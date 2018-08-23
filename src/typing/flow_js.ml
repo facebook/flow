@@ -2712,12 +2712,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ThisTypeAppT(reason_tapp,c,this,ts), _) ->
       let reason_op = reason_of_use_t u in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
-      instantiate_this_class cx trace reason_op tc this (Upper u)
+      instantiate_this_class cx trace reason_tapp tc this (Upper u)
 
     | (_, UseT (use_op, ThisTypeAppT(reason_tapp,c,this,ts))) ->
       let reason_op = reason_of_t l in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
-      instantiate_this_class cx trace reason_op tc this (Lower (use_op, l))
+      instantiate_this_class cx trace reason_tapp tc this (Lower (use_op, l))
 
     | DefT (_, TypeAppT _), ReposLowerT (reason, use_desc, u) ->
         rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
@@ -3808,17 +3808,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (l, tvar)
 
     (* this-specialize a this-abstracted class by substituting This *)
-    | ThisClassT (r, i), ThisSpecializeT(_, this, k) ->
+    | ThisClassT (_, i), ThisSpecializeT(r, this, k) ->
       let i = subst cx (SMap.singleton "this" this) i in
       continue_repos cx trace r i k
 
     (* this-specialization of non-this-abstracted classes is a no-op *)
-    | DefT (r, ClassT i), ThisSpecializeT(_, _this, k) ->
+    | DefT (_, ClassT i), ThisSpecializeT(r, _this, k) ->
       (* TODO: check that this is a subtype of i? *)
       continue_repos cx trace r i k
 
-    | DefT (_, AnyT), ThisSpecializeT (_, _, k) ->
-      continue cx trace l k
+    | DefT (_, AnyT), ThisSpecializeT (r, _, k) ->
+      continue_repos cx trace r l k
 
     | DefT (_, PolyT _), ReposLowerT (reason, use_desc, u) ->
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
@@ -7867,8 +7867,8 @@ and instantiate_this_class cx trace reason tc this k =
 and specialize_class cx trace ~reason_op ~reason_tapp c = function
   | None -> c
   | Some ts ->
-    Tvar.mk_where cx reason_op (fun tvar ->
-      rec_flow cx trace (c, SpecializeT (unknown_use, reason_op, reason_tapp, None, Some ts, tvar))
+    Tvar.mk_where cx reason_tapp (fun tout ->
+      rec_flow cx trace (c, SpecializeT (unknown_use, reason_op, reason_tapp, None, Some ts, tout))
     )
 
 (* Object assignment patterns. In the `Object.assign` model (chain_objects), an
@@ -10630,10 +10630,9 @@ and get_builtin_typeapp cx ?trace reason x ts =
 
 (* Specialize a polymorphic class, make an instance of the specialized class. *)
 and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
-  let c = reposition_reason cx ?trace reason_tapp c in
-  let t = Tvar.mk cx reason_op in
+  let t = Tvar.mk cx reason_tapp in
   flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
-  mk_instance cx ?trace (reason_of_t c) t
+  mk_instance cx ?trace reason_tapp t
 
 and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts =
   let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts in

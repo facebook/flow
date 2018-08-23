@@ -114,8 +114,14 @@ Error --------------------------------------------------------------------------
 
 Cannot instantiate class `MyClass4` because class `MyClass4` [1] is not a polymorphic type.
 
+   test.js:83:11
    83| var mono: MyClass4<> = new MyClass4; // error, class is not polymorphic
-                 ^^^^^^^^^^ [1]
+                 ^^^^^^^^^^
+
+References:
+   test.js:81:7
+   81| class MyClass4 { }
+             ^^^^^^^^ [1]
 
 
 

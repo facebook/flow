@@ -3246,17 +3246,25 @@ let poly_type id tparams t =
     let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
     DefT (reason, PolyT (tparams, t, id))
 
-let typeapp t tparams =
+let typeapp ?annot_loc t targs =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
+  let reason = match annot_loc with
+  | Some loc -> annot_reason (repos_reason loc reason)
+  | None -> reason
+  in
   let use_op = Op (TypeApplication { type' = reason }) in
-  DefT (reason, TypeAppT (use_op, t, tparams))
+  DefT (reason, TypeAppT (use_op, t, targs))
 
-let this_typeapp t this tparams =
-  let reason = match tparams with
+let this_typeapp ?annot_loc t this targs =
+  let reason = match targs with
   | Some _ -> replace_reason (fun desc -> RTypeApp desc) (reason_of_t t)
   | None -> reason_of_t t
   in
-  ThisTypeAppT (reason, t, this, tparams)
+  let reason = match annot_loc with
+  | Some loc -> annot_reason (repos_reason loc reason)
+  | None -> reason
+  in
+  ThisTypeAppT (reason, t, this, targs)
 
 let annot use_desc = function
   | OpenT (r, _) as t -> AnnotT (r, t, use_desc)

@@ -1009,7 +1009,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:52:2
 
-Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:52:2
    52| ({p: 'foo'}: React.ElementConfig<typeof A>); // Error: string ~> number
@@ -1026,7 +1026,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:56:2
 
-Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:56:2
    56| ({p: 'foo'}: React.ElementConfig<typeof B>); // Error: string ~> number
@@ -1043,8 +1043,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:58:2
 
-Cannot cast object literal to `ElementConfig` because property `p` is missing in object literal [1] but exists in object
-type [2].
+Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object literal [1] but exists in
+object type [2].
 
    element_config.js:58:2
    58| ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
@@ -1058,7 +1058,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:60:2
 
-Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:60:2
    60| ({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
@@ -1075,8 +1075,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:62:2
 
-Cannot cast object literal to `ElementConfig` because property `p` is missing in object literal [1] but exists in object
-type [2].
+Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object literal [1] but exists in
+object type [2].
 
    element_config.js:62:2
    62| ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
@@ -1090,7 +1090,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:64:2
 
-Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:64:2
    64| ({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
@@ -1107,8 +1107,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:71:2
 
-Cannot cast object literal to `ElementConfig` because property `p` is missing in object type [1] but exists in object
-literal [2].
+Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object type [1] but exists in
+object literal [2].
 
    element_config.js:71:2
    71| ({p: 42}: React.ElementConfig<typeof F>); // Error: extra property `p`
@@ -1122,8 +1122,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:72:2
 
-Cannot cast object literal to `ElementConfig` because property `p` is missing in object type [1] but exists in object
-literal [2].
+Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object type [1] but exists in
+object literal [2].
 
    element_config.js:72:2
    72| ({p: 'foo'}: React.ElementConfig<typeof F>); // Error: extra property `p`
@@ -1137,7 +1137,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:76:2
 
-Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:76:2
    76| ({p: 'foo'}: React.ElementConfig<typeof G>); // Error: string ~> number
@@ -1154,7 +1154,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:80:2
 
-Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:80:2
    80| ({p: 'foo'}: React.ElementConfig<typeof H>); // Error: string ~> number
@@ -1171,7 +1171,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:84:2
 
-Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:84:2
    84| ({p: 'foo'}: React.ElementConfig<typeof I>); // Error: string ~> number
@@ -1188,7 +1188,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:88:2
 
-Cannot cast object literal to `ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
 
    element_config.js:88:2
    88| ({p: 'foo'}: React.ElementConfig<typeof J>); // Error: string ~> number
@@ -1205,8 +1205,8 @@ References:
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:8:2
 
-Cannot cast `<Foo />` to `Element` because property `b` is missing in object type [1] but exists in object type [2] in
-type argument `Props` [3] of property `type`.
+Cannot cast `<Foo />` to `React.Element` because property `b` is missing in object type [1] but exists in object
+type [2] in type argument `Props` [3] of property `type`.
 
    element_with_component_type.js:8:2
     8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error

@@ -5948,8 +5948,7 @@ and mk_class_sig =
     | None -> Implicit { null = false }, None
     | Some (loc, { Ast.Class.Extends.expr; targs }) ->
       let (_, c), _ as expr = expression cx expr in
-      let c = Flow.reposition cx loc ~annot_loc:loc c in
-      let t, targs = Anno.mk_super cx tparams_map c targs in
+      let t, targs = Anno.mk_super cx tparams_map loc c targs in
       Explicit t, Some (loc, { Ast.Class.Extends.expr; targs })
   in
 

@@ -2559,7 +2559,7 @@ react_component.js:32:13 = {
     "kind":"Generic",
     "typeArgs":[{"kind":"Num"}],
     "type":{
-      "provenance":{"kind":"Library","loc":"[LIB] react.js:240:42-63"},
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:240:42-60"},
       "name":"ComponentType"
     },
     "structural":false
@@ -2582,7 +2582,7 @@ react_component.js:32:29 = {
   "expanded_type":{
     "kind":"TypeAlias",
     "name":{
-      "provenance":{"kind":"Library","loc":"[LIB] react.js:240:42-63"},
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:240:42-60"},
       "name":"ComponentType"
     },
     "typeParams":[{"name":"P","bound":null,"polarity":"Neutral"}],

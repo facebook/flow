@@ -188,11 +188,12 @@ let rec convert cx tparams_map = Ast.Type.(function
   let id_loc, name = id in
   let reason = mk_reason (RType name) loc in
   let id_reason = mk_reason (RType name) id_loc in
-  let t_unapplied = Tvar.mk_where cx reason (fun t ->
+  let qid_reason = mk_reason (RType (qualified_name qid)) qid_loc in
+  let t_unapplied = Tvar.mk_where cx qid_reason (fun t ->
     let id_info = name, t, Type_table.Other in
     Type_table.set_info id_loc id_info (Context.type_table cx);
-    let use_op = Op (GetProperty (mk_reason (RType (qualified_name qid)) qid_loc)) in
-    Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
+    let use_op = Op (GetProperty qid_reason) in
+    Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, name), t));
   ) in
   let t, targs = mk_nominal_type cx reason tparams_map (t_unapplied, targs) in
   (loc, t),
@@ -701,7 +702,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* other applications with id as head expr *)
   | _ ->
     let reason = mk_reason (RType name) loc in
-    let c = type_identifier cx name loc in
+    let c = type_identifier cx name name_loc in
     let id_info = name, c, Type_table.Other in
     Type_table.set_info name_loc id_info (Context.type_table cx);
     let t, targs = mk_nominal_type cx reason tparams_map (c, targs) in
@@ -1248,13 +1249,13 @@ and mk_singleton_boolean loc b =
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
 and mk_nominal_type cx reason tparams_map (c, targs) =
   let reason = annot_reason reason in
-  let c = mod_reason_of_t annot_reason c in
   match targs with
   | None ->
       Flow.mk_instance cx reason c, None
   | Some (loc, targs) ->
+      let annot_loc = loc_of_reason reason in
       let targs, targs_ast = convert_list cx tparams_map targs in
-      typeapp c targs, Some (loc, targs_ast)
+      typeapp ~annot_loc c targs, Some (loc, targs_ast)
 
 (* take a list of AST type param declarations,
    do semantic checking and create types for them. *)
@@ -1318,14 +1319,9 @@ and polarity = Ast.Variance.(function
 and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   let lookup_mode = Env.LookupMode.ForType in
   let i, id_ast = convert_qualification ~lookup_mode cx "extends" id in
-  let loc = match targs with
-  | Some (targs, _) -> Loc.btwn loc targs
-  | None -> loc
-  in
   let r = mk_reason (RType (qualified_name id)) loc in
   let t, targs_ast = mk_nominal_type cx r tparams_map (i, targs) in
-  Flow.reposition cx loc ~annot_loc:loc t,
-  (loc, { Ast.Type.Generic.id = id_ast; targs = targs_ast })
+  t, (loc, { Ast.Type.Generic.id = id_ast; targs = targs_ast })
 
 and add_interface_properties cx tparams_map properties s =
   let open Class_sig in
@@ -1475,7 +1471,7 @@ and add_interface_properties cx tparams_map properties s =
   in
   x, List.rev rev_prop_asts
 
-let mk_super cx tparams_map c targs = Type.(
+let mk_super cx tparams_map loc c targs = Type.(
   (* A super class must be parameterized by This, so that it can be
      specialized to this class and its subclasses when properties are looked
      up on their instances. *)
@@ -1489,11 +1485,11 @@ let mk_super cx tparams_map c targs = Type.(
       let c = Tvar.mk_derivable_where cx reason (fun tvar ->
         Flow.flow cx (c, SpecializeT (unknown_use, reason, reason, None, None, tvar))
       ) in
-      this_typeapp c this None, None
-  | Some (loc, targs) ->
+      this_typeapp ~annot_loc:loc c this None, None
+  | Some (targs_loc, targs) ->
       let targs, targs_ast = convert_list cx tparams_map targs in
-      this_typeapp c this (Some targs),
-      Some (loc, targs_ast)
+      this_typeapp ~annot_loc:loc c this (Some targs),
+      Some (targs_loc, targs_ast)
 )
 
 let mk_interface_sig cx reason decl =
@@ -1556,7 +1552,7 @@ let mk_declare_class_sig =
     let props_bag = Tvar.mk_derivable_where cx r (fun tvar ->
       Flow.flow cx (i, Type.MixinT (r, tvar))
     ) in
-    let t, targs = mk_super cx tparams_map props_bag targs in
+    let t, targs = mk_super cx tparams_map loc props_bag targs in
     t, (loc, { Ast.Type.Generic.id; targs })
   in
 
@@ -1593,12 +1589,12 @@ let mk_declare_class_sig =
       let id = Context.make_nominal cx in
       let extends, extends_ast =
         match extends with
-        | Some (extends_loc, {Ast.Type.Generic.id; targs}) ->
+        | Some (loc, {Ast.Type.Generic.id; targs}) ->
           let lookup_mode = Env.LookupMode.ForValue in
           let i, id =
             convert_qualification ~lookup_mode cx "mixins" id in
-          let t, targs = mk_super cx tparams_map i targs in
-          Some t, Some (extends_loc, { Ast.Type.Generic.id; targs })
+          let t, targs = mk_super cx tparams_map loc i targs in
+          Some t, Some (loc, { Ast.Type.Generic.id; targs })
         | None ->
           None, None
       in

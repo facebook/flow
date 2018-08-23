@@ -40,6 +40,7 @@ val mk_interface_super: Context.t ->
 
 val mk_super: Context.t ->
   Type.t SMap.t ->
+  Loc.t ->
   Type.t ->
   (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option ->
   Type.t * (Loc.t, Loc.t * Type.t) Ast.Type.ParameterInstantiation.t option
