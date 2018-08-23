@@ -15,8 +15,12 @@ let mk_signature_verifier_test contents expected_msgs =
     let signature = match Signature_builder.program (parse contents) with
       | Ok signature -> signature
       | Error _ -> failwith "Signature builder failure!" in
-    let msgs = List.map Signature_builder_deps.Error.to_string @@
-      Signature_builder_deps.ErrorSet.elements @@ Signature_builder.Signature.verify signature in
+    let errors, remote_dependencies = Signature_builder.Signature.verify signature in
+    let error_msgs = List.map Signature_builder_deps.Error.to_string @@
+      Signature_builder_deps.ErrorSet.elements errors in
+    let remote_dependency_msgs = List.map Signature_builder_deps.Dep.to_string @@
+      Signature_builder_deps.DepSet.elements remote_dependencies in
+    let msgs = error_msgs @ remote_dependency_msgs in
     let printer = String.concat "; " in
     assert_equal ~ctxt
       ~cmp:(eq printer)
@@ -183,38 +187,41 @@ let tests = "signature_verifier" >::: [
     ["Expected annotation @ (1, 4) to (1, 5)"];
 
   "import_default_dependencies" >:: mk_signature_verifier_test
-    ["import x from './test12-helper';";
+    ["import x from './import_default_dependencies_helper';";
      "class C {";
      "  p: typeof x = 0";
      "}";
      "export default (new C: C);"]
-    [];
+    ["import { default } from './import_default_dependencies_helper'"];
 
   "import_type_dependencies" >:: mk_signature_verifier_test
-    ["import type { T1, T2, T3 } from './test13-helper';";
+    ["import type { T1, T2, T3 } from './import_type_dependencies_helper';";
      "class C {";
      "  f: T1 = 0;";
      "  m(x: T2): T3 { return x; }";
      "}";
      "export default C;"]
-    [];
+    ["import type { T1 } from './import_type_dependencies_helper'";
+     "import type { T2 } from './import_type_dependencies_helper'";
+     "import type { T3 } from './import_type_dependencies_helper'"];
 
   "hoisted_requires" >:: mk_signature_verifier_test
-    ["const M = require('./test14-helper');";
+    ["const M = require('./hoisted_requires_helper');";
      "if (Math.random() < 0.5) {";
-     "  var { D } = require('./test14-helper');";
+     "  var { D } = require('./hoisted_requires_helper');";
      "} else {";
-     "  var { D } = require('./test14-helper');";
+     "  var { D } = require('./hoisted_requires_helper');";
      "}";
      "var D = 0;";
      "class C extends M.D {";
      "  f: D = 0;";
      "}";
      "module.exports = C;"]
-    ["Expected annotation @ (7, 4) to (7, 5)"];
+    ["Expected annotation @ (7, 4) to (7, 5)";
+     "require('./hoisted_requires_helper')"];
 
   "hoisted_locals" >:: mk_signature_verifier_test
-    ["const M = require('./test15-helper');";
+    ["const M = require('./hoisted_locals_helper');";
      "if (Math.random() < 0.5) {";
      "  var D = 0;";
      "} else {";
@@ -225,5 +232,6 @@ let tests = "signature_verifier" >::: [
      "}";
      "module.exports = C;"]
     ["Expected annotation @ (3, 6) to (3, 7)";
-     "Expected annotation @ (5, 6) to (5, 7)"];
+     "Expected annotation @ (5, 6) to (5, 7)";
+     "require('./hoisted_locals_helper')"];
 ]

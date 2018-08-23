@@ -56,6 +56,26 @@ module Dep = struct
     | Type x -> Some (x, fun loc -> Error.ExpectedType (x, loc))
     | Value x -> Some (x, fun loc -> Error.ExpectedValue (x, loc))
     | ImportNamed _ | ImportStar _ | Require _ | GlobalType _ | GlobalValue _ -> None
+
+  let remote = function
+    | Type _ | Value _ -> false
+    | ImportNamed _ | ImportStar _ | Require _ | GlobalType _ | GlobalValue _ -> true
+
+  let to_string =
+    let string_of_import_kind = function
+      | Ast.Statement.ImportDeclaration.ImportValue -> "import"
+      | Ast.Statement.ImportDeclaration.ImportType -> "import type"
+      | Ast.Statement.ImportDeclaration.ImportTypeof -> "import typeof"
+    in function
+      | Type x -> spf "type: %s" x
+      | Value x -> spf "value: %s" x
+      | ImportNamed { kind; name = (_, n); source = (_, m) } ->
+        spf "%s { %s } from '%s'" (string_of_import_kind kind) n m
+      | ImportStar { kind; source = (_, m) } ->
+        spf "%s * from '%s'" (string_of_import_kind kind) m
+      | Require { source = (_, m) } -> spf "require('%s')" m
+      | GlobalType x -> spf "global type: %s" x
+      | GlobalValue x -> spf "global value: %s" x
 end
 
 module DepSet = Set.Make (Dep)

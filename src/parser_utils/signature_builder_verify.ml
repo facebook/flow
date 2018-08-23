@@ -623,12 +623,18 @@ end
           | None -> global dep
         end
 
-  let rec check ?(cache=ref Deps.DepSet.empty) env deps =
-    Deps.recurse (check_dep ~cache env) deps
+  let rec check cache env deps =
+    Deps.recurse (check_dep cache env) deps
 
-  and check_dep ~cache env dep =
+  and check_dep cache env dep =
     if Deps.DepSet.mem dep !cache then Deps.ErrorSet.empty
     else begin
       cache := Deps.DepSet.add dep !cache;
-      check ~cache env (validate_and_eval env dep)
+      check cache env (validate_and_eval env dep)
     end
+
+  let check env deps =
+    let cache = ref Deps.DepSet.empty in
+    let errors = check cache env deps in
+    let remote_dependencies = Deps.DepSet.filter Deps.Dep.remote !cache in
+    errors, remote_dependencies
