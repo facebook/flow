@@ -6001,18 +6001,18 @@ and mk_class_sig =
   let class_sig, extends_ast, implements_ast =
     let id = Context.make_nominal cx in
     let extends, extends_ast = mk_extends cx tparams_map extends in
-    let implements, implements_ast = implements |> List.map (fun (i_loc, i) ->
-      let { Ast.Class.Implements.id = loc, name; targs } = i in
-      let super_loc = match targs with
-      | Some (ts, _) -> Loc.btwn loc ts
-      | None -> loc in
-      let reason = mk_reason (RType name) super_loc in
-      let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
+    let implements, implements_ast = implements |> List.map (fun (loc, i) ->
+      let { Ast.Class.Implements.id = (id_loc, name); targs } = i in
+      let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
+      let typeapp, targs = match targs with
+      | None -> (loc, c, None), None
+      | Some (targs_loc, targs) ->
+        let ts, targs_ast = Anno.convert_list cx tparams_map targs in
+        (loc, c, Some ts), Some (targs_loc, targs_ast)
+      in
       let id_info = name, c, Type_table.Other in
-      let t, targs_ast = Anno.mk_nominal_type cx reason tparams_map (c, targs) in
-      Type_table.set_info loc id_info (Context.type_table cx);
-      Flow.reposition cx super_loc ~annot_loc:super_loc t,
-      (i_loc, { Ast.Class.Implements.id = (loc, c), name; targs = targs_ast})
+      Type_table.set_info id_loc id_info (Context.type_table cx);
+      typeapp, (loc, { Ast.Class.Implements.id = (id_loc, c), name; targs })
     ) |> List.split in
     let super = Class { extends; mixins = []; implements } in
     empty id reason tparams tparams_map super, extends_ast, implements_ast

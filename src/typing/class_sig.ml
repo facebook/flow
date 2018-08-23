@@ -52,13 +52,13 @@ type t = {
 
 and super =
   | Interface of {
-      extends: Type.t list;
+      extends: typeapp list;
       callable: bool;
     }
   | Class of {
       extends: extends;
       mixins: typeapp list; (* declare class only *)
-      implements: Type.t list
+      implements: typeapp list
     }
 
 and extends =
@@ -259,14 +259,14 @@ let subst_extends cx map = function
 let subst_super cx map = function
   | Interface { extends; callable } ->
     Interface {
-      extends = List.map (Flow.subst cx map) extends;
+      extends = List.map (subst_typeapp cx map) extends;
       callable;
     }
   | Class { extends; mixins; implements } ->
     Class {
       extends = subst_extends cx map extends;
       mixins = List.map (subst_typeapp cx map) mixins;
-      implements = List.map (Flow.subst cx map) implements;
+      implements = List.map (subst_typeapp cx map) implements;
     }
 
 let generate_tests cx f x =
@@ -519,6 +519,12 @@ let supertype cx tparams_with_this x =
   let open Type in
   match x.super with
   | Interface {extends; callable} ->
+    let extends = List.map (function
+    | loc, c, None ->
+      let reason = annot_reason (repos_reason loc (reason_of_t c)) in
+      Flow.mk_instance cx reason c
+    | annot_loc, c, Some targs -> typeapp ~annot_loc c targs
+    ) extends in
     (* If the interface definition includes a callable property, add the
        function prototype to the super type *)
     let extends =
@@ -566,7 +572,13 @@ let thistype cx x =
   let super = supertype cx tparams_with_this x in
   let implements = match x.super with
   | Interface _ -> []
-  | Class {implements; _} -> implements
+  | Class {implements; _} ->
+    List.map (function
+      | loc, c, None ->
+        let reason = annot_reason (repos_reason loc (Type.reason_of_t c)) in
+        Flow.mk_instance cx reason c
+      | annot_loc, c, Some targs -> Type.typeapp ~annot_loc c targs
+    ) implements
   in
   let initialized_static_fields, static_objtype = statictype cx tparams_with_this x in
   let insttype = insttype cx ~initialized_static_fields x in
@@ -581,7 +593,13 @@ let check_implements cx def_reason x =
     let this = thistype cx x in
     let reason = x.instance.reason in
     let open Type in
-    List.iter (fun i ->
+    List.iter (fun (loc, c, targs_opt) ->
+      let i = match targs_opt with
+      | None ->
+        let reason = annot_reason (repos_reason loc (reason_of_t c)) in
+        Flow.mk_instance cx reason c
+      | Some targs -> typeapp ~annot_loc:loc c targs
+      in
       let use_op = Op (ClassImplementsCheck {
         def = def_reason;
         name = reason;

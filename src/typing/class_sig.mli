@@ -22,13 +22,13 @@ and field =
 
 type super =
   | Interface of {
-      extends: Type.t list;
+      extends: typeapp list;
       callable: bool;
     }
   | Class of {
       extends: extends;
       mixins: typeapp list; (* declare class only *)
-      implements: Type.t list
+      implements: typeapp list
     }
 
 and extends =

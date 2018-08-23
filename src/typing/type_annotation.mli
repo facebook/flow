@@ -33,11 +33,6 @@ val convert_qualification: ?lookup_mode:Env.LookupMode.t ->
   (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t ->
   Type.t * (Loc.t, Loc.t * Type.t) Ast.Type.Generic.Identifier.t
 
-val mk_interface_super: Context.t ->
-  Type.t SMap.t ->
-  Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t ->
-  Type.t * (Loc.t * (Loc.t, Loc.t * Type.t) Ast.Type.Generic.t)
-
 val mk_super: Context.t ->
   Type.t SMap.t ->
   Loc.t ->

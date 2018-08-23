@@ -1318,10 +1318,14 @@ and polarity = Ast.Variance.(function
 
 and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   let lookup_mode = Env.LookupMode.ForType in
-  let i, id_ast = convert_qualification ~lookup_mode cx "extends" id in
-  let r = mk_reason (RType (qualified_name id)) loc in
-  let t, targs_ast = mk_nominal_type cx r tparams_map (i, targs) in
-  t, (loc, { Ast.Type.Generic.id = id_ast; targs = targs_ast })
+  let c, id = convert_qualification ~lookup_mode cx "extends" id in
+  let typeapp, targs = match targs with
+  | None -> (loc, c, None), None
+  | Some (targs_loc, targs) ->
+    let ts, targs_ast = convert_list cx tparams_map targs in
+    (loc, c, Some ts), Some (targs_loc, targs_ast)
+  in
+  typeapp, (loc, { Ast.Type.Generic.id; targs })
 
 and add_interface_properties cx tparams_map properties s =
   let open Class_sig in
@@ -1591,12 +1595,16 @@ let mk_declare_class_sig =
       in
       let implements, implements_ast =
         implements
-        |> List.map (fun (i_loc, i) ->
-            let { Ast.Class.Implements.id = loc, name; targs } = i in
-            let reason = mk_reason (RCustom "implements") loc in
-            let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name loc in
-            let t, targs = mk_nominal_type cx reason tparams_map (c, targs) in
-            t, (i_loc, { Ast.Class.Implements.id = (loc, c), name; targs; })
+        |> List.map (fun (loc, i) ->
+            let { Ast.Class.Implements.id = (id_loc, name); targs } = i in
+            let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
+            let typeapp, targs = match targs with
+            | None -> (loc, c, None), None
+            | Some (targs_loc, targs) ->
+              let ts, targs_ast = convert_list cx tparams_map targs in
+              (loc, c, Some ts), Some (targs_loc, targs_ast)
+            in
+            typeapp, (loc, { Ast.Class.Implements.id = (id_loc, c), name; targs })
         )
         |> List.split in
       let super =
