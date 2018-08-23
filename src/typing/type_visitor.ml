@@ -375,9 +375,9 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | ThisSpecializeT (_, t1, t2) ->
-    let acc = self#type_ cx pole_TODO acc t1 in
-    let acc = self#type_ cx pole_TODO acc t2 in
+  | ThisSpecializeT (_, this, k) ->
+    let acc = self#type_ cx pole_TODO acc this in
+    let acc = self#cont cx acc k in
     acc
 
   | VarianceCheckT (_, ts, _) -> List.fold_left (self#type_ cx pole_TODO) acc ts

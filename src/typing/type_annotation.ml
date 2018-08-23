@@ -1246,8 +1246,7 @@ and mk_singleton_boolean loc b =
 
 (* Given the type of expression C and type arguments T1...Tn, return the type of
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
-(** See comment on Flow.mk_instance for what the for_type flag means. **)
-and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
+and mk_nominal_type cx reason tparams_map (c, targs) =
   let reason = annot_reason reason in
   let c = mod_reason_of_t (fun reason ->
     annot_reason (replace_reason (function
@@ -1260,7 +1259,7 @@ and mk_nominal_type ?(for_type=true) cx reason tparams_map (c, targs) =
   ) c in
   match targs with
   | None ->
-      Flow.mk_instance cx reason ~for_type c, None
+      Flow.mk_instance cx reason c, None
   | Some (loc, targs) ->
       let targs, targs_ast = convert_list cx tparams_map targs in
       typeapp c targs, Some (loc, targs_ast)

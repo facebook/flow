@@ -437,7 +437,7 @@ module rec TypeTerm : sig
     **)
     | SpecializeT of use_op * reason * reason * specialize_cache * t list option * t
     (* operation on this-abstracted classes *)
-    | ThisSpecializeT of reason * t * t
+    | ThisSpecializeT of reason * t * cont
     (* variance check on polymorphic types *)
     | VarianceCheckT of reason * t list * polarity
 
@@ -2369,7 +2369,7 @@ end = struct
     | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
     | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
     | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
-    | ThisSpecializeT(reason, this, t) -> ThisSpecializeT (f reason, this, t)
+    | ThisSpecializeT(reason, this, k) -> ThisSpecializeT (f reason, this, k)
     | ToStringT (reason, t) -> ToStringT (f reason, t)
     | UnaryMinusT (reason, t) -> UnaryMinusT (f reason, t)
     | UnifyT (t, t2) -> UnifyT (mod_reason_of_t f t, mod_reason_of_t f t2)

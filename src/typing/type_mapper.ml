@@ -658,11 +658,11 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if tlist_opt' == tlist_opt && t'' == t' then t
         else SpecializeT (u, r1, r2, cache, tlist_opt', t'')
-    | ThisSpecializeT (r, t1, t2) ->
-        let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
-        if t1' == t1 && t2' == t2 then t
-        else ThisSpecializeT (r, t1', t2')
+    | ThisSpecializeT (r, this, k) ->
+        let this' = self#type_ cx map_cx this in
+        let k' = self#cont cx map_cx k in
+        if this' == this && k' == k then t
+        else ThisSpecializeT (r, this', k')
     | VarianceCheckT (r, tlist, p) ->
         let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
         if tlist' == tlist then t

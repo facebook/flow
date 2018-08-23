@@ -50,7 +50,7 @@ val mk_type_annotation: Context.t ->
   (Loc.t, Loc.t) Ast.Type.annotation option ->
   Type.t * (Loc.t, Loc.t * Type.t) Ast.Type.annotation option
 
-val mk_nominal_type: ?for_type:bool ->
+val mk_nominal_type:
   Context.t ->
   Reason.t ->
   Type.t SMap.t ->

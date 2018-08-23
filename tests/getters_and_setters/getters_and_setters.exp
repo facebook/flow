@@ -450,7 +450,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- variance.js:21:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is read-only in `<<anonymous class>>` [2] but
-writable in `Base` [3].
+writable in `Base` [1].
 
    variance.js:21:2
         v-------------------
@@ -464,15 +464,12 @@ References:
    variance.js:21:16
    21| (class extends Base {
                       ^^^^ [1]
-   variance.js:11:7
-   11| class Base {
-             ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:26:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is write-only in `<<anonymous class>>` [2] but
-readable in `Base` [3].
+readable in `Base` [1].
 
    variance.js:26:2
         v-------------------
@@ -486,15 +483,12 @@ References:
    variance.js:26:16
    26| (class extends Base {
                       ^^^^ [1]
-   variance.js:11:7
-   11| class Base {
-             ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:37:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `pos` is write-only in `<<anonymous class>>` [2]
-but read-only in `Base` [3].
+but read-only in `Base` [1].
 
    variance.js:37:2
         v-------------------
@@ -508,15 +502,12 @@ References:
    variance.js:37:16
    37| (class extends Base {
                       ^^^^ [1]
-   variance.js:11:7
-   11| class Base {
-             ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:47:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `neg` is read-only in `<<anonymous class>>` [2] but
-write-only in `Base` [3].
+write-only in `Base` [1].
 
    variance.js:47:2
         v-------------------
@@ -530,9 +521,6 @@ References:
    variance.js:47:16
    47| (class extends Base {
                       ^^^^ [1]
-   variance.js:11:7
-   11| class Base {
-             ^^^^ [3]
 
 
 

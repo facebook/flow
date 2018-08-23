@@ -557,10 +557,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "tvar", _json_of_t json_cx tvar
     ]
 
-  | ThisSpecializeT (_, this, tvar) -> [
-      "type", _json_of_t json_cx this;
-      "tvar", _json_of_t json_cx tvar
-    ]
+  | ThisSpecializeT (_, this, k) ->
+      ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
 
   | VarianceCheckT (_, targs, polarity) -> [
       "types", JSON_Array (List.map (_json_of_t json_cx) targs);
@@ -2187,7 +2185,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | TestPropT (_, _, prop, ptype) -> p ~extra:(spf "(%s), %s"
       (propref prop)
       (kid ptype)) t
-  | ThisSpecializeT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
+  | ThisSpecializeT (_, this, _) -> p ~extra:(spf "%s" (kid this)) t
   | ToStringT (_, arg) -> p ~extra:(use_kid arg) t
   | UnaryMinusT _ -> p t
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t

@@ -2714,15 +2714,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ThisTypeAppT(reason_tapp,c,this,ts), _) ->
       let reason_op = reason_of_use_t u in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
-      let c = instantiate_this_class cx trace reason_op tc this in
-      rec_flow cx trace (mk_instance cx ~trace reason_op ~for_type:false c, u)
+      instantiate_this_class cx trace reason_op tc this (Upper u)
 
     | (_, UseT (use_op, ThisTypeAppT(reason_tapp,c,this,ts))) ->
       let reason_op = reason_of_t l in
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
-      let c = instantiate_this_class cx trace reason_op tc this in
-      let t_out = mk_instance cx ~trace reason_op ~for_type:false c in
-      rec_flow cx trace (l, UseT (use_op, t_out))
+      instantiate_this_class cx trace reason_op tc this (Lower (use_op, l))
 
     | DefT (_, TypeAppT _), ReposLowerT (reason, use_desc, u) ->
         rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
@@ -3882,17 +3879,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (l, tvar)
 
     (* this-specialize a this-abstracted class by substituting This *)
-    | ThisClassT (reason, i), ThisSpecializeT(_, this, tvar) ->
+    | ThisClassT (r, i), ThisSpecializeT(_, this, k) ->
       let i = subst cx (SMap.singleton "this" this) i in
-      rec_flow_t cx trace (DefT (reason, ClassT i), tvar)
+      continue_repos cx trace r i k
 
     (* this-specialization of non-this-abstracted classes is a no-op *)
-    | DefT (r, ClassT i), ThisSpecializeT(_, _this, tvar) ->
+    | DefT (r, ClassT i), ThisSpecializeT(_, _this, k) ->
       (* TODO: check that this is a subtype of i? *)
-      rec_flow_t cx trace (DefT (r, ClassT i), tvar)
+      continue_repos cx trace r i k
 
-    | DefT (_, AnyT), ThisSpecializeT (_, _, tvar) ->
-      rec_flow_t cx trace (l, tvar)
+    | DefT (_, AnyT), ThisSpecializeT (_, _, k) ->
+      continue cx trace l k
 
     | DefT (_, PolyT _), ReposLowerT (reason, use_desc, u) ->
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
@@ -7288,10 +7285,7 @@ and check_super cx trace ~use_op lreason ureason t x p =
   let use_op = Frame (PropertyCompatibility {
     prop = Some x;
     lower = lreason;
-    upper = replace_reason (function
-      | RStatics desc -> desc
-      | desc -> desc
-    ) ureason;
+    upper = ureason;
     is_sentinel = false;
   }, use_op) in
   let strict = NonstrictReturning (None, None) in
@@ -7852,10 +7846,8 @@ and canonicalize_imported_type cx trace reason t =
     None
 
 (* Specialize This in a class. Eventually this causes substitution. *)
-and instantiate_this_class cx trace reason tc this =
-  Tvar.mk_where cx reason (fun tvar ->
-    rec_flow cx trace (tc, ThisSpecializeT (reason, this, tvar))
-  )
+and instantiate_this_class cx trace reason tc this k =
+  rec_flow cx trace (tc, ThisSpecializeT (reason, this, k))
 
 (* Specialize targs in a class. This is somewhat different from
    mk_typeapp_instance, in that it returns the specialized class type, not the
@@ -10659,21 +10651,13 @@ and mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id xs t t
       );
       t
 
-(* NOTE: the for_type flag is true when expecting a type (e.g., when processing
-   an annotation), and false when expecting a runtime value (e.g., when
-   processing an extends). *)
-and mk_instance cx ?trace instance_reason ?(for_type=true) ?(use_desc=false) c =
-  if for_type then
-    (* Make an annotation. *)
-    let source = Tvar.mk_where cx instance_reason (fun t ->
-      (* this part is similar to making a runtime value *)
-      flow_opt_t cx ?trace (c, DefT (instance_reason, TypeT (InstanceKind, t)))
-    ) in
-    AnnotT (source, use_desc)
-  else
-    Tvar.mk_derivable_where cx instance_reason (fun t ->
-      flow_opt_t cx ?trace (c, class_type t)
-    )
+and mk_instance cx ?trace instance_reason ?(use_desc=false) c =
+  (* Make an annotation. *)
+  let source = Tvar.mk_where cx instance_reason (fun t ->
+    (* this part is similar to making a runtime value *)
+    flow_opt_t cx ?trace (c, DefT (instance_reason, TypeT (InstanceKind, t)))
+  ) in
+  AnnotT (source, use_desc)
 
 and reposition_reason cx ?trace reason ?(use_desc=false) t =
   reposition
@@ -11017,6 +11001,10 @@ and unify cx t1 t2 =
 and continue cx trace t = function
   | Lower (use_op, l) -> rec_flow cx trace (l, UseT (use_op, t))
   | Upper u -> rec_flow cx trace (t, u)
+
+and continue_repos cx trace reason ?(use_desc=false) t = function
+  | Lower (use_op, l) -> rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, l))
+  | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
 
 and react_kit cx trace ~use_op reason_op l u =
   React_kit.run

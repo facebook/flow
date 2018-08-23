@@ -17,7 +17,7 @@ let run cx trace ~use_op reason_op l u
   ~(get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t)
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
-  ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?for_type:bool -> ?use_desc:bool -> Type.t -> Type.t)
+  ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t)
   ~(string_key: string -> reason -> Type.t)
   ~(mk_type_destructor: Context.t -> trace:Trace.t -> use_op -> reason -> t -> Type.destructor -> int -> bool * Type.t)
   ~(sealed_in_op: reason -> Type.sealtype -> bool)

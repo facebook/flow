@@ -84,9 +84,9 @@ References:
    a.js:74:7
    74| class G extends F {
              ^ [2]
-   a.js:4:7
-    4| class A {
-             ^ [3]
+   a.js:65:17
+   65| class F extends A {
+                       ^ [3]
 
 
 
