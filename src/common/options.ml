@@ -41,6 +41,10 @@ type jsx_mode =
    *)
   | Jsx_csx
 
+type saved_state_fetcher =
+| Dummy_fetcher
+| Local_fetcher
+
 type t = {
   opt_all : bool;
   opt_debug : bool;
@@ -76,7 +80,7 @@ type t = {
   opt_lazy_mode: lazy_mode option;
   opt_quiet : bool;
   opt_root : Path.t;
-  opt_saved_state_load_script: string option;
+  opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_no_fallback: bool;
   opt_strip_root : bool;
   opt_suppress_comments : Str.regexp list;
@@ -125,7 +129,7 @@ let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let no_saved_state opts = opts.opt_no_saved_state
 let root opts = opts.opt_root
 let facebook_fbt opts = opts.opt_facebook_fbt
-let saved_state_load_script opts = opts.opt_saved_state_load_script
+let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 
 let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
 let should_ignore_non_literal_requires opts =

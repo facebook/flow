@@ -68,7 +68,7 @@ module Opts = struct
     name: string option;
     no_flowlib: bool;
     node_resolver_dirnames: string list;
-    saved_state_load_script: string option;
+    saved_state_fetcher: Options.saved_state_fetcher;
     shm_dep_table_pow: int;
     shm_dirs: string list;
     shm_global_size: int;
@@ -180,7 +180,7 @@ module Opts = struct
     name = None;
     no_flowlib = false;
     node_resolver_dirnames = ["node_modules"];
-    saved_state_load_script = None;
+    saved_state_fetcher = Options.Dummy_fetcher;
     shm_dep_table_pow = 17;
     shm_dirs = default_shm_dirs;
     shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
@@ -849,12 +849,15 @@ let parse_options config lines =
       });
     }
 
-    |> define_opt "saved_state.load_script" {
+    |> define_opt "saved_state.fetcher" {
       initializer_ = USE_DEFAULT;
       flags = [];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with saved_state_load_script = Some v;
+      optparser = optparse_enum [
+        ("none", Options.Dummy_fetcher);
+        ("local", Options.Local_fetcher);
+      ];
+      setter = (fun opts saved_state_fetcher -> Ok {
+        opts with saved_state_fetcher;
       });
     }
 
@@ -1144,7 +1147,7 @@ let munge_underscores c = c.options.Opts.munge_underscores
 let name c = c.options.Opts.name
 let no_flowlib c = c.options.Opts.no_flowlib
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
-let saved_state_load_script c = c.options.Opts.saved_state_load_script
+let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
 let shm_dirs c = c.options.Opts.shm_dirs
 let shm_global_size c = c.options.Opts.shm_global_size

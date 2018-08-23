@@ -284,13 +284,9 @@ runtest() {
         OUT_DIR="$OUT_PARENT_DIR/$name"
         mkdir "$OUT_DIR"
 
-        # Make these now so that we can clean them up if necessary
-        SAVED_STATE_DIR=$(mktemp -d /tmp/flow_saved_state_XXXXXX)
-
         # deletes the temp directory
         function cleanup {
           rm -rf "$OUT_PARENT_DIR"
-          rm -rf "$SAVED_STATE_DIR"
         }
         function force_cleanup {
           "$FLOW" stop "$OUT_DIR" 1> /dev/null 2>&1
@@ -429,8 +425,6 @@ runtest() {
         create_saved_state () {
           local root="$1"
           local flowconfig_name="$2"
-          local SAVED_STATE_LOAD_SCRIPT
-          SAVED_STATE_LOAD_SCRIPT=$(mktemp "$SAVED_STATE_DIR/flow_XXXXXX.load_script")
           (
             set -e
             # start lazy server and wait
@@ -441,18 +435,16 @@ runtest() {
               --log-file "$abs_log_file" \
               --monitor-log-file "$abs_monitor_log_file"
 
-            local SAVED_STATE_FILENAME
-            SAVED_STATE_FILENAME=$(mktemp "$SAVED_STATE_DIR/flow_XXXXXX.saved_state")
+            local SAVED_STATE_FILENAME="$root/.flow.saved_state"
+            local CHANGES_FILENAME="$root/.flow.saved_state_file_changes"
             assert_ok "$FLOW" save-state \
               --root "$root" \
               --out "$SAVED_STATE_FILENAME" \
               --flowconfig-name "$flowconfig_name"
             assert_ok "$FLOW" stop --flowconfig-name "$flowconfig_name" "$root"
-            echo "echo '{\"path\":\"$SAVED_STATE_FILENAME\"}'" > "$SAVED_STATE_LOAD_SCRIPT"
-            chmod +x "$SAVED_STATE_LOAD_SCRIPT"
+            touch "$CHANGES_FILENAME"
           )  > /dev/null 2>&1
           local RET=$?
-          echo "$SAVED_STATE_LOAD_SCRIPT"
           return $RET
         }
 
@@ -460,11 +452,11 @@ runtest() {
         if [ "$cmd" == "check" ]
         then
             if [[ "$saved_state" -eq 1 ]]; then
-              if load_script=$(create_saved_state . ".flowconfig"); then
+              if create_saved_state . ".flowconfig"; then
                 # default command is check with configurable --all and --no-flowlib
                 "$FLOW" check . \
                   $all $flowlib --strip-root --show-all-errors \
-                  --saved-state-load-script "$load_script" \
+                  --saved-state-fetcher "local" \
                   --saved-state-no-fallback \
                    1>> "$abs_out_file" 2>> "$stderr_dest"
                 st=$?
@@ -506,12 +498,11 @@ runtest() {
                   fi
                 done
 
-                local load_script
-                if load_script=$(create_saved_state "$root" "$flowconfig_name")
+                if create_saved_state "$root" "$flowconfig_name"
                 then
                   "$FLOW" start "$root" \
                     $all $flowlib --wait \
-                    --saved-state-load-script "$load_script" \
+                    --saved-state-fetcher "local" \
                     --saved-state-no-fallback \
                     --file-watcher "$file_watcher" \
                     --log-file "$abs_log_file" \

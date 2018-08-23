@@ -72,7 +72,7 @@ val name: config -> string option
 val no_flowlib: config -> bool
 val node_resolver_dirnames: config -> string list
 val required_version: config -> string option
-val saved_state_load_script: config -> string option
+val saved_state_fetcher: config -> Options.saved_state_fetcher
 val shm_dep_table_pow: config -> int
 val shm_dirs: config -> string list
 val shm_global_size: config -> int

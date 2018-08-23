@@ -626,7 +626,7 @@ module Options_flags = struct
     no_saved_state: bool;
     profile: bool;
     quiet: bool;
-    saved_state_load_script: string option;
+    saved_state_fetcher: Options.saved_state_fetcher option;
     saved_state_no_fallback: bool;
     strip_root: bool;
     temp_dir: string option;
@@ -662,7 +662,7 @@ let options_flags =
   let collect_options_flags main
     debug profile all weak traces no_flowlib munge_underscore_members max_workers
     include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
-    merge_timeout saved_state_load_script saved_state_no_fallback no_saved_state =
+    merge_timeout saved_state_fetcher saved_state_no_fallback no_saved_state =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -685,7 +685,7 @@ let options_flags =
       temp_dir;
       quiet;
       merge_timeout;
-      saved_state_load_script;
+      saved_state_fetcher;
       saved_state_no_fallback;
       no_saved_state;
    }
@@ -719,8 +719,12 @@ let options_flags =
       ~doc:("The maximum time in seconds to attempt to typecheck a file or cycle of files. " ^
         "0 means no timeout (default: 100)")
       ~env:"FLOW_MERGE_TIMEOUT"
-    |> flag "--saved-state-load-script" (optional string)
-      ~doc:"Use this script to fetch the saved state"
+    |> flag "--saved-state-fetcher"
+      (enum [
+        "none", Options.Dummy_fetcher;
+        "local", Options.Local_fetcher;
+      ])
+      ~doc:("Which saved state fetcher Flow should use (none, local) (default: none)")
     |> flag "--saved-state-no-fallback" no_arg
       ~doc:"If saved state fails to load, exit (normally fallback is to initialize from scratch)"
     |> flag "--no-saved-state" no_arg
@@ -818,15 +822,16 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
   in
 
   (* The CLI flag overrides the .flowconfig *)
-  let opt_saved_state_load_script = Option.first_some
-    options_flags.saved_state_load_script
-    (FlowConfig.saved_state_load_script flowconfig)
+  let opt_saved_state_fetcher = Option.value
+    options_flags.saved_state_fetcher
+    ~default:(FlowConfig.saved_state_fetcher flowconfig)
   in
 
   (* We need cancelable rechecks for saved state. This can be deleted when
    * experimental.cancelable_rechecks is deleted *)
   let opt_enable_cancelable_rechecks =
-    FlowConfig.enable_cancelable_rechecks flowconfig || opt_saved_state_load_script <> None
+    FlowConfig.enable_cancelable_rechecks flowconfig
+      || opt_saved_state_fetcher <> Options.Dummy_fetcher
   in
 
   let strict_mode = FlowConfig.strict_mode flowconfig in
@@ -883,8 +888,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_lint_severities = lint_severities;
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
-    (* TODO - add a flag for this to override the .flowconfig *)
-    opt_saved_state_load_script;
+    opt_saved_state_fetcher;
     opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
     opt_no_saved_state = options_flags.no_saved_state;
   }
