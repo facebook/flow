@@ -35,9 +35,14 @@ module ErrorSet = Set.Make (Error)
 module Dep = struct
   type t =
     | Local of local
+    | Dynamic of dynamic
     | Remote of remote
 
   and local = Sort.t * string
+
+  and dynamic =
+    | DynamicImport of Loc.t
+    | DynamicRequire of Loc.t
 
   and remote =
     | ImportNamed of {
@@ -60,7 +65,7 @@ module Dep = struct
 
   let remote = function
     | Remote _ -> true
-    | Local _ -> false
+    | Local _ | Dynamic _ -> false
 
   let to_string =
     let string_of_import_sort = function
@@ -68,6 +73,9 @@ module Dep = struct
       | Sort.Type -> "import type" in
     let string_of_local (sort, x) =
       spf "%s: %s" (Sort.to_string sort) x in
+    let string_of_dynamic = function
+      | DynamicImport loc -> spf "import @ %s" (Loc.to_string loc)
+      | DynamicRequire loc -> spf "require @ %s" (Loc.to_string loc) in
     let string_of_remote = function
       | ImportNamed { sort; name = (_, n); source = (_, m) } ->
         spf "%s { %s } from '%s'" (string_of_import_sort sort) n m
@@ -77,6 +85,7 @@ module Dep = struct
       | Global local -> spf "global %s" (string_of_local local)
     in function
       | Local local -> string_of_local local
+      | Dynamic dynamic -> string_of_dynamic dynamic
       | Remote remote -> string_of_remote remote
 end
 
@@ -101,6 +110,9 @@ let unit dep = Known (DepSet.singleton dep)
 
 let type_ atom = unit Dep.(Local (Sort.Type, atom))
 let value atom = unit Dep.(Local (Sort.Value, atom))
+
+let dynamic_import loc = unit Dep.(Dynamic (DynamicImport loc))
+let dynamic_require loc = unit Dep.(Dynamic (DynamicRequire loc))
 
 let import_named sort source name = unit Dep.(Remote (ImportNamed { sort; source; name }))
 let import_star sort source = unit Dep.(Remote (ImportStar { sort; source }))

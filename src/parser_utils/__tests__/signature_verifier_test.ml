@@ -234,4 +234,8 @@ let tests = "signature_verifier" >::: [
     ["Expected annotation @ (3, 6) to (3, 7)";
      "Expected annotation @ (5, 6) to (5, 7)";
      "require('./hoisted_locals_helper')"];
+
+  "dynamic_requires" >:: mk_signature_verifier_test
+    ["module.exports = require('./dynamic_requires_helper');"]
+    ["require('./dynamic_requires_helper')"];
 ]

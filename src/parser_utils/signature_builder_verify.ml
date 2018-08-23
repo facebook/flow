@@ -291,13 +291,19 @@ module Eval = struct
           | PropertyPrivateName _ -> deps
           | PropertyExpression _ -> Deps.top (Error.UnexpectedObjectKey loc)
         end
+      | loc, Import _ -> Deps.dynamic_import loc
+      | loc, Call stuff
+          when begin
+            let { Ast.Expression.Call.callee; _ } = stuff in
+            match callee with
+              | _, Identifier (_, "require") -> true
+              | _ -> false
+          end -> Deps.dynamic_require loc
 
       | _loc, Array _x -> Deps.todo "Array"
       | _loc, Unary _x -> Deps.todo "Unary"
       | _loc, Binary _x -> Deps.todo "Binary"
       | _loc, New _x -> Deps.todo "New"
-      | _loc, Import _x -> Deps.todo "Import"
-      (* TODO: require *)
 
       | loc, _ ->
         Deps.top (Error.UnexpectedExpression loc)
@@ -589,7 +595,19 @@ end
       eval_export_type_bindings type_exports_named type_exports_named_info
     )
 
-  let validate_and_eval env dep =
+  let dynamic_validator (dynamic_imports, dynamic_requires) = function
+    | Dep.DynamicImport loc ->
+      begin match LocMap.get loc dynamic_imports with
+        | None -> Deps.top (Deps.Error.UnexpectedExpression loc)
+        | Some source -> Deps.import_star Kind.Sort.Value source
+      end
+    | Dep.DynamicRequire loc ->
+      begin match LocMap.get loc dynamic_requires with
+        | None -> Deps.top (Deps.Error.UnexpectedExpression loc)
+        | Some source -> Deps.require source
+      end
+
+  let validate_and_eval env dynamic_sources dep =
     match dep with
       | Dep.Local local ->
         let sort, x = local in
@@ -606,19 +624,33 @@ end
           | None -> Deps.global local
         end
       | Dep.Remote _ -> Deps.unit dep
+      | Dep.Dynamic dynamic -> dynamic_validator dynamic_sources dynamic
 
-  let rec check cache env deps =
-    Deps.recurse (check_dep cache env) deps
+  let rec check cache env dynamic_sources deps =
+    Deps.recurse (check_dep cache env dynamic_sources) deps
 
-  and check_dep cache env dep =
+  and check_dep cache env dynamic_sources dep =
     if Deps.DepSet.mem dep !cache then Deps.ErrorSet.empty
     else begin
       cache := Deps.DepSet.add dep !cache;
-      check cache env (validate_and_eval env dep)
+      check cache env dynamic_sources (validate_and_eval env dynamic_sources dep)
     end
 
-  let check env deps =
+  let check env file_sig deps =
     let cache = ref Deps.DepSet.empty in
-    let errors = check cache env deps in
+    let dynamic_sources =
+      let open File_sig in
+      let requires = file_sig.module_sig.requires in
+      let dynamic_imports = ref LocMap.empty in
+      let dynamic_requires = ref LocMap.empty in
+      List.iter (function
+        | ImportDynamic { source; import_loc } ->
+          dynamic_imports := LocMap.add import_loc source !dynamic_imports
+        | Require { source; require_loc; bindings = None } ->
+          dynamic_requires := LocMap.add require_loc source !dynamic_requires
+        | _ -> ()
+      ) requires;
+      !dynamic_imports, !dynamic_requires in
+    let errors = check cache env dynamic_sources deps in
     let remote_dependencies = Deps.DepSet.filter Dep.remote !cache in
     errors, remote_dependencies

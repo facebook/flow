@@ -221,7 +221,7 @@ module Signature = struct
     env, file_sig
 
   let verify (env, file_sig) =
-    Verify.check env @@ Verify.exports file_sig
+    Verify.check env file_sig @@ Verify.exports file_sig
 end
 
 class type_hoister = object(this)
