@@ -5891,6 +5891,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | OpaqueT _, PredicateT (p, t) -> predicate cx trace t l p
     | OpaqueT _, GuardT (pred, result, sink) -> guard cx trace l pred result sink
 
+    (* Preserve OpaqueT as consequent, but branch based on the bound *)
+    | OpaqueT (_, {super_t = Some t; _}), CondT (r, then_t_opt, else_t, tout) ->
+      let then_t_opt = match then_t_opt with
+      | Some _ -> then_t_opt
+      | None -> Some l
+      in
+      rec_flow cx trace (t, CondT (r, then_t_opt, else_t, tout))
+
     (* Opaque types may be treated as their supertype when they are a lower bound for a use *)
     | OpaqueT (_, {super_t = Some t; _}), _ ->
         rec_flow cx trace (t, u)
@@ -6144,9 +6152,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************************)
 
     (* Use our alternate if our lower bound is empty. *)
-    | DefT (_, EmptyT), CondT (_, alt, tout) -> rec_flow_t cx trace (alt, tout)
+    | DefT (_, EmptyT), CondT (_, _, else_t, tout) ->
+      rec_flow_t cx trace (else_t, tout)
+
     (* Otherwise continue by Flowing out lower bound to tout. *)
-    | _, CondT (_, _, tout) -> rec_flow_t cx trace (l, tout)
+    | _, CondT (_, then_t_opt, _, tout) ->
+      let then_t = match then_t_opt with
+      | Some t -> t
+      | None -> l
+      in
+      rec_flow_t cx trace (then_t, tout)
 
     (*************************)
     (* repositioning, part 2 *)
@@ -11659,7 +11674,7 @@ and object_kit =
               (* Use CondT to replace void with t1. *)
               let t = Tvar.mk_where cx reason (fun tvar ->
                 rec_flow cx trace (filter_optional cx ~trace reason t1,
-                  CondT (reason, t2, tvar))
+                  CondT (reason, None, t2, tvar))
               ) in
               Some (Field (None, t, prop_polarity))
           ) config_props defaults_props in

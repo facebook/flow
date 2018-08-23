@@ -874,11 +874,12 @@ class ['a] t = object(self)
         let resolve_spread' = self#resolve_spread cx map_cx resolve_spread in
         if resolve_spread' == resolve_spread then t
         else ResolveSpreadT (op, r, resolve_spread')
-    | CondT (r, alt, tout) ->
-        let alt' = self#type_ cx map_cx alt in
+    | CondT (r, then_t, else_t, tout) ->
+        let then_t' = OptionUtils.ident_map (self#type_ cx map_cx) then_t in
+        let else_t' = self#type_ cx map_cx else_t in
         let tout' = self#type_ cx map_cx tout in
-        if alt' == alt && tout' == tout then t
-        else CondT (r, alt', tout')
+        if then_t' == then_t && else_t' == else_t && tout' == tout then t
+        else CondT (r, then_t', else_t', tout')
     | ExtendsUseT (use_op, r, tlist, t1, t2) ->
       let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
       let t1' = self#type_ cx map_cx t1 in

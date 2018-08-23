@@ -664,9 +664,11 @@ module rec TypeTerm : sig
      * whatever type it resolves to *)
     | ResolveSpreadT of use_op * reason * resolve_spread_type
 
-    (* `CondT (reason, alternate, tout)` will flow `alternate` to `tout` when
-     * the lower bound is empty. *)
-    | CondT of reason * t * t_out
+    (* CondT (_, then_t_opt, else_t, tout) is a branch, which flows `else_t`
+     * into `tout` when the resolved lower bound is `empty`. If the resolved
+     * lower bound is non-empty, it will flow either `Some then_t` or the lower
+     * bound itself into `tout`. *)
+    | CondT of reason * t option * t * t_out
 
     (* util for deciding subclassing relations *)
     | ExtendsUseT of use_op * reason * t list * t * t
@@ -2208,7 +2210,7 @@ end = struct
     | VarianceCheckT(reason,_,_) -> reason
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
     | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
-    | CondT (reason, _, _) -> reason
+    | CondT (reason, _, _, _) -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2379,7 +2381,7 @@ end = struct
         TypeAppVarianceCheckT (use_op, f reason_op, reason_tapp, targs)
     | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
         ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
-    | CondT (reason, alt, tout) -> CondT (f reason, alt, tout)
+    | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
 
   and mod_reason_of_opt_use_t f = function
   | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
@@ -2493,7 +2495,7 @@ end = struct
   | CallOpenPredT (_, _, _, _, _)
   | SubstOnPredT (_, _, _)
   | RefineT (_, _, _)
-  | CondT (_, _, _)
+  | CondT (_, _, _, _)
     -> nope u
 
   let use_op_of_use_t =

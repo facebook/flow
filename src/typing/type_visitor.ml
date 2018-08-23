@@ -616,8 +616,9 @@ class ['a] t = object(self)
     in
     acc
 
-  | CondT (_, t, tout) ->
-    let acc = self#type_ cx pole_TODO acc t in
+  | CondT (_, then_t_opt, else_t, tout) ->
+    let acc = self#opt (self#type_ cx pole_TODO) acc then_t_opt in
+    let acc = self#type_ cx pole_TODO acc else_t in
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 

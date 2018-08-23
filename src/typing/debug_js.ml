@@ -859,7 +859,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ) rrt_unresolved);
       "resolve_to", json_of_resolve_to json_cx rrt_resolve_to;
     ]
-  | CondT (_, alternate, t_out) -> [
+  | CondT (_, consequent, alternate, t_out) -> [
+      "consequent", (match consequent with
+      | Some t -> _json_of_t json_cx t
+      | None -> JSON_Null);
       "alternate", _json_of_t json_cx alternate;
       "t_out", _json_of_t json_cx t_out;
     ]
@@ -2193,7 +2196,11 @@ and dump_use_t_ (depth, tvars) cx t =
       (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
   | ConcretizeTypeAppsT _ -> p t
   | TypeAppVarianceCheckT _ -> p t
-  | CondT (_, alt, tout) -> p ~extra:(spf "%s, %s" (kid alt) (kid tout)) t
+  | CondT (_, then_t, else_t, tout) -> p t
+      ~extra:(spf "%s, %s, %s"
+        (match then_t with None -> "None" | Some t -> spf "Some (%s)" (kid t))
+        (kid else_t)
+        (kid tout))
   | ExtendsUseT (_, _, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
 

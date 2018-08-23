@@ -350,7 +350,7 @@ let run cx trace ~use_op reason_op l u
       in
       Tvar.mk_where cx reason (fun tout ->
         rec_flow cx trace (filter_maybe cx ~trace reason config,
-          CondT (reason, empty_object, tout))
+          CondT (reason, None, empty_object, tout))
       )
     in
     (* Create the optional children input type from the children arguments. *)
