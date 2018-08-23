@@ -367,6 +367,8 @@ class requires_exports_calculator ~ast = object(this)
   inherit [(exports_info t', error) result] visitor ~init:(Ok (mk_file_sig init_exports_info)) as super
 
   val scope_info = Scope_builder.program ast
+  method toplevel_names =
+    Scope_api.toplevel_names scope_info
 
   val mutable curr_declare_module: exports_info module_sig' option = None;
 
@@ -876,9 +878,17 @@ class requires_exports_calculator ~ast = object(this)
     ListUtils.ident_map map_statement stmts
 end
 
-let program_with_exports_info ~ast =
+type toplevel_names_and_exports_info = {
+  toplevel_names: SSet.t;
+  exports_info: (exports_info t', error) result
+}
+
+let program_with_toplevel_names_and_exports_info ~ast =
   let walk = new requires_exports_calculator ~ast in
-  walk#eval walk#program ast
+  {
+    toplevel_names = walk#toplevel_names;
+    exports_info = walk#eval walk#program ast
+  }
 
 let map_unit_file_sig =
   let map_unit_module_sig module_sig =
@@ -896,9 +906,9 @@ let map_unit_file_sig =
     }
 
 let program ~ast =
-  match program_with_exports_info ~ast with
-    | Ok file_sig -> Ok (map_unit_file_sig file_sig)
-    | Error e -> Error e
+  match program_with_toplevel_names_and_exports_info ~ast with
+    | { exports_info = Ok file_sig; _ } -> Ok (map_unit_file_sig file_sig)
+    | { exports_info = Error e; _ } -> Error e
 
 class mapper = object(this)
   method file_sig (file_sig: t) =

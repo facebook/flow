@@ -197,7 +197,13 @@ and es_export_def =
 type error =
   | IndeterminateModuleType of Loc.t
 
-val program_with_exports_info: ast:(Loc.t, Loc.t) Ast.program -> (exports_info t', error) result
+type toplevel_names_and_exports_info = {
+  toplevel_names: SSet.t;
+  exports_info: (exports_info t', error) result
+}
+
+val program_with_toplevel_names_and_exports_info: ast:(Loc.t, Loc.t) Ast.program ->
+  toplevel_names_and_exports_info
 
 (* Use for debugging; not for exposing info the the end user *)
 val exports_info_to_string: exports_info -> string
