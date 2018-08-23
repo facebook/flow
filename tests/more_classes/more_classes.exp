@@ -53,12 +53,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ Foo.js:10:5
 
-Cannot assign `x` to `this.x` because property `x` is missing in uninitialized this (expected super constructor
-call) [1].
+Must call `super` before accessing this [1] in a derived constructor.
 
    Foo.js:10:5
    10|     this.x = x;
-           ^^^^^^
+           ^^^^
 
 References:
    Foo.js:7:7

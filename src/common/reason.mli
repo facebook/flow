@@ -53,7 +53,6 @@ type reason_desc =
   | RExistential
   | RTooFewArgs
   | RTooFewArgsExpectedRest
-  | RUninitializedThis
   | RConstructorReturn
   | RNewObject
   | RUnion

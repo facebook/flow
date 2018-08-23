@@ -1672,11 +1672,20 @@ let rec error_of_msg ~trace_reasons ~source_file =
       [text "Missing type annotation for "; desc reason; text "."]
 
   | EBindingError (binding_error, loc, x, entry) ->
-    let x = mk_reason (RIdentifier x) (Scope.Entry.entry_loc entry) in
+    let desc =
+      if x = internal_name "this" then RThis
+      else if x = internal_name "super" then RSuper
+      else RIdentifier x
+    in
+    let x = mk_reason desc (Scope.Entry.entry_loc entry) in
     let msg = match binding_error with
     | ENameAlreadyBound ->
       [text "Cannot declare "; ref x; text " because the name is already bound."]
-    | EReferencedBeforeDeclaration -> [
+    | EReferencedBeforeDeclaration ->
+      if desc = RThis || desc = RSuper then [
+        text "Must call "; code "super"; text " before accessing "; ref x;
+        text " in a derived constructor."
+      ] else [
         text "Cannot use variable "; ref x; text " because the declaration ";
         text "either comes later or was skipped.";
       ]

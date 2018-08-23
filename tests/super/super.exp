@@ -1,10 +1,10 @@
 Error ---------------------------------------------------------------------------------------------- constructor.js:15:5
 
-Cannot get `this.y` because property `y` is missing in uninitialized this (expected super constructor call) [1].
+Must call `super` before accessing this [1] in a derived constructor.
 
    constructor.js:15:5
    15|     this.y; // error (no super call)
-           ^^^^^^
+           ^^^^
 
 References:
    constructor.js:12:7
@@ -14,11 +14,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:16:5
 
-Cannot get `this.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
+Must call `super` before accessing this [1] in a derived constructor.
 
    constructor.js:16:5
    16|     this.x; // error (no super call)
-           ^^^^^^
+           ^^^^
 
 References:
    constructor.js:12:7
@@ -26,27 +26,13 @@ References:
              ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- constructor.js:30:3
+Error --------------------------------------------------------------------------------------------- constructor.js:36:10
 
-Cannot get `f.y` because property `y` is missing in uninitialized this (expected super constructor call) [1].
+Must call `super` before accessing this [1] in a derived constructor.
 
-   constructor.js:30:3
-   30|   f.y; // error
-         ^^^
-
-References:
-   constructor.js:33:7
-   33| class F extends A {
-             ^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------- constructor.js:31:3
-
-Cannot get `f.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
-
-   constructor.js:31:3
-   31|   f.x; // error
-         ^^^
+   constructor.js:36:10
+   36|     leak(this); // error (no super call yet)
+                ^^^^
 
 References:
    constructor.js:33:7
@@ -56,26 +42,25 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- constructor.js:45:5
 
-Cannot get `super.x` because property `x` is missing in uninitialized this (expected super constructor call) [1].
+Must call `super` before accessing super [1] in a derived constructor.
 
    constructor.js:45:5
    45|     super.x; // error (no super call)
-           ^^^^^^^
+           ^^^^^
 
 References:
-   constructor.js:43:7
+   constructor.js:43:17
    43| class G extends A {
-             ^ [1]
+                       ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- constructor.js:63:5
+Error --------------------------------------------------------------------------------------------- constructor.js:69:11
 
-Cannot call `leaked_this.foo` because property `foo` is missing in uninitialized this (expected super constructor
-call) [1].
+Must call `super` before accessing this [1] in a derived constructor.
 
-   constructor.js:63:5
-   63|     leaked_this.foo()
-           ^^^^^^^^^^^^^^^^^
+   constructor.js:69:11
+   69|     super(this); // error (no super call yet)
+                 ^^^^
 
 References:
    constructor.js:67:7
@@ -85,11 +70,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------- constructor.js:83:17
 
-Cannot call `this.foo` because property `foo` is missing in uninitialized this (expected super constructor call) [1].
+Must call `super` before accessing this [1] in a derived constructor.
 
    constructor.js:83:17
    83|     super(() => this.foo()); // error (no super call yet)
-                       ^^^^^^^^^^
+                       ^^^^
 
 References:
    constructor.js:81:7
@@ -174,4 +159,4 @@ References:
 
 
 
-Found 12 errors
+Found 11 errors

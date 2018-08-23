@@ -25,6 +25,13 @@ val in_predicate_scope: unit -> bool
 
 val all_entries: unit -> Entry.t SMap.t
 
+val find_entry:
+  Context.t ->
+  string ->
+  ?desc:Reason.reason_desc ->
+  Loc.t ->
+  Scope.t * Entry.t
+
 val peek_frame: unit -> int
 
 val push_var_scope: Context.t -> Scope.t -> unit

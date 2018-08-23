@@ -6318,12 +6318,6 @@ and mk_func_sig =
    and super` to the environment, and return the signature. *)
 and function_decl id cx loc func this super =
   let func_sig, reconstruct_func = mk_func_sig cx SMap.empty loc func in
-
-  let this, super =
-    let new_entry t = Scope.Entry.new_var ~loc:(loc_of_t t) t in
-    new_entry this, new_entry super
-  in
-
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
   let body = func_sig |> Func_sig.with_typeparams cx (fun () ->
@@ -6342,22 +6336,27 @@ and function_decl id cx loc func this super =
 and define_internal cx reason x =
   let ix = internal_name x in
   let loc = loc_of_reason reason in
-  let opt = Env.get_var_declared_type cx ix loc in
-  ignore Env.(set_var cx ~use_op:unknown_use ix (Flow.filter_optional cx reason opt) loc)
+  Env.declare_let cx ix loc;
+  let t = Env.get_var_declared_type cx ix loc in
+  Env.init_let cx ~use_op:unknown_use ix ~has_anno:false t loc
 
 (* Process a function definition, returning a (polymorphic) function type. *)
 and mk_function id cx loc func =
-  let this = Tvar.mk cx (mk_reason RThis loc) in
+  let this_t = Tvar.mk cx (mk_reason RThis loc) in
+  let this = Scope.Entry.new_let this_t ~loc ~state:Scope.State.Initialized in
   (* Normally, functions do not have access to super. *)
-  let super = ObjProtoT (mk_reason RNoSuper loc) in
+  let super =
+    let t = ObjProtoT (mk_reason RNoSuper loc) in
+    Scope.Entry.new_let t ~loc ~state:Scope.State.Initialized
+  in
   let func_sig, reconstruct_ast = function_decl id cx loc func this super in
-  let fun_type = Func_sig.functiontype cx this func_sig in
+  let fun_type = Func_sig.functiontype cx this_t func_sig in
   fun_type, reconstruct_ast fun_type
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
 and mk_arrow cx loc func =
-  let this = this_ cx loc in
-  let super = super_ cx loc in
+  let _, this = Env.find_entry cx (internal_name "this") loc in
+  let _, super = Env.find_entry cx (internal_name "super") loc in
   let {Ast.Function.id; _} = func in
   let func_sig, reconstruct_ast = function_decl id cx loc func this super in
   (* Do not expose the type of `this` in the function's type. The call to

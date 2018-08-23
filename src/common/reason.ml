@@ -102,7 +102,6 @@ type reason_desc =
   | RExistential
   | RTooFewArgs
   | RTooFewArgsExpectedRest
-  | RUninitializedThis
   | RConstructorReturn
   | RNewObject
   | RUnion
@@ -455,7 +454,6 @@ let rec string_of_desc = function
   | RTooFewArgs -> "undefined (too few arguments)"
   | RTooFewArgsExpectedRest ->
     "undefined (too few arguments, expected default/rest parameters)"
-  | RUninitializedThis -> "uninitialized this (expected super constructor call)"
   | RConstructorReturn -> "constructor return"
   | RNewObject -> "new object"
   | RUnion -> "union"
@@ -1153,7 +1151,6 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RExistential
 | RTooFewArgs
 | RTooFewArgsExpectedRest
-| RUninitializedThis
 | RConstructorReturn
 | RNewObject
 | RUnion

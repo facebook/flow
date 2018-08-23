@@ -595,7 +595,9 @@ let classtype cx ?(check_polarity=true) x =
 (* Processes the bodies of instance and static class members. *)
 let toplevels cx ~decls ~stmts ~expr x =
   Env.in_lex_scope cx (fun () ->
-    let new_entry t = Scope.Entry.new_var ~loc:(Type.loc_of_t t) t in
+    let new_entry ?(state=Scope.State.Initialized) t =
+      Scope.Entry.new_let ~loc:(Type.loc_of_t t) ~state t
+    in
 
     let method_ this super ~set_asts f =
       let save_return = Abnormal.clear_saved Abnormal.Return in
@@ -648,24 +650,18 @@ let toplevels cx ~decls ~stmts ~expr x =
     x |> with_sig ~static:false (fun s ->
       (* process constructor *)
       begin
-        (* When in a derived constructor, initialize this and super to undefined.
-           For internal names, we can afford to initialize with undefined and
-           fatten the declared type to allow undefined. This works because we
-           always look up the flow-sensitive type of internals, and don't havoc
-           them. However, the same trick wouldn't work for normal uninitialized
-           locals, e.g., so it cannot be used in general to track definite
-           assignments. *)
+        (* When in a derived constructor, leave this and super undeclared, the
+           same way let-scoped variables are stored in the environment before
+           their declaration. Once we see a super() call, the bindings are
+           treated as declared and initialized. This protects against using
+           `this` before it is allocated by the superclass. *)
         let derived_ctor = match x.super with
           | Class {extends = Explicit _; _} -> true
           | _ -> false
         in
         let new_entry t =
           if derived_ctor then
-            let open Type in
-            let specific =
-              DefT (replace_reason_const RUninitializedThis (reason_of_t this), VoidT)
-            in
-            Scope.Entry.new_var ~loc:(loc_of_t t) ~specific (Type.optional t)
+            new_entry t ~state:Scope.State.Undeclared
           else
             new_entry t
         in
