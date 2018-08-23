@@ -10903,33 +10903,36 @@ and rec_flow cx trace (t1, t2) =
 and rec_flow_t cx trace ?(use_op=unknown_use) (t1, t2) =
   rec_flow cx trace (t1, UseT (use_op, t2))
 
-and rec_flow_p cx trace ?(use_op=unknown_use) ?(report_polarity=true)
-  lreason ureason propref = function
+and flow_opt_p cx ?trace ~use_op ~report_polarity lreason ureason propref =
+  function
   (* unification cases *)
   | Field (_, lt, Neutral),
     Field (_, ut, Neutral) ->
-    rec_unify cx trace ~use_op lt ut
+    unify_opt cx ?trace ~use_op lt ut
   (* directional cases *)
   | lp, up ->
     let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
     (match Property.read_t lp, Property.read_t up with
     | Some lt, Some ut ->
-      rec_flow cx trace (lt, UseT (use_op, ut))
+      flow_opt cx ?trace (lt, UseT (use_op, ut))
     | None, Some _ when report_polarity ->
-      add_output cx ~trace (FlowError.EPropPolarityMismatch (
+      add_output cx ?trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up),
         use_op))
     | _ -> ());
     (match Property.write_t lp, Property.write_t up with
     | Some lt, Some ut ->
-      rec_flow cx trace (ut, UseT (use_op, lt))
+      flow_opt cx ?trace (ut, UseT (use_op, lt))
     | None, Some _ when report_polarity ->
-      add_output cx ~trace (FlowError.EPropPolarityMismatch (
+      add_output cx ?trace (FlowError.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up),
         use_op))
     | _ -> ())
+
+and rec_flow_p cx trace ?(use_op=unknown_use) ?(report_polarity=true) =
+  flow_opt_p cx ~trace ~use_op ~report_polarity
 
 (* Ideally this function would not be required: either we call `flow` from
    outside without a trace (see below), or we call one of the functions above
@@ -10970,6 +10973,9 @@ and flow cx (lower, upper) =
 and flow_t cx (t1, t2) =
   flow cx (t1, UseT (unknown_use, t2))
 
+and flow_p cx ?(use_op=unknown_use) lreason ureason propref props =
+  flow_opt_p cx ~use_op ~report_polarity:true lreason ureason propref props
+
 and tvar_with_constraint cx ?trace ?(derivable=false) u =
   let reason = reason_of_use_t u in
   let mk_tvar_where =
@@ -10989,14 +10995,14 @@ and rec_unify cx trace ~use_op ?(unify_any=false) t1 t2 =
   __unify cx ~use_op ~unify_any t1 t2
     (Trace.rec_trace ~max t1 (UseT (use_op, t2)) trace)
 
-and unify_opt cx ?trace ?(unify_any=false) t1 t2 =
+and unify_opt cx ?trace ?(use_op=unknown_use) ?(unify_any=false) t1 t2 =
   let trace = match trace with
   | None -> Trace.unit_trace t1 (UseT (unknown_use, t2))
   | Some trace ->
     let max = Context.max_trace_depth cx in
     Trace.rec_trace ~max t1 (UseT (unknown_use, t2)) trace
   in
-  __unify cx ~use_op:unknown_use ~unify_any t1 t2 trace
+  __unify cx ~use_op ~unify_any t1 t2 trace
 
 (* Externally visible function for unification. *)
 (* Calls internal entry point and traps runaway recursion. *)

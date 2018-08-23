@@ -16,6 +16,14 @@ val tvar_with_constraint: Context.t -> ?trace:Trace.t -> ?derivable:bool -> Type
 
 val unify: Context.t -> Type.t -> Type.t -> unit
 
+val flow_p:
+  Context.t ->
+  ?use_op:Type.use_op ->
+  reason -> (* lreason *)
+  reason -> (* ureason *)
+  Type.propref ->
+  (Type.property * Type.property) -> unit
+
 val reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> ?annot_loc:Loc.t -> Type.t -> Type.t
 
 (* constraint utils *)
