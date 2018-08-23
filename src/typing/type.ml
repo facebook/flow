@@ -288,6 +288,7 @@ module rec TypeTerm : sig
     | Cast of { lower: reason; upper: reason }
     | ClassExtendsCheck of { def: reason; name: reason; extends: reason }
     | ClassImplementsCheck of { def: reason; name: reason; implements: reason }
+    | ClassOwnProtoCheck of { prop: string; own_loc: Loc.t option; proto_loc: Loc.t option }
     | Coercion of { from: reason; target: reason }
     | FunCall of {
         op: reason;
@@ -1204,6 +1205,7 @@ and Property : sig
 
   val read_loc: t -> Loc.t option
   val write_loc: t -> Loc.t option
+  val first_loc: t -> Loc.t option
 
   val iter_t: (TypeTerm.t -> unit) -> t -> unit
   val fold_t: ('a -> TypeTerm.t -> 'a) -> 'a -> t -> 'a
@@ -1261,6 +1263,21 @@ end = struct
     | Method _
     | Get _ ->
         None
+
+  let first_loc = function
+    | Field (loc, _, _)
+    | Get (loc, _)
+    | Set (loc, _)
+    | Method (loc, _) ->
+        loc
+    | GetSet (loc1_opt, _, loc2_opt, _) ->
+        match loc1_opt, loc2_opt with
+        | None, None -> None
+        | Some loc, None | None, Some loc -> Some loc
+        | Some loc1, Some loc2 ->
+          let k = Loc.compare loc1 loc2 in
+          let loc = if k <= 0 then loc1 else loc2 in
+          Some loc
 
   let access = function
     | Read -> read_t
@@ -2881,6 +2898,7 @@ let loc_of_root_use_op = function
 | Speculation _
 | Internal _
 | UnknownUse
+| ClassOwnProtoCheck _
   -> Loc.none
 
 (* Printing some types in parseable form relies on particular formats in
@@ -2992,6 +3010,7 @@ let string_of_root_use_op = function
 | Cast _ -> "Cast"
 | ClassExtendsCheck _ -> "ClassExtendsCheck"
 | ClassImplementsCheck _ -> "ClassImplementsCheck"
+| ClassOwnProtoCheck _ -> "ClassOwnProtoCheck"
 | Coercion _ -> "Coercion"
 | FunCall _ -> "FunCall"
 | FunCallMethod _ -> "FunCallMethod"

@@ -714,6 +714,20 @@ let rec error_of_msg ~trace_reasons ~source_file =
         `Root (def, None,
           [text "Cannot implement "; ref implements; text " with "; desc def])
 
+      | Op ClassOwnProtoCheck {prop; own_loc; proto_loc} ->
+        (match own_loc, proto_loc with
+        | None, None -> `UnknownRoot true
+        | Some loc, None ->
+          let def = mk_reason (RProperty (Some prop)) loc in
+          `Root (def, None, [text "Cannot shadow proto property"])
+        | None, Some loc ->
+          let def = mk_reason (RProperty (Some prop)) loc in
+          `Root (def, None, [text "Cannot define shadowed proto property"])
+        | Some own_loc, Some proto_loc ->
+          let def = mk_reason (RProperty (Some prop)) own_loc in
+          let proto = mk_reason (RIdentifier prop) proto_loc in
+          `Root (def, None, [text "Cannot shadow proto property "; ref proto]))
+
       | Op Coercion {from; target} ->
         `Root (from, None,
           [text "Cannot coerce "; desc from; text " to "; desc target])

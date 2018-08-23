@@ -615,6 +615,20 @@ let check_super cx def_reason x =
   let open Type in
   let initialized_static_fields, static_objtype = statictype cx tparams_with_this x in
   let insttype = insttype cx ~initialized_static_fields x in
+
+  Context.iter_props cx insttype.own_props (fun x p1 ->
+    match Context.get_prop cx insttype.proto_props x with
+    | None -> ()
+    | Some p2 ->
+      let use_op = Op (ClassOwnProtoCheck {
+        prop = x;
+        own_loc = Property.first_loc p1;
+        proto_loc = Property.first_loc p2;
+      }) in
+      let propref = Named (reason, x) in
+      Flow.flow_p cx ~use_op reason reason propref (p1, p2)
+  );
+
   let super = supertype cx tparams_with_this x in
   let use_op = Op (ClassExtendsCheck {
     def = def_reason;
