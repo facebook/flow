@@ -122,6 +122,7 @@ type reason_desc =
   | RTypeApp of reason_desc
   | RThisTypeApp of reason_desc
   | RExtends of reason_desc
+  | RClass of reason_desc
   | RStatics of reason_desc
   | RSuperOf of reason_desc
   | RFrozen of reason_desc

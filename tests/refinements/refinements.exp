@@ -2623,7 +2623,7 @@ Cannot compare the result of `typeof` to string literal `foo` because it is not 
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:69:6
 
-Cannot cast `Foo` to empty because statics of `Foo` [1] is incompatible with empty [2].
+Cannot cast `Foo` to empty because class `Foo` [1] is incompatible with empty [2].
 
    typeof.js:69:6
    69|     (Foo: empty); // error, Foo is a class

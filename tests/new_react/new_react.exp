@@ -132,7 +132,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:25
 
-Cannot assign `<Foo />` to `foo` because statics of `Foo` [1] is incompatible with number [2] in property `type`.
+Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in property `type`.
 
    classes.js:39:25
    39| var foo: $jsx<number> = <Foo/>;
@@ -233,7 +233,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:79:32
 
-Cannot assign `<FooLegacy />` to `foo_legacy` because statics of React component [1] is incompatible with number [2] in
+Cannot assign `<FooLegacy />` to `foo_legacy` because class React component [1] is incompatible with number [2] in
 property `type`.
 
    classes.js:79:32

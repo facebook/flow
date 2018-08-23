@@ -3220,12 +3220,15 @@ let maybe t =
 let exact t =
   ExactT (reason_of_t t, t)
 
-let class_type t =
-  let reason = replace_reason (fun desc -> RStatics desc) (reason_of_t t) in
+let class_type ?(structural=false) t =
+  let reason =
+    if structural then reason_of_t t
+    else replace_reason (fun desc -> RClass desc) (reason_of_t t)
+  in
   DefT (reason, ClassT t)
 
 let this_class_type t =
-  let reason = replace_reason (fun desc -> RStatics desc) (reason_of_t t) in
+  let reason = replace_reason (fun desc -> RClass desc) (reason_of_t t) in
   ThisClassT (reason, t)
 
 let extends_type r l u =

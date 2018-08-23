@@ -596,7 +596,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:33:4
 
-Cannot cast `class { ... }` to empty because statics of `<<anonymous class>>` [1] is incompatible with empty [2].
+Cannot cast `class { ... }` to empty because class `<<anonymous class>>` [1] is incompatible with empty [2].
 
    expression.js:33:4
    33| (((class {}: empty): T).p: empty);

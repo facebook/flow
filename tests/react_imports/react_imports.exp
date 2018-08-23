@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    commonjs-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -54,7 +54,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    commonjs.js:4:2
     4| (React.Component: number); // Error
@@ -108,7 +108,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- es-default-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    es-default-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -162,7 +162,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ es-default.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    es-default.js:4:2
     4| (React.Component: number); // Error
@@ -272,7 +272,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    es-namespace-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -326,7 +326,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    es-namespace.js:4:2
     4| (React.Component: number); // Error

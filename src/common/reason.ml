@@ -171,6 +171,7 @@ type reason_desc =
   | RTypeApp of reason_desc
   | RThisTypeApp of reason_desc
   | RExtends of reason_desc
+  | RClass of reason_desc
   | RStatics of reason_desc
   | RSuperOf of reason_desc
   | RFrozen of reason_desc
@@ -470,8 +471,8 @@ let rec string_of_desc = function
   | RDefaultValue -> "default value"
   | RConstructor -> "constructor"
   | RDefaultConstructor -> "default constructor"
-  | RConstructorCall (RPolyType (RStatics d)) -> string_of_desc d
-  | RConstructorCall (RStatics d) -> string_of_desc d
+  | RConstructorCall (RPolyType (RClass d)) -> string_of_desc d
+  | RConstructorCall (RClass d) -> string_of_desc d
   | RConstructorCall d -> spf "new %s" (string_of_desc d)
   | RReturn -> "return"
   | RImplicitReturn desc -> spf "implicitly-returned %s" (string_of_desc desc)
@@ -525,7 +526,7 @@ let rec string_of_desc = function
   | RCode x -> "`" ^ x ^ "`"
   | RDefaultImportedType (_, m) -> spf "Default import from `%s`" m
   | RCustom x -> x
-  | RPolyType (RStatics d) -> string_of_desc d
+  | RPolyType (RClass d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
   | RPolyTest (_, d) -> string_of_desc d
   | RExactType d -> string_of_desc d
@@ -541,6 +542,7 @@ let rec string_of_desc = function
   | RTypeApp d -> string_of_desc d
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
   | RExtends d -> spf "extends %s" (string_of_desc d)
+  | RClass d -> spf "class %s" (string_of_desc d)
   | RStatics d -> spf "statics of %s" (string_of_desc d)
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
@@ -1217,6 +1219,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RTypeApp _
 | RThisTypeApp _
 | RExtends _
+| RClass _
 | RStatics _
 | RSuperOf _
 | RFrozen _

@@ -589,7 +589,11 @@ let classtype cx ?(check_polarity=true) x =
   let { tparams; _ } = remove_this x in
   let open Type in
   (if check_polarity then Flow.check_polarity cx Positive this);
-  let t = if structural x then class_type this else this_class_type this in
+  let t =
+    if structural x
+    then class_type ~structural:true this
+    else this_class_type this
+  in
   poly_type (Context.make_nominal cx) tparams t
 
 (* Processes the bodies of instance and static class members. *)

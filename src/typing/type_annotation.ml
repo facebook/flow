@@ -1248,15 +1248,7 @@ and mk_singleton_boolean loc b =
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
 and mk_nominal_type cx reason tparams_map (c, targs) =
   let reason = annot_reason reason in
-  let c = mod_reason_of_t (fun reason ->
-    annot_reason (replace_reason (function
-    (* Unwrapping RStatics aligns error messages that look at the top level
-     * reason. mk_instance unwraps ClassT so the result of mk_nominal_type will
-     * not be the "statics of". *)
-    | RStatics desc -> desc
-    | desc -> desc
-    ) reason)
-  ) c in
+  let c = mod_reason_of_t annot_reason c in
   match targs with
   | None ->
       Flow.mk_instance cx reason c, None

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- import_typeof.js:13:22
 
-Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` [1] is incompatible with statics of `ClassFoo1` [2].
+Cannot assign `new ClassFoo1()` to `a2` because `ClassFoo1` [1] is incompatible with class `ClassFoo1` [2].
 
    import_typeof.js:13:22
    13| var a2: ClassFoo1T = new ClassFoo1(); // Error: ClassFoo1 (inst) ~> ClassFoo1 (class)
@@ -28,7 +28,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:24:22
 
-Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2` [1] is incompatible with statics of `ClassFoo2` [2].
+Cannot assign `new ClassFoo2()` to `b2` because `ClassFoo2` [1] is incompatible with class `ClassFoo2` [2].
 
    import_typeof.js:24:22
    24| var b2: ClassFoo2T = new ClassFoo2(); // Error: ClassFoo2 (inst) ~> ClassFoo2 (class)
@@ -56,7 +56,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:35:22
 
-Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3` [1] is incompatible with statics of `ClassFoo3` [2].
+Cannot assign `new ClassFoo3()` to `c2` because `ClassFoo3` [1] is incompatible with class `ClassFoo3` [2].
 
    import_typeof.js:35:22
    35| var c2: ClassFoo3T = new ClassFoo3(); // Error: ClassFoo3 (inst) ~> ClassFoo3 (class)
@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:45:22
 
-Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` [1] is incompatible with statics of `ClassFoo4` [2].
+Cannot assign `new ClassFoo4()` to `d2` because `ClassFoo4` [1] is incompatible with class `ClassFoo4` [2].
 
    import_typeof.js:45:22
    45| var d2: ClassFoo4T = new ClassFoo4(); // Error: ClassFoo4 (inst) ~> ClassFoo4 (class)

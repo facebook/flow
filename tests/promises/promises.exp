@@ -380,7 +380,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ resolve_global.js:39:23
 
-Cannot instantiate `Promise` because `Promise` [1] is not a polymorphic type.
+Cannot instantiate class `Promise` because class `Promise` [1] is not a polymorphic type.
 
    39| async function baz(): Promise<number> {
                              ^^^^^^^^^^^^^^^ [1]
