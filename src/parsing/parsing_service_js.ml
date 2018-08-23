@@ -348,8 +348,11 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
          * The only files which are parsed but not inferred are .flow files with
          * no @flow pragma. *)
         if types_checked then
-          match File_sig.program ~ast with
-          | Ok file_sig -> Parse_ok (ast, file_sig)
+          match Signature_builder.program ast with
+          | Ok signature ->
+            let errors, _ = Signature_builder.Signature.verify signature in
+            let verified_file_sig = File_sig.verified errors (snd signature) in
+            Parse_ok (ast, verified_file_sig)
           | Error e -> Parse_fail (File_sig_error e)
         else
           Parse_ok (ast, File_sig.init))

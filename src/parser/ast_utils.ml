@@ -8,6 +8,8 @@
 open Ast
 
 type binding = Loc.t * string
+type ident = Loc.t * string
+type source = Loc.t * string
 
 let rec bindings_of_pattern =
   let open Pattern in

@@ -222,7 +222,7 @@ module Eval = struct
       | loc, Object { Object.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
       | loc, Array { Array.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
       | _, Assignment { Assignment.left; _ } -> pattern tps left
-      | _, Expression _ -> Deps.todo "Expression"
+      | loc, Expression _ -> Deps.todo loc "Expression"
 
   let type_params =
     let type_param tps tparam =
@@ -300,10 +300,10 @@ module Eval = struct
               | _ -> false
           end -> Deps.dynamic_require loc
 
-      | _loc, Array _x -> Deps.todo "Array"
-      | _loc, Unary _x -> Deps.todo "Unary"
-      | _loc, Binary _x -> Deps.todo "Binary"
-      | _loc, New _x -> Deps.todo "New"
+      | loc, Array _x -> Deps.todo loc "Array"
+      | loc, Unary _x -> Deps.todo loc "Unary"
+      | loc, Binary _x -> Deps.todo loc "Binary"
+      | loc, New _x -> Deps.todo loc "New"
 
       | loc, _ ->
         Deps.top (Error.UnexpectedExpression loc)

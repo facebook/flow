@@ -93,15 +93,15 @@ type t =
     }
   | ImportNamedDef of {
       kind: Ast.Statement.ImportDeclaration.importKind;
-      source: File_sig.source;
-      name: File_sig.ident;
+      source: Ast_utils.source;
+      name: Ast_utils.ident;
     }
   | ImportStarDef of {
       kind: Ast.Statement.ImportDeclaration.importKind;
-      source: File_sig.source;
+      source: Ast_utils.source;
     }
   | RequireDef of {
-      source: File_sig.source;
+      source: Ast_utils.source;
     }
 
 let to_string = function

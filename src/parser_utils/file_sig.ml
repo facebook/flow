@@ -24,19 +24,19 @@ and 'info module_sig' = {
 
 and require =
   | Require of {
-      source: source;
+      source: Ast_utils.source;
       require_loc: Loc.t;
       bindings: require_bindings option;
     }
-  | ImportDynamic of { source: source; import_loc: Loc.t }
-  | Import0 of { source: source }
+  | ImportDynamic of { source: Ast_utils.source; import_loc: Loc.t }
+  | Import0 of { source: Ast_utils.source }
   | Import of {
-      source: source;
+      source: Ast_utils.source;
       named: imported_locs Nel.t SMap.t SMap.t;
-      ns: ident option;
+      ns: Ast_utils.ident option;
       types: imported_locs Nel.t SMap.t SMap.t;
       typesof: imported_locs Nel.t SMap.t SMap.t;
-      typesof_ns: ident option;
+      typesof_ns: Ast_utils.ident option;
     }
 
 and imported_locs = {
@@ -45,7 +45,7 @@ and imported_locs = {
 }
 
 and require_bindings =
-  | BindIdent of ident
+  | BindIdent of Ast_utils.ident
   | BindNamed of imported_locs Nel.t SMap.t SMap.t
 
 and module_kind =
@@ -60,7 +60,7 @@ and module_kind =
 and export =
   | ExportDefault of {
       default_loc: Loc.t;
-      local: ident option;
+      local: Ast_utils.ident option;
     }
   | ExportNamed of {
       loc: Loc.t;
@@ -68,15 +68,15 @@ and export =
     }
   | ExportNs of {
       loc: Loc.t;
-      source: source;
+      source: Ast_utils.source;
     }
 
 and named_export_kind =
   | NamedDeclaration
-  | NamedSpecifier of { local: ident; source: source option }
+  | NamedSpecifier of { local: Ast_utils.ident; source: Ast_utils.source option }
 
 and export_star =
-  | ExportStar of { star_loc: Loc.t; source: source }
+  | ExportStar of { star_loc: Loc.t; source: Ast_utils.source }
 
 and type_export =
   | TypeExportNamed of {
@@ -84,15 +84,12 @@ and type_export =
       kind: named_export_kind
     }
 
-and ident = Loc.t * string
-
-and source = Loc.t * string
-
 and tolerable_error =
   (* e.g. `module.exports.foo = 4` when not at the top level *)
   | BadExportPosition of Loc.t
   (* e.g. `foo(module)`, dangerous because `module` is aliased *)
   | BadExportContext of string (* offending identifier *) * Loc.t
+  | SignatureVerificationError of Signature_builder_deps.Error.t
 
 type exports_info = {
   module_kind_info: module_kind_info;
@@ -106,7 +103,7 @@ and module_kind_info =
 and cjs_exports_def =
   | DeclareModuleExportsDef of (Loc.t, Loc.t) Ast.Type.annotation
   | SetModuleExportsDef of (Loc.t, Loc.t) Ast.Expression.t
-  | AddModuleExportsDef of ident * (Loc.t, Loc.t) Ast.Expression.t
+  | AddModuleExportsDef of Ast_utils.ident * (Loc.t, Loc.t) Ast.Expression.t
 
 and es_export_def =
   | DeclareExportDef of (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.declaration
@@ -910,6 +907,14 @@ let program ~ast =
     | { exports_info = Ok file_sig; _ } -> Ok (map_unit_file_sig file_sig)
     | { exports_info = Error e; _ } -> Error e
 
+let verified errors file_sig =
+  let file_sig = map_unit_file_sig file_sig in
+  { file_sig with
+    tolerable_errors = Signature_builder_deps.ErrorSet.fold (fun error acc ->
+      (SignatureVerificationError error):: acc
+    ) errors file_sig.tolerable_errors
+  }
+
 class mapper = object(this)
   method file_sig (file_sig: t) =
     let { module_sig; declare_modules; tolerable_errors } = file_sig in
@@ -1075,14 +1080,14 @@ class mapper = object(this)
       then type_export
       else TypeExportNamed { loc = loc'; kind = kind' }
 
-  method ident (ident: ident) =
+  method ident (ident: Ast_utils.ident) =
     let (loc, str) = ident in
     let loc' = this#loc loc in
     if loc == loc'
     then ident
     else (loc', str)
 
-  method source (source: source) =
+  method source (source: Ast_utils.source) =
     let (loc, str) = source in
     let loc' = this#loc loc in
     if loc == loc'
@@ -1101,6 +1106,40 @@ class mapper = object(this)
       if loc == loc'
       then tolerable_error
       else BadExportContext (str, loc')
+    | SignatureVerificationError sve ->
+      let open Signature_builder_deps.Error in
+      begin match sve with
+        | ExpectedSort (sort, x, loc) ->
+          let loc' = this#loc loc in
+          if loc == loc'
+          then tolerable_error
+          else SignatureVerificationError (ExpectedSort (sort, x, loc'))
+        | ExpectedAnnotation loc ->
+          let loc' = this#loc loc in
+          if loc == loc'
+          then tolerable_error
+          else SignatureVerificationError (ExpectedAnnotation loc')
+        | InvalidTypeParamUse loc ->
+          let loc' = this#loc loc in
+          if loc == loc'
+          then tolerable_error
+          else SignatureVerificationError (InvalidTypeParamUse loc')
+        | UnexpectedObjectKey loc ->
+          let loc' = this#loc loc in
+          if loc == loc'
+          then tolerable_error
+          else SignatureVerificationError (UnexpectedObjectKey loc')
+        | UnexpectedExpression loc ->
+          let loc' = this#loc loc in
+          if loc == loc'
+          then tolerable_error
+          else SignatureVerificationError (UnexpectedExpression loc')
+        | TODO (msg, loc) ->
+          let loc' = this#loc loc in
+          if loc == loc'
+          then tolerable_error
+          else SignatureVerificationError (TODO (msg, loc'))
+      end
 
   method error (error: error) =
     match error with

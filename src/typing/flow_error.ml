@@ -169,6 +169,7 @@ type error_message =
   | EUnnecessaryInvariant of Loc.t * reason
   | EInexactSpread of reason * reason
   | EDeprecatedCallSyntax of Loc.t
+  | ESignatureVerification of Signature_builder_deps.Error.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -394,6 +395,7 @@ let util_use_op_of_msg nope util = function
 | EUnnecessaryInvariant _
 | EInexactSpread _
 | EDeprecatedCallSyntax _
+| ESignatureVerification _
   -> nope
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
@@ -1159,6 +1161,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
       code export_name
   in
 
+  let mk_signature_verification_error loc msgs =
+    mk_error ~trace_infos loc
+      ((text "Could not build a typed interface for this module. ")::msgs)
+  in
+
   function
   | EIncompatible {
       lower = (reason_lower, _);
@@ -1786,6 +1793,36 @@ let rec error_of_msg ~trace_reasons ~source_file =
       code name;
       text " may only be used as part of a legal top level export statement";
     ]
+
+  | ESignatureVerification sve ->
+    let open Signature_builder_deps.Error in
+    begin match sve with
+      | ExpectedSort (sort, x, loc) ->
+        mk_signature_verification_error loc [
+          code x;
+          text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))
+        ]
+      | ExpectedAnnotation loc ->
+        mk_signature_verification_error loc [
+          text "Missing type annotation:"
+        ]
+      | InvalidTypeParamUse loc ->
+        mk_signature_verification_error loc [
+          text "Invalid use of type parameter:"
+        ]
+      | UnexpectedObjectKey loc ->
+        mk_signature_verification_error loc [
+          text "Expected simple object key:"
+        ]
+      | UnexpectedExpression loc ->
+        mk_signature_verification_error loc [
+          text "Expected literal expression:"
+        ]
+      | TODO (msg, loc) ->
+        mk_signature_verification_error loc [
+          text (spf "TODO: %s is not supported yet, try using a type cast." msg)
+        ]
+    end
 
   | EUnreachable loc ->
     mk_error ~trace_infos ~kind:InferWarning loc

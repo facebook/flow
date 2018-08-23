@@ -2820,3 +2820,5 @@ let dump_flow_error =
       spf "EInexactSpread (%s, %s)"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
+    | ESignatureVerification sve ->
+      spf "ESignatureVerification (%s)" (Signature_builder_deps.Error.to_string sve)

@@ -16,7 +16,7 @@ module Error = struct
     | InvalidTypeParamUse of Loc.t
     | UnexpectedObjectKey of Loc.t
     | UnexpectedExpression of Loc.t
-    | TODO of string
+    | TODO of string * Loc.t
 
   let compare = Pervasives.compare
 
@@ -27,7 +27,7 @@ module Error = struct
     | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (Loc.to_string loc)
     | UnexpectedObjectKey loc -> spf "Expected simple object key @ %s" (Loc.to_string loc)
     | UnexpectedExpression loc -> spf "Expected literal expression @ %s" (Loc.to_string loc)
-    | TODO msg -> spf "TODO: %s" msg
+    | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (Loc.to_string loc)
 
 end
 module ErrorSet = Set.Make (Error)
@@ -47,15 +47,15 @@ module Dep = struct
   and remote =
     | ImportNamed of {
         sort: Sort.t;
-        source: File_sig.source;
-        name: File_sig.ident;
+        source: Ast_utils.source;
+        name: Ast_utils.ident;
       }
     | ImportStar of {
         sort: Sort.t;
-        source: File_sig.source;
+        source: Ast_utils.source;
       }
     | Require of {
-        source: File_sig.source;
+        source: Ast_utils.source;
       }
     | Global of local
 
@@ -104,7 +104,7 @@ let bot = Known DepSet.empty
 let top msg = Unknown (ErrorSet.singleton msg)
 
 let unreachable = bot
-let todo msg = top (Error.TODO msg)
+let todo loc msg = top (Error.TODO (msg, loc))
 
 let unit dep = Known (DepSet.singleton dep)
 

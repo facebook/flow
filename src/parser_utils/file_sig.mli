@@ -41,7 +41,7 @@ and require =
   (* require('foo'); *)
   | Require of {
     (* location of module ref *)
-    source: source;
+    source: Ast_utils.source;
 
     require_loc: Loc.t;
 
@@ -52,19 +52,19 @@ and require =
   }
 
   (* import('foo').then(...) *)
-  | ImportDynamic of { source: source; import_loc: Loc.t }
+  | ImportDynamic of { source: Ast_utils.source; import_loc: Loc.t }
 
   (* import declaration without specifiers
    *
    * Note that this is equivalent to the Import variant below with all fields
    * empty, but modeled as a separate variant to ensure use sites handle this
    * case if necessary. *)
-  | Import0 of { source: source }
+  | Import0 of { source: Ast_utils.source }
 
   (* import declaration with specifiers *)
   | Import of {
     (* location of module ref *)
-    source: source;
+    source: Ast_utils.source;
 
     (* map from remote name to local names of value imports
      * source: import {A, B as C} from "foo";
@@ -79,7 +79,7 @@ and require =
     (* optional pair of location of namespace import and local name
      * source: import * as X from "foo";
      * result: loc, X *)
-    ns: ident option;
+    ns: Ast_utils.ident option;
 
     (* map from remote name to local names of type imports
      * source: import type {A, B as C} from "foo";
@@ -96,7 +96,7 @@ and require =
     (* optional pair of location of namespace typeof import and local name
      * source: import typeof * as X from "foo";
      * result: loc, X *)
-    typesof_ns: ident option
+    typesof_ns: Ast_utils.ident option
   }
 
 and imported_locs = {
@@ -107,7 +107,7 @@ and imported_locs = {
 and require_bindings =
   (* source: const bar = require('./foo');
    * result: bar *)
-  | BindIdent of ident
+  | BindIdent of Ast_utils.ident
   (* map from remote name to local names of requires
    * source: const {a, b: c} = require('./foo');
    * result: {a: {a: [a_loc]}, b: {c: [c_loc]}} *)
@@ -132,7 +132,7 @@ and export =
     default_loc: Loc.t;
     (* may have local name, e.g., `export default function foo {}` *)
     (** NOTE: local = Some id if and only if id introduces a local binding **)
-    local: ident option;
+    local: Ast_utils.ident option;
   }
   | ExportNamed of {
     (* loc of remote name *)
@@ -143,20 +143,20 @@ and export =
     (* loc of remote name *)
     loc: Loc.t;
     (* module reference of exported namespace *)
-    source: source;
+    source: Ast_utils.source;
   }
 
 and named_export_kind =
   | NamedDeclaration
   | NamedSpecifier of {
     (* local name, e.g., `export {foo as bar}`, `export type {T as U}` *)
-    local: ident;
+    local: Ast_utils.ident;
     (* module reference for re-exports, e.g., `export {foo} from 'bar'`,`export type {T} from 'bar'` *)
-    source: source option
+    source: Ast_utils.source option
   }
 
 and export_star =
-  | ExportStar of { star_loc: Loc.t; source: source }
+  | ExportStar of { star_loc: Loc.t; source: Ast_utils.source }
 
 and type_export =
   | TypeExportNamed of {
@@ -165,15 +165,12 @@ and type_export =
     kind: named_export_kind;
   }
 
-and ident = Loc.t * string
-
-and source = Loc.t * string
-
 and tolerable_error =
   (* e.g. `module.exports.foo = 4` when not at the top level *)
   | BadExportPosition of Loc.t
   (* e.g. `foo(module)`, dangerous because `module` is aliased *)
   | BadExportContext of string (* offending identifier *) * Loc.t
+  | SignatureVerificationError of Signature_builder_deps.Error.t
 
 type exports_info = {
   module_kind_info: module_kind_info;
@@ -187,7 +184,7 @@ and module_kind_info =
 and cjs_exports_def =
   | DeclareModuleExportsDef of (Loc.t, Loc.t) Ast.Type.annotation
   | SetModuleExportsDef of (Loc.t, Loc.t) Ast.Expression.t
-  | AddModuleExportsDef of ident * (Loc.t, Loc.t) Ast.Expression.t
+  | AddModuleExportsDef of Ast_utils.ident * (Loc.t, Loc.t) Ast.Expression.t
 
 and es_export_def =
   | DeclareExportDef of (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.declaration
@@ -215,6 +212,7 @@ type t = unit t'
 val init: t
 
 val program: ast:(Loc.t, Loc.t) Ast.program -> (t, error) result
+val verified: Signature_builder_deps.ErrorSet.t -> exports_info t' -> t
 
 (* Use for debugging; not for exposing info the the end user *)
 val to_string: t -> string
@@ -226,8 +224,8 @@ class mapper : object
   method export: export -> export
   method export_star: export_star -> export_star
   method file_sig: t -> t
-  method ident: ident -> ident
-  method source: source -> source
+  method ident: Ast_utils.ident -> Ast_utils.ident
+  method source: Ast_utils.source -> Ast_utils.source
   method named_export_kind: named_export_kind -> named_export_kind
   method imported_locs: imported_locs -> imported_locs
   method loc: Loc.t -> Loc.t

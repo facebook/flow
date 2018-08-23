@@ -39,6 +39,7 @@ let error_of_file_sig_tolerable_error ~source_file err =
   let flow_err = match err with
   | File_sig.BadExportPosition loc -> Flow_error.EBadExportPosition loc
   | File_sig.BadExportContext (name, loc) -> Flow_error.EBadExportContext (name, loc)
+  | File_sig.SignatureVerificationError sve -> Flow_error.ESignatureVerification sve
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 

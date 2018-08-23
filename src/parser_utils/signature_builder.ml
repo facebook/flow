@@ -12,8 +12,7 @@ module Env = Signature_builder_env
 module Verify = Signature_builder_verify
 
 module Signature = struct
-  type t = Env.t * File_sig.exports_info
-  let init = Env.empty, []
+  type t = Env.t * File_sig.exports_info File_sig.t'
 
   let add_env env entry =
     Env.add entry env
@@ -394,4 +393,6 @@ let program program =
     hoist#eval hoist#program program in
   let { File_sig.toplevel_names; exports_info } =
     File_sig.program_with_toplevel_names_and_exports_info program in
-  Core_result.map ~f:(Signature.mk env toplevel_names) exports_info
+  match exports_info with
+    | Ok exports_info -> Ok (Signature.mk env toplevel_names exports_info)
+    | Error e -> Error e

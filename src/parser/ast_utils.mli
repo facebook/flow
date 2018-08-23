@@ -6,6 +6,8 @@
  *)
 
 type binding = Loc.t * string
+type ident = Loc.t * string
+type source = Loc.t * string
 
 val bindings_of_pattern:
   binding list ->
