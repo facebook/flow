@@ -106,3 +106,10 @@ val filename_from_string: options: options -> string -> File_key.t
 val mkdirp: string -> Unix.file_perm -> unit
 
 val is_within_node_modules: root:Path.t -> options: options -> string -> bool
+
+val imaginary_realpath: string -> string
+val canonicalize_filenames:
+  cwd:string ->
+  handle_imaginary:(string -> string) ->
+  string list ->
+  string list

@@ -35,7 +35,7 @@ let main base_flags option_values root _from out () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
 
-  let out = Path.make @@ CommandUtils.imaginary_realpath out in
+  let out = Path.make @@ Files.imaginary_realpath out in
 
   let out_str = Path.to_string out in
   Printf.printf "Asking server to create a saved-state file at `%s`\n%!" out_str;

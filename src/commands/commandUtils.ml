@@ -7,44 +7,6 @@
 
 open Utils_js
 
-(* realpath doesn't work for non-existent paths. So let's find the longest existent prefix, run
- * realpath on that, and then append the rest to it
- *)
-let imaginary_realpath =
-  (* Realpath fails on non-existent paths. So let's find the longest prefix which exists. We
-   * recurse using Sys.file_exists, which is just a single stat, as opposed to realpath which
-   * stats /foo, then /foo/bar, then /foo/bar/baz, etc *)
-  let rec find_real_prefix path rev_suffix =
-    let rev_suffix = Filename.basename path :: rev_suffix in
-    let prefix = Filename.dirname path in
-    (* Sys.file_exists should always return true for / and for . so we should never get into
-     * infinite recursion. Let's assert that *)
-    assert (prefix <> path);
-    if Sys.file_exists prefix
-    then prefix, rev_suffix
-    else find_real_prefix prefix rev_suffix
-  in
-
-  fun path ->
-    let real_prefix, rev_suffix = find_real_prefix path [] in
-    match Sys_utils.realpath real_prefix with
-    | None -> failwith (spf "Realpath failed for existent path %s" real_prefix)
-    | Some abs -> List.fold_left Filename.concat abs rev_suffix
-
-let canonicalize_filenames ?(allow_imaginary=false) ~cwd filenames =
-  List.map (fun filename ->
-    let filename = Sys_utils.expanduser filename in (* normalize ~ *)
-    let filename = Files.normalize_path cwd filename in (* normalize ./ and ../ *)
-    match Sys_utils.realpath filename with (* normalize symlinks *)
-    | Some abs -> abs
-    | None ->
-      if allow_imaginary
-      then imaginary_realpath filename
-      else
-        let msg = Printf.sprintf "File not found: %S" filename in
-        FlowExitStatus.(exit ~msg No_input)
-  ) filenames
-
 let expand_file_list ?options filenames =
   let paths = List.map Path.make filenames in
   let next_files = match paths with
@@ -63,17 +25,22 @@ let expand_file_list ?options filenames =
 
 let get_filenames_from_input ?(allow_imaginary=false) input_file filenames =
   let cwd = Sys.getcwd () in
+  let handle_imaginary =
+    if allow_imaginary
+    then Files.imaginary_realpath
+    else fun fn -> FlowExitStatus.(exit ~msg:(Printf.sprintf "File not found: %S" fn) No_input)
+  in
   let input_file_filenames = match input_file with
   | Some "-" ->
     Sys_utils.lines_of_in_channel stdin
-    |> canonicalize_filenames ~allow_imaginary ~cwd
+    |> Files.canonicalize_filenames ~handle_imaginary ~cwd
   | Some input_file ->
     Sys_utils.lines_of_file input_file
-    |> canonicalize_filenames ~allow_imaginary ~cwd:(Filename.dirname input_file)
+    |> Files.canonicalize_filenames ~handle_imaginary ~cwd:(Filename.dirname input_file)
   | None -> []
   in
   let cli_filenames = match filenames with
-  | Some filenames -> canonicalize_filenames ~allow_imaginary ~cwd filenames
+  | Some filenames -> Files.canonicalize_filenames ~handle_imaginary ~cwd filenames
   | None -> []
   in
   cli_filenames @ input_file_filenames
