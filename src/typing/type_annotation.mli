@@ -11,65 +11,65 @@
 
 val convert: Context.t ->
   Type.t SMap.t ->
-  (Loc.t, Loc.t) Ast.Type.t ->
-  (Loc.t, Loc.t * Type.t) Ast.Type.t
+  (Loc.t, Loc.t) Flow_ast.Type.t ->
+  (Loc.t, Loc.t * Type.t) Flow_ast.Type.t
 
 val convert_list :
   Context.t ->
   Type.t SMap.t ->
-  (Loc.t, Loc.t) Ast.Type.t list ->
+  (Loc.t, Loc.t) Flow_ast.Type.t list ->
   Type.t list *
-  (Loc.t, Loc.t * Type.t) Ast.Type.t list
+  (Loc.t, Loc.t * Type.t) Flow_ast.Type.t list
 
 val convert_opt :
   Context.t ->
   Type.t SMap.t ->
-  (Loc.t, Loc.t) Ast.Type.t option ->
-  Type.t option * (Loc.t, Loc.t * Type.t) Ast.Type.t option
+  (Loc.t, Loc.t) Flow_ast.Type.t option ->
+  Type.t option * (Loc.t, Loc.t * Type.t) Flow_ast.Type.t option
 
 val convert_qualification: ?lookup_mode:Env.LookupMode.t ->
   Context.t ->
   string ->
-  (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t ->
-  Type.t * (Loc.t, Loc.t * Type.t) Ast.Type.Generic.Identifier.t
+  (Loc.t, Loc.t) Flow_ast.Type.Generic.Identifier.t ->
+  Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Type.Generic.Identifier.t
 
 val mk_super: Context.t ->
   Type.t SMap.t ->
   Loc.t ->
   Type.t ->
-  (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option ->
-  (Loc.t * Type.t * Type.t list option) * (Loc.t, Loc.t * Type.t) Ast.Type.ParameterInstantiation.t option
+  (Loc.t, Loc.t) Flow_ast.Type.ParameterInstantiation.t option ->
+  (Loc.t * Type.t * Type.t list option) * (Loc.t, Loc.t * Type.t) Flow_ast.Type.ParameterInstantiation.t option
 
 val mk_type_annotation: Context.t ->
   Type.t SMap.t ->
   Reason.t ->
-  (Loc.t, Loc.t) Ast.Type.annotation option ->
-  Type.t * (Loc.t, Loc.t * Type.t) Ast.Type.annotation option
+  (Loc.t, Loc.t) Flow_ast.Type.annotation option ->
+  Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Type.annotation option
 
 val mk_nominal_type:
   Context.t ->
   Reason.t ->
   Type.t SMap.t ->
-  (Type.t * (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option) ->
-  Type.t * (Loc.t, Loc.t * Type.t) Ast.Type.ParameterInstantiation.t option
+  (Type.t * (Loc.t, Loc.t) Flow_ast.Type.ParameterInstantiation.t option) ->
+  Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Type.ParameterInstantiation.t option
 
 val mk_type_param_declarations: Context.t ->
   ?tparams_map:(Type.t SMap.t) ->
-  (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option ->
+  (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.t option ->
   Type.typeparam list *
   Type.t SMap.t *
-  (Loc.t, Loc.t * Type.t) Ast.Type.ParameterDeclaration.t option
+  (Loc.t, Loc.t * Type.t) Flow_ast.Type.ParameterDeclaration.t option
 
 val mk_interface_sig: Context.t ->
   Reason.t ->
-  (Loc.t, Loc.t) Ast.Statement.Interface.t ->
-  Class_sig.t * Type.t * (Loc.t, Loc.t * Type.t) Ast.Statement.Interface.t
+  (Loc.t, Loc.t) Flow_ast.Statement.Interface.t ->
+  Class_sig.t * Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Statement.Interface.t
 
 val mk_declare_class_sig: Context.t ->
   Reason.t ->
-  (Loc.t, Loc.t) Ast.Statement.DeclareClass.t ->
-  Class_sig.t * Type.t * (Loc.t, Loc.t * Type.t) Ast.Statement.DeclareClass.t
+  (Loc.t, Loc.t) Flow_ast.Statement.DeclareClass.t ->
+  Class_sig.t * Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Statement.DeclareClass.t
 
-val polarity: Loc.t Ast.Variance.t option -> Type.polarity
+val polarity: Loc.t Flow_ast.Variance.t option -> Type.polarity
 
-val qualified_name: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t -> string
+val qualified_name: (Loc.t, Loc.t) Flow_ast.Type.Generic.Identifier.t -> string

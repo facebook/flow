@@ -148,7 +148,7 @@ module Response = struct
       tc_errors: Errors.ErrorSet.t;
       tc_warnings: Errors.ErrorSet.t;
       suggest_warnings: Errors.ErrorSet.t;
-      annotated_program: (Loc.t, Loc.t) Ast.program;
+      annotated_program: (Loc.t, Loc.t) Flow_ast.program;
     }
   | Suggest_Error of Errors.ErrorSet.t
 

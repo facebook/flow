@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 class property_access_searcher name = object(this)
   inherit [bool] Flow_ast_visitor.visitor ~init:false as super
   method! member expr =

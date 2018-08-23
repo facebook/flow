@@ -7,7 +7,7 @@
 
 (* For use by a worker process *)
 type worker_mutator = {
-  add_file: File_key.t -> (Loc.t, Loc.t) Ast.program -> Docblock.t -> File_sig.t -> unit;
+  add_file: File_key.t -> (Loc.t, Loc.t) Flow_ast.program -> Docblock.t -> File_sig.t -> unit;
   add_hash: File_key.t -> Xx.hash -> unit
 }
 
@@ -25,14 +25,14 @@ end
 val has_ast: File_key.t -> bool
 val has_old_ast: File_key.t -> bool
 
-val get_ast: File_key.t -> (Loc.t, Loc.t) Ast.program option
+val get_ast: File_key.t -> (Loc.t, Loc.t) Flow_ast.program option
 val get_docblock: File_key.t -> Docblock.t option
 val get_file_sig: File_key.t -> File_sig.t option
 val get_file_hash: File_key.t -> Xx.hash option
 val get_old_file_hash: File_key.t -> Xx.hash option
 
 (* after parsing, retrieves ast and docblock by filename (unsafe) *)
-val get_ast_unsafe: File_key.t -> (Loc.t, Loc.t) Ast.program
+val get_ast_unsafe: File_key.t -> (Loc.t, Loc.t) Flow_ast.program
 val get_docblock_unsafe: File_key.t -> Docblock.t
 val get_file_sig_unsafe: File_key.t -> File_sig.t
 val get_file_hash_unsafe: File_key.t -> Xx.hash

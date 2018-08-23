@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 open Token
 open Parser_env
-open Ast
+open Flow_ast
 open Parser_common
 module Error = Parse_error
 

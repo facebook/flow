@@ -10,8 +10,8 @@
 type t
 
 type set_asts =
-  (Loc.t, Loc.t * Type.t) Ast.Function.body option *
-  (Loc.t, Loc.t * Type.t) Ast.Expression.t option
+  (Loc.t, Loc.t * Type.t) Flow_ast.Function.body option *
+  (Loc.t, Loc.t * Type.t) Flow_ast.Expression.t option
   -> unit
 
 type set_type = Type.t -> unit
@@ -176,11 +176,11 @@ val generate_tests: Context.t ->
 
 (** Evaluate the class body. *)
 val toplevels: Context.t ->
-  decls:(Context.t -> (Loc.t, Loc.t) Ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> (Loc.t, Loc.t) Ast.Statement.t list ->
-                      (Loc.t, Loc.t * Type.t) Ast.Statement.t list) ->
-  expr:(Context.t -> (Loc.t, Loc.t) Ast.Expression.t ->
-                      (Loc.t, Loc.t * Type.t) Ast.Expression.t) ->
+  decls:(Context.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list ->
+                      (Loc.t, Loc.t * Type.t) Flow_ast.Statement.t list) ->
+  expr:(Context.t -> (Loc.t, Loc.t) Flow_ast.Expression.t ->
+                      (Loc.t, Loc.t * Type.t) Flow_ast.Expression.t) ->
   t -> unit
 
 (** 1. Type Conversion *)
@@ -194,7 +194,7 @@ val classtype: Context.t ->
 
 module This: sig
   val is_bound_to_empty: t -> bool
-  val in_class: (Loc.t, Loc.t) Ast.Class.t -> bool
+  val in_class: (Loc.t, Loc.t) Flow_ast.Class.t -> bool
 end
 
 val with_typeparams: Context.t -> (unit -> 'a) -> t -> 'a

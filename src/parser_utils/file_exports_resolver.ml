@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 open Flow_ast_visitor
 
 (* Resolve the AST nodes of CommonJS exported values, it mimics the ES modules interface

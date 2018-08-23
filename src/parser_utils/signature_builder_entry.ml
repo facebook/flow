@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 module Kind = Signature_builder_kind
 
 type t = Loc.t Ast.Identifier.t * Kind.t

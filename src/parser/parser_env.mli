@@ -60,7 +60,7 @@ val last_loc : env -> Loc.t option
 val last_token : env -> Token.t option
 val in_export : env -> bool
 val labels : env -> SSet.t
-val comments : env -> Loc.t Ast.Comment.t list
+val comments : env -> Loc.t Flow_ast.Comment.t list
 val in_loop : env -> bool
 val in_switch : env -> bool
 val in_formal_parameters : env -> bool
@@ -130,7 +130,7 @@ module Peek : sig
   val token : env -> Token.t
   val loc : env -> Loc.t
   val errors : env -> (Loc.t * Parse_error.t) list
-  val comments : env -> Loc.t Ast.Comment.t list
+  val comments : env -> Loc.t Flow_ast.Comment.t list
   val is_line_terminator : env -> bool
   val is_implicit_semicolon : env -> bool
   val is_identifier : env -> bool
@@ -142,7 +142,7 @@ module Peek : sig
   val ith_token : i:int -> env -> Token.t
   val ith_loc : i:int -> env -> Loc.t
   val ith_errors : i:int -> env -> (Loc.t * Parse_error.t) list
-  val ith_comments : i:int -> env -> Loc.t Ast.Comment.t list
+  val ith_comments : i:int -> env -> Loc.t Flow_ast.Comment.t list
   val ith_is_identifier : i:int -> env -> bool
   val ith_is_identifier_name : i:int -> env -> bool
   val ith_is_type_identifier : i:int -> env -> bool

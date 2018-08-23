@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Ast
+open Flow_ast
 module Error = Parse_error
 module SSet = Set.Make(String)
 
@@ -813,7 +813,7 @@ module Try = struct
 
   type saved_state = {
     saved_errors          : (Loc.t * Error.t) list;
-    saved_comments        : Loc.t Ast.Comment.t list;
+    saved_comments        : Loc.t Flow_ast.Comment.t list;
     saved_last_lex_result : Lex_result.t option;
     saved_lex_mode_stack  : Lex_mode.t list;
     saved_lex_env         : Lex_env.t;

@@ -82,9 +82,9 @@ val add_parsed_resolved_requires:
   File_key.t ->
   Errors.ErrorSet.t
 
-val add_package: string -> (Loc.t, Loc.t) Ast.program -> unit
+val add_package: string -> (Loc.t, Loc.t) Flow_ast.program -> unit
 
-val package_incompatible: string -> (Loc.t, Loc.t) Ast.program -> bool
+val package_incompatible: string -> (Loc.t, Loc.t) Flow_ast.program -> bool
 
 (***************************************************)
 

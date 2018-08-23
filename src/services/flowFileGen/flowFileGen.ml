@@ -41,7 +41,7 @@ let gen_imports env =
    *)
   let import_stmts = Context.import_stmts env.Codegen.flow_cx in
   let env = List.fold_left (fun env stmt ->
-    let open Ast in
+    let open Flow_ast in
     let open Statement in
     let open ImportDeclaration in
     let {importKind; source; specifiers; default;} = stmt in
@@ -54,7 +54,7 @@ let gen_imports env =
       | None ->
         ([], None)
     in
-    let _, { Ast.StringLiteral.value = source; _ } = source in
+    let _, { Flow_ast.StringLiteral.value = source; _ } = source in
 
     let env = Codegen.add_str "import " env in
     let env =

@@ -9,7 +9,7 @@ open Utils_js
 
 (* shared heap for parsed ASTs by filename *)
 module ASTHeap = SharedMem_js.WithCache (File_key) (struct
-    type t = (Loc.t, Loc.t) Ast.program
+    type t = (Loc.t, Loc.t) Flow_ast.program
     let prefix = Prefix.make()
     let description = "AST"
     let use_sqlite_fallback () = false
@@ -83,7 +83,7 @@ end
 
 (* For use by a worker process *)
 type worker_mutator = {
-  add_file: File_key.t -> (Loc.t, Loc.t) Ast.program -> Docblock.t -> File_sig.t -> unit;
+  add_file: File_key.t -> (Loc.t, Loc.t) Flow_ast.program -> Docblock.t -> File_sig.t -> unit;
   add_hash: File_key.t -> Xx.hash -> unit
 }
 

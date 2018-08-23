@@ -140,10 +140,10 @@ let set_module_kind cx loc new_exports_kind = Context.(
  *
  * Paired with function which undoes this, for typed AST construction
  *)
-let nameify_default_export_decl decl = Ast.Statement.(
+let nameify_default_export_decl decl = Flow_ast.Statement.(
   let identity x = x in
   match decl with
-  | loc, FunctionDeclaration func_decl -> Ast.Function.(
+  | loc, FunctionDeclaration func_decl -> Flow_ast.Function.(
     if func_decl.id <> None then decl, identity else
       (loc, FunctionDeclaration {
         func_decl with
@@ -155,7 +155,7 @@ let nameify_default_export_decl decl = Ast.Statement.(
       )
     )
 
-  | loc, ClassDeclaration class_decl -> Ast.Class.(
+  | loc, ClassDeclaration class_decl -> Flow_ast.Class.(
     if class_decl.id <> None then decl, identity else
       (loc, ClassDeclaration {
         class_decl with

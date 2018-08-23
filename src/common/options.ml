@@ -32,7 +32,7 @@ type jsx_mode =
    * when interpreting JSX syntax. Otherwise, the usual rules of JSX are
    * followed: children are varargs after a props argument.
    *)
-  | Jsx_pragma of (string * (Loc.t, Loc.t) Ast.Expression.t)
+  | Jsx_pragma of (string * (Loc.t, Loc.t) Flow_ast.Expression.t)
 
   (**
    * Alternate mode for interpreting JSX syntax. The element name is treated

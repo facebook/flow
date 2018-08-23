@@ -5,9 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 open Core_result
 open Ty
-module T = Ast.Type
+module T = Flow_ast.Type
 
 let mapM f ts = all (List.map f ts)
 

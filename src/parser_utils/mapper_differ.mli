@@ -6,10 +6,10 @@
  *)
 
 type node =
-  | Statement of (Loc.t, Loc.t) Ast.Statement.t * (Loc.t, Loc.t) Ast.Statement.t
-  | Expression of (Loc.t, Loc.t) Ast.Expression.t * (Loc.t, Loc.t) Ast.Expression.t
-  | ClassElement of (Loc.t, Loc.t) Ast.Class.Body.element * (Loc.t, Loc.t) Ast.Class.Body.element
-  | Type of (Loc.t, Loc.t) Ast.Type.t * (Loc.t, Loc.t) Ast.Type.t
+  | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t * (Loc.t, Loc.t) Flow_ast.Statement.t
+  | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t * (Loc.t, Loc.t) Flow_ast.Expression.t
+  | ClassElement of (Loc.t, Loc.t) Flow_ast.Class.Body.element * (Loc.t, Loc.t) Flow_ast.Class.Body.element
+  | Type of (Loc.t, Loc.t) Flow_ast.Type.t * (Loc.t, Loc.t) Flow_ast.Type.t
 
 (*
  * A map of (old node, new node)
@@ -17,7 +17,7 @@ type node =
 
 type t = node Utils_js.LocMap.t
 
-val diff : Flow_ast_mapper.mapper -> (Loc.t, Loc.t) Ast.program -> t * (Loc.t, Loc.t) Ast.program
+val diff : Flow_ast_mapper.mapper -> (Loc.t, Loc.t) Flow_ast.program -> t * (Loc.t, Loc.t) Flow_ast.program
 
 (*
  * Combines two diffs and merges the old value with the add value

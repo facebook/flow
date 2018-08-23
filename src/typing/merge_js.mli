@@ -21,7 +21,7 @@ val merge_component_strict:
   file_options: Files.options option ->
   strict_mode: StrictModeSettings.t ->
   file_sigs: File_sig.t Utils_js.FilenameMap.t ->
-  get_ast_unsafe: (File_key.t -> (Loc.t, Loc.t) Ast.program) ->
+  get_ast_unsafe: (File_key.t -> (Loc.t, Loc.t) Flow_ast.program) ->
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
   ?do_gc: bool ->
   (* component *)
@@ -33,7 +33,7 @@ val merge_component_strict:
   (* master cx *)
   Context.sig_t ->
   (* cxs in component order, hd is merged leader *)
-  (Context.t * (Loc.t, Loc.t * Type.t) Ast.program) Nel.t
+  (Context.t * (Loc.t, Loc.t * Type.t) Flow_ast.program) Nel.t
 
 val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 

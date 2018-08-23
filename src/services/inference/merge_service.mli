@@ -30,10 +30,10 @@ val merge_strict_context:
 val merge_contents_context:
   Options.t ->
   File_key.t ->
-  (Loc.t, Loc.t) Ast.program ->
+  (Loc.t, Loc.t) Flow_ast.program ->
   Docblock.t ->
   File_sig.t ->
-  Context.t * (Loc.t, Loc.t * Type.t) Ast.program
+  Context.t * (Loc.t, Loc.t * Type.t) Flow_ast.program
 
 val merge_runner:
   job: 'a merge_job ->

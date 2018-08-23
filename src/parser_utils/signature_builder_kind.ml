@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 module Annot_path = struct
   type t =
     | Annot of (Loc.t, Loc.t) Ast.Type.annotation

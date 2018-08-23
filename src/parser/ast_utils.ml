@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Ast
+open Flow_ast
 
 type binding = Loc.t * string
 type ident = Loc.t * string
@@ -42,14 +42,14 @@ let rec bindings_of_pattern =
       failwith "expression pattern"
 
 let bindings_of_variable_declarations =
-  let open Ast.Statement.VariableDeclaration in
+  let open Flow_ast.Statement.VariableDeclaration in
   List.fold_left (fun acc -> function
     | _, { Declarator.id = (_, pattern); _ } ->
       bindings_of_pattern acc pattern
   ) []
 
 let partition_directives statements =
-  let open Ast.Statement in
+  let open Flow_ast.Statement in
   let rec helper directives = function
     | ((_, Expression { Expression.directive = Some _; _ }) as directive)::rest ->
       helper (directive::directives) rest

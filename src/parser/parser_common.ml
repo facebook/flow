@@ -6,7 +6,7 @@
  *)
 
 open Parser_env
-open Ast
+open Flow_ast
 module Error = Parse_error
 
 type pattern_errors = {
@@ -131,9 +131,9 @@ let identifier_name env =
  * https://tc39.github.io/ecma262/#sec-islabelledfunction
  *)
 let rec is_labelled_function = function
-  | _, Ast.Statement.Labeled { Ast.Statement.Labeled.body; _ } ->
+  | _, Flow_ast.Statement.Labeled { Flow_ast.Statement.Labeled.body; _ } ->
     begin match body with
-    | _, Ast.Statement.FunctionDeclaration _ -> true
+    | _, Flow_ast.Statement.FunctionDeclaration _ -> true
     | _ -> is_labelled_function body
     end
   | _ ->

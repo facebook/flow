@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 exception Combine_inconsistency
 
 type node =
@@ -16,7 +18,7 @@ type node =
 type t = node Utils_js.LocMap.t
 
 module L = Utils_js.LocMap
-module B = Ast.Class.Body
+module B = Flow_ast.Class.Body
 
 class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
   object (_this)

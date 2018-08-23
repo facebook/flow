@@ -17,8 +17,8 @@ let test ctxt =
   let str = E.literal (Literals.string "a") in
   let (&&) a b = E.logical_and a b in
   let (||) a b = E.logical_or a b in
-  let (+) a b = E.binary ~op:Ast.Expression.Binary.Plus a b in
-  let (-) a b = E.binary ~op:Ast.Expression.Binary.Minus a b in
+  let (+) a b = E.binary ~op:Flow_ast.Expression.Binary.Plus a b in
+  let (-) a b = E.binary ~op:Flow_ast.Expression.Binary.Minus a b in
 
   (* nested logical expressions *)
 
@@ -175,7 +175,7 @@ let test ctxt =
 
   (* function *)
 
-  let fn = (Loc.none, Ast.Expression.Function (
+  let fn = (Loc.none, Flow_ast.Expression.Function (
     Functions.make ~id:None ~expression:true ~params:[] ())
   ) in
   assert_layout_of_expression ~ctxt

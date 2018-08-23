@@ -182,14 +182,14 @@ and module_kind_info =
   | ESInfo of es_export_def SMap.t
 
 and cjs_exports_def =
-  | DeclareModuleExportsDef of (Loc.t, Loc.t) Ast.Type.annotation
-  | SetModuleExportsDef of (Loc.t, Loc.t) Ast.Expression.t
-  | AddModuleExportsDef of Ast_utils.ident * (Loc.t, Loc.t) Ast.Expression.t
+  | DeclareModuleExportsDef of (Loc.t, Loc.t) Flow_ast.Type.annotation
+  | SetModuleExportsDef of (Loc.t, Loc.t) Flow_ast.Expression.t
+  | AddModuleExportsDef of Ast_utils.ident * (Loc.t, Loc.t) Flow_ast.Expression.t
 
 and es_export_def =
-  | DeclareExportDef of (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.declaration
-  | ExportDefaultDef of (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.declaration
-  | ExportNamedDef of (Loc.t, Loc.t) Ast.Statement.t
+  | DeclareExportDef of (Loc.t, Loc.t) Flow_ast.Statement.DeclareExportDeclaration.declaration
+  | ExportDefaultDef of (Loc.t, Loc.t) Flow_ast.Statement.ExportDefaultDeclaration.declaration
+  | ExportNamedDef of (Loc.t, Loc.t) Flow_ast.Statement.t
 
 type error =
   | IndeterminateModuleType of Loc.t
@@ -199,7 +199,7 @@ type toplevel_names_and_exports_info = {
   exports_info: (exports_info t', error) result
 }
 
-val program_with_toplevel_names_and_exports_info: ast:(Loc.t, Loc.t) Ast.program ->
+val program_with_toplevel_names_and_exports_info: ast:(Loc.t, Loc.t) Flow_ast.program ->
   toplevel_names_and_exports_info
 
 (* Use for debugging; not for exposing info the the end user *)
@@ -211,7 +211,7 @@ type t = unit t'
 
 val init: t
 
-val program: ast:(Loc.t, Loc.t) Ast.program -> (t, error) result
+val program: ast:(Loc.t, Loc.t) Flow_ast.program -> (t, error) result
 val verified: Signature_builder_deps.ErrorSet.t -> exports_info t' -> t
 
 (* Use for debugging; not for exposing info the the end user *)

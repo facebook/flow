@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 open Token
 open Parser_common
 open Parser_env
-open Ast
+open Flow_ast
 
 module Pattern
   (Parse: Parser_common.PARSER)

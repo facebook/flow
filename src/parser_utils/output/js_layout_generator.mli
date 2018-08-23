@@ -28,7 +28,7 @@ type comment_attach =
     | Following
 
 type comment_map =
-  (comment_attach * (Loc.t, Loc.t) Ast.Statement.t * Loc.t Ast.Comment.t)
+  (comment_attach * (Loc.t, Loc.t) Flow_ast.Statement.t * Loc.t Flow_ast.Comment.t)
   list LocMap.t
 
 val normal_context: expression_context
@@ -38,20 +38,20 @@ val with_attached_comments: comment_map option ref
 val program:
   preserve_docblock:bool ->
   checksum:string option ->
-  (Loc.t, Loc.t) Ast.program -> Layout.layout_node
+  (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
 val program_simple:
-  (Loc.t, Loc.t) Ast.program -> Layout.layout_node
-val expression: ?ctxt:expression_context -> (Loc.t, Loc.t) Ast.Expression.t -> Layout.layout_node
+  (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
+val expression: ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Expression.t -> Layout.layout_node
 val statement:
   ?allow_empty:bool ->
   ?pretty_semicolon:bool ->
-  (Loc.t, Loc.t) Ast.Statement.t -> Layout.layout_node
-val object_property: (Loc.t, Loc.t) Ast.Expression.Object.property -> Layout.layout_node
-val class_method: (Loc.t, Loc.t) Ast.Class.Method.t -> Layout.layout_node
-val class_property: (Loc.t, Loc.t) Ast.Class.Property.t -> Layout.layout_node
-val class_private_field: (Loc.t, Loc.t) Ast.Class.PrivateField.t -> Layout.layout_node
-val type_: (Loc.t, Loc.t) Ast.Type.t -> Layout.layout_node
-val identifier: Loc.t Ast.Identifier.t -> Layout.layout_node
+  (Loc.t, Loc.t) Flow_ast.Statement.t -> Layout.layout_node
+val object_property: (Loc.t, Loc.t) Flow_ast.Expression.Object.property -> Layout.layout_node
+val class_method: (Loc.t, Loc.t) Flow_ast.Class.Method.t -> Layout.layout_node
+val class_property: (Loc.t, Loc.t) Flow_ast.Class.Property.t -> Layout.layout_node
+val class_private_field: (Loc.t, Loc.t) Flow_ast.Class.PrivateField.t -> Layout.layout_node
+val type_: (Loc.t, Loc.t) Flow_ast.Type.t -> Layout.layout_node
+val identifier: Loc.t Flow_ast.Identifier.t -> Layout.layout_node
 
 val better_quote: string -> string
 val utf8_escape: quote:string -> string -> string

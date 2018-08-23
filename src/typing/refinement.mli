@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val key: (Loc.t, Loc.t) Ast.Expression.t -> Key.t option
+val key: (Loc.t, Loc.t) Flow_ast.Expression.t -> Key.t option
 val get:
   Context.t ->
-  (Loc.t, Loc.t) Ast.Expression.t ->
+  (Loc.t, Loc.t) Flow_ast.Expression.t ->
   Loc.t ->
   Type.t option

@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 (*
  * The file reproduces the behavior from
  * https://github.com/prettier/prettier/blob/bcdb6936ba42658b8dcdf1f70b4e5e0c8ae8ec06/src/main/comments.js

@@ -10,7 +10,7 @@ type t = {
   lex_token: Token.t;
   lex_loc: Loc.t;
   lex_errors: (Loc.t * Parse_error.t) list;
-  lex_comments: Loc.t Ast.Comment.t list;
+  lex_comments: Loc.t Flow_ast.Comment.t list;
 }
 
 let token result = result.lex_token

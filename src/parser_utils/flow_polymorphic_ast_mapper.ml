@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 let ( * ) f g (x, y) = (f x, g y)
 let id x = x
 

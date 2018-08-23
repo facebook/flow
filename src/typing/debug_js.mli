@@ -30,7 +30,7 @@ val string_of_reason: Context.t -> Reason.t -> string
 val string_of_file: Context.t -> string
 val string_of_selector: Type.TypeTerm.selector -> string
 val string_of_destructor: Type.TypeTerm.destructor -> string
-val string_of_default: (Loc.t, Loc.t) Ast.Expression.t Default.t -> string
+val string_of_default: (Loc.t, Loc.t) Flow_ast.Expression.t Default.t -> string
 
 val dump_t: ?depth:int -> Context.t -> Type.t -> string
 val dump_use_t: ?depth:int -> Context.t -> Type.use_t -> string

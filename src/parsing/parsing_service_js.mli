@@ -13,7 +13,7 @@ type types_mode =
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of (Loc.t, Loc.t) Ast.program * File_sig.t
+  | Parse_ok of (Loc.t, Loc.t) Flow_ast.program * File_sig.t
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -90,7 +90,7 @@ val parse_json_file :
   fail:bool ->
   string ->
   File_key.t ->
-  Loc.t * (Loc.t * (Loc.t, Loc.t) Ast.Statement.t') list * Loc.t Ast.Comment.t list
+  Loc.t * (Loc.t * (Loc.t, Loc.t) Flow_ast.Statement.t') list * Loc.t Flow_ast.Comment.t list
 
 (* parse contents of a file *)
 val do_parse:

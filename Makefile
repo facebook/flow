@@ -368,7 +368,7 @@ flow.odocl: $(shell find . -name "*.ml" -o -name "*.mli")
 	done
 	# For some reason these two AST files cause ocamldoc to get stuck
 	cat deps \
-		| grep -v "src/parser/ast.ml" \
+		| grep -v "src/parser/flow_ast.ml" \
 		| sed "s/\.ml$$//" > $@
 	rm -f deps last_deps temp_deps
 

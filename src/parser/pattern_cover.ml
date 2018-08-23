@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Ast
+open Flow_ast
 open Parser_common
 open Parser_env
 
@@ -38,7 +38,7 @@ module Cover
     then error_at env (fst expr, err);
 
     (match expr with
-    | loc, Ast.Expression.Identifier (_, name)
+    | loc, Flow_ast.Expression.Identifier (_, name)
       when is_restricted name ->
         strict_error_at env (loc, Error.StrictLHSAssignment)
     | _ -> ());

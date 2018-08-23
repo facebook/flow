@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 (* This module contains the traversal functions which set up subtyping
    constraints for every expression, statement, and declaration form in a
    JavaScript AST; the subtyping constraints are themselves solved in module

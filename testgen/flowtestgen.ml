@@ -40,7 +40,7 @@ let sys_init () =
 
 let move_func (prog : Syntax.t list) =
   let is_func s = match s with
-      | Syntax.Stmt (Ast.Statement.FunctionDeclaration _) -> true
+      | Syntax.Stmt (Flow_ast.Statement.FunctionDeclaration _) -> true
       | _ -> false in
 
   let all_func = List.filter is_func prog in

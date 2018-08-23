@@ -11,12 +11,12 @@ type 'a change' =
 type 'a change = (Loc.t * 'a change')
 
 type node =
-  | Statement of (Loc.t, Loc.t) Ast.Statement.t
-  | Program of (Loc.t, Loc.t) Ast.program
-  | Expression of (Loc.t, Loc.t) Ast.Expression.t
-  | Identifier of Loc.t Ast.Identifier.t
+  | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
+  | Program of (Loc.t, Loc.t) Flow_ast.program
+  | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t
+  | Identifier of Loc.t Flow_ast.Identifier.t
 
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it
  * does not work well for e.g. parsing two programs and determining their differences. *)
-val program: (Loc.t, Loc.t) Ast.program -> (Loc.t, Loc.t) Ast.program -> node change list
+val program: (Loc.t, Loc.t) Flow_ast.program -> (Loc.t, Loc.t) Flow_ast.program -> node change list

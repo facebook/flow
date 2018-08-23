@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 open Flow_ast_visitor
 
 module Entry = Signature_builder_entry

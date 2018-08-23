@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 (*
 Implements a basic dependence tracker for both values and types (tvars).
 It collects, for all the variable declarations, the assignments

@@ -290,8 +290,8 @@ let mk_comment
   (start: Loc.position) (_end: Loc.position)
   (buf: Buffer.t)
   (multiline: bool)
-: Loc.t Ast.Comment.t =
-  let open Ast.Comment in
+: Loc.t Flow_ast.Comment.t =
+  let open Flow_ast.Comment in
   let loc = { Loc.source = Lex_env.source env; start; _end } in
   let s = Buffer.contents buf in
   let c = if multiline then Block s else Line s in
@@ -383,7 +383,7 @@ type jsx_text_mode =
 
 type result =
   | Token of Lex_env.t * Token.t
-  | Comment of Lex_env.t * Loc.t Ast.Comment.t
+  | Comment of Lex_env.t * Loc.t Flow_ast.Comment.t
   | Continue of Lex_env.t
 
 let rec comment env buf lexbuf =

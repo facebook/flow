@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 type 'a change' =
   | Replace of 'a * 'a
   (* TODO add Insert and Delete as part of the implementation of a real diff algorithm *)

@@ -22,7 +22,7 @@ open Destructuring
 
 type param = string option * Type.t
 type rest = string option * Loc.t * Type.t
-type default = (Loc.t, Loc.t) Ast.Expression.t Default.t
+type default = (Loc.t, Loc.t) Flow_ast.Expression.t Default.t
 type binding = string * Loc.t * Type.t * default option
 
 type t = {

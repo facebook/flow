@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 (* This module defines a general notion of trace, which is used in modules
    Type_inference_js and Flow_js to record how the typechecker reasons about
    code, systematically collecting, simplifying, and solving constraints. This

@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 let flow_completion_to_lsp
     (item: ServerProt.Response.complete_autocomplete_result)
   : Lsp.Completion.completionItem =

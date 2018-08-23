@@ -12,8 +12,8 @@ val infer_ast:
   file_sig: File_sig.t ->
   Context.t ->
   File_key.t ->
-  (Loc.t, Loc.t) Ast.program ->
-  (Loc.t, Loc.t * Type.t) Ast.program
+  (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t * Type.t) Flow_ast.program
 (* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file:
   exclude_syms: SSet.t ->
@@ -21,5 +21,5 @@ val infer_lib_file:
   file_options: Files.options option ->
   file_sig: File_sig.t ->
   Context.t ->
-  (Loc.t, Loc.t) Ast.program ->
+  (Loc.t, Loc.t) Flow_ast.program ->
   string list
