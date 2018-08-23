@@ -90,10 +90,10 @@ class visitor ~cxs = object(this)
       else (loc, Method { meth with value = (fn_loc, fn') })
     | _ -> prop
 
-  method! class_method (meth: (Loc.t, Loc.t) Ast.Class.Method.t') =
+  method! class_method loc (meth: (Loc.t, Loc.t) Ast.Class.Method.t') =
     let open Ast.Class.Method in
     let open Ast.Expression.Object.Property in
-    let meth = super#class_method meth in
+    let meth = super#class_method loc meth in
     let { key; value = (loc, func); _ } = meth in
     match key with
     | Identifier (id_loc, _) ->

@@ -771,7 +771,7 @@ module This = struct
   end
 
   let in_class c =
-    try (new detector)#class_ c |> ignore; false
+    try (new detector)#class_ Loc.none c |> ignore; false
     with FoundInClass -> true
 end
 

@@ -394,7 +394,7 @@ class mapper = object(this)
       if id == id' then expr else loc, Identifier id'
 
     | loc, Literal l ->
-      let l' = this#literal l in
+      let l' = this#literal loc l in
       let dep = { typeDep = Dep.Primitive;
                   valDep = Dep.Primitive } in
       dep_map <- DepMap.add (DepKey.Temp loc) dep dep_map
@@ -403,7 +403,7 @@ class mapper = object(this)
 
     | loc, Ast.Expression.Object o ->
       let open Dep in
-      let o' = super#object_ o in
+      let o' = super#object_ loc o in
       (* Initialize dependence info for the AST node *)
       let dep = { typeDep = Dep.Object;
                   valDep = Dep.Object } in
@@ -437,7 +437,7 @@ class mapper = object(this)
       loc, Ast.Expression.Object o'
 
     | loc, Assignment a ->
-      let a' = this#assignment a in
+      let a' = this#assignment loc a in
       loc, Assignment a'
 
     | loc, Binary b ->
@@ -472,7 +472,7 @@ class mapper = object(this)
 
     | loc, Update x ->
       let open Ast.Expression.Update in
-      let x' = this#update_expression x in
+      let x' = this#update_expression loc x in
       let { argument; operator = _; prefix = _ } = x' in
       (match argument with
         | loc_a, Ast.Expression.Identifier _ ->
@@ -559,7 +559,7 @@ class mapper = object(this)
 
     | _, _ -> ()  (* TODO deal with the case e.p = e'. Update or havoc *)
 
-  method! assignment (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
+  method! assignment _loc (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
     let open Ast.Expression.Assignment in
     let { operator = op; left; right } = expr in
     let left' = this#assignment_pattern left in
@@ -574,7 +574,7 @@ class mapper = object(this)
     let open Ast.Statement.VariableDeclaration in
     match left with
     | LeftDeclaration (loc, decl) ->
-      let decl' = super#variable_declaration decl in
+      let decl' = super#variable_declaration loc decl in
       (* Even though variable_declarator is handled elsewhere, For the For-of
          case, it does not see the rhs assignment.  So we need to havoc that
          declarator here. *)
@@ -604,7 +604,7 @@ class mapper = object(this)
     let open Ast.Statement.VariableDeclaration in
     match left with
     | LeftDeclaration (loc, decl) ->
-      let decl' = super#variable_declaration decl in
+      let decl' = super#variable_declaration loc decl in
       (* Even though variable_declarator is handled elsewhere, For the For-In
          case, it does not see the rhs assignment.  So we need to havoc that
          declarator here. *)

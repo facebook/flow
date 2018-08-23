@@ -9,14 +9,14 @@ module Ast = Flow_ast
 
 class property_access_searcher name = object(this)
   inherit [bool] Flow_ast_visitor.visitor ~init:false as super
-  method! member expr =
+  method! member loc expr =
     let open Ast.Expression.Member in
     begin match expr.property with
       | PropertyIdentifier (_, x) when x = name ->
           this#set_acc true
       | _ -> ()
     end;
-    super#member expr
+    super#member loc expr
   method! object_key (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
     let open Ast.Expression.Object.Property in
     begin match key with

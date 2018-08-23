@@ -12,16 +12,16 @@ open OUnit2
 class useless_mapper = object
   inherit Flow_ast_mapper.mapper as super
 
-  method! literal (expr: Ast.Literal.t) =
+  method! literal _loc (expr: Ast.Literal.t) =
     let open Ast.Literal in
     match expr.value with
     | Number 4.0 ->
       {value=Number 5.0; raw="5"}
     | _ -> expr
 
-  method! binary (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
+  method! binary loc (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
     let open Ast.Expression.Binary in
-    let expr = super#binary expr in
+    let expr = super#binary loc expr in
     let { operator; _ } = expr in
     match operator with
     | Plus ->
@@ -37,9 +37,9 @@ class useless_mapper = object
     else
       id
 
-  method! variable_declaration (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
+  method! variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
     let open Ast.Statement.VariableDeclaration in
-    let decl = super#variable_declaration decl in
+    let decl = super#variable_declaration loc decl in
     let { declarations; kind } = decl in
     if kind = Var then { declarations; kind = Const }
     else decl

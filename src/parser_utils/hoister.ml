@@ -86,7 +86,7 @@ class hoister = object(this)
 
   (* Ignore class declarations, since they are lexical bindings (thus not
      hoisted). *)
-  method! class_ (cls: (Loc.t, Loc.t) Ast.Class.t) =
+  method! class_ _loc (cls: (Loc.t, Loc.t) Ast.Class.t) =
     cls
 
   (* Ignore import declarations, since they are lexical bindings (thus not
@@ -113,22 +113,22 @@ class hoister = object(this)
     | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const ->
       expr (* don't hoist let/const bindings *)
 
-  method! declare_variable (decl: (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t) =
+  method! declare_variable loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t) =
     let open Ast.Statement.DeclareVariable in
     this#add_binding decl.id;
-    super#declare_variable decl
+    super#declare_variable loc decl
 
-  method! declare_class (decl: (Loc.t, Loc.t) Ast.Statement.DeclareClass.t) =
+  method! declare_class loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareClass.t) =
     let open Ast.Statement.DeclareClass in
     this#add_binding decl.id;
-    super#declare_class decl
+    super#declare_class loc decl
 
-  method! declare_function (decl: (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) =
+  method! declare_function loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) =
     let open Ast.Statement.DeclareFunction in
     this#add_binding decl.id;
-    super#declare_function decl
+    super#declare_function loc decl
 
-  method! function_declaration (expr: (Loc.t, Loc.t) Ast.Function.t) =
+  method! function_declaration _loc (expr: (Loc.t, Loc.t) Ast.Function.t) =
     let open Ast.Function in
     let { id; _ } = expr in
     begin match id with
@@ -183,7 +183,7 @@ class lexical_hoister = object(this)
       expr
     | Some Ast.Statement.VariableDeclaration.Var -> expr
 
-  method! class_ (cls: (Loc.t, Loc.t) Ast.Class.t) =
+  method! class_ _loc (cls: (Loc.t, Loc.t) Ast.Class.t) =
     let open Ast.Class in
     let {
       id; body = _; tparams = _;
@@ -212,7 +212,7 @@ class lexical_hoister = object(this)
     this#add_binding id;
     id
 
-  method! import_namespace_specifier (id: Loc.t Ast.Identifier.t) =
+  method! import_namespace_specifier _loc (id: Loc.t Ast.Identifier.t) =
     this#add_binding id;
     id
 

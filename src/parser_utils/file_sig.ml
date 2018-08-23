@@ -423,7 +423,7 @@ class requires_exports_calculator ~ast = object(this)
     end;
     super#expression expr
 
-  method! binary (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
+  method! binary loc (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
     let open Ast.Expression in
     let open Ast.Expression.Binary in
     let is_module_or_exports = function
@@ -446,9 +446,9 @@ class requires_exports_calculator ~ast = object(this)
       identify_or_recurse right;
       expr
     end else
-      super#binary expr
+      super#binary loc expr
 
-  method! member (expr: (Loc.t, Loc.t) Ast.Expression.Member.t) =
+  method! member loc (expr: (Loc.t, Loc.t) Ast.Expression.Member.t) =
     let open Ast.Expression in
     let open Ast.Expression.Member in
     let { _object; property; computed = _ } = expr in
@@ -475,7 +475,7 @@ class requires_exports_calculator ~ast = object(this)
       | Identifier (_, "exports"), PropertyIdentifier _ ->
         (* In these cases we don't know much about the property so we should recurse *)
         ignore (this#member_property property)
-      | _ -> ignore (super#member expr)
+      | _ -> ignore (super#member loc expr)
     end;
     expr
 
@@ -671,11 +671,11 @@ class requires_exports_calculator ~ast = object(this)
     end;
     super#declare_export_declaration stmt_loc decl
 
-  method! assignment (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
-    this#handle_assignment ~is_toplevel:false expr;
+  method! assignment loc (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
+    this#handle_assignment ~is_toplevel:false loc expr;
     expr
 
-  method handle_assignment ~(is_toplevel: bool) (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
+  method handle_assignment ~(is_toplevel: bool) loc (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
     let open Ast.Expression in
     let open Ast.Expression.Assignment in
     let { operator; left; right } = expr in
@@ -717,7 +717,7 @@ class requires_exports_calculator ~ast = object(this)
       ignore (this#expression right);
       this#add_tolerable_error (BadExportContext (id, loc))
     | _ ->
-      ignore (super#assignment expr)
+      ignore (super#assignment loc expr)
     end;
 
     (* Handle imports *)
@@ -857,8 +857,8 @@ class requires_exports_calculator ~ast = object(this)
     let map_expression (expr: (Loc.t, Loc.t) Expression.t) =
       let open Expression in
       match expr with
-      | _, Assignment assg ->
-          this#handle_assignment ~is_toplevel:true assg;
+      | loc, Assignment assg ->
+          this#handle_assignment ~is_toplevel:true loc assg;
           expr
       | _ -> this#expression expr
     in

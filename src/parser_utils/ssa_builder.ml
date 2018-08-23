@@ -412,7 +412,7 @@ class ssa_builder = object(this)
     super#jsx_identifier ident
 
   (* Order of evaluation matters *)
-  method! assignment (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
+  method! assignment _loc (expr: (Loc.t, Loc.t) Ast.Expression.Assignment.t) =
     let open Ast.Expression.Assignment in
     let { operator; left; right } = expr in
     begin match operator with
@@ -467,7 +467,7 @@ class ssa_builder = object(this)
     decl
 
   (* read and write (when the argument is an identifier) *)
-  method! update_expression (expr: (Loc.t, Loc.t) Ast.Expression.Update.t) =
+  method! update_expression _loc (expr: (Loc.t, Loc.t) Ast.Expression.Update.t) =
     let open Ast.Expression.Update in
     let { argument; operator = _; prefix = _ } = expr in
     begin match argument with
@@ -482,23 +482,23 @@ class ssa_builder = object(this)
     expr
 
   (* things that cause abrupt completions *)
-  method! break (stmt: Loc.t Ast.Statement.Break.t) =
+  method! break _loc (stmt: Loc.t Ast.Statement.Break.t) =
     let open Ast.Statement.Break in
     let { label } = stmt in
     this#raise_abrupt_completion (AbruptCompletion.break label)
 
-  method! continue (stmt: Loc.t Ast.Statement.Continue.t) =
+  method! continue _loc (stmt: Loc.t Ast.Statement.Continue.t) =
     let open Ast.Statement.Continue in
     let { label } = stmt in
     this#raise_abrupt_completion (AbruptCompletion.continue label)
 
-  method! return (stmt: (Loc.t, Loc.t) Ast.Statement.Return.t) =
+  method! return _loc (stmt: (Loc.t, Loc.t) Ast.Statement.Return.t) =
     let open Ast.Statement.Return in
     let { argument } = stmt in
     ignore @@ Flow_ast_mapper.map_opt this#expression argument;
     this#raise_abrupt_completion AbruptCompletion.return
 
-  method! throw (stmt: (Loc.t, Loc.t) Ast.Statement.Throw.t) =
+  method! throw _loc (stmt: (Loc.t, Loc.t) Ast.Statement.Throw.t) =
     let open Ast.Statement.Throw in
     let { argument } = stmt in
     ignore @@ this#expression argument;
@@ -527,7 +527,7 @@ class ssa_builder = object(this)
   (* [ENV0] s2 [ENV2]                       *)
   (* POST = ENV1 | ENV2                     *)
   (******************************************)
-  method! if_statement (stmt: (Loc.t, Loc.t) Ast.Statement.If.t) =
+  method! if_statement _loc (stmt: (Loc.t, Loc.t) Ast.Statement.If.t) =
     let open Ast.Statement.If in
     let { test; consequent; alternate } = stmt in
     ignore @@ this#expression test;
@@ -563,7 +563,7 @@ class ssa_builder = object(this)
   (* [ENV2] s [ENV1]              *)
   (* POST = ENV2                  *)
   (********************************)
-  method! while_ (stmt: (Loc.t, Loc.t) Ast.Statement.While.t) =
+  method! while_ _loc (stmt: (Loc.t, Loc.t) Ast.Statement.While.t) =
     this#expecting_abrupt_completions (fun () ->
       let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
       let open Ast.Statement.While in
@@ -607,7 +607,7 @@ class ssa_builder = object(this)
   (* [ENV0 | ENV1] s; e [ENV1]       *)
   (* POST = ENV1                     *)
   (***********************************)
-  method! do_while (stmt: (Loc.t, Loc.t) Ast.Statement.DoWhile.t) =
+  method! do_while _loc (stmt: (Loc.t, Loc.t) Ast.Statement.DoWhile.t) =
     this#expecting_abrupt_completions (fun () ->
       let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
       let open Ast.Statement.DoWhile in
@@ -652,7 +652,7 @@ class ssa_builder = object(this)
   (* [ENV2] s; e2 [ENV1]                *)
   (* POST = ENV2                        *)
   (**************************************)
-  method! scoped_for_statement (stmt: (Loc.t, Loc.t) Ast.Statement.For.t) =
+  method! scoped_for_statement _loc (stmt: (Loc.t, Loc.t) Ast.Statement.For.t) =
     this#expecting_abrupt_completions (fun () ->
       let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
       let open Ast.Statement.For in
@@ -703,7 +703,7 @@ class ssa_builder = object(this)
   (* [ENV0 | ENV1] e1; s [ENV1]        *)
   (* POST = ENV2                       *)
   (*************************************)
-  method! scoped_for_in_statement (stmt: (Loc.t, Loc.t) Ast.Statement.ForIn.t) =
+  method! scoped_for_in_statement _loc (stmt: (Loc.t, Loc.t) Ast.Statement.ForIn.t) =
     this#expecting_abrupt_completions (fun () ->
       let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
       let open Ast.Statement.ForIn in
@@ -750,7 +750,7 @@ class ssa_builder = object(this)
   (* [ENV0 | ENV1] e1; s [ENV1]        *)
   (* POST = ENV2                       *)
   (*************************************)
-  method! scoped_for_of_statement (stmt: (Loc.t, Loc.t) Ast.Statement.ForOf.t) =
+  method! scoped_for_of_statement _loc (stmt: (Loc.t, Loc.t) Ast.Statement.ForOf.t) =
     this#expecting_abrupt_completions (fun () ->
       let continues = (AbruptCompletion.continue None)::possible_labeled_continues in
       let open Ast.Statement.ForOf in
@@ -805,7 +805,7 @@ class ssa_builder = object(this)
   (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
   (* POST = ENVN | ENVN'                                     *)
   (***********************************************************)
-  method! switch (switch: (Loc.t, Loc.t) Ast.Statement.Switch.t) =
+  method! switch _loc (switch: (Loc.t, Loc.t) Ast.Statement.Switch.t) =
     this#expecting_abrupt_completions (fun () ->
       let open Ast.Statement.Switch in
       let { discriminant; cases } = switch in
@@ -869,23 +869,23 @@ class ssa_builder = object(this)
   (* [HAVOC] s3 [ENV3 ]                                  *)
   (* POST = ENV3                                         *)
   (*******************************************************)
-  method! try_catch (stmt: (Loc.t, Loc.t) Ast.Statement.Try.t) =
+  method! try_catch _loc (stmt: (Loc.t, Loc.t) Ast.Statement.Try.t) =
     this#expecting_abrupt_completions (fun () ->
       let open Ast.Statement.Try in
-      let { block = (_loc, block); handler; finalizer } = stmt in
+      let { block = (loc, block); handler; finalizer } = stmt in
       let try_completion_state = this#run_to_completion (fun () ->
-        ignore @@ this#block block
+        ignore @@ this#block loc block
       ) in
       let env1 = this#ssa_env in
       let catch_completion_state, env2 = match handler with
-        | Some (_loc, clause) ->
+        | Some (loc, clause) ->
           (* NOTE: Havoc-ing the state when entering the handler is probably
              overkill. We can be more precise but still correct by collecting all
              possible writes in the try-block and merging them with the state when
              entering the try-block. *)
           this#havoc_current_ssa_env;
           let catch_completion_state = this#run_to_completion (fun () ->
-            ignore @@ this#catch_clause clause
+            ignore @@ this#catch_clause loc clause
           ) in
           catch_completion_state, this#ssa_env
         | None -> None, this#empty_ssa_env
@@ -904,7 +904,7 @@ class ssa_builder = object(this)
              when entering the handler (which in turn should already account for
              any contributions by the try-block). *)
           this#havoc_current_ssa_env;
-          ignore @@ this#block block
+          ignore @@ this#block loc block
         | None -> ()
       end;
       this#from_completion completion_state
@@ -912,7 +912,7 @@ class ssa_builder = object(this)
     stmt
 
   (* branching expressions *)
-  method! logical (expr: (Loc.t, Loc.t) Ast.Expression.Logical.t) =
+  method! logical _loc (expr: (Loc.t, Loc.t) Ast.Expression.Logical.t) =
     let open Ast.Expression.Logical in
     let { operator = _; left; right } = expr in
     ignore @@ this#expression left;
@@ -921,7 +921,7 @@ class ssa_builder = object(this)
     this#merge_self_ssa_env env1;
     expr
 
-  method! conditional (expr: (Loc.t, Loc.t) Ast.Expression.Conditional.t) =
+  method! conditional _loc (expr: (Loc.t, Loc.t) Ast.Expression.Conditional.t) =
     let open Ast.Expression.Conditional in
     let { test; consequent; alternate } = expr in
     ignore @@ this#predicate_expression test;
@@ -958,7 +958,7 @@ class ssa_builder = object(this)
 
   (* Labeled statements handle labeled breaks, but also push labeled continues
      that are expected to be handled by immediately nested loops. *)
-  method! labeled_statement (stmt: (Loc.t, Loc.t) Ast.Statement.Labeled.t) =
+  method! labeled_statement _loc (stmt: (Loc.t, Loc.t) Ast.Statement.Labeled.t) =
     this#expecting_abrupt_completions (fun () ->
       let open Ast.Statement.Labeled in
       let { label; body } = stmt in

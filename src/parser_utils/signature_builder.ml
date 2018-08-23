@@ -347,35 +347,35 @@ class type_hoister = object(this)
     | _, With _
       -> stmt
 
-  method! variable_declaration (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
+  method! variable_declaration _loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
     this#add_binding_list (Entry.variable_declaration decl);
     decl
 
-  method! declare_variable (decl: (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t) =
+  method! declare_variable _loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t) =
     this#add_binding (Entry.declare_variable decl);
     decl
 
-  method! function_declaration (expr: (Loc.t, Loc.t) Ast.Function.t) =
+  method! function_declaration _loc (expr: (Loc.t, Loc.t) Ast.Function.t) =
     this#add_binding_opt (Entry.function_declaration expr);
     expr
 
-  method! declare_function (decl: (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) =
+  method! declare_function _loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) =
     this#add_binding (Entry.declare_function decl);
     decl
 
-  method! class_ (cls: (Loc.t, Loc.t) Ast.Class.t) =
+  method! class_ _loc (cls: (Loc.t, Loc.t) Ast.Class.t) =
     this#add_binding_opt (Entry.class_ cls);
     cls
 
-  method! declare_class (decl: (Loc.t, Loc.t) Ast.Statement.DeclareClass.t) =
+  method! declare_class _loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareClass.t) =
     this#add_binding (Entry.declare_class decl);
     decl
 
-  method! type_alias (stuff: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t) =
+  method! type_alias _loc (stuff: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t) =
     this#add_binding (Entry.type_alias stuff);
     stuff
 
-  method! opaque_type (otype: (Loc.t, Loc.t) Ast.Statement.OpaqueType.t) =
+  method! opaque_type _loc (otype: (Loc.t, Loc.t) Ast.Statement.OpaqueType.t) =
     this#add_binding (Entry.opaque_type otype);
     otype
 
