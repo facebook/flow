@@ -165,37 +165,33 @@ module Eval = struct
   and array_type tps at =
     type_ tps at
 
-  and type_ref tps (_, r) =
+  and type_ref =
     let open Ast.Type.Generic in
-    match r with
-      | { id = Identifier.Unqualified (_, name); targs } ->
-        let deps = if SSet.mem name tps then Deps.bot else Deps.type_ name in
-        Deps.join (deps, type_args tps targs)
-      | { id = Identifier.Qualified (_, { Identifier.qualification; _ }); targs } ->
-        let deps = qualified_ref tps qualification in
-        Deps.join (deps, type_args tps targs)
+    let rec qualified_type_ref tps qualification =
+      let open Identifier in
+      match qualification with
+        | Unqualified (_, name) ->
+          if SSet.mem name tps then Deps.bot else Deps.type_ name
+        | Qualified (_, { qualification; _ }) -> qualified_type_ref tps qualification
+    in
+    fun tps (_, r) ->
+      let { id; targs } = r in
+      let deps = qualified_type_ref tps id in
+      Deps.join (deps, type_args tps targs)
 
-  and value_ref tps (_, r) =
+  and value_ref =
     let open Ast.Type.Generic in
-    match r with
-      | { id = Identifier.Unqualified (loc, name); targs } ->
-        let deps =
-          if SSet.mem name tps
-          then Deps.top (Error.InvalidTypeParamUse loc)
-          else Deps.value name in
-        Deps.join (deps, type_args tps targs)
-      | { id = Identifier.Qualified (_, { Identifier.qualification; _ }); targs } ->
-        let deps = qualified_ref tps qualification in
-        Deps.join (deps, type_args tps targs)
-
-  and qualified_ref tps qualification =
-    let open Ast.Type.Generic.Identifier in
-    match qualification with
-      | Unqualified (loc, name) ->
-        if SSet.mem name tps
-        then Deps.top (Error.InvalidTypeParamUse loc)
-        else Deps.value name
-      | Qualified (_, { qualification; _ }) -> qualified_ref tps qualification
+    let rec qualified_value_ref tps qualification =
+      let open Identifier in
+      match qualification with
+        | Unqualified (loc, name) ->
+          if SSet.mem name tps then Deps.top (Error.InvalidTypeParamUse loc) else Deps.value name
+        | Qualified (_, { qualification; _ }) -> qualified_value_ref tps qualification
+    in
+    fun tps (_, r) ->
+      let { id; targs } = r in
+      let deps = qualified_value_ref tps id in
+      Deps.join (deps, type_args tps targs)
 
   and type_args tps = function
     | None -> Deps.bot

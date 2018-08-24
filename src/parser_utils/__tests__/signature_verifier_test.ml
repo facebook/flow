@@ -216,6 +216,16 @@ let tests = "signature_verifier" >::: [
      "import type { T2 } from './import_type_dependencies_helper'";
      "import type { T3 } from './import_type_dependencies_helper'"];
 
+  "qualified_references" >:: mk_signature_verifier_test
+    ["import M1 from './qualified_references_helper';";
+     "import type M2 from './qualified_references_helper';";
+     "class C {";
+     "  m(x: M1.T): M2.T { return x; }";
+     "}";
+     "export default C;"]
+    ["import type { default } from './qualified_references_helper'";
+     "import { default } from './qualified_references_helper'"];
+
   "hoisted_requires" >:: mk_signature_verifier_test
     ["const M = require('./hoisted_requires_helper');";
      "if (Math.random() < 0.5) {";
