@@ -186,6 +186,11 @@ let tests = "signature_verifier" >::: [
      "export default (new C: C);"]
     ["Expected annotation @ (1, 4) to (1, 5)"];
 
+  "const_initializer" >:: mk_signature_verifier_test
+    ["const x = 0";
+     "export default { x };"]
+    [];
+
   "import_default_dependencies" >:: mk_signature_verifier_test
     ["import x from './import_default_dependencies_helper';";
      "class C {";

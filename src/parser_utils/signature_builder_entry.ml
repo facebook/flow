@@ -11,13 +11,12 @@ module Kind = Signature_builder_kind
 
 type t = Loc.t Ast.Identifier.t * Kind.t
 
-let rec pattern ?annot_path (expr: (Loc.t, Loc.t) Ast.Pattern.t) =
+let rec pattern ?annot_path init (p: (Loc.t, Loc.t) Ast.Pattern.t) =
   let open Ast.Pattern in
-  let _, patt = expr in
-  begin match patt with
-    | Identifier { Identifier.name; annot; _ } ->
-      [name, Kind.VariableDef { annot = Kind.Annot_path.mk_annot ?annot_path annot }]
-    | Object { Object.properties; annot } ->
+  begin match p with
+    | _, Identifier { Identifier.name; annot; _ } ->
+      [name, Kind.VariableDef { annot = Kind.Annot_path.mk_annot ?annot_path annot; init }]
+    | _, Object { Object.properties; annot } ->
       let open Object in
       let annot_path = Kind.Annot_path.mk_annot ?annot_path annot in
       List.fold_left (fun acc -> function
@@ -25,36 +24,39 @@ let rec pattern ?annot_path (expr: (Loc.t, Loc.t) Ast.Pattern.t) =
           begin match key with
             | Property.Identifier (_, x) ->
               let annot_path = Kind.Annot_path.mk_object ?annot_path x in
-              acc @ (pattern ?annot_path p)
+              acc @ (pattern ?annot_path init p)
             | Property.Literal (_, { Ast.Literal.raw; _ }) ->
               let annot_path = Kind.Annot_path.mk_object ?annot_path raw in
-              acc @ (pattern ?annot_path p)
+              acc @ (pattern ?annot_path init p)
             | Property.Computed _ ->
-              acc @ (pattern p)
+              acc @ (pattern init p)
           end
         | RestProperty (_, { RestProperty.argument = p }) ->
-          acc @ (pattern p)
+          acc @ (pattern init p)
       ) [] properties
-    | Array { Array.elements; annot } ->
+    | _, Array { Array.elements; annot } ->
       let open Array in
       let annot_path = Kind.Annot_path.mk_annot ?annot_path annot in
       fst @@ List.fold_left (fun (acc, i) -> function
         | None -> acc, i+1
         | Some (Element p) ->
           let annot_path = Kind.Annot_path.mk_array ?annot_path i in
-          acc @ (pattern ?annot_path p), i+1
+          acc @ (pattern ?annot_path init p), i+1
         | Some (RestElement (_, { RestElement.argument = p })) ->
-          acc @ (pattern p), i+1
+          acc @ (pattern init p), i+1
       ) ([], 0) elements
-    | Assignment { Assignment.left; _ } -> pattern ?annot_path left
-    | Expression _ -> [] (* TODO *)
+    | _, Assignment { Assignment.left; _ } -> pattern ?annot_path init left
+    | _, Expression _ -> [] (* TODO *)
   end
 
 let variable_declaration (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
   let open Ast.Statement.VariableDeclaration in
-  let { declarations; _ } = decl in
-  List.fold_left (fun acc (_, { Declarator.id; _ }) ->
-    acc @ (pattern id)
+  let { declarations; kind } = decl in
+  List.fold_left (fun acc (_, { Declarator.id; init }) ->
+    let init = match kind, init with
+      | Const, Some _ -> init
+      | _ -> None in
+    acc @ (pattern init id)
   ) [] declarations
 
 let function_declaration function_declaration =
@@ -76,7 +78,7 @@ let class_ class_ =
 let declare_variable declare_variable =
   let open Ast.Statement.DeclareVariable in
   let { id; annot } = declare_variable in
-  id, Kind.VariableDef { annot = Kind.Annot_path.mk_annot annot }
+  id, Kind.VariableDef { annot = Kind.Annot_path.mk_annot annot; init = None }
 
 let declare_function declare_function =
   let open Ast.Statement.DeclareFunction in

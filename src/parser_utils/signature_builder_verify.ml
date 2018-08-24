@@ -207,25 +207,6 @@ module Eval = struct
       | None, Some t | Some t, None -> type_ tps t
       | Some t1, Some t2 -> Deps.join (type_ tps t1, type_ tps t2)
 
-  let rec annot_path tps = function
-    | Kind.Annot_path.Annot (_, t) -> type_ tps t
-    | Kind.Annot_path.Object (path, _) -> annot_path tps path
-    | Kind.Annot_path.Array (path, _) -> annot_path tps path
-
-  let annotation tps (loc, annot) =
-    match annot with
-      | Some path -> annot_path tps path
-      | None -> Deps.top (Error.ExpectedAnnotation loc)
-
-  let rec pattern tps patt =
-    let open Ast.Pattern in
-    match patt with
-      | loc, Identifier { Identifier.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
-      | loc, Object { Object.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
-      | loc, Array { Array.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
-      | _, Assignment { Assignment.left; _ } -> pattern tps left
-      | loc, Expression _ -> Deps.todo loc "Expression"
-
   let type_params =
     let type_param tps tparam =
       let open Ast.Type.ParameterDeclaration.TypeParam in
@@ -247,8 +228,30 @@ module Eval = struct
           SSet.add tp tps, Deps.join (deps, deps')
         ) init tparams
 
-  let rec literal_expr =
-    let tps = SSet.empty in
+  let rec annot_path tps = function
+    | Kind.Annot_path.Annot (_, t) -> type_ tps t
+    | Kind.Annot_path.Object (path, _) -> annot_path tps path
+    | Kind.Annot_path.Array (path, _) -> annot_path tps path
+
+  let rec annotation ?init tps (loc, annot) =
+    match annot with
+      | Some path -> annot_path tps path
+      | None ->
+        begin match init with
+          | Some expr -> literal_expr tps expr
+          | None -> Deps.top (Error.ExpectedAnnotation loc)
+        end
+
+  and pattern tps patt =
+    let open Ast.Pattern in
+    match patt with
+      | loc, Identifier { Identifier.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
+      | loc, Object { Object.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
+      | loc, Array { Array.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
+      | _, Assignment { Assignment.left; _ } -> pattern tps left
+      | loc, Expression _ -> Deps.todo loc "Expression"
+
+  and literal_expr tps =
     let open Ast.Expression in
     function
       | _, Literal _ -> Deps.bot
@@ -278,7 +281,7 @@ module Eval = struct
       | _, Object stuff ->
         let open Ast.Expression.Object in
         let { properties } = stuff in
-        object_ properties
+        object_ tps properties
       | _, TypeCast stuff ->
         let open Ast.Expression.TypeCast in
         let { annot; _ } = stuff in
@@ -287,7 +290,7 @@ module Eval = struct
       | loc, Member stuff ->
         let open Ast.Expression.Member in
         let { _object; property; _ } = stuff in
-        let deps = literal_expr _object in
+        let deps = literal_expr tps _object in
         begin match property with
           | PropertyIdentifier _
           | PropertyPrivateName _ -> deps
@@ -341,7 +344,7 @@ module Eval = struct
       let deps = List.fold_left (Deps.reduce_join (class_element tps)) deps body in
       let deps = match super with
         | None -> deps
-        | Some expr -> Deps.join (deps, literal_expr expr) in
+        | Some expr -> Deps.join (deps, literal_expr tps expr) in
       let deps = Deps.join (deps, type_args tps super_targs) in
       List.fold_left (Deps.reduce_join (implement tps)) deps implements
 
@@ -352,8 +355,7 @@ module Eval = struct
     Deps.join (deps, type_args tps targs)
 
   and object_ =
-    let tps = SSet.empty in
-    let object_property =
+    let object_property tps =
       let open Ast.Expression.Object.Property in
       let object_key (loc, key) =
         let open Ast.Expression.Object.Property in
@@ -365,7 +367,7 @@ module Eval = struct
       in function
         | loc, Init { key; value; _ } ->
           let deps = object_key (loc, key) in
-          Deps.join (deps, literal_expr value)
+          Deps.join (deps, literal_expr tps value)
         | loc, Method { key; value = (fn_loc, fn) }
         | loc, Get { key; value = (fn_loc, fn) }
         | loc, Set { key; value = (fn_loc, fn) }
@@ -375,25 +377,25 @@ module Eval = struct
           let { tparams; params; return; _ } = fn in
           Deps.join (deps, function_ tps tparams params (fn_loc, return))
     in
-    let object_spread_property p =
+    let object_spread_property tps p =
       let open Ast.Expression.Object.SpreadProperty in
       let _, { argument } = p in
-      literal_expr argument
+      literal_expr tps argument
     in
-    fun properties ->
+    fun tps properties ->
       let open Ast.Expression.Object in
       List.fold_left (fun deps prop ->
         match prop with
-          | Property p -> Deps.join (deps, object_property p)
-          | SpreadProperty p -> Deps.join (deps, object_spread_property p)
+          | Property p -> Deps.join (deps, object_property tps p)
+          | SpreadProperty p -> Deps.join (deps, object_spread_property tps p)
       ) Deps.bot properties
 
 end
 
   let eval (loc, kind) =
     match kind with
-      | Kind.VariableDef { annot } ->
-        Eval.annotation SSet.empty (loc, annot)
+      | Kind.VariableDef { annot; init } ->
+        Eval.annotation ?init SSet.empty (loc, annot)
       | Kind.FunctionDef { tparams; params; return; } ->
         Eval.function_ SSet.empty tparams params (loc, return)
       | Kind.DeclareFunctionDef { annot = (_, t) } ->
@@ -425,10 +427,12 @@ end
       | Kind.RequireDef { source } ->
         Deps.require source
 
-  let cjs_exports = function
-    | File_sig.SetModuleExportsDef expr -> Eval.literal_expr expr
-    | File_sig.AddModuleExportsDef (_id, expr) -> Eval.literal_expr expr
-    | File_sig.DeclareModuleExportsDef (_loc, t) -> Eval.type_ SSet.empty t
+  let cjs_exports =
+    let tps = SSet.empty in
+    function
+    | File_sig.SetModuleExportsDef expr -> Eval.literal_expr tps expr
+    | File_sig.AddModuleExportsDef (_id, expr) -> Eval.literal_expr tps expr
+    | File_sig.DeclareModuleExportsDef (_loc, t) -> Eval.type_ tps t
 
   let eval_entry ((loc, _), kind) =
     eval (loc, kind)
@@ -524,7 +528,7 @@ end
     | Declaration stmt -> eval_stmt stmt
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
       eval_function_declaration loc function_
-    | Expression expr -> Eval.literal_expr expr
+    | Expression expr -> Eval.literal_expr SSet.empty expr
   )
 
   let eval_export_value_bindings named named_infos =

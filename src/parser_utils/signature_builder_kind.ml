@@ -55,7 +55,8 @@ end
 
 type t =
   | VariableDef of {
-      annot: Annot_path.t option
+      annot: Annot_path.t option;
+      init: (Loc.t, Loc.t) Ast.Expression.t option;
     }
   | FunctionDef of {
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
