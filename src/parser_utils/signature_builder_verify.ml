@@ -312,7 +312,13 @@ module Eval = struct
         let open Ast.Expression.Binary in
         let { operator; left; right } = stuff in
         arith_binary tps operator loc left right
-
+      | loc, Sequence stuff ->
+        let open Ast.Expression.Sequence in
+        let { expressions } = stuff in
+        begin match List.rev expressions with
+          | expr::_ -> literal_expr tps expr
+          | [] -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Sequence))
+        end
       | loc, Assignment _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
       | loc, Call _ ->
@@ -337,8 +343,6 @@ module Eval = struct
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.OptionalCall))
       | loc, OptionalMember _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.OptionalMember))
-      | loc, Sequence _ ->
-        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Sequence))
       | loc, Super ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Super))
       | loc, TaggedTemplate _ ->
