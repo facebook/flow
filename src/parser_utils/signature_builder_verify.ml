@@ -270,9 +270,9 @@ module Eval = struct
       | loc, ArrowFunction stuff
         ->
         let open Ast.Function in
-        let { id; tparams; params; return; _ } = stuff in
+        let { id; generator; tparams; params; return; body; _ } = stuff in
         begin match id with
-          | None -> function_ tps tparams params (loc, return)
+          | None -> function_ tps generator tparams params (loc, return) body
           | Some (_, name) -> Deps.value name
         end
       | _, Object stuff ->
@@ -421,18 +421,22 @@ module Eval = struct
         | None -> deps
         | Some (_, { RestElement.argument }) -> Deps.join (deps, pattern tps argument)
 
-    in fun tps tparams params (loc, return) ->
+    in fun tps generator tparams params (loc, return) body ->
       let tps, deps = type_params tps tparams in
       let deps = Deps.join (deps, function_params tps params) in
-      Deps.join (deps, annotation tps (loc, Kind.Annot_path.mk_annot return))
+      match return with
+        | None ->
+          if not generator && Signature_utils.Procedure_decider.is body then deps
+          else Deps.top (Error.ExpectedAnnotation loc)
+        | Some _ -> Deps.join (deps, annotation tps (loc, Kind.Annot_path.mk_annot return))
 
   and class_ =
     let class_element tps element =
       let open Ast.Class in
       match element with
         | Body.Method (_, { Method.value; _ }) ->
-          let loc, { Ast.Function.tparams; params; return; _ } = value in
-          function_ tps tparams params (loc, return)
+          let loc, { Ast.Function.generator; tparams; params; return; body; _ } = value in
+          function_ tps generator tparams params (loc, return) body
         | Body.Property (loc, { Property.annot; _ }) -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
         | Body.PrivateField (loc, { PrivateField.annot; _ }) -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
 
@@ -489,8 +493,8 @@ module Eval = struct
           ->
           let deps = object_key (loc, key) in
           let open Ast.Function in
-          let { tparams; params; return; _ } = fn in
-          Deps.join (deps, function_ tps tparams params (fn_loc, return))
+          let { generator; tparams; params; return; body; _ } = fn in
+          Deps.join (deps, function_ tps generator tparams params (fn_loc, return) body)
     in
     let object_spread_property tps p =
       let open Ast.Expression.Object.SpreadProperty in
@@ -511,8 +515,8 @@ end
     match kind with
       | Kind.VariableDef { annot; init } ->
         Eval.annotation ?init SSet.empty (loc, annot)
-      | Kind.FunctionDef { tparams; params; return; } ->
-        Eval.function_ SSet.empty tparams params (loc, return)
+      | Kind.FunctionDef { generator; tparams; params; return; body; } ->
+        Eval.function_ SSet.empty generator tparams params (loc, return) body
       | Kind.DeclareFunctionDef { annot = (_, t) } ->
         Eval.type_ SSet.empty t
       | Kind.ClassDef { tparams; body; super; super_targs; implements } ->

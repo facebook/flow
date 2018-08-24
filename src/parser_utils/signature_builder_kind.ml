@@ -59,9 +59,11 @@ type t =
       init: (Loc.t, Loc.t) Ast.Expression.t option;
     }
   | FunctionDef of {
+      generator: bool;
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
       params: (Loc.t, Loc.t) Ast.Function.Params.t;
       return: (Loc.t, Loc.t) Ast.Type.annotation option;
+      body: (Loc.t, Loc.t) Ast.Function.body;
     }
   | DeclareFunctionDef of {
       annot: (Loc.t, Loc.t) Ast.Type.annotation;

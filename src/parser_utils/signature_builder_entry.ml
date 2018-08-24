@@ -61,8 +61,8 @@ let variable_declaration (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration
 
 let function_declaration function_declaration =
   let open Ast.Function in
-  let { id; tparams; params; return; _ } = function_declaration in
-  id, Kind.FunctionDef { tparams; params; return }
+  let { id; generator; tparams; params; return; body; _ } = function_declaration in
+  id, Kind.FunctionDef { generator; tparams; params; return; body }
 
 let class_ class_ =
   let open Ast.Class in
