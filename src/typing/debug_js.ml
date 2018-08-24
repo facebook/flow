@@ -490,9 +490,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SuperT (_, _, Derived {instance=i; statics=o}) -> [
-      "instance", json_of_insttype json_cx i;
-      "statics", json_of_objtype json_cx o;
+  | SuperT (_, _, Derived {own; proto; static}) -> [
+      "own", json_of_pmap json_cx own;
+      "proto", json_of_pmap json_cx proto;
+      "static", json_of_pmap json_cx static;
     ]
 
   | ImplementsT (op, t) -> [

@@ -325,9 +325,10 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SuperT (_, _, Derived {instance; statics}) ->
-    let acc = self#inst_type cx pole_TODO acc instance in
-    let acc = self#obj_type cx pole_TODO acc statics in
+  | SuperT (_, _, Derived {own; proto; static}) ->
+    let acc = self#smap (self#prop cx pole_TODO) acc own in
+    let acc = self#smap (self#prop cx pole_TODO) acc proto in
+    let acc = self#smap (self#prop cx pole_TODO) acc static in
     acc
 
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t

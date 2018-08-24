@@ -584,11 +584,12 @@ class ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if targs' == targs && args' == args && t'' == t' then t
         else ConstructorT (op, r, targs', args', t'')
-    | SuperT (op, r, Derived {instance=i; statics=o}) ->
-        let i' = self#inst_type cx map_cx i in
-        let o' = self#obj_type cx map_cx o in
-        if i' == i && o' == o then t
-        else SuperT (op, r, Derived {instance=i'; statics=o'})
+    | SuperT (op, r, Derived {own=o; proto=p; static=s}) ->
+        let o' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) o in
+        let p' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) p in
+        let s' = SMap.ident_map (Property.ident_map_t (self#type_ cx map_cx)) s in
+        if o' == o && p' == p && s' == s then t
+        else SuperT (op, r, Derived {own=o'; proto=p'; static=s'})
     | ImplementsT (use_op, t') ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

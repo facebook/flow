@@ -615,11 +615,18 @@ let check_super cx def_reason x =
   let x = remove_this x in
   let reason = x.instance.reason in
   let open Type in
-  let initialized_static_fields, static_objtype = statictype cx tparams_with_this x in
-  let insttype = insttype cx ~initialized_static_fields x in
 
-  Context.iter_props cx insttype.own_props (fun x p1 ->
-    match Context.get_prop cx insttype.proto_props x with
+  (* NOTE: SuperT ignores the constructor anyway, so we don't pass it here.
+     Call properties are also ignored, so we ignore that result. *)
+  let _, own, proto, _call = elements cx ?constructor:None x.instance in
+  let static =
+    (* NOTE: The own, proto maps are disjoint by construction. *)
+    let _, own, proto, _call = elements cx x.static in
+    SMap.union own proto
+  in
+
+  SMap.iter (fun x p1 ->
+    match SMap.get x proto with
     | None -> ()
     | Some p2 ->
       let use_op = Op (ClassOwnProtoCheck {
@@ -629,7 +636,7 @@ let check_super cx def_reason x =
       }) in
       let propref = Named (reason, x) in
       Flow.flow_p cx ~use_op reason reason propref (p1, p2)
-  );
+  ) own;
 
   let super = supertype cx tparams_with_this x in
   let use_op = Op (ClassExtendsCheck {
@@ -637,10 +644,7 @@ let check_super cx def_reason x =
     name = reason;
     extends = reason_of_t super;
   }) in
-  Flow.flow cx (super, SuperT (use_op, reason, Derived {
-    instance = insttype;
-    statics = static_objtype
-  }))
+  Flow.flow cx (super, SuperT (use_op, reason, Derived {own; proto; static}))
 
 (* TODO: Ideally we should check polarity for all class types, but this flag is
    flipped off for interface/declare class currently. *)

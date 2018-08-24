@@ -5790,22 +5790,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         for the inherited properties are non-strict: they are not required to
         exist. **)
 
-    | DefT (ureason, InstanceT (static, _, _, _)),
-      SuperT (use_op, reason, Derived {instance=di; statics=ds}) ->
+    | DefT (ureason, InstanceT (st, _, _, _)),
+      SuperT (use_op, reason, Derived {own; proto; static}) ->
       let check_super l = check_super cx trace ~use_op reason ureason l in
-      begin (* instance *)
-        let {own_props; proto_props; _} = di in
-        Context.iter_props cx own_props (check_super l);
-        Context.iter_props cx proto_props (fun x p ->
-          if inherited_method x then check_super l x p
-        )
-      end;
-      begin (* statics *)
-        let {props_tmap; _} = ds in
-        Context.iter_props cx props_tmap (fun x p ->
-          if inherited_method x then check_super static x p
-        )
-      end
+      SMap.iter (check_super l) own;
+      SMap.iter (fun x p -> if inherited_method x then check_super l x p) proto;
+      (* TODO: inherited_method logic no longer applies for statics. It used to
+         when call properties were included in the props, but that is no longer
+         the case. All that remains is the "constructor" prop, which has no
+         special meaning on the static object. *)
+      SMap.iter (fun x p -> if inherited_method x then check_super st x p) static;
 
     (***********************)
     (* opaque types part 2 *)

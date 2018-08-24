@@ -808,9 +808,13 @@ module rec TypeTerm : sig
     | Upper of use_t
 
   (* Instance types are represented as an InstanceT while statics are ObjT.
-     However, both need to be checked for compatibility with the super type at
-     declaration time. *)
-  and derived_type = Derived of { instance: insttype; statics: objtype }
+     For superclass compatibility checking, it suffices to just check the
+     properties instead of creating the full InstanceT/ObjT. *)
+  and derived_type = Derived of {
+    own: property SMap.t;
+    proto: property SMap.t;
+    static: property SMap.t;
+  }
 
   (* LookupT is a general-purpose tool for traversing prototype chains in search
      of properties. In all cases, if the property is found somewhere along the
