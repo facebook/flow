@@ -319,8 +319,13 @@ module Eval = struct
           | expr::_ -> literal_expr tps expr
           | [] -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Sequence))
         end
-      | loc, Assignment _ ->
-        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
+      | loc, Assignment stuff ->
+        let open Ast.Expression.Assignment in
+        let { operator; left = _; right } = stuff in
+        begin match operator with
+          | Assign -> literal_expr tps right
+          | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
+        end
       | loc, Call _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
       | loc, Comprehension _ ->
