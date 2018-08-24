@@ -545,6 +545,8 @@ end
         Deps.import_star (Kind.Sort.of_import_kind kind) source
       | Kind.RequireDef { source } ->
         Deps.require source
+      | Kind.SketchyToplevelDef ->
+        Deps.top (Deps.Error.SketchyToplevelDef loc)
 
   let cjs_exports =
     let tps = SSet.empty in

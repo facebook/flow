@@ -16,6 +16,7 @@ module Error = struct
     | InvalidTypeParamUse of Loc.t
     | UnexpectedObjectKey of Loc.t
     | UnexpectedExpression of Loc.t * Ast_utils.ExpressionSort.t
+    | SketchyToplevelDef of Loc.t
     | TODO of string * Loc.t
 
   let compare = Pervasives.compare
@@ -30,6 +31,8 @@ module Error = struct
     | UnexpectedExpression (loc, esort) ->
       spf "Expected literal expression instead of %s @ %s"
         (Ast_utils.ExpressionSort.to_string esort) (Loc.to_string loc)
+    | SketchyToplevelDef loc ->
+      spf "Unexpected toplevel definition that needs hoisting @ %s" (Loc.to_string loc)
     | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (Loc.to_string loc)
 
 end

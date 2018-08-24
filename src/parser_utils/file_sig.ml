@@ -1136,6 +1136,11 @@ class mapper = object(this)
           if loc == loc'
           then tolerable_error
           else SignatureVerificationError (UnexpectedExpression (loc', esort))
+        | SketchyToplevelDef loc ->
+          let loc' = this#loc loc in
+          if loc == loc'
+          then tolerable_error
+          else SignatureVerificationError (SketchyToplevelDef loc')
         | TODO (msg, loc) ->
           let loc' = this#loc loc in
           if loc == loc'

@@ -228,7 +228,23 @@ end
 class type_hoister = object(this)
   inherit [Env.t] visitor ~init:Env.empty as super
 
+  (* tracks the current block scope level; for now, this can only take on values 0 and 1 *)
+  val mutable level = 0
+  method private next f =
+    level <- level + 1;
+    Lazy.force f;
+    level <- level - 1
+
+  method private is_toplevel =
+    level = 0
+
   method private add_binding entry =
+    let entry =
+      if this#is_toplevel then entry
+      else
+        let id, _ = entry in
+        Entry.sketchy_toplevel id
+    in
     this#update_acc (Env.add entry)
 
   method private add_binding_opt = function
@@ -271,7 +287,9 @@ class type_hoister = object(this)
       | _, Switch _
       | _, Try _
       | _, While _
-        -> super#statement stmt
+        ->
+        this#next (lazy (ignore @@ super#statement stmt));
+        stmt
 
       (* shortcut *)
       | _, DeclareExportDeclaration _
@@ -294,19 +312,7 @@ class type_hoister = object(this)
   method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
     let open Ast.Statement in
     match stmt with
-    (* process non-lexical bindings *)
-    | _, VariableDeclaration decl ->
-      let open Ast.Statement.VariableDeclaration in
-      let { kind; _ } = decl in
-      begin match kind with
-        | Ast.Statement.VariableDeclaration.Var -> super#statement stmt
-        | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const -> stmt
-      end
-    | _, DeclareVariable _ -> super#statement stmt
-
-    (* ignore lexical bindings *)
-    | _, FunctionDeclaration _
-    | _, DeclareFunction _
+    (* ignore block-scoped bindings and type bindings *)
     | _, ClassDeclaration _
     | _, DeclareClass _
     | _, TypeAlias _
@@ -316,6 +322,19 @@ class type_hoister = object(this)
     | _, InterfaceDeclaration _
     | _, DeclareInterface _
       -> stmt
+
+    (* process function-scoped bindings *)
+    | _, VariableDeclaration decl ->
+      let open Ast.Statement.VariableDeclaration in
+      let { kind; _ } = decl in
+      begin match kind with
+        | Ast.Statement.VariableDeclaration.Var -> super#statement stmt
+        | Ast.Statement.VariableDeclaration.Let | Ast.Statement.VariableDeclaration.Const -> stmt
+      end
+    | _, DeclareVariable _
+    | _, FunctionDeclaration _
+    | _, DeclareFunction _
+      -> super#statement stmt
 
     (* recurse through control flow *)
     | _, Block _

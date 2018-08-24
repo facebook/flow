@@ -117,3 +117,6 @@ let import_named id name kind source =
 
 let require id source =
   id, Kind.RequireDef { source }
+
+let sketchy_toplevel id =
+  id, Kind.SketchyToplevelDef

@@ -1821,6 +1821,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
               (Ast_utils.ExpressionSort.to_string esort)
           )
         ]
+      | SketchyToplevelDef loc ->
+        mk_signature_verification_error loc [
+          text "Unexpected toplevel definition that needs hoisting:"
+        ]
       | TODO (msg, loc) ->
         mk_signature_verification_error loc [
           text (spf "TODO: %s is not supported yet, try using a type cast." msg)

@@ -108,6 +108,7 @@ type t =
   | RequireDef of {
       source: Ast_utils.source;
     }
+  | SketchyToplevelDef
 
 let to_string = function
   | VariableDef _ -> "VariableDef"
@@ -121,6 +122,7 @@ let to_string = function
   | ImportNamedDef _ -> "ImportNamedDef"
   | ImportStarDef _ -> "ImportStarDef"
   | RequireDef _ -> "RequireDef"
+  | SketchyToplevelDef -> "SketchyToplevelDef"
 
 let is_type = function
   | VariableDef _ -> true (* conditional *)
@@ -134,6 +136,7 @@ let is_type = function
   | ImportNamedDef { kind; _ } -> Sort.is_import_type kind
   | ImportStarDef { kind; _ } -> Sort.is_import_type kind
   | RequireDef _ -> true (* conditional *)
+  | SketchyToplevelDef -> true (* don't care *)
 
 let is_value = function
   | VariableDef _ -> true
@@ -147,6 +150,7 @@ let is_value = function
   | ImportNamedDef { kind; _ } -> Sort.is_import_value kind
   | ImportStarDef { kind; _ } -> Sort.is_import_value kind
   | RequireDef _ -> true
+  | SketchyToplevelDef -> true (* don't care *)
 
 let validator = function
   | Sort.Type -> is_type

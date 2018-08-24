@@ -262,11 +262,37 @@ let tests = "signature_verifier" >::: [
      "  f: D = 0;";
      "}";
      "module.exports = C;"]
-    ["Expected annotation @ (3, 6) to (3, 7)";
-     "Expected annotation @ (5, 6) to (5, 7)";
+    ["Unexpected toplevel definition that needs hoisting @ (3, 6) to (3, 7)";
+     "Unexpected toplevel definition that needs hoisting @ (5, 6) to (5, 7)";
      "require('./hoisted_locals_helper')"];
 
   "dynamic_requires" >:: mk_signature_verifier_test
     ["module.exports = require('./dynamic_requires_helper');"]
     ["require('./dynamic_requires_helper')"];
+
+  "scope_extrusion" >:: mk_signature_verifier_test
+    ["{";
+     "  class C {}";
+     "  var x: C = new C;";
+     "}";
+     "class C {";
+     "  f = 0;";
+     "}";
+     "module.exports = x;"]
+    ["Unexpected toplevel definition that needs hoisting @ (3, 6) to (3, 7)"];
+
+  "scope_extrusion_nested" >:: mk_signature_verifier_test
+    ["{";
+     "  class C {}";
+     "  let y = 0;";
+     "  if (b) {";
+     "    var x: C = new C;";
+     "  }";
+     "}";
+     "class C {";
+     "  f = 0;";
+     "}";
+     "module.exports = { x, y };"]
+    ["Unexpected toplevel definition that needs hoisting @ (5, 8) to (5, 9)";
+     "global value: y"];
 ]
