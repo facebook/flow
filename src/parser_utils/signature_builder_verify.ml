@@ -251,6 +251,7 @@ module Eval = struct
     let open Ast.Expression in
     function
       | _, Literal _ -> Deps.bot
+      | _, TemplateLiteral _ -> Deps.bot
       | _, Identifier (_, name) -> Deps.value name
       | _, Class stuff ->
         let open Ast.Class in
@@ -352,8 +353,6 @@ module Eval = struct
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Super))
       | loc, TaggedTemplate _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.TaggedTemplate))
-      | loc, TemplateLiteral _ ->
-        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.TemplateLiteral))
       | loc, This ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.This))
       | loc, Update _ ->
