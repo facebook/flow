@@ -191,6 +191,12 @@ let tests = "signature_verifier" >::: [
      "export default { x };"]
     [];
 
+  "array_literal" >:: mk_signature_verifier_test
+    ["const x = 0";
+     "var y = false";
+     "export default [ x, y ];"]
+    ["Expected annotation @ (2, 4) to (2, 5)"];
+
   "import_default_dependencies" >:: mk_signature_verifier_test
     ["import x from './import_default_dependencies_helper';";
      "class C {";

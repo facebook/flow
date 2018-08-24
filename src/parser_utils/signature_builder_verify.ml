@@ -282,6 +282,10 @@ module Eval = struct
         let open Ast.Expression.Object in
         let { properties } = stuff in
         object_ tps properties
+      | _, Array stuff ->
+        let open Ast.Expression.Array in
+        let { elements } = stuff in
+        array_ tps elements
       | _, TypeCast stuff ->
         let open Ast.Expression.TypeCast in
         let { annot; _ } = stuff in
@@ -305,7 +309,6 @@ module Eval = struct
               | _ -> false
           end -> Deps.dynamic_require loc
 
-      | loc, Array _x -> Deps.todo loc "Array"
       | loc, Unary _x -> Deps.todo loc "Unary"
       | loc, Binary _x -> Deps.todo loc "Binary"
       | loc, New _x -> Deps.todo loc "New"
@@ -347,6 +350,22 @@ module Eval = struct
         | Some expr -> Deps.join (deps, literal_expr tps expr) in
       let deps = Deps.join (deps, type_args tps super_targs) in
       List.fold_left (Deps.reduce_join (implement tps)) deps implements
+
+  and array_ =
+    let spread_element tps spread_element =
+      let open Ast.Expression.SpreadElement in
+      let _, { argument } = spread_element in
+      literal_expr tps argument
+    in
+    let array_element tps expr_or_spread_opt =
+      let open Ast.Expression in
+      match expr_or_spread_opt with
+        | None -> Deps.bot
+        | Some (Expression expr) -> literal_expr tps expr
+        | Some (Spread spread) -> spread_element tps spread
+    in
+    fun tps elements ->
+      List.fold_left (Deps.reduce_join (array_element tps)) Deps.bot elements
 
   and implement tps implement =
     let open Ast.Class.Implements in
