@@ -14,10 +14,10 @@ module Procedure_decider = struct
     method private no =
       this#update_acc (fun _ -> false)
 
-    method! function_ (expr: (Loc.t, Loc.t) Flow_ast.Function.t) =
+    method! function_ _loc (expr: (Loc.t, Loc.t) Flow_ast.Function.t) =
       expr
 
-    method! return (stmt: (Loc.t, Loc.t) Flow_ast.Statement.Return.t) =
+    method! return _loc (stmt: (Loc.t, Loc.t) Flow_ast.Statement.Return.t) =
       let open Flow_ast.Statement.Return in
       let { argument } = stmt in
       begin match argument with
@@ -28,8 +28,8 @@ module Procedure_decider = struct
 
     method! function_body_any (body: (Loc.t, Loc.t) Flow_ast.Function.body) =
       begin match body with
-        | Flow_ast.Function.BodyBlock (_, block) ->
-          ignore @@ this#function_body block
+        | Flow_ast.Function.BodyBlock (loc, block) ->
+          ignore @@ this#function_body loc block
         | Flow_ast.Function.BodyExpression _ ->
           this#no
       end;
