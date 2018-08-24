@@ -31,3 +31,40 @@ val loc_of_expression:
 
 val loc_of_statement:
   ('a, 'a) Flow_ast.Statement.t -> 'a
+
+module ExpressionSort: sig
+  type t =
+    | Array
+    | ArrowFunction
+    | Assignment
+    | Binary
+    | Call
+    | Class
+    | Comprehension
+    | Conditional
+    | Function
+    | Generator
+    | Identifier
+    | Import
+    | JSXElement
+    | JSXFragment
+    | Literal
+    | Logical
+    | Member
+    | MetaProperty
+    | New
+    | Object
+    | OptionalCall
+    | OptionalMember
+    | Sequence
+    | Super
+    | TaggedTemplate
+    | TemplateLiteral
+    | This
+    | TypeCast
+    | Unary
+    | Update
+    | Yield
+
+  val to_string: t -> string
+end

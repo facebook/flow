@@ -15,18 +15,21 @@ module Error = struct
     | ExpectedAnnotation of Loc.t
     | InvalidTypeParamUse of Loc.t
     | UnexpectedObjectKey of Loc.t
-    | UnexpectedExpression of Loc.t
+    | UnexpectedExpression of Loc.t * Ast_utils.ExpressionSort.t
     | TODO of string * Loc.t
 
   let compare = Pervasives.compare
 
   let to_string = function
     | ExpectedSort (sort, x, loc) ->
-      spf "%s @ %s is not a %s" x (Loc.to_string loc) (Sort.to_string sort)
+      spf "%s @ %s is not a %s"
+        x (Loc.to_string loc) (Sort.to_string sort)
     | ExpectedAnnotation loc -> spf "Expected annotation @ %s" (Loc.to_string loc)
     | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (Loc.to_string loc)
     | UnexpectedObjectKey loc -> spf "Expected simple object key @ %s" (Loc.to_string loc)
-    | UnexpectedExpression loc -> spf "Expected literal expression @ %s" (Loc.to_string loc)
+    | UnexpectedExpression (loc, esort) ->
+      spf "Expected literal expression instead of %s @ %s"
+        (Ast_utils.ExpressionSort.to_string esort) (Loc.to_string loc)
     | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (Loc.to_string loc)
 
 end

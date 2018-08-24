@@ -1814,9 +1814,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
         mk_signature_verification_error loc [
           text "Expected simple object key:"
         ]
-      | UnexpectedExpression loc ->
+      | UnexpectedExpression (loc, esort) ->
         mk_signature_verification_error loc [
-          text "Expected literal expression:"
+          text (
+            spf "Expected literal expression instead of %s, try using a type cast."
+              (Ast_utils.ExpressionSort.to_string esort)
+          )
         ]
       | TODO (msg, loc) ->
         mk_signature_verification_error loc [

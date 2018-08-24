@@ -313,10 +313,44 @@ module Eval = struct
         let { operator; left; right } = stuff in
         arith_binary tps operator loc left right
 
-      | loc, New _x -> Deps.todo loc "New"
-
-      | loc, _ ->
-        Deps.top (Error.UnexpectedExpression loc)
+      | loc, Assignment _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
+      | loc, Call _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
+      | loc, Comprehension _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Comprehension))
+      | loc, Conditional _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Conditional))
+      | loc, Generator _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Generator))
+      | loc, JSXElement _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXElement))
+      | loc, JSXFragment _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXFragment))
+      | loc, Logical _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Logical))
+      | loc, MetaProperty _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.MetaProperty))
+      | loc, New _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.New))
+      | loc, OptionalCall _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.OptionalCall))
+      | loc, OptionalMember _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.OptionalMember))
+      | loc, Sequence _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Sequence))
+      | loc, Super ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Super))
+      | loc, TaggedTemplate _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.TaggedTemplate))
+      | loc, TemplateLiteral _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.TemplateLiteral))
+      | loc, This ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.This))
+      | loc, Update _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Update))
+      | loc, Yield _ ->
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Yield))
 
   and arith_unary tps operator loc argument =
     let open Ast.Expression.Unary in
@@ -333,7 +367,7 @@ module Eval = struct
         ignore tps; ignore argument; Deps.bot
       | Await ->
         (* The result type of this operation depends in a complicated way on the argument type. *)
-        Deps.top (Error.UnexpectedExpression loc)
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Unary))
 
   and arith_binary tps operator _loc left right =
     let open Ast.Expression.Binary in
@@ -673,12 +707,12 @@ end
   let dynamic_validator (dynamic_imports, dynamic_requires) = function
     | Dep.DynamicImport loc ->
       begin match LocMap.get loc dynamic_imports with
-        | None -> Deps.top (Deps.Error.UnexpectedExpression loc)
+        | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
         | Some source -> Deps.import_star Kind.Sort.Value source
       end
     | Dep.DynamicRequire loc ->
       begin match LocMap.get loc dynamic_requires with
-        | None -> Deps.top (Deps.Error.UnexpectedExpression loc)
+        | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
         | Some source -> Deps.require source
       end
 

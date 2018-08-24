@@ -68,3 +68,71 @@ let negate_number_literal (value, raw) =
 let loc_of_statement = fst
 
 let loc_of_expression = fst
+
+module ExpressionSort = struct
+  type t =
+    | Array
+    | ArrowFunction
+    | Assignment
+    | Binary
+    | Call
+    | Class
+    | Comprehension
+    | Conditional
+    | Function
+    | Generator
+    | Identifier
+    | Import
+    | JSXElement
+    | JSXFragment
+    | Literal
+    | Logical
+    | Member
+    | MetaProperty
+    | New
+    | Object
+    | OptionalCall
+    | OptionalMember
+    | Sequence
+    | Super
+    | TaggedTemplate
+    | TemplateLiteral
+    | This
+    | TypeCast
+    | Unary
+    | Update
+    | Yield
+
+  let to_string = function
+    | Array -> "Array"
+    | ArrowFunction -> "ArrowFunction"
+    | Assignment -> "Assignment"
+    | Binary -> "Binary"
+    | Call -> "Call"
+    | Class -> "Class"
+    | Comprehension -> "Comprehension"
+    | Conditional -> "Conditional"
+    | Function -> "Function"
+    | Generator -> "Generator"
+    | Identifier -> "Identifier"
+    | Import -> "Import"
+    | JSXElement -> "JSXElement"
+    | JSXFragment -> "JSXFragment"
+    | Literal -> "Literal"
+    | Logical -> "Logical"
+    | Member -> "Member"
+    | MetaProperty -> "Metaproperty"
+    | New -> "New"
+    | Object -> "Object"
+    | OptionalCall -> "OptionalCall"
+    | OptionalMember -> "OptionalMember"
+    | Sequence -> "Sequence"
+    | Super -> "Super"
+    | TaggedTemplate -> "TaggedTemplate"
+    | TemplateLiteral -> "TemplateLiteral"
+    | This -> "This"
+    | TypeCast -> "TypeCast"
+    | Unary -> "Unary"
+    | Update -> "Update"
+    | Yield -> "Yield"
+end
