@@ -42,6 +42,7 @@ module Scope = struct
     defs: Def.t SMap.t;
     locals: use_def_map;
     globals: SSet.t;
+    loc: Loc.t;
   }
 end
 
@@ -104,6 +105,18 @@ let def_is_unused info def =
 let scope info scope_id =
   try IMap.find_unsafe scope_id info.scopes with Not_found ->
     failwith ("Scope " ^ (string_of_int scope_id) ^ " not found")
+
+let scope_of_loc info scope_loc =
+  let scopes =
+    IMap.fold
+      (fun scope_id scope acc ->
+        if scope.Scope.loc = scope_loc then scope_id::acc
+        else acc
+      )
+      info.scopes
+      []
+  in
+  List.rev scopes
 
 let is_local_use { scopes; _ } use =
   IMap.exists (fun _ scope ->

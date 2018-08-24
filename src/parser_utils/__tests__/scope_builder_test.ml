@@ -54,6 +54,26 @@ let mk_scope_builder_uses_of_all_uses_test contents expected_uses =
       expected_uses uses
   end
 
+let mk_scope_builder_scope_loc_test contents expected_scope_locs =
+  begin fun ctxt ->
+    let info = Scope_builder.program (parse contents) in
+    let scope_locs = IMap.elements (
+      IMap.map
+        (fun scope -> scope.Scope_api.Scope.loc)
+        info.Scope_api.scopes
+      )
+    in
+    let scope_locs = List.rev scope_locs in
+    let printer = (fun list ->
+      Printf.sprintf "[%s]" (print_list (fun (id, loc) -> Printf.sprintf "%d: %s" id (Loc.to_string loc)) list)
+    ) in
+    assert_equal ~ctxt
+      ~cmp:(eq printer)
+      ~printer
+      ~msg:"Uses of all uses don't match!"
+      expected_scope_locs scope_locs
+  end
+
 let tests = "scope_builder" >::: [
   "let_all_uses" >:: mk_scope_builder_all_uses_test
     "function foo() { \
@@ -174,4 +194,29 @@ let tests = "scope_builder" >::: [
      mk_loc (1, 38) (1, 41);
      mk_loc (1, 44) (1, 47);
      mk_loc (1, 51) (1, 52)];
+  "scope_loc_function_declaration" >:: mk_scope_builder_scope_loc_test
+    "function a() {};"
+    [0, mk_loc (1, 0) (1, 16); (* program *)
+     1, mk_loc (1, 0) (1, 16); (* program (lexical) *)
+     2, mk_loc (1, 0) (1, 15); (* function params and body *)
+     3, mk_loc (1, 13) (1, 15)]; (* block (lexical) *)
+  "scope_loc_function_expression" >:: mk_scope_builder_scope_loc_test
+    "const x = function() {};"
+    [0, mk_loc (1, 0) (1, 24); (* program *)
+     1, mk_loc (1, 0) (1, 24); (* program (lexical) *)
+     2, mk_loc (1, 10) (1, 23); (* function name (lexical) *)
+     3, mk_loc (1, 10) (1, 23); (* function params and body *)
+     4, mk_loc (1, 21) (1, 23)]; (* block (lexical) *)
+  "scope_loc_arrow_function" >:: mk_scope_builder_scope_loc_test
+    "const x = () => 1;"
+    [0, mk_loc (1, 0) (1, 18); (* program *)
+     1, mk_loc (1, 0) (1, 18); (* program (lexical) *)
+     2, mk_loc (1, 10) (1, 17); (* function name (lexical) *)
+     3, mk_loc (1, 10) (1, 17)]; (* function params and body *)
+  "scope_loc_for_in" >:: mk_scope_builder_scope_loc_test
+    "for (let a in b) {}"
+    [0, mk_loc (1, 0) (1, 19); (* program *)
+     1, mk_loc (1, 0) (1, 19); (* program (lexical) *)
+     2, mk_loc (1, 0) (1, 19); (* for in (lexical) *)
+     3, mk_loc (1, 17) (1, 19)]; (* block (lexical) *)
 ]

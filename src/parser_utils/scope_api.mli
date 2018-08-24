@@ -25,6 +25,7 @@ module Scope: sig
     defs: Def.t SMap.t;
     locals: use_def_map;
     globals: SSet.t;
+    loc: Loc.t;
   }
 end
 type info = {
@@ -33,6 +34,11 @@ type info = {
 }
 
 val scope: info -> scope -> Scope.t
+
+(* List of scopes associated with a loc. The returned list order should be
+   based on the scope depth (some nodes such as functions have two scopes
+   associated, one for the name and one for the params/body). *)
+val scope_of_loc: info -> Loc.t -> scope list
 
 val all_uses: info -> uses
 val defs_of_all_uses: info -> use_def_map

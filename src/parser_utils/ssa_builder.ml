@@ -288,11 +288,11 @@ class ssa_builder = object(this)
     this#resolve_havocs bindings;
     ssa_env <- old_ssa_env
 
-  method! with_bindings: 'a. ?lexical:bool -> Bindings.t -> ('a -> 'a) -> 'a -> 'a =
-    fun ?lexical bindings visit node ->
+  method! with_bindings: 'a. ?lexical:bool -> Loc.t -> Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+    fun ?lexical loc bindings visit node ->
       let saved_state = this#push_ssa_env bindings in
       this#run (fun () ->
-        ignore @@ super#with_bindings ?lexical bindings visit node
+        ignore @@ super#with_bindings ?lexical loc bindings visit node
       ) ~finally:(fun () ->
         this#pop_ssa_env saved_state
       );
@@ -934,13 +934,13 @@ class ssa_builder = object(this)
     expr
 
   (* We also havoc state when entering functions and exiting calls. *)
-  method! lambda params body =
+  method! lambda loc params body =
     this#expecting_abrupt_completions (fun () ->
       let env = this#ssa_env in
       this#run (fun () ->
         this#havoc_uninitialized_ssa_env;
         let completion_state = this#run_to_completion (fun () ->
-          super#lambda params body
+          super#lambda loc params body
         ) in
         this#commit_abrupt_completion_matching AbruptCompletion.(mem [return; throw]) completion_state
       ) ~finally:(fun () ->
@@ -998,6 +998,7 @@ class ssa_builder = object(this)
 end
 
 let program_with_scope ?(ignore_toplevel=false) program =
+  let loc, _, _ = program in
   let ssa_walk = new ssa_builder in
   let bindings =
     if ignore_toplevel then Bindings.empty
@@ -1005,7 +1006,7 @@ let program_with_scope ?(ignore_toplevel=false) program =
       let hoist = new hoister in
       hoist#eval hoist#program program
   in
-  ignore @@ ssa_walk#with_bindings bindings ssa_walk#program program;
+  ignore @@ ssa_walk#with_bindings loc bindings ssa_walk#program program;
   ssa_walk#acc, ssa_walk#values
 
 let program program =

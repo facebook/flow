@@ -107,8 +107,8 @@ class scope_builder = object(this)
     });
     result
 
-  method with_bindings: 'a. ?lexical:bool -> Bindings.t -> ('a -> 'a) -> 'a -> 'a =
-    fun ?(lexical=false) bindings visit node ->
+  method with_bindings: 'a. ?lexical:bool -> Loc.t -> Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+    fun ?(lexical=false) loc bindings visit node ->
       let save_counter = counter in
       let save_uses = uses in
       let old_env = env in
@@ -128,7 +128,7 @@ class scope_builder = object(this)
           | Some def -> LocMap.add loc def locals, globals
           | None -> locals, SSet.add x globals
         ) (locals, SSet.empty) uses in
-        let scopes = IMap.add child { Scope.lexical; parent; defs; locals; globals; } acc.scopes in
+        let scopes = IMap.add child { Scope.lexical; parent; defs; locals; globals; loc; } acc.scopes in
         { acc with scopes }
       );
       uses <- save_uses;
@@ -159,13 +159,14 @@ class scope_builder = object(this)
   method! block loc (stmt: (Loc.t, Loc.t) Ast.Statement.Block.t) =
     let lexical_hoist = new lexical_hoister in
     let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
-    this#with_bindings ~lexical:true lexical_bindings (super#block loc) stmt
+    this#with_bindings ~lexical:true loc lexical_bindings (super#block loc) stmt
 
   (* like block *)
   method! program (program: (Loc.t, Loc.t) Ast.program) =
+    let loc, _, _ = program in
     let lexical_hoist = new lexical_hoister in
     let lexical_bindings = lexical_hoist#eval lexical_hoist#program program in
-    this#with_bindings ~lexical:true lexical_bindings super#program program
+    this#with_bindings ~lexical:true loc lexical_bindings super#program program
 
   method private scoped_for_in_statement loc (stmt: (Loc.t, Loc.t) Ast.Statement.ForIn.t) =
     super#for_in_statement loc stmt
@@ -180,7 +181,7 @@ class scope_builder = object(this)
       lexical_hoist#eval (lexical_hoist#variable_declaration loc) decl
     | LeftPattern _ -> Bindings.empty
     in
-    this#with_bindings ~lexical:true lexical_bindings (this#scoped_for_in_statement loc) stmt
+    this#with_bindings ~lexical:true loc lexical_bindings (this#scoped_for_in_statement loc) stmt
 
   method private scoped_for_of_statement loc (stmt: (Loc.t, Loc.t) Ast.Statement.ForOf.t) =
     super#for_of_statement loc stmt
@@ -195,7 +196,7 @@ class scope_builder = object(this)
       lexical_hoist#eval (lexical_hoist#variable_declaration loc) decl
     | LeftPattern _ -> Bindings.empty
     in
-    this#with_bindings ~lexical:true lexical_bindings (this#scoped_for_of_statement loc) stmt
+    this#with_bindings ~lexical:true loc lexical_bindings (this#scoped_for_of_statement loc) stmt
 
   method private scoped_for_statement loc (stmt: (Loc.t, Loc.t) Ast.Statement.For.t) =
     super#for_statement loc stmt
@@ -210,7 +211,7 @@ class scope_builder = object(this)
       lexical_hoist#eval (lexical_hoist#variable_declaration loc) decl
     | _ -> Bindings.empty
     in
-    this#with_bindings ~lexical:true lexical_bindings (this#scoped_for_statement loc) stmt
+    this#with_bindings ~lexical:true loc lexical_bindings (this#scoped_for_statement loc) stmt
 
   method! catch_clause loc (clause: (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t') =
     let open Ast.Statement.Try.CatchClause in
@@ -223,10 +224,10 @@ class scope_builder = object(this)
         lexical_hoist#eval lexical_hoist#catch_clause_pattern p
       | None -> Bindings.empty
       in
-    this#with_bindings ~lexical:true lexical_bindings (super#catch_clause loc) clause
+    this#with_bindings ~lexical:true loc lexical_bindings (super#catch_clause loc) clause
 
   (* helper for function params and body *)
-  method private lambda params body =
+  method private lambda loc params body =
     let open Ast.Function in
 
     (* hoisting *)
@@ -235,19 +236,19 @@ class scope_builder = object(this)
       let (_loc, { Params.params = param_list; rest = _rest }) = params in
       run_list hoist#function_param_pattern param_list;
       match body with
-        | BodyBlock (loc, block) ->
-          run (hoist#block loc) block
+        | BodyBlock (block_loc, block) ->
+          run (hoist#block block_loc) block
         | _ ->
           ()
     end;
 
-    this#with_bindings hoist#acc (fun () ->
+    this#with_bindings loc hoist#acc (fun () ->
       let (_loc, { Params.params = param_list; rest }) = params in
       run_list this#function_param_pattern param_list;
       run_opt this#function_rest_element rest;
       begin match body with
-      | BodyBlock (loc, block) ->
-        run (this#block loc) block
+      | BodyBlock (block_loc, block) ->
+        run (this#block block_loc) block
       | BodyExpression expr ->
         run this#expression expr
       end;
@@ -268,7 +269,7 @@ class scope_builder = object(this)
 
       run_opt this#function_identifier id;
 
-      this#lambda params body;
+      this#lambda loc params body;
     end;
 
     expr
@@ -291,9 +292,9 @@ class scope_builder = object(this)
       let bindings = match id with
         | Some name -> Bindings.singleton name
         | None -> Bindings.empty in
-      this#with_bindings ~lexical:true bindings (fun () ->
+      this#with_bindings loc ~lexical:true bindings (fun () ->
         run_opt this#function_identifier id;
-        this#lambda params body;
+        this#lambda loc params body;
       ) ();
     end;
 
@@ -301,6 +302,7 @@ class scope_builder = object(this)
 end
 
 let program ?(ignore_toplevel=false) program =
+  let loc, _, _ = program in
   let walk = new scope_builder in
   let bindings =
     if ignore_toplevel then Bindings.empty
@@ -308,4 +310,4 @@ let program ?(ignore_toplevel=false) program =
       let hoist = new hoister in
       hoist#eval hoist#program program
   in
-  walk#eval (walk#with_bindings bindings walk#program) program
+  walk#eval (walk#with_bindings loc bindings walk#program) program
