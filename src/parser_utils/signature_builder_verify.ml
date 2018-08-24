@@ -327,6 +327,12 @@ module Eval = struct
           | Assign -> literal_expr tps right
           | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
         end
+      | _, Update stuff ->
+        let open Ast.Expression.Update in
+        (* This operation has a simple result type. *)
+        let { argument = _; _ } = stuff in
+        Deps.bot
+
       | loc, Call _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
       | loc, Comprehension _ ->
@@ -355,8 +361,6 @@ module Eval = struct
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.TaggedTemplate))
       | loc, This ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.This))
-      | loc, Update _ ->
-        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Update))
       | loc, Yield _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Yield))
 
