@@ -308,13 +308,67 @@ module Eval = struct
               | _, Identifier (_, "require") -> true
               | _ -> false
           end -> Deps.dynamic_require loc
+      | loc, Unary stuff ->
+        let open Ast.Expression.Unary in
+        let { operator; argument; _ } = stuff in
+        arith_unary tps operator loc argument
+      | loc, Binary stuff ->
+        let open Ast.Expression.Binary in
+        let { operator; left; right } = stuff in
+        arith_binary tps operator loc left right
 
-      | loc, Unary _x -> Deps.todo loc "Unary"
-      | loc, Binary _x -> Deps.todo loc "Binary"
       | loc, New _x -> Deps.todo loc "New"
 
       | loc, _ ->
         Deps.top (Error.UnexpectedExpression loc)
+
+  and arith_unary tps operator loc argument =
+    let open Ast.Expression.Unary in
+    match operator with
+      | Minus
+      | Plus
+      | Not
+      | BitNot
+      | Typeof
+      | Void
+      | Delete
+        ->
+        (* These operations have simple result types. *)
+        ignore tps; ignore argument; Deps.bot
+      | Await ->
+        (* The result type of this operation depends in a complicated way on the argument type. *)
+        Deps.top (Error.UnexpectedExpression loc)
+
+  and arith_binary tps operator _loc left right =
+    let open Ast.Expression.Binary in
+    match operator with
+      | Plus ->
+        let deps = literal_expr tps left in
+        Deps.join (deps, literal_expr tps right)
+      | Equal
+      | NotEqual
+      | StrictEqual
+      | StrictNotEqual
+      | LessThan
+      | LessThanEqual
+      | GreaterThan
+      | GreaterThanEqual
+      | LShift
+      | RShift
+      | RShift3
+      | Minus
+      | Mult
+      | Exp
+      | Div
+      | Mod
+      | BitOr
+      | Xor
+      | BitAnd
+      | In
+      | Instanceof
+        ->
+        (* These operations have simple result types. *)
+        ignore left; ignore right; Deps.bot
 
   and function_ =
     let function_params tps params =
