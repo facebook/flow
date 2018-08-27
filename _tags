@@ -6,6 +6,7 @@ true: package(ppx_deriving), package(dtoa), package(wtf8)
 <hack/utils/*.ml*>: warn(-3-27)
 <src/flowlib/flowlib.ml>: ppx(scripts/ppx_gen_flowlibs.native lib/ prelude/)
 <src/parser/*.ml*>: warn(-39)
+<src/common/ty/*.ml*>: package(visitors.ppx)
 <**/node_modules/**>: -traverse
 <_obuild>: -traverse
 <packages>: -traverse

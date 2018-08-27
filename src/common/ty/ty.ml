@@ -5,16 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type provenance =
-  | Local of Loc.t      (* Defined locally *)
-  | Imported of Loc.t   (* Defined remotely, imported to file *)
-  | Remote of Loc.t     (* Defined remotely, NOT imported to file *)
-  | Library of Loc.t    (* Defined in library *)
-  | Builtin
-
-type identifier = string
-
-type symbol = Symbol of (provenance * identifier) [@@unboxed]
+include Ty_symbol
+include Ty_ancestors
 
 type t =
   | TVar of tvar * t list option
@@ -103,6 +95,31 @@ and type_param = {
 and opt = bool
 
 and polarity = Positive | Negative | Neutral
+[@@deriving visitors {
+  name="iter_ty";
+  nude=true;
+  variety = "iter";
+  visit_prefix="on_";
+  ancestors=["iter_ty_base"];
+}, visitors {
+  name="reduce_ty";
+  variety = "reduce";
+  nude = true;
+  visit_prefix = "on_";
+  ancestors = ["reduce_ty_base"];
+}, visitors {
+  name="map_ty";
+  variety = "map";
+  nude = true;
+  visit_prefix = "on_";
+  ancestors = ["map_ty_base"];
+}, visitors {
+  name="endo_ty";
+  variety = "endo";
+  nude = true;
+  visit_prefix = "on_";
+  ancestors = ["endo_ty_base"];
+}]
 
 
 (* Type descructors *)
@@ -145,9 +162,6 @@ let mk_object ?(obj_exact=false) ?(obj_frozen=false) obj_props =
 
 let named_t symbol =
   Generic (symbol, false, None)
-
-let builtin_symbol name =
-  Symbol (Builtin, name)
 
 let builtin_t name =
   named_t (builtin_symbol name)

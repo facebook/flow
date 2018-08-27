@@ -20,6 +20,7 @@ depends: [
   "lwt_ppx" { >= "1.1.0" }
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
+  "visitors" {build}
   "wtf8"
 ]
 available: [ocaml-version >= "4.05.0"]
