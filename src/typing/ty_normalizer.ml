@@ -219,21 +219,6 @@ end = struct
   (* Type ops   *)
   (**************)
 
-  (* Simplify a list of types by:
-     - returning the "zero" element if such exists, or
-     - filtering out "one" elements
-  *)
-  let simplify_zero_one ~zero ~one =
-    let rec simplify_aux acc = function
-    | [] -> acc
-    | t::ts ->
-      if t = zero then [t]
-      else if t = one then simplify_aux acc ts
-      else simplify_aux (t::acc) ts
-    in
-    simplify_aux []
-
-
   (* Simplify union/intersection types
 
      This visitor:
@@ -246,36 +231,48 @@ end = struct
      The Any state of this visitor is used to capture any change to the type
      structure.
   *)
-  let simplify_unions_inters_visitor =
-    let open Ty_visitor.AnyVisitor in
-    object(self) inherit visitor
-    method private simplify env ~break ~zero ~one ~make ts =
-      mapM (self#type_ env) ts >>= fun ts' ->
-      let ts' = List.concat (List.map break ts') in
-      let ts' = List.sort Pervasives.compare ts' in
-      let ts' = ListUtils.uniq ts' in
-      let ts' = simplify_zero_one ~zero ~one ts' in
-      tell (List.length ts <> List.length ts') >>| fun _ ->
-      make ts'
-    method! type_ env = function
-    | Ty.Union (t1, t2, ts) ->
-        let break = Ty.bk_union in
-        let make = Ty.mk_union in
-        self#simplify env ~break ~zero:Ty.Top ~one:Ty.Bot ~make (t1::t2::ts)
-    | Ty.Inter (t1, t2, ts) ->
-        let break = Ty.bk_inter in
-        let make = Ty.mk_union in
-        self#simplify env ~break ~zero:Ty.Bot ~one:Ty.Top ~make (t1::t2::ts)
-    | t ->
-        (* WARNING: do not descend to other constructors or this will
-           get slow *)
-        return t
-    end
+  let simplify_unions_inters =
+    let open Ty in
+    let simplify_zero_one ~zero ~one =
+      let rec simplify_aux acc = function
+      | [] -> acc
+      | t::ts ->
+        if t = zero then [t]
+        else if t = one then simplify_aux acc ts
+        else simplify_aux (t::acc) ts
+      in
+      simplify_aux []
+    in
+    let o = object (self)
+      inherit [_] endo_ty
+      method private simplify env ~break ~zero ~one ~make ts =
+        let ts' = self#on_list self#on_t env ts in
+        let ts' = List.concat (List.map break ts') in
+        let ts' = List.sort Pervasives.compare ts' in
+        let ts' = ListUtils.uniq ts' in
+        let ts' = simplify_zero_one ~zero ~one ts' in
+        if List.length ts = List.length ts'
+        then None (* no change *)
+        else Some (make ts')
 
-  let rec simplify_unions_inters t =
-    let t', changed = simplify_unions_inters_visitor#type_ () t in
-    if changed then simplify_unions_inters t' else t
-
+      method! on_t env t =
+        match t with
+        | Union (t0,t1,ts) ->
+          let opt = self#simplify ~break:Ty.bk_union ~zero:Ty.Top
+            ~one:Ty.Bot ~make:Ty.mk_union env (t0::t1::ts) in
+          Option.value ~default:t opt
+        | Inter (t0,t1,ts) ->
+          let opt = self#simplify ~break:Ty.bk_inter ~zero:Ty.Bot
+            ~one:Ty.Top ~make:Ty.mk_inter env (t0::t1::ts) in
+          Option.value ~default:t opt
+        (* WARNING: do not descend to other constructors or this will get slow *)
+        | _ -> t
+    end in
+    let rec go t =
+      let t' = o#on_t () t in
+      if t == t' then t else go t'
+    in
+    fun t -> go t
 
   (* We wrap the union and intersection constructors with the following
      functions that keep types as small as possible.
