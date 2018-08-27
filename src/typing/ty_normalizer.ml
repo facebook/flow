@@ -339,7 +339,7 @@ end = struct
     let mk_mu ~check_recursive i t =
       let is_rec =
         if check_recursive
-        then Ty_utils.FreeVars.is_free_in ~is_top:true i t
+        then  Ty_utils.appears_in_t ~is_top:true i t
         else true in
       if is_rec then
         Ty.(match t with
