@@ -1913,7 +1913,7 @@ object.js:6:5 = {
   "end":5
 }
 object.js:6:7 = {
-  "type":"{b: ?{c: (null | {d: number})}} | void",
+  "type":"void | {b: ?{c: (null | {d: number})}}",
   "reasons":[],
   "loc":{
     "source":"object.js",
@@ -1973,7 +1973,7 @@ object.js:8:14 = {
   "end":14
 }
 object.js:8:16 = {
-  "type":"{d: number} | null",
+  "type":"null | {d: number}",
   "reasons":[],
   "loc":{
     "source":"object.js",

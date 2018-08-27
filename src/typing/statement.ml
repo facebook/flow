@@ -3022,7 +3022,8 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
       let (_, t2), _ as alternate = expression cx alternate in
 
       let newset = Changeset.merge oldset in
-      Env.merge_env cx loc (env, then_env, else_env) newset;
+      Env.merge_env cx loc (env, then_env, else_env)
+        (Changeset.exclude_refines newset);
       Env.update_env cx loc env;
       (* TODO call loc_of_predicate on some pred?
          t1 is wrong but hopefully close *)

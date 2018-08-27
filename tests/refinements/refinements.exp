@@ -118,6 +118,62 @@ References:
                                                       ^^^^^^^^^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:4:2
+
+Property `q` is missing in object literal [1].
+
+   cond_expr.js:4:2
+   4| (a.q ? a.q : "foo");
+       ^^^
+
+References:
+   cond_expr.js:3:9
+   3| var a = { p: 0 };
+              ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:5:2
+
+Cannot get `a.q` because property `q` is missing in object literal [1].
+
+   cond_expr.js:5:2
+   5| (a.q: mixed); // An error here
+       ^^^
+
+References:
+   cond_expr.js:3:9
+   3| var a = { p: 0 };
+              ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:8:5
+
+Property `q` is missing in object literal [1].
+
+   cond_expr.js:8:5
+   8| if (b.q) {} else {};
+          ^^^
+
+References:
+   cond_expr.js:7:9
+   7| var b = { p: 0 };
+              ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- cond_expr.js:9:2
+
+Cannot get `b.q` because property `q` is missing in object literal [1].
+
+   cond_expr.js:9:2
+   9| (b.q: mixed); // is an error here
+       ^^^
+
+References:
+   cond_expr.js:7:9
+   7| var b = { p: 0 };
+              ^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:11:25
 
 Cannot call `getTypeASTName` with `typeAST.type` bound to `typeAST` because `BadType` [1] is incompatible with
@@ -2924,4 +2980,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 204 errors
+Found 208 errors
