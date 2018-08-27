@@ -336,15 +336,12 @@ end = struct
        `TypeAlias` is abusively treated as a type. Eventually, the goal is to include it
        in a "module element" category rather than the Ty.t structure.
     *)
-    let mk_mu ~check_recursive i t =
-      let is_rec =
-        if check_recursive
-        then  Ty_utils.appears_in_t ~is_top:true i t
-        else true in
-      if is_rec then
-        Ty.(match t with
+    let mk_mu ~definitely_appears i t =
+      let open Ty in
+      if definitely_appears || Ty_utils.appears_in_t ~is_top:true i t then
+        match t with
         | TypeAlias { ta_name; _ } -> subst (RVar i) ta_name t
-        | _ -> Mu (i, t))
+        | _ -> Mu (i, t)
       else t
 
     (* When inferring recursive types, the top-level appearances of the recursive
@@ -363,43 +360,31 @@ end = struct
        It is expected to followed by type minimization, so that the introduced
        Bot and Top can be eliminated.
     *)
-
-    module RemoveTopLevelTvarVisitor = struct
-      module Env = struct
-        type t = U (* union context *)
-               | I (* intersection context *)
-        let descend _ e = e
-        (* The starting state is that of a union. This allows for the behavior
-           outlined above.
-        *)
-        let init = U
-        (* The "zero" element is Bot (resp. Top) if we're in a union (resp.
-           intersection) context, so that a subsequent minimization pass
-           eliminates it.
-        *)
-        let zero = function
-          | I -> Ty.Top
-          | U -> Ty.Bot
-      end
-
-      module M = Ty_visitor.MakeAny(Env)
-      open M
-
-      let run v =
-        let remove_toplevel_tvar_visitor = object(self) inherit visitor
-          method! type_ env = function
-          | Ty.Union (t0,t1,ts) ->
-            mapM (self#type_ Env.U) (t0::t1::ts) >>| Ty.mk_union
-          | Ty.Inter (t0,t1,ts) ->
-            mapM (self#type_ Env.I) (t0::t1::ts) >>| Ty.mk_inter
-          | Ty.TVar (Ty.RVar v', _) when v = v' ->
-            tell true >>| fun _ -> Env.zero env
-          | Ty.Mu (v, t) ->
-            self#type_ env t >>| mk_mu ~check_recursive:true v
-          | t -> return t
-        end in
-        remove_toplevel_tvar_visitor#type_ Env.init
-    end
+    let remove_toplevel_tvar =
+      let open Ty in
+      let o = object (self)
+        inherit [_] endo_ty
+        method env_zero =
+          function `Union -> Bot | `Inter -> Top
+        method! on_t env t =
+          match env, t with
+          | (v, _), Union (t0,t1,ts) ->
+            let ts = t0::t1::ts in
+            let ts' = self#on_list self#on_t (v, `Union) ts in
+            if ts == ts' then t else Ty.mk_union ts'
+          | (v, _), Inter (t0,t1,ts) ->
+            let ts = t0::t1::ts in
+            let ts' = self#on_list self#on_t (v, `Inter) ts in
+            if ts == ts' then t else Ty.mk_inter ts'
+          | (v, mode), TVar (Ty.RVar v', _) when v = v' ->
+            self#env_zero mode
+          | _, Mu (v, rt) ->
+            let rt' = self#on_t env rt in
+            if rt == rt' then t
+            else mk_mu ~definitely_appears:false v rt'
+          | _, _ -> t
+      end in
+      fun v t -> o#on_t (v, `Union) t
 
 
     (* Constructing recursive types.
@@ -431,16 +416,13 @@ end = struct
           not a recursive type.
     *)
     let make free_vars i t =
-      if VSet.mem i free_vars then
-        (* Maybe recursive (might be a degenerate) *)
-        let t, changed = RemoveTopLevelTvarVisitor.run i t in
-        let t = if changed then simplify_unions_inters t else t in
-        (* If not changed then all free_vars are still in, o.w. recompute free vars *)
-        mk_mu ~check_recursive:changed i t
-      else
-        (* Definitely not recursive *)
-        t
-
+      if not (VSet.mem i free_vars) then t else
+      (* Recursive, but still might be a degenerate case *)
+      let t' = remove_toplevel_tvar i t in
+      let changed = not (t == t') in
+      let t' = if changed then simplify_unions_inters t' else t' in
+      (* If not changed then all free_vars are still in, o.w. recompute free vars *)
+      mk_mu ~definitely_appears:(not changed) i t'
   end
 
 
