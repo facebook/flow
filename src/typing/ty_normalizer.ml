@@ -308,14 +308,17 @@ end = struct
     (* Helper functions *)
 
     (* Replace a recursive type variable r with a symbol sym in the type t. *)
-    let subst r sym t =
-      let subst_visitor = object inherit Ty_visitor.UnitVisitor.visitor as super
-        method! type_ env = function
-        | Ty.TVar (i, ts) when r = i ->
-          super#type_ env (Ty.Generic (sym, true, ts))
-        | t -> super#type_ env t
-      end in
-      subst_visitor#map_type () t
+    let subst  =
+      let o = Ty.(object
+        inherit [_] map_ty as super
+        method! on_t env t =
+          let t = match t, env with
+          | TVar (i, ts), (r, sym) when r = i -> Generic (sym, true, ts)
+          | _ -> t in
+          super#on_t env t
+      end) in
+      fun r sym t ->
+        o#on_t (r, sym) t
 
     (* We shouldn't really create bare Mu types for two reasons.
 
@@ -442,52 +445,39 @@ end = struct
 
 
   module Substitution = struct
-    module Env = struct
-      type t =  Ty.t SMap.t
-      let descend _ e = e
+    open Ty
+
+    let init_env tparams types =
+      let rec step acc = function
+      | [], _ | _, [] -> acc
+      | p::ps, t::ts -> step (SMap.add p.tp_name t acc) (ps, ts)
+      in
+      step SMap.empty (tparams, types)
+
+    let remove_params env = function
+    | None -> env
+    | Some ps -> List.fold_left (fun e p -> SMap.remove p.tp_name e) env ps
+
+    let visitor = object
+      inherit [_] endo_ty as super
+      method! on_t env t =
+        match t with
+        | TypeAlias { ta_tparams = ps; _ }
+        | Fun { fun_type_params = ps; _ } ->
+          let env = remove_params env ps in
+          super#on_t env t
+        | Bound (Symbol (_, name)) ->
+          let t' = Option.value (SMap.get name env) ~default:t in
+          super#on_t env t'
+        | _ ->
+          super#on_t env t
     end
-    module Visitor = Ty_visitor.MakeAny(Env)
-
-    (* Replace a list of type parameters with a list of types in the given type.
-     * These lists might not match exactly in length.
-     *)
-    let run =
-      let open Ty in
-      let init_env tparams types =
-        let rec step acc = function
-        | [], _ | _, [] -> acc
-        | p::ps, t::ts -> step (SMap.add p.tp_name t acc) (ps, ts)
-        in
-        step SMap.empty (tparams, types)
-      in
-      let remove_params env = function
-      | None -> env
-      | Some ps -> List.fold_left (fun e p -> SMap.remove p.tp_name e) env ps
-      in
-      let open Visitor in
-      let subst_visitor = object inherit visitor as super
-        method! type_ env t =
-          match t with
-          | TypeAlias { ta_tparams=ps; _ }
-          | Fun { fun_type_params=ps; _ } ->
-            let env = remove_params env ps in
-            super#type_ env t
-          | Bound (Symbol (_, name)) ->
-            begin match SMap.get name env with
-            | Some t' ->
-              (* Mark the substitution *)
-              begin tell true >>= fun _ ->
-              super#type_ env t' end
-            | _ -> super#type_ env t
-            end
-          | _ -> super#type_ env t
-        end
-      in
-      fun vs ts t_body ->
-        let env = init_env vs ts in
-        let t, changed = subst_visitor#type_ env t_body in
-        if changed then simplify_unions_inters t else t
-
+      (* Replace a list of type parameters with a list of types in the given type.
+       * These lists might not match exactly in length. *)
+    let run vs ts t =
+      let env = init_env vs ts in
+      let t' = visitor#on_t env t in
+      if t != t' then simplify_unions_inters t' else t'
   end
 
   (***********************)
