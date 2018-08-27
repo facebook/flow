@@ -12438,10 +12438,10 @@ class assert_ground_visitor skip = object (self)
     | DefT (_, PolyT (tparams, _, _)) -> loop cx pole seen (tparams, targs)
     | DefT (_, EmptyT) -> seen
     | DefT (_, AnyT) -> seen
-    | c ->
-      add_output cx FlowError.(EInternal
-        (loc_of_t c, UnexpectedTypeapp (string_of_ctor c)));
-      seen
+    | _ ->
+        (* We don't error here on an unexpected typeapp because we would have already
+         * caught that this type is not polymorphic earlier *)
+        seen
 end
 
 let enforce_strict cx id =
