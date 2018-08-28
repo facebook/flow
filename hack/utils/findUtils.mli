@@ -10,3 +10,5 @@
 val is_dot_file: string -> bool
 val is_php: string -> bool
 val has_ancestor: string -> string -> bool
+val file_filter: string -> bool
+val path_filter: Relative_path.t -> bool
