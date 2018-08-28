@@ -417,7 +417,7 @@ str.js = {
     },
     {
       "name":"toLocaleLowerCase",
-      "type":"() => string",
+      "type":"(locale?: string | Array<string>) => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
       "line":314,
@@ -427,7 +427,7 @@ str.js = {
     },
     {
       "name":"toLocaleUpperCase",
-      "type":"() => string",
+      "type":"(locale?: string | Array<string>) => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
       "line":315,

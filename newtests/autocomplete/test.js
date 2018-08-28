@@ -692,7 +692,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleLowerCase",
-               "type": "() => string",
+               "type": "(locale?: string | Array<string>) => string",
                "func_details": {
                  "return_type": "string",
                  "params": []
@@ -705,7 +705,7 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleUpperCase",
-               "type": "() => string",
+               "type": "(locale?: string | Array<string>) => string",
                "func_details": {
                  "return_type": "string",
                  "params": []
