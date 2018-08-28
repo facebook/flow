@@ -20,6 +20,7 @@ module Ast = Flow_ast
 module T = Type
 
 let error_annot = Loc.none, Type.Locationless.AnyT.t
+let unimplemented_annot = Loc.none, Type.Locationless.AnyT.t
 
 module Type = struct
   open Ast.Type
@@ -98,9 +99,9 @@ end
 
 module Expression = struct
   open Ast.Expression
-  let error = Identifier (Loc.none, "Error")
+  let error = Identifier (error_annot, "Error")
   let expression_or_spread_list_error = [ Expression (error_annot, error) ]
-  let unimplemented = Identifier (Loc.none, "Unimplemented")
+  let unimplemented = Identifier (unimplemented_annot, "Unimplemented")
   let targs_unimplemented = None
   let expression_or_spread_list_unimplemented = [ Expression (error_annot, unimplemented) ]
 

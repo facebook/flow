@@ -211,7 +211,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       f ~use_op loc name default curr_t;
       (* Type annotations in patterns are currently ignored *)
       let annot = None in
-      (loc, curr_t), Identifier { Identifier.name = (id_loc, name); optional; annot; }
+      (loc, curr_t), Identifier { Identifier.name = ((id_loc, curr_t), name); optional; annot; }
 
   | loc, Assignment { Assignment.left; right } ->
       let default = Some (Default.expr ?default right) in

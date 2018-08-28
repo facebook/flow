@@ -234,7 +234,7 @@ and Type : sig
     module TypeParam : sig
       type ('M, 'T) t = 'T * ('M, 'T) t'
       and ('M, 'T) t' = {
-        name: 'M Identifier.t;
+        name: 'T Identifier.t;
         bound: ('M, 'T) Type.annotation option;
         variance: 'M Variance.t option;
         default: ('M, 'T) Type.t option;
@@ -857,7 +857,7 @@ and Expression : sig
   end
   module Member : sig
     type ('M, 'T) property =
-      | PropertyIdentifier of 'M Identifier.t
+      | PropertyIdentifier of 'T Identifier.t
       | PropertyPrivateName of 'M PrivateName.t
       | PropertyExpression of ('M, 'T) Expression.t
 
@@ -933,7 +933,7 @@ and Expression : sig
     | Conditional of ('M, 'T) Conditional.t
     | Function of ('M, 'T) Function.t
     | Generator of ('M, 'T) Generator.t
-    | Identifier of 'M Identifier.t
+    | Identifier of 'T Identifier.t
     | Import of ('M, 'T) t
     | JSXElement of ('M, 'T) JSX.element
     | JSXFragment of ('M, 'T) JSX.fragment
@@ -1148,7 +1148,7 @@ and Pattern : sig
   end
   module Identifier : sig
     type ('M, 'T) t = {
-      name: 'M Identifier.t;
+      name: 'T Identifier.t;
       annot: ('M, 'T) Type.annotation option;
       optional: bool;
     }

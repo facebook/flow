@@ -14,7 +14,6 @@ let id : 'a . 'a -> 'a = fun x -> x
 
 class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
-
   method virtual on_loc_annot : 'M -> 'N
   method virtual on_type_annot : 'T -> 'U
 
@@ -131,7 +130,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | Conditional x -> Conditional (this#conditional x)
     | Function x -> Function (this#function_ x)
     | Generator x -> Generator (this#generator x)
-    | Identifier x -> Identifier (this#identifier x)
+    | Identifier x -> Identifier (this#t_identifier x)
     | Import x -> Import (this#import annot x)
     | JSXElement x -> JSXElement (this#jsx_element x)
     | JSXFragment x -> JSXFragment (this#jsx_fragment x)
@@ -667,7 +666,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
               : ('N, 'U) Ast.Type.ParameterDeclaration.TypeParam.t =
     let open Ast.Type.ParameterDeclaration.TypeParam in
     let annot, { name; bound; variance; default; } = type_param in
-    let name' = (this#on_loc_annot * id) name in
+    let name' = this#t_identifier name in
     let bound' = Option.map ~f:this#type_annotation bound in
     let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     let default' = Option.map ~f:this#type_ default in
@@ -1015,8 +1014,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | PropertyExpression e ->
       PropertyExpression (this#member_property_expression e)
 
-  method member_property_identifier (ident: 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
-    this#identifier ident
+  method member_property_identifier (ident: 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
+    this#t_identifier ident
 
   method member_private_name (name: 'M Ast.PrivateName.t) : 'N Ast.PrivateName.t =
     this#private_name name
@@ -1158,7 +1157,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       let right' = this#expression right in
       Assignment { Assignment.left = left'; right = right' }
     | Identifier { Identifier.name; annot; optional } ->
-      let name' = this#pattern_identifier ?kind name in
+      let name' = this#t_pattern_identifier ?kind name in
       let annot' = Option.map ~f:this#type_annotation annot in
       Identifier { Identifier.name = name'; annot = annot'; optional }
     | Expression e ->

@@ -1283,8 +1283,14 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let tparam = { reason; name; bound; polarity; default; } in
     let t = BoundT (reason, name, polarity) in
     let id_info = name, t, Type_table.Other in
+
+    let name_ast =
+      let loc, ident = id in
+      (loc, t), ident
+    in
+
     let ast = (loc, t), {
-      TypeParam.name = id;
+      TypeParam.name = name_ast;
       bound = bound_ast;
       variance;
       default = default_ast
