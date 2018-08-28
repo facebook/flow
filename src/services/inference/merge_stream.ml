@@ -24,6 +24,28 @@ end = struct
   let length (n, _) = n
 end
 
+module MergeStats : sig
+  type t
+  val make: unit -> t
+  val get_total_files: t -> int
+  val increment_total_files: t -> int -> unit
+  val get_skipped_files: t -> int
+  val increment_skipped_files: t -> int -> unit
+end = struct
+  type t = int ref (* total files *) * int ref (* skipped files *)
+  let make () = (ref 0, ref 0)
+  let get_total_files (total, _) = !total
+  let increment_total_files (total, _) x =
+    total := !total + x
+  let get_skipped_files (_, skipped) = !skipped
+  let increment_skipped_files (_, skipped) x =
+    skipped := !skipped + x
+end
+
+type merge_stats = MergeStats.t
+let get_total_files = MergeStats.get_total_files
+let get_skipped_files = MergeStats.get_skipped_files
+
 type element = Component of File_key.t Nel.t
 
 type 'a merge_result = (File_key.t * 'a) list
@@ -37,7 +59,8 @@ type 'a merge_stream = {
     (* accumulator *)
     'a merge_result ->
     (* accumulated results *)
-    'a merge_result
+    'a merge_result;
+  stats: merge_stats
 }
 
 let make
@@ -82,7 +105,14 @@ let make
   let total_number_of_files = ref (FilenameMap.fold (fun _ files acc ->
     Nel.length files + acc
   ) component_map 0) in
-  let files_merged_so_far = ref 0 in
+  let stats = MergeStats.make () in
+  let record_merged x =
+    MergeStats.increment_total_files stats x
+  in
+  let record_skipped x =
+    record_merged x;
+    MergeStats.increment_skipped_files stats x
+  in
 
   (* stream of files available to schedule *)
   let stream = ref Stream.empty in
@@ -159,10 +189,10 @@ let make
         let components, num_files = take n in
         if components <> [] then begin
           MonitorRPC.status_update ServerStatus.(Merging_progress {
-            finished = !files_merged_so_far;
+            finished = MergeStats.get_total_files stats;
             total = Some !total_number_of_files;
           });
-          files_merged_so_far := !files_merged_so_far + num_files;
+          record_merged num_files;
           Bucket.Job components
         end else
           Bucket.Done
@@ -219,13 +249,13 @@ let make
         FilenameSet.cardinal fs + acc
       ) 0 skipped in
       if skipped_length > 0 then begin
-        files_merged_so_far := !files_merged_so_far + skipped_length;
+        record_skipped skipped_length;
         MonitorRPC.status_update ServerStatus.(Merging_progress {
-          finished = !files_merged_so_far;
+          finished = MergeStats.get_total_files stats;
           total = Some !total_number_of_files;
         })
       end;
       List.rev_append merged merged_acc
   in
 
-  { next; merge }
+  { next; merge; stats }

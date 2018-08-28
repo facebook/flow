@@ -8,13 +8,15 @@
 open Utils_js
 module Reqs = Merge_js.Reqs
 
-type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
+type 'a merge_job_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
-  'a merge_results ->
+  'a merge_job_results ->
   File_key.t Nel.t ->
-  'a merge_results
+  'a merge_job_results
+
+type 'a merge_results = 'a merge_job_results * int (* skipped count *)
 
 type merge_strict_context_result = {
   cx: Context.t;
@@ -308,7 +310,7 @@ let merge_runner
   ) component_map in
 
   let start_time = Unix.gettimeofday () in
-  let {Merge_stream.next; merge;} = Merge_stream.make
+  let {Merge_stream.next; merge; stats} = Merge_stream.make
     ~dependency_graph ~leader_map ~component_map ~recheck_leader_map ~intermediate_result_callback
   in
   (* returns parallel lists of filenames, error sets, and suppression sets *)
@@ -319,8 +321,11 @@ let merge_runner
     ~merge:(merge ~master_mutator)
     ~next
   in
+  let total_number_of_files = Merge_stream.get_total_files stats in
+  let files_skipped = Merge_stream.get_skipped_files stats in
+  Hh_logger.info "Merge skipped %d of %d modules" files_skipped total_number_of_files;
   let elapsed = Unix.gettimeofday () -. start_time in
   if Options.should_profile options then Hh_logger.info "merged (strict) in %f" elapsed;
-  Lwt.return ret
+  Lwt.return (ret, files_skipped)
 
 let merge_strict = merge_runner ~job:merge_strict_component

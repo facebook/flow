@@ -318,11 +318,11 @@ let run_merge_service
     acc
     =
   with_timer_lwt ~options "Merge" profiling (fun () ->
-    let%lwt merged = Merge_service.merge_strict
+    let%lwt merged, skipped_count = Merge_service.merge_strict
       ~master_mutator ~worker_mutator ~intermediate_result_callback ~options ~workers
       dependency_graph component_map recheck_map
     in
-    Lwt.return @@ List.fold_left (fun acc (file, result) ->
+    let errs, suppressions, severity_cover_set = List.fold_left (fun acc (file, result) ->
       let component = FilenameMap.find_unsafe file component_map in
       (* remove all errors, suppressions for rechecked component *)
       let errors, suppressions, severity_cover_set =
@@ -341,6 +341,8 @@ let run_merge_service
         let new_errors = error_set_of_merge_error file msg in
         update_errset errors file new_errors, suppressions, severity_cover_set
     ) acc merged
+    in
+    Lwt.return (errs, suppressions, severity_cover_set, skipped_count)
   )
 
 (* This function does some last minute preparation and then calls into the merge service, which
@@ -447,7 +449,7 @@ let merge
     calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge in
 
   Hh_logger.info "Merging";
-  let%lwt merge_errors, suppressions, severity_cover_set =
+  let%lwt merge_errors, suppressions, severity_cover_set, skipped_count =
     let intermediate_result_callback results =
       let errors = lazy (
         List.map (fun (file, result) ->
@@ -472,7 +474,7 @@ let merge
         transaction (FilenameSet.union files_to_merge deleted)
     in
 
-    let%lwt merge_errors, suppressions, severity_cover_set =
+    let%lwt merge_errors, suppressions, severity_cover_set, skipped_count =
       run_merge_service
         ~master_mutator
         ~worker_mutator
@@ -493,7 +495,7 @@ let merge
       else Lwt.return_unit
     in
     Hh_logger.info "Done";
-    Lwt.return (merge_errors, suppressions, severity_cover_set)
+    Lwt.return (merge_errors, suppressions, severity_cover_set, skipped_count)
   in
 
   let checked = CheckedSet.union unchanged_checked to_merge in
@@ -504,7 +506,7 @@ let merge
     |> Utils_js.FilenameMap.elements
     |> List.map (fun (leader, members) -> (leader, Nel.length members))
     |> List.filter (fun (_, member_count) -> member_count > 1) in
-  Lwt.return (checked, cycle_leaders, errors)
+  Lwt.return (checked, cycle_leaders, errors, skipped_count)
 
 let ensure_parsed ~options ~profiling ~workers files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
@@ -575,7 +577,7 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env file file_sig 
 
     let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
 
-    let%lwt checked, _cycle_leaders, errors = Transaction.with_transaction (fun transaction ->
+    let%lwt checked, _cycle_leaders, errors, _skipped_count = Transaction.with_transaction (fun transaction ->
       merge
         ~transaction ~options ~profiling ~workers ~errors
         ~unchanged_checked ~to_merge ~components ~recheck_map
@@ -1153,7 +1155,7 @@ let recheck_with_profiling
   let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
 
   (* recheck *)
-  let%lwt checked, cycle_leaders, errors = merge
+  let%lwt checked, cycle_leaders, errors, skipped_count = merge
     ~transaction
     ~options
     ~profiling
@@ -1210,12 +1212,12 @@ let recheck_with_profiling
       checked_files = checked;
       errors;
     },
-    (new_or_changed, deleted, all_dependent_files, cycle_leaders))
+    (new_or_changed, deleted, all_dependent_files, cycle_leaders, skipped_count))
   )
 
 let recheck ~options ~workers ~updates env ~files_to_focus =
   let should_print_summary = Options.should_profile options in
-  let%lwt profiling, (env, (modified, deleted, dependent_files, cycle_leaders)) =
+  let%lwt profiling, (env, (modified, deleted, dependent_files, cycle_leaders, skipped_count)) =
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
         Transaction.with_transaction (fun transaction ->
@@ -1226,7 +1228,7 @@ let recheck ~options ~workers ~updates env ~files_to_focus =
     )
   in
   (** TODO: update log to reflect current terminology **)
-  FlowEventLogger.recheck ~modified ~deleted ~dependent_files ~profiling;
+  FlowEventLogger.recheck ~modified ~deleted ~dependent_files ~profiling ~skipped_count;
 
   let duration = Profiling_js.get_profiling_duration profiling in
   let dependent_file_count = Utils_js.FilenameSet.cardinal dependent_files in
@@ -1511,7 +1513,7 @@ let init ~profiling ~workers options =
 
 let full_check ~profiling ~options ~workers ~focus_targets env =
   let { ServerEnv.files = parsed; dependency_graph; errors; _; } = env in
-  let%lwt (checked_files, _, errors) = Transaction.with_transaction (fun transaction ->
+  let%lwt (checked_files, _, errors, _skipped_count) = Transaction.with_transaction (fun transaction ->
     let%lwt infer_input = files_to_infer
       ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
 

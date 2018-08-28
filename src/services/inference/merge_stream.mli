@@ -9,6 +9,10 @@ open Utils_js
 
 type element = Component of File_key.t Nel.t
 
+type merge_stats
+val get_total_files: merge_stats -> int
+val get_skipped_files: merge_stats -> int
+
 type 'a merge_result = (File_key.t * 'a) list
 
 type 'a merge_stream = {
@@ -20,7 +24,8 @@ type 'a merge_stream = {
     (* accumulator *)
     'a merge_result ->
     (* accumulated results *)
-    'a merge_result
+    'a merge_result;
+  stats: merge_stats;
 }
 
 val make :
