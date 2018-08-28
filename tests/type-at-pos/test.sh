@@ -313,8 +313,6 @@ printf "exports.js:5:25 = "
 assert_ok "$FLOW" type-at-pos exports.js 5 25 --strip-root --pretty
 
 # module-export.js
-printf "module-export.js:3:16 = "
-assert_ok "$FLOW" type-at-pos module-export.js 3 16 --strip-root --pretty
 printf "module-export.js:7:13 = "
 assert_ok "$FLOW" type-at-pos module-export.js 7 13 --strip-root --pretty
 

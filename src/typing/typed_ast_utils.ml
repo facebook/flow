@@ -72,3 +72,59 @@ class type_parameter_mapper = object(_)
     cls
 
 end
+
+
+(* Find identifier under location *)
+
+exception Found of Loc.t * Type.TypeScheme.t
+
+(* Kinds of nodes that "type-at-pos" is interested in:
+ * - identifiers              (handled in t_identifier)
+ * - literal object keys      (handled in object_key)
+ * - `this`, `super`          (handled in expression)
+ * - private property names   (handled in expression)
+ *)
+class type_at_pos_searcher target_loc = object(self)
+  inherit type_parameter_mapper as super
+
+  method covers_target loc =
+    Reason.in_range target_loc loc
+
+  method find_loc: 'a . Loc.t -> Type.t -> Type.typeparam list -> 'a =
+    fun loc t tparams ->
+      raise (Found (loc, { Type.TypeScheme.tparams; type_ = t}))
+
+  method! t_identifier (((loc, t), _) as id) =
+    if self#covers_target loc
+    then self#annot_with_tparams (self#find_loc loc t)
+    else super#t_identifier id
+
+  method! object_key key =
+    let open Ast.Expression.Object.Property in
+    match key with
+    | Literal ((loc, t), _) when self#covers_target loc ->
+      self#annot_with_tparams (self#find_loc loc t)
+    | _ -> super#object_key key
+
+  method! expression expr =
+    let open Ast.Expression in
+    match expr with
+    | (loc, t), (This | Super)
+    | (_, t), Member { Member.property = Member.PropertyPrivateName (loc, _); _ }
+    | (_, t), OptionalMember { OptionalMember.member = { Member.property =
+        Member.PropertyPrivateName (loc, _); _
+      }; _}
+    when self#covers_target loc ->
+      self#annot_with_tparams (fun tparams -> self#find_loc loc t tparams)
+    | _ -> super#expression expr
+
+end
+
+let find_type_at_pos_annotation typed_ast loc =
+  let searcher = new type_at_pos_searcher loc in
+  try
+    let _ = searcher#program typed_ast in
+    None
+  with
+  | Found (loc, scheme) -> Some (loc, scheme)
+  | exc -> raise exc

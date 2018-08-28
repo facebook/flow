@@ -1705,21 +1705,6 @@ exports.js:5:25 = {
   "start":24,
   "end":26
 }
-module-export.js:3:16 = {
-  "type":"module a",
-  "reasons":[],
-  "loc":{
-    "source":"module-export.js",
-    "type":"SourceFile",
-    "start":{"line":3,"column":16,"offset":25},
-    "end":{"line":3,"column":16,"offset":26}
-  },
-  "path":"module-export.js",
-  "line":3,
-  "endline":3,
-  "start":16,
-  "end":16
-}
 module-export.js:7:13 = {
   "type":"{|A: class A|}",
   "reasons":[],
