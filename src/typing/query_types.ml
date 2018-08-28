@@ -5,6 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+open Typed_ast_utils
+
 (*****************)
 (* Query/Suggest *)
 (*****************)
@@ -39,7 +42,7 @@ type result =
 let sort_loc_pairs pair_list =
   List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
 
-let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
+let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc typed_ast =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -47,10 +50,9 @@ let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
     expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
   } in
-  let pred range = Reason.in_range loc range in
-  match Type_table.find_type_info_with_pred type_table pred with
+  match find_type_at_pos_annotation typed_ast loc with
   | None -> FailureNoMatch
-  | Some (loc, (_, scheme, _)) ->
+  | Some  (loc, scheme) ->
     let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~type_table in
     (match Ty_normalizer.from_scheme ~options ~genv scheme with
     | Ok ty -> Success (loc, ty)
@@ -58,6 +60,8 @@ let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
       let msg = Ty_normalizer.error_to_string err in
       FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
 
+(* TODO query_coverage_type can be omitted - typed AST should contain the
+ * locations below *)
 let query_coverage_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
   let options = {
     Ty_normalizer_env.

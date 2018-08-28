@@ -297,6 +297,10 @@ assert_ok "$FLOW" type-at-pos interface.js 9 19 --strip-root --pretty
 # assert_ok "$FLOW" type-at-pos interface.js 11 6 --strip-root --pretty
 # printf "interface.js:13:6 = "
 # assert_ok "$FLOW" type-at-pos interface.js 13 6 --strip-root --pretty
+printf "interface.js:17:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 17 7 --strip-root --pretty
+printf "interface.js:18:7 = "
+assert_ok "$FLOW" type-at-pos interface.js 18 7 --strip-root --pretty
 
 # declare_class.js
 printf "declare_class.js:3:15 = "
@@ -329,10 +333,6 @@ printf "import-typeof-class.js:6:16 "
 assert_ok "$FLOW" type-at-pos import-typeof-class.js 6 16 --strip-root --pretty --expand-json-output
 printf "import-typeof-class.js:7:16 "
 assert_ok "$FLOW" type-at-pos import-typeof-class.js 7 16 --strip-root --pretty --expand-json-output
-
-# object_special_cases.js
-printf "object_special_cases.js:6:32 = "
-assert_ok "$FLOW" type-at-pos object_special_cases.js 6 32 --strip-root --pretty
 
 # object.js
 printf "object.js:3:15 = "

@@ -1645,6 +1645,36 @@ interface.js:9:19 = {
   "start":18,
   "end":19
 }
+interface.js:17:7 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":7,"offset":227},
+    "end":{"line":17,"column":7,"offset":228}
+  },
+  "path":"interface.js",
+  "line":17,
+  "endline":17,
+  "start":7,
+  "end":7
+}
+interface.js:18:7 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"interface.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":7,"offset":246},
+    "end":{"line":18,"column":7,"offset":247}
+  },
+  "path":"interface.js",
+  "line":18,
+  "endline":18,
+  "start":7,
+  "end":7
+}
 declare_class.js:3:15 = {
   "type":"class C",
   "reasons":[],
@@ -1791,21 +1821,6 @@ import-typeof-class.js:7:16 {
   "endline":7,
   "start":16,
   "end":16
-}
-object_special_cases.js:6:32 = {
-  "type":"string",
-  "reasons":[],
-  "loc":{
-    "source":"object_special_cases.js",
-    "type":"SourceFile",
-    "start":{"line":6,"column":30,"offset":87},
-    "end":{"line":6,"column":34,"offset":92}
-  },
-  "path":"object_special_cases.js",
-  "line":6,
-  "endline":6,
-  "start":30,
-  "end":34
 }
 object.js:3:15 = {
   "type":"{a?: {b: ?{c: (null | {d: number})}}}",

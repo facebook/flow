@@ -12,7 +12,7 @@ let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content l
   Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
   function
   | Error str -> Error (str, None)
-  | Ok (cx, _info, file_sig, _typed_ast) ->
+  | Ok (cx, _info, file_sig, typed_ast) ->
     let loc = Loc.make file line col in
     let json_data, loc, ty =
       let mk_data result_str loc ty_json = Hh_json.JSON_Object [
@@ -23,7 +23,8 @@ let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content l
       Query_types.(
         let type_table = Context.type_table cx in
         let file = Context.file cx in
-        match query_type ~full_cx:cx ~file ~file_sig ~expand_aliases ~type_table loc with
+        (* passing in type_table only because it seems necessary for constructing genv *)
+        match query_type ~full_cx:cx ~file ~file_sig ~expand_aliases ~type_table loc typed_ast with
         | FailureNoMatch ->
           Hh_json.JSON_Object [
             "result", Hh_json.JSON_String "FAILURE_NO_MATCH"

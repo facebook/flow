@@ -12,3 +12,8 @@ i_a.mm(1);
 
 i_a.mf("x");
 i_a.mf(1);
+
+interface I {
+  get y(): string;
+  set y(x: number): void;
+}
