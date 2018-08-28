@@ -407,11 +407,6 @@ let elements cx ?constructor s =
 
   initialized_fields, fields, methods, call
 
-let arg_polarities x =
-  List.fold_left Type.(fun acc tp ->
-    SMap.add tp.name tp.polarity acc
-  ) SMap.empty x.tparams
-
 let specialize cx targs c =
   let open Type in
   let reason = reason_of_t c in
@@ -464,11 +459,14 @@ let insttype cx ~initialized_static_fields s =
       let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
       Some (loc0, t)
   in
+  let type_args = List.map (fun {Type.name; reason; polarity; _} ->
+    let t = SMap.find_unsafe name s.tparams_map in
+    name, reason, t, polarity
+  ) s.tparams in
   let initialized_fields, fields, methods, call = elements cx ?constructor s.instance in
   { Type.
     class_id = s.id;
-    type_args = SMap.map (fun t -> (Type.reason_of_t t, t)) s.tparams_map;
-    arg_polarities = arg_polarities s;
+    type_args;
     own_props = Context.make_property_map cx fields;
     proto_props = Context.make_property_map cx methods;
     inst_call_t = Option.map call ~f:(Context.make_call_prop cx);

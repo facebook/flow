@@ -780,15 +780,18 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
       let typeparams, typeparams_map, tparams_ast =
         Anno.mk_type_param_declarations cx tparams in
       let underlying_t, impltype_ast = Anno.convert_opt cx typeparams_map impltype in
-      let opaque_arg_polarities = List.fold_left (fun acc tparam ->
-        SMap.add tparam.name tparam.polarity acc) SMap.empty typeparams in
+      let opaque_type_args = List.map (fun {name; reason; polarity; _} ->
+        let t = SMap.find_unsafe name typeparams_map in
+        name, reason, t, polarity
+      ) typeparams in
       let super_t, supertype_ast = Anno.convert_opt cx typeparams_map supertype in
-      let opaquetype = { underlying_t;
-                         super_t;
-                         opaque_id = Context.make_nominal cx;
-                         opaque_arg_polarities;
-                         opaque_type_args = SMap.map (fun t -> (reason_of_t t, t)) typeparams_map;
-                         opaque_name = name} in
+      let opaquetype = {
+        underlying_t;
+        super_t;
+        opaque_id = Context.make_nominal cx;
+        opaque_type_args;
+        opaque_name = name
+      } in
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
       Flow.check_polarity cx Positive t;
       let type_ = poly_type (Context.make_nominal cx) typeparams

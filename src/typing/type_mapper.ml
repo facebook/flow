@@ -113,11 +113,10 @@ class ['a] t = object(self)
       | OpaqueT (r, opaquetype) ->
           let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
           let super_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.super_t in
-          let opaque_type_args = SMap.ident_map (fun x ->
-            let (r, t) = x in
+          let opaque_type_args = ListUtils.ident_map (fun x ->
+            let (s, r, t, p) = x in
             let t' = self#type_ cx map_cx t in
-            if t == t' then x
-            else (r, t')
+            if t == t' then x else (s, r, t', p)
           ) opaquetype.opaque_type_args in
           if underlying_t == opaquetype.underlying_t &&
             super_t == opaquetype.super_t &&
@@ -290,7 +289,6 @@ class ['a] t = object(self)
     let {
       class_id;
       type_args;
-      arg_polarities;
       own_props;
       proto_props;
       inst_call_t;
@@ -299,11 +297,10 @@ class ['a] t = object(self)
       has_unknown_react_mixins;
       structural
     } = i in
-    let type_args' = SMap.ident_map (fun x ->
-      let (r, t) = x in
+    let type_args' = ListUtils.ident_map (fun x ->
+      let (s, r, t, p) = x in
       let t' = self#type_ cx map_cx t in
-      if t == t' then x
-      else (r, t')
+      if t == t' then x else (s, r, t', p)
     ) type_args in
     let own_props' =
       let map = Context.find_props cx own_props in
@@ -326,7 +323,6 @@ class ['a] t = object(self)
     else {
       class_id;
       type_args = type_args';
-      arg_polarities;
       own_props = own_props';
       proto_props = proto_props';
       inst_call_t = inst_call_t';

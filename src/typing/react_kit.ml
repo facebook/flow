@@ -958,8 +958,7 @@ let run cx trace ~use_op reason_op l u
 
       let insttype = {
         class_id = 0;
-        type_args = SMap.empty;
-        arg_polarities = SMap.empty;
+        type_args = [];
         (* TODO: props are actually installed on the prototype *)
         own_props = Context.make_property_map cx props;
         proto_props = Context.make_property_map cx SMap.empty;

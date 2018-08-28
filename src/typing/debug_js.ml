@@ -1099,8 +1099,13 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
     "classId", int_ insttype.class_id;
-    "typeArgs", json_of_tmap json_cx (SMap.map snd insttype.type_args);
-    "argPolarities", json_of_polarity_map json_cx insttype.arg_polarities;
+    "typeArgs", JSON_Array (List.map (fun (x, _, t, p) ->
+      JSON_Object [
+        "name", JSON_String x;
+        "type", _json_of_t json_cx t;
+        "polarity", json_of_polarity json_cx p;
+      ]
+    ) insttype.type_args);
     "fieldTypes", json_of_pmap json_cx own_props;
     "methodTypes", json_of_pmap json_cx proto_props;
     "mixins", JSON_Bool insttype.has_unknown_react_mixins;
@@ -1205,17 +1210,6 @@ and json_of_type_map_impl json_cx = Hh_json.(function
     ]
 )
 
-and json_of_polarity_map json_cx = check_depth json_of_polarity_map_impl json_cx
-and json_of_polarity_map_impl json_cx pmap = Hh_json.(
-  let lst = SMap.fold (fun name pol acc ->
-    JSON_Object [
-      "name", JSON_String name;
-      "polarity", json_of_polarity json_cx pol
-    ] :: acc
-  ) pmap [] in
-  JSON_Array (List.rev lst)
-)
-
 and json_of_propref json_cx = check_depth json_of_propref_impl json_cx
 and json_of_propref_impl json_cx = Hh_json.(function
   | Named (r, x) -> JSON_Object [
@@ -1227,18 +1221,10 @@ and json_of_propref_impl json_cx = Hh_json.(function
     ]
 )
 
-and json_of_tmap json_cx = check_depth json_of_tmap_impl json_cx
-and json_of_tmap_impl json_cx bindings = Hh_json.(
-  let lst = SMap.fold (fun name t acc ->
-    json_of_type_binding json_cx (name, t) :: acc
-  ) bindings [] in
-  JSON_Array (List.rev lst)
-)
-
 and json_of_loc_tmap json_cx = check_depth json_of_loc_tmap_impl json_cx
 and json_of_loc_tmap_impl json_cx bindings = Hh_json.(
   let lst = SMap.fold (fun name (loc, t) acc ->
-    json_of_type_binding_with_loc json_cx (name, (loc, t)) :: acc
+    json_of_type_binding json_cx (name, (loc, t)) :: acc
   ) bindings [] in
   JSON_Array (List.rev lst)
 )
@@ -1292,12 +1278,7 @@ and json_of_prop_impl json_cx p = Hh_json.(
 ))
 
 and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
-and json_of_type_binding_impl json_cx (name, t) = Hh_json.(
-  JSON_Object ["name", JSON_String name; "type", _json_of_t json_cx t]
-)
-
-and json_of_type_binding_with_loc json_cx = check_depth json_of_type_binding_with_loc_impl json_cx
-and json_of_type_binding_with_loc_impl json_cx (name, (loc, t)) = Hh_json.(
+and json_of_type_binding_impl json_cx (name, (loc, t)) = Hh_json.(
   let loc_json = match loc with
     | None -> Hh_json.JSON_Null
     | Some loc -> json_of_loc ~strip_root:json_cx.strip_root loc

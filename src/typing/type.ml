@@ -917,8 +917,7 @@ module rec TypeTerm : sig
 
   and insttype = {
     class_id: ident;
-    type_args: (reason * t) SMap.t;
-    arg_polarities: polarity SMap.t;
+    type_args: (string * reason * t * polarity) list;
     own_props: Properties.id;
     proto_props: Properties.id;
     inst_call_t: int option;
@@ -932,8 +931,7 @@ module rec TypeTerm : sig
     opaque_id: int;
     underlying_t: t option;
     super_t: t option;
-    opaque_type_args: (reason * t) SMap.t;
-    opaque_arg_polarities: polarity SMap.t;
+    opaque_type_args: (string * reason * t * polarity) list;
     opaque_name: string;
   }
 

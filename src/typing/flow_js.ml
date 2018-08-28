@@ -970,7 +970,7 @@ module ResolvableTypeJob = struct
     | DefT (_, InstanceT (static, super, _,
         { class_id; type_args; own_props; proto_props; inst_call_t; _ })) ->
       let ts = if class_id = 0 then [] else [super; static] in
-      let ts = SMap.fold (fun _ (_, t) ts -> t::ts) type_args ts in
+      let ts = List.fold_left (fun ts (_, _, t, _) -> t::ts) ts type_args in
       let props_tmap = SMap.union
         (Context.find_props cx own_props)
         (Context.find_props cx proto_props)
@@ -2814,9 +2814,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* If the ids are equal, we use flow_type_args to make sure that the type arguments of each
      * are compatible with each other. If there are no type args, this doesn't do anything *)
-    | OpaqueT (lreason, {opaque_id = id1; opaque_arg_polarities = ps; opaque_type_args = ltargs; _}),
+    | OpaqueT (lreason, {opaque_id = id1; opaque_type_args = ltargs; _}),
       UseT (use_op, OpaqueT (ureason, {opaque_id = id2; opaque_type_args = utargs; _})) when id1 = id2 ->
-        flow_type_args cx trace ~use_op lreason ureason ps ltargs utargs
+        flow_type_args cx trace ~use_op lreason ureason ltargs utargs
 
     (* Repositioning should happen before opaque types are considered so that we can
      * have the "most recent" location when we do look at the opaque type *)
@@ -4563,10 +4563,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       then begin
           (if instance.class_id != instance_super.class_id then
             assert_false "unexpected difference in class_ids in flow_instts");
-          let { type_args = tmap1; arg_polarities = pmap; _ } = instance in
+          let { type_args = tmap1; _ } = instance in
           let { type_args = tmap2; _ } = instance_super in
           let ureason = replace_reason (function RExtends desc -> desc | desc -> desc) reason_op in
-          flow_type_args cx trace ~use_op reason ureason pmap tmap1 tmap2
+          flow_type_args cx trace ~use_op reason ureason tmap1 tmap2
         end
       else
         (* If this instance type has declared implementations, any structural
@@ -7181,15 +7181,8 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
 (* inheritance utils *)
 (*********************)
 
-and flow_type_args cx trace ~use_op lreason ureason pmap tmap1 tmap2 =
-  tmap1 |> SMap.iter (fun x (targ_reason, t1) ->
-    let (_, t2) = SMap.find_unsafe x tmap2 in
-    (* type_args contains a mixture of args to type params declared on the
-       instance's class, and args to outer-scope type params.
-       OTOH arg_polarities only holds polarities of declared params.
-       it'll take some upstream refactoring to handle variance to in-scope
-       type params - meanwhile, we fall back to neutral (invariant) *)
-    let polarity = Option.value (SMap.get x pmap) ~default:Neutral in
+and flow_type_args cx trace ~use_op lreason ureason targs1 targs2 =
+  List.iter2 (fun (x, targ_reason, t1, polarity) (_, _, t2, _) ->
     let use_op = Frame (TypeArgCompatibility {
       name = x;
       targ = targ_reason;
@@ -7197,11 +7190,11 @@ and flow_type_args cx trace ~use_op lreason ureason pmap tmap1 tmap2 =
       upper = ureason;
       polarity;
     }, use_op) in
-    (match polarity with
+    match polarity with
     | Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
     | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
-    | Neutral -> rec_unify cx trace ~use_op t1 t2)
-  )
+    | Neutral -> rec_unify cx trace ~use_op t1 t2
+  ) targs1 targs2;
 
 and inherited_method x = x <> "constructor"
 

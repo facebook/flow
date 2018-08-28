@@ -80,13 +80,11 @@ class ['a] t = object(self)
       underlying_t;
       super_t;
       opaque_type_args;
-      opaque_arg_polarities;
       opaque_name = _;
     } = ot in
-    let acc = SMap.fold (fun x (_, t) acc ->
-      let pole' = SMap.find_unsafe x opaque_arg_polarities in
+    let acc = self#list (fun acc (_, _, t, pole') ->
       self#type_ cx (P.mult (pole, pole')) acc t
-    ) opaque_type_args acc in
+    ) acc opaque_type_args in
     let acc = self#opt (self#type_ cx pole) acc underlying_t in
     let acc = self#opt (self#type_ cx pole) acc super_t in
     acc
@@ -751,7 +749,6 @@ class ['a] t = object(self)
     let {
       class_id = _;
       type_args;
-      arg_polarities;
       own_props;
       proto_props;
       inst_call_t;
@@ -760,10 +757,9 @@ class ['a] t = object(self)
       has_unknown_react_mixins = _;
       structural = _;
     } = i in
-    let acc = SMap.fold (fun x (_, t) acc ->
-      let pole' = SMap.find_unsafe x arg_polarities in
+    let acc = self#list (fun acc (_, _, t, pole') ->
       self#type_ cx (P.mult (pole, pole')) acc t
-    ) type_args acc in
+    ) acc type_args in
     let acc = self#props cx pole acc own_props in
     let acc = self#props cx pole acc proto_props in
     let acc = self#opt (self#call_prop cx pole) acc inst_call_t in
