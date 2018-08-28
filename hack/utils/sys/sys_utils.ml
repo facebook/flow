@@ -161,7 +161,9 @@ let parse_path_list (paths: string list): string list =
   | None -> failwith (Printf.sprintf "Invalid path: %s" path)
 )
 
-let rm_dir_tree = Disk.rm_dir_tree
+let rm_dir_tree ?(skip_mocking=false) =
+  if skip_mocking then RealDisk.rm_dir_tree
+  else Disk.rm_dir_tree
 
 let restart () =
   let cmd = Sys.argv.(0) in
@@ -341,7 +343,9 @@ let try_touch ~follow_symlinks file =
   with _ ->
     ()
 
-let mkdir_p = Disk.mkdir_p
+let mkdir_p ?(skip_mocking=false) =
+  if skip_mocking then RealDisk.mkdir_p
+  else Disk.mkdir_p
 
 (* Emulate "mkdir -p", i.e., no error if already exists. *)
 let mkdir_no_fail dir =
