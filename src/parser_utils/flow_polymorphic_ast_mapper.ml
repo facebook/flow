@@ -7,35 +7,27 @@
 
 module Ast = Flow_ast
 
-let ( * ) f g (x, y) = (f x, g y)
-let id x = x
+let ( * ) : 'a 'b 'c 'd . ('a -> 'c) -> ('b -> 'd) -> ('a * 'b) -> ('c * 'd) =
+  fun f g (x, y) -> (f x, g y)
 
-type m = []
-type t = []
-type n = []
-type u = []
+let id : 'a . 'a -> 'a = fun x -> x
 
-class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
+class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
-  (* OCaml's typechecker has a bug which allows 'M and 'N to unify. Uncommenting
-    this method uses this bug to monomorphize 'M and 'N to different types,
-    which makes it easier to avoid unifying 'M and 'N with each other when
-    developing this class. Same for 'T and 'U.
-  method uncomment_when_developing
-    ((_ : 'M) : m) ((_ : 'T) : t) ((_ : 'N) : n) ((_ : 'U) : u) = ()
-  *)
 
+  method virtual on_loc_annot : 'M -> 'N
+  method virtual on_type_annot : 'T -> 'U
 
   method program (program: ('M, 'T) Ast.program) : ('N, 'U) Ast.program =
     let (annot, statements, comments) = program in
-    let annot' = f annot in
+    let annot' = this#on_loc_annot annot in
     let statements' = this#toplevel_statement_list statements in
     let comments' = List.map (this#comment) comments in
     annot', statements', comments'
 
   method statement ((annot, stmt): ('M, 'T) Ast.Statement.t) : ('N, 'U) Ast.Statement.t =
     let open Ast.Statement in
-    f annot,
+    this#on_loc_annot annot,
     match stmt with
     | Block block -> Block (this#block block)
 
@@ -121,11 +113,11 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
       DeclareOpaqueType (this#declare_opaque_type otype)
 
   method comment ((annot, c): 'M Ast.Comment.t) : 'N Ast.Comment.t =
-    f annot, c
+    this#on_loc_annot annot, c
 
   method expression ((annot, expr'): ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
     let open Ast.Expression in
-    g annot,
+    this#on_type_annot annot,
     match expr' with
     | This -> This
     | Super -> Super
@@ -215,7 +207,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
     let param' = Option.map ~f:this#catch_clause_pattern param in
-    let body' = (f * this#block) body in
+    let body' = (this#on_loc_annot * this#block) body in
     { param = param'; body = body' }
 
   method class_ (cls: ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
@@ -241,13 +233,13 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let annot, { expr; targs } = extends in
     let expr' = this#expression expr in
     let targs' = Option.map ~f:this#type_parameter_instantiation targs in
-    f annot, { expr = expr'; targs = targs' }
+    this#on_loc_annot annot, { expr = expr'; targs = targs' }
 
   method class_decorator (dec : ('M, 'T) Ast.Class.Decorator.t) : ('N, 'U) Ast.Class.Decorator.t =
     let open Ast.Class.Decorator in
     let annot, { expression } = dec in
     let expression' = this#expression expression in
-    f annot, { expression = expression' }
+    this#on_loc_annot annot, { expression = expression' }
 
   method class_identifier (ident: 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
     this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
@@ -256,23 +248,23 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Class.Body in
     let annot, { body } = cls_body in
     let body' = List.map this#class_element body in
-    g annot, { body = body' }
+    this#on_type_annot annot, { body = body' }
 
   method class_element (elem: ('M, 'T) Ast.Class.Body.element) : ('N, 'U) Ast.Class.Body.element =
     let open Ast.Class.Body in
     match elem with
     | Method (annot, meth) ->
-      Method (f annot, this#class_method meth)
+      Method (this#on_loc_annot annot, this#class_method meth)
     | Property (annot, prop) ->
-      Property (f annot, this#class_property prop)
+      Property (this#on_loc_annot annot, this#class_property prop)
     | PrivateField (annot, field) ->
-      PrivateField (f annot, this#class_private_field field)
+      PrivateField (this#on_loc_annot annot, this#class_private_field field)
 
   method class_method (meth: ('M, 'T) Ast.Class.Method.t') : ('N, 'U) Ast.Class.Method.t' =
     let open Ast.Class.Method in
     let { kind; key; value; static; decorators; } = meth in
     let key' = this#object_key key in
-    let value' = (f * this#function_) value in
+    let value' = (this#on_loc_annot * this#function_) value in
     let decorators' = List.map this#class_decorator decorators in
     { kind; key = key'; value = value'; static; decorators = decorators' }
 
@@ -282,7 +274,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let key' = this#object_key key in
     let value' = Option.map ~f:this#expression value in
     let annot' = Option.map ~f:this#type_annotation annot in
-    let variance' = Option.map ~f:(f * id) variance in
+    let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     { key = key'; value = value'; annot = annot'; static; variance = variance'; }
 
   method class_private_field (prop: ('M, 'T) Ast.Class.PrivateField.t') =
@@ -291,7 +283,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let key' = this#private_name key in
     let value' = Option.map ~f:this#expression value in
     let annot' = Option.map ~f:this#type_annotation annot in
-    let variance' = Option.map ~f:(f * id) variance in
+    let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     { key = key'; value = value'; annot = annot'; static; variance = variance' }
 
   method comprehension (expr: ('M, 'T) Ast.Expression.Comprehension.t)
@@ -308,7 +300,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let annot, { left; right; each } = block in
     let left' = this#pattern left in
     let right' = this#expression right in
-    f annot, { left = left'; right = right'; each }
+    this#on_loc_annot annot, { left = left'; right = right'; each }
 
   method conditional (expr: ('M, 'T) Ast.Expression.Conditional.t)
                           : ('N, 'U) Ast.Expression.Conditional.t =
@@ -334,9 +326,11 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let { id = ident; tparams; body; extends; mixins; implements } = decl in
     let id' = this#class_identifier ident in
     let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
-    let body' = (f *this#object_type) body in
-    let extends' = Option.map ~f:(f * this#generic_type) extends in
-    let mixins' = List.map (f * this#generic_type) mixins in
+    let body' =
+      let a, b = body in
+      this#on_loc_annot a, this#object_type b in
+    let extends' = Option.map ~f:(this#on_loc_annot * this#generic_type) extends in
+    let mixins' = List.map (this#on_loc_annot * this#generic_type) mixins in
     let implements' = List.map this#class_implements implements in
     {
       id = id';
@@ -353,15 +347,15 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let annot, { id = id_; targs } = implements in
     let id' = this#t_identifier id_ in
     let targs' = Option.map ~f:this#type_parameter_instantiation targs in
-    f annot, { id = id'; targs = targs' }
+    this#on_loc_annot annot, { id = id'; targs = targs' }
 
   method declare_export_declaration _annot
     (decl: ('M, 'T) Ast.Statement.DeclareExportDeclaration.t)
          : ('N, 'U) Ast.Statement.DeclareExportDeclaration.t =
     let open Ast.Statement.DeclareExportDeclaration in
     let { default; source; specifiers; declaration } = decl in
-    let default' = Option.map ~f default in
-    let source' = Option.map ~f:(f * id) source in
+    let default' = Option.map ~f:this#on_loc_annot default in
+    let source' = Option.map ~f:(this#on_loc_annot * id) source in
     let specifiers' = Option.map ~f:this#export_named_specifier specifiers in
     let declaration' = Option.map ~f:this#declare_export_declaration_decl declaration in
     {
@@ -377,19 +371,19 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Statement.DeclareExportDeclaration in
     match decl with
     | Variable (annot, decl_var) ->
-      Variable (f annot, this#declare_variable decl_var)
+      Variable (this#on_loc_annot annot, this#declare_variable decl_var)
     | Function (annot, decl_func) ->
-      Function (f annot, this#declare_function decl_func)
+      Function (this#on_loc_annot annot, this#declare_function decl_func)
     | Class (annot, decl_class) ->
-      Class (f annot, this#declare_class decl_class)
+      Class (this#on_loc_annot annot, this#declare_class decl_class)
     | DefaultType t ->
       DefaultType (this#type_ t)
     | NamedType (annot, alias) ->
-      NamedType (f annot, this#type_alias alias)
+      NamedType (this#on_loc_annot annot, this#type_alias alias)
     | NamedOpaqueType (annot, ot) ->
-      NamedOpaqueType (f annot, this#opaque_type ot)
+      NamedOpaqueType (this#on_loc_annot annot, this#opaque_type ot)
     | Interface (annot, iface) ->
-      Interface (f annot, this#interface iface)
+      Interface (this#on_loc_annot annot, this#interface iface)
 
   method declare_function (decl: ('M, 'T) Ast.Statement.DeclareFunction.t)
                               : ('N, 'U) Ast.Statement.DeclareFunction.t =
@@ -409,14 +403,14 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Statement.DeclareModule in
     let { id; body; kind } = m in
     let id' = match id with
-      | Identifier (annot, name) -> Identifier (g annot, name)
-      | Literal (annot, name) -> Literal (g annot, name)
+      | Identifier (annot, name) -> Identifier (this#on_type_annot annot, name)
+      | Literal (annot, name) -> Literal (this#on_type_annot annot, name)
     in
     let kind' = match kind with
-      | CommonJS annot -> CommonJS (f annot)
-      | ES annot -> ES (f annot)
+      | CommonJS annot -> CommonJS (this#on_loc_annot annot)
+      | ES annot -> ES (this#on_loc_annot annot)
     in
-    let body' = (f * this#block) body in
+    let body' = (this#on_loc_annot * this#block) body in
     { id = id'; body = body'; kind = kind' }
 
   method declare_module_exports _annot (t_annot: ('M, 'T) Ast.Type.annotation)
@@ -449,7 +443,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                                               : ('N, 'U) Ast.Statement.ExportDefaultDeclaration.t =
     let open Ast.Statement.ExportDefaultDeclaration in
     let { default; declaration } = decl in
-    let default' = f default in
+    let default' = this#on_loc_annot default in
     let declaration' = this#export_default_declaration_decl declaration in
     { default = default'; declaration = declaration' }
 
@@ -465,7 +459,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                                             : ('N, 'U) Ast.Statement.ExportNamedDeclaration.t =
     let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind; source; specifiers; declaration } = decl in
-    let source' = Option.map ~f:(f * id) source in
+    let source' = Option.map ~f:(this#on_loc_annot * id) source in
     let specifiers' = Option.map ~f:this#export_named_specifier specifiers in
     let declaration' = Option.map ~f:this#statement declaration in
     { exportKind; source = source'; specifiers = specifiers'; declaration = declaration' }
@@ -476,17 +470,17 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     match spec with
     | ExportSpecifiers specs -> ExportSpecifiers (List.map this#export_specifier specs)
     | ExportBatchSpecifier (annot, name) ->
-      let annot' = f annot in
-      let name' = Option.map ~f:(f * id) name in
+      let annot' = this#on_loc_annot annot in
+      let name' = Option.map ~f:(this#on_loc_annot * id) name in
       ExportBatchSpecifier (annot', name')
 
   method export_specifier (spec : 'M Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
                                 : 'N Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t =
     let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
     let annot, { local; exported } = spec in
-    let local' = (f * id) local in
-    let exported' = Option.map ~f:(f * id) exported in
-    f annot, { local = local'; exported = exported' }
+    let local' = (this#on_loc_annot * id) local in
+    let exported' = Option.map ~f:(this#on_loc_annot * id) exported in
+    this#on_loc_annot annot, { local = local'; exported = exported' }
 
   method expression_statement (stmt: ('M, 'T) Ast.Statement.Expression.t)
                                   : ('N, 'U) Ast.Statement.Expression.t =
@@ -515,7 +509,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Statement.ForIn in
     match left with
     | LeftDeclaration (annot, decl) ->
-      LeftDeclaration (f annot, this#variable_declaration decl)
+      LeftDeclaration (this#on_loc_annot annot, this#variable_declaration decl)
     | LeftPattern patt -> LeftPattern (this#for_in_assignment_pattern patt)
 
   method for_of_statement (stuff: ('M, 'T) Ast.Statement.ForOf.t) : ('N, 'U) Ast.Statement.ForOf.t =
@@ -530,7 +524,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Statement.ForOf in
     match left with
     | LeftDeclaration (annot, decl) ->
-      LeftDeclaration (f annot, this#variable_declaration decl)
+      LeftDeclaration (this#on_loc_annot annot, this#variable_declaration decl)
     | LeftPattern patt ->
       LeftPattern (this#for_of_assignment_pattern patt)
 
@@ -548,7 +542,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Statement.For in
     match init with
     | InitDeclaration (annot, decl) ->
-      InitDeclaration (f annot, this#variable_declaration decl)
+      InitDeclaration (this#on_loc_annot annot, this#variable_declaration decl)
     | InitExpression expr ->
       InitExpression (this#expression expr)
 
@@ -558,14 +552,14 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let annot, { annot = t_annot; name; optional; } = fpt in
     let t_annot' = this#type_ t_annot in
     let name' = Option.map ~f:this#t_identifier name in
-    f annot, { annot = t_annot'; name = name'; optional }
+    this#on_loc_annot annot, { annot = t_annot'; name = name'; optional }
 
   method function_rest_param_type (frpt: ('M, 'T) Ast.Type.Function.RestParam.t)
                                       : ('N, 'U) Ast.Type.Function.RestParam.t =
     let open Ast.Type.Function.RestParam in
     let annot, { argument } = frpt in
     let argument' = this#function_param_type argument in
-    f annot, { argument = argument' }
+    this#on_loc_annot annot, { argument = argument' }
 
   method function_type (ft: ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
     let open Ast.Type.Function in
@@ -579,7 +573,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let rpo' = Option.map ~f:this#function_rest_param_type rpo in
     let return' = this#type_ return in
     {
-      params = (f params_annot, { Params.params = ps'; rest = rpo' });
+      params = (this#on_loc_annot params_annot, { Params.params = ps'; rest = rpo' });
       return = return';
       tparams = tparams';
     }
@@ -593,9 +587,9 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     match opvt with
     | Init t -> Init (this#type_ t)
     | Get (annot, ft) ->
-      Get (f annot, this#function_type ft)
+      Get (this#on_loc_annot annot, this#function_type ft)
     | Set (annot, ft) ->
-      Set (f annot, this#function_type ft)
+      Set (this#on_loc_annot annot, this#function_type ft)
 
   method object_property_type (opt: ('M, 'T) Ast.Type.Object.Property.t)
                                   : ('N, 'U) Ast.Type.Object.Property.t =
@@ -603,8 +597,8 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let annot, { key; value; optional; static; proto; _method; variance; } = opt in
     let key' = this#object_key key in
     let value' = this#object_property_value_type value in
-    let variance' = Option.map ~f:(f * id) variance in
-    f annot, { key = key'; value = value'; optional; static; proto; _method; variance = variance' }
+    let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
+    this#on_loc_annot annot, { key = key'; value = value'; optional; static; proto; _method; variance = variance' }
 
   method object_type (ot: ('M, 'T) Ast.Type.Object.t) : ('N, 'U) Ast.Type.Object.t =
     let open Ast.Type.Object in
@@ -619,31 +613,31 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     | Property prop -> Property (this#object_property_type prop)
     | SpreadProperty (annot, { SpreadProperty.argument }) ->
       let argument' = this#type_ argument in
-      SpreadProperty (f annot, { SpreadProperty.argument = argument' })
+      SpreadProperty (this#on_loc_annot annot, { SpreadProperty.argument = argument' })
     | Indexer (annot, indexer) ->
       let open Indexer in
       let { id = id_; key; value; static; variance } = indexer in
-      let id' = Option.map ~f:(f * id) id_ in
+      let id' = Option.map ~f:(this#on_loc_annot * id) id_ in
       let key' = this#type_ key in
       let value' = this#type_ value in
-      let variance' = Option.map ~f:(f * id) variance in
-      Indexer (f annot, { id = id'; key = key'; value = value'; static; variance = variance' })
+      let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
+      Indexer (this#on_loc_annot annot, { id = id'; key = key'; value = value'; static; variance = variance' })
     | CallProperty (annot, { CallProperty.value; static }) ->
       let open CallProperty in
-      let value' = (f * this#function_type) value in
-      CallProperty (f annot, { value = value'; static })
+      let value' = (this#on_loc_annot * this#function_type) value in
+      CallProperty (this#on_loc_annot annot, { value = value'; static })
     | InternalSlot (annot, islot) ->
       let open InternalSlot in
       let { id = id_; value; _ } = islot in
-      let id' = (f * id) id_ in
+      let id' = (this#on_loc_annot * id) id_ in
       let value' = this#type_ value in
-      InternalSlot (f annot, { islot with id = id'; value = value' })
+      InternalSlot (this#on_loc_annot annot, { islot with id = id'; value = value' })
 
   method interface_type (i: ('M, 'T) Ast.Type.Interface.t) : ('N, 'U) Ast.Type.Interface.t =
     let open Ast.Type.Interface in
     let { extends; body } = i in
-    let extends' = List.map (f * this#generic_type) extends in
-    let body' = (f * this#object_type) body in
+    let extends' = List.map (this#on_loc_annot * this#generic_type) extends in
+    let body' = (this#on_loc_annot * this#object_type) body in
     { extends = extends'; body = body' }
 
   method generic_identifier_type (git: ('M, 'T)  Ast.Type.Generic.Identifier.t)
@@ -654,30 +648,30 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     | Qualified (annot, { qualification; id = id_ }) ->
       let qualification' = this#generic_identifier_type qualification in
       let id' = this#t_identifier id_ in
-      Qualified (f annot, { qualification = qualification'; id = id' })
+      Qualified (this#on_loc_annot annot, { qualification = qualification'; id = id' })
 
   method type_parameter_instantiation (pi: ('M, 'T) Ast.Type.ParameterInstantiation.t)
                                         : ('N, 'U) Ast.Type.ParameterInstantiation.t =
     let annot, targs = pi in
     let targs' = List.map this#type_ targs in
-    f annot, targs'
+    this#on_loc_annot annot, targs'
 
   method type_parameter_declaration (pd: ('M, 'T) Ast.Type.ParameterDeclaration.t)
                                       : ('N, 'U) Ast.Type.ParameterDeclaration.t =
     let annot, type_params = pd in
     let type_params' = List.map this#type_parameter_declaration_type_param type_params in
-    f annot, type_params'
+    this#on_loc_annot annot, type_params'
 
   method type_parameter_declaration_type_param
     (type_param: ('M, 'T) Ast.Type.ParameterDeclaration.TypeParam.t)
               : ('N, 'U) Ast.Type.ParameterDeclaration.TypeParam.t =
     let open Ast.Type.ParameterDeclaration.TypeParam in
     let annot, { name; bound; variance; default; } = type_param in
-    let name' = (f * id) name in
+    let name' = (this#on_loc_annot * id) name in
     let bound' = Option.map ~f:this#type_annotation bound in
-    let variance' = Option.map ~f:(f * id) variance in
+    let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     let default' = Option.map ~f:this#type_ default in
-    g annot, { name = name'; bound = bound'; variance = variance'; default = default'; }
+    this#on_type_annot annot, { name = name'; bound = bound'; variance = variance'; default = default'; }
 
   method generic_type (gt: ('M, 'T) Ast.Type.Generic.t) : ('N, 'U) Ast.Type.Generic.t =
     let open Ast.Type.Generic in
@@ -689,14 +683,14 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
   method type_predicate ((annot, pred) : ('M, 'T) Ast.Type.Predicate.t)
                                       : ('N, 'U) Ast.Type.Predicate.t =
     let open Ast.Type.Predicate in
-    f annot,
+    this#on_loc_annot annot,
     match pred with
     | Declared e -> Declared (this#expression e)
     | Inferred -> Inferred
 
   method type_ ((annot, t): ('M, 'T) Ast.Type.t) : ('N, 'U) Ast.Type.t =
     let open Ast.Type in
-    g annot,
+    this#on_type_annot annot,
     match t with
     ( Any
     | Mixed
@@ -733,7 +727,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
       Tuple ts'
 
   method type_annotation ((annot, t_annot): ('M, 'T) Ast.Type.annotation) =
-    f annot, this#type_ t_annot
+    this#on_loc_annot annot, this#type_ t_annot
 
   method function_ (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
     let open Ast.Function in
@@ -747,12 +741,12 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
       let annot, { Params.params = params_list; rest } = params in
       let params_list' = List.map this#function_param_pattern params_list in
       let rest' = Option.map ~f:this#function_rest_element rest in
-      f annot, { Params.params = params_list'; rest = rest' }
+      this#on_loc_annot annot, { Params.params = params_list'; rest = rest' }
     in
     let return' = Option.map ~f:this#type_annotation return in
     let body' = match body with
       | BodyBlock (annot, block) ->
-        BodyBlock (f annot, this#function_body block)
+        BodyBlock (this#on_loc_annot annot, this#function_body block)
       | BodyExpression expr ->
         BodyExpression (this#expression expr)
     in
@@ -783,10 +777,10 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     { blocks = blocks'; filter = filter' }
 
   method identifier ((annot, name): 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
-    f annot, name
+    this#on_loc_annot annot, name
 
   method t_identifier ((annot, name): 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
-    g annot, name
+    this#on_type_annot annot, name
 
   method interface (interface: ('M, 'T) Ast.Statement.Interface.t)
                             : ('N, 'U) Ast.Statement.Interface.t =
@@ -794,8 +788,8 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let { id = ident; tparams; extends; body } = interface in
     let id' = this#class_identifier ident in
     let tparams' = Option.map ~f:this#type_parameter_declaration tparams in
-    let extends' = List.map (f * this#generic_type) extends in
-    let body' = (f * this#object_type) body in
+    let extends' = List.map (this#on_loc_annot * this#generic_type) extends in
+    let body' = (this#on_loc_annot * this#object_type) body in
     { id = id'; tparams = tparams'; extends = extends'; body = body' }
 
   method interface_declaration (decl: ('M, 'T) Ast.Statement.Interface.t)
@@ -803,7 +797,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     this#interface decl
 
   method private_name ((annot, ident): 'M Ast.PrivateName.t) : 'N Ast.PrivateName.t =
-    f annot, this#identifier ident
+    this#on_loc_annot annot, this#identifier ident
 
   method import _annot (expr: ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
     this#expression expr
@@ -828,7 +822,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let { importKind; source; specifiers; default } = decl in
     let specifiers' = Option.map ~f:this#import_specifier specifiers in
     let default' = Option.map ~f:this#import_default_specifier default in
-    let source' = (f * id) source in
+    let source' = (this#on_loc_annot * id) source in
     { importKind; source = source'; specifiers = specifiers'; default = default' }
 
   method import_specifier (specifier: ('M, 'T) Ast.Statement.ImportDeclaration.specifier)
@@ -840,7 +834,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
       ImportNamedSpecifiers named_specifiers'
     | ImportNamespaceSpecifier (annot, ident) ->
       let ident' = this#import_namespace_specifier ident in
-      ImportNamespaceSpecifier (f annot, ident')
+      ImportNamespaceSpecifier (this#on_loc_annot annot, ident')
 
   method import_named_specifier (specifier: 'T Ast.Statement.ImportDeclaration.named_specifier)
                                           : 'U Ast.Statement.ImportDeclaration.named_specifier =
@@ -867,8 +861,8 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
   method jsx_fragment (expr: ('M, 'T) Ast.JSX.fragment) : ('N, 'U) Ast.JSX.fragment =
     let open Ast.JSX in
     let { frag_openingElement; frag_closingElement; frag_children } = expr in
-    let opening' = f frag_openingElement in
-    let closing' = Option.map ~f frag_closingElement in
+    let opening' = this#on_loc_annot frag_openingElement in
+    let closing' = Option.map ~f:this#on_loc_annot frag_closingElement in
     let children' = List.map this#jsx_child frag_children in
     { frag_openingElement = opening'; frag_closingElement = closing'; frag_children = children' }
 
@@ -877,13 +871,13 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let annot, { name; selfClosing; attributes } = elem in
     let name' = this#jsx_name name in
     let attributes' = List.map this#jsx_opening_attribute attributes in
-    f annot, { name = name'; selfClosing; attributes = attributes' }
+    this#on_loc_annot annot, { name = name'; selfClosing; attributes = attributes' }
 
   method jsx_closing_element (elem: 'M Ast.JSX.Closing.t) : 'N Ast.JSX.Closing.t =
     let open Ast.JSX.Closing in
     let annot, {name} = elem in
     let name' = this#jsx_name name in
-    f annot, {name=name'}
+    this#on_loc_annot annot, {name=name'}
 
   method jsx_opening_attribute (jsx_attr: ('M, 'T) Ast.JSX.Opening.attribute)
                                         : ('N, 'U) Ast.JSX.Opening.attribute =
@@ -892,7 +886,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     | Attribute attr ->
       Attribute (this#jsx_attribute attr)
     | SpreadAttribute (annot, attr) ->
-      SpreadAttribute (f annot, this#jsx_spread_attribute attr)
+      SpreadAttribute (this#on_loc_annot annot, this#jsx_spread_attribute attr)
 
   method jsx_spread_attribute (attr: ('M, 'T) Ast.JSX.SpreadAttribute.t')
                                   : ('N, 'U) Ast.JSX.SpreadAttribute.t' =
@@ -904,24 +898,24 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.JSX.Attribute in
     let annot, { name; value } = attr in
     let name' = match name with
-      | Identifier (annot, name) -> Identifier (f annot, name)
+      | Identifier (annot, name) -> Identifier (this#on_loc_annot annot, name)
       | NamespacedName nname -> NamespacedName (this#jsx_namespaced_name nname)
     in
     let value' = Option.map ~f:this#jsx_attribute_value value in
-    f annot, { name = name'; value = value' }
+    this#on_loc_annot annot, { name = name'; value = value' }
 
   method jsx_attribute_value (value: ('M, 'T) Ast.JSX.Attribute.value)
                                   : ('N, 'U) Ast.JSX.Attribute.value =
     let open Ast.JSX.Attribute in
     match value with
-    | Literal (annot, lit) -> Literal (f annot, lit)
+    | Literal (annot, lit) -> Literal (this#on_loc_annot annot, lit)
     | ExpressionContainer (annot, expr) ->
-      ExpressionContainer (f annot, this#jsx_expression expr)
+      ExpressionContainer (this#on_loc_annot annot, this#jsx_expression expr)
 
   method jsx_child (child: ('M, 'T) Ast.JSX.child) : ('N, 'U) Ast.JSX.child =
     let open Ast.JSX in
     let annot, child' = child in
-    f annot,
+    this#on_loc_annot annot,
     match child' with
     | Element elem ->
       Element (this#jsx_element elem)
@@ -939,7 +933,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let { expression } = jsx_expr in
     let expression' = match expression with
       | Expression expr -> Expression (this#expression expr)
-      | EmptyExpression annot -> EmptyExpression (f annot)
+      | EmptyExpression annot -> EmptyExpression (this#on_loc_annot annot)
     in
     { expression = expression' }
 
@@ -959,7 +953,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let annot, {namespace; name} = namespaced_name in
     let namespace' = this#jsx_identifier namespace in
     let name' = this#jsx_identifier name in
-    f annot, {namespace=namespace'; name=name'}
+    this#on_loc_annot annot, {namespace=namespace'; name=name'}
 
   method jsx_member_expression (member_exp: 'M Ast.JSX.MemberExpression.t)
                                           : 'N Ast.JSX.MemberExpression.t =
@@ -974,10 +968,10 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
         MemberExpression.MemberExpression nested_exp'
     in
     let property' = this#jsx_identifier property in
-    f annot, MemberExpression.({_object=_object'; property=property'})
+    this#on_loc_annot annot, MemberExpression.({_object=_object'; property=property'})
 
   method jsx_identifier ((annot, name): 'M Ast.JSX.Identifier.t) : 'N Ast.JSX.Identifier.t =
-    f annot, name
+    this#on_loc_annot annot, name
 
   method labeled_statement (stmt: ('M, 'T) Ast.Statement.Labeled.t)
                                 : ('N, 'U) Ast.Statement.Labeled.t =
@@ -1034,7 +1028,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                             : 'N Ast.Expression.MetaProperty.t =
     let open Ast.Expression.MetaProperty in
     let { meta; property } = expr in
-    { meta = (f * id) meta; property = (f * id) property }
+    { meta = (this#on_loc_annot * id) meta; property = (this#on_loc_annot * id) property }
 
   method new_ (expr: ('M, 'T) Ast.Expression.New.t) : ('N, 'U) Ast.Expression.New.t =
     let open Ast.Expression.New in
@@ -1062,7 +1056,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                               : ('N, 'U) Ast.Expression.Object.Property.t =
     let open Ast.Expression.Object.Property in
     let annot, prop' = prop in
-    f annot,
+    this#on_loc_annot annot,
     match prop' with
     | Init { key; value; shorthand } ->
       let key' = this#object_key key in
@@ -1072,23 +1066,23 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     | Method { key; value = fn_annot, fn } ->
       let key' = this#object_key key in
       let fn' = this#function_ fn in
-      Method { key = key'; value = f fn_annot, fn' }
+      Method { key = key'; value = this#on_loc_annot fn_annot, fn' }
 
     | Get { key; value = fn_annot, fn } ->
       let key' = this#object_key key in
       let fn' = this#function_ fn in
-      Get { key = key'; value = f fn_annot, fn' }
+      Get { key = key'; value = this#on_loc_annot fn_annot, fn' }
 
     | Set { key; value = fn_annot, fn } ->
       let key' = this#object_key key in
       let fn' = this#function_ fn in
-      Set { key = key'; value = f fn_annot, fn' }
+      Set { key = key'; value = this#on_loc_annot fn_annot, fn' }
 
   method object_key (key: ('M, 'T) Ast.Expression.Object.Property.key) =
     let open Ast.Expression.Object.Property in
     match key with
     | Literal (annot, lit) ->
-      Literal (g annot, this#literal lit)
+      Literal (this#on_type_annot annot, this#literal lit)
     | Identifier ident ->
       Identifier (this#object_key_identifier ident)
     | PrivateName ident ->
@@ -1149,7 +1143,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
   method pattern ?kind (expr: ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t =
     let open Ast.Pattern in
     let annot, patt = expr in
-    g annot,
+    this#on_type_annot annot,
     match patt with
     | Object { Object.properties; annot } ->
       let properties' = List.map (this#pattern_object_p ?kind) properties in
@@ -1186,9 +1180,9 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Pattern.Object in
     match p with
     | Property (annot, prop) ->
-      Property (f annot, this#pattern_object_property ?kind prop)
+      Property (this#on_loc_annot annot, this#pattern_object_property ?kind prop)
     | RestProperty (annot, prop) ->
-      RestProperty (f annot, this#pattern_object_rest_property ?kind prop)
+      RestProperty (this#on_loc_annot annot, this#pattern_object_rest_property ?kind prop)
 
   method pattern_object_property ?kind (prop: ('M, 'T) Ast.Pattern.Object.Property.t')
                                             : ('N, 'U) Ast.Pattern.Object.Property.t' =
@@ -1202,7 +1196,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Pattern.Object.Property in
     match key with
     | Literal (annot, lit) ->
-      Literal (f annot, this#pattern_object_property_literal_key ?kind lit)
+      Literal (this#on_loc_annot annot, this#pattern_object_property_literal_key ?kind lit)
     | Identifier identifier ->
       Identifier (this#pattern_object_property_identifier_key ?kind identifier)
     | Computed expr ->
@@ -1242,7 +1236,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     | Element elem ->
       Element (this#pattern_array_element_pattern ?kind elem)
     | RestElement (annot, elem) ->
-      RestElement (f annot, this#pattern_array_rest_element ?kind elem)
+      RestElement (this#on_loc_annot annot, this#pattern_array_rest_element ?kind elem)
 
   method pattern_array_element_pattern ?kind (expr: ('M, 'T) Ast.Pattern.t)
                                                   : ('N, 'U) Ast.Pattern.t =
@@ -1271,7 +1265,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                                     : ('N, 'U) Ast.Function.RestElement.t =
     let open Ast.Function.RestElement in
     let annot, { argument } = expr in
-    f annot, { argument = this#pattern argument }
+    this#on_loc_annot annot, { argument = this#pattern argument }
 
   method return (stmt: ('M, 'T) Ast.Statement.Return.t) : ('N, 'U) Ast.Statement.Return.t =
     let open Ast.Statement.Return in
@@ -1296,19 +1290,19 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
                             : ('N, 'U) Ast.Expression.SpreadElement.t =
     let open Ast.Expression.SpreadElement in
     let annot, { argument } = expr in
-    f annot, { argument = this#expression argument }
+    this#on_loc_annot annot, { argument = this#expression argument }
 
   method spread_property (expr: ('M, 'T) Ast.Expression.Object.SpreadProperty.t)
                               : ('N, 'U) Ast.Expression.Object.SpreadProperty.t =
     let open Ast.Expression.Object.SpreadProperty in
     let annot, { argument } = expr in
-    f annot, { argument = this#expression argument }
+    this#on_loc_annot annot, { argument = this#expression argument }
 
   method switch (switch: ('M, 'T) Ast.Statement.Switch.t) : ('N, 'U) Ast.Statement.Switch.t =
     let open Ast.Statement.Switch in
     let { discriminant; cases } = switch in
     let discriminant' = this#expression discriminant in
-    let cases' = List.map (f * this#switch_case) cases in
+    let cases' = List.map (this#on_loc_annot * this#switch_case) cases in
     { discriminant = discriminant'; cases = cases' }
 
   method switch_case (case: ('M, 'T) Ast.Statement.Switch.Case.t') =
@@ -1323,7 +1317,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let open Ast.Expression.TaggedTemplate in
     let { tag; quasi } = expr in
     let tag' = this#expression tag in
-    let quasi' = (f * this#template_literal) quasi in
+    let quasi' = (this#on_loc_annot * this#template_literal) quasi in
     { tag = tag'; quasi = quasi' }
 
   method template_literal (expr: ('M, 'T) Ast.Expression.TemplateLiteral.t)
@@ -1336,7 +1330,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
 
   method template_literal_element ((annot, elem): 'M Ast.Expression.TemplateLiteral.Element.t)
                                                 : 'N Ast.Expression.TemplateLiteral.Element.t =
-    f annot, elem
+    this#on_loc_annot annot, elem
 
   method throw (stmt: ('M, 'T) Ast.Statement.Throw.t) : ('N, 'U) Ast.Statement.Throw.t =
     let open Ast.Statement.Throw in
@@ -1346,9 +1340,9 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
   method try_catch (stmt: ('M, 'T) Ast.Statement.Try.t) : ('N, 'U) Ast.Statement.Try.t =
     let open Ast.Statement.Try in
     let { block; handler; finalizer } = stmt in
-    let block' = (f * this#block) block in
-    let handler' = Option.map ~f:(f * this#catch_clause) handler in
-    let finalizer' = Option.map ~f:(f * this#block) finalizer in
+    let block' = (this#on_loc_annot * this#block) block in
+    let handler' = Option.map ~f:(this#on_loc_annot * this#catch_clause) handler in
+    let finalizer' = Option.map ~f:(this#on_loc_annot * this#block) finalizer in
     {
       block = block';
       handler = handler';
@@ -1389,7 +1383,7 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     let annot, { id; init } = decl in
     let id' = this#variable_declarator_pattern ~kind id in
     let init' = Option.map ~f:this#expression init in
-    f annot, { id = id'; init = init' }
+    this#on_loc_annot annot, { id = id'; init = init' }
 
   method while_ (stuff: ('M, 'T) Ast.Statement.While.t) : ('N, 'U) Ast.Statement.While.t =
     let open Ast.Statement.While in
@@ -1421,17 +1415,6 @@ class ['M, 'T, 'N, 'U] mapper (f : 'M -> 'N) (g : 'T -> 'U) = object(this)
     { argument = argument'; delegate }
 
 end
-
-(*  Guards against constraints on type parameters.
-    Not sure why we have to do this (or if there's a better way) just to
-    get OCaml to understand that we want this class to be truly polymorphic.
-    If this doesn't typecheck, then go to the top of the class definition above
-    and uncomment the method called "uncomment_when_developing" to see what
-    needs to be fixed in the class definition.
-*)
-let () =
-  ignore (new mapper (fun (_ : m) -> (raise Exit : n)) (fun (_ : t) -> (raise Exit : u)));
-  ignore (new mapper (fun (_ : n) -> (raise Exit : m)) (fun (_ : u) -> (raise Exit : t)))
 
 let fold_program mappers ast =
   List.fold_left (fun ast m -> m#program ast) ast mappers

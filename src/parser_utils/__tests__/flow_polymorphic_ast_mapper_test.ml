@@ -7,12 +7,18 @@
 
 open OUnit2
 
+class ['a] mapper = object(_)
+  inherit [Loc.t, 'a, Loc.t, 'a] Flow_polymorphic_ast_mapper.mapper
+  method on_loc_annot (x: Loc.t) = x
+  method on_type_annot (x: 'a) = x
+end
+
 (* these tests don't do much other than check that the mapper doesn't raise
     exceptions *)
 
 let run_mapper source =
   let ast, _ = Parser_flow.program source in
-  let mapper = new Flow_polymorphic_ast_mapper.mapper (fun _ -> ()) (fun _ -> ()) in
+  let mapper = new mapper in
   let _ = mapper#program ast in
   ()
 
