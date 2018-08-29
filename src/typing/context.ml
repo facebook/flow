@@ -506,26 +506,26 @@ let make_nominal cx =
   nominal
 
 (* Copy context from cx_other to cx *)
-let merge_into cx cx_other =
-  cx.property_maps <- Type.Properties.Map.union cx_other.property_maps cx.property_maps;
-  cx.call_props <- IMap.union cx_other.call_props cx.call_props;
-  cx.export_maps <- Type.Exports.Map.union cx_other.export_maps cx.export_maps;
-  cx.evaluated <- IMap.union cx_other.evaluated cx.evaluated;
-  cx.type_graph <- Graph_explorer.union cx_other.type_graph cx.type_graph;
-  cx.graph <- IMap.union cx_other.graph cx.graph;
-  cx.type_asserts <- LocMap.union cx.type_asserts cx_other.type_asserts;
+let merge_into sig_cx sig_cx_other =
+  sig_cx.property_maps <- Type.Properties.Map.union sig_cx_other.property_maps sig_cx.property_maps;
+  sig_cx.call_props <- IMap.union sig_cx_other.call_props sig_cx.call_props;
+  sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
+  sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
+  sig_cx.type_graph <- Graph_explorer.union sig_cx_other.type_graph sig_cx.type_graph;
+  sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
+  sig_cx.type_asserts <- LocMap.union sig_cx.type_asserts sig_cx_other.type_asserts;
 
   (* These entries are intermediates, and will be cleared from dep_cxs before
      merge. However, initializing builtins is a bit different, and actually copy
-     these things from the lib cxs into the master cx before we clear the
-     indeterminates and calculate the sig cx. *)
-  cx.envs <- IMap.union cx_other.envs cx.envs;
-  cx.errors <- Errors.ErrorSet.union cx_other.errors cx.errors;
-  cx.error_suppressions <- Error_suppressions.union cx_other.error_suppressions cx.error_suppressions;
-  cx.severity_cover <- ExactCover.union cx_other.severity_cover cx.severity_cover;
-  cx.exists_checks <- LocMap.union cx_other.exists_checks cx.exists_checks;
-  cx.exists_excuses <- LocMap.union cx_other.exists_excuses cx.exists_excuses;
-  cx.all_unresolved <- IMap.union cx_other.all_unresolved cx.all_unresolved;
+     these things from the lib cxs into the master sig_cx before we clear the
+     indeterminates and calculate the sig sig_cx. *)
+  sig_cx.envs <- IMap.union sig_cx_other.envs sig_cx.envs;
+  sig_cx.errors <- Errors.ErrorSet.union sig_cx_other.errors sig_cx.errors;
+  sig_cx.error_suppressions <- Error_suppressions.union sig_cx_other.error_suppressions sig_cx.error_suppressions;
+  sig_cx.severity_cover <- ExactCover.union sig_cx_other.severity_cover sig_cx.severity_cover;
+  sig_cx.exists_checks <- LocMap.union sig_cx_other.exists_checks sig_cx.exists_checks;
+  sig_cx.exists_excuses <- LocMap.union sig_cx_other.exists_excuses sig_cx.exists_excuses;
+  sig_cx.all_unresolved <- IMap.union sig_cx_other.all_unresolved sig_cx.all_unresolved;
   ()
 
 (* Find the constraints of a type variable in the graph.
