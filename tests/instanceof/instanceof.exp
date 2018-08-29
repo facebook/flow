@@ -68,5 +68,22 @@ References:
                                         ^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- objproto.js:4:4
 
-Found 5 errors
+Cannot cast `c.p` to empty because string [1] is incompatible with empty [2].
+
+   objproto.js:4:4
+   4|   (c.p: empty); // error: string ~> empty
+         ^^^
+
+References:
+   objproto.js:1:14
+   1| class C { p: string }
+                   ^^^^^^ [1]
+   objproto.js:4:9
+   4|   (c.p: empty); // error: string ~> empty
+              ^^^^^ [2]
+
+
+
+Found 6 errors

@@ -9222,11 +9222,20 @@ and instanceof_test cx trace result = function
       let u = PredicateT(pred, result) in
       rec_flow cx trace (super_c, ReposLowerT (reason, false, u))
 
-  | true,
-    ObjProtoT _,
-    InternalT (ExtendsT (r, _, a))
-    ->
-    (** We hit the root class, so C is not a subclass of A **)
+  (** If we are checking `instanceof Object` or `instanceof Function`, objects
+      with `ObjProtoT` or `FunProtoT` should pass. *)
+  | true, ObjProtoT reason, (InternalT (ExtendsT _) as right) ->
+    let obj_proto = get_builtin_type cx ~trace reason ~use_desc:true "Object" in
+    rec_flow cx trace (obj_proto,
+      PredicateT (LeftP (InstanceofTest, right), result))
+
+  | true, FunProtoT reason, (InternalT (ExtendsT _) as right) ->
+    let fun_proto = get_builtin_type cx ~trace reason ~use_desc:true "Function" in
+    rec_flow cx trace (fun_proto,
+      PredicateT (LeftP (InstanceofTest, right), result))
+
+  (** We hit the root class, so C is not a subclass of A **)
+  | true, DefT (_, NullT), InternalT (ExtendsT (r, _, a)) ->
     rec_flow_t cx trace (reposition cx ~trace (loc_of_reason r) a, result)
 
   (** Prune the type when any other `instanceof` check succeeds (since this is
