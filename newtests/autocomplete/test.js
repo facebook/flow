@@ -21,7 +21,7 @@ export default suite(({addFile, flowCmd}) => [
          str string
          toLocaleString () => string
          toString () => string
-         valueOf () => Object
+         valueOf () => mixed
 
        `,
      ).exitCodes([0]),
@@ -138,16 +138,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              }
            ]
          }
@@ -1074,16 +1074,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              }
            ]
          }
@@ -1181,16 +1181,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              }
            ]
          }
@@ -1394,16 +1394,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              }
            ]
          }
@@ -1607,16 +1607,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              }
            ]
          }
@@ -1895,16 +1895,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              }
            ]
          }
@@ -2030,16 +2030,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              },
              {
                "name": "x",
@@ -2147,16 +2147,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              },
              {
                "name": "x",
@@ -2264,16 +2264,16 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "valueOf",
-               "type": "() => Object",
+               "type": "() => mixed",
                "func_details": {
-                 "return_type": "Object",
+                 "return_type": "mixed",
                  "params": []
                },
                "path": "[LIB] core.js",
                "line": 68,
                "endline": 68,
                "start": 5,
-               "end": 21
+               "end": 20
              },
              {
                "name": "x",
@@ -2541,16 +2541,16 @@ export default suite(({addFile, flowCmd}) => [
            },
            {
              "name": "valueOf",
-             "type": "() => Object",
+             "type": "() => mixed",
              "func_details": {
-               "return_type": "Object",
+               "return_type": "mixed",
                "params": []
              },
              "path": "[LIB] core.js",
              "line": 68,
              "endline": 68,
              "start": 5,
-             "end": 21
+             "end": 20
            }
          ]
        }

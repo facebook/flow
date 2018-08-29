@@ -461,8 +461,8 @@ Cannot assign `y.valueOf` to `yValueOf` because function type [1] is incompatibl
 
 References:
    <BUILTINS>/core.js:68:5
-    68|     valueOf(): Object;
-            ^^^^^^^^^^^^^^^^^ [1]
+    68|     valueOf(): mixed;
+            ^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:126:16
    126| var yValueOf : number = y.valueOf; // error
                        ^^^^^^ [2]

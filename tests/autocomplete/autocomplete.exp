@@ -5,7 +5,7 @@ propertyIsEnumerable (prop: any) => boolean
 str string
 toLocaleString () => string
 toString () => string
-valueOf () => Object
+valueOf () => mixed
 foo.js = {
   "result":[
     {
@@ -80,13 +80,13 @@ foo.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     }
   ]
 }
@@ -665,13 +665,13 @@ union.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     }
   ]
 }
@@ -729,13 +729,13 @@ object_builtins.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     }
   ]
 }
@@ -872,13 +872,13 @@ function_builtins.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     }
   ]
 }
@@ -1015,13 +1015,13 @@ fun.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     }
   ]
 }
@@ -1193,13 +1193,13 @@ generics.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     }
   ]
 }
@@ -1277,13 +1277,13 @@ optional.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     },
     {
       "name":"x",
@@ -1351,13 +1351,13 @@ jsx1.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     },
     {
       "name":"x",
@@ -1425,13 +1425,13 @@ jsx2.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     },
     {
       "name":"x",
@@ -2052,13 +2052,13 @@ class.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     }
   ]
 }
@@ -2154,13 +2154,13 @@ idx.js = {
     },
     {
       "name":"valueOf",
-      "type":"() => Object",
-      "func_details":{"return_type":"Object","params":[]},
+      "type":"() => mixed",
+      "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
       "line":68,
       "endline":68,
       "start":5,
-      "end":21
+      "end":20
     }
   ]
 }
