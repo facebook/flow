@@ -2818,8 +2818,8 @@ Cannot get `x[0]` because an indexer property is missing in `Boolean` [1].
             ^^^^
 
 References:
-   <BUILTINS>/core.js:117:15
-   117| declare class Boolean {
+   <BUILTINS>/core.js:116:15
+   116| declare class Boolean {
                       ^^^^^^^ [1]
 
 
