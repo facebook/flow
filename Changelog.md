@@ -1,3 +1,19 @@
+### 0.80.0
+
+Likely to cause new Flow errors:
+* We've changed how Flow lint severity is calculated. We used to look at every location mentioned by a lint and we'd use the lowest severity, where Off < Warn < Error. Now we just use the severity at the lint's first location. Flow suppression comments (e.g. `// $FlowFixMe`) can still suppress a lint at any mentioned location. Depending on your setup, this change may expose Flow lints which were turned off by accident. For example, a "Sketchy Null Check" lint in a file with that lint set to error would have been turned off if it also mentions a file with that lint off. Now that lint will show up as an error.
+* Some libdef changes may cause a few errors. For example, `Headers.get` and `URLSearchParams.get` are now annotated to return `null | string` instead of `string` and `File.lastModifiedDate: any` was replaced with `File.lastModified: number`.
+
+Notable bug fixes:
+* Fixed a crash that could happen when a persistent connection disappears.
+
+Misc:
+* Many improvements to the libdefs and docs. Thanks for the PRs, everyone!
+* Small perf improvement by making `BoundT` (internal representation of type parameter bounds) smaller.
+
+Parser:
+* Small change to the OCaml AST for the `extends` expression in a class declaration. Moved a couple of properties to their own node.
+
 ### 0.79.1
 
 Notable bug fixes:
