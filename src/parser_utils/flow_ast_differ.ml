@@ -133,6 +133,8 @@ and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast
     block block1 block2
   | (_, Ast.Statement.For for1), (_, Ast.Statement.For for2) ->
     for_statement for1 for2
+  | (_, Ast.Statement.While while1), (_, Ast.Statement.While while2) ->
+    Some (while_statement while1 while2)
   | (_, Ast.Statement.DoWhile do_while1), (_, Ast.Statement.DoWhile do_while2) ->
     Some (do_while_statement do_while1 do_while2)
   | _, _ ->
@@ -368,6 +370,16 @@ and for_statement_init(init1: (Loc.t, Loc.t) Ast.Statement.For.init)
   | (InitDeclaration _, InitExpression _)
   | (InitExpression _, InitDeclaration _) ->
     None
+
+and while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.While.t)
+                    (stmt2: (Loc.t, Loc.t) Ast.Statement.While.t)
+    : node change list =
+  let open Ast.Statement.While in
+  let { test = test1; body = body1 } = stmt1 in
+  let { test = test2; body = body2 } = stmt2 in
+  let test = diff_if_changed expression test1 test2 in
+  let body = diff_if_changed statement body1 body2 in
+  test @ body
 
 and do_while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
                        (stmt2: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
