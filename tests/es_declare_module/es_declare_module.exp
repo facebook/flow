@@ -32,6 +32,29 @@ References:
              ^^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------------- es_declare_module.js:9:2
+
+Cannot cast `CJS_Named` to object type because:
+ - property `num1` is read-only in module `CJS_Named` [1] but writable in object type [2].
+ - property `str1` is read-only in module `CJS_Named` [1] but writable in object type [2].
+
+   es_declare_module.js:9:2
+   9| (CJS_Named: {num1: number, str1: string});
+       ^^^^^^^^^
+
+References:
+   flow-typed/declares.js:1:1
+      v---------------------------
+   1| declare module "CJS_Named" {
+   2|   declare var num1: number;
+   3|   declare var str1: string;
+   4| }
+      ^ [1]
+   es_declare_module.js:9:13
+   9| (CJS_Named: {num1: number, str1: string});
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- es_declare_module.js:10:2
 
 Cannot cast `CJS_Named` to number because module `CJS_Named` [1] is incompatible with number [2].
@@ -193,4 +216,4 @@ Cannot import `exports` because there is no `exports` export in `ES`.
 
 
 
-Found 14 errors
+Found 16 errors

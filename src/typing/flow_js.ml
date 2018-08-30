@@ -1999,7 +1999,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (* convert ES module's named exports to an object *)
           let proto = ObjProtoT reason in
           let exports_tmap = Context.find_exports cx exports.exports_tmap in
-          let props = SMap.map (fun (loc, t) -> Field (loc, t, Neutral)) exports_tmap in
+          let props = SMap.map (fun (loc, t) -> Field (loc, t, Positive)) exports_tmap in
           Obj_type.mk_with_proto cx reason
             ~sealed:true ~frozen:true ~props proto
       ) in
@@ -2009,7 +2009,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ModuleT(_, exports, imported_is_strict), ImportModuleNsT(reason, t, is_strict)) ->
       check_nonstrict_import cx trace is_strict imported_is_strict reason;
       let exports_tmap = Context.find_exports cx exports.exports_tmap in
-      let props = SMap.map (fun (loc, t) -> Field (loc, t, Neutral)) exports_tmap in
+      let props = SMap.map (fun (loc, t) -> Field (loc, t, Positive)) exports_tmap in
       let props = match exports.cjs_export with
       | Some t ->
         (* TODO this Field should probably have a location *)

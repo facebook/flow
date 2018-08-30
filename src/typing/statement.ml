@@ -1779,7 +1779,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
           match entry with
           | Value {specific; _} ->
             let loc = Some (entry_loc entry) in
-            Properties.add_field x Neutral loc specific acc
+            Properties.add_field x Positive loc specific acc
           | Type _ | Class _ -> acc
         ) module_scope.entries SMap.empty in
         let proto = ObjProtoT reason in
