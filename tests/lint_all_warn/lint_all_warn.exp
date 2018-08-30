@@ -1,0 +1,38 @@
+Error ---------------------------------------------------------------------------------------------- sketchy_null.js:6:5
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-string`)
+
+   sketchy_null.js:6:5
+   6| if (x) { } // This should be an error
+          ^
+
+References:
+   sketchy_null.js:3:17
+   3| declare var x: ?string;
+                      ^^^^^^ [1]
+   sketchy_null.js:3:16
+   3| declare var x: ?string;
+                     ^^^^^^^ [2]
+
+
+Warning -------------------------------------------------------------------------------------------- sketchy_null.js:8:5
+
+Sketchy null check on string [1] which is potentially an empty string. Perhaps you meant to check for null or
+undefined [2]? (`sketchy-null-string`)
+
+   sketchy_null.js:8:5
+   8| if (x) { } // This should be a warning
+          ^
+
+References:
+   sketchy_null.js:3:17
+   3| declare var x: ?string;
+                      ^^^^^^ [1]
+   sketchy_null.js:3:16
+   3| declare var x: ?string;
+                     ^^^^^^^ [2]
+
+
+
+Found 1 error and 1 warning
