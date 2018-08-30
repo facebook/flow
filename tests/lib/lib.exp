@@ -66,5 +66,22 @@ References:
              ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- libtest.js:14:10
 
-Found 4 errors
+Cannot return `s.codePointAt(...)` because undefined [1] is incompatible with number [2].
+
+   libtest.js:14:10
+    14|   return s.codePointAt(0);
+                 ^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:293:42
+   293|     codePointAt(index: number): number | void;
+                                                 ^^^^ [1]
+   libtest.js:13:25
+    13| function f(s: string) : number {
+                                ^^^^^^ [2]
+
+
+
+Found 5 errors
