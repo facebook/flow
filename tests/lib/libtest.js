@@ -9,3 +9,7 @@ a.delete('foobar');
 var b = undefined;
 if (undefined) {
 }
+
+function f(s: string) : number {
+  return s.codePointAt(0);
+}
