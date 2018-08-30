@@ -62,6 +62,24 @@ class MyClass {
 }
 ```
 
+Fields added ouside of the class definition need to be annotated within the body
+of the class.
+
+```js
+// @flow
+function func_we_use_everywhere (x: number): number {
+  return x + 1;
+}
+class MyClass {
+  static constant: number;
+  static helper: (number) => number;
+  method: number => number;
+}
+MyClass.helper = func_we_use_everywhere
+MyClass.constant = 42
+MyClass.prototype.method = func_we_use_everywhere
+```
+
 Flow also supports using the [class properties syntax](https://tc39.github.io/proposal-class-public-fields/).
 
 ```js
