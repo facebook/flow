@@ -1,0 +1,1 @@
+cmd: check --all --strip-root --show-all-errors --include-warnings
