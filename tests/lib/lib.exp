@@ -75,8 +75,8 @@ Cannot return `s.codePointAt(...)` because undefined [1] is incompatible with nu
                  ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:292:42
-   292|     codePointAt(index: number): number | void;
+   <BUILTINS>/core.js:295:42
+   295|     codePointAt(index: number): number | void;
                                                  ^^^^ [1]
    libtest.js:13:25
     13| function f(s: string) : number {

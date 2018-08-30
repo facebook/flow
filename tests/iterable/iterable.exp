@@ -147,8 +147,8 @@ return value of property `@@iterator`.
          ^^^^
 
 References:
-   <BUILTINS>/core.js:288:28
-   288|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:291:28
+   291|     @@iterator(): Iterator<string>;
                                    ^^^^^^ [1]
    string.js:5:17
      5| ("hi": Iterable<number>); // Error - string is a Iterable<string>

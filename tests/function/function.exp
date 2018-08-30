@@ -100,8 +100,8 @@ Cannot call `test.apply` because string [1] is incompatible with number [2].
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:288:28
-   288|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:291:28
+   291|     @@iterator(): Iterator<string>;
                                    ^^^^^^ [1]
    apply.js:1:29
      1| function test(a: string, b: number): number {

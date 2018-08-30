@@ -102,8 +102,8 @@ since `z` is not a member of the set.
                           ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:330:21
-   330| type RegExp$flags = $CharSet<"gimsuy">;
+   <BUILTINS>/core.js:287:21
+   287| type RegExp$flags = $CharSet<"gimsuy">;
                             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -117,8 +117,8 @@ since `z` is not a member of the set.
                               ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:330:21
-   330| type RegExp$flags = $CharSet<"gimsuy">;
+   <BUILTINS>/core.js:287:21
+   287| type RegExp$flags = $CharSet<"gimsuy">;
                             ^^^^^^^^^^^^^^^^^^ [2]
 
 
