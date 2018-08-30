@@ -1689,8 +1689,15 @@ let rec error_of_msg ~trace_reasons ~source_file =
       [text "Use an array literal instead of "; code "new Array(...)"; text "."]
 
   | EMissingAnnotation reason ->
+    let tail = match (desc_of_reason reason) with
+    | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
+        let reason_op = mk_reason reason_op_desc reason_op_loc in
+        let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
+        [desc reason; text " is a type parameter declared in "; ref reason_tapp;
+         text " and was implicitly instantiated at "; ref reason_op; text "."]
+    | _ -> [] in
     mk_error ~trace_infos (loc_of_reason reason)
-      [text "Missing type annotation for "; desc reason; text "."]
+      ([text "Missing type annotation for "; desc reason; text "."] @ tail)
 
   | EBindingError (binding_error, loc, x, entry) ->
     let desc =

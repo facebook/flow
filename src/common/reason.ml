@@ -134,7 +134,8 @@ type reason_desc =
   | RType of string
   | RTypeAlias of string * bool (* trust in normalization *) * reason_desc
   | ROpaqueType of string
-  | RTypeParam of string * reason_desc * Loc.t
+  | RTypeParam of string * (reason_desc * Loc.t) (*reason op *)
+                * (reason_desc * Loc.t) (* reason tapp *)
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option

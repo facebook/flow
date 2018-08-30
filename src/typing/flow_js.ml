@@ -524,11 +524,12 @@ module ImplicitTypeArgument = struct
      polymorphic types need to be implicitly instantiated, because there was no
      explicit instantiation (via a type application), or when we want to cache a
      unique instantiation and unify it with other explicit instantiations. *)
-  let mk_targ cx typeparam reason_op =
+  let mk_targ cx typeparam reason_op reason_tapp =
     (* Create a reason that is positioned at reason_op, but has a def_loc at
      * typeparam.reason. *)
     let loc_op = loc_of_reason reason_op in
-    let desc = RTypeParam (typeparam.name, desc_of_reason reason_op, loc_op) in
+    let desc = RTypeParam (typeparam.name, (desc_of_reason reason_op, loc_op),
+      (desc_of_reason reason_tapp, def_loc_of_reason reason_tapp)) in
     let reason = mk_reason desc (def_loc_of_reason typeparam.reason) in
     let reason = repos_reason loc_op reason in
     Tvar.mk cx reason
@@ -721,7 +722,7 @@ module Cache = struct
       try
         Hashtbl.find cache (loc, typeparam.reason, op_reason)
       with _ ->
-        let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) in
+        let t = ImplicitTypeArgument.mk_targ cx typeparam (Nel.hd op_reason) reason_tapp in
         Hashtbl.add cache (loc, typeparam.reason, op_reason) t;
         t
   end
@@ -1375,7 +1376,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (OpenT(r, tvar), t2) ->
       let t2 = match desc_of_reason r with
-      | RTypeParam (_, _, loc) ->
+      | RTypeParam (_, (_, loc), _) ->
         mod_use_op_of_use_t (fun op -> Frame (ImplicitTypeParam loc, op)) t2
       | _ -> t2
       in
@@ -4217,13 +4218,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | CustomFunT (_, ReactCreateClass),
       CallT (use_op, reason_op, { call_targs = None; call_args_tlist = arg1::_; call_tout; _ }) ->
       let loc_op = loc_of_reason reason_op in
+      let loc_tapp = def_loc_of_reason (reason_of_t call_tout) in
+      let desc_tapp = desc_of_reason (reason_of_t call_tout) in
       let spec = extract_non_spread cx ~trace arg1 in
       let mk_tvar f = Tvar.mk cx (f reason_op) in
       let knot = { React.CreateClass.
         this = mk_tvar (replace_reason_const RThisType);
         static = mk_tvar (replace_reason_const RThisType);
-        state_t = mk_tvar (replace_reason (fun d -> RTypeParam ("State", d, loc_op)));
-        default_t = mk_tvar (replace_reason (fun d -> RTypeParam ("Default", d, loc_op)));
+        state_t = mk_tvar (replace_reason
+          (fun d -> RTypeParam ("State", (d, loc_op), (desc_tapp, loc_tapp))));
+        default_t = mk_tvar (replace_reason
+          (fun d -> RTypeParam ("Default", (d, loc_op), (desc_tapp, loc_tapp))));
       } in
       rec_flow cx trace (spec, ReactKitT (use_op, reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
@@ -7767,7 +7772,7 @@ and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (xs,t
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
 and instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache (xs,t) =
   let ts = xs |> List.map (fun typeparam ->
-    ImplicitTypeArgument.mk_targ cx typeparam reason_op
+    ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp
   ) in
   instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ?cache (xs,t) ts
 
