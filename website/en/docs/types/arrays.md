@@ -146,7 +146,7 @@ The main advantage to using `$ReadOnlyArray` instead of `Array` is that `$ReadOn
 type parameter is *covariant* while `Array`'s type parameter is *invariant*. That means that
 `$ReadOnlyArray<number>` is a subtype of `$ReadOnlyArray<number | string>` while
 `Array<number>` is NOT a subtype of `Array<number | string>`. So it's often useful to use
-`$ReadOnlyArray` as a type annotation to allow various different types of arrays.
+`$ReadOnlyArray` in type annotations for arrays of various types of elements.
 Take, for instance, the following scenario:
 
 ```js
