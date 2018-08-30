@@ -45,6 +45,20 @@ let add_lint_suppressions lint_suppressions t = {
   lint_suppressions = LocSet.union t.lint_suppressions lint_suppressions;
 }
 
+exception No_source of string
+exception Missing_lint_settings of string
+(* raises if `loc` has no filename or `severity_cover` contains no entry for `loc`'s filename *)
+let lint_settings_at_loc loc severity_cover =
+  let file = match loc.Loc.source with
+  | Some x -> x
+  | None -> raise (No_source (Loc.to_string loc))
+  in
+  let file_cover = match FilenameMap.get file severity_cover with
+  | Some x -> x
+  | None -> raise (Missing_lint_settings (Loc.to_string loc))
+  in
+  ExactCover.find loc file_cover
+
 let check_loc lint_kind {suppressions; _} severity_cover
   ((result, used, unused, is_primary_loc) as acc) loc =
   (* We only want to check the starting position of the reason *)
@@ -62,7 +76,7 @@ let check_loc lint_kind {suppressions; _} severity_cover
     (* Only respect lint settings at the primary (first) location *)
     if is_primary_loc
     then Option.value_map lint_kind ~default:acc ~f:(fun some_lint_kind ->
-      let lint_settings = ExactCover.find loc severity_cover in
+      let lint_settings = lint_settings_at_loc loc severity_cover in
       let state = LintSettings.get_value some_lint_kind lint_settings in
       let unused_lint_suppressions =
         match LintSettings.get_loc some_lint_kind lint_settings with
@@ -95,7 +109,7 @@ let check err suppressions severity_cover unused =
     match Errors.kind_of_error err with
       | Errors.LintError kind ->
         let severity, is_explicit = List.fold_left (fun (s, e) loc ->
-          let lint_settings = ExactCover.find loc severity_cover in
+          let lint_settings = lint_settings_at_loc loc severity_cover in
           let s' = LintSettings.get_value kind lint_settings in
           let e' = LintSettings.is_explicit kind lint_settings in
           (severity_min s s', e || e')

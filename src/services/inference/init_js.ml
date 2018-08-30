@@ -137,8 +137,12 @@ let load_lib_files ~master_cx ~options files =
           | Parsing.File_sig_error error ->
             Inference_utils.set_of_file_sig_error ~source_file:lib_file error
           in
-          let result = lib_file, false, errors, Error_suppressions.empty,
-            ExactCover.file_cover lib_file lint_severities in
+          let severity_cover =
+            Utils_js.FilenameMap.singleton
+              lib_file
+              (ExactCover.file_cover lib_file lint_severities)
+          in
+          let result = lib_file, false, errors, Error_suppressions.empty, severity_cover in
           exclude_syms, (result :: results)
 
         | Parsing.Parse_skip
@@ -146,7 +150,11 @@ let load_lib_files ~master_cx ~options files =
           (* should never happen *)
           let errs = Errors.ErrorSet.empty in
           let suppressions = Error_suppressions.empty in
-          let severity_cover = ExactCover.file_cover lib_file lint_severities in
+          let severity_cover =
+            Utils_js.FilenameMap.singleton
+              lib_file
+              (ExactCover.file_cover lib_file lint_severities)
+          in
           let result = lib_file, false, errs, suppressions, severity_cover in
           exclude_syms, (result :: results)
         )

@@ -93,7 +93,7 @@ val is_verbose: t -> bool
 val is_weak: t -> bool
 val is_strict: t -> bool
 val is_strict_local: t -> bool
-val severity_cover: t -> ExactCover.lint_severity_cover
+val severity_cover: t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
 val require_map: t -> Type.t LocMap.t
@@ -131,7 +131,7 @@ val pop_declare_module: t -> unit
 val add_env: t -> int -> env -> unit
 val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
-val add_severity_cover: t -> ExactCover.lint_severity_cover -> unit
+val add_severity_cover: t -> File_key.t -> ExactCover.lint_severity_cover -> unit
 val add_lint_suppressions: t -> LocSet.t -> unit
 val add_import_stmt: t -> (Loc.t, Loc.t) Flow_ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit

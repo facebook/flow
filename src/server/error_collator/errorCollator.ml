@@ -67,9 +67,7 @@ let regenerate =
     } = env.ServerEnv.errors in
     let suppressions = union_suppressions suppressions in
 
-    (* union the errors from all files together, filtering suppressed errors *)
-    let severity_cover = ExactCover.union_all severity_cover_set in
-    let acc_fun = acc_fun suppressions severity_cover in
+    let acc_fun = acc_fun suppressions severity_cover_set in
     let collated_errorset, warnings, collated_suppressed_errors, unused =
       (ErrorSet.empty, FilenameMap.empty, [], suppressions)
       |> FilenameMap.fold acc_fun local_errors

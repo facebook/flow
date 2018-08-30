@@ -344,7 +344,7 @@ let scan_for_lint_suppressions =
       (process_comment cx) (severity_cover_builder, base_settings, Utils.LocSet.empty) comments
     in
     let severity_cover = ExactCover.bake severity_cover_builder in
-    Context.add_severity_cover cx severity_cover;
+    Context.add_severity_cover cx (Context.file cx) severity_cover;
     Context.add_lint_suppressions cx suppression_locs
 
 let scan_for_suppressions cx lint_severities file_options comments =

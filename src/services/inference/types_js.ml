@@ -50,9 +50,6 @@ let update_suppressions map file errsup =
     then FilenameMap.remove file map
     else FilenameMap.add file errsup map
 
-let update_severity_cover_set map file severity_cover =
-  FilenameMap.add file severity_cover map
-
 let with_timer_lwt ?options timer profiling f =
   let should_print = Option.value_map options ~default:false ~f:(Options.should_profile) in
   Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling
@@ -336,7 +333,7 @@ let run_merge_service
       | Ok (new_errors, new_suppressions, new_severity_cover) ->
         update_errset errors file new_errors,
         update_suppressions suppressions file new_suppressions,
-        update_severity_cover_set severity_cover_set file new_severity_cover
+        FilenameMap.union new_severity_cover severity_cover_set
       | Error msg ->
         let new_errors = error_set_of_merge_error file msg in
         update_errset errors file new_errors, suppressions, severity_cover_set
@@ -381,14 +378,14 @@ let merge
       let curr_errors = ref ErrorSet.empty in
       let curr_warnings = ref ErrorSet.empty in
       let curr_suppressions = ref (Error_suppressions.union_suppressions suppressions) in
-      let curr_severity_cover = ref (ExactCover.union_all severity_cover_set) in
+      let curr_severity_cover = ref severity_cover_set in
       let filter = Error_suppressions.filter_suppressed_errors in
       Lwt.return (function lazy results ->
         let new_errors, new_warnings, suppressions, severity_cover =
           List.fold_left (fun (errs_acc, warns_acc, supps_acc, lints_acc) result ->
             let file, errs_and_warns, supps, lints = result in
             let supps_acc = Error_suppressions.union supps_acc supps in
-            let lints_acc = ExactCover.union lints_acc lints in
+            let lints_acc = FilenameMap.union lints_acc lints in
             (* Filter errors and warnings based on suppressions we've seen so far. *)
             let errs, warns, _, _ = filter supps_acc lints_acc errs_and_warns
               ~unused:Error_suppressions.empty (* TODO: track unused suppressions *)
@@ -460,8 +457,9 @@ let merge
             let errors = error_set_of_merge_error file msg in
             let suppressions = Error_suppressions.empty in
             let severity_cover =
-              ExactCover.file_cover file
-                (Options.lint_severities options)
+              Utils_js.FilenameMap.singleton
+                file
+                (ExactCover.file_cover file (Options.lint_severities options))
             in
             file, errors, suppressions, severity_cover
         ) (Lazy.force results)
@@ -643,8 +641,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
         let open ServerEnv in
         let file_severity_cover = Context.severity_cover cx in
         let { severity_cover_set; _ } = !env.errors in
-        ExactCover.union_all
-          (FilenameMap.add filename file_severity_cover severity_cover_set)
+        FilenameMap.union file_severity_cover severity_cover_set
       in
 
       (* Filter out suppressed errors *)
@@ -726,8 +723,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
       let errors_acc = update_errset errors_acc lib_file errs in
       let suppressions_acc =
         update_suppressions suppressions_acc lib_file suppressions in
-      let severity_cover_set_acc =
-        update_severity_cover_set severity_cover_set_acc lib_file severity_cover in
+      let severity_cover_set_acc = FilenameMap.union severity_cover severity_cover_set_acc in
       all_ok, errors_acc, suppressions_acc, severity_cover_set_acc
     ) (true, local_errors, suppressions, severity_cover_set) lib_files
   )
@@ -1425,7 +1421,7 @@ let init ~profiling ~workers options =
   let%lwt () = init_package_heap ~options ~profiling parsed in
 
   Hh_logger.info "Loading libraries";
-  let%lwt libs_ok, local_errors, suppressions, severity_cover_set =
+  let%lwt libs_ok, local_errors, suppressions, (severity_cover_set: ExactCover.lint_severity_cover Utils_js.FilenameMap.t) =
     let suppressions = FilenameMap.empty in
     let severity_cover_set = FilenameMap.empty in
     init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs in

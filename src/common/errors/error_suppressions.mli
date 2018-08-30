@@ -18,5 +18,5 @@ val unused : t -> Loc.t list
 val union_suppressions : t Utils_js.FilenameMap.t -> t
 
 val filter_suppressed_errors :
-  t -> ExactCover.lint_severity_cover -> Errors.ErrorSet.t -> unused:t ->
+  t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> Errors.ErrorSet.t -> unused:t ->
   (Errors.ErrorSet.t * Errors.ErrorSet.t * (Errors.error * Utils_js.LocSet.t) list * t)

@@ -6,7 +6,7 @@
  *)
 
 (*
- * An ExactCover.t represents an exact cover over 0 or more files.
+ * An ExactCover.t represents an exact cover over 1 file.
  *
  * See https://en.wikipedia.org/wiki/Exact_cover; the short version is that an
  * ExactCover.t represents a set of adjacent, nonoverlapping, nonempty,
@@ -24,8 +24,6 @@ open Severity
 (* Supports O(log(n)) queries to get the value associated with a loc. *)
 type 'a t
 
-(* Cover over 0 files. *)
-val empty: 'a t
 (* Given a filename and a value, generate a cover associating that value with that entire file. *)
 val file_cover: File_key.t -> 'a -> 'a t
 (* Gets the value associated with a certain location in the code. To resolve
@@ -34,11 +32,6 @@ val file_cover: File_key.t -> 'a -> 'a t
 val find: Loc.t -> 'a t -> 'a
 (* Combines two disjoint covers. Behavior is undefined if the provided covers
  * aren't disjoint. *)
-val union: 'a t -> 'a t -> 'a t
-(* Combines covers collated by filename into one cover. Behavior is undefined if
- * the provided covers aren't disjoint. *)
-val union_all : 'a t Utils_js.FilenameMap.t -> 'a t
-
 
 (* Supports O(j*(j+k)) operations to modify a range of a cover being constructed,
  * where j is the number of ranges in the builder intersecting the range being

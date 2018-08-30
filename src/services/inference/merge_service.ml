@@ -199,8 +199,9 @@ let merge_strict_component ~worker_mutator ~options merged_acc component =
     let errors = Errors.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let severity_cover =
-      ExactCover.file_cover file
-        (Options.lint_severities options)
+      Utils_js.FilenameMap.singleton
+        file
+        (ExactCover.file_cover file (Options.lint_severities options))
     in
     (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
 

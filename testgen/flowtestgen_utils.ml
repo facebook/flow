@@ -611,8 +611,9 @@ let flow_check (code : string) : string option =
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
           (Nel.one filename) reqs [] master_sig_cx in
       let suppressions = Error_suppressions.empty in
+      let severity_cover = Utils_js.FilenameMap.singleton filename (ExactCover.default_file_cover filename) in
       let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-          suppressions (ExactCover.default_file_cover filename) (Context.errors final_cx)
+          suppressions severity_cover (Context.errors final_cx)
           ~unused:suppressions
       in
       let error_num = Errors.ErrorSet.cardinal errors in
