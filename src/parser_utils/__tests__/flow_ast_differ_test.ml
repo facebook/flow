@@ -155,4 +155,14 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     assert_equal ~ctxt [(28, 34), "gotRenamed"] edits
   end;
+  "do_while_body" >:: begin fun ctxt ->
+    let source = "do { rename; } while (true);" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(5, 11), "gotRenamed"] edits
+  end;
+  "do_while_condition" >:: begin fun ctxt ->
+    let source = "do { continue; } while (rename);" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(24, 30), "gotRenamed"] edits
+  end;
 ]
