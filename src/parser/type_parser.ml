@@ -544,6 +544,14 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | Some loc -> error_at env (loc, Error.UnexpectedProto)
     | None -> ()
 
+    in let error_invalid_property_name env static key =
+      let is_static = static <> None in
+      match key with
+      | Expression.Object.Property.Identifier (loc, name)
+        when is_static && (String.equal name "constructor" || String.equal name "prototype") ->
+        error_at env (loc, Error.InvalidFieldName (name, is_static, false))
+      | _ -> ()
+
     in let rec properties ~allow_static ~allow_proto ~allow_spread ~exact env acc =
       assert (not (allow_static && allow_spread)); (* no `static ...A` *)
       let start_loc = Peek.loc env in
@@ -656,6 +664,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
                 error_unexpected_variance env variance;
                 method_property env start_loc static key
               | _ ->
+                error_invalid_property_name env static key;
                 init_property env start_loc ~variance ~static ~proto key
               end
 
