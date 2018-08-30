@@ -20,7 +20,7 @@ depends: [
   "lwt_ppx" { >= "1.1.0" }
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
-  "ppx_tools_versioned" { = "5.2.0" }
+  "ppx_tools_versioned" { = "5.2" }
   "visitors" {build}
   "wtf8"
 ]
