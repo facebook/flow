@@ -175,4 +175,9 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     assert_equal ~ctxt [(24, 30), "gotRenamed"] edits
   end;
+  "switch_discriminant" >:: begin fun ctxt ->
+    let source = "switch (rename) { case true: break; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(8, 14), "gotRenamed"] edits
+  end;
 ]

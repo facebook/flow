@@ -137,6 +137,8 @@ and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast
     Some (while_statement while1 while2)
   | (_, Ast.Statement.DoWhile do_while1), (_, Ast.Statement.DoWhile do_while2) ->
     Some (do_while_statement do_while1 do_while2)
+  | (_, Ast.Statement.Switch switch1), (_, Ast.Statement.Switch switch2) ->
+    switch_statement switch1 switch2
   | _, _ ->
     None
   in
@@ -390,3 +392,15 @@ and do_while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
   let body = diff_if_changed statement body1 body2 in
   let test = diff_if_changed expression test1 test2 in
   List.concat [body; test]
+
+and switch_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Switch.t)
+                     (stmt2: (Loc.t, Loc.t) Ast.Statement.Switch.t)
+    : node change list option =
+  let open Ast.Statement.Switch in
+  let { discriminant = discriminant1; cases = cases1} = stmt1 in
+  let { discriminant = discriminant2; cases = cases2} = stmt2 in
+  if cases1 != cases2 then
+    (* TODO recurse into switch_cases *)
+    None
+  else
+    Some(diff_if_changed expression discriminant1 discriminant2)
