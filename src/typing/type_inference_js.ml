@@ -20,8 +20,7 @@ module Utils = Utils_js
 let force_annotations cx =
   let m = Context.module_ref cx in
   let tvar = Flow_js.lookup_module cx m in
-  let _, id = Type.open_tvar tvar in
-  Flow_js.enforce_strict cx id
+  Flow_js.enforce_strict cx tvar
 
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =

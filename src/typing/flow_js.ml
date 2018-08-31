@@ -12249,7 +12249,7 @@ end = struct
 
 end
 
-class assert_ground_visitor skip = object (self)
+class assert_ground_visitor skip r context = object (self)
   inherit [Marked.t] Type_visitor.t as super
 
   (* Track prop maps which correspond to object literals. We don't ask for
@@ -12264,6 +12264,41 @@ class assert_ground_visitor skip = object (self)
   val mutable insts: (int * SSet.t) Properties.Map.t = Properties.Map.empty
 
   val depth = ref 0
+  val reason_stack = ref [r]
+  val max_reasons = Context.max_trace_depth context
+
+  method private push_frame r =
+    incr depth;
+    if max_reasons > 0 then (
+      let head_loc = def_loc_of_reason (List.hd !reason_stack) in
+      let curr_loc = def_loc_of_reason r in
+      let should_add = Loc.span_compare head_loc curr_loc = 0 in
+      reason_stack := if should_add
+        then r::(List.tl !reason_stack)
+        else r::!reason_stack;
+      if max_reasons > 0 && List.length !reason_stack > max_reasons then (
+        let top_half = ListUtils.first_n (max_reasons / 2) !reason_stack in
+        let bottom_half_num = if max_reasons mod 2 = 1
+          then max_reasons / 2 + 1
+          else max_reasons / 2 in
+        let bottom_half = ListUtils.last_n bottom_half_num !reason_stack in
+        reason_stack := top_half @ bottom_half);
+      should_add
+    ) else false
+
+  method private pop_frame did_add =
+    decr depth;
+    if max_reasons > 0 then (
+      if did_add then
+        reason_stack := List.tl !reason_stack;
+    )
+
+  method private with_frame r f =
+    let did_add = self#push_frame r in
+    let result = f () in
+    self#pop_frame did_add;
+    result
+
 
   (* Tvars with reasons that match should not be missing annotation errors. *)
   method private skip_reason r =
@@ -12292,7 +12327,12 @@ class assert_ground_visitor skip = object (self)
         if Polarity.compat (pole, Negative)
         then (
           unify_opt cx ~unify_any:true (OpenT (r, id)) Locationless.AnyT.t;
-          add_output cx (FlowError.EMissingAnnotation r)
+          let trace_reasons = if max_reasons = 0
+             then []
+             else List.map (fun reason ->
+                 repos_reason (def_loc_of_reason reason) reason)
+               !reason_stack in
+          add_output cx (FlowError.EMissingAnnotation (r, trace_reasons))
         );
         if Polarity.compat (pole, Positive)
         then List.fold_left (self#type_ cx Positive) seen (types_of constraints)
@@ -12306,7 +12346,7 @@ class assert_ground_visitor skip = object (self)
         (Polarity.string pole)
         (Debug_js.dump_t cx ~depth:verbose_depth t)
     ) (Context.verbose cx);
-    incr depth;
+    self#with_frame (reason_of_t t) (fun () ->
     let seen =
       match t with
       | BoundT _ -> seen
@@ -12392,8 +12432,7 @@ class assert_ground_visitor skip = object (self)
           (DefT (r, FunT (any, any, {ft with this_t = any})))
       | _ -> super#type_ cx pole seen t
     in
-    decr depth;
-    seen
+    seen)
 
   method! props cx pole seen id =
     if Properties.Map.mem id objlits
@@ -12451,7 +12490,7 @@ class assert_ground_visitor skip = object (self)
         seen
 end
 
-let enforce_strict cx id =
+let enforce_strict cx t =
   (* First, compute a set of ids to be skipped by calling `assume_ground`. After
      the call, skip_ids contains precisely those ids that correspond to
      requires/imports. *)
@@ -12464,9 +12503,8 @@ let enforce_strict cx id =
      walking the graph starting from id. Typically, id corresponds to
      exports. *)
   let seen =
-    let visitor = new assert_ground_visitor !skip_ids in
-    let r = locationless_reason (RCustom "") in
-    visitor#tvar cx Positive Marked.empty r id
+    let visitor = new assert_ground_visitor !skip_ids (reason_of_t t) cx in
+    visitor#type_ cx Positive Marked.empty t
   in
   ignore (seen: Marked.t)
 

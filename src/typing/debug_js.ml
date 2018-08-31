@@ -2649,7 +2649,7 @@ let dump_flow_error =
         spf "EUnsupportedSyntax (%s, _)" (string_of_loc loc)
     | EUseArrayLiteral loc ->
         spf "EUseArrayLiteral (%s)" (string_of_loc loc)
-    | EMissingAnnotation reason ->
+    | EMissingAnnotation (reason, _) ->
         spf "EMissingAnnotation (%s)" (dump_reason cx reason)
     | EBindingError (_binding_error, loc, x, entry) ->
         spf "EBindingError (_, %s, %s, %s)"

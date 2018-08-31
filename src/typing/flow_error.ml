@@ -112,7 +112,7 @@ type error_message =
   | EInternal of Loc.t * internal_error
   | EUnsupportedSyntax of Loc.t * unsupported_syntax
   | EUseArrayLiteral of Loc.t
-  | EMissingAnnotation of reason
+  | EMissingAnnotation of reason * reason list
   | EBindingError of binding_error * Loc.t * string * Scope.Entry.t
   | ERecursionLimit of (reason * reason)
   | EModuleOutsideRoot of Loc.t * string
@@ -1688,7 +1688,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     mk_error ~trace_infos loc
       [text "Use an array literal instead of "; code "new Array(...)"; text "."]
 
-  | EMissingAnnotation reason ->
+  | EMissingAnnotation (reason, trace_reasons) ->
     let tail = match (desc_of_reason reason) with
     | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
         let reason_op = mk_reason reason_op_desc reason_op_loc in
@@ -1696,6 +1696,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
         [desc reason; text " is a type parameter declared in "; ref reason_tapp;
          text " and was implicitly instantiated at "; ref reason_op; text "."]
     | _ -> [] in
+    (* We don't collect trace info in the assert_ground_visitor because traces
+     * represent tests of lower bounds to upper bounds, and the assert_ground
+     * visitor is just visiting types. Instead, we collect a list of types we
+     * visited to get to the missing annotation error and report that as the
+     * trace *)
+    let trace_infos = List.map info_of_reason trace_reasons in
     mk_error ~trace_infos (loc_of_reason reason)
       ([text "Missing type annotation for "; desc reason; text "."] @ tail)
 
