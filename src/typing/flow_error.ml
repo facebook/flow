@@ -1693,7 +1693,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
         let reason_op = mk_reason reason_op_desc reason_op_loc in
         let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
-        [desc reason; text " is a type parameter declared in "; ref reason_tapp;
+        [text " "; desc reason; text " is a type parameter declared in "; ref reason_tapp;
          text " and was implicitly instantiated at "; ref reason_op; text "."]
     | _ -> [] in
     (* We don't collect trace info in the assert_ground_visitor because traces
