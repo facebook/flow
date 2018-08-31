@@ -490,39 +490,13 @@ typedef void *sqlite3_ptr;
 typedef sqlite3 *sqlite3_ptr;
 #endif
 
-// DECLARATIONS
-// All functions are declared with the same prototype regardless of
-// build configuration.
-// Some types are not available in some configurations (e.g. sqlite3).
-// For these cases,
-// use a typedef.
-
 static long removed_count = 0;
 
-// Forward declaration
-void hhfi_insert_row(
-        sqlite3_ptr db,
-        int64_t hash,
-        const char *name,
-        int64_t nkind,
-        const char *filespec
-);
-
-// Forward declaration
-char *hhfi_get_filespec(sqlite3_ptr db, int64_t hash);
-
+static sqlite3_ptr hhfi_db = NULL;
 // Forward declaration
 sqlite3_ptr hhfi_get_db(void);
-
 // Forward declaration
-void hhfi_init_db(const char *path);
-
-// Forward declaration
-void hhfi_free_db(void);
-
-static sqlite3_ptr hhfi_db = NULL;
-
-// END DECLARATIONS
+char *hhfi_get_filespec(sqlite3_ptr db, int64_t hash);
 
 void raise_assertion_failure(char * msg) {
   caml_raise_with_string(*caml_named_value("c_assertion_failure"), msg);
@@ -2134,13 +2108,6 @@ value Val_some(value v)
 #ifndef NO_SQLITE3
 
 // ------------------------ START OF SQLITE3 SECTION --------------------------
-
-CAMLprim value hh_removed_count(value ml_unit) {
-    CAMLparam1(ml_unit);
-    UNUSED(ml_unit);
-    return Val_long(removed_count);
-}
-
 static void assert_sql_with_line(
   int result,
   int correct_result,
@@ -2155,6 +2122,88 @@ static void assert_sql_with_line(
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("sql_assertion_failure");
   caml_raise_with_arg(*exn, Val_long(result));
+}
+
+static const char *hhfi_insert_row_sql =                                \
+  "INSERT INTO NAME_INFO (HASH, NAME, NKIND, FILESPEC) VALUES (?, ?, ?, ?);";
+
+// insert a row into the name_info table
+void hhfi_insert_row(
+        sqlite3_ptr db,
+        int64_t hash,
+        const char *name,
+        int64_t kind,
+        const char *filespec
+) {
+    assert(db);
+    assert(name);
+    assert(filespec);
+    const char *sql = hhfi_insert_row_sql;
+    sqlite3_stmt *stmt = NULL;
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL), SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 1, hash), SQLITE_OK);
+    assert_sql(sqlite3_bind_text(stmt, 2, name, -1, SQLITE_TRANSIENT),
+            SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 3, kind), SQLITE_OK);
+    assert_sql(sqlite3_bind_text(stmt, 4, filespec, -1, SQLITE_TRANSIENT),
+            SQLITE_OK);
+    assert_sql(sqlite3_step(stmt), SQLITE_DONE);
+    assert_sql(sqlite3_finalize(stmt), SQLITE_OK);
+    return;
+}
+
+static const char *hhfi_get_filespec_sql = \
+    "SELECT FILESPEC FROM NAME_INFO WHERE (HASH = (?));";
+
+char *hhfi_get_filespec(
+        sqlite3_ptr db,
+        int64_t hash
+) {
+    assert(db);
+    const char *sql = hhfi_get_filespec_sql;
+    sqlite3_stmt *stmt = NULL;
+    assert_sql(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL), SQLITE_OK);
+    assert_sql(sqlite3_bind_int64(stmt, 1, hash), SQLITE_OK);
+    int sqlerr = sqlite3_step(stmt);
+    char *out = NULL;
+    if (sqlerr == SQLITE_DONE) {
+        // do nothing
+    } else if (sqlerr == SQLITE_ROW) {
+        // sqlite returns const unsigned char*
+        out = copy_malloc((char *) sqlite3_column_text(stmt, 0));
+        // make sure there are no more rows
+        assert_sql(sqlite3_step(stmt), SQLITE_DONE);
+    } else {
+        // unexpected sqlite status
+        assert(0);
+    }
+    sqlite3_finalize(stmt);
+    return out;
+}
+
+void hhfi_init_db(const char *path) {
+    assert(hhfi_db == NULL);
+    assert_sql(sqlite3_open(path, &hhfi_db), SQLITE_OK);
+    assert_sql(sqlite3_exec(hhfi_db, "BEGIN TRANSACTION;", 0, 0, 0), SQLITE_OK);
+    return;
+}
+
+void hhfi_free_db(void) {
+    assert(hhfi_db != NULL);
+    assert_sql(sqlite3_exec(hhfi_db, "END TRANSACTION;", 0, 0, 0), SQLITE_OK);
+    assert_sql(sqlite3_close(hhfi_db), SQLITE_OK);
+    return;
+}
+
+sqlite3_ptr hhfi_get_db(void) {
+    assert(hhfi_db != NULL);
+    return hhfi_db;
+}
+
+CAMLprim value hh_removed_count(value ml_unit) {
+    CAMLparam1(ml_unit);
+    UNUSED(ml_unit);
+    return Val_long(removed_count);
 }
 
 CAMLprim value get_file_info_on_disk(
@@ -2957,82 +3006,6 @@ CAMLprim value hh_get_sqlite(value ocaml_key) {
 }
 
 // --------------------------END OF SQLITE3 SECTION ---------------------------
-static const char *hhfi_insert_row_sql = \
-  "INSERT INTO NAME_INFO (HASH, NAME, NKIND, FILESPEC) VALUES (?, ?, ?, ?);";
-
-// insert a row into the name_info table
-void hhfi_insert_row(
-        sqlite3_ptr db,
-        int64_t hash,
-        const char *name,
-        int64_t kind,
-        const char *filespec
-) {
-    assert(db);
-    assert(name);
-    assert(filespec);
-    const char *sql = hhfi_insert_row_sql;
-    sqlite3_stmt *stmt = NULL;
-    assert_sql(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL), SQLITE_OK);
-    assert_sql(sqlite3_bind_int64(stmt, 1, hash), SQLITE_OK);
-    assert_sql(sqlite3_bind_text(stmt, 2, name, -1, SQLITE_TRANSIENT),
-            SQLITE_OK);
-    assert_sql(sqlite3_bind_int64(stmt, 3, kind), SQLITE_OK);
-    assert_sql(sqlite3_bind_text(stmt, 4, filespec, -1, SQLITE_TRANSIENT),
-            SQLITE_OK);
-    assert_sql(sqlite3_step(stmt), SQLITE_DONE);
-    assert_sql(sqlite3_finalize(stmt), SQLITE_OK);
-    return;
-}
-
-static const char *hhfi_get_filespec_sql = \
-    "SELECT FILESPEC FROM NAME_INFO WHERE (HASH = (?));";
-
-char *hhfi_get_filespec(
-        sqlite3_ptr db,
-        int64_t hash
-) {
-    assert(db);
-    const char *sql = hhfi_get_filespec_sql;
-    sqlite3_stmt *stmt = NULL;
-    assert_sql(sqlite3_prepare_v2(db, sql, -1, &stmt, NULL), SQLITE_OK);
-    assert_sql(sqlite3_bind_int64(stmt, 1, hash), SQLITE_OK);
-    int sqlerr = sqlite3_step(stmt);
-    char *out = NULL;
-    if (sqlerr == SQLITE_DONE) {
-        // do nothing
-    } else if (sqlerr == SQLITE_ROW) {
-        // sqlite returns const unsigned char*
-        out = copy_malloc((char *) sqlite3_column_text(stmt, 0));
-        // make sure there are no more rows
-        assert_sql(sqlite3_step(stmt), SQLITE_DONE);
-    } else {
-        // unexpected sqlite status
-        assert(0);
-    }
-    sqlite3_finalize(stmt);
-    return out;
-}
-
-void hhfi_init_db(const char *path) {
-    assert(hhfi_db == NULL);
-    assert_sql(sqlite3_open(path, &hhfi_db), SQLITE_OK);
-    assert_sql(sqlite3_exec(hhfi_db, "BEGIN TRANSACTION;", 0, 0, 0), SQLITE_OK);
-    return;
-}
-
-void hhfi_free_db(void) {
-    assert(hhfi_db != NULL);
-    assert_sql(sqlite3_exec(hhfi_db, "END TRANSACTION;", 0, 0, 0), SQLITE_OK);
-    assert_sql(sqlite3_close(hhfi_db), SQLITE_OK);
-    return;
-}
-
-sqlite3_ptr hhfi_get_db(void) {
-    assert(hhfi_db != NULL);
-    return hhfi_db;
-}
-
 #else
 
 // ----------------------- START OF NO_SQLITE3 SECTION ------------------------
