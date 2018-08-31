@@ -2382,16 +2382,6 @@ size_t deptbl_entry_count_for_slot(size_t slot) {
   return count;
 }
 
-static long hh_save_file_info_helper_sqlite(
-    const char* const out_filename
-) {
-    assert_master();
-    sqlite3 *db_out = NULL;
-    assert_sql(sqlite3_open(out_filename, &db_out), SQLITE_OK);
-    make_all_tables(db_out);
-    return 0;
-}
-
 static sqlite3 * connect_and_create_dep_table_helper(
     const char* const out_filename
 ) {
