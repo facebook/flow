@@ -7,6 +7,8 @@
  *
  */
 
+#include "hh_shared.h"
+
 /*****************************************************************************/
 /* File Implementing the shared memory system for Hack.
  *
@@ -498,14 +500,6 @@ void raise_assertion_failure(char *msg);
 
 static size_t get_wasted_heap_size(void);
 
-CAMLprim value hh_heap_size(void);
-
-CAMLprim value hh_log_level(void);
-
-CAMLprim value hh_hash_used_slots(void);
-
-CAMLprim value hh_hash_slots(void);
-
 struct timeval log_duration(const char *prefix, struct timeval start_t);
 
 void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail);
@@ -539,29 +533,11 @@ static void set_sizes(
         uint64_t config_hash_table_pow
 );
 
-CAMLprim value hh_shared_init( value config_val, value shm_dir_val);
-
-value hh_connect(value connector, value is_master);
-
-CAMLprim value hh_counter_next(void);
-
 void assert_master(void);
 
 void assert_not_master(void);
 
-CAMLprim value hh_stop_workers(void);
-
-CAMLprim value hh_resume_workers(void);
-
-CAMLprim value hh_check_should_exit(void);
-
 void check_should_exit(void);
-
-void hh_shared_store(value data);
-
-CAMLprim value hh_shared_load(void);
-
-void hh_shared_clear(void);
 
 static void raise_dep_table_full(void);
 
@@ -575,37 +551,13 @@ static void prepend_to_deptbl_list(uint32_t key, uint32_t val);
 
 static void add_dep(uint32_t key, uint32_t val);
 
-void hh_add_dep(value ocaml_dep);
-
-CAMLprim value hh_dep_used_slots(void);
-
-CAMLprim value hh_dep_slots(void);
-
-CAMLprim value hh_get_dep(value ocaml_key);
-
 static char *temp_memory_map(void);
 
 static void temp_memory_unmap(char *tmp_heap);
 
-void hh_call_after_init(void);
-
-value hh_check_heap_overflow(void);
-
 static int should_collect(int aggressive);
 
-CAMLprim value hh_should_collect(value aggressive_val);
-
-CAMLprim value hh_collect(value aggressive_val);
-
 static void raise_heap_full(void);
-
-static char* hh_alloc(hh_header_t header);
-
-static char* hh_store_ocaml(
-        value data,
-        /*out*/size_t *alloc_size,
-        /*out*/size_t *orig_size
-);
 
 static uint64_t get_hash(value key);
 
@@ -613,36 +565,11 @@ static value write_at(unsigned int slot, value data);
 
 static void raise_hash_table_full(void);
 
-value hh_add(value key, value data);
-
 static unsigned int find_slot(value key);
-
-value hh_mem(value key);
-
-CAMLprim value hh_mem_status(value key);
-
-CAMLprim value hh_deserialize(char *src);
-
-CAMLprim value hh_get_and_deserialize(value key);
-
-CAMLprim value hh_get_and_deserialize_sqlite(
-        value ml_use_fileinfo_sqlite,
-        value ml_key
-);
-
-CAMLprim value hh_get_size(value key);
-
-void hh_move(value key1, value key2);
-
-void hh_remove(value key);
 
 CAMLprim value hh_removed_count(value ml_unit);
 
 static long removed_count = 0;
-
-void hh_cleanup_sqlite(void);
-
-void hh_hashtable_cleanup_sqlite(void);
 
 value Val_some(value v);
 
@@ -668,33 +595,6 @@ static void verify_sqlite_header(sqlite3_ptr db, int ignore_hh_version);
 
 size_t deptbl_entry_count_for_slot(size_t slot);
 
-static long hh_save_file_info_helper_sqlite(const char* const out_filename);
-
-static size_t hh_save_dep_table_helper_sqlite(
-        const char* const out_filename,
-        const char* const build_info
-);
-
-CAMLprim value hh_save_dep_table_sqlite(
-        value out_filename,
-        value build_revision
-);
-
-CAMLprim value hh_load_dep_table_sqlite(
-        value in_filename,
-        value ignore_hh_version
-);
-
-CAMLprim value hh_get_dep_sqlite(value ocaml_key);
-
-CAMLprim value hh_save_table_sqlite(value out_filename);
-
-CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys);
-
-CAMLprim value hh_load_table_sqlite(value in_filename, value verify);
-
-CAMLprim value hh_get_sqlite(value ocaml_key);
-
 void hhfi_insert_row(
         sqlite3_ptr db,
         int64_t hash,
@@ -708,15 +608,6 @@ char *hhfi_get_filespec(sqlite3_ptr db, int64_t hash);
 static char *copy_malloc(const char *s);
 
 static sqlite3_ptr hhfi_db = NULL;
-
-CAMLprim value hh_save_file_info_init(value ml_path);
-
-CAMLprim value hh_save_file_info_sqlite(
-        value ml_hash,
-        value ml_name,
-        value ml_kind,
-        value ml_filespec
-);
 
 sqlite3_ptr hhfi_get_db(void);
 
