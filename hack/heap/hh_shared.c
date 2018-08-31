@@ -496,105 +496,10 @@ typedef sqlite3 *sqlite3_ptr;
 // Some types are not available in some configurations (e.g. sqlite3).
 // For these cases,
 // use a typedef.
-void raise_assertion_failure(char *msg);
-
-static size_t get_wasted_heap_size(void);
-
-struct timeval log_duration(const char *prefix, struct timeval start_t);
-
-void memfd_init(char *shm_dir, size_t shared_mem_size, uint64_t minimum_avail);
-
-static void raise_failed_anonymous_memfd_init(void);
-
-static void raise_less_than_minimum_available(uint64_t avail);
-
-void assert_avail_exceeds_minimum(char *shm_dir, uint64_t minimum_avail);
-
-static char *memfd_map(size_t shared_mem_size);
-
-static char *memfd_map(size_t shared_mem_size);
-
-static void raise_out_of_shared_memory(void);
-
-static void win_reserve(char *mem, size_t sz);
-
-static void memfd_reserve(char *mem, size_t sz);
-
-static void define_globals(char *shared_mem_init);
-
-static size_t get_shared_mem_size(void);
-
-static void init_shared_globals(size_t config_log_level);
-
-static void set_sizes(
-        uint64_t config_global_size,
-        uint64_t config_heap_size,
-        uint64_t config_dep_table_pow,
-        uint64_t config_hash_table_pow
-);
-
-void assert_master(void);
-
-void assert_not_master(void);
-
-void check_should_exit(void);
-
-static void raise_dep_table_full(void);
-
-static uint64_t hash_uint64(uint64_t n);
-
-static int add_binding(uint64_t value);
-
-static uint32_t alloc_deptbl_node(uint32_t key, uint32_t val);
-
-static void prepend_to_deptbl_list(uint32_t key, uint32_t val);
-
-static void add_dep(uint32_t key, uint32_t val);
-
-static char *temp_memory_map(void);
-
-static void temp_memory_unmap(char *tmp_heap);
-
-static int should_collect(int aggressive);
-
-static void raise_heap_full(void);
-
-static uint64_t get_hash(value key);
-
-static value write_at(unsigned int slot, value data);
-
-static void raise_hash_table_full(void);
-
-static unsigned int find_slot(value key);
-
-CAMLprim value hh_removed_count(value ml_unit);
 
 static long removed_count = 0;
 
-value Val_some(value v);
-
-static void assert_sql_with_line(
-        int result,
-        int correct_result,
-        int line_number
-);
-
-CAMLprim value get_file_info_on_disk( value ml_unit);
-
-CAMLprim value set_file_info_on_disk_path(value ml_str);
-
-CAMLprim value get_file_info_on_disk_path(value ml_unit);
-
-CAMLprim value open_file_info_db(value ml_unit);
-
-static void make_all_tables(sqlite3_ptr db);
-
-static void create_sqlite_header(sqlite3_ptr db, const char* const buildInfo);
-
-static void verify_sqlite_header(sqlite3_ptr db, int ignore_hh_version);
-
-size_t deptbl_entry_count_for_slot(size_t slot);
-
+// Forward declaration
 void hhfi_insert_row(
         sqlite3_ptr db,
         int64_t hash,
@@ -603,28 +508,30 @@ void hhfi_insert_row(
         const char *filespec
 );
 
+// Forward declaration
 char *hhfi_get_filespec(sqlite3_ptr db, int64_t hash);
 
-static char *copy_malloc(const char *s);
+// Forward declaration
+sqlite3_ptr hhfi_get_db(void);
+
+// Forward declaration
+void hhfi_init_db(const char *path);
+
+// Forward declaration
+void hhfi_free_db(void);
 
 static sqlite3_ptr hhfi_db = NULL;
 
-sqlite3_ptr hhfi_get_db(void);
-
-void hhfi_init_db(const char *path);
-
-void hhfi_free_db(void);
-
 // END DECLARATIONS
+
+void raise_assertion_failure(char * msg) {
+  caml_raise_with_string(*caml_named_value("c_assertion_failure"), msg);
+}
 
 static char *copy_malloc(const char *s) {
     char *d = malloc(1 + strlen(s));
     assert(d);
     return strcpy(d, s);
-}
-
-void raise_assertion_failure(char * msg) {
-  caml_raise_with_string(*caml_named_value("c_assertion_failure"), msg);
 }
 
 /* Part of the heap not reachable from hashtable entries. Can be reclaimed with
