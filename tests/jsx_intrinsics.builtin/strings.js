@@ -15,4 +15,4 @@ var Str: string = 'str';
 React.createElement('div', {}); // This is fine
 React.createElement('bad', {}); // This is fine
 
-<Div id={42} />; // This is fine
+<Div nonexistentProp={42} />; // This is fine
