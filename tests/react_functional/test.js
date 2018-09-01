@@ -13,5 +13,5 @@ var Z = 0;
 <Z />; // error, expected React component
 
 // Ensure StatelessFunctionalComponent type is usable
-const H: React.StatelessFunctionalComponent<{foo: string}> = (props) => {};
+const H: React.StatelessFunctionalComponent<{foo: string}> = (props) => { return null };
 <H foo=""/>; // ok
