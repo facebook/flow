@@ -8,7 +8,7 @@ class Hello extends React.Component<{name: string}> {
     name: React.PropTypes.string.isRequired,
   };
 
-  render(): Node {
+  render() {
     return <div>{this.props.name}</div>;
   }
 }

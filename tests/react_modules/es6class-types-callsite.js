@@ -6,13 +6,13 @@ import type {Node} from 'react';
 type Props = {name: string};
 
 class HelloLocal extends React.Component<Props> {
-  render(): Node {
+  render() {
     return <div>{this.props.name}</div>;
   }
 }
 
 class Callsite extends React.Component<Props> {
-  render(): Node {
+  render() {
     return (
       <div>
         <Hello />
