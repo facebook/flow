@@ -23,14 +23,14 @@ Property `key` is missing in object literal [1] but exists in `React.Element` [2
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:183:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   183| declare type React$Element<+ElementType: React$ElementType> = {|
+   184|   +type: ElementType,
+   185|   +props: React$ElementProps<ElementType>,
+   186|   +key: React$Key | null,
+   187|   +ref: any,
+   188| |};
         -^ [2]
 
 
@@ -43,14 +43,14 @@ Property `props` is missing in object literal [1] but exists in `React.Element` 
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:183:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   183| declare type React$Element<+ElementType: React$ElementType> = {|
+   184|   +type: ElementType,
+   185|   +props: React$ElementProps<ElementType>,
+   186|   +key: React$Key | null,
+   187|   +ref: any,
+   188| |};
         -^ [2]
 
 
@@ -63,14 +63,14 @@ Property `ref` is missing in object literal [1] but exists in `React.Element` [2
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:173:63
+   <BUILTINS>/react.js:183:63
                                                                       v-
-   173| declare type React$Element<+ElementType: React$ElementType> = {|
-   174|   +type: ElementType,
-   175|   +props: React$ElementProps<ElementType>,
-   176|   +key: React$Key | null,
-   177|   +ref: any,
-   178| |};
+   183| declare type React$Element<+ElementType: React$ElementType> = {|
+   184|   +type: ElementType,
+   185|   +props: React$ElementProps<ElementType>,
+   186|   +key: React$Key | null,
+   187|   +ref: any,
+   188| |};
         -^ [2]
 
 
@@ -420,7 +420,7 @@ References:
    26|   bar: 'Hello, world!', // Error: `bar` is a string.
               ^^^^^^^^^^^^^^^ [1]
    create_element.js:16:38
-   16| function B(props: {foo: number, bar: number}) {}
+   16| function B(props: {foo: number, bar: number}) { return null }
                                             ^^^^^^ [2]
 
 
@@ -454,7 +454,7 @@ References:
    29| React.createElement(B, {foo: 42}); // Error: `bar` is missing.
                               ^^^^^^^^^ [1]
    create_element.js:16:19
-   16| function B(props: {foo: number, bar: number}) {}
+   16| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -492,7 +492,7 @@ References:
    31| React.createElement(B, undefined); // Error: `foo` and `bar` are missing.
                               ^^^^^^^^^ [1]
    create_element.js:16:19
-   16| function B(props: {foo: number, bar: number}) {}
+   16| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -530,7 +530,7 @@ References:
    33| React.createElement(B, null); // Error: `foo` and `bar` are missing.
                               ^^^^ [1]
    create_element.js:16:19
-   16| function B(props: {foo: number, bar: number}) {}
+   16| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -561,7 +561,7 @@ Cannot cast `React.createElement(...).props.foo` to boolean because number [1] i
 
 References:
    create_element.js:16:25
-   16| function B(props: {foo: number, bar: number}) {}
+   16| function B(props: {foo: number, bar: number}) { return null }
                                ^^^^^^ [1]
    create_element.js:40:54
    40| (React.createElement(B, {foo: 1, bar: 2}).props.foo: boolean); // Error: `foo`
@@ -624,7 +624,7 @@ Cannot call `React.createElement` because:
 
 References:
    create_element.js:16:19
-   16| function B(props: {foo: number, bar: number}) {}
+   16| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -666,7 +666,7 @@ References:
    61|   bar: 'Hello, world!', // Error: `bar` is a string.
               ^^^^^^^^^^^^^^^ [1]
    create_element.js:50:38
-   50| function D(props: {foo: number, bar: number}) {}
+   50| function D(props: {foo: number, bar: number}) { return null }
                                             ^^^^^^ [2]
 
 
@@ -1775,7 +1775,7 @@ References:
    26|   bar: 'Hello, world!', // Error: `bar` is a string.
               ^^^^^^^^^^^^^^^ [1]
    create_factory.js:13:38
-   13| function B(props: {foo: number, bar: number}) {}
+   13| function B(props: {foo: number, bar: number}) { return null }
                                             ^^^^^^ [2]
 
 
@@ -1809,7 +1809,7 @@ References:
    29| bFactory({foo: 42}); // Error: `bar` is missing.
                 ^^^^^^^^^ [1]
    create_factory.js:13:19
-   13| function B(props: {foo: number, bar: number}) {}
+   13| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1847,7 +1847,7 @@ References:
    31| bFactory(undefined); // Error: `foo` and `bar` are missing.
                 ^^^^^^^^^ [1]
    create_factory.js:13:19
-   13| function B(props: {foo: number, bar: number}) {}
+   13| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1885,7 +1885,7 @@ References:
    33| bFactory(null); // Error: `foo` and `bar` are missing.
                 ^^^^ [1]
    create_factory.js:13:19
-   13| function B(props: {foo: number, bar: number}) {}
+   13| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1916,7 +1916,7 @@ Cannot cast `bFactory(...).props.foo` to boolean because number [1] is incompati
 
 References:
    create_factory.js:13:25
-   13| function B(props: {foo: number, bar: number}) {}
+   13| function B(props: {foo: number, bar: number}) { return null }
                                ^^^^^^ [1]
    create_factory.js:39:40
    39| (bFactory({foo: 1, bar: 2}).props.foo: boolean); // Error: `foo` is `number`.
@@ -1979,7 +1979,7 @@ Cannot call `bFactory` because:
 
 References:
    create_factory.js:13:19
-   13| function B(props: {foo: number, bar: number}) {}
+   13| function B(props: {foo: number, bar: number}) { return null }
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2021,7 +2021,7 @@ References:
    62|   bar: 'Hello, world!', // Error: `bar` is a string.
               ^^^^^^^^^^^^^^^ [1]
    create_factory.js:48:38
-   48| function D(props: {foo: number, bar: number}) {}
+   48| function D(props: {foo: number, bar: number}) { return null }
                                             ^^^^^^ [2]
 
 
