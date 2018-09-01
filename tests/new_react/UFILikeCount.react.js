@@ -16,7 +16,7 @@ var UFILikeCount = React.createClass({
     feedback: React.PropTypes.object.isRequired
   },
 
-  render: function(): Node {
+  render: function() {
     return <div/>;
   }
 });
