@@ -84,6 +84,17 @@ let diff_if_changed_opt f opt1 opt2: node change list option =
   | _ ->
     None
 
+(* This is needed if the function for the given node returns a node change
+* list instead of a node change list option (for instance, expression) *)
+let diff_if_changed_nonopt_fn f opt1 opt2: node change list option =
+  match opt1, opt2 with
+  | Some x1, Some x2 ->
+    if x1 == x2 then Some [] else Some (f x1 x2)
+  | None, None ->
+    Some []
+  | _ ->
+    None
+
 (* Outline:
 * - There is a function for every AST node that we want to be able to recurse into.
 * - Each function for an AST node represented in the `node` type above should return a list of
@@ -182,7 +193,7 @@ and variable_declarator (decl1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration
     (* TODO recurse into id after patterns are implemented *)
     None
   else
-    diff_if_changed_opt (fun x y -> Some (expression x y)) init1 init2
+    diff_if_changed_nonopt_fn expression init1 init2
 
 and variable_declaration (var1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) (var2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
     : node change list option =
@@ -353,10 +364,9 @@ and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
   let open Ast.Statement.For in
   let { init = init1; test = test1; update = update1; body = body1 } = stmt1 in
   let { init = init2; test = test2; update = update2; body = body2 } = stmt2 in
-  let expression_option expr1 expr2 = Some (expression expr1 expr2) in
   let init = diff_if_changed_opt for_statement_init init1 init2 in
-  let test = diff_if_changed_opt expression_option test1 test2 in
-  let update = diff_if_changed_opt expression_option update1 update2 in
+  let test = diff_if_changed_nonopt_fn expression test1 test2 in
+  let update = diff_if_changed_nonopt_fn expression update1 update2 in
   let body = Some (diff_if_changed statement body1 body2) in
   Option.all [init; test; update; body] |> Option.map ~f:List.concat
 
@@ -399,8 +409,16 @@ and switch_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Switch.t)
   let open Ast.Statement.Switch in
   let { discriminant = discriminant1; cases = cases1} = stmt1 in
   let { discriminant = discriminant2; cases = cases2} = stmt2 in
-  if cases1 != cases2 then
-    (* TODO recurse into switch_cases *)
-    None
-  else
-    Some(diff_if_changed expression discriminant1 discriminant2)
+  let discriminant = Some (diff_if_changed expression discriminant1 discriminant2) in
+  let cases = diff_and_recurse switch_case cases1 cases2 in
+  Option.all [discriminant; cases] |> Option.map ~f:List.concat
+
+and switch_case ((_, s1): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
+                ((_, s2): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
+    : node change list option =
+  let open Ast.Statement.Switch.Case in
+  let { test = test1; consequent = consequent1} = s1 in
+  let { test = test2; consequent = consequent2} = s2 in
+  let test = diff_if_changed_nonopt_fn expression test1 test2 in
+  let consequent = statement_list consequent1 consequent2 in
+  Option.all [test; consequent] |> Option.map ~f:List.concat

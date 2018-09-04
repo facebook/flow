@@ -180,4 +180,14 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     assert_equal ~ctxt [(8, 14), "gotRenamed"] edits
   end;
+  "switch_case_test" >:: begin fun ctxt ->
+    let source = "switch (true) { case rename: break; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(21, 27), "gotRenamed"] edits
+  end;
+  "switch_case_consequent" >:: begin fun ctxt ->
+    let source = "switch (true) { case true: rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(27, 33), "gotRenamed"] edits
+  end;
 ]
