@@ -692,29 +692,39 @@ export default suite(({addFile, flowCmd}) => [
              },
              {
                "name": "toLocaleLowerCase",
-               "type": "() => string",
+               "type": "(locale?: (string | Array<string>)) => string",
                "func_details": {
                  "return_type": "string",
-                 "params": []
+                 "params": [
+                   {
+                     "name": "locale?",
+                     "type": "string | Array<string>"
+                   }
+                 ]
                },
                "path": "[LIB] core.js",
                "line": 316,
                "endline": 316,
                "start": 5,
-               "end": 31
+               "end": 62
              },
              {
                "name": "toLocaleUpperCase",
-               "type": "() => string",
+               "type": "(locale?: (string | Array<string>)) => string",
                "func_details": {
                  "return_type": "string",
-                 "params": []
+                 "params": [
+                   {
+                     "name": "locale?",
+                     "type": "string | Array<string>"
+                   }
+                 ]
                },
                "path": "[LIB] core.js",
                "line": 317,
                "endline": 317,
                "start": 5,
-               "end": 31
+               "end": 62
              },
              {
                "name": "toLowerCase",

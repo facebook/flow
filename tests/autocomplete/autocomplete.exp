@@ -417,23 +417,29 @@ str.js = {
     },
     {
       "name":"toLocaleLowerCase",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
+      "type":"(locale?: (string | Array<string>)) => string",
+      "func_details":{
+        "return_type":"string",
+        "params":[{"name":"locale?","type":"string | Array<string>"}]
+      },
       "path":"[LIB] core.js",
       "line":316,
       "endline":316,
       "start":5,
-      "end":31
+      "end":62
     },
     {
       "name":"toLocaleUpperCase",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
+      "type":"(locale?: (string | Array<string>)) => string",
+      "func_details":{
+        "return_type":"string",
+        "params":[{"name":"locale?","type":"string | Array<string>"}]
+      },
       "path":"[LIB] core.js",
       "line":317,
       "endline":317,
       "start":5,
-      "end":31
+      "end":62
     },
     {
       "name":"toLowerCase",
@@ -1854,23 +1860,29 @@ if.js = {
     },
     {
       "name":"toLocaleLowerCase",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
+      "type":"(locale?: (string | Array<string>)) => string",
+      "func_details":{
+        "return_type":"string",
+        "params":[{"name":"locale?","type":"string | Array<string>"}]
+      },
       "path":"[LIB] core.js",
       "line":316,
       "endline":316,
       "start":5,
-      "end":31
+      "end":62
     },
     {
       "name":"toLocaleUpperCase",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
+      "type":"(locale?: (string | Array<string>)) => string",
+      "func_details":{
+        "return_type":"string",
+        "params":[{"name":"locale?","type":"string | Array<string>"}]
+      },
       "path":"[LIB] core.js",
       "line":317,
       "endline":317,
       "start":5,
-      "end":31
+      "end":62
     },
     {
       "name":"toLowerCase",
