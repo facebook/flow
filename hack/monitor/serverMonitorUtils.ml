@@ -40,8 +40,6 @@ type watchman_mergebase = {
 (** Informant-induced restart may specify the mini saved state
  * we should load from. *)
 type target_mini_state = {
-  (** True if this is a tiny saved state. *)
-  is_tiny : bool;
   mini_state_everstore_handle : string;
   (** The SVN revision to which the above handle corresponds to. *)
   target_svn_rev : int;
