@@ -63,10 +63,13 @@ CAMLprim value hh_deserialize(char *src);
 /* Returns the value associated to a given key, and deserialize it. */
 /* The key MUST be present. */
 CAMLprim value hh_get_and_deserialize(value key);
+
+#ifndef NO_SQLITE3
 CAMLprim value hh_get_and_deserialize_sqlite(
         value ml_use_fileinfo_sqlite,
         value ml_key
 );
+#endif
 
 /*****************************************************************************/
 /* Dependency table operations. */
@@ -103,6 +106,8 @@ void hh_move(value key1, value key2);
 /* Removes a key from the hash table. */
 void hh_remove(value key);
 
+#ifndef NO_SQLITE3
+
 /*****************************************************************************/
 /* Saved State with SQLite */
 /*****************************************************************************/
@@ -138,4 +143,5 @@ CAMLprim value hh_save_file_info_sqlite(
         value ml_filespec
 );
 
-#endif
+#endif /* NO_SQLITE3 */
+#endif /* HH_SHARED_H */

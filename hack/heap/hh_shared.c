@@ -1955,6 +1955,7 @@ CAMLprim value hh_get_and_deserialize(value key) {
   CAMLreturn(result);
 }
 
+#ifndef NO_SQLITE3
 CAMLprim value hh_get_and_deserialize_sqlite(
     value ml_use_fileinfo_sqlite,
     value ml_key
@@ -1979,6 +1980,7 @@ CAMLprim value hh_get_and_deserialize_sqlite(
   }
   return 0; // impossible
 }
+#endif
 
 /*****************************************************************************/
 /* Returns the size of the value associated to a given key. */
@@ -2037,6 +2039,8 @@ void hh_remove(value key) {
   removed_count += 1;
 }
 
+#ifndef NO_SQLITE3
+
 /*****************************************************************************/
 /* Saved State with SQLite */
 /*****************************************************************************/
@@ -2070,9 +2074,6 @@ value Val_some(value v)
 
 #define Some_val(v) Field(v,0)
 
-#ifndef NO_SQLITE3
-
-// ------------------------ START OF SQLITE3 SECTION --------------------------
 CAMLprim value hh_removed_count(value ml_unit) {
     CAMLparam1(ml_unit);
     UNUSED(ml_unit);
@@ -2852,123 +2853,4 @@ CAMLprim value hh_get_sqlite(value ocaml_key) {
   CAMLreturn(result);
 }
 
-// --------------------------END OF SQLITE3 SECTION ---------------------------
-#else
-
-// ----------------------- START OF NO_SQLITE3 SECTION ------------------------
-
-CAMLprim value hh_get_loaded_dep_table_filename() {
-  CAMLparam0();
-  CAMLreturn(caml_copy_string(""));
-}
-
-CAMLprim value hh_save_dep_table_sqlite(
-    value out_filename,
-    value build_revision
-) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_update_dep_table_sqlite(
-    value out_filename,
-    value build_revision
-) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_save_file_info_sqlite(
-    value out_filename,
-    value ml_name,
-    value ml_kind,
-    value ml_filespec
-) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_load_dep_table_sqlite(
-    value in_filename,
-    value ignore_hh_version) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
-  // Empty list
-  CAMLparam0();
-  CAMLreturn(Val_int(0));
-}
-
-CAMLprim value hh_save_table_sqlite(value out_filename) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_get_sqlite(value ocaml_key) {
-  CAMLparam0();
-  CAMLreturn(Val_none);
-}
-
-CAMLprim value set_file_info_on_disk(value ml_str) {
-  CAMLparam1(ml_str);
-  UNUSED(ml_str);
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value get_file_info_on_disk(value ml_str) {
-  CAMLparam1(ml_str);
-  UNUSED(ml_str);
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value get_file_info_on_disk_path(value ml_str) {
-  CAMLparam1(ml_str);
-  UNUSED(ml_str);
-  CAMLreturn(caml_copy_string(""));
-}
-
-CAMLprim value set_file_info_on_disk_path(value ml_str) {
-  CAMLparam1(ml_str);
-  UNUSED(ml_str);
-  CAMLreturn(Val_unit);
-}
-
-CAMLprim value open_file_info_db(
-    value ml_unit
-) {
-  UNUSED(ml_unit);
-  return Val_unit;
-}
-
-CAMLprim value hh_save_file_info_init(
-        value ml_path
-) {
-    UNUSED(ml_path);
-    return Val_unit;
-}
-
-CAMLprim value hh_save_file_info_free(
-        value ml_unit
-) {
-    UNUSED(ml_unit);
-    return Val_unit;
-}
-
-CAMLprim value hh_removed_count(value ml_unit) {
-    CAMLparam1(ml_unit);
-    UNUSED(ml_unit);
-    return Val_long(removed_count);
-}
-#endif
+#endif /* NO_SQLITE3 */
