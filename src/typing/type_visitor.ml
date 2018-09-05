@@ -219,7 +219,7 @@ class ['a] t = object(self)
   | PropExistsP _ -> acc
   | LatentP (t, _) -> self#type_ cx Positive acc t
 
-  method private destructor cx acc = function
+  method destructor cx acc = function
   | NonMaybeType
   | PropertyType _
   | ValuesType

@@ -12249,6 +12249,12 @@ end = struct
 
 end
 
+class type_finder t = object (_self)
+  inherit [bool] Type_visitor.t as super
+  method! type_ cx pole found = function
+    | t' -> (t = t') || super#type_ cx pole found t
+end
+
 class assert_ground_visitor skip r context = object (self)
   inherit [Marked.t] Type_visitor.t as super
 
@@ -12463,11 +12469,13 @@ class assert_ground_visitor skip r context = object (self)
     ) props seen
 
   method private typeapp =
-    let rec loop cx pole seen = function
+    let rec loop ?constant_polarity_param cx pole seen = function
       | _, [] -> seen
       | [], _ -> seen
       | tparam::tparams, targ::targs ->
-        let param_polarity = Polarity.mult (pole, tparam.polarity) in
+        let param_polarity = match constant_polarity_param with
+        | Some (s, p) when tparam.name = s -> p
+        | _ -> Polarity.mult (pole, tparam.polarity) in
         let seen = self#type_ cx param_polarity seen targ in
         loop cx pole seen (tparams, targs)
     in
@@ -12481,6 +12489,15 @@ class assert_ground_visitor skip r context = object (self)
           self#typeapp targs cx pole acc t
         ) lower seen)
     | AnnotT (_, t, _) -> self#typeapp targs cx pole seen t
+    (* Shallowly check to see if it is an EvalT. If the EvalT's first
+     * value is a BoundT, we can visit that parameter with a constant
+     * positive polarity if it does not appear in the defer_use_t.
+     *)
+    | DefT (_, PolyT (tparams, DefT (_, TypeT (_,
+      EvalT (BoundT (_, s, _) as t, (TypeDestructorT (_, _, destructor)), _))), _)) ->
+        if (new type_finder t)#destructor cx false destructor
+        then loop cx pole seen (tparams, targs)
+        else loop ~constant_polarity_param:(s, Positive) cx pole seen (tparams, targs)
     | DefT (_, PolyT (tparams, _, _)) -> loop cx pole seen (tparams, targs)
     | DefT (_, EmptyT) -> seen
     | DefT (_, AnyT) -> seen

@@ -18,4 +18,5 @@ class ['a] t: object
   method eval_id : Context.t -> Type.polarity -> 'a -> int -> 'a
   method fun_type : Context.t -> Type.polarity -> 'a -> Type.funtype -> 'a
   method dict_type : Context.t -> Type.polarity -> 'a -> Type.dicttype -> 'a
+  method destructor: Context.t -> 'a -> Type.destructor -> 'a
 end
