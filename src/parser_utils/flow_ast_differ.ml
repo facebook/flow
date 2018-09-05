@@ -146,6 +146,8 @@ and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast
     for_statement for1 for2
   | (_, Ast.Statement.While while1), (_, Ast.Statement.While while2) ->
     Some (while_statement while1 while2)
+  | (_, Ast.Statement.ForOf for_of1), (_, Ast.Statement.ForOf for_of2) ->
+    for_of_statement for_of1 for_of2
   | (_, Ast.Statement.DoWhile do_while1), (_, Ast.Statement.DoWhile do_while2) ->
     Some (do_while_statement do_while1 do_while2)
   | (_, Ast.Statement.Switch switch1), (_, Ast.Statement.Switch switch2) ->
@@ -392,6 +394,32 @@ and while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.While.t)
   let test = diff_if_changed expression test1 test2 in
   let body = diff_if_changed statement body1 body2 in
   test @ body
+
+and for_of_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.ForOf.t)
+                     (stmt2: (Loc.t, Loc.t) Ast.Statement.ForOf.t)
+    : node change list option =
+  let open Ast.Statement.ForOf in
+  let { left = left1; right = right1; body = body1; async = async1 } = stmt1 in
+  let { left = left2; right = right2; body = body2; async = async2 } = stmt2 in
+  let left = if left1 == left2 then Some [] else for_of_statement_lhs left1 left2 in
+  let body = Some (diff_if_changed statement body1 body2) in
+  let right = Some (diff_if_changed expression right1 right2) in
+  let async = if async1 != async2 then None else Some [] in
+  Option.all [left; right; body; async] |> Option.map ~f:List.concat
+
+and for_of_statement_lhs (left1: (Loc.t, Loc.t) Ast.Statement.ForOf.left)
+                          (left2: (Loc.t, Loc.t) Ast.Statement.ForOf.left)
+    : node change list option =
+  let open Ast.Statement.ForOf in
+  match (left1, left2) with
+  | (LeftDeclaration(_, decl1), LeftDeclaration(_, decl2)) ->
+    variable_declaration decl1 decl2
+  | (LeftPattern _, LeftPattern _) ->
+    (* TODO(jaday) recurse into patterns after they are implemented *)
+    None
+  | (LeftDeclaration _, LeftPattern _)
+  | (LeftPattern _, LeftDeclaration _) ->
+    None
 
 and do_while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
                        (stmt2: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)

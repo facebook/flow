@@ -165,6 +165,21 @@ let tests = "ast_differ" >::: [
     let edits = edits_of_source source in
     assert_equal ~ctxt [(15, 21), "gotRenamed"] edits
   end;
+  "for_of_left" >:: begin fun ctxt ->
+    let source = "for (var x of xs) { continue; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(0, 31), "for (const x of xs) {\n  continue;\n}"] edits
+  end;
+  "for_of_right" >:: begin fun ctxt ->
+    let source = "for (let x of rename) { continue; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(14, 20), "gotRenamed"] edits
+  end;
+  "for_of_body" >:: begin fun ctxt ->
+    let source = "for (let x of xs) { rename; }" in
+    let edits = edits_of_source source in
+    assert_equal ~ctxt [(20, 26), "gotRenamed"] edits
+  end;
   "do_while_body" >:: begin fun ctxt ->
     let source = "do { rename; } while (true);" in
     let edits = edits_of_source source in
