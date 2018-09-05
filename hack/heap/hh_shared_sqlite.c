@@ -6,6 +6,8 @@
  * LICENSE file in the "hack" directory of this source tree.
  *
  */
+#ifndef NO_SQLITE3
+
 #include "hh_shared_sqlite.h"
 
 #define CAML_NAME_SPACE
@@ -13,18 +15,12 @@
 #include <caml/callback.h>
 #include <caml/fail.h>
 
-#ifndef NO_SQLITE3
 #include <sqlite3.h>
-#endif
 
-#ifdef _WIN32
-#include <windows.h>
-#else
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
 #include <sys/types.h>
-#endif
 
 #include "hh_assert.h"
 
@@ -38,7 +34,6 @@
     (UNUSED(a), UNUSED(b))
 
 
-#ifndef NO_SQLITE3
 const char *create_tables_sql[] = {
   "CREATE TABLE IF NOT EXISTS HEADER(" \
   "    MAGIC_CONSTANT INTEGER PRIMARY KEY NOT NULL," \
@@ -165,25 +160,4 @@ sqlite3_ptr hhfi_get_db(void) {
     return hhfi_db;
 }
 
-#else
-char *hhfi_get_filespec(
-        sqlite3_ptr db,
-        int64_t hash
-) {
-    UNUSED2(db, hash);
-    return NULL;
-}
-
-void hhfi_init_db(const char *path) {
-    UNUSED(path);
-    return;
-}
-
-void hhfi_free_db(void) {
-    return;
-}
-
-sqlite3_ptr hhfi_get_db(void) {
-    return NULL;
-}
-#endif
+#endif /* NO_SQLITE3 */

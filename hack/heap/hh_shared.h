@@ -63,10 +63,6 @@ CAMLprim value hh_deserialize(char *src);
 /* Returns the value associated to a given key, and deserialize it. */
 /* The key MUST be present. */
 CAMLprim value hh_get_and_deserialize(value key);
-CAMLprim value hh_get_and_deserialize_sqlite(
-        value ml_use_fileinfo_sqlite,
-        value ml_key
-);
 
 /*****************************************************************************/
 /* Dependency table operations. */
