@@ -10,7 +10,7 @@ React.createElement(42); // Error: Number is not a valid component type.
 React.createElement('div', {}); // OK
 React.createElement(42, {}); // Error: Number is not a valid component type.
 React.createElement({}, {}); // Error: Object is not a valid component type.
-React.createElement(() => {}, {}); // OK
+React.createElement(() => { return null }, {}); // OK
 
 class A extends React.Component<{foo: number, bar: number}> {}
 function B(props: {foo: number, bar: number}) { return null }
