@@ -7,7 +7,7 @@ type Props = {name: string};
 class Hello extends React.Component<Props> {
   static defaultProps: {};
 
-  render() {
+  render(): Node {
     return <div>{this.props.name}</div>;
   }
 }

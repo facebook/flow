@@ -32,7 +32,7 @@ var FeedUFI = React.createClass({
     );
   },
 
-  render: function() {
+  render: function(): Node {
     return (
       <div/>
     );

@@ -8,13 +8,13 @@ class HelloLocal extends React.Component<{name: string}> {
   propTypes = {
     name: React.PropTypes.string.isRequired,
   };
-  render() {
+  render(): Node {
     return <div>{this.props.name}</div>;
   }
 }
 
 class Callsite extends React.Component<{}> {
-  render() {
+  render(): Node {
     return (
       <div>
         <Hello />

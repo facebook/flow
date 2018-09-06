@@ -8,13 +8,13 @@ var HelloLocal = React.createClass({
     name: React.PropTypes.string.isRequired,
   },
 
-  render: function() {
+  render: function(): Node {
     return <div>{this.props.name}</div>;
   }
 });
 
 var Callsite = React.createClass({
-  render: function() {
+  render: function(): Node {
     return (
       <div>
         <Hello />
