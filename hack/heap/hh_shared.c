@@ -1468,54 +1468,6 @@ CAMLprim value hh_get_dep(value ocaml_key) {
 }
 
 /*****************************************************************************/
-/* Garbage collector */
-/*****************************************************************************/
-
-/** Wrappers around mmap/munmap */
-
-#ifdef _WIN32
-
-static char *temp_memory_map(void) {
-  char *tmp_heap = NULL;
-  tmp_heap = VirtualAlloc(NULL, heap_size, MEM_RESERVE, PAGE_READWRITE);
-  if (!tmp_heap) {
-    win32_maperr(GetLastError());
-    uerror("VirtualAlloc2", Nothing);
-  }
-  return tmp_heap;
-}
-
-static void temp_memory_unmap(char * tmp_heap) {
-  if(!VirtualFree(tmp_heap, 0, MEM_RELEASE)) {
-    win32_maperr(GetLastError());
-    uerror("VirtualFree", Nothing);
-  }
-}
-
-#else
-
-static char *temp_memory_map(void) {
-  char *tmp_heap = NULL;
-  int flags       = MAP_PRIVATE | MAP_ANON | MAP_NORESERVE;
-  int prot        = PROT_READ | PROT_WRITE;
-  tmp_heap = (char*)mmap(NULL, heap_size, prot, flags, 0, 0);
-  if(tmp_heap == MAP_FAILED) {
-    printf("Error while collecting: %s\n", strerror(errno));
-    exit(2);
-  }
-  return tmp_heap;
-}
-
-static void temp_memory_unmap(char * tmp_heap) {
-  if(munmap(tmp_heap, heap_size) == -1) {
-    printf("Error while collecting: %s\n", strerror(errno));
-    exit(2);
-  }
-}
-
-#endif
-
-/*****************************************************************************/
 /* Must be called after the hack server is done initializing.
  * We keep the original size of the heap to estimate how often we should
  * garbage collect.
@@ -1566,51 +1518,94 @@ CAMLprim value hh_collect(value aggressive_val) {
   int aggressive  = Bool_val(aggressive_val);
   assert_master();
   assert_allow_removes();
-  char* tmp_heap = NULL;
-  char* dest = NULL;
-  size_t mem_size = 0;
 
   if (!should_collect(aggressive)) {
     return Val_unit;
   }
   printf("Starting shared memory collection\n");
 
-  tmp_heap = temp_memory_map();
-  dest = tmp_heap;
+  // Step 1: Walk the hashtbl entries, which are the roots of our marking pass.
 
-  // Walking the table
-  for(size_t i = 0; i < hashtbl_size; i++) {
-    if (hashtbl[i].addr == NULL) {
-      continue;
-    }
-    else {
-      // Found a non empty slot
-      // No workers should be writing at the moment. If a worker died in the
-      // middle of a write, that is also very bad
-      assert(hashtbl[i].addr != HASHTBL_WRITE_IN_PROGRESS);
+  for (size_t i = 0; i < hashtbl_size; i++) {
+    // Skip empty slots
+    if (hashtbl[i].addr == NULL) { continue; }
 
-      hh_header_t *addr = (hh_header_t *)hashtbl[i].addr - 1;
-      size_t bl_size = Entry_size(*addr) + sizeof(hh_header_t);
-      size_t aligned_size = ALIGNED(bl_size);
+    // No workers should be writing at the moment. If a worker died in the
+    // middle of a write, that is also very bad
+    assert(hashtbl[i].addr != HASHTBL_WRITE_IN_PROGRESS);
 
-#ifdef _WIN32
-      win_reserve(dest, bl_size);
-#endif
-      memcpy(dest, addr, bl_size);
-      // This is where the data ends up after the copy
-      hashtbl[i].addr = heap_init + mem_size + sizeof(hh_header_t);
-      dest     += aligned_size;
-      mem_size += aligned_size;
-    }
+    // The hashtbl addr will be wrong after we relocate the heap entry, but we
+    // don't know where the heap entry will relocate to yet. We need to first
+    // move the heap entry, then fix up the hashtbl addr.
+    //
+    // We accomplish this by storing the heap header in the now useless addr
+    // field and storing a pointer to the addr field where the header used to
+    // be. Then, after moving the heap entry, we can follow the pointer to
+    // restore our original header and update the addr field to our relocated
+    // address.
+
+    // Location of the addr field (8 bytes) in the hashtable
+    char **hashtbl_addr = &hashtbl[i].addr;
+
+    // Location of the header (8 bytes) in the heap
+    char *heap_addr = hashtbl[i].addr - sizeof(hh_header_t);
+
+    // Swap
+    hh_header_t header = *(hh_header_t *)heap_addr;
+    *(hh_header_t *)hashtbl_addr = header;
+    *(uintptr_t *)heap_addr = (uintptr_t)hashtbl_addr;
   }
 
-  // Copying the result back into shared memory
-  memcpy(heap_init, tmp_heap, mem_size);
-  *heap = heap_init + mem_size;
+  // Step 2: Walk the heap and relocate entries, updating the hashtbl to point
+  // to relocated addresses.
 
-  temp_memory_unmap(tmp_heap);
-  // we removed all garbage - entire heap size should be used
+  // Pointer to free space in the heap where moved values will move to.
+  char *dest = heap_init;
+
+  // Pointer that walks the heap from bottom to top.
+  char *src = heap_init;
+
+  size_t aligned_size;
+  hh_header_t header;
+  while (src < *heap) {
+    if (*(uint64_t *)src & 1) {
+      // If the lsb is set, this is a header. If it's a header, that means the
+      // entry was not marked in the first pass and should be collected. Don't
+      // move dest pointer, but advance src pointer to next heap entry.
+      header = *(hh_header_t *)src;
+      aligned_size = ALIGNED(Entry_size(header) + sizeof(hh_header_t));
+    } else {
+      // If the lsb is 0, this is a pointer to the addr field of the hashtable
+      // element, which holds the header bytes. This entry is live.
+      char *hashtbl_addr = *(char **)src;
+      header = *(hh_header_t *)hashtbl_addr;
+      aligned_size = ALIGNED(Entry_size(header) + sizeof(hh_header_t));
+
+      // Fix the hashtbl addr field to point to our new location and restore the
+      // heap header data temporarily stored in the addr field bits.
+      char *new_addr = dest + sizeof(hh_header_t);
+      *(uintptr_t *)hashtbl_addr = (uintptr_t)new_addr;
+      *(hh_header_t *)src = header;
+
+      // Move the entry as far to the left as possible.
+      memmove(dest, src, aligned_size);
+      dest += aligned_size;
+    }
+
+    src += aligned_size;
+  }
+
+  // TODO: Space between dest and *heap is unused, but will almost certainly
+  // become used again soon. Currently we will never decommit, which may cause
+  // issues when there is memory pressure.
+  //
+  // If the kernel supports it, we might consider using madvise(MADV_FREE),
+  // which allows the kernel to reclaim the memory lazily under pressure, but
+  // would not force page faults under healthy operation.
+
+  *heap = dest;
   *wasted_heap_size = 0;
+
   return Val_unit;
 }
 
@@ -1625,7 +1620,7 @@ static void raise_heap_full(void) {
  * The chunks are cache aligned.
  * The word before the chunk address contains the size of the chunk in bytes.
  * The function returns a pointer to the data (the size can be accessed by
- * looking at the address: chunk - sizeof(size_t)).
+ * looking at the address: chunk - sizeof(hh_header_t)).
  */
 /*****************************************************************************/
 

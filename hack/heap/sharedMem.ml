@@ -161,9 +161,9 @@ external connect : handle -> is_master:bool -> unit = "hh_connect"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
-external hh_should_collect: bool -> bool = "hh_should_collect"
+external hh_should_collect: bool -> bool = "hh_should_collect" [@@noalloc]
 
-external hh_collect: bool -> unit = "hh_collect"
+external hh_collect: bool -> unit = "hh_collect" [@@noalloc]
 
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
