@@ -239,14 +239,29 @@ typedef enum {
   KIND_SERIALIZED = !KIND_STRING
 } storage_kind;
 
-typedef struct {
-  // Size of data in the heap
-  uint32_t size : 31;
-  storage_kind kind : 1;
-  // Size of the data stored in the heap after decompression.
-  // If the data was not compressed this will be 0
-  uint32_t uncompressed_size;
-} hh_header_t;
+// Every heap entry starts with a 64-bit header with the following layout:
+//
+//  6                                3 3  3                                0 0
+//  3                                3 2  1                                1 0
+// +----------------------------------+-+-----------------------------------+-+
+// |11111111 11111111 11111111 1111111|0| 11111111 11111111 11111111 1111111|1|
+// +----------------------------------+-+-----------------------------------+-+
+// |                                  | |                                   |
+// |                                  | |                                   * 0 tag
+// |                                  | |
+// |                                  | * 31-1 uncompressed size (0 if uncompressed)
+// |                                  |
+// |                                  * 32 kind (0 = serialized, 1 = string)
+// |
+// * 63-33 size of heap entry
+//
+// The tag bit is always 1 and is used to differentiate headers from pointers
+// during garbage collection (see hh_collect).
+typedef uint64_t hh_header_t;
+
+#define Entry_size(x) ((x) >> 33)
+#define Entry_kind(x) (((x) >> 32) & 1)
+#define Entry_uncompressed_size(x) (((x) >> 1) & 0x7FFFFFFF)
 
 typedef struct {
   // Size of the BLOB in bytes.
@@ -256,10 +271,6 @@ typedef struct {
   // statement.
   void * blob;
 } query_result_t;
-
-/* Size of where we allocate shared objects. */
-#define Get_buf_size(x) (((hh_header_t*)(x))[-1].size + sizeof(hh_header_t))
-#define Get_buf(x)      ((x) - sizeof(hh_header_t))
 
 /* Too lazy to use getconf */
 #define CACHE_LINE_SIZE (1 << 6)
@@ -1578,9 +1589,9 @@ CAMLprim value hh_collect(value aggressive_val) {
       // middle of a write, that is also very bad
       assert(hashtbl[i].addr != HASHTBL_WRITE_IN_PROGRESS);
 
-      size_t bl_size      = Get_buf_size(hashtbl[i].addr);
+      hh_header_t *addr = (hh_header_t *)hashtbl[i].addr - 1;
+      size_t bl_size = Entry_size(*addr) + sizeof(hh_header_t);
       size_t aligned_size = ALIGNED(bl_size);
-      char* addr          = Get_buf(hashtbl[i].addr);
 
 #ifdef _WIN32
       win_reserve(dest, bl_size);
@@ -1621,7 +1632,7 @@ static void raise_heap_full(void) {
 static char* hh_alloc(hh_header_t header) {
   // the size of this allocation needs to be kept in sync with wasted_heap_size
   // modification in hh_remove
-  size_t slot_size  = ALIGNED(header.size + sizeof(hh_header_t));
+  size_t slot_size  = ALIGNED(Entry_size(header) + sizeof(hh_header_t));
   char* chunk       = __sync_fetch_and_add(heap, (char*)slot_size);
   if (chunk + slot_size > heap_max) {
     raise_heap_full();
@@ -1644,6 +1655,7 @@ static char* hh_store_ocaml(
 ) {
   char* value = NULL;
   size_t size = 0;
+  size_t uncompressed_size = 0;
   storage_kind kind = 0;
 
   // If the data is an Ocaml string it is more efficient to copy its contents
@@ -1667,34 +1679,40 @@ static char* hh_store_ocaml(
 
   // We limit the size of elements we will allocate to our heap to ~2GB
   assert(size < 0x80000000);
-  hh_header_t header = { size, kind, 0 };
+  *orig_size = size;
 
-  size_t max_compression_size = LZ4_compressBound(header.size);
+  size_t max_compression_size = LZ4_compressBound(size);
   char* compressed_data = malloc(max_compression_size);
   size_t compressed_size = LZ4_compress_default(
     value,
     compressed_data,
-    header.size,
+    size,
     max_compression_size);
 
-  if (compressed_size != 0 && compressed_size < header.size) {
-    header.uncompressed_size = header.size;
-    header.size = compressed_size;
+  if (compressed_size != 0 && compressed_size < size) {
+    uncompressed_size = size;
+    size = compressed_size;
   }
+
+  *alloc_size = size;
+
+  hh_header_t header
+    = size << 33
+    | (uint64_t)kind << 32
+    | (uncompressed_size & 0x7FFFFFFF) << 1
+    | 1;
 
   char* addr = hh_alloc(header);
   memcpy(addr,
-         header.uncompressed_size ? compressed_data : value,
-         header.size);
+         uncompressed_size ? compressed_data : value,
+         size);
 
   free(compressed_data);
   // We temporarily allocate memory using malloc to serialize the Ocaml object.
   // When we have finished copying the serialized data into our heap we need
   // to free the memory we allocated to avoid a leak.
-  if (header.kind == KIND_SERIALIZED) free(value);
+  if (kind == KIND_SERIALIZED) free(value);
 
-  *alloc_size = header.size;
-  *orig_size = size;
   return addr;
 }
 
@@ -1914,27 +1932,28 @@ CAMLprim value hh_deserialize(char *src) {
   CAMLlocal1(result);
   hh_header_t header =
     *(hh_header_t*)(src - sizeof(hh_header_t));
-  size_t size = header.size;
+  size_t size = Entry_size(header);
+  size_t uncompressed_size_exp = Entry_uncompressed_size(header);
   char *data = src;
-  if (header.uncompressed_size) {
-    data = malloc(header.uncompressed_size);
+  if (uncompressed_size_exp) {
+    data = malloc(uncompressed_size_exp);
     size_t uncompressed_size = LZ4_decompress_safe(
       src,
       data,
-      header.size,
-      header.uncompressed_size);
-    assert(uncompressed_size == header.uncompressed_size);
+      size,
+      uncompressed_size_exp);
+    assert(uncompressed_size == uncompressed_size_exp);
     size = uncompressed_size;
   }
 
-  if (header.kind == KIND_STRING) {
+  if (Entry_kind(header) == KIND_STRING) {
     result = caml_alloc_string(size);
     memcpy(String_val(result), data, size);
   } else {
     result = caml_input_value_from_block(data, size);
   }
 
-  if (header.uncompressed_size) {
+  if (uncompressed_size_exp) {
     free(data);
   }
   CAMLreturn(result);
@@ -1967,7 +1986,7 @@ CAMLprim value hh_get_size(value key) {
   hh_header_t header =
     *(hh_header_t*)(hashtbl[slot].addr - sizeof(hh_header_t));
 
-  CAMLreturn(Long_val(header.size));
+  CAMLreturn(Long_val(Entry_size(header)));
 }
 
 /*****************************************************************************/
@@ -2006,7 +2025,8 @@ void hh_remove(value key) {
   assert_allow_removes();
   assert(hashtbl[slot].hash == get_hash(key));
   // see hh_alloc for the source of this size
-  size_t slot_size = ALIGNED(Get_buf_size(hashtbl[slot].addr));
+  hh_header_t *header = (hh_header_t *)hashtbl[slot].addr - 1;
+  size_t slot_size = ALIGNED(Entry_size(*header) + sizeof(hh_header_t));
   __sync_fetch_and_add(wasted_heap_size, slot_size);
   hashtbl[slot].addr = NULL;
   removed_count += 1;
@@ -2641,7 +2661,7 @@ CAMLprim value hh_save_table_sqlite(value out_filename) {
     }
     char *value = hashtbl[slot].addr - sizeof(hh_header_t);
     hh_header_t *header = (hh_header_t *) value;
-    size_t value_size = header->size + sizeof(hh_header_t);
+    size_t value_size = Entry_size(*header) + sizeof(hh_header_t);
 
     assert_sql(sqlite3_bind_int64(insert_stmt, 1, slot_hash), SQLITE_OK);
     assert_sql(
@@ -2707,7 +2727,7 @@ CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
     }
     char *value = hashtbl[slot].addr - sizeof(hh_header_t);
     hh_header_t *header = (hh_header_t *) value;
-    size_t value_size = header->size + sizeof(hh_header_t);
+    size_t value_size = Entry_size(*header) + sizeof(hh_header_t);
 
     assert_sql(sqlite3_bind_int64(insert_stmt, 1, slot_hash), SQLITE_OK);
     assert_sql(
@@ -2815,7 +2835,7 @@ CAMLprim value hh_get_sqlite(value ocaml_key) {
     char *value = (char *) sqlite3_column_blob(get_select_stmt, 0);
     size_t value_size = (size_t) sqlite3_column_bytes(get_select_stmt, 0);
     hh_header_t header = *(hh_header_t*)value;
-    assert(value_size == header.size + sizeof(hh_header_t));
+    assert(value_size == Entry_size(header) + sizeof(hh_header_t));
     result = Val_some(hh_deserialize(value + sizeof(hh_header_t)));
   } else if (err_num != SQLITE_DONE) {
     // Something went wrong in sqlite3_step, lets crash
