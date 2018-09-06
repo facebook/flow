@@ -63,10 +63,6 @@ CAMLprim value hh_deserialize(char *src);
 /* Returns the value associated to a given key, and deserialize it. */
 /* The key MUST be present. */
 CAMLprim value hh_get_and_deserialize(value key);
-CAMLprim value hh_get_and_deserialize_sqlite(
-        value ml_use_fileinfo_sqlite,
-        value ml_key
-);
 
 /*****************************************************************************/
 /* Dependency table operations. */
@@ -102,6 +98,16 @@ CAMLprim value hh_mem_status(value key);
 void hh_move(value key1, value key2);
 /* Removes a key from the hash table. */
 void hh_remove(value key);
+
+/*****************************************************************************/
+/* Saved State without SQLite */
+/*****************************************************************************/
+
+#ifndef _WIN32
+void hh_save_table(value out_filename);
+
+void hh_load_table(value in_filename);
+#endif /* _WIN32 */
 
 /*****************************************************************************/
 /* Saved State with SQLite */
