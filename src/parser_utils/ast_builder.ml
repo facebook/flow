@@ -245,11 +245,14 @@ module Expressions = struct
       argument;
     }
 
-  let object_property_key k =
+  let object_property_key (k: string) =
     Object.Property.Identifier (Loc.none, k)
 
   let object_property_key_literal k =
     Object.Property.Literal (Loc.none, k)
+
+  let object_property_key_literal_from_string (k: string) =
+    Object.Property.Literal (Loc.none, Literals.string k)
 
   let object_method ?body ?(params=[]) ?(generator=false) ?(async=false) key =
     let fn = Functions.make ~id:None ~expression:true ~params ~generator ~async ?body () in
@@ -292,6 +295,13 @@ module Expressions = struct
 
   let member_expression expr =
     Loc.none, Ast.Expression.Member expr
+
+  let member_expression_ident_by_name obj (name: string) =
+    member_expression (member obj ~property: name)
+
+  let member_expression_computed_string obj (str: string) =
+    member_expression (member_computed_expr obj
+      ~property:(literal (Literals.string str)))
 
   let optional_member_expression ~optional expr =
     Loc.none, OptionalMember { OptionalMember.
