@@ -68,8 +68,8 @@ References:
    api.js:14:25
     14| Children.forEach(a, (x: number) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:264:38
-   264|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:254:38
+   254|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
 
 
@@ -90,8 +90,8 @@ References:
    api.js:16:25
     16| Children.forEach(a, (x: string) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:264:38
-   264|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:254:38
+   254|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
    api.js:5:25
      5| const a: ChildrenArray<?number> = [
@@ -107,8 +107,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:276:42
-   276|     count(children: ChildrenArray<any>): number;
+   <BUILTINS>/react.js:266:42
+   266|     count(children: ChildrenArray<any>): number;
                                                  ^^^^^^ [1]
    api.js:29:15
     29| function s(x: string) {}
@@ -175,8 +175,8 @@ References:
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:20:5
-   20|   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ [4]
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------ component.js:15:1
@@ -246,8 +246,8 @@ References:
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:20:5
-   20|   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ [4]
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:23:1
