@@ -12,6 +12,7 @@ class ['a] t :
       Context.t -> 'a -> Constraint.bounds -> Constraint.bounds
     method call_arg :
       Context.t -> 'a -> Type.call_arg -> Type.call_arg
+    method call_prop : Context.t -> 'a -> int -> int
     method choice_use_tool :
       Context.t ->
       'a -> Type.choice_use_tool -> Type.choice_use_tool

@@ -448,7 +448,7 @@ class ['a] t = object(self)
       call_t = call_t';
     }
 
-  method private call_prop cx map_cx id =
+  method call_prop cx map_cx id =
     let t = Context.find_call cx id in
     let t' = self#type_ cx map_cx t in
     if t == t' then id else Context.make_call_prop cx t'
