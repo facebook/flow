@@ -103,9 +103,11 @@ void hh_remove(value key);
 /* Saved State without SQLite */
 /*****************************************************************************/
 
+#ifndef _WIN32
 void hh_save_table(value out_filename);
 
 void hh_load_table(value in_filename);
+#endif /* _WIN32 */
 
 /*****************************************************************************/
 /* Saved State with SQLite */

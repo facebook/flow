@@ -2015,7 +2015,7 @@ void hh_remove(value key) {
 /*****************************************************************************/
 /* Saved State without SQLite */
 /*****************************************************************************/
-
+#ifndef _WIN32
 static void raise_revision_length_is_zero(void) {
   static value *exn = NULL;
   if (!exn) exn = caml_named_value("revision_length_is_zero");
@@ -2131,7 +2131,7 @@ typedef struct {
  * a void*-sized value */
 static intptr_t decompress(const decompress_args* args) {
   int actual_compressed_size = LZ4_decompress_fast(
-      args->compressed,
+      args->compressed
       args->decompress_start,
       args->decompressed_size);
   return args->compressed_size == actual_compressed_size;
@@ -2195,7 +2195,7 @@ void hh_load_table(value in_filename) {
   fclose(fp);
   CAMLreturn0;
 }
-
+#endif /* _WIN32 */
 /*****************************************************************************/
 /* Saved State with SQLite */
 /*****************************************************************************/
