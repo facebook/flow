@@ -144,6 +144,8 @@ and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast
     block block1 block2
   | (_, Ast.Statement.For for1), (_, Ast.Statement.For for2) ->
     for_statement for1 for2
+  | (_, Ast.Statement.ForIn for_in1), (_, Ast.Statement.ForIn for_in2) ->
+    for_in_statement for_in1 for_in2
   | (_, Ast.Statement.While while1), (_, Ast.Statement.While while2) ->
     Some (while_statement while1 while2)
   | (_, Ast.Statement.ForOf for_of1), (_, Ast.Statement.ForOf for_of2) ->
@@ -383,6 +385,32 @@ and for_statement_init(init1: (Loc.t, Loc.t) Ast.Statement.For.init)
     Some (diff_if_changed expression expr1 expr2)
   | (InitDeclaration _, InitExpression _)
   | (InitExpression _, InitDeclaration _) ->
+    None
+
+and for_in_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.ForIn.t)
+                     (stmt2: (Loc.t, Loc.t) Ast.Statement.ForIn.t)
+     : node change list option =
+  let open Ast.Statement.ForIn in
+  let { left = left1; right = right1; body = body1; each = each1 } = stmt1 in
+  let { left = left2; right = right2; body = body2; each = each2 } = stmt2 in
+  let left = if left1 == left2 then Some [] else for_in_statement_lhs left1 left2 in
+  let body = Some (diff_if_changed statement body1 body2) in
+  let right = Some (diff_if_changed expression right1 right2) in
+  let each = if each1 != each2 then None else Some [] in
+  Option.all [left; right; body; each] |> Option.map ~f:List.concat
+
+and for_in_statement_lhs (left1: (Loc.t, Loc.t) Ast.Statement.ForIn.left)
+                          (left2: (Loc.t, Loc.t) Ast.Statement.ForIn.left)
+    : node change list option =
+  let open Ast.Statement.ForIn in
+  match (left1, left2) with
+  | (LeftDeclaration(_, decl1), LeftDeclaration(_, decl2)) ->
+    variable_declaration decl1 decl2
+  | (LeftPattern _, LeftPattern _) ->
+    (* TODO(yeongwoo) recurse into patterns after they are implemented *)
+    None
+  | (LeftDeclaration _, LeftPattern _)
+  | (LeftPattern _, LeftDeclaration _) ->
     None
 
 and while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.While.t)
