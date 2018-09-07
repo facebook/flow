@@ -2221,9 +2221,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, AnyFunT), MethodT (_, _, _, Named (_, x), _, _)
         when is_function_prototype x ->
       rec_flow cx trace (FunProtoT reason, u)
-    | (DefT (_, AnyFunT), UseT (_, u)) when function_like u -> ()
-    | (DefT (_, AnyFunT), UseT (_, u)) when object_like u -> ()
-    | DefT (_, AnyFunT), UseT (_, (DefT (_, TypeT _) | DefT (_, AnyFunT))) -> ()
+    | DefT (_, AnyFunT), UseT (_, u) when function_like u -> ()
+    | DefT (_, AnyFunT), UseT (_, u) when object_like u -> ()
+    | DefT (_, AnyFunT), UseT (_, DefT (_, AnyFunT)) -> ()
 
     (**
      * Handling for the idx() custom function.
@@ -4592,12 +4592,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a class value annotation becomes the instance type *)
       rec_flow cx trace (it, BecomeT (r, t))
 
-    | DefT (_, FunT(_, prototype, _)), UseT (_, DefT (reason, TypeT (_, t))) ->
-      (* a function value annotation becomes the prototype type *)
-      rec_flow cx trace (prototype, BecomeT (reason, t))
-
     | DefT (_, AnyT), UseT (_, DefT (reason, TypeT (_, t))) ->
-      (* any can function as class or function type, hence ok for annotations *)
+      (* any can function as class, hence ok for annotations *)
       rec_flow cx trace (l, BecomeT (reason, t))
 
     | DefT (_, TypeT (_, l)), UseT (use_op, DefT (_, TypeT (_, u))) ->
@@ -7062,7 +7058,7 @@ and function_like = function
   | _ -> false
 
 and function_like_op = function
-  | CallT _ | UseT (_, DefT (_, TypeT _))
+  | CallT _
   | ConstructorT _
   | UseT (_, DefT (_, AnyFunT)) -> true
   | t -> object_like_op t
