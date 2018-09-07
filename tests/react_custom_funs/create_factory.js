@@ -10,7 +10,7 @@ React.createFactory(any)(undefined); // OK
 React.createFactory(any)(null); // OK
 
 class A extends React.Component<{foo: number, bar: number}, void> {}
-function B(props: {foo: number, bar: number}) {}
+function B(props: {foo: number, bar: number}) { return null }
 
 const aFactory = React.createFactory(A);
 const bFactory = React.createFactory(B);
@@ -45,7 +45,7 @@ bFactory(); // Error: Missing `foo` and `bar`.
 class C extends React.Component<{foo: number, bar: number}, void> {
   static defaultProps = {bar: 42};
 }
-function D(props: {foo: number, bar: number}) {}
+function D(props: {foo: number, bar: number}) { return null }
 D.defaultProps = {bar: 42};
 
 const cFactory = React.createFactory(C);

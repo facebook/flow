@@ -75,11 +75,12 @@ import * as React from 'react';
 ## `React.Node` <a class="toc" id="toc-react-node" href="#toc-react-node"></a>
 
 This represents any node that can be rendered in a React application.
-`React.Node` can be undefined, null, a boolean, a number, a string, a React
+`React.Node` can be null, a boolean, a number, a string, a React
 element, or an array of any of those types recursively.
 
-If you need a return type for your component `render()` methods or you need a
-generic type for a children prop then you should use `React.Node`.
+If you need a return type for your component `render()` methods then you should use `React.Node`.
+However, if you need a generic type for a children prop, use `?React.Node`; 
+children can be undefined, when `render()` can't return `undefined`.
 
 Here is an example of `React.Node` being used as the return type to `render()`:
 

@@ -17,5 +17,6 @@ class Parent extends React.Component<{
     React.Children.map(this.props.children, (child: Element<typeof Child>) => {
       console.log(child.props);
     });
+    return null;
   }
 }

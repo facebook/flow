@@ -8,7 +8,7 @@ Cannot create `F` element because property `foo` is missing in props [1] but exi
 
 References:
    test.js:3:19
-   3| function F(props: { foo: string }) {}
+   3| function F(props: { foo: string }) { return null }
                         ^^^^^^^^^^^^^^^ [2]
 
 
@@ -25,16 +25,8 @@ References:
    5| <F foo={0} />; // error: number ~> string
               ^ [1]
    test.js:3:26
-   3| function F(props: { foo: string }) {}
+   3| function F(props: { foo: string }) { return null }
                                ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- test.js:9:33
-
-Cannot resolve name `numner`.
-
-   9| function G(props: { foo: string|numner }) {}
-                                      ^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
@@ -52,4 +44,4 @@ References:
 
 
 
-Found 4 errors
+Found 3 errors

@@ -7,7 +7,7 @@ var Hello = React.createClass({
     name: React.PropTypes.string.isRequired,
   },
 
-  render: function(): Node {
+  render: function() {
     return <div>{this.props.name}</div>;
   }
 });
