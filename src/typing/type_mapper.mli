@@ -4,7 +4,46 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
-class ['a] t :
+class virtual ['a] t :
+  object
+    method arr_type :
+      Context.t -> 'a -> Type.arrtype -> Type.arrtype
+    method bounds :
+      Context.t -> 'a -> Constraint.bounds -> Constraint.bounds
+    method virtual call_prop : Context.t -> 'a -> int -> int
+    method def_type : Context.t -> 'a -> Type.def_t -> Type.def_t
+    method defer_use_type :
+      Context.t -> 'a -> Type.defer_use_t -> Type.defer_use_t
+    method destructor :
+      Context.t -> 'a -> Type.destructor -> Type.destructor
+    method dict_type :
+      Context.t -> 'a -> Type.dicttype -> Type.dicttype
+    method export_types :
+      Context.t -> 'a -> Type.exporttypes -> Type.exporttypes
+    method virtual exports :
+      Context.t -> 'a -> Type.Exports.id -> Type.Exports.id
+    method fun_type :
+      Context.t -> 'a -> Type.funtype -> Type.funtype
+    method inst_type :
+      Context.t -> 'a -> Type.insttype -> Type.insttype
+    method obj_type :
+      Context.t -> 'a -> Type.objtype -> Type.objtype
+    method predicate :
+      Context.t -> 'a -> Type.predicate -> Type.predicate
+    method virtual props : Context.t -> 'a -> Type.Properties.id -> Type.Properties.id
+    method selector :
+      Context.t -> 'a -> Type.selector -> Type.selector
+    method virtual tvar :
+      Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
+    method type_ : Context.t -> 'a -> Type.t -> Type.t
+    method type_param :
+      Context.t -> 'a -> Type.typeparam -> Type.typeparam
+    method type_map : Context.t -> 'a -> Type.type_map -> Type.type_map
+    method virtual use_type :
+      Context.t -> 'a -> Type.UseTypeMap.key -> Type.UseTypeMap.key
+end
+
+class virtual ['a] t_with_uses :
   object
     method arr_type :
       Context.t -> 'a -> Type.arrtype -> Type.arrtype
@@ -12,13 +51,12 @@ class ['a] t :
       Context.t -> 'a -> Constraint.bounds -> Constraint.bounds
     method call_arg :
       Context.t -> 'a -> Type.call_arg -> Type.call_arg
-    method call_prop : Context.t -> 'a -> int -> int
+    method virtual call_prop : Context.t -> 'a -> int -> int
     method choice_use_tool :
       Context.t ->
       'a -> Type.choice_use_tool -> Type.choice_use_tool
     method class_binding : Context.t -> 'a -> Type.class_binding -> Type.class_binding
     method cont : Context.t -> 'a -> Type.cont -> Type.cont
-    method type_map : Context.t -> 'a -> Type.type_map -> Type.type_map
     method create_class_knot :
       Context.t ->
       'a ->
@@ -47,7 +85,7 @@ class ['a] t :
       Context.t -> 'a -> Type.elem_action -> Type.elem_action
     method export_types :
       Context.t -> 'a -> Type.exporttypes -> Type.exporttypes
-    method exports :
+    method virtual exports :
       Context.t -> 'a -> Type.Exports.id -> Type.Exports.id
     method fun_call_type :
       Context.t -> 'a -> Type.funcalltype -> Type.funcalltype
@@ -81,6 +119,7 @@ class ['a] t :
       Context.t -> 'a -> Type.predicate -> Type.predicate
     method prop_ref :
       Context.t -> 'a -> Type.propref -> Type.propref
+    method virtual props : Context.t -> 'a -> Type.Properties.id -> Type.Properties.id
     method react_tool :
       Context.t -> 'a -> Type.React.tool -> Type.React.tool
     method resolve :
@@ -135,11 +174,12 @@ class ['a] t :
       Type.React.CreateClass.stack_head * Type.t list *
       Type.React.CreateClass.spec Type.React.CreateClass.maybe_known
       list
-    method tvar :
+    method virtual tvar :
       Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
     method type_ : Context.t -> 'a -> Type.t -> Type.t
     method type_param :
       Context.t -> 'a -> Type.typeparam -> Type.typeparam
+    method type_map : Context.t -> 'a -> Type.type_map -> Type.type_map
     method unresolved_param :
       Context.t ->
       'a -> Type.unresolved_param -> Type.unresolved_param

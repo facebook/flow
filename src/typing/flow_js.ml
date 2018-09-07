@@ -1284,7 +1284,7 @@ let print_types_if_verbose cx trace
   | None ->
     ()
 
-let subst = Substituter.subst
+let subst = Subst.subst
 
 (********************** start of slab **********************************)
 
