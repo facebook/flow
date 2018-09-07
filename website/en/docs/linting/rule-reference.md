@@ -10,15 +10,13 @@ layout: guide
 
 * [`all`](#toc-all)
 * [`sketchy-null`](#toc-sketchy-null)
-* [`sketchy-number`](#toc-sketchy-number)
 * [`untyped-type-import`](#toc-untyped-type-import)
 * [`untyped-import`](#toc-untyped-import)
 * [`unclear-type`](#toc-unclear-type)
 * [`unsafe-getters-setters`](#toc-unsafe-getters-setters)
-* [`deprecated-declare-exports`](#toc-deprecated-declare-exports)
 * [`nonstrict-import`](#toc-nonstrict-import)
 * [`unnecessary-optional-chain`](#toc-unnecessary-optional-chain)
-* [`unnecessary-invariant`](#toc-unnecessary-invariant)
+
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -76,32 +74,6 @@ if (x) {}
 ```
 would still have a sketchy-null-number warning on line 3.
 
-#### `sketchy-number` <a class="toc" id="toc-sketchy-number" href="#toc-sketchy-number"></a>
-
-Triggers when a `number` is used in a manner which may lead to unexpected results if the value is falsy.
-Currently, this lint triggers if a `number` appears in:
-* the left-hand side of an `&&` expression.
-
-As a motivating example, consider this common idiom in React:
-
-```js
-{showFoo && <Foo />}
-```
-
-Here, `showFoo` is a boolean which controls whether or not to display the `<Foo />` element. If `showFoo` is true, then this evaluates to `{<Foo />}`. If `showFoo` is false, then this evaluates to `{false}`, which doesn't display anything.
-
-Now suppose that instead of a boolean, we have a numerical value representing, say, the number of comments on a post. We want to display a count of the comments, unless there are no comments. We might naively try to do something similar to the boolean case:
-
-```js
-{count && <>[{count} comments]</>}
-```
-
-If `count` is, say, `5`, then this displays "[5 comments]". However, if `count` is `0`, then this displays "0" instead of displaying nothing. (This problem is unique to `number` because `0` and `NaN` are the only falsy values which React renders with a visible result.) This could be subtly dangerous: if this immediately follows another numerical value, it might appear to the user that we have multiplied that value by 10! Instead, we should do a proper conditional check:
-
-```js
-{count ? <>[{count} comments]</> : null}
-```
-
 #### `untyped-type-import` <a class="toc" id="toc-untyped-type-import" href="#toc-untyped-type-import"></a>
 
 Triggers when you import a type from an untyped file. Importing a type from an
@@ -133,41 +105,6 @@ const o = {
 
 #### `nonstrict-import` <a class="toc" id="toc-nonstrict-import" href="#toc-nonstrict-import"></a>
 Used in conjuction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
-
-#### `deprecated-declare-exports` <a class="toc" id="toc-deprecated-declare-exports" href="#toc-deprecated-declare-exports"></a>
-
-Note: This lint was removed in Flow version 0.68, along with the `declare var exports` syntax.
-
-Triggers when the deprecated syntax is used to declare the default export of a [declared CommonJS module](../../libdefs/creation/#toc-declaring-a-commonjs-module).
-
-Before Flow version 0.25, the way to declare the default exports looked like this:
-
-```js
-declare module "foo" {
-  declare var exports: number; // old, deprecated syntax
-}
-```
-
-In version 0.25, we introduced an alternative syntax:
-
-```js
-declare module "foo" {
-  declare module.exports: number;
-}
-```
-
-The new syntax is simpler and less magical. The old syntax will be removed in a future version of Flow.
-
-This lint is enabled by default. If you see an error, you should try to rewrite the offending declaration. If you are unable to rewrite the declaration (for example, if it's part of a node_module dependency), you can disable the lint in your `.flowconfig`.
-
-To disable this lint, add a line to the `[lints]` section of your project's `.flowconfig` file.
-
-```
-[lints]
-deprecated-declare-exports=off
-```
-
-However, note that this syntax will be removed soon, so you should file issues with any projects that still use it.
 
 #### `unnecessary-optional-chain` <a class="toc" id="toc-unnecessary-optional-chain" href="#toc-unnecessary-optional-chain"></a>
 
@@ -203,8 +140,79 @@ foo?.bar.baz;
 
 This makes it clear to the reader that `bar` is not a potentially nullish property.
 
-#### `unnecessary-invariant` <a class="toc" id="toc-unnecessary-invariant" href="#toc-unnecessary-invariant"></a>
+### Deprecated Lint Rules 
+> **Note:** The following rules have each been **deprecated** and will no longer work.
+
+* [`unnecessary-invariant`](#toc-deprecated-unnecessary-invariant)
+* [`sketchy-number`](#toc-deprecated-sketchy-number)
+* [`deprecated-declare-exports`](#toc-deprecated-declare-exports)
+
+
+#### `unnecessary-invariant` <a class="toc" id="toc-deprecated-unnecessary-invariant" href="#toc-deprecated-unnecessary-invariant"></a>
 
 Triggers when you use `invariant` to check a condition which we know must be truthy based on the available type information. This is quite conservative: for example, if all we know about the condition is that it is a `boolean`, then the lint will not fire even if the condition must be `true` at runtime.
 
 Note that this lint does not trigger when we know a condition is always `false`. It is a common idiom to use `invariant()` or `invariant(false, ...)` to throw in code that should be unreachable.
+
+
+#### `sketchy-number` <a class="toc" id="toc-deprecated-sketchy-number" href="#toc-deprecated-sketchy-number"></a>
+
+Triggers when a `number` is used in a manner which may lead to unexpected results if the value is falsy.
+Currently, this lint triggers if a `number` appears in:
+* the left-hand side of an `&&` expression.
+
+As a motivating example, consider this common idiom in React:
+
+```js
+{showFoo && <Foo />}
+```
+
+Here, `showFoo` is a boolean which controls whether or not to display the `<Foo />` element. If `showFoo` is true, then this evaluates to `{<Foo />}`. If `showFoo` is false, then this evaluates to `{false}`, which doesn't display anything.
+
+Now suppose that instead of a boolean, we have a numerical value representing, say, the number of comments on a post. We want to display a count of the comments, unless there are no comments. We might naively try to do something similar to the boolean case:
+
+```js
+{count && <>[{count} comments]</>}
+```
+
+If `count` is, say, `5`, then this displays "[5 comments]". However, if `count` is `0`, then this displays "0" instead of displaying nothing. (This problem is unique to `number` because `0` and `NaN` are the only falsy values which React renders with a visible result.) This could be subtly dangerous: if this immediately follows another numerical value, it might appear to the user that we have multiplied that value by 10! Instead, we should do a proper conditional check:
+
+```js
+{count ? <>[{count} comments]</> : null}
+```
+
+
+#### `deprecated-declare-exports` <a class="toc" id="toc-deprecated-declare-exports" href="#toc-deprecated-declare-exports"></a>
+
+> Note: This lint was removed in Flow version 0.68, along with the `declare var exports` syntax.
+
+Triggers when the deprecated syntax is used to declare the default export of a [declared CommonJS module](../../libdefs/creation/#toc-declaring-a-commonjs-module).
+
+Before Flow version 0.25, the way to declare the default exports looked like this:
+
+```js
+declare module "foo" {
+  declare var exports: number; // old, deprecated syntax
+}
+```
+
+In version 0.25, we introduced an alternative syntax:
+
+```js
+declare module "foo" {
+  declare module.exports: number;
+}
+```
+
+The new syntax is simpler and less magical. The old syntax will be removed in a future version of Flow.
+
+This lint is enabled by default. If you see an error, you should try to rewrite the offending declaration. If you are unable to rewrite the declaration (for example, if it's part of a node_module dependency), you can disable the lint in your `.flowconfig`.
+
+To disable this lint, add a line to the `[lints]` section of your project's `.flowconfig` file.
+
+```
+[lints]
+deprecated-declare-exports=off
+```
+
+However, note that this syntax was removed in Flow version 0.68, so you should file issues with any projects that still use it.
