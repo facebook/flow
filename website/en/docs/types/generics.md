@@ -412,3 +412,43 @@ let bar: Item<2> = { prop: 2 };
 
 You must always include the brackets `<>` when using the type (just like
 parentheses for a function call).
+
+#### Variance Sigils<a class="toc" id="toc-variance-sigils" href="#toc-variance-sigils"></a>
+
+You can also specify the subtyping behavior of a generic via variance sigils.
+By default, generics behave invariantly, but you may add a `+` to their
+declaration to make them behave covariantly, or a `-` to their declaration to
+make them behave contravariantly. See [our docs on variance](../../lang/variance)
+for a more information on variance in Flow.
+
+Variance sigils allow you to be more specific about how you intend to
+use your generics, giving Flow the power to do more precise type checking.
+For example, you may want this relationship to hold:
+
+```js
+//@flow
+type GenericBox<+T> = T;
+
+var x: GenericBox<number> = 3;
+(x: GenericBox<number| string>);
+```
+
+The example above could not be accomplished without the `+` variance sigil:
+
+```js
+//@flow
+type GenericBoxError<T> = T;
+
+var x: GenericBoxError<number> = 3;
+(x: GenericBoxError<number| string>); // number | string is not compatible with number.
+```
+
+Note that if you annotate your generic with variance sigils then Flow will
+check to make sure those types only appear in positions that make sense for
+that variance sigil. For example, you cannot declare a generic type parameter
+to behave covariantly and use it in a contravariant position:
+
+```js
+//@flow
+type NotActuallyCovariant<+T> = (T) => void;
+```
