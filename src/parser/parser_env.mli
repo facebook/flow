@@ -129,6 +129,7 @@ val token_is_restricted : Token.t -> bool
 module Peek : sig
   val token : env -> Token.t
   val loc : env -> Loc.t
+  val loc_skip_lookeahead : env -> Loc.t
   val errors : env -> (Loc.t * Parse_error.t) list
   val comments : env -> Loc.t Flow_ast.Comment.t list
   val is_line_terminator : env -> bool

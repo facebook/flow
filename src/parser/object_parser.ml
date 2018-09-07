@@ -102,7 +102,10 @@ module Object
     | true, _ -> error_at env (key_loc, Error.GetterArity)
     | false, _ -> error_at env (key_loc, Error.SetterArity)
     end;
-    let return = Type.annotation_opt env in
+    let return = match Type.annotation_opt env with
+    | Some annotation -> Ast.Function.Available annotation
+    | None -> Ast.Function.Missing (Peek.loc_skip_lookeahead env)
+    in
     let _, body, strict = Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
     Declaration.strict_post_check env ~strict ~simple None params;
@@ -241,7 +244,10 @@ module Object
           in
           Declaration.function_params ~await ~yield env
         in
-        let return = Type.annotation_opt env in
+        let return = match Type.annotation_opt env with
+        | Some annotation -> Ast.Function.Available annotation
+        | None -> Ast.Function.Missing (Peek.loc_skip_lookeahead env)
+        in
         let _, body, strict =
           Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in
@@ -558,7 +564,10 @@ module Object
           in
           Declaration.function_params ~await ~yield env
         in
-        let return = Type.annotation_opt env in
+        let return = match Type.annotation_opt env with
+        | Some annotation -> Ast.Function.Available annotation
+        | None -> Ast.Function.Missing (Peek.loc_skip_lookeahead env)
+        in
         let _, body, strict =
           Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in

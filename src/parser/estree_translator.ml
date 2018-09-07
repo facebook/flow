@@ -328,6 +328,9 @@ end with type t = Impl.t) = struct
         | BodyBlock b -> block b
         | BodyExpression expr -> expression expr)
         in
+        let return = match arrow.return with
+        | Missing _ -> None
+        | Available t -> Some t in
         node "ArrowFunctionExpression" loc [
           "id", option identifier arrow.id;
           "params", function_params arrow.params;
@@ -336,7 +339,7 @@ end with type t = Impl.t) = struct
           "generator", bool arrow.generator;
           "predicate", option predicate arrow.predicate;
           "expression", bool arrow.expression;
-          "returnType", option type_annotation arrow.return;
+          "returnType", option type_annotation return;
           "typeParameters", option type_parameter_declaration arrow.tparams;
         ]
       )
@@ -528,7 +531,9 @@ end with type t = Impl.t) = struct
     let body = match fn.body with
     | BodyBlock b -> block b
     | BodyExpression b -> expression b in
-
+    let return = match fn.return with
+    | Missing _ -> None
+    | Available t -> Some t in
     node "FunctionDeclaration" loc [
       (* estree hasn't come around to the idea that function decls can have
          optional ids, but acorn, babel, espree and esprima all have, so let's
@@ -540,7 +545,7 @@ end with type t = Impl.t) = struct
       "generator", bool fn.generator;
       "predicate", option predicate fn.predicate;
       "expression", bool fn.expression;
-      "returnType", option type_annotation fn.return;
+      "returnType", option type_annotation return;
       "typeParameters", option type_parameter_declaration fn.tparams;
     ]
   )
@@ -550,6 +555,9 @@ end with type t = Impl.t) = struct
     | BodyBlock b -> block b
     | BodyExpression expr -> expression expr
     in
+    let return = match _function.return with
+    | Missing _ -> None
+    | Available t -> Some t in
     node "FunctionExpression" loc [
       "id", option identifier _function.id;
       "params", function_params _function.params;
@@ -558,7 +566,7 @@ end with type t = Impl.t) = struct
       "generator", bool _function.generator;
       "predicate", option predicate _function.predicate;
       "expression", bool _function.expression;
-      "returnType", option type_annotation _function.return;
+      "returnType", option type_annotation return;
       "typeParameters", option type_parameter_declaration _function.tparams;
     ]
   )

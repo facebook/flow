@@ -173,8 +173,8 @@ and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
       | BodyBlock (_, s) -> string_of_stmt (S.Block s)
       | BodyExpression (_, e) -> string_of_expr e in
     let ret_type_str = match func.return with
-      | Some (_, (_, t)) -> ": " ^ string_of_type t
-      | None -> "" in
+      | F.Available (_, (_, t)) -> ": " ^ string_of_type t
+      | F.Missing _ -> "" in
     "function " ^ fname ^ "(" ^ params_str ^ ") " ^ ret_type_str ^ " {\n" ^
     body_str ^
     "}\n"

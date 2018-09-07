@@ -1218,6 +1218,7 @@ and function_base
     params; body; async; predicate; return; tparams;
     expression=_; generator=_; id=_ (* Handled via `function_` *)
   } =
+  let open Ast.Function in
   fuse [
     if async then fuse [Atom "async"; space; id] else id;
     option type_parameter tparams;
@@ -1227,7 +1228,7 @@ and function_base
       Ast.Pattern.Identifier {
         Ast.Pattern.Identifier.optional=false; annot=None; _;
       }
-    )]; rest = None}), None, None, None -> List.hd (function_params ~ctxt params)
+    )]; rest = None}), Missing _, None, None -> List.hd (function_params ~ctxt params)
     | _, _, _, _, _ ->
       list
         ~wrap:(Atom "(", Atom ")")
@@ -1235,21 +1236,21 @@ and function_base
         (function_params ~ctxt:normal_context params)
     end;
     begin match return, predicate with
-    | None, None -> Empty
-    | None, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
-    | Some ret, Some pred -> fuse [
+    | Missing _, None -> Empty
+    | Missing _, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
+    | Available ret, Some pred -> fuse [
         type_annotation ret;
         pretty_space;
         type_predicate pred;
       ]
-    | Some ret, None -> type_annotation ret;
+    | Available ret, None -> type_annotation ret;
     end;
     if arrow then fuse [
         (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
            unexpected multiply-and-assign operator. Thus, we format this with a
            space e.g. `():* =>{}`. *)
         begin match return with
-        | Some (_, (_, Ast.Type.Exists)) -> space
+        | Available (_, (_, Ast.Type.Exists)) -> space
         | _ -> pretty_space
         end;
         Atom "=>";

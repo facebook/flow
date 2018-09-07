@@ -457,6 +457,10 @@ module Peek = struct
 
   let token env = ith_token ~i:0 env
   let loc env = ith_loc ~i:0 env
+  let loc_skip_lookeahead env =
+    let loc = loc env in
+    Loc.({ loc with _end = loc.start})
+
   let errors env = ith_errors ~i:0 env
   let comments env = ith_comments ~i:0 env
   let lex_env env = ith_lex_env ~i:0 env

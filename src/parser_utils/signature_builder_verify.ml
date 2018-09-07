@@ -413,8 +413,8 @@ module Eval = struct
         ignore left; ignore right; Deps.bot
 
   and function_ =
+    let open Ast.Function in
     let function_params tps params =
-      let open Ast.Function in
       let _, { Params.params; rest; } = params in
       let deps = List.fold_left (Deps.reduce_join (pattern tps)) Deps.bot params in
       match rest with
@@ -425,10 +425,10 @@ module Eval = struct
       let tps, deps = type_params tps tparams in
       let deps = Deps.join (deps, function_params tps params) in
       match return with
-        | None ->
+        | Missing _loc ->
           if not generator && Signature_utils.Procedure_decider.is body then deps
           else Deps.top (Error.ExpectedAnnotation loc)
-        | Some _ -> Deps.join (deps, annotation tps (loc, Kind.Annot_path.mk_annot return))
+        | Available annot -> Deps.join (deps, annotation tps (loc, Kind.Annot_path.mk_annot (Some annot)))
 
   and class_ =
     let class_element tps element =

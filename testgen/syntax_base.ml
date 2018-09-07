@@ -169,7 +169,7 @@ let mk_func_def
      generator = false;
      predicate = None;
      expression = false;
-     return = Some (Loc.none, (Loc.none, rtype));
+     return = Ast.Function.Available (Loc.none, (Loc.none, rtype));
      tparams = None} in
   Stmt (S.FunctionDeclaration func)
 

@@ -663,6 +663,15 @@ class mapper = object(this)
     let loc, a = annot in
     id this#type_ a annot (fun a -> (loc, a))
 
+  method return_type_annotation (return: ('M, 'T) Flow_ast.Function.return) =
+    let open Flow_ast.Function in
+    match return with
+    | Available annot ->
+      let annot' = this#type_annotation annot in
+      if annot' == annot then return
+      else Available annot'
+    | Missing _loc -> return
+
   method function_ _loc (expr: (Loc.t, Loc.t) Flow_ast.Function.t) =
     let open Flow_ast.Function in
     let {
@@ -671,7 +680,7 @@ class mapper = object(this)
     } = expr in
     let ident' = map_opt this#function_identifier ident in
     let params' = this#function_params params in
-    let return' = map_opt this#type_annotation return in
+    let return' = this#return_type_annotation return in
     let body' = this#function_body_any body in
     (* TODO: walk predicate *)
     let tparams' = map_opt this#type_parameter_declaration tparams in

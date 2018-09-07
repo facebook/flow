@@ -77,7 +77,7 @@ module Functions = struct
       generator = generator;
       predicate = None;
       expression;
-      return = None;
+      return = Missing Loc.none;
       tparams = None;
     }
 end

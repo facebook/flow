@@ -1649,8 +1649,8 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; params; return; _} = func in
       let sig_loc = match params, return with
-      | _, Some (end_loc, _)
-      | (end_loc, _), None
+      | _, Ast.Function.Available (end_loc, _)
+      | (end_loc, _), Ast.Function.Missing _
          -> Loc.btwn loc end_loc
       in
       let fn_type, func_ast = mk_function None cx sig_loc func in
@@ -3070,8 +3070,8 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
   | Function func ->
       let {Ast.Function.id; params; return; predicate; _} = func in
       let sig_loc = match params, return with
-      | _, Some (end_loc, _)
-      | (end_loc, _), None
+      | _, Ast.Function.Available (end_loc, _)
+      | (end_loc, _), Ast.Function.Missing _
          -> Loc.btwn loc end_loc
       in
 
@@ -6329,8 +6329,18 @@ and mk_func_sig =
     let fparams, params = mk_params cx tparams_map params in
     let body = Some body in
     let ret_reason = mk_reason RReturn (return_loc func) in
-    let return_t, return =
-      Anno.mk_type_annotation cx tparams_map ret_reason return
+    let return_t, return, loc = match return with
+    | Ast.Function.Available annot ->
+      let return_t, return = Anno.mk_type_annotation cx tparams_map ret_reason (Some annot) in
+      let (loc, _) = annot in
+      return_t, return, loc
+    | Ast.Function.Missing loc ->
+      let return_t, return = Anno.mk_type_annotation cx tparams_map ret_reason None in
+      return_t, return, loc
+    in
+    let return = match return with
+    | Some type_annot -> Ast.Function.Available type_annot
+    | None -> Ast.Function.Missing loc
     in
     let return_t, predicate = Ast.Type.Predicate.(match predicate with
       | None ->
@@ -6461,7 +6471,7 @@ and declare_function_to_function_declaration cx
                 Ast.Statement.Return.argument = Some e
               })
             ]}) in
-          let return = Some (loc, return) in
+          let return = Ast.Function.Available (loc, return) in
           Some (Ast.Statement.FunctionDeclaration { Ast.Function.
             id = Some id;
             params = (params_loc, { Ast.Function.Params.params; rest });
@@ -6477,7 +6487,7 @@ and declare_function_to_function_declaration cx
               id = Some ((id_loc, fun_type), id_name);
               tparams;
               params = params_loc, { Ast.Function.Params.params; rest };
-              return = Some (_, return);
+              return = Ast.Function.Available (_, return);
               body = Ast.Function.BodyBlock (pred_loc, { Ast.Statement.Block.
                 body = [_, Ast.Statement.Return { Ast.Statement.Return.
                   argument = Some e;

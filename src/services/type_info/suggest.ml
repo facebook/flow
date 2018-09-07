@@ -137,13 +137,15 @@ class visitor ~cxs = object(this)
     let { return; _ } = func in
     let return' =
       match return with
-      | Some _ -> return
-      | None ->
+      | Available _ -> return
+      | Missing _ ->
         let index = Ty.(function
           | Fun { fun_return; _ } -> Ok fun_return
           | ty -> Error (NonFunctionType (Ty_printer.string_of_t ty))
         ) in
-        this#inferred_type ~search ~index loc
+        match this#inferred_type ~search ~index loc with
+        | Some annot -> Available annot
+        | None -> Missing loc
     in
     if return' == return
       then func

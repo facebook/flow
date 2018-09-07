@@ -1282,13 +1282,17 @@ and Function : sig
     generator: bool;
     predicate: ('M, 'T) Type.Predicate.t option;
     expression: bool;
-    return: ('M, 'T) Type.annotation option;
+    return: ('M, 'T) return;
     tparams: ('M, 'T) Type.ParameterDeclaration.t option;
   }
 
   and ('M, 'T) body =
     | BodyBlock of ('M * ('M, 'T) Statement.Block.t)
     | BodyExpression of ('M, 'T) Expression.t
+
+  and ('M, 'T) return =
+    | Missing of 'M
+    | Available of ('M, 'T) Type.annotation
 
   [@@deriving show]
 

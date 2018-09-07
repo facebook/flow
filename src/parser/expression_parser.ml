@@ -1068,7 +1068,9 @@ module Expression
                                annot=None;
                                optional=false;
           } in
-          (loc, { Ast.Function.Params.params = [param]; rest = None }), None, None
+          (loc, { Ast.Function.Params.params = [param]; rest = None }),
+          (* FIXME(festevezga) D9545732 add proper location *) Ast.Function.Missing Loc.none,
+          None
         else
           let params =
             let yield = allow_yield env in

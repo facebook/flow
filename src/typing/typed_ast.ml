@@ -173,7 +173,7 @@ module Function = struct
       generator = false;
       predicate = None;
       expression = false;
-      return = None;
+      return = Missing Loc.none;
       tparams = None;
     }
 
@@ -200,7 +200,7 @@ module Function = struct
     generator = false;
     predicate = None;
     expression = false;
-    return = None;
+    return = Missing Loc.none;
     tparams = None;
   }
 

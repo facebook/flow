@@ -738,6 +738,13 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method type_annotation ((annot, t_annot): ('M, 'T) Ast.Type.annotation) =
     this#on_loc_annot annot, this#type_ t_annot
 
+  method return_type_annotation (return: ('M, 'T) Ast.Function.return)
+                                       : ('N, 'U) Ast.Function.return =
+    let open Ast.Function in
+    match return with
+    | Available annot -> Available (this#type_annotation annot)
+    | Missing loc -> Missing (this#on_loc_annot loc)
+
   method function_ (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
     let open Ast.Function in
     let {
@@ -752,7 +759,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
         let rest' = Option.map ~f:this#function_rest_element rest in
         this#on_loc_annot annot, { Params.params = params_list'; rest = rest' }
       in
-      let return' = Option.map ~f:this#type_annotation return in
+      let return' = this#return_type_annotation return in
       let body' = match body with
         | BodyBlock (annot, block) ->
           BodyBlock (this#on_loc_annot annot, this#function_body block)

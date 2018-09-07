@@ -34,7 +34,7 @@ type t = {
 let return_loc =
   let module F = Ast.Function in
   let open F in function
-  | {return = Some (_, (loc, _)); _}
+  | {return = Available (_, (loc, _)); _}
   | {F.body = BodyExpression (loc, _); _} -> loc
   | {F.body = BodyBlock (loc, _); _} -> Loc.char_before loc
 

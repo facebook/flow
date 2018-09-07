@@ -26,7 +26,7 @@ module type TYPE = sig
   val annotation : env -> (Loc.t, Loc.t) Ast.Type.annotation
   val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation option
   val predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.Predicate.t option
-  val annotation_and_predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation option * (Loc.t, Loc.t) Ast.Type.Predicate.t option
+  val annotation_and_predicate_opt : env -> (Loc.t, Loc.t) Ast.Function.return * (Loc.t, Loc.t) Ast.Type.Predicate.t option
 end
 
 module Type (Parse: Parser_common.PARSER) : TYPE = struct
@@ -828,15 +828,19 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | _ -> None
 
   let annotation_and_predicate_opt env =
+    let open Ast.Function in
     match Peek.token env, Peek.ith_token ~i:1 env with
     | T_COLON, T_CHECKS ->
       Expect.token env T_COLON;
-      (None, predicate_opt env)
+      Missing (Peek.loc_skip_lookeahead env), predicate_opt env
     | T_COLON, _ ->
-       let annotation = annotation_opt env in
-       let predicate = predicate_opt env in
-       (annotation, predicate)
-    | _ -> None, None
+      let annotation = match annotation_opt env with
+      | Some annotation -> Available annotation
+      | None -> Missing (Peek.loc_skip_lookeahead env)
+      in
+      let predicate = predicate_opt env in
+      annotation, predicate
+    | _ -> Missing (Peek.loc_skip_lookeahead env), None
 
   let wrap f env =
     let env = env |> with_strict true in
