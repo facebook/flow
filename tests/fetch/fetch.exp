@@ -498,6 +498,7 @@ Cannot call `Response` with object literal bound to `input` because:
  - Or object literal [1] is incompatible with `ArrayBuffer` [5].
  - Or object literal [1] is incompatible with `$TypedArray` [6].
  - Or object literal [1] is incompatible with `DataView` [7].
+ - Or object literal [1] is incompatible with `ReadableStream` [8].
 
    response.js:30:34
                                          v
@@ -511,16 +512,16 @@ Cannot call `Response` with object literal bound to `input` because:
 
 References:
    <BUILTINS>/bom.js:942:26
-   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
+   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                  ^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/bom.js:942:44
-   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
+   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                    ^^^^^^^^ [3]
    <BUILTINS>/bom.js:942:55
-   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
+   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                               ^^^^ [4]
    <BUILTINS>/bom.js:942:62
-   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView;
+   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                                      ^^^^^^^^^^^ [5]
    <BUILTINS>/core.js:627:25
    627| type $ArrayBufferView = $TypedArray | DataView;
@@ -528,6 +529,9 @@ References:
    <BUILTINS>/core.js:627:39
    627| type $ArrayBufferView = $TypedArray | DataView;
                                               ^^^^^^^^ [7]
+   <BUILTINS>/bom.js:942:95
+   942| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
+                                                                                                      ^^^^^^^^^^^^^^ [8]
 
 
 Error ------------------------------------------------------------------------------------------------- response.js:42:1
