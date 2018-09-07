@@ -1691,10 +1691,13 @@ static char* hh_store_ocaml(
 
   *alloc_size = size;
 
+  // Both size and uncompressed_size will certainly fit in 31 bits, as the
+  // original size fits per the assert above and we check that the compressed
+  // size is less than the original size.
   hh_header_t header
     = size << 33
     | (uint64_t)kind << 32
-    | (uncompressed_size & 0x7FFFFFFF) << 1
+    | uncompressed_size << 1
     | 1;
 
   char* addr = hh_alloc(header);
