@@ -100,6 +100,13 @@ void hh_move(value key1, value key2);
 void hh_remove(value key);
 
 /*****************************************************************************/
+/* Saved State without SQLite */
+/*****************************************************************************/
+/* Windows isn't supported, as the implementation uses pthreads. */
+void hh_save_table(value out_filename);
+void hh_load_table(value in_filename);
+
+/*****************************************************************************/
 /* Saved State with SQLite */
 /*****************************************************************************/
 /* Safe to call outside of sql. */

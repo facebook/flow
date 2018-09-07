@@ -2028,6 +2028,196 @@ void hh_remove(value key) {
 }
 
 /*****************************************************************************/
+/* Saved State without SQLite */
+/*****************************************************************************/
+
+static void raise_revision_length_is_zero(void) {
+  static value *exn = NULL;
+  if (!exn) exn = caml_named_value("revision_length_is_zero");
+  caml_raise_constant(*exn);
+}
+
+#ifndef _WIN32
+static void fwrite_no_fail(
+  const void* ptr, size_t size, size_t nmemb, FILE* fp
+) {
+  size_t nmemb_written = fwrite(ptr, size, nmemb, fp);
+  assert(nmemb_written == nmemb);
+}
+
+/* We want to use read() instead of fread() for the large shared memory block
+ * because buffering slows things down. This means we cannot use fread() for
+ * the other (smaller) values in our file either, because the buffering can
+ * move the file position indicator ahead of the values read. */
+static void read_all(int fd, void* start, size_t size) {
+  assert(size > 0);
+  size_t total_read = 0;
+  do {
+    void* ptr = (void*)((uintptr_t)start + total_read);
+    ssize_t bytes_read = read(fd, (void*)ptr, size);
+    assert(bytes_read != -1 && bytes_read != 0);
+    total_read += bytes_read;
+  } while (total_read < size);
+}
+
+static void fwrite_header(FILE* fp) {
+  fwrite_no_fail(&MAGIC_CONSTANT, sizeof MAGIC_CONSTANT, 1, fp);
+
+  size_t revlen = strlen(BuildInfo_kRevision);
+  fwrite_no_fail(&revlen, sizeof revlen, 1, fp);
+  fwrite_no_fail(BuildInfo_kRevision, sizeof(char), revlen, fp);
+}
+
+static void fread_header(FILE* fp) {
+  uint64_t magic = 0;
+  read_all(fileno(fp), (void*)&magic, sizeof magic);
+  assert(magic == MAGIC_CONSTANT);
+
+  size_t revlen = 0;
+  read_all(fileno(fp), (void*)&revlen, sizeof revlen);
+  char revision[revlen];
+  if (revlen > 0) {
+    read_all(fileno(fp), (void*)revision, revlen * sizeof(char));
+    assert(strncmp(revision, BuildInfo_kRevision, revlen) == 0);
+  } else {
+    raise_revision_length_is_zero();
+  }
+}
+
+static char* save_start() {
+  return (char*) hashtbl;
+}
+
+void hh_save_table(value out_filename) {
+  CAMLparam1(out_filename);
+  FILE* fp = fopen(String_val(out_filename), "wb");
+
+  fwrite_header(fp);
+
+  /*
+   * Format of the compressed shared memory:
+   * LZ4 can only work in chunks of 2GB, so we compress each chunk individually,
+   * and write out each one as
+   * [compressed size of chunk][uncompressed size of chunk][chunk]
+   * A compressed size of zero indicates the end of the compressed section.
+   */
+  char* chunk_start = save_start();
+  int compressed_size = 0;
+  while (chunk_start < *heap) {
+    uintptr_t remaining = *heap - chunk_start;
+    uintptr_t chunk_size = LZ4_MAX_INPUT_SIZE < remaining ?
+      LZ4_MAX_INPUT_SIZE : remaining;
+
+    char* compressed = malloc(chunk_size * sizeof(char));
+    assert(compressed != NULL);
+
+    compressed_size = LZ4_compress_default(
+        chunk_start, /* source */
+        compressed, /* destination */
+        chunk_size, /* bytes to write from source */
+        chunk_size); /* maximum amount to write */
+    assert(compressed_size > 0);
+
+    fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
+    fwrite_no_fail(&chunk_size, sizeof chunk_size, 1, fp);
+    fwrite_no_fail((void*)compressed, 1, compressed_size, fp);
+
+    chunk_start += chunk_size;
+    free(compressed);
+  }
+  compressed_size = 0;
+  fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
+
+  fclose(fp);
+  CAMLreturn0;
+}
+
+typedef struct {
+  char* compressed;
+  char* decompress_start;
+  int compressed_size;
+  int decompressed_size;
+} decompress_args;
+
+static void* decompress(void* pthread_args) {
+  const decompress_args* args = (decompress_args*) pthread_args;
+  int actual_compressed_size = LZ4_decompress_fast(
+      args->compressed,
+      args->decompress_start,
+      args->decompressed_size);
+  return (void*)((long)(args->compressed_size == actual_compressed_size));
+}
+
+void hh_load_table(value in_filename) {
+  CAMLparam1(in_filename);
+  FILE* fp = fopen(String_val(in_filename), "rb");
+
+  if (fp == NULL) {
+    caml_failwith("Failed to open file");
+  }
+
+  fread_header(fp);
+
+  int compressed_size = 0;
+  read_all(fileno(fp), (void*)&compressed_size, sizeof compressed_size);
+  char* chunk_start = save_start();
+
+  pthread_attr_t attr;
+  pthread_attr_init(&attr);
+  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
+  pthread_t thread;
+  decompress_args args;
+  int thread_started = 0;
+
+  // see hh_save_table for a description of what we are parsing here.
+  while (compressed_size > 0) {
+    char* compressed = malloc(compressed_size * sizeof(char));
+    assert(compressed != NULL);
+    uintptr_t chunk_size = 0;
+    read_all(fileno(fp), (void*)&chunk_size, sizeof chunk_size);
+    read_all(fileno(fp), compressed, compressed_size * sizeof(char));
+    if (thread_started) {
+      intptr_t success = 0;
+      int rc = pthread_join(thread, (void*)&success);
+      free(args.compressed);
+      assert(rc == 0);
+      assert(success);
+    }
+    args.compressed = compressed;
+    args.compressed_size = compressed_size;
+    args.decompress_start = chunk_start;
+    args.decompressed_size = chunk_size;
+    pthread_create(&thread, &attr, decompress, &args);
+    thread_started = 1;
+    chunk_start += chunk_size;
+    read_all(fileno(fp), (void*)&compressed_size, sizeof compressed_size);
+  }
+
+  if (thread_started) {
+    int success;
+    int rc = pthread_join(thread, (void*)&success);
+    free(args.compressed);
+    assert(rc == 0);
+    assert(success);
+  }
+
+  *heap = chunk_start;
+
+  fclose(fp);
+  CAMLreturn0;
+}
+#else
+void hh_save_table(value out_filename) {
+  return;
+}
+
+void hh_load_table(value in_filename) {
+  return;
+}
+#endif /* _WIN32 */
+/*****************************************************************************/
+
+/*****************************************************************************/
 /* Saved State with SQLite */
 /*****************************************************************************/
 
