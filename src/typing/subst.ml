@@ -113,6 +113,13 @@ let substituter = object(self)
         EvalT (x', TypeDestructorT (use_op, r, d'), Reason.mk_id ())
       )
 
+    (* We only want to change the EvalT id if the rest of the EvalT actually changed *)
+    | EvalT (t', dt, _id) ->
+        let t'' = self#type_ cx map_cx t' in
+        let dt' = self#defer_use_type cx map_cx dt in
+        if t' == t'' && dt == dt' then t
+        else EvalT (t'', dt', Reason.mk_id ())
+
     | ModuleT _
     | InternalT (ExtendsT _)
       ->
@@ -125,6 +132,10 @@ let substituter = object(self)
     let t' = self#type_ cx (map, force, use_op) t in
     if t == t' then p else LatentP (t', i)
   | p -> p
+
+  (* The EvalT case is the only case that calls this function. We've explicitly overrided it
+   * in all cases, so this should never be called *)
+  method eval_id _cx _map_cx _id = assert false
 end
 
 let subst cx ?use_op ?(force=true) map =

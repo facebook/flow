@@ -18,6 +18,7 @@ class virtual ['a] t :
       Context.t -> 'a -> Type.destructor -> Type.destructor
     method dict_type :
       Context.t -> 'a -> Type.dicttype -> Type.dicttype
+    method virtual eval_id : Context.t -> 'a -> IMap.key -> IMap.key
     method export_types :
       Context.t -> 'a -> Type.exporttypes -> Type.exporttypes
     method virtual exports :
@@ -30,6 +31,7 @@ class virtual ['a] t :
       Context.t -> 'a -> Type.objtype -> Type.objtype
     method predicate :
       Context.t -> 'a -> Type.predicate -> Type.predicate
+    method prop : Context.t -> 'a -> Type.Property.t -> Type.Property.t
     method virtual props : Context.t -> 'a -> Type.Properties.id -> Type.Properties.id
     method selector :
       Context.t -> 'a -> Type.selector -> Type.selector
@@ -83,6 +85,7 @@ class virtual ['a] t_with_uses :
       Context.t -> 'a -> Type.dicttype -> Type.dicttype
     method elem_action :
       Context.t -> 'a -> Type.elem_action -> Type.elem_action
+    method virtual eval_id : Context.t -> 'a -> IMap.key -> IMap.key
     method export_types :
       Context.t -> 'a -> Type.exporttypes -> Type.exporttypes
     method virtual exports :
@@ -117,6 +120,7 @@ class virtual ['a] t_with_uses :
       'a -> Type.Object.tool -> Type.Object.tool
     method predicate :
       Context.t -> 'a -> Type.predicate -> Type.predicate
+    method prop : Context.t -> 'a -> Type.Property.t -> Type.Property.t
     method prop_ref :
       Context.t -> 'a -> Type.propref -> Type.propref
     method virtual props : Context.t -> 'a -> Type.Properties.id -> Type.Properties.id

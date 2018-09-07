@@ -55,11 +55,12 @@ class virtual ['a] t = object(self)
       | DefT (r, t') ->
           let t'' = self#def_type cx map_cx t' in
           if t' == t'' then t else DefT (r, t'')
-      | EvalT (t', dt, _) ->
+      | EvalT (t', dt, id) ->
           let t'' = self#type_ cx map_cx t' in
           let dt' = self#defer_use_type cx map_cx dt in
-          if t' == t'' && dt == dt' then t
-          else EvalT (t'', dt', Reason.mk_id ())
+          let id' = self#eval_id cx map_cx id in
+          if t' == t'' && dt == dt' && id' == id then t
+          else EvalT (t'', dt', id')
       | BoundT _ -> t
       | ExistsT _ -> t
       | ThisClassT (r, t') ->
@@ -538,6 +539,32 @@ class virtual ['a] t = object(self)
       else ObjectMapi t''
 
   method virtual props: Context.t -> 'a -> Properties.id -> Properties.id
+
+  method virtual eval_id: Context.t -> 'a -> IMap.key -> IMap.key
+
+  method prop cx map_cx prop =
+    match prop with
+    | Field (l, t, p) ->
+        let t' = self#type_ cx map_cx t in
+        if t == t' then prop
+        else Field (l, t', p)
+    | Method (l, t) ->
+        let t' = self#type_ cx map_cx t in
+        if t == t' then prop
+        else Method (l, t')
+    | Get (l, t) ->
+        let t' = self#type_ cx map_cx t in
+        if t == t' then prop
+        else Get (l, t')
+    | Set (l, t) ->
+        let t' = self#type_ cx map_cx t in
+        if t == t' then prop
+        else Set (l, t')
+    | GetSet (l1, t1, l2, t2) ->
+        let t1' = self#type_ cx map_cx t1 in
+        let t2' = self#type_ cx map_cx t2 in
+        if t1 == t1' && t2 == t2' then prop
+        else GetSet(l1, t1', l2, t2')
 end
 
 class virtual ['a] t_with_uses = object(self)
