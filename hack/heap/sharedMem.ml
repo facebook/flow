@@ -47,6 +47,7 @@ exception Out_of_shared_memory
 exception Hash_table_full
 exception Dep_table_full
 exception Heap_full
+exception Revision_length_is_zero
 exception Sql_assertion_failure of int
 exception Failed_anonymous_memfd_init
 exception Less_than_minimum_available of int
@@ -57,6 +58,7 @@ let () =
   Callback.register_exception "hash_table_full" Hash_table_full;
   Callback.register_exception "dep_table_full" Dep_table_full;
   Callback.register_exception "heap_full" Heap_full;
+  Callback.register_exception "revision_length_is_zero" Revision_length_is_zero;
   Callback.register_exception
     "sql_assertion_failure"
     (Sql_assertion_failure 0);
@@ -222,6 +224,14 @@ external load_dep_table_sqlite_c: string -> bool -> int = "hh_load_dep_table_sql
 
 let load_dep_table_sqlite : string -> bool -> int = fun fn ignore_hh_version ->
   load_dep_table_sqlite_c fn ignore_hh_version
+
+(*****************************************************************************)
+(* Serializes & loads the hash table directly into memory *)
+(*****************************************************************************)
+
+external save_table: string -> unit = "hh_save_table"
+
+external load_table: string -> unit = "hh_load_table"
 
 (*****************************************************************************)
 (* Serializes the hash table to sqlite *)
