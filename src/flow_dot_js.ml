@@ -219,7 +219,7 @@ let check_content ~filename ~content =
   let errors, warnings = match parse_content filename content with
   | Ok (ast, file_sig) ->
     let cx, _ = infer_and_merge ~root filename ast file_sig in
-    let suppressions = Error_suppressions.empty in (* TODO: support suppressions *)
+    let suppressions = Utils_js.FilenameMap.empty in (* TODO: support suppressions *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
       suppressions (Context.severity_cover cx) (Context.errors cx) ~unused:suppressions
     in errors, warnings

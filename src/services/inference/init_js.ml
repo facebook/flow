@@ -142,14 +142,14 @@ let load_lib_files ~master_cx ~options files =
               lib_file
               (ExactCover.file_cover lib_file lint_severities)
           in
-          let result = lib_file, false, errors, Error_suppressions.empty, severity_cover in
+          let result = lib_file, false, errors, FilenameMap.empty, severity_cover in
           exclude_syms, (result :: results)
 
         | Parsing.Parse_skip
             (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
           (* should never happen *)
           let errs = Errors.ErrorSet.empty in
-          let suppressions = Error_suppressions.empty in
+          let suppressions = FilenameMap.empty in
           let severity_cover =
             Utils_js.FilenameMap.singleton
               lib_file

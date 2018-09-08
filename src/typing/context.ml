@@ -89,7 +89,7 @@ type sig_t = {
 
   mutable errors: Errors.ErrorSet.t;
 
-  mutable error_suppressions: Error_suppressions.t;
+  mutable error_suppressions: Error_suppressions.t Utils_js.FilenameMap.t;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
 
   (* map from exists proposition locations to the types of values running through them *)
@@ -186,7 +186,7 @@ let make_sig () = {
   module_map = SMap.empty;
   type_asserts = LocMap.empty;
   errors = Errors.ErrorSet.empty;
-  error_suppressions = Error_suppressions.empty;
+  error_suppressions = Utils_js.FilenameMap.empty;
   severity_cover = Utils_js.FilenameMap.empty;
   exists_checks = LocMap.empty;
   exists_excuses = LocMap.empty;
@@ -336,11 +336,11 @@ let add_error cx error =
   cx.sig_cx.errors <- Errors.ErrorSet.add error cx.sig_cx.errors
 let add_error_suppression cx loc =
   cx.sig_cx.error_suppressions <-
-    Error_suppressions.add loc cx.sig_cx.error_suppressions
+    Error_suppressions.add_to_map loc cx.sig_cx.error_suppressions
 let add_severity_cover cx filekey severity_cover =
   cx.sig_cx.severity_cover <- Utils_js.FilenameMap.add filekey severity_cover cx.sig_cx.severity_cover
 let add_lint_suppressions cx suppressions = cx.sig_cx.error_suppressions <-
-  Error_suppressions.add_lint_suppressions suppressions cx.sig_cx.error_suppressions
+  Error_suppressions.add_lint_suppressions_to_map suppressions cx.sig_cx.error_suppressions
 let add_import_stmt cx stmt =
   cx.import_stmts <- stmt::cx.import_stmts
 let add_imported_t cx name t =
@@ -364,7 +364,7 @@ let add_type_assert cx k v =
 let remove_all_errors cx =
   cx.sig_cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
-  cx.sig_cx.error_suppressions <- Error_suppressions.empty
+  cx.sig_cx.error_suppressions <- Utils_js.FilenameMap.empty
 let remove_all_lint_severities cx =
   cx.sig_cx.severity_cover <- Utils_js.FilenameMap.empty
 let remove_tvar cx id =
@@ -521,7 +521,7 @@ let merge_into sig_cx sig_cx_other =
      indeterminates and calculate the sig sig_cx. *)
   sig_cx.envs <- IMap.union sig_cx_other.envs sig_cx.envs;
   sig_cx.errors <- Errors.ErrorSet.union sig_cx_other.errors sig_cx.errors;
-  sig_cx.error_suppressions <- Error_suppressions.union sig_cx_other.error_suppressions sig_cx.error_suppressions;
+  sig_cx.error_suppressions <- Error_suppressions.union_maps sig_cx_other.error_suppressions sig_cx.error_suppressions;
   sig_cx.severity_cover <- Utils_js.FilenameMap.union sig_cx_other.severity_cover sig_cx.severity_cover;
   sig_cx.exists_checks <- LocMap.union sig_cx_other.exists_checks sig_cx.exists_checks;
   sig_cx.exists_excuses <- LocMap.union sig_cx_other.exists_excuses sig_cx.exists_excuses;

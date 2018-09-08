@@ -26,7 +26,7 @@ let regenerate =
   let open Error_suppressions in
   let add_unused_suppression_warnings checked unused warnings =
     (* For each unused suppression, create an warning *)
-    Error_suppressions.unused unused
+    Error_suppressions.all_locs_of_map unused
     |> List.fold_left
       (fun warnings loc ->
         let source_file = match Loc.source loc with Some x -> x | None -> File_key.SourceFile "-" in
@@ -65,7 +65,6 @@ let regenerate =
     let {
       ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set;
     } = env.ServerEnv.errors in
-    let suppressions = union_suppressions suppressions in
 
     let acc_fun = acc_fun suppressions severity_cover_set in
     let collated_errorset, warnings, collated_suppressed_errors, unused =

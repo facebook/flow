@@ -6,17 +6,21 @@
  *)
 
 type t
+type t_map = t Utils_js.FilenameMap.t
 
-val empty : t
-val is_empty : t -> bool
-val add : Loc.t -> t -> t
-val add_lint_suppressions : Utils_js.LocSet.t -> t -> t
-val union : t -> t -> t
-val unused : t -> Loc.t list
+(* Raises if the given loc has `source` set to `None` *)
+val add_to_map : Loc.t -> t_map -> t_map
+val add_lint_suppressions_to_map : Utils_js.LocSet.t -> t_map -> t_map
 
-(* combines suppressions collated by filename into one collection *)
-val union_suppressions : t Utils_js.FilenameMap.t -> t
+(* Union the two given maps. If they both contain values for a given key, union the values. *)
+val union_maps : t_map -> t_map -> t_map
+(* Union the two given maps. If they both contain values for a given key, use the value from the
+ * second argument. If this would result in an empty value, removing the key/value pair altogether.
+ *)
+val update_suppressions: t_map -> t_map -> t_map
+
+val all_locs_of_map : t_map -> Loc.t list
 
 val filter_suppressed_errors :
-  t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> Errors.ErrorSet.t -> unused:t ->
-  (Errors.ErrorSet.t * Errors.ErrorSet.t * (Errors.error * Utils_js.LocSet.t) list * t)
+  t_map -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> Errors.ErrorSet.t -> unused:t_map ->
+  (Errors.ErrorSet.t * Errors.ErrorSet.t * (Errors.error * Utils_js.LocSet.t) list * t_map)

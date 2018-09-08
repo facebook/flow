@@ -45,11 +45,6 @@ let filter_duplicate_provider map file =
     FilenameMap.add file new_errset map
   | None -> map
 
-let update_suppressions map file errsup =
-  if Error_suppressions.is_empty errsup
-    then FilenameMap.remove file map
-    else FilenameMap.add file errsup map
-
 let with_timer_lwt ?options timer profiling f =
   let should_print = Option.value_map options ~default:false ~f:(Options.should_profile) in
   Profiling_js.with_timer_lwt ~should_print ~timer ~f profiling
@@ -332,7 +327,7 @@ let run_merge_service
       match result with
       | Ok (new_errors, new_suppressions, new_severity_cover) ->
         update_errset errors file new_errors,
-        update_suppressions suppressions file new_suppressions,
+        Error_suppressions.update_suppressions suppressions new_suppressions,
         FilenameMap.union new_severity_cover severity_cover_set
       | Error msg ->
         let new_errors = error_set_of_merge_error file msg in
@@ -377,18 +372,18 @@ let merge
       let open Errors in
       let curr_errors = ref ErrorSet.empty in
       let curr_warnings = ref ErrorSet.empty in
-      let curr_suppressions = ref (Error_suppressions.union_suppressions suppressions) in
+      let curr_suppressions = ref suppressions in
       let curr_severity_cover = ref severity_cover_set in
       let filter = Error_suppressions.filter_suppressed_errors in
       Lwt.return (function lazy results ->
         let new_errors, new_warnings, suppressions, severity_cover =
           List.fold_left (fun (errs_acc, warns_acc, supps_acc, lints_acc) result ->
             let file, errs_and_warns, supps, lints = result in
-            let supps_acc = Error_suppressions.union supps_acc supps in
+            let supps_acc = Error_suppressions.union_maps supps_acc supps in
             let lints_acc = FilenameMap.union lints_acc lints in
             (* Filter errors and warnings based on suppressions we've seen so far. *)
             let errs, warns, _, _ = filter supps_acc lints_acc errs_and_warns
-              ~unused:Error_suppressions.empty (* TODO: track unused suppressions *)
+              ~unused:FilenameMap.empty (* TODO: track unused suppressions *)
             in
             (* Only add errors we haven't seen before. *)
             let errs_acc = ErrorSet.fold (fun err acc ->
@@ -455,7 +450,7 @@ let merge
             file, errors, suppressions, severity_cover
           | Error msg ->
             let errors = error_set_of_merge_error file msg in
-            let suppressions = Error_suppressions.empty in
+            let suppressions = FilenameMap.empty in
             let severity_cover =
               Utils_js.FilenameMap.singleton
                 file
@@ -630,10 +625,9 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       (* Suppressions for errors in this file can come from dependencies *)
       let suppressions =
         let open ServerEnv in
-        let file_suppressions = Context.error_suppressions cx in
+        let new_suppressions = Context.error_suppressions cx in
         let { suppressions; _ } = !env.errors in
-        Error_suppressions.union_suppressions
-          (FilenameMap.add filename file_suppressions suppressions)
+        Error_suppressions.update_suppressions suppressions new_suppressions
       in
 
       (* Severity cover info can come from dependencies *)
@@ -647,7 +641,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       (* Filter out suppressed errors *)
       let errors, warnings, _, _ =
         Error_suppressions.filter_suppressed_errors suppressions severity_cover errors
-          ~unused:Error_suppressions.empty (* TODO: track unused suppressions *)
+          ~unused:FilenameMap.empty (* TODO: track unused suppressions *)
       in
 
       let warnings = if Options.should_include_warnings options
@@ -722,7 +716,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
       let all_ok = if ok then all_ok else false in
       let errors_acc = update_errset errors_acc lib_file errs in
       let suppressions_acc =
-        update_suppressions suppressions_acc lib_file suppressions in
+        Error_suppressions.update_suppressions suppressions_acc suppressions in
       let severity_cover_set_acc = FilenameMap.union severity_cover severity_cover_set_acc in
       all_ok, errors_acc, suppressions_acc, severity_cover_set_acc
     ) (true, local_errors, suppressions, severity_cover_set) lib_files
