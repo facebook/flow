@@ -2453,7 +2453,7 @@ predicates.js - if (Array.isArray(y.FOO)): {
   "end":23
 }
 react_component.js:3:9 = {
-  "type":"{|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<$NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>}, +ChildrenArray: type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T, +Component: class React$Component<Props, State = void>, +ComponentType: type ComponentType<P> = React$ComponentType<P>, +Context: type Context<T> = React$Context<T>, +DOM: any, +Element: type Element<+C> = React$Element<C>, +ElementConfig: type ElementConfig<C> = React$ElementConfig<C>, +ElementProps: type ElementProps<C> = React$ElementProps<C>, +ElementRef: type ElementRef<C> = React$ElementRef<C>, +ElementType: type ElementType = React$ElementType, +Fragment: ({children: React$Node}) => React$Node, +Key: type Key = React$Key, +Node: type Node = React$Node, +Portal: type Portal = React$Portal, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +Ref: type Ref<C> = React$Ref<C>, +StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T) => React$Context<T>, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, +default: {|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<$NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>}, +Component: class React$Component<Props, State = void>, +DOM: any, +Fragment: ({children: React$Node}) => React$Node, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T) => React$Context<T>, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, +isValidElement: (element: any) => boolean, +version: string|}, +isValidElement: (element: any) => boolean, +version: string|}",
+  "type":"{|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<$NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>}, +ChildrenArray: type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T, +Component: class React$Component<Props, State = void>, +ComponentType: type ComponentType<P> = React$ComponentType<P>, +Context: type Context<T> = React$Context<T>, +DOM: any, +Element: type Element<+C> = React$Element<C>, +ElementConfig: type ElementConfig<C> = React$ElementConfig<C>, +ElementProps: type ElementProps<C> = React$ElementProps<C>, +ElementRef: type ElementRef<C> = React$ElementRef<C>, +ElementType: type ElementType = React$ElementType, +Fragment: ({children: ?React$Node}) => React$Node, +Key: type Key = React$Key, +Node: type Node = React$Node, +Portal: type Portal = React$Portal, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +Ref: type Ref<C> = React$Ref<C>, +StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T) => React$Context<T>, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, +default: {|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<$NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>}, +Component: class React$Component<Props, State = void>, +DOM: any, +Fragment: ({children: ?React$Node}) => React$Node, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +checkPropTypes: <V>(propTypes: $SubType<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T) => React$Context<T>, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <ElementType: React$ElementType>() => {current: (null | React$ElementRef<ElementType>)}, +isValidElement: (element: any) => boolean, +version: string|}, +isValidElement: (element: any) => boolean, +version: string|}",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
@@ -2514,12 +2514,19 @@ react_component.js:31:7 = {
               "prop":{
                 "kind":"field",
                 "type":{
-                  "kind":"Generic",
-                  "type":{
-                    "provenance":{"kind":"Library","loc":"[LIB] react.js:13:5,20:24"},
-                    "name":"React$Node"
-                  },
-                  "structural":false
+                  "kind":"Union",
+                  "types":[
+                    {"kind":"Void"},
+                    {"kind":"Null"},
+                    {
+                      "kind":"Generic",
+                      "type":{
+                        "provenance":{"kind":"Library","loc":"[LIB] react.js:14:5,20:25"},
+                        "name":"React$Node"
+                      },
+                      "structural":false
+                    }
+                  ]
                 },
                 "polarity":"Neutral",
                 "optional":false
@@ -2534,13 +2541,13 @@ react_component.js:31:7 = {
     "returnType":{
       "kind":"Generic",
       "type":{
-        "provenance":{"kind":"Library","loc":"[LIB] react.js:13:5,20:24"},
+        "provenance":{"kind":"Library","loc":"[LIB] react.js:14:5,20:25"},
         "name":"React$Node"
       },
       "structural":false
     }
   },
-  "type":"({children: React$Node}) => React$Node",
+  "type":"({children: ?React$Node}) => React$Node",
   "reasons":[],
   "loc":{
     "source":"react_component.js",
