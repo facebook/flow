@@ -10,6 +10,7 @@ type node =
   | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t * (Loc.t, Loc.t) Flow_ast.Expression.t
   | ClassElement of (Loc.t, Loc.t) Flow_ast.Class.Body.element * (Loc.t, Loc.t) Flow_ast.Class.Body.element
   | Type of (Loc.t, Loc.t) Flow_ast.Type.t * (Loc.t, Loc.t) Flow_ast.Type.t
+  | Return of (Loc.t, Loc.t) Flow_ast.Function.return
 
 (*
  * A map of (old node, new node)

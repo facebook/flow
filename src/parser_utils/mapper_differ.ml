@@ -14,6 +14,7 @@ type node =
   | Expression of (Loc.t, Loc.t) Ast.Expression.t * (Loc.t, Loc.t) Ast.Expression.t
   | ClassElement of (Loc.t, Loc.t) Ast.Class.Body.element * (Loc.t, Loc.t) Ast.Class.Body.element
   | Type of (Loc.t, Loc.t) Ast.Type.t * (Loc.t, Loc.t) Ast.Type.t
+  | Return of (Loc.t, Loc.t) Flow_ast.Function.return
 
 type t = node Utils_js.LocMap.t
 
@@ -23,7 +24,9 @@ module B = Flow_ast.Class.Body
 class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
   object (_this)
     inherit Flow_ast_mapper.mapper as super
+
     val m = m
+
     method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
       let stmt = super#statement stmt in
       let (loc_pre, _) = stmt in
@@ -33,6 +36,7 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
         s := L.add loc_pre (Statement (stmt, mapped)) !s ;
         mapped )
       else stmt
+
     method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
       let expr = super#expression expr in
       let (loc_pre, _) = expr in
@@ -42,6 +46,7 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
         s := L.add loc_pre (Expression (expr, mapped)) !s ;
         mapped )
       else expr
+
     method! class_element (elem: (Loc.t, Loc.t) Ast.Class.Body.element) =
       let elem = super#class_element elem in
       let loc_pre = match elem with
@@ -55,6 +60,7 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
         s := L.add loc_pre (ClassElement (elem, mapped)) !s ;
         mapped )
       else elem
+
     method! type_ (t: (Loc.t, Loc.t) Ast.Type.t) =
       let t = super#type_ t in
       let (loc_pre, _) = t in
@@ -64,6 +70,51 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
         s := L.add loc_pre (Type (t, mapped)) !s ;
         mapped )
       else t
+
+    method! return_type_annotation (return: (Loc.t, Loc.t) Flow_ast.Function.return) =
+      let open Flow_ast.Function in
+      let return = super#return_type_annotation return in
+      let loc_pre = match return with
+      | Available _ -> Loc.none
+      | Missing loc -> loc
+      in
+      let size_pre = L.cardinal !s in
+      let mapped = m#return_type_annotation return in
+      if size_pre == L.cardinal !s && mapped <> return then (
+        s := L.add loc_pre (Return mapped) !s ;
+        mapped )
+      else return
+
+    method! function_ loc (expr: (Loc.t, Loc.t) Flow_ast.Function.t) =
+      let open Flow_ast.Function in
+      let { return = return1; _ } = expr in
+      let loc_pre = match return1 with
+      | Available _ -> Loc.none
+      | Missing loc -> loc
+      in
+      let func' = super#function_ loc expr in
+      let { return = return2; _ } = func' in
+      let func'' = m#function_ loc func' in
+      let { return = return3; _ } = func'' in
+      if not (return1 == return2 && return2 == return3) then
+        s := L.add loc_pre (Return return3) !s ;
+      func''
+
+    method! class_method loc (meth: (Loc.t, Loc.t) Ast.Class.Method.t') =
+      let open Flow_ast.Function in
+      let ({Ast.Class.Method.value; _} as meth) = super#class_method loc meth in
+      let _, { return = return1; _ } = value in
+      let loc_pre = match return1 with
+      | Available _ -> Loc.none
+      | Missing loc -> loc
+      in
+      let ({Ast.Class.Method.value; _} as meth') = super#class_method loc meth in
+      let _, { return = return2; _ } = value in
+      let ({Ast.Class.Method.value; _} as meth'') = m#class_method loc meth' in
+      let _, { return = return3; _ } = value in
+      if not (return1 == return2 && return2 == return3) then
+        s := L.add loc_pre (Return return3) !s ;
+      meth''
   end
 
 let collapse_diffs map =
