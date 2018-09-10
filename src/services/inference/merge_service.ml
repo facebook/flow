@@ -23,6 +23,7 @@ type merge_strict_context_result = {
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
   file_sigs: File_sig.t FilenameMap.t;
+  typed_asts: (Loc.t, Loc.t * Type.t) Flow_ast.program FilenameMap.t;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -105,7 +106,7 @@ let merge_strict_context ~options component =
   let lint_severities = Options.lint_severities options in
   let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
-  let (cx, _), other_cxs = Merge_js.merge_component_strict
+  let ((cx, _), other_cxs) as cx_nel = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:Parsing_heaps.get_ast_unsafe
     ~get_docblock_unsafe:Parsing_heaps.get_docblock_unsafe
@@ -113,9 +114,14 @@ let merge_strict_context ~options component =
     component file_reqs dep_cxs master_cx
   in
 
-  (* throw out typed ASTs *)
+  let typed_asts = Nel.fold_left (fun typed_asts (ctx, typed_ast) ->
+    let file = Context.file ctx in
+    FilenameMap.add file typed_ast typed_asts
+  ) FilenameMap.empty cx_nel in
+
   let other_cxs = List.map fst other_cxs in
-  { cx; other_cxs; master_cx; file_sigs }
+
+  { cx; other_cxs; master_cx; file_sigs; typed_asts }
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)

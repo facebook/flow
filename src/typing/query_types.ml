@@ -60,26 +60,6 @@ let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc typed_as
       let msg = Ty_normalizer.error_to_string err in
       FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
 
-(* TODO query_coverage_type can be omitted - typed AST should contain the
- * locations below *)
-let query_coverage_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc =
-  let options = {
-    Ty_normalizer_env.
-    fall_through_merged = false;
-    expand_internal_types = false;
-    expand_type_aliases = expand_aliases;
-    flag_shadowed_type_params = false;
-  } in
-  match Type_table.find_unsafe_coverage type_table loc with
-  | exception Not_found -> FailureNoMatch
-  | scheme ->
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
-    (match Ty_normalizer.from_scheme ~options ~genv scheme with
-    | Ok ty -> Success (loc, ty)
-    | Error err ->
-      let msg = Ty_normalizer.error_to_string err in
-      FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
-
 let dump_types cx file_sig ~printer =
   let options = Ty_normalizer_env.default_opts in
   let file = Context.file cx in

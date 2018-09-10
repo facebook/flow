@@ -22,6 +22,7 @@ type merge_strict_context_result = {
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
   file_sigs: File_sig.t FilenameMap.t;
+  typed_asts: (Loc.t, Loc.t * Type.t) Flow_ast.program FilenameMap.t;
 }
 
 val merge_strict_context:
