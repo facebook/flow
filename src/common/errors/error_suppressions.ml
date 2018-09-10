@@ -12,64 +12,98 @@
 open Severity
 open Utils_js
 
-type error_suppressions = LocSet.t SpanMap.t
-type t = {
-  suppressions: error_suppressions;
-  lint_suppressions: LocSet.t
-}
-
-type t_map = t FilenameMap.t
-
 exception No_source of string
 exception Missing_lint_settings of string
 
-let empty = {
-  suppressions = SpanMap.empty;
-  lint_suppressions = LocSet.empty;
-}
+module FileSuppressions : sig
+  type t
+
+  val empty: t
+
+  val is_empty: t -> bool
+
+  val add: Loc.t -> t -> t
+  val remove: Loc.t -> t -> t
+  val union: t -> t -> t
+  val add_lint_suppression: Loc.t -> t -> t
+  val remove_lint_suppression: Loc.t -> t -> t
+
+  val suppression_at_loc: Loc.t -> t -> LocSet.t option
+  val all_locs: t -> LocSet.t
+end = struct
+  type error_suppressions = LocSet.t SpanMap.t
+  type t = {
+    suppressions: error_suppressions;
+    lint_suppressions: LocSet.t
+  }
+
+  let empty = {
+    suppressions = SpanMap.empty;
+    lint_suppressions = LocSet.empty;
+  }
+
+  let is_empty { suppressions; lint_suppressions } =
+    SpanMap.is_empty suppressions && LocSet.is_empty lint_suppressions
+
+  let add loc { suppressions; lint_suppressions } =
+    let suppression_loc = Loc.(
+      let start = { loc.start with line = loc._end.line + 1; column = 0 } in
+      let _end = { loc._end with line = loc._end.line + 2; column = 0 } in
+      { loc with start; _end }
+    ) in
+    let suppressions =
+      SpanMap.add suppression_loc (LocSet.singleton loc) suppressions
+        ~combine:LocSet.union
+    in
+    { suppressions; lint_suppressions }
+
+  let remove loc ({ suppressions; _ } as orig) =
+    { orig with suppressions = SpanMap.remove loc suppressions }
+
+  let union a b = {
+    suppressions = SpanMap.union a.suppressions b.suppressions;
+    lint_suppressions = LocSet.union a.lint_suppressions b.lint_suppressions;
+  }
+
+  let add_lint_suppression lint_suppression t = {
+    t with
+    lint_suppressions = LocSet.add lint_suppression t.lint_suppressions;
+  }
+
+  let remove_lint_suppression lint_suppression ({ lint_suppressions; _} as orig) =
+    { orig with lint_suppressions = LocSet.remove lint_suppression lint_suppressions }
+
+  let suppression_at_loc loc {suppressions; _} =
+    SpanMap.get loc suppressions
+
+  let all_locs { suppressions; lint_suppressions } =
+    suppressions
+    |> SpanMap.values
+    |> List.fold_left LocSet.union lint_suppressions
+end
+
+type t = FileSuppressions.t
+type t_map = t FilenameMap.t
 
 let file_of_loc_unsafe loc =
   match loc.Loc.source with
   | Some x -> x
   | None -> raise (No_source (Loc.to_string loc))
 
-let add loc { suppressions; lint_suppressions } =
-  let suppression_loc = Loc.(
-    let start = { loc.start with line = loc._end.line + 1; column = 0 } in
-    let _end = { loc._end with line = loc._end.line + 2; column = 0 } in
-    { loc with start; _end }
-  ) in
-  let suppressions =
-    SpanMap.add suppression_loc (LocSet.singleton loc) suppressions
-      ~combine:LocSet.union
-  in
-  { suppressions; lint_suppressions }
-
 let add_to_map loc map =
   let file = file_of_loc_unsafe loc in
-  let suppressions = FilenameMap.get file map |> Option.value ~default:empty in
-  let suppressions = add loc suppressions in
-  FilenameMap.add file suppressions map
-
-let union a b = {
-  suppressions = SpanMap.union a.suppressions b.suppressions;
-  lint_suppressions = LocSet.union a.lint_suppressions b.lint_suppressions;
-}
+  let suppressions = FileSuppressions.empty |> FileSuppressions.add loc in
+  FilenameMap.add ~combine:FileSuppressions.union file suppressions map
 
 let union_maps =
-  let combine _key x y = Some (union x y) in
+  let combine _key x y = Some (FileSuppressions.union x y) in
   fun a b -> Utils_js.FilenameMap.union ~combine a b
-
-let add_lint_suppression lint_suppression t = {
-  t with
-  lint_suppressions = LocSet.add lint_suppression t.lint_suppressions;
-}
 
 let add_lint_suppressions_to_map lint_suppressions map =
   LocSet.fold begin fun loc acc ->
     let file = file_of_loc_unsafe loc in
-    let file_suppressions = FilenameMap.get file acc |> Option.value ~default:empty in
-    let file_suppressions = add_lint_suppression loc file_suppressions in
+    let file_suppressions = FilenameMap.get file acc |> Option.value ~default:FileSuppressions.empty in
+    let file_suppressions = FileSuppressions.add_lint_suppression loc file_suppressions in
     FilenameMap.add file file_suppressions acc
   end lint_suppressions map
 
@@ -87,13 +121,12 @@ let file_suppressions_of_loc loc suppressions_map =
   let file = file_of_loc_unsafe loc in
   match FilenameMap.get file suppressions_map with
   | Some x -> x
-  | None -> empty
+  | None -> FileSuppressions.empty
 
 (* raises if `loc` has no filename *)
 let suppression_at_loc loc suppressions_map =
   let file_suppressions = file_suppressions_of_loc loc suppressions_map in
-  let {suppressions; _} = file_suppressions in
-  SpanMap.get loc suppressions
+  FileSuppressions.suppression_at_loc loc file_suppressions
 
 (* raises if `loc` has no filename.
  * no-op if suppressions_map does not contain an entry for that file. *)
@@ -106,18 +139,10 @@ let update_file_suppressions f loc suppressions_map =
     FilenameMap.add file file_suppressions suppressions_map
 
 let remove_suppression_from_map loc (suppressions_map: t_map) =
-  let f file_suppressions =
-    let suppressions = SpanMap.remove loc file_suppressions.suppressions in
-    { file_suppressions with suppressions }
-  in
-  update_file_suppressions f loc suppressions_map
+  update_file_suppressions (FileSuppressions.remove loc) loc suppressions_map
 
 let remove_lint_suppression_from_map loc (suppressions_map: t_map) =
-  let f file_suppressions =
-    let lint_suppressions = LocSet.remove loc file_suppressions.lint_suppressions in
-    { file_suppressions with lint_suppressions }
-  in
-  update_file_suppressions f loc suppressions_map
+  update_file_suppressions (FileSuppressions.remove_lint_suppression loc) loc suppressions_map
 
 let check_loc lint_kind suppressions severity_cover
   ((result, used, (unused: t_map), is_primary_loc) as acc) loc =
@@ -199,20 +224,13 @@ let check err (suppressions: t_map) severity_cover (unused: t_map) =
   in Some (result, used, unused)
 
 (* Gets the locations of the suppression comments that are yet unused *)
-let all_locs { suppressions; lint_suppressions } =
-  suppressions
-  |> SpanMap.values
-  |> List.fold_left LocSet.union lint_suppressions
 
 let all_locs_of_map map =
   map
   |> FilenameMap.values
-  |> List.map all_locs
+  |> List.map FileSuppressions.all_locs
   |> List.fold_left LocSet.union LocSet.empty
   |> LocSet.elements
-
-let is_empty { suppressions; lint_suppressions } =
-  SpanMap.is_empty suppressions && LocSet.is_empty lint_suppressions
 
 let filter_suppressed_errors suppressions severity_cover errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
@@ -228,7 +246,7 @@ let filter_suppressed_errors suppressions severity_cover errors ~unused =
 
 let update_suppressions current_suppressions new_suppressions =
   FilenameMap.fold begin fun file file_suppressions acc ->
-    if is_empty file_suppressions
+    if FileSuppressions.is_empty file_suppressions
       then FilenameMap.remove file acc
       else FilenameMap.add file file_suppressions acc
   end new_suppressions current_suppressions
