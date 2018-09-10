@@ -205,7 +205,6 @@ let update_dep_table_sqlite : string -> string -> int = fun fn build_revision ->
 external hh_save_file_info_sqlite: string -> string -> int -> string -> unit =
   "hh_save_file_info_sqlite"
 let save_file_info_sqlite ~hash ~name kind filespec =
-  Hh_logger.log "save_file_info_sqlite\n";
   hh_save_file_info_sqlite hash name (int_of_kind kind) filespec
 
 external hh_save_file_info_init : string -> unit =
