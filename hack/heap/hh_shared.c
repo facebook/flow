@@ -1522,7 +1522,6 @@ CAMLprim value hh_collect(value aggressive_val) {
   if (!should_collect(aggressive)) {
     return Val_unit;
   }
-  printf("Starting shared memory collection\n");
 
   // Step 1: Walk the hashtbl entries, which are the roots of our marking pass.
 
