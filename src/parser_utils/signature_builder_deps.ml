@@ -97,22 +97,18 @@ end
 
 module DepSet = Set.Make (Dep)
 
-type t =
-  | Known of DepSet.t
-  | Unknown of ErrorSet.t
+type t = DepSet.t * ErrorSet.t
 
-let join = function
-  | Known deps1, Known deps2 -> Known (DepSet.union deps1 deps2)
-  | Unknown msgs1, Unknown msgs2 -> Unknown (ErrorSet.union msgs1 msgs2)
-  | unknown, Known _ | Known _, unknown -> unknown
+let join ((deps1, msgs1), (deps2, msgs2)) =
+  DepSet.union deps1 deps2, ErrorSet.union msgs1 msgs2
 
-let bot = Known DepSet.empty
-let top msg = Unknown (ErrorSet.singleton msg)
+let bot = DepSet.empty, ErrorSet.empty
+let top msg = DepSet.empty, ErrorSet.singleton msg
 
 let unreachable = bot
 let todo loc msg = top (Error.TODO (msg, loc))
 
-let unit dep = Known (DepSet.singleton dep)
+let unit dep = DepSet.singleton dep, ErrorSet.empty
 
 let type_ atom = unit Dep.(Local (Sort.Type, atom))
 let value atom = unit Dep.(Local (Sort.Value, atom))
@@ -128,6 +124,5 @@ let global local = unit Dep.(Remote (Global local))
 let reduce_join f deps x =
   join (deps, f x)
 
-let recurse f = function
-  | Known deps -> DepSet.fold (fun dep msgs -> ErrorSet.union (f dep) msgs) deps ErrorSet.empty
-  | Unknown msgs -> msgs
+let recurse f (deps, msgs) =
+  DepSet.fold (fun dep msgs -> ErrorSet.union (f dep) msgs) deps msgs

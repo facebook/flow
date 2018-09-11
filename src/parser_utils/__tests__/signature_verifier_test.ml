@@ -249,6 +249,8 @@ let tests = "signature_verifier" >::: [
      "}";
      "module.exports = C;"]
     ["Expected annotation @ (7, 4) to (7, 5)";
+     "import { D } from './hoisted_requires_helper'";
+     "import { D } from './hoisted_requires_helper'";
      "require('./hoisted_requires_helper')"];
 
   "hoisted_locals" >:: mk_signature_verifier_test
@@ -295,4 +297,15 @@ let tests = "signature_verifier" >::: [
      "module.exports = { x, y };"]
     ["Unexpected toplevel definition that needs hoisting @ (5, 8) to (5, 9)";
      "global value: y"];
+
+  "report_all_errors" >:: mk_signature_verifier_test
+    ["class A {";
+     "  f = (x: number) => x;     // C";
+     "}";
+     "module.exports = {";
+     "  a: A,                     // A";
+     "  b: (x: string) => x,      // B";
+     "};"]
+    ["Expected annotation @ (2, 2) to (2, 23)";
+     "Expected annotation @ (6, 5) to (6, 21)"];
 ]
