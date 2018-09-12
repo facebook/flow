@@ -29,7 +29,11 @@ let text_of_node node =
   let source = Pretty_printer.print ~source_maps:None ~skip_endline layout in
   Source.contents source
 
+let text_of_nodes = ListUtils.to_string "\n" text_of_node
+
 let edit_of_change = function
   | loc, Replace (_, new_node) -> (loc, text_of_node new_node)
+  | loc, Insert new_nodes -> (loc, text_of_nodes new_nodes)
+  | loc, Delete _ -> (loc, "")
 
 let edits_of_changes changes = List.map edit_of_change changes

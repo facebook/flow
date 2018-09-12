@@ -104,7 +104,7 @@ end
 
 let mapper_to_edits (ast_mapper: Flow_ast_mapper.mapper) (ast: (Loc.t, Loc.t) Ast.program) =
   let new_ast = ast_mapper#program ast in
-  let changes = Flow_ast_differ.program ast new_ast in
+  let changes = Flow_ast_differ.program Flow_ast_differ.Trivial ast new_ast in
   Ast_diff_printer.edits_of_changes changes
 
 let get_with_default default key map =

@@ -9,25 +9,21 @@ module Ast = Flow_ast
 
 type 'a change' =
   | Replace of 'a * 'a
-  (* TODO add Insert and Delete as part of the implementation of a real diff algorithm *)
+  | Insert of 'a list
+  | Delete of 'a
 
 type 'a change = (Loc.t * 'a change')
+
+type diff_algorithm = Trivial | Standard
 
 (* Position in the list is necessary to figure out what Loc.t to assign to insertions. *)
 type 'a diff_result = (int (* position *) * 'a change')
 
 (* diffs based on identity *)
 (* return None if no good diff was found (max edit distance exceeded, etc.) *)
-let list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_result list) option =
-  (* For now,
-   * inspect the lists pairwise and record any items which are different as replacements. Give up if
-   * the lists have different lengths.
-   *
-   * TODO implement a real diff algorithm, e.g. http://www.xmailserver.org/diff2.pdf. Note that this
-   * diff algorithm provides a list of deletions and insertions. We will have to do a pass over
-   * these results to convert a deletion and insertion at the same location into a replacement, in
-   * order to allow us to recurse into the nodes and provide a more fine-grained diff.
-   *)
+let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_result list) option =
+ (* inspect the lists pairwise and record any items which are different as replacements. Give up if
+  * the lists have different lengths.*)
   let rec helper i lst1 lst2 =
     match lst1, lst2 with
     | [], [] -> Some []
@@ -44,22 +40,119 @@ let list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_result list) 
   if old_list == new_list then Some []
   else helper 0 old_list new_list
 
-(* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs. *)
-let diff_and_recurse
-    (f: 'a -> 'a -> 'b change list option)
-    (old_list: 'a list)
-    (new_list: 'a list)
-    : 'b change list option =
-  let changes = list_diff old_list new_list in
-  Option.bind changes begin fun changes ->
-    changes
-    |> List.map begin function
-    | _, Replace (x1, x2) ->
-      f x1 x2
-    end
-    |> Option.all
-    |> Option.map ~f:List.concat
-  end
+(* diffs based on http://www.xmailserver.org/diff2.pdf on page 6 *)
+let standard_list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_result list) option =
+  (* Lots of acccesses in this algorithm so arrays are faster *)
+  let (old_arr, new_arr) = Array.of_list old_list, Array.of_list new_list in
+  let (n, m) = Array.length old_arr, Array.length new_arr in
+
+  (* The shortest edit sequence problem is equivalent to finding the longest
+     common subsequence, or equivalently the longest trace *)
+  let longest_trace max_distance : (int * int) list option =
+    (* adds the match points in this snake to the trace and produces the endpoint along with the
+       new trace *)
+    let rec follow_snake x y trace =
+      if x >= n || y >= m then x, y, trace else
+      if old_arr.(x) == new_arr.(y) then follow_snake (x + 1) (y + 1) ((x,y) :: trace) else
+      x, y, trace in
+
+    let rec build_trace dist frontier visited  =
+      if Hashtbl.mem visited (n, m) then () else
+      let new_frontier = Queue.create () in
+      if dist > max_distance then () else
+
+      let follow_trace (x, y) : unit =
+        let trace = Hashtbl.find visited (x,y) in
+        let x_old, y_old, advance_in_old_list = follow_snake (x + 1) y trace in
+        let x_new, y_new, advance_in_new_list = follow_snake x (y + 1) trace in
+        (* if we have already visited this location, there is a shorter path to it, so we don't
+           store this trace *)
+        let () = if Hashtbl.mem visited (x_old, y_old) |> not then
+            let () = Queue.add (x_old, y_old) new_frontier in
+            Hashtbl.add visited (x_old, y_old) advance_in_old_list in
+        if Hashtbl.mem visited (x_new, y_new) |> not then
+            let () = Queue.add (x_new, y_new) new_frontier in
+            Hashtbl.add visited (x_new, y_new) advance_in_new_list in
+
+      Queue.iter follow_trace frontier;
+      build_trace (dist + 1) new_frontier visited in
+
+    (* Keep track of all visited string locations so we don't duplicate work *)
+    let visited = Hashtbl.create (n * m) in
+    let frontier = Queue.create () in
+    (* Start with the basic trace, but follow a starting snake to a non-match point *)
+    let x,y,trace = follow_snake 0 0 [] in
+    Queue.add (x,y) frontier;
+    Hashtbl.add visited (x,y) trace;
+    build_trace 0 frontier visited;
+    Hashtbl.find_opt visited (n,m) in
+
+  (* Produces an edit script from a trace via the procedure described on page 4
+     of the paper. Assumes the trace is ordered by the x coordinate *)
+  let build_script_from_trace (trace : (int * int) list) : 'a diff_result list =
+
+    (* adds inserts at position x_k for values in new_list from
+       y_k + 1 to y_(k + 1) - 1 for k such that y_k + 1 < y_(k + 1) *)
+    let rec add_inserts k script =
+      let trace_len = List.length trace in
+      let trace_array = Array.of_list trace in
+      let gen_inserts first last =
+        let len = last - first in
+        Core_list.sub new_list ~pos:first ~len:len in
+      if k > trace_len - 1 then script else
+      (* The algorithm treats the trace as though (-1,-1) were the (-1)th match point
+         in the list and (n,m) were the (len+1)th *)
+      let first = if k = -1 then 0 else (trace_array.(k) |> snd) + 1 in
+      let last = if k = trace_len - 1 then m else trace_array.(k + 1) |> snd in
+      if first < last then
+        let start = if k = -1 then -1 else trace_array.(k) |> fst in
+        (start, Insert (gen_inserts first last)) :: script
+        |> add_inserts (k + 1)
+      else add_inserts (k + 1) script in
+
+    let change_compare (pos1, chg1) (pos2, chg2) =
+      if pos1 <> pos2 then compare pos1 pos2 else
+      (* Orders the change types alphabetically. This puts same-indexed inserts before deletes *)
+      match chg1, chg2 with
+      | Insert _, Delete _ | Delete _, Replace _ | Insert _, Replace _ -> -1
+      | Delete _, Insert _ | Replace _, Delete _ | Replace _, Insert _ -> 1
+      | _ -> 0 in
+
+    (* Convert like-indexed deletes and inserts into a replacement. This relies
+       on the fact that sorting the script with our change_compare function will order all
+       Insert nodes before Deletes *)
+    let rec convert_to_replace script =
+      match script with
+      | [] | [_] -> script
+      | (i1, Insert (x :: [])) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
+          (i2, Replace (y, x)) :: (convert_to_replace t)
+      | (i1, Insert (x :: rst)) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
+          (* We are only removing the first element of the insertion *)
+          (i2, Replace (y, x)) :: (convert_to_replace ((i2, Insert rst) :: t))
+      | h :: t -> h :: (convert_to_replace t) in
+
+    (* Deletes are added for every element of old_list that does not have a
+       match point with new_list *)
+    let deletes =
+      List.map fst trace
+      |> ISet.of_list
+      |> ISet.diff (ListUtils.range 0 n |> ISet.of_list)
+      |> ISet.elements
+      |> List.map (fun pos -> (pos, Delete (old_arr.(pos)))) in
+
+    deletes
+    |> add_inserts (-1)
+    |> List.sort change_compare
+    |> convert_to_replace in
+
+  let open Option in
+  longest_trace (n + m)
+  >>| List.rev (* trace is built backwards for efficiency *)
+  >>| build_script_from_trace
+
+let list_diff = function
+  | Trivial -> trivial_list_diff
+  | Standard -> standard_list_diff
 
 (* We need a variant here for every node that we want to be able to store a diff for. The more we
  * have here, the more granularly we can diff. *)
@@ -114,367 +207,388 @@ let diff_if_changed_nonopt_fn f opt1 opt2: node change list option =
 *   What would we do if the original tree had no annotation, but the new tree did have one? We
 *   would not know what Loc.t to give to the insertion.
 *)
-
 (* Entry point *)
-let rec program (program1: (Loc.t, Loc.t) Ast.program) (program2: (Loc.t, Loc.t) Ast.program) : node change list =
-  let (program_loc, statements1, _) = program1 in
-  let (_, statements2, _) = program2 in
-  statement_list statements1 statements2
-  |> Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
+let program (algo : diff_algorithm)
+            (program1: (Loc.t, Loc.t) Ast.program)
+            (program2: (Loc.t, Loc.t) Ast.program) : node change list =
 
-and statement_list (stmts1: (Loc.t, Loc.t) Ast.Statement.t list) (stmts2: (Loc.t, Loc.t) Ast.Statement.t list)
-    : node change list option =
-  diff_and_recurse (fun x y -> Some (statement x y)) stmts1 stmts2
+  (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs. *)
+  let diff_and_recurse (type a) (type b)
+      (f: a -> a -> b change list option)
+      (old_list: a list)
+      (new_list: a list)
+      : b change list option =
+    let changes = list_diff algo old_list new_list in
+    Option.bind changes begin fun changes ->
+      changes
+      |> List.map begin function
+      | _, Replace (x1, x2) ->
+        f x1 x2
+      | _ -> failwith "implement insert/delete"
+      end
+      |> Option.all
+      |> Option.map ~f:List.concat
+    end in
 
-and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast.Statement.t)
-    : node change list =
-  let open Ast.Statement in
-  let changes = match stmt1, stmt2 with
-  | (_, VariableDeclaration var1), (_, VariableDeclaration var2) ->
-    variable_declaration var1 var2
-  | (_, FunctionDeclaration func1), (_, FunctionDeclaration func2) ->
-    function_declaration func1 func2
-  | (_, ClassDeclaration class1), (_, ClassDeclaration class2) ->
-    class_ class1 class2
-  | (_, Ast.Statement.If if1), (_, Ast.Statement.If if2) ->
-    if_statement if1 if2
-  | (_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2) ->
-    expression_statement expr1 expr2
-  | (_, Ast.Statement.Block block1), (_, Ast.Statement.Block block2) ->
-    block block1 block2
-  | (_, Ast.Statement.For for1), (_, Ast.Statement.For for2) ->
-    for_statement for1 for2
-  | (_, Ast.Statement.ForIn for_in1), (_, Ast.Statement.ForIn for_in2) ->
-    for_in_statement for_in1 for_in2
-  | (_, Ast.Statement.While while1), (_, Ast.Statement.While while2) ->
-    Some (while_statement while1 while2)
-  | (_, Ast.Statement.ForOf for_of1), (_, Ast.Statement.ForOf for_of2) ->
-    for_of_statement for_of1 for_of2
-  | (_, Ast.Statement.DoWhile do_while1), (_, Ast.Statement.DoWhile do_while2) ->
-    Some (do_while_statement do_while1 do_while2)
-  | (_, Ast.Statement.Switch switch1), (_, Ast.Statement.Switch switch2) ->
-    switch_statement switch1 switch2
-  | _, _ ->
-    None
-  in
-  let old_loc = Ast_utils.loc_of_statement stmt1 in
-  Option.value changes ~default:[(old_loc, Replace (Statement stmt1, Statement stmt2))]
+  let rec program' (program1: (Loc.t, Loc.t) Ast.program) (program2: (Loc.t, Loc.t) Ast.program) : node change list =
+    let (program_loc, statements1, _) = program1 in
+    let (_, statements2, _) = program2 in
+    statement_list statements1 statements2
+    |> Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
 
-and function_declaration func1 func2 = function_ func1 func2
+  and statement_list (stmts1: (Loc.t, Loc.t) Ast.Statement.t list) (stmts2: (Loc.t, Loc.t) Ast.Statement.t list)
+      : node change list option =
+    diff_and_recurse (fun x y -> Some (statement x y)) stmts1 stmts2
 
-and function_ (func1: (Loc.t, Loc.t) Ast.Function.t) (func2: (Loc.t, Loc.t) Ast.Function.t)
-    : node change list option =
-  let open Ast.Function in
-  let {
-    id = id1; params = params1; body = body1; async = async1; generator = generator1;
-    expression = expression1; predicate = predicate1; return = return1; tparams = tparams1;
-  } = func1 in
-  let {
-    id = id2; params = params2; body = body2; async = async2; generator = generator2;
-    expression = expression2; predicate = predicate2; return = return2; tparams = tparams2;
-  } = func2 in
-
-  if id1 != id2 || params1 != params2 || (* body handled below *) async1 != async2
-      || generator1 != generator2 || expression1 != expression2 || predicate1 != predicate2
-      || return1 != return2 || tparams1 != tparams2
-  then
-    None
-  else
-    (* just body changed *)
-    match body1, body2 with
-    | BodyExpression _, _
-    | _, BodyExpression _ ->
-      None
-    | BodyBlock (_, block1), BodyBlock (_, block2) ->
+  and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast.Statement.t)
+      : node change list =
+    let open Ast.Statement in
+    let changes = match stmt1, stmt2 with
+    | (_, VariableDeclaration var1), (_, VariableDeclaration var2) ->
+      variable_declaration var1 var2
+    | (_, FunctionDeclaration func1), (_, FunctionDeclaration func2) ->
+      function_declaration func1 func2
+    | (_, ClassDeclaration class1), (_, ClassDeclaration class2) ->
+      class_ class1 class2
+    | (_, Ast.Statement.If if1), (_, Ast.Statement.If if2) ->
+      if_statement if1 if2
+    | (_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2) ->
+      expression_statement expr1 expr2
+    | (_, Ast.Statement.Block block1), (_, Ast.Statement.Block block2) ->
       block block1 block2
-
-and variable_declarator (decl1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t) (decl2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t)
-    : node change list option =
-  let open Ast.Statement.VariableDeclaration.Declarator in
-  let (_, { id = id1; init = init1 }) = decl1 in
-  let (_, { id = id2; init = init2 }) = decl2 in
-  if id1 != id2 then
-    (* TODO recurse into id after patterns are implemented *)
-    None
-  else
-    diff_if_changed_nonopt_fn expression init1 init2
-
-and variable_declaration (var1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) (var2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
-    : node change list option =
-  let open Ast.Statement.VariableDeclaration in
-  let { declarations = declarations1; kind = kind1 } = var1 in
-  let { declarations = declarations2; kind = kind2 } = var2 in
-  if kind1 != kind2 then
-    None
-  else if declarations1 != declarations2 then
-    diff_and_recurse variable_declarator declarations1 declarations2
-  else
-    Some []
-
-and if_statement (if1: (Loc.t, Loc.t) Ast.Statement.If.t) (if2: (Loc.t, Loc.t) Ast.Statement.If.t)
-    : node change list option =
-  let open Ast.Statement.If in
-  let {
-    test = test1;
-    consequent = consequent1;
-    alternate = alternate1
-  } = if1 in
-  let {
-    test = test2;
-    consequent = consequent2;
-    alternate = alternate2
-  } = if2 in
-
-  let expr_diff = Some (diff_if_changed expression test1 test2) in
-  let cons_diff = Some (diff_if_changed statement consequent1 consequent2) in
-  let alt_diff = match alternate1, alternate2 with
-    | None, None -> Some ([])
-    | Some _, None
-    | None, Some _ -> None
-    | Some a1, Some a2 -> Some (diff_if_changed statement a1 a2) in
-  let result_list = [expr_diff; cons_diff; alt_diff] in
-
-  Option.all result_list |> Option.map ~f:List.concat
-
-and class_ (class1: (Loc.t, Loc.t) Ast.Class.t) (class2: (Loc.t, Loc.t) Ast.Class.t) =
-  let open Ast.Class in
-  let {
-    id=id1; body=body1; tparams=tparams1; extends=extends1;
-    implements=implements1; classDecorators=classDecorators1;
-  } = class1 in
-  let {
-    id=id2; body=body2; tparams=tparams2; extends=extends2;
-    implements=implements2; classDecorators=classDecorators2;
-  } = class2 in
-  if id1 != id2 || (* body handled below *) tparams1 != tparams2 || extends1 != extends2 ||
-      implements1 != implements2 || classDecorators1 != classDecorators2
-  then
-    None
-  else
-    (* just body changed *)
-    class_body body1 body2
-
-and class_body (class_body1: (Loc.t, Loc.t) Ast.Class.Body.t) (class_body2: (Loc.t, Loc.t) Ast.Class.Body.t)
-    : node change list option =
-  let open Ast.Class.Body in
-  let _, { body=body1 } = class_body1 in
-  let _, { body=body2 } = class_body2 in
-  diff_and_recurse class_element body1 body2
-
-and class_element (elem1: (Loc.t, Loc.t) Ast.Class.Body.element) (elem2: (Loc.t, Loc.t) Ast.Class.Body.element)
-    : node change list option =
-  let open Ast.Class.Body in
-  match elem1, elem2 with
-  | Method (_, m1), Method (_, m2) ->
-    class_method m1 m2
-  | _ -> None (* TODO *)
-
-and class_method
-    (m1: (Loc.t, Loc.t) Ast.Class.Method.t')
-    (m2: (Loc.t, Loc.t) Ast.Class.Method.t')
-    : node change list option =
-  let open Ast.Class.Method in
-  let { kind = kind1; key = key1; value = (_loc, value1); static = static1; decorators = decorators1 } =
-    m1
-  in
-  let { kind = kind2; key = key2; value = (_loc, value2); static = static2; decorators = decorators2 } =
-    m2
-  in
-  if kind1 != kind2 || key1 != key2 || (* value handled below *) static1 != static2 ||
-      decorators1 != decorators2
-  then
-    None
-  else
-    function_ value1 value2
-
-and block (block1: (Loc.t, Loc.t) Ast.Statement.Block.t) (block2: (Loc.t, Loc.t) Ast.Statement.Block.t)
-    : node change list option =
-  let open Ast.Statement.Block in
-  let { body = body1 } = block1 in
-  let { body = body2 } = block2 in
-  statement_list body1 body2
-
-and expression_statement
-    (stmt1: (Loc.t, Loc.t) Ast.Statement.Expression.t)
-    (stmt2: (Loc.t, Loc.t) Ast.Statement.Expression.t)
-    : node change list option =
-  let open Ast.Statement.Expression in
-  let { expression = expr1; directive = dir1 } = stmt1 in
-  let { expression = expr2; directive = dir2 } = stmt2 in
-  if dir1 != dir2 then
-    None
-  else
-    Some (expression expr1 expr2)
-
-and expression (expr1: (Loc.t, Loc.t) Ast.Expression.t) (expr2: (Loc.t, Loc.t) Ast.Expression.t)
-    : node change list =
-  let changes =
-    (* The open is here to avoid ambiguity with the use of the local `Expression` constructor
-     * below *)
-    let open Ast.Expression in
-    match expr1, expr2 with
-    | (_, Binary b1), (_, Binary b2) ->
-      binary b1 b2
-    | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
-      Some (identifier id1 id2)
-    | (_, New new1), (_, New new2) ->
-      new_ new1 new2
-    | (_, Call call1), (_, Call call2) ->
-      call_ call1 call2
-    | (_, Function f1), (_, Function f2) ->
-      function_ f1 f2
+    | (_, Ast.Statement.For for1), (_, Ast.Statement.For for2) ->
+      for_statement for1 for2
+    | (_, Ast.Statement.ForIn for_in1), (_, Ast.Statement.ForIn for_in2) ->
+      for_in_statement for_in1 for_in2
+    | (_, Ast.Statement.While while1), (_, Ast.Statement.While while2) ->
+      Some (while_statement while1 while2)
+    | (_, Ast.Statement.ForOf for_of1), (_, Ast.Statement.ForOf for_of2) ->
+      for_of_statement for_of1 for_of2
+    | (_, Ast.Statement.DoWhile do_while1), (_, Ast.Statement.DoWhile do_while2) ->
+      Some (do_while_statement do_while1 do_while2)
+    | (_, Ast.Statement.Switch switch1), (_, Ast.Statement.Switch switch2) ->
+      switch_statement switch1 switch2
     | _, _ ->
       None
-  in
-  let old_loc = Ast_utils.loc_of_expression expr1 in
-  Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+    in
+    let old_loc = Ast_utils.loc_of_statement stmt1 in
+    Option.value changes ~default:[(old_loc, Replace (Statement stmt1, Statement stmt2))]
 
-and binary (b1: (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2: (Loc.t, Loc.t) Ast.Expression.Binary.t): node change list option =
-  let open Ast.Expression.Binary in
-  let { operator = op1; left = left1; right = right1 } = b1 in
-  let { operator = op2; left = left2; right = right2 } = b2 in
-  if op1 != op2 then
-    None
-  else
-    Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)
+  and function_declaration func1 func2 = function_ func1 func2
 
-and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node change list =
-  let (old_loc, _) = id1 in
-  [(old_loc, Replace (Identifier id1, Identifier id2))]
+  and function_ (func1: (Loc.t, Loc.t) Ast.Function.t) (func2: (Loc.t, Loc.t) Ast.Function.t)
+      : node change list option =
+    let open Ast.Function in
+    let {
+      id = id1; params = params1; body = body1; async = async1; generator = generator1;
+      expression = expression1; predicate = predicate1; return = return1; tparams = tparams1;
+    } = func1 in
+    let {
+      id = id2; params = params2; body = body2; async = async2; generator = generator2;
+      expression = expression2; predicate = predicate2; return = return2; tparams = tparams2;
+    } = func2 in
 
-and new_ (new1: (Loc.t, Loc.t) Ast.Expression.New.t) (new2: (Loc.t, Loc.t) Ast.Expression.New.t): node change list option =
-  let open Ast.Expression.New in
-  let { callee = callee1; targs = targs1; arguments = arguments1 } = new1 in
-  let { callee = callee2; targs = targs2; arguments = arguments2 } = new2 in
-  if targs1 != targs2 || arguments1 != arguments2 then
-    (* TODO(nmote) recurse into targs and arguments *)
-    None
-  else
-    Some (diff_if_changed expression callee1 callee2)
+    if id1 != id2 || params1 != params2 || (* body handled below *) async1 != async2
+        || generator1 != generator2 || expression1 != expression2 || predicate1 != predicate2
+        || return1 != return2 || tparams1 != tparams2
+    then
+      None
+    else
+      (* just body changed *)
+      match body1, body2 with
+      | BodyExpression _, _
+      | _, BodyExpression _ ->
+        None
+      | BodyBlock (_, block1), BodyBlock (_, block2) ->
+        block block1 block2
 
-and call_ (call1: (Loc.t, Loc.t) Ast.Expression.Call.t) (call2: (Loc.t, Loc.t) Ast.Expression.Call.t): node change list option =
-  let open Ast.Expression.Call in
-  let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
-  let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
-  if targs1 != targs2 || arguments1 != arguments2 then
-    (* TODO(nmote) recurse into targs and arguments *)
-    None
-  else
-    Some (diff_if_changed expression callee1 callee2)
+  and variable_declarator (decl1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t) (decl2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t)
+      : node change list option =
+    let open Ast.Statement.VariableDeclaration.Declarator in
+    let (_, { id = id1; init = init1 }) = decl1 in
+    let (_, { id = id2; init = init2 }) = decl2 in
+    if id1 != id2 then
+      (* TODO recurse into id after patterns are implemented *)
+      None
+    else
+      diff_if_changed_nonopt_fn expression init1 init2
 
-and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
-                  (stmt2: (Loc.t, Loc.t) Ast.Statement.For.t)
-    : node change list option =
-  let open Ast.Statement.For in
-  let { init = init1; test = test1; update = update1; body = body1 } = stmt1 in
-  let { init = init2; test = test2; update = update2; body = body2 } = stmt2 in
-  let init = diff_if_changed_opt for_statement_init init1 init2 in
-  let test = diff_if_changed_nonopt_fn expression test1 test2 in
-  let update = diff_if_changed_nonopt_fn expression update1 update2 in
-  let body = Some (diff_if_changed statement body1 body2) in
-  Option.all [init; test; update; body] |> Option.map ~f:List.concat
+  and variable_declaration (var1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) (var2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
+      : node change list option =
+    let open Ast.Statement.VariableDeclaration in
+    let { declarations = declarations1; kind = kind1 } = var1 in
+    let { declarations = declarations2; kind = kind2 } = var2 in
+    if kind1 != kind2 then
+      None
+    else if declarations1 != declarations2 then
+      diff_and_recurse variable_declarator declarations1 declarations2
+    else
+      Some []
 
-and for_statement_init(init1: (Loc.t, Loc.t) Ast.Statement.For.init)
-                      (init2: (Loc.t, Loc.t) Ast.Statement.For.init)
-    : node change list option =
-  let open Ast.Statement.For in
-  match (init1, init2) with
-  | (InitDeclaration(_, decl1), InitDeclaration(_, decl2)) ->
-    variable_declaration decl1 decl2
-  | (InitExpression expr1, InitExpression expr2) ->
-    Some (diff_if_changed expression expr1 expr2)
-  | (InitDeclaration _, InitExpression _)
-  | (InitExpression _, InitDeclaration _) ->
-    None
+  and if_statement (if1: (Loc.t, Loc.t) Ast.Statement.If.t) (if2: (Loc.t, Loc.t) Ast.Statement.If.t)
+      : node change list option =
+    let open Ast.Statement.If in
+    let {
+      test = test1;
+      consequent = consequent1;
+      alternate = alternate1
+    } = if1 in
+    let {
+      test = test2;
+      consequent = consequent2;
+      alternate = alternate2
+    } = if2 in
 
-and for_in_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.ForIn.t)
-                     (stmt2: (Loc.t, Loc.t) Ast.Statement.ForIn.t)
-     : node change list option =
-  let open Ast.Statement.ForIn in
-  let { left = left1; right = right1; body = body1; each = each1 } = stmt1 in
-  let { left = left2; right = right2; body = body2; each = each2 } = stmt2 in
-  let left = if left1 == left2 then Some [] else for_in_statement_lhs left1 left2 in
-  let body = Some (diff_if_changed statement body1 body2) in
-  let right = Some (diff_if_changed expression right1 right2) in
-  let each = if each1 != each2 then None else Some [] in
-  Option.all [left; right; body; each] |> Option.map ~f:List.concat
+    let expr_diff = Some (diff_if_changed expression test1 test2) in
+    let cons_diff = Some (diff_if_changed statement consequent1 consequent2) in
+    let alt_diff = match alternate1, alternate2 with
+      | None, None -> Some ([])
+      | Some _, None
+      | None, Some _ -> None
+      | Some a1, Some a2 -> Some (diff_if_changed statement a1 a2) in
+    let result_list = [expr_diff; cons_diff; alt_diff] in
+    Option.all result_list |> Option.map ~f:List.concat
 
-and for_in_statement_lhs (left1: (Loc.t, Loc.t) Ast.Statement.ForIn.left)
-                          (left2: (Loc.t, Loc.t) Ast.Statement.ForIn.left)
-    : node change list option =
-  let open Ast.Statement.ForIn in
-  match (left1, left2) with
-  | (LeftDeclaration(_, decl1), LeftDeclaration(_, decl2)) ->
-    variable_declaration decl1 decl2
-  | (LeftPattern _, LeftPattern _) ->
-    (* TODO(yeongwoo) recurse into patterns after they are implemented *)
-    None
-  | (LeftDeclaration _, LeftPattern _)
-  | (LeftPattern _, LeftDeclaration _) ->
-    None
+  and class_ (class1: (Loc.t, Loc.t) Ast.Class.t) (class2: (Loc.t, Loc.t) Ast.Class.t) =
+    let open Ast.Class in
+    let {
+      id=id1; body=body1; tparams=tparams1; extends=extends1;
+      implements=implements1; classDecorators=classDecorators1;
+    } = class1 in
+    let {
+      id=id2; body=body2; tparams=tparams2; extends=extends2;
+      implements=implements2; classDecorators=classDecorators2;
+    } = class2 in
+    if id1 != id2 || (* body handled below *) tparams1 != tparams2 || extends1 != extends2 ||
+        implements1 != implements2 || classDecorators1 != classDecorators2
+    then
+      None
+    else
+      (* just body changed *)
+      class_body body1 body2
 
-and while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.While.t)
-                    (stmt2: (Loc.t, Loc.t) Ast.Statement.While.t)
-    : node change list =
-  let open Ast.Statement.While in
-  let { test = test1; body = body1 } = stmt1 in
-  let { test = test2; body = body2 } = stmt2 in
-  let test = diff_if_changed expression test1 test2 in
-  let body = diff_if_changed statement body1 body2 in
-  test @ body
+  and class_body (class_body1: (Loc.t, Loc.t) Ast.Class.Body.t) (class_body2: (Loc.t, Loc.t) Ast.Class.Body.t)
+      : node change list option =
+    let open Ast.Class.Body in
+    let _, { body=body1 } = class_body1 in
+    let _, { body=body2 } = class_body2 in
+    diff_and_recurse class_element body1 body2
 
-and for_of_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.ForOf.t)
-                     (stmt2: (Loc.t, Loc.t) Ast.Statement.ForOf.t)
-    : node change list option =
-  let open Ast.Statement.ForOf in
-  let { left = left1; right = right1; body = body1; async = async1 } = stmt1 in
-  let { left = left2; right = right2; body = body2; async = async2 } = stmt2 in
-  let left = if left1 == left2 then Some [] else for_of_statement_lhs left1 left2 in
-  let body = Some (diff_if_changed statement body1 body2) in
-  let right = Some (diff_if_changed expression right1 right2) in
-  let async = if async1 != async2 then None else Some [] in
-  Option.all [left; right; body; async] |> Option.map ~f:List.concat
+  and class_element (elem1: (Loc.t, Loc.t) Ast.Class.Body.element) (elem2: (Loc.t, Loc.t) Ast.Class.Body.element)
+      : node change list option =
+    let open Ast.Class.Body in
+    match elem1, elem2 with
+    | Method (_, m1), Method (_, m2) ->
+      class_method m1 m2
+    | _ -> None (* TODO *)
 
-and for_of_statement_lhs (left1: (Loc.t, Loc.t) Ast.Statement.ForOf.left)
-                          (left2: (Loc.t, Loc.t) Ast.Statement.ForOf.left)
-    : node change list option =
-  let open Ast.Statement.ForOf in
-  match (left1, left2) with
-  | (LeftDeclaration(_, decl1), LeftDeclaration(_, decl2)) ->
-    variable_declaration decl1 decl2
-  | (LeftPattern _, LeftPattern _) ->
-    (* TODO(jaday) recurse into patterns after they are implemented *)
-    None
-  | (LeftDeclaration _, LeftPattern _)
-  | (LeftPattern _, LeftDeclaration _) ->
-    None
+  and class_method
+      (m1: (Loc.t, Loc.t) Ast.Class.Method.t')
+      (m2: (Loc.t, Loc.t) Ast.Class.Method.t')
+      : node change list option =
+    let open Ast.Class.Method in
+    let { kind = kind1; key = key1; value = (_loc, value1); static = static1; decorators = decorators1 } =
+      m1
+    in
+    let { kind = kind2; key = key2; value = (_loc, value2); static = static2; decorators = decorators2 } =
+      m2
+    in
+    if kind1 != kind2 || key1 != key2 || (* value handled below *) static1 != static2 ||
+        decorators1 != decorators2
+    then
+      None
+    else
+      function_ value1 value2
 
-and do_while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
-                       (stmt2: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
-    : node change list =
-  let open Ast.Statement.DoWhile in
-  let { body = body1; test = test1 } = stmt1 in
-  let { body = body2; test = test2 } = stmt2 in
-  let body = diff_if_changed statement body1 body2 in
-  let test = diff_if_changed expression test1 test2 in
-  List.concat [body; test]
+  and block (block1: (Loc.t, Loc.t) Ast.Statement.Block.t) (block2: (Loc.t, Loc.t) Ast.Statement.Block.t)
+      : node change list option =
+    let open Ast.Statement.Block in
+    let { body = body1 } = block1 in
+    let { body = body2 } = block2 in
+    statement_list body1 body2
 
-and switch_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Switch.t)
-                     (stmt2: (Loc.t, Loc.t) Ast.Statement.Switch.t)
-    : node change list option =
-  let open Ast.Statement.Switch in
-  let { discriminant = discriminant1; cases = cases1} = stmt1 in
-  let { discriminant = discriminant2; cases = cases2} = stmt2 in
-  let discriminant = Some (diff_if_changed expression discriminant1 discriminant2) in
-  let cases = diff_and_recurse switch_case cases1 cases2 in
-  Option.all [discriminant; cases] |> Option.map ~f:List.concat
+  and expression_statement
+      (stmt1: (Loc.t, Loc.t) Ast.Statement.Expression.t)
+      (stmt2: (Loc.t, Loc.t) Ast.Statement.Expression.t)
+      : node change list option =
+    let open Ast.Statement.Expression in
+    let { expression = expr1; directive = dir1 } = stmt1 in
+    let { expression = expr2; directive = dir2 } = stmt2 in
+    if dir1 != dir2 then
+      None
+    else
+      Some (expression expr1 expr2)
 
-and switch_case ((_, s1): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
-                ((_, s2): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
-    : node change list option =
-  let open Ast.Statement.Switch.Case in
-  let { test = test1; consequent = consequent1} = s1 in
-  let { test = test2; consequent = consequent2} = s2 in
-  let test = diff_if_changed_nonopt_fn expression test1 test2 in
-  let consequent = statement_list consequent1 consequent2 in
-  Option.all [test; consequent] |> Option.map ~f:List.concat
+  and expression (expr1: (Loc.t, Loc.t) Ast.Expression.t) (expr2: (Loc.t, Loc.t) Ast.Expression.t)
+      : node change list =
+    let changes =
+      (* The open is here to avoid ambiguity with the use of the local `Expression` constructor
+       * below *)
+      let open Ast.Expression in
+      match expr1, expr2 with
+      | (_, Binary b1), (_, Binary b2) ->
+        binary b1 b2
+      | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
+        Some (identifier id1 id2)
+      | (_, New new1), (_, New new2) ->
+        new_ new1 new2
+      | (_, Call call1), (_, Call call2) ->
+        call_ call1 call2
+      | (_, Function f1), (_, Function f2) ->
+        function_ f1 f2
+      | _, _ ->
+        None
+    in
+    let old_loc = Ast_utils.loc_of_expression expr1 in
+    Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+
+  and binary (b1: (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2: (Loc.t, Loc.t) Ast.Expression.Binary.t): node change list option =
+    let open Ast.Expression.Binary in
+    let { operator = op1; left = left1; right = right1 } = b1 in
+    let { operator = op2; left = left2; right = right2 } = b2 in
+    if op1 != op2 then
+      None
+    else
+      Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)
+
+  and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node change list =
+    let (old_loc, _) = id1 in
+    [(old_loc, Replace (Identifier id1, Identifier id2))]
+
+  and new_ (new1: (Loc.t, Loc.t) Ast.Expression.New.t) (new2: (Loc.t, Loc.t) Ast.Expression.New.t): node change list option =
+    let open Ast.Expression.New in
+    let { callee = callee1; targs = targs1; arguments = arguments1 } = new1 in
+    let { callee = callee2; targs = targs2; arguments = arguments2 } = new2 in
+    if targs1 != targs2 || arguments1 != arguments2 then
+      (* TODO(nmote) recurse into targs and arguments *)
+      None
+    else
+      Some (diff_if_changed expression callee1 callee2)
+
+  and call_ (call1: (Loc.t, Loc.t) Ast.Expression.Call.t) (call2: (Loc.t, Loc.t) Ast.Expression.Call.t): node change list option =
+    let open Ast.Expression.Call in
+    let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
+    let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
+    if targs1 != targs2 || arguments1 != arguments2 then
+      (* TODO(nmote) recurse into targs and arguments *)
+      None
+    else
+      Some (diff_if_changed expression callee1 callee2)
+
+  and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
+                    (stmt2: (Loc.t, Loc.t) Ast.Statement.For.t)
+      : node change list option =
+    let open Ast.Statement.For in
+    let { init = init1; test = test1; update = update1; body = body1 } = stmt1 in
+    let { init = init2; test = test2; update = update2; body = body2 } = stmt2 in
+    let init = diff_if_changed_opt for_statement_init init1 init2 in
+    let test = diff_if_changed_nonopt_fn expression test1 test2 in
+    let update = diff_if_changed_nonopt_fn expression update1 update2 in
+    let body = Some (diff_if_changed statement body1 body2) in
+    Option.all [init; test; update; body] |> Option.map ~f:List.concat
+
+  and for_statement_init(init1: (Loc.t, Loc.t) Ast.Statement.For.init)
+                        (init2: (Loc.t, Loc.t) Ast.Statement.For.init)
+      : node change list option =
+    let open Ast.Statement.For in
+    match (init1, init2) with
+    | (InitDeclaration(_, decl1), InitDeclaration(_, decl2)) ->
+      variable_declaration decl1 decl2
+    | (InitExpression expr1, InitExpression expr2) ->
+      Some (diff_if_changed expression expr1 expr2)
+    | (InitDeclaration _, InitExpression _)
+    | (InitExpression _, InitDeclaration _) ->
+      None
+
+  and for_in_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.ForIn.t)
+                       (stmt2: (Loc.t, Loc.t) Ast.Statement.ForIn.t)
+       : node change list option =
+    let open Ast.Statement.ForIn in
+    let { left = left1; right = right1; body = body1; each = each1 } = stmt1 in
+    let { left = left2; right = right2; body = body2; each = each2 } = stmt2 in
+    let left = if left1 == left2 then Some [] else for_in_statement_lhs left1 left2 in
+    let body = Some (diff_if_changed statement body1 body2) in
+    let right = Some (diff_if_changed expression right1 right2) in
+    let each = if each1 != each2 then None else Some [] in
+    Option.all [left; right; body; each] |> Option.map ~f:List.concat
+
+  and for_in_statement_lhs (left1: (Loc.t, Loc.t) Ast.Statement.ForIn.left)
+                            (left2: (Loc.t, Loc.t) Ast.Statement.ForIn.left)
+      : node change list option =
+    let open Ast.Statement.ForIn in
+    match (left1, left2) with
+    | (LeftDeclaration(_, decl1), LeftDeclaration(_, decl2)) ->
+      variable_declaration decl1 decl2
+    | (LeftPattern _, LeftPattern _) ->
+      (* TODO(yeongwoo) recurse into patterns after they are implemented *)
+      None
+    | (LeftDeclaration _, LeftPattern _)
+    | (LeftPattern _, LeftDeclaration _) ->
+      None
+
+  and while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.While.t)
+                      (stmt2: (Loc.t, Loc.t) Ast.Statement.While.t)
+      : node change list =
+    let open Ast.Statement.While in
+    let { test = test1; body = body1 } = stmt1 in
+    let { test = test2; body = body2 } = stmt2 in
+    let test = diff_if_changed expression test1 test2 in
+    let body = diff_if_changed statement body1 body2 in
+    test @ body
+
+  and for_of_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.ForOf.t)
+                       (stmt2: (Loc.t, Loc.t) Ast.Statement.ForOf.t)
+      : node change list option =
+    let open Ast.Statement.ForOf in
+    let { left = left1; right = right1; body = body1; async = async1 } = stmt1 in
+    let { left = left2; right = right2; body = body2; async = async2 } = stmt2 in
+    let left = if left1 == left2 then Some [] else for_of_statement_lhs left1 left2 in
+    let body = Some (diff_if_changed statement body1 body2) in
+    let right = Some (diff_if_changed expression right1 right2) in
+    let async = if async1 != async2 then None else Some [] in
+    Option.all [left; right; body; async] |> Option.map ~f:List.concat
+
+  and for_of_statement_lhs (left1: (Loc.t, Loc.t) Ast.Statement.ForOf.left)
+                            (left2: (Loc.t, Loc.t) Ast.Statement.ForOf.left)
+      : node change list option =
+    let open Ast.Statement.ForOf in
+    match (left1, left2) with
+    | (LeftDeclaration(_, decl1), LeftDeclaration(_, decl2)) ->
+      variable_declaration decl1 decl2
+    | (LeftPattern _, LeftPattern _) ->
+      (* TODO(jaday) recurse into patterns after they are implemented *)
+      None
+    | (LeftDeclaration _, LeftPattern _)
+    | (LeftPattern _, LeftDeclaration _) ->
+      None
+
+  and do_while_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
+                         (stmt2: (Loc.t, Loc.t) Ast.Statement.DoWhile.t)
+      : node change list =
+    let open Ast.Statement.DoWhile in
+    let { body = body1; test = test1 } = stmt1 in
+    let { body = body2; test = test2 } = stmt2 in
+    let body = diff_if_changed statement body1 body2 in
+    let test = diff_if_changed expression test1 test2 in
+    List.concat [body; test]
+
+  and switch_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Switch.t)
+                       (stmt2: (Loc.t, Loc.t) Ast.Statement.Switch.t)
+      : node change list option =
+    let open Ast.Statement.Switch in
+    let { discriminant = discriminant1; cases = cases1} = stmt1 in
+    let { discriminant = discriminant2; cases = cases2} = stmt2 in
+    let discriminant = Some (diff_if_changed expression discriminant1 discriminant2) in
+    let cases = diff_and_recurse switch_case cases1 cases2 in
+    Option.all [discriminant; cases] |> Option.map ~f:List.concat
+
+  and switch_case ((_, s1): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
+                  ((_, s2): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
+      : node change list option =
+    let open Ast.Statement.Switch.Case in
+    let { test = test1; consequent = consequent1} = s1 in
+    let { test = test2; consequent = consequent2} = s2 in
+    let test = diff_if_changed_nonopt_fn expression test1 test2 in
+    let consequent = statement_list consequent1 consequent2 in
+    Option.all [test; consequent] |> Option.map ~f:List.concat in
+  program' program1 program2
