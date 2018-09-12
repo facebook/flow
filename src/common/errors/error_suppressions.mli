@@ -6,11 +6,15 @@
  *)
 
 type t
-type t_map = t Utils_js.FilenameMap.t
+type t_map
+
+val empty_map : t_map
 
 (* Raises if the given loc has `source` set to `None` *)
 val add_to_map : Loc.t -> t_map -> t_map
 val add_lint_suppressions_to_map : Utils_js.LocSet.t -> t_map -> t_map
+
+val remove_from_map : File_key.t -> t_map -> t_map
 
 (* Union the two given maps. If they both contain values for a given key, union the values. *)
 val union_maps : t_map -> t_map -> t_map

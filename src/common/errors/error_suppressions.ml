@@ -85,6 +85,8 @@ end
 type t = FileSuppressions.t
 type t_map = t FilenameMap.t
 
+let empty_map = FilenameMap.empty
+
 let file_of_loc_unsafe loc =
   match loc.Loc.source with
   | Some x -> x
@@ -106,6 +108,8 @@ let add_lint_suppressions_to_map lint_suppressions map =
     let file_suppressions = FileSuppressions.add_lint_suppression loc file_suppressions in
     FilenameMap.add file file_suppressions acc
   end lint_suppressions map
+
+let remove_from_map = FilenameMap.remove
 
 (* raises if `loc` has no filename or `severity_cover` contains no entry for `loc`'s filename *)
 let lint_settings_at_loc loc severity_cover =

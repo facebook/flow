@@ -610,7 +610,7 @@ let flow_check (code : string) : string option =
           ~get_ast_unsafe:(fun _ -> input_ast)
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
           (Nel.one filename) reqs [] master_sig_cx in
-      let suppressions = Utils_js.FilenameMap.empty in
+      let suppressions = Error_suppressions.empty_map in
       let severity_cover = Utils_js.FilenameMap.singleton filename (ExactCover.default_file_cover filename) in
       let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
           suppressions severity_cover (Context.errors final_cx)

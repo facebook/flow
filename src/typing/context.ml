@@ -89,7 +89,7 @@ type sig_t = {
 
   mutable errors: Errors.ErrorSet.t;
 
-  mutable error_suppressions: Error_suppressions.t Utils_js.FilenameMap.t;
+  mutable error_suppressions: Error_suppressions.t_map;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
 
   (* map from exists proposition locations to the types of values running through them *)
@@ -186,7 +186,7 @@ let make_sig () = {
   module_map = SMap.empty;
   type_asserts = LocMap.empty;
   errors = Errors.ErrorSet.empty;
-  error_suppressions = Utils_js.FilenameMap.empty;
+  error_suppressions = Error_suppressions.empty_map;
   severity_cover = Utils_js.FilenameMap.empty;
   exists_checks = LocMap.empty;
   exists_excuses = LocMap.empty;
@@ -364,7 +364,7 @@ let add_type_assert cx k v =
 let remove_all_errors cx =
   cx.sig_cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
-  cx.sig_cx.error_suppressions <- Utils_js.FilenameMap.empty
+  cx.sig_cx.error_suppressions <- Error_suppressions.empty_map
 let remove_all_lint_severities cx =
   cx.sig_cx.severity_cover <- Utils_js.FilenameMap.empty
 let remove_tvar cx id =

@@ -203,7 +203,7 @@ let merge_strict_component ~worker_mutator ~options merged_acc component =
   )
   else
     let errors = Errors.ErrorSet.empty in
-    let suppressions = FilenameMap.empty in
+    let suppressions = Error_suppressions.empty_map in
     let severity_cover =
       Utils_js.FilenameMap.singleton
         file

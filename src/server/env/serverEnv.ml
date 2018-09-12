@@ -26,7 +26,7 @@ type errors = {
      dependencies can be cleared during merge. *)
   merge_errors: Errors.ErrorSet.t Utils_js.FilenameMap.t;
   (* error suppressions in the code *)
-  suppressions: Error_suppressions.t Utils_js.FilenameMap.t;
+  suppressions: Error_suppressions.t_map;
   (* lint severity settings in the code *)
   severity_cover_set: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
 }
