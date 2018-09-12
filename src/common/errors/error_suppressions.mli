@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t
 type t_map
 
 val empty_map : t_map

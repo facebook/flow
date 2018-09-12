@@ -82,8 +82,7 @@ end = struct
     |> List.fold_left LocSet.union lint_suppressions
 end
 
-type t = FileSuppressions.t
-type t_map = t FilenameMap.t
+type t_map = FileSuppressions.t FilenameMap.t
 
 let empty_map = FilenameMap.empty
 
