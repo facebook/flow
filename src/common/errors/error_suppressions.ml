@@ -82,25 +82,25 @@ end = struct
     |> List.fold_left LocSet.union lint_suppressions
 end
 
-type t_map = FileSuppressions.t FilenameMap.t
+type t = FileSuppressions.t FilenameMap.t
 
-let empty_map = FilenameMap.empty
+let empty = FilenameMap.empty
 
 let file_of_loc_unsafe loc =
   match loc.Loc.source with
   | Some x -> x
   | None -> raise (No_source (Loc.to_string loc))
 
-let add_to_map loc map =
+let add loc map =
   let file = file_of_loc_unsafe loc in
   let suppressions = FileSuppressions.empty |> FileSuppressions.add loc in
   FilenameMap.add ~combine:FileSuppressions.union file suppressions map
 
-let union_maps =
+let union =
   let combine _key x y = Some (FileSuppressions.union x y) in
   fun a b -> Utils_js.FilenameMap.union ~combine a b
 
-let add_lint_suppressions_to_map lint_suppressions map =
+let add_lint_suppressions lint_suppressions map =
   LocSet.fold begin fun loc acc ->
     let file = file_of_loc_unsafe loc in
     let file_suppressions = FilenameMap.get file acc |> Option.value ~default:FileSuppressions.empty in
@@ -108,7 +108,7 @@ let add_lint_suppressions_to_map lint_suppressions map =
     FilenameMap.add file file_suppressions acc
   end lint_suppressions map
 
-let remove_from_map = FilenameMap.remove
+let remove = FilenameMap.remove
 
 (* raises if `loc` has no filename or `severity_cover` contains no entry for `loc`'s filename *)
 let lint_settings_at_loc loc severity_cover =
@@ -141,14 +141,14 @@ let update_file_suppressions f loc suppressions_map =
     let file_suppressions = f file_suppressions in
     FilenameMap.add file file_suppressions suppressions_map
 
-let remove_suppression_from_map loc (suppressions_map: t_map) =
+let remove_suppression_from_map loc (suppressions_map: t) =
   update_file_suppressions (FileSuppressions.remove loc) loc suppressions_map
 
-let remove_lint_suppression_from_map loc (suppressions_map: t_map) =
+let remove_lint_suppression_from_map loc (suppressions_map: t) =
   update_file_suppressions (FileSuppressions.remove_lint_suppression loc) loc suppressions_map
 
 let check_loc lint_kind suppressions severity_cover
-  ((result, used, (unused: t_map), is_primary_loc) as acc) loc =
+  ((result, used, (unused: t), is_primary_loc) as acc) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   match suppression_at_loc loc suppressions with
@@ -174,7 +174,7 @@ let check_loc lint_kind suppressions severity_cover
     else result, used, unused, false
 
 (* Checks if any of the given locations should be suppressed. *)
-let check_locs locs lint_kind (suppressions: t_map) severity_cover (unused: t_map) =
+let check_locs locs lint_kind (suppressions: t) severity_cover (unused: t) =
   (* We need to check every location in order to figure out which suppressions
      are really unused...that's why we don't shortcircuit as soon as we find a
      matching error suppression.
@@ -185,7 +185,7 @@ let check_locs locs lint_kind (suppressions: t_map) severity_cover (unused: t_ma
     (Err, LocSet.empty, unused, true)
     locs
 
-let check err (suppressions: t_map) severity_cover (unused: t_map) =
+let check err (suppressions: t) severity_cover (unused: t) =
   let locs =
     Errors.locs_of_error err
     (* It is possible for errors to contain locations without a source, but suppressions always
@@ -228,7 +228,7 @@ let check err (suppressions: t_map) severity_cover (unused: t_map) =
 
 (* Gets the locations of the suppression comments that are yet unused *)
 
-let all_locs_of_map map =
+let all_locs map =
   map
   |> FilenameMap.values
   |> List.map FileSuppressions.all_locs

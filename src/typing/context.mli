@@ -69,7 +69,7 @@ val enable_const_params: t -> bool
 val enforce_strict_call_arity: t -> bool
 val envs: t -> env IMap.t
 val errors: t -> Errors.ErrorSet.t
-val error_suppressions: t -> Error_suppressions.t_map
+val error_suppressions: t -> Error_suppressions.t
 val esproposal_class_static_fields: t -> Options.esproposal_feature_mode
 val esproposal_class_instance_fields: t -> Options.esproposal_feature_mode
 val esproposal_decorators: t -> Options.esproposal_feature_mode

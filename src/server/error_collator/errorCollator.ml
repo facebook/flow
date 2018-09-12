@@ -26,7 +26,7 @@ let regenerate =
   let open Error_suppressions in
   let add_unused_suppression_warnings checked unused warnings =
     (* For each unused suppression, create an warning *)
-    Error_suppressions.all_locs_of_map unused
+    Error_suppressions.all_locs unused
     |> List.fold_left
       (fun warnings loc ->
         let source_file = match Loc.source loc with Some x -> x | None -> File_key.SourceFile "-" in

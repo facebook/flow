@@ -55,11 +55,11 @@ val merge_strict:
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   intermediate_result_callback:
     ((Errors.ErrorSet.t *
-      Error_suppressions.t_map *
+      Error_suppressions.t *
       ExactCover.lint_severity_cover Utils_js.FilenameMap.t) merge_job_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: MultiWorkerLwt.worker list option ->
   FilenameSet.t FilenameMap.t ->
   (File_key.t Nel.t) FilenameMap.t ->
   bool FilenameMap.t ->
-  (Errors.ErrorSet.t * Error_suppressions.t_map * ExactCover.lint_severity_cover Utils_js.FilenameMap.t) merge_results Lwt.t
+  (Errors.ErrorSet.t * Error_suppressions.t * ExactCover.lint_severity_cover Utils_js.FilenameMap.t) merge_results Lwt.t
