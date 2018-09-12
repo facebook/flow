@@ -436,6 +436,8 @@ let program (algo : diff_algorithm)
         call_ call1 call2
       | (_, Function f1), (_, Function f2) ->
         function_ f1 f2
+      | (_, Class class1), (_, Class class2) ->
+        class_ class1 class2
       | _, _ ->
         None
     in
