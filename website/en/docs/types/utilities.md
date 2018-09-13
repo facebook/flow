@@ -604,11 +604,20 @@ const person5: PersonDetails = {age: 28, name: 'a'};  // OK
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 
-Work in progress
+`$Supertype<T>` acts as `any` over supertypes of `T`.
+
+If you need to opt-out of the type checker, and don't want to go all
+the way to `any`, you can instead use `$Supertype`. **`$Supertype` is
+unsafe and should be avoided.**
 
 ## `$Subtype<T>` <a class="toc" id="toc-subtype" href="#toc-subtype"></a>
 
-Work in progress
+`$Subtype<T>` acts as `any` over subtypes of `T`.
+
+If you need to opt-out of the type checker, and don't want to go all
+the way to `any`, you can instead use `$Subtype`. **`$Subtype` is
+unsafe and should be avoided.**
+
 
 ## Existential Type (`*`) <a class="toc" id="toc-existential-type" href="#toc-existential-type"></a>
 
