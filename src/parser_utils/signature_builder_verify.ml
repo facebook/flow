@@ -16,6 +16,12 @@ module Deps = Signature_builder_deps
 module Error = Deps.Error
 module Dep = Deps.Dep
 
+module ObjProp = Ast.Expression.Object.Property
+
+module type EvalEnv = sig
+  val prevent_munge: bool
+end
+
 (* A signature of a module is described by exported expressions / definitions, but what we're really
    interested in is their types. In particular, we are interested in computing these types early, so
    that we can check the code inside a module against the signature in a separate pass. So the
@@ -60,7 +66,7 @@ module Dep = Deps.Dep
    `import *` bring exported types in scope? These considerations will affect the computation step
    and ideally would be verified as well, but we're punting on them right now.
 *)
-module Eval = struct
+module Eval(Env: EvalEnv) = struct
 
   let rec type_ tps t =
     let open Ast.Type in
@@ -433,12 +439,17 @@ module Eval = struct
   and class_ =
     let class_element tps element =
       let open Ast.Class in
-      match element with
-        | Body.Method (_, { Method.value; _ }) ->
+      match Env.prevent_munge, element with
+        | false, Body.Method (_, { Method.key = (ObjProp.Identifier (_, name)); _ })
+        | false, Body.Property (_, { Property.key = (ObjProp.Identifier (_, name)); _ })
+          when Parser_common.is_munged_property_name name ->
+          Deps.bot
+        | _, Body.Method (_, { Method.value; _ }) ->
           let loc, { Ast.Function.generator; tparams; params; return; body; _ } = value in
           function_ tps generator tparams params (loc, return) body
-        | Body.Property (loc, { Property.annot; _ }) -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
-        | Body.PrivateField (loc, { PrivateField.annot; _ }) -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
+        | _, Body.Property (loc, { Property.annot; _ })
+        | _, Body.PrivateField (loc, { PrivateField.annot; _ }) ->
+          annotation tps (loc, Kind.Annot_path.mk_annot annot)
 
     in fun tparams body super super_targs implements ->
       let open Ast.Class in
@@ -510,6 +521,10 @@ module Eval = struct
       ) Deps.bot properties
 
 end
+
+module Verifier(Env: EvalEnv) = struct
+
+  module Eval = Eval(Env)
 
   let eval (loc, kind) =
     match kind with
@@ -781,3 +796,5 @@ end
     let errors = check cache env dynamic_sources deps in
     let remote_dependencies = Deps.DepSet.filter Dep.remote !cache in
     errors, remote_dependencies
+
+end

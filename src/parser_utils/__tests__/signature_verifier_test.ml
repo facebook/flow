@@ -9,13 +9,15 @@
 open OUnit2
 open Test_utils
 
-let mk_signature_verifier_test contents expected_msgs =
+let mk_signature_verifier_test ?(prevent_munge = false) contents expected_msgs =
   begin fun ctxt ->
     let contents = String.concat "\n" contents in
     let signature = match Signature_builder.program (parse contents) with
       | Ok signature -> signature
       | Error _ -> failwith "Signature builder failure!" in
-    let errors, remote_dependencies = Signature_builder.Signature.verify signature in
+    let errors, remote_dependencies =
+      Signature_builder.Signature.verify ~prevent_munge signature
+    in
     let error_msgs = List.map Signature_builder_deps.Error.to_string @@
       Signature_builder_deps.ErrorSet.elements errors in
     let remote_dependency_msgs = List.map Signature_builder_deps.Dep.to_string @@
@@ -308,4 +310,34 @@ let tests = "signature_verifier" >::: [
      "};"]
     ["Expected annotation @ (2, 2) to (2, 23)";
      "Expected annotation @ (6, 5) to (6, 21)"];
+
+  "munged_methods_ignored" >:: mk_signature_verifier_test
+    ["class C {";
+    " _method() { return 1; }";
+    "}";
+    "export default C;"]
+    [];
+
+  "munged_methods_not_ignored_if_directive" >:: mk_signature_verifier_test
+    ~prevent_munge:true
+    ["class C {";
+    " _method() { return 1; }";
+    "}";
+    "export default C;"]
+    ["Expected annotation @ (2, 8) to (2, 24)"];
+
+  "munged_fields_ignored" >:: mk_signature_verifier_test
+    ["class C {";
+    " _method = () => { return 1; }";
+    "}";
+    "export default C;"]
+    [];
+
+  "munged_fields_not_ignored_if_directive" >:: mk_signature_verifier_test
+    ~prevent_munge:true
+    ["class C {";
+    " _method = () => { return 1; }";
+    "}";
+    "export default C;"]
+    ["Expected annotation @ (2, 1) to (2, 30)"];
 ]

@@ -98,6 +98,7 @@ val do_parse:
   types_mode: types_mode ->
   use_strict: bool ->
   info: Docblock.t ->
+  ?prevent_munge: bool ->
   string ->                 (* contents of the file *)
   File_key.t ->               (* filename *)
   result

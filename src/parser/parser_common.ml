@@ -150,3 +150,7 @@ let with_loc ?start_loc fn env =
   | None -> start_loc
   in
   loc, result
+
+let is_munged_property_name name = (String.length name >= 2)
+  && name.[0] = '_'
+  && name.[1] <> '_'

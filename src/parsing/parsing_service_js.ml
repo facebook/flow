@@ -329,7 +329,7 @@ let types_checked types_mode info =
     | Some Docblock.OptInStrictLocal
     | Some Docblock.OptInWeak -> true
 
-let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
+let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false) content file =
   try (
     match file with
     | File_key.JsonFile _ ->
@@ -350,9 +350,14 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info content file =
          * The only files which are parsed but not inferred are .flow files with
          * no @flow pragma. *)
         if types_checked then
+          let prevent_munge = Option.map2
+            (Some prevent_munge)
+            (Docblock.preventMunge info)
+            (||)
+          in
           match Signature_builder.program ast with
           | Ok signature ->
-            let errors, _ = Signature_builder.Signature.verify signature in
+            let errors, _ = Signature_builder.Signature.verify ?prevent_munge signature in
             let verified_file_sig = File_sig.verified errors (snd signature) in
             Parse_ok (ast, verified_file_sig)
           | Error e -> Parse_fail (File_sig_error e)
