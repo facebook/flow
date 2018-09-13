@@ -14,6 +14,12 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
   let get x t =
     try Some (find x t) with Not_found -> None
 
+  let has_key x m =
+    try
+      let _ = find x m in
+      true
+    with Not_found -> false
+
   let find_unsafe = find
 
   let union ?combine x y =
@@ -113,6 +119,11 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
       add ?combine new_key item map_, changed || new_key != key
     ) map (empty, false) in
     if changed then map_ else map
+
+  let for_all2 ~f m1 m2 =
+    let key_bool_map =
+      merge (fun k v1opt v2opt -> Some (f k v1opt v2opt)) m1 m2 in
+    for_all (fun _k b -> b) key_bool_map
 
   let make_pp pp_key pp_data fmt x =
     Format.fprintf fmt "@[<hv 2>{";

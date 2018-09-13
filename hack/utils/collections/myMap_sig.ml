@@ -12,6 +12,7 @@ module type S = sig
 
   val add: ?combine: ('a -> 'a -> 'a) -> key -> 'a -> 'a t -> 'a t
   val get: key -> 'a t -> 'a option
+  val has_key: key -> 'a t -> bool
   val find_unsafe: key -> 'a t -> 'a
   val union: ?combine:(key -> 'a -> 'a -> 'a option) -> 'a t -> 'a t -> 'a t
   val union_env: 'a -> 'b t -> 'b t ->
@@ -34,6 +35,7 @@ module type S = sig
   val from_keys: key list -> f:(key -> 'a) -> 'a t
   val ident_map: ('a -> 'a) -> 'a t -> 'a t
   val ident_map_key: ?combine: ('a -> 'a -> 'a) -> (key -> key) -> 'a t -> 'a t
+  val for_all2: f:(key -> 'a option -> 'b option -> bool) -> 'a t -> 'b t -> bool
   val make_pp:
     (Format.formatter -> key -> unit) ->
     (Format.formatter -> 'a -> unit) ->
