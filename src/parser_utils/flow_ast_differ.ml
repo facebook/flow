@@ -268,6 +268,8 @@ let program (algo : diff_algorithm)
       Some (do_while_statement do_while1 do_while2)
     | (_, Ast.Statement.Switch switch1), (_, Ast.Statement.Switch switch2) ->
       switch_statement switch1 switch2
+    | (_, Ast.Statement.Return return1), (_, Ast.Statement.Return return2) ->
+      return_statement return1 return2
     | _, _ ->
       None
     in
@@ -573,6 +575,14 @@ let program (algo : diff_algorithm)
     let body = diff_if_changed statement body1 body2 in
     let test = diff_if_changed expression test1 test2 in
     List.concat [body; test]
+
+  and return_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Return.t)
+                       (stmt2: (Loc.t, Loc.t) Ast.Statement.Return.t)
+      : node change list option =
+    let open Ast.Statement.Return in
+    let { argument = argument1; } = stmt1 in
+    let { argument = argument2; } = stmt2 in
+    diff_if_changed_nonopt_fn expression argument1 argument2
 
   and switch_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Switch.t)
                        (stmt2: (Loc.t, Loc.t) Ast.Statement.Switch.t)

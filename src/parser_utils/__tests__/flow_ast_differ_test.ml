@@ -217,6 +217,10 @@ let tests = "ast_differ" >::: [
     let source = "(class Foo { method() { rename; } })" in
     assert_edits_equal ctxt [(24, 30), "gotRenamed"] source (new useless_mapper)
   end;
+  "return_statement_with_expression" >:: begin fun ctxt ->
+    let source = "function foo() { return rename; }" in
+    assert_edits_equal ctxt [(24, 30), "gotRenamed"] source (new useless_mapper)
+  end;
   "list_diff_simple" >:: begin fun ctxt ->
     let a = "a" in
     let b = "b" in
