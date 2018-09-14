@@ -69,6 +69,8 @@ let loc_of_statement = fst
 
 let loc_of_expression = fst
 
+let loc_of_pattern = fst
+
 module ExpressionSort = struct
   type t =
     | Array

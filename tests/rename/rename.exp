@@ -25,10 +25,10 @@ Rename of an object property:
       "oldRange":{
         "source":"objects.js",
         "type":"SourceFile",
-        "start":{"line":11,"column":3,"offset":144},
-        "end":{"line":11,"column":18,"offset":160}
+        "start":{"line":11,"column":9,"offset":150},
+        "end":{"line":11,"column":13,"offset":155}
       },
-      "newText":"const {newName: bar} = x;"
+      "newText":"{newName: bar}"
     }
   ]
 }
@@ -41,10 +41,10 @@ Rename of a local variable used in object shorthand:
       "oldRange":{
         "source":"objects.js",
         "type":"SourceFile",
-        "start":{"line":6,"column":3,"offset":72},
-        "end":{"line":6,"column":17,"offset":87}
+        "start":{"line":6,"column":9,"offset":78},
+        "end":{"line":6,"column":11,"offset":81}
       },
-      "newText":"const newName = \"\";"
+      "newText":"newName"
     },
     {
       "oldRange":{
@@ -66,10 +66,10 @@ Rename of a local variable bound by destructuring shorthand:
       "oldRange":{
         "source":"objects.js",
         "type":"SourceFile",
-        "start":{"line":11,"column":3,"offset":144},
-        "end":{"line":11,"column":18,"offset":160}
+        "start":{"line":11,"column":9,"offset":150},
+        "end":{"line":11,"column":13,"offset":155}
       },
-      "newText":"const {bar: newName} = x;"
+      "newText":"{bar: newName}"
     },
     {
       "oldRange":{

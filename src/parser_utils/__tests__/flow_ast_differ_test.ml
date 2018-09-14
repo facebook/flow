@@ -303,4 +303,32 @@ let tests = "ast_differ" >::: [
     let script = list_diff Standard old_list new_list in
     assert_equal ~ctxt (Some edits) script
   end;
+  "pattern_identifier" >:: begin fun ctxt ->
+    let source = "let rename = 0" in
+    assert_edits_equal ctxt [(4,10), "gotRenamed"] source (new useless_mapper)
+  end;
+  "pattern_array" >:: begin fun ctxt ->
+    let source = "let [rename,rename] = [0]" in
+    assert_edits_equal ctxt [(5,11), "gotRenamed"; (12,18), "gotRenamed"] source (new useless_mapper)
+  end;
+  "pattern_array_nested" >:: begin fun ctxt ->
+    let source = "let [[[rename]]] = 0" in
+    assert_edits_equal ctxt [(7,13), "gotRenamed"] source (new useless_mapper)
+  end;
+  "pattern_array_rest" >:: begin fun ctxt ->
+    let source = "let [a,b,...rename] = 0" in
+    assert_edits_equal ctxt [(12,18), "gotRenamed"] source (new useless_mapper)
+  end;
+  "pattern_object_longhand" >:: begin fun ctxt ->
+    let source = "let {rename: rename} = 0" in
+    assert_edits_equal ctxt [(5,11), "gotRenamed"; (13,19), "gotRenamed"] source (new useless_mapper)
+  end;
+  "pattern_object_rest" >:: begin fun ctxt ->
+    let source = "let {a,b,...rename} = 0" in
+    assert_edits_equal ctxt [(12,18), "gotRenamed"] source (new useless_mapper)
+  end;
+  "pattern_assignment" >:: begin fun ctxt ->
+    let source = "let [a=rename] = 0" in
+    assert_edits_equal ctxt [(7,13), "gotRenamed"] source (new useless_mapper)
+  end;
 ]

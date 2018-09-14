@@ -32,6 +32,9 @@ val loc_of_expression:
 val loc_of_statement:
   ('a, 'a) Flow_ast.Statement.t -> 'a
 
+val loc_of_pattern:
+  ('a, 'a) Flow_ast.Pattern.t -> 'a
+
 module ExpressionSort: sig
   type t =
     | Array

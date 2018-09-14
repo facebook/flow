@@ -161,6 +161,7 @@ type node =
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
   | Identifier of Loc.t Ast.Identifier.t
+  | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
 
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
@@ -310,8 +311,7 @@ let program (algo : diff_algorithm)
     let (_, { id = id1; init = init1 }) = decl1 in
     let (_, { id = id2; init = init2 }) = decl2 in
     if id1 != id2 then
-      (* TODO recurse into id after patterns are implemented *)
-      None
+      Some (pattern id1 id2)
     else
       diff_if_changed_nonopt_fn expression init1 init2
 
@@ -523,9 +523,8 @@ let program (algo : diff_algorithm)
     match (left1, left2) with
     | (LeftDeclaration(_, decl1), LeftDeclaration(_, decl2)) ->
       variable_declaration decl1 decl2
-    | (LeftPattern _, LeftPattern _) ->
-      (* TODO(yeongwoo) recurse into patterns after they are implemented *)
-      None
+    | (LeftPattern p1, LeftPattern p2) ->
+      Some (pattern p1 p2)
     | (LeftDeclaration _, LeftPattern _)
     | (LeftPattern _, LeftDeclaration _) ->
       None
@@ -559,9 +558,8 @@ let program (algo : diff_algorithm)
     match (left1, left2) with
     | (LeftDeclaration(_, decl1), LeftDeclaration(_, decl2)) ->
       variable_declaration decl1 decl2
-    | (LeftPattern _, LeftPattern _) ->
-      (* TODO(jaday) recurse into patterns after they are implemented *)
-      None
+    | (LeftPattern p1, LeftPattern p2) ->
+      Some (pattern p1 p2)
     | (LeftDeclaration _, LeftPattern _)
     | (LeftPattern _, LeftDeclaration _) ->
       None
@@ -602,5 +600,129 @@ let program (algo : diff_algorithm)
     let { test = test2; consequent = consequent2} = s2 in
     let test = diff_if_changed_nonopt_fn expression test1 test2 in
     let consequent = statement_list consequent1 consequent2 in
-    Option.all [test; consequent] |> Option.map ~f:List.concat in
-  program' program1 program2
+    Option.all [test; consequent] |> Option.map ~f:List.concat
+
+  and pattern (p1: (Loc.t, Loc.t) Ast.Pattern.t)
+              (p2: (Loc.t, Loc.t) Ast.Pattern.t)
+      : node change list =
+    let changes = match p1, p2 with
+      | (_, Ast.Pattern.Identifier i1), (_, Ast.Pattern.Identifier i2) ->
+          pattern_identifier i1 i2
+      | (_, Ast.Pattern.Array a1), (_, Ast.Pattern.Array a2) ->
+          pattern_array a1 a2
+      | (_, Ast.Pattern.Object o1), (_, Ast.Pattern.Object o2) ->
+          pattern_object o1 o2
+      | (_, Ast.Pattern.Assignment a1), (_, Ast.Pattern.Assignment a2) ->
+          Some (pattern_assignment a1 a2)
+      | (_, Ast.Pattern.Expression e1), (_, Ast.Pattern.Expression e2) ->
+          Some (expression e1 e2)
+      | _, _ ->
+          None
+        in
+      let old_loc = Ast_utils.loc_of_pattern p1 in
+      Option.value changes ~default:[(old_loc, Replace (Pattern p1, Pattern p2))]
+
+  and pattern_assignment (a1: (Loc.t, Loc.t) Ast.Pattern.Assignment.t)
+                         (a2: (Loc.t, Loc.t) Ast.Pattern.Assignment.t)
+      : node change list =
+    let open Ast.Pattern.Assignment in
+    let { left = left1; right = right1 } = a1 in
+    let { left = left2; right = right2 } = a2 in
+    let left_diffs = diff_if_changed pattern left1 left2 in
+    let right_diffs = diff_if_changed expression right1 right2 in
+    left_diffs @ right_diffs
+
+  and pattern_object (o1: (Loc.t, Loc.t) Ast.Pattern.Object.t)
+                     (o2: (Loc.t, Loc.t) Ast.Pattern.Object.t)
+      : node change list option =
+    let open Ast.Pattern.Object in
+    let { properties = properties1; annot = annot1 } = o1 in
+    let { properties = properties2; annot = annot2 } = o2 in
+    if annot1 != annot2 then
+        None
+    else
+        diff_and_recurse pattern_object_property properties1 properties2
+
+  and pattern_object_property (p1: (Loc.t, Loc.t) Ast.Pattern.Object.property)
+                              (p2: (Loc.t, Loc.t) Ast.Pattern.Object.property)
+      : node change list option =
+    let open Ast.Pattern.Object in
+    match p1, p2 with
+    | (Property (_, p3), Property (_, p4)) ->
+        let open Ast.Pattern.Object.Property in
+        let { key = key1; pattern = pattern1; shorthand = shorthand1; } = p3 in
+        let { key = key2; pattern = pattern2; shorthand = shorthand2; } = p4 in
+        let keys = diff_if_changed_opt pattern_object_property_key (Some key1) (Some key2) in
+        let pats = Some (diff_if_changed pattern pattern1 pattern2) in
+        (match shorthand1, shorthand2 with
+        | false, false ->
+          Option.all [keys; pats] |> Option.map ~f:List.concat
+        | _, _ ->
+          None)
+    | (RestProperty (_, rp1) ,RestProperty (_, rp2)) ->
+        let open Ast.Pattern.Object.RestProperty in
+        let { argument = argument1 } = rp1 in
+        let { argument = argument2 } = rp2 in
+        Some (diff_if_changed pattern argument1 argument2)
+    | _, _ ->
+        None
+
+  and pattern_object_property_key (k1: (Loc.t, Loc.t) Ast.Pattern.Object.Property.key)
+                                  (k2: (Loc.t, Loc.t) Ast.Pattern.Object.Property.key)
+      : node change list option =
+    let open Ast.Pattern.Object.Property in
+    match k1, k2 with
+    | Literal _, Literal _ ->
+        (* TODO: recurse into literals *)
+        None
+    | Ast.Pattern.Object.Property.Identifier i1, Ast.Pattern.Object.Property.Identifier i2 ->
+        Some (identifier i1 i2)
+    | Computed e1, Computed e2 ->
+        Some (expression e1 e2)
+    | _, _ ->
+        None
+
+  and pattern_array (a1: (Loc.t, Loc.t) Ast.Pattern.Array.t)
+                    (a2: (Loc.t, Loc.t) Ast.Pattern.Array.t)
+      : node change list option =
+    let open Ast.Pattern.Array in
+    let { elements = elements1; annot = annot1 } = a1 in
+    let { elements = elements2; annot = annot2 } = a2 in
+    if annot1 != annot2 then
+        None
+    else
+        diff_and_recurse pattern_array_element elements1 elements2
+
+  and pattern_array_element (eo1: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
+                            (eo2: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
+      : node change list option =
+    let open Ast.Pattern.Array in
+    match eo1, eo2 with
+    | Some (Element p1), Some (Element p2) ->
+        Some (pattern p1 p2)
+    | Some (RestElement re1), Some (RestElement re2) ->
+        Some (pattern_array_rest re1 re2)
+    | None, None ->
+        Some [] (* Both elements elided *)
+    | _, _ ->
+        None (* one element is elided and another is not *)
+
+  and pattern_array_rest ((_, r1): (Loc.t, Loc.t) Ast.Pattern.Array.RestElement.t)
+                         ((_, r2): (Loc.t, Loc.t) Ast.Pattern.Array.RestElement.t)
+      : node change list =
+    let open Ast.Pattern.Array.RestElement in
+    let { argument = argument1 } = r1 in
+    let { argument = argument2 } = r2 in
+      pattern argument1 argument2
+
+  and pattern_identifier (i1: (Loc.t, Loc.t) Ast.Pattern.Identifier.t)
+                         (i2: (Loc.t, Loc.t) Ast.Pattern.Identifier.t)
+      : node change list option =
+    let open Ast.Pattern.Identifier in
+    let { name = name1; annot = annot1; optional = optional1 } = i1 in
+    let { name = name2; annot = annot2; optional = optional2 } = i2 in
+    if annot1 != annot2 || optional1 != optional2 then
+      None
+    else
+      Some (identifier name1 name2) in
+program' program1 program2
