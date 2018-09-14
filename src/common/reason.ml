@@ -728,14 +728,7 @@ let is_builtin_reason r =
   Loc.(r.loc.source = Some File_key.Builtins)
 
 let is_lib_reason r =
-  (* TODO: use File_key.is_lib_file *)
-  Loc.(match r.loc.source with
-  | Some File_key.LibFile _ -> true
-  | Some File_key.Builtins -> true
-  | Some File_key.SourceFile _ -> false
-  | Some File_key.JsonFile _ -> false
-  | Some File_key.ResourceFile _ -> false
-  | None -> false)
+  Option.value_map ~default:false ~f:File_key.is_lib_file Loc.(r.loc.source)
 
 let is_blamable_reason r =
   not Loc.(r.loc = none || is_lib_reason r)
