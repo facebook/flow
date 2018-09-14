@@ -22,3 +22,7 @@ val to_string : ?include_source:bool -> t -> string
 val source : t -> File_key.t option
 (* filename, line, column. produces a Loc.t at the given location, with stubbed out offsets *)
 val make: File_key.t -> int -> int -> t
+(* Produces a location at the start of the input location *)
+val start_loc : t -> t
+(* Produces a location at the end of the input location *)
+val end_loc : t -> t

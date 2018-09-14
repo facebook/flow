@@ -123,3 +123,6 @@ let make file line col =
     start = { line; column = col; offset = 0; };
     _end = { line; column = col + 1; offset = 0; };
   }
+
+let start_loc loc = {loc with _end = loc.start}
+let end_loc   loc = {loc with start = loc._end}

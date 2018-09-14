@@ -213,23 +213,46 @@ let program (algo : diff_algorithm)
             (program1: (Loc.t, Loc.t) Ast.program)
             (program2: (Loc.t, Loc.t) Ast.program) : node change list =
 
-  (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs. *)
+  (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs.
+     For inserts and deletes, it uses `trivial` to produce a Loc.t and a b for the change *)
   let diff_and_recurse (type a) (type b)
       (f: a -> a -> b change list option)
+      (trivial : a -> (Loc.t * b) option)
       (old_list: a list)
       (new_list: a list)
       : b change list option =
-    let changes = list_diff algo old_list new_list in
-    Option.bind changes begin fun changes ->
-      changes
-      |> List.map begin function
-      | _, Replace (x1, x2) ->
-        f x1 x2
-      | _ -> failwith "implement insert/delete"
-      end
-      |> Option.all
-      |> Option.map ~f:List.concat
-    end in
+    let open Option in
+
+    let recurse_into_change = function
+      | _, Replace (x1, x2) -> f x1 x2
+      | index, Insert lst ->
+        let loc =
+          if List.length old_list = 0 then None else
+          (* To insert at the start of the list, insert before the first element *)
+          if index = -1 then List.hd old_list |> trivial >>| fst >>| Loc.start_loc
+          (* Otherwise insert it after the current element *)
+          else List.nth old_list index |> trivial >>| fst >>| Loc.end_loc in
+        List.map trivial lst
+        |>  all
+        >>| List.map snd (* drop the loc *)
+        >>| (fun x -> Insert x)
+        |>  both loc
+        >>| Core_list.return
+      | _, Delete x ->
+        trivial x
+        >>| (fun (loc, y) -> loc, Delete y)
+        >>| Core_list.return in
+
+    let recurse_into_changes changes =
+      List.map recurse_into_change changes
+      |> all
+      |> map ~f:List.concat in
+
+    list_diff algo old_list new_list
+    >>= recurse_into_changes in
+
+  (* diff_and_recurse for when there is no way to get a trivial transfomation from a to b*)
+  let diff_and_recurse_no_trivial f = diff_and_recurse f (fun _ -> None) in
 
   let rec program' (program1: (Loc.t, Loc.t) Ast.program) (program2: (Loc.t, Loc.t) Ast.program) : node change list =
     let (program_loc, statements1, _) = program1 in
@@ -239,7 +262,8 @@ let program (algo : diff_algorithm)
 
   and statement_list (stmts1: (Loc.t, Loc.t) Ast.Statement.t list) (stmts2: (Loc.t, Loc.t) Ast.Statement.t list)
       : node change list option =
-    diff_and_recurse (fun x y -> Some (statement x y)) stmts1 stmts2
+    diff_and_recurse (fun x y -> Some (statement x y))
+      (fun s -> Some (Ast_utils.loc_of_statement s, Statement s)) stmts1 stmts2
 
   and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast.Statement.t)
       : node change list =
@@ -323,7 +347,7 @@ let program (algo : diff_algorithm)
     if kind1 != kind2 then
       None
     else if declarations1 != declarations2 then
-      diff_and_recurse variable_declarator declarations1 declarations2
+      diff_and_recurse_no_trivial variable_declarator declarations1 declarations2
     else
       Some []
 
@@ -374,7 +398,7 @@ let program (algo : diff_algorithm)
     let open Ast.Class.Body in
     let _, { body=body1 } = class_body1 in
     let _, { body=body2 } = class_body2 in
-    diff_and_recurse class_element body1 body2
+    diff_and_recurse_no_trivial class_element body1 body2
 
   and class_element (elem1: (Loc.t, Loc.t) Ast.Class.Body.element) (elem2: (Loc.t, Loc.t) Ast.Class.Body.element)
       : node change list option =
@@ -589,7 +613,7 @@ let program (algo : diff_algorithm)
     let { discriminant = discriminant1; cases = cases1} = stmt1 in
     let { discriminant = discriminant2; cases = cases2} = stmt2 in
     let discriminant = Some (diff_if_changed expression discriminant1 discriminant2) in
-    let cases = diff_and_recurse switch_case cases1 cases2 in
+    let cases = diff_and_recurse_no_trivial switch_case cases1 cases2 in
     Option.all [discriminant; cases] |> Option.map ~f:List.concat
 
   and switch_case ((_, s1): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
@@ -641,7 +665,7 @@ let program (algo : diff_algorithm)
     if annot1 != annot2 then
         None
     else
-        diff_and_recurse pattern_object_property properties1 properties2
+        diff_and_recurse_no_trivial pattern_object_property properties1 properties2
 
   and pattern_object_property (p1: (Loc.t, Loc.t) Ast.Pattern.Object.property)
                               (p2: (Loc.t, Loc.t) Ast.Pattern.Object.property)
@@ -691,7 +715,7 @@ let program (algo : diff_algorithm)
     if annot1 != annot2 then
         None
     else
-        diff_and_recurse pattern_array_element elements1 elements2
+        diff_and_recurse_no_trivial pattern_array_element elements1 elements2
 
   and pattern_array_element (eo1: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
                             (eo2: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
