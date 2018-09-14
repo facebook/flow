@@ -149,13 +149,13 @@ str.js = {
     },
     {
       "name":"codePointAt",
-      "type":"(index: number) => (number | void)",
-      "func_details":{"return_type":"number | void","params":[{"name":"index","type":"number"}]},
+      "type":"(index: number) => number",
+      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
       "line":295,
       "endline":295,
       "start":5,
-      "end":45
+      "end":38
     },
     {
       "name":"concat",
@@ -1592,13 +1592,13 @@ if.js = {
     },
     {
       "name":"codePointAt",
-      "type":"(index: number) => (number | void)",
-      "func_details":{"return_type":"number | void","params":[{"name":"index","type":"number"}]},
+      "type":"(index: number) => number",
+      "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
       "line":295,
       "endline":295,
       "start":5,
-      "end":45
+      "end":38
     },
     {
       "name":"concat",
