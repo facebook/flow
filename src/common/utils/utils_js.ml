@@ -77,6 +77,8 @@ let rec toFixpoint f x =
 let uncurry f (x,y) = f x y
 let curry f x y = f (x, y)
 
+let ( %> ) f g x = g (f x)
+
 (**
  * Useful for various places where a user might have typoed a string and the
  * set of possible intended strings is known (i.e. variable names).

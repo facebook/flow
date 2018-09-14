@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+open Utils_js
 
 type 'a change' =
   | Replace of 'a * 'a
@@ -243,10 +244,10 @@ let program (algo : diff_algorithm)
         >>| (fun (loc, y) -> loc, Delete y)
         >>| Core_list.return in
 
-    let recurse_into_changes changes =
-      List.map recurse_into_change changes
-      |> all
-      |> map ~f:List.concat in
+    let recurse_into_changes =
+      List.map recurse_into_change
+      %> all
+      %> map ~f:List.concat in
 
     list_diff algo old_list new_list
     >>= recurse_into_changes in

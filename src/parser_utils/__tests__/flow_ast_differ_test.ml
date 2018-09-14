@@ -7,6 +7,7 @@
 
 module Ast = Flow_ast
 open Flow_ast_differ
+open Utils_js
 
 open OUnit2
 
@@ -87,9 +88,9 @@ let edits_of_source algo source mapper =
 let debug_string_of_edit ((start, end_), text) =
   Printf.sprintf "((%d, %d), %s)" start end_ text
 
-let debug_string_of_edits changes =
-  List.map debug_string_of_edit changes
-  |> String.concat ", "
+let debug_string_of_edits =
+  List.map debug_string_of_edit
+  %> String.concat ", "
 
 let debug_print_string_script script =
   let print_string_result (i, chg) =
