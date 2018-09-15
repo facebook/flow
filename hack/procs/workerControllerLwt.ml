@@ -69,7 +69,9 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
         let%lwt () = Lwt_unix.wait_read infd_lwt in
         (* Read in a lwt-unfriendly, blocking manner from the worker *)
         (* Due to https://github.com/ocsigen/lwt/issues/564, annotation cannot go on let%let node *)
-        Lwt.return (Marshal_tools.from_fd_with_preamble infd: (b * Measure.record_data))
+        let data : b = Marshal_tools.from_fd_with_preamble infd in
+        let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
+        Lwt.return (data, stats)
       with
       | Lwt.Canceled as exn ->
         (* Worker is handling a job but we're cancelling *)
@@ -79,6 +81,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
         (* Wait for the worker to finish cancelling *)
         let%lwt () = Lwt_unix.wait_read infd_lwt in
         (* Read the junk from the pipe *)
+        let _ = Marshal_tools.from_fd_with_preamble infd in
         let _ = Marshal_tools.from_fd_with_preamble infd in
         raise exn
       | exn ->

@@ -339,10 +339,11 @@ let call ?(call_id=0) w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   (* Prepare ourself to read answer from the slave. *)
   let get_result_with_status_check ?(block_on_waitpid=false) () : b =
     with_exit_status_check ~block_on_waitpid slave_pid begin fun () ->
-      let res : b * Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
+      let data : b = Marshal_tools.from_fd_with_preamble infd in
+      let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
       close w h;
-      Measure.merge (Measure.deserialize (snd res));
-      fst res
+      Measure.merge (Measure.deserialize stats);
+      data
     end in
   let result () : b =
     (**
@@ -377,6 +378,7 @@ let call ?(call_id=0) w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
        * results back, this will return either actual results, or "anything"
        * (written by interrupt signal that exited). The types don't match, but we
        * ignore both of them anyway. *)
+      let _ : 'c = Marshal_tools.from_fd_with_preamble infd in
       let _ : 'c = Marshal_tools.from_fd_with_preamble infd in
       ()
     end

@@ -26,9 +26,10 @@ type slave_job_status =
 
 let on_slave_cancelled parent_outfd =
   (* The cancelling controller will ignore result of cancelled job anyway (see
-   * wait_for_cancel function), so we can send back anything. *)
-  Marshal_tools.to_fd_with_preamble parent_outfd "anything"
-  |> ignore
+   * wait_for_cancel function), so we can send back anything. Write twice, since
+   * the normal response writes twice too *)
+  Marshal_tools.to_fd_with_preamble parent_outfd "anything" |> ignore;
+  Marshal_tools.to_fd_with_preamble parent_outfd "anything" |> ignore
 
 (*****************************************************************************
  * Entry point for spawned worker.
@@ -48,6 +49,7 @@ let slave_main ic oc =
   let outfd = Daemon.descr_of_out_channel oc in
 
   let send_result data =
+
     let tm = Unix.times () in
     let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
     let end_system_time = tm.Unix.tms_stime +. tm.Unix.tms_cstime in
@@ -73,10 +75,10 @@ let slave_main ic oc =
 
     Measure.sample "minor_collections" (float (end_minor_collections - !start_minor_collections));
     Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
-    let stats = Measure.serialize (Measure.pop_global ()) in
+
     (* If we got so far, just let it finish "naturally" *)
     WorkerCancel.set_on_worker_cancelled (fun () -> ());
-    let len = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd (data,stats) in
+    let len = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data in
     if len > 30 * 1024 * 1024 (* 30 MB *) then begin
       Hh_logger.log "WARNING: you are sending quite a lot of data (%d bytes), \
         which may have an adverse performance impact. If you are sending \
@@ -84,7 +86,12 @@ let slave_main ic oc =
         values in their environment." len;
       Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
         (Printexc.get_callstack 100));
-    end
+    end;
+
+    let stats = Measure.serialize (Measure.pop_global ()) in
+
+    let _ = Marshal_tools.to_fd_with_preamble outfd stats in
+    ()
   in
 
   try
