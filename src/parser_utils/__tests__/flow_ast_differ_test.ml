@@ -179,6 +179,21 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((4, 5), "(5)"); ((9, 10), "(5)"); ((21, 27), "gotRenamed")]
       ~source ~expected:"if ((5)) { (5); } else { gotRenamed }" ~mapper:(new useless_mapper)
   end;
+  "with_nochange" >:: begin fun ctxt ->
+    let source = "with (object) { foo = true; }" in
+    assert_edits_equal ctxt ~edits:[] ~source
+      ~expected:"with (object) { foo = true; }" ~mapper:(new useless_mapper)
+  end;
+  "whit_object" >:: begin fun ctxt ->
+    let source = "with (rename) { foo = true; };" in
+    assert_edits_equal ctxt ~edits:[(6, 12), "gotRenamed"] ~source
+      ~expected:"with (gotRenamed) { foo = true; };" ~mapper:(new useless_mapper)
+  end;
+  "with_body" >:: begin fun ctxt ->
+    let source = "with (objct) { rename; };" in
+    assert_edits_equal ctxt ~edits:[(15, 21), "gotRenamed"] ~source
+      ~expected:"with (objct) { gotRenamed; };" ~mapper:(new useless_mapper)
+  end;
   "function_expression" >:: begin fun ctxt ->
     let source = "(function() { 4; })" in
     assert_edits_equal ctxt ~edits:[((14, 15), "(5)")] ~source ~expected:"(function() { (5); })"

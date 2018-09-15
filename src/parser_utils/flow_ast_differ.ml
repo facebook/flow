@@ -296,6 +296,8 @@ let program (algo : diff_algorithm)
       switch_statement switch1 switch2
     | (_, Ast.Statement.Return return1), (_, Ast.Statement.Return return2) ->
       return_statement return1 return2
+    | (_, Ast.Statement.With with1), (_, Ast.Statement.With with2) ->
+      Some (with_statement with1 with2)
     | _, _ ->
       None
     in
@@ -375,6 +377,16 @@ let program (algo : diff_algorithm)
       | Some a1, Some a2 -> Some (diff_if_changed statement a1 a2) in
     let result_list = [expr_diff; cons_diff; alt_diff] in
     Option.all result_list |> Option.map ~f:List.concat
+
+    and with_statement (with1: (Loc.t, Loc.t) Ast.Statement.With.t)
+                       (with2: (Loc.t, Loc.t) Ast.Statement.With.t)
+        : node change list =
+      let open Ast.Statement.With in
+      let {_object = _object1; body = body1;} = with1 in
+      let {_object = _object2; body = body2;} = with2 in
+      let _object_diff = diff_if_changed expression _object1 _object2 in
+      let body_diff    = diff_if_changed statement  body1    body2    in
+      _object_diff @ body_diff
 
   and class_ (class1: (Loc.t, Loc.t) Ast.Class.t) (class2: (Loc.t, Loc.t) Ast.Class.t) =
     let open Ast.Class in
