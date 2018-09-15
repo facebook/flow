@@ -55,10 +55,12 @@ include MultiWorker.CallFunctor (struct
     in
 
     let rec run_worker worker =
+      let idle_start_wall_time = Unix.gettimeofday () in
       let%lwt bucket = get_job () in
       match bucket with
-      | None -> Lwt.return_unit
+      | None -> Lwt.return idle_start_wall_time
       | Some bucket ->
+        Measure.sample "worker_idle" (Unix.gettimeofday () -. idle_start_wall_time);
         let%lwt result = WorkerControllerLwt.call worker (fun xl -> job neutral xl) bucket in
         let%lwt () = merge_with_acc result in
         (* Wait means "ask again after a worker has finished and has merged its result". So now that
@@ -70,12 +72,17 @@ include MultiWorker.CallFunctor (struct
     let%lwt () =
       let worker_threads = List.map run_worker workers in
       try%lwt
-        LwtUtils.iter_all worker_threads
+        let%lwt idle_start_times = LwtUtils.all worker_threads in
+        let idle_end_wall_time = Unix.gettimeofday () in
+        List.iter (fun idle_start_wall_time ->
+          Measure.sample "worker_idle" (idle_end_wall_time -. idle_start_wall_time);
+        ) idle_start_times;
+        Lwt.return_unit
       with Lwt.Canceled ->
         let total = List.length worker_threads in
         let finished = ref 0 in
         let worker_threads = List.map (fun thread ->
-          (thread) [%lwt.finally
+          (let%lwt _ = thread in Lwt.return_unit) [%lwt.finally
             incr finished;
             report_canceled ~total ~finished:(!finished);
             Lwt.return_unit
