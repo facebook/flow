@@ -556,3 +556,6 @@ type rusage = {
   ru_nivcsw: int;        (* involuntary context switches *)
 }
 external getrusage: unit -> rusage = "hh_getrusage"
+
+external start_gc_profiling: unit -> unit = "hh_start_gc_profiling" [@@noalloc]
+external get_gc_time: unit -> float * float = "hh_get_gc_time"

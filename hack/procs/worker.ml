@@ -62,6 +62,11 @@ let slave_main ic oc =
       major_collections = end_major_collections;
       _;
     } = Gc.quick_stat () in
+
+    let major_time, minor_time = Sys_utils.get_gc_time () in
+    Measure.sample "worker_gc_major_wall_time" major_time;
+    Measure.sample "worker_gc_minor_wall_time" minor_time;
+
     Measure.sample "worker_user_time" (end_user_time -. !start_user_time);
     Measure.sample "worker_system_time" (end_system_time -. !start_system_time);
     Measure.sample "worker_wall_time" (Unix.gettimeofday () -. !start_wall_time);
@@ -108,6 +113,9 @@ let slave_main ic oc =
     WorkerCancel.set_on_worker_cancelled (fun () -> on_slave_cancelled outfd);
     let tm = Unix.times () in
     let gc = Gc.quick_stat () in
+
+    Sys_utils.start_gc_profiling ();
+
     start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
     start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
     start_minor_words := gc.Gc.minor_words;
@@ -116,6 +124,7 @@ let slave_main ic oc =
     start_minor_collections := gc.Gc.minor_collections;
     start_major_collections := gc.Gc.major_collections;
     start_wall_time := Unix.gettimeofday ();
+
     do_process { send = send_result };
     exit 0
   with
@@ -137,11 +146,12 @@ let slave_main ic oc =
       Exit_status.exit exit_code
   | e ->
       let e_str = Printexc.to_string e in
-      Printf.printf "Exception: %s\n" e_str;
+      let pid = Unix.getpid () in
+      Printf.printf "Worker slave %d exception: %s\n%!" pid e_str;
       EventLogger.log_if_initialized (fun () ->
         EventLogger.worker_exception e_str
       );
-      print_endline "Potential backtrace:";
+      Printf.printf "Worker slave %d Potential backtrace:\n%!" pid;
       Printexc.print_backtrace stdout;
       exit 2
 

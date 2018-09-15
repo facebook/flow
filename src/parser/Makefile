@@ -11,6 +11,7 @@ OCB = ocamlbuild -use-ocamlfind
 
 NATIVE_OBJECT_FILES=\
 	hack/utils/sys/files.o\
+	hack/utils/sys/gc_profiling.o\
 	hack/utils/sys/getrusage.o\
 	hack/utils/sys/nproc.o\
 	hack/utils/sys/realpath.o\
