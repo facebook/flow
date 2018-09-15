@@ -121,6 +121,7 @@ let create_program_init ~shared_mem_config ~focus_targets options =
   let program_init = fun () ->
     let%lwt profiling, env = init ~focus_targets genv in
     FlowEventLogger.init_done ~profiling;
+    if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
     Lwt.return (profiling, env)
   in
   genv, program_init
