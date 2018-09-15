@@ -1217,16 +1217,23 @@ module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
      * Direct.add is a no-op if the key already exists. *)
     Direct.add x y
 
+  let log_hit_rate ~hit =
+    Measure.sample (Value.description ^ " (cache hit rate)") (if hit then 1. else 0.);
+    Measure.sample ("(ALL cache hit rate)") (if hit then 1. else 0.)
+
   let get x =
     match Cache.get x with
     | None ->
-      (match Direct.get x with
+      let result = (match Direct.get x with
        | None -> None
        | Some v as result ->
          Cache.add x v;
          result
-      )
+      ) in
+      if hh_log_level () > 0 then log_hit_rate ~hit:false;
+      result
     | Some _ as result ->
+      if hh_log_level () > 0 then log_hit_rate ~hit:true;
       result
 
   (* We don't cache old objects, they are not accessed often enough. *)
