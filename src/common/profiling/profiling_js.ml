@@ -55,6 +55,8 @@ end = struct
     worker_read_request: time_measurement;
     worker_run: time_measurement;
     worker_send_response: time_measurement;
+    worker_gc_minor: time_measurement;
+    worker_gc_major: time_measurement;
   }
 
   type result = {
@@ -76,6 +78,8 @@ end = struct
     worker_read_request_start: float;
     worker_run_start: float;
     worker_send_response_start: float;
+    worker_gc_minor_start: float;
+    worker_gc_major_start: float;
   }
 
   type running_timer = {
@@ -120,6 +124,8 @@ end = struct
     let get_read () = Option.value ~default:0.0 (Measure.get_sum "worker_read_request") in
     let get_send () = Option.value ~default:0.0 (Measure.get_sum "worker_send_response") in
     let get_idle () = Option.value ~default:0.0 (Measure.get_sum "worker_idle") in
+    let get_gc_minor () = Option.value ~default:0.0 (Measure.get_sum "worker_gc_minor_wall_time") in
+    let get_gc_major () = Option.value ~default:0.0 (Measure.get_sum "worker_gc_major_wall_time") in
 
     let worker_wall_start_times () =
       {
@@ -127,6 +133,8 @@ end = struct
         worker_read_request_start = get_read ();
         worker_run_start = get_run ();
         worker_send_response_start = get_send ();
+        worker_gc_minor_start = get_gc_minor ();
+        worker_gc_major_start = get_gc_major ();
       }
     in
 
@@ -136,6 +144,8 @@ end = struct
         worker_read_request = time_measurement start.worker_read_request_start (get_read ());
         worker_run = time_measurement start.worker_run_start (get_run ());
         worker_send_response = time_measurement start.worker_send_response_start (get_send ());
+        worker_gc_minor = time_measurement start.worker_gc_minor_start (get_gc_minor ());
+        worker_gc_major = time_measurement start.worker_gc_major_start (get_gc_major ());
       }
     in
 
@@ -321,6 +331,8 @@ end = struct
         worker_read_request = merge_time_measurement a.worker_read_request b.worker_read_request;
         worker_run = merge_time_measurement a.worker_run b.worker_run;
         worker_send_response = merge_time_measurement a.worker_send_response b.worker_send_response;
+        worker_gc_minor = merge_time_measurement a.worker_gc_minor b.worker_gc_minor;
+        worker_gc_major = merge_time_measurement a.worker_gc_major b.worker_gc_major;
       }
     in
 
@@ -413,6 +425,8 @@ end = struct
             "read", json_of_time_measurement worker_wall_times.worker_read_request;
             "send", json_of_time_measurement worker_wall_times.worker_send_response;
             "idle", json_of_time_measurement worker_wall_times.worker_idle;
+            "gc_minor", json_of_time_measurement worker_wall_times.worker_gc_minor;
+            "gc_major", json_of_time_measurement worker_wall_times.worker_gc_major;
           ];
           "sub_results", sub_results;
           "samples", JSON_Number (string_of_int sample_count);
@@ -524,15 +538,20 @@ end = struct
     in
 
     (* Prints a single row of the table. All but the last column have a fixed width. *)
-    let print_summary_single_raw key (result_wall, result_cpu, (run, read, send, idle)) total =
-      let worker_total = idle +. read +. run +. send in
+    let print_summary_single_raw
+      key (result_wall, result_cpu, (run, read, send, idle, gc_minor, gc_major)) total =
+      let run = run -. gc_minor -. gc_major in (* run time includes gc time *)
+      let worker_total = idle +. read +. run +. send +. gc_minor +. gc_major in
       let worker_total = if worker_total = 0.0 then 1.0 else worker_total in
       let worker_idle_pct = idle /. worker_total *. 100. in
       let worker_read_pct = read /. worker_total *. 100. in
       let worker_run_pct = run /. worker_total *. 100. in
       let worker_send_pct = send /. worker_total *. 100. in
+      let worker_gc_minor_pct = gc_minor /. worker_total *. 100. in
+      let worker_gc_major_pct = gc_major /. worker_total *. 100. in
 
-      Printf.eprintf "%7.3f (%5.1f%%)   %9.3f (%5.1f%%)   %3d%% %3d%% %3d%% %3d%%    %s\n%!"
+      Printf.eprintf
+        "%7.3f (%5.1f%%)   %9.3f (%5.1f%%)   %3d%% %3d%% %3d%% %3d%% %3d%% %3d%%    %s\n%!"
         result_wall
         (100.0 *. result_wall /. total.wall.duration)
         result_cpu
@@ -541,6 +560,8 @@ end = struct
         (worker_read_pct |> int_of_float)
         (worker_send_pct |> int_of_float)
         (worker_idle_pct |> int_of_float)
+        (worker_gc_minor_pct |> int_of_float)
+        (worker_gc_major_pct |> int_of_float)
         key
     in
 
@@ -549,7 +570,9 @@ end = struct
         result.worker_wall_times.worker_run.duration,
         result.worker_wall_times.worker_read_request.duration,
         result.worker_wall_times.worker_send_response.duration,
-        result.worker_wall_times.worker_idle.duration
+        result.worker_wall_times.worker_idle.duration,
+        result.worker_wall_times.worker_gc_minor.duration,
+        result.worker_wall_times.worker_gc_major.duration
       ) in
       print_summary_single_raw key (result.wall.duration, sum_cpu result, worker_wall_times) total
     in
@@ -557,8 +580,12 @@ end = struct
     (* If there's more than 1% of wall time since the last end and the next start_age, then print an
      * <Unknown> row *)
     let print_unknown ~indent last_end (wall_start_age, cpu_start_age, worker_wall_start) total =
-      let (run_start, read_start, send_start, idle_start) = worker_wall_start in
-      let (wall_end, cpu_end, (run_end, read_end, send_end, idle_end)) = last_end in
+      let (run_start, read_start, send_start, idle_start, gc_minor_start, gc_major_start) =
+        worker_wall_start
+      in
+      let (wall_end, cpu_end, (run_end, read_end, send_end, idle_end, gc_minor_end, gc_major_end)) =
+        last_end
+      in
       let unknown_wall = wall_start_age -. wall_end in
       if unknown_wall /. total.wall.duration > 0.01
       then
@@ -567,7 +594,9 @@ end = struct
           run_start -. run_end,
           read_start -. read_end,
           send_start -. send_end,
-          idle_start -. idle_end
+          idle_start -. idle_end,
+          gc_minor_start -. gc_minor_end,
+          gc_major_start -. gc_major_end
         ) in
         print_summary_single_raw
           (indent ^ "<Unknown>") (unknown_wall, unknown_cpu, unknown_worker) total
@@ -579,14 +608,27 @@ end = struct
         worker_read_request = { start_age = read_start; duration = read_duration; };
         worker_send_response = { start_age = send_start; duration = send_duration; };
         worker_idle = { start_age = idle_start; duration = idle_duration; };
+        worker_gc_minor = { start_age = gc_minor_start; duration = gc_minor_duration; };
+        worker_gc_major = { start_age = gc_major_start; duration = gc_major_duration; };
       } = worker_wall_times in
-      let worker_last = (run_start, read_start, send_start, idle_start) in
-      let worker_remaining = (run_duration, read_duration, send_duration, idle_duration) in
+      let worker_last =
+        (run_start, read_start, send_start, idle_start, gc_minor_start, gc_major_start)
+      in
+      let worker_remaining = (
+          run_duration,
+          read_duration,
+          send_duration,
+          idle_duration,
+          gc_minor_duration,
+          gc_major_duration
+      ) in
       let worker_end = (
         run_start +. run_duration,
         read_start +. read_duration,
         send_start +. send_duration,
-        idle_start +. idle_duration
+        idle_start +. idle_duration,
+        gc_minor_start +. gc_minor_duration,
+        gc_major_start +. gc_major_duration
       ) in
       worker_last, worker_remaining, worker_end
     in
@@ -643,12 +685,14 @@ end = struct
         let wall_remaining = wall_remaining -. result.wall.duration in
         let cpu_remaining = cpu_remaining -. (sum_cpu result) in
         let worker_remaining =
-          let (run, read, send, idle) = worker_remaining in
+          let (run, read, send, idle, gc_minor, gc_major) = worker_remaining in
           (
             run -. result.worker_wall_times.worker_run.duration,
             read -. result.worker_wall_times.worker_read_request.duration,
             send -. result.worker_wall_times.worker_send_response.duration,
-            idle -. result.worker_wall_times.worker_idle.duration
+            idle -. result.worker_wall_times.worker_idle.duration,
+            gc_minor -. result.worker_wall_times.worker_gc_minor.duration,
+            gc_major -. result.worker_wall_times.worker_gc_major.duration
           )
         in wall_remaining, cpu_remaining, worker_remaining
       in
@@ -659,7 +703,9 @@ end = struct
     fun total ->
       (* Print the header *)
       let label = Printf.sprintf "%s Timings" total.timer_name in
-      let header = "   WALL TIME            CPU TIME         RUN/READ/SEND/IDLE    SECTION" in
+      let header =
+        "   WALL TIME            CPU TIME         RUN/READ/SEND/IDLE/GC m/GC M      SECTION"
+      in
       let header_len = String.length header + 8 in
       let whitespace_len = header_len - (String.length label) in
       Printf.eprintf "%s%s%s\n%!"

@@ -125,6 +125,7 @@ let slave_main ic oc =
     start_major_collections := gc.Gc.major_collections;
     start_wall_time := Unix.gettimeofday ();
 
+
     do_process { send = send_result };
     exit 0
   with
