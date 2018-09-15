@@ -23,7 +23,7 @@ let entry =
 (* Saves the default GC settings, which are restored by the workers. Workers can
  * have more relaxed GC configs as they are short-lived processes, and this
  * prevents the workers from inheriting GC settings the master needs. *)
-let gc_control = Gc.get ()
+let gc_control = Gc.{(get ()) with minor_heap_size = 1024 * 1024 * 2; }
 
 let make ~n heap_handle =
   MultiWorkerLwt.make
