@@ -44,6 +44,7 @@ let slave_main ic oc =
   let start_major_words = ref 0. in
   let start_minor_collections = ref 0 in
   let start_major_collections = ref 0 in
+  let start_wall_time = ref 0. in
 
   let infd = Daemon.descr_of_in_channel ic in
   let outfd = Daemon.descr_of_out_channel oc in
@@ -63,6 +64,7 @@ let slave_main ic oc =
     } = Gc.quick_stat () in
     Measure.sample "worker_user_time" (end_user_time -. !start_user_time);
     Measure.sample "worker_system_time" (end_system_time -. !start_system_time);
+    Measure.sample "worker_wall_time" (Unix.gettimeofday () -. !start_wall_time);
 
     Measure.track_distribution "minor_words" ~bucket_size:(float (100 * 1024 * 1024));
     Measure.sample "minor_words" (end_minor_words -. !start_minor_words);
@@ -78,7 +80,9 @@ let slave_main ic oc =
 
     (* If we got so far, just let it finish "naturally" *)
     WorkerCancel.set_on_worker_cancelled (fun () -> ());
-    let len = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data in
+    let len = Measure.time "worker_send_response" (fun () ->
+      Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data
+    ) in
     if len > 30 * 1024 * 1024 (* 30 MB *) then begin
       Hh_logger.log "WARNING: you are sending quite a lot of data (%d bytes), \
         which may have an adverse performance impact. If you are sending \
@@ -88,6 +92,8 @@ let slave_main ic oc =
         (Printexc.get_callstack 100));
     end;
 
+    Measure.sample "worker_response_len" (float len);
+
     let stats = Measure.serialize (Measure.pop_global ()) in
 
     let _ = Marshal_tools.to_fd_with_preamble outfd stats in
@@ -96,7 +102,9 @@ let slave_main ic oc =
 
   try
     Measure.push_global ();
-    let Request do_process = Marshal_tools.from_fd_with_preamble infd in
+    let Request do_process = Measure.time "worker_read_request" (fun () ->
+      Marshal_tools.from_fd_with_preamble infd
+    ) in
     WorkerCancel.set_on_worker_cancelled (fun () -> on_slave_cancelled outfd);
     let tm = Unix.times () in
     let gc = Gc.quick_stat () in
@@ -107,6 +115,7 @@ let slave_main ic oc =
     start_major_words := gc.Gc.major_words;
     start_minor_collections := gc.Gc.minor_collections;
     start_major_collections := gc.Gc.major_collections;
+    start_wall_time := Unix.gettimeofday ();
     do_process { send = send_result };
     exit 0
   with
