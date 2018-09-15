@@ -184,7 +184,7 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[] ~source
       ~expected:"with (object) { foo = true; }" ~mapper:(new useless_mapper)
   end;
-  "whit_object" >:: begin fun ctxt ->
+  "with_object" >:: begin fun ctxt ->
     let source = "with (rename) { foo = true; };" in
     assert_edits_equal ctxt ~edits:[(6, 12), "gotRenamed"] ~source
       ~expected:"with (gotRenamed) { foo = true; };" ~mapper:(new useless_mapper)
