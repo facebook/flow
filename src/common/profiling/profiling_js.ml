@@ -50,17 +50,32 @@ end = struct
     cpu_usage: float;
   }
 
+  type worker_wall_times = {
+    worker_idle: time_measurement;
+    worker_read_request: time_measurement;
+    worker_run: time_measurement;
+    worker_send_response: time_measurement;
+  }
+
   type result = {
     timer_name: string;
     user: time_measurement;
     system: time_measurement;
     worker_user: time_measurement;
     worker_system: time_measurement;
+    worker_wall_times: worker_wall_times;
     wall: time_measurement;
     processor_totals: processor_info;
     flow_cpu_usage: float;
     sub_results: result list;
     sample_count: int; (* If we merge a sample with 2 duplicates, this will be 3 *)
+  }
+
+  type worker_wall_start_times = {
+    worker_idle_start: float;
+    worker_read_request_start: float;
+    worker_run_start: float;
+    worker_send_response_start: float;
   }
 
   type running_timer = {
@@ -69,6 +84,7 @@ end = struct
     system_start: float;
     worker_user_start: float;
     worker_system_start: float;
+    worker_wall_start_times: worker_wall_start_times;
     wall_start: float;
     processor_info_start: Sys_utils.processor_info;
     mutable sub_results_rev: result list;
@@ -93,6 +109,37 @@ end = struct
     | Some time -> time in
     (worker_user_time, worker_system_time)
 
+  let time_measurement start end_ =
+    {
+      start_age = start;
+      duration = end_ -. start;
+    }
+
+  let worker_wall_start_times, worker_wall_times =
+    let get_run () = Option.value ~default:0.0 (Measure.get_sum "worker_wall_time") in
+    let get_read () = Option.value ~default:0.0 (Measure.get_sum "worker_read_request") in
+    let get_send () = Option.value ~default:0.0 (Measure.get_sum "worker_send_response") in
+    let get_idle () = Option.value ~default:0.0 (Measure.get_sum "worker_idle") in
+
+    let worker_wall_start_times () =
+      {
+        worker_idle_start = get_idle ();
+        worker_read_request_start = get_read ();
+        worker_run_start = get_run ();
+        worker_send_response_start = get_send ();
+      }
+    in
+
+    let worker_wall_times start =
+      {
+        worker_idle = time_measurement start.worker_idle_start (get_idle ());
+        worker_read_request = time_measurement start.worker_read_request_start (get_read ());
+        worker_run = time_measurement start.worker_run_start (get_run ());
+        worker_send_response = time_measurement start.worker_send_response_start (get_send ());
+      }
+    in
+
+    worker_wall_start_times, worker_wall_times
 
   let legacy_top_timer_name = "Profiling"
 
@@ -100,6 +147,7 @@ end = struct
     let wall_start = Unix.gettimeofday () in
     let (user_start, system_start) = times () in
     let (worker_user_start, worker_system_start) = worker_times () in
+    let worker_wall_start_times = worker_wall_start_times () in
     let processor_info_start = Sys_utils.processor_info () in
     {
       timer;
@@ -107,6 +155,7 @@ end = struct
       system_start;
       worker_user_start;
       worker_system_start;
+      worker_wall_start_times;
       wall_start;
       processor_info_start;
       sub_results_rev = [];
@@ -147,6 +196,7 @@ end = struct
       start_age = running_timer.worker_system_start;
       duration = worker_system_end -. running_timer.worker_system_start;
     } in
+    let worker_wall_times = worker_wall_times running_timer.worker_wall_start_times in
     let wall = {
       start_age = running_timer.wall_start -. flow_start_time;
       duration = wall_end -. running_timer.wall_start;
@@ -173,6 +223,7 @@ end = struct
       system;
       worker_user;
       worker_system;
+      worker_wall_times;
       wall;
       processor_totals;
       flow_cpu_usage;
@@ -264,6 +315,15 @@ end = struct
       { start_age = a.start_age; duration = a.duration +. b.duration; }
     in
 
+    let merge_worker_wall_times a b =
+      {
+        worker_idle = merge_time_measurement a.worker_idle b.worker_idle;
+        worker_read_request = merge_time_measurement a.worker_read_request b.worker_read_request;
+        worker_run = merge_time_measurement a.worker_run b.worker_run;
+        worker_send_response = merge_time_measurement a.worker_send_response b.worker_send_response;
+      }
+    in
+
     let weighted_average values =
       let weight_sum, acc = List.fold_left (fun (weight_sum, acc) (weight, value) ->
         assert (weight >= 0.);
@@ -296,6 +356,8 @@ end = struct
           system = merge_time_measurement result.system dupe.system;
           worker_user = merge_time_measurement result.worker_user dupe.worker_user;
           worker_system = merge_time_measurement result.worker_system dupe.worker_system;
+          worker_wall_times =
+            merge_worker_wall_times result.worker_wall_times dupe.worker_wall_times;
           processor_totals = merge_processor_totals result.processor_totals dupe.processor_totals;
           flow_cpu_usage = weighted_average [
             total_cpu_time result.processor_totals, result.flow_cpu_usage;
@@ -314,6 +376,7 @@ end = struct
       system;
       worker_user;
       worker_system;
+      worker_wall_times;
       processor_totals;
       flow_cpu_usage;
       sub_results;
@@ -345,6 +408,12 @@ end = struct
           "system", json_of_time_measurement system;
           "worker_user", json_of_time_measurement worker_user;
           "worker_system", json_of_time_measurement worker_system;
+          "worker_wall_times", JSON_Object [
+            "run", json_of_time_measurement worker_wall_times.worker_run;
+            "read", json_of_time_measurement worker_wall_times.worker_read_request;
+            "send", json_of_time_measurement worker_wall_times.worker_send_response;
+            "idle", json_of_time_measurement worker_wall_times.worker_idle;
+          ];
           "sub_results", sub_results;
           "samples", JSON_Number (string_of_int sample_count);
         ]
@@ -430,9 +499,9 @@ end = struct
    *     0.260 (  0.8%)      0.259 (  0.1%)    <Unknown total>
    *
    *
-   * For each profiled section, it prints out the wall time and cpu time, including the percentage of
-   * the total profiled time. The sections are printed in the order that they were run. Sub timers
-   * are indented under their parent.
+   * For each profiled section, it prints out the wall time and cpu time, including the percentage
+   * of the total profiled time. The sections are printed in the order that they were run. Sub
+   * timers are indented under their parent.
    *
    * The <Unknown> sections appear when some unprofiled code takes up more than 1% of wall time. The
    * <Unknown total> is the sum of all unprofiled time.
@@ -455,33 +524,83 @@ end = struct
     in
 
     (* Prints a single row of the table. All but the last column have a fixed width. *)
-    let print_summary_single_raw key (result_wall, result_cpu) total =
-      Printf.eprintf "%7.3f (%5.1f%%)    %7.3f (%5.1f%%)    %s\n%!"
+    let print_summary_single_raw key (result_wall, result_cpu, (run, read, send, idle)) total =
+      let worker_total = idle +. read +. run +. send in
+      let worker_total = if worker_total = 0.0 then 1.0 else worker_total in
+      let worker_idle_pct = idle /. worker_total *. 100. in
+      let worker_read_pct = read /. worker_total *. 100. in
+      let worker_run_pct = run /. worker_total *. 100. in
+      let worker_send_pct = send /. worker_total *. 100. in
+
+      Printf.eprintf "%7.3f (%5.1f%%)   %9.3f (%5.1f%%)   %3d%% %3d%% %3d%% %3d%%    %s\n%!"
         result_wall
         (100.0 *. result_wall /. total.wall.duration)
         result_cpu
         (100.0 *. result_cpu /. (sum_cpu total))
+        (worker_run_pct |> int_of_float)
+        (worker_read_pct |> int_of_float)
+        (worker_send_pct |> int_of_float)
+        (worker_idle_pct |> int_of_float)
         key
     in
 
     let print_summary_single key result total =
-      print_summary_single_raw key (result.wall.duration, sum_cpu result) total
+      let worker_wall_times = (
+        result.worker_wall_times.worker_run.duration,
+        result.worker_wall_times.worker_read_request.duration,
+        result.worker_wall_times.worker_send_response.duration,
+        result.worker_wall_times.worker_idle.duration
+      ) in
+      print_summary_single_raw key (result.wall.duration, sum_cpu result, worker_wall_times) total
     in
 
     (* If there's more than 1% of wall time since the last end and the next start_age, then print an
      * <Unknown> row *)
-    let print_unknown ~indent last_end (wall_start_age, cpu_start_age) total =
-      let (wall_end, cpu_end) = last_end in
+    let print_unknown ~indent last_end (wall_start_age, cpu_start_age, worker_wall_start) total =
+      let (run_start, read_start, send_start, idle_start) = worker_wall_start in
+      let (wall_end, cpu_end, (run_end, read_end, send_end, idle_end)) = last_end in
       let unknown_wall = wall_start_age -. wall_end in
       if unknown_wall /. total.wall.duration > 0.01
       then
         let unknown_cpu = cpu_start_age -. cpu_end in
-        print_summary_single_raw (indent ^ "<Unknown>") (unknown_wall, unknown_cpu) total
+        let unknown_worker = (
+          run_start -. run_end,
+          read_start -. read_end,
+          send_start -. send_end,
+          idle_start -. idle_end
+        ) in
+        print_summary_single_raw
+          (indent ^ "<Unknown>") (unknown_wall, unknown_cpu, unknown_worker) total
     in
 
-    let rec print_result_rows ~indent ~total (last_end, (wall_remaining, cpu_remaining)) result =
+    let worker_wall_times_to_tuples worker_wall_times =
+      let {
+        worker_run = { start_age = run_start; duration = run_duration; };
+        worker_read_request = { start_age = read_start; duration = read_duration; };
+        worker_send_response = { start_age = send_start; duration = send_duration; };
+        worker_idle = { start_age = idle_start; duration = idle_duration; };
+      } = worker_wall_times in
+      let worker_last = (run_start, read_start, send_start, idle_start) in
+      let worker_remaining = (run_duration, read_duration, send_duration, idle_duration) in
+      let worker_end = (
+        run_start +. run_duration,
+        read_start +. read_duration,
+        send_start +. send_duration,
+        idle_start +. idle_duration
+      ) in
+      worker_last, worker_remaining, worker_end
+    in
+
+    let rec print_result_rows
+      ~indent ~total (last_end, (wall_remaining, cpu_remaining, worker_remaining)) result =
+
+      let result_worker_starts, result_worker_durations, result_worker_end =
+        worker_wall_times_to_tuples result.worker_wall_times
+      in
       (* Print an <Unknown> row if needed *)
-      print_unknown ~indent last_end (result.wall.start_age, sum_cpu_start_age result) total;
+      print_unknown
+        ~indent last_end
+        (result.wall.start_age, sum_cpu_start_age result, result_worker_starts) total;
 
       (* Print this row *)
       print_summary_single (indent ^ result.timer_name) result total;
@@ -492,16 +611,23 @@ end = struct
 
         let last_end, remaining = List.fold_left
           (print_result_rows ~indent:new_indent ~total)
-          ((result.wall.start_age, sum_cpu_start_age result), (result.wall.duration, sum_cpu result))
+          (
+            (result.wall.start_age, sum_cpu_start_age result, result_worker_starts),
+            (result.wall.duration, sum_cpu result, result_worker_durations)
+          )
           result.sub_results
         in
 
-        (* Print an <Unknown> row if there's too much time between the last section and the end of the
-         * profiling *)
+        (* Print an <Unknown> row if there's too much time between the last section and the end of
+         * the profiling *)
         print_unknown
           ~indent:new_indent
           last_end
-          (result.wall.start_age +. result.wall.duration, sum_cpu_start_age result +. sum_cpu result)
+          (
+            result.wall.start_age +. result.wall.duration,
+            sum_cpu_start_age result +. sum_cpu result,
+            result_worker_end
+          )
           total;
 
         (* Print the unknown totals *)
@@ -510,9 +636,22 @@ end = struct
 
       let last_end =
         result.wall.start_age +. result.wall.duration,
-        (sum_cpu_start_age result) +. (sum_cpu result)
+        (sum_cpu_start_age result) +. (sum_cpu result),
+        result_worker_end
       in
-      let remaining = wall_remaining -. result.wall.duration, cpu_remaining -. (sum_cpu result) in
+      let remaining =
+        let wall_remaining = wall_remaining -. result.wall.duration in
+        let cpu_remaining = cpu_remaining -. (sum_cpu result) in
+        let worker_remaining =
+          let (run, read, send, idle) = worker_remaining in
+          (
+            run -. result.worker_wall_times.worker_run.duration,
+            read -. result.worker_wall_times.worker_read_request.duration,
+            send -. result.worker_wall_times.worker_send_response.duration,
+            idle -. result.worker_wall_times.worker_idle.duration
+          )
+        in wall_remaining, cpu_remaining, worker_remaining
+      in
       last_end, remaining
     in
 
@@ -520,7 +659,7 @@ end = struct
     fun total ->
       (* Print the header *)
       let label = Printf.sprintf "%s Timings" total.timer_name in
-      let header = "   WALL TIME            CPU TIME        SECTION" in
+      let header = "   WALL TIME            CPU TIME         RUN/READ/SEND/IDLE    SECTION" in
       let header_len = String.length header + 8 in
       let whitespace_len = header_len - (String.length label) in
       Printf.eprintf "%s%s%s\n%!"
@@ -533,20 +672,34 @@ end = struct
 
       let indent = "  " in
 
+      let worker_last, worker_remaining, worker_end =
+        worker_wall_times_to_tuples total.worker_wall_times
+      in
+
+      let last_end = total.wall.start_age, sum_cpu_start_age total, worker_last in
+      let remaining = total.wall.duration, sum_cpu total, worker_remaining in
+
       (* Print the various sections and the unknown durations *)
       let last_end, remaining = List.fold_left
         (print_result_rows ~indent ~total)
-        ((total.wall.start_age, sum_cpu_start_age total), (total.wall.duration, sum_cpu total))
+        (last_end, remaining)
         total.sub_results
       in
 
       (* Print an <Unknown> row if there's too much time between the last section and the end of the
        * profiling *)
-      print_unknown
-        ~indent
-        last_end
-        (total.wall.start_age +. total.wall.duration, sum_cpu_start_age total +. sum_cpu total)
-        total;
+      let () =
+        let start = (
+          total.wall.start_age +. total.wall.duration,
+          sum_cpu_start_age total +. sum_cpu total,
+          worker_end
+        ) in
+        print_unknown
+          ~indent
+          last_end
+          start
+          total
+      in
 
       (* Print the unknown totals *)
       print_summary_single_raw "<Unknown total>" remaining total
