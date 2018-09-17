@@ -442,7 +442,7 @@ module Eval(Env: EvalEnv) = struct
       match Env.prevent_munge, element with
         | false, Body.Method (_, { Method.key = (ObjProp.Identifier (_, name)); _ })
         | false, Body.Property (_, { Property.key = (ObjProp.Identifier (_, name)); _ })
-          when Parser_common.is_munged_property_name name ->
+          when Signature_utils.is_munged_property_name name ->
           Deps.bot
         | _, Body.Method (_, { Method.value; _ }) ->
           let loc, { Ast.Function.generator; tparams; params; return; body; _ } = value in

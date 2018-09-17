@@ -42,3 +42,7 @@ module Procedure_decider = struct
     decider#eval decider#function_body_any body
 
 end
+
+let is_munged_property_name name = (String.length name >= 2)
+  && name.[0] = '_'
+  && name.[1] <> '_'

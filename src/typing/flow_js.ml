@@ -8518,9 +8518,7 @@ and mk_intersection_reason r _ls =
  *)
 and is_munged_prop_name cx name =
   (Context.should_munge_underscores cx)
-  && (String.length name >= 2)
-  && name.[0] = '_'
-  && name.[1] <> '_'
+  && Signature_utils.is_munged_property_name name
 
 and lookup_prop cx trace l reason_prop reason_op strict x action =
   let l =
