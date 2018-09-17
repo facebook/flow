@@ -92,7 +92,12 @@ assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-2.js 20 10
 echo "ES6 default export of an async function:"
 # export default async function foo() { foo(); }
 #                                ^
-assert_ok "$FLOW" find-refs --global --json --pretty --strip-root exportDefaultAsync.js 8 32
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root exportDefaultAsync.js 3 32
+
+echo "ES6 import of default async function:"
+# import fooAsync from './exportDefaultAsync';
+#          ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root importDefault.js 3 10
 
 echo "ES6 default export of an arbitrary expression:"
 # export default (1, function foo() { foo(); });
@@ -104,7 +109,15 @@ echo "Function expression exported via export default:"
 #                              ^
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root exportDefaultExpr.js 5 30
 
+echo "Function declaration is not shadowed by export default expression:"
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root exportDefaultExpr.js 9 2
+
 echo
+
+echo "ES6 import of default expression:"
+# import foo from './exportDefaultExpr';
+#          ^
+assert_ok "$FLOW" find-refs --global --json --pretty --strip-root importDefault.js 4 10
 
 echo "shadowing an export:"
 assert_ok "$FLOW" find-refs --global --json --pretty --strip-root es6-1.js 12 15

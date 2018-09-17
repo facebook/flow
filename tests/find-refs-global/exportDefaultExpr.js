@@ -1,9 +1,9 @@
 // @flow
 
-import foo from './exportDefaultAsync';
+function foo() {}
 
 export default (1, function foo() { foo(); });
 
-// This refers to the imported symbol, since the `export default` statement does not introduce a
-// top-level binding.
+// This refers to the first foo function, since the `export default` contains
+// a function expression which is not in top-level scope.
 foo();

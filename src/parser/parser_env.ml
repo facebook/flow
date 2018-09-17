@@ -669,7 +669,8 @@ module Peek = struct
 
   let is_function env =
     token env = T_FUNCTION ||
-    (token env = T_ASYNC && ith_token ~i:1 env = T_FUNCTION)
+    (token env = T_ASYNC && ith_token ~i:1 env = T_FUNCTION &&
+      (loc env)._end.line = (ith_loc ~i:1 env).start.line)
 
   let is_class env =
     match token env with

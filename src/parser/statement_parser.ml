@@ -957,21 +957,21 @@ module Statement
           Expect.token env T_DEFAULT
         ) env in
         record_export env (Loc.btwn start_loc (Peek.loc env), "default");
-        let declaration = match Peek.token env with
-        | T_FUNCTION ->
-            (* export default function foo (...) { ... } *)
+        let declaration =
+          if Peek.is_function env then
+            (* export default [async] function [foo] (...) { ... } *)
             let fn = Declaration._function env in
             Declaration fn
-        | _ when Peek.is_class env ->
+          else if Peek.is_class env then
             (* export default class foo { ... } *)
             let _class = Object.class_declaration env decorators in
             Declaration _class
-        | _ ->
+          else
             (* export default [assignment expression]; *)
             let expr = Parse.assignment env in
             Eat.semicolon env;
             Expression expr
-          in
+        in
         Statement.ExportDefaultDeclaration {
           default;
           declaration;
