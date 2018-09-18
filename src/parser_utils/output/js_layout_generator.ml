@@ -1077,6 +1077,9 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
         list
           ~wrap:(Atom "{", Atom "}")
           ~sep:(Atom ",")
+          (* Object rest can have comma but most tooling still apply old
+          pre-spec rules that disallow it so omit it to be safe *)
+          ~trailing:false
           (List.map
             (function
             | P.Object.Property (loc, { P.Object.Property.
@@ -1108,6 +1111,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
         list
           ~wrap:(Atom "[", Atom "]")
           ~sep:(Atom ",")
+          ~trailing:false (* Array rest cannot have trailing *)
           (List.map
             (function
             | None -> Empty

@@ -1663,7 +1663,10 @@ let tests = "js_layout_generator" >::: [
       assert_statement_string ~ctxt ~pretty:true "let {a: b, c = d} = a;";
       assert_statement_string ~ctxt ~pretty:true "let {...a} = a;";
       assert_statement_string ~ctxt ~pretty:true (
-        "let {\n  a: b,\n  c = " ^ String.make 80 'd' ^ ",\n} = a;"
+        "let {\n  a: b,\n  c = " ^ String.make 80 'd' ^ "\n} = a;"
+      );
+      assert_statement_string ~ctxt ~pretty:true (
+        "let {\n  a: b,\n  ...c" ^ String.make 80 'c' ^ "\n} = a;"
       );
       assert_statement_string ~ctxt "let []=a;";
       assert_statement_string ~ctxt "let []:a=a;";
@@ -1679,9 +1682,12 @@ let tests = "js_layout_generator" >::: [
       assert_statement_string ~ctxt "let [a,...b]=a;";
       assert_statement_string ~ctxt ~pretty:true "let [a, b] = a;";
       assert_statement_string ~ctxt ~pretty:true "let [a, ...b] = a;";
+      assert_statement_string ~ctxt ~pretty:true (
+        "let [\n  a,\n  ...b" ^ String.make 80 'c' ^ "\n] = a;"
+      );
       assert_statement_string ~ctxt ~pretty:true "let [a, , b] = a;";
       assert_statement_string ~ctxt ~pretty:true (
-        "let [\n  a,\n  ,\n  " ^ String.make 80 'b' ^ ",\n] = a;"
+        "let [\n  a,\n  ,\n  " ^ String.make 80 'b' ^ "\n] = a;"
       );
     end;
 

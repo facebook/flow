@@ -53,10 +53,7 @@ let test ctxt =
               fused [
                 atom "{";
                 sequence ~break:Layout.Break_if_needed [
-                  fused [
-                    loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=2; offset=2}; _end={Loc.line=1; column=3; offset=3}} (id ~loc:{Loc.none with Loc.start={Loc.line=1; column=2; offset=2}; _end={Loc.line=1; column=3; offset=3}} "a");
-                    Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
-                  ];
+                  loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=2; offset=2}; _end={Loc.line=1; column=3; offset=3}} (id ~loc:{Loc.none with Loc.start={Loc.line=1; column=2; offset=2}; _end={Loc.line=1; column=3; offset=3}} "a");
                 ];
                 atom "}";
               ];
