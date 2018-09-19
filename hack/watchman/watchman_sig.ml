@@ -64,7 +64,7 @@ module Types = struct
   type changes =
     | Watchman_unavailable
     | Watchman_pushed of pushed_changes
-    | Watchman_synchronous of SSet.t
+    | Watchman_synchronous of pushed_changes list
 end
 
 (** The abstract types, and the types that are defined in terms of
@@ -125,7 +125,7 @@ module type S = sig
   val get_changes: ?deadline:float ->
     watchman_instance -> (watchman_instance * changes) result
   val get_changes_synchronously: timeout:int ->
-    watchman_instance -> (watchman_instance * SSet.t) result
+    watchman_instance -> (watchman_instance * (pushed_changes list)) result
 
   val conn_of_instance: watchman_instance -> conn option
 
