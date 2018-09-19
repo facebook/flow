@@ -38,7 +38,7 @@ struct
 
   let get_sockname timeout =
     let process = Lwt_process.open_process_in
-      ("watchman", [| "watchman"; "get-sockname"; "--no-pretty" |])
+      ("", [| "watchman"; "--no-pretty"; "get-sockname"; |])
     in
     let%lwt output =
       try%lwt Lwt_unix.with_timeout timeout @@ fun () -> Lwt_io.read_line process#stdout
@@ -53,10 +53,18 @@ struct
   let open_connection ~timeout =
     let%lwt sockname = get_sockname timeout in
 
-    (* Yes, I know that Unix.open_connection uses the same fd for input and output. But I don't
-     * want to hardcode that assumption here. So let's pretend like ic and oc might be back by
-     * different fds *)
-    let (ic, oc) = Unix.open_connection (Unix.ADDR_UNIX sockname) in
+    let (ic, oc) =
+      if Sys.os_type = "Unix"
+      (* Yes, I know that Unix.open_connection uses the same fd for input and output. But I don't
+       * want to hardcode that assumption here. So let's pretend like ic and oc might be back by
+       * different fds *)
+      then Unix.open_connection (Unix.ADDR_UNIX sockname)
+      (* On Windows, however, named pipes behave like regular files from the client's perspective.
+       * We just open the file and create in/out channels for it. The file permissions attribute
+       * is not needed because the file should exist already but we have to pass something. *)
+      else let fd = Unix.openfile sockname [Unix.O_RDWR] 0o640 in
+      (Unix.in_channel_of_descr fd, Unix.out_channel_of_descr fd)
+    in
     let reader =
       Unix.descr_of_in_channel ic
       |> Lwt_unix.of_unix_file_descr ~blocking:true
