@@ -606,6 +606,11 @@ class virtual ['a] t_with_uses = object(self)
           let t'' = self#type_ cx map_cx t' in
           if prop' == prop && t'' == t' then t
           else GetPropT (use_op, r, prop', t'')
+      | MatchPropT (use_op, r, prop, t') ->
+          let prop' = self#prop_ref cx map_cx prop in
+          let t'' = self#type_ cx map_cx t' in
+          if prop' == prop && t'' == t' then t
+          else MatchPropT (use_op, r, prop', t'')
       | GetPrivatePropT (use_op, r, prop, scopes, static, t') ->
           let t'' = self#type_ cx map_cx t' in
           let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
@@ -1156,10 +1161,10 @@ class virtual ['a] t_with_uses = object(self)
         let prop' = Property.ident_map_t (self#type_ cx map_cx) prop in
         if prop == prop' then t
         else SuperProp (op, prop')
-    | MatchProp t' ->
+    | MatchProp (use, t') ->
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t
-      else MatchProp t'
+      else MatchProp (use, t')
 
   method cont cx map_cx t =
     match t with

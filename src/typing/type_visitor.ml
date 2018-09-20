@@ -277,6 +277,7 @@ class ['a] t = object(self)
     acc
 
   | GetPropT (_, _, p, t)
+  | MatchPropT(_, _, p, t)
   | TestPropT (_, _, p, t) ->
     let acc = self#propref cx acc p in
     let acc = self#type_ cx pole_TODO acc t in
@@ -823,7 +824,7 @@ class ['a] t = object(self)
   | LookupProp (_, prop)
   | SuperProp (_, prop) ->
     self#prop cx pole_TODO acc prop
-  | MatchProp t ->
+  | MatchProp (_, t) ->
     self#type_ cx pole_TODO acc t
 
   method private read_write cx acc = function

@@ -452,6 +452,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | SetPropT (_, _, name, _, t, _)
   | GetPropT (_, _, name, t)
+  | MatchPropT (_, _, name, t)
   | TestPropT (_, _, name, t) -> [
       "propRef", json_of_propref json_cx name;
       "propType", _json_of_t json_cx t
@@ -1426,7 +1427,7 @@ and json_of_lookup_action_impl json_cx action = Hh_json.(
         "kind", JSON_String "SuperProp";
         "prop", json_of_prop json_cx p;
       ]
-    | MatchProp t -> [
+    | MatchProp (_, t) -> [
         "kind", JSON_String "MatchProp";
         "t", _json_of_t json_cx t
       ]
@@ -1856,7 +1857,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | RWProp (_, _, t, Write _) -> spf "Write %s" (kid t)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp (_, p) -> spf "Super %s" (prop p)
-  | MatchProp t -> spf "Match %s" (kid t)
+  | MatchProp (_, t) -> spf "Match %s" (kid t)
   in
 
   let specialize_cache = function
@@ -2070,6 +2071,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
   | GetValuesT _ -> p t
+  | MatchPropT (use_op, _, prop, ptype)
   | GetPropT (use_op, _, prop, ptype) -> p ~extra:(spf "%s, (%s), %s"
       (string_of_use_op use_op)
       (propref prop)
@@ -2387,6 +2389,7 @@ let dump_flow_error =
   let dump_upper_kind = function
   | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
   | IncompatibleSetPropT _ -> "IncompatibleSetPropT"
+  | IncompatibleMatchPropT _ -> "IncompatibleSetPropT"
   | IncompatibleGetPrivatePropT -> "IncompatibleGetPrivatePropT"
   | IncompatibleSetPrivatePropT -> "IncompatibleSetPrivatePropT"
   | IncompatibleMethodT _ -> "IncompatibleMethodT"

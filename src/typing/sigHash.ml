@@ -90,6 +90,7 @@ type hash =
   | SetPropH
   | SetPrivatePropH
   | GetPropH
+  | MatchPropH
   | GetPrivatePropH
   | TestPropH
   | SetElemH
@@ -245,6 +246,7 @@ let hash_of_use_ctor = Type.(function
   | SetPropT _ -> SetPropH
   | SetPrivatePropT _ -> SetPrivatePropH
   | GetPropT _ -> GetPropH
+  | MatchPropT _ -> MatchPropH
   | GetPrivatePropT _ -> GetPrivatePropH
   | TestPropT _ -> TestPropH
   | SetElemT _ -> SetElemH

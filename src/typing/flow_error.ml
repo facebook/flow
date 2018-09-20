@@ -247,6 +247,7 @@ and lower_kind =
 and upper_kind =
   | IncompatibleGetPropT of Loc.t * string option
   | IncompatibleSetPropT of Loc.t * string option
+  | IncompatibleMatchPropT of Loc.t * string option
   | IncompatibleGetPrivatePropT
   | IncompatibleSetPrivatePropT
   | IncompatibleMethodT of Loc.t * string option
@@ -1099,6 +1100,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       -> nope "is not a number"
     | IncompatibleGetPropT (prop_loc, prop)
     | IncompatibleSetPropT (prop_loc, prop)
+    | IncompatibleMatchPropT (prop_loc, prop)
     | IncompatibleHasOwnPropT (prop_loc, prop)
     | IncompatibleMethodT (prop_loc, prop)
       -> mk_prop_missing_error prop_loc prop lower use_op

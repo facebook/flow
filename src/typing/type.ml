@@ -367,6 +367,8 @@ module rec TypeTerm : sig
      * fields when the InstanceT ~> SetPrivatePropT constraint is processsed *)
     | SetPrivatePropT of use_op * reason * string * class_binding list * bool * t * t option
     | GetPropT of use_op * reason * propref * t
+    (* For shapes *)
+    | MatchPropT of use_op * reason * propref * t
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
     | TestPropT of reason * ident * propref * t
@@ -859,7 +861,7 @@ module rec TypeTerm : sig
   | RWProp of use_op * t (* original target *) * t (* in/out type *) * rw
   | LookupProp of use_op * Property.t
   | SuperProp of use_op * Property.t
-  | MatchProp of t
+  | MatchProp of use_op * t
 
   and rw =
   | Read
@@ -2230,6 +2232,7 @@ end = struct
     | TypeAppVarianceCheckT (_, reason, _, _) -> reason
     | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
     | CondT (reason, _, _, _) -> reason
+    | MatchPropT (_, reason, _, _) -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2401,6 +2404,7 @@ end = struct
     | ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, r2), targs) ->
         ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
     | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
+    | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
 
   and mod_reason_of_opt_use_t f = function
   | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
@@ -2431,6 +2435,7 @@ end = struct
   | SetPrivatePropT (op, r, s, c, b, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, c, b, t, tp))
   | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
+  | MatchPropT (op, r, p, t) -> util op (fun op -> MatchPropT (op, r, p, t))
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, t2, t3))
   | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
@@ -2769,6 +2774,7 @@ let any_propagating_use_t = function
   | GetKeysT _
   | GetValuesT _
   | GetPropT _
+  | MatchPropT _
   | GetPrivatePropT _
   | GetProtoT _
   | GetStaticsT _
@@ -3150,6 +3156,7 @@ let string_of_use_ctor = function
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
+  | MatchPropT _ -> "MatchPropT"
   | SetPrivatePropT _ -> "SetPrivatePropT"
   | SetProtoT _ -> "SetProtoT"
   | SpecializeT _ -> "SpecializeT"
