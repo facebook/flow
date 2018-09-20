@@ -32,6 +32,15 @@ class useless_mapper = object
       { expr with operator=Plus }
     | _ -> expr
 
+  method! unary_expression loc (expr: (Loc.t, Loc.t) Ast.Expression.Unary.t) =
+    let open Ast.Expression.Unary in
+    let expr = super#unary_expression loc expr in
+    let { operator; _ } = expr in
+    match operator with
+    | Minus -> expr
+    | _ ->
+      { expr with operator=Minus }
+
   method! identifier id =
     let (loc, name) = id in
     if name = "rename" then
@@ -152,6 +161,16 @@ let tests = "ast_differ" >::: [
   "new" >:: begin fun ctxt ->
     let source = "new rename()" in
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source ~expected:"new gotRenamed()"
+      ~mapper:(new useless_mapper)
+  end;
+  "unary_same_op" >:: begin fun ctxt ->
+    let source = "-rename" in
+    assert_edits_equal ctxt ~edits:[((1, 7), "gotRenamed")] ~source ~expected:"-gotRenamed"
+      ~mapper:(new useless_mapper)
+  end;
+  "unary_diff_op" >:: begin fun ctxt ->
+    let source = "+rename" in
+    assert_edits_equal ctxt ~edits:[((0, 7), "(-gotRenamed)")] ~source ~expected:"(-gotRenamed)"
       ~mapper:(new useless_mapper)
   end;
   "block" >:: begin fun ctxt ->
