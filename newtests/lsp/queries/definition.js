@@ -5,3 +5,4 @@ function fred(): number {
 }
 
 fred();
+    // command has no definition

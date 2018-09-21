@@ -43,6 +43,30 @@ export default suite(
       ),
     ]),
 
+    test('textDocument/definition', [
+      addFile('definition.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/definition', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
+        position: {line: 7, character: 11}, // over a comment
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/definition{[]}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+
+    test('textDocument/definition', [
+      addFile('definition.js'),
+      ideStartAndConnect(),
+      ideRequestAndWaitUntilResponse('textDocument/definition', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>definition.js'},
+        position: {line: 7, character: 1}, // over whitespace
+      }).verifyAllIDEMessagesInStep(
+        ['textDocument/definition{[]}'],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+
     test('textDocument/hover', [
       addFile('hover.js'),
       ideStartAndConnect(),

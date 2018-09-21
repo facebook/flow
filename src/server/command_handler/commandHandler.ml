@@ -743,6 +743,9 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
       get_def ~options ~workers ~env ~profiling (file, line, char) in
     let metadata = with_data ~extra_data metadata in
     begin match result with
+      | Ok loc when loc = Loc.none ->
+        let response = ResponseMessage (id, DefinitionResult []) in
+        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | Ok loc ->
         let default_uri = params.textDocument.TextDocumentIdentifier.uri in
         let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
