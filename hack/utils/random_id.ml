@@ -7,7 +7,7 @@
  *
  *)
 
-let () = Random.self_init ()
+let initialized = ref false
 
 let base64_alphabet =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
@@ -19,6 +19,11 @@ let () =
   assert (String.length base64_alphabet = 64)
 
 let short_string_with_alphabet alphabet =
+  (* If we haven't seeded random then do it now *)
+  if not !initialized then begin
+    initialized := true;
+    Random.self_init ()
+  end;
   let r = ref ((Random.bits () lsl 30) lor Random.bits ()) in
   let cs = ref [] in
   while !r > 0 do
