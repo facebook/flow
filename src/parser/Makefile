@@ -100,7 +100,6 @@ test-js: js
 		$(NATIVE_OBJECT_FILES); \
 	$(OCB) -no-links \
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
-	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
 		$(REL_DIR)/test/run_tests.native
 
