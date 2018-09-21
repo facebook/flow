@@ -94,8 +94,7 @@ module type WATCHMAN_PROCESS = sig
   val return: 'a -> 'a result
   val catch: f:(unit -> 'b result) -> catch:(exn -> 'b result) -> 'b result
 
-  val map_fold_values: 'a SMap.t -> init:'b -> f:('a -> 'b -> 'b result) -> 'b result
-  val map_iter_values_s: 'a SMap.t -> f:('a -> unit result) -> unit result
+  val list_fold_values: 'a list -> init:'b -> f:('b -> 'a -> 'b result) -> 'b result
 
   val open_connection: timeout:float -> conn result
   val request:
