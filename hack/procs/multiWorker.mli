@@ -56,6 +56,10 @@ val call :
   'c
 
 val call_with_interrupt :
+  (* [on_cancelled] should be specified if your [next] function ever returns
+     [Bucket.Wait], and it should return the list of all jobs that haven't
+     finished or started yet. *)
+  ?on_cancelled:(unit -> 'a list) ->
   worker list option ->
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->

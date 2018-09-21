@@ -55,6 +55,7 @@ let multi_threaded_call
   (merge: b -> c -> c)
   (neutral: c)
   (next: a Bucket.next)
+  ?(on_cancelled : (unit -> a list) option)
   (interrupt: d interrupt_config) =
 
   incr call_id;
@@ -88,9 +89,12 @@ let multi_threaded_call
     | Bucket.Done -> acc
     | Bucket.Job a -> add_pending (a::acc)
     | Bucket.Wait ->
-      (* Wait is only used by Flow at the moment, and they don't plan to use
-      * this cancelling mechanism for now. *)
-      failwith "cancelling jobs with Wait not supported" in
+      (* There's not really a good solution to generically getting the pending
+         work items when attempting to cancel a job that's in the Wait state,
+         so we depend on those jobs to determine their own state in the
+         [on_cancelled] handler. *)
+      failwith "cancelling jobs with Wait not supported"
+  in
 
   (* When a job is cancelled, return all the jobs that were not started OR were
    * cancelled in the middle (so you better hope they are idempotent).*)
@@ -112,8 +116,12 @@ let multi_threaded_call
     let res = acc, env, handlers in
     if decision = Cancel then begin
       WorkerController.cancel handles;
-      let unfinished = List.map handles ~f:WorkerController.get_job in
-      let unfinished = add_pending unfinished in
+      let unfinished = match on_cancelled with
+        | Some f -> f ()
+        | None ->
+          let unfinished = List.map handles ~f:WorkerController.get_job in
+          add_pending unfinished
+      in
       res, Some unfinished
     end else res, None in
 
@@ -187,14 +195,14 @@ let call workers job merge neutral next =
   assert (unfinished = []);
   res
 
-let call_with_interrupt workers job merge neutral next interrupt =
+let call_with_interrupt workers job merge neutral next ?on_cancelled interrupt =
   SharedMem.allow_removes false;
   (* Interrupting of nested jobs is not implemented *)
   assert (List.for_all workers
     ~f:(fun x -> Option.is_none @@ WorkerController.get_handle_UNSAFE x)
   );
   let (res, interrupt_env), unfinished =
-    multi_threaded_call workers job merge neutral next interrupt in
+    multi_threaded_call workers job merge neutral next ?on_cancelled interrupt in
   SharedMem.allow_removes true;
   res, interrupt_env, unfinished
 

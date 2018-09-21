@@ -74,11 +74,17 @@ end)
 let call = Call.call
 
 (* If we ever want this in MultiWorkerLwt then move this into CallFunctor *)
-let call_with_interrupt workers ~job ~merge ~neutral ~next ~interrupt =
+let call_with_interrupt ?on_cancelled workers ~job ~merge ~neutral ~next ~interrupt =
   match workers with
   | None -> single_threaded_call job merge neutral next, interrupt.MultiThreadedCall.env, []
   | Some workers ->
-    MultiThreadedCall.call_with_interrupt workers job merge neutral next
+    MultiThreadedCall.call_with_interrupt
+      ?on_cancelled
+      workers
+      job
+      merge
+      neutral
+      next
       interrupt
 
 let next ?progress_fn ?max_size workers =

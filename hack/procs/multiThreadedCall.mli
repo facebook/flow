@@ -46,6 +46,10 @@ val call_with_interrupt :
   ('c -> 'a -> 'b) ->
   ('b -> 'c -> 'c) -> 'c ->
   'a Bucket.next ->
+  (* [on_cancelled] should be specified if your [next] function ever returns
+     [Bucket.Wait], and it should return the list of all jobs that haven't
+     finished or started yet. *)
+  ?on_cancelled:(unit -> 'a list) ->
   'd interrupt_config ->
   'c * 'd * 'a list
 
