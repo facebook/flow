@@ -913,6 +913,11 @@ end
 
 (* ErrorResponse *)
 module Error = struct
+  type t = {code: int; message: string; data: Hh_json.json option}
+
+  (* Legacy: some code uses exceptions instead of Error.t. *)
+  (* Be careful with that since if you unmarshal one then you can't pattern-match it. *)
+
   (* Defined by JSON-RPC. *)
   exception Parse of string (* -32700 *)
   exception InvalidRequest of string (* -32600 *)
@@ -973,7 +978,7 @@ type lsp_result =
   | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
   | RenameResult of Rename.result
-  | ErrorResult of exn * string
+  | ErrorResult of Error.t * string (* the string is a stacktrace *)
 
 type lsp_notification =
   | ExitNotification
@@ -998,7 +1003,7 @@ type lsp_message =
 
 type 'a lsp_handler = 'a lsp_result_handler * 'a lsp_error_handler
 
-and 'a lsp_error_handler = (exn * string) -> 'a -> 'a
+and 'a lsp_error_handler = (Error.t * string) -> 'a -> 'a
 
 and 'a lsp_result_handler =
   | ShowMessageHandler of (ShowMessageRequest.result -> 'a -> 'a)

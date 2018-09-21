@@ -1088,14 +1088,13 @@ let handle_persistent
     | LspResponse (Error (env, metadata)) ->
       let metadata = {metadata with server_profiling; server_logging_context; } in
       let (_, reason, Utils.Callstack stack) = Option.value_exn metadata.error_info in
-      let e = Failure reason in
+      let e = Lsp_fmt.error_of_exn (Failure reason) in
       let lsp_response = match request with
         | LspToServer (RequestMessage (id, _), _) ->
           Some (ResponseMessage (id, ErrorResult (e, stack)))
         | LspToServer _ ->
           let open LogMessage in
-          let (code, reason, _original_data) = Lsp_fmt.get_error_info e in
-          let text = (Printf.sprintf "%s [%i]\n%s" reason code stack) in
+          let text = (Printf.sprintf "%s [%i]\n%s" e.Error.message e.Error.code stack) in
           Some (NotificationMessage (TelemetryNotification
             {type_=MessageType.ErrorMessage; message=text;}))
         | _ -> None in

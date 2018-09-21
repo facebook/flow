@@ -754,7 +754,7 @@ let track_from_server (state: state) (c: Lsp.lsp_message) : state =
 
 let dismiss_tracks (state: state) : state =
   let decline_request_to_server (id: lsp_id) : unit =
-    let e = Error.RequestCancelled "Connection to server has been lost" in
+    let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "Connection to server has been lost") in
     let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
     let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
     to_stdout json
@@ -1713,9 +1713,9 @@ and main_handle_error
     lsp_exit_bad ()
 
   | e ->
-    let (code, message, _data) = get_error_info e in
-    main_log_error ~expected:true ("[FlowLSP] " ^ message) stack;
-    let text = Printf.sprintf "FlowLSP exception %s [%i]\n%s" message code stack in
+    let e = Lsp_fmt.error_of_exn e in
+    main_log_error ~expected:true ("[FlowLSP] " ^ e.Error.message) stack;
+    let text = Printf.sprintf "FlowLSP exception %s [%i]\n%s" e.Error.message e.Error.code stack in
     let () = match event with
       | Some (Client_message (RequestMessage (id, _request), _metadata)) ->
         let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in

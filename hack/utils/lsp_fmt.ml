@@ -935,57 +935,48 @@ let print_initialize (r: Initialize.result) : json =
 (** error response                                                     **)
 (************************************************************************)
 
-let get_error_info (e: exn) : int * string * json option =
-  (* returns (lspErrorCode, friendlyMessage, lspData) *)
+let error_of_exn (e: exn) : Lsp.Error.t =
+  let open Lsp.Error in
   match e with
-  | Error.Parse message -> (-32700, message, None)
-  | Error.InvalidRequest message -> (-32600, message, None)
-  | Error.MethodNotFound message -> (-32601, message, None)
-  | Error.InvalidParams message -> (-32602, message, None)
-  | Error.InternalError message -> (-32603, message, None)
-  | Error.ServerErrorStart (message, data) -> (-32099, message, Some (print_initializeError data))
-  | Error.ServerErrorEnd message -> (-32000, message, None)
-  | Error.ServerNotInitialized message -> (-32002, message, None)
-  | Error.Unknown message -> (-32001, message, None)
-  | Error.RequestCancelled message -> (-32800, message, None)
-  | Exit_status.Exit_with code -> (-32001, Exit_status.to_string code, None)
-  | _ -> (-32001, Printexc.to_string e, None)
+  | Error.Parse message -> {code= -32700; message; data=None;}
+  | Error.InvalidRequest message -> {code= -32600; message; data=None;}
+  | Error.MethodNotFound message -> {code= -32601; message; data=None;}
+  | Error.InvalidParams message -> {code= -32602; message; data=None;}
+  | Error.InternalError message -> {code= -32603; message; data=None;}
+  | Error.ServerErrorStart (message, data) ->
+      {code= -32099; message; data=Some (print_initializeError data);}
+  | Error.ServerErrorEnd message -> {code= -32000; message; data=None;}
+  | Error.ServerNotInitialized message -> {code= -32002; message; data=None;}
+  | Error.Unknown message -> {code= -32001; message; data=None;}
+  | Error.RequestCancelled message -> {code= -32800; message; data=None;}
+  | Exit_status.Exit_with code -> {code= -32001; message=Exit_status.to_string code; data=None;}
+  | _ -> {code= -32001; message=Printexc.to_string e; data=None;}
 
-let print_error (e: exn) (stack: string) : json =
+let print_error (e: Error.t) (stack: string) : json =
   let open Hh_json in
-  let (code, message, original_data) = get_error_info e in
+  let open Error in
   let stack_json_property = ("stack", string_ stack) in
   (* We'd like to add a stack-trace. The only place we can fit it, that will *)
   (* be respected by vscode-jsonrpc, is inside the 'data' field. And we can  *)
   (* do that only if data is an object. We can synthesize one if needed.     *)
-  let data = match original_data with
+  let data = match e.data with
     | None -> JSON_Object [stack_json_property]
     | Some (JSON_Object o) -> JSON_Object (stack_json_property :: o)
     | Some primitive -> primitive
   in
   JSON_Object [
-    "code", int_ code;
-    "message", string_ message;
+    "code", int_ e.code;
+    "message", string_ e.message;
     "data", data;
   ]
 
-let parse_error (error: json) : exn =
+let parse_error (error: json) : Error.t =
   let json = Some error in
   let code = Jget.int_exn json "code" in
   let message = Jget.string_exn json "message" in
-  let _data = Jget.val_opt json "data" in
-  match code with
-  | -32700 -> Error.Parse message
-  | -32600 -> Error.InvalidRequest message
-  | -32601 -> Error.MethodNotFound message
-  | -32602 -> Error.InvalidParams message
-  | -32603 -> Error.InternalError message
-  | -32800 -> Error.RequestCancelled message
-  | -32001 -> Error.Unknown message
-  | -32099 (* Error.ServerErrorStart *)
-  | -32000 (* Error.ServerErrorEnd *)
-  | -32002 (* Error.ServerNotInitialized *)
-  | _ -> raise (Error.Parse ("Unrecognized LSP error code: " ^ (string_of_int code)))
+  let data = Jget.val_opt json "data"
+  in
+  {Error.code; message; data}
 
 
 (************************************************************************)
@@ -1034,7 +1025,7 @@ let result_name_to_string (result: lsp_result) : string =
   | DocumentOnTypeFormattingResult _ -> "textDocument/onTypeFormatting"
   | RageResult _ -> "telemetry/rage"
   | RenameResult _ -> "textDocument/rename"
-  | ErrorResult (e, _stack) -> "ERROR/" ^ (Printexc.to_string e)
+  | ErrorResult (e, _stack) -> "ERROR/" ^ (e.Error.message)
 
 let notification_name_to_string (notification: lsp_notification) : string =
   match notification with
@@ -1066,7 +1057,7 @@ let denorm_message_to_string (message: lsp_message) : string =
   | NotificationMessage n ->
     Printf.sprintf "notification %s" (notification_name_to_string n)
   | ResponseMessage (id, ErrorResult (e, _stack)) ->
-    Printf.sprintf "error %s %s" (id_to_string id) (Printexc.to_string e)
+    Printf.sprintf "error %s %s" (id_to_string id) (e.Error.message)
   | ResponseMessage (id, r) ->
     Printf.sprintf "result %s %s" (id_to_string id) (result_name_to_string r)
 
