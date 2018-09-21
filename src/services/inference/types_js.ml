@@ -1468,11 +1468,24 @@ let load_saved_state ~profiling ~workers options =
   | Saved_state_fetcher.No_saved_state ->
     Hh_logger.info "No saved state available";
     Lwt.return_none
-  | Saved_state_fetcher.Saved_state { saved_state_filename; changed_files=_; (* TODO *) } ->
+  | Saved_state_fetcher.Saved_state { saved_state_filename; changed_files; } ->
     with_timer_lwt ~options "LoadSavedState" profiling (fun () ->
       try%lwt
         let%lwt saved_state = Saved_state.load ~workers ~saved_state_filename ~options in
-        Lwt.return_some saved_state
+        let updates = Recheck_updates.process_updates
+          ~options
+          ~libs:(SSet.of_list saved_state.Saved_state.ordered_non_flowlib_libs)
+          changed_files
+        in
+        let updates = match updates with
+        | Core_result.Error ({ Recheck_updates.msg; _; }) ->
+          Hh_logger.error "The saved state is no longer valid due to file changes: %s" msg;
+          raise Saved_state.Invalid_saved_state
+        | Core_result.Ok updates -> updates in
+        Hh_logger.info "Saved state script reports %d files changed & we care about %d of them"
+          (SSet.cardinal changed_files)
+          (FilenameSet.cardinal updates);
+        Lwt.return_some (saved_state, updates)
       with Saved_state.Invalid_saved_state ->
         if Options.saved_state_no_fallback options
         then
@@ -1481,14 +1494,16 @@ let load_saved_state ~profiling ~workers options =
     )
 
 let init ~profiling ~workers options =
-  let%lwt parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors =
+  let%lwt updates, (parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors) =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
-      init ~profiling ~workers options
-    | Some saved_state ->
+      let%lwt init_ret = init ~profiling ~workers options in
+      Lwt.return (FilenameSet.empty, init_ret)
+    | Some (saved_state, updates) ->
       (* We loaded a saved state successfully! We are awesome! *)
-      init_from_saved_state ~profiling ~workers ~saved_state options
+      let%lwt init_ret = init_from_saved_state ~profiling ~workers ~saved_state options in
+      Lwt.return (updates, init_ret)
   in
 
   let env = { ServerEnv.
@@ -1502,7 +1517,17 @@ let init ~profiling ~workers options =
     collated_errors = ref None;
     connections = Persistent_connection.empty;
   } in
-  Lwt.return (libs_ok, env)
+
+  (* Don't recheck if the libs are not ok *)
+  if FilenameSet.is_empty updates || not libs_ok
+  then Lwt.return (libs_ok, env)
+  else begin
+    let%lwt recheck_profiling, _summary, env =
+      recheck ~options ~workers ~updates env ~files_to_focus:FilenameSet.empty
+    in
+    Profiling_js.merge ~from:recheck_profiling ~into:profiling;
+    Lwt.return (true, env)
+  end
 
 let full_check ~profiling ~options ~workers ~focus_targets env =
   let { ServerEnv.files = parsed; dependency_graph; errors; _; } = env in
