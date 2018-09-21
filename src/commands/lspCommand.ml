@@ -944,8 +944,10 @@ let parse_and_cache flowconfig_name (state: state) (uri: string)
     state, open_ast, open_diagnostics
 
 
-(* print_diagnostics: just pushes the set of diagnostics for this uri to the client *)
-(* taking into account whether there are superceding local parse errors as well.    *)
+(* print_diagnostics: just pushes the set of diagnostics for this uri to the client
+ * taking into account whether there are superceding local parse errors as well.
+ * We actually only send the first 200 errors per file to the client, since
+ * more than that wouldn't add value to the user, and makes clients sluggish. *)
 let print_diagnostics
     (uri: string)
     (diagnostics: PublishDiagnostics.diagnostic list)
@@ -962,6 +964,8 @@ let print_diagnostics
     | _ -> false, false in
 
   (* First we'll look at server tracks, update then appropriately. *)
+  (* This is to maintain the list of all URIs for which the server has sent *)
+  (* diagnostics, so all those URIs can be cleared should the server disconnect. *)
   let msg = NotificationMessage
     (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
   let state = track_from_server state msg in
@@ -992,6 +996,34 @@ let print_diagnostics
     o_live_diagnostics @ diagnostics
   else
     diagnostics in
+
+  (* Send only the first 'cap' diagnostics per file to the client *)
+  let cap = 200 in
+  let is_below_cap = (List.nth diagnostics cap) = None in
+  let diagnostics = if is_below_cap then
+    (* avoid O(nlogn) sort in this case *)
+    diagnostics
+  else begin
+    let cmp d1 d2 = Lsp_helpers.pos_compare d1.range.start d2.range.start in
+    let diagnostics = List.sort cmp diagnostics in
+    let (retain, discard) = List.split_n diagnostics cap in
+    match discard with
+    | [] -> retain
+    | discard ->
+      let discard_count = List.length discard in
+      let message = Printf.sprintf "[Only showing %i/%i diagnostics]" cap (cap + discard_count) in
+      let diagnostic = { PublishDiagnostics.
+        (* the following range displays fine in all editors, regardless of contents *)
+        range = {start={line=0; character=0;}; end_={line=0; character=0;}};
+        severity = Some PublishDiagnostics.Information;
+        code = NoCode;
+        source = Some "Flow";
+        message;
+        relatedInformation = [];
+        relatedLocations = [];
+      } in
+      diagnostic :: retain
+    end in
 
   (* Avoid sending the message if it was empty before and is empty now. *)
   (* This isn't needed for correct client behavior, but it makes the transcripts *)
