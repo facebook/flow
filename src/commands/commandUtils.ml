@@ -723,6 +723,7 @@ let options_flags =
       (enum [
         "none", Options.Dummy_fetcher;
         "local", Options.Local_fetcher;
+        "fb", Options.Fb_fetcher;
       ])
       ~doc:("Which saved state fetcher Flow should use (none, local) (default: none)")
     |> flag "--saved-state-no-fallback" no_arg
@@ -839,6 +840,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_flowconfig_name = flowconfig_name;
     opt_lazy_mode = lazy_mode;
     opt_root = root;
+    opt_root_name = FlowConfig.root_name flowconfig;
     opt_debug = options_flags.debug;
     opt_verbose = options_flags.verbose;
     opt_all = options_flags.all || FlowConfig.all flowconfig;

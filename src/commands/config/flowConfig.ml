@@ -65,9 +65,9 @@ module Opts = struct
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     munge_underscores: bool;
-    name: string option;
     no_flowlib: bool;
     node_resolver_dirnames: string list;
+    root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_dep_table_pow: int;
     shm_dirs: string list;
@@ -177,9 +177,9 @@ module Opts = struct
     module_system = Options.Node;
     modules_are_use_strict = false;
     munge_underscores = false;
-    name = None;
     no_flowlib = false;
     node_resolver_dirnames = ["node_modules"];
+    root_name = None;
     saved_state_fetcher = Options.Dummy_fetcher;
     shm_dep_table_pow = 17;
     shm_dirs = default_shm_dirs;
@@ -782,7 +782,7 @@ let parse_options config lines =
       optparser = optparse_string;
       setter = (fun opts v ->
         FlowEventLogger.set_root_name (Some v);
-        Ok {opts with name = Some v;}
+        Ok {opts with root_name = Some v;}
       );
     }
 
@@ -855,6 +855,7 @@ let parse_options config lines =
       optparser = optparse_enum [
         ("none", Options.Dummy_fetcher);
         ("local", Options.Local_fetcher);
+        ("fb", Options.Fb_fetcher);
       ];
       setter = (fun opts saved_state_fetcher -> Ok {
         opts with saved_state_fetcher;
@@ -1144,9 +1145,9 @@ let module_resource_exts c = c.options.Opts.module_resource_exts
 let module_system c = c.options.Opts.module_system
 let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
-let name c = c.options.Opts.name
 let no_flowlib c = c.options.Opts.no_flowlib
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
+let root_name c = c.options.Opts.root_name
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
 let shm_dirs c = c.options.Opts.shm_dirs

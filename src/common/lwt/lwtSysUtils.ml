@@ -34,3 +34,14 @@ let exec_read cmd args =
   let%lwt status = process#close in
   assert (status = Unix.WEXITED 0);
   Lwt.return result
+
+type command_result = { stdout: string; stderr: string; status: Unix.process_status; }
+
+let exec cmd args =
+  Lwt_process.with_process_full (cmd, Array.of_list (cmd::args)) (fun process ->
+    (* Wait for it to finish *)
+    let%lwt status = process#status in
+    let%lwt stdout = Lwt_io.read process#stdout in
+    let%lwt stderr = Lwt_io.read process#stderr in
+    Lwt.return {stdout; stderr; status}
+  )

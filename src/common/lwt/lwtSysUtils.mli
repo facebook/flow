@@ -8,3 +8,7 @@
 val blocking_waitpid: int -> (int * Unix.process_status) Lwt.t
 
 val exec_read: string -> string list -> string Lwt.t
+
+type command_result = { stdout: string; stderr: string; status: Unix.process_status; }
+
+val exec: string -> string list -> command_result Lwt.t

@@ -15,5 +15,5 @@ type result =
 | No_saved_state
 
 module type FETCHER = sig
-  val fetch: options:Options.t -> result Lwt.t
+  val fetch: options:Options.t -> (Profiling_js.finished * result) Lwt.t
 end
