@@ -128,11 +128,6 @@ end = struct
 
     type acc = env
 
-    (* Each subscription will send hg.update state_enter/state_leaves. So let's only react for the
-     * first and last *)
-    let hg_update_semaphore = ref 0
-    let should_broadcast = ref false
-
     let extract_hg_update_metadata = function
     | None -> "<UNKNOWN>", "<UNKNOWN REV>"
     | Some metadata ->
@@ -141,7 +136,7 @@ end = struct
       distance, rev
 
     let broadcast env =
-      if !should_broadcast && not (SSet.is_empty env.files)
+      if not (SSet.is_empty env.files)
       then Lwt_condition.broadcast env.changes_condition ()
 
     let main env =
@@ -155,38 +150,17 @@ end = struct
           env.files <- SSet.union env.files new_files;
           broadcast env
         | Watchman_lwt.State_enter (name, metadata) ->
-          if name = "hg.update" then begin
-            if !hg_update_semaphore = 0 then begin
-              should_broadcast := false;
-              let distance, rev = extract_hg_update_metadata metadata in
-              Logger.info
-                "Watchman reports an hg.update just started. Moving %s revs from %s" distance rev
-            end;
-            incr hg_update_semaphore
-          end
+          if name = "hg.update"
+          then
+            let distance, rev = extract_hg_update_metadata metadata in
+            Logger.info
+              "Watchman reports an hg.update just started. Moving %s revs from %s" distance rev
         | Watchman_lwt.State_leave (name, metadata) ->
-          if name = "hg.update" then begin
-            decr hg_update_semaphore;
-            if !hg_update_semaphore = 0
-            then begin
-              let distance, rev = extract_hg_update_metadata metadata in
-              Logger.info
-                "Watchman reports an hg.update just finished. Moved %s revs to %s" distance rev;
-
-              let debounce_time = 5.0 in
-              Logger.info
-                "Debouncing by deferring file watcher notifications for %f seconds" debounce_time;
-
-              Lwt.async (fun () ->
-                let%lwt () = Lwt_unix.sleep debounce_time in
-                if !hg_update_semaphore = 0 then begin
-                  should_broadcast := true;
-                  broadcast env
-                end;
-                Lwt.return_unit
-              )
-            end
-          end
+          if name = "hg.update"
+          then
+            let distance, rev = extract_hg_update_metadata metadata in
+            Logger.info
+              "Watchman reports an hg.update just finished. Moved %s revs to %s" distance rev
         | Watchman_lwt.Changed_merge_base _ ->
           failwith "We're not using an scm aware subscription, so we should never get these"
         end
