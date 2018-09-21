@@ -374,8 +374,7 @@ module Make_json_reader (Json : Json_reader_intf) : (Json_reader with type json 
       | None -> acc
     ) SMap.empty sources contents
 
-  (* TODO: use Map.find_opt when minimum ocaml >= 4.05 *)
-  let find_opt key map = try Some (SMap.find key map) with Not_found -> None
+  let find_opt key map = SMap.find_opt key map
   let opt f key map = match find_opt key map with Some x -> Some (f x) | None -> None
 
   let sourcemap_of_json json =
