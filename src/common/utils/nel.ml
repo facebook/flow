@@ -31,6 +31,8 @@ let iter f (x, xs) =
 
 let map f (x, xs) = (f x, List.map f xs)
 
+let (>>|) l f = map f l
+
 let ident_map f ((x, xs) as original) =
   let x' = f x in
   let xs' = ListUtils.ident_map f xs in
@@ -49,6 +51,8 @@ let map_concat f (x, xs) =
   match List.concat xss with
   | [] -> failwith "impossible"
   | x::xs -> (x, xs)
+
+let (>>=) l f = map_concat f l
 
 let rev (x, xs) =
   match List.rev (x::xs) with
