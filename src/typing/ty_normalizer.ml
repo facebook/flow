@@ -591,10 +591,10 @@ end = struct
     | MatchingPropT _ -> return Ty.Bot
     | AnyWithUpperBoundT t ->
       type__ ~env t >>| fun ty ->
-      Ty.generic_builtin_t "$SubType" [ty]
+      Ty.generic_builtin_t "$Subtype" [ty]
     | AnyWithLowerBoundT t ->
       type__ ~env t >>| fun ty ->
-      Ty.generic_builtin_t "$SuperType" [ty]
+      Ty.generic_builtin_t "$Supertype" [ty]
     | DefT (_, MixedT _) -> return Ty.Top
     | DefT (_, AnyT) -> return Ty.Any
     | DefT (_, AnyObjT) -> return Ty.AnyObj
