@@ -679,7 +679,6 @@ type track_effect = {
 }
 
 let track_to_server (state: state) (c: Lsp.lsp_message) : (state * track_effect) =
-  (* didOpen, didChange, didSave, didClose: save them up in editor_file_events *)
   let changed_open_file = match (get_open_files state), c with
     | _, NotificationMessage (DidOpenNotification params) ->
       let o_open_doc = params.DidOpen.textDocument in
@@ -706,10 +705,35 @@ let track_to_server (state: state) (c: Lsp.lsp_message) : (state * track_effect)
     | _, _ ->
       None
   in
+  (* update ienv.i_open_files... *)
   let state, changed_live_uri = match changed_open_file with
     | Some (uri, open_file_info) -> update_open_file uri open_file_info state, Some uri
     | None -> state, None
   in
+  (* update cenv.c_diagnostics... we don't need to send updated squiggle locations *)
+  (* right now ourselves, since all editors take care of that; but if ever we *)
+  (* re-send the server's existing diagnostics for this file then that should take *)
+  (* into account any user edits since then. This isn't perfect - e.g. if the user *)
+  (* modifies a file we'll update squiggles, but if the user subsquently closes the *)
+  (* file unsaved and then re-opens it then we'll be left with wrong squiggles. *)
+  (* It also doesn't compensate if the flow server starts a typecheck, then receives *)
+  (* a DidChange, then sends error spans from as it was at the start of the typecheck. *)
+  (* Still, at least we're doing better on the common case -- where the server has sent *)
+  (* diagnostics, then the user types, then we re-send live syntax errors. *)
+  let state = match state, c with
+    | Connected cenv, NotificationMessage (DidChangeNotification params) -> begin
+      let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
+      match SMap.find_opt uri cenv.c_diagnostics with
+        | Some diagnostics_for_uri ->
+          let diagnostics_for_uri = Lsp_helpers.update_diagnostics_due_to_change
+            diagnostics_for_uri params in
+          let c_diagnostics = SMap.add uri diagnostics_for_uri cenv.c_diagnostics in
+          Connected {cenv with c_diagnostics; }
+        | _ -> state
+      end
+    | _ -> state
+  in
+  (* update cenv.c_outstanding_requests*... *)
   let state = match state, c with
     (* client->server requests *)
     | Connected env, RequestMessage (id, _) ->
