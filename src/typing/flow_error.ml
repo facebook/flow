@@ -1290,7 +1290,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | ETooFewTypeArgs (reason_tapp, reason_arity, n) ->
     let reason_arity = replace_reason_const (desc_of_reason reason_tapp) reason_arity in
     mk_error ~trace_infos (loc_of_reason reason_tapp) [
-      text "Cannot use "; ref reason_arity; text " with less than ";
+      text "Cannot use "; ref reason_arity; text " with fewer than ";
       text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"))
     ]
 

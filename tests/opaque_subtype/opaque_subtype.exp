@@ -169,7 +169,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:27
 
-Cannot use `PolyFoo` [1] with less than 1 type argument.
+Cannot use `PolyFoo` [1] with fewer than 1 type argument.
 
    test.js:19:27
    19| class PolyBar2<T> extends PolyFoo {}

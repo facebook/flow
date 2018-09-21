@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- annot.js:3:17
 
-Cannot use `A` [1] with less than 1 type argument.
+Cannot use `A` [1] with fewer than 1 type argument.
 
    annot.js:3:17
    3| class B extends A { } // OK, same as above

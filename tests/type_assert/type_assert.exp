@@ -24,7 +24,7 @@ Cannot use TypeAssert library function [1] with function type [1] argument
 
 Error ------------------------------------------------------------------------------------------ type-args-tests.js:13:1
 
-Cannot use TypeAssert library function [1] with less than 1 type argument.
+Cannot use TypeAssert library function [1] with fewer than 1 type argument.
 
    13| TypeAssertIs(8);
        ^^^^^^^^^^^^^^^ [1]

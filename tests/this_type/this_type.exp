@@ -299,7 +299,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- generics.js:6:30
 
-Cannot use `Implicit` [1] with less than 1 type argument.
+Cannot use `Implicit` [1] with fewer than 1 type argument.
 
    generics.js:6:30
    6| class ImplicitNumber extends Implicit { arg: number; }

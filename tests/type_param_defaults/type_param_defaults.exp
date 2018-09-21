@@ -170,7 +170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:40:21
 
-Cannot use `D` [1] with less than 1 type argument.
+Cannot use `D` [1] with fewer than 1 type argument.
 
    classes.js:40:21
    40| var d_too_few_args: D<> = new D('hello'); // Error too few tparams

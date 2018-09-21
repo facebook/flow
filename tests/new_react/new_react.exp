@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------- bad_default_props.js:15:18
 
-Cannot use property `Component` [1] with less than 1 type argument.
+Cannot use property `Component` [1] with fewer than 1 type argument.
 
    bad_default_props.js:15:18
    15| class C3 extends React.Component { // error
@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- bad_default_props.js:20:18
 
-Cannot use property `Component` [1] with less than 1 type argument.
+Cannot use property `Component` [1] with fewer than 1 type argument.
 
    bad_default_props.js:20:18
    20| class C4 extends React.Component {
