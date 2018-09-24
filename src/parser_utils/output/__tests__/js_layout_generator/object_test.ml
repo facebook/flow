@@ -24,20 +24,16 @@ let tests = [
     assert_layout_of_expression ~ctxt
       L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
         fused [
-          fused [
-            atom "{";
-            flat_pretty_space;
-          ];
+          atom "{";
+          flat_pretty_space;
           sequence ~break:Layout.Break_if_needed [
             fused [
               prop_layout;
               Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
             ];
           ];
-          fused [
-            flat_pretty_space;
-            atom "}";
-          ];
+          flat_pretty_space;
+          atom "}";
         ];
       ]))
       ast;

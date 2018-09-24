@@ -58,10 +58,14 @@ let if_break if_ else_ =
 
 (* Fuse a list of items together, no spaces or breaks will be inserted *)
 let fuse items =
-  let items = List.filter (function Empty -> false | _ -> true) items in
+  let items = List.rev (List.fold_left (fun acc -> function
+    | Empty -> acc
+    | Concat more -> List.rev_append more acc
+    | item -> item::acc
+  ) [] items) in
   match items with
   | [] -> Empty
-  | item::[] -> item
+  | [item] -> item
   | _ -> Concat items
 
 (* Fuse a list of items to align vertically *)

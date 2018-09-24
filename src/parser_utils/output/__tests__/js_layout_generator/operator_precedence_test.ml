@@ -35,7 +35,9 @@ let test ctxt =
     L.(loc (fused [
       expression x; pretty_space; atom "&&";
       sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-        fused [flat_pretty_space; wrap_in_parens (expression (y && z))];
+        fused (
+          flat_pretty_space::(wrap_in_parens_raw (expression (y && z)))
+        );
       ];
     ]))
     (x && (y && z));
@@ -53,7 +55,7 @@ let test ctxt =
     L.(loc (fused [
       expression x; pretty_space; atom "&&";
       sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-        fused [flat_pretty_space; wrap_in_parens (expression (y || z))];
+        fused (flat_pretty_space::(wrap_in_parens_raw (expression (y || z))));
       ];
     ]))
     (x && (y || z));
@@ -71,19 +73,20 @@ let test ctxt =
     L.(loc (fused [
       expression x; pretty_space; atom "||";
       sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-        fused [flat_pretty_space; wrap_in_parens (expression (y || z))];
+        fused (flat_pretty_space::(wrap_in_parens_raw (expression (y || z))));
       ];
     ]))
     (x || (y || z));
 
   assert_layout_of_expression ~ctxt
-    L.(loc (fused [
-      wrap_in_parens (expression (x || y));
-      pretty_space; atom "&&";
-      sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-        fused [flat_pretty_space; expression z];
-      ];
-    ]))
+    L.(loc (fused (
+      (wrap_in_parens_raw (expression (x || y))) @ [
+        pretty_space; atom "&&";
+        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
+          fused [flat_pretty_space; expression z];
+        ];
+      ]
+    )))
     ((x || y) && z);
 
   assert_layout_of_expression ~ctxt
@@ -102,10 +105,10 @@ let test ctxt =
     ((x + y) + z);
 
   assert_layout_of_expression ~ctxt
-    L.(loc (fused [
-      expression x; pretty_space; atom "+"; pretty_space;
-      wrap_in_parens (expression (y + z));
-    ]))
+    L.(loc (fused (
+      [expression x; pretty_space; atom "+"; pretty_space] @
+      wrap_in_parens_raw (expression (y + z))
+    )))
     (x + (y + z));
 
   assert_layout_of_expression ~ctxt
@@ -113,10 +116,10 @@ let test ctxt =
     ((x + y) - z);
 
   assert_layout_of_expression ~ctxt
-    L.(loc (fused [
-      expression x; pretty_space; atom "+"; pretty_space;
-      wrap_in_parens (expression (y - z));
-    ]))
+    L.(loc (fused (
+      [expression x; pretty_space; atom "+"; pretty_space] @
+      wrap_in_parens_raw (expression (y - z))
+    )))
     (x + (y - z));
 
   (* logical expressions and binary expressions *)
@@ -131,17 +134,17 @@ let test ctxt =
     ((x + y) && z);
 
   assert_layout_of_expression ~ctxt
-    L.(loc (fused [
-      expression x; pretty_space; atom "+"; pretty_space;
-      wrap_in_parens (expression (y && z));
-    ]))
+    L.(loc (fused (
+      [expression x; pretty_space; atom "+"; pretty_space] @
+      wrap_in_parens_raw (expression (y && z))
+    )))
     (x + (y && z));
 
   assert_layout_of_expression ~ctxt
-    L.(loc (fused [
-      wrap_in_parens (expression (x && y));
-      pretty_space; atom "+"; pretty_space; expression z;
-    ]))
+    L.(loc (fused (
+      wrap_in_parens_raw (expression (x && y)) @
+      [pretty_space; atom "+"; pretty_space; expression z]
+    )))
     ((x && y) + z);
 
   assert_layout_of_expression ~ctxt
@@ -200,19 +203,21 @@ let test ctxt =
 
   let seq = E.sequence [x; y] in
   assert_layout_of_expression ~ctxt
-    L.(loc (fused [
-      wrap_in_parens (expression seq); pretty_space; atom "&&";
-      sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-        fused [flat_pretty_space; expression z];
-      ];
-    ]))
+    L.(loc (fused (
+      wrap_in_parens_raw (expression seq) @ [
+        pretty_space; atom "&&";
+        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
+          fused [flat_pretty_space; expression z];
+        ];
+      ]
+    )))
     (seq && z);
 
   assert_layout_of_expression ~ctxt
     L.(loc (fused [
       expression z; pretty_space; atom "&&";
       sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-        fused [flat_pretty_space; wrap_in_parens (expression seq)];
+        fused (flat_pretty_space::(wrap_in_parens_raw (expression seq)));
       ];
     ]))
     (z && seq);
@@ -232,10 +237,10 @@ let test ctxt =
   assert_layout_of_expression ~ctxt
     L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
       sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-        fused [
-          wrap_in_parens (expression seq);
-          Layout.IfBreak ((atom ","), (fused [atom ","; pretty_space]));
-        ];
+        fused (
+          wrap_in_parens_raw (expression seq) @
+          [Layout.IfBreak ((atom ","), (fused [atom ","; pretty_space]))]
+        );
         expression z;
       ];
     ]))

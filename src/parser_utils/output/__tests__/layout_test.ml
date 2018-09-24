@@ -36,11 +36,11 @@ let tests = "layout" >::: [
       assert_layout ~ctxt expected actual;
 
       let actual = fuse_list ~wrap:(c, d) [a; b] in
-      let expected = Concat [c; Concat [a; pretty_space; b]; d] in
+      let expected = Concat [c; a; pretty_space; b; d] in
       assert_layout ~ctxt expected actual;
 
       let actual = fuse_list ~sep ~wrap:(c, d) [a; b] in
-      let expected = Concat [c; Concat [a; sep; pretty_space; b]; d] in
+      let expected = Concat [c; a; sep; pretty_space; b; d] in
       assert_layout ~ctxt expected actual;
     end;
 ]

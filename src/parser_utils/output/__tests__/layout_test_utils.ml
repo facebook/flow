@@ -49,10 +49,10 @@ module Layout_builder = struct
   let flat_pretty_space =
     IfBreak (Empty, IfPretty (Atom " ", Empty))
 
-  let wrap_in_parens x =
-    fused [
-      atom "("; sequence ~break:Layout.Break_if_needed [x]; atom ")";
-    ]
+  let wrap_in_parens_raw x =
+    [atom "("; sequence ~break:Layout.Break_if_needed [x]; atom ")"]
+
+  let wrap_in_parens x = fused (wrap_in_parens_raw x)
 
   type printer_pos = Word of string | Phrase of string
 
@@ -200,7 +200,7 @@ module Layout_matcher = struct
   let body_of_function_declaration ast =
     return (Js_layout_generator.statement ast)
     >>= loc
-    >>= (nth_fused 3) (* skip function name, space, params *)
+    >>= (nth_fused 5) (* skip `function`, space, name, space, params *)
     >>= loc
     >>= (nth_sequence 0)
     >>= (nth_fused 1) (* skip { to get body *)

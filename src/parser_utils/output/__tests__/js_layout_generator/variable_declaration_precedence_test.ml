@@ -19,11 +19,10 @@ let test ctxt =
     L.(loc (fused [
       loc (fused [
         atom "var"; atom " ";
-        loc (fused [
-          loc (id "x");
-          pretty_space; atom "="; pretty_space;
-          wrap_in_parens (expression seq);
-        ]);
+        loc (fused (
+          [loc (id "x"); pretty_space; atom "="; pretty_space] @
+          wrap_in_parens_raw (expression seq)
+        ));
       ]);
       atom ";";
     ]))

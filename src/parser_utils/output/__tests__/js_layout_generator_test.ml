@@ -670,25 +670,23 @@ let tests = "js_layout_generator" >::: [
       ] in
       assert_layout_result ~ctxt
         L.(loc (fused [
-          fused [
-            atom "return";
-            atom " ";
-            sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-              fused [
-                Layout.IfBreak ((atom "("), empty);
-                sequence ~break:Layout.Break_if_needed [
-                  loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-                    sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-                      fused [
-                        loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                        Layout.IfBreak ((atom ","), (fused [atom ","; pretty_space]));
-                      ];
-                      loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
+          atom "return";
+          atom " ";
+          sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+            fused [
+              Layout.IfBreak ((atom "("), empty);
+              sequence ~break:Layout.Break_if_needed [
+                loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+                  sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+                    fused [
+                      loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                      Layout.IfBreak ((atom ","), (fused [atom ","; pretty_space]));
                     ];
-                  ]);
-                ];
-                Layout.IfBreak ((atom ")"), empty);
+                    loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
+                  ];
+                ]);
               ];
+              Layout.IfBreak ((atom ")"), empty);
             ];
           ];
           Layout.IfPretty ((atom ";"), empty);
@@ -704,15 +702,13 @@ let tests = "js_layout_generator" >::: [
       let func = S.function_declaration (Loc.none, "f") ~body:[S.return (Some logical)] in
       assert_layout_result ~ctxt
         L.(loc (fused [
-          fused [
-            atom "return";
-            atom " ";
-            sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-              fused [
-                Layout.IfBreak ((atom "("), empty);
-                sequence ~break:Layout.Break_if_needed [expression logical];
-                Layout.IfBreak ((atom ")"), empty);
-              ];
+          atom "return";
+          atom " ";
+          sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+            fused [
+              Layout.IfBreak ((atom "("), empty);
+              sequence ~break:Layout.Break_if_needed [expression logical];
+              Layout.IfBreak ((atom ")"), empty);
             ];
           ];
           Layout.IfPretty ((atom ";"), empty);
@@ -729,24 +725,22 @@ let tests = "js_layout_generator" >::: [
       ] in
       assert_layout_result ~ctxt
         L.(loc (fused [
-          fused [
-            atom "return";
-            atom " ";
-            sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-              fused [
-                Layout.IfBreak ((atom "("), empty);
-                sequence ~break:Layout.Break_if_needed [
-                  (* TODO: this is wrong, it should allow the + to break *)
-                  loc (fused [
-                    loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                    pretty_space;
-                    atom "+";
-                    pretty_space;
-                    loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
-                  ]);
-                ];
-                Layout.IfBreak ((atom ")"), empty);
+          atom "return";
+          atom " ";
+          sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+            fused [
+              Layout.IfBreak ((atom "("), empty);
+              sequence ~break:Layout.Break_if_needed [
+                (* TODO: this is wrong, it should allow the + to break *)
+                loc (fused [
+                  loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                  pretty_space;
+                  atom "+";
+                  pretty_space;
+                  loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
+                ]);
               ];
+              Layout.IfBreak ((atom ")"), empty);
             ];
           ];
           Layout.IfPretty ((atom ";"), empty);
@@ -762,15 +756,13 @@ let tests = "js_layout_generator" >::: [
       let func = S.function_declaration (Loc.none, "f") ~body:[S.return (Some jsx)] in
       assert_layout_result ~ctxt
         L.(loc (fused [
-          fused [
-            atom "return";
-            pretty_space;
-            sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-              fused [
-                Layout.IfBreak ((atom "("), empty);
-                sequence ~break:Layout.Break_if_needed [expression jsx];
-                Layout.IfBreak ((atom ")"), empty);
-              ];
+          atom "return";
+          pretty_space;
+          sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+            fused [
+              Layout.IfBreak ((atom "("), empty);
+              sequence ~break:Layout.Break_if_needed [expression jsx];
+              Layout.IfBreak ((atom ")"), empty);
             ];
           ];
           Layout.IfPretty ((atom ";"), empty);
@@ -787,11 +779,9 @@ let tests = "js_layout_generator" >::: [
       ] in
       assert_layout_result ~ctxt
         L.(loc (fused [
-          fused [
-            atom "return";
-            atom " ";
-            loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-          ];
+          atom "return";
+          atom " ";
+          loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
           Layout.IfPretty ((atom ";"), empty);
         ]))
         Layout_matcher.(body_of_function_declaration func >>= nth_sequence 0);
@@ -1241,14 +1231,12 @@ let tests = "js_layout_generator" >::: [
                 sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
                   loc (fused [
                     id "a";
-                    fused [
-                      atom "=";
-                      loc (fused [
-                        atom "\"";
-                        atom "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-                        atom "\"";
-                      ]);
-                    ];
+                    atom "=";
+                    loc (fused [
+                      atom "\"";
+                      atom "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+                      atom "\"";
+                    ]);
                   ]);
                 ];
               ];
