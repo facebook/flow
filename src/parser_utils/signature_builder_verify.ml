@@ -444,6 +444,8 @@ module Eval(Env: EvalEnv) = struct
         | false, Body.Property (_, { Property.key = (ObjProp.Identifier (_, name)); _ })
           when Signature_utils.is_munged_property_name name ->
           Deps.bot
+        | _, Body.Property (_, { Property.key = (ObjProp.Identifier (_, "propTypes")); static = true; _ }) ->
+          Deps.bot
         | _, Body.Method (_, { Method.value; _ }) ->
           let loc, { Ast.Function.generator; tparams; params; return; body; _ } = value in
           function_ tps generator tparams params (loc, return) body

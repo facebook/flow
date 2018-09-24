@@ -340,4 +340,18 @@ let tests = "signature_verifier" >::: [
     "}";
     "export default C;"]
     ["Expected annotation @ (2, 1) to (2, 30)"];
+
+  "propTypes_static_ignored" >:: mk_signature_verifier_test
+    ["class C {";
+    " static propTypes = {}";
+    "}";
+    "export default C;"]
+    [];
+
+  "propTypes_member_failure" >:: mk_signature_verifier_test
+    ["class C {";
+    " propTypes = {}";
+    "}";
+    "export default C;"]
+    ["Expected annotation @ (2, 1) to (2, 15)"];
 ]
