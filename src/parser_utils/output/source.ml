@@ -131,3 +131,9 @@ let json_of_source source =
   | None -> rev_props
   in
   JSON_Object (List.rev rev_props)
+
+let json_of_source_map source =
+  match source.sourcemap with
+  | Some sourcemap ->
+    Json.json_of_sourcemap sourcemap
+  | None -> Hh_json.JSON_Object ([])
