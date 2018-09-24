@@ -315,7 +315,7 @@ let mapi l ~f = List.rev (rev_mapi l ~f)
 
 
 let iteri l ~f =
-  ignore (fold l ~init:0 ~f:(fun i x -> f i x; i + 1));
+  ignore (fold l ~init:0 ~f:(fun i x -> let () = f i x in i + 1))
 ;;
 
 let foldi t ~f ~init =
