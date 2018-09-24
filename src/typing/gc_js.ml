@@ -10,6 +10,7 @@ open Type
 
 module LocMap = Utils_js.LocMap
 module P = Type.Polarity
+module Marked = Marked.IdMarked
 
 (** Garbage collection (GC) for graphs refers to the act of "marking" reachable
     type variables from a given set of "roots," by following links between type

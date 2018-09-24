@@ -12167,6 +12167,8 @@ class type_finder t = object (_self)
     | t' -> (t = t') || super#type_ cx pole found t
 end
 
+module Marked = Marked.IdMarked
+
 class assert_ground_visitor skip r context = object (self)
   inherit [Marked.t] Type_visitor.t as super
 
