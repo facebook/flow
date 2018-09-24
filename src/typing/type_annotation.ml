@@ -1221,7 +1221,7 @@ and mk_type cx tparams_map reason = function
         then AnyT.why reason
         else Tvar.mk cx reason
       in
-      Hashtbl.replace (Context.annot_table cx) (loc_of_reason reason) t;
+      Hashtbl.replace (Context.annot_table cx) (aloc_of_reason reason |> ALoc.to_loc) t;
       t, None
 
   | Some annot ->
@@ -1255,7 +1255,7 @@ and mk_nominal_type cx reason tparams_map (c, targs) =
   | None ->
       Flow.mk_instance cx reason c, None
   | Some (loc, targs) ->
-      let annot_loc = loc_of_reason reason in
+      let annot_loc = aloc_of_reason reason |> ALoc.to_loc in
       let targs, targs_ast = convert_list cx tparams_map targs in
       typeapp ~annot_loc c targs, Some (loc, targs_ast)
 

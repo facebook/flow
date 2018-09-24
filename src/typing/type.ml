@@ -2246,7 +2246,7 @@ end = struct
 
   let desc_of_t t = desc_of_reason (reason_of_t t)
 
-  let loc_of_t t = loc_of_reason (reason_of_t t)
+  let loc_of_t t = aloc_of_reason (reason_of_t t) |> ALoc.to_loc
 
   let def_loc_of_t t = def_loc_of_reason (reason_of_t t)
 
@@ -2901,7 +2901,7 @@ let loc_of_root_use_op = function
 | ReactCreateElementCall {op; _}
 | TypeApplication {type'=op}
 | SetProperty {value=op; _}
-  -> loc_of_reason op
+  -> aloc_of_reason op |> ALoc.to_loc
 | ReactGetIntrinsic _
 | Speculation _
 | Internal _

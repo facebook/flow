@@ -226,7 +226,7 @@ val json_of_reason: ?strip_root:Path.t option -> reason -> Hh_json.json
 val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
-val loc_of_reason: reason -> Loc.t
+val aloc_of_reason: reason -> ALoc.t
 val def_loc_of_reason: reason -> Loc.t
 val annot_loc_of_reason: reason -> Loc.t option
 val desc_of_reason: ?unwrap:bool -> reason -> reason_desc

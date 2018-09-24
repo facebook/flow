@@ -1040,7 +1040,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
           Tvar.mk_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
             let callt = mk_functioncalltype reason None [Arg t] tvar in
-            let reason = repos_reason (loc_of_reason (reason_of_t t)) reason in
+            let reason = repos_reason (aloc_of_reason (reason_of_t t) |> ALoc.to_loc) reason in
             Flow.flow cx (funt, CallT (unknown_use, reason, callt))
           )
         ] in
@@ -4109,7 +4109,7 @@ and func_call cx reason ~use_op ?(call_strict_arity=true) func_t targts argts =
 and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
     (expr, obj_t, name) targts argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
-  (match Refinement.get cx expr (loc_of_reason reason) with
+  (match Refinement.get cx expr (aloc_of_reason reason |> ALoc.to_loc) with
   | Some f ->
       (* note: the current state of affairs is that we understand
          member expressions as having refined types, rather than
@@ -6390,7 +6390,7 @@ and function_decl id cx loc func this super =
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
   let ix = internal_name x in
-  let loc = loc_of_reason reason in
+  let loc = aloc_of_reason reason |> ALoc.to_loc in
   Env.declare_let cx ix loc;
   let t = Env.get_var_declared_type cx ix loc in
   Env.init_let cx ~use_op:unknown_use ix ~has_anno:false t loc

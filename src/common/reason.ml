@@ -215,7 +215,7 @@ type reason = {
   test_id: int option;
   derivable: bool;
   desc: reason_desc;
-  loc: Loc.t;
+  loc: ALoc.t;
   def_loc_opt: Loc.t option;
   annot_loc_opt: Loc.t option;
 }
@@ -358,11 +358,11 @@ let mk_reason_with_test_id test_id desc loc def_loc_opt annot_loc_opt = {
 
 (* The current test_id is included in every new reason. *)
 let mk_reason desc loc =
-  mk_reason_with_test_id (TestID.current ()) desc loc None None
+  mk_reason_with_test_id (TestID.current ()) desc (ALoc.of_loc loc) None None
 
 (* Lift a string to a reason. Usually used as a dummy reason. *)
 let locationless_reason desc =
-  mk_reason_with_test_id None desc Loc.none None None
+  mk_reason_with_test_id None desc (ALoc.of_loc Loc.none) None None
 
 let func_reason {Ast.Function.async; generator; _} =
   let func_desc = match async, generator with
@@ -374,12 +374,13 @@ let func_reason {Ast.Function.async; generator; _} =
   mk_reason (RFunction func_desc)
 
 
-let loc_of_reason r = r.loc
+let aloc_of_reason r = r.loc
 
+(* TODO return ALoc *)
 let def_loc_of_reason r =
   match r.def_loc_opt with
   | Some loc -> loc
-  | None -> loc_of_reason r
+  | None -> ALoc.to_loc @@ aloc_of_reason r
 
 let annot_loc_of_reason r =
   r.annot_loc_opt
@@ -583,7 +584,7 @@ let rec string_of_desc = function
   | RReactSFC -> "React stateless functional component"
 
 let string_of_reason ?(strip_root=None) r =
-  let spos = string_of_loc ~strip_root (loc_of_reason r) in
+  let spos = string_of_loc ~strip_root (aloc_of_reason r |> ALoc.to_loc) in
   let desc = string_of_desc r.desc in
   if spos = ""
   then desc
@@ -595,14 +596,14 @@ let string_of_reason ?(strip_root=None) r =
 
 let json_of_reason ?(strip_root=None) r = Hh_json.(
   JSON_Object ([
-    "pos", json_of_loc ~strip_root (loc_of_reason r);
+    "pos", json_of_loc ~strip_root (aloc_of_reason r |> ALoc.to_loc);
     "desc", JSON_String (string_of_desc r.desc)
   ])
 )
 
 let dump_reason ?(strip_root=None) r =
   spf "%s: %S%s"
-    (string_of_loc ~strip_root (loc_of_reason r))
+    (string_of_loc ~strip_root (aloc_of_reason r |> ALoc.to_loc))
     (string_of_desc r.desc)
     begin match r.test_id with
     | Some n -> spf " (test %d)" n
@@ -721,20 +722,28 @@ let derivable_reason r =
   { r with derivable = true }
 
 let builtin_reason desc =
-  mk_reason desc { Loc.none with Loc.source = Some File_key.Builtins }
+  { Loc.none with Loc.source = Some File_key.Builtins }
+  |> mk_reason desc
   |> derivable_reason
 
 let is_builtin_reason r =
-  Loc.(r.loc.source = Some File_key.Builtins)
+  r.loc
+  |> ALoc.to_loc
+  |> Loc.source
+  |> (=) (Some File_key.Builtins)
 
 let is_lib_reason r =
-  Option.value_map ~default:false ~f:File_key.is_lib_file Loc.(r.loc.source)
+  r.loc
+  |> ALoc.to_loc
+  |> Loc.source
+  |> Option.value_map ~default:false ~f:File_key.is_lib_file
 
 let is_blamable_reason r =
-  not Loc.(r.loc = none || is_lib_reason r)
+  not Loc.(ALoc.to_loc r.loc = none || is_lib_reason r)
 
 let reasons_overlap r1 r2 =
-  Loc.(contains r1.loc r2.loc)
+  let r1_loc, r2_loc = ALoc.to_loc r1.loc, ALoc.to_loc r2.loc in
+  Loc.contains r1_loc r2_loc
 
 (* reason transformers: *)
 
@@ -744,7 +753,7 @@ let replace_reason ?(keep_def_loc=false) f r =
   mk_reason_with_test_id
     (TestID.current ())
     (f (desc_of_reason ~unwrap:false r))
-    (loc_of_reason r)
+    (aloc_of_reason r)
     def_loc_opt
     (annot_loc_of_reason r)
 
@@ -765,10 +774,10 @@ let repos_reason loc ?annot_loc reason =
   | Some annot_loc -> Some annot_loc
   | None -> reason.annot_loc_opt
   in
-  mk_reason_with_test_id reason.test_id reason.desc loc def_loc_opt annot_loc_opt
+  mk_reason_with_test_id reason.test_id reason.desc (ALoc.of_loc loc) def_loc_opt annot_loc_opt
 
 let annot_reason reason =
-  {reason with annot_loc_opt = Some reason.loc}
+  {reason with annot_loc_opt = Some (ALoc.to_loc reason.loc)}
 
 module ReasonMap = MyMap.Make(struct
   type t = reason

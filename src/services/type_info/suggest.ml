@@ -34,7 +34,7 @@ class visitor ~cxs = object(this)
   method private warn loc (w: warning) =
     let open Errors in
     let desc = warning_desc_to_string w in
-    _warnings <- ErrorSet.add (mk_error loc (Friendly.message_of_string desc)) _warnings;
+    _warnings <- ErrorSet.add (mk_error (loc |> ALoc.of_loc) (Friendly.message_of_string desc)) _warnings;
     None
 
   method warnings () = _warnings

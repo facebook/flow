@@ -55,7 +55,7 @@ let substituter = object(self)
         (match desc_of_reason ~unwrap:false (reason_of_t param_t) with
         | RPolyTest _ ->
           mod_reason_of_t (fun reason ->
-            annot_reason (repos_reason (loc_of_reason tp_reason) reason)
+            annot_reason (repos_reason (aloc_of_reason tp_reason |> ALoc.to_loc) reason)
           ) param_t
         | _ ->
           param_t

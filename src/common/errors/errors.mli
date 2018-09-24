@@ -57,7 +57,7 @@ val mk_error:
   ?trace_infos:info list ->
   ?root:(Loc.t * Loc.t Friendly.message) ->
   ?frames:(Loc.t Friendly.message list) ->
-  Loc.t ->
+  ALoc.t ->
   Loc.t Friendly.message ->
   error
 

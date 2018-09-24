@@ -11,7 +11,7 @@ let mk_with_proto cx reason
   ?(sealed=false) ?(exact=true) ?(frozen=false) ?dict ?call ?(props=SMap.empty) proto =
   let sealed =
     if sealed then Sealed
-    else UnsealedInFile (Loc.source (Reason.loc_of_reason reason))
+    else UnsealedInFile (Loc.source (Reason.aloc_of_reason reason |> ALoc.to_loc))
   in
   let flags = { sealed; exact; frozen } in
   let call = Option.map call ~f:(Context.make_call_prop cx) in
@@ -23,4 +23,4 @@ let mk cx reason =
 
 and sealed_in_op reason_op = function
   | Sealed -> true
-  | UnsealedInFile source -> source <> (Loc.source (Reason.loc_of_reason reason_op))
+  | UnsealedInFile source -> source <> (Loc.source (Reason.aloc_of_reason reason_op |> ALoc.to_loc))

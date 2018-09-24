@@ -613,7 +613,7 @@ let mk_error
   | _ -> message
   in
   (kind, trace, {
-    loc;
+    loc = ALoc.to_loc loc;
     root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
     message = Normal { message; frames };
   })

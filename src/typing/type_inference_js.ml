@@ -426,7 +426,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
 
     add_entry (Reason.internal_name "exports")
       (Entry.new_var
-        ~loc:(Reason.loc_of_reason reason_exports_module)
+        ~loc:(Reason.aloc_of_reason reason_exports_module |> ALoc.to_loc)
         ~specific:(Type.DefT (
           Reason.replace_reason_const
             (Reason.RCustom "undefined exports")

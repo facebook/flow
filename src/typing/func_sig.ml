@@ -172,7 +172,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* bind type params *)
   SMap.iter (fun name t ->
     let r = reason_of_t t in
-    let loc = loc_of_reason r in
+    let loc = aloc_of_reason r |> ALoc.to_loc in
     Env.bind_type cx name (DefT (r, TypeT (TypeParamKind, t))) loc
       ~state:Scope.State.Initialized
   ) tparams_map;
@@ -259,9 +259,9 @@ let toplevels id cx this super ~decls ~stmts ~expr
         match statements with
         | [(_, Return { Return.argument = Some _})] -> ()
         | _ ->
-          let loc = loc_of_reason reason in
+          let loc = aloc_of_reason reason in
           Flow_js.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc, PredicateInvalidBody))
+            Flow_error.(EUnsupportedSyntax (loc |> ALoc.to_loc, PredicateInvalidBody))
       end
     | _ -> ()
   );
@@ -319,7 +319,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
       let (_, t), _ as ast = expr cx e in
       unknown_use, t, Some ast
     | Predicate ->
-      let loc = loc_of_reason reason in
+      let loc = aloc_of_reason reason |> ALoc.to_loc in
       Flow_js.add_output cx
         Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
       let t = VoidT.at loc in
