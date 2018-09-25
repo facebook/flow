@@ -21,6 +21,7 @@ let layout_of_node = function
     ]
   | Identifier id -> Js_layout_generator.identifier id
   | Pattern pat -> Js_layout_generator.pattern pat
+  | TypeAnnotation annot -> Js_layout_generator.type_annotation annot
 
 let text_of_node node =
   let layout = layout_of_node node in

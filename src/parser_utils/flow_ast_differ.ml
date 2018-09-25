@@ -163,6 +163,7 @@ type node =
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
   | Identifier of Loc.t Ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
+  | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
 
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
@@ -178,6 +179,15 @@ let diff_if_changed_opt f opt1 opt2: node change list option =
     Some []
   | _ ->
     None
+
+(* This is needed if the function f takes its arguments as options and produces an optional
+   node change list (for instance, type annotation). In this case it is not sufficient just to
+   give up and return None if only one of the options is present *)
+let diff_if_changed_opt_arg f opt1 opt2: node change list option =
+  match opt1, opt2 with
+  | None, None -> Some []
+  | Some x1, Some x2 when x1 == x2 -> Some []
+  | _ -> f opt1 opt2
 
 (* This is needed if the function for the given node returns a node change
 * list instead of a node change list option (for instance, expression) *)
@@ -470,7 +480,7 @@ let program (algo : diff_algorithm)
       | (_, Unary u1), (_, Unary u2) ->
         unary u1 u2
       | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
-        Some (identifier id1 id2)
+        identifier id1 id2 |> Option.return
       | (_, New new1), (_, New new2) ->
         new_ new1 new2
       | (_, Call call1), (_, Call call2) ->
@@ -724,7 +734,7 @@ let program (algo : diff_algorithm)
         (* TODO: recurse into literals *)
         None
     | Ast.Pattern.Object.Property.Identifier i1, Ast.Pattern.Object.Property.Identifier i2 ->
-        Some (identifier i1 i2)
+        identifier i1 i2 |> Option.return
     | Computed e1, Computed e2 ->
         Some (expression e1 e2)
     | _, _ ->
@@ -769,8 +779,21 @@ let program (algo : diff_algorithm)
     let open Ast.Pattern.Identifier in
     let { name = name1; annot = annot1; optional = optional1 } = i1 in
     let { name = name2; annot = annot2; optional = optional2 } = i2 in
-    if annot1 != annot2 || optional1 != optional2 then
+    if optional1 != optional2 then
       None
     else
-      Some (identifier name1 name2) in
+      let ids = diff_if_changed identifier name1 name2 |> Option.return in
+      let annots = diff_if_changed_opt_arg type_annotation annot1 annot2 in
+      Option.(all [ids; annots] >>| List.concat)
+
+  and type_annotation (annot1: (Loc.t, Loc.t) Ast.Type.annotation option)
+                      (annot2: (Loc.t, Loc.t) Ast.Type.annotation option)
+      : node change list option =
+    match annot1, annot2 with
+    | None, None -> Some []
+    | Some (loc, typ), None -> Some [loc, Delete (TypeAnnotation (loc, typ))]
+    | None, Some _ -> None (* Nowhere in the original program to insert the annotation *)
+    | Some (loc1, typ1), Some (loc2, typ2) ->
+        Some [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))] in
+
 program' program1 program2

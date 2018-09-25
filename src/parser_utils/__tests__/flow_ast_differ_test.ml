@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+module Type = Flow_ast.Type
 open Flow_ast_differ
 open Utils_js
 
@@ -54,6 +55,13 @@ class useless_mapper = object
     let { declarations; kind } = decl in
     if kind = Var then { declarations; kind = Const }
     else decl
+
+  method! type_ (annot: (Loc.t, Loc.t) Flow_ast.Type.t) =
+    let (loc, typ) = annot in
+    let typ = match typ with
+    | Type.Number -> Type.String
+    | _ -> typ in
+    (loc, typ)
 end
 
 class insert_end_mapper = object
@@ -84,6 +92,44 @@ class delete_mapper = object
   method! statement_list = List.tl
 end
 
+class delete_annot_mapper = object
+  inherit Flow_ast_mapper.mapper as super
+
+  method! pattern ?kind expr =
+  let open Flow_ast.Pattern in
+  let open Flow_ast.Pattern.Identifier in
+  let expr = super#pattern ?kind expr in
+  let (loc, patt) = expr in
+  match patt with
+    | Identifier id -> loc, Identifier { id with annot = None }
+    | _ -> expr
+
+  method! return_type_annotation return =
+    let open Flow_ast.Function in
+    match super#return_type_annotation return with
+    | Available (loc, _) -> Missing loc
+    | Missing _ -> return
+end
+
+class insert_annot_mapper = object
+  inherit Flow_ast_mapper.mapper as super
+
+  method! pattern ?kind expr =
+  let open Flow_ast.Pattern in
+  let open Flow_ast.Pattern.Identifier in
+  let expr = super#pattern ?kind expr in
+  let (loc, patt) = expr in
+  match patt with
+    | Identifier id -> loc, Identifier { id with annot = Some (loc, (loc, Type.Number)) }
+    | _ -> expr
+
+  method! return_type_annotation return =
+    let open Flow_ast.Function in
+    match super#return_type_annotation return with
+    | Available _ -> return
+    | Missing _loc -> Available (_loc, (_loc, Type.Number))
+end
+
 let edits_of_source algo source mapper =
   let ast, _ = Parser_flow.program source in
   let new_ast = mapper#program ast in
@@ -100,7 +146,6 @@ let debug_string_of_edit ((start, end_), text) =
 let debug_string_of_edits =
   List.map debug_string_of_edit
   %> String.concat ", "
-
 let debug_print_string_script script =
   let print_string_result (i, chg) =
     match chg with
@@ -111,13 +156,18 @@ let debug_print_string_script script =
   | None -> print_endline "no script"
   | Some sc -> List.iter print_string_result sc
 
-
 let apply_edits source edits =
   let apply_edit acc ((_begin, _end), str) =
     let before = Str.string_before acc (_begin) in
     let after = Str.string_after acc (_end) in
     before ^ str ^ after in
   List.fold_left apply_edit source (List.rev edits)
+
+let print_debug_info source edits_trivial edits_standard =
+  print_endline (spf "Trivial edits: %s" (debug_string_of_edits edits_trivial));
+  print_endline (spf "Standard edits: %s" (debug_string_of_edits edits_standard));
+  print_endline (spf "Trivial applied: %s" (apply_edits source edits_trivial));
+  print_endline (spf "Standard applied: %s" (apply_edits source edits_standard))
 
 let assert_edits_equal ctxt ~edits ~source ~expected ~mapper =
   let edits_trivial = edits_of_source Trivial source mapper in
@@ -375,6 +425,21 @@ let tests = "ast_differ" >::: [
     let source = "function foo() { return rename; }" in
     assert_edits_equal ctxt ~edits:[(24, 30), "gotRenamed"] ~source
       ~expected:"function foo() { return gotRenamed; }" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_delete" >:: begin fun ctxt ->
+    let source = "let x : number = 3;" in
+    assert_edits_equal ctxt ~edits:[(6, 14),""] ~source
+      ~expected:"let x  = 3;" ~mapper:(new delete_annot_mapper)
+  end;
+  "type_annotation_insert" >:: begin fun ctxt ->
+    let source = "let x = 3;" in
+    assert_edits_equal ctxt ~edits:[(4, 5), "x: number"] ~source
+      ~expected:"let x: number = 3;" ~mapper:(new insert_annot_mapper)
+  end;
+  "type_annotation_replace" >:: begin fun ctxt ->
+    let source = "let x : number = 3;" in
+    assert_edits_equal ctxt ~edits:[(6, 14),": string"] ~source
+      ~expected:"let x : string = 3;" ~mapper:(new useless_mapper)
   end;
   "list_diff_simple" >:: begin fun ctxt ->
     let a = "a" in
