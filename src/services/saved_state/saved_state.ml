@@ -100,11 +100,13 @@ end = struct
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
   let write_version =
-    let version_length = String.length Flow_version.version in
+    let version = Flow_build_id.get_build_id () in
+    let version_length = String.length version in
+    assert (version_length = 16); (* Build ID should always be 16 bytes *)
     let rec write_version fd offset len =
       if len > 0
       then
-        let%lwt bytes_written = Lwt_unix.write_string fd Flow_version.version offset len in
+        let%lwt bytes_written = Lwt_unix.write_string fd version offset len in
         let offset = offset + bytes_written in
         let len = len - bytes_written in
         write_version fd offset len
@@ -299,7 +301,7 @@ end = struct
   end
 
   let verify_version =
-    let version_length = String.length Flow_version.version in
+    let version_length = 16 in (* Flow_build_id should always be 16 bytes *)
     let rec read_version fd buf offset len =
       if len > 0
       then
@@ -317,11 +319,12 @@ end = struct
         read_version fd buf offset len
       else
         let result = Bytes.to_string buf in
-        if result <> Flow_version.version
+        let flow_build_id = Flow_build_id.get_build_id () in
+        if result <> flow_build_id
         then begin
           Hh_logger.error
             "Saved-state file failed version check. Expected version %S but got %S"
-            Flow_version.version
+            flow_build_id
             result;
           raise Invalid_saved_state
         end else Lwt.return_unit
