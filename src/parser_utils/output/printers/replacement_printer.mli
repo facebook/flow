@@ -7,7 +7,9 @@
 
 type patch = (int * int * string) list
 
-val mk_patch :
-  Mapper_differ.t -> (Loc.t, Loc.t) Flow_ast.program -> string -> patch
+val mk_patch : Mapper_differ.t -> (Loc.t, Loc.t) Flow_ast.program -> string -> patch
+
+val mk_patch_ast_differ : Flow_ast_differ.node Flow_ast_differ.change list ->
+  (Loc.t, Loc.t) Flow_ast.program -> string -> patch
 
 val print : patch -> string -> string

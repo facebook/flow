@@ -75,6 +75,19 @@ let mk_patch (diff : Mapper_differ.t) (ast : (Loc.t, Loc.t) Ast.program)
     (fun (start_one, _, _) (start_two, _, _) -> compare start_one start_two)
     spans
 
+let mk_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list)
+  (ast : (Loc.t, Loc.t) Ast.program) (file_path : string) : patch =
+
+   let _, line_counts = file_info file_path in
+   let line_counts_arr = Array.of_list (List.rev line_counts) in
+   let offset {Loc.line; column; _} =
+     let _, line_start, _ = line_counts_arr.(line) in
+     line_start + column in
+
+   let attached_comments = Some (Flow_prettier_comments.attach_comments ast) in
+   Ast_diff_printer.edits_of_changes attached_comments diff
+   |> List.map (fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
+
 let print (patch : patch) (file_path : string) : string =
   let lines, line_counts = file_info file_path in
   let _, _, file_end = List.hd line_counts in
