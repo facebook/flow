@@ -8,6 +8,6 @@
 type patch = (int * int * string) list
 
 val mk_patch :
-  Mapper_differ.t -> (Loc.t, Loc.t) Flow_ast.program -> string -> patch Lwt.t
+  Mapper_differ.t -> (Loc.t, Loc.t) Flow_ast.program -> string -> patch
 
-val print : patch -> string -> string Lwt.t
+val print : patch -> string -> string

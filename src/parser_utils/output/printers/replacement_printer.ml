@@ -6,8 +6,6 @@
  *)
 
 module Ast = Flow_ast
-module IO = Lwt_io
-module S = Lwt_stream
 module L = Utils_js.LocMap
 module D = Mapper_differ
 module J = Js_layout_generator
@@ -15,24 +13,28 @@ module F = Ast.Function
 
 type patch = (int * int * string) list
 
-let file_info file_path =
-  let%lwt file = IO.open_file ~mode:IO.input file_path in
-  let lines_stream = IO.read_lines file in
-  let%lwt lines, line_counts, _ =
-    S.fold
-      (fun s (lines, acc, prev_offset) ->
+let file_info file_path : string list * (int * int * int) list =
+  let input_channel = open_in file_path in
+  let rec build_list l =
+    match input_line input_channel with
+    | line -> build_list (line :: l)
+    | exception End_of_file -> close_in input_channel ; List.rev l
+  in
+  let lines_read = build_list [] in
+  let lines, line_counts, _ =
+    List.fold_left
+      (fun (lines, acc, prev_offset) s ->
         let size = String.length s in
         let new_offset = prev_offset + size in
         (s :: lines, (size, prev_offset, new_offset) :: acc, new_offset + 1) )
-      lines_stream
       ([], [(0, 0, 0)], 0)
+      lines_read
   in
-  let%lwt _ = Lwt_io.close file in
-  Lwt.return @@ (lines, line_counts)
+  (lines, line_counts)
 
 let mk_patch (diff : Mapper_differ.t) (ast : (Loc.t, Loc.t) Ast.program)
-    (file_path : string) : patch Lwt.t =
-  let%lwt _, line_counts = file_info file_path in
+    (file_path : string) : patch =
+  let _, line_counts = file_info file_path in
   let line_counts_arr = Array.of_list (List.rev line_counts) in
   let offset {Loc.line; column; _} =
     let _, line_start, _ = line_counts_arr.(line) in
@@ -69,13 +71,12 @@ let mk_patch (diff : Mapper_differ.t) (ast : (Loc.t, Loc.t) Ast.program)
       diff []
   in
   J.with_attached_comments := None ;
-  Lwt.return
-  @@ List.sort
-       (fun (start_one, _, _) (start_two, _, _) -> compare start_one start_two)
-       spans
+  List.sort
+    (fun (start_one, _, _) (start_two, _, _) -> compare start_one start_two)
+    spans
 
-let print (patch : patch) (file_path : string) : string Lwt.t =
-  let%lwt lines, line_counts = file_info file_path in
+let print (patch : patch) (file_path : string) : string =
+  let lines, line_counts = file_info file_path in
   let _, _, file_end = List.hd line_counts in
   let file_string = String.concat "\n" (List.rev lines) in
   (* Apply the spans to the original text *)
@@ -98,4 +99,4 @@ let print (patch : patch) (file_path : string) : string Lwt.t =
       Printf.sprintf "%s%s\n" result_string_minus_end
         (String.sub file_string last_span last_span_to_end_size)
   in
-  Lwt.return result_string
+  result_string
