@@ -6,8 +6,12 @@
  *)
 
 open Flow_ast_differ
+open Utils_js
 
-let layout_of_node = function
+let layout_of_node comments node =
+  let old = !Js_layout_generator.with_attached_comments in
+  Js_layout_generator.with_attached_comments := comments;
+  let layout = match node with
   | Statement stmt -> Js_layout_generator.statement stmt
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast
   | Expression expr ->
@@ -21,21 +25,23 @@ let layout_of_node = function
     ]
   | Identifier id -> Js_layout_generator.identifier id
   | Pattern pat -> Js_layout_generator.pattern pat
-  | TypeAnnotation annot -> Js_layout_generator.type_annotation annot
+  | TypeAnnotation annot -> Js_layout_generator.type_annotation annot in
+  Js_layout_generator.with_attached_comments := old;
+  layout
 
-let text_of_node node =
-  let layout = layout_of_node node in
+let text_of_node comments =
+  layout_of_node comments
   (* TODO if we are reprinting the entire program we probably want this to be
    * false. Add some tests and make sure we get it right. *)
-  let skip_endline = true in
-  let source = Pretty_printer.print ~source_maps:None ~skip_endline layout in
-  Source.contents source
+  %> Pretty_printer.print ~source_maps:None ~skip_endline:true
+  %> Source.contents
 
-let text_of_nodes = ListUtils.to_string "\n" text_of_node
+let text_of_nodes = text_of_node %> ListUtils.to_string "\n"
 
-let edit_of_change = function
-  | loc, Replace (_, new_node) -> (loc, text_of_node new_node)
-  | loc, Insert new_nodes -> (loc, text_of_nodes new_nodes)
+let edit_of_change comments = function
+  | loc, Replace (_, new_node) -> (loc, text_of_node comments new_node)
+  | loc, Insert new_nodes -> (loc, text_of_nodes comments new_nodes)
   | loc, Delete _ -> (loc, "")
 
-let edits_of_changes changes = List.map edit_of_change changes
+let edits_of_changes comments changes =
+  List.map (edit_of_change comments) changes

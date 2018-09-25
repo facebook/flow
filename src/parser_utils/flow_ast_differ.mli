@@ -28,7 +28,8 @@ type node =
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it
  * does not work well for e.g. parsing two programs and determining their differences. *)
-val program: diff_algorithm -> (Loc.t, Loc.t) Flow_ast.program -> (Loc.t, Loc.t) Flow_ast.program -> node change list
+val program: diff_algorithm -> (Loc.t, Loc.t) Flow_ast.program ->
+  (Loc.t, Loc.t) Flow_ast.program -> node change list
 
 (* Diffs two lists and produces an edit script. This is exposed only for testing purposes *)
 type 'a diff_result = int * 'a change'

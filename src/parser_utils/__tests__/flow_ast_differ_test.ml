@@ -135,7 +135,7 @@ let edits_of_source algo source mapper =
   let new_ast = mapper#program ast in
   let edits =
     program algo ast new_ast
-    |> Ast_diff_printer.edits_of_changes
+    |> Ast_diff_printer.edits_of_changes None
   in
   (* Extract columns from the locs *)
   List.map (fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) edits
@@ -146,6 +146,7 @@ let debug_string_of_edit ((start, end_), text) =
 let debug_string_of_edits =
   List.map debug_string_of_edit
   %> String.concat ", "
+
 let debug_print_string_script script =
   let print_string_result (i, chg) =
     match chg with
@@ -172,6 +173,7 @@ let print_debug_info source edits_trivial edits_standard =
 let assert_edits_equal ctxt ~edits ~source ~expected ~mapper =
   let edits_trivial = edits_of_source Trivial source mapper in
   let edits_standard = edits_of_source Standard source mapper in
+  print_debug_info source edits_trivial edits_standard;
   assert_equal ~ctxt edits edits_trivial;
   assert_equal ~ctxt edits edits_standard;
   assert_equal ~ctxt expected (apply_edits source edits_trivial);
@@ -402,10 +404,14 @@ let tests = "ast_differ" >::: [
     let source = "" in
     let ast_empty, _ = Parser_flow.program source in
     let ast_var, _ = Parser_flow.program "var x = 6;" in
-    let edits_trivial = program Trivial ast_empty ast_var |> Ast_diff_printer.edits_of_changes |>
-    List.map (fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) in
-    let edits_standard = program Trivial ast_empty ast_var |> Ast_diff_printer.edits_of_changes |>
-    List.map (fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) in
+    let edits_trivial =
+      program Trivial ast_empty ast_var
+      |> Ast_diff_printer.edits_of_changes None
+      |> List.map (fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) in
+    let edits_standard =
+      program Standard ast_empty ast_var
+      |> Ast_diff_printer.edits_of_changes None
+      |> List.map (fun (loc, text) -> Loc.((loc.start.column, loc._end.column), text)) in
     assert_equal ~ctxt edits_trivial [(0, 0), "var x = 6;"];
     assert_equal ~ctxt edits_standard [((0, 0), "var x = 6;");];
     assert_equal ~ctxt (apply_edits source edits_trivial) "var x = 6;";
@@ -455,6 +461,12 @@ let tests = "ast_differ" >::: [
     let source = "function foo() { return 1; }" in
     assert_edits_equal ctxt ~edits:[(15, 15),": number"] ~source
       ~expected:"function foo() : number{ return 1; }" ~mapper:(new insert_annot_mapper)
+  end;
+  "comments" >:: begin fun ctxt ->
+    let source = "function foo() { /* comment */ (5 - 3); 4; (6 + 4); /* comment */}" in
+    assert_edits_equal ctxt ~edits:[((40, 41), "(5)"); ((44, 49), "(6 - 5)")] ~source
+      ~expected:"function foo() { /* comment */ (5 - 3); (5); ((6 - 5)); /* comment */}"
+      ~mapper:(new useless_mapper)
   end;
   "list_diff_simple" >:: begin fun ctxt ->
     let a = "a" in
