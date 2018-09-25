@@ -69,6 +69,7 @@ MODULES=\
   src/commands/config\
   src/common\
   src/common/audit\
+  src/common/build_id\
   src/common/errors\
   src/common/lints\
   src/common/lwt\

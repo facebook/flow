@@ -39,6 +39,7 @@ let main json pretty from _root () =
       "semver", JSON_String Flow_version.version;
       "binary", JSON_String (Sys_utils.executable_path ());
       "build_id", JSON_String Build_id.build_id_ohai;
+      "flow_build_id", JSON_String (Flow_build_id.get_build_id ());
     ] in
     print_json_endline ~pretty json
   end else begin
