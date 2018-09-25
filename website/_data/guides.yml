@@ -92,6 +92,7 @@
     - path: "/docs/config/lints/"
     - path: "/docs/config/options/"
     - path: "/docs/config/version/"
+    - path: "/docs/config/declarations/"
 
 - id: libdefs
   pages:
