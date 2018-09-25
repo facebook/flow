@@ -51,6 +51,7 @@ let set_command _ = ()
 let set_from _ = ()
 let set_root _ = ()
 let set_root_name _ = ()
+let set_saved_state_filename _ = ()
 let set_monitor_options ~file_watcher:_  = ()
 let set_server_options ~lazy_mode:_ ~cancelable_rechecks:_ = ()
 
@@ -85,3 +86,6 @@ let saved_state_fb_fetcher_success
   ~changed_files_count:_ ~saved_state_filename:_ ~profiling:_ = ()
 
 let saved_state_fb_fetcher_error ~step:_ ~trace:_ ~profiling:_ = ()
+
+let load_saved_state_success ~changed_files_count:_ = ()
+let load_saved_state_error ~saved_state_filename:_ ~changed_files_count:_ ~invalid_reason:_ = ()

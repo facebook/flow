@@ -262,7 +262,23 @@ end = struct
     Lwt.return_unit
 end
 
-exception Invalid_saved_state
+type invalid_reason =
+| Bad_header
+| Build_mismatch
+| Changed_files
+| Failed_to_marshal
+| File_does_not_exist
+| Flowconfig_mismatch
+
+let invalid_reason_to_string = function
+| Bad_header -> "Invalid saved state header"
+| Build_mismatch -> "Build ID of saved state does not match this binary"
+| Changed_files -> "A file change invalidated the saved state"
+| Failed_to_marshal -> "Failed to unmarshal data from saved state"
+| File_does_not_exist -> "Saved state file does not exist"
+| Flowconfig_mismatch -> ".flowconfig has changed since saved state was generated"
+
+exception Invalid_saved_state of invalid_reason
 
 (* Loading the saved state generally consists of 2 things:
  *
@@ -312,7 +328,7 @@ end = struct
             "Invalid saved state version header. It should be %d bytes but only read %d bytes"
             version_length
             (version_length - len);
-          raise Invalid_saved_state
+          raise (Invalid_saved_state Bad_header)
         end;
         let offset = offset + bytes_read in
         let len = len - bytes_read in
@@ -326,7 +342,7 @@ end = struct
             "Saved-state file failed version check. Expected version %S but got %S"
             flow_build_id
             result;
-          raise Invalid_saved_state
+          raise (Invalid_saved_state Build_mismatch)
         end else Lwt.return_unit
     in
     fun fd -> read_version fd (Bytes.create version_length) 0 version_length
@@ -423,7 +439,7 @@ end = struct
     then begin
       Hh_logger.error
         "Invalid saved state: .flowconfig has changed since this saved state was generated.";
-      raise Invalid_saved_state
+      raise (Invalid_saved_state Flowconfig_mismatch)
     end;
 
     let parsed_count = FilenameMap.cardinal parsed_heaps in
@@ -472,7 +488,7 @@ end = struct
     with
     | Unix.Unix_error(Unix.ENOENT, _, _) as exn ->
       Hh_logger.error ~exn "Failed to open %S" filename;
-      raise Invalid_saved_state
+      raise (Invalid_saved_state File_does_not_exist)
     in
 
     let%lwt () = verify_version fd in
@@ -480,7 +496,7 @@ end = struct
       try%lwt Marshal_tools_lwt.from_fd_with_preamble fd
       with exn ->
         Hh_logger.error ~exn "Failed to parsed saved state data";
-        raise Invalid_saved_state
+        raise (Invalid_saved_state Failed_to_marshal)
     in
 
     let%lwt () = Lwt_unix.close fd in

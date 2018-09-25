@@ -29,7 +29,17 @@ type saved_state_data = {
   node_modules_containers: SSet.t;
 }
 
-exception Invalid_saved_state
+type invalid_reason =
+| Bad_header
+| Build_mismatch
+| Changed_files
+| Failed_to_marshal
+| File_does_not_exist
+| Flowconfig_mismatch
+
+val invalid_reason_to_string: invalid_reason -> string
+
+exception Invalid_saved_state of invalid_reason
 
 val save:
   saved_state_filename:Path.t ->
