@@ -92,8 +92,7 @@ end = struct
 
   let catch ~f ~catch = try f () with exn -> catch exn
 
-  let map_fold_values map ~init ~f = SMap.fold (fun _ v acc -> f v acc) map init
-  let map_iter_values_s map ~f = SMap.iter (fun _ v -> f v) map
+  let list_fold_values = List.fold
 
   (* Send a request to the watchman process *)
   let send_request ~debug_logging oc json =
@@ -249,10 +248,15 @@ struct
 
   include Watchman_sig.Types
 
-  type watched_path = {
-    subscription_name: string;
-    path: Path.t;
-    relative_path: string;
+  type dead_env = {
+    (** Will reuse original settings to reinitializing watchman subscription. *)
+    prior_settings : init_settings;
+    reinit_attempts: int;
+    dead_since: float;
+    prior_clockspec : string;
+  }
+
+  type env = {
     (* See https://facebook.github.io/watchman/docs/clockspec.html
      *
      * This is also used to reliably detect a crashed watchman. Watchman has a
@@ -260,25 +264,11 @@ struct
      *
      * See also assert_no_fresh_instance *)
     mutable clockspec: string;
-  }
-
-  type resume_watches =
-    | Prior_watched_paths of watched_path SMap.t
-    | New_watch_from_clockspec of string
-
-  type dead_env = {
-    (** Will reuse original settings to reinitializing watchman subscription. *)
-    prior_settings : init_settings;
-    reinit_attempts: int;
-    dead_since: float;
-    prior_watched_paths: watched_path SMap.t;
-  }
-
-  type env = {
-    settings : init_settings;
     conn: Watchman_process.conn;
+    settings: init_settings;
+    subscription: string;
     watch_root: string;
-    watched_paths: watched_path SMap.t;
+    watched_path_expression_terms: Hh_json.json option;
   }
 
   let dead_env_from_alive env =
@@ -287,11 +277,11 @@ struct
       dead_since = Unix.time ();
       reinit_attempts = 0;
       (** When we start a new watchman connection, we continue to use the prior
-       * clockspec for each watched root. If the same watchman server is still alive, then all is
+       * clockspec. If the same watchman server is still alive, then all is
        * good. If not, the clockspec allows us to detect whether a new watchman
        * server had to be started. See also "is_fresh_instance" on watchman's
        * "since" response. *)
-      prior_watched_paths = env.watched_paths;
+      prior_clockspec = env.clockspec;
     }
 
   type watchman_instance =
@@ -318,7 +308,7 @@ struct
 
   (** Conjunction of extra_expressions and expression_terms. *)
   let request_json
-      ?(extra_kv=[]) ?(extra_expressions=[]) ~watched_path watchman_command env =
+      ?(extra_kv=[]) ?(extra_expressions=[]) watchman_command env =
     let open Hh_json in
     let command = begin match watchman_command with
       | Subscribe -> "subscribe"
@@ -327,42 +317,43 @@ struct
       [JSON_String command ; JSON_String env.watch_root] @
         begin
           match watchman_command with
-          | Subscribe -> [JSON_String watched_path.subscription_name]
+          | Subscribe -> [JSON_String env.subscription]
           | _ -> []
         end in
     let expressions = extra_expressions @ (env.settings.expression_terms) in
+    let expressions = match env.watched_path_expression_terms with
+    | Some terms -> terms :: expressions
+    | None -> expressions
+    in
+    assert (expressions <> []);
     let directives = [
       JSON_Object (extra_kv
       @ [
         "fields", J.strlist ["name"];
-        "relative_root", JSON_String watched_path.relative_path;]
-      (** Watchman doesn't allow an empty allof expression. Omit if empty. *)
-      @ if expressions = [] then [] else [
-        "expression", J.pred "allof" expressions
+        (** Watchman doesn't allow an empty allof expression. But expressions is never empty *)
+        "expression", J.pred "allof" expressions;
       ])
     ] in
     let request = JSON_Array (header @ directives) in
     request
 
-  let all_query ~watched_path env =
+  let all_query env =
     request_json
       ~extra_expressions:([Hh_json.JSON_String "exists"])
-      ~watched_path
       Query env
 
-  let since_query ~watched_path env =
+  let since_query env =
     request_json
-      ~extra_kv: ["since", Hh_json.JSON_String watched_path.clockspec;
+      ~extra_kv: ["since", Hh_json.JSON_String env.clockspec;
                   "empty_on_fresh_instance", Hh_json.JSON_Bool true]
-      ~watched_path
       Query env
 
-  let subscribe ~mode ~watched_path env =
+  let subscribe ~mode env =
     let since, mode = match mode with
-    | All_changes -> Hh_json.JSON_String watched_path.clockspec, []
+    | All_changes -> Hh_json.JSON_String env.clockspec, []
     | Defer_changes ->
-      Hh_json.JSON_String watched_path.clockspec, ["defer", J.strlist ["hg.update"]]
-    | Drop_changes -> Hh_json.JSON_String watched_path.clockspec, ["drop", J.strlist ["hg.update"]]
+      Hh_json.JSON_String env.clockspec, ["defer", J.strlist ["hg.update"]]
+    | Drop_changes -> Hh_json.JSON_String env.clockspec, ["drop", J.strlist ["hg.update"]]
     | Scm_aware ->
         Hh_logger.log "Making Scm_aware subscription";
         let scm = Hh_json.JSON_Object
@@ -375,7 +366,6 @@ struct
       ~extra_kv:((["since", since] @ mode) @
                  ["empty_on_fresh_instance",
                  Hh_json.JSON_Bool true])
-      ~watched_path
       Subscribe env
 
   let watch_project root = J.strlist ["watch-project"; root]
@@ -440,29 +430,8 @@ struct
       >>= get_bool name
       |> project_bool
 
-  let re_init ?resume_watches
+  let re_init ?prior_clockspec
     { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
-
-    (* Dedupe roots *)
-    let roots_with_clockspecs = match resume_watches with
-    | None ->
-      (* Dedupe roots & add in that we have no prior clockspec *)
-      List.fold_left roots
-        ~init:SMap.empty
-        ~f:(fun map path -> SMap.add (Path.to_string path) (path, None) map)
-    | Some (New_watch_from_clockspec clockspec) ->
-      (* Dedupe roots & add clockspec for resuming watch. *)
-      List.fold_left roots
-        ~init:SMap.empty
-        ~f:(fun map path -> SMap.add (Path.to_string path) (path, Some clockspec) map)
-    | Some (Prior_watched_paths watched_paths) ->
-      SMap.fold
-        (fun _ { path; clockspec; _; } -> SMap.add (Path.to_string path) (path, Some clockspec))
-        watched_paths
-        SMap.empty
-    in
-    if SMap.cardinal roots_with_clockspecs = 0
-    then failwith "Cannot run watchman with fewer than 1 root";
 
     with_crash_record_opt "init" @@ fun () ->
     Watchman_process.open_connection ~timeout:(float_of_int init_timeout) >>= fun conn ->
@@ -473,42 +442,55 @@ struct
     (** Disable subscribe if Watchman flush feature isn't supported. *)
     let subscribe_mode = if supports_flush then subscribe_mode else None in
 
-    Watchman_process.map_fold_values roots_with_clockspecs
-      ~init:(SMap.empty, SSet.empty)
-      ~f: (fun (path, prior_clockspec) (watched_paths, watch_roots) ->
+    Watchman_process.list_fold_values roots
+      ~init:(Some [], SSet.empty)
+      ~f: (fun (terms, watch_roots) path ->
         (* Watch this root *)
         Watchman_process.request
-          ~debug_logging ~conn (watch_project (Path.to_string path)) >>= fun response ->
+          ~debug_logging ~conn (watch_project (Path.to_string path)) >|= fun response ->
         let watch_root = J.get_string_val "watch" response in
         let relative_path = J.get_string_val "relative_path" ~default:"" response in
 
-        (* If we don't have a prior clockspec, grab the current clock *)
-        (match prior_clockspec with
-          | Some s -> Watchman_process.return s
-          | None ->
-            Watchman_process.request ~debug_logging ~conn (clock watch_root)
-            >|= J.get_string_val "clock"
-        ) >|= fun clockspec ->
-
-        (* We may not end up subscribing, but if we do this will be the name *)
-        let subscription_name = spf "%s:%s" subscription_prefix relative_path in
-        let watched_path = { subscription_name; path; relative_path; clockspec } in
-        let watched_paths = SMap.add subscription_name watched_path watched_paths in
+        let terms = match terms with
+        | None -> None
+        | Some _ when relative_path = "" ->
+          (* If we're watching the watch root directory, then there's no point in specifying a list
+           * of files and directories to watch. We're already subscribed to any change in this
+           * watch root anyway *)
+          None
+        | Some terms ->
+          (* So lets say we're being told to watch foo/bar. Is foo/bar a directory? Is it a file?
+           * If it is a file now, might it become a directory later? I'm not aware of a term which
+           * will watch for either a file or a directory, so let's add two terms *)
+          Some (J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms)
+        in
 
         let watch_roots = SSet.add watch_root watch_roots in
-        watched_paths, watch_roots
+        terms, watch_roots
       )
-    >>= fun (watched_paths, watch_roots) ->
+    >>= fun (watched_path_expression_terms, watch_roots) ->
 
     (* All of our watched paths should have the same watch root. Let's assert that *)
     let watch_root = match SSet.elements watch_roots with
-    | [] -> failwith "Unreachable - we already asserted at least 1 root"
+    | [] -> failwith "Cannot run watchman with fewer than 1 root";
     | [watch_root] -> watch_root
     | _ ->
       failwith (
         spf "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
           (SSet.cardinal watch_roots)
       )
+    in
+
+    (* If we don't have a prior clockspec, grab the current clock *)
+    (match prior_clockspec with
+      | Some s -> Watchman_process.return s
+      | None ->
+        Watchman_process.request ~debug_logging ~conn (clock watch_root)
+        >|= J.get_string_val "clock"
+    ) >>= fun clockspec ->
+
+    let watched_path_expression_terms =
+      Option.map watched_path_expression_terms ~f:(J.pred "anyof")
     in
 
     let env = {
@@ -522,22 +504,22 @@ struct
       };
       conn;
       watch_root;
-      watched_paths;
+      watched_path_expression_terms;
+      clockspec;
+      subscription = Printf.sprintf "%s.%d" subscription_prefix (Unix.getpid ());
     } in
     (match subscribe_mode with
     | None -> Watchman_process.return ()
     | Some mode ->
-      Watchman_process.map_iter_values_s env.watched_paths ~f:(fun watched_path ->
-        Watchman_process.request ~debug_logging ~conn (subscribe ~mode ~watched_path env) >|= ignore
-      )
+      Watchman_process.request ~debug_logging ~conn (subscribe ~mode env) >|= ignore
     ) >|= fun () ->
     env
 
   let init ?since_clockspec settings () =
-    let resume_watches = Option.map since_clockspec ~f:(fun clockspec -> New_watch_from_clockspec clockspec) in
-    re_init ?resume_watches settings
+    let prior_clockspec = since_clockspec in
+    re_init ?prior_clockspec settings
 
-  let extract_file_names ~watched_path env json =
+  let extract_file_names env json =
     let files = try J.get_array_val "files" json with
       (** When an hg.update happens, it shows up in the watchman subscription
        * as a notification with no files key present. *)
@@ -546,8 +528,7 @@ struct
     let files = List.map files begin fun json ->
       let s = Hh_json.get_string_exn json in
       let abs =
-        Filename.concat env.watch_root @@
-        Filename.concat watched_path.relative_path s in
+        Filename.concat env.watch_root s in
       abs
     end in
     files
@@ -567,8 +548,7 @@ struct
       then
         let () =
           Hh_logger.log "Attemping to reestablish watchman subscription" in
-        re_init ~resume_watches:(Prior_watched_paths dead_env.prior_watched_paths)
-          dead_env.prior_settings
+        re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
         >|= function
         | None ->
           Hh_logger.log "Reestablishing watchman subscription failed.";
@@ -650,19 +630,12 @@ struct
     Watchman_process.catch
       ~f:(fun () ->
         with_crash_record_exn "get_all_files" @@ fun () ->
-          Watchman_process.map_fold_values
-            env.watched_paths
-            ~init:SSet.empty
-            ~f:(fun watched_path set ->
-              Watchman_process.request
-                ~debug_logging:env.settings.debug_logging
-                (all_query ~watched_path env)
-              >|= fun response ->
-                watched_path.clockspec <- J.get_string_val "clock" response;
-                extract_file_names ~watched_path env response
-                |> List.fold ~init:set ~f:(fun set file -> SSet.add file set)
-            )
-          >|= SSet.elements
+          Watchman_process.request
+            ~debug_logging:env.settings.debug_logging
+            (all_query env)
+          >|= fun response ->
+          env.clockspec <- J.get_string_val "clock" response;
+          extract_file_names env response
       )
       ~catch:(fun _ -> raise Exit_status.(Exit_with Watchman_failed))
 
@@ -674,7 +647,7 @@ struct
     | `Leave ->
       State_leave (name, metadata)
 
-  let make_mergebase_changed_response ~watched_path env data =
+  let make_mergebase_changed_response env data =
     let open Hh_json.Access in
     let accessor = return data in
     accessor >>=
@@ -683,34 +656,20 @@ struct
     accessor >>= get_obj "clock" >>=
       get_obj "scm" >>=
       get_string "mergebase" >>= fun (mergebase, keytrace) ->
-    let files = set_of_list @@ extract_file_names ~watched_path env data in
-    watched_path.clockspec <- clock;
+    let files = set_of_list @@ extract_file_names env data in
+    env.clockspec <- clock;
     let response = Changed_merge_base (mergebase, files, clock) in
     Ok ((env, response), keytrace)
-
-  let get_watched_path_for_response env data =
-    let subscription_name =
-      try J.get_string_val "subscription" data
-      with Not_found ->
-        failwith (
-          spf
-            "Malformed response from watchman missing 'subscription' field:\n%s"
-            (Hh_json.json_to_string ~pretty:true data)
-        )
-    in
-    try SMap.find_unsafe subscription_name env.watched_paths
-    with Not_found -> failwith (spf "Unknown watchman subscription '%s'" subscription_name)
 
   let transform_asynchronous_get_changes_response env data = match data with
     | None ->
       env, Files_changed (SSet.empty)
     | Some data -> begin
-      let watched_path = get_watched_path_for_response env data in
 
-      match make_mergebase_changed_response ~watched_path env data with
+      match make_mergebase_changed_response env data with
       | Ok ((env, response), _) -> env, response
       | Error _ ->
-        watched_path.clockspec <- J.get_string_val "clock" data;
+        env.clockspec <- J.get_string_val "clock" data;
         assert_no_fresh_instance data;
         try env, make_state_change_response `Enter
           (J.get_string_val "state-enter" data) data with
@@ -718,7 +677,7 @@ struct
         try env, make_state_change_response `Leave
           (J.get_string_val "state-leave" data) data with
         | Not_found ->
-          env, Files_changed (set_of_list @@ extract_file_names ~watched_path env data)
+          env, Files_changed (set_of_list @@ extract_file_names env data)
     end
 
   let get_changes ?deadline instance =
@@ -734,20 +693,11 @@ struct
         let env, result = transform_asynchronous_get_changes_response env response in
         env, Watchman_pushed result
       else
-        Watchman_process.map_fold_values
-          env.watched_paths
-          ~init:(env, [])
-          ~f:(fun watched_path (env, changes) ->
-            let query = since_query ~watched_path env in
-            Watchman_process.request
-              ~debug_logging ~conn:env.conn ?timeout query
-            >|= fun response ->
-              let env, changes' =
-                transform_asynchronous_get_changes_response env (Some response)
-              in
-              env, changes'::changes
-          )
-        >|= fun (env, result) -> env, Watchman_synchronous result
+        let query = since_query env in
+        Watchman_process.request ~debug_logging ~conn:env.conn ?timeout query
+        >|= fun response ->
+        let env, changes = transform_asynchronous_get_changes_response env (Some response) in
+        env, Watchman_synchronous [changes]
 
   let flush_request ~(timeout:int) watch_root =
     let open Hh_json in
@@ -765,18 +715,17 @@ struct
       | None -> false
       | Some json -> begin
         let open Hh_json.Access in
-        let synced = (return json) >>= get_array "synced" |> function
-          | Error _ -> SSet.empty
-          | Ok (vs, _) -> List.map vs ~f:Hh_json.get_string_exn |> SSet.of_list
-        in
-        let not_needed = (return json) >>= get_array "no_sync_needed" |> function
-          | Error _ -> SSet.empty
-          | Ok (vs, _) -> List.map vs ~f:Hh_json.get_string_exn |> SSet.of_list
-        in
-        (* All the subscriptions which we need to sync *)
-        let to_sync = env.watched_paths |> SMap.bindings |> List.map ~f:fst |> SSet.of_list in
-        (* Return true if all subs have been sync'd or don't need to be sync'd *)
-        SSet.diff (SSet.diff to_sync synced) not_needed |> SSet.is_empty
+        let is_synced = lazy ((return json) >>= get_array "synced" |> function
+          | Error _ -> false
+          | Ok (vs, _) ->
+            List.exists vs ~f:(fun str -> Hh_json.get_string_exn str = env.subscription)
+        ) in
+        let is_not_needed = lazy ((return json) >>= get_array "no_sync_needed" |> function
+          | Error _ -> false
+          | Ok (vs, _) ->
+            List.exists vs ~f:(fun str -> Hh_json.get_string_exn str = env.subscription)
+        ) in
+        Lazy.force is_synced || Lazy.force is_not_needed
       end
     in
     let timeout = deadline -. Unix.time () in
@@ -804,23 +753,14 @@ struct
       @@ (fun env ->
         if env.settings.subscribe_mode = None
         then
-          Watchman_process.map_fold_values
-            env.watched_paths
-            ~init:(env, [])
-            ~f:(fun watched_path (env, changes) ->
-              let timeout = float_of_int timeout in
-              let query = since_query ~watched_path env in
-              Watchman_process.request
-                ~debug_logging:env.settings.debug_logging
-                ~conn:env.conn ~timeout query
-              >|= fun response ->
-                let env, changes' =
-                  transform_asynchronous_get_changes_response env (Some response)
-                in
-                env, (changes'::changes)
-            )
-          >|= fun (env, changes) ->
-            env, Watchman_synchronous changes
+          let timeout = float_of_int timeout in
+          let query = since_query env in
+          Watchman_process.request
+            ~debug_logging:env.settings.debug_logging
+            ~conn:env.conn ~timeout query
+          >|= fun response ->
+          let env, changes = transform_asynchronous_get_changes_response env (Some response) in
+          env, Watchman_synchronous [changes]
         else
           let request = flush_request ~timeout env.watch_root in
           let conn = env.conn in
@@ -851,13 +791,12 @@ struct
         settings = test_settings;
         conn;
         watch_root = "/path/to/root";
-        watched_paths =
-          SMap.add "mysubscriptionname" {
-            subscription_name = "mysubscriptionname";
-            path = Path.dummy_path;
-            relative_path = "";
-            clockspec = "";
-          } SMap.empty
+        clockspec = "";
+        watched_path_expression_terms = Some (J.pred "anyof" [
+          J.strlist ["dirname"; "foo"];
+          J.strlist ["name"; "foo"];
+        ]);
+        subscription = "dummy_prefix.123456789";
       }
 
     let transform_asynchronous_get_changes_response env json =

@@ -22,11 +22,8 @@ struct
 
   let catch ~f ~catch = Lwt.catch f catch
 
-  let map_fold_values map ~init ~f =
-    Lwt_list.fold_left_s (fun acc (_, v) -> f v acc) init (SMap.bindings map)
-
-  let map_iter_values_s map ~f =
-    Lwt_list.iter_s (fun (_, v) -> f v) (SMap.bindings map)
+  let list_fold_values l ~init ~f =
+    Lwt_list.fold_left_s f init l
 
   (* Send a request to the watchman process *)
   let send_request ~debug_logging oc json =
