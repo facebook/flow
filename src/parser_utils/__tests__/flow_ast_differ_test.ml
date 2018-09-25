@@ -441,6 +441,21 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(6, 14),": string"] ~source
       ~expected:"let x : string = 3;" ~mapper:(new useless_mapper)
   end;
+  "return_type_replace" >:: begin fun ctxt ->
+    let source = "function foo() : number { return 1; }" in
+    assert_edits_equal ctxt ~edits:[(15, 23),": string"] ~source
+      ~expected:"function foo() : string { return 1; }" ~mapper:(new useless_mapper)
+  end;
+  "return_type_delete" >:: begin fun ctxt ->
+    let source = "function foo() : number { return 1; }" in
+    assert_edits_equal ctxt ~edits:[(15, 23),""] ~source
+      ~expected:"function foo()  { return 1; }" ~mapper:(new delete_annot_mapper)
+  end;
+  "return_type_insert" >:: begin fun ctxt ->
+    let source = "function foo() { return 1; }" in
+    assert_edits_equal ctxt ~edits:[(15, 15),": number"] ~source
+      ~expected:"function foo() : number{ return 1; }" ~mapper:(new insert_annot_mapper)
+  end;
   "list_diff_simple" >:: begin fun ctxt ->
     let a = "a" in
     let b = "b" in

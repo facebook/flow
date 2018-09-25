@@ -330,17 +330,32 @@ let program (algo : diff_algorithm)
 
     if id1 != id2 || params1 != params2 || (* body handled below *) async1 != async2
         || generator1 != generator2 || expression1 != expression2 || predicate1 != predicate2
-        || return1 != return2 || tparams1 != tparams2
+        || tparams1 != tparams2
     then
       None
     else
-      (* just body changed *)
-      match body1, body2 with
-      | BodyExpression _, _
-      | _, BodyExpression _ ->
-        None
-      | BodyBlock (_, block1), BodyBlock (_, block2) ->
-        block block1 block2
+      let fnbody = diff_if_changed_opt function_body_any (Some body1) (Some body2) in
+      let returns = diff_if_changed return_type_annotation return1 return2 |> Option.return in
+      Option.(all [fnbody; returns] >>| List.concat)
+
+  and function_body_any (body1 : (Loc.t, Loc.t) Ast.Function.body)
+                        (body2 : (Loc.t, Loc.t) Ast.Function.body)
+      : node change list option =
+    let open Ast.Function in
+    match body1, body2 with
+    | BodyExpression _, _ | _, BodyExpression _ -> None
+    | BodyBlock (_, block1), BodyBlock (_, block2) -> block block1 block2
+
+  and return_type_annotation (return1: (Loc.t, Loc.t) Ast.Function.return)
+                      (return2: (Loc.t, Loc.t) Ast.Function.return)
+      : node change list =
+    let open Ast.Function in
+    match return1, return2 with
+    | Missing _, Missing _ -> []
+    | Missing loc1, Available (loc2, typ) -> [loc1, Insert [TypeAnnotation (loc2, typ)]]
+    | Available (loc1, typ), Missing _ -> [loc1, Delete (TypeAnnotation (loc1, typ))]
+    | Available (loc1, typ1), Available (loc2, typ2) ->
+     [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
 
   and variable_declarator (decl1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t) (decl2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t)
       : node change list option =
