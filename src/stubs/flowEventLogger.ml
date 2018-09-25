@@ -80,3 +80,8 @@ let persistent_command_failure ~server_logging_context:_ ~request:_ ~extra_data:
   ~server_profiling:_ ~client_duration:_ ~wall_start:_ ~error:_ = ()
 let persistent_expected_error ~client_context:_ ~error:_ = ()
 let persistent_unexpected_error ~client_context:_ ~error:_ = ()
+let saved_state_fb_fetcher_success
+  ~repo_root:_ ~merge_base_hash:_ ~merge_base_timestamp:_ ~saved_state_hash:_
+  ~changed_files_count:_ ~saved_state_filename:_ ~profiling:_ = ()
+
+let saved_state_fb_fetcher_error ~step:_ ~trace:_ ~profiling:_ = ()

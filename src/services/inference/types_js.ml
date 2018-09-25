@@ -1458,12 +1458,15 @@ let init ~profiling ~workers options =
 
 (* Does a best-effort job to load a saved state. If it fails, returns None *)
 let load_saved_state ~profiling ~workers options =
-  let%lwt fetch_result = match Options.saved_state_fetcher options with
+  let%lwt fetch_profiling, fetch_result = match Options.saved_state_fetcher options with
     | Options.Dummy_fetcher -> Saved_state_dummy_fetcher.fetch ~options
     | Options.Local_fetcher -> Saved_state_local_fetcher.fetch ~options
+    | Options.Fb_fetcher -> Saved_state_fb_fetcher.fetch ~options
   in
+  Profiling_js.merge ~from:fetch_profiling ~into:profiling;
   match fetch_result with
   | Saved_state_fetcher.No_saved_state ->
+    Hh_logger.info "No saved state available";
     Lwt.return_none
   | Saved_state_fetcher.Saved_state { saved_state_filename; changed_files=_; (* TODO *) } ->
     with_timer_lwt ~options "LoadSavedState" profiling (fun () ->
