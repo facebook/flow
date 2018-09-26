@@ -709,6 +709,7 @@ let options_flags =
         ~doc:"Treat any class member name with a leading underscore as private"
     |> flag "--max-workers" (optional int)
         ~doc:"Maximum number of workers to create (capped by number of cores)"
+        ~env:"FLOW_MAX_WORKERS"
     |> warning_flags
     |> flowconfig_flags
     |> verbose_flags
