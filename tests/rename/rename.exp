@@ -16,10 +16,10 @@ Rename of an object property:
       "oldRange":{
         "source":"objects.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":10,"offset":97},
-        "end":{"line":7,"column":14,"offset":102}
+        "start":{"line":7,"column":11,"offset":98},
+        "end":{"line":7,"column":13,"offset":101}
       },
-      "newText":"({ newName: bar })"
+      "newText":"newName: bar"
     },
     {
       "oldRange":{
@@ -50,10 +50,10 @@ Rename of a local variable used in object shorthand:
       "oldRange":{
         "source":"objects.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":10,"offset":97},
-        "end":{"line":7,"column":14,"offset":102}
+        "start":{"line":7,"column":11,"offset":98},
+        "end":{"line":7,"column":13,"offset":101}
       },
-      "newText":"({ bar: newName })"
+      "newText":"bar: newName"
     }
   ]
 }

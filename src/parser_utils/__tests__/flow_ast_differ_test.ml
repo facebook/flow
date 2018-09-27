@@ -234,6 +234,30 @@ let tests = "ast_differ" >::: [
       ~expected:"class A { f: number = (x: string) => x; }"
       ~mapper:(new prop_annot_mapper)
   end;
+  "obj_prop" >:: begin fun ctxt ->
+    let source = "let x = { rename : 4 }" in
+    assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed"); ((19, 20), "(5)")] ~source
+      ~expected:"let x = { gotRenamed : (5) }"
+      ~mapper:(new useless_mapper)
+  end;
+  "obj_prop2" >:: begin fun ctxt ->
+    let source = "let x = { bar() { rename; } }" in
+    assert_edits_equal ctxt ~edits:[(18, 24), "gotRenamed"] ~source
+      ~expected:"let x = { bar() { gotRenamed; } }"
+      ~mapper:(new useless_mapper)
+  end;
+  "obj_prop3" >:: begin fun ctxt ->
+    let source = "let x = { 4 : 3 }" in
+    assert_edits_equal ctxt ~edits:[(10, 15), "5: 3"] ~source
+      ~expected:"let x = { 5: 3 }"
+      ~mapper:(new useless_mapper)
+  end;
+  "obj_spread_prop" >:: begin fun ctxt ->
+    let source = "let x = { ...rename, x : 4}" in
+    assert_edits_equal ctxt ~edits:[((13, 19), "gotRenamed"); ((25, 26), "(5)")] ~source
+      ~expected:"let x = { ...gotRenamed, x : (5)}"
+      ~mapper:(new useless_mapper)
+  end;
   "precedence" >:: begin fun ctxt ->
     let source = "5 - 3 * 3" in
     (* It is mandatory to insert the parens here *)

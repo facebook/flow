@@ -165,6 +165,7 @@ type node =
   | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
+  | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
 
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
@@ -582,6 +583,8 @@ let program (algo : diff_algorithm)
         class_ class1 class2
       | (_, Assignment assn1), (_, Assignment assn2) ->
         assignment_ assn1 assn2
+      | (_, Object obj1), (_, Object obj2) ->
+        _object obj1 obj2
       | _, _ ->
         None
     in
@@ -596,6 +599,55 @@ let program (algo : diff_algorithm)
     let { operator = op2; left = pat2; right = exp2 } = assn2 in
     if op1 != op2 then None else
     diff_if_changed pattern pat1 pat2 @ diff_if_changed expression exp1 exp2 |> Option.return
+
+  and object_spread_property prop1 prop2 =
+    let open Ast.Expression.Object.SpreadProperty in
+    let { argument = arg1 } = prop1 in
+    let { argument = arg2 } = prop2 in
+    expression arg1 arg2
+
+  and object_key key1 key2 =
+    let open Ast.Expression.Object.Property in
+    match key1, key2 with
+    | Literal _, Literal _ -> (* TODO: recurse into literals *) None
+    | Ast.Expression.Object.Property.Identifier i1, Ast.Expression.Object.Property.Identifier i2 ->
+        identifier i1 i2 |> Option.return
+    | Computed e1, Computed e2 -> expression e1 e2 |> Option.return
+    | _, _ -> None
+
+  and object_regular_property (_, prop1) (_, prop2) =
+    let open Ast.Expression.Object.Property in
+    match prop1, prop2 with
+    | Init { shorthand = sh1; value = val1; key = key1 },
+      Init { shorthand = sh2; value = val2; key = key2 } ->
+        if sh1 != sh2 then None else
+        let values = diff_if_changed expression val1 val2 |> Option.return in
+        let keys = diff_if_changed_opt object_key (Some key1) (Some key2) in
+        Option.(all [keys; values] >>| List.concat)
+    | Set {value = val1; key = key1 }, Set { value = val2; key = key2 }
+    | Method {value = val1; key = key1 }, Method { value = val2; key = key2 }
+    | Get {value = val1; key = key1 }, Get { value = val2; key = key2 } ->
+        let values = diff_if_changed_opt function_ (Some (snd val1)) (Some (snd val2)) in
+        let keys = diff_if_changed_opt object_key (Some key1) (Some key2) in
+        Option.(all [keys; values] >>| List.concat)
+    | _ -> None
+
+  and object_property prop1 prop2 =
+    let open Ast.Expression.Object in
+    match prop1, prop2 with
+    | Property (loc, p1), Property p2 ->
+      object_regular_property (loc, p1) p2
+      |> Option.value ~default:[(loc, Replace (ObjectProperty prop1, ObjectProperty prop2))]
+      |> Option.return
+    | SpreadProperty (_, p1), SpreadProperty (_, p2) ->
+        object_spread_property p1 p2 |> Option.return
+    | _ -> None
+
+  and _object obj1 obj2 =
+    let open Ast.Expression.Object in
+    let { properties = properties1 } = obj1 in
+    let { properties = properties2 } = obj2 in
+    diff_and_recurse_no_trivial object_property properties1 properties2
 
   and binary (b1: (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2: (Loc.t, Loc.t) Ast.Expression.Binary.t): node change list option =
     let open Ast.Expression.Binary in

@@ -25,6 +25,7 @@ type node =
   | Pattern of (Loc.t, Loc.t) Flow_ast.Pattern.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
+  | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
 
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it
