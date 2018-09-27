@@ -164,6 +164,7 @@ type node =
   | Identifier of Loc.t Ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
+  | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
 
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
@@ -507,18 +508,19 @@ let program (algo : diff_algorithm)
     match elem1, elem2 with
     | Method (_, m1), Method (_, m2) ->
       class_method m1 m2
-    | Property (_, p1), Property (_, p2) ->
-      class_property p1 p2
+    | Property p1, Property p2 ->
+      class_property p1 p2 |> Option.return
     | _ -> None (* TODO *)
 
-  and class_property prop1 prop2 =
+  and class_property prop1 prop2 : node change list =
     let open Ast.Class.Property in
-    let { key = key1; value = val1; annot = annot1; static = static1; variance = var1} = prop1 in
-    let { key = key2; value = val2; annot = annot2; static = static2; variance = var2} = prop2 in
-    if key1 != key2 || static1 != static2 || var1 != var2 then None else
-    let vals = diff_if_changed_nonopt_fn expression val1 val2 in
-    let annots = diff_if_changed_opt_arg type_annotation annot1 annot2 in
-    Option.(all [vals; annots] >>| List.concat)
+    let loc1, { key = key1; value = val1; annot = annot1; static = s1; variance = var1} = prop1 in
+    let _,    { key = key2; value = val2; annot = annot2; static = s2; variance = var2} = prop2 in
+    (if key1 != key2 || s1 != s2 || var1 != var2 then None else
+      let vals = diff_if_changed_nonopt_fn expression val1 val2 in
+      let annots = diff_if_changed_opt_arg type_annotation annot1 annot2 in
+      Option.(all [vals; annots] >>| List.concat))
+    |> Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
 
   and class_method
       (m1: (Loc.t, Loc.t) Ast.Class.Method.t')

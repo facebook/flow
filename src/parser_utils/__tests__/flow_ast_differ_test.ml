@@ -141,6 +141,19 @@ class insert_annot_mapper = object
     | Missing _loc -> Available (_loc, (_loc, Type.Number))
 end
 
+class prop_annot_mapper = object
+  inherit Flow_ast_mapper.mapper as super
+
+  method! class_property _loc (prop: (Loc.t, Loc.t) Flow_ast.Class.Property.t') =
+    let open Flow_ast.Class.Property in
+    let prop = super#class_property _loc prop in
+    let { annot; _ } = prop in
+    let annot' = match annot with
+      | Some _ -> annot
+      | None -> Some (Loc.none, (Loc.none, Type.Number)) in
+    { prop with annot = annot' }
+end
+
 let edits_of_source algo source mapper =
   let ast, _ = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
@@ -214,6 +227,12 @@ let tests = "ast_differ" >::: [
     let source = "class Foo { bar = 4; }" in
     assert_edits_equal ctxt ~edits:[((18, 19), "(5)")] ~source
       ~expected:"class Foo { bar = (5); }" ~mapper:(new useless_mapper)
+  end;
+  "class_prop_annot" >:: begin fun ctxt ->
+    let source = "class A { f = (x: string) => x; }" in
+    assert_edits_equal ctxt ~edits:[(10, 31), "f: number = (x: string) => x;"] ~source
+      ~expected:"class A { f: number = (x: string) => x; }"
+      ~mapper:(new prop_annot_mapper)
   end;
   "precedence" >:: begin fun ctxt ->
     let source = "5 - 3 * 3" in
