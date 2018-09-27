@@ -8,6 +8,7 @@ import findFlowBin from '../command/findFlowBin';
 
 export type Args = {
   bin: string,
+  flowconfigName: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
   includeFlowtest: boolean,
@@ -20,6 +21,7 @@ export default class RemoveCommentsCommand extends Base<Args> {
     }
     return {
       bin: findFlowBin(argv.bin),
+      flowconfigName: argv.flowconfigName,
       errorCheckCommand: argv.check,
       root: resolve(process.cwd(), argv._[0]),
       includeFlowtest: !!argv['include-flowtest'],
@@ -44,6 +46,7 @@ Queries Flow for the unused error suppressions for ROOT. Then removes them from 
   static getFlags() {
     return [
       commonFlags.bin,
+      commonFlags.flowconfigName,
       commonFlags.errorCheckCommand,
       {
         type: "boolean",

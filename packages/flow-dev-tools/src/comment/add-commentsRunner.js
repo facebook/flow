@@ -165,7 +165,7 @@ export default async function(args: Args): Promise<void> {
   screen.render();
   let flowResult;
   try {
-    flowResult = await getFlowErrors(args.bin, args.errorCheckCommand, args.root);
+    flowResult = await getFlowErrors(args.bin, args.errorCheckCommand, args.root, args.flowconfigName);
   } catch (e) {
     screen.destroy();
     throw e;

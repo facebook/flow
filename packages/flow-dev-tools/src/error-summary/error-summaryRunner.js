@@ -11,6 +11,7 @@ export default (async function(args: Args): Promise<void> {
     args.bin,
     args.errorCheckCommand,
     args.root,
+    args.flowconfigName,
   );
 
   var error_summary = {};

@@ -10,6 +10,7 @@ import findFlowBin from '../command/findFlowBin';
 
 export type Args = {
   bin: string,
+  flowconfigName: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
   messageFilter: ?string,
@@ -26,6 +27,7 @@ export default class ErrorSummaryCommand extends Base<Args> {
     }
     return {
       bin: findFlowBin(argv.bin),
+      flowconfigName: argv.flowconfigName,
       errorCheckCommand: argv.check,
       root: resolve(process.cwd(), argv._[0]),
       messageFilter: argv.messageFilter,
@@ -54,6 +56,7 @@ Queries Flow for the errors for ROOT. Then logs how many times each error messag
   static getFlags() {
     return [
       commonFlags.bin,
+      commonFlags.flowconfigName,
       commonFlags.errorCheckCommand,
       {
         type: 'string',

@@ -9,6 +9,7 @@ import findFlowBin from '../command/findFlowBin';
 export type Args = {
   all: boolean,
   bin: string,
+  flowconfigName: string,
   comment: ?string,
   errorCheckCommand: 'check' | 'status',
   root: string,
@@ -22,6 +23,7 @@ export default class AddCommentsCommand extends Base<Args> {
     return {
       all: argv.all,
       bin: findFlowBin(argv.bin),
+      flowconfigName: argv.flowconfigName,
       errorCheckCommand: argv.check,
       root: resolve(process.cwd(), argv._[0]),
       comment: argv.comment,
@@ -46,6 +48,7 @@ Queries Flow for the errors for ROOT. Then opens a curses interface to let you s
   static getFlags() {
     return [
       commonFlags.bin,
+      commonFlags.flowconfigName,
       commonFlags.errorCheckCommand,
       {
         type: "string",
