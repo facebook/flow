@@ -578,11 +578,22 @@ let program (algo : diff_algorithm)
         function_ f1 f2
       | (_, Class class1), (_, Class class2) ->
         class_ class1 class2
+      | (_, Assignment assn1), (_, Assignment assn2) ->
+        assignment_ assn1 assn2
       | _, _ ->
         None
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
     Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+
+  and assignment_ (assn1: (Loc.t, Loc.t) Ast.Expression.Assignment.t)
+                  (assn2: (Loc.t, Loc.t) Ast.Expression.Assignment.t)
+      : node change list option =
+    let open Ast.Expression.Assignment in
+    let { operator = op1; left = pat1; right = exp1 } = assn1 in
+    let { operator = op2; left = pat2; right = exp2 } = assn2 in
+    if op1 != op2 then None else
+    diff_if_changed pattern pat1 pat2 @ diff_if_changed expression exp1 exp2 |> Option.return
 
   and binary (b1: (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2: (Loc.t, Loc.t) Ast.Expression.Binary.t): node change list option =
     let open Ast.Expression.Binary in

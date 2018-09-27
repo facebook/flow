@@ -502,6 +502,18 @@ let tests = "ast_differ" >::: [
       ~expected:"export function foo() { let x = gotRenamed; }"
       ~mapper:(new useless_mapper)
   end;
+  "assignment_left" >:: begin fun ctxt ->
+    let source = "rename = 6;" in
+    assert_edits_equal ctxt ~edits:[(0, 6), "gotRenamed"] ~source
+      ~expected:"gotRenamed = 6;"
+      ~mapper:(new useless_mapper)
+  end;
+  "assignment_right" >:: begin fun ctxt ->
+    let source = "x = rename;" in
+    assert_edits_equal ctxt ~edits:[(4, 10), "gotRenamed"] ~source
+      ~expected:"x = gotRenamed;"
+      ~mapper:(new useless_mapper)
+  end;
   "list_diff_simple" >:: begin fun ctxt ->
     let a = "a" in
     let b = "b" in
