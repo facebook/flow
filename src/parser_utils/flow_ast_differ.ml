@@ -308,11 +308,73 @@ let program (algo : diff_algorithm)
       return_statement return1 return2
     | (_, Ast.Statement.With with1), (_, Ast.Statement.With with2) ->
       Some (with_statement with1 with2)
+    | (_, Ast.Statement.ExportDefaultDeclaration export1),
+      (_, Ast.Statement.ExportDefaultDeclaration export2) ->
+      export_default_declaration export1 export2
+    | (_, Ast.Statement.DeclareExportDeclaration export1),
+      (_, Ast.Statement.DeclareExportDeclaration export2) ->
+      declare_export export1 export2
+    | (_, Ast.Statement.ExportNamedDeclaration export1),
+      (_, Ast.Statement.ExportNamedDeclaration export2) ->
+      export_named_declaration export1 export2
     | _, _ ->
       None
     in
     let old_loc = Ast_utils.loc_of_statement stmt1 in
     Option.value changes ~default:[(old_loc, Replace (Statement stmt1, Statement stmt2))]
+
+  and export_named_declaration export1 export2 =
+    let open Ast.Statement.ExportNamedDeclaration in
+    let { declaration = decl1; specifiers = specs1; source = src1; exportKind = kind1 } = export1 in
+    let { declaration = decl2; specifiers = specs2; source = src2; exportKind = kind2 } = export2 in
+    if src1 != src2 || kind1 != kind2 then None else
+    let decls = diff_if_changed_nonopt_fn statement decl1 decl2 in
+    let specs = diff_if_changed_opt export_named_declaration_specifier specs1 specs2 in
+    Option.(all [decls; specs] >>| List.concat)
+
+  and export_default_declaration (export1 : (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t)
+                                 (export2 : (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t)
+      : node change list option =
+    let open Ast.Statement.ExportDefaultDeclaration in
+    let { declaration = declaration1; default = default1 } = export1 in
+    let { declaration = declaration2; default = default2 } = export2 in
+    if default1 != default2 then None else
+    match declaration1, declaration2 with
+    | Declaration s1, Declaration s2 -> statement s1 s2 |> Option.return
+    | Ast.Statement.ExportDefaultDeclaration.Expression e1,
+      Ast.Statement.ExportDefaultDeclaration.Expression e2 ->
+        expression e1 e2 |> Option.return
+    | _ -> None
+
+  and export_specifier (spec1 : Loc.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
+      (spec2 : Loc.t Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
+      : node change list option =
+    let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+    let _, { local = local1; exported = exported1 } = spec1 in
+    let _, { local = local2; exported = exported2 } = spec2 in
+    let locals = diff_if_changed identifier local1 local2 in
+    let exporteds = diff_if_changed_nonopt_fn identifier exported1 exported2 in
+    Option.(all [return locals; exporteds] >>| List.concat)
+
+  and export_named_declaration_specifier
+      (specs1 : Loc.t Ast.Statement.ExportNamedDeclaration.specifier)
+      (specs2 : Loc.t Ast.Statement.ExportNamedDeclaration.specifier) =
+    let open Ast.Statement.ExportNamedDeclaration in
+    match specs1, specs2 with
+    | ExportSpecifiers es1, ExportSpecifiers es2 ->
+      diff_and_recurse_no_trivial export_specifier es1 es2
+    | ExportBatchSpecifier (_, ebs1), ExportBatchSpecifier (_, ebs2) ->
+      diff_if_changed_nonopt_fn identifier ebs1 ebs2
+    | _ -> None
+
+  and declare_export (export1 : (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.t)
+                                 (export2 : (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.t)
+      : node change list option =
+    let open Ast.Statement.DeclareExportDeclaration in
+    let { default = default1; declaration = decl1; specifiers = specs1; source = src1 } = export1 in
+    let { default = default2; declaration = decl2; specifiers = specs2; source = src2 } = export2 in
+    if default1 != default2 || src1 != src2 || decl1 != decl2 then None else
+    diff_if_changed_opt export_named_declaration_specifier specs1 specs2
 
   and function_declaration func1 func2 = function_ func1 func2
 

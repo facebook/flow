@@ -490,6 +490,18 @@ let tests = "ast_differ" >::: [
       ~expected:"function foo() { /* comment */ (5 - 3); (5); ((6 - 5)); /* comment */}"
       ~mapper:(new useless_mapper)
   end;
+  "fn_default_export" >:: begin fun ctxt ->
+    let source = "export default function foo() { let x = rename; }" in
+    assert_edits_equal ctxt ~edits:[(40, 46), "gotRenamed"] ~source
+      ~expected:"export default function foo() { let x = gotRenamed; }"
+      ~mapper:(new useless_mapper)
+  end;
+  "fn_export_named" >:: begin fun ctxt ->
+    let source = "export function foo() { let x = rename; }" in
+    assert_edits_equal ctxt ~edits:[(32, 38), "gotRenamed"] ~source
+      ~expected:"export function foo() { let x = gotRenamed; }"
+      ~mapper:(new useless_mapper)
+  end;
   "list_diff_simple" >:: begin fun ctxt ->
     let a = "a" in
     let b = "b" in
