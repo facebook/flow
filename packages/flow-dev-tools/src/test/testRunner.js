@@ -370,6 +370,9 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
 
 export default (async function(args: Args): Promise<void> {
   process.env.IN_FLOW_TEST = '1';
+  if (!process.env.hasOwnProperty('FLOW_MAX_WORKERS')) {
+    process.env.FLOW_MAX_WORKERS = '2';
+  }
 
   await write(process.stderr, `Using flow binary: ${args.bin}\n`);
 
