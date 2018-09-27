@@ -286,6 +286,12 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((14, 15), "(5)")] ~source ~expected:"(function() { (5); })"
     ~mapper:(new useless_mapper)
   end;
+  "arrow_function" >:: begin fun ctxt ->
+    let source = "let bar = (x) => 4;" in
+    assert_edits_equal ctxt ~edits:[(17, 18), "(5)"] ~source
+    ~expected:"let bar = (x) => (5);"
+    ~mapper:(new useless_mapper)
+  end;
   "call" >:: begin fun ctxt ->
     let source = "rename()" in
     assert_edits_equal ctxt ~edits:[((0, 6), "gotRenamed")] ~source ~expected:"gotRenamed()"

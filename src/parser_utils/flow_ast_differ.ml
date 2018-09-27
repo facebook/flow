@@ -343,8 +343,9 @@ let program (algo : diff_algorithm)
       : node change list option =
     let open Ast.Function in
     match body1, body2 with
-    | BodyExpression _, _ | _, BodyExpression _ -> None
+    | BodyExpression e1, BodyExpression e2 -> expression e1 e2 |> Option.return
     | BodyBlock (_, block1), BodyBlock (_, block2) -> block block1 block2
+    | _ -> None
 
   and return_type_annotation (return1: (Loc.t, Loc.t) Ast.Function.return)
                       (return2: (Loc.t, Loc.t) Ast.Function.return)
@@ -511,7 +512,7 @@ let program (algo : diff_algorithm)
         new_ new1 new2
       | (_, Call call1), (_, Call call2) ->
         call_ call1 call2
-      | (_, Function f1), (_, Function f2) ->
+      | (_, Function f1), (_, Function f2) | (_, ArrowFunction f1), (_, ArrowFunction f2) ->
         function_ f1 f2
       | (_, Class class1), (_, Class class2) ->
         class_ class1 class2
