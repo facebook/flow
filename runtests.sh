@@ -601,6 +601,9 @@ runtest() {
     fi
 }
 
+if [ -z "$FLOW_MAX_WORKERS" ]; then
+  export FLOW_MAX_WORKERS=2
+fi
 
 num_to_run_in_parallel=${FLOW_RUNTESTS_PARALLELISM-16}
 if [[ "$quiet" -eq 0 ]]; then
