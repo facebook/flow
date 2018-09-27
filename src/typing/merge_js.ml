@@ -607,6 +607,7 @@ module ContextOptimizer = struct
         | None -> quotient
         | Some t ->
           let quotient = self#type_ cx pole quotient t in
+          let { reduced_evaluated; _ } = quotient in
           let reduced_evaluated = IMap.add id t reduced_evaluated in
           super#eval_id cx pole { quotient with reduced_evaluated } id
 
