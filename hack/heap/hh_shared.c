@@ -115,12 +115,11 @@
 
 // global SQLite DB pointer
 static sqlite3 *g_db = NULL;
-static sqlite3 *hashtable_db = NULL;
+
 // Global select statement for getting dep from the
 // above g_db database. It is shared between
 // requests because preparing a statement is expensive.
 static sqlite3_stmt *g_get_dep_select_stmt = NULL;
-static sqlite3_stmt *get_select_stmt = NULL;
 #endif
 
 
@@ -467,7 +466,6 @@ static size_t allow_hashtable_writes_by_current_process = 1;
 static size_t worker_can_exit = 1;
 
 static char *db_filename = NULL;
-static char *hashtable_db_filename = NULL;
 
 #define FILE_INFO_ON_DISK_PATH "FILE_INFO_ON_DISK_PATH"
 
@@ -860,8 +858,6 @@ static void define_globals(char * shared_mem_init) {
   db_filename = (char*)mem;
   mem += page_size;
 
-  hashtable_db_filename = (char*)mem;
-  mem += page_size;
   /* END OF THE SMALL OBJECTS PAGE */
 
   /* Global storage initialization */
@@ -899,7 +895,7 @@ static void define_globals(char * shared_mem_init) {
 static size_t get_shared_mem_size(void) {
   size_t page_size = getpagesize();
   return (global_size_b + dep_size_b + bindings_size_b + hashtbl_size_b +
-          heap_size + 3 * page_size);
+          heap_size + 2 * page_size);
 }
 
 static void init_shared_globals(size_t config_log_level) {
@@ -921,7 +917,6 @@ static void init_shared_globals(size_t config_log_level) {
   // Zero out this shared memory for a string
   size_t page_size = getpagesize();
   memset(db_filename, 0, page_size);
-  memset(hashtable_db_filename, 0, page_size);
 }
 
 static void set_sizes(
@@ -2030,211 +2025,15 @@ void hh_remove(value key) {
 }
 
 /*****************************************************************************/
-/* Saved State without SQLite */
-/*****************************************************************************/
-
-static void raise_revision_length_is_zero(void) {
-  static value *exn = NULL;
-  if (!exn) exn = caml_named_value("revision_length_is_zero");
-  caml_raise_constant(*exn);
-}
-
-#ifndef _WIN32
-static void fwrite_no_fail(
-  const void* ptr, size_t size, size_t nmemb, FILE* fp
-) {
-  size_t nmemb_written = fwrite(ptr, size, nmemb, fp);
-  assert(nmemb_written == nmemb);
-}
-
-/* We want to use read() instead of fread() for the large shared memory block
- * because buffering slows things down. This means we cannot use fread() for
- * the other (smaller) values in our file either, because the buffering can
- * move the file position indicator ahead of the values read. */
-static void read_all(int fd, void* start, size_t size) {
-  assert(size > 0);
-  size_t total_read = 0;
-  do {
-    void* ptr = (void*)((uintptr_t)start + total_read);
-    ssize_t bytes_read = read(fd, (void*)ptr, size);
-    assert(bytes_read != -1 && bytes_read != 0);
-    total_read += bytes_read;
-  } while (total_read < size);
-}
-
-static void fwrite_header(FILE* fp) {
-  fwrite_no_fail(&MAGIC_CONSTANT, sizeof MAGIC_CONSTANT, 1, fp);
-
-  size_t revlen = strlen(BuildInfo_kRevision);
-  fwrite_no_fail(&revlen, sizeof revlen, 1, fp);
-  fwrite_no_fail(BuildInfo_kRevision, sizeof(char), revlen, fp);
-}
-
-static void fread_header(FILE* fp) {
-  uint64_t magic = 0;
-  read_all(fileno(fp), (void*)&magic, sizeof magic);
-  assert(magic == MAGIC_CONSTANT);
-
-  size_t revlen = 0;
-  read_all(fileno(fp), (void*)&revlen, sizeof revlen);
-  char revision[revlen];
-  if (revlen > 0) {
-    read_all(fileno(fp), (void*)revision, revlen * sizeof(char));
-    assert(strncmp(revision, BuildInfo_kRevision, revlen) == 0);
-  } else {
-    raise_revision_length_is_zero();
-  }
-}
-
-static char* save_start() {
-  return (char*) hashtbl;
-}
-
-void hh_save_table(value out_filename) {
-  CAMLparam1(out_filename);
-  FILE* fp = fopen(String_val(out_filename), "wb");
-
-  fwrite_header(fp);
-
-  /*
-   * Format of the compressed shared memory:
-   * LZ4 can only work in chunks of 2GB, so we compress each chunk individually,
-   * and write out each one as
-   * [compressed size of chunk][uncompressed size of chunk][chunk]
-   * A compressed size of zero indicates the end of the compressed section.
-   */
-  char* chunk_start = save_start();
-  int compressed_size = 0;
-  while (chunk_start < *heap) {
-    uintptr_t remaining = *heap - chunk_start;
-    uintptr_t chunk_size = LZ4_MAX_INPUT_SIZE < remaining ?
-      LZ4_MAX_INPUT_SIZE : remaining;
-
-    char* compressed = malloc(chunk_size * sizeof(char));
-    assert(compressed != NULL);
-
-    compressed_size = LZ4_compress_default(
-        chunk_start, /* source */
-        compressed, /* destination */
-        chunk_size, /* bytes to write from source */
-        chunk_size); /* maximum amount to write */
-    assert(compressed_size > 0);
-
-    fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
-    fwrite_no_fail(&chunk_size, sizeof chunk_size, 1, fp);
-    fwrite_no_fail((void*)compressed, 1, compressed_size, fp);
-
-    chunk_start += chunk_size;
-    free(compressed);
-  }
-  compressed_size = 0;
-  fwrite_no_fail(&compressed_size, sizeof compressed_size, 1, fp);
-
-  fclose(fp);
-  CAMLreturn0;
-}
-
-typedef struct {
-  char* compressed;
-  char* decompress_start;
-  int compressed_size;
-  int decompressed_size;
-} decompress_args;
-
-static void* decompress(void* pthread_args) {
-  const decompress_args* args = (decompress_args*) pthread_args;
-  int actual_compressed_size = LZ4_decompress_fast(
-      args->compressed,
-      args->decompress_start,
-      args->decompressed_size);
-  return (void*)((long)(args->compressed_size == actual_compressed_size));
-}
-
-void hh_load_table(value in_filename) {
-  CAMLparam1(in_filename);
-  FILE* fp = fopen(String_val(in_filename), "rb");
-
-  if (fp == NULL) {
-    caml_failwith("Failed to open file");
-  }
-
-  fread_header(fp);
-
-  int compressed_size = 0;
-  read_all(fileno(fp), (void*)&compressed_size, sizeof compressed_size);
-  char* chunk_start = save_start();
-
-  pthread_attr_t attr;
-  pthread_attr_init(&attr);
-  pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-  pthread_t thread;
-  decompress_args args;
-  int thread_started = 0;
-
-  // see hh_save_table for a description of what we are parsing here.
-  while (compressed_size > 0) {
-    char* compressed = malloc(compressed_size * sizeof(char));
-    assert(compressed != NULL);
-    uintptr_t chunk_size = 0;
-    read_all(fileno(fp), (void*)&chunk_size, sizeof chunk_size);
-    read_all(fileno(fp), compressed, compressed_size * sizeof(char));
-    if (thread_started) {
-      intptr_t success = 0;
-      int rc = pthread_join(thread, (void*)&success);
-      free(args.compressed);
-      assert(rc == 0);
-      assert(success);
-    }
-    args.compressed = compressed;
-    args.compressed_size = compressed_size;
-    args.decompress_start = chunk_start;
-    args.decompressed_size = chunk_size;
-    pthread_create(&thread, &attr, decompress, &args);
-    thread_started = 1;
-    chunk_start += chunk_size;
-    read_all(fileno(fp), (void*)&compressed_size, sizeof compressed_size);
-  }
-
-  if (thread_started) {
-    int success;
-    int rc = pthread_join(thread, (void*)&success);
-    free(args.compressed);
-    assert(rc == 0);
-    assert(success);
-  }
-
-  *heap = chunk_start;
-
-  fclose(fp);
-  CAMLreturn0;
-}
-#else
-void hh_save_table(value out_filename) {
-  return;
-}
-
-void hh_load_table(value in_filename) {
-  return;
-}
-#endif /* _WIN32 */
-
-/*****************************************************************************/
 /* Saved State with SQLite */
 /*****************************************************************************/
 
-// Safe to call outside of sql
+// This code is called when we fall back from a saved state to full init,
+// not at the end of saving the state.
 void hh_cleanup_sqlite(void) {
   CAMLparam0();
   size_t page_size = getpagesize();
   memset(db_filename, 0, page_size);
-  CAMLreturn0;
-}
-
-// Safe to call outside of sql
-void hh_hashtable_cleanup_sqlite(void) {
-  CAMLparam0();
-  size_t page_size = getpagesize();
-  memset(hashtable_db_filename, 0, page_size);
   CAMLreturn0;
 }
 
@@ -2547,8 +2346,9 @@ static size_t hh_save_dep_table_helper_sqlite(
 }
 
 /*
- * Assumption: When we save the dependency table, we do a fresh load
- * aka there was NO saved state loaded.
+ * Assumption: When we save the dependency table using this function,
+ * we do a fresh load, meaning that there was NO saved state loaded.
+ * From a loaded saved state, we call hh_update_dep_table_sqlite instead.
  */
 CAMLprim value hh_save_dep_table_sqlite(
     value out_filename,
@@ -2868,171 +2668,6 @@ CAMLprim value hh_save_table_sqlite(value out_filename) {
   CAMLreturn(Val_long(secs));
 }
 
-/*
- * Stores only the provided keys and corresponding values in the database
- */
-CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
-  CAMLparam2(out_filename, keys);
-
-  assert_master();
-
-  struct timeval tv = { 0 };
-  struct timeval tv2 = { 0 };
-  gettimeofday(&tv, NULL);
-
-  sqlite3 *db_out = NULL;
-  assert_sql(sqlite3_open(String_val(out_filename), &db_out), SQLITE_OK);
-  make_all_tables(db_out);
-  write_sqlite_header(db_out, BuildInfo_kRevision);
-
-  const char *sql =
-    "CREATE TABLE IF NOT EXISTS HASHTABLE(" \
-    "  KEY_VERTEX INT PRIMARY KEY NOT NULL," \
-    "  VALUE_VERTEX BLOB NOT NULL" \
-    ");";
-  assert_sql(sqlite3_exec(db_out, sql, NULL, 0, NULL), SQLITE_OK);
-
-  assert_sql(sqlite3_exec(db_out, "PRAGMA synchronous = OFF", NULL, 0, NULL),
-    SQLITE_OK);
-  assert_sql(
-    sqlite3_exec(db_out, "PRAGMA journal_mode = MEMORY", NULL, 0, NULL),
-    SQLITE_OK);
-  assert_sql(sqlite3_exec(db_out, "BEGIN TRANSACTION", NULL, 0, NULL),
-    SQLITE_OK);
-
-  sqlite3_stmt *insert_stmt = NULL;
-  sql = "INSERT INTO HASHTABLE (KEY_VERTEX, VALUE_VERTEX) VALUES (?,?)";
-  assert_sql(sqlite3_prepare_v2(db_out, sql, -1, &insert_stmt, NULL),
-    SQLITE_OK);
-  int n_keys = Wosize_val(keys);
-  for (int i = 0; i < n_keys; ++i) {
-    unsigned int slot = find_slot(Field(keys, i));
-    uint64_t slot_hash = hashtbl[slot].hash;
-    if (slot_hash == 0) {
-      continue;
-    }
-    char *value = hashtbl[slot].addr - sizeof(hh_header_t);
-    hh_header_t *header = (hh_header_t *) value;
-    size_t value_size = Entry_size(*header) + sizeof(hh_header_t);
-
-    assert_sql(sqlite3_bind_int64(insert_stmt, 1, slot_hash), SQLITE_OK);
-    assert_sql(
-      sqlite3_bind_blob(insert_stmt, 2, value, value_size, SQLITE_TRANSIENT),
-        SQLITE_OK);
-    assert_sql(sqlite3_step(insert_stmt), SQLITE_DONE);
-    assert_sql(sqlite3_clear_bindings(insert_stmt), SQLITE_OK);
-    assert_sql(sqlite3_reset(insert_stmt), SQLITE_OK);
-  }
-
-  assert_sql(sqlite3_finalize(insert_stmt), SQLITE_OK);
-  assert_sql(sqlite3_exec(db_out, "END TRANSACTION", NULL, 0, NULL), SQLITE_OK);
-
-  assert_sql(sqlite3_close(db_out), SQLITE_OK);
-  gettimeofday(&tv2, NULL);
-  int secs = tv2.tv_sec - tv.tv_sec;
-  CAMLreturn(Val_long(secs));
-}
-
-CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
-  CAMLparam2(in_filename, verify);
-  struct timeval tv = { 0 };
-  struct timeval tv2 = { 0 };
-  gettimeofday(&tv, NULL);
-
-  // This can only happen in the master
-  assert_master();
-
-  const char *filename = String_val(in_filename);
-  size_t filename_len = strlen(filename);
-
-  /* Since we save the filename on the heap, and have allocated only
-   * getpagesize() space
-   */
-  assert(filename_len < getpagesize());
-
-  memcpy(hashtable_db_filename, filename, filename_len);
-  hashtable_db_filename[filename_len] = '\0';
-
-  // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
-  assert_sql(
-    sqlite3_open_v2(
-      hashtable_db_filename, &hashtable_db, SQLITE_OPEN_READONLY, NULL),
-    SQLITE_OK);
-
-  // Verify the header
-  if (Bool_val(verify)) {
-    verify_sqlite_header(hashtable_db, 0);
-  }
-
-  gettimeofday(&tv2, NULL);
-  int secs = tv2.tv_sec - tv.tv_sec;
-  // Reporting only seconds, ignore milli seconds
-  CAMLreturn(Val_long(secs));
-}
-
-CAMLprim value hh_get_sqlite(value ocaml_key) {
-  CAMLparam1(ocaml_key);
-  CAMLlocal1(result);
-
-  result = Val_none;
-
-  assert(hashtable_db_filename != NULL);
-
-  // Check whether we are in SQL mode
-  if (*hashtable_db_filename == '\0') {
-    // We are not in SQL mode, return empty list
-    CAMLreturn(result);
-  }
-
-  // Now that we know we are in SQL mode, make sure db connection is made
-  if (hashtable_db == NULL) {
-    assert(*hashtable_db_filename != '\0');
-    // We are in sql, hence we shouldn't be in the master process,
-    // since we are not connected yet, soo.. try to connect
-    assert_not_master();
-    // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
-    assert_sql(
-      sqlite3_open_v2(
-        hashtable_db_filename, &hashtable_db, SQLITE_OPEN_READONLY, NULL),
-      SQLITE_OK
-    );
-    assert(hashtable_db != NULL);
-  }
-
-  // The caller is required to pass a 32-bit node ID.
-  const uint64_t hash = get_hash(ocaml_key);
-
-  if (get_select_stmt == NULL) {
-    const char *sql = "SELECT VALUE_VERTEX FROM HASHTABLE WHERE KEY_VERTEX=?;";
-    assert_sql(
-      sqlite3_prepare_v2(hashtable_db, sql, -1, &get_select_stmt, NULL),
-      SQLITE_OK);
-    assert(get_select_stmt != NULL);
-  }
-
-  assert_sql(sqlite3_bind_int64(get_select_stmt, 1, hash), SQLITE_OK);
-
-  int err_num = sqlite3_step(get_select_stmt);
-  // err_num is SQLITE_ROW if there is a row to look at,
-  // SQLITE_DONE if no results
-  if (err_num == SQLITE_ROW) {
-    // Means we found it in the table
-    // Columns are 0 indexed
-    char *value = (char *) sqlite3_column_blob(get_select_stmt, 0);
-    size_t value_size = (size_t) sqlite3_column_bytes(get_select_stmt, 0);
-    hh_header_t header = *(hh_header_t*)value;
-    assert(value_size == Entry_size(header) + sizeof(hh_header_t));
-    result = Val_some(hh_deserialize(value + sizeof(hh_header_t)));
-  } else if (err_num != SQLITE_DONE) {
-    // Something went wrong in sqlite3_step, lets crash
-    assert_sql(err_num, SQLITE_ROW);
-  }
-
-  assert_sql(sqlite3_clear_bindings(get_select_stmt), SQLITE_OK);
-  assert_sql(sqlite3_reset(get_select_stmt), SQLITE_OK);
-  CAMLreturn(result);
-}
-
 // --------------------------END OF SQLITE3 SECTION ---------------------------
 #else
 
@@ -3080,26 +2715,6 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   // Empty list
   CAMLparam0();
   CAMLreturn(Val_int(0));
-}
-
-CAMLprim value hh_save_table_sqlite(value out_filename) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_load_table_sqlite(value in_filename, value verify) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value hh_get_sqlite(value ocaml_key) {
-  CAMLparam0();
-  CAMLreturn(Val_none);
 }
 
 CAMLprim value set_file_info_on_disk(value ml_str) {

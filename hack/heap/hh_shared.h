@@ -48,7 +48,6 @@ void hh_shared_store(value data);
 CAMLprim value hh_shared_load(void);
 void hh_shared_clear(void);
 
-
 /*****************************************************************************/
 /* Garbage collection. */
 /*****************************************************************************/
@@ -100,19 +99,9 @@ void hh_move(value key1, value key2);
 void hh_remove(value key);
 
 /*****************************************************************************/
-/* Saved State without SQLite */
-/*****************************************************************************/
-/* Windows isn't supported, as the implementation uses pthreads. */
-void hh_save_table(value out_filename);
-void hh_load_table(value in_filename);
-
-/*****************************************************************************/
 /* Saved State with SQLite */
 /*****************************************************************************/
-/* Safe to call outside of sql. */
 void hh_cleanup_sqlite(void);
-/* Safe to call outside of sql. */
-void hh_hashtable_cleanup_sqlite(void);
 
 /* Dependency table. */
 CAMLprim value hh_save_dep_table_sqlite(
@@ -124,12 +113,6 @@ CAMLprim value hh_load_dep_table_sqlite(
         value ignore_hh_version
 );
 CAMLprim value hh_get_dep_sqlite(value ocaml_key);
-
-/* Hash table. */
-CAMLprim value hh_save_table_sqlite(value out_filename);
-CAMLprim value hh_save_table_keys_sqlite(value out_filename, value keys);
-CAMLprim value hh_load_table_sqlite(value in_filename, value verify);
-CAMLprim value hh_get_sqlite(value ocaml_key);
 
 /* File information. */
 CAMLprim value hh_save_file_info_init(value ml_path);
