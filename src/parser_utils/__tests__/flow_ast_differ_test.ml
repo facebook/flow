@@ -12,6 +12,17 @@ open Utils_js
 
 open OUnit2
 
+let parse_options = Some Parser_env.({
+  esproposal_class_instance_fields = true;
+  esproposal_class_static_fields = true;
+  esproposal_decorators = true;
+  esproposal_export_star_as = true;
+  esproposal_optional_chaining = true;
+  esproposal_nullish_coalescing = true;
+  types = true;
+  use_strict = false;
+})
+
 class useless_mapper = object
   inherit Flow_ast_mapper.mapper as super
 
@@ -131,7 +142,7 @@ class insert_annot_mapper = object
 end
 
 let edits_of_source algo source mapper =
-  let ast, _ = Parser_flow.program source in
+  let ast, _ = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
   let edits =
     program algo ast new_ast
@@ -198,6 +209,11 @@ let tests = "ast_differ" >::: [
     let source = "class Foo { bar() { 4; } }" in
     assert_edits_equal ctxt ~edits:[((20, 21), "(5)")] ~source
       ~expected:"class Foo { bar() { (5); } }" ~mapper:(new useless_mapper)
+  end;
+  "class2" >:: begin fun ctxt ->
+    let source = "class Foo { bar = 4; }" in
+    assert_edits_equal ctxt ~edits:[((18, 19), "(5)")] ~source
+      ~expected:"class Foo { bar = (5); }" ~mapper:(new useless_mapper)
   end;
   "precedence" >:: begin fun ctxt ->
     let source = "5 - 3 * 3" in
