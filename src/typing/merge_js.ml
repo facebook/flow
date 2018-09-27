@@ -489,31 +489,21 @@ let merge_tvar =
    walks the context from its exports. Once the walk is done, we can replace the
    corresponding parts of the context (graph, property maps, envs) by their
    reduced forms.
+
+   NOTE: Changing ids of entities stored in the Context is dangerous here,
+   since it would require changing every occurence of that id. As such, the mapper
+   currently only traverses ids for side-effects, but returns the original id.
+
+   There are also several places where we add something to a map, recurse, then
+   readd. The original add makes sure we don't visit the same entity twice, the
+   second actually changes the entity in the exports.
 *)
 module ContextOptimizer = struct
   open Constraint
   open Type
 
-  type quotient = {
-    reduced_module_map : Type.t SMap.t;
-    reduced_graph : node IMap.t;
-    reduced_property_maps : Properties.map;
-    reduced_call_props : Type.t IMap.t;
-    reduced_export_maps : Exports.map;
-    reduced_evaluated : Type.t IMap.t;
-  }
-
-  let empty = {
-    reduced_module_map = SMap.empty;
-    reduced_graph = IMap.empty;
-    reduced_property_maps = Properties.Map.empty;
-    reduced_call_props = IMap.empty;
-    reduced_export_maps = Exports.Map.empty;
-    reduced_evaluated = IMap.empty;
-  }
-
   class context_optimizer = object(self)
-    inherit [quotient] Type_visitor.t as super
+    inherit [Polarity.t] Type_mapper.t_with_uses as super
 
     val sig_hash = Xx.init ()
     method sig_hash () = Xx.digest sig_hash
@@ -529,97 +519,107 @@ module ContextOptimizer = struct
     val mutable stable_eval_ids = IMap.empty
     val mutable stable_opaque_ids = IMap.empty
     val mutable stable_poly_ids = IMap.empty
+    val mutable reduced_module_map = SMap.empty;
+    val mutable reduced_graph = IMap.empty;
+    val mutable reduced_property_maps = Properties.Map.empty;
+    val mutable reduced_call_props = IMap.empty;
+    val mutable reduced_export_maps = Exports.Map.empty;
+    val mutable reduced_evaluated = IMap.empty;
 
-    method reduce cx quotient module_ref =
-      let { reduced_module_map; _ } = quotient in
+    method reduce cx module_ref =
       let export = Context.find_module cx module_ref in
-      let reduced_module_map = SMap.add module_ref export reduced_module_map in
-      self#type_ cx Neutral { quotient with reduced_module_map } export
+      let export' = self#type_ cx Neutral export in
+      reduced_module_map <- SMap.add module_ref export' reduced_module_map
 
-    method! tvar cx pole quotient r id =
+    method tvar cx pole r id =
       let root_id, _ = Context.find_constraints cx id in
       if id == root_id then
-        let { reduced_graph; _ } = quotient in
         if IMap.mem id reduced_graph then
           let stable_id = IMap.find_unsafe root_id stable_tvar_ids in
           SigHash.add_int sig_hash stable_id;
-          quotient
+          id
         else
           let t = merge_tvar cx r id in
           let node = Root { rank = 0; constraints = Resolved t } in
-          let reduced_graph = IMap.add id node reduced_graph in
+          reduced_graph <- IMap.add id node reduced_graph;
           let () =
             let stable_id = self#fresh_stable_id in
             stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids
           in
-          self#type_ cx pole { quotient with reduced_graph } t
-      else
-        let quotient = self#tvar cx pole quotient r root_id in
+          let t = (self#type_ cx pole t) in
+          let node = Root { rank = 0; constraints = Resolved t } in
+          reduced_graph <- IMap.add id node reduced_graph;
+          id
+      else (
+        ignore (self#tvar cx pole r root_id);
         let node = Goto root_id in
-        let reduced_graph = IMap.add id node quotient.reduced_graph in
-        { quotient with reduced_graph }
+        reduced_graph <- IMap.add id node reduced_graph;
+        id
+      )
 
-    method! props cx pole quotient id =
-      let { reduced_property_maps; _ } = quotient in
+    method props cx pole id =
       if (Properties.Map.mem id reduced_property_maps)
       then
         let () = SigHash.add_int sig_hash (id :> int) in
-        quotient
+        id
       else
         let pmap = Context.find_props cx id in
         let () = SigHash.add_props_map sig_hash pmap in
-        let reduced_property_maps =
-          Properties.Map.add id pmap reduced_property_maps in
-        super#props cx pole { quotient with reduced_property_maps } id
+        reduced_property_maps <- Properties.Map.add id pmap reduced_property_maps;
+        let pmap' = SMap.ident_map (self#prop cx pole) pmap in
+        reduced_property_maps <- Properties.Map.add id pmap' reduced_property_maps;
+        id
 
-    method! call_prop cx pole quotient id =
-      let { reduced_call_props; _ } = quotient in
+    method call_prop cx pole id =
       if (IMap.mem id reduced_call_props)
       then
         let () = SigHash.add_int sig_hash id in
-        quotient
+        id
       else
         let t = Context.find_call cx id in
-        let reduced_call_props = IMap.add id t reduced_call_props in
-        super#call_prop cx pole { quotient with reduced_call_props } id
+        reduced_call_props <- IMap.add id t reduced_call_props;
+        let t' = self#type_ cx pole t in
+        reduced_call_props <- IMap.add id t' reduced_call_props;
+        id
 
-    method! exports cx pole quotient id =
-      let { reduced_export_maps; _ } = quotient in
-      if (Exports.Map.mem id reduced_export_maps) then quotient
+    method exports cx pole id =
+      if (Exports.Map.mem id reduced_export_maps) then id
       else
         let tmap = Context.find_exports cx id in
-        SigHash.add_exports_map sig_hash tmap;
-        let reduced_export_maps =
-          Exports.Map.add id tmap reduced_export_maps in
-        super#exports cx pole { quotient with reduced_export_maps } id
+        let map_pair (loc, t) = (loc, self#type_ cx pole t) in
+        reduced_export_maps <- Exports.Map.add id tmap reduced_export_maps;
+        let tmap' = SMap.ident_map map_pair tmap in
+        reduced_export_maps <- Exports.Map.add id tmap' reduced_export_maps;
+        SigHash.add_exports_map sig_hash tmap';
+        id
 
-    method! eval_id cx pole quotient id =
-      let { reduced_evaluated; _ } = quotient in
+    method eval_id cx pole id =
       if IMap.mem id reduced_evaluated
       then
         let stable_id = IMap.find_unsafe id stable_eval_ids in
         SigHash.add_int sig_hash stable_id;
-        quotient
+        id
       else
         let stable_id = self#fresh_stable_id in
         stable_eval_ids <- IMap.add id stable_id stable_eval_ids;
         match IMap.get id (Context.evaluated cx) with
-        | None -> quotient
+        | None -> id
         | Some t ->
-          let quotient = self#type_ cx pole quotient t in
-          let { reduced_evaluated; _ } = quotient in
-          let reduced_evaluated = IMap.add id t reduced_evaluated in
-          super#eval_id cx pole { quotient with reduced_evaluated } id
+          reduced_evaluated <- IMap.add id t reduced_evaluated;
+          let t' = self#type_ cx pole t in
+          reduced_evaluated <- IMap.add id t' reduced_evaluated;
+          id
 
-    method! dict_type cx pole quotient dicttype =
-      SigHash.add_polarity sig_hash dicttype.dict_polarity;
-      super#dict_type cx pole quotient dicttype
+    method! dict_type cx pole dicttype =
+      let dicttype' = super#dict_type cx pole dicttype in
+      SigHash.add_polarity sig_hash dicttype'.dict_polarity;
+      dicttype'
 
-    method! type_ cx pole quotient t =
+    method! type_ cx pole t =
       SigHash.add_reason sig_hash (reason_of_t t);
       match t with
       | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
-      | OpenT _ -> super#type_ cx pole quotient t
+      | OpenT _ -> super#type_ cx pole t
       | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
         let id =
           if Context.mem_nominal_id cx class_id
@@ -631,7 +631,7 @@ module ContextOptimizer = struct
           | Some id -> id
           else class_id in
         SigHash.add_int sig_hash id;
-        super#type_ cx pole quotient t
+        super#type_ cx pole t
       | OpaqueT (_, opaquetype) ->
         let id =
           let {opaque_id; _} = opaquetype in
@@ -645,7 +645,7 @@ module ContextOptimizer = struct
           else opaque_id
         in
         SigHash.add_int sig_hash id;
-        super#type_ cx pole quotient t
+        super#type_ cx pole t
       | DefT (_, PolyT (_, _, poly_id)) ->
         let id =
           if Context.mem_nominal_id cx poly_id
@@ -658,38 +658,80 @@ module ContextOptimizer = struct
           else poly_id
         in
         SigHash.add_int sig_hash id;
-        super#type_ cx pole quotient t
+        super#type_ cx pole t
       | _ ->
-        SigHash.add_type sig_hash t;
-        super#type_ cx pole quotient t
+        let t' = super#type_ cx pole t in
+        SigHash.add_type sig_hash t';
+        t'
 
-    method! use_type_ cx quotient use =
+    method! use_type cx pole use =
       SigHash.add_reason sig_hash (reason_of_use_t use);
       match use with
-      | UseT (_, t) -> self#type_ cx Neutral quotient t
+      | UseT (u, t) ->
+          let t' = self#type_ cx Neutral t in
+          if t' == t then use
+          else UseT (u, t')
       | _ ->
         SigHash.add_use sig_hash use;
-        super#use_type_ cx quotient use
+        super#use_type cx pole use
+
+    method! choice_use_tool cx pole t =
+      match t with
+      | FullyResolveType id ->
+          ignore @@ self#type_graph cx pole ISet.empty id;
+          t
+      | _ -> super#choice_use_tool cx pole t
+
+    method private type_graph cx pole seen id =
+      let open Graph_explorer in
+      let seen' = ISet.add id seen in
+      if seen' == seen then (seen, id) else
+      let graph = Context.type_graph cx in
+      ignore @@ self#eval_id cx pole id;
+      let seen' = match IMap.get id graph.explored_nodes with
+      | None -> seen'
+      | Some {deps} ->
+        ISet.fold (fun id seen -> fst @@ self#type_graph cx pole seen id) deps seen'
+      in
+      let seen' =
+        match IMap.get id graph.unexplored_nodes with
+        | None -> seen'
+        | Some {rev_deps} ->
+          ISet.fold (fun id seen -> fst @@ self#type_graph cx pole seen id) rev_deps seen'
+      in
+      (seen', id)
+
+    method get_stable_tvar_ids = stable_tvar_ids
+    method get_stable_nominal_ids = stable_nominal_ids
+    method get_stable_eval_ids = stable_eval_ids
+    method get_stable_opaque_ids = stable_opaque_ids
+    method get_stable_poly_ids = stable_poly_ids
+    method get_reduced_module_map = reduced_module_map
+    method get_reduced_graph = reduced_graph
+    method get_reduced_property_maps = reduced_property_maps
+    method get_reduced_call_props = reduced_call_props
+    method get_reduced_export_maps = reduced_export_maps
+    method get_reduced_evaluated = reduced_evaluated
   end
 
   (* walk a context from a list of exports *)
   let reduce_context cx module_refs =
     let reducer = new context_optimizer in
-    let quotient = List.fold_left (reducer#reduce cx) empty module_refs in
-    reducer#sig_hash (), quotient
+    List.iter (reducer#reduce cx) module_refs;
+    reducer#sig_hash (), reducer
 
   (* reduce a context to a "signature context" *)
   let sig_context cx module_refs =
-    let sig_hash, quotient = reduce_context cx module_refs in
-    Context.set_module_map cx quotient.reduced_module_map;
-    Context.set_graph cx quotient.reduced_graph;
-    Context.set_property_maps cx quotient.reduced_property_maps;
-    Context.set_call_props cx quotient.reduced_call_props;
-    Context.set_export_maps cx quotient.reduced_export_maps;
-    Context.set_evaluated cx quotient.reduced_evaluated;
+    let sig_hash, reducer = reduce_context cx module_refs in
+    Context.set_module_map cx reducer#get_reduced_module_map;
+    Context.set_graph cx reducer#get_reduced_graph;
+    Context.set_property_maps cx reducer#get_reduced_property_maps;
+    Context.set_call_props cx reducer#get_reduced_call_props;
+    Context.set_export_maps cx reducer#get_reduced_export_maps;
+    Context.set_evaluated cx reducer#get_reduced_evaluated;
     Context.set_type_graph cx (
       Graph_explorer.new_graph
-        (IMap.fold (fun k _ -> ISet.add k) quotient.reduced_graph ISet.empty)
+        (IMap.fold (fun k _ -> ISet.add k) reducer#get_reduced_graph ISet.empty)
     );
     sig_hash
 

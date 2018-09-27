@@ -263,7 +263,6 @@ class virtual ['a] t = object(self)
                        changeset;
                        def_reason } as t) =
     let this_t' = self#type_ cx map_cx this_t in
-    let return_t' = self#type_ cx map_cx return_t in
     let params' = ListUtils.ident_map (fun ((name, t) as param) ->
       let t' = self#type_ cx map_cx t in
       if t' == t then param else (name, t')
@@ -274,6 +273,7 @@ class virtual ['a] t = object(self)
         let t' = self#type_ cx map_cx t in
         if t' == t then rest_param else Some (name, loc, t')
     in
+    let return_t' = self#type_ cx map_cx return_t in
     if this_t' == this_t &&
        return_t' == return_t &&
        params' == params &&
