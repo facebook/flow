@@ -519,7 +519,7 @@ let program (algo : diff_algorithm)
     let _,    { key = key2; value = val2; annot = annot2; static = s2; variance = var2} = prop2 in
     (if key1 != key2 || s1 != s2 || var1 != var2 then None else
       let vals = diff_if_changed_nonopt_fn expression val1 val2 in
-      let annots = diff_if_changed_opt_arg type_annotation annot1 annot2 in
+      let annots = diff_if_changed_opt_arg type_annotation_opt annot1 annot2 in
       Option.(all [vals; annots] >>| List.concat))
     |> Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
 
@@ -937,10 +937,10 @@ let program (algo : diff_algorithm)
       None
     else
       let ids = diff_if_changed identifier name1 name2 |> Option.return in
-      let annots = diff_if_changed_opt_arg type_annotation annot1 annot2 in
+      let annots = diff_if_changed_opt_arg type_annotation_opt annot1 annot2 in
       Option.(all [ids; annots] >>| List.concat)
 
-  and type_annotation (annot1: (Loc.t, Loc.t) Ast.Type.annotation option)
+  and type_annotation_opt (annot1: (Loc.t, Loc.t) Ast.Type.annotation option)
                       (annot2: (Loc.t, Loc.t) Ast.Type.annotation option)
       : node change list option =
     match annot1, annot2 with
