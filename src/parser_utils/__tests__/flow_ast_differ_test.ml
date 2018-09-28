@@ -69,10 +69,9 @@ class useless_mapper = object
 
   method! type_ (annot: (Loc.t, Loc.t) Flow_ast.Type.t) =
     let (loc, typ) = annot in
-    let typ = match typ with
-    | Type.Number -> Type.String
-    | _ -> typ in
-    (loc, typ)
+    match typ with
+    | Type.Number -> (loc, Type.String)
+    | _ -> annot
 end
 
 class insert_end_mapper = object
