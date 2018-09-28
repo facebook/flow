@@ -13,6 +13,7 @@ val push_new_workload: workload -> unit
 val push_new_env_update: env_update -> unit
 val push_files_to_recheck: ?callback:(Profiling_js.finished option -> unit) -> SSet.t -> unit
 val push_files_to_focus: ?callback:(Profiling_js.finished option -> unit) -> SSet.t -> unit
+val cancellation_requests: Lsp.IdSet.t ref
 
 (* APIs to wait *)
 val wait_for_anything:

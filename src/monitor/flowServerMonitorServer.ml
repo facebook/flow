@@ -88,7 +88,7 @@ end = struct
     else let%lwt () = Lwt_unix.sleep time_til_doomsday in start_clock ()
 end
 
-(* The long-lived stream of requests *)
+(* The long-lived stream of requests in the monitor that have arrived from client *)
 (* This is unbounded, because otherwise lspCommand might deadlock. *)
 let command_stream, push_to_command_stream = Lwt_stream.create ()
 
@@ -156,6 +156,8 @@ end = struct
   module CommandLoop = LwtLoop.Make (struct
     type acc = (FileWatcher.watcher * ServerConnection.t)
 
+    (* Writes a message to the out-stream of the monitor, to be eventually *)
+    (* picked up by the server. *)
     let send_request ~msg conn = ServerConnection.write ~msg conn
 
     (* In order to try and avoid races between the file system and a command (like `flow status`),

@@ -17,6 +17,18 @@ let push_new_workload workload = push_new_workload (Some workload)
  * but are quick to handle *)
 let env_update_stream, push_new_env_update = Lwt_stream.create ()
 let push_new_env_update env_update = push_new_env_update (Some env_update)
+(* Outstanding cancellation requests are lodged here as soon as they arrive
+ * from the monitor (NOT FIFO) as well as being lodged in the normal FIFO
+ * queue. (1) if there was a workload sent prior to the cancellation request
+ * but we're only just FIFO getting to it now, it can peek to see whether
+ * that a cancellation request came after it, and not bother starting.
+ * (2) by the time the FIFO queue gets around to seeing the cancellation
+ * request in the normal FIFO queue, then we know it can no longer cancel
+ * any future requests, so we'll remove it from the set.
+ * Observe that our cancellation handling is best-effort only... we won't
+ * cancel something already underway, and we might start something even while
+ * the cancellation request is queued up somewhere between monitor and server. *)
+let cancellation_requests = ref Lsp.IdSet.empty
 
 type recheck_msg = {
   files: SSet.t;

@@ -576,7 +576,7 @@ let handle_ephemeral_immediately_unsafe
 
 let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
 
-let handle_ephemeral genv (request_id, command) =
+let enqueue_or_handle_ephemeral genv (request_id, command) =
   if should_handle_immediately command
   then handle_ephemeral_immediately genv () (request_id, command)
   else begin
@@ -584,6 +584,7 @@ let handle_ephemeral genv (request_id, command) =
       (fun env -> handle_ephemeral_deferred genv env (request_id, command));
     Lwt.return_unit
   end
+
 let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
   begin match Persistent_connection.client_did_open env.connections client ~files with
@@ -680,6 +681,12 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
   let workers = genv.ServerEnv.workers in
 
   match msg with
+  | LspToServer (RequestMessage (id, _), metadata)
+      when IdSet.mem id !(ServerMonitorListenerState.cancellation_requests) ->
+    let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
+    let response = ResponseMessage (id, ErrorResult (e, "")) in
+    Lwt.return (LspResponse (Ok (env, Some response, metadata)))
+
   | Subscribe ->
       let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings env in
       let new_connections = Persistent_connection.subscribe_client
@@ -733,6 +740,14 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let open TextDocumentIdentifier in
     let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
     let%lwt env = did_close genv env client (Nel.one fn) in
+    Lwt.return (LspResponse (Ok (env, None, metadata)))
+
+  | LspToServer (NotificationMessage (CancelRequestNotification params), metadata) ->
+    let id = params.CancelRequest.id in
+    (* by the time this cancel request shows up in the queue, then it must already *)
+    (* have had its effect if any on messages earlier in the queue, and so can be  *)
+    (* removed. *)
+    ServerMonitorListenerState.(cancellation_requests := IdSet.remove id !cancellation_requests);
     Lwt.return (LspResponse (Ok (env, None, metadata)))
 
   | LspToServer (RequestMessage (id, DefinitionRequest params), metadata) ->
@@ -1135,3 +1150,20 @@ let handle_persistent
       MonitorRPC.status_update ~event;
       Lwt.return env
   end
+
+let enqueue_persistent
+    (genv: ServerEnv.genv)
+    (client_id: Persistent_connection.Prot.client_id)
+    (request: Persistent_connection_prot.request)
+  : unit =
+  let open MonitorProt.PersistentProt in
+  begin
+  match request with
+  | LspToServer (NotificationMessage (CancelRequestNotification params), _) ->
+    let id = params.CancelRequest.id in
+    ServerMonitorListenerState.(cancellation_requests := IdSet.add id !cancellation_requests)
+  | _ -> ()
+  end;
+  ServerMonitorListenerState.push_new_workload
+    (fun env -> handle_persistent genv env client_id request);
+  ()

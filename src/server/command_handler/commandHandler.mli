@@ -5,14 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val handle_ephemeral:
+val enqueue_or_handle_ephemeral:
   ServerEnv.genv ->
   MonitorProt.request_id * ServerProt.Request.command_with_context ->
   unit Lwt.t
 
-val handle_persistent:
+val enqueue_persistent:
   ServerEnv.genv ->
-  ServerEnv.env ->
   Persistent_connection_prot.client_id ->
   Persistent_connection_prot.request ->
-  ServerEnv.env Lwt.t
+  unit

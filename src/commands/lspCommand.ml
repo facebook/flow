@@ -1454,9 +1454,6 @@ begin
   | _, Client_message (NotificationMessage ExitNotification, _metadata) ->
     if state = Post_shutdown then lsp_exit_ok () else lsp_exit_bad ()
 
-  | _, Client_message (NotificationMessage (CancelRequestNotification _), _metadata) ->
-    Ok (state, LogNotNeeded)
-
   | Pre_init _, Client_message _ ->
     raise (Error.ServerNotInitialized "Server not initialized")
 
@@ -1504,6 +1501,10 @@ begin
   | Connected cenv, Client_message (c, metadata) ->
     (* We'll track what's being sent to the server. This might involve some client *)
     (* computation work, which we'll profile, and send it over in metadata. *)
+    (* Note: in the case where c is a cancel-notification for a request that *)
+    (* was already handled in lspCommand like ShutdownRequest or DocSymbolsRequest *)
+    (* we'll still forward it; that's okay since server already has to be *)
+    (* hardened against unrecognized ids in cancel requests. *)
     let client_duration, state = with_timer (fun () ->
       let state, {changed_live_uri} = track_to_server state c in
       let state = Option.value_map changed_live_uri ~default:state
@@ -1538,6 +1539,10 @@ begin
     let metadata = { metadata with
       Persistent_connection_prot.client_duration=Some client_duration } in
     Ok (state, LogNeeded metadata)
+
+  | _, Client_message (NotificationMessage (CancelRequestNotification _), _metadata) ->
+    (* let's just not bother reporting any error in this case *)
+    Ok (state, LogNotNeeded)
 
   | Disconnected _, Client_message (c, _metadata) ->
     let (state, _) = track_to_server state c in

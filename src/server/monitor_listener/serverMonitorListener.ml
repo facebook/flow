@@ -14,10 +14,9 @@ module ListenLoop = LwtLoop.Make (struct
 
   let handle_message genv = function
   | MonitorProt.Request (request_id, command) ->
-    CommandHandler.handle_ephemeral genv (request_id, command)
+    CommandHandler.enqueue_or_handle_ephemeral genv (request_id, command)
   | MonitorProt.PersistentConnectionRequest (client_id, request) ->
-    ServerMonitorListenerState.push_new_workload
-      (fun env -> CommandHandler.handle_persistent genv env client_id request);
+    CommandHandler.enqueue_persistent genv client_id request;
     Lwt.return_unit
   | MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) ->
     ServerMonitorListenerState.push_new_env_update (fun env -> { env with
@@ -49,6 +48,7 @@ module ListenLoop = LwtLoop.Make (struct
     FlowExitStatus.(exit ~msg Killed_by_monitor)
 
   let main genv =
+    (* read a message from the monitor *)
     let%lwt message = MonitorRPC.read () in
     let%lwt () = handle_message genv message in
     Lwt.return genv
