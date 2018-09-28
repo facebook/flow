@@ -13,6 +13,10 @@ module F = Ast.Function
 
 type patch = (int * int * string) list
 
+let show_patch p: string =
+  ListUtils.to_string ""
+    (fun (s, e, p) -> Printf.sprintf "Start: <%d> End: <%d> Patch: <%s>\n" s e p) p
+
 let file_info file_path : string list * (int * int * int) list =
   let input_channel = open_in file_path in
   let rec build_list l =
@@ -71,9 +75,7 @@ let mk_patch (diff : Mapper_differ.t) (ast : (Loc.t, Loc.t) Ast.program)
       diff []
   in
   J.with_attached_comments := None ;
-  List.sort
-    (fun (start_one, _, _) (start_two, _, _) -> compare start_one start_two)
-    spans
+  spans
 
 let mk_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list)
   (ast : (Loc.t, Loc.t) Ast.program) (file_path : string) : patch =
@@ -89,6 +91,10 @@ let mk_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list
    |> List.map (fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
 
 let print (patch : patch) (file_path : string) : string =
+  let patch_sorted = List.sort
+   (fun (start_one, _, _) (start_two, _, _) -> compare start_one start_two)
+   patch
+  in
   let lines, line_counts = file_info file_path in
   let _, _, file_end = List.hd line_counts in
   let file_string = String.concat "\n" (List.rev lines) in
@@ -102,7 +108,7 @@ let print (patch : patch) (file_path : string) : string =
             text
         in
         (file_curr, _end) )
-      ("", 0) patch
+      ("", 0) patch_sorted
   in
   let last_span_to_end_size = file_end - last_span in
   let result_string =
