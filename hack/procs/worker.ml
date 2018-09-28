@@ -50,7 +50,7 @@ let slave_main ic oc =
   let outfd = Daemon.descr_of_out_channel oc in
 
   let send_result data =
-
+    Mem_profile.stop ();
     let tm = Unix.times () in
     let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
     let end_system_time = tm.Unix.tms_stime +. tm.Unix.tms_cstime in
@@ -124,8 +124,7 @@ let slave_main ic oc =
     start_minor_collections := gc.Gc.minor_collections;
     start_major_collections := gc.Gc.major_collections;
     start_wall_time := Unix.gettimeofday ();
-
-
+    Mem_profile.start ();
     do_process { send = send_result };
     exit 0
   with
