@@ -24,7 +24,6 @@ let process_updates genv env updates =
   match process_updates ~options:genv.ServerEnv.options ~libs:env.ServerEnv.libs updates with
   | Core_result.Ok updates -> updates
   | Core_result.Error { msg; exit_status } -> begin
-    Persistent_connection.send_exit env.connections exit_status;
     Hh_logger.fatal "Status: Error";
     Hh_logger.fatal "%s" msg;
     FlowExitStatus.exit ~msg exit_status

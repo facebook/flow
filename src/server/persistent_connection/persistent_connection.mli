@@ -26,8 +26,6 @@ val update_clients:
   clients:t ->
   calc_errors_and_warnings:(unit -> Errors.ErrorSet.t * Errors.ErrorSet.t Utils_js.FilenameMap.t) ->
   unit
-val send_exit:
-  t -> FlowExitStatus.t -> unit
 val send_lsp:
   t -> Lsp.lsp_message option * Prot.metadata -> unit
 val send_start_recheck:

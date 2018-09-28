@@ -68,9 +68,6 @@ let send_errors_if_subscribed ~client ~errors ~warnings =
   if client.subscribed
   then send_errors ~errors ~warnings client
 
-let send_single_exit code client =
-  send_message (Prot.ServerExit code) client
-
 let send_single_lsp (message, metadata) client =
   send_message (Prot.LspFromServer (message, metadata)) client
 
@@ -116,11 +113,6 @@ let update_clients ~clients ~calc_errors_and_warnings =
       error_count warning_file_count subscribed_client_count all_client_count;
     List.iter (send_errors ~errors ~warnings) subscribed_clients
   end
-
-let send_exit clients code =
-  clients
-    |> get_subscribed_clients
-    |> List.iter (send_single_exit code)
 
 let send_lsp clients json =
   clients
