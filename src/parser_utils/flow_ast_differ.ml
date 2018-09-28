@@ -585,6 +585,8 @@ let program (algo : diff_algorithm)
         assignment_ assn1 assn2
       | (_, Object obj1), (_, Object obj2) ->
         _object obj1 obj2
+      | (_, TypeCast t1), (_, TypeCast t2) ->
+        Some (type_cast t1 t2)
       | _, _ ->
         None
     in
@@ -955,6 +957,15 @@ let program (algo : diff_algorithm)
       : node change list =
     [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
 
+  and type_cast
+      (type_cast1: (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)
+      (type_cast2: (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t): node change list =
+    let open Flow_ast.Expression.TypeCast in
+    let { expression=expr1; annot=annot1; } = type_cast1 in
+    let { expression=expr2; annot=annot2; } = type_cast2 in
+    let expr = diff_if_changed expression expr1 expr2 in
+    let annot = diff_if_changed type_annotation annot1 annot2 in
+    expr @ annot
 in
 
 program' program1 program2

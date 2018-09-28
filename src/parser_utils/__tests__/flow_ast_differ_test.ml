@@ -671,4 +671,14 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(7,13), "gotRenamed"] ~source
       ~expected:"let [a=gotRenamed] = 0" ~mapper:(new useless_mapper)
   end;
+  "type_cast_expr" >:: begin fun ctxt ->
+    let source = "(rename: string)" in
+    assert_edits_equal ctxt ~edits:[(1,7), "gotRenamed"] ~source
+      ~expected:"(gotRenamed: string)" ~mapper:(new useless_mapper)
+  end;
+  "type_cast_type" >:: begin fun ctxt ->
+    let source = "(dontrename: number)" in
+    assert_edits_equal ctxt ~edits:[(11,19), ": string"] ~source
+      ~expected:"(dontrename: string)" ~mapper:(new useless_mapper)
+  end;
 ]
