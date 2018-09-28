@@ -947,7 +947,14 @@ let program (algo : diff_algorithm)
     | None, None -> Some []
     | Some (loc, typ), None -> Some [loc, Delete (TypeAnnotation (loc, typ))]
     | None, Some _ -> None (* Nowhere in the original program to insert the annotation *)
-    | Some (loc1, typ1), Some (loc2, typ2) ->
-        Some [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))] in
+    | Some annot1, Some annot2 ->
+        Some (type_annotation annot1 annot2)
+
+  and type_annotation ((loc1, typ1): (Loc.t, Loc.t) Ast.Type.annotation)
+                      ((loc2, typ2): (Loc.t, Loc.t) Ast.Type.annotation)
+      : node change list =
+    [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+
+in
 
 program' program1 program2
