@@ -489,6 +489,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
                c = Exit_status.(exit_code Sql_corrupt) ||
                c = Exit_status.(exit_code Sql_misuse) -> true
        | _ -> false in
+     let is_big_rebase = match exit_status with
+       | Some c when c =  Exit_status.(exit_code Big_rebase_detected) -> true
+       | _ -> false in
      let max_watchman_retries = 3 in
      let max_sql_retries = 3 in
      if (is_watchman_failed || is_watchman_fresh_instance)
@@ -510,6 +513,15 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
          Hh_logger.log
           "Several large rebases caused FileHeap to be stale. Restarting";
          kill_and_maybe_restart_server env exit_status
+        end else if is_big_rebase then begin
+          (* Server detected rebase sooner than monitor. If we keep going,
+           * monitor will eventually discover the same rebase and restart the
+           * server again for no reason. Reinitializing informant to bring it to
+           * the same understanding of current revision as server. *)
+          Informant.reinit env.informant;
+          Hh_logger.log
+           "Server exited because of big rebase. Restarting";
+          kill_and_maybe_restart_server env exit_status
       end else if is_sql_assertion_failure
       && (env.retries < max_sql_retries) then begin
         Hh_logger.log
