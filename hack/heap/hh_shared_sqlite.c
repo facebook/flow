@@ -46,7 +46,7 @@ const char *create_tables_sql[] = {
   "    FILESPEC TEXT NOT NULL" \
   ");",
   "CREATE TABLE IF NOT EXISTS DEPTABLE(" \
-  "    KEY_VERTEX INT PRIMARY KEY NOT NULL," \
+  "    KEY_VERTEX INTEGER PRIMARY KEY NOT NULL," \
   "    VALUE_VERTEX BLOB NOT NULL" \
   ");",
 };
