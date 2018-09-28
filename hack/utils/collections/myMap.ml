@@ -97,6 +97,11 @@ module Make(Ord: Map.OrderedType) : S with type key = Ord.t = struct
       add key (f key) acc
     end empty keys
 
+  let of_list elts =
+    List.fold_left begin fun acc (key, value) ->
+      add key value acc
+    end empty elts
+
   let add ?combine key new_value map =
     match combine with
     | None -> add key new_value map

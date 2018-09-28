@@ -7,6 +7,8 @@
  *
  *)
 
+exception Incorrect_format
+
 let soi = string_of_int
 let string_of_char = String.make 1
 
@@ -150,6 +152,16 @@ let fold_left ~f ~acc str =
   !acc
 
 let split c = Str.split (Str.regexp @@ Char.escaped c)
+
+let split2 c s =
+  let parts = split c s in
+  match parts with
+  | [first; second] -> Some (first, second)
+  | _ -> None
+let split2_exn c s =
+  match split2 c s with
+  | Some s -> s
+  | None -> raise Incorrect_format
 
 (* Replaces all instances of the needle character with the replacement character
  *)

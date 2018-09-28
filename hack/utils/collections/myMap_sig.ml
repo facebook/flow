@@ -33,6 +33,7 @@ module type S = sig
   val choose: 'a t -> (key * 'a) option
   val max_binding: 'a t -> (key * 'a) option
   val from_keys: key list -> f:(key -> 'a) -> 'a t
+  val of_list: (key * 'a) list -> 'a t
   val ident_map: ('a -> 'a) -> 'a t -> 'a t
   val ident_map_key: ?combine: ('a -> 'a -> 'a) -> (key -> key) -> 'a t -> 'a t
   val for_all2: f:(key -> 'a option -> 'b option -> bool) -> 'a t -> 'b t -> bool
