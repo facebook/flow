@@ -71,6 +71,7 @@ type t =
   | Sql_misuse
   | Uncaught_exception
   | Decl_not_found
+  | Big_rebase_detected
 
 exception Exit_with of t
 
@@ -116,6 +117,7 @@ let exit_code = function
   | EventLogger_restart_out_of_retries -> 108
   | Watchman_fresh_instance ->      109
   | Watchman_invalid_result ->      110
+  | Big_rebase_detected ->          111
   | IDE_malformed_request ->        201
   | IDE_no_server ->                202
   | IDE_out_of_retries ->           203
@@ -197,6 +199,7 @@ let to_string = function
   | Sql_misuse -> "Sql_misuse"
   | Uncaught_exception -> "Uncaught_exception"
   | Decl_not_found -> "Decl_not_found"
+  | Big_rebase_detected -> "Big_rebase_detected"
 
 
 let unpack = function
