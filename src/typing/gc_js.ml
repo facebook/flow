@@ -53,7 +53,7 @@ let gc = object (self)
   val depth = ref 0;
 
   method! type_ cx pole marked t =
-    Option.iter ~f:(fun { Verbose.depth = verbose_depth; indent} ->
+    Option.iter ~f:(fun { Verbose.depth = verbose_depth; indent; enabled_during_flowlib=_;} ->
       let pid = Context.pid_prefix cx in
       let indent = String.make (!depth * indent) ' ' in
       Utils_js.prerr_endlinef "\n%s%sGC (%s): %s" indent pid

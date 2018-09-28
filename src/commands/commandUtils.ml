@@ -263,14 +263,15 @@ let autostop_flag prev = CommandSpec.ArgSpec.(
 )
 
 let verbose_flags =
-  let collector main verbose indent depth =
+  let collector main verbose indent depth enabled_during_flowlib =
     let opt_verbose =
       if verbose || indent || depth != None
       then Some { Verbose.
         indent = if indent then 2 else 0;
-        depth = match depth with
+        depth = (match depth with
           | Some n when n >= 0 -> n
-          | _ -> 1
+          | _ -> 1);
+        enabled_during_flowlib;
       }
       else None
     in
@@ -285,6 +286,8 @@ let verbose_flags =
         ~doc:"Indent verbose info during typecheck (implies --verbose)"
     |> flag "--verbose-depth" int
         ~doc:"Recursively print types up to specified depth (default 1, implies --verbose)"
+    |> flag "--verbose-flowlib" no_arg
+        ~doc:"Print verbose info while initializing the flowlib"
   )
 
 let quiet_flag prev = CommandSpec.ArgSpec.(

@@ -710,7 +710,17 @@ let init_package_heap ~options ~profiling parsed =
 
 let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs =
   with_timer_lwt ~options "InitLibs" profiling (fun () ->
-    let%lwt lib_files = Init_js.init ~options ordered_libs in
+    let%lwt lib_files =
+      let options = match Options.verbose options with
+        | Some { Verbose.enabled_during_flowlib = false; _; } ->
+          (* Normally we disable verbosity while loading the libs. But if we're running with
+           * --verbose-flowlib then we want to leave verbosity on *)
+          { options with Options.opt_verbose = None; }
+        | _ -> options
+      in
+      Init_js.init ~options ordered_libs
+    in
+
     Lwt.return @@ List.fold_left (fun acc (lib_file, ok, errs, suppressions, severity_cover) ->
       let all_ok, errors_acc, suppressions_acc, severity_cover_set_acc = acc in
       let all_ok = if ok then all_ok else false in
