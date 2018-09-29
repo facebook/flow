@@ -3098,6 +3098,46 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ) ->
       ()
 
+    (* Optimization to treat maybe and optional types as special unions for subset comparision *)
+
+    | DefT (reason, UnionT rep), UseT (use_op, DefT (r, MaybeT maybe)) ->
+      let void = (VoidT.why r) in
+      let null = (NullT.why r) in
+      let filter_void t = TypeUtil.quick_subtype t void in
+      let filter_null t = TypeUtil.quick_subtype t null in
+      let filter_null_and_void t = filter_void t || filter_null t in
+      let remove_predicate predicate =
+        UnionRep.members
+        %> Type_mapper.union_flatten cx
+        %> Core_list.rev_filter ~f:(predicate %> not)
+        %> union_of_ts reason in
+      (* if the union doesn't contain void or null,
+         then everything in it must be upper-bounded by maybe *)
+      begin match UnionRep.quick_mem_enum void rep, UnionRep.quick_mem_enum null rep with
+        | UnionRep.No, UnionRep.No -> rec_flow_t ~use_op cx trace (l, maybe)
+        | UnionRep.Yes, UnionRep.No ->
+            rec_flow_t ~use_op cx trace (remove_predicate filter_void rep, maybe)
+        | UnionRep.No, UnionRep.Yes ->
+            rec_flow_t ~use_op cx trace (remove_predicate filter_null rep, maybe)
+        | UnionRep.Yes, UnionRep.Yes ->
+            rec_flow_t ~use_op cx trace (remove_predicate filter_null_and_void rep, maybe)
+        | _ -> UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+      end
+
+    | DefT (reason, UnionT rep), UseT (use_op, DefT (r, OptionalT opt)) ->
+      let void = (VoidT.why r) in
+      let remove_void =
+        UnionRep.members
+        %> Type_mapper.union_flatten cx
+        %> Core_list.rev_filter ~f:(fun t -> TypeUtil.quick_subtype t void |> not)
+        %> union_of_ts reason in
+      (* if the union doesn't contain void, then everything in it must be upper-bounded by u *)
+      begin match UnionRep.quick_mem_enum void rep with
+        | UnionRep.No -> rec_flow_t ~use_op cx trace (l, opt)
+        | UnionRep.Yes -> rec_flow_t ~use_op cx trace (remove_void rep, opt)
+        | _ -> UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
+      end
+
     | DefT (r, UnionT rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result) ->
       (* we have the check l.key === sentinel where l.key is a union *)
       if sense then
