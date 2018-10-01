@@ -63,7 +63,7 @@ let types_in_file ~full_cx ~file ~file_sig ~expand_aliases ~type_table typed_ast
     | Error _ -> map
   ) LocMap.empty ty_list
 
-let query_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table loc typed_ast =
+let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~typed_ast loc =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -87,7 +87,7 @@ let dump_types cx file_sig ~printer =
   let type_table = Context.type_table cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
   let result = Ty_normalizer.from_schemes ~options ~genv
-    (Type_table.coverage_to_list (Context.type_table cx)) in
+    (Type_table.coverage_to_list type_table) in
   let print_ok = function
     | l, Ok t -> Some (l, printer t)
     | _ -> None
