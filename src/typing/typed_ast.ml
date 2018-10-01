@@ -19,6 +19,8 @@ module Ast = Flow_ast
   *)
 module T = Type
 
+type program = (Loc.t, Loc.t * Type.t) Ast.program
+
 let error_annot = Loc.none, Type.Locationless.AnyT.t
 let unimplemented_annot = Loc.none, Type.Locationless.AnyT.t
 

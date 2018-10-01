@@ -7,6 +7,8 @@
 
 module T = Type
 
+type program = (Loc.t, Loc.t * Type.t) Flow_ast.program
+
 val error_annot : Loc.t * Type.t
 
 module Type : sig
