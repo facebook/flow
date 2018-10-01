@@ -50,12 +50,12 @@ let types_in_file ~full_cx ~file ~file_sig ~expand_aliases ~type_table typed_ast
     expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
   } in
-  let types_list = Typed_ast_utils.typed_ast_to_list ~f:(fun x-> x) typed_ast in
+  let type_scheme_list = Typed_ast_utils.typed_ast_to_list typed_ast in
   let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~type_table in
-  let ty_list = Ty_normalizer.from_types
+  let ty_list = Ty_normalizer.from_schemes
     ~options
     ~genv
-    types_list
+    type_scheme_list
   in
   List.fold_left (fun map (loc, result) ->
     match result with

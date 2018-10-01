@@ -121,38 +121,24 @@ class type_at_pos_searcher target_loc = object(self)
 
 end
 
-class ['t] type_at_loc_map_folder (f: Type.t -> 't) = object(_)
-  inherit [
-    Loc.t, Loc.t * Type.t,
-    Loc.t, Loc.t * Type.t
-  ] Flow_polymorphic_ast_mapper.mapper
-
-  val mutable map: 't LocMap.t = LocMap.empty
-
-  method on_loc_annot (x: Loc.t) = x
-
-  method on_type_annot (x: Loc.t * Type.t) =
-    let (loc, ty) = x in
-    map <- LocMap.add loc (f ty) map;
+class type_at_loc_map_folder = object(_)
+  inherit type_parameter_mapper
+  val mutable map = LocMap.empty
+  method! on_type_annot x =
+    let loc, type_ = x in
+    let scheme = Type.TypeScheme.{ type_; tparams = bound_tparams; } in
+    map <- LocMap.add loc scheme map;
     x
-
   method to_map = map
 end
 
-class ['t] type_at_loc_list_folder (f: Type.t -> 't) = object(_)
-  inherit [
-    Loc.t, Loc.t * Type.t,
-    Loc.t, Loc.t * Type.t
-  ] Flow_polymorphic_ast_mapper.mapper
-
+class type_at_loc_list_folder = object(_)
+  inherit type_parameter_mapper
   val mutable l = []
-
-  method on_loc_annot (x: Loc.t) = x
-
-  method on_type_annot ((loc, x) as ty: Loc.t * Type.t) =
-    l <- (loc, f x) :: l ;
-    ty
-
+  method! on_type_annot x =
+    let loc, type_ = x in
+    l <- (loc, Type.TypeScheme.{ type_; tparams = bound_tparams; }) :: l;
+    x
   method to_list = l
 end
 
@@ -165,12 +151,12 @@ let find_type_at_pos_annotation typed_ast loc =
   | Found (loc, scheme) -> Some (loc, scheme)
   | exc -> raise exc
 
-let typed_ast_to_map ~f typed_ast =
-  let folder: 'a type_at_loc_map_folder = new type_at_loc_map_folder f in
-  ignore @@ folder#program typed_ast ;
+let typed_ast_to_map typed_ast =
+  let folder = new type_at_loc_map_folder in
+  ignore (folder#program typed_ast);
   folder#to_map
 
-let typed_ast_to_list ~f typed_ast: (Loc.t * 'a) list =
-  let folder = new type_at_loc_list_folder f in
-  ignore @@ folder#program typed_ast ;
+let typed_ast_to_list typed_ast: (Loc.t * Type.TypeScheme.t) list =
+  let folder = new type_at_loc_list_folder in
+  ignore (folder#program typed_ast);
   folder#to_list
