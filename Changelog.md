@@ -1,3 +1,20 @@
+### 0.82.0
+
+Likely to cause new Flow errors:
+* Removed the ability to use functions as type annotations. This ability was
+  originally designed to support ES3-style classes, but in practice causes
+  confusion and missed errors. We found that the vast majority of added errors
+  were detecting legitimate bugs, and the remainder could be easily updated to
+  ES6 classes.
+
+New Features:
+* Added worker utilization and GC profiling under the `--profile` mode.
+
+Misc:
+* Further improved performance of IDE requests on large codebases.
+* Tweaked OCaml GC settings to reduce time spent collecting on workers.
+* Improved performance and reliability of watchman integration.
+
 ### 0.81.0
 
 Likely to cause new Flow errors:
