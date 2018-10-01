@@ -23,6 +23,7 @@ let print ~source_maps node =
         ) src nodes
     | Concat nodes
     | Sequence (_, nodes) -> List.fold_left print_node src nodes
+    | Newline -> Source.add_newline src
     | Atom s -> Source.add_string s src
     | Identifier (loc, s) -> Source.add_identifier loc s src
     | IfPretty (_, node) -> print_node src node

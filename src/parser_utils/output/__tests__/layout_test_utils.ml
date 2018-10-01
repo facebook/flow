@@ -49,6 +49,15 @@ module Layout_builder = struct
   let flat_pretty_space =
     IfBreak (Empty, IfPretty (Atom " ", Empty))
 
+  let pretty_newline =
+    IfPretty (Newline, Empty)
+
+  let line =
+    IfBreak (Newline, Atom " ")
+
+  let softline =
+    IfBreak (Newline, Empty)
+
   let wrap_in_parens_raw x =
     [atom "("; sequence ~break:Layout.Break_if_needed [x]; atom ")"]
 
@@ -121,14 +130,21 @@ module Layout_builder = struct
       phrase "id%s %S" loc str
 
     | IfPretty (Atom " ", Empty) -> word "pretty_space"
+    | IfPretty (Newline, Empty) -> word "pretty_newline"
 
     | IfPretty (left, right) ->
       phrase "Layout.IfPretty (%s, %s)" (helper ~i left) (helper ~i right)
 
     | IfBreak (Empty, IfPretty (Atom " ", Empty)) -> word "flat_pretty_space"
 
+    | IfBreak (Newline, Atom " ") -> word "line"
+    | IfBreak (Newline, Empty) -> word "softline"
+
     | IfBreak (left, right) ->
       phrase "Layout.IfBreak (%s, %s)" (helper ~i left) (helper ~i right)
+
+    | Newline ->
+      word "Newline"
 
     | Empty ->
       word "empty"

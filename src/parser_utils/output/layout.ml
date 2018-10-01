@@ -12,6 +12,8 @@ type layout_node =
   | Concat of layout_node list
   (* Join elements, allow for breaking over over lines *)
   | Sequence of list_config * (layout_node list)
+  (* Force a line break *)
+  | Newline
   (* Print a string *)
   | Atom of string
   (* Print an identifier, useful for source map name mappings *)
@@ -49,6 +51,13 @@ let ugly_space = IfPretty (Empty, space)
 let flat_space = IfBreak (Empty, space)
 let flat_pretty_space = IfBreak (Empty, pretty_space)
 let flat_ugly_space = IfBreak (Empty, ugly_space)
+
+(* Force a line break (`\n`) in pretty mode *)
+let pretty_newline = IfPretty (Newline, Empty)
+(* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise a space *)
+let line = IfBreak (Newline, space)
+(* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise nothing *)
+let softline = IfBreak (Newline, Empty)
 
 let if_pretty if_ else_ =
   if if_ = Empty && else_ = Empty then Empty else IfPretty (if_, else_)
@@ -139,6 +148,7 @@ let fuse_with_space =
         if str = "" then None else
         Some (if mode = `First then str.[0] else str.[String.length str - 1])
     | Empty -> None
+    | Newline -> None
     | SourceLocation (_, node)
     | IfPretty (_, node)
     | IfBreak (_, node) -> ugly_char ~mode node
@@ -227,6 +237,7 @@ end = struct
         (string_of_layout left)
         (string_of_layout right)
 
+    | Newline -> "Newline"
     | Empty -> "Empty"
 
   let rec layout_of_layout = function
@@ -287,5 +298,6 @@ end = struct
         ];
       ]
 
+    | Newline -> Atom "Newline"
     | Empty -> Atom "Empty"
 end

@@ -362,6 +362,9 @@ let print ~force_single_line ~source_maps node =
           else go (Source.add_newline (print_node acc n)) ns
       in
       go src nodes
+    | Newline ->
+        if force_single_line then Source.add_space 1 src
+        else Source.add_newline src
     | IfPretty (node, _) -> print_node src node
     | Concat nodes
     | Sequence (_, nodes) -> List.fold_left print_node src nodes
