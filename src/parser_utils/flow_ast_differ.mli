@@ -7,7 +7,7 @@
 
 type 'a change' =
   | Replace of 'a * 'a
-  | Insert of 'a list
+  | Insert of (* separator. Defaults to \n *) string option * 'a list
   | Delete of 'a
 
 type 'a change = (Loc.t * 'a change')

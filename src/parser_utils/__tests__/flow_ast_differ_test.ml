@@ -182,7 +182,7 @@ let debug_print_string_script script =
   let print_string_result (i, chg) =
     match chg with
     | Replace (ol, ne) -> print_endline (Utils_js.spf "Replace %s with %s at %d" ol ne i)
-    | Insert ins -> print_endline (Utils_js.spf "Insert %s at %d" (String.concat ", " ins) i)
+    | Insert (_, ins) -> print_endline (Utils_js.spf "Insert %s at %d" (String.concat ", " ins) i)
     | Delete d -> print_endline (Utils_js.spf "Delete %s at %d" d i) in
   match script with
   | None -> print_endline "no script"
@@ -588,7 +588,7 @@ let tests = "ast_differ" >::: [
     let old_list = [a;a] in
     let new_list = [b;b;b;b] in
     let edits = [(0, Replace (a, b));(1, Replace (a, b));
-                 (1, Insert [b;b])] in
+                 (1, Insert (None, [b;b]))] in
     let script = list_diff Standard old_list new_list in
     assert_equal ~ctxt (Some edits) script
   end;
@@ -608,7 +608,8 @@ let tests = "ast_differ" >::: [
     let c = "c" in
     let old_list = [a;b;c;a;b;b;a] in
     let new_list = [c;b;a;b;a;c] in
-    let edits = [(0, Delete a); (1, Delete b); (3, Delete a); (4, Insert [a]); (6, Insert [c])] in
+    let edits = [(0, Delete a); (1, Delete b); (3, Delete a)
+      ; (4, Insert (None, [a])); (6, Insert (None, [c]))] in
     let script = list_diff Standard old_list new_list in
     assert_equal ~ctxt (Some edits) script
   end;
@@ -617,7 +618,7 @@ let tests = "ast_differ" >::: [
     let y = "y" in
     let old_list = [x;x;x;y;y;y] in
     let new_list = [y;y;y;x;x;x] in
-    let edits = [(0, Delete x); (1, Delete x); (2, Delete x); (5, Insert [x;x;x])] in
+    let edits = [(0, Delete x); (1, Delete x); (2, Delete x); (5, Insert (None, [x;x;x]))] in
     let script = list_diff Standard old_list new_list in
     assert_equal ~ctxt (Some edits) script
   end;
@@ -628,9 +629,9 @@ let tests = "ast_differ" >::: [
     let old_list = [t';h;i;s;space;i;s;space;s;e;n;t;e;n;c;e;space;o;n;e;pd] in
     (*"This is the second sentence"*)
     let new_list = [t';h;i;s;space;i;s;space;t;h;e;space;s;e;c;o;n;d;space;s;e;n;t;e;n;c;e;pd] in
-    let edits = [(7, Insert [t;h;e;space]); (9, Insert [c;o]); (11, Replace (t,d));
-                 (11, Insert [space;s]); (14, Replace (c,t)); (16, Delete space);
-                 (17, Delete o); (18, Insert [c])] in
+    let edits = [(7, Insert (None, [t;h;e;space])); (9, Insert (None, [c;o])); (11, Replace (t,d));
+                 (11, Insert (None, [space;s])); (14, Replace (c,t)); (16, Delete space);
+                 (17, Delete o); (18, Insert (None, [c]))] in
     let script = list_diff Standard old_list new_list in
     debug_print_string_script script;
     assert_equal ~ctxt (Some edits) script
@@ -691,7 +692,7 @@ let tests = "ast_differ" >::: [
   end;
   "type_cast_add" >:: begin fun ctxt ->
     let source = "const dontrename = call( /* preserve spaces */  )" in
-    assert_edits_equal ctxt ~edits:[(19, 19), "("; (49, 49), ": any"; (49, 49), ")"]
+    assert_edits_equal ctxt ~edits:[(19, 19), "("; (49, 49), ": any)"]
       ~source ~mapper:(new insert_typecast_mapper)
       ~expected:"const dontrename = (call( /* preserve spaces */  ): any)"
   end;

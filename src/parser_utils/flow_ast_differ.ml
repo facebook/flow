@@ -10,7 +10,7 @@ open Utils_js
 
 type 'a change' =
   | Replace of 'a * 'a
-  | Insert of 'a list
+  | Insert of (* separator. Defaults to \n *) string option * 'a list
   | Delete of 'a
 
 type 'a change = (Loc.t * 'a change')
@@ -107,7 +107,7 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_resu
       let last = if k = trace_len - 1 then m else trace_array.(k + 1) |> snd in
       if first < last then
         let start = if k = -1 then -1 else trace_array.(k) |> fst in
-        (start, Insert (gen_inserts first last)) :: script
+        (start, Insert (None, (gen_inserts first last))) :: script
         |> add_inserts (k + 1)
       else add_inserts (k + 1) script in
 
@@ -125,11 +125,11 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_resu
     let rec convert_to_replace script =
       match script with
       | [] | [_] -> script
-      | (i1, Insert (x :: [])) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
+      | (i1, Insert (_, x :: [])) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
           (i2, Replace (y, x)) :: (convert_to_replace t)
-      | (i1, Insert (x :: rst)) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
+      | (i1, Insert (break, x :: rst)) :: (i2, Delete y) :: t when i1 = i2 - 1 ->
           (* We are only removing the first element of the insertion *)
-          (i2, Replace (y, x)) :: (convert_to_replace ((i2, Insert rst) :: t))
+          (i2, Replace (y, x)) :: (convert_to_replace ((i2, Insert (break, rst)) :: t))
       | h :: t -> h :: (convert_to_replace t) in
 
     (* Deletes are added for every element of old_list that does not have a
@@ -239,7 +239,7 @@ let program (algo : diff_algorithm)
 
     let recurse_into_change = function
       | _, Replace (x1, x2) -> f x1 x2
-      | index, Insert lst ->
+      | index, Insert (break, lst) ->
         let loc =
           if List.length old_list = 0 then None else
           (* To insert at the start of the list, insert before the first element *)
@@ -249,7 +249,7 @@ let program (algo : diff_algorithm)
         List.map trivial lst
         |>  all
         >>| List.map snd (* drop the loc *)
-        >>| (fun x -> Insert x)
+        >>| (fun x -> Insert (break, x))
         |>  both loc
         >>| Core_list.return
       | _, Delete x ->
@@ -418,7 +418,7 @@ let program (algo : diff_algorithm)
     let open Ast.Function in
     match return1, return2 with
     | Missing _, Missing _ -> []
-    | Missing loc1, Available (loc2, typ) -> [loc1, Insert [TypeAnnotation (loc2, typ)]]
+    | Missing loc1, Available (loc2, typ) -> [loc1, Insert (None, [TypeAnnotation (loc2, typ)])]
     | Available (loc1, typ), Missing _ -> [loc1, Delete (TypeAnnotation (loc1, typ))]
     | Available (loc1, typ1), Available (loc2, typ2) ->
      [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
@@ -979,10 +979,9 @@ let program (algo : diff_algorithm)
     let { expression=expr2; annot=annot2; } = type_cast in
     let expr_diff_rev = diff_if_changed expression expr expr2 |> List.rev in
     let append_annot_rev =
-      ({loc with start = loc._end }, Insert [Raw ")"])
-      :: ({loc with start = loc._end }, Insert [TypeAnnotation annot2])
+      ({loc with start = loc._end }, Insert (Some "", [TypeAnnotation annot2; Raw ")"]))
       :: expr_diff_rev in
-    ({loc with _end = loc.start}, Insert [Raw "("]) :: (List.rev append_annot_rev)
+    ({loc with _end = loc.start}, Insert (Some "", [Raw "("])) :: (List.rev append_annot_rev)
 in
 
 program' program1 program2

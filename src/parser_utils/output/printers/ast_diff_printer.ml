@@ -39,11 +39,13 @@ let text_of_node comments =
   %> Pretty_printer.print ~source_maps:None ~skip_endline:true
   %> Source.contents
 
-let text_of_nodes = text_of_node %> ListUtils.to_string "\n"
+let text_of_nodes break =
+  let sep = match break with | Some str -> str | None -> "\n" in
+  text_of_node %> ListUtils.to_string sep
 
 let edit_of_change comments = function
   | loc, Replace (_, new_node) -> (loc, text_of_node comments new_node)
-  | loc, Insert new_nodes -> (loc, text_of_nodes comments new_nodes)
+  | loc, Insert (break, new_nodes) -> (loc, text_of_nodes break comments new_nodes)
   | loc, Delete _ -> (loc, "")
 
 let edits_of_changes comments changes =
