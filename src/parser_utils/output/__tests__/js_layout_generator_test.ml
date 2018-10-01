@@ -24,7 +24,7 @@ let make_loc start_line end_line = Loc.{
   }
 
 let tests = "js_layout_generator" >::: [
-  "operator_precedence" >:: Operator_precedence_test.test;
+  "operator_precedence" >::: Operator_precedence_test.tests;
   "assignment_precedence" >:: Assignment_precedence_test.test;
   "variable_declaration_precedence" >:: Variable_declaration_precedence_test.test;
   "objects" >::: Object_test.tests;
