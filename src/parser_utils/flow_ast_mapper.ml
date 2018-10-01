@@ -825,7 +825,7 @@ class mapper = object(this)
     if name == name' && attributes == attributes' then elem
     else loc, { name; selfClosing; attributes = attributes' }
 
-  method jsx_closing_element (elem: Loc.t Flow_ast.JSX.Closing.t) =
+  method jsx_closing_element (elem: (Loc.t, Loc.t) Flow_ast.JSX.Closing.t) =
     let open Flow_ast.JSX.Closing in
     let loc, {name} = elem in
     let name' = this#jsx_name name in
@@ -879,7 +879,7 @@ class mapper = object(this)
       id this#expression expr jsx_expr (fun expr -> { expression = Expression expr})
     | EmptyExpression _ -> jsx_expr
 
-  method jsx_name (name: Loc.t Flow_ast.JSX.name) =
+  method jsx_name (name: (Loc.t, Loc.t) Flow_ast.JSX.name) =
     let open Flow_ast.JSX in
     let name' = match name with
       | Identifier id -> Identifier (this#jsx_identifier id)
@@ -892,7 +892,7 @@ class mapper = object(this)
      * above *)
     if name = name' then name else name'
 
-  method jsx_namespaced_name (namespaced_name: Loc.t Flow_ast.JSX.NamespacedName.t) =
+  method jsx_namespaced_name (namespaced_name: (Loc.t, Loc.t) Flow_ast.JSX.NamespacedName.t) =
     let open Flow_ast.JSX in
     let open NamespacedName in
     let loc, {namespace; name} = namespaced_name in
@@ -903,7 +903,7 @@ class mapper = object(this)
     else
       loc, {namespace=namespace'; name=name'}
 
-  method jsx_member_expression (member_exp: Loc.t Flow_ast.JSX.MemberExpression.t) =
+  method jsx_member_expression (member_exp: (Loc.t, Loc.t) Flow_ast.JSX.MemberExpression.t) =
     let open Flow_ast.JSX in
     let loc, {MemberExpression._object; MemberExpression.property} = member_exp in
     let _object' = match _object with

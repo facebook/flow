@@ -891,7 +891,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let attributes' = List.map this#jsx_opening_attribute attributes in
     this#on_loc_annot annot, { name = name'; selfClosing; attributes = attributes' }
 
-  method jsx_closing_element (elem: 'M Ast.JSX.Closing.t) : 'N Ast.JSX.Closing.t =
+  method jsx_closing_element (elem: ('M, 'T) Ast.JSX.Closing.t) : ('N, 'U) Ast.JSX.Closing.t =
     let open Ast.JSX.Closing in
     let annot, {name} = elem in
     let name' = this#jsx_name name in
@@ -916,19 +916,19 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.JSX.Attribute in
     let annot, { name; value } = attr in
     let name' = match name with
-      | Identifier (annot, name) -> Identifier (this#on_loc_annot annot, name)
+      | Identifier id -> Identifier (this#jsx_identifier id)
       | NamespacedName nname -> NamespacedName (this#jsx_namespaced_name nname)
     in
     let value' = Option.map ~f:this#jsx_attribute_value value in
     this#on_loc_annot annot, { name = name'; value = value' }
 
   method jsx_attribute_value (value: ('M, 'T) Ast.JSX.Attribute.value)
-                                  : ('N, 'U) Ast.JSX.Attribute.value =
+                                   : ('N, 'U) Ast.JSX.Attribute.value =
     let open Ast.JSX.Attribute in
     match value with
-    | Literal (annot, lit) -> Literal (this#on_loc_annot annot, lit)
+    | Literal (annot, lit) -> Literal (this#on_type_annot annot, lit)
     | ExpressionContainer (annot, expr) ->
-      ExpressionContainer (this#on_loc_annot annot, this#jsx_expression expr)
+      ExpressionContainer (this#on_type_annot annot, this#jsx_expression expr)
 
   method jsx_child (child: ('M, 'T) Ast.JSX.child) : ('N, 'U) Ast.JSX.child =
     let open Ast.JSX in
@@ -946,7 +946,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | Text _ as child' -> child'
 
   method jsx_expression (jsx_expr: ('M, 'T) Ast.JSX.ExpressionContainer.t)
-                                : ('N, 'U) Ast.JSX.ExpressionContainer.t =
+                                 : ('N, 'U) Ast.JSX.ExpressionContainer.t =
     let open Ast.JSX.ExpressionContainer in
     let { expression } = jsx_expr in
     let expression' = match expression with
@@ -955,7 +955,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     in
     { expression = expression' }
 
-  method jsx_name (name: 'M Ast.JSX.name) =
+  method jsx_name (name: ('M, 'T) Ast.JSX.name): ('N, 'U) Ast.JSX.name =
     let open Ast.JSX in
     match name with
     | Identifier id -> Identifier (this#jsx_identifier id)
@@ -964,8 +964,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | MemberExpression member_exp ->
       MemberExpression (this#jsx_member_expression member_exp)
 
-  method jsx_namespaced_name (namespaced_name: 'M Ast.JSX.NamespacedName.t)
-                                            : 'N Ast.JSX.NamespacedName.t =
+  method jsx_namespaced_name (namespaced_name: ('M, 'T) Ast.JSX.NamespacedName.t)
+                                             : ('N, 'U) Ast.JSX.NamespacedName.t =
     let open Ast.JSX in
     let open NamespacedName in
     let annot, {namespace; name} = namespaced_name in
@@ -973,8 +973,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let name' = this#jsx_identifier name in
     this#on_loc_annot annot, {namespace=namespace'; name=name'}
 
-  method jsx_member_expression (member_exp: 'M Ast.JSX.MemberExpression.t)
-                                          : 'N Ast.JSX.MemberExpression.t =
+  method jsx_member_expression (member_exp: ('M, 'T) Ast.JSX.MemberExpression.t)
+                                          : ('N, 'U) Ast.JSX.MemberExpression.t =
     let open Ast.JSX in
     let annot, {MemberExpression._object; MemberExpression.property} = member_exp in
     let _object' = match _object with
@@ -988,8 +988,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let property' = this#jsx_identifier property in
     this#on_loc_annot annot, MemberExpression.({_object=_object'; property=property'})
 
-  method jsx_identifier ((annot, name): 'M Ast.JSX.Identifier.t) : 'N Ast.JSX.Identifier.t =
-    this#on_loc_annot annot, name
+  method jsx_identifier ((annot, name): 'T Ast.JSX.Identifier.t) : 'U Ast.JSX.Identifier.t =
+    this#on_type_annot annot, name
 
   method labeled_statement (stmt: ('M, 'T) Ast.Statement.Labeled.t)
                                 : ('N, 'U) Ast.Statement.Labeled.t =

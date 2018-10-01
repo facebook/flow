@@ -1675,6 +1675,231 @@ interface.js:18:7 = {
   "start":7,
   "end":7
 }
+jsx.js:7:12 = {
+  "type":"React$Element<\"div\">",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":12,"offset":123},
+    "end":{"line":7,"column":14,"offset":126}
+  },
+  "path":"jsx.js",
+  "line":7,
+  "endline":7,
+  "start":12,
+  "end":14
+}
+jsx.js:7:16 = {
+  "type":"A",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":16,"offset":127},
+    "end":{"line":7,"column":20,"offset":132}
+  },
+  "path":"jsx.js",
+  "line":7,
+  "endline":7,
+  "start":16,
+  "end":20
+}
+jsx.js:7:23 = {
+  "type":"{data: A, name: string}",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":23,"offset":134},
+    "end":{"line":7,"column":27,"offset":139}
+  },
+  "path":"jsx.js",
+  "line":7,
+  "endline":7,
+  "start":23,
+  "end":27
+}
+jsx.js:7:29 = {
+  "type":"A",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":29,"offset":140},
+    "end":{"line":7,"column":32,"offset":144}
+  },
+  "path":"jsx.js",
+  "line":7,
+  "endline":7,
+  "start":29,
+  "end":32
+}
+jsx.js:7:35 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":35,"offset":146},
+    "end":{"line":7,"column":39,"offset":151}
+  },
+  "path":"jsx.js",
+  "line":7,
+  "endline":7,
+  "start":35,
+  "end":39
+}
+jsx.js:7:55 = {
+  "type":"boolean",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":51,"offset":162},
+    "end":{"line":7,"column":55,"offset":167}
+  },
+  "path":"jsx.js",
+  "line":7,
+  "endline":7,
+  "start":51,
+  "end":55
+}
+jsx.js:7:61 = {
+  "type":"{data: A, name: string}",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":61,"offset":172},
+    "end":{"line":7,"column":65,"offset":177}
+  },
+  "path":"jsx.js",
+  "line":7,
+  "endline":7,
+  "start":61,
+  "end":65
+}
+jsx.js:8:17 = {
+  "type":"{data: A, name: string}",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":17,"offset":199},
+    "end":{"line":8,"column":21,"offset":204}
+  },
+  "path":"jsx.js",
+  "line":8,
+  "endline":8,
+  "start":17,
+  "end":21
+}
+jsx.js:8:23 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":23,"offset":205},
+    "end":{"line":8,"column":26,"offset":209}
+  },
+  "path":"jsx.js",
+  "line":8,
+  "endline":8,
+  "start":23,
+  "end":26
+}
+jsx.js:8:30 = {
+  "type":"React$Element<\"div\">",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":30,"offset":212},
+    "end":{"line":8,"column":32,"offset":215}
+  },
+  "path":"jsx.js",
+  "line":8,
+  "endline":8,
+  "start":30,
+  "end":32
+}
+jsx.js:11:17 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":17,"offset":260},
+    "end":{"line":11,"column":19,"offset":263}
+  },
+  "path":"jsx.js",
+  "line":11,
+  "endline":11,
+  "start":17,
+  "end":19
+}
+jsx.js:18:12 = {
+  "type":"{|r: class C|}",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":12,"offset":347},
+    "end":{"line":18,"column":12,"offset":348}
+  },
+  "path":"jsx.js",
+  "line":18,
+  "endline":18,
+  "start":12,
+  "end":12
+}
+jsx.js:18:14 = {
+  "type":"class C",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":14,"offset":349},
+    "end":{"line":18,"column":14,"offset":350}
+  },
+  "path":"jsx.js",
+  "line":18,
+  "endline":18,
+  "start":14,
+  "end":14
+}
+jsx.js:18:12 = {
+  "type":"{|r: class C|}",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":22,"offset":357},
+    "end":{"line":18,"column":22,"offset":358}
+  },
+  "path":"jsx.js",
+  "line":18,
+  "endline":18,
+  "start":22,
+  "end":22
+}
+jsx.js:18:24 = {
+  "type":"class C",
+  "reasons":[],
+  "loc":{
+    "source":"jsx.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":24,"offset":359},
+    "end":{"line":18,"column":24,"offset":360}
+  },
+  "path":"jsx.js",
+  "line":18,
+  "endline":18,
+  "start":24,
+  "end":24
+}
 declare_class.js:3:15 = {
   "type":"class C",
   "reasons":[],

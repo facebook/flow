@@ -100,6 +100,11 @@ class type_at_pos_searcher target_loc = object(self)
     then self#annot_with_tparams (self#find_loc loc t)
     else super#t_identifier id
 
+  method! jsx_identifier (((loc, t), _) as id) =
+    if self#covers_target loc
+    then self#annot_with_tparams (self#find_loc loc t)
+    else super#jsx_identifier id
+
   method! object_key key =
     let open Ast.Expression.Object.Property in
     match key with

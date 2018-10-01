@@ -230,3 +230,56 @@ module Class = struct
     })
   end
 end
+
+module JSX = struct
+  module Identifier = struct
+    open Ast.JSX.Identifier
+    let error = error_annot, { name = "Error" }
+  end
+
+  module Attribute = struct
+    let error_name =
+      Ast.JSX.Attribute.Identifier Identifier.error
+
+    let error = Loc.none, {
+      Ast.JSX.Attribute.name = error_name;
+      value = None;
+    }
+  end
+
+  module SpreadAttribute = struct
+    let error = Loc.none, {
+      Ast.JSX.SpreadAttribute.argument = error_annot, Expression.error
+    }
+  end
+
+  module MemberExpression = struct
+    let error = Loc.none, {
+      Ast.JSX.MemberExpression._object =
+        Ast.JSX.MemberExpression.Identifier Identifier.error;
+      Ast.JSX.MemberExpression.property = Identifier.error;
+    }
+    let error_object = Ast.JSX.MemberExpression.Identifier (
+      Identifier.error
+    )
+  end
+
+  let error_name =
+    Ast.JSX.Identifier Identifier.error
+
+  module Opening = struct
+    open Ast.JSX.Opening
+    let error_attribute_list attributes =
+      List.map (function
+        | Attribute _ -> Attribute Attribute.error
+        | SpreadAttribute _ -> SpreadAttribute SpreadAttribute.error
+      ) attributes
+  end
+
+  module Closing = struct
+    open Ast.JSX.Closing
+    let error = Loc.none,  {
+      name = error_name;
+    }
+  end
+end

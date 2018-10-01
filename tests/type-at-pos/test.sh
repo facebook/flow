@@ -302,6 +302,38 @@ assert_ok "$FLOW" type-at-pos interface.js 17 7 --strip-root --pretty
 printf "interface.js:18:7 = "
 assert_ok "$FLOW" type-at-pos interface.js 18 7 --strip-root --pretty
 
+# jsx.js
+printf "jsx.js:7:12 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 12 --strip-root --pretty
+printf "jsx.js:7:16 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 16 --strip-root --pretty
+printf "jsx.js:7:23 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 23 --strip-root --pretty
+printf "jsx.js:7:29 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 29 --strip-root --pretty
+printf "jsx.js:7:35 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 35 --strip-root --pretty
+printf "jsx.js:7:55 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 55 --strip-root --pretty
+printf "jsx.js:7:61 = "
+assert_ok "$FLOW" type-at-pos jsx.js 7 61 --strip-root --pretty
+printf "jsx.js:8:17 = "
+assert_ok "$FLOW" type-at-pos jsx.js 8 17 --strip-root --pretty
+printf "jsx.js:8:23 = "
+assert_ok "$FLOW" type-at-pos jsx.js 8 23 --strip-root --pretty
+printf "jsx.js:8:30 = "
+assert_ok "$FLOW" type-at-pos jsx.js 8 30 --strip-root --pretty
+printf "jsx.js:11:17 = "
+assert_ok "$FLOW" type-at-pos jsx.js 11 17 --strip-root --pretty
+printf "jsx.js:18:12 = "
+assert_ok "$FLOW" type-at-pos jsx.js 18 12 --strip-root --pretty
+printf "jsx.js:18:14 = "
+assert_ok "$FLOW" type-at-pos jsx.js 18 14 --strip-root --pretty
+printf "jsx.js:18:12 = "
+assert_ok "$FLOW" type-at-pos jsx.js 18 22 --strip-root --pretty
+printf "jsx.js:18:24 = "
+assert_ok "$FLOW" type-at-pos jsx.js 18 24 --strip-root --pretty
+
 # declare_class.js
 printf "declare_class.js:3:15 = "
 assert_ok "$FLOW" type-at-pos declare_class.js 3 15 --strip-root --pretty

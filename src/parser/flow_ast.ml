@@ -960,7 +960,7 @@ end = Expression
 
 and JSX : sig
   module Identifier : sig
-    type 'M t = 'M * t'
+    type 'T t = 'T * t'
     and t' = {
       name: string;
     }
@@ -968,10 +968,10 @@ and JSX : sig
   end
 
   module NamespacedName : sig
-    type 'M t = 'M * 'M t'
-    and 'M t' = {
-      namespace: 'M Identifier.t;
-      name: 'M Identifier.t;
+    type ('M, 'T) t = 'M * 'T t'
+    and 'T t' = {
+      namespace: 'T Identifier.t;
+      name: 'T Identifier.t;
     }
     [@@deriving show]
   end
@@ -999,16 +999,16 @@ and JSX : sig
   module Attribute : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and 'M name =
-      | Identifier of 'M Identifier.t
-      | NamespacedName of 'M NamespacedName.t
+    and ('M, 'T) name =
+      | Identifier of 'T Identifier.t
+      | NamespacedName of ('M, 'T) NamespacedName.t
 
     and ('M, 'T) value =
-      | Literal of 'M * Literal.t
-      | ExpressionContainer of 'M * ('M, 'T) ExpressionContainer.t
+      | Literal of 'T * Literal.t
+      | ExpressionContainer of 'T * ('M, 'T) ExpressionContainer.t
 
     and ('M, 'T) t' = {
-      name: 'M name;
+      name: ('M, 'T) name;
       value: ('M, 'T) value option;
     }
 
@@ -1024,24 +1024,24 @@ and JSX : sig
   end
 
   module MemberExpression : sig
-    type 'M t = 'M * 'M t'
+    type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and 'M _object =
-      | Identifier of 'M Identifier.t
-      | MemberExpression of 'M t
+    and ('M, 'T) _object =
+      | Identifier of 'T Identifier.t
+      | MemberExpression of ('M, 'T) t
 
-    and 'M t' = {
-      _object: 'M _object;
-      property: 'M Identifier.t;
+    and ('M, 'T) t' = {
+      _object: ('M, 'T) _object;
+      property: 'T Identifier.t;
     }
 
     [@@deriving show]
   end
 
-  type 'M name =
-    | Identifier of 'M Identifier.t
-    | NamespacedName of 'M NamespacedName.t
-    | MemberExpression of 'M MemberExpression.t
+  type ('M, 'T) name =
+    | Identifier of 'T Identifier.t
+    | NamespacedName of ('M, 'T) NamespacedName.t
+    | MemberExpression of ('M, 'T) MemberExpression.t
     [@@deriving show]
 
   module Opening : sig
@@ -1052,7 +1052,7 @@ and JSX : sig
       | SpreadAttribute of ('M, 'T) SpreadAttribute.t
 
     and ('M, 'T) t' = {
-      name: 'M name;
+      name: ('M, 'T) name;
       selfClosing: bool;
       attributes: ('M, 'T) attribute list;
     }
@@ -1061,9 +1061,9 @@ and JSX : sig
   end
 
   module Closing : sig
-    type 'M t = 'M * 'M t'
-    and 'M t' = {
-      name: 'M name;
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+    and ('M, 'T) t' = {
+      name: ('M, 'T) name;
     }
     [@@deriving show]
   end
@@ -1078,7 +1078,7 @@ and JSX : sig
 
   and ('M, 'T) element = {
     openingElement: ('M, 'T) Opening.t;
-    closingElement: 'M Closing.t option;
+    closingElement: ('M, 'T) Closing.t option;
     children: ('M, 'T) child list
   }
 

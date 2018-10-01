@@ -211,7 +211,7 @@ module JSX (Parse: Parser_common.PARSER) = struct
         Loc.btwn start_loc end_loc, `Fragment
 
     type element_or_closing =
-      | Closing of Loc.t JSX.Closing.t
+      | Closing of (Loc.t, Loc.t) JSX.Closing.t
       | ClosingFragment of Loc.t
       | ChildElement of (Loc.t * (Loc.t, Loc.t) JSX.element)
       | ChildFragment of (Loc.t * (Loc.t, Loc.t) JSX.fragment)

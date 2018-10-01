@@ -92,3 +92,28 @@ module Class : sig
     val element_error : (Loc.t, Loc.t * T.t) Flow_ast.Class.Body.element
   end
 end
+
+module JSX : sig
+  module Identifier : sig
+    val error : (Loc.t * T.t) Flow_ast.JSX.Identifier.t
+  end
+  module Attribute : sig
+    val error : (Loc.t, Loc.t * T.t) Flow_ast.JSX.Attribute.t
+  end
+  module SpreadAttribute : sig
+    val error : (Loc.t, Loc.t * T.t) Flow_ast.JSX.SpreadAttribute.t
+  end
+  module MemberExpression : sig
+    val error : (Loc.t, Loc.t * T.t) Flow_ast.JSX.MemberExpression.t
+    val error_object : (Loc.t, Loc.t * T.t) Flow_ast.JSX.MemberExpression._object
+  end
+  val error_name : (Loc.t, Loc.t * T.t) Flow_ast.JSX.name
+  module Opening : sig
+    val error_attribute_list :
+      (Loc.t, Loc.t) Flow_ast.JSX.Opening.attribute list ->
+      (Loc.t, Loc.t * T.t) Flow_ast.JSX.Opening.attribute list
+  end
+  module Closing : sig
+    val error : (Loc.t, Loc.t * T.t) Flow_ast.JSX.Closing.t
+  end
+end

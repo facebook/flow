@@ -3160,10 +3160,12 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
       (loc, t), TemplateLiteral { TemplateLiteral.quasis; expressions }
 
   | JSXElement e ->
-      (loc, jsx cx e), Typed_ast.Expression.unimplemented
+      let t, e = jsx cx e in
+      (loc, t), JSXElement e
 
   | JSXFragment f ->
-      (loc, jsx_fragment cx f), Typed_ast.Expression.unimplemented
+      let t, f = jsx_fragment cx f in
+      (loc, t), JSXFragment f
 
   | Class c ->
       let (name_loc, name) = extract_class_name loc c in
@@ -4708,31 +4710,45 @@ and clone_object cx reason this that =
     )
   )
 
-and collapse_children cx children = Ast.JSX.(
+and collapse_children cx children:
+  Type.unresolved_param list *
+  (Loc.t, Loc.t * Type.t) Ast.JSX.child list = Ast.JSX.(
   children
-  |> List.filter (ExpressionContainer.(function
-    | (_, ExpressionContainer { expression = EmptyExpression _ }) -> false
-    | _ -> true))
-  |> List.map (jsx_body cx)
-  |> List.fold_left (fun children -> function
-    | None -> children
-    | Some child -> child::children) []
-  |> List.rev)
+  |> List.fold_left (fun (unres_params, children) -> function
+    | ExpressionContainer.(
+        loc,
+        ExpressionContainer { expression = EmptyExpression empty_loc }
+      ) ->
+      unres_params, (loc,
+        ExpressionContainer.(ExpressionContainer {
+          expression = EmptyExpression empty_loc
+        })
+      )::children
+    | child ->
+      let unres_param_opt, child = jsx_body cx child in
+      Option.value_map unres_param_opt
+        ~default:unres_params ~f:(fun x -> x::unres_params),
+      child::children
+  ) ([], [])
+  |> map_pair List.rev List.rev)
 
-and jsx cx = Ast.JSX.(
-  function { openingElement; children; closingElement } ->
+and jsx cx e: Type.t * (Loc.t, Loc.t * Type.t) Ast.JSX.element = Ast.JSX.(
+  let { openingElement; children; closingElement } = e in
   let locs =
     let open_, _ = openingElement in
     match closingElement with
     | Some (close, _) -> Loc.btwn open_ close, open_, Loc.btwn_exclusive open_ close
     | _ -> open_, open_, open_
   in
-  let children = collapse_children cx children in
-  jsx_title cx openingElement children locs
+  let unresolved_params, children = collapse_children cx children in
+  let t, openingElement, closingElement =
+    jsx_title cx openingElement closingElement unresolved_params locs in
+  t, { openingElement; children; closingElement }
 )
 
-and jsx_fragment cx = Ast.JSX.(
-  function { frag_openingElement; frag_children; frag_closingElement } ->
+and jsx_fragment cx fragment: Type.t * (Loc.t, Loc.t * Type.t) Ast.JSX.fragment =
+  let open Ast.JSX in
+  let { frag_openingElement; frag_children; frag_closingElement } = fragment in
   let locs =
     let open_ = frag_openingElement in
     match frag_closingElement with
@@ -4740,81 +4756,162 @@ and jsx_fragment cx = Ast.JSX.(
     | _ -> open_, open_, open_
   in
   let _, loc_opening, _ = locs in
-  let children = collapse_children cx frag_children in
-  let fragment =
+  let unresolved_params, frag_children = collapse_children cx frag_children in
+  let fragment_t =
     let reason = mk_reason (RIdentifier "React.Fragment") loc_opening in
     let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
     let use_op = Op (GetProperty reason) in
     get_prop ~is_cond:false cx reason ~use_op react (reason, "Fragment")
   in
-  jsx_desugar cx "React.Fragment" fragment (NullT.at loc_opening) [] children locs
-)
+  let t = jsx_desugar cx "React.Fragment" fragment_t (NullT.at loc_opening) []
+    unresolved_params locs in
+  t, { frag_openingElement; frag_children; frag_closingElement }
 
-and jsx_title cx openingElement children locs = Ast.JSX.(
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let expression cx e = snd_fst (expression cx e) in
+and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
   let loc_element, _, _ = locs in
-  let _, { Opening.name; attributes; _ } = openingElement in
+  let loc, { Opening.name; attributes; selfClosing } = openingElement in
   let facebook_fbt = Context.facebook_fbt cx in
   let jsx_mode = Context.jsx cx in
 
-  match (name, facebook_fbt, jsx_mode) with
-  | Identifier (_, { Identifier.name = "fbt" }), Some facebook_fbt, _ ->
+  let t, name, attributes = match (name, facebook_fbt, jsx_mode) with
+  | Identifier (loc_id, ({ Identifier.name = "fbt" } as id)), Some facebook_fbt, _ ->
     let fbt_reason = mk_reason RFbt loc_element in
-    Flow.get_builtin_type cx fbt_reason facebook_fbt
+    let t = Flow.get_builtin_type cx fbt_reason facebook_fbt in
+    let name = Identifier ((loc_id, t), id) in
+    let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
+    t, name, attributes
 
   | Identifier (loc, { Identifier.name }), _, Options.Jsx_react ->
-    if Type_inference_hooks_js.dispatch_id_hook cx name loc then AnyT.at loc_element else
-    let reason = mk_reason (RReactElement (Some name)) loc_element in
-    let c =
-      if name = String.capitalize_ascii name then
-        identifier cx name loc
-      else
-        DefT (mk_reason (RIdentifier name) loc, SingletonStrT name)
-    in
-    let o = jsx_mk_props cx reason c name attributes children in
-    jsx_desugar cx name c o attributes children locs
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
+      let t = AnyT.at loc_element in
+      let name = Identifier ((loc, t), { Identifier.name }) in
+      let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
+      t, name, attributes
+    else
+      let reason = mk_reason (RReactElement (Some name)) loc_element in
+      let c =
+        if name = String.capitalize_ascii name then
+          identifier cx name loc
+        else
+          DefT (mk_reason (RIdentifier name) loc, SingletonStrT name)
+      in
+      let o, attributes' = jsx_mk_props cx reason c name attributes children in
+      let t = jsx_desugar cx name c o attributes children locs in
+      let name = Identifier ((loc, t), { Identifier.name }) in
+      t, name, attributes'
 
   | Identifier (loc, { Identifier.name }), _, Options.Jsx_pragma _ ->
-    if Type_inference_hooks_js.dispatch_id_hook cx name loc then AnyT.at loc_element else
-    let reason = mk_reason (RJSXElement (Some name)) loc_element in
-    let c =
-      if name = String.capitalize_ascii name then
-        identifier cx name loc
-      else
-        DefT (mk_reason (RIdentifier name) loc, StrT (Literal (None, name)))
-    in
-    let o = jsx_mk_props cx reason c name attributes children in
-    jsx_desugar cx name c o attributes children locs
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
+      let t = AnyT.at loc_element in
+      let name = Identifier ((loc, t), { Identifier.name }) in
+      let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
+      t, name, attributes
+    else
+      let reason = mk_reason (RJSXElement (Some name)) loc_element in
+      let c =
+        if name = String.capitalize_ascii name then
+          identifier cx name loc
+        else
+          DefT (mk_reason (RIdentifier name) loc, StrT (Literal (None, name)))
+      in
+      let o, attributes' = jsx_mk_props cx reason c name attributes children in
+      let t = jsx_desugar cx name c o attributes children locs in
+      let name = Identifier ((loc, t), { Identifier.name }) in
+      t, name, attributes'
 
   | Identifier (loc, { Identifier.name }), _, Options.Jsx_csx ->
     (**
      * It's a bummer to duplicate this case, but CSX does not want the
      * "if name = String.capitalize name" restriction.
      *)
-    if Type_inference_hooks_js.dispatch_id_hook cx name loc then AnyT.at loc_element else
-    let reason = mk_reason (RJSXElement (Some name)) loc_element in
-    let c = identifier cx name loc in
-    let o = jsx_mk_props cx reason c name attributes children in
-    jsx_desugar cx name c o attributes children locs
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc
+    then
+      let t = AnyT.at loc_element in
+      let name = Identifier ((loc, t), { Identifier.name }) in
+      let attributes' = Typed_ast.JSX.Opening.error_attribute_list attributes in
+      t, name, attributes'
+    else
+      let reason = mk_reason (RJSXElement (Some name)) loc_element in
+      let c = identifier cx name loc in
+      let o, attributes' = jsx_mk_props cx reason c name attributes children in
+      let t = jsx_desugar cx name c o attributes children locs in
+      let name = Identifier ((loc, t), { Identifier.name }) in
+      t, name, attributes'
 
   | MemberExpression member, _, Options.Jsx_react ->
     let name = jsx_title_member_to_string member in
     let el = RReactElement (Some name) in
     let reason = mk_reason el loc_element in
-    let c = jsx_title_member_to_expression member in
-    let c = mod_reason_of_t (replace_reason_const (RIdentifier name)) (expression cx c) in
-    let o = jsx_mk_props cx reason c name attributes children in
-    jsx_desugar cx name c o attributes children locs
+    let m_expr = jsx_title_member_to_expression member in
+    let (_, t), m_expr' = expression cx m_expr in
+    let c = mod_reason_of_t (replace_reason_const (RIdentifier name)) t in
+    let o, attributes' = jsx_mk_props cx reason c name attributes children in
+    let t = jsx_desugar cx name c o attributes children locs in
+    let name' = MemberExpression (expression_to_jsx_title_member m_expr') in
+    (t, name', attributes')
 
   | _ ->
       (* TODO? covers namespaced names as element names *)
-      AnyT.at loc_element
+    let t = AnyT.at loc_element in
+    let name = Typed_ast.JSX.error_name in
+    let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
+    t, name, attributes
+  in
+
+  let closingElement =
+    match closingElement with
+    | Some (c_loc, { Closing.name = cname }) ->
+      Some (c_loc, { Closing.name = jsx_match_closing_element name cname })
+    | None -> None
+  in
+  t, (loc, { Opening.name; selfClosing; attributes; }), closingElement
 )
 
+and jsx_match_closing_element =
+  let match_identifiers o_id c_id =
+    let (_, t), _ = o_id in
+    let loc, name = c_id in
+    (loc, t), name
+  in
+  let rec match_member_expressions o_mexp c_mexp =
+    let open Ast.JSX.MemberExpression in
+    let _, { _object = o_obj; property = o_prop; } = o_mexp in
+    let loc, { _object = c_obj; property = c_prop; } = c_mexp in
+    let _object = match_objects o_obj c_obj in
+    let property = match_identifiers o_prop c_prop in
+    loc, { _object; property; }
+
+  and match_objects o_obj c_obj =
+    match o_obj, c_obj with
+    | Ast.JSX.MemberExpression.Identifier o_id,
+      Ast.JSX.MemberExpression.Identifier c_id ->
+      Ast.JSX.MemberExpression.Identifier (match_identifiers o_id c_id)
+    | Ast.JSX.MemberExpression.MemberExpression o_exp,
+      Ast.JSX.MemberExpression.MemberExpression c_exp ->
+      Ast.JSX.MemberExpression.MemberExpression (match_member_expressions o_exp c_exp)
+    | _, _ -> Typed_ast.JSX.MemberExpression.error_object
+  in
+  let match_namespaced_names o_id c_id =
+    let _, { Ast.JSX.NamespacedName.namespace = o_ns; name = o_name } = o_id in
+    let loc, { Ast.JSX.NamespacedName.namespace = c_ns; name = c_name } = c_id in
+    let namespace = match_identifiers o_ns c_ns in
+    let name = match_identifiers o_name c_name in
+    loc, { Ast.JSX.NamespacedName.namespace; name; }
+  in
+  (* Transfer open types to close types *)
+  fun o_name c_name -> Ast.JSX.(
+    match o_name, c_name with
+    | Identifier o_id, Identifier c_id ->
+        Identifier (match_identifiers o_id c_id)
+    | NamespacedName o_nname, NamespacedName c_nname ->
+        NamespacedName (match_namespaced_names o_nname c_nname)
+    | MemberExpression o_mexp, MemberExpression c_mexp ->
+        MemberExpression (match_member_expressions o_mexp c_mexp)
+    | _, _ ->
+        Typed_ast.JSX.error_name
+  )
+
 and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let expression cx e = snd_fst (expression cx e) in
   let is_react = Context.jsx cx = Options.Jsx_react in
   let reason_props = replace_reason_const
     (if is_react then RReactProps else RJSXElementProps name)
@@ -4856,7 +4953,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         )
   in
 
-  let sealed, map, result = List.fold_left (fun (sealed, map, result) att ->
+  let sealed, map, result, atts = List.fold_left (fun (sealed, map, result, atts) att ->
     match att with
     (* All attributes with a non-namespaced name that are not a react ignored
      * attribute. *)
@@ -4865,42 +4962,56 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         value
       }) ->
       (* Get the type for the attribute's value. *)
-      let atype =
+      let atype, value =
         if Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c
-        then AnyT.at aloc
+        then AnyT.at aloc, None
         else
           match value with
             (* <element name="literal" /> *)
             | Some (Attribute.Literal (loc, lit)) ->
-                literal cx loc lit
+                let t = literal cx loc lit in
+                t, Some (Attribute.Literal ((loc, t), lit))
             (* <element name={expression} /> *)
-            | Some (Attribute.ExpressionContainer (_, {
+            | Some (Attribute.ExpressionContainer (ec_loc, {
                 ExpressionContainer.expression =
                   ExpressionContainer.Expression (loc, e)
               })) ->
-                expression cx (loc, e)
+                let (_, t), _ as e = expression cx (loc, e) in
+                t, Some (Attribute.ExpressionContainer ((ec_loc, t), {
+                    ExpressionContainer.expression =
+                      ExpressionContainer.Expression e
+                  }))
             (* <element name={} /> *)
-            | Some (Attribute.ExpressionContainer _) ->
-                EmptyT.at aloc
+            | Some (Attribute.ExpressionContainer (ec_loc, _)) ->
+                let t = EmptyT.at aloc in
+                t, Some (Attribute.ExpressionContainer (
+                  (ec_loc, t), ExpressionContainer.({
+                    expression = Expression Typed_ast.(error_annot, Expression.error)
+                  })))
             (* <element name /> *)
             | None ->
-                DefT (mk_reason RBoolean aloc, BoolT (Some true))
+                DefT (mk_reason RBoolean aloc, BoolT (Some true)), None
       in
       let p = Field (Some id_loc, atype, Neutral) in
-      (sealed, SMap.add aname p map, result)
+      let att = Opening.Attribute (aloc, { Attribute.
+          name = Attribute.Identifier ((id_loc, atype), { Identifier.name = aname });
+          value
+        }) in
+      (sealed, SMap.add aname p map, result, att::atts)
     (* Do nothing for namespaced attributes or ignored React attributes. *)
     | Opening.Attribute _ ->
         (* TODO: attributes with namespaced names *)
-        (sealed, map, result)
+        (sealed, map, result, atts)
     (* <element {...spread} /> *)
-    | Opening.SpreadAttribute (_, { SpreadAttribute.argument }) ->
-        let spread = expression cx argument in
+    | Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument }) ->
+        let (_, spread), _ as argument = expression cx argument in
         let obj = eval_props (map, result) in
         let result = mk_spread spread obj
           ~assert_exact:(not (SMap.is_empty map && result = None)) in
-        sealed, SMap.empty, Some result
-  ) (true, SMap.empty, None) attributes in
-
+        let att = Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument }) in
+        sealed, SMap.empty, Some result, att::atts
+  ) (true, SMap.empty, None, []) attributes in
+  let attributes = List.rev atts in
   let map =
     match children with
     | [] -> map
@@ -4923,7 +5034,8 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         let p = Field (None, arr, Neutral) in
         SMap.add "children" p map
   in
-  eval_props ~sealed (map, result)
+  let t = eval_props ~sealed (map, result) in
+  t, attributes
 )
 
 and jsx_desugar cx name component_t props attributes children locs =
@@ -5014,34 +5126,48 @@ and jsx_desugar cx name component_t props attributes children locs =
  * since the common error is that the identifier is not in scope.
  *)
 and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let expression cx e = snd_fst (expression cx e) in
   function
   | _, Identifier (_, name) ->
       let desc = RJSXIdentifier (raw_jsx_expr, name) in
       Env.var_ref ~lookup_mode:ForValue cx name loc ~desc
   | expr ->
       (* Oh well, we tried *)
-      expression cx expr
+      let (_, t), _ = expression cx expr in
+      t
 )
 
-and jsx_body cx = Ast.JSX.(
-  (* TEMPORARY, until this function is updated to return ASTs *)
-  let expression cx e = snd_fst (expression cx e) in
-  function
-  | _, Element e -> Some (UnresolvedArg (jsx cx e))
-  | _, Fragment f -> Some (UnresolvedArg (jsx_fragment cx f))
-  | _, ExpressionContainer ec -> (
-      let open ExpressionContainer in
-      let { expression = ex } = ec in
-      Some (UnresolvedArg (match ex with
-        | Expression (loc, e) -> expression cx (loc, e)
-        | EmptyExpression loc ->
-          DefT (mk_reason (RCustom "empty jsx body") loc, EmptyT)))
-    )
-  | _, SpreadChild expr -> Some (UnresolvedSpreadArg (expression cx expr))
-  | loc, Text { Text.value; raw=_; } ->
-      Option.map (jsx_trim_text loc value) (fun c -> UnresolvedArg c)
+and jsx_body cx (loc, child) = Ast.JSX.(
+  match child with
+  | Element e ->
+    let t, e = jsx cx e in
+    Some (UnresolvedArg t), (loc, Element e)
+  | Fragment f ->
+    let t, f = jsx_fragment cx f in
+    Some (UnresolvedArg t), (loc, Fragment f)
+  | ExpressionContainer ec ->
+    let open ExpressionContainer in
+    let { expression = ex } = ec in
+    let unresolved_param, ex =
+      match ex with
+      | Expression e ->
+        let (_, t), _ as e = expression cx e in
+        UnresolvedArg t, Expression e
+      | EmptyExpression loc ->
+        let reason = mk_reason (RCustom "empty jsx body") loc in
+        let t = DefT (reason, EmptyT) in
+        UnresolvedArg t, EmptyExpression loc
+    in
+    Some unresolved_param, (loc, ExpressionContainer { expression = ex })
+  | SpreadChild expr ->
+    let (_, t), _ as e = expression cx expr in
+    Some (UnresolvedSpreadArg t), (loc, SpreadChild e)
+  | Text { Text.value; raw; } ->
+    let unresolved_param_opt =
+      match jsx_trim_text loc value with
+      | Some c -> Some (UnresolvedArg c)
+      | None -> None
+    in
+    unresolved_param_opt, (loc, Text { Text.value; raw; })
 )
 
 and jsx_trim_text loc value =
@@ -5076,6 +5202,26 @@ and jsx_title_member_to_expression member =
       computed = false;
     })
   )
+
+(* reverses jsx_title_member_to_expression *)
+and expression_to_jsx_title_member = function
+  | Ast.Expression.Member.(
+      Ast.Expression.Member {
+        _object = (mloc, _), obj_expr;
+        property = PropertyIdentifier (pannot, name);
+        computed = false;
+      }) ->
+    let _object = match obj_expr with
+    | Ast.Expression.Identifier ((id_loc, t), name) ->
+      Ast.JSX.MemberExpression.Identifier ((id_loc, t), { Ast.JSX.Identifier.name })
+    | _ ->
+      let jsx_expr = expression_to_jsx_title_member obj_expr in
+      Ast.JSX.MemberExpression.MemberExpression jsx_expr
+    in
+    let property = pannot, { Ast.JSX.Identifier.name = name } in
+    mloc, Ast.JSX.MemberExpression.{ _object; property; }
+  | _ ->
+    Typed_ast.JSX.MemberExpression.error
 
 (* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,
