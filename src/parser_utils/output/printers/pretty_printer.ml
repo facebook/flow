@@ -31,7 +31,7 @@ let rec fits ~width ~context nodes =
     | Concat items -> fits ~width ~context (items @ rest)
     (* Respect forced breaks *)
     | Newline -> false
-    | Sequence ({ break = Break_if_pretty | Break_always; _ }, _) -> false
+    | Sequence ({ break = Break_if_pretty; _ }, _) -> false
     | Sequence ({ break = _; inline = (before, _); indent = _ }, items) ->
       (* TODO: need to consider `after`. and indent? *)
       (not before && context.mode = Break) || (fits ~width ~context (items @ rest))
@@ -57,8 +57,7 @@ let print =
       { w with src }
     | Concat nodes -> List.fold_left (print_node context) w nodes
     | Newline -> break_and_indent context w
-    | Sequence ({ break=Break_if_pretty; inline=(left, right); indent }, nodes)
-    | Sequence ({ break=Break_always; inline=(left, right); indent }, nodes) ->
+    | Sequence ({ break=Break_if_pretty; inline=(left, right); indent }, nodes) ->
       let inner_context = { ind = context.ind + indent; mode = Break } in
       let w = if not left then break_and_indent inner_context w else w in
       let (w, _) = List.fold_left

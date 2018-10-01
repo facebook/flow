@@ -1662,16 +1662,17 @@ let tests = "js_layout_generator" >::: [
         ast
       in
       let expected =
-        L.(program (
-          sequence ~break:Layout.Break_always ~inline:(false, true) ~indent:0 [
-            sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
-              loc (fused [loc (id "x"); atom ";"])
-            ];
-            atom "/* @artifact abc123 */"
-          ]
-        ))
+        L.(program (fused [
+          sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
+            loc (fused [loc (id "x"); atom ";"]);
+          ];
+          Layout.Newline;
+          atom "/* @artifact abc123 */";
+        ]))
       in
-      assert_layout ~ctxt expected layout
+      assert_layout ~ctxt expected layout;
+      assert_output ~ctxt "x;\n/* @artifact abc123 */" layout;
+      assert_output ~ctxt ~pretty:true "x;\n/* @artifact abc123 */" layout;
     end;
 
   "program_trailing_semicolon" >::

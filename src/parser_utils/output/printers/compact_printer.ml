@@ -14,13 +14,6 @@ let print ~source_maps node =
       let src = print_node src node in
       let src = Source.pop_loc src in
       src
-    | Sequence ({ break=Break_always; inline=(left, right); indent = _ }, nodes) ->
-        List.fold_left (fun src node ->
-          let src = if not left then Source.add_newline src else src in
-          let src = print_node src node in
-          let src = if not right then Source.add_newline src else src in
-          src
-        ) src nodes
     | Concat nodes
     | Sequence (_, nodes) -> List.fold_left print_node src nodes
     | Newline -> Source.add_newline src

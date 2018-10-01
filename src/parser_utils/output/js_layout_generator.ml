@@ -394,8 +394,7 @@ and combine_directives_and_comments directives comments : Layout.layout_node =
 and maybe_embed_checksum nodes checksum = match checksum with
   | Some checksum ->
     let comment = Printf.sprintf "/* %s */" checksum in
-    let fmt = { break=Break_always; inline=(false, true); indent=0; } in
-    Sequence(fmt, [nodes; Atom comment])
+    fuse [nodes; Newline; Atom comment]
   | None -> nodes
 
 and comment (loc, comment) =

@@ -85,7 +85,6 @@ module Layout_builder = struct
     let string_of_when_to_break = function
     | Break_if_needed -> "Layout.Break_if_needed"
     | Break_if_pretty -> "Layout.Break_if_pretty"
-    | Break_always -> "Layout.Break_always"
     in
     let word x = Word x in
     let phrase fmt = Printf.ksprintf (fun str -> Phrase str) fmt in

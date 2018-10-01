@@ -28,7 +28,6 @@ type layout_node =
 and when_to_break =
   | Break_if_needed
   | Break_if_pretty
-  | Break_always (* even in compact mode! *)
 
 and list_config = {
   break: when_to_break;
@@ -76,6 +75,15 @@ let fuse items =
   | [] -> Empty
   | [item] -> item
   | _ -> Concat items
+
+let join sep nodes =
+  let rec helper acc = function
+    | [] -> List.rev acc
+    | hd::tl ->
+      let acc = if acc = [] then [hd] else hd::sep::acc in
+      helper acc tl
+  in
+  fuse (helper [] nodes)
 
 (* Fuse a list of items to align vertically *)
 let fuse_vertically
@@ -191,7 +199,6 @@ end = struct
   let debug_string_of_when_to_break = function
   | Break_if_needed -> "Break_if_needed"
   | Break_if_pretty -> "Break_if_pretty"
-  | Break_always -> "Break_always"
 
   let rec string_of_layout = function
     | SourceLocation (loc, child) ->

@@ -338,13 +338,9 @@ let type_ ?(size=5000) t =
   let type_layout = type_ ~depth:0 t in
   (* Run type_ first so that env_map has been populated *)
   let env_layout = List.map env_ (IMap.bindings !env_map) in
-  Sequence (
-    { break=Break_always; inline=(true, true); indent=0 },
-    env_layout @ [type_layout]
-  )
+  Layout.(join Newline (env_layout @ [type_layout]))
 
 (* Same as Compact_printer with the exception of:
-   - "Sequence Break_always" to allow breaks after every type alias
    - IfPretty to allow spaces after punctuation.
    We still maintain a single line format.
 *)
@@ -352,16 +348,6 @@ let print ~force_single_line ~source_maps node =
   let rec print_node src = function
     (* this printer does not output locations *)
     | SourceLocation _ -> src
-    | Sequence ({ break=Break_always; _ }, nodes) ->
-      let rec go acc = function
-      | [] -> acc
-      | [n] -> print_node acc n
-      | n::ns ->
-        if force_single_line
-          then go (Source.add_space 1 (print_node acc n)) ns
-          else go (Source.add_newline (print_node acc n)) ns
-      in
-      go src nodes
     | Newline ->
         if force_single_line then Source.add_space 1 src
         else Source.add_newline src
