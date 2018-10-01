@@ -60,7 +60,7 @@ let tests = [
   end;
 
   (* a function value forces the whole object to break in pretty mode *)
-  "function" >:: begin fun ctxt ->
+  "object_property_is_function" >:: begin fun ctxt ->
     let prop1 = E.object_property (E.object_property_key "foo") (E.identifier "x") in
     let prop2 = E.object_property (E.object_property_key "bar") (E.function_ ()) in
     let prop3 = E.object_property (E.object_property_key "baz") (E.identifier "y") in
@@ -103,5 +103,74 @@ let tests = [
       layout;
     assert_output ~ctxt "{foo:x,bar:function(){},baz:y}" layout;
     assert_output ~ctxt ~pretty:true "{\n  foo: x,\n  \n  bar: function() {},\n  \n  baz: y,\n}" layout;
+  end;
+
+  "object_property_is_method" >:: begin fun ctxt ->
+    let layout = Js_layout_generator.expression (
+      E.object_ [
+        E.object_method (E.object_property_key "foo");
+      ]
+    ) in
+    assert_output ~ctxt "{foo(){}}" layout;
+    assert_output ~ctxt ~pretty:true "{ foo() {} }" layout;
+  end;
+
+  "object_property_is_generator_method" >:: begin fun ctxt ->
+    let layout = Js_layout_generator.expression (
+      E.object_ [
+        E.object_method ~generator:true (E.object_property_key "foo");
+      ]
+    ) in
+    assert_output ~ctxt "{*foo(){}}" layout;
+    assert_output ~ctxt ~pretty:true "{ *foo() {} }" layout;
+  end;
+
+  "object_property_is_sequence" >:: begin fun ctxt ->
+    let layout = Js_layout_generator.expression (
+      E.object_ [
+        E.object_property
+          (E.object_property_key "foo")
+          (E.sequence [E.identifier "x"; E.identifier "y"]);
+      ]
+    ) in
+    assert_output ~ctxt "{foo:(x,y)}" layout;
+    assert_output ~ctxt ~pretty:true "{ foo: (x, y) }" layout;
+  end;
+
+  "object_property_key_is_literal" >:: begin fun ctxt ->
+    let layout = Js_layout_generator.expression (
+      E.object_ [
+        E.object_property_with_literal
+          (Ast_builder.Literals.string "foo")
+          (E.literal (Ast_builder.Literals.string "bar"));
+      ]
+    ) in
+    assert_output ~ctxt ~msg:"string literal keys should be quoted"
+      "{\"foo\":\"bar\"}" layout;
+    assert_output ~ctxt ~msg:"string literal keys should be quoted" ~pretty:true
+      "{ \"foo\": \"bar\" }" layout;
+  end;
+
+  "object_property_key_is_computed" >:: begin fun ctxt ->
+    let b80 = String.make 80 'b' in
+    let ast = Ast_builder.expression_of_string ("{["^b80^"]: 123}") in
+    let layout = Js_layout_generator.expression ast in
+    assert_output ~ctxt
+      ("{["^b80^"]:123}")
+      layout;
+    assert_output ~ctxt ~pretty:true
+      ("{\n  [\n    "^b80^"\n  ]: 123,\n}")
+      layout;
+
+    let b40 = String.make 40 'b' in
+    let ast = Ast_builder.expression_of_string ("{["^b40^"+"^b40^"]: 123}") in
+    let layout = Js_layout_generator.expression ast in
+    assert_output ~ctxt
+      ("{["^b40^"+"^b40^"]:123}")
+      layout;
+    (* TODO: the second b40 should wrap *)
+    assert_output ~ctxt ~pretty:true
+      ("{\n  [\n    "^b40^" + "^b40^"\n  ]: 123,\n}")
+      layout;
   end;
 ]

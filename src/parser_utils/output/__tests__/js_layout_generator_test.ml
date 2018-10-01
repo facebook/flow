@@ -124,60 +124,6 @@ let tests = "js_layout_generator" >::: [
       assert_expression ~ctxt "x--- --y" ast;
     end;
 
-  "object_property_is_function" >::
-    begin fun ctxt ->
-      let ast = E.object_ [
-        E.object_property
-          (E.object_property_key "foo")
-          (E.function_ ());
-      ] in
-      assert_expression ~ctxt "{foo:function(){}}" ast
-    end;
-
-  "object_property_is_method" >::
-    begin fun ctxt ->
-      let ast = E.object_ [
-        E.object_method (E.object_property_key "foo");
-      ] in
-      assert_expression ~ctxt "{foo(){}}" ast
-    end;
-
-  "object_property_is_generator_method" >::
-    begin fun ctxt ->
-      let ast = E.object_ [
-        E.object_method ~generator:true (E.object_property_key "foo");
-      ] in
-      assert_expression ~ctxt "{*foo(){}}" ast
-    end;
-
-  "object_property_is_sequence" >::
-    begin fun ctxt ->
-      let ast = E.object_ [
-        E.object_property
-          (E.object_property_key "foo")
-          (E.sequence [E.identifier "x"; E.identifier "y"]);
-      ] in
-      assert_expression ~ctxt "{foo:(x,y)}" ast
-    end;
-
-  "object_property_key_is_literal" >::
-    begin fun ctxt ->
-      let ast = E.object_ [
-        E.object_property_with_literal
-          (Literals.string "foo")
-          (E.literal (Literals.string "bar"));
-      ] in
-      assert_expression ~ctxt ~msg:"string literal keys should be quoted"
-        "{\"foo\":\"bar\"}" ast
-    end;
-
-  "object_property_key_is_computed" >::
-    begin fun ctxt ->
-      assert_expression_string ~ctxt ~pretty:true (
-        "{\n  [\n    " ^ String.make 80 'b' ^ "\n  ]: 123,\n}"
-      );
-    end;
-
   "do_while_semicolon" >::
     begin fun ctxt ->
       let module S = Ast.Statement in
