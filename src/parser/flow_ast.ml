@@ -1291,7 +1291,7 @@ and Function : sig
     | BodyExpression of ('M, 'T) Expression.t
 
   and ('M, 'T) return =
-    | Missing of 'M
+    | Missing of 'T
     | Available of ('M, 'T) Type.annotation
 
   [@@deriving show]

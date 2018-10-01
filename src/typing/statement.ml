@@ -6338,10 +6338,6 @@ and mk_func_sig =
       let return_t, return = Anno.mk_type_annotation cx tparams_map ret_reason None in
       return_t, return, loc
     in
-    let return = match return with
-    | Some type_annot -> Ast.Function.Available type_annot
-    | None -> Ast.Function.Missing loc
-    in
     let return_t, predicate = Ast.Type.Predicate.(match predicate with
       | None ->
           return_t, None
@@ -6357,6 +6353,10 @@ and mk_func_sig =
           fst (Anno.mk_type_annotation cx tparams_map ret_reason None),
           Some (loc, Declared (Typed_ast.error_annot, Typed_ast.Expression.error))
     ) in
+    let return = match return with
+    | Some type_annot -> Ast.Function.Available type_annot
+    | None -> Ast.Function.Missing (loc, return_t)
+    in
     {Func_sig.reason; kind; tparams; tparams_map; fparams; body; return_t},
     (fun body fun_type -> { func with Ast.Function.
       id = Option.map ~f:(fun (id_loc, name) -> (id_loc, fun_type), name) id;

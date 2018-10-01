@@ -175,7 +175,7 @@ module Function = struct
       generator = false;
       predicate = None;
       expression = false;
-      return = Missing Loc.none;
+      return = Missing error_annot;
       tparams = None;
     }
 
@@ -202,7 +202,7 @@ module Function = struct
     generator = false;
     predicate = None;
     expression = false;
-    return = Missing Loc.none;
+    return = Missing error_annot;
     tparams = None;
   }
 
