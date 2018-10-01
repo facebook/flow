@@ -29,6 +29,7 @@ let tests = "js_layout_generator" >::: [
   "variable_declaration_precedence" >:: Variable_declaration_precedence_test.test;
   "objects" >::: Object_test.tests;
   "comment" >::: Comment_test.tests;
+  "program" >::: Program_test.tests;
 
   "unary_plus_binary" >::
     begin fun ctxt ->
