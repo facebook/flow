@@ -254,11 +254,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.Class.Body in
     match elem with
     | Method (annot, meth) ->
-      Method (this#on_loc_annot annot, this#class_method meth)
+      Method (this#on_type_annot annot, this#class_method meth)
     | Property (annot, prop) ->
-      Property (this#on_loc_annot annot, this#class_property prop)
+      Property (this#on_type_annot annot, this#class_property prop)
     | PrivateField (annot, field) ->
-      PrivateField (this#on_loc_annot annot, this#class_private_field field)
+      PrivateField (this#on_type_annot annot, this#class_private_field field)
 
   method class_method (meth: ('M, 'T) Ast.Class.Method.t') : ('N, 'U) Ast.Class.Method.t' =
     let open Ast.Class.Method in

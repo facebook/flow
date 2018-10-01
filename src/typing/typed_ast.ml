@@ -221,7 +221,7 @@ module Class = struct
 
   module Body = struct
     open Body
-    let element_error = Method (Loc.none, { Method.
+    let element_error = Method (error_annot, { Method.
       kind = Method.Method;
       key = Expression.Object.Property.key_error;
       value = Loc.none, Function.error;

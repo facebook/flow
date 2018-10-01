@@ -1174,7 +1174,7 @@ end = Comment
 
 and Class : sig
   module Method : sig
-    type ('M, 'T) t = 'M * ('M, 'T) t'
+    type ('M, 'T) t = 'T * ('M, 'T) t'
     and kind =
       | Constructor
       | Method
@@ -1190,7 +1190,7 @@ and Class : sig
     [@@deriving show]
   end
   module Property : sig
-    type ('M, 'T) t = 'M * ('M, 'T) t'
+    type ('M, 'T) t = 'T * ('M, 'T) t'
     and ('M, 'T) t' = {
       key: ('M, 'T) Expression.Object.Property.key;
       value: ('M, 'T) Expression.t option;
@@ -1201,7 +1201,7 @@ and Class : sig
     [@@deriving show]
   end
   module PrivateField: sig
-    type ('M, 'T) t = 'M * ('M, 'T) t'
+    type ('M, 'T) t = 'T * ('M, 'T) t'
     and ('M, 'T) t' = {
       key: 'M PrivateName.t;
       value: ('M, 'T) Expression.t option;

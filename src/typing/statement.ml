@@ -6132,7 +6132,7 @@ and mk_class_sig =
         let body = Option.value (!body_ref) ~default:Typed_ast.Function.body_error in
         let func_t = Option.value (!func_t_ref) ~default:(AnyFunT.at id_loc) in
         let func = reconstruct_func body func_t in
-        Body.Method (loc, { Method.
+        Body.Method ((loc, func_t), { Method.
           key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), name);
           value = func_loc, func;
           kind;
@@ -6163,8 +6163,8 @@ and mk_class_sig =
 
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
-        let field, _, annot_ast, get_value = mk_field cx tparams_map reason annot value in
-        let get_element () = Body.PrivateField (loc, { PrivateField.
+        let field, annot_t, annot_ast, get_value = mk_field cx tparams_map reason annot value in
+        let get_element () = Body.PrivateField ((loc, annot_t), { PrivateField.
           key;
           annot = annot_ast;
           value = get_value ();
@@ -6188,7 +6188,7 @@ and mk_class_sig =
         let reason = mk_reason (RProperty (Some name)) loc in
         let polarity = Anno.polarity variance in
         let field, annot_t, annot, get_value = mk_field cx tparams_map reason annot value in
-        let get_element () = Body.Property (loc, { Property.
+        let get_element () = Body.Property ((loc, annot_t), { Property.
           key = Ast.Expression.Object.Property.Identifier ((id_loc, annot_t), name);
           annot;
           value = get_value ();
