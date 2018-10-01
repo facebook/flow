@@ -28,7 +28,9 @@ let rec fits ~width ~context nodes =
         | Flat -> else_::rest
         in
         fits ~width ~context nodes
+    | Group items
     | Concat items -> fits ~width ~context (items @ rest)
+    | Indent node -> fits ~width ~context (node::rest)
     (* Respect forced breaks *)
     | Newline -> false
     | Sequence ({ break = Break_if_pretty; _ }, _) -> false
@@ -57,6 +59,7 @@ let print =
       { w with src }
     | Concat nodes -> List.fold_left (print_node context) w nodes
     | Newline -> break_and_indent context w
+    | Indent node -> print_node { context with ind = context.ind + 2 } w node
     | Sequence ({ break=Break_if_pretty; inline=(left, right); indent }, nodes) ->
       let inner_context = { ind = context.ind + indent; mode = Break } in
       let w = if not left then break_and_indent inner_context w else w in
@@ -69,6 +72,14 @@ let print =
         (w, List.length nodes - 1)
         nodes in
       if not right then break_and_indent context w else w
+    | Group nodes as layout ->
+      let context =
+        let flat_context = {context with mode = Flat} in
+        if fits ~width:(max_width - w.pos) ~context:flat_context [layout]
+          then flat_context
+          else {context with mode=Break}
+      in
+      print_node context w (Concat nodes)
     | Sequence ({ break=Break_if_needed; inline; indent }, nodes) as layout -> begin
       let flat_context = {context with mode = Flat} in
       if fits ~width:(max_width - w.pos) ~context:flat_context [layout] then (

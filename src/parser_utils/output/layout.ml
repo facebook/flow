@@ -10,8 +10,12 @@ type layout_node =
   | SourceLocation of Loc.t * layout_node
   (* A list of nodes that don't break *)
   | Concat of layout_node list
+  (* A list of nodes to try to fit on one line *)
+  | Group of layout_node list
   (* Join elements, allow for breaking over over lines *)
   | Sequence of list_config * (layout_node list)
+  (* Increase the indentation *)
+  | Indent of layout_node
   (* Force a line break *)
   | Newline
   (* Print a string *)
@@ -156,11 +160,13 @@ let fuse_with_space =
         if str = "" then None else
         Some (if mode = `First then str.[0] else str.[String.length str - 1])
     | Empty -> None
+    | Indent node -> ugly_char ~mode node
     | Newline -> None
     | SourceLocation (_, node)
     | IfPretty (_, node)
     | IfBreak (_, node) -> ugly_char ~mode node
     | Concat nodes
+    | Group nodes
     | Sequence (_, nodes) ->
         let nodes = if mode = `First then nodes else List.rev nodes in
         List.fold_left (fun acc node ->
@@ -214,6 +220,14 @@ end = struct
       in
       spf "Concat [%s]" items
 
+    | Group items ->
+      let items =
+        items
+        |> List.map string_of_layout
+        |> String.concat "; "
+      in
+      spf "Group [%s]" items
+
     | Sequence ({ break; inline=(inline_before, inline_after); indent; }, node_list) ->
       let config = spf
         "{break=%s; inline=(%b, %b); indent=%d}"
@@ -244,6 +258,7 @@ end = struct
         (string_of_layout left)
         (string_of_layout right)
 
+    | Indent node -> spf "Indent (%s)" (string_of_layout node)
     | Newline -> "Newline"
     | Empty -> "Empty"
 
@@ -259,6 +274,14 @@ end = struct
     | Concat items ->
       Concat [
         Atom "Concat";
+        pretty_space;
+        list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
+          (List.map layout_of_layout items);
+      ]
+
+    | Group items ->
+      Concat [
+        Atom "Group";
         pretty_space;
         list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
           (List.map layout_of_layout items);
@@ -302,6 +325,15 @@ end = struct
         list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") [
           (layout_of_layout left);
           (layout_of_layout right);
+        ];
+      ]
+
+    | Indent child ->
+      Concat [
+        Atom "Indent";
+        pretty_space;
+        list ~wrap:(Atom "(", Atom ")") ~sep:(Atom ",") [
+          (layout_of_layout child);
         ];
       ]
 

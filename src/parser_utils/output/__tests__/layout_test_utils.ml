@@ -28,6 +28,9 @@ module Layout_builder = struct
   let sequence ~break ?(inline=(false, false)) ?(indent=2) items =
     Sequence ({break; inline; indent}, items)
 
+  let group items =
+    Group items
+
   let fused items =
     Concat items
 
@@ -57,6 +60,8 @@ module Layout_builder = struct
 
   let softline =
     IfBreak (Newline, Empty)
+
+  let indent node = Indent node
 
   let wrap_in_parens_raw x =
     [atom "("; sequence ~break:Layout.Break_if_needed [x]; atom ")"]
@@ -95,6 +100,9 @@ module Layout_builder = struct
       else
         let loc = if loc = Loc.none then "" else spf " ~loc:%s" (string_of_loc loc) in
         phrase "loc%s %s" loc (helper ~i child)
+
+    | Group items ->
+      phrase "group %s" (list ~i items)
 
     | Concat items ->
       phrase "fused %s" (list ~i items)
@@ -141,6 +149,9 @@ module Layout_builder = struct
 
     | IfBreak (left, right) ->
       phrase "Layout.IfBreak (%s, %s)" (helper ~i left) (helper ~i right)
+
+    | Indent node ->
+      phrase "indent (%s)" (helper ~i node)
 
     | Newline ->
       word "Newline"

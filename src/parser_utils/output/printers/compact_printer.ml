@@ -15,7 +15,9 @@ let print ~source_maps node =
       let src = Source.pop_loc src in
       src
     | Concat nodes
+    | Group nodes
     | Sequence (_, nodes) -> List.fold_left print_node src nodes
+    | Indent node -> print_node src node
     | Newline -> Source.add_newline src
     | Atom s -> Source.add_string s src
     | Identifier (loc, s) -> Source.add_identifier loc s src

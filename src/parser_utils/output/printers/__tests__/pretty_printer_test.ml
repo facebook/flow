@@ -192,4 +192,40 @@ let tests = "pretty_printer" >::: [
       in
       assert_pretty_print ~ctxt ("("^a80^")") layout;
     end;
+
+  "group_break" >::
+    begin fun ctxt ->
+      let a40 = String.make 40 'A' in
+      let a80 = String.make 80 'A' in
+
+      (* fits *)
+      assert_pretty_print ~ctxt
+        ("("^a40^")")
+        (Group [Atom "("; Atom a40; Atom ")"]);
+
+      (* fits *)
+      assert_pretty_print ~ctxt
+        ("( "^a40^" )")
+        (Group [Atom "("; line; Atom a40; line; Atom ")"]);
+
+      (* exceeds 80 cols since there are no breaks *)
+      assert_pretty_print ~ctxt
+        ("("^a80^")")
+        (Group [Atom "("; Atom a80; Atom ")"]);
+
+      (* breaks *)
+      assert_pretty_print ~ctxt
+        ("(\n"^a80^"\n)")
+        (Group [Atom "("; line; Atom a80; line; Atom ")"]);
+
+      (* doesn't exceed 80 cols *)
+      assert_pretty_print ~ctxt
+        ("( "^a40^" )")
+        (Group [Atom "("; Indent (Concat [line; Atom a40]); line; Atom ")"]);
+
+      (* breaks, but indent makes it 82 cols *)
+      assert_pretty_print ~ctxt
+        ("(\n  "^a80^"\n)")
+        (Group [Atom "("; Indent (Concat [line; Atom a80]); line; Atom ")"]);
+    end;
 ]

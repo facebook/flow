@@ -351,8 +351,10 @@ let print ~force_single_line ~source_maps node =
     | Newline ->
         if force_single_line then Source.add_space 1 src
         else Source.add_newline src
+    | Indent node -> print_node src node
     | IfPretty (node, _) -> print_node src node
     | Concat nodes
+    | Group nodes
     | Sequence (_, nodes) -> List.fold_left print_node src nodes
     | Atom s -> Source.add_string s src
     | Identifier (loc, s) -> Source.add_identifier loc s src
