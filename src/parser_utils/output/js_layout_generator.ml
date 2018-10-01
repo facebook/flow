@@ -812,13 +812,11 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
 
       (* if we need to wrap, the op stays on the first line, with the RHS on a
          new line and indented by 2 spaces *)
-      fuse [
+      Group [
         left;
         pretty_space;
         operator;
-        Sequence ({ break = Break_if_needed; inline = (false, true); indent = 2 }, [
-          fuse [flat_pretty_space; right];
-        ])
+        Indent (fuse [line; right])
       ]
     | E.Member m -> member ~precedence ~ctxt m
     | E.OptionalMember { E.OptionalMember.member = m; optional } ->

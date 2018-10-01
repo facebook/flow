@@ -58,7 +58,7 @@ let flat_ugly_space = IfBreak (Empty, ugly_space)
 (* Force a line break (`\n`) in pretty mode *)
 let pretty_newline = IfPretty (Newline, Empty)
 (* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise a space *)
-let line = IfBreak (Newline, space)
+let line = IfBreak (Newline, pretty_space)
 (* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise nothing *)
 let softline = IfBreak (Newline, Empty)
 

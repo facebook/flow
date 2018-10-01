@@ -26,11 +26,9 @@ let tests = [
   "and_with_and_lhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression ((x && y) && z) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression (x && y); pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression z];
-        ];
+        indent (fused [line; expression z]);
       ]))
       layout;
     assert_output ~ctxt "x&&y&&z" layout;
@@ -50,13 +48,11 @@ let tests = [
   "and_with_and_rhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression (x && (y && z)) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression x; pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused (
-            flat_pretty_space::(wrap_in_parens_raw (expression (y && z)))
-          );
-        ];
+        indent (fused (
+          line::(wrap_in_parens_raw (expression (y && z)))
+        ));
       ]))
       layout;
     assert_output ~ctxt "x&&(y&&z)" layout;
@@ -78,11 +74,9 @@ let tests = [
   "or_with_and_lhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression ((x && y) || z) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression (x && y); pretty_space; atom "||";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression z];
-        ];
+        indent (fused [line; expression z]);
       ]))
       layout;
     assert_output ~ctxt "x&&y||z" layout;
@@ -102,11 +96,11 @@ let tests = [
   "and_with_or_rhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression (x && (y || z)) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression x; pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused (flat_pretty_space::(wrap_in_parens_raw (expression (y || z))));
-        ];
+        indent (fused (
+          line::(wrap_in_parens_raw (expression (y || z)))
+        ));
       ]))
       layout;
     assert_output ~ctxt "x&&(y||z)" layout;
@@ -128,11 +122,9 @@ let tests = [
   "or_with_or_lhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression ((x || y) || z) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression (x || y); pretty_space; atom "||";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression z]
-        ];
+        indent (fused [line; expression z]);
       ]))
       layout;
     assert_output ~ctxt "x||y||z" layout;
@@ -152,11 +144,11 @@ let tests = [
   "or_with_or_rhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression (x || (y || z)) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression x; pretty_space; atom "||";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused (flat_pretty_space::(wrap_in_parens_raw (expression (y || z))));
-        ];
+        indent (fused (
+          line::(wrap_in_parens_raw (expression (y || z)))
+        ));
       ]))
       layout;
     assert_output ~ctxt "x||(y||z)" layout;
@@ -166,14 +158,11 @@ let tests = [
   "and_with_or_lhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression ((x || y) && z) in
     assert_layout ~ctxt
-      L.(loc (fused (
-        (wrap_in_parens_raw (expression (x || y))) @ [
-          pretty_space; atom "&&";
-          sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-            fused [flat_pretty_space; expression z];
-          ];
-        ]
-      )))
+      L.(loc (group [
+        wrap_in_parens (expression (x || y));
+        pretty_space; atom "&&";
+        indent (fused [line; expression z]);
+      ]))
       layout;
     assert_output ~ctxt "(x||y)&&z" layout;
     assert_output ~ctxt ~pretty:true "(x || y) && z" layout;
@@ -182,11 +171,9 @@ let tests = [
   "or_with_and_rhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression (x || (y && z)) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression x; pretty_space; atom "||";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression (y && z)];
-        ];
+        indent (fused [line; expression (y && z)]);
       ]))
       layout;
     assert_output ~ctxt "x||y&&z" layout;
@@ -238,11 +225,9 @@ let tests = [
   "and_with_plus_lhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression ((x + y) && z) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression (x + y); pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression z];
-        ];
+        indent (fused [line; expression z]);
       ]))
       layout;
     assert_output ~ctxt "x+y&&z" layout;
@@ -276,11 +261,9 @@ let tests = [
   "and_with_plus_rhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression (x && (y + z)) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression x; pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression (y + z)]
-        ];
+        indent (fused [line; expression (y + z)]);
       ]))
       layout;
     assert_output ~ctxt "x&&y+z" layout;
@@ -290,11 +273,9 @@ let tests = [
   "and_literal_lhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression (str && x) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression str; pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression x];
-        ];
+        indent (fused [line; expression x]);
       ]))
       layout;
     assert_output ~ctxt "\"a\"&&x" layout;
@@ -304,11 +285,9 @@ let tests = [
   "and_literal_rhs" >:: begin fun ctxt ->
     let layout = Js_layout_generator.expression (x && str) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression x; pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression str];
-        ];
+        indent (fused [line; expression str]);
       ]))
       layout;
     assert_output ~ctxt "x&&\"a\"" layout;
@@ -321,11 +300,9 @@ let tests = [
     ) in
     let layout = Js_layout_generator.expression (fn && x) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression fn; pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression x];
-        ];
+        indent (fused [line; expression x]);
       ]))
       layout;
     assert_output ~ctxt "function(){}&&x" layout;
@@ -333,11 +310,9 @@ let tests = [
 
     let layout = Js_layout_generator.expression (x && fn) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression x; pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused [flat_pretty_space; expression fn];
-        ];
+        indent (fused [line; expression fn]);
       ]))
       layout;
     assert_output ~ctxt "x&&function(){}" layout;
@@ -348,25 +323,22 @@ let tests = [
     let seq = E.sequence [x; y] in
     let layout = Js_layout_generator.expression (seq && z) in
     assert_layout ~ctxt
-      L.(loc (fused (
-        wrap_in_parens_raw (expression seq) @ [
-          pretty_space; atom "&&";
-          sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-            fused [flat_pretty_space; expression z];
-          ];
-        ]
-      )))
+      L.(loc (group [
+        wrap_in_parens (expression seq);
+        pretty_space; atom "&&";
+        indent (fused [line; expression z]);
+      ]))
       layout;
     assert_output ~ctxt "(x,y)&&z" layout;
     assert_output ~ctxt ~pretty:true "(x, y) && z" layout;
 
     let layout = Js_layout_generator.expression (z && seq) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         expression z; pretty_space; atom "&&";
-        sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-          fused (flat_pretty_space::(wrap_in_parens_raw (expression seq)));
-        ];
+        indent (fused (
+          line::(wrap_in_parens_raw (expression seq))
+        ));
       ]))
       layout;
     assert_output ~ctxt "z&&(x,y)" layout;

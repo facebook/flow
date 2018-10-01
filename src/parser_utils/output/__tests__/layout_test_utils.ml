@@ -56,7 +56,7 @@ module Layout_builder = struct
     IfPretty (Newline, Empty)
 
   let line =
-    IfBreak (Newline, Atom " ")
+    IfBreak (Newline, pretty_space)
 
   let softline =
     IfBreak (Newline, Empty)
@@ -144,7 +144,7 @@ module Layout_builder = struct
 
     | IfBreak (Empty, IfPretty (Atom " ", Empty)) -> word "flat_pretty_space"
 
-    | IfBreak (Newline, Atom " ") -> word "line"
+    | IfBreak (Newline, IfPretty (Atom " ", Empty)) -> word "line"
     | IfBreak (Newline, Empty) -> word "softline"
 
     | IfBreak (left, right) ->

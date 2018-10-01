@@ -608,19 +608,20 @@ let tests = "js_layout_generator" >::: [
     begin fun ctxt ->
       let x40 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" in
       let ast = E.logical_and (E.identifier x40) (E.identifier x40) in
-      assert_layout_of_expression ~ctxt
-        L.(loc (fused [
+      let layout = Js_layout_generator.expression ast in
+      assert_layout ~ctxt
+        L.(loc (group [
           loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
           pretty_space;
           atom "&&";
-          sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-            fused [
-              flat_pretty_space;
-              loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-            ];
-          ];
+          indent ((fused [
+            Layout.IfBreak (Layout.Newline, pretty_space);
+            loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+          ]));
         ]))
-        ast;
+        layout;
+      assert_output ~ctxt (x40^"&&"^x40) layout;
+      assert_output ~ctxt ~pretty:true (x40^" &&\n  "^x40) layout;
     end;
 
   "return_statement_parens" >::
