@@ -588,6 +588,8 @@ let program (algo : diff_algorithm)
         _object obj1 obj2
       | (_, TypeCast t1), (_, TypeCast t2) ->
         Some (type_cast t1 t2)
+      | expr, (loc, TypeCast t2) ->
+        Some (type_cast_added expr loc t2)
       | _, _ ->
         None
     in
@@ -967,6 +969,20 @@ let program (algo : diff_algorithm)
     let expr = diff_if_changed expression expr1 expr2 in
     let annot = diff_if_changed type_annotation annot1 annot2 in
     expr @ annot
+
+  and type_cast_added
+      (expr: (Loc.t, Loc.t) Flow_ast.Expression.t)
+      (loc: Loc.t)
+      (type_cast: (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t): node change list =
+    let open Flow_ast.Expression.TypeCast in
+    let open Loc in
+    let { expression=expr2; annot=annot2; } = type_cast in
+    let expr_diff_rev = diff_if_changed expression expr expr2 |> List.rev in
+    let append_annot_rev =
+      ({loc with start = loc._end }, Insert [Raw ")"])
+      :: ({loc with start = loc._end }, Insert [TypeAnnotation annot2])
+      :: expr_diff_rev in
+    ({loc with _end = loc.start}, Insert [Raw "("]) :: (List.rev append_annot_rev)
 in
 
 program' program1 program2

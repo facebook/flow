@@ -153,6 +153,14 @@ class prop_annot_mapper = object
     { prop with annot = annot' }
 end
 
+class insert_typecast_mapper = object
+  inherit Flow_ast_mapper.mapper
+  method! expression expression =
+    let loc, _ = expression in
+    loc, Flow_ast.Expression.TypeCast
+      { Flow_ast.Expression.TypeCast.annot=(loc, (loc, Flow_ast.Type.Any)); expression }
+end
+
 let edits_of_source algo source mapper =
   let ast, _ = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
@@ -680,5 +688,11 @@ let tests = "ast_differ" >::: [
     let source = "(dontrename: number)" in
     assert_edits_equal ctxt ~edits:[(11,19), ": string"] ~source
       ~expected:"(dontrename: string)" ~mapper:(new useless_mapper)
+  end;
+  "type_cast_add" >:: begin fun ctxt ->
+    let source = "const dontrename = call( /* preserve spaces */  )" in
+    assert_edits_equal ctxt ~edits:[(19, 19), "("; (49, 49), ": any"; (49, 49), ")"]
+      ~source ~mapper:(new insert_typecast_mapper)
+      ~expected:"const dontrename = (call( /* preserve spaces */  ): any)"
   end;
 ]
