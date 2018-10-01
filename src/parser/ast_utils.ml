@@ -71,6 +71,32 @@ let loc_of_expression = fst
 
 let loc_of_pattern = fst
 
+let string_of_binary_operator op =
+  let open Flow_ast.Expression.Binary in
+  match op with
+  | Equal -> "=="
+  | NotEqual -> "!="
+  | StrictEqual -> "==="
+  | StrictNotEqual -> "!=="
+  | LessThan -> "<"
+  | LessThanEqual -> "<="
+  | GreaterThan -> ">"
+  | GreaterThanEqual -> ">="
+  | LShift -> "<<"
+  | RShift -> ">>"
+  | RShift3 -> ">>>"
+  | Plus -> "+"
+  | Minus -> "-"
+  | Mult -> "*"
+  | Exp -> "**"
+  | Div -> "/"
+  | Mod -> "%"
+  | BitOr -> "|"
+  | Xor -> "^"
+  | BitAnd -> "&"
+  | In -> "in"
+  | Instanceof -> "instanceof"
+
 module ExpressionSort = struct
   type t =
     | Array

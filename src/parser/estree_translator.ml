@@ -380,37 +380,12 @@ end with type t = Impl.t) = struct
           ]
         end
       )
-    | loc, Binary binary -> Binary.(
-        let operator = match binary.operator with
-        | Equal -> "=="
-        | NotEqual -> "!="
-        | StrictEqual -> "==="
-        | StrictNotEqual -> "!=="
-        | LessThan -> "<"
-        | LessThanEqual -> "<="
-        | GreaterThan -> ">"
-        | GreaterThanEqual -> ">="
-        | LShift -> "<<"
-        | RShift -> ">>"
-        | RShift3 -> ">>>"
-        | Plus -> "+"
-        | Minus -> "-"
-        | Mult -> "*"
-        | Exp -> "**"
-        | Div -> "/"
-        | Mod -> "%"
-        | BitOr -> "|"
-        | Xor -> "^"
-        | BitAnd -> "&"
-        | In -> "in"
-        | Instanceof -> "instanceof"
-        in
+    | loc, Binary { Binary.left; operator; right } ->
         node "BinaryExpression" loc [
-          "operator", string operator;
-          "left", expression binary.left;
-          "right", expression binary.right;
+          "operator", string (Ast_utils.string_of_binary_operator operator);
+          "left", expression left;
+          "right", expression right;
         ]
-      )
     | loc, TypeCast typecast -> TypeCast.(
         node "TypeCastExpression" loc [
           "expression", expression typecast.expression;

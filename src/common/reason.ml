@@ -961,35 +961,13 @@ and code_desc_of_pattern (_, x) = Ast.Pattern.(match x with
 (* Implementation of operator flattening logic lifted from Prettier:
  * https://github.com/prettier/prettier/blob/dd78f31aaf5b4522b780f13194d57308e5fdf53b/src/common/util.js#L328-L399 *)
 and code_desc_of_operation = Ast.Expression.(
-  let string_of_operator = Binary.(function
-  | `Binary op -> (match op with
-    | Equal -> "=="
-    | NotEqual -> "!="
-    | StrictEqual -> "==="
-    | StrictNotEqual -> "!=="
-    | LessThan -> "<"
-    | LessThanEqual -> "<="
-    | GreaterThan -> ">"
-    | GreaterThanEqual -> ">="
-    | LShift -> "<<"
-    | RShift -> ">>"
-    | RShift3 -> ">>>"
-    | Plus -> "+"
-    | Minus -> "-"
-    | Mult -> "*"
-    | Exp -> "**"
-    | Div -> "/"
-    | Mod -> "%"
-    | BitOr -> "|"
-    | Xor -> "^"
-    | BitAnd -> "&"
-    | In -> "in"
-    | Instanceof -> "instanceof")
+  let string_of_operator = function
+  | `Binary op -> Ast_utils.string_of_binary_operator op
   | `Logical op -> (match op with
     | Logical.Or -> "||"
     | Logical.And -> "&&"
     | Logical.NullishCoalesce -> "??")
-  ) in
+  in
   let should_flatten = Binary.(
     let precedence = function
     | `Logical Logical.Or -> 0

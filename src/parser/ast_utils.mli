@@ -71,3 +71,6 @@ module ExpressionSort: sig
 
   val to_string: t -> string
 end
+
+val string_of_binary_operator:
+  Flow_ast.Expression.Binary.operator -> string

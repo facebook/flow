@@ -723,30 +723,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
       let module B = E.Binary in
       fuse_with_space [
         expression_with_parens ~precedence ~ctxt left;
-        begin match operator with
-        | B.Equal -> Atom "=="
-        | B.NotEqual -> Atom "!="
-        | B.StrictEqual -> Atom "==="
-        | B.StrictNotEqual -> Atom "!=="
-        | B.LessThan -> Atom "<"
-        | B.LessThanEqual -> Atom "<="
-        | B.GreaterThan -> Atom ">"
-        | B.GreaterThanEqual -> Atom ">="
-        | B.LShift -> Atom "<<"
-        | B.RShift -> Atom ">>"
-        | B.RShift3 -> Atom ">>>"
-        | B.Plus -> Atom "+"
-        | B.Minus -> Atom "-"
-        | B.Mult -> Atom "*"
-        | B.Exp -> Atom "**"
-        | B.Div -> Atom "/"
-        | B.Mod -> Atom "%"
-        | B.BitOr -> Atom "|"
-        | B.Xor -> Atom "^"
-        | B.BitAnd -> Atom "&"
-        | B.In -> Atom "in"
-        | B.Instanceof -> Atom "instanceof"
-        end;
+        Atom (Ast_utils.string_of_binary_operator operator);
         begin match operator, right with
         | E.Binary.Plus,
           (_, E.Unary { E.Unary.operator=E.Unary.Plus; _ })
