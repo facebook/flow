@@ -1219,9 +1219,8 @@ let tests = "js_layout_generator" >::: [
           sequence ~break:Layout.Break_if_pretty [
             fused [
               loc ~loc:b_loc (loc (fused [atom "<"; id "B"; pretty_space; atom "/>"]));
-              sequence ~break:Layout.Break_always ~inline:(false, true) ~indent:0 [
-                loc ~loc:c_loc (loc (fused [atom "<"; id "C"; pretty_space; atom "/>"]));
-              ]
+              Layout.Newline;
+              loc ~loc:c_loc (loc (fused [atom "<"; id "C"; pretty_space; atom "/>"]));
             ]
           ];
           loc (fused [atom "</"; id "A"; atom ">"]);

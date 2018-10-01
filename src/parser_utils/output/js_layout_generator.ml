@@ -69,10 +69,6 @@ let statement_with_test name test body = fuse [
     body;
   ]
 
-let prepend_newline ?(always=false) node =
-  let break = if always then Break_always else Break_if_pretty in
-  Sequence ({ break; inline=(false, true); indent=0; }, [node])
-
 let option f = function
   | Some v -> f v
   | None -> Empty
@@ -1453,7 +1449,7 @@ and list_with_newlines (nodes: (Loc.t * Layout.layout_node) list) =
 
     (* Lines are offset by more than one, let's add a line break *)
     | Some { Loc._end; _ }, node when _end.line + 1 < loc.start.line ->
-      (prepend_newline node)::acc
+      (fuse [pretty_newline; node])::acc
 
     (* Hasn't matched, just add the node *)
     | _, node -> node::acc
@@ -1492,11 +1488,14 @@ and object_properties_with_newlines properties =
             ((object_property p)::acc, Some (has_function_decl p))
           | (Some true, p) ->
             (
-              (prepend_newline (object_property p))::acc,
+              (fuse [pretty_newline; object_property p])::acc,
               Some (has_function_decl p)
             )
           | (_, p) when has_function_decl p ->
-            ((prepend_newline (object_property p))::acc, Some true)
+            (
+              (fuse [pretty_newline; object_property p])::acc,
+              Some true
+            )
           | _ -> ((object_property p)::acc, Some false)
       )
       ([], None)
@@ -1721,9 +1720,9 @@ and jsx_children loc children =
         (* If the current child and the previous child line positions are offset match
            this via forcing a newline *)
         | Some last_line when loc.start.line > last_line ->
-          (* TODO: Remove the `~always:true` hack, this forces newlines to exist
+          (* TODO: Remove the `Newline` hack, this forces newlines to exist
                    when using the compact printer *)
-          prepend_newline ~always:true child_n
+          fuse [Newline; child_n]
         (* Must be on the same line as the previous child *)
         | Some _ -> child_n
         in

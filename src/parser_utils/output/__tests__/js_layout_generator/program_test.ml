@@ -31,7 +31,8 @@ let tests = [
           ]);
           atom ";";
         ]);
-        sequence ~break:Layout.Break_if_pretty ~inline:(false, true) ~indent:0 [
+        fused [
+          pretty_newline;
           loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
             loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
               atom "var";

@@ -83,18 +83,16 @@ let tests = [
               ]));
             ];
             fused [
-              sequence ~break:Layout.Break_if_pretty ~inline:(false, true) ~indent:0 [
-                prop2_layout;
-              ];
+              pretty_newline;
+              prop2_layout;
               Layout.IfBreak ((atom ","), (fused [
                 atom ",";
                 pretty_space;
               ]));
             ];
             fused [
-              sequence ~break:Layout.Break_if_pretty ~inline:(false, true) ~indent:0 [
-                prop3_layout;
-              ];
+              pretty_newline;
+              prop3_layout;
               Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
             ];
           ];
