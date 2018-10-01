@@ -10,41 +10,12 @@ module Ast = Flow_ast
 open OUnit2
 open Ast_builder
 open Layout_test_utils
+open Layout_generator_test_utils
 
 module S = Ast_builder.Statements
 module E = Ast_builder.Expressions
 module J = Ast_builder.JSXs
 module L = Layout_builder
-
-let space_regex = Str.regexp_string " "
-
-let assert_output ~ctxt ?msg ?(pretty=false) expected_str layout =
-  let print =
-    if pretty then Pretty_printer.print ~source_maps:None ~skip_endline:false
-    else Compact_printer.print ~source_maps:None
-  in
-  let out = String.trim (print layout |> Source.contents) in
-  let printer x = Str.global_replace space_regex "\xE2\x90\xA3" x (* open box *) in
-  assert_equal ~ctxt ?msg ~printer expected_str out
-
-let assert_expression
-    ~ctxt ?msg ?pretty ?(expr_ctxt=Js_layout_generator.normal_context)
-    expected_str ast =
-  let layout = Js_layout_generator.expression ~ctxt:expr_ctxt ast in
-  assert_output ~ctxt ?msg ?pretty expected_str layout
-
-let assert_expression_string ~ctxt ?msg ?pretty ?expr_ctxt str =
-  let ast = expression_of_string str in
-  assert_expression ~ctxt ?msg ?pretty ?expr_ctxt str ast
-
-let assert_statement ~ctxt ?msg ?pretty expected_str ast =
-  let layout = Js_layout_generator.statement ast in
-  assert_output ~ctxt ?msg ?pretty expected_str layout
-
-let assert_statement_string ~ctxt ?msg ?pretty str =
-  let ast = statement_of_string str in
-  let layout = Js_layout_generator.statement ast in
-  assert_output ~ctxt ?msg ?pretty str layout
 
 let make_loc start_line end_line = Loc.{
     source = None;
@@ -57,6 +28,7 @@ let tests = "js_layout_generator" >::: [
   "assignment_precedence" >:: Assignment_precedence_test.test;
   "variable_declaration_precedence" >:: Variable_declaration_precedence_test.test;
   "objects" >::: Object_test.tests;
+  "comment" >::: Comment_test.tests;
 
   "unary_plus_binary" >::
     begin fun ctxt ->

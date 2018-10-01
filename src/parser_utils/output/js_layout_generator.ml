@@ -69,9 +69,6 @@ let statement_with_test name test body = fuse [
     body;
   ]
 
-let append_newline ?(always=false) node =
-  let break = if always then Break_always else Break_if_pretty in
-  Sequence ({ break; inline=(true, false); indent=0; }, [node])
 let prepend_newline ?(always=false) node =
   let break = if always then Break_always else Break_if_pretty in
   Sequence ({ break; inline=(false, true); indent=0; }, [node])
@@ -409,13 +406,14 @@ and comment (loc, comment) =
   let module C = Ast.Comment in
   source_location_with_comments (loc, match comment with
   | C.Block txt -> fuse [
-      Atom "/*";
-      prepend_newline (Atom txt);
-      prepend_newline (Atom "*/");
+      Atom "/*"; pretty_newline;
+      Atom txt; pretty_newline;
+      Atom "*/";
     ]
   | C.Line txt -> fuse [
       Atom "//";
-      append_newline ~always:true (Atom txt)
+      Atom txt;
+      Newline;
     ]
   )
 

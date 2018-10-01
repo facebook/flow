@@ -332,6 +332,11 @@ module Expressions = struct
   let unary_not (b: (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Not b
 end
 
+module Comments = struct
+  let block txt = Loc.none, Ast.Comment.Block txt
+  let line txt = Loc.none, Ast.Comment.Line txt
+end
+
 let mk_program stmts =
   Loc.none, stmts, []
 
