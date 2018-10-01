@@ -158,6 +158,7 @@ let list_diff = function
 (* We need a variant here for every node that we want to be able to store a diff for. The more we
  * have here, the more granularly we can diff. *)
 type node =
+  | Raw of string
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t

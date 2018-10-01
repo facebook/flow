@@ -18,6 +18,7 @@ type 'a change = (Loc.t * 'a change')
 type diff_algorithm = Trivial | Standard
 
 type node =
+  | Raw of string
   | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
   | Program of (Loc.t, Loc.t) Flow_ast.program
   | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t

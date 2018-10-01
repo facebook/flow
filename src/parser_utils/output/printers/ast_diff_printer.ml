@@ -12,6 +12,7 @@ let layout_of_node comments node =
   let old = !Js_layout_generator.with_attached_comments in
   Js_layout_generator.with_attached_comments := comments;
   let layout = match node with
+  | Raw str -> Layout.Atom str
   | Statement stmt -> Js_layout_generator.statement stmt
   | Program ast -> Js_layout_generator.program ~preserve_docblock:true ~checksum:None ast
   | Expression expr ->
