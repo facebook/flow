@@ -166,10 +166,11 @@ module Friendly = struct
     | _ -> message_inlines_of_string (string_of_desc desc)
     in
     if loc then (
-      let loc = match annot_loc_of_reason r with
+      let loc = match annot_aloc_of_reason r with
       | Some loc -> loc
-      | None -> def_aloc_of_reason r |> ALoc.to_loc
+      | None -> def_aloc_of_reason r
       in
+      let loc = ALoc.to_loc loc in
       if loc = Loc.none then
         Inline desc
       else

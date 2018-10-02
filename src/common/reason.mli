@@ -228,7 +228,7 @@ val dump_reason: ?strip_root:Path.t option -> reason -> string
 (* accessors *)
 val aloc_of_reason: reason -> ALoc.t
 val def_aloc_of_reason: reason -> ALoc.t
-val annot_loc_of_reason: reason -> Loc.t option
+val annot_aloc_of_reason: reason -> ALoc.t option
 val desc_of_reason: ?unwrap:bool -> reason -> reason_desc
 
 (* simple way to get derived reasons whose descriptions are
@@ -236,7 +236,7 @@ val desc_of_reason: ?unwrap:bool -> reason -> reason_desc
 val replace_reason: ?keep_def_loc:bool -> (reason_desc -> reason_desc) -> reason -> reason
 val replace_reason_const: ?keep_def_loc:bool -> reason_desc -> reason -> reason
 
-val repos_reason: Loc.t -> ?annot_loc:Loc.t -> reason -> reason
+val repos_reason: Loc.t -> ?annot_loc:ALoc.t -> reason -> reason
 val annot_reason: reason -> reason
 
 val do_patch: string list -> (int * int * string) list -> string

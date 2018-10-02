@@ -1612,7 +1612,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (r, UnionT rep), ReposUseT (reason, use_desc, use_op, l) ->
       let rep = UnionRep.ident_map (annot use_desc) rep in
-      let annot_loc = annot_loc_of_reason reason in
+      let annot_loc = annot_aloc_of_reason reason in
       let r = repos_reason (aloc_of_reason reason |> ALoc.to_loc) ?annot_loc r in
       let r =
         if use_desc
@@ -1622,7 +1622,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, DefT (r, UnionT rep)))
 
     | DefT (r, MaybeT u), ReposUseT (reason, use_desc, use_op, l) ->
-      let annot_loc = annot_loc_of_reason reason in
+      let annot_loc = annot_aloc_of_reason reason in
       let r = repos_reason (aloc_of_reason reason |> ALoc.to_loc) ?annot_loc r in
       let r =
         if use_desc
@@ -1632,7 +1632,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, DefT (r, MaybeT (annot use_desc u))))
 
     | DefT (r, OptionalT u), ReposUseT (reason, use_desc, use_op, l) ->
-      let annot_loc = annot_loc_of_reason reason in
+      let annot_loc = annot_aloc_of_reason reason in
       let r = repos_reason (aloc_of_reason reason |> ALoc.to_loc) ?annot_loc r in
       let r =
         if use_desc
@@ -7189,7 +7189,7 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
      *)
     mod_reason_of_t (fun bound_reason ->
       let param_loc = Reason.aloc_of_reason param_reason in
-      let annot_loc = annot_loc_of_reason bound_reason in
+      let annot_loc = annot_aloc_of_reason bound_reason in
       let desc = desc_of_reason ~unwrap:false bound_reason in
       repos_reason (param_loc |> ALoc.to_loc) ?annot_loc (mk_reason (RPolyTest (name, desc)) (param_loc |> ALoc.to_loc))
     ) (subst cx prev_args bound)
@@ -8763,10 +8763,11 @@ and update_sketchy_null cx opt_loc t =
     | Some loc ->
       let t_loc =
         let reason = reason_of_t t in
-        match annot_loc_of_reason reason with
+        match annot_aloc_of_reason reason with
         | Some loc -> Some loc
-        | None -> Some (def_aloc_of_reason reason |> ALoc.to_loc)
+        | None -> Some (def_aloc_of_reason reason)
       in
+      let t_loc = Option.map ~f:ALoc.to_loc t_loc in
       let exists_checks = Context.exists_checks cx in
       let exists_check = LocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
       let exists_check = match Type_filter.maybe t with
@@ -10624,7 +10625,7 @@ and reposition_reason cx ?trace reason ?(use_desc=false) t =
     ?trace
     (aloc_of_reason reason |> ALoc.to_loc)
     ?desc:(if use_desc then Some (desc_of_reason reason) else None)
-    ?annot_loc:(annot_loc_of_reason reason)
+    ?annot_loc:(annot_aloc_of_reason reason)
     t
 
 (* set the position of the given def type from a reason *)

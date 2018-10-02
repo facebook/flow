@@ -217,7 +217,7 @@ type reason = {
   desc: reason_desc;
   aloc: ALoc.t;
   def_aloc_opt: ALoc.t option;
-  annot_loc_opt: Loc.t option;
+  annot_aloc_opt: ALoc.t option;
 }
 
 type t = reason
@@ -347,13 +347,13 @@ let json_of_loc ?strip_root loc = Hh_json.(
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc aloc def_aloc_opt annot_loc_opt = {
+let mk_reason_with_test_id test_id desc aloc def_aloc_opt annot_aloc_opt = {
   test_id;
   derivable = false;
   desc;
   aloc;
   def_aloc_opt;
-  annot_loc_opt;
+  annot_aloc_opt;
 }
 
 (* The current test_id is included in every new reason. *)
@@ -382,8 +382,8 @@ let def_aloc_of_reason r =
   | Some loc -> loc
   | None -> aloc_of_reason r
 
-let annot_loc_of_reason r =
-  r.annot_loc_opt
+let annot_aloc_of_reason r =
+  r.annot_aloc_opt
 
 let function_desc_prefix = function
   | RAsync -> "async "
@@ -755,29 +755,29 @@ let replace_reason ?(keep_def_loc=false) f r =
     (f (desc_of_reason ~unwrap:false r))
     (aloc_of_reason r)
     def_aloc_opt
-    (annot_loc_of_reason r)
+    (annot_aloc_of_reason r)
 
 let replace_reason_const ?(keep_def_loc=false) desc r =
-  let (def_aloc_opt, annot_loc_opt) = if keep_def_loc
-    then (r.def_aloc_opt, r.annot_loc_opt)
+  let (def_aloc_opt, annot_aloc_opt) = if keep_def_loc
+    then (r.def_aloc_opt, r.annot_aloc_opt)
     else (None, None)
   in
-  mk_reason_with_test_id r.test_id desc r.aloc def_aloc_opt annot_loc_opt
+  mk_reason_with_test_id r.test_id desc r.aloc def_aloc_opt annot_aloc_opt
 
 (* returns reason with new location and description of original *)
-let repos_reason loc ?annot_loc reason =
+let repos_reason loc ?(annot_loc: ALoc.t option) reason =
   let def_aloc_opt =
     let def_loc = def_aloc_of_reason reason in
     if loc = (ALoc.to_loc def_loc) then None else Some def_loc
   in
-  let annot_loc_opt = match annot_loc with
+  let annot_aloc_opt = match annot_loc with
   | Some annot_loc -> Some annot_loc
-  | None -> reason.annot_loc_opt
+  | None -> reason.annot_aloc_opt
   in
-  mk_reason_with_test_id reason.test_id reason.desc (loc |> ALoc.of_loc) def_aloc_opt annot_loc_opt
+  mk_reason_with_test_id reason.test_id reason.desc (loc |> ALoc.of_loc) def_aloc_opt annot_aloc_opt
 
 let annot_reason reason =
-  {reason with annot_loc_opt = Some (ALoc.to_loc reason.aloc)}
+  {reason with annot_aloc_opt = Some reason.aloc}
 
 module ReasonMap = MyMap.Make(struct
   type t = reason

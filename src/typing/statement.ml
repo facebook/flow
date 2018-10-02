@@ -4220,7 +4220,7 @@ and unary cx loc = Ast.Expression.Unary.(function
            having a tvar allows other special cases that match concrete lower bounds to proceed
            (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
            make a negative number not look like a literal.) *)
-        let reason = repos_reason loc ~annot_loc:loc reason in
+        let reason = repos_reason loc ~annot_loc:(ALoc.of_loc loc) reason in
         let (value, raw) = Ast_utils.negate_number_literal (value, raw) in
         DefT (reason, NumT (Literal (sense, (value, raw))))
       | arg ->
