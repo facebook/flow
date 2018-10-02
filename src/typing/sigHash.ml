@@ -394,7 +394,7 @@ let add_loc state loc =
 let add_reason state r =
   let open Reason in
   add_loc state (aloc_of_reason r |> ALoc.to_loc);
-  add_loc state (def_loc_of_reason r)
+  add_loc state (def_aloc_of_reason r |> ALoc.to_loc)
 
 let add_polarity = add_int
 

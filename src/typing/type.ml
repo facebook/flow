@@ -2248,7 +2248,7 @@ end = struct
 
   let loc_of_t t = aloc_of_reason (reason_of_t t) |> ALoc.to_loc
 
-  let def_loc_of_t t = def_loc_of_reason (reason_of_t t)
+  let def_loc_of_t t = def_aloc_of_reason (reason_of_t t) |> ALoc.to_loc
 
   (* TODO make a type visitor *)
   let rec mod_reason_of_t f = function

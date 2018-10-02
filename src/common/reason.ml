@@ -216,7 +216,7 @@ type reason = {
   derivable: bool;
   desc: reason_desc;
   aloc: ALoc.t;
-  def_aloc_opt: Loc.t option;
+  def_aloc_opt: ALoc.t option;
   annot_loc_opt: Loc.t option;
 }
 
@@ -377,10 +377,10 @@ let func_reason {Ast.Function.async; generator; _} =
 let aloc_of_reason r = r.aloc
 
 (* TODO return ALoc *)
-let def_loc_of_reason r =
+let def_aloc_of_reason r =
   match r.def_aloc_opt with
   | Some loc -> loc
-  | None -> ALoc.to_loc @@ aloc_of_reason r
+  | None -> aloc_of_reason r
 
 let annot_loc_of_reason r =
   r.annot_loc_opt
@@ -767,14 +767,14 @@ let replace_reason_const ?(keep_def_loc=false) desc r =
 (* returns reason with new location and description of original *)
 let repos_reason loc ?annot_loc reason =
   let def_aloc_opt =
-    let def_loc = def_loc_of_reason reason in
-    if loc = def_loc then None else Some def_loc
+    let def_loc = def_aloc_of_reason reason in
+    if loc = (ALoc.to_loc def_loc) then None else Some def_loc
   in
   let annot_loc_opt = match annot_loc with
   | Some annot_loc -> Some annot_loc
   | None -> reason.annot_loc_opt
   in
-  mk_reason_with_test_id reason.test_id reason.desc (ALoc.of_loc loc) def_aloc_opt annot_loc_opt
+  mk_reason_with_test_id reason.test_id reason.desc (loc |> ALoc.of_loc) def_aloc_opt annot_loc_opt
 
 let annot_reason reason =
   {reason with annot_loc_opt = Some (ALoc.to_loc reason.aloc)}

@@ -1381,7 +1381,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     in
     let expected_polarity = polarity_string expected_polarity in
     let actual_polarity = polarity_string actual_polarity in
-    let reason_targ = mk_reason (RIdentifier name) (def_loc_of_reason reason) in
+    let reason_targ = mk_reason (RIdentifier name) (def_aloc_of_reason reason |> ALoc.to_loc) in
     mk_error ~trace_infos (aloc_of_reason reason) [
       text "Cannot use "; ref reason_targ; text (" in an " ^ actual_polarity ^ " ");
       text "position because "; ref reason_targ; text " is expected to occur only in ";
@@ -1530,7 +1530,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       valid = valid_reason;
       use_op;
     } ->
-    let valid_reason = mk_reason (desc_of_reason valid_reason) (def_loc_of_reason valid_reason) in
+    let valid_reason = mk_reason (desc_of_reason valid_reason) (def_aloc_of_reason valid_reason |> ALoc.to_loc) in
     let invalids =
       InvalidCharSetSet.fold (fun c acc ->
         match c with

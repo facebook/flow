@@ -529,8 +529,8 @@ module ImplicitTypeArgument = struct
      * typeparam.reason. *)
     let loc_op = aloc_of_reason reason_op in
     let desc = RTypeParam (typeparam.name, (desc_of_reason reason_op, loc_op |> ALoc.to_loc),
-      (desc_of_reason reason_tapp, def_loc_of_reason reason_tapp)) in
-    let reason = mk_reason desc (def_loc_of_reason typeparam.reason) in
+      (desc_of_reason reason_tapp, def_aloc_of_reason reason_tapp |> ALoc.to_loc)) in
+    let reason = mk_reason desc (def_aloc_of_reason typeparam.reason |> ALoc.to_loc) in
     let reason = repos_reason (loc_op |> ALoc.to_loc) reason in
     Tvar.mk cx reason
 
@@ -718,7 +718,7 @@ module Cache = struct
     let cache: (cache_key, Type.t) Hashtbl.t = Hashtbl.create 0
 
     let find cx reason_tapp typeparam op_reason =
-      let loc = def_loc_of_reason reason_tapp in
+      let loc = def_aloc_of_reason reason_tapp |> ALoc.to_loc in
       try
         Hashtbl.find cache (loc, typeparam.reason, op_reason)
       with _ ->
@@ -2829,14 +2829,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
     | OpaqueT (r, {underlying_t = Some t; _}), _
-      when ALoc.source (aloc_of_reason r) = Loc.source (def_loc_of_reason r) ->
+      when ALoc.source (aloc_of_reason r) = ALoc.source (def_aloc_of_reason r) ->
       rec_flow cx trace (t, u)
 
     (* If the lower bound is in the same file as where the opaque type was defined,
      * we expose the underlying type information *)
     | _, UseT (use_op, OpaqueT (r, {underlying_t = Some t; _}))
       when ALoc.source (aloc_of_reason (reason_of_t l)) =
-           Loc.source (def_loc_of_reason r) ->
+           ALoc.source (def_aloc_of_reason r) ->
       rec_flow cx trace (l, UseT (use_op, t))
 
     (*****************************************************************)
@@ -4260,7 +4260,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | CustomFunT (_, ReactCreateClass),
       CallT (use_op, reason_op, { call_targs = None; call_args_tlist = arg1::_; call_tout; _ }) ->
       let loc_op = aloc_of_reason reason_op in
-      let loc_tapp = def_loc_of_reason (reason_of_t call_tout) in
+      let loc_tapp = def_aloc_of_reason (reason_of_t call_tout) in
       let desc_tapp = desc_of_reason (reason_of_t call_tout) in
       let spec = extract_non_spread cx ~trace arg1 in
       let mk_tvar f = Tvar.mk cx (f reason_op) in
@@ -4268,9 +4268,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         this = mk_tvar (replace_reason_const RThisType);
         static = mk_tvar (replace_reason_const RThisType);
         state_t = mk_tvar (replace_reason
-          (fun d -> RTypeParam ("State", (d, loc_op |> ALoc.to_loc), (desc_tapp, loc_tapp))));
+          (fun d -> RTypeParam ("State", (d, loc_op |> ALoc.to_loc), (desc_tapp, loc_tapp |> ALoc.to_loc))));
         default_t = mk_tvar (replace_reason
-          (fun d -> RTypeParam ("Default", (d, loc_op |> ALoc.to_loc), (desc_tapp, loc_tapp))));
+          (fun d -> RTypeParam ("Default", (d, loc_op |> ALoc.to_loc), (desc_tapp, loc_tapp |> ALoc.to_loc))));
       } in
       rec_flow cx trace (spec, ReactKitT (use_op, reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
@@ -6298,7 +6298,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ((reason_prop, strict_reason), reason, Some x, use_op)));
 
       (* Install shadow prop (if necessary) and link up proto chain. *)
-      let prop_loc = def_loc_of_reason reason_prop in
+      let prop_loc = def_aloc_of_reason reason_prop in
       let p = find_or_intro_shadow_prop cx trace reason_op x prop_loc (Nel.rev rev_proto_ids) in
       perform_lookup_action cx trace propref p reason reason_op action
 
@@ -6324,7 +6324,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (* Create prop and link shadow props along the proto chain. *)
           let reason_prop = replace_reason_const (RShadowProperty x) reason_op in
           let t = Tvar.mk cx reason_prop in
-          let prop_loc = def_loc_of_reason lookup_reason in
+          let prop_loc = def_aloc_of_reason lookup_reason in
           (match proto_ids with
           | [] -> ()
           | id::ids ->
@@ -6332,7 +6332,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t_proto = Property.assert_field p_proto in
             rec_flow cx trace (t_proto, UnifyT (t_proto, t)));
           (* Add prop *)
-          let p = Field (Some prop_loc, t, Neutral) in
+          let p = Field (Some (prop_loc |> ALoc.to_loc), t, Neutral) in
           pmap
             |> SMap.add x p
             |> Context.add_property_map cx id;
@@ -8702,7 +8702,7 @@ and find_or_intro_shadow_prop cx trace reason_op x prop_loc =
   let intro_shadow_prop id =
     let reason_prop = replace_reason_const (RShadowProperty x) reason_op in
     let t = Tvar.mk cx reason_prop in
-    let p = Field (Some prop_loc, t, Neutral) in
+    let p = Field (Some (prop_loc |> ALoc.to_loc), t, Neutral) in
     Context.set_prop cx id (internal_name x) p;
     t, p
   in
@@ -8765,7 +8765,7 @@ and update_sketchy_null cx opt_loc t =
         let reason = reason_of_t t in
         match annot_loc_of_reason reason with
         | Some loc -> Some loc
-        | None -> Some (def_loc_of_reason reason)
+        | None -> Some (def_aloc_of_reason reason |> ALoc.to_loc)
       in
       let exists_checks = Context.exists_checks cx in
       let exists_check = LocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
@@ -12230,8 +12230,8 @@ class assert_ground_visitor skip r context = object (self)
   method private push_frame r =
     incr depth;
     if max_reasons > 0 then (
-      let head_loc = def_loc_of_reason (List.hd !reason_stack) in
-      let curr_loc = def_loc_of_reason r in
+      let head_loc = def_aloc_of_reason (List.hd !reason_stack) |> ALoc.to_loc in
+      let curr_loc = def_aloc_of_reason r |> ALoc.to_loc in
       let should_add = Loc.span_compare head_loc curr_loc = 0 in
       reason_stack := if should_add
         then r::(List.tl !reason_stack)
@@ -12290,7 +12290,7 @@ class assert_ground_visitor skip r context = object (self)
           let trace_reasons = if max_reasons = 0
              then []
              else List.map (fun reason ->
-                 repos_reason (def_loc_of_reason reason) reason)
+                 repos_reason (def_aloc_of_reason reason |> ALoc.to_loc) reason)
                !reason_stack in
           add_output cx (FlowError.EMissingAnnotation (r, trace_reasons))
         );

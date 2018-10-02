@@ -194,7 +194,7 @@ end = struct
     let open Type in
     let pred { name; reason; _ } = (
       name = tp_name &&
-      Reason.def_loc_of_reason reason = tp_loc
+      Reason.def_aloc_of_reason reason |> ALoc.to_loc = tp_loc
     ) in
     match List.find_opt pred env.Env.tparams with
     | Some _ ->
@@ -203,7 +203,7 @@ end = struct
         let shadow_pred { name; _ } = (name = tp_name) in
         match List.find_opt shadow_pred env.Env.tparams with
         | Some { reason; _ }
-          when Reason.def_loc_of_reason reason <> tp_loc ->
+          when Reason.def_aloc_of_reason reason |> ALoc.to_loc <> tp_loc ->
           terr ~kind:ShadowTypeParam (Some t)
         | Some _ ->
           return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
@@ -512,7 +512,7 @@ end = struct
   (* TODO due to repositioninig `reason_loc` may not point to the actual
      location where `name` was defined. *)
   let symbol_from_reason env reason name =
-    let def_loc = Reason.def_loc_of_reason reason in
+    let def_loc = Reason.def_aloc_of_reason reason |> ALoc.to_loc in
     symbol_from_loc env def_loc name
 
 
@@ -537,7 +537,7 @@ end = struct
     let reason = Type.reason_of_t t in
     match desc_of_reason ~unwrap:false reason with
     | RPolyTest (name, _) ->
-      let loc = Reason.def_loc_of_reason reason in
+      let loc = Reason.def_aloc_of_reason reason |> ALoc.to_loc in
       let default t = type_with_alias_reason ~env t in
       lookup_tparam ~default env t name loc
     | _ ->
@@ -909,7 +909,7 @@ end = struct
     | Ty.Bound (Ty.Symbol (prov, sym_name)) ->
       let pred Type.{ name; reason; _ } = (
         name = sym_name &&
-        Reason.def_loc_of_reason reason = Ty.loc_of_provenance prov
+        Reason.def_aloc_of_reason reason |> ALoc.to_loc = Ty.loc_of_provenance prov
       ) in
       begin match List.find_opt pred env.Env.tparams with
       | Some Type.{ bound; _ } -> type__ ~env bound >>= class_t_aux
@@ -1044,7 +1044,7 @@ end = struct
     let open Type in
     let name = opaque_type.opaque_name in
     let current_source = Env.current_file env in
-    let opaque_source = Loc.source (def_loc_of_reason reason) in
+    let opaque_source = ALoc.source (def_aloc_of_reason reason) in
     let opaque_symbol = symbol_from_reason env reason name in
     (* Compare the current file (of the query) and the file that the opaque
        type is defined. If they differ, then hide the underlying/super type.

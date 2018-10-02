@@ -168,7 +168,7 @@ module Friendly = struct
     if loc then (
       let loc = match annot_loc_of_reason r with
       | Some loc -> loc
-      | None -> def_loc_of_reason r
+      | None -> def_aloc_of_reason r |> ALoc.to_loc
       in
       if loc = Loc.none then
         Inline desc

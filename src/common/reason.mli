@@ -227,7 +227,7 @@ val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
 val aloc_of_reason: reason -> ALoc.t
-val def_loc_of_reason: reason -> Loc.t
+val def_aloc_of_reason: reason -> ALoc.t
 val annot_loc_of_reason: reason -> Loc.t option
 val desc_of_reason: ?unwrap:bool -> reason -> reason_desc
 
