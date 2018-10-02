@@ -216,7 +216,7 @@ type reason = {
   derivable: bool;
   desc: reason_desc;
   aloc: ALoc.t;
-  def_loc_opt: Loc.t option;
+  def_aloc_opt: Loc.t option;
   annot_loc_opt: Loc.t option;
 }
 
@@ -347,12 +347,12 @@ let json_of_loc ?strip_root loc = Hh_json.(
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc aloc def_loc_opt annot_loc_opt = {
+let mk_reason_with_test_id test_id desc aloc def_aloc_opt annot_loc_opt = {
   test_id;
   derivable = false;
   desc;
   aloc;
-  def_loc_opt;
+  def_aloc_opt;
   annot_loc_opt;
 }
 
@@ -378,7 +378,7 @@ let aloc_of_reason r = r.aloc
 
 (* TODO return ALoc *)
 let def_loc_of_reason r =
-  match r.def_loc_opt with
+  match r.def_aloc_opt with
   | Some loc -> loc
   | None -> ALoc.to_loc @@ aloc_of_reason r
 
@@ -749,24 +749,24 @@ let reasons_overlap r1 r2 =
 
 (* returns reason with new description and position of original *)
 let replace_reason ?(keep_def_loc=false) f r =
-  let def_loc_opt = if keep_def_loc then r.def_loc_opt else None in
+  let def_aloc_opt = if keep_def_loc then r.def_aloc_opt else None in
   mk_reason_with_test_id
     (TestID.current ())
     (f (desc_of_reason ~unwrap:false r))
     (aloc_of_reason r)
-    def_loc_opt
+    def_aloc_opt
     (annot_loc_of_reason r)
 
 let replace_reason_const ?(keep_def_loc=false) desc r =
-  let (def_loc_opt, annot_loc_opt) = if keep_def_loc
-    then (r.def_loc_opt, r.annot_loc_opt)
+  let (def_aloc_opt, annot_loc_opt) = if keep_def_loc
+    then (r.def_aloc_opt, r.annot_loc_opt)
     else (None, None)
   in
-  mk_reason_with_test_id r.test_id desc r.aloc def_loc_opt annot_loc_opt
+  mk_reason_with_test_id r.test_id desc r.aloc def_aloc_opt annot_loc_opt
 
 (* returns reason with new location and description of original *)
 let repos_reason loc ?annot_loc reason =
-  let def_loc_opt =
+  let def_aloc_opt =
     let def_loc = def_loc_of_reason reason in
     if loc = def_loc then None else Some def_loc
   in
@@ -774,7 +774,7 @@ let repos_reason loc ?annot_loc reason =
   | Some annot_loc -> Some annot_loc
   | None -> reason.annot_loc_opt
   in
-  mk_reason_with_test_id reason.test_id reason.desc (ALoc.of_loc loc) def_loc_opt annot_loc_opt
+  mk_reason_with_test_id reason.test_id reason.desc (ALoc.of_loc loc) def_aloc_opt annot_loc_opt
 
 let annot_reason reason =
   {reason with annot_loc_opt = Some (ALoc.to_loc reason.aloc)}
