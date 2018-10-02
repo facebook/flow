@@ -197,6 +197,22 @@ References:
                                                ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------- class_constructor_property.js:8:3
+
+Classes may not have fields named `constructor`.
+
+   8|   constructor: T = e; // error
+        ^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------- declared_class_constructor_property.js:8:3
+
+Classes may not have fields named `constructor`.
+
+   8|   constructor: T; // error
+        ^^^^^^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------- derived_class.js:9:51
 
 string [1] is incompatible with number [2].
@@ -796,4 +812,4 @@ References:
 
 
 
-Found 48 errors
+Found 50 errors

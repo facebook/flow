@@ -20,7 +20,7 @@ module type TYPE = sig
   val type_parameter_declaration_with_defaults : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
   val type_parameter_instantiation : env -> (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option
   val generic : env -> Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
-  val _object : allow_static:bool -> allow_proto:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
+  val _object : is_class:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
   val interface_helper : env -> (Loc.t, Loc.t) Type.Interface.t
   val function_param_list : env -> (Loc.t, Loc.t) Type.Function.Params.t
   val annotation : env -> (Loc.t, Loc.t) Ast.Type.annotation
@@ -149,7 +149,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | T_LCURLY
     | T_LCURLYBAR ->
       let loc, o = _object env
-        ~allow_static:false ~allow_proto:false ~allow_exact:true ~allow_spread:true in
+        ~is_class:false ~allow_exact:true ~allow_spread:true in
       loc, Type.Object o
     | T_INTERFACE ->
       with_loc (fun env ->
@@ -544,16 +544,18 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | Some loc -> error_at env (loc, Error.UnexpectedProto)
     | None -> ()
 
-    in let error_invalid_property_name env static key =
+    in let error_invalid_property_name env is_class static key =
       let is_static = static <> None in
+      let is_constructor = String.equal "constructor" in
+      let is_prototype = String.equal "prototype" in
       match key with
       | Expression.Object.Property.Identifier (loc, name)
-        when is_static && (String.equal name "constructor" || String.equal name "prototype") ->
+        when is_class && (is_constructor name || (is_static && is_prototype name)) ->
         error_at env (loc, Error.InvalidFieldName (name, is_static, false))
       | _ -> ()
 
-    in let rec properties ~allow_static ~allow_proto ~allow_spread ~exact env acc =
-      assert (not (allow_static && allow_spread)); (* no `static ...A` *)
+    in let rec properties ~is_class ~allow_spread ~exact env acc =
+      assert (not (is_class && allow_spread)); (* no `static ...A` *)
       let start_loc = Peek.loc env in
       match Peek.token env with
       | T_EOF -> List.rev acc
@@ -562,35 +564,39 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       | T_ELLIPSIS when allow_spread ->
         let prop = spread_property env start_loc in
         semicolon exact env;
-        properties ~allow_static ~allow_proto ~allow_spread ~exact env (prop::acc)
+        properties ~is_class ~allow_spread ~exact env (prop::acc)
       | _ ->
-        let prop = property env start_loc ~allow_static ~allow_proto
-          ~variance:None ~static:None ~proto:None in
+        let prop = property env start_loc ~is_class ~allow_static:is_class
+          ~allow_proto:is_class ~variance:None ~static:None ~proto:None in
         semicolon exact env;
-        properties ~allow_static ~allow_proto ~allow_spread ~exact env (prop::acc)
+        properties ~is_class ~allow_spread ~exact env (prop::acc)
 
-    and property env ~allow_static ~allow_proto ~variance ~static ~proto start_loc =
+    and property env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto start_loc =
       match Peek.token env with
       | T_PLUS when variance = None ->
         let loc = Peek.loc env in
         Eat.token env;
         let variance = Some (loc, Variance.Plus) in
-        property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+        property
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_MINUS when variance = None ->
         let loc = Peek.loc env in
         Eat.token env;
         let variance = Some (loc, Variance.Minus) in
-        property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+        property
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_STATIC when allow_static ->
         assert (variance = None); (* if we parsed variance, allow_static = false *)
         let static = Some (Peek.loc env) in
         Eat.token env;
-        property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+        property
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_IDENTIFIER { raw = "proto"; _ } when allow_proto ->
         assert (variance = None); (* if we parsed variance, allow_proto = false *)
         let proto = Some (Peek.loc env) in
         Eat.token env;
-        property env ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+        property
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
       | T_LBRACKET ->
         error_unexpected_proto env proto;
         Expect.token env T_LBRACKET;
@@ -664,15 +670,15 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
                 error_unexpected_variance env variance;
                 method_property env start_loc static key
               | _ ->
-                error_invalid_property_name env static key;
+                error_invalid_property_name env is_class static key;
                 init_property env start_loc ~variance ~static ~proto key
               end
 
-    in fun ~allow_static ~allow_proto ~allow_exact ~allow_spread env ->
+    in fun ~is_class ~allow_exact ~allow_spread env ->
       let exact = allow_exact && Peek.token env = T_LCURLYBAR in
       with_loc (fun env ->
         Expect.token env (if exact then T_LCURLYBAR else T_LCURLY);
-        let properties = properties ~allow_static ~allow_proto ~exact ~allow_spread env [] in
+        let properties = properties ~is_class ~exact ~allow_spread env [] in
         Expect.token env (if exact then T_RCURLYBAR else T_RCURLY);
         { Type.Object.exact; properties; }
       ) env
@@ -694,8 +700,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         supers env []
       end else [] in
       let body = _object env
-        ~allow_exact:false ~allow_spread:false
-        ~allow_static:false ~allow_proto:false
+        ~allow_exact:false ~allow_spread:false ~is_class:false
       in
       { Type.Interface.extends; body }
 
@@ -856,8 +861,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
   let type_parameter_declaration =
     wrap (type_parameter_declaration ~allow_default:false)
   let type_parameter_instantiation = wrap type_parameter_instantiation
-  let _object ~allow_static ~allow_proto env =
-    wrap (_object ~allow_static ~allow_proto ~allow_exact:false ~allow_spread:false) env
+  let _object ~is_class env =
+    wrap (_object ~is_class ~allow_exact:false ~allow_spread:false) env
   let interface_helper = wrap interface_helper
   let function_param_list = wrap function_param_list
   let annotation = wrap annotation

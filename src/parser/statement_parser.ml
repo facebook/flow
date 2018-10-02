@@ -654,7 +654,7 @@ module Statement
       | T_IMPLEMENTS -> Eat.token env; Object.class_implements env []
       | _ -> []
       in
-      let body = Type._object ~allow_static:true ~allow_proto:true env in
+      let body = Type._object ~is_class:true env in
       Statement.DeclareClass.({
         id;
         tparams;
