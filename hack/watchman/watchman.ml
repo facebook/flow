@@ -406,7 +406,7 @@ struct
 
   let with_crash_record_exn source f =
     Watchman_process.catch ~f ~catch:(fun e ->
-      Hh_logger.exc ~prefix:("Watchman " ^ source ^ ": ") e;
+      Hh_logger.exc_with_dodgy_backtrace ~prefix:("Watchman " ^ source ^ ": ") e;
       raise e
     )
 

@@ -53,4 +53,4 @@ val call_with_interrupt :
   'd interrupt_config ->
   'c * 'd * 'a list
 
-val on_exception : (exn -> unit) -> unit
+val on_exception : ((exn * Utils.callstack) -> unit) -> unit

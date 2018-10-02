@@ -43,11 +43,14 @@ let print_duration name t =
   print_with_newline "%s: %f" name (t2 -. t);
   t2
 
-let exc ?(prefix="") e =
+let exc_with_dodgy_backtrace ?(prefix: string = "") (e: exn) : unit =
   (* TODO - delete this function and use call normal Hh_logger functions with ~exn *)
   print_with_newline "%s%s" prefix (Printexc.to_string e);
   Printexc.print_backtrace stderr;
   ()
+
+let exc ?(prefix: string = "") ~(stack: string) (e: exn) : unit =
+  print_with_newline "%s%s\n%s" prefix (Printexc.to_string e) stack
 
 module Level : sig
   type t =
