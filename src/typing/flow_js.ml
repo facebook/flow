@@ -7644,9 +7644,11 @@ and variance_check cx ?trace polarity = function
     check_polarity cx ?trace (Polarity.mult (polarity, tp.polarity)) t;
     variance_check cx ?trace polarity (tps, ts)
 
-and poly_minimum_arity xs =
-  List.filter (fun typeparam -> typeparam.default = None) xs
-  |> List.length
+and poly_minimum_arity =
+  let f = fun n typeparam ->
+    if typeparam.default = None then n + 1 else n
+  in
+  List.fold_left f 0
 
 (* Instantiate a polymorphic definition given type arguments. *)
 and instantiate_poly_with_targs
