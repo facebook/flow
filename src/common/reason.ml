@@ -215,7 +215,7 @@ type reason = {
   test_id: int option;
   derivable: bool;
   desc: reason_desc;
-  loc: ALoc.t;
+  aloc: ALoc.t;
   def_loc_opt: Loc.t option;
   annot_loc_opt: Loc.t option;
 }
@@ -347,11 +347,11 @@ let json_of_loc ?strip_root loc = Hh_json.(
 
 (* reason constructors, accessors, etc. *)
 
-let mk_reason_with_test_id test_id desc loc def_loc_opt annot_loc_opt = {
+let mk_reason_with_test_id test_id desc aloc def_loc_opt annot_loc_opt = {
   test_id;
   derivable = false;
   desc;
-  loc;
+  aloc;
   def_loc_opt;
   annot_loc_opt;
 }
@@ -374,7 +374,7 @@ let func_reason {Ast.Function.async; generator; _} =
   mk_reason (RFunction func_desc)
 
 
-let aloc_of_reason r = r.loc
+let aloc_of_reason r = r.aloc
 
 (* TODO return ALoc *)
 let def_loc_of_reason r =
@@ -727,22 +727,22 @@ let builtin_reason desc =
   |> derivable_reason
 
 let is_builtin_reason r =
-  r.loc
+  r.aloc
   |> ALoc.to_loc
   |> Loc.source
   |> (=) (Some File_key.Builtins)
 
 let is_lib_reason r =
-  r.loc
+  r.aloc
   |> ALoc.to_loc
   |> Loc.source
   |> Option.value_map ~default:false ~f:File_key.is_lib_file
 
 let is_blamable_reason r =
-  not Loc.(ALoc.to_loc r.loc = none || is_lib_reason r)
+  not Loc.(ALoc.to_loc r.aloc = none || is_lib_reason r)
 
 let reasons_overlap r1 r2 =
-  let r1_loc, r2_loc = ALoc.to_loc r1.loc, ALoc.to_loc r2.loc in
+  let r1_loc, r2_loc = ALoc.to_loc r1.aloc, ALoc.to_loc r2.aloc in
   Loc.contains r1_loc r2_loc
 
 (* reason transformers: *)
@@ -762,7 +762,7 @@ let replace_reason_const ?(keep_def_loc=false) desc r =
     then (r.def_loc_opt, r.annot_loc_opt)
     else (None, None)
   in
-  mk_reason_with_test_id r.test_id desc r.loc def_loc_opt annot_loc_opt
+  mk_reason_with_test_id r.test_id desc r.aloc def_loc_opt annot_loc_opt
 
 (* returns reason with new location and description of original *)
 let repos_reason loc ?annot_loc reason =
@@ -777,7 +777,7 @@ let repos_reason loc ?annot_loc reason =
   mk_reason_with_test_id reason.test_id reason.desc (ALoc.of_loc loc) def_loc_opt annot_loc_opt
 
 let annot_reason reason =
-  {reason with annot_loc_opt = Some (ALoc.to_loc reason.loc)}
+  {reason with annot_loc_opt = Some (ALoc.to_loc reason.aloc)}
 
 module ReasonMap = MyMap.Make(struct
   type t = reason
