@@ -3,7 +3,7 @@ layout: guide
 ---
 
 Flow is a static type checker for your JavaScript code. It does a lot of work
-to make you more productive. Making you code faster, smarter, more confidently,
+to make you more productive. Making your code faster, smarter, more confidently,
 and to a bigger scale.
 
 Flow checks your code for errors through **static type annotations**. These
