@@ -331,17 +331,18 @@ let global_lexicals = [
    tests/global_ref tracks this issue.
  *)
 let cache_global cx name ?desc loc global_scope =
+  let aloc = ALoc.of_loc loc in
   let t =
     if List.mem name global_any
-    then AnyT.at loc
+    then AnyT.at aloc
     else if List.mem name global_lexicals
-    then ObjProtoT (mk_reason (RCustom "global object") loc)
+    then ObjProtoT (mk_reason (RCustom "global object") aloc)
     else
       let desc = match desc with
       | Some desc -> desc
       | None -> RIdentifier name
       in
-      let reason = mk_reason desc loc in
+      let reason = mk_reason desc aloc in
       Flow.get_builtin cx name reason
   in
   let entry = Entry.new_var t ~loc ~state:State.Initialized in
@@ -735,6 +736,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
     value_declare_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
     ->
+    let value_declare_loc = ALoc.of_loc value_declare_loc in
     let uninit desc = VoidT.make (mk_reason desc value_declare_loc) in
     let specific = if state = State.Declared
       then uninit (RCustom "uninitialized variable")
@@ -773,7 +775,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
   | Type _ when lookup_mode != ForType ->
     let msg = FlowError.ETypeInValuePosition in
     binding_error msg cx name entry loc;
-    AnyT.at (entry_loc entry)
+    AnyT.at (entry_loc entry |> ALoc.of_loc)
 
   | Type t ->
     t._type
@@ -786,7 +788,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
       when lookup_mode = ForValue && not (allow_forward_ref kind)
       && same_activation scope ->
       tdz_error cx name loc v;
-      AnyT.at value_declare_loc
+      AnyT.at (value_declare_loc |> ALoc.of_loc)
     | _ ->
       Changeset.change_var (scope.id, name, Changeset.Read);
       let s, g = value_entry_types ~lookup_mode scope v in
@@ -989,7 +991,7 @@ let merge_env =
   in
 
   let create_union cx loc name l1 l2 =
-    let reason = mk_reason name loc in
+    let reason = mk_reason name (loc |> ALoc.of_loc) in
     Tvar.mk_where cx reason (fun tvar ->
       Flow.flow cx (l1, UseT (Op (Internal MergeEnv), tvar));
       Flow.flow cx (l2, UseT (Op (Internal MergeEnv), tvar));
@@ -1218,7 +1220,7 @@ let widen_env =
     if specific = general
     then None
     else
-      let reason = mk_reason name loc in
+      let reason = mk_reason name (loc |> ALoc.of_loc) in
       let tvar = Tvar.mk cx reason in
       Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
       Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
@@ -1339,13 +1341,13 @@ let refine_expr = add_heap_refinement Changeset.Refine
    only necessary for fresh pseudovars like heap refinements -
    others can be obtained via query_var.
  *)
-let refine_with_preds cx loc preds orig_types =
+let refine_with_preds cx (loc: Loc.t) preds orig_types =
   let mk_refi_type orig_type pred refi_reason =
     Tvar.mk_where cx refi_reason (fun refined_type ->
       Flow.flow cx (orig_type, PredicateT (pred, refined_type)))
   in
   let refine_with_pred key pred acc =
-    let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
+    let refi_reason = mk_reason (RRefined (Key.reason_desc key)) (loc |> ALoc.of_loc) in
     match key with
     (* for real consts/lets/vars, we model assignment/initialization *)
     | name, [] when not (is_internal_name name) ->

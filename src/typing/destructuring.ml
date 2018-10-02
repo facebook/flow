@@ -37,10 +37,11 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
   | top_loc, Array { Array.elements; _; } -> Array.(
       let elements = elements |> List.mapi (fun i -> function
         | Some (Element ((loc, _) as p)) ->
-            let key = DefT (mk_reason RNumber loc, NumT (
+            let aloc = ALoc.of_loc loc in
+            let key = DefT (mk_reason RNumber aloc, NumT (
               Literal (None, (float i, string_of_int i))
             )) in
-            let reason = mk_reason (RCustom (spf "element %d" i)) loc in
+            let reason = mk_reason (RCustom (spf "element %d" i)) aloc in
             let init = Option.map init (fun init ->
               loc, Ast.Expression.(Member Member.({
                 _object = init;
@@ -66,7 +67,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
             let default = Option.map default (Default.elem key reason) in
             Some (Element (recurse ~parent_pattern_t tvar init default p))
         | Some (RestElement (loc, { RestElement.argument = p })) ->
-            let reason = mk_reason RArrayPatternRestProp loc in
+            let reason = mk_reason RArrayPatternRestProp (loc |> ALoc.of_loc) in
             let tvar =
               EvalT (curr_t, DestructuringT (reason, ArrRest i), mk_id())
             in
@@ -95,7 +96,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                     value = Ast.Literal.String name; _ });
                 pattern = p; _; }
               ->
-                let reason = mk_reason (RProperty (Some name)) loc in
+                let reason = mk_reason (RProperty (Some name)) (loc |> ALoc.of_loc) in
                 let init = Option.map init (fun init ->
                   loc, Ast.Expression.(Member Member.({
                     _object = init;
@@ -137,7 +138,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
             | { Property.key = Property.Computed key; pattern = p; _; } ->
                 let (_, key_t), _ as key_ast = expr cx key in
                 let loc = fst key in
-                let reason = mk_reason (RProperty None) loc in
+                let reason = mk_reason (RProperty None) (loc |> ALoc.of_loc) in
                 let init = Option.map init (fun init ->
                   loc, Ast.Expression.(Member Member.({
                     _object = init;
@@ -166,7 +167,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
             end
 
         | RestProperty (loc, { RestProperty.argument = p }) ->
-            let reason = mk_reason RObjectPatternRestProp loc in
+            let reason = mk_reason RObjectPatternRestProp (loc |> ALoc.of_loc) in
             let tvar =
               EvalT (curr_t, DestructuringT (reason, ObjRest xs), mk_id())
             in
@@ -203,7 +204,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       let id_info = name, curr_t, Type_table.Other in
       Type_table.set_info id_loc id_info (Context.type_table cx);
       let use_op = Op (AssignVar {
-        var = Some (mk_reason (RIdentifier name) loc);
+        var = Some (mk_reason (RIdentifier name) (loc |> ALoc.of_loc));
         init = (match init with
         | Some init -> mk_expression_reason init
         | None -> reason_of_t curr_t);
@@ -215,7 +216,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
 
   | loc, Assignment { Assignment.left; right } ->
       let default = Some (Default.expr ?default right) in
-      let reason = mk_reason RDefaultValue loc in
+      let reason = mk_reason RDefaultValue (loc |> ALoc.of_loc) in
       let tvar =
         EvalT (curr_t, DestructuringT (reason, Default), mk_id())
       in

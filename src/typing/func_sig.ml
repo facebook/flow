@@ -136,7 +136,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   | Some (BodyExpression (loc, _)) -> loc
   | None -> Loc.none
   ) in
-  let reason = mk_reason RFunctionBody loc in
+  let reason = mk_reason RFunctionBody (loc |> ALoc.of_loc) in
 
   let env =  Env.peek_env () in
   let new_env = Env.clone_env env in
@@ -181,7 +181,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   Option.iter
     ~f:(fun (_, loc, t) ->
       let rest_reason =
-        mk_reason (RCustom "Rest params are always arrays") loc in
+        mk_reason (RCustom "Rest params are always arrays") (loc |> ALoc.of_loc) in
       Flow_js.flow cx (t, AssertRestParamT rest_reason)
     )
     (Func_params.rest fparams);
@@ -189,7 +189,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
   fparams |> Func_params.iter Scope.(fun (name, loc, t, default) ->
-    let reason = mk_reason (RParameter (Some name)) loc in
+    let reason = mk_reason (RParameter (Some name)) (loc |> ALoc.of_loc) in
     (* add default value as lower bound, if provided *)
     Option.iter ~f:(fun default ->
       let default_t = Flow.mk_default cx reason default
@@ -210,7 +210,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* early-add our own name binding for recursive calls *)
   Option.iter id ~f:(fun (loc, name) ->
-    let entry = Scope.Entry.new_var ~loc (AnyT.at loc) in
+    let entry = Scope.Entry.new_var ~loc (AnyT.at (loc |> ALoc.of_loc)) in
     Scope.add_entry name entry function_scope
   );
 
@@ -285,7 +285,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* build return type for void funcs *)
   let init_ast = if is_void then
-    let loc = loc_of_t return_t in
+    let loc = loc_of_t return_t |> ALoc.of_loc in
     (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
      * algorithm to pick use_ops outside the provided loc. *)
     let use_op, void_t, init_ast = match kind with
@@ -319,9 +319,9 @@ let toplevels id cx this super ~decls ~stmts ~expr
       let (_, t), _ as ast = expr cx e in
       unknown_use, t, Some ast
     | Predicate ->
-      let loc = aloc_of_reason reason |> ALoc.to_loc in
+      let loc = aloc_of_reason reason in
       Flow_js.add_output cx
-        Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
+        Flow_error.(EUnsupportedSyntax (loc |> ALoc.to_loc, PredicateVoidReturn));
       let t = VoidT.at loc in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       use_op, t, None

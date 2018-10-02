@@ -357,8 +357,8 @@ let mk_reason_with_test_id test_id desc aloc def_aloc_opt annot_aloc_opt = {
 }
 
 (* The current test_id is included in every new reason. *)
-let mk_reason desc loc =
-  mk_reason_with_test_id (TestID.current ()) desc (ALoc.of_loc loc) None None
+let mk_reason desc aloc =
+  mk_reason_with_test_id (TestID.current ()) desc aloc None None
 
 (* Lift a string to a reason. Usually used as a dummy reason. *)
 let locationless_reason desc =
@@ -371,7 +371,7 @@ let func_reason {Ast.Function.async; generator; _} =
   | false, true -> RGenerator
   | false, false -> RNormal
   in
-  mk_reason (RFunction func_desc)
+  ALoc.of_loc %> mk_reason (RFunction func_desc)
 
 
 let aloc_of_reason r = r.aloc
@@ -723,6 +723,7 @@ let derivable_reason r =
 
 let builtin_reason desc =
   { Loc.none with Loc.source = Some File_key.Builtins }
+  |> ALoc.of_loc
   |> mk_reason desc
   |> derivable_reason
 
@@ -1045,15 +1046,15 @@ and code_desc_of_literal x = Ast.(match x.Literal.value with
 
 let rec mk_expression_reason = Ast.Expression.(function
 | (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
-| (loc, Object _) -> mk_reason RObjectLit loc
-| (loc, Array _) -> mk_reason RArrayLit loc
+| (loc, Object _) -> mk_reason RObjectLit (loc |> ALoc.of_loc)
+| (loc, Array _) -> mk_reason RArrayLit (loc |> ALoc.of_loc)
 | (loc, ArrowFunction f) -> func_reason f loc
 | (loc, Function f) -> func_reason f loc
 | (loc, Ast.Expression.Literal {Ast.Literal.value = Ast.Literal.String ""; _}) ->
-  mk_reason (RStringLit "") loc
-| (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
-| (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
-| (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
+  mk_reason (RStringLit "") (loc |> ALoc.of_loc)
+| (loc, TaggedTemplate _) -> mk_reason RTemplateString (loc |> ALoc.of_loc)
+| (loc, TemplateLiteral _) -> mk_reason RTemplateString (loc |> ALoc.of_loc)
+| (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) (loc |> ALoc.of_loc)
 )
 
 (* TODO: replace RCustom descriptions with proper descriptions *)

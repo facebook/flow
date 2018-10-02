@@ -169,7 +169,7 @@ end
 val lexpos: string -> int -> int -> Lexing.position
 
 (* reason constructor *)
-val mk_reason: reason_desc -> Loc.t -> reason
+val mk_reason: reason_desc -> ALoc.t -> reason
 
 (* ranges *)
 val diff_range: Loc.t -> int * int

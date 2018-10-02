@@ -1330,7 +1330,7 @@ end = struct
     | ReactElementConfigType -> from_name "React$ElementConfig" [t]
     | ReactElementRefType -> from_name "React$ElementRef" [t]
     | PropertyType k ->
-      let r = mk_reason (RStringLit k) Loc.none in
+      let r = mk_reason (RStringLit k) (Loc.none |> ALoc.of_loc) in
       from_name "$PropertyType" [t; DefT (r, SingletonStrT k)]
     | TypeMap (ObjectMap t') -> from_name "$ObjMap" [t; t']
     | TypeMap (ObjectMapi t') -> from_name "$ObjMapi" [t; t']

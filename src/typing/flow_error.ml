@@ -721,14 +721,14 @@ let rec error_of_msg ~trace_reasons ~source_file =
         (match own_loc, proto_loc with
         | None, None -> `UnknownRoot true
         | Some loc, None ->
-          let def = mk_reason (RProperty (Some prop)) loc in
+          let def = mk_reason (RProperty (Some prop)) (loc |> ALoc.of_loc) in
           `Root (def, None, [text "Cannot shadow proto property"])
         | None, Some loc ->
-          let def = mk_reason (RProperty (Some prop)) loc in
+          let def = mk_reason (RProperty (Some prop)) (loc |> ALoc.of_loc) in
           `Root (def, None, [text "Cannot define shadowed proto property"])
         | Some own_loc, Some proto_loc ->
-          let def = mk_reason (RProperty (Some prop)) own_loc in
-          let proto = mk_reason (RIdentifier prop) proto_loc in
+          let def = mk_reason (RProperty (Some prop)) (own_loc |> ALoc.of_loc) in
+          let proto = mk_reason (RIdentifier prop) (proto_loc |> ALoc.of_loc) in
           `Root (def, None, [text "Cannot shadow proto property "; ref proto]))
 
       | Op Coercion {from; target} ->
@@ -1381,7 +1381,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     in
     let expected_polarity = polarity_string expected_polarity in
     let actual_polarity = polarity_string actual_polarity in
-    let reason_targ = mk_reason (RIdentifier name) (def_aloc_of_reason reason |> ALoc.to_loc) in
+    let reason_targ = mk_reason (RIdentifier name) (def_aloc_of_reason reason) in
     mk_error ~trace_infos (aloc_of_reason reason) [
       text "Cannot use "; ref reason_targ; text (" in an " ^ actual_polarity ^ " ");
       text "position because "; ref reason_targ; text " is expected to occur only in ";
@@ -1457,11 +1457,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
     let open Friendly in
     let prev_case_r =
       mk_reason (RCustom
-        ("case " ^ string_of_int (prev_i + 1))) (aloc_of_reason prev_case |> ALoc.to_loc)
+        ("case " ^ string_of_int (prev_i + 1))) (aloc_of_reason prev_case)
     in
     let case_r =
       mk_reason (RCustom
-        ("case " ^ string_of_int (i + 1))) (aloc_of_reason case |> ALoc.to_loc)
+        ("case " ^ string_of_int (i + 1))) (aloc_of_reason case)
     in
     mk_error (aloc_of_reason union_r) (
       [
@@ -1471,7 +1471,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       ] @
       (conjunction_concat ~conjunction:"or" (List.map (fun case_r ->
         let text = "to " ^ (string_of_desc (desc_of_reason case_r)) in
-        [ref (mk_reason (RCustom text) (aloc_of_reason case_r |> ALoc.to_loc))]
+        [ref (mk_reason (RCustom text) (aloc_of_reason case_r))]
       ) case_rs)) @
       [text "."]
     )
@@ -1530,7 +1530,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       valid = valid_reason;
       use_op;
     } ->
-    let valid_reason = mk_reason (desc_of_reason valid_reason) (def_aloc_of_reason valid_reason |> ALoc.to_loc) in
+    let valid_reason = mk_reason (desc_of_reason valid_reason) (def_aloc_of_reason valid_reason) in
     let invalids =
       InvalidCharSetSet.fold (fun c acc ->
         match c with
@@ -1699,8 +1699,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EMissingAnnotation (reason, trace_reasons) ->
     let tail = match (desc_of_reason reason) with
     | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
-        let reason_op = mk_reason reason_op_desc reason_op_loc in
-        let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
+        let reason_op = mk_reason reason_op_desc (reason_op_loc |> ALoc.of_loc) in
+        let reason_tapp = mk_reason reason_tapp_desc (reason_tapp_loc |> ALoc.of_loc) in
         [text " "; desc reason; text " is a type parameter declared in "; ref reason_tapp;
          text " and was implicitly instantiated at "; ref reason_op; text "."]
     | _ -> [] in
@@ -1719,7 +1719,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       else if x = internal_name "super" then RSuper
       else RIdentifier x
     in
-    let x = mk_reason desc (Scope.Entry.entry_loc entry) in
+    let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.of_loc) in
     let msg = match binding_error with
     | ENameAlreadyBound ->
       [text "Cannot declare "; ref x; text " because the name is already bound."]
@@ -1979,7 +1979,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     mk_error ~trace_infos ~kind:DuplicateProviderError (loc1 |> ALoc.of_loc) [
       text "Duplicate module provider for "; code module_name; text ". Change ";
       text "either this module provider or the ";
-      ref (mk_reason (RCustom "current module provider") loc2);
+      ref (mk_reason (RCustom "current module provider") (loc2 |> ALoc.of_loc));
       text ".";
     ]
 
@@ -2090,9 +2090,9 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | Lints.SketchyNullMixed -> "mixed", "false"
     in
     mk_error ~trace_infos ~kind:(LintError (Lints.SketchyNull kind)) (loc |> ALoc.of_loc) [
-      text "Sketchy null check on "; ref (mk_reason (RCustom type_str) falsy_loc); text " ";
+      text "Sketchy null check on "; ref (mk_reason (RCustom type_str) (falsy_loc |> ALoc.of_loc)); text " ";
       text "which is potentially "; text value_str; text ". Perhaps you meant to ";
-      text "check for "; ref (mk_reason RNullOrVoid null_loc); text "?";
+      text "check for "; ref (mk_reason RNullOrVoid (null_loc |> ALoc.of_loc)); text "?";
     ]
 
   | ESketchyNumberLint (Lints.SketchyNumberAnd, reason) ->

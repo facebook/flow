@@ -200,7 +200,7 @@ let autocomplete_id cx file_sig env =
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
 let autocomplete_jsx cx file_sig cls ac_name ac_loc docblock = Flow_js.(
-    let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
+    let reason = Reason.mk_reason (Reason.RCustom ac_name) (ac_loc |> ALoc.of_loc) in
     let component_instance = mk_instance cx reason cls in
     let props_object = Tvar.mk_where cx reason (fun tvar ->
       let use_op = Type.Op Type.UnknownUse in

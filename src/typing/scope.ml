@@ -217,7 +217,7 @@ module Entry = struct
     | Value v ->
       if Reason.is_internal_name name
       then entry
-      else Value { v with specific = Type.EmptyT.at loc }
+      else Value { v with specific = Type.EmptyT.at (loc |> ALoc.of_loc) }
 
   let is_lex = function
     | Type _ -> false

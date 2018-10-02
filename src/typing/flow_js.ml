@@ -530,7 +530,7 @@ module ImplicitTypeArgument = struct
     let loc_op = aloc_of_reason reason_op in
     let desc = RTypeParam (typeparam.name, (desc_of_reason reason_op, loc_op |> ALoc.to_loc),
       (desc_of_reason reason_tapp, def_aloc_of_reason reason_tapp |> ALoc.to_loc)) in
-    let reason = mk_reason desc (def_aloc_of_reason typeparam.reason |> ALoc.to_loc) in
+    let reason = mk_reason desc (def_aloc_of_reason typeparam.reason) in
     let reason = repos_reason (loc_op |> ALoc.to_loc) reason in
     Tvar.mk cx reason
 
@@ -2410,24 +2410,24 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       let call_loc = aloc_of_reason reason_op in
       let fun_loc = aloc_of_reason fun_reason in
-      let fun_reason_new = mk_reason RFunctionType (fun_loc |> ALoc.to_loc) in
+      let fun_reason_new = mk_reason RFunctionType fun_loc in
 
       (* Add Flow errors for calls that attempt to assert types that cannot be
       checked at runtime. *)
-      let reason = mk_reason (RCustom "TypeAssert library function") (call_loc |> ALoc.to_loc) in
+      let reason = mk_reason (RCustom "TypeAssert library function") call_loc in
       let return_t = begin match call_type.call_targs with
       | None ->
         add_output cx ~trace (FlowError.ETooFewTypeArgs (reason, reason, 1));
-        AnyT.at (fun_loc |> ALoc.to_loc)
+        AnyT.at fun_loc
       | Some [t] ->
         let kind, return_t = begin match l with
-        | CustomFunT (_, TypeAssertIs) -> Context.Is, BoolT.at (fun_loc |> ALoc.to_loc)
+        | CustomFunT (_, TypeAssertIs) -> Context.Is, BoolT.at fun_loc
         | CustomFunT (_, TypeAssertThrows) -> Context.Throws, t
         | CustomFunT (_, TypeAssertWraps) ->
           (* For TypeAssertWraps, return type is Result<T> *)
-          let mk_bool b = DefT (mk_reason (RBooleanLit b) (fun_loc |> ALoc.to_loc), SingletonBoolT b) in
+          let mk_bool b = DefT (mk_reason (RBooleanLit b) fun_loc, SingletonBoolT b) in
           let pmap_fail =
-            Properties.add_field "error" Neutral None (StrT.at (fun_loc |> ALoc.to_loc))
+            Properties.add_field "error" Neutral None (StrT.at fun_loc)
             (Properties.add_field "success" Neutral None (mk_bool false) SMap.empty) in
           let pmap_succ =
             Properties.add_field "value" Neutral None t
@@ -2435,26 +2435,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let id_succ, id_fail =
             Context.make_property_map cx pmap_fail,
             Context.make_property_map cx pmap_succ in
-          let reason = mk_reason (RCustom "Result<T>") (fun_loc |> ALoc.to_loc) in
+          let reason = mk_reason (RCustom "Result<T>") fun_loc in
           let obj_fail, obj_succ =
             mk_object_def_type ~reason ~dict:None ~call:None id_fail dummy_prototype,
             mk_object_def_type ~reason ~dict:None ~call:None id_succ dummy_prototype in
           Context.Wraps,
-          DefT (mk_reason RUnion (fun_loc |> ALoc.to_loc), UnionT (UnionRep.make obj_fail obj_succ []))
+          DefT (mk_reason RUnion fun_loc, UnionT (UnionRep.make obj_fail obj_succ []))
         | _ -> failwith "cannot reach this case"
         end in
         Context.add_type_assert cx (call_loc |> ALoc.to_loc) (kind, TypeUtil.loc_of_t t); return_t
       | Some _ ->
         add_output cx ~trace (FlowError.ETooManyTypeArgs (reason, reason, 1));
-        AnyT.at (fun_loc |> ALoc.to_loc)
+        AnyT.at fun_loc
       end in
 
       let funtype = DefT (fun_reason_new, FunT (
         dummy_static reason,
-        DefT (mk_reason RPrototype (fun_loc |> ALoc.to_loc), AnyT),
+        DefT (mk_reason RPrototype fun_loc, AnyT),
         {
-          this_t = DefT (mk_reason RThis (fun_loc |> ALoc.to_loc), AnyT);
-          params = [(Some "value", MixedT.at (fun_loc |> ALoc.to_loc))];
+          this_t = DefT (mk_reason RThis fun_loc, AnyT);
+          params = [(Some "value", MixedT.at fun_loc)];
           rest_param = None;
           return_t = return_t;
           is_predicate = false;
@@ -2582,7 +2582,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, BoolT None), NotT (reason, tout)
     | DefT (_, StrT AnyLiteral), NotT (reason, tout)
     | DefT (_, NumT AnyLiteral), NotT (reason, tout) ->
-      rec_flow_t cx trace (BoolT.at (aloc_of_reason reason |> ALoc.to_loc), tout)
+      rec_flow_t cx trace (BoolT.at (aloc_of_reason reason), tout)
 
     (* !x when x is falsy *)
     | DefT (_, BoolT (Some false)), NotT (reason, tout)
@@ -3813,7 +3813,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_arity =
         let tp1, tpN = List.hd tparams, List.hd (List.rev tparams) in
         let loc = Loc.btwn (aloc_of_reason tp1.reason |> ALoc.to_loc) (aloc_of_reason tpN.reason |> ALoc.to_loc) in
-        mk_reason (RCustom "See type parameters of definition here") loc in
+        mk_reason (RCustom "See type parameters of definition here") (loc |> ALoc.of_loc) in
       if List.length targs > maximum_arity then (
         add_output cx ~trace
           (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
@@ -5416,7 +5416,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                     FlowError.ETupleOutOfBounds (reasons, List.length ts, index, use_op)
                   in
                   add_output cx ~trace error;
-                  true, DefT (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason |> ALoc.to_loc), VoidT)
+                  true, DefT (mk_reason RTupleOutOfBoundsAccess (aloc_of_reason reason), VoidT)
                 end else true, value
               end
           end
@@ -6626,12 +6626,12 @@ and flow_addition cx trace use_op reason flip l r u =
   | DefT (_, StrT _), DefT (_, StrT _)
   | DefT (_, StrT _), DefT (_, NumT _)
   | DefT (_, NumT _), DefT (_, StrT _) ->
-    rec_flow_t cx trace (StrT.at (loc |> ALoc.to_loc), u)
+    rec_flow_t cx trace (StrT.at loc, u)
 
   (* unreachable additions are unreachable *)
   | DefT (_, EmptyT), _
   | _, DefT (_, EmptyT) ->
-    rec_flow_t cx trace (EmptyT.at (loc |> ALoc.to_loc), u)
+    rec_flow_t cx trace (EmptyT.at loc, u)
 
   | DefT (reason, MixedT _), _
   | _, DefT (reason, MixedT _) ->
@@ -6639,27 +6639,27 @@ and flow_addition cx trace use_op reason flip l r u =
 
   | DefT (_, (NumT _ | BoolT _ | NullT | VoidT)),
     DefT (_, (NumT _ | BoolT _ | NullT | VoidT)) ->
-    rec_flow_t cx trace (NumT.at (loc |> ALoc.to_loc), u)
+    rec_flow_t cx trace (NumT.at loc, u)
 
   | DefT (_, StrT _), _ ->
     rec_flow cx trace (r, UseT (use_op, l));
-    rec_flow_t cx trace (StrT.at (loc |> ALoc.to_loc), u);
+    rec_flow_t cx trace (StrT.at loc, u);
 
   | _, DefT (_, StrT _) ->
     rec_flow cx trace (l, UseT (use_op, r));
-    rec_flow_t cx trace (StrT.at (loc |> ALoc.to_loc), u);
+    rec_flow_t cx trace (StrT.at loc, u);
 
   | DefT (_, AnyT), _
   | _, DefT (_, AnyT) ->
-    rec_flow_t cx trace (AnyT.at (loc |> ALoc.to_loc), u)
+    rec_flow_t cx trace (AnyT.at loc, u)
 
   | DefT (_, NumT _), _ ->
     rec_flow cx trace (r, UseT (use_op, l));
-    rec_flow_t cx trace (NumT.at (loc |> ALoc.to_loc), u);
+    rec_flow_t cx trace (NumT.at loc, u);
 
   | _, DefT (_, NumT _) ->
     rec_flow cx trace (l, UseT (use_op, r));
-    rec_flow_t cx trace (NumT.at (loc |> ALoc.to_loc), u);
+    rec_flow_t cx trace (NumT.at loc, u);
 
   | (_, _) ->
     let fake_str = StrT.why reason in
@@ -7191,7 +7191,7 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
       let param_loc = Reason.aloc_of_reason param_reason in
       let annot_loc = annot_aloc_of_reason bound_reason in
       let desc = desc_of_reason ~unwrap:false bound_reason in
-      repos_reason (param_loc |> ALoc.to_loc) ?annot_loc (mk_reason (RPolyTest (name, desc)) (param_loc |> ALoc.to_loc))
+      repos_reason (param_loc |> ALoc.to_loc) ?annot_loc (mk_reason (RPolyTest (name, desc)) param_loc)
     ) (subst cx prev_args bound)
   in
   (* make argument map by folding mk_arg over param list *)
@@ -7740,7 +7740,7 @@ and instantiate_poly_param_upper_bounds cx typeparams =
 and mk_poly_arity_reason xs =
   let x1, xN = List.hd xs, List.hd (List.rev xs) in
   let loc = Loc.btwn (aloc_of_reason x1.reason |> ALoc.to_loc) (aloc_of_reason xN.reason |> ALoc.to_loc) in
-  mk_reason (RCustom "See type parameters of definition here") loc
+  mk_reason (RCustom "See type parameters of definition here") (loc |> ALoc.of_loc)
 
 (* Fix a this-abstracted instance type by tying a "knot": assume that the
    fixpoint is some `this`, substitute it as This in the instance type, and
@@ -8887,7 +8887,7 @@ and predicate cx trace t l p = match p with
   (*********************)
 
   | SingletonStrP (expected_loc, sense, lit) ->
-    let filtered_str = Type_filter.string_literal expected_loc sense lit l in
+    let filtered_str = Type_filter.string_literal (expected_loc |> ALoc.of_loc) sense lit l in
     rec_flow_t cx trace (filtered_str, t)
 
   | NotP SingletonStrP (_, _, lit) ->
@@ -8899,7 +8899,7 @@ and predicate cx trace t l p = match p with
   (*********************)
 
   | SingletonNumP (expected_loc, sense, lit) ->
-    let filtered_num = Type_filter.number_literal expected_loc sense lit l in
+    let filtered_num = Type_filter.number_literal (expected_loc |> ALoc.of_loc) sense lit l in
     rec_flow_t cx trace (filtered_num, t)
 
   | NotP SingletonNumP (_, _, lit) ->
@@ -10132,7 +10132,7 @@ and multiflow_partial =
       | [] -> ()
       | first_unused_arg :: _ ->
         FlowError.EFunctionCallExtraArg (
-          mk_reason RFunctionUnusedArgument (loc_of_t first_unused_arg),
+          mk_reason RFunctionUnusedArgument (loc_of_t first_unused_arg |> ALoc.of_loc),
           def_reason,
           List.length parlist,
           use_op
@@ -10405,7 +10405,7 @@ and finish_resolve_spread_list =
           let last = Nel.hd spread_reasons in
           let first = Nel.(hd (rev spread_reasons)) in
           let loc = Loc.btwn (aloc_of_reason first |> ALoc.to_loc) (aloc_of_reason last |> ALoc.to_loc) in
-          let r = mk_reason RArray loc in
+          let r = mk_reason RArray (loc |> ALoc.of_loc) in
           Tvar.mk_where cx r (fun tvar ->
             TypeExSet.elements tset
             |> List.iter (fun t -> flow cx (t, UseT (unknown_use, tvar)))
@@ -11747,7 +11747,7 @@ and object_kit =
     in
     let r =
       let loc = Loc.btwn (aloc_of_reason r1 |> ALoc.to_loc) (aloc_of_reason r2 |> ALoc.to_loc) in
-      mk_reason RObjectType loc
+      mk_reason RObjectType (loc |> ALoc.of_loc)
     in
     let props = SMap.merge (fun _ p1 p2 ->
       let read_dict r d = optional (read_dict r d), true in

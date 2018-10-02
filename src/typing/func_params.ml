@@ -62,7 +62,7 @@ let add_complex cx ~expr ?default patt t x =
     let t = match type_of_pattern patt with
     | None -> t
     | Some _ ->
-      let reason = mk_reason (RIdentifier name) loc in
+      let reason = mk_reason (RIdentifier name) (loc |> ALoc.of_loc) in
       EvalT (t, DestructuringT (reason, Become), mk_id())
     in
     Type_table.set (Context.type_table cx) loc t;

@@ -60,7 +60,7 @@ class type_parameter_mapper = object(_)
       let name_loc = Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
       { Type.
         name = "this";
-        reason = Reason.mk_reason (Reason.RType name) name_loc;
+        reason = Reason.mk_reason (Reason.RType name) (name_loc |> ALoc.of_loc);
         bound = self_t;
         polarity = Type.Positive;
         default = None;

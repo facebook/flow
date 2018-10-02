@@ -129,7 +129,7 @@ let run cx trace ~use_op reason_op l u
     let reason = reason_of_t l in
     (* Get the internal $JSXIntrinsics map. *)
     let intrinsics =
-      let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t l) in
+      let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t l |> ALoc.of_loc) in
       get_builtin_type cx ~trace reason "$JSXIntrinsics"
     in
     (* Create a use_op for the upcoming operations. *)
@@ -293,8 +293,8 @@ let run cx trace ~use_op reason_op l u
       (* Create a reason where the location is between our first and last known
        * argument. *)
       let r = mk_reason RReactChildren (match use_op with
-      | Op (ReactCreateElementCall {children; _}) -> children
-      | _ -> aloc_of_reason reason_op |> ALoc.to_loc)
+      | Op (ReactCreateElementCall {children; _}) -> children |> ALoc.of_loc
+      | _ -> aloc_of_reason reason_op)
       in
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (t::ts), Some (t::ts)))))
     (* If we only have a spread of unknown length then React may not pass in
@@ -319,8 +319,8 @@ let run cx trace ~use_op reason_op l u
       let r = mk_reason
         (RReactChildrenOrType (t |> reason_of_t |> desc_of_reason))
         (match use_op with
-        | Op (ReactCreateElementCall {children; _}) -> children
-        | _ -> aloc_of_reason reason_op |> ALoc.to_loc)
+        | Op (ReactCreateElementCall {children; _}) -> children |> ALoc.of_loc
+        | _ -> aloc_of_reason reason_op)
       in
       Some (union_of_ts r [
         t;
@@ -332,8 +332,8 @@ let run cx trace ~use_op reason_op l u
     | t::ts, Some spread ->
       (* Create a reason between our known argument and the spread argument. *)
       let r = mk_reason RReactChildren (match use_op with
-      | Op (ReactCreateElementCall {children; _}) -> children
-      | _ -> aloc_of_reason reason_op |> ALoc.to_loc)
+      | Op (ReactCreateElementCall {children; _}) -> children |> ALoc.of_loc
+      | _ -> aloc_of_reason reason_op)
       in
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
   in

@@ -102,7 +102,7 @@ let explicit_res_require_strict cx (loc, f, cx_to) =
 (* Connect a export of a declared module to its import in cxs_to. This happens
    in some arbitrary cx, so cx_to should have already been copied to cx. *)
 let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
-  let reason = Reason.(mk_reason (RCustom m) loc) in
+  let reason = Reason.(mk_reason (RCustom m) (loc |> ALoc.of_loc)) in
 
   (* lookup module declaration from builtin context *)
   let m_name =
@@ -125,7 +125,7 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
 let explicit_unchecked_require_strict cx (m, loc, cx_to) =
   (* Use a special reason so we can tell the difference between an any-typed type import
    * from an untyped module and an any-typed type import from a nonexistent module. *)
-  let reason = Reason.(mk_reason (RUntypedModule m) loc) in
+  let reason = Reason.(mk_reason (RUntypedModule m) (loc |> ALoc.of_loc)) in
   let m_name = Reason.internal_module_name m in
   let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
@@ -228,9 +228,9 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
   let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
     Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
       let desc = Reason.RCustom "TypeAssert library function" in
-      let reason_main = Reason.mk_reason desc call_loc in
+      let reason_main = Reason.mk_reason desc (call_loc |> ALoc.of_loc) in
       let wrap reason = Flow_js.add_output full_cx (Flow_error.EInvalidTypeArgs (
-        reason_main, Reason.mk_reason reason call_loc
+        reason_main, Reason.mk_reason reason (call_loc |> ALoc.of_loc)
       )) in
       match Ty_normalizer.from_scheme ~options ~genv scheme with
       | Ok ty ->

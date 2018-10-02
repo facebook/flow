@@ -365,7 +365,7 @@ let scan_for_suppressions cx lint_severities file_options comments =
 
 let add_require_tvars =
   let add cx desc loc =
-    let reason = Reason.mk_reason desc loc in
+    let reason = Reason.mk_reason desc (loc |> ALoc.of_loc) in
     let t = Tvar.mk cx reason in
     Context.add_require cx loc t
   in
@@ -374,7 +374,7 @@ let add_require_tvars =
        module`s (for now). This won't fly forever so at some point we'll need to
        move `declare module` storage into the modulemap just like normal modules
        and merge them as such. *)
-    let reason = Reason.mk_reason desc loc in
+    let reason = Reason.mk_reason desc (loc |> ALoc.of_loc) in
     let t = Flow_js.get_builtin cx m_name reason in
     Context.add_require cx loc t
   in
@@ -441,7 +441,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
   Env.init_env cx module_scope;
 
   let file_loc = Loc.({ none with source = Some filename }) in
-  let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
+  let reason = Reason.mk_reason (Reason.RCustom "exports") (file_loc |> ALoc.of_loc) in
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   let init_exports = Obj_type.mk cx reason in
@@ -458,7 +458,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
     (* CommonJS with a clobbered module.exports *)
     | CommonJSModule(Some(loc)) ->
       let module_exports_t = ImpExp.get_module_exports cx file_loc in
-      let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
+      let reason = Reason.mk_reason (Reason.RCustom "exports") (loc |> ALoc.of_loc) in
       ImpExp.mk_commonjs_module_t cx reason_exports_module
         reason module_exports_t
 

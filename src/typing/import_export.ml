@@ -49,12 +49,13 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
   )
 
 let mk_resource_module_t cx loc f =
+  let aloc = ALoc.of_loc loc in
   let reason, exports_t = match Utils_js.extension_of_filename f with
   | Some ".css" ->
-    let reason = Reason.mk_reason RObjectType loc in
+    let reason = Reason.mk_reason RObjectType aloc in
     reason, Type.DefT (reason, Type.AnyObjT)
   | Some _ ->
-    let reason = Reason.mk_reason RString loc in
+    let reason = Reason.mk_reason RString aloc in
     reason, Type.StrT.why reason
   | _ -> failwith "How did we find a resource file without an extension?!"
   in
@@ -71,7 +72,7 @@ let require_t_of_ref_unsafe cx (loc, _) =
 let require cx ((_, module_ref) as source) require_loc =
   Type_inference_hooks_js.dispatch_import_hook cx source require_loc;
   let module_t = require_t_of_ref_unsafe cx source in
-  let reason = mk_reason (RCommonJSExports module_ref) require_loc in
+  let reason = mk_reason (RCommonJSExports module_ref) (require_loc |> ALoc.of_loc) in
   Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (module_t, CJSRequireT(reason, t, Context.is_strict cx))
   )
@@ -93,7 +94,7 @@ let module_t_of_cx cx =
   | Some t -> t
   | None ->
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    let reason = (Reason.mk_reason (RCustom "exports") loc) in
+    let reason = (Reason.mk_reason (RCustom "exports") (loc |> ALoc.of_loc)) in
     Tvar.mk_where cx reason (fun t -> Context.add_module cx m t)
 
 let set_module_t cx reason f =
