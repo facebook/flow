@@ -2829,13 +2829,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
     | OpaqueT (r, {underlying_t = Some t; _}), _
-      when Loc.source (aloc_of_reason r |> ALoc.to_loc) = Loc.source (def_loc_of_reason r) ->
+      when ALoc.source (aloc_of_reason r) = Loc.source (def_loc_of_reason r) ->
       rec_flow cx trace (t, u)
 
     (* If the lower bound is in the same file as where the opaque type was defined,
      * we expose the underlying type information *)
     | _, UseT (use_op, OpaqueT (r, {underlying_t = Some t; _}))
-      when Loc.source (aloc_of_reason (reason_of_t l) |> ALoc.to_loc) =
+      when ALoc.source (aloc_of_reason (reason_of_t l)) =
            Loc.source (def_loc_of_reason r) ->
       rec_flow cx trace (l, UseT (use_op, t))
 
