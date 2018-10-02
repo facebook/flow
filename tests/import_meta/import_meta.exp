@@ -1,0 +1,42 @@
+Error ----------------------------------------------------------------------------------------------- import_meta.js:9:1
+
+Not supported.
+
+   9| import.meta;
+      ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- import_meta.js:12:1
+
+Not supported.
+
+   12| import.meta.hello = "world";
+       ^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- import_meta.js:15:14
+
+Not supported.
+
+   15| const meta = import.meta;
+                    ^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- no_assign_to_import_meta.js:4:1
+
+Invalid left-hand side in assignment
+
+   4| import.meta = {wat: "wat"}; // parse error
+      ^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------- no_other_metaproperties.js:4:1
+
+The only valid meta property for import is import.meta
+
+   4| import.atem; // parse error
+      ^^^^^^
+
+
+
+Found 5 errors

@@ -39,6 +39,9 @@ module Expression
   let is_assignable_lhs = Expression.(function
     | _, MetaProperty { MetaProperty.meta = (_, "new"); property = (_, "target") }
       -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+    | _, MetaProperty { MetaProperty.meta = (_, "import"); property = (_, "meta") }
+      -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+      (* draft spec: https://tc39.github.io/proposal-import-meta/ *)
 
     | _, Array _
     | _, Identifier _
@@ -193,6 +196,9 @@ module Expression
   and is_lhs = Expression.(function
     | _, MetaProperty { MetaProperty.meta = (_, "new"); property = (_, "target") }
       -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+    | _, MetaProperty { MetaProperty.meta = (_, "import"); property = (_, "meta") }
+      -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+      (* draft spec: https://tc39.github.io/proposal-import-meta/ *)
 
     | _, Identifier _
     | _, Member _
@@ -534,11 +540,36 @@ module Expression
       super
 
   and import env = with_loc (fun env ->
+    let start_loc = Peek.loc env in
     Expect.token env T_IMPORT;
-    Expect.token env T_LPAREN;
-    let arg = assignment (with_no_in false env) in
-    Expect.token env T_RPAREN;
-    Expression.Import arg
+    match Peek.token env with
+    | T_LPAREN ->
+      (* "import(...)" syntax *)
+      Eat.token env;
+      let arg = assignment (with_no_in false env) in
+      Expect.token env T_RPAREN;
+      Expression.Import arg
+    | T_PERIOD -> begin
+      (* "import.meta" syntax (no other metaproperties are permitted) *)
+      Eat.token env;
+      match Peek.token env with
+      | T_IDENTIFIER { raw = "meta"; _ } ->
+        Eat.token env;
+        let end_loc = Peek.loc env in
+        Expression.(MetaProperty MetaProperty.({
+          meta = start_loc, "import";
+          property = end_loc, "meta";
+        }))
+      | T_IDENTIFIER _ ->
+        error_at env (start_loc, Parse_error.InvalidImportMetaProperty);
+        Expression.Identifier (start_loc, "import")
+      | _ ->
+        error_unexpected env;
+        Expression.Identifier (start_loc, "import")
+      end
+    | _ ->
+      error_unexpected env;
+      Expression.Identifier (start_loc, "import")
   ) env
 
   and call_cover ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left =
