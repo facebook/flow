@@ -62,13 +62,14 @@ let subst cx map x =
   let {tparams; tparams_map; fparams; return_t; _} = x in
   (* Remove shadowed type params from `map`, but allow bounds/defaults to be
      substituted if they refer to a type param before it is shadowed. *)
-  let tparams, map = tparams |> List.fold_left (fun (tparams, map) tp ->
+  let tparams = tparams |> List.map (fun tp ->
     let bound = Flow.subst cx map tp.bound in
     let default = Option.map ~f:(Flow.subst cx map) tp.default in
-    {tp with bound; default}::tparams,
+    {tp with bound; default}
+  ) in
+  let map = tparams |> List.fold_left (fun map tp ->
     SMap.remove tp.name map
-  ) ([], map) in
-  let tparams = List.rev tparams in
+  ) map in
   let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
   let fparams = Func_params.subst cx map fparams in
   let return_t = Flow.subst cx map return_t in
