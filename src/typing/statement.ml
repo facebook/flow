@@ -4957,14 +4957,14 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
     match att with
     (* All attributes with a non-namespaced name that are not a react ignored
      * attribute. *)
-    | Opening.Attribute (aloc, { Attribute.
+    | Opening.Attribute (attr_loc, { Attribute.
         name = Attribute.Identifier (id_loc, { Identifier.name = aname });
         value
       }) ->
       (* Get the type for the attribute's value. *)
       let atype, value =
-        if Type_inference_hooks_js.dispatch_jsx_hook cx aname aloc c
-        then AnyT.at aloc, None
+        if Type_inference_hooks_js.dispatch_jsx_hook cx aname attr_loc c
+        then AnyT.at attr_loc, None
         else
           match value with
             (* <element name="literal" /> *)
@@ -4983,17 +4983,17 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
                   }))
             (* <element name={} /> *)
             | Some (Attribute.ExpressionContainer (ec_loc, _)) ->
-                let t = EmptyT.at aloc in
+                let t = EmptyT.at attr_loc in
                 t, Some (Attribute.ExpressionContainer (
                   (ec_loc, t), ExpressionContainer.({
                     expression = Expression Typed_ast.(error_annot, Expression.error)
                   })))
             (* <element name /> *)
             | None ->
-                DefT (mk_reason RBoolean aloc, BoolT (Some true)), None
+                DefT (mk_reason RBoolean attr_loc, BoolT (Some true)), None
       in
       let p = Field (Some id_loc, atype, Neutral) in
-      let att = Opening.Attribute (aloc, { Attribute.
+      let att = Opening.Attribute (attr_loc, { Attribute.
           name = Attribute.Identifier ((id_loc, atype), { Identifier.name = aname });
           value
         }) in
