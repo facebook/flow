@@ -971,7 +971,7 @@ and number_literal ~in_member_object raw num =
     else
       Atom raw, Atom str
   in
-  IfPretty (if_pretty, if_ugly)
+  if if_pretty = if_ugly then if_pretty else IfPretty (if_pretty, if_ugly)
 
 and literal { Ast.Literal.raw; value; } =
   let open Ast.Literal in
