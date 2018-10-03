@@ -815,7 +815,8 @@ class mapper = object(this)
     let open Flow_ast.JSX in
     let { frag_children; _ } = expr in
     let children' = ListUtils.ident_map this#jsx_child frag_children in
-    { expr with frag_children = children' }
+    if frag_children == children' then expr
+    else { expr with frag_children = children' }
 
   method jsx_opening_element (elem: (Loc.t, Loc.t) Flow_ast.JSX.Opening.t) =
     let open Flow_ast.JSX.Opening in
