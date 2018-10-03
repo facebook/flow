@@ -99,8 +99,25 @@ let tests = "js_layout_generator" >::: [
         argument = y;
       }) in
 
-      let ast = E.binary ~op:Ast.Expression.Binary.Plus x incr_y in
-      assert_expression ~ctxt "x+ ++y" ast;
+      begin
+        let ast = E.binary ~op:Ast.Expression.Binary.Plus x incr_y in
+        let layout = Js_layout_generator.expression ast in
+        assert_layout ~ctxt
+          L.(loc (fused [
+            loc (id "x");
+            pretty_space;
+            atom "+";
+            pretty_space;
+            ugly_space;
+            loc (fused [
+              atom "++";
+              loc (id "y");
+            ]);
+          ]))
+          layout;
+        assert_output ~ctxt "x+ ++y" layout;
+        assert_output ~ctxt ~pretty:true "x + ++y" layout;
+      end;
 
       let ast = E.binary ~op:Ast.Expression.Binary.Minus x incr_y in
       assert_expression ~ctxt "x- ++y" ast;
@@ -538,17 +555,72 @@ let tests = "js_layout_generator" >::: [
       assert_statement ~ctxt {|if(foo in{"foo":bar}){}|} ast;
     end;
 
-  "binary_instanceof_space" >::
-    begin fun ctxt ->
-      let ast = statement_of_string {|if("foo" instanceof {"foo": bar}){}|} in
-      assert_statement ~ctxt {|if("foo"instanceof{"foo":bar}){}|} ast;
-
-      let ast = statement_of_string {|if("foo" instanceof bar){}|} in
-      assert_statement ~ctxt {|if("foo"instanceof bar){}|} ast;
-
-      let ast = statement_of_string {|if(foo instanceof {"foo":bar}){}|} in
-      assert_statement ~ctxt {|if(foo instanceof{"foo":bar}){}|} ast;
+  "binary_instanceof_space" >:: begin fun ctxt ->
+    begin
+      let ast = E.binary ~op:Flow_ast.Expression.Binary.Instanceof
+        (E.literal (Literals.string "foo"))
+        (E.object_ [])
+      in
+      let layout = Js_layout_generator.expression ast in
+      assert_layout ~ctxt
+        L.(loc (fused [
+          loc (loc (fused [
+            atom "\"";
+            atom "foo";
+            atom "\"";
+          ]));
+          pretty_space;
+          atom "instanceof";
+          pretty_space;
+          loc (atom "{}");
+        ]))
+        layout;
+      assert_output ~ctxt {|"foo"instanceof{}|} layout;
+      assert_output ~ctxt ~pretty:true {|"foo" instanceof {}|} layout;
     end;
+
+    begin
+      let ast = E.binary ~op:Flow_ast.Expression.Binary.Instanceof
+        (E.literal (Literals.string "foo"))
+        (E.identifier "bar")
+      in
+      let layout = Js_layout_generator.expression ast in
+      assert_layout ~ctxt
+         L.(loc (fused [
+          loc (loc (fused [
+            atom "\"";
+            atom "foo";
+            atom "\"";
+          ]));
+          pretty_space;
+          atom "instanceof";
+          space;
+          loc (id "bar");
+        ]))
+        layout;
+      assert_output ~ctxt {|"foo"instanceof bar|} layout;
+      assert_output ~ctxt ~pretty:true {|"foo" instanceof bar|} layout;
+    end;
+
+    begin
+      let ast = E.binary ~op:Flow_ast.Expression.Binary.Instanceof
+        (E.identifier "foo")
+        (E.object_ [])
+      in
+      let layout = Js_layout_generator.expression ast in
+      assert_layout ~ctxt
+        L.(loc (fused [
+          loc (id "foo");
+          space;
+          atom "instanceof";
+          pretty_space;
+          loc (atom "{}");
+        ]))
+        layout;
+      assert_output ~ctxt {|foo instanceof{}|} layout;
+      assert_output ~ctxt ~pretty:true {|foo instanceof {}|} layout;
+    end;
+  end;
 
   "logical_wrapping" >::
     begin fun ctxt ->

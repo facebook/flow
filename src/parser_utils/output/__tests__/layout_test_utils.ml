@@ -46,11 +46,17 @@ module Layout_builder = struct
   let atom str =
     Atom str
 
+  let space =
+    Atom " "
+
   let pretty_space =
-    IfPretty (Atom " ", Empty)
+    IfPretty (space, Empty)
+
+  let ugly_space =
+    IfPretty (Empty, space)
 
   let flat_pretty_space =
-    IfBreak (Empty, IfPretty (Atom " ", Empty))
+    IfBreak (Empty, IfPretty (space, Empty))
 
   let pretty_newline =
     IfPretty (Newline, Empty)
@@ -129,6 +135,9 @@ module Layout_builder = struct
       let indent = if indent = 2 then "" else spf " ~indent:%d" indent in
       phrase "sequence%s%s%s %s" break inline indent (list ~i items)
 
+    | Atom " " ->
+      word "space"
+
     | Atom str ->
       phrase "atom %S" str
 
@@ -138,6 +147,7 @@ module Layout_builder = struct
 
     | IfPretty (Atom " ", Empty) -> word "pretty_space"
     | IfPretty (Newline, Empty) -> word "pretty_newline"
+    | IfPretty (Empty, (Atom " ")) -> word "ugly_space"
 
     | IfPretty (left, right) ->
       phrase "Layout.IfPretty (%s, %s)" (helper ~i left) (helper ~i right)
