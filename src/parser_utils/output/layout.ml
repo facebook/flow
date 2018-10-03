@@ -145,6 +145,10 @@ let list
     [layout_items]
   )
 
+(* Takes a list of layout nodes and intersperses spaces: a `space` if a space is necessary
+   to separate two tokens, or a `pretty_space` if it's only needed for aesthetics. Generally a
+   space is required, except if the last char of one node or the first char of the next node is
+   a punctuator, then spaces are only for aesthetics (e.g. `new Foo` vs `new(Foo)`) *)
 let fuse_with_space =
   let is_punctuator = function
   | '{' | '(' | ')' | '[' | ']' | '.'
