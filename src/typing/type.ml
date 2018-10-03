@@ -3268,8 +3268,8 @@ let extends_use_type use_op l u =
   ExtendsUseT (use_op, reason, [], l, u)
 
 let poly_type id (tparams: typeparam Nel.t) t =
-    let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
-    DefT (reason, PolyT (tparams, t, id))
+  let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
+  DefT (reason, PolyT (tparams, t, id))
 
 let poly_type_of_tparam_list id tparams t =
   match tparams with
