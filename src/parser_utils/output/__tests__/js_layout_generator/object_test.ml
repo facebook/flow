@@ -36,6 +36,14 @@ let expected_object2_layout prop1 prop2 =
   ]))
 
 let tests = [
+  "empty_object" >:: begin fun ctxt ->
+    let ast = E.object_ [] in
+    let layout = Js_layout_generator.expression ast in
+    assert_layout ~ctxt L.(loc (atom "{}")) layout;
+    assert_output ~ctxt "{}" layout;
+    assert_output ~ctxt ~pretty:true "{}" layout;
+  end;
+
   (* `{ foo: x, bar: y }` rather than `{foo: x, bar: y}` *)
   "flat_spaces_inside_braces" >:: begin fun ctxt ->
     let prop1 = E.object_property (E.object_property_key "foo") (E.identifier "x") in

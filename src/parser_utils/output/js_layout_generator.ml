@@ -675,6 +675,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           elements
         )
     | E.Object { E.Object.properties } ->
+      if properties = [] then Atom "{}" else
       list
         ~wrap:(Concat [Atom "{"; flat_pretty_space], Concat [flat_pretty_space; Atom "}"])
         ~sep:(Atom ",")
