@@ -564,11 +564,11 @@ let tests = "js_layout_generator" >::: [
       let layout = Js_layout_generator.expression ast in
       assert_layout ~ctxt
         L.(loc (fused [
-          loc (loc (fused [
+          loc (fused [
             atom "\"";
             atom "foo";
             atom "\"";
-          ]));
+          ]);
           pretty_space;
           atom "instanceof";
           pretty_space;
@@ -587,11 +587,11 @@ let tests = "js_layout_generator" >::: [
       let layout = Js_layout_generator.expression ast in
       assert_layout ~ctxt
          L.(loc (fused [
-          loc (loc (fused [
+          loc (fused [
             atom "\"";
             atom "foo";
             atom "\"";
-          ]));
+          ]);
           pretty_space;
           atom "instanceof";
           space;
@@ -1773,6 +1773,20 @@ let tests = "js_layout_generator" >::: [
       assert_statement ~ctxt "throw foo;" (statement_of_string "throw (foo);");
       assert_statement_string ~ctxt "throw new Error();";
     end;
+
+  "string_literal" >:: begin fun ctxt ->
+    let ast = E.literal (Literals.string "a") in
+    let layout = Js_layout_generator.expression ast in
+    assert_layout ~ctxt
+      L.(loc (fused [
+        atom "\"";
+        atom "a";
+        atom "\"";
+      ]))
+      layout;
+    assert_output ~ctxt {|"a"|} layout;
+    assert_output ~ctxt ~pretty:true {|"a"|} layout;
+  end;
 
   "unicode_string_literal" >::
     begin fun ctxt ->

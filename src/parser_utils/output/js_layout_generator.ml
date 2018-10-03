@@ -692,7 +692,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         ~trailing:false
         (List.map (expression_with_parens ~precedence ~ctxt) expressions)
     | E.Identifier ident -> identifier ident
-    | E.Literal lit -> literal (loc, lit)
+    | E.Literal lit -> literal lit
     | E.Function func -> function_ ~precedence func
     | E.ArrowFunction func -> function_base ~ctxt ~precedence ~arrow:true func
     | E.Assignment { E.Assignment.operator; left; right } ->
@@ -973,21 +973,18 @@ and number_literal ~in_member_object raw num =
   in
   IfPretty (if_pretty, if_ugly)
 
-and literal (loc, { Ast.Literal.raw; value; }) =
+and literal { Ast.Literal.raw; value; } =
   let open Ast.Literal in
-  source_location_with_comments (
-    loc,
-    match value with
-    | Number num ->
-      number_literal ~in_member_object:false raw num
-    | String str ->
-      let quote = better_quote str in
-      fuse [Atom quote; Atom (utf8_escape ~quote str); Atom quote]
-    | RegExp { RegExp.pattern; flags; } ->
-      let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
-      fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
-    | _ -> Atom raw
-  )
+  match value with
+  | Number num ->
+    number_literal ~in_member_object:false raw num
+  | String str ->
+    let quote = better_quote str in
+    fuse [Atom quote; Atom (utf8_escape ~quote str); Atom quote]
+  | RegExp { RegExp.pattern; flags; } ->
+    let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
+    fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
+  | _ -> Atom raw
 
 and member ?(optional=false) ~precedence ~ctxt member_node =
   let { Ast.Expression.Member._object; property; computed } = member_node in
@@ -1026,7 +1023,7 @@ and string_literal (loc, { Ast.StringLiteral.value; _ }) =
   )
 
 and pattern_object_property_key = Ast.Pattern.Object.(function
-  | Property.Literal lit -> literal lit
+  | Property.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
   | Property.Identifier ident -> identifier ident
   | Property.Computed expr ->
     fuse [
@@ -1480,7 +1477,7 @@ and object_properties_with_newlines properties =
 and object_property_key key =
   let module O = Ast.Expression.Object in
   match key with
-  | O.Property.Literal lit -> literal lit
+  | O.Property.Literal (loc, lit) -> source_location_with_comments (loc, literal lit)
   | O.Property.Identifier ident -> identifier ident
   | O.Property.Computed expr ->
     fuse [
@@ -1606,7 +1603,8 @@ and jsx_attribute (loc, { Ast.JSX.Attribute.name; value }) =
     | Some v -> fuse [
       Atom "=";
       begin match v with
-      | A.Literal (loc, lit) -> literal (loc, lit)
+      | A.Literal (loc, lit) ->
+        source_location_with_comments (loc, literal lit)
       | A.ExpressionContainer (loc, express) ->
         source_location_with_comments (loc, jsx_expression_container express)
       end;

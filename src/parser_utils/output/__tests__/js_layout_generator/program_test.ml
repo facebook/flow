@@ -26,7 +26,7 @@ let tests = [
               pretty_space;
               atom "=";
               pretty_space;
-              loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=8; offset=8}; _end={Loc.line=1; column=9; offset=9}} (loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=8; offset=8}; _end={Loc.line=1; column=9; offset=9}} (Layout.IfPretty ((atom "1"), (atom "1"))));
+              loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=8; offset=8}; _end={Loc.line=1; column=9; offset=9}} (Layout.IfPretty ((atom "1"), (atom "1")));
             ]);
           ]);
           atom ";";
@@ -42,7 +42,7 @@ let tests = [
                 pretty_space;
                 atom "=";
                 pretty_space;
-                loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=8; offset=21}; _end={Loc.line=4; column=9; offset=22}} (loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=8; offset=21}; _end={Loc.line=4; column=9; offset=22}} (Layout.IfPretty ((atom "2"), (atom "2"))));
+                loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=8; offset=21}; _end={Loc.line=4; column=9; offset=22}} (Layout.IfPretty ((atom "2"), (atom "2")));
               ]);
             ]);
             atom ";";
