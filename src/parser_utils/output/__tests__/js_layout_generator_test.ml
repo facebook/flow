@@ -120,13 +120,13 @@ let tests = "js_layout_generator" >::: [
       end;
 
       let ast = E.binary ~op:Ast.Expression.Binary.Minus x incr_y in
-      assert_expression ~ctxt "x- ++y" ast;
+      assert_expression ~ctxt "x-++y" ast;
 
       let ast = E.binary ~op:Ast.Expression.Binary.Minus x decr_y in
       assert_expression ~ctxt "x- --y" ast;
 
       let ast = E.binary ~op:Ast.Expression.Binary.Plus x decr_y in
-      assert_expression ~ctxt "x+ --y" ast;
+      assert_expression ~ctxt "x+--y" ast;
 
       let ast = E.binary ~op:Ast.Expression.Binary.Plus x_incr y in
       assert_expression ~ctxt "x+++y" ast;

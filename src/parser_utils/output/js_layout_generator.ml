@@ -730,18 +730,10 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           (_, E.Unary { E.Unary.operator=E.Unary.Plus; _ })
         | E.Binary.Minus,
           (_, E.Unary { E.Unary.operator=E.Unary.Minus; _ })
-          ->
-          let ctxt = context_after_token ctxt in
-          fuse [ugly_space; expression ~ctxt right]
         | E.Binary.Plus,
-          (_, E.Unary { E.Unary.operator=E.Unary.Minus; _ })
+          (_, E.Update { E.Update.prefix = true; operator = E.Update.Increment; _ })
         | E.Binary.Minus,
-          (_, E.Unary { E.Unary.operator=E.Unary.Plus; _ })
-          ->
-          let ctxt = context_after_token ctxt in
-          fuse [expression ~ctxt right]
-        | (E.Binary.Plus | E.Binary.Minus),
-          (_, E.Update { E.Update.prefix = true; _ })
+          (_, E.Update { E.Update.prefix = true; operator = E.Update.Decrement; _ })
           ->
           let ctxt = context_after_token ctxt in
           fuse [ugly_space; expression ~ctxt right]
