@@ -69,6 +69,11 @@ let rev_append xs ys =
   | [] -> failwith "impossible"
   | z::zs -> (z, zs)
 
+let append xs ys =
+  match List.append (to_list xs) (to_list ys) with
+  | [] -> failwith "impossible"
+  | z::zs -> (z, zs)
+
 let length (_, xs) = 1 + List.length xs
 
 let fold_left f acc (x, xs) = List.fold_left f acc (x::xs)

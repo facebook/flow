@@ -23,6 +23,7 @@ val (>>=): 'a t -> ('a -> 'b t) -> 'b t
 val rev: 'a t -> 'a t
 val rev_map: ('a -> 'b) -> 'a t -> 'b t
 val rev_append: 'a t -> 'a t -> 'a t
+val append: 'a t -> 'a t -> 'a t
 val length: 'a t -> int
 val fold_left: ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
 val hd: 'a t -> 'a

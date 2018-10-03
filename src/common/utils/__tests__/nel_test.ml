@@ -74,6 +74,10 @@ let tests = "nel" >::: [
     assert_equal ~ctxt (Nel.rev_append lst lst2 |> Nel.to_list) [2; 4; 6; 3; 5]
   end;
 
+  "append" >:: begin fun ctxt ->
+    assert_equal ~ctxt (Nel.append lst lst2 |> Nel.to_list) [6; 4; 2; 3; 5]
+  end;
+
   "length" >:: begin fun ctxt ->
     assert_equal ~ctxt (Nel.length lst) 3
   end;
