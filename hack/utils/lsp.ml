@@ -994,6 +994,9 @@ type lsp_notification =
   | ProgressNotification of Progress.params
   | ActionRequiredNotification of ActionRequired.params
   | ConnectionStatusNotification of ConnectionStatus.params
+  | InitializedNotification
+  | SetTraceNotification (* $/setTraceNotification *)
+  | LogTraceNotification (* $/logTraceNotification *)
   | UnknownNotification of string * Hh_json.json option
 
 type lsp_message =

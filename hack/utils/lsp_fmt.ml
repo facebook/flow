@@ -1042,6 +1042,9 @@ let notification_name_to_string (notification: lsp_notification) : string =
   | ProgressNotification _ -> "window/progress"
   | ActionRequiredNotification _ -> "window/actionRequired"
   | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
+  | InitializedNotification -> "initialized"
+  | SetTraceNotification -> "$/setTraceNotification"
+  | LogTraceNotification -> "$/logTraceNotification"
   | UnknownNotification (method_, _params) -> method_
 
 let message_name_to_string (message: lsp_message) : string =
@@ -1088,6 +1091,9 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
 let parse_lsp_notification (method_: string) (params: json option) : lsp_notification =
   match method_ with
   | "$/cancelRequest" -> CancelRequestNotification (parse_cancelRequest params)
+  | "$/setTraceNotification" -> SetTraceNotification
+  | "$/logTraceNotification" -> LogTraceNotification
+  | "initialized" -> InitializedNotification
   | "exit" -> ExitNotification
   | "textDocument/didOpen" -> DidOpenNotification (parse_didOpen params)
   | "textDocument/didClose" -> DidCloseNotification (parse_didClose params)
@@ -1230,6 +1236,9 @@ let print_lsp_notification (notification: lsp_notification) : json =
         print_actionRequired r.ActionRequired.id r.ActionRequired.label
     | ConnectionStatusNotification r -> print_connectionStatus r
     | ExitNotification
+    | InitializedNotification
+    | SetTraceNotification
+    | LogTraceNotification
     | DidOpenNotification _
     | DidCloseNotification _
     | DidSaveNotification _

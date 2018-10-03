@@ -1444,6 +1444,14 @@ begin
     } in
     Ok (try_connect flowconfig_name env, LogNeeded metadata)
 
+  | _, Client_message (NotificationMessage InitializedNotification, _metadata) ->
+    Ok (state, LogNotNeeded)
+
+  | _, Client_message (NotificationMessage SetTraceNotification, _metadata)
+  | _, Client_message (NotificationMessage LogTraceNotification, _metadata) ->
+    (* specific to VSCode logging *)
+    Ok (state, LogNotNeeded)
+
   | _, Client_message (RequestMessage (id, ShutdownRequest), _metadata) ->
     begin match state with Connected env -> close_conn env | _ -> () end;
     let response = ResponseMessage (id, ShutdownResult) in
