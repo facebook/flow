@@ -209,7 +209,7 @@ class virtual ['a] t = object(self)
           if t'' == t' then t
           else OptionalT t''
       | PolyT (tparamlist, t', _) ->
-          let tparamlist' = ListUtils.ident_map (self#type_param cx map_cx) tparamlist in
+          let tparamlist' = Nel.ident_map (self#type_param cx map_cx) tparamlist in
           let t'' = self#type_ cx map_cx t' in
           if tparamlist == tparamlist' && t' == t'' then t
           else PolyT (tparamlist', t'', Reason.mk_id ())

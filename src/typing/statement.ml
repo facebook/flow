@@ -756,7 +756,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
         in
         loop t
       in
-      let type_ = poly_type (Context.make_nominal cx) typeparams
+      let type_ = poly_type_of_tparam_list (Context.make_nominal cx) typeparams
         (DefT (r, TypeT (TypeAliasKind, t))) in
       Flow.check_polarity cx Positive t;
       Type_table.set (Context.type_table cx) loc type_;
@@ -795,7 +795,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
       } in
       let t = OpaqueT (mk_reason (ROpaqueType name) (loc |> ALoc.of_loc), opaquetype) in
       Flow.check_polarity cx Positive t;
-      let type_ = poly_type (Context.make_nominal cx) typeparams
+      let type_ = poly_type_of_tparam_list (Context.make_nominal cx) typeparams
         (DefT (r, TypeT (OpaqueKind, t))) in
       let open Flow in
       let () = match underlying_t, super_t with

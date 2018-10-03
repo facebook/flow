@@ -35,7 +35,7 @@ type codegen_env = {
 
 let add_applied_tparams applied_tparams env = {env with applied_tparams;}
 let add_str str env = Buffer.add_string env.buf str; env
-let add_tparams tparams env = {env with tparams;}
+let add_tparams tparams env = {env with tparams=(Nel.to_list tparams);}
 let find_props tmap_id env = Context.find_props env.flow_cx tmap_id
 let has_class_name class_id env = IMap.mem class_id env.class_names
 let next_class_name env =

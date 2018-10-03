@@ -190,7 +190,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | DefT (_, PolyT (tparams, t, id)) -> [
       "id", JSON_Number (string_of_int id);
-      "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) tparams);
+      "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) (Nel.to_list tparams));
       "type", _json_of_t json_cx t
     ]
 
@@ -1733,7 +1733,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | FunProtoCallT _ -> p t
   | DefT (_, PolyT (tps, c, id)) -> p ~extra:(spf "%s [%s] #%d"
       (kid c)
-      (String.concat "; " (List.map (fun tp -> tp.name) tps))
+      (String.concat "; " (List.map (fun tp -> tp.name) (Nel.to_list tps)))
       id) t
   | ThisClassT (_, inst) -> p ~extra:(kid inst) t
   | BoundT (_, name, _) -> p ~extra:name t

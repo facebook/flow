@@ -67,7 +67,7 @@ let substituter = object(self)
       else t
 
     | DefT (reason, PolyT (xs, inner, _)) ->
-      let xs, map, changed = List.fold_left (fun (xs, map, changed) typeparam ->
+      let xs, map, changed = Nel.fold_left (fun (xs, map, changed) typeparam ->
         let bound = self#type_ cx (map, force, use_op) typeparam.bound in
         let default = match typeparam.default with
         | None -> None
@@ -79,9 +79,15 @@ let substituter = object(self)
         SMap.remove typeparam.name map,
         changed || bound != typeparam.bound || default != typeparam.default
       ) ([], map, false) xs in
+      let xs = xs |> List.rev |> Nel.of_list in
+      (* The constructed list will always be nonempty because we fold over a nonempty list and add
+       * an element to the resulting list for every element in the original list. It's just a bit
+       * tricky to show this by construction while preserving the exact semantics of the above code.
+       *)
+      let xs = Option.value_exn xs in
       let inner_ = self#type_ cx (map, false, None) inner in
       let changed = changed || inner_ != inner in
-      if changed then DefT (reason, PolyT (List.rev xs, inner_, mk_id ())) else t
+      if changed then DefT (reason, PolyT (xs, inner_, mk_id ())) else t
 
     | ThisClassT (reason, this) ->
       let map = SMap.remove "this" map in

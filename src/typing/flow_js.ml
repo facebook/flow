@@ -3798,7 +3798,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (t_, tvar)
 
     | DefT (_, PolyT (tps, _, _)), VarianceCheckT(_, ts, polarity) ->
-      variance_check cx ~trace polarity (tps, ts)
+      variance_check cx ~trace polarity (Nel.to_list tps, ts)
 
     (* When we are checking the polarity of a super class where the super class has no type
        args, we end up generating this constraint. Since it has no type args, we never resolve to
@@ -3809,16 +3809,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT (tparams, _, _)),
       TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
       let minimum_arity = poly_minimum_arity tparams in
-      let maximum_arity = List.length tparams in
+      let maximum_arity = Nel.length tparams in
       let reason_arity =
-        let tp1, tpN = List.hd tparams, List.hd (List.rev tparams) in
+        let tp1, tpN = Nel.hd tparams, Nel.hd (Nel.rev tparams) in
         let loc = Loc.btwn (aloc_of_reason tp1.reason |> ALoc.to_loc) (aloc_of_reason tpN.reason |> ALoc.to_loc) in
         mk_reason (RCustom "See type parameters of definition here") (loc |> ALoc.of_loc) in
       if List.length targs > maximum_arity then (
         add_output cx ~trace
           (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
       ) else (
-        let unused_targs = List.fold_left (fun targs { name; default; polarity; reason; _ } ->
+        let unused_targs = Nel.fold_left (fun targs { name; default; polarity; reason; _ } ->
           match default, targs with
           | None, [] ->
             (* fewer arguments than params but no default *)
@@ -3906,8 +3906,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when id1 = id2 -> ()
 
     | DefT (r1, PolyT (params1, t1, id1)), UseT (use_op, DefT (r2, PolyT (params2, t2, id2))) ->
-      let n1 = List.length params1 in
-      let n2 = List.length params2 in
+      let n1 = Nel.length params1 in
+      let n2 = Nel.length params2 in
       if n2 > n1 then
         add_output cx ~trace (FlowError.ETooManyTypeArgs (r2, r1, n1))
       else if n2 < n1 then
@@ -3930,7 +3930,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (** general case **)
     | _, UseT (use_op, DefT (_, PolyT (ids, t, _))) ->
-        generate_tests cx ids (fun map_ ->
+        generate_tests cx (Nel.to_list ids) (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, subst cx ~use_op map_ t))
         )
 
@@ -3958,7 +3958,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           reason_tapp = reason_tapp;
           reason_arity = mk_poly_arity_reason ids;
           min_arity = poly_minimum_arity ids;
-          max_arity = List.length ids;
+          max_arity = Nel.length ids;
         })
       (* Special case for `_ instanceof C` where C is polymorphic *)
       | PredicateT ((RightP (InstanceofTest, _) | NotP (RightP (InstanceofTest, _))), _) ->
@@ -7567,7 +7567,7 @@ and check_polarity cx ?trace polarity = function
     List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
 
   | DefT (_, PolyT (xs, t, _)) ->
-    List.iter (check_polarity_typeparam cx ?trace polarity) xs;
+    Nel.iter (check_polarity_typeparam cx ?trace polarity) xs;
     check_polarity cx ?trace polarity t
 
   | ThisTypeAppT (_, c, _, None) ->
@@ -7648,7 +7648,7 @@ and poly_minimum_arity =
   let f = fun n typeparam ->
     if typeparam.default = None then n + 1 else n
   in
-  List.fold_left f 0
+  Nel.fold_left f 0
 
 (* Instantiate a polymorphic definition given type arguments. *)
 and instantiate_poly_with_targs
@@ -7663,7 +7663,7 @@ and instantiate_poly_with_targs
   ts
   =
   let minimum_arity = poly_minimum_arity xs in
-  let maximum_arity = List.length xs in
+  let maximum_arity = Nel.length xs in
   let reason_arity = mk_poly_arity_reason xs in
   if List.length ts > maximum_arity
   then begin
@@ -7671,7 +7671,7 @@ and instantiate_poly_with_targs
     Option.iter errs_ref
       ~f:(fun errs_ref -> errs_ref := `ETooManyTypeArgs(reason_arity, maximum_arity)::!errs_ref)
   end;
-  let map, _ = List.fold_left
+  let map, _ = Nel.fold_left
     (fun (map, ts) typeparam ->
       let t, ts = match typeparam, ts with
       | {default=Some default; _;}, [] ->
@@ -7712,7 +7712,7 @@ and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
 (* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)
 and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (xs,t) =
   (* Remember: other_bound might refer to other type params *)
-  let ts, _ = List.fold_left
+  let ts, _ = Nel.fold_left
     (fun (ts, map) typeparam ->
       let t = match typeparam.bound with
       | DefT (_, MixedT _) -> AnyT.why reason_op
@@ -7725,14 +7725,14 @@ and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (xs,t
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
 and instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache (xs,t) =
-  let ts = xs |> List.map (fun typeparam ->
+  let ts = xs |> Nel.map (fun typeparam ->
     ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp
   ) in
-  instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ?cache (xs,t) ts
+  instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ?cache (xs,t) (Nel.to_list ts)
 
 (* instantiate each param of a polymorphic type with its upper bound *)
 and instantiate_poly_param_upper_bounds cx typeparams =
-  let _, revlist = List.fold_left (
+  let _, revlist = Nel.fold_left (
     fun (map, list) { name; bound; _ } ->
       let t = subst cx map bound in
       SMap.add name t map, t :: list
@@ -7740,7 +7740,7 @@ and instantiate_poly_param_upper_bounds cx typeparams =
   List.rev revlist
 
 and mk_poly_arity_reason xs =
-  let x1, xN = List.hd xs, List.hd (List.rev xs) in
+  let x1, xN = Nel.hd xs, Nel.hd (Nel.rev xs) in
   let loc = Loc.btwn (aloc_of_reason x1.reason |> ALoc.to_loc) (aloc_of_reason xN.reason |> ALoc.to_loc) in
   mk_reason (RCustom "See type parameters of definition here") (loc |> ALoc.of_loc)
 
@@ -7777,9 +7777,11 @@ and canonicalize_imported_type cx trace reason t =
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
   | DefT (_, PolyT (typeparams, ThisClassT _, _)) ->
-    let targs = List.map (fun tp ->
-      BoundT (tp.reason, tp.name, tp.polarity)
-    ) typeparams in
+    let targs =
+      typeparams
+      |> Nel.map (fun tp -> BoundT (tp.reason, tp.name, tp.polarity))
+      |> Nel.to_list
+    in
     Some (poly_type (mk_id ()) typeparams (class_type (typeapp t targs)))
 
   | DefT (_, PolyT (_, DefT (_, TypeT _), _)) ->
@@ -9752,8 +9754,8 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
     when id1 = id2 -> ()
 
   | DefT (r1, PolyT (params1, t1, id1)), DefT (r2, PolyT (params2, t2, id2)) ->
-    let n1 = List.length params1 in
-    let n2 = List.length params2 in
+    let n1 = Nel.length params1 in
+    let n2 = Nel.length params2 in
     if n2 > n1 then
       add_output cx ~trace (FlowError.ETooManyTypeArgs (r2, r1, n1))
     else if n2 < n1 then
@@ -10771,7 +10773,7 @@ and instantiate_poly_t cx t = function
         try
           let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
             SMap.add name type_ acc
-          ) SMap.empty type_params types in
+          ) SMap.empty (Nel.to_list type_params) types in
           subst cx subst_map t_
         with _ ->
           prerr_endline "Instantiating poly type failed";
@@ -12453,9 +12455,9 @@ class assert_ground_visitor skip r context = object (self)
     | DefT (_, PolyT (tparams, DefT (_, TypeT (_,
       EvalT (BoundT (_, s, _) as t, (TypeDestructorT (_, _, destructor)), _))), _)) ->
         if (new type_finder t)#destructor cx false destructor
-        then loop cx pole seen (tparams, targs)
-        else loop ~constant_polarity_param:(s, Positive) cx pole seen (tparams, targs)
-    | DefT (_, PolyT (tparams, _, _)) -> loop cx pole seen (tparams, targs)
+        then loop cx pole seen ((Nel.to_list tparams), targs)
+        else loop ~constant_polarity_param:(s, Positive) cx pole seen ((Nel.to_list tparams), targs)
+    | DefT (_, PolyT (tparams, _, _)) -> loop cx pole seen ((Nel.to_list tparams), targs)
     | DefT (_, EmptyT) -> seen
     | DefT (_, AnyT) -> seen
     | _ ->

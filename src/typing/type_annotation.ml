@@ -779,7 +779,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       }))
   in
   let id = Context.make_nominal cx in
-  (loc, poly_type id tparams ft),
+  (loc, poly_type_of_tparam_list id tparams ft),
   Function {
     Function.params = (params_loc, {
       Function.Params.params = List.rev rev_param_asts;

@@ -160,7 +160,7 @@ class ['a] t = object(self)
   | OptionalT t -> self#type_ cx pole acc t
 
   | PolyT (xs, t, _) ->
-    let acc = self#list (self#type_param cx pole) acc xs in
+    let acc = self#nel (self#type_param cx pole) acc xs in
     let acc = self#type_ cx pole acc t in
     acc
 
@@ -993,6 +993,9 @@ class ['a] t = object(self)
 
   method private list: 't. ('a -> 't -> 'a) -> 'a -> 't list -> 'a =
     List.fold_left
+
+  method private nel: 't. ('a -> 't -> 'a) -> 'a -> 't Nel.t -> 'a =
+    Nel.fold_left
 
   method private opt: 't. ('a -> 't -> 'a) -> 'a -> 't option -> 'a =
     fun f acc opt -> Option.fold opt ~init:acc ~f

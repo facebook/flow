@@ -787,7 +787,7 @@ end = struct
     | DefT (_, FunT (_, _, f)) ->
       fun_ty ~env f None
     | DefT (_, PolyT (ps, DefT (_, FunT (_, _, f)), _)) ->
-      mapM (type_param ~env) ps >>= fun ps ->
+      mapM (type_param ~env) (Nel.to_list ps) >>= fun ps ->
       fun_ty ~env f (Some ps)
     | _ ->
       terr ~kind:BadMethodType (Some t)
@@ -924,7 +924,7 @@ end = struct
     class_t ~env t ps
 
   and poly_ty ~env t typeparams =
-    let env, results = List.fold_left (fun (env, rs) typeparam ->
+    let env, results = Nel.fold_left (fun (env, rs) typeparam ->
       let r = type_param ~env typeparam in
       (Env.add_typeparam env typeparam, r::rs)
     ) (env, []) typeparams in
