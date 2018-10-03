@@ -375,7 +375,7 @@ end with type t = Impl.t) = struct
           in
           node "UnaryExpression" loc [
             "operator", string operator;
-            "prefix", bool unary.prefix;
+            "prefix", bool true;
             "argument", expression unary.argument;
           ]
         end

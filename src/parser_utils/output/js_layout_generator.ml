@@ -809,7 +809,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           ~sep:(Atom ",")
           (List.map expression_or_spread arguments);
       ];
-    | E.Unary { E.Unary.operator; prefix = _; argument } ->
+    | E.Unary { E.Unary.operator; argument } ->
       let s_operator, needs_space = begin match operator with
       | E.Unary.Minus -> Atom "-", false
       | E.Unary.Plus -> Atom "+", false

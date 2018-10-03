@@ -1314,7 +1314,7 @@ class mapper = object(this)
 
   method unary_expression _loc (expr: (Loc.t, Loc.t) Flow_ast.Expression.Unary.t) =
     let open Flow_ast.Expression in
-    let { Unary.argument; operator = _; prefix = _ } = expr in
+    let { Unary.argument; operator = _ } = expr in
     id this#expression argument expr
       (fun argument -> { expr with Unary.argument })
 

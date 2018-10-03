@@ -234,7 +234,6 @@ module Expressions = struct
   let unary ~op argument =
     Loc.none, Unary { Unary.
       operator = op;
-      prefix = true;
       argument;
     }
 

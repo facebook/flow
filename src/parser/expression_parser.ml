@@ -449,7 +449,6 @@ module Expression
       | _ -> ());
       Cover_expr (loc, Expression.(Unary { Unary.
         operator;
-        prefix = true;
         argument;
       }))
 

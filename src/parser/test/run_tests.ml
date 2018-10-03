@@ -344,7 +344,6 @@ end = struct
     | JSON_Number actual,
       (_, Unary { Unary.
         operator = Unary.Minus;
-        prefix = _;
         argument = (_, Literal { Ast.Literal.
           value = Ast.Literal.Number _;
           raw = expected;

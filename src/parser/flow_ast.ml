@@ -734,7 +734,6 @@ and Expression : sig
 
     and ('M, 'T) t = {
       operator: operator;
-      prefix: bool;
       argument: ('M, 'T) Expression.t
     }
 

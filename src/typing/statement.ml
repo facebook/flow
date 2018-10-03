@@ -4203,17 +4203,17 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
 
 (* traverse a unary expression, return result type *)
 and unary cx loc = Ast.Expression.Unary.(function
-  | { operator = Not; argument; prefix } ->
+  | { operator = Not; argument } ->
       let (_, arg), _ as argument = expression cx argument in
       let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) (loc |> ALoc.of_loc) in
       Tvar.mk_where cx reason (fun t -> Flow.flow cx (arg, NotT (reason, t))),
-      { operator = Not; argument; prefix; }
+      { operator = Not; argument; }
 
-  | { operator = Plus; argument; prefix } ->
+  | { operator = Plus; argument } ->
       let argument = expression cx argument in
-      NumT.at (loc |> ALoc.of_loc), { operator = Plus; argument; prefix; }
+      NumT.at (loc |> ALoc.of_loc), { operator = Plus; argument; }
 
-  | { operator = Minus; argument; prefix } ->
+  | { operator = Minus; argument } ->
       let (_, argt), _ as argument = expression cx argument in
       begin match argt with
       | DefT (reason, NumT (Literal (sense, (value, raw)))) ->
@@ -4230,27 +4230,27 @@ and unary cx loc = Ast.Expression.Unary.(function
           Flow.flow cx (arg, UnaryMinusT (reason, t));
         )
       end,
-      { operator = Minus; argument; prefix; }
+      { operator = Minus; argument; }
 
-  | { operator = BitNot; argument; prefix } ->
+  | { operator = BitNot; argument } ->
       let t = NumT.at (loc |> ALoc.of_loc) in
       let (_, argt), _ as argument = expression cx argument in
       Flow.flow_t cx (argt, t);
-      t, { operator = BitNot; argument; prefix; }
+      t, { operator = BitNot; argument; }
 
-  | { operator = Typeof; argument; prefix } ->
+  | { operator = Typeof; argument } ->
       let argument = expression cx argument in
-      StrT.at (loc |> ALoc.of_loc), { operator = Typeof; argument = argument; prefix }
+      StrT.at (loc |> ALoc.of_loc), { operator = Typeof; argument }
 
-  | { operator = Void; argument; prefix } ->
+  | { operator = Void; argument } ->
       let argument = expression cx argument in
-      VoidT.at (loc |> ALoc.of_loc), { operator = Void; argument; prefix }
+      VoidT.at (loc |> ALoc.of_loc), { operator = Void; argument }
 
-  | { operator = Delete; argument; prefix } ->
+  | { operator = Delete; argument } ->
       let argument = expression cx argument in
-      BoolT.at (loc |> ALoc.of_loc), { operator = Delete; argument; prefix }
+      BoolT.at (loc |> ALoc.of_loc), { operator = Delete; argument }
 
-  | { operator = Await; argument; prefix } ->
+  | { operator = Await; argument } ->
     (** TODO: await should look up Promise in the environment instead of going
         directly to the core definition. Otherwise, the following won't work
         with a polyfilled Promise! **)
@@ -4269,7 +4269,7 @@ and unary cx loc = Ast.Expression.Unary.(function
       args = [mk_expression_reason argument];
     }) in
     func_call cx reason ~use_op await None [Arg arg],
-    { operator = Await; argument = argument_ast; prefix }
+    { operator = Await; argument = argument_ast }
 )
 
 (* numeric pre/post inc/dec *)
@@ -5435,23 +5435,23 @@ and predicates_of_condition cx e = Ast.(Expression.(
     (* typeof expr ==/=== string *)
     (* this must happen before the case below involving Literal.String in order
        to match anything. *)
-    | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; prefix; }),
+    | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }),
       (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)) ->
       typeof_test loc sense argument s str_loc (fun argument ->
         reconstruct_ast (
           (typeof_loc, StrT.at (typeof_loc |> ALoc.of_loc)),
-          Expression.Unary { Unary.operator = Unary.Typeof; argument; prefix; }
+          Expression.Unary { Unary.operator = Unary.Typeof; argument }
         ) ((str_loc, StrT.at (str_loc |> ALoc.of_loc)), lit_exp)
       )
     | (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)),
-      (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; prefix; }) ->
+      (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }) ->
       typeof_test loc sense argument s str_loc (fun argument ->
         reconstruct_ast ((str_loc, StrT.at (str_loc |> ALoc.of_loc)), lit_exp) (
           (typeof_loc, StrT.at (typeof_loc |> ALoc.of_loc)),
-          Expression.Unary { Unary.operator = Unary.Typeof; argument; prefix; }
+          Expression.Unary { Unary.operator = Unary.Typeof; argument }
         )
       )
-    | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; prefix; }),
+    | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }),
       (str_loc, (Expression.TemplateLiteral {
         TemplateLiteral.quasis = [_, {
           TemplateLiteral.Element.value = {
@@ -5463,7 +5463,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       typeof_test loc sense argument s str_loc (fun argument ->
         reconstruct_ast (
           (typeof_loc, StrT.at (typeof_loc |> ALoc.of_loc)),
-          Expression.Unary { Unary.operator = Unary.Typeof; argument; prefix; }
+          Expression.Unary { Unary.operator = Unary.Typeof; argument }
         ) ((str_loc, StrT.at (str_loc |> ALoc.of_loc)), lit_exp)
       )
     | (str_loc, (Expression.TemplateLiteral {
@@ -5474,11 +5474,11 @@ and predicates_of_condition cx e = Ast.(Expression.(
         }];
         expressions = [];
       } as lit_exp)),
-      (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; prefix; }) ->
+      (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }) ->
       typeof_test loc sense argument s str_loc (fun argument ->
         reconstruct_ast ((str_loc, StrT.at (str_loc |> ALoc.of_loc)), lit_exp) (
           (typeof_loc, StrT.at (typeof_loc |> ALoc.of_loc)),
-          Expression.Unary { Unary.operator = Unary.Typeof; argument; prefix; }
+          Expression.Unary { Unary.operator = Unary.Typeof; argument }
         )
       )
 
@@ -5802,9 +5802,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
       )
 
   (* !test *)
-  | loc, Unary { Unary.operator = Unary.Not; argument; prefix; } ->
+  | loc, Unary { Unary.operator = Unary.Not; argument; } ->
       let (arg, map, not_map, xts) = predicates_of_condition cx argument in
-      let ast' = Unary { Unary.operator = Unary.Not; argument = arg; prefix; } in
+      let ast' = Unary { Unary.operator = Unary.Not; argument = arg } in
       let ast = (loc, BoolT.at (loc |> ALoc.of_loc)), ast' in
       (ast, not_map, map, xts)
 

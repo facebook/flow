@@ -1378,9 +1378,9 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method unary_expression (expr: ('M, 'T) Ast.Expression.Unary.t)
                               : ('N, 'U) Ast.Expression.Unary.t =
     let open Ast.Expression.Unary in
-    let { argument; operator; prefix; } = expr in
+    let { argument; operator; } = expr in
     let argument' = this#expression argument in
-    { argument = argument'; operator; prefix }
+    { argument = argument'; operator }
 
   method update_expression (expr: ('M, 'T) Ast.Expression.Update.t)
                                 : ('N, 'U) Ast.Expression.Update.t =

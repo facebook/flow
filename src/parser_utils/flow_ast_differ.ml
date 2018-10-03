@@ -665,9 +665,9 @@ let program (algo : diff_algorithm)
 
   and unary (u1: (Loc.t, Loc.t) Ast.Expression.Unary.t) (u2: (Loc.t, Loc.t) Ast.Expression.Unary.t): node change list option =
     let open Ast.Expression.Unary in
-    let { operator = op1; argument = arg1; prefix = prefix1 } = u1 in
-    let { operator = op2; argument = arg2; prefix = prefix2 } = u2 in
-    if op1 != op2 || prefix1 != prefix2 then
+    let { operator = op1; argument = arg1 } = u1 in
+    let { operator = op2; argument = arg2 } = u2 in
+    if op1 != op2 then
       None
     else
       Some (expression arg1 arg2)

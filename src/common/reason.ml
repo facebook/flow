@@ -917,7 +917,7 @@ Ast.Expression.(match x with
 | TemplateLiteral _ -> "`...`"
 | This -> "this"
 | TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
-| Unary { Unary.operator; prefix; argument } ->
+| Unary { Unary.operator; argument } ->
   let x = code_desc_of_expression ~wrap:true argument in
   let op = Unary.(match operator with
   | Minus -> "-"
@@ -929,7 +929,7 @@ Ast.Expression.(match x with
   | Delete -> "delete "
   | Await -> "await "
   ) in
-  do_wrap (if prefix then op ^ x else x ^ op)
+  do_wrap (op ^ x)
 | Update { Update.operator; prefix; argument } ->
   let x = code_desc_of_expression ~wrap:true argument in
   let op = Update.(match operator with
