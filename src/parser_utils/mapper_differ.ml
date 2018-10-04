@@ -14,7 +14,7 @@ type node =
   | Expression of (Loc.t, Loc.t) Ast.Expression.t * (Loc.t, Loc.t) Ast.Expression.t
   | ClassElement of (Loc.t, Loc.t) Ast.Class.Body.element * (Loc.t, Loc.t) Ast.Class.Body.element
   | Type of (Loc.t, Loc.t) Ast.Type.t * (Loc.t, Loc.t) Ast.Type.t
-  | Return of (Loc.t, Loc.t) Flow_ast.Function.return
+  | Return of (Loc.t, Loc.t) Flow_ast.Type.annotation_or_hint
 
 type t = node Utils_js.LocMap.t
 
@@ -71,15 +71,15 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
         mapped )
       else t
 
-    method! return_type_annotation (return: (Loc.t, Loc.t) Flow_ast.Function.return) =
-      let open Flow_ast.Function in
-      let return = super#return_type_annotation return in
+    method! type_annotation_hint (return: (Loc.t, Loc.t) Flow_ast.Type.annotation_or_hint) =
+      let open Flow_ast.Type in
+      let return = super#type_annotation_hint return in
       let loc_pre = match return with
       | Available _ -> Loc.none
       | Missing loc -> loc
       in
       let size_pre = L.cardinal !s in
-      let mapped = m#return_type_annotation return in
+      let mapped = m#type_annotation_hint return in
       if size_pre == L.cardinal !s && mapped <> return then (
         s := L.add loc_pre (Return mapped) !s ;
         mapped )
@@ -89,8 +89,8 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
       let open Flow_ast.Function in
       let { return = return1; _ } = expr in
       let loc_pre = match return1 with
-      | Available _ -> Loc.none
-      | Missing loc -> loc
+      | Flow_ast.Type.Available _ -> Loc.none
+      | Flow_ast.Type.Missing loc -> loc
       in
       let func' = super#function_ loc expr in
       let { return = return2; _ } = func' in
@@ -105,8 +105,8 @@ class wrapper (m: Flow_ast_mapper.mapper) (s: t ref) =
       let ({Ast.Class.Method.value; _} as meth) = super#class_method loc meth in
       let _, { return = return1; _ } = value in
       let loc_pre = match return1 with
-      | Available _ -> Loc.none
-      | Missing loc -> loc
+      | Flow_ast.Type.Available _ -> Loc.none
+      | Flow_ast.Type.Missing loc -> loc
       in
       let ({Ast.Class.Method.value; _} as meth') = super#class_method loc meth in
       let _, { return = return2; _ } = value in

@@ -235,7 +235,9 @@ and type_param tp =
   (Loc.none, {
     T.ParameterDeclaration.TypeParam.
     name = Loc.none, tp.tp_name;
-    bound;
+    bound = (match bound with
+    | Some t -> T.Available t
+    | None -> T.Missing Loc.none);
     variance = variance_ tp.tp_polarity;
     default;
   })

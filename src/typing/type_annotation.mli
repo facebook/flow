@@ -43,8 +43,13 @@ val mk_super: Context.t ->
 val mk_type_annotation: Context.t ->
   Type.t SMap.t ->
   Reason.t ->
-  (Loc.t, Loc.t) Flow_ast.Type.annotation option ->
-  Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Type.annotation option
+  (Loc.t, Loc.t) Flow_ast.Type.annotation_or_hint ->
+  Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Type.annotation_or_hint
+
+val mk_type_available_annotation: Context.t ->
+  Type.t SMap.t ->
+  (Loc.t, Loc.t) Flow_ast.Type.annotation ->
+  Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Type.annotation
 
 val mk_nominal_type:
   Context.t ->

@@ -60,8 +60,8 @@ let add_complex cx ~expr ?default patt t x =
   let bindings_rev = ref x.bindings_rev in
   let patt = destructuring cx ~expr t None default patt ~f:(fun ~use_op:_ loc name default t ->
     let t = match type_of_pattern patt with
-    | None -> t
-    | Some _ ->
+    | Flow_ast.Type.Missing _ -> t
+    | Flow_ast.Type.Available _ ->
       let reason = mk_reason (RIdentifier name) (loc |> ALoc.of_loc) in
       EvalT (t, DestructuringT (reason, Become), mk_id())
     in

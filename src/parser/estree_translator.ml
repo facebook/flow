@@ -30,6 +30,9 @@ end with type t = Impl.t) = struct
   let option f = function
     | Some v -> f v
     | None -> null
+  let hint f = function
+    | Ast.Type.Available v -> f v
+    | Ast.Type.Missing _ -> null
 
   let position p =
     obj [
@@ -329,8 +332,8 @@ end with type t = Impl.t) = struct
         | BodyExpression expr -> expression expr)
         in
         let return = match arrow.return with
-        | Missing _ -> None
-        | Available t -> Some t in
+        | Ast.Type.Missing _ -> None
+        | Ast.Type.Available t -> Some t in
         node "ArrowFunctionExpression" loc [
           "id", option identifier arrow.id;
           "params", function_params arrow.params;
@@ -507,8 +510,8 @@ end with type t = Impl.t) = struct
     | BodyBlock b -> block b
     | BodyExpression b -> expression b in
     let return = match fn.return with
-    | Missing _ -> None
-    | Available t -> Some t in
+    | Ast.Type.Missing _ -> None
+    | Ast.Type.Available t -> Some t in
     node "FunctionDeclaration" loc [
       (* estree hasn't come around to the idea that function decls can have
          optional ids, but acorn, babel, espree and esprima all have, so let's
@@ -531,8 +534,8 @@ end with type t = Impl.t) = struct
     | BodyExpression expr -> expression expr
     in
     let return = match _function.return with
-    | Missing _ -> None
-    | Available t -> Some t in
+    | Ast.Type.Missing _ -> None
+    | Ast.Type.Available t -> Some t in
     node "FunctionExpression" loc [
       "id", option identifier _function.id;
       "params", function_params _function.params;
@@ -563,7 +566,7 @@ end with type t = Impl.t) = struct
   } =
     node "Identifier" loc [
       "name", string (snd name);
-      "typeAnnotation", option type_annotation annot;
+      "typeAnnotation", hint type_annotation annot;
       "optional", bool optional;
     ]
 
@@ -588,8 +591,8 @@ end with type t = Impl.t) = struct
 
   and declare_variable (loc, d) = Statement.DeclareVariable.(
     let id_loc = Loc.btwn (fst d.id) (match d.annot with
-      | Some annot -> fst annot
-      | None -> fst d.id) in
+      | Ast.Type.Available annot -> fst annot
+      | Ast.Type.Missing _ -> fst d.id) in
     node "DeclareVariable" loc [
       "id", pattern_identifier id_loc {
         Pattern.Identifier.name = d.id;
@@ -604,7 +607,7 @@ end with type t = Impl.t) = struct
     node "DeclareFunction" loc [
       "id", pattern_identifier id_loc {
         Pattern.Identifier.name = d.id;
-                           annot = Some d.annot;
+                           annot = Ast.Type.Available d.annot;
                            optional = false;
       };
       "predicate", option predicate d.predicate
@@ -767,7 +770,7 @@ end with type t = Impl.t) = struct
     node "ClassPrivateProperty" loc [
       "key", identifier key;
       "value", option expression prop.value;
-      "typeAnnotation", option type_annotation prop.annot;
+      "typeAnnotation", hint type_annotation prop.annot;
       "static", bool prop.static;
       "variance", option variance prop.variance;
     ]
@@ -782,7 +785,7 @@ end with type t = Impl.t) = struct
     node "ClassProperty" loc [
       "key", key;
       "value", option expression prop.value;
-      "typeAnnotation", option type_annotation prop.annot;
+      "typeAnnotation", hint type_annotation prop.annot;
       "computed", bool computed;
       "static", bool prop.static;
       "variance", option variance prop.variance;
@@ -813,12 +816,12 @@ end with type t = Impl.t) = struct
     | loc, Object obj ->
         node "ObjectPattern" loc [
           "properties", array_of_list object_pattern_property obj.Object.properties;
-          "typeAnnotation", option type_annotation obj.Object.annot;
+          "typeAnnotation", hint type_annotation obj.Object.annot;
         ]
     | loc, Array arr ->
         node "ArrayPattern" loc [
           "elements", array_of_list (option array_pattern_element) arr.Array.elements;
-          "typeAnnotation", option type_annotation arr.Array.annot;
+          "typeAnnotation", hint type_annotation arr.Array.annot;
         ]
     | loc, Assignment { Assignment.left; right } ->
         node "AssignmentPattern" loc [
@@ -1260,7 +1263,7 @@ end with type t = Impl.t) = struct
       (* we track the location of the name, but don't expose it here for
          backwards-compatibility. TODO: change this? *)
       "name", string name;
-      "bound", option type_annotation bound;
+      "bound", hint type_annotation bound;
       "variance", option variance tp_var;
       "default", option _type default;
     ]

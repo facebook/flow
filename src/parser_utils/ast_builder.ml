@@ -26,14 +26,14 @@ module Patterns = struct
   let identifier str =
     Loc.none, Identifier { Identifier.
       name = Loc.none, str;
-      annot = None;
+      annot = Ast.Type.Missing Loc.none;
       optional = false;
     }
 
   let array str =
     Loc.none, Array { Array.
       elements = [Some (Array.Element (identifier str))];
-      annot = None;
+      annot = Ast.Type.Missing Loc.none;
     }
 
   let assignment str expr =
@@ -50,7 +50,7 @@ module Patterns = struct
         pattern = identifier str;
         shorthand = true;
       })];
-      annot = None;
+      annot = Ast.Type.Missing Loc.none;
     }
 end
 
@@ -77,7 +77,7 @@ module Functions = struct
       generator = generator;
       predicate = None;
       expression;
-      return = Missing Loc.none;
+      return = Ast.Type.Missing Loc.none;
       tparams = None;
     }
 end

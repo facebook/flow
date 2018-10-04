@@ -228,6 +228,10 @@ and Type : sig
    * Type.annotation with a location from column 6-14 *)
   and ('M, 'T) annotation = 'M * ('M, 'T) t
 
+  and ('M, 'T) annotation_or_hint =
+    | Missing of 'M
+    | Available of ('M, 'T) Type.annotation
+
   [@@deriving show]
 
   module ParameterDeclaration : sig
@@ -235,7 +239,7 @@ and Type : sig
       type ('M, 'T) t = 'T * ('M, 'T) t'
       and ('M, 'T) t' = {
         name: 'T Identifier.t;
-        bound: ('M, 'T) Type.annotation option;
+        bound: ('M, 'T) Type.annotation_or_hint;
         variance: 'M Variance.t option;
         default: ('M, 'T) Type.t option;
       }
@@ -455,7 +459,7 @@ and Statement : sig
   module DeclareVariable : sig
     type ('M, 'T) t = {
       id: 'T Identifier.t;
-      annot: ('M, 'T) Type.annotation option;
+      annot: ('M, 'T) Type.annotation_or_hint;
     }
     [@@deriving show]
   end
@@ -1117,7 +1121,7 @@ and Pattern : sig
       | RestProperty of ('M, 'T) RestProperty.t
     and ('M, 'T) t = {
       properties: ('M, 'T) property list;
-      annot: ('M, 'T) Type.annotation option;
+      annot: ('M, 'T) Type.annotation_or_hint;
     }
     [@@deriving show]
   end
@@ -1134,7 +1138,7 @@ and Pattern : sig
       | RestElement of ('M, 'T) RestElement.t
     and ('M, 'T) t = {
       elements: ('M, 'T) element option list;
-      annot: ('M, 'T) Type.annotation option;
+      annot: ('M, 'T) Type.annotation_or_hint;
     }
     [@@deriving show]
   end
@@ -1148,7 +1152,7 @@ and Pattern : sig
   module Identifier : sig
     type ('M, 'T) t = {
       name: 'T Identifier.t;
-      annot: ('M, 'T) Type.annotation option;
+      annot: ('M, 'T) Type.annotation_or_hint;
       optional: bool;
     }
     [@@deriving show]
@@ -1193,7 +1197,7 @@ and Class : sig
     and ('M, 'T) t' = {
       key: ('M, 'T) Expression.Object.Property.key;
       value: ('M, 'T) Expression.t option;
-      annot: ('M, 'T) Type.annotation option;
+      annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
     }
@@ -1204,7 +1208,7 @@ and Class : sig
     and ('M, 'T) t' = {
       key: 'M PrivateName.t;
       value: ('M, 'T) Expression.t option;
-      annot: ('M, 'T) Type.annotation option;
+      annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
     }
@@ -1281,17 +1285,13 @@ and Function : sig
     generator: bool;
     predicate: ('M, 'T) Type.Predicate.t option;
     expression: bool;
-    return: ('M, 'T) return;
+    return: ('M, 'T) Type.annotation_or_hint;
     tparams: ('M, 'T) Type.ParameterDeclaration.t option;
   }
 
   and ('M, 'T) body =
     | BodyBlock of ('M * ('M, 'T) Statement.Block.t)
     | BodyExpression of ('M, 'T) Expression.t
-
-  and ('M, 'T) return =
-    | Missing of 'T
-    | Available of ('M, 'T) Type.annotation
 
   [@@deriving show]
 

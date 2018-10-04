@@ -32,8 +32,8 @@ class type_parameter_mapper = object(_)
       let _, { TypeParam.name = (_, t), name; bound; variance; default; } = tparam in
       let reason = Type.reason_of_t t in
       let bound = match bound with
-      | None -> Type.MixedT.make reason
-      | Some (_, ((_, t), _)) -> t
+      | Ast.Type.Missing _ -> Type.MixedT.make reason
+      | Ast.Type.Available (_, ((_, t), _)) -> t
       in
       let polarity = Type_annotation.polarity variance in
       let default = Option.map default ~f:(fun ((_, t), _) -> t)

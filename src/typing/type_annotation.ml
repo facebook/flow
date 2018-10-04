@@ -14,6 +14,7 @@ open Env.LookupMode
 
 module FlowError = Flow_error
 module Flow = Flow_js
+module T = Ast.Type
 
 (* AST helpers *)
 
@@ -1231,11 +1232,15 @@ and mk_type cx tparams_map reason = function
       t, Some annot_ast
 
 and mk_type_annotation cx tparams_map reason = function
-| None ->
-  fst (mk_type cx tparams_map reason None), None
-| Some (loc, annot) ->
-  let t, annot_ast = mk_type cx tparams_map reason (Some annot) in
-  t, Option.map ~f:(fun ast -> loc, ast) annot_ast
+| T.Missing _ as annot ->
+  fst (mk_type cx tparams_map reason None), annot
+| T.Available annot ->
+  let t, ast_annot = mk_type_available_annotation cx tparams_map annot in
+  t, T.Available ast_annot
+
+and mk_type_available_annotation cx tparams_map (loc, annot) =
+  let (_, t), _ as annot_ast = convert cx tparams_map annot in
+  t, (loc, annot_ast)
 
 and mk_singleton_string loc key =
   let reason = mk_reason (RStringLit key) (loc |> ALoc.of_loc) in
@@ -1269,10 +1274,14 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let { TypeParam.name = name_loc, name as id; bound; variance; default; } = type_param in
     let reason = mk_reason (RType name) (name_loc |> ALoc.of_loc) in
     let bound, bound_ast = match bound with
-    | None -> DefT (reason, MixedT Mixed_everything), None
-    | Some (bound_loc, u) ->
+    | Ast.Type.Missing _ as miss -> DefT (reason, MixedT Mixed_everything), miss
+    | Ast.Type.Available (bound_loc, u) ->
         let bound, bound_ast = mk_type cx tparams_map reason (Some u) in
-        bound, Option.map ~f:(fun ast -> bound_loc, ast) bound_ast
+        let bound_ast = match bound_ast with
+        | Some ast -> Ast.Type.Available (bound_loc, ast)
+        | None -> Ast.Type.Missing bound_loc
+        in
+        bound, bound_ast
     in
     let default, default_ast = match default with
     | None -> None, None

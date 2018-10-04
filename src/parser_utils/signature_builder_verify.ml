@@ -208,8 +208,8 @@ module Eval(Env: EvalEnv) = struct
       let open Ast.Type.ParameterDeclaration.TypeParam in
       let _, { name = (_, x); bound; default; _ } = tparam in
       let deps = match bound with
-        | None -> Deps.bot
-        | Some (_, t) -> type_ tps t in
+        | Ast.Type.Missing _ -> Deps.bot
+        | Ast.Type.Available (_, t) -> type_ tps t in
       let deps = match default with
         | None -> deps
         | Some t -> Deps.join (deps, type_ tps t) in
@@ -436,10 +436,10 @@ module Eval(Env: EvalEnv) = struct
       let tps, deps = type_params tps tparams in
       let deps = Deps.join (deps, function_params tps params) in
       match return with
-        | Missing loc ->
+        | Ast.Type.Missing loc ->
           if not generator && Signature_utils.Procedure_decider.is body then deps
           else Deps.top (Error.ExpectedAnnotation loc)
-        | Available (_, t) -> Deps.join (deps, type_ tps t)
+        | Ast.Type.Available (_, t) -> Deps.join (deps, type_ tps t)
 
   and class_ =
     let class_element tps element =

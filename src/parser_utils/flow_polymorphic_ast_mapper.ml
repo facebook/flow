@@ -273,7 +273,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { key; value; annot; static; variance; } = prop in
     let key' = this#object_key key in
     let value' = Option.map ~f:this#expression value in
-    let annot' = Option.map ~f:this#type_annotation annot in
+    let annot' = this#type_annotation_hint annot in
     let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     { key = key'; value = value'; annot = annot'; static; variance = variance'; }
 
@@ -282,7 +282,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { key; value; annot; static; variance; } = prop in
     let key' = this#private_name key in
     let value' = Option.map ~f:this#expression value in
-    let annot' = Option.map ~f:this#type_annotation annot in
+    let annot' = this#type_annotation_hint annot in
     let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     { key = key'; value = value'; annot = annot'; static; variance = variance' }
 
@@ -427,7 +427,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.Statement.DeclareVariable in
     let { id = ident; annot } = decl in
     let id' = this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
-    let annot' = Option.map ~f:this#type_annotation annot in
+    let annot' = this#type_annotation_hint annot in
     { id = id'; annot = annot' }
 
   method do_while (stuff: ('M, 'T) Ast.Statement.DoWhile.t) : ('N, 'U) Ast.Statement.DoWhile.t =
@@ -677,7 +677,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.Type.ParameterDeclaration.TypeParam in
     let annot, { name; bound; variance; default; } = type_param in
     let name' = this#t_identifier name in
-    let bound' = Option.map ~f:this#type_annotation bound in
+    let bound' = this#type_annotation_hint bound in
     let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     let default' = Option.map ~f:this#type_ default in
     this#on_type_annot annot, { name = name'; bound = bound'; variance = variance'; default = default'; }
@@ -738,12 +738,12 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method type_annotation ((annot, t_annot): ('M, 'T) Ast.Type.annotation) =
     this#on_loc_annot annot, this#type_ t_annot
 
-  method return_type_annotation (return: ('M, 'T) Ast.Function.return)
-                                       : ('N, 'U) Ast.Function.return =
-    let open Ast.Function in
+  method type_annotation_hint (return: ('M, 'T) Ast.Type.annotation_or_hint)
+                                       : ('N, 'U) Ast.Type.annotation_or_hint =
+    let open Ast.Type in
     match return with
     | Available annot -> Available (this#type_annotation annot)
-    | Missing loc -> Missing (this#on_type_annot loc)
+    | Missing loc -> Missing (this#on_loc_annot loc)
 
   method function_ (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
     let open Ast.Function in
@@ -759,7 +759,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
         let rest' = Option.map ~f:this#function_rest_element rest in
         this#on_loc_annot annot, { Params.params = params_list'; rest = rest' }
       in
-      let return' = this#return_type_annotation return in
+      let return' = this#type_annotation_hint return in
       let body' = match body with
         | BodyBlock (annot, block) ->
           BodyBlock (this#on_loc_annot annot, this#function_body block)
@@ -1166,11 +1166,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     match patt with
     | Object { Object.properties; annot } ->
       let properties' = List.map (this#pattern_object_p ?kind) properties in
-      let annot' = Option.map ~f:this#type_annotation annot in
+      let annot' = this#type_annotation_hint annot in
       Object { Object.properties = properties'; annot = annot' }
     | Array { Array.elements; annot } ->
       let elements' = List.map (Option.map ~f:(this#pattern_array_e ?kind)) elements in
-      let annot' = Option.map ~f:this#type_annotation annot in
+      let annot' = this#type_annotation_hint annot in
       Array { Array.elements = elements'; annot = annot' }
     | Assignment { Assignment.left; right } ->
       let left' = this#pattern_assignment_pattern ?kind left in
@@ -1178,7 +1178,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       Assignment { Assignment.left = left'; right = right' }
     | Identifier { Identifier.name; annot; optional } ->
       let name' = this#t_pattern_identifier ?kind name in
-      let annot' = Option.map ~f:this#type_annotation annot in
+      let annot' = this#type_annotation_hint annot in
       Identifier { Identifier.name = name'; annot = annot'; optional }
     | Expression e ->
       Expression (this#pattern_expression e)

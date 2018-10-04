@@ -24,9 +24,9 @@ module type TYPE = sig
   val interface_helper : env -> (Loc.t, Loc.t) Type.Interface.t
   val function_param_list : env -> (Loc.t, Loc.t) Type.Function.Params.t
   val annotation : env -> (Loc.t, Loc.t) Ast.Type.annotation
-  val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation option
+  val annotation_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint
   val predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.Predicate.t option
-  val annotation_and_predicate_opt : env -> (Loc.t, Loc.t) Ast.Function.return * (Loc.t, Loc.t) Ast.Type.Predicate.t option
+  val annotation_and_predicate_opt : env -> (Loc.t, Loc.t) Ast.Type.annotation_or_hint * (Loc.t, Loc.t) Ast.Type.Predicate.t option
 end
 
 module Type (Parse: Parser_common.PARSER) : TYPE = struct
@@ -711,7 +711,12 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and bounded_type env = with_loc (fun env ->
     let name = type_identifier env in
-    let bound = if Peek.token env = T_COLON then Some (annotation env) else None in
+    let bound = if Peek.token env = T_COLON
+      then
+        Ast.Type.Available (annotation env)
+      else
+        Ast.Type.Missing (Peek.loc_skip_lookahead env)
+    in
     name, bound
   ) env
 
@@ -810,8 +815,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and annotation_opt env =
     match Peek.token env with
-    | T_COLON -> Some (annotation env)
-    | _ -> None
+    | T_COLON -> Type.Available (annotation env)
+    | _ -> Type.Missing (Peek.loc_skip_lookahead env)
 
   let predicate = with_loc (fun env ->
     Expect.token env T_CHECKS;
@@ -833,19 +838,16 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | _ -> None
 
   let annotation_and_predicate_opt env =
-    let open Ast.Function in
+    let open Ast.Type in
     match Peek.token env, Peek.ith_token ~i:1 env with
     | T_COLON, T_CHECKS ->
       Expect.token env T_COLON;
-      Missing (Peek.loc_skip_lookeahead env), predicate_opt env
+      Missing (Peek.loc_skip_lookahead env), predicate_opt env
     | T_COLON, _ ->
-      let annotation = match annotation_opt env with
-      | Some annotation -> Available annotation
-      | None -> Missing (Peek.loc_skip_lookeahead env)
-      in
+      let annotation = annotation_opt env in
       let predicate = predicate_opt env in
       annotation, predicate
-    | _ -> Missing (Peek.loc_skip_lookeahead env), None
+    | _ -> Missing (Peek.loc_skip_lookahead env), None
 
   let wrap f env =
     let env = env |> with_strict true in

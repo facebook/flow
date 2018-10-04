@@ -9,7 +9,7 @@ module Ast = Flow_ast
 module L = Utils_js.LocMap
 module D = Mapper_differ
 module J = Js_layout_generator
-module F = Ast.Function
+module T = Ast.Type
 
 type patch = (int * int * string) list
 
@@ -55,8 +55,8 @@ let mk_patch (diff : Mapper_differ.t) (ast : (Loc.t, Loc.t) Ast.program)
           | D.Statement (_, node) -> J.statement node
           | D.Expression (_, node) -> J.expression node
           | D.Type (_, node) -> J.type_ node
-          | D.Return (F.Available annot) -> J.type_annotation annot
-          | D.Return (F.Missing _) -> Layout.Empty
+          | D.Return (T.Available annot) -> J.type_annotation annot
+          | D.Return (T.Missing _) -> Layout.Empty
           | D.ClassElement (_, node) -> (
             match node with
             | Ast.Class.Body.Method meth -> J.class_method meth
@@ -68,7 +68,7 @@ let mk_patch (diff : Mapper_differ.t) (ast : (Loc.t, Loc.t) Ast.program)
         in
         let node_string =
           match value with
-          | D.Return (F.Available _) -> node_string ^ " "
+          | D.Return (T.Available _) -> node_string ^ " "
           | _ -> node_string
         in
         (offset start, offset _end, node_string) :: acc )

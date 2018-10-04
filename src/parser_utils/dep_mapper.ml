@@ -208,14 +208,14 @@ class mapper = object(this)
            let d = LocMap.find loc use_def_map in
            let key = DepKey.Id d in
            match annot with
-             | None ->
+             | Ast.Type.Missing _ ->
                (* Currently, we pretend we don't know anything about caller/callee *)
                let dep = { typeDep = Incomplete;
                            valDep = Incomplete } in
                dep_map <-
                  DepMap.add ~combine:(merge_dep key) (* update_dep *)
                  key dep dep_map
-             | Some some_annot ->
+             | Ast.Type.Available some_annot ->
                let dep = { typeDep = Annotation (some_annot, []);
                            valDep = Incomplete } in
                dep_map <-
@@ -235,14 +235,14 @@ class mapper = object(this)
          let d = LocMap.find loc use_def_map in
          let key = DepKey.Id d in
          match annot with
-           | None ->
+           | Ast.Type.Missing _ ->
              let dep = { typeDep = NoInfo;
                          valDep = NoInfo } in
              (* different from fun param!! *)
              dep_map <-
                DepMap.add ~combine:(merge_dep key) (* update_dep *)
                key dep dep_map
-           | Some some_annot -> (* annotation *)
+           | Ast.Type.Available some_annot -> (* annotation *)
              let dep = { typeDep = Annotation (some_annot, []);
                          valDep = NoInfo } in
              dep_map <-

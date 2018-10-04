@@ -96,8 +96,8 @@ let rec variable_decl cx entry = Ast.Statement.(
         Typed_ast.error_annot, Typed_ast.Expression.error in
       (destructuring cx ~expr t None None p ~f:(fun ~use_op:_ loc name _default t ->
         let t = match annot with
-        | None -> t
-        | Some _ ->
+        | Ast.Type.Missing _ -> t
+        | Ast.Type.Available _ ->
           let r = mk_reason (RIdentifier name) (loc |> ALoc.of_loc) in
           EvalT (t, DestructuringT (r, Become), mk_id())
         in
@@ -252,16 +252,13 @@ and statement_decl cx = Ast.Statement.(
       _; } as declare_function)) ->
       (match declare_function_to_function_declaration cx declare_function with
       | None ->
-          let r = mk_reason (RCustom (spf "declare %s" name)) (loc |> ALoc.of_loc) in
           let t, annot' =
-            Anno.mk_type_annotation cx SMap.empty r (Some annot) in
+            Anno.mk_type_available_annotation cx SMap.empty annot in
           Type_table.set (Context.type_table cx) id_loc t;
           let id_info = name, t, Type_table.Other in
           Type_table.set_info id_loc id_info (Context.type_table cx);
           Env.bind_declare_fun cx name t id_loc;
-          Option.iter
-            ~f:(fun annot' -> Scope.add_declare_func_annot name annot' (Env.peek_scope ()))
-            annot';
+          Scope.add_declare_func_annot name annot' (Env.peek_scope ()) ;
       | Some (func_decl, _) ->
           statement_decl cx (loc, func_decl)
       )
@@ -487,7 +484,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
     Ast.Pattern.(match param with
       | Some p -> (match p with
         | loc, Identifier {
-            Identifier.name = (name_loc, name); annot = None; optional;
+            Identifier.name = (name_loc, name); annot = Ast.Type.Missing _ as ann; optional;
           } ->
             let r = mk_reason (RCustom "catch") (loc |> ALoc.of_loc) in
             let t = Tvar.mk cx r in
@@ -503,7 +500,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
             { Try.CatchClause.
               param = Some ((loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
                 name = (name_loc, t), name;
-                annot = None;
+                annot = ann;
                 optional;
               });
               body = b_loc, { Block.body = stmts };
@@ -1514,9 +1511,11 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
               ignore Env.(set_var cx ~use_op name_str t pat_loc);
               ForIn.LeftPattern ((pat_loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
                 name = ((name_loc, t), name_str);
-                annot = Option.map
-                  ~f:(fun (a_loc, _) -> a_loc, (Typed_ast.error_annot, Typed_ast.Type.error))
-                  annot;
+                annot = (match annot with
+                  | Ast.Type.Available (a_loc, _) ->
+                    Ast.Type.Available (a_loc, (Typed_ast.error_annot, Typed_ast.Type.error))
+                  | Ast.Type.Missing loc ->
+                    Ast.Type.Missing loc);
                 optional;
               })
 
@@ -1612,9 +1611,11 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
                 (pat_loc, element_tvar),
                 Ast.Pattern.Identifier { Ast.Pattern.Identifier.
                   name = ((name_loc, element_tvar), name_str);
-                  annot = Option.map
-                    ~f:(fun (loc, _) -> loc, (Typed_ast.error_annot, Typed_ast.Type.error))
-                    annot;
+                  annot = (match annot with
+                    | Ast.Type.Available (loc, _) ->
+                      Ast.Type.Available (loc, (Typed_ast.error_annot, Typed_ast.Type.error))
+                    | Ast.Type.Missing loc ->
+                      Ast.Type.Missing loc);
                   optional;
                 }
               )
@@ -1650,8 +1651,8 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; params; return; _} = func in
       let sig_loc = match params, return with
-      | _, Ast.Function.Available (end_loc, _)
-      | (end_loc, _), Ast.Function.Missing _
+      | _, Ast.Type.Available (end_loc, _)
+      | (end_loc, _), Ast.Type.Missing _
          -> Loc.btwn loc end_loc
       in
       let fn_type, func_ast = mk_function None cx sig_loc func in
@@ -2681,7 +2682,9 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
         let id_info = name, t, Type_table.Other in
         Type_table.set_info id_loc id_info (Context.type_table cx);
         Env.unify_declared_type cx name t;
-        let has_anno = not (annot = None) in
+        let has_anno = match annot with
+        | Ast.Type.Available _ -> true
+        | Ast.Type.Missing _ -> false in
         Type_inference_hooks_js.(dispatch_lval_hook cx name loc (Val t));
         let id = (loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
           name = (id_loc, t), name;
@@ -2723,7 +2726,9 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
         (* compound lvalue *)
         let pattern_name = internal_pattern_name loc in
         let annot = type_of_pattern id in
-        let has_anno = not (annot = None) in
+        let has_anno = match annot with
+        | Ast.Type.Available _ -> true
+        | Ast.Type.Missing _ -> false in
         let t, init_ast, init_reason = match init with
           | Some expr ->
             let (_, t), _ as expr_ast = expression cx expr in
@@ -2840,9 +2845,7 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
       (loc, t), Logical l
 
   | TypeCast { TypeCast.expression = e; annot } ->
-      let r = mk_reason (RCustom "typecast") (loc |> ALoc.of_loc) in
-      let t, annot' = Anno.mk_type_annotation cx SMap.empty r (Some annot) in
-      let annot' = Option.value_exn annot' in
+      let t, annot' = Anno.mk_type_available_annotation cx SMap.empty annot in
       Type_table.set (Context.type_table cx) loc t;
       let (_, infer_t), _ as e' = expression cx e in
       let use_op = Op (Cast {
@@ -3071,8 +3074,8 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
   | Function func ->
       let {Ast.Function.id; params; return; predicate; _} = func in
       let sig_loc = match params, return with
-      | _, Ast.Function.Available (end_loc, _)
-      | (end_loc, _), Ast.Function.Missing _
+      | _, Ast.Type.Available (end_loc, _)
+      | (end_loc, _), Ast.Type.Missing _
          -> Loc.btwn loc end_loc
       in
 
@@ -4435,9 +4438,11 @@ and assignment_lhs cx = Ast.Pattern.(function
       let t = identifier cx name loc in
       ((pat_loc, t), Identifier { Identifier.
         name = (loc, t), name;
-        annot = Option.map
-          ~f:(fun (loc, _) -> loc, (Typed_ast.error_annot, Typed_ast.Type.error))
-          annot;
+        annot = (match annot with
+        | Ast.Type.Available (loc, _) ->
+          Ast.Type.Available (loc, (Typed_ast.error_annot, Typed_ast.Type.error))
+        | Ast.Type.Missing hint ->
+          Ast.Type.Missing hint);
         optional;
       })
 
@@ -6476,34 +6481,22 @@ and mk_func_sig =
     let fparams, params = mk_params cx tparams_map params in
     let body = Some body in
     let ret_reason = mk_reason RReturn (return_loc func |> ALoc.of_loc) in
-    let return_t, return, loc = match return with
-    | Ast.Function.Available annot ->
-      let return_t, return = Anno.mk_type_annotation cx tparams_map ret_reason (Some annot) in
-      let (loc, _) = annot in
-      return_t, return, loc
-    | Ast.Function.Missing loc ->
-      let return_t, return = Anno.mk_type_annotation cx tparams_map ret_reason None in
-      return_t, return, loc
-    in
+    let return_t, return = Anno.mk_type_annotation cx tparams_map ret_reason return in
     let return_t, predicate = Ast.Type.Predicate.(match predicate with
       | None ->
           return_t, None
       | Some (loc, Inferred) ->
           (* Restrict the fresh condition type by the declared return type *)
-          let fresh_t, _ = Anno.mk_type_annotation cx tparams_map ret_reason None in
+          let fresh_t, _ = Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc) in
           Flow.flow_t cx (fresh_t, return_t);
           fresh_t, Some (loc, Inferred)
       | Some (loc, Declared _) ->
           Flow_js.add_output cx Flow_error.(
             EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)
           );
-          fst (Anno.mk_type_annotation cx tparams_map ret_reason None),
+          fst (Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)),
           Some (loc, Declared (Typed_ast.error_annot, Typed_ast.Expression.error))
     ) in
-    let return = match return with
-    | Some type_annot -> Ast.Function.Available type_annot
-    | None -> Ast.Function.Missing (loc, return_t)
-    in
     {Func_sig.reason; kind; tparams; tparams_map; fparams; body; return_t},
     (fun body fun_type -> { func with Ast.Function.
       id = Option.map ~f:(fun (id_loc, name) -> (id_loc, fun_type), name) id;
@@ -6600,7 +6593,7 @@ and declare_function_to_function_declaration cx
               in
               let name' = ({ Ast.Pattern.Identifier.
                 name;
-                annot = Some (fst annot, annot);
+                annot = Ast.Type.Available (fst annot, annot);
                 optional = false;
               }) in
               (l, Ast.Pattern.Identifier name')
@@ -6618,7 +6611,7 @@ and declare_function_to_function_declaration cx
                 Ast.Statement.Return.argument = Some e
               })
             ]}) in
-          let return = Ast.Function.Available (loc, return) in
+          let return = Ast.Type.Available (loc, return) in
           Some (Ast.Statement.FunctionDeclaration { Ast.Function.
             id = Some id;
             params = (params_loc, { Ast.Function.Params.params; rest });
@@ -6634,7 +6627,7 @@ and declare_function_to_function_declaration cx
               id = Some ((id_loc, fun_type), id_name);
               tparams;
               params = params_loc, { Ast.Function.Params.params; rest };
-              return = Ast.Function.Available (_, return);
+              return = Ast.Type.Available (_, return);
               body = Ast.Function.BodyBlock (pred_loc, { Ast.Statement.Block.
                 body = [_, Ast.Statement.Return { Ast.Statement.Return.
                   argument = Some e;
@@ -6645,7 +6638,7 @@ and declare_function_to_function_declaration cx
               let param_to_param_type = function
                 | (loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
                     name = (name_loc, _), name;
-                    annot = Some (_, annot);
+                    annot = Ast.Type.Available (_, annot);
                     optional;
                   } ->
                   loc,

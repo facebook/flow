@@ -20,7 +20,7 @@ val destructuring :
   (Loc.t, Loc.t * Type.t) Flow_ast.Pattern.t
 val type_of_pattern :
   'a * (Loc.t, Loc.t) Flow_ast.Pattern.t' ->
-  (Loc.t, Loc.t) Flow_ast.Type.annotation option
+  (Loc.t, Loc.t) Flow_ast.Type.annotation_or_hint
 val destructuring_assignment :
   Context.t ->
   expr:(

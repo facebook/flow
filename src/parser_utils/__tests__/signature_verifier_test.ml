@@ -49,7 +49,7 @@ let tests = "signature_verifier" >::: [
 
   "export_function_literal_check2" >:: mk_signature_verifier_test
     ["export default function(x: number) { return x };"]
-    ["Expected annotation @ (1, 35) to (1, 35)"];
+    ["Expected annotation @ (1, 34) to (1, 34)"];
 
   "export_function_reference" >:: mk_signature_verifier_test
     ["function foo(x: number): number { return x }";
@@ -65,7 +65,7 @@ let tests = "signature_verifier" >::: [
   "export_function_reference_check2" >:: mk_signature_verifier_test
     ["function foo(x: number) { return x }";
      "export default foo;"]
-    ["Expected annotation @ (1, 24) to (1, 24)";
+    ["Expected annotation @ (1, 23) to (1, 23)";
      "Reachable: foo"];
 
   "export_object_literal_property_literal" >:: mk_signature_verifier_test
@@ -115,7 +115,7 @@ let tests = "signature_verifier" >::: [
      "  m(x: number) { return x; }";
      "}";
      "export default C;"]
-    ["Expected annotation @ (3, 15) to (3, 15)";
+    ["Expected annotation @ (3, 14) to (3, 14)";
      "Reachable: C"];
 
   "type_alias_dependencies" >:: mk_signature_verifier_test
@@ -225,7 +225,7 @@ let tests = "signature_verifier" >::: [
   "void_generator" >:: mk_signature_verifier_test
     ["function* foo() { yield 0; }";
      "export default foo;"]
-    ["Expected annotation @ (1, 16) to (1, 16)";
+    ["Expected annotation @ (1, 15) to (1, 15)";
      "Reachable: foo"];
 
   "import_default_dependencies" >:: mk_signature_verifier_test
@@ -335,7 +335,7 @@ let tests = "signature_verifier" >::: [
      "  b: (x: string) => x,      // B";
      "};"]
     ["Expected annotation @ (2, 2) to (2, 23)";
-     "Expected annotation @ (6, 17) to (6, 17)";
+     "Expected annotation @ (6, 16) to (6, 16)";
      "Reachable: A"];
 
   "munged_methods_ignored" >:: mk_signature_verifier_test
@@ -351,7 +351,7 @@ let tests = "signature_verifier" >::: [
      "  _method() { return 1; }";
      "}";
     "export default C;"]
-    ["Expected annotation @ (2, 12) to (2, 12)";
+    ["Expected annotation @ (2, 11) to (2, 11)";
      "Reachable: C"];
 
   "munged_fields_ignored" >:: mk_signature_verifier_test

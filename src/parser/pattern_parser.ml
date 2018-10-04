@@ -12,6 +12,9 @@ open Parser_common
 open Parser_env
 open Flow_ast
 
+let missing_annot env =
+  Ast.Type.Missing (Peek.loc_skip_lookahead env)
+
 module Pattern
   (Parse: Parser_common.PARSER)
   (Type: Type_parser.TYPE)
@@ -61,7 +64,7 @@ module Pattern
     fun env (loc, { Ast.Expression.Object.properties = props }) ->
       loc, Pattern.(Object { Object.
         properties = properties env [] props;
-        annot = None;
+        annot = missing_annot env;
       })
 
   and array_from_expr =
@@ -116,7 +119,7 @@ module Pattern
     fun env (loc, { Ast.Expression.Array.elements = elems }) ->
       loc, Pattern.Array { Pattern.Array.
         elements = elements env [] elems;
-        annot = None;
+        annot = missing_annot env;
       }
 
   and from_expr env (loc, expr) =
@@ -144,7 +147,7 @@ module Pattern
         end;
         loc, Pattern.Identifier { Pattern.Identifier.
           name;
-          annot = None;
+          annot = missing_annot env;
           optional = false;
         }
     | Assignment { Assignment.operator = Assignment.Assign; left; right } ->
@@ -222,7 +225,7 @@ module Pattern
             end;
             let pattern = (id_loc, Pattern.Identifier { Pattern.Identifier.
               name;
-              annot = None;
+              annot = missing_annot env;
               optional = false;
             }) in
             let pattern = property_with_default env pattern in
@@ -277,8 +280,8 @@ module Pattern
       let properties = properties env ~seen_rest:false ~rest_trailing_comma:None [] in
       Expect.token env T_RCURLY;
       let annot =
-        if Peek.token env = T_COLON then Some (Type.annotation env)
-        else None
+        if Peek.token env = T_COLON then Ast.Type.Available (Type.annotation env)
+        else missing_annot env
       in
       Pattern.Object { Pattern.Object.properties; annot; }
     )
@@ -330,8 +333,8 @@ module Pattern
       let elements = elements env [] in
       Expect.token env T_RBRACKET;
       let annot =
-        if Peek.token env = T_COLON then Some (Type.annotation env)
-        else None
+        if Peek.token env = T_COLON then Ast.Type.Available (Type.annotation env)
+        else missing_annot env
       in
       Pattern.Array { Pattern.Array.elements; annot; }
     )

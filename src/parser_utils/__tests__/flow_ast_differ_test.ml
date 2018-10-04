@@ -6,7 +6,7 @@
  *)
 
 module Ast = Flow_ast
-module Type = Flow_ast.Type
+module Type = Ast.Type
 open Flow_ast_differ
 open Utils_js
 
@@ -67,7 +67,7 @@ class useless_mapper = object
     if kind = Var then { declarations; kind = Const }
     else decl
 
-  method! type_ (annot: (Loc.t, Loc.t) Flow_ast.Type.t) =
+  method! type_ (annot: (Loc.t, Loc.t) Type.t) =
     let (loc, typ) = annot in
     match typ with
     | Type.Number -> (loc, Type.String)
@@ -106,50 +106,50 @@ class delete_annot_mapper = object
   inherit Flow_ast_mapper.mapper as super
 
   method! pattern ?kind expr =
-  let open Flow_ast.Pattern in
-  let open Flow_ast.Pattern.Identifier in
+  let open Ast.Pattern in
+  let open Ast.Pattern.Identifier in
   let expr = super#pattern ?kind expr in
   let (loc, patt) = expr in
   match patt with
-    | Identifier id -> loc, Identifier { id with annot = None }
+    | Identifier id ->
+      loc, Identifier { id with annot = Type.Missing Loc.none }
     | _ -> expr
 
-  method! return_type_annotation return =
-    let open Flow_ast.Function in
-    match super#return_type_annotation return with
-    | Available (loc, _) -> Missing loc
-    | Missing _ -> return
+  method! type_annotation_hint return =
+    match super#type_annotation_hint return with
+    | Type.Available (loc, _) -> Type.Missing loc
+    | Type.Missing _ -> return
 end
 
 class insert_annot_mapper = object
   inherit Flow_ast_mapper.mapper as super
 
   method! pattern ?kind expr =
-  let open Flow_ast.Pattern in
-  let open Flow_ast.Pattern.Identifier in
+  let open Ast.Pattern in
+  let open Ast.Pattern.Identifier in
   let expr = super#pattern ?kind expr in
   let (loc, patt) = expr in
   match patt with
-    | Identifier id -> loc, Identifier { id with annot = Some (loc, (loc, Type.Number)) }
+    | Identifier id ->
+      loc, Identifier { id with annot = Type.Available (loc, (loc, Type.Number)) }
     | _ -> expr
 
-  method! return_type_annotation return =
-    let open Flow_ast.Function in
-    match super#return_type_annotation return with
-    | Available _ -> return
-    | Missing _loc -> Available (_loc, (_loc, Type.Number))
+  method! type_annotation_hint return =
+    match super#type_annotation_hint return with
+    | Type.Available _ -> return
+    | Type.Missing _loc -> Type.Available (_loc, (_loc, Type.Number))
 end
 
 class prop_annot_mapper = object
   inherit Flow_ast_mapper.mapper as super
 
-  method! class_property _loc (prop: (Loc.t, Loc.t) Flow_ast.Class.Property.t') =
-    let open Flow_ast.Class.Property in
+  method! class_property _loc (prop: (Loc.t, Loc.t) Ast.Class.Property.t') =
+    let open Ast.Class.Property in
     let prop = super#class_property _loc prop in
     let { annot; _ } = prop in
     let annot' = match annot with
-      | Some _ -> annot
-      | None -> Some (Loc.none, (Loc.none, Type.Number)) in
+      | Type.Available _ -> annot
+      | Type.Missing _ -> Type.Available (Loc.none, (Loc.none, Type.Number)) in
     { prop with annot = annot' }
 end
 
@@ -157,8 +157,8 @@ class insert_typecast_mapper = object
   inherit Flow_ast_mapper.mapper
   method! expression expression =
     let loc, _ = expression in
-    loc, Flow_ast.Expression.TypeCast
-      { Flow_ast.Expression.TypeCast.annot=(loc, (loc, Flow_ast.Type.Any)); expression }
+    loc, Ast.Expression.TypeCast
+      { Ast.Expression.TypeCast.annot=(loc, (loc, Type.Any)); expression }
 end
 
 let edits_of_source algo source mapper =
@@ -237,7 +237,7 @@ let tests = "ast_differ" >::: [
   end;
   "class_prop_annot" >:: begin fun ctxt ->
     let source = "class A { f = (x: string) => x; }" in
-    assert_edits_equal ctxt ~edits:[(10, 31), "f: number = (x: string) => x;"] ~source
+    assert_edits_equal ctxt ~edits:[(11, 11), ": number"] ~source
       ~expected:"class A { f: number = (x: string) => x; }"
       ~mapper:(new prop_annot_mapper)
   end;
@@ -511,7 +511,7 @@ let tests = "ast_differ" >::: [
   end;
   "type_annotation_insert" >:: begin fun ctxt ->
     let source = "let x = 3;" in
-    assert_edits_equal ctxt ~edits:[(4, 5), "x: number"] ~source
+    assert_edits_equal ctxt ~edits:[(5, 5), ": number"] ~source
       ~expected:"let x: number = 3;" ~mapper:(new insert_annot_mapper)
   end;
   "type_annotation_replace" >:: begin fun ctxt ->
@@ -531,8 +531,8 @@ let tests = "ast_differ" >::: [
   end;
   "return_type_insert" >:: begin fun ctxt ->
     let source = "function foo() { return 1; }" in
-    assert_edits_equal ctxt ~edits:[(15, 15),": number"] ~source
-      ~expected:"function foo() : number{ return 1; }" ~mapper:(new insert_annot_mapper)
+    assert_edits_equal ctxt ~edits:[(14, 14),": number"] ~source
+      ~expected:"function foo(): number { return 1; }" ~mapper:(new insert_annot_mapper)
   end;
   "comments" >:: begin fun ctxt ->
     let source = "function foo() { /* comment */ (5 - 3); 4; (6 + 4); /* comment */}" in

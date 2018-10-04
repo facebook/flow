@@ -158,7 +158,7 @@ let mk_func_def
 
   let param = let open P.Identifier in
     (Loc.none, P.Identifier {name = (Loc.none, pname);
-                             annot = Some (Loc.none, (Loc.none, ptype));
+                             annot = T.Available (Loc.none, (Loc.none, ptype));
                              optional = false}) in
 
   let func = let open Ast.Function in
@@ -169,7 +169,7 @@ let mk_func_def
      generator = false;
      predicate = None;
      expression = false;
-     return = Ast.Function.Available (Loc.none, (Loc.none, rtype));
+     return = T.Available (Loc.none, (Loc.none, rtype));
      tparams = None} in
   Stmt (S.FunctionDeclaration func)
 
@@ -217,8 +217,8 @@ let mk_prop_write
 let mk_vardecl ?etype (vname : string) (expr : (Loc.t, Loc.t) E.t') : t =
   (* Make an identifier *)
   let t = match etype with
-    | None -> None
-    | Some t -> Some (Loc.none, (Loc.none, t)) in
+    | None -> T.Missing Loc.none
+    | Some t -> T.Available (Loc.none, (Loc.none, t)) in
 
   let id = let open P.Identifier in
     (Loc.none, P.Identifier

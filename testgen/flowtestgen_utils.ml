@@ -72,8 +72,8 @@ let rec string_of_pattern (pattern : (Loc.t, Loc.t) P.t') =
     (snd id.name) ^
     (if id.optional then "?" else "") ^ " " ^
     (match id.annot with
-     | Some (_, (_, t)) -> " : " ^ (string_of_type t)
-     | None -> "")
+     | Ast.Type.Available (_, (_, t)) -> " : " ^ (string_of_type t)
+     | Ast.Type.Missing _ -> "")
   | P.Expression (_, e) -> string_of_expr e
   | P.Assignment assign ->
     let open P.Assignment in
@@ -173,8 +173,8 @@ and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
       | BodyBlock (_, s) -> string_of_stmt (S.Block s)
       | BodyExpression (_, e) -> string_of_expr e in
     let ret_type_str = match func.return with
-      | F.Available (_, (_, t)) -> ": " ^ string_of_type t
-      | F.Missing _ -> "" in
+      | T.Available (_, (_, t)) -> ": " ^ string_of_type t
+      | T.Missing _ -> "" in
     "function " ^ fname ^ "(" ^ params_str ^ ") " ^ ret_type_str ^ " {\n" ^
     body_str ^
     "}\n"

@@ -73,6 +73,10 @@ let option f = function
   | Some v -> f v
   | None -> Empty
 
+let hint f = function
+  | Ast.Type.Available v -> f v
+  | Ast.Type.Missing _ -> Empty
+
 let deoptionalize l =
   List.rev (List.fold_left (fun acc -> function None -> acc | Some x -> x::acc) [] l)
 
@@ -1062,7 +1066,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
             )
             properties
           );
-        option type_annotation annot;
+        hint type_annotation annot;
       ]
     | P.Array { P.Array.elements; annot } ->
       fuse [
@@ -1080,7 +1084,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
               source_location_with_comments (loc, fuse [Atom "..."; pattern argument])
             )
             elements);
-        option type_annotation annot;
+        hint type_annotation annot;
       ]
     | P.Assignment { P.Assignment.left; right } ->
       fuse [
@@ -1097,7 +1101,7 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
       fuse [
         identifier name;
         if optional then Atom "?" else Empty;
-        option type_annotation annot;
+        hint type_annotation annot;
       ]
     | P.Expression expr -> expression ~ctxt expr
   )
@@ -1180,7 +1184,6 @@ and function_base
     params; body; async; predicate; return; tparams;
     expression=_; generator=_; id=_ (* Handled via `function_` *)
   } =
-  let open Ast.Function in
   fuse [
     if async then fuse [Atom "async"; space; id] else id;
     option type_parameter tparams;
@@ -1188,9 +1191,9 @@ and function_base
     | true, (_, { Ast.Function.Params.params = [(
       _,
       Ast.Pattern.Identifier {
-        Ast.Pattern.Identifier.optional=false; annot=None; _;
+        Ast.Pattern.Identifier.optional=false; annot=Ast.Type.Missing _; _;
       }
-    )]; rest = None}), Missing _, None, None -> List.hd (function_params ~ctxt params)
+    )]; rest = None}), Ast.Type.Missing _, None, None -> List.hd (function_params ~ctxt params)
     | _, _, _, _, _ ->
       list
         ~wrap:(Atom "(", Atom ")")
@@ -1198,21 +1201,21 @@ and function_base
         (function_params ~ctxt:normal_context params)
     end;
     begin match return, predicate with
-    | Missing _, None -> Empty
-    | Missing _, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
-    | Available ret, Some pred -> fuse [
+    | Ast.Type.Missing _, None -> Empty
+    | Ast.Type.Missing _, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
+    | Ast.Type.Available ret, Some pred -> fuse [
         type_annotation ret;
         pretty_space;
         type_predicate pred;
       ]
-    | Available ret, None -> type_annotation ret;
+    | Ast.Type.Available ret, None -> type_annotation ret;
     end;
     if arrow then fuse [
         (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
            unexpected multiply-and-assign operator. Thus, we format this with a
            space e.g. `():* =>{}`. *)
         begin match return with
-        | Available (_, (_, Ast.Type.Exists)) -> space
+        | Ast.Type.Available (_, (_, Ast.Type.Exists)) -> space
         | _ -> pretty_space
         end;
         Atom "=>";
@@ -1305,7 +1308,7 @@ and class_property_helper loc key value static annot variance =
     if static then fuse [Atom "static"; space] else Empty;
     option variance_ variance;
     key;
-    option type_annotation annot;
+    hint type_annotation annot;
     begin match value with
       | Some v -> fuse [
         pretty_space; Atom "="; pretty_space;
@@ -1920,7 +1923,7 @@ and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
   fuse [
     option variance_ variance;
     source_location_with_comments (loc, Atom name);
-    option type_annotation bound;
+    hint type_annotation bound;
     begin match default with
     | Some t -> fuse [
         pretty_space;
@@ -2278,7 +2281,7 @@ and declare_variable ?(s_type=Empty) { Ast.Statement.DeclareVariable.
     s_type;
     Atom "var"; space;
     identifier id;
-    option type_annotation annot;
+    hint type_annotation annot;
   ])
 
 and declare_module_exports annot =

@@ -301,7 +301,7 @@ class mapper = object(this)
     let { key; value; annot; static = _; variance = _; } = prop in
     let key' = this#object_key key in
     let value' = map_opt this#expression value in
-    let annot' = map_opt this#type_annotation annot in
+    let annot' = this#type_annotation_hint annot in
     if key == key' && value == value' && annot' == annot then prop
     else { prop with key = key'; value = value'; annot = annot' }
 
@@ -310,7 +310,7 @@ class mapper = object(this)
     let { key; value; annot; static = _; variance = _; } = prop in
     let key' = this#private_name key in
     let value' = map_opt this#expression value in
-    let annot' = map_opt this#type_annotation annot in
+    let annot' = this#type_annotation_hint annot in
     if key == key' && value == value' && annot' == annot then prop
     else { prop with key = key'; value = value'; annot = annot' }
 
@@ -391,7 +391,7 @@ class mapper = object(this)
     let open Flow_ast.Statement.DeclareVariable in
     let { id = ident; annot } = decl in
     let id' = this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Var ident in
-    let annot' = map_opt this#type_annotation annot in
+    let annot' = this#type_annotation_hint annot in
     if id' == ident && annot' == annot then decl
     else { id = id'; annot = annot' }
 
@@ -606,7 +606,7 @@ class mapper = object(this)
   method type_parameter_declaration_type_param (type_param: (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.TypeParam.t) =
     let open Flow_ast.Type.ParameterDeclaration.TypeParam in
     let loc, { name; bound; variance; default; } = type_param in
-    let bound' = map_opt this#type_annotation bound in
+    let bound' = this#type_annotation_hint bound in
     let default' = map_opt this#type_ default in
     if bound' == bound && default' == default then type_param
     else loc, { name; bound = bound'; variance; default = default'; }
@@ -663,8 +663,8 @@ class mapper = object(this)
     let loc, a = annot in
     id this#type_ a annot (fun a -> (loc, a))
 
-  method return_type_annotation (return: ('M, 'T) Flow_ast.Function.return) =
-    let open Flow_ast.Function in
+  method type_annotation_hint (return: ('M, 'T) Flow_ast.Type.annotation_or_hint) =
+    let open Flow_ast.Type in
     match return with
     | Available annot ->
       let annot' = this#type_annotation annot in
@@ -680,7 +680,7 @@ class mapper = object(this)
     } = expr in
     let ident' = map_opt this#function_identifier ident in
     let params' = this#function_params params in
-    let return' = this#return_type_annotation return in
+    let return' = this#type_annotation_hint return in
     let body' = this#function_body_any body in
     (* TODO: walk predicate *)
     let tparams' = map_opt this#type_parameter_declaration tparams in
@@ -1100,12 +1100,12 @@ class mapper = object(this)
     let patt' = match patt with
       | Object { Object.properties; annot } ->
         let properties' = ListUtils.ident_map (this#pattern_object_p ?kind) properties in
-        let annot' = map_opt this#type_annotation annot in
+        let annot' = this#type_annotation_hint annot in
         if properties' == properties && annot' == annot then patt
         else Object { Object.properties = properties'; annot = annot' }
       | Array { Array.elements; annot } ->
         let elements' = ListUtils.ident_map (map_opt (this#pattern_array_e ?kind)) elements in
-        let annot' = map_opt this#type_annotation annot in
+        let annot' = this#type_annotation_hint annot in
         if elements' == elements && annot' == annot then patt
         else Array { Array.elements = elements'; annot = annot' }
       | Assignment { Assignment.left; right } ->
@@ -1115,7 +1115,7 @@ class mapper = object(this)
         else Assignment { Assignment.left = left'; right = right' }
       | Identifier { Identifier.name; annot; optional } ->
         let name' = this#pattern_identifier ?kind name in
-        let annot' = map_opt this#type_annotation annot in
+        let annot' = this#type_annotation_hint annot in
         if name == name' && annot == annot' then patt
         else Identifier { Identifier.name = name'; annot = annot'; optional }
       | Expression e ->

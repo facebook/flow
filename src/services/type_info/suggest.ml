@@ -107,11 +107,14 @@ class visitor ~cxs = object(this)
     let patt' = match patt with
       | Identifier { Identifier.name; annot; optional } -> (
           match annot with
-          | None ->
+          | Ast.Type.Missing mis_loc ->
             let annot = this#inferred_type ~search:(fun x -> x)
               ~index:(fun x -> Ok x) loc in
+            let annot = match annot with
+            | Some annot -> Ast.Type.Available annot
+            | None -> Ast.Type.Missing mis_loc in
             Identifier { Identifier.name; annot; optional }
-          | Some _ -> patt
+          | Ast.Type.Available _ -> patt
         )
       | _ ->
         let _, patt' = super#function_param_pattern expr in
@@ -137,15 +140,15 @@ class visitor ~cxs = object(this)
     let { return; _ } = func in
     let return' =
       match return with
-      | Available _ -> return
-      | Missing _ ->
+      | Ast.Type.Available _ -> return
+      | Ast.Type.Missing _ as miss ->
         let index = Ty.(function
           | Fun { fun_return; _ } -> Ok fun_return
           | ty -> Error (NonFunctionType (Ty_printer.string_of_t ty))
         ) in
         match this#inferred_type ~search ~index loc with
-        | Some annot -> Available annot
-        | None -> Missing loc
+        | Some annot -> Ast.Type.Available annot
+        | None -> miss
     in
     if return' == return
       then func

@@ -186,7 +186,7 @@ let diff_if_changed_opt f opt1 opt2: node change list option =
 (* This is needed if the function f takes its arguments as options and produces an optional
    node change list (for instance, type annotation). In this case it is not sufficient just to
    give up and return None if only one of the options is present *)
-let diff_if_changed_opt_arg f opt1 opt2: node change list option =
+let _diff_if_changed_opt_arg f opt1 opt2: node change list option =
   match opt1, opt2 with
   | None, None -> Some []
   | Some x1, Some x2 when x1 == x2 -> Some []
@@ -400,7 +400,7 @@ let program (algo : diff_algorithm)
       None
     else
       let fnbody = diff_if_changed_opt function_body_any (Some body1) (Some body2) in
-      let returns = diff_if_changed return_type_annotation return1 return2 |> Option.return in
+      let returns = diff_if_changed type_annotation_hint return1 return2 |> Option.return in
       Option.(all [fnbody; returns] >>| List.concat)
 
   and function_body_any (body1 : (Loc.t, Loc.t) Ast.Function.body)
@@ -411,17 +411,6 @@ let program (algo : diff_algorithm)
     | BodyExpression e1, BodyExpression e2 -> expression e1 e2 |> Option.return
     | BodyBlock (_, block1), BodyBlock (_, block2) -> block block1 block2
     | _ -> None
-
-  and return_type_annotation (return1: (Loc.t, Loc.t) Ast.Function.return)
-                      (return2: (Loc.t, Loc.t) Ast.Function.return)
-      : node change list =
-    let open Ast.Function in
-    match return1, return2 with
-    | Missing _, Missing _ -> []
-    | Missing loc1, Available (loc2, typ) -> [loc1, Insert (None, [TypeAnnotation (loc2, typ)])]
-    | Available (loc1, typ), Missing _ -> [loc1, Delete (TypeAnnotation (loc1, typ))]
-    | Available (loc1, typ1), Available (loc2, typ2) ->
-     [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
 
   and variable_declarator (decl1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t) (decl2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.Declarator.t)
       : node change list option =
@@ -520,7 +509,7 @@ let program (algo : diff_algorithm)
     let _,    { key = key2; value = val2; annot = annot2; static = s2; variance = var2} = prop2 in
     (if key1 != key2 || s1 != s2 || var1 != var2 then None else
       let vals = diff_if_changed_nonopt_fn expression val1 val2 in
-      let annots = diff_if_changed_opt_arg type_annotation_opt annot1 annot2 in
+      let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       Option.(all [vals; annots] >>| List.concat))
     |> Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
 
@@ -942,18 +931,19 @@ let program (algo : diff_algorithm)
       None
     else
       let ids = diff_if_changed identifier name1 name2 |> Option.return in
-      let annots = diff_if_changed_opt_arg type_annotation_opt annot1 annot2 in
+      let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       Option.(all [ids; annots] >>| List.concat)
 
-  and type_annotation_opt (annot1: (Loc.t, Loc.t) Ast.Type.annotation option)
-                      (annot2: (Loc.t, Loc.t) Ast.Type.annotation option)
-      : node change list option =
-    match annot1, annot2 with
-    | None, None -> Some []
-    | Some (loc, typ), None -> Some [loc, Delete (TypeAnnotation (loc, typ))]
-    | None, Some _ -> None (* Nowhere in the original program to insert the annotation *)
-    | Some annot1, Some annot2 ->
-        Some (type_annotation annot1 annot2)
+  and type_annotation_hint
+        (return1: (Loc.t, Loc.t) Ast.Type.annotation_or_hint)
+        (return2: (Loc.t, Loc.t) Ast.Type.annotation_or_hint): node change list =
+    let open Ast.Type in
+    match return1, return2 with
+    | Missing _, Missing _ -> []
+    | Missing loc1, Available (loc2, typ) -> [loc1, Insert (None, [TypeAnnotation (loc2, typ)])]
+    | Available (loc1, typ), Missing _ -> [loc1, Delete (TypeAnnotation (loc1, typ))]
+    | Available (loc1, typ1), Available (loc2, typ2) ->
+     [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
 
   and type_annotation ((loc1, typ1): (Loc.t, Loc.t) Ast.Type.annotation)
                       ((loc2, typ2): (Loc.t, Loc.t) Ast.Type.annotation)

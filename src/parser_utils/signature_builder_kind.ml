@@ -14,8 +14,8 @@ module Annot_path = struct
     | Array of t * int
 
   let mk_annot ?annot_path = function
-    | None -> annot_path
-    | Some annot -> Some (Annot (annot))
+    | Ast.Type.Missing _ -> annot_path
+    | Ast.Type.Available annot -> Some (Annot (annot))
 
   let mk_object ?annot_path x =
     match annot_path with
@@ -62,7 +62,7 @@ type t =
       generator: bool;
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
       params: (Loc.t, Loc.t) Ast.Function.Params.t;
-      return: (Loc.t, Loc.t) Ast.Function.return;
+      return: (Loc.t, Loc.t) Ast.Type.annotation_or_hint;
       body: (Loc.t, Loc.t) Ast.Function.body;
     }
   | DeclareFunctionDef of {

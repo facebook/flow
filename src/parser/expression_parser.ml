@@ -1064,11 +1064,11 @@ module Expression
             Parse.identifier ~restricted_error:Error.StrictParamName env in
           let param = loc, Pattern.Identifier {
             Pattern.Identifier.name = loc, name;
-                               annot=None;
+                               annot= Ast.Type.Missing (Peek.loc_skip_lookahead env);
                                optional=false;
           } in
           (loc, { Ast.Function.Params.params = [param]; rest = None }),
-          (* FIXME(festevezga) D9545732 add proper location *) Ast.Function.Missing Loc.none,
+          Ast.Type.Missing Loc.({ loc with start = loc._end }),
           None
         else
           let params =

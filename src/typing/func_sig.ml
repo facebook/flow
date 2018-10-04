@@ -31,12 +31,10 @@ type t = {
   return_t: Type.t;
 }
 
-let return_loc =
-  let module F = Ast.Function in
-  let open F in function
-  | {return = Available (_, (loc, _)); _}
-  | {F.body = BodyExpression (loc, _); _} -> loc
-  | {F.body = BodyBlock (loc, _); _} -> Loc.char_before loc
+let return_loc = function
+  | {Ast.Function.return = Ast.Type.Available (_, (loc, _)); _}
+  | {Ast.Function.body = Ast.Function.BodyExpression (loc, _); _} -> loc
+  | {Ast.Function.body = Ast.Function.BodyBlock (loc, _); _} -> Loc.char_before loc
 
 let default_constructor reason = {
   reason;
