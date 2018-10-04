@@ -173,7 +173,7 @@ let all_entries () =
 (* clear environment *)
 let havoc_current_activation () =
   scopes := [];
-  Changeset.init ()
+  Changeset.Global.init ()
 
 (* save environment to context *)
 let snapshot_env cx =
@@ -189,7 +189,7 @@ let push_var_scope cx scope =
     | VarScope _ -> ()
     | _ -> assert_false "push_var_scope on non-var scope");
   scopes := scope :: !scopes;
-  Changeset.push ();
+  Changeset.Global.push ();
   snapshot_env cx
 
 (***
@@ -208,7 +208,7 @@ let saved_closure_changeset = ref (Some Changeset.empty)
 
 let save_closure_changeset scopes =
   let ids = List.map (fun { id; _ } -> id) scopes in
-  let changeset = Changeset.(include_scopes ids (peek ())) in
+  let changeset = Changeset.(include_scopes ids (Global.peek ())) in
   saved_closure_changeset := Some changeset
 
 let retrieve_closure_changeset () =
@@ -227,7 +227,7 @@ let pop_var_scope () =
   | { kind = VarScope _; _ } :: tail_scopes ->
     save_closure_changeset tail_scopes;
     scopes := tail_scopes;
-    Changeset.pop ()
+    Changeset.Global.pop ()
   | [] -> assert_false "empty scope list"
   | _ -> assert_false "top scope is non-var"
 
@@ -242,7 +242,7 @@ let pop_lex_scope () =
   match !scopes with
   | { kind = LexScope; id; _ } :: tail_scopes ->
     (* cull any changelist entries for this scope *)
-    ignore (Changeset.filter_scope_changes id);
+    ignore (Changeset.Global.filter_scope_changes id);
     (* pop *)
     scopes := tail_scopes
   | [] -> assert_false "empty scope list"
@@ -264,7 +264,7 @@ let trunc_env =
   | 0, scopes -> scopes
   | _, [] -> assert_false "trunc_env: scopes underflow"
   | n, scope :: scopes ->
-    ignore (Changeset.filter_scope_changes scope.id);
+    ignore (Changeset.Global.filter_scope_changes scope.id);
     trunc (n - 1, scopes)
   in
   fun depth ->
@@ -633,7 +633,7 @@ let init_value_entry kind cx ~use_op name ~has_anno specific loc =
         value_state = State.Undeclared | State.Declared; _ } as v)
     | Const _, Value ({ Entry.kind = Const _;
         value_state = State.Undeclared | State.Declared; _ } as v) ->
-      Changeset.change_var (scope.id, name, Changeset.Write);
+      Changeset.Global.change_var (scope.id, name, Changeset.Write);
       if specific != v.general then (
         Flow_js.flow cx (specific, UseT (use_op, v.general));
       );
@@ -790,7 +790,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
       tdz_error cx name loc v;
       AnyT.at (value_declare_loc |> ALoc.of_loc)
     | _ ->
-      Changeset.change_var (scope.id, name, Changeset.Read);
+      Changeset.Global.change_var (scope.id, name, Changeset.Read);
       let s, g = value_entry_types ~lookup_mode scope v in
       if specific then s else g
   )
@@ -882,7 +882,7 @@ let update_var ?(track_ref=false) op cx ~use_op name specific loc =
     None
   | Value ({ Entry.kind = Let _ | Var _; _ } as v) ->
     let change = scope.id, name, op in
-    Changeset.change_var change;
+    Changeset.Global.change_var change;
     let use_op = match op with
     | Changeset.Write -> use_op
     | Changeset.Refine -> use_op
@@ -933,7 +933,7 @@ let refine_const cx name specific loc =
   Entry.(match entry with
   | Value ({ Entry.kind = Const _; _ } as v) ->
     let change = scope.id, name, Changeset.Refine in
-    Changeset.change_var change;
+    Changeset.Global.change_var change;
     let general = Entry.general_of_value v in
     Flow.flow cx (specific, UseT (Op (Internal Refinement), general));
     let update = Value {
@@ -1328,7 +1328,7 @@ let add_heap_refinement op key refi_loc refined original =
   let base, _ = key in
   let scope, _ = find_entry_in_var_scope base in
   let change = scope.id, key, op in
-  Changeset.change_refi change;
+  Changeset.Global.change_refi change;
   Scope.add_refi key refi scope;
   change
 
@@ -1383,7 +1383,7 @@ let refine_with_preds cx (loc: Loc.t) preds orig_types =
    state of the cloned environment back into the reinstated
    original *)
 let in_refined_env cx loc preds orig_types f =
-  let oldset = Changeset.clear () in
+  let oldset = Changeset.Global.clear () in
   let orig_env = peek_env () in
   let new_env = clone_env orig_env in
   update_env cx loc new_env;
@@ -1391,7 +1391,7 @@ let in_refined_env cx loc preds orig_types f =
 
   let result = f () in
 
-  let newset = Changeset.merge oldset in
+  let newset = Changeset.Global.merge oldset in
   merge_env cx loc (orig_env, orig_env, new_env) newset;
   update_env cx loc orig_env;
 
