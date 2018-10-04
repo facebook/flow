@@ -46,7 +46,7 @@ let tests = "signature_verifier" >::: [
 
   "export_function_literal_check2" >:: mk_signature_verifier_test
     ["export default function(x: number) { return x };"]
-    ["Expected annotation @ (1, 15) to (1, 47)"];
+    ["Expected annotation @ (1, 35) to (1, 35)"];
 
   "export_function_reference" >:: mk_signature_verifier_test
     ["function foo(x: number): number { return x }";
@@ -61,7 +61,7 @@ let tests = "signature_verifier" >::: [
   "export_function_reference_check2" >:: mk_signature_verifier_test
     ["function foo(x: number) { return x }";
      "export default foo;"]
-    ["Expected annotation @ (1, 9) to (1, 12)"];
+    ["Expected annotation @ (1, 24) to (1, 24)"];
 
   "export_object_literal_property_literal" >:: mk_signature_verifier_test
     ["export default { p: 0 };"]
@@ -107,7 +107,7 @@ let tests = "signature_verifier" >::: [
      "  m(x: number) { return x; }";
      "}";
      "export default C;"]
-    ["Expected annotation @ (3, 3) to (3, 28)"];
+    ["Expected annotation @ (3, 15) to (3, 15)"];
 
   "type_alias_dependencies" >:: mk_signature_verifier_test
     ["type T1 = number;";
@@ -207,7 +207,7 @@ let tests = "signature_verifier" >::: [
   "void_generator" >:: mk_signature_verifier_test
     ["function* foo() { yield 0; }";
      "export default foo;"]
-    ["Expected annotation @ (1, 10) to (1, 13)"];
+    ["Expected annotation @ (1, 16) to (1, 16)"];
 
   "import_default_dependencies" >:: mk_signature_verifier_test
     ["import x from './import_default_dependencies_helper';";
@@ -309,7 +309,7 @@ let tests = "signature_verifier" >::: [
      "  b: (x: string) => x,      // B";
      "};"]
     ["Expected annotation @ (2, 2) to (2, 23)";
-     "Expected annotation @ (6, 5) to (6, 21)"];
+     "Expected annotation @ (6, 17) to (6, 17)"];
 
   "munged_methods_ignored" >:: mk_signature_verifier_test
     ["class C {";
@@ -324,7 +324,7 @@ let tests = "signature_verifier" >::: [
      "  _method() { return 1; }";
      "}";
     "export default C;"]
-    ["Expected annotation @ (2, 9) to (2, 25)"];
+    ["Expected annotation @ (2, 12) to (2, 12)"];
 
   "munged_fields_ignored" >:: mk_signature_verifier_test
     ["class C {";
