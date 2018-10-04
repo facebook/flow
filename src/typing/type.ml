@@ -975,6 +975,9 @@ module rec TypeTerm : sig
     default: t option;
   }
 
+  and typeparams_nonempty = Loc.t * typeparam Nel.t
+  and typeparams = typeparams_nonempty option
+
   and selector =
   | Prop of string
   | Elem of t
@@ -3278,6 +3281,11 @@ let poly_type_of_tparam_list id tparams t =
     let tparams_nel = (hd, tl) in
     poly_type id tparams_nel t
 
+let poly_type_of_tparams id (tparams: typeparams) t =
+  match tparams with
+  | None -> t
+  | Some (_loc, tparams_nel) -> poly_type id tparams_nel t
+
 let typeapp ?annot_loc t targs =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
   let reason = match annot_loc with
@@ -3418,3 +3426,22 @@ let apply_opt_use opt_use t_out = match opt_use with
 | OptGetPrivatePropT (u, r, s, cbs, b) -> GetPrivatePropT (u, r, s, cbs, b, t_out)
 | OptTestPropT (r, i, p) -> TestPropT (r, i, p, t_out)
 | OptGetElemT (u, r, t) -> GetElemT (u, r, t, t_out)
+
+module TypeParams : sig
+  val to_list: typeparams -> typeparam list
+  val of_list: Loc.t -> typeparam list -> typeparams
+  val map: (typeparam -> typeparam) -> typeparams -> typeparams
+end = struct
+  let to_list tparams =
+    Option.value_map tparams ~default:[] ~f:(fun (_loc, tparam_nel) ->
+      Nel.to_list tparam_nel
+    )
+
+  let of_list tparams_loc tparams =
+    match tparams with
+    | [] -> None
+    | hd::tl -> Some (tparams_loc, (hd, tl))
+
+  let map f tparams =
+    Option.map ~f:(fun (loc, params) -> (loc, Nel.map f params)) tparams
+end

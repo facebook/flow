@@ -12,7 +12,7 @@ type kind =
 type t = {
   reason: Reason.t;
   kind: kind;
-  tparams: Type.typeparam list;
+  tparams: Type.typeparams;
   tparams_map: Type.t SMap.t;
   fparams: Func_params.t;
   body: (Loc.t, Loc.t) Flow_ast.Function.body option;

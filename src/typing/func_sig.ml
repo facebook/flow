@@ -24,7 +24,7 @@ type kind =
 type t = {
   reason: reason;
   kind: kind;
-  tparams: Type.typeparam list;
+  tparams: Type.typeparams;
   tparams_map: Type.t SMap.t;
   fparams: Func_params.t;
   body: (Loc.t, Loc.t) Ast.Function.body option;
@@ -41,7 +41,7 @@ let return_loc =
 let default_constructor reason = {
   reason;
   kind = Ctor;
-  tparams = [];
+  tparams = None;
   tparams_map = SMap.empty;
   fparams = Func_params.empty;
   body = None;
@@ -51,7 +51,7 @@ let default_constructor reason = {
 let field_initializer tparams_map reason expr return_t = {
   reason;
   kind = FieldInit expr;
-  tparams = [];
+  tparams = None;
   tparams_map;
   fparams = Func_params.empty;
   body = None;
@@ -62,12 +62,12 @@ let subst cx map x =
   let {tparams; tparams_map; fparams; return_t; _} = x in
   (* Remove shadowed type params from `map`, but allow bounds/defaults to be
      substituted if they refer to a type param before it is shadowed. *)
-  let tparams = tparams |> List.map (fun tp ->
+  let tparams = tparams |> TypeParams.map (fun tp ->
     let bound = Flow.subst cx map tp.bound in
     let default = Option.map ~f:(Flow.subst cx map) tp.default in
     {tp with bound; default}
   ) in
-  let map = tparams |> List.fold_left (fun map tp ->
+  let map = TypeParams.to_list tparams |> List.fold_left (fun map tp ->
     SMap.remove tp.name map
   ) map in
   let tparams_map = SMap.map (Flow.subst cx map) tparams_map in
@@ -77,7 +77,7 @@ let subst cx map x =
 
 let generate_tests cx f x =
   let {tparams; tparams_map; fparams; return_t; _} = x in
-  Flow.generate_tests cx tparams (fun map -> f {
+  Flow.generate_tests cx (tparams |> TypeParams.to_list) (fun map -> f {
     x with
     tparams_map = SMap.map (Flow.subst cx map) tparams_map;
     fparams = Func_params.subst cx map fparams;
@@ -105,7 +105,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
     def_reason = reason;
   } in
   let t = DefT (reason, FunT (static, prototype, funtype)) in
-  let t = poly_type_of_tparam_list (Context.make_nominal cx) tparams t in
+  let t = poly_type_of_tparams (Context.make_nominal cx) tparams t in
   Flow.unify cx t knot;
   t
 
@@ -120,7 +120,7 @@ let methodtype cx {reason; tparams; fparams; return_t; _} =
     mk_boundfunctiontype
       params_tlist ~rest_param ~def_reason ~params_names return_t
   )) in
-  poly_type_of_tparam_list (Context.make_nominal cx) tparams t
+  poly_type_of_tparams (Context.make_nominal cx) tparams t
 
 let gettertype ({return_t; _}: t) = return_t
 
@@ -346,4 +346,4 @@ let toplevels id cx this super ~decls ~stmts ~expr
 let to_ctor_sig f = { f with kind = Ctor }
 
 let with_typeparams cx f x =
-  Type_table.with_typeparams x.tparams (Context.type_table cx) f
+  Type_table.with_typeparams (TypeParams.to_list x.tparams) (Context.type_table cx) f

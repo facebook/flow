@@ -756,7 +756,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
         in
         loop t
       in
-      let type_ = poly_type_of_tparam_list (Context.make_nominal cx) typeparams
+      let type_ = poly_type_of_tparams (Context.make_nominal cx) typeparams
         (DefT (r, TypeT (TypeAliasKind, t))) in
       Flow.check_polarity cx Positive t;
       Type_table.set (Context.type_table cx) loc type_;
@@ -784,7 +784,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
       let opaque_type_args = List.map (fun {name; reason; polarity; _} ->
         let t = SMap.find_unsafe name typeparams_map in
         name, reason, t, polarity
-      ) typeparams in
+      ) (TypeParams.to_list typeparams) in
       let super_t, supertype_ast = Anno.convert_opt cx typeparams_map supertype in
       let opaquetype = {
         underlying_t;
@@ -795,12 +795,12 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
       } in
       let t = OpaqueT (mk_reason (ROpaqueType name) (loc |> ALoc.of_loc), opaquetype) in
       Flow.check_polarity cx Positive t;
-      let type_ = poly_type_of_tparam_list (Context.make_nominal cx) typeparams
+      let type_ = poly_type_of_tparams (Context.make_nominal cx) typeparams
         (DefT (r, TypeT (OpaqueKind, t))) in
       let open Flow in
       let () = match underlying_t, super_t with
       | Some l, Some u ->
-        generate_tests cx typeparams (fun map_ ->
+        generate_tests cx (TypeParams.to_list typeparams) (fun map_ ->
           flow_t cx (subst cx map_ l, subst cx map_ u)
         ) |> ignore
       | _ -> ()
@@ -6180,7 +6180,7 @@ and mk_class_sig =
   in
 
   let self', tparams, tparams_map =
-    add_this self cx reason tparams tparams_map
+    add_this self cx reason (TypeParams.to_list tparams) tparams_map
   in
 
   let class_sig, extends_ast, implements_ast =
@@ -6472,7 +6472,7 @@ and mk_func_sig =
     let tparams, tparams_map, tparams_ast =
       Anno.mk_type_param_declarations cx ~tparams_map tparams
     in
-    Type_table.with_typeparams tparams (Context.type_table cx) @@ fun _ ->
+    Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
     let fparams, params = mk_params cx tparams_map params in
     let body = Some body in
     let ret_reason = mk_reason RReturn (return_loc func |> ALoc.of_loc) in

@@ -56,7 +56,7 @@ val mk_nominal_type:
 val mk_type_param_declarations: Context.t ->
   ?tparams_map:(Type.t SMap.t) ->
   (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.t option ->
-  Type.typeparam list *
+  Type.typeparams *
   Type.t SMap.t *
   (Loc.t, Loc.t * Type.t) Flow_ast.Type.ParameterDeclaration.t option
 

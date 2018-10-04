@@ -720,13 +720,15 @@ let rec convert cx tparams_map = Ast.Type.(function
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx ~tparams_map tparams in
 
+  let tparams_list = Type.TypeParams.to_list tparams in
+
   let rev_params, rev_param_asts = List.fold_left (fun (params_acc, asts_acc) (param_loc, param) ->
     let { Function.Param.name; annot; optional } = param in
     let (_, t), _ as annot_ast = convert cx tparams_map annot in
     let t = if optional then Type.optional t else t in
     let name = Option.map ~f:(fun (loc, name) ->
       let id_info = name, t, Type_table.Other in
-      Type_table.set_info ~extra_tparams:tparams loc id_info (Context.type_table cx);
+      Type_table.set_info ~extra_tparams:tparams_list loc id_info (Context.type_table cx);
       (loc, t), name
     ) name in
     (Option.map ~f:ident_name name, t) :: params_acc,
@@ -779,7 +781,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       }))
   in
   let id = Context.make_nominal cx in
-  (loc, poly_type_of_tparam_list id tparams ft),
+  (loc, poly_type_of_tparams id tparams ft),
   Function {
     Function.params = (params_loc, {
       Function.Params.params = List.rev rev_param_asts;
@@ -1197,7 +1199,7 @@ and mk_func_sig =
   fun cx tparams_map loc func ->
     let tparams, tparams_map, tparams_ast =
       mk_type_param_declarations cx ~tparams_map func.tparams in
-    Type_table.with_typeparams tparams (Context.type_table cx) @@ fun _ ->
+    Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
     let fparams, params_ast = convert_params cx tparams_map func.Ast.Type.Function.params in
     let (_, return_t), _ as return_ast = convert cx tparams_map func.return in
     { Func_sig.
@@ -1302,14 +1304,18 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     SMap.add name (Flow.subst cx bounds_map bound) bounds_map,
     ast :: rev_asts
   in
-  let rev_tparams, tparams_map, _, rev_asts =
-    tparams
-    |> Option.value_map ~f:snd ~default:[]
-    |> List.fold_left add_type_param ([], tparams_map, SMap.empty, [])
-  in
-  let tparams_ast =
-    Option.map ~f:(fun (tparams_loc, _) -> tparams_loc, List.rev rev_asts) tparams in
-  List.rev rev_tparams, tparams_map, tparams_ast
+  match tparams with
+  | None -> None, tparams_map, None
+  | Some (tparams_loc, tparams) ->
+    let rev_tparams, tparams_map, _, rev_asts =
+      List.fold_left add_type_param ([], tparams_map, SMap.empty, []) tparams
+    in
+    let tparams_ast = Some (tparams_loc, List.rev rev_asts) in
+    let tparams = match List.rev rev_tparams with
+    | [] -> None
+    | hd::tl -> Some (tparams_loc, (hd, tl))
+    in
+    tparams, tparams_map, tparams_ast
 
 and type_identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
@@ -1439,7 +1445,7 @@ and add_interface_properties cx tparams_map properties s =
             Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
             let fsig, func_ast = mk_func_sig cx tparams_map (loc |> ALoc.of_loc) func in
             let prop_t = match fsig with
-            | { Func_sig.tparams=[]; fparams; _ } ->
+            | { Func_sig.tparams=None; fparams; _ } ->
               (match Func_params.value fparams with
               | [_, t] -> t
               | _ -> AnyT.at (id_loc |> ALoc.of_loc) (* error case: report any ok *))
@@ -1505,6 +1511,8 @@ let mk_interface_sig cx reason decl =
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx tparams in
 
+  let tparams_list = Type.TypeParams.to_list tparams in
+
   let id_info = id_name, self, Type_table.Other in
   Type_table.set_info id_loc id_info (Context.type_table cx);
 
@@ -1521,7 +1529,7 @@ let mk_interface_sig cx reason decl =
       ) properties in
       Interface { extends; callable }
     in
-    empty id reason tparams tparams_map super, extends_ast
+    empty id reason tparams_list tparams_map super, extends_ast
   in
 
   (* TODO: interfaces don't have a name field, or even statics *)
@@ -1576,10 +1584,12 @@ let mk_declare_class_sig =
     let tparams, tparams_map, tparam_asts =
       mk_type_param_declarations cx tparams in
 
+    let tparams_list = Type.TypeParams.to_list tparams in
+
     let id_info = id_name, self, Type_table.Other in
     Type_table.set_info id_loc id_info (Context.type_table cx);
 
-    let _, tparams, tparams_map = Class_sig.add_this self cx reason tparams tparams_map in
+    let _, tparams, tparams_map = Class_sig.add_this self cx reason tparams_list tparams_map in
 
     Type_table.with_typeparams tparams (Context.type_table cx) @@ fun _ ->
 
