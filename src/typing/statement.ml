@@ -853,7 +853,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
 
       (* switch_state tracks case effects and is used to create outgoing env *)
       let switch_state = ref None in
-      let update_switch_state (case_env, case_writes, _test_refis, loc) =
+      let update_switch_state (case_env, case_writes, _, loc) =
         let case_env = ListUtils.last_n incoming_depth case_env in
         let state = match !switch_state with
         | None ->
@@ -899,8 +899,8 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
 
         (* merge env changes from fallthrough case, if present *)
         Option.iter !fallthrough_case ~f:(fun (env, writes, refis, _) ->
-          let chg = Changeset.union writes refis in
-          Env.merge_env cx loc (case_env, case_env, env) chg
+          let changes = Changeset.union writes refis in
+          Env.merge_env cx loc (case_env, case_env, env) changes
         );
 
         (** process statements, track control flow exits: exit will be an
@@ -912,10 +912,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
         let break_opt = Abnormal.swap_saved (Abnormal.Break None) save_break in
 
         (* restore ambient changes and save case writes *)
-        let case_writes =
-          let case_changes = Changeset.Global.merge save_changes in
-          Changeset.include_writes case_changes
-        in
+        let case_writes = Changeset.include_writes save_changes |> Changeset.Global.merge in
 
         (* track fallthrough to next case and/or break to switch end *)
         let falls_through, breaks_to_end = match exit with
