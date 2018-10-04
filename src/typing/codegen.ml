@@ -121,7 +121,7 @@ let gen_builtin_class_type t env = Type.(
     match resolve_type builtin_t env with
     | ThisClassT(_, DefT (_, InstanceT (_, _, _, {class_id; _;}))) ->
       class_id
-    | DefT (_, PolyT(_, ThisClassT(_, DefT (_, InstanceT(_, _, _, {class_id; _;}))), _)) ->
+    | DefT (_, PolyT(_, _, ThisClassT(_, DefT (_, InstanceT(_, _, _, {class_id; _;}))), _)) ->
       class_id
     | builtin_t -> failwith (spf "Unexpected global type: %s" (string_of_ctor builtin_t))
   in
@@ -295,7 +295,7 @@ let rec gen_type t env = Type.(
   )
   | DefT (_, OptionalT t) -> add_str "void | " env |> gen_type t
   | OpenT tvar -> gen_type (resolve_tvar tvar env) env
-  | DefT (_, PolyT (tparams, t, _)) -> gen_type t (add_tparams tparams env)
+  | DefT (_, PolyT (_, tparams, t, _)) -> gen_type t (add_tparams tparams env)
   | ReposT (_, t) -> gen_type t env
   | InternalT (ReposUpperT (_, t)) -> gen_type t env
   | ShapeT t -> add_str "$Shape<" env |> gen_type t |> add_str ">"
@@ -365,7 +365,7 @@ and gen_prop k p env =
         |> gen_func_params params rest_param
         |> add_str "): "
         |> gen_type return_t
-    | DefT (_, PolyT (tparams, t, _)) -> gen_method k t (add_tparams tparams env)
+    | DefT (_, PolyT (_, tparams, t, _)) -> gen_method k t (add_tparams tparams env)
     | _ -> add_str (spf "mixed /* UNEXPECTED TYPE: %s */" (string_of_ctor t)) env
   in
 

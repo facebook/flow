@@ -66,7 +66,7 @@ let substituter = object(self)
       if force then Tvar.mk cx reason
       else t
 
-    | DefT (reason, PolyT (xs, inner, _)) ->
+    | DefT (reason, PolyT (tparams_loc, xs, inner, _)) ->
       let xs, map, changed = Nel.fold_left (fun (xs, map, changed) typeparam ->
         let bound = self#type_ cx (map, force, use_op) typeparam.bound in
         let default = match typeparam.default with
@@ -87,7 +87,7 @@ let substituter = object(self)
       let xs = Option.value_exn xs in
       let inner_ = self#type_ cx (map, false, None) inner in
       let changed = changed || inner_ != inner in
-      if changed then DefT (reason, PolyT (xs, inner_, mk_id ())) else t
+      if changed then DefT (reason, PolyT (tparams_loc, xs, inner_, mk_id ())) else t
 
     | ThisClassT (reason, this) ->
       let map = SMap.remove "this" map in

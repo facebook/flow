@@ -208,11 +208,11 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else OptionalT t''
-      | PolyT (tparamlist, t', _) ->
+      | PolyT (tparams_loc, tparamlist, t', _) ->
           let tparamlist' = Nel.ident_map (self#type_param cx map_cx) tparamlist in
           let t'' = self#type_ cx map_cx t' in
           if tparamlist == tparamlist' && t' == t'' then t
-          else PolyT (tparamlist', t'', Reason.mk_id ())
+          else PolyT (tparams_loc, tparamlist', t'', Reason.mk_id ())
       | TypeAppT (op, t', ts) ->
           let t'' = self#type_ cx map_cx t' in
           let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in

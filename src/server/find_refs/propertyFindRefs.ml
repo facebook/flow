@@ -305,7 +305,7 @@ let extract_instancet cx ty : (Type.t, string) result =
   let resolved = Flow_js.resolve_type cx ty in
   match resolved with
     | ThisClassT (_, t)
-    | DefT (_, PolyT (_, ThisClassT (_, t), _)) -> Ok t
+    | DefT (_, PolyT (_, _, ThisClassT (_, t), _)) -> Ok t
     | _ ->
       let type_string = string_of_ctor resolved in
       Error ("Expected a class type to extract an instance type from, got " ^ type_string)

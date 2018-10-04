@@ -629,7 +629,7 @@ end = struct
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
       uniq_inter (t0::t1::ts)
-    | DefT (_, PolyT (ps, t, _)) -> poly_ty ~env t ps
+    | DefT (_, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
     | DefT (r, TypeT (kind, t)) -> type_t ~env r kind t None
     | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t ts
     | DefT (r, InstanceT (_, _, _, t)) -> instance_t ~env r t
@@ -786,7 +786,7 @@ end = struct
     match t with
     | DefT (_, FunT (_, _, f)) ->
       fun_ty ~env f None
-    | DefT (_, PolyT (ps, DefT (_, FunT (_, _, f)), _)) ->
+    | DefT (_, PolyT (_, ps, DefT (_, FunT (_, _, f)), _)) ->
       mapM (type_param ~env) (Nel.to_list ps) >>= fun ps ->
       fun_ty ~env f (Some ps)
     | _ ->

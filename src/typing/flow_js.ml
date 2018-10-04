@@ -984,7 +984,7 @@ module ResolvableTypeJob = struct
       | Some id -> (Context.find_call cx id)::ts
       in
       collect_of_types ?log_unresolved cx reason acc ts
-    | DefT (_, PolyT (_, t, _)) ->
+    | DefT (_, PolyT (_, _, t, _)) ->
       collect_of_type ?log_unresolved cx reason acc t
     | BoundT _ ->
       acc
@@ -1741,13 +1741,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* `import typeof` creates a properly-parameterized type alias for the  *)
     (* "typeof" the remote export.                                          *)
     (************************************************************************)
-    | DefT (_, PolyT(typeparams, ((DefT (_, ClassT _) | DefT (_, FunT _)) as lower_t), id)),
+    | DefT (_, PolyT(tparams_loc, typeparams, ((DefT (_, ClassT _) | DefT (_, FunT _)) as lower_t), id)),
       ImportTypeofT(reason, _, t) ->
       let typeof_t = mk_typeof_annotation cx ~trace reason lower_t in
-      rec_flow_t cx trace (poly_type id typeparams
+      rec_flow_t cx trace (poly_type id tparams_loc typeparams
         (DefT (reason, TypeT (ImportTypeofKind, typeof_t))), t)
 
-    | (DefT (_, TypeT _) | DefT (_, PolyT(_, DefT (_, TypeT _), _))),
+    | (DefT (_, TypeT _) | DefT (_, PolyT(_, _, DefT (_, TypeT _), _))),
       ImportTypeofT(reason, export_name, _) ->
       add_output cx ~trace (FlowError.EImportTypeAsTypeof (reason, export_name))
 
@@ -2198,7 +2198,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (AnyT.why reason, t)
 
-    | (DefT (_, PolyT (_, DefT (_, TypeT _), _)) | DefT (_, TypeT _)),
+    | (DefT (_, PolyT (_, _, DefT (_, TypeT _), _)) | DefT (_, TypeT _)),
        AssertImportIsValueT(reason, name) ->
       add_output cx ~trace (FlowError.EImportTypeAsValue (reason, name))
 
@@ -2778,8 +2778,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *
      * The upper bound's c should always be a PolyT here since we could not have
      * made it here if it was not given the logic of our earlier case. *)
-    | DefT (_, PolyT (_, _, id1)),
-      ConcretizeTypeAppsT (use_op, (ts1, _, r1), (DefT (_, PolyT (_, _, id2)), ts2, _, r2), false)
+    | DefT (_, PolyT (_, _, _, id1)),
+      ConcretizeTypeAppsT (use_op, (ts1, _, r1), (DefT (_, PolyT (_, _, _, id2)), ts2, _, r2), false)
       when id1 = id2 && List.length ts1 = List.length ts2 ->
       let targs = List.map2 (fun t1 t2 -> (t1, t2)) ts1 ts2 in
       rec_flow cx trace (l,
@@ -2787,8 +2787,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* This is the case which implements the expansion for our
      * TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal. *)
-    | DefT (_, PolyT (xs1, t1, id1)),
-      ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (DefT (_, PolyT (xs2, t2, id2)), ts2, op2, r2), false) ->
+    | DefT (_, PolyT (_, xs1, t1, id1)),
+      ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (DefT (_, PolyT (_, xs2, t2, id2)), ts2, op2, r2), false) ->
       let t1 = mk_typeapp_instance_of_poly cx trace ~use_op:op2 ~reason_op:r2 ~reason_tapp:r1
         id1 xs1 t1 ts1 in
       let t2 = mk_typeapp_instance_of_poly cx trace ~use_op:op1 ~reason_op:r1 ~reason_tapp:r2
@@ -3766,13 +3766,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         UseT (unknown_use, tvar)
       )
 
-    | DefT (_, PolyT (xs, ThisClassT (_, DefT (_, InstanceT (_, _, _, insttype))), _)),
+    | DefT (_, PolyT (tparams_loc, xs, ThisClassT (_, DefT (_, InstanceT (_, _, _, insttype))), _)),
       MixinT (r, tvar) ->
       let static = ObjProtoT r in
       let super = ObjProtoT r in
       let instance = DefT (r, InstanceT (static, super, [], insttype)) in
       rec_flow cx trace (
-        poly_type (Context.make_nominal cx) xs (this_class_type instance),
+        poly_type (Context.make_nominal cx) tparams_loc xs (this_class_type instance),
         UseT (unknown_use, tvar)
       )
 
@@ -3792,12 +3792,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        operation. (SpecializeT operations are created when processing TypeAppT
        types, so the decision to cache or not originates there.) *)
 
-    | DefT (_, PolyT (xs,t,id)), SpecializeT(use_op,reason_op,reason_tapp,cache,ts,tvar) ->
+    | DefT (_, PolyT (_,xs,t,id)), SpecializeT(use_op,reason_op,reason_tapp,cache,ts,tvar) ->
       let ts = Option.value ts ~default:[] in
       let t_ = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id xs t ts in
       rec_flow_t cx trace (t_, tvar)
 
-    | DefT (_, PolyT (tps, _, _)), VarianceCheckT(_, ts, polarity) ->
+    | DefT (_, PolyT (_, tps, _, _)), VarianceCheckT(_, ts, polarity) ->
       variance_check cx ~trace polarity (Nel.to_list tps, ts)
 
     (* When we are checking the polarity of a super class where the super class has no type
@@ -3806,7 +3806,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ClassT _), VarianceCheckT(_, [], polarity) ->
         check_polarity cx ~trace polarity l
 
-    | DefT (_, PolyT (tparams, _, _)),
+    | DefT (_, PolyT (_, tparams, _, _)),
       TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
       let minimum_arity = poly_minimum_arity tparams in
       let maximum_arity = Nel.length tparams in
@@ -3902,10 +3902,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        can be derived as a specialization of the generic signature. *)
 
     (** some shortcuts **)
-    | DefT (_, PolyT (_, _, id1)), UseT (_, DefT (_, PolyT (_, _, id2)))
+    | DefT (_, PolyT (_, _, _, id1)), UseT (_, DefT (_, PolyT (_, _, _, id2)))
       when id1 = id2 -> ()
 
-    | DefT (r1, PolyT (params1, t1, id1)), UseT (use_op, DefT (r2, PolyT (params2, t2, id2))) ->
+    | DefT (r1, PolyT (_, params1, t1, id1)), UseT (use_op, DefT (r2, PolyT (_, params2, t2, id2))) ->
       let n1 = Nel.length params1 in
       let n2 = Nel.length params2 in
       if n2 > n1 then
@@ -3929,7 +3929,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (inst1, inst2)
 
     (** general case **)
-    | _, UseT (use_op, DefT (_, PolyT (ids, t, _))) ->
+    | _, UseT (use_op, DefT (_, PolyT (_, ids, t, _))) ->
         generate_tests cx (Nel.to_list ids) (fun map_ ->
           rec_flow cx trace (l, UseT (use_op, subst cx ~use_op map_ t))
         )
@@ -3949,7 +3949,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extends clauses and at function call sites - without explicit type
         arguments, since typically they're easily inferred from context.
       *)
-    | DefT (reason_tapp, (PolyT (ids, t, _))), _ ->
+    | DefT (reason_tapp, (PolyT (_, ids, t, _))), _ ->
       let reason_op = reason_of_use_t u in
       begin match u with
       | UseT (use_op, DefT (_, TypeT _)) ->
@@ -7566,7 +7566,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, IntersectionT rep) ->
     List.iter (check_polarity cx ?trace polarity) (InterRep.members rep)
 
-  | DefT (_, PolyT (xs, t, _)) ->
+  | DefT (_, PolyT (_, xs, t, _)) ->
     Nel.iter (check_polarity_typeparam cx ?trace polarity) xs;
     check_polarity cx ?trace polarity t
 
@@ -7768,23 +7768,23 @@ and canonicalize_imported_type cx trace reason t =
   | DefT (_, FunT (_, prototype, _)) ->
     Some (DefT (reason, TypeT (ImportFunKind, prototype)))
 
-  | DefT (_, PolyT (typeparams, DefT (_, ClassT inst), id)) ->
-    Some (poly_type id typeparams (DefT (reason, TypeT (ImportClassKind, inst))))
+  | DefT (_, PolyT (tparams_loc, typeparams, DefT (_, ClassT inst), id)) ->
+    Some (poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportClassKind, inst))))
 
-  | DefT (_, PolyT (typeparams, DefT (_, FunT (_, prototype, _)), id)) ->
-    Some (poly_type id typeparams (DefT (reason, TypeT (ImportFunKind, prototype))))
+  | DefT (_, PolyT (tparams_loc, typeparams, DefT (_, FunT (_, prototype, _)), id)) ->
+    Some (poly_type id tparams_loc typeparams (DefT (reason, TypeT (ImportFunKind, prototype))))
 
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)
-  | DefT (_, PolyT (typeparams, ThisClassT _, _)) ->
+  | DefT (_, PolyT (tparams_loc, typeparams, ThisClassT _, _)) ->
     let targs =
       typeparams
       |> Nel.map (fun tp -> BoundT (tp.reason, tp.name, tp.polarity))
       |> Nel.to_list
     in
-    Some (poly_type (mk_id ()) typeparams (class_type (typeapp t targs)))
+    Some (poly_type (mk_id ()) tparams_loc typeparams (class_type (typeapp t targs)))
 
-  | DefT (_, PolyT (_, DefT (_, TypeT _), _)) ->
+  | DefT (_, PolyT (_, _, DefT (_, TypeT _), _)) ->
     Some t
 
   (* fix this-abstracted class when used as a type *)
@@ -9750,10 +9750,10 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
   | t, OpenT (r, id) when ok_unify ~unify_any (desc_of_reason r) t ->
     resolve_id cx trace ~use_op:(unify_flip use_op) id t
 
-  | DefT (_, PolyT (_, _, id1)), DefT (_, PolyT (_, _, id2))
+  | DefT (_, PolyT (_, _, _, id1)), DefT (_, PolyT (_, _, _, id2))
     when id1 = id2 -> ()
 
-  | DefT (r1, PolyT (params1, t1, id1)), DefT (r2, PolyT (params2, t2, id2)) ->
+  | DefT (r1, PolyT (_, params1, t1, id1)), DefT (r2, PolyT (_, params2, t2, id2)) ->
     let n1 = Nel.length params1 in
     let n2 = Nel.length params2 in
     if n2 > n1 then
@@ -10769,7 +10769,7 @@ and get_builtin_prop_type cx ?trace reason tool =
 and instantiate_poly_t cx t = function
   | None -> (* nothing to do *) t
   | Some types -> match t with
-      | DefT (_, PolyT (type_params, t_, _)) -> (
+      | DefT (_, PolyT (_, type_params, t_, _)) -> (
         try
           let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
             SMap.add name type_ acc
@@ -12036,7 +12036,7 @@ end = struct
         let inst_t = instantiate_poly_t cx c (Some ts) in
         let inst_t = instantiate_type inst_t in
         extract_type cx inst_t
-    | DefT (_, PolyT (_, sub_type, _)) ->
+    | DefT (_, PolyT (_, _, sub_type, _)) ->
         (* TODO: replace type parameters with stable/proper names? *)
         extract_type cx sub_type
     | ThisClassT (_, DefT (_, InstanceT (static, _, _, _)))
@@ -12452,12 +12452,12 @@ class assert_ground_visitor skip r context = object (self)
      * value is a BoundT, we can visit that parameter with a constant
      * positive polarity if it does not appear in the defer_use_t.
      *)
-    | DefT (_, PolyT (tparams, DefT (_, TypeT (_,
+    | DefT (_, PolyT (_, tparams, DefT (_, TypeT (_,
       EvalT (BoundT (_, s, _) as t, (TypeDestructorT (_, _, destructor)), _))), _)) ->
         if (new type_finder t)#destructor cx false destructor
         then loop cx pole seen ((Nel.to_list tparams), targs)
         else loop ~constant_polarity_param:(s, Positive) cx pole seen ((Nel.to_list tparams), targs)
-    | DefT (_, PolyT (tparams, _, _)) -> loop cx pole seen ((Nel.to_list tparams), targs)
+    | DefT (_, PolyT (_, tparams, _, _)) -> loop cx pole seen ((Nel.to_list tparams), targs)
     | DefT (_, EmptyT) -> seen
     | DefT (_, AnyT) -> seen
     | _ ->

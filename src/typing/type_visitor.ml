@@ -159,7 +159,7 @@ class ['a] t = object(self)
 
   | OptionalT t -> self#type_ cx pole acc t
 
-  | PolyT (xs, t, _) ->
+  | PolyT (_, xs, t, _) ->
     let acc = self#nel (self#type_param cx pole) acc xs in
     let acc = self#type_ cx pole acc t in
     acc

@@ -237,7 +237,7 @@ module rec TypeTerm : sig
        it is forced only when polymorphic types are applied. *)
 
     (* polymorphic type *)
-    | PolyT of typeparam Nel.t * t * int
+    | PolyT of Loc.t * typeparam Nel.t * t * int
     (* type application *)
     | TypeAppT of use_op * t * t list
 
@@ -3270,21 +3270,21 @@ let extends_use_type use_op l u =
   let reason = replace_reason (fun desc -> RExtends desc) (reason_of_t u) in
   ExtendsUseT (use_op, reason, [], l, u)
 
-let poly_type id (tparams: typeparam Nel.t) t =
+let poly_type id tparams_loc (tparams: typeparam Nel.t) t =
   let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
-  DefT (reason, PolyT (tparams, t, id))
+  DefT (reason, PolyT (tparams_loc, tparams, t, id))
 
-let poly_type_of_tparam_list id tparams t =
+let poly_type_of_tparam_list id tparams_loc tparams t =
   match tparams with
   | [] -> t
   | hd::tl ->
     let tparams_nel = (hd, tl) in
-    poly_type id tparams_nel t
+    poly_type id tparams_loc tparams_nel t
 
 let poly_type_of_tparams id (tparams: typeparams) t =
   match tparams with
   | None -> t
-  | Some (_loc, tparams_nel) -> poly_type id tparams_nel t
+  | Some (tparams_loc, tparams_nel) -> poly_type id tparams_loc tparams_nel t
 
 let typeapp ?annot_loc t targs =
   let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in

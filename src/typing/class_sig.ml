@@ -678,7 +678,7 @@ let classtype cx ?(check_polarity=true) x =
     then class_type ~structural:true this
     else this_class_type this
   in
-  poly_type_of_tparam_list (Context.make_nominal cx) (Type.TypeParams.to_list tparams) t
+  poly_type_of_tparams (Context.make_nominal cx) tparams t
 
 (* Processes the bodies of instance and static class members. *)
 let toplevels cx ~decls ~stmts ~expr x =
