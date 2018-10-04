@@ -866,8 +866,6 @@ end = struct
       Ty.(Arr { arr_readonly = true; arr_elt_t = t})
     | T.TupleAT (_, ts) ->
       mapM (type__ ~env) ts >>| fun ts -> Ty.Tup ts
-    | T.EmptyAT ->
-      return Ty.Bot
 
   and name_of_instance_reason r =
     (* This should cover all cases but throw an error just in case. *)

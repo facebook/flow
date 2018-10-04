@@ -743,7 +743,6 @@ class ['a] t = object(self)
     acc
   | ROArrayAT t ->
     self#type_ cx pole acc t
-  | EmptyAT -> acc
 
   method private inst_type cx pole acc i =
     let {

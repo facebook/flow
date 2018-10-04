@@ -155,10 +155,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "elemType", _json_of_t json_cx elemt;
     ]
 
-  | DefT (_, ArrT EmptyAT) -> [
-      "kind", JSON_String "EmptyArray";
-    ]
-
   | DefT (_, CharSetT chars) -> [
       "chars", JSON_String (String_utils.CharSet.to_string chars);
     ]
@@ -1746,7 +1742,6 @@ let rec dump_t_ (depth, tvars) cx t =
       ~extra:(spf "Tuple [%s]" (String.concat ", " (List.map kid tup))) t
   | DefT (_, ArrT (ROArrayAT (elemt))) -> p
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
-  | DefT (_, ArrT EmptyAT) -> p ~extra:("EmptyArray") t
   | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
   | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t

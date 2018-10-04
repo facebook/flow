@@ -173,9 +173,6 @@ let rec gen_type t env = Type.(
       |> add_str "["
       |> gen_separated_list tuple_types ", " gen_type
       |> add_str "]"
-    | EmptyAT ->
-      (* There isn't any real way to write this type at the moment *)
-      add_str "Array<empty>" env
     )
 
   | DefT (_, BoolT (Some _)) ->

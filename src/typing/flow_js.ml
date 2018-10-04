@@ -359,11 +359,6 @@ let rec merge_type cx =
       ArrT (ROArrayAT (merge_type cx (elemt1, elemt2)))
     )
 
-  | DefT (_, ArrT EmptyAT),
-    DefT (_, ArrT EmptyAT) ->
-
-    DefT (locationless_reason (RCustom "empty array"), ArrT EmptyAT)
-
   | (DefT (_, MaybeT t1), DefT (_, MaybeT t2))
   | (DefT (_, MaybeT t1), t2)
   | (t1, DefT (_, MaybeT t2)) ->
@@ -967,7 +962,6 @@ module ResolvableTypeJob = struct
       collect_of_types ?log_unresolved cx reason acc (elemt::tuple_types)
     | DefT (_, ArrT (ROArrayAT (elemt))) ->
       collect_of_type ?log_unresolved cx reason acc elemt
-    | DefT (_, ArrT EmptyAT) -> acc
     | DefT (_, InstanceT (static, super, _,
         { class_id; type_args; own_props; proto_props; inst_call_t; _ })) ->
       let ts = if class_id = 0 then [] else [super; static] in
@@ -3407,10 +3401,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       }) ->
       let reason = reason_of_t l in
 
-      let r, arrtype = match l with
-      | DefT (r, ArrT arrtype) ->
+      let arrtype = match l with
+      | DefT (_, ArrT arrtype) ->
         (* Arrays *)
-        r, arrtype
+        arrtype
       | _ ->
         (* Non-array non-any iterables *)
         let reason = reason_of_t l in
@@ -3422,10 +3416,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             "$Iterable" targs
         in
         flow_t cx (l, iterable);
-        reason, ArrayAT (element_tvar, None)
+        ArrayAT (element_tvar, None)
       in
 
-      let elemt = elemt_of_arrtype r arrtype in
+      let elemt = elemt_of_arrtype arrtype in
 
       begin match rrt_resolve_to with
       (* Any ResolveSpreadsTo* which does some sort of constant folding needs to
@@ -3514,8 +3508,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             | TupleAT (elemt, _) -> ArrayAT (elemt, None)
             (* These cannot *)
             | ArrayAT (_, None)
-            | ROArrayAT _
-            | EmptyAT -> arrtype in
+            | ROArrayAT _ -> arrtype in
 
             let rrt_resolved =
              ResolvedSpreadArg(reason, new_arrtype)::rrt_resolved in
@@ -4579,9 +4572,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (DefT (r1, ArrT (TupleAT (t1, ts1))), u)
       end
 
-    (* EmptyAT arrays are the subtype of all arrays *)
-    | DefT (_, ArrT EmptyAT), UseT (_, DefT (_, ArrT _)) -> ()
-
     (* Read only arrays are the super type of all tuples and arrays *)
     | DefT (r1, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT (t1))),
       UseT (use_op, DefT (r2, ArrT (ROArrayAT (t2)))) ->
@@ -5108,7 +5098,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow cx trace (o, u)
 
-    | DefT (arr_r, ArrT arrtype), ObjAssignFromT (r, o, t, ObjSpreadAssign) ->
+    | DefT (_, ArrT arrtype), ObjAssignFromT (r, o, t, ObjSpreadAssign) ->
       begin match arrtype with
       | ArrayAT (elemt, None)
       | ROArrayAT (elemt) ->
@@ -5120,9 +5110,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         List.iter (fun from ->
           rec_flow cx trace (from, ObjAssignFromT (r, o, t, default_obj_assign_kind))
         ) ts
-      | EmptyAT ->
-        (* Object.assign(o, ...EmptyAT) -> Object.assign(o, empty) *)
-        rec_flow cx trace (DefT (arr_r, EmptyT), ObjAssignFromT (r, o, t, default_obj_assign_kind))
       end
 
     (*************************)
@@ -5388,8 +5375,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
      * error when `tup[0] = 123` does not. *)
     | DefT (_, AnyT),
-      ElemT (use_op, reason_op, (DefT (r, ArrT arrtype) as arr), action) ->
-      let value = elemt_of_arrtype r arrtype in
+      ElemT (use_op, reason_op, (DefT (_, ArrT arrtype) as arr), action) ->
+      let value = elemt_of_arrtype arrtype in
       perform_elem_action cx trace ~use_op reason_op arr value action
 
     | l, ElemT (use_op, reason, (DefT (reason_tup, ArrT arrtype) as arr), action) when numeric l ->
@@ -5397,7 +5384,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | ArrayAT(value, ts) -> value, ts, false
       | TupleAT(value, ts) -> value, Some ts, true
       | ROArrayAT (value) -> value, None, true
-      | EmptyAT -> DefT (reason_tup, EmptyT), None, true
       end in
       let exact_index, value = match l with
       | DefT (_, NumT (Literal (_, (float_value, _)))) ->
@@ -5450,8 +5436,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ArrT arrtype), ArrRestT (_, reason, i, tout) ->
       let arrtype = match arrtype with
       | ArrayAT (_, None)
-      | ROArrayAT _
-      | EmptyAT -> arrtype
+      | ROArrayAT _ -> arrtype
       | ArrayAT (elemt, Some ts) -> ArrayAT (elemt, Some (Core_list.drop ts i))
       | TupleAT (elemt, ts) -> TupleAT (elemt, Core_list.drop ts i) in
       let a = DefT (reason, ArrT arrtype) in
@@ -5479,8 +5464,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let arrtype = match arrtype with
       | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(List.map f) ts)
       | TupleAT (elemt, ts) -> TupleAT (f elemt, List.map f ts)
-      | ROArrayAT (elemt) -> ROArrayAT (f elemt)
-      | EmptyAT -> EmptyAT in
+      | ROArrayAT (elemt) -> ROArrayAT (f elemt) in
       let t =
         let reason = replace_reason_const RArrayType reason_op in
         DefT (reason, ArrT arrtype)
@@ -6437,9 +6421,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
       rec_flow cx trace (get_builtin_typeapp cx ~trace reason "Array" [t], u)
 
-    | DefT (reason, ArrT (TupleAT _ | ROArrayAT _ | EmptyAT as arrtype)),
+    | DefT (reason, ArrT (TupleAT _ | ROArrayAT _ as arrtype)),
       (GetPropT _ | SetPropT _ | MethodT _ | LookupT _) ->
-      let t = elemt_of_arrtype reason arrtype in
+      let t = elemt_of_arrtype arrtype in
       rec_flow
         cx trace (get_builtin_typeapp cx ~trace reason "$ReadOnlyArray" [t], u)
 
@@ -7536,8 +7520,6 @@ and check_polarity cx ?trace polarity = function
 
   | DefT (_, ArrT (ROArrayAT (elemt))) ->
     check_polarity cx ?trace polarity elemt
-
-  | DefT (_, ArrT EmptyAT) -> ()
 
   | DefT (_, ObjT obj) ->
     check_polarity_propmap cx ?trace polarity obj.props_tmap;
@@ -9110,7 +9092,7 @@ and instanceof_test cx trace result = function
     (DefT (reason, ArrT arrtype) as arr),
     DefT (r, ClassT (DefT (_, (InstanceT _)) as a)) ->
 
-    let elemt = elemt_of_arrtype reason arrtype in
+    let elemt = elemt_of_arrtype arrtype in
 
     let right = extends_type r arr a in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
@@ -9120,7 +9102,7 @@ and instanceof_test cx trace result = function
     (DefT (reason, ArrT arrtype) as arr),
     DefT (r, ClassT (DefT (_, (InstanceT _)) as a)) ->
 
-    let elemt = elemt_of_arrtype reason arrtype in
+    let elemt = elemt_of_arrtype arrtype in
 
     let right = extends_type r arr a in
     let arrt = get_builtin_typeapp cx ~trace reason "Array" [elemt] in
@@ -10242,7 +10224,6 @@ and finish_resolve_spread_list =
                 tuple_types
           | ArrayAT (_, None)
           | ROArrayAT (_)
-          | EmptyAT
             -> param::acc
           end
       | ResolvedAnySpreadArg _
@@ -10295,7 +10276,7 @@ and finish_resolve_spread_list =
        * every element in the array *)
       let tset = List.fold_left (fun tset elem ->
         let elemt = match elem with
-        | ResolvedSpreadArg (r, arrtype) -> elemt_of_arrtype r arrtype
+        | ResolvedSpreadArg (_, arrtype) -> elemt_of_arrtype arrtype
         | ResolvedArg elemt -> elemt
         | ResolvedAnySpreadArg _ -> failwith "Should not be hit"
         in
@@ -10379,7 +10360,7 @@ and finish_resolve_spread_list =
         | (ResolvedArg t)::rest ->
           reason_of_t t, t, rest
         | (ResolvedSpreadArg (r, arrtype))::rest ->
-          r, elemt_of_arrtype r arrtype, rest
+          r, elemt_of_arrtype arrtype, rest
         | (ResolvedAnySpreadArg reason)::rest ->
           reason, AnyT.why reason, rest
         | [] -> failwith "Empty list already handled")
@@ -10808,7 +10789,6 @@ and resolve_builtin_class cx ?trace = function
     | ArrayAT (elemt, _) -> get_builtin cx ?trace "Array" reason, elemt
     | TupleAT (elemt, _)
     | ROArrayAT (elemt) -> get_builtin cx ?trace "$ReadOnlyArray" reason, elemt
-    | EmptyAT -> get_builtin cx ?trace "$ReadOnlyArray" reason, DefT (reason, EmptyT)
     in
     let array_t = resolve_type cx builtin in
     let array_t = instantiate_poly_t cx array_t (Some [elemt]) in

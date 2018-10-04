@@ -458,7 +458,6 @@ class virtual ['a] t = object(self)
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t
         else ROArrayAT t''
-    | EmptyAT -> t
 
   method bounds cx map_cx t =
     let open Constraint in

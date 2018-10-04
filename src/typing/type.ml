@@ -785,8 +785,6 @@ module rec TypeTerm : sig
   (* ROArrayAT(elemt) is the super type for all tuples and arrays for which
    * elemt is a supertype of every element type *)
   | ROArrayAT of t
-  (* EmptyAT is the bottom type for all arrays and tuples *)
-  | EmptyAT
 
   and objtype = {
     flags: flags;
@@ -3228,11 +3226,10 @@ and extract_getter_type = function
   | DefT (_, FunT (_, _, { return_t; _; })) -> return_t
   | _ -> failwith "Getter property with unexpected type"
 
-and elemt_of_arrtype reason = function
+and elemt_of_arrtype = function
 | ArrayAT (elemt, _)
 | ROArrayAT (elemt)
 | TupleAT (elemt, _) -> elemt
-| EmptyAT -> DefT (reason, EmptyT)
 
 let optional t =
   let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
