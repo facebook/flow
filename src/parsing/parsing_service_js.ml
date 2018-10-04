@@ -355,9 +355,15 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false) c
             (Docblock.preventMunge info)
             (||)
           in
+          (* NOTE: This is a temporary hack that makes the signature verifier ignore any static
+             property named `propTypes` in any class. It should be killed with fire or replaced with
+             something that only works for React classes, in which case we must make a corresponding
+             change in the type system that enforces that any such property is private. *)
+          let ignore_static_propTypes = true in
           match Signature_builder.program ast with
           | Ok signature ->
-            let errors, _ = Signature_builder.Signature.verify ?prevent_munge signature in
+            let errors, _ = Signature_builder.Signature.verify
+              ?prevent_munge ~ignore_static_propTypes signature in
             let verified_file_sig = File_sig.verified errors (snd signature) in
             Parse_ok (ast, verified_file_sig)
           | Error e -> Parse_fail (File_sig_error e)

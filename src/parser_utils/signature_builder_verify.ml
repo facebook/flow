@@ -20,6 +20,7 @@ module ObjProp = Ast.Expression.Object.Property
 
 module type EvalEnv = sig
   val prevent_munge: bool
+  val ignore_static_propTypes: bool
 end
 
 (* A signature of a module is described by exported expressions / definitions, but what we're really
@@ -439,18 +440,24 @@ module Eval(Env: EvalEnv) = struct
   and class_ =
     let class_element tps element =
       let open Ast.Class in
-      match Env.prevent_munge, element with
-        | false, Body.Method (_, { Method.key = (ObjProp.Identifier (_, name)); _ })
-        | false, Body.Property (_, { Property.key = (ObjProp.Identifier (_, name)); _ })
-          when Signature_utils.is_munged_property_name name ->
+      match element with
+        (* special cases *)
+        | Body.Method (_, { Method.key = (ObjProp.Identifier (_, name)); _ })
+        | Body.Property (_, { Property.key = (ObjProp.Identifier (_, name)); _ })
+            when not Env.prevent_munge && Signature_utils.is_munged_property_name name ->
           Deps.bot
-        | _, Body.Property (_, { Property.key = (ObjProp.Identifier (_, "propTypes")); static = true; _ }) ->
+        | Body.Property (_, {
+            Property.key = (ObjProp.Identifier (_, "propTypes"));
+            static = true; _
+          }) when Env.ignore_static_propTypes ->
           Deps.bot
-        | _, Body.Method (_, { Method.value; _ }) ->
+
+        (* general cases *)
+        | Body.Method (_, { Method.value; _ }) ->
           let loc, { Ast.Function.generator; tparams; params; return; body; _ } = value in
           function_ tps generator tparams params (loc, return) body
-        | _, Body.Property (loc, { Property.annot; _ })
-        | _, Body.PrivateField (loc, { PrivateField.annot; _ }) ->
+        | Body.Property (loc, { Property.annot; _ })
+        | Body.PrivateField (loc, { PrivateField.annot; _ }) ->
           annotation tps (loc, Kind.Annot_path.mk_annot annot)
 
     in fun tparams body super super_targs implements ->

@@ -9,14 +9,14 @@
 open OUnit2
 open Test_utils
 
-let mk_signature_verifier_test ?(prevent_munge = false) contents expected_msgs =
+let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =
   begin fun ctxt ->
     let contents = String.concat "\n" contents in
     let signature = match Signature_builder.program (parse contents) with
       | Ok signature -> signature
       | Error _ -> failwith "Signature builder failure!" in
     let errors, remote_dependencies =
-      Signature_builder.Signature.verify ~prevent_munge signature
+      Signature_builder.Signature.verify ?prevent_munge ?ignore_static_propTypes signature
     in
     let error_msgs = List.map Signature_builder_deps.Error.to_string @@
       Signature_builder_deps.ErrorSet.elements errors in
@@ -342,6 +342,7 @@ let tests = "signature_verifier" >::: [
     ["Expected annotation @ (2, 1) to (2, 30)"];
 
   "propTypes_static_ignored" >:: mk_signature_verifier_test
+    ~ignore_static_propTypes:true
     ["class C {";
     " static propTypes = {}";
     "}";

@@ -221,8 +221,11 @@ module Signature = struct
     ) env imports_info in
     env, file_sig
 
-  let verify ?(prevent_munge=false) (env, file_sig) =
-    let module Verify = V(struct let prevent_munge = prevent_munge end) in
+  let verify ?(prevent_munge=false) ?(ignore_static_propTypes=false) (env, file_sig) =
+    let module Verify = V(struct
+      let prevent_munge = prevent_munge
+      let ignore_static_propTypes = ignore_static_propTypes
+    end) in
     Verify.check env file_sig @@ Verify.exports file_sig
 end
 
