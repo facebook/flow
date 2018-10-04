@@ -475,17 +475,12 @@ module Eval(Env: EvalEnv) = struct
       List.fold_left (Deps.reduce_join (implement tps)) deps implements
 
   and array_ =
-    let spread_element tps spread_element =
-      let open Ast.Expression.SpreadElement in
-      let _, { argument } = spread_element in
-      literal_expr tps argument
-    in
     let array_element tps expr_or_spread_opt =
       let open Ast.Expression in
       match expr_or_spread_opt with
         | None -> Deps.bot
         | Some (Expression expr) -> literal_expr tps expr
-        | Some (Spread spread) -> spread_element tps spread
+        | Some (Spread (loc, _spread)) -> Deps.top (Error.UnexpectedArraySpread loc)
     in
     fun tps elements ->
       Nel.fold_left (Deps.reduce_join (array_element tps)) Deps.bot elements

@@ -1131,6 +1131,11 @@ class mapper = object(this)
           if loc == loc'
           then tolerable_error
           else SignatureVerificationError (UnexpectedObjectKey loc')
+        | UnexpectedArraySpread loc ->
+          let loc' = this#loc loc in
+          if loc == loc'
+          then tolerable_error
+          else SignatureVerificationError (UnexpectedArraySpread loc')
         | EmptyArray loc ->
           let loc' = this#loc loc in
           if loc == loc'

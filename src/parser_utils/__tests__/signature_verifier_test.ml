@@ -386,4 +386,8 @@ let tests = "signature_verifier" >::: [
     ["Expected annotation @ (2, 2) to (2, 16)";
      "Reachable: C"];
 
+  "array_spread" >:: mk_signature_verifier_test
+    ["module.exports = [1, ...[2, 3], 4]"]
+    ["Unexpected array spread @ (1, 21) to (1, 30)"];
+
 ]
