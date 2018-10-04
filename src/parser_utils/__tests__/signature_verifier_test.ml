@@ -402,4 +402,12 @@ let tests = "signature_verifier" >::: [
     ["module.exports = 'x'.length"]
     ["Expected literal expression instead of Member @ (1, 17) to (1, 27)"];
 
+  "arith_expression1" >:: mk_signature_verifier_test
+    ["module.exports = 6*7"]
+    [];
+
+  "arith_expression2" >:: mk_signature_verifier_test
+    ["module.exports = 6+7"]
+    ["Expected literal expression instead of Binary @ (1, 17) to (1, 20)"];
+
 ]

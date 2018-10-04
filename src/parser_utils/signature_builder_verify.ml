@@ -408,12 +408,9 @@ module Eval(Env: EvalEnv) = struct
         (* The result type of this operation depends in a complicated way on the argument type. *)
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Unary))
 
-  and arith_binary tps operator _loc left right =
+  and arith_binary tps operator loc left right =
     let open Ast.Expression.Binary in
     match operator with
-      | Plus ->
-        let deps = literal_expr tps left in
-        Deps.join (deps, literal_expr tps right)
       | Equal
       | NotEqual
       | StrictEqual
@@ -437,7 +434,10 @@ module Eval(Env: EvalEnv) = struct
       | Instanceof
         ->
         (* These operations have simple result types. *)
-        ignore left; ignore right; Deps.bot
+        ignore tps; ignore left; ignore right; Deps.bot
+      | Plus ->
+        (* The result type of this operation depends in a complicated way on the left/right types. *)
+        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Binary))
 
   and function_ =
     let open Ast.Function in
