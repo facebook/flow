@@ -362,7 +362,7 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false) c
           let ignore_static_propTypes = true in
           match Signature_builder.program ast with
           | Ok signature ->
-            let errors, _ = Signature_builder.Signature.verify
+            let errors, _, _ = Signature_builder.Signature.verify
               ?prevent_munge ~ignore_static_propTypes signature in
             let verified_file_sig = File_sig.verified errors (snd signature) in
             Parse_ok (ast, verified_file_sig)

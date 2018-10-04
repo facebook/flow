@@ -73,6 +73,10 @@ module Dep = struct
     | Remote _ -> true
     | Local _ | Dynamic _ -> false
 
+  let local_uses dep acc = match dep with
+    | Local (_, n) -> SSet.add n acc
+    | Remote _ | Dynamic _ -> acc
+
   let to_string =
     let string_of_import_sort = function
       | Sort.Value -> "import"

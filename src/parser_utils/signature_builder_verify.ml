@@ -804,6 +804,9 @@ module Verifier(Env: EvalEnv) = struct
       !dynamic_imports, !dynamic_requires in
     let errors = check cache env dynamic_sources deps in
     let remote_dependencies = Deps.DepSet.filter Dep.remote !cache in
-    errors, remote_dependencies
+    let env =
+      let local_uses = Deps.DepSet.fold Dep.local_uses !cache SSet.empty in
+      SMap.filter (fun n _ -> SSet.mem n local_uses) env in
+    errors, remote_dependencies, env
 
 end
