@@ -898,6 +898,36 @@ destructuring.js:17:13 = {
   "start":13,
   "end":13
 }
+dictionary.js:3:7 = {
+  "type":"{|\"\": null, \" \": null, \"'\": null, \"1\": null, _: null, \"a b\": null, \"a'b\": null, ab: null, get xnull, set ystring|}",
+  "reasons":[],
+  "loc":{
+    "source":"dictionary.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":7,"offset":16},
+    "end":{"line":3,"column":8,"offset":18}
+  },
+  "path":"dictionary.js",
+  "line":3,
+  "endline":3,
+  "start":7,
+  "end":8
+}
+dictionary.js:19:7 = {
+  "type":"{|\"\": null, \" \": null, '\"': null, \"1\": null, _: null, \"a b\": null, 'a\"b': null, ab: null, get xnull, set ystring|}",
+  "reasons":[],
+  "loc":{
+    "source":"dictionary.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":7,"offset":209},
+    "end":{"line":19,"column":8,"offset":211}
+  },
+  "path":"dictionary.js",
+  "line":19,
+  "endline":19,
+  "start":7,
+  "end":8
+}
 exact.js:4:6 = {
   "type":"type B = $Exact<A>",
   "reasons":[],

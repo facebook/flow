@@ -31,6 +31,11 @@ let in_quotes s =
 
 let option ~f = Option.value_map ~default:Empty ~f
 
+let property_key_quotes_needed x =
+  let regexp = Str.regexp "^[a-zA-Z\\$_][a-zA-Z0-9\\$_]*$" in
+  not (Str.string_match regexp x 0)
+
+
 (*************************)
 (* Main Transformation   *)
 (*************************)
@@ -178,15 +183,23 @@ let type_ ?(size=5000) t =
       type_ ~depth annot;
     ]
 
-  and type_object_property ~depth =
+  and type_object_property =
+    let to_key x =
+      if property_key_quotes_needed x then
+        let quote = better_quote x in
+        fuse [Atom quote; Atom (utf8_escape ~quote x); Atom quote]
+      else
+        identifier x
+    in
     let open Ty in
-    function
+    fun ~depth prop ->
+    match prop with
     | NamedProp (key, named_prop) -> begin
       match named_prop with
       | Field (t, { fld_polarity; fld_optional }) ->
         fuse [
           variance_ fld_polarity;
-          identifier key;
+          to_key key;
           if fld_optional then Atom "?" else Empty;
           Atom ":";
           pretty_space;
@@ -194,19 +207,19 @@ let type_ ?(size=5000) t =
         ]
 
       | Method func -> fuse [
-          identifier key;
+          to_key key;
           type_function ~depth ~sep:(Atom ":") func;
         ]
 
       | Get t -> fuse [
           Atom "get"; space;
-          identifier key;
+          to_key key;
           type_ ~depth t;
         ]
 
       | Set t -> fuse [
           Atom "set"; space;
-          identifier key;
+          to_key key;
           type_ ~depth t;
         ]
       end

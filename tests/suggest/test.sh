@@ -20,6 +20,7 @@ do_file "class-1.js"
 do_file "class-2.js"
 # do_file "class-3.js" # TODO
 do_file "comments-0.js"
+do_file "dictionary.js"
 do_file "func-0.js"
 do_file "func-1.js"
 do_file "func-2.js"

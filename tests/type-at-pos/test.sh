@@ -164,6 +164,12 @@ assert_ok "$FLOW" type-at-pos destructuring.js 3 6 --strip-root --pretty
 printf "destructuring.js:17:13 = "
 assert_ok "$FLOW" type-at-pos destructuring.js 17 13 --strip-root --pretty
 
+# dictionary
+printf "dictionary.js:3:7 = "
+assert_ok "$FLOW" type-at-pos dictionary.js 3 7 --strip-root --pretty
+printf "dictionary.js:19:7 = "
+assert_ok "$FLOW" type-at-pos dictionary.js 19 7 --strip-root --pretty
+
 # exact.js
 printf "exact.js:4:6 = "
 assert_ok "$FLOW" type-at-pos exact.js 4 6 --strip-root --pretty

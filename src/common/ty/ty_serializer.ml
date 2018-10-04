@@ -154,11 +154,19 @@ and obj_prop = function
   | CallProp f ->
     obj_call_prop f >>| fun p -> T.Object.CallProperty (Loc.none, p)
 
-and obj_named_prop x =
-  let key = Ast.Expression.Object.Property.Identifier (Loc.none, x) in
-  function
+and obj_named_prop =
+  let to_key x =
+    if Ty_printer.property_key_quotes_needed x then
+      let raw = x in
+      let value = Ast.Literal.String raw in
+      Ast.Expression.Object.Property.Literal (Loc.none, { Ast.Literal.value; raw })
+    else
+      Ast.Expression.Object.Property.Identifier (Loc.none, x)
+  in
+  fun x prop ->
+  match prop with
   | Field (t, fld) -> type_ t >>| fun t -> {
-      T.Object.Property.key;
+      T.Object.Property.key = to_key x;
       value = T.Object.Property.Init t;
       optional = fld.fld_optional;
       static = false;
@@ -167,7 +175,7 @@ and obj_named_prop x =
       variance = variance_ fld.fld_polarity;
     }
   | Method f -> function_ f >>| fun fun_t -> {
-      T.Object.Property.key;
+      T.Object.Property.key = to_key x;
       value = T.Object.Property.Init (Loc.none, T.Function fun_t);
       optional = false;
       static = false;
@@ -176,7 +184,7 @@ and obj_named_prop x =
       variance = None;
     }
   | Get t -> getter t >>| fun t -> {
-      T.Object.Property.key;
+      T.Object.Property.key = to_key x;
       value = T.Object.Property.Get (Loc.none, t);
       optional = false;
       static = false;
@@ -185,7 +193,7 @@ and obj_named_prop x =
       variance = None;
     }
   | Set t -> setter t >>| fun t -> {
-      T.Object.Property.key;
+      T.Object.Property.key = to_key x;
       value = T.Object.Property.Set (Loc.none, t);
       optional = false;
       static = false;

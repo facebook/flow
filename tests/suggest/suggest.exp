@@ -67,6 +67,68 @@ return /* BETWEEEN */`${a}`;// END OF return ...
 }// END
 
 
+dictionary.js
+// @flow
+(): {|
+  "": null,
+  " ": null,
+  "'": null,
+  "1": null,
+  _: null,
+  "a b": null,
+  "a'b": null,
+  ab: null,
+  get x(): null,
+  set y(string): void,
+|} => (
+  {
+    ab: null,
+    "a b": null,
+    "a'b": null,
+    "1": null,
+    "'": null,
+    " ": null,
+    "_": null,
+    "": null,
+    
+    get "x"() {
+      return null;
+    },
+    
+    set "y"(z: string) {},
+  }
+);
+
+(): {|
+  "": null,
+  " ": null,
+  '"': null,
+  "1": null,
+  _: null,
+  "a b": null,
+  'a"b': null,
+  ab: null,
+  get x(): null,
+  set y(string): void,
+|} => (
+  {
+    ab: null,
+    "a b": null,
+    'a"b': null,
+    "1": null,
+    '"': null,
+    " ": null,
+    "_": null,
+    "": null,
+    
+    get "x"() {
+      return null;
+    },
+    
+    set "y"(z: string) {},
+  }
+);
+
 func-0.js
 // @flow
 function foo(x: number, y: string): string {
