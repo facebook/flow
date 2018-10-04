@@ -15,6 +15,7 @@ module Error = struct
     | ExpectedAnnotation of Loc.t
     | InvalidTypeParamUse of Loc.t
     | UnexpectedObjectKey of Loc.t
+    | EmptyArray of Loc.t
     | UnexpectedExpression of Loc.t * Ast_utils.ExpressionSort.t
     | SketchyToplevelDef of Loc.t
     | TODO of string * Loc.t
@@ -28,6 +29,7 @@ module Error = struct
     | ExpectedAnnotation loc -> spf "Expected annotation @ %s" (Loc.to_string loc)
     | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (Loc.to_string loc)
     | UnexpectedObjectKey loc -> spf "Expected simple object key @ %s" (Loc.to_string loc)
+    | EmptyArray loc -> spf "Cannot determine element type of empty array @ %s" (Loc.to_string loc)
     | UnexpectedExpression (loc, esort) ->
       spf "Expected literal expression instead of %s @ %s"
         (Ast_utils.ExpressionSort.to_string esort) (Loc.to_string loc)

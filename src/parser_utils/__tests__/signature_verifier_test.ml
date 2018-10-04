@@ -206,7 +206,11 @@ let tests = "signature_verifier" >::: [
      "export default { x };"]
     ["Reachable: x"];
 
-  "array_literal" >:: mk_signature_verifier_test
+  "empty_array_literal" >:: mk_signature_verifier_test
+    ["export default [ ];"]
+    ["Cannot determine element type of empty array @ (1, 15) to (1, 18)"];
+
+  "non_empty_array_literal" >:: mk_signature_verifier_test
     ["const x = 0";
      "var y = false";
      "export default [ x, y ];"]

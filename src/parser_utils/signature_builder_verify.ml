@@ -286,10 +286,13 @@ module Eval(Env: EvalEnv) = struct
         let open Ast.Expression.Object in
         let { properties } = stuff in
         object_ tps properties
-      | _, Array stuff ->
+      | loc, Array stuff ->
         let open Ast.Expression.Array in
         let { elements } = stuff in
-        array_ tps elements
+        begin match elements with
+          | [] -> Deps.top (Error.EmptyArray loc)
+          | e::es -> array_ tps (e, es)
+        end
       | _, TypeCast stuff ->
         let open Ast.Expression.TypeCast in
         let { annot; _ } = stuff in
@@ -485,7 +488,7 @@ module Eval(Env: EvalEnv) = struct
         | Some (Spread spread) -> spread_element tps spread
     in
     fun tps elements ->
-      List.fold_left (Deps.reduce_join (array_element tps)) Deps.bot elements
+      Nel.fold_left (Deps.reduce_join (array_element tps)) Deps.bot elements
 
   and implement tps implement =
     let open Ast.Class.Implements in
