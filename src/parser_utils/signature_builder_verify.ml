@@ -16,8 +16,6 @@ module Deps = Signature_builder_deps
 module Error = Deps.Error
 module Dep = Deps.Dep
 
-module ObjProp = Ast.Expression.Object.Property
-
 module type EvalEnv = sig
   val prevent_munge: bool
   val ignore_static_propTypes: bool
@@ -147,21 +145,16 @@ module Eval(Env: EvalEnv) = struct
       let open Ast.Type.Object.CallProperty in
       let _, { value = (_, ft); _ } = prop in
       function_type tps ft
-    in
-    let object_type_internal_slot tps prop =
-      let open Ast.Type.Object.InternalSlot in
-      let _, { value; _ } = prop in
-      type_ tps value
 
     in fun tps ot ->
       let open Ast.Type.Object in
       let { properties; _ } = ot in
       List.fold_left (fun deps -> function
         | Property prop -> Deps.join (deps, object_type_prop tps prop)
-        | SpreadProperty prop -> Deps.join (deps, object_type_spread_prop tps prop)
         | Indexer prop -> Deps.join (deps, object_type_indexer tps prop)
         | CallProperty prop -> Deps.join (deps, object_type_call_prop tps prop)
-        | InternalSlot prop -> Deps.join (deps, object_type_internal_slot tps prop)
+        | SpreadProperty prop -> Deps.join (deps, object_type_spread_prop tps prop)
+        | InternalSlot _prop -> Deps.unreachable
       ) Deps.bot properties
 
   and interface_type tps it =
@@ -453,12 +446,12 @@ module Eval(Env: EvalEnv) = struct
       let open Ast.Class in
       match element with
         (* special cases *)
-        | Body.Method (_, { Method.key = (ObjProp.Identifier (_, name)); _ })
-        | Body.Property (_, { Property.key = (ObjProp.Identifier (_, name)); _ })
+        | Body.Method (_, { Method.key = (Ast.Expression.Object.Property.Identifier (_, name)); _ })
+        | Body.Property (_, { Property.key = (Ast.Expression.Object.Property.Identifier (_, name)); _ })
             when not Env.prevent_munge && Signature_utils.is_munged_property_name name ->
           Deps.bot
         | Body.Property (_, {
-            Property.key = (ObjProp.Identifier (_, "propTypes"));
+            Property.key = (Ast.Expression.Object.Property.Identifier (_, "propTypes"));
             static = true; _
           }) when Env.ignore_static_propTypes ->
           Deps.bot
