@@ -3806,14 +3806,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ClassT _), VarianceCheckT(_, [], polarity) ->
         check_polarity cx ~trace polarity l
 
-    | DefT (_, PolyT (_, tparams, _, _)),
+    | DefT (_, PolyT (tparams_loc, tparams, _, _)),
       TypeAppVarianceCheckT (use_op, reason_op, reason_tapp, targs) ->
       let minimum_arity = poly_minimum_arity tparams in
       let maximum_arity = Nel.length tparams in
       let reason_arity =
-        let tp1, tpN = Nel.hd tparams, Nel.hd (Nel.rev tparams) in
-        let loc = Loc.btwn (aloc_of_reason tp1.reason |> ALoc.to_loc) (aloc_of_reason tpN.reason |> ALoc.to_loc) in
-        mk_reason (RCustom "See type parameters of definition here") (loc |> ALoc.of_loc) in
+        mk_reason (RCustom "See type parameters of definition here") (tparams_loc |> ALoc.of_loc) in
       if List.length targs > maximum_arity then (
         add_output cx ~trace
           (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
