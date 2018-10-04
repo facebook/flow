@@ -270,26 +270,17 @@ module Eval(Env: EvalEnv) = struct
       | _, Identifier stuff -> identifier stuff
       | _, Class stuff ->
         let open Ast.Class in
-        let { id; body; tparams; extends; implements; _ } = stuff in
-        begin match id with
-          | None ->
-            begin
-              let super, super_targs = match extends with
-                | None -> None, None
-                | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
-              class_ tparams body super super_targs implements
-            end
-          | Some (_, name) -> Deps.value name
-        end
+        let { id = _; body; tparams; extends; implements; _ } = stuff in
+        let super, super_targs = match extends with
+          | None -> None, None
+          | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
+        class_ tparams body super super_targs implements
       | _, Function stuff
       | _, ArrowFunction stuff
         ->
         let open Ast.Function in
-        let { id; generator; tparams; params; return; body; _ } = stuff in
-        begin match id with
-          | None -> function_ tps generator tparams params return body
-          | Some (_, name) -> Deps.value name
-        end
+        let { id = _; generator; tparams; params; return; body; _ } = stuff in
+        function_ tps generator tparams params return body
       | _, Object stuff ->
         let open Ast.Expression.Object in
         let { properties } = stuff in

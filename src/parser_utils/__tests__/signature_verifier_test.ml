@@ -410,4 +410,12 @@ let tests = "signature_verifier" >::: [
     ["module.exports = 6+7"]
     ["Expected literal expression instead of Binary @ (1, 17) to (1, 20)"];
 
+  "named_class_expression" >:: mk_signature_verifier_test
+    ["module.exports = class C { }"]
+    [];
+
+  "named_function_expression" >:: mk_signature_verifier_test
+    ["module.exports = function foo() { }"]
+    [];
+
 ]
