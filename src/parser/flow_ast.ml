@@ -229,7 +229,7 @@ and Type : sig
   and ('M, 'T) annotation = 'M * ('M, 'T) t
 
   and ('M, 'T) annotation_or_hint =
-    | Missing of 'M
+    | Missing of 'T
     | Available of ('M, 'T) Type.annotation
 
   [@@deriving show]

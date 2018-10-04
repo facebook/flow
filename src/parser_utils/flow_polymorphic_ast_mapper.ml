@@ -739,11 +739,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     this#on_loc_annot annot, this#type_ t_annot
 
   method type_annotation_hint (return: ('M, 'T) Ast.Type.annotation_or_hint)
-                                       : ('N, 'U) Ast.Type.annotation_or_hint =
+                                     : ('N, 'U) Ast.Type.annotation_or_hint =
     let open Ast.Type in
     match return with
     | Available annot -> Available (this#type_annotation annot)
-    | Missing loc -> Missing (this#on_loc_annot loc)
+    | Missing loc -> Missing (this#on_type_annot loc)
 
   method function_ (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
     let open Ast.Function in

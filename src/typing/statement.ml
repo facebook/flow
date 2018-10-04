@@ -484,7 +484,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
     Ast.Pattern.(match param with
       | Some p -> (match p with
         | loc, Identifier {
-            Identifier.name = (name_loc, name); annot = Ast.Type.Missing _ as ann; optional;
+            Identifier.name = (name_loc, name); annot = Ast.Type.Missing mloc; optional;
           } ->
             let r = mk_reason (RCustom "catch") (loc |> ALoc.of_loc) in
             let t = Tvar.mk cx r in
@@ -500,7 +500,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
             { Try.CatchClause.
               param = Some ((loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
                 name = (name_loc, t), name;
-                annot = ann;
+                annot = Ast.Type.Missing (mloc, t);
                 optional;
               });
               body = b_loc, { Block.body = stmts };
@@ -1512,7 +1512,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
                   | Ast.Type.Available (a_loc, _) ->
                     Ast.Type.Available (a_loc, (Typed_ast.error_annot, Typed_ast.Type.error))
                   | Ast.Type.Missing loc ->
-                    Ast.Type.Missing loc);
+                    Ast.Type.Missing (loc, t));
                 optional;
               })
 
@@ -1612,7 +1612,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
                     | Ast.Type.Available (loc, _) ->
                       Ast.Type.Available (loc, (Typed_ast.error_annot, Typed_ast.Type.error))
                     | Ast.Type.Missing loc ->
-                      Ast.Type.Missing loc);
+                      Ast.Type.Missing (loc, element_tvar));
                   optional;
                 }
               )
@@ -4439,7 +4439,7 @@ and assignment_lhs cx = Ast.Pattern.(function
         | Ast.Type.Available (loc, _) ->
           Ast.Type.Available (loc, (Typed_ast.error_annot, Typed_ast.Type.error))
         | Ast.Type.Missing hint ->
-          Ast.Type.Missing hint);
+          Ast.Type.Missing (hint, Type.Locationless.AnyT.t));
         optional;
       })
 

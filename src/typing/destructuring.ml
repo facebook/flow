@@ -79,7 +79,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       )
       in
       (* Type annotations in patterns are currently ignored *)
-      let annot = Ast.Type.Missing Loc.none in
+      let annot = Ast.Type.Missing Typed_ast.error_annot in
       (top_loc, curr_t), Array { elements; annot; }
     )
 
@@ -178,7 +178,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       in
       let properties = List.rev rev_props in
       (* Type annotations in patterns are currently ignored *)
-      let annot = Ast.Type.Missing Loc.none in
+      let annot = Ast.Type.Missing Typed_ast.error_annot in
       (top_loc, curr_t), Object { Object.properties; annot }
     )
 
@@ -211,7 +211,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       }) in
       f ~use_op loc name default curr_t;
       (* Type annotations in patterns are currently ignored *)
-      let annot = Ast.Type.Missing Loc.none in
+      let annot = Ast.Type.Missing Typed_ast.error_annot in
       (loc, curr_t), Identifier { Identifier.name = ((id_loc, curr_t), name); optional; annot; }
 
   | loc, Assignment { Assignment.left; right } ->

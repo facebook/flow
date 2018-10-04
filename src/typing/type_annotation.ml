@@ -1218,8 +1218,9 @@ and mk_type cx tparams_map reason = function
       t, Some annot_ast
 
 and mk_type_annotation cx tparams_map reason = function
-| T.Missing _ as annot ->
-  fst (mk_type cx tparams_map reason None), annot
+| T.Missing loc ->
+  let t, _ = mk_type cx tparams_map reason None in
+  t, T.Missing (loc, t)
 | T.Available annot ->
   let t, ast_annot = mk_type_available_annotation cx tparams_map annot in
   t, T.Available ast_annot
@@ -1260,12 +1261,14 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let { TypeParam.name = name_loc, name as id; bound; variance; default; } = type_param in
     let reason = mk_reason (RType name) (name_loc |> ALoc.of_loc) in
     let bound, bound_ast = match bound with
-    | Ast.Type.Missing _ as miss -> DefT (reason, MixedT Mixed_everything), miss
+    | Ast.Type.Missing loc ->
+        let t = DefT (reason, MixedT Mixed_everything) in
+        t, Ast.Type.Missing (loc, t)
     | Ast.Type.Available (bound_loc, u) ->
         let bound, bound_ast = mk_type cx tparams_map reason (Some u) in
         let bound_ast = match bound_ast with
         | Some ast -> Ast.Type.Available (bound_loc, ast)
-        | None -> Ast.Type.Missing bound_loc
+        | None -> Ast.Type.Missing (bound_loc, bound)
         in
         bound, bound_ast
     in
