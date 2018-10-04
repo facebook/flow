@@ -42,7 +42,7 @@ type signature = {
 
 type t = {
   id: int;
-  tparams: Type.typeparam list;
+  tparams: Type.typeparams;
   tparams_map: Type.t SMap.t;
   super: super;
   (* Multiple function signatures indicates an overloaded constructor. Note that
@@ -272,7 +272,7 @@ let subst_super cx map = function
     }
 
 let generate_tests cx f x =
-  Flow.generate_tests cx x.tparams (fun map -> f {
+  Flow.generate_tests cx (Type.TypeParams.to_list x.tparams) (fun map -> f {
     id = x.id;
     tparams = x.tparams;
     tparams_map = SMap.map (Flow.subst cx map) x.tparams_map;
@@ -462,7 +462,7 @@ let insttype cx ~initialized_static_fields s =
   let type_args = List.map (fun {Type.name; reason; polarity; _} ->
     let t = SMap.find_unsafe name s.tparams_map in
     name, reason, t, polarity
-  ) s.tparams in
+  ) (Type.TypeParams.to_list s.tparams) in
   let initialized_fields, fields, methods, call = elements cx ?constructor s.instance in
   { Type.
     class_id = s.id;
@@ -482,13 +482,13 @@ let add_this self cx reason tparams tparams_map =
      We need this reference to constrain the `this` in the class. *)
   let rec_instance_type =
     match tparams with
-    | [] ->
+    | None ->
       Flow.mk_instance cx reason self
     | _ ->
       let targs = List.map (fun tp ->
         let {Type.reason; name; polarity; _} = tp in
         Type.BoundT (reason, name, polarity)
-      ) tparams in
+      ) (Type.TypeParams.to_list tparams) in
       Type.typeapp self targs
   in
   let this_reason = replace_reason_const RThisType reason in
@@ -499,20 +499,42 @@ let add_this self cx reason tparams tparams_map =
     polarity = Type.Positive;
     default = None;
   } in
+  let tparams =
+    (* Use the loc for the original tparams, or just the loc for the this type if there are no
+     * tparams *)
+    let loc = Option.value_map ~default:(aloc_of_reason this_reason |> ALoc.to_loc) ~f:fst tparams in
+    (* Add the type of `this` to the end of the list of type
+       parameters. Remember, order is important, since we don't have recursive
+       bounds (aka F-bounds): the bound of This refers to all the other type
+       parameters! *)
+    let tparams_lst = Type.TypeParams.to_list tparams @ [this_tp] in
+    (* Obviously there is at least one element since we just added `this_tp` *)
+    let tparams_nel = Option.value_exn (Nel.of_list tparams_lst) in
+    Some (loc, tparams_nel)
+  in
   rec_instance_type,
-  (* Add the type of `this` to the end of the list of type
-     parameters. Remember, order is important, since we don't have recursive
-     bounds (aka F-bounds): the bound of This refers to all the other type
-     parameters! *)
-  tparams@[this_tp],
+  tparams,
   SMap.add "this" (Type.BoundT (this_reason, "this", Type.Positive)) tparams_map
 
 let remove_this x =
-  if structural x then x else {
-    x with
-    tparams = List.rev (List.tl (List.rev x.tparams));
-    tparams_map = SMap.remove "this" x.tparams_map;
-  }
+  if structural x then x
+  else
+    let tparams =
+      (* Remove the last type param. Assert that we have at least one type param. *)
+      let loc, tparams_nel = Option.value_exn x.tparams in
+      tparams_nel
+      |> Nel.to_list
+      |> List.rev
+      |> List.tl
+      |> List.rev
+      |> Nel.of_list
+      |> Option.map ~f:(fun nel -> (loc, nel))
+    in
+    {
+      x with
+      tparams;
+      tparams_map = SMap.remove "this" x.tparams_map;
+    }
 
 let supertype cx tparams_with_this x =
   let super_reason = replace_reason (fun d -> RSuperOf d) x.instance.reason in
@@ -656,7 +678,7 @@ let classtype cx ?(check_polarity=true) x =
     then class_type ~structural:true this
     else this_class_type this
   in
-  poly_type_of_tparam_list (Context.make_nominal cx) tparams t
+  poly_type_of_tparam_list (Context.make_nominal cx) (Type.TypeParams.to_list tparams) t
 
 (* Processes the bodies of instance and static class members. *)
 let toplevels cx ~decls ~stmts ~expr x =
@@ -778,4 +800,4 @@ module This = struct
 end
 
 let with_typeparams cx f x =
-  Type_table.with_typeparams x.tparams (Context.type_table cx) f
+  Type_table.with_typeparams (Type.TypeParams.to_list x.tparams) (Context.type_table cx) f

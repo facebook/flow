@@ -6185,7 +6185,7 @@ and mk_class_sig =
   in
 
   let self', tparams, tparams_map =
-    add_this self cx reason (TypeParams.to_list tparams) tparams_map
+    add_this self cx reason tparams tparams_map
   in
 
   let class_sig, extends_ast, implements_ast =

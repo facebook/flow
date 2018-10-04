@@ -43,7 +43,7 @@ and typeapp = Loc.t * Type.t * Type.t list option
 val empty:
   int -> (* id *)
   Reason.t ->
-  Type.typeparam list ->
+  Type.typeparams ->
   Type.t SMap.t -> (* tparams_map *)
   super ->
   t
@@ -156,9 +156,9 @@ val add_this:
   Type.t -> (* self *)
   Context.t ->
   Reason.t ->
-  Type.typeparam list ->
+  Type.typeparams ->
   Type.t SMap.t -> (* tparams_map *)
-  Type.t * Type.typeparam list * Type.t SMap.t
+  Type.t * Type.typeparams * Type.t SMap.t
 
 (** 1. Manipulation *)
 

@@ -1083,7 +1083,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       ) properties in
       Class_sig.Interface { extends; callable }
     in
-    Class_sig.empty id reason [] tparams_map super, extend_asts
+    Class_sig.empty id reason None tparams_map super, extend_asts
   in
   let iface_sig, property_asts =
     add_interface_properties cx tparams_map properties iface_sig in
@@ -1520,8 +1520,6 @@ let mk_interface_sig cx reason decl =
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx tparams in
 
-  let tparams_list = Type.TypeParams.to_list tparams in
-
   let id_info = id_name, self, Type_table.Other in
   Type_table.set_info id_loc id_info (Context.type_table cx);
 
@@ -1538,7 +1536,7 @@ let mk_interface_sig cx reason decl =
       ) properties in
       Interface { extends; callable }
     in
-    empty id reason tparams_list tparams_map super, extends_ast
+    empty id reason tparams tparams_map super, extends_ast
   in
 
   (* TODO: interfaces don't have a name field, or even statics *)
@@ -1593,14 +1591,12 @@ let mk_declare_class_sig =
     let tparams, tparams_map, tparam_asts =
       mk_type_param_declarations cx tparams in
 
-    let tparams_list = Type.TypeParams.to_list tparams in
-
     let id_info = id_name, self, Type_table.Other in
     Type_table.set_info id_loc id_info (Context.type_table cx);
 
-    let _, tparams, tparams_map = Class_sig.add_this self cx reason tparams_list tparams_map in
+    let _, tparams, tparams_map = Class_sig.add_this self cx reason tparams tparams_map in
 
-    Type_table.with_typeparams tparams (Context.type_table cx) @@ fun _ ->
+    Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
 
     let iface_sig, extends_ast, mixins_ast, implements_ast =
       let id = Context.make_nominal cx in
