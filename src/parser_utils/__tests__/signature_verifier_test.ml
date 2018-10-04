@@ -394,4 +394,12 @@ let tests = "signature_verifier" >::: [
     ["module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' }"]
     ["Unexpected object spread @ (1, 27) to (1, 40)"];
 
+  "reference_expression1" >:: mk_signature_verifier_test
+    ["module.exports = Number.NaN"]
+    ["global value: Number"];
+
+  "reference_expression2" >:: mk_signature_verifier_test
+    ["module.exports = 'x'.length"]
+    ["Expected literal expression instead of Member @ (1, 17) to (1, 27)"];
+
 ]

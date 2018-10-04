@@ -267,7 +267,7 @@ module Eval(Env: EvalEnv) = struct
           | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Literal))
         end
       | _, TemplateLiteral _ -> Deps.bot
-      | _, Identifier (_, name) -> Deps.value name
+      | _, Identifier stuff -> identifier stuff
       | _, Class stuff ->
         let open Ast.Class in
         let { id; body; tparams; extends; implements; _ } = stuff in
@@ -306,15 +306,7 @@ module Eval(Env: EvalEnv) = struct
         let { annot; _ } = stuff in
         let _, t = annot in
         type_ tps t
-      | loc, Member stuff ->
-        let open Ast.Expression.Member in
-        let { _object; property; _ } = stuff in
-        let deps = literal_expr tps _object in
-        begin match property with
-          | PropertyIdentifier _
-          | PropertyPrivateName _ -> deps
-          | PropertyExpression _ -> Deps.top (Error.UnexpectedObjectKey loc)
-        end
+      | loc, Member stuff -> member loc stuff
       | loc, Import _ -> Deps.dynamic_import loc
       | loc, Call stuff
           when begin
@@ -381,6 +373,23 @@ module Eval(Env: EvalEnv) = struct
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.This))
       | loc, Yield _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Yield))
+
+  and identifier stuff =
+    let _, name = stuff in
+    Deps.value name
+
+  and member loc stuff =
+    let open Ast.Expression.Member in
+    let { _object; property; _ } = stuff in
+    let deps = match _object with
+      | _, Ast.Expression.Identifier stuff -> identifier stuff
+      | _, Ast.Expression.Member stuff -> member loc stuff
+      | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Member))
+    in
+    match property with
+      | PropertyIdentifier _
+      | PropertyPrivateName _ -> deps
+      | PropertyExpression _ -> Deps.top (Error.UnexpectedObjectKey loc)
 
   and arith_unary tps operator loc argument =
     let open Ast.Expression.Unary in
