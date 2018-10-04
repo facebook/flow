@@ -313,46 +313,47 @@ let tests = "signature_verifier" >::: [
 
   "munged_methods_ignored" >:: mk_signature_verifier_test
     ["class C {";
-    " _method() { return 1; }";
-    "}";
-    "export default C;"]
+     "  _method() { return 1; }";
+     "}";
+     "export default C;"]
     [];
 
   "munged_methods_not_ignored_if_directive" >:: mk_signature_verifier_test
     ~prevent_munge:true
     ["class C {";
-    " _method() { return 1; }";
-    "}";
+     "  _method() { return 1; }";
+     "}";
     "export default C;"]
-    ["Expected annotation @ (2, 8) to (2, 24)"];
+    ["Expected annotation @ (2, 9) to (2, 25)"];
 
   "munged_fields_ignored" >:: mk_signature_verifier_test
     ["class C {";
-    " _method = () => { return 1; }";
-    "}";
-    "export default C;"]
+     "  _method = () => { return 1; }";
+     "}";
+     "export default C;"]
     [];
 
   "munged_fields_not_ignored_if_directive" >:: mk_signature_verifier_test
     ~prevent_munge:true
     ["class C {";
-    " _method = () => { return 1; }";
-    "}";
-    "export default C;"]
-    ["Expected annotation @ (2, 1) to (2, 30)"];
+     "  _method = () => { return 1; }";
+     "}";
+     "export default C;"]
+    ["Expected annotation @ (2, 2) to (2, 31)"];
 
   "propTypes_static_ignored" >:: mk_signature_verifier_test
     ~ignore_static_propTypes:true
     ["class C {";
-    " static propTypes = {}";
-    "}";
+     "  static propTypes = {}";
+     "}";
     "export default C;"]
     [];
 
   "propTypes_member_failure" >:: mk_signature_verifier_test
     ["class C {";
-    " propTypes = {}";
-    "}";
-    "export default C;"]
-    ["Expected annotation @ (2, 1) to (2, 15)"];
+     "  propTypes = {}";
+     "}";
+     "export default C;"]
+    ["Expected annotation @ (2, 2) to (2, 16)"];
+
 ]
