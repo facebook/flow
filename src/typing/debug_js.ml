@@ -705,8 +705,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "name", JSON_String name;
     ]
 
-  | AssertRestParamT _ -> []
-
   | CJSExtractNamedExportsT (_, (module_t_reason, exporttypes, is_strict), t_out) -> [
       "module", _json_of_t json_cx (ModuleT (module_t_reason, exporttypes, is_strict));
       "t_out", _json_of_t json_cx t_out;
@@ -2036,7 +2034,6 @@ and dump_use_t_ (depth, tvars) cx t =
   | AssertBinaryInRHST _ -> p t
   | AssertForInRHST _ -> p t
   | AssertImportIsValueT _ -> p t
-  | AssertRestParamT _ -> p t
   | BecomeT (_, arg) -> p ~extra:(kid arg) t
   | BindT _ -> p t
   | CallElemT (_, _, ix, _) -> p ~extra:(kid ix) t

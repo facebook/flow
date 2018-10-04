@@ -5888,15 +5888,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, AssertArithmeticOperandT _ ->
       add_output cx ~trace (FlowError.EArithmeticOperand (reason_of_t l))
 
-    (***********************************************************************)
-    (* Rest param annotations must be super types of the array bottom type *)
-    (***********************************************************************)
-
-    | rest, AssertRestParamT r ->
-      (* This allows rest to be things like Iterable<T>, mixed, Array<T>, [1,2]
-         but disallows things like number, string, boolean *)
-      rec_flow_t cx trace (DefT (r, ArrT EmptyAT), rest)
-
     (***********************************************************)
     (* coercion                                                *)
     (***********************************************************)

@@ -112,7 +112,6 @@ type hash =
   | AssertBinaryInLHSH
   | AssertBinaryInRHSH
   | AssertForInRHSH
-  | AssertRestParamH
   | PredicateH
   | GuardH
   | EqH
@@ -268,7 +267,6 @@ let hash_of_use_ctor = Type.(function
   | AssertBinaryInLHST _ -> AssertBinaryInLHSH
   | AssertBinaryInRHST _ -> AssertBinaryInRHSH
   | AssertForInRHST _ -> AssertForInRHSH
-  | AssertRestParamT _ -> AssertRestParamH
   | PredicateT _ -> PredicateH
   | GuardT _ -> GuardH
   | EqT _ -> EqH

@@ -687,18 +687,32 @@ References:
                                              ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- rest.js:38:38
+Error ---------------------------------------------------------------------------------------------------- rest.js:38:55
 
-Rest params are always arrays [1] is incompatible with string [2].
+Cannot call `string_rest_t` because rest array [1] is incompatible with string [2].
 
-   rest.js:38:38
-   38| function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
-                                            ^^^^^ [1]
+   rest.js:38:55
+   38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
+                                                             ^^^^^^^^^^^^^^^ [1]
 
 References:
-   rest.js:38:42
-   38| function string_rest_t<T: string>(...xs: T): void {} // Error - rest param can't be a string
-                                                ^ [2]
+   rest.js:38:27
+   38| function string_rest_t<T: string>(...xs: T): void {}; string_rest_t(); // Error - rest param can't be a string
+                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- rest.js:39:53
+
+Cannot call `empty_rest_t` because rest array [1] is incompatible with empty [2].
+
+   rest.js:39:53
+   39| function empty_rest_t<T: empty>(...xs: T): void {}; empty_rest_t(); // Error - rest param can't be empty
+                                                           ^^^^^^^^^^^^^^ [1]
+
+References:
+   rest.js:29:26
+   29| function empty_rest_t<T: empty>(...xs: T): void {}
+                                ^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:53:2
@@ -788,4 +802,4 @@ References:
 
 
 
-Found 56 errors
+Found 57 errors

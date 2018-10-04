@@ -697,8 +697,7 @@ class virtual ['a] t_with_uses = object(self)
       | AssertArithmeticOperandT _
       | AssertBinaryInLHST _
       | AssertBinaryInRHST _
-      | AssertForInRHST _
-      | AssertRestParamT _ -> t
+      | AssertForInRHST _ -> t
       | PredicateT (p, t') ->
           let p' = self#predicate cx map_cx p in
           let t'' = self#type_ cx map_cx t' in

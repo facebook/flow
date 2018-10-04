@@ -345,8 +345,7 @@ class ['a] t = object(self)
   | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
-  | AssertForInRHST _
-  | AssertRestParamT _ -> acc
+  | AssertForInRHST _ -> acc
 
   | PredicateT (predicate, t) ->
     let acc = self#predicate cx acc predicate in

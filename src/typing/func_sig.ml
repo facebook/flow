@@ -176,15 +176,6 @@ let toplevels id cx this super ~decls ~stmts ~expr
       ~state:Scope.State.Initialized
   ) tparams_map;
 
-  (* Check the rest parameter annotation *)
-  Option.iter
-    ~f:(fun (_, loc, t) ->
-      let rest_reason =
-        mk_reason (RCustom "Rest params are always arrays") (loc |> ALoc.of_loc) in
-      Flow_js.flow cx (t, AssertRestParamT rest_reason)
-    )
-    (Func_params.rest fparams);
-
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
   fparams |> Func_params.iter Scope.(fun (name, loc, t, default) ->

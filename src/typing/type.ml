@@ -408,7 +408,6 @@ module rec TypeTerm : sig
     | AssertBinaryInLHST of reason
     | AssertBinaryInRHST of reason
     | AssertForInRHST of reason
-    | AssertRestParamT of reason
 
     (* operation specifying a type refinement via a predicate *)
     | PredicateT of predicate * t
@@ -2154,7 +2153,6 @@ end = struct
     | AssertBinaryInLHST reason -> reason
     | AssertBinaryInRHST reason -> reason
     | AssertForInRHST reason -> reason
-    | AssertRestParamT reason -> reason
     | AssertImportIsValueT (reason, _) -> reason
     | BecomeT (reason, _) -> reason
     | BindT (_, reason, _, _) -> reason
@@ -2302,7 +2300,6 @@ end = struct
     | AssertBinaryInLHST reason -> AssertBinaryInLHST (f reason)
     | AssertBinaryInRHST reason -> AssertBinaryInRHST (f reason)
     | AssertForInRHST reason -> AssertForInRHST (f reason)
-    | AssertRestParamT reason -> AssertRestParamT (f reason)
     | AssertImportIsValueT (reason, name) -> AssertImportIsValueT (f reason, name)
     | BecomeT (reason, t) -> BecomeT (f reason, t)
     | BindT (use_op, reason, ft, pass) -> BindT (use_op, f reason, ft, pass)
@@ -2474,7 +2471,6 @@ end = struct
   | AssertBinaryInLHST (_)
   | AssertBinaryInRHST (_)
   | AssertForInRHST (_)
-  | AssertRestParamT (_)
   | PredicateT (_, _)
   | GuardT (_, _, _)
   | EqT (_, _, _)
@@ -2833,7 +2829,6 @@ let any_propagating_use_t = function
   | AssertBinaryInRHST _
   | AssertForInRHST _
   | AssertImportIsValueT _
-  | AssertRestParamT _
   | ComparatorT _
   | DebugPrintT _
   | DebugSleepT _
@@ -3074,7 +3069,6 @@ let string_of_use_ctor = function
   | AssertBinaryInRHST _ -> "AssertBinaryInRHST"
   | AssertForInRHST _ -> "AssertForInRHST"
   | AssertImportIsValueT _ -> "AssertImportIsValueT"
-  | AssertRestParamT _ -> "AssertRestParamT"
   | BecomeT _ -> "BecomeT"
   | BindT _ -> "BindT"
   | CallElemT _ -> "CallElemT"

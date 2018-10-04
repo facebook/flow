@@ -746,15 +746,6 @@ let rec convert cx tparams_map = Ast.Type.(function
   | Some (rest_loc, { Function.RestParam.argument = (param_loc, param) }) ->
     let { Function.Param.name; annot; optional } = param in
     let (_, rest), _ as annot_ast = convert cx tparams_map annot in
-    (* TODO - Use AssertRestParamT here. The big problem is that, at this
-     * point, there might be some unsubstituted type parameters in the rest
-     * type. Unlike expressions, which know all type parameters have been
-     * substituted thanks to generate_tests, we visit types outside of
-     * generate_tests.
-     *
-     * One solution might be to build a type visitor that runs during
-     * generate_tests and does the various subst and tests then
-     *)
     Some (Option.map ~f:ident_name name, loc_of_t rest, rest),
     Some (rest_loc, {
       Function.RestParam.argument = (param_loc, {
@@ -1169,11 +1160,6 @@ and mk_func_sig =
   let add_rest cx tparams_map (loc, param) x =
     let { Param.name = id; annot; optional } = param in
     let (_, t), _ as annot = convert cx tparams_map annot in
-    let () =
-      let name = Option.map id ~f:snd in
-      let reason = mk_reason (RRestParameter name) (loc_of_t t |> ALoc.of_loc) in
-      Flow.flow cx (t, AssertRestParamT reason)
-    in
     Func_params.add_rest cx loc id t x,
     (loc, { Param.
       name = Option.map ~f:(fun (loc, name) -> (loc, t), name) id;
