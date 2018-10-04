@@ -1236,14 +1236,14 @@ let do_rage flowconfig_name (state: state) : Rage.result =
 
   (* Some helpers to add various types of data to the rage output... *)
   let add_file (items: rageItem list) (file: Path.t) : rageItem list =
-    if Path.file_exists file then
+    let data = if Path.file_exists file then
       let data = Path.cat file in (* cat even up to 1gig is workable even if ugly *)
       let len = String.length data in
       let max_len = 10 * 1024 * 1024 in (* maximum 10mb *)
-      let data = if len <= max_len then data else String.sub data (len - max_len) max_len in
-      { title = Some (Path.to_string file); data; } :: items
+      if len <= max_len then data else String.sub data (len - max_len) max_len
     else
-      items in
+      Printf.sprintf "File not found: %s" (Path.to_string file) in
+    { title = Some (Path.to_string file); data; } :: items in
   let add_string (items: rageItem list) (data: string) : rageItem list =
     { title = None; data; } :: items in
   let add_pid (items: rageItem list) ((pid, reason): (int * string)) : rageItem list =
@@ -1300,8 +1300,8 @@ let do_rage flowconfig_name (state: state) : Rage.result =
       let items = add_file items server_log_file in
       let items = add_file items monitor_log_file in
       (* Let's pick up the old files in case user reported bug after a crash *)
-      let items = add_file items (Path.concat server_log_file ".old") in
-      let items = add_file items (Path.concat monitor_log_file ".old") in
+      let items = add_file items (Path.make ((Path.to_string server_log_file) ^ ".old")) in
+      let items = add_file items (Path.make ((Path.to_string monitor_log_file) ^ ".old")) in
       (* And the pids file *)
       let items = try
         let pids = PidLog.get_pids (Server_files_js.pids_file ~flowconfig_name ~tmp_dir ienv.i_root)
