@@ -2242,6 +2242,11 @@ let dump_prop ?(depth=3) cx p =
 let dump_tvar ?(depth=3) cx id =
   dump_tvar_ (depth, ISet.empty) cx id
 
+let dump_flow ?(depth=3) cx (l, u) =
+  spf "Lower: %s ~>\n Upper: %s"
+    (dump_t ~depth cx l)
+    (dump_use_t ~depth cx u)
+
 (*****************************************************)
 
 (* scopes and types *)
