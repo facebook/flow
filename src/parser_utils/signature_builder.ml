@@ -12,8 +12,6 @@ open Flow_ast_visitor
 module Entry = Signature_builder_entry
 module Env = Signature_builder_env
 module V = Signature_builder_verify.Verifier
-module Verify = V(struct let prevent_munge = false end)
-module VerifyPreventMunge = V(struct let prevent_munge = true end)
 
 module Signature = struct
   type t = Env.t * File_sig.exports_info File_sig.t'
@@ -224,9 +222,8 @@ module Signature = struct
     env, file_sig
 
   let verify ?(prevent_munge=false) (env, file_sig) =
-    match prevent_munge with
-    | false -> Verify.check env file_sig @@ Verify.exports file_sig
-    | true -> VerifyPreventMunge.check env file_sig @@ VerifyPreventMunge.exports file_sig
+    let module Verify = V(struct let prevent_munge = prevent_munge end) in
+    Verify.check env file_sig @@ Verify.exports file_sig
 end
 
 class type_hoister = object(this)
