@@ -306,9 +306,9 @@ Cannot use `Implicit` [1] with fewer than 1 type argument.
                                    ^^^^^^^^
 
 References:
-   generics.js:5:16
+   generics.js:5:15
    5| class Implicit<X> { arg: X; val: X; }
-                     ^ [1]
+                    ^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- import.js:7:1

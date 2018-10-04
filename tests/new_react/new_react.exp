@@ -7,9 +7,9 @@ Cannot use property `Component` [1] with fewer than 1 type argument.
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
+   <BUILTINS>/react.js:26:30
    26| declare class React$Component<Props, State = void> {
-                                     ^^^^^^^^^^^^ [1]
+                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- bad_default_props.js:20:18
@@ -21,9 +21,9 @@ Cannot use property `Component` [1] with fewer than 1 type argument.
                         ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:26:31
+   <BUILTINS>/react.js:26:30
    26| declare class React$Component<Props, State = void> {
-                                     ^^^^^^^^^^^^ [1]
+                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- classes.js:7:1

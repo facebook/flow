@@ -7,9 +7,9 @@ Cannot use `A` [1] with fewer than 1 type argument.
                       ^
 
 References:
-   annot.js:1:9
+   annot.js:1:8
    1| class A<X> { }
-              ^ [1]
+             ^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- annot.js:10:10

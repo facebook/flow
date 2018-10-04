@@ -2787,12 +2787,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* This is the case which implements the expansion for our
      * TypeAppT (c, ts) ~> TypeAppT (c, ts) when the cs are unequal. *)
-    | DefT (_, PolyT (_, xs1, t1, id1)),
-      ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (DefT (_, PolyT (_, xs2, t2, id2)), ts2, op2, r2), false) ->
+    | DefT (_, PolyT (tparams_loc1, xs1, t1, id1)),
+      ConcretizeTypeAppsT (use_op, (ts1, op1, r1), (DefT (_, PolyT (tparams_loc2, xs2, t2, id2)), ts2, op2, r2), false) ->
       let t1 = mk_typeapp_instance_of_poly cx trace ~use_op:op2 ~reason_op:r2 ~reason_tapp:r1
-        id1 xs1 t1 ts1 in
+        id1 tparams_loc1 xs1 t1 ts1 in
       let t2 = mk_typeapp_instance_of_poly cx trace ~use_op:op1 ~reason_op:r1 ~reason_tapp:r2
-        id2 xs2 t2 ts2 in
+        id2 tparams_loc2 xs2 t2 ts2 in
       rec_flow cx trace (t1, UseT (use_op, t2))
 
     | DefT (reason_tapp, TypeAppT (use_op, c, ts)), _ ->
@@ -3792,9 +3792,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        operation. (SpecializeT operations are created when processing TypeAppT
        types, so the decision to cache or not originates there.) *)
 
-    | DefT (_, PolyT (_,xs,t,id)), SpecializeT(use_op,reason_op,reason_tapp,cache,ts,tvar) ->
+    | DefT (_, PolyT (tparams_loc,xs,t,id)), SpecializeT(use_op,reason_op,reason_tapp,cache,ts,tvar) ->
       let ts = Option.value ts ~default:[] in
-      let t_ = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id xs t ts in
+      let t_ = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id tparams_loc xs t ts in
       rec_flow_t cx trace (t_, tvar)
 
     | DefT (_, PolyT (_, tps, _, _)), VarianceCheckT(_, ts, polarity) ->
@@ -3903,7 +3903,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, PolyT (_, _, _, id1)), UseT (_, DefT (_, PolyT (_, _, _, id2)))
       when id1 = id2 -> ()
 
-    | DefT (r1, PolyT (_, params1, t1, id1)), UseT (use_op, DefT (r2, PolyT (_, params2, t2, id2))) ->
+    | DefT (r1, PolyT (tparams_loc1, params1, t1, id1)), UseT (use_op, DefT (r2, PolyT (tparams_loc2, params2, t2, id2))) ->
       let n1 = Nel.length params1 in
       let n2 = Nel.length params2 in
       if n2 > n1 then
@@ -3919,11 +3919,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let inst1 =
           let r = reason_of_t t1 in
           mk_typeapp_of_poly cx trace
-            ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
+            ~use_op ~reason_op:r ~reason_tapp:r id1 tparams_loc1 params1 t1 args1 in
         let inst2 =
           let r = reason_of_t t2 in
           mk_typeapp_of_poly cx trace
-            ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
+            ~use_op ~reason_op:r ~reason_tapp:r id2 tparams_loc2 params2 t2 args2 in
         rec_flow_t cx trace (inst1, inst2)
 
     (** general case **)
@@ -3947,21 +3947,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         extends clauses and at function call sites - without explicit type
         arguments, since typically they're easily inferred from context.
       *)
-    | DefT (reason_tapp, (PolyT (_, ids, t, _))), _ ->
+    | DefT (reason_tapp, (PolyT (tparams_loc, ids, t, _))), _ ->
       let reason_op = reason_of_use_t u in
       begin match u with
       | UseT (use_op, DefT (_, TypeT _)) ->
         ignore use_op; (* TODO: add use op to missing type arg error? *)
         add_output cx ~trace (FlowError.EMissingTypeArgs {
           reason_tapp = reason_tapp;
-          reason_arity = mk_poly_arity_reason ids;
+          reason_arity = mk_poly_arity_reason tparams_loc;
           min_arity = poly_minimum_arity ids;
           max_arity = Nel.length ids;
         })
       (* Special case for `_ instanceof C` where C is polymorphic *)
       | PredicateT ((RightP (InstanceofTest, _) | NotP (RightP (InstanceofTest, _))), _) ->
         let l = instantiate_poly_default_args cx trace
-          ~use_op:unknown_use ~reason_op ~reason_tapp (ids, t) in
+          ~use_op:unknown_use ~reason_op ~reason_tapp (tparams_loc, ids, t) in
         rec_flow cx trace (l, u)
       (* Special case for React.PropTypes.instanceOf arguments, which are an
          exception to type arg arity strictness, because it's not possible to
@@ -3969,7 +3969,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | ReactKitT (use_op, reason_op, (React.SimplifyPropType
           (React.SimplifyPropType.InstanceOf, _) as tool)) ->
         let l = instantiate_poly_default_args cx trace
-          ~use_op ~reason_op ~reason_tapp (ids, t) in
+          ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
         react_kit cx trace ~use_op reason_op l tool
       (* Calls to polymorphic functions may cause non-termination, e.g. when the
          results of the calls feed back as subtle variations of the original
@@ -4004,21 +4004,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             | SpreadArg t -> reason_of_t t
           ) calltype.call_args_tlist in
           let t_ = instantiate_poly cx trace
-            ~use_op ~reason_op ~reason_tapp ~cache:arg_reasons (ids,t) in
+            ~use_op ~reason_op ~reason_tapp ~cache:arg_reasons (tparams_loc,ids,t) in
           rec_flow cx trace (t_, u)
         | Some targs ->
-          let t_ = instantiate_poly_with_targs cx trace (ids, t) targs
+          let t_ = instantiate_poly_with_targs cx trace (tparams_loc, ids, t) targs
             ~use_op ~reason_op ~reason_tapp in
           rec_flow cx trace (t_,
             CallT (use_op, reason_op, {calltype with call_targs = None}))
         end
       | ConstructorT (use_op, reason_op, Some targs, args, tout) ->
-        let t_ = instantiate_poly_with_targs cx trace (ids, t) targs
+        let t_ = instantiate_poly_with_targs cx trace (tparams_loc, ids, t) targs
           ~use_op ~reason_op ~reason_tapp in
         rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
       | _ ->
         let t_ = instantiate_poly cx trace
-          ~use_op:unknown_use ~reason_op ~reason_tapp (ids,t) in
+          ~use_op:unknown_use ~reason_op ~reason_tapp (tparams_loc,ids,t) in
         rec_flow cx trace (t_, u)
       end
 
@@ -7657,12 +7657,12 @@ and instantiate_poly_with_targs
   ~reason_tapp
   ?cache
   ?errs_ref
-  (xs,t)
+  (tparams_loc, xs,t)
   ts
   =
   let minimum_arity = poly_minimum_arity xs in
   let maximum_arity = Nel.length xs in
-  let reason_arity = mk_poly_arity_reason xs in
+  let reason_arity = mk_poly_arity_reason tparams_loc in
   if List.length ts > maximum_arity
   then begin
     add_output cx ~trace (FlowError.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
@@ -7708,7 +7708,7 @@ and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
 (* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)
-and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (xs,t) =
+and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs,t) =
   (* Remember: other_bound might refer to other type params *)
   let ts, _ = Nel.fold_left
     (fun (ts, map) typeparam ->
@@ -7719,14 +7719,14 @@ and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (xs,t
     ) ([], SMap.empty)
     xs in
   let ts = List.rev ts in
-  instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (xs,t) ts
+  instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp (tparams_loc, xs,t) ts
 
 (* Instantiate a polymorphic definition by creating fresh type arguments. *)
-and instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache (xs,t) =
+and instantiate_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache (tparams_loc, xs,t) =
   let ts = xs |> Nel.map (fun typeparam ->
     ImplicitTypeArgument.mk_targ cx typeparam reason_op reason_tapp
   ) in
-  instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ?cache (xs,t) (Nel.to_list ts)
+  instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ?cache (tparams_loc, xs,t) (Nel.to_list ts)
 
 (* instantiate each param of a polymorphic type with its upper bound *)
 and instantiate_poly_param_upper_bounds cx typeparams =
@@ -7737,10 +7737,8 @@ and instantiate_poly_param_upper_bounds cx typeparams =
     ) (SMap.empty, []) typeparams in
   List.rev revlist
 
-and mk_poly_arity_reason xs =
-  let x1, xN = Nel.hd xs, Nel.hd (Nel.rev xs) in
-  let loc = Loc.btwn (aloc_of_reason x1.reason |> ALoc.to_loc) (aloc_of_reason xN.reason |> ALoc.to_loc) in
-  mk_reason (RCustom "See type parameters of definition here") (loc |> ALoc.of_loc)
+and mk_poly_arity_reason tparams_loc =
+  mk_reason (RCustom "See type parameters of definition here") (tparams_loc |> ALoc.of_loc)
 
 (* Fix a this-abstracted instance type by tying a "knot": assume that the
    fixpoint is some `this`, substitute it as This in the instance type, and
@@ -9751,7 +9749,7 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
   | DefT (_, PolyT (_, _, _, id1)), DefT (_, PolyT (_, _, _, id2))
     when id1 = id2 -> ()
 
-  | DefT (r1, PolyT (_, params1, t1, id1)), DefT (r2, PolyT (_, params2, t2, id2)) ->
+  | DefT (r1, PolyT (tparams_loc1, params1, t1, id1)), DefT (r2, PolyT (tparams_loc2, params2, t2, id2)) ->
     let n1 = Nel.length params1 in
     let n2 = Nel.length params2 in
     if n2 > n1 then
@@ -9767,11 +9765,11 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
       let inst1 =
         let r = reason_of_t t1 in
         mk_typeapp_of_poly cx trace
-          ~use_op ~reason_op:r ~reason_tapp:r id1 params1 t1 args1 in
+          ~use_op ~reason_op:r ~reason_tapp:r id1 tparams_loc1 params1 t1 args1 in
       let inst2 =
         let r = reason_of_t t2 in
         mk_typeapp_of_poly cx trace
-          ~use_op ~reason_op:r ~reason_tapp:r id2 params2 t2 args2 in
+          ~use_op ~reason_op:r ~reason_tapp:r id2 tparams_loc2 params2 t2 args2 in
       rec_unify cx trace ~use_op inst1 inst2
 
   | DefT (_, ArrT (ArrayAT(t1, ts1))),
@@ -10585,21 +10583,21 @@ and mk_typeapp_instance cx ?trace ~use_op ~reason_op ~reason_tapp ?cache c ts =
   flow_opt cx ?trace (c, SpecializeT (use_op, reason_op, reason_tapp, cache, Some ts, t));
   mk_instance cx ?trace reason_tapp t
 
-and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts =
-  let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id xs t ts in
+and mk_typeapp_instance_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts =
+  let t = mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp id tparams_loc xs t ts in
   mk_instance cx ~trace reason_tapp t
 
-and mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id xs t ts =
+and mk_typeapp_of_poly cx trace ~use_op ~reason_op ~reason_tapp ?cache id tparams_loc xs t ts =
   match cache with
   | Some cache ->
-    instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ~cache (xs,t) ts
+    instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ~cache (tparams_loc,xs,t) ts
   | None ->
     let key = id, ts in
     match Cache.Subst.find key with
     | None ->
       let errs_ref = ref [] in
       let t = instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp
-        ~errs_ref (xs,t) ts in
+        ~errs_ref (tparams_loc,xs,t) ts in
       Cache.Subst.add key (!errs_ref, t);
       t
     | Some (errs, t) ->
