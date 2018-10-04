@@ -257,7 +257,15 @@ module Eval(Env: EvalEnv) = struct
   and literal_expr tps =
     let open Ast.Expression in
     function
-      | _, Literal _ -> Deps.bot
+      | loc, Literal { Ast.Literal.value; raw = _ } ->
+        begin match value with
+          | Ast.Literal.String _
+          | Ast.Literal.Number _
+          | Ast.Literal.Boolean _
+          | Ast.Literal.Null
+            -> Deps.bot
+          | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Literal))
+        end
       | _, TemplateLiteral _ -> Deps.bot
       | _, Identifier (_, name) -> Deps.value name
       | _, Class stuff ->
