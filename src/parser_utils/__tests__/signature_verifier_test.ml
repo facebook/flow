@@ -289,8 +289,8 @@ let tests = "signature_verifier" >::: [
      "  f: D = 0;";
      "}";
      "module.exports = C;"]
-    ["Unexpected toplevel definition that needs hoisting @ (3, 6) to (3, 7)";
-     "Unexpected toplevel definition that needs hoisting @ (5, 6) to (5, 7)";
+    ["Unexpected toplevel definition that needs hoisting @ (3, 2) to (3, 12)";
+     "Unexpected toplevel definition that needs hoisting @ (5, 2) to (5, 16)";
      "require('./hoisted_locals_helper')";
      "Reachable: C, D, M"];
 
@@ -307,7 +307,7 @@ let tests = "signature_verifier" >::: [
      "  f = 0;";
      "}";
      "module.exports = x;"]
-    ["Unexpected toplevel definition that needs hoisting @ (3, 6) to (3, 7)";
+    ["Unexpected toplevel definition that needs hoisting @ (3, 2) to (3, 19)";
      "Reachable: x"];
 
   "scope_extrusion_nested" >:: mk_signature_verifier_test
@@ -322,7 +322,7 @@ let tests = "signature_verifier" >::: [
      "  f = 0;";
      "}";
      "module.exports = { x, y };"]
-    ["Unexpected toplevel definition that needs hoisting @ (5, 8) to (5, 9)";
+    ["Unexpected toplevel definition that needs hoisting @ (5, 4) to (5, 21)";
      "global value: y";
      "Reachable: x"];
 

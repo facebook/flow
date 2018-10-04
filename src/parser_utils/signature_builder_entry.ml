@@ -11,11 +11,11 @@ module Kind = Signature_builder_kind
 
 type t = Loc.t Ast.Identifier.t * Kind.t
 
-let rec pattern ?annot_path init (p: (Loc.t, Loc.t) Ast.Pattern.t) =
+let rec pattern loc ?annot_path init (p: (Loc.t, Loc.t) Ast.Pattern.t) =
   let open Ast.Pattern in
   begin match p with
     | _, Identifier { Identifier.name; annot; _ } ->
-      [name, Kind.VariableDef { annot = Kind.Annot_path.mk_annot ?annot_path annot; init }]
+      [name, (loc, Kind.VariableDef { annot = Kind.Annot_path.mk_annot ?annot_path annot; init })]
     | _, Object { Object.properties; annot } ->
       let open Object in
       let annot_path = Kind.Annot_path.mk_annot ?annot_path annot in
@@ -24,15 +24,15 @@ let rec pattern ?annot_path init (p: (Loc.t, Loc.t) Ast.Pattern.t) =
           begin match key with
             | Property.Identifier (_, x) ->
               let annot_path = Kind.Annot_path.mk_object ?annot_path x in
-              acc @ (pattern ?annot_path init p)
+              acc @ (pattern loc ?annot_path init p)
             | Property.Literal (_, { Ast.Literal.raw; _ }) ->
               let annot_path = Kind.Annot_path.mk_object ?annot_path raw in
-              acc @ (pattern ?annot_path init p)
+              acc @ (pattern loc ?annot_path init p)
             | Property.Computed _ ->
-              acc @ (pattern init p)
+              acc @ (pattern loc init p)
           end
         | RestProperty (_, { RestProperty.argument = p }) ->
-          acc @ (pattern init p)
+          acc @ (pattern loc init p)
       ) [] properties
     | _, Array { Array.elements; annot } ->
       let open Array in
@@ -41,30 +41,30 @@ let rec pattern ?annot_path init (p: (Loc.t, Loc.t) Ast.Pattern.t) =
         | None -> acc, i+1
         | Some (Element p) ->
           let annot_path = Kind.Annot_path.mk_array ?annot_path i in
-          acc @ (pattern ?annot_path init p), i+1
+          acc @ (pattern loc ?annot_path init p), i+1
         | Some (RestElement (_, { RestElement.argument = p })) ->
-          acc @ (pattern init p), i+1
+          acc @ (pattern loc init p), i+1
       ) ([], 0) elements
-    | _, Assignment { Assignment.left; _ } -> pattern ?annot_path init left
+    | _, Assignment { Assignment.left; _ } -> pattern loc ?annot_path init left
     | _, Expression _ -> [] (* TODO *)
   end
 
-let variable_declaration (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
+let variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
   let open Ast.Statement.VariableDeclaration in
   let { declarations; kind } = decl in
   List.fold_left (fun acc (_, { Declarator.id; init }) ->
     let init = match kind, init with
       | Const, Some _ -> init
       | _ -> None in
-    acc @ (pattern init id)
+    acc @ (pattern loc init id)
   ) [] declarations
 
-let function_declaration function_declaration =
+let function_declaration loc function_declaration =
   let open Ast.Function in
   let { id; generator; tparams; params; return; body; _ } = function_declaration in
-  id, Kind.FunctionDef { generator; tparams; params; return; body }
+  id, (loc, Kind.FunctionDef { generator; tparams; params; return; body })
 
-let class_ class_ =
+let class_ loc class_ =
   let open Ast.Class in
   let {
     id; tparams; body; extends; implements;
@@ -73,50 +73,50 @@ let class_ class_ =
   let super, super_targs = match extends with
   | None -> None, None
   | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
-  id, Kind.ClassDef { tparams; body; super; super_targs; implements }
+  id, (loc, Kind.ClassDef { tparams; body; super; super_targs; implements })
 
-let declare_variable declare_variable =
+let declare_variable loc declare_variable =
   let open Ast.Statement.DeclareVariable in
   let { id; annot } = declare_variable in
-  id, Kind.VariableDef { annot = Kind.Annot_path.mk_annot annot; init = None }
+  id, (loc, Kind.VariableDef { annot = Kind.Annot_path.mk_annot annot; init = None })
 
-let declare_function declare_function =
+let declare_function loc declare_function =
   let open Ast.Statement.DeclareFunction in
   let { id; annot; _ } = declare_function in
-  id, Kind.DeclareFunctionDef { annot }
+  id, (loc, Kind.DeclareFunctionDef { annot })
 
-let declare_class declare_class =
+let declare_class loc declare_class =
   let open Ast.Statement.DeclareClass in
   let {
-    id; tparams; body = (_, body); extends; mixins; implements
+    id; tparams; body; extends; mixins; implements
   } = declare_class in
-  id, Kind.DeclareClassDef { tparams; body; extends; mixins; implements }
+  id, (loc, Kind.DeclareClassDef { tparams; body; extends; mixins; implements })
 
-let type_alias type_alias =
+let type_alias loc type_alias =
   let open Ast.Statement.TypeAlias in
   let { id; right; tparams } = type_alias in
-  id, Kind.TypeDef { tparams; right }
+  id, (loc, Kind.TypeDef { tparams; right })
 
-let opaque_type opaque_type =
+let opaque_type loc opaque_type =
   let open Ast.Statement.OpaqueType in
   let { id; tparams; impltype; supertype; _ } = opaque_type in
-  id, Kind.OpaqueTypeDef { tparams; impltype; supertype }
+  id, (loc, Kind.OpaqueTypeDef { tparams; impltype; supertype })
 
-let interface interface =
+let interface loc interface =
   let open Ast.Statement.Interface in
   let {
-    id; tparams; body = (_, body); extends
+    id; tparams; body; extends
   } = interface in
-  id, Kind.InterfaceDef { tparams; body; extends }
+  id, (loc, Kind.InterfaceDef { tparams; body; extends })
 
-let import_star id kind source =
-  id, Kind.ImportStarDef { kind; source }
+let import_star loc id kind source =
+  id, (loc, Kind.ImportStarDef { kind; source })
 
-let import_named id name kind source =
-  id, Kind.ImportNamedDef { kind; source; name }
+let import_named loc id name kind source =
+  id, (loc, Kind.ImportNamedDef { kind; source; name })
 
-let require id source =
-  id, Kind.RequireDef { source }
+let require loc id source =
+  id, (loc, Kind.RequireDef { source })
 
-let sketchy_toplevel id =
-  id, Kind.SketchyToplevelDef
+let sketchy_toplevel loc id =
+  id, (loc, Kind.SketchyToplevelDef)

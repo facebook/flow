@@ -26,69 +26,72 @@ module Signature = struct
   let add_env_list env entries =
     Env.push entries env
 
-  let add_variable_declaration env variable_declaration =
-    add_env_list env (Entry.variable_declaration variable_declaration)
+  let add_variable_declaration env loc variable_declaration =
+    add_env_list env (Entry.variable_declaration loc variable_declaration)
 
-  let add_function_declaration env function_declaration =
-    add_env_opt env (Entry.function_declaration function_declaration)
+  let add_function_declaration env loc function_declaration =
+    add_env_opt env (Entry.function_declaration loc function_declaration)
 
-  let add_class env class_ =
-    add_env_opt env (Entry.class_ class_)
+  let add_class env loc class_ =
+    add_env_opt env (Entry.class_ loc class_)
 
-  let add_declare_variable env declare_variable =
-    add_env env (Entry.declare_variable declare_variable)
+  let add_declare_variable env loc declare_variable =
+    add_env env (Entry.declare_variable loc declare_variable)
 
-  let add_declare_function env declare_function =
-    add_env env (Entry.declare_function declare_function)
+  let add_declare_function env loc declare_function =
+    add_env env (Entry.declare_function loc declare_function)
 
-  let add_declare_class env declare_class =
-    add_env env (Entry.declare_class declare_class)
+  let add_declare_class env loc declare_class =
+    add_env env (Entry.declare_class loc declare_class)
 
-  let add_type_alias env type_alias =
-    add_env env (Entry.type_alias type_alias)
+  let add_type_alias env loc type_alias =
+    add_env env (Entry.type_alias loc type_alias)
 
-  let add_opaque_type env opaque_type =
-    add_env env (Entry.opaque_type opaque_type)
+  let add_opaque_type env loc opaque_type =
+    add_env env (Entry.opaque_type loc opaque_type)
 
-  let add_interface env interface =
-    add_env env (Entry.interface interface)
+  let add_interface env loc interface =
+    add_env env (Entry.interface loc interface)
 
   let add_declare_export_declaration env = Ast.Statement.DeclareExportDeclaration.(function
-    | Variable (_, declare_variable) -> add_declare_variable env declare_variable
-    | Function (_, declare_function) -> add_declare_function env declare_function
-    | Class (_, declare_class) -> add_declare_class env declare_class
-    | NamedType (_, type_alias) -> add_type_alias env type_alias
-    | NamedOpaqueType (_, opaque_type) -> add_opaque_type env opaque_type
-    | Interface (_, interface) -> add_interface env interface
+    | Variable (loc, declare_variable) -> add_declare_variable env loc declare_variable
+    | Function (loc, declare_function) -> add_declare_function env loc declare_function
+    | Class (loc, declare_class) -> add_declare_class env loc declare_class
+    | NamedType (loc, type_alias) -> add_type_alias env loc type_alias
+    | NamedOpaqueType (loc, opaque_type) -> add_opaque_type env loc opaque_type
+    | Interface (loc, interface) -> add_interface env loc interface
     | DefaultType _ -> assert false
   )
 
   let add_export_default_declaration env = Ast.Statement.ExportDefaultDeclaration.(function
-    | Declaration (_, Ast.Statement.FunctionDeclaration
+    | Declaration (loc, Ast.Statement.FunctionDeclaration
         ({ Ast.Function.id = Some _; _ } as function_declaration)
       ) ->
-      add_function_declaration env function_declaration
-    | Declaration (_, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
-      add_class env class_
+      add_function_declaration env loc function_declaration
+    | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
+      add_class env loc class_
     | Declaration _ -> assert false
-    | Expression (_, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-      add_function_declaration env function_
-    | Expression _ -> assert false
+    | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
+      add_function_declaration env loc function_
+    | Expression _ -> assert false (* TODO: class? *)
   )
 
   let add_stmt env = Ast.Statement.(function
-    | _, VariableDeclaration variable_declaration -> add_variable_declaration env variable_declaration
-    | _, DeclareVariable declare_variable -> add_declare_variable env declare_variable
-    | _, FunctionDeclaration function_declaration -> add_function_declaration env function_declaration
-    | _, DeclareFunction declare_function -> add_declare_function env declare_function
-    | _, ClassDeclaration class_ -> add_class env class_
-    | _, DeclareClass declare_class -> add_declare_class env declare_class
-    | _, TypeAlias type_alias -> add_type_alias env type_alias
-    | _, DeclareTypeAlias type_alias -> add_type_alias env type_alias
-    | _, OpaqueType opaque_type -> add_opaque_type env opaque_type
-    | _, DeclareOpaqueType opaque_type -> add_opaque_type env opaque_type
-    | _, InterfaceDeclaration interface -> add_interface env interface
-    | _, DeclareInterface interface -> add_interface env interface
+    | loc, VariableDeclaration variable_declaration ->
+      add_variable_declaration env loc variable_declaration
+    | loc, DeclareVariable declare_variable ->
+      add_declare_variable env loc declare_variable
+    | loc, FunctionDeclaration function_declaration ->
+      add_function_declaration env loc function_declaration
+    | loc, DeclareFunction declare_function -> add_declare_function env loc declare_function
+    | loc, ClassDeclaration class_ -> add_class env loc class_
+    | loc, DeclareClass declare_class -> add_declare_class env loc declare_class
+    | loc, TypeAlias type_alias -> add_type_alias env loc type_alias
+    | loc, DeclareTypeAlias type_alias -> add_type_alias env loc type_alias
+    | loc, OpaqueType opaque_type -> add_opaque_type env loc opaque_type
+    | loc, DeclareOpaqueType opaque_type -> add_opaque_type env loc opaque_type
+    | loc, InterfaceDeclaration interface -> add_interface env loc interface
+    | loc, DeclareInterface interface -> add_interface env loc interface
 
     | _, Block _
     | _, DoWhile _
@@ -121,6 +124,7 @@ module Signature = struct
     let open File_sig in
     SMap.fold (fun n export_def env ->
       let export = SMap.find n named in
+      let _, export = export in
       match export, export_def with
         | ExportDefault { local; _ }, DeclareExportDef declare_export_declaration ->
           begin match local with
@@ -149,6 +153,7 @@ module Signature = struct
     let open File_sig in
     SMap.fold (fun n export_def env ->
       let export = SMap.find n type_named in
+      let _, export = export in
       match export, export_def with
         | TypeExportNamed { kind; _ }, DeclareExportDef declare_export_declaration ->
           begin match kind with
@@ -163,30 +168,30 @@ module Signature = struct
         | _ -> assert false
     ) type_named_infos env
 
-  let add_named_imports ?(filter=(fun _ -> true)) source kind named_imports env =
+  let add_named_imports import_loc ?(filter=(fun _ -> true)) source kind named_imports env =
     SMap.fold (fun remote ids env ->
       SMap.fold (fun local locs env ->
         Nel.fold_left (fun env { File_sig.remote_loc; local_loc } ->
           let id = local_loc, local in
           let name = remote_loc, remote in
-          if filter id then add_env env (Entry.import_named id name kind source) else env
+          if filter id then add_env env (Entry.import_named import_loc id name kind source) else env
         ) env locs
       ) ids env
     ) named_imports env
 
-  let add_require_bindings toplevel_names source require_bindings env =
+  let add_require_bindings toplevel_names require_loc source require_bindings env =
     let filter (_, x) = SSet.mem x toplevel_names in
     let open File_sig in
     match require_bindings with
-      | BindIdent id -> if filter id then add_env env (Entry.require id source) else env
+      | BindIdent id -> if filter id then add_env env (Entry.require require_loc id source) else env
       | BindNamed named_imports ->
         let kind = Ast.Statement.ImportDeclaration.ImportValue in
-        add_named_imports ~filter source kind named_imports env
+        add_named_imports require_loc ~filter source kind named_imports env
 
-  let add_ns_imports source kind ns_imports env =
+  let add_ns_imports import_loc source kind ns_imports env =
     match ns_imports with
       | None -> env
-      | Some id -> add_env env (Entry.import_star id kind source)
+      | Some id -> add_env env (Entry.import_star import_loc id kind source)
 
   let mk env toplevel_names file_sig =
     let open File_sig in
@@ -209,14 +214,15 @@ module Signature = struct
       add_export_type_bindings type_exports_named type_exports_named_info env
     in
     let env = List.fold_left (fun env -> function
-      | Require { source; bindings = Some require_bindings; _ } ->
-        add_require_bindings toplevel_names source require_bindings env
-      | Import { source; named; ns; types; typesof; typesof_ns } ->
-        let env = add_named_imports source Ast.Statement.ImportDeclaration.ImportValue named env in
-        let env = add_ns_imports source Ast.Statement.ImportDeclaration.ImportValue ns env in
-        let env = add_named_imports source Ast.Statement.ImportDeclaration.ImportType types env in
-        let env = add_named_imports source Ast.Statement.ImportDeclaration.ImportTypeof typesof env in
-        add_ns_imports source Ast.Statement.ImportDeclaration.ImportTypeof typesof_ns env
+      | Require { source; bindings = Some require_bindings; require_loc } ->
+        add_require_bindings toplevel_names require_loc source require_bindings env
+      | Import { import_loc; source; named; ns; types; typesof; typesof_ns } ->
+        let open Ast.Statement.ImportDeclaration in
+        let env = add_named_imports import_loc source ImportValue named env in
+        let env = add_ns_imports import_loc source ImportValue ns env in
+        let env = add_named_imports import_loc source ImportType types env in
+        let env = add_named_imports import_loc source ImportTypeof typesof env in
+        add_ns_imports import_loc source ImportTypeof typesof_ns env
       | _ -> env
     ) env imports_info in
     env, file_sig
@@ -246,8 +252,8 @@ class type_hoister = object(this)
     let entry =
       if this#is_toplevel then entry
       else
-        let id, _ = entry in
-        Entry.sketchy_toplevel id
+        let id, (loc, _) = entry in
+        Entry.sketchy_toplevel loc id
     in
     this#update_acc (Env.add entry)
 
@@ -370,40 +376,40 @@ class type_hoister = object(this)
     | _, With _
       -> stmt
 
-  method! variable_declaration _loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
-    this#add_binding_list (Entry.variable_declaration decl);
+  method! variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
+    this#add_binding_list (Entry.variable_declaration loc decl);
     decl
 
-  method! declare_variable _loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t) =
-    this#add_binding (Entry.declare_variable decl);
+  method! declare_variable loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t) =
+    this#add_binding (Entry.declare_variable loc decl);
     decl
 
-  method! function_declaration _loc (expr: (Loc.t, Loc.t) Ast.Function.t) =
-    this#add_binding_opt (Entry.function_declaration expr);
+  method! function_declaration loc (expr: (Loc.t, Loc.t) Ast.Function.t) =
+    this#add_binding_opt (Entry.function_declaration loc expr);
     expr
 
-  method! declare_function _loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) =
-    this#add_binding (Entry.declare_function decl);
+  method! declare_function loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) =
+    this#add_binding (Entry.declare_function loc decl);
     decl
 
-  method! class_ _loc (cls: (Loc.t, Loc.t) Ast.Class.t) =
-    this#add_binding_opt (Entry.class_ cls);
+  method! class_ loc (cls: (Loc.t, Loc.t) Ast.Class.t) =
+    this#add_binding_opt (Entry.class_ loc cls);
     cls
 
-  method! declare_class _loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareClass.t) =
-    this#add_binding (Entry.declare_class decl);
+  method! declare_class loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareClass.t) =
+    this#add_binding (Entry.declare_class loc decl);
     decl
 
-  method! type_alias _loc (stuff: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t) =
-    this#add_binding (Entry.type_alias stuff);
+  method! type_alias loc (stuff: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t) =
+    this#add_binding (Entry.type_alias loc stuff);
     stuff
 
-  method! opaque_type _loc (otype: (Loc.t, Loc.t) Ast.Statement.OpaqueType.t) =
-    this#add_binding (Entry.opaque_type otype);
+  method! opaque_type loc (otype: (Loc.t, Loc.t) Ast.Statement.OpaqueType.t) =
+    this#add_binding (Entry.opaque_type loc otype);
     otype
 
-  method! interface (interface: (Loc.t, Loc.t) Ast.Statement.Interface.t) =
-    this#add_binding (Entry.interface interface);
+  method! interface_declaration loc (interface: (Loc.t, Loc.t) Ast.Statement.Interface.t) =
+    this#add_binding (Entry.interface loc interface);
     interface
 
   (* Ignore expressions *)

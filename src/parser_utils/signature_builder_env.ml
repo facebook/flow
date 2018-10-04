@@ -6,7 +6,7 @@
  *)
 
 module LocMap = Utils_js.LocMap
-type t = Signature_builder_kind.t LocMap.t SMap.t
+type t = (Loc.t * Signature_builder_kind.t) LocMap.t SMap.t
 
 let empty = SMap.empty
 

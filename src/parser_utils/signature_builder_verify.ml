@@ -529,17 +529,17 @@ module Verifier(Env: EvalEnv) = struct
 
   module Eval = Eval(Env)
 
-  let eval (loc, kind) =
+  let eval id_loc (loc, kind) =
     match kind with
       | Kind.VariableDef { annot; init } ->
-        Eval.annotation ?init SSet.empty (loc, annot)
+        Eval.annotation ?init SSet.empty (id_loc, annot)
       | Kind.FunctionDef { generator; tparams; params; return; body; } ->
         Eval.function_ SSet.empty generator tparams params return body
       | Kind.DeclareFunctionDef { annot = (_, t) } ->
         Eval.type_ SSet.empty t
       | Kind.ClassDef { tparams; body; super; super_targs; implements } ->
         Eval.class_ tparams body super super_targs implements
-      | Kind.DeclareClassDef { tparams; body; extends; mixins; implements } ->
+      | Kind.DeclareClassDef { tparams; body = (_, body); extends; mixins; implements } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
         let deps = Deps.join (deps, Eval.object_type tps body) in
         let deps = match extends with
@@ -553,7 +553,7 @@ module Verifier(Env: EvalEnv) = struct
       | Kind.OpaqueTypeDef { tparams; impltype; supertype } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
         Deps.join (deps, Eval.opaque_type tps impltype supertype)
-      | Kind.InterfaceDef { tparams; body; extends } ->
+      | Kind.InterfaceDef { tparams; body = (_, body); extends } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
         let deps = Deps.join (deps, Eval.object_type tps body) in
         List.fold_left (Deps.reduce_join (Eval.type_ref tps)) deps extends
@@ -561,7 +561,7 @@ module Verifier(Env: EvalEnv) = struct
         Deps.import_named (Kind.Sort.of_import_kind kind) source name
       | Kind.ImportStarDef { kind; source } ->
         Deps.import_star (Kind.Sort.of_import_kind kind) source
-      | Kind.RequireDef { source } ->
+      | Kind.RequireDef { source; _ } ->
         Deps.require source
       | Kind.SketchyToplevelDef ->
         Deps.top (Deps.Error.SketchyToplevelDef loc)
@@ -573,52 +573,53 @@ module Verifier(Env: EvalEnv) = struct
     | File_sig.AddModuleExportsDef (_id, expr) -> Eval.literal_expr tps expr
     | File_sig.DeclareModuleExportsDef (_loc, t) -> Eval.type_ tps t
 
-  let eval_entry ((loc, _), kind) =
-    eval (loc, kind)
+  let eval_entry (id, kind) =
+    let loc, _ = id in
+    eval loc kind
 
-  let eval_declare_variable declare_variable =
-    eval_entry (Entry.declare_variable declare_variable)
+  let eval_declare_variable loc declare_variable =
+    eval_entry (Entry.declare_variable loc declare_variable)
 
-  let eval_declare_function declare_function =
-    eval_entry (Entry.declare_function declare_function)
+  let eval_declare_function loc declare_function =
+    eval_entry (Entry.declare_function loc declare_function)
 
-  let eval_declare_class declare_class =
-    eval_entry (Entry.declare_class declare_class)
+  let eval_declare_class loc declare_class =
+    eval_entry (Entry.declare_class loc declare_class)
 
-  let eval_type_alias type_alias =
-    eval_entry (Entry.type_alias type_alias)
+  let eval_type_alias loc type_alias =
+    eval_entry (Entry.type_alias loc type_alias)
 
-  let eval_opaque_type opaque_type =
-    eval_entry (Entry.opaque_type opaque_type)
+  let eval_opaque_type loc opaque_type =
+    eval_entry (Entry.opaque_type loc opaque_type)
 
-  let eval_interface interface =
-    eval_entry (Entry.interface interface)
+  let eval_interface loc interface =
+    eval_entry (Entry.interface loc interface)
 
   let eval_function_declaration loc function_declaration =
-    let _, kind = Entry.function_declaration function_declaration in
-    eval (loc, kind)
+    let _, kind = Entry.function_declaration loc function_declaration in
+    eval loc kind
 
   let eval_class loc class_ =
-    let _, kind = Entry.class_ class_ in
-    eval (loc, kind)
+    let _, kind = Entry.class_ loc class_ in
+    eval loc kind
 
-  let eval_variable_declaration variable_declaration =
+  let eval_variable_declaration loc variable_declaration =
     List.fold_left (Deps.reduce_join eval_entry) Deps.bot @@
-      Entry.variable_declaration variable_declaration
+      Entry.variable_declaration loc variable_declaration
 
   let eval_stmt = Ast.Statement.(function
-    | _, VariableDeclaration variable_declaration -> eval_variable_declaration variable_declaration
-    | _, DeclareVariable declare_variable -> eval_declare_variable declare_variable
+    | loc, VariableDeclaration variable_declaration -> eval_variable_declaration loc variable_declaration
+    | loc, DeclareVariable declare_variable -> eval_declare_variable loc declare_variable
     | loc, FunctionDeclaration function_declaration -> eval_function_declaration loc function_declaration
-    | _, DeclareFunction declare_function -> eval_declare_function declare_function
+    | loc, DeclareFunction declare_function -> eval_declare_function loc declare_function
     | loc, ClassDeclaration class_ -> eval_class loc class_
-    | _, DeclareClass declare_class -> eval_declare_class declare_class
-    | _, TypeAlias type_alias -> eval_type_alias type_alias
-    | _, DeclareTypeAlias type_alias -> eval_type_alias type_alias
-    | _, OpaqueType opaque_type -> eval_opaque_type opaque_type
-    | _, DeclareOpaqueType opaque_type -> eval_opaque_type opaque_type
-    | _, InterfaceDeclaration interface -> eval_interface interface
-    | _, DeclareInterface interface -> eval_interface interface
+    | loc, DeclareClass declare_class -> eval_declare_class loc declare_class
+    | loc, TypeAlias type_alias -> eval_type_alias loc type_alias
+    | loc, DeclareTypeAlias type_alias -> eval_type_alias loc type_alias
+    | loc, OpaqueType opaque_type -> eval_opaque_type loc opaque_type
+    | loc, DeclareOpaqueType opaque_type -> eval_opaque_type loc opaque_type
+    | loc, InterfaceDeclaration interface -> eval_interface loc interface
+    | loc, DeclareInterface interface -> eval_interface loc interface
 
     | _, Expression _
     | _, DeclareExportDeclaration _
@@ -648,12 +649,12 @@ module Verifier(Env: EvalEnv) = struct
   )
 
   let eval_declare_export_declaration = Ast.Statement.DeclareExportDeclaration.(function
-    | Variable (_, declare_variable) -> eval_declare_variable declare_variable
-    | Function (_, declare_function) -> eval_declare_function declare_function
-    | Class (_, declare_class) -> eval_declare_class declare_class
-    | NamedType (_, type_alias) -> eval_type_alias type_alias
-    | NamedOpaqueType (_, opaque_type) -> eval_opaque_type opaque_type
-    | Interface (_, interface) -> eval_interface interface
+    | Variable (loc, declare_variable) -> eval_declare_variable loc declare_variable
+    | Function (loc, declare_function) -> eval_declare_function loc declare_function
+    | Class (loc, declare_class) -> eval_declare_class loc declare_class
+    | NamedType (loc, type_alias) -> eval_type_alias loc type_alias
+    | NamedOpaqueType (loc, opaque_type) -> eval_opaque_type loc opaque_type
+    | Interface (loc, interface) -> eval_interface loc interface
     | DefaultType t -> Eval.type_ SSet.empty t
   )
 
@@ -676,6 +677,7 @@ module Verifier(Env: EvalEnv) = struct
       Deps.join (
         deps,
       let export_def = SMap.get n named_infos in
+      let _, export = export in
       match export, export_def with
         | ExportDefault _, Some (DeclareExportDef decl) ->
           eval_declare_export_declaration decl
@@ -703,6 +705,7 @@ module Verifier(Env: EvalEnv) = struct
       Deps.join (
         deps,
       let export_def = SMap.get n type_named_infos in
+      let _, export = export in
       match export, export_def with
         | TypeExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef decl) ->
           eval_declare_export_declaration decl
@@ -762,7 +765,7 @@ module Verifier(Env: EvalEnv) = struct
             Utils_js.LocMap.fold (fun loc kind deps ->
               Deps.join (
                 deps,
-                if validate kind then eval (loc, kind)
+                if validate (snd kind) then eval loc kind
                 else Deps.top (Dep.expectation sort x loc)
               )
             ) entries Deps.bot

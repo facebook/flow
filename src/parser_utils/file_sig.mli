@@ -25,8 +25,8 @@ type 'info t' = {
 and 'info module_sig' = {
   requires: require list;
   module_kind: module_kind;
-  type_exports_named: type_export SMap.t; (* export type {A, B as C} [from x] *)
-  type_exports_star: export_star list; (* export type * from "foo" *)
+  type_exports_named: (Loc.t * type_export) SMap.t; (* export type {A, B as C} [from x] *)
+  type_exports_star: (Loc.t * export_star) list; (* export type * from "foo" *)
   info: 'info; (* useful to carry information that might eventually be erased *)
 }
 
@@ -63,6 +63,8 @@ and require =
 
   (* import declaration with specifiers *)
   | Import of {
+    import_loc: Loc.t;
+
     (* location of module ref *)
     source: Ast_utils.source;
 
@@ -121,9 +123,9 @@ and module_kind =
   }
   | ES of {
     (* map from exported name to export data *)
-    named: export SMap.t;
+    named: (Loc.t * export) SMap.t;
     (* map from module reference to location of `export *` *)
-    star: export_star list;
+    star: (Loc.t * export_star) list;
   }
 
 and export =
@@ -142,6 +144,7 @@ and export =
   | ExportNs of {
     (* loc of remote name *)
     loc: Loc.t;
+    star_loc: Loc.t;
     (* module reference of exported namespace *)
     source: Ast_utils.source;
   }
@@ -221,8 +224,8 @@ val require_loc_map: module_sig -> Loc.t Nel.t SMap.t
 
 class mapper : object
   method error: error -> error
-  method export: export -> export
-  method export_star: export_star -> export_star
+  method export: Loc.t * export -> Loc.t * export
+  method export_star: Loc.t * export_star -> Loc.t * export_star
   method file_sig: t -> t
   method ident: Ast_utils.ident -> Ast_utils.ident
   method source: Ast_utils.source -> Ast_utils.source
@@ -234,5 +237,5 @@ class mapper : object
   method require: require -> require
   method require_bindings: require_bindings -> require_bindings
   method tolerable_error: tolerable_error -> tolerable_error
-  method type_export: type_export -> type_export
+  method type_export: Loc.t * type_export -> Loc.t * type_export
 end

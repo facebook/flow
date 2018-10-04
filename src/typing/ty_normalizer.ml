@@ -1450,7 +1450,7 @@ end = struct
       match require with
       | Require { source=_; require_loc=_; bindings } ->
         from_bindings bindings acc
-      | Import { source=_; named; ns=_; types; typesof; typesof_ns=_; } ->
+      | Import { import_loc=_; source=_; named; ns=_; types; typesof; typesof_ns=_; } ->
         (* TODO import namespaces (`ns`) as modules that might contain imported types *)
         acc
         |> from_imported_locs_map named

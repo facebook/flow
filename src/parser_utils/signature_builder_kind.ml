@@ -77,7 +77,7 @@ type t =
     }
   | DeclareClassDef of {
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
-      body: (Loc.t, Loc.t) Ast.Type.Object.t;
+      body: Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t;
       extends: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) option;
       mixins: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
       implements: (Loc.t, Loc.t) Ast.Class.Implements.t list;
@@ -93,7 +93,7 @@ type t =
     }
   | InterfaceDef of {
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
-      body: (Loc.t, Loc.t) Ast.Type.Object.t;
+      body: Loc.t * (Loc.t, Loc.t) Ast.Type.Object.t;
       extends: (Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t) list;
     }
   | ImportNamedDef of {
