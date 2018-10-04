@@ -1835,6 +1835,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
         mk_signature_verification_error (loc |> ALoc.of_loc) [
           text "Expected simple object key:"
         ]
+      | UnexpectedObjectSpread loc ->
+        mk_signature_verification_error (loc |> ALoc.of_loc) [
+          text "Unexpected object spread:"
+        ]
       | UnexpectedArraySpread loc ->
         mk_signature_verification_error (loc |> ALoc.of_loc) [
           text "Unexpected array spread:"

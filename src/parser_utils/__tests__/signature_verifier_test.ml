@@ -390,4 +390,8 @@ let tests = "signature_verifier" >::: [
     ["module.exports = [1, ...[2, 3], 4]"]
     ["Unexpected array spread @ (1, 21) to (1, 30)"];
 
+  "object_spread" >:: mk_signature_verifier_test
+    ["module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' }"]
+    ["Unexpected object spread @ (1, 27) to (1, 40)"];
+
 ]

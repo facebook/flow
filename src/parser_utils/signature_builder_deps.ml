@@ -15,6 +15,7 @@ module Error = struct
     | ExpectedAnnotation of Loc.t
     | InvalidTypeParamUse of Loc.t
     | UnexpectedObjectKey of Loc.t
+    | UnexpectedObjectSpread of Loc.t
     | UnexpectedArraySpread of Loc.t
     | EmptyArray of Loc.t
     | UnexpectedExpression of Loc.t * Ast_utils.ExpressionSort.t
@@ -30,6 +31,7 @@ module Error = struct
     | ExpectedAnnotation loc -> spf "Expected annotation @ %s" (Loc.to_string loc)
     | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (Loc.to_string loc)
     | UnexpectedObjectKey loc -> spf "Expected simple object key @ %s" (Loc.to_string loc)
+    | UnexpectedObjectSpread loc -> spf "Unexpected object spread @ %s" (Loc.to_string loc)
     | UnexpectedArraySpread loc -> spf "Unexpected array spread @ %s" (Loc.to_string loc)
     | EmptyArray loc -> spf "Cannot determine element type of empty array @ %s" (Loc.to_string loc)
     | UnexpectedExpression (loc, esort) ->

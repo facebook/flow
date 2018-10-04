@@ -514,17 +514,12 @@ module Eval(Env: EvalEnv) = struct
           let { generator; tparams; params; return; body; _ } = fn in
           Deps.join (deps, function_ tps generator tparams params return body)
     in
-    let object_spread_property tps p =
-      let open Ast.Expression.Object.SpreadProperty in
-      let _, { argument } = p in
-      literal_expr tps argument
-    in
     fun tps properties ->
       let open Ast.Expression.Object in
       List.fold_left (fun deps prop ->
         match prop with
           | Property p -> Deps.join (deps, object_property tps p)
-          | SpreadProperty p -> Deps.join (deps, object_spread_property tps p)
+          | SpreadProperty (loc, _p) -> Deps.top (Error.UnexpectedObjectSpread loc)
       ) Deps.bot properties
 
 end
