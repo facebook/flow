@@ -100,7 +100,10 @@ module T = struct
       }
 
   and function_params =
-    Loc.t * (Loc.t * type_) list * (Loc.t * (Loc.t * type_)) option
+    Loc.t * pattern list * (Loc.t * pattern) option
+
+  and pattern =
+      Loc.t * Loc.t Ast.Identifier.t option * bool (* optional *) * type_
 
   and class_t =
     | CLASS of {
@@ -155,11 +158,11 @@ module T = struct
       l
   end
 
-  let param_of_type (loc, t) =
+  let param_of_type (loc, name, optional, annot) =
     loc, {
-      Ast.Type.Function.Param.name = None;
-      annot = t;
-      optional = false;
+      Ast.Type.Function.Param.name;
+      annot;
+      optional;
     }
 
   let type_of_generic (loc, gt) =
@@ -508,10 +511,12 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
   and pattern patt =
     let open Ast.Pattern in
     match patt with
-      | loc, Identifier { Identifier.annot; _ } ->
-        loc, annotated_type (Kind.Annot_path.mk_annot annot)
-      | loc, Object { Object.annot; _ } -> loc, annotated_type (Kind.Annot_path.mk_annot annot)
-      | loc, Array { Array.annot; _ } -> loc, annotated_type (Kind.Annot_path.mk_annot annot)
+      | loc, Identifier { Identifier.annot; name; optional; } ->
+        loc, Some name, optional, annotated_type (Kind.Annot_path.mk_annot annot)
+      | loc, Object { Object.annot; _ } ->
+        loc, None, false, annotated_type (Kind.Annot_path.mk_annot annot)
+      | loc, Array { Array.annot; _ } ->
+        loc, None, false, annotated_type (Kind.Annot_path.mk_annot annot)
       | _, Assignment { Assignment.left; _ } -> pattern left
       | _loc (* TODO *), Expression _ -> raise (Error "pattern")
 

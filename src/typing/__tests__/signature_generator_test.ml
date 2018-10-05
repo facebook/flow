@@ -169,7 +169,7 @@ let tests = "signature_generator" >::: ([
   "module_exports_class_expression" >:: mk_signature_generator_test
     ["module.exports = class { m(x: number): number { return x; } }"]
     ["declare module.exports: typeof $1;"; (* outlining *)
-     "declare class $1 {m(number): number}"];
+     "declare class $1 {m(x: number): number}"];
 
   "module_exports_require" >:: mk_signature_generator_test
     ["module.exports = require('./foo')"]
@@ -204,7 +204,7 @@ let tests = "signature_generator" >::: ([
 
   "export_default_expression" >:: mk_signature_generator_test
     ["export default function(x: number): number { return x; }"]
-    ["declare export default (number) => number;"];
+    ["declare export default (x: number) => number;"];
 
   "declare_export_default_type" >:: mk_signature_generator_test
     ["declare export default (number) => number"]
@@ -403,7 +403,7 @@ let tests = "signature_generator" >::: ([
      "declare class B {+x: T, m(): void}";
      "export type {A};";
      "interface A {+x: U}";
-     "declare module.exports: (B) => A;"];
+     "declare module.exports: (x: B) => A;"];
 
   "class_statics" >:: mk_signature_generator_test
     ["export class C {";
@@ -420,5 +420,16 @@ let tests = "signature_generator" >::: ([
      "}"]
     ["export {C};";
      "declare class C {foo: () => void, static foo(): void}"];
+
+  "class_implements" >:: mk_signature_generator_test
+    ["interface I {";
+     "  foo(x?: string): void;";
+     "}";
+     "export class C implements I {";
+     "  foo(x?: string): void { }";
+     "}"]
+    ["interface I {foo(x?: string): void}";
+     "export {C};";
+     "declare class C {foo(x?: string): void}"]
 
 ] @ verified_signature_generator_tests)
