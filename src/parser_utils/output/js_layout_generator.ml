@@ -1350,8 +1350,8 @@ and class_base { Ast.Class.
   id; body; tparams; extends;
   implements; classDecorators
 } =
-  fuse [
-    decorators_list classDecorators;
+  let decorator_parts = decorators_list classDecorators in
+  let class_parts = [
     Atom "class";
     begin match id with
     | Some ident -> fuse [
@@ -1360,49 +1360,58 @@ and class_base { Ast.Class.
       ]
     | None -> Empty
     end;
-    begin
-      let class_extends = [
-        begin match extends with
-        | Some (loc, { Ast.Class.Extends.expr; targs }) -> Some (fuse [
-            Atom "extends"; space;
-            source_location_with_comments (loc, fuse [
-              expression expr;
-              option type_parameter_instantiation targs;
-            ])
+  ] in
+  let extends_parts =
+    let class_extends = [
+      begin match extends with
+      | Some (loc, { Ast.Class.Extends.expr; targs }) -> Some (fuse [
+          Atom "extends"; space;
+          source_location_with_comments (loc, fuse [
+            expression expr;
+            option type_parameter_instantiation targs;
           ])
-        | None -> None
-        end;
-        begin match implements with
-        | [] -> None
-        | _ -> Some (fuse [
-            Atom "implements"; space;
-            fuse_list
-              ~sep:(Atom ",")
-              (List.map
-                (fun (loc, { Ast.Class.Implements.id; targs }) ->
-                  source_location_with_comments (loc, fuse [
-                    identifier id;
-                    option type_parameter_instantiation targs;
-                  ])
-                )
-                implements
+        ])
+      | None -> None
+      end;
+      begin match implements with
+      | [] -> None
+      | _ -> Some (fuse [
+          Atom "implements"; space;
+          fuse_list
+            ~sep:(Atom ",")
+            (List.map
+              (fun (loc, { Ast.Class.Implements.id; targs }) ->
+                source_location_with_comments (loc, fuse [
+                  identifier id;
+                  option type_parameter_instantiation targs;
+                ])
               )
-          ])
-        end;
-      ] in
-      match deoptionalize class_extends with
-      | [] -> Empty
-      | items ->
-        list
-          ~wrap:(flat_space, Empty)
-          (* Ensure items are space separated when flat *)
-          ~sep:flat_ugly_space
-          ~trailing:false
-          ~inline:(false, true)
-          items
-    end;
-    pretty_space;
-    class_body body;
+              implements
+            )
+        ])
+      end;
+    ] in
+    match deoptionalize class_extends with
+    | [] -> []
+    | items ->
+      [
+        Layout.Indent (fuse [
+          line;
+          join line items;
+        ])
+      ]
+  in
+  let parts =
+    []
+    |> List.rev_append class_parts
+    |> List.rev_append extends_parts
+    |> List.cons pretty_space
+    |> List.cons (class_body body)
+    |> List.rev
+  in
+  group [
+    decorator_parts;
+    group parts;
   ]
 
 (* given a list of (loc * layout node) pairs, insert newlines between the nodes when necessary *)

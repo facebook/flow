@@ -1027,10 +1027,79 @@ let tests = "js_layout_generator" >::: [
       assert_statement_string ~ctxt "class a implements b<b>{}";
       assert_statement_string ~ctxt "class a implements b,c{}";
       assert_statement_string ~ctxt "class a implements b<b>,c<c>{}";
-      assert_statement_string ~ctxt "class a extends b implements c{}";
-      assert_statement_string ~ctxt ~pretty:true (
-        "class a extends b implements c {}"
-      );
+
+      begin
+        let ast = S.class_declaration
+          ~id:(Loc.none, "a")
+          ~super:(E.identifier "b")
+          ~implements:[Ast_builder.Classes.implements (Loc.none, "c")]
+          []
+        in
+        let layout = Js_layout_generator.statement ast in
+        assert_layout ~ctxt
+          L.(loc (group [
+            atom "class";
+            space;
+            id "a";
+            indent ((fused [
+              line;
+              atom "extends";
+              space;
+              loc (loc (id "b"));
+              line;
+              atom "implements";
+              space;
+              loc (id "c");
+            ]));
+            pretty_space;
+            atom "{}";
+          ]))
+          layout;
+        assert_output ~ctxt
+          "class a extends b implements c{}"
+          layout;
+        assert_output ~ctxt ~pretty:true
+          "class a extends b implements c {}"
+          layout;
+      end;
+
+      begin
+        let x35 = String.make 35 'x' in
+        let y29 = String.make 29 'y' in
+        let c2 = S.class_declaration ~id:(Loc.none, x35) ~super:(E.identifier y29) [] in
+        let ast = S.block [c2] in
+        let layout = Js_layout_generator.statement ast in
+        assert_layout ~ctxt
+          L.(loc (loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+            fused [
+              atom "{";
+              sequence ~break:Layout.Break_if_pretty [
+                loc (group [
+                  atom "class";
+                  space;
+                  id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+                  indent ((fused [
+                    line;
+                    atom "extends";
+                    space;
+                    loc (loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"));
+                  ]));
+                  pretty_space;
+                  atom "{}";
+                ]);
+              ];
+              atom "}";
+            ];
+          ])))
+          layout;
+        assert_output ~ctxt
+          ("{class " ^ x35 ^ " extends " ^ y29 ^ "{}}")
+          layout;
+        assert_output ~ctxt ~pretty:true
+          ("{\n  class " ^ x35 ^ "\n    extends " ^ y29 ^ " {}" ^ "\n}")
+          layout;
+      end;
+
       assert_statement_string ~ctxt ~pretty:true (
         "class a\n  extends " ^ long_b ^ "\n  implements c {}"
       );

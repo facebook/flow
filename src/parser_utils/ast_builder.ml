@@ -85,8 +85,11 @@ end
 module Classes = struct
   open Ast.Class
 
+  let implements ?targs id =
+    Loc.none, { Implements.id; targs; }
+
   (* TODO: add method_ and property *)
-  let make ?super ?id elements =
+  let make ?super ?(implements = []) ?id elements =
     let extends = match super with
     | None -> None
     | Some expr -> Some (Loc.none, { Extends.expr; targs = None })
@@ -95,7 +98,7 @@ module Classes = struct
       body = Loc.none, { Body.body = elements };
       tparams = None;
       extends;
-      implements = [];
+      implements;
       classDecorators = [];
     }
 end
@@ -174,8 +177,8 @@ module Statements = struct
     let fn = Functions.make ~params ~id:(Some id) ?body ~expression:false () in
     loc, FunctionDeclaration fn
 
-  let class_declaration ?super ?id elements =
-    Loc.none, ClassDeclaration (Classes.make ?super ?id elements)
+  let class_declaration ?super ?implements ?id elements =
+    Loc.none, ClassDeclaration (Classes.make ?super ?implements ?id elements)
 
   let if_ test consequent alternate =
     Loc.none, If { If.test; consequent; alternate }
