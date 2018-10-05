@@ -405,6 +405,11 @@ let tests_data = [
   ["Unexpected array spread @ (1, 21) to (1, 30)"],
   [];
 
+  name "array_hole",
+  ["module.exports = [,]"],
+  ["Unexpected array hole @ (1, 17) to (1, 20)"],
+  [];
+
   name "object_spread",
   ["module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' }"],
   ["Unexpected object spread @ (1, 27) to (1, 40)"],
@@ -438,7 +443,7 @@ let tests_data = [
   name "named_function_expression",
   ["module.exports = function foo() { }"],
   [],
-  []
+  [];
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =

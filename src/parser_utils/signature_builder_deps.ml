@@ -17,6 +17,7 @@ module Error = struct
     | UnexpectedObjectKey of Loc.t
     | UnexpectedObjectSpread of Loc.t
     | UnexpectedArraySpread of Loc.t
+    | UnexpectedArrayHole of Loc.t
     | EmptyArray of Loc.t
     | EmptyObject of Loc.t
     | UnexpectedExpression of Loc.t * Ast_utils.ExpressionSort.t
@@ -34,6 +35,7 @@ module Error = struct
     | UnexpectedObjectKey loc -> spf "Expected simple object key @ %s" (Loc.to_string loc)
     | UnexpectedObjectSpread loc -> spf "Unexpected object spread @ %s" (Loc.to_string loc)
     | UnexpectedArraySpread loc -> spf "Unexpected array spread @ %s" (Loc.to_string loc)
+    | UnexpectedArrayHole loc -> spf "Unexpected array hole @ %s" (Loc.to_string loc)
     | EmptyArray loc -> spf "Cannot determine element type of empty array @ %s" (Loc.to_string loc)
     | EmptyObject loc -> spf "Cannot determine types of initialized properties of empty object @ %s" (Loc.to_string loc)
     | UnexpectedExpression (loc, esort) ->

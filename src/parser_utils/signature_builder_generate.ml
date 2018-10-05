@@ -783,7 +783,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     let array_element expr_or_spread_opt =
       let open Ast.Expression in
       match expr_or_spread_opt with
-        | None -> T.AInit (T.Void)
+        | None -> raise (Error "hole element") (* TODO: verification error *)
         | Some (Expression expr) -> T.AInit (literal_expr expr)
         | Some (Spread _spread) -> raise (Error "spread element") (* TODO: verification error *)
     in

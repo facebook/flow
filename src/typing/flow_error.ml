@@ -1843,6 +1843,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
         mk_signature_verification_error (loc |> ALoc.of_loc) [
           text "Unexpected array spread:"
         ]
+      | UnexpectedArrayHole loc ->
+        mk_signature_verification_error (loc |> ALoc.of_loc) [
+          text "Unexpected array hole:"
+        ]
       | EmptyArray loc ->
         mk_signature_verification_error (loc |> ALoc.of_loc) [
           text "Cannot determine element type of empty array, try using a type cast."

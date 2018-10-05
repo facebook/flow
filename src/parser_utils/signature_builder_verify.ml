@@ -283,7 +283,7 @@ module Eval(Env: EvalEnv) = struct
         let { elements } = stuff in
         begin match elements with
           | [] -> Deps.top (Error.EmptyArray loc)
-          | e::es -> array_ tps (e, es)
+          | e::es -> array_ tps loc (e, es)
         end
       | _, TypeCast stuff ->
         let open Ast.Expression.TypeCast in
@@ -476,15 +476,15 @@ module Eval(Env: EvalEnv) = struct
       List.fold_left (Deps.reduce_join (implement tps)) deps implements
 
   and array_ =
-    let array_element tps expr_or_spread_opt =
+    let array_element tps loc expr_or_spread_opt =
       let open Ast.Expression in
       match expr_or_spread_opt with
-        | None -> Deps.bot
+        | None -> Deps.top (Error.UnexpectedArrayHole loc)
         | Some (Expression expr) -> literal_expr tps expr
         | Some (Spread (loc, _spread)) -> Deps.top (Error.UnexpectedArraySpread loc)
     in
-    fun tps elements ->
-      Nel.fold_left (Deps.reduce_join (array_element tps)) Deps.bot elements
+    fun tps loc elements ->
+      Nel.fold_left (Deps.reduce_join (array_element tps loc)) Deps.bot elements
 
   and implement tps implement =
     let open Ast.Class.Implements in
