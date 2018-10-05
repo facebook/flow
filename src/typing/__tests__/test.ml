@@ -9,6 +9,7 @@ open OUnit2
 
 let tests = "typing" >::: [
   Typed_ast_test.tests;
+  Signature_generator_test.tests;
 ]
 
 let () = run_test_tt_main tests

@@ -12,6 +12,7 @@ open Flow_ast_visitor
 module Entry = Signature_builder_entry
 module Env = Signature_builder_env
 module V = Signature_builder_verify.Verifier
+module G = Signature_builder_generate.Generator
 
 module Signature = struct
   type t = Env.t * File_sig.exports_info File_sig.t'
@@ -229,6 +230,17 @@ module Signature = struct
       let ignore_static_propTypes = ignore_static_propTypes
     end) in
     Verify.check env file_sig @@ Verify.exports file_sig
+
+  let verify_and_generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) (env, file_sig) program =
+    let errors, _, env = verify ~prevent_munge ~ignore_static_propTypes (env, file_sig) in
+    if Signature_builder_deps.ErrorSet.is_empty errors then
+      let module Generate = G(struct
+        let prevent_munge = prevent_munge
+        let ignore_static_propTypes = ignore_static_propTypes
+      end) in
+      Ok (Generate.make env file_sig program)
+    else
+      Error errors
 end
 
 class type_hoister = object(this)
