@@ -17,7 +17,12 @@ module Error = Deps.Error
 module Dep = Deps.Dep
 
 let loc_TODO = Loc.none
-let loc_WILDCARD = Loc.none
+
+(* The generator creates new AST nodes, some of whose locations do not map back very accurately to
+   original locations. While these are relatively unimportant, in that they should never make their
+   way into type errors, making them Loc.none is risky because they would make Flow crash in the
+   event of unforeseen bugs. Instead we reuse some nearby locations as approximations. *)
+let approx_loc loc = loc
 
 module T = struct
   type type_ = (Loc.t, Loc.t) Ast.Type.t
@@ -392,7 +397,7 @@ module T = struct
       let loc, x = source in
       let require = decl_loc, Ast.Expression.Call {
         Ast.Expression.Call.callee =
-          loc_WILDCARD, Ast.Expression.Identifier (loc_WILDCARD, "require");
+          approx_loc decl_loc, Ast.Expression.Identifier (approx_loc decl_loc, "require");
         targs = None;
         arguments = [Ast.Expression.Expression (loc, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.String x;
@@ -1019,7 +1024,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
               (export_loc, Ast.Statement.ExportNamedDeclaration {
                 Ast.Statement.ExportNamedDeclaration.declaration = None;
                 specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-                  loc_WILDCARD, {
+                  approx_loc export_loc, {
                     Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = id;
                     exported = Some (default_loc, n);
                   }
@@ -1039,7 +1044,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           (export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              loc_WILDCARD, {
+              approx_loc export_loc, {
                 Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
                 exported = None;
               }
@@ -1053,7 +1058,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
               (export_loc, Ast.Statement.ExportNamedDeclaration {
                 Ast.Statement.ExportNamedDeclaration.declaration = None;
                 specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-                  loc_WILDCARD, {
+                  approx_loc export_loc, {
                     Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = id;
                     exported = Some (default_loc, n);
                   }
@@ -1075,7 +1080,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           (export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              loc_WILDCARD, {
+              approx_loc export_loc, {
                 Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
                 exported = None;
               }
@@ -1087,7 +1092,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           (export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              loc_WILDCARD, {
+              approx_loc export_loc, {
                 Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = name;
                 exported = if (snd name) = n then None else Some (loc, n);
               }
@@ -1130,7 +1135,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              loc_WILDCARD, {
+              approx_loc export_loc, {
                 Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
                 exported = None;
               }
@@ -1142,7 +1147,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              loc_WILDCARD, {
+              approx_loc export_loc, {
                 Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
                 exported = None;
               }
@@ -1154,7 +1159,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              loc_WILDCARD, {
+              approx_loc export_loc, {
                 Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = name;
                 exported = if (snd name) = n then None else Some (loc, n);
               }
