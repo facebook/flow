@@ -21,14 +21,18 @@ let pretty_print program =
 let print_ast program =
   Hh_json.json_to_string ~pretty:true @@ Translate.program program
 
+let verify_and_generate ?prevent_munge ?ignore_static_propTypes contents =
+  let contents = String.concat "\n" contents in
+  let program = Signature_verifier_test.parse contents in
+  let signature = match Signature_builder.program program with
+    | Ok signature -> signature
+    | Error _ -> failwith "Signature builder failure!" in
+  Signature_builder.Signature.verify_and_generate ?prevent_munge ?ignore_static_propTypes
+    signature program
+
 let mk_signature_generator_test contents expected_msgs =
   begin fun ctxt ->
-    let contents = String.concat "\n" contents in
-    let program = Signature_verifier_test.parse contents in
-    let signature = match Signature_builder.program program with
-      | Ok signature -> signature
-      | Error _ -> failwith "Signature builder failure!" in
-    let msgs = match Signature_builder.Signature.verify_and_generate signature program with
+    let msgs = match verify_and_generate contents with
       | Ok program ->
         String.split_on_char '\n' @@ pretty_print program
       | Error errors ->
@@ -43,7 +47,36 @@ let mk_signature_generator_test contents expected_msgs =
       expected_msgs msgs
   end
 
-let tests = "signature_generator" >::: [
+let mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes contents =
+  begin fun ctxt ->
+    let msgs = match verify_and_generate ?prevent_munge ?ignore_static_propTypes contents with
+      | Ok _program -> []
+      | Error errors ->
+        List.map Signature_builder_deps.Error.to_string @@
+          Signature_builder_deps.ErrorSet.elements errors
+    in
+    let printer v = String.concat "\n" v in
+    assert_equal ~ctxt
+      ~cmp:(Signature_verifier_test.eq printer)
+      ~printer
+      ~msg:"Results don't match!"
+      [] msgs
+  end
+
+let verified_signature_generator_tests =
+  List.fold_left (fun acc -> fun (
+    (prevent_munge, ignore_static_propTypes, name),
+    contents,
+    error_msgs,
+    _other_msgs) ->
+    if error_msgs = [] then
+      let name = "verified_" ^ name in
+      (name >:: mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes
+         contents) :: acc
+    else acc
+  ) [] Signature_verifier_test.tests_data
+
+let tests = "signature_generator" >::: ([
   "dead_type" >:: mk_signature_generator_test
     ["type U = number"]
     [];
@@ -371,4 +404,4 @@ let tests = "signature_generator" >::: [
      "export type {A};";
      "interface A {+x: U}";
      "declare module.exports: (B) => A;"];
-]
+] @ verified_signature_generator_tests)
