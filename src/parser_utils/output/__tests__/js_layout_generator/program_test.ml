@@ -32,7 +32,7 @@ let tests = [
           atom ";";
         ]);
         fused [
-          pretty_newline;
+          pretty_hardline;
           loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
             loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
               atom "var";

@@ -55,10 +55,14 @@ let flat_space = IfBreak (Empty, space)
 let flat_pretty_space = IfBreak (Empty, pretty_space)
 let flat_ugly_space = IfBreak (Empty, ugly_space)
 
+let hardline = Newline
 (* Force a line break (`\n`) in pretty mode *)
-let pretty_newline = IfPretty (Newline, Empty)
+let pretty_hardline = IfPretty (Newline, Empty)
+
 (* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise a space *)
-let line = IfBreak (Newline, pretty_space)
+let line = IfBreak (Newline, space)
+(* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise a pretty space *)
+let pretty_line = IfBreak (Newline, pretty_space)
 (* Inserts a line break (`\n`) if the code doesn't fit on one line, otherwise nothing *)
 let softline = IfBreak (Newline, Empty)
 
@@ -67,6 +71,16 @@ let if_pretty if_ else_ =
 
 let if_break if_ else_ =
   if if_ = Empty && else_ = Empty then Empty else IfBreak (if_, else_)
+
+let group items =
+  let items = List.rev (List.fold_left (fun acc -> function
+    | Empty -> acc
+    | Concat more -> List.rev_append more acc
+    | item -> item::acc
+  ) [] items) in
+  match items with
+  | [Group _ as hd] -> hd
+  | _ -> Group items
 
 (* Fuse a list of items together, no spaces or breaks will be inserted *)
 let fuse items =

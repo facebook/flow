@@ -633,7 +633,7 @@ let tests = "js_layout_generator" >::: [
           pretty_space;
           atom "&&";
           indent ((fused [
-            Layout.IfBreak (Layout.Newline, pretty_space);
+            Layout.IfBreak (hardline, pretty_space);
             loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
           ]));
         ]))
@@ -1238,7 +1238,7 @@ let tests = "js_layout_generator" >::: [
           sequence ~break:Layout.Break_if_pretty [
             fused [
               loc ~loc:b_loc (loc (fused [atom "<"; id "B"; pretty_space; atom "/>"]));
-              Layout.Newline;
+              hardline;
               loc ~loc:c_loc (loc (fused [atom "<"; id "C"; pretty_space; atom "/>"]));
             ]
           ];
@@ -1685,7 +1685,7 @@ let tests = "js_layout_generator" >::: [
           sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
             loc (fused [loc (id "x"); atom ";"]);
           ];
-          Layout.Newline;
+          hardline;
           atom "/* @artifact abc123 */";
         ]))
       in

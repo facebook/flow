@@ -91,7 +91,7 @@ let tests = [
               ]));
             ];
             fused [
-              pretty_newline;
+              pretty_hardline;
               prop2_layout;
               Layout.IfBreak ((atom ","), (fused [
                 atom ",";
@@ -99,7 +99,7 @@ let tests = [
               ]));
             ];
             fused [
-              pretty_newline;
+              pretty_hardline;
               prop3_layout;
               Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
             ];

@@ -49,6 +49,9 @@ module Layout_builder = struct
   let space =
     Atom " "
 
+  let hardline =
+    Newline
+
   let pretty_space =
     IfPretty (space, Empty)
 
@@ -58,10 +61,13 @@ module Layout_builder = struct
   let flat_pretty_space =
     IfBreak (Empty, IfPretty (space, Empty))
 
-  let pretty_newline =
+  let pretty_hardline =
     IfPretty (Newline, Empty)
 
   let line =
+    IfBreak (Newline, space)
+
+  let pretty_line =
     IfBreak (Newline, pretty_space)
 
   let softline =
@@ -146,7 +152,7 @@ module Layout_builder = struct
       phrase "id%s %S" loc str
 
     | IfPretty (Atom " ", Empty) -> word "pretty_space"
-    | IfPretty (Newline, Empty) -> word "pretty_newline"
+    | IfPretty (Newline, Empty) -> word "pretty_hardline"
     | IfPretty (Empty, (Atom " ")) -> word "ugly_space"
 
     | IfPretty (left, right) ->
@@ -154,7 +160,8 @@ module Layout_builder = struct
 
     | IfBreak (Empty, IfPretty (Atom " ", Empty)) -> word "flat_pretty_space"
 
-    | IfBreak (Newline, IfPretty (Atom " ", Empty)) -> word "line"
+    | IfBreak (Newline, Atom " ") -> word "line"
+    | IfBreak (Newline, IfPretty (Atom " ", Empty)) -> word "pretty_line"
     | IfBreak (Newline, Empty) -> word "softline"
 
     | IfBreak (left, right) ->
@@ -164,7 +171,7 @@ module Layout_builder = struct
       phrase "indent (%s)" (helper ~i node)
 
     | Newline ->
-      word "Newline"
+      word "hardline"
 
     | Empty ->
       word "empty"

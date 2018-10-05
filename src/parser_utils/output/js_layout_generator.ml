@@ -405,8 +405,8 @@ and comment (loc, comment) =
   let module C = Ast.Comment in
   source_location_with_comments (loc, match comment with
   | C.Block txt -> fuse [
-      Atom "/*"; pretty_newline;
-      Atom txt; pretty_newline;
+      Atom "/*"; pretty_hardline;
+      Atom txt; pretty_hardline;
       Atom "*/";
     ]
   | C.Line txt -> fuse [
@@ -790,7 +790,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         left;
         pretty_space;
         operator;
-        Indent (fuse [line; right])
+        Indent (fuse [pretty_line; right])
       ]
     | E.Member m -> member ~precedence ~ctxt m
     | E.OptionalMember { E.OptionalMember.member = m; optional } ->
@@ -1416,7 +1416,7 @@ and list_with_newlines (nodes: (Loc.t * Layout.layout_node) list) =
 
     (* Lines are offset by more than one, let's add a line break *)
     | Some { Loc._end; _ }, node when _end.line + 1 < loc.start.line ->
-      (fuse [pretty_newline; node])::acc
+      (fuse [pretty_hardline; node])::acc
 
     (* Hasn't matched, just add the node *)
     | _, node -> node::acc
@@ -1455,12 +1455,12 @@ and object_properties_with_newlines properties =
             ((object_property p)::acc, Some (has_function_decl p))
           | (Some true, p) ->
             (
-              (fuse [pretty_newline; object_property p])::acc,
+              (fuse [pretty_hardline; object_property p])::acc,
               Some (has_function_decl p)
             )
           | (_, p) when has_function_decl p ->
             (
-              (fuse [pretty_newline; object_property p])::acc,
+              (fuse [pretty_hardline; object_property p])::acc,
               Some true
             )
           | _ -> ((object_property p)::acc, Some false)

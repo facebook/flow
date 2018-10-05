@@ -20,9 +20,9 @@ let tests = [
       assert_layout ~ctxt
         L.(loc (fused [
           atom "/*";
-          pretty_newline;
+          pretty_hardline;
           atom "test";
-          pretty_newline;
+          pretty_hardline;
           atom "*/";
         ]))
         layout;
