@@ -256,6 +256,9 @@ module Expressions = struct
   let object_property_key_literal_from_string (k: string) =
     Object.Property.Literal (Loc.none, Literals.string k)
 
+  let object_property_computed_key k =
+    Object.Property.Computed k
+
   let object_method ?body ?(params=[]) ?(generator=false) ?(async=false) key =
     let fn = Functions.make ~id:None ~expression:true ~params ~generator ~async ?body () in
     let prop = Object.Property.Method { key; value = (Loc.none, fn) } in

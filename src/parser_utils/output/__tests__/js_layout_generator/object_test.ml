@@ -161,8 +161,37 @@ let tests = [
 
   "object_property_key_is_computed" >:: begin fun ctxt ->
     let b80 = String.make 80 'b' in
-    let ast = Ast_builder.expression_of_string ("{["^b80^"]: 123}") in
+    let ast = E.object_ [
+      E.object_property
+        (E.object_property_computed_key (E.identifier b80))
+        (E.literal (Ast_builder.Literals.number 123. "123"));
+    ] in
     let layout = Js_layout_generator.expression ast in
+    assert_layout ~ctxt
+      L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+        fused [
+          atom "{";
+          flat_pretty_space;
+          sequence ~break:Layout.Break_if_needed [
+            fused [
+              loc (fused [
+                atom "[";
+                sequence ~break:Layout.Break_if_needed [
+                  loc (id b80);
+                ];
+                atom "]";
+                atom ":";
+                pretty_space;
+                loc (atom "123");
+              ]);
+              Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+            ];
+          ];
+          flat_pretty_space;
+          atom "}";
+        ];
+      ]))
+      layout;
     assert_output ~ctxt
       ("{["^b80^"]:123}")
       layout;
@@ -171,8 +200,47 @@ let tests = [
       layout;
 
     let b40 = String.make 40 'b' in
-    let ast = Ast_builder.expression_of_string ("{["^b40^"+"^b40^"]: 123}") in
+    let ast = E.object_ [
+      E.object_property
+        (E.object_property_computed_key (
+          E.binary ~op:Flow_ast.Expression.Binary.Plus
+            (E.identifier b40)
+            (E.identifier b40)
+        ))
+        (E.literal (Ast_builder.Literals.number 123. "123"));
+    ] in
     let layout = Js_layout_generator.expression ast in
+    assert_layout ~ctxt
+      L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+        fused [
+          atom "{";
+          flat_pretty_space;
+          sequence ~break:Layout.Break_if_needed [
+            fused [
+              loc (fused [
+                atom "[";
+                sequence ~break:Layout.Break_if_needed [
+                  loc (fused [
+                    loc (id b40);
+                    pretty_space;
+                    atom "+";
+                    pretty_space;
+                    loc (id b40);
+                  ]);
+                ];
+                atom "]";
+                atom ":";
+                pretty_space;
+                loc (atom "123");
+              ]);
+              Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+            ];
+          ];
+          flat_pretty_space;
+          atom "}";
+        ];
+      ]))
+      layout;
     assert_output ~ctxt
       ("{["^b40^"+"^b40^"]:123}")
       layout;
