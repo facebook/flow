@@ -680,10 +680,17 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         )
     | E.Object { E.Object.properties } ->
       if properties = [] then Atom "{}" else
-      list
-        ~wrap:(Concat [Atom "{"; flat_pretty_space], Concat [flat_pretty_space; Atom "}"])
-        ~sep:(Atom ",")
-        (object_properties_with_newlines properties)
+      let properties = object_properties_with_newlines properties in
+      group [
+        Atom "{";
+        Layout.Indent (fuse [
+          pretty_line;
+          join (fuse [Atom ","; pretty_line]) properties;
+          if_break (if_pretty (Atom ",") Layout.Empty) Layout.Empty;
+        ]);
+        pretty_line;
+        Atom "}";
+      ]
     | E.Sequence { E.Sequence.expressions } ->
       (* to get an AST like `x, (y, z)`, then there must've been parens
          around the right side. we can force that by bumping the minimum
@@ -1485,7 +1492,11 @@ and object_property_key key =
   | O.Property.Computed expr ->
     fuse [
       Atom "[";
-      Sequence ({ seq with break=Break_if_needed }, [expression expr]);
+      Layout.Indent (fuse [
+        pretty_line;
+        expression expr;
+      ]);
+      pretty_line;
       Atom "]";
     ]
   | O.Property.PrivateName _ ->
@@ -1498,7 +1509,7 @@ and object_property property =
     source_location_with_comments (loc,
       let s_key = object_property_key key in
       if shorthand then s_key
-      else fuse [
+      else group [
         s_key; Atom ":"; pretty_space;
         expression_with_parens ~precedence:min_precedence ~ctxt:normal_context value;
       ]

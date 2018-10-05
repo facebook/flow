@@ -16,23 +16,18 @@ module L = Layout_builder
 let expected_object2_layout prop1 prop2 =
   let prop1_layout = Js_layout_generator.object_property prop1 in
   let prop2_layout = Js_layout_generator.object_property prop2 in
-  L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-    fused [
-      atom "{";
-      flat_pretty_space;
-      sequence ~break:Layout.Break_if_needed [
-        fused [
-          prop1_layout;
-          Layout.IfBreak ((atom ","), (fused [atom ","; pretty_space]));
-        ];
-        fused [
-          prop2_layout;
-          Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
-        ];
-      ];
-      flat_pretty_space;
-      atom "}";
-    ];
+  L.(loc (group [
+    atom "{";
+    indent (fused [
+      pretty_line;
+      prop1_layout;
+      atom ",";
+      pretty_line;
+      prop2_layout;
+      Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+    ]);
+    pretty_line;
+    atom "}";
   ]))
 
 let tests = [
@@ -78,35 +73,23 @@ let tests = [
     let prop2_layout = Js_layout_generator.object_property prop2 in
     let prop3_layout = Js_layout_generator.object_property prop3 in
     assert_layout ~ctxt
-      L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-        fused [
-          atom "{";
-          flat_pretty_space;
-          sequence ~break:Layout.Break_if_needed [
-            fused [
-              prop1_layout;
-              Layout.IfBreak ((atom ","), (fused [
-                atom ",";
-                pretty_space;
-              ]));
-            ];
-            fused [
-              pretty_hardline;
-              prop2_layout;
-              Layout.IfBreak ((atom ","), (fused [
-                atom ",";
-                pretty_space;
-              ]));
-            ];
-            fused [
-              pretty_hardline;
-              prop3_layout;
-              Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
-            ];
-          ];
-          flat_pretty_space;
-          atom "}";
-        ];
+      L.(loc (group [
+        atom "{";
+        indent ((fused [
+          pretty_line;
+          prop1_layout;
+          atom ",";
+          pretty_line;
+          pretty_hardline;
+          prop2_layout;
+          atom ",";
+          pretty_line;
+          pretty_hardline;
+          prop3_layout;
+          Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+        ]));
+        pretty_line;
+        atom "}";
       ]))
       layout;
     assert_output ~ctxt "{foo:x,bar:function(){},baz:y}" layout;
@@ -168,29 +151,27 @@ let tests = [
     ] in
     let layout = Js_layout_generator.expression ast in
     assert_layout ~ctxt
-      L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-        fused [
-          atom "{";
-          flat_pretty_space;
-          sequence ~break:Layout.Break_if_needed [
-            fused [
-              loc (fused [
-                atom "[";
-                sequence ~break:Layout.Break_if_needed [
-                  loc (id b80);
-                ];
-                atom "]";
-                atom ":";
-                pretty_space;
-                loc (atom "123");
-              ]);
-              Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
-            ];
-          ];
-          flat_pretty_space;
-          atom "}";
-        ];
-      ]))
+      L.(loc (group [
+        atom "{";
+        indent ((fused [
+          pretty_line;
+          loc (group [
+            atom "[";
+            indent ((fused [
+              pretty_line;
+              loc (id b80);
+            ]));
+            pretty_line;
+            atom "]";
+            atom ":";
+            pretty_space;
+            loc (atom "123");
+          ]);
+          Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+        ]));
+        pretty_line;
+        atom "}";
+        ]))
       layout;
     assert_output ~ctxt
       ("{["^b80^"]:123}")
@@ -211,34 +192,32 @@ let tests = [
     ] in
     let layout = Js_layout_generator.expression ast in
     assert_layout ~ctxt
-      L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-        fused [
-          atom "{";
-          flat_pretty_space;
-          sequence ~break:Layout.Break_if_needed [
-            fused [
+      L.(loc (group [
+        atom "{";
+        indent ((fused [
+          pretty_line;
+          loc (group [
+            atom "[";
+            indent ((fused [
+              pretty_line;
               loc (fused [
-                atom "[";
-                sequence ~break:Layout.Break_if_needed [
-                  loc (fused [
-                    loc (id b40);
-                    pretty_space;
-                    atom "+";
-                    pretty_space;
-                    loc (id b40);
-                  ]);
-                ];
-                atom "]";
-                atom ":";
+                loc (id b40);
                 pretty_space;
-                loc (atom "123");
+                atom "+";
+                pretty_space;
+                loc (id b40);
               ]);
-              Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
-            ];
-          ];
-          flat_pretty_space;
-          atom "}";
-        ];
+            ]));
+            pretty_line;
+            atom "]";
+            atom ":";
+            pretty_space;
+            loc (atom "123");
+          ]);
+          Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
+        ]));
+        pretty_line;
+        atom "}";
       ]))
       layout;
     assert_output ~ctxt
