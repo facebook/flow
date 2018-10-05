@@ -8,18 +8,6 @@
 
 open OUnit2
 
-let parse contents =
-  let parse_options = Some { Parser_env.default_parse_options with
-    Parser_env.esproposal_class_instance_fields = true;
-    Parser_env.esproposal_class_static_fields = true;
-    Parser_env.esproposal_export_star_as = true;
-  } in
-  let ast, _errors = Parser_flow.program ~parse_options contents in
-  ast
-
-let eq printer v1 v2 =
-  printer v1 = printer v2
-
 module Translate = Estree_translator.Translate (Json_of_estree) (struct
   (* TODO: make these configurable via CLI flags *)
   let include_comments = true
@@ -36,7 +24,7 @@ let print_ast program =
 let mk_signature_generator_test contents expected_msgs =
   begin fun ctxt ->
     let contents = String.concat "\n" contents in
-    let program = parse contents in
+    let program = Signature_verifier_test.parse contents in
     let signature = match Signature_builder.program program with
       | Ok signature -> signature
       | Error _ -> failwith "Signature builder failure!" in
@@ -49,7 +37,7 @@ let mk_signature_generator_test contents expected_msgs =
     in
     let printer v = "\n" ^ (String.concat "\n" v) in
     assert_equal ~ctxt
-      ~cmp:(eq printer)
+      ~cmp:(Signature_verifier_test.eq printer)
       ~printer
       ~msg:"Results don't match!"
       expected_msgs msgs

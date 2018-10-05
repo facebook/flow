@@ -7,7 +7,18 @@
 
 
 open OUnit2
-open Test_utils
+
+let parse contents =
+  let parse_options = Some { Parser_env.default_parse_options with
+    Parser_env.esproposal_class_instance_fields = true;
+    Parser_env.esproposal_class_static_fields = true;
+    Parser_env.esproposal_export_star_as = true;
+  } in
+  let ast, _errors = Parser_flow.program ~parse_options contents in
+  ast
+
+let eq printer v1 v2 =
+  printer v1 = printer v2
 
 let name ?prevent_munge ?ignore_static_propTypes x =
   prevent_munge, ignore_static_propTypes, x
