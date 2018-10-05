@@ -1253,22 +1253,21 @@ and block (loc, { Ast.Statement.Block.body }) =
 
 and decorators_list decorators =
   if List.length decorators > 0 then
-    list
-      ~wrap:(Empty, flat_ugly_space)
-      ~inline:(true, false)
-      ~break:Break_if_pretty
-      ~indent:0
-      (List.map
-        (fun (_, { Ast.Class.Decorator.expression = expr }) -> fuse [
-          Atom "@";
-          begin
-            (* Magic number, after `Call` but before `Update` *)
-            let precedence = 18 in
-            expression_with_parens ~precedence ~ctxt:normal_context expr;
-          end;
-        ])
-        decorators
-      )
+    let decorators = List.map
+      (fun (_, { Ast.Class.Decorator.expression = expr }) -> fuse [
+        Atom "@";
+        begin
+          (* Magic number, after `Call` but before `Update` *)
+          let precedence = 18 in
+          expression_with_parens ~precedence ~ctxt:normal_context expr;
+        end;
+      ])
+      decorators
+    in
+    group [
+      join pretty_line decorators;
+      if_pretty hardline space;
+    ]
   else Empty
 
 and class_method (
