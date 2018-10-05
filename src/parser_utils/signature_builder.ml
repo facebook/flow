@@ -238,7 +238,12 @@ module Signature = struct
         let prevent_munge = prevent_munge
         let ignore_static_propTypes = ignore_static_propTypes
       end) in
-      Ok (Generate.make env file_sig program)
+      try Ok (Generate.make env file_sig program)
+      with _ ->
+        let program_loc, _, _ = program in
+        Error (Signature_builder_deps.ErrorSet.singleton (
+          Signature_builder_deps.Error.TODO ("signature generation failed", program_loc)
+        ))
     else
       Error errors
 end
