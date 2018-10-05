@@ -19,10 +19,6 @@ module Signature = struct
   let add_env env entry =
     Env.add entry env
 
-  let add_env_opt env = function
-    | None, _ -> env
-    | Some id, kind -> add_env env (id, kind)
-
   let add_env_list env entries =
     Env.push entries env
 
@@ -30,10 +26,10 @@ module Signature = struct
     add_env_list env (Entry.variable_declaration loc variable_declaration)
 
   let add_function_declaration env loc function_declaration =
-    add_env_opt env (Entry.function_declaration loc function_declaration)
+    add_env env (Entry.function_declaration loc function_declaration)
 
   let add_class env loc class_ =
-    add_env_opt env (Entry.class_ loc class_)
+    add_env env (Entry.class_ loc class_)
 
   let add_declare_variable env loc declare_variable =
     add_env env (Entry.declare_variable loc declare_variable)
@@ -385,7 +381,7 @@ class type_hoister = object(this)
     decl
 
   method! function_declaration loc (expr: (Loc.t, Loc.t) Ast.Function.t) =
-    this#add_binding_opt (Entry.function_declaration loc expr);
+    this#add_binding (Entry.function_declaration loc expr);
     expr
 
   method! declare_function loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) =
@@ -393,7 +389,7 @@ class type_hoister = object(this)
     decl
 
   method! class_ loc (cls: (Loc.t, Loc.t) Ast.Class.t) =
-    this#add_binding_opt (Entry.class_ loc cls);
+    this#add_binding (Entry.class_ loc cls);
     cls
 
   method! declare_class loc (decl: (Loc.t, Loc.t) Ast.Statement.DeclareClass.t) =

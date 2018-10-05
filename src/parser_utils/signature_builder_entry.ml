@@ -62,7 +62,7 @@ let variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclara
 let function_declaration loc function_declaration =
   let open Ast.Function in
   let { id; generator; tparams; params; return; body; _ } = function_declaration in
-  id, (loc, Kind.FunctionDef { generator; tparams; params; return; body })
+  Option.value_exn id, (loc, Kind.FunctionDef { generator; tparams; params; return; body })
 
 let class_ loc class_ =
   let open Ast.Class in
@@ -73,7 +73,7 @@ let class_ loc class_ =
   let super, super_targs = match extends with
   | None -> None, None
   | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
-  id, (loc, Kind.ClassDef { tparams; body; super; super_targs; implements })
+  Option.value_exn id, (loc, Kind.ClassDef { tparams; body; super; super_targs; implements })
 
 let declare_variable loc declare_variable =
   let open Ast.Statement.DeclareVariable in

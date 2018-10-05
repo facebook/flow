@@ -596,57 +596,14 @@ module Verifier(Env: EvalEnv) = struct
     eval_entry (Entry.interface loc interface)
 
   let eval_function_declaration loc function_declaration =
-    let _, kind = Entry.function_declaration loc function_declaration in
-    eval loc kind
+    eval_entry (Entry.function_declaration loc function_declaration)
 
   let eval_class loc class_ =
-    let _, kind = Entry.class_ loc class_ in
-    eval loc kind
+    eval_entry (Entry.class_ loc class_)
 
   let eval_variable_declaration loc variable_declaration =
     List.fold_left (Deps.reduce_join eval_entry) Deps.bot @@
       Entry.variable_declaration loc variable_declaration
-
-  let eval_stmt = Ast.Statement.(function
-    | loc, VariableDeclaration variable_declaration -> eval_variable_declaration loc variable_declaration
-    | loc, DeclareVariable declare_variable -> eval_declare_variable loc declare_variable
-    | loc, FunctionDeclaration function_declaration -> eval_function_declaration loc function_declaration
-    | loc, DeclareFunction declare_function -> eval_declare_function loc declare_function
-    | loc, ClassDeclaration class_ -> eval_class loc class_
-    | loc, DeclareClass declare_class -> eval_declare_class loc declare_class
-    | loc, TypeAlias type_alias -> eval_type_alias loc type_alias
-    | loc, DeclareTypeAlias type_alias -> eval_type_alias loc type_alias
-    | loc, OpaqueType opaque_type -> eval_opaque_type loc opaque_type
-    | loc, DeclareOpaqueType opaque_type -> eval_opaque_type loc opaque_type
-    | loc, InterfaceDeclaration interface -> eval_interface loc interface
-    | loc, DeclareInterface interface -> eval_interface loc interface
-
-    | _, Expression _
-    | _, DeclareExportDeclaration _
-    | _, ExportDefaultDeclaration _
-    | _, ExportNamedDeclaration _
-    | _, ImportDeclaration _
-    | _, Block _
-    | _, Break _
-    | _, Continue _
-    | _, Debugger
-    | _, DeclareModule _
-    | _, DeclareModuleExports _
-    | _, DoWhile _
-    | _, Empty
-    | _, For _
-    | _, ForIn _
-    | _, ForOf _
-    | _, If _
-    | _, Labeled _
-    | _, Return _
-    | _, Switch _
-    | _, Throw _
-    | _, Try _
-    | _, While _
-    | _, With _
-      -> assert false
-  )
 
   let eval_declare_export_declaration = Ast.Statement.DeclareExportDeclaration.(function
     | Variable (loc, declare_variable) -> eval_declare_variable loc declare_variable
@@ -663,9 +620,20 @@ module Verifier(Env: EvalEnv) = struct
         ({ Ast.Function.id = Some _; _ } as function_declaration)
       ) ->
       eval_function_declaration loc function_declaration
+    | Declaration (_, Ast.Statement.FunctionDeclaration
+        ({ Ast.Function.id = None; generator; tparams; params; return; body; _ })
+      ) ->
+      Eval.function_ SSet.empty generator tparams params return body
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
       eval_class loc class_
-    | Declaration stmt -> eval_stmt stmt
+    | Declaration (_, Ast.Statement.ClassDeclaration
+        ({ Ast.Class.id = None; tparams; body; extends; implements; _ })
+      ) ->
+      let super, super_targs = match extends with
+        | None -> None, None
+        | Some (_, { Ast.Class.Extends.expr; targs; }) -> Some expr, targs in
+      Eval.class_ tparams body super super_targs implements
+    | Declaration _stmt -> Deps.unreachable
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
       eval_function_declaration loc function_
     | Expression expr -> Eval.literal_expr SSet.empty expr
@@ -679,14 +647,20 @@ module Verifier(Env: EvalEnv) = struct
       let export_def = SMap.get n named_infos in
       let _, export = export in
       match export, export_def with
-        | ExportDefault _, Some (DeclareExportDef decl) ->
-          eval_declare_export_declaration decl
-        | ExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef decl) ->
-          eval_declare_export_declaration decl
-        | ExportDefault _, Some (ExportDefaultDef decl) ->
-          eval_export_default_declaration decl
-        | ExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef stmt) ->
-          eval_stmt stmt
+        | ExportDefault { local; _ }, Some (DeclareExportDef decl) ->
+          begin match local with
+            | Some id -> Deps.value (snd id)
+            | None -> eval_declare_export_declaration decl
+          end
+        | ExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef _decl) ->
+          Deps.value n
+        | ExportDefault { local; _ }, Some (ExportDefaultDef decl) ->
+          begin match local with
+            | Some id -> Deps.value (snd id)
+            | None -> eval_export_default_declaration decl
+          end
+        | ExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef _stmt) ->
+          Deps.value n
         | ExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
           begin match source with
             | None -> Deps.value (snd local)
@@ -707,10 +681,10 @@ module Verifier(Env: EvalEnv) = struct
       let export_def = SMap.get n type_named_infos in
       let _, export = export in
       match export, export_def with
-        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef decl) ->
-          eval_declare_export_declaration decl
-        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef stmt) ->
-          eval_stmt stmt
+        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef _decl) ->
+          Deps.unreachable
+        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef _stmt) ->
+          Deps.type_ n
         | TypeExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
           begin match source with
             | None -> Deps.type_ (snd local)
