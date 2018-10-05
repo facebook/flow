@@ -17,6 +17,7 @@
 (*****************************************************************************)
 
 type process_id = int
+type worker_id = int
 type worker_failure =
   (* Worker killed by Out Of Memory. *)
   | Worker_oomed
@@ -46,7 +47,7 @@ type ('a, 'b) handle
 (* An empty type *)
 type void
 (* Get the worker's id *)
-val worker_id: worker -> int
+val worker_id: worker -> worker_id
 (* Has the worker been killed *)
 val is_killed: worker -> bool
 (* Mark the worker as busy. Throw if it is already busy *)

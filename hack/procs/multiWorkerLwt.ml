@@ -20,7 +20,7 @@ include MultiWorker.CallFunctor (struct
     (type a) (type b) (type c)
     workers
     (job: c -> a -> b)
-    (merge: b -> c -> c)
+    (merge: WorkerController.worker_id * b -> c -> c)
     (neutral: c)
     (next: a Bucket.next) =
 
@@ -62,7 +62,7 @@ include MultiWorker.CallFunctor (struct
       | Some bucket ->
         Measure.sample "worker_idle" (Unix.gettimeofday () -. idle_start_wall_time);
         let%lwt result = WorkerControllerLwt.call worker (fun xl -> job neutral xl) bucket in
-        let%lwt () = merge_with_acc result in
+        let%lwt () = merge_with_acc (WorkerController.worker_id worker, result) in
         (* Wait means "ask again after a worker has finished and has merged its result". So now that
          * we've merged our response, let's wake any other workers which are waiting for work *)
         Lwt_condition.broadcast wait_signal ();
@@ -104,7 +104,7 @@ exception MultiWorkersBusy
  * we do when another comes in. *)
 let is_busy = ref false
 
-let call workers ~job ~merge ~neutral ~next =
+let call_with_worker_id workers ~job ~merge ~neutral ~next =
   if !is_busy then
     raise MultiWorkersBusy
   else begin
@@ -112,7 +112,11 @@ let call workers ~job ~merge ~neutral ~next =
     (call workers ~job ~merge ~neutral ~next) [%lwt.finally is_busy := false; Lwt.return_unit]
   end
 
-(* A separate abstract type from MultiWorker.worker forces users to always use MultiWorkerLwt *)
+let call workers ~job ~merge ~neutral ~next =
+  let merge (_worker_id, a) b = merge a b in
+  call_with_worker_id workers ~job ~merge ~neutral ~next
+
+  (* A separate abstract type from MultiWorker.worker forces users to always use MultiWorkerLwt *)
 type worker = WorkerController.worker
 
 let next ?progress_fn ?max_size workers =

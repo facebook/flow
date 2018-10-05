@@ -29,6 +29,8 @@ type 'env interrupt_config = {
   handlers : 'env -> (Unix.file_descr * 'env interrupt_handler) list;
 }
 
+type worker_id = int
+
 let no_interrupt env = {
   handlers = (fun _ -> []);
   env;
@@ -52,7 +54,7 @@ let multi_threaded_call
   (type a) (type b) (type c) (type d)
   workers
   (job: c -> a -> b)
-  (merge: b -> c -> c)
+  (merge: worker_id * b -> c -> c)
   (neutral: c)
   (next: a Bucket.next)
   ?(on_cancelled : (unit -> a list) option)
@@ -165,7 +167,9 @@ let multi_threaded_call
              let res = WorkerController.get_result h in
              (* Results for handles from other calls are cached by get_result
               * and will be retrieved later, so we ignore them here *)
-             let acc = if is_current h then merge res acc else acc in
+             let acc = if is_current h then
+                 let worker_id = WorkerController.get_worker h |> WorkerController.worker_id in
+                 merge (worker_id, res) acc else acc in
              acc, failures
            with
            | WorkerController.Worker_failed (_, failure) ->
@@ -190,7 +194,14 @@ let multi_threaded_call
     !on_exception_ref (e, stack);
     raise e
 
+let call_with_worker_id workers job merge neutral next =
+  let (res, ()), unfinished =
+    multi_threaded_call workers job merge neutral next (no_interrupt ()) in
+  assert (unfinished = []);
+  res
+
 let call workers job merge neutral next =
+  let merge (_id, a) b = merge a b in
   let (res, ()), unfinished =
     multi_threaded_call workers job merge neutral next (no_interrupt ()) in
   assert (unfinished = []);
@@ -202,6 +213,7 @@ let call_with_interrupt workers job merge neutral next ?on_cancelled interrupt =
   assert (List.for_all workers
     ~f:(fun x -> Option.is_none @@ WorkerController.get_handle_UNSAFE x)
   );
+  let merge (_id, a) b = merge a b in
   let (res, interrupt_env), unfinished =
     multi_threaded_call workers job merge neutral next ?on_cancelled interrupt in
   SharedMem.allow_removes true;

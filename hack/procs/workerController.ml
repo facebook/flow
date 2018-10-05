@@ -33,6 +33,7 @@ open Worker
  *****************************************************************************)
 
 type process_id = int
+type worker_id = int
 type worker_failure =
   (* Worker killed by Out Of Memory. *)
   | Worker_oomed

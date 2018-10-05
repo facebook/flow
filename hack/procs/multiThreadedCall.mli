@@ -30,6 +30,8 @@ type 'env interrupt_config = {
   handlers : 'env -> (Unix.file_descr * 'env interrupt_handler) list;
 }
 
+type worker_id = int
+
 val no_interrupt : 'a -> 'a interrupt_config
 
 (** Can raise Coalesced_failures exception. *)
@@ -37,6 +39,16 @@ val call :
   WorkerController.worker list ->
   ('c -> 'a -> 'b) ->
   ('b -> 'c -> 'c) ->
+  'c ->
+  'a Bucket.next ->
+  'c
+
+(** Invokes merge with a unique worker id.
+    Can raise Coalesced_failures exception. *)
+val call_with_worker_id :
+  WorkerController.worker list ->
+  ('c -> 'a -> 'b) ->
+  (worker_id * 'b -> 'c -> 'c) ->
   'c ->
   'a Bucket.next ->
   'c
