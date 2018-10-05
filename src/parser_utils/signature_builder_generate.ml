@@ -520,11 +520,11 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     match patt with
       | loc, Identifier { Identifier.annot; name; optional; } ->
         loc, Some name, optional, annotated_type (Kind.Annot_path.mk_annot annot)
-      | loc, Object { Object.annot; _ } ->
+      | loc, Object { Object.annot; properties = _ } ->
         loc, None, false, annotated_type (Kind.Annot_path.mk_annot annot)
-      | loc, Array { Array.annot; _ } ->
+      | loc, Array { Array.annot; elements = _ } ->
         loc, None, false, annotated_type (Kind.Annot_path.mk_annot annot)
-      | _, Assignment { Assignment.left; _ } -> pattern left
+      | _, Assignment { Assignment.left; right = _ } -> pattern left
       | _loc (* TODO *), Expression _ -> raise (Error "pattern")
 
   and literal_expr =
@@ -542,7 +542,10 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | loc, Identifier stuff -> T.ValueRef (loc, identifier stuff)
       | loc, Class stuff ->
         let open Ast.Class in
-        let { id = _; tparams; body; extends; implements; _ } = stuff in
+        let {
+          tparams; body; extends; implements;
+          id = _; classDecorators = _
+        } = stuff in
         let super, super_targs = match extends with
           | None -> None, None
           | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
@@ -551,7 +554,10 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | loc, ArrowFunction stuff
         ->
         let open Ast.Function in
-        let { id = _; generator; tparams; params; return; body; _ } = stuff in
+        let {
+          generator; tparams; params; return; body;
+          id = _; async = _; predicate = _; expression = _
+        } = stuff in
         T.Function (loc, function_ generator tparams params return body)
       | _, Object stuff ->
         let open Ast.Expression.Object in
@@ -563,7 +569,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         T.ArrayLiteral (array_ elements)
       | _, TypeCast stuff ->
         let open Ast.Expression.TypeCast in
-        let { annot; _ } = stuff in
+        let { annot; expression = _ } = stuff in
         let _, t = annot in
         T.TypeCast (type_ t)
       | loc, Member stuff -> T.ValueRef (loc, member stuff)
@@ -579,7 +585,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         T.Outline (fst expr, T.DynamicRequire expr)
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
-        let { operator; argument; _ } = stuff in
+        let { operator; argument } = stuff in
         arith_unary operator loc argument
       | loc, Binary stuff ->
         let open Ast.Expression.Binary in
@@ -602,7 +608,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | _, Update stuff ->
         let open Ast.Expression.Update in
         (* This operation has a simple result type. *)
-        let { argument = _; _ } = stuff in
+        let { operator = _; argument = _; prefix = _ } = stuff in
         T.Number
 
       | _loc, Call _
@@ -629,7 +635,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
 
   and member stuff =
     let open Ast.Expression.Member in
-    let { _object; property; _ } = stuff in
+    let { _object; property; computed = _ } = stuff in
     let path_loc, t = ref_expr _object in
     let name = match property with
       | PropertyIdentifier (loc, x) -> loc, x
@@ -706,6 +712,9 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           if not generator && Signature_utils.Procedure_decider.is body then T.EXPR (T.Void)
           else raise (Error (Printf.sprintf "%s (%s)" "not void" (Loc.to_string loc)))
         | Ast.Type.Available (_, t) -> T.TYPE (type_ t) in
+      (* TODO: It is unclear whether what happens for async or generator functions. In particular,
+         what do declarations of such functions look like, aside from the return type being
+         `Promise<...>` or `Generator<...>`? *)
       T.FUNCTION {
         tparams;
         params;
@@ -726,16 +735,19 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           }) when Env.ignore_static_propTypes ->
           acc
 
-        | Body.Method (elem_loc, { Method.key; value; kind; static; _ }) ->
+        | Body.Method (elem_loc, { Method.key; value; kind; static; decorators = _ }) ->
           let x = object_key key in
-          let loc, { Ast.Function.generator; tparams; params; return; body; _ } = value in
+          let loc, {
+            Ast.Function.generator; tparams; params; return; body;
+            id = _; async = _; predicate = _; expression = _;
+          } = value in
           (elem_loc, T.CMethod
             (x, kind, static, (loc, function_ generator tparams params return body))) :: acc
-        | Body.Property (elem_loc, { Property.key; annot; static; variance; _ }) ->
+        | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _ }) ->
           let x = object_key key in
           (elem_loc, T.CProperty
             (x, static, variance, annotated_type (Kind.Annot_path.mk_annot annot))) :: acc
-        | Body.PrivateField (elem_loc, { PrivateField.key = (_, (_, x)); annot; static; variance; _ }) ->
+        | Body.PrivateField (elem_loc, { PrivateField.key = (_, (_, x)); annot; static; variance; value = _ }) ->
           (elem_loc, T.CPrivateField
             (x, static, variance, annotated_type (Kind.Annot_path.mk_annot annot))) :: acc
 
@@ -779,23 +791,32 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     let object_property =
       let open Ast.Expression.Object.Property in
       function
-        | loc, Init { key; value; _ } ->
+        | loc, Init { key; value; shorthand = _ } ->
           let x = object_key key in
           loc, T.OInit (x, literal_expr value)
         | loc, Method { key; value = (fn_loc, fn) } ->
           let x = object_key key in
           let open Ast.Function in
-          let { generator; tparams; params; return; body; _ } = fn in
+          let {
+            generator; tparams; params; return; body;
+            id = _; async = _; predicate = _; expression = _
+          } = fn in
           loc, T.OMethod (x, (fn_loc, function_ generator tparams params return body))
         | loc, Get { key; value = (fn_loc, fn) } ->
           let x = object_key key in
           let open Ast.Function in
-          let { generator; tparams; params; return; body; _ } = fn in
+          let {
+            generator; tparams; params; return; body;
+            id = _; async = _; predicate = _; expression = _
+          } = fn in
           loc, T.OGet (x, (fn_loc, function_ generator tparams params return body))
         | loc, Set { key; value = (fn_loc, fn) } ->
           let x = object_key key in
           let open Ast.Function in
-          let { generator; tparams; params; return; body; _ } = fn in
+          let {
+            generator; tparams; params; return; body;
+            id = _; async = _; predicate = _; expression = _
+          } = fn in
           loc, T.OSet (x, (fn_loc, function_ generator tparams params return body))
     in
     function
@@ -957,15 +978,19 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         ({ Ast.Function.id = Some _; _ } as function_declaration)
       ) ->
       `Decl (eval_function_declaration loc function_declaration)
-    | Declaration (loc, Ast.Statement.FunctionDeclaration
-        ({ Ast.Function.id = None; generator; tparams; params; return; body; _ })
-      ) ->
+    | Declaration (loc, Ast.Statement.FunctionDeclaration ({
+        Ast.Function.id = None;
+        generator; tparams; params; return; body;
+        async = _; predicate = _; expression = _
+      })) ->
       `Expr (T.Function (loc, Eval.function_ generator tparams params return body))
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
       `Decl (eval_class loc class_)
-    | Declaration (loc, Ast.Statement.ClassDeclaration
-        ({ Ast.Class.id = None; tparams; body; extends; implements; _ })
-      ) ->
+    | Declaration (loc, Ast.Statement.ClassDeclaration ({
+        Ast.Class.id = None;
+        tparams; body; extends; implements;
+        classDecorators = _
+      })) ->
       let super, super_targs = match extends with
         | None -> None, None
         | Some (_, { Ast.Class.Extends.expr; targs; }) -> Some expr, targs in
