@@ -1847,6 +1847,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
         mk_signature_verification_error (loc |> ALoc.of_loc) [
           text "Cannot determine element type of empty array, try using a type cast."
         ]
+      | EmptyObject loc ->
+        mk_signature_verification_error (loc |> ALoc.of_loc) [
+          text "Cannot determine types of initialized properties of empty object, try using a type cast."
+        ]
       | UnexpectedExpression (loc, esort) ->
         mk_signature_verification_error (loc |> ALoc.of_loc) [
           text (

@@ -79,6 +79,11 @@ let tests_data = [
   ["Expected annotation @ (1, 4) to (1, 5)"],
   ["Reachable: x"];
 
+  name "empty_object_literal",
+  ["export default { };"],
+  ["Cannot determine types of initialized properties of empty object @ (1, 15) to (1, 18)"],
+  [];
+
   name "export_class_reference",
   ["class C {";
    "  f: number = 0;";

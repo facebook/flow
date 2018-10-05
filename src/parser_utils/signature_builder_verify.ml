@@ -274,10 +274,11 @@ module Eval(Env: EvalEnv) = struct
         let open Ast.Function in
         let { id = _; generator; tparams; params; return; body; _ } = stuff in
         function_ tps generator tparams params return body
-      | _, Object stuff ->
+      | loc, Object stuff ->
         let open Ast.Expression.Object in
         let { properties } = stuff in
-        object_ tps properties
+        if properties = [] then Deps.top (Error.EmptyObject loc)
+        else object_ tps properties
       | loc, Array stuff ->
         let open Ast.Expression.Array in
         let { elements } = stuff in

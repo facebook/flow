@@ -18,6 +18,7 @@ module Error = struct
     | UnexpectedObjectSpread of Loc.t
     | UnexpectedArraySpread of Loc.t
     | EmptyArray of Loc.t
+    | EmptyObject of Loc.t
     | UnexpectedExpression of Loc.t * Ast_utils.ExpressionSort.t
     | SketchyToplevelDef of Loc.t
     | TODO of string * Loc.t
@@ -34,6 +35,7 @@ module Error = struct
     | UnexpectedObjectSpread loc -> spf "Unexpected object spread @ %s" (Loc.to_string loc)
     | UnexpectedArraySpread loc -> spf "Unexpected array spread @ %s" (Loc.to_string loc)
     | EmptyArray loc -> spf "Cannot determine element type of empty array @ %s" (Loc.to_string loc)
+    | EmptyObject loc -> spf "Cannot determine types of initialized properties of empty object @ %s" (Loc.to_string loc)
     | UnexpectedExpression (loc, esort) ->
       spf "Expected literal expression instead of %s @ %s"
         (Ast_utils.ExpressionSort.to_string esort) (Loc.to_string loc)

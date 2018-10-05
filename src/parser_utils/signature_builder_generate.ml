@@ -66,7 +66,7 @@ module T = struct
   and expr_type =
     (* types and expressions *)
     | Function of (Loc.t * function_t)
-    | ObjectLiteral of (Loc.t * object_property_t) list
+    | ObjectLiteral of (Loc.t * object_property_t) Nel.t
     | ArrayLiteral of array_element_t Nel.t
     | ValueRef of Loc.t * reference (* typeof `x` *)
 
@@ -173,10 +173,10 @@ module T = struct
 
   let rec type_of_expr_type outlined loc = function
     | Function function_t -> type_of_function outlined function_t
-    | ObjectLiteral pts ->
+    | ObjectLiteral (pt, pts) ->
       loc, Ast.Type.Object {
         Ast.Type.Object.exact = true;
-        properties = List.map (type_of_object_property outlined) pts
+        properties = List.map (type_of_object_property outlined) (pt :: pts)
       }
     | ArrayLiteral ets ->
       loc, Ast.Type.Array (match ets with
@@ -791,12 +791,14 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           let { generator; tparams; params; return; body; _ } = fn in
           loc, T.OSet (x, (fn_loc, function_ generator tparams params return body))
     in
-    fun properties ->
-      let open Ast.Expression.Object in
-      List.map (function
-        | Property p -> object_property p
-        | SpreadProperty _p -> raise (Error "spread property") (* TODO: verification error *)
-      ) properties
+    function
+      | [] -> raise (Error "empty object") (* TODO: verification error *)
+      | property::properties ->
+        let open Ast.Expression.Object in
+        Nel.map (function
+          | Property p -> object_property p
+          | SpreadProperty _p -> raise (Error "spread property") (* TODO: verification error *)
+        ) (property, properties)
 
 end
 
