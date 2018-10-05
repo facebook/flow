@@ -40,7 +40,8 @@ module T = struct
       }
     (* declarations and outlined expressions *)
     | ClassDecl of class_t
-    | LocalDecl of Loc.t * little_annotation
+    | FunctionDecl of Loc.t * little_annotation
+    | VariableDecl of Loc.t * little_annotation
     (* remote *)
     | ImportNamed of {
         kind: Ast.Statement.ImportDeclaration.importKind;
@@ -340,7 +341,13 @@ module T = struct
       decl_loc, Ast.Statement.DeclareClass {
         Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body;
       }
-    | LocalDecl (loc, little_annotation) ->
+    | FunctionDecl (loc, little_annotation) ->
+      decl_loc, Ast.Statement.DeclareFunction {
+        Ast.Statement.DeclareFunction.id;
+        annot = loc, type_of_little_annotation outlined little_annotation;
+        predicate = None;
+      }
+    | VariableDecl (loc, little_annotation) ->
       decl_loc, Ast.Statement.DeclareVariable {
         Ast.Statement.DeclareVariable.id;
         annot = Ast.Type.Available (loc, type_of_little_annotation outlined little_annotation)
@@ -809,12 +816,12 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
   let eval (loc, kind) =
     match kind with
       | Kind.VariableDef { annot; init } ->
-        T.LocalDecl (loc_TODO, Eval.annotation ?init annot)
+        T.VariableDecl (loc_TODO, Eval.annotation ?init annot)
       | Kind.FunctionDef { generator; tparams; params; return; body; } ->
-        T.LocalDecl (loc_TODO, T.EXPR
+        T.FunctionDecl (loc_TODO, T.EXPR
           (T.Function (loc, Eval.function_ generator tparams params return body)))
       | Kind.DeclareFunctionDef { annot = (_, t) } ->
-        T.LocalDecl (loc_TODO, T.TYPE (Eval.type_ t))
+        T.FunctionDecl (loc_TODO, T.TYPE (Eval.type_ t))
       | Kind.ClassDef { tparams; body; super; super_targs; implements } ->
         T.ClassDecl (Eval.class_ tparams body super super_targs implements)
       | Kind.DeclareClassDef { tparams; body = (body_loc, body); extends; mixins; implements } ->
