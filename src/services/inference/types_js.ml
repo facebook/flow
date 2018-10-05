@@ -849,6 +849,7 @@ let recheck_with_profiling
         FilenameSet.diff
           (FilenameSet.inter files_to_focus unchanged_parse) (* unchanged files to focus... *)
           (CheckedSet.focused env.ServerEnv.checked_files)   (* ...which aren't already focused *)
+        |> FilenameSet.filter (fun f -> FilenameSet.mem f env.ServerEnv.files) (* Only parsed *)
       in
       let%lwt () = ensure_parsed ~options ~profiling ~workers
         (CheckedSet.add ~focused:unchanged_files_to_focus CheckedSet.empty)
