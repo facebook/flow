@@ -30,7 +30,6 @@ module T = struct
       }
     | OpaqueType of {
         tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
-        impltype: type_ option;
         supertype: type_ option;
       }
     | Interface of {
@@ -324,8 +323,10 @@ module T = struct
   and stmt_of_decl outlined decl_loc id = function
     | Type { tparams; right; } ->
       decl_loc, Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right }
-    | OpaqueType { tparams; impltype; supertype; } ->
-      decl_loc, Ast.Statement.OpaqueType { Ast.Statement.OpaqueType.id; tparams; impltype; supertype }
+    | OpaqueType { tparams; supertype; } ->
+      decl_loc, Ast.Statement.DeclareOpaqueType {
+        Ast.Statement.OpaqueType.id; tparams; impltype = None; supertype
+      }
     | Interface { tparams; extends; body; } ->
       decl_loc, Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body }
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
@@ -867,19 +868,14 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           tparams;
           right;
         }
-      | Kind.OpaqueTypeDef { tparams; impltype; supertype } ->
+      | Kind.OpaqueTypeDef { tparams; supertype } ->
         let tparams = Eval.type_params tparams in
-        let impltype = match impltype with
-          | None -> None
-          | Some t -> Some (Eval.type_ t)
-        in
         let supertype = match supertype with
           | None -> None
           | Some t -> Some (Eval.type_ t)
         in
         T.OpaqueType {
           tparams;
-          impltype;
           supertype;
         }
       | Kind.InterfaceDef { tparams; extends; body = (body_loc, body) } ->
@@ -1130,8 +1126,18 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     SMap.fold (fun n (export_loc, export) acc ->
       let export_def = SMap.get n type_named_infos in
       (match export, export_def with
-        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef _decl) ->
-          raise Eval.Unreachable (* TODO: update signature verifier *)
+        | TypeExportNamed { loc; kind = NamedDeclaration }, Some (DeclareExportDef _decl) ->
+          export_loc, Ast.Statement.ExportNamedDeclaration {
+            Ast.Statement.ExportNamedDeclaration.declaration = None;
+            specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
+              loc_WILDCARD, {
+                Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
+                exported = None;
+              }
+            ]);
+            source = None;
+            exportKind = Ast.Statement.ExportType;
+          }
         | TypeExportNamed { loc; kind = NamedDeclaration }, Some (ExportNamedDef _stmt) ->
           export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;

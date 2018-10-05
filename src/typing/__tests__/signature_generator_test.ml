@@ -439,6 +439,25 @@ let tests = "signature_generator" >::: ([
     ["declare function foo<T>(x: T): void;";
      "declare function foo<T, S>(x: T): void;";
      "export {foo};";
-     "declare function foo<T, S, R>(x: T): void;"]
+     "declare function foo<T, S, R>(x: T): void;"];
+
+  "opaque_type" >:: mk_signature_generator_test
+    ["declare export opaque type T1";
+     "declare export opaque type T2: number";
+     "opaque type T3 = number"; (* dead *)
+     "export opaque type T4: number = T3";
+     "opaque type T5 = number";
+     "export opaque type T6: T5 = number";
+    ]
+    ["export type {T1};";
+     "declare opaque type T1;";
+     "export type {T2};";
+     "declare opaque type T2: number;";
+     "";
+     "export type {T4};";
+     "declare opaque type T4: number;";
+     "declare opaque type T5;";
+     "export type {T6};";
+     "declare opaque type T6: T5;"];
 
 ] @ verified_signature_generator_tests)

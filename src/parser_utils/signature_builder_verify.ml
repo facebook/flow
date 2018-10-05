@@ -197,11 +197,10 @@ module Eval(Env: EvalEnv) = struct
     | None -> Deps.bot
     | Some (_, ts) -> List.fold_left (Deps.reduce_join (type_ tps)) Deps.bot ts
 
-  let opaque_type tps impltype supertype =
-    match impltype, supertype with
-      | None, None -> Deps.bot
-      | None, Some t | Some t, None -> type_ tps t
-      | Some t1, Some t2 -> Deps.join (type_ tps t1, type_ tps t2)
+  let opaque_type tps supertype =
+    match supertype with
+      | None -> Deps.bot
+      | Some t -> type_ tps t
 
   let type_params =
     let type_param tps tparam =
@@ -551,9 +550,9 @@ module Verifier(Env: EvalEnv) = struct
       | Kind.TypeDef { tparams; right } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
         Deps.join (deps, Eval.type_ tps right)
-      | Kind.OpaqueTypeDef { tparams; impltype; supertype } ->
+      | Kind.OpaqueTypeDef { tparams; supertype } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
-        Deps.join (deps, Eval.opaque_type tps impltype supertype)
+        Deps.join (deps, Eval.opaque_type tps supertype)
       | Kind.InterfaceDef { tparams; body = (_, body); extends } ->
         let tps, deps = Eval.type_params SSet.empty tparams in
         let deps = Deps.join (deps, Eval.object_type tps body) in
@@ -683,7 +682,7 @@ module Verifier(Env: EvalEnv) = struct
       let _, export = export in
       match export, export_def with
         | TypeExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef _decl) ->
-          Deps.unreachable
+          Deps.type_ n
         | TypeExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef _stmt) ->
           Deps.type_ n
         | TypeExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
