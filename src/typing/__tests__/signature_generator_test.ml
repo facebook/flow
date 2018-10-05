@@ -400,8 +400,25 @@ let tests = "signature_generator" >::: ([
      "type T = number;";
      "type U = T;";
      ""; (* TODO: pretty printing adds newlines for dead stuff *)
-     "declare class B {x: T, m(): void}";
+     "declare class B {+x: T, m(): void}";
      "export type {A};";
      "interface A {+x: U}";
      "declare module.exports: (B) => A;"];
+
+  "class_statics" >:: mk_signature_generator_test
+    ["export class C {";
+     "  static x: number = 0;";
+     "  static foo(): void { }";
+     "}"]
+    ["export {C};";
+     "declare class C {static x: number, static foo(): void}"];
+
+  "class_statics2" >:: mk_signature_generator_test
+    ["export class C {";
+     "  foo: () => void;";
+     "  static foo(): void { }";
+     "}"]
+    ["export {C};";
+     "declare class C {foo: () => void, static foo(): void}"];
+
 ] @ verified_signature_generator_tests)

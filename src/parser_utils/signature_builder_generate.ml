@@ -118,9 +118,9 @@ module T = struct
       }
 
   and class_element_t =
-    | CMethod of object_key * (Loc.t * function_t)
-    | CProperty of object_key * type_
-    | CPrivateField of string * type_
+    | CMethod of object_key * Ast.Class.Method.kind * bool (* static *) * (Loc.t * function_t)
+    | CProperty of object_key * bool (* static *) * Loc.t Ast.Variance.t option * type_
+    | CPrivateField of string * bool (* static *) * Loc.t Ast.Variance.t option * type_
 
   and object_property_t =
     | OInit of object_key * expr_type
@@ -398,29 +398,29 @@ module T = struct
       }
 
   and object_type_property_of_class_element outlined = function
-    | loc, CMethod (object_key, f) ->
+    | loc, CMethod (object_key, _kind, static, f) ->
       let open Ast.Type.Object in
       Property (loc, {
         Property.key = object_key;
         value = Property.Init (type_of_function outlined f);
         optional = false;
-        static = false;
+        static;
         proto = false;
         _method = true;
         variance = None;
       })
-    | loc, CProperty (object_key, t) ->
+    | loc, CProperty (object_key, static, variance, t) ->
       let open Ast.Type.Object in
       Property (loc, {
         Property.key = object_key;
         value = Property.Init t;
         optional = false;
-        static = false;
+        static;
         proto = false;
         _method = false;
-        variance = None;
+        variance;
       })
-    | _loc, CPrivateField (_x, _t) -> assert false
+    | _loc, CPrivateField (_x, _static, _variance, _t) -> assert false
 
 end
 
@@ -714,15 +714,18 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           }) when Env.ignore_static_propTypes ->
           acc
 
-        | Body.Method (elem_loc, { Method.key; value; _ }) ->
+        | Body.Method (elem_loc, { Method.key; value; kind; static; _ }) ->
           let x = object_key key in
           let loc, { Ast.Function.generator; tparams; params; return; body; _ } = value in
-          (elem_loc, T.CMethod (x, (loc, function_ generator tparams params return body))) :: acc
-        | Body.Property (elem_loc, { Property.key; annot; _ }) ->
+          (elem_loc, T.CMethod
+            (x, kind, static, (loc, function_ generator tparams params return body))) :: acc
+        | Body.Property (elem_loc, { Property.key; annot; static; variance; _ }) ->
           let x = object_key key in
-          (elem_loc, T.CProperty (x, annotated_type (Kind.Annot_path.mk_annot annot))) :: acc
-        | Body.PrivateField (elem_loc, { PrivateField.key = (_, (_, x)); annot; _ }) ->
-          (elem_loc, T.CPrivateField (x, annotated_type (Kind.Annot_path.mk_annot annot))) :: acc
+          (elem_loc, T.CProperty
+            (x, static, variance, annotated_type (Kind.Annot_path.mk_annot annot))) :: acc
+        | Body.PrivateField (elem_loc, { PrivateField.key = (_, (_, x)); annot; static; variance; _ }) ->
+          (elem_loc, T.CPrivateField
+            (x, static, variance, annotated_type (Kind.Annot_path.mk_annot annot))) :: acc
 
     in fun tparams body super super_targs implements ->
       let open Ast.Class in
