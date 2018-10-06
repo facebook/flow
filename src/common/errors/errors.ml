@@ -74,13 +74,13 @@ module Friendly = struct
    * merge errors with the same root cause into a single block.
    *)
   type 'a t' = {
-    loc: Loc.t;
+    loc: 'a;
     root: 'a error_root option;
     message: 'a error_message;
   }
 
   and 'a error_root = {
-    root_loc: Loc.t;
+    root_loc: 'a;
     root_message: 'a message;
   }
 
