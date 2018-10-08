@@ -11759,8 +11759,8 @@ and object_kit =
       match todo with
       | [] ->
         let x = match join with
-        | Or -> Nel.cons x done_rev |> Nel.concat
-        | And -> merge (intersect2_with_reason reason) x done_rev
+        | _, Or -> Nel.cons x done_rev |> Nel.concat
+        | _, And -> merge (intersect2_with_reason reason) x done_rev
         in
         next tool cx trace use_op reason tout x
       | t::todo ->
@@ -11816,14 +11816,16 @@ and object_kit =
       rec_flow cx trace (i, GetStaticsT (r, t));
       rec_flow cx trace (t, ObjKitT (use_op, reason, Resolve resolve_tool, tool, tout))
     (* Resolve each member of a union. *)
-    | DefT (_, UnionT rep) ->
+    | DefT (union_reason, UnionT rep) ->
+      let union_loc = aloc_of_reason union_reason in
       let t, todo = UnionRep.members_nel rep in
-      let resolve_tool = Resolve (List0 (todo, Or)) in
+      let resolve_tool = Resolve (List0 (todo, (union_loc, Or))) in
       rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     (* Resolve each member of an intersection. *)
-    | DefT (_, IntersectionT rep) ->
+    | DefT (intersection_reason, IntersectionT rep) ->
+      let intersection_loc = aloc_of_reason intersection_reason in
       let t, todo = InterRep.members_nel rep in
-      let resolve_tool = Resolve (List0 (todo, And)) in
+      let resolve_tool = Resolve (List0 (todo, (intersection_loc, And))) in
       rec_flow cx trace (t, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     (* Mirroring Object.assign() and {...null} semantics, treat null/void as
      * empty objects. *)

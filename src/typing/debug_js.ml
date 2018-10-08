@@ -1947,7 +1947,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let object_kit =
     let open Object in
-    let join = function And -> "And" | Or -> "Or" in
+    let join (_loc, op) = match op with And -> "And" | Or -> "Or" in
     let resolved xs =
       spf "[%s]" (String.concat "; " (List.map slice (Nel.to_list xs)))
     in
