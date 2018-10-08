@@ -1342,10 +1342,31 @@ let refine_expr = add_heap_refinement Changeset.Refine
    others can be obtained via query_var.
  *)
 let refine_with_preds cx (loc: Loc.t) preds orig_types =
+  let refine_type orig_type pred refined_type =
+    (* When refining a type against a literal, we want to be sure that that literal can actually
+       inhabit that type *)
+    begin match pred with
+      | SingletonBoolP (loc, b) ->
+          let reason = ALoc.of_loc loc |> mk_reason (RBooleanLit b) in
+          Flow.flow cx (DefT (reason, BoolT (Some b)), UseT (Op (Internal Refinement), orig_type))
+      | SingletonStrP (loc, b, str) ->
+          let reason = ALoc.of_loc loc |> mk_reason (RStringLit str) in
+          Flow.flow cx (DefT (reason, StrT (Literal (Some b, str))),
+            UseT (Op (Internal Refinement), orig_type))
+      | SingletonNumP (loc, b, ((_, str) as num)) ->
+          let reason = ALoc.of_loc loc |> mk_reason (RNumberLit str) in
+          Flow.flow cx (DefT (reason, NumT (Literal (Some b, num))),
+            UseT (Op (Internal Refinement), orig_type))
+      | LeftP (SentinelProp name, (DefT (reason, (BoolT _ | StrT _ | NumT _)) as t)) ->
+          Flow.flow cx (MatchingPropT (reason, name, t),
+            UseT (Op (Internal Refinement), orig_type))
+      | _ -> ()
+    end;
+    Flow.flow cx (orig_type, PredicateT (pred, refined_type)) in
+
   let mk_refi_type orig_type pred refi_reason =
-    Tvar.mk_where cx refi_reason (fun refined_type ->
-      Flow.flow cx (orig_type, PredicateT (pred, refined_type)))
-  in
+    refine_type orig_type pred |> Tvar.mk_where cx refi_reason in
+
   let refine_with_pred key pred acc =
     let refi_reason = mk_reason (RRefined (Key.reason_desc key)) (loc |> ALoc.of_loc) in
     match key with

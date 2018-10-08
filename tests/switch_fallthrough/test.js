@@ -30,10 +30,12 @@ switch (x) {
 
 (x : 'foo'); // error
 
-switch (x) {
+declare var y: Enum
+
+switch (y) {
   case 'bar':
   case 'baz':
-    x = 'foo';
+    y = 'foo';
 }
 
-(x : 'foo'); // no error
+(y : 'foo'); // no error

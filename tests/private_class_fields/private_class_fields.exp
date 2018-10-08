@@ -304,7 +304,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:159:7
 
-Cannot cast `this.#p` to number literal `4` because number literal `3` [1] is incompatible with number literal `4` [2].
+Cannot cast `this.#p` to number literal `4` because:
+ - number literal `3` [1] is incompatible with number literal `4` [2].
+ - number literal `3` [3] is incompatible with number literal `4` [2].
 
    test.js:159:7
    159|      (this.#p: 4); // Error, this.p doesnt refine this.#p
@@ -317,6 +319,9 @@ References:
    test.js:159:16
    159|      (this.#p: 4); // Error, this.p doesnt refine this.#p
                        ^ [2]
+   test.js:154:20
+   154|    if (this.#p === 3) {
+                           ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:162:7
@@ -372,8 +377,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:173:7
 
-Cannot cast `RefinementClashes.#q` to number literal `4` because number literal `3` [1] is incompatible with number
-literal `4` [2].
+Cannot cast `RefinementClashes.#q` to number literal `4` because:
+ - number literal `3` [1] is incompatible with number literal `4` [2].
+ - number literal `3` [3] is incompatible with number literal `4` [2].
 
    test.js:173:7
    173|      (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
@@ -386,6 +392,9 @@ References:
    test.js:173:29
    173|      (RefinementClashes.#q: 4); // Error, RefinementClashes.q doesnt refine RefinementClashes.#q
                                     ^ [2]
+   test.js:168:33
+   168|    if (RefinementClashes.#q === 3) {
+                                        ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:176:7
@@ -440,4 +449,4 @@ References:
 
 
 
-Found 28 errors
+Found 30 errors

@@ -1,0 +1,195 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:10:8
+
+string literal `qux` [1] is incompatible with enum [2].
+
+   test.js:10:8
+   10|   case 'qux': // error
+              ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:8
+
+number literal `3` [1] is incompatible with enum [2].
+
+   test.js:19:8
+   19|   case 3: // error
+              ^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:8
+
+string literal `qux` [1] is incompatible with enum [2].
+
+   test.js:28:8
+   28|   case 'qux': // error
+              ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:35:16
+
+string literal `qux` [1] is incompatible with enum [2].
+
+   test.js:35:16
+   35| else if (x === 'qux') {} // error
+                      ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:39:16
+
+string literal `qux` [1] is incompatible with enum [2].
+
+   test.js:39:16
+   39| else if (x === 'qux') {} // error
+                      ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:8
+
+number literal `4` [1] is incompatible with enum [2].
+
+   test.js:47:8
+   47|   case 4: // error
+              ^ [1]
+
+References:
+   test.js:42:16
+   42| declare var y: eNum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:56:8
+
+number literal `4` [1] is incompatible with enum [2].
+
+   test.js:56:8
+   56|   case 4: // error
+              ^ [1]
+
+References:
+   test.js:42:16
+   42| declare var y: eNum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:67:3
+
+All branches are incompatible:
+ - Either object with property `type` that matches string literal `qux` [1] is incompatible with string literal
+   `foo` [2].
+ - Or object with property `type` that matches string literal `qux` [1] is incompatible with string literal `bar` [3].
+ - Or object with property `type` that matches string literal `qux` [1] is incompatible with string literal `baz` [4].
+
+   test.js:67:3
+         v-------------------
+   67|   case 'qux': // error
+   68|     break;
+           -----^ [1]
+
+References:
+   test.js:60:30
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                    ^^^^^ [2]
+   test.js:60:48
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                      ^^^^^ [3]
+   test.js:60:66
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                        ^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:67:8
+
+All branches are incompatible:
+ - Either string [1] is incompatible with string literal `foo` [2].
+ - Or string [1] is incompatible with string literal `bar` [3].
+ - Or string [1] is incompatible with string literal `baz` [4].
+
+   test.js:67:8
+   67|   case 'qux': // error
+              ^^^^^ [1]
+
+References:
+   test.js:60:30
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                    ^^^^^ [2]
+   test.js:60:48
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                      ^^^^^ [3]
+   test.js:60:66
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                        ^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:76:8
+
+All branches are incompatible:
+ - Either string [1] is incompatible with string literal `foo` [2].
+ - Or string [1] is incompatible with string literal `bar` [3].
+ - Or string [1] is incompatible with string literal `baz` [4].
+
+   test.js:76:8
+   76|   case 'qux': // error
+              ^^^^^ [1]
+
+References:
+   test.js:60:30
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                    ^^^^^ [2]
+   test.js:60:48
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                      ^^^^^ [3]
+   test.js:60:66
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                        ^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:85:8
+
+All branches are incompatible:
+ - Either number [1] is incompatible with string literal `foo` [2].
+ - Or number [1] is incompatible with string literal `bar` [3].
+ - Or number [1] is incompatible with string literal `baz` [4].
+
+   test.js:85:8
+   85|   case 3: // error
+              ^ [1]
+
+References:
+   test.js:60:30
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                    ^^^^^ [2]
+   test.js:60:48
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                      ^^^^^ [3]
+   test.js:60:66
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                        ^^^^^ [4]
+
+
+
+Found 11 errors

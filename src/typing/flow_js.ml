@@ -8959,11 +8959,11 @@ and predicate cx trace t l p = match p with
   (* true *)
   (********)
 
-  | SingletonBoolP true ->
+  | SingletonBoolP (_, true) ->
     let filtered = Type_filter.true_ l in
     rec_flow_t cx trace (filtered, t)
 
-  | NotP (SingletonBoolP true) ->
+  | NotP (SingletonBoolP (_, true)) ->
     let filtered = Type_filter.not_true l in
     rec_flow_t cx trace (filtered, t)
 
@@ -8971,11 +8971,11 @@ and predicate cx trace t l p = match p with
   (* false *)
   (*********)
 
-  | SingletonBoolP false ->
+  | SingletonBoolP (_, false) ->
     let filtered = Type_filter.false_ l in
     rec_flow_t cx trace (filtered, t)
 
-  | NotP (SingletonBoolP false) ->
+  | NotP (SingletonBoolP (_, false)) ->
     let filtered = Type_filter.not_false l in
     rec_flow_t cx trace (filtered, t)
 

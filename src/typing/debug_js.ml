@@ -1304,7 +1304,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | SingletonBoolP value -> ["value", JSON_Bool value]
+  | SingletonBoolP (_, value) -> ["value", JSON_Bool value]
   | SingletonStrP (_, _, str) -> ["value", JSON_String str]
   | SingletonNumP (_, _, (_,raw)) -> ["value", JSON_String raw]
 

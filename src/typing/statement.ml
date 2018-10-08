@@ -5485,15 +5485,15 @@ and predicates_of_condition cx e = Ast.(Expression.(
       )
 
     (* special case equality relations involving booleans *)
-    | (_, Expression.Literal { Literal.value = Literal.Boolean lit; _}) as value,
+    | (lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _}) as value,
       expr ->
       let (_, val_t), _ as val_ast = expression cx value in
-      literal_test loc ~sense ~strict expr val_t (SingletonBoolP lit)
+      literal_test loc ~sense ~strict expr val_t (SingletonBoolP (lit_loc, lit))
         (fun expr -> reconstruct_ast val_ast expr)
     | expr,
-      ((_, Expression.Literal { Literal.value = Literal.Boolean lit; _}) as value) ->
+      ((lit_loc, Expression.Literal { Literal.value = Literal.Boolean lit; _}) as value) ->
       let (_, val_t), _ as val_ast = expression cx value in
-      literal_test loc ~sense ~strict expr val_t (SingletonBoolP lit)
+      literal_test loc ~sense ~strict expr val_t (SingletonBoolP (lit_loc, lit))
         (fun expr -> reconstruct_ast expr val_ast)
 
     (* special case equality relations involving strings *)

@@ -704,7 +704,7 @@ module rec TypeTerm : sig
     | NullP (* null *)
     | MaybeP (* null or undefined *)
 
-    | SingletonBoolP of bool (* true or false *)
+    | SingletonBoolP of Loc.t * bool (* true or false *)
     | SingletonStrP of Loc.t * bool * string (* string literal *)
     | SingletonNumP of Loc.t * bool * number_literal
 
@@ -3191,8 +3191,8 @@ let rec string_of_predicate = function
   | NullP -> "null"
   | MaybeP -> "null or undefined"
 
-  | SingletonBoolP false -> "false"
-  | SingletonBoolP true -> "true"
+  | SingletonBoolP (_, false) -> "false"
+  | SingletonBoolP (_, true) -> "true"
   | SingletonStrP (_, _, str) -> spf "string `%s`" str
   | SingletonNumP (_, _, (_,raw)) -> spf "number `%s`" raw
 
