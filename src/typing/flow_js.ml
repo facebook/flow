@@ -11716,10 +11716,6 @@ and object_kit =
       let t = if opt then optional t else t in
       t, own1 || own2
     in
-    let r =
-      let loc = Loc.btwn (aloc_of_reason r1 |> ALoc.to_loc) (aloc_of_reason r2 |> ALoc.to_loc) in
-      mk_reason RObjectType (loc |> ALoc.of_loc)
-    in
     let props = SMap.merge (fun _ p1 p2 ->
       let read_dict r d = optional (read_dict r d), true in
       match p1, p2 with
@@ -11745,6 +11741,15 @@ and object_kit =
       sealed = Sealed;
       exact = flags1.exact || flags2.exact;
     } in
+    props, dict, flags
+  in
+
+  let intersect2_with_reason reason ((r1, _, _, _) as x1) ((r2, _, _, _) as x2) =
+    let props, dict, flags = intersect2 reason x1 x2 in
+    let r =
+      let loc = Loc.btwn (aloc_of_reason r1 |> ALoc.to_loc) (aloc_of_reason r2 |> ALoc.to_loc) in
+      mk_reason RObjectType (loc |> ALoc.of_loc)
+    in
     r, props, dict, flags
   in
 
@@ -11759,7 +11764,7 @@ and object_kit =
       | [] ->
         let x = match join with
         | Or -> Nel.cons x done_rev |> Nel.concat
-        | And -> merge (intersect2 reason) x done_rev
+        | And -> merge (intersect2_with_reason reason) x done_rev
         in
         next tool cx trace use_op reason tout x
       | t::todo ->
@@ -11861,7 +11866,7 @@ and object_kit =
   let super cx trace use_op reason resolve_tool tool tout acc = function
     | DefT (r, InstanceT (_, super, _, {own_props; _})) ->
       let slice = interface_slice cx r own_props in
-      let acc = intersect2 reason acc slice in
+      let acc = intersect2_with_reason reason acc slice in
       let resolve_tool = Super (acc, resolve_tool) in
       rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     | DefT (_, (AnyT | AnyObjT)) ->
