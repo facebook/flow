@@ -10352,32 +10352,28 @@ and finish_resolve_spread_list =
            * spreads. This means we need to build a spread argument, with
            * unknown arity. *)
           let tset = TypeExSet.empty in
-          flatten r args (Some (Nel.one r, tset)) resolved
+          flatten r args (Some tset) resolved
         | [] -> failwith "Empty list already handled"
         )
-      | Some (spread_reasons, tset) ->
-        let spread_reason, elemt, rest = (match resolved with
+      | Some tset ->
+        let elemt, rest = (match resolved with
         | (ResolvedArg t)::rest ->
-          reason_of_t t, t, rest
-        | (ResolvedSpreadArg (r, arrtype))::rest ->
-          r, elemt_of_arrtype arrtype, rest
+          t, rest
+        | (ResolvedSpreadArg (_, arrtype))::rest ->
+          elemt_of_arrtype arrtype, rest
         | (ResolvedAnySpreadArg reason)::rest ->
-          reason, AnyT.why reason, rest
+          AnyT.why reason, rest
         | [] -> failwith "Empty list already handled")
         in
-        let spread_reasons = Nel.cons spread_reason spread_reasons in
         let tset = TypeExSet.add elemt tset in
-        flatten r args (Some (spread_reasons, tset)) rest
+        flatten r args (Some tset) rest
 
     in
     fun cx r resolved ->
       let args, spread = flatten r [] None resolved in
       let spread = Option.map
-        ~f:(fun (spread_reasons, tset) ->
-          let last = Nel.hd spread_reasons in
-          let first = Nel.(hd (rev spread_reasons)) in
-          let loc = Loc.btwn (aloc_of_reason first |> ALoc.to_loc) (aloc_of_reason last |> ALoc.to_loc) in
-          let r = mk_reason RArray (loc |> ALoc.of_loc) in
+        ~f:(fun tset ->
+          let r = mk_reason RArray (aloc_of_reason r) in
           Tvar.mk_where cx r (fun tvar ->
             TypeExSet.elements tset
             |> List.iter (fun t -> flow cx (t, UseT (unknown_use, tvar)))
