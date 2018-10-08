@@ -11740,12 +11740,9 @@ and object_kit =
     props, dict, flags
   in
 
-  let intersect2_with_reason reason ((r1, _, _, _) as x1) ((r2, _, _, _) as x2) =
+  let intersect2_with_reason reason intersection_loc x1 x2 =
     let props, dict, flags = intersect2 reason x1 x2 in
-    let r =
-      let loc = Loc.btwn (aloc_of_reason r1 |> ALoc.to_loc) (aloc_of_reason r2 |> ALoc.to_loc) in
-      mk_reason RObjectType (loc |> ALoc.of_loc)
-    in
+    let r = mk_reason RObjectType intersection_loc in
     r, props, dict, flags
   in
 
@@ -11760,7 +11757,7 @@ and object_kit =
       | [] ->
         let x = match join with
         | _, Or -> Nel.cons x done_rev |> Nel.concat
-        | _, And -> merge (intersect2_with_reason reason) x done_rev
+        | loc, And -> merge (intersect2_with_reason reason loc) x done_rev
         in
         next tool cx trace use_op reason tout x
       | t::todo ->
