@@ -502,7 +502,7 @@ let add_this self cx reason tparams tparams_map =
   let tparams =
     (* Use the loc for the original tparams, or just the loc for the this type if there are no
      * tparams *)
-    let loc = Option.value_map ~default:(aloc_of_reason this_reason |> ALoc.to_loc) ~f:fst tparams in
+    let loc = Option.value_map ~default:(aloc_of_reason this_reason) ~f:fst tparams in
     (* Add the type of `this` to the end of the list of type
        parameters. Remember, order is important, since we don't have recursive
        bounds (aka F-bounds): the bound of This refers to all the other type

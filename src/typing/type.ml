@@ -237,7 +237,7 @@ module rec TypeTerm : sig
        it is forced only when polymorphic types are applied. *)
 
     (* polymorphic type *)
-    | PolyT of Loc.t * typeparam Nel.t * t * int
+    | PolyT of ALoc.t * typeparam Nel.t * t * int
     (* type application *)
     | TypeAppT of use_op * t * t list
 
@@ -972,7 +972,7 @@ module rec TypeTerm : sig
     default: t option;
   }
 
-  and typeparams_nonempty = Loc.t * typeparam Nel.t
+  and typeparams_nonempty = ALoc.t * typeparam Nel.t
   and typeparams = typeparams_nonempty option
 
   and selector =
@@ -3420,7 +3420,7 @@ let apply_opt_use opt_use t_out = match opt_use with
 
 module TypeParams : sig
   val to_list: typeparams -> typeparam list
-  val of_list: Loc.t -> typeparam list -> typeparams
+  val of_list: ALoc.t -> typeparam list -> typeparams
   val map: (typeparam -> typeparam) -> typeparams -> typeparams
 end = struct
   let to_list tparams =

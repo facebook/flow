@@ -1311,7 +1311,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let tparams_ast = Some (tparams_loc, List.rev rev_asts) in
     let tparams = match List.rev rev_tparams with
     | [] -> None
-    | hd::tl -> Some (tparams_loc, (hd, tl))
+    | hd::tl -> Some (tparams_loc |> ALoc.of_loc, (hd, tl))
     in
     tparams, tparams_map, tparams_ast
 
