@@ -11862,7 +11862,11 @@ and object_kit =
   let super cx trace use_op reason resolve_tool tool tout acc = function
     | DefT (r, InstanceT (_, super, _, {own_props; _})) ->
       let slice = interface_slice cx r own_props in
-      let acc = intersect2_with_reason reason acc slice in
+      let acc = intersect2 reason acc slice in
+      let acc =
+        let (props, dict, flags) = acc in
+        (reason, props, dict, flags)
+      in
       let resolve_tool = Super (acc, resolve_tool) in
       rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
     | DefT (_, (AnyT | AnyObjT)) ->
