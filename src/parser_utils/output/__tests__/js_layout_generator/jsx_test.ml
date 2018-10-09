@@ -71,31 +71,27 @@ let tests = [
         ]
     ) in
     let layout = L.(loc ~loc:a_loc (fused [
-      loc (fused [
+      loc (group [
         atom "<"; id "A";
-        sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-          fused [
-            Layout.IfBreak (empty, (atom " "));
-            sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-              loc (fused [
-                id "a";
-                atom "=";
-                loc (fused [
-                  atom "\"";
-                  atom "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-                  atom "\"";
-                ]);
-              ]);
-            ];
-          ];
-        ];
+        indent (fused [
+          line;
+          loc (fused [
+            id "a";
+            atom "=";
+            loc (fused [
+              atom "\"";
+              atom "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+              atom "\"";
+            ]);
+          ]);
+        ]);
         atom ">";
       ]);
       sequence ~break:Layout.Break_if_pretty [
         fused [
-          loc ~loc:b_loc (loc (fused [atom "<"; id "B"; pretty_space; atom "/>"]));
+          loc ~loc:b_loc (loc (group [atom "<"; id "B"; pretty_space; atom "/>"]));
           hardline;
-          loc ~loc:c_loc (loc (fused [atom "<"; id "C"; pretty_space; atom "/>"]));
+          loc ~loc:c_loc (loc (group [atom "<"; id "C"; pretty_space; atom "/>"]));
         ]
       ];
       loc (fused [atom "</"; id "A"; atom ">"]);
@@ -136,41 +132,35 @@ let tests = [
     let layout = Js_layout_generator.expression ast in
     assert_layout ~ctxt
       L.(loc ~loc:a_loc (fused [
-        loc (fused [
+        loc (group [
           atom "<";
           id "aaaaaaaaaaaaa";
-          sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-            fused [
-              Layout.IfBreak (empty, space);
-              sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-                fused [
-                  loc (fused [
-                    id "bbbb";
-                    atom "=";
-                    loc (fused [
-                      atom "\"";
-                      atom "cccccccccccccccccccccccccccccccccccc";
-                      atom "\"";
-                    ]);
-                  ]);
-                  flat_pretty_space;
-                ];
-                loc (fused [
-                  id "ddddd";
-                  atom "=";
-                  loc (fused [
-                    atom "\"";
-                    atom "eeeeeeeeeeee";
-                    atom "\"";
-                  ]);
-                ]);
-              ];
-            ];
-          ];
+          indent ((fused [
+            line;
+            loc (fused [
+              id "bbbb";
+              atom "=";
+              loc (fused [
+                atom "\"";
+                atom "cccccccccccccccccccccccccccccccccccc";
+                atom "\"";
+              ]);
+            ]);
+            pretty_line;
+            loc (fused [
+              id "ddddd";
+              atom "=";
+              loc (fused [
+                atom "\"";
+                atom "eeeeeeeeeeee";
+                atom "\"";
+              ]);
+            ]);
+          ]));
           atom ">";
         ]);
         sequence ~break:Layout.Break_if_pretty [
-          loc ~loc:f_loc (loc (fused [
+          loc ~loc:f_loc (loc (group [
             atom "<";
             id "f";
             pretty_space;
@@ -203,11 +193,11 @@ let tests = [
        "</aaaaaaaaaaaaa>"^
        "}")
       block_layout;
-    (* TODO: the first attribute runs into the element name! *)
-    (* TODO: attributes should wrap *)
     assert_output ~ctxt ~pretty:true
       ("{\n"^
-       "  <aaaaaaaaaaaaabbbb=\"cccccccccccccccccccccccccccccccccccc\" ddddd=\"eeeeeeeeeeee\">\n"^
+       "  <aaaaaaaaaaaaa\n"^
+       "    bbbb=\"cccccccccccccccccccccccccccccccccccc\"\n"^
+       "    ddddd=\"eeeeeeeeeeee\">\n"^
        "    <f />\n"^
        "  </aaaaaaaaaaaaa>;\n"^
        "}")

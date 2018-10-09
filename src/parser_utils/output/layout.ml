@@ -51,8 +51,6 @@ let seq = {
 let space = Atom " "
 let pretty_space = IfPretty (space, Empty)
 let ugly_space = IfPretty (Empty, space)
-let flat_space = IfBreak (Empty, space)
-let flat_pretty_space = IfBreak (Empty, pretty_space)
 let flat_ugly_space = IfBreak (Empty, ugly_space)
 
 let hardline = Newline

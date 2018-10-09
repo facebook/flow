@@ -1651,16 +1651,16 @@ and jsx_fragment_opening loc =
   jsx_opening_helper loc None []
 
 and jsx_opening_helper loc nameOpt attributes =
-  source_location_with_comments (loc, fuse [
+  source_location_with_comments (loc, group [
     Atom "<";
     (match nameOpt with
     | Some name -> jsx_element_name name
     | None -> Empty);
-    if List.length attributes > 0 then
-      list
-        ~wrap:(flat_space, Empty)
-        ~inline:(false, true) (* put `>` on end of last attr *)
-        (List.map jsx_opening_attr attributes)
+    if attributes <> [] then
+      Layout.Indent (fuse [
+        line;
+        join pretty_line (List.map jsx_opening_attr attributes);
+      ])
     else Empty;
     Atom ">";
   ])
@@ -1669,13 +1669,17 @@ and jsx_self_closing (loc, { Ast.JSX.Opening.
   name; attributes; selfClosing=_
 }) =
   let attributes = List.map jsx_opening_attr attributes in
-  source_location_with_comments (loc, fuse [
+  source_location_with_comments (loc, group [
     Atom "<";
     jsx_element_name name;
     if attributes <> [] then
-      list
-        ~wrap:(flat_space, flat_pretty_space)
-        attributes
+      fuse [
+        Layout.Indent (fuse [
+          line;
+          join pretty_line attributes;
+        ]);
+        pretty_line;
+      ]
     else pretty_space;
     Atom "/>";
   ])

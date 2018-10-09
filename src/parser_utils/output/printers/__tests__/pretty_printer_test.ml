@@ -11,6 +11,8 @@ open OUnit2
 
 let space_regex = Str.regexp_string " "
 
+let flat_pretty_space = IfBreak (Empty, pretty_space)
+
 let assert_pretty_print ~ctxt ?msg expected_str layout =
   let out = layout
     |> Pretty_printer.print ~source_maps:None
