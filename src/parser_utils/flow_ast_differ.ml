@@ -320,6 +320,8 @@ let program (algo : diff_algorithm)
     | (_, Ast.Statement.ExportNamedDeclaration export1),
       (_, Ast.Statement.ExportNamedDeclaration export2) ->
       export_named_declaration export1 export2
+    | (_, Ast.Statement.Try try1), (_, Ast.Statement.Try try2) ->
+      try_ try1 try2
     | _, _ ->
       None
     in
@@ -467,6 +469,27 @@ let program (algo : diff_algorithm)
       let _object_diff = diff_if_changed expression _object1 _object2 in
       let body_diff    = diff_if_changed statement  body1    body2    in
       _object_diff @ body_diff
+
+  and try_ (try1: (Loc.t, Loc.t) Ast.Statement.Try.t) (try2: (Loc.t, Loc.t) Ast.Statement.Try.t) =
+    let open Ast.Statement.Try in
+    let { block = (_, block1); handler = handler1; finalizer = finalizer1 } = try1 in
+    let { block = (_, block2); handler = handler2; finalizer = finalizer2 } = try2 in
+    let block_diff = diff_if_changed_opt block (Some block1) (Some block2) in
+    let finalizer_diff = diff_if_changed_opt block
+      (Option.map ~f:snd finalizer1) (Option.map ~f:snd finalizer2) in
+    let handler_diff = diff_if_changed_opt handler handler1 handler2 in
+    Option.all [block_diff; finalizer_diff; handler_diff] |> Option.map ~f:List.concat
+
+  and handler (hand1: (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t)
+      (hand2: (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t) =
+    let open Ast.Statement.Try.CatchClause in
+    let _, { body = (_, block1); param = param1 } = hand1 in
+    let _, { body = (_, block2); param = param2 } = hand2 in
+    let body_diff = diff_if_changed_opt block (Some block1) (Some block2) in
+    let param_diff = diff_if_changed_nonopt_fn pattern param1 param2 in
+    Option.all [body_diff; param_diff] |> Option.map ~f:List.concat
+
+
 
   and class_ (class1: (Loc.t, Loc.t) Ast.Class.t) (class2: (Loc.t, Loc.t) Ast.Class.t) =
     let open Ast.Class in

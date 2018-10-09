@@ -428,6 +428,26 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(24, 30), "gotRenamed"] ~source
       ~expected:"do { continue; } while (gotRenamed);" ~mapper:(new useless_mapper)
   end;
+  "try_stmt_body" >:: begin fun ctxt ->
+    let source = "try { rename; } catch(e) { other; };" in
+    assert_edits_equal ctxt ~edits:[(6,12), "gotRenamed"] ~source
+      ~expected:"try { gotRenamed; } catch(e) { other; };" ~mapper:(new useless_mapper)
+  end;
+  "try_stmt_catch" >:: begin fun ctxt ->
+    let source = "try { thing; } catch(rename) { other; };" in
+    assert_edits_equal ctxt ~edits:[(21,27), "gotRenamed"] ~source
+      ~expected:"try { thing; } catch(gotRenamed) { other; };" ~mapper:(new useless_mapper)
+  end;
+  "try_stmt_handler" >:: begin fun ctxt ->
+    let source = "try { thing; } catch(e) { rename; };" in
+    assert_edits_equal ctxt ~edits:[(26,32), "gotRenamed"] ~source
+      ~expected:"try { thing; } catch(e) { gotRenamed; };" ~mapper:(new useless_mapper)
+  end;
+  "try_stmt_finalizer" >:: begin fun ctxt ->
+    let source = "try { thing; } finally { rename; };" in
+    assert_edits_equal ctxt ~edits:[(25,31), "gotRenamed"] ~source
+      ~expected:"try { thing; } finally { gotRenamed; };" ~mapper:(new useless_mapper)
+  end;
   "switch_discriminant" >:: begin fun ctxt ->
     let source = "switch (rename) { case true: break; }" in
     assert_edits_equal ctxt ~edits:[(8, 14), "gotRenamed"] ~source
