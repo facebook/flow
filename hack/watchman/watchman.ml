@@ -69,7 +69,9 @@ module Watchman_process_helpers = struct
     let response =
     try Hh_json.json_of_string output
     with e ->
-      Hh_logger.error ~exn:e "Failed to parse string as JSON: %s" output;
+      let stack = Printexc.get_backtrace () in
+      Hh_logger.error "Failed to parse string as JSON: %s\nEXCEPTION:%s\nSTACK:%s\n"
+        output (Printexc.to_string e) stack;
       raise e
     in
     assert_no_error response;

@@ -54,7 +54,8 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
         let _ = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd request in
         Lwt.return_unit
       with exn ->
-        Hh_logger.error ~exn "Failed to read response from work #%d" (worker_id w);
+        let stack = Printexc.get_backtrace () in
+        Hh_logger.error "Failed to read response from work #%d\n%s" (worker_id w) stack;
         (* Failed to send the job to the worker. Is it because the worker is dead or is it
          * something else? *)
         let%lwt pid, status = Lwt_unix.waitpid [Unix.WNOHANG] slave_pid in

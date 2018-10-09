@@ -24,6 +24,10 @@ type 'a logger_fn =
   ('a, unit, string, unit) format4 ->
   'a
 
+type 'a logger_noexn_fn =
+  ('a, unit, string, unit) format4 ->
+  'a
+
 let msg_stream, push_to_msg_stream = Lwt_stream.create ()
 
 module WriteLoop = LwtLoop.Make (struct

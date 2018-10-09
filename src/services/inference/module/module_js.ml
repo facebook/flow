@@ -276,7 +276,9 @@ module External = struct
                 let response_text = input_line in_channel in
                 json_of_string response_text
               with exn ->
-                let () = Hh_logger.fatal ~exn "Failed to talk to the module resolver" in
+                let stack = Printexc.get_backtrace () in
+                let () = Hh_logger.fatal "Failed to talk to the module resolver\n%s\n%s"
+                  (Printexc.to_string exn) stack in
                 let exn_str = Printf.sprintf "Exception %s" (Printexc.to_string exn) in
                 raise (Module_resolver_fatal exn_str)
             in

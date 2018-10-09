@@ -690,10 +690,9 @@ let basic_check_contents ~options ~workers ~env ~profiling contents filename =
   with
   | Lwt.Canceled as exn -> raise exn
   | exn ->
-    Hh_logger.error ~exn "Uncaught exception in basic_check_contents";
-    let e = spf "%s\n%s"
-      (Printexc.to_string exn)
-      (Printexc.get_backtrace ()) in
+    let stack = Printexc.get_backtrace () in
+    let e = spf "%s\n%s" (Printexc.to_string exn) stack in
+    Hh_logger.error "Uncaught exception in basic_check_contents\n%s" e;
     Lwt.return (Error e)
 
 let init_package_heap ~options ~profiling parsed =
