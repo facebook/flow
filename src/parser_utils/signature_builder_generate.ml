@@ -16,8 +16,6 @@ module Deps = Signature_builder_deps
 module Error = Deps.Error
 module Dep = Deps.Dep
 
-let loc_TODO = Loc.none
-
 (* The generator creates new AST nodes, some of whose locations do not map back very accurately to
    original locations. While these are relatively unimportant, in that they should never make their
    way into type errors, making them Loc.none is risky because they would make Flow crash in the
@@ -44,8 +42,8 @@ module T = struct
       }
     (* declarations and outlined expressions *)
     | ClassDecl of class_t
-    | FunctionDecl of Loc.t * little_annotation
-    | VariableDecl of Loc.t * little_annotation
+    | FunctionDecl of little_annotation
+    | VariableDecl of little_annotation
     (* remote *)
     | ImportNamed of {
         kind: Ast.Statement.ImportDeclaration.importKind;
@@ -66,14 +64,14 @@ module T = struct
 
   and little_annotation =
     | TYPE of type_
-    | EXPR of expr_type
+    | EXPR of (Loc.t * expr_type)
 
   and expr_type =
     (* types and expressions *)
-    | Function of (Loc.t * function_t)
+    | Function of function_t
     | ObjectLiteral of (Loc.t * object_property_t) Nel.t
     | ArrayLiteral of array_element_t Nel.t
-    | ValueRef of Loc.t * reference (* typeof `x` *)
+    | ValueRef of reference (* typeof `x` *)
 
     | NumberLiteral of Ast.NumberLiteral.t
     | StringLiteral of Ast.StringLiteral.t
@@ -86,7 +84,7 @@ module T = struct
 
     | TypeCast of type_
 
-    | Outline of Loc.t * outlinable_t
+    | Outline of outlinable_t
 
   and object_type = (Loc.t, Loc.t) Ast.Type.Object.t
 
@@ -131,13 +129,13 @@ module T = struct
     | CPrivateField of string * bool (* static *) * Loc.t Ast.Variance.t option * type_
 
   and object_property_t =
-    | OInit of object_key * expr_type
+    | OInit of object_key * (Loc.t * expr_type)
     | OMethod of object_key * (Loc.t * function_t)
     | OGet of object_key * (Loc.t * function_t)
     | OSet of object_key * (Loc.t * function_t)
 
   and array_element_t =
-    | AInit of expr_type
+    | AInit of (Loc.t * expr_type)
 
   and reference =
     | RLexical of Loc.t * string
@@ -176,14 +174,14 @@ module T = struct
   let source_of_source (loc, x) =
     loc, { Ast.StringLiteral.value = x; raw = x; }
 
-  let rec type_of_expr_type outlined loc = function
-    | Function function_t -> type_of_function outlined function_t
-    | ObjectLiteral (pt, pts) ->
+  let rec type_of_expr_type outlined = function
+    | loc, Function function_t -> type_of_function outlined (loc, function_t)
+    | loc, ObjectLiteral (pt, pts) ->
       loc, Ast.Type.Object {
         Ast.Type.Object.exact = true;
         properties = List.map (type_of_object_property outlined) (pt :: pts)
       }
-    | ArrayLiteral ets ->
+    | loc, ArrayLiteral ets ->
       loc, Ast.Type.Array (match ets with
         | et, [] -> type_of_array_element outlined et
         | et1, et2::ets ->
@@ -193,26 +191,26 @@ module T = struct
             List.map (type_of_array_element outlined) ets
           )
       )
-    | ValueRef (ref_loc, reference) ->
-      loc, Ast.Type.Typeof (type_of_generic (ref_loc, {
+    | loc, ValueRef reference ->
+      loc, Ast.Type.Typeof (type_of_generic (loc, {
         Ast.Type.Generic.id = generic_id_of_reference reference;
         targs = None;
       }))
-    | NumberLiteral nt -> loc, Ast.Type.NumberLiteral nt
-    | StringLiteral st -> loc, Ast.Type.StringLiteral st
-    | BooleanLiteral b -> loc, Ast.Type.BooleanLiteral b
-    | Number -> loc, Ast.Type.Number
-    | String -> loc, Ast.Type.String
-    | Boolean -> loc, Ast.Type.Boolean
-    | Void -> loc, Ast.Type.Void
-    | Null -> loc, Ast.Type.Null
+    | loc, NumberLiteral nt -> loc, Ast.Type.NumberLiteral nt
+    | loc, StringLiteral st -> loc, Ast.Type.StringLiteral st
+    | loc, BooleanLiteral b -> loc, Ast.Type.BooleanLiteral b
+    | loc, Number -> loc, Ast.Type.Number
+    | loc, String -> loc, Ast.Type.String
+    | loc, Boolean -> loc, Ast.Type.Boolean
+    | loc, Void -> loc, Ast.Type.Void
+    | loc, Null -> loc, Ast.Type.Null
 
-    | TypeCast t -> t
+    | _loc, TypeCast t -> t
 
-    | Outline (outlined_loc, ht) ->
-      let f = outlining_fun outlined outlined_loc ht in
-      let id = Outlined.next outlined outlined_loc f in
-      loc, Ast.Type.Typeof (type_of_generic (outlined_loc, {
+    | loc, Outline ht ->
+      let f = outlining_fun outlined loc ht in
+      let id = Outlined.next outlined loc f in
+      loc, Ast.Type.Typeof (type_of_generic (loc, {
         Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified id;
         targs = None;
       }))
@@ -257,12 +255,12 @@ module T = struct
 
 
   and type_of_array_element outlined = function
-    | AInit expr_type -> type_of_expr_type outlined loc_TODO expr_type
+    | AInit expr_type -> type_of_expr_type outlined expr_type
 
   and type_of_object_property outlined = function
     | loc, OInit (key, expr_type) -> Ast.Type.Object.Property (loc, {
         Ast.Type.Object.Property.key;
-        value = Ast.Type.Object.Property.Init (type_of_expr_type outlined loc_TODO expr_type);
+        value = Ast.Type.Object.Property.Init (type_of_expr_type outlined expr_type);
         optional = false;
         static = false;
         proto = false;
@@ -323,7 +321,11 @@ module T = struct
 
   and type_of_little_annotation outlined = function
     | TYPE t -> t
-    | EXPR expr_type -> type_of_expr_type outlined loc_TODO expr_type
+    | EXPR expr_type -> type_of_expr_type outlined expr_type
+
+  and annot_of_little_annotation outlined little_annotation =
+    let t = type_of_little_annotation outlined little_annotation in
+    fst t, t
 
   and stmt_of_decl outlined decl_loc id = function
     | Type { tparams; right; } ->
@@ -347,16 +349,16 @@ module T = struct
       decl_loc, Ast.Statement.DeclareClass {
         Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body;
       }
-    | FunctionDecl (loc, little_annotation) ->
+    | FunctionDecl little_annotation ->
       decl_loc, Ast.Statement.DeclareFunction {
         Ast.Statement.DeclareFunction.id;
-        annot = loc, type_of_little_annotation outlined little_annotation;
+        annot = annot_of_little_annotation outlined little_annotation;
         predicate = None;
       }
-    | VariableDecl (loc, little_annotation) ->
+    | VariableDecl little_annotation ->
       decl_loc, Ast.Statement.DeclareVariable {
         Ast.Statement.DeclareVariable.id;
-        annot = Ast.Type.Available (loc, type_of_little_annotation outlined little_annotation)
+        annot = Ast.Type.Available (annot_of_little_annotation outlined little_annotation)
       }
     | ImportNamed { kind; source; name; } ->
       let importKind = kind in
@@ -536,16 +538,16 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
   and literal_expr =
     let open Ast.Expression in
     function
-      | _, Literal { Ast.Literal.value; raw } ->
+      | loc, Literal { Ast.Literal.value; raw } ->
         begin match value with
-          | Ast.Literal.String value -> T.StringLiteral { Ast.StringLiteral.value; raw }
-          | Ast.Literal.Number value -> T.NumberLiteral { Ast.NumberLiteral.value; raw }
-          | Ast.Literal.Boolean b -> T.BooleanLiteral b
-          | Ast.Literal.Null -> T.Null
+          | Ast.Literal.String value -> loc, T.StringLiteral { Ast.StringLiteral.value; raw }
+          | Ast.Literal.Number value -> loc, T.NumberLiteral { Ast.NumberLiteral.value; raw }
+          | Ast.Literal.Boolean b -> loc, T.BooleanLiteral b
+          | Ast.Literal.Null -> loc, T.Null
           | _ -> raise (Error "literal_expr")
         end
-      | _, TemplateLiteral _ -> T.String
-      | loc, Identifier stuff -> T.ValueRef (loc, identifier stuff)
+      | loc, TemplateLiteral _ -> loc, T.String
+      | loc, Identifier stuff -> loc, T.ValueRef (identifier stuff)
       | loc, Class stuff ->
         let open Ast.Class in
         let {
@@ -555,7 +557,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         let super, super_targs = match extends with
           | None -> None, None
           | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
-        T.Outline (loc, T.Class (class_ tparams body super super_targs implements))
+        loc, T.Outline (T.Class (class_ tparams body super super_targs implements))
       | loc, Function stuff
       | loc, ArrowFunction stuff
         ->
@@ -564,21 +566,21 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           generator; tparams; params; return; body;
           id = _; async = _; predicate = _; expression = _
         } = stuff in
-        T.Function (loc, function_ generator tparams params return body)
-      | _, Object stuff ->
+        loc, T.Function (function_ generator tparams params return body)
+      | loc, Object stuff ->
         let open Ast.Expression.Object in
         let { properties } = stuff in
-        T.ObjectLiteral (object_ properties)
-      | _, Array stuff ->
+        loc, T.ObjectLiteral (object_ properties)
+      | loc, Array stuff ->
         let open Ast.Expression.Array in
         let { elements } = stuff in
-        T.ArrayLiteral (array_ elements)
-      | _, TypeCast stuff ->
+        loc, T.ArrayLiteral (array_ elements)
+      | loc, TypeCast stuff ->
         let open Ast.Expression.TypeCast in
         let { annot; expression = _ } = stuff in
         let _, t = annot in
-        T.TypeCast (type_ t)
-      | loc, Member stuff -> T.ValueRef (loc, member stuff)
+        loc, T.TypeCast (type_ t)
+      | loc, Member stuff -> loc, T.ValueRef (member stuff)
       | loc, Import (source_loc,
          (Literal { Ast.Literal.value = Ast.Literal.String value; raw } |
           TemplateLiteral {
@@ -586,9 +588,9 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
               TemplateLiteral.Element.value = { TemplateLiteral.Element.cooked = value; raw }; _
             }]; _
           })) ->
-        T.Outline (loc, T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw }))
-      | (_, Call { Ast.Expression.Call.callee = (_, Identifier (_, "require")); _ }) as expr ->
-        T.Outline (fst expr, T.DynamicRequire expr)
+        loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw }))
+      | (loc, Call { Ast.Expression.Call.callee = (_, Identifier (_, "require")); _ }) as expr ->
+        loc, T.Outline (T.DynamicRequire expr)
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
         let { operator; argument } = stuff in
@@ -611,11 +613,11 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           | Assign -> literal_expr right
           | _ -> raise (Error "assignment")
         end
-      | _, Update stuff ->
+      | loc, Update stuff ->
         let open Ast.Expression.Update in
         (* This operation has a simple result type. *)
         let { operator = _; argument = _; prefix = _ } = stuff in
-        T.Number
+        loc, T.Number
 
       | _loc, Call _
       | _loc, Comprehension _
@@ -657,48 +659,48 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | loc, Member stuff -> loc, member stuff
       | _ -> raise (Error "ref_expr") (* TODO: verification error *)
 
-  and arith_unary operator _loc (* TODO *) _argument =
+  and arith_unary operator loc _argument =
     let open Ast.Expression.Unary in
     match operator with
       (* These operations have simple result types. *)
-      | Minus -> T.Number
-      | Plus -> T.Number
-      | Not -> T.Boolean
-      | BitNot -> T.Number
-      | Typeof -> T.String
-      | Void -> T.Void
-      | Delete -> T.Boolean
+      | Minus -> loc, T.Number
+      | Plus -> loc, T.Number
+      | Not -> loc, T.Boolean
+      | BitNot -> loc, T.Number
+      | Typeof -> loc, T.String
+      | Void -> loc, T.Void
+      | Delete -> loc, T.Boolean
 
       | Await ->
         (* The result type of this operation depends in a complicated way on the argument type. *)
         raise (Error "await")
 
-  and arith_binary operator _loc (* TODO *) _left _right =
+  and arith_binary operator loc _left _right =
     let open Ast.Expression.Binary in
     match operator with
       | Plus -> raise (Error "plus") (* TODO: verification error *)
       (* These operations have simple result types. *)
-      | Equal -> T.Boolean
-      | NotEqual -> T.Boolean
-      | StrictEqual -> T.Boolean
-      | StrictNotEqual -> T.Boolean
-      | LessThan -> T.Boolean
-      | LessThanEqual -> T.Boolean
-      | GreaterThan -> T.Boolean
-      | GreaterThanEqual -> T.Boolean
-      | LShift -> T.Number
-      | RShift -> T.Number
-      | RShift3 -> T.Number
-      | Minus -> T.Number
-      | Mult -> T.Number
-      | Exp -> T.Number
-      | Div -> T.Number
-      | Mod -> T.Number
-      | BitOr -> T.Number
-      | Xor -> T.Number
-      | BitAnd -> T.Number
-      | In -> T.Boolean
-      | Instanceof -> T.Boolean
+      | Equal -> loc, T.Boolean
+      | NotEqual -> loc, T.Boolean
+      | StrictEqual -> loc, T.Boolean
+      | StrictNotEqual -> loc, T.Boolean
+      | LessThan -> loc, T.Boolean
+      | LessThanEqual -> loc, T.Boolean
+      | GreaterThan -> loc, T.Boolean
+      | GreaterThanEqual -> loc, T.Boolean
+      | LShift -> loc, T.Number
+      | RShift -> loc, T.Number
+      | RShift3 -> loc, T.Number
+      | Minus -> loc, T.Number
+      | Mult -> loc, T.Number
+      | Exp -> loc, T.Number
+      | Div -> loc, T.Number
+      | Mod -> loc, T.Number
+      | BitOr -> loc, T.Number
+      | Xor -> loc, T.Number
+      | BitAnd -> loc, T.Number
+      | In -> loc, T.Boolean
+      | Instanceof -> loc, T.Boolean
 
   and function_ =
     let function_params params =
@@ -715,7 +717,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       let params = function_params params in
       let return = match return with
         | Ast.Type.Missing loc ->
-          if not generator && Signature_utils.Procedure_decider.is body then T.EXPR (T.Void)
+          if not generator && Signature_utils.Procedure_decider.is body then T.EXPR (loc, T.Void)
           else raise (Error (Printf.sprintf "%s (%s)" "not void" (Loc.to_string loc)))
         | Ast.Type.Available (_, t) -> T.TYPE (type_ t) in
       (* TODO: It is unclear whether what happens for async or generator functions. In particular,
@@ -843,12 +845,12 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
   let eval (loc, kind) =
     match kind with
       | Kind.VariableDef { annot; init } ->
-        T.VariableDecl (loc_TODO, Eval.annotation ?init annot)
+        T.VariableDecl (Eval.annotation ?init annot)
       | Kind.FunctionDef { generator; tparams; params; return; body; } ->
-        T.FunctionDecl (loc_TODO, T.EXPR
-          (T.Function (loc, Eval.function_ generator tparams params return body)))
+        T.FunctionDecl (T.EXPR
+          (loc, T.Function (Eval.function_ generator tparams params return body)))
       | Kind.DeclareFunctionDef { annot = (_, t) } ->
-        T.FunctionDecl (loc_TODO, T.TYPE (Eval.type_ t))
+        T.FunctionDecl (T.TYPE (Eval.type_ t))
       | Kind.ClassDef { tparams; body; super; super_targs; implements } ->
         T.ClassDecl (Eval.class_ tparams body super super_targs implements)
       | Kind.DeclareClassDef { tparams; body = (body_loc, body); extends; mixins; implements } ->
@@ -917,12 +919,12 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       | Some mod_exp_loc, [File_sig.DeclareModuleExportsDef (loc, t)] ->
         [mod_exp_loc, Ast.Statement.DeclareModuleExports (loc, t)]
       | Some mod_exp_loc, [File_sig.SetModuleExportsDef expr] ->
-        let annot = T.type_of_expr_type outlined loc_TODO (Eval.literal_expr expr) in
-        [mod_exp_loc, Ast.Statement.DeclareModuleExports (loc_TODO, annot)]
+        let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
+        [mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot)]
       | Some mod_exp_loc, list ->
         let properties = List.map (function
           | File_sig.AddModuleExportsDef (id, expr) ->
-            let annot = T.type_of_expr_type outlined loc_TODO (Eval.literal_expr expr) in
+            let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
             let open Ast.Type.Object in
             Property (fst id, {
               Property.key = Ast.Expression.Object.Property.Identifier id;
@@ -984,7 +986,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         generator; tparams; params; return; body;
         async = _; predicate = _; expression = _
       })) ->
-      `Expr (T.Function (loc, Eval.function_ generator tparams params return body))
+      `Expr (loc, T.Function (Eval.function_ generator tparams params return body))
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
       `Decl (eval_class loc class_)
     | Declaration (loc, Ast.Statement.ClassDeclaration ({
@@ -995,7 +997,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       let super, super_targs = match extends with
         | None -> None, None
         | Some (_, { Ast.Class.Extends.expr; targs; }) -> Some expr, targs in
-      `Expr (T.Outline (loc, T.Class (Eval.class_ tparams body super super_targs implements)))
+      `Expr (loc, T.Outline (T.Class (Eval.class_ tparams body super super_targs implements)))
     | Declaration _stmt -> raise Eval.Unreachable (* TODO: update signature verifier *)
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
       `Decl (eval_function_declaration loc function_)
@@ -1068,7 +1070,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
               }) :: acc
             | `Expr expr_type ->
               let declaration = Ast.Statement.DeclareExportDeclaration.DefaultType
-                (T.type_of_expr_type outlined loc_TODO expr_type) in
+                (T.type_of_expr_type outlined expr_type) in
               (export_loc, Ast.Statement.DeclareExportDeclaration {
                 Ast.Statement.DeclareExportDeclaration.default = Some default_loc;
                 declaration = Some declaration;
