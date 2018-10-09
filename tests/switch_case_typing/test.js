@@ -85,3 +85,16 @@ switch (o.type) {
   case 3: // error
     break;
 }
+
+declare var s: String;
+if (s === "a" || s === "b") {} // error
+if (s === "a" && s === "b") {} // error
+
+declare var st: string;
+if (st === 1 || st === 2) {} // error
+if (st === 1 && st === 2) {} // error
+
+type Obj = { field : string };
+declare var obj: Obj;
+if (obj.field === 1 || obj.field === 2) {} // error
+if (obj.field === 1 && obj.field === 2) {} // error

@@ -191,5 +191,173 @@ References:
                                                                         ^^^^^ [4]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:90:11
 
-Found 11 errors
+string literal `a` [1] is incompatible with `String` [2].
+
+   test.js:90:11
+   90| if (s === "a" || s === "b") {} // error
+                 ^^^ [1]
+
+References:
+   test.js:89:16
+   89| declare var s: String;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:90:24
+
+string literal `b` [1] is incompatible with `String` [2].
+
+   test.js:90:24
+   90| if (s === "a" || s === "b") {} // error
+                              ^^^ [1]
+
+References:
+   test.js:89:16
+   89| declare var s: String;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:91:11
+
+string literal `a` [1] is incompatible with `String` [2].
+
+   test.js:91:11
+   91| if (s === "a" && s === "b") {} // error
+                 ^^^ [1]
+
+References:
+   test.js:89:16
+   89| declare var s: String;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:91:24
+
+string literal `b` [1] is incompatible with `String` [2].
+
+   test.js:91:24
+   91| if (s === "a" && s === "b") {} // error
+                              ^^^ [1]
+
+References:
+   test.js:89:16
+   89| declare var s: String;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:94:12
+
+number literal `1` [1] is incompatible with string [2].
+
+   test.js:94:12
+   94| if (st === 1 || st === 2) {} // error
+                  ^ [1]
+
+References:
+   test.js:93:17
+   93| declare var st: string;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:94:24
+
+number literal `2` [1] is incompatible with string [2].
+
+   test.js:94:24
+   94| if (st === 1 || st === 2) {} // error
+                              ^ [1]
+
+References:
+   test.js:93:17
+   93| declare var st: string;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:95:12
+
+number literal `1` [1] is incompatible with string [2].
+
+   test.js:95:12
+   95| if (st === 1 && st === 2) {} // error
+                  ^ [1]
+
+References:
+   test.js:93:17
+   93| declare var st: string;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:95:24
+
+number literal `2` [1] is incompatible with string [2].
+
+   test.js:95:24
+   95| if (st === 1 && st === 2) {} // error
+                              ^ [1]
+
+References:
+   test.js:93:17
+   93| declare var st: string;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:99:19
+
+number [1] is incompatible with string [2].
+
+   test.js:99:19
+   99| if (obj.field === 1 || obj.field === 2) {} // error
+                         ^ [1]
+
+References:
+   test.js:97:22
+   97| type Obj = { field : string };
+                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:99:38
+
+number [1] is incompatible with string [2].
+
+   test.js:99:38
+   99| if (obj.field === 1 || obj.field === 2) {} // error
+                                            ^ [1]
+
+References:
+   test.js:97:22
+   97| type Obj = { field : string };
+                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:100:19
+
+number [1] is incompatible with string [2].
+
+   test.js:100:19
+   100| if (obj.field === 1 && obj.field === 2) {} // error
+                          ^ [1]
+
+References:
+   test.js:97:22
+    97| type Obj = { field : string };
+                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:100:38
+
+number [1] is incompatible with string [2].
+
+   test.js:100:38
+   100| if (obj.field === 1 && obj.field === 2) {} // error
+                                             ^ [1]
+
+References:
+   test.js:97:22
+    97| type Obj = { field : string };
+                             ^^^^^^ [2]
+
+
+
+Found 23 errors
