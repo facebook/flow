@@ -92,7 +92,7 @@ module type WATCHMAN_PROCESS = sig
   val (>>=): 'a result -> ('a -> 'b result) -> 'b result
   val (>|=): 'a result -> ('a -> 'b) -> 'b result
   val return: 'a -> 'a result
-  val catch: f:(unit -> 'b result) -> catch:(exn -> 'b result) -> 'b result
+  val catch: f:(unit -> 'b result) -> catch:(stack: string -> exn -> 'b result) -> 'b result
 
   val list_fold_values: 'a list -> init:'b -> f:('b -> 'a -> 'b result) -> 'b result
 

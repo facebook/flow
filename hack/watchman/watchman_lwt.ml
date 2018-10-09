@@ -20,7 +20,10 @@ struct
   let (>|=) = Lwt.(>|=)
   let return = Lwt.return
 
-  let catch ~f ~catch = Lwt.catch f catch
+  let catch ~f ~catch = Lwt.catch f (fun e ->
+    (* TODO(ljw): what if the backtract has been corrupted by the time we get here? *)
+    let dodgy_stack = Printexc.get_backtrace () in
+    catch ~stack:dodgy_stack e)
 
   let list_fold_values l ~init ~f =
     Lwt_list.fold_left_s f init l

@@ -92,7 +92,12 @@ end = struct
   let (>|=) a f = f a
   let return x = x
 
-  let catch ~f ~catch = try f () with exn -> catch exn
+  let catch ~f ~catch =
+    try
+      f ()
+    with exn ->
+      let stack = Printexc.get_backtrace () in
+      catch ~stack exn
 
   let list_fold_values = List.fold
 
@@ -407,15 +412,15 @@ struct
   (****************************************************************************)
 
   let with_crash_record_exn source f =
-    Watchman_process.catch ~f ~catch:(fun e ->
-      Hh_logger.exc_with_dodgy_backtrace ~prefix:("Watchman " ^ source ^ ": ") e;
+    Watchman_process.catch ~f ~catch:(fun ~stack e ->
+      Hh_logger.exc ~prefix:("Watchman " ^ source ^ ": ") ~stack e;
       raise e
     )
 
   let with_crash_record_opt source f =
     Watchman_process.catch
       ~f:(fun () -> with_crash_record_exn source f >|= fun v -> Some v)
-      ~catch:(fun _ -> Watchman_process.return None)
+      ~catch:(fun ~stack:_ _exn -> Watchman_process.return None)
 
   let has_capability name capabilities =
     (** Projects down from the boolean error monad into booleans.
@@ -587,7 +592,8 @@ struct
           with_crash_record_exn source (fun () -> f env) >|= fun (env, result) ->
           Watchman_alive env, result
         )
-        ~catch:(function
+        ~catch:(fun ~stack exn ->
+          match exn with
           | Sys_error msg when msg = "Broken pipe" ->
             Hh_logger.log "Watchman Pipe broken.";
             close_channel_on_instance env
@@ -620,7 +626,7 @@ struct
             Hh_logger.log "Watchman error: %s. Closing channel" msg;
             close_channel_on_instance env
           | e ->
-            let msg = Printexc.to_string e in
+            let msg = Printf.sprintf "%s\n%s" (Printexc.to_string e) stack in
             EventLogger.watchman_uncaught_failure msg;
             raise Exit_status.(Exit_with Watchman_failed)
         )
@@ -639,7 +645,7 @@ struct
           env.clockspec <- J.get_string_val "clock" response;
           extract_file_names env response
       )
-      ~catch:(fun _ -> raise Exit_status.(Exit_with Watchman_failed))
+      ~catch:(fun ~stack:_ _ -> raise Exit_status.(Exit_with Watchman_failed))
 
   let make_state_change_response state name data =
     let metadata = J.try_get_val "metadata" data in
