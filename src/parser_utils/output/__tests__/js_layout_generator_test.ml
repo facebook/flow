@@ -17,12 +17,6 @@ module E = Ast_builder.Expressions
 module J = Ast_builder.JSXs
 module L = Layout_builder
 
-let make_loc start_line end_line = Loc.{
-    source = None;
-    start = { line = start_line; column = 0; offset = 0; };
-    _end = { line = end_line; column = 0; offset = 0; };
-  }
-
 let tests = "js_layout_generator" >::: [
   "operator_precedence" >::: Operator_precedence_test.tests;
   "assignment_precedence" >:: Assignment_precedence_test.test;
@@ -30,6 +24,7 @@ let tests = "js_layout_generator" >::: [
   "objects" >::: Object_test.tests;
   "comment" >::: Comment_test.tests;
   "program" >::: Program_test.tests;
+  "jsx" >::: Jsx_test.tests;
 
   "unary_plus_binary" >::
     begin fun ctxt ->
@@ -1252,125 +1247,6 @@ let tests = "js_layout_generator" >::: [
     begin fun ctxt ->
       assert_expression_string ~ctxt {|import("a")|};
       assert_expression_string ~ctxt "import(a)";
-    end;
-
-  "jsx_element" >::
-    begin fun ctxt ->
-      assert_expression_string ~ctxt "<A/>";
-      assert_expression_string ~ctxt "<A></A>";
-      assert_expression_string ~ctxt "<A:a/>";
-      assert_expression_string ~ctxt "<A.b/>";
-      assert_expression_string ~ctxt "<A.b.c/>";
-      assert_expression_string ~ctxt "<A><B/></A>";
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A a=\"a\"><B /></A>"
-      );
-
-      begin
-        let a_loc = make_loc 1 4 in
-        let b_loc = make_loc 2 2 in
-        let c_loc = make_loc 3 3 in
-        let ast = E.jsx_element ~loc:a_loc (
-          J.element
-            (J.identifier "A")
-            ~attrs:[
-              J.attr
-                (J.attr_identifier "a")
-                (Some (J.attr_literal (Literals.string (String.make 80 'a'))))
-            ]
-            ~children:[
-              J.child_element ~loc:b_loc (J.identifier "B") ~selfclosing:true;
-              J.child_element ~loc:c_loc (J.identifier "C") ~selfclosing:true;
-            ]
-        ) in
-        let layout = L.(loc ~loc:a_loc (fused [
-          loc (fused [
-            atom "<"; id "A";
-            sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-              fused [
-                Layout.IfBreak (empty, (atom " "));
-                sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-                  loc (fused [
-                    id "a";
-                    atom "=";
-                    loc (fused [
-                      atom "\"";
-                      atom "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-                      atom "\"";
-                    ]);
-                  ]);
-                ];
-              ];
-            ];
-            atom ">";
-          ]);
-          sequence ~break:Layout.Break_if_pretty [
-            fused [
-              loc ~loc:b_loc (loc (fused [atom "<"; id "B"; pretty_space; atom "/>"]));
-              hardline;
-              loc ~loc:c_loc (loc (fused [atom "<"; id "C"; pretty_space; atom "/>"]));
-            ]
-          ];
-          loc (fused [atom "</"; id "A"; atom ">"]);
-        ])) in
-        assert_layout_of_expression ~ctxt layout ast;
-        assert_expression ~ctxt ~pretty:true (
-          "<A\n  a=\"" ^ String.make 80 'a' ^ "\">\n  <B />\n  <C />\n</A>"
-        ) ast;
-        assert_expression ~ctxt (
-          "<A a=\"" ^ String.make 80 'a' ^ "\"><B/>\n<C/></A>"
-        ) ast;
-      end;
-
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A a=\"a\">\n  " ^ String.make 80 'b' ^ "\n</A>"
-      );
-
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A a=\"a\">\n  a{\" \"}\n  b\n</A>"
-      );
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A><B /><C /></A>"
-      );
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A>\n  <" ^ String.make 80 'B' ^ " />\n  <C />\n</A>"
-      );
-      (* TODO: Utils_jsx.trim_jsx_text is overly aggressive for pretty
-       *       printing, user supplied newlines between words should be
-       *       maintained. The following test should pass:
-       *
-       *  assert_expression_string ~ctxt ~pretty:true (
-       *    "<A>\n  " ^ String.make 80 'a' ^ "\n  " ^ String.make 80 'b' ^ "\n</A>"
-       *  );
-       *)
-    end;
-
-  "jsx_attribute" >::
-    begin fun ctxt ->
-      (* TODO: valueless attributes shouldnt print trailing spaces when last *)
-      assert_expression_string ~ctxt "<A a />";
-      assert_expression_string ~ctxt "<A a:a />";
-      assert_expression_string ~ctxt "<A a={1}/>";
-      assert_expression_string ~ctxt "<A a=\"\"/>";
-      assert_expression_string ~ctxt "<A {...a}/>";
-      assert_expression_string ~ctxt "<A a {...a}b />";
-      assert_expression_string ~ctxt "<A a b />";
-      assert_expression_string ~ctxt "<A a b=\"\"/>";
-      assert_expression_string ~ctxt "<A a=\"a\"b={b}/>";
-      assert_expression_string ~ctxt "<A b=\"\"a />";
-      assert_expression_string ~ctxt "<A b={1}a />";
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A a=\"a\" b />"
-      );
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A\n  a=\"" ^ String.make 80 'a' ^ "\"\n  b\n/>"
-      );
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A a=\"a\" b=\"b\" />"
-      );
-      assert_expression_string ~ctxt ~pretty:true (
-        "<A\n  a=\"" ^ String.make 80 'a' ^ "\"\n  b=\"b\"\n/>"
-      );
     end;
 
   "import_declaration_statement" >::

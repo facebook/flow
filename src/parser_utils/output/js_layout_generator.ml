@@ -1668,13 +1668,14 @@ and jsx_opening_helper loc nameOpt attributes =
 and jsx_self_closing (loc, { Ast.JSX.Opening.
   name; attributes; selfClosing=_
 }) =
+  let attributes = List.map jsx_opening_attr attributes in
   source_location_with_comments (loc, fuse [
     Atom "<";
     jsx_element_name name;
-    if List.length attributes > 0 then
+    if attributes <> [] then
       list
         ~wrap:(flat_space, flat_pretty_space)
-        (List.map jsx_opening_attr attributes)
+        attributes
     else pretty_space;
     Atom "/>";
   ])
