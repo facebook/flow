@@ -4325,6 +4325,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | CustomFunT (reason, _), _ when function_like_op u ->
       rec_flow cx trace (DefT (reason, AnyFunT), u)
 
+    (* Any propagation *)
+
+    | DefT (_, AnyT), UseT (use_op, DefT (_, FunT (_, _, funtype))) ->
+        let { this_t; params; rest_param; return_t;
+              closure_t = _; is_predicate = _; changeset = _; def_reason = _; } = funtype in
+        List.iter (fun (_, t) -> rec_flow_t cx trace ~use_op (t, l)) params;
+        Option.iter ~f:(fun (_, _, t) -> rec_flow_t cx trace ~use_op (t, l)) rest_param;
+        rec_flow_t cx trace ~use_op (this_t, l);
+        rec_flow_t cx trace ~use_op (l, return_t)
+
     (*********************************************)
     (* object types deconstruct into their parts *)
     (*********************************************)
@@ -7006,9 +7016,6 @@ and ground_subtype = function
 
   (* Allow deferred unification with `any` *)
   | (_, UnifyT _) -> false
-
-  (* Allow any propagation to dictionaries *)
-  | DefT (_, AnyT), ElemT _ -> false
 
   | DefT (_, UnionT _), _ -> false
 
