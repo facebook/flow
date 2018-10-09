@@ -15,6 +15,10 @@ let of_list = function
   | x::xs -> Some (x, xs)
   | [] -> None
 
+let of_list_exn = function
+  | x::xs -> (x, xs)
+  | [] -> failwith "of_list_exn given empty list"
+
 let one x = (x, [])
 
 let cons x0 (x1, xs) = (x0, x1::xs)
@@ -79,6 +83,8 @@ let length (_, xs) = 1 + List.length xs
 let fold_left f acc (x, xs) = List.fold_left f acc (x::xs)
 
 let hd (x, _) = x
+
+let tl (_, xs) = xs
 
 let nth nel n = List.nth (to_list nel) n
 

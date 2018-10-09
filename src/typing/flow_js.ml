@@ -12207,33 +12207,22 @@ class assert_ground_visitor skip r context = object (self)
   val mutable insts: (int * SSet.t) Properties.Map.t = Properties.Map.empty
 
   val depth = ref 0
-  val reason_stack = ref [r]
+  val reason_stack = ref (Nel.one r)
   val max_reasons = Context.max_trace_depth context
 
   method private push_frame r =
     incr depth;
-    if max_reasons > 0 then (
-      let head_loc = def_aloc_of_reason (List.hd !reason_stack) |> ALoc.to_loc in
-      let curr_loc = def_aloc_of_reason r |> ALoc.to_loc in
-      let should_add = Loc.span_compare head_loc curr_loc = 0 in
-      reason_stack := if should_add
-        then r::(List.tl !reason_stack)
-        else r::!reason_stack;
-      if max_reasons > 0 && List.length !reason_stack > max_reasons then (
-        let top_half = ListUtils.first_n (max_reasons / 2) !reason_stack in
-        let bottom_half_num = if max_reasons mod 2 = 1
-          then max_reasons / 2 + 1
-          else max_reasons / 2 in
-        let bottom_half = ListUtils.last_n bottom_half_num !reason_stack in
-        reason_stack := top_half @ bottom_half);
-      should_add
-    ) else false
+    if max_reasons > 0 && Nel.length !reason_stack < max_reasons then (
+      reason_stack := Nel.cons r !reason_stack;
+      true)
+    else false
 
   method private pop_frame did_add =
     decr depth;
-    if max_reasons > 0 then (
-      if did_add then
-        reason_stack := List.tl !reason_stack;
+    if max_reasons > 0 && did_add then (
+      (* We start with a Nel and always add in push_frame, so the tail should always
+       * be non-empty *)
+      reason_stack := (Nel.of_list_exn (Nel.tl !reason_stack));
     )
 
   method private with_frame r f =
@@ -12274,7 +12263,7 @@ class assert_ground_visitor skip r context = object (self)
              then []
              else List.map (fun reason ->
                  repos_reason (def_aloc_of_reason reason |> ALoc.to_loc) reason)
-               !reason_stack in
+               (Nel.to_list !reason_stack) in
           add_output cx (FlowError.EMissingAnnotation (r, trace_reasons))
         );
         if Polarity.compat (pole, Positive)
