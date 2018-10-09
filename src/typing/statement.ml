@@ -40,10 +40,27 @@ let translate_identifier_or_literal_key t = Ast.Expression.Object.(function
   | Property.Literal (loc, lit) -> Property.Literal ((loc, t), lit)
   | Property.PrivateName _ | Property.Computed _ -> assert_false "precondition not met")
 
+let convert_tparam_instantiations cx tparams_map instantiations =
+  let open Ast.Expression.TypeParameterInstantiation in
+  let rec loop ts tasts cx tparams_map = function
+  | [] -> (List.rev ts, List.rev tasts)
+  | ast::asts ->
+    begin match ast with
+    | Explicit ast ->
+        let (_, t), _ as tast = Anno.convert cx tparams_map ast in
+        loop (t::ts) ((Explicit tast)::tasts) cx tparams_map asts
+    | Implicit loc ->
+        let (_, t), _ as tast = Anno.error_type cx loc
+          (Flow_error.EImplicitInstantiationNotYetSupported loc) in
+        loop (t::ts) ((Explicit tast)::tasts) cx tparams_map asts
+    end
+  in
+  loop [] [] cx tparams_map instantiations
+
 let convert_targs cx = function
   | None -> None, None
   | Some (loc, args) ->
-    let targts, targs_ast = Anno.convert_list cx SMap.empty args in
+    let targts, targs_ast = convert_tparam_instantiations cx SMap.empty args in
     List.iter (fun t ->
       Type_table.set_targ (Context.type_table cx) (TypeUtil.loc_of_t t) t
     ) targts;
@@ -2895,7 +2912,7 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
       arguments
     } -> (
       let targts_opt = Option.map targs (fun (targts_loc, args) ->
-        targts_loc, List.map (Anno.convert cx SMap.empty) args
+        targts_loc, convert_tparam_instantiations cx SMap.empty args
       ) in
       let argts, arges = arguments
         |> List.map (expression_or_spread cx)
@@ -2933,7 +2950,7 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
         (loc, AnyT.at (loc |> ALoc.of_loc)),
         New {
           New.callee = callee_annot, Identifier ((id_loc, id_t), name);
-          targs = Some (targts_loc, targts);
+          targs = Some (targts_loc, snd targts);
           arguments = arges
         }
     )
@@ -2944,11 +2961,11 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
       arguments
     } -> (
       let targts = Option.map targs (fun (loc, args) ->
-        loc, List.map (Anno.convert cx SMap.empty) args
+        loc, (convert_tparam_instantiations cx SMap.empty args)
       ) in
       let args = List.map (expression_or_spread cx) arguments in
       let result = match targts, args with
-      | Some (loc, [elem_t]), [Arg argt, arg] -> Ok (Some (loc, elem_t), argt, arg)
+      | Some (loc, ([t], [elem_t])), [Arg argt, arg] -> Ok (Some (loc, elem_t, t), argt, arg)
       | None, [Arg argt, arg] -> Ok (None, argt, arg)
       | None, _ -> Error (Flow_error.EUseArrayLiteral loc)
       | Some _, _ ->
@@ -2966,7 +2983,7 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
           replace_reason_const (RCustom "array length") reason in
         Flow.flow_t cx (arg_t, DefT (length_reason, NumT AnyLiteral));
         let t, targs = match targ_t with
-        | Some (loc, ((_, t), _ as targ)) -> t, Some (loc, [targ])
+        | Some (loc, ast, t) -> t, Some (loc, [ast])
         | None ->
           let element_reason =
             replace_reason_const (RCustom "array element") reason in
@@ -3359,7 +3376,7 @@ and subscript =
       } when not (Env.local_scope_entry_exists name) ->
       let lhs_t, arguments = (
         let targts = Option.map targs (fun (_, args) ->
-          List.map (Anno.convert cx SMap.empty) args
+          snd (convert_tparam_instantiations cx SMap.empty args)
         ) in
         match targts, arguments with
         | None, [ Expression (source_loc, Ast.Expression.Literal {
@@ -3414,7 +3431,7 @@ and subscript =
       } when not (Env.local_scope_entry_exists name) ->
       let lhs_t, arguments = (
         let targts = Option.map targs (fun (_, args) ->
-          List.map (Anno.convert cx SMap.empty) args
+          snd (convert_tparam_instantiations cx SMap.empty args)
         ) in
         match targts, arguments with
         | None, [
@@ -3679,7 +3696,7 @@ and subscript =
         (* TODO: require *)
         let (_, callee_t), _ as callee = expression cx callee in
         let targs = Option.map targs (fun (loc, args) ->
-          loc, List.map (Anno.convert cx SMap.empty) args
+          loc, snd (convert_tparam_instantiations cx SMap.empty args)
         ) in
         (* NOTE: if an invariant expression throws abnormal control flow, the
             entire statement it was in is reconstructed in the typed AST as an
@@ -6039,7 +6056,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     | "freeze"  ),
     Some (targs_loc, targs),
     _ ->
-    let targs = List.map (Anno.convert cx SMap.empty) targs in
+    let targs = snd (convert_tparam_instantiations cx SMap.empty targs) in
     let args = List.map (fun arg -> snd (expression_or_spread cx arg)) args in
     Flow.add_output cx Flow_error.(ECallTypeArity {
       call_loc = loc;

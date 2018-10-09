@@ -249,6 +249,7 @@ and Type : sig
     and ('M, 'T) t' = ('M, 'T) TypeParam.t list
     [@@deriving show]
   end
+
   module ParameterInstantiation : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
     and ('M, 'T) t' = ('M, 'T) Type.t list
@@ -627,6 +628,14 @@ and Statement : sig
 end = Statement
 
 and Expression : sig
+
+  module TypeParameterInstantiation : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+    and ('M, 'T) type_parameter_instantiation = Explicit of ('M, 'T) Type.t | Implicit of 'T
+    and ('M, 'T) t' = ('M, 'T) type_parameter_instantiation list
+    [@@deriving show]
+  end
+
   module SpreadElement : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
     and ('M, 'T) t' = {
@@ -838,7 +847,7 @@ and Expression : sig
   module New : sig
     type ('M, 'T) t = {
       callee: ('M, 'T) Expression.t;
-      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+      targs: ('M, 'T) Expression.TypeParameterInstantiation.t option;
       arguments: ('M, 'T) expression_or_spread list;
     }
     [@@deriving show]
@@ -846,7 +855,7 @@ and Expression : sig
   module Call : sig
     type ('M, 'T) t = {
       callee: ('M, 'T) Expression.t;
-      targs: ('M, 'T) Type.ParameterInstantiation.t option;
+      targs: ('M, 'T) Expression.TypeParameterInstantiation.t option;
       arguments: ('M, 'T) expression_or_spread list;
     }
     [@@deriving show]

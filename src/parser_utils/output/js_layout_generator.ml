@@ -814,7 +814,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           Atom "new";
           callee_layout;
         ];
-        option type_parameter_instantiation targs;
+        option type_parameter_instantiation_with_implicit targs;
         list
           ~wrap:(Atom "(", Atom ")")
           ~sep:(Atom ",")
@@ -929,7 +929,7 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
         list
           ~wrap:(Atom less_than, Atom ">")
           ~sep:(Atom ",")
-          (List.map type_ args)
+          (List.map explicit_or_implicit args)
       ), "("
     in
     fuse [
@@ -1963,6 +1963,15 @@ and type_parameter (loc, params) =
       (List.map type_param params)
   )
 
+and type_parameter_instantiation_with_implicit (loc, args) =
+  source_location_with_comments (
+    loc,
+    list
+      ~wrap:(Atom "<", Atom ">")
+      ~sep:(Atom ",")
+      (List.map explicit_or_implicit args)
+  )
+
 and type_parameter_instantiation (loc, args) =
   source_location_with_comments (
     loc,
@@ -2229,6 +2238,14 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")
     | T.Exists -> Atom "*"
   )
+
+and explicit_or_implicit
+  (x: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
+  =
+  let open Ast.Expression.TypeParameterInstantiation in
+  match x with
+  | Implicit _ -> Atom "_"
+  | Explicit t -> type_ t
 
 and interface_declaration_base ~def { Ast.Statement.Interface.
   id; tparams; body=(loc, obj); extends

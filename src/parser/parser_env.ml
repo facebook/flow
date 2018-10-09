@@ -440,7 +440,7 @@ let is_reserved str_val =
 let is_reserved_type str_val =
   match str_val with
   | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number"
-  | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends"
+  | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends" | "_"
     -> true
   | _ -> false
 

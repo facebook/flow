@@ -170,6 +170,7 @@ type error_message =
   | EInexactSpread of reason * reason
   | EDeprecatedCallSyntax of Loc.t
   | ESignatureVerification of Signature_builder_deps.Error.t
+  | EImplicitInstantiationNotYetSupported of Loc.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -397,6 +398,7 @@ let util_use_op_of_msg nope util = function
 | EInexactSpread _
 | EDeprecatedCallSyntax _
 | ESignatureVerification _
+| EImplicitInstantiationNotYetSupported _
   -> nope
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
@@ -2070,6 +2072,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EDeprecatedCallSyntax loc ->
     mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedCallSyntax) (loc |> ALoc.of_loc)
       [text "Deprecated $call syntax. Use callable property syntax instead."]
+
+  | EImplicitInstantiationNotYetSupported loc ->
+    mk_error ~trace_infos (loc |> ALoc.of_loc)
+    [text "Implicit instantiation via "; code "_"; text " is not supported yet."]
 
   | EUnusedSuppression loc ->
     mk_error ~trace_infos (loc |> ALoc.of_loc)

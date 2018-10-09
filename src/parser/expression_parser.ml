@@ -572,7 +572,7 @@ module Expression
         (* Parameterized call syntax is ambiguous, so we fall back to
            standard parsing if it fails. *)
         Try.or_else env ~fallback:left (fun env ->
-          let targs = Type.type_parameter_instantiation env in
+          let targs = type_parameter_instantiation env in
           arguments ?targs env
         )
     | _ -> left
@@ -622,7 +622,7 @@ module Expression
              standard parsing if it fails. *)
           let error_callback _ _ = raise Try.Rollback in
           let env = env |> with_error_callback error_callback in
-          Try.or_else env ~fallback:None Type.type_parameter_instantiation
+          Try.or_else env ~fallback:None type_parameter_instantiation
         else
           None
       in
@@ -636,6 +636,35 @@ module Expression
         targs;
         arguments;
       }))
+
+  and type_parameter_instantiation =
+    let args env acc =
+      let rec args_helper env acc =
+        match Peek.token env with
+      | T_EOF
+      | T_GREATER_THAN -> List.rev acc
+      | _ ->
+          let t = match Peek.token env with
+          | T_IDENTIFIER {value = "_"; _} ->
+              let loc = Peek.loc env in
+              Expect.identifier env "_";
+              Expression.TypeParameterInstantiation.Implicit loc
+          | _ -> Expression.TypeParameterInstantiation.Explicit(Type._type env)
+          in
+          let acc = t::acc in
+          if Peek.token env <> T_GREATER_THAN
+          then Expect.token env T_COMMA;
+          args_helper env acc
+      in args_helper env acc
+
+    in fun env -> if Peek.token env = T_LESS_THAN then
+      Some (with_loc (fun env ->
+        Expect.token env T_LESS_THAN;
+        let args = args env [] in
+        Expect.token env T_GREATER_THAN;
+        args
+      ) env)
+    else None
 
   and arguments =
     let argument env =

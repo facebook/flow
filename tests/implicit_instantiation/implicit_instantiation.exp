@@ -1,0 +1,18 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:5:17
+
+Implicit instantiation via `_` is not supported yet.
+
+   5| const a = new A<_>(); // Error, not yet supported (but parses as implicit instantiation).
+                      ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:16
+
+Implicit instantiation via `_` is not supported yet.
+
+   8| const b = test<_>(); // Error, not yet supported (but parses as implicit instantiation).
+                     ^
+
+
+
+Found 2 errors

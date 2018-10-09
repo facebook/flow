@@ -2804,3 +2804,5 @@ let dump_flow_error =
           (dump_reason cx reason_op)
     | ESignatureVerification sve ->
       spf "ESignatureVerification (%s)" (Signature_builder_deps.Error.to_string sve)
+    | EImplicitInstantiationNotYetSupported loc ->
+        spf "EImplicitInstantiationNotYetSupported (%s)" (string_of_loc loc)

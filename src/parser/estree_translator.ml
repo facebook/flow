@@ -450,7 +450,7 @@ end with type t = Impl.t) = struct
     | loc, New _new -> New.(
         node "NewExpression" loc [
           "callee", expression _new.callee;
-          "typeArguments", option type_parameter_instantiation _new.targs;
+          "typeArguments", option type_parameter_instantiation_with_implicit _new.targs;
           "arguments", array_of_list expression_or_spread _new.arguments;
         ]
       )
@@ -1030,6 +1030,13 @@ end with type t = Impl.t) = struct
     | Exists -> exists_type loc
   )
 
+  and implicit loc = generic_type (loc,
+    {Type.Generic.id = Type.Generic.Identifier.Unqualified (loc, "_"); targs = None})
+
+  and explicit_or_implicit_targ x = match x with
+  | Expression.TypeParameterInstantiation.Explicit t -> _type t
+  | Expression.TypeParameterInstantiation.Implicit loc -> implicit loc
+
   and any_type loc = node "AnyTypeAnnotation" loc []
 
   and mixed_type loc = node "MixedTypeAnnotation" loc []
@@ -1273,6 +1280,11 @@ end with type t = Impl.t) = struct
       "params", array_of_list _type targs;
     ]
 
+  and type_parameter_instantiation_with_implicit (loc, targs) =
+    node "TypeParameterInstantiation" loc [
+      "params", array_of_list explicit_or_implicit_targ targs;
+    ]
+
   and jsx_element (loc, (element: (Loc.t, Loc.t) JSX.element)) = JSX.(
     node "JSXElement" loc [
       "openingElement", jsx_opening element.openingElement;
@@ -1458,7 +1470,7 @@ end with type t = Impl.t) = struct
 
   and call_node_properties call = Expression.Call.([
     "callee", expression call.callee;
-    "typeArguments", option type_parameter_instantiation call.targs;
+    "typeArguments", option type_parameter_instantiation_with_implicit call.targs;
     "arguments", array_of_list expression_or_spread call.arguments;
   ])
 

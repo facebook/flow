@@ -228,7 +228,7 @@ class mapper = object(this)
     let open Flow_ast.Expression.Call in
     let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
-    let targs' = map_opt this#type_parameter_instantiation targs in
+    let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
     let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
     if callee == callee' && targs == targs' && arguments == arguments' then expr
     else { callee = callee'; targs = targs'; arguments = arguments' }
@@ -591,9 +591,16 @@ class mapper = object(this)
     | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
     | _ -> git (* TODO *)
 
+  method type_parameter_instantiation_with_implicit
+  (pi: (Loc.t, Loc.t) Flow_ast.Expression.TypeParameterInstantiation.t) =
+    let loc, targs = pi in
+    let targs' = List.map this#type_or_implicit targs in
+    if targs' == targs then pi
+    else loc, targs'
+
   method type_parameter_instantiation (pi: (Loc.t, Loc.t) Flow_ast.Type.ParameterInstantiation.t) =
     let loc, targs = pi in
-    let targs' = ListUtils.ident_map this#type_ targs in
+    let targs' = List.map this#type_ targs in
     if targs' == targs then pi
     else loc, targs'
 
@@ -658,6 +665,12 @@ class mapper = object(this)
       let ts' = ListUtils.ident_map this#type_ ts in
       if ts' == ts then t
       else loc, Tuple ts'
+
+  method type_or_implicit t =
+    let open Flow_ast.Expression.TypeParameterInstantiation in
+    match t with
+    | Explicit x -> Explicit (this#type_ x)
+    | Implicit _ -> t
 
   method type_annotation (annot: (Loc.t, Loc.t) Flow_ast.Type.annotation) =
     let loc, a = annot in
@@ -987,7 +1000,7 @@ class mapper = object(this)
     let open Flow_ast.Expression.New in
     let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
-    let targs' = map_opt this#type_parameter_instantiation targs in
+    let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
     let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
     if callee == callee' && targs == targs' && arguments == arguments' then expr
     else { callee = callee'; targs = targs'; arguments = arguments' }

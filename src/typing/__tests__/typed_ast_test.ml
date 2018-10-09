@@ -119,7 +119,7 @@ class ['a] loc_none_mapper = object(_)
   method on_type_annot (_x: 'a) = Loc.none
 end
 
-let generate_stmts_layout stmts =
+let generate_stmts_layout (stmts: (Loc.t, 'a) Flow_ast.Statement.t list) =
   let none_mapper = new loc_none_mapper in
   let prog = Loc.none, List.map none_mapper#statement stmts, [] in
   let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
