@@ -278,13 +278,15 @@ let merge_strict_job ~worker_mutator ~job ~options merged elements =
       | SharedMem_js.Dep_table_full as exc -> raise exc
       (* A catch all suppression is probably a bad idea... *)
       | exc ->
+        (* Do this first, to grab the backtrace in case it's overwritten *)
+        let exn_str = fmt_file_exc files exc in
         (* Ensure heaps are in a good state before continuing. *)
         Context_heaps.Merge_context_mutator.add_merge_on_exn
           ~audit:Expensive.ok worker_mutator ~options component;
         (* In dev mode, fail hard, but log and continue in prod. *)
         if Build_mode.dev then raise exc else
           prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
-            (Unix.getpid()) (Nel.length component) (fmt_file_exc files exc);
+            (Unix.getpid()) (Nel.length component) exn_str;
         (* An errored component is always changed. *)
         let file = Nel.hd component in
         let file_loc = Loc.({ none with source = Some file }) in
