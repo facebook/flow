@@ -174,6 +174,9 @@ type node =
 let diff_if_changed f x1 x2 =
   if x1 == x2 then [] else f x1 x2
 
+let diff_if_changed_ret_opt f x1 x2 =
+  if x1 == x2 then Some [] else f x1 x2
+
 let diff_if_changed_opt f opt1 opt2: node change list option =
   match opt1, opt2 with
   | Some x1, Some x2 ->
@@ -401,7 +404,7 @@ let program (algo : diff_algorithm)
     then
       None
     else
-      let fnbody = diff_if_changed_opt function_body_any (Some body1) (Some body2) in
+      let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
       let returns = diff_if_changed type_annotation_hint return1 return2 |> Option.return in
       Option.(all [fnbody; returns] >>| List.concat)
 
@@ -474,7 +477,7 @@ let program (algo : diff_algorithm)
     let open Ast.Statement.Try in
     let { block = (_, block1); handler = handler1; finalizer = finalizer1 } = try1 in
     let { block = (_, block2); handler = handler2; finalizer = finalizer2 } = try2 in
-    let block_diff = diff_if_changed_opt block (Some block1) (Some block2) in
+    let block_diff = diff_if_changed_ret_opt block block1 block2 in
     let finalizer_diff = diff_if_changed_opt block
       (Option.map ~f:snd finalizer1) (Option.map ~f:snd finalizer2) in
     let handler_diff = diff_if_changed_opt handler handler1 handler2 in
@@ -485,7 +488,7 @@ let program (algo : diff_algorithm)
     let open Ast.Statement.Try.CatchClause in
     let _, { body = (_, block1); param = param1 } = hand1 in
     let _, { body = (_, block2); param = param2 } = hand2 in
-    let body_diff = diff_if_changed_opt block (Some block1) (Some block2) in
+    let body_diff = diff_if_changed_ret_opt block block1 block2 in
     let param_diff = diff_if_changed_nonopt_fn pattern param1 param2 in
     Option.all [body_diff; param_diff] |> Option.map ~f:List.concat
 
@@ -639,13 +642,13 @@ let program (algo : diff_algorithm)
       Init { shorthand = sh2; value = val2; key = key2 } ->
         if sh1 != sh2 then None else
         let values = diff_if_changed expression val1 val2 |> Option.return in
-        let keys = diff_if_changed_opt object_key (Some key1) (Some key2) in
+        let keys = diff_if_changed_ret_opt object_key key1 key2 in
         Option.(all [keys; values] >>| List.concat)
     | Set {value = val1; key = key1 }, Set { value = val2; key = key2 }
     | Method {value = val1; key = key1 }, Method { value = val2; key = key2 }
     | Get {value = val1; key = key1 }, Get { value = val2; key = key2 } ->
-        let values = diff_if_changed_opt function_ (Some (snd val1)) (Some (snd val2)) in
-        let keys = diff_if_changed_opt object_key (Some key1) (Some key2) in
+        let values = diff_if_changed_ret_opt function_ (snd val1) (snd val2) in
+        let keys = diff_if_changed_ret_opt object_key key1 key2 in
         Option.(all [keys; values] >>| List.concat)
     | _ -> None
 
@@ -881,7 +884,7 @@ let program (algo : diff_algorithm)
         let open Ast.Pattern.Object.Property in
         let { key = key1; pattern = pattern1; shorthand = shorthand1; } = p3 in
         let { key = key2; pattern = pattern2; shorthand = shorthand2; } = p4 in
-        let keys = diff_if_changed_opt pattern_object_property_key (Some key1) (Some key2) in
+        let keys = diff_if_changed_ret_opt pattern_object_property_key key1 key2 in
         let pats = Some (diff_if_changed pattern pattern1 pattern2) in
         (match shorthand1, shorthand2 with
         | false, false ->
