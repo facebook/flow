@@ -13,6 +13,7 @@ open Layout_generator_test_utils
 
 module E = Ast_builder.Expressions
 module J = Ast_builder.JSXs
+module S = Ast_builder.Statements
 module L = Layout_builder
 
 let make_loc start_line end_line = Loc.{
@@ -106,6 +107,111 @@ let tests = [
     assert_expression ~ctxt (
       "<A a=\"" ^ String.make 80 'a' ^ "\"><B/>\n<C/></A>"
     ) ast;
+  end;
+
+  "borderline_length_with_children" >:: begin fun ctxt ->
+    (* opening tag is 80 columns. if it's indented, make sure it breaks.
+
+      <aaaaaaaaaaaaa bbbb="cccccccccccccccccccccccccccccccccccc" ddddd="eeeeeeeeeeee">
+        <f />
+      </aaaaaaaaaaaaa>
+    *)
+    let a_loc = make_loc 1 4 in
+    let f_loc = make_loc 2 2 in
+    let ast = E.jsx_element ~loc:a_loc (
+      J.element
+        (J.identifier "aaaaaaaaaaaaa")
+        ~attrs:[
+          J.attr
+            (J.attr_identifier "bbbb")
+            (Some (J.attr_literal (Literals.string "cccccccccccccccccccccccccccccccccccc")));
+          J.attr
+            (J.attr_identifier "ddddd")
+            (Some (J.attr_literal (Literals.string "eeeeeeeeeeee")));
+        ]
+        ~children:[
+          J.child_element ~loc:f_loc (J.identifier "f") ~selfclosing:true;
+        ]
+    ) in
+    let layout = Js_layout_generator.expression ast in
+    assert_layout ~ctxt
+      L.(loc ~loc:a_loc (fused [
+        loc (fused [
+          atom "<";
+          id "aaaaaaaaaaaaa";
+          sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+            fused [
+              Layout.IfBreak (empty, space);
+              sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
+                fused [
+                  loc (fused [
+                    id "bbbb";
+                    atom "=";
+                    loc (fused [
+                      atom "\"";
+                      atom "cccccccccccccccccccccccccccccccccccc";
+                      atom "\"";
+                    ]);
+                  ]);
+                  flat_pretty_space;
+                ];
+                loc (fused [
+                  id "ddddd";
+                  atom "=";
+                  loc (fused [
+                    atom "\"";
+                    atom "eeeeeeeeeeee";
+                    atom "\"";
+                  ]);
+                ]);
+              ];
+            ];
+          ];
+          atom ">";
+        ]);
+        sequence ~break:Layout.Break_if_pretty [
+          loc ~loc:f_loc (loc (fused [
+            atom "<";
+            id "f";
+            pretty_space;
+            atom "/>";
+          ]));
+        ];
+        loc (fused [
+          atom "</";
+          id "aaaaaaaaaaaaa";
+          atom ">";
+        ]);
+      ]))
+      layout;
+    assert_output ~ctxt
+      ({|<aaaaaaaaaaaaa bbbb="cccccccccccccccccccccccccccccccccccc"ddddd="eeeeeeeeeeee">|}^
+       {|<f/>|}^
+       {|</aaaaaaaaaaaaa>|})
+      layout;
+    assert_output ~ctxt ~pretty:true
+      ({|<aaaaaaaaaaaaa bbbb="cccccccccccccccccccccccccccccccccccc" ddddd="eeeeeeeeeeee">|}^"\n"^
+       {|  <f />|}^"\n"^
+       {|</aaaaaaaaaaaaa>|})
+      layout;
+
+    let block_layout = Js_layout_generator.statement (S.block [S.expression ast]) in
+    assert_output ~ctxt
+      ("{"^
+       "<aaaaaaaaaaaaa bbbb=\"cccccccccccccccccccccccccccccccccccc\"ddddd=\"eeeeeeeeeeee\">"^
+       "<f/>"^
+       "</aaaaaaaaaaaaa>"^
+       "}")
+      block_layout;
+    (* TODO: the first attribute runs into the element name! *)
+    (* TODO: attributes should wrap *)
+    assert_output ~ctxt ~pretty:true
+      ("{\n"^
+       "  <aaaaaaaaaaaaabbbb=\"cccccccccccccccccccccccccccccccccccc\" ddddd=\"eeeeeeeeeeee\">\n"^
+       "    <f />\n"^
+       "  </aaaaaaaaaaaaa>;\n"^
+       "}")
+      block_layout;
   end;
 
   "long_child_text" >:: begin fun ctxt ->
