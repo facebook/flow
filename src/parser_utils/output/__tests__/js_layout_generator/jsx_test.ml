@@ -87,13 +87,13 @@ let tests = [
         ]);
         atom ">";
       ]);
-      sequence ~break:Layout.Break_if_pretty [
-        fused [
-          loc ~loc:b_loc (loc (group [atom "<"; id "B"; pretty_space; atom "/>"]));
-          hardline;
-          loc ~loc:c_loc (loc (group [atom "<"; id "C"; pretty_space; atom "/>"]));
-        ]
-      ];
+      indent (fused [
+        pretty_hardline;
+        loc ~loc:b_loc (loc (group [atom "<"; id "B"; pretty_space; atom "/>"]));
+        hardline;
+        loc ~loc:c_loc (loc (group [atom "<"; id "C"; pretty_space; atom "/>"]));
+      ]);
+      pretty_hardline;
       loc (fused [atom "</"; id "A"; atom ">"]);
     ])) in
     assert_layout_of_expression ~ctxt layout ast;
@@ -159,14 +159,16 @@ let tests = [
           ]));
           atom ">";
         ]);
-        sequence ~break:Layout.Break_if_pretty [
+        indent (fused [
+          pretty_hardline;
           loc ~loc:f_loc (loc (group [
             atom "<";
             id "f";
             pretty_space;
             atom "/>";
           ]));
-        ];
+        ]);
+        pretty_hardline;
         loc (fused [
           atom "</";
           id "aaaaaaaaaaaaa";

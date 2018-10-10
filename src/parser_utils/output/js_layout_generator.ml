@@ -1702,7 +1702,7 @@ and jsx_children loc children =
       (fun (children_n, last_line) (loc, child) ->
         let child_n = SourceLocation (loc, child) in
         let formatted_child_n = match last_line with
-        (* First child, newlines will always be forced via the `fuse_vertically` below *)
+        (* First child, newlines will always be forced via the `pretty_hardline` below *)
         | None -> child_n
         (* If the current child and the previous child line positions are offset match
            this via forcing a newline *)
@@ -1718,7 +1718,10 @@ and jsx_children loc children =
       ([], None)
       processed_children
     in
-    fuse_vertically ~indent:2 [fuse (List.rev children_n)]
+    fuse [
+      Layout.Indent (fuse (pretty_hardline::(List.rev children_n)));
+      pretty_hardline;
+    ]
   (* Single line *)
   end else fuse (List.map (fun (loc, child) -> SourceLocation (loc, child)) processed_children)
 
