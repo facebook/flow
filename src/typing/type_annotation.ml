@@ -1642,7 +1642,7 @@ let mk_declare_class_sig =
         iface_sig
       else
         let reason = replace_reason_const RDefaultConstructor reason in
-        Class_sig.add_default_constructor reason iface_sig
+        add_default_constructor reason iface_sig
     in
     iface_sig, self,
     { Ast.Statement.DeclareClass.

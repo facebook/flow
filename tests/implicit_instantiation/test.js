@@ -1,8 +1,24 @@
 //@flow
 
-class A<T> {}
+function identity<T>(x: T): T { return x; }
+const x: string = identity<_>('string'); // Ok
+const y: string = identity<_>(3); // Error, string incompatible with number.
 
-const a = new A<_>(); // Error, not yet supported (but parses as implicit instantiation).
+declare function unimplementable<T>(): {x: T};
 
-declare function test<T>(): T;
-const b = test<_>(); // Error, not yet supported (but parses as implicit instantiation).
+
+const a = unimplementable<_>(); // Ok, not exported. Leaks a tvar.
+
+var b: {x: string} = a; // Concretize to string.
+(a: {x: string}); // Ok
+(a: {x: number}); // Not ok, number incompatible with string
+
+const z = identity<_>(3); // Give z a lower bound.
+(z: string); // Error, number lower bound string upper bound
+
+declare function readOnly<T>(): {+x :T};
+
+module.exports = {
+  x: unimplementable<_>(), // Error, requires concrete annot
+  y: readOnly<_>(), // Ok, type var is an a positive position
+};

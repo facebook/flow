@@ -390,7 +390,7 @@ module rec TypeTerm : sig
     | ReposUseT of reason * bool (* use_desc *) * use_op * t
 
     (* operations on runtime types, such as classes and functions *)
-    | ConstructorT of use_op * reason * t list option * call_arg list * t
+    | ConstructorT of use_op * reason * targ list option * call_arg list * t
     | SuperT of use_op * reason * derived_type
     | ImplementsT of use_op * t
     | MixinT of reason * t
@@ -762,14 +762,16 @@ module rec TypeTerm : sig
   (* Used by CallT and similar constructors *)
   and funcalltype = {
     call_this_t: t;
-    call_targs: t list option;
+    call_targs: targ list option;
     call_args_tlist: call_arg list;
     call_tout: t;
     call_closure_t: int;
     call_strict_arity: bool;
   }
 
-  and opt_funcalltype = t * t list option * call_arg list * int * bool
+  and targ = ImplicitArg of ALoc.t | ExplicitArg of t
+
+  and opt_funcalltype = t * targ list option * call_arg list * int * bool
 
   and call_arg =
   | Arg of t

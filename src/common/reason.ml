@@ -102,6 +102,7 @@ type reason_desc =
   | RThis
   | RThisType
   | RExistential
+  | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest
   | RConstructorReturn
@@ -456,6 +457,7 @@ let rec string_of_desc = function
   | RThis -> "this"
   | RThisType -> "`this` type"
   | RExistential -> "existential"
+  | RImplicitInstantiation -> "implicit instantiation"
   | RTooFewArgs -> "undefined (too few arguments)"
   | RTooFewArgsExpectedRest ->
     "undefined (too few arguments, expected default/rest parameters)"
@@ -651,6 +653,7 @@ let is_instantiable_reason r =
   | RTypeParam _
   | RThisType
   | RExistential -> true
+  | RImplicitInstantiation -> true
   | _ -> false
 
 (* TODO: Property accesses create unresolved tvars to hold results, even when
@@ -1135,6 +1138,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RThis
 | RThisType
 | RExistential
+| RImplicitInstantiation
 | RTooFewArgs
 | RTooFewArgsExpectedRest
 | RConstructorReturn

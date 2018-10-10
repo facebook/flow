@@ -183,6 +183,10 @@ class ['a] t = object(self)
   | IdxWrapper t ->
     self#type_ cx pole acc t
 
+  method targ cx pole acc = function
+  | ImplicitArg _ -> acc
+  | ExplicitArg t -> self#type_ cx pole acc t
+
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
@@ -319,7 +323,7 @@ class ['a] t = object(self)
   | ReposUseT (_, _, _, t) -> self#type_ cx pole_TODO acc t
 
   | ConstructorT (_, _, targs, args, t) ->
-    let acc = Option.fold ~init:acc ~f:(List.fold_left (self#type_ cx pole_TODO)) targs in
+    let acc = Option.fold ~init:acc ~f:(List.fold_left (self#targ cx pole_TODO)) targs in
     let acc = List.fold_left (self#call_arg cx) acc args in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -784,7 +788,7 @@ class ['a] t = object(self)
       call_strict_arity = _;
     } = call in
     let acc = self#type_ cx pole_TODO acc call_this_t in
-    let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc call_targs in
+    let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
     let acc = self#list (self#call_arg cx) acc call_args_tlist in
     let acc = self#type_ cx pole_TODO acc call_tout in
     acc

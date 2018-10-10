@@ -9,6 +9,7 @@ class ['a] t: object
   (* Only exposing a few methods for now. *)
   method type_ : Context.t -> Type.polarity -> 'a -> Type.t -> 'a
   method def_type : Context.t -> Type.polarity -> 'a -> Type.def_t -> 'a
+  method targ : Context.t -> Type.polarity -> 'a -> Type.targ -> 'a
   method use_type_ : Context.t -> 'a -> Type.use_t -> 'a
   method tvar : Context.t -> Type.polarity -> 'a -> Reason.reason -> Constraint.ident -> 'a
   method props : Context.t -> Type.polarity -> 'a -> Type.Properties.id -> 'a

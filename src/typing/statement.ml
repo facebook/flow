@@ -48,11 +48,11 @@ let convert_tparam_instantiations cx tparams_map instantiations =
     begin match ast with
     | Explicit ast ->
         let (_, t), _ as tast = Anno.convert cx tparams_map ast in
-        loop (t::ts) ((Explicit tast)::tasts) cx tparams_map asts
+        loop ((ExplicitArg t)::ts) ((Explicit tast)::tasts) cx tparams_map asts
     | Implicit loc ->
-        let (_, t), _ as tast = Anno.error_type cx loc
-          (Flow_error.EImplicitInstantiationNotYetSupported loc) in
-        loop (t::ts) ((Explicit tast)::tasts) cx tparams_map asts
+        (* TODO: (jmbrown) create a tvar for type-at-pos here *)
+        loop ((ImplicitArg (ALoc.of_loc loc))::ts)
+          ((Implicit (loc, AnyT.at (loc |> ALoc.of_loc)))::tasts) cx tparams_map asts
     end
   in
   loop [] [] cx tparams_map instantiations
@@ -62,7 +62,12 @@ let convert_targs cx = function
   | Some (loc, args) ->
     let targts, targs_ast = convert_tparam_instantiations cx SMap.empty args in
     List.iter (fun t ->
-      Type_table.set_targ (Context.type_table cx) (TypeUtil.loc_of_t t) t
+      match t with
+      | ExplicitArg t ->
+          Type_table.set_targ (Context.type_table cx) (TypeUtil.loc_of_t t) t
+      | ImplicitArg _ ->
+          (* TODO: Figure out to do with implicit instantiation in the type table *)
+          ()
     ) targts;
     Some targts, Some (loc, targs_ast)
 
@@ -2983,7 +2988,8 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
           replace_reason_const (RCustom "array length") reason in
         Flow.flow_t cx (arg_t, DefT (length_reason, NumT AnyLiteral));
         let t, targs = match targ_t with
-        | Some (loc, ast, t) -> t, Some (loc, [ast])
+        | Some (loc, ast, ExplicitArg t) -> t, Some (loc, [ast])
+        | Some (_, _, ImplicitArg _)
         | None ->
           let element_reason =
             replace_reason_const (RCustom "array element") reason in

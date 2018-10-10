@@ -35,6 +35,7 @@ class virtual ['a] t :
     method virtual props : Context.t -> 'a -> Type.Properties.id -> Type.Properties.id
     method selector :
       Context.t -> 'a -> Type.selector -> Type.selector
+    method targ : Context.t -> 'a -> Type.targ -> Type.targ
     method virtual tvar :
       Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
     method type_ : Context.t -> 'a -> Type.t -> Type.t
@@ -178,6 +179,7 @@ class virtual ['a] t_with_uses :
       Type.React.CreateClass.stack_head * Type.t list *
       Type.React.CreateClass.spec Type.React.CreateClass.maybe_known
       list
+    method targ : Context.t -> 'a -> Type.targ -> Type.targ
     method virtual tvar :
       Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
     method type_ : Context.t -> 'a -> Type.t -> Type.t

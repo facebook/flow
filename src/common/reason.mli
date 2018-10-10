@@ -51,6 +51,7 @@ type reason_desc =
   | RThis
   | RThisType
   | RExistential
+  | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest
   | RConstructorReturn

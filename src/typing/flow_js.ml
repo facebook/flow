@@ -2413,7 +2413,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | None ->
         add_output cx ~trace (FlowError.ETooFewTypeArgs (reason, reason, 1));
         AnyT.at fun_loc
-      | Some [t] ->
+      | Some [ExplicitArg t] ->
         let kind, return_t = begin match l with
         | CustomFunT (_, TypeAssertIs) -> Context.Is, BoolT.at fun_loc
         | CustomFunT (_, TypeAssertThrows) -> Context.Throws, t
@@ -4000,13 +4000,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ~use_op ~reason_op ~reason_tapp ~cache:arg_reasons (tparams_loc,ids,t) in
           rec_flow cx trace (t_, u)
         | Some targs ->
-          let t_ = instantiate_poly_with_targs cx trace (tparams_loc, ids, t) targs
+          let t_ = instantiate_poly_call_or_new cx trace (tparams_loc, ids, t) targs
             ~use_op ~reason_op ~reason_tapp in
           rec_flow cx trace (t_,
             CallT (use_op, reason_op, {calltype with call_targs = None}))
         end
       | ConstructorT (use_op, reason_op, Some targs, args, tout) ->
-        let t_ = instantiate_poly_with_targs cx trace (tparams_loc, ids, t) targs
+        let t_ = instantiate_poly_call_or_new cx trace (tparams_loc, ids, t) targs
           ~use_op ~reason_op ~reason_tapp in
         rec_flow cx trace (t_, ConstructorT (use_op, reason_op, None, args, tout))
       | _ ->
@@ -7627,6 +7627,30 @@ and poly_minimum_arity =
     if typeparam.default = None then n + 1 else n
   in
   Nel.fold_left f 0
+
+(* Instantiate a polymorphic definition given tparam instantiations in a Call or
+ * New expression. *)
+and instantiate_poly_call_or_new
+  cx
+  trace
+  ~use_op
+  ~reason_op
+  ~reason_tapp
+  ?cache
+  ?errs_ref
+  (tparams_loc, xs, t)
+  targs
+  =
+  let _, ts = Nel.fold_left (fun (targs, ts) typeparam -> match targs with
+  | [] -> ([], ts)
+  | (ExplicitArg t)::targs -> (targs, t::ts)
+  | (ImplicitArg aloc)::targs ->
+    let reason = mk_reason RImplicitInstantiation aloc in
+    let t = ImplicitTypeArgument.mk_targ cx typeparam reason reason_tapp in
+    (targs, t::ts)) (targs, []) xs
+  in
+  instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ?cache ?errs_ref
+    (tparams_loc, xs, t) (List.rev ts)
 
 (* Instantiate a polymorphic definition given type arguments. *)
 and instantiate_poly_with_targs

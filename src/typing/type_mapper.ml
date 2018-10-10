@@ -161,6 +161,14 @@ class virtual ['a] t = object(self)
 
   method virtual tvar: Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
 
+  method targ cx map_cx t =
+    match t with
+    | ImplicitArg _ -> t
+    | ExplicitArg t' ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then t
+        else ExplicitArg t''
+
   method def_type cx map_cx t =
     match t with
       | NumT _
@@ -657,7 +665,7 @@ class virtual ['a] t_with_uses = object(self)
           if t'' == t' then t
           else ReposUseT (r, use_desc, use_op, t'')
       | ConstructorT (op, r, targs, args, t') ->
-          let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) targs in
+          let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) targs in
           let args' = ListUtils.ident_map (self#call_arg cx map_cx) args in
           let t'' = self#type_ cx map_cx t' in
           if targs' == targs && args' == args && t'' == t' then t
@@ -990,7 +998,7 @@ class virtual ['a] t_with_uses = object(self)
 
     method private opt_fun_call_type cx map_cx ((this, targs, args, clos, strict) as t) =
       let this' = self#type_ cx map_cx this in
-      let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) targs in
+      let targs' = OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) targs in
       let args' = ListUtils.ident_map (self#call_arg cx map_cx) args in
       if this' == this && targs' == targs && args' == args
       then t
@@ -1088,7 +1096,8 @@ class virtual ['a] t_with_uses = object(self)
       call_strict_arity;
     } = t in
     let call_this_t' = self#type_ cx map_cx call_this_t in
-    let call_targs' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) call_targs in
+    let call_targs' = OptionUtils.ident_map (ListUtils.ident_map (self#targ cx map_cx)) call_targs
+    in
     let call_args_tlist' = ListUtils.ident_map (self#call_arg cx map_cx) call_args_tlist in
     let call_tout' = self#type_ cx map_cx call_tout in
     if (

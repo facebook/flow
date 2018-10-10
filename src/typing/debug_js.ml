@@ -89,6 +89,12 @@ and _json_of_tvar json_cx id = Hh_json.(
   ]
 )
 
+and _json_of_targ json_cx t = Hh_json.(
+  JSON_Object (match t with
+  | ImplicitArg _ -> ["kind", JSON_String "implicit"]
+  | ExplicitArg t -> ["kind", JSON_String "explicit"; "type", _json_of_t json_cx t]
+))
+
 and _json_of_t_impl json_cx t = Hh_json.(
   JSON_Object ([
     "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_t t);
@@ -482,7 +488,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | ConstructorT (_, _, targs, args, t) -> [
       "typeArgs", (match targs with
         | None -> JSON_Null
-        | Some ts -> JSON_Array (List.map (_json_of_t json_cx) ts));
+        | Some ts -> JSON_Array (List.map (_json_of_targ json_cx) ts));
       "argTypes", JSON_Array (List.map (json_of_funcallarg json_cx) args);
       "type", _json_of_t json_cx t
     ]
@@ -1068,7 +1074,7 @@ and json_of_funcalltype_impl json_cx {
     "thisType", _json_of_t json_cx call_this_t;
     "typeArgs", (match call_targs with
       | None -> JSON_Null
-      | Some ts -> JSON_Array (List.map (_json_of_t json_cx) ts));
+      | Some ts -> JSON_Array (List.map (_json_of_targ json_cx) ts));
     "argTypes", JSON_Array arg_types;
     "tout", _json_of_t json_cx call_tout;
     "closureIndex", int_ call_closure_t;
@@ -2804,5 +2810,3 @@ let dump_flow_error =
           (dump_reason cx reason_op)
     | ESignatureVerification sve ->
       spf "ESignatureVerification (%s)" (Signature_builder_deps.Error.to_string sve)
-    | EImplicitInstantiationNotYetSupported loc ->
-        spf "EImplicitInstantiationNotYetSupported (%s)" (string_of_loc loc)

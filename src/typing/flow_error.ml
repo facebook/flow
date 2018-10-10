@@ -170,7 +170,6 @@ type error_message =
   | EInexactSpread of reason * reason
   | EDeprecatedCallSyntax of Loc.t
   | ESignatureVerification of Signature_builder_deps.Error.t
-  | EImplicitInstantiationNotYetSupported of Loc.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -398,7 +397,6 @@ let util_use_op_of_msg nope util = function
 | EInexactSpread _
 | EDeprecatedCallSyntax _
 | ESignatureVerification _
-| EImplicitInstantiationNotYetSupported _
   -> nope
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
@@ -1699,21 +1697,25 @@ let rec error_of_msg ~trace_reasons ~source_file =
       [text "Use an array literal instead of "; code "new Array(...)"; text "."]
 
   | EMissingAnnotation (reason, trace_reasons) ->
-    let tail = match (desc_of_reason reason) with
+    let default = [text "Missing type annotation for "; desc reason; text "."] in
+    let msg = match (desc_of_reason reason) with
+    | RTypeParam (_, (RImplicitInstantiation, _), _) ->
+        [text "Please use a concrete type annotation instead of "; code "_";
+      text " in this position."]
     | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
         let reason_op = mk_reason reason_op_desc (reason_op_loc |> ALoc.of_loc) in
         let reason_tapp = mk_reason reason_tapp_desc (reason_tapp_loc |> ALoc.of_loc) in
-        [text " "; desc reason; text " is a type parameter declared in "; ref reason_tapp;
+        default @ [text " "; desc reason; text " is a type parameter declared in "; ref reason_tapp;
          text " and was implicitly instantiated at "; ref reason_op; text "."]
-    | _ -> [] in
+    | _ -> default in
+
     (* We don't collect trace info in the assert_ground_visitor because traces
      * represent tests of lower bounds to upper bounds, and the assert_ground
      * visitor is just visiting types. Instead, we collect a list of types we
      * visited to get to the missing annotation error and report that as the
      * trace *)
     let trace_infos = List.map info_of_reason trace_reasons in
-    mk_error ~trace_infos (aloc_of_reason reason)
-      ([text "Missing type annotation for "; desc reason; text "."] @ tail)
+    mk_error ~trace_infos (aloc_of_reason reason) msg
 
   | EBindingError (binding_error, loc, x, entry) ->
     let desc =
@@ -2072,10 +2074,6 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EDeprecatedCallSyntax loc ->
     mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedCallSyntax) (loc |> ALoc.of_loc)
       [text "Deprecated $call syntax. Use callable property syntax instead."]
-
-  | EImplicitInstantiationNotYetSupported loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc)
-    [text "Implicit instantiation via "; code "_"; text " is not supported yet."]
 
   | EUnusedSuppression loc ->
     mk_error ~trace_infos (loc |> ALoc.of_loc)
