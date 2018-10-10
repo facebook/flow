@@ -365,23 +365,18 @@ let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
       | [] -> comments
       | (loc, _)::_ -> comments_before_loc loc comments
       in
-      fuse_vertically ~inline:(true, true) (
-        (combine_directives_and_comments directives comments)::
+      (combine_directives_and_comments directives comments)::
         (statements_list_with_newlines statements)
-      )
     else
-      fuse_vertically ~inline:(true, true) (
-        statements_list_with_newlines statements
-      )
+      statements_list_with_newlines statements
   in
+  let nodes = group [join pretty_hardline nodes] in
   let nodes = maybe_embed_checksum nodes checksum in
   let loc = { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }} in
   source_location_with_comments (loc, nodes)
 
 and program_simple (loc, statements, _) =
-  let nodes = fuse_vertically ~inline:(true, true) (
-    statements_list_with_newlines statements
-  ) in
+  let nodes = group [join pretty_hardline (statements_list_with_newlines statements)] in
   let loc = { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }} in
   source_location_with_comments (loc, nodes)
 
@@ -393,7 +388,7 @@ and combine_directives_and_comments directives comments : Layout.layout_node =
     | loc, Statement s -> loc, statement ~allow_empty:true s
     | loc, Comment c -> loc, comment c
   ) merged in
-  fuse_vertically ~inline:(true, true) (list_with_newlines nodes)
+  join pretty_hardline (list_with_newlines nodes)
 
 and maybe_embed_checksum nodes checksum = match checksum with
   | Some checksum ->

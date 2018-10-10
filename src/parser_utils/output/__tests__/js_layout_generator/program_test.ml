@@ -18,7 +18,7 @@ let tests = [
     let ast = Ast_builder.program_of_string "var x = 1;\n\n\nvar y = 2;" in
     let layout = Js_layout_generator.program ~checksum:None ~preserve_docblock:false ast in
     assert_layout ~ctxt
-      L.(program (sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
+      L.(program (group [
         loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=0; offset=0}; _end={Loc.line=1; column=10; offset=10}} (fused [
           loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=0; offset=0}; _end={Loc.line=1; column=10; offset=10}} (fused [
             atom "var";
@@ -33,23 +33,22 @@ let tests = [
           ]);
           atom ";";
         ]);
-        fused [
-          pretty_hardline;
+        pretty_hardline;
+        pretty_hardline;
+        loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
           loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
-            loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=0; offset=13}; _end={Loc.line=4; column=10; offset=23}} (fused [
-              atom "var";
-              atom " ";
-              loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=9; offset=22}} (fused [
-                loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=5; offset=18}} (id ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=5; offset=18}} "y");
-                pretty_space;
-                atom "=";
-                pretty_space;
-                loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=8; offset=21}; _end={Loc.line=4; column=9; offset=22}} (atom "2");
-              ]);
+            atom "var";
+            space;
+            loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=9; offset=22}} (fused [
+              loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=5; offset=18}} (id ~loc:{Loc.none with Loc.start={Loc.line=4; column=4; offset=17}; _end={Loc.line=4; column=5; offset=18}} "y");
+              pretty_space;
+              atom "=";
+              pretty_space;
+              loc ~loc:{Loc.none with Loc.start={Loc.line=4; column=8; offset=21}; _end={Loc.line=4; column=9; offset=22}} (atom "2");
             ]);
-            atom ";";
           ]);
-        ];
+          atom ";";
+        ]);
       ]))
       layout;
     assert_output ~ctxt "var x=1;var y=2;" layout;
@@ -68,7 +67,7 @@ let tests = [
       in
       assert_layout ~ctxt
         L.(program (fused [
-          sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
+          group [
             loc (fused [
               loc (id "x");
               atom ";";
@@ -94,11 +93,12 @@ let tests = [
         ast
       in
       assert_layout ~ctxt
-        L.(program (sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
+        L.(program (group [
           loc (fused [
             loc (id "x");
             atom ";";
           ]);
+          pretty_hardline;
           loc (fused [
             loc (id "y");
             atom ";";
@@ -129,14 +129,13 @@ let tests = [
         ast
       in
       assert_layout ~ctxt
-        L.(program (sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
-          sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
-            loc ~loc:c_loc (fused [
-              atom "//";
-              atom " hello world";
-              hardline;
-            ]);
-          ];
+        L.(program (group [
+          loc ~loc:c_loc (fused [
+            atom "//";
+            atom " hello world";
+            hardline;
+          ]);
+          pretty_hardline;
           loc ~loc:s_loc (fused [
             loc (id "x");
             atom ";";
@@ -155,7 +154,7 @@ let tests = [
         ast
       in
       assert_layout ~ctxt
-        L.(program (sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
+        L.(program (group [
           loc ~loc:s_loc (fused [
             loc (id "x");
             atom ";";
