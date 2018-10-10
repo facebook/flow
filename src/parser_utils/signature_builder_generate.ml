@@ -507,7 +507,6 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
   let rec annot_path = function
     | Kind.Annot_path.Annot (_, t) -> type_ t
     | Kind.Annot_path.Object (path, _) -> annot_path path
-    | Kind.Annot_path.Array (path, _) -> annot_path path
 
   let rec annotated_type annot =
     match annot with

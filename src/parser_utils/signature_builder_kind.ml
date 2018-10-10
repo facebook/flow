@@ -11,7 +11,6 @@ module Annot_path = struct
   type t =
     | Annot of (Loc.t, Loc.t) Ast.Type.annotation
     | Object of t * string
-    | Array of t * int
 
   let mk_annot ?annot_path = function
     | Ast.Type.Missing _ -> annot_path
@@ -21,11 +20,6 @@ module Annot_path = struct
     match annot_path with
       | None -> None
       | Some annot_path -> Some (Object (annot_path, x))
-
-  let mk_array ?annot_path i =
-    match annot_path with
-      | None -> None
-      | Some annot_path -> Some (Array (annot_path, i))
 end
 
 module Sort = struct

@@ -34,17 +34,15 @@ let rec pattern loc ?annot_path init (p: (Loc.t, Loc.t) Ast.Pattern.t) =
         | RestProperty (_, { RestProperty.argument = p }) ->
           acc @ (pattern loc init p)
       ) [] properties
-    | _, Array { Array.elements; annot } ->
+    | _, Array { Array.elements; annot = _ } ->
       let open Array in
-      let annot_path = Kind.Annot_path.mk_annot ?annot_path annot in
-      fst @@ List.fold_left (fun (acc, i) -> function
-        | None -> acc, i+1
+      List.fold_left (fun acc -> function
+        | None -> acc
         | Some (Element p) ->
-          let annot_path = Kind.Annot_path.mk_array ?annot_path i in
-          acc @ (pattern loc ?annot_path init p), i+1
+          acc @ (pattern loc init p)
         | Some (RestElement (_, { RestElement.argument = p })) ->
-          acc @ (pattern loc init p), i+1
-      ) ([], 0) elements
+          acc @ (pattern loc init p)
+      ) [] elements
     | _, Assignment { Assignment.left; _ } -> pattern loc ?annot_path init left
     | _, Expression _ -> [] (* TODO *)
   end
