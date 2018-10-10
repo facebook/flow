@@ -12,3 +12,5 @@ let to_loc loc = loc
 
 (* We'll still store the source concretely even when we move to abstract locations. *)
 let source = Loc.source
+
+let compare = Loc.compare
