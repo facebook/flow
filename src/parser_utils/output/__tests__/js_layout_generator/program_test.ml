@@ -108,4 +108,62 @@ let tests = [
       assert_output ~ctxt "x;y;" layout;
       assert_output ~ctxt ~pretty:true "x;\ny;" layout;
     end;
+
+  "preserve_docblock" >:: begin fun ctxt ->
+    let c_loc = Loc.({ none with start = { line = 1; column = 1; offset = 0 }}) in
+    let s_loc = Loc.({ none with start = { line = 2; column = 1; offset = 0 }}) in
+    let ast =
+      let comments = [
+        Ast_builder.Comments.line ~loc:c_loc " hello world";
+      ] in
+      let statements = [
+        S.expression ~loc:s_loc (E.identifier "x")
+      ] in
+      Ast_builder.mk_program ~comments statements
+    in
+
+    begin
+      let layout = Js_layout_generator.program
+        ~preserve_docblock:true
+        ~checksum:None
+        ast
+      in
+      assert_layout ~ctxt
+        L.(program (sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
+          sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
+            loc ~loc:c_loc (fused [
+              atom "//";
+              atom " hello world";
+              hardline;
+            ]);
+          ];
+          loc ~loc:s_loc (fused [
+            loc (id "x");
+            atom ";";
+          ]);
+        ]))
+        layout;
+      assert_output ~ctxt "// hello world\nx;" layout;
+      (* TODO: inserts an extra line between line comments *)
+      assert_output ~ctxt ~pretty:true "// hello world\n\nx;" layout;
+    end;
+
+    begin
+      let layout = Js_layout_generator.program
+        ~preserve_docblock:false
+        ~checksum:None
+        ast
+      in
+      assert_layout ~ctxt
+        L.(program (sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
+          loc ~loc:s_loc (fused [
+            loc (id "x");
+            atom ";";
+          ]);
+        ]))
+        layout;
+      assert_output ~ctxt "x;" layout;
+      assert_output ~ctxt ~pretty:true "x;" layout;
+    end;
+  end;
 ]

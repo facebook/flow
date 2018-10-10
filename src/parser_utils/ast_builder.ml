@@ -146,8 +146,8 @@ module Statements = struct
       body;
     }
 
-  let expression ?directive expression =
-    Loc.none, Expression { Expression.expression; directive }
+  let expression ?(loc = Loc.none) ?directive expression =
+    loc, Expression { Expression.expression; directive }
 
   let labeled label body =
     Loc.none, Labeled { Labeled.label; body }
@@ -338,12 +338,12 @@ module Expressions = struct
 end
 
 module Comments = struct
-  let block txt = Loc.none, Ast.Comment.Block txt
-  let line txt = Loc.none, Ast.Comment.Line txt
+  let block ?(loc = Loc.none) txt = loc, Ast.Comment.Block txt
+  let line ?(loc = Loc.none) txt = loc, Ast.Comment.Line txt
 end
 
-let mk_program stmts =
-  Loc.none, stmts, []
+let mk_program ?(comments=[]) stmts =
+  Loc.none, stmts, comments
 
 let ast_of_string ~parser str =
   let parse_options = Some Parser_env.({
