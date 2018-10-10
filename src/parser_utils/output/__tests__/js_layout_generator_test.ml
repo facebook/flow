@@ -1615,52 +1615,6 @@ let tests = "js_layout_generator" >::: [
       );
     end;
 
-  "program_artifact_newline" >::
-    begin fun ctxt ->
-      let ast = mk_program [
-        S.expression (E.identifier "x");
-      ] in
-      let layout = Js_layout_generator.program
-        ~preserve_docblock:false
-        ~checksum:(Some "@artifact abc123")
-        ast
-      in
-      let expected =
-        L.(program (fused [
-          sequence ~break:Layout.Break_if_pretty ~inline:(true, true) ~indent:0 [
-            loc (fused [loc (id "x"); atom ";"]);
-          ];
-          hardline;
-          atom "/* @artifact abc123 */";
-        ]))
-      in
-      assert_layout ~ctxt expected layout;
-      assert_output ~ctxt "x;\n/* @artifact abc123 */" layout;
-      assert_output ~ctxt ~pretty:true "x;\n/* @artifact abc123 */" layout;
-    end;
-
-  "program_trailing_semicolon" >::
-    begin fun ctxt ->
-      let ast = mk_program [
-        S.expression (E.identifier "x");
-        S.expression (E.identifier "y");
-      ] in
-      let layout = Js_layout_generator.program
-        ~preserve_docblock:false
-        ~checksum:None
-        ast
-      in
-      let expected =
-        L.(program (
-          fused_vertically ~inline:(true, true) [
-            loc (fused [loc (id "x"); atom ";"]);
-            loc (fused [loc (id "y"); atom ";"]);
-          ]
-        ))
-      in
-      assert_layout ~ctxt expected layout
-    end;
-
   "regexp" >::
     begin fun ctxt ->
       (* flags should be sorted *)
