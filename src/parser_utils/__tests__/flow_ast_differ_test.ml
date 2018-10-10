@@ -719,8 +719,8 @@ let tests = "ast_differ" >::: [
   end;
   "class_type_param_instantiation" >:: begin fun ctxt ->
     let source = "class A extends B<{}> { m(): rename {} }" in
-    assert_edits_equal ctxt ~edits:[((0, 40), "class A\n  extends B<{}> {\n  m(): gotRenamed {}\n}")] ~source
-    ~expected:"class A\n  extends B<{}> {\n  m(): gotRenamed {}\n}"
+    assert_edits_equal ctxt ~edits:[((27, 35), ": gotRenamed")] ~source
+    ~expected:"class A extends B<{}> { m(): gotRenamed {} }"
     ~mapper:(new useless_mapper)
   end;
 ]

@@ -594,13 +594,13 @@ class mapper = object(this)
   method type_parameter_instantiation_with_implicit
   (pi: (Loc.t, Loc.t) Flow_ast.Expression.TypeParameterInstantiation.t) =
     let loc, targs = pi in
-    let targs' = List.map this#type_or_implicit targs in
+    let targs' = ListUtils.ident_map this#type_or_implicit targs in
     if targs' == targs then pi
     else loc, targs'
 
   method type_parameter_instantiation (pi: (Loc.t, Loc.t) Flow_ast.Type.ParameterInstantiation.t) =
     let loc, targs = pi in
-    let targs' = List.map this#type_ targs in
+    let targs' = ListUtils.ident_map this#type_ targs in
     if targs' == targs then pi
     else loc, targs'
 
