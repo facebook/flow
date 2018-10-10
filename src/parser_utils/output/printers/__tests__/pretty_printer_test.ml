@@ -55,7 +55,7 @@ let tests = "pretty_printer" >::: [
             Atom "a";
             fuse [
               Atom "b"; space; Atom "=>";
-              fuse_vertically ~indent:2 ~inline:(false, true) [Atom short_string];
+              Indent (fuse [pretty_hardline; Atom short_string]);
             ];
           ];
       ] in

@@ -101,13 +101,6 @@ let join sep nodes =
   in
   fuse (helper [] nodes)
 
-(* Fuse a list of items to align vertically *)
-let fuse_vertically
-  ?(indent=0)
-  ?(inline=(false, false))
-  items =
-  Sequence ({ break=Break_if_pretty; indent; inline }, items)
-
 let fuse_list =
   let rec helper ~sep acc = function
   | [] -> fuse (List.rev acc)
