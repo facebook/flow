@@ -68,6 +68,7 @@ class useless_mapper = object
     else decl
 
   method! type_ (annot: (Loc.t, Loc.t) Type.t) =
+    let annot = super#type_ annot in
     let (loc, typ) = annot in
     match typ with
     | Type.Number -> (loc, Type.String)
@@ -715,5 +716,11 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(19, 19), "("; (49, 49), ": any)"]
       ~source ~mapper:(new insert_typecast_mapper)
       ~expected:"const dontrename = (call( /* preserve spaces */  ): any)"
+  end;
+  "class_type_param_instantiation" >:: begin fun ctxt ->
+    let source = "class A extends B<{}> { m(): rename {} }" in
+    assert_edits_equal ctxt ~edits:[((0, 40), "class A\n  extends B<{}> {\n  m(): gotRenamed {}\n}")] ~source
+    ~expected:"class A\n  extends B<{}> {\n  m(): gotRenamed {}\n}"
+    ~mapper:(new useless_mapper)
   end;
 ]
