@@ -1907,7 +1907,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
               | _, OpaqueType opaque_t -> Some (NamedOpaqueType (opaque_loc, opaque_t))
               | _ -> assert_false "OpaqueType typed AST doesn't preserve structure"
             in
-            [(spf "opauqe type %s = ..." name, name_loc, name, None)], ExportType, ast
+            [(spf "opaque type %s = ..." name, name_loc, name, None)], ExportType, ast
         | Some (Interface (loc, i)) ->
             let {Interface.id = (name_loc, name); _;} = i in
             let int_dec = statement cx (loc, InterfaceDeclaration i) in
