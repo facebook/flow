@@ -227,12 +227,16 @@ module Eval(Env: EvalEnv) = struct
     | Kind.Annot_path.Annot (_, t) -> type_ tps t
     | Kind.Annot_path.Object (path, _) -> annot_path tps path
 
-  let rec annotation ?init tps (loc, annot) =
+  let rec init_path tps = function
+    | Kind.Init_path.Init expr -> literal_expr tps expr
+    | Kind.Init_path.Object (_, (path, _)) -> init_path tps path
+
+  and annotation ?init tps (loc, annot) =
     match annot with
       | Some path -> annot_path tps path
       | None ->
         begin match init with
-          | Some expr -> literal_expr tps expr
+          | Some path -> init_path tps path
           | None -> Deps.top (Error.ExpectedAnnotation loc)
         end
 

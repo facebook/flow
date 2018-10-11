@@ -86,6 +86,8 @@ module T = struct
 
     | Outline of outlinable_t
 
+    | ObjectDestruct of (Loc.t * expr_type) * (Loc.t * string)
+
   and object_type = (Loc.t, Loc.t) Ast.Type.Object.t
 
   and object_key = (Loc.t, Loc.t) Ast.Expression.Object.Property.key
@@ -214,6 +216,21 @@ module T = struct
         Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified id;
         targs = None;
       }))
+
+    | loc, ObjectDestruct (expr_type, prop) ->
+      let t = type_of_expr_type outlined expr_type in
+      let f id = fst expr_type, Ast.Statement.DeclareVariable {
+        Ast.Statement.DeclareVariable.id;
+        annot = Ast.Type.Available (fst t, t);
+      } in
+      let id = Outlined.next outlined loc f in
+      loc, Ast.Type.Typeof (type_of_generic (loc, {
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Qualified (loc, {
+          Ast.Type.Generic.Identifier.qualification = Ast.Type.Generic.Identifier.Unqualified id;
+          id = prop
+        });
+        targs = None;
+      }));
 
   and generic_id_of_reference = function
     | RLexical (loc, x) -> Ast.Type.Generic.Identifier.Unqualified (loc, x)
@@ -508,7 +525,12 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     | Kind.Annot_path.Annot (_, t) -> type_ t
     | Kind.Annot_path.Object (path, _) -> annot_path path
 
-  let rec annotated_type annot =
+  let rec init_path = function
+    | Kind.Init_path.Init expr -> literal_expr expr
+    | Kind.Init_path.Object (prop_loc, (path, (loc, x))) ->
+      prop_loc, T.ObjectDestruct (init_path path, (loc, x))
+
+  and annotated_type annot =
     match annot with
       | Some path -> annot_path path
       | None -> raise (Error "annotated_type")
@@ -518,7 +540,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | Some path -> T.TYPE (annot_path path)
       | None ->
         begin match init with
-          | Some expr -> T.EXPR (literal_expr expr)
+          | Some path -> T.EXPR (init_path path)
           | None -> raise (Error "annotation")
         end
 

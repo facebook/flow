@@ -460,4 +460,22 @@ let tests = "signature_generator" >::: ([
      "export type {T6};";
      "declare opaque type T6: T5;"];
 
+  "import_then_destructure" >:: mk_signature_generator_test
+    ["import Foo from 'foo';";
+     "const { Bar } = Foo;";
+     "module.exports = Bar;"]
+    ["import Foo from \"foo\";";
+     "declare var Bar: typeof $1.Bar;";
+     "declare var $1: typeof Foo;"; (* TODO: compress *)
+     "declare module.exports: typeof Bar;"];
+
+  "import_then_destructure2" >:: mk_signature_generator_test
+    ["import Foo from 'foo';";
+     "const { Foo: Bar } = { Foo };";
+     "module.exports = Bar;"]
+    ["import Foo from \"foo\";";
+     "declare var Bar: typeof $1.Foo;";
+     "declare var $1: {|Foo: typeof Foo|};";
+     "declare module.exports: typeof Bar;"];
+
 ] @ verified_signature_generator_tests)

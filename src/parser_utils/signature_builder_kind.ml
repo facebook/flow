@@ -22,6 +22,21 @@ module Annot_path = struct
       | Some annot_path -> Some (Object (annot_path, x))
 end
 
+module Init_path = struct
+  type t =
+    | Init of (Loc.t, Loc.t) Ast.Expression.t
+    | Object of Loc.t * (t * (Loc.t * string))
+
+  let mk_init = function
+    | None -> None
+    | Some init -> Some (Init init)
+
+  let mk_object prop_loc ?init_path (loc, x) =
+    match init_path with
+      | None -> None
+      | Some init_path -> Some (Object (prop_loc, (init_path, (loc, x))))
+end
+
 module Sort = struct
   type t = Type | Value
   let to_string = function
@@ -50,7 +65,7 @@ end
 type t =
   | VariableDef of {
       annot: Annot_path.t option;
-      init: (Loc.t, Loc.t) Ast.Expression.t option;
+      init: Init_path.t option;
     }
   | FunctionDef of {
       generator: bool;
