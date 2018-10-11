@@ -533,11 +533,6 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         | path_loc, T.ValueRef reference -> T.ValueRef (T.RPath (path_loc, reference, (loc, x)))
         | _ -> T.ObjectDestruct (expr_type, (loc, x))
 
-  and annotated_type annot =
-    match annot with
-      | Some path -> annot_path path
-      | None -> raise (Error "annotated_type")
-
   and annotation ?init annot =
     match annot with
       | Some path -> T.TYPE (annot_path path)
@@ -547,15 +542,19 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           | None -> raise (Error "annotation")
         end
 
+  and annotated_type = function
+    | Ast.Type.Missing _ -> raise (Error "annotation")
+    | Ast.Type.Available (_, t) -> type_ t
+
   and pattern patt =
     let open Ast.Pattern in
     match patt with
       | loc, Identifier { Identifier.annot; name; optional; } ->
-        loc, Some name, optional, annotated_type (Kind.Annot_path.mk_annot annot)
+        loc, Some name, optional, annotated_type annot
       | loc, Object { Object.annot; properties = _ } ->
-        loc, None, false, annotated_type (Kind.Annot_path.mk_annot annot)
+        loc, None, false, annotated_type annot
       | loc, Array { Array.annot; elements = _ } ->
-        loc, None, false, annotated_type (Kind.Annot_path.mk_annot annot)
+        loc, None, false, annotated_type annot
       | _, Assignment { Assignment.left; right = _ } -> pattern left
       | _loc (* TODO *), Expression _ -> raise (Error "pattern")
 
@@ -777,11 +776,11 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
             (x, kind, static, (loc, function_ generator tparams params return body))) :: acc
         | Body.Property (elem_loc, { Property.key; annot; static; variance; value = _ }) ->
           let x = object_key key in
-          (elem_loc, T.CProperty
-            (x, static, variance, annotated_type (Kind.Annot_path.mk_annot annot))) :: acc
-        | Body.PrivateField (elem_loc, { PrivateField.key = (_, (_, x)); annot; static; variance; value = _ }) ->
-          (elem_loc, T.CPrivateField
-            (x, static, variance, annotated_type (Kind.Annot_path.mk_annot annot))) :: acc
+          (elem_loc, T.CProperty (x, static, variance, annotated_type annot)) :: acc
+        | Body.PrivateField (elem_loc, {
+            PrivateField.key = (_, (_, x)); annot; static; variance; value = _
+          }) ->
+          (elem_loc, T.CPrivateField (x, static, variance, annotated_type annot)) :: acc
 
     in fun tparams body super super_targs implements ->
       let open Ast.Class in

@@ -240,12 +240,17 @@ module Eval(Env: EvalEnv) = struct
           | None -> Deps.top (Error.ExpectedAnnotation loc)
         end
 
+  and annotated_type tps loc = function
+    | Ast.Type.Missing _ -> Deps.top (Error.ExpectedAnnotation loc)
+    | Ast.Type.Available (_, t) -> type_ tps t
+
   and pattern tps patt =
     let open Ast.Pattern in
     match patt with
-      | loc, Identifier { Identifier.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
-      | loc, Object { Object.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
-      | loc, Array { Array.annot; _ } -> annotation tps (loc, Kind.Annot_path.mk_annot annot)
+      | loc, Identifier { Identifier.annot; _ }
+      | loc, Object { Object.annot; _ }
+      | loc, Array { Array.annot; _ }
+        -> annotated_type tps loc annot
       | _, Assignment { Assignment.left; _ } -> pattern tps left
       | loc, Expression _ -> Deps.todo loc "Expression"
 
@@ -465,7 +470,7 @@ module Eval(Env: EvalEnv) = struct
           function_ tps generator tparams params return body
         | Body.Property (loc, { Property.annot; _ })
         | Body.PrivateField (loc, { PrivateField.annot; _ }) ->
-          annotation tps (loc, Kind.Annot_path.mk_annot annot)
+          annotated_type tps loc annot
 
     in fun tparams body super super_targs implements ->
       let open Ast.Class in
