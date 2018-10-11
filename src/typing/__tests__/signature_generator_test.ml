@@ -477,4 +477,12 @@ let tests = "signature_generator" >::: ([
      "declare var $1: {|Foo: typeof Foo|};";
      "declare module.exports: typeof Bar;"];
 
+  "optional_param" >:: mk_signature_generator_test
+    ["module.exports = function(x?: number) { }"]
+    ["declare module.exports: (x?: number) => void;"];
+
+  "optional_param_default" >:: mk_signature_generator_test
+    ["module.exports = function(x: number = 0) { }"]
+    ["declare module.exports: (x?: number) => void;"];
+
 ] @ verified_signature_generator_tests)

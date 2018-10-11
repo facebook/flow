@@ -546,16 +546,16 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     | Ast.Type.Missing _ -> raise (Error "annotation")
     | Ast.Type.Available (_, t) -> type_ t
 
-  and pattern patt =
+  and pattern ?(default=false) patt =
     let open Ast.Pattern in
     match patt with
       | loc, Identifier { Identifier.annot; name; optional; } ->
-        loc, Some name, optional, annotated_type annot
+        loc, Some name, default || optional, annotated_type annot
       | loc, Object { Object.annot; properties = _ } ->
         loc, None, false, annotated_type annot
       | loc, Array { Array.annot; elements = _ } ->
         loc, None, false, annotated_type annot
-      | _, Assignment { Assignment.left; right = _ } -> pattern left
+      | _, Assignment { Assignment.left; right = _ } -> pattern ~default:true left
       | _loc (* TODO *), Expression _ -> raise (Error "pattern")
 
   and literal_expr =
