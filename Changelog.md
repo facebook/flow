@@ -1,3 +1,30 @@
+### 0.83.0
+
+Likely to cause new Flow errors:
+* Fixed a bug where type precision was lost at module boundaries
+
+Notable bug fixes:
+* Prevented an exponential blowup when union types flow into "maybe" (`?T`) or "optional" (essentially `T | void`) types
+* Allowed `{p:T}` to be a subtype of `$Shape<{+p:T}>`
+
+Misc:
+* Fixed exception when using --traces
+* Changed `--verbose` to not log while loading flowlibs by default; pass `--verbose-flowlibs` to override
+* Added ability for LSP clients to cancel previously-sent commands
+* Improved location of diagnostics via LSP while typing
+* Fixed LSP textDocument/definition response when there are no results (prevents bogus jump-to-definition inside comments, for example)
+* Limited number of errors returned via LSP to 200, to improve Nuclide and Visual Studio performance
+* Fixed an exception when attempting to focus a file that Flow ignored
+
+Library definition changes:
+* Added `ResizeObserver` declarations
+* Added missing `net$Server.listening` property
+* Added `process.cpuUsage()`
+
+Parser:
+* Fixed `export default async function` to be a `FunctionDeclaration` not a `FunctionExpression`
+* Made instance properties named 'constructor' a syntax error
+
 ### 0.82.0
 
 Likely to cause new Flow errors:
