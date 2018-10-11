@@ -26,22 +26,25 @@ let string_of_kind = function
 | LintError lint_kind -> "LintError" ^ "-" ^ Lints.string_of_kind lint_kind
 
 (* internal rep for core info *)
-type message =
-  | BlameM of Loc.t * string
+type 'a message' =
+  | BlameM of 'a * string
   | CommentM of string
+type message = Loc.t message'
 
 (* simple structure for callers to specify error message content,
    converted to message internally. *)
-type info = Loc.t * string list
+type 'a info' = 'a * string list
+type info = Loc.t info'
 
 (** for extra info, enough structure to do simple tree-shaped output *)
-type info_tree =
-  | InfoLeaf of info list
-  | InfoNode of info list * info_tree list
+type 'a info_tree' =
+  | InfoLeaf of 'a info' list
+  | InfoNode of 'a info' list * 'a info_tree' list
+type info_tree = Loc.t info_tree'
 
-type classic_error = {
-  messages: message list;
-  extra: info_tree list
+type 'a classic_error = {
+  messages: 'a message' list;
+  extra: 'a info_tree' list
 }
 
 module LocSet = Utils_js.LocSet
@@ -586,7 +589,8 @@ module Friendly = struct
     }
 end
 
-type error = error_kind * message list * Friendly.t
+type 'a error' = error_kind * 'a message' list * 'a Friendly.t'
+type error = Loc.t error'
 
 let is_duplicate_provider_error (kind, _, _) = kind = DuplicateProviderError
 
@@ -937,20 +941,20 @@ end
    traces may share endpoints, and produce the same error *)
 module ErrorSet = Set.Make(Error)
 
-type error_group =
+type 'a error_group =
   (* Friendly errors without a root are never grouped. When traces are enabled
    * all friendly errors will never group. *)
-  | Singleton of error_kind * message list * Friendly.t
+  | Singleton of error_kind * 'a message' list * 'a Friendly.t'
   (* Friendly errors that share a root are grouped together. The errors list
    * is reversed. *)
   | Group of {
       kind: error_kind;
-      root: Loc.t Friendly.error_root;
-      errors_rev: Friendly.t Nel.t;
+      root: 'a Friendly.error_root;
+      errors_rev: 'a Friendly.t' Nel.t;
       omitted: int;
     }
 
-exception Interrupt_ErrorSet_fold of error_group list
+exception Interrupt_ErrorSet_fold of Loc.t error_group list
 
 (* Folds an ErrorSet into a grouped list. However, the group and all sub-groups
  * are in reverse order. *)

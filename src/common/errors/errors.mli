@@ -21,12 +21,14 @@ val string_of_kind: error_kind -> string
     [ location1, ["number"; "Type is incompatible with"];
       location2, ["string"] ]
   *)
-type info = Loc.t * string list
+type 'a info' = 'a * string list
+type info = Loc.t info'
 
 (** for extra info, enough structure to do simple tree-shaped output *)
-type info_tree =
-  | InfoLeaf of info list
-  | InfoNode of info list * info_tree list
+type 'a info_tree' =
+  | InfoLeaf of 'a info' list
+  | InfoNode of 'a info' list * 'a info_tree' list
+type info_tree = Loc.t info_tree'
 
 module Friendly : sig
   type 'a message = 'a message_feature list
