@@ -465,8 +465,7 @@ let tests = "signature_generator" >::: ([
      "const { Bar } = Foo;";
      "module.exports = Bar;"]
     ["import Foo from \"foo\";";
-     "declare var Bar: typeof $1.Bar;";
-     "declare var $1: typeof Foo;"; (* TODO: compress *)
+     "declare var Bar: typeof Foo.Bar;";
      "declare module.exports: typeof Bar;"];
 
   "import_then_destructure2" >:: mk_signature_generator_test

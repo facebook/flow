@@ -528,7 +528,10 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
   let rec init_path = function
     | Kind.Init_path.Init expr -> literal_expr expr
     | Kind.Init_path.Object (prop_loc, (path, (loc, x))) ->
-      prop_loc, T.ObjectDestruct (init_path path, (loc, x))
+      let expr_type = init_path path in
+      prop_loc, match expr_type with
+        | path_loc, T.ValueRef reference -> T.ValueRef (T.RPath (path_loc, reference, (loc, x)))
+        | _ -> T.ObjectDestruct (expr_type, (loc, x))
 
   and annotated_type annot =
     match annot with
