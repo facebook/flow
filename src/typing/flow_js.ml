@@ -7125,6 +7125,7 @@ and any_propagated cx trace any = function
   | ToStringT _
   | UnaryMinusT _
   | UnifyT _
+  | UseT (_, DefT (_, IdxWrapper _))
   | UseT (_, DefT (_, MaybeT _)) (* used to filter maybe *)
   | UseT (_, DefT (_, OptionalT _)) (* used to filter optional *)
 
