@@ -7128,6 +7128,7 @@ and any_propagated cx trace any = function
   | UnifyT _
   | UseT (_, DefT (_, IdxWrapper _))
   | UseT (_, DefT (_, MaybeT _)) (* used to filter maybe *)
+  | UseT (_, MergedT _) (* Already handled in __flow *)
   | UseT (_, DefT (_, OptionalT _)) (* used to filter optional *)
 
   (* Ideally, any would pollute every member of the union. However, it should be safe to only
