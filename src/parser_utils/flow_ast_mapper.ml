@@ -837,7 +837,7 @@ class mapper = object(this)
     let name' = this#jsx_name name in
     let attributes' = ListUtils.ident_map this#jsx_opening_attribute attributes in
     if name == name' && attributes == attributes' then elem
-    else loc, { name; selfClosing; attributes = attributes' }
+    else loc, { name = name'; selfClosing; attributes = attributes' }
 
   method jsx_closing_element (elem: (Loc.t, Loc.t) Flow_ast.JSX.Closing.t) =
     let open Flow_ast.JSX.Closing in
