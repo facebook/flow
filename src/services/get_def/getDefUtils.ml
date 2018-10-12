@@ -423,6 +423,8 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
   let props_access_info = ref (Ok None) in
   compute_ast_result file_key content
   %>>= fun (ast, file_sig, info) ->
+  (* Check if it's an exported symbol *)
+  let loc = Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in
   let info = Docblock.set_flow_mode_for_ide_command info in
   let literal_key_info: (Loc.t * Loc.t * string) option = ObjectKeyAtLoc.get ast loc in
   let%lwt cx =

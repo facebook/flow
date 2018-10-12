@@ -38,24 +38,17 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   | Error err -> Lwt.return (Error err, None)
   | Ok content ->
     let%lwt result =
-      FindRefsUtils.compute_ast_result file_key content %>>= fun (ast, file_sig, _) ->
+      FindRefsUtils.compute_ast_result file_key content %>>= fun (ast, _, _) ->
       let property_find_refs start_loc =
-        PropertyFindRefs.find_refs genv env ~profiling ~content file_key start_loc ~global ~multi_hop
+        let%lwt def_info = GetDefUtils.get_def_info genv env profiling file_key content start_loc in
+        PropertyFindRefs.find_refs genv env ~content file_key def_info ~global ~multi_hop
       in
       (* Start by running local variable find references *)
       match VariableFindRefs.local_find_refs ast loc with
       (* Got nothing from local variable find-refs, try object property find-refs *)
       | None -> property_find_refs loc
       | Some ((name, local_refs), local_def_loc) ->
-        (* We got something from local variable find-refs -- now let's check if it's an exported
-         * symbol *)
-        let start_loc = match ImportExportSymbols.find_related_symbol file_sig local_def_loc with
-        (* It's a local variable but it's not related to an export/import. However, let's try
-         * property find-refs anyway in case the local is used as an object property shorthand. *)
-        | None -> loc
-        | Some related_loc -> related_loc
-        in
-        let%lwt refs = property_find_refs start_loc in
+        let%lwt refs = property_find_refs local_def_loc in
         refs %>>| fun refs ->
         (* If property find-refs returned nothing (for example if we are importing from an untyped
          * module), then fall back on the local refs we computed earlier. *)

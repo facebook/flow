@@ -357,14 +357,20 @@ Destructuring:
     {
       "source":"locals.js",
       "type":"SourceFile",
-      "start":{"line":37,"column":7,"offset":476},
-      "end":{"line":37,"column":7,"offset":477}
+      "start":{"line":36,"column":7,"offset":445},
+      "end":{"line":36,"column":7,"offset":446}
     },
     {
       "source":"locals.js",
       "type":"SourceFile",
       "start":{"line":37,"column":26,"offset":495},
       "end":{"line":37,"column":26,"offset":496}
+    },
+    {
+      "source":"locals.js",
+      "type":"SourceFile",
+      "start":{"line":40,"column":8,"offset":531},
+      "end":{"line":40,"column":8,"offset":532}
     }
   ]
 }

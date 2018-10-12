@@ -450,8 +450,7 @@ let find_refs_local genv file_key content def_info =
   find_refs_in_file genv.options ast_info file_key def_info >>= fun refs ->
   Ok (Some ((display_name_of_def_info def_info, refs), None))
 
-let find_refs genv env ~profiling ~content file_key loc ~global ~multi_hop =
-  let%lwt def_info = get_def_info genv env profiling file_key content loc in
+let find_refs genv env ~content file_key def_info ~global ~multi_hop =
   def_info %>>= fun def_info_opt ->
   match def_info_opt with
     | None -> Lwt.return (Ok None)

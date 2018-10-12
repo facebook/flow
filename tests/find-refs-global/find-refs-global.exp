@@ -1212,20 +1212,14 @@ CJS object exporting shorthand:
     {
       "source":"cjs-2.js",
       "type":"SourceFile",
+      "start":{"line":3,"column":7,"offset":28},
+      "end":{"line":3,"column":10,"offset":32}
+    },
+    {
+      "source":"cjs-2.js",
+      "type":"SourceFile",
       "start":{"line":4,"column":37,"offset":77},
       "end":{"line":4,"column":40,"offset":81}
-    },
-    {
-      "source":"cjs-4.js",
-      "type":"SourceFile",
-      "start":{"line":3,"column":22,"offset":70},
-      "end":{"line":3,"column":25,"offset":74}
-    },
-    {
-      "source":"cjs-4.js",
-      "type":"SourceFile",
-      "start":{"line":9,"column":1,"offset":150},
-      "end":{"line":9,"column":4,"offset":154}
     }
   ]
 }
