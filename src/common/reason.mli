@@ -167,13 +167,10 @@ module TestID: sig
   val run: ('a -> 'b) -> 'a -> 'b
 end
 
-val lexpos: string -> int -> int -> Lexing.position
-
 (* reason constructor *)
 val mk_reason: reason_desc -> ALoc.t -> reason
 
 (* ranges *)
-val diff_range: Loc.t -> int * int
 val in_range: Loc.t -> Loc.t -> bool
 
 val string_of_desc: reason_desc -> string

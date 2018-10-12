@@ -223,21 +223,6 @@ type reason = {
 
 type t = reason
 
-let lexpos file line col = {
-  Lexing.pos_fname = file;
-  Lexing.pos_lnum = line;
-  Lexing.pos_bol = 0;
-  Lexing.pos_cnum = col;
-}
-
-let diff_range loc = Loc.(
-  let line1, line2 = loc.start.line, loc._end.line in
-  (* TODO: Get rid of +1 which is here to ensure same behavior as old code
-     using Pos.info_pos *)
-  let start, end_  = loc.start.column + 1, loc._end.column in
-  (line2 - line1, end_ - start)
-)
-
 let in_range loc range = Loc.(
   let line, line1, line2 = loc.start.line, range.start.line, range._end.line in
   (line1 < line || (line = line1 && range.start.column <= loc.start.column)) &&
