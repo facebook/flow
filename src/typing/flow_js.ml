@@ -7041,7 +7041,8 @@ and any_propagated cx trace any = function
       rec_flow_t cx trace (AnyT.why reason, t);
       true
 
-  | UseT (use_op, DefT (_, ClassT t)) -> (* mk_instance ~for_type:false *)
+  | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *)
+  | UseT (use_op, ExactT (_, t)) ->
       rec_flow_t cx trace ~use_op (any, t);
       true
 
