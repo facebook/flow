@@ -1315,6 +1315,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     if Speculation.(defer_action cx (Action.Flow (l, u))) then
       print_if_verbose cx trace ~indent:1 ["deferred during speculation"]
 
+    (* Either propagate AnyT through the use type, or short-circuit because any <: u trivially *)
+    else if match l with DefT(_, AnyT) -> any_propagated cx trace l u | _ -> false then ()
+
     else match (l,u) with
 
     (********)
@@ -2568,9 +2571,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*****************)
     (* logical types *)
     (*****************)
-
-    | DefT (_, AnyT), NotT (reason, tout) ->
-      rec_flow_t cx trace (AnyT.why reason, tout)
 
     (* !x when x is of unknown truthiness *)
     | DefT (_, BoolT None), NotT (reason, tout)
@@ -4325,16 +4325,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | CustomFunT (reason, _), _ when function_like_op u ->
       rec_flow cx trace (DefT (reason, AnyFunT), u)
 
-    (* Any propagation *)
-
-    | DefT (_, AnyT), UseT (use_op, DefT (_, FunT (_, _, funtype))) ->
-        let { this_t; params; rest_param; return_t;
-              closure_t = _; is_predicate = _; changeset = _; def_reason = _; } = funtype in
-        List.iter (fun (_, t) -> rec_flow_t cx trace ~use_op (t, l)) params;
-        Option.iter ~f:(fun (_, _, t) -> rec_flow_t cx trace ~use_op (t, l)) rest_param;
-        rec_flow_t cx trace ~use_op (this_t, l);
-        rec_flow_t cx trace ~use_op (l, return_t)
-
     (*********************************************)
     (* object types deconstruct into their parts *)
     (*********************************************)
@@ -4627,10 +4617,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* a class value annotation becomes the instance type *)
       rec_flow cx trace (it, BecomeT (r, t))
 
-    | DefT (_, AnyT), UseT (_, DefT (reason, TypeT (_, t))) ->
-      (* any can function as class, hence ok for annotations *)
-      rec_flow cx trace (l, BecomeT (reason, t))
-
     | DefT (_, TypeT (_, l)), UseT (use_op, DefT (_, TypeT (_, u))) ->
       rec_unify cx trace ~use_op ~unify_any:true l u
 
@@ -4647,9 +4633,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (use_op, DefT (_, ClassT (DefT (_, InstanceT (static2, _, _, _)) as u_))) ->
       rec_unify cx trace ~use_op static1 static2;
       rec_unify cx trace ~use_op prototype u_
-
-    | DefT (_, AnyT), UseT (use_op, DefT (_, ClassT u)) ->
-      rec_flow cx trace (l, UseT (use_op, u))
 
     (*********************************************************)
     (* class types derive instance types (with constructors) *)
@@ -4786,7 +4769,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* __proto__ setter *)
     (********************)
 
-    | DefT (_, (AnyT | AnyObjT | AnyFunT)), SetProtoT _ -> ()
+    | DefT (_, (AnyObjT | AnyFunT)), SetProtoT _ -> ()
 
     | _, SetProtoT (reason_op, _) ->
       add_output cx ~trace (FlowError.EUnsupportedSetProto reason_op)
@@ -7033,7 +7016,9 @@ and ground_subtype = function
   | _, UseT (_, DefT (_, MixedT _))
     -> true
 
-  | DefT (_, AnyT), u -> not (any_propagating_use_t u)
+  (* we handle the any propagation check later *)
+  | DefT (_, AnyT), _ -> false
+
   | _, UseT (_, DefT (_, AnyT)) -> true
 
   (* opt: avoid builtin lookups *)
@@ -7047,6 +7032,132 @@ and ground_subtype = function
 
   | _ ->
     false
+
+(* types trapped for any propagation. Returns true if this function handles the any case, either
+   by propagating or by doing the trivial case. False if the usetype needs to be handled
+   separately. *)
+and any_propagated cx trace any = function
+  | NotT (reason, t) ->
+      rec_flow_t cx trace (AnyT.why reason, t);
+      true
+
+  | UseT (use_op, DefT (_, ClassT t)) -> (* mk_instance ~for_type:false *)
+      rec_flow_t cx trace ~use_op (any, t);
+      true
+
+  | UseT (use_op, DefT (_, FunT (_, _, funtype))) -> (* function type *)
+      let { this_t; params; rest_param; return_t;
+            closure_t = _; is_predicate = _; changeset = _; def_reason = _; } = funtype in
+      List.iter (fun (_, t) -> rec_flow_t cx trace ~use_op (t, any)) params;
+      Option.iter ~f:(fun (_, _, t) -> rec_flow_t cx trace ~use_op (t, any)) rest_param;
+      rec_flow_t cx trace ~use_op (this_t, any);
+      rec_flow_t cx trace ~use_op (any, return_t);
+      true
+
+  | UseT (_, DefT (reason, TypeT (_, t))) -> (* import type *)
+      (* any can function as class, hence ok for annotations *)
+      rec_flow cx trace (any, BecomeT (reason, t));
+      true
+
+  | AdderT _
+  | AndT _
+  | ArrRestT _
+  | BecomeT _
+  | BindT _
+  | CallT _
+  | CallElemT _
+  | CallLatentPredT _
+  | CallOpenPredT _
+  | ChoiceKitUseT _
+  | CJSExtractNamedExportsT _
+  | CJSRequireT _
+  | CondT _
+  | ConstructorT _
+  | CopyNamedExportsT _
+  | CopyTypeExportsT _
+  | ElemT _
+  | ExportNamedT _
+  | ExportTypeT _
+  | GetElemT _
+  | GetKeysT _
+  | GetPrivatePropT _
+  | GetPropT _
+  | GetProtoT _
+  | GetStaticsT _
+  | GetValuesT _
+  | GuardT _
+  | IdxUnMaybeifyT _
+  | IdxUnwrap _
+  | ImportDefaultT _
+  | ImportModuleNsT _
+  | ImportNamedT _
+  | ImportTypeT _
+  | ImportTypeofT _
+  | IntersectionPreprocessKitT _
+  | LookupT _
+  | MatchPropT _
+  | MakeExactT _
+  | MapTypeT _
+  | MethodT _
+  | MixinT _
+  | NullishCoalesceT _
+  | ObjFreezeT _
+  | ObjKitT _
+  | ObjRestT _
+  | ObjSealT _
+  | ObjTestProtoT _
+  | ObjTestT _
+  | OptionalChainT _
+  | OrT _
+  | PredicateT _
+  | ReactKitT _
+  | RefineT _
+  | ReposLowerT _
+  | ReposUseT _
+  | ResolveSpreadT _
+  | SentinelPropTestT _
+  | SetElemT _
+  | SetPropT _
+  | SpecializeT _
+  | TestPropT _
+  | ThisSpecializeT _
+  | ToStringT _
+  | UnaryMinusT _
+  | UnifyT _
+  | UseT (_, DefT (_, MaybeT _)) (* used to filter maybe *)
+  | UseT (_, DefT (_, OptionalT _)) (* used to filter optional *)
+  | UseT (_, OpenT _) ->
+      false
+
+  (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
+     true *)
+  | AssertArithmeticOperandT _
+  | AssertBinaryInLHST _
+  | AssertBinaryInRHST _
+  | AssertForInRHST _
+  | AssertImportIsValueT _
+  | ComparatorT _
+  | DebugPrintT _
+  | DebugSleepT _
+  | EqT _
+  | HasOwnPropT _
+  | ImplementsT _
+  | InvariantT _
+  | SetPrivatePropT _
+  | SetProtoT _
+  | SuperT _
+  | TypeAppVarianceCheckT _
+  | VarianceCheckT _
+  | ConcretizeTypeAppsT _
+  | ExtendsUseT _
+    -> true
+
+  (* TODO: Figure out if these should be true or false *)
+  | ObjAssignFromT _
+  | ObjAssignToT _
+  | SubstOnPredT _
+  | UseT _
+    -> true
 
 and numeric = function
   | DefT (_, NumT _) -> true
