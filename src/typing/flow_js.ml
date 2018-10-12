@@ -7042,7 +7042,8 @@ and any_propagated cx trace any = function
       true
 
   | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *)
-  | UseT (use_op, ExactT (_, t)) ->
+  | UseT (use_op, ExactT (_, t))
+  | UseT (use_op, ShapeT t) ->
       rec_flow_t cx trace ~use_op (any, t);
       true
 
