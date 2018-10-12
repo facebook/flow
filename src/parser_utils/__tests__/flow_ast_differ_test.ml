@@ -33,6 +33,15 @@ class useless_mapper = object
       {value=Number 5.0; raw="5"}
     | _ -> expr
 
+  method! logical loc (expr: (Loc.t, Loc.t) Ast.Expression.Logical.t) =
+    let open Ast.Expression.Logical in
+    let expr = super#logical loc expr in
+    let { operator; _ } = expr in
+    match operator with
+    | NullishCoalesce ->
+      { expr with operator=Or }
+    | _ -> expr
+
   method! binary loc (expr: (Loc.t, Loc.t) Ast.Expression.Binary.t) =
     let open Ast.Expression.Binary in
     let expr = super#binary loc expr in
@@ -721,6 +730,24 @@ let tests = "ast_differ" >::: [
     let source = "class A extends B<{}> { m(): rename {} }" in
     assert_edits_equal ctxt ~edits:[((27, 35), ": gotRenamed")] ~source
     ~expected:"class A extends B<{}> { m(): gotRenamed {} }"
+    ~mapper:(new useless_mapper)
+  end;
+  "logical_operator_left" >:: begin fun ctxt ->
+    let source = "rename && b" in
+    assert_edits_equal ctxt ~edits:[((0, 6), "gotRenamed")] ~source
+    ~expected:"gotRenamed && b"
+    ~mapper:(new useless_mapper)
+  end;
+  "logical_operator_right" >:: begin fun ctxt ->
+    let source = "a || rename" in
+    assert_edits_equal ctxt ~edits:[((5, 11), "gotRenamed")] ~source
+    ~expected:"a || gotRenamed"
+    ~mapper:(new useless_mapper)
+  end;
+  "logical_operator_changed" >:: begin fun ctxt ->
+    let source = "a ?? b" in
+    assert_edits_equal ctxt ~edits:[((0, 6), "(a || b)")] ~source
+    ~expected:"(a || b)"
     ~mapper:(new useless_mapper)
   end;
 ]

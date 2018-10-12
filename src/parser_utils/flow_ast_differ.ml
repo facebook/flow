@@ -603,6 +603,8 @@ let program (algo : diff_algorithm)
         _object obj1 obj2
       | (_, TypeCast t1), (_, TypeCast t2) ->
         Some (type_cast t1 t2)
+      | (_, Logical l1), (_, Logical l2) ->
+        logical l1 l2
       | expr, (loc, TypeCast t2) ->
         Some (type_cast_added expr loc t2)
       | _, _ ->
@@ -710,7 +712,16 @@ let program (algo : diff_algorithm)
       None
     else
       Some (diff_if_changed expression callee1 callee2)
-
+  and logical expr1 expr2 =
+    let open Ast.Expression.Logical in
+    let { left = left1; right = right1; operator = operator1} = expr1 in
+    let { left = left2; right = right2; operator = operator2} = expr2 in
+    if operator1 == operator2 then
+      let left = diff_if_changed expression left1 left2 in
+      let right = diff_if_changed expression right1 right2 in
+      Some (List.concat [left; right])
+    else
+      None
   and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
                     (stmt2: (Loc.t, Loc.t) Ast.Statement.For.t)
       : node change list option =
