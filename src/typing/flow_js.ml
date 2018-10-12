@@ -7131,6 +7131,7 @@ and any_propagated cx trace any = function
      taint the type in the branch that flow picks when generating constraints for this, so
      this can be handled by the pre-existing rules *)
   | UseT (_, DefT (_, UnionT _))
+  | UseT (_, DefT (_, IntersectionT _)) (* Already handled in the wildcard case in __flow *)
   | UseT (_, OpenT _) ->
       false
 
