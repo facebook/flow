@@ -27,6 +27,10 @@ type t =
   | UnexpectedTypeImport
   | UnexpectedTypeExport
   | UnexpectedTypeInterface
+  | UnexpectedSpreadType
+  | UnexpectedExplicitInexactInObject
+  | InexactInsideExact
+  | InexactInsideNonObject
   | NewlineAfterThrow
   | InvalidRegExp
   | InvalidRegExpFlags of string
@@ -146,6 +150,14 @@ module PP =
       | UnexpectedTypeImport -> "Type imports are not allowed in untyped mode"
       | UnexpectedTypeExport -> "Type exports are not allowed in untyped mode"
       | UnexpectedTypeInterface -> "Interfaces are not allowed in untyped mode"
+      | UnexpectedSpreadType ->
+          "Spreading a type is only allowed inside an object type"
+      | UnexpectedExplicitInexactInObject ->
+          "Explicit inexact syntax must come at the end of an object type"
+      | InexactInsideExact ->
+          "Explicit inexact syntax cannot appear inside an explicit exact object type"
+      | InexactInsideNonObject ->
+          "Explicit inexact syntax can only appear inside an object type"
       | NewlineAfterThrow ->  "Illegal newline after throw"
       | InvalidRegExp -> "Invalid regular expression"
       | InvalidRegExpFlags flags -> "Invalid flags supplied to RegExp constructor '"^flags^"'"
