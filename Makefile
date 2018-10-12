@@ -106,6 +106,7 @@ MODULES=\
   src/server/server_utils\
   src/server/shmem\
   src/services/autocomplete\
+	src/services/get_def\
   src/services/inference\
   src/services/inference/module\
   src/services/flowFileGen\
