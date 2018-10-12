@@ -7159,6 +7159,7 @@ and any_propagated cx trace any = function
   | VarianceCheckT _
   | ConcretizeTypeAppsT _
   | ExtendsUseT _
+  | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
     -> true
 
   (* TODO: Figure out if these should be true or false *)
