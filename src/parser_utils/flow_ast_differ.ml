@@ -206,6 +206,37 @@ let diff_if_changed_nonopt_fn f opt1 opt2: node change list option =
   | _ ->
     None
 
+(* Is an RHS expression an import expression? *)
+let is_import_expr (expr: (Loc.t, Loc.t) Ast.Expression.t) =
+  let open Ast.Expression.Call in
+  match expr with
+    | _, Ast.Expression.Import _ -> true
+    | _, Ast.Expression.Call { callee = (_, Ast.Expression.Identifier (_, name)); _ } ->
+      name = "require"
+    | _ -> false
+
+(* Guess whether a statement is an import or not *)
+let is_import_stmt (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
+  let open Ast.Statement.Expression in
+  let open Ast.Statement.VariableDeclaration in
+  let open Ast.Statement.VariableDeclaration.Declarator in
+  match stmt with
+    | _, Ast.Statement.ImportDeclaration _ -> true
+    | _, Ast.Statement.Expression { expression = expr; _ } -> is_import_expr expr
+    | _, Ast.Statement.VariableDeclaration { declarations = decs; _ } ->
+        List.exists
+          (fun (_, { init; _ }) -> Option.value_map init ~default:false ~f:is_import_expr)
+          decs
+    | _ -> false
+
+let partition_imports (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
+  let rec partition_import_helper rec_stmts top =
+    match rec_stmts with
+      | [] -> List.rev top, []
+      | hd::tl -> if is_import_stmt hd then partition_import_helper tl (hd::top)
+          else List.rev top, rec_stmts
+  in partition_import_helper stmts []
+
 (* Outline:
 * - There is a function for every AST node that we want to be able to recurse into.
 * - Each function for an AST node represented in the `node` type above should return a list of
@@ -230,19 +261,34 @@ let program (algo : diff_algorithm)
             (program1: (Loc.t, Loc.t) Ast.program)
             (program2: (Loc.t, Loc.t) Ast.program) : node change list =
 
-  (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs.
-     For inserts and deletes, it uses `trivial` to produce a Loc.t and a b for the change *)
-  let diff_and_recurse (type a) (type b)
+  (* Assuming a diff has already been generated, recurse into it.
+     This function is passed the old_list and index_offset parameters
+     in order to correctly insert new statements WITHOUT assuming that
+     the entire statement list is being processed with a single call
+     to this function. When an Insert diff is detected, we need to find
+     a Loc.t that represents where in the original program they will be inserted.
+     To do so, we find the statement in the old statement list that they will
+     be inserted after, and get its end_loc. The index_offset parameter represents how
+     many statements in the old statement list are NOT represented in this diff--
+     for example, if we separated the statement lists into a list of initial imports
+     and a list of body statements and generated diffs for them separately
+     (cf. toplevel_statement_list), when recursing into the body diffs, the
+     length of the imports in the old statement list should be passed in to
+     index_offset so that insertions into the body section are given the right index.
+  *)
+  let recurse_into_diff (type a) (type b)
       (f: a -> a -> b change list option)
       (trivial : a -> (Loc.t * b) option)
       (old_list: a list)
-      (new_list: a list)
+      (index_offset: int)
+      (diffs: a diff_result list)
       : b change list option =
     let open Option in
 
     let recurse_into_change = function
       | _, Replace (x1, x2) -> f x1 x2
       | index, Insert (break, lst) ->
+        let index = index + index_offset in
         let loc =
           if List.length old_list = 0 then None else
           (* To insert at the start of the list, insert before the first element *)
@@ -264,9 +310,23 @@ let program (algo : diff_algorithm)
       List.map recurse_into_change
       %> all
       %> map ~f:List.concat in
+    recurse_into_changes diffs
+  in
+
+
+  (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs.
+     For inserts and deletes, it uses `trivial` to produce a Loc.t and a b for the change *)
+  let diff_and_recurse (type a) (type b)
+      (f: a -> a -> b change list option)
+      (trivial : a -> (Loc.t * b) option)
+      (old_list: a list)
+      (new_list: a list)
+      : b change list option =
+    let open Option in
 
     list_diff algo old_list new_list
-    >>= recurse_into_changes in
+    >>= recurse_into_diff f trivial old_list 0
+  in
 
   (* diff_and_recurse for when there is no way to get a trivial transfomation from a to b*)
   let diff_and_recurse_no_trivial f = diff_and_recurse f (fun _ -> None) in
@@ -274,8 +334,46 @@ let program (algo : diff_algorithm)
   let rec program' (program1: (Loc.t, Loc.t) Ast.program) (program2: (Loc.t, Loc.t) Ast.program) : node change list =
     let (program_loc, statements1, _) = program1 in
     let (_, statements2, _) = program2 in
-    statement_list statements1 statements2
+    toplevel_statement_list statements1 statements2
     |> Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
+
+
+
+  and toplevel_statement_list (stmts1: (Loc.t, Loc.t) Ast.Statement.t list)
+      (stmts2: (Loc.t, Loc.t) Ast.Statement.t list) =
+    let open Option in
+    let imports1, body1 = partition_imports stmts1 in
+    let imports2, body2 = partition_imports stmts2 in
+
+    let imports_diff = list_diff algo imports1 imports2 in
+    let body_diff = list_diff algo body1 body2 in
+    let whole_program_diff = list_diff algo stmts1 stmts2 in
+
+    let split_len =
+      all [imports_diff; body_diff]
+      >>| List.map List.length
+      >>| List.fold_left (+) 0
+      |> value ~default:max_int in
+    let whole_len =
+      value_map ~default:max_int whole_program_diff ~f:List.length in
+
+    if split_len > whole_len then begin
+      whole_program_diff >>=
+      recurse_into_diff (fun x y -> Some (statement x y))
+        (fun s -> Some (Ast_utils.loc_of_statement s, Statement s)) stmts1 0
+    end else begin
+      imports_diff
+      >>= recurse_into_diff (fun x y -> Some (statement x y))
+        (fun s -> Some (Ast_utils.loc_of_statement s, Statement s)) stmts1 0
+      >>= fun import_recurse ->
+      body_diff
+      >>=
+      (List.length imports1
+       |> recurse_into_diff (fun x y -> Some (statement x y))
+            (fun s -> Some (Ast_utils.loc_of_statement s, Statement s)) stmts1)
+      >>| (fun body_recurse ->
+        import_recurse@body_recurse)
+    end
 
   and statement_list (stmts1: (Loc.t, Loc.t) Ast.Statement.t list) (stmts2: (Loc.t, Loc.t) Ast.Statement.t list)
       : node change list option =

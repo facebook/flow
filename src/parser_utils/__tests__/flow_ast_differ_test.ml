@@ -107,9 +107,110 @@ class insert_dup_mapper = object
     dup stmts
 end
 
+class first_last_dup_mapper = object
+  inherit Flow_ast_mapper.mapper
+  method! statement_list stmts =
+    (List.hd stmts)::stmts@[List.hd (List.rev stmts)]
+end
+
+class insert_import_mapper = object
+  inherit useless_mapper as super
+  method! statement_list stmts =
+    if List.length stmts > 0 then begin
+      let open Ast.Statement.ImportDeclaration in
+      let open Ast.StringLiteral in
+      let stmts = super#statement_list stmts in
+      let loc, _ = List.hd stmts in
+      let imp = loc, Ast.Statement.ImportDeclaration
+        { importKind = Ast.Statement.ImportDeclaration.ImportValue;
+          source = (loc, { value = "baz"; raw = "\"baz\"" });
+          default = None;
+          specifiers = Some
+            (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
+              [{ kind = None;
+                 local = None; remote = (loc, "baz") }])}
+        in
+      imp::stmts
+    end else super#statement_list stmts
+
+end
+
+
+class insert_second_import_mapper = object
+  inherit useless_mapper as super
+  method! statement_list stmts =
+    if List.length stmts > 0 then begin
+      let open Ast.Statement.ImportDeclaration in
+      let open Ast.StringLiteral in
+      let stmts = super#statement_list stmts in
+      let loc, _ = List.hd stmts in
+      let imp = loc, Ast.Statement.ImportDeclaration
+        { importKind = Ast.Statement.ImportDeclaration.ImportValue;
+          source = (loc, { value = "baz"; raw = "\"baz\"" });
+          default = None;
+          specifiers = Some
+            (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
+              [{ kind = None;
+                 local = None; remote = (loc, "baz") }])}
+        in
+      (List.hd stmts)::imp::(List.tl stmts)
+    end else super#statement_list stmts
+
+end
+
+class insert_second_cjsimport_mapper = object
+  inherit useless_mapper as super
+
+  method! statement_list stmts =
+    if List.length stmts > 0 then begin
+      let open Ast.Statement.Expression in
+      let open Ast.Expression.Call in
+      let open Ast.Literal in
+      let stmts = super#statement_list stmts in
+      let loc, _ = List.hd stmts in
+      let imp = (loc, Ast.Statement.Expression (
+        { expression = (loc, Ast.Expression.Call {
+            callee = (loc, Ast.Expression.Identifier (loc, "require"));
+            targs = None; arguments = [
+              Ast.Expression.Expression (loc, Ast.Expression.Literal
+                { value = Ast.Literal.String "baz"; raw = "\"baz\""})
+            ]
+          }); directive = None })) in
+      (List.hd stmts)::imp::(List.tl stmts)
+    end else super#statement_list stmts
+end
+
+class add_body_mapper = object
+  inherit useless_mapper as super
+
+  method! statement_list stmts =
+    if List.length stmts > 0 then begin
+      let open Ast.Statement.Expression in
+      let open Ast.Expression.Call in
+      let open Ast.Literal in
+      let stmts = super#statement_list stmts in
+      let loc, _ = List.rev stmts |> List.hd in
+      let imp = (loc, Ast.Statement.Expression (
+        { expression = (loc, Ast.Expression.Call {
+            callee = (loc, Ast.Expression.Identifier (loc, "foo"));
+            targs = None; arguments = [
+              Ast.Expression.Expression (loc, Ast.Expression.Literal
+                { value = Ast.Literal.String "baz"; raw = "\"baz\""})
+            ]
+          }); directive = None })) in
+      stmts@[imp]
+    end else super#statement_list stmts
+end
+
 class delete_mapper = object
   inherit Flow_ast_mapper.mapper
   method! statement_list = List.tl
+end
+
+class delete_end_mapper = object
+  inherit Flow_ast_mapper.mapper
+  method! statement_list stmt =
+    List.rev stmt |> List.tl |> List.rev
 end
 
 class delete_annot_mapper = object
@@ -228,6 +329,11 @@ let assert_edits_differ ctxt ~edits_trivial ~edits_standard ~source
   assert_equal ~ctxt edits_standard edits_standard';
   assert_equal ~ctxt trivial_expected (apply_edits source edits_trivial');
   assert_equal ~ctxt standard_expected (apply_edits source edits_standard')
+
+let assert_edits_equal_standard_only ctxt ~edits ~source ~expected ~mapper =
+  let edits_standard = edits_of_source Standard source mapper in
+  assert_equal ~ctxt edits edits_standard;
+  assert_equal ~ctxt expected (apply_edits source edits_standard)
 
 let tests = "ast_differ" >::: [
   "simple" >:: begin fun ctxt ->
@@ -749,5 +855,75 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((0, 6), "(a || b)")] ~source
     ~expected:"(a || b)"
     ~mapper:(new useless_mapper)
+  end;
+  "insert_import_split" >:: begin fun ctxt ->
+    let source = "5 - (2 + 2)" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((0, 0), "import {baz} from \"baz\";"); ((5,10), "(2 - 2)")] ~source
+    ~expected:"import {baz} from \"baz\";5 - ((2 - 2))"
+    ~mapper:(new insert_import_mapper)
+  end;
+  "insert_import_existing_split" >:: begin fun ctxt ->
+    let source = "foo; 5 - (2 + 2)" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((0, 0), "import {baz} from \"baz\";"); ((10, 15), "(2 - 2)")] ~source
+    ~expected:"import {baz} from \"baz\";foo; 5 - ((2 - 2))"
+    ~mapper:(new insert_import_mapper)
+  end;
+  "insert_import_second_split" >:: begin fun ctxt ->
+    let source = "import bing from 'bing'; 5 - (2 + 2)" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((24, 24), "import {baz} from \"baz\";"); ((30, 35), "(2 - 2)")] ~source
+    ~expected:"import bing from 'bing';import {baz} from \"baz\"; 5 - ((2 - 2))"
+    ~mapper:(new insert_second_import_mapper)
+  end;
+  "existing_cjs_import_split" >:: begin fun ctxt ->
+    let source = "const x = require('bing'); 5 - (2 + 2)" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((26, 26), "import {baz} from \"baz\";"); ((32, 37), "(2 - 2)")] ~source
+    ~expected:"const x = require('bing');import {baz} from \"baz\"; 5 - ((2 - 2))"
+    ~mapper:(new insert_second_import_mapper)
+  end;
+  "insert_cjs_import_split" >:: begin fun ctxt ->
+    let source = "import 'bing'; 5 - (2 + 2)" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((14, 14), "require(\"baz\");"); ((20, 25), "(2 - 2)")] ~source
+    ~expected:"import 'bing';require(\"baz\"); 5 - ((2 - 2))"
+    ~mapper:(new insert_second_cjsimport_mapper)
+  end;
+  "pathological_import_split" >:: begin fun ctxt ->
+    let source = "import 'baz'; import 'bing'; 5 - (2 + 2);" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((0,0), "5 - (2 + 2);")] ~source
+    ~expected:"5 - (2 + 2);import 'baz'; import 'bing'; 5 - (2 + 2);"
+    ~mapper:(new insert_begin_mapper)
+  end;
+  "remove_import_split" >:: begin fun ctxt ->
+    let source = "import 'baz';5 - (2 + 2);" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((0,13), "")] ~source
+    ~expected:"5 - (2 + 2);"
+    ~mapper:(new delete_mapper)
+  end;
+  "add_body_split" >:: begin fun ctxt ->
+    let source = "import 'baz';" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((13,13), "foo(\"baz\");")] ~source
+    ~expected:"import 'baz';foo(\"baz\");"
+    ~mapper:(new add_body_mapper)
+  end;
+  "add_to_body_split" >:: begin fun ctxt ->
+    let source = "import 'baz'; bar(qux);" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((23,23), "foo(\"baz\");")] ~source
+    ~expected:"import 'baz'; bar(qux);foo(\"baz\");"
+    ~mapper:(new add_body_mapper)
+  end;
+  "remove_body_split" >:: begin fun ctxt ->
+    let source = "import 'baz';5 - (2 + 2);" in
+    assert_edits_equal_standard_only ctxt
+    ~edits:[((13,25), "")] ~source
+    ~expected:"import 'baz';"
+    ~mapper:(new delete_end_mapper)
   end;
 ]
