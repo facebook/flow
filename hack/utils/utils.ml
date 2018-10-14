@@ -148,6 +148,12 @@ let strip_ns s =
   if String.length s == 0 || s.[0] <> '\\' then s
   else String.sub s 1 ((String.length s) - 1)
 
+(* A\B\C -> \A\B\C *)
+let add_ns s =
+  if String.length s = 0 || s.[0] <> '\\'
+  then "\\" ^ s
+  else s
+
 (* \A\B\C -> C *)
 let strip_all_ns s =
   try
