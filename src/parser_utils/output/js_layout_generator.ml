@@ -2150,12 +2150,14 @@ and type_object_property = Ast.Type.Object.(function
     ])
   )
 
-and type_object ?(sep=(Atom ",")) { Ast.Type.Object.exact; properties } =
+and type_object ?(sep=(Atom ",")) { Ast.Type.Object.exact; properties; inexact} =
   let s_exact = if exact then Atom "|" else Empty in
+  let props = List.map type_object_property properties in
+  let props = if inexact then props @ [Atom "..."] else props in
   list
     ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])
     ~sep
-    (List.map type_object_property properties)
+    props
 
 and type_interface { Ast.Type.Interface.extends; body=(loc, obj) } =
   fuse [

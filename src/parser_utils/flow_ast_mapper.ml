@@ -566,7 +566,7 @@ class mapper = object(this)
 
   method object_type _loc (ot: (Loc.t, Loc.t) Flow_ast.Type.Object.t) =
     let open Flow_ast.Type.Object in
-    let { properties ; exact; } = ot in
+    let { properties ; exact; inexact } = ot in
     let properties' = ListUtils.ident_map (fun p -> match p with
       | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
       | SpreadProperty p' -> id this#object_spread_property_type p' p (fun p' -> SpreadProperty p')
@@ -575,7 +575,7 @@ class mapper = object(this)
       | InternalSlot _ -> p (* TODO *)
     ) properties in
     if properties' == properties then ot
-    else { properties = properties'; exact }
+    else { properties = properties'; exact; inexact }
 
   method interface_type _loc (i: (Loc.t, Loc.t) Flow_ast.Type.Interface.t) =
     let open Flow_ast.Type.Interface in

@@ -143,6 +143,7 @@ and obj_ o =
   (Loc.none, T.Object {
     T.Object.
     exact = o.obj_exact;
+    inexact = false;
     properties;
   })
 

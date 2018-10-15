@@ -176,6 +176,7 @@ and Type : sig
 
     type ('M, 'T) t = {
       exact: bool;
+      inexact: bool;
       properties: ('M, 'T) property list;
     }
     and ('M, 'T) property =

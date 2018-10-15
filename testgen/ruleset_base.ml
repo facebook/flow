@@ -289,7 +289,7 @@ class ruleset_base = object(self)
                                           _method = false;
                                           variance = None})) props in
       let open T.Object in
-      T.Object {exact = false; properties = prop_types} in
+      T.Object {exact = false; properties = prop_types; inexact = true} in
     lit, lit_expr, ret_type
 
   (* A function for generating literal expressions and types *)
@@ -326,7 +326,7 @@ class ruleset_base = object(self)
                                           _method = false;
                                           variance = None})) props in
       let open T.Object in
-      T.Object {exact = false; properties = prop_types} in
+      T.Object {exact = false; properties = prop_types; inexact = true} in
     ret_type
 
   (* ESSENTIAL: rules *)
@@ -409,7 +409,9 @@ class ruleset_base = object(self)
            variance = None} in
         let open T.Object in
         T.Object {exact = o_type.exact;
-                  properties = Property (Loc.none, new_prop) :: o_type.properties}
+                  properties = Property (Loc.none, new_prop) :: o_type.properties;
+                  inexact = not o_type.exact;
+                 }
       else
         T.Object o_type in
 

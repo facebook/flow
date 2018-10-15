@@ -604,9 +604,9 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method object_type (ot: ('M, 'T) Ast.Type.Object.t) : ('N, 'U) Ast.Type.Object.t =
     let open Ast.Type.Object in
-    let { properties ; exact; } = ot in
+    let { properties ; exact; inexact } = ot in
     let properties' = List.map this#object_type_property properties in
-    { properties = properties'; exact }
+    { properties = properties'; exact; inexact }
 
   method object_type_property (prop : ('M, 'T) Ast.Type.Object.property)
                                     : ('N, 'U) Ast.Type.Object.property =

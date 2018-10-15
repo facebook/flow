@@ -71,7 +71,7 @@ class ruleset_depth = object(self)
                                       proto = false;
                                       _method = false;
                                       variance = None;}) in
-      T.Object.(T.Object {exact = false; properties = [prop_type]}) in
+      T.Object.(T.Object {exact = false; properties = [prop_type]; inexact = true}) in
       obj_expr, obj_type
 
   (* property update rule *)

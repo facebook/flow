@@ -554,24 +554,25 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         error_at env (loc, Error.InvalidFieldName (name, is_static, false))
       | _ -> ()
 
-    in let rec properties ~is_class ~allow_inexact ~allow_spread ~exact env acc =
+    in let rec properties ~is_class ~allow_inexact ~allow_spread ~exact env
+      ((props, inexact) as acc) =
       assert (not (is_class && allow_spread)); (* no `static ...A` *)
       assert ((not allow_inexact) || allow_spread); (* allow_inexact implies allow_spread *)
       let start_loc = Peek.loc env in
       match Peek.token env with
-      | T_EOF -> List.rev acc
-      | T_RCURLYBAR when exact -> List.rev acc
-      | T_RCURLY when not exact -> List.rev acc
+      | T_EOF -> List.rev props, inexact
+      | T_RCURLYBAR when exact -> List.rev props, inexact
+      | T_RCURLY when not exact -> List.rev props, inexact
       | T_ELLIPSIS when allow_spread ->
           Eat.token env;
           begin match Peek.token env with
           | T_COMMA | T_SEMICOLON | T_RCURLY | T_RCURLYBAR ->
             semicolon exact env;
             begin match Peek.token env with
-            | T_RCURLY when allow_inexact -> List.rev acc
+            | T_RCURLY when allow_inexact -> List.rev props, true
             | T_RCURLYBAR ->
                 error_at env (start_loc, Error.InexactInsideExact);
-                List.rev acc
+                List.rev props, inexact
             | _ ->
                 error_at env (start_loc, Error.UnexpectedExplicitInexactInObject);
                 properties ~is_class ~allow_inexact ~allow_spread ~exact env acc
@@ -579,7 +580,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           | _ ->
               let prop = spread_property env start_loc in
               semicolon exact env;
-              properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop::acc)
+              properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop::props, inexact)
           end
 
       (* In this case, allow_spread is false, so we may assume allow_inexact is false based on our
@@ -607,7 +608,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         let prop = property env start_loc ~is_class ~allow_static:is_class
           ~allow_proto:is_class ~variance:None ~static:None ~proto:None in
         semicolon exact env;
-        properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop::acc)
+        properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop::props, inexact)
 
     and property env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto start_loc =
       match Peek.token env with
@@ -717,9 +718,11 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let allow_inexact = allow_exact && not exact in
       with_loc (fun env ->
         Expect.token env (if exact then T_LCURLYBAR else T_LCURLY);
-        let properties = properties ~is_class ~allow_inexact ~exact ~allow_spread env [] in
+        let properties, inexact = properties ~is_class ~allow_inexact ~exact ~allow_spread env
+          ([], false) in
         Expect.token env (if exact then T_RCURLYBAR else T_RCURLY);
-        { Type.Object.exact; properties; }
+        (* inexact = true iff `...` was used to indicate inexactnes *)
+        { Type.Object.exact; properties; inexact }
       ) env
 
   and interface_helper =

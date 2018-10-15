@@ -181,6 +181,7 @@ module T = struct
     | loc, ObjectLiteral (pt, pts) ->
       loc, Ast.Type.Object {
         Ast.Type.Object.exact = true;
+        inexact = false;
         properties = List.map (type_of_object_property outlined) (pt :: pts)
       }
     | loc, ArrayLiteral ets ->
@@ -356,6 +357,7 @@ module T = struct
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
       let body = body_loc, {
         Ast.Type.Object.exact = false;
+        inexact = false;
         properties = List.map (object_type_property_of_class_element outlined) body;
       } in
       let mixins = [] in
@@ -962,6 +964,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         ) list in
         let ot = {
           Ast.Type.Object.exact = true;
+          inexact = false;
           properties;
         } in
         let t = mod_exp_loc, Ast.Type.Object ot in

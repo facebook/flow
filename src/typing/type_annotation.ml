@@ -783,7 +783,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     tparams = tparams_ast;
   }
 
-| loc, Object { Object.exact; properties } ->
+| loc, Object { Object.exact; properties; inexact } ->
   let reason_desc = RObjectType in
   let callable = List.exists (function
     | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
@@ -1056,10 +1056,10 @@ let rec convert cx tparams_map = Ast.Type.(function
     let reason = mk_reason RObjectType (loc |> ALoc.of_loc) in
     let target = Annot {make_exact = exact} in
     EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
-  ), Object { Object.exact; properties = List.rev rev_prop_asts }
+  ), Object { Object.exact; properties = List.rev rev_prop_asts; inexact }
 
 | loc, Interface {Interface.extends; body} ->
-  let body_loc, {Ast.Type.Object.properties; exact} = body in
+  let body_loc, {Ast.Type.Object.properties; exact; inexact = _inexact } = body in
   let reason = mk_reason RInterfaceType (loc |> ALoc.of_loc) in
   let iface_sig, extend_asts =
     let id = Context.make_nominal cx in
@@ -1086,6 +1086,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   Interface { Interface.
     body = body_loc, { Object.
       exact;
+      inexact = false;
       properties = property_asts;
     };
     extends = extend_asts;
@@ -1499,7 +1500,7 @@ let mk_interface_sig cx reason decl =
   let { Ast.Statement.Interface.
     id = id_loc, id_name;
     tparams;
-    body = (body_loc, { Ast.Type.Object.properties; exact });
+    body = (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact });
     extends;
     _;
   } = decl in
@@ -1538,7 +1539,7 @@ let mk_interface_sig cx reason decl =
     id = (id_loc, self), id_name;
     tparams = tparams_ast;
     extends = extends_ast;
-    body = body_loc, { Ast.Type.Object.exact; properties };
+    body = body_loc, { Ast.Type.Object.exact; properties; inexact = false };
   }
 
 let mk_declare_class_sig =
@@ -1569,7 +1570,7 @@ let mk_declare_class_sig =
     let { Ast.Statement.DeclareClass.
       id = (id_loc, id_name) as ident;
       tparams;
-      body = body_loc, { Ast.Type.Object.properties; exact };
+      body = body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact };
       extends;
       mixins;
       implements;
@@ -1648,7 +1649,7 @@ let mk_declare_class_sig =
     { Ast.Statement.DeclareClass.
       id = (id_loc, self), id_name;
       tparams = tparam_asts;
-      body = body_loc, { Ast.Type.Object.properties; exact };
+      body = body_loc, { Ast.Type.Object.properties; exact; inexact = false };
       extends = extends_ast;
       mixins = mixins_ast;
       implements = implements_ast;
