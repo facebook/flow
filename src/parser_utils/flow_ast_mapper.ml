@@ -669,7 +669,10 @@ class mapper = object(this)
   method type_or_implicit t =
     let open Flow_ast.Expression.TypeParameterInstantiation in
     match t with
-    | Explicit x -> Explicit (this#type_ x)
+    | Explicit x ->
+      let x' = this#type_ x in
+      if x' == x then t
+      else Explicit x'
     | Implicit _ -> t
 
   method type_annotation (annot: (Loc.t, Loc.t) Flow_ast.Type.annotation) =
