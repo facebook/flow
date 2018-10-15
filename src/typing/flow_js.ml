@@ -7127,12 +7127,15 @@ and any_propagated cx trace any = function
   | UnaryMinusT _
   | UnifyT _
   | UseT (_, AnnotT _) (* this transforms into a ReposUseT *)
-  | UseT (_, InternalT _) (* Should never happen, will error in __flow *)
-  | UseT (_, DefT (_, IdxWrapper _))
-  | UseT (_, MatchingPropT _) (* Should never appear in this position *)
   | UseT (_, DefT (_, MaybeT _)) (* used to filter maybe *)
   | UseT (_, MergedT _) (* Already handled in __flow *)
   | UseT (_, DefT (_, OptionalT _)) (* used to filter optional *)
+
+  (* Should never occur, so we just defer to __flow to handle errors *)
+  | UseT (_, OpenPredT _)
+  | UseT (_, InternalT _)
+  | UseT (_, MatchingPropT _)
+  | UseT (_, DefT (_, IdxWrapper _))
 
   (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so
