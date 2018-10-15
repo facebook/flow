@@ -104,6 +104,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     server_start_options: SC.server_start_options;
     (** How many times have we tried to relaunch it? *)
     retries: int;
+    sql_retries: int;
+    watchman_retries: int;
     max_purgatory_clients: int;
     (** Version of this running server, as specified in the config file. *)
     current_version: string option;
@@ -468,69 +470,86 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     env, exit_status, server_state
 
   let update_status env monitor_config =
-     let env, exit_status, server_state = update_status_ env monitor_config in
-     let informant_report = Informant.report env.informant server_state in
-     let is_watchman_fresh_instance = match exit_status with
-       | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
-       | _ -> false in
-     let is_watchman_failed = match exit_status with
-       | Some c when c = Exit_status.(exit_code Watchman_failed) -> true
-       | _ -> false in
-     let is_config_changed = match exit_status with
-       | Some c when c = Exit_status.(exit_code Hhconfig_changed) -> true
-       | _ -> false in
-     let is_file_heap_stale = match exit_status with
-       | Some c when c = Exit_status.(exit_code File_heap_stale) -> true
-       | _ -> false in
-     let is_sql_assertion_failure = match exit_status with
-       | Some c
+    let env, exit_status, server_state = update_status_ env monitor_config in
+    let informant_report = Informant.report env.informant server_state in
+    let is_watchman_fresh_instance = match exit_status with
+      | Some c when c = Exit_status.(exit_code Watchman_fresh_instance) -> true
+      | _ -> false in
+    let is_watchman_failed = match exit_status with
+      | Some c when c = Exit_status.(exit_code Watchman_failed) -> true
+      | _ -> false in
+    let is_config_changed = match exit_status with
+      | Some c when c = Exit_status.(exit_code Hhconfig_changed) -> true
+      | _ -> false in
+    let is_heap_stale = match exit_status with
+      | Some c
+          when c = Exit_status.(exit_code File_heap_stale) ||
+               c = Exit_status.(exit_code Decl_not_found) -> true
+      | _ -> false in
+    let is_sql_assertion_failure = match exit_status with
+      | Some c
           when c = Exit_status.(exit_code Sql_assertion_failure) ||
                c = Exit_status.(exit_code Sql_cantopen) ||
                c = Exit_status.(exit_code Sql_corrupt) ||
                c = Exit_status.(exit_code Sql_misuse) -> true
-       | _ -> false in
-     let is_big_rebase = match exit_status with
-       | Some c when c =  Exit_status.(exit_code Big_rebase_detected) -> true
-       | _ -> false in
-     let max_watchman_retries = 3 in
-     let max_sql_retries = 3 in
-     if (is_watchman_failed || is_watchman_fresh_instance)
-       && (env.retries < max_watchman_retries) then begin
-       Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
-         (env.retries + 1);
-       kill_and_maybe_restart_server env exit_status
-     end
-     else match informant_report with
-     | Informant_sig.Restart_server target_mini_state ->
-       Hh_logger.log "Informant directed server restart. Restarting server.";
-       HackEventLogger.informant_induced_restart ();
-       kill_and_maybe_restart_server ?target_mini_state env exit_status
-     | Informant_sig.Move_along ->
-       if is_config_changed then begin
-         Hh_logger.log "hh_server died from hh config change. Restarting";
-         kill_and_maybe_restart_server env exit_status
-       end else if is_file_heap_stale then begin
-         Hh_logger.log
-          "Several large rebases caused FileHeap to be stale. Restarting";
-         kill_and_maybe_restart_server env exit_status
-        end else if is_big_rebase then begin
-          (* Server detected rebase sooner than monitor. If we keep going,
-           * monitor will eventually discover the same rebase and restart the
-           * server again for no reason. Reinitializing informant to bring it to
-           * the same understanding of current revision as server. *)
-          Informant.reinit env.informant;
-          Hh_logger.log
-           "Server exited because of big rebase. Restarting";
-          kill_and_maybe_restart_server env exit_status
+      | _ -> false in
+    let is_worker_error = match exit_status with
+      | Some c
+          when c = Exit_status.(exit_code Worker_not_found_exception) ||
+               c = Exit_status.(exit_code Worker_busy) ||
+               c = Exit_status.(exit_code Worker_failed_to_send_job) -> true
+      | _ -> false in
+    let is_decl_heap_elems_bug = match exit_status with
+      | Some c when c = Exit_status.(exit_code Decl_heap_elems_bug) -> true
+      | _ -> false in
+    let is_big_rebase = match exit_status with
+      | Some c when c =  Exit_status.(exit_code Big_rebase_detected) -> true
+      | _ -> false in
+    let max_watchman_retries = 3 in
+    let max_sql_retries = 3 in
+    match informant_report with
+    | Informant_sig.Restart_server target_mini_state ->
+      Hh_logger.log "Informant directed server restart. Restarting server.";
+      HackEventLogger.informant_induced_restart ();
+      kill_and_maybe_restart_server ?target_mini_state env exit_status
+    | Informant_sig.Move_along ->
+      if (is_watchman_failed || is_watchman_fresh_instance)
+        && (env.watchman_retries < max_watchman_retries) then begin
+        Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
+          (env.watchman_retries + 1);
+        let env = { env with watchman_retries = env.watchman_retries + 1} in
+        kill_and_maybe_restart_server env exit_status
+      end else if is_decl_heap_elems_bug then begin
+        Hh_logger.log "hh_server died due to Decl_heap_elems_bug. Restarting";
+        kill_and_maybe_restart_server env exit_status
+      end else if is_worker_error then begin
+        Hh_logger.log "hh_server died due to worker error. Restarting";
+        kill_and_maybe_restart_server env exit_status
+      end else if is_config_changed then begin
+        Hh_logger.log "hh_server died from hh config change. Restarting";
+        kill_and_maybe_restart_server env exit_status
+      end else if is_heap_stale then begin
+        Hh_logger.log
+          "Several large rebases caused shared heap to be stale. Restarting";
+        kill_and_maybe_restart_server env exit_status
+      end else if is_big_rebase then begin
+        (* Server detected rebase sooner than monitor. If we keep going,
+        * monitor will eventually discover the same rebase and restart the
+        * server again for no reason. Reinitializing informant to bring it to
+        * the same understanding of current revision as server. *)
+        Informant.reinit env.informant;
+        Hh_logger.log
+          "Server exited because of big rebase. Restarting";
+        kill_and_maybe_restart_server env exit_status
       end else if is_sql_assertion_failure
-      && (env.retries < max_sql_retries) then begin
+          && (env.sql_retries < max_sql_retries) then begin
         Hh_logger.log
           "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
-          (env.retries + 1);
+          (env.sql_retries + 1);
+        let env = { env with sql_retries = env.sql_retries + 1} in
         kill_and_maybe_restart_server env exit_status
-      end
-       else
-         env
+      end else
+        env
 
   let rec check_and_run_loop ?(consecutive_throws=0) env monitor_config
       (socket: Unix.file_descr) =
@@ -634,6 +653,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       server = server_process;
       server_start_options;
       retries = 0;
+      sql_retries = 0;
+      watchman_retries = 0;
       ignore_hh_version = Informant.should_ignore_hh_version informant_init_env;
     } in
     env, monitor_config, socket
