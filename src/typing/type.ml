@@ -2714,7 +2714,8 @@ let is_use = function
 
 (* not all so-called def types can appear as use types *)
 let is_proper_def = function
-  | InternalT _ -> false
+  | InternalT _
+  | MatchingPropT _ -> false
   | _ -> true
 
 (* convenience *)
