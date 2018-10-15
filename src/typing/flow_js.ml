@@ -7136,6 +7136,7 @@ and any_propagated cx trace any = function
   | UseT (_, InternalT _)
   | UseT (_, MatchingPropT _)
   | UseT (_, DefT (_, IdxWrapper _))
+  | UseT (_, ModuleT _)
 
   (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so
