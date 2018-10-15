@@ -7126,6 +7126,7 @@ and any_propagated cx trace any = function
   | ToStringT _
   | UnaryMinusT _
   | UnifyT _
+  | UseT (_, AnnotT _) (* this transforms into a ReposUseT *)
   | UseT (_, DefT (_, IdxWrapper _))
   | UseT (_, MatchingPropT _) (* Should never appear in this position *)
   | UseT (_, DefT (_, MaybeT _)) (* used to filter maybe *)
