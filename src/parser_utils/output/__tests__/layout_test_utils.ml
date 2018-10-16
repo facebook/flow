@@ -75,10 +75,12 @@ module Layout_builder = struct
 
   let indent node = Indent node
 
-  let wrap_in_parens_raw x =
-    [atom "("; sequence ~break:Layout.Break_if_needed [x]; atom ")"]
-
-  let wrap_in_parens x = fused (wrap_in_parens_raw x)
+  let wrap_in_parens x = group [
+    atom "(";
+    Indent (Concat [softline; x]);
+    softline;
+    atom ")"
+  ]
 
   type printer_pos = Word of string | Phrase of string
 
@@ -113,6 +115,14 @@ module Layout_builder = struct
         let loc = if loc = Loc.none then "" else spf " ~loc:%s" (string_of_loc loc) in
         phrase "loc%s %s" loc (helper ~i child)
 
+    | Group [
+        Atom "(";
+        Indent (Concat [IfBreak (Newline, Empty); x]);
+        IfBreak (Newline, Empty);
+        Atom ")"
+      ] ->
+      phrase "wrap_in_parens %s" (helper ~i x)
+
     | Group items ->
       phrase "group %s" (list ~i items)
 
@@ -121,16 +131,6 @@ module Layout_builder = struct
 
     | Sequence ({ break = Break_if_pretty; inline = (false, false); indent = 0 }, items) ->
       phrase "fused_vertically %s" (list ~i items)
-
-    | Sequence (
-        { break = Break_if_needed; inline = (true, true); indent = 0 },
-        [Concat [
-          Atom "(";
-          Sequence ({ break = Break_if_needed; inline = (false, false); indent = 2}, [x]);
-          Atom ")";
-        ]]
-      ) ->
-      phrase "wrap_in_parens %s" (helper ~i x)
 
     | Sequence ({ break; inline; indent; }, items) ->
       let break = spf " ~break:%s" (string_of_when_to_break break) in

@@ -53,9 +53,10 @@ let not_supported loc message = failwith (message ^ " at " ^ Loc.to_string loc)
 let with_semicolon node = fuse [node; Atom ";"]
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
 let wrap_in_parens item =
-  fuse [
+  group [
     Atom "(";
-    Sequence ({ seq with break=Break_if_needed }, [item]);
+    Indent (fuse [softline; item]);
+    softline;
     Atom ")";
   ]
 let wrap_in_parens_on_break item = list

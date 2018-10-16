@@ -840,6 +840,7 @@ let tests = "js_layout_generator" >::: [
         (Some (S.empty ()))
       in
       assert_statement ~ctxt "if(x)y:;else;" ast;
+      assert_statement ~ctxt ~pretty:true "if (x) y: {} else {}" ast;
     end;
 
   "if_statement_without_block" >::
@@ -849,25 +850,38 @@ let tests = "js_layout_generator" >::: [
         (S.expression (E.identifier "y"))
         (None)
       in
+      assert_statement ~ctxt "if(x)y;" if_stmt;
+      assert_statement ~ctxt ~pretty:true "if (x) y;" if_stmt;
+
       let if_else_stmt = S.if_
         (E.identifier "x")
         (S.expression (E.identifier "y"))
         (Some (S.expression (E.identifier "z")))
       in
-
-      assert_statement ~ctxt "if(x)y;" if_stmt;
       assert_statement ~ctxt "if(x)y;else z;" if_else_stmt;
+      assert_statement ~ctxt ~pretty:true "if (x) y; else z;" if_else_stmt;
 
       let ast = S.block [
         if_stmt;
         S.expression (E.identifier "z");
       ] in
       assert_statement ~ctxt "{if(x)y;z}" ast;
+      assert_statement ~ctxt ~pretty:true
+        ("{\n"^
+         "  if (x) y;\n"^
+         "  z;\n"^
+         "}")
+        ast;
 
       let ast = S.block [
         if_else_stmt;
       ] in
       assert_statement ~ctxt "{if(x)y;else z}" ast;
+      assert_statement ~ctxt ~pretty:true
+        ("{\n"^
+         "  if (x) y; else z;\n"^
+         "}")
+        ast;
 
       let ast = S.if_
         (E.identifier "x")
@@ -875,6 +889,36 @@ let tests = "js_layout_generator" >::: [
         (Some (S.expression (E.increment ~prefix:true (E.identifier "z"))))
       in
       assert_statement ~ctxt "if(x)y;else++z;" ast
+    end;
+
+  "if_statement_without_block_long" >::
+    begin fun ctxt ->
+      let a80 = String.make 80 'A' in
+      let if_stmt = S.if_
+        (E.identifier a80)
+        (S.expression (E.identifier "y"))
+        (None)
+      in
+      assert_statement ~ctxt
+        ("if("^a80^")y;")
+        if_stmt;
+      assert_statement ~ctxt ~pretty:true
+        ("if (\n  "^a80^"\n) y;")
+        if_stmt;
+
+      let ast = S.block [
+        if_stmt;
+        S.expression (E.identifier "z");
+      ] in
+      assert_statement ~ctxt ("{if("^a80^")y;z}") ast;
+      assert_statement ~ctxt ~pretty:true
+        ("{\n"^
+         "  if (\n"^
+         "    "^a80^"\n"^
+         "  ) y;\n"^
+         "  z;\n"^
+         "}")
+        ast;
     end;
 
   "while_statement_without_block" >::
