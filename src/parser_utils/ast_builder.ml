@@ -228,6 +228,13 @@ module Expressions = struct
   let binary ~op left right =
     Loc.none, Binary { Binary.operator = op; left; right }
 
+  let plus left right = binary ~op:Binary.Plus left right
+  let minus left right = binary ~op:Binary.Minus left right
+  let mult left right = binary ~op:Binary.Mult left right
+  let instanceof left right = binary ~op:Binary.Instanceof left right
+  let in_ left right = binary ~op:Binary.In left right
+  let equal left right = binary ~op:Binary.Equal left right
+
   let conditional test consequent alternate =
     Loc.none, Conditional { Conditional.test; consequent; alternate }
 
@@ -240,12 +247,22 @@ module Expressions = struct
       argument;
     }
 
+  let unary_plus (b: (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Plus b
+  let unary_minus (b: (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Minus b
+  let unary_not (b: (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Not b
+
   let update ~op ~prefix argument =
     Loc.none, Update { Update.
       operator = op;
       prefix;
       argument;
     }
+
+  let increment ~prefix argument =
+    update ~op:Update.Increment ~prefix argument
+
+  let decrement ~prefix argument =
+    update ~op:Update.Decrement ~prefix argument
 
   let object_property_key (k: string) =
     Object.Property.Identifier (Loc.none, k)
@@ -320,6 +337,8 @@ module Expressions = struct
   let sequence exprs =
     Loc.none, Sequence { Sequence.expressions = exprs }
 
+  let expression expr = Expression expr
+
   let spread expr =
     Spread (Loc.none, { SpreadElement.argument = expr })
 
@@ -334,7 +353,6 @@ module Expressions = struct
 
   let logical_and (l: (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.And l r
   let logical_or (l: (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.Or l r
-  let unary_not (b: (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Not b
 end
 
 module Comments = struct

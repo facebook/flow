@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Ast = Flow_ast
-
 open OUnit2
 open Ast_builder
 open Layout_test_utils
@@ -28,44 +26,40 @@ let tests = "js_layout_generator" >::: [
 
   "unary_plus_binary" >::
     begin fun ctxt ->
-      let module U = Ast.Expression.Unary in
-      let module B = Ast.Expression.Binary in
-
       let x = E.identifier "x" in
       let y = E.identifier "y" in
-      let plus_y = E.unary ~op:U.Plus y in
-      let minus_y = E.unary ~op:U.Minus y in
+      let plus_y = E.unary_plus y in
+      let minus_y = E.unary_minus y in
 
-      let ast = E.binary ~op:B.Plus x plus_y in
+      let ast = E.plus x plus_y in
       assert_expression ~ctxt "x+ +y" ast;
 
-      let ast = E.binary ~op:B.Plus plus_y x in
+      let ast = E.plus plus_y x in
       assert_expression ~ctxt "+y+x" ast;
 
-      let ast = E.binary ~op:B.Minus x minus_y in
+      let ast = E.minus x minus_y in
       assert_expression ~ctxt "x- -y" ast;
 
-      let ast = E.binary ~op:B.Plus x minus_y in
+      let ast = E.plus x minus_y in
       assert_expression ~ctxt "x+-y" ast;
 
-      let ast = E.binary ~op:B.Minus x plus_y in
+      let ast = E.minus x plus_y in
       assert_expression ~ctxt "x-+y" ast;
 
-      let ast = E.binary ~op:B.Plus x (E.conditional plus_y y y) in
+      let ast = E.plus x (E.conditional plus_y y y) in
       assert_expression ~ctxt "x+(+y?y:y)" ast;
 
-      let ast = E.binary ~op:B.Plus x (E.binary plus_y ~op:B.Plus y) in
+      let ast = E.plus x (E.plus plus_y y) in
       assert_expression ~ctxt "x+(+y+y)" ast;
 
       (* `*` is higher precedence than `+`, so would not normally need parens if
          not for the `+y` *)
-      let ast = E.binary ~op:B.Plus x (E.binary plus_y ~op:B.Mult y) in
+      let ast = E.plus x (E.mult plus_y y) in
       assert_expression ~ctxt "x+(+y)*y" ast;
 
       (* parens are necessary around the inner `+y+y`, but would be reundant
          around the multiplication. that is, we don't need `x+((+y+y)*y)`. *)
-      let ast = E.binary
-        ~op:B.Plus x (E.binary ~op:B.Mult (E.binary plus_y ~op:B.Plus y) y) in
+      let ast = E.plus x (E.mult (E.plus plus_y y) y) in
       assert_expression ~ctxt "x+(+y+y)*y" ast;
     end;
 
@@ -73,29 +67,13 @@ let tests = "js_layout_generator" >::: [
     begin fun ctxt ->
       let x = E.identifier "x" in
       let y = E.identifier "y" in
-      let x_incr = (Loc.none, Ast.Expression.Update { Ast.Expression.Update.
-        operator = Ast.Expression.Update.Increment;
-        prefix = false;
-        argument = x;
-      }) in
-      let x_decr = (Loc.none, Ast.Expression.Update { Ast.Expression.Update.
-        operator = Ast.Expression.Update.Decrement;
-        prefix = false;
-        argument = x;
-      }) in
-      let incr_y = (Loc.none, Ast.Expression.Update { Ast.Expression.Update.
-        operator = Ast.Expression.Update.Increment;
-        prefix = true;
-        argument = y;
-      }) in
-      let decr_y = (Loc.none, Ast.Expression.Update { Ast.Expression.Update.
-        operator = Ast.Expression.Update.Decrement;
-        prefix = true;
-        argument = y;
-      }) in
+      let x_incr = E.increment ~prefix:false x in
+      let x_decr = E.decrement ~prefix:false x in
+      let incr_y = E.increment ~prefix:true y in
+      let decr_y = E.decrement ~prefix:true y in
 
       begin
-        let ast = E.binary ~op:Ast.Expression.Binary.Plus x incr_y in
+        let ast = E.plus x incr_y in
         let layout = Js_layout_generator.expression ast in
         assert_layout ~ctxt
           L.(loc (fused [
@@ -114,78 +92,64 @@ let tests = "js_layout_generator" >::: [
         assert_output ~ctxt ~pretty:true "x + ++y" layout;
       end;
 
-      let ast = E.binary ~op:Ast.Expression.Binary.Minus x incr_y in
+      let ast = E.minus x incr_y in
       assert_expression ~ctxt "x-++y" ast;
 
-      let ast = E.binary ~op:Ast.Expression.Binary.Minus x decr_y in
+      let ast = E.minus x decr_y in
       assert_expression ~ctxt "x- --y" ast;
 
-      let ast = E.binary ~op:Ast.Expression.Binary.Plus x decr_y in
+      let ast = E.plus x decr_y in
       assert_expression ~ctxt "x+--y" ast;
 
-      let ast = E.binary ~op:Ast.Expression.Binary.Plus x_incr y in
+      let ast = E.plus x_incr y in
       assert_expression ~ctxt "x+++y" ast;
 
-      let ast = E.binary ~op:Ast.Expression.Binary.Minus x_decr y in
+      let ast = E.minus x_decr y in
       assert_expression ~ctxt "x---y" ast;
 
-      let ast = E.binary ~op:Ast.Expression.Binary.Plus x_incr incr_y in
+      let ast = E.plus x_incr incr_y in
       assert_expression ~ctxt "x+++ ++y" ast;
 
-      let ast = E.binary ~op:Ast.Expression.Binary.Minus x_decr decr_y in
+      let ast = E.minus x_decr decr_y in
       assert_expression ~ctxt "x--- --y" ast;
     end;
 
   "do_while_semicolon" >::
     begin fun ctxt ->
-      let module S = Ast.Statement in
       (* do { x } while (y) *)
-      let ast = (Loc.none, S.DoWhile { S.DoWhile.
-        body = (Loc.none, S.Block { S.Block.
-          body = [
-            Loc.none, S.Expression { S.Expression.
-              expression = E.identifier "x";
-              directive = None;
-            };
-          ];
-        });
-        test = E.identifier "y";
-      }) in
+      let ast =
+        let body = S.block [
+          S.expression (E.identifier "x");
+        ] in
+        let test = E.identifier "y" in
+        S.do_while body test
+      in
       assert_statement ~ctxt "do{x}while(y);" ast;
     end;
 
   "do_while_single_statement" >::
     begin fun ctxt ->
-      let module S = Ast.Statement in
       (* do x; while (y) *)
-      let ast = (Loc.none, S.DoWhile { S.DoWhile.
-        body = (Loc.none, S.Expression { S.Expression.
-          expression = E.identifier "x";
-          directive = None;
-        });
-        test = E.identifier "y";
-      }) in
+      let ast =
+        let body = S.expression (E.identifier "x") in
+        let test = E.identifier "y" in
+        S.do_while body test
+      in
       assert_statement ~ctxt "do x;while(y);" ast;
     end;
 
   "conditional_expression_parens" >::
     begin fun ctxt ->
-      let module Expr = Ast.Expression in
-
       let a, b, c, d, e =
         E.identifier "a", E.identifier "b", E.identifier "c",
         E.identifier "d", E.identifier "e" in
 
       (* a ? b++ : c-- *)
-      let update = E.conditional a
-        (E.update ~op:Expr.Update.Increment ~prefix:false b)
-        (E.update ~op:Expr.Update.Decrement ~prefix:false c) in
+      let update = E.conditional a (E.increment ~prefix:false b) (E.decrement ~prefix:false c) in
       assert_expression ~ctxt "a?b++:c--" update;
 
       (* a ? +b : -c *)
-      let unary = E.conditional a
-        (E.unary ~op:Expr.Unary.Plus b)
-        (E.unary ~op:Expr.Unary.Minus c) in
+      let unary = E.conditional a (E.unary_plus b) (E.unary_minus c) in
       assert_expression ~ctxt "a?+b:-c" unary;
 
       (* (a || b) ? c : d *)
@@ -220,7 +184,7 @@ let tests = "js_layout_generator" >::: [
       let x = E.identifier "x" in
 
       (* `(x++)()` *)
-      let update = E.call (E.update ~op:Ast.Expression.Update.Increment ~prefix:false x) in
+      let update = E.call (E.increment ~prefix:false x) in
       assert_expression ~ctxt "(x++)()" update;
 
       (* `x.y()` *)
@@ -263,10 +227,10 @@ let tests = "js_layout_generator" >::: [
       (* `__d("a", [], (function() {}), 1)` *)
       let underscore_d = E.call
         ~args:[
-          Ast.Expression.Expression (E.literal (Literals.string "a"));
-          Ast.Expression.Expression (E.literal (Literals.string "b"));
-          Ast.Expression.Expression (E.function_ ());
-          Ast.Expression.Expression (E.literal (Literals.number 1. "1"));
+          E.expression (E.literal (Literals.string "a"));
+          E.expression (E.literal (Literals.string "b"));
+          E.expression (E.function_ ());
+          E.expression (E.literal (Literals.number 1. "1"));
         ]
         (E.identifier "__d") in
       assert_expression ~ctxt "__d(\"a\",\"b\",(function(){}),1)" underscore_d;
@@ -278,7 +242,7 @@ let tests = "js_layout_generator" >::: [
 
       (* `(x++).y` *)
       let update = E.member_expression (E.member
-        (E.update ~op:Ast.Expression.Update.Increment ~prefix:false x)
+        (E.increment ~prefix:false x)
         ~property:"y") in
       assert_expression ~ctxt "(x++).y" update;
 
@@ -342,9 +306,7 @@ let tests = "js_layout_generator" >::: [
       let x, y, z = E.identifier "x", E.identifier "y", E.identifier "z" in
 
       (* `new (x++)()` *)
-      let update = E.new_ (
-        E.update ~op:Ast.Expression.Update.Increment ~prefix:false x
-      ) in
+      let update = E.new_ (E.increment ~prefix:false x) in
       assert_expression ~ctxt "new(x++)()" update;
 
       (* `new (x())()` *)
@@ -352,11 +314,7 @@ let tests = "js_layout_generator" >::: [
       assert_expression ~ctxt "new(x())()" call;
 
       (* `new x.y()` *)
-      let member = E.new_ (Loc.none, Ast.Expression.Member { Ast.Expression.Member.
-        _object = x;
-        property = Ast.Expression.Member.PropertyIdentifier (Loc.none, "y");
-        computed = false;
-      }) in
+      let member = E.new_ (E.member_expression (E.member x ~property:"y")) in
       assert_expression ~ctxt "new x.y()" member;
 
       (* `new (x.y())()` *)
@@ -378,51 +336,46 @@ let tests = "js_layout_generator" >::: [
 
   "unary_expression_parens" >::
     begin fun ctxt ->
-      let module Unary = Ast.Expression.Unary in
-      let module Update = Ast.Expression.Update in
-
       (* `+(+x)` *)
-      let plus = E.unary ~op:Unary.Plus (
-        E.unary ~op:Unary.Plus (E.identifier "x")
+      let plus = E.unary_plus (
+        E.unary_plus (E.identifier "x")
       ) in
       assert_expression ~ctxt "+(+x)" plus;
 
       (* `+-x` *)
-      let minus = E.unary ~op:Unary.Plus (
-        E.unary ~op:Unary.Minus (E.identifier "x")
-      ) in
+      let minus = E.unary_plus (E.unary_minus (E.identifier "x")) in
       assert_expression ~ctxt "+-x" minus;
 
       (* `+(++x)` *)
-      let prefix_incr = E.unary ~op:Unary.Plus (
-        E.update ~op:Update.Increment ~prefix:true (E.identifier "x")
+      let prefix_incr = E.unary_plus (
+        E.increment ~prefix:true (E.identifier "x")
       ) in
       assert_expression ~ctxt "+(++x)" prefix_incr;
 
       (* `+--x` *)
-      let prefix_decr = E.unary ~op:Unary.Plus (
-        E.update ~op:Update.Decrement ~prefix:true (E.identifier "x")
+      let prefix_decr = E.unary_plus (
+        E.decrement ~prefix:true (E.identifier "x")
       ) in
       assert_expression ~ctxt "+--x" prefix_decr;
 
       (* `+x++` *)
-      let suffix_incr = E.unary ~op:Unary.Plus (
-        E.update ~op:Update.Increment ~prefix:false (E.identifier "x")
+      let suffix_incr = E.unary_plus (
+        E.increment ~prefix:false (E.identifier "x")
       ) in
       assert_expression ~ctxt "+x++" suffix_incr;
 
       (* `+x--` *)
-      let suffix_decr = E.unary ~op:Unary.Plus (
-        E.update ~op:Update.Decrement ~prefix:false (E.identifier "x")
+      let suffix_decr = E.unary_plus (
+        E.decrement ~prefix:false (E.identifier "x")
       ) in
       assert_expression ~ctxt "+x--" suffix_decr;
 
       (* `+x()` *)
-      let call = E.unary ~op:Unary.Plus (E.call (E.identifier "x")) in
+      let call = E.unary_plus (E.call (E.identifier "x")) in
       assert_expression ~ctxt "+x()" call;
 
       (* `+new x()` *)
-      let new_ = E.unary ~op:Unary.Plus (E.new_ (E.identifier "x")) in
+      let new_ = E.unary_plus (E.new_ (E.identifier "x")) in
       assert_expression ~ctxt "+new x()" new_;
     end;
 
@@ -507,7 +460,7 @@ let tests = "js_layout_generator" >::: [
 
       let args =
         let seq = E.sequence [x; y] in
-        [Ast.Expression.Expression seq] in
+        [E.expression seq] in
       let call = E.call ~args f in
       assert_expression ~ctxt ~msg:"sequence should be parenthesized"
         "f((x,y))" call;
@@ -517,14 +470,14 @@ let tests = "js_layout_generator" >::: [
       assert_expression ~ctxt ~msg:"sequence should be parenthesized"
         "f(...(x,y))" call;
 
-      let args = [Ast.Expression.Expression (E.conditional x y z)] in
+      let args = [E.expression (E.conditional x y z)] in
       let call = E.call ~args f in
       assert_expression ~ctxt ~msg:"higher-precedence ops don't need parens"
         "f(x?y:z)" call;
 
       let call =
         let arrow = E.arrow_function () in
-        let args = [Ast.Expression.Expression arrow] in
+        let args = [E.expression arrow] in
         E.call ~args f in
       assert_expression ~ctxt ~msg:"higher-precedence ops don't need parens"
         "f(()=>{})" call;
@@ -532,7 +485,7 @@ let tests = "js_layout_generator" >::: [
       let args =
         let seq = E.sequence [x; y] in
         let logical = E.logical_or seq z in
-        [Ast.Expression.Expression logical] in
+        [E.expression logical] in
       let call = E.call ~args f in
       assert_expression ~ctxt ~msg:"nested sequence has parens"
         "f((x,y)||z)" call;
@@ -552,7 +505,7 @@ let tests = "js_layout_generator" >::: [
 
   "binary_instanceof_space" >:: begin fun ctxt ->
     begin
-      let ast = E.binary ~op:Flow_ast.Expression.Binary.Instanceof
+      let ast = E.instanceof
         (E.literal (Literals.string "foo"))
         (E.object_ [])
       in
@@ -575,7 +528,7 @@ let tests = "js_layout_generator" >::: [
     end;
 
     begin
-      let ast = E.binary ~op:Flow_ast.Expression.Binary.Instanceof
+      let ast = E.instanceof
         (E.literal (Literals.string "foo"))
         (E.identifier "bar")
       in
@@ -598,7 +551,7 @@ let tests = "js_layout_generator" >::: [
     end;
 
     begin
-      let ast = E.binary ~op:Flow_ast.Expression.Binary.Instanceof
+      let ast = E.instanceof
         (E.identifier "foo")
         (E.object_ [])
       in
@@ -707,8 +660,7 @@ let tests = "js_layout_generator" >::: [
 
       (* binary expressions get split *)
       let func = S.function_declaration (Loc.none, "f") ~body:[
-        let op = Ast.Expression.Binary.Plus in
-        S.return (Some (E.binary ~op (E.identifier x40) (E.identifier y40)))
+        S.return (Some (E.plus (E.identifier x40) (E.identifier y40)))
       ] in
       assert_layout_result ~ctxt
         L.(loc (fused [
@@ -802,7 +754,7 @@ let tests = "js_layout_generator" >::: [
     begin fun ctxt ->
       let ast =
         let x, y = E.identifier "x", E.identifier "y" in
-        let init = E.binary x ~op:Ast.Expression.Binary.In y in
+        let init = E.in_ x y in
         let body = S.empty () in
         S.for_ init None None body
       in
@@ -812,8 +764,8 @@ let tests = "js_layout_generator" >::: [
       let ast =
         let y, z = E.identifier "y", E.identifier "z" in
         let true_ = Expressions.true_ () in
-        let in_expr = E.binary y ~op:Ast.Expression.Binary.In z in
-        let eq_expr = E.binary true_ ~op:Ast.Expression.Binary.Equal in_expr in
+        let in_expr = E.in_ y z in
+        let eq_expr = E.equal true_ in_expr in
         let init = E.assignment (Patterns.identifier "x") eq_expr in
         let body = S.empty () in
         S.for_ init None None body
@@ -877,9 +829,7 @@ let tests = "js_layout_generator" >::: [
       let ast = S.if_
         (E.identifier "x")
         (S.expression (E.identifier "y"))
-        (Some (S.expression (
-          E.update ~op:Ast.Expression.Update.Increment ~prefix:true (E.identifier "z")
-        )))
+        (Some (S.expression (E.increment ~prefix:true (E.identifier "z"))))
       in
       assert_statement ~ctxt "if(x)y;else++z;" ast
     end;
@@ -905,9 +855,7 @@ let tests = "js_layout_generator" >::: [
       assert_statement ~ctxt "do x:;while(y);" ast;
 
       let ast = S.do_while
-        (S.expression (
-          E.update ~op:Ast.Expression.Update.Increment ~prefix:true (E.identifier "x")
-        ))
+        (S.expression (E.increment ~prefix:true (E.identifier "x")))
         (E.identifier "y")
       in
       assert_statement ~ctxt "do++x;while(y);" ast;
