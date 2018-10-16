@@ -6,10 +6,6 @@
  *)
 
 module Ast = Flow_ast
-module L = Utils_js.LocMap
-module D = Mapper_differ
-module J = Js_layout_generator
-module T = Ast.Type
 
 type patch = (int * int * string) list
 
@@ -35,47 +31,6 @@ let file_info file_path : string list * (int * int * int) list =
       lines_read
   in
   (lines, line_counts)
-
-let mk_patch (diff : Mapper_differ.t) (ast : (Loc.t, Loc.t) Ast.program)
-    (file_path : string) : patch =
-  let _, line_counts = file_info file_path in
-  let line_counts_arr = Array.of_list (List.rev line_counts) in
-  let offset {Loc.line; column; _} =
-    let _, line_start, _ = line_counts_arr.(line) in
-    line_start + column
-  in
-  let attached_comments = Flow_prettier_comments.attach_comments ast in
-  J.with_attached_comments := Some attached_comments ;
-  let spans =
-    L.fold
-      (fun loc value acc ->
-        let {Loc.start; _end; _} = loc in
-        let node_string =
-          ( match value with
-          | D.Statement (_, node) -> J.statement node
-          | D.Expression (_, node) -> J.expression node
-          | D.Type (_, node) -> J.type_ node
-          | D.Return (T.Available annot) -> J.type_annotation annot
-          | D.Return (T.Missing _) -> Layout.Empty
-          | D.ClassElement (_, node) -> (
-            match node with
-            | Ast.Class.Body.Method meth -> J.class_method meth
-            | Ast.Class.Body.Property prop -> J.class_property prop
-            | Ast.Class.Body.PrivateField field -> J.class_private_field field
-            ) )
-          |> Pretty_printer.print ~skip_endline:true ~source_maps:None
-          |> Source.contents
-        in
-        let node_string =
-          match value with
-          | D.Return (T.Available _) -> node_string ^ " "
-          | _ -> node_string
-        in
-        (offset start, offset _end, node_string) :: acc )
-      diff []
-  in
-  J.with_attached_comments := None ;
-  spans
 
 let mk_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list)
   (ast : (Loc.t, Loc.t) Ast.program) (file_path : string) : patch =
