@@ -27,6 +27,7 @@ type node =
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
+  | JSXIdentifier of Loc.t Flow_ast.JSX.Identifier.t
 
 (* Diffs the given ASTs using referential equality to determine whether two nodes are different.
  * This works well for transformations based on Flow_ast_mapper, which preserves identity, but it

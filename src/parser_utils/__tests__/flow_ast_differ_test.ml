@@ -23,7 +23,7 @@ let parse_options = Some Parser_env.({
   use_strict = false;
 })
 
-class useless_mapper = object
+class useless_mapper = object(this)
   inherit Flow_ast_mapper.mapper as super
 
   method! literal _loc (expr: Ast.Literal.t) =
@@ -82,6 +82,49 @@ class useless_mapper = object
     match typ with
     | Type.Number -> (loc, Type.String)
     | _ -> annot
+
+  method! jsx_element _loc (elem: (Loc.t, Loc.t) Ast.JSX.element) =
+    let open Ast.JSX in
+    let { openingElement = (_, open_elem) as openingElement;
+        closingElement; children } = elem in
+    let openingElement' = this#jsx_opening_element openingElement in
+    let closingElement' =
+      let (loc, open_elem') = openingElement' in
+      if open_elem'.Opening.selfClosing then None
+      (* if selfClosing changed from true to false, construct a closing element *)
+      else if open_elem.Opening.selfClosing then
+        Some (loc, {Closing.name = open_elem'.Opening.name})
+      else Flow_ast_mapper.map_opt super#jsx_closing_element closingElement in
+    let children' = ListUtils.ident_map super#jsx_child children in
+    if openingElement == openingElement' && closingElement == closingElement' &&
+        children == children' then elem
+    else
+      { openingElement = openingElement'; closingElement = closingElement'; children = children' }
+
+  method! jsx_opening_element (elem: (Loc.t, Loc.t) Ast.JSX.Opening.t) =
+    let open Ast.JSX.Opening in
+    let loc, { name; selfClosing; attributes } = elem in
+    let name' = this#jsx_name name in
+    let selfClosing' =
+      match name' with
+      | Ast.JSX.Identifier (_, {Ast.JSX.Identifier.name = id_name }) ->
+        if id_name = "selfClosing" then true
+        else if id_name = "notSelfClosing" then false
+        else selfClosing
+      | _ -> selfClosing in
+    let attributes' = ListUtils.ident_map super#jsx_opening_attribute attributes in
+    if name == name' && selfClosing == selfClosing' && attributes == attributes' then elem
+    else (loc, { name = name'; selfClosing = selfClosing'; attributes = attributes'})
+
+  method! jsx_identifier (id: Loc.t Ast.JSX.Identifier.t) =
+    let open Ast.JSX.Identifier in
+    let (loc, {name}) = id in
+    match name with
+      | "rename" -> (loc, {name = "gotRenamed"})
+      | "Rename" -> (loc, {name = "GotRenamed"})
+      | "RENAME" -> (loc, {name = "GOT_RENAMED"})
+      | _ -> id
+
 end
 
 class insert_end_mapper = object
@@ -925,5 +968,67 @@ let tests = "ast_differ" >::: [
     ~edits:[((13,25), "")] ~source
     ~expected:"import 'baz';"
     ~mapper:(new delete_end_mapper)
+  end;
+  "jsx_element_self_closing_simple" >:: begin fun ctxt ->
+    let source = "<rename />" in
+    assert_edits_equal ctxt ~edits:[(1, 7), "gotRenamed"] ~source
+      ~expected:"<gotRenamed />"
+      ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_self_closing_namespaced_namespace" >:: begin fun ctxt ->
+    let source = "<RENAME:dontRename />" in
+    assert_edits_equal ctxt ~edits:[(1, 7), "GOT_RENAMED"] ~source
+    ~expected:"<GOT_RENAMED:dontRename />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_self_closing_namespaced_name" >:: begin fun ctxt ->
+    let source = "<DONT_RENAME:rename />" in
+    assert_edits_equal ctxt ~edits:[(13, 19), "gotRenamed"] ~source
+    ~expected:"<DONT_RENAME:gotRenamed />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_self_closing_member_expr_object" >:: begin fun ctxt ->
+    let source = "<Rename.dontRename />" in
+    assert_edits_equal ctxt ~edits:[(1, 7), "GotRenamed"] ~source
+    ~expected:"<GotRenamed.dontRename />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_self_closing_member_expr_name" >:: begin fun ctxt ->
+    let source = "<DontRename.rename />" in
+    assert_edits_equal ctxt ~edits:[(12, 18), "gotRenamed"] ~source
+    ~expected:"<DontRename.gotRenamed />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_self_closing_member_expr_nested_object" >:: begin fun ctxt ->
+    let source = "<Rename.DontRename.Rename.dontRename />" in
+    assert_edits_equal ctxt ~edits:[(1, 7), "GotRenamed"; (19, 25), "GotRenamed"]
+    ~source ~expected:"<GotRenamed.DontRename.GotRenamed.dontRename />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_simple" >:: begin fun ctxt ->
+    let source = "<rename></rename>" in
+    assert_edits_equal ctxt ~edits:[(1, 7), "gotRenamed"; (10, 16), "gotRenamed"]
+    ~source ~expected:"<gotRenamed></gotRenamed>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_member_expr_nested" >:: begin fun ctxt ->
+    let source = "<Rename.DontRename.rename></Rename.DontRename.rename>" in
+    assert_edits_equal ctxt
+    ~edits:[(1, 7), "GotRenamed"; (19, 25), "gotRenamed"; (28, 34), "GotRenamed";
+        (46, 52), "gotRenamed"] ~source
+    ~expected:"<GotRenamed.DontRename.gotRenamed></GotRenamed.DontRename.gotRenamed>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_to_self_closing" >:: begin fun ctxt ->
+    let source = "<selfClosing></selfClosing>" in
+    assert_edits_equal ctxt ~edits:[(0, 27), "(<selfClosing />)"]
+    ~source ~expected:"(<selfClosing />)"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_from_self_closing" >:: begin fun ctxt ->
+    let source = "<notSelfClosing />" in
+    assert_edits_equal ctxt ~edits:[(0, 18), "(<notSelfClosing></notSelfClosing>)"]
+    ~source ~expected:"(<notSelfClosing></notSelfClosing>)"
+    ~mapper:(new useless_mapper)
   end;
 ]

@@ -167,6 +167,7 @@ type node =
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
+  | JSXIdentifier of Loc.t Ast.JSX.Identifier.t
 
 (* This is needed because all of the functions assume that if they are called, there is some
  * difference between their arguments and they will often report that even if no difference actually
@@ -699,6 +700,8 @@ let program (algo : diff_algorithm)
         assignment_ assn1 assn2
       | (_, Object obj1), (_, Object obj2) ->
         _object obj1 obj2
+      | (_, JSXElement jsx_elem1), (_, JSXElement jsx_elem2) ->
+        jsx_element jsx_elem1 jsx_elem2
       | (_, TypeCast t1), (_, TypeCast t2) ->
         Some (type_cast t1 t2)
       | (_, Logical l1), (_, Logical l2) ->
@@ -710,6 +713,104 @@ let program (algo : diff_algorithm)
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
     Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+
+  and jsx_element
+      (jsx_elem1: (Loc.t, Loc.t) Ast.JSX.element)
+      (jsx_elem2: (Loc.t, Loc.t) Ast.JSX.element)
+      : node change list option =
+    let open Ast.JSX in
+    let { openingElement = open_elem1;
+          closingElement = close_elem1;
+          children = children1 } = jsx_elem1 in
+    let { openingElement = open_elem2;
+          closingElement = close_elem2;
+          children = children2 } = jsx_elem2 in
+    (* TODO: (aycheng) T35129016 recurse into children *)
+    if children1 != children2 then None
+    else
+      let openingChanged =
+        diff_if_changed_ret_opt jsx_opening_element open_elem1 open_elem2 in
+      let closingChanged =
+        diff_if_changed_opt jsx_closing_element close_elem1 close_elem2 in
+      Option.(all [openingChanged; closingChanged] >>| List.concat)
+
+  and jsx_opening_element
+      (elem1: (Loc.t, Loc.t) Ast.JSX.Opening.t)
+      (elem2: (Loc.t, Loc.t) Ast.JSX.Opening.t)
+      : node change list option =
+    let open Ast.JSX.Opening in
+    let _, { name = name1;
+             selfClosing = self_close1;
+             attributes = attrs1 } = elem1 in
+    let _, { name = name2;
+             selfClosing = self_close2;
+             attributes = attrs2 } = elem2 in
+    if self_close1 != self_close2 then None
+    (* TODO: (aycheng) T35129730 recurse into attributes *)
+    else if attrs1 != attrs2 then None
+    else
+      diff_if_changed_ret_opt jsx_name name1 name2
+
+  and jsx_name
+      (name1: (Loc.t, Loc.t) Ast.JSX.name)
+      (name2: (Loc.t, Loc.t) Ast.JSX.name)
+      : node change list option =
+    let open Ast.JSX in
+    match name1, name2 with
+    | Ast.JSX.Identifier id1, Ast.JSX.Identifier id2 ->
+      Some (diff_if_changed jsx_identifier id1 id2)
+    | NamespacedName namespaced_name1, NamespacedName namespaced_name2 ->
+      Some (diff_if_changed jsx_namespaced_name namespaced_name1 namespaced_name2)
+    | MemberExpression member_expr1, MemberExpression member_expr2 ->
+      diff_if_changed_ret_opt jsx_member_expression member_expr1 member_expr2
+    | _ -> None
+
+  and jsx_identifier
+      (id1: Loc.t Ast.JSX.Identifier.t)
+      (id2: Loc.t Ast.JSX.Identifier.t)
+      : node change list =
+    let open Ast.JSX.Identifier in
+    let (old_loc, {name = name1}) = id1 in
+    let (_, {name = name2}) = id2 in
+    if name1 = name2 then []
+    else [(old_loc, Replace (JSXIdentifier id1, JSXIdentifier id2))]
+
+  and jsx_namespaced_name
+      (namespaced_name1: (Loc.t, Loc.t) Ast.JSX.NamespacedName.t)
+      (namespaced_name2: (Loc.t, Loc.t) Ast.JSX.NamespacedName.t)
+      : node change list =
+    let open Ast.JSX.NamespacedName in
+    let (_, {namespace = namespace1; name = name1}) = namespaced_name1 in
+    let (_, {namespace = namespace2; name = name2}) = namespaced_name2 in
+    let namespaceChanged = diff_if_changed jsx_identifier namespace1 namespace2 in
+    let nameChanged = diff_if_changed jsx_identifier name1 name2 in
+    namespaceChanged @ nameChanged
+
+  and jsx_member_expression
+      (member_expr1: (Loc.t, Loc.t) Ast.JSX.MemberExpression.t)
+      (member_expr2: (Loc.t, Loc.t) Ast.JSX.MemberExpression.t)
+      : node change list option =
+    let open Ast.JSX.MemberExpression in
+    let (_, {_object = object1; property = prop1}) = member_expr1 in
+    let (_, {_object = object2; property = prop2}) = member_expr2 in
+    let objectChanged =
+      match object1, object2 with
+      | Ast.JSX.MemberExpression.Identifier id1, Ast.JSX.MemberExpression.Identifier id2 ->
+        Some (diff_if_changed jsx_identifier id1 id2)
+      | MemberExpression member_expr1', MemberExpression member_expr2' ->
+        diff_if_changed_ret_opt jsx_member_expression member_expr1' member_expr2'
+      | _ -> None in
+    let propertyChanged = diff_if_changed jsx_identifier prop1 prop2 in
+    Option.(all [objectChanged; Some propertyChanged] >>| List.concat)
+
+  and jsx_closing_element
+      (elem1: (Loc.t, Loc.t) Ast.JSX.Closing.t)
+      (elem2: (Loc.t, Loc.t) Ast.JSX.Closing.t)
+      : node change list option =
+    let open Ast.JSX.Closing in
+    let _, { name = name1 } = elem1 in
+    let _, { name = name2 } = elem2 in
+    diff_if_changed_ret_opt jsx_name name1 name2
 
   and assignment_ (assn1: (Loc.t, Loc.t) Ast.Expression.Assignment.t)
                   (assn2: (Loc.t, Loc.t) Ast.Expression.Assignment.t)

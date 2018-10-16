@@ -55,6 +55,7 @@ val type_annotation: (Loc.t, Loc.t) Flow_ast.Type.annotation -> Layout.layout_no
 val identifier: Loc.t Flow_ast.Identifier.t -> Layout.layout_node
 val pattern: ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Pattern.t -> Layout.layout_node
 val comment: Loc.t Flow_ast.Comment.t -> Layout.layout_node
+val jsx_identifier: LocMap.key Flow_ast.JSX.Identifier.t -> Layout.layout_node
 
 val better_quote: string -> string
 val utf8_escape: quote:string -> string -> string

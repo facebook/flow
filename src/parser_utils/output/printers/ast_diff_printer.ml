@@ -28,7 +28,8 @@ let layout_of_node comments node =
   | Pattern pat -> Js_layout_generator.pattern pat
   | TypeAnnotation annot -> Js_layout_generator.type_annotation annot
   | ClassProperty prop -> Js_layout_generator.class_property prop
-  | ObjectProperty prop -> Js_layout_generator.object_property prop in
+  | ObjectProperty prop -> Js_layout_generator.object_property prop
+  | JSXIdentifier id -> Js_layout_generator.jsx_identifier id in
   Js_layout_generator.with_attached_comments := old;
   layout
 
