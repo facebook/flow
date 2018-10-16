@@ -1043,4 +1043,10 @@ let tests = "ast_differ" >::: [
       ~expected:"new MyClass(class A { f: number = (x: string) => x; });"
       ~mapper:(new prop_annot_mapper)
   end;
+  "insert_inside_array" >:: begin fun ctxt ->
+    let source = "[{ render() { class A { f = (x: string) => x; } return new A() } }]" in
+    assert_edits_equal ctxt ~edits:[(25, 25), ": number"] ~source
+      ~expected:"[{ render() { class A { f: number = (x: string) => x; } return new A() } }]"
+      ~mapper:(new prop_annot_mapper)
+  end;
 ]

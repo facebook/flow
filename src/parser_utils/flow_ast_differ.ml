@@ -706,6 +706,8 @@ let program (algo : diff_algorithm)
         Some (type_cast t1 t2)
       | (_, Logical l1), (_, Logical l2) ->
         logical l1 l2
+      | (_, Array arr1), (_, Array arr2) ->
+        array_ arr1 arr2
       | expr, (loc, TypeCast t2) ->
         Some (type_cast_added expr loc t2)
       | _, _ ->
@@ -916,7 +918,9 @@ let program (algo : diff_algorithm)
       let callee = Some (diff_if_changed expression callee1 callee2) in
       Option.(all [args; callee] >>| List.concat)
 
-  and expression_or_spread (expr1: (Loc.t, Loc.t) Ast.Expression.expression_or_spread) (expr2: (Loc.t, Loc.t) Ast.Expression.expression_or_spread) : node change list option =
+  and expression_or_spread (expr1: (Loc.t, Loc.t) Ast.Expression.expression_or_spread)
+                           (expr2: (Loc.t, Loc.t) Ast.Expression.expression_or_spread)
+      : node change list option =
     match expr1, expr2 with
     | Ast.Expression.Expression e1, Ast.Expression.Expression e2 ->
       Some (diff_if_changed expression e1 e2)
@@ -934,6 +938,14 @@ let program (algo : diff_algorithm)
       Some (List.concat [left; right])
     else
       None
+
+  and array_ arr1 arr2 : node change list option =
+    let open Ast.Expression.Array in
+    let { elements = elems1 } = arr1 in
+    let { elements = elems2 } = arr2 in
+    diff_and_recurse_no_trivial
+      (diff_if_changed_opt expression_or_spread)
+      elems1 elems2
 
   and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
                     (stmt2: (Loc.t, Loc.t) Ast.Statement.For.t)
