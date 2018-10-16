@@ -117,26 +117,69 @@ let tests = "js_layout_generator" >::: [
   "do_while_semicolon" >::
     begin fun ctxt ->
       (* do { x } while (y) *)
-      let ast =
+      let layout = Js_layout_generator.statement (
         let body = S.block [
           S.expression (E.identifier "x");
         ] in
         let test = E.identifier "y" in
         S.do_while body test
-      in
-      assert_statement ~ctxt "do{x}while(y);" ast;
+      ) in
+      assert_output ~ctxt "do{x}while(y);" layout;
+      assert_output ~ctxt ~pretty:true
+        ("do {\n"^
+         "  x;\n"^
+         "} while (y);")
+        layout;
     end;
 
-  "do_while_single_statement" >::
-    begin fun ctxt ->
-      (* do x; while (y) *)
-      let ast =
-        let body = S.expression (E.identifier "x") in
-        let test = E.identifier "y" in
-        S.do_while body test
-      in
-      assert_statement ~ctxt "do x;while(y);" ast;
-    end;
+  "do_while_long" >:: begin fun ctxt ->
+    (* do { xxxx... } while (yyyy...) *)
+    let x80 = String.make 80 'x' in
+    let y80 = String.make 80 'y' in
+    let layout = Js_layout_generator.statement (
+      let body = S.block [
+        S.expression (E.identifier x80);
+      ] in
+      let test = E.identifier y80 in
+      S.do_while body test
+    ) in
+    assert_output ~ctxt ("do{"^x80^"}while("^y80^");") layout;
+    assert_output ~ctxt ~pretty:true
+      ("do {\n"^
+       "  "^x80^";\n"^
+       "} while (\n"^
+       "  "^y80^"\n"^
+       ");")
+      layout;
+  end;
+
+  "do_while_single_statement" >:: begin fun ctxt ->
+    (* do x; while (y) *)
+    let layout = Js_layout_generator.statement (
+      let body = S.expression (E.identifier "x") in
+      let test = E.identifier "y" in
+      S.do_while body test
+    ) in
+    assert_output ~ctxt "do x;while(y);" layout;
+    assert_output ~ctxt ~pretty:true "do x; while (y);" layout;
+  end;
+
+  "do_while_single_statement_long" >:: begin fun ctxt ->
+    (* do xxxx...; while (yyyy...) *)
+    let x80 = String.make 80 'x' in
+    let y80 = String.make 80 'y' in
+    let layout = Js_layout_generator.statement (
+      let body = S.expression (E.identifier x80) in
+      let test = E.identifier y80 in
+      S.do_while body test
+    ) in
+    assert_output ~ctxt ("do "^x80^";while("^y80^");") layout;
+    assert_output ~ctxt ~pretty:true
+      ("do "^x80^"; while (\n"^
+       "  "^y80^"\n"^
+       ");")
+      layout;
+  end;
 
   "conditional_expression_parens" >::
     begin fun ctxt ->
