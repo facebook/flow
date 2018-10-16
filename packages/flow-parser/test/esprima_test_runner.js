@@ -199,6 +199,7 @@ function handleSpecialObjectCompare(esprima, flow, env) {
       break;
     case 'ObjectTypeAnnotation':
       esprima.exact = esprima.exact || false;
+      delete flow.inexact;
       esprima.internalSlots = esprima.internalSlots || [];
       break;
     case 'ObjectTypeProperty':

@@ -83,6 +83,7 @@
         "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":24}},
         "range":[57,72],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -156,6 +157,7 @@
         "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":26}},
         "range":[152,169],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -247,6 +249,7 @@
         "loc":{"source":null,"start":{"line":8,"column":9},"end":{"line":8,"column":24}},
         "range":[247,262],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -305,6 +308,7 @@
         "loc":{"source":null,"start":{"line":11,"column":9},"end":{"line":11,"column":22}},
         "range":[298,311],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -363,6 +367,7 @@
         "loc":{"source":null,"start":{"line":14,"column":9},"end":{"line":14,"column":29}},
         "range":[357,377],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -436,6 +441,7 @@
         "loc":{"source":null,"start":{"line":17,"column":9},"end":{"line":17,"column":24}},
         "range":[427,442],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -502,6 +508,7 @@
         "loc":{"source":null,"start":{"line":20,"column":9},"end":{"line":20,"column":27}},
         "range":[497,515],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -583,6 +590,7 @@
         "loc":{"source":null,"start":{"line":23,"column":9},"end":{"line":23,"column":31}},
         "range":[563,585],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -649,6 +657,7 @@
         "loc":{"source":null,"start":{"line":26,"column":9},"end":{"line":26,"column":34}},
         "range":[638,663],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",

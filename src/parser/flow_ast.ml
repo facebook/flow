@@ -176,6 +176,13 @@ and Type : sig
 
     type ('M, 'T) t = {
       exact: bool;
+      (* Inexact indicates the presence of ... in the object. It is more
+       * easily understood if exact is read as "explicitly exact" and "inexact"
+       * is read as "explicitly inexact".
+       *
+       * This confusion will go away when we get rid of the exact flag in favor
+       * of inexact as part of the work to make object types exact by default.
+       * *)
       inexact: bool;
       properties: ('M, 'T) property list;
     }

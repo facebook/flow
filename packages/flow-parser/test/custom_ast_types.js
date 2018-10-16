@@ -178,6 +178,7 @@ def("Function")
 
 def("ObjectTypeAnnotation")
     .field("exact", Boolean)
+    .field("inexact", or(Boolean, void 0), defaults["undefined"])
     .field("properties", [or(
       def("ObjectTypeProperty"),
       def("ObjectTypeSpreadProperty"))])

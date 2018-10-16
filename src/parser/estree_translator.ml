@@ -630,7 +630,7 @@ end with type t = Impl.t) = struct
     node "DeclareClass" loc [
       "id", identifier id;
       "typeParameters", option type_parameter_declaration tparams;
-      "body", object_type body;
+      "body", object_type ~include_inexact:false body;
       "extends", extends;
       "implements", array_of_list class_implements implements;
       "mixins", array_of_list interface_extends mixins;
@@ -645,7 +645,7 @@ end with type t = Impl.t) = struct
     node "DeclareInterface" loc [
       "id", identifier id;
       "typeParameters", option type_parameter_declaration tparams;
-      "body", object_type body;
+      "body", object_type ~include_inexact:false body;
       "extends", array_of_list interface_extends extends;
     ]
 
@@ -796,7 +796,7 @@ end with type t = Impl.t) = struct
     node "InterfaceDeclaration" loc [
       "id", identifier i.id;
       "typeParameters", option type_parameter_declaration i.tparams;
-      "body", object_type i.body;
+      "body", object_type ~include_inexact:false i.body;
       "extends", array_of_list interface_extends i.extends;
     ]
   )
@@ -1016,7 +1016,7 @@ end with type t = Impl.t) = struct
     | Boolean -> boolean_type loc
     | Nullable t -> nullable_type loc t
     | Function fn -> function_type (loc, fn)
-    | Object o -> object_type (loc, o)
+    | Object o -> object_type ~include_inexact:true (loc, o)
     | Interface i -> interface_type (loc, i)
     | Array t -> array_type loc t
     | Generic g -> generic_type (loc, g)
@@ -1086,7 +1086,7 @@ end with type t = Impl.t) = struct
     ] *)
     function_type_param argument
 
-  and object_type (loc, o) = Type.Object.(
+  and object_type ~include_inexact (loc, o) = Type.Object.(
     let props, ixs, calls, slots = List.fold_left (fun (props, ixs, calls, slots) ->
       function
       | Property p ->
@@ -1105,13 +1105,18 @@ end with type t = Impl.t) = struct
         let slot = object_type_internal_slot s in
         props, ixs, calls, slot::slots
     ) ([], [], [], []) o.properties in
-    node "ObjectTypeAnnotation" loc [
+    let fields = [
       "exact", bool o.exact;
       "properties", array (List.rev props);
       "indexers", array (List.rev ixs);
       "callProperties", array (List.rev calls);
       "internalSlots", array (List.rev slots);
-    ]
+    ] in
+    let fields = if include_inexact
+      then ("inexact", bool o.inexact)::fields
+      else fields
+    in
+    node "ObjectTypeAnnotation" loc fields
   )
 
   and object_type_property (loc, { Type.Object.Property.
@@ -1177,7 +1182,7 @@ end with type t = Impl.t) = struct
   and interface_type (loc, i) = Type.Interface.(
     node "InterfaceTypeAnnotation" loc [
       "extends", array_of_list interface_extends i.extends;
-      "body", object_type i.body;
+      "body", object_type ~include_inexact:false i.body;
     ]
   )
 

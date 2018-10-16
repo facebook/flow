@@ -21,6 +21,7 @@
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":17}},
         "range":[9,17],
         "exact":false,
+        "inexact":true,
         "properties":[],
         "indexers":[],
         "callProperties":[],
@@ -45,6 +46,7 @@
         "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":17}},
         "range":[27,35],
         "exact":false,
+        "inexact":true,
         "properties":[],
         "indexers":[],
         "callProperties":[],
@@ -69,6 +71,7 @@
         "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":6,"column":1}},
         "range":[45,68],
         "exact":false,
+        "inexact":true,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -118,6 +121,7 @@
         "loc":{"source":null,"start":{"line":7,"column":9},"end":{"line":10,"column":1}},
         "range":[78,101],
         "exact":false,
+        "inexact":true,
         "properties":[
           {
             "type":"ObjectTypeProperty",
