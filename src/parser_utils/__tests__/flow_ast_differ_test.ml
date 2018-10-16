@@ -1031,4 +1031,16 @@ let tests = "ast_differ" >::: [
     ~source ~expected:"(<notSelfClosing></notSelfClosing>)"
     ~mapper:(new useless_mapper)
   end;
+  "call_insert" >:: begin fun ctxt ->
+    let source = "callFunction(class A { f = (x: string) => x; });" in
+    assert_edits_equal ctxt ~edits:[(24, 24), ": number"] ~source
+      ~expected:"callFunction(class A { f: number = (x: string) => x; });"
+      ~mapper:(new prop_annot_mapper)
+  end;
+  "new_insert" >:: begin fun ctxt ->
+    let source = "new MyClass(class A { f = (x: string) => x; });" in
+    assert_edits_equal ctxt ~edits:[(23, 23), ": number"] ~source
+      ~expected:"new MyClass(class A { f: number = (x: string) => x; });"
+      ~mapper:(new prop_annot_mapper)
+  end;
 ]

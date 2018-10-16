@@ -896,21 +896,34 @@ let program (algo : diff_algorithm)
     let open Ast.Expression.New in
     let { callee = callee1; targs = targs1; arguments = arguments1 } = new1 in
     let { callee = callee2; targs = targs2; arguments = arguments2 } = new2 in
-    if targs1 != targs2 || arguments1 != arguments2 then
-      (* TODO(nmote) recurse into targs and arguments *)
+    if targs1 != targs2 then
+      (* TODO(nmote) recurse into targs *)
       None
     else
-      Some (diff_if_changed expression callee1 callee2)
+      let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
+      let callee = Some (diff_if_changed expression callee1 callee2) in
+      Option.(all [args; callee] >>| List.concat)
 
   and call_ (call1: (Loc.t, Loc.t) Ast.Expression.Call.t) (call2: (Loc.t, Loc.t) Ast.Expression.Call.t): node change list option =
     let open Ast.Expression.Call in
     let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
     let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
-    if targs1 != targs2 || arguments1 != arguments2 then
-      (* TODO(nmote) recurse into targs and arguments *)
+    if targs1 != targs2 then
+      (* TODO(nmote) recurse into targs *)
       None
     else
-      Some (diff_if_changed expression callee1 callee2)
+      let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
+      let callee = Some (diff_if_changed expression callee1 callee2) in
+      Option.(all [args; callee] >>| List.concat)
+
+  and expression_or_spread (expr1: (Loc.t, Loc.t) Ast.Expression.expression_or_spread) (expr2: (Loc.t, Loc.t) Ast.Expression.expression_or_spread) : node change list option =
+    match expr1, expr2 with
+    | Ast.Expression.Expression e1, Ast.Expression.Expression e2 ->
+      Some (diff_if_changed expression e1 e2)
+    (* TODO(festevezga) recurse into spreads *)
+    | Ast.Expression.Spread _, Ast.Expression.Spread _
+    | _, _ -> None
+
   and logical expr1 expr2 =
     let open Ast.Expression.Logical in
     let { left = left1; right = right1; operator = operator1} = expr1 in
@@ -921,6 +934,7 @@ let program (algo : diff_algorithm)
       Some (List.concat [left; right])
     else
       None
+
   and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
                     (stmt2: (Loc.t, Loc.t) Ast.Statement.For.t)
       : node change list option =
