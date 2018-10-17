@@ -29,6 +29,8 @@ val get_name : t -> string
 (* Returns a fresh id every time. *)
 val make : string -> t
 
+val without_ident : string -> t
+
 (* Returns the same id every time for a given string argument. Used for
  * function / method parameters.
  * The ids returned here are guaranteed not to overlap with those returned by

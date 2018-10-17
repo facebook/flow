@@ -9,7 +9,7 @@
 
 module S = struct
   type t = int * string
-  let compare x y = fst x - fst y
+  let compare x y = compare x y
 end
 
 include S
@@ -29,6 +29,8 @@ let to_int x = fst x
 let get_name x = to_string x
 
 let make x = (next (), x)
+
+let without_ident x = (0, x)
 
 (* `make` always returns a positive value. By multiplying the hash by -1 we
  * ensure that the value returned by `get` never overlaps with those returned
