@@ -675,17 +675,12 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           elements
         )
     | E.Object { E.Object.properties } ->
-      if properties = [] then Atom "{}" else
-      let properties = object_properties_with_newlines properties in
       group [
-        Atom "{";
-        Layout.Indent (fuse [
-          pretty_line;
-          join (fuse [Atom ","; pretty_line]) properties;
-          if_break (if_pretty (Atom ",") Layout.Empty) Layout.Empty;
-        ]);
-        pretty_line;
-        Atom "}";
+        new_list
+          ~wrap:(Atom "{", Atom "}")
+          ~sep:(Atom ",")
+          ~wrap_spaces:true
+          (object_properties_with_newlines properties)
       ]
     | E.Sequence { E.Sequence.expressions } ->
       (* to get an AST like `x, (y, z)`, then there must've been parens
@@ -805,13 +800,13 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         then wrap_in_parens (expression ~ctxt callee)
         else expression ~ctxt callee
       in
-      fuse [
+      group [
         fuse_with_space [
           Atom "new";
           callee_layout;
         ];
         option type_parameter_instantiation_with_implicit targs;
-        list
+        new_list
           ~wrap:(Atom "(", Atom ")")
           ~sep:(Atom ",")
           (List.map expression_or_spread arguments);

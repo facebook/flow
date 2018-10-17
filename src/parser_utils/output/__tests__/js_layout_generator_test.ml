@@ -349,28 +349,16 @@ let tests = "js_layout_generator" >::: [
     let x80 = String.make 80 'x' in
     let layout = Js_layout_generator.expression (E.new_ (E.identifier x80)) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         atom "new";
         space;
         loc (id x80);
-        sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-          fused [
-            atom "(";
-            sequence ~break:Layout.Break_if_needed [
-
-            ];
-            atom ")";
-          ];
-        ];
+        atom "(";
+        atom ")";
       ]))
       layout;
     assert_output ~ctxt ("new "^x80^"()") layout;
-    (* TODO: should not insert a blank line *)
-    assert_output ~ctxt ~pretty:true
-      ("new "^x80^"(\n"^
-       "  \n"^
-       ")")
-       layout;
+    assert_output ~ctxt ~pretty:true ("new "^x80^"()") layout;
   end;
 
   "new_expression_params" >:: begin fun ctxt ->
@@ -382,29 +370,21 @@ let tests = "js_layout_generator" >::: [
       ]
     ) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         atom "new";
         space;
         loc (id "Foo");
-        sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-          fused [
-            atom "(";
-            sequence ~break:Layout.Break_if_needed [
-              fused [
-                loc (id "x");
-                Layout.IfBreak ((atom ","), (fused [
-                  atom ",";
-                  pretty_space;
-                ]));
-              ];
-              fused [
-                loc (id "y");
-                Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
-              ];
-            ];
-            atom ")";
-          ];
-        ];
+        atom "(";
+        indent ((fused [
+          softline;
+          loc (id "x");
+          atom ",";
+          pretty_line;
+          loc (id "y");
+          Layout.IfBreak ((atom ","), empty);
+        ]));
+        softline;
+        atom ")";
       ]))
       layout;
     assert_output ~ctxt "new Foo(x,y)" layout;
@@ -418,22 +398,18 @@ let tests = "js_layout_generator" >::: [
       E.new_ (E.identifier "Foo") ~args:[E.expression (E.identifier x80)]
     ) in
     assert_layout ~ctxt
-      L.(loc (fused [
+      L.(loc (group [
         atom "new";
         space;
         loc (id "Foo");
-        sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-          fused [
-            atom "(";
-            sequence ~break:Layout.Break_if_needed [
-              fused [
-                loc (id x80);
-                Layout.IfBreak ((Layout.IfPretty ((atom ","), empty)), empty);
-              ];
-            ];
-            atom ")";
-          ];
-        ];
+        atom "(";
+        indent ((fused [
+          softline;
+          loc (id x80);
+          Layout.IfBreak ((atom ","), empty);
+        ]));
+        softline;
+        atom ")";
       ]))
       layout;
     assert_output ~ctxt ("new Foo("^x80^")") layout;
@@ -663,7 +639,10 @@ let tests = "js_layout_generator" >::: [
           pretty_space;
           atom "instanceof";
           pretty_space;
-          loc (atom "{}");
+          loc (group [
+            atom "{";
+            atom "}";
+          ]);
         ]))
         layout;
       assert_output ~ctxt {|"foo"instanceof{}|} layout;
@@ -705,7 +684,10 @@ let tests = "js_layout_generator" >::: [
           space;
           atom "instanceof";
           pretty_space;
-          loc (atom "{}");
+          loc (group [
+            atom "{";
+            atom "}";
+          ]);
         ]))
         layout;
       assert_output ~ctxt {|foo instanceof{}|} layout;

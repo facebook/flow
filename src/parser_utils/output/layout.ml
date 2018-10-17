@@ -114,6 +114,32 @@ let fuse_list =
       snd wrap;
     ]
 
+let wrap_and_indent ?(pretty_space=false) (before, after) items =
+  let layout =
+    if items = [] then Empty else
+    let wrap_line = if pretty_space then pretty_line else softline in
+    fuse [
+      Indent (fuse (wrap_line::items));
+      wrap_line;
+    ]
+  in
+  fuse [before; layout; after]
+
+let new_list
+  ?(wrap=(Empty, Empty))
+  ?(sep=Empty)
+  ?(wrap_spaces=false)
+  ?(trailing_sep=true)
+  items =
+  let items_layout =
+    if items = [] then items else
+    [
+      join (fuse [sep; pretty_line]) items;
+      if trailing_sep then if_break (Atom ",") Empty else Empty;
+    ]
+  in
+  wrap_and_indent ~pretty_space:wrap_spaces wrap items_layout
+
 (* All purpose list *)
 let list
   ?(break=Break_if_needed)
