@@ -332,13 +332,13 @@ let program (algo : diff_algorithm)
   (* diff_and_recurse for when there is no way to get a trivial transfomation from a to b*)
   let diff_and_recurse_no_trivial f = diff_and_recurse f (fun _ -> None) in
 
+  let join_diff_list = Some [] |> List.fold_left (Option.map2 ~f:List.append) in
+
   let rec program' (program1: (Loc.t, Loc.t) Ast.program) (program2: (Loc.t, Loc.t) Ast.program) : node change list =
     let (program_loc, statements1, _) = program1 in
     let (_, statements2, _) = program2 in
     toplevel_statement_list statements1 statements2
     |> Option.value ~default:[(program_loc, Replace (Program program1, Program program2))]
-
-
 
   and toplevel_statement_list (stmts1: (Loc.t, Loc.t) Ast.Statement.t list)
       (stmts2: (Loc.t, Loc.t) Ast.Statement.t list) =
@@ -437,7 +437,7 @@ let program (algo : diff_algorithm)
     if src1 != src2 || kind1 != kind2 then None else
     let decls = diff_if_changed_nonopt_fn statement decl1 decl2 in
     let specs = diff_if_changed_opt export_named_declaration_specifier specs1 specs2 in
-    Option.(all [decls; specs] >>| List.concat)
+    join_diff_list [decls; specs]
 
   and export_default_declaration (export1 : (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t)
                                  (export2 : (Loc.t, Loc.t) Ast.Statement.ExportDefaultDeclaration.t)
@@ -459,9 +459,10 @@ let program (algo : diff_algorithm)
     let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
     let _, { local = local1; exported = exported1 } = spec1 in
     let _, { local = local2; exported = exported2 } = spec2 in
-    let locals = diff_if_changed identifier local1 local2 in
+    let locals = diff_if_changed identifier local1 local2 |> Option.return in
     let exporteds = diff_if_changed_nonopt_fn identifier exported1 exported2 in
-    Option.(all [return locals; exporteds] >>| List.concat)
+    join_diff_list [locals; exporteds]
+
 
   and export_named_declaration_specifier
       (specs1 : Loc.t Ast.Statement.ExportNamedDeclaration.specifier)
@@ -505,7 +506,7 @@ let program (algo : diff_algorithm)
     else
       let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
       let returns = diff_if_changed type_annotation_hint return1 return2 |> Option.return in
-      Option.(all [fnbody; returns] >>| List.concat)
+      join_diff_list [fnbody; returns]
 
   and function_body_any (body1 : (Loc.t, Loc.t) Ast.Function.body)
                         (body2 : (Loc.t, Loc.t) Ast.Function.body)
@@ -559,18 +560,17 @@ let program (algo : diff_algorithm)
       | Some _, None
       | None, Some _ -> None
       | Some a1, Some a2 -> Some (diff_if_changed statement a1 a2) in
-    let result_list = [expr_diff; cons_diff; alt_diff] in
-    Option.all result_list |> Option.map ~f:List.concat
+    join_diff_list [expr_diff; cons_diff; alt_diff]
 
-    and with_statement (with1: (Loc.t, Loc.t) Ast.Statement.With.t)
-                       (with2: (Loc.t, Loc.t) Ast.Statement.With.t)
-        : node change list =
-      let open Ast.Statement.With in
-      let {_object = _object1; body = body1;} = with1 in
-      let {_object = _object2; body = body2;} = with2 in
-      let _object_diff = diff_if_changed expression _object1 _object2 in
-      let body_diff    = diff_if_changed statement  body1    body2    in
-      _object_diff @ body_diff
+  and with_statement (with1: (Loc.t, Loc.t) Ast.Statement.With.t)
+                     (with2: (Loc.t, Loc.t) Ast.Statement.With.t)
+      : node change list =
+    let open Ast.Statement.With in
+    let {_object = _object1; body = body1;} = with1 in
+    let {_object = _object2; body = body2;} = with2 in
+    let _object_diff = diff_if_changed expression _object1 _object2 in
+    let body_diff    = diff_if_changed statement  body1    body2    in
+    _object_diff @ body_diff
 
   and try_ (try1: (Loc.t, Loc.t) Ast.Statement.Try.t) (try2: (Loc.t, Loc.t) Ast.Statement.Try.t) =
     let open Ast.Statement.Try in
@@ -580,7 +580,7 @@ let program (algo : diff_algorithm)
     let finalizer_diff = diff_if_changed_opt block
       (Option.map ~f:snd finalizer1) (Option.map ~f:snd finalizer2) in
     let handler_diff = diff_if_changed_opt handler handler1 handler2 in
-    Option.all [block_diff; finalizer_diff; handler_diff] |> Option.map ~f:List.concat
+    join_diff_list [block_diff; finalizer_diff; handler_diff]
 
   and handler (hand1: (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t)
       (hand2: (Loc.t, Loc.t) Ast.Statement.Try.CatchClause.t) =
@@ -589,9 +589,7 @@ let program (algo : diff_algorithm)
     let _, { body = (_, block2); param = param2 } = hand2 in
     let body_diff = diff_if_changed_ret_opt block block1 block2 in
     let param_diff = diff_if_changed_nonopt_fn pattern param1 param2 in
-    Option.all [body_diff; param_diff] |> Option.map ~f:List.concat
-
-
+    join_diff_list [body_diff; param_diff]
 
   and class_ (class1: (Loc.t, Loc.t) Ast.Class.t) (class2: (Loc.t, Loc.t) Ast.Class.t) =
     let open Ast.Class in
@@ -635,7 +633,7 @@ let program (algo : diff_algorithm)
     (if key1 != key2 || s1 != s2 || var1 != var2 then None else
       let vals = diff_if_changed_nonopt_fn expression val1 val2 in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
-      Option.(all [vals; annots] >>| List.concat))
+      join_diff_list [vals; annots])
     |> Option.value ~default:[(loc1, Replace (ClassProperty prop1, ClassProperty prop2))]
 
   and class_method
@@ -734,7 +732,7 @@ let program (algo : diff_algorithm)
         diff_if_changed_ret_opt jsx_opening_element open_elem1 open_elem2 in
       let closingChanged =
         diff_if_changed_opt jsx_closing_element close_elem1 close_elem2 in
-      Option.(all [openingChanged; closingChanged] >>| List.concat)
+      join_diff_list [openingChanged; closingChanged]
 
   and jsx_opening_element
       (elem1: (Loc.t, Loc.t) Ast.JSX.Opening.t)
@@ -802,8 +800,8 @@ let program (algo : diff_algorithm)
       | MemberExpression member_expr1', MemberExpression member_expr2' ->
         diff_if_changed_ret_opt jsx_member_expression member_expr1' member_expr2'
       | _ -> None in
-    let propertyChanged = diff_if_changed jsx_identifier prop1 prop2 in
-    Option.(all [objectChanged; Some propertyChanged] >>| List.concat)
+    let propertyChanged = diff_if_changed jsx_identifier prop1 prop2 |> Option.return in
+    join_diff_list [objectChanged; propertyChanged]
 
   and jsx_closing_element
       (elem1: (Loc.t, Loc.t) Ast.JSX.Closing.t)
@@ -846,13 +844,13 @@ let program (algo : diff_algorithm)
         if sh1 != sh2 then None else
         let values = diff_if_changed expression val1 val2 |> Option.return in
         let keys = diff_if_changed_ret_opt object_key key1 key2 in
-        Option.(all [keys; values] >>| List.concat)
+        join_diff_list [keys; values]
     | Set {value = val1; key = key1 }, Set { value = val2; key = key2 }
     | Method {value = val1; key = key1 }, Method { value = val2; key = key2 }
     | Get {value = val1; key = key1 }, Get { value = val2; key = key2 } ->
         let values = diff_if_changed_ret_opt function_ (snd val1) (snd val2) in
         let keys = diff_if_changed_ret_opt object_key key1 key2 in
-        Option.(all [keys; values] >>| List.concat)
+        join_diff_list [keys; values]
     | _ -> None
 
   and object_property prop1 prop2 =
@@ -904,7 +902,7 @@ let program (algo : diff_algorithm)
     else
       let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
       let callee = Some (diff_if_changed expression callee1 callee2) in
-      Option.(all [args; callee] >>| List.concat)
+      join_diff_list [args; callee]
 
   and call_ (call1: (Loc.t, Loc.t) Ast.Expression.Call.t) (call2: (Loc.t, Loc.t) Ast.Expression.Call.t): node change list option =
     let open Ast.Expression.Call in
@@ -916,7 +914,7 @@ let program (algo : diff_algorithm)
     else
       let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
       let callee = Some (diff_if_changed expression callee1 callee2) in
-      Option.(all [args; callee] >>| List.concat)
+      join_diff_list [args; callee]
 
   and expression_or_spread (expr1: (Loc.t, Loc.t) Ast.Expression.expression_or_spread)
                            (expr2: (Loc.t, Loc.t) Ast.Expression.expression_or_spread)
@@ -957,7 +955,7 @@ let program (algo : diff_algorithm)
     let test = diff_if_changed_nonopt_fn expression test1 test2 in
     let update = diff_if_changed_nonopt_fn expression update1 update2 in
     let body = Some (diff_if_changed statement body1 body2) in
-    Option.all [init; test; update; body] |> Option.map ~f:List.concat
+    join_diff_list [init; test; update; body]
 
   and for_statement_init(init1: (Loc.t, Loc.t) Ast.Statement.For.init)
                         (init2: (Loc.t, Loc.t) Ast.Statement.For.init)
@@ -982,7 +980,7 @@ let program (algo : diff_algorithm)
     let body = Some (diff_if_changed statement body1 body2) in
     let right = Some (diff_if_changed expression right1 right2) in
     let each = if each1 != each2 then None else Some [] in
-    Option.all [left; right; body; each] |> Option.map ~f:List.concat
+    join_diff_list [left; right; body; each]
 
   and for_in_statement_lhs (left1: (Loc.t, Loc.t) Ast.Statement.ForIn.left)
                             (left2: (Loc.t, Loc.t) Ast.Statement.ForIn.left)
@@ -1017,7 +1015,7 @@ let program (algo : diff_algorithm)
     let body = Some (diff_if_changed statement body1 body2) in
     let right = Some (diff_if_changed expression right1 right2) in
     let async = if async1 != async2 then None else Some [] in
-    Option.all [left; right; body; async] |> Option.map ~f:List.concat
+    join_diff_list [left; right; body; async]
 
   and for_of_statement_lhs (left1: (Loc.t, Loc.t) Ast.Statement.ForOf.left)
                             (left2: (Loc.t, Loc.t) Ast.Statement.ForOf.left)
@@ -1058,7 +1056,7 @@ let program (algo : diff_algorithm)
     let { discriminant = discriminant2; cases = cases2} = stmt2 in
     let discriminant = Some (diff_if_changed expression discriminant1 discriminant2) in
     let cases = diff_and_recurse_no_trivial switch_case cases1 cases2 in
-    Option.all [discriminant; cases] |> Option.map ~f:List.concat
+    join_diff_list [discriminant; cases]
 
   and switch_case ((_, s1): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
                   ((_, s2): (Loc.t, Loc.t) Ast.Statement.Switch.Case.t)
@@ -1068,7 +1066,7 @@ let program (algo : diff_algorithm)
     let { test = test2; consequent = consequent2} = s2 in
     let test = diff_if_changed_nonopt_fn expression test1 test2 in
     let consequent = statement_list consequent1 consequent2 in
-    Option.all [test; consequent] |> Option.map ~f:List.concat
+    join_diff_list [test; consequent]
 
   and pattern (p1: (Loc.t, Loc.t) Ast.Pattern.t)
               (p2: (Loc.t, Loc.t) Ast.Pattern.t)
@@ -1123,8 +1121,7 @@ let program (algo : diff_algorithm)
         let keys = diff_if_changed_ret_opt pattern_object_property_key key1 key2 in
         let pats = Some (diff_if_changed pattern pattern1 pattern2) in
         (match shorthand1, shorthand2 with
-        | false, false ->
-          Option.all [keys; pats] |> Option.map ~f:List.concat
+        | false, false -> join_diff_list [keys; pats]
         | _, _ ->
           None)
     | (RestProperty (_, rp1) ,RestProperty (_, rp2)) ->
@@ -1194,7 +1191,7 @@ let program (algo : diff_algorithm)
     else
       let ids = diff_if_changed identifier name1 name2 |> Option.return in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
-      Option.(all [ids; annots] >>| List.concat)
+      join_diff_list [ids; annots]
 
   and type_annotation_hint
         (return1: (Loc.t, Loc.t) Ast.Type.annotation_or_hint)
