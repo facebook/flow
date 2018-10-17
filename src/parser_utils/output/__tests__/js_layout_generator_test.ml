@@ -422,11 +422,37 @@ let tests = "js_layout_generator" >::: [
 
   "new_expression_parens" >::
     begin fun ctxt ->
-      let x, y, z = E.identifier "x", E.identifier "y", E.identifier "z" in
+      let x80 = String.make 80 'x' in
+      let x, y, z, id80 = E.identifier "x", E.identifier "y", E.identifier "z", E.identifier x80 in
 
       (* `new (x++)()` *)
-      let update = E.new_ (E.increment ~prefix:false x) in
-      assert_expression ~ctxt "new(x++)()" update;
+      begin
+        let layout = Js_layout_generator.expression (
+          E.new_ (E.increment ~prefix:false x)
+        )in
+        assert_layout ~ctxt
+          L.(loc (group [
+            atom "new";
+            pretty_space;
+            wrap_in_parens (loc (fused [
+              loc (id "x");
+              atom "++";
+            ]));
+            atom "(";
+            atom ")";
+          ]))
+          layout;
+        assert_output ~ctxt "new(x++)()" layout;
+        assert_output ~ctxt ~pretty:true "new (x++)()" layout;
+
+        let update = E.new_ (E.increment ~prefix:false id80) in
+        assert_expression ~ctxt ("new("^x80^"++)()") update;
+        assert_expression ~ctxt ~pretty:true
+          ("new (\n"^
+           "  "^x80^"++\n"^
+           ")()")
+          update;
+      end;
 
       (* `new (x())()` *)
       let call = E.new_ (E.call x) in
@@ -1294,17 +1320,249 @@ let tests = "js_layout_generator" >::: [
       );
     end;
 
-  "forof_statements" >::
-    begin fun ctxt ->
-      assert_statement_string ~ctxt "for(let a of b){}";
-      assert_statement_string ~ctxt "for(a of b){}";
-      assert_statement_string ~ctxt ~pretty:true (
-        "for (let a of b) {\n  a;\n}"
-      );
-      assert_statement_string ~ctxt (
-        "async function f(){for await(let x of y){}}"
-      );
+  "forin_statement_declaration" >:: begin fun ctxt ->
+    let mk_layout a b =
+      Js_layout_generator.statement (
+        S.for_in
+          (S.for_in_declarator [S.variable_declarator a])
+          (E.identifier b)
+          (S.block [S.expression (E.identifier a)])
+      )
+    in
+
+    begin
+      let layout = mk_layout "a" "b" in
+      assert_layout ~ctxt
+        L.(loc (fused [
+          atom "for";
+          pretty_space;
+          group [
+            atom "(";
+            indent ((fused [
+              softline;
+              loc (fused [
+                atom "var";
+                space;
+                loc (loc (id "a"));
+              ]);
+              space;
+              atom "in";
+              space;
+              loc (id "b");
+            ]));
+            softline;
+            atom ")";
+          ];
+          pretty_space;
+          loc (loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+            fused [
+              atom "{";
+              sequence ~break:Layout.Break_if_pretty [
+                loc (fused [
+                  loc (id "a");
+                  Layout.IfPretty ((atom ";"), empty);
+                ]);
+              ];
+              atom "}";
+            ];
+          ]));
+        ]))
+        layout;
+      assert_output ~ctxt "for(var a in b){a}" layout;
+      assert_output ~ctxt ~pretty:true
+        ("for (var a in b) {\n"^
+         "  a;\n"^
+         "}")
+        layout;
     end;
+
+    begin
+      let a80 = String.make 80 'a' in
+      let layout = mk_layout a80 "b" in
+      assert_output ~ctxt ("for(var "^a80^" in b){"^a80^"}") layout;
+      assert_output ~ctxt ~pretty:true
+        ("for (\n"^
+         "  var "^a80^" in b\n"^
+         ") {\n"^
+         "  "^a80^";\n"^
+         "}")
+        layout;
+    end;
+  end;
+
+  "forin_statement_pattern_identifier" >:: begin fun ctxt ->
+    let mk_layout a b =
+      Js_layout_generator.statement (
+        S.for_in
+          (S.for_in_pattern (Patterns.identifier a))
+          (E.identifier b)
+          (S.block [])
+      )
+    in
+
+    begin
+      let layout = mk_layout "a" "b" in
+      assert_layout ~ctxt
+        L.(loc (fused [
+          atom "for";
+          pretty_space;
+          group [
+            atom "(";
+            indent ((fused [
+              softline;
+              loc (id "a");
+              space;
+              atom "in";
+              space;
+              loc (id "b");
+            ]));
+            softline;
+            atom ")";
+          ];
+          pretty_space;
+          loc (loc (atom "{}"));
+        ]))
+        layout;
+      assert_output ~ctxt "for(a in b){}" layout;
+      assert_output ~ctxt ~pretty:true "for (a in b) {}" layout;
+    end;
+
+    begin
+      let a80 = String.make 80 'a' in
+      let layout = mk_layout a80 "b" in
+      assert_output ~ctxt ("for("^a80^" in b){}") layout;
+      assert_output ~ctxt ~pretty:true
+        ("for (\n"^
+         "  "^a80^" in b\n"^
+         ") {}")
+        layout;
+    end;
+  end;
+
+  "forof_statement_declaration" >:: begin fun ctxt ->
+    let mk_layout a b =
+      Js_layout_generator.statement (
+        S.for_of
+          (S.for_of_declarator [S.variable_declarator a])
+          (E.identifier b)
+          (S.block [S.expression (E.identifier a)])
+      )
+    in
+
+    begin
+      let layout = mk_layout "a" "b" in
+      assert_layout ~ctxt
+        L.(loc (fused [
+          atom "for";
+          pretty_space;
+          group [
+            atom "(";
+            indent ((fused [
+              softline;
+              loc (fused [
+                atom "var";
+                space;
+                loc (loc (id "a"));
+              ]);
+              space;
+              atom "of";
+              space;
+              loc (id "b");
+            ]));
+            softline;
+            atom ")";
+          ];
+          pretty_space;
+          loc (loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+            fused [
+              atom "{";
+              sequence ~break:Layout.Break_if_pretty [
+                loc (fused [
+                  loc (id "a");
+                  Layout.IfPretty ((atom ";"), empty);
+                ]);
+              ];
+              atom "}";
+            ];
+          ]));
+        ]))
+        layout;
+      assert_output ~ctxt "for(var a of b){a}" layout;
+      assert_output ~ctxt ~pretty:true
+        ("for (var a of b) {\n"^
+         "  a;\n"^
+         "}")
+        layout;
+    end;
+
+    begin
+      let a80 = String.make 80 'a' in
+      let layout = mk_layout a80 "b" in
+      assert_output ~ctxt ("for(var "^a80^" of b){"^a80^"}") layout;
+      assert_output ~ctxt ~pretty:true
+        ("for (\n"^
+         "  var "^a80^" of b\n"^
+         ") {\n"^
+         "  "^a80^";\n"^
+         "}")
+        layout;
+    end;
+  end;
+
+  "forof_statement_pattern_identifier" >:: begin fun ctxt ->
+    let mk_layout a b =
+      Js_layout_generator.statement (
+        S.for_of
+          (S.for_of_pattern (Patterns.identifier a))
+          (E.identifier b)
+          (S.block [])
+      )
+    in
+
+    begin
+      let layout = mk_layout "a" "b" in
+      assert_layout ~ctxt
+        L.(loc (fused [
+          atom "for";
+          pretty_space;
+          group [
+            atom "(";
+            indent ((fused [
+              softline;
+              loc (id "a");
+              space;
+              atom "of";
+              space;
+              loc (id "b");
+            ]));
+            softline;
+            atom ")";
+          ];
+          pretty_space;
+          loc (loc (atom "{}"));
+        ]))
+        layout;
+      assert_output ~ctxt "for(a of b){}" layout;
+      assert_output ~ctxt ~pretty:true "for (a of b) {}" layout;
+    end;
+
+    begin
+      let a80 = String.make 80 'a' in
+      let layout = mk_layout a80 "b" in
+      assert_output ~ctxt ("for("^a80^" of b){}") layout;
+      assert_output ~ctxt ~pretty:true
+        ("for (\n"^
+         "  "^a80^" of b\n"^
+         ") {}")
+        layout;
+    end;
+  end;
+
+  "forof_statement_async" >:: begin fun ctxt ->
+    assert_statement_string ~ctxt (
+      "async function f(){for await(let x of y){}}"
+    );
+  end;
 
   "forof_statement_without_block" >::
     begin fun ctxt ->
@@ -1473,11 +1731,41 @@ let tests = "js_layout_generator" >::: [
       assert_statement_string ~ctxt ~pretty:true "declare export opaque type a: b;";
     end;
 
-  "type_cast_expression" >::
-    begin fun ctxt ->
-      assert_expression_string ~ctxt "(a:b)";
-      assert_expression_string ~ctxt ~pretty:true "(a: b)";
-    end;
+  "type_cast_expression" >:: begin fun ctxt ->
+    let layout = Js_layout_generator.expression (
+      E.typecast (E.identifier "a") Types.mixed
+    ) in
+    assert_layout ~ctxt
+      L.(loc (group [
+        atom "(";
+        indent ((fused [
+          softline;
+          loc (id "a");
+          loc (fused [
+            atom ":";
+            pretty_space;
+            loc (atom "mixed");
+          ]);
+        ]));
+        softline;
+        atom ")";
+      ]))
+      layout;
+    assert_output ~ctxt "(a:mixed)" layout;
+    assert_output ~ctxt ~pretty:true "(a: mixed)" layout;
+
+    let a80 = String.make 80 'a' in
+    let layout = Js_layout_generator.expression (
+      E.typecast (E.identifier a80) Types.mixed
+    ) in
+    assert_output ~ctxt ("("^a80^":mixed)") layout;
+    (* TODO: don't break onto multiple lines *)
+    assert_output ~ctxt ~pretty:true
+      ("(\n"^
+       "  "^a80^": mixed\n"^
+       ")")
+      layout;
+  end;
 
   "type_parameter" >::
     begin fun ctxt ->

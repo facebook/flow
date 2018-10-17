@@ -7,6 +7,11 @@
 
 module Ast = Flow_ast
 
+module Types = struct
+  let mixed = Loc.none, Ast.Type.Mixed
+  let annotation t = Loc.none, t
+end
+
 module Literals = struct
   open Ast.Literal
 
@@ -145,6 +150,24 @@ module Statements = struct
       update;
       body;
     }
+
+  let for_in ?(each=false) left right body =
+    Loc.none, ForIn { ForIn.left; right; body; each }
+
+  let for_in_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) declarations =
+    ForIn.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind })
+
+  let for_in_pattern patt =
+    ForIn.LeftPattern patt
+
+  let for_of ?(async=false) left right body =
+    Loc.none, ForOf { ForOf.left; right; body; async }
+
+  let for_of_declarator ?(kind = Ast.Statement.VariableDeclaration.Var) declarations =
+    ForOf.LeftDeclaration (Loc.none, { VariableDeclaration.declarations; kind })
+
+  let for_of_pattern patt =
+    ForOf.LeftPattern patt
 
   let expression ?(loc = Loc.none) ?directive expression =
     loc, Expression { Expression.expression; directive }
@@ -353,6 +376,12 @@ module Expressions = struct
 
   let logical_and (l: (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.And l r
   let logical_or (l: (Loc.t, Loc.t) Ast.Expression.t) r = logical ~op:Logical.Or l r
+
+  let typecast expression annotation =
+    Loc.none, TypeCast { TypeCast.
+      expression;
+      annot = Types.annotation annotation;
+    }
 end
 
 module Comments = struct
