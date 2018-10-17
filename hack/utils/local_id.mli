@@ -7,7 +7,7 @@
  *
  *)
 
-(* Used to represent local variables in the named AST. *)
+(** Used to represent local variables in the named AST. *)
 
 module S : sig
   type t
@@ -26,15 +26,19 @@ val to_int : t -> int
 
 val get_name : t -> string
 
-(* Returns a fresh id every time. *)
-val make : string -> t
+(** Make an id for a scoped variable. Return a fresh id every time.
+This is used to enforce that two locals with the same name but with
+different scopes have different ids. *)
+val make_scoped : string -> t
 
-val without_ident : string -> t
+(** Make an id for an unscoped variable. Two calls with the same input
+ * string will return the same id. *)
+val make_unscoped : string -> t
 
-(* Returns the same id every time for a given string argument. Used for
+(** Returns the same id every time for a given string argument. Used for
  * function / method parameters.
  * The ids returned here are guaranteed not to overlap with those returned by
- * Local_id.make, which is used for naming local variables. *)
+ * Local_id.make_scoped, which is used for naming local variables. *)
 val get : string -> t
 
 val tmp : unit -> t

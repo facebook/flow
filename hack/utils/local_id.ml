@@ -28,9 +28,9 @@ let to_int x = fst x
 
 let get_name x = to_string x
 
-let make x = (next (), x)
+let make_scoped x = (next (), x)
 
-let without_ident x = (0, x)
+let make_unscoped x = (0, x)
 
 (* `make` always returns a positive value. By multiplying the hash by -1 we
  * ensure that the value returned by `get` never overlaps with those returned
