@@ -122,7 +122,40 @@ class BlessedError {
   }
 }
 
-export default async function(args: Args): Promise<void> {
+/**
+ * Filter out errors without a main location
+ */
+function filterErrors(errors: Array<FlowError>): Array<FlowError> {
+  return errors.filter(e => mainLocOfError(e) != null);
+}
+
+/**
+ * Wrap errors with some extra functionality
+ */
+function blessErrors(errors: Array<FlowError>): Array<BlessedError> {
+  return errors.map(e => new BlessedError(e));
+}
+
+async function nonInteractive(args: Args): Promise<void> {
+  let flowResult = await getFlowErrors(
+    args.bin,
+    args.errorCheckCommand,
+    args.root,
+    args.flowconfigName,
+  );
+
+  if (flowResult.passed) {
+    console.log("No errors found. Nothing to do. Exiting");
+    return;
+  }
+
+  const errors = blessErrors(filterErrors(flowResult.errors));
+
+  await addComments(args, errors);
+  process.exit(0);
+}
+
+async function interactive(args: Args): Promise<void> {
   // Use blessed to select which comments to remove
 
   // Create a screen object.
@@ -217,9 +250,7 @@ export default async function(args: Args): Promise<void> {
   });
 
   // Filter out errors without a main location
-  const errors = flowResult.errors
-    .filter(e => mainLocOfError(e) != null)
-    .map(e => new BlessedError(e));
+  const errors = blessErrors(filterErrors(flowResult.errors));
 
   let locationToErrorsMap: Map<string, Array<BlessedError>>;
   let scrollToLocationMap;
@@ -537,13 +568,13 @@ export default async function(args: Args): Promise<void> {
           if (err == null && value != null) {
             args.comment = value;
             screen.destroy();
-            await addComments(args, selectedErrors)
+            await addComments(args, selectedErrors);
             process.exit(0);
           }
       });
     } else {
       screen.destroy();
-      await addComments(args, selectedErrors)
+      await addComments(args, selectedErrors);
       process.exit(0);
     }
   };
@@ -553,10 +584,13 @@ export default async function(args: Args): Promise<void> {
   showDetails(1);
   locations.focus();
   screen.render();
+}
 
+export default async function(args: Args): Promise<void> {
   if (args.all) {
-    errors.map(e => e.select());
-    await doAddComments();
+    await nonInteractive(args);
+  } else {
+    await interactive(args);
   }
 }
 
