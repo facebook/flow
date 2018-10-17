@@ -3042,44 +3042,81 @@ and expression_ ~is_cond cx loc e : (Loc.t, Loc.t * Type.t) Ast.Expression.t =
       let then_env = Env.clone_env env in
       Env.update_env cx loc then_env;
       let _ = Env.refine_with_preds cx loc preds xtypes in
-      let (_, t1), _ as consequent = expression cx consequent in
+      let ((_, t1), _ as consequent, then_abnormal)
+        = Abnormal.catch_expr_control_flow_exception
+            (fun () -> expression cx consequent) in
 
       let else_env = Env.clone_env env in
       Env.update_env cx loc else_env;
       let _ = Env.refine_with_preds cx loc not_preds xtypes in
-      let (_, t2), _ as alternate = expression cx alternate in
+      let ((_, t2), _ as alternate, else_abnormal)
+        = Abnormal.catch_expr_control_flow_exception
+            (fun () -> expression cx alternate) in
 
       let newset = Changeset.Global.merge oldset in
-      Env.merge_env cx loc (env, then_env, else_env)
+
+      let end_env, combined_type = match then_abnormal, else_abnormal with
+      (* If one side throws (using invariant()) only refine with the other
+         side.*)
+      | Some Abnormal.Throw, None ->
+        else_env, t2
+      | None, Some Abnormal.Throw ->
+        then_env, t1
+
+      | Some Abnormal.Throw, Some Abnormal.Throw ->
+        Env.merge_env cx loc (env, then_env, else_env) newset;
+        env, EmptyT.at (loc |> ALoc.of_loc)
+        (* Both sides threw--see below for where we re-raise *)
+
+      | None, None ->
+        Env.merge_env cx loc (env, then_env, else_env)
         (Changeset.exclude_refines newset);
-      Env.update_env cx loc env;
+        env, DefT (reason, UnionT (UnionRep.make t1 t2 []))
+        (* NOTE: In general it is dangerous to express the least upper bound of
+           some types as a union: it might pin down the least upper bound
+           prematurely (before all the types have been inferred), and when the
+           union appears as an upper bound, it might lead to speculative matching.
+
+           However, here a union is safe, because this union is guaranteed to only
+           appear as a lower bound.
+
+           In such "covariant" positions, avoiding unnecessary indirection via
+           tvars is a good thing, because it improves precision. In particular, it
+           enables more types to be fully resolvable, which improves results of
+           speculative matching.
+
+           It should be possible to do this more broadly and systematically. For
+           example, results of operations on annotations (like property gets on
+           objects, calls on functions) are often represented as unresolved tvars,
+           where they could be pinned down to resolved types.
+        *)
+
+      | _ ->
+        (* The only kind of abnormal control flow that should be raised from
+           an expression is a Throw. The other kinds (return, break, continue)
+           can only arise from statements, and while statements can appear within
+           expressions (eg function expressions), any abnormals will be handled
+           before they get here. *)
+        assert_false "Unexpected abnormal control flow from within expression"
+      in
+      Env.update_env cx loc end_env;
       (* TODO call loc_of_predicate on some pred?
          t1 is wrong but hopefully close *)
+      let ast =
+        (loc, combined_type),
+        Conditional { Conditional.
+          test = test;
+          consequent = consequent;
+          alternate = alternate;
+        } in
 
-      (* NOTE: In general it is dangerous to express the least upper bound of
-         some types as a union: it might pin down the least upper bound
-         prematurely (before all the types have been inferred), and when the
-         union appears as an upper bound, it might lead to speculative matching.
+      (* handle control flow in cases where we've thrown from both sides *)
+      begin match then_abnormal, else_abnormal with
+      | Some then_exn, Some else_exn when then_exn = else_exn ->
+        Abnormal.throw_expr_control_flow_exception loc ast then_exn
 
-         However, here a union is safe, because this union is guaranteed to only
-         appear as a lower bound.
-
-         In such "covariant" positions, avoiding unnecessary indirection via
-         tvars is a good thing, because it improves precision. In particular, it
-         enables more types to be fully resolvable, which improves results of
-         speculative matching.
-
-         It should be possible to do this more broadly and systematically. For
-         example, results of operations on annotations (like property gets on
-         objects, calls on functions) are often represented as unresolved tvars,
-         where they could be pinned down to resolved types.
-      *)
-      (loc, DefT (reason, UnionT (UnionRep.make t1 t2 []))),
-      Conditional { Conditional.
-        test = test;
-        consequent = consequent;
-        alternate = alternate;
-      }
+      | _ -> ast
+      end
 
   | Assignment { Assignment.operator; left; right } ->
       let t, left, right = assignment cx loc (left, operator, right) in
@@ -3715,15 +3752,12 @@ and subscript =
             (* invariant() is treated like a throw *)
             Env.reset_current_activation loc;
             Abnormal.save Abnormal.Throw;
-            Abnormal.throw_stmt_control_flow_exception
-              (loc, Ast.Statement.Expression { Ast.Statement.Expression.
-                expression = (loc, VoidT.at (loc |> ALoc.of_loc)), Call { Call.
-                  callee = callee;
-                  targs;
-                  arguments = [];
-                };
-                directive = None;
-              })
+            Abnormal.throw_expr_control_flow_exception loc
+              ((loc, VoidT.at (loc |> ALoc.of_loc)), (Ast.Expression.Call ( { Call.
+                callee = callee;
+                targs;
+                arguments = [];
+              })))
               Abnormal.Throw
           | None, (Expression (_, Ast.Expression.Literal {
               Ast.Literal.value = Ast.Literal.Boolean false; _
@@ -3734,15 +3768,12 @@ and subscript =
             Env.reset_current_activation loc;
             Abnormal.save Abnormal.Throw;
             let lit_exp = expression cx lit_exp in
-            Abnormal.throw_stmt_control_flow_exception
-              (loc, Ast.Statement.Expression { Ast.Statement.Expression.
-                expression = (loc, VoidT.at (loc |> ALoc.of_loc)), Call { Call.
-                  callee = callee;
-                  targs;
-                  arguments = Expression lit_exp :: arguments;
-                };
-                directive = None;
-              })
+            Abnormal.throw_expr_control_flow_exception loc
+              ((loc, VoidT.at (loc |> ALoc.of_loc)), (Ast.Expression.Call ( { Call.
+                callee = callee;
+                targs;
+                arguments = Expression lit_exp :: arguments;
+              })))
               Abnormal.Throw
           | None, (Expression cond)::arguments ->
             let arguments = List.map (Fn.compose snd (expression_or_spread cx)) arguments in
