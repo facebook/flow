@@ -746,10 +746,11 @@ let program (algo : diff_algorithm)
              selfClosing = self_close2;
              attributes = attrs2 } = elem2 in
     if self_close1 != self_close2 then None
-    (* TODO: (aycheng) T35129730 recurse into attributes *)
-    else if attrs1 != attrs2 then None
     else
-      diff_if_changed_ret_opt jsx_name name1 name2
+      let nameChanged = diff_if_changed_ret_opt jsx_name name1 name2 in
+      let attributesChanged =
+        diff_and_recurse_no_trivial jsx_opening_attribute attrs1 attrs2 in
+      join_diff_list [nameChanged; attributesChanged]
 
   and jsx_name
       (name1: (Loc.t, Loc.t) Ast.JSX.name)
@@ -811,6 +812,66 @@ let program (algo : diff_algorithm)
     let _, { name = name1 } = elem1 in
     let _, { name = name2 } = elem2 in
     diff_if_changed_ret_opt jsx_name name1 name2
+
+  and jsx_opening_attribute
+      (jsx_attr1: (Loc.t, Loc.t) Ast.JSX.Opening.attribute)
+      (jsx_attr2: (Loc.t, Loc.t) Ast.JSX.Opening.attribute)
+      : node change list option =
+    let open Ast.JSX.Opening in
+    match jsx_attr1, jsx_attr2 with
+    | Attribute attr1, Attribute attr2 ->
+      diff_if_changed_ret_opt jsx_attribute attr1 attr2
+    | SpreadAttribute attr1, SpreadAttribute attr2 ->
+      diff_if_changed jsx_spread_attribute attr1 attr2 |> Option.return
+    | _ -> None
+
+  and jsx_spread_attribute
+      (attr1: (Loc.t, Loc.t) Ast.JSX.SpreadAttribute.t)
+      (attr2: (Loc.t, Loc.t) Ast.JSX.SpreadAttribute.t)
+      : node change list =
+    let open Flow_ast.JSX.SpreadAttribute in
+    let _, { argument = arg1 } = attr1 in
+    let _, { argument = arg2 } = attr2 in
+    diff_if_changed expression arg1 arg2
+
+  and jsx_attribute
+      (attr1: (Loc.t, Loc.t) Ast.JSX.Attribute.t)
+      (attr2: (Loc.t, Loc.t) Ast.JSX.Attribute.t)
+      : node change list option =
+    let open Ast.JSX.Attribute in
+    let _, { name = name1; value = value1 } = attr1 in
+    let _, { name = name2; value = value2 } = attr2 in
+    let nameChanged =
+      match name1, name2 with
+      | Ast.JSX.Attribute.Identifier id1, Ast.JSX.Attribute.Identifier id2 ->
+        Some (diff_if_changed jsx_identifier id1 id2)
+      | NamespacedName namespaced_name1, NamespacedName namespaced_name2 ->
+        Some (diff_if_changed jsx_namespaced_name namespaced_name1 namespaced_name2)
+      | _ -> None in
+    let valueChanged =
+      if value1 == value2 then Some []
+      else
+        match value1, value2 with
+        | Some (Literal (_, _lit1)), Some (Literal (_, _lit2)) ->
+          (* TODO: recurse into literals *) None
+        | Some (ExpressionContainer (_, expr1)), Some (ExpressionContainer (_, expr2)) ->
+          jsx_expression expr1 expr2
+        | _ -> None in
+    join_diff_list [nameChanged; valueChanged]
+
+  and jsx_expression
+      (jsx_expr1: (Loc.t, Loc.t) Ast.JSX.ExpressionContainer.t)
+      (jsx_expr2: (Loc.t, Loc.t) Ast.JSX.ExpressionContainer.t)
+      : node change list option =
+    let open Ast.JSX in
+    let { ExpressionContainer.expression = expr1 } = jsx_expr1 in
+    let { ExpressionContainer.expression = expr2 } = jsx_expr2 in
+    match expr1, expr2 with
+    | ExpressionContainer.Expression expr1', ExpressionContainer.Expression expr2' ->
+      Some (diff_if_changed expression expr1' expr2')
+    | ExpressionContainer.EmptyExpression _, ExpressionContainer.EmptyExpression _ ->
+      Some []
+    | _ -> None
 
   and assignment_ (assn1: (Loc.t, Loc.t) Ast.Expression.Assignment.t)
                   (assn2: (Loc.t, Loc.t) Ast.Expression.Assignment.t)

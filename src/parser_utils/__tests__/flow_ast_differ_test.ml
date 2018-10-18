@@ -125,6 +125,17 @@ class useless_mapper = object(this)
       | "RENAME" -> (loc, {name = "GOT_RENAMED"})
       | _ -> id
 
+  method! jsx_attribute (attr: (Loc.t, Loc.t) Ast.JSX.Attribute.t) =
+    let open Ast.JSX.Attribute in
+    let loc, { name; value } = attr in
+    let name' =
+      match name with
+      | Identifier id -> Identifier (this#jsx_identifier id)
+      | _ -> name in
+    let value' = Flow_ast_mapper.map_opt super#jsx_attribute_value value in
+    if name == name' && value == value' then attr
+    else (loc, { name = name'; value = value' })
+
 end
 
 class insert_end_mapper = object
@@ -1029,6 +1040,61 @@ let tests = "ast_differ" >::: [
     let source = "<notSelfClosing />" in
     assert_edits_equal ctxt ~edits:[(0, 18), "(<notSelfClosing></notSelfClosing>)"]
     ~source ~expected:"(<notSelfClosing></notSelfClosing>)"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_attribute_name" >:: begin fun ctxt ->
+    let source = "<Component rename={1} />" in
+    assert_edits_equal ctxt ~edits:[(11, 17), "gotRenamed"]
+    ~source ~expected:"<Component gotRenamed={1} />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_attribute_value_expression_literal" >:: begin fun ctxt ->
+    let source = "<Component someProp={4} />" in
+    assert_edits_equal ctxt ~edits:[(21, 22), "(5)"]
+    ~source ~expected:"<Component someProp={(5)} />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_attribute_value_expression_binop" >:: begin fun ctxt ->
+    let source = "<Component someProp={4 + 4} />" in
+    assert_edits_equal ctxt ~edits:[((21, 26), "(5 - 5)")]
+    ~source ~expected:"<Component someProp={(5 - 5)} />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_attribute_name_and_value" >:: begin fun ctxt ->
+    let source = "<Component rename={4} />" in
+    assert_edits_equal ctxt ~edits:[((11, 17), "gotRenamed"); ((19, 20), "(5)")]
+    ~source ~expected:"<Component gotRenamed={(5)} />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_attribute_list_name" >:: begin fun ctxt ->
+    let source = "<Component dontRename={1} rename={2} />" in
+    assert_edits_equal ctxt ~edits:[(26, 32), "gotRenamed"]
+    ~source ~expected:"<Component dontRename={1} gotRenamed={2} />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_attribute_list_expression_literal" >:: begin fun ctxt ->
+    let source = "<Component someProp={4} anotherProp={4} />" in
+    assert_edits_equal ctxt ~edits:[((21, 22), "(5)"); (37,38), "(5)"]
+    ~source ~expected:"<Component someProp={(5)} anotherProp={(5)} />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_spread_attribute" >:: begin fun ctxt ->
+    let source = "<Component {...rename} />" in
+    assert_edits_equal ctxt ~edits:[(15, 21), "gotRenamed"]
+    ~source ~expected:"<Component {...gotRenamed} />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_spread_attribute_list_mixed" >:: begin fun ctxt ->
+    let source = "<Component {...rename} rename={4}/>" in
+    assert_edits_equal ctxt
+    ~edits:[((15, 21), "gotRenamed"); ((23, 29), "gotRenamed"); ((31, 32), "(5)")]
+    ~source ~expected:"<Component {...gotRenamed} gotRenamed={(5)}/>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_attribute_list_name_and_value" >:: begin fun ctxt ->
+    let source = "<Component rename={1} dontRename={4} />" in
+    assert_edits_equal ctxt ~edits:[((11, 17), "gotRenamed"); ((34, 35), "(5)")]
+    ~source ~expected:"<Component gotRenamed={1} dontRename={(5)} />"
     ~mapper:(new useless_mapper)
   end;
   "call_insert" >:: begin fun ctxt ->
