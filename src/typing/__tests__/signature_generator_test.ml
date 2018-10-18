@@ -442,6 +442,13 @@ let tests = "signature_generator" >::: ([
      "declare function foo<T, S, R>(x: T): void;";
      "export {foo};"];
 
+    "function_overloading2" >:: mk_signature_generator_test
+      ["declare export function foo<A>(x?: null, y?: null): void;";
+       "declare export function foo<A,B>(x: null, y?: null): void;"]
+      ["declare function foo<A>(x?: null, y?: null): void;";
+       "declare function foo<A, B>(x: null, y?: null): void;";
+       "export {foo};"];
+
   "opaque_type" >:: mk_signature_generator_test
     ["declare export opaque type T1";
      "declare export opaque type T2: number";

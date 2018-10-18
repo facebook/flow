@@ -1049,8 +1049,11 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           exportKind = Ast.Statement.ExportValue;
         }) :: acc
     ) [] star in
+    let seen = ref SSet.empty in
     let stmts = List.fold_left2 (fun acc (n, (export_loc, export)) export_def ->
-      match export, export_def with
+      if SSet.mem n !seen then acc else (
+        seen := SSet.add n !seen;
+        match export, export_def with
         | ExportDefault { default_loc; local }, DeclareExportDef decl ->
           begin match local with
             | Some id ->
@@ -1122,6 +1125,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
             exportKind = Ast.Statement.ExportValue;
           }) :: acc
         | _ -> assert false
+      )
     ) stmts named named_infos in
     List.fold_left (fun acc (n, (export_loc, export)) ->
       match export with
