@@ -14,6 +14,8 @@ type t
 val of_loc: Loc.t -> t
 val to_loc: t -> Loc.t
 
+val none: t
+
 val source: t -> File_key.t option
 
 val compare: t -> t -> int
