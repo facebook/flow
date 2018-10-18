@@ -268,8 +268,6 @@ printf "generics.js:18:1 = "
 assert_ok "$FLOW" type-at-pos generics.js 18 1 --strip-root --pretty
 printf "generics.js:22:1 = "
 assert_ok "$FLOW" type-at-pos generics.js 22 1 --strip-root --pretty
-printf "generics.js:26:1 = "
-assert_ok "$FLOW" type-at-pos generics.js 26 1 --strip-root --pretty
 printf "generics.js:30:13 = "
 assert_ok "$FLOW" type-at-pos generics.js 30 13 --strip-root --pretty
 
@@ -551,8 +549,6 @@ printf "type-destructor.js:10:6 = "
 assert_ok "$FLOW" type-at-pos type-destructor.js 10 6 --strip-root --pretty
 printf "type-destructor.js:12:6 = "
 assert_ok "$FLOW" type-at-pos type-destructor.js 12 6 --strip-root --pretty
-printf "type-destructor.js:13:6 = "
-assert_ok "$FLOW" type-at-pos type-destructor.js 13 6 --strip-root --pretty
 printf "type-destructor.js:15:6 = "
 assert_ok "$FLOW" type-at-pos type-destructor.js 15 6 --strip-root --pretty
 printf "type-destructor.js:16:6 = "

@@ -1498,29 +1498,14 @@ generics.js:22:1 = {
   "start":1,
   "end":2
 }
-generics.js:26:1 = {
-  "type":"Mono<number>",
-  "reasons":[],
-  "loc":{
-    "source":"generics.js",
-    "type":"SourceFile",
-    "start":{"line":26,"column":1,"offset":383},
-    "end":{"line":26,"column":2,"offset":385}
-  },
-  "path":"generics.js",
-  "line":26,
-  "endline":26,
-  "start":1,
-  "end":2
-}
 generics.js:30:13 = {
   "type":"empty",
   "reasons":[],
   "loc":{
     "source":"generics.js",
     "type":"SourceFile",
-    "start":{"line":30,"column":13,"offset":437},
-    "end":{"line":30,"column":13,"offset":438}
+    "start":{"line":30,"column":13,"offset":368},
+    "end":{"line":30,"column":13,"offset":369}
   },
   "path":"generics.js",
   "line":30,
@@ -3259,29 +3244,14 @@ type-destructor.js:12:6 = {
   "start":6,
   "end":6
 }
-type-destructor.js:13:6 = {
-  "type":"type I<K> = any",
-  "reasons":[],
-  "loc":{
-    "source":"type-destructor.js",
-    "type":"SourceFile",
-    "start":{"line":13,"column":6,"offset":286},
-    "end":{"line":13,"column":6,"offset":287}
-  },
-  "path":"type-destructor.js",
-  "line":13,
-  "endline":13,
-  "start":6,
-  "end":6
-}
 type-destructor.js:15:6 = {
   "type":"type J<K> = $ElementType<H, K>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":15,"column":6,"offset":340},
-    "end":{"line":15,"column":6,"offset":341}
+    "start":{"line":15,"column":6,"offset":288},
+    "end":{"line":15,"column":6,"offset":289}
   },
   "path":"type-destructor.js",
   "line":15,
@@ -3295,8 +3265,8 @@ type-destructor.js:16:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":16,"column":6,"offset":372},
-    "end":{"line":16,"column":6,"offset":373}
+    "start":{"line":16,"column":6,"offset":320},
+    "end":{"line":16,"column":6,"offset":321}
   },
   "path":"type-destructor.js",
   "line":16,
@@ -3310,8 +3280,8 @@ type-destructor.js:17:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":17,"column":6,"offset":389},
-    "end":{"line":17,"column":6,"offset":390}
+    "start":{"line":17,"column":6,"offset":337},
+    "end":{"line":17,"column":6,"offset":338}
   },
   "path":"type-destructor.js",
   "line":17,
@@ -3325,8 +3295,8 @@ type-destructor.js:19:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":19,"column":6,"offset":409},
-    "end":{"line":19,"column":7,"offset":411}
+    "start":{"line":19,"column":6,"offset":357},
+    "end":{"line":19,"column":7,"offset":359}
   },
   "path":"type-destructor.js",
   "line":19,
@@ -3340,8 +3310,8 @@ type-destructor.js:20:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":20,"column":6,"offset":453},
-    "end":{"line":20,"column":7,"offset":455}
+    "start":{"line":20,"column":6,"offset":401},
+    "end":{"line":20,"column":7,"offset":403}
   },
   "path":"type-destructor.js",
   "line":20,
@@ -3355,8 +3325,8 @@ type-destructor.js:21:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":6,"offset":497},
-    "end":{"line":21,"column":7,"offset":499}
+    "start":{"line":21,"column":6,"offset":445},
+    "end":{"line":21,"column":7,"offset":447}
   },
   "path":"type-destructor.js",
   "line":21,
@@ -3370,8 +3340,8 @@ type-destructor.js:23:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":23,"column":6,"offset":551},
-    "end":{"line":23,"column":6,"offset":552}
+    "start":{"line":23,"column":6,"offset":499},
+    "end":{"line":23,"column":6,"offset":500}
   },
   "path":"type-destructor.js",
   "line":23,
@@ -3385,8 +3355,8 @@ type-destructor.js:27:5 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":27,"column":5,"offset":675},
-    "end":{"line":27,"column":5,"offset":676}
+    "start":{"line":27,"column":5,"offset":623},
+    "end":{"line":27,"column":5,"offset":624}
   },
   "path":"type-destructor.js",
   "line":27,
@@ -3400,8 +3370,8 @@ type-destructor.js:28:5 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":28,"column":5,"offset":702},
-    "end":{"line":28,"column":5,"offset":703}
+    "start":{"line":28,"column":5,"offset":650},
+    "end":{"line":28,"column":5,"offset":651}
   },
   "path":"type-destructor.js",
   "line":28,
@@ -3415,8 +3385,8 @@ type-destructor.js:29:5 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":28,"column":5,"offset":702},
-    "end":{"line":28,"column":5,"offset":703}
+    "start":{"line":28,"column":5,"offset":650},
+    "end":{"line":28,"column":5,"offset":651}
   },
   "path":"type-destructor.js",
   "line":28,
@@ -3430,8 +3400,8 @@ type-destructor.js:33:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":33,"column":6,"offset":771},
-    "end":{"line":33,"column":6,"offset":772}
+    "start":{"line":33,"column":6,"offset":719},
+    "end":{"line":33,"column":6,"offset":720}
   },
   "path":"type-destructor.js",
   "line":33,
@@ -3445,8 +3415,8 @@ type-destructor.js:34:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":34,"column":6,"offset":804},
-    "end":{"line":34,"column":7,"offset":806}
+    "start":{"line":34,"column":6,"offset":752},
+    "end":{"line":34,"column":7,"offset":754}
   },
   "path":"type-destructor.js",
   "line":34,
@@ -3460,8 +3430,8 @@ type-destructor.js:36:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":36,"column":6,"offset":836},
-    "end":{"line":36,"column":6,"offset":837}
+    "start":{"line":36,"column":6,"offset":784},
+    "end":{"line":36,"column":6,"offset":785}
   },
   "path":"type-destructor.js",
   "line":36,
@@ -3475,8 +3445,8 @@ type-destructor.js:37:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":37,"column":6,"offset":857},
-    "end":{"line":37,"column":7,"offset":859}
+    "start":{"line":37,"column":6,"offset":805},
+    "end":{"line":37,"column":7,"offset":807}
   },
   "path":"type-destructor.js",
   "line":37,
@@ -3490,8 +3460,8 @@ type-destructor.js:41:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":41,"column":6,"offset":931},
-    "end":{"line":41,"column":6,"offset":932}
+    "start":{"line":41,"column":6,"offset":879},
+    "end":{"line":41,"column":6,"offset":880}
   },
   "path":"type-destructor.js",
   "line":41,
@@ -3505,8 +3475,8 @@ type-destructor.js:42:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":42,"column":6,"offset":976},
-    "end":{"line":42,"column":7,"offset":978}
+    "start":{"line":42,"column":6,"offset":924},
+    "end":{"line":42,"column":7,"offset":926}
   },
   "path":"type-destructor.js",
   "line":42,
@@ -3520,8 +3490,8 @@ type-destructor.js:44:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":44,"column":6,"offset":1024},
-    "end":{"line":44,"column":6,"offset":1025}
+    "start":{"line":44,"column":6,"offset":972},
+    "end":{"line":44,"column":6,"offset":973}
   },
   "path":"type-destructor.js",
   "line":44,
@@ -3535,8 +3505,8 @@ type-destructor.js:45:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":45,"column":6,"offset":1087},
-    "end":{"line":45,"column":7,"offset":1089}
+    "start":{"line":45,"column":6,"offset":1035},
+    "end":{"line":45,"column":7,"offset":1037}
   },
   "path":"type-destructor.js",
   "line":45,
@@ -3550,8 +3520,8 @@ type-destructor.js:47:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":47,"column":6,"offset":1148},
-    "end":{"line":47,"column":6,"offset":1149}
+    "start":{"line":47,"column":6,"offset":1096},
+    "end":{"line":47,"column":6,"offset":1097}
   },
   "path":"type-destructor.js",
   "line":47,
@@ -3565,8 +3535,8 @@ type-destructor.js:48:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":48,"column":6,"offset":1204},
-    "end":{"line":48,"column":7,"offset":1206}
+    "start":{"line":48,"column":6,"offset":1152},
+    "end":{"line":48,"column":7,"offset":1154}
   },
   "path":"type-destructor.js",
   "line":48,
@@ -3580,8 +3550,8 @@ type-destructor.js:62:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":62,"column":6,"offset":1446},
-    "end":{"line":62,"column":11,"offset":1452}
+    "start":{"line":62,"column":6,"offset":1394},
+    "end":{"line":62,"column":11,"offset":1400}
   },
   "path":"type-destructor.js",
   "line":62,
@@ -3595,8 +3565,8 @@ type-destructor.js:63:6 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":63,"column":6,"offset":1500},
-    "end":{"line":63,"column":12,"offset":1507}
+    "start":{"line":63,"column":6,"offset":1448},
+    "end":{"line":63,"column":12,"offset":1455}
   },
   "path":"type-destructor.js",
   "line":63,
@@ -3610,8 +3580,8 @@ type-destructor.js:68:13 = {
   "loc":{
     "source":"type-destructor.js",
     "type":"SourceFile",
-    "start":{"line":68,"column":13,"offset":1728},
-    "end":{"line":68,"column":13,"offset":1729}
+    "start":{"line":68,"column":13,"offset":1676},
+    "end":{"line":68,"column":13,"offset":1677}
   },
   "path":"type-destructor.js",
   "line":68,

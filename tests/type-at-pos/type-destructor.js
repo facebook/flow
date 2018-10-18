@@ -10,7 +10,7 @@ type F = {| vs: $Values<typeof obj> |};
 type G<R> = $Call<<N>() => N, R>;
 
 type H = {| a: string, b: number |};
-type I<K> = $PropertyType<H, K>;       // Flow error
+
 
 type J<K> = $ElementType<H, K>;
 type K = J<'a'>;

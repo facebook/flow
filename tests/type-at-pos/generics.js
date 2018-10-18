@@ -22,9 +22,9 @@ var on: O<number> = { x: 0 };
 on;
 
 type Mono = C<void>;
-var mn: Mono<number> = new C; // error: application of non-poly type
-mn;
 
-/* $FlowFixMe */
+/*
+ * $FlowFixMe
+ */
 type Empty = empty;
 declare var a: Empty.T<number>;
