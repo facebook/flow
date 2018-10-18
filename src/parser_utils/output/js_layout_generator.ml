@@ -54,9 +54,8 @@ let with_semicolon node = fuse [node; Atom ";"]
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
 
 let wrap_in_parens item = group [Atom "("; item; Atom ")"]
-let wrap_in_parens_on_break item = list
-  ~wrap:(IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty))
-  [item]
+let wrap_in_parens_on_break item =
+  wrap_and_indent (IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [item]
 let statement_with_test name test body = fuse [
     Atom name;
     pretty_space;
@@ -504,7 +503,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
           | _, E.Binary _
           | _, E.Sequence _
           | _, E.JSXElement _ ->
-            wrap_in_parens_on_break (expression arg)
+            group [wrap_in_parens_on_break (expression arg)]
           | _ ->
             expression arg
           in
@@ -514,7 +513,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
     | S.Throw { S.Throw.argument } ->
       with_semicolon (fuse_with_space [
         Atom "throw";
-        wrap_in_parens_on_break (expression argument);
+        group [wrap_in_parens_on_break (expression argument)];
       ])
     | S.Try { S.Try.block=b; handler; finalizer } ->
       fuse [
