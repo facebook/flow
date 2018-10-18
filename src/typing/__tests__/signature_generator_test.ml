@@ -94,8 +94,8 @@ let tests = "signature_generator" >::: ([
     ["type U = number";
      "export type T = U"]
     ["type U = number;";
-     "export type {T};"; (* TODO: change of spaces *)
-     "type T = U;"];
+     "type T = U;";
+     "export type {T};"]; (* TODO: change of spaces *)
 
   "export_type_specifier" >:: mk_signature_generator_test
     ["type U = number";
@@ -125,8 +125,8 @@ let tests = "signature_generator" >::: ([
   "export_type_specifier_remote_local3" >:: mk_signature_generator_test
     ["export type K = number";
      "export type { K as K2 } from './foo'"]
-    ["export type {K};";
-     "type K = number;";
+    ["type K = number;";
+     "export type {K};";
      "export type {K as K2} from \"./foo\";"];
 
   "export_type_batch" >:: mk_signature_generator_test
@@ -168,18 +168,18 @@ let tests = "signature_generator" >::: ([
 
   "module_exports_class_expression" >:: mk_signature_generator_test
     ["module.exports = class { m(x: number): number { return x; } }"]
-    ["declare module.exports: typeof $1;"; (* outlining *)
-     "declare class $1 {m(x: number): number}"];
+    ["declare class $1 {m(x: number): number}";
+     "declare module.exports: typeof $1;"]; (* outlining *)
 
   "module_exports_require" >:: mk_signature_generator_test
     ["module.exports = require('./foo')"]
-    ["declare module.exports: typeof $1;"; (* outlining *)
-     "const $1 = require(\"./foo\");"];
+    ["const $1 = require(\"./foo\");";
+     "declare module.exports: typeof $1;"]; (* outlining *)
 
   "module_exports_import" >:: mk_signature_generator_test
     ["module.exports = import('./foo')"]
-    ["declare module.exports: typeof $1;"; (* outlining *)
-     "import * as $1 from \"./foo\";"];
+    ["import * as $1 from \"./foo\";";
+     "declare module.exports: typeof $1;"]; (* outlining *)
 
   "module_exports_bindings" >:: mk_signature_generator_test
     ["function foo() { }";
@@ -212,43 +212,43 @@ let tests = "signature_generator" >::: ([
 
   "export_default_function_declaration" >:: mk_signature_generator_test
     ["export default function foo(): void { }"]
-    ["export {foo as default};";
-     "declare function foo(): void;"];
+    ["declare function foo(): void;";
+     "export {foo as default};"];
 
   "export_default_class_declaration" >:: mk_signature_generator_test
     ["export default class C { x: number = 0; }"]
-    ["export {C as default};";
-     "declare class C {x: number}"];
+    ["declare class C {x: number}";
+     "export {C as default};"];
 
   "declare_export_default_function_declaration" >:: mk_signature_generator_test
     ["declare export default function foo(): void;"]
-    ["export {foo as default};";
-     "declare function foo(): void;"];
+    ["declare function foo(): void;";
+     "export {foo as default};"];
 
   "declare_export_default_class_declaration" >:: mk_signature_generator_test
     ["declare export default class C { x: number; }"]
-    ["export {C as default};";
-     "declare class C {x: number}"];
+    ["declare class C {x: number}";
+     "export {C as default};"];
 
   "export_function_declaration" >:: mk_signature_generator_test
     ["export function foo(): void { }"]
-    ["export {foo};";
-     "declare function foo(): void;"];
+    ["declare function foo(): void;";
+     "export {foo};"];
 
   "export_class_declaration" >:: mk_signature_generator_test
     ["export class C { x: number = 0; }"]
-    ["export {C};";
-     "declare class C {x: number}"];
+    ["declare class C {x: number}";
+     "export {C};"];
 
   "declare_export_function_declaration" >:: mk_signature_generator_test
     ["declare export function foo(): void;"]
-    ["export {foo};";
-     "declare function foo(): void;"];
+    ["declare function foo(): void;";
+     "export {foo};"];
 
   "declare_export_class_declaration" >:: mk_signature_generator_test
     ["declare export class C { x: number; }"]
-    ["export {C};";
-     "declare class C {x: number}"];
+    ["declare class C {x: number}";
+     "export {C};"];
 
   "export_specifier" >:: mk_signature_generator_test
     ["var x: number = 0";
@@ -278,8 +278,8 @@ let tests = "signature_generator" >::: ([
   "export_specifier_remote_local3" >:: mk_signature_generator_test
     ["export function k() { }";
      "export { k as k2 } from './foo'"]
-    ["export {k};";
-     "declare function k(): void;";
+    ["declare function k(): void;";
+     "export {k};";
      "export {k as k2} from \"./foo\";"];
 
   "export_batch" >:: mk_signature_generator_test
@@ -396,13 +396,14 @@ let tests = "signature_generator" >::: ([
      "class B { +x: T = 0; m() { (foo(): W); } }"; (* reachable, but as declaration *)
      "export interface A { +x: U; }";
      "module.exports = function(x: B): A { return x; }"]
-    ["export type {T};";
-     "type T = number;";
+    ["type T = number;";
      "type U = T;";
      ""; (* TODO: pretty printing adds newlines for dead stuff *)
      "declare class B {+x: T, m(): void}";
-     "export type {A};";
      "interface A {+x: U}";
+     "export type {T};";
+     "";
+     "export type {A};";
      "declare module.exports: (x: B) => A;"];
 
   "class_statics" >:: mk_signature_generator_test
@@ -410,16 +411,16 @@ let tests = "signature_generator" >::: ([
      "  static x: number = 0;";
      "  static foo(): void { }";
      "}"]
-    ["export {C};";
-     "declare class C {static x: number, static foo(): void}"];
+    ["declare class C {static x: number, static foo(): void}";
+     "export {C};"];
 
   "class_statics2" >:: mk_signature_generator_test
     ["export class C {";
      "  foo: () => void;";
      "  static foo(): void { }";
      "}"]
-    ["export {C};";
-     "declare class C {foo: () => void, static foo(): void}"];
+    ["declare class C {foo: () => void, static foo(): void}";
+     "export {C};"];
 
   "class_implements" >:: mk_signature_generator_test
     ["interface I {";
@@ -429,8 +430,8 @@ let tests = "signature_generator" >::: ([
      "  foo(x?: string): void { }";
      "}"]
     ["interface I {foo(x?: string): void}";
-     "export {C};";
-     "declare class C {foo(x?: string): void}"];
+     "declare class C {foo(x?: string): void}";
+     "export {C};"];
 
   "function_overloading" >:: mk_signature_generator_test
     ["declare function foo<T>(x: T): void;";
@@ -438,8 +439,8 @@ let tests = "signature_generator" >::: ([
      "export function foo<T,S,R>(x: T): void { }"]
     ["declare function foo<T>(x: T): void;";
      "declare function foo<T, S>(x: T): void;";
-     "export {foo};";
-     "declare function foo<T, S, R>(x: T): void;"];
+     "declare function foo<T, S, R>(x: T): void;";
+     "export {foo};"];
 
   "opaque_type" >:: mk_signature_generator_test
     ["declare export opaque type T1";
@@ -449,16 +450,18 @@ let tests = "signature_generator" >::: ([
      "opaque type T5 = number";
      "export opaque type T6: T5 = number";
     ]
-    ["export type {T1};";
-     "declare opaque type T1;";
-     "export type {T2};";
+    ["declare opaque type T1;";
      "declare opaque type T2: number;";
      "";
-     "export type {T4};";
      "declare opaque type T4: number;";
      "declare opaque type T5;";
-     "export type {T6};";
-     "declare opaque type T6: T5;"];
+     "declare opaque type T6: T5;";
+     "export type {T1};";
+     "export type {T2};";
+     "";
+     "export type {T4};";
+     "";
+     "export type {T6};"];
 
   "import_then_destructure" >:: mk_signature_generator_test
     ["import Foo from 'foo';";

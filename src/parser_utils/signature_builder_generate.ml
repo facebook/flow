@@ -1264,9 +1264,10 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     program_loc,
     List.sort Pervasives.compare (
       List.rev_append env @@
-      List.rev_append values @@
-      List.rev_append types @@
       List.rev outlined_stmts
+    ) @ List.sort Pervasives.compare (
+      List.rev_append values @@
+      List.rev types
     ),
     comments
 
