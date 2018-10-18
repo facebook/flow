@@ -35,9 +35,13 @@ module Patterns = struct
       optional = false;
     }
 
-  let array str =
+  let array elements =
+    let elements = List.map (function
+      | Some i -> Some (Array.Element i)
+      | None -> None
+    ) elements in
     Loc.none, Array { Array.
-      elements = [Some (Array.Element (identifier str))];
+      elements;
       annot = Ast.Type.Missing Loc.none;
     }
 
@@ -191,6 +195,12 @@ module Statements = struct
       ?(kind = Ast.Statement.VariableDeclaration.Var)
       declarations =
     Loc.none, VariableDeclaration { VariableDeclaration.kind; declarations; }
+
+  let let_declaration declarations =
+    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Let declarations
+
+  let const_declaration declarations =
+    variable_declaration ~kind:Ast.Statement.VariableDeclaration.Const declarations
 
   let function_declaration ?(loc=Loc.none) ?(params=[]) ?body id =
     let body = match body with

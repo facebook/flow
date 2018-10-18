@@ -21,6 +21,7 @@ let tests = "js_layout_generator" >::: [
   "variable_declaration_precedence" >:: Variable_declaration_precedence_test.test;
   "objects" >::: Object_test.tests;
   "comment" >::: Comment_test.tests;
+  "pattern" >::: Pattern_test.tests;
   "program" >::: Program_test.tests;
   "jsx" >::: Jsx_test.tests;
 
@@ -1929,58 +1930,6 @@ let tests = "js_layout_generator" >::: [
       assert_statement_string ~ctxt "declare export{a,b}";
       assert_statement_string ~ctxt "declare export{a,b}from\"a\"";
       assert_statement_string ~ctxt "declare export*from\"a\"";
-    end;
-
-  "pattern" >::
-    begin fun ctxt ->
-      assert_statement_string ~ctxt "let a=a;";
-      assert_statement_string ~ctxt "let a?=a;";
-      assert_statement_string ~ctxt "let a:b=a;";
-      assert_statement_string ~ctxt "let a?:b=a;";
-      assert_statement_string ~ctxt "let {}=a;";
-      assert_statement_string ~ctxt "let {}:b=a;";
-      assert_statement_string ~ctxt "let {a}=a;";
-      assert_statement_string ~ctxt "let {a:b}=a;";
-      assert_statement_string ~ctxt "let {a:b}=a;";
-      assert_statement_string ~ctxt "let {a,b}=a;";
-      assert_statement_string ~ctxt "let {a,b:{c}}=a;";
-      assert_statement_string ~ctxt "let {a=b}=a;";
-      assert_statement_string ~ctxt "let {a:b=c}=a;";
-      assert_statement_string ~ctxt "let {a=++b}=a;";
-      assert_statement_string ~ctxt "let {...a}=a;";
-      assert_statement_string ~ctxt "let {a,...b}=a;";
-      assert_statement_string ~ctxt ~pretty:true "let {a} = a;";
-      assert_statement_string ~ctxt ~pretty:true "let {a: b} = a;";
-      assert_statement_string ~ctxt ~pretty:true "let {a: b, c} = a;";
-      assert_statement_string ~ctxt ~pretty:true "let {a: b, c = d} = a;";
-      assert_statement_string ~ctxt ~pretty:true "let {...a} = a;";
-      assert_statement_string ~ctxt ~pretty:true (
-        "let {\n  a: b,\n  c = " ^ String.make 80 'd' ^ "\n} = a;"
-      );
-      assert_statement_string ~ctxt ~pretty:true (
-        "let {\n  a: b,\n  ...c" ^ String.make 80 'c' ^ "\n} = a;"
-      );
-      assert_statement_string ~ctxt "let []=a;";
-      assert_statement_string ~ctxt "let []:a=a;";
-      assert_statement_string ~ctxt "let [a]=a;";
-      assert_statement_string ~ctxt "let [a?]=a;";
-      assert_statement_string ~ctxt "let [a:b]=a;";
-      assert_statement_string ~ctxt "let [a?:b]=a;";
-      assert_statement_string ~ctxt "let [a,b]=a;";
-      assert_statement_string ~ctxt "let [,,a]=a;";
-      assert_statement_string ~ctxt "let [[]]=a;";
-      assert_statement_string ~ctxt "let [,,[a]]=a;";
-      assert_statement_string ~ctxt "let [...a]=a;";
-      assert_statement_string ~ctxt "let [a,...b]=a;";
-      assert_statement_string ~ctxt ~pretty:true "let [a, b] = a;";
-      assert_statement_string ~ctxt ~pretty:true "let [a, ...b] = a;";
-      assert_statement_string ~ctxt ~pretty:true (
-        "let [\n  a,\n  ...b" ^ String.make 80 'c' ^ "\n] = a;"
-      );
-      assert_statement_string ~ctxt ~pretty:true "let [a, , b] = a;";
-      assert_statement_string ~ctxt ~pretty:true (
-        "let [\n  a,\n  ,\n  " ^ String.make 80 'b' ^ "\n] = a;"
-      );
     end;
 
   "regexp" >::
