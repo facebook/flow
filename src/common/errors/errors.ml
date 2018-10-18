@@ -26,10 +26,9 @@ let string_of_kind = function
 | LintError lint_kind -> "LintError" ^ "-" ^ Lints.string_of_kind lint_kind
 
 (* internal rep for core info *)
-type 'a message' =
+type 'a message =
   | BlameM of 'a * string
   | CommentM of string
-type message = Loc.t message'
 
 (* simple structure for callers to specify error message content,
    converted to message internally. *)
@@ -43,7 +42,7 @@ type 'a info_tree' =
 type info_tree = Loc.t info_tree'
 
 type 'a classic_error = {
-  messages: 'a message' list;
+  messages: 'a message list;
   extra: 'a info_tree' list
 }
 
@@ -589,7 +588,7 @@ module Friendly = struct
     }
 end
 
-type 'a error' = error_kind * 'a message' list * 'a Friendly.t'
+type 'a error' = error_kind * 'a message list * 'a Friendly.t'
 type error = Loc.t error'
 
 let is_duplicate_provider_error (kind, _, _) = kind = DuplicateProviderError
@@ -944,7 +943,7 @@ module ErrorSet = Set.Make(Error)
 type 'a error_group =
   (* Friendly errors without a root are never grouped. When traces are enabled
    * all friendly errors will never group. *)
-  | Singleton of error_kind * 'a message' list * 'a Friendly.t'
+  | Singleton of error_kind * 'a message list * 'a Friendly.t'
   (* Friendly errors that share a root are grouped together. The errors list
    * is reversed. *)
   | Group of {
@@ -3044,83 +3043,70 @@ module Lsp_output = struct
     }
 end
 
-class mapper = object(this)
-  method error (error: error) =
+class virtual ['a, 'b] mapper' = object(this)
+  method virtual loc: 'a -> 'b
+
+  method error (error: 'a error') : 'b error' =
     let (error_kind, messages, friendly_error) = error in
     let error_kind' = this#error_kind error_kind in
-    let messages' = ListUtils.ident_map this#message messages in
+    let messages' = List.map this#message messages in
     let friendly_error' = this#friendly_error friendly_error in
-    if error_kind == error_kind' && messages == messages' && friendly_error == friendly_error'
-    then error
-    else (error_kind', messages', friendly_error')
+    (error_kind', messages', friendly_error')
 
   method error_kind (error_kind: error_kind) = error_kind
 
-  method private message (message: message) =
+  method private message (message: 'a message) : 'b message =
     match message with
     | BlameM (loc, str) ->
       let loc' = this#loc loc in
-      if loc == loc'
-      then message
-      else BlameM (loc', str)
-    | CommentM _ -> message
+      BlameM (loc', str)
+    | CommentM str -> CommentM str
 
-  method private friendly_error (friendly_error: Friendly.t) =
+  method friendly_error (friendly_error: 'a Friendly.t') : 'b Friendly.t' =
     let { Friendly.loc; root; message; } = friendly_error in
     let loc' = this#loc loc in
-    let root' = OptionUtils.ident_map this#error_root root in
+    let root' = Option.map ~f:this#error_root root in
     let message' = this#error_message message in
-    if loc == loc' && root == root' && message == message'
-    then friendly_error
-    else { Friendly.loc = loc'; root = root'; message = message'; }
+    { Friendly.loc = loc'; root = root'; message = message'; }
 
-  method private error_root (error_root: Loc.t Friendly.error_root) =
+  method private error_root (error_root: 'a Friendly.error_root) : 'b Friendly.error_root =
     let { Friendly.root_loc; root_message; } = error_root in
     let root_loc' = this#loc root_loc in
     let root_message' = this#friendly_message root_message in
-    if root_loc == root_loc' && root_message == root_message'
-    then error_root
-    else { Friendly.root_loc = root_loc'; root_message = root_message'; }
+    { Friendly.root_loc = root_loc'; root_message = root_message'; }
 
-  method private error_message (error_message: Loc.t Friendly.error_message) =
+  method private error_message (error_message: 'a Friendly.error_message) : 'b Friendly.error_message =
     match error_message with
     | Friendly.Normal { message; frames; } ->
       let message' = this#friendly_message message in
-      let frames' = OptionUtils.ident_map (ListUtils.ident_map this#friendly_message) frames in
-      if message == message' && frames == frames'
-      then error_message
-      else Friendly.Normal { message = message'; frames = frames' }
+      let frames' = Option.map ~f:(List.map this#friendly_message) frames in
+      Friendly.Normal { message = message'; frames = frames' }
     | Friendly.Speculation { frames; branches; } ->
-      let frames' = ListUtils.ident_map this#friendly_message frames in
-      let branches' = ListUtils.ident_map (fun branch ->
+      let frames' = List.map this#friendly_message frames in
+      let branches' = List.map (fun branch ->
         let (score, friendly_error) = branch in
         let friendly_error' = this#friendly_error friendly_error in
-        if friendly_error == friendly_error'
-        then branch
-        else (score, friendly_error')
+        (score, friendly_error')
       ) branches in
-      if frames == frames' && branches == branches'
-      then error_message
-      else Friendly.Speculation { frames = frames'; branches = branches'; }
+      Friendly.Speculation { frames = frames'; branches = branches'; }
 
-  method friendly_message (friendly_message: Loc.t Friendly.message) =
-    ListUtils.ident_map this#message_feature friendly_message
+  method friendly_message (friendly_message: 'a Friendly.message) : 'b Friendly.message =
+    List.map this#message_feature friendly_message
 
-  method message_feature (message_feature: Loc.t Friendly.message_feature) =
+  method message_feature (message_feature: 'a Friendly.message_feature) : 'b Friendly.message_feature =
     match message_feature with
     | Friendly.Inline inlines ->
-      let inlines' = ListUtils.ident_map this#message_inline inlines in
-      if inlines == inlines'
-      then message_feature
-      else Friendly.Inline inlines'
+      let inlines' = List.map this#message_inline inlines in
+      Friendly.Inline inlines'
     | Friendly.Reference (inlines, loc) ->
-      let inlines' = ListUtils.ident_map this#message_inline inlines in
+      let inlines' = List.map this#message_inline inlines in
       let loc' = this#loc loc in
-      if inlines == inlines' && loc == loc'
-      then message_feature
-      else Friendly.Reference (inlines', loc')
+      Friendly.Reference (inlines', loc')
 
   method message_inline (message_inline: Friendly.message_inline) = message_inline
+end
 
-  method loc (loc: Loc.t) = loc
+class mapper = object
+  inherit [Loc.t, Loc.t] mapper'
+  method loc x = x
 end

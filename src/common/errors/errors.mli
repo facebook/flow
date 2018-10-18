@@ -31,6 +31,7 @@ type 'a info_tree' =
 type info_tree = Loc.t info_tree'
 
 module Friendly : sig
+  type t
   type 'a message = 'a message_feature list
 
   and 'a message_feature =
@@ -185,6 +186,7 @@ end
 
 class mapper : object
   method error: error -> error
+  method friendly_error: Friendly.t -> Friendly.t
   method error_kind: error_kind -> error_kind
   method friendly_message: Loc.t Friendly.message -> Loc.t Friendly.message
   method loc: Loc.t -> Loc.t
