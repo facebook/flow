@@ -847,6 +847,25 @@ let unify_declared_type ?(lookup_mode=ForValue) cx name t =
   | _ -> ()
   )
 
+(* Unify declared function type with another type. This is similarly motivated as above, except that
+   we also need to take overloading into account. See `bind_declare_fun` for similar logic. *)
+let unify_declared_fun_type =
+  let find_type aloc = function
+    | DefT (_, IntersectionT rep) ->
+      let match_type t = aloc_of_reason (reason_of_t t) = aloc in
+      begin match List.find_opt match_type (InterRep.members rep) with
+        | Some t -> t
+        | None -> assert_false "Internal Error: Improper overloaded declare function entries."
+      end
+    | v -> v
+  in
+  fun cx name aloc t ->
+    Entry.(match get_current_env_entry name with
+      | Some (Value v) ->
+        Flow.unify cx t (find_type aloc (general_of_value v))
+      | _ -> ()
+    )
+
 let is_global_var _cx name =
   let rec loop = function
     | [] -> true

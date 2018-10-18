@@ -270,17 +270,13 @@ and statement_decl cx = Ast.Statement.(
 
   | (loc, DeclareFunction ({ DeclareFunction.
       id = (id_loc, name);
-      annot;
       _; } as declare_function)) ->
       (match declare_function_to_function_declaration cx declare_function with
       | None ->
-          let t, annot' =
-            Anno.mk_type_available_annotation cx SMap.empty annot in
+          let r = mk_reason (RCustom (spf "declare %s" name)) (loc |> ALoc.of_loc) in
+          let t = Tvar.mk cx r in
           Type_table.set (Context.type_table cx) id_loc t;
-          let id_info = name, t, Type_table.Other in
-          Type_table.set_info id_loc id_info (Context.type_table cx);
-          Env.bind_declare_fun cx name t id_loc;
-          Scope.add_declare_func_annot name annot' (Env.peek_scope ()) ;
+          Env.bind_declare_fun cx name t id_loc
       | Some (func_decl, _) ->
           statement_decl cx (loc, func_decl)
       )
@@ -1708,14 +1704,15 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
       | Some (func_decl, reconstruct_ast) ->
           loc, DeclareFunction (reconstruct_ast (statement cx (loc, func_decl)))
       | None ->
-        let { DeclareFunction.id = _, name as id; _ } = declare_function in
-        let annot = Option.value
-          (Scope.get_declare_func_annot name (Env.peek_scope ()))
-          ~default:(Loc.none, (Typed_ast.error_annot, Typed_ast.Type.error))
-        in
+          let { DeclareFunction.id = id_loc, name as id; annot; _ } = declare_function in
+          let t, annot_ast =
+            Anno.mk_type_available_annotation cx SMap.empty annot in
+          let id_info = name, t, Type_table.Other in
+          Type_table.set_info id_loc id_info (Context.type_table cx);
+          Env.unify_declared_fun_type cx name (loc |> ALoc.of_loc) t;
           loc, DeclareFunction { DeclareFunction.
             id;
-            annot;
+            annot = annot_ast;
             predicate = None;
           }
       )

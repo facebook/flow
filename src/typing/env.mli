@@ -148,6 +148,13 @@ val unify_declared_type:
   Type.t ->
   unit
 
+val unify_declared_fun_type:
+  Context.t ->
+  string ->
+  ALoc.t ->
+  Type.t ->
+  unit
+
 val var_ref:
   ?lookup_mode:LookupMode.t ->
   Context.t ->

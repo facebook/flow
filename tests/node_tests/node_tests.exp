@@ -151,22 +151,22 @@ fix add a type annotation to `_` [3] or to `data` [4].
         -^
 
 References:
-   <BUILTINS>/node.js:974:28
-                                   v
+   <BUILTINS>/node.js:974:3
+          v-------------------------
    974|   declare function readFile(
    975|     path: string | Buffer | URL | number,
    976|     options: { encoding: string; flag?: string },
    977|     callback: (err: ?ErrnoError, data: string) => void
    978|   ): void;
-          ------^ [1]
-   <BUILTINS>/node.js:979:28
-                                   v
+          -------^ [1]
+   <BUILTINS>/node.js:979:3
+          v-------------------------
    979|   declare function readFile(
    980|     path: string | Buffer | URL | number,
    981|     options: { flag?: string },
    982|     callback: (err: ?ErrnoError, data: Buffer) => void
    983|   ): void;
-          ------^ [2]
+          -------^ [2]
    fs/fs.js:13:48
     13| fs.readFile("file.exp", { encoding: "blah" }, (_, data) => {
                                                        ^ [3]
