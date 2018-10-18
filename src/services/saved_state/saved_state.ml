@@ -91,10 +91,14 @@ end = struct
   class error_normalizer (root) = object
     inherit Errors.mapper
 
-    method! loc (loc: Loc.t) =
+    method! loc (loc: ALoc.t) =
+      (* TODO(nmote) path normalization (and denormalization) should be done on ALocs directly. This
+      * will be feasible since we will store paths concretely even for truly abstract locations. *)
+      let loc = ALoc.to_loc loc in
       { loc with
         Loc.source = Option.map ~f:(normalize_file_key ~root) loc.Loc.source;
       }
+      |> ALoc.of_loc
   end
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
@@ -310,10 +314,12 @@ end = struct
   class error_denormalizer (root) = object
     inherit Errors.mapper
 
-    method! loc (loc: Loc.t) =
+    method! loc (loc: ALoc.t) =
+      let loc = ALoc.to_loc loc in
       { loc with
         Loc.source = Option.map ~f:(denormalize_file_key ~root) loc.Loc.source;
       }
+      |> ALoc.of_loc
   end
 
   let verify_version =

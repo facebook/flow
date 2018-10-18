@@ -22,13 +22,13 @@ val string_of_kind: error_kind -> string
       location2, ["string"] ]
   *)
 type 'a info' = 'a * string list
-type info = Loc.t info'
+type info = ALoc.t info'
 
 (** for extra info, enough structure to do simple tree-shaped output *)
 type 'a info_tree' =
   | InfoLeaf of 'a info' list
   | InfoNode of 'a info' list * 'a info_tree' list
-type info_tree = Loc.t info_tree'
+type info_tree = ALoc.t info_tree'
 
 module Friendly : sig
   type t
@@ -45,7 +45,7 @@ module Friendly : sig
   val message_of_string: string -> 'a message
   val text: string -> 'a message_feature
   val code: string -> 'a message_feature
-  val ref: ?loc:bool -> Reason.reason -> Loc.t message_feature
+  val ref: ?loc:bool -> Reason.reason -> ALoc.t message_feature
   val intersperse: 'a -> 'a list -> 'a list
   val conjunction_concat: ?conjunction:string -> 'a message list -> 'a message
   val capitalize: 'a message -> 'a message
@@ -58,25 +58,25 @@ type error
 val mk_error:
   ?kind:error_kind ->
   ?trace_infos:info list ->
-  ?root:(Loc.t * Loc.t Friendly.message) ->
-  ?frames:(Loc.t Friendly.message list) ->
+  ?root:(ALoc.t * ALoc.t Friendly.message) ->
+  ?frames:(ALoc.t Friendly.message list) ->
   ALoc.t ->
-  Loc.t Friendly.message ->
+  ALoc.t Friendly.message ->
   error
 
 val mk_speculation_error:
   ?kind:error_kind ->
   ?trace_infos:info list ->
-  loc:Loc.t ->
-  root:(Loc.t * Loc.t Friendly.message) option ->
-  frames:(Loc.t Friendly.message list) ->
+  loc:ALoc.t ->
+  root:(ALoc.t * ALoc.t Friendly.message) option ->
+  frames:(ALoc.t Friendly.message list) ->
   speculation_errors:((int * error) list) ->
   error
 
 val is_duplicate_provider_error: error -> bool
 
-val loc_of_error: error -> Loc.t
-val locs_of_error: error -> Loc.t list
+val loc_of_error: error -> ALoc.t
+val locs_of_error: error -> ALoc.t list
 val kind_of_error: error -> error_kind
 
 (* we store errors in sets, currently, because distinct
@@ -188,8 +188,8 @@ class mapper : object
   method error: error -> error
   method friendly_error: Friendly.t -> Friendly.t
   method error_kind: error_kind -> error_kind
-  method friendly_message: Loc.t Friendly.message -> Loc.t Friendly.message
-  method loc: Loc.t -> Loc.t
-  method message_feature: Loc.t Friendly.message_feature -> Loc.t Friendly.message_feature
+  method friendly_message: ALoc.t Friendly.message -> ALoc.t Friendly.message
+  method loc: ALoc.t -> ALoc.t
+  method message_feature: ALoc.t Friendly.message_feature -> ALoc.t Friendly.message_feature
   method message_inline: Friendly.message_inline -> Friendly.message_inline
 end

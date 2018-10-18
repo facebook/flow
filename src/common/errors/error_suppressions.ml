@@ -149,6 +149,7 @@ let remove_lint_suppression_from_map loc (suppressions_map: t) =
 
 let check_loc lint_kind suppressions severity_cover
   ((result, used, (unused: t), is_primary_loc) as acc) loc =
+  let loc = ALoc.to_loc loc in
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   match suppression_at_loc loc suppressions with
@@ -191,13 +192,14 @@ let check err (suppressions: t) severity_cover (unused: t) =
     (* It is possible for errors to contain locations without a source, but suppressions always
      * exist in an actual file so there is no point checking if suppressions exist at locations
      * without a source. *)
-    |> List.filter (fun {Loc.source; _} -> Option.is_some source)
+    |> List.filter (fun loc -> Option.is_some (ALoc.source loc))
   in
   (* Ignore lint errors which were never enabled in the first place. *)
   let lint_kind, ignore =
     match Errors.kind_of_error err with
       | Errors.LintError kind ->
         let severity, is_explicit = List.fold_left (fun (s, e) loc ->
+          let loc = ALoc.to_loc loc in
           let lint_settings = lint_settings_at_loc loc severity_cover in
           let s' = LintSettings.get_value kind lint_settings in
           let e' = LintSettings.is_explicit kind lint_settings in
@@ -214,7 +216,7 @@ let check err (suppressions: t) severity_cover (unused: t) =
   (* Ignore lints in node_modules folders (which we assume to be dependencies). *)
   let is_in_dependency =
     let primary_loc = Errors.loc_of_error err in
-    Option.value_map (Loc.source primary_loc) ~default:false ~f:(fun filename ->
+    Option.value_map (ALoc.source primary_loc) ~default:false ~f:(fun filename ->
       String_utils.is_substring "/node_modules/" (File_key.to_string filename))
   in
   let result = match Errors.kind_of_error err with

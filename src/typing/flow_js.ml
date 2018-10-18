@@ -1127,7 +1127,7 @@ let add_output cx ?trace msg =
     let error = FlowError.error_of_msg ~trace_reasons ~source_file:(Context.file cx) msg in
 
     (* catch no-loc errors early, before they get into error map *)
-    if Loc.source (Errors.loc_of_error error) = None then
+    if ALoc.source (Errors.loc_of_error error) = None then
       assert_false (
         spf "add_output: no source for error: %s"
         (Debug_js.dump_flow_error cx msg));

@@ -33,13 +33,13 @@ type 'a message =
 (* simple structure for callers to specify error message content,
    converted to message internally. *)
 type 'a info' = 'a * string list
-type info = Loc.t info'
+type info = ALoc.t info'
 
 (** for extra info, enough structure to do simple tree-shaped output *)
 type 'a info_tree' =
   | InfoLeaf of 'a info' list
   | InfoNode of 'a info' list * 'a info_tree' list
-type info_tree = Loc.t info_tree'
+type info_tree = ALoc.t info_tree'
 
 type 'a classic_error = {
   messages: 'a message list;
@@ -111,7 +111,7 @@ module Friendly = struct
     group_message_list: 'a message_group list;
   }
 
-  type t = Loc.t t'
+  type t = ALoc.t t'
 
   (* This function was introduced into the OCaml standard library in 4.04.0. Not
    * all of our tooling supports 4.04.0 yet, so we have a small
@@ -172,8 +172,7 @@ module Friendly = struct
       | Some loc -> loc
       | None -> def_aloc_of_reason r
       in
-      let loc = ALoc.to_loc loc in
-      if loc = Loc.none then
+      if (ALoc.to_loc loc) = Loc.none then
         Inline desc
       else
         Reference (desc, loc)
@@ -589,7 +588,7 @@ module Friendly = struct
 end
 
 type 'a error' = error_kind * 'a message list * 'a Friendly.t'
-type error = Loc.t error'
+type error = ALoc.t error'
 
 class virtual ['a, 'b] mapper' = object(this)
   method virtual loc: 'a -> 'b
@@ -652,6 +651,12 @@ class virtual ['a, 'b] mapper' = object(this)
       Friendly.Reference (inlines', loc')
 
   method message_inline (message_inline: Friendly.message_inline) = message_inline
+
+end
+
+let loc_concretizer = object
+  inherit [ALoc.t, Loc.t] mapper'
+  method loc = ALoc.to_loc
 end
 
 let is_duplicate_provider_error (kind, _, _) = kind = DuplicateProviderError
@@ -667,11 +672,12 @@ let infos_to_messages infos =
 
 let mk_error
   ?(kind=InferError)
-  ?trace_infos
-  ?root
-  ?frames
-  loc
-  message
+  ?(trace_infos: info list option)
+  ?(root: (ALoc.t * ALoc.t Friendly.message) option)
+  ?(frames: ALoc.t Friendly.message list option)
+  (loc: ALoc.t)
+  (message: ALoc.t Friendly.message)
+  : error
 =
   let open Friendly in
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
@@ -680,7 +686,7 @@ let mk_error
   | _ -> message
   in
   (kind, trace, {
-    loc = ALoc.to_loc loc;
+    loc;
     root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });
     message = Normal { message; frames };
   })
@@ -948,7 +954,7 @@ let rec compare =
     | Inline _, Reference _ -> 1
     | Reference _, Inline _ -> -1
     | Reference (m1, loc1), Reference (m2, loc2) ->
-      let k = Loc.compare loc1 loc2 in
+      let k = ALoc.compare loc1 loc2 in
       if k = 0 then compare_lists compare_message_inline m1 m2 else k
   in
   let compare_friendly_message m1 m2 =
@@ -974,7 +980,7 @@ let rec compare =
     let open Friendly in
     let loc1, loc2 = loc_of_error_for_compare err1, loc_of_error_for_compare err2 in
     let (k1, _, err1), (k2, _, err2) = err1, err2 in
-    let k = Loc.compare loc1 loc2 in
+    let k = ALoc.compare loc1 loc2 in
     if k = 0 then
       let k = kind_cmp k1 k2 in
       if k = 0 then match err1, err2 with
@@ -984,7 +990,7 @@ let rec compare =
         { root=Some { root_message=rm2; _ }; loc=loc2; message=m2 } ->
         let k = compare_lists compare_message_feature rm1 rm2 in
         if k = 0 then
-          let k = Loc.compare loc1 loc2 in
+          let k = ALoc.compare loc1 loc2 in
           if k = 0 then compare_friendly_message m1 m2
           else k
         else k
@@ -1023,7 +1029,8 @@ exception Interrupt_ErrorSet_fold of Loc.t error_group list
 let collect_errors_into_groups max set =
   let open Friendly in
   try
-    let (_, acc) = ErrorSet.fold (fun (kind, trace, error) (n, acc) ->
+    let (_, acc) = ErrorSet.fold (fun full_error (n, acc) ->
+      let (kind, trace, error) = loc_concretizer#error full_error in
       let omit = Option.value_map max ~default:false ~f:(fun max -> max <= n) in
       let acc = match error with
       | error when trace <> [] ->
@@ -2956,12 +2963,16 @@ module Json_output = struct
     let obj_props_rev =
       []
       |> ErrorSet.fold (fun error acc ->
-        f ~severity:Err (error, Utils_js.LocSet.empty) :: acc) errors
+        f ~severity:Err (loc_concretizer#error error, Utils_js.LocSet.empty) :: acc) errors
       |> ErrorSet.fold (fun warn acc ->
-        f ~severity:Warn (warn, Utils_js.LocSet.empty) :: acc) warnings
+        f ~severity:Warn (loc_concretizer#error warn, Utils_js.LocSet.empty) :: acc) warnings
     in
     (* We want these to show up as "suppressed error"s, not "suppressed off"s *)
     let obj_props_rev = List.fold_left (fun acc suppressed_error ->
+      let suppressed_error =
+        let (err, suppressions) = suppressed_error in
+        (loc_concretizer#error err, suppressions)
+      in
       f ~severity:Err suppressed_error :: acc
     ) obj_props_rev suppressed_errors
     in
@@ -3045,7 +3056,8 @@ module Vim_emacs_output = struct
       );
       Buffer.contents buf
     in
-    let to_string ~strip_root prefix ((_, trace, error) : error) : string =
+    let to_string ~strip_root prefix (full_error : error) : string =
+      let (_, trace, error) = loc_concretizer#error full_error in
       classic_to_string ~strip_root prefix trace (Friendly.to_classic error) in
     fun ~strip_root oc ~errors ~warnings () ->
       let sl = []
@@ -3079,6 +3091,7 @@ module Lsp_output = struct
     (* will produce LSP message "Error about `code` in type `foo` [1]" *)
     (* and the LSP related location will have message "[1]: `foo`"      *)
     let (kind, _, friendly) = error in
+    let friendly = loc_concretizer#friendly_error friendly in
     let (_, loc, group) =
       Friendly.message_group_of_error ~show_all_branches:false ~show_root:true friendly in
     let (references, group) = Friendly.extract_references group in
@@ -3107,6 +3120,6 @@ module Lsp_output = struct
 end
 
 class mapper = object
-  inherit [Loc.t, Loc.t] mapper'
+  inherit [ALoc.t, ALoc.t] mapper'
   method loc x = x
 end

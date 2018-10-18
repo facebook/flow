@@ -580,7 +580,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ) then (
       String.sub desc 1 ((String.length desc) - 2)
     ) else desc in
-    aloc_of_reason reason |> ALoc.to_loc, desc :: extras
+    aloc_of_reason reason, desc :: extras
   in
 
   let info_of_reason r = mk_info r [] in
@@ -789,7 +789,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
           [text "Cannot instantiate "; desc type'])
 
       | Op (SetProperty {prop; value; lhs; _}) ->
-        let loc_reason = if Loc.contains (aloc_of_reason lhs |> ALoc.to_loc) loc then lhs else value in
+        let loc_reason = if Loc.contains (aloc_of_reason lhs |> ALoc.to_loc) (ALoc.to_loc loc) then lhs else value in
         `Root (loc_reason, None,
           [text "Cannot assign "; desc value; text " to "; desc prop])
 
@@ -805,7 +805,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
         `Next use_op
 
       | Frame (FunReturn {lower; _}, use_op) ->
-        `Frame (repos_reason loc lower, use_op,
+        `Frame (repos_reason (ALoc.to_loc loc) lower, use_op,
           [text "the return value"])
 
       | Frame (IndexerKeyCompatibility {lower; _}, use_op) ->
@@ -829,7 +829,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
         | Op (ClassImplementsCheck _) ->  repos_reason loc reason
         | _ -> reason
         in
-        let lower = repos_small_reason loc lower use_op in
+        let lower = repos_small_reason (ALoc.to_loc loc) lower use_op in
         let rec loop lower = function
         (* Don't match $key/$value/$call properties since they have special
          * meaning. As defined above. *)
@@ -884,15 +884,15 @@ let rec error_of_msg ~trace_reasons ~source_file =
       | `NextWithLoc (frame_reason, use_op) ->
         (* If our current loc is inside our frame_loc then use our current loc
          * since it is the smallest possible loc in our frame_loc. *)
-        let frame_loc = aloc_of_reason frame_reason |> ALoc.to_loc in
-        let loc = if Loc.contains frame_loc loc then loc else frame_loc in
+        let frame_loc = aloc_of_reason frame_reason in
+        let loc = if Loc.contains (ALoc.to_loc frame_loc) (ALoc.to_loc loc) then loc else frame_loc in
         loop loc frames use_op
       (* Add our frame message and reposition the location if appropriate. *)
       | `Frame (frame_reason, use_op, frame) ->
         (* If our current loc is inside our frame_loc then use our current loc
          * since it is the smallest possible loc in our frame_loc. *)
-        let frame_loc = aloc_of_reason frame_reason |> ALoc.to_loc in
-        let frame_contains_loc = Loc.contains frame_loc loc in
+        let frame_loc = aloc_of_reason frame_reason in
+        let frame_contains_loc = Loc.contains (ALoc.to_loc frame_loc) (ALoc.to_loc loc) in
         let loc = if frame_contains_loc then loc else frame_loc in
         (* Add our frame and recurse with the next use_op. *)
         let (all_frames, local_frames) = frames in
@@ -913,9 +913,9 @@ let rec error_of_msg ~trace_reasons ~source_file =
       | `Root (root_reason, root_specific_reason, root_message) ->
         (* If our current loc is inside our root_loc then use our current loc
          * since it is the smallest possible loc in our root_loc. *)
-        let root_loc = aloc_of_reason root_reason |> ALoc.to_loc in
-        let root_specific_loc = Option.map root_specific_reason (aloc_of_reason %> ALoc.to_loc) in
-        let loc = if Loc.contains root_loc loc && Loc.compare root_loc loc <> 0
+        let root_loc = aloc_of_reason root_reason in
+        let root_specific_loc = Option.map root_specific_reason aloc_of_reason in
+        let loc = if Loc.contains (ALoc.to_loc root_loc) (ALoc.to_loc loc) && ALoc.compare root_loc loc <> 0
           then loc
           else Option.value root_specific_loc ~default:root_loc
         in
@@ -935,18 +935,18 @@ let rec error_of_msg ~trace_reasons ~source_file =
    * not have any punctuation. Punctuation will be provided after the frames of
    * an error message. *)
   let mk_use_op_error loc use_op message =
-    let (root, loc, frames) = unwrap_use_ops (loc |> ALoc.to_loc) use_op in
+    let (root, loc, frames) = unwrap_use_ops loc use_op in
     mk_error
       ~trace_infos
       ?root
       ~frames
-      (ALoc.of_loc loc)
+      loc
       message
   in
 
   (* Make a friendly error based on failed speculation. *)
   let mk_use_op_speculation_error loc use_op branches =
-    let (root, loc, frames) = unwrap_use_ops (loc |> ALoc.to_loc) use_op in
+    let (root, loc, frames) = unwrap_use_ops loc use_op in
     let speculation_errors = List.map (fun (_, msg) ->
       let score = score_of_msg msg in
       let error = error_of_msg ~trace_reasons:[] ~source_file msg in
