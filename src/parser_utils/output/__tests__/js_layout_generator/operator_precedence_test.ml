@@ -65,10 +65,8 @@ let tests = [
       layout;
     assert_output ~ctxt ~pretty:true
       ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"^
-       "  (\n"^
-       "    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"^
-       "      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n"^
-       "  )")
+       "  (xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"^
+       "    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)")
       layout;
   end;
 
@@ -114,10 +112,8 @@ let tests = [
       layout;
     assert_output ~ctxt ~pretty:true
       ("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx &&\n"^
-       "  (\n"^
-       "    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ||\n"^
-       "      xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n"^
-       "  )")
+       "  (xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ||\n"^
+       "    xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx)")
       layout;
   end;
 

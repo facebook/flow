@@ -52,20 +52,15 @@ let context_after_token ctxt = { ctxt with left = Normal_left }
 let not_supported loc message = failwith (message ^ " at " ^ Loc.to_string loc)
 let with_semicolon node = fuse [node; Atom ";"]
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
-let wrap_in_parens item =
-  group [
-    Atom "(";
-    Indent (fuse [softline; item]);
-    softline;
-    Atom ")";
-  ]
+
+let wrap_in_parens item = group [Atom "("; item; Atom ")"]
 let wrap_in_parens_on_break item = list
   ~wrap:(IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty))
   [item]
 let statement_with_test name test body = fuse [
     Atom name;
     pretty_space;
-    wrap_in_parens test;
+    group [wrap_and_indent (Atom "(", Atom ")") [test]];
     pretty_space;
     body;
   ]
@@ -564,7 +559,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
         pretty_space;
         Atom "while";
         pretty_space;
-        wrap_in_parens (expression test)
+        group [wrap_and_indent (Atom "(", Atom ")") [expression test]];
       ])
     | S.For { S.For.init; test; update; body } ->
       fuse [

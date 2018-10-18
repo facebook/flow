@@ -11,12 +11,11 @@ a(1);
 
 arrow-1.js
 // @flow
-const b = (
-  (x: (k: string, l: number) => string, y: string, z: {|f: number|}): string => x(
-    y,
-    z.f,
-  )
-);
+const b = ((
+  x: (k: string, l: number) => string,
+  y: string,
+  z: {|f: number|},
+): string => x(y, z.f));
 b((k: string, l: number): string => l + k, "a", { f: 2 });
 
 class-0.js
@@ -80,24 +79,22 @@ dictionary.js
   ab: null,
   get x(): null,
   set y(string): void,
-|} => (
-  {
-    ab: null,
-    "a b": null,
-    "a'b": null,
-    "1": null,
-    "'": null,
-    " ": null,
-    "_": null,
-    "": null,
-    
-    get "x"() {
-      return null;
-    },
-    
-    set "y"(z: string) {},
-  }
-);
+|} => ({
+  ab: null,
+  "a b": null,
+  "a'b": null,
+  "1": null,
+  "'": null,
+  " ": null,
+  "_": null,
+  "": null,
+  
+  get "x"() {
+    return null;
+  },
+  
+  set "y"(z: string) {},
+});
 
 (): {|
   "": null,
@@ -110,24 +107,22 @@ dictionary.js
   ab: null,
   get x(): null,
   set y(string): void,
-|} => (
-  {
-    ab: null,
-    "a b": null,
-    'a"b': null,
-    "1": null,
-    '"': null,
-    " ": null,
-    "_": null,
-    "": null,
-    
-    get "x"() {
-      return null;
-    },
-    
-    set "y"(z: string) {},
-  }
-);
+|} => ({
+  ab: null,
+  "a b": null,
+  'a"b': null,
+  "1": null,
+  '"': null,
+  " ": null,
+  "_": null,
+  "": null,
+  
+  get "x"() {
+    return null;
+  },
+  
+  set "y"(z: string) {},
+});
 
 func-0.js
 // @flow

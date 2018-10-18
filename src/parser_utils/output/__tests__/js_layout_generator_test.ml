@@ -447,11 +447,7 @@ let tests = "js_layout_generator" >::: [
 
         let update = E.new_ (E.increment ~prefix:false id80) in
         assert_expression ~ctxt ("new("^x80^"++)()") update;
-        assert_expression ~ctxt ~pretty:true
-          ("new (\n"^
-           "  "^x80^"++\n"^
-           ")()")
-          update;
+        assert_expression ~ctxt ~pretty:true ("new ("^x80^"++)()") update;
       end;
 
       (* `new (x())()` *)
@@ -1338,19 +1334,15 @@ let tests = "js_layout_generator" >::: [
           pretty_space;
           group [
             atom "(";
-            indent ((fused [
-              softline;
-              loc (fused [
-                atom "var";
-                space;
-                loc (loc (id "a"));
-              ]);
+            loc (fused [
+              atom "var";
               space;
-              atom "in";
-              space;
-              loc (id "b");
-            ]));
-            softline;
+              loc (loc (id "a"));
+            ]);
+            space;
+            atom "in";
+            space;
+            loc (id "b");
             atom ")";
           ];
           pretty_space;
@@ -1381,9 +1373,7 @@ let tests = "js_layout_generator" >::: [
       let layout = mk_layout a80 "b" in
       assert_output ~ctxt ("for(var "^a80^" in b){"^a80^"}") layout;
       assert_output ~ctxt ~pretty:true
-        ("for (\n"^
-         "  var "^a80^" in b\n"^
-         ") {\n"^
+        ("for (var "^a80^" in b) {\n"^
          "  "^a80^";\n"^
          "}")
         layout;
@@ -1408,15 +1398,11 @@ let tests = "js_layout_generator" >::: [
           pretty_space;
           group [
             atom "(";
-            indent ((fused [
-              softline;
-              loc (id "a");
-              space;
-              atom "in";
-              space;
-              loc (id "b");
-            ]));
-            softline;
+            loc (id "a");
+            space;
+            atom "in";
+            space;
+            loc (id "b");
             atom ")";
           ];
           pretty_space;
@@ -1432,9 +1418,7 @@ let tests = "js_layout_generator" >::: [
       let layout = mk_layout a80 "b" in
       assert_output ~ctxt ("for("^a80^" in b){}") layout;
       assert_output ~ctxt ~pretty:true
-        ("for (\n"^
-         "  "^a80^" in b\n"^
-         ") {}")
+        ("for ("^a80^" in b) {}")
         layout;
     end;
   end;
@@ -1457,19 +1441,15 @@ let tests = "js_layout_generator" >::: [
           pretty_space;
           group [
             atom "(";
-            indent ((fused [
-              softline;
-              loc (fused [
-                atom "var";
-                space;
-                loc (loc (id "a"));
-              ]);
+            loc (fused [
+              atom "var";
               space;
-              atom "of";
-              space;
-              loc (id "b");
-            ]));
-            softline;
+              loc (loc (id "a"));
+            ]);
+            space;
+            atom "of";
+            space;
+            loc (id "b");
             atom ")";
           ];
           pretty_space;
@@ -1500,9 +1480,7 @@ let tests = "js_layout_generator" >::: [
       let layout = mk_layout a80 "b" in
       assert_output ~ctxt ("for(var "^a80^" of b){"^a80^"}") layout;
       assert_output ~ctxt ~pretty:true
-        ("for (\n"^
-         "  var "^a80^" of b\n"^
-         ") {\n"^
+        ("for (var "^a80^" of b) {\n"^
          "  "^a80^";\n"^
          "}")
         layout;
@@ -1527,15 +1505,11 @@ let tests = "js_layout_generator" >::: [
           pretty_space;
           group [
             atom "(";
-            indent ((fused [
-              softline;
-              loc (id "a");
-              space;
-              atom "of";
-              space;
-              loc (id "b");
-            ]));
-            softline;
+            loc (id "a");
+            space;
+            atom "of";
+            space;
+            loc (id "b");
             atom ")";
           ];
           pretty_space;
@@ -1551,9 +1525,7 @@ let tests = "js_layout_generator" >::: [
       let layout = mk_layout a80 "b" in
       assert_output ~ctxt ("for("^a80^" of b){}") layout;
       assert_output ~ctxt ~pretty:true
-        ("for (\n"^
-         "  "^a80^" of b\n"^
-         ") {}")
+        ("for ("^a80^" of b) {}")
         layout;
     end;
   end;
@@ -1738,16 +1710,12 @@ let tests = "js_layout_generator" >::: [
     assert_layout ~ctxt
       L.(loc (group [
         atom "(";
-        indent ((fused [
-          softline;
-          loc (id "a");
-          loc (fused [
-            atom ":";
-            pretty_space;
-            loc (atom "mixed");
-          ]);
-        ]));
-        softline;
+        loc (id "a");
+        loc (fused [
+          atom ":";
+          pretty_space;
+          loc (atom "mixed");
+        ]);
         atom ")";
       ]))
       layout;
@@ -1759,12 +1727,7 @@ let tests = "js_layout_generator" >::: [
       E.typecast (E.identifier a80) Types.mixed
     ) in
     assert_output ~ctxt ("("^a80^":mixed)") layout;
-    (* TODO: don't break onto multiple lines *)
-    assert_output ~ctxt ~pretty:true
-      ("(\n"^
-       "  "^a80^": mixed\n"^
-       ")")
-      layout;
+    assert_output ~ctxt ~pretty:true ("("^a80^": mixed)") layout;
   end;
 
   "type_parameter" >::

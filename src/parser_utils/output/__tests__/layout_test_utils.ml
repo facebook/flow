@@ -75,12 +75,7 @@ module Layout_builder = struct
 
   let indent node = Indent node
 
-  let wrap_in_parens x = group [
-    atom "(";
-    Indent (Concat [softline; x]);
-    softline;
-    atom ")"
-  ]
+  let wrap_in_parens x = group [atom "("; x; atom ")"]
 
   type printer_pos = Word of string | Phrase of string
 
@@ -115,12 +110,7 @@ module Layout_builder = struct
         let loc = if loc = Loc.none then "" else spf " ~loc:%s" (string_of_loc loc) in
         phrase "loc%s %s" loc (helper ~i child)
 
-    | Group [
-        Atom "(";
-        Indent (Concat [IfBreak (Newline, Empty); x]);
-        IfBreak (Newline, Empty);
-        Atom ")"
-      ] ->
+    | Group [Atom "("; x; Atom ")"] ->
       phrase "wrap_in_parens %s" (helper ~i x)
 
     | Group items ->
