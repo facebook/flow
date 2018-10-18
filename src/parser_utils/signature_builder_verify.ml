@@ -649,51 +649,67 @@ module Verifier(Env: EvalEnv) = struct
 
   let eval_export_value_bindings named named_infos =
     let open File_sig in
-    SMap.fold (fun n export deps ->
-      Deps.join (
-        deps,
-      let export_def = SMap.get n named_infos in
-      let _, export = export in
+    let named, ns = List.partition (function
+      | _, (_, ExportNamed { kind = NamedSpecifier _; _ })
+      | _, (_, ExportNs _)
+        -> false
+      | _, (_, _) -> true
+    ) named in
+    let deps = List.fold_left2 (fun deps (n, (_, export)) export_def ->
+      Deps.join (deps,
       match export, export_def with
-        | ExportDefault { local; _ }, Some (DeclareExportDef decl) ->
+        | ExportDefault { local; _ }, DeclareExportDef decl ->
           begin match local with
             | Some id -> Deps.value (snd id)
             | None -> eval_declare_export_declaration decl
           end
-        | ExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef _decl) ->
+        | ExportNamed { kind = NamedDeclaration; _ }, DeclareExportDef _decl ->
           Deps.value n
-        | ExportDefault { local; _ }, Some (ExportDefaultDef decl) ->
+        | ExportDefault { local; _ }, ExportDefaultDef decl ->
           begin match local with
             | Some id -> Deps.value (snd id)
             | None -> eval_export_default_declaration decl
           end
-        | ExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef _stmt) ->
+        | ExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt ->
           Deps.value n
-        | ExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
+        | _ -> assert false
+      )
+    ) Deps.bot named named_infos in
+    List.fold_left (fun deps (_, (_, export)) ->
+      Deps.join (deps,
+      match export with
+        | ExportNamed { kind = NamedSpecifier { local; source }; _ } ->
           begin match source with
             | None -> Deps.value (snd local)
             | Some source ->
               Deps.import_named Kind.Sort.Value source local
           end
-        | ExportNs { source; _ }, None ->
+        | ExportNs { source; _ } ->
           Deps.import_star Kind.Sort.Value source
         | _ -> assert false
       )
-    ) named Deps.bot
+    ) deps ns
 
   let eval_export_type_bindings type_named type_named_infos =
     let open File_sig in
-    SMap.fold (fun n export deps ->
-      Deps.join (
-        deps,
-      let export_def = SMap.get n type_named_infos in
-      let _, export = export in
+    let type_named, type_ns = List.partition (function
+      | _, (_, TypeExportNamed { kind = NamedSpecifier _; _ }) -> false
+      | _, (_, _) -> true
+    ) type_named in
+    let deps = List.fold_left2 (fun deps (n, (_, export)) export_def ->
+      Deps.join (deps,
       match export, export_def with
-        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (DeclareExportDef _decl) ->
+        | TypeExportNamed { kind = NamedDeclaration; _ }, DeclareExportDef _decl ->
           Deps.type_ n
-        | TypeExportNamed { kind = NamedDeclaration; _ }, Some (ExportNamedDef _stmt) ->
+        | TypeExportNamed { kind = NamedDeclaration; _ }, ExportNamedDef _stmt ->
           Deps.type_ n
-        | TypeExportNamed { kind = NamedSpecifier { local; source }; _ }, None ->
+        | _ -> assert false
+      )
+    ) Deps.bot type_named type_named_infos in
+    List.fold_left (fun deps (_, (_, export)) ->
+      Deps.join (deps,
+      match export with
+        | TypeExportNamed { kind = NamedSpecifier { local; source }; _ } ->
           begin match source with
             | None -> Deps.type_ (snd local)
             | Some source ->
@@ -701,7 +717,7 @@ module Verifier(Env: EvalEnv) = struct
           end
         | _ -> assert false
       )
-    ) type_named Deps.bot
+    ) deps type_ns
 
   let exports file_sig =
     let open File_sig in

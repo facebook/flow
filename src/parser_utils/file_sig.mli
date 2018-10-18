@@ -25,7 +25,7 @@ type 'info t' = {
 and 'info module_sig' = {
   requires: require list;
   module_kind: module_kind;
-  type_exports_named: (Loc.t * type_export) SMap.t; (* export type {A, B as C} [from x] *)
+  type_exports_named: (string * (Loc.t * type_export)) list; (* export type {A, B as C} [from x] *)
   type_exports_star: (Loc.t * export_star) list; (* export type * from "foo" *)
   info: 'info; (* useful to carry information that might eventually be erased *)
 }
@@ -123,7 +123,7 @@ and module_kind =
   }
   | ES of {
     (* map from exported name to export data *)
-    named: (Loc.t * export) SMap.t;
+    named: (string * (Loc.t * export)) list;
     (* map from module reference to location of `export *` *)
     star: (Loc.t * export_star) list;
   }
@@ -177,12 +177,12 @@ and tolerable_error =
 
 type exports_info = {
   module_kind_info: module_kind_info;
-  type_exports_named_info: es_export_def SMap.t;
+  type_exports_named_info: es_export_def list;
 }
 
 and module_kind_info =
   | CommonJSInfo of cjs_exports_def list
-  | ESInfo of es_export_def SMap.t
+  | ESInfo of es_export_def list
 
 and cjs_exports_def =
   | DeclareModuleExportsDef of (Loc.t, Loc.t) Flow_ast.Type.annotation
@@ -224,7 +224,7 @@ val require_loc_map: module_sig -> Loc.t Nel.t SMap.t
 
 class mapper : object
   method error: error -> error
-  method export: Loc.t * export -> Loc.t * export
+  method export: string * (Loc.t * export) -> string * (Loc.t * export)
   method export_star: Loc.t * export_star -> Loc.t * export_star
   method file_sig: t -> t
   method ident: Ast_utils.ident -> Ast_utils.ident
@@ -237,5 +237,5 @@ class mapper : object
   method require: require -> require
   method require_bindings: require_bindings -> require_bindings
   method tolerable_error: tolerable_error -> tolerable_error
-  method type_export: Loc.t * type_export -> Loc.t * type_export
+  method type_export: string * (Loc.t * type_export) -> string * (Loc.t * type_export)
 end

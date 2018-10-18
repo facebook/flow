@@ -27,7 +27,7 @@ let find_related_symbol_from_export loc = function
 let find_related_symbol_from_module_kind loc = function
   | CommonJS _ -> None
   | ES {named; _} ->
-    let exports = SMap.values named in
+    let exports = List.map snd named in
     ListUtils.first_some_map (find_related_symbol_from_export loc) exports
 
 let find_related_symbol_from_require loc = function

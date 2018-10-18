@@ -119,9 +119,13 @@ module Signature = struct
 
   let add_export_value_bindings named named_infos env =
     let open File_sig in
-    SMap.fold (fun n export_def env ->
-      let export = SMap.find n named in
-      let _, export = export in
+    let named = List.filter (function
+      | _, (_, ExportNamed { kind = NamedSpecifier _; _ })
+      | _, (_, ExportNs _)
+        -> false
+      | _, (_, _) -> true
+    ) named in
+    List.fold_left2 (fun env (_n, (_, export)) export_def ->
       match export, export_def with
         | ExportDefault { local; _ }, DeclareExportDef declare_export_declaration ->
           begin match local with
@@ -144,13 +148,15 @@ module Signature = struct
             | NamedSpecifier _ -> assert false
           end
         | _ -> assert false
-    ) named_infos env
+    ) env named named_infos
 
   let add_export_type_bindings type_named type_named_infos env =
     let open File_sig in
-    SMap.fold (fun n export_def env ->
-      let export = SMap.find n type_named in
-      let _, export = export in
+    let type_named = List.filter (function
+      | _, (_, TypeExportNamed { kind = NamedSpecifier _; _ }) -> false
+      | _, (_, _) -> true
+    ) type_named in
+    List.fold_left2 (fun env (_n, (_, export)) export_def ->
       match export, export_def with
         | TypeExportNamed { kind; _ }, DeclareExportDef declare_export_declaration ->
           begin match kind with
@@ -163,7 +169,7 @@ module Signature = struct
             | NamedSpecifier _ -> assert false
           end
         | _ -> assert false
-    ) type_named_infos env
+    ) env type_named type_named_infos
 
   let add_named_imports import_loc ?(filter=(fun _ -> true)) source kind named_imports env =
     SMap.fold (fun remote ids env ->

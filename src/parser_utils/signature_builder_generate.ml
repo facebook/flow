@@ -1032,6 +1032,12 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
 
   let eval_export_value_bindings outlined named named_infos star =
     let open File_sig in
+    let named, ns = List.partition (function
+      | _, (_, ExportNamed { kind = NamedSpecifier _; _ })
+      | _, (_, ExportNs _)
+        -> false
+      | _, (_, _) -> true
+    ) named in
     let stmts = List.fold_left (fun acc -> function
       | export_loc, ExportStar { star_loc; source; } ->
         (export_loc, Ast.Statement.ExportNamedDeclaration {
@@ -1043,10 +1049,9 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           exportKind = Ast.Statement.ExportValue;
         }) :: acc
     ) [] star in
-    SMap.fold (fun n (export_loc, export) acc ->
-      let export_def = SMap.get n named_infos in
+    let stmts = List.fold_left2 (fun acc (n, (export_loc, export)) export_def ->
       match export, export_def with
-        | ExportDefault { default_loc; local }, Some (DeclareExportDef decl) ->
+        | ExportDefault { default_loc; local }, DeclareExportDef decl ->
           begin match local with
             | Some id ->
               (export_loc, Ast.Statement.ExportNamedDeclaration {
@@ -1068,7 +1073,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
                 source = None;
               }) :: acc
           end
-        | ExportNamed { loc; kind = NamedDeclaration }, Some (DeclareExportDef _decl) ->
+        | ExportNamed { loc; kind = NamedDeclaration }, DeclareExportDef _decl ->
           (export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
@@ -1080,7 +1085,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
             source = None;
             exportKind = Ast.Statement.ExportValue;
           }) :: acc
-        | ExportDefault { default_loc; _ }, Some (ExportDefaultDef decl) ->
+        | ExportDefault { default_loc; _ }, ExportDefaultDef decl ->
           begin match eval_export_default_declaration decl with
             | `Decl (id, _dt) ->
               (export_loc, Ast.Statement.ExportNamedDeclaration {
@@ -1104,7 +1109,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
                 source = None;
               }) :: acc
           end
-        | ExportNamed { loc; kind = NamedDeclaration }, Some (ExportNamedDef _stmt) ->
+        | ExportNamed { loc; kind = NamedDeclaration }, ExportNamedDef _stmt ->
           (export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
@@ -1116,7 +1121,11 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
             source = None;
             exportKind = Ast.Statement.ExportValue;
           }) :: acc
-        | ExportNamed { loc; kind = NamedSpecifier { local = name; source } }, None ->
+        | _ -> assert false
+    ) stmts named named_infos in
+    List.fold_left (fun acc (n, (export_loc, export)) ->
+      match export with
+        | ExportNamed { loc; kind = NamedSpecifier { local = name; source } } ->
           (export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
@@ -1131,7 +1140,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
             );
             exportKind = Ast.Statement.ExportValue;
           }) :: acc
-        | ExportNs { loc; star_loc; source; }, None ->
+        | ExportNs { loc; star_loc; source; } ->
           (export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier (
@@ -1141,10 +1150,14 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
             exportKind = Ast.Statement.ExportValue;
           }) :: acc
         | _ -> assert false
-    ) named stmts
+    ) stmts ns
 
   let eval_export_type_bindings type_named type_named_infos type_star =
     let open File_sig in
+    let type_named, type_ns = List.partition (function
+      | _, (_, TypeExportNamed { kind = NamedSpecifier _; _ }) -> false
+      | _, (_, _) -> true
+    ) type_named in
     let stmts = List.fold_left (fun acc -> function
       | export_loc, ExportStar { star_loc; source } ->
         (export_loc, Ast.Statement.ExportNamedDeclaration {
@@ -1156,10 +1169,9 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           exportKind = Ast.Statement.ExportType;
         }) :: acc
     ) [] type_star in
-    SMap.fold (fun n (export_loc, export) acc ->
-      let export_def = SMap.get n type_named_infos in
+    let stmts = List.fold_left2 (fun acc (n, (export_loc, export)) export_def ->
       (match export, export_def with
-        | TypeExportNamed { loc; kind = NamedDeclaration }, Some (DeclareExportDef _decl) ->
+        | TypeExportNamed { loc; kind = NamedDeclaration }, DeclareExportDef _decl ->
           export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
@@ -1171,7 +1183,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
             source = None;
             exportKind = Ast.Statement.ExportType;
           }
-        | TypeExportNamed { loc; kind = NamedDeclaration }, Some (ExportNamedDef _stmt) ->
+        | TypeExportNamed { loc; kind = NamedDeclaration }, ExportNamedDef _stmt ->
           export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
@@ -1183,7 +1195,12 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
             source = None;
             exportKind = Ast.Statement.ExportType;
           }
-        | TypeExportNamed { loc; kind = NamedSpecifier { local = name; source } }, None ->
+        | _ -> assert false
+      ) :: acc
+    ) stmts type_named type_named_infos in
+    List.fold_left (fun acc (n, (export_loc, export)) ->
+      (match export with
+      | TypeExportNamed { loc; kind = NamedSpecifier { local = name; source } } ->
           export_loc, Ast.Statement.ExportNamedDeclaration {
             Ast.Statement.ExportNamedDeclaration.declaration = None;
             specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
@@ -1200,7 +1217,8 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           }
         | _ -> assert false
       ) :: acc
-    ) type_named stmts
+    ) stmts type_ns
+
 
   let exports outlined file_sig =
     let open File_sig in
