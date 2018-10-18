@@ -1890,7 +1890,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * ObjT CommonJS export values have their properties turned into named
      * exports
      *)
-    | DefT (_, ObjT {props_tmap; proto_t; _;}),
+    | (DefT (_, ObjT {props_tmap; proto_t; _;}) | ExactT (_, DefT (_, ObjT {props_tmap; proto_t; _;}))),
       CJSExtractNamedExportsT(
         reason, (module_t_reason, exporttypes, is_strict), t_out
       ) ->
