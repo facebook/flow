@@ -16,3 +16,4 @@ let none = Loc.none
 let source = Loc.source
 
 let compare = Loc.compare
+let equal = Loc.equal

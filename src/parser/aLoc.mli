@@ -19,3 +19,4 @@ val none: t
 val source: t -> File_key.t option
 
 val compare: t -> t -> int
+val equal: t -> t -> bool
