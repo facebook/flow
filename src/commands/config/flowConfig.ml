@@ -458,10 +458,9 @@ let group_into_sections lines =
   let (section, section_lines) = section in
   List.rev ((section, List.rev section_lines)::sections)
 
-let trim_lines lines =
+let get_lines lines =
   lines
-  |> List.map (fun (_, line) -> String.trim line)
-  |> List.filter (fun s -> s <> "")
+  |> List.map (fun (_, line) -> line)
 
 let trim_labeled_lines lines =
   lines
@@ -472,23 +471,23 @@ let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version (Fl
 
 (* parse [include] lines *)
 let parse_includes config lines =
-  let includes = trim_lines lines in
+  let includes = get_lines lines in
   { config with includes; }
 
 let parse_libs config lines =
-  let libs = trim_lines lines in
+  let libs = get_lines lines in
   { config with libs; }
 
 let parse_ignores config lines =
-  let ignores = trim_lines lines in
+  let ignores = get_lines lines in
   { config with ignores; }
 
 let parse_untyped config lines =
-  let untyped = trim_lines lines in
+  let untyped = get_lines lines in
   { config with untyped; }
 
 let parse_declarations config lines =
-  let declarations = trim_lines lines in
+  let declarations = get_lines lines in
   { config with declarations; }
 
 let parse_options config lines =
@@ -1035,6 +1034,7 @@ let is_not_comment =
       (fun (regexp) -> Str.string_match regexp line 0)
       comment_regexps)
 
+
 let default_lint_severities = [
   Lints.DeprecatedCallSyntax, (Severity.Err, None);
 ]
@@ -1049,7 +1049,8 @@ let read filename =
   let lines = contents
     |> Sys_utils.split_lines
     |> List.mapi (fun i line -> (i+1, String.trim line))
-    |> List.filter is_not_comment in
+    |> List.filter is_not_comment
+    |> List.filter (fun (_, s) -> s <> "") in
   let config = {
     empty_config with
     lint_severities = List.fold_left (fun acc (lint, severity) ->
