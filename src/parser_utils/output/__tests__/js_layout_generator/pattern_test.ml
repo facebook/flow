@@ -71,14 +71,14 @@ let tests = [
           atom "let";
           space;
           loc (fused [
-            loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-              fused [
-                atom "{";
-                sequence ~break:Layout.Break_if_needed [
-                  loc (id "a");
-                ];
-                atom "}";
-              ];
+            loc (group [
+              atom "{";
+              indent ((fused [
+                softline;
+                loc (id "a");
+              ]));
+              softline;
+              atom "}";
             ]);
             pretty_space;
             atom "=";
@@ -211,14 +211,14 @@ let tests = [
           atom "let";
           space;
           loc (fused [
-            loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-              fused [
-                atom "[";
-                sequence ~break:Layout.Break_if_needed [
-                  loc (id "a");
-                ];
-                atom "]";
-              ];
+            loc (group [
+              atom "[";
+              indent ((fused [
+                softline;
+                loc (id "a");
+              ]));
+              softline;
+              atom "]";
             ]);
             pretty_space;
             atom "=";

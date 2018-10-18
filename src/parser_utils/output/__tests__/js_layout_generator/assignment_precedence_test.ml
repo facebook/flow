@@ -44,21 +44,21 @@ let test ctxt =
 
   assert_layout_of_statement_string ~ctxt
     L.(loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=0; offset=0}; _end={Loc.line=1; column=8; offset=8}} (fused [
-      wrap_in_parens (
-        loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=1; offset=1}; _end={Loc.line=1; column=6; offset=6}} (fused [
-          loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=1; offset=1}; _end={Loc.line=1; column=4; offset=4}} (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-            fused [
-              atom "{";
-              sequence ~break:Layout.Break_if_needed [
-                loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=2; offset=2}; _end={Loc.line=1; column=3; offset=3}} (id ~loc:{Loc.none with Loc.start={Loc.line=1; column=2; offset=2}; _end={Loc.line=1; column=3; offset=3}} "a");
-              ];
-              atom "}";
-            ];
-          ]);
-          pretty_space; atom "="; pretty_space;
-          loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=5; offset=5}; _end={Loc.line=1; column=6; offset=6}} (id ~loc:{Loc.none with Loc.start={Loc.line=1; column=5; offset=5}; _end={Loc.line=1; column=6; offset=6}} "b");
+      wrap_in_parens (loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=1; offset=1}; _end={Loc.line=1; column=6; offset=6}} (fused [
+        loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=1; offset=1}; _end={Loc.line=1; column=4; offset=4}} (group [
+          atom "{";
+          indent ((fused [
+            softline;
+            loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=2; offset=2}; _end={Loc.line=1; column=3; offset=3}} (id ~loc:{Loc.none with Loc.start={Loc.line=1; column=2; offset=2}; _end={Loc.line=1; column=3; offset=3}} "a");
+          ]));
+          softline;
+          atom "}";
         ]);
-      );
+        pretty_space;
+        atom "=";
+        pretty_space;
+        loc ~loc:{Loc.none with Loc.start={Loc.line=1; column=5; offset=5}; _end={Loc.line=1; column=6; offset=6}} (id ~loc:{Loc.none with Loc.start={Loc.line=1; column=5; offset=5}; _end={Loc.line=1; column=6; offset=6}} "b");
+      ]));
       atom ";";
     ]))
     "({a}=b);";
