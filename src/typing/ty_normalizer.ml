@@ -214,6 +214,52 @@ end = struct
       default t
 
 
+  (****************)
+  (* Type queries *)
+  (****************)
+
+  exception FoundFreeBoundInType
+
+  (* Note: only use toplevel_* functions from outside the class *)
+  let free_bound_t_finder = object (self)
+    inherit [unit] Type_visitor.t as super
+
+    val mutable polys = []
+
+    method toplevel_type cx t =
+      polys <- [];
+      match self#type_ cx Type.Positive () t with
+      | exception FoundFreeBoundInType -> true
+      | _ -> false
+
+    method toplevel_destructor cx t =
+      polys <- [];
+      match self#destructor cx () t with
+      | exception FoundFreeBoundInType -> true
+      | _ -> false
+
+    method! type_ cx pole () = function
+      | Type.BoundT (_, bname, _) ->
+        if List.mem bname polys
+        then ()
+        else raise FoundFreeBoundInType
+      | Type.DefT (_, Type.PolyT (_, tparams, _, _)) as t ->
+        let old_polys = polys in
+        Nel.iter (fun tparam -> polys <- tparam.Type.name::polys) tparams;
+        let result = super#type_ cx pole () t in
+        polys <- old_polys;
+        result
+      | Type.ThisClassT _ as t ->
+        let old_polys = polys in
+        polys <- "this"::polys;
+        let result = super#type_ cx pole () t in
+        polys <- old_polys;
+        result
+      | t ->
+        super#type_ cx pole () t
+
+  end
+
 
   (**************)
   (* Type ops   *)
@@ -1302,57 +1348,45 @@ end = struct
 
   and destructuring_t ~env t id r s =
     let cx = Env.get_cx env in
-    let result = try
-      (* eval_selector may throw for BoundT. Catching here. *)
-      Ok (Flow_js.eval_selector cx r t s id)
-    with
-      exn -> Error (spf "Exception:%s" (Printexc.to_string exn))
-    in
-    match result with
-    | Ok tout -> type__ ~env tout
-    | Error msg -> terr ~kind:BadEvalT ~msg (Some t)
+    let t = Flow_js.eval_selector cx r t s id in
+    type__ ~env t
 
-  and named_type_destructor_t ~env t d =
+  and named_type_destructor_t =
     let open Type in
-    let from_name n ts =
-      mapM (type__ ~env) ts >>| fun tys ->
-      Ty.generic_builtin_t n tys
+    let from_name ~env n ts =
+      mapM (type__ ~env) ts >>| Ty.generic_builtin_t n
     in
-    match d with
-    | NonMaybeType -> from_name "$NonMaybeType" [t]
-    | ReadOnlyType -> from_name "$ReadOnlyType" [t]
-    | ValuesType -> from_name "$Values" [t]
-    | ElementType t' -> from_name "$ElementType" [t; t']
-    | CallType ts -> from_name "$Call" (t::ts)
-    | ReactElementPropsType -> from_name "React$ElementProps" [t]
-    | ReactElementConfigType -> from_name "React$ElementConfig" [t]
-    | ReactElementRefType -> from_name "React$ElementRef" [t]
+    fun ~env t -> function
+    | NonMaybeType -> from_name ~env "$NonMaybeType" [t]
+    | ReadOnlyType -> from_name ~env "$ReadOnlyType" [t]
+    | ValuesType -> from_name ~env "$Values" [t]
+    | ElementType t' -> from_name ~env "$ElementType" [t; t']
+    | CallType ts -> from_name ~env "$Call" (t::ts)
+    | ReactElementPropsType -> from_name ~env "React$ElementProps" [t]
+    | ReactElementConfigType -> from_name ~env "React$ElementConfig" [t]
+    | ReactElementRefType -> from_name ~env "React$ElementRef" [t]
     | PropertyType k ->
       let r = mk_reason (RStringLit k) (Loc.none |> ALoc.of_loc) in
-      from_name "$PropertyType" [t; DefT (r, SingletonStrT k)]
-    | TypeMap (ObjectMap t') -> from_name "$ObjMap" [t; t']
-    | TypeMap (ObjectMapi t') -> from_name "$ObjMapi" [t; t']
-    | TypeMap (TupleMap t') -> from_name "$TupleMap" [t; t']
-    | RestType (Object.Rest.Sound, t') -> from_name "$Rest" [t; t']
-    | RestType (Object.Rest.IgnoreExactAndOwn, t') -> from_name "$Diff" [t; t']
-    | RestType (Object.Rest.ReactConfigMerge, _) | Bind _ | SpreadType _ ->
+      from_name ~env "$PropertyType" [t; DefT (r, SingletonStrT k)]
+    | TypeMap (ObjectMap t') -> from_name ~env "$ObjMap" [t; t']
+    | TypeMap (ObjectMapi t') -> from_name ~env "$ObjMapi" [t; t']
+    | TypeMap (TupleMap t') -> from_name ~env "$TupleMap" [t; t']
+    | RestType (Object.Rest.Sound, t') -> from_name ~env "$Rest" [t; t']
+    | RestType (Object.Rest.IgnoreExactAndOwn, t') -> from_name ~env "$Diff" [t; t']
+    | (RestType (Object.Rest.ReactConfigMerge, _) | Bind _ | SpreadType _) as d ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) (Some t)
 
   and resolve_type_destructor_t ~env t id use_op reason d =
     let cx = Env.get_cx env in
-    let trace = Trace.dummy_trace in
-    let result =
-      try
-        Ok (snd (Flow_js.mk_type_destructor cx ~trace use_op reason t d id))
-      with
-        (* Allow bounds *)
-        | Flow_js.Not_expect_bound s -> Error s
-        (* But re-raise any other exception *)
-        | exn -> raise exn
-    in
-    match result with
-    | Ok t -> type__ ~env t
-    | Error _s -> named_type_destructor_t ~env t d
+    let tparams = env.Env.tparams in
+    if List.length tparams > 0 &&
+      (free_bound_t_finder#toplevel_type cx t ||
+        free_bound_t_finder#toplevel_destructor cx d)
+    then named_type_destructor_t ~env t d
+    else
+      let trace = Trace.dummy_trace in
+      let _, t = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
+      type__ ~env t
 
   and evaluate_type_destructor ~env t id use_op reason d =
     let cx = Env.get_cx env in

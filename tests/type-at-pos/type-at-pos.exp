@@ -3230,7 +3230,7 @@ type-destructor.js:8:6 = {
   "end":6
 }
 type-destructor.js:10:6 = {
-  "type":"type G<R> = empty",
+  "type":"type G<R> = $Call<<N>() => N, R>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -3530,7 +3530,7 @@ type-destructor.js:44:6 = {
   "end":6
 }
 type-destructor.js:45:6 = {
-  "type":"type UP<X, Y> = {a: $Call<<T>(T) => Array<T>, X>, b?: $Call<<T>(T) => Array<T>, Y>}",
+  "type":"type UP<X, Y> = $ObjMap<{a: X, b?: Y}, <T>(T) => Array<T>>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -3560,7 +3560,7 @@ type-destructor.js:47:6 = {
   "end":6
 }
 type-destructor.js:48:6 = {
-  "type":"type VP<X> = [$Call<<K>(k: K) => \"FOO\", X>, \"FOO\"]",
+  "type":"type VP<X> = $TupleMap<[X, mixed], <K>(k: K) => \"FOO\">",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",

@@ -91,6 +91,7 @@ val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type
 val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
 
 (* strict *)
+val types_of: Constraint.constraints -> Type.t list
 val enforce_strict: Context.t -> Type.t -> unit
 val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
 val resolve_type: Context.t -> Type.t -> Type.t
