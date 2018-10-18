@@ -452,6 +452,13 @@ let tests_data = [
    "}"],
   [],
   ["Reachable: C, Foo"];
+
+  name "bound_coverage",
+  ["type Foo = number";
+   "export type T = <X: Foo> (X) => void"],
+  [],
+  ["Reachable: Foo, T"];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =

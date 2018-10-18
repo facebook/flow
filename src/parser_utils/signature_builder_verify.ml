@@ -112,9 +112,10 @@ module Eval(Env: EvalEnv) = struct
 
     in fun tps ft ->
       let open Ast.Type.Function in
-      let { params; return; _ } = ft in
+      let { tparams; params; return } = ft in
+      let tps, deps = type_params tps tparams in
       let _, { Params.params; rest; } = params in
-      let deps = List.fold_left (Deps.reduce_join (function_type_param tps)) Deps.bot params in
+      let deps = List.fold_left (Deps.reduce_join (function_type_param tps)) deps params in
       let deps = match rest with
       | None -> deps
       | Some (_, { RestParam.argument }) -> Deps.join (deps, function_type_param tps argument)
@@ -197,12 +198,7 @@ module Eval(Env: EvalEnv) = struct
     | None -> Deps.bot
     | Some (_, ts) -> List.fold_left (Deps.reduce_join (type_ tps)) Deps.bot ts
 
-  let opaque_type tps supertype =
-    match supertype with
-      | None -> Deps.bot
-      | Some t -> type_ tps t
-
-  let type_params =
+  and type_params =
     let type_param tps tparam =
       let open Ast.Type.ParameterDeclaration.TypeParam in
       let _, { name = (_, x); bound; default; _ } = tparam in
@@ -222,6 +218,11 @@ module Eval(Env: EvalEnv) = struct
           let tp, deps' = type_param tps tparam in
           SSet.add tp tps, Deps.join (deps, deps')
         ) init tparams
+
+  let opaque_type tps supertype =
+    match supertype with
+      | None -> Deps.bot
+      | Some t -> type_ tps t
 
   let rec annot_path tps = function
     | Kind.Annot_path.Annot (_, t) -> type_ tps t
