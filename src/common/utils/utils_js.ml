@@ -17,6 +17,10 @@ module LocSet = Set.Make(Loc)
 
 module LocMap = MyMap.Make(Loc)
 
+module ALocSet = Set.Make(ALoc)
+
+module ALocMap = MyMap.Make(ALoc)
+
 module FilenameSet = Set.Make(File_key)
 
 module FilenameMap = MyMap.Make (File_key)
