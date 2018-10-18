@@ -1028,10 +1028,11 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
   (*******************************************************)
 
   | (loc, Return { Return.argument }) ->
-      let reason = mk_reason (RCustom "return") (loc |> ALoc.of_loc) in
+      let aloc = ALoc.of_loc loc in
+      let reason = mk_reason (RCustom "return") aloc in
       let ret = Env.get_internal_var cx "return" loc in
       let t, argument_ast = match argument with
-        | None -> VoidT.at (loc |> ALoc.of_loc), None
+        | None -> VoidT.at aloc, None
         | Some expr ->
           if Env.in_predicate_scope () then
             let ((_, t), _ as ast, p_map, n_map, _) = predicates_of_condition cx expr in
@@ -1048,7 +1049,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
         (* Convert the return expression's type T to Promise<T>. If the
          * expression type is itself a Promise<T>, ensure we still return
          * a Promise<T> via Promise.resolve. *)
-        let reason = mk_reason (RCustom "async return") (loc |> ALoc.of_loc) in
+        let reason = mk_reason (RCustom "async return") aloc in
         let t' = Flow.get_builtin_typeapp cx reason "Promise" [
           Tvar.mk_derivable_where cx reason (fun tvar ->
             let funt = Flow.get_builtin cx "$await" reason in
@@ -1061,7 +1062,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
       | Scope.Generator ->
         (* Convert the return expression's type R to Generator<Y,R,N>, where
          * Y and R are internals, installed earlier. *)
-        let reason = mk_reason (RCustom "generator return") (loc |> ALoc.of_loc) in
+        let reason = mk_reason (RCustom "generator return") aloc in
         let t' = Flow.get_builtin_typeapp cx reason "Generator" [
           Env.get_internal_var cx "yield" loc;
           Tvar.mk_derivable_where cx reason (fun tvar ->
@@ -1071,7 +1072,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
         ] in
         Flow.reposition cx ~desc:(desc_of_t t) loc t'
       | Scope.AsyncGenerator ->
-        let reason = mk_reason (RCustom "async generator return") (loc |> ALoc.of_loc) in
+        let reason = mk_reason (RCustom "async generator return") aloc in
         let t' = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [
           Env.get_internal_var cx "yield" loc;
           Tvar.mk_derivable_where cx reason (fun tvar ->
