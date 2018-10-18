@@ -331,6 +331,8 @@ let json_of_loc ?strip_root loc = Hh_json.(
   JSON_Object (json_of_loc_props ?strip_root loc)
 )
 
+let json_of_aloc ?strip_root aloc = json_of_loc ?strip_root (ALoc.to_loc aloc)
+
 (* reason constructors, accessors, etc. *)
 
 let mk_reason_with_test_id test_id desc aloc def_aloc_opt annot_aloc_opt = {
