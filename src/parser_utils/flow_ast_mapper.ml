@@ -370,8 +370,8 @@ class mapper = object(this)
     if id' == ident && annot' == annot then decl
     else { id = id'; annot = annot'; predicate }
 
-  method declare_interface _loc (decl: (Loc.t, Loc.t) Flow_ast.Statement.Interface.t) =
-    this#interface decl
+  method declare_interface loc (decl: (Loc.t, Loc.t) Flow_ast.Statement.Interface.t) =
+    this#interface loc decl
 
   method declare_module _loc (m: (Loc.t, Loc.t) Flow_ast.Statement.DeclareModule.t) =
     let open Flow_ast.Statement.DeclareModule in
@@ -739,7 +739,7 @@ class mapper = object(this)
 
   method identifier (expr: Loc.t Flow_ast.Identifier.t) = expr
 
-  method interface (interface: (Loc.t, Loc.t) Flow_ast.Statement.Interface.t) =
+  method interface _loc (interface: (Loc.t, Loc.t) Flow_ast.Statement.Interface.t) =
     let open Flow_ast.Statement.Interface in
     let { id = ident; tparams; extends; body } = interface in
     let id' = this#class_identifier ident in
@@ -750,8 +750,8 @@ class mapper = object(this)
     then interface
     else { id = id'; tparams = tparams'; extends = extends'; body = body' }
 
-  method interface_declaration _loc (decl: (Loc.t, Loc.t) Flow_ast.Statement.Interface.t) =
-    this#interface decl
+  method interface_declaration loc (decl: (Loc.t, Loc.t) Flow_ast.Statement.Interface.t) =
+    this#interface loc decl
 
   method private_name (expr: Loc.t Flow_ast.PrivateName.t) = expr
 

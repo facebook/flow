@@ -444,6 +444,14 @@ let tests_data = [
   ["module.exports = function foo() { }"],
   [],
   [];
+
+  name "interface_coverage",
+  ["declare interface Foo<X> { }";
+   "declare export class C {";
+   "  foo: Foo<any>;";
+   "}"],
+  [],
+  ["Reachable: C, Foo"];
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =

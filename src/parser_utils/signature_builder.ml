@@ -427,7 +427,7 @@ class type_hoister = object(this)
     this#add_binding (Entry.opaque_type loc otype);
     otype
 
-  method! interface_declaration loc (interface: (Loc.t, Loc.t) Ast.Statement.Interface.t) =
+  method! interface loc (interface: (Loc.t, Loc.t) Ast.Statement.Interface.t) =
     this#add_binding (Entry.interface loc interface);
     interface
 
