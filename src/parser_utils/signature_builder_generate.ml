@@ -647,9 +647,13 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | loc, Identifier { Identifier.annot; name; optional; } ->
         loc, Some name, default || optional, annotated_type annot
       | loc, Object { Object.annot; properties = _ } ->
-        loc, None, false, annotated_type annot
+        if default
+        then loc, Some (loc, "_"), true, annotated_type annot
+        else loc, None, false, annotated_type annot
       | loc, Array { Array.annot; elements = _ } ->
-        loc, None, false, annotated_type annot
+        if default
+        then loc, Some (loc, "_"), true, annotated_type annot
+        else loc, None, false, annotated_type annot
       | _, Assignment { Assignment.left; right = _ } -> pattern ~default:true left
       | _loc (* TODO *), Expression _ -> raise (Error "pattern")
 

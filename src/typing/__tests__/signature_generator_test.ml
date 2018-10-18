@@ -495,6 +495,10 @@ let tests = "signature_generator" >::: ([
     ["module.exports = function(x: number = 0) { }"]
     ["declare module.exports: (x?: number) => void;"];
 
+  "optional_destructured_param_default" >:: mk_signature_generator_test
+    ["module.exports = function({ x }: { x: number } = { x: 0 }) { }"]
+    ["declare module.exports: (_?: {x: number}) => void;"];
+
   "array_summary_number" >:: mk_signature_generator_test
     ["module.exports = [1, 2, 3]"]
     ["declare module.exports: Array<number>;"];
