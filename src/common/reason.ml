@@ -298,6 +298,8 @@ let string_of_loc ?(strip_root=None) loc = Loc.(
     spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
 )
 
+let string_of_aloc ?strip_root aloc = string_of_loc ?strip_root (ALoc.to_loc aloc)
+
 let json_of_loc_props ?(strip_root=None) loc = Hh_json.(Loc.(
   [
     "source", (
