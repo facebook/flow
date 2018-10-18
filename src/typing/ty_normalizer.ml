@@ -1351,6 +1351,34 @@ end = struct
     let t = Flow_js.eval_selector cx r t s id in
     type__ ~env t
 
+  and spread =
+    let spread_of_ty = function
+      | Ty.Obj { Ty.obj_props; _ } -> obj_props
+      | t -> [Ty.SpreadProp t]
+    in
+    let obj_exact t target =
+      match target with
+      | Type.Object.Spread.(Annot { make_exact }) ->
+        return make_exact
+      | Type.Object.Spread.Value ->
+        terr ~kind:BadEvalT ~msg:"spread-target-value" (Some t)
+    in
+    let mk_spread t target prefix_tys ty =
+      obj_exact t target >>| fun obj_exact ->
+      Ty.Obj { Ty.
+        obj_props = prefix_tys @ spread_of_ty ty;
+        obj_exact;
+        obj_frozen = false; (* default *)
+      }
+    in
+    fun ~env t target ts_rev ->
+      mapM (type__ ~env) ts_rev >>= fun tys_rev ->
+      let prefix_tys = List.fold_left (fun acc t ->
+        List.rev_append (spread_of_ty t) acc
+      ) [] tys_rev in
+      type__ ~env t >>= fun ty ->
+      mk_spread t target prefix_tys ty
+
   and named_type_destructor_t =
     let open Type in
     let from_name ~env n ts =
@@ -1373,7 +1401,8 @@ end = struct
     | TypeMap (TupleMap t') -> from_name ~env "$TupleMap" [t; t']
     | RestType (Object.Rest.Sound, t') -> from_name ~env "$Rest" [t; t']
     | RestType (Object.Rest.IgnoreExactAndOwn, t') -> from_name ~env "$Diff" [t; t']
-    | (RestType (Object.Rest.ReactConfigMerge, _) | Bind _ | SpreadType _) as d ->
+    | SpreadType (target, ts) -> spread ~env t target ts
+    | (RestType (Object.Rest.ReactConfigMerge, _) | Bind _) as d ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) (Some t)
 
   and resolve_type_destructor_t ~env t id use_op reason d =

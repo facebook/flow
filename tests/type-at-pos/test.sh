@@ -678,6 +678,79 @@ assert_ok "$FLOW" type-at-pos optional_chaining.js 16 20 --strip-root --pretty
 printf "optional_chaining.js:16:24 = "
 assert_ok "$FLOW" type-at-pos optional_chaining.js 16 24 --strip-root --pretty
 
+# spread.js
+printf "spread.js:11:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 11 6 --strip-root --pretty
+printf "spread.js:12:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 12 6 --strip-root --pretty
+printf "spread.js:13:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 13 6 --strip-root --pretty
+printf "spread.js:14:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 14 6 --strip-root --pretty
+printf "spread.js:15:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 15 6 --strip-root --pretty
+printf "spread.js:16:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 16 6 --strip-root --pretty
+printf "spread.js:17:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 17 6 --strip-root --pretty
+printf "spread.js:18:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 18 6 --strip-root --pretty
+printf "spread.js:19:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 19 6 --strip-root --pretty
+printf "spread.js:20:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 20 6 --strip-root --pretty
+printf "spread.js:21:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 21 6 --strip-root --pretty
+printf "spread.js:22:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 22 6 --strip-root --pretty
+printf "spread.js:23:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 23 6 --strip-root --pretty
+printf "spread.js:24:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 24 6 --strip-root --pretty
+printf "spread.js:26:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 26 6 --strip-root --pretty
+printf "spread.js:27:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 27 6 --strip-root --pretty
+printf "spread.js:28:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 28 6 --strip-root --pretty
+printf "spread.js:29:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 29 6 --strip-root --pretty
+printf "spread.js:30:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 30 6 --strip-root --pretty
+printf "spread.js:31:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 31 6 --strip-root --pretty
+printf "spread.js:32:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 32 6 --strip-root --pretty
+printf "spread.js:33:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 33 6 --strip-root --pretty
+printf "spread.js:34:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 34 6 --strip-root --pretty
+printf "spread.js:35:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 35 6 --strip-root --pretty
+printf "spread.js:36:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 36 6 --strip-root --pretty --expand-type-aliases
+printf "spread.js:37:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 37 6 --strip-root --pretty
+printf "spread.js:38:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 38 6 --strip-root --pretty
+printf "spread.js:39:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 39 6 --strip-root --pretty
+printf "spread.js:40:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 40 6 --strip-root --pretty
+printf "spread.js:41:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 41 6 --strip-root --pretty
+printf "spread.js:42:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 42 6 --strip-root --pretty
+printf "spread.js:43:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 43 6 --strip-root --pretty
+printf "spread.js:44:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 44 6 --strip-root --pretty
+printf "spread.js:45:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 45 6 --strip-root --pretty
+printf "spread.js:46:6 = "
+assert_ok "$FLOW" type-at-pos spread.js 46 6 --strip-root --pretty
+
+
 # type-alias.js
 printf "type-alias.js:3:6 = "
 assert_ok "$FLOW" type-at-pos type-alias.js 3 6 --strip-root --pretty

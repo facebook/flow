@@ -242,6 +242,11 @@ let type_ ?(size=5000) t =
         type_function ~depth ~sep:(Atom ":") func
       ]
 
+    | SpreadProp t -> fuse [
+        Atom "...";
+        type_ ~depth t;
+      ]
+
   and type_array ~depth { arr_readonly; arr_elt_t } =
     fuse [
       Atom (if arr_readonly then "$ReadOnlyArray" else "Array");

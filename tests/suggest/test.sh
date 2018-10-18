@@ -30,6 +30,7 @@ do_file "object-1.js"
 do_file "object-2.js"
 do_file "poly-0.js"
 do_file "react-0.js"
+do_file "spread.js"
 do_file "string-literal.js"
 do_file "union-0.js"
 

@@ -154,6 +154,8 @@ and obj_prop = function
     obj_index_prop d >>| fun p -> T.Object.Indexer (Loc.none, p)
   | CallProp f ->
     obj_call_prop f >>| fun p -> T.Object.CallProperty (Loc.none, p)
+  | SpreadProp t ->
+    obj_spread_prop t >>| fun p -> T.Object.SpreadProperty p
 
 and obj_named_prop =
   let to_key x =
@@ -220,6 +222,12 @@ and obj_call_prop f =
   value = (Loc.none, value);
   static = false;
 }
+
+and obj_spread_prop t =
+  type_ t >>| fun t -> Loc.none, {
+    T.Object.SpreadProperty.
+    argument = t;
+  }
 
 and arr { arr_readonly; arr_elt_t } =
   type_ arr_elt_t >>= fun t ->

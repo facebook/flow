@@ -72,6 +72,7 @@ and dump_prop ~depth = function
   | NamedProp (s, p) -> dump_named_prop ~depth s p
   | IndexProp d -> dump_dict ~depth d
   | CallProp f -> dump_fun_t ~depth f
+  | SpreadProp t -> dump_spread ~depth t
 
 and dump_named_prop ~depth x = function
   | Field (t, field) -> dump_field ~depth x field t
@@ -87,6 +88,9 @@ and dump_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
       | _ -> "")
     (dump_t ~depth dict_key)
     (dump_t ~depth dict_value)
+
+and dump_spread ~depth t =
+  spf "...%s" (dump_t ~depth t)
 
 and dump_obj ~depth { obj_exact; obj_props; obj_frozen = _ } =
   if obj_exact
@@ -357,6 +361,10 @@ let json_of_t ~strip_root =
     | CallProp ft -> [
         "kind", JSON_String "NamedProp";
         "prop", JSON_Object (json_of_fun_t ft);
+      ]
+    | SpreadProp t -> [
+        "kind", JSON_String "SpreadProp";
+        "prop", json_of_t t;
       ]
     )
   )

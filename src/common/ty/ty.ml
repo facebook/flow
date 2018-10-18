@@ -66,6 +66,7 @@ and prop =
   | NamedProp of identifier * named_prop
   | IndexProp of dict
   | CallProp of fun_t
+  | SpreadProp of t
 
 and named_prop =
   | Field of t * field

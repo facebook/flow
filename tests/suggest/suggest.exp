@@ -230,6 +230,45 @@ function tick(): void {
 
 setInterval(tick, 1000);
 
+spread.js
+// @flow
+declare opaque type O;
+class C {
+  f: O;
+}
+class D {
+  g: O;
+}
+
+(): {w: mixed, x?: O, y?: O, z: O} => {
+  declare var x: {w: O, ...{x: O, y: O}, z: O};
+  return x;
+};
+(): {|w: O, x: O, y: O, z: O|} => {
+  declare var x: {|w: O, ...{|x: O, y: O|}, z: O|};
+  return x;
+};
+(): {f?: O, o: O} => {
+  declare var x: {...C, o: O};
+  return x;
+};
+(): {f?: O, o: mixed} => {
+  declare var x: {o: O, ...C};
+  return x;
+};
+(): {f?: O} & {g?: O} => {
+  declare var x: {...C} & {...D};
+  return x;
+};
+<T: {}, S: {f: O}>(): {f?: mixed, o: O} | T | S => {
+  declare var x: {...T, ...S, o: O};
+  return x;
+};
+<T: {}>(): {o: O} | T => {
+  declare var x: {...T, o: O};
+  return x;
+};
+
 string-literal.js
 // @flow
 declare var a: "a";
