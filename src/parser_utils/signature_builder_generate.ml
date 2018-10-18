@@ -69,8 +69,10 @@ module T = struct
   and expr_type =
     (* types and expressions *)
     | Function of function_t
+
     | ObjectLiteral of (Loc.t * object_property_t) Nel.t
     | ArrayLiteral of array_element_t Nel.t
+
     | ValueRef of reference (* typeof `x` *)
 
     | NumberLiteral of Ast.NumberLiteral.t
@@ -79,6 +81,7 @@ module T = struct
     | Number
     | String
     | Boolean
+
     | Void
     | Null
 
@@ -143,6 +146,92 @@ module T = struct
     | RLexical of Loc.t * string
     | RPath of Loc.t * reference * (Loc.t * string)
 
+  let rec summarize_array loc = function
+    | AInit (_, et), aes ->
+      List.fold_left (fun acc -> function
+        | AInit (_, et) -> data_optional_pair loc acc (Some et)
+      ) (Some et) aes
+
+  and data_optional_pair loc data1 data2 = match data1, data2 with
+    | Some et1, Some et2 -> summarize_expr_type_pair loc et1 et2
+    | None, _ | _, None -> None
+
+  and summarize_expr_type_pair loc expr_type1 expr_type2 = match expr_type1, expr_type2 with
+    | ArrayLiteral array1, ArrayLiteral array2 ->
+      let array' = summarize_array_pair loc array1 array2 in
+      begin match array' with
+        | None -> None
+        | Some et -> Some (ArrayLiteral (AInit (loc, et), []))
+      end
+    | ObjectLiteral object1, ObjectLiteral object2 ->
+      let object' = summarize_object_pair loc object1 object2 in
+      begin match object' with
+        | None -> None
+        | Some xets ->
+          Some (ObjectLiteral (Nel.rev_map (fun (x, et) ->
+            loc, OInit (x, (loc, et))
+          ) xets))
+      end
+    | (NumberLiteral _ | Number), (NumberLiteral _ | Number) -> Some Number
+    | (StringLiteral _ | String), (StringLiteral _ | String) -> Some String
+    | (BooleanLiteral _ | Boolean), (BooleanLiteral _ | Boolean) -> Some Boolean
+    | Null, Null -> Some Null
+
+    | _ -> None
+
+  and summarize_array_pair loc array1 array2 =
+    data_optional_pair loc (summarize_array loc array1) (summarize_array loc array2)
+
+  and summarize_object_pair =
+    let abs_object_key object_key =
+      let open Ast.Expression.Object.Property in
+      match object_key with
+        | Literal (_, x) -> `Literal x
+        | Identifier (_, x) -> `Identifier x
+        | PrivateName (_, (_, x)) -> `PrivateName x
+        | _ -> assert false in
+    let object_key loc abs_object_key =
+      let open Ast.Expression.Object.Property in
+      match abs_object_key with
+        | `Literal x -> Literal (loc, x)
+        | `Identifier x -> Identifier (loc, x)
+        | `PrivateName x -> PrivateName (loc, (loc, x)) in
+    let compare_object_property =
+      let abs_object_key = function
+        | _, OInit (object_key, _)
+        | _, OMethod (object_key, _)
+        | _, OGet (object_key, _)
+        | _, OSet (object_key, _)
+          -> abs_object_key object_key
+      in
+      fun op1 op2 ->
+        Pervasives.compare (abs_object_key op1) (abs_object_key op2) in
+    let summarize_object_property_pair loc op1 op2 = match snd op1, snd op2 with
+      | OInit (object_key1, (_, et1)), OInit (object_key2, (_, et2)) ->
+        let x = abs_object_key object_key1 in
+        if x = abs_object_key object_key2
+        then match summarize_expr_type_pair loc et1 et2 with
+          | Some et -> Some (object_key loc x, et)
+          | None -> None
+        else None
+      | _ -> None in
+    let rec summarize_object_pair loc acc = function
+      | [], [] -> acc
+      | [], _ | _, [] -> None
+      | op1::ops1, op2::ops2 ->
+        let acc = match summarize_object_property_pair loc op1 op2, acc with
+          | None, _ | _, None -> None
+          | Some xet, Some xets -> Some (Nel.cons xet xets) in
+        summarize_object_pair loc acc (ops1, ops2)
+    in
+    fun loc object1 object2 ->
+      let op1, ops1 = Nel.of_list_exn @@ List.sort compare_object_property @@ Nel.to_list object1 in
+      let op2, ops2 = Nel.of_list_exn @@ List.sort compare_object_property @@ Nel.to_list object2 in
+      let init = match summarize_object_property_pair loc op1 op2 with
+        | None -> None
+        | Some xet -> Some (xet, []) in
+      summarize_object_pair loc init (ops1, ops2)
+
   module Outlined: sig
     type 'a t
     val create: unit -> 'a t
@@ -185,15 +274,20 @@ module T = struct
         properties = List.map (type_of_object_property outlined) (pt :: pts)
       }
     | loc, ArrayLiteral ets ->
-      loc, Ast.Type.Array (match ets with
-        | et, [] -> type_of_array_element outlined et
-        | et1, et2::ets ->
-          loc, Ast.Type.Union (
-            type_of_array_element outlined et1,
-            type_of_array_element outlined et2,
-            List.map (type_of_array_element outlined) ets
-          )
+      loc, Ast.Type.Array (match summarize_array loc ets with
+        | None ->
+          begin match ets with
+            | et, [] -> type_of_array_element outlined et
+            | et1, et2::ets ->
+              loc, Ast.Type.Union (
+                type_of_array_element outlined et1,
+                type_of_array_element outlined et2,
+                List.map (type_of_array_element outlined) ets
+              )
+          end
+        | Some et -> type_of_expr_type outlined (loc, et)
       )
+
     | loc, ValueRef reference ->
       loc, Ast.Type.Typeof (type_of_generic (loc, {
         Ast.Type.Generic.id = generic_id_of_reference reference;
@@ -270,7 +364,6 @@ module T = struct
         Ast.Statement.VariableDeclaration.kind;
         declarations = [decl_loc, declaration];
       }
-
 
   and type_of_array_element outlined = function
     | AInit expr_type -> type_of_expr_type outlined expr_type

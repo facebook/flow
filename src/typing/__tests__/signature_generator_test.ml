@@ -495,4 +495,20 @@ let tests = "signature_generator" >::: ([
     ["module.exports = function(x: number = 0) { }"]
     ["declare module.exports: (x?: number) => void;"];
 
+  "array_summary_number" >:: mk_signature_generator_test
+    ["module.exports = [1, 2, 3]"]
+    ["declare module.exports: Array<number>;"];
+
+  "array_summary_array" >:: mk_signature_generator_test
+    ["module.exports = [[1, 2], [3]]"]
+    ["declare module.exports: Array<Array<number>>;"];
+
+  "array_summary_object" >:: mk_signature_generator_test
+    ["module.exports = [{ x: 1 }, { x: 2 }]"]
+    ["declare module.exports: Array<{|x: number|}>;"];
+
+  "array_summary_object_array" >:: mk_signature_generator_test
+    ["module.exports = [{ x: [1, 2] }, { x: [3] }]"]
+    ["declare module.exports: Array<{|x: Array<number>|}>;"];
+
 ] @ verified_signature_generator_tests)
