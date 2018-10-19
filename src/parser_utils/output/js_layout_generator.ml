@@ -1124,22 +1124,23 @@ and variable_declaration ?(ctxt=normal_context) (loc, {
   Ast.Statement.VariableDeclaration.declarations;
   kind;
 }) =
-  source_location_with_comments (loc, fuse [
-    begin match kind with
-    | Ast.Statement.VariableDeclaration.Var -> Atom "var"
-    | Ast.Statement.VariableDeclaration.Let -> Atom "let"
-    | Ast.Statement.VariableDeclaration.Const -> Atom "const"
-    end;
-    space;
-    begin match declarations with
-      | [single_decl] -> variable_declarator ~ctxt single_decl
-      | _ ->
-        list
-          ~sep:(Atom ",")
-          ~inline:(false, true)
-          ~trailing:false
-          (List.map (variable_declarator ~ctxt) declarations)
-    end
+  let kind_layout = match kind with
+  | Ast.Statement.VariableDeclaration.Var -> Atom "var"
+  | Ast.Statement.VariableDeclaration.Let -> Atom "let"
+  | Ast.Statement.VariableDeclaration.Const -> Atom "const"
+  in
+  let decls_layout = match declarations with
+    | [single_decl] -> variable_declarator ~ctxt single_decl
+    | _ ->
+      list
+        ~sep:(Atom ",")
+        ~inline:(false, true)
+        ~trailing:false
+        (List.map (variable_declarator ~ctxt) declarations)
+  in
+  source_location_with_comments (loc, fuse_with_space [
+    kind_layout;
+    decls_layout;
   ]);
 
 and variable_declarator ~ctxt (loc, {
