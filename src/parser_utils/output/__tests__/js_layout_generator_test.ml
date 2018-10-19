@@ -187,24 +187,18 @@ let tests = "js_layout_generator" >::: [
       E.conditional (E.identifier "a") (E.identifier "b") (E.identifier "c")
     ) in
     assert_layout ~ctxt
-      L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-        fused [
-          loc (id "a");
+      L.(loc (group [
+        loc (id "a");
+        indent ((fused [
+          pretty_line;
+          atom "?";
           pretty_space;
-          sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
-            fused [
-              atom "?";
-              pretty_space;
-              loc (id "b");
-              flat_pretty_space;
-            ];
-            fused [
-              atom ":";
-              pretty_space;
-              loc (id "c");
-            ];
-          ];
-        ];
+          loc (id "b");
+          pretty_line;
+          atom ":";
+          pretty_space;
+          loc (id "c");
+        ]));
       ]))
       layout;
     assert_output ~ctxt "a?b:c" layout;
@@ -216,7 +210,7 @@ let tests = "js_layout_generator" >::: [
     ) in
     assert_output ~ctxt (a80^"?b:c") layout;
     assert_output ~ctxt ~pretty:true
-      (a80^" \n"^ (* TODO: remove trailing whitespace *)
+      (a80^"\n"^
        "  ? b\n"^
        "  : c")
       layout;
@@ -227,7 +221,7 @@ let tests = "js_layout_generator" >::: [
     ) in
     assert_output ~ctxt ("a?"^b80^":c") layout;
     assert_output ~ctxt ~pretty:true
-      ("a \n"^ (* TODO: remove trailing whitespace *)
+      ("a\n"^
        "  ? "^b80^"\n"^
        "  : c")
       layout;
