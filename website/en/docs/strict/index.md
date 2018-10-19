@@ -35,7 +35,7 @@ untyped-type-import
 Also recommended, but optional as it may be too noisy in some codebases:
 `sketchy-null`
 
-We recommend you enable all your desired rules from the beginning, then adopt Flow Strict file-by-file. This works better than enabling a single rule, adding `@flow strict` to many files, and then adding more rules to the config.
+We recommend to enable all your desired rules from the beginning, then adopt Flow Strict file-by-file. This works better than enabling a single rule, adding `@flow strict` to many files, and then adding more rules to the config.
 
 ### Adoption <a class="toc" id="toc-adoption" href="#toc-adoption"></a>
 Add `@flow strict` to a file and fix all errors that appear. Because Flow Strict requires dependencies to also be strict (if the `nonstrict-import` rule is enabled), start at the leaves of the dependency tree and work up from there. Do not add `$FlowFixMe` to suppress the new errors as they appear; just add `@flow strict` once all issues have been resolved. Since the most common reasons for using `$FlowFixMe` stem from reliance on untyped dependencies or behavior, future issues should be greatly reduced once Flow Strict is enabled.
