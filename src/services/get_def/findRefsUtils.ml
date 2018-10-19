@@ -21,12 +21,12 @@ let compute_docblock file content =
  * case for local find-refs requests, where the client may pipe in file contents rather than just
  * specifying a filename. For global find-refs, we assume that all dependent files are the same as
  * what's on disk, so we can grab the AST from the heap instead. *)
-let compute_ast_result file content =
+let compute_ast_result ~module_ref_prefix file content =
   let docblock = compute_docblock file content in
   let open Parsing_service_js in
   let types_mode = TypesAllowed in
   let use_strict = true in
-  let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock content file in
+  let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock ~module_ref_prefix content file in
   match result with
     | Parse_ok (ast, file_sig) -> Ok (ast, file_sig, docblock)
     (* The parse should not fail; we have passed ~fail:false *)

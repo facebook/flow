@@ -29,6 +29,7 @@ let metadata = { Context.
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
   facebook_fbt = None;
+  haste_module_ref_prefix = None;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
@@ -54,7 +55,7 @@ let parse_content file content =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
   assert_equal parse_errors [];
-  match File_sig.program ~ast with
+  match File_sig.program ~ast ~module_ref_prefix:None with
   | Ok fsig -> ast, fsig
   | Error _ -> assert_failure "File_sig.program failed"
 

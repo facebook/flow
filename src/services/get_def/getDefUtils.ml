@@ -421,7 +421,8 @@ let add_literal_properties literal_key_info def_info =
 let get_def_info genv env profiling file_key content loc: (def_info option, string) result Lwt.t =
   let {options; workers} = genv in
   let props_access_info = ref (Ok None) in
-  compute_ast_result file_key content
+  let module_ref_prefix = Options.haste_module_ref_prefix options in
+  compute_ast_result ~module_ref_prefix file_key content
   %>>= fun (ast, file_sig, info) ->
   (* Check if it's an exported symbol *)
   let loc = Option.value (ImportExportSymbols.find_related_symbol file_sig loc) ~default:loc in

@@ -464,7 +464,7 @@ let tests_data = [
 let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =
   begin fun ctxt ->
     let contents = String.concat "\n" contents in
-    let signature = match Signature_builder.program (parse contents) with
+    let signature = match Signature_builder.program ~module_ref_prefix:None (parse contents) with
       | Ok signature -> signature
       | Error _ -> failwith "Signature builder failure!" in
     let errors, remote_dependencies, env =

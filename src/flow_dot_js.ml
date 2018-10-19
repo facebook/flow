@@ -40,7 +40,7 @@ let parse_content file content =
     ) Errors.ErrorSet.empty parse_errors in
     Error converted
   else
-    match File_sig.program ~ast with
+    match File_sig.program ~ast ~module_ref_prefix:None with
     | Error e -> Error (Errors.ErrorSet.singleton (error_of_file_sig_error file e))
     | Ok fsig -> Ok (ast, fsig)
 
@@ -144,6 +144,7 @@ let stub_metadata ~root ~checked = { Context.
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
   facebook_fbt = None;
+  haste_module_ref_prefix = None;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;

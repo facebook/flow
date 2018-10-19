@@ -1,0 +1,10 @@
+[ignore]
+
+[include]
+
+[libs]
+
+[options]
+no_flowlib=false
+module.system=haste
+module.system.haste.module_ref_prefix=m#
