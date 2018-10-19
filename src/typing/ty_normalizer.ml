@@ -1348,8 +1348,10 @@ end = struct
 
   and destructuring_t ~env t id r s =
     let cx = Env.get_cx env in
-    let t = Flow_js.eval_selector cx r t s id in
-    type__ ~env t
+    match Flow_js.eval_selector cx r t s id with
+    | exception Flow_js.Not_expect_bound _ ->
+      terr ~kind:BadEvalT ~msg:"destructuring" (Some t)
+    | t -> type__ ~env t
 
   and spread =
     let spread_of_ty = function
@@ -1414,8 +1416,10 @@ end = struct
     then named_type_destructor_t ~env t d
     else
       let trace = Trace.dummy_trace in
-      let _, t = Flow_js.mk_type_destructor cx ~trace use_op reason t d id in
-      type__ ~env t
+      match Flow_js.mk_type_destructor cx ~trace use_op reason t d id with
+      | exception Flow_js.Not_expect_bound _ ->
+        terr ~kind:BadEvalT ~msg:"type_destructor" (Some t)
+      | _, t -> type__ ~env t
 
   and evaluate_type_destructor ~env t id use_op reason d =
     let cx = Env.get_cx env in
