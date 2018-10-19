@@ -124,6 +124,11 @@ class type_at_pos_searcher target_loc = object(self)
       self#annot_with_tparams (fun tparams -> self#find_loc loc t tparams)
     | _ -> super#expression expr
 
+  method! implicit (loc, t) =
+    if self#covers_target loc
+    then self#annot_with_tparams (self#find_loc loc t)
+    else super#implicit (loc, t)
+
 end
 
 class type_at_loc_map_folder = object(_)

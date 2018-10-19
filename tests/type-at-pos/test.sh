@@ -794,3 +794,6 @@ assert_ok "$FLOW" type-at-pos type-alias.js 31 6 --strip-root --pretty --expand-
 
 printf "type-alias.js:34:6 "
 assert_ok "$FLOW" type-at-pos type-alias.js 34 6 --strip-root --pretty --expand-json-output
+
+printf "implicit-instantiation.js:5:10"
+assert_ok "$FLOW" type-at-pos implicit-instantiation.js 5 10 --strip-root --pretty --expand-json-output

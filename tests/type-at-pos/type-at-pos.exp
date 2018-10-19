@@ -4980,3 +4980,19 @@ type-alias.js:34:6 {
   "start":6,
   "end":11
 }
+implicit-instantiation.js:5:10{
+  "expanded_type":{"kind":"Any"},
+  "type":"any",
+  "reasons":[],
+  "loc":{
+    "source":"implicit-instantiation.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":10,"offset":62},
+    "end":{"line":5,"column":10,"offset":63}
+  },
+  "path":"implicit-instantiation.js",
+  "line":5,
+  "endline":5,
+  "start":10,
+  "end":10
+}
