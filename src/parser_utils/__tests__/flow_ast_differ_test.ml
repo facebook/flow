@@ -451,6 +451,22 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source ~expected:"new gotRenamed()"
       ~mapper:(new useless_mapper)
   end;
+  "member" >:: begin fun ctxt ->
+    let source = "rename.a" in
+    assert_edits_equal ctxt ~edits:[((0, 6), "gotRenamed")] ~source ~expected:"gotRenamed.a"
+      ~mapper:(new useless_mapper)
+  end;
+  "member_identifier" >:: begin fun ctxt ->
+    let source = "rename.rename" in
+    assert_edits_equal ctxt ~edits:[((0, 6), "gotRenamed"); ((7, 13), "gotRenamed")] ~source
+      ~expected:"gotRenamed.gotRenamed"
+      ~mapper:(new useless_mapper)
+  end;
+  "member_expression" >:: begin fun ctxt ->
+    let source = "obj[4]" in
+    assert_edits_equal ctxt ~edits:[((4, 5), "(5)")] ~source ~expected:"obj[(5)]"
+      ~mapper:(new useless_mapper)
+  end;
   "unary_same_op" >:: begin fun ctxt ->
     let source = "-rename" in
     assert_edits_equal ctxt ~edits:[((1, 7), "gotRenamed")] ~source ~expected:"-gotRenamed"

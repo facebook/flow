@@ -688,6 +688,8 @@ let program (algo : diff_algorithm)
         identifier id1 id2 |> Option.return
       | (_, New new1), (_, New new2) ->
         new_ new1 new2
+      | (_, Member member1), (_, Member member2) ->
+        member_ member1 member2
       | (_, Call call1), (_, Call call2) ->
         call_ call1 call2
       | (_, Function f1), (_, Function f2) | (_, ArrowFunction f1), (_, ArrowFunction f2) ->
@@ -964,6 +966,30 @@ let program (algo : diff_algorithm)
       let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
       let callee = Some (diff_if_changed expression callee1 callee2) in
       join_diff_list [args; callee]
+
+  and member_ (member1: (Loc.t, Loc.t) Ast.Expression.Member.t)
+              (member2: (Loc.t, Loc.t) Ast.Expression.Member.t): node change list option =
+    let open Ast.Expression.Member in
+    let { _object = obj1; property = prop1; computed = computed1 } = member1 in
+    let { _object = obj2; property = prop2; computed = computed2 } = member2 in
+    let obj = Some (diff_if_changed expression obj1 obj2) in
+    let prop = if computed1 != computed2 then
+      None
+    else
+      diff_if_changed_ret_opt member_property prop1 prop2 in
+    join_diff_list [obj; prop]
+
+  and member_property (prop1: (Loc.t, Loc.t) Ast.Expression.Member.property)
+                       (prop2: (Loc.t, Loc.t) Ast.Expression.Member.property)
+      : node change list option =
+    let open Ast.Expression.Member in
+    match prop1, prop2 with
+      | PropertyExpression exp1, PropertyExpression exp2 ->
+        Some (diff_if_changed expression exp1 exp2)
+      | PropertyIdentifier id1, PropertyIdentifier id2
+      | PropertyPrivateName (_, id1), PropertyPrivateName (_, id2) ->
+        Some (diff_if_changed identifier id1 id2)
+      | _, _ -> None
 
   and call_ (call1: (Loc.t, Loc.t) Ast.Expression.Call.t) (call2: (Loc.t, Loc.t) Ast.Expression.Call.t): node change list option =
     let open Ast.Expression.Call in
