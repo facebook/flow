@@ -480,19 +480,30 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
     | S.With { S.With._object; body } ->
       statement_with_test "with" (expression _object) (statement body)
     | S.Switch { S.Switch.discriminant; cases } ->
-      let case_nodes = match cases with
-      | [] -> []
-      | hd::[] -> [switch_case ~last:true hd]
-      | hd::rest ->
-        let rev_rest = List.rev rest in
-        let last = List.hd rev_rest |> switch_case ~last:true in
-        let middle = List.tl rev_rest |> List.map (switch_case ~last:false) in
-        (switch_case ~last:false hd)::(List.rev (last::middle))
+      let case_nodes =
+        let rec helper acc = function
+        | [] -> List.rev acc
+        | case::[] -> List.rev ((switch_case ~last:true case)::acc)
+        | case::next::rest ->
+          let case_node = switch_case ~last:false case in
+          let next_node = switch_case ~last:(rest = []) next in
+          let case_node =
+            let (Loc.{_end = {line = case_end; _}; _}, _) = case in
+            let (Loc.{start = {line = next_start; _}; _}, _) = next in
+            if case_end + 1 < next_start then fuse [case_node; pretty_hardline]
+            else case_node
+          in
+          helper (next_node::case_node::acc) rest
+        in
+        helper [] cases
       in
-      statement_with_test
-        "switch"
-        (expression discriminant)
-        (list ~wrap:(Atom "{", Atom "}") ~break:Break_if_pretty case_nodes)
+      let cases_node =
+        wrap_and_indent
+          ~break:pretty_hardline
+          (Atom "{", Atom "}")
+          [join pretty_hardline case_nodes]
+      in
+      statement_with_test "switch" (expression discriminant) cases_node
     | S.Return { S.Return.argument } ->
       let s_return = Atom "return" in
       with_semicolon (
@@ -1929,10 +1940,11 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent }) =
     match consequent with
     | [] -> case_left
     | _ ->
-      list
-        ~wrap:(case_left, Empty)
-        ~break:Break_if_pretty
-        (statement_list ~pretty_semicolon:last consequent)
+      let statements = statement_list ~pretty_semicolon:last consequent in
+      fuse [
+        case_left;
+        Indent (fuse (pretty_hardline::statements));
+      ]
   )
 
 and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.

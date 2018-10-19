@@ -1950,10 +1950,18 @@ let tests = "js_layout_generator" >::: [
     end;
 
   "switch" >:: begin fun ctxt ->
+    let case1_loc = Loc.{ none with
+      start = { line = 1; column = 1; offset = 0 };
+      _end = { line = 2; column = 3; offset = 0 }
+    } in
+    let case2_loc = Loc.{ none with
+      start = { line = 4; column = 1; offset = 0 };
+      _end = { line = 5; column = 3; offset = 0 }
+    } in
     let layout = Js_layout_generator.statement (
       S.switch (E.identifier "x") [
-        S.switch_case ~test:(E.literal (Literals.string "a")) [S.break ()];
-        S.switch_case ~test:(E.literal (Literals.string "b")) [S.break ()];
+        S.switch_case ~loc:case1_loc ~test:(E.literal (Literals.string "a")) [S.break ()];
+        S.switch_case ~loc:case2_loc ~test:(E.literal (Literals.string "b")) [S.break ()];
       ]
     ) in
     assert_layout ~ctxt
@@ -1970,53 +1978,48 @@ let tests = "js_layout_generator" >::: [
           atom ")";
         ];
         pretty_space;
-        sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-          fused [
-            atom "{";
-            sequence ~break:Layout.Break_if_pretty [
-              fused [
-                loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-                  fused [
-                    atom "case";
-                    pretty_space;
-                    loc (fused [
-                      atom "\"";
-                      atom "a";
-                      atom "\"";
-                    ]);
-                    atom ":";
-                    sequence ~break:Layout.Break_if_pretty [
-                      loc (fused [
-                        atom "break";
-                        atom ";";
-                      ]);
-                    ];
-                  ];
-                ]);
-                flat_pretty_space;
-              ];
-              loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-                fused [
-                  atom "case";
-                  pretty_space;
-                  loc (fused [
-                    atom "\"";
-                    atom "b";
-                    atom "\"";
-                  ]);
-                  atom ":";
-                  sequence ~break:Layout.Break_if_pretty [
-                    loc (fused [
-                      atom "break";
-                      Layout.IfPretty ((atom ";"), empty);
-                    ]);
-                  ];
-                ];
+        atom "{";
+        indent ((fused [
+          pretty_hardline;
+          loc ~loc:case1_loc (fused [
+            atom "case";
+            pretty_space;
+            loc (fused [
+              atom "\"";
+              atom "a";
+              atom "\"";
+            ]);
+            atom ":";
+            indent ((fused [
+              pretty_hardline;
+              loc (fused [
+                atom "break";
+                atom ";";
               ]);
-            ];
-            atom "}";
-          ];
-        ];
+            ]));
+          ]);
+          pretty_hardline;
+          pretty_hardline;
+          loc ~loc:case2_loc (fused [
+            atom "case";
+            pretty_space;
+            loc (fused [
+              atom "\"";
+              atom "b";
+              atom "\"";
+            ]);
+            atom ":";
+            indent ((fused [
+              pretty_hardline;
+              loc (fused [
+                atom "break";
+                Layout.IfPretty ((atom ";"), empty);
+              ]);
+            ]));
+          ]);
+        ]));
+        pretty_hardline;
+        atom "}";
       ]))
       layout;
     assert_output ~ctxt "switch(x){case\"a\":break;case\"b\":break}" layout;
@@ -2024,10 +2027,9 @@ let tests = "js_layout_generator" >::: [
       ("switch (x) {\n"^
        "  case \"a\":\n"^
        "    break;\n"^
-       "  \n"^ (* TODO: kill trailing whitespace *)
+       "  \n"^ (* TODO: fix trailing whitespace *)
        "  case \"b\":\n"^
        "    break;\n"^
-       "  \n"^ (* TODO: kill trailing whitespace *)
        "}")
       layout;
   end;

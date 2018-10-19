@@ -226,8 +226,8 @@ module Statements = struct
   let switch discriminant cases =
     Loc.none, Switch { Switch.discriminant; cases }
 
-  let switch_case ?test consequent =
-    Loc.none, { Switch.Case.test; consequent }
+  let switch_case ?(loc=Loc.none) ?test consequent =
+    loc, { Switch.Case.test; consequent }
 
   let break ?label () =
     Loc.none, Break { Break.label }
