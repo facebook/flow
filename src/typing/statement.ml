@@ -50,9 +50,10 @@ let convert_tparam_instantiations cx tparams_map instantiations =
         let (_, t), _ as tast = Anno.convert cx tparams_map ast in
         loop ((ExplicitArg t)::ts) ((Explicit tast)::tasts) cx tparams_map asts
     | Implicit loc ->
-        (* TODO: (jmbrown) create a tvar for type-at-pos here *)
-        loop ((ImplicitArg (ALoc.of_loc loc))::ts)
-          ((Implicit (loc, AnyT.at (loc |> ALoc.of_loc)))::tasts) cx tparams_map asts
+        let reason = mk_reason RImplicitInstantiation (ALoc.of_loc loc) in
+        let id = Tvar.mk_no_wrap cx reason in
+        loop ((ImplicitArg (reason, id))::ts)
+          ((Implicit (loc, OpenT (reason, id)))::tasts) cx tparams_map asts
     end
   in
   loop [] [] cx tparams_map instantiations

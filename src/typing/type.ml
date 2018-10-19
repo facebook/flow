@@ -769,7 +769,12 @@ module rec TypeTerm : sig
     call_strict_arity: bool;
   }
 
-  and targ = ImplicitArg of ALoc.t | ExplicitArg of t
+  and targ =
+    (* This tvar gets lower bounds from the instantiations of _. It is used to power type-services
+     * like type-at-pos and should not be used for type checking
+     *)
+    | ImplicitArg of tvar
+    | ExplicitArg of t
 
   and opt_funcalltype = t * targ list option * call_arg list * int * bool
 

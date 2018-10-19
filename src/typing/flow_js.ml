@@ -7788,9 +7788,10 @@ and instantiate_poly_call_or_new
   let _, ts = Nel.fold_left (fun (targs, ts) typeparam -> match targs with
   | [] -> ([], ts)
   | (ExplicitArg t)::targs -> (targs, t::ts)
-  | (ImplicitArg aloc)::targs ->
-    let reason = mk_reason RImplicitInstantiation aloc in
+  | (ImplicitArg (r, id))::targs ->
+    let reason = mk_reason RImplicitInstantiation (aloc_of_reason r) in
     let t = ImplicitTypeArgument.mk_targ cx typeparam reason reason_tapp in
+    rec_flow_t cx trace ~use_op (t, OpenT (r, id));
     (targs, t::ts)) (targs, []) xs
   in
   instantiate_poly_with_targs cx trace ~use_op ~reason_op ~reason_tapp ?cache ?errs_ref
