@@ -764,17 +764,11 @@ let tests = "js_layout_generator" >::: [
             Layout.IfBreak ((atom "("), empty);
             indent ((fused [
               softline;
-              loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-                sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-                  fused [
-                    loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
-                    Layout.IfBreak ((atom ","), (fused [
-                      atom ",";
-                      pretty_space;
-                    ]));
-                  ];
-                  loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
-                ];
+              loc (group [
+                loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
+                atom ",";
+                pretty_line;
+                loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy");
               ]);
             ]));
             softline;
@@ -2126,5 +2120,17 @@ let tests = "js_layout_generator" >::: [
         assert_expression ~ctxt "100" (expression_of_string "1e2");
         assert_expression ~ctxt "1e3" (expression_of_string "1000");
         assert_expression ~ctxt "2592e6" (expression_of_string "2.592e+09");
-      end
+      end;
+
+  "sequence_long" >:: begin fun ctxt ->
+    let x80 = String.make 80 'x' in
+    let layout = Js_layout_generator.expression (
+      E.sequence [E.identifier x80; E.identifier x80]
+    ) in
+    assert_output ~ctxt (x80^","^x80) layout;
+    assert_output ~ctxt ~pretty:true
+      (x80^",\n"^
+       x80)
+      layout;
+  end;
 ]

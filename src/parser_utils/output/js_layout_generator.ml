@@ -692,12 +692,8 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
          around the right side. we can force that by bumping the minimum
          precedence. *)
       let precedence = precedence + 1 in
-      list
-        ~inline:(true, true)
-        ~sep:(Atom ",")
-        ~indent:0
-        ~trailing:false
-        (List.map (expression_with_parens ~precedence ~ctxt) expressions)
+      let layouts = List.map (expression_with_parens ~precedence ~ctxt) expressions in
+      group [join (fuse [Atom ","; pretty_line]) layouts]
     | E.Identifier ident -> identifier ident
     | E.Literal lit -> literal lit
     | E.Function func -> function_ ~precedence func
