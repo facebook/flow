@@ -1233,13 +1233,19 @@ and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
   | None -> s_params
 
 and block (loc, { Ast.Statement.Block.body }) =
+  let statements =
+    body
+    |> statement_list_with_locs ~allow_empty:true ~pretty_semicolon:true
+    |> list_with_newlines
+  in
   source_location_with_comments (
     loc,
-    if List.length body > 0 then
-      body
-      |> statement_list_with_locs ~allow_empty:true ~pretty_semicolon:true
-      |> list_with_newlines
-      |> list ~wrap:(Atom "{", Atom "}") ~break:Break_if_pretty
+    if statements <> [] then
+      group [
+        wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [
+          join pretty_hardline statements;
+        ];
+      ]
     else Atom "{}"
   )
 

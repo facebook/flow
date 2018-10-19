@@ -782,7 +782,7 @@ let tests = "js_layout_generator" >::: [
           ];
           Layout.IfPretty ((atom ";"), empty);
         ]))
-        Layout_matcher.(body_of_function_declaration func >>= nth_sequence 0);
+        Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
       assert_statement ~ctxt ("function f(){return "^x40^","^y40^"}") func;
       assert_statement ~ctxt ~pretty:true
         ("function f() {\n  return (\n    "^x40^",\n    "^y40^"\n  );\n}")
@@ -806,7 +806,7 @@ let tests = "js_layout_generator" >::: [
           ];
           Layout.IfPretty ((atom ";"), empty);
         ]))
-        Layout_matcher.(body_of_function_declaration func >>= nth_sequence 0);
+        Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
       assert_statement ~ctxt ~pretty:true
         ("function f() {\n  return (\n    "^x40^" &&\n      " ^ y40 ^ "\n  );\n}")
         func;
@@ -831,7 +831,7 @@ let tests = "js_layout_generator" >::: [
           ];
           Layout.IfPretty ((atom ";"), empty);
         ]))
-        Layout_matcher.(body_of_function_declaration func >>= nth_sequence 0);
+        Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
       assert_statement ~ctxt ~pretty:true
         ("function f() {\n  return (\n    "^x40^" + " ^ y40 ^ "\n  );\n}")
         func;
@@ -855,7 +855,7 @@ let tests = "js_layout_generator" >::: [
           ];
           Layout.IfPretty ((atom ";"), empty);
         ]))
-        Layout_matcher.(body_of_function_declaration func >>= nth_sequence 0);
+        Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
       assert_statement ~ctxt ~pretty:true
         ("function f() {\n  return (\n    <"^long_name^"></"^long_name^">\n  );\n}")
         func;
@@ -872,7 +872,7 @@ let tests = "js_layout_generator" >::: [
           loc (id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx");
           Layout.IfPretty ((atom ";"), empty);
         ]))
-        Layout_matcher.(body_of_function_declaration func >>= nth_sequence 0);
+        Layout_matcher.(body_of_function_declaration func >>= nth_fused 0);
       assert_statement ~ctxt ("function f(){return "^x80^"}") func;
       assert_statement ~ctxt ~pretty:true ("function f() {\n  return "^x80^";\n}") func;
     end;
@@ -1206,26 +1206,26 @@ let tests = "js_layout_generator" >::: [
         let ast = S.block [c2] in
         let layout = Js_layout_generator.statement ast in
         assert_layout ~ctxt
-          L.(loc (loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-            fused [
-              atom "{";
-              sequence ~break:Layout.Break_if_pretty [
-                loc (group [
-                  atom "class";
+          L.(loc (loc (group [
+            atom "{";
+            indent ((fused [
+              pretty_hardline;
+              loc (group [
+                atom "class";
+                space;
+                id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
+                indent ((fused [
+                  line;
+                  atom "extends";
                   space;
-                  id "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx";
-                  indent ((fused [
-                    line;
-                    atom "extends";
-                    space;
-                    loc (loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"));
-                  ]));
-                  pretty_space;
-                  atom "{}";
-                ]);
-              ];
-              atom "}";
-            ];
+                  loc (loc (id "yyyyyyyyyyyyyyyyyyyyyyyyyyyyy"));
+                ]));
+                pretty_space;
+                atom "{}";
+              ]);
+            ]));
+            pretty_hardline;
+            atom "}";
           ])))
           layout;
         assert_output ~ctxt
@@ -1348,17 +1348,17 @@ let tests = "js_layout_generator" >::: [
             atom ")";
           ];
           pretty_space;
-          loc (loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-            fused [
-              atom "{";
-              sequence ~break:Layout.Break_if_pretty [
-                loc (fused [
-                  loc (id "a");
-                  Layout.IfPretty ((atom ";"), empty);
-                ]);
-              ];
-              atom "}";
-            ];
+          loc (loc (group [
+            atom "{";
+            indent ((fused [
+              pretty_hardline;
+              loc (fused [
+                loc (id "a");
+                Layout.IfPretty ((atom ";"), empty);
+              ]);
+            ]));
+            pretty_hardline;
+            atom "}";
           ]));
         ]))
         layout;
@@ -1455,17 +1455,17 @@ let tests = "js_layout_generator" >::: [
             atom ")";
           ];
           pretty_space;
-          loc (loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-            fused [
-              atom "{";
-              sequence ~break:Layout.Break_if_pretty [
-                loc (fused [
-                  loc (id "a");
-                  Layout.IfPretty ((atom ";"), empty);
-                ]);
-              ];
-              atom "}";
-            ];
+          loc (loc (group [
+            atom "{";
+            indent ((fused [
+              pretty_hardline;
+              loc (fused [
+                loc (id "a");
+                Layout.IfPretty ((atom ";"), empty);
+              ]);
+            ]));
+            pretty_hardline;
+            atom "}";
           ]));
         ]))
         layout;

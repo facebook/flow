@@ -114,13 +114,16 @@ let fuse_list =
       snd wrap;
     ]
 
-let wrap_and_indent ?(pretty_space=false) (before, after) items =
+let wrap_and_indent ?break (before, after) items =
+  let break = match break with
+  | Some break -> break
+  | None -> softline
+  in
   let layout =
     if items = [] then Empty else
-    let wrap_line = if pretty_space then pretty_line else softline in
     fuse [
-      Indent (fuse (wrap_line::items));
-      wrap_line;
+      Indent (fuse (break::items));
+      break;
     ]
   in
   fuse [before; layout; after]
@@ -138,7 +141,8 @@ let new_list
       if trailing_sep then if_break (Atom ",") Empty else Empty;
     ]
   in
-  wrap_and_indent ~pretty_space:wrap_spaces wrap items_layout
+  let break = if wrap_spaces then Some pretty_line else None in
+  wrap_and_indent ?break wrap items_layout
 
 (* All purpose list *)
 let list

@@ -196,36 +196,60 @@ module Layout_matcher = struct
 
   let empty = function
     | Empty -> Ok ()
-    | x -> Error x
+    | x -> Error ("expected Empty", x)
 
   let loc = function
     | SourceLocation (_, x) -> Ok x
-    | x -> Error x
+    | x -> Error ("expected SourceLocation", x)
+
+  let indent = function
+    | Indent x -> Ok x
+    | x -> Error ("expected Indent", x)
+
+  let group = function
+    | Group x -> Ok x
+    | x -> Error ("expected Group", x)
+
+  let nth_group n = function
+    | Group xs as layout ->
+      begin
+        try Ok (List.nth xs n)
+        with Failure _ -> Error ("couldn't get "^(string_of_int n)^"th Group element", layout)
+      end
+    | x -> Error ("expected Group", x)
 
   let fused = function
     | Concat x -> Ok x
-    | x -> Error x
+    | x -> Error ("expected Concat", x)
 
   let nth_fused n = function
-    | Concat xs as layout -> (try Ok (List.nth xs n) with Failure _ -> Error layout)
-    | layout -> Error layout
+    | Concat xs as layout ->
+      begin
+        try Ok (List.nth xs n)
+        with Failure _ -> Error ("couldn't get "^(string_of_int n)^"th Concat element", layout)
+      end
+    | layout -> Error ("expected Concat", layout)
 
   let atom = function
     | Atom x -> Ok x
-    | x -> Error x
+    | x -> Error ("expected Atom", x)
 
   (* TODO: support matching break, inline, indent *)
   let sequence = function
     | Sequence (_, x) -> Ok x
-    | x -> Error x
+    | x -> Error ("expected Sequence", x)
 
   let nth_sequence n = function
-    | Sequence (_, xs) as layout -> (try Ok (List.nth xs n) with Failure _ -> Error layout)
-    | layout -> Error layout
+    | Sequence (_, xs) as layout ->
+      begin
+        try Ok (List.nth xs n)
+        with Failure _ -> Error ("couldn't get "^(string_of_int n)^"th Layout element", layout)
+      end
+    | layout -> Error ("expected Sequence", layout)
 
   let pretty_space = function
     | IfPretty (Atom " ", Empty) -> Ok ()
-    | x -> Error x
+    | x -> Error ("expected pretty space", x)
 
 
   (* higher level helpers *)
@@ -235,9 +259,13 @@ module Layout_matcher = struct
     >>= loc
     >>= (nth_fused 5) (* skip `function`, space, name, space, params *)
     >>= loc
-    >>= (nth_sequence 0)
-    >>= (nth_fused 1) (* skip { to get body *)
-
+    >>= (nth_group 1) (* skip opening { *)
+    >>= indent (* body is indented *)
+    >>= fused
+    >>= (function
+        | [] -> Ok (Concat [])
+        | _newline::rest -> Ok (Concat rest) (* skip newline after { *)
+        )
 end
 
 let assert_layout ~ctxt ?msg expected actual =
@@ -246,10 +274,11 @@ let assert_layout ~ctxt ?msg expected actual =
 let assert_layout_result ~ctxt ?msg expected actual =
   match actual with
   | Ok layout -> assert_layout ~ctxt ?msg expected layout
-  | Error layout ->
-      assert_equal ~ctxt
-        ~msg:(Printf.sprintf "Unable to decode %s" (Layout_builder.printer layout))
-        true false
+  | Error (msg, layout) ->
+      assert_failure
+        (Printf.sprintf "Unable to decode %s:\n%s"
+          (Layout_builder.printer layout)
+          msg)
 
 let assert_layout_of_expression
     ~ctxt ?msg ?(expr_ctxt=Js_layout_generator.normal_context)
