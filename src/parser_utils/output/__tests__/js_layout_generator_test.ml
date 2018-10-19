@@ -182,6 +182,57 @@ let tests = "js_layout_generator" >::: [
       layout;
   end;
 
+  "conditionals" >:: begin fun ctxt ->
+    let layout = Js_layout_generator.expression (
+      E.conditional (E.identifier "a") (E.identifier "b") (E.identifier "c")
+    ) in
+    assert_layout ~ctxt
+      L.(loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+        fused [
+          loc (id "a");
+          pretty_space;
+          sequence ~break:Layout.Break_if_needed ~inline:(false, true) [
+            fused [
+              atom "?";
+              pretty_space;
+              loc (id "b");
+              flat_pretty_space;
+            ];
+            fused [
+              atom ":";
+              pretty_space;
+              loc (id "c");
+            ];
+          ];
+        ];
+      ]))
+      layout;
+    assert_output ~ctxt "a?b:c" layout;
+    assert_output ~ctxt ~pretty:true "a ? b : c" layout;
+
+    let a80 = String.make 80 'a' in
+    let layout = Js_layout_generator.expression (
+      E.conditional (E.identifier a80) (E.identifier "b") (E.identifier "c")
+    ) in
+    assert_output ~ctxt (a80^"?b:c") layout;
+    assert_output ~ctxt ~pretty:true
+      (a80^" \n"^ (* TODO: remove trailing whitespace *)
+       "  ? b\n"^
+       "  : c")
+      layout;
+
+    let b80 = String.make 80 'b' in
+    let layout = Js_layout_generator.expression (
+      E.conditional (E.identifier "a") (E.identifier b80) (E.identifier "c")
+    ) in
+    assert_output ~ctxt ("a?"^b80^":c") layout;
+    assert_output ~ctxt ~pretty:true
+      ("a \n"^ (* TODO: remove trailing whitespace *)
+       "  ? "^b80^"\n"^
+       "  : c")
+      layout;
+  end;
+
   "conditional_expression_parens" >::
     begin fun ctxt ->
       let a, b, c, d, e =
@@ -893,7 +944,50 @@ let tests = "js_layout_generator" >::: [
       assert_statement ~ctxt {|return 123;|} ret;
     end;
 
-  "for_loops" >::
+  "for_loop" >:: begin fun ctxt ->
+    let x80 = String.make 80 'x' in
+    let layout = Js_layout_generator.statement (
+      S.for_ (E.identifier x80) None None (S.empty ())
+    ) in
+    assert_layout ~ctxt
+      L.(loc (fused [
+        atom "for";
+        pretty_space;
+        sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+          fused [
+            atom "(";
+            sequence ~break:Layout.Break_if_needed [
+              fused [
+                loc (id x80);
+                Layout.IfBreak ((atom ";"), (fused [
+                  atom ";";
+                  pretty_space;
+                ]));
+              ];
+              Layout.IfBreak ((atom ";"), (fused [
+                atom ";";
+                pretty_space;
+              ]));
+              empty;
+            ];
+            atom ")";
+          ];
+        ];
+        pretty_space;
+        loc (Layout.IfPretty ((atom "{}"), (atom ";")));
+      ]))
+      layout;
+    assert_output ~ctxt ("for("^x80^";;);") layout;
+    assert_output ~ctxt ~pretty:true
+      ("for (\n"^
+       "  "^x80^";\n"^
+       "  ;\n"^
+       "  \n"^ (* TODO: remove trailing whitespace *)
+       ") {}") (* TODO: should print ;, not {}. that changes the AST! *)
+      layout;
+  end;
+
+  "binary_in_in_for_loops" >::
     begin fun ctxt ->
       let ast =
         let x, y = E.identifier "x", E.identifier "y" in
