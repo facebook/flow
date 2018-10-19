@@ -1949,6 +1949,89 @@ let tests = "js_layout_generator" >::: [
       assert_expression ~ctxt {|'""\''|} (expression_of_string {|'""\''|});
     end;
 
+  "switch" >:: begin fun ctxt ->
+    let layout = Js_layout_generator.statement (
+      S.switch (E.identifier "x") [
+        S.switch_case ~test:(E.literal (Literals.string "a")) [S.break ()];
+        S.switch_case ~test:(E.literal (Literals.string "b")) [S.break ()];
+      ]
+    ) in
+    assert_layout ~ctxt
+      L.(loc (fused [
+        atom "switch";
+        pretty_space;
+        group [
+          atom "(";
+          indent ((fused [
+            softline;
+            loc (id "x");
+          ]));
+          softline;
+          atom ")";
+        ];
+        pretty_space;
+        sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+          fused [
+            atom "{";
+            sequence ~break:Layout.Break_if_pretty [
+              fused [
+                loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+                  fused [
+                    atom "case";
+                    pretty_space;
+                    loc (fused [
+                      atom "\"";
+                      atom "a";
+                      atom "\"";
+                    ]);
+                    atom ":";
+                    sequence ~break:Layout.Break_if_pretty [
+                      loc (fused [
+                        atom "break";
+                        atom ";";
+                      ]);
+                    ];
+                  ];
+                ]);
+                flat_pretty_space;
+              ];
+              loc (sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
+                fused [
+                  atom "case";
+                  pretty_space;
+                  loc (fused [
+                    atom "\"";
+                    atom "b";
+                    atom "\"";
+                  ]);
+                  atom ":";
+                  sequence ~break:Layout.Break_if_pretty [
+                    loc (fused [
+                      atom "break";
+                      Layout.IfPretty ((atom ";"), empty);
+                    ]);
+                  ];
+                ];
+              ]);
+            ];
+            atom "}";
+          ];
+        ];
+      ]))
+      layout;
+    assert_output ~ctxt "switch(x){case\"a\":break;case\"b\":break}" layout;
+    assert_output ~ctxt ~pretty:true
+      ("switch (x) {\n"^
+       "  case \"a\":\n"^
+       "    break;\n"^
+       "  \n"^ (* TODO: kill trailing whitespace *)
+       "  case \"b\":\n"^
+       "    break;\n"^
+       "  \n"^ (* TODO: kill trailing whitespace *)
+       "}")
+      layout;
+  end;
+
   "switch_case_space" >::
     begin fun ctxt ->
       let assert_no_space ~ctxt expr =
