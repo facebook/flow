@@ -165,12 +165,19 @@ let possible_types_of_type cx = function
   | OpenT (_, id) -> possible_types cx id
   | _ -> []
 
+let possible_types_of_use cx = function
+  | UseT (_, t) -> possible_types_of_type cx t
+  | _ -> []
+
 let uses_of constraints =
   match constraints with
   | Unresolved { upper; _ } -> UseTypeMap.keys upper
   | Resolved t -> [UseT (unknown_use, t)]
 
 let possible_uses cx id = uses_of (Context.find_graph cx id)
+
+let create_intersection rep =
+  DefT (locationless_reason (RCustom "intersection"), IntersectionT rep)
 
 let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
   | ([],_) | (_,[]) -> []
@@ -179,10 +186,6 @@ let rec list_map2 f ts1 ts2 = match (ts1,ts2) with
 let rec merge_type cx =
   let create_union rep =
     DefT (locationless_reason (RCustom "union"), UnionT rep)
-  in
-
-  let create_intersection rep =
-    DefT (locationless_reason (RCustom "intersection"), IntersectionT rep)
   in
 
   function
@@ -380,8 +383,13 @@ let rec merge_type cx =
       create_union (UnionRep.make t1 t2 [])
 
 and resolve_type cx = function
-  | OpenT tvar -> resolve_tvar cx tvar
+  | OpenT tvar -> resolve_type cx (resolve_tvar cx tvar)
+  | AnnotT (_, t, _) -> resolve_type cx t
+  | MergedT (_, uses) -> resolve_merged_t cx uses
   | t -> t
+
+
+and default_locationless_any = Locationless.AnyT.t
 
 and resolve_tvar cx (_, id) =
   let ts = possible_types cx id in
@@ -398,7 +406,14 @@ and resolve_tvar cx (_, id) =
      improve failure tolerance.  *)
   List.fold_left (fun u t ->
     merge_type cx (t, u)
-  ) Locationless.AnyT.t ts
+  ) default_locationless_any ts
+
+and resolve_merged_t cx uses =
+  let ts = List.map (possible_types_of_use cx) uses in
+  match List.flatten ts with
+  | [] -> default_locationless_any
+  | [x] -> x
+  | x::y::ts -> create_intersection (InterRep.make x y ts)
 
 (** The following functions do "shallow" walks over types, respectively from
     requires and from exports, in order to report missing annotations. There are

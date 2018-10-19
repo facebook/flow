@@ -1,0 +1,13 @@
+Don't crash on MergedT:
+{
+  "kind":"symbol-found",
+  "name":"arr",
+  "locs":[
+    {
+      "source":"test.js",
+      "type":"SourceFile",
+      "start":{"line":7,"column":3,"offset":173},
+      "end":{"line":7,"column":5,"offset":176}
+    }
+  ]
+}
