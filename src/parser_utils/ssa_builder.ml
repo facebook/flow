@@ -10,6 +10,8 @@ module Ast = Flow_ast
 open Hoister
 open Scope_builder
 
+open Utils_js
+
 (* For every read of a variable x, we are interested in tracking writes to x
    that can reach that read. Ultimately the writes are going to be represented
    as a list of locations, where each location corresponds to a "single static
