@@ -5,16 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module type LocSig = sig
-  type t
-  val compare: t -> t -> int
-  val equal: t -> t -> bool
-
-  module LMap: (MyMap.S with type key = t)
-  module LSet: (Set.S with type elt = t)
-end
-
-module Make (L: LocSig) : sig
+module Make (L: Loc_sig.S) : sig
   type scope = int
   type use = L.t
   type uses = L.LSet.t
@@ -253,18 +244,8 @@ end = struct
       (SMap.union toplevel_scope.defs toplevel_lexical_scope.defs) SSet.empty
 end
 
-module With_Loc = Make (struct
-  include Loc
+module With_Loc = Make (Loc_sig.LocS)
 
-  module LMap = Utils_js.LocMap
-  module LSet = Utils_js.LocSet
-end)
-
-module With_ALoc = Make (struct
-  include ALoc
-
-  module LMap = Utils_js.ALocMap
-  module LSet = Utils_js.ALocSet
-end)
+module With_ALoc = Make (Loc_sig.ALocS)
 
 include With_Loc
