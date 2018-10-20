@@ -8,7 +8,7 @@
 module Ast = Flow_ast
 
 class property_access_searcher name = object(this)
-  inherit [bool] Flow_ast_visitor.visitor ~init:false as super
+  inherit [bool, Loc.t] Flow_ast_visitor.visitor ~init:false as super
   method! member loc expr =
     let open Ast.Expression.Member in
     begin match expr.property with

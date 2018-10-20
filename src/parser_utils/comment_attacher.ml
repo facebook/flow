@@ -36,7 +36,7 @@ module Acc = struct
 end
 
 class comment_attacher ~comments = object(this)
-  inherit [Acc.t] visitor ~init:(Acc.init comments) as super
+  inherit [Acc.t, Loc.t] visitor ~init:(Acc.init comments) as super
 
   method private check_loc node_loc =
     match acc.unattached_comments with

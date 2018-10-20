@@ -360,7 +360,7 @@ let set_cjs_exports mod_exp_loc cjs_exports_def msig =
    scope builder class.
 *)
 class requires_exports_calculator ~ast ~module_ref_prefix = object(this)
-  inherit [(exports_info t', error) result] visitor ~init:(Ok (mk_file_sig init_exports_info)) as super
+  inherit [(exports_info t', error) result, Loc.t] visitor ~init:(Ok (mk_file_sig init_exports_info)) as super
 
   val scope_info = Scope_builder.program ast
   method toplevel_names =

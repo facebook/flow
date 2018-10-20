@@ -14,7 +14,7 @@ open Scope_api
 module LocMap = Utils_js.LocMap
 
 class with_or_eval_visitor = object(this)
-  inherit [bool] visitor ~init:false as super
+  inherit [bool, Loc.t] visitor ~init:false as super
 
   method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
@@ -86,7 +86,7 @@ end = struct
 end
 
 class scope_builder = object(this)
-  inherit [Acc.t] visitor ~init:Acc.init as super
+  inherit [Acc.t, Loc.t] visitor ~init:Acc.init as super
 
   val mutable env = Env.empty
   val mutable current_scope_opt = None

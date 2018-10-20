@@ -27,7 +27,7 @@ let warning_desc_to_string = function
     Utils_js.spf "Inferred type is empty."
 
 class visitor ~cxs = object(this)
-  inherit [unit] Flow_ast_visitor.visitor ~init:() as super
+  inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
 
   val mutable _warnings = Errors.ErrorSet.empty
 

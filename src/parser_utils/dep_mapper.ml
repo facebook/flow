@@ -141,7 +141,7 @@ module Dep = struct
 end
 
 class mapper = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
 
   val mutable use_def_map = LocMap.empty
   method use_def_map = use_def_map

@@ -47,7 +47,7 @@ let empty_module_exports = {
 
 (* TODO: Create a generic LOC to AST map  *)
 class ast_of_def_loc_visitor ~loc = object(this)
-  inherit [ast_node option] visitor ~init:None as super
+  inherit [ast_node option, Loc.t] visitor ~init:None as super
 
   method! statement stmt =
     let open Ast.Statement in
@@ -81,7 +81,7 @@ let ast_of_def_loc ~ast ~loc =
   walk#eval walk#program ast
 
 class exports_resolver ~ast = object(this)
-  inherit [module_exports] visitor ~init:empty_module_exports as _super
+  inherit [module_exports, Loc.t] visitor ~init:empty_module_exports as _super
 
   val scope_info = Scope_builder.program ast
 

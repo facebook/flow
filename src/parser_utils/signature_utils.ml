@@ -9,7 +9,7 @@ open Flow_ast_visitor
 
 module Procedure_decider = struct
   class decider = object(this)
-    inherit [bool] visitor ~init:true
+    inherit [bool, Loc.t] visitor ~init:true
 
     method private no =
       this#update_acc (fun _ -> false)

@@ -60,7 +60,7 @@ end
    we probably should not change it without extensive testing. *)
 
 class hoister = object(this)
-  inherit [Bindings.t] visitor ~init:Bindings.empty as super
+  inherit [Bindings.t, Loc.t] visitor ~init:Bindings.empty as super
 
   method private add_binding entry =
     (* `event` is a global in old IE and jsxmin lazily avoids renaming it. it
@@ -141,7 +141,7 @@ class hoister = object(this)
 end
 
 class lexical_hoister = object(this)
-  inherit [Bindings.t] visitor ~init:Bindings.empty as super
+  inherit [Bindings.t, Loc.t] visitor ~init:Bindings.empty as super
 
   method private add_binding entry =
     this#update_acc (Bindings.add entry)

@@ -18,7 +18,7 @@ let get_ref_kinds refs loc =
   |> List.map fst
 
 class rename_mapper refs new_name = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
 
   method! identifier (expr: Loc.t Ast.Identifier.t) =
     let loc, _ = expr in
@@ -102,7 +102,7 @@ class rename_mapper refs new_name = object(this)
     | _ -> super#object_property prop
 end
 
-let mapper_to_edits (ast_mapper: Flow_ast_mapper.mapper) (ast: (Loc.t, Loc.t) Ast.program) =
+let mapper_to_edits (ast_mapper: Loc.t Flow_ast_mapper.mapper) (ast: (Loc.t, Loc.t) Ast.program) =
   let new_ast = ast_mapper#program ast in
   let changes = Flow_ast_differ.program Flow_ast_differ.Standard ast new_ast in
   Ast_diff_printer.edits_of_changes None changes

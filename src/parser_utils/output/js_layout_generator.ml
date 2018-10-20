@@ -224,7 +224,7 @@ let definitely_needs_parens =
 (* TODO: this only needs to be shallow; we don't need to walk into function
    or class bodies, for example. *)
 class contains_call_mapper result_ref = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! call _loc expr = result_ref := true; expr
 end
 

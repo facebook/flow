@@ -24,7 +24,7 @@ let parse_options = Some Parser_env.({
 })
 
 class useless_mapper = object(this)
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
 
   method! literal _loc (expr: Ast.Literal.t) =
     let open Ast.Literal in
@@ -139,21 +139,21 @@ class useless_mapper = object(this)
 end
 
 class insert_end_mapper = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! statement_list stmts =
     let stmt = List.nth stmts (List.length stmts - 1) in
     stmts @ [stmt]
 end
 
 class insert_begin_mapper = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! statement_list stmts =
     let stmt = List.nth stmts (List.length stmts - 1) in
     stmt :: stmts
 end
 
 class insert_dup_mapper = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! statement_list stmts =
     let rec dup = function
     | [] -> []
@@ -162,7 +162,7 @@ class insert_dup_mapper = object
 end
 
 class first_last_dup_mapper = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! statement_list stmts =
     (List.hd stmts)::stmts@[List.hd (List.rev stmts)]
 end
@@ -257,18 +257,18 @@ class add_body_mapper = object
 end
 
 class delete_mapper = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! statement_list = List.tl
 end
 
 class delete_end_mapper = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! statement_list stmt =
     List.rev stmt |> List.tl |> List.rev
 end
 
 class delete_annot_mapper = object
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
 
   method! pattern ?kind expr =
   let open Ast.Pattern in
@@ -287,7 +287,7 @@ class delete_annot_mapper = object
 end
 
 class insert_annot_mapper = object
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
 
   method! pattern ?kind expr =
   let open Ast.Pattern in
@@ -306,7 +306,7 @@ class insert_annot_mapper = object
 end
 
 class prop_annot_mapper = object
-  inherit Flow_ast_mapper.mapper as super
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
 
   method! class_property _loc (prop: (Loc.t, Loc.t) Ast.Class.Property.t') =
     let open Ast.Class.Property in
@@ -319,7 +319,7 @@ class prop_annot_mapper = object
 end
 
 class insert_typecast_mapper = object
-  inherit Flow_ast_mapper.mapper
+  inherit [Loc.t] Flow_ast_mapper.mapper
   method! expression expression =
     let loc, _ = expression in
     loc, Ast.Expression.TypeCast

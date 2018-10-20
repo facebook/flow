@@ -17,7 +17,7 @@ open FindRefsUtils
 (* The default visitor does not provide all of the context we need when visiting an object key. In
  * particular, we need the location of the enclosing object literal. *)
 class ['acc] object_key_visitor ~init = object(this)
-  inherit ['acc] Flow_ast_visitor.visitor ~init as super
+  inherit ['acc, Loc.t] Flow_ast_visitor.visitor ~init as super
 
   method! expression (exp: (Loc.t, Loc.t) Flow_ast.Expression.t) =
     let open Flow_ast.Expression in

@@ -785,7 +785,7 @@ module This = struct
 
   exception FoundInClass
   class detector = object
-    inherit Flow_ast_mapper.mapper as super
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     method! generic_identifier_type (git: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t) =
       let open Ast.Type.Generic.Identifier in

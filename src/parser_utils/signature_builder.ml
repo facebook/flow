@@ -255,7 +255,7 @@ module Signature = struct
 end
 
 class type_hoister = object(this)
-  inherit [Env.t] visitor ~init:Env.empty as super
+  inherit [Env.t, Loc.t] visitor ~init:Env.empty as super
 
   (* tracks the current block scope level; for now, this can only take on values 0 and 1 *)
   val mutable level = 0
