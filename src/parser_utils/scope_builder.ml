@@ -54,7 +54,7 @@ end
 module Env : sig
   type t
   val empty: t
-  val mk_env: (unit -> int) -> t -> Bindings.t -> t
+  val mk_env: (unit -> int) -> t -> Loc.t Bindings.t -> t
   val get: string -> t -> Def.t option
   val defs: t -> Def.t SMap.t
 end = struct
@@ -107,7 +107,7 @@ class scope_builder = object(this)
     });
     result
 
-  method with_bindings: 'a. ?lexical:bool -> Loc.t -> Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+  method with_bindings: 'a. ?lexical:bool -> Loc.t -> Loc.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
     fun ?(lexical=false) loc bindings visit node ->
       let save_counter = counter in
       let save_uses = uses in

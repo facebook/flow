@@ -288,7 +288,7 @@ class ssa_builder = object(this)
     this#resolve_havocs bindings;
     ssa_env <- old_ssa_env
 
-  method! with_bindings: 'a. ?lexical:bool -> Loc.t -> Bindings.t -> ('a -> 'a) -> 'a -> 'a =
+  method! with_bindings: 'a. ?lexical:bool -> Loc.t -> Loc.t Bindings.t -> ('a -> 'a) -> 'a -> 'a =
     fun ?lexical loc bindings visit node ->
       let saved_state = this#push_ssa_env bindings in
       this#run (fun () ->
