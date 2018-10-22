@@ -1348,9 +1348,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       print_if_verbose cx trace ~indent:1 ["deferred during speculation"]
 
     (* Either propagate AnyT through the use type, or short-circuit because any <: u trivially *)
-    else if match l with DefT(_, AnyT) -> any_propagated cx trace l u | _ -> false then ()
+    else if
+      match l with
+      | DefT (_, AnyT) -> any_propagated cx trace l u
+      | _ -> false
 
-    else match (l,u) with
+    (* Either propagate AnyT through the def type, or short-circuit because l <: any trivially *)
+    then () else if
+      match u with
+      | UseT (use_op, (DefT (_, AnyT) as any)) -> any_propagated_use cx trace use_op any l
+      | _ -> false
+
+    then () else match (l,u) with
 
     (********)
     (* eval *)
@@ -7060,8 +7069,7 @@ and ground_subtype = function
 
   (* we handle the any propagation check later *)
   | DefT (_, AnyT), _ -> false
-
-  | _, UseT (_, DefT (_, AnyT)) -> true
+  | _, UseT (_, DefT (_, AnyT)) -> false
 
   (* opt: avoid builtin lookups *)
   | ObjProtoT _, UseT (_, ObjProtoT _)
@@ -7222,6 +7230,45 @@ and any_propagated cx trace any = function
   (* TODO: Figure out if these should be true or false *)
   | UseT _
     -> true
+
+(* Propagates any flows in case of contravariant/invariant subtypes: the any must pollute
+   all types in contravariant positions when t <: any. *)
+and any_propagated_use _ _ _ _ = function
+  (* These types have no negative positions in their lower bounds *)
+  | ExistsT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
+  | FunProtoT _
+  | ObjProtoT _
+  | NullProtoT _ ->
+      true
+
+  (* Need special action later *)
+  | OpenT _ -> false
+
+  (* TODO: figure out what is up with these *)
+  | AnnotT _
+  | AnyWithLowerBoundT _
+  | AnyWithUpperBoundT _
+  | BoundT _
+  | CustomFunT _
+  | DefT _
+  | EvalT _
+  | ExactT _
+  | InternalT _
+  | KeysT _
+  | MatchingPropT _
+  | MergedT _
+  | ModuleT _
+  | OpaqueT _
+  | OpenPredT _
+  | ReposT _
+  | ShapeT _
+  | ThisClassT _
+  | ThisTypeAppT _
+  | TypeDestructorTriggerT _ ->
+      true
 
 and numeric = function
   | DefT (_, NumT _) -> true
