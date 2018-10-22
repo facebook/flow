@@ -433,28 +433,46 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
 let merge_tvar =
   let open Type in
   let possible_types = Flow_js.possible_types in
-  let rec collect_lowers cx seen acc = function
+  let rec collect_lowers ~filter_empty cx seen acc = function
     | [] -> List.rev acc
     | t::ts ->
       match t with
       (* Recursively unwrap unseen tvars *)
       | OpenT (_, id) ->
         if ISet.mem id seen
-        then collect_lowers cx seen acc ts (* already unwrapped *)
-        else collect_lowers cx (ISet.add id seen) acc (possible_types cx id @ ts)
-      (* Ignore empty *)
-      | DefT (_, EmptyT) -> collect_lowers cx seen acc ts
+        then collect_lowers ~filter_empty cx seen acc ts (* already unwrapped *)
+        else
+          let seen = ISet.add id seen in
+          collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
+      (* Ignore empty in existentials. This behavior is sketchy, but the error
+         behavior without this filtering is worse. If an existential accumulates
+         an empty, we error but it's very non-obvious how the empty arose. *)
+      | DefT (_, EmptyT) when filter_empty ->
+        collect_lowers ~filter_empty cx seen acc ts
       (* Everything else becomes part of the merge typed *)
-      | _ -> collect_lowers cx seen (t::acc) ts
+      | _ -> collect_lowers ~filter_empty cx seen (t::acc) ts
   in
   fun cx r id ->
-    let lowers = collect_lowers cx (ISet.singleton id) [] (possible_types cx id) in
+    (* Because the behavior of existentials are so difficult to predict, they
+       enjoy some special casing here. When existential types are finally
+       removed, this logic can be removed. *)
+    let existential =
+      let open Reason in
+      match desc_of_reason r with
+      | RExistential -> true
+      | _ -> false
+    in
+    let lowers =
+      let seen = ISet.singleton id in
+      collect_lowers cx seen [] (possible_types cx id)
+        ~filter_empty:existential 
+    in
     match lowers with
       | [t] -> t
       | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
       | [] ->
         let uses = Flow_js.possible_uses cx id in
-        if uses = []
+        if uses = [] || existential
           then Locationless.AnyT.t
           else MergedT (r, uses)
 
