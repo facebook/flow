@@ -70,6 +70,8 @@ printf "class-1.js:4:3 = "
 assert_ok "$FLOW" type-at-pos class-1.js 4 3 --strip-root --pretty
 printf "class-1.js:8:3 = "
 assert_ok "$FLOW" type-at-pos class-1.js 8 3 --strip-root --pretty
+printf "class-1.js:10:5 = "
+assert_ok "$FLOW" type-at-pos class-1.js 10 5 --strip-root --pretty
 
 #class-2.js
 printf "class-2.js:4:3 = "
@@ -286,6 +288,10 @@ printf "import_lib_named.js:3:15 (--expand-json-output) = "
 assert_ok "$FLOW" type-at-pos import_lib_named.js 3 15 --strip-root --pretty --expand-json-output
 printf "import_lib_named.js:3:27 (--expand-json-output) = "
 assert_ok "$FLOW" type-at-pos import_lib_named.js 3 27 --strip-root --pretty --expand-json-output
+
+# import-class-as-type.js
+printf "import-class-as-type.js:6:13 = "
+assert_ok "$FLOW" type-at-pos import-class-as-type.js 6 13 --strip-root --pretty
 
 # interface.js
 printf "interface.js:3:12 = "
@@ -794,6 +800,19 @@ assert_ok "$FLOW" type-at-pos type-alias.js 31 6 --strip-root --pretty --expand-
 
 printf "type-alias.js:34:6 "
 assert_ok "$FLOW" type-at-pos type-alias.js 34 6 --strip-root --pretty --expand-json-output
+
+# type-utils.js
+printf "type-utils.js:5:13 "
+assert_ok "$FLOW" type-at-pos type-utils.js 5 13 --strip-root --pretty --expand-json-output
+printf "type-utils.js:6:13 "
+assert_ok "$FLOW" type-at-pos type-utils.js 6 13 --strip-root --pretty --expand-json-output
+printf "type-utils.js:10:13 "
+assert_ok "$FLOW" type-at-pos type-utils.js 10 13 --strip-root --pretty
+printf "type-utils.js:11:13 "
+assert_ok "$FLOW" type-at-pos type-utils.js 11 13 --strip-root --pretty
+printf "type-utils.js:12:13 "
+assert_ok "$FLOW" type-at-pos type-utils.js 12 13 --strip-root --pretty
+
 
 printf "implicit-instantiation.js:5:10"
 assert_ok "$FLOW" type-at-pos implicit-instantiation.js 5 10 --strip-root --pretty --expand-json-output

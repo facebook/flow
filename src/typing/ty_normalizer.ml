@@ -30,6 +30,7 @@ type error_kind =
   | BadBoundT
   | BadCallProp
   | BadClassT
+  | BadThisClassT
   | BadPoly
   | BadTypeAlias
   | BadTypeApp
@@ -48,6 +49,7 @@ let error_kind_to_string = function
   | BadBoundT -> "Unbound type parameter"
   | BadCallProp -> "Bad call property"
   | BadClassT -> "Bad class"
+  | BadThisClassT -> "Bad this class"
   | BadPoly -> "Bad polymorphic type"
   | BadTypeAlias -> "Bad type alias"
   | BadTypeApp -> "Bad type application"
@@ -932,44 +934,51 @@ end = struct
     | [] -> Ty.Generic (symbol, inst.structural, None)
     | xs -> Ty.Generic (symbol, inst.structural, Some xs)
 
-  and class_t ~env t ps =
-    let rec class_t_aux = function
-    | Ty.ClassDecl (name, _) ->
-      return (Ty.ClassDecl (name, ps))
-    | Ty.InterfaceDecl (name, _) ->
-      return (Ty.InterfaceDecl (name, ps))
-    | Ty.Generic (name, true (* structural *), _) ->
-      return (Ty.InterfaceDecl (name, ps))
-    | Ty.Generic (name, false (* structural *), _) ->
-      return (Ty.ClassDecl (name, ps))
-    | (Ty.Bot | Ty.Exists | Ty.Any | Ty.AnyObj | Ty.Top) as b ->
-      return b
-    | Ty.Union (t0,t1,ts) ->
-      class_t_aux t0 >>= fun t0 ->
-      class_t_aux t1 >>= fun t1 ->
-      mapM class_t_aux ts >>| fun ts ->
-      uniq_union (t0::t1::ts)
-    | Ty.Inter (t0,t1,ts) ->
-      class_t_aux t0 >>= fun t0 ->
-      class_t_aux t1 >>= fun t1 ->
-      mapM class_t_aux ts >>| fun ts ->
-      uniq_inter (t0::t1::ts)
-    | Ty.Bound (Ty.Symbol (prov, sym_name)) ->
-      let pred Type.{ name; reason; _ } = (
-        name = sym_name &&
-        Reason.def_aloc_of_reason reason |> ALoc.to_loc = Ty.loc_of_provenance prov
-      ) in
-      begin match List.find_opt pred env.Env.tparams with
-      | Some Type.{ bound; _ } -> type__ ~env bound >>= class_t_aux
-      | _ -> terr ~kind:BadClassT ~msg:"bound" (Some t)
-      end
-    | ty ->
-      terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t)
+  and class_t =
+    let rec go ~env ps ty =
+      match ty with
+      | Ty.Generic (name, true (* interface *), _) ->
+        return (Ty.InterfaceDecl (name, ps))
+      | Ty.Generic (name, false (* class *), _) ->
+        (* If some parameters have been passed, then we are in the `PolyT-ThisClassT`
+         * case of Flow_js.canonicalize_imported_type. This case should still be
+         * normalized to an abstract class declaration. If no parameters are passed
+         * then this is a `Class<T>` with an instance T. *)
+        begin match ps with
+          | Some _ -> return (Ty.ClassDecl (name, ps))
+          | None -> return (Ty.ClassUtil ty)
+        end
+      | Ty.ClassUtil _
+      | Ty.Bot
+      | Ty.Exists
+      | Ty.Any
+      | Ty.AnyObj
+      | Ty.Top
+      | Ty.Union _
+      | Ty.Inter _ ->
+        return (Ty.ClassUtil ty)
+      | Ty.Bound (Ty.Symbol (prov, sym_name)) ->
+        let pred Type.{ name; reason; _ } = (
+          name = sym_name &&
+          Reason.def_aloc_of_reason reason |> ALoc.to_loc = Ty.loc_of_provenance prov
+        ) in
+        begin match List.find_opt pred env.Env.tparams with
+        | Some Type.{ bound; _ } -> type__ ~env bound >>= go ~env ps
+        | _ -> terr ~kind:BadClassT ~msg:"bound" None
+        end
+      | ty ->
+        terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) None
     in
-    type__ ~env t >>= class_t_aux
+    fun ~env t ps ->
+      type__ ~env t >>= go ~env ps
 
   and this_class_t ~env t ps =
-    class_t ~env t ps
+    type__ ~env t >>= fun ty ->
+    match ty with
+    | Ty.Generic (name, false (* non-structural *), _) ->
+      return (Ty.ClassDecl (name, ps))
+    | _ ->
+      terr ~kind:BadThisClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t)
 
   and poly_ty ~env t typeparams =
     let env, results = Nel.fold_left (fun (env, rs) typeparam ->

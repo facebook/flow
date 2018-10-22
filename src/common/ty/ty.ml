@@ -29,6 +29,7 @@ type t =
   | TypeOf of symbol
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
+  | ClassUtil of t
   | Exists
   | Module of symbol
   | Mu of int * t
@@ -189,7 +190,8 @@ let rec mk_exact ty =
   | Fun _ | Arr _ | Tup _ -> ty
   (* Wrap in $Exact<...> *)
   | Generic _ | TVar _ | Bound _ | Union _ | Inter _
-  | TypeOf _ | ClassDecl _ | InterfaceDecl _ | Exists | Module _ ->
+  | TypeOf _ | ClassDecl _ | InterfaceDecl _ | ClassUtil _
+  | Exists | Module _ ->
     generic_builtin_t "$Exact" [ty]
 
 let named_alias ?ta_tparams ?ta_type name =

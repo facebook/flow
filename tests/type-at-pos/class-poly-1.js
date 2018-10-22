@@ -1,6 +1,6 @@
 // @flow
 
-class A<T> {
+export class A<T> {
   x: T;
   m() { return this.x; }
 }

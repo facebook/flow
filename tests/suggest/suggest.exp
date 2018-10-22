@@ -39,7 +39,7 @@ class A {
 }
 
 var a = new A();
-function foo(x: Class<A>): Class<A> {
+function foo(x: typeof A): typeof A {
   return x;
 }
 foo(A);
@@ -288,6 +288,17 @@ function f3(): '""' {
 function f4(): "\\" {
   return backslash;
 }
+
+type-utils.js
+// @flow
+declare class C<P> {}
+;
+
+declare var typeof_C: typeof C;
+(): typeof C => typeof_C;
+
+declare var class_of_C_number: Class<C<number>>;
+(): Class<C<number>> => class_of_C_number;
 
 union-0.js
 // @flow

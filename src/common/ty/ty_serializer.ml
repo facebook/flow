@@ -66,7 +66,8 @@ let rec type_ t =
   | Tup ts -> mapM type_ ts >>| fun ts -> (Loc.none, T.Tuple ts)
   | Union (t0, t1, ts) as t -> union t (t0,t1,ts)
   | Inter (t0, t1, ts) -> intersection (t0,t1,ts)
-  | ClassDecl (s, _) -> class_ s
+  | ClassDecl (s, _) -> class_decl s
+  | ClassUtil s -> class_util s
 
   | InterfaceDecl _
   | TypeOf _
@@ -281,12 +282,16 @@ and setter t = function_ {
   fun_type_params = None;
 }
 
-and class_ t =
-  generic t None >>| fun t ->
+and class_decl name =
+  generic name None >>| fun name ->
+  (Loc.none, T.Typeof name)
+
+and class_util t =
+  type_ t >>| fun t ->
   (Loc.none, T.Generic {
     T.Generic.
     id = T.Generic.Identifier.Unqualified (identifier "Class");
-    targs = Some (Loc.none, [t])
+    targs = Some (Loc.none, [t]);
   })
 
 and annotation t = type_ t >>| fun t -> (Loc.none, t)

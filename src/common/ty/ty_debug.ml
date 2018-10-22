@@ -162,6 +162,7 @@ and dump_t ?(depth = 10) t =
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
   | InterfaceDecl (name, ps) ->
     spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
+  | ClassUtil s -> spf "ClassUtil (%s)" (dump_t ~depth s)
   | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
 
 let dump_binding (v, ty) =
@@ -201,6 +202,7 @@ let string_of_ctor = function
   | TypeOf _ -> "Typeof"
   | ClassDecl _ -> "ClassDecl"
   | InterfaceDecl _ -> "InterfaceDecl"
+  | ClassUtil _ -> "ClassUtil"
   | Exists -> "Exists"
   | Module _ -> "Module"
   | Mu _ -> "Mu"
@@ -283,6 +285,9 @@ let json_of_t ~strip_root =
     | InterfaceDecl (name, tparams) -> [
         "name", json_of_symbol name;
         "typeParams", json_of_type_params tparams;
+      ]
+    | ClassUtil s -> [
+        "type", json_of_t s;
       ]
     | Exists -> []
     | Mu (i, t) -> [

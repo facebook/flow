@@ -96,6 +96,7 @@ let type_ ?(size=5000) t =
       type_intersection ~depth (t1::t2::ts)
     | ClassDecl (n, ps) -> class_decl ~depth n ps
     | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
+    | ClassUtil s -> class_util ~depth s
     | Tup ts ->
       list
         ~wrap:(Atom "[", Atom "]")
@@ -314,6 +315,9 @@ let type_ ?(size=5000) t =
     identifier id;
     option (type_parameter ~depth) typeParameters;
   ]
+
+  and class_util ~depth t =
+    type_generic ~depth (identifier "Class") (Some [t])
 
   and type_parameter ~depth params =
     list
