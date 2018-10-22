@@ -7233,7 +7233,16 @@ and any_propagated cx trace any = function
 
 (* Propagates any flows in case of contravariant/invariant subtypes: the any must pollute
    all types in contravariant positions when t <: any. *)
-and any_propagated_use _ _ _ _ = function
+and any_propagated_use cx trace use_op any = function
+  | DefT (_, FunT (_, _, funtype)) -> (* function types are contravariant in the arguments *)
+      let { this_t; params; rest_param; return_t;
+            closure_t = _; is_predicate = _; changeset = _; def_reason = _; } = funtype in
+      List.iter (fun (_, t) -> rec_flow_t cx trace ~use_op (any, t)) params;
+      Option.iter ~f:(fun (_, _, t) -> rec_flow_t cx trace ~use_op (any, t)) rest_param;
+      rec_flow_t cx trace ~use_op (any, this_t);
+      rec_flow_t cx trace ~use_op (return_t, any);
+      true
+
   (* These types have no negative positions in their lower bounds *)
   | ExistsT _
   | FunProtoApplyT _

@@ -212,7 +212,7 @@ react-0.js
 import React from "react";
 import ReactDOM from "react-dom";
 
-function Clock(props): any {
+function Clock(props: any): any {
   return (
     <div>
       <h1>Hello, world!</h1>
