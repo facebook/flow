@@ -1,0 +1,50 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:5:1
+
+Cannot create `Fr` element because property `foo` is missing in props [1] but exists in object type [2].
+
+   test.js:5:1
+   5| <Fr />; // error: missing `foo`
+      ^^^^^^ [1]
+
+References:
+   test.js:3:19
+   3| function F(props: { foo: string }, ref) { return null; }
+                        ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:6:1
+
+Cannot create `Fr` element because number [1] is incompatible with string [2] in property `foo`.
+
+   test.js:6:1
+   6| <Fr foo={0} />; // error: number ~> string
+      ^^^^^^^^^^^^^^
+
+References:
+   test.js:6:10
+   6| <Fr foo={0} />; // error: number ~> string
+               ^ [1]
+   test.js:3:26
+   3| function F(props: { foo: string }, ref) { return null; }
+                               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:18
+
+Cannot call `React.forwardRef` with `Z` bound to `render` because number [1] is incompatible with function type [2].
+
+   test.js:16:18
+    16| React.forwardRef(Z); // error, expected render function
+                         ^
+
+References:
+   test.js:15:9
+    15| var Z = 0;
+                ^ [1]
+   <BUILTINS>/react.js:234:13
+   234|     render: (props: Props, ref: React$Ref<ElementType>) => React$Node
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 3 errors
