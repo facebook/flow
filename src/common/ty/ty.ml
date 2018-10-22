@@ -170,10 +170,10 @@ let builtin_t name =
   named_t (builtin_symbol name)
 
 let generic_t ?(structural=false) symbol targs =
-  Generic (symbol, structural, Some targs)
+  Generic (symbol, structural, targs)
 
 let generic_builtin_t name targs =
-  generic_t (builtin_symbol name) targs
+  generic_t (builtin_symbol name) (Some targs)
 
 let rec mk_exact ty =
   match ty with

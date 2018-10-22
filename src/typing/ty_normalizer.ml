@@ -140,6 +140,9 @@ end = struct
 
   (* Monadic helper functions *)
   let mapM f xs = all (List.map f xs)
+  let optMapM f = function
+    | Some xs -> mapM f xs >>| fun ys -> Some ys
+    | None as y -> return y
   let concat_fold_m f xs = mapM f xs >>| List.concat
 
   let fresh_num =
@@ -679,14 +682,12 @@ end = struct
       uniq_inter (t0::t1::ts)
     | DefT (_, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
     | DefT (r, TypeT (kind, t)) -> type_t ~env r kind t None
-    | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t ts
+    | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t (Some ts)
     | DefT (r, InstanceT (_, _, _, t)) -> instance_t ~env r t
     | DefT (_, ClassT t) -> class_t ~env t None
     | DefT (_, IdxWrapper t) -> type__ ~env t
     | ThisClassT (_, t) -> this_class_t ~env t None
-    (* NOTE For now we are ignoring the "this" type here. *)
-    | ThisTypeAppT (_, c, _, None) -> type__ ~env c
-    | ThisTypeAppT (_, c, _, Some ts) -> type_app ~env c ts
+    | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
     | KeysT (_, t) ->
       type__ ~env t >>| fun ty ->
       Ty.generic_builtin_t "$Keys" [ty]
@@ -1063,33 +1064,36 @@ end = struct
   and exact_t ~env t =
     type__ ~env  t >>| Ty.mk_exact
 
-  and type_app ~env t targs =
-    type__ ~env t >>= fun ty ->
-    mapM (type__ ~env) targs >>= fun targs ->
-    match ty with
-    | Ty.ClassDecl (name, _) ->
-      return (Ty.generic_t ~structural:false name targs)
-    | Ty.InterfaceDecl (name, _) ->
-      return (Ty.generic_t ~structural:true name targs)
-    | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
-      let t = if Env.expand_type_aliases env then
-        match ta_tparams, ta_type with
-        | Some ps, Some t -> Substitution.run ps targs t
-        | None, Some t -> t
-        | _ -> Ty.generic_t ta_name targs
-      else
-        Ty.generic_t ta_name targs
-      in return t
-    | Ty.Any ->
-      return Ty.Any
-    (* "Fix" type application on recursive types *)
-    | Ty.TVar (Ty.RVar v, None) ->
-      return (Ty.TVar (Ty.RVar v, Some targs))
-    | Ty.Bot ->
-      return Ty.Bot
-    | _ ->
-      let msg = spf "Normalized receiver type: %s" (Ty_debug.dump_t ty) in
-      terr ~kind:BadTypeApp ~msg (Some t)
+  and type_app =
+    let  go ~env targs = function
+      | Ty.ClassDecl (name, _) ->
+        return (Ty.generic_t ~structural:false name targs)
+      | Ty.InterfaceDecl (name, _) ->
+        return (Ty.generic_t ~structural:true name targs)
+      | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
+        begin
+          match ta_type with
+          | Some ta_type when Env.expand_type_aliases env ->
+            let t = match Option.both ta_tparams targs with
+              | Some (ps, ts) -> Substitution.run ps ts ta_type
+              | None -> ta_type
+            in return t
+          | _ ->
+            return (Ty.generic_t ta_name targs)
+        end
+      | Ty.(Any | Bot | Top) as ty -> return ty
+      (* "Fix" type application on recursive types *)
+      | Ty.TVar (Ty.RVar v, None) ->
+        return (Ty.TVar (Ty.RVar v, targs))
+      | Ty.ClassUtil _ as ty when Option.is_none targs ->
+        return ty
+      | ty ->
+        terr ~kind:BadTypeApp ~msg:(Ty_debug.string_of_ctor ty) None
+    in
+    fun ~env t targs ->
+      type__ ~env t >>= fun ty ->
+      optMapM (type__ ~env) targs >>= fun targs ->
+      go ~env targs ty
 
   and opaque_t ~env reason opaque_type =
     let name = opaque_type.Type.opaque_name in

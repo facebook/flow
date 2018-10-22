@@ -374,7 +374,7 @@ class-1.js:8:3 = {
   "end":3
 }
 class-1.js:10:5 = {
-  "type":"class A",
+  "type":"A",
   "reasons":[],
   "loc":{
     "source":"class-1.js",
@@ -734,7 +734,7 @@ class-statics.js:9:7 = {
   "end":9
 }
 class-statics.js:11:8 = {
-  "type":"(unknown)",
+  "type":"Class<A>",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
