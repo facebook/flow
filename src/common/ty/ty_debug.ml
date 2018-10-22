@@ -158,10 +158,10 @@ and dump_t ?(depth = 10) t =
   | Module n ->
     spf "Module(%s)" (dump_symbol n)
   | Exists -> "*"
-  | Class (name, true, ps) ->
-    spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
-  | Class (name, false, ps) ->
+  | ClassDecl (name, ps) ->
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
+  | InterfaceDecl (name, ps) ->
+    spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
   | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
 
 let dump_binding (v, ty) =
@@ -199,7 +199,8 @@ let string_of_ctor = function
   | Inter _ -> "Inter"
   | TypeAlias _ -> "TypeAlias"
   | TypeOf _ -> "Typeof"
-  | Class _ -> "Class"
+  | ClassDecl _ -> "ClassDecl"
+  | InterfaceDecl _ -> "InterfaceDecl"
   | Exists -> "Exists"
   | Module _ -> "Module"
   | Mu _ -> "Mu"
@@ -275,9 +276,12 @@ let json_of_t ~strip_root =
     | Module name -> [
         "name", json_of_symbol name;
       ]
-    | Class (name, structural, tparams) -> [
+    | ClassDecl (name, tparams) -> [
         "name", json_of_symbol name;
-        "structural", JSON_Bool structural;
+        "typeParams", json_of_type_params tparams;
+      ]
+    | InterfaceDecl (name, tparams) -> [
+        "name", json_of_symbol name;
         "typeParams", json_of_type_params tparams;
       ]
     | Exists -> []

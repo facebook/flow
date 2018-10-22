@@ -934,10 +934,14 @@ end = struct
 
   and class_t ~env t ps =
     let rec class_t_aux = function
-    | Ty.Class (name, structural, _) ->
-      return (Ty.Class (name, structural, ps))
-    | Ty.Generic (name, structural, _) ->
-      return (Ty.Class (name, structural, ps))
+    | Ty.ClassDecl (name, _) ->
+      return (Ty.ClassDecl (name, ps))
+    | Ty.InterfaceDecl (name, _) ->
+      return (Ty.InterfaceDecl (name, ps))
+    | Ty.Generic (name, true (* structural *), _) ->
+      return (Ty.InterfaceDecl (name, ps))
+    | Ty.Generic (name, false (* structural *), _) ->
+      return (Ty.ClassDecl (name, ps))
     | (Ty.Bot | Ty.Exists | Ty.Any | Ty.AnyObj | Ty.Top) as b ->
       return b
     | Ty.Union (t0,t1,ts) ->
@@ -1013,18 +1017,21 @@ end = struct
       import_symbol env r t >>= fun symbol ->
       let Ty.Symbol (_, name) = symbol in
       let env = Env.{ env with under_type_alias = Some name } in
-      type__ ~env t >>= function
+      type__ ~env t >>= fun ty ->
+      match ty with
       | Ty.TypeAlias _ ->
         terr ~kind:BadTypeAlias ~msg:"nested type alias" None
-      | Ty.Class _ as t ->
+      | Ty.ClassDecl _
+      | Ty.InterfaceDecl _ ->
         (* Normalize imports of the form "import typeof { C } from 'm';" (where C
-           is defined as a class in 'm') as a Ty.Class, instead of Ty.TypeAlias.
+           is defined as a class/interface in 'm') as a Ty.ClassDecl/InterfaceDecl,
+           instead of Ty.TypeAlias.
            The provenance information on the class should point to the defining
            location. This way we avoid the indirection of the import location on
            the alias symbol. *)
-        return t
-      | t ->
-        return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:t)
+        return ty
+      | _ ->
+        return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:ty)
     in
     let import_typeof env r t ps = import env r t ps in
     let import_fun env r t ps = import env r t ps in
@@ -1051,8 +1058,10 @@ end = struct
     type__ ~env t >>= fun ty ->
     mapM (type__ ~env) targs >>= fun targs ->
     match ty with
-    | Ty.Class (name, _, _) ->
-      return (Ty.generic_t name targs)
+    | Ty.ClassDecl (name, _) ->
+      return (Ty.generic_t ~structural:false name targs)
+    | Ty.InterfaceDecl (name, _) ->
+      return (Ty.generic_t ~structural:true name targs)
     | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
       let t = if Env.expand_type_aliases env then
         match ta_tparams, ta_type with
@@ -1542,7 +1551,8 @@ end = struct
       type__ ~env t >>| fun ty ->
       match ty with
       | TypeAlias { ta_name = Symbol (p, _) ; _ }
-      | Class (Symbol (p, _), _, _) ->
+      | ClassDecl (Symbol (p, _), _)
+      | InterfaceDecl (Symbol (p, _), _) ->
         Some (x, loc_of_provenance p)
       | _ -> None
     )

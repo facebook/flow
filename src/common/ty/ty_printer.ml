@@ -94,7 +94,8 @@ let type_ ?(size=5000) t =
       type_union ~depth  (t1::t2::ts)
     | Inter (t1, t2, ts) ->
       type_intersection ~depth (t1::t2::ts)
-    | Class (n, s, ps) -> type_class ~depth n s ps
+    | ClassDecl (n, ps) -> class_decl ~depth n ps
+    | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
     | Tup ts ->
       list
         ~wrap:(Atom "[", Atom "]")
@@ -300,8 +301,15 @@ let type_ ?(size=5000) t =
     | Inter _ -> wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
 
-  and type_class ~depth (Symbol (_, id)) structural typeParameters = fuse [
-    Atom (if structural then "interface" else "class");
+  and class_decl ~depth (Symbol (_, id)) typeParameters = fuse [
+    Atom "class";
+    space;
+    identifier id;
+    option (type_parameter ~depth) typeParameters;
+  ]
+
+  and interface_decl ~depth (Symbol (_, id)) typeParameters = fuse [
+    Atom "interface";
     space;
     identifier id;
     option (type_parameter ~depth) typeParameters;

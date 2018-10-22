@@ -1545,12 +1545,11 @@ import_lib.js:7:8 = {
 }
 import_lib.js:7:25 (--expand-json-output) = {
   "expanded_type":{
-    "kind":"Class",
+    "kind":"InterfaceDecl",
     "name":{
       "provenance":{"kind":"Imported","loc":"import_interfaces.js:9:18-25"},
       "name":"Listener"
     },
-    "structural":true,
     "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
   },
   "type":"interface Listener<TFields>",
@@ -1569,12 +1568,11 @@ import_lib.js:7:25 (--expand-json-output) = {
 }
 import_lib_named.js:3:15 (--expand-json-output) = {
   "expanded_type":{
-    "kind":"Class",
+    "kind":"InterfaceDecl",
     "name":{
       "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
       "name":"Listener"
     },
-    "structural":true,
     "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
   },
   "type":"interface Listener<TFields>",
@@ -1593,12 +1591,11 @@ import_lib_named.js:3:15 (--expand-json-output) = {
 }
 import_lib_named.js:3:27 (--expand-json-output) = {
   "expanded_type":{
-    "kind":"Class",
+    "kind":"InterfaceDecl",
     "name":{
       "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
       "name":"Listener"
     },
-    "structural":true,
     "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
   },
   "type":"interface Listener<TFields>",
@@ -2022,9 +2019,8 @@ import-default.js:3:16 = {
 }
 import-typeof-class.js:6:16 {
   "expanded_type":{
-    "kind":"Class",
+    "kind":"ClassDecl",
     "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
-    "structural":false,
     "typeParams":null
   },
   "type":"class C",
@@ -2043,9 +2039,8 @@ import-typeof-class.js:6:16 {
 }
 import-typeof-class.js:7:16 {
   "expanded_type":{
-    "kind":"Class",
+    "kind":"ClassDecl",
     "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
-    "structural":false,
     "typeParams":null
   },
   "type":"class C",
@@ -3039,9 +3034,8 @@ refinement.js:8:25 = {
 }
 require-class.js:5:16 = {
   "expanded_type":{
-    "kind":"Class",
+    "kind":"ClassDecl",
     "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
-    "structural":false,
     "typeParams":null
   },
   "type":"class C",
@@ -3060,9 +3054,8 @@ require-class.js:5:16 = {
 }
 require-class.js:6:16 = {
   "expanded_type":{
-    "kind":"Class",
+    "kind":"ClassDecl",
     "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
-    "structural":false,
     "typeParams":null
   },
   "type":"class C",
@@ -4960,9 +4953,8 @@ type-alias.js:34:6 {
     "name":{"provenance":{"kind":"Local","loc":"type-alias.js:34:15-26"},"name":"TKlass"},
     "typeParams":null,
     "body":{
-      "kind":"Class",
+      "kind":"ClassDecl",
       "name":{"provenance":{"kind":"Local","loc":"type-alias.js:33:7-11"},"name":"Klass"},
-      "structural":false,
       "typeParams":null
     }
   },

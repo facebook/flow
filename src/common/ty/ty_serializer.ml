@@ -66,8 +66,9 @@ let rec type_ t =
   | Tup ts -> mapM type_ ts >>| fun ts -> (Loc.none, T.Tuple ts)
   | Union (t0, t1, ts) as t -> union t (t0,t1,ts)
   | Inter (t0, t1, ts) -> intersection (t0,t1,ts)
-  | Class (s, _, _) -> class_ s
+  | ClassDecl (s, _) -> class_ s
 
+  | InterfaceDecl _
   | TypeOf _
   | TypeAlias _
   | Exists

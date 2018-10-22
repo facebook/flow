@@ -214,7 +214,8 @@ let check_type_visitor wrap =
     | TypeAlias {ta_name = Ty_symbol.Symbol (_, id); _} ->
       wrap (Reason.RCustom ("type alias " ^ id))
     | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
-    | (Void|Null|Num|Str|Bool|NumLit _|StrLit _|BoolLit _|TypeOf _|Generic _|Class _) -> ()
+    | (Void|Null|Num|Str|Bool|NumLit _|StrLit _|BoolLit _|TypeOf _|
+      Generic _|ClassDecl _|InterfaceDecl _) -> ()
 
   end
 

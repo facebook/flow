@@ -27,7 +27,8 @@ type t =
   | Inter of t * t * t list
   | TypeAlias of type_alias
   | TypeOf of symbol
-  | Class of symbol * bool (* structural *) * type_param list option
+  | ClassDecl of symbol * type_param list option
+  | InterfaceDecl of symbol * type_param list option
   | Exists
   | Module of symbol
   | Mu of int * t
@@ -167,8 +168,8 @@ let named_t symbol =
 let builtin_t name =
   named_t (builtin_symbol name)
 
-let generic_t symbol targs =
-  Generic (symbol, false, Some targs)
+let generic_t ?(structural=false) symbol targs =
+  Generic (symbol, structural, Some targs)
 
 let generic_builtin_t name targs =
   generic_t (builtin_symbol name) targs
@@ -188,7 +189,7 @@ let rec mk_exact ty =
   | Fun _ | Arr _ | Tup _ -> ty
   (* Wrap in $Exact<...> *)
   | Generic _ | TVar _ | Bound _ | Union _ | Inter _
-  | TypeOf _ | Class _ | Exists | Module _ ->
+  | TypeOf _ | ClassDecl _ | InterfaceDecl _ | Exists | Module _ ->
     generic_builtin_t "$Exact" [ty]
 
 let named_alias ?ta_tparams ?ta_type name =
