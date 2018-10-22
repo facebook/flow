@@ -108,14 +108,11 @@ let rec serve ~genv ~env =
 let create_program_init ~shared_mem_config ~focus_targets options =
   let handle = SharedMem_js.init shared_mem_config in
   let genv = ServerEnvBuild.make_genv options handle in
-  let should_print_summary = Options.should_profile options in
 
-  let program_init = fun () ->
-    Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
-      let%lwt env = init ~profiling ~focus_targets genv in
-      if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
-      Lwt.return env
-    )
+  let program_init = fun profiling ->
+    let%lwt env = init ~profiling ~focus_targets genv in
+    if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
+    Lwt.return env
   in
   genv, program_init
 
@@ -133,7 +130,10 @@ let run ~monitor_channels ~shared_mem_config options =
       let t = Unix.gettimeofday () in
       Hh_logger.info "Initializing Server (This might take some time)";
 
-      let%lwt profiling, env = program_init () in
+      let should_print_summary = Options.should_profile options in
+      let%lwt profiling, env = Profiling_js.with_profiling_lwt program_init
+        ~label:"Init" ~should_print_summary
+      in
 
       let event = ServerStatus.(Finishing_up {
         duration = Profiling_js.get_profiling_duration profiling;
@@ -182,7 +182,11 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
   let initial_lwt_thread () =
     let _, program_init =
       create_program_init ~shared_mem_config ~focus_targets options in
-    let%lwt profiling, env = program_init () in
+
+    let should_print_summary = Options.should_profile options in
+    let%lwt profiling, env = Profiling_js.with_profiling_lwt program_init
+      ~label:"Init" ~should_print_summary
+    in
 
     let event = ServerStatus.(Finishing_up {
       duration = Profiling_js.get_profiling_duration profiling;
