@@ -940,6 +940,10 @@ module ResolvableTypeJob = struct
         collect_of_types ?log_unresolved cx reason acc ts
       end
 
+    | EvalT (t, TypeDestructorT (_, _, d), _) ->
+      let acc = collect_of_type ?log_unresolved cx reason acc t in
+      collect_of_destructor ?log_unresolved cx reason acc d
+
     (* Some common kinds of types are quite overloaded: sometimes they
        correspond to types written by the user, but sometimes they also model
        internal types, and as such carry other bits of information. For now, we
@@ -997,12 +1001,6 @@ module ResolvableTypeJob = struct
       collect_of_type ?log_unresolved cx reason acc t
     | BoundT _ ->
       acc
-
-    | EvalT (_, TypeDestructorT _, id) ->
-      (match IMap.get id (Context.evaluated cx) with
-      | Some (OpenT ((_, id) as tvar)) ->
-        IMap.add id (Binding tvar) acc
-      | _ -> acc)
 
     (* TODO: The following kinds of types are not walked out of laziness. It's
        not immediately clear what we'd gain (or lose) by walking them. *)
@@ -1093,6 +1091,25 @@ module ResolvableTypeJob = struct
     | OpenPredT _
       ->
       acc
+
+  and collect_of_destructor ?log_unresolved cx reason acc = function
+    | NonMaybeType -> acc
+    | PropertyType _ -> acc
+    | ElementType t -> collect_of_type ?log_unresolved cx reason acc t
+    | Bind t -> collect_of_type ?log_unresolved cx reason acc t
+    | ReadOnlyType -> acc
+    | SpreadType (_, ts) -> collect_of_types ?log_unresolved cx reason acc ts
+    | RestType (_, t) -> collect_of_type ?log_unresolved cx reason acc t
+    | ValuesType -> acc
+    | CallType ts -> collect_of_types ?log_unresolved cx reason acc ts
+    | TypeMap tmap -> collect_of_type_map ?log_unresolved cx reason acc tmap
+    | ReactElementPropsType
+    | ReactElementConfigType
+    | ReactElementRefType -> acc
+
+  and collect_of_type_map ?log_unresolved cx reason acc = function
+    | TupleMap t | ObjectMap t | ObjectMapi t ->
+      collect_of_type ?log_unresolved cx reason acc t
 
   (* TODO: Support for use types is currently sketchy. Full resolution of use
      types are only needed for choice-making on intersections. We care about
