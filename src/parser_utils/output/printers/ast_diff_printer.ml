@@ -29,6 +29,11 @@ let layout_of_node comments node =
   | TypeAnnotation annot -> Js_layout_generator.type_annotation annot
   | ClassProperty prop -> Js_layout_generator.class_property prop
   | ObjectProperty prop -> Js_layout_generator.object_property prop
+  | JSXChild child ->
+    begin match Js_layout_generator.jsx_child child with
+    | Some (_, layout_node) -> layout_node
+    (* This case shouldn't happen, so return Empty *)
+    | None -> Layout.Empty end
   | JSXIdentifier id -> Js_layout_generator.jsx_identifier id in
   Js_layout_generator.with_attached_comments := old;
   layout

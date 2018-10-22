@@ -167,6 +167,7 @@ type node =
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
+  | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
   | JSXIdentifier of Loc.t Ast.JSX.Identifier.t
 
 (* This is needed because all of the functions assume that if they are called, there is some
@@ -702,6 +703,8 @@ let program (algo : diff_algorithm)
         _object obj1 obj2
       | (_, JSXElement jsx_elem1), (_, JSXElement jsx_elem2) ->
         jsx_element jsx_elem1 jsx_elem2
+      | (_, JSXFragment frag1), (_, JSXFragment frag2) ->
+        jsx_fragment frag1 frag2
       | (_, TypeCast t1), (_, TypeCast t2) ->
         Some (type_cast t1 t2)
       | (_, Logical l1), (_, Logical l2) ->
@@ -727,14 +730,30 @@ let program (algo : diff_algorithm)
     let { openingElement = open_elem2;
           closingElement = close_elem2;
           children = children2 } = jsx_elem2 in
-    (* TODO: (aycheng) T35129016 recurse into children *)
-    if children1 != children2 then None
-    else
-      let openingChanged =
-        diff_if_changed_ret_opt jsx_opening_element open_elem1 open_elem2 in
-      let closingChanged =
-        diff_if_changed_opt jsx_closing_element close_elem1 close_elem2 in
-      join_diff_list [openingChanged; closingChanged]
+    let openingChanged =
+      diff_if_changed_ret_opt jsx_opening_element open_elem1 open_elem2 in
+    let childrenChanged =
+      diff_and_recurse_no_trivial
+        (fun x y -> jsx_child x y |> Option.return) children1 children2 in
+    let closingChanged =
+      diff_if_changed_opt jsx_closing_element close_elem1 close_elem2 in
+    join_diff_list [openingChanged; childrenChanged; closingChanged]
+
+  and jsx_fragment
+      (frag1: (Loc.t, Loc.t) Ast.JSX.fragment)
+      (frag2: (Loc.t, Loc.t) Ast.JSX.fragment)
+      : node change list option =
+    let open Ast.JSX in
+    (* Opening and closing elements contain no information besides loc, so we
+     * ignore them for the diff *)
+    let { frag_openingElement = _;
+          frag_children = children1;
+          frag_closingElement = _} = frag1 in
+    let { frag_openingElement = _;
+          frag_children = children2;
+          frag_closingElement = _} = frag2 in
+    diff_and_recurse_no_trivial
+      (fun x y -> jsx_child x y |> Option.return) children1 children2
 
   and jsx_opening_element
       (elem1: (Loc.t, Loc.t) Ast.JSX.Opening.t)
@@ -860,6 +879,30 @@ let program (algo : diff_algorithm)
           jsx_expression expr1 expr2
         | _ -> None in
     join_diff_list [nameChanged; valueChanged]
+
+  and jsx_child
+      (child1: (Loc.t, Loc.t) Ast.JSX.child)
+      (child2: (Loc.t, Loc.t) Ast.JSX.child)
+      : node change list =
+    let open Ast.JSX in
+    let (old_loc, child1') = child1 in
+    let (_, child2') = child2 in
+    if child1' == child2' then []
+    else
+      let changes =
+        match child1', child2' with
+        | Element elem1, Element elem2 ->
+          diff_if_changed_ret_opt jsx_element elem1 elem2
+        | Fragment frag1, Fragment frag2 ->
+          diff_if_changed_ret_opt jsx_fragment frag1 frag2
+        | ExpressionContainer expr1, ExpressionContainer expr2 ->
+          diff_if_changed_ret_opt jsx_expression expr1 expr2
+        | SpreadChild _expr1, SpreadChild _expr2 ->
+          (* TODO: (aycheng) T35433521 Flow AST Differ: Recurse into Spread and SpreadChild *)
+          (* Some (diff_if_changed expression expr1 expr2) *) None
+        | Text _, Text _ -> None
+        | _ -> None in
+      Option.value changes ~default:[(old_loc, Replace (JSXChild child1, JSXChild child2))]
 
   and jsx_expression
       (jsx_expr1: (Loc.t, Loc.t) Ast.JSX.ExpressionContainer.t)

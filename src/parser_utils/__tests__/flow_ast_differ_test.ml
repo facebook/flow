@@ -95,7 +95,7 @@ class useless_mapper = object(this)
       else if open_elem.Opening.selfClosing then
         Some (loc, {Closing.name = open_elem'.Opening.name})
       else Flow_ast_mapper.map_opt super#jsx_closing_element closingElement in
-    let children' = ListUtils.ident_map super#jsx_child children in
+    let children' = ListUtils.ident_map this#jsx_child children in
     if openingElement == openingElement' && closingElement == closingElement' &&
         children == children' then elem
     else
@@ -135,6 +135,16 @@ class useless_mapper = object(this)
     let value' = Flow_ast_mapper.map_opt super#jsx_attribute_value value in
     if name == name' && value == value' then attr
     else (loc, { name = name'; value = value' })
+
+  method! jsx_child (child: (Loc.t, Loc.t) Ast.JSX.child) =
+    let open Ast.JSX in
+    match child with
+    | loc, Text txt ->
+      let { Text.value; _ } = txt in
+      if value = "rename" then
+        (loc, Text { Text.value = "gotRenamed"; Text.raw = "gotRenamed"})
+      else child
+    | _ -> super#jsx_child child
 
 end
 
@@ -1111,6 +1121,50 @@ let tests = "ast_differ" >::: [
     let source = "<Component rename={1} dontRename={4} />" in
     assert_edits_equal ctxt ~edits:[((11, 17), "gotRenamed"); ((34, 35), "(5)")]
     ~source ~expected:"<Component gotRenamed={1} dontRename={(5)} />"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_child_element" >:: begin fun ctxt ->
+    let source = "<div><rename /></div>" in
+    assert_edits_equal ctxt ~edits:[(6, 12), "gotRenamed"]
+    ~source ~expected:"<div><gotRenamed /></div>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_child_fragment" >:: begin fun ctxt ->
+    let source = "<div><>rename</></div>" in
+    assert_edits_equal ctxt ~edits:[(7, 13), "gotRenamed"]
+    ~source ~expected:"<div><>gotRenamed</></div>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_child_expr" >:: begin fun ctxt ->
+    let source = "<div>{rename}</div>" in
+    assert_edits_equal ctxt ~edits:[(6, 12), "gotRenamed"]
+    ~source ~expected:"<div>{gotRenamed}</div>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_child_text" >:: begin fun ctxt ->
+    let source = "<div>rename</div>" in
+    assert_edits_equal ctxt ~edits:[(5, 11), "gotRenamed"]
+    ~source ~expected:"<div>gotRenamed</div>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_children" >:: begin fun ctxt ->
+    let source = "<div>{rename} <rename /></div>" in
+    assert_edits_equal ctxt
+    ~edits:[((6, 12), "gotRenamed"); ((15, 21), "gotRenamed")]
+    ~source ~expected:"<div>{gotRenamed} <gotRenamed /></div>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_children_nested" >:: begin fun ctxt ->
+    let source = "<div><rename><><rename /></></rename></div>" in
+    assert_edits_equal ctxt
+    ~edits:[((6, 12), "gotRenamed"); ((16, 22), "gotRenamed"); ((30, 36), "gotRenamed")]
+    ~source ~expected:"<div><gotRenamed><><gotRenamed /></></gotRenamed></div>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_fragment_expr" >:: begin fun ctxt ->
+    let source = "<>{rename}</>" in
+    assert_edits_equal ctxt ~edits:[(3, 9), "gotRenamed"]
+    ~source ~expected:"<>{gotRenamed}</>"
     ~mapper:(new useless_mapper)
   end;
   "call_insert" >:: begin fun ctxt ->
