@@ -5027,6 +5027,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects can be assigned, i.e., their properties can be set in bulk *)
     (**********************************************************************)
 
+    (* Special case any. Otherwise this will lead to confusing errors when any tranforms to an
+       object type. *)
+    | DefT (_, AnyT), ObjAssignToT (_, _, t, _) ->
+      rec_flow_t cx trace (l, t)
+
     | to_obj, ObjAssignToT (reason, from_obj, t, kind) ->
       rec_flow cx trace (from_obj, ObjAssignFromT (reason, to_obj, t, kind))
 
@@ -5100,6 +5105,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        `SetPropT (_, _, _, AnyT, _)` on all of its props. *)
     | DefT (_, AnyObjT), ObjAssignFromT (reason, _, t, ObjAssign _) ->
       rec_flow_t cx trace (DefT (reason, AnyObjT), t)
+
+    | DefT (_, AnyT), ObjAssignFromT (_, _, t, _) ->
+      rec_flow_t cx trace (l, t)
 
     | ObjProtoT _, ObjAssignFromT (_, to_obj, t, ObjAssign _) ->
       rec_flow_t cx trace (to_obj, t)
@@ -7164,6 +7172,8 @@ and any_propagated cx trace any = function
   | UseT (_, DefT (_, MaybeT _)) (* used to filter maybe *)
   | UseT (_, MergedT _) (* Already handled in __flow *)
   | UseT (_, DefT (_, OptionalT _)) (* used to filter optional *)
+  | ObjAssignFromT _ (* Handled in __flow *)
+  | ObjAssignToT _ (* Handled in __flow *)
 
   (* Should never occur, so we just defer to __flow to handle errors *)
   | UseT (_, OpenPredT _)
@@ -7205,8 +7215,6 @@ and any_propagated cx trace any = function
     -> true
 
   (* TODO: Figure out if these should be true or false *)
-  | ObjAssignFromT _
-  | ObjAssignToT _
   | SubstOnPredT _
   | UseT _
     -> true
