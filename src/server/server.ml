@@ -173,7 +173,7 @@ let run_from_daemonize ~monitor_channels ~shared_mem_config options =
       in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-let check_once ~shared_mem_config ~client_include_warnings ?focus_targets options =
+let check_once ~shared_mem_config ~format_errors ?focus_targets options =
   PidLog.disable ();
   MonitorRPC.disable ();
 
@@ -184,20 +184,22 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
       create_program_init ~shared_mem_config ~focus_targets options in
 
     let should_print_summary = Options.should_profile options in
-    let%lwt profiling, (errors, warnings, suppressed_errors) =
+    let%lwt profiling, (print_errors, errors, warnings) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
         let%lwt env = program_init profiling in
-        let%lwt errors, warnings, suppressed_errors =
+        let%lwt ((errors, warnings, _) as collated_errors) =
           Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling
             ~f:(fun () -> Lwt.return (ErrorCollator.get env))
         in
-        let warnings = if client_include_warnings || Options.should_include_warnings options
-          then warnings
-          else Errors.ErrorSet.empty
+        let%lwt print_errors =
+          Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling
+            ~f:(fun () -> Lwt.return (format_errors collated_errors))
         in
-        Lwt.return (errors, warnings, suppressed_errors)
+        Lwt.return (print_errors, errors, warnings)
       )
     in
+
+    print_errors profiling;
 
     let event = ServerStatus.(Finishing_up {
       duration = Profiling_js.get_profiling_duration profiling;
@@ -206,7 +208,7 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
 
     FlowEventLogger.init_done ~profiling;
 
-    Lwt.return (profiling, errors, warnings, suppressed_errors)
+    Lwt.return (errors, warnings)
   in
   LwtInit.run_lwt initial_lwt_thread
 

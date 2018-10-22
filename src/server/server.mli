@@ -7,13 +7,15 @@
 
 val check_once :
   shared_mem_config:SharedMem_js.config ->
-  client_include_warnings:bool ->
+  format_errors: (
+    (Errors.ErrorSet.t * (* errors *)
+     Errors.ErrorSet.t * (* warnings *)
+     (Errors.error * Utils_js.LocSet.t) list) (* suppressed errors *) ->
+    (Profiling_js.finished -> unit) (* print errors *)
+  ) ->
   ?focus_targets:Utils_js.FilenameSet.t ->
   Options.t ->
-  Profiling_js.finished *
-    Errors.ErrorSet.t * (* errors *)
-    Errors.ErrorSet.t * (* warnings *)
-    (Errors.error * Utils_js.LocSet.t) list (* suppressed errors *)
+  (Errors.ErrorSet.t * (* errors *) Errors.ErrorSet.t (* warnings *))
 
 val daemonize :
   log_file:string ->

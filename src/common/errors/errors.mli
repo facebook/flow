@@ -117,8 +117,17 @@ module Cli_output : sig
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
     lazy_msg: string option ->
-    unit ->
-    unit
+    unit -> unit
+
+  val format_errors:
+    out_channel:out_channel ->
+    flags:error_flags ->
+    ?stdin_file:stdin_file ->
+    strip_root: Path.t option ->
+    errors: ErrorSet.t ->
+    warnings: ErrorSet.t ->
+    lazy_msg: string option ->
+    unit -> (Profiling_js.finished option -> unit) (* print errors *)
 end
 
 module Json_output : sig
@@ -140,12 +149,10 @@ module Json_output : sig
     strip_root: Path.t option ->
     suppressed_errors: (error * Utils_js.LocSet.t) list ->
     ?version:json_version ->
-    ?profiling:Profiling_js.finished option ->
     ?stdin_file:stdin_file ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
-    unit ->
-    Hh_json.json
+    unit -> (Profiling_js.finished option -> Hh_json.json)
 
   val print_errors:
     out_channel:out_channel ->
@@ -153,12 +160,21 @@ module Json_output : sig
     suppressed_errors: (error * Utils_js.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
-    ?profiling:Profiling_js.finished option ->
     ?stdin_file:stdin_file ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
-    unit ->
-    unit
+    unit -> unit
+
+  val format_errors:
+    out_channel:out_channel ->
+    strip_root: Path.t option ->
+    suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    pretty:bool ->
+    ?version:json_version ->
+    ?stdin_file:stdin_file ->
+    errors: ErrorSet.t ->
+    warnings: ErrorSet.t ->
+    unit -> (Profiling_js.finished option -> unit) (* print errors *)
 end
 
 module Vim_emacs_output : sig

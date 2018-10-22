@@ -13,23 +13,31 @@ type printer =
   | Cli of Errors.Cli_output.error_flags
 
 (* helper - print errors. used in check-and-die runs *)
-let print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings =
+let format_errors ~printer ~client_include_warnings ~include_suppressed options
+  (errors, warnings, suppressed_errors) =
+
+  let include_warnings = client_include_warnings || Options.should_include_warnings options in
+  let warnings = if include_warnings then warnings else Errors.ErrorSet.empty in
+  let suppressed_errors = if include_suppressed then suppressed_errors else [] in
+
   let strip_root =
     if Options.should_strip_root options
     then Some (Options.root options)
     else None
   in
 
-  match printer with
+  (* The print_errors functions in the Errors modules are carefully defined to
+   * perform any expensive, non-printing work when partially applied, before
+   * receiving the `profiling` argument.
+   *
+   * We use this trick in order to actually profile this work. So, the
+   * annotation on the `print_errors` binding below serves to ensure that the
+   * error functions are applied enough that this expensive work happens. *)
+  let print_errors: (Profiling_js.finished option -> unit) = match printer with
   | Json { pretty; version } ->
-    let profiling =
-      if options.Options.opt_profile
-      then Some profiling
-      else None in
-    Errors.Json_output.print_errors
+    Errors.Json_output.format_errors
       ~out_channel:stdout
       ~strip_root
-      ~profiling
       ~pretty
       ?version
       ~suppressed_errors
@@ -42,7 +50,7 @@ let print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warning
       errors
       suppressed_errors
     in
-    Errors.Cli_output.print_errors
+    Errors.Cli_output.format_errors
       ~out_channel:stdout
       ~flags
       ~strip_root
@@ -50,6 +58,12 @@ let print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warning
       ~warnings
       ~lazy_msg:None
       ()
+  in
+
+  fun profiling ->
+    if options.Options.opt_profile
+    then print_errors (Some profiling)
+    else print_errors None
 
 module CheckCommand = struct
   let spec = { CommandSpec.
@@ -103,18 +117,17 @@ module CheckCommand = struct
 
     let shared_mem_config = shm_config shm_flags flowconfig in
 
-    let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
+    let format_errors =
+      let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
+      let printer =
+        if json || Option.is_some json_version || pretty then
+          Json { pretty; version = json_version }
+        else
+          Cli error_flags in
+      format_errors ~printer ~client_include_warnings ~include_suppressed options
+    in
 
-    let profiling, errors, warnings, suppressed_errors = Server.check_once
-      ~shared_mem_config ~client_include_warnings options in
-    let suppressed_errors =
-      if include_suppressed then suppressed_errors else [] in
-    let printer =
-      if json || Option.is_some json_version || pretty then
-        Json { pretty; version = json_version }
-      else
-        Cli error_flags in
-    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
+    let errors, warnings = Server.check_once options ~shared_mem_config ~format_errors in
     Flow_server_profile.print_url ();
     FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
 
@@ -182,24 +195,23 @@ module FocusCheckCommand = struct
 
     let shared_mem_config = shm_config shm_flags flowconfig in
 
-    let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
-
     let focus_targets = SSet.fold
       (fun file acc -> FilenameSet.add (File_key.SourceFile Path.(to_string (make file))) acc)
       filenames
       FilenameSet.empty in
 
-    let profiling, errors, warnings, suppressed_errors = Server.check_once
-      ~shared_mem_config ~client_include_warnings ~focus_targets options in
-    let suppressed_errors =
-      if include_suppressed then suppressed_errors else [] in
-    let printer =
-      if json || Option.is_some json_version || pretty then
-        Json { pretty; version = json_version }
-      else
-        Cli error_flags
+    let format_errors =
+      let client_include_warnings = error_flags.Errors.Cli_output.include_warnings in
+      let printer =
+        if json || Option.is_some json_version || pretty then
+          Json { pretty; version = json_version }
+        else
+          Cli error_flags in
+      format_errors ~printer ~client_include_warnings ~include_suppressed options
     in
-    print_errors ~printer ~profiling ~suppressed_errors options ~errors ~warnings;
+
+    let errors, warnings = Server.check_once options ~shared_mem_config ~focus_targets ~format_errors in
     FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
+
   let command = CommandSpec.command spec main
 end

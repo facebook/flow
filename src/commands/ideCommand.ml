@@ -106,7 +106,7 @@ module VeryUnstable: ClientProtocol = struct
      * we display, we don't want the printer removing them. *)
     let json_errors = Errors.Json_output.full_status_json_of_errors
       ~strip_root ?version:json_version
-      ~suppressed_errors:([]) ~errors ~warnings ()
+      ~suppressed_errors:([]) ~errors ~warnings () None
     in
     let json_message = Json_rpc.jsonrpcize_notification "diagnosticsNotification" [json_errors] in
     let json_string = Hh_json.json_to_string json_message in
