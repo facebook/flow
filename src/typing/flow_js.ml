@@ -7083,6 +7083,10 @@ and any_propagated cx trace any = function
       rec_flow_t cx trace (AnyT.why reason, t);
       true
 
+  | SubstOnPredT (_, _, OpenPredT (_, t, _, _)) ->
+      rec_flow_t cx trace (any, t);
+      true
+
   | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *)
   | UseT (use_op, ExactT (_, t))
   | UseT (use_op, ShapeT t) ->
@@ -7163,6 +7167,7 @@ and any_propagated cx trace any = function
   | SetElemT _
   | SetPropT _
   | SpecializeT _
+  | SubstOnPredT _ (* Should be impossible. We only generate these with OpenPredTs. *)
   | TestPropT _
   | ThisSpecializeT _
   | ToStringT _
@@ -7215,7 +7220,6 @@ and any_propagated cx trace any = function
     -> true
 
   (* TODO: Figure out if these should be true or false *)
-  | SubstOnPredT _
   | UseT _
     -> true
 
