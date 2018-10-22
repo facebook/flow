@@ -1306,10 +1306,10 @@ and class_method (
     end
   )
 
-and class_property_helper loc key value static annot variance =
+and class_property_helper loc key value static annot variance_ =
   source_location_with_comments (loc, with_semicolon (fuse [
     if static then fuse [Atom "static"; space] else Empty;
-    option variance_ variance;
+    option variance variance_;
     key;
     hint type_annotation annot;
     begin match value with
@@ -1914,7 +1914,7 @@ and export_default_declaration { Ast.Statement.ExportDefaultDeclaration.
     );
   ]
 
-and variance_ (loc, var) =
+and variance (loc, var) =
   source_location_with_comments (
     loc,
     match var with
@@ -1943,10 +1943,10 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent }) =
   )
 
 and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
-  name = (loc, name); bound; variance; default
+  name = (loc, name); bound; variance = variance_; default
 }) =
   fuse [
-    option variance_ variance;
+    option variance variance_;
     source_location_with_comments (loc, Atom name);
     hint type_annotation bound;
     begin match default with
@@ -2079,7 +2079,7 @@ and type_function ~sep { Ast.Type.Function.
 
 and type_object_property = Ast.Type.Object.(function
   | Property (loc, { Property.
-      key; value; optional; static; proto; variance; _method;
+      key; value; optional; static; proto; variance = variance_; _method;
     }) ->
     let s_static = if static then fuse [Atom "static"; space] else Empty in
     let s_proto = if proto then fuse [Atom "proto"; space] else Empty in
@@ -2097,7 +2097,7 @@ and type_object_property = Ast.Type.Object.(function
       | Property.Init t, _, _, _ -> fuse [
           s_static;
           s_proto;
-          option variance_ variance;
+          option variance variance_;
           object_property_key key;
           if optional then Atom "?" else Empty;
           Atom ":";
@@ -2121,10 +2121,10 @@ and type_object_property = Ast.Type.Object.(function
       Atom "...";
       type_ argument;
     ])
-  | Indexer (loc, { Indexer.id; key; value; static; variance }) ->
+  | Indexer (loc, { Indexer.id; key; value; static; variance = variance_ }) ->
     source_location_with_comments (loc, fuse [
       if static then fuse [Atom "static"; space] else Empty;
-      option variance_ variance;
+      option variance variance_;
       Atom "[";
       begin match id with
       | Some id -> fuse [
