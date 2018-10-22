@@ -26,7 +26,7 @@ let sample_init_memory profiling =
        profiling
   ) memory_metrics
 
-let init ~focus_targets genv =
+let init ~profiling ~focus_targets genv =
   (* write binary path and version to server log *)
   Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
   Hh_logger.info "version=%s" Flow_version.version;
@@ -42,37 +42,28 @@ let init ~focus_targets genv =
 
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
 
-  let should_print_summary = Options.should_profile options in
-  let%lwt (profiling, env) = Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary
-    begin fun profiling ->
-      let%lwt libs_ok, env = Types_js.init ~profiling ~workers options in
+  let%lwt libs_ok, env = Types_js.init ~profiling ~workers options in
 
-      (* If any libs errored, skip typechecking and just show lib errors. Note
-       * that `init` above has done all parsing, not just lib parsing, resolved
-       * and committed modules, etc.
-       *
-       * Furthermore, if we're in lazy mode, we forego typechecking until later,
-       * when it proceeds on an as-needed basis. *)
-      let%lwt env =
-        if not libs_ok || Options.is_lazy_mode options
-        then Lwt.return env
-        else Types_js.full_check ~profiling ~workers ~focus_targets ~options env
-      in
+  (* If any libs errored, skip typechecking and just show lib errors. Note
+   * that `init` above has done all parsing, not just lib parsing, resolved
+   * and committed modules, etc.
+   *
+   * Furthermore, if we're in lazy mode, we forego typechecking until later,
+   * when it proceeds on an as-needed basis. *)
+  let%lwt env =
+    if not libs_ok || Options.is_lazy_mode options
+    then Lwt.return env
+    else Types_js.full_check ~profiling ~workers ~focus_targets ~options env
+  in
 
-      sample_init_memory profiling;
+  sample_init_memory profiling;
 
-      SharedMem_js.init_done();
+  SharedMem_js.init_done();
 
-      (* Return an env that initializes invariants required and maintained by
-         recheck, namely that `files` contains files that parsed successfully, and
-         `errors` contains the current set of errors. *)
-      Lwt.return env
-    end in
-  let event = ServerStatus.(Finishing_up {
-    duration = Profiling_js.get_profiling_duration profiling;
-    info = InitSummary}) in
-  MonitorRPC.status_update ~event;
-  Lwt.return (profiling, env)
+  (* Return an env that initializes invariants required and maintained by
+     recheck, namely that `files` contains files that parsed successfully, and
+     `errors` contains the current set of errors. *)
+  Lwt.return env
 
 let rec run_workload genv env workload =
   let on_cancel () =
@@ -117,12 +108,14 @@ let rec serve ~genv ~env =
 let create_program_init ~shared_mem_config ~focus_targets options =
   let handle = SharedMem_js.init shared_mem_config in
   let genv = ServerEnvBuild.make_genv options handle in
+  let should_print_summary = Options.should_profile options in
 
   let program_init = fun () ->
-    let%lwt profiling, env = init ~focus_targets genv in
-    FlowEventLogger.init_done ~profiling;
-    if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
-    Lwt.return (profiling, env)
+    Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
+      let%lwt env = init ~profiling ~focus_targets genv in
+      if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
+      Lwt.return env
+    )
   in
   genv, program_init
 
@@ -139,10 +132,21 @@ let run ~monitor_channels ~shared_mem_config options =
     let%lwt env =
       let t = Unix.gettimeofday () in
       Hh_logger.info "Initializing Server (This might take some time)";
-      let%lwt _profiling, env = program_init () in
+
+      let%lwt profiling, env = program_init () in
+
+      let event = ServerStatus.(Finishing_up {
+        duration = Profiling_js.get_profiling_duration profiling;
+        info = InitSummary}) in
+      MonitorRPC.status_update ~event;
+
+      FlowEventLogger.init_done ~profiling;
+
       Hh_logger.info "Server is READY";
+
       let t' = Unix.gettimeofday () in
       Hh_logger.info "Took %f seconds to initialize." (t' -. t);
+
       Lwt.return env
     in
 
@@ -179,6 +183,13 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
     let _, program_init =
       create_program_init ~shared_mem_config ~focus_targets options in
     let%lwt profiling, env = program_init () in
+
+    let event = ServerStatus.(Finishing_up {
+      duration = Profiling_js.get_profiling_duration profiling;
+      info = InitSummary}) in
+    MonitorRPC.status_update ~event;
+
+    FlowEventLogger.init_done ~profiling;
 
     let errors, warnings, suppressed_errors = ErrorCollator.get env in
     let warnings = if client_include_warnings || Options.should_include_warnings options
