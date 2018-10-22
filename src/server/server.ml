@@ -184,8 +184,19 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
       create_program_init ~shared_mem_config ~focus_targets options in
 
     let should_print_summary = Options.should_profile options in
-    let%lwt profiling, env = Profiling_js.with_profiling_lwt program_init
-      ~label:"Init" ~should_print_summary
+    let%lwt profiling, (errors, warnings, suppressed_errors) =
+      Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
+        let%lwt env = program_init profiling in
+        let%lwt errors, warnings, suppressed_errors =
+          Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling
+            ~f:(fun () -> Lwt.return (ErrorCollator.get env))
+        in
+        let warnings = if client_include_warnings || Options.should_include_warnings options
+          then warnings
+          else Errors.ErrorSet.empty
+        in
+        Lwt.return (errors, warnings, suppressed_errors)
+      )
     in
 
     let event = ServerStatus.(Finishing_up {
@@ -195,11 +206,6 @@ let check_once ~shared_mem_config ~client_include_warnings ?focus_targets option
 
     FlowEventLogger.init_done ~profiling;
 
-    let errors, warnings, suppressed_errors = ErrorCollator.get env in
-    let warnings = if client_include_warnings || Options.should_include_warnings options
-      then warnings
-      else Errors.ErrorSet.empty
-    in
     Lwt.return (profiling, errors, warnings, suppressed_errors)
   in
   LwtInit.run_lwt initial_lwt_thread
