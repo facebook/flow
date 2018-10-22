@@ -1432,7 +1432,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, u))
 
     | MergedT (reason, _), _ ->
-      rec_flow cx trace (EmptyT.why reason, u)
+      rec_flow cx trace (AnyT.why reason, u)
 
     (****************)
     (* eval, contd. *)
