@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Make (L: Loc_sig.S) : sig
+module type S = sig
+  module L: Loc_sig.S
+
   type scope = int
   type use = L.t
   type uses = L.LSet.t
@@ -56,7 +58,11 @@ module Make (L: Loc_sig.S) : sig
   val compute_free_and_bound_variables: Scope.t Tree.t -> (Def.t SMap.t * SSet.t * SSet.t) Tree.t
 
   val toplevel_names: info -> SSet.t
-end = struct
+end
+
+module Make (L: Loc_sig.S) : S with module L = L = struct
+  module L = L
+
   type scope = int
   type use = L.t
   type uses = L.LSet.t
