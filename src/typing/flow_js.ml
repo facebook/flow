@@ -7017,7 +7017,6 @@ and quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
    complicated: it avoids deep structural checks, admits `any`, etc. It might be worth it to
    simplify this function later. *)
 and ground_subtype = function
-  | TypeDestructorTriggerT _, UseT (_, TypeDestructorTriggerT _) -> false
   (* tvars are not considered ground, so they're not part of this relation *)
   | (OpenT _, _) | (_, UseT (_, OpenT _)) -> false
 
@@ -7028,6 +7027,9 @@ and ground_subtype = function
   | (_, ObjKitT _) -> false
 
   | (_, ChoiceKitUseT _) -> false
+
+  (* eval *)
+  | _, UseT (_, TypeDestructorTriggerT _) -> false
 
   (* Allow deferred unification with `any` *)
   | (_, UnifyT _) -> false
