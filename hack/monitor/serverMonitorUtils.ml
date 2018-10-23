@@ -111,6 +111,7 @@ type connection_error =
   (** Server dormant and can't join the (now full) queue of connections
    * waiting for the next server. *)
   | Server_dormant
+  | Server_dormant_out_of_retries
   | Build_id_mismatched of build_mismatch_info option
   | Monitor_connection_failure
 
