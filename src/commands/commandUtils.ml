@@ -468,6 +468,13 @@ let collect_flowconfig_flags main ignores_str untyped_str declarations_str inclu
   let raw_lint_severities = list_of_string_arg lints_str in
   main { ignores; includes; libs; raw_lint_severities; untyped; declarations; }
 
+let expand_project_root_token root str =
+  let root = Path.to_string root
+    |> Sys_utils.normalize_filename_dir_sep in
+  str
+    |> Str.split_delim Files.project_root_token
+    |> String.concat root
+
 let file_options =
   let default_lib_dir ~no_flowlib tmp_dir =
     let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
@@ -481,11 +488,8 @@ let file_options =
   let ignores_of_arg root patterns extras =
     let patterns = Core_list.rev_append extras patterns in
     Core_list.map ~f:(fun s ->
-     let root = Path.to_string root
-       |> Sys_utils.normalize_filename_dir_sep in
      let reg = s
-       |> Str.split_delim Files.project_root_token
-       |> String.concat root
+       |> expand_project_root_token root
        |> Str.regexp in
       (s, reg)
     ) patterns
@@ -554,6 +558,11 @@ let file_options =
       includes
       |> Core_list.rev_append (FlowConfig.includes flowconfig)
       |> includes_of_arg ~root ~lib_paths in
+    let module_resolver_dirnames =
+      flowconfig
+      |> FlowConfig.node_resolver_dirnames
+      |> List.map (expand_project_root_token root)
+      in
     { Files.
       default_lib_dir;
       ignores;
@@ -563,7 +572,7 @@ let file_options =
       lib_paths;
       module_file_exts = FlowConfig.module_file_exts flowconfig;
       module_resource_exts = FlowConfig.module_resource_exts flowconfig;
-      node_resolver_dirnames = FlowConfig.node_resolver_dirnames flowconfig;
+      node_resolver_dirnames = module_resolver_dirnames;
     }
 
 let ignore_flag prev = CommandSpec.ArgSpec.(
@@ -918,11 +927,9 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
   in
 
   let expand_project_root_token path root =
-    let str_root = Path.to_string root
-      |> Sys_utils.normalize_filename_dir_sep in
-    Path.to_string path
-      |> Str.split_delim Files.project_root_token
-      |> String.concat str_root
+    path
+      |> Path.to_string
+      |> expand_project_root_token root
       |> Path.make
   in
 
