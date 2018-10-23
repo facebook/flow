@@ -148,7 +148,7 @@ module rec Parse : PARSER = struct
     (* Remember kids, these look like statements but they're not
       * statements... (see section 13) *)
     | T_LET -> let_ env
-    | T_CONST -> var_or_const env
+    | T_CONST -> const env
     | _ when Peek.is_function env -> Declaration._function env
     | _ when Peek.is_class env -> class_declaration env decorators
     | T_INTERFACE -> interface env
@@ -164,7 +164,7 @@ module rec Parse : PARSER = struct
         Peek.loc env, Ast.Statement.Empty
     | T_SEMICOLON -> empty env
     | T_LCURLY -> block env
-    | T_VAR -> var_or_const env
+    | T_VAR -> var env
     | T_BREAK -> break env
     | T_CONTINUE -> continue env
     | T_DEBUGGER -> debugger env

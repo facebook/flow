@@ -41,7 +41,8 @@ module type STATEMENT = sig
  val switch: env -> (Loc.t, Loc.t) Statement.t
  val throw: env -> (Loc.t, Loc.t) Statement.t
  val type_alias: env -> (Loc.t, Loc.t) Statement.t
- val var_or_const: env -> (Loc.t, Loc.t) Statement.t
+ val var: env -> (Loc.t, Loc.t) Statement.t
+ val const: env -> (Loc.t, Loc.t) Statement.t
 end
 
 module Statement
@@ -424,25 +425,25 @@ module Statement
     }
   )
 
-  and var_or_const = with_loc (fun env ->
-    let (_loc, declaration), errs = Declaration.variable env in
+  and var = with_loc (fun env ->
+    let declaration, errs = Declaration.var env in
     Eat.semicolon env;
     errs |> List.iter (error_at env);
-    declaration
+    Statement.VariableDeclaration declaration
+  )
+
+  and const = with_loc (fun env ->
+    let declaration, errs = Declaration.const env in
+    Eat.semicolon env;
+    errs |> List.iter (error_at env);
+    Statement.VariableDeclaration declaration
   )
 
   and let_ = with_loc (fun env ->
-    Expect.token env T_LET;
-    (* Let declaration *)
-    let declarations, errs = Declaration.variable_declaration_list (env |> with_no_let true) in
-    let declaration =
-      Ast.(Statement.VariableDeclaration Statement.VariableDeclaration.({
-        declarations;
-        kind = Let;
-      })) in
+    let declaration, errs = Declaration.let_ env in
     Eat.semicolon env;
     errs |> List.iter (error_at env);
-    declaration
+    Statement.VariableDeclaration declaration
   )
 
   and while_ = with_loc (fun env ->

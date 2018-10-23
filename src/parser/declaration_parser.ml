@@ -23,8 +23,6 @@ module type DECLARATION = sig
   val is_simple_function_params: (Loc.t, Loc.t) Ast.Function.Params.t -> bool
   val strict_post_check: env -> strict:bool -> simple:bool -> Loc.t Identifier.t option -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
   val concise_function_body: env -> async:bool -> generator:bool -> (Loc.t, Loc.t) Function.body * bool
-  val variable: env -> (Loc.t, Loc.t) Statement.t * (Loc.t * Error.t) list
-  val variable_declaration_list: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list * (Loc.t * Error.t) list
   val let_: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val const: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val var: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
@@ -329,18 +327,4 @@ module Declaration
   let let_ env =
     let env = env |> with_no_let true in
     declarations T_LET Statement.VariableDeclaration.Let env
-
-  let variable env =
-    let loc, (decl, errs) = with_loc (fun env ->
-      let variable, errs = match Peek.token env with
-      | T_CONST -> const env
-      | T_LET   -> let_ env
-      | T_VAR   -> var env
-      | _ ->
-          error_unexpected env;
-          (* We need to return something. This is as good as anything else *)
-          var env in
-      Statement.VariableDeclaration variable, errs
-    ) env in
-    (loc, decl), errs
 end
