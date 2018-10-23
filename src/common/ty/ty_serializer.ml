@@ -18,21 +18,26 @@ let opt f t =
   | Some t -> f t >>| fun t -> Some t
   | _ -> return None
 
-let identifier x = (Loc.none, x)
+let id_from_string x = Loc.none, x
 
-let builtin x =
-  return (Loc.none, T.Generic {
-    T.Generic.
-    id = T.Generic.Identifier.Unqualified (identifier x);
-    targs = None;
-  })
+let id_from_symbol x =
+  let { name; anonymous; _ } = x in
+  if anonymous
+  then Error (Utils_js.spf "Cannot output anonymous elements.")
+  else Ok (id_from_string name)
 
-let generic_builtin x targs =
-  return (Loc.none, T.Generic {
+let builtin_from_id ?targs x =
+  Loc.none, T.Generic {
     T.Generic.
-    id = T.Generic.Identifier.Unqualified (identifier x);
-    targs = Some targs;
-  })
+    id = T.Generic.Identifier.Unqualified x;
+    targs;
+  }
+
+let builtin_from_symbol x =
+  id_from_symbol x >>| builtin_from_id ?targs:None
+
+let builtin_from_string ?targs x =
+  id_from_string x |> builtin_from_id ?targs
 
 let tvar (RVar _) = Error "Unsupported recursive variables."
 
@@ -45,11 +50,11 @@ let rec type_ t =
   let just t = return (Loc.none, t) in
   match t with
   | TVar (v, _) -> tvar v
-  | Bound (Symbol (_, s)) -> builtin s
+  | Bound s -> builtin_from_symbol s
   | Generic (x, _, ts) -> generic x ts
   | Any -> just T.Any
-  | AnyObj -> builtin "Object"
-  | AnyFun -> builtin "Function"
+  | AnyObj -> return (builtin_from_string "Object")
+  | AnyFun -> return (builtin_from_string "Function")
   | Top -> just T.Mixed
   | Bot -> just T.Empty
   | Void -> just T.Void
@@ -79,11 +84,12 @@ let rec type_ t =
     Error (Utils_js.spf "Unsupported type constructor `%s`."
       (Ty_debug.string_of_ctor t))
 
-and generic (Symbol (_, id)) targs =
+and generic x targs =
+  id_from_symbol x >>= fun id ->
   opt type_arguments targs >>| fun targs ->
   (Loc.none, T.Generic {
     T.Generic.
-    id = T.Generic.Identifier.Unqualified (identifier id);
+    id = T.Generic.Identifier.Unqualified id;
     targs
   })
 
@@ -125,10 +131,11 @@ and fun_params params rest_param =
   })
 
 and fun_param (name, t, {prm_optional}) =
+  let name = Option.map ~f:id_from_string name in
   type_ t >>| fun annot ->
   (Loc.none, {
     T.Function.Param.
-    name = Option.map ~f:identifier name;
+    name;
     annot;
     optional = prm_optional;
   })
@@ -208,10 +215,11 @@ and obj_named_prop =
     }
 
 and obj_index_prop d =
+  let id = Option.map ~f:id_from_string d.dict_name in
   type_ d.dict_key >>= fun key ->
   type_ d.dict_value >>| fun value -> {
     T.Object.Indexer.
-    id = Option.map ~f:identifier d.dict_name;
+    id;
     key;
     value;
     static = false;
@@ -232,10 +240,10 @@ and obj_spread_prop t =
   }
 
 and arr { arr_readonly; arr_elt_t } =
-  type_ arr_elt_t >>= fun t ->
+  type_ arr_elt_t >>| fun t ->
   if arr_readonly
-  then generic_builtin "$ReadOnlyArray" (Loc.none, [t])
-  else return (Loc.none, T.Array t)
+  then builtin_from_string "ReadOnlyArray" ~targs:(Loc.none, [t])
+  else (Loc.none, T.Array t)
 
 and type_params ts =
   mapM type_param ts >>| fun ts -> (Loc.none, ts)
@@ -287,10 +295,11 @@ and class_decl name =
   (Loc.none, T.Typeof name)
 
 and class_util t =
+  let id = id_from_string "Class" in
   type_ t >>| fun t ->
   (Loc.none, T.Generic {
     T.Generic.
-    id = T.Generic.Identifier.Unqualified (identifier "Class");
+    id = T.Generic.Identifier.Unqualified id;
     targs = Some (Loc.none, [t]);
   })
 

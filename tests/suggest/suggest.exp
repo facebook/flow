@@ -416,3 +416,15 @@ Normalizer error:
 
 
 Found 2 warnings
+warn-anonymous-class.js
+
+Warning ------------------------------------------------------------------------------------ warn-anonymous-class.js:3:1
+
+Type serializer failed with:
+Cannot output anonymous elements.
+
+   3| () => class {};
+      ^^^^^^^^^^^^^^
+
+
+Found 1 warning

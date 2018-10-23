@@ -211,10 +211,20 @@ end = struct
           when Reason.def_aloc_of_reason reason |> ALoc.to_loc <> tp_loc ->
           terr ~kind:ShadowTypeParam (Some t)
         | Some _ ->
-          return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
+          return (Ty.Bound {
+            Ty.provenance = Ty.Local;
+            loc = tp_loc;
+            anonymous = false;
+            name = tp_name
+          })
         | None -> assert false
       else
-        return Ty.(Bound (Symbol (Local tp_loc, tp_name)))
+        return (Ty.Bound {
+          Ty.provenance = Ty.Local;
+          loc = tp_loc;
+          anonymous = false;
+          name = tp_name
+        })
     | None ->
       default t
 
@@ -499,7 +509,7 @@ end = struct
         | Fun { fun_type_params = ps; _ } ->
           let env = remove_params env ps in
           super#on_t env t
-        | Bound (Symbol (_, name)) ->
+        | Bound { name; _ } ->
           let t' = Option.value (SMap.get name env) ~default:t in
           super#on_t env t'
         | _ ->
@@ -541,24 +551,27 @@ end = struct
     let symbol_source = Loc.source loc in
     let provenance =
       match symbol_source with
-      | Some LibFile _ -> Ty.Library loc
+      | Some LibFile _ -> Ty.Library
       | Some (SourceFile _) ->
         let current_source = Env.(env.genv.file) in
         (* Locally defined name *)
         if Some current_source = symbol_source
-        then Ty.Local loc
+        then Ty.Local
         (* Otherwise it is one of:
            - Imported, or
            - Remote (defined in a different file but not imported in this one) *)
-        else (match SMap.get name env.Env.imported_names with
-          | Some loc' when loc = loc' -> Ty.Imported loc
-          | _ -> Ty.Remote loc)
+        else
+          begin match SMap.get name env.Env.imported_names with
+            | Some loc' when loc = loc' -> Ty.Imported
+            | _ -> Ty.Remote
+          end
       | Some (JsonFile _)
-      | Some (ResourceFile _) -> Ty.Local loc
+      | Some (ResourceFile _) -> Ty.Local
       | Some Builtins -> Ty.Builtin
-      | None -> Ty.Local loc
+      | None -> Ty.Local
     in
-    Ty.Symbol (provenance, name)
+    let anonymous = name = "<<anonymous class>>" in
+    { Ty.provenance; name; anonymous; loc }
 
   (* TODO due to repositioninig `reason_loc` may not point to the actual
      location where `name` was defined. *)
@@ -958,14 +971,16 @@ end = struct
       | Ty.Union _
       | Ty.Inter _ ->
         return (Ty.ClassUtil ty)
-      | Ty.Bound (Ty.Symbol (prov, sym_name)) ->
+      | Ty.Bound (Ty.{ loc; name = bname; _ }) ->
         let pred Type.{ name; reason; _ } = (
-          name = sym_name &&
-          Reason.def_aloc_of_reason reason |> ALoc.to_loc = Ty.loc_of_provenance prov
+          name = bname &&
+          Reason.def_aloc_of_reason reason |> ALoc.to_loc = loc
         ) in
         begin match List.find_opt pred env.Env.tparams with
-        | Some Type.{ bound; _ } -> type__ ~env bound >>= go ~env ps
-        | _ -> terr ~kind:BadClassT ~msg:"bound" None
+          | Some Type.{ bound; _ } ->
+            type__ ~env bound >>= go ~env ps
+          | _ ->
+            terr ~kind:BadClassT ~msg:"bound" None
         end
       | ty ->
         terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) None
@@ -1025,7 +1040,7 @@ end = struct
     in
     let import env r t ps =
       import_symbol env r t >>= fun symbol ->
-      let Ty.Symbol (_, name) = symbol in
+      let { Ty.name; _ } = symbol in
       let env = Env.{ env with under_type_alias = Some name } in
       type__ ~env t >>= fun ty ->
       match ty with
@@ -1236,7 +1251,7 @@ end = struct
     | ReactElementFactory _ -> return Ty.(
         let param_t = mk_tparam "T" in
         let tparams = [param_t] in
-        let t = Bound (Symbol (Builtin, "T")) in
+        let t = Bound (builtin_symbol "T") in
         let params = [
           (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);
@@ -1563,10 +1578,10 @@ end = struct
       let env = Env.init ~options ~genv ~tparams ~imported_names:SMap.empty in
       type__ ~env t >>| fun ty ->
       match ty with
-      | TypeAlias { ta_name = Symbol (p, _) ; _ }
-      | ClassDecl (Symbol (p, _), _)
-      | InterfaceDecl (Symbol (p, _), _) ->
-        Some (x, loc_of_provenance p)
+      | TypeAlias { ta_name = { loc; _ } ; _ }
+      | ClassDecl ({ loc; _ }, _)
+      | InterfaceDecl ({ loc; _ }, _) ->
+        Some (x, loc)
       | _ -> None
     )
 

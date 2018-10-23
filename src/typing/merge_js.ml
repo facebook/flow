@@ -206,13 +206,13 @@ let check_type_visitor wrap =
     | Any -> wrap Reason.RAny
     | AnyObj -> wrap Reason.RAnyObject
     | AnyFun -> wrap Reason.RAnyFunction
-    | Bound (Ty_symbol.Symbol (_, id)) -> wrap (Reason.RCustom ("bound type var " ^ id))
+    | Bound { Ty.name; _ } -> wrap (Reason.RCustom ("bound type var " ^ name))
     | Top -> wrap Reason.RMixed
     | Bot -> wrap Reason.REmpty
     | Exists -> wrap Reason.RExistential
-    | Module (Ty_symbol.Symbol (_, x)) -> wrap (Reason.RModule x)
-    | TypeAlias {ta_name = Ty_symbol.Symbol (_, id); _} ->
-      wrap (Reason.RCustom ("type alias " ^ id))
+    | Module { Ty.name; _ } -> wrap (Reason.RModule name)
+    | TypeAlias { ta_name = { Ty.name; _ }; _} ->
+      wrap (Reason.RCustom ("type alias " ^ name))
     | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
     | (Void|Null|Num|Str|Bool|NumLit _|StrLit _|BoolLit _|TypeOf _|
       Generic _|ClassDecl _|InterfaceDecl _|ClassUtil _) -> ()

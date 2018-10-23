@@ -63,3 +63,6 @@ assert_ok "$FLOW" suggest --strip-root --quiet --fail-on-tc-errors warn-empty-0.
 
 echo "warn-func-poly-0.js"
 assert_errors "$FLOW" suggest --strip-root --quiet --fail-on-suggest-warnings warn-func-poly-0.js 2>&1
+
+echo "warn-anonymous-class.js"
+assert_errors "$FLOW" suggest --strip-root --quiet --fail-on-suggest-warnings warn-anonymous-class.js 2>&1

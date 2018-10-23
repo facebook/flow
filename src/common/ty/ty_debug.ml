@@ -107,12 +107,12 @@ and dump_generics ~depth = function
 
 and dump_tvar (RVar i) = spf "T_%d" i
 
-and dump_symbol (Symbol (provenance, name)) =
+and dump_symbol { provenance; loc; name; _ } =
   match provenance with
-  | Local _ -> name
-  | Imported loc -> spf "%s /* imported from file %s */" name (Reason.string_of_loc loc)
-  | Remote loc -> spf "%s /* defined in file %s */" name (Reason.string_of_loc loc)
-  | Library loc -> spf "%s /* defined in library %s */" name (Reason.string_of_loc loc)
+  | Local -> name
+  | Imported -> spf "%s /* imported from file %s */" name (Reason.string_of_loc loc)
+  | Remote -> spf "%s /* defined in file %s */" name (Reason.string_of_loc loc)
+  | Library -> spf "%s /* defined in library %s */" name (Reason.string_of_loc loc)
   | Builtin -> spf "%s /* builtin */" name
 
 and dump_t ?(depth = 10) t =
@@ -210,15 +210,15 @@ let string_of_ctor = function
 
 let json_of_t ~strip_root =
 
-  let json_of_provenance p = Hh_json.(JSON_Object [
+  let json_of_provenance loc p = Hh_json.(JSON_Object [
       "kind", JSON_String (Ty.string_of_provenance_ctor p);
-      "loc", JSON_String (Reason.string_of_loc ~strip_root (Ty.loc_of_provenance p));
+      "loc", JSON_String (Reason.string_of_loc ~strip_root loc);
     ])
   in
 
-  let json_of_symbol (Symbol (prov, name)) = Hh_json.(
+  let json_of_symbol { provenance; loc; name; _ } = Hh_json.(
     JSON_Object [
-      "provenance", json_of_provenance prov;
+      "provenance", json_of_provenance loc provenance;
       "name", JSON_String name;
     ])
   in
@@ -229,8 +229,8 @@ let json_of_t ~strip_root =
     ] @
     match t with
     | TVar (v, ts) -> json_of_tvar v @ json_of_targs ts
-    | Bound (Ty.Symbol (_, s)) -> [
-        "bound", JSON_String s
+    | Bound (Ty.{ name; _ }) -> [
+        "bound", JSON_String name
       ]
     | Generic (s, str, targs_opt) ->
       json_of_targs targs_opt @ [

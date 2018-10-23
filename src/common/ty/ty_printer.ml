@@ -72,7 +72,7 @@ let type_ ?(size=5000) t =
   and type_impl ~depth (t: Ty.t) =
     match t with
     | TVar (v, ts) -> type_generic ~depth (type_var v) ts
-    | Bound (Symbol (_, s)) -> Atom s
+    | Bound { name; _ } -> Atom name
     | Any -> Atom "any"
     | AnyObj -> Atom "Object"
     | AnyFun -> Atom "Function"
@@ -89,7 +89,7 @@ let type_ ?(size=5000) t =
         func
     | Obj obj -> type_object ~depth obj
     | Arr arr -> type_array ~depth arr
-    | Generic (Symbol (_, id), _, ts) -> type_generic ~depth (identifier id) ts
+    | Generic ({ name; _ }, _, ts) -> type_generic ~depth (identifier name) ts
     | Union (t1, t2, ts) ->
       type_union ~depth  (t1::t2::ts)
     | Inter (t1, t2, ts) ->
@@ -108,8 +108,8 @@ let type_ ?(size=5000) t =
     | BoolLit value -> Atom (if value then "true" else "false")
     | Exists -> Atom "*"
     | TypeAlias ta -> type_alias ta
-    | TypeOf (Symbol (_, n)) -> fuse [Atom "typeof"; space; identifier n]
-    | Module (Symbol (_, n)) -> fuse [Atom "module"; space; identifier n]
+    | TypeOf { name; _ } -> fuse [Atom "typeof"; space; identifier name]
+    | Module { name; _ } -> fuse [Atom "module"; space; identifier name]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
       env_map := IMap.add i t !env_map;
@@ -131,17 +131,17 @@ let type_ ?(size=5000) t =
 
   and identifier name = Atom name
 
-  and type_alias { ta_name = Symbol (provenance, id); ta_tparams; ta_type } =
+  and type_alias { ta_name = { provenance; name; _ }; ta_tparams; ta_type } =
     match provenance with
-    | Imported _ | Remote _ -> fuse [
+    | Imported | Remote -> fuse [
         Atom "imported"; space;
-        identifier id;
+        identifier name;
         option (type_parameter ~depth:0) ta_tparams;
       ]
 
     | _ -> fuse ([
         Atom "type"; space;
-        identifier id;
+        identifier name;
         option (type_parameter ~depth:0) ta_tparams;
       ]
       @ Option.value_map ta_type ~default:[] ~f:(fun t -> [
@@ -302,17 +302,17 @@ let type_ ?(size=5000) t =
     | Inter _ -> wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
 
-  and class_decl ~depth (Symbol (_, id)) typeParameters = fuse [
+  and class_decl ~depth { name; _ } typeParameters = fuse [
     Atom "class";
     space;
-    identifier id;
+    identifier name;
     option (type_parameter ~depth) typeParameters;
   ]
 
-  and interface_decl ~depth (Symbol (_, id)) typeParameters = fuse [
+  and interface_decl ~depth { name; _ } typeParameters = fuse [
     Atom "interface";
     space;
-    identifier id;
+    identifier name;
     option (type_parameter ~depth) typeParameters;
   ]
 

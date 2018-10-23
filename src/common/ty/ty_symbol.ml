@@ -6,15 +6,22 @@
  *)
 
 type provenance =
-  | Local of Loc.t      (* Defined locally *)
-  | Imported of Loc.t   (* Defined remotely, imported to file *)
-  | Remote of Loc.t     (* Defined remotely, NOT imported to file *)
-  | Library of Loc.t    (* Defined in library *)
+  | Local       (* Defined locally *)
+  | Imported    (* Defined remotely, imported to file *)
+  | Remote      (* Defined remotely, NOT imported to file *)
+  | Library     (* Defined in library *)
   | Builtin
 
-type identifier = string
+type symbol = {
+  provenance: provenance;
+  loc: Loc.t;
+  name: string;
+  anonymous: bool;
+}
 
-type symbol = Symbol of (provenance * identifier) [@@unboxed]
-
-let builtin_symbol name =
-  Symbol (Builtin, name)
+let builtin_symbol name = {
+  provenance = Builtin;
+  loc = Loc.none;
+  name;
+  anonymous = false;
+}

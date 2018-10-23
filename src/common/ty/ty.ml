@@ -37,8 +37,8 @@ type t =
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
 
 and fun_t = {
-  fun_params: (identifier option * t * fun_param) list;
-  fun_rest_param: (identifier option * t) option;
+  fun_params: (string option * t * fun_param) list;
+  fun_rest_param: (string option * t) option;
   fun_return: t;
   fun_type_params: type_param list option;
 }
@@ -65,7 +65,7 @@ and fun_param = {
 }
 
 and prop =
-  | NamedProp of identifier * named_prop
+  | NamedProp of string * named_prop
   | IndexProp of dict
   | CallProp of fun_t
   | SpreadProp of t
@@ -83,13 +83,13 @@ and field = {
 
 and dict = {
   dict_polarity: polarity;
-  dict_name: identifier option;
+  dict_name: string option;
   dict_key: t;
   dict_value: t;
 }
 
 and type_param = {
-  tp_name: identifier;
+  tp_name: string;
   tp_bound: t option;
   tp_polarity: polarity;
   tp_default: t option;
@@ -183,7 +183,7 @@ let rec mk_exact ty =
     TypeAlias { a with ta_type }
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Do not nest $Exact *)
-  | Generic (Symbol (Builtin, "$Exact"), _, Some [_]) -> ty
+  | Generic ({ provenance = Builtin; name = "$Exact"; _ }, _, Some [_]) -> ty
   (* Not applicable *)
   | Any | AnyObj | AnyFun | Top | Bot | Void | Null
   | Num | Str | Bool | NumLit _ | StrLit _ | BoolLit _
@@ -198,25 +198,12 @@ let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }
 
 let string_of_provenance_ctor = function
-  | Local _ -> "Local"
-  | Imported _ -> "Imported"
-  | Remote _ -> "Remote"
-  | Library _ -> "Library"
+  | Local -> "Local"
+  | Imported -> "Imported"
+  | Remote -> "Remote"
+  | Library -> "Library"
   | Builtin -> "Builtin"
 
-let string_of_provenance prov =
-  match prov with
-  | Local loc | Imported loc | Remote loc | Library loc ->
-    Utils_js.spf "%s %s" (string_of_provenance_ctor prov)
-      (Reason.string_of_loc loc)
-  | Builtin -> "Builtin"
-
-let string_of_symbol (Symbol (prov, name)) =
-  Utils_js.spf "%s (%s)" name (string_of_provenance prov)
-
-let loc_of_provenance = function
-  | Local loc -> loc
-  | Imported loc -> loc
-  | Remote loc -> loc
-  | Library loc -> loc
-  | Builtin -> Loc.none
+let string_of_symbol { provenance; loc; name; _ } =
+  Utils_js.spf "%s (%s:%s)" name (string_of_provenance_ctor provenance)
+    (Reason.string_of_loc loc)
