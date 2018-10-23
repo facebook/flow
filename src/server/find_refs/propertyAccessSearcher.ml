@@ -49,8 +49,9 @@ class property_access_searcher name = object(this)
       if exported_name = name then
         this#set_acc true
     | Some (_, VariableDeclaration { VariableDeclaration.declarations = decls; _ }) ->
-      Ast_utils.bindings_of_variable_declarations decls
-      |> List.iter (fun (_, exported_name) -> if exported_name = name then this#set_acc true)
+      Ast_utils.fold_bindings_of_variable_declarations
+        (fun () (_, exported_name) -> if exported_name = name then this#set_acc true)
+        () decls
     | _ -> ()
     (* TODO add type exports when find-refs supports them *)
     end;

@@ -9,14 +9,17 @@ type binding = Loc.t * string
 type ident = Loc.t * string
 type source = Loc.t * string
 
-val bindings_of_pattern:
-  binding list ->
+val fold_bindings_of_pattern:
+  ('a -> binding -> 'a) ->
+  'a ->
   (Loc.t, Loc.t) Flow_ast.Pattern.t' ->
-  binding list
+  'a
 
-val bindings_of_variable_declarations:
+val fold_bindings_of_variable_declarations:
+  ('a -> binding -> 'a) ->
+  'a ->
   (Loc.t, Loc.t) Flow_ast.Statement.VariableDeclaration.Declarator.t list ->
-  binding list
+  'a
 
 val partition_directives:
   (Loc.t, Loc.t) Flow_ast.Statement.t list ->

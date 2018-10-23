@@ -11,42 +11,42 @@ type binding = Loc.t * string
 type ident = Loc.t * string
 type source = Loc.t * string
 
-let rec bindings_of_pattern =
+let rec fold_bindings_of_pattern =
   let open Pattern in
-  let property acc =
+  let property f acc =
     let open Object in
     function
     | Property (_, { Property.pattern = (_, p); _ })
     | RestProperty (_, { RestProperty.argument = (_, p) }) ->
-      bindings_of_pattern acc p
+      fold_bindings_of_pattern f acc p
   in
-  let element acc =
+  let element f acc =
     let open Array in
     function
     | None -> acc
     | Some (Element (_, p))
     | Some (RestElement (_, { RestElement.argument = (_, p) })) ->
-      bindings_of_pattern acc p
+      fold_bindings_of_pattern f acc p
   in
-  fun acc ->
+  fun f acc ->
     function
     | Identifier { Identifier.name; _ } ->
-      name::acc
+      f acc name
     | Object { Object.properties; _ } ->
-      List.fold_left property acc properties
+      List.fold_left (property f) acc properties
     | Array { Array.elements; _ } ->
-      List.fold_left element acc elements
+      List.fold_left (element f) acc elements
     | Assignment { Assignment.left = (_, p); _ } ->
-      bindings_of_pattern acc p
+      fold_bindings_of_pattern f acc p
     | Expression _ ->
       failwith "expression pattern"
 
-let bindings_of_variable_declarations =
+let fold_bindings_of_variable_declarations f acc declarations =
   let open Flow_ast.Statement.VariableDeclaration in
   List.fold_left (fun acc -> function
     | _, { Declarator.id = (_, pattern); _ } ->
-      bindings_of_pattern acc pattern
-  ) []
+      fold_bindings_of_pattern f acc pattern
+  ) acc declarations
 
 let partition_directives statements =
   let open Flow_ast.Statement in

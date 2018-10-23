@@ -1953,15 +1953,11 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
             Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
             [(spf "class %s {}" name, id_loc, name, None)]
           | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
-            let decl_to_bindings accum (_, decl) =
-              let id = snd decl.VariableDeclaration.Declarator.id in
-              List.rev (Ast_utils.bindings_of_pattern accum id)
-            in
-            let bound_names = List.fold_left decl_to_bindings [] declarations in
-            bound_names |> List.map (fun (loc, name) ->
+            Ast_utils.fold_bindings_of_variable_declarations (fun acc (loc, name) ->
               Type_inference_hooks_js.dispatch_export_named_hook name loc;
-              (spf "var %s" name, loc, name, None)
-            )
+              (spf "var %s" name, loc, name, None)::acc
+            ) [] declarations
+            |> List.rev
           | _, TypeAlias {TypeAlias.id; _} ->
             let name = ident_name id in
             [(spf "type %s = ..." name, loc, name, None)]
@@ -1998,14 +1994,10 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
             let name = ident_name ident in
             [(spf "class %s {}" name, (fst ident), name, None)]
           | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
-            let decl_to_bindings accum (_, decl) =
-              let id = snd decl.VariableDeclaration.Declarator.id in
-              List.rev (Ast_utils.bindings_of_pattern accum id)
-            in
-            let bound_names = List.fold_left decl_to_bindings [] declarations in
-            bound_names |> List.map (fun (loc, name) ->
-              (spf "var %s" name, loc, name, None)
-            )
+            Ast_utils.fold_bindings_of_variable_declarations (fun acc (loc, name) ->
+              (spf "var %s" name, loc, name, None)::acc
+            ) [] declarations
+            |> List.rev
           | _, TypeAlias {TypeAlias.id; _} ->
             let name = ident_name id in
             [(spf "type %s = ..." name, loc, name, None)]

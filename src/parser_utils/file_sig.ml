@@ -600,13 +600,14 @@ class requires_exports_calculator ~ast ~module_ref_prefix = object(this)
         let export = stmt_loc, ExportNamed { loc; kind; } in
         this#add_exports stmt_loc ExportValue [name, export] [export_info] None
       | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
-        let bindings = Ast_utils.bindings_of_variable_declarations decls in
-        let bindings = List.map (fun (loc, name) ->
-          let export = stmt_loc, ExportNamed { loc; kind } in
-          (name, export), export_info
-        ) bindings in
-        let bindings1, bindings2 = List.split bindings in
-        this#add_exports stmt_loc ExportValue bindings1 bindings2 None
+        let rev_named, rev_info = Ast_utils.fold_bindings_of_variable_declarations
+          (fun (named, infos) (loc, name) ->
+            let export = stmt_loc, ExportNamed { loc; kind } in
+            ((name, export)::named), (export_info::infos))
+          ([], [])
+          decls
+        in
+        this#add_exports stmt_loc ExportValue (List.rev rev_named) (List.rev rev_info) None
       | TypeAlias { TypeAlias.id; _ }
       | OpaqueType { OpaqueType.id; _ }
       | InterfaceDeclaration { Interface.id; _ } ->
