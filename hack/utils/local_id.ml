@@ -9,7 +9,7 @@
 
 module S = struct
   type t = int * string
-  let compare x y = compare x y
+  let compare = Pervasives.compare
 end
 
 include S
