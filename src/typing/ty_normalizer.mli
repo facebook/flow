@@ -53,7 +53,7 @@ val from_schemes:
 
 val fold_hashtbl:
   options:options -> genv:genv ->
-  f:('a -> (Loc.t * (Ty.t, error) result) -> 'a) ->
+  f:('a -> ('loc * (Ty.t, error) result) -> 'a) ->
   g:('b -> Type.TypeScheme.t) ->
-  htbl: (Loc.t, 'b) Hashtbl.t ->
+  htbl: ('loc, 'b) Hashtbl.t ->
   'a -> 'a
