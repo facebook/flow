@@ -7287,6 +7287,7 @@ and any_propagated_use cx trace use_op any = function
   | ThisClassT _
   | ReposT _
   | EvalT _
+  | MergedT _
   | OpenPredT _
   | InternalT (ReposUpperT _)
   | InternalT (OptionalChainVoidT _)
@@ -7309,7 +7310,6 @@ and any_propagated_use cx trace use_op any = function
   (* TODO: figure out what is up with these *)
   | CustomFunT _
   | DefT _
-  | MergedT _
   | OpaqueT _
   | ThisTypeAppT _
   | TypeDestructorTriggerT _ ->
