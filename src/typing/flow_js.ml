@@ -7290,6 +7290,7 @@ and any_propagated_use cx trace use_op any = function
   | OpenPredT _
   | InternalT (ReposUpperT _)
   | InternalT (OptionalChainVoidT _)
+  | MatchingPropT _
   | ShapeT _
   | DefT (_, OptionalT _)
   | DefT (_, MaybeT _) ->
@@ -7308,7 +7309,6 @@ and any_propagated_use cx trace use_op any = function
   (* TODO: figure out what is up with these *)
   | CustomFunT _
   | DefT _
-  | MatchingPropT _
   | MergedT _
   | OpaqueT _
   | ThisTypeAppT _
