@@ -9,6 +9,8 @@
 open OUnit2
 open Test_utils
 
+module Scope_api = Scope_api.With_Loc
+
 let mk_scope_builder_all_uses_test contents expected_all_uses =
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in

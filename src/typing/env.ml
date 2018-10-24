@@ -17,6 +17,7 @@ open Scope
 
 module FlowError = Flow_error
 module Flow = Flow_js
+module Scope_api = Scope_api.With_Loc
 
 (* lookup modes:
 

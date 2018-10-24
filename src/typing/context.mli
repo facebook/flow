@@ -120,7 +120,7 @@ val max_workers: t -> int
 val jsx: t -> Options.jsx_mode
 val exists_checks: t -> ExistsCheck.t LocMap.t
 val exists_excuses: t -> ExistsCheck.t LocMap.t
-val use_def: t -> Scope_api.info * Ssa_api.values
+val use_def: t -> Scope_api.With_Loc.info * Ssa_api.values
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -160,7 +160,7 @@ val set_call_props: t -> Type.t IMap.t -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
 val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
 val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
-val set_use_def: t -> Scope_api.info * Ssa_api.values -> unit
+val set_use_def: t -> Scope_api.With_Loc.info * Ssa_api.values -> unit
 val set_module_map: t -> Type.t SMap.t -> unit
 
 val clear_intermediates: t -> unit

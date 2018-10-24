@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+module Scope_api = Scope_api.With_Loc
 
 open Flow_ast_visitor
 

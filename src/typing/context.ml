@@ -6,6 +6,7 @@
  *)
 
 module LocMap = Utils_js.LocMap
+module Scope_api = Scope_api.With_Loc
 
 exception Props_not_found of Type.Properties.id
 exception Call_not_found of int

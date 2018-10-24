@@ -253,5 +253,3 @@ end
 module With_Loc = Make (Loc_sig.LocS)
 
 module With_ALoc = Make (Loc_sig.ALocS)
-
-include With_Loc

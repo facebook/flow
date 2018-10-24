@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 open Utils_js
+module Scope_api = Scope_api.With_Loc
 
 let local_find_refs ast loc =
   let open Scope_api in
