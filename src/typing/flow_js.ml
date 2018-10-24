@@ -7089,16 +7089,18 @@ and ground_subtype = function
    the any-expanded type and the original will handle the any-propagation to any relevant positions,
    some of which may invoke this function when they hit the any propagation functions in the
    recusive call to __flow. *)
-and expand_any _cx any = function
+and expand_any _cx any u =
+  let only_any _ = any in
+  match u with
   | DefT (r, ArrT (ArrayAT _)) ->
       DefT (r, ArrT (ArrayAT (any, None)))
   | DefT (r, ArrT (TupleAT (_, ts))) ->
-      DefT (r, ArrT (TupleAT (any, List.map (fun _ -> any) ts)))
+      DefT (r, ArrT (TupleAT (any, List.map only_any ts)))
 
   | OpaqueT (r, ({ underlying_t; super_t; opaque_type_args; _} as opaquetype)) ->
       let opaquetype = { opaquetype with
-        underlying_t = Option.(underlying_t >>| fun _ -> any);
-        super_t      = Option.(super_t      >>| fun _ -> any);
+        underlying_t = Option.(underlying_t >>| only_any);
+        super_t      = Option.(super_t      >>| only_any);
         opaque_type_args =
           Core_list.(opaque_type_args >>| fun (str, r', _, polarity) -> (str, r', any, polarity));
       } in
@@ -7220,6 +7222,7 @@ and any_propagated cx trace any = function
   | UseT (_, DefT (_, OptionalT _)) (* used to filter optional *)
   | ObjAssignFromT _ (* Handled in __flow *)
   | ObjAssignToT _ (* Handled in __flow *)
+  | UseT (_, ThisTypeAppT _)
 
   (* Should never occur, so we just defer to __flow to handle errors *)
   | UseT (_, OpenPredT _)
@@ -7315,7 +7318,8 @@ and any_propagated_use cx trace use_op any = function
   | MatchingPropT _
   | ShapeT _
   | DefT (_, OptionalT _)
-  | DefT (_, MaybeT _) ->
+  | DefT (_, MaybeT _)
+  | ThisTypeAppT _ ->
       false
 
   (* Should never occur as the lower bound of any *)
@@ -7331,7 +7335,6 @@ and any_propagated_use cx trace use_op any = function
   (* TODO: figure out what is up with these *)
   | CustomFunT _
   | DefT _
-  | ThisTypeAppT _
   | TypeDestructorTriggerT _ ->
       true
 
