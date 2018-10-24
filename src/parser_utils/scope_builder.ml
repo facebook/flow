@@ -10,7 +10,7 @@ module Ast = Flow_ast
 open Flow_ast_visitor
 open Hoister
 
-module Make (L: Loc_sig.S) (Api: Scope_api.S with module L = L) = struct
+module Make (L: Loc_sig.S) (Api: Scope_api_sig.S with module L = L) = struct
   open Api
   class with_or_eval_visitor = object(this)
     inherit [bool, L.t] visitor ~init:false as super
