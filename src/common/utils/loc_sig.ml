@@ -15,14 +15,18 @@ module type S = sig
 end
 
 module LocS = struct
-  include Loc
+  type t = Loc.t
+  let compare = Loc.compare
+  let equal = Loc.equal
 
   module LMap = Utils_js.LocMap
   module LSet = Utils_js.LocSet
 end
 
 module ALocS = struct
-  include ALoc
+  type t = ALoc.t
+  let compare = ALoc.compare
+  let equal = ALoc.equal
 
   module LMap = Utils_js.ALocMap
   module LSet = Utils_js.ALocSet
