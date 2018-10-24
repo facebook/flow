@@ -364,7 +364,7 @@ let set_cjs_exports mod_exp_loc cjs_exports_def msig =
 (* Subclass of the AST visitor class that calculates requires and exports. Initializes with the
    scope builder class.
 *)
-class requires_exports_calculator ~ast = object(this)
+class requires_exports_calculator ~ast ~module_ref_prefix = object(this)
   inherit [(exports_info t', error) result] visitor ~init:(Ok (mk_file_sig init_exports_info)) as super
 
   val scope_info = Scope_builder.program ast
@@ -486,6 +486,11 @@ class requires_exports_calculator ~ast = object(this)
     let { Call.callee; targs = _; arguments } = expr in
     this#handle_call call_loc callee arguments None;
     super#call call_loc expr
+
+  method! literal loc (expr: Ast.Literal.t) =
+    let open Ast.Literal in
+    this#handle_literal loc expr.value;
+    super#literal loc expr
 
   method! import import_loc (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
@@ -808,6 +813,21 @@ class requires_exports_calculator ~ast = object(this)
       | _ -> ()
     end
 
+  method private handle_literal loc lit =
+    let open Ast.Literal in
+    match module_ref_prefix with
+    | Some prefix -> begin
+      match lit with
+      | String s when String_utils.string_starts_with s prefix ->
+        this#add_require (Require {
+          source = (loc, String_utils.lstrip s prefix);
+          require_loc = loc;
+          bindings = None;
+        })
+      | _ -> ()
+    end
+    | None -> ()
+
   method! declare_module loc (m: (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) =
     let name = Ast.Statement.DeclareModule.(match m.id with
     | Identifier (_, name) -> name
@@ -888,8 +908,8 @@ type toplevel_names_and_exports_info = {
   exports_info: (exports_info t', error) result
 }
 
-let program_with_toplevel_names_and_exports_info ~ast =
-  let walk = new requires_exports_calculator ~ast in
+let program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix =
+  let walk = new requires_exports_calculator ~ast ~module_ref_prefix in
   {
     toplevel_names = walk#toplevel_names;
     exports_info = walk#eval walk#program ast
@@ -910,8 +930,8 @@ let map_unit_file_sig =
       declare_modules = declare_modules';
     }
 
-let program ~ast =
-  match program_with_toplevel_names_and_exports_info ~ast with
+let program ~ast ~module_ref_prefix  =
+  match program_with_toplevel_names_and_exports_info ~ast ~module_ref_prefix with
     | { exports_info = Ok file_sig; _ } -> Ok (map_unit_file_sig file_sig)
     | { exports_info = Error e; _ } -> Error e
 

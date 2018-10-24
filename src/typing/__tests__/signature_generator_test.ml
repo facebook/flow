@@ -24,7 +24,7 @@ let print_ast program =
 let verify_and_generate ?prevent_munge ?ignore_static_propTypes contents =
   let contents = String.concat "\n" contents in
   let program = Signature_verifier_test.parse contents in
-  let signature = match Signature_builder.program program with
+  let signature = match Signature_builder.program ~module_ref_prefix:None program with
     | Ok signature -> signature
     | Error _ -> failwith "Signature builder failure!" in
   Signature_builder.Signature.verify_and_generate ?prevent_munge ?ignore_static_propTypes

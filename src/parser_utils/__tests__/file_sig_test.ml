@@ -8,15 +8,15 @@
 open OUnit2
 open File_sig
 
-let visit ?parse_options source =
+let visit ?parse_options ?(module_ref_prefix = None) source =
   let ast, _ = Parser_flow.program ~parse_options source in
-  match program ast with
+  match program ~ast ~module_ref_prefix with
   | Ok fsig -> fsig
   | Error _ -> assert_failure "Unexpected error"
 
-let visit_err ?parse_options source =
+let visit_err ?parse_options ?(module_ref_prefix = None) source =
   let ast, _ = Parser_flow.program ~parse_options source in
-  match program ast with
+  match program ~ast ~module_ref_prefix with
   | Error e -> e
   | Ok _ -> assert_failure "Unexpected success"
 
@@ -238,6 +238,20 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
+    | _ -> assert_failure "Unexpected requires"
+  end;
+
+  "cjs_module_ref" >:: begin fun ctxt ->
+    let source = "moduleRefConsumer('m#foo')" in
+    let {module_sig = {requires; _}; _} = visit source ~module_ref_prefix:(Some "m#") in
+    match requires with
+    | [Require {
+        source = (source_loc, "foo");
+        require_loc;
+        _
+      }] ->
+      assert_substring_equal ~ctxt "'m#foo'" source source_loc;
+      assert_substring_equal ~ctxt "'m#foo'" source require_loc;
     | _ -> assert_failure "Unexpected requires"
   end;
 

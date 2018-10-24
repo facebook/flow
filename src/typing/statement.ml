@@ -4232,7 +4232,14 @@ and identifier cx name loc =
 
 (* traverse a literal expression, return result type *)
 and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
-  | String s ->
+  | String s -> begin
+    match Context.haste_module_ref_prefix cx with
+    | Some prefix when String_utils.string_starts_with s prefix ->
+      let m = String_utils.lstrip s prefix in
+      let t = require cx (loc, m) Loc.none in
+      let reason = mk_reason (RCustom "module reference") (loc |> ALoc.of_loc) in
+      Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [t]
+    | _ ->
       (* It's too expensive to track literal information for large strings.*)
       let max_literal_length = Context.max_literal_length cx in
       let lit =
@@ -4241,6 +4248,7 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
         else AnyLiteral
       in
       DefT (annot_reason (mk_reason RString (loc |> ALoc.of_loc)), StrT lit)
+  end
 
   | Boolean b ->
       DefT (annot_reason (mk_reason RBoolean (loc |> ALoc.of_loc)), BoolT (Some b))
