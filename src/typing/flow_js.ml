@@ -7287,7 +7287,9 @@ and any_propagated_use cx trace use_op any = function
   | OpenPredT _
   | InternalT (ReposUpperT _)
   | InternalT (OptionalChainVoidT _)
-  | ShapeT _ ->
+  | ShapeT _
+  | DefT (_, OptionalT _)
+  | DefT (_, MaybeT _) ->
       false
 
   (* Should never occur as the lower bound of any *)
