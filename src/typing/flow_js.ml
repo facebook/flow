@@ -7083,6 +7083,31 @@ and ground_subtype = function
   | _ ->
     false
 
+(* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
+   cases. Note that it is not always safe to do this (ie in the case of unions).
+   Note: we can get away with a shallow (i.e. non-recursive) expansion here because the flow between
+   the any-expanded type and the original will handle the any-propagation to any relevant positions,
+   some of which may invoke this function when they hit the any propagation functions in the
+   recusive call to __flow. *)
+and expand_any _cx any = function
+  | DefT (r, ArrT (ArrayAT _)) ->
+      DefT (r, ArrT (ArrayAT (any, None)))
+  | DefT (r, ArrT (TupleAT (_, ts))) ->
+      DefT (r, ArrT (TupleAT (any, List.map (fun _ -> any) ts)))
+
+  | OpaqueT (r, ({ underlying_t; super_t; opaque_type_args; _} as opaquetype)) ->
+      let opaquetype = { opaquetype with
+        underlying_t = Option.(underlying_t >>| fun _ -> any);
+        super_t      = Option.(super_t      >>| fun _ -> any);
+        opaque_type_args =
+          Core_list.(opaque_type_args >>| fun (str, r', _, polarity) -> (str, r', any, polarity));
+      } in
+      OpaqueT (r, opaquetype)
+
+  | _ -> (* Just returning any would result in infinite recursion in most cases *)
+      failwith "no any expansion defined for this case"
+
+
 (* types trapped for any propagation. Returns true if this function handles the any case, either
    by propagating or by doing the trivial case. False if the usetype needs to be handled
    separately. *)
@@ -7102,13 +7127,11 @@ and any_propagated cx trace any = function
       rec_flow_t cx trace ~use_op (any, t);
       true
 
-  | UseT (use_op, (DefT (r, ArrT (ArrayAT _)) as arr)) -> (* arrays are invariant *)
-      rec_flow_t cx trace ~use_op (DefT (r, ArrT (ArrayAT (any, None))), arr);
-      true
-
-  | UseT (use_op, (DefT (r, ArrT (TupleAT (_, ts))) as tup)) -> (* tuples are invariant *)
-      let any_tup = DefT (r, ArrT (TupleAT (any, List.map (fun _ -> any) ts))) in
-      rec_flow_t cx trace ~use_op (any_tup, tup);
+  (* Some types just need to be expanded and filled with any types *)
+  | UseT (use_op, (DefT (_, ArrT (ArrayAT _)) as t))
+  | UseT (use_op, (DefT (_, ArrT (TupleAT _)) as t))
+  | UseT (use_op, (OpaqueT _ as t)) ->
+      rec_flow_t cx trace ~use_op (expand_any cx any t, t);
       true
 
   | UseT (use_op, DefT (_, FunT (_, _, funtype))) -> (* function type *)
@@ -7253,17 +7276,11 @@ and any_propagated_use cx trace use_op any = function
       rec_flow_t cx trace ~use_op (return_t, any);
       true
 
-  | DefT (_, ArrT (ROArrayAT t)) -> (* read-only arrays are covariant *)
-      rec_flow_t cx trace ~use_op (t, any);
-      true
-
-  | (DefT (r, ArrT (ArrayAT _)) as arr) -> (* arrays are invariant *)
-      rec_flow_t cx trace ~use_op (arr, DefT (r, ArrT (ArrayAT (any, None))));
-      true
-
-  | (DefT (r, ArrT (TupleAT (_, ts))) as tup) -> (* tuples are invariant *)
-      let any_tup = DefT (r, ArrT (TupleAT (any, List.map (fun _ -> any) ts))) in
-      rec_flow_t cx trace ~use_op (tup, any_tup);
+  (* Some types just need to be expanded and filled with any types *)
+  | (DefT (_, ArrT (ArrayAT _)) as t)
+  | (DefT (_, ArrT (TupleAT _)) as t)
+  | (OpaqueT _ as t) ->
+      rec_flow_t cx trace ~use_op (t, expand_any cx any t);
       true
 
   (* These types have no negative positions in their lower bounds *)
@@ -7277,6 +7294,10 @@ and any_propagated_use cx trace use_op any = function
       true
 
   | KeysT _ -> (* Keys cannot be tainted by any *)
+      true
+
+  | DefT (_, ArrT (ROArrayAT t)) ->
+      rec_flow_t cx trace ~use_op (t, any);
       true
 
   (* Handled already in __flow *)
@@ -7310,7 +7331,6 @@ and any_propagated_use cx trace use_op any = function
   (* TODO: figure out what is up with these *)
   | CustomFunT _
   | DefT _
-  | OpaqueT _
   | ThisTypeAppT _
   | TypeDestructorTriggerT _ ->
       true
