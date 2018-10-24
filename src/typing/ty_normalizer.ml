@@ -84,8 +84,7 @@ module NormalizerMonad : sig
   val run_imports:
     options:Env.options ->
     genv:Env.genv ->
-    State.t ->
-    Loc.t SMap.t * State.t
+    Loc.t SMap.t
 
 end = struct
 
@@ -1595,20 +1594,21 @@ end = struct
 
   end
 
-  let run_imports ~options ~genv state =
+  let run_imports ~options ~genv =
     let open Imports in
+    let state = State.empty in
     let file_sig = genv.Env.file_sig in
     let requires = File_sig.(file_sig.module_sig.requires) in
     let type_table = genv.Env.type_table in
     let imported_locs = from_requires requires in
     let imported_schemes = extract_schemes type_table imported_locs in
     match run state (extract_idents ~options ~genv imported_schemes) with
-    | Ok x, state -> x, state
-    | Error _, state ->
+    | Ok x, _state -> x
+    | Error _, _state ->
       (* Fall back to empty imports map.
        * TODO provide more fine grained handling of errors
        *)
-      SMap.empty, state
+      SMap.empty
 
 end
 
@@ -1617,40 +1617,40 @@ open NormalizerMonad
 (* Exposed API *)
 
 let from_schemes ~options ~genv schemes =
-  let imported_names, state = run_imports ~options ~genv State.empty in
+  let imported_names = run_imports ~options ~genv in
   let _, result = ListUtils.fold_map (fun state (a, scheme) ->
     let { Type.TypeScheme.tparams; type_ = t } = scheme in
     match run_type ~options ~genv ~imported_names ~tparams state t with
     | Ok t, state -> state, (a, Ok t)
     | Error s, state -> state, (a, Error s)
-  ) state schemes in
+  ) State.empty schemes in
   result
 
 let from_types ~options ~genv ts =
-  let imported_names, state = run_imports ~options ~genv State.empty in
+  let imported_names = run_imports ~options ~genv in
   let _, result = ListUtils.fold_map (fun state (a, t) ->
     match run_type ~options ~genv ~imported_names ~tparams:[] state t with
     | Ok t, state -> state, (a, Ok t)
     | Error s, state -> state, (a, Error s)
-  ) state ts in
+  ) State.empty ts in
   result
 
 let from_scheme ~options ~genv scheme =
-  let imported_names, state = run_imports ~options ~genv State.empty in
+  let imported_names = run_imports ~options ~genv in
   let { Type.TypeScheme.tparams; type_ = t } = scheme in
-  let result, _ = run_type ~options ~genv ~imported_names ~tparams state t in
+  let result, _ = run_type ~options ~genv ~imported_names ~tparams State.empty t in
   result
 
 let from_type ~options ~genv t =
-  let imported_names, state = run_imports ~options ~genv State.empty in
-  let result, _ = run_type ~options ~genv ~imported_names ~tparams:[] state t in
+  let imported_names = run_imports ~options ~genv in
+  let result, _ = run_type ~options ~genv ~imported_names ~tparams:[] State.empty t in
   result
 
 let fold_hashtbl ~options ~genv ~f ~g ~htbl init =
-  let imported_names, state = run_imports ~options ~genv State.empty in
+  let imported_names = run_imports ~options ~genv in
   let result, _ = Hashtbl.fold (fun loc x (acc, state) ->
     let { Type.TypeScheme.tparams; type_ = t } = g x in
     let result, state = run_type ~options ~genv ~imported_names ~tparams state t in
     f acc (loc, result), state
-  ) htbl (init, state) in
+  ) htbl (init, State.empty) in
   result

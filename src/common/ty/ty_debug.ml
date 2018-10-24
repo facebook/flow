@@ -108,12 +108,8 @@ and dump_generics ~depth = function
 and dump_tvar (RVar i) = spf "T_%d" i
 
 and dump_symbol { provenance; loc; name; _ } =
-  match provenance with
-  | Local -> name
-  | Imported -> spf "%s /* imported from file %s */" name (Reason.string_of_loc loc)
-  | Remote -> spf "%s /* defined in file %s */" name (Reason.string_of_loc loc)
-  | Library -> spf "%s /* defined in library %s */" name (Reason.string_of_loc loc)
-  | Builtin -> spf "%s /* builtin */" name
+  spf "(%s, %s) %s" (Ty.string_of_provenance_ctor provenance)
+    (Reason.string_of_loc loc) name
 
 and dump_t ?(depth = 10) t =
   if depth < 0 then "..." else
