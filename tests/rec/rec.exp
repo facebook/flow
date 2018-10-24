@@ -7,8 +7,8 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:538:22
-   538|     get(key: K): V | void;
+   <BUILTINS>/core.js:549:22
+   549|     get(key: K): V | void;
                              ^^^^ [1]
    <BUILTINS>/core.js:493:11
    493| interface $Iterable<+Yield,+Return,-Next> {
@@ -24,8 +24,8 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:538:22
-   538|     get(key: K): V | void;
+   <BUILTINS>/core.js:549:22
+   549|     get(key: K): V | void;
                              ^^^^ [1]
    <BUILTINS>/core.js:493:11
    493| interface $Iterable<+Yield,+Return,-Next> {
@@ -41,8 +41,8 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:538:22
-   538|     get(key: K): V | void;
+   <BUILTINS>/core.js:549:22
+   549|     get(key: K): V | void;
                              ^^^^ [1]
    <BUILTINS>/core.js:493:11
    493| interface $Iterable<+Yield,+Return,-Next> {
@@ -58,8 +58,8 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:538:22
-   538|     get(key: K): V | void;
+   <BUILTINS>/core.js:549:22
+   549|     get(key: K): V | void;
                              ^^^^ [1]
    <BUILTINS>/core.js:493:11
    493| interface $Iterable<+Yield,+Return,-Next> {

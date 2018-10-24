@@ -105,8 +105,8 @@ value of property `@@iterator`.
                  ^^^
 
 References:
-   <BUILTINS>/core.js:532:28
-   532|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:543:28
+   543|     @@iterator(): Iterator<[K, V]>;
                                    ^^^^^^ [1]
    map.js:13:55
     13| function mapTest4(map: Map<number, string>): Iterable<string> {
