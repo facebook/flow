@@ -1,3 +1,21 @@
+Error --------------------------------------------------------------------------------------------------- arrays.js:8:14
+
+Cannot call `noop` with `new_arr` bound to `arr` because null or undefined [1] is incompatible with string [2] in array
+element of array element.
+
+   arrays.js:8:14
+   8| noop<string>(new_arr);
+                   ^^^^^^^
+
+References:
+   arrays.js:4:31
+   4| declare var arr : Array<Array<?string>>;
+                                    ^^^^^^^ [1]
+   arrays.js:8:6
+   8| noop<string>(new_arr);
+           ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ function.js:10:10
 
 Cannot assign `42` to `o[x]` because number [1] is incompatible with string [2].
@@ -27,4 +45,4 @@ References:
 
 
 
-Found 2 errors
+Found 3 errors

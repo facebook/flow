@@ -7276,27 +7276,38 @@ and any_propagated_use cx trace use_op any = function
   | NullProtoT _ ->
       true
 
+  | KeysT _ -> (* Keys cannot be tainted by any *)
+      true
+
+  (* Handled already in __flow *)
+  | AnnotT _
+  | AnyWithLowerBoundT _
+  | ReposT _
+  | EvalT _
+  | OpenPredT _
+  | InternalT (ReposUpperT _)
+  | InternalT (OptionalChainVoidT _)
+  | ShapeT _ ->
+      false
+
+  (* Should never occur as the lower bound of any *)
+  | BoundT _
+  | InternalT (ChoiceKitT _)
+  | InternalT (ExtendsT _)
+  | ModuleT _ ->
+      false
+
   (* Need special action later *)
   | OpenT _ -> false
 
   (* TODO: figure out what is up with these *)
-  | AnnotT _
-  | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
-  | BoundT _
   | CustomFunT _
   | DefT _
-  | EvalT _
   | ExactT _
-  | InternalT _
-  | KeysT _
   | MatchingPropT _
   | MergedT _
-  | ModuleT _
   | OpaqueT _
-  | OpenPredT _
-  | ReposT _
-  | ShapeT _
   | ThisClassT _
   | ThisTypeAppT _
   | TypeDestructorTriggerT _ ->
