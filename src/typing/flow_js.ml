@@ -7095,10 +7095,20 @@ and any_propagated cx trace any = function
       rec_flow_t cx trace (any, t);
       true
 
+  | UseT (use_op, DefT (_, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
   | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *)
   | UseT (use_op, ExactT (_, t))
   | UseT (use_op, ShapeT t) ->
       rec_flow_t cx trace ~use_op (any, t);
+      true
+
+  | UseT (use_op, (DefT (r, ArrT (ArrayAT _)) as arr)) -> (* arrays are invariant *)
+      rec_flow_t cx trace ~use_op (DefT (r, ArrT (ArrayAT (any, None))), arr);
+      true
+
+  | UseT (use_op, (DefT (r, ArrT (TupleAT (_, ts))) as tup)) -> (* tuples are invariant *)
+      let any_tup = DefT (r, ArrT (TupleAT (any, List.map (fun _ -> any) ts))) in
+      rec_flow_t cx trace ~use_op (any_tup, tup);
       true
 
   | UseT (use_op, DefT (_, FunT (_, _, funtype))) -> (* function type *)
@@ -7241,6 +7251,19 @@ and any_propagated_use cx trace use_op any = function
       Option.iter ~f:(fun (_, _, t) -> rec_flow_t cx trace ~use_op (any, t)) rest_param;
       rec_flow_t cx trace ~use_op (any, this_t);
       rec_flow_t cx trace ~use_op (return_t, any);
+      true
+
+  | DefT (_, ArrT (ROArrayAT t)) -> (* read-only arrays are covariant *)
+      rec_flow_t cx trace ~use_op (t, any);
+      true
+
+  | (DefT (r, ArrT (ArrayAT _)) as arr) -> (* arrays are invariant *)
+      rec_flow_t cx trace ~use_op (arr, DefT (r, ArrT (ArrayAT (any, None))));
+      true
+
+  | (DefT (r, ArrT (TupleAT (_, ts))) as tup) -> (* tuples are invariant *)
+      let any_tup = DefT (r, ArrT (TupleAT (any, List.map (fun _ -> any) ts))) in
+      rec_flow_t cx trace ~use_op (tup, any_tup);
       true
 
   (* These types have no negative positions in their lower bounds *)
