@@ -7282,6 +7282,9 @@ and any_propagated_use cx trace use_op any = function
   (* Handled already in __flow *)
   | AnnotT _
   | AnyWithLowerBoundT _
+  | AnyWithUpperBoundT _
+  | ExactT _
+  | ThisClassT _
   | ReposT _
   | EvalT _
   | OpenPredT _
@@ -7303,14 +7306,11 @@ and any_propagated_use cx trace use_op any = function
   | OpenT _ -> false
 
   (* TODO: figure out what is up with these *)
-  | AnyWithUpperBoundT _
   | CustomFunT _
   | DefT _
-  | ExactT _
   | MatchingPropT _
   | MergedT _
   | OpaqueT _
-  | ThisClassT _
   | ThisTypeAppT _
   | TypeDestructorTriggerT _ ->
       true
