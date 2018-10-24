@@ -75,7 +75,7 @@ val mk_declare_class_sig: Context.t ->
   (Loc.t, Loc.t) Flow_ast.Statement.DeclareClass.t ->
   Class_sig.t * Type.t * (Loc.t, Loc.t * Type.t) Flow_ast.Statement.DeclareClass.t
 
-val polarity: Loc.t Flow_ast.Variance.t option -> Type.polarity
+val polarity: 'a Flow_ast.Variance.t option -> Type.polarity
 
 val qualified_name: (Loc.t, Loc.t) Flow_ast.Type.Generic.Identifier.t -> string
 

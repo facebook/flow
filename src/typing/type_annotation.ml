@@ -79,6 +79,11 @@ let add_deprecated_type_error_if_not_lib_file cx loc = Loc.(
     | _ -> ()
 )
 
+let polarity = Ast.Variance.(function
+  | Some (_, Plus) -> Positive
+  | Some (_, Minus) -> Negative
+  | None -> Neutral
+)
 (**********************************)
 (* Transform annotations to types *)
 (**********************************)
@@ -1322,12 +1327,6 @@ and type_identifier cx name loc =
   else if name = "undefined"
   then VoidT.at (loc |> ALoc.of_loc)
   else Env.var_ref ~lookup_mode:ForType cx name loc
-
-and polarity = Ast.Variance.(function
-  | Some (_, Plus) -> Positive
-  | Some (_, Minus) -> Negative
-  | None -> Neutral
-)
 
 and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   let lookup_mode = Env.LookupMode.ForType in
