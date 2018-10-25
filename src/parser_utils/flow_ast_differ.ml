@@ -732,14 +732,14 @@ let program (algo : diff_algorithm)
     let { openingElement = open_elem2;
           closingElement = close_elem2;
           children = children2 } = jsx_elem2 in
-    let openingChanged =
+    let opening_diff =
       diff_if_changed_ret_opt jsx_opening_element open_elem1 open_elem2 in
-    let childrenChanged =
+    let children_diff =
       diff_and_recurse_no_trivial
         (fun x y -> jsx_child x y |> Option.return) children1 children2 in
-    let closingChanged =
+    let closing_diff =
       diff_if_changed_opt jsx_closing_element close_elem1 close_elem2 in
-    join_diff_list [openingChanged; childrenChanged; closingChanged]
+    join_diff_list [opening_diff; children_diff; closing_diff]
 
   and jsx_fragment
       (frag1: (Loc.t, Loc.t) Ast.JSX.fragment)
@@ -770,10 +770,10 @@ let program (algo : diff_algorithm)
              attributes = attrs2 } = elem2 in
     if self_close1 != self_close2 then None
     else
-      let nameChanged = diff_if_changed_ret_opt jsx_name name1 name2 in
-      let attributesChanged =
+      let name_diff = diff_if_changed_ret_opt jsx_name name1 name2 in
+      let attrs_diff =
         diff_and_recurse_no_trivial jsx_opening_attribute attrs1 attrs2 in
-      join_diff_list [nameChanged; attributesChanged]
+      join_diff_list [name_diff; attrs_diff]
 
   and jsx_name
       (name1: (Loc.t, Loc.t) Ast.JSX.name)
@@ -806,9 +806,9 @@ let program (algo : diff_algorithm)
     let open Ast.JSX.NamespacedName in
     let (_, {namespace = namespace1; name = name1}) = namespaced_name1 in
     let (_, {namespace = namespace2; name = name2}) = namespaced_name2 in
-    let namespaceChanged = diff_if_changed jsx_identifier namespace1 namespace2 in
-    let nameChanged = diff_if_changed jsx_identifier name1 name2 in
-    namespaceChanged @ nameChanged
+    let namespace_diff = diff_if_changed jsx_identifier namespace1 namespace2 in
+    let name_diff = diff_if_changed jsx_identifier name1 name2 in
+    namespace_diff @ name_diff
 
   and jsx_member_expression
       (member_expr1: (Loc.t, Loc.t) Ast.JSX.MemberExpression.t)
@@ -817,15 +817,15 @@ let program (algo : diff_algorithm)
     let open Ast.JSX.MemberExpression in
     let (_, {_object = object1; property = prop1}) = member_expr1 in
     let (_, {_object = object2; property = prop2}) = member_expr2 in
-    let objectChanged =
+    let obj_diff =
       match object1, object2 with
       | Ast.JSX.MemberExpression.Identifier id1, Ast.JSX.MemberExpression.Identifier id2 ->
         Some (diff_if_changed jsx_identifier id1 id2)
       | MemberExpression member_expr1', MemberExpression member_expr2' ->
         diff_if_changed_ret_opt jsx_member_expression member_expr1' member_expr2'
       | _ -> None in
-    let propertyChanged = diff_if_changed jsx_identifier prop1 prop2 |> Option.return in
-    join_diff_list [objectChanged; propertyChanged]
+    let prop_diff = diff_if_changed jsx_identifier prop1 prop2 |> Option.return in
+    join_diff_list [obj_diff; prop_diff]
 
   and jsx_closing_element
       (elem1: (Loc.t, Loc.t) Ast.JSX.Closing.t)
@@ -864,14 +864,14 @@ let program (algo : diff_algorithm)
     let open Ast.JSX.Attribute in
     let _, { name = name1; value = value1 } = attr1 in
     let _, { name = name2; value = value2 } = attr2 in
-    let nameChanged =
+    let name_diff =
       match name1, name2 with
       | Ast.JSX.Attribute.Identifier id1, Ast.JSX.Attribute.Identifier id2 ->
         Some (diff_if_changed jsx_identifier id1 id2)
       | NamespacedName namespaced_name1, NamespacedName namespaced_name2 ->
         Some (diff_if_changed jsx_namespaced_name namespaced_name1 namespaced_name2)
       | _ -> None in
-    let valueChanged =
+    let value_diff =
       if value1 == value2 then Some []
       else
         match value1, value2 with
@@ -880,7 +880,7 @@ let program (algo : diff_algorithm)
         | Some (ExpressionContainer (_, expr1)), Some (ExpressionContainer (_, expr2)) ->
           jsx_expression expr1 expr2
         | _ -> None in
-    join_diff_list [nameChanged; valueChanged]
+    join_diff_list [name_diff; value_diff]
 
   and jsx_child
       (child1: (Loc.t, Loc.t) Ast.JSX.child)
