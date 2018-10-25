@@ -227,30 +227,17 @@ module Make (L: Loc_sig.S) (Api: Scope_api_sig.S with module L = L) = struct
 
     (* helper for function params and body *)
     method private lambda loc params body =
-      let open Ast.Function in
+      (* function params and bindings within the function body share the same scope *)
+      let bindings =
+        let hoist = new hoister in
+        run hoist#function_params params;
+        run hoist#function_body_any body;
+        hoist#acc
+      in
 
-      (* hoisting *)
-      let hoist = new hoister in
-      begin
-        let (_loc, { Params.params = param_list; rest = _rest }) = params in
-        run_list hoist#function_param_pattern param_list;
-        match body with
-          | BodyBlock (block_loc, block) ->
-            run (hoist#block block_loc) block
-          | _ ->
-            ()
-      end;
-
-      this#with_bindings loc hoist#acc (fun () ->
-        let (_loc, { Params.params = param_list; rest }) = params in
-        run_list this#function_param_pattern param_list;
-        run_opt this#function_rest_element rest;
-        begin match body with
-        | BodyBlock (block_loc, block) ->
-          run (this#block block_loc) block
-        | BodyExpression expr ->
-          run this#expression expr
-        end;
+      this#with_bindings loc bindings (fun () ->
+        run this#function_params params;
+        run this#function_body_any body;
       ) ()
 
     method! function_declaration loc (expr: (L.t, L.t) Ast.Function.t) =

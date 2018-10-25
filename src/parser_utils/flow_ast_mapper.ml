@@ -1226,8 +1226,10 @@ class ['loc] mapper = object(this)
   method predicate_expression (expr: ('loc, 'loc) Flow_ast.Expression.t) =
     this#expression expr
 
-  (* TODO *)
-  method function_rest_element (expr: ('loc, 'loc) Flow_ast.Function.RestElement.t) = expr
+  method function_rest_element (expr: ('loc, 'loc) Flow_ast.Function.RestElement.t) =
+    let open Flow_ast.Function.RestElement in
+    let loc, { argument } = expr in
+    id this#binding_pattern argument expr (fun argument -> loc, { argument })
 
   method return _loc (stmt: ('loc, 'loc) Flow_ast.Statement.Return.t) =
     let open Flow_ast.Statement.Return in

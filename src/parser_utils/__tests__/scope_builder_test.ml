@@ -78,13 +78,18 @@ let mk_scope_builder_scope_loc_test contents expected_scope_locs =
 
 let tests = "scope_builder" >::: [
   "let_all_uses" >:: mk_scope_builder_all_uses_test
-    "function foo() { \
-       let x = 0; \
-       return x; \
-     }"
-    [mk_loc (1, 9) (1, 12);
-     mk_loc (1, 21) (1, 22);
-     mk_loc (1, 35) (1, 36)];
+    ("function foo(x, ...y) {\n"^
+     "  let z = 0;\n"^
+     "  x, y;\n"^
+     "  return z;\n"^
+     "}")
+    [mk_loc (1, 9) (1, 12); (* foo *)
+     mk_loc (1, 13) (1, 14); (* x def *)
+     mk_loc (1, 19) (1, 20); (* y def *)
+     mk_loc (2, 6) (2, 7); (* z def *)
+     mk_loc (3, 2) (3, 3); (* x use *)
+     mk_loc (3, 5) (3, 6); (* y use *)
+     mk_loc (4, 9) (4, 10)]; (* z use *)
   "let_locs_of_defs_of_all_uses" >:: mk_scope_builder_locs_of_defs_of_all_uses_test
     "function foo() { \
        let x = 0; \
