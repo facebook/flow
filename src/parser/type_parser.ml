@@ -764,8 +764,11 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and type_parameter_declaration =
     let rec params env ~allow_default ~require_default acc = Type.ParameterDeclaration.TypeParam.(
-      let variance = variance env in
-      let loc, (name, bound) = bounded_type env in
+      let loc, (variance, name, bound) = with_loc (fun env ->
+        let variance = variance env in
+        let _, (name, bound) = bounded_type env in
+        (variance, name, bound)
+      ) env in
       let default, require_default = match allow_default, Peek.token env with
       | false, _ -> None, false
       | true, T_ASSIGN ->
