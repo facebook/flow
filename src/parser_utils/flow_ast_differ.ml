@@ -687,6 +687,8 @@ let program (algo : diff_algorithm)
         unary u1 u2
       | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
         identifier id1 id2 |> Option.return
+      | (_, Conditional c1), (_, Conditional c2) ->
+        conditional_expression c1 c2 |> Option.return
       | (_, New new1), (_, New new2) ->
         new_ new1 new2
       | (_, Member member1), (_, Member member2) ->
@@ -997,6 +999,17 @@ let program (algo : diff_algorithm)
   and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node change list =
     let (old_loc, _) = id1 in
     [(old_loc, Replace (Identifier id1, Identifier id2))]
+
+  and conditional_expression (c1: (Loc.t, Loc.t) Ast.Expression.Conditional.t)
+                             (c2: (Loc.t, Loc.t) Ast.Expression.Conditional.t)
+      : node change list =
+    let open Ast.Expression.Conditional in
+    let { test = test1; consequent = cons1; alternate = alt1 } = c1 in
+    let { test = test2; consequent = cons2; alternate = alt2 } = c2 in
+    let test_diff = diff_if_changed expression test1 test2 in
+    let cons_diff = diff_if_changed expression cons1 cons2 in
+    let alt_diff = diff_if_changed expression alt1 alt2 in
+    List.concat [test_diff; cons_diff; alt_diff]
 
   and new_ (new1: (Loc.t, Loc.t) Ast.Expression.New.t) (new2: (Loc.t, Loc.t) Ast.Expression.New.t): node change list option =
     let open Ast.Expression.New in

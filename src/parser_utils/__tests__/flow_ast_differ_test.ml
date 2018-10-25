@@ -512,6 +512,31 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((4, 5), "(5)"); ((9, 10), "(5)"); ((21, 27), "gotRenamed")]
       ~source ~expected:"if ((5)) { (5); } else { gotRenamed }" ~mapper:(new useless_mapper)
   end;
+  "conditional_nochange" >:: begin fun ctxt ->
+    let source = "1 > 0 ? false : true" in
+    assert_edits_equal ctxt ~edits:[] ~source
+      ~expected:"1 > 0 ? false : true" ~mapper:(new useless_mapper)
+  end;
+  "conditional_test" >:: begin fun ctxt ->
+    let source = "rename ? false : true" in
+    assert_edits_equal ctxt ~edits:[((0, 6), "gotRenamed")] ~source
+      ~expected:"gotRenamed ? false : true" ~mapper:(new useless_mapper)
+  end;
+  "conditional_consequent" >:: begin fun ctxt ->
+    let source = "1 > 0 ? rename : true" in
+    assert_edits_equal ctxt ~edits:[((8, 14), "gotRenamed")] ~source
+      ~expected:"1 > 0 ? gotRenamed : true" ~mapper:(new useless_mapper)
+  end;
+  "conditional_alternate" >:: begin fun ctxt ->
+    let source = "1 > 0 ? false : rename" in
+    assert_edits_equal ctxt ~edits:[((16, 22), "gotRenamed")] ~source
+      ~expected:"1 > 0 ? false : gotRenamed" ~mapper:(new useless_mapper)
+  end;
+  "conditional_cons_and_alt" >:: begin fun ctxt ->
+    let source = "1 > 0 ? 4 : rename" in
+    assert_edits_equal ctxt ~edits:[((8, 9), "(5)"); ((12, 18), "gotRenamed")] ~source
+      ~expected:"1 > 0 ? (5) : gotRenamed" ~mapper:(new useless_mapper)
+  end;
   "with_nochange" >:: begin fun ctxt ->
     let source = "with (object) { foo = true; }" in
     assert_edits_equal ctxt ~edits:[] ~source
