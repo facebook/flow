@@ -21,7 +21,7 @@ let empty = {
   mixed_loc = None;
 }
 
-let to_string t =
+let debug_to_string t =
   let string_of_loc_option = function
     | None -> "None"
     | Some loc -> Loc.to_string ~include_source:true loc
