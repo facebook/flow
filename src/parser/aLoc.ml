@@ -17,3 +17,5 @@ let source = Loc.source
 
 let compare = Loc.compare
 let equal = Loc.equal
+
+let to_string = Loc.to_string
