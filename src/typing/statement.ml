@@ -6669,7 +6669,6 @@ and declare_function_to_function_declaration cx
             async = false;
             generator = false;
             predicate = Some (loc, Ast.Type.Predicate.Inferred);
-            expression = false;
             return;
             tparams;
           }, function

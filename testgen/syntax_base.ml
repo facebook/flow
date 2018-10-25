@@ -168,7 +168,6 @@ let mk_func_def
      async = false;
      generator = false;
      predicate = None;
-     expression = false;
      return = T.Available (Loc.none, (Loc.none, rtype));
      tparams = None} in
   Stmt (S.FunctionDeclaration func)

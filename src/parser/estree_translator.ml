@@ -327,9 +327,9 @@ end with type t = Impl.t) = struct
         ]
     | loc, Function _function -> function_expression (loc, _function)
     | loc, ArrowFunction arrow -> Function.(
-        let body = (match arrow.body with
-        | BodyBlock b -> block b
-        | BodyExpression expr -> expression expr)
+        let body, expression = match arrow.body with
+        | BodyBlock b -> block b, false
+        | BodyExpression expr -> expression expr, true
         in
         let return = match arrow.return with
         | Ast.Type.Missing _ -> None
@@ -341,7 +341,7 @@ end with type t = Impl.t) = struct
           "async", bool arrow.async;
           "generator", bool arrow.generator;
           "predicate", option predicate arrow.predicate;
-          "expression", bool arrow.expression;
+          "expression", bool expression;
           "returnType", option type_annotation return;
           "typeParameters", option type_parameter_declaration arrow.tparams;
         ]
@@ -506,9 +506,9 @@ end with type t = Impl.t) = struct
   )
 
   and function_declaration (loc, fn) = Function.(
-    let body = match fn.body with
-    | BodyBlock b -> block b
-    | BodyExpression b -> expression b in
+    let body, expression = match fn.body with
+    | BodyBlock b -> block b, false
+    | BodyExpression b -> expression b, true in
     let return = match fn.return with
     | Ast.Type.Missing _ -> None
     | Ast.Type.Available t -> Some t in
@@ -522,16 +522,16 @@ end with type t = Impl.t) = struct
       "async", bool fn.async;
       "generator", bool fn.generator;
       "predicate", option predicate fn.predicate;
-      "expression", bool fn.expression;
+      "expression", bool expression;
       "returnType", option type_annotation return;
       "typeParameters", option type_parameter_declaration fn.tparams;
     ]
   )
 
   and function_expression (loc, _function) = Function.(
-    let body = match _function.body with
-    | BodyBlock b -> block b
-    | BodyExpression expr -> expression expr
+    let body, expression = match _function.body with
+    | BodyBlock b -> block b, false
+    | BodyExpression expr -> expression expr, true
     in
     let return = match _function.return with
     | Ast.Type.Missing _ -> None
@@ -543,7 +543,7 @@ end with type t = Impl.t) = struct
       "async", bool _function.async;
       "generator", bool _function.generator;
       "predicate", option predicate _function.predicate;
-      "expression", bool _function.expression;
+      "expression", bool expression;
       "returnType", option type_annotation return;
       "typeParameters", option type_parameter_declaration _function.tparams;
     ]

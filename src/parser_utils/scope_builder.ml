@@ -262,7 +262,7 @@ module Make (L: Loc_sig.S) (Api: Scope_api_sig.S with module L = L) = struct
       if not contains_with_or_eval then begin
         let open Ast.Function in
         let {
-          id; params; body; async = _; generator = _; expression = _;
+          id; params; body; async = _; generator = _;
           predicate = _; return = _; tparams = _;
         } = expr in
 
@@ -284,7 +284,7 @@ module Make (L: Loc_sig.S) (Api: Scope_api_sig.S with module L = L) = struct
       if not contains_with_or_eval then begin
         let open Ast.Function in
         let {
-          id; params; body; async = _; generator = _; expression = _;
+          id; params; body; async = _; generator = _;
           predicate = _; return = _; tparams = _;
         } = expr in
 
@@ -298,7 +298,7 @@ module Make (L: Loc_sig.S) (Api: Scope_api_sig.S with module L = L) = struct
       end;
 
       expr
-  end
+    end
 
   let program ?(ignore_toplevel=false) program =
     let loc, _, _ = program in

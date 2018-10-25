@@ -492,15 +492,15 @@ let program (algo : diff_algorithm)
     let open Ast.Function in
     let {
       id = id1; params = params1; body = body1; async = async1; generator = generator1;
-      expression = expression1; predicate = predicate1; return = return1; tparams = tparams1;
+      predicate = predicate1; return = return1; tparams = tparams1;
     } = func1 in
     let {
       id = id2; params = params2; body = body2; async = async2; generator = generator2;
-      expression = expression2; predicate = predicate2; return = return2; tparams = tparams2;
+      predicate = predicate2; return = return2; tparams = tparams2;
     } = func2 in
 
     if id1 != id2 || params1 != params2 || (* body handled below *) async1 != async2
-        || generator1 != generator2 || expression1 != expression2 || predicate1 != predicate2
+        || generator1 != generator2 || predicate1 != predicate2
         || tparams1 != tparams2
     then
       None

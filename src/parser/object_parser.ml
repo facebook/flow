@@ -106,10 +106,10 @@ module Object
     let _, body, strict = Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
     Declaration.strict_post_check env ~strict ~simple None params;
-    let end_loc, expression = Function.(
-      match body with
-      | BodyBlock (loc, _) -> loc, false
-      | BodyExpression (loc, _) -> loc, true) in
+    let end_loc = match body with
+      | Function.BodyBlock (loc, _) -> loc
+      | Function.BodyExpression (loc, _) -> loc
+    in
     let loc = Loc.btwn start_loc end_loc in
     let value = loc, Function.({
       id = None;
@@ -118,7 +118,6 @@ module Object
       generator;
       async;
       predicate = None; (* setters/getter are not predicates *)
-      expression;
       return;
       tparams;
     }) in
@@ -246,9 +245,9 @@ module Object
           Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in
         Declaration.strict_post_check env ~strict ~simple None params;
-        let end_loc, expression = match body with
-          | Function.BodyBlock (loc, _) -> loc, false
-          | Function.BodyExpression (loc, _) -> loc, true
+        let end_loc = match body with
+          | Function.BodyBlock (loc, _) -> loc
+          | Function.BodyExpression (loc, _) -> loc
         in
         let loc = Loc.btwn start_loc end_loc in
         loc, Function.({
@@ -259,7 +258,6 @@ module Object
           async;
           (* TODO: add support for object method predicates *)
           predicate = None;
-          expression;
           return;
           tparams;
         })
@@ -563,10 +561,10 @@ module Object
           Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in
         Declaration.strict_post_check env ~strict ~simple None params;
-        let end_loc, expression = Function.(
-          match body with
-          | BodyBlock (loc, _) -> loc, false
-          | BodyExpression (loc, _) -> loc, true) in
+        let end_loc = match body with
+          | Function.BodyBlock (loc, _) -> loc
+          | Function.BodyExpression (loc, _) -> loc
+        in
         let loc = Loc.btwn func_loc end_loc in
         let value = loc, Function.({
           id = None;
@@ -576,7 +574,6 @@ module Object
           async;
           (* TODO: add support for method predicates *)
           predicate = None;
-          expression;
           return;
           tparams;
         }) in

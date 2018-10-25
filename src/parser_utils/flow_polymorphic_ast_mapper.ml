@@ -765,7 +765,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method function_ (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
     let open Ast.Function in
     let {
-      id = ident; params; body; async; generator; expression;
+      id = ident; params; body; async; generator;
       predicate; return; tparams;
     } = expr in
     let ident' = Option.map ~f:this#t_function_identifier ident in
@@ -786,7 +786,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       let predicate' = Option.map ~f:this#type_predicate predicate in
       {
         id = ident'; params = params'; return = return'; body = body';
-        async; generator; expression; predicate = predicate'; tparams = tparams';
+        async; generator; predicate = predicate'; tparams = tparams';
       }
     )
 

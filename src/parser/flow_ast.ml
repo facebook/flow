@@ -1301,7 +1301,6 @@ and Function : sig
     async: bool;
     generator: bool;
     predicate: ('M, 'T) Type.Predicate.t option;
-    expression: bool;
     return: ('M, 'T) Type.annotation_or_hint;
     tparams: ('M, 'T) Type.ParameterDeclaration.t option;
   }

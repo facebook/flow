@@ -74,7 +74,7 @@ module Functions = struct
   let body_expression expr =
     BodyExpression expr
 
-  let make ~id ~expression ~params ?(generator=false) ?(async=false) ?body () =
+  let make ~id ~params ?(generator=false) ?(async=false) ?body () =
     let body = match body with
     | Some body -> body
     | None -> body_block []
@@ -85,7 +85,6 @@ module Functions = struct
       async;
       generator = generator;
       predicate = None;
-      expression;
       return = Ast.Type.Missing Loc.none;
       tparams = None;
     }
@@ -207,7 +206,7 @@ module Statements = struct
     | Some stmts -> Some (Functions.body_block stmts)
     | None -> None
     in
-    let fn = Functions.make ~params ~id:(Some id) ?body ~expression:false () in
+    let fn = Functions.make ~params ~id:(Some id) ?body () in
     loc, FunctionDeclaration fn
 
   let class_declaration ?super ?implements ?id elements =
@@ -251,11 +250,11 @@ module Expressions = struct
     }
 
   let function_ ?(generator=false) ?(params=[]) ?body () =
-    let fn = Functions.make ~generator ~params ~id:None ?body ~expression:true () in
+    let fn = Functions.make ~generator ~params ~id:None ?body () in
     Loc.none, Function fn
 
   let arrow_function ?(params=[]) ?body () =
-    let fn = Functions.make ~params ~id:None ?body ~expression:true () in
+    let fn = Functions.make ~params ~id:None ?body () in
     Loc.none, ArrowFunction fn
 
   let class_ ?super ?id elements =
@@ -319,7 +318,7 @@ module Expressions = struct
     Object.Property.Computed k
 
   let object_method ?body ?(params=[]) ?(generator=false) ?(async=false) key =
-    let fn = Functions.make ~id:None ~expression:true ~params ~generator ~async ?body () in
+    let fn = Functions.make ~id:None ~params ~generator ~async ?body () in
     let prop = Object.Property.Method { key; value = (Loc.none, fn) } in
     Object.Property (Loc.none, prop)
 

@@ -823,10 +823,6 @@ module Expression
       Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
     Declaration.strict_post_check env ~strict ~simple id params;
-    let expression = Function.(
-      match body with
-      | BodyBlock _ -> false
-      | BodyExpression _ -> true) in
     Loc.btwn start_loc end_loc, Expression.(Function Function.({
       id;
       params;
@@ -834,7 +830,6 @@ module Expression
       generator;
       async;
       predicate;
-      expression;
       return;
       tparams;
     }))
@@ -1139,10 +1134,6 @@ module Expression
       in
       let simple = Declaration.is_simple_function_params params in
       Declaration.strict_post_check env ~strict ~simple None params;
-      let expression = Function.(
-        match body with
-        | BodyBlock _ -> false
-        | BodyExpression _ -> true) in
       let loc = Loc.btwn start_loc end_loc in
       Cover_expr (loc, Expression.(ArrowFunction { Function.
         id = None;
@@ -1151,7 +1142,6 @@ module Expression
         async;
         generator = false; (* arrow functions cannot be generators *)
         predicate;
-        expression;
         return;
         tparams;
       }))

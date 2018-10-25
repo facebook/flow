@@ -295,7 +295,7 @@ let tests = [
 
   "function" >:: begin fun ctxt ->
     let fn = (Loc.none, Flow_ast.Expression.Function (
-      Functions.make ~id:None ~expression:true ~params:[] ())
+      Functions.make ~id:None ~params:[] ())
     ) in
     let layout = Js_layout_generator.expression (fn && x) in
     assert_layout ~ctxt

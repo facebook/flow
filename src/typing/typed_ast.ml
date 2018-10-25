@@ -174,7 +174,6 @@ module Function = struct
       async = false;
       generator = false;
       predicate = None;
-      expression = false;
       return = Ast.Type.Missing error_annot;
       tparams = None;
     }
@@ -201,7 +200,6 @@ module Function = struct
     async = false;
     generator = false;
     predicate = None;
-    expression = false;
     return = Ast.Type.Missing error_annot;
     tparams = None;
   }

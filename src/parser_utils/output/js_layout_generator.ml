@@ -1180,7 +1180,7 @@ and function_base
   ?(id=Empty)
   { Ast.Function.
     params; body; async; predicate; return; tparams;
-    expression=_; generator=_; id=_ (* Handled via `function_` *)
+    generator=_; id=_ (* Handled via `function_` *)
   } =
   fuse [
     if async then fuse [Atom "async"; space; id] else id;

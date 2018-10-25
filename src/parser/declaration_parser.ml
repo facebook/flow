@@ -250,10 +250,10 @@ module Declaration
     let _, body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in
     strict_post_check env ~strict ~simple id params;
-    let end_loc, expression = Ast.Function.(
+    let end_loc = Ast.Function.(
       match body with
-      | BodyBlock (loc, _) -> loc, false
-      | BodyExpression (loc, _) -> loc, true) in
+      | BodyBlock (loc, _) -> loc
+      | BodyExpression (loc, _) -> loc) in
     Loc.btwn start_loc end_loc, Statement.(FunctionDeclaration Function.({
       id;
       params;
@@ -261,7 +261,6 @@ module Declaration
       generator;
       async;
       predicate;
-      expression;
       return;
       tparams;
     }))
