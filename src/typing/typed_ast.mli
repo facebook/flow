@@ -56,9 +56,6 @@ module Expression : sig
   val expression_or_spread_list_error
     : (Loc.t, Loc.t * T.t) Flow_ast.Expression.expression_or_spread list
   val unimplemented : (Loc.t, Loc.t * T.t) Flow_ast.Expression.t'
-  val targs_unimplemented : (Loc.t, Loc.t * T.t) Flow_ast.Type.ParameterInstantiation.t option
-  val expression_or_spread_list_unimplemented
-    : (Loc.t, Loc.t * T.t) Flow_ast.Expression.expression_or_spread list
   module Object : sig
     val property_error : (Loc.t, Loc.t * T.t) Flow_ast.Expression.Object.property
     module Property : sig
@@ -70,14 +67,11 @@ end
 
 module Pattern : sig
   val error : (Loc.t, Loc.t * T.t) Flow_ast.Pattern.t'
-  val unimplemented : (Loc.t, Loc.t * T.t) Flow_ast.Pattern.t'
 end
 
 module Function : sig
   val body_error : (Loc.t, Loc.t * T.t) Flow_ast.Function.body
   val error : (Loc.t, Loc.t * T.t) Flow_ast.Function.t
-  val body_unimplemented : (Loc.t, Loc.t * T.t) Flow_ast.Function.body
-  val unimplemented : (Loc.t, Loc.t * T.t) Flow_ast.Function.t
   module RestElement : sig
     val error : (Loc.t, Loc.t * T.t) Flow_ast.Function.RestElement.t'
   end
@@ -87,7 +81,6 @@ module Function : sig
 end
 
 module Class : sig
-  val unimplemented : (Loc.t, Loc.t * T.t) Flow_ast.Class.t
   module Body : sig
     val element_error : (Loc.t, Loc.t * T.t) Flow_ast.Class.Body.element
   end

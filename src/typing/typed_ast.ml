@@ -104,8 +104,6 @@ module Expression = struct
   let error = Identifier (error_annot, "Error")
   let expression_or_spread_list_error = [ Expression (error_annot, error) ]
   let unimplemented = Identifier (unimplemented_annot, "Unimplemented")
-  let targs_unimplemented = None
-  let expression_or_spread_list_unimplemented = [ Expression (error_annot, unimplemented) ]
 
   module Object = struct
     open Object
@@ -126,7 +124,6 @@ end
 module Pattern = struct
   open Ast.Pattern
   let error = Expression (error_annot, Expression.error)
-  let unimplemented = Expression (error_annot, Expression.unimplemented)
 end
 
 module Statement = struct
@@ -166,17 +163,6 @@ end
 module Function = struct
   open Ast.Function
   let body_error = BodyExpression (error_annot, Expression.error)
-  let body_unimplemented = BodyExpression (error_annot, Expression.unimplemented)
-  let unimplemented = {
-      id = Some (error_annot, "Unimplemented");
-      params = Loc.none, { Params.params = []; rest = None; };
-      body = body_unimplemented;
-      async = false;
-      generator = false;
-      predicate = None;
-      return = Ast.Type.Missing error_annot;
-      tparams = None;
-    }
 
   module RestElement = struct
     open RestElement
@@ -208,15 +194,6 @@ end
 
 module Class = struct
   open Ast.Class
-  let unimplemented = {
-    id = Some (error_annot, "Unimplemented");
-    body = error_annot, { Ast.Class.Body.body = [] };
-    tparams = None;
-    extends = None;
-    implements = [];
-    classDecorators = [];
-  }
-
   module Body = struct
     open Body
     let element_error = Method (error_annot, { Method.
