@@ -177,6 +177,14 @@ let concat_fold f acc items =
   ) (acc, []) items in
   acc, List.concat lists
 
+let last_opt l =
+  let rec last l v = match l with
+  | [] -> v
+  | x :: xs -> last xs x
+  in
+  List.nth_opt l 0
+  |> Option.map ~f:(last l)
+
 (** Monadic versions of previous folding operations
 
     It's unfortunate that we have to replicate the definitions for
