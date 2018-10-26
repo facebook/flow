@@ -64,10 +64,11 @@ class useless_mapper = object(this)
 
   method! identifier id =
     let (loc, name) = id in
-    if name = "rename" then
-      (loc, "gotRenamed")
-    else
-      id
+    match name with
+      | "rename" -> (loc, "gotRenamed")
+      | "Rename" -> (loc, "GotRenamed")
+      | "RENAME" -> (loc, "GOT_RENAMED")
+      | _ -> id
 
   method! variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
     let open Ast.Statement.VariableDeclaration in
@@ -146,6 +147,43 @@ class useless_mapper = object(this)
       else child
     | _ -> super#jsx_child child
 
+  method! variance
+      (variance: (Loc.t) Ast.Variance.t option) =
+    let open Ast.Variance in
+    match variance with
+    | Some (loc, Minus) -> Some (loc, Plus)
+    | _ -> variance
+
+end
+
+class insert_variance_mapper = object(this)
+  inherit useless_mapper as super
+
+  method! type_parameter_declaration_type_param
+      (type_param: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t) =
+    let open Ast.Type.ParameterDeclaration.TypeParam in
+    let (loc, type_param') as orig = super#type_parameter_declaration_type_param type_param in
+    let { variance; _ } = type_param' in
+    let variance' = this#variance_ loc variance in
+    if variance == variance' then orig
+    else loc, { type_param' with variance = variance' }
+
+  (* New variance method with a different type signature that allows us to insert a loc *)
+  method variance_
+      (loc: Loc.t) (variance: (Loc.t) Ast.Variance.t option) =
+    let open Ast.Variance in
+    match variance with
+    | None -> Some (loc, Plus)
+    | _ -> variance
+end
+
+class delete_variance_mapper = object
+  inherit [Loc.t] Flow_ast_mapper.mapper
+  method! variance (variance: (Loc.t) Ast.Variance.t option) =
+    let open Ast.Variance in
+    match variance with
+    | Some (_loc, Minus) -> None
+    | _ -> variance
 end
 
 class insert_end_mapper = object
@@ -1190,6 +1228,56 @@ let tests = "ast_differ" >::: [
     let source = "<>{rename}</>" in
     assert_edits_equal ctxt ~edits:[(3, 9), "gotRenamed"]
     ~source ~expected:"<>{gotRenamed}</>"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_id" >:: begin fun ctxt ->
+    let source = "type Rename = string" in
+    assert_edits_equal ctxt ~edits:[(5, 11), "GotRenamed"]
+    ~source ~expected:"type GotRenamed = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_param_name" >:: begin fun ctxt ->
+    let source = "type alias<RENAME> = string" in
+    assert_edits_equal ctxt ~edits:[(11, 17), "GOT_RENAMED"]
+    ~source ~expected:"type alias<GOT_RENAMED> = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_param_bound" >:: begin fun ctxt ->
+    let source = "type alias<A: number> = string" in
+    assert_edits_equal ctxt ~edits:[(12, 20), ": string"]
+    ~source ~expected:"type alias<A: string> = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_param_variance" >:: begin fun ctxt ->
+    let source = "type alias<-A> = string" in
+    assert_edits_equal ctxt ~edits:[(11, 12), "+"]
+    ~source ~expected:"type alias<+A> = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_param_insert_variance" >:: begin fun ctxt ->
+    let source = "type alias<A> = string" in
+    assert_edits_equal ctxt ~edits:[(11, 12), "+A"]
+    ~source ~expected:"type alias<+A> = string"
+    ~mapper:(new insert_variance_mapper)
+  end;
+  "type_alias_param_bound_insert_variance" >:: begin fun ctxt ->
+    let source = "type alias<A: number> = string" in
+    assert_edits_equal ctxt ~edits:[((11, 20), "+A: string")]
+    ~source ~expected:"type alias<+A: string> = string"
+    ~mapper:(new insert_variance_mapper)
+  end;
+  "type_alias_param_delete_variance" >:: begin fun ctxt ->
+    let source = "type alias<-A> = string" in
+    assert_edits_equal ctxt ~edits:[(11, 12), ""]
+    ~source ~expected:"type alias<A> = string"
+    ~mapper:(new delete_variance_mapper)
+  end;
+  "type_alias_param_list" >:: begin fun ctxt ->
+    let source = "type alias<-RENAME, RENAME: number> = string" in
+    assert_edits_equal ctxt
+    ~edits:[((11, 12), "+"); ((12, 18), "GOT_RENAMED");
+        ((20, 26), "GOT_RENAMED"); ((26, 34), ": string")]
+    ~source ~expected:"type alias<+GOT_RENAMED, GOT_RENAMED: string> = string"
     ~mapper:(new useless_mapper)
   end;
   "call_insert" >:: begin fun ctxt ->

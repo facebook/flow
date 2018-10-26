@@ -164,6 +164,8 @@ type node =
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
   | Identifier of Loc.t Ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
+  | Variance of (Loc.t) Ast.Variance.t
+  | TypeParam of (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
@@ -425,6 +427,8 @@ let program (algo : diff_algorithm)
       export_named_declaration export1 export2
     | (_, Ast.Statement.Try try1), (_, Ast.Statement.Try try2) ->
       try_ try1 try2
+    | (_, TypeAlias t_alias1), (_, TypeAlias t_alias2) ->
+      type_alias t_alias1 t_alias2
     | _, _ ->
       None
     in
@@ -1335,6 +1339,57 @@ let program (algo : diff_algorithm)
       let ids = diff_if_changed identifier name1 name2 |> Option.return in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       join_diff_list [ids; annots]
+
+  and type_alias
+      (t_alias1: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)
+      (t_alias2: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)
+      : node change list option =
+    let open Ast.Statement.TypeAlias in
+    let { id = id1; tparams = t_params1; right = right1 } = t_alias1 in
+    let { id = id2; tparams = t_params2; right = right2 } = t_alias2 in
+    let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+    let t_params_diff = diff_if_changed_opt type_parameter_declaration t_params1 t_params2 in
+    (* TODO: (aycheng) T35567413 Flow AST Differ: Handle Type.t *)
+    let right_diff = if right1 == right2 then Some [] else None in
+    join_diff_list [id_diff; t_params_diff; right_diff]
+
+  and type_parameter_declaration
+      (pd1: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t)
+      (pd2: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t)
+      : node change list option =
+    let _, t_params1 = pd1 in
+    let _, t_params2 = pd2 in
+    diff_and_recurse_no_trivial
+       (fun x y -> type_parameter_declaration_type_param x y |> Option.return)
+       t_params1 t_params2
+
+  and type_parameter_declaration_type_param
+      ((loc1, t_param1): (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t)
+      ((_, t_param2): (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t)
+      : node change list =
+    let open Ast.Type.ParameterDeclaration.TypeParam in
+    let { name = name1; bound = bound1; variance = variance1; default = default1} = t_param1 in
+    let { name = name2; bound = bound2; variance = variance2; default = default2} = t_param2 in
+    let variance_diff = diff_if_changed_ret_opt variance variance1 variance2 in
+    let name_diff = diff_if_changed identifier name1 name2 |> Option.return in
+    let bound_diff = diff_if_changed type_annotation_hint bound1 bound2 |> Option.return in
+    (* TODO: (aycheng) T35567413 Flow AST Differ: Handle Type.t *)
+    let default_diff = if default1 == default2 then Some [] else None in
+    let result = join_diff_list [variance_diff; name_diff; bound_diff; default_diff] in
+    Option.value result
+      ~default:[loc1, Replace (TypeParam (loc1, t_param1), TypeParam (loc1, t_param2))]
+
+  and variance
+      (var1: (Loc.t) Ast.Variance.t option)
+      (var2: (Loc.t) Ast.Variance.t option)
+      : node change list option =
+    match var1, var2 with
+      | Some (loc1, var1), Some (_, var2) ->
+        Some [loc1, Replace (Variance (loc1, var1), Variance (loc1, var2))]
+      | Some (loc1, var1), None ->
+        Some [loc1, Delete (Variance (loc1, var1))]
+      | None, None -> Some []
+      | _ -> None
 
   and type_annotation_hint
         (return1: (Loc.t, Loc.t) Ast.Type.annotation_or_hint)
