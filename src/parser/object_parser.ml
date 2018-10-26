@@ -129,76 +129,27 @@ module Object
       | Cover_expr expr -> expr, Pattern_cover.empty_errors
       | Cover_patt (expr, errs) -> expr, errs
     in
-    let rec property env =
-      let open Ast.Expression.Object in
-      let start_loc = Peek.loc env in
-      if Peek.token env = T_ELLIPSIS
-      then begin
-        (* Spread property *)
-        Expect.token env T_ELLIPSIS;
-        let argument, errs = parse_assignment_cover env in
-        SpreadProperty (Loc.btwn start_loc (fst argument), SpreadProperty.({
-          argument;
-        })), errs
-      end else begin
-        let async = match Peek.ith_token ~i:1 env with
-          | T_ASSIGN (* { async = true } (destructuring) *)
-          | T_COLON (* { async: true } *)
-          | T_LESS_THAN (* { async<T>() {} } *)
-          | T_LPAREN (* { async() {} } *)
-          | T_COMMA (* { async, other, shorthand } *)
-          | T_RCURLY (* { async } *)
-            -> false
-          | _
-            -> Declaration.async env
-        in
-        let generator = Declaration.generator env in
-        match async, generator, Peek.token env with
-        | false, false, T_IDENTIFIER { raw = "get"; _ } ->
-            let _, key = key env in
-            begin match Peek.token env with
-            | T_ASSIGN
-            | T_COLON
-            | T_LESS_THAN
-            | T_LPAREN
-            | T_COMMA
-            | T_RCURLY -> init env start_loc key false false
-            | _ -> get env start_loc, Pattern_cover.empty_errors
-            end
-        | false, false, T_IDENTIFIER { raw = "set"; _ } ->
-            let _, key = key env in
-            begin match Peek.token env with
-            | T_ASSIGN
-            | T_COLON
-            | T_LESS_THAN
-            | T_LPAREN
-            | T_COMMA
-            | T_RCURLY -> init env start_loc key false false
-            | _ -> set env start_loc, Pattern_cover.empty_errors
-            end
-        | async, generator, _ ->
-            let _, key = key env in
-            init env start_loc key async generator
-      end
 
-    and get env start_loc =
+    let get env start_loc =
       let key, (end_loc, fn) = getter_or_setter env true in
       let loc = Loc.btwn start_loc end_loc in
       Ast.Expression.Object.(Property (loc, Property.Get {
         key;
         value = (end_loc, fn);
       }))
+    in
 
-    and set env start_loc =
+    let set env start_loc =
       let key, (end_loc, fn) = getter_or_setter env false in
       let loc = Loc.btwn start_loc end_loc in
       Ast.Expression.Object.(Property (loc, Property.Set {
         key;
         value = (end_loc, fn);
       }))
+    in
 
     (* #prod-PropertyDefinition *)
-    and init =
+    let init =
       let open Ast.Expression.Object.Property in
 
       (* #prod-IdentifierReference *)
@@ -325,6 +276,59 @@ module Object
           parse_init ~key ~async ~generator
         ) env in
         Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, prop), errs
+    in
+
+    let property env =
+      let open Ast.Expression.Object in
+      let start_loc = Peek.loc env in
+      if Peek.token env = T_ELLIPSIS
+      then begin
+        (* Spread property *)
+        Expect.token env T_ELLIPSIS;
+        let argument, errs = parse_assignment_cover env in
+        SpreadProperty (Loc.btwn start_loc (fst argument), SpreadProperty.({
+          argument;
+        })), errs
+      end else begin
+        let async = match Peek.ith_token ~i:1 env with
+          | T_ASSIGN (* { async = true } (destructuring) *)
+          | T_COLON (* { async: true } *)
+          | T_LESS_THAN (* { async<T>() {} } *)
+          | T_LPAREN (* { async() {} } *)
+          | T_COMMA (* { async, other, shorthand } *)
+          | T_RCURLY (* { async } *)
+            -> false
+          | _
+            -> Declaration.async env
+        in
+        let generator = Declaration.generator env in
+        match async, generator, Peek.token env with
+        | false, false, T_IDENTIFIER { raw = "get"; _ } ->
+            let _, key = key env in
+            begin match Peek.token env with
+            | T_ASSIGN
+            | T_COLON
+            | T_LESS_THAN
+            | T_LPAREN
+            | T_COMMA
+            | T_RCURLY -> init env start_loc key false false
+            | _ -> get env start_loc, Pattern_cover.empty_errors
+            end
+        | false, false, T_IDENTIFIER { raw = "set"; _ } ->
+            let _, key = key env in
+            begin match Peek.token env with
+            | T_ASSIGN
+            | T_COLON
+            | T_LESS_THAN
+            | T_LPAREN
+            | T_COMMA
+            | T_RCURLY -> init env start_loc key false false
+            | _ -> set env start_loc, Pattern_cover.empty_errors
+            end
+        | async, generator, _ ->
+            let _, key = key env in
+            init env start_loc key async generator
+      end
     in
 
     let rec properties env ~rest_trailing_comma (props, errs) =
