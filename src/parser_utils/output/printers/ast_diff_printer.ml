@@ -27,6 +27,7 @@ let layout_of_node comments node =
   | Identifier id -> Js_layout_generator.identifier id
   | Pattern pat -> Js_layout_generator.pattern pat
   | Variance var -> Js_layout_generator.variance var
+  | Type typ -> Js_layout_generator.type_ typ
   | TypeParam t_param -> Js_layout_generator.type_param t_param
   | TypeAnnotation annot -> Js_layout_generator.type_annotation annot
   | ClassProperty prop -> Js_layout_generator.class_property prop

@@ -165,6 +165,7 @@ type node =
   | Identifier of Loc.t Ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
   | Variance of (Loc.t) Ast.Variance.t
+  | Type of (Loc.t, Loc.t) Flow_ast.Type.t
   | TypeParam of (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
@@ -1340,6 +1341,12 @@ let program (algo : diff_algorithm)
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       join_diff_list [ids; annots]
 
+  and type_
+      ((loc1, type1): (Loc.t, Loc.t) Ast.Type.t)
+      ((_loc2, type2): (Loc.t, Loc.t) Ast.Type.t)
+      : node change list =
+    [loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
+
   and type_alias
       (t_alias1: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)
       (t_alias2: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)
@@ -1349,8 +1356,7 @@ let program (algo : diff_algorithm)
     let { id = id2; tparams = t_params2; right = right2 } = t_alias2 in
     let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
     let t_params_diff = diff_if_changed_opt type_parameter_declaration t_params1 t_params2 in
-    (* TODO: (aycheng) T35567413 Flow AST Differ: Handle Type.t *)
-    let right_diff = if right1 == right2 then Some [] else None in
+    let right_diff = diff_if_changed type_ right1 right2 |> Option.return in
     join_diff_list [id_diff; t_params_diff; right_diff]
 
   and type_parameter_declaration
@@ -1373,8 +1379,7 @@ let program (algo : diff_algorithm)
     let variance_diff = diff_if_changed_ret_opt variance variance1 variance2 in
     let name_diff = diff_if_changed identifier name1 name2 |> Option.return in
     let bound_diff = diff_if_changed type_annotation_hint bound1 bound2 |> Option.return in
-    (* TODO: (aycheng) T35567413 Flow AST Differ: Handle Type.t *)
-    let default_diff = if default1 == default2 then Some [] else None in
+    let default_diff = diff_if_changed_nonopt_fn type_ default1 default2 in
     let result = join_diff_list [variance_diff; name_diff; bound_diff; default_diff] in
     Option.value result
       ~default:[loc1, Replace (TypeParam (loc1, t_param1), TypeParam (loc1, t_param2))]

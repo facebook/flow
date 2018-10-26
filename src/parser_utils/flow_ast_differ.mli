@@ -25,6 +25,7 @@ type node =
   | Identifier of Loc.t Flow_ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Flow_ast.Pattern.t
   | Variance of (Loc.t) Flow_ast.Variance.t
+  | Type of (Loc.t, Loc.t) Flow_ast.Type.t
   | TypeParam of (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t

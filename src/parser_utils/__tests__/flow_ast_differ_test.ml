@@ -1272,12 +1272,32 @@ let tests = "ast_differ" >::: [
     ~source ~expected:"type alias<A> = string"
     ~mapper:(new delete_variance_mapper)
   end;
+  "type_alias_param_default" >:: begin fun ctxt ->
+    let source = "type alias<A = number> = string" in
+    assert_edits_equal ctxt ~edits:[(15, 21), "string"]
+    ~source ~expected:"type alias<A = string> = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_param_combo" >:: begin fun ctxt ->
+    let source = "type alias<-RENAME: number = number> = string" in
+    assert_edits_equal ctxt
+    ~edits:[((11, 12), "+"); ((12, 18), "GOT_RENAMED");
+        ((18, 26), ": string"); ((29, 35), "string")]
+    ~source ~expected:"type alias<+GOT_RENAMED: string = string> = string"
+    ~mapper:(new useless_mapper)
+  end;
   "type_alias_param_list" >:: begin fun ctxt ->
     let source = "type alias<-RENAME, RENAME: number> = string" in
     assert_edits_equal ctxt
     ~edits:[((11, 12), "+"); ((12, 18), "GOT_RENAMED");
         ((20, 26), "GOT_RENAMED"); ((26, 34), ": string")]
     ~source ~expected:"type alias<+GOT_RENAMED, GOT_RENAMED: string> = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_right" >:: begin fun ctxt ->
+    let source = "type alias = number" in
+    assert_edits_equal ctxt ~edits:[(13, 19), "string"]
+    ~source ~expected:"type alias = string"
     ~mapper:(new useless_mapper)
   end;
   "call_insert" >:: begin fun ctxt ->
