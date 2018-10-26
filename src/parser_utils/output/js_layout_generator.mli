@@ -43,7 +43,6 @@ val program_simple:
   (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
 val expression: ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Expression.t -> Layout.layout_node
 val statement:
-  ?allow_empty:bool ->
   ?pretty_semicolon:bool ->
   (Loc.t, Loc.t) Flow_ast.Statement.t -> Layout.layout_node
 val object_property: (Loc.t, Loc.t) Flow_ast.Expression.Object.property -> Layout.layout_node

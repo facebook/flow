@@ -230,6 +230,9 @@ module Statements = struct
 
   let break ?label () =
     Loc.none, Break { Break.label }
+
+  let with_ _object body =
+    Loc.none, With { With._object; body }
 end
 
 module Expressions = struct

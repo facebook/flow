@@ -380,7 +380,7 @@ and combine_directives_and_comments directives comments : Layout.layout_node =
   let comments = List.map (fun ((loc, _) as x) -> loc, Comment x) comments in
   let merged = List.merge (fun (a, _) (b, _) -> Loc.compare a b) directives comments in
   let nodes = List.map (function
-    | loc, Statement s -> loc, statement ~allow_empty:true s
+    | loc, Statement s -> loc, statement s
     | loc, Comment c -> loc, comment c
   ) merged in
   join pretty_hardline (list_with_newlines nodes)
@@ -406,19 +406,19 @@ and comment (loc, comment) =
     ]
   )
 
-and statement_list_with_locs ?allow_empty ?(pretty_semicolon=false) (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
+and statement_list_with_locs ?(pretty_semicolon=false) (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
   let rec mapper acc = function
   | [] -> List.rev acc
   | ((loc, _) as stmt)::rest ->
     let pretty_semicolon = pretty_semicolon && rest = [] in
-    let acc = (loc, statement ?allow_empty ~pretty_semicolon stmt)::acc in
+    let acc = (loc, statement ~pretty_semicolon stmt)::acc in
     (mapper [@tailcall]) acc rest
   in
   mapper [] stmts
 
-and statement_list ?allow_empty ?pretty_semicolon (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
+and statement_list ?pretty_semicolon (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
   stmts
-  |> statement_list_with_locs ?allow_empty ?pretty_semicolon
+  |> statement_list_with_locs ?pretty_semicolon
   |> List.map (fun (_loc, layout) -> layout)
 
 (**
@@ -428,7 +428,7 @@ and statement_list ?allow_empty ?pretty_semicolon (stmts: (Loc.t, Loc.t) Ast.Sta
  * a semicolon is never required on the last statement of a statement list, so we can set
  * `~pretty_semicolon:true` to only print the unnecessary semicolon in pretty mode.
  *)
-and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement.t) =
+and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement.t) =
   let (loc, stmt) = root_stmt in
   let module E = Ast.Expression in
   let module S = Ast.Statement in
@@ -436,7 +436,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
   source_location_with_comments (
     loc,
     match stmt with
-    | S.Empty -> if allow_empty then Atom ";" else IfPretty(Atom "{}", Atom ";")
+    | S.Empty -> Atom ";"
     | S.Debugger -> with_semicolon (Atom "debugger")
     | S.Block b -> block (loc, b)
     | S.Expression { S.Expression.expression = expr; _ } ->
@@ -1257,7 +1257,7 @@ and function_return return predicate =
 and block (loc, { Ast.Statement.Block.body }) =
   let statements =
     body
-    |> statement_list_with_locs ~allow_empty:true ~pretty_semicolon:true
+    |> statement_list_with_locs ~pretty_semicolon:true
     |> list_with_newlines
   in
   source_location_with_comments (
@@ -1455,7 +1455,7 @@ and list_with_newlines (nodes: (Loc.t * Layout.layout_node) list) =
 
 and statements_list_with_newlines statements =
   statements
-  |> List.map (fun (loc, s) -> loc, statement ~allow_empty:true (loc, s))
+  |> List.map (fun (loc, s) -> loc, statement (loc, s))
   |> list_with_newlines
 
 and object_properties_with_newlines properties =
