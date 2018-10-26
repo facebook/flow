@@ -325,8 +325,9 @@ module Object
           parse_init ~key ~async ~generator
         ) env in
         Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, prop), errs
+    in
 
-    and properties env ~rest_trailing_comma (props, errs) =
+    let rec properties env ~rest_trailing_comma (props, errs) =
       match Peek.token env with
       | T_EOF
       | T_RCURLY ->
