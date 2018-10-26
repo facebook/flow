@@ -25,7 +25,7 @@ end with type t = Impl.t) = struct
   open Ast
   open Impl
 
-  let array_of_list fn list = array (List.map fn list)
+  let array_of_list fn list = array (List.rev_map fn list |> List.rev)
   let int x = number (float x)
   let option f = function
     | Some v -> f v
@@ -837,7 +837,7 @@ end with type t = Impl.t) = struct
       let rest = node "RestElement" rest_loc [
         "argument", pattern argument;
       ] in
-      let rev_params = params |> List.map pattern |> List.rev in
+      let rev_params = List.rev_map pattern params in
       let params = List.rev (rest::rev_params) in
       array params
     | _, { params; rest = None } ->
