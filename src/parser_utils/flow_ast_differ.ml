@@ -170,6 +170,7 @@ type node =
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
+  | TemplateLiteral of (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
   | JSXChild of (Loc.t, Loc.t) Ast.JSX.child
   | JSXIdentifier of Loc.t Ast.JSX.Identifier.t
 
@@ -708,6 +709,8 @@ let program (algo : diff_algorithm)
         assignment_ assn1 assn2
       | (_, Object obj1), (_, Object obj2) ->
         _object obj1 obj2
+      | (loc, Ast.Expression.TemplateLiteral t_lit1), (_, Ast.Expression.TemplateLiteral t_lit2) ->
+        Some (template_literal loc t_lit1 t_lit2)
       | (_, JSXElement jsx_elem1), (_, JSXElement jsx_elem2) ->
         jsx_element jsx_elem1 jsx_elem2
       | (_, JSXFragment frag1), (_, JSXFragment frag2) ->
@@ -725,6 +728,32 @@ let program (algo : diff_algorithm)
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
     Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+
+  and template_literal
+      (loc: Loc.t) (* Need to pass in loc because TemplateLiteral doesn't have a loc attached *)
+      (t_lit1: (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t)
+      (t_lit2: (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t)
+      : node change list =
+    let open Ast.Expression.TemplateLiteral in
+    let { quasis = quasis1; expressions = exprs1 } = t_lit1 in
+    let { quasis = quasis2; expressions = exprs2 } = t_lit2 in
+    let quasis_diff = diff_and_recurse_no_trivial template_literal_element quasis1 quasis2 in
+    let exprs_diff = diff_and_recurse_no_trivial
+      (fun x y -> expression x y |> Option.return) exprs1 exprs2 in
+    let result = join_diff_list [quasis_diff; exprs_diff] in
+    Option.value result
+      ~default:[(loc, Replace (TemplateLiteral t_lit1, TemplateLiteral t_lit2))]
+
+  and template_literal_element
+      (tl_elem1: Loc.t Ast.Expression.TemplateLiteral.Element.t)
+      (tl_elem2: Loc.t Ast.Expression.TemplateLiteral.Element.t)
+      : node change list option =
+    let open Ast.Expression.TemplateLiteral.Element in
+    let _, { value = value1; tail = tail1 } = tl_elem1 in
+    let _, { value = value2; tail = tail2 } = tl_elem2 in
+    (* These are primitives, so structural equality is fine *)
+    if value1.raw <> value2.raw || value1.cooked <> value2.cooked || tail1 <> tail2
+    then None else Some []
 
   and jsx_element
       (jsx_elem1: (Loc.t, Loc.t) Ast.JSX.element)

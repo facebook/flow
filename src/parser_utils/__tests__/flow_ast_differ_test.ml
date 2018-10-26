@@ -77,6 +77,13 @@ class useless_mapper = object(this)
     if kind = Var then { declarations; kind = Const }
     else decl
 
+  method! template_literal_element (elem: 'loc Ast.Expression.TemplateLiteral.Element.t) =
+    let open Ast.Expression.TemplateLiteral.Element in
+    let loc, { value; tail } = elem in
+    if value.raw = "rename" then
+      loc, { value = { raw = "gotRenamed"; cooked = "gotRenamed" }; tail}
+    else elem
+
   method! type_ (annot: (Loc.t, Loc.t) Type.t) =
     let annot = super#type_ annot in
     let (loc, typ) = annot in
@@ -1068,6 +1075,25 @@ let tests = "ast_differ" >::: [
     ~edits:[((13,25), "")] ~source
     ~expected:"import 'baz';"
     ~mapper:(new delete_end_mapper)
+  end;
+  "template_literal_simple" >:: begin fun ctxt ->
+    let source = "`rename`" in
+    assert_edits_equal ctxt ~edits:[(0, 8), "`gotRenamed`"] ~source
+      ~expected:"`gotRenamed`"
+      ~mapper:(new useless_mapper)
+  end;
+  "template_literal_expr" >:: begin fun ctxt ->
+    let source = "`foo ${rename} bar`" in
+    assert_edits_equal ctxt ~edits:[(7, 13), "gotRenamed"] ~source
+      ~expected:"`foo ${gotRenamed} bar`"
+      ~mapper:(new useless_mapper)
+  end;
+  "template_literal_expr_multiple" >:: begin fun ctxt ->
+    let source = "let test = `${rename} ${foo} bar ${rename}`" in
+    assert_edits_equal ctxt
+      ~edits:[((14, 20), "gotRenamed"); ((35, 41), "gotRenamed")]
+      ~source ~expected:"let test = `${gotRenamed} ${foo} bar ${gotRenamed}`"
+      ~mapper:(new useless_mapper)
   end;
   "jsx_element_self_closing_simple" >:: begin fun ctxt ->
     let source = "<rename />" in

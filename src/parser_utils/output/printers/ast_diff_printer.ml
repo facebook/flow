@@ -32,6 +32,7 @@ let layout_of_node comments node =
   | TypeAnnotation annot -> Js_layout_generator.type_annotation annot
   | ClassProperty prop -> Js_layout_generator.class_property prop
   | ObjectProperty prop -> Js_layout_generator.object_property prop
+  | TemplateLiteral t_lit -> Js_layout_generator.template_literal t_lit
   | JSXChild child ->
     begin match Js_layout_generator.jsx_child child with
     | Some (_, layout_node) -> layout_node
