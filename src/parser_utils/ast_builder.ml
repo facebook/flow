@@ -241,6 +241,9 @@ module Expressions = struct
   let identifier name =
     Loc.none, Identifier (Loc.none, name)
 
+  let array elements =
+    Loc.none, Array { Array.elements }
+
   let call_node ?targs ?(args=[]) callee = { Call.callee; targs; arguments = args }
 
   let call ?(args=[]) callee =

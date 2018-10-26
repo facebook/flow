@@ -1207,6 +1207,72 @@ let tests = "js_layout_generator" >::: [
       );
     end;
 
+  "array_with_trailing_comma" >:: begin fun ctxt ->
+    let a80 = String.make 80 'a' in
+    let layout = Js_layout_generator.expression (
+      E.array [
+        Some (E.expression (E.identifier a80));
+        Some (E.expression (E.identifier a80));
+      ]
+    ) in
+    assert_layout ~ctxt
+      L.(loc (group [
+        atom "[";
+        indent ((fused [
+          softline;
+          loc (id a80);
+          atom ",";
+          pretty_line;
+          loc (id a80);
+          Layout.IfBreak (atom ",", empty);
+        ]));
+        softline;
+        atom "]";
+      ]))
+      layout;
+    assert_output ~ctxt ("["^a80^","^a80^"]") layout;
+    assert_output ~ctxt ~pretty:true
+      ("[\n"^
+       "  "^a80^",\n"^
+       "  "^a80^",\n"^
+       "]")
+      layout;
+  end;
+
+  "array_with_trailing_hole" >:: begin fun ctxt ->
+    let layout = Js_layout_generator.expression (
+      E.array [Some (E.expression (E.identifier "a")); None]
+    ) in
+    assert_layout ~ctxt
+      L.(loc (group [
+        atom "[";
+        indent ((fused [
+          softline;
+          loc (id "a");
+          atom ",";
+          pretty_line;
+          atom ",";
+        ]));
+        softline;
+        atom "]";
+      ]))
+      layout;
+    assert_output ~ctxt "[a,,]" layout;
+    assert_output ~ctxt ~pretty:true "[a, ,]" layout;
+
+    let a80 = String.make 80 'a' in
+    let layout = Js_layout_generator.expression (
+      E.array [Some (E.expression (E.identifier a80)); None]
+    ) in
+    assert_output ~ctxt ("["^a80^",,]") layout;
+    assert_output ~ctxt ~pretty:true
+      ("[\n"^
+       "  "^a80^",\n"^
+       "  ,\n"^
+       "]")
+      layout;
+  end;
+
   "function_statements" >::
     begin fun ctxt ->
       assert_statement_string ~ctxt "function a(){}";

@@ -690,20 +690,25 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
     | E.This -> Atom "this"
     | E.Super -> Atom "super"
     | E.Array { E.Array.elements } ->
-      let last_element = (List.length elements) - 1 in
-      list
-        ~wrap:(Atom "[", Atom "]")
-        ~sep:(Atom ",")
-        (List.mapi
-          (fun i e -> match e with
-            | Some expr -> expression_or_spread ~ctxt:normal_context expr
-            (* If the last item is empty it needs a trailing comma forced so to
-               retain the same AST output. *)
-            | None when i = last_element -> IfBreak (Empty, Atom ",")
-            | None -> Empty
-          )
-          elements
-        )
+      let rev_elements = List.rev_map (function
+        | Some expr -> expression_or_spread ~ctxt:normal_context expr
+        | None -> Empty
+      ) elements in
+
+      (* if the last element is a hole, then we need to manually insert a trailing `,`, even in
+         ugly mode, and disable automatic trailing separators. *)
+      let trailing_sep, rev_elements = match rev_elements with
+        | Empty::tl -> false, (Atom ",")::tl
+        | _ -> true, rev_elements
+      in
+
+      group [
+        new_list
+          ~wrap:(Atom "[", Atom "]")
+          ~sep:(Atom ",")
+          ~trailing_sep
+          (List.rev rev_elements);
+      ]
     | E.Object { E.Object.properties } ->
       group [
         new_list
