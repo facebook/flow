@@ -958,27 +958,19 @@ let tests = "js_layout_generator" >::: [
       L.(loc (fused [
         atom "for";
         pretty_space;
-        sequence ~break:Layout.Break_if_needed ~inline:(true, true) ~indent:0 [
-          fused [
-            atom "(";
-            sequence ~break:Layout.Break_if_needed [
-              fused [
-                loc (id x80);
-                Layout.IfBreak ((atom ";"), (fused [
-                  atom ";";
-                  pretty_space;
-                ]));
-              ];
-              Layout.IfBreak ((atom ";"), (fused [
-                atom ";";
-                pretty_space;
-              ]));
-              empty;
-            ];
-            atom ")";
-          ];
+        group [
+          atom "(";
+          indent ((fused [
+            softline;
+            loc (id x80);
+            atom ";";
+            pretty_line;
+            atom ";";
+            pretty_line;
+          ]));
+          softline;
+          atom ")";
         ];
-        pretty_space;
         loc (atom ";");
       ]))
       layout;
@@ -988,7 +980,7 @@ let tests = "js_layout_generator" >::: [
        "  "^x80^";\n"^
        "  ;\n"^
        "  \n"^ (* TODO: remove trailing whitespace *)
-       ") ;") (* TODO: remove extra whitespace *)
+       ");")
       layout;
   end;
 
@@ -1070,7 +1062,7 @@ let tests = "js_layout_generator" >::: [
       S.if_ (E.identifier "x") (S.empty ()) (None)
     ) in
     assert_output ~ctxt "if(x);" layout;
-    assert_output ~ctxt ~pretty:true "if (x) ;" layout; (* TODO: remove extra space *)
+    assert_output ~ctxt ~pretty:true "if (x);" layout;
   end;
 
   "if_else_statement_without_block" >::
@@ -1114,7 +1106,10 @@ let tests = "js_layout_generator" >::: [
         ("if("^a80^")y;")
         if_stmt;
       assert_statement ~ctxt ~pretty:true
-        ("if (\n  "^a80^"\n) y;")
+        ("if (\n"^
+         "  "^a80^"\n"^
+         ")\n"^
+         "  y;")
         if_stmt;
 
       let ast = S.block [
@@ -1126,7 +1121,8 @@ let tests = "js_layout_generator" >::: [
         ("{\n"^
          "  if (\n"^
          "    "^a80^"\n"^
-         "  ) y;\n"^
+         "  )\n"^
+         "    y;\n"^
          "  z;\n"^
          "}")
         ast;
@@ -1137,7 +1133,7 @@ let tests = "js_layout_generator" >::: [
       S.if_ (E.identifier "x") (S.empty ()) (Some (S.expression (E.identifier "y")))
     ) in
     assert_output ~ctxt "if(x);else y;" layout;
-    assert_output ~ctxt ~pretty:true "if (x) ; else y;" layout; (* TODO: remove extra space *)
+    assert_output ~ctxt ~pretty:true "if (x); else y;" layout;
   end;
 
   "if_else_statement_with_empty_alternate" >:: begin fun ctxt ->
@@ -1153,7 +1149,7 @@ let tests = "js_layout_generator" >::: [
       S.if_ (E.identifier "x") (S.empty ()) (Some (S.empty ()))
     ) in
     assert_output ~ctxt "if(x);else;" layout;
-    assert_output ~ctxt ~pretty:true "if (x) ; else ;" layout; (* TODO: remove extra spaces *)
+    assert_output ~ctxt ~pretty:true "if (x); else ;" layout; (* TODO: remove extra space *)
   end;
 
   "while_statement_without_block" >::
@@ -1169,7 +1165,7 @@ let tests = "js_layout_generator" >::: [
 
       let ast = S.while_ (E.identifier "x") (S.empty ()) in
       assert_statement ~ctxt "while(x);" ast;
-      assert_statement ~ctxt ~pretty:true "while (x) ;" ast; (* TODO: remove extra space *)
+      assert_statement ~ctxt ~pretty:true "while (x);" ast;
     end;
 
   "do_while_statements" >::
@@ -1581,7 +1577,7 @@ let tests = "js_layout_generator" >::: [
         (S.empty ())
     ) in
     assert_output ~ctxt "for(a in b);" layout;
-    assert_output ~ctxt ~pretty:true "for (a in b) ;" layout; (* TODO: remove extra space *)
+    assert_output ~ctxt ~pretty:true "for (a in b);" layout;
   end;
 
   "forof_statement_declaration" >:: begin fun ctxt ->
@@ -1711,7 +1707,7 @@ let tests = "js_layout_generator" >::: [
         (S.empty ())
     ) in
     assert_output ~ctxt "for(a of b);" layout;
-    assert_output ~ctxt ~pretty:true "for (a of b) ;" layout; (* TODO: remove extra space *)
+    assert_output ~ctxt ~pretty:true "for (a of b);" layout;
   end;
 
   "yield_expressions" >::
@@ -2324,6 +2320,6 @@ let tests = "js_layout_generator" >::: [
       S.with_ (E.identifier "x") (S.empty ())
     ) in
     assert_output ~ctxt "with(x);" layout;
-    assert_output ~ctxt ~pretty:true "with (x) ;" layout; (* TODO: remove extra space *)
+    assert_output ~ctxt ~pretty:true "with (x);" layout;
   end;
 ]

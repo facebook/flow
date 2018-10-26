@@ -56,14 +56,6 @@ let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
 let wrap_in_parens item = group [Atom "("; item; Atom ")"]
 let wrap_in_parens_on_break item =
   wrap_and_indent (IfBreak (Atom "(", Empty), IfBreak (Atom ")", Empty)) [item]
-let statement_with_test name test body = fuse [
-    Atom name;
-    pretty_space;
-    group [wrap_and_indent (Atom "(", Atom ")") [test]];
-    pretty_space;
-    body;
-  ]
-
 let option f = function
   | Some v -> f v
   | None -> Empty
@@ -446,7 +438,10 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
       begin match alternate with
       | Some alt ->
         fuse [
-          statement_with_test "if" (expression test) (statement consequent);
+          group [
+            statement_with_test "if" (expression test);
+            statement_after_test consequent;
+          ];
           pretty_space;
           fuse_with_space [
             Atom "else";
@@ -454,7 +449,10 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
           ]
         ]
       | None ->
-        statement_with_test "if" (expression test) (statement ~pretty_semicolon consequent)
+        group [
+          statement_with_test "if" (expression test);
+          statement_after_test ~pretty_semicolon consequent;
+        ]
       end
     | S.Labeled { S.Labeled.label; body } ->
       fuse [
@@ -478,7 +476,10 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         | None -> s_continue;
       )
     | S.With { S.With._object; body } ->
-      statement_with_test "with" (expression _object) (statement body)
+      fuse [
+        statement_with_test "with" (expression _object);
+        statement_after_test body;
+      ]
     | S.Switch { S.Switch.discriminant; cases } ->
       let case_nodes =
         let rec helper acc = function
@@ -503,7 +504,11 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
           (Atom "{", Atom "}")
           [join pretty_hardline case_nodes]
       in
-      statement_with_test "switch" (expression discriminant) cases_node
+      fuse [
+        statement_with_test "switch" (expression discriminant);
+        pretty_space;
+        cases_node;
+      ]
     | S.Return { S.Return.argument } ->
       let s_return = Atom "return" in
       with_semicolon (
@@ -536,9 +541,9 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
           source_location_with_comments (loc, match param with
             | Some p -> fuse [
                 pretty_space;
-                statement_with_test "catch"
-                  (pattern ~ctxt:normal_context p)
-                  (block body)
+                statement_with_test "catch" (pattern ~ctxt:normal_context p);
+                pretty_space;
+                block body;
               ]
             | None -> fuse [
               pretty_space;
@@ -559,7 +564,10 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         | None -> Empty
       ]
     | S.While { S.While.test; body } ->
-      statement_with_test "while" (expression test) (statement ~pretty_semicolon body);
+      fuse [
+        statement_with_test "while" (expression test);
+        statement_after_test ~pretty_semicolon body;
+      ]
     | S.DoWhile { S.DoWhile.body; test } ->
       with_semicolon (fuse [
         fuse_with_space [
@@ -573,13 +581,9 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
       ])
     | S.For { S.For.init; test; update; body } ->
       fuse [
-        Atom "for";
-        pretty_space;
-        list
-          ~wrap:(Atom "(", Atom ")")
-          ~sep:(Atom ";")
-          ~trailing:false
-          [
+        statement_with_test
+          "for"
+          (join (fuse [Atom ";"; pretty_line]) [
             begin match init with
             | Some (S.For.InitDeclaration decl) ->
               let ctxt = { normal_context with group = In_for_init } in
@@ -597,9 +601,8 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
             | Some expr -> expression expr
             | None -> Empty
             end;
-          ];
-        pretty_space;
-        statement ~pretty_semicolon body;
+          ]);
+        statement_after_test ~pretty_semicolon body;
       ]
     | S.ForIn { S.ForIn.left; right; body; each } ->
       fuse [
@@ -614,8 +617,7 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
           Atom "in";
           expression right;
         ]);
-        pretty_space;
-        statement ~pretty_semicolon body;
+        statement_after_test ~pretty_semicolon body;
       ]
     | S.FunctionDeclaration func -> function_ func
     | S.VariableDeclaration decl ->
@@ -634,8 +636,7 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
           space; Atom "of"; space;
           expression right;
         ]);
-        pretty_space;
-        statement ~pretty_semicolon body;
+        statement_after_test ~pretty_semicolon body;
       ]
     | S.ImportDeclaration import -> import_declaration import
     | S.ExportNamedDeclaration export -> export_declaration export
@@ -654,6 +655,30 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
     | S.DeclareOpaqueType opaqueType -> opaque_type ~declare:true opaqueType
     | S.DeclareExportDeclaration export -> declare_export_declaration export
   )
+
+(* The beginning of a statement that does a "test", like `if (test)` or `while (test)` *)
+and statement_with_test name test =
+  fuse [
+    Atom name;
+    pretty_space;
+    group [wrap_and_indent (Atom "(", Atom ")") [test]];
+  ]
+
+(* A statement following a "test", like the `statement` in `if (expr) statement` or
+   `for (...) statement`. Better names for this are welcome! *)
+and statement_after_test ?pretty_semicolon = function
+  | _, Ast.Statement.Empty as stmt ->
+    statement ?pretty_semicolon stmt
+  | _, Ast.Statement.Block _ as stmt ->
+    fuse [
+      pretty_space;
+      statement ?pretty_semicolon stmt;
+    ]
+  | stmt ->
+    Indent (fuse [
+      pretty_line;
+      statement ?pretty_semicolon stmt;
+    ])
 
 and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.t) =
   let (loc, expr) = root_expr in
