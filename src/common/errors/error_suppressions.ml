@@ -89,7 +89,7 @@ let empty = FilenameMap.empty
 let file_of_loc_unsafe loc =
   match loc.Loc.source with
   | Some x -> x
-  | None -> raise (No_source (Loc.to_string loc))
+  | None -> raise (No_source (Loc.to_string ~include_source:true loc))
 
 let add loc map =
   let file = file_of_loc_unsafe loc in
