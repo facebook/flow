@@ -591,6 +591,8 @@ class ['loc] mapper = object(this)
     | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
     | _ -> git (* TODO *)
 
+  method variance (variance: ('loc) Flow_ast.Variance.t option) = variance
+
   method type_parameter_instantiation_with_implicit
   (pi: ('loc, 'loc) Flow_ast.Expression.TypeParameterInstantiation.t) =
     let loc, targs = pi in
@@ -613,10 +615,13 @@ class ['loc] mapper = object(this)
   method type_parameter_declaration_type_param (type_param: ('loc, 'loc) Flow_ast.Type.ParameterDeclaration.TypeParam.t) =
     let open Flow_ast.Type.ParameterDeclaration.TypeParam in
     let loc, { name; bound; variance; default; } = type_param in
+    let name' = this#identifier name in
     let bound' = this#type_annotation_hint bound in
+    let variance' = this#variance variance in
     let default' = map_opt this#type_ default in
-    if bound' == bound && default' == default then type_param
-    else loc, { name; bound = bound'; variance; default = default'; }
+    if name' == name && bound' == bound && variance' == variance && default' == default
+    then type_param
+    else loc, { name = name'; bound = bound'; variance = variance'; default = default'; }
 
   method generic_type _loc (gt: ('loc, 'loc) Flow_ast.Type.Generic.t) =
     let open Flow_ast.Type.Generic in
