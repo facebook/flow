@@ -1076,6 +1076,18 @@ let tests = "ast_differ" >::: [
     ~expected:"import 'baz';"
     ~mapper:(new delete_end_mapper)
   end;
+  "tagged_template_tag" >:: begin fun ctxt ->
+    let source = "rename`dontRename`" in
+    assert_edits_equal ctxt ~edits:[(0, 6), "gotRenamed"] ~source
+      ~expected:"gotRenamed`dontRename`"
+      ~mapper:(new useless_mapper)
+  end;
+  "tagged_template_literal" >:: begin fun ctxt ->
+    let source = "dontRename`rename`" in
+    assert_edits_equal ctxt ~edits:[(10, 18), "`gotRenamed`"] ~source
+      ~expected:"dontRename`gotRenamed`"
+      ~mapper:(new useless_mapper)
+  end;
   "template_literal_simple" >:: begin fun ctxt ->
     let source = "`rename`" in
     assert_edits_equal ctxt ~edits:[(0, 8), "`gotRenamed`"] ~source

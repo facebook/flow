@@ -709,6 +709,8 @@ let program (algo : diff_algorithm)
         assignment_ assn1 assn2
       | (_, Object obj1), (_, Object obj2) ->
         _object obj1 obj2
+      | (_, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2) ->
+        Some (tagged_template t_tmpl1 t_tmpl2)
       | (loc, Ast.Expression.TemplateLiteral t_lit1), (_, Ast.Expression.TemplateLiteral t_lit2) ->
         Some (template_literal loc t_lit1 t_lit2)
       | (_, JSXElement jsx_elem1), (_, JSXElement jsx_elem2) ->
@@ -728,6 +730,17 @@ let program (algo : diff_algorithm)
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
     Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+
+  and tagged_template
+      (t_tmpl1: (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
+      (t_tmpl2: (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
+      : node change list =
+    let open Ast.Expression.TaggedTemplate in
+    let { tag = tag1; quasi = (loc, quasi1) } = t_tmpl1 in
+    let { tag = tag2; quasi = (_, quasi2) } = t_tmpl2 in
+    let tag_diff = diff_if_changed expression tag1 tag2 in
+    let quasi_diff = diff_if_changed (template_literal loc) quasi1 quasi2 in
+    tag_diff @ quasi_diff
 
   and template_literal
       (loc: Loc.t) (* Need to pass in loc because TemplateLiteral doesn't have a loc attached *)
