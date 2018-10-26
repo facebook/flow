@@ -617,7 +617,7 @@ and statement ?(allow_empty=false) ?(pretty_semicolon=false) (root_stmt: (Loc.t,
         pretty_space;
         statement ~pretty_semicolon body;
       ]
-    | S.FunctionDeclaration func -> function_ ~precedence:max_precedence func
+    | S.FunctionDeclaration func -> function_ func
     | S.VariableDeclaration decl ->
       with_semicolon (variable_declaration (loc, decl))
     | S.ClassDeclaration class_ -> class_base class_
@@ -696,8 +696,8 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
       group [join (fuse [Atom ","; pretty_line]) layouts]
     | E.Identifier ident -> identifier ident
     | E.Literal lit -> literal lit
-    | E.Function func -> function_ ~precedence func
-    | E.ArrowFunction func -> function_base ~ctxt ~precedence ~arrow:true func
+    | E.Function func -> function_ func
+    | E.ArrowFunction func -> arrow_function ~ctxt ~precedence func
     | E.Assignment { E.Assignment.operator; left; right } ->
       fuse [
         pattern ~ctxt left;
@@ -1158,73 +1158,78 @@ and variable_declarator ~ctxt (loc, {
     | None -> pattern ~ctxt id
   )
 
-and function_ ?(ctxt=normal_context) ~precedence func =
-  let { Ast.Function.id; generator; _ } = func in
-  let s_func = fuse [
-    Atom "function";
-    if generator then Atom "*" else Empty;
-  ] in
-  function_base
-    ~ctxt
-    ~precedence
-    ~id:(match id with
-    | Some id -> fuse [s_func; space; identifier id]
-    | None -> s_func
-    )
-    func
-
-and function_base
-  ~ctxt
-  ~precedence
-  ?(arrow=false)
-  ?(id=Empty)
-  { Ast.Function.
-    params; body; async; predicate; return; tparams;
-    generator=_; id=_ (* Handled via `function_` *)
-  } =
-  fuse [
-    if async then fuse [Atom "async"; space; id] else id;
-    option type_parameter tparams;
-    begin match arrow, params, return, predicate, tparams with
-    | true, (_, { Ast.Function.Params.params = [(
+and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
+  params; body; async; predicate; return; tparams;
+  generator=_; id=_; (* arrows don't have ids and can't be generators *)
+} =
+  let params_and_stuff = match params, return, predicate, tparams with
+  | (_, { Ast.Function.Params.params = [(
       _,
       Ast.Pattern.Identifier {
         Ast.Pattern.Identifier.optional=false; annot=Ast.Type.Missing _; _;
       }
-    )]; rest = None}), Ast.Type.Missing _, None, None -> List.hd (function_params ~ctxt params)
-    | _, _, _, _, _ ->
+    )]; rest = None}), Ast.Type.Missing _, None, None ->
+      List.hd (function_params ~ctxt params)
+  | _, _, _, _ ->
+    fuse [
+      option type_parameter tparams;
       list
         ~wrap:(Atom "(", Atom ")")
         ~sep:(Atom ",")
-        (function_params ~ctxt:normal_context params)
+        (function_params ~ctxt:normal_context params);
+      function_return return predicate;
+    ]
+  in
+  fuse [
+    fuse_with_space [
+      if async then Atom "async" else Empty;
+      params_and_stuff;
+    ];
+    (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
+       unexpected multiply-and-assign operator. Thus, we format this with a
+       space e.g. `():* =>{}`. *)
+    begin match return with
+    | Ast.Type.Available (_, (_, Ast.Type.Exists)) -> space
+    | _ -> pretty_space
     end;
-    begin match return, predicate with
-    | Ast.Type.Missing _, None -> Empty
-    | Ast.Type.Missing _, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
-    | Ast.Type.Available ret, Some pred -> fuse [
-        type_annotation ret;
-        pretty_space;
-        type_predicate pred;
-      ]
-    | Ast.Type.Available ret, None -> type_annotation ret;
-    end;
-    if arrow then fuse [
-        (* Babylon does not parse ():*=>{}` because it thinks the `*=` is an
-           unexpected multiply-and-assign operator. Thus, we format this with a
-           space e.g. `():* =>{}`. *)
-        begin match return with
-        | Ast.Type.Available (_, (_, Ast.Type.Exists)) -> space
-        | _ -> pretty_space
-        end;
-        Atom "=>";
-    ] else Empty;
+    Atom "=>";
     pretty_space;
     begin match body with
     | Ast.Function.BodyBlock b -> block b
     | Ast.Function.BodyExpression expr ->
-      let ctxt = if arrow then { normal_context with group=In_arrow_func }
-      else normal_context in
+      let ctxt = { normal_context with group=In_arrow_func } in
       expression_with_parens ~precedence ~ctxt expr
+    end;
+  ]
+
+and function_ func =
+  let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; } = func in
+  let prefix =
+    let s_func = fuse [
+      Atom "function";
+      if generator then Atom "*" else Empty;
+    ] in
+    let id = match id with
+    | Some id -> fuse [s_func; space; identifier id]
+    | None -> s_func
+    in
+    if async then fuse [Atom "async"; space; id] else id
+  in
+  function_base ~prefix ~params ~body ~predicate ~return ~tparams
+
+and function_base ~prefix ~params ~body ~predicate ~return ~tparams =
+  fuse [
+    prefix;
+    option type_parameter tparams;
+    list
+      ~wrap:(Atom "(", Atom ")")
+      ~sep:(Atom ",")
+      (function_params ~ctxt:normal_context params);
+    function_return return predicate;
+    pretty_space;
+    begin match body with
+    | Ast.Function.BodyBlock b -> block b
+    | Ast.Function.BodyExpression _ -> failwith "Only arrows should have BodyExpressions"
     end;
   ]
 
@@ -1237,6 +1242,17 @@ and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
       ]) in
       List.append s_params [s_rest]
   | None -> s_params
+
+and function_return return predicate =
+  match return, predicate with
+  | Ast.Type.Missing _, None -> Empty
+  | Ast.Type.Missing _, Some pred -> fuse [Atom ":"; pretty_space; type_predicate pred]
+  | Ast.Type.Available ret, Some pred -> fuse [
+      type_annotation ret;
+      pretty_space;
+      type_predicate pred;
+    ]
+  | Ast.Type.Available ret, None -> type_annotation ret
 
 and block (loc, { Ast.Statement.Block.body }) =
   let statements =
@@ -1279,28 +1295,28 @@ and class_method (
   { Ast.Class.Method.kind; key; value=(func_loc, func); static; decorators }
 ) =
   let module M = Ast.Class.Method in
+  let { Ast.Function.
+    params; body; async; generator; predicate; return; tparams;
+    id = _; (* methods don't use id; see `key` *)
+  } = func in
   source_location_with_comments (loc, begin
     let s_key = object_property_key key in
-    let s_key =
-      let { Ast.Function.generator; _ } = func in
-      fuse [if generator then Atom "*" else Empty; s_key;]
-    in
-    let s_key = match kind with
+    let s_key = if generator then fuse [Atom "*"; s_key] else s_key in
+    let s_kind = match kind with
     | M.Constructor
-    | M.Method -> s_key
-    | M.Get -> fuse [Atom "get"; space; s_key]
-    | M.Set -> fuse [Atom "set"; space; s_key]
+    | M.Method -> Empty
+    | M.Get -> Atom "get"
+    | M.Set -> Atom "set"
     in
+    (* TODO: getters/setters/constructors will never be async *)
+    let s_async = if async then Atom "async" else Empty in
+    let prefix = fuse_with_space [s_async; s_kind; s_key] in
     fuse [
       decorators_list decorators;
       if static then fuse [Atom "static"; space] else Empty;
       source_location_with_comments (
         func_loc,
-        function_base
-          ~ctxt:normal_context
-          ~precedence:max_precedence
-          ~id:s_key
-          func
+        function_base ~prefix ~params ~body ~predicate ~return ~tparams
       )
     ]
     end
@@ -1513,35 +1529,56 @@ and object_property property =
     )
   | O.Property (loc, O.Property.Method { key; value = (fn_loc, func) }) ->
     let s_key = object_property_key key in
-    let { Ast.Function.generator; _ } = func in
-    let precedence = max_precedence in
-    let ctxt = normal_context in
-    let g_key = fuse [
+    let { Ast.Function.
+      id; params; body; async; generator; predicate; return; tparams;
+    } = func in
+    assert (id = None); (* methods don't have ids, see `key` *)
+    let prefix = fuse [
+      if async then fuse [Atom "async"; space] else Empty;
       if generator then Atom "*" else Empty;
       s_key;
     ] in
     source_location_with_comments (loc,
-      source_location_with_comments (fn_loc, function_base ~ctxt ~precedence ~id:g_key func)
+      source_location_with_comments (
+        fn_loc,
+        function_base ~prefix ~params ~body ~predicate ~return ~tparams
+      )
     )
   | O.Property (loc, O.Property.Get { key; value = (fn_loc, func) }) ->
-    let s_key = object_property_key key in
-    let precedence = max_precedence in
-    let ctxt = normal_context in
+    let { Ast.Function.
+      id; params; body; async; generator; predicate; return; tparams;
+    } = func in
+    assert (id = None); (* getters don't have ids, see `key` *)
+    assert (not async); (* getters can't be async *)
+    assert (not generator); (* getters can't be generators *)
+    let prefix = fuse [
+      Atom "get";
+      space;
+      object_property_key key;
+    ] in
     source_location_with_comments (loc,
-      source_location_with_comments (fn_loc, fuse [
-        Atom "get"; space;
-        function_base ~ctxt ~precedence ~id:s_key func
-      ])
+      source_location_with_comments (
+        fn_loc,
+        function_base ~prefix ~params ~body ~predicate ~return ~tparams
+      )
     )
   | O.Property (loc, O.Property.Set { key; value = (fn_loc, func) }) ->
-    let s_key = object_property_key key in
-    let precedence = max_precedence in
-    let ctxt = normal_context in
+    let { Ast.Function.
+      id; params; body; async; generator; predicate; return; tparams;
+    } = func in
+    assert (id = None); (* setters don't have ids, see `key` *)
+    assert (not async); (* setters can't be async *)
+    assert (not generator); (* setters can't be generators *)
+    let prefix = fuse [
+      Atom "set";
+      space;
+      object_property_key key;
+    ] in
     source_location_with_comments (loc,
-      source_location_with_comments (fn_loc, fuse [
-        Atom "set"; space;
-        function_base ~ctxt ~precedence ~id:s_key func
-      ])
+      source_location_with_comments (
+        fn_loc,
+        function_base ~prefix ~params ~body ~predicate ~return ~tparams
+      )
     )
   | O.SpreadProperty (loc, { O.SpreadProperty.argument }) ->
     source_location_with_comments (loc, fuse [Atom "..."; expression argument])

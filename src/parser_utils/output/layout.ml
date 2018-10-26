@@ -217,6 +217,10 @@ let fuse_with_space =
   | _ -> false
   in
   let rec helper acc = function
+  | Empty::rest ->
+    helper acc rest
+  | a::Empty::rest ->
+    helper acc (a::rest)
   | a::b::rest ->
     let prev = ugly_char ~mode:`Last a |> opt_punctuator in
     let next = ugly_char ~mode:`First b |> opt_punctuator in
