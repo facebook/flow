@@ -508,6 +508,12 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let max_watchman_retries = 3 in
     let max_sql_retries = 3 in
     match informant_report with
+    | Informant_sig.Move_along when env.server = Died_config_changed ->
+      env
+    | Informant_sig.Restart_server _ when env.server = Died_config_changed ->
+      Hh_logger.log "%s" @@ "Ignoring Informant directed restart - waiting for next client " ^
+        "connection to verify server version first";
+      env
     | Informant_sig.Restart_server target_mini_state ->
       Hh_logger.log "Informant directed server restart. Restarting server.";
       HackEventLogger.informant_induced_restart ();
