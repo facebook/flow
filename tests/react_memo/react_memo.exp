@@ -1,0 +1,103 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:43:1
+
+Cannot create `MemoProps` element because property `foo` is missing in props [1] but exists in `Props` [2].
+
+   test.js:43:1
+   43| <MemoProps />; // foo is missing
+       ^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:18:11
+   18|   (props: Props): React.Node => <span title={props.foo}>{props.bar}</span>,
+                 ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:44:1
+
+Cannot create `MemoProps` element because string [1] is incompatible with number [2] in property `bar`.
+
+   test.js:44:1
+   44| <MemoProps foo="foo" bar="not a number" />;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:44:26
+   44| <MemoProps foo="foo" bar="not a number" />;
+                                ^^^^^^^^^^^^^^ [1]
+   test.js:5:34
+    5| type Props = {foo: string, bar?: number};
+                                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:45:1
+
+Cannot create `MemoClass` element because string [1] is incompatible with number [2] in property `bar`.
+
+   test.js:45:1
+   45| <MemoClass foo="foo" bar="not a number" />;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:45:26
+   45| <MemoClass foo="foo" bar="not a number" />;
+                                ^^^^^^^^^^^^^^ [1]
+   test.js:5:34
+    5| type Props = {foo: string, bar?: number};
+                                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:46:1
+
+Cannot create `MemoPropsCompare` element because string [1] is incompatible with number [2] in property `bar`.
+
+   test.js:46:1
+   46| <MemoPropsCompare foo="foo" bar="not a number" />;
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:46:33
+   46| <MemoPropsCompare foo="foo" bar="not a number" />;
+                                       ^^^^^^^^^^^^^^ [1]
+   test.js:5:34
+    5| type Props = {foo: string, bar?: number};
+                                        ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:48:32
+
+Cannot call `React.memo` with `<span />` bound to `type` because:
+ - Either a callable signature is missing in `React.Element` [1] but exists in `React.StatelessFunctionalComponent` [2].
+ - Or `React.Element` [1] is incompatible with statics of `React.Component` [3].
+
+   test.js:48:32
+    48| const MemoElement = React.memo(<span />);
+                                       ^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:153:5
+   153|   | React$StatelessFunctionalComponent<Props>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:154:5
+   154|   | Class<React$Component<Props, any>>;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:49:31
+
+Cannot call `React.memo` with `42` bound to `type` because number [1] is incompatible with string [2].
+
+   test.js:49:31
+    49| const MemoNumber = React.memo(42);
+                                      ^^ [1]
+
+References:
+   <BUILTINS>/react.js:235:40
+   235|     type: React$ComponentType<Props> | string,
+                                               ^^^^^^ [2]
+
+
+
+Found 6 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
