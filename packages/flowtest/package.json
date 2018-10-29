@@ -1,0 +1,48 @@
+{
+  "name": "flowtest",
+  "version": "1.0.0",
+  "description": "Test harness for running tests on flow types",
+  "homepage": "https://flow.org",
+  "license": "BSD-3-Clause",
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "flowtest": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "rm -rf dist && babel src --out-dir dist --ignore __tests__",
+    "test": "flow && jest",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "flow",
+    "test"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/flow.git"
+  },
+  "jest": {
+    "rootDir": "src",
+    "testMatch": [
+      "**/__tests__/*-test.js"
+    ]
+  },
+  "dependencies": {
+    "colors": "1.1.2",
+    "flow-remove-types": "^1.2.1",
+    "glob": "7.0.4",
+    "yargs": "5.0.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-env": "^1.6.0",
+    "babel-preset-flow": "^6.23.0",
+    "flow-bin": "^0.83.0",
+    "flow-typed": "^2.1.5",
+    "prettier": "1.6.1",
+    "jest": "^20.0.4"
+  },
+  "engine": ">=6"
+}

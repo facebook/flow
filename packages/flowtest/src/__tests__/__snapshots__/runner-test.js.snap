@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`./test-project 1`] = `
+Array [
+  Array [
+    "Using Flow v%s (%s)",
+    "0.83.0",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/node_modules/flow-bin/flow-linux64-v0.83.0/flow",
+  ],
+  Array [
+    "Discovering flowtests in root \`%s\`",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/src/__tests__/test-project",
+  ],
+  Array [
+    "Found %d flowtest%s in root \`%s\`",
+    6,
+    "s",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/src/__tests__/test-project",
+  ],
+  Array [
+    "Using the existing flow server and running flow status",
+  ],
+  Array [
+    "%s: %s",
+    "[31m[1m[✗] FAIL[22m[39m",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/src/__tests__/test-project/a/b/c/d/__flowtests__/fail.js",
+  ],
+  Array [
+    "%s: %s",
+    "[32m[1m[✓] PASS[22m[39m",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/src/__tests__/test-project/a/b/c/d/__flowtests__/pass.js",
+  ],
+  Array [
+    "%s: %s",
+    "[31m[1m[✗] FAIL[22m[39m",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/src/__tests__/test-project/a/b/c/d/fail-flowtest.js",
+  ],
+  Array [
+    "%s: %s",
+    "[32m[1m[✓] PASS[22m[39m",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/src/__tests__/test-project/a/b/c/d/pass-flowtest.js",
+  ],
+  Array [
+    "%s: %s",
+    "[31m[1m[✗] FAIL[22m[39m",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/src/__tests__/test-project/fail-flowtest.js",
+  ],
+  Array [
+    "%s: %s",
+    "[32m[1m[✓] PASS[22m[39m",
+    "/data/users/jmbrown/fbsource/fbcode/flow/packages/flowtest/src/__tests__/test-project/pass-flowtest.js",
+  ],
+  Array [
+    "%d tests passed, %d tests failed",
+    3,
+    3,
+  ],
+]
+`;
