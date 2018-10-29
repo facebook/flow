@@ -63,12 +63,12 @@ module Object
         let value = Literal.Number value in
         loc,  Literal (loc, { Literal.value; raw; })
     | T_LBRACKET ->
-        let start_loc = Peek.loc env in
-        Expect.token env T_LBRACKET;
-        let expr = Parse.assignment (env |> with_no_in false) in
-        let end_loc = Peek.loc env in
-        Expect.token env T_RBRACKET;
-        Loc.btwn start_loc end_loc, Ast.Expression.Object.Property.Computed expr
+        with_loc (fun env ->
+          Expect.token env T_LBRACKET;
+          let expr = Parse.assignment (env |> with_no_in false) in
+          Expect.token env T_RBRACKET;
+          Ast.Expression.Object.Property.Computed expr
+        ) env
     | T_POUND when class_body ->
         let loc, id, _is_private = Expression.property_name_include_private env in
         add_declared_private env (snd id);
@@ -83,44 +83,39 @@ module Object
     let async = false in
     let generator = Declaration.generator env in
     let key_loc, key = key env in
-    let start_loc = Peek.loc env in
+    let value = with_loc (fun env ->
+      (* #sec-function-definitions-static-semantics-early-errors *)
+      let env = env |> with_allow_super Super_prop in
 
-    (* #sec-function-definitions-static-semantics-early-errors *)
-    let env = env |> with_allow_super Super_prop in
-
-    (* It's not clear how type params on getters & setters would make sense
-     * in Flow's type system. Since this is a Flow syntax extension, we might
-     * as well disallow it until we need it *)
-    let tparams = None in
-    let params = Declaration.function_params ~await:false ~yield:false env in
-    begin match is_getter, params with
-    | true, (_, { Ast.Function.Params.params = []; rest = None }) -> ()
-    | false, (_, { Ast.Function.Params.rest = Some _; _ }) ->
-        (* rest params don't make sense on a setter *)
-        error_at env (key_loc, Error.SetterArity)
-    | false, (_, { Ast.Function.Params.params = [_]; _ }) -> ()
-    | true, _ -> error_at env (key_loc, Error.GetterArity)
-    | false, _ -> error_at env (key_loc, Error.SetterArity)
-    end;
-    let return = Type.annotation_opt env in
-    let _, body, strict = Declaration.function_body env ~async ~generator in
-    let simple = Declaration.is_simple_function_params params in
-    Declaration.strict_post_check env ~strict ~simple None params;
-    let end_loc = match body with
-      | Function.BodyBlock (loc, _) -> loc
-      | Function.BodyExpression (loc, _) -> loc
-    in
-    let loc = Loc.btwn start_loc end_loc in
-    let value = loc, Function.({
-      id = None;
-      params;
-      body;
-      generator;
-      async;
-      predicate = None; (* setters/getter are not predicates *)
-      return;
-      tparams;
-    }) in
+      (* It's not clear how type params on getters & setters would make sense
+       * in Flow's type system. Since this is a Flow syntax extension, we might
+       * as well disallow it until we need it *)
+      let tparams = None in
+      let params = Declaration.function_params ~await:false ~yield:false env in
+      begin match is_getter, params with
+      | true, (_, { Ast.Function.Params.params = []; rest = None }) -> ()
+      | false, (_, { Ast.Function.Params.rest = Some _; _ }) ->
+          (* rest params don't make sense on a setter *)
+          error_at env (key_loc, Error.SetterArity)
+      | false, (_, { Ast.Function.Params.params = [_]; _ }) -> ()
+      | true, _ -> error_at env (key_loc, Error.GetterArity)
+      | false, _ -> error_at env (key_loc, Error.SetterArity)
+      end;
+      let return = Type.annotation_opt env in
+      let _, body, strict = Declaration.function_body env ~async ~generator in
+      let simple = Declaration.is_simple_function_params params in
+      Declaration.strict_post_check env ~strict ~simple None params;
+      { Function.
+        id = None;
+        params;
+        body;
+        generator;
+        async;
+        predicate = None; (* setters/getter are not predicates *)
+        return;
+        tparams;
+      }
+    ) env in
     key, value
 
   let _initializer =
@@ -131,21 +126,17 @@ module Object
     in
 
     let get env start_loc =
-      let key, (end_loc, fn) = getter_or_setter env true in
-      let loc = Loc.btwn start_loc end_loc in
-      Ast.Expression.Object.(Property (loc, Property.Get {
-        key;
-        value = (end_loc, fn);
-      }))
+      let loc, (key, value) = with_loc ~start_loc (fun env ->
+        getter_or_setter env true
+      ) env in
+      Ast.Expression.Object.(Property (loc, Property.Get { key; value }))
     in
 
     let set env start_loc =
-      let key, (end_loc, fn) = getter_or_setter env false in
-      let loc = Loc.btwn start_loc end_loc in
-      Ast.Expression.Object.(Property (loc, Property.Set {
-        key;
-        value = (end_loc, fn);
-      }))
+      let loc, (key, value) = with_loc ~start_loc (fun env ->
+        getter_or_setter env false
+      ) env in
+      Ast.Expression.Object.(Property (loc, Property.Set { key; value }))
     in
 
     (* #prod-PropertyDefinition *)
@@ -175,9 +166,7 @@ module Object
       in
 
       (* #prod-MethodDefinition *)
-      let parse_method env ~async ~generator =
-        let start_loc = Peek.loc env in
-
+      let parse_method ~async ~generator = with_loc (fun env ->
         (* #sec-function-definitions-static-semantics-early-errors *)
         let env = env |> with_allow_super Super_prop in
 
@@ -196,12 +185,7 @@ module Object
           Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in
         Declaration.strict_post_check env ~strict ~simple None params;
-        let end_loc = match body with
-          | Function.BodyBlock (loc, _) -> loc
-          | Function.BodyExpression (loc, _) -> loc
-        in
-        let loc = Loc.btwn start_loc end_loc in
-        loc, Function.({
+        { Function.
           id = None;
           params;
           body;
@@ -211,8 +195,8 @@ module Object
           predicate = None;
           return;
           tparams;
-        })
-      in
+        }
+      ) in
 
       (* PropertyName `:` AssignmentExpression *)
       let parse_value env =
@@ -226,18 +210,21 @@ module Object
         match key with
         | Property.Identifier id ->
           let assignment_loc = Peek.loc env in
-          Expect.token env T_ASSIGN;
-          let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
-          let right = Parse.assignment env in
-          let loc = Loc.btwn (fst left) (fst right) in
-          (loc, Ast.Expression.(Assignment Assignment.({
-            operator = Assign;
-            left;
-            right;
-          }))), {
+          let ast = with_loc ~start_loc:(fst id) (fun env ->
+            Expect.token env T_ASSIGN;
+            let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
+            let right = Parse.assignment env in
+            Ast.Expression.(Assignment Assignment.({
+              operator = Assign;
+              left;
+              right;
+            }))
+          ) env in
+          let errs = {
             if_expr = [assignment_loc, Parse_error.UnexpectedToken "="];
             if_patt = [];
-          }
+          } in
+          ast, errs
 
         | Property.Literal _
         | Property.PrivateName _
@@ -272,24 +259,24 @@ module Object
           prop, errs
       in
       fun env start_loc key async generator ->
-        let end_loc, (prop, errs) = with_loc (
+        let loc, (prop, errs) = with_loc ~start_loc (
           parse_init ~key ~async ~generator
         ) env in
-        Ast.Expression.Object.Property (Loc.btwn start_loc end_loc, prop), errs
+        Ast.Expression.Object.Property (loc, prop), errs
     in
 
     let property env =
       let open Ast.Expression.Object in
-      let start_loc = Peek.loc env in
       if Peek.token env = T_ELLIPSIS
       then begin
         (* Spread property *)
-        Expect.token env T_ELLIPSIS;
-        let argument, errs = parse_assignment_cover env in
-        SpreadProperty (Loc.btwn start_loc (fst argument), SpreadProperty.({
-          argument;
-        })), errs
+        let loc, (argument, errs) = with_loc (fun env ->
+          Expect.token env T_ELLIPSIS;
+          parse_assignment_cover env
+        ) env in
+        SpreadProperty (loc, { SpreadProperty.argument }), errs
       end else begin
+        let start_loc = Peek.loc env in
         let async = match Peek.ith_token ~i:1 env with
           | T_ASSIGN (* { async = true } (destructuring) *)
           | T_COLON (* { async: true } *)
@@ -361,15 +348,11 @@ module Object
       loc, expr, errs
 
   let rec class_implements env acc =
-    let id = Type.type_identifier env in
-    let targs = Type.type_parameter_instantiation env in
-    let loc = match targs with
-    | None -> fst id
-    | Some (loc, _) -> Loc.btwn (fst id) loc in
-    let implement = loc, Ast.Class.Implements.({
-      id;
-      targs;
-    }) in
+    let implement = with_loc (fun env ->
+      let id = Type.type_identifier env in
+      let targs = Type.type_parameter_instantiation env in
+      { Ast.Class.Implements.id; targs }
+    ) env in
     let acc = implement::acc in
     match Peek.token env with
     | T_COMMA ->
@@ -447,42 +430,41 @@ module Object
           end in
           elements env seen_constructor' private_names' (element::acc)
 
-    in fun env ->
-      let start_loc = Peek.loc env in
+    in fun env -> with_loc (fun env ->
       Expect.token env T_LCURLY;
       enter_class env;
       let body = elements env false SSet.empty [] in
       exit_class env;
-      let end_loc = Peek.loc env in
       Expect.token env T_RCURLY;
-      Loc.btwn start_loc end_loc, Ast.Class.Body.({
-        body;
-      })
+      { Ast.Class.Body.body }
+    ) env
 
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
   and class_element =
     let get env start_loc decorators static =
-      let key, (end_loc, _ as value) =
-        getter_or_setter env true in
-      Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
+      let loc, (key, value) = with_loc ~start_loc (fun env ->
+        getter_or_setter env true
+      ) env in
+      Ast.Class.(Body.Method (loc, { Method.
         key;
         value;
-        kind = Get;
+        kind = Method.Get;
         static;
         decorators;
-      })))
+      }))
 
     in let set env start_loc decorators static =
-      let key, (end_loc, _ as value) =
-        getter_or_setter env false in
-      Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
+      let loc, (key, value) = with_loc ~start_loc (fun env ->
+        getter_or_setter env false
+      ) env in
+      Ast.Class.(Body.Method (loc, { Method.
         key;
         value;
-        kind = Set;
+        kind = Method.Set;
         static;
         decorators;
-      })))
+      }))
 
     in let error_unsupported_variance env = function
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
@@ -494,7 +476,7 @@ module Object
       | T_ASSIGN
       | T_SEMICOLON when not async && not generator ->
         (* Class property with annotation *)
-        let end_loc, (annot, value) = with_loc (fun env ->
+        let loc, (annot, value) = with_loc ~start_loc (fun env ->
           let annot = Type.annotation_opt env in
           let options = parse_options env in
           let value =
@@ -514,7 +496,6 @@ module Object
           end;
           annot, value
         ) env in
-        let loc = Loc.btwn start_loc end_loc in
         begin match key with
         | Ast.Expression.Object.Property.PrivateName private_name ->
           Ast.Class.(Body.PrivateField (loc, PrivateField.({
@@ -550,45 +531,41 @@ module Object
             Ast.Class.Method.Method,
             env |> with_allow_super Super_prop
         in
-        let func_loc = Peek.loc env in
-        let tparams = Type.type_parameter_declaration env in
-        let params =
-          let yield, await = match async, generator with
-          | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
-          | true, false -> false, allow_await env (* #prod-AsyncMethod *)
-          | false, true -> true, false (* #prod-GeneratorMethod *)
-          | false, false -> false, false (* #prod-MethodDefinition *)
+        let value = with_loc (fun env ->
+          let tparams = Type.type_parameter_declaration env in
+          let params =
+            let yield, await = match async, generator with
+            | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+            | true, false -> false, allow_await env (* #prod-AsyncMethod *)
+            | false, true -> true, false (* #prod-GeneratorMethod *)
+            | false, false -> false, false (* #prod-MethodDefinition *)
+            in
+            Declaration.function_params ~await ~yield env
           in
-          Declaration.function_params ~await ~yield env
-        in
-        let return = Type.annotation_opt env in
-        let _, body, strict =
-          Declaration.function_body env ~async ~generator in
-        let simple = Declaration.is_simple_function_params params in
-        Declaration.strict_post_check env ~strict ~simple None params;
-        let end_loc = match body with
-          | Function.BodyBlock (loc, _) -> loc
-          | Function.BodyExpression (loc, _) -> loc
-        in
-        let loc = Loc.btwn func_loc end_loc in
-        let value = loc, Function.({
-          id = None;
-          params;
-          body;
-          generator;
-          async;
-          (* TODO: add support for method predicates *)
-          predicate = None;
-          return;
-          tparams;
-        }) in
-        Ast.Class.(Body.Method (Loc.btwn start_loc end_loc, Method.({
+          let return = Type.annotation_opt env in
+          let _, body, strict =
+            Declaration.function_body env ~async ~generator in
+          let simple = Declaration.is_simple_function_params params in
+          Declaration.strict_post_check env ~strict ~simple None params;
+          { Function.
+            id = None;
+            params;
+            body;
+            generator;
+            async;
+            (* TODO: add support for method predicates *)
+            predicate = None;
+            return;
+            tparams;
+          }
+        ) env in
+        Ast.Class.(Body.Method (Loc.btwn start_loc (fst value), { Method.
           key;
           value;
           kind;
           static;
           decorators;
-        })))
+        }))
 
     in fun env ->
       let start_loc = Peek.loc env in
@@ -636,10 +613,9 @@ module Object
           let _, key = key ~class_body:true env in
           init env start_loc decorators key async generator static variance
 
-  let class_declaration env decorators =
+  let class_declaration env decorators = with_loc (fun env ->
     (* 10.2.1 says all parts of a class definition are strict *)
     let env = env |> with_strict true in
-    let start_loc = Peek.loc env in
     let decorators = decorators @ (decorator_list env) in
     Expect.token env T_CLASS;
     let tmp_env = env |> with_no_let true in
@@ -650,15 +626,15 @@ module Object
     ) in
     let tparams = Type.type_parameter_declaration_with_defaults env in
     let body, extends, implements = _class env in
-    let loc = Loc.btwn start_loc (fst body) in
-    loc, Ast.Statement.(ClassDeclaration Class.({
+    Ast.Statement.ClassDeclaration { Class.
       id;
       body;
       tparams;
       extends;
       implements;
       classDecorators=decorators;
-    }))
+    }
+  ) env
 
   let class_expression = with_loc (fun env ->
     (* 10.2.1 says all parts of a class expression are strict *)

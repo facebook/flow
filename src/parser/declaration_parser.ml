@@ -124,15 +124,15 @@ module Declaration
 
   let function_params =
     let rec param env =
+      let start_loc = Peek.loc env in
       let left = Parse.pattern env Error.StrictParamName in
-      (* TODO: shouldn't Parse.pattern recognize Assignment patterns? *)
-      if Peek.token env = T_ASSIGN
-      then begin
-        Expect.token env T_ASSIGN;
-        let right = Parse.assignment env in
-        let loc = Loc.btwn (fst left) (fst right) in
+      if Peek.token env = T_ASSIGN then
+        let loc, right = with_loc ~start_loc (fun env ->
+          Expect.token env T_ASSIGN;
+          Parse.assignment env
+        ) env in
         (loc, Pattern.Assignment { Pattern.Assignment.left; right })
-      end else
+      else
         left
     and param_list env acc =
       match Peek.token env with
@@ -141,10 +141,10 @@ module Declaration
       | T_ELLIPSIS as t ->
           let rest =
             if t = T_ELLIPSIS then begin
-              let start_loc = Peek.loc env in
-              Expect.token env T_ELLIPSIS;
-              let id = Parse.pattern env Error.StrictParamName in
-              let loc = Loc.btwn start_loc (fst id) in
+              let loc, id = with_loc (fun env ->
+                Expect.token env T_ELLIPSIS;
+                Parse.pattern env Error.StrictParamName
+              ) env in
               Some (loc, { Function.RestElement.argument = id; })
             end else
               None
@@ -217,8 +217,7 @@ module Declaration
     in fun (_, { Ast.Function.Params.params; rest }) ->
       rest = None && List.for_all is_simple_param params
 
-  let _function env =
-    let start_loc = Peek.loc env in
+  let _function = with_loc (fun env ->
     let async = async env in
     Expect.token env T_FUNCTION;
     let generator = generator env in
@@ -250,11 +249,7 @@ module Declaration
     let _, body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in
     strict_post_check env ~strict ~simple id params;
-    let end_loc = Ast.Function.(
-      match body with
-      | BodyBlock (loc, _) -> loc
-      | BodyExpression (loc, _) -> loc) in
-    Loc.btwn start_loc end_loc, Statement.(FunctionDeclaration Function.({
+    Statement.FunctionDeclaration { Function.
       id;
       params;
       body;
@@ -263,7 +258,8 @@ module Declaration
       predicate;
       return;
       tparams;
-    }))
+    }
+  )
 
   let variable_declaration_list =
     let variable_declaration env =
