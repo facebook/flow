@@ -99,6 +99,7 @@ val do_parse:
   use_strict: bool ->
   info: Docblock.t ->
   ?prevent_munge: bool ->
+  module_ref_prefix: string option ->
   string ->                 (* contents of the file *)
   File_key.t ->               (* filename *)
   result

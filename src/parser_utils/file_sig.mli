@@ -202,7 +202,9 @@ type toplevel_names_and_exports_info = {
   exports_info: (exports_info t', error) result
 }
 
-val program_with_toplevel_names_and_exports_info: ast:(Loc.t, Loc.t) Flow_ast.program ->
+val program_with_toplevel_names_and_exports_info:
+  ast:(Loc.t, Loc.t) Flow_ast.program ->
+  module_ref_prefix:string option ->
   toplevel_names_and_exports_info
 
 (* Use for debugging; not for exposing info the the end user *)
@@ -214,7 +216,10 @@ type t = unit t'
 
 val init: t
 
-val program: ast:(Loc.t, Loc.t) Flow_ast.program -> (t, error) result
+val program:
+  ast:(Loc.t, Loc.t) Flow_ast.program ->
+  module_ref_prefix:string option ->
+  (t, error) result
 val verified: Signature_builder_deps.ErrorSet.t -> exports_info t' -> t
 
 (* Use for debugging; not for exposing info the the end user *)

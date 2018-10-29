@@ -37,6 +37,7 @@ type metadata = {
   esproposal_optional_chaining: Options.esproposal_feature_mode;
   esproposal_nullish_coalescing: Options.esproposal_feature_mode;
   facebook_fbt: string option;
+  haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   root: Path.t;
@@ -163,6 +164,7 @@ let metadata_of_options options = {
   esproposal_optional_chaining = Options.esproposal_optional_chaining options;
   esproposal_nullish_coalescing = Options.esproposal_nullish_coalescing options;
   facebook_fbt = Options.facebook_fbt options;
+  haste_module_ref_prefix = Options.haste_module_ref_prefix options;
   ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
   max_workers = Options.max_workers options;
@@ -297,6 +299,7 @@ let refs_table cx = cx.refs_table
 let export_maps cx = cx.sig_cx.export_maps
 let root cx = cx.metadata.root
 let facebook_fbt cx = cx.metadata.facebook_fbt
+let haste_module_ref_prefix cx = cx.metadata.haste_module_ref_prefix
 let should_ignore_non_literal_requires cx = cx.metadata.ignore_non_literal_requires
 let should_munge_underscores cx  = cx.metadata.munge_underscores
 let should_strip_root cx = cx.metadata.strip_root

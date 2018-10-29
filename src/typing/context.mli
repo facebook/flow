@@ -38,6 +38,7 @@ type metadata = {
   esproposal_optional_chaining: Options.esproposal_feature_mode;
   esproposal_nullish_coalescing: Options.esproposal_feature_mode;
   facebook_fbt: string option;
+  haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
   root: Path.t;
@@ -105,6 +106,7 @@ val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
 val root: t -> Path.t
 val facebook_fbt: t -> string option
+val haste_module_ref_prefix: t -> string option
 val should_ignore_non_literal_requires: t -> bool
 val should_munge_underscores: t -> bool
 val should_strip_root: t -> bool

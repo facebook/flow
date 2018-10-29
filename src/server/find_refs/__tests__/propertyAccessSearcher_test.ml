@@ -9,7 +9,7 @@ open OUnit2
 
 let run ctxt expected name text =
   let (ast, _, _) =
-    FindRefsUtils.compute_ast_result (File_key.SourceFile "/dummy.js") text
+    FindRefsUtils.compute_ast_result ~module_ref_prefix:None (File_key.SourceFile "/dummy.js") text
     |> Core_result.ok_or_failwith
   in
   let result = PropertyAccessSearcher.search name ast in
