@@ -7256,6 +7256,7 @@ and any_propagated_use cx trace use_op any = function
 
   (* Should never occur as the lower bound of any *)
   | BoundT _
+  | DefT (_, TypeT _)
   | InternalT (ChoiceKitT _)
   | InternalT (ExtendsT _)
   | ModuleT _ ->
