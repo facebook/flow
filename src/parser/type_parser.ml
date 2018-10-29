@@ -822,6 +822,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         if Peek.token env = T_LESS_THAN then
           Some (with_loc (fun env ->
             Expect.token env T_LESS_THAN;
+            let env = with_no_anon_function_type false env in
             let args = args env [] in
             Expect.token env T_GREATER_THAN;
             args
