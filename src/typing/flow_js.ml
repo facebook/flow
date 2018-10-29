@@ -7247,6 +7247,8 @@ and any_propagated_use cx trace use_op any = function
   | ShapeT _
   | DefT (_, OptionalT _)
   | DefT (_, MaybeT _)
+  | DefT (_, UnionT _)
+  | DefT (_, IntersectionT _)
   | ThisTypeAppT _ ->
       false
 
