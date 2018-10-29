@@ -924,9 +924,9 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
     TODO: This is FB only, find generic way to add logic *)
   | (_, Ast.Expression.Identifier (_, "__d")), None, [a; b; c; d] ->
     let lparen = if optional then ".?(" else "(" in
-    fuse [
+    group [
       Atom "__d";
-      list
+      new_list
         ~wrap:(Atom lparen, Atom ")")
         ~sep:(Atom ",")
         [
@@ -946,19 +946,23 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
       let less_than = if optional then "?.<" else "<" in
       source_location_with_comments (
         loc,
-        list
-          ~wrap:(Atom less_than, Atom ">")
-          ~sep:(Atom ",")
-          (List.map explicit_or_implicit args)
+        group [
+          new_list
+            ~wrap:(Atom less_than, Atom ">")
+            ~sep:(Atom ",")
+            (List.map explicit_or_implicit args);
+        ]
       ), "("
     in
     fuse [
       expression_with_parens ~precedence ~ctxt callee;
       targs;
-      list
-        ~wrap:(Atom lparen, Atom ")")
-        ~sep:(Atom ",")
-        (List.map expression_or_spread arguments)
+      group [
+        new_list
+          ~wrap:(Atom lparen, Atom ")")
+          ~sep:(Atom ",")
+          (List.map expression_or_spread arguments);
+      ]
     ]
 
 and expression_with_parens ~precedence ~(ctxt:expression_context) expr =
@@ -1159,14 +1163,26 @@ and variable_declaration ?(ctxt=normal_context) (loc, {
   | Ast.Statement.VariableDeclaration.Let -> Atom "let"
   | Ast.Statement.VariableDeclaration.Const -> Atom "const"
   in
+  let has_init = List.exists (fun var ->
+    let open Ast.Statement.VariableDeclaration.Declarator in
+    match var with
+    | (_, { id = _; init = Some _ }) -> true
+    | _ -> false
+  ) declarations in
+  let sep = if has_init then pretty_hardline else pretty_line in
   let decls_layout = match declarations with
-    | [single_decl] -> variable_declarator ~ctxt single_decl
-    | _ ->
-      list
-        ~sep:(Atom ",")
-        ~inline:(false, true)
-        ~trailing:false
-        (List.map (variable_declarator ~ctxt) declarations)
+    | [] -> Empty (* impossible *)
+    | single_decl::[] -> variable_declarator ~ctxt single_decl
+    | hd::tl ->
+      let hd = variable_declarator ~ctxt hd in
+      let tl = List.map (variable_declarator ~ctxt) tl in
+      group [
+        hd; Atom ",";
+        Indent (fuse [
+          sep;
+          join (fuse [Atom ","; sep]) tl;
+        ]);
+      ]
   in
   source_location_with_comments (loc, fuse_with_space [
     kind_layout;
@@ -1203,10 +1219,12 @@ and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
   | _, _, _, _ ->
     fuse [
       option type_parameter tparams;
-      list
-        ~wrap:(Atom "(", Atom ")")
-        ~sep:(Atom ",")
-        (function_params ~ctxt:normal_context params);
+      group [
+        new_list
+          ~wrap:(Atom "(", Atom ")")
+          ~sep:(Atom ",")
+          (function_params ~ctxt:normal_context params);
+      ];
       function_return return predicate;
     ]
   in
@@ -1379,20 +1397,20 @@ and class_private_field (loc, { Ast.Class.PrivateField.
     variance
 
 and class_body (loc, { Ast.Class.Body.body }) =
-  if List.length body > 0 then
+  if body <> [] then
     source_location_with_comments (
       loc,
-      list
-        ~wrap:(Atom "{", Atom "}")
-        ~break:Break_if_pretty
-        (List.map
-          (function
-          | Ast.Class.Body.Method meth -> class_method meth
-          | Ast.Class.Body.Property prop -> class_property prop
-          | Ast.Class.Body.PrivateField field -> class_private_field field
-          )
-          body
-        )
+      group [
+        wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [
+          join pretty_hardline (
+            List.map (function
+            | Ast.Class.Body.Method meth -> class_method meth
+            | Ast.Class.Body.Property prop -> class_property prop
+            | Ast.Class.Body.PrivateField field -> class_private_field field
+            ) body
+          );
+        ];
+      ]
     )
   else Atom "{}"
 
@@ -1852,10 +1870,12 @@ and import_named_specifier { Ast.Statement.ImportDeclaration.
   ]
 
 and import_named_specifiers named_specifiers =
-  list
-    ~wrap:(Atom "{", Atom "}")
-    ~sep:(Atom ",")
-    (List.map import_named_specifier named_specifiers)
+  group [
+    new_list
+      ~wrap:(Atom "{", Atom "}")
+      ~sep:(Atom ",")
+      (List.map import_named_specifier named_specifiers);
+  ]
 
 and import_declaration { Ast.Statement.ImportDeclaration.
   importKind; source; specifiers; default
@@ -1909,7 +1929,7 @@ and export_source ~prefix = function
 
 and export_specifier source = Ast.Statement.ExportNamedDeclaration.(function
   | ExportSpecifiers specifiers -> fuse [
-      list
+      group [new_list
         ~wrap:(Atom "{", Atom "}")
         ~sep:(Atom ",")
         (List.map
@@ -1930,6 +1950,7 @@ and export_specifier source = Ast.Statement.ExportNamedDeclaration.(function
           ))
           specifiers
         );
+      ];
       export_source ~prefix:pretty_space source;
     ]
   | ExportBatchSpecifier (loc, Some ident) -> fuse [
@@ -2030,28 +2051,34 @@ and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
 and type_parameter (loc, params) =
   source_location_with_comments (
     loc,
-    list
-      ~wrap:(Atom "<", Atom ">")
-      ~sep:(Atom ",")
-      (List.map type_param params)
+    group [
+      new_list
+        ~wrap:(Atom "<", Atom ">")
+        ~sep:(Atom ",")
+        (List.map type_param params);
+    ]
   )
 
 and type_parameter_instantiation_with_implicit (loc, args) =
   source_location_with_comments (
     loc,
-    list
-      ~wrap:(Atom "<", Atom ">")
-      ~sep:(Atom ",")
-      (List.map explicit_or_implicit args)
+    group [
+      new_list
+        ~wrap:(Atom "<", Atom ">")
+        ~sep:(Atom ",")
+        (List.map explicit_or_implicit args);
+    ]
   )
 
 and type_parameter_instantiation (loc, args) =
   source_location_with_comments (
     loc,
-    list
-      ~wrap:(Atom "<", Atom ">")
-      ~sep:(Atom ",")
-      (List.map type_ args)
+    group [
+      new_list
+        ~wrap:(Atom "<", Atom ">")
+        ~sep:(Atom ",")
+        (List.map type_ args);
+    ]
   )
 
 and type_alias ~declare { Ast.Statement.TypeAlias.id; tparams; right } =
@@ -2135,10 +2162,12 @@ and type_function ~sep { Ast.Type.Function.
   in
   fuse [
     option type_parameter tparams;
-    list
-      ~wrap:(Atom "(", Atom ")")
-      ~sep:(Atom ",")
-      params;
+    group [
+      new_list
+        ~wrap:(Atom "(", Atom ")")
+        ~sep:(Atom ",")
+        params;
+    ];
     sep;
     pretty_space;
     type_ return;
@@ -2224,10 +2253,12 @@ and type_object ?(sep=(Atom ",")) { Ast.Type.Object.exact; properties; inexact} 
   let s_exact = if exact then Atom "|" else Empty in
   let props = List.map type_object_property properties in
   let props = if inexact then props @ [Atom "..."] else props in
-  list
-    ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])
-    ~sep
-    props
+  group [
+    new_list
+      ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])
+      ~sep
+      props;
+  ]
 
 and type_interface { Ast.Type.Interface.extends; body=(loc, obj) } =
   fuse [
@@ -2304,10 +2335,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
       type_union_or_intersection ~sep:(Atom "&") (t1::t2::ts)
     | T.Typeof t -> fuse [Atom "typeof"; space; type_ t]
     | T.Tuple ts ->
-      list
-        ~wrap:(Atom "[", Atom "]")
-        ~sep:(Atom ",")
-        (List.map type_ ts)
+      group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (List.map type_ ts)]
     | T.StringLiteral { Ast.StringLiteral.raw; _ }
     | T.NumberLiteral { Ast.NumberLiteral.raw; _ } -> Atom raw
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")
