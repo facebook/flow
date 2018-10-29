@@ -6998,9 +6998,9 @@ and ground_subtype = function
    the any-expanded type and the original will handle the any-propagation to any relevant positions,
    some of which may invoke this function when they hit the any propagation functions in the
    recusive call to __flow. *)
-and expand_any _cx any u =
+and expand_any _cx any t =
   let only_any _ = any in
-  match u with
+  match t with
   | DefT (r, ArrT (ArrayAT _)) ->
       DefT (r, ArrT (ArrayAT (any, None)))
   | DefT (r, ArrT (TupleAT (_, ts))) ->
@@ -7172,7 +7172,25 @@ and any_propagated cx trace any = function
   | UseT (_, KeysT _) (* Any won't interact with the type inside KeysT, so it can't be tainted *)
     -> true
 
-  (* TODO: Figure out if these should be true or false *)
+  (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
+  | UseT (_, CustomFunT (_, ReactElementFactory _))
+  | UseT (_, CustomFunT (_, ReactPropType _))
+  | UseT (_, CustomFunT (_, ObjectAssign))
+  | UseT (_, CustomFunT (_, ObjectGetPrototypeOf))
+  | UseT (_, CustomFunT (_, ObjectSetPrototypeOf))
+  | UseT (_, CustomFunT (_, Compose _))
+  | UseT (_, CustomFunT (_, ReactCreateClass))
+  | UseT (_, CustomFunT (_, ReactCreateElement))
+  | UseT (_, CustomFunT (_, ReactCloneElement))
+  | UseT (_, CustomFunT (_, Idx))
+  | UseT (_, CustomFunT (_, TypeAssertIs))
+  | UseT (_, CustomFunT (_, TypeAssertThrows))
+  | UseT (_, CustomFunT (_, TypeAssertWraps))
+  | UseT (_, CustomFunT (_, DebugPrint))
+  | UseT (_, CustomFunT (_, DebugThrow))
+  | UseT (_, CustomFunT (_, DebugSleep))
+  | UseT (_, DefT (_, ObjT _))
+  | UseT (_, DefT (_, InstanceT _))
   | UseT _
     -> true
 
@@ -7195,6 +7213,13 @@ and any_propagated_use cx trace use_op any = function
       rec_flow_t cx trace ~use_op (t, expand_any cx any t);
       true
 
+  | KeysT _ -> (* Keys cannot be tainted by any *)
+      true
+
+  | DefT (_, ArrT (ROArrayAT t)) ->
+      rec_flow_t cx trace ~use_op (t, any);
+      true
+
   (* These types have no negative positions in their lower bounds *)
   | ExistsT _
   | FunProtoApplyT _
@@ -7203,13 +7228,6 @@ and any_propagated_use cx trace use_op any = function
   | FunProtoT _
   | ObjProtoT _
   | NullProtoT _ ->
-      true
-
-  | KeysT _ -> (* Keys cannot be tainted by any *)
-      true
-
-  | DefT (_, ArrT (ROArrayAT t)) ->
-      rec_flow_t cx trace ~use_op (t, any);
       true
 
   (* Handled already in __flow *)
@@ -7241,8 +7259,25 @@ and any_propagated_use cx trace use_op any = function
   (* Need special action later *)
   | OpenT _ -> false
 
-  (* TODO: figure out what is up with these *)
-  | CustomFunT _
+  (* TODO: Punt on these for now, but figure out whether these should fall through or not *)
+  | CustomFunT (_, ReactElementFactory _)
+  | CustomFunT (_, ReactPropType _)
+  | CustomFunT (_, ObjectAssign)
+  | CustomFunT (_, ObjectGetPrototypeOf)
+  | CustomFunT (_, ObjectSetPrototypeOf)
+  | CustomFunT (_, Compose _)
+  | CustomFunT (_, ReactCreateClass)
+  | CustomFunT (_, ReactCreateElement)
+  | CustomFunT (_, ReactCloneElement)
+  | CustomFunT (_, Idx)
+  | CustomFunT (_, TypeAssertIs)
+  | CustomFunT (_, TypeAssertThrows)
+  | CustomFunT (_, TypeAssertWraps)
+  | CustomFunT (_, DebugPrint)
+  | CustomFunT (_, DebugThrow)
+  | CustomFunT (_, DebugSleep)
+  | DefT (_, ObjT _)
+  | DefT (_, InstanceT _)
   | DefT _
   | TypeDestructorTriggerT _ ->
       true
