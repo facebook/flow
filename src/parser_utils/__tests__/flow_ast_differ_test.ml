@@ -30,7 +30,7 @@ class useless_mapper = object(this)
     let open Ast.Literal in
     match expr.value with
     | Number 4.0 ->
-      {value=Number 5.0; raw="5"}
+      { value = Number 5.0; raw = "5" }
     | _ -> expr
 
   method! logical loc (expr: (Loc.t, Loc.t) Ast.Expression.Logical.t) =
@@ -161,6 +161,23 @@ class useless_mapper = object(this)
     | Some (loc, Minus) -> Some (loc, Plus)
     | _ -> variance
 
+end
+
+class literal_mapper = object
+  inherit [Loc.t] Flow_ast_mapper.mapper
+  method! literal _loc (expr: Ast.Literal.t) =
+    let open Ast.Literal in
+    match expr.value with
+    | String "rename" ->
+      { value = String "gotRenamed"; raw = "gotRenamed" }
+    | Boolean false ->
+      { value = Boolean true; raw = "true" }
+    | Null ->
+      { value = String "wasNull"; raw = "wasNull" }
+    | Number 4.0 ->
+      { value = Number 5.0; raw = "5" }
+    (* TODO: add test for RegExp case? *)
+    | _ -> expr
 end
 
 class insert_variance_mapper = object(this)
@@ -445,20 +462,35 @@ let assert_edits_equal_standard_only ctxt ~edits ~source ~expected ~mapper =
   assert_equal ~ctxt expected (apply_edits source edits_standard)
 
 let tests = "ast_differ" >::: [
+  "literal_string" >:: begin fun ctxt ->
+    let source = "\"rename\"" in
+    assert_edits_equal ctxt ~edits:[((0, 8), "\"gotRenamed\"")]
+      ~source ~expected:"\"gotRenamed\"" ~mapper:(new literal_mapper)
+  end;
+  "literal_bool" >:: begin fun ctxt ->
+    let source = "false" in
+    assert_edits_equal ctxt ~edits:[((0, 5), "true")]
+      ~source ~expected:"true" ~mapper:(new literal_mapper)
+  end;
+  "literal_null" >:: begin fun ctxt ->
+    let source = "null" in
+    assert_edits_equal ctxt ~edits:[((0, 4), "\"wasNull\"")]
+      ~source ~expected:"\"wasNull\"" ~mapper:(new literal_mapper)
+  end;
   "simple" >:: begin fun ctxt ->
     let source = "function foo() { (5 - 3); 4; (6 + 4); }" in
-    assert_edits_equal ctxt ~edits:[((26, 27), "(5)"); ((30, 35), "(6 - 5)")]
-      ~source ~expected:"function foo() { (5 - 3); (5); ((6 - 5)); }" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt ~edits:[((26, 27), "5"); ((30, 35), "(6 - 5)")]
+      ~source ~expected:"function foo() { (5 - 3); 5; ((6 - 5)); }" ~mapper:(new useless_mapper)
   end;
   "class" >:: begin fun ctxt ->
     let source = "class Foo { bar() { 4; } }" in
-    assert_edits_equal ctxt ~edits:[((20, 21), "(5)")] ~source
-      ~expected:"class Foo { bar() { (5); } }" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt ~edits:[((20, 21), "5")] ~source
+      ~expected:"class Foo { bar() { 5; } }" ~mapper:(new useless_mapper)
   end;
   "class2" >:: begin fun ctxt ->
     let source = "class Foo { bar = 4; }" in
-    assert_edits_equal ctxt ~edits:[((18, 19), "(5)")] ~source
-      ~expected:"class Foo { bar = (5); }" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt ~edits:[((18, 19), "5")] ~source
+      ~expected:"class Foo { bar = 5; }" ~mapper:(new useless_mapper)
   end;
   "class_prop_annot" >:: begin fun ctxt ->
     let source = "class A { f = (x: string) => x; }" in
@@ -468,8 +500,8 @@ let tests = "ast_differ" >::: [
   end;
   "obj_prop" >:: begin fun ctxt ->
     let source = "let x = { rename : 4 }" in
-    assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed"); ((19, 20), "(5)")] ~source
-      ~expected:"let x = { gotRenamed : (5) }"
+    assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed"); ((19, 20), "5")] ~source
+      ~expected:"let x = { gotRenamed : 5 }"
       ~mapper:(new useless_mapper)
   end;
   "obj_prop2" >:: begin fun ctxt ->
@@ -480,14 +512,14 @@ let tests = "ast_differ" >::: [
   end;
   "obj_prop3" >:: begin fun ctxt ->
     let source = "let x = { 4 : 3 }" in
-    assert_edits_equal ctxt ~edits:[(10, 15), "5: 3"] ~source
-      ~expected:"let x = { 5: 3 }"
+    assert_edits_equal ctxt ~edits:[(10, 11), "5"] ~source
+      ~expected:"let x = { 5 : 3 }"
       ~mapper:(new useless_mapper)
   end;
   "obj_spread_prop" >:: begin fun ctxt ->
     let source = "let x = { ...rename, x : 4}" in
-    assert_edits_equal ctxt ~edits:[((13, 19), "gotRenamed"); ((25, 26), "(5)")] ~source
-      ~expected:"let x = { ...gotRenamed, x : (5)}"
+    assert_edits_equal ctxt ~edits:[((13, 19), "gotRenamed"); ((25, 26), "5")] ~source
+      ~expected:"let x = { ...gotRenamed, x : 5}"
       ~mapper:(new useless_mapper)
   end;
   "precedence" >:: begin fun ctxt ->
@@ -519,7 +551,7 @@ let tests = "ast_differ" >::: [
   end;
   "member_expression" >:: begin fun ctxt ->
     let source = "obj[4]" in
-    assert_edits_equal ctxt ~edits:[((4, 5), "(5)")] ~source ~expected:"obj[(5)]"
+    assert_edits_equal ctxt ~edits:[((4, 5), "5")] ~source ~expected:"obj[5]"
       ~mapper:(new useless_mapper)
   end;
   "unary_same_op" >:: begin fun ctxt ->
@@ -534,8 +566,8 @@ let tests = "ast_differ" >::: [
   end;
   "block" >:: begin fun ctxt ->
     let source = "{ 2; 4; 10; rename; }" in
-    assert_edits_equal ctxt ~edits:[((5, 6), "(5)"); ((12, 18), "gotRenamed")] ~source
-      ~expected:"{ 2; (5); 10; gotRenamed; }" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt ~edits:[((5, 6), "5"); ((12, 18), "gotRenamed")] ~source
+      ~expected:"{ 2; 5; 10; gotRenamed; }" ~mapper:(new useless_mapper)
   end;
   "if_nochange" >:: begin fun ctxt ->
     let source = "if (true) { false; } else { true; }" in
@@ -544,18 +576,18 @@ let tests = "ast_differ" >::: [
   end;
   "if_noblock" >:: begin fun ctxt ->
     let source = "if (4) rename;" in
-    assert_edits_equal ctxt ~edits:[((4, 5), "(5)"); ((7, 13), "gotRenamed");] ~source
-      ~expected:"if ((5)) gotRenamed;" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt ~edits:[((4, 5), "5"); ((7, 13), "gotRenamed");] ~source
+      ~expected:"if (5) gotRenamed;" ~mapper:(new useless_mapper)
   end;
   "if_partial" >:: begin fun ctxt ->
     let source = "if (4) { rename; }" in
-    assert_edits_equal ctxt ~edits:[((4, 5), "(5)"); ((9, 15), "gotRenamed");] ~source
-      ~expected:"if ((5)) { gotRenamed; }" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt ~edits:[((4, 5), "5"); ((9, 15), "gotRenamed");] ~source
+      ~expected:"if (5) { gotRenamed; }" ~mapper:(new useless_mapper)
   end;
   "if_full" >:: begin fun ctxt ->
     let source = "if (4) { 4; } else { rename }" in
-    assert_edits_equal ctxt ~edits:[((4, 5), "(5)"); ((9, 10), "(5)"); ((21, 27), "gotRenamed")]
-      ~source ~expected:"if ((5)) { (5); } else { gotRenamed }" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt ~edits:[((4, 5), "5"); ((9, 10), "5"); ((21, 27), "gotRenamed")]
+      ~source ~expected:"if (5) { 5; } else { gotRenamed }" ~mapper:(new useless_mapper)
   end;
   "conditional_nochange" >:: begin fun ctxt ->
     let source = "1 > 0 ? false : true" in
@@ -579,8 +611,8 @@ let tests = "ast_differ" >::: [
   end;
   "conditional_cons_and_alt" >:: begin fun ctxt ->
     let source = "1 > 0 ? 4 : rename" in
-    assert_edits_equal ctxt ~edits:[((8, 9), "(5)"); ((12, 18), "gotRenamed")] ~source
-      ~expected:"1 > 0 ? (5) : gotRenamed" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt ~edits:[((8, 9), "5"); ((12, 18), "gotRenamed")] ~source
+      ~expected:"1 > 0 ? 5 : gotRenamed" ~mapper:(new useless_mapper)
   end;
   "with_nochange" >:: begin fun ctxt ->
     let source = "with (object) { foo = true; }" in
@@ -599,13 +631,13 @@ let tests = "ast_differ" >::: [
   end;
   "function_expression" >:: begin fun ctxt ->
     let source = "(function() { 4; })" in
-    assert_edits_equal ctxt ~edits:[((14, 15), "(5)")] ~source ~expected:"(function() { (5); })"
+    assert_edits_equal ctxt ~edits:[((14, 15), "5")] ~source ~expected:"(function() { 5; })"
     ~mapper:(new useless_mapper)
   end;
   "arrow_function" >:: begin fun ctxt ->
     let source = "let bar = (x) => 4;" in
-    assert_edits_equal ctxt ~edits:[(17, 18), "(5)"] ~source
-    ~expected:"let bar = (x) => (5);"
+    assert_edits_equal ctxt ~edits:[(17, 18), "5"] ~source
+    ~expected:"let bar = (x) => 5;"
     ~mapper:(new useless_mapper)
   end;
   "call" >:: begin fun ctxt ->
@@ -620,7 +652,7 @@ let tests = "ast_differ" >::: [
   end;
   "variable_declaration_expression" >:: begin fun ctxt ->
     let source = "let x = 4;" in
-    assert_edits_equal ctxt ~edits:[((8, 9), "(5)")] ~source ~expected:"let x = (5);"
+    assert_edits_equal ctxt ~edits:[((8, 9), "5")] ~source ~expected:"let x = 5;"
     ~mapper:(new useless_mapper)
   end;
   "variable_declaration_kind_expression" >:: begin fun ctxt ->
@@ -635,8 +667,8 @@ let tests = "ast_differ" >::: [
   end;
   "for_init" >:: begin fun ctxt ->
     let source = "for (let i = 4; i < 10; i++) {}" in
-    assert_edits_equal ctxt  ~edits:[(13, 14), "(5)"] ~source
-      ~expected:"for (let i = (5); i < 10; i++) {}" ~mapper:(new useless_mapper)
+    assert_edits_equal ctxt  ~edits:[(13, 14), "5"] ~source
+      ~expected:"for (let i = 5; i < 10; i++) {}" ~mapper:(new useless_mapper)
   end;
   "for_body" >:: begin fun ctxt ->
     let source = "for (i = 7; i < top; i++) { rename; }" in
@@ -822,8 +854,8 @@ let tests = "ast_differ" >::: [
   end;
   "comments" >:: begin fun ctxt ->
     let source = "function foo() { /* comment */ (5 - 3); 4; (6 + 4); /* comment */}" in
-    assert_edits_equal ctxt ~edits:[((40, 41), "(5)"); ((44, 49), "(6 - 5)")] ~source
-      ~expected:"function foo() { /* comment */ (5 - 3); (5); ((6 - 5)); /* comment */}"
+    assert_edits_equal ctxt ~edits:[((40, 41), "5"); ((44, 49), "(6 - 5)")] ~source
+      ~expected:"function foo() { /* comment */ (5 - 3); 5; ((6 - 5)); /* comment */}"
       ~mapper:(new useless_mapper)
   end;
   "fn_default_export" >:: begin fun ctxt ->
@@ -1183,8 +1215,8 @@ let tests = "ast_differ" >::: [
   end;
   "jsx_element_attribute_value_expression_literal" >:: begin fun ctxt ->
     let source = "<Component someProp={4} />" in
-    assert_edits_equal ctxt ~edits:[(21, 22), "(5)"]
-    ~source ~expected:"<Component someProp={(5)} />"
+    assert_edits_equal ctxt ~edits:[(21, 22), "5"]
+    ~source ~expected:"<Component someProp={5} />"
     ~mapper:(new useless_mapper)
   end;
   "jsx_element_attribute_value_expression_binop" >:: begin fun ctxt ->
@@ -1195,8 +1227,8 @@ let tests = "ast_differ" >::: [
   end;
   "jsx_element_attribute_name_and_value" >:: begin fun ctxt ->
     let source = "<Component rename={4} />" in
-    assert_edits_equal ctxt ~edits:[((11, 17), "gotRenamed"); ((19, 20), "(5)")]
-    ~source ~expected:"<Component gotRenamed={(5)} />"
+    assert_edits_equal ctxt ~edits:[((11, 17), "gotRenamed"); ((19, 20), "5")]
+    ~source ~expected:"<Component gotRenamed={5} />"
     ~mapper:(new useless_mapper)
   end;
   "jsx_element_attribute_list_name" >:: begin fun ctxt ->
@@ -1207,8 +1239,8 @@ let tests = "ast_differ" >::: [
   end;
   "jsx_element_attribute_list_expression_literal" >:: begin fun ctxt ->
     let source = "<Component someProp={4} anotherProp={4} />" in
-    assert_edits_equal ctxt ~edits:[((21, 22), "(5)"); (37,38), "(5)"]
-    ~source ~expected:"<Component someProp={(5)} anotherProp={(5)} />"
+    assert_edits_equal ctxt ~edits:[((21, 22), "5"); (37,38), "5"]
+    ~source ~expected:"<Component someProp={5} anotherProp={5} />"
     ~mapper:(new useless_mapper)
   end;
   "jsx_element_spread_attribute" >:: begin fun ctxt ->
@@ -1220,14 +1252,14 @@ let tests = "ast_differ" >::: [
   "jsx_element_spread_attribute_list_mixed" >:: begin fun ctxt ->
     let source = "<Component {...rename} rename={4}/>" in
     assert_edits_equal ctxt
-    ~edits:[((15, 21), "gotRenamed"); ((23, 29), "gotRenamed"); ((31, 32), "(5)")]
-    ~source ~expected:"<Component {...gotRenamed} gotRenamed={(5)}/>"
+    ~edits:[((15, 21), "gotRenamed"); ((23, 29), "gotRenamed"); ((31, 32), "5")]
+    ~source ~expected:"<Component {...gotRenamed} gotRenamed={5}/>"
     ~mapper:(new useless_mapper)
   end;
   "jsx_element_attribute_list_name_and_value" >:: begin fun ctxt ->
     let source = "<Component rename={1} dontRename={4} />" in
-    assert_edits_equal ctxt ~edits:[((11, 17), "gotRenamed"); ((34, 35), "(5)")]
-    ~source ~expected:"<Component gotRenamed={1} dontRename={(5)} />"
+    assert_edits_equal ctxt ~edits:[((11, 17), "gotRenamed"); ((34, 35), "5")]
+    ~source ~expected:"<Component gotRenamed={1} dontRename={5} />"
     ~mapper:(new useless_mapper)
   end;
   "jsx_element_child_element" >:: begin fun ctxt ->

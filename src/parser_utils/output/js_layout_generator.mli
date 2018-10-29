@@ -41,6 +41,7 @@ val program:
   (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
 val program_simple:
   (Loc.t, Loc.t) Flow_ast.program -> Layout.layout_node
+val literal: Flow_ast.Literal.t -> Layout.layout_node
 val expression: ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Expression.t -> Layout.layout_node
 val statement:
   ?pretty_semicolon:bool ->

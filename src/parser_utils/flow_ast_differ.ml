@@ -159,6 +159,7 @@ let list_diff = function
  * have here, the more granularly we can diff. *)
 type node =
   | Raw of string
+  | Literal of Ast.Literal.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
@@ -694,6 +695,8 @@ let program (algo : diff_algorithm)
        * below *)
       let open Ast.Expression in
       match expr1, expr2 with
+      | (loc, Ast.Expression.Literal lit1), (_, Ast.Expression.Literal lit2) ->
+        Some (literal loc lit1 lit2)
       | (_, Binary b1), (_, Binary b2) ->
         binary b1 b2
       | (_, Unary u1), (_, Unary u2) ->
@@ -737,6 +740,12 @@ let program (algo : diff_algorithm)
     in
     let old_loc = Ast_utils.loc_of_expression expr1 in
     Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
+
+  and literal (loc: Loc.t)
+      (lit1: Ast.Literal.t)
+      (lit2: Ast.Literal.t)
+      : node change list =
+    [(loc, Replace (Literal lit1, Literal lit2))]
 
   and tagged_template
       (t_tmpl1: (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
@@ -923,14 +932,13 @@ let program (algo : diff_algorithm)
         Some (diff_if_changed jsx_namespaced_name namespaced_name1 namespaced_name2)
       | _ -> None in
     let value_diff =
-      if value1 == value2 then Some []
-      else
-        match value1, value2 with
-        | Some (Literal (_, _lit1)), Some (Literal (_, _lit2)) ->
-          (* TODO: recurse into literals *) None
-        | Some (ExpressionContainer (_, expr1)), Some (ExpressionContainer (_, expr2)) ->
-          jsx_expression expr1 expr2
-        | _ -> None in
+      match value1, value2 with
+      | Some (Ast.JSX.Attribute.Literal (loc, lit1)),
+            Some (Ast.JSX.Attribute.Literal (_, lit2)) ->
+        diff_if_changed (literal loc) lit1 lit2 |> Option.return
+      | Some (ExpressionContainer (_, expr1)), Some (ExpressionContainer (_, expr2)) ->
+        diff_if_changed_ret_opt jsx_expression expr1 expr2
+      | _ -> None in
     join_diff_list [name_diff; value_diff]
 
   and jsx_child
@@ -986,12 +994,14 @@ let program (algo : diff_algorithm)
     expression arg1 arg2
 
   and object_key key1 key2 =
-    let open Ast.Expression.Object.Property in
+    let module EOP = Ast.Expression.Object.Property in
     match key1, key2 with
-    | Literal _, Literal _ -> (* TODO: recurse into literals *) None
-    | Ast.Expression.Object.Property.Identifier i1, Ast.Expression.Object.Property.Identifier i2 ->
-        identifier i1 i2 |> Option.return
-    | Computed e1, Computed e2 -> expression e1 e2 |> Option.return
+    | EOP.Literal (loc, l1), EOP.Literal (_, l2) ->
+      diff_if_changed (literal loc) l1 l2 |> Option.return
+    | EOP.Identifier i1, EOP.Identifier i2 ->
+      diff_if_changed identifier i1 i2 |> Option.return
+    | EOP.Computed e1, EOP.Computed e2 ->
+      diff_if_changed expression e1 e2 |> Option.return
     | _, _ -> None
 
   and object_regular_property (_, prop1) (_, prop2) =
@@ -1337,15 +1347,14 @@ let program (algo : diff_algorithm)
   and pattern_object_property_key (k1: (Loc.t, Loc.t) Ast.Pattern.Object.Property.key)
                                   (k2: (Loc.t, Loc.t) Ast.Pattern.Object.Property.key)
       : node change list option =
-    let open Ast.Pattern.Object.Property in
+    let module POP = Ast.Pattern.Object.Property in
     match k1, k2 with
-    | Literal _, Literal _ ->
-        (* TODO: recurse into literals *)
-        None
-    | Ast.Pattern.Object.Property.Identifier i1, Ast.Pattern.Object.Property.Identifier i2 ->
-        identifier i1 i2 |> Option.return
-    | Computed e1, Computed e2 ->
-        Some (expression e1 e2)
+    | POP.Literal (loc, l1), POP.Literal (_, l2) ->
+        diff_if_changed (literal loc) l1 l2 |> Option.return
+    | POP.Identifier i1, POP.Identifier i2 ->
+        diff_if_changed identifier i1 i2 |> Option.return
+    | POP.Computed e1, POP.Computed e2 ->
+        diff_if_changed expression e1 e2 |> Option.return
     | _, _ ->
         None
 
