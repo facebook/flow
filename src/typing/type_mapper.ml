@@ -27,9 +27,10 @@ let union_flatten =
       if ISet.mem id !seen then []
       else begin
         seen := ISet.add id !seen;
+        let open Constraint in
         match Context.find_graph cx id with
-        | Constraint.Resolved t' -> flatten cx seen t'
-        | _ -> [t]
+        | Resolved t' | FullyResolved t' -> flatten cx seen t'
+        | Unresolved _ -> [t]
       end
     | AnnotT (_, t, _) -> flatten cx seen t
     | ReposT (_, t) -> flatten cx seen t

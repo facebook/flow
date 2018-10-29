@@ -155,7 +155,7 @@ let visit_eval_id cx id f =
 let types_of constraints =
   match constraints with
   | Unresolved { lower; _ } -> TypeMap.keys lower
-  | Resolved t -> [t]
+  | Resolved t | FullyResolved t -> [t]
 
 (* Def types that describe the solution of a type variable. *)
 let possible_types cx id = types_of (Context.find_graph cx id)
@@ -172,7 +172,7 @@ let possible_types_of_use cx = function
 let uses_of constraints =
   match constraints with
   | Unresolved { upper; _ } -> UseTypeMap.keys upper
-  | Resolved t -> [UseT (unknown_use, t)]
+  | Resolved t | FullyResolved t -> [UseT (unknown_use, t)]
 
 let possible_uses cx id = uses_of (Context.find_graph cx id)
 
@@ -502,7 +502,7 @@ and assume_ground_id cx ~depth ids_ref id =
       uppertvars |> IMap.iter (fun id _ ->
         assume_ground_id cx ~depth ids_ref id
       )
-    | Resolved _ ->
+    | Resolved _ | FullyResolved _ ->
       ()
   )
 
@@ -883,7 +883,7 @@ module ResolvableTypeJob = struct
          disjoint unions. *)
       then IMap.add id (Binding tvar) acc
       else begin match Context.find_graph cx id with
-      | Resolved t ->
+      | Resolved t | FullyResolved t ->
         let acc = IMap.add id OpenResolved acc in
         collect_of_type ?log_unresolved cx reason acc t
       | Unresolved _ ->
@@ -1400,13 +1400,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             flows_across cx trace ~use_op bounds1.lower bounds2.upper;
           );
 
-      | Unresolved bounds1, Resolved t2 ->
+      | Unresolved bounds1, (Resolved t2 | FullyResolved t2) ->
           edges_and_flows_to_t cx trace (id1, bounds1) (UseT (use_op, t2))
 
-      | Resolved t1, Unresolved bounds2 ->
+      | (Resolved t1 | FullyResolved t1), Unresolved bounds2 ->
           edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
 
-      | Resolved t1, Resolved t2 ->
+      | (Resolved t1 | FullyResolved t1), (Resolved t2 | FullyResolved t2) ->
           rec_flow cx trace (t1, UseT (use_op, t2))
       );
 
@@ -1426,7 +1426,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Unresolved bounds1 ->
           edges_and_flows_to_t cx trace (id1, bounds1) t2
 
-      | Resolved t1 ->
+      | Resolved t1 | FullyResolved t1 ->
           rec_flow cx trace (t1, t2)
       );
 
@@ -1440,7 +1440,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Unresolved bounds2 ->
           edges_and_flows_from_t cx trace ~use_op t1 (id2, bounds2)
 
-      | Resolved t2 ->
+      | Resolved t2 | FullyResolved t2 ->
           rec_flow cx trace (t1, UseT (use_op, t2))
       );
 
@@ -7639,8 +7639,8 @@ and mk_type_destructor cx ~trace use_op reason t d id =
     | OpenT (_, id) ->
       let _, constraints = Context.find_constraints cx id in
       (match constraints with
-        | Resolved t -> t
-        | _ -> t)
+        | Resolved t | FullyResolved t -> t
+        | Unresolved _ -> t)
     | _ -> t
   in
   match t, IMap.get id evaluated with
@@ -9928,19 +9928,19 @@ and goto cx trace ~use_op (id1, root1) (id2, root2) =
     );
     Context.add_tvar cx id1 (Goto id2);
 
-  | Unresolved bounds1, Resolved t2 ->
+  | Unresolved bounds1, (Resolved t2 | FullyResolved t2) ->
     let t2_use = UseT (use_op, t2) in
     edges_and_flows_to_t cx trace ~opt:true (id1, bounds1) t2_use;
     edges_and_flows_from_t cx trace ~use_op:(unify_flip use_op) ~opt:true t2 (id1, bounds1);
     Context.add_tvar cx id1 (Goto id2);
 
-  | Resolved t1, Unresolved bounds2 ->
+  | (Resolved t1 | FullyResolved t1), Unresolved bounds2 ->
     let t1_use = UseT (unify_flip use_op, t1) in
     edges_and_flows_to_t cx trace ~opt:true (id2, bounds2) t1_use;
     edges_and_flows_from_t cx trace ~use_op ~opt:true t1 (id2, bounds2);
     Context.add_tvar cx id2 (Goto id1);
 
-  | Resolved t1, Resolved t2 ->
+  | (Resolved t1 | FullyResolved t1), (Resolved t2 | FullyResolved t2) ->
     (* replace node first, in case rec_unify recurses back to these tvars *)
     Context.add_tvar cx id1 (Goto id2);
     rec_unify cx trace ~use_op t1 t2;
@@ -9961,15 +9961,16 @@ and merge_ids cx trace ~use_op id1 id2 =
 
 (* Resolve a type variable to a type. This involves finding its root, and
    resolving to that type. *)
-and resolve_id cx trace ~use_op id t =
+and resolve_id cx trace ~use_op ?(fully_resolved=false) id t =
   let id, root = Context.find_root cx id in
   match root.constraints with
   | Unresolved bounds ->
-    Context.add_tvar cx id (Root { root with constraints = Resolved t });
+    let constraints = if fully_resolved then FullyResolved t else Resolved t in
+    Context.add_tvar cx id (Root { root with constraints });
     edges_and_flows_to_t cx trace ~opt:true (id, bounds) (UseT (use_op, t));
     edges_and_flows_from_t cx trace ~use_op ~opt:true t (id, bounds);
 
-  | Resolved t_ ->
+  | Resolved t_ | FullyResolved t_ ->
     rec_unify cx trace ~use_op t_ t
 
 (******************)
@@ -10932,7 +10933,9 @@ and reposition cx ?trace (loc: Loc.t) ?desc ?annot_loc t =
     let use_desc = Option.is_some desc in
     let constraints = Context.find_graph cx id in
     begin match constraints with
-    | Resolved t ->
+    (* TODO: In the FullyResolved case, repositioning will cause us to "lose"
+       the fully resolved status. We should be able to preserve it. *)
+    | Resolved t | FullyResolved t ->
       (* A tvar may be resolved to a type that has special repositioning logic,
          like UnionT. We want to recurse to pick up that logic, but must be
          careful as the union may refer back to the tvar itself, causing a loop.
@@ -10945,16 +10948,30 @@ and reposition cx ?trace (loc: Loc.t) ?desc ?annot_loc t =
           then Tvar.mk_derivable_where
           else Tvar.mk_where
         in
+        (* The resulting tvar should be fully resolved if this one is *)
+        let fully_resolved = match constraints with
+        | Resolved _ -> false
+        | FullyResolved _ -> true
+        | Unresolved _ -> assert_false "handled below"
+        in
         mk_tvar_where cx reason (fun tvar ->
-          let t' = recurse (IMap.add id tvar seen) t in
           (* All `t` in `Resolved t` are concrete. Because `t` is a concrete
              type, `t'` is also necessarily concrete (i.e., reposition preserves
              open -> open, concrete -> concrete). The unification below thus
              results in resolving `tvar` to `t'`, so we end up with a resolved
              tvar whenever we started with one. *)
-          unify_opt cx ?trace ~unify_any:true tvar t';
+          let t' = recurse (IMap.add id tvar seen) t in
+          (* resolve_id requires a trace param *)
+          let trace = match trace with
+          | None -> Trace.unit_trace tvar (UseT (unknown_use, t'))
+          | Some trace ->
+            let max = Context.max_trace_depth cx in
+            Trace.rec_trace ~max tvar (UseT (unknown_use, t')) trace
+          in
+          let _, id = open_tvar tvar in
+          resolve_id cx trace ~use_op:unknown_use ~fully_resolved id t';
         ))
-    | _ ->
+    | Unresolved _ ->
       (* Try to re-use an already created repositioning tvar.
          See repos_cache.ml for details. *)
       match Repos_cache.find id reason !Cache.repos_cache with
@@ -12582,8 +12599,12 @@ class assert_ground_visitor skip r context = object (self)
           add_output cx (FlowError.EMissingAnnotation (r, trace_reasons))
         );
         if Polarity.compat (pole, Positive)
-        then List.fold_left (self#type_ cx Positive) seen (types_of constraints)
-        else seen
+        then begin match constraints with
+        (* TODO: ok to skip fully resolved tvars? *)
+        | Resolved t | FullyResolved t -> self#type_ cx Positive seen t
+        | Unresolved { lower; _ } ->
+          TypeMap.fold (fun t _ seen -> self#type_ cx Positive seen t) lower seen
+        end else seen
 
   method! type_ cx pole seen t =
     Option.iter ~f:(fun { Verbose.depth = verbose_depth; indent; enabled_during_flowlib=_; } ->
@@ -12724,7 +12745,7 @@ class assert_ground_visitor skip r context = object (self)
     | OpenT (r, id) ->
       let seen = self#tvar cx Positive seen r id in
       (match Context.find_graph cx id with
-      | Resolved t -> self#typeapp targs cx pole seen t
+      | Resolved t | FullyResolved t -> self#typeapp targs cx pole seen t
       | Unresolved { lower; _ } ->
         TypeMap.fold (fun t _ acc ->
           self#typeapp targs cx pole acc t

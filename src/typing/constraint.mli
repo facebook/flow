@@ -20,6 +20,7 @@ and root = {
 
 and constraints =
 | Resolved of Type.t
+| FullyResolved of Type.t
 | Unresolved of bounds
 
 and bounds = {

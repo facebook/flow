@@ -560,14 +560,14 @@ module ContextOptimizer = struct
           id
         else
           let t = merge_tvar cx r id in
-          let node = Root { rank = 0; constraints = Resolved t } in
+          let node = Root { rank = 0; constraints = FullyResolved t } in
           reduced_graph <- IMap.add id node reduced_graph;
           let () =
             let stable_id = self#fresh_stable_id in
             stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids
           in
           let t = (self#type_ cx pole t) in
-          let node = Root { rank = 0; constraints = Resolved t } in
+          let node = Root { rank = 0; constraints = FullyResolved t } in
           reduced_graph <- IMap.add id node reduced_graph;
           id
       else (
