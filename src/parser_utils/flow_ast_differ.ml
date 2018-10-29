@@ -404,38 +404,38 @@ let program (algo : diff_algorithm)
       function_declaration func1 func2
     | (_, ClassDeclaration class1), (_, ClassDeclaration class2) ->
       class_ class1 class2
-    | (_, Ast.Statement.If if1), (_, Ast.Statement.If if2) ->
+    | (_, If if1), (_, If if2) ->
       if_statement if1 if2
     | (_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2) ->
       expression_statement expr1 expr2
-    | (_, Ast.Statement.Block block1), (_, Ast.Statement.Block block2) ->
+    | (_, Block block1), (_, Block block2) ->
       block block1 block2
-    | (_, Ast.Statement.For for1), (_, Ast.Statement.For for2) ->
+    | (_, For for1), (_, For for2) ->
       for_statement for1 for2
-    | (_, Ast.Statement.ForIn for_in1), (_, Ast.Statement.ForIn for_in2) ->
+    | (_, ForIn for_in1), (_, ForIn for_in2) ->
       for_in_statement for_in1 for_in2
-    | (_, Ast.Statement.While while1), (_, Ast.Statement.While while2) ->
+    | (_, While while1), (_, While while2) ->
       Some (while_statement while1 while2)
-    | (_, Ast.Statement.ForOf for_of1), (_, Ast.Statement.ForOf for_of2) ->
+    | (_, ForOf for_of1), (_, ForOf for_of2) ->
       for_of_statement for_of1 for_of2
-    | (_, Ast.Statement.DoWhile do_while1), (_, Ast.Statement.DoWhile do_while2) ->
+    | (_, DoWhile do_while1), (_, DoWhile do_while2) ->
       Some (do_while_statement do_while1 do_while2)
-    | (_, Ast.Statement.Switch switch1), (_, Ast.Statement.Switch switch2) ->
+    | (_, Switch switch1), (_, Switch switch2) ->
       switch_statement switch1 switch2
-    | (_, Ast.Statement.Return return1), (_, Ast.Statement.Return return2) ->
+    | (_, Return return1), (_, Return return2) ->
       return_statement return1 return2
-    | (_, Ast.Statement.With with1), (_, Ast.Statement.With with2) ->
+    | (_, With with1), (_, With with2) ->
       Some (with_statement with1 with2)
-    | (_, Ast.Statement.ExportDefaultDeclaration export1),
-      (_, Ast.Statement.ExportDefaultDeclaration export2) ->
+    | (_, ExportDefaultDeclaration export1),
+      (_, ExportDefaultDeclaration export2) ->
       export_default_declaration export1 export2
-    | (_, Ast.Statement.DeclareExportDeclaration export1),
-      (_, Ast.Statement.DeclareExportDeclaration export2) ->
+    | (_, DeclareExportDeclaration export1),
+      (_, DeclareExportDeclaration export2) ->
       declare_export export1 export2
-    | (_, Ast.Statement.ExportNamedDeclaration export1),
-      (_, Ast.Statement.ExportNamedDeclaration export2) ->
+    | (_, ExportNamedDeclaration export1),
+      (_, ExportNamedDeclaration export2) ->
       export_named_declaration export1 export2
-    | (_, Ast.Statement.Try try1), (_, Ast.Statement.Try try2) ->
+    | (_, Try try1), (_, Try try2) ->
       try_ try1 try2
     | (_, TypeAlias t_alias1), (_, TypeAlias t_alias2) ->
       type_alias t_alias1 t_alias2
