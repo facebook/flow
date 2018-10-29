@@ -17,11 +17,6 @@ module Utils = Utils_js
 (* Driver *)
 (**********)
 
-let force_annotations cx =
-  let m = Context.module_ref cx in
-  let tvar = Flow_js.lookup_module cx m in
-  Flow_js.enforce_strict cx tvar
-
 (* core inference, assuming setup and teardown happens elsewhere *)
 let infer_core cx statements =
   try
@@ -471,9 +466,6 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
     | ESModule -> ImpExp.mk_module_t cx reason_exports_module
   ) in
   Flow_js.flow_t cx (module_t, initial_module_t);
-
-  (* insist that whatever type flows into exports is fully annotated *)
-  force_annotations cx;
 
   prog_loc, typed_statements, comments
 

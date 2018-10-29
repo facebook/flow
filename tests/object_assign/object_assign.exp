@@ -54,7 +54,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2].
 
    B.js:10:20
-   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+   10| var bad_: number = f(); // error: string ~> number
                           ^^^
 
 References:
@@ -62,22 +62,8 @@ References:
     9|   foo: function(): string { return 'hi'; }
                           ^^^^^^ [1]
    B.js:10:11
-   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+   10| var bad_: number = f(); // error: string ~> number
                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------- B.js:10:20
-
-Cannot call `f` because property `foo` is missing in global object [1] but exists in object literal [2].
-
-   B.js:10:20
-   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
-                          ^^^ [1]
-
-References:
-   A.js:8:25
-    8| var Bad = Object.assign({}, EventEmitter.prototype, {
-                               ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- B.js:12:19
@@ -214,4 +200,4 @@ References:
 
 
 
-Found 13 errors
+Found 12 errors
