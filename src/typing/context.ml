@@ -568,9 +568,10 @@ and find_root cx id =
 
 let rec find_resolved cx = function
   | Type.OpenT (_, id) ->
+    let open Constraint in
     begin match find_graph cx id with
-      | Constraint.Resolved t -> Some t
-      | Constraint.Unresolved _ -> None
+      | Resolved t | FullyResolved t -> Some t
+      | Unresolved _ -> None
     end
   | Type.AnnotT (_, t, _) -> find_resolved cx t
   | t -> Some t

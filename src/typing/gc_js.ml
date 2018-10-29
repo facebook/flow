@@ -74,7 +74,7 @@ let gc = object (self)
         self#tvar cx pole marked r root_id
       else
         match constraints with
-        | Resolved t -> self#type_ cx pole marked t
+        | Resolved t | FullyResolved t -> self#type_ cx pole marked t
         | Unresolved bounds ->
           let marked =
             if P.compat (pole, Positive) then
@@ -109,7 +109,7 @@ let gc = object (self)
         self#tvar_bounds cx pole marked root_id
       else
         match constraints with
-        | Resolved _ -> marked
+        | Resolved _ | FullyResolved _ -> marked
         | Unresolved bounds ->
           let marked =
             if P.compat (pole, Positive) then
@@ -132,7 +132,7 @@ end
 let live cx marked p id =
   let constraints = Context.find_graph cx id in
   match constraints with
-  | Resolved _ -> ()
+  | Resolved _ | FullyResolved _ -> ()
   | Unresolved bounds ->
     let lower, lowertvars =
       if P.compat (p, Positive) then

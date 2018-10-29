@@ -764,7 +764,7 @@ end = struct
   and resolve_bounds ~env =
     let open Constraint in
     function
-    | Resolved t -> type__ ~env t
+    | Resolved t | FullyResolved t -> type__ ~env t
     | Unresolved bounds ->
       let ts = T.TypeMap.keys bounds.lower in
       mapM (type__ ~env) ts >>|

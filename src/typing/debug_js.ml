@@ -1371,11 +1371,12 @@ and json_of_root_impl json_cx root = Hh_json.(Constraint.(
 and json_of_constraints json_cx = check_depth json_of_constraints_impl json_cx
 and json_of_constraints_impl json_cx constraints = Hh_json.(
   JSON_Object (
+    let open Constraint in
     match constraints with
-    | Constraint.Resolved t ->
+    | Resolved t | FullyResolved t ->
       ["kind", JSON_String "Resolved"]
       @ ["type", _json_of_t json_cx t]
-    | Constraint.Unresolved bounds ->
+    | Unresolved bounds ->
       ["kind", JSON_String "Unresolved"]
       @ ["bounds", json_of_bounds json_cx bounds]
   )
@@ -2193,7 +2194,7 @@ and dump_tvar_ (depth, tvars) cx id =
   try
     match Context.find_tvar cx id with
     | Goto g -> spf "%d, Goto %d" id g
-    | Root { constraints = Resolved t; _ } ->
+    | Root { constraints = Resolved t | FullyResolved t; _ } ->
       spf "%d, Resolved %s" id (dump_t_ (depth-1, stack) cx t)
     | Root { constraints = Unresolved { lower; upper; _ }; _ } ->
       if lower = TypeMap.empty && upper = UseTypeMap.empty

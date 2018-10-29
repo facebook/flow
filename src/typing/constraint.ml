@@ -58,6 +58,7 @@ and root = {
 
 and constraints =
 | Resolved of Type.t
+| FullyResolved of Type.t
 | Unresolved of bounds
 
 (** The bounds structure carries the evolving constraints on the solution of an
