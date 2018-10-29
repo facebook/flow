@@ -439,6 +439,8 @@ let program (algo : diff_algorithm)
       try_ try1 try2
     | (_, TypeAlias t_alias1), (_, TypeAlias t_alias2) ->
       type_alias t_alias1 t_alias2
+    | (_, OpaqueType o_type1), (_, OpaqueType o_type2) ->
+      opaque_type o_type1 o_type2
     | _, _ ->
       None
     in
@@ -1421,6 +1423,19 @@ let program (algo : diff_algorithm)
     let t_params_diff = diff_if_changed_opt type_parameter_declaration t_params1 t_params2 in
     let right_diff = diff_if_changed type_ right1 right2 |> Option.return in
     join_diff_list [id_diff; t_params_diff; right_diff]
+
+  and opaque_type
+      (o_type1: (Loc.t, Loc.t) Ast.Statement.OpaqueType.t)
+      (o_type2: (Loc.t, Loc.t) Ast.Statement.OpaqueType.t)
+      : node change list option =
+    let open Ast.Statement.OpaqueType in
+    let { id = id1; tparams = t_params1; impltype = impltype1; supertype = supertype1} = o_type1 in
+    let { id = id2; tparams = t_params2; impltype = impltype2; supertype = supertype2} = o_type2 in
+    let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+    let t_params_diff = diff_if_changed_opt type_parameter_declaration t_params1 t_params2 in
+    let supertype_diff = diff_if_changed_nonopt_fn type_ supertype1 supertype2 in
+    let impltype_diff = diff_if_changed_nonopt_fn type_ impltype1 impltype2 in
+    join_diff_list [id_diff; t_params_diff; supertype_diff; impltype_diff]
 
   and type_parameter_declaration
       (pd1: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t)

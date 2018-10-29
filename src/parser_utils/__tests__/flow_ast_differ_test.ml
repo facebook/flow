@@ -1382,6 +1382,37 @@ let tests = "ast_differ" >::: [
     ~source ~expected:"type alias = string"
     ~mapper:(new useless_mapper)
   end;
+  "opaque_type_id" >:: begin fun ctxt ->
+    let source = "opaque type Rename = string" in
+    assert_edits_equal ctxt ~edits:[(12, 18), "GotRenamed"]
+    ~source ~expected:"opaque type GotRenamed = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "opaque_type_param" >:: begin fun ctxt ->
+    let source = "opaque type foo<RENAME> = string" in
+    assert_edits_equal ctxt ~edits:[(16, 22), "GOT_RENAMED"]
+    ~source ~expected:"opaque type foo<GOT_RENAMED> = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "opaque_type_impl" >:: begin fun ctxt ->
+    let source = "opaque type foo<A> = number" in
+    assert_edits_equal ctxt ~edits:[(21, 27), "string"]
+    ~source ~expected:"opaque type foo<A> = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "opaque_type_super" >:: begin fun ctxt ->
+    let source = "opaque type foo: number = string" in
+    assert_edits_equal ctxt ~edits:[(17, 23), "string"]
+    ~source ~expected:"opaque type foo: string = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "opaque_type_combo" >:: begin fun ctxt ->
+    let source = "opaque type Rename<RENAME>: number = number" in
+    assert_edits_equal ctxt ~edits:[((12, 18), "GotRenamed"); ((19, 25), "GOT_RENAMED");
+      ((28, 34), "string"); ((37, 43), "string")]
+    ~source ~expected:"opaque type GotRenamed<GOT_RENAMED>: string = string"
+    ~mapper:(new useless_mapper)
+  end;
   "call_insert" >:: begin fun ctxt ->
     let source = "callFunction(class A { f = (x: string) => x; });" in
     assert_edits_equal ctxt ~edits:[(24, 24), ": number"] ~source
