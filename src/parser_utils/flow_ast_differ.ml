@@ -319,7 +319,6 @@ let program (algo : diff_algorithm)
     recurse_into_changes diffs
   in
 
-
   (* Runs `list_diff` and then recurses into replacements (using `f`) to get more granular diffs.
      For inserts and deletes, it uses `trivial` to produce a Loc.t and a b for the change *)
   let diff_and_recurse (type a) (type b)
@@ -334,8 +333,16 @@ let program (algo : diff_algorithm)
     >>= recurse_into_diff f trivial old_list 0
   in
 
+  (* Same as diff_and_recurse but takes in a function `f` that doesn't return an option *)
+  let diff_and_recurse_nonopt (type a) (type b)
+      (f: a -> a -> b change list) =
+    diff_and_recurse (fun x y -> f x y |> Option.return) in
+
   (* diff_and_recurse for when there is no way to get a trivial transfomation from a to b*)
   let diff_and_recurse_no_trivial f = diff_and_recurse f (fun _ -> None) in
+
+  let diff_and_recurse_nonopt_no_trivial f =
+    diff_and_recurse_nonopt f (fun _ -> None) in
 
   let join_diff_list = Some [] |> List.fold_left (Option.map2 ~f:List.append) in
 
@@ -383,7 +390,7 @@ let program (algo : diff_algorithm)
 
   and statement_list (stmts1: (Loc.t, Loc.t) Ast.Statement.t list) (stmts2: (Loc.t, Loc.t) Ast.Statement.t list)
       : node change list option =
-    diff_and_recurse (fun x y -> Some (statement x y))
+    diff_and_recurse_nonopt statement
       (fun s -> Some (Ast_utils.loc_of_statement s, Statement s)) stmts1 stmts2
 
   and statement (stmt1: (Loc.t, Loc.t) Ast.Statement.t) (stmt2: (Loc.t, Loc.t) Ast.Statement.t)
@@ -751,8 +758,7 @@ let program (algo : diff_algorithm)
     let { quasis = quasis1; expressions = exprs1 } = t_lit1 in
     let { quasis = quasis2; expressions = exprs2 } = t_lit2 in
     let quasis_diff = diff_and_recurse_no_trivial template_literal_element quasis1 quasis2 in
-    let exprs_diff = diff_and_recurse_no_trivial
-      (fun x y -> expression x y |> Option.return) exprs1 exprs2 in
+    let exprs_diff = diff_and_recurse_nonopt_no_trivial expression exprs1 exprs2 in
     let result = join_diff_list [quasis_diff; exprs_diff] in
     Option.value result
       ~default:[(loc, Replace (TemplateLiteral t_lit1, TemplateLiteral t_lit2))]
@@ -782,8 +788,7 @@ let program (algo : diff_algorithm)
     let opening_diff =
       diff_if_changed_ret_opt jsx_opening_element open_elem1 open_elem2 in
     let children_diff =
-      diff_and_recurse_no_trivial
-        (fun x y -> jsx_child x y |> Option.return) children1 children2 in
+      diff_and_recurse_nonopt_no_trivial jsx_child children1 children2 in
     let closing_diff =
       diff_if_changed_opt jsx_closing_element close_elem1 close_elem2 in
     join_diff_list [opening_diff; children_diff; closing_diff]
@@ -801,8 +806,7 @@ let program (algo : diff_algorithm)
     let { frag_openingElement = _;
           frag_children = children2;
           frag_closingElement = _} = frag2 in
-    diff_and_recurse_no_trivial
-      (fun x y -> jsx_child x y |> Option.return) children1 children2
+    diff_and_recurse_nonopt_no_trivial jsx_child children1 children2
 
   and jsx_opening_element
       (elem1: (Loc.t, Loc.t) Ast.JSX.Opening.t)
@@ -1407,8 +1411,7 @@ let program (algo : diff_algorithm)
       : node change list option =
     let _, t_params1 = pd1 in
     let _, t_params2 = pd2 in
-    diff_and_recurse_no_trivial
-       (fun x y -> type_parameter_declaration_type_param x y |> Option.return)
+    diff_and_recurse_nonopt_no_trivial type_parameter_declaration_type_param
        t_params1 t_params2
 
   and type_parameter_declaration_type_param
