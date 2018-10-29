@@ -3029,17 +3029,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* cases where there is no loss of precision *)
 
-    (** Optimization where an union is a subset of another. Equality modulo
+    (* Optimization where an union is a subset of another. Equality modulo
         reasons is important for this optimization to be effective, since types
-        are repositioned everywhere.
+        are repositioned everywhere. *)
 
-        TODO: (1) Define a more general partial equality, that takes into
+    (** TODO: (1) Define a more general partial equality, that takes into
         account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
     | DefT (_, UnionT rep1), UseT (_, DefT (_, UnionT rep2)) when
-        let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
-        Type_mapper.union_flatten cx @@ UnionRep.members rep1 |> List.for_all (fun t1 ->
-          List.exists (TypeUtil.quick_subtype t1) ts2
-        ) ->
+       (* Try n log n check before n^2 check *)
+        begin match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
+          | Some enums1, Some enums2 ->
+              EnumSet.for_all (fun t1 -> EnumSet.mem t1 enums2) enums1
+          | _, _ ->
+              let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
+              Type_mapper.union_flatten cx @@ UnionRep.members rep1
+              |> List.for_all (fun t1 -> List.exists (TypeUtil.quick_subtype t1) ts2)
+        end ->
       ()
 
     (* Optimization to treat maybe and optional types as special unions for subset comparision *)
