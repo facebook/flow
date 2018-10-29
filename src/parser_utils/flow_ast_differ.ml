@@ -950,9 +950,8 @@ let program (algo : diff_algorithm)
           diff_if_changed_ret_opt jsx_fragment frag1 frag2
         | ExpressionContainer expr1, ExpressionContainer expr2 ->
           diff_if_changed_ret_opt jsx_expression expr1 expr2
-        | SpreadChild _expr1, SpreadChild _expr2 ->
-          (* TODO: (aycheng) T35433521 Flow AST Differ: Recurse into Spread and SpreadChild *)
-          (* Some (diff_if_changed expression expr1 expr2) *) None
+        | SpreadChild expr1, SpreadChild expr2 ->
+          diff_if_changed expression expr1 expr2 |> Option.return
         | Text _, Text _ -> None
         | _ -> None in
       Option.value changes ~default:[(old_loc, Replace (JSXChild child1, JSXChild child2))]
@@ -1116,9 +1115,18 @@ let program (algo : diff_algorithm)
     match expr1, expr2 with
     | Ast.Expression.Expression e1, Ast.Expression.Expression e2 ->
       Some (diff_if_changed expression e1 e2)
-    (* TODO(festevezga) recurse into spreads *)
-    | Ast.Expression.Spread _, Ast.Expression.Spread _
+    | Ast.Expression.Spread spread1, Ast.Expression.Spread spread2 ->
+      Some (diff_if_changed spread_element spread1 spread2)
     | _, _ -> None
+
+  and spread_element
+      (spread1: (Loc.t, Loc.t) Ast.Expression.SpreadElement.t)
+      (spread2: (Loc.t, Loc.t) Ast.Expression.SpreadElement.t)
+      : node change list =
+    let open Ast.Expression.SpreadElement in
+    let _, { argument = arg1 } = spread1 in
+    let _, { argument = arg2 } = spread2 in
+    diff_if_changed expression arg1 arg2
 
   and logical expr1 expr2 =
     let open Ast.Expression.Logical in

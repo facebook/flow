@@ -1076,6 +1076,12 @@ let tests = "ast_differ" >::: [
     ~expected:"import 'baz';"
     ~mapper:(new delete_end_mapper)
   end;
+  "spread_simple" >:: begin fun ctxt ->
+    let source = "[...rename]" in
+    assert_edits_equal ctxt ~edits:[(4, 10), "gotRenamed"] ~source
+      ~expected:"[...gotRenamed]"
+      ~mapper:(new useless_mapper)
+  end;
   "tagged_template_tag" >:: begin fun ctxt ->
     let source = "rename`dontRename`" in
     assert_edits_equal ctxt ~edits:[(0, 6), "gotRenamed"] ~source
@@ -1240,6 +1246,12 @@ let tests = "ast_differ" >::: [
     let source = "<div>{rename}</div>" in
     assert_edits_equal ctxt ~edits:[(6, 12), "gotRenamed"]
     ~source ~expected:"<div>{gotRenamed}</div>"
+    ~mapper:(new useless_mapper)
+  end;
+  "jsx_element_child_spread" >:: begin fun ctxt ->
+    let source = "<div>{...rename}</div>" in
+    assert_edits_equal ctxt ~edits:[(9, 15), "gotRenamed"]
+    ~source ~expected:"<div>{...gotRenamed}</div>"
     ~mapper:(new useless_mapper)
   end;
   "jsx_element_child_text" >:: begin fun ctxt ->
