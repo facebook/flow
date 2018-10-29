@@ -106,8 +106,11 @@ class ['a] t = object(self)
   | ThisClassT (_, t) -> self#type_ cx pole acc t
 
   | ThisTypeAppT (_, t, this, ts_opt) ->
-    let acc = self#type_ cx pole acc t in
+    let acc = self#type_ cx Positive acc t in
     let acc = self#type_ cx pole acc this in
+    (* If we knew what `t` resolved to, we could determine the polarities for
+       `ts`, but in general `t` might be unresolved. Subclasses which have more
+       information should override this to be more specific. *)
     let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc ts_opt in
     acc
 
