@@ -7216,6 +7216,7 @@ and any_propagated_use cx trace use_op any = function
   | KeysT _ -> (* Keys cannot be tainted by any *)
       true
 
+  | DefT (_, ClassT t)
   | DefT (_, ArrT (ROArrayAT t)) ->
       rec_flow_t cx trace ~use_op (t, any);
       true
