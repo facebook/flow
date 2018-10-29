@@ -415,97 +415,6 @@ and resolve_merged_t cx uses =
   | [x] -> x
   | x::y::ts -> create_intersection (InterRep.make x y ts)
 
-(** The following functions do "shallow" walks over types, respectively from
-    requires and from exports, in order to report missing annotations. There are
-    some opportunities for future work:
-
-    - Rewrite these functions using a type visitor class.
-
-    - Consider using gc to crawl the graph further down from requires, and
-    maybe also up from exports. Preliminary experiments along those lines
-    suggest that a general walk doesn't always give expected results. As an
-    example in one direction, the signature of a class is reachable from a
-    `require`d superclass, but the corresponding constraint simply checks for
-    consistency of overrides, and should not relax reporting missing annotations
-    in the signature. As an example in the other direction, an exported function
-    may have an open `this` type that we cannot expect to be annotated.
-**)
-
-(* To avoid complaining about "missing" annotations where external types are
-   used in the exported type, we mark requires and their uses as types. *)
-
-(* TODO: All said and done, this strategy to avoid complaining about missing
-   annotations that depend on requires is a hack intended to achieve the ideal
-   of being able to "look up" annotations in required modules, when they're
-   already provided. The latter should be possible if we switch reporting
-   missing annotations from early (during the "infer" phase) to late (during
-   the "merge" phase). *)
-
-let rec assume_ground cx ?(depth=1) ids t =
-  begin match Context.verbose cx with
-  | Some { Verbose.depth = verbose_depth; indent; enabled_during_flowlib=_; } ->
-    let pid = Context.pid_prefix cx in
-    let indent = String.make ((depth - 1) * indent) ' ' in
-    prerr_endlinef "\n%s%sassume_ground: %s"
-      indent pid (Debug_js.dump_use_t cx ~depth:verbose_depth t)
-  | None -> ()
-  end;
-  begin match t with
-  | UseT (_, OpenT(_,id)) ->
-    assume_ground_id ~depth:(depth + 1) cx ids id
-
-  (** The subset of operations to crawl. The type variables denoting the
-      results of these operations would be ignored by the is_required check in
-     `assert_ground`.
-
-     These are intended to be exactly the operations that might be involved
-     when extracting (parts of) requires/imports. As such, they need to be
-     kept in sync as module system conventions evolve. *)
-
-  | ReposLowerT (_, _, use_t) ->
-    assume_ground cx ~depth:(depth + 1) ids use_t
-
-  | ImportModuleNsT (_, t, _)
-  | CJSRequireT (_, t, _)
-  | ImportTypeT (_, _, t)
-  | ImportTypeofT (_, _, t)
-
-  (** Other common operations that might happen immediately after extracting
-      (parts of) requires/imports. *)
-
-  | GetPropT (_, _, _, t)
-  | CallT (_, _, { call_tout = t; _ })
-  | MethodT (_, _, _, _, { call_tout = t; _ }, _)
-  | ConstructorT (_, _, _, _, t) ->
-    assume_ground cx ~depth:(depth + 1) ids (UseT (unknown_use, t))
-
-  | _ -> ()
-  end;
-  if Context.is_verbose cx then
-    let pid = Context.pid_prefix cx in
-    if depth = 1 then
-      prerr_endlinef "\n%sAssumed ground: %s"
-        pid
-        (!ids |> ISet.elements |> List.map string_of_int |> String.concat ", ")
-
-and assume_ground_id cx ~depth ids_ref id =
-  let root_id, constraints = Context.find_constraints cx id in
-  let ids = !ids_ref in
-  let ids' = ISet.add root_id ids in
-  if ids' != ids then (
-    ids_ref := ids';
-    match constraints with
-    | Unresolved { upper; uppertvars; _ } ->
-      upper |> UseTypeMap.iter (fun t _ ->
-        assume_ground cx ~depth ids_ref t
-      );
-      uppertvars |> IMap.iter (fun id _ ->
-        assume_ground_id cx ~depth ids_ref id
-      )
-    | Resolved _ | FullyResolved _ ->
-      ()
-  )
-
 (**************)
 (* builtins *)
 (**************)
@@ -4269,7 +4178,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let loc_tapp = def_aloc_of_reason (reason_of_t call_tout) in
       let desc_tapp = desc_of_reason (reason_of_t call_tout) in
       let spec = extract_non_spread cx ~trace arg1 in
-      let mk_tvar f = Tvar.mk cx (f reason_op) in
+      let mk_tvar f = Tvar.mk cx (f reason_op |> derivable_reason) in
       let knot = { React.CreateClass.
         this = mk_tvar (replace_reason_const RThisType);
         static = mk_tvar (replace_reason_const RThisType);
@@ -12375,9 +12284,23 @@ class type_finder t = object (_self)
     | t' -> (t = t') || super#type_ cx pole found t
 end
 
+(* Given a type, report missing annotation errors if
+
+   - the given type is a tvar whose id isn't explicitly specified in the given
+   skip set, or isn't explicitly marked as derivable, or if
+
+   - the tvar appears in a negative position
+
+   Type variables that are in the skip set are marked in assume_ground as
+   depending on `require`d modules. Thus, e.g., when the superclass of an
+   exported class is `require`d, we should not insist on an annotation for the
+   superclass.
+*)
+(* need to consider only "def" types *)
+
 module Marked = Marked.IdMarked
 
-class assert_ground_visitor skip r context = object (self)
+class assert_ground_visitor r ~max_reasons = object (self)
   inherit [Marked.t] Type_visitor.t as super
 
   (* Track prop maps which correspond to object literals. We don't ask for
@@ -12393,7 +12316,6 @@ class assert_ground_visitor skip r context = object (self)
 
   val depth = ref 0
   val reason_stack = ref (Nel.one r)
-  val max_reasons = Context.max_trace_depth context
 
   method private push_frame r =
     incr depth;
@@ -12422,11 +12344,15 @@ class assert_ground_visitor skip r context = object (self)
     match desc_of_reason r with
     (* No possible annotation for `this` type. *)
     | RThis -> true
+    (* Treat * as an annotation, even though it is inferred, because the
+       resulting errors are confusing and have unpredictable locations. *-types
+       are already deprecated, and this wart will go away entirely when we
+       finally remove support. *)
+    | RExistential -> true
     | _ -> false
 
   method private derivable_reason r =
     match desc_of_reason r with
-    | RExistential -> true
     | RShadowProperty _ -> true
     | _ -> is_derivable_reason r
 
@@ -12435,29 +12361,41 @@ class assert_ground_visitor skip r context = object (self)
     if id != root_id
     then self#tvar cx pole seen r root_id
     else
-      if ISet.mem id skip then seen else
       if self#skip_reason r then seen else
       let pole = if self#derivable_reason r then Positive else pole in
-      match Marked.add id pole seen with
+      (* TODO: clean up the match pole below. Visiting a tvar with a negative
+         polarity will add an error and resolve the tvar to any. We don't need
+         to also walk the positive edge of the tvar. This behavior is a bit
+         different from what the Marked module provides, but treating negative
+         as neutral gives the correct behavior. *)
+      match Marked.add id (match pole with Negative -> Neutral | _ -> pole) seen with
       | None -> seen
       | Some (pole, seen) ->
-        if Polarity.compat (pole, Negative)
-        then (
+        match pole with
+        | Neutral | Negative ->
           unify_opt cx ~unify_any:true (OpenT (r, id)) Locationless.AnyT.t;
           let trace_reasons = if max_reasons = 0
              then []
              else List.map (fun reason ->
                  repos_reason (def_aloc_of_reason reason |> ALoc.to_loc) reason)
                (Nel.to_list !reason_stack) in
-          add_output cx (FlowError.EMissingAnnotation (r, trace_reasons))
-        );
-        if Polarity.compat (pole, Positive)
-        then begin match constraints with
-        (* TODO: ok to skip fully resolved tvars? *)
-        | Resolved t | FullyResolved t -> self#type_ cx Positive seen t
-        | Unresolved { lower; _ } ->
-          TypeMap.fold (fun t _ seen -> self#type_ cx Positive seen t) lower seen
-        end else seen
+          add_output cx (FlowError.EMissingAnnotation (r, trace_reasons));
+          seen
+        | Positive ->
+          match constraints with
+          | FullyResolved _ ->
+            (* A fully resolved node corresponds to either (a) a tvar imported
+               from a dependency, which has already gone through assert_ground
+               or (b) a tvar corresponding to an annotation in this file which
+               certainly does not contain unresolved tvars.
+
+               In either case, it is not necessary to visit the structure of the
+               resolved type, as we will not find anything to complain about. *)
+            seen
+          | Resolved t ->
+            self#type_ cx Positive seen t
+          | Unresolved { lower; _ } ->
+            TypeMap.fold (fun t _ seen -> self#type_ cx Positive seen t) lower seen
 
   method! type_ cx pole seen t =
     Option.iter ~f:(fun { Verbose.depth = verbose_depth; indent; enabled_during_flowlib=_; } ->
@@ -12623,21 +12561,11 @@ class assert_ground_visitor skip r context = object (self)
 end
 
 let enforce_strict cx t =
-  (* First, compute a set of ids to be skipped by calling `assume_ground`. After
-     the call, skip_ids contains precisely those ids that correspond to
-     requires/imports. *)
-  let skip_ids = ref ISet.empty in
-  LocMap.iter (fun _ tvar ->
-    assume_ground cx skip_ids (UseT (unknown_use, tvar))
-  ) (Context.require_map cx);
-
-  (* With the computed skip_ids, call `assert_ground` to force annotations while
-     walking the graph starting from id. Typically, id corresponds to
-     exports. *)
-  let seen =
-    let visitor = new assert_ground_visitor !skip_ids (reason_of_t t) cx in
-    visitor#type_ cx Positive Marked.empty t
+  let visitor =
+    new assert_ground_visitor (reason_of_t t)
+      ~max_reasons:(Context.max_trace_depth cx)
   in
+  let seen = visitor#type_ cx Positive Marked.empty t in
   ignore (seen: Marked.t)
 
 (* Would rather this live elsewhere, but here because module DAG. *)

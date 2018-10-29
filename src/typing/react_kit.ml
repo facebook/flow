@@ -880,6 +880,12 @@ let run cx trace ~use_op reason_op l u
         | "displayName"
         | "getDefaultProps"
         | "propTypes" ->
+          let v = match Property.read_t v with
+          | None -> v
+          | Some t ->
+            let loc = Property.read_loc v in
+            Field (loc, t, Positive)
+          in
           props, SMap.add k v static_props
 
         (* Don't autobind ReactClassInterface props, like getInitialState.
@@ -963,7 +969,7 @@ let run cx trace ~use_op reason_op l u
         own_props = Context.make_property_map cx props;
         proto_props = Context.make_property_map cx SMap.empty;
         initialized_fields = SSet.empty;
-        initialized_static_fields = SSet.empty;
+        initialized_static_fields = SSet.singleton "propTypes";
         inst_call_t = None;
         has_unknown_react_mixins = spec.unknown_mixins <> [];
         structural = false;

@@ -240,7 +240,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
         wrap (Type.desc_of_t t)
     )
   in
-  List.iter (fun (cx, _typed_ast) ->
+  List.iter (fun cx ->
     let file = Context.file cx in
     let type_table = Context.type_table cx in
     let targs_map = Type_table.targs_hashtbl type_table in
@@ -248,6 +248,13 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
     Utils_js.LocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
   ) cxs
+
+let force_annotations leader_cx other_cxs =
+  List.iter (fun cx ->
+    Context.module_ref cx
+    |> Flow_js.lookup_module leader_cx
+    |> Flow_js.enforce_strict leader_cx
+  ) (leader_cx::other_cxs)
 
 let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
   let open Context in
@@ -325,7 +332,9 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
 
   let init_gc_state = if do_gc then Some (Gc_js.init ~master_cx) else None in
 
-  let rev_cxs, impl_cxs, _ = Nel.fold_left (fun (cxs, impl_cxs, gc_state) filename ->
+  let rev_cxs, rev_tasts, impl_cxs, _ =
+    Nel.fold_left (fun (cxs, tasts, impl_cxs, gc_state) filename ->
+
     (* create cx *)
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
@@ -350,7 +359,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
         ) strict_mode lint_severities
       else lint_severities in
     let file_sig = FilenameMap.find_unsafe filename file_sigs in
-    let typed_ast =
+    let tast =
       Type_inference_js.infer_ast cx filename ast
         ~lint_severities ~file_options ~file_sig
     in
@@ -361,11 +370,12 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
       gc_state
     ) in
 
-    (cx, typed_ast)::cxs, FilenameMap.add filename cx impl_cxs, gc_state
-  ) ([], FilenameMap.empty, init_gc_state) component in
+    cx::cxs, tast::tasts, FilenameMap.add filename cx impl_cxs, gc_state
+  ) ([], [], FilenameMap.empty, init_gc_state) component in
   let cxs = List.rev rev_cxs in
+  let tasts = List.rev rev_tasts in
 
-  let (cx, typed_ast), other_cxs = List.hd cxs, List.tl cxs in
+  let cx, other_cxs = List.hd cxs, List.tl cxs in
 
   Flow_js.Cache.clear();
 
@@ -426,7 +436,11 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_unnecessary_invariants cx;
   detect_invalid_type_assert_calls ~full_cx:cx file_sigs cxs;
 
-  (cx, typed_ast), other_cxs
+  force_annotations cx other_cxs;
+
+  match List.combine cxs tasts with
+  | [] -> failwith "there is at least one cx"
+  | x::xs -> x, xs
 
 let merge_tvar =
   let open Type in
