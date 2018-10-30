@@ -96,7 +96,7 @@ let type_ ?(size=5000) t =
       type_intersection ~depth (t1::t2::ts)
     | ClassDecl (n, ps) -> class_decl ~depth n ps
     | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
-    | ClassUtil s -> class_util ~depth s
+    | Utility s -> utility ~depth s
     | Tup ts ->
       list
         ~wrap:(Atom "[", Atom "]")
@@ -106,7 +106,6 @@ let type_ ?(size=5000) t =
     | StrLit raw -> fuse (in_quotes raw)
     | NumLit raw -> Atom raw
     | BoolLit value -> Atom (if value then "true" else "false")
-    | Exists -> Atom "*"
     | TypeAlias ta -> type_alias ta
     | TypeOf { name; _ } -> fuse [Atom "typeof"; space; identifier name]
     | Module { name; _ } -> fuse [Atom "module"; space; identifier name]
@@ -316,8 +315,10 @@ let type_ ?(size=5000) t =
     option (type_parameter ~depth) typeParameters;
   ]
 
-  and class_util ~depth t =
-    type_generic ~depth (identifier "Class") (Some [t])
+  and utility ~depth u =
+    let ctor = Ty.string_of_utility_ctor u in
+    let ts = Ty.types_of_utility u in
+    type_generic ~depth (identifier ctor) ts
 
   and type_parameter ~depth params =
     list

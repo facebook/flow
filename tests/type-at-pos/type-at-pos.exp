@@ -5024,13 +5024,16 @@ type-utils.js:5:13 {
 }
 type-utils.js:6:13 {
   "expanded_type":{
-    "kind":"ClassUtil",
-    "type":{
-      "kind":"Generic",
-      "typeArgs":[{"kind":"Num"}],
-      "type":{"provenance":{"kind":"Local","loc":"type-utils.js:3:15"},"name":"C"},
-      "structural":false
-    }
+    "kind":"Utility",
+    "kind":"Class",
+    "typeArgs":[
+      {
+        "kind":"Generic",
+        "typeArgs":[{"kind":"Num"}],
+        "type":{"provenance":{"kind":"Local","loc":"type-utils.js:3:15"},"name":"C"},
+        "structural":false
+      }
+    ]
   },
   "type":"Class<C<number>>",
   "reasons":[],

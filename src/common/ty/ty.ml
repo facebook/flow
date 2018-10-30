@@ -29,8 +29,7 @@ type t =
   | TypeOf of symbol
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
-  | ClassUtil of t
-  | Exists
+  | Utility of utility
   | Module of symbol
   | Mu of int * t
 
@@ -96,6 +95,27 @@ and type_param = {
 }
 
 and opt = bool
+
+(* https://flow.org/en/docs/types/utilities/ *)
+and utility =
+  | Keys of t
+  | Values of t
+  | ReadOnly of t
+  | Exact of t
+  | Diff of t * t
+  | Rest of t * t
+  | PropertyType of t * t
+  | ElementType of t * t
+  | NonMaybeType of t
+  | ObjMap of t * t
+  | ObjMapi of t * t
+  | TupleMap of t * t
+  | Call of t * t list
+  | Class of t
+  | Shape of t
+  | Supertype of t
+  | Subtype of t
+  | Exists
 
 and polarity = Positive | Negative | Neutral
 [@@deriving visitors {
@@ -182,17 +202,17 @@ let rec mk_exact ty =
     let ta_type = Option.map ~f:mk_exact a.ta_type in
     TypeAlias { a with ta_type }
   | Mu (i, t) -> Mu (i, mk_exact t)
-  (* Do not nest $Exact *)
-  | Generic ({ provenance = Builtin; name = "$Exact"; _ }, _, Some [_]) -> ty
   (* Not applicable *)
   | Any | AnyObj | AnyFun | Top | Bot | Void | Null
   | Num | Str | Bool | NumLit _ | StrLit _ | BoolLit _
   | Fun _ | Arr _ | Tup _ -> ty
+  (* Do not nest $Exact *)
+  | Utility (Exact _) -> ty
   (* Wrap in $Exact<...> *)
   | Generic _ | TVar _ | Bound _ | Union _ | Inter _
-  | TypeOf _ | ClassDecl _ | InterfaceDecl _ | ClassUtil _
-  | Exists | Module _ ->
-    generic_builtin_t "$Exact" [ty]
+  | TypeOf _ | ClassDecl _ | InterfaceDecl _
+  | Utility _ | Module _ ->
+    Utility (Exact ty)
 
 let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }
@@ -207,3 +227,43 @@ let string_of_provenance_ctor = function
 let string_of_symbol { provenance; loc; name; _ } =
   Utils_js.spf "%s (%s:%s)" name (string_of_provenance_ctor provenance)
     (Reason.string_of_loc loc)
+
+let string_of_utility_ctor = function
+  | Keys _ -> "$Keys"
+  | Values _ -> "$Values"
+  | ReadOnly _ -> "$ReadOnly"
+  | Exact _ -> "$Exact"
+  | Diff _ -> "$Diff"
+  | Rest _ -> "$Rest"
+  | PropertyType _ -> "$PropertyType"
+  | ElementType _ -> "$ElementType"
+  | NonMaybeType _ -> "$NonMaybeType"
+  | ObjMap _ -> "$ObjMap"
+  | ObjMapi _ -> "$ObjMapi"
+  | TupleMap _ -> "$TupleMap"
+  | Call _ -> "$Call"
+  | Class _ -> "Class"
+  | Shape _ -> "$Shape"
+  | Supertype _ -> "$Supertype"
+  | Subtype _ -> "$Subtype"
+  | Exists -> "*"
+
+let types_of_utility = function
+  | Keys t -> Some [t]
+  | Values t -> Some [t]
+  | ReadOnly t -> Some [t]
+  | Exact t -> Some [t]
+  | Diff (t1, t2) -> Some [t1; t2]
+  | Rest (t1, t2) -> Some [t1; t2]
+  | PropertyType (t1, t2) -> Some [t1; t2]
+  | ElementType (t1, t2) -> Some [t1; t2]
+  | NonMaybeType t -> Some [t]
+  | ObjMap (t1, t2) -> Some [t1; t2]
+  | ObjMapi (t1, t2) -> Some [t1; t2]
+  | TupleMap (t1, t2) -> Some [t1; t2]
+  | Call (t, ts) -> Some (t::ts)
+  | Class t -> Some [t]
+  | Shape t -> Some [t]
+  | Supertype t -> Some [t]
+  | Subtype t -> Some [t]
+  | Exists -> None

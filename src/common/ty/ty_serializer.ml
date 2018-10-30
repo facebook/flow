@@ -26,7 +26,7 @@ let id_from_symbol x =
   then Error (Utils_js.spf "Cannot output anonymous elements.")
   else Ok (id_from_string name)
 
-let builtin_from_id ?targs x =
+let mk_generic x targs =
   Loc.none, T.Generic {
     T.Generic.
     id = T.Generic.Identifier.Unqualified x;
@@ -34,10 +34,12 @@ let builtin_from_id ?targs x =
   }
 
 let builtin_from_symbol x =
-  id_from_symbol x >>| builtin_from_id ?targs:None
+  id_from_symbol x >>| fun x ->
+  mk_generic x None
 
 let builtin_from_string ?targs x =
-  id_from_string x |> builtin_from_id ?targs
+  let x = id_from_string x in
+  mk_generic x targs
 
 let tvar (RVar _) = Error "Unsupported recursive variables."
 
@@ -72,12 +74,11 @@ let rec type_ t =
   | Union (t0, t1, ts) as t -> union t (t0,t1,ts)
   | Inter (t0, t1, ts) -> intersection (t0,t1,ts)
   | ClassDecl (s, _) -> class_decl s
-  | ClassUtil s -> class_util s
+  | Utility s -> utility s
 
   | InterfaceDecl _
   | TypeOf _
   | TypeAlias _
-  | Exists
   | Mu _
   | Module _
     ->
@@ -294,13 +295,11 @@ and class_decl name =
   generic name None >>| fun name ->
   (Loc.none, T.Typeof name)
 
-and class_util t =
-  let id = id_from_string "Class" in
-  type_ t >>| fun t ->
-  (Loc.none, T.Generic {
-    T.Generic.
-    id = T.Generic.Identifier.Unqualified id;
-    targs = Some (Loc.none, [t]);
-  })
+and utility u =
+  let ctor = Ty.string_of_utility_ctor u in
+  let ts = Ty.types_of_utility u in
+  let id = id_from_string ctor in
+  opt type_arguments ts >>| fun ts ->
+  mk_generic id ts
 
 and annotation t = type_ t >>| fun t -> (Loc.none, t)

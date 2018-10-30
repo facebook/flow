@@ -111,6 +111,15 @@ and dump_symbol { provenance; loc; name; _ } =
   spf "(%s, %s) %s" (Ty.string_of_provenance_ctor provenance)
     (Reason.string_of_loc loc) name
 
+and dump_utility ~depth u =
+  let ctor = Ty.string_of_utility_ctor u in
+  match Ty.types_of_utility u with
+  | Some ts ->
+    List.map (dump_t ~depth) ts |>
+    String.concat ", " |>
+    spf "%s (%s)" ctor
+  | None -> ctor
+
 and dump_t ?(depth = 10) t =
   if depth < 0 then "..." else
   let depth = depth - 1 in
@@ -153,12 +162,11 @@ and dump_t ?(depth = 10) t =
     spf "Typeof(%s)" (dump_symbol n)
   | Module n ->
     spf "Module(%s)" (dump_symbol n)
-  | Exists -> "*"
   | ClassDecl (name, ps) ->
     spf "Class (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
   | InterfaceDecl (name, ps) ->
     spf "Interface (name=%s, params= %s)" (dump_symbol name) (dump_type_params ~depth ps)
-  | ClassUtil s -> spf "ClassUtil (%s)" (dump_t ~depth s)
+  | Utility u -> dump_utility ~depth u
   | Mu (i, t) -> spf "Mu (%d, %s)" i (dump_t ~depth t)
 
 let dump_binding (v, ty) =
@@ -198,8 +206,7 @@ let string_of_ctor = function
   | TypeOf _ -> "Typeof"
   | ClassDecl _ -> "ClassDecl"
   | InterfaceDecl _ -> "InterfaceDecl"
-  | ClassUtil _ -> "ClassUtil"
-  | Exists -> "Exists"
+  | Utility _ -> "Utility"
   | Module _ -> "Module"
   | Mu _ -> "Mu"
 
@@ -282,10 +289,7 @@ let json_of_t ~strip_root =
         "name", json_of_symbol name;
         "typeParams", json_of_type_params tparams;
       ]
-    | ClassUtil s -> [
-        "type", json_of_t s;
-      ]
-    | Exists -> []
+    | Utility u -> json_of_utility u
     | Mu (i, t) -> [
         "mu_var", int_ i;
         "type", json_of_t t;
@@ -404,5 +408,11 @@ let json_of_t ~strip_root =
         "type", json_of_t t;
       ]
   ))
+
+  and json_of_utility u = Hh_json.(
+    let ctor = Ty.string_of_utility_ctor u in
+    let ts = json_of_targs (Ty.types_of_utility u) in
+    ("kind", JSON_String ctor) :: ts
+  )
 
   in fun t -> json_of_t t

@@ -653,11 +653,11 @@ end = struct
     | InternalT i -> internal_t ~env t i
     | MatchingPropT _ -> return Ty.Bot
     | AnyWithUpperBoundT t ->
-      type__ ~env t >>| fun ty ->
-      Ty.generic_builtin_t "$Subtype" [ty]
+      type__ ~env t >>| fun t ->
+      Ty.Utility (Ty.Subtype t)
     | AnyWithLowerBoundT t ->
-      type__ ~env t >>| fun ty ->
-      Ty.generic_builtin_t "$Supertype" [ty]
+      type__ ~env t >>| fun t ->
+      Ty.Utility (Ty.Supertype t)
     | DefT (_, MixedT _) -> return Ty.Top
     | DefT (_, AnyT) -> return Ty.Any
     | DefT (_, AnyObjT) -> return Ty.AnyObj
@@ -702,15 +702,15 @@ end = struct
     | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
     | KeysT (_, t) ->
       type__ ~env t >>| fun ty ->
-      Ty.generic_builtin_t "$Keys" [ty]
+      Ty.Utility (Ty.Keys ty)
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t -> type__ ~env t
     | TypeDestructorTriggerT _ -> return Ty.Bot
     | MergedT (_, uses) -> merged_t ~env uses
-    | ExistsT _ -> return Ty.Exists
     | ObjProtoT _ -> return (Ty.builtin_t "Object.prototype")
     | FunProtoT _ -> return (Ty.builtin_t "Function.prototype")
+    | ExistsT _ -> return (Ty.Utility Ty.Exists)
     | OpenPredT (_, t, _, _) -> type__ ~env t
 
     | FunProtoApplyT _ ->
@@ -959,17 +959,16 @@ end = struct
          * then this is a `Class<T>` with an instance T. *)
         begin match ps with
           | Some _ -> return (Ty.ClassDecl (name, ps))
-          | None -> return (Ty.ClassUtil ty)
+          | None -> return (Ty.Utility (Ty.Class ty))
         end
-      | Ty.ClassUtil _
+      | Ty.Utility (Ty.Class _ | Ty.Exists)
       | Ty.Bot
-      | Ty.Exists
       | Ty.Any
       | Ty.AnyObj
       | Ty.Top
       | Ty.Union _
       | Ty.Inter _ ->
-        return (Ty.ClassUtil ty)
+        return (Ty.Utility (Ty.Class ty))
       | Ty.Bound (Ty.{ loc; name = bname; _ }) ->
         let pred Type.{ name; reason; _ } = (
           name = bname &&
@@ -1099,7 +1098,7 @@ end = struct
       (* "Fix" type application on recursive types *)
       | Ty.TVar (Ty.RVar v, None) ->
         return (Ty.TVar (Ty.RVar v, targs))
-      | Ty.ClassUtil _ as ty when Option.is_none targs ->
+      | Ty.Utility (Ty.Class _) as ty when Option.is_none targs ->
         return ty
       | ty ->
         terr ~kind:BadTypeApp ~msg:(Ty_debug.string_of_ctor ty) None
@@ -1417,30 +1416,36 @@ end = struct
       type__ ~env t >>= fun ty ->
       mk_spread t target prefix_tys ty
 
-  and named_type_destructor_t =
-    let open Type in
-    let from_name ~env n ts =
-      mapM (type__ ~env) ts >>| Ty.generic_builtin_t n
-    in
-    fun ~env t -> function
-    | NonMaybeType -> from_name ~env "$NonMaybeType" [t]
-    | ReadOnlyType -> from_name ~env "$ReadOnlyType" [t]
-    | ValuesType -> from_name ~env "$Values" [t]
-    | ElementType t' -> from_name ~env "$ElementType" [t; t']
-    | CallType ts -> from_name ~env "$Call" (t::ts)
-    | ReactElementPropsType -> from_name ~env "React$ElementProps" [t]
-    | ReactElementConfigType -> from_name ~env "React$ElementConfig" [t]
-    | ReactElementRefType -> from_name ~env "React$ElementRef" [t]
-    | PropertyType k ->
-      let r = mk_reason (RStringLit k) (Loc.none |> ALoc.of_loc) in
-      from_name ~env "$PropertyType" [t; DefT (r, SingletonStrT k)]
-    | TypeMap (ObjectMap t') -> from_name ~env "$ObjMap" [t; t']
-    | TypeMap (ObjectMapi t') -> from_name ~env "$ObjMapi" [t; t']
-    | TypeMap (TupleMap t') -> from_name ~env "$TupleMap" [t; t']
-    | RestType (Object.Rest.Sound, t') -> from_name ~env "$Rest" [t; t']
-    | RestType (Object.Rest.IgnoreExactAndOwn, t') -> from_name ~env "$Diff" [t; t']
-    | SpreadType (target, ts) -> spread ~env t target ts
-    | (RestType (Object.Rest.ReactConfigMerge, _) | Bind _) as d ->
+  and named_type_destructor_t ~env t d =
+    type__ ~env t >>= fun ty ->
+    match d with
+    | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
+    | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))
+    | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
+    | T.ElementType t' ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ElementType (ty, ty'))
+    | T.CallType ts ->
+      mapM (type__ ~env) ts >>| fun tys -> Ty.Utility (Ty.Call (ty, tys))
+    | T.TypeMap (T.ObjectMap t') ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMap (ty, ty'))
+    | T.TypeMap (T.ObjectMapi t') ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMapi (ty, ty'))
+    | T.PropertyType k ->
+      return (Ty.Utility (Ty.PropertyType (ty, Ty.StrLit k)))
+    | T.TypeMap (T.TupleMap t') ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.TupleMap (ty, ty'))
+    | T.RestType (T.Object.Rest.Sound, t') ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Rest (ty, ty'))
+    | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
+    | T.SpreadType (target, ts) -> spread ~env t target ts
+
+    | T.ReactElementPropsType -> return (Ty.generic_builtin_t "React$ElementProps" [ty])
+    | T.ReactElementConfigType -> return (Ty.generic_builtin_t "React$ElementConfig" [ty])
+    | T.ReactElementRefType -> return (Ty.generic_builtin_t "React$ElementRef" [ty])
+
+    | T.RestType (T.Object.Rest.ReactConfigMerge, _)
+    | T.Bind _ ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) (Some t)
 
   and resolve_type_destructor_t ~env t id use_op reason d =
