@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast_utils = Flow_ast_utils
+
 module Ast = Flow_ast
 open Utils_js
 

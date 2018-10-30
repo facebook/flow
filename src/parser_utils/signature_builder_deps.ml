@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast_utils = Flow_ast_utils
+
 let spf = Printf.sprintf
 
 module Sort = Signature_builder_kind.Sort

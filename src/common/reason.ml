@@ -955,7 +955,7 @@ and code_desc_of_pattern (_, x) = Ast.Pattern.(match x with
  * https://github.com/prettier/prettier/blob/dd78f31aaf5b4522b780f13194d57308e5fdf53b/src/common/util.js#L328-L399 *)
 and code_desc_of_operation = Ast.Expression.(
   let string_of_operator = function
-  | `Binary op -> Ast_utils.string_of_binary_operator op
+  | `Binary op -> Flow_ast_utils.string_of_binary_operator op
   | `Logical op -> (match op with
     | Logical.Or -> "||"
     | Logical.And -> "&&"

@@ -385,7 +385,7 @@ end with type t = Impl.t) = struct
       )
     | loc, Binary { Binary.left; operator; right } ->
         node "BinaryExpression" loc [
-          "operator", string (Ast_utils.string_of_binary_operator operator);
+          "operator", string (Flow_ast_utils.string_of_binary_operator operator);
           "left", expression left;
           "right", expression right;
         ]

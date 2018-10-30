@@ -1863,7 +1863,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
         mk_signature_verification_error (loc |> ALoc.of_loc) [
           text (
             spf "Expected literal expression instead of %s, try using a type cast."
-              (Ast_utils.ExpressionSort.to_string esort)
+              (Flow_ast_utils.ExpressionSort.to_string esort)
           )
         ]
       | SketchyToplevelDef loc ->

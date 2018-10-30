@@ -1953,7 +1953,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
             Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
             [(spf "class %s {}" name, id_loc, name, None)]
           | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
-            Ast_utils.fold_bindings_of_variable_declarations (fun acc (loc, name) ->
+            Flow_ast_utils.fold_bindings_of_variable_declarations (fun acc (loc, name) ->
               Type_inference_hooks_js.dispatch_export_named_hook name loc;
               (spf "var %s" name, loc, name, None)::acc
             ) [] declarations
@@ -1994,7 +1994,7 @@ and statement cx : 'a -> (Loc.t, Loc.t * Type.t) Ast.Statement.t = Ast.Statement
             let name = ident_name ident in
             [(spf "class %s {}" name, (fst ident), name, None)]
           | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
-            Ast_utils.fold_bindings_of_variable_declarations (fun acc (loc, name) ->
+            Flow_ast_utils.fold_bindings_of_variable_declarations (fun acc (loc, name) ->
               (spf "var %s" name, loc, name, None)::acc
             ) [] declarations
             |> List.rev
@@ -4275,7 +4275,7 @@ and unary cx loc = Ast.Expression.Unary.(function
            (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
            make a negative number not look like a literal.) *)
         let reason = repos_reason loc ~annot_loc:(ALoc.of_loc loc) reason in
-        let (value, raw) = Ast_utils.negate_number_literal (value, raw) in
+        let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
         DefT (reason, NumT (Literal (sense, (value, raw))))
       | arg ->
         let reason = mk_reason (desc_of_t arg) (loc |> ALoc.of_loc) in

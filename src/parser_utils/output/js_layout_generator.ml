@@ -347,7 +347,7 @@ let identifier_with_comments (current_loc, name) =
 let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
   let nodes =
     if preserve_docblock && comments <> [] then
-      let directives, statements = Ast_utils.partition_directives statements in
+      let directives, statements = Flow_ast_utils.partition_directives statements in
       let comments = match statements with
       | [] -> comments
       | (loc, _)::_ -> comments_before_loc loc comments
@@ -757,7 +757,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
       let module B = E.Binary in
       fuse_with_space [
         expression_with_parens ~precedence ~ctxt left;
-        Atom (Ast_utils.string_of_binary_operator operator);
+        Atom (Flow_ast_utils.string_of_binary_operator operator);
         begin match operator, right with
         | E.Binary.Plus,
           (_, E.Unary { E.Unary.operator=E.Unary.Plus; _ })
