@@ -107,7 +107,10 @@ let type_ ?(size=5000) t =
     | NumLit raw -> Atom raw
     | BoolLit value -> Atom (if value then "true" else "false")
     | TypeAlias ta -> type_alias ta
-    | TypeOf { name; _ } -> fuse [Atom "typeof"; space; identifier name]
+    | TypeOf (path, name) ->
+      let path = List.map (fun x -> [Atom x; Atom "."]) path in
+      let value = (List.concat path) @ [Atom name] in
+      fuse ([Atom "typeof"; space] @ value)
     | Module { name; _ } -> fuse [Atom "module"; space; identifier name]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in

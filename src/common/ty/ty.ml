@@ -26,7 +26,7 @@ type t =
   | Union of t * t * t list
   | Inter of t * t * t list
   | TypeAlias of type_alias
-  | TypeOf of symbol
+  | TypeOf of path * string
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
   | Utility of utility
@@ -34,6 +34,8 @@ type t =
   | Mu of int * t
 
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
+
+and path = string list
 
 and fun_t = {
   fun_params: (string option * t * fun_param) list;

@@ -708,9 +708,9 @@ end = struct
     | ShapeT t -> type__ ~env t
     | TypeDestructorTriggerT _ -> return Ty.Bot
     | MergedT (_, uses) -> merged_t ~env uses
-    | ObjProtoT _ -> return (Ty.builtin_t "Object.prototype")
-    | FunProtoT _ -> return (Ty.builtin_t "Function.prototype")
     | ExistsT _ -> return (Ty.Utility Ty.Exists)
+    | ObjProtoT _ -> return (Ty.TypeOf (["Object"], "prototype"))
+    | FunProtoT _ -> return (Ty.TypeOf (["Function"], "prototype"))
     | OpenPredT (_, t, _, _) -> type__ ~env t
 
     | FunProtoApplyT _ ->
@@ -723,7 +723,7 @@ end = struct
           ]
           Any)
       else
-        return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.apply"))
+        return Ty.(TypeOf (["Function"; "prototype"], "apply"))
 
     | FunProtoBindT _ ->
       if Env.expand_internal_types env then
@@ -733,7 +733,7 @@ end = struct
           ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = Any })
           Any)
       else
-         return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.bind"))
+         return Ty.(TypeOf (["Function"; "prototype"], "bind"))
 
     | FunProtoCallT _ ->
       if Env.expand_internal_types env then
@@ -743,7 +743,7 @@ end = struct
           ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = Any })
           Any)
       else
-         return Ty.(TypeOf (Ty.builtin_symbol "Function.prototype.call"))
+         return Ty.(TypeOf (["Function"; "prototype"], "call"))
 
     | ModuleT (reason, _, _) -> module_t env reason t
 

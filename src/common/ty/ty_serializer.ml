@@ -88,11 +88,7 @@ let rec type_ t =
 and generic x targs =
   id_from_symbol x >>= fun id ->
   opt type_arguments targs >>| fun targs ->
-  (Loc.none, T.Generic {
-    T.Generic.
-    id = T.Generic.Identifier.Unqualified id;
-    targs
-  })
+  mk_generic id targs
 
 and union t (t0, t1, rest) =
   let ts = bk_union t in

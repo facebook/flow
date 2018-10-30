@@ -478,7 +478,7 @@ let merge_tvar =
     let lowers =
       let seen = ISet.singleton id in
       collect_lowers cx seen [] (possible_types cx id)
-        ~filter_empty:existential 
+        ~filter_empty:existential
     in
     match lowers with
       | [t] -> t
