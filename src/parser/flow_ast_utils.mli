@@ -5,20 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type binding = Loc.t * string
-type ident = Loc.t * string
-type source = Loc.t * string
+type 'loc binding = 'loc * string
+type 'loc ident = 'loc * string
+type 'loc source = 'loc * string
 
 val fold_bindings_of_pattern:
-  ('a -> binding -> 'a) ->
+  ('a -> 'loc binding -> 'a) ->
   'a ->
-  (Loc.t, Loc.t) Flow_ast.Pattern.t' ->
+  ('loc, 'loc) Flow_ast.Pattern.t' ->
   'a
 
 val fold_bindings_of_variable_declarations:
-  ('a -> binding -> 'a) ->
+  ('a -> 'loc binding -> 'a) ->
   'a ->
-  (Loc.t, Loc.t) Flow_ast.Statement.VariableDeclaration.Declarator.t list ->
+  ('loc, 'loc) Flow_ast.Statement.VariableDeclaration.Declarator.t list ->
   'a
 
 val partition_directives:

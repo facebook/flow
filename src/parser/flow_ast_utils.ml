@@ -7,9 +7,9 @@
 
 open Flow_ast
 
-type binding = Loc.t * string
-type ident = Loc.t * string
-type source = Loc.t * string
+type 'loc binding = 'loc * string
+type 'loc ident = 'loc * string
+type 'loc source = 'loc * string
 
 let rec fold_bindings_of_pattern =
   let open Pattern in

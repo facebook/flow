@@ -29,20 +29,20 @@ and 'info module_sig' = {
 
 and require =
   | Require of {
-      source: Ast_utils.source;
+      source: Loc.t Ast_utils.source;
       require_loc: Loc.t;
       bindings: require_bindings option;
     }
-  | ImportDynamic of { source: Ast_utils.source; import_loc: Loc.t }
-  | Import0 of { source: Ast_utils.source }
+  | ImportDynamic of { source: Loc.t Ast_utils.source; import_loc: Loc.t }
+  | Import0 of { source: Loc.t Ast_utils.source }
   | Import of {
       import_loc: Loc.t;
-      source: Ast_utils.source;
+      source: Loc.t Ast_utils.source;
       named: imported_locs Nel.t SMap.t SMap.t;
-      ns: Ast_utils.ident option;
+      ns: Loc.t Ast_utils.ident option;
       types: imported_locs Nel.t SMap.t SMap.t;
       typesof: imported_locs Nel.t SMap.t SMap.t;
-      typesof_ns: Ast_utils.ident option;
+      typesof_ns: Loc.t Ast_utils.ident option;
     }
 
 and imported_locs = {
@@ -51,7 +51,7 @@ and imported_locs = {
 }
 
 and require_bindings =
-  | BindIdent of Ast_utils.ident
+  | BindIdent of Loc.t Ast_utils.ident
   | BindNamed of imported_locs Nel.t SMap.t SMap.t
 
 and module_kind =
@@ -66,7 +66,7 @@ and module_kind =
 and export =
   | ExportDefault of {
       default_loc: Loc.t;
-      local: Ast_utils.ident option;
+      local: Loc.t Ast_utils.ident option;
     }
   | ExportNamed of {
       loc: Loc.t;
@@ -75,15 +75,15 @@ and export =
   | ExportNs of {
       loc: Loc.t;
       star_loc: Loc.t;
-      source: Ast_utils.source;
+      source: Loc.t Ast_utils.source;
     }
 
 and named_export_kind =
   | NamedDeclaration
-  | NamedSpecifier of { local: Ast_utils.ident; source: Ast_utils.source option }
+  | NamedSpecifier of { local: Loc.t Ast_utils.ident; source: Loc.t Ast_utils.source option }
 
 and export_star =
-  | ExportStar of { star_loc: Loc.t; source: Ast_utils.source }
+  | ExportStar of { star_loc: Loc.t; source: Loc.t Ast_utils.source }
 
 and type_export =
   | TypeExportNamed of {
@@ -110,7 +110,7 @@ and module_kind_info =
 and cjs_exports_def =
   | DeclareModuleExportsDef of (Loc.t, Loc.t) Ast.Type.annotation
   | SetModuleExportsDef of (Loc.t, Loc.t) Ast.Expression.t
-  | AddModuleExportsDef of Ast_utils.ident * (Loc.t, Loc.t) Ast.Expression.t
+  | AddModuleExportsDef of Loc.t Ast_utils.ident * (Loc.t, Loc.t) Ast.Expression.t
 
 and es_export_def =
   | DeclareExportDef of (Loc.t, Loc.t) Ast.Statement.DeclareExportDeclaration.declaration
@@ -1116,14 +1116,14 @@ class mapper = object(this)
       then type_export
       else n, (export_loc', TypeExportNamed { loc = loc'; kind = kind' })
 
-  method ident (ident: Ast_utils.ident) =
+  method ident (ident: Loc.t Ast_utils.ident) =
     let (loc, str) = ident in
     let loc' = this#loc loc in
     if loc == loc'
     then ident
     else (loc', str)
 
-  method source (source: Ast_utils.source) =
+  method source (source: Loc.t Ast_utils.source) =
     let (loc, str) = source in
     let loc' = this#loc loc in
     if loc == loc'

@@ -108,15 +108,15 @@ type t =
     }
   | ImportNamedDef of {
       kind: Ast.Statement.ImportDeclaration.importKind;
-      source: Ast_utils.source;
-      name: Ast_utils.ident;
+      source: Loc.t Ast_utils.source;
+      name: Loc.t Ast_utils.ident;
     }
   | ImportStarDef of {
       kind: Ast.Statement.ImportDeclaration.importKind;
-      source: Ast_utils.source;
+      source: Loc.t Ast_utils.source;
     }
   | RequireDef of {
-      source: Ast_utils.source;
+      source: Loc.t Ast_utils.source;
     }
   | SketchyToplevelDef
 

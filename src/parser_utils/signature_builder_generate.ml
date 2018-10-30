@@ -49,15 +49,15 @@ module T = struct
     (* remote *)
     | ImportNamed of {
         kind: Ast.Statement.ImportDeclaration.importKind;
-        source: Ast_utils.source;
-        name: Ast_utils.ident;
+        source: Loc.t Ast_utils.source;
+        name: Loc.t Ast_utils.ident;
       }
     | ImportStar of {
         kind: Ast.Statement.ImportDeclaration.importKind;
-        source: Ast_utils.source;
+        source: Loc.t Ast_utils.source;
       }
     | Require of {
-        source: Ast_utils.source;
+        source: Loc.t Ast_utils.source;
       }
 
   and generic = Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
