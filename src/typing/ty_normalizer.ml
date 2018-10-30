@@ -1189,8 +1189,8 @@ end = struct
        => ?IdxResult;
     *)
     | Idx ->
-      let idxObject = builtin_t "IdxObject" in
-      let idxResult = builtin_t "IdxResult" in
+      let idxObject = Ty.Bound (Ty.builtin_symbol "IdxObject") in
+      let idxResult = Ty.Bound (Ty.builtin_symbol "IdxResult") in
       let tparams = [
         mk_tparam ~bound:Ty.AnyObj "IdxObject";
         mk_tparam "IdxResult";
@@ -1217,7 +1217,7 @@ end = struct
     | TypeAssertThrows ->
       let tparams = [ mk_tparam "TypeAssertT" ] in
       let params = [ (Some "value", Ty.Top, non_opt_param) ] in
-      let ret = builtin_t "TypeAssertT" in
+      let ret = Ty.Bound (Ty.builtin_symbol "TypeAssertT") in
       return (mk_fun ~tparams ~params ret)
 
     (* Result<T> = {success: true, value: T} | {success: false, error: string}
