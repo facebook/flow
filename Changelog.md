@@ -1,3 +1,47 @@
+### 0.85.0
+
+Likely to cause new Flow errors:
+
+* Fixed an issue that caused missing annotations errors to be suppressed.
+
+  Please [read the full post](https://medium.com/flow-type/asking-for-required-annotations-64d4f9c1edf8)
+  for more information on what changed and tips on dealing with the new errors.
+
+### 0.84.0
+
+Likely to cause new Flow errors:
+
+* Earlier, type constraints between `any` and other types would be dropped. Instead, they are now
+  propagated. In some cases, this unblocks further constraint solving and helps find more errors.
+* When a variable is equality-checked with a literal, the variable's type is refined. Earlier, if
+  the variable's type was incompatible with the literal's type, it would silently be refined to
+  `empty`, whereas now this is an error.
+
+New Features:
+
+* Added support for wildcard (`_`) type arguments to function / constructor calls. This is
+  especially useful when some type arguments are sufficient to pin down the type of the result; the
+  others can simply be `_`.
+
+Notable bug fixes:
+
+* Fixed a case that would crash `get-def` and `find-refs`
+* Fixed a bug with unreachability analysis for ternary expressions
+* Fixed a bug with refinements merging at the end of switch statements
+
+Misc:
+
+* Fixed various AST printing / layout bugs
+* Made various improvements to the AST differ
+* Refactored parts of `get-def` and `find-refs` to reuse code
+* Made progress on abstracting locations in the core type inference engine
+* Made progress on module signature verification and generation
+* Merged PRs that improve type declarations: e.g., `getBoundingClient` returns a `DOMRect` instead of a `ClientRect`.
+
+Parser:
+
+* Support for `...` to indicate inexactness in object types
+
 ### 0.83.0
 
 Likely to cause new Flow errors:
