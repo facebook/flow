@@ -1,3 +1,12 @@
+### 0.85.0
+
+Likely to cause new Flow errors:
+
+* Fixed an issue that caused missing annotations errors to be suppressed.
+
+  Please [read the full post](https://medium.com/flow-type/asking-for-required-annotations-64d4f9c1edf8)
+  for more information on what changed and tips on dealing with the new errors.
+
 ### 0.84.0
 
 Likely to cause new Flow errors:
