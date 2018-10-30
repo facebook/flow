@@ -28,7 +28,7 @@ module Error = struct
 
   let compare = Pervasives.compare
 
-  let to_string = function
+  let debug_to_string = function
     | ExpectedSort (sort, x, loc) ->
       spf "%s @ %s is not a %s"
         x (Loc.to_string loc) (Sort.to_string sort)

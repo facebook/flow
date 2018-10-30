@@ -470,7 +470,7 @@ let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents 
     let errors, remote_dependencies, env =
       Signature_builder.Signature.verify ?prevent_munge ?ignore_static_propTypes signature
     in
-    let error_msgs = List.map Signature_builder_deps.Error.to_string @@
+    let error_msgs = List.map Signature_builder_deps.Error.debug_to_string @@
       Signature_builder_deps.ErrorSet.elements errors in
     let remote_dependency_msgs = List.map Signature_builder_deps.Dep.to_string @@
       Signature_builder_deps.DepSet.elements remote_dependencies in
