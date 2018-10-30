@@ -11,7 +11,7 @@ include Ty_ancestors
 type t =
   | TVar of tvar * t list option
   | Bound of symbol
-  | Generic of symbol * bool (* structural *) * t list option
+  | Generic of symbol * gen_kind * t list option
   | Any | AnyObj | AnyFun
   | Top | Bot
   | Void | Null
@@ -36,6 +36,11 @@ type t =
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
 
 and path = string list
+
+and gen_kind =
+  | ClassKind
+  | InterfaceKind
+  | TypeAliasKind
 
 and fun_t = {
   fun_params: (string option * t * fun_param) list;
@@ -185,17 +190,14 @@ let mk_field_props prop_list =
 let mk_object ?(obj_exact=false) ?(obj_frozen=false) obj_props =
   Obj { obj_exact; obj_frozen; obj_props }
 
-let named_t symbol =
-  Generic (symbol, false, None)
+let mk_generic_class symbol targs =
+  Generic (symbol, ClassKind, targs)
 
-let builtin_t name =
-  named_t (builtin_symbol name)
+let mk_generic_interface symbol targs =
+  Generic (symbol, InterfaceKind, targs)
 
-let generic_t ?(structural=false) symbol targs =
-  Generic (symbol, structural, targs)
-
-let generic_builtin_t name targs =
-  generic_t (builtin_symbol name) (Some targs)
+let mk_generic_talias symbol targs =
+  Generic (symbol, TypeAliasKind, targs)
 
 let rec mk_exact ty =
   match ty with
@@ -229,6 +231,11 @@ let string_of_provenance_ctor = function
 let string_of_symbol { provenance; loc; name; _ } =
   Utils_js.spf "%s (%s:%s)" name (string_of_provenance_ctor provenance)
     (Reason.string_of_loc loc)
+
+let string_of_generic_kind = function
+  | ClassKind -> "class"
+  | InterfaceKind -> "interface"
+  | TypeAliasKind -> "type alias"
 
 let string_of_utility_ctor = function
   | Keys _ -> "$Keys"

@@ -340,6 +340,20 @@ end = struct
   let uniq_union ts = ts |> Ty.mk_union |> simplify_unions_inters
   let uniq_inter ts = ts |> Ty.mk_inter |> simplify_unions_inters
 
+  let generic_class name targs =
+    Ty.mk_generic_class name targs
+
+  let generic_interface name targs =
+    Ty.mk_generic_interface name targs
+
+  let generic_talias name targs =
+    Ty.mk_generic_talias name targs
+
+  let builtin_t name =
+    generic_talias (Ty.builtin_symbol name) None
+
+  let generic_builtin_t name ts =
+    generic_talias (Ty.builtin_symbol name) (Some ts)
 
 
   (*********************)
@@ -373,7 +387,8 @@ end = struct
         inherit [_] map_ty as super
         method! on_t env t =
           let t = match t, env with
-          | TVar (i, ts), (r, sym) when r = i -> Generic (sym, true, ts)
+          | TVar (i, ts), (r, sym) when r = i ->
+            generic_talias sym ts
           | _ -> t in
           super#on_t env t
       end) in
@@ -631,7 +646,7 @@ end = struct
         in
         if continue then type_after_reason ~env t else
         let symbol = symbol_from_reason env reason name in
-        return (Ty.named_t symbol)
+        return (generic_talias symbol None)
       | _ ->
         (* We are now beyond the point of the one-off expansion. Reset the environment
            assigning None to under_type_alias, so that aliases are used in subsequent
@@ -943,23 +958,28 @@ end = struct
     let open Type in
     name_of_instance_reason r >>= fun name ->
     let symbol = symbol_from_reason env r name in
-    mapM (fun (_, _, t, _) -> type__ ~env t) inst.type_args >>| function
-    | [] -> Ty.Generic (symbol, inst.structural, None)
-    | xs -> Ty.Generic (symbol, inst.structural, Some xs)
+    mapM (fun (_, _, t, _) -> type__ ~env t) inst.type_args >>| fun tys ->
+    let targs = match tys with [] -> None | _ -> Some tys in
+    if inst.structural
+    then generic_interface symbol targs
+    else generic_class symbol targs
 
   and class_t =
     let rec go ~env ps ty =
       match ty with
-      | Ty.Generic (name, true (* interface *), _) ->
-        return (Ty.InterfaceDecl (name, ps))
-      | Ty.Generic (name, false (* class *), _) ->
-        (* If some parameters have been passed, then we are in the `PolyT-ThisClassT`
-         * case of Flow_js.canonicalize_imported_type. This case should still be
-         * normalized to an abstract class declaration. If no parameters are passed
-         * then this is a `Class<T>` with an instance T. *)
-        begin match ps with
-          | Some _ -> return (Ty.ClassDecl (name, ps))
-          | None -> return (Ty.Utility (Ty.Class ty))
+      | Ty.Generic (name, kind, _) ->
+        begin match kind with
+          | Ty.InterfaceKind -> return (Ty.InterfaceDecl (name, ps))
+          | Ty.TypeAliasKind -> return (Ty.Utility (Ty.Class ty))
+          | Ty.ClassKind ->
+            (* If some parameters have been passed, then we are in the `PolyT-ThisClassT`
+             * case of Flow_js.canonicalize_imported_type. This case should still be
+             * normalized to an abstract class declaration. If no parameters are passed
+             * then this is a `Class<T>` with an instance T. *)
+            begin match ps with
+              | Some _ -> return (Ty.ClassDecl (name, ps))
+              | None -> return (Ty.Utility (Ty.Class ty))
+            end
         end
       | Ty.Utility (Ty.Class _ | Ty.Exists)
       | Ty.Bot
@@ -989,7 +1009,7 @@ end = struct
   and this_class_t ~env t ps =
     type__ ~env t >>= fun ty ->
     match ty with
-    | Ty.Generic (name, false (* non-structural *), _) ->
+    | Ty.Generic (name, Ty.ClassKind, _) ->
       return (Ty.ClassDecl (name, ps))
     | _ ->
       terr ~kind:BadThisClassT ~msg:(Ty_debug.string_of_ctor ty) (Some t)
@@ -1080,9 +1100,9 @@ end = struct
   and type_app =
     let  go ~env targs = function
       | Ty.ClassDecl (name, _) ->
-        return (Ty.generic_t ~structural:false name targs)
+        return (generic_class name targs)
       | Ty.InterfaceDecl (name, _) ->
-        return (Ty.generic_t ~structural:true name targs)
+        return (generic_interface name targs)
       | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
         begin
           match ta_type with
@@ -1092,7 +1112,7 @@ end = struct
               | None -> ta_type
             in return t
           | _ ->
-            return (Ty.generic_t ta_name targs)
+            return (generic_talias ta_name targs)
         end
       | Ty.(Any | Bot | Top) as ty -> return ty
       (* "Fix" type application on recursive types *)
@@ -1111,7 +1131,7 @@ end = struct
   and opaque_t ~env reason opaque_type =
     let name = opaque_type.Type.opaque_name in
     let opaque_symbol = symbol_from_reason env reason name in
-    return (Ty.named_t opaque_symbol)
+    return (generic_talias opaque_symbol None)
 
   (* We are being a bit lax here with opaque types so that we don't have to
      introduce a new constructor in Ty.t to support all kinds of OpaqueT.
@@ -1169,8 +1189,8 @@ end = struct
        => ?IdxResult;
     *)
     | Idx ->
-      let idxObject = Ty.builtin_t "IdxObject" in
-      let idxResult = Ty.builtin_t "IdxResult" in
+      let idxObject = builtin_t "IdxObject" in
+      let idxResult = builtin_t "IdxResult" in
       let tparams = [
         mk_tparam ~bound:Ty.AnyObj "IdxObject";
         mk_tparam "IdxResult";
@@ -1197,7 +1217,7 @@ end = struct
     | TypeAssertThrows ->
       let tparams = [ mk_tparam "TypeAssertT" ] in
       let params = [ (Some "value", Ty.Top, non_opt_param) ] in
-      let ret = Ty.builtin_t "TypeAssertT" in
+      let ret = builtin_t "TypeAssertT" in
       return (mk_fun ~tparams ~params ret)
 
     (* Result<T> = {success: true, value: T} | {success: false, error: string}
@@ -1209,7 +1229,7 @@ end = struct
         ("success", Ty.BoolLit false, false); ("error", Ty.Str, false)
       ]) in
       let result_succ_ty = Ty.mk_object (Ty.mk_field_props [
-        ("success", Ty.BoolLit true, false); ("value", Ty.builtin_t "TypeAssertT", false)
+        ("success", Ty.BoolLit true, false); ("value", builtin_t "TypeAssertT", false)
       ]) in
       let ret = Ty.mk_union [result_fail_ty; result_succ_ty] in
       return (mk_fun ~tparams ~params ret)
@@ -1233,10 +1253,10 @@ end = struct
     | ReactPropType _ -> return Ty.Any
 
     (* reactCreateClass: (spec: any) => ReactClass<any> *)
-    | ReactCreateClass -> return Ty.(mk_fun
-        ~params:[(Some "spec", Any, non_opt_param)]
-        (generic_builtin_t "ReactClass" [Any])
-      )
+    | ReactCreateClass ->
+      let params = [(Some "spec", Ty.Any, non_opt_param)] in
+      let x = Ty.builtin_symbol "ReactClass" in
+      return (mk_fun ~params (generic_talias x (Some [Ty.Any])))
 
     (* 1. Component class:
           <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
@@ -1280,19 +1300,19 @@ end = struct
   and custom_fun_short ~env =
     let open Type in
     function
-    | ObjectAssign -> return (Ty.builtin_t "Object$Assign")
-    | ObjectGetPrototypeOf -> return (Ty.builtin_t "Object$GetPrototypeOf")
-    | ObjectSetPrototypeOf -> return (Ty.builtin_t "Object$SetPrototypeOf")
-    | Compose false -> return (Ty.builtin_t "$Compose")
-    | Compose true -> return (Ty.builtin_t "$ComposeReverse")
+    | ObjectAssign -> return (builtin_t "Object$Assign")
+    | ObjectGetPrototypeOf -> return (builtin_t "Object$GetPrototypeOf")
+    | ObjectSetPrototypeOf -> return (builtin_t "Object$SetPrototypeOf")
+    | Compose false -> return (builtin_t "$Compose")
+    | Compose true -> return (builtin_t "$ComposeReverse")
     | ReactPropType t -> react_prop_type ~env t
-    | ReactCreateClass -> return (Ty.builtin_t "React$CreateClass")
-    | ReactCreateElement -> return (Ty.builtin_t "React$CreateElement")
-    | ReactCloneElement -> return (Ty.builtin_t "React$CloneElement")
+    | ReactCreateClass -> return (builtin_t "React$CreateClass")
+    | ReactCreateElement -> return (builtin_t "React$CreateElement")
+    | ReactCloneElement -> return (builtin_t "React$CloneElement")
     | ReactElementFactory t ->
       type__ ~env t >>| fun t ->
-      Ty.generic_builtin_t "React$ElementFactory" [t]
-    | Idx -> return (Ty.builtin_t "$Facebookism$Idx")
+      generic_builtin_t "React$ElementFactory" [t]
+    | Idx -> return (builtin_t "$Facebookism$Idx")
     (* var TypeAssertIs: <TypeAssertT>(value: mixed) => boolean *)
     | TypeAssertIs ->
       let tparams = [ mk_tparam "TypeAssertT" ] in
@@ -1303,7 +1323,7 @@ end = struct
     | TypeAssertThrows ->
       let tparams = [ mk_tparam "TypeAssertT" ] in
       let params = [ (Some "value", Ty.Top, non_opt_param) ] in
-      let ret = Ty.builtin_t "TypeAssertT" in
+      let ret = builtin_t "TypeAssertT" in
       return (mk_fun ~tparams ~params ret)
 
     (* Result<T> = {success: true, value: T} | {success: false, error: string}
@@ -1315,14 +1335,14 @@ end = struct
         ("success", Ty.BoolLit false, false); ("error", Ty.Str, false)
       ]) in
       let result_succ_ty = Ty.mk_object (Ty.mk_field_props [
-        ("success", Ty.BoolLit true, false); ("value", Ty.builtin_t "TypeAssertT", false)
+        ("success", Ty.BoolLit true, false); ("value", builtin_t "TypeAssertT", false)
       ]) in
       let ret = Ty.mk_union [result_fail_ty; result_succ_ty] in
       return (mk_fun ~tparams ~params ret)
 
-    | DebugPrint -> return (Ty.builtin_t "$Flow$DebugPrint")
-    | DebugThrow -> return (Ty.builtin_t "$Flow$DebugThrow")
-    | DebugSleep -> return (Ty.builtin_t "$Flow$DebugSleep")
+    | DebugPrint -> return (builtin_t "$Flow$DebugPrint")
+    | DebugThrow -> return (builtin_t "$Flow$DebugThrow")
+    | DebugSleep -> return (builtin_t "$Flow$DebugSleep")
 
   and custom_fun ~env t =
     if Env.expand_internal_types env
@@ -1334,13 +1354,13 @@ end = struct
     function
     | Primitive (_, t)   ->
       type__ ~env t >>| fun t ->
-      Ty.generic_builtin_t "React$PropType$Primitive" [t]
-    | Complex ArrayOf -> return (Ty.builtin_t "React$PropType$ArrayOf")
-    | Complex InstanceOf -> return (Ty.builtin_t "React$PropType$ArrayOf")
-    | Complex ObjectOf -> return (Ty.builtin_t "React$PropType$dbjectOf")
-    | Complex OneOf -> return (Ty.builtin_t "React$PropType$OneOf")
-    | Complex OneOfType -> return (Ty.builtin_t "React$PropType$OneOfType")
-    | Complex Shape -> return (Ty.builtin_t "React$PropType$Shape")
+      generic_builtin_t "React$PropType$Primitive" [t]
+    | Complex ArrayOf -> return (builtin_t "React$PropType$ArrayOf")
+    | Complex InstanceOf -> return (builtin_t "React$PropType$ArrayOf")
+    | Complex ObjectOf -> return (builtin_t "React$PropType$dbjectOf")
+    | Complex OneOf -> return (builtin_t "React$PropType$OneOf")
+    | Complex OneOfType -> return (builtin_t "React$PropType$OneOfType")
+    | Complex Shape -> return (builtin_t "React$PropType$Shape")
 
   and internal_t ~env t =
     let open Type in
@@ -1440,9 +1460,9 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
     | T.SpreadType (target, ts) -> spread ~env t target ts
 
-    | T.ReactElementPropsType -> return (Ty.generic_builtin_t "React$ElementProps" [ty])
-    | T.ReactElementConfigType -> return (Ty.generic_builtin_t "React$ElementConfig" [ty])
-    | T.ReactElementRefType -> return (Ty.generic_builtin_t "React$ElementRef" [ty])
+    | T.ReactElementPropsType -> return (generic_builtin_t "React$ElementProps" [ty])
+    | T.ReactElementConfigType -> return (generic_builtin_t "React$ElementConfig" [ty])
+    | T.ReactElementRefType -> return (generic_builtin_t "React$ElementRef" [ty])
 
     | T.RestType (T.Object.Rest.ReactConfigMerge, _)
     | T.Bind _ ->

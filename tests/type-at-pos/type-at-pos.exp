@@ -2789,7 +2789,7 @@ react_component.js:31:7 = {
                         "provenance":{"kind":"Library","loc":"[LIB] react.js:14:5,20:25"},
                         "name":"React$Node"
                       },
-                      "structural":false
+                      "kind":"type alias"
                     }
                   ]
                 },
@@ -2809,7 +2809,7 @@ react_component.js:31:7 = {
         "provenance":{"kind":"Library","loc":"[LIB] react.js:14:5,20:25"},
         "name":"React$Node"
       },
-      "structural":false
+      "kind":"type alias"
     }
   },
   "type":"({children: ?React$Node}) => React$Node",
@@ -2834,7 +2834,7 @@ react_component.js:32:13 = {
       "provenance":{"kind":"Library","loc":"[LIB] react.js:240:42-60"},
       "name":"ComponentType"
     },
-    "structural":false
+    "kind":"type alias"
   },
   "type":"ComponentType<number>",
   "reasons":[],
@@ -2865,7 +2865,7 @@ react_component.js:32:29 = {
         "provenance":{"kind":"Library","loc":"[LIB] react.js:153:5,154:38"},
         "name":"React$ComponentType"
       },
-      "structural":false
+      "kind":"type alias"
     }
   },
   "type":"type ComponentType<P> = React$ComponentType<P>",
@@ -5031,7 +5031,7 @@ type-utils.js:6:13 {
         "kind":"Generic",
         "typeArgs":[{"kind":"Num"}],
         "type":{"provenance":{"kind":"Local","loc":"type-utils.js:3:15"},"name":"C"},
-        "structural":false
+        "kind":"class"
       }
     ]
   },

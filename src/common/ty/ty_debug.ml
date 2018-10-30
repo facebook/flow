@@ -128,9 +128,11 @@ and dump_t ?(depth = 10) t =
     spf "TVAR(%s, params=%s)" (dump_tvar v)
       (dump_generics ~depth ts)
   | Bound s -> spf "Bound(%s)" (dump_symbol s)
-  | Generic (s, st, ts) ->
-    spf "Generic(%s, struct= %b, params=%s)"
-      (dump_symbol s) st (dump_generics ~depth ts)
+  | Generic (s, kind, ts) ->
+    spf "Generic (%s, kind= %s, params=%s)"
+      (dump_symbol s)
+      (Ty.string_of_generic_kind kind)
+      (dump_generics ~depth ts)
   | Any -> "Any"
   | AnyObj -> "AnyObj"
   | AnyFun -> "AnyFun"
@@ -235,10 +237,10 @@ let json_of_t ~strip_root =
     | Bound (Ty.{ name; _ }) -> [
         "bound", JSON_String name
       ]
-    | Generic (s, str, targs_opt) ->
+    | Generic (s, k, targs_opt) ->
       json_of_targs targs_opt @ [
         "type", json_of_symbol s;
-        "structural", JSON_Bool str;
+        "kind", JSON_String (Ty.string_of_generic_kind k);
       ]
     | Any | AnyObj | AnyFun
     | Top | Bot
