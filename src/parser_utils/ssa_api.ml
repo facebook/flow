@@ -5,7 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module Make (L: Loc_sig.S) : sig
+module type S = sig
+  module L: Loc_sig.S
+
   type read_loc = L.t
   type write_loc =
     | Write of L.t
@@ -16,7 +18,10 @@ module Make (L: Loc_sig.S) : sig
   val uninitialized: write_loc
   val write_locs_of_read_loc: values -> read_loc -> write_locs
   val is_dead_write_loc: values -> L.t -> bool
-end = struct
+end
+
+module Make (L: Loc_sig.S) : S with module L = L = struct
+  module L = L
   type read_loc = L.t
   type write_loc =
     | Write of L.t
