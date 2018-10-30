@@ -746,6 +746,16 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(25,31), "gotRenamed"] ~source
       ~expected:"try { thing; } finally { gotRenamed; };" ~mapper:(new useless_mapper)
   end;
+  "labeled_label" >:: begin fun ctxt ->
+    let source = "rename: while (true) { }" in
+    assert_edits_equal ctxt ~edits:[(0, 6), "gotRenamed"] ~source
+      ~expected:"gotRenamed: while (true) { }" ~mapper:(new useless_mapper)
+  end;
+  "labeled_body" >:: begin fun ctxt ->
+    let source = "foo: while (rename) { }" in
+    assert_edits_equal ctxt ~edits:[(12, 18), "gotRenamed"] ~source
+      ~expected:"foo: while (gotRenamed) { }" ~mapper:(new useless_mapper)
+  end;
   "switch_discriminant" >:: begin fun ctxt ->
     let source = "switch (rename) { case true: break; }" in
     assert_edits_equal ctxt ~edits:[(8, 14), "gotRenamed"] ~source
