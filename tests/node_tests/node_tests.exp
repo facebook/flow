@@ -67,9 +67,9 @@ Cannot call `hmac.write` with `123` bound to `chunk` because number [1] is incom
                         ^^^ [1]
 
 References:
-   <BUILTINS>/node.js:1721:21
-   1721|     chunk: Buffer | string,
-                             ^^^^^^ [2]
+   <BUILTINS>/node.js:1721:34
+   1721|     chunk: Buffer | Uint8Array | string,
+                                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- crypto/crypto.js:26:24
