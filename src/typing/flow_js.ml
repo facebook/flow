@@ -3038,8 +3038,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, UnionT rep1), UseT (_, DefT (_, UnionT rep2)) when
        (* Try n log n check before n^2 check *)
         begin match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
-          | Some enums1, Some enums2 ->
-              EnumSet.for_all (fun t1 -> EnumSet.mem t1 enums2) enums1
+          | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2
           | _, _ ->
               let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
               Type_mapper.union_flatten cx @@ UnionRep.members rep1
