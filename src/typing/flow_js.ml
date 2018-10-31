@@ -1963,7 +1963,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let props = match exports.cjs_export with
       | Some t ->
         (* TODO this Field should probably have a location *)
-        let p = Field (None, t, Neutral) in
+        let p = Field (None, t, Positive) in
         SMap.add "default" p props
       | None -> props
       in
