@@ -1113,7 +1113,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     | Declaration (loc, Ast.Statement.FunctionDeclaration
         ({ Ast.Function.id = Some _; _ } as function_declaration)
       ) ->
-      `Decl (eval_function_declaration loc function_declaration)
+      `Decl (Entry.function_declaration loc function_declaration)
     | Declaration (loc, Ast.Statement.FunctionDeclaration ({
         Ast.Function.id = None;
         generator; tparams; params; return; body;
@@ -1121,7 +1121,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       })) ->
       `Expr (loc, T.Function (Eval.function_ generator tparams params return body))
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
-      `Decl (eval_class loc class_)
+      `Decl (Entry.class_ loc class_)
     | Declaration (loc, Ast.Statement.ClassDeclaration ({
         Ast.Class.id = None;
         tparams; body; extends; implements;
@@ -1133,9 +1133,71 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       `Expr (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
     | Declaration _stmt -> raise Eval.Unreachable (* TODO: update signature verifier *)
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-      `Decl (eval_function_declaration loc function_)
+      `Decl (Entry.function_declaration loc function_)
     | Expression expr -> `Expr (Eval.literal_expr expr)
   )
+
+  let export_name export_loc ?exported ?source local exportKind =
+    export_loc, Ast.Statement.ExportNamedDeclaration {
+      Ast.Statement.ExportNamedDeclaration.declaration = None;
+      specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
+        approx_loc export_loc, {
+          Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local; exported;
+        }
+      ]);
+      source;
+      exportKind;
+    }
+
+  let export_named_specifier export_loc local remote source exportKind =
+    let exported = if snd remote = snd local then None else Some remote in
+    let source = match source with
+      | None -> None
+      | Some source -> Some (T.source_of_source source) in
+    export_name export_loc ?exported ?source local exportKind
+
+  let export_star export_loc star_loc ?remote source exportKind =
+    export_loc, Ast.Statement.ExportNamedDeclaration {
+      Ast.Statement.ExportNamedDeclaration.declaration = None;
+      specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier (
+        star_loc, remote
+      ));
+      source = Some (T.source_of_source source);
+      exportKind;
+    }
+
+  let declare_export_default_declaration export_loc default_loc declaration =
+    export_loc, Ast.Statement.DeclareExportDeclaration {
+      default = Some default_loc;
+      Ast.Statement.DeclareExportDeclaration.declaration = Some declaration;
+      specifiers = None;
+      source = None;
+    }
+
+  let export_value_named_declaration export_loc local =
+    export_name export_loc local Ast.Statement.ExportValue
+
+  let export_value_default_named_declaration export_loc default local =
+    export_name export_loc local ~exported:default Ast.Statement.ExportValue
+
+  let export_value_named_specifier export_loc local remote source =
+    export_named_specifier export_loc local remote source Ast.Statement.ExportValue
+
+  let export_value_star export_loc star_loc source =
+    export_star export_loc star_loc source Ast.Statement.ExportValue
+
+  let export_value_ns_star export_loc star_loc ns source =
+    export_star export_loc star_loc ~remote:ns source Ast.Statement.ExportValue
+
+  let export_type_named_declaration export_loc local =
+    export_name export_loc local Ast.Statement.ExportType
+
+  let export_type_named_specifier export_loc local remote source =
+    export_named_specifier export_loc local remote source Ast.Statement.ExportType
+
+  let export_type_star export_loc star_loc source =
+    export_star export_loc star_loc source Ast.Statement.ExportType
+
 
   let eval_export_value_bindings outlined named named_infos star =
     let open File_sig in
@@ -1147,14 +1209,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     ) named in
     let stmts = List.fold_left (fun acc -> function
       | export_loc, ExportStar { star_loc; source; } ->
-        (export_loc, Ast.Statement.ExportNamedDeclaration {
-          Ast.Statement.ExportNamedDeclaration.declaration = None;
-          specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier (
-            star_loc, None
-          ));
-          source = Some (T.source_of_source source);
-          exportKind = Ast.Statement.ExportValue;
-        }) :: acc
+        (export_value_star export_loc star_loc source) :: acc
     ) [] star in
     let seen = ref SSet.empty in
     let stmts = List.fold_left2 (fun acc (n, (export_loc, export)) export_def ->
@@ -1164,102 +1219,32 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         | ExportDefault { default_loc; local }, DeclareExportDef decl ->
           begin match local with
             | Some id ->
-              (export_loc, Ast.Statement.ExportNamedDeclaration {
-                Ast.Statement.ExportNamedDeclaration.declaration = None;
-                specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-                  approx_loc export_loc, {
-                    Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = id;
-                    exported = Some (default_loc, n);
-                  }
-                ]);
-                source = None;
-                exportKind = Ast.Statement.ExportValue;
-              }) :: acc
+              (export_value_default_named_declaration export_loc (default_loc, n) id) :: acc
             | None ->
-              (export_loc, Ast.Statement.DeclareExportDeclaration {
-                default = Some default_loc;
-                Ast.Statement.DeclareExportDeclaration.declaration = Some decl;
-                specifiers = None;
-                source = None;
-              }) :: acc
+              (declare_export_default_declaration export_loc default_loc decl) :: acc
           end
-        | ExportNamed { loc; kind = NamedDeclaration }, DeclareExportDef _decl ->
-          (export_loc, Ast.Statement.ExportNamedDeclaration {
-            Ast.Statement.ExportNamedDeclaration.declaration = None;
-            specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              approx_loc export_loc, {
-                Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
-                exported = None;
-              }
-            ]);
-            source = None;
-            exportKind = Ast.Statement.ExportValue;
-          }) :: acc
         | ExportDefault { default_loc; _ }, ExportDefaultDef decl ->
           begin match eval_export_default_declaration decl with
-            | `Decl (id, _dt) ->
-              (export_loc, Ast.Statement.ExportNamedDeclaration {
-                Ast.Statement.ExportNamedDeclaration.declaration = None;
-                specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-                  approx_loc export_loc, {
-                    Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = id;
-                    exported = Some (default_loc, n);
-                  }
-                ]);
-                source = None;
-                exportKind = Ast.Statement.ExportValue;
-              }) :: acc
+            | `Decl (id, _kind) ->
+              (export_value_default_named_declaration export_loc (default_loc, n) id) :: acc
             | `Expr expr_type ->
               let declaration = Ast.Statement.DeclareExportDeclaration.DefaultType
                 (T.type_of_expr_type outlined expr_type) in
-              (export_loc, Ast.Statement.DeclareExportDeclaration {
-                Ast.Statement.DeclareExportDeclaration.default = Some default_loc;
-                declaration = Some declaration;
-                specifiers = None;
-                source = None;
-              }) :: acc
+              (declare_export_default_declaration export_loc default_loc declaration) :: acc
           end
+        | ExportNamed { loc; kind = NamedDeclaration }, DeclareExportDef _decl ->
+          (export_value_named_declaration export_loc (loc, n)) :: acc
         | ExportNamed { loc; kind = NamedDeclaration }, ExportNamedDef _stmt ->
-          (export_loc, Ast.Statement.ExportNamedDeclaration {
-            Ast.Statement.ExportNamedDeclaration.declaration = None;
-            specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              approx_loc export_loc, {
-                Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
-                exported = None;
-              }
-            ]);
-            source = None;
-            exportKind = Ast.Statement.ExportValue;
-          }) :: acc
+          (export_value_named_declaration export_loc (loc, n)) :: acc
         | _ -> assert false
       )
     ) stmts named named_infos in
     List.fold_left (fun acc (n, (export_loc, export)) ->
       match export with
         | ExportNamed { loc; kind = NamedSpecifier { local = name; source } } ->
-          (export_loc, Ast.Statement.ExportNamedDeclaration {
-            Ast.Statement.ExportNamedDeclaration.declaration = None;
-            specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              approx_loc export_loc, {
-                Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = name;
-                exported = if (snd name) = n then None else Some (loc, n);
-              }
-            ]);
-            source = (match source with
-              | None -> None
-              | Some source -> Some (T.source_of_source source)
-            );
-            exportKind = Ast.Statement.ExportValue;
-          }) :: acc
+          (export_value_named_specifier export_loc name (loc, n) source) :: acc
         | ExportNs { loc; star_loc; source; } ->
-          (export_loc, Ast.Statement.ExportNamedDeclaration {
-            Ast.Statement.ExportNamedDeclaration.declaration = None;
-            specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier (
-              star_loc, Some (loc, n)
-            ));
-            source = Some (T.source_of_source source);
-            exportKind = Ast.Statement.ExportValue;
-          }) :: acc
+          (export_value_ns_star export_loc star_loc (loc, n) source) :: acc
         | _ -> assert false
     ) stmts ns
 
@@ -1271,61 +1256,21 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     ) type_named in
     let stmts = List.fold_left (fun acc -> function
       | export_loc, ExportStar { star_loc; source } ->
-        (export_loc, Ast.Statement.ExportNamedDeclaration {
-          Ast.Statement.ExportNamedDeclaration.declaration = None;
-          specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier (
-            star_loc, None
-          ));
-          source = Some (T.source_of_source source);
-          exportKind = Ast.Statement.ExportType;
-        }) :: acc
+        (export_type_star export_loc star_loc source) :: acc
     ) [] type_star in
     let stmts = List.fold_left2 (fun acc (n, (export_loc, export)) export_def ->
       (match export, export_def with
         | TypeExportNamed { loc; kind = NamedDeclaration }, DeclareExportDef _decl ->
-          export_loc, Ast.Statement.ExportNamedDeclaration {
-            Ast.Statement.ExportNamedDeclaration.declaration = None;
-            specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              approx_loc export_loc, {
-                Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
-                exported = None;
-              }
-            ]);
-            source = None;
-            exportKind = Ast.Statement.ExportType;
-          }
+          export_type_named_declaration export_loc (loc, n)
         | TypeExportNamed { loc; kind = NamedDeclaration }, ExportNamedDef _stmt ->
-          export_loc, Ast.Statement.ExportNamedDeclaration {
-            Ast.Statement.ExportNamedDeclaration.declaration = None;
-            specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              approx_loc export_loc, {
-                Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = (loc, n);
-                exported = None;
-              }
-            ]);
-            source = None;
-            exportKind = Ast.Statement.ExportType;
-          }
+          export_type_named_declaration export_loc (loc, n)
         | _ -> assert false
       ) :: acc
     ) stmts type_named type_named_infos in
     List.fold_left (fun acc (n, (export_loc, export)) ->
       (match export with
       | TypeExportNamed { loc; kind = NamedSpecifier { local = name; source } } ->
-          export_loc, Ast.Statement.ExportNamedDeclaration {
-            Ast.Statement.ExportNamedDeclaration.declaration = None;
-            specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
-              approx_loc export_loc, {
-                Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local = name;
-                exported = if (snd name) = n then None else Some (loc, n);
-              }
-            ]);
-            source = (match source with
-              | None -> None
-              | Some source -> Some (T.source_of_source source)
-            );
-            exportKind = Ast.Statement.ExportType;
-          }
+          export_type_named_specifier export_loc name (loc, n) source
         | _ -> assert false
       ) :: acc
     ) stmts type_ns
