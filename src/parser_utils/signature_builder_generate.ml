@@ -98,7 +98,7 @@ module T = struct
   and object_key = (Loc.t, Loc.t) Ast.Expression.Object.Property.key
 
   and outlinable_t =
-    | Class of class_t
+    | Class of (Loc.t * string) option * class_t
     | DynamicImport of Loc.t * Ast.StringLiteral.t
     | DynamicRequire of (Loc.t, Loc.t) Ast.Expression.t
 
@@ -237,7 +237,8 @@ module T = struct
   module Outlined: sig
     type 'a t
     val create: unit -> 'a t
-    val next: 'a t -> Loc.t -> (Loc.t Ast.Identifier.t -> 'a) -> Loc.t Ast.Identifier.t
+    val next: 'a t -> Loc.t -> (Loc.t Ast.Identifier.t -> Loc.t Ast.Identifier.t option * 'a)
+      -> Loc.t Ast.Identifier.t
     val get: 'a t -> 'a list
   end = struct
     type 'a t = (int * 'a list) ref
@@ -246,7 +247,11 @@ module T = struct
       let n, l = !outlined in
       let n = n + 1 in
       let id = outlined_loc, Printf.sprintf "$%d" n in
-      let l = (f id) :: l in
+      let id_opt, x = f id in
+      let n, id = match id_opt with
+        | None -> n, id
+        | Some id -> n - 1, id in
+      let l = x :: l in
       outlined := (n, l);
       id
     let get outlined =
@@ -316,10 +321,10 @@ module T = struct
 
     | loc, ObjectDestruct (expr_type, prop) ->
       let t = type_of_expr_type outlined expr_type in
-      let f id = fst expr_type, Ast.Statement.DeclareVariable {
+      let f id = None, (fst expr_type, Ast.Statement.DeclareVariable {
         Ast.Statement.DeclareVariable.id;
         annot = Ast.Type.Available (fst t, t);
-      } in
+      }) in
       let id = Outlined.next outlined loc f in
       loc, Ast.Type.Typeof (type_of_generic (loc, {
         Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Qualified (loc, {
@@ -337,9 +342,12 @@ module T = struct
       })
 
   and outlining_fun outlined decl_loc ht id = match ht with
-    | Class class_t ->
+    | Class (id_opt, class_t) -> id_opt,
+      let id = match id_opt with
+        | None -> id
+        | Some id -> id in
       stmt_of_decl outlined decl_loc id (ClassDecl class_t)
-    | DynamicImport (source_loc, source_lit) ->
+    | DynamicImport (source_loc, source_lit) -> None,
       let importKind = Ast.Statement.ImportDeclaration.ImportValue in
       let source = source_loc, source_lit in
       let default = None in
@@ -351,7 +359,7 @@ module T = struct
         default;
         specifiers;
       }
-    | DynamicRequire require ->
+    | DynamicRequire require -> None,
       let kind = Ast.Statement.VariableDeclaration.Const in
       let pattern = decl_loc, Ast.Pattern.Identifier {
         Ast.Pattern.Identifier.name = id;
@@ -676,12 +684,12 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         let open Ast.Class in
         let {
           tparams; body; extends; implements;
-          id = _; classDecorators = _
+          id; classDecorators = _
         } = stuff in
         let super, super_targs = match extends with
           | None -> None, None
           | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
-        loc, T.Outline (T.Class (class_ tparams body super super_targs implements))
+        loc, T.Outline (T.Class (id, class_ tparams body super super_targs implements))
       | loc, Function stuff
       | loc, ArrowFunction stuff
         ->
@@ -1122,7 +1130,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       let super, super_targs = match extends with
         | None -> None, None
         | Some (_, { Ast.Class.Extends.expr; targs; }) -> Some expr, targs in
-      `Expr (loc, T.Outline (T.Class (Eval.class_ tparams body super super_targs implements)))
+      `Expr (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
     | Declaration _stmt -> raise Eval.Unreachable (* TODO: update signature verifier *)
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
       `Decl (eval_function_declaration loc function_)

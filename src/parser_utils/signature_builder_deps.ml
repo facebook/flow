@@ -59,6 +59,7 @@ module Dep = struct
   and local = Sort.t * string
 
   and dynamic =
+    | Class of Loc.t * string
     | DynamicImport of Loc.t
     | DynamicRequire of Loc.t
 
@@ -96,6 +97,7 @@ module Dep = struct
     let string_of_local (sort, x) =
       spf "%s: %s" (Sort.to_string sort) x in
     let string_of_dynamic = function
+      | Class (loc, x) -> spf "class %s @ %s" x (Loc.to_string loc)
       | DynamicImport loc -> spf "import @ %s" (Loc.to_string loc)
       | DynamicRequire loc -> spf "require @ %s" (Loc.to_string loc) in
     let string_of_remote = function
@@ -142,3 +144,10 @@ let reduce_join f deps x =
 
 let recurse f (deps, msgs) =
   DepSet.fold (fun dep msgs -> ErrorSet.union (f dep) msgs) deps msgs
+
+let replace_local_with_dynamic_class (loc, x) (deps, msgs) =
+  let acc = DepSet.fold (fun dep acc -> match dep with
+    | Dep.Local (_, y) when x = y -> acc
+    | _ -> join (acc, unit dep)
+  ) deps (DepSet.empty, msgs) in
+  join (acc, unit (Dep.Dynamic (Dep.Class (loc, x))))

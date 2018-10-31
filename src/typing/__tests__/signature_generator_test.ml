@@ -171,6 +171,11 @@ let tests = "signature_generator" >::: ([
     ["declare class $1 {m(x: number): number}";
      "declare module.exports: typeof $1;"]; (* outlining *)
 
+  "module_exports_named_class_expression" >:: mk_signature_generator_test
+    ["module.exports = class C { m(x: C): C { return x; } }"]
+    ["declare class C {m(x: C): C}";
+     "declare module.exports: typeof C;"]; (* outlining *)
+
   "module_exports_require" >:: mk_signature_generator_test
     ["module.exports = require('./foo')"]
     ["const $1 = require(\"./foo\");";

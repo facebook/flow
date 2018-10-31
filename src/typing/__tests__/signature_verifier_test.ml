@@ -459,6 +459,17 @@ let tests_data = [
   [],
   ["Reachable: Foo, T"];
 
+  name "recursive_class_coverage",
+  ["module.exports = class C { x: C; }"],
+  [],
+  [];
+
+  name "shadowed_class_expression",
+  ["class C { }";
+   "module.exports = class C { }"],
+  ["Unexpected toplevel definition that needs hoisting @ (2, 23) to (2, 24)"],
+  [];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =

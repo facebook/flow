@@ -273,11 +273,15 @@ module Eval(Env: EvalEnv) = struct
       | _, Identifier stuff -> identifier stuff
       | _, Class stuff ->
         let open Ast.Class in
-        let { id = _; body; tparams; extends; implements; _ } = stuff in
+        let { id; body; tparams; extends; implements; _ } = stuff in
         let super, super_targs = match extends with
           | None -> None, None
           | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
-        class_ tparams body super super_targs implements
+        let deps = class_ tparams body super super_targs implements in
+        begin match id with
+          | None -> deps
+          | Some x -> Deps.replace_local_with_dynamic_class x deps
+        end
       | _, Function stuff
       | _, ArrowFunction stuff
         ->
@@ -744,7 +748,11 @@ module Verifier(Env: EvalEnv) = struct
       eval_export_type_bindings type_exports_named type_exports_named_info
     )
 
-  let dynamic_validator (dynamic_imports, dynamic_requires) = function
+  let dynamic_validator env (dynamic_imports, dynamic_requires) = function
+    | Dep.Class (loc, x) ->
+      if SMap.mem x env
+      then Deps.top (Deps.Error.SketchyToplevelDef loc)
+      else Deps.bot
     | Dep.DynamicImport loc ->
       begin match LocMap.get loc dynamic_imports with
         | None -> Deps.top (Deps.Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Import))
@@ -773,7 +781,7 @@ module Verifier(Env: EvalEnv) = struct
           | None -> Deps.global local
         end
       | Dep.Remote _ -> Deps.unit dep
-      | Dep.Dynamic dynamic -> dynamic_validator dynamic_sources dynamic
+      | Dep.Dynamic dynamic -> dynamic_validator env dynamic_sources dynamic
 
   let rec check cache env dynamic_sources deps =
     Deps.recurse (check_dep cache env dynamic_sources) deps
