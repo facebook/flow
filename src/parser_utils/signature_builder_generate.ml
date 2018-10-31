@@ -58,6 +58,7 @@ module T = struct
       }
     | Require of {
         source: Loc.t Ast_utils.source;
+        name: Loc.t Ast_utils.ident option;
       }
 
   and generic = Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
@@ -448,6 +449,26 @@ module T = struct
     let t = type_of_little_annotation outlined little_annotation in
     fst t, t
 
+  and name_opt_pattern id name_opt =
+    let id_pattern = fst id, Ast.Pattern.Identifier {
+      Ast.Pattern.Identifier.name = id;
+      annot = Ast.Type.Missing (fst id);
+      optional = false;
+    } in
+    match name_opt with
+      | None -> id_pattern
+      | Some name ->
+        fst id, Ast.Pattern.Object {
+          Ast.Pattern.Object.properties = [
+            Ast.Pattern.Object.Property (fst id, {
+              Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier name;
+              pattern = id_pattern;
+              shorthand = (snd id = snd name);
+            })
+          ];
+          annot = Ast.Type.Missing (fst id);
+        }
+
   and stmt_of_decl outlined decl_loc id = function
     | Type { tparams; right; } ->
       decl_loc, Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right }
@@ -511,13 +532,9 @@ module T = struct
         default;
         specifiers;
       }
-    | Require { source; } ->
+    | Require { source; name } ->
       let kind = Ast.Statement.VariableDeclaration.Const in
-      let pattern = fst id, Ast.Pattern.Identifier {
-        Ast.Pattern.Identifier.name = id;
-        annot = Ast.Type.Missing (fst id);
-        optional = false;
-      } in
+      let pattern = name_opt_pattern id name in
       let loc, x = source in
       let require = decl_loc, Ast.Expression.Call {
         Ast.Expression.Call.callee =
@@ -1030,8 +1047,8 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         T.ImportNamed { kind; source; name }
       | Kind.ImportStarDef { kind; source } ->
         T.ImportStar { kind; source }
-      | Kind.RequireDef { source } ->
-        T.Require { source }
+      | Kind.RequireDef { source; name } ->
+        T.Require { source; name }
       | Kind.SketchyToplevelDef ->
         raise (Eval.Error "sketchy toplevel def")
 

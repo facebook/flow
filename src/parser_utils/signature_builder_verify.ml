@@ -576,8 +576,8 @@ module Verifier(Env: EvalEnv) = struct
         Deps.import_named (Kind.Sort.of_import_kind kind) source name
       | Kind.ImportStarDef { kind; source } ->
         Deps.import_star (Kind.Sort.of_import_kind kind) source
-      | Kind.RequireDef { source; _ } ->
-        Deps.require source
+      | Kind.RequireDef { source; name } ->
+        Deps.require ?name source
       | Kind.SketchyToplevelDef ->
         Deps.top (Deps.Error.SketchyToplevelDef loc)
 

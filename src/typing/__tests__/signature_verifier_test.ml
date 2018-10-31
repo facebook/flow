@@ -286,9 +286,9 @@ let tests_data = [
    "}";
    "module.exports = C;"],
   ["Expected annotation @ (7, 4) to (7, 5)"],
-  ["import { D } from './hoisted_requires_helper'";
-   "import { D } from './hoisted_requires_helper'";
-   "require('./hoisted_requires_helper')";
+  ["require('./hoisted_requires_helper')";
+   "require('./hoisted_requires_helper').D";
+   "require('./hoisted_requires_helper').D";
    "Reachable: C, D, M"];
 
   name "hoisted_locals",

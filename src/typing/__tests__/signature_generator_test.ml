@@ -378,13 +378,13 @@ let tests = "signature_generator" >::: ([
   "require_destructured" >:: mk_signature_generator_test
     ["const { C } = require('./foo')";
      "declare module.exports: C"]
-    ["import {C} from \"./foo\";";
+    ["const {C} = require(\"./foo\");";
      "declare module.exports: C;"];
 
   "require_destructured_local" >:: mk_signature_generator_test
     ["const { C: C2 } = require('./foo')";
      "declare module.exports: C2"]
-    ["import {C as C2} from \"./foo\";";
+    ["const {C: C2} = require(\"./foo\");";
      "declare module.exports: C2;"];
 
   "require_destructured_local_dead" >:: mk_signature_generator_test

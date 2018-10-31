@@ -75,6 +75,7 @@ module Dep = struct
       }
     | Require of {
         source: Loc.t Ast_utils.source;
+        name: Loc.t Ast_utils.ident option;
       }
     | Global of local
 
@@ -105,7 +106,11 @@ module Dep = struct
         spf "%s { %s } from '%s'" (string_of_import_sort sort) n m
       | ImportStar { sort; source = (_, m) } ->
         spf "%s * from '%s'" (string_of_import_sort sort) m
-      | Require { source = (_, m) } -> spf "require('%s')" m
+      | Require { source = (_, m); name } ->
+        begin match name with
+          | None -> spf "require('%s')" m
+          | Some (_, n) -> spf "require('%s').%s" m n
+        end
       | Global local -> spf "global %s" (string_of_local local)
     in function
       | Local local -> string_of_local local
@@ -136,7 +141,7 @@ let dynamic_require loc = unit Dep.(Dynamic (DynamicRequire loc))
 
 let import_named sort source name = unit Dep.(Remote (ImportNamed { sort; source; name }))
 let import_star sort source = unit Dep.(Remote (ImportStar { sort; source }))
-let require source = unit Dep.(Remote (Require { source }))
+let require ?name source = unit Dep.(Remote (Require { source; name }))
 let global local = unit Dep.(Remote (Global local))
 
 let reduce_join f deps x =

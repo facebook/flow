@@ -118,8 +118,8 @@ let import_star loc id kind source =
 let import_named loc id name kind source =
   id, (loc, Kind.ImportNamedDef { kind; source; name })
 
-let require loc id source =
-  id, (loc, Kind.RequireDef { source })
+let require loc id ?name source =
+  id, (loc, Kind.RequireDef { source; name })
 
 let sketchy_toplevel loc id =
   id, (loc, Kind.SketchyToplevelDef)

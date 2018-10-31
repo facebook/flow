@@ -171,13 +171,13 @@ module Signature = struct
         | _ -> assert false
     ) env type_named type_named_infos
 
-  let add_named_imports import_loc ?(filter=(fun _ -> true)) source kind named_imports env =
+  let add_named_imports import_loc source kind named_imports env =
     SMap.fold (fun remote ids env ->
       SMap.fold (fun local locs env ->
         Nel.fold_left (fun env { File_sig.remote_loc; local_loc } ->
           let id = local_loc, local in
           let name = remote_loc, remote in
-          if filter id then add_env env (Entry.import_named import_loc id name kind source) else env
+          add_env env (Entry.import_named import_loc id name kind source)
         ) env locs
       ) ids env
     ) named_imports env
@@ -187,9 +187,16 @@ module Signature = struct
     let open File_sig in
     match require_bindings with
       | BindIdent id -> if filter id then add_env env (Entry.require require_loc id source) else env
-      | BindNamed named_imports ->
-        let kind = Ast.Statement.ImportDeclaration.ImportValue in
-        add_named_imports require_loc ~filter source kind named_imports env
+      | BindNamed named_requires ->
+        SMap.fold (fun remote ids env ->
+          SMap.fold (fun local locs env ->
+            Nel.fold_left (fun env { File_sig.remote_loc; local_loc } ->
+              let id = local_loc, local in
+              let name = remote_loc, remote in
+              if filter id then add_env env (Entry.require require_loc id ~name source) else env
+            ) env locs
+          ) ids env
+        ) named_requires env
 
   let add_ns_imports import_loc source kind ns_imports env =
     match ns_imports with

@@ -117,6 +117,7 @@ type t =
     }
   | RequireDef of {
       source: Loc.t Ast_utils.source;
+      name: Loc.t Ast_utils.ident option;
     }
   | SketchyToplevelDef
 
