@@ -3163,6 +3163,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when List.mem u (InterRep.members rep) ->
       ()
 
+    (* String enum sets can be handled in logarithmic time by just
+     * checking for membership in the set.
+     *)
+    | DefT (reason_l, StrT Literal (_, x)), UseT (use_op, DefT (reason_u, UnionT rep)) when
+        match UnionRep.check_enum rep with
+        | Some enums ->
+            if not (EnumSet.mem (Enum.Str x) enums)
+            then add_output cx ~trace (FlowError.EIncompatibleWithUseOp
+              (reason_l, UnionRep.specialized_reason reason_u rep, use_op));
+            true
+        | _ -> false
+      -> ()
+
     | _, UseT (_, DefT (_, UnionT rep)) when
         let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
         List.exists (TypeUtil.quick_subtype l) ts ->
