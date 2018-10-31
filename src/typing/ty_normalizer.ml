@@ -678,9 +678,20 @@ end = struct
     | DefT (_, AnyObjT) -> return Ty.AnyObj
     | DefT (_, AnyFunT) -> return Ty.AnyFun
     | DefT (_, VoidT) -> return Ty.Void
-    | DefT (_, NumT _) -> return Ty.Num
-    | DefT (_, StrT _) -> return Ty.Str
-    | DefT (_, BoolT _) -> return Ty.Bool
+    | DefT (_, NumT (Literal (_, (_, x))))
+      when Env.preserve_inferred_literal_types env ->
+      return (Ty.Num (Some x))
+    | DefT (_, NumT (Truthy | AnyLiteral | Literal _)) ->
+      return (Ty.Num None)
+    | DefT (_, StrT (Literal (_, x)))
+      when Env.preserve_inferred_literal_types env ->
+      return (Ty.Str (Some x))
+    | DefT (_, StrT (Truthy | AnyLiteral | Literal _)) ->
+      return (Ty.Str None)
+    | DefT (_, BoolT (Some x))
+      when Env.preserve_inferred_literal_types env ->
+      return (Ty.Bool (Some x))
+    | DefT (_, BoolT _) -> return (Ty.Bool None)
     | DefT (_, EmptyT) -> return Ty.Bot
     | DefT (_, NullT) -> return Ty.Null
     | DefT (_, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
@@ -1211,7 +1222,7 @@ end = struct
     | TypeAssertIs ->
       let tparams = [ mk_tparam "TypeAssertT" ] in
       let params = [ (Some "value", Ty.Top, non_opt_param) ] in
-      return (mk_fun ~tparams ~params Ty.Bool)
+      return (mk_fun ~tparams ~params (Ty.Bool None))
 
     (*  var TypeAssertThrows: <TypeAssertT>(value: mixed) => TypeAssertT *)
     | TypeAssertThrows ->
@@ -1226,10 +1237,12 @@ end = struct
       let tparams = [ mk_tparam "TypeAssertT" ] in
       let params = [ (Some "value", Ty.Top, non_opt_param) ] in
       let result_fail_ty = Ty.mk_object (Ty.mk_field_props [
-        ("success", Ty.BoolLit false, false); ("error", Ty.Str, false)
+        ("success", Ty.BoolLit false, false);
+        ("error", Ty.Str None, false);
       ]) in
       let result_succ_ty = Ty.mk_object (Ty.mk_field_props [
-        ("success", Ty.BoolLit true, false); ("value", builtin_t "TypeAssertT", false)
+        ("success", Ty.BoolLit true, false);
+        ("value", builtin_t "TypeAssertT", false);
       ]) in
       let ret = Ty.mk_union [result_fail_ty; result_succ_ty] in
       return (mk_fun ~tparams ~params ret)
@@ -1246,7 +1259,7 @@ end = struct
 
     (* debugSleep: (seconds: number) => void *)
     | DebugSleep -> return Ty.(
-        mk_fun ~params:[(Some "seconds", Num, non_opt_param)] Void
+        mk_fun ~params:[(Some "seconds", Num None, non_opt_param)] Void
       )
 
     (* reactPropType: any (TODO) *)
@@ -1317,7 +1330,7 @@ end = struct
     | TypeAssertIs ->
       let tparams = [ mk_tparam "TypeAssertT" ] in
       let params = [ (Some "value", Ty.Top, non_opt_param) ] in
-      return (mk_fun ~tparams ~params Ty.Bool)
+      return (mk_fun ~tparams ~params (Ty.Bool None))
 
     (*  var TypeAssertThrows: <TypeAssertT>(value: mixed) => TypeAssertT *)
     | TypeAssertThrows ->
@@ -1332,10 +1345,12 @@ end = struct
       let tparams = [ mk_tparam "TypeAssertT" ] in
       let params = [ (Some "value", Ty.Top, non_opt_param) ] in
       let result_fail_ty = Ty.mk_object (Ty.mk_field_props [
-        ("success", Ty.BoolLit false, false); ("error", Ty.Str, false)
+        ("success", Ty.BoolLit false, false);
+        ("error", Ty.Str None, false);
       ]) in
       let result_succ_ty = Ty.mk_object (Ty.mk_field_props [
-        ("success", Ty.BoolLit true, false); ("value", builtin_t "TypeAssertT", false)
+        ("success", Ty.BoolLit true, false);
+        ("value", builtin_t "TypeAssertT", false);
       ]) in
       let ret = Ty.mk_union [result_fail_ty; result_succ_ty] in
       return (mk_fun ~tparams ~params ret)

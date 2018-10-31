@@ -61,9 +61,9 @@ let rec type_ t =
   | Bot -> just T.Empty
   | Void -> just T.Void
   | Null -> just T.Null
-  | Num -> just T.Number
-  | Str -> just T.String
-  | Bool -> just T.Boolean
+  | Num _ -> just T.Number
+  | Str _ -> just T.String
+  | Bool _ -> just T.Boolean
   | NumLit lit -> just (T.NumberLiteral (num_lit lit))
   | StrLit lit -> just (T.StringLiteral (str_lit lit))
   | BoolLit lit -> just (T.BooleanLiteral lit)

@@ -15,7 +15,9 @@ type t =
   | Any | AnyObj | AnyFun
   | Top | Bot
   | Void | Null
-  | Num | Str | Bool
+  | Num of string option
+  | Str of string option
+  | Bool of bool option
   | NumLit of string
   | StrLit of string
   | BoolLit of bool
@@ -208,7 +210,7 @@ let rec mk_exact ty =
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)
   | Any | AnyObj | AnyFun | Top | Bot | Void | Null
-  | Num | Str | Bool | NumLit _ | StrLit _ | BoolLit _
+  | Num _ | Str _ | Bool _ | NumLit _ | StrLit _ | BoolLit _
   | Fun _ | Arr _ | Tup _ -> ty
   (* Do not nest $Exact *)
   | Utility (Exact _) -> ty
@@ -217,6 +219,9 @@ let rec mk_exact ty =
   | TypeOf _ | ClassDecl _ | InterfaceDecl _
   | Utility _ | Module _ ->
     Utility (Exact ty)
+
+let mk_array ~readonly t =
+  Arr { arr_readonly = readonly; arr_elt_t = t }
 
 let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }

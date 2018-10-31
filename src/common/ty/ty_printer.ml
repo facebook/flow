@@ -80,9 +80,9 @@ let type_ ?(size=5000) t =
     | Bot -> Atom "empty"
     | Void -> Atom "void"
     | Null -> Atom "null"
-    | Num -> Atom "number"
-    | Str -> Atom "string"
-    | Bool -> Atom "boolean"
+    | Num _ -> Atom "number"
+    | Str _ -> Atom "string"
+    | Bool _ -> Atom "boolean"
     | Fun func ->
       type_function ~depth
         ~sep:(fuse [pretty_space; Atom "=>"])

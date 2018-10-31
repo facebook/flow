@@ -141,6 +141,7 @@ let autocomplete_member ~ac_type cx file_sig this ac_name ac_loc docblock = Flow
       expand_internal_types = true;
       expand_type_aliases = false;
       flag_shadowed_type_params = true;
+      preserve_inferred_literal_types = false;
     } in
     let file = Context.file cx in
     let type_table = Context.type_table cx in
@@ -183,6 +184,7 @@ let autocomplete_id cx file_sig env =
         expand_internal_types = true;
         expand_type_aliases = false;
         flag_shadowed_type_params = true;
+        preserve_inferred_literal_types = false;
       } in
       let file = Context.file cx in
       let type_table = Context.type_table cx in

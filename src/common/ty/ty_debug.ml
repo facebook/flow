@@ -140,11 +140,14 @@ and dump_t ?(depth = 10) t =
   | Bot -> "Bot"
   | Void -> "Void"
   | Null -> "Null"
-  | Num -> "Num"
+  | Num (Some x) -> spf "Num (%s)" x
+  | Num None -> "Num"
   | NumLit s -> spf "\"%s\"" s
-  | Str -> "Str"
+  | Str (Some x) -> spf "Str (%s)" x
+  | Str None -> "Str"
   | StrLit s -> spf "\"%s\"" s
-  | Bool -> "Bool"
+  | Bool (Some x) -> spf "Bool (%b)" x
+  | Bool None -> "Bool"
   | BoolLit b ->  spf "\"%b\"" b
   | Fun f -> dump_fun_t ~depth f
   | Obj o -> dump_obj ~depth o
@@ -192,9 +195,9 @@ let string_of_ctor = function
   | Bot -> "Bot"
   | Void -> "Void"
   | Null -> "Null"
-  | Num -> "Num"
-  | Str -> "Str"
-  | Bool -> "Bool"
+  | Num _ -> "Num"
+  | Str _ -> "Str"
+  | Bool _ -> "Bool"
   | NumLit _ -> "NumLit"
   | StrLit _ -> "StrLit"
   | BoolLit _ -> "BoolLit"
@@ -245,7 +248,7 @@ let json_of_t ~strip_root =
     | Any | AnyObj | AnyFun
     | Top | Bot
     | Void | Null
-    | Num | Str | Bool -> []
+    | Num _ | Str _ | Bool _ -> []
     | NumLit s
     | StrLit s -> [
         "literal", JSON_String s

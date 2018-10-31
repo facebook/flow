@@ -348,6 +348,42 @@ assert_ok "$FLOW" type-at-pos jsx.js 18 24 --strip-root --pretty
 printf "declare_class.js:3:15 = "
 assert_ok "$FLOW" type-at-pos declare_class.js 3 15 --strip-root --pretty
 
+# literals.js
+printf "literals.js:6:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 6 7 --strip-root --pretty
+printf "literals.js:7:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 7 7 --strip-root --pretty
+printf "literals.js:8:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 8 7 --strip-root --pretty
+printf "literals.js:9:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 9 7 --strip-root --pretty
+printf "literals.js:10:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 10 7 --strip-root --pretty
+printf "literals.js:13:6 = "
+assert_ok "$FLOW" type-at-pos literals.js 13 6 --strip-root --pretty
+printf "literals.js:14:6 = "
+assert_ok "$FLOW" type-at-pos literals.js 14 6 --strip-root --pretty
+printf "literals.js:15:6 = "
+assert_ok "$FLOW" type-at-pos literals.js 15 6 --strip-root --pretty
+printf "literals.js:16:6 = "
+assert_ok "$FLOW" type-at-pos literals.js 16 6 --strip-root --pretty
+printf "literals.js:17:6 = "
+assert_ok "$FLOW" type-at-pos literals.js 17 6 --strip-root --pretty
+printf "literals.js:19:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 19 7 --strip-root --pretty
+printf "literals.js:21:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 21 7 --strip-root --pretty
+printf "literals.js:22:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 22 7 --strip-root --pretty
+printf "literals.js:24:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 24 7 --strip-root --pretty
+printf "literals.js:28:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 28 7 --strip-root --pretty
+printf "literals.js:31:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 31 7 --strip-root --pretty
+printf "literals.js:32:7 = "
+assert_ok "$FLOW" type-at-pos literals.js 32 7 --strip-root --pretty
+
 # mixed.js
 printf "mixed.js:18:17 = "
 assert_ok "$FLOW" type-at-pos mixed.js 18 17 --strip-root --pretty

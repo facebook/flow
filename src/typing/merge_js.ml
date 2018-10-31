@@ -213,7 +213,7 @@ let check_type_visitor wrap =
     | TypeAlias { ta_name = { Ty.name; _ }; _} ->
       wrap (Reason.RCustom ("type alias " ^ name))
     | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
-    | (Void|Null|Num|Str|Bool|NumLit _|StrLit _|BoolLit _|TypeOf _|
+    | (Void|Null|Num _|Str _|Bool _|NumLit _|StrLit _|BoolLit _|TypeOf _|
       Generic _|ClassDecl _|InterfaceDecl _|Utility _) -> ()
 
   end
@@ -225,6 +225,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     expand_internal_types = false;
     expand_type_aliases = true;
     flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
   } in
   let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
     Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->

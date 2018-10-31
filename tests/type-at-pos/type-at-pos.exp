@@ -1957,6 +1957,261 @@ declare_class.js:3:15 = {
   "start":15,
   "end":15
 }
+literals.js:6:7 = {
+  "type":"string",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":6,"column":7,"offset":68},
+    "end":{"line":6,"column":7,"offset":69}
+  },
+  "path":"literals.js",
+  "line":6,
+  "endline":6,
+  "start":7,
+  "end":7
+}
+literals.js:7:7 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":7,"column":7,"offset":83},
+    "end":{"line":7,"column":7,"offset":84}
+  },
+  "path":"literals.js",
+  "line":7,
+  "endline":7,
+  "start":7,
+  "end":7
+}
+literals.js:8:7 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":7,"offset":96},
+    "end":{"line":8,"column":7,"offset":97}
+  },
+  "path":"literals.js",
+  "line":8,
+  "endline":8,
+  "start":7,
+  "end":7
+}
+literals.js:9:7 = {
+  "type":"boolean",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":7,"offset":112},
+    "end":{"line":9,"column":7,"offset":113}
+  },
+  "path":"literals.js",
+  "line":9,
+  "endline":9,
+  "start":7,
+  "end":7
+}
+literals.js:10:7 = {
+  "type":"boolean | string | number",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":7,"offset":128},
+    "end":{"line":10,"column":7,"offset":129}
+  },
+  "path":"literals.js",
+  "line":10,
+  "endline":10,
+  "start":7,
+  "end":7
+}
+literals.js:13:6 = {
+  "type":"type S = \"A\"",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":6,"offset":186},
+    "end":{"line":13,"column":6,"offset":187}
+  },
+  "path":"literals.js",
+  "line":13,
+  "endline":13,
+  "start":6,
+  "end":6
+}
+literals.js:14:6 = {
+  "type":"type N = 1",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":6,"offset":200},
+    "end":{"line":14,"column":6,"offset":201}
+  },
+  "path":"literals.js",
+  "line":14,
+  "endline":14,
+  "start":6,
+  "end":6
+}
+literals.js:15:6 = {
+  "type":"type F = 1.01",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":15,"column":6,"offset":212},
+    "end":{"line":15,"column":6,"offset":213}
+  },
+  "path":"literals.js",
+  "line":15,
+  "endline":15,
+  "start":6,
+  "end":6
+}
+literals.js:16:6 = {
+  "type":"type B = true",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":16,"column":6,"offset":227},
+    "end":{"line":16,"column":6,"offset":228}
+  },
+  "path":"literals.js",
+  "line":16,
+  "endline":16,
+  "start":6,
+  "end":6
+}
+literals.js:17:6 = {
+  "type":"type U = \"A\" | 1 | 1.01 | true",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":6,"offset":242},
+    "end":{"line":17,"column":6,"offset":243}
+  },
+  "path":"literals.js",
+  "line":17,
+  "endline":17,
+  "start":6,
+  "end":6
+}
+literals.js:19:7 = {
+  "type":"(x: (\"A\" | \"B\")) => (\"A\" | \"B\")",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":7,"offset":276},
+    "end":{"line":19,"column":8,"offset":278}
+  },
+  "path":"literals.js",
+  "line":19,
+  "endline":19,
+  "start":7,
+  "end":8
+}
+literals.js:21:7 = {
+  "type":"{|f: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":7,"offset":309},
+    "end":{"line":21,"column":8,"offset":311}
+  },
+  "path":"literals.js",
+  "line":21,
+  "endline":21,
+  "start":7,
+  "end":8
+}
+literals.js:22:7 = {
+  "type":"{|f: \"f\"|}",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":22,"column":7,"offset":332},
+    "end":{"line":22,"column":8,"offset":334}
+  },
+  "path":"literals.js",
+  "line":22,
+  "endline":22,
+  "start":7,
+  "end":8
+}
+literals.js:24:7 = {
+  "type":"(x: string) => string",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":24,"column":7,"offset":363},
+    "end":{"line":24,"column":8,"offset":365}
+  },
+  "path":"literals.js",
+  "line":24,
+  "endline":24,
+  "start":7,
+  "end":8
+}
+literals.js:28:7 = {
+  "type":"Array<number>",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":28,"column":7,"offset":401},
+    "end":{"line":28,"column":17,"offset":412}
+  },
+  "path":"literals.js",
+  "line":28,
+  "endline":28,
+  "start":7,
+  "end":17
+}
+literals.js:31:7 = {
+  "type":"A<number>",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":31,"column":7,"offset":453},
+    "end":{"line":31,"column":9,"offset":456}
+  },
+  "path":"literals.js",
+  "line":31,
+  "endline":31,
+  "start":7,
+  "end":9
+}
+literals.js:32:7 = {
+  "type":"A<1>",
+  "reasons":[],
+  "loc":{
+    "source":"literals.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":7,"offset":482},
+    "end":{"line":32,"column":9,"offset":485}
+  },
+  "path":"literals.js",
+  "line":32,
+  "endline":32,
+  "start":7,
+  "end":9
+}
 mixed.js:18:17 = {
   "type":"AB",
   "reasons":[],

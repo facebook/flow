@@ -49,6 +49,7 @@ let types_in_file ~full_cx ~file ~file_sig ~expand_aliases ~type_table typed_ast
     expand_internal_types = false;
     expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = true;
   } in
   let type_scheme_list = Typed_ast_utils.typed_ast_to_list typed_ast in
   let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~type_table in
@@ -70,6 +71,7 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~typed
     expand_internal_types = false;
     expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
   } in
   match find_type_at_pos_annotation typed_ast loc with
   | None -> FailureNoMatch
@@ -106,6 +108,7 @@ let covered_types cx file_sig ~should_check =
     expand_internal_types = false;
     expand_type_aliases = false;
     flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
   } in
   let file = Context.file cx in
   let type_table = Context.type_table cx in
@@ -137,6 +140,7 @@ let suggest_types cx file_sig =
     expand_internal_types = false;
     expand_type_aliases = false;
     flag_shadowed_type_params = true;
+    preserve_inferred_literal_types = false;
   } in
   let type_table = Context.type_table cx in
   let file = Context.file cx in

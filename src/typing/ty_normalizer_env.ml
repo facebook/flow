@@ -47,6 +47,9 @@ type options = {
     This flags toggles this behavior.
   *)
   flag_shadowed_type_params: bool;
+
+  (* Makes the normalizer more aggressive is preserving inferred literal types *)
+  preserve_inferred_literal_types: bool;
 }
 
 let default_opts = {
@@ -54,17 +57,7 @@ let default_opts = {
   expand_internal_types = false;
   expand_type_aliases = false;
   flag_shadowed_type_params = false;
-}
-
-let mk_opts
-  ~fall_through_merged
-  ~expand_internal_types
-  ~expand_type_aliases
-  ~flag_shadowed_type_params =
-{ fall_through_merged;
-  expand_internal_types;
-  expand_type_aliases;
-  flag_shadowed_type_params;
+  preserve_inferred_literal_types = false;
 }
 
 (* This is a global environment that should not change during normalization *)
@@ -169,6 +162,8 @@ let fall_through_merged e = e.options.fall_through_merged
 let expand_internal_types e = e.options.expand_internal_types
 let expand_type_aliases e = e.options.expand_type_aliases
 let flag_shadowed_type_params e = e.options.flag_shadowed_type_params
+let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_types
+
 let current_file e = e.genv.file
 
 let add_typeparam env typeparam =
