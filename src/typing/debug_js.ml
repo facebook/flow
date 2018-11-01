@@ -2809,5 +2809,7 @@ let dump_flow_error =
       spf "EInexactSpread (%s, %s)"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
+    | EUnexpectedTemporaryBaseType loc ->
+      spf "EUnexpectedTemporaryBaseType (%s)" (string_of_loc loc)
     | ESignatureVerification sve ->
       spf "ESignatureVerification (%s)" (Signature_builder_deps.Error.debug_to_string sve)

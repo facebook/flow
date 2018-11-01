@@ -169,6 +169,7 @@ type error_message =
   | EUnnecessaryInvariant of Loc.t * reason
   | EInexactSpread of reason * reason
   | EDeprecatedCallSyntax of Loc.t
+  | EUnexpectedTemporaryBaseType of Loc.t
   | ESignatureVerification of Signature_builder_deps.Error.t
 
 and binding_error =
@@ -396,6 +397,7 @@ let util_use_op_of_msg nope util = function
 | EUnnecessaryInvariant _
 | EInexactSpread _
 | EDeprecatedCallSyntax _
+| EUnexpectedTemporaryBaseType _
 | ESignatureVerification _
   -> nope
 
@@ -1817,6 +1819,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
     mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
       code name;
       text " may only be used as part of a legal top level export statement";
+    ]
+
+  | EUnexpectedTemporaryBaseType loc ->
+    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+      text "The type argument of a temporary base type must be a compatible literal type";
     ]
 
   | ESignatureVerification sve ->

@@ -61,9 +61,18 @@ let rec type_ t =
   | Bot -> just T.Empty
   | Void -> just T.Void
   | Null -> just T.Null
-  | Num _ -> just T.Number
-  | Str _ -> just T.String
-  | Bool _ -> just T.Boolean
+  | Num (Some lit) ->
+    return (builtin_from_string "$TEMPORARY$number"
+      ~targs:(Loc.none, [Loc.none, T.NumberLiteral (num_lit lit)]))
+  | Num None -> just T.Number
+  | Str (Some lit) ->
+    return (builtin_from_string "$TEMPORARY$string"
+      ~targs:(Loc.none, [Loc.none, T.StringLiteral (str_lit lit)]))
+  | Str None -> just T.String
+  | Bool (Some lit) ->
+    return (builtin_from_string "$TEMPORARY$boolean"
+      ~targs:(Loc.none, [Loc.none, (T.BooleanLiteral lit)]))
+  | Bool None -> just T.Boolean
   | NumLit lit -> just (T.NumberLiteral (num_lit lit))
   | StrLit lit -> just (T.StringLiteral (str_lit lit))
   | BoolLit lit -> just (T.BooleanLiteral lit)

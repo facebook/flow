@@ -238,6 +238,41 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   begin match name with
 
+  (* Temporary base types with literal information *)
+  | "$TEMPORARY$number" ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
+      let elemts, targs = convert_type_params () in
+      match List.hd elemts with
+        | DefT (r, SingletonNumT num_lit) ->
+          reconstruct_ast
+            (DefT (r, NumT (Literal (None, num_lit))))
+            targs
+        | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc)
+    )
+
+  | "$TEMPORARY$string" ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
+      let elemts, targs = convert_type_params () in
+      match List.hd elemts with
+        | DefT (r, SingletonStrT str_lit) ->
+          reconstruct_ast
+            (DefT (r, StrT (Literal (None, str_lit))))
+            targs
+        | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc)
+    )
+
+  | "$TEMPORARY$boolean" ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
+      let elemts, targs = convert_type_params () in
+      match List.hd elemts with
+        | DefT (r, SingletonBoolT bool) ->
+          reconstruct_ast
+            (DefT (r, BoolT (Some bool)))
+            targs
+        | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc)
+    )
+
+
   (* Array<T> *)
   | "Array" ->
     check_type_arg_arity cx loc targs 1 (fun () ->
