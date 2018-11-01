@@ -30,7 +30,6 @@ module Request = struct
       int * (* char *)
       Verbose.t option *
       bool (* expand type aliases *)
-  | PORT of string list
   | REFACTOR of File_input.t * int * int * refactor_variant (* filename, line, char, refactor variant *)
   | STATUS of Path.t * bool (* include_warnings *)
   | FORCE_RECHECK of { files: string list; focus:bool; profile:bool }
@@ -69,8 +68,6 @@ module Request = struct
   | INFER_TYPE (fn, line, char, _, _) ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input fn) line char
-  | PORT (files) ->
-      Printf.sprintf "port %s" (String.concat " " files)
   | REFACTOR (fn, line, char, kind) ->
       Printf.sprintf "refactor %s:%d:%d:%s"
         (File_input.filename_of_file_input fn)
@@ -169,8 +166,6 @@ module Response = struct
   type gen_flow_files_response =
     ((string * gen_flow_files_result) list, gen_flow_files_error) result
 
-  type port_response = (string, exn) result SMap.t
-
   type directory_mismatch = {
     server: Path.t;
     client: Path.t;
@@ -204,7 +199,6 @@ module Response = struct
   | GET_DEF of get_def_response
   | GET_IMPORTS of get_imports_response
   | INFER_TYPE of infer_type_response
-  | PORT of port_response
   | REFACTOR of refactor_response
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
   | FORCE_RECHECK of Profiling_js.finished option
@@ -223,7 +217,6 @@ module Response = struct
   | GET_DEF _ -> "get_def response"
   | GET_IMPORTS _ -> "get_imports response"
   | INFER_TYPE _ -> "infer_type response"
-  | PORT _ -> "port response"
   | REFACTOR _ -> "refactor response"
   | STATUS _ -> "status response"
   | FORCE_RECHECK _ -> "force_recheck response"

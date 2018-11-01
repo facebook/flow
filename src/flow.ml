@@ -33,7 +33,6 @@ end = struct
     InitCommand.command;
     LspCommand.command;
     LsCommand.command;
-    PortCommand.command;
     RefactorCommand.command;
     SaveStateCommand.command;
     ServerCommand.command;

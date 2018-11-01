@@ -110,7 +110,6 @@ MODULES=\
   src/services/inference\
   src/services/inference/module\
   src/services/flowFileGen\
-  src/services/port\
   src/services/saved_state\
   src/services/type_info\
   src/state/heaps/context\
