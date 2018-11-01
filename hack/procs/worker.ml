@@ -145,14 +145,14 @@ let slave_main ic oc =
       in
       Exit_status.exit exit_code
   | e ->
+      let e_backtrace = Printexc.get_backtrace () in
       let e_str = Printexc.to_string e in
       let pid = Unix.getpid () in
       Printf.printf "Worker slave %d exception: %s\n%!" pid e_str;
       EventLogger.log_if_initialized (fun () ->
         EventLogger.worker_exception e_str
       );
-      Printf.printf "Worker slave %d Potential backtrace:\n%!" pid;
-      Printexc.print_backtrace stdout;
+      Printf.printf "Worker slave %d Potential backtrace:\n%s\n%!" pid e_backtrace;
       exit 2
 
 let win32_worker_main restore (state, _controller_fd) (ic, oc) =
