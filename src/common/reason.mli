@@ -239,8 +239,6 @@ val replace_reason_const: ?keep_def_loc:bool -> reason_desc -> reason -> reason
 val repos_reason: Loc.t -> ?annot_loc:ALoc.t -> reason -> reason
 val annot_reason: reason -> reason
 
-val do_patch: string list -> (int * int * string) list -> string
-
 module ReasonMap : MyMap.S with type key = reason
 
 val mk_expression_reason: (Loc.t, Loc.t) Flow_ast.Expression.t -> reason

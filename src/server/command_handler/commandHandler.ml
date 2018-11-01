@@ -183,10 +183,6 @@ let suggest ~options ~workers ~env ~profiling file_input =
       Lwt.return (Ok (ServerProt.Response.Suggest_Error errors))
   )
 
-(* NOTE: currently, not only returns list of annotations, but also writes a
-   timestamped file with annotations *)
-let port = Port_service_js.port_files
-
 let find_module ~options (moduleref, filename) =
   let file = File_key.SourceFile filename in
   let loc = {Loc.none with Loc.source = Some file} in
@@ -411,10 +407,6 @@ let handle_ephemeral_deferred_unsafe
           ServerProt.Response.INFER_TYPE result
           |> respond;
           Lwt.return json_data
-      | ServerProt.Request.PORT (files) ->
-          ServerProt.Response.PORT (port files: ServerProt.Response.port_response)
-          |> respond;
-          Lwt.return None
       | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
           let open ServerProt.Response in
           let%lwt result =
@@ -506,7 +498,6 @@ let should_handle_immediately { ServerProt.Request.client_logging_context=_; com
     | ServerProt.Request.GET_DEF _
     | ServerProt.Request.GET_IMPORTS _
     | ServerProt.Request.INFER_TYPE _
-    | ServerProt.Request.PORT _
     | ServerProt.Request.REFACTOR _
     | ServerProt.Request.STATUS _
     | ServerProt.Request.SUGGEST _
@@ -560,7 +551,6 @@ let handle_ephemeral_immediately_unsafe
       | ServerProt.Request.GET_DEF _
       | ServerProt.Request.GET_IMPORTS _
       | ServerProt.Request.INFER_TYPE _
-      | ServerProt.Request.PORT _
       | ServerProt.Request.REFACTOR _
       | ServerProt.Request.STATUS _
       | ServerProt.Request.SUGGEST _

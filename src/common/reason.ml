@@ -229,30 +229,6 @@ let in_range loc range = Loc.(
   (line < line2 || (line = line2 && loc._end.column <= range._end.column))
 )
 
-let rec patch ll offset lines = function
-  | [] -> ()
-  | (l,c,str)::insertions ->
-      let c = if l = ll then c + offset else c in
-      let del = try Some (int_of_string str) with _ -> None in
-      let line = lines.(l - 1) in
-      let shift = match del with
-      | Some n -> (* delete n chars at l, c *)
-          lines.(l - 1) <- spf "%s%s"
-            (string_before line c) (string_after line (c + n));
-          -n
-      | None -> (* insert str at l, c *)
-          lines.(l - 1) <- spf "%s%s%s"
-            (string_before line c) str (string_after line c);
-          String.length str
-      in
-      let offset = (if l = ll then offset else 0) + shift in
-      patch l offset lines insertions
-
-let do_patch lines insertions =
-  let lines = Array.of_list lines in
-  patch 1 0 lines insertions;
-  String.concat "\n" (Array.to_list lines)
-
 let string_of_source ?(strip_root=None) = File_key.(function
   | Builtins -> "(builtins)"
   | LibFile file ->
