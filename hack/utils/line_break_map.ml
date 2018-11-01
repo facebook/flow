@@ -12,9 +12,12 @@ type t = int array [@@deriving show]
 let last_offset = ref 0
 let curr_index = ref 0
 
-let make text =
+let reset_global_state () =
   last_offset := 0;
-  curr_index := 0;
+  curr_index := 0
+
+let make text =
+  reset_global_state ();
   (* Clever Tricks Warning
    * ---------------------
    * We prepend 0, so as to make the invariant hold that there is always a
