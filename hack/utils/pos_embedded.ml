@@ -357,6 +357,25 @@ let destruct_range (p : 'a pos) : (int * int * int * int) =
   line_start, col_start_minus1 + 1,
   line_end,   col_end_minus1 + 1
 
+let advance_one (p : 'a pos): 'a pos =
+  match p with
+  | Pos_small { pos_file; pos_start; pos_end } ->
+    Pos_small {
+      pos_file;
+      pos_start;
+      pos_end =
+        let column = File_pos_small.column pos_end in
+        File_pos_small.set_column (column + 1) pos_end
+    }
+  | Pos_large { pos_file; pos_start; pos_end } ->
+    Pos_large {
+      pos_file;
+      pos_start;
+      pos_end =
+        let column = File_pos_large.column pos_end in
+        File_pos_large.set_column (column + 1) pos_end
+    }
+
 (* This returns a half-open interval. *)
 let multiline_string t =
   let line_start, char_start, line_end, char_end = destruct_range t in

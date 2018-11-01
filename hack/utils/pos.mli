@@ -105,6 +105,8 @@ val get_text_from_pos: content:string -> 'a pos -> string
 (* This returns a half-open interval. *)
 val destruct_range : 'a pos -> (int * int * int * int)
 
+val advance_one : 'a pos -> 'a pos
+
 (* Compare by filename, then tie-break by start position, and finally by the
  * end position *)
 val compare : 'a pos -> 'a pos -> int
