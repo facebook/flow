@@ -149,7 +149,7 @@ static sqlite3_stmt *g_get_dep_select_stmt = NULL;
 #endif
 
 
-#define HASHTBL_WRITE_IN_PROGRESS ((char*)1)
+#define HASHTBL_WRITE_IN_PROGRESS ((heap_entry_t*)1)
 
 /****************************************************************************
  * Quoting the linux manpage: memfd_create() creates an anonymous file
@@ -238,30 +238,6 @@ typedef enum {
   KIND_SERIALIZED = !KIND_STRING
 } storage_kind;
 
-// Every heap entry starts with a 64-bit header with the following layout:
-//
-//  6                                3 3  3                                0 0
-//  3                                3 2  1                                1 0
-// +----------------------------------+-+-----------------------------------+-+
-// |11111111 11111111 11111111 1111111|0| 11111111 11111111 11111111 1111111|1|
-// +----------------------------------+-+-----------------------------------+-+
-// |                                  | |                                   |
-// |                                  | |                                   * 0 tag
-// |                                  | |
-// |                                  | * 31-1 uncompressed size (0 if uncompressed)
-// |                                  |
-// |                                  * 32 kind (0 = serialized, 1 = string)
-// |
-// * 63-33 size of heap entry
-//
-// The tag bit is always 1 and is used to differentiate headers from pointers
-// during garbage collection (see hh_collect).
-typedef uint64_t hh_header_t;
-
-#define Entry_size(x) ((x) >> 33)
-#define Entry_kind(x) (((x) >> 32) & 1)
-#define Entry_uncompressed_size(x) (((x) >> 1) & 0x7FFFFFFF)
-
 typedef struct {
   // Size of the BLOB in bytes.
   size_t size;
@@ -300,10 +276,41 @@ extern const char* const BuildInfo_kRevision;
 /* Types */
 /*****************************************************************************/
 
+// Every heap entry starts with a 64-bit header with the following layout:
+//
+//  6                                3 3  3                                0 0
+//  3                                3 2  1                                1 0
+// +----------------------------------+-+-----------------------------------+-+
+// |11111111 11111111 11111111 1111111|0| 11111111 11111111 11111111 1111111|1|
+// +----------------------------------+-+-----------------------------------+-+
+// |                                  | |                                   |
+// |                                  | |                                   * 0 tag
+// |                                  | |
+// |                                  | * 31-1 uncompressed size (0 if uncompressed)
+// |                                  |
+// |                                  * 32 kind (0 = serialized, 1 = string)
+// |
+// * 63-33 size of heap entry
+//
+// The tag bit is always 1 and is used to differentiate headers from pointers
+// during garbage collection (see hh_collect).
+typedef uint64_t hh_header_t;
+
+#define Entry_size(x) ((x) >> 33)
+#define Entry_kind(x) (((x) >> 32) & 1)
+#define Entry_uncompressed_size(x) (((x) >> 1) & 0x7FFFFFFF)
+#define Heap_entry_total_size(header) sizeof(heap_entry_t) + Entry_size(header)
+
+/* Shared memory structures. hh_shared.h typedefs this to heap_entry_t. */
+typedef struct {
+  hh_header_t header;
+  char data[];
+} heap_entry_t;
+
 /* Cells of the Hashtable */
 typedef struct {
   uint64_t hash;
-  char* addr;
+  heap_entry_t* addr;
 } helt_t;
 
 /*****************************************************************************/
@@ -1537,12 +1544,15 @@ CAMLprim value hh_collect(value aggressive_val) {
     // be. Then, after moving the heap entry, we can follow the pointer to
     // restore our original header and update the addr field to our relocated
     // address.
+    //
+    // This is all super unsafe and only works because we constrain the size of
+    // an hh_header_t struct to the size of a pointer.
 
     // Location of the addr field (8 bytes) in the hashtable
-    char **hashtbl_addr = &hashtbl[i].addr;
+    char **hashtbl_addr = (char **)&hashtbl[i].addr;
 
     // Location of the header (8 bytes) in the heap
-    char *heap_addr = hashtbl[i].addr - sizeof(hh_header_t);
+    char *heap_addr = (char *)hashtbl[i].addr;
 
     // Swap
     hh_header_t header = *(hh_header_t *)heap_addr;
@@ -1567,18 +1577,17 @@ CAMLprim value hh_collect(value aggressive_val) {
       // entry was not marked in the first pass and should be collected. Don't
       // move dest pointer, but advance src pointer to next heap entry.
       header = *(hh_header_t *)src;
-      aligned_size = ALIGNED(Entry_size(header) + sizeof(hh_header_t));
+      aligned_size = ALIGNED(Heap_entry_total_size(header));
     } else {
       // If the lsb is 0, this is a pointer to the addr field of the hashtable
       // element, which holds the header bytes. This entry is live.
       char *hashtbl_addr = *(char **)src;
       header = *(hh_header_t *)hashtbl_addr;
-      aligned_size = ALIGNED(Entry_size(header) + sizeof(hh_header_t));
+      aligned_size = ALIGNED(Heap_entry_total_size(header));
 
       // Fix the hashtbl addr field to point to our new location and restore the
       // heap header data temporarily stored in the addr field bits.
-      char *new_addr = dest + sizeof(hh_header_t);
-      *(uintptr_t *)hashtbl_addr = (uintptr_t)new_addr;
+      *(uintptr_t *)hashtbl_addr = (uintptr_t)dest;
       *(hh_header_t *)src = header;
 
       // Move the entry as far to the left as possible.
@@ -1610,25 +1619,20 @@ static void raise_heap_full(void) {
 }
 
 /*****************************************************************************/
-/* Allocates in the shared heap.
- * The chunks are cache aligned.
- * The word before the chunk address contains the size of the chunk in bytes.
- * The function returns a pointer to the data (the size can be accessed by
- * looking at the address: chunk - sizeof(hh_header_t)).
- */
+/* Allocates in the shared heap. The chunks are cache aligned. */
 /*****************************************************************************/
 
-static char* hh_alloc(hh_header_t header) {
+static heap_entry_t* hh_alloc(hh_header_t header) {
   // the size of this allocation needs to be kept in sync with wasted_heap_size
   // modification in hh_remove
-  size_t slot_size  = ALIGNED(Entry_size(header) + sizeof(hh_header_t));
-  char* chunk       = __sync_fetch_and_add(heap, (char*)slot_size);
+  size_t slot_size = ALIGNED(Heap_entry_total_size(header));
+  char *chunk = __sync_fetch_and_add(heap, (char*) slot_size);
   if (chunk + slot_size > heap_max) {
     raise_heap_full();
   }
   memfd_reserve(chunk, slot_size);
-  *((hh_header_t*)chunk) = header;
-  return (chunk + sizeof(hh_header_t));
+  ((heap_entry_t *)chunk)->header = header;
+  return (heap_entry_t *)chunk;
 }
 
 /*****************************************************************************/
@@ -1637,7 +1641,7 @@ static char* hh_alloc(hh_header_t header) {
  * the allocated chunk.
  */
 /*****************************************************************************/
-static char* hh_store_ocaml(
+static heap_entry_t* hh_store_ocaml(
   value data,
   /*out*/size_t *alloc_size,
   /*out*/size_t *orig_size
@@ -1694,8 +1698,8 @@ static char* hh_store_ocaml(
     | uncompressed_size << 1
     | 1;
 
-  char* addr = hh_alloc(header);
-  memcpy(addr,
+  heap_entry_t* addr = hh_alloc(header);
+  memcpy(&addr->data,
          uncompressed_size ? compressed_data : value,
          size);
 
@@ -1915,18 +1919,15 @@ CAMLprim value hh_mem_status(value key) {
 }
 
 /*****************************************************************************/
-/* Deserializes the value pointed by src. */
-/* The src is an OCaml style pointer, */
-/* meaning that it points right behind the header */
+/* Deserializes the value pointed to by elt. */
 /*****************************************************************************/
-CAMLprim value hh_deserialize(char *src) {
+CAMLprim value hh_deserialize(heap_entry_t *elt) {
   CAMLparam0();
   CAMLlocal1(result);
-  hh_header_t header =
-    *(hh_header_t*)(src - sizeof(hh_header_t));
-  size_t size = Entry_size(header);
-  size_t uncompressed_size_exp = Entry_uncompressed_size(header);
-  char *data = src;
+  size_t size = Entry_size(elt->header);
+  size_t uncompressed_size_exp = Entry_uncompressed_size(elt->header);
+  char *src = elt->data;
+  char *data = elt->data;
   if (uncompressed_size_exp) {
     data = malloc(uncompressed_size_exp);
     size_t uncompressed_size = LZ4_decompress_safe(
@@ -1938,14 +1939,14 @@ CAMLprim value hh_deserialize(char *src) {
     size = uncompressed_size;
   }
 
-  if (Entry_kind(header) == KIND_STRING) {
+  if (Entry_kind(elt->header) == KIND_STRING) {
     result = caml_alloc_string(size);
     memcpy(String_val(result), data, size);
   } else {
     result = caml_input_value_from_block(data, size);
   }
 
-  if (uncompressed_size_exp) {
+  if (data != src) {
     free(data);
   }
   CAMLreturn(result);
@@ -1975,10 +1976,7 @@ CAMLprim value hh_get_size(value key) {
 
   unsigned int slot = find_slot(key);
   assert(hashtbl[slot].hash == get_hash(key));
-  hh_header_t header =
-    *(hh_header_t*)(hashtbl[slot].addr - sizeof(hh_header_t));
-
-  CAMLreturn(Long_val(Entry_size(header)));
+  CAMLreturn(Long_val(Entry_size(hashtbl[slot].addr->header)));
 }
 
 /*****************************************************************************/
@@ -2017,8 +2015,8 @@ void hh_remove(value key) {
   assert_allow_removes();
   assert(hashtbl[slot].hash == get_hash(key));
   // see hh_alloc for the source of this size
-  hh_header_t *header = (hh_header_t *)hashtbl[slot].addr - 1;
-  size_t slot_size = ALIGNED(Entry_size(*header) + sizeof(hh_header_t));
+  size_t slot_size =
+    ALIGNED(Heap_entry_total_size(hashtbl[slot].addr->header));
   __sync_fetch_and_add(wasted_heap_size, slot_size);
   hashtbl[slot].addr = NULL;
   removed_count += 1;

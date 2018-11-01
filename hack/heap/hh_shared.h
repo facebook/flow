@@ -57,8 +57,6 @@ CAMLprim value hh_collect(value aggressive_val);
 /*****************************************************************************/
 /* Deserialization. */
 /*****************************************************************************/
-/* Deserializes the value pointed by src. */
-CAMLprim value hh_deserialize(char *src);
 /* Returns the value associated to a given key, and deserialize it. */
 /* The key MUST be present. */
 CAMLprim value hh_get_and_deserialize(value key);
