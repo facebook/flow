@@ -1082,8 +1082,7 @@ let program (algo : diff_algorithm)
     let { callee = callee1; targs = targs1; arguments = arguments1 } = new1 in
     let { callee = callee2; targs = targs2; arguments = arguments2 } = new2 in
     if targs1 != targs2 then
-      (* TODO(nmote) recurse into targs *)
-      None
+      diff_if_changed_opt type_parameter_instantiation_with_implicit targs1 targs2
     else
       let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
       let callee = Some (diff_if_changed expression callee1 callee2) in
@@ -1118,8 +1117,7 @@ let program (algo : diff_algorithm)
     let { callee = callee1; targs = targs1; arguments = arguments1 } = call1 in
     let { callee = callee2; targs = targs2; arguments = arguments2 } = call2 in
     if targs1 != targs2 then
-      (* TODO(nmote) recurse into targs *)
-      None
+      diff_if_changed_opt type_parameter_instantiation_with_implicit targs1 targs2
     else
       let args = diff_and_recurse_no_trivial expression_or_spread arguments1 arguments2 in
       let callee = Some (diff_if_changed expression callee1 callee2) in
@@ -1426,6 +1424,24 @@ let program (algo : diff_algorithm)
       ((_loc2, type2): (Loc.t, Loc.t) Ast.Type.t)
       : node change list =
     [loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
+
+  and type_or_implicit
+      (t1: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
+      (t2: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
+      : node change list option =
+    let open Ast.Expression.TypeParameterInstantiation in
+    match t1, t2 with
+    | Explicit type1, Explicit type2 -> Some (diff_if_changed type_ type1 type2)
+    | Implicit _, Implicit _ -> Some []
+    | _ -> None
+
+  and type_parameter_instantiation_with_implicit
+      (pi1: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.t)
+      (pi2: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.t)
+      : node change list option =
+    let _, t_args1 = pi1 in
+    let _, t_args2 = pi2 in
+    diff_and_recurse_no_trivial type_or_implicit t_args1 t_args2
 
   and type_alias
       (t_alias1: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)
