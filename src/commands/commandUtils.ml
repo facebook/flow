@@ -760,6 +760,13 @@ let options_flags =
     |> flag "--no-saved-state" no_arg
       ~doc:"Do not load from a saved state even if one is available"
 
+let flowconfig_name_flag prev =
+  let open CommandSpec.ArgSpec in
+  prev
+  |> flag "--flowconfig-name" (required ~default:Server_files_js.default_flowconfig_name string)
+    ~doc:(Printf.sprintf "Set the name of the flow configuration file. (default: %s)"
+      Server_files_js.default_flowconfig_name)
+
 let base_flags =
   let collect_base_flags main flowconfig_name =
     main { Base_flags.
@@ -770,9 +777,7 @@ let base_flags =
     let open CommandSpec.ArgSpec in
     prev
     |> collect collect_base_flags
-    |> flag "--flowconfig-name" (required ~default:Server_files_js.default_flowconfig_name string)
-    ~doc:(Printf.sprintf "Set the name of the flow configuration file. (default: %s)"
-      Server_files_js.default_flowconfig_name)
+    |> flowconfig_name_flag
 
 let file_watcher_flag prev =
   let open CommandSpec.ArgSpec in

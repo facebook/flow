@@ -20,6 +20,7 @@ end = struct
     CheckCommands.CheckCommand.command;
     CheckCommands.FocusCheckCommand.command;
     CheckContentsCommand.command;
+    ConfigCommand.command;
     CoverageCommand.command;
     CycleCommand.command;
     DumpTypesCommand.command;
