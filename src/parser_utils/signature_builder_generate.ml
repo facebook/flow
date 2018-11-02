@@ -15,6 +15,7 @@ module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
 
 module Deps = Signature_builder_deps.With_Loc
+module File_sig = File_sig.With_Loc
 module Error = Deps.Error
 module Dep = Deps.Dep
 

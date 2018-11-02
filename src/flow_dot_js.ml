@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module File_sig = File_sig.With_Loc
+
 let error_of_parse_error source_file (loc, err) =
   let flow_err = Flow_error.EParseError (loc, err) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err

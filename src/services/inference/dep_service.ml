@@ -7,6 +7,8 @@
 
 open Utils_js
 
+module File_sig = File_sig.With_Loc
+
 (* sketch of baseline incremental alg:
 
    Note: this is for strict mode only, which is the easy case,

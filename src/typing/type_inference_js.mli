@@ -9,7 +9,7 @@
 val infer_ast:
   lint_severities: Severity.severity LintSettings.t ->
   file_options: Files.options option ->
-  file_sig: File_sig.t ->
+  file_sig: File_sig.With_Loc.t ->
   Context.t ->
   File_key.t ->
   (Loc.t, Loc.t) Flow_ast.program ->
@@ -19,7 +19,7 @@ val infer_lib_file:
   exclude_syms: SSet.t ->
   lint_severities: Severity.severity LintSettings.t ->
   file_options: Files.options option ->
-  file_sig: File_sig.t ->
+  file_sig: File_sig.With_Loc.t ->
   Context.t ->
   (Loc.t, Loc.t) Flow_ast.program ->
   string list

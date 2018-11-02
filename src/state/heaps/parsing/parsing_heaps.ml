@@ -7,6 +7,8 @@
 
 open Utils_js
 
+module File_sig = File_sig.With_Loc
+
 (* shared heap for parsed ASTs by filename *)
 module ASTHeap = SharedMem_js.WithCache (File_key) (struct
     type t = (Loc.t, Loc.t) Flow_ast.program

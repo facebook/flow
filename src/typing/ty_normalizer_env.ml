@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module File_sig = File_sig.With_Loc
 
 type options = {
 

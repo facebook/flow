@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module File_sig = File_sig.With_Loc
+
 let error_of_docblock_error ~source_file (loc, err) =
   let flow_err = Flow_error.EDocblockError (loc, match err with
     | Parsing_service_js.MultipleFlowAttributes -> Flow_error.MultipleFlowAttributes

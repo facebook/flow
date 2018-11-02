@@ -9,6 +9,8 @@
 
 open Utils_js
 
+module File_sig = File_sig.With_Loc
+
 (* For each parsed file, this is what we will save *)
 type parsed_file_data = {
   package: Package_json.t option; (* Only package.json files have this *)
