@@ -80,29 +80,7 @@ end = struct
     FlowEventLogger.set_command (Some command_string);
     FlowEventLogger.init_flow_command ~version:Flow_version.version;
 
-    try
-      let args = CommandSpec.args_of_argv command argv in
-      CommandSpec.run command args
-    with
-    | CommandSpec.Show_help ->
-      print_endline (CommandSpec.string_of_usage command);
-      FlowExitStatus.(exit No_error)
-    | CommandSpec.Failed_to_parse (arg_name, msg) ->
-      begin try
-        let json_arg = List.find (fun s ->
-          String_utils.string_starts_with s "--pretty" || String_utils.string_starts_with s "--json")
-          argv in
-        let pretty = String_utils.string_starts_with json_arg "--pretty" in
-        FlowExitStatus.set_json_mode ~pretty
-      with Not_found -> () end;
-      let msg = Utils_js.spf
-        "%s: %s %s\n%s"
-        (Filename.basename Sys.executable_name)
-        arg_name
-        msg
-        (CommandSpec.string_of_usage command)
-      in
-      FlowExitStatus.(exit ~msg Commandline_usage_error)
+    CommandUtils.run_command command argv
 end
 
 let _ =
