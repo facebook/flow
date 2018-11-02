@@ -15,7 +15,8 @@ module ArgSpec = struct
   | No_Arg
   | Arg
   | Arg_List
-  | Arg_Rest
+  | Arg_Rest (* consumes a '--' and all remaining args *)
+  | Arg_Command (* consumes all the remaining args verbatim, to pass to a subcommand *)
 
   type 'a flag_t = {
     parse : name:string -> string list option -> 'a;
@@ -90,6 +91,19 @@ module ArgSpec = struct
     | _ -> None
     );
     arg = Arg;
+  }
+
+  let command cmds = {
+    parse = (fun ~name -> function
+      | Some (cmd_name::argv) ->
+        begin match (enum cmds).parse ~name (Some [cmd_name]) with
+        | Some cmd -> Some (cmd, argv)
+        | None -> None
+        end
+      | Some []
+      | None -> None
+    );
+    arg = Arg_Command;
   }
 
   let no_arg = {
@@ -216,6 +230,7 @@ module ArgSpec = struct
     anons = List.append prev.anons [("--", Arg_Rest)];
   }
 
+
   let dummy value prev = {
     f = (fun x -> let (values, main) = prev.f x in (values, main value));
     flags = prev.flags;
@@ -301,6 +316,7 @@ and parse_flag values spec arg args =
       parse values spec args
 
     | ArgSpec.Arg_Rest -> failwith "Not supported"
+    | ArgSpec.Arg_Command -> failwith "Not supported"
   with
   | Not_found ->
     raise (Failed_to_parse (arg, "unknown option"))
@@ -316,7 +332,11 @@ and parse_anon values spec arg args =
     let values = SMap.add name value_list values in
     parse values spec args
   | Some (name, ArgSpec.Arg_Rest) ->
+    let args = if arg = "--" then args else arg::args in
     let values = SMap.add name args values in
+    parse values spec []
+  | Some (name, ArgSpec.Arg_Command) ->
+    let values = SMap.add name (arg::args) values in
     parse values spec []
   | Some (_, ArgSpec.No_Arg) ->
     assert false
