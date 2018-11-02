@@ -6,7 +6,7 @@
  *)
 
 open OUnit2
-open File_sig
+open File_sig.With_Loc
 
 let visit ?parse_options ?(module_ref_prefix = None) source =
   let ast, _ = Parser_flow.program ~parse_options source in

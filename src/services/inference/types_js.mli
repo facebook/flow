@@ -48,7 +48,7 @@ val basic_check_contents:
   File_key.t ->           (* fake file-/module name *)
   (Context.t *
    Docblock.t *
-   File_sig.t *
+   File_sig.With_Loc.t *
    (Loc.t, Loc.t * Type.t) Flow_ast.program,
    string) result Lwt.t
 
@@ -61,7 +61,7 @@ val typecheck_contents:
   File_key.t ->                             (* fake file-/module name *)
   ((Context.t *
     (Loc.t, Loc.t) Flow_ast.program *
-    File_sig.t *
+    File_sig.With_Loc.t *
     (Loc.t, Loc.t * Type.t) Flow_ast.program) option *
    Errors.ErrorSet.t *                      (* errors *)
    Errors.ErrorSet.t) Lwt.t                 (* warnings *)
@@ -72,5 +72,5 @@ val ensure_checked_dependencies:
   workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
   File_key.t ->
-  File_sig.t ->
+  File_sig.With_Loc.t ->
   unit Lwt.t

@@ -21,7 +21,7 @@ type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
-  file_sigs: File_sig.t FilenameMap.t;
+  file_sigs: File_sig.With_Loc.t FilenameMap.t;
   typed_asts: (Loc.t, Loc.t * Type.t) Flow_ast.program FilenameMap.t;
 }
 
@@ -35,7 +35,7 @@ val merge_contents_context:
   File_key.t ->
   (Loc.t, Loc.t) Flow_ast.program ->
   Docblock.t ->
-  File_sig.t ->
+  File_sig.With_Loc.t ->
   Context.t * (Loc.t, Loc.t * Type.t) Flow_ast.program
 
 val merge_runner:

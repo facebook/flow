@@ -7,6 +7,8 @@
 
 open OUnit2
 
+module File_sig = File_sig.With_Loc
+
 (* pretty much copied from Flow_dot_js *)
 let metadata = { Context.
   (* local *)

@@ -16,6 +16,7 @@
 open Hh_json
 open Utils_js
 
+module File_sig = File_sig.With_Loc
 
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 

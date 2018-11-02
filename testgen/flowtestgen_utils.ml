@@ -568,7 +568,7 @@ let flow_check (code : string) : string option =
       let builtin_metadata = stub_metadata ~root ~checked:true in
       let lint_severities = LintSettings.empty_severities in
       let builtins_ast, _ = Parser_flow.program (read_file "lib/core.js") in
-      let builtins_file_sig = match File_sig.program ~ast:builtins_ast ~module_ref_prefix:None with
+      let builtins_file_sig = match File_sig.With_Loc.program ~ast:builtins_ast ~module_ref_prefix:None with
       | Ok file_sig -> file_sig
       | Error _ -> failwith "error calculating builtins file sig"
       in
@@ -600,7 +600,7 @@ let flow_check (code : string) : string option =
                           } in
       let input_ast, _ = Parser_flow.program code in
       let filename = File_key.SourceFile "/tmp/foo.js" in
-      let file_sig = match File_sig.program ~ast:input_ast ~module_ref_prefix:None with
+      let file_sig = match File_sig.With_Loc.program ~ast:input_ast ~module_ref_prefix:None with
       | Ok file_sig -> file_sig
       | Error _ -> failwith "error calculating implementation file sig"
       in

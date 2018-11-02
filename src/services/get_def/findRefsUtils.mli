@@ -11,11 +11,11 @@ val compute_ast_result:
   module_ref_prefix: string option ->
   File_key.t ->
   string (* content *) ->
-  ((Loc.t, Loc.t) Flow_ast.program * File_sig.t * Docblock.t, string) result
+  ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
 
 val get_ast_result:
   File_key.t ->
-  ((Loc.t, Loc.t) Flow_ast.program * File_sig.t * Docblock.t, string) result
+  ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
 
 val get_dependents:
   Options.t ->

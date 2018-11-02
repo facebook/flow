@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+module File_sig = File_sig.With_Loc
 
 (* infer phase services *)
 

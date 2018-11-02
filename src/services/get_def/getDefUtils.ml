@@ -449,7 +449,7 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
     (* Check if we are on a CJS import/export. These cases are not covered above since the type
      * system hooks don't quite get us what we want. *)
     let export_loc =
-      let open File_sig in
+      let open File_sig.With_Loc in
       List.fold_left begin fun acc -> function
       | Require { source = (_, module_ref); require_loc; _ } ->
         if Loc.contains require_loc loc then begin match acc with
@@ -472,7 +472,7 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
     let export_loc = export_loc >>| function
     | Some _ as x -> x
     | None ->
-      let open File_sig in
+      let open File_sig.With_Loc in
       match file_sig.module_sig.module_kind with
       | CommonJS { mod_exp_loc=Some mod_exp_loc; _ } ->
         if Loc.contains mod_exp_loc loc then Some mod_exp_loc

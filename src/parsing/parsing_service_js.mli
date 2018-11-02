@@ -13,7 +13,7 @@ type types_mode =
 
 (* result of individual parse *)
 type result =
-  | Parse_ok of (Loc.t, Loc.t) Flow_ast.program * File_sig.t
+  | Parse_ok of (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -24,7 +24,7 @@ and parse_skip_reason =
 and parse_failure =
   | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
-  | File_sig_error of File_sig.error
+  | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
 and docblock_error_kind =
@@ -36,7 +36,7 @@ and docblock_error_kind =
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: (File_sig.tolerable_error list) FilenameMap.t;
+  parse_ok: (File_sig.With_Loc.tolerable_error list) FilenameMap.t;
 
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;

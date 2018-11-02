@@ -9,6 +9,8 @@
 
 open Utils_js
 
+module File_sig = File_sig.With_Loc
+
 (****************** typecheck job helpers *********************)
 
 let clear_errors (files: FilenameSet.t) errors =

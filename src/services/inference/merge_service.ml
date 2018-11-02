@@ -7,6 +7,7 @@
 
 open Utils_js
 module Reqs = Merge_js.Reqs
+module File_sig = File_sig.With_Loc
 
 type 'a merge_job_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =

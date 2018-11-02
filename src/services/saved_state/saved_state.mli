@@ -10,7 +10,7 @@
 type parsed_file_data = {
   package: Package_json.t option; (* Only package.json files have this *)
   info: Module_heaps.info;
-  file_sig: File_sig.t;
+  file_sig: File_sig.With_Loc.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
 }

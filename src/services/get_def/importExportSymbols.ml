@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open File_sig
+open File_sig.With_Loc
 
 let if_one_return_other x a b =
   if x = a then Some b
