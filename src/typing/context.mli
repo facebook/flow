@@ -37,6 +37,7 @@ type metadata = {
   esproposal_export_star_as: Options.esproposal_feature_mode;
   esproposal_optional_chaining: Options.esproposal_feature_mode;
   esproposal_nullish_coalescing: Options.esproposal_feature_mode;
+  facebook_fbs: string option;
   facebook_fbt: string option;
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
@@ -105,6 +106,7 @@ val call_props: t -> Type.t IMap.t
 val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
 val root: t -> Path.t
+val facebook_fbs: t -> string option
 val facebook_fbt: t -> string option
 val haste_module_ref_prefix: t -> string option
 val should_ignore_non_literal_requires: t -> bool

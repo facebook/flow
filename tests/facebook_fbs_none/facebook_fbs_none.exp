@@ -1,0 +1,16 @@
+Error ------------------------------------------------------------------------------------------------------ main.js:4:2
+
+Cannot cast `<fbs />` to number because `React.Element` [1] is incompatible with number [2].
+
+   main.js:4:2
+   4| (<fbs />: number); // Error: ReactElement ~> number
+       ^^^^^^^ [1]
+
+References:
+   main.js:4:11
+   4| (<fbs />: number); // Error: ReactElement ~> number
+                ^^^^^^ [2]
+
+
+
+Found 1 error

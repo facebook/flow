@@ -539,6 +539,7 @@ let stub_metadata ~root ~checked = { Context.
   esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  facebook_fbs = None;
   facebook_fbt = None;
   haste_module_ref_prefix = None;
   ignore_non_literal_requires = false;
