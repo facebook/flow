@@ -67,15 +67,38 @@ let free_vars_of_t : is_top:bool -> Ty.t -> TVarSet.t =
 let appears_in_t ~is_top v t =
   TVarSet.mem v (free_vars_of_t ~is_top t)
 
-let size_of_t : Ty.t -> int =
-  let open Ty in
-  let o = object (_self)
-    inherit [_] reduce_ty as super
-    method zero = 0
-    method plus a b = a + b
-    method! on_t env (t: Ty.t) = 1 + super#on_t env t
-  end in
-  fun t -> o#on_t () t
+module Size: sig
+  type bounded_int = Exactly of int | GreaterThan of int
+  val of_type: ?max:int -> Ty.t -> bounded_int
+  val size_to_string: bounded_int -> string
+end = struct
+  exception SizeCutOff
+
+  type bounded_int =
+    | Exactly of int
+    | GreaterThan of int
+
+  let size_to_string = function
+    | Exactly x -> Utils_js.spf "%d" x
+    | GreaterThan x -> Utils_js.spf "(Greater than %d)" x
+
+  let of_type =
+    let open Ty in
+    let size = ref 0 in
+    let o = object
+      inherit [_] iter_ty as super
+      method! on_t max (t: Ty.t) =
+        size := !size + 1;
+        if !size > max then
+          raise SizeCutOff;
+        super#on_t max t
+    end in
+    fun ?(max=10000) t ->
+      size := 0;
+      match o#on_t max t with
+      | exception SizeCutOff -> GreaterThan max
+      | () -> Exactly !size
+end
 
 let symbols_of_t : Ty.t -> Ty_symbol.symbol list =
   let open Ty in
