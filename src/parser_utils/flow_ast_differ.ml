@@ -1331,10 +1331,10 @@ let program (algo : diff_algorithm)
     let open Ast.Pattern.Object in
     let { properties = properties1; annot = annot1 } = o1 in
     let { properties = properties2; annot = annot2 } = o2 in
-    if annot1 != annot2 then
-        None
-    else
-        diff_and_recurse_no_trivial pattern_object_property properties1 properties2
+    let properties_diff =
+      diff_and_recurse_no_trivial pattern_object_property properties1 properties2 in
+    let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Option.return in
+    join_diff_list [properties_diff; annot_diff]
 
   and pattern_object_property (p1: (Loc.t, Loc.t) Ast.Pattern.Object.property)
                               (p2: (Loc.t, Loc.t) Ast.Pattern.Object.property)
@@ -1379,10 +1379,10 @@ let program (algo : diff_algorithm)
     let open Ast.Pattern.Array in
     let { elements = elements1; annot = annot1 } = a1 in
     let { elements = elements2; annot = annot2 } = a2 in
-    if annot1 != annot2 then
-        None
-    else
-        diff_and_recurse_no_trivial pattern_array_element elements1 elements2
+    let elements_diff =
+      diff_and_recurse_no_trivial pattern_array_element elements1 elements2 in
+    let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Option.return in
+    join_diff_list [elements_diff; annot_diff]
 
   and pattern_array_element (eo1: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
                             (eo2: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
