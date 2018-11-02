@@ -6,11 +6,11 @@
  *)
 
 type t = {
-  null_loc: Loc.t option;
-  bool_loc: Loc.t option;
-  string_loc: Loc.t option;
-  number_loc: Loc.t option;
-  mixed_loc: Loc.t option;
+  null_loc: ALoc.t option;
+  bool_loc: ALoc.t option;
+  string_loc: ALoc.t option;
+  number_loc: ALoc.t option;
+  mixed_loc: ALoc.t option;
 }
 
 let empty = {
@@ -24,7 +24,7 @@ let empty = {
 let debug_to_string t =
   let string_of_loc_option = function
     | None -> "None"
-    | Some loc -> Loc.to_string ~include_source:true loc
+    | Some loc -> ALoc.to_string ~include_source:true loc
   in
   [
     ("null_loc", t.null_loc);

@@ -66,7 +66,8 @@ let parse_content file content =
 (* TODO: consider whether require tvars are necessary, and if not, take this out *)
 let add_require_tvars =
   let add cx desc loc =
-    let reason = Reason.mk_reason desc (loc |> ALoc.of_loc) in
+    let loc = ALoc.of_loc loc in
+    let reason = Reason.mk_reason desc loc in
     let t = Tvar.mk cx reason in
     Context.add_require cx loc t
   in
@@ -75,7 +76,8 @@ let add_require_tvars =
        module`s (for now). This won't fly forever so at some point we'll need to
        move `declare module` storage into the modulemap just like normal modules
        and merge them as such. *)
-    let reason = Reason.mk_reason desc (loc |> ALoc.of_loc) in
+    let loc = ALoc.of_loc loc in
+    let reason = Reason.mk_reason desc loc in
     let t = Flow_js.get_builtin cx m_name reason in
     Context.add_require cx loc t
   in
@@ -106,6 +108,7 @@ let lib_before_and_after_stmts file_name =
   add_require_tvars cx file_sig;
   let module_scope = Scope.fresh () in
   Env.init_env cx module_scope;
+  let stmts = List.map Ast_loc_utils.abstractify_mapper#statement stmts in
   let t_stmts =
     try
       Statement.toplevel_decls cx stmts;

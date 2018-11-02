@@ -23,15 +23,15 @@ type t = {
   (* This stores type information about expressions. Every expression in the program should have a
    * type here. This means that there is some nesting, e.g. in the expression `5 + 4` there will be
    * a type for `5`, a type for `4`, and a type for the entire addition expression. *)
-  coverage: (Loc.t, Type.TypeScheme.t) Hashtbl.t;
+  coverage: (ALoc.t, Type.TypeScheme.t) Hashtbl.t;
   (* This stores type information about identifiers only. There should be no overlap or nesting of
    * locations here. *)
-  type_info: (Loc.t, Type.TypeScheme.t entry) Hashtbl.t;
+  type_info: (ALoc.t, Type.TypeScheme.t entry) Hashtbl.t;
   (* Keep a stack of the type parameters in scope and use it to create type schemes. *)
   tparams: Type.typeparam list ref;
   (* This stores type information for explicit type arguments to polymorphic
    * functions. TODO once typed AST is available, this won't be necessary anymore. *)
-  targs: (Loc.t, Type.TypeScheme.t ) Hashtbl.t;
+  targs: (ALoc.t, Type.TypeScheme.t ) Hashtbl.t;
 }
 
 let create () = {
@@ -129,6 +129,7 @@ let function_decl_loc id loc =
   match id with
   | Some (loc, _) -> loc
   | None ->
+    let loc = ALoc.to_loc loc in
     Loc.({ loc with
       _end = {
         line = loc.start.line;
@@ -137,3 +138,4 @@ let function_decl_loc id loc =
         offset = loc.start.offset + 8;
       };
     })
+    |> ALoc.of_loc

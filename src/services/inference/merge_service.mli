@@ -21,8 +21,9 @@ type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
-  file_sigs: File_sig.With_Loc.t FilenameMap.t;
-  typed_asts: (Loc.t, Loc.t * Type.t) Flow_ast.program FilenameMap.t;
+  loc_file_sigs: File_sig.With_Loc.t FilenameMap.t;
+  file_sigs: File_sig.With_ALoc.t FilenameMap.t;
+  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
 }
 
 val merge_strict_context:
@@ -36,7 +37,7 @@ val merge_contents_context:
   (Loc.t, Loc.t) Flow_ast.program ->
   Docblock.t ->
   File_sig.With_Loc.t ->
-  Context.t * (Loc.t, Loc.t * Type.t) Flow_ast.program
+  Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
 
 val merge_runner:
   job: 'a merge_job ->

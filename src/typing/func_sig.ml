@@ -17,7 +17,7 @@ type kind =
   | Async
   | Generator
   | AsyncGenerator
-  | FieldInit of (Loc.t, Loc.t) Ast.Expression.t
+  | FieldInit of (ALoc.t, ALoc.t) Ast.Expression.t
   | Predicate
   | Ctor
 
@@ -27,14 +27,18 @@ type t = {
   tparams: Type.typeparams;
   tparams_map: Type.t SMap.t;
   fparams: Func_params.t;
-  body: (Loc.t, Loc.t) Ast.Function.body option;
+  body: (ALoc.t, ALoc.t) Ast.Function.body option;
   return_t: Type.t;
 }
 
 let return_loc = function
   | {Ast.Function.return = Ast.Type.Available (_, (loc, _)); _}
   | {Ast.Function.body = Ast.Function.BodyExpression (loc, _); _} -> loc
-  | {Ast.Function.body = Ast.Function.BodyBlock (loc, _); _} -> Loc.char_before loc
+  | {Ast.Function.body = Ast.Function.BodyBlock (loc, _); _} ->
+    loc
+    |> ALoc.to_loc
+    |> Loc.char_before
+    |> ALoc.of_loc
 
 let default_constructor reason = {
   reason;
@@ -133,9 +137,9 @@ let toplevels id cx this super ~decls ~stmts ~expr
   let loc = Ast.Function.(match body with
   | Some (BodyBlock (loc, _)) -> loc
   | Some (BodyExpression (loc, _)) -> loc
-  | None -> Loc.none
+  | None -> ALoc.none
   ) in
-  let reason = mk_reason RFunctionBody (loc |> ALoc.of_loc) in
+  let reason = mk_reason RFunctionBody loc in
 
   let env =  Env.peek_env () in
   let new_env = Env.clone_env env in
@@ -171,7 +175,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* bind type params *)
   SMap.iter (fun name t ->
     let r = reason_of_t t in
-    let loc = aloc_of_reason r |> ALoc.to_loc in
+    let loc = aloc_of_reason r in
     Env.bind_type cx name (DefT (r, TypeT (TypeParamKind, t))) loc
       ~state:Scope.State.Initialized
   ) tparams_map;
@@ -179,7 +183,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   (* add param bindings *)
   let const_params = Context.enable_const_params cx in
   fparams |> Func_params.iter Scope.(fun (name, loc, t, default) ->
-    let reason = mk_reason (RParameter (Some name)) (loc |> ALoc.of_loc) in
+    let reason = mk_reason (RParameter (Some name)) loc in
     (* add default value as lower bound, if provided *)
     Option.iter ~f:(fun default ->
       let default_t = Flow.mk_default cx reason default
@@ -200,7 +204,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* early-add our own name binding for recursive calls *)
   Option.iter id ~f:(fun (loc, name) ->
-    let entry = Scope.Entry.new_var ~loc (AnyT.at (loc |> ALoc.of_loc)) in
+    let entry = Scope.Entry.new_var ~loc (AnyT.at loc) in
     Scope.add_entry name entry function_scope
   );
 
@@ -251,7 +255,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
         | _ ->
           let loc = aloc_of_reason reason in
           Flow_js.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc |> ALoc.to_loc, PredicateInvalidBody))
+            Flow_error.(EUnsupportedSyntax (loc, PredicateInvalidBody))
       end
     | _ -> ()
   );
@@ -275,7 +279,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* build return type for void funcs *)
   let init_ast = if is_void then
-    let loc = loc_of_t return_t |> ALoc.of_loc in
+    let loc = loc_of_t return_t in
     (* Some branches add an ImplicitTypeParam frame to force our flow_use_op
      * algorithm to pick use_ops outside the provided loc. *)
     let use_op, void_t, init_ast = match kind with
@@ -311,7 +315,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
     | Predicate ->
       let loc = aloc_of_reason reason in
       Flow_js.add_output cx
-        Flow_error.(EUnsupportedSyntax (loc |> ALoc.to_loc, PredicateVoidReturn));
+        Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
       let t = VoidT.at loc in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       use_op, t, None

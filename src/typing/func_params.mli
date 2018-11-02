@@ -7,30 +7,30 @@
 
 type t
 
-type default = (Loc.t, Loc.t) Flow_ast.Expression.t Default.t
-type binding = string * Loc.t * Type.t * default option
+type default = (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t
+type binding = string * ALoc.t * Type.t * default option
 
 (* build up a params value *)
 val empty: t
 
 val add_simple: Context.t ->
   optional: bool ->
-  ?default: (Loc.t, Loc.t) Flow_ast.Expression.t ->
-  Loc.t -> (Loc.t * string) option -> Type.t ->
+  ?default: (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+  ALoc.t -> (ALoc.t * string) option -> Type.t ->
   t -> t
 
 val add_complex: Context.t ->
   expr:(
-    Context.t -> (Loc.t, Loc.t) Flow_ast.Expression.t ->
-    (Loc.t, Loc.t * Type.t) Flow_ast.Expression.t
+    Context.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
   ) ->
-  ?default: (Loc.t, Loc.t) Flow_ast.Expression.t ->
-  (Loc.t, Loc.t) Flow_ast.Pattern.t -> Type.t ->
+  ?default: (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+  (ALoc.t, ALoc.t) Flow_ast.Pattern.t -> Type.t ->
   t ->
-  t * (Loc.t, Loc.t * Type.t) Flow_ast.Pattern.t
+  t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.t
 
 val add_rest: Context.t ->
-  Loc.t -> (Loc.t * string) option -> Type.t ->
+  ALoc.t -> (ALoc.t * string) option -> Type.t ->
   t -> t
 
 (* (name, type) of each param, in order *)
@@ -38,7 +38,7 @@ val add_rest: Context.t ->
 val value: t -> (string option * Type.t) list
 
 (* The rest param *)
-val rest: t -> (string option * Loc.t * Type.t) option
+val rest: t -> (string option * ALoc.t * Type.t) option
 
 (* iterates over all bindings, traversing through any destructued
    bindings as well, in source order of declaration *)

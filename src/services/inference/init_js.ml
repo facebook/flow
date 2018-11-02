@@ -90,7 +90,7 @@ let load_lib_files ~master_cx ~options files =
           Flow.mk_builtins cx;
 
           let syms = Infer.infer_lib_file cx ast
-            ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig
+            ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig:(File_sig.abstractify_locs file_sig)
           in
 
           Context.merge_into (Context.sig_cx master_cx) sig_cx;

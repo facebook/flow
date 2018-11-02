@@ -49,7 +49,7 @@ val basic_check_contents:
   (Context.t *
    Docblock.t *
    File_sig.With_Loc.t *
-   (Loc.t, Loc.t * Type.t) Flow_ast.program,
+   (ALoc.t, ALoc.t * Type.t) Flow_ast.program,
    string) result Lwt.t
 
 val typecheck_contents:
@@ -62,7 +62,7 @@ val typecheck_contents:
   ((Context.t *
     (Loc.t, Loc.t) Flow_ast.program *
     File_sig.With_Loc.t *
-    (Loc.t, Loc.t * Type.t) Flow_ast.program) option *
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.program) option *
    Errors.ErrorSet.t *                      (* errors *)
    Errors.ErrorSet.t) Lwt.t                 (* warnings *)
 

@@ -12,7 +12,7 @@ open Reason
 module Env = Ty_normalizer_env
 module T = Type
 module VSet = ISet
-module File_sig = File_sig.With_Loc
+module File_sig = File_sig.With_ALoc
 
 (* The type normalizer converts infered types (of type `Type.t`) under a context
    cx to the simplified form of type `Ty.t`. It is called by various modules,

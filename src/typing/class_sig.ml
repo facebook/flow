@@ -12,8 +12,8 @@ module Flow = Flow_js
 open Reason
 
 type set_asts =
-  (Loc.t, Loc.t * Type.t) Ast.Function.body option *
-  (Loc.t, Loc.t * Type.t) Ast.Expression.t option
+  (ALoc.t, ALoc.t * Type.t) Ast.Function.body option *
+  (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
   -> unit
 
 type set_type = Type.t -> unit
@@ -22,9 +22,9 @@ and field =
   | Annot of Type.t
   | Infer of Func_sig.t * set_asts
 
-type field' = Loc.t option * Type.polarity * field
+type field' = ALoc.t option * Type.polarity * field
 
-type func_info = Loc.t option * Func_sig.t * set_asts * set_type
+type func_info = ALoc.t option * Func_sig.t * set_asts * set_type
 
 type signature = {
   reason: reason;
@@ -67,7 +67,7 @@ and extends =
   | Explicit of typeapp
   | Implicit of { null: bool }
 
-and typeapp = Loc.t * Type.t * Type.t list option
+and typeapp = ALoc.t * Type.t * Type.t list option
 
 let empty id reason tparams tparams_map super =
   let empty_sig reason = {
@@ -785,9 +785,9 @@ module This = struct
 
   exception FoundInClass
   class detector = object
-    inherit [Loc.t] Flow_ast_mapper.mapper as super
+    inherit [ALoc.t] Flow_ast_mapper.mapper as super
 
-    method! generic_identifier_type (git: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t) =
+    method! generic_identifier_type (git: (ALoc.t, ALoc.t) Ast.Type.Generic.Identifier.t) =
       let open Ast.Type.Generic.Identifier in
       match git with
       | Unqualified (_, "this") -> raise FoundInClass
@@ -795,7 +795,7 @@ module This = struct
   end
 
   let in_class c =
-    try (new detector)#class_ Loc.none c |> ignore; false
+    try (new detector)#class_ ALoc.none c |> ignore; false
     with FoundInClass -> true
 end
 

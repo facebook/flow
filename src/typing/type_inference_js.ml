@@ -6,7 +6,6 @@
  *)
 
 module Ast = Flow_ast
-module File_sig = File_sig.With_Loc
 
 (* infer phase services *)
 
@@ -29,7 +28,7 @@ let infer_core cx statements =
     stmts
   | Abnormal.Exn (Abnormal.Stmts stmts, _) ->
     (* should never happen *)
-    let loc = Loc.({ none with source = Some (Context.file cx) }) in
+    let loc = Loc.({ none with source = Some (Context.file cx) }) |> ALoc.of_loc in
     Flow_js.add_output cx FlowError.(EInternal (loc, AbnormalControlFlow));
     stmts
   | Abnormal.Exn _ ->
@@ -361,7 +360,7 @@ let scan_for_suppressions cx lint_severities file_options comments =
 
 let add_require_tvars =
   let add cx desc loc =
-    let reason = Reason.mk_reason desc (loc |> ALoc.of_loc) in
+    let reason = Reason.mk_reason desc loc in
     let t = Tvar.mk cx reason in
     Context.add_require cx loc t
   in
@@ -370,12 +369,12 @@ let add_require_tvars =
        module`s (for now). This won't fly forever so at some point we'll need to
        move `declare module` storage into the modulemap just like normal modules
        and merge them as such. *)
-    let reason = Reason.mk_reason desc (loc |> ALoc.of_loc) in
+    let reason = Reason.mk_reason desc loc in
     let t = Flow_js.get_builtin cx m_name reason in
     Context.add_require cx loc t
   in
-  fun cx file_sig ->
-    let open File_sig in
+  fun cx (file_sig: File_sig.With_ALoc.t) ->
+    let open File_sig.With_ALoc in
     SMap.iter (fun mref locs ->
       let desc = Reason.RCustom mref in
       Nel.iter (add cx desc) locs
@@ -395,14 +394,17 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
 
   Flow_js.Cache.clear();
 
-  let prog_loc, statements, comments = ast in
+  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+
+  let _, _, comments = ast in
+  let prog_aloc, aloc_statements, aloc_comments = aloc_ast in
 
   add_require_tvars cx file_sig;
 
   let module_ref = Context.module_ref cx in
 
   begin
-    try Context.set_use_def cx @@ Ssa_builder.program_with_scope ast
+    try Context.set_use_def cx @@ Ssa_builder.With_ALoc.program_with_scope aloc_ast
     with _ -> ()
   end;
 
@@ -422,7 +424,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
 
     add_entry (Reason.internal_name "exports")
       (Entry.new_var
-        ~loc:(Reason.aloc_of_reason reason_exports_module |> ALoc.to_loc)
+        ~loc:(Reason.aloc_of_reason reason_exports_module)
         ~specific:(Type.DefT (
           Reason.replace_reason_const
             (Reason.RCustom "undefined exports")
@@ -436,8 +438,8 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
 
   Env.init_env cx module_scope;
 
-  let file_loc = Loc.({ none with source = Some filename }) in
-  let reason = Reason.mk_reason (Reason.RCustom "exports") (file_loc |> ALoc.of_loc) in
+  let file_loc = Loc.({ none with source = Some filename }) |> ALoc.of_loc in
+  let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
   let initial_module_t = ImpExp.module_t_of_cx cx in
   let init_exports = Obj_type.mk cx reason in
@@ -445,7 +447,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
 
   (* infer *)
   Flow_js.flow_t cx (init_exports, local_exports_var);
-  let typed_statements = infer_core cx statements in
+  let typed_statements = infer_core cx aloc_statements in
 
   scan_for_suppressions cx lint_severities file_options comments;
 
@@ -454,7 +456,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
     (* CommonJS with a clobbered module.exports *)
     | CommonJSModule(Some(loc)) ->
       let module_exports_t = ImpExp.get_module_exports cx file_loc in
-      let reason = Reason.mk_reason (Reason.RCustom "exports") (loc |> ALoc.of_loc) in
+      let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
       ImpExp.mk_commonjs_module_t cx reason_exports_module
         reason module_exports_t
 
@@ -468,7 +470,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
   ) in
   Flow_js.flow_t cx (module_t, initial_module_t);
 
-  prog_loc, typed_statements, comments
+  prog_aloc, typed_statements, aloc_comments
 
 
 (* infer a parsed library file.
@@ -477,7 +479,9 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
    b) bindings are added as properties to the builtin object
  *)
 let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast =
-  let _, statements, comments = ast in
+  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let _, _, comments = ast in
+  let _, aloc_statements, _ = aloc_ast in
   Flow_js.Cache.clear();
 
   let () =
@@ -489,7 +493,7 @@ let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast
   let module_scope = Scope.fresh () in
   Env.init_env ~exclude_syms cx module_scope;
 
-  ignore (infer_core cx statements : (Loc.t, Loc.t * Type.t) Ast.Statement.t list);
+  ignore (infer_core cx aloc_statements : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t list);
   scan_for_suppressions cx lint_severities file_options comments;
 
   module_scope |> Scope.(iter_entries Entry.(fun name entry ->

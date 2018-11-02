@@ -50,7 +50,7 @@ type metadata = {
 }
 
 type module_kind =
-  | CommonJSModule of Loc.t option
+  | CommonJSModule of ALoc.t option
   | ESModule
 
 type type_assert_kind = Is | Throws | Wraps
@@ -83,12 +83,12 @@ val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
 val find_call: t -> int -> Type.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
-val find_require: t -> Loc.t -> Type.t
+val find_require: t -> ALoc.t -> Type.t
 val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
 val mem_nominal_id: t -> Constraint.ident -> bool
 val graph: t -> Constraint.node IMap.t
-val import_stmts: t -> (Loc.t, Loc.t) Flow_ast.Statement.ImportDeclaration.t list
+val import_stmts: t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
 val is_verbose: t -> bool
@@ -98,7 +98,7 @@ val is_strict_local: t -> bool
 val severity_cover: t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind
-val require_map: t -> Type.t LocMap.t
+val require_map: t -> Type.t ALocMap.t
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
 val property_maps: t -> Type.Properties.map
@@ -116,13 +116,13 @@ val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
 val type_graph: t -> Graph_explorer.graph
 val type_table: t -> Type_table.t
-val type_asserts: t -> (type_assert_kind * Loc.t) LocMap.t
+val type_asserts: t -> (type_assert_kind * ALoc.t) ALocMap.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int
 val jsx: t -> Options.jsx_mode
-val exists_checks: t -> ExistsCheck.t LocMap.t
-val exists_excuses: t -> ExistsCheck.t LocMap.t
-val use_def: t -> Scope_api.With_Loc.info * Ssa_api.values
+val exists_checks: t -> ExistsCheck.t ALocMap.t
+val exists_excuses: t -> ExistsCheck.t ALocMap.t
+val use_def: t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values
 val pid_prefix: t -> string
 
 val copy_of_context: t -> t
@@ -137,16 +137,16 @@ val add_error: t -> Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_severity_cover: t -> File_key.t -> ExactCover.lint_severity_cover -> unit
 val add_lint_suppressions: t -> LocSet.t -> unit
-val add_import_stmt: t -> (Loc.t, Loc.t) Flow_ast.Statement.ImportDeclaration.t -> unit
+val add_import_stmt: t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t -> unit
 val add_imported_t: t -> string -> Type.t -> unit
-val add_require: t -> Loc.t -> Type.t -> unit
+val add_require: t -> ALoc.t -> Type.t -> unit
 val add_module: t -> string -> Type.t -> unit
 val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_call_prop: t -> int -> Type.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
-val add_type_assert: t -> Loc.t -> (type_assert_kind * Loc.t) -> unit
+val add_type_assert: t -> ALoc.t -> (type_assert_kind * ALoc.t) -> unit
 val remove_all_errors: t -> unit
 val remove_all_error_suppressions: t -> unit
 val remove_all_lint_severities: t -> unit
@@ -160,9 +160,9 @@ val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_call_props: t -> Type.t IMap.t -> unit
 val set_export_maps: t -> Type.Exports.map -> unit
-val set_exists_checks: t -> ExistsCheck.t LocMap.t -> unit
-val set_exists_excuses: t -> ExistsCheck.t LocMap.t -> unit
-val set_use_def: t -> Scope_api.With_Loc.info * Ssa_api.values -> unit
+val set_exists_checks: t -> ExistsCheck.t ALocMap.t -> unit
+val set_exists_excuses: t -> ExistsCheck.t ALocMap.t -> unit
+val set_use_def: t -> Scope_api.With_ALoc.info * Ssa_api.With_ALoc.values -> unit
 val set_module_map: t -> Type.t SMap.t -> unit
 
 val clear_intermediates: t -> unit
@@ -184,10 +184,10 @@ val test_prop_hit: t -> Constraint.ident -> unit
 val test_prop_miss: t -> Constraint.ident -> string option -> (Reason.t * Reason.t) -> Type.use_op -> unit
 val test_prop_get_never_hit: t -> (string option * (Reason.t * Reason.t) * Type.use_op) list
 
-val mark_optional_chain: t -> Loc.t -> Reason.t -> useful:bool -> unit
-val unnecessary_optional_chains: t -> (Loc.t * Reason.t) list
-val mark_invariant: t -> Loc.t -> Reason.t -> useful:bool -> unit
-val unnecessary_invariants: t -> (Loc.t * Reason.t) list
+val mark_optional_chain: t -> ALoc.t -> Reason.t -> useful:bool -> unit
+val unnecessary_optional_chains: t -> (ALoc.t * Reason.t) list
+val mark_invariant: t -> ALoc.t -> Reason.t -> useful:bool -> unit
+val unnecessary_invariants: t -> (ALoc.t * Reason.t) list
 
 (* utils *)
 val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
@@ -195,7 +195,7 @@ val has_prop: t -> Type.Properties.id -> string -> bool
 val get_prop: t -> Type.Properties.id -> string -> Type.Property.t option
 val set_prop: t -> Type.Properties.id -> string -> Type.Property.t -> unit
 val has_export: t -> Type.Exports.id -> string -> bool
-val set_export: t -> Type.Exports.id -> string -> (Loc.t option * Type.t) -> unit
+val set_export: t -> Type.Exports.id -> string -> (ALoc.t option * Type.t) -> unit
 
 (* constructors *)
 val make_property_map: t -> Type.Properties.t -> Type.Properties.id

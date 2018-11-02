@@ -17,7 +17,7 @@ open Scope
 
 module FlowError = Flow_error
 module Flow = Flow_js
-module Scope_api = Scope_api.With_Loc
+module Scope_api = Scope_api.With_ALoc
 
 (* lookup modes:
 
@@ -288,7 +288,7 @@ let update_env cx loc new_scopes =
   (if List.length new_scopes != List.length (peek_env ())
   then assert_false (spf
     "update_env %s: unequal length scope lists, old %d new %d "
-    (string_of_loc loc)
+    (string_of_aloc loc)
     (List.length new_scopes)
     (List.length (peek_env ()))));
 
@@ -332,18 +332,17 @@ let global_lexicals = [
    tests/global_ref tracks this issue.
  *)
 let cache_global cx name ?desc loc global_scope =
-  let aloc = ALoc.of_loc loc in
   let t =
     if List.mem name global_any
-    then AnyT.at aloc
+    then AnyT.at loc
     else if List.mem name global_lexicals
-    then ObjProtoT (mk_reason (RCustom "global object") aloc)
+    then ObjProtoT (mk_reason (RCustom "global object") loc)
     else
       let desc = match desc with
       | Some desc -> desc
       | None -> RIdentifier name
       in
-      let reason = mk_reason desc aloc in
+      let reason = mk_reason desc loc in
       Flow.get_builtin cx name reason
   in
   let entry = Entry.new_var t ~loc ~state:State.Initialized in
@@ -463,7 +462,7 @@ let bind_entry cx name entry loc =
         | LexScope, Value { Entry.kind = Const _; _ }
         | LexScope, Class _
         | VarScope _, _ ->
-          let loc = entry_loc entry in
+          let loc = entry_loc entry |> ALoc.to_loc in
           Type_inference_hooks_js.dispatch_ref_hook cx loc loc;
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)
@@ -503,7 +502,7 @@ let bind_entry cx name entry loc =
 (* bind class entry *)
 let bind_class cx class_id class_private_fields class_private_static_fields =
   bind_entry cx (internal_name "class")
-  (Entry.new_class class_id class_private_fields class_private_static_fields) Loc.none
+  (Entry.new_class class_id class_private_fields class_private_static_fields) ALoc.none
 
 (* bind var entry *)
 let bind_var ?(state=State.Declared) cx name t loc =
@@ -609,17 +608,17 @@ let promote_to_const_like cx loc =
     let uses = Scope_api.uses_of_use info loc in
     (* We consider a binding to be const-like if all reads point to the same
        write, modulo initialization. *)
-    let writes = LocSet.fold (fun use acc ->
-      match LocMap.get use values with
+    let writes = ALocSet.fold (fun use acc ->
+      match ALocMap.get use values with
         | None -> (* use is a write *) acc
         | Some write_locs -> (* use is a read *)
           (* collect writes pointed to by the read, modulo initialization *)
           List.fold_left (fun acc -> function
-            | Ssa_api.Uninitialized -> acc
-            | Ssa_api.Write loc -> LocSet.add loc acc
+            | Ssa_api.With_ALoc.Uninitialized -> acc
+            | Ssa_api.With_ALoc.Write loc -> ALocSet.add loc acc
           ) acc write_locs
-    ) uses LocSet.empty in
-    LocSet.cardinal writes <= 1
+    ) uses ALocSet.empty in
+    ALocSet.cardinal writes <= 1
   with _ -> false
 
 (* helper - update var entry to reflect assignment/initialization *)
@@ -737,7 +736,6 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
     value_declare_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
     ->
-    let value_declare_loc = ALoc.of_loc value_declare_loc in
     let uninit desc = VoidT.make (mk_reason desc value_declare_loc) in
     let specific = if state = State.Declared
       then uninit (RCustom "uninitialized variable")
@@ -770,13 +768,13 @@ let allow_forward_ref = Scope.Entry.(function
 let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
   let scope, entry = find_entry cx name ?desc loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.entry_loc entry) loc;
+    (Entry.entry_loc entry |> ALoc.to_loc) (ALoc.to_loc loc);
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
     let msg = FlowError.ETypeInValuePosition in
     binding_error msg cx name entry loc;
-    AnyT.at (entry_loc entry |> ALoc.of_loc)
+    AnyT.at (entry_loc entry)
 
   | Type t ->
     t._type
@@ -789,7 +787,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
       when lookup_mode = ForValue && not (allow_forward_ref kind)
       && same_activation scope ->
       tdz_error cx name loc v;
-      AnyT.at (value_declare_loc |> ALoc.of_loc)
+      AnyT.at value_declare_loc
     | _ ->
       Changeset.Global.change_var (scope.id, name, Changeset.Read);
       let s, g = value_entry_types ~lookup_mode scope v in
@@ -893,7 +891,7 @@ let get_refinement cx key loc =
 let update_var ?(track_ref=false) op cx ~use_op name specific loc =
   let scope, entry = find_entry cx name loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.entry_loc entry) loc;
+    (Entry.entry_loc entry |> ALoc.to_loc) (ALoc.to_loc loc);
   Entry.(match entry with
   | Value ({
       Entry.kind = (Let _ as kind); value_state = State.Undeclared; _
@@ -996,7 +994,7 @@ let rec find_scope cx loc envs scope_id =
     else find_scope cx loc List.(map tl envs) scope_id
   | _ ->
     assert_false (spf "find_scopes %s: scope %d not found. head env %s"
-      (string_of_loc loc) scope_id
+      (string_of_aloc loc) scope_id
       (string_of_env cx (List.hd envs)))
 
 (* The following function takes a changset and a triple of environments -
@@ -1011,7 +1009,7 @@ let merge_env =
   in
 
   let create_union cx loc name l1 l2 =
-    let reason = mk_reason name (loc |> ALoc.of_loc) in
+    let reason = mk_reason name loc in
     Tvar.mk_where cx reason (fun tvar ->
       Flow.flow cx (l1, UseT (Op (Internal MergeEnv), tvar));
       Flow.flow cx (l2, UseT (Op (Internal MergeEnv), tvar));
@@ -1074,7 +1072,7 @@ let merge_env =
     (* type aliases can't be refined or reassigned, shouldn't be here *)
     | Some Type _, Some Type _, Some Type _ ->
       assert_false (spf "merge_env %s: type alias %s found in changelist"
-        (string_of_loc loc) name)
+        (string_of_aloc loc) name)
     (* global lookups may leave uneven new entries, which we can forget *)
     | _, _, _ when is_global scope0 ->
       ()
@@ -1083,7 +1081,7 @@ let merge_env =
       assert_false (spf
         "%smerge_entry %s %s: missing from scopes:\n%s\n%s\n%s"
         (Context.pid_prefix cx)
-        (string_of_loc loc)
+        (string_of_aloc loc)
         (Changeset.string_of_entry_ref entry_ref)
         (Debug_js.string_of_scope cx scope0)
         (Debug_js.string_of_scope cx scope1)
@@ -1101,7 +1099,7 @@ let merge_env =
       | Some e -> spf "Some %s" Entry.(string_of_kind e)
       in assert_false (spf
         "merge_env %s: non-uniform distribution of entry %s: %s, %s, %s"
-        (string_of_loc loc)
+        (string_of_aloc loc)
         name
         (print_entry_kind_opt orig)
         (print_entry_kind_opt child1)
@@ -1142,7 +1140,7 @@ let merge_env =
   fun cx loc (env0, env1, env2) changeset ->
     begin if not (envs_congruent [env0; env1; env2]) then assert_false
       (spf "merge_env %s: envs not congruent: %d %d %d"
-        (string_of_loc loc)
+        (string_of_aloc loc)
         (List.length env0) (List.length env1) (List.length env2))
     end;
     changeset |> Changeset.iter_type_updates
@@ -1181,7 +1179,7 @@ let copy_env =
     (* type aliases shouldn't be here *)
     | Some Type _, Some Type _ ->
       assert_false (spf "copy_env %s: type alias %s found in changelist"
-        (string_of_loc loc) name)
+        (string_of_aloc loc) name)
 
     (* global lookups may leave new entries in env2, or orphan changes *)
     (* ...which we can forget *)
@@ -1201,7 +1199,7 @@ let copy_env =
       | Some e -> spf "Some %s" (Entry.string_of_kind e)
       in assert_false (spf
         "copy_env %s: non-uniform distribution of entry %s: %s, %s"
-        (string_of_loc loc)
+        (string_of_aloc loc)
         name
         (print_entry_kind_opt entry1)
         (print_entry_kind_opt entry2))
@@ -1224,7 +1222,7 @@ let copy_env =
   fun cx loc (env1, env2) changeset ->
     (if envs_congruent [env1; env2] then ()
     else assert_false (spf "copy_env %s: envs not congruent"
-      (string_of_loc loc)));
+      (string_of_aloc loc)));
     changeset |> Changeset.iter_type_updates
       (copy_entry cx loc (env1, env2))
       (copy_refi cx loc (env1, env2))
@@ -1240,7 +1238,7 @@ let widen_env =
     if specific = general
     then None
     else
-      let reason = mk_reason name (loc |> ALoc.of_loc) in
+      let reason = mk_reason name loc in
       let tvar = Tvar.mk cx reason in
       Flow.flow cx (specific, UseT (Op (Internal WidenEnv), tvar));
       Flow.flow cx (tvar, UseT (Op (Internal WidenEnv), general));
@@ -1361,21 +1359,21 @@ let refine_expr = add_heap_refinement Changeset.Refine
    only necessary for fresh pseudovars like heap refinements -
    others can be obtained via query_var.
  *)
-let refine_with_preds cx (loc: Loc.t) preds orig_types =
+let refine_with_preds cx loc preds orig_types =
   let refine_type orig_type pred refined_type =
     let rec check_literal_subtypes pred =
       (* When refining a type against a literal, we want to be sure that that literal can actually
          inhabit that type *)
       begin match pred with
         | SingletonBoolP (loc, b) ->
-            let reason = ALoc.of_loc loc |> mk_reason (RBooleanLit b) in
+            let reason = loc |> mk_reason (RBooleanLit b) in
             Flow.flow cx (DefT (reason, BoolT (Some b)), UseT (Op (Internal Refinement), orig_type))
         | SingletonStrP (loc, b, str) ->
-            let reason = ALoc.of_loc loc |> mk_reason (RStringLit str) in
+            let reason = loc |> mk_reason (RStringLit str) in
             Flow.flow cx (DefT (reason, StrT (Literal (Some b, str))),
               UseT (Op (Internal Refinement), orig_type))
         | SingletonNumP (loc, b, ((_, str) as num)) ->
-            let reason = ALoc.of_loc loc |> mk_reason (RNumberLit str) in
+            let reason = loc |> mk_reason (RNumberLit str) in
             Flow.flow cx (DefT (reason, NumT (Literal (Some b, num))),
               UseT (Op (Internal Refinement), orig_type))
         | LeftP (SentinelProp name, (DefT (reason, (BoolT _ | StrT _ | NumT _)) as t)) ->
@@ -1395,7 +1393,7 @@ let refine_with_preds cx (loc: Loc.t) preds orig_types =
     refine_type orig_type pred |> Tvar.mk_where cx refi_reason in
 
   let refine_with_pred key pred acc =
-    let refi_reason = mk_reason (RRefined (Key.reason_desc key)) (loc |> ALoc.of_loc) in
+    let refi_reason = mk_reason (RRefined (Key.reason_desc key)) loc in
     match key with
     (* for real consts/lets/vars, we model assignment/initialization *)
     | name, [] when not (is_internal_name name) ->

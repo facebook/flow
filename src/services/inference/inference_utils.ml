@@ -8,7 +8,7 @@
 module File_sig = File_sig.With_Loc
 
 let error_of_docblock_error ~source_file (loc, err) =
-  let flow_err = Flow_error.EDocblockError (loc, match err with
+  let flow_err = Flow_error.EDocblockError (ALoc.of_loc loc, match err with
     | Parsing_service_js.MultipleFlowAttributes -> Flow_error.MultipleFlowAttributes
     | Parsing_service_js.MultipleProvidesModuleAttributes -> Flow_error.MultipleProvidesModuleAttributes
     | Parsing_service_js.MultipleJSXAttributes -> Flow_error.MultipleJSXAttributes
@@ -22,7 +22,7 @@ let set_of_docblock_errors ~source_file errors =
   ) Errors.ErrorSet.empty errors
 
 let error_of_parse_error ~source_file (loc, err) =
-  let flow_err = Flow_error.EParseError (loc, err) in
+  let flow_err = Flow_error.EParseError (ALoc.of_loc loc, err) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let set_of_parse_error ~source_file error =
@@ -30,7 +30,7 @@ let set_of_parse_error ~source_file error =
 
 let error_of_file_sig_error ~source_file err =
   let flow_err = match err with
-  | File_sig.IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType loc
+  | File_sig.IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType (ALoc.of_loc loc)
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
@@ -39,8 +39,8 @@ let set_of_file_sig_error ~source_file error =
 
 let error_of_file_sig_tolerable_error ~source_file err =
   let flow_err = match err with
-  | File_sig.BadExportPosition loc -> Flow_error.EBadExportPosition loc
-  | File_sig.BadExportContext (name, loc) -> Flow_error.EBadExportContext (name, loc)
+  | File_sig.BadExportPosition loc -> Flow_error.EBadExportPosition (ALoc.of_loc loc)
+  | File_sig.BadExportContext (name, loc) -> Flow_error.EBadExportContext (name, ALoc.of_loc loc)
   | File_sig.SignatureVerificationError sve -> Flow_error.ESignatureVerification sve
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err

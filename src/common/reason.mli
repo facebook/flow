@@ -84,7 +84,7 @@ type reason_desc =
   | RType of string
   | RTypeAlias of string * bool * reason_desc
   | ROpaqueType of string
-  | RTypeParam of string * (reason_desc * Loc.t) * (reason_desc * Loc.t)
+  | RTypeParam of string * (reason_desc * ALoc.t) * (reason_desc * ALoc.t)
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option
@@ -184,7 +184,7 @@ val json_of_loc_props: ?strip_root:Path.t option -> Loc.t -> (string * Hh_json.j
 
 val locationless_reason: reason_desc -> reason
 
-val func_reason: (Loc.t, Loc.t) Flow_ast.Function.t -> Loc.t -> reason
+val func_reason: (ALoc.t, ALoc.t) Flow_ast.Function.t -> ALoc.t -> reason
 
 val is_internal_name: string -> bool
 val internal_name: string -> string
@@ -193,7 +193,7 @@ val is_internal_module_name: string -> bool
 val internal_module_name: string -> string
 val uninternal_module_name: string -> string
 
-val internal_pattern_name: Loc.t -> string
+val internal_pattern_name: ALoc.t -> string
 
 val is_instantiable_reason: reason -> bool
 
@@ -236,12 +236,12 @@ val desc_of_reason: ?unwrap:bool -> reason -> reason_desc
 val replace_reason: ?keep_def_loc:bool -> (reason_desc -> reason_desc) -> reason -> reason
 val replace_reason_const: ?keep_def_loc:bool -> reason_desc -> reason -> reason
 
-val repos_reason: Loc.t -> ?annot_loc:ALoc.t -> reason -> reason
+val repos_reason: ALoc.t -> ?annot_loc:ALoc.t -> reason -> reason
 val annot_reason: reason -> reason
 
 module ReasonMap : MyMap.S with type key = reason
 
-val mk_expression_reason: (Loc.t, Loc.t) Flow_ast.Expression.t -> reason
+val mk_expression_reason: (ALoc.t, ALoc.t) Flow_ast.Expression.t -> reason
 
 val unknown_elem_empty_array_desc: reason_desc
 val inferred_union_elem_array_desc: reason_desc

@@ -8,11 +8,11 @@
 module Reqs : sig
   type t
   val empty: t
-  val add_impl: string -> File_key.t -> Utils_js.LocSet.t -> t -> t
-  val add_dep_impl: string -> File_key.t -> (Context.sig_t * Utils_js.LocSet.t) -> t -> t
-  val add_unchecked: string -> File_key.t -> Utils_js.LocSet.t -> t -> t
-  val add_res: string -> File_key.t -> Utils_js.LocSet.t -> t -> t
-  val add_decl:string -> File_key.t -> (Utils_js.LocSet.t * Modulename.t) -> t -> t
+  val add_impl: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
+  val add_dep_impl: string -> File_key.t -> (Context.sig_t * Utils_js.ALocSet.t) -> t -> t
+  val add_unchecked: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
+  val add_res: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
+  val add_decl:string -> File_key.t -> (Utils_js.ALocSet.t * Modulename.t) -> t -> t
 end
 
 val merge_component_strict:
@@ -20,7 +20,7 @@ val merge_component_strict:
   lint_severities: Severity.severity LintSettings.t ->
   file_options: Files.options option ->
   strict_mode: StrictModeSettings.t ->
-  file_sigs: File_sig.With_Loc.t Utils_js.FilenameMap.t ->
+  file_sigs: File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
   get_ast_unsafe: (File_key.t -> (Loc.t, Loc.t) Flow_ast.program) ->
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
   ?do_gc: bool ->
@@ -33,7 +33,7 @@ val merge_component_strict:
   (* master cx *)
   Context.sig_t ->
   (* cxs in component order, hd is merged leader *)
-  (Context.t * (Loc.t, Loc.t * Type.t) Flow_ast.program) Nel.t
+  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program) Nel.t
 
 val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 

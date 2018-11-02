@@ -19,10 +19,10 @@ module Ast = Flow_ast
   *)
 module T = Type
 
-type program = (Loc.t, Loc.t * Type.t) Ast.program
+type program = (ALoc.t, ALoc.t * Type.t) Ast.program
 
-let error_annot = Loc.none, Type.Locationless.AnyT.t
-let unimplemented_annot = Loc.none, Type.Locationless.AnyT.t
+let error_annot = ALoc.none, Type.Locationless.AnyT.t
+let unimplemented_annot = ALoc.none, Type.Locationless.AnyT.t
 
 module Type = struct
   open Ast.Type
@@ -44,7 +44,7 @@ module Type = struct
 
     let error = {
       tparams = None;
-      params = Loc.none, Params.error;
+      params = ALoc.none, Params.error;
       return = error_annot, error;
     }
   end
@@ -71,7 +71,7 @@ module Type = struct
     module Indexer = struct
       open Indexer
       let error = {
-        id = Some (Loc.none, "Error");
+        id = Some (ALoc.none, "Error");
         key = error_annot, error;
         value = error_annot, error;
         static = false;
@@ -82,7 +82,7 @@ module Type = struct
     module InternalSlot = struct
       open InternalSlot
       let error = {
-        id = Loc.none, "Error";
+        id = ALoc.none, "Error";
         value = error_annot, error;
         optional = false;
         static = false;
@@ -117,7 +117,7 @@ module Expression = struct
       }
     end
     let property_error =
-      Property (Loc.none, Property.error)
+      Property (ALoc.none, Property.error)
   end
 end
 
@@ -128,9 +128,9 @@ end
 
 module Statement = struct
   open Ast.Statement
-  let error = Loc.none, Labeled { Labeled.
-    label = Loc.none, "Error";
-    body = Loc.none, Empty;
+  let error = ALoc.none, Labeled { Labeled.
+    label = ALoc.none, "Error";
+    body = ALoc.none, Empty;
   }
   module Try = struct
     open Try
@@ -138,7 +138,7 @@ module Statement = struct
       open CatchClause
       let error = {
         param = None;
-        body = Loc.none, { Ast.Statement.Block.body = [error] }
+        body = ALoc.none, { Ast.Statement.Block.body = [error] }
       }
     end
   end
@@ -153,8 +153,8 @@ module Statement = struct
   module DeclareFunction = struct
     open DeclareFunction
     let error = {
-      id = Loc.none, "Error";
-      annot = Loc.none, (error_annot, Ast.Type.Function Type.Function.error);
+      id = ALoc.none, "Error";
+      annot = ALoc.none, (error_annot, Ast.Type.Function Type.Function.error);
       predicate = None;
     }
   end
@@ -181,7 +181,7 @@ module Function = struct
 
   let error = {
     id = Some (error_annot, "Error");
-    params = Loc.none, Params.error;
+    params = ALoc.none, Params.error;
     body = BodyExpression (error_annot, Expression.error);
     async = false;
     generator = false;
@@ -199,7 +199,7 @@ module Class = struct
     let element_error = Method (error_annot, { Method.
       kind = Method.Method;
       key = Expression.Object.Property.key_error;
-      value = Loc.none, Function.error;
+      value = ALoc.none, Function.error;
       static = false;
       decorators = [];
     })
@@ -216,20 +216,20 @@ module JSX = struct
     let error_name =
       Ast.JSX.Attribute.Identifier Identifier.error
 
-    let error = Loc.none, {
+    let error = ALoc.none, {
       Ast.JSX.Attribute.name = error_name;
       value = None;
     }
   end
 
   module SpreadAttribute = struct
-    let error = Loc.none, {
+    let error = ALoc.none, {
       Ast.JSX.SpreadAttribute.argument = error_annot, Expression.error
     }
   end
 
   module MemberExpression = struct
-    let error = Loc.none, {
+    let error = ALoc.none, {
       Ast.JSX.MemberExpression._object =
         Ast.JSX.MemberExpression.Identifier Identifier.error;
       Ast.JSX.MemberExpression.property = Identifier.error;
@@ -253,7 +253,7 @@ module JSX = struct
 
   module Closing = struct
     open Ast.JSX.Closing
-    let error = Loc.none,  {
+    let error = ALoc.none,  {
       name = error_name;
     }
   end

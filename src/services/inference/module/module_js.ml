@@ -16,8 +16,6 @@
 open Hh_json
 open Utils_js
 
-module File_sig = File_sig.With_Loc
-
 type mode = ModuleMode_Checked | ModuleMode_Weak | ModuleMode_Unchecked
 
 type error =
@@ -124,7 +122,7 @@ module type MODULE_SYSTEM = sig
   val imported_module:
     options: Options.t ->
     SSet.t ->
-    File_key.t -> Loc.t Nel.t ->
+    File_key.t -> ALoc.t Nel.t ->
     ?resolution_acc:resolution_acc ->
     string -> Modulename.t
 
@@ -341,7 +339,7 @@ module Node = struct
       lazy (path_if_exists ~file_options resolution_acc (path ^ ext))
     ))
 
-  let parse_main ~root ~file_options loc resolution_acc package_filename file_exts =
+  let parse_main ~root ~file_options (loc: ALoc.t) resolution_acc package_filename file_exts =
     let package_filename = resolve_symlinks package_filename in
     if not (file_exists package_filename) || (Files.is_ignored file_options package_filename)
     then None
@@ -386,7 +384,7 @@ module Node = struct
           lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
         ]
 
-  let resolve_relative ~options (loc, _) ?resolution_acc root_path rel_path =
+  let resolve_relative ~options ((loc: ALoc.t), _) ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     if Files.is_flow_file ~options:file_options path
@@ -680,8 +678,8 @@ let resolved_requires_of ~options node_modules_containers f require_loc =
   }
 
 let add_parsed_resolved_requires ~mutator ~options ~node_modules_containers file =
-  let file_sig = Parsing_heaps.get_file_sig_unsafe file in
-  let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
+  let file_sig = Parsing_heaps.get_file_sig_unsafe file |> File_sig.abstractify_locs in
+  let require_loc = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
     resolved_requires_of ~options node_modules_containers file require_loc in
   Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires;

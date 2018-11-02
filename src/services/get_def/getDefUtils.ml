@@ -83,7 +83,7 @@ let get_object_literal_loc ty : Loc.t option =
     |> desc_of_reason ~unwrap:false
   in
   match reason_desc with
-  | RObjectLit -> Some (Type.def_loc_of_t ty)
+  | RObjectLit -> Some (Type.def_loc_of_t ty |> ALoc.to_loc)
   | _ -> None
 
 type def_kind =

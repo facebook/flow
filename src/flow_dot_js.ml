@@ -5,15 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module File_sig = File_sig.With_Loc
-
 let error_of_parse_error source_file (loc, err) =
-  let flow_err = Flow_error.EParseError (loc, err) in
+  let flow_err = Flow_error.EParseError (ALoc.of_loc loc, err) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let error_of_file_sig_error source_file e =
-  let flow_err = File_sig.(match e with
-  | IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType loc
+  let flow_err = File_sig.With_Loc.(match e with
+  | IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType (ALoc.of_loc loc)
   ) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
@@ -42,7 +40,7 @@ let parse_content file content =
     ) Errors.ErrorSet.empty parse_errors in
     Error converted
   else
-    match File_sig.program ~ast ~module_ref_prefix:None with
+    match File_sig.With_Loc.program ~ast ~module_ref_prefix:None with
     | Error e -> Error (Errors.ErrorSet.singleton (error_of_file_sig_error file e))
     | Ok fsig -> Ok (ast, fsig)
 
@@ -79,7 +77,7 @@ let load_lib_files ~master_cx ~metadata files
         let cx = Context.make sig_cx metadata lib_file Files.lib_module_ref in
         Flow_js.mk_builtins cx;
         let syms = Type_inference_js.infer_lib_file cx ast
-          ~exclude_syms ~file_sig ~lint_severities:LintSettings.empty_severities ~file_options:None
+          ~exclude_syms ~file_sig:(File_sig.abstractify_locs file_sig) ~lint_severities:LintSettings.empty_severities ~file_options:None
         in
 
         Context.merge_into (Context.sig_cx master_cx) sig_cx;
@@ -199,10 +197,10 @@ let infer_and_merge ~root filename ast file_sig =
   Flow_js.Cache.clear();
   let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
-  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+  let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let reqs = SMap.fold (fun module_name locs reqs ->
     let m = Modulename.String module_name in
-    let locs = locs |> Nel.to_list |> Utils_js.LocSet.of_list in
+    let locs = locs |> Nel.to_list |> Utils_js.ALocSet.of_list in
     Merge_js.Reqs.add_decl module_name filename (locs, m) reqs
   ) require_loc_map Merge_js.Reqs.empty in
   let lint_severities = LintSettings.empty_severities in
@@ -222,6 +220,7 @@ let check_content ~filename ~content =
   let filename = File_key.SourceFile filename in
   let errors, warnings = match parse_content filename content with
   | Ok (ast, file_sig) ->
+    let file_sig = File_sig.abstractify_locs file_sig in
     let cx, _ = infer_and_merge ~root filename ast file_sig in
     let suppressions = Error_suppressions.empty in (* TODO: support suppressions *)
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
@@ -267,6 +266,7 @@ let infer_type filename content line col =
     match parse_content filename content with
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
+      let file_sig = File_sig.abstractify_locs file_sig in
       let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
       let type_table = Context.type_table cx in
       let file = Context.file cx in
@@ -301,6 +301,7 @@ let dump_types js_file js_content =
     match parse_content filename content with
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
+      let file_sig = File_sig.abstractify_locs file_sig in
       let cx, _ = infer_and_merge ~root filename ast file_sig in
       let printer = Ty_printer.string_of_t in
       let types = Query_types.dump_types cx file_sig ~printer in

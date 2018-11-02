@@ -7,7 +7,6 @@
 
 open Utils_js
 module Reqs = Merge_js.Reqs
-module File_sig = File_sig.With_Loc
 
 type 'a merge_job_results = (File_key.t * ('a, Flow_error.error_message) result) list
 type 'a merge_job =
@@ -23,8 +22,9 @@ type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
-  file_sigs: File_sig.t FilenameMap.t;
-  typed_asts: (Loc.t, Loc.t * Type.t) Flow_ast.program FilenameMap.t;
+  loc_file_sigs: File_sig.With_Loc.t FilenameMap.t;
+  file_sigs: File_sig.With_ALoc.t FilenameMap.t;
+  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -55,7 +55,7 @@ let reqs_of_component component required =
   let dep_cxs, reqs =
     List.fold_left (fun (dep_cxs, reqs) req ->
       let r, locs, resolved_r, file = req in
-      let locs = locs |> Nel.to_list |> LocSet.of_list in
+      let locs = locs |> Nel.to_list |> ALocSet.of_list in
       Module_heaps.(match get_file Expensive.ok resolved_r with
       | Some (File_key.ResourceFile f) ->
         dep_cxs, Reqs.add_res f file locs reqs
@@ -87,17 +87,20 @@ let reqs_of_component component required =
   master_cx, dep_cxs, reqs
 
 let merge_strict_context ~options component =
-  let required, file_sigs =
-    Nel.fold_left (fun (required, file_sigs) file ->
-      let file_sig = Parsing_heaps.get_file_sig_unsafe file in
-      let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+  let required, file_sigs, loc_file_sigs =
+    Nel.fold_left (fun (required, file_sigs, loc_file_sigs) file ->
+      let loc_file_sig = Parsing_heaps.get_file_sig_unsafe file in
+      let file_sig = File_sig.abstractify_locs loc_file_sig in
+      let file_sigs = FilenameMap.add file file_sig file_sigs in
+      let loc_file_sigs = FilenameMap.add file loc_file_sig loc_file_sigs in
+      let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
       let required = SMap.fold (fun r locs acc ->
         let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
           file r in
         (r, locs, resolved_r, file) :: acc
       ) require_loc_map required in
-      required, FilenameMap.add file file_sig file_sigs
-    ) ([], FilenameMap.empty) component in
+      required, file_sigs, loc_file_sigs
+    ) ([], FilenameMap.empty, FilenameMap.empty) component in
 
   let master_cx, dep_cxs, file_reqs =
     reqs_of_component component required
@@ -122,14 +125,15 @@ let merge_strict_context ~options component =
 
   let other_cxs = List.map fst other_cxs in
 
-  { cx; other_cxs; master_cx; file_sigs; typed_asts }
+  { cx; other_cxs; master_cx; file_sigs; loc_file_sigs; typed_asts }
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context options file ast info file_sig =
+  let file_sig = File_sig.abstractify_locs file_sig in
   let required =
-    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-    SMap.fold (fun r locs required ->
+    let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
+    SMap.fold (fun r (locs: ALoc.t Nel.t) required ->
       let resolved_r = Module_js.imported_module
         ~options
         ~node_modules_containers:!Files.node_modules_containers
@@ -290,7 +294,7 @@ let merge_strict_job ~worker_mutator ~job ~options merged elements =
             (Unix.getpid()) (Nel.length component) exn_str;
         (* An errored component is always changed. *)
         let file = Nel.hd component in
-        let file_loc = Loc.({ none with source = Some file }) in
+        let file_loc = Loc.({ none with source = Some file }) |> ALoc.of_loc in
         (* We can't pattern match on the exception type once it's marshalled
            back to the master process, so we pattern match on it here to create
            an error result. *)

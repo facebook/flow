@@ -40,7 +40,7 @@ let regenerate =
         if not (CheckedSet.dependencies checked |> FilenameSet.mem source_file)
         then begin
           let err =
-            let msg = Flow_error.EUnusedSuppression loc in
+            let msg = Flow_error.EUnusedSuppression (ALoc.of_loc loc) in
             Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg in
           let file_warnings = FilenameMap.get source_file warnings
             |> Option.value ~default:ErrorSet.empty

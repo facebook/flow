@@ -188,7 +188,7 @@ let find_module ~options (moduleref, filename) =
   let loc = {Loc.none with Loc.source = Some file} in
   let module_name = Module_js.imported_module
     ~options ~node_modules_containers:!Files.node_modules_containers
-    file (Nel.one loc) moduleref in
+    file (Nel.one (ALoc.of_loc loc)) moduleref in
   Module_heaps.get_file ~audit:Expensive.warn module_name
 
 let gen_flow_files ~options env files =

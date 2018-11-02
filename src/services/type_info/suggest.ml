@@ -40,8 +40,8 @@ class visitor ~cxs = object(this)
   method warnings () = _warnings
 
   method private inferred_type ~search ~index loc =
-    let search_loc = search loc in
-    match Utils_js.LocMap.get search_loc cxs with
+    let search_loc = search loc |> ALoc.of_loc in
+    match Utils_js.ALocMap.get search_loc cxs with
     | Some (Ok ty) -> (
         match index ty with
         | Ok Ty.Bot ->
@@ -132,7 +132,10 @@ class visitor ~cxs = object(this)
   method function_return loc func =
     let open Ast.Function in
     let { id; _ } = func in
-    let search = Type_table.function_decl_loc id in
+    let id = Option.map id ~f:(fun (loc, name) -> ALoc.of_loc loc, name) in
+    let search loc =
+      Type_table.function_decl_loc id (ALoc.of_loc loc) |> ALoc.to_loc
+    in
     this#callable_return ~search loc func
 
   method callable_return ~search loc func =

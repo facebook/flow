@@ -148,7 +148,7 @@ let autocomplete_member ~ac_type cx file_sig this ac_name ac_loc docblock = Flow
     let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
     let result = result_map
     |> autocomplete_filter_members
-    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t), t))
+    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t |> ALoc.to_loc), t))
     |> SMap.values
     |> Ty_normalizer.from_types ~options ~genv
     |> Core_list.filter_map ~f:(function
@@ -176,7 +176,7 @@ let autocomplete_id cx file_sig env =
         then (Loc.none, "this")
         else if is_super
         then (Loc.none, "super")
-        else (Scope.Entry.entry_loc entry, name)
+        else (Scope.Entry.entry_loc entry |> ALoc.to_loc, name)
       in
       let options = {
         Ty_normalizer_env.
@@ -214,6 +214,7 @@ let autocomplete_jsx cx file_sig cls ac_name ac_loc docblock = Flow_js.(
   )
 
 let autocomplete_get_results cx file_sig state docblock =
+  let file_sig = File_sig.abstractify_locs file_sig in
   match !state with
   | Some { ac_type = Acid (env); _; } ->
     autocomplete_id cx file_sig env

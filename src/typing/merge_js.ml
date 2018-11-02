@@ -16,14 +16,14 @@ module RequireMap = MyMap.Make (struct
 end)
 
 module FilenameMap = Utils_js.FilenameMap
-module LocSet = Utils_js.LocSet
+module ALocSet = Utils_js.ALocSet
 
 module Reqs = struct
-  type impl = LocSet.t
-  type dep_impl = Context.sig_t * LocSet.t
-  type unchecked = LocSet.t
-  type res = LocSet.t
-  type decl = LocSet.t * Modulename.t
+  type impl = ALocSet.t
+  type dep_impl = Context.sig_t * ALocSet.t
+  type unchecked = ALocSet.t
+  type res = ALocSet.t
+  type decl = ALocSet.t * Modulename.t
   type t = {
     impls: impl RequireMap.t;
     dep_impls: dep_impl RequireMap.t;
@@ -41,11 +41,11 @@ module Reqs = struct
   }
 
   let add_impl require requirer require_locs reqs =
-    let impls = RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.impls in
+    let impls = RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.impls in
     { reqs with impls }
 
   let add_dep_impl =
-    let combine (from_cx, locs1) (_, locs2) = from_cx, LocSet.union locs1 locs2 in
+    let combine (from_cx, locs1) (_, locs2) = from_cx, ALocSet.union locs1 locs2 in
     fun require requirer (from_cx, require_locs) reqs ->
       let dep_impls =
         RequireMap.add ~combine (require, requirer) (from_cx, require_locs) reqs.dep_impls
@@ -54,16 +54,16 @@ module Reqs = struct
 
   let add_unchecked require requirer require_locs reqs =
     let unchecked =
-      RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.unchecked
+      RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.unchecked
     in
     { reqs with unchecked }
 
   let add_res require requirer require_locs reqs =
-    let res = RequireMap.add ~combine:LocSet.union (require, requirer) require_locs reqs.res in
+    let res = RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.res in
     { reqs with res }
 
   let add_decl =
-    let combine (locs1, modulename) (locs2, _) = LocSet.union locs1 locs2, modulename in
+    let combine (locs1, modulename) (locs2, _) = ALocSet.union locs1 locs2, modulename in
     fun require requirer (require_locs, modulename) reqs ->
     let decls = RequireMap.add ~combine (require, requirer) (require_locs, modulename) reqs.decls in
     { reqs with decls }
@@ -102,7 +102,7 @@ let explicit_res_require_strict cx (loc, f, cx_to) =
 (* Connect a export of a declared module to its import in cxs_to. This happens
    in some arbitrary cx, so cx_to should have already been copied to cx. *)
 let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
-  let reason = Reason.(mk_reason (RCustom m) (loc |> ALoc.of_loc)) in
+  let reason = Reason.(mk_reason (RCustom m) loc) in
 
   (* lookup module declaration from builtin context *)
   let m_name =
@@ -125,7 +125,7 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
 let explicit_unchecked_require_strict cx (m, loc, cx_to) =
   (* Use a special reason so we can tell the difference between an any-typed type import
    * from an untyped module and an any-typed type import from a nonexistent module. *)
-  let reason = Reason.(mk_reason (RUntypedModule m) (loc |> ALoc.of_loc)) in
+  let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
   let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
@@ -145,7 +145,7 @@ let detect_sketchy_null_checks cx =
   let detect_function exists_excuses loc exists_check =
     let open ExistsCheck in
 
-    let exists_excuse = Utils_js.LocMap.get loc exists_excuses
+    let exists_excuse = Utils_js.ALocMap.get loc exists_excuses
       |> Option.value ~default:empty in
 
     begin match exists_check.null_loc with
@@ -164,7 +164,7 @@ let detect_sketchy_null_checks cx =
     end
   in
 
-  Utils_js.LocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
+  Utils_js.ALocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
 
 let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
@@ -230,9 +230,9 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
   let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
     Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
       let desc = Reason.RCustom "TypeAssert library function" in
-      let reason_main = Reason.mk_reason desc (call_loc |> ALoc.of_loc) in
+      let reason_main = Reason.mk_reason desc call_loc in
       let wrap reason = Flow_js.add_output full_cx (Flow_error.EInvalidTypeArgs (
-        reason_main, Reason.mk_reason reason (call_loc |> ALoc.of_loc)
+        reason_main, Reason.mk_reason reason call_loc
       )) in
       match Ty_normalizer.from_scheme ~options ~genv scheme with
       | Ok ty ->
@@ -248,7 +248,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     let targs_map = Type_table.targs_hashtbl type_table in
     let file_sig = FilenameMap.find_unsafe file file_sigs in
     let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
-    Utils_js.LocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
+    Utils_js.ALocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
   ) cxs
 
 let force_annotations leader_cx other_cxs =
@@ -263,7 +263,9 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
 
   let metadata =
     let jsx = match Docblock.jsx docblock_info with
-    | Some (Docblock.Jsx_pragma (expr, jsx_expr)) -> Options.Jsx_pragma (expr, jsx_expr)
+    | Some (Docblock.Jsx_pragma (expr, jsx_expr)) ->
+      let jsx_expr = Ast_loc_utils.abstractify_mapper#expression jsx_expr in
+      Options.Jsx_pragma (expr, jsx_expr)
     | Some Docblock.Csx_pragma -> Options.Jsx_csx
     | None -> Options.Jsx_react
     in
@@ -388,7 +390,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   reqs.impls
   |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    LocSet.iter (fun loc ->
+    ALocSet.iter (fun loc ->
       explicit_impl_require_strict cx (sig_cx, m, loc, cx_to);
     ) locs;
   );
@@ -396,7 +398,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   reqs.dep_impls
   |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    LocSet.iter (fun loc ->
+    ALocSet.iter (fun loc ->
       explicit_impl_require_strict cx (cx_from, m, loc, cx_to)
     ) locs
   );
@@ -404,7 +406,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   reqs.res
   |> RequireMap.iter (fun (f, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    LocSet.iter (fun loc ->
+    ALocSet.iter (fun loc ->
       explicit_res_require_strict cx (loc, f, cx_to)
     ) locs
   );
@@ -412,7 +414,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   reqs.decls
   |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    LocSet.iter (fun loc ->
+    ALocSet.iter (fun loc ->
       explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
     ) locs
   );
@@ -420,7 +422,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   reqs.unchecked
   |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    LocSet.iter (fun loc ->
+    ALocSet.iter (fun loc ->
       explicit_unchecked_require_strict cx (m, loc, cx_to)
     ) locs
   );

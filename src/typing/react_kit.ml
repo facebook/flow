@@ -11,7 +11,7 @@ open React
 
 let run cx trace ~use_op reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
-  ~(reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t)
+  ~(reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t)
   ~(rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit)
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
   ~(get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t)
@@ -49,7 +49,7 @@ let run cx trace ~use_op reason_op l u
 
   let coerce_prop_type = function
     | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
-      let loc = aloc_of_reason reason |> ALoc.to_loc in
+      let loc = aloc_of_reason reason in
       Ok (required, reposition cx ~trace loc t)
     | DefT (reason, FunT _) as t ->
       rec_flow_t cx trace (t,
@@ -113,7 +113,7 @@ let run cx trace ~use_op reason_op l u
       {
         this_t = any;
         params = [(None, props)];
-        rest_param = Some (None, aloc_of_reason reason_op |> ALoc.to_loc, any);
+        rest_param = Some (None, aloc_of_reason reason_op, any);
         return_t = if with_return_t
           then get_builtin_type cx reason_op "React$Node"
           else any;
@@ -129,7 +129,7 @@ let run cx trace ~use_op reason_op l u
     let reason = reason_of_t l in
     (* Get the internal $JSXIntrinsics map. *)
     let intrinsics =
-      let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t l |> ALoc.of_loc) in
+      let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t l) in
       get_builtin_type cx ~trace reason "$JSXIntrinsics"
     in
     (* Create a use_op for the upcoming operations. *)
@@ -293,7 +293,7 @@ let run cx trace ~use_op reason_op l u
       (* Create a reason where the location is between our first and last known
        * argument. *)
       let r = mk_reason RReactChildren (match use_op with
-      | Op (ReactCreateElementCall {children; _}) -> children |> ALoc.of_loc
+      | Op (ReactCreateElementCall {children; _}) -> children
       | _ -> aloc_of_reason reason_op)
       in
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (t::ts), Some (t::ts)))))
@@ -319,7 +319,7 @@ let run cx trace ~use_op reason_op l u
       let r = mk_reason
         (RReactChildrenOrType (t |> reason_of_t |> desc_of_reason))
         (match use_op with
-        | Op (ReactCreateElementCall {children; _}) -> children |> ALoc.of_loc
+        | Op (ReactCreateElementCall {children; _}) -> children
         | _ -> aloc_of_reason reason_op)
       in
       Some (union_of_ts r [
@@ -332,7 +332,7 @@ let run cx trace ~use_op reason_op l u
     | t::ts, Some spread ->
       (* Create a reason between our known argument and the spread argument. *)
       let r = mk_reason RReactChildren (match use_op with
-      | Op (ReactCreateElementCall {children; _}) -> children |> ALoc.of_loc
+      | Op (ReactCreateElementCall {children; _}) -> children
       | _ -> aloc_of_reason reason_op)
       in
       Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
