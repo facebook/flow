@@ -173,7 +173,7 @@ and tolerable_error =
   | BadExportPosition of Loc.t
   (* e.g. `foo(module)`, dangerous because `module` is aliased *)
   | BadExportContext of string (* offending identifier *) * Loc.t
-  | SignatureVerificationError of Signature_builder_deps.Error.t
+  | SignatureVerificationError of Signature_builder_deps.With_Loc.Error.t
 
 type exports_info = {
   module_kind_info: module_kind_info;
@@ -220,7 +220,7 @@ val program:
   ast:(Loc.t, Loc.t) Flow_ast.program ->
   module_ref_prefix:string option ->
   (t, error) result
-val verified: Signature_builder_deps.ErrorSet.t -> exports_info t' -> t
+val verified: Signature_builder_deps.With_Loc.ErrorSet.t -> exports_info t' -> t
 
 (* Use for debugging; not for exposing info the the end user *)
 val to_string: t -> string

@@ -9,6 +9,7 @@ module Ast_utils = Flow_ast_utils
 
 module Ast = Flow_ast
 module Scope_api = Scope_api.With_Loc
+module Signature_builder_deps = Signature_builder_deps.With_Loc
 
 module Result = Core_result
 open Flow_ast_visitor

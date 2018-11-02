@@ -364,7 +364,7 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false) ~
           | Ok signature ->
             let errors = match Signature_builder.Signature.verify_and_generate
                 ?prevent_munge ~ignore_static_propTypes signature ast with
-              | Ok _signature_ast -> Signature_builder_deps.ErrorSet.empty
+              | Ok _signature_ast -> Signature_builder_deps.With_Loc.ErrorSet.empty
               | Error errors -> errors
             in
             let verified_file_sig = File_sig.verified errors (snd signature) in
