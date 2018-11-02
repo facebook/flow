@@ -161,6 +161,14 @@ class useless_mapper = object(this)
     | Some (loc, Minus) -> Some (loc, Plus)
     | _ -> variance
 
+  method! type_parameter_instantiation_with_implicit (loc, targs) =
+    let open Ast.Expression.TypeParameterInstantiation in
+    let f targ =
+      match targ with
+      | Explicit targ'-> Explicit (this#type_ targ')
+      | Implicit loc -> Explicit (loc, Ast.Type.Any) in
+    (loc, List.map f targs)
+
 end
 
 class literal_mapper = object
@@ -398,6 +406,13 @@ class insert_typecast_mapper = object
       { Ast.Expression.TypeCast.annot=(loc, (loc, Type.Any)); expression }
 end
 
+class insert_type_param_instantiation = object
+  inherit [Loc.t] Flow_ast_mapper.mapper
+  method! type_parameter_instantiation_with_implicit (loc, targs) =
+    let open Ast.Expression.TypeParameterInstantiation in
+    (loc, (Explicit (loc, Ast.Type.Any))::targs)
+end
+
 let edits_of_source algo source mapper =
   let ast, _ = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
@@ -538,6 +553,33 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source ~expected:"new gotRenamed()"
       ~mapper:(new useless_mapper)
   end;
+  "new_type_param" >:: begin fun ctxt ->
+    let source = "new foo<RENAME>()" in
+    assert_edits_equal ctxt ~edits:[((8, 14), "GOT_RENAMED")] ~source
+      ~expected:"new foo<GOT_RENAMED>()"
+      ~mapper:(new useless_mapper)
+  end;
+  "new_type_param_multiple" >:: begin fun ctxt ->
+    let source = "new foo<RENAME, RENAME>()" in
+    assert_edits_equal ctxt
+      ~edits:[((8, 14), "GOT_RENAMED"); ((16, 22), "GOT_RENAMED")] ~source
+      ~expected:"new foo<GOT_RENAMED, GOT_RENAMED>()"
+      ~mapper:(new useless_mapper)
+  end;
+  "new_type_param_insert" >:: begin fun ctxt ->
+    let source = "new foo<>()" in
+    assert_edits_equal ctxt
+      ~edits:[((0, 11), "(new foo<any>())")] ~source
+      ~expected:"(new foo<any>())"
+      ~mapper:(new insert_type_param_instantiation)
+  end;
+  "new_type_param_implicit" >:: begin fun ctxt ->
+    let source = "new foo<_>()" in
+    assert_edits_equal ctxt
+      ~edits:[((0, 12), "(new foo<any>())")] ~source
+      ~expected:"(new foo<any>())"
+      ~mapper:(new useless_mapper)
+  end;
   "member" >:: begin fun ctxt ->
     let source = "rename.a" in
     assert_edits_equal ctxt ~edits:[((0, 6), "gotRenamed")] ~source ~expected:"gotRenamed.a"
@@ -644,6 +686,11 @@ let tests = "ast_differ" >::: [
     let source = "rename()" in
     assert_edits_equal ctxt ~edits:[((0, 6), "gotRenamed")] ~source ~expected:"gotRenamed()"
     ~mapper:(new useless_mapper)
+  end;
+  "call_type_param" >:: begin fun ctxt ->
+    let source = "rename<RENAME>()" in
+    assert_edits_equal ctxt ~edits:[((7, 13), "GOT_RENAMED")] ~source
+      ~expected:"rename<GOT_RENAMED>()" ~mapper:(new useless_mapper)
   end;
   "variable_declaration_kind" >:: begin fun ctxt ->
     let source = "var x = 5;" in
