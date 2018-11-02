@@ -170,7 +170,7 @@ type error_message =
   | EInexactSpread of reason * reason
   | EDeprecatedCallSyntax of Loc.t
   | EUnexpectedTemporaryBaseType of Loc.t
-  | ESignatureVerification of Signature_builder_deps.Error.t
+  | ESignatureVerification of Signature_builder_deps.With_Loc.Error.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -1827,7 +1827,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | ESignatureVerification sve ->
-    let open Signature_builder_deps.Error in
+    let open Signature_builder_deps.With_Loc.Error in
     begin match sve with
       | ExpectedSort (sort, x, loc) ->
         mk_signature_verification_error (loc |> ALoc.of_loc) [

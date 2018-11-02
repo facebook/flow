@@ -13,6 +13,7 @@ module Entry = Signature_builder_entry
 module Env = Signature_builder_env
 module V = Signature_builder_verify.Verifier
 module G = Signature_builder_generate.Generator
+module Signature_builder_deps = Signature_builder_deps.With_Loc
 
 module Signature = struct
   type t = Env.t * File_sig.exports_info File_sig.t'
