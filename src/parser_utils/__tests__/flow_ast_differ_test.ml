@@ -1040,6 +1040,11 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(12,18), "gotRenamed"] ~source
         ~expected:"let [a,b,...gotRenamed] = 0" ~mapper:(new useless_mapper)
   end;
+  "pattern_array" >:: begin fun ctxt ->
+    let source = "let [foo,bar]: rename = [0]" in
+    assert_edits_equal ctxt ~edits:[(13, 21), ": gotRenamed"] ~source
+      ~expected:"let [foo,bar]: gotRenamed = [0]" ~mapper:(new useless_mapper)
+  end;
   "pattern_object_longhand" >:: begin fun ctxt ->
     let source = "let {rename: rename} = 0" in
     assert_edits_equal ctxt ~edits:[(5,11), "gotRenamed"; (13,19), "gotRenamed"] ~source
@@ -1049,6 +1054,11 @@ let tests = "ast_differ" >::: [
     let source = "let {a,b,...rename} = 0" in
     assert_edits_equal ctxt ~edits:[(12,18), "gotRenamed"] ~source
       ~expected:"let {a,b,...gotRenamed} = 0" ~mapper:(new useless_mapper)
+  end;
+  "pattern_object_annot" >:: begin fun ctxt ->
+    let source = "let {foo: bar}: rename = 0" in
+    assert_edits_equal ctxt ~edits:[(14, 22), ": gotRenamed"] ~source
+      ~expected:"let {foo: bar}: gotRenamed = 0" ~mapper:(new useless_mapper)
   end;
   "pattern_assignment" >:: begin fun ctxt ->
     let source = "let [a=rename] = 0" in
