@@ -115,13 +115,13 @@ let lib_before_and_after_stmts file_name =
   stmts, t_stmts
 
 
-class ['a] loc_none_mapper = object(_)
-  inherit [Loc.t, 'a, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
-  method on_loc_annot (_x: Loc.t) = Loc.none
-  method on_type_annot (_x: 'a) = Loc.none
+class ['a, 'b] loc_none_mapper = object(_)
+  inherit ['a, 'b, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+  method on_loc_annot (_x: 'a) = Loc.none
+  method on_type_annot (_x: 'b) = Loc.none
 end
 
-let generate_stmts_layout (stmts: (Loc.t, 'a) Flow_ast.Statement.t list) =
+let generate_stmts_layout (stmts: ('a, 'b) Flow_ast.Statement.t list) =
   let none_mapper = new loc_none_mapper in
   let prog = Loc.none, List.map none_mapper#statement stmts, [] in
   let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
