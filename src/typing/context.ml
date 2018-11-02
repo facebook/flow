@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module LocMap = Utils_js.LocMap
-module Scope_api = Scope_api.With_Loc
+module ALocMap = Utils_js.ALocMap
+module Scope_api = Scope_api.With_ALoc
 
 exception Props_not_found of Type.Properties.id
 exception Call_not_found of int
@@ -50,7 +50,7 @@ type metadata = {
 }
 
 type module_kind =
-  | CommonJSModule of Loc.t option
+  | CommonJSModule of ALoc.t option
   | ESModule
 
 type test_prop_hit_or_miss =
@@ -88,7 +88,7 @@ type sig_t = {
   mutable module_map: Type.t SMap.t;
 
   (* map from TypeAssert assertion locations to the type being asserted *)
-  mutable type_asserts: (type_assert_kind * Loc.t) LocMap.t;
+  mutable type_asserts: (type_assert_kind * ALoc.t) ALocMap.t;
 
   mutable errors: Errors.ErrorSet.t;
 
@@ -96,7 +96,7 @@ type sig_t = {
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
 
   (* map from exists proposition locations to the types of values running through them *)
-  mutable exists_checks: ExistsCheck.t LocMap.t;
+  mutable exists_checks: ExistsCheck.t ALocMap.t;
   (* map from exists proposition locations to the types of excuses for them *)
   (* If a variable appears in something like `x || ''`, the existence check
    * is excused and not considered sketchy. (The program behaves identically to how it would
@@ -104,13 +104,13 @@ type sig_t = {
    * common pattern. Excusing it eliminates a lot of noise from the lint rule. *)
   (* The above example assumes that x is a string. If it were a different type
    * it wouldn't be excused. *)
-  mutable exists_excuses: ExistsCheck.t LocMap.t;
+  mutable exists_excuses: ExistsCheck.t ALocMap.t;
 
   mutable test_prop_hits_and_misses: test_prop_hit_or_miss IMap.t;
 
-  mutable optional_chains_useful: (Reason.t * bool) LocMap.t;
+  mutable optional_chains_useful: (Reason.t * bool) ALocMap.t;
 
-  mutable invariants_useful: (Reason.t * bool) LocMap.t;
+  mutable invariants_useful: (Reason.t * bool) ALocMap.t;
 }
 
 type t = {
@@ -122,7 +122,7 @@ type t = {
 
   mutable module_kind: module_kind;
 
-  mutable import_stmts: (Loc.t, Loc.t) Flow_ast.Statement.ImportDeclaration.t list;
+  mutable import_stmts: (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list;
   mutable imported_ts: Type.t SMap.t;
 
   (* set of "nominal" ids (created by Flow_js.mk_nominal_id) *)
@@ -134,7 +134,7 @@ type t = {
       meaningfully changed: see Merge_js.ContextOptimizer. **)
   mutable nominal_ids: ISet.t;
 
-  mutable require_map: Type.t LocMap.t;
+  mutable require_map: Type.t ALocMap.t;
 
   type_table: Type_table.t;
   annot_table: (Loc.t, Type.t) Hashtbl.t;
@@ -142,7 +142,7 @@ type t = {
 
   mutable declare_module_ref: string option;
 
-  mutable use_def : Scope_api.info * Ssa_api.values;
+  mutable use_def : Scope_api.info * Ssa_api.With_ALoc.values;
 }
 
 let metadata_of_options options = {
@@ -177,7 +177,7 @@ let metadata_of_options options = {
   suppress_types = Options.suppress_types options;
 }
 
-let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, LocMap.empty
+let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty
 
 let make_sig () = {
   graph = IMap.empty;
@@ -189,15 +189,15 @@ let make_sig () = {
   all_unresolved = IMap.empty;
   envs = IMap.empty;
   module_map = SMap.empty;
-  type_asserts = LocMap.empty;
+  type_asserts = ALocMap.empty;
   errors = Errors.ErrorSet.empty;
   error_suppressions = Error_suppressions.empty;
   severity_cover = Utils_js.FilenameMap.empty;
-  exists_checks = LocMap.empty;
-  exists_excuses = LocMap.empty;
+  exists_checks = ALocMap.empty;
+  exists_excuses = ALocMap.empty;
   test_prop_hits_and_misses = IMap.empty;
-  optional_chains_useful = LocMap.empty;
-  invariants_useful = LocMap.empty;
+  optional_chains_useful = ALocMap.empty;
+  invariants_useful = ALocMap.empty;
 }
 
 (* create a new context structure.
@@ -217,7 +217,7 @@ let make sig_cx metadata file module_ref = {
 
   nominal_ids = ISet.empty;
 
-  require_map = LocMap.empty;
+  require_map = ALocMap.empty;
 
   type_table = Type_table.create ();
   annot_table = Hashtbl.create 0;
@@ -272,8 +272,8 @@ let find_exports cx id =
   try Type.Exports.Map.find_unsafe id cx.sig_cx.export_maps
   with Not_found -> raise (Exports_not_found id)
 let find_require cx loc =
-  try LocMap.find_unsafe loc cx.require_map
-  with Not_found -> raise (Require_not_found (Loc.to_string ~include_source:true loc))
+  try ALocMap.find_unsafe loc cx.require_map
+  with Not_found -> raise (Require_not_found (ALoc.to_string ~include_source:true loc))
 let find_module cx m = find_module_sig (sig_cx cx) m
 let find_tvar cx id =
   try IMap.find_unsafe id cx.sig_cx.graph
@@ -353,7 +353,7 @@ let add_import_stmt cx stmt =
 let add_imported_t cx name t =
   cx.imported_ts <- SMap.add name t cx.imported_ts
 let add_require cx loc tvar =
-  cx.require_map <- LocMap.add loc tvar cx.require_map
+  cx.require_map <- ALocMap.add loc tvar cx.require_map
 let add_module cx name tvar =
   cx.sig_cx.module_map <- SMap.add name tvar cx.sig_cx.module_map
 let add_property_map cx id pmap =
@@ -367,7 +367,7 @@ let add_tvar cx id bounds =
 let add_nominal_id cx id =
   cx.nominal_ids <- ISet.add id cx.nominal_ids
 let add_type_assert cx k v =
-  cx.sig_cx.type_asserts <- LocMap.add k v cx.sig_cx.type_asserts
+  cx.sig_cx.type_asserts <- ALocMap.add k v cx.sig_cx.type_asserts
 let remove_all_errors cx =
   cx.sig_cx.errors <- Errors.ErrorSet.empty
 let remove_all_error_suppressions cx =
@@ -406,11 +406,11 @@ let set_module_map cx module_map =
 let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
-  cx.sig_cx.exists_checks <- LocMap.empty;
-  cx.sig_cx.exists_excuses <- LocMap.empty;
+  cx.sig_cx.exists_checks <- ALocMap.empty;
+  cx.sig_cx.exists_excuses <- ALocMap.empty;
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
-  cx.sig_cx.optional_chains_useful <- LocMap.empty;
-  cx.sig_cx.invariants_useful <- LocMap.empty;
+  cx.sig_cx.optional_chains_useful <- ALocMap.empty;
+  cx.sig_cx.invariants_useful <- ALocMap.empty;
   ()
 
 (* Given a sig context, it makes sense to clear the parts that are shared with
@@ -446,22 +446,22 @@ let test_prop_get_never_hit cx =
   ) [] (IMap.bindings cx.sig_cx.test_prop_hits_and_misses)
 
 let mark_optional_chain cx loc lhs_reason ~useful =
-  cx.sig_cx.optional_chains_useful <- LocMap.add loc (lhs_reason, useful) ~combine:(
+  cx.sig_cx.optional_chains_useful <- ALocMap.add loc (lhs_reason, useful) ~combine:(
     fun (r, u) (_, u') -> (r, u || u')
   ) cx.sig_cx.optional_chains_useful
 
 let unnecessary_optional_chains cx =
-  LocMap.fold (fun loc (r, useful) acc ->
+  ALocMap.fold (fun loc (r, useful) acc ->
     if useful then acc else (loc, r) :: acc
   ) cx.sig_cx.optional_chains_useful []
 
 let mark_invariant cx loc reason ~useful =
-  cx.sig_cx.invariants_useful <- LocMap.add loc (reason, useful) ~combine:(
+  cx.sig_cx.invariants_useful <- ALocMap.add loc (reason, useful) ~combine:(
     fun (r, u) (_, u') -> (r, u || u')
   ) cx.sig_cx.invariants_useful
 
 let unnecessary_invariants cx =
-  LocMap.fold (fun loc (r, useful) acc ->
+  ALocMap.fold (fun loc (r, useful) acc ->
     if useful then acc else (loc, r) :: acc
   ) cx.sig_cx.invariants_useful []
 
@@ -520,7 +520,7 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
   sig_cx.type_graph <- Graph_explorer.union sig_cx_other.type_graph sig_cx.type_graph;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
-  sig_cx.type_asserts <- LocMap.union sig_cx.type_asserts sig_cx_other.type_asserts;
+  sig_cx.type_asserts <- ALocMap.union sig_cx.type_asserts sig_cx_other.type_asserts;
 
   (* These entries are intermediates, and will be cleared from dep_cxs before
      merge. However, initializing builtins is a bit different, and actually copy
@@ -530,8 +530,8 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.errors <- Errors.ErrorSet.union sig_cx_other.errors sig_cx.errors;
   sig_cx.error_suppressions <- Error_suppressions.union sig_cx_other.error_suppressions sig_cx.error_suppressions;
   sig_cx.severity_cover <- Utils_js.FilenameMap.union sig_cx_other.severity_cover sig_cx.severity_cover;
-  sig_cx.exists_checks <- LocMap.union sig_cx_other.exists_checks sig_cx.exists_checks;
-  sig_cx.exists_excuses <- LocMap.union sig_cx_other.exists_excuses sig_cx.exists_excuses;
+  sig_cx.exists_checks <- ALocMap.union sig_cx_other.exists_checks sig_cx.exists_checks;
+  sig_cx.exists_excuses <- ALocMap.union sig_cx_other.exists_excuses sig_cx.exists_excuses;
   sig_cx.all_unresolved <- IMap.union sig_cx_other.all_unresolved sig_cx.all_unresolved;
   ()
 

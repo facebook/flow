@@ -447,10 +447,10 @@ module ImplicitTypeArgument = struct
     (* Create a reason that is positioned at reason_op, but has a def_loc at
      * typeparam.reason. *)
     let loc_op = aloc_of_reason reason_op in
-    let desc = RTypeParam (typeparam.name, (desc_of_reason reason_op, loc_op |> ALoc.to_loc),
-      (desc_of_reason reason_tapp, def_aloc_of_reason reason_tapp |> ALoc.to_loc)) in
+    let desc = RTypeParam (typeparam.name, (desc_of_reason reason_op, loc_op),
+      (desc_of_reason reason_tapp, def_aloc_of_reason reason_tapp)) in
     let reason = mk_reason desc (def_aloc_of_reason typeparam.reason) in
-    let reason = repos_reason (loc_op |> ALoc.to_loc) reason in
+    let reason = repos_reason loc_op reason in
     Tvar.mk cx reason
 
   (* Abstract a type argument that is created by implicit instantiation
@@ -1179,7 +1179,7 @@ let expect_proper_def_use t =
 
 let check_nonstrict_import cx trace is_strict imported_is_strict reason =
   if is_strict && (not imported_is_strict) then
-    let loc = Reason.aloc_of_reason reason |> ALoc.to_loc in
+    let loc = Reason.aloc_of_reason reason in
     let message = FlowError.ENonstrictImport loc in
     add_output cx ~trace message
 
@@ -1363,7 +1363,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | MergedT _, ReposUseT (reason, use_desc, use_op, l) ->
       let loc = aloc_of_reason reason in
       let desc = if use_desc then Some (desc_of_reason reason) else None in
-      let u = reposition cx ~trace (loc |> ALoc.to_loc) ?desc l in
+      let u = reposition cx ~trace loc ?desc l in
       rec_flow cx trace (l, UseT (use_op, u))
 
     | MergedT (reason, _), _ ->
@@ -1497,7 +1497,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | AnnotT (r, t, use_desc), IntersectionPreprocessKitT (_, ConcretizeTypes _) ->
       (* TODO: directly derive loc and desc from the reason of tvar *)
-      let loc = aloc_of_reason r |> ALoc.to_loc in
+      let loc = aloc_of_reason r in
       let desc = if use_desc then Some (desc_of_reason r) else None in
       rec_flow cx trace (reposition ~trace cx loc ?desc t, u)
 
@@ -1560,7 +1560,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (r, UnionT rep), ReposUseT (reason, use_desc, use_op, l) ->
       let rep = UnionRep.ident_map (annot use_desc) rep in
       let annot_loc = annot_aloc_of_reason reason in
-      let r = repos_reason (aloc_of_reason reason |> ALoc.to_loc) ?annot_loc r in
+      let r = repos_reason (aloc_of_reason reason) ?annot_loc r in
       let r =
         if use_desc
         then replace_reason_const (desc_of_reason reason) r
@@ -1570,7 +1570,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (r, MaybeT u), ReposUseT (reason, use_desc, use_op, l) ->
       let annot_loc = annot_aloc_of_reason reason in
-      let r = repos_reason (aloc_of_reason reason |> ALoc.to_loc) ?annot_loc r in
+      let r = repos_reason (aloc_of_reason reason) ?annot_loc r in
       let r =
         if use_desc
         then replace_reason_const (desc_of_reason reason) r
@@ -1580,7 +1580,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (r, OptionalT u), ReposUseT (reason, use_desc, use_op, l) ->
       let annot_loc = annot_aloc_of_reason reason in
-      let r = repos_reason (aloc_of_reason reason |> ALoc.to_loc) ?annot_loc r in
+      let r = repos_reason (aloc_of_reason reason) ?annot_loc r in
       let r =
         if use_desc
         then replace_reason_const (desc_of_reason reason) r
@@ -1622,7 +1622,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ()
 
     | _, BecomeT (reason, t) ->
-      let l = reposition ~trace cx (aloc_of_reason reason |> ALoc.to_loc) l in
+      let l = reposition ~trace cx (aloc_of_reason reason) l in
       rec_unify cx trace ~use_op:unknown_use ~unify_any:true l t
 
     (***********************)
@@ -1944,7 +1944,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some t ->
           (* reposition the export to point at the require(), like the object
              we create below for non-CommonJS exports *)
-          reposition ~trace cx (aloc_of_reason reason |> ALoc.to_loc) t
+          reposition ~trace cx (aloc_of_reason reason) t
         | None ->
           (* convert ES module's named exports to an object *)
           let proto = ObjProtoT reason in
@@ -2107,7 +2107,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * from an untyped module and an any-typed import from a nonexistent module. *)
         | RUntypedModule module_name ->
           let loc = Reason.aloc_of_reason reason in
-          let message = FlowError.EUntypedImport (loc |> ALoc.to_loc, module_name) in
+          let message = FlowError.EUntypedImport (loc, module_name) in
           add_output cx ~trace message
         | _ -> ()
       in
@@ -2119,11 +2119,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * from an untyped module and an any-typed import from a nonexistent module. *)
         | (ImportType | ImportTypeof), RUntypedModule module_name ->
           let loc = Reason.aloc_of_reason reason in
-          let message = FlowError.EUntypedTypeImport (loc |> ALoc.to_loc, module_name) in
+          let message = FlowError.EUntypedTypeImport (loc, module_name) in
           add_output cx ~trace message
         | ImportValue, RUntypedModule module_name ->
           let loc = Reason.aloc_of_reason reason in
-          let message = FlowError.EUntypedImport (loc |> ALoc.to_loc, module_name) in
+          let message = FlowError.EUntypedImport (loc, module_name) in
           add_output cx ~trace message
         | _ -> ()
       in
@@ -2135,11 +2135,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          * from an untyped module and an any-typed type import from a nonexistent module. *)
         | (ImportType | ImportTypeof), RUntypedModule module_name ->
           let loc = Reason.aloc_of_reason reason in
-          let message = FlowError.EUntypedTypeImport (loc |> ALoc.to_loc, module_name) in
+          let message = FlowError.EUntypedTypeImport (loc, module_name) in
           add_output cx ~trace message
         | ImportValue, RUntypedModule module_name ->
           let loc = Reason.aloc_of_reason reason in
-          let message = FlowError.EUntypedImport (loc |> ALoc.to_loc, module_name) in
+          let message = FlowError.EUntypedImport (loc, module_name) in
           add_output cx ~trace message
         | _ -> ()
       in
@@ -2271,7 +2271,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         AnyT.why reason_op
       | Some _, _ ->
         add_output cx ~trace FlowError.(ECallTypeArity {
-          call_loc = aloc_of_reason reason_op |> ALoc.to_loc;
+          call_loc = aloc_of_reason reason_op;
           is_new = false;
           reason_arity = lreason;
           expected_arity = 0;
@@ -2390,7 +2390,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           DefT (mk_reason RUnion fun_loc, UnionT (UnionRep.make obj_fail obj_succ []))
         | _ -> failwith "cannot reach this case"
         end in
-        Context.add_type_assert cx (call_loc |> ALoc.to_loc) (kind, TypeUtil.loc_of_t t); return_t
+        Context.add_type_assert cx call_loc (kind, TypeUtil.loc_of_t t); return_t
       | Some _ ->
         add_output cx ~trace (FlowError.ETooManyTypeArgs (reason, reason, 1));
         AnyT.at fun_loc
@@ -2419,11 +2419,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*********************)
 
     | DefT (r, (NullT | VoidT)), OptionalChainT (r', lhs_reason, chain) ->
-      Context.mark_optional_chain cx (aloc_of_reason r' |> ALoc.to_loc) lhs_reason ~useful:true;
+      Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:true;
       Nel.iter (fun (_, t_out) -> rec_flow_t cx trace (InternalT (OptionalChainVoidT r), t_out)) chain;
 
     | InternalT (OptionalChainVoidT _), OptionalChainT (r', lhs_reason, chain) ->
-      Context.mark_optional_chain cx (aloc_of_reason r' |> ALoc.to_loc) lhs_reason ~useful:false;
+      Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:false;
       Nel.iter (fun (_, t_out) -> rec_flow_t cx trace (l, t_out)) chain;
 
     | _, OptionalChainT (r', lhs_reason, chain) when (
@@ -2431,7 +2431,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | DefT (_, (MaybeT _ | OptionalT _ | UnionT _ | IntersectionT _)) -> false
         | _ -> true
       ) ->
-      Context.mark_optional_chain cx (aloc_of_reason r' |> ALoc.to_loc) lhs_reason ~useful:(
+      Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:(
         match l with
         | DefT (_, (MixedT _ | AnyT | AnyObjT | AnyFunT)) -> true
         | _ -> false
@@ -2451,7 +2451,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* invariant *)
     (*************)
 
-    | _, InvariantT r' -> Context.mark_invariant cx (aloc_of_reason r' |> ALoc.to_loc) (reason_of_t l) ~useful:(
+    | _, InvariantT r' -> Context.mark_invariant cx (aloc_of_reason r') (reason_of_t l) ~useful:(
         match Type_filter.not_exists l with
         | DefT (_, EmptyT) -> false
         | _ -> true
@@ -2471,7 +2471,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          reposition the entire maybe type. *)
       let loc = aloc_of_reason reason_op in
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
-      rec_flow cx trace (reposition cx ~trace (loc |> ALoc.to_loc) ?desc l, u)
+      rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
     | DefT (_, MaybeT t), ObjAssignFromT (_, _, _, ObjAssign _) ->
       (* This isn't correct, but matches the existing incorrectness of spreads
@@ -3571,7 +3571,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* exactify incoming UB object type, flow to LB *)
     | DefT (ru, ObjT obj_u), MakeExactT (reason_op, Lower (use_op, l)) ->
       (* forward to standard obj ~> obj *)
-      let ru = repos_reason (aloc_of_reason reason_op |> ALoc.to_loc) ru in
+      let ru = repos_reason (aloc_of_reason reason_op) ru in
       let xu = { obj_u with flags = { obj_u.flags with exact = true } } in
       rec_flow cx trace (l, UseT (use_op, DefT (ru, ObjT xu)))
 
@@ -3656,7 +3656,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Ok None ->
         let loc = aloc_of_reason lreason in
         add_output cx ~trace FlowError.(EInternal
-          (loc |> ALoc.to_loc, PredFunWithoutParamNames))
+          (loc, PredFunWithoutParamNames))
       | Error (msg, reasons) ->
         add_output cx ~trace (FlowError.EFunPredCustom (reasons, msg));
         rec_flow_t cx trace (unrefined_t, fresh_t))
@@ -3703,7 +3703,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | OpenPredT _, UseT (_, OpenPredT _) ->
       let loc = aloc_of_reason (reason_of_use_t u) in
-      add_output cx ~trace FlowError.(EInternal (loc |> ALoc.to_loc, OpenPredWithoutSubst))
+      add_output cx ~trace FlowError.(EInternal (loc, OpenPredWithoutSubst))
 
     (*********************************************)
     (* Using predicate functions as regular ones *)
@@ -4047,7 +4047,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
                 "Predicate function is incompatible with"))
             | (None, _)::_, _ | _, (None, _)::_ ->
               let loc = aloc_of_reason ureason in
-              Error (FlowError.(EInternal (loc |> ALoc.to_loc, PredFunWithoutParamNames)))
+              Error (FlowError.(EInternal (loc, PredFunWithoutParamNames)))
           in
           match subst_map (0, SMap.empty) (ft1.params, ft2.params) with
           | Error e -> add_output cx ~trace e
@@ -4086,7 +4086,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       Option.iter call_targs ~f:(fun _ ->
         add_output cx ~trace FlowError.(ECallTypeArity {
-          call_loc = aloc_of_reason reason_callsite |> ALoc.to_loc;
+          call_loc = aloc_of_reason reason_callsite;
           is_new = false;
           reason_arity = reason_fundef;
           expected_arity = 0;
@@ -4100,7 +4100,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          call. clears the op stack because the result of the call is not the
          call itself. *)
       rec_flow_t cx trace (
-        reposition cx ~trace (aloc_of_reason reason_callsite |> ALoc.to_loc) t1,
+        reposition cx ~trace (aloc_of_reason reason_callsite) t1,
         t2
       );
 
@@ -4226,9 +4226,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         this = mk_tvar (replace_reason_const RThisType);
         static = mk_tvar (replace_reason_const RThisType);
         state_t = mk_tvar (replace_reason
-          (fun d -> RTypeParam ("State", (d, loc_op |> ALoc.to_loc), (desc_tapp, loc_tapp |> ALoc.to_loc))));
+          (fun d -> RTypeParam ("State", (d, loc_op), (desc_tapp, loc_tapp))));
         default_t = mk_tvar (replace_reason
-          (fun d -> RTypeParam ("Default", (d, loc_op |> ALoc.to_loc), (desc_tapp, loc_tapp |> ALoc.to_loc))));
+          (fun d -> RTypeParam ("Default", (d, loc_op), (desc_tapp, loc_tapp))));
       } in
       rec_flow cx trace (spec, ReactKitT (use_op, reason_op,
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
@@ -4251,7 +4251,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (VoidT.why reason_op, call_tout);
 
     | CustomFunT (_, DebugThrow), CallT (_, reason_op, _) ->
-      raise (Flow_error.EDebugThrow (aloc_of_reason reason_op |> ALoc.to_loc))
+      raise (Flow_error.EDebugThrow (aloc_of_reason reason_op))
 
     | CustomFunT (_, DebugSleep),
       CallT (_, reason_op, { call_targs = None; call_args_tlist=arg1::_; call_tout; _ }) ->
@@ -4280,7 +4280,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       Option.iter call_targs ~f:(fun _ ->
         add_output cx ~trace FlowError.(
           ECallTypeArity {
-            call_loc = aloc_of_reason reason_op |> ALoc.to_loc;
+            call_loc = aloc_of_reason reason_op;
             is_new = false;
             reason_arity = lreason;
             expected_arity = 0;
@@ -4483,7 +4483,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, ObjTestProtoT (reason_op, u) ->
       let proto =
         if object_like l
-        then reposition cx ~trace (aloc_of_reason reason_op |> ALoc.to_loc) l
+        then reposition cx ~trace (aloc_of_reason reason_op) l
         else
           let () = add_output cx ~trace
             (FlowError.EInvalidPrototype (reason_of_t l)) in
@@ -4593,7 +4593,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (rl, ClassT l), UseT (use_op, DefT (_, ClassT u)) ->
       rec_flow cx trace (
-        reposition cx ~trace (aloc_of_reason rl |> ALoc.to_loc) l,
+        reposition cx ~trace (aloc_of_reason rl) l,
         UseT (use_op, u))
 
     | DefT (_, FunT (static1, prototype, _)),
@@ -4611,7 +4611,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* early error if type args passed to non-polymorphic class *)
       Option.iter targs ~f:(fun _ ->
         add_output cx ~trace FlowError.(ECallTypeArity {
-          call_loc = aloc_of_reason reason_op |> ALoc.to_loc;
+          call_loc = aloc_of_reason reason_op;
           is_new = true;
           reason_arity = reason_of_t this;
           expected_arity = 0;
@@ -4641,7 +4641,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (** create new object **)
       let reason_c = replace_reason_const RNewObject reason_op in
       let objtype =
-        let sealed = UnsealedInFile (Loc.source (loc_of_t proto)) in
+        let sealed = UnsealedInFile (ALoc.source (loc_of_t proto)) in
         let flags = { default_flags with sealed } in
         let dict = None in
         let call = None in
@@ -4652,7 +4652,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (** error if type arguments are provided to non-polymorphic constructor **)
       Option.iter targs ~f:(fun _ ->
         add_output cx ~trace FlowError.(ECallTypeArity {
-          call_loc = aloc_of_reason reason_op |> ALoc.to_loc;
+          call_loc = aloc_of_reason reason_op;
           is_new = true;
           reason_arity = lreason;
           expected_arity = 0;
@@ -4713,11 +4713,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        The __proto__ object of an instance is an ObjT having the properties in
        insttype.methods_tmap, not the super instance.  *)
     | DefT (_, InstanceT (_, super, _, _)), GetProtoT (reason_op, t) ->
-      let proto = reposition cx ~trace (aloc_of_reason reason_op |> ALoc.to_loc) super in
+      let proto = reposition cx ~trace (aloc_of_reason reason_op) super in
       rec_flow_t cx trace (proto, t)
 
     | DefT (_, ObjT {proto_t; _}), GetProtoT (reason_op, t) ->
-      let proto = reposition cx ~trace (aloc_of_reason reason_op |> ALoc.to_loc) proto_t in
+      let proto = reposition cx ~trace (aloc_of_reason reason_op) proto_t in
       rec_flow_t cx trace (proto, t)
 
     | ObjProtoT _, GetProtoT (reason_op, t) ->
@@ -4725,7 +4725,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (proto, t)
 
     | FunProtoT reason, GetProtoT (reason_op, t) ->
-      let proto = ObjProtoT (repos_reason (aloc_of_reason reason_op |> ALoc.to_loc) reason) in
+      let proto = ObjProtoT (repos_reason (aloc_of_reason reason_op) reason) in
       rec_flow_t cx trace (proto, t)
 
     | DefT (_, (AnyT | AnyObjT | AnyFunT)), GetProtoT (reason_op, t) ->
@@ -4770,7 +4770,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
       let loc = aloc_of_reason reason_op in
-      add_output cx ~trace FlowError.(EInternal (loc |> ALoc.to_loc, InstanceLookupComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (********************************)
     (* ... and their fields written *)
@@ -4815,7 +4815,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
       let loc = aloc_of_reason reason_op in
-      add_output cx ~trace FlowError.(EInternal (loc |> ALoc.to_loc, InstanceLookupComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     | DefT (reason_c, InstanceT (_, super, _, instance)),
       MatchPropT (use_op, reason_op, Named (reason_prop, x), prop_t) ->
@@ -4870,7 +4870,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
       let loc = aloc_of_reason reason_op in
-      add_output cx ~trace FlowError.(EInternal (loc |> ALoc.to_loc, InstanceLookupComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (********************************)
     (* ... and their methods called *)
@@ -4902,7 +4902,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          are converted to named property access to `$key` and `$value` during
          element resolution in ElemT. *)
       let loc = aloc_of_reason reason_call in
-      add_output cx ~trace FlowError.(EInternal (loc |> ALoc.to_loc, InstanceLookupComputed))
+      add_output cx ~trace FlowError.(EInternal (loc, InstanceLookupComputed))
 
     (** In traditional type systems, object types are not extensible.  E.g., an
         object {x: 0, y: ""} has type {x: number; y: string}. While it is
@@ -4991,7 +4991,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason_prop =
           lreason
           |> replace_reason (fun desc -> RPropertyOf (x, desc))
-          |> repos_reason (aloc_of_reason reason_op |> ALoc.to_loc)
+          |> repos_reason (aloc_of_reason reason_op)
         in
         match Property.read_t p with
         | Some t ->
@@ -5519,7 +5519,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (t, tout)
 
     | DefT (reason, ClassT instance), GetPropT (_, _, Named (_, "prototype"), tout) ->
-      let instance = reposition cx ~trace (aloc_of_reason reason |> ALoc.to_loc) instance in
+      let instance = reposition cx ~trace (aloc_of_reason reason) instance in
       rec_flow_t cx trace (instance, tout)
 
     (**************************************)
@@ -5655,7 +5655,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       } as funtype)) ->
       Option.iter call_targs ~f:(fun _ ->
         add_output cx ~trace FlowError.(ECallTypeArity {
-          call_loc = aloc_of_reason reason_op |> ALoc.to_loc;
+          call_loc = aloc_of_reason reason_op;
           is_new = false;
           reason_arity = lreason;
           expected_arity = 0;
@@ -6273,7 +6273,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let t_proto = Property.assert_field p_proto in
             rec_flow cx trace (t_proto, UnifyT (t_proto, t)));
           (* Add prop *)
-          let p = Field (Some (prop_loc |> ALoc.to_loc), t, Neutral) in
+          let p = Field (Some prop_loc, t, Neutral) in
           pmap
             |> SMap.add x p
             |> Context.add_property_map cx id;
@@ -6337,7 +6337,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyObjT), ExtendsUseT _ -> ()
 
     | DefT (lreason, ObjT { proto_t; _ }), ExtendsUseT _ ->
-      let l = reposition cx ~trace (aloc_of_reason lreason |> ALoc.to_loc) proto_t in
+      let l = reposition cx ~trace (aloc_of_reason lreason) proto_t in
       rec_flow cx trace (l, u)
 
     | DefT (reason, ClassT instance), ExtendsUseT _ ->
@@ -6483,15 +6483,15 @@ and flow_error_kind_of_lower = function
   | _ -> None
 
 and flow_error_kind_of_upper = function
-  | GetPropT (_, _, Named (r, name), _) -> FlowError.IncompatibleGetPropT (aloc_of_reason r |> ALoc.to_loc, Some name)
+  | GetPropT (_, _, Named (r, name), _) -> FlowError.IncompatibleGetPropT (aloc_of_reason r, Some name)
   | GetPropT (_, _, Computed t, _) -> FlowError.IncompatibleGetPropT (loc_of_t t, None)
   | GetPrivatePropT (_, _, _, _, _, _) -> FlowError.IncompatibleGetPrivatePropT
-  | SetPropT (_, _, Named (r, name), _, _, _) -> FlowError.IncompatibleSetPropT (aloc_of_reason r |> ALoc.to_loc, Some name)
+  | SetPropT (_, _, Named (r, name), _, _, _) -> FlowError.IncompatibleSetPropT (aloc_of_reason r, Some name)
   | SetPropT (_, _, Computed t, _, _, _) -> FlowError.IncompatibleSetPropT (loc_of_t t, None)
-  | MatchPropT (_, _, Named (r, name), _) -> FlowError.IncompatibleMatchPropT (aloc_of_reason r |> ALoc.to_loc, Some name)
+  | MatchPropT (_, _, Named (r, name), _) -> FlowError.IncompatibleMatchPropT (aloc_of_reason r, Some name)
   | MatchPropT (_, _, Computed t, _) -> FlowError.IncompatibleMatchPropT (loc_of_t t, None)
   | SetPrivatePropT (_, _, _, _, _, _, _) -> FlowError.IncompatibleSetPrivatePropT
-  | MethodT (_, _, _, Named (r, name), _, _) -> FlowError.IncompatibleMethodT (aloc_of_reason r |> ALoc.to_loc, Some name)
+  | MethodT (_, _, _, Named (r, name), _, _) -> FlowError.IncompatibleMethodT (aloc_of_reason r, Some name)
   | MethodT (_, _, _, Computed t, _, _) -> FlowError.IncompatibleMethodT (loc_of_t t, None)
   | CallT _ -> FlowError.IncompatibleCallT
   | ConstructorT _ -> FlowError.IncompatibleConstructorT
@@ -6511,8 +6511,8 @@ and flow_error_kind_of_upper = function
   | ThisSpecializeT _ -> FlowError.IncompatibleThisSpecializeT
   | VarianceCheckT _ -> FlowError.IncompatibleVarianceCheckT
   | GetKeysT _ -> FlowError.IncompatibleGetKeysT
-  | HasOwnPropT (_, r, Literal (_, name)) -> FlowError.IncompatibleHasOwnPropT (aloc_of_reason r |> ALoc.to_loc, Some name)
-  | HasOwnPropT (_, r, _) -> FlowError.IncompatibleHasOwnPropT (aloc_of_reason r |> ALoc.to_loc, None)
+  | HasOwnPropT (_, r, Literal (_, name)) -> FlowError.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
+  | HasOwnPropT (_, r, _) -> FlowError.IncompatibleHasOwnPropT (aloc_of_reason r, None)
   | GetValuesT _ -> FlowError.IncompatibleGetValuesT
   | UnaryMinusT _ -> FlowError.IncompatibleUnaryMinusT
   | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> FlowError.IncompatibleMapTypeTObject
@@ -7428,7 +7428,7 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
       let param_loc = Reason.aloc_of_reason param_reason in
       let annot_loc = annot_aloc_of_reason bound_reason in
       let desc = desc_of_reason ~unwrap:false bound_reason in
-      repos_reason (param_loc |> ALoc.to_loc) ?annot_loc (mk_reason (RPolyTest (name, desc)) param_loc)
+      repos_reason param_loc ?annot_loc (mk_reason (RPolyTest (name, desc)) param_loc)
     ) (subst cx prev_args bound)
   in
   (* make argument map by folding mk_arg over param list *)
@@ -7954,7 +7954,7 @@ and instantiate_poly_with_targs
     )
     (SMap.empty, ts)
     xs in
-  reposition cx ~trace (aloc_of_reason reason_tapp |> ALoc.to_loc) (subst cx ~use_op map t)
+  reposition cx ~trace (aloc_of_reason reason_tapp) (subst cx ~use_op map t)
 
 (* Given a type parameter, a supplied type argument for specializing it, and a
    reason for specialization, either return the type argument or, when directed,
@@ -8091,7 +8091,7 @@ and chain_objects cx ?trace reason this those =
       flow_opt cx ?trace (result, ObjAssignToT(reason, that, t, kind));
     )
   ) this those in
-  reposition cx ?trace (aloc_of_reason reason |> ALoc.to_loc) result
+  reposition cx ?trace (aloc_of_reason reason) result
 
 (*******************************************************)
 (* Entry points into the process of trying different   *)
@@ -8964,7 +8964,7 @@ and find_or_intro_shadow_prop cx trace reason_op x prop_loc =
   let intro_shadow_prop id =
     let reason_prop = replace_reason_const (RShadowProperty x) reason_op in
     let t = Tvar.mk cx reason_prop in
-    let p = Field (Some (prop_loc |> ALoc.to_loc), t, Neutral) in
+    let p = Field (Some prop_loc, t, Neutral) in
     Context.set_prop cx id (internal_name x) p;
     t, p
   in
@@ -9029,9 +9029,8 @@ and update_sketchy_null cx opt_loc t =
         | Some loc -> Some loc
         | None -> Some (def_aloc_of_reason reason)
       in
-      let t_loc = Option.map ~f:ALoc.to_loc t_loc in
       let exists_checks = Context.exists_checks cx in
-      let exists_check = LocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
+      let exists_check = ALocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
       let exists_check = match Type_filter.maybe t with
         | DefT (_, EmptyT) -> exists_check
         | _ -> {exists_check with null_loc = t_loc}
@@ -9046,7 +9045,7 @@ and update_sketchy_null cx opt_loc t =
       in
       let exists_checks = if exists_check = ExistsCheck.empty
         then exists_checks
-        else LocMap.add loc exists_check exists_checks
+        else ALocMap.add loc exists_check exists_checks
       in
       Context.set_exists_checks cx exists_checks
 
@@ -9074,7 +9073,7 @@ and guard cx trace source pred result sink = match pred with
   let loc = aloc_of_reason (reason_of_t sink) in
   let pred_str = string_of_predicate pred in
   add_output cx ~trace
-    FlowError.(EInternal (loc |> ALoc.to_loc, UnsupportedGuardPredicate pred_str))
+    FlowError.(EInternal (loc, UnsupportedGuardPredicate pred_str))
 
 (**************)
 (* predicates *)
@@ -9149,7 +9148,7 @@ and predicate cx trace t l p = match p with
   (*********************)
 
   | SingletonStrP (expected_loc, sense, lit) ->
-    let filtered_str = Type_filter.string_literal (expected_loc |> ALoc.of_loc) sense lit l in
+    let filtered_str = Type_filter.string_literal expected_loc sense lit l in
     rec_flow_t cx trace (filtered_str, t)
 
   | NotP SingletonStrP (_, _, lit) ->
@@ -9161,7 +9160,7 @@ and predicate cx trace t l p = match p with
   (*********************)
 
   | SingletonNumP (expected_loc, sense, lit) ->
-    let filtered_num = Type_filter.number_literal (expected_loc |> ALoc.of_loc) sense lit l in
+    let filtered_num = Type_filter.number_literal expected_loc sense lit l in
     rec_flow_t cx trace (filtered_num, t)
 
   | NotP SingletonNumP (_, _, lit) ->
@@ -9456,7 +9455,7 @@ and instanceof_test cx trace result = function
 
   (** We hit the root class, so C is not a subclass of A **)
   | true, DefT (_, NullT), InternalT (ExtendsT (r, _, a)) ->
-    rec_flow_t cx trace (reposition cx ~trace (aloc_of_reason r |> ALoc.to_loc) a, result)
+    rec_flow_t cx trace (reposition cx ~trace (aloc_of_reason r) a, result)
 
   (** Prune the type when any other `instanceof` check succeeds (since this is
       impossible). *)
@@ -9498,7 +9497,7 @@ and instanceof_test cx trace result = function
     InternalT (ExtendsT(r, c, _))
     ->
     (** We hit the root class, so C is not a subclass of A **)
-    rec_flow_t cx trace (reposition cx ~trace (aloc_of_reason r |> ALoc.to_loc) c, result)
+    rec_flow_t cx trace (reposition cx ~trace (aloc_of_reason r) c, result)
 
   (** Don't refine the type when any other `instanceof` check fails. **)
   | false, left, _ ->
@@ -9654,6 +9653,7 @@ and flow_use_op op1 u =
          * For now, using locs is cleaner then adding unreliable bits to type
          * parameter uses in inputs/outputs. *)
         | ImplicitTypeParam loc_op when not alt ->
+          let loc_op = ALoc.to_loc loc_op in
           let loc2 = loc_of_root_use_op (root_of_use_op op2) in
           Loc.contains loc_op loc2
         | _ -> alt)
@@ -10395,7 +10395,7 @@ and multiflow_partial =
       | [] -> ()
       | first_unused_arg :: _ ->
         FlowError.EFunctionCallExtraArg (
-          mk_reason RFunctionUnusedArgument (loc_of_t first_unused_arg |> ALoc.of_loc),
+          mk_reason RFunctionUnusedArgument (loc_of_t first_unused_arg),
           def_reason,
           List.length parlist,
           use_op
@@ -10780,7 +10780,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
     (* TODO: Sam, comment repositioning logic here *)
     | Read, Some t ->
       let loc = aloc_of_reason ureason in
-      rec_flow_t cx trace (reposition cx ~trace (loc |> ALoc.to_loc) t, tout)
+      rec_flow_t cx trace (reposition cx ~trace loc t, tout)
     | Write (_, prop_t), Some t ->
       rec_flow cx trace (tout, UseT (use_op, t));
       Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (t, prop_t)) prop_t
@@ -10807,7 +10807,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
 and perform_elem_action cx trace ~use_op reason_op l value = function
   | ReadElem t ->
     let loc = aloc_of_reason reason_op in
-    rec_flow_t cx trace (reposition cx ~trace (loc |> ALoc.to_loc) value, t)
+    rec_flow_t cx trace (reposition cx ~trace loc value, t)
   | WriteElem (tin, tout) ->
     rec_flow cx trace (tin, UseT (use_op, value));
     Option.iter ~f:(fun t -> rec_flow_t cx trace (l, t)) tout
@@ -10881,13 +10881,13 @@ and reposition_reason cx ?trace reason ?(use_desc=false) t =
   reposition
     cx
     ?trace
-    (aloc_of_reason reason |> ALoc.to_loc)
+    (aloc_of_reason reason)
     ?desc:(if use_desc then Some (desc_of_reason reason) else None)
     ?annot_loc:(annot_aloc_of_reason reason)
     t
 
 (* set the position of the given def type from a reason *)
-and reposition cx ?trace (loc: Loc.t) ?desc ?annot_loc t =
+and reposition cx ?trace (loc: ALoc.t) ?desc ?annot_loc t =
   let mod_reason reason =
     let reason = repos_reason loc ?annot_loc reason in
     match desc with
@@ -12218,8 +12218,8 @@ module Members : sig
     | FailureUnhandledType of Type.t
 
   type t = (
-    (* Success *) (Loc.t option * Type.t) SMap.t,
-    (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
+    (* Success *) (ALoc.t option * Type.t) SMap.t,
+    (* SuccessModule *) (ALoc.t option * Type.t) SMap.t * (Type.t option)
   ) generic_t
 
   (* For debugging purposes *)
@@ -12242,8 +12242,8 @@ end = struct
     | FailureUnhandledType of Type.t
 
   type t = (
-    (* Success *) (Loc.t option * Type.t) SMap.t,
-    (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
+    (* Success *) (ALoc.t option * Type.t) SMap.t,
+    (* SuccessModule *) (ALoc.t option * Type.t) SMap.t * (Type.t option)
   ) generic_t
 
   let string_of_extracted_type = function
@@ -12253,7 +12253,7 @@ end = struct
     | FailureAnyType -> "FailureAnyType"
     | FailureUnhandledType t -> Printf.sprintf "FailureUnhandledType (%s)" (Type.string_of_ctor t)
 
-  let to_command_result = function
+  let to_command_result_aloc = function
     | Success map
     | SuccessModule (map, None) ->
         Ok map
@@ -12267,6 +12267,12 @@ end = struct
         Error (spf
           "autocomplete on unexpected type of value %s (please file a task!)"
           (string_of_ctor t))
+
+  let loc_tmap_of_aloc_tmap = SMap.map (fun (aloc, t) -> (Option.map aloc ~f:ALoc.to_loc, t))
+
+  let to_command_result =
+    to_command_result_aloc
+    %> Core_result.map ~f:loc_tmap_of_aloc_tmap
 
   let find_props cx fields =
     SMap.filter (fun key _ ->
@@ -12477,7 +12483,7 @@ end = struct
 
   and extract_members_as_map cx this_t =
     let members = extract cx this_t in
-    match to_command_result members with
+    match to_command_result_aloc members with
     | Ok map -> map
     | Error _ -> SMap.empty
 
@@ -12582,7 +12588,7 @@ class assert_ground_visitor r ~max_reasons = object (self)
           let trace_reasons = if max_reasons = 0
              then []
              else List.map (fun reason ->
-                 repos_reason (def_aloc_of_reason reason |> ALoc.to_loc) reason)
+                 repos_reason (def_aloc_of_reason reason) reason)
                (Nel.to_list !reason_stack) in
           add_output cx (FlowError.EMissingAnnotation (r, trace_reasons));
           seen

@@ -1282,7 +1282,7 @@ and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
 and json_of_type_binding_impl json_cx (name, (loc, t)) = Hh_json.(
   let loc_json = match loc with
     | None -> Hh_json.JSON_Null
-    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root loc
+    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root (ALoc.to_loc loc)
   in
   JSON_Object [
     "name", JSON_String name;
@@ -1514,9 +1514,9 @@ let json_of_scope = Scope.(
       "kind", JSON_String (Entry.string_of_value_kind kind);
       "value_state", JSON_String (State.to_string value_state);
       "value_declare_loc",
-        json_of_loc ~strip_root:json_cx.strip_root value_declare_loc;
+        json_of_aloc ~strip_root:json_cx.strip_root value_declare_loc;
       "value_assign_loc",
-        json_of_loc ~strip_root:json_cx.strip_root value_assign_loc;
+        json_of_aloc ~strip_root:json_cx.strip_root value_assign_loc;
       "specific", _json_of_t json_cx specific;
       "general", _json_of_t json_cx general;
     ]
@@ -1528,7 +1528,7 @@ let json_of_scope = Scope.(
     JSON_Object [
       "entry_type", JSON_String "Type";
       "type_state", JSON_String (State.to_string type_state);
-      "type_loc", json_of_loc ~strip_root:json_cx.strip_root type_loc;
+      "type_loc", json_of_aloc ~strip_root:json_cx.strip_root type_loc;
       "_type", _json_of_t json_cx _type;
     ]
   in
@@ -1560,7 +1560,7 @@ let json_of_scope = Scope.(
 
   let json_of_refi_impl json_cx { refi_loc; refined; original } =
     JSON_Object [
-      "refi_loc", json_of_loc ~strip_root:json_cx.strip_root refi_loc;
+      "refi_loc", json_of_aloc ~strip_root:json_cx.strip_root refi_loc;
       "refined", _json_of_t json_cx refined;
       "original", _json_of_t json_cx original;
     ]
@@ -2259,8 +2259,8 @@ let string_of_scope_entry = Scope.(
       value_assign_loc: %s; specific: %s; general: %s }"
       (Entry.string_of_value_kind kind)
       (State.to_string value_state)
-      (string_of_loc value_declare_loc)
-      (string_of_loc value_assign_loc)
+      (string_of_aloc value_declare_loc)
+      (string_of_aloc value_assign_loc)
       (dump_t cx specific)
       (dump_t cx general)
   in
@@ -2269,7 +2269,7 @@ let string_of_scope_entry = Scope.(
                                   type_binding_kind = _ } =
     spf "{ type_state: %s; type_loc: %S; _type: %s }"
       (State.to_string type_state)
-      (string_of_loc type_loc)
+      (string_of_aloc type_loc)
       (dump_t cx _type)
   in
 
@@ -2290,7 +2290,7 @@ let string_of_scope_entries cx entries =
 
 let string_of_scope_refi cx { Scope.refi_loc; refined; original } =
   spf "{ refi_loc: %S; refined: %s; original: %s }"
-    (string_of_loc refi_loc)
+    (string_of_aloc refi_loc)
     (dump_t cx refined)
     (dump_t cx original)
 
@@ -2599,14 +2599,14 @@ let dump_flow_error =
     | EIdxUse2 reason ->
         spf "EIdxUse2 (%s)" (dump_reason cx reason)
     | EUnexpectedThisType loc ->
-        spf "EUnexpectedThisType (%s)" (string_of_loc loc)
+        spf "EUnexpectedThisType (%s)" (string_of_aloc loc)
     | ETypeParamArity (loc, expected) ->
-        spf "ETypeParamArity (%s, %d)" (string_of_loc loc) expected
+        spf "ETypeParamArity (%s, %d)" (string_of_aloc loc) expected
     | ETypeParamMinArity (loc, expected) ->
-        spf "ETypeParamMinArity (%s, %d)" (string_of_loc loc) expected
+        spf "ETypeParamMinArity (%s, %d)" (string_of_aloc loc) expected
     | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity } ->
         spf "ECallTypeArity { call_loc=%s; is_new=%b; reason_arity=%s; expected_arity=%d; }"
-          (string_of_loc call_loc) is_new (dump_reason cx reason_arity) expected_arity
+          (string_of_aloc call_loc) is_new (dump_reason cx reason_arity) expected_arity
     | ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity) ->
         spf "ETooManyTypeArgs (%s, %s, %d)"
           (dump_reason cx reason_tapp)
@@ -2622,24 +2622,24 @@ let dump_flow_error =
           (dump_reason cx reason_tapp)
           (dump_reason cx reason_arity)
     | EPropertyTypeAnnot loc ->
-        spf "EPropertyTypeAnnot (%s)" (string_of_loc loc)
+        spf "EPropertyTypeAnnot (%s)" (string_of_aloc loc)
     | EExportsAnnot loc ->
-        spf "EExportsAnnot (%s)" (string_of_loc loc)
+        spf "EExportsAnnot (%s)" (string_of_aloc loc)
     | ECharSetAnnot loc ->
-        spf "ECharSetAnnot (%s)" (string_of_loc loc)
+        spf "ECharSetAnnot (%s)" (string_of_aloc loc)
     | EInvalidCharSet { invalid = (reason, _); valid; use_op } ->
         spf "EInvalidCharSet { invalid = (%s, _); valid = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx valid)
           (string_of_use_op use_op)
     | EUnsupportedKeyInObjectType loc ->
-        spf "EUnsupportedKeyInObjectType (%s)" (string_of_loc loc)
+        spf "EUnsupportedKeyInObjectType (%s)" (string_of_aloc loc)
     | EPredAnnot loc ->
-        spf "EPredAnnot (%s)" (string_of_loc loc)
+        spf "EPredAnnot (%s)" (string_of_aloc loc)
     | ERefineAnnot loc ->
-        spf "ERefineAnnot (%s)" (string_of_loc loc)
+        spf "ERefineAnnot (%s)" (string_of_aloc loc)
     | EUnexpectedTypeof loc ->
-        spf "EUnexpectedTypeof (%s)" (string_of_loc loc)
+        spf "EUnexpectedTypeof (%s)" (string_of_aloc loc)
     | EFunPredCustom ((reason1, reason2), msg) ->
         spf "EFunPredCustom (%s, %s, %S)"
           (dump_reason cx reason1)
@@ -2651,16 +2651,16 @@ let dump_flow_error =
           (dump_reason cx upper)
           (string_of_use_op use_op)
     | EInternal (loc, err) ->
-        spf "EInternal (%s, %s)" (string_of_loc loc) (dump_internal_error err)
+        spf "EInternal (%s, %s)" (string_of_aloc loc) (dump_internal_error err)
     | EUnsupportedSyntax (loc, _) ->
-        spf "EUnsupportedSyntax (%s, _)" (string_of_loc loc)
+        spf "EUnsupportedSyntax (%s, _)" (string_of_aloc loc)
     | EUseArrayLiteral loc ->
-        spf "EUseArrayLiteral (%s)" (string_of_loc loc)
+        spf "EUseArrayLiteral (%s)" (string_of_aloc loc)
     | EMissingAnnotation (reason, _) ->
         spf "EMissingAnnotation (%s)" (dump_reason cx reason)
     | EBindingError (_binding_error, loc, x, entry) ->
         spf "EBindingError (_, %s, %s, %s)"
-          (string_of_loc loc)
+          (string_of_aloc loc)
           x
           (Scope.Entry.string_of_kind entry)
     | ERecursionLimit (reason1, reason2) ->
@@ -2668,30 +2668,30 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
     | EModuleOutsideRoot (loc, name) ->
-        spf "EModuleOutsideRoot (%s, %S)" (string_of_loc loc) name
+        spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
     | EExperimentalDecorators loc ->
-        spf "EExperimentalDecorators (%s)" (string_of_loc loc)
+        spf "EExperimentalDecorators (%s)" (string_of_aloc loc)
     | EExperimentalClassProperties (loc, static) ->
-        spf "EExperimentalClassProperties (%s, %b)" (string_of_loc loc) static
+        spf "EExperimentalClassProperties (%s, %b)" (string_of_aloc loc) static
     | EUnsafeGetSet loc ->
-        spf "EUnsafeGetSet (%s)" (string_of_loc loc)
+        spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
     | EExperimentalExportStarAs loc ->
-        spf "EExperimentalExportStarAs (%s)" (string_of_loc loc)
+        spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc ->
-        spf "EIndeterminateModuleType (%s)" (string_of_loc loc)
+        spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc ->
-        spf "EBadExportPosition (%s)" (string_of_loc loc)
+        spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) ->
-        spf "EBadExportContext (%s, %s)" name (string_of_loc loc)
+        spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
     | EUnreachable loc ->
-        spf "EUnreachable (%s)" (string_of_loc loc)
+        spf "EUnreachable (%s)" (string_of_aloc loc)
     | EInvalidObjectKit { reason; reason_op; use_op; _ } ->
         spf "EInvalidObjectKit { reason = %s; reason_op = %s; use_op = %s }"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
           (string_of_use_op use_op)
     | EInvalidTypeof (loc, name) ->
-        spf "EInvalidTypeof (%s, %S)" (string_of_loc loc) name
+        spf "EInvalidTypeof (%s, %S)" (string_of_aloc loc) name
     | EBinaryInLHS reason ->
         spf "EBinaryInLHS (%s)" (dump_reason cx reason)
     | EBinaryInRHS reason ->
@@ -2709,7 +2709,7 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
     | EInvalidLHSInAssignment loc ->
-        spf "EInvalidLHSInAssignment (%s)" (string_of_loc loc)
+        spf "EInvalidLHSInAssignment (%s)" (string_of_aloc loc)
     | EIncompatibleWithUseOp (reason1, reason2, use_op) ->
         spf "EIncompatibleWithUseOp (%s, %s, %s)"
           (dump_reason cx reason1)
@@ -2739,32 +2739,32 @@ let dump_flow_error =
           (File_key.to_string conflict)
     | EParseError (loc, _parse_error) ->
       spf "EParseError (%s, _)"
-        (string_of_loc loc)
+        (string_of_aloc loc)
         (* TODO: string of parse error constructor *)
     | EDocblockError (loc, err) ->
       spf "EDocblockError (%s, %s)"
-        (string_of_loc loc)
+        (string_of_aloc loc)
         (match err with
         | MultipleFlowAttributes -> "MultipleFlowAttributes"
         | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
     | EUntypedTypeImport (loc, module_name) ->
-      spf "EUntypedTypeImport (%s, %s)" (string_of_loc loc) module_name
+      spf "EUntypedTypeImport (%s, %s)" (string_of_aloc loc) module_name
     | EUntypedImport (loc, module_name) ->
-      spf "EUntypedImport (%s, %s)" (string_of_loc loc) module_name
+      spf "EUntypedImport (%s, %s)" (string_of_aloc loc) module_name
     | ENonstrictImport loc ->
-      spf "ENonstrictImport (%s)" (string_of_loc loc)
+      spf "ENonstrictImport (%s)" (string_of_aloc loc)
     | EUnclearType loc ->
-      spf "EUnclearType (%s)" (string_of_loc loc)
+      spf "EUnclearType (%s)" (string_of_aloc loc)
     | EDeprecatedType loc ->
-      spf "EDeprecatedType (%s)" (string_of_loc loc)
+      spf "EDeprecatedType (%s)" (string_of_aloc loc)
     | EUnsafeGettersSetters loc ->
-      spf "EUnclearGettersSetters (%s)" (string_of_loc loc)
+      spf "EUnclearGettersSetters (%s)" (string_of_aloc loc)
     | EDeprecatedCallSyntax loc ->
-      spf "EDeprecatedCallSyntax (%s)" (string_of_loc loc)
+      spf "EDeprecatedCallSyntax (%s)" (string_of_aloc loc)
     | EUnusedSuppression loc ->
-      spf "EUnusedSuppression (%s)" (string_of_loc loc)
+      spf "EUnusedSuppression (%s)" (string_of_aloc loc)
     | ELintSetting (loc, kind) ->
       let open LintSettings in
       let kind_str = match kind with
@@ -2786,9 +2786,9 @@ let dump_flow_error =
       in
       spf "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
         kind_str
-        (string_of_loc loc)
-        (string_of_loc null_loc)
-        (string_of_loc falsy_loc)
+        (string_of_aloc loc)
+        (string_of_aloc null_loc)
+        (string_of_aloc falsy_loc)
     | ESketchyNumberLint (kind, reason) ->
       let open Lints in
       let kind_str = match kind with
@@ -2798,18 +2798,18 @@ let dump_flow_error =
     | EInvalidPrototype reason ->
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
     | EExperimentalOptionalChaining loc ->
-        spf "EExperimentalOptionalChaining (%s)" (string_of_loc loc)
+        spf "EExperimentalOptionalChaining (%s)" (string_of_aloc loc)
     | EOptionalChainingMethods loc ->
-        spf "EOptionalChainingMethods (%s)" (string_of_loc loc)
+        spf "EOptionalChainingMethods (%s)" (string_of_aloc loc)
     | EUnnecessaryOptionalChain (loc, _) ->
-        spf "EUnnecessaryOptionalChain (%s)" (string_of_loc loc)
+        spf "EUnnecessaryOptionalChain (%s)" (string_of_aloc loc)
     | EUnnecessaryInvariant (loc, _) ->
-        spf "EUnnecessaryInvariant (%s)" (string_of_loc loc)
+        spf "EUnnecessaryInvariant (%s)" (string_of_aloc loc)
     | EInexactSpread (reason, reason_op) ->
       spf "EInexactSpread (%s, %s)"
           (dump_reason cx reason)
           (dump_reason cx reason_op)
     | EUnexpectedTemporaryBaseType loc ->
-      spf "EUnexpectedTemporaryBaseType (%s)" (string_of_loc loc)
+      spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
     | ESignatureVerification sve ->
       spf "ESignatureVerification (%s)" (Signature_builder_deps.With_Loc.Error.debug_to_string sve)

@@ -5,7 +5,7 @@ type kind =
   | Async
   | Generator
   | AsyncGenerator
-  | FieldInit of (Loc.t, Loc.t) Flow_ast.Expression.t
+  | FieldInit of (ALoc.t, ALoc.t) Flow_ast.Expression.t
   | Predicate
   | Ctor
 
@@ -15,7 +15,7 @@ type t = {
   tparams: Type.typeparams;
   tparams_map: Type.t SMap.t;
   fparams: Func_params.t;
-  body: (Loc.t, Loc.t) Flow_ast.Function.body option;
+  body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
   return_t: Type.t;
 }
 
@@ -39,7 +39,7 @@ val default_constructor:
 val field_initializer:
   Type.t SMap.t -> (* type params map *)
   Reason.t ->
-  (Loc.t, Loc.t) Flow_ast.Expression.t -> (* init *)
+  (ALoc.t, ALoc.t) Flow_ast.Expression.t -> (* init *)
   Type.t -> (* return *)
   t
 
@@ -69,18 +69,18 @@ val generate_tests: Context.t ->
     necessary. This is when the body of the function gets checked, so it also
     returns a typed AST of the function body. *)
 val toplevels:
-  Loc.t Flow_ast.Identifier.t option -> (* id *)
+  ALoc.t Flow_ast.Identifier.t option -> (* id *)
   Context.t ->
   Scope.Entry.t -> (* this *)
   Scope.Entry.t -> (* super *)
-  decls:(Context.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list ->
-                      (Loc.t, Loc.t * Type.t) Flow_ast.Statement.t list) ->
-  expr:(Context.t -> (Loc.t, Loc.t) Flow_ast.Expression.t ->
-                      (Loc.t, Loc.t * Type.t) Flow_ast.Expression.t) ->
+  decls:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Statement.t list ->
+                      (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list) ->
+  expr:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+                      (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
   t ->
-  (Loc.t, Loc.t * Type.t) Flow_ast.Function.body option *
-  (Loc.t, Loc.t * Type.t) Flow_ast.Expression.t option
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option *
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option
 
 (** 1. Type Conversion *)
 
@@ -107,7 +107,7 @@ val settertype: t -> Type.t
 (** 1. Util *)
 
 (** The location of the return type for a function. *)
-val return_loc: (Loc.t, Loc.t) Flow_ast.Function.t -> Loc.t
+val return_loc: (ALoc.t, ALoc.t) Flow_ast.Function.t -> ALoc.t
 val to_ctor_sig: t -> t
 
 val with_typeparams: Context.t -> (unit -> 'a) -> t -> 'a

@@ -85,10 +85,10 @@ module Entry = struct
     value_state: State.t;
 
     (* The location where the binding was declared/created *)
-    value_declare_loc: Loc.t;
+    value_declare_loc: ALoc.t;
 
     (* The last location (in this scope) where the entry value was assigned *)
-    value_assign_loc: Loc.t;
+    value_assign_loc: ALoc.t;
 
     specific: Type.t;
     general: Type.t;
@@ -101,7 +101,7 @@ module Entry = struct
   type type_binding = {
     type_binding_kind: type_binding_kind;
     type_state: State.t;
-    type_loc: Loc.t;
+    type_loc: ALoc.t;
     _type: Type.t;
   }
 
@@ -155,12 +155,12 @@ module Entry = struct
   let entry_loc = function
   | Value v -> v.value_declare_loc
   | Type t -> t.type_loc
-  | Class _ -> Loc.none
+  | Class _ -> ALoc.none
 
   let assign_loc = function
   | Value v -> v.value_assign_loc
   | Type t -> t.type_loc
-  | Class _ -> Loc.none
+  | Class _ -> ALoc.none
 
   let declared_type = function
   | Value v -> v.general
@@ -217,7 +217,7 @@ module Entry = struct
     | Value v ->
       if Reason.is_internal_name name
       then entry
-      else Value { v with specific = Type.EmptyT.at (loc |> ALoc.of_loc) }
+      else Value { v with specific = Type.EmptyT.at loc }
 
   let is_lex = function
     | Type _ -> false
@@ -261,7 +261,7 @@ let string_of_kind = function
 | LexScope -> "LexScope"
 
 type refi_binding = {
-  refi_loc: Loc.t;
+  refi_loc: ALoc.t;
   refined: Type.t;
   original: Type.t;
 }
@@ -283,7 +283,7 @@ type t = {
   kind: kind;
   mutable entries: Entry.t SMap.t;
   mutable refis: refi_binding Key_map.t;
-  mutable declare_func_annots: (Loc.t, Loc.t * Type.t) Flow_ast.Type.annotation SMap.t;
+  mutable declare_func_annots: (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation SMap.t;
 }
 
 (* ctor helper *)

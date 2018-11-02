@@ -576,7 +576,7 @@ let flow_check (code : string) : string option =
       let builtins_cx = Context.make builtins_sig_cx builtin_metadata
         File_key.Builtins Files.lib_module_ref in
       let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
-        ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:builtins_file_sig in
+        ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:(File_sig.abstractify_locs builtins_file_sig) in
       let () =
         let from_t = Context.find_module master_cx Files.lib_module_ref in
         let to_t = Context.find_module builtins_cx Files.lib_module_ref in
@@ -604,7 +604,7 @@ let flow_check (code : string) : string option =
       | Ok file_sig -> file_sig
       | Error _ -> failwith "error calculating implementation file sig"
       in
-      let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
+      let file_sigs = Utils_js.FilenameMap.singleton filename (File_sig.abstractify_locs file_sig) in
       let reqs = Merge_js.Reqs.empty in
       (* WARNING: This line might crash. That's why we put the entire block into a try catch *)
       let (final_cx, _), _other_cxs = Merge_js.merge_component_strict

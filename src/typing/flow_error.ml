@@ -9,7 +9,7 @@ open Type
 open Utils_js
 open Reason
 
-exception EDebugThrow of Loc.t
+exception EDebugThrow of ALoc.t
 exception EMergeTimeout of float
 
 type invalid_char_set =
@@ -87,52 +87,52 @@ type error_message =
   | EIdxArity of reason
   | EIdxUse1 of reason
   | EIdxUse2 of reason
-  | EUnexpectedThisType of Loc.t
-  | ETypeParamArity of Loc.t * int
+  | EUnexpectedThisType of ALoc.t
+  | ETypeParamArity of ALoc.t * int
   | ECallTypeArity of {
-      call_loc: Loc.t;
+      call_loc: ALoc.t;
       is_new: bool;
       reason_arity: reason;
       expected_arity: int;
     }
-  | ETypeParamMinArity of Loc.t * int
+  | ETypeParamMinArity of ALoc.t * int
   | ETooManyTypeArgs of reason * reason * int
   | ETooFewTypeArgs of reason * reason * int
   | EInvalidTypeArgs of reason * reason
-  | EPropertyTypeAnnot of Loc.t
-  | EExportsAnnot of Loc.t
-  | ECharSetAnnot of Loc.t
+  | EPropertyTypeAnnot of ALoc.t
+  | EExportsAnnot of ALoc.t
+  | ECharSetAnnot of ALoc.t
   | EInvalidCharSet of { invalid: reason * InvalidCharSetSet.t; valid: reason; use_op: use_op }
-  | EUnsupportedKeyInObjectType of Loc.t
-  | EPredAnnot of Loc.t
-  | ERefineAnnot of Loc.t
-  | EUnexpectedTypeof of Loc.t
+  | EUnsupportedKeyInObjectType of ALoc.t
+  | EPredAnnot of ALoc.t
+  | ERefineAnnot of ALoc.t
+  | EUnexpectedTypeof of ALoc.t
   | EFunPredCustom of (reason * reason) * string
   | EFunctionIncompatibleWithShape of reason * reason * use_op
-  | EInternal of Loc.t * internal_error
-  | EUnsupportedSyntax of Loc.t * unsupported_syntax
-  | EUseArrayLiteral of Loc.t
+  | EInternal of ALoc.t * internal_error
+  | EUnsupportedSyntax of ALoc.t * unsupported_syntax
+  | EUseArrayLiteral of ALoc.t
   | EMissingAnnotation of reason * reason list
-  | EBindingError of binding_error * Loc.t * string * Scope.Entry.t
+  | EBindingError of binding_error * ALoc.t * string * Scope.Entry.t
   | ERecursionLimit of (reason * reason)
-  | EModuleOutsideRoot of Loc.t * string
-  | EExperimentalDecorators of Loc.t
-  | EExperimentalClassProperties of Loc.t * bool
-  | EUnsafeGetSet of Loc.t
-  | EExperimentalExportStarAs of Loc.t
-  | EIndeterminateModuleType of Loc.t
-  | EBadExportPosition of Loc.t
-  | EBadExportContext of string * Loc.t
-  | EUnreachable of Loc.t
+  | EModuleOutsideRoot of ALoc.t * string
+  | EExperimentalDecorators of ALoc.t
+  | EExperimentalClassProperties of ALoc.t * bool
+  | EUnsafeGetSet of ALoc.t
+  | EExperimentalExportStarAs of ALoc.t
+  | EIndeterminateModuleType of ALoc.t
+  | EBadExportPosition of ALoc.t
+  | EBadExportContext of string * ALoc.t
+  | EUnreachable of ALoc.t
   | EInvalidObjectKit of { tool: Object.tool; reason: reason; reason_op: reason; use_op: use_op }
-  | EInvalidTypeof of Loc.t * string
+  | EInvalidTypeof of ALoc.t * string
   | EBinaryInLHS of reason
   | EBinaryInRHS of reason
   | EArithmeticOperand of reason
   | EForInRHS of reason
   | EObjectComputedPropertyAccess of (reason * reason)
   | EObjectComputedPropertyAssign of (reason * reason)
-  | EInvalidLHSInAssignment of Loc.t
+  | EInvalidLHSInAssignment of ALoc.t
   | EIncompatibleWithUseOp of reason * reason * use_op
   | EUnsupportedImplements of reason
   | EReactKit of (reason * reason) * React.tool * use_op
@@ -144,32 +144,32 @@ type error_message =
       provider: File_key.t;
       conflict: File_key.t
     }
-  | EParseError of Loc.t * Parse_error.t
-  | EDocblockError of Loc.t * docblock_error
+  | EParseError of ALoc.t * Parse_error.t
+  | EDocblockError of ALoc.t * docblock_error
   (* The string is either the name of a module or "the module that exports `_`". *)
-  | EUntypedTypeImport of Loc.t * string
-  | EUntypedImport of Loc.t * string
-  | ENonstrictImport of Loc.t
-  | EUnclearType of Loc.t
-  | EDeprecatedType of Loc.t
-  | EUnsafeGettersSetters of Loc.t
-  | EUnusedSuppression of Loc.t
+  | EUntypedTypeImport of ALoc.t * string
+  | EUntypedImport of ALoc.t * string
+  | ENonstrictImport of ALoc.t
+  | EUnclearType of ALoc.t
+  | EDeprecatedType of ALoc.t
+  | EUnsafeGettersSetters of ALoc.t
+  | EUnusedSuppression of ALoc.t
   | ELintSetting of LintSettings.lint_parse_error
   | ESketchyNullLint of {
       kind: Lints.sketchy_null_kind;
-      loc: Loc.t;
-      null_loc: Loc.t;
-      falsy_loc: Loc.t;
+      loc: ALoc.t;
+      null_loc: ALoc.t;
+      falsy_loc: ALoc.t;
     }
   | ESketchyNumberLint of Lints.sketchy_number_kind * reason
   | EInvalidPrototype of reason
-  | EExperimentalOptionalChaining of Loc.t
-  | EOptionalChainingMethods of Loc.t
-  | EUnnecessaryOptionalChain of Loc.t * reason
-  | EUnnecessaryInvariant of Loc.t * reason
+  | EExperimentalOptionalChaining of ALoc.t
+  | EOptionalChainingMethods of ALoc.t
+  | EUnnecessaryOptionalChain of ALoc.t * reason
+  | EUnnecessaryInvariant of ALoc.t * reason
   | EInexactSpread of reason * reason
-  | EDeprecatedCallSyntax of Loc.t
-  | EUnexpectedTemporaryBaseType of Loc.t
+  | EDeprecatedCallSyntax of ALoc.t
+  | EUnexpectedTemporaryBaseType of ALoc.t
   | ESignatureVerification of Signature_builder_deps.With_Loc.Error.t
 
 and binding_error =
@@ -246,17 +246,17 @@ and lower_kind =
   | Incompatible_intersection
 
 and upper_kind =
-  | IncompatibleGetPropT of Loc.t * string option
-  | IncompatibleSetPropT of Loc.t * string option
-  | IncompatibleMatchPropT of Loc.t * string option
+  | IncompatibleGetPropT of ALoc.t * string option
+  | IncompatibleSetPropT of ALoc.t * string option
+  | IncompatibleMatchPropT of ALoc.t * string option
   | IncompatibleGetPrivatePropT
   | IncompatibleSetPrivatePropT
-  | IncompatibleMethodT of Loc.t * string option
+  | IncompatibleMethodT of ALoc.t * string option
   | IncompatibleCallT
   | IncompatibleConstructorT
-  | IncompatibleGetElemT of Loc.t
-  | IncompatibleSetElemT of Loc.t
-  | IncompatibleCallElemT of Loc.t
+  | IncompatibleGetElemT of ALoc.t
+  | IncompatibleSetElemT of ALoc.t
+  | IncompatibleCallElemT of ALoc.t
   | IncompatibleElemTOfArrT
   | IncompatibleObjAssignFromTSpread
   | IncompatibleObjAssignFromT
@@ -269,7 +269,7 @@ and upper_kind =
   | IncompatibleThisSpecializeT
   | IncompatibleVarianceCheckT
   | IncompatibleGetKeysT
-  | IncompatibleHasOwnPropT of Loc.t * string option
+  | IncompatibleHasOwnPropT of ALoc.t * string option
   | IncompatibleGetValuesT
   | IncompatibleUnaryMinusT
   | IncompatibleMapTypeTObject
@@ -723,14 +723,14 @@ let rec error_of_msg ~trace_reasons ~source_file =
         (match own_loc, proto_loc with
         | None, None -> `UnknownRoot true
         | Some loc, None ->
-          let def = mk_reason (RProperty (Some prop)) (loc |> ALoc.of_loc) in
+          let def = mk_reason (RProperty (Some prop)) loc in
           `Root (def, None, [text "Cannot shadow proto property"])
         | None, Some loc ->
-          let def = mk_reason (RProperty (Some prop)) (loc |> ALoc.of_loc) in
+          let def = mk_reason (RProperty (Some prop)) loc in
           `Root (def, None, [text "Cannot define shadowed proto property"])
         | Some own_loc, Some proto_loc ->
-          let def = mk_reason (RProperty (Some prop)) (own_loc |> ALoc.of_loc) in
-          let proto = mk_reason (RIdentifier prop) (proto_loc |> ALoc.of_loc) in
+          let def = mk_reason (RProperty (Some prop)) own_loc in
+          let proto = mk_reason (RIdentifier prop) proto_loc in
           `Root (def, None, [text "Cannot shadow proto property "; ref proto]))
 
       | Op Coercion {from; target} ->
@@ -807,7 +807,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
         `Next use_op
 
       | Frame (FunReturn {lower; _}, use_op) ->
-        `Frame (repos_reason (ALoc.to_loc loc) lower, use_op,
+        `Frame (repos_reason loc lower, use_op,
           [text "the return value"])
 
       | Frame (IndexerKeyCompatibility {lower; _}, use_op) ->
@@ -831,13 +831,13 @@ let rec error_of_msg ~trace_reasons ~source_file =
         | Op (ClassImplementsCheck _) ->  repos_reason loc reason
         | _ -> reason
         in
-        let lower = repos_small_reason (ALoc.to_loc loc) lower use_op in
+        let lower = repos_small_reason loc lower use_op in
         let rec loop lower = function
         (* Don't match $key/$value/$call properties since they have special
          * meaning. As defined above. *)
         | Frame (PropertyCompatibility {prop=Some prop; lower=lower'; _}, use_op)
             when prop <> "$key" && prop <> "$value" && prop <> "$call" ->
-          let lower' = repos_small_reason (aloc_of_reason lower |> ALoc.to_loc) lower' use_op in
+          let lower' = repos_small_reason (aloc_of_reason lower) lower' use_op in
           (* Perform the same frame location unwrapping as we do in our
            * general code. *)
           let lower = if
@@ -1111,11 +1111,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | IncompatibleMatchPropT (prop_loc, prop)
     | IncompatibleHasOwnPropT (prop_loc, prop)
     | IncompatibleMethodT (prop_loc, prop)
-      -> mk_prop_missing_error (prop_loc |> ALoc.of_loc) prop lower use_op
+      -> mk_prop_missing_error prop_loc prop lower use_op
     | IncompatibleGetElemT prop_loc
     | IncompatibleSetElemT prop_loc
     | IncompatibleCallElemT prop_loc
-      -> mk_prop_missing_error (prop_loc |> ALoc.of_loc) None lower use_op
+      -> mk_prop_missing_error prop_loc None lower use_op
     | IncompatibleGetStaticsT
       -> nope "is not an instance type"
     (* unreachable or unclassified use-types. until we have a mechanical way
@@ -1172,6 +1172,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   in
 
   let mk_signature_verification_error loc msgs =
+    let loc = ALoc.of_loc loc in
     mk_error ~trace_infos loc
       ((text "Could not build a typed interface for this module. ")::msgs)
   in
@@ -1309,16 +1310,16 @@ let rec error_of_msg ~trace_reasons ~source_file =
 
   | ETypeParamArity (loc, n) ->
     if n = 0 then
-      mk_error ~trace_infos (loc |> ALoc.of_loc)
+      mk_error ~trace_infos loc
         [text "Cannot apply type because it is not a polymorphic type."]
     else
-      mk_error ~trace_infos (loc |> ALoc.of_loc) [
+      mk_error ~trace_infos loc [
         text "Cannot use type without exactly ";
         text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"));
       ]
 
   | ETypeParamMinArity (loc, n) ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos loc [
       text "Cannot use type without at least ";
       text (spf "%n type %s." n (if n == 1 then "argument" else "arguments"));
     ]
@@ -1326,12 +1327,12 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity = n } ->
     let use = if is_new then "construct " else "call " in
     if n = 0 then
-      mk_error ~trace_infos (call_loc |> ALoc.of_loc) [
+      mk_error ~trace_infos call_loc [
         text "Cannot "; text use; text "non-polymorphic "; ref reason_arity;
         text " with type arguments.";
       ]
     else
-      mk_error ~trace_infos (call_loc |> ALoc.of_loc) [
+      mk_error ~trace_infos call_loc [
         text "Cannot "; text use; ref reason_arity; text " without exactly ";
         text (spf "%n type argument%s." n (if n == 1 then "" else "s"));
       ]
@@ -1506,23 +1507,23 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | EUnexpectedThisType loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc)
+    mk_error ~trace_infos loc
       [text "Unexpected use of "; code "this"; text " type."]
 
   | EPropertyTypeAnnot loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos loc [
       text "Cannot use "; code "$PropertyType"; text " because the second ";
       text "type argument must be a string literal.";
     ]
 
   | EExportsAnnot loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos loc [
       text "Cannot use "; code "$Exports"; text " because the first type ";
       text "argument must be a string literal.";
     ]
 
   | ECharSetAnnot loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos loc [
       text "Cannot use "; code "$CharSet"; text " because the first type ";
       text "argument must be a string literal.";
     ]
@@ -1549,23 +1550,23 @@ let rec error_of_msg ~trace_reasons ~source_file =
     )
 
   | EUnsupportedKeyInObjectType loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc)
+    mk_error ~trace_infos loc
       [text "Unsupported key in object type."]
 
   | EPredAnnot loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos loc [
       text "Cannot use "; code "$Pred"; text " because the first ";
       text "type argument must be a number literal.";
     ]
 
   | ERefineAnnot loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos loc [
       text "Cannot use "; code "$Refine"; text " because the third ";
       text "type argument must be a number literal.";
     ]
 
   | EUnexpectedTypeof loc ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc)
+    mk_error ~trace_infos ~kind:InferWarning loc
       [code "typeof"; text " can only be used to get the type of variables."]
 
   | EFunPredCustom ((a, b), msg) ->
@@ -1625,7 +1626,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | UnexpectedTypeapp s ->
         "unexpected typeapp: "^s
     in
-    mk_error ~trace_infos ~kind:InternalError (loc |> ALoc.of_loc)
+    mk_error ~trace_infos ~kind:InternalError loc
       [text (spf "Internal error: %s" msg)]
 
   | EUnsupportedSyntax (loc, unsupported_syntax) ->
@@ -1692,10 +1693,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
       | UnsupportedInternalSlot {name; static = true} ->
         [text "Unsupported static internal slot "; code name; text "."]
     in
-    mk_error ~trace_infos (loc |> ALoc.of_loc) msg
+    mk_error ~trace_infos loc msg
 
   | EUseArrayLiteral loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc)
+    mk_error ~trace_infos loc
       [text "Use an array literal instead of "; code "new Array(...)"; text "."]
 
   | EMissingAnnotation (reason, trace_reasons) ->
@@ -1705,8 +1706,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
         [text "Please use a concrete type annotation instead of "; code "_";
       text " in this position."]
     | RTypeParam (_, (reason_op_desc, reason_op_loc), (reason_tapp_desc, reason_tapp_loc)) ->
-        let reason_op = mk_reason reason_op_desc (reason_op_loc |> ALoc.of_loc) in
-        let reason_tapp = mk_reason reason_tapp_desc (reason_tapp_loc |> ALoc.of_loc) in
+        let reason_op = mk_reason reason_op_desc reason_op_loc in
+        let reason_tapp = mk_reason reason_tapp_desc reason_tapp_loc in
         default @ [text " "; desc reason; text " is a type parameter declared in "; ref reason_tapp;
          text " and was implicitly instantiated at "; ref reason_op; text "."]
     | _ -> default in
@@ -1725,7 +1726,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       else if x = internal_name "super" then RSuper
       else RIdentifier x
     in
-    let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.of_loc) in
+    let x = mk_reason desc (Scope.Entry.entry_loc entry) in
     let msg = match binding_error with
     | ENameAlreadyBound ->
       [text "Cannot declare "; ref x; text " because the name is already bound."]
@@ -1746,14 +1747,14 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | EImportReassigned ->
       [text "Cannot reassign import "; ref x; text "."]
     in
-    mk_error ~trace_infos (loc |> ALoc.of_loc) msg
+    mk_error ~trace_infos loc msg
 
   | ERecursionLimit (r, _) ->
     mk_error ~kind:RecursionLimitError (aloc_of_reason r)
       [text "*** Recursion limit exceeded ***"]
 
   | EModuleOutsideRoot (loc, package_relative_to_root) ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos loc [
       text "This module resolves to "; code package_relative_to_root; text " which ";
       text "is outside both your root directory and all of the entries in the ";
       code "[include]"; text " section of your "; code ".flowconfig"; text ". ";
@@ -1764,7 +1765,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | EExperimentalDecorators loc ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:InferWarning loc [
       text "Experimental decorator usage. Decorators are an early stage ";
       text "proposal that may change. Additionally, Flow does not account for ";
       text "the type implications of decorators at this time.";
@@ -1776,7 +1777,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       then "class static field", "class_static_fields"
       else "class instance field", "class_instance_fields"
     in
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:InferWarning loc [
       text ("Experimental " ^ config_name ^ " usage. ");
       text (String.capitalize_ascii config_name ^ "s are an active early stage ");
       text "feature proposal that may change. You may opt-in to using them ";
@@ -1786,7 +1787,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | EUnsafeGetSet loc ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:InferWarning loc [
       text "Potentially unsafe get/set usage. Getters and setters with side ";
       text "effects are potentially unsafe and so disabled by default. You may ";
       text "opt-in to using them anyway by putting ";
@@ -1795,7 +1796,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | EExperimentalExportStarAs loc ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:InferWarning loc [
       text "Experimental "; code "export * as"; text " usage. ";
       code "export * as"; text " is an active early stage feature propsal that ";
       text "may change. You may opt-in to using it anyway by putting ";
@@ -1804,25 +1805,25 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | EIndeterminateModuleType loc ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:InferWarning loc [
       text "Unable to determine module type (CommonJS vs ES) if both an export ";
       text "statement and "; code "module.exports"; text " are used in the ";
       text "same module!";
     ]
 
   | EBadExportPosition loc ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:InferWarning loc [
       text "Exports can only appear at the top level"
     ]
 
   | EBadExportContext (name, loc) ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:InferWarning loc [
       code name;
       text " may only be used as part of a legal top level export statement";
     ]
 
   | EUnexpectedTemporaryBaseType loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos loc [
       text "The type argument of a temporary base type must be a compatible literal type";
     ]
 
@@ -1830,61 +1831,61 @@ let rec error_of_msg ~trace_reasons ~source_file =
     let open Signature_builder_deps.With_Loc.Error in
     begin match sve with
       | ExpectedSort (sort, x, loc) ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           code x;
           text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))
         ]
       | ExpectedAnnotation loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Missing type annotation:"
         ]
       | InvalidTypeParamUse loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Invalid use of type parameter:"
         ]
       | UnexpectedObjectKey loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Expected simple object key:"
         ]
       | UnexpectedObjectSpread loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Unexpected object spread:"
         ]
       | UnexpectedArraySpread loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Unexpected array spread:"
         ]
       | UnexpectedArrayHole loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Unexpected array hole:"
         ]
       | EmptyArray loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Cannot determine element type of empty array, try using a type cast."
         ]
       | EmptyObject loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Cannot determine types of initialized properties of empty object, try using a type cast."
         ]
       | UnexpectedExpression (loc, esort) ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text (
             spf "Expected literal expression instead of %s, try using a type cast."
               (Flow_ast_utils.ExpressionSort.to_string esort)
           )
         ]
       | SketchyToplevelDef loc ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text "Unexpected toplevel definition that needs hoisting:"
         ]
       | TODO (msg, loc) ->
-        mk_signature_verification_error (loc |> ALoc.of_loc) [
+        mk_signature_verification_error loc [
           text (spf "TODO: %s is not supported yet, try using a type cast." msg)
         ]
     end
 
   | EUnreachable loc ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc)
+    mk_error ~trace_infos ~kind:InferWarning loc
       [text "Unreachable code."]
 
   | EInvalidObjectKit { tool=_; reason; reason_op=_; use_op } ->
@@ -1892,7 +1893,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       [ref reason; text " is not an object"]
 
   | EInvalidTypeof (loc, typename) ->
-    mk_error ~trace_infos ~kind:InferWarning (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:InferWarning loc [
       text "Cannot compare the result of "; code "typeof"; text " to string ";
       text "literal "; code typename; text " because it is not a valid ";
       code "typeof"; text " return value.";
@@ -1932,7 +1933,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       [text "Cannot assign computed property using "; ref reason_prop; text "."]
 
   | EInvalidLHSInAssignment loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc)
+    mk_error ~trace_infos loc
       [text "Invalid left-hand side in assignment expression."]
 
   | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
@@ -2015,7 +2016,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | EParseError (loc, parse_error) ->
-    mk_error ~kind:ParseError (loc |> ALoc.of_loc)
+    mk_error ~kind:ParseError loc
       (Friendly.message_of_string (Parse_error.PP.error parse_error))
 
   | EDocblockError (loc, err) ->
@@ -2040,50 +2041,50 @@ let rec error_of_msg ~trace_reasons ~source_file =
       | None -> []
       | Some first_error -> [text (spf " Parse error: %s." first_error)]
     in
-    mk_error ~kind:ParseError (loc |> ALoc.of_loc) msg
+    mk_error ~kind:ParseError loc msg
 
   | EUntypedTypeImport (loc, module_name) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UntypedTypeImport) (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:(LintError Lints.UntypedTypeImport) loc [
       text "Importing a type from an untyped module makes it "; code "any"; text " ";
       text "and is not safe! Did you mean to add "; code "// @flow"; text " to ";
       text "the top of "; code module_name; text "?";
     ]
 
   | EUntypedImport (loc, module_name) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UntypedImport) (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:(LintError Lints.UntypedImport) loc [
       text "Importing from an untyped module makes it "; code "any"; text " ";
       text "and is not safe! Did you mean to add "; code "// @flow"; text " ";
       text "to the top of "; code module_name; text "?";
     ]
 
   | ENonstrictImport loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.NonstrictImport) (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:(LintError Lints.NonstrictImport) loc [
       text "Dependencies of a "; code "@flow strict"; text " module must ";
       text "also be "; code "@flow strict"; text "!"
     ]
 
   | EUnclearType loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UnclearType) (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:(LintError Lints.UnclearType) loc [
       text "Unclear type. Using "; code "any"; text ", ";
       code "Object"; text ", "; code "Function"; text ", ";
       code "$Subtype<...>"; text ", or "; code "$Supertype<...>"; text " types is not safe!"
     ]
 
   | EDeprecatedType loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedType) (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedType) loc [
       text "Deprecated type. Using "; code "*"; text " types is not recommended!"
     ]
 
   | EUnsafeGettersSetters loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UnsafeGettersSetters) (loc |> ALoc.of_loc)
+    mk_error ~trace_infos ~kind:(LintError Lints.UnsafeGettersSetters) loc
       [text "Getters and setters can have side effects and are unsafe."]
 
   | EDeprecatedCallSyntax loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedCallSyntax) (loc |> ALoc.of_loc)
+    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedCallSyntax) loc
       [text "Deprecated $call syntax. Use callable property syntax instead."]
 
   | EUnusedSuppression loc ->
-    mk_error ~trace_infos (loc |> ALoc.of_loc)
+    mk_error ~trace_infos loc
       [text "Unused suppression comment."]
 
   | ELintSetting (loc, kind) ->
@@ -2111,7 +2112,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
         code ","; text "?";
       ]
     in
-    mk_error ~trace_infos ~kind:ParseError (loc |> ALoc.of_loc) msg
+    let loc = ALoc.of_loc loc in
+    mk_error ~trace_infos ~kind:ParseError loc msg
 
   | ESketchyNullLint { kind; loc; falsy_loc; null_loc } ->
     let type_str, value_str = match kind with
@@ -2120,10 +2122,10 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | Lints.SketchyNullString -> "string", "an empty string"
     | Lints.SketchyNullMixed -> "mixed", "false"
     in
-    mk_error ~trace_infos ~kind:(LintError (Lints.SketchyNull kind)) (loc |> ALoc.of_loc) [
-      text "Sketchy null check on "; ref (mk_reason (RCustom type_str) (falsy_loc |> ALoc.of_loc)); text " ";
+    mk_error ~trace_infos ~kind:(LintError (Lints.SketchyNull kind)) loc [
+      text "Sketchy null check on "; ref (mk_reason (RCustom type_str) falsy_loc); text " ";
       text "which is potentially "; text value_str; text ". Perhaps you meant to ";
-      text "check for "; ref (mk_reason RNullOrVoid (null_loc |> ALoc.of_loc)); text "?";
+      text "check for "; ref (mk_reason RNullOrVoid null_loc); text "?";
     ]
 
   | ESketchyNumberLint (Lints.SketchyNumberAnd, reason) ->
@@ -2138,7 +2140,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       [text "Cannot use "; ref reason; text " as a prototype. Expected an object or null."]
 
   | EExperimentalOptionalChaining loc ->
-    mk_error ~trace_infos ~kind:ParseError (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:ParseError loc [
       text "Experimental optional chaining ("; code "?."; text ") usage. ";
       text "Optional chaining is an active early-stage feature proposal that ";
       text "may change. You may opt in to using it anyway by putting ";
@@ -2147,19 +2149,19 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | EOptionalChainingMethods loc ->
-    mk_error ~trace_infos ~kind:ParseError (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:ParseError loc [
       text "Flow does not yet support method or property calls in optional chains."
     ]
 
   | EUnnecessaryOptionalChain (loc, lhs_reason) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryOptionalChain) (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryOptionalChain) loc [
       text "This use of optional chaining ("; code "?."; text ") is unnecessary because ";
       ref lhs_reason; text " cannot be nullish or because an earlier "; code "?.";
       text " will short-circuit the nullish case.";
     ]
 
   | EUnnecessaryInvariant (loc, reason) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryInvariant) (loc |> ALoc.of_loc) [
+    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryInvariant) loc [
       text "This use of `invariant` is unnecessary because "; ref reason;
       text " is always truthy."
     ]

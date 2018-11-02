@@ -10,8 +10,8 @@
 type t
 
 type set_asts =
-  (Loc.t, Loc.t * Type.t) Flow_ast.Function.body option *
-  (Loc.t, Loc.t * Type.t) Flow_ast.Expression.t option
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.body option *
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t option
   -> unit
 
 type set_type = Type.t -> unit
@@ -35,7 +35,7 @@ and extends =
   | Explicit of typeapp
   | Implicit of { null: bool }
 
-and typeapp = Loc.t * Type.t * Type.t list option
+and typeapp = ALoc.t * Type.t * Type.t list option
 
 (** 1. Constructors **)
 
@@ -54,7 +54,7 @@ val empty:
     classes, which permit duplicate definitions where latter definitions
     overwrite former ones. *)
 val add_constructor:
-  Loc.t option ->
+  ALoc.t option ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   ?set_type:set_type ->
@@ -68,31 +68,31 @@ val add_default_constructor: Reason.t -> t -> t
     interfaces, which interpret duplicate definitions as branches of a single
     overloaded constructor. *)
 val append_constructor:
-  Loc.t option ->
+  ALoc.t option ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   ?set_type:set_type ->
   t -> t
 
 (** Add field to signature. *)
-val add_field: static:bool -> string -> Loc.t -> Type.polarity -> field -> t -> t
+val add_field: static:bool -> string -> ALoc.t -> Type.polarity -> field -> t -> t
 
 (** Add indexer to signature. *)
 val add_indexer:
   static:bool ->
   Type.polarity ->
-  key:(Loc.t * Type.t) ->
-  value:(Loc.t * Type.t) ->
+  key:(ALoc.t * Type.t) ->
+  value:(ALoc.t * Type.t) ->
   t -> t
 
 (** Add static `name` field. *)
 val add_name_field: t -> t
 
 (** Add proto field to signature. *)
-val add_proto_field: string -> Loc.t -> Type.polarity -> field -> t -> t
+val add_proto_field: string -> ALoc.t -> Type.polarity -> field -> t -> t
 
 (** Add private field to signature. *)
-val add_private_field: string -> Loc.t -> Type.polarity -> field -> static:bool -> t -> t
+val add_private_field: string -> ALoc.t -> Type.polarity -> field -> static:bool -> t -> t
 
 (** Add method to signature.
 
@@ -102,7 +102,7 @@ val add_private_field: string -> Loc.t -> Type.polarity -> field -> static:bool 
 val add_method:
   static:bool ->
   string ->
-  Loc.t ->
+  ALoc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   ?set_type:set_type ->
@@ -116,7 +116,7 @@ val add_method:
 val append_method:
   static:bool ->
   string ->
-  Loc.t ->
+  ALoc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   ?set_type:set_type ->
@@ -130,7 +130,7 @@ val add_call_deprecated: static:bool -> Type.t -> t -> t
 val add_getter:
   static:bool ->
   string ->
-  Loc.t ->
+  ALoc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   ?set_type:set_type ->
@@ -140,7 +140,7 @@ val add_getter:
 val add_setter:
   static:bool ->
   string ->
-  Loc.t ->
+  ALoc.t ->
   Func_sig.t ->
   ?set_asts:set_asts ->
   ?set_type:set_type ->
@@ -176,11 +176,11 @@ val generate_tests: Context.t ->
 
 (** Evaluate the class body. *)
 val toplevels: Context.t ->
-  decls:(Context.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list -> unit) ->
-  stmts:(Context.t -> (Loc.t, Loc.t) Flow_ast.Statement.t list ->
-                      (Loc.t, Loc.t * Type.t) Flow_ast.Statement.t list) ->
-  expr:(Context.t -> (Loc.t, Loc.t) Flow_ast.Expression.t ->
-                      (Loc.t, Loc.t * Type.t) Flow_ast.Expression.t) ->
+  decls:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Statement.t list -> unit) ->
+  stmts:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Statement.t list ->
+                      (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list) ->
+  expr:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+                      (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
   t -> unit
 
 (** 1. Type Conversion *)
@@ -194,7 +194,7 @@ val classtype: Context.t ->
 
 module This: sig
   val is_bound_to_empty: t -> bool
-  val in_class: (Loc.t, Loc.t) Flow_ast.Class.t -> bool
+  val in_class: (ALoc.t, ALoc.t) Flow_ast.Class.t -> bool
 end
 
 val with_typeparams: Context.t -> (unit -> 'a) -> t -> 'a

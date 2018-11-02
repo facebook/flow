@@ -39,6 +39,9 @@ type result =
 | FailureUnparseable of Loc.t * Type.t * string
 | Success of Loc.t * Ty.t
 
+let concretize_loc_pairs pair_list =
+  List.map (fun (loc, x) -> ALoc.to_loc loc, x) pair_list
+
 let sort_loc_pairs pair_list =
   List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
 
@@ -94,7 +97,9 @@ let dump_types cx file_sig ~printer =
     | l, Ok t -> Some (l, printer t)
     | _ -> None
   in
-  sort_loc_pairs (Core_list.filter_map result ~f:print_ok)
+  (Core_list.filter_map result ~f:print_ok)
+  |> concretize_loc_pairs
+  |> sort_loc_pairs
 
 let is_covered = function
   | Ty.Any
@@ -125,7 +130,9 @@ let covered_types cx file_sig ~should_check =
   let g x = x in
   let htbl = Type_table.coverage_hashtbl (Context.type_table cx) in
   let coverage = Ty_normalizer.fold_hashtbl ~options ~genv ~f ~g ~htbl [] in
-  sort_loc_pairs coverage
+  coverage
+  |> concretize_loc_pairs
+  |> sort_loc_pairs
 
 (* 'suggest' can use as many types in the type tables as possible, which is why
    we are querying the tables from both "coverage" and "type_info". Coverage
@@ -145,15 +152,15 @@ let suggest_types cx file_sig =
   let type_table = Context.type_table cx in
   let file = Context.file cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
-  let result = Utils_js.LocMap.empty in
+  let result = Utils_js.ALocMap.empty in
   let result = Ty_normalizer.fold_hashtbl
     ~options ~genv
-    ~f:(fun acc (loc, t) -> Utils_js.LocMap.add loc t acc)
+    ~f:(fun acc (loc, t) -> Utils_js.ALocMap.add loc t acc)
     ~g:(fun t -> t)
     ~htbl:(Type_table.coverage_hashtbl type_table) result in
   let result = Ty_normalizer.fold_hashtbl
     ~options ~genv
-    ~f:(fun acc (loc, t) -> Utils_js.LocMap.add loc t acc)
+    ~f:(fun acc (loc, t) -> Utils_js.ALocMap.add loc t acc)
     ~g:(fun (_, t, _) -> t)
     ~htbl:(Type_table.type_info_hashtbl type_table) result in
   result

@@ -37,7 +37,7 @@ let id state name =
     (* similarly for import type bindings *)
     state.getdef_type <- Some (Gdval v)
   | Some entry ->
-    state.getdef_type <- Some (Gdloc (entry_loc entry))
+    state.getdef_type <- Some (Gdloc (entry_loc entry |> ALoc.to_loc))
   | None ->
     ()
   )
@@ -90,7 +90,7 @@ let extract_member_def cx this name =
     begin match SMap.get name result_map with
     | Some (loc, t) ->
         begin match loc with
-          | None -> Type.loc_of_t t
+          | None -> Type.loc_of_t t |> ALoc.to_loc
           | Some x -> x
         end
     | None -> Loc.none
@@ -100,7 +100,7 @@ let extract_member_def cx this name =
 let getdef_from_type_table cx loc =
   let typetable = Context.type_table cx in
   let type_info =
-    Type_table.find_type_info_with_pred typetable (fun l -> Loc.contains l loc)
+    Type_table.find_type_info_with_pred typetable (fun l -> Loc.contains (ALoc.to_loc l) loc)
   in
   Option.bind type_info begin function
     | _, (_, _, Type_table.Import (name, obj_t))
@@ -125,19 +125,19 @@ let getdef_get_result_from_hooks ~options cx state =
        actually interested in the location of the resolved types. *)
     let ts = Flow_js.possible_types_of_type cx v in
     Done begin match ts with
-    | [t] -> Type.def_loc_of_t t
+    | [t] -> Type.def_loc_of_t t |> ALoc.to_loc
     | _ -> Loc.none
     end, None
   | Some Gdmem (name, this) ->
       extract_member_def cx this name
   | Some Gdrequire ((source_loc, name), require_loc) ->
-      let module_t = Flow_js.resolve_type cx (Context.find_require cx source_loc) in
+      let module_t = Flow_js.resolve_type cx (Context.find_require cx (ALoc.of_loc source_loc)) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
         let filename = Module_heaps.get_file Expensive.warn (
           Module_js.imported_module ~options
             ~node_modules_containers:!Files.node_modules_containers
-            (Context.file cx) (Nel.one require_loc) name
+            (Context.file cx) (Nel.one (ALoc.of_loc require_loc)) name
         ) in
         (match filename with
         | Some file -> Loc.({none with source = Some file;})
@@ -152,7 +152,7 @@ let getdef_get_result_from_hooks ~options cx state =
           (* If we have a location for the cjs export, go there. Otherwise
            * fall back to just the top of the file *)
           let loc = match cjs_export with
-            | Some t -> loc_of_t t (* This can return Loc.none *)
+            | Some t -> loc_of_t t |> ALoc.to_loc (* This can return Loc.none *)
             | None -> Loc.none
           in
           if loc = Loc.none then

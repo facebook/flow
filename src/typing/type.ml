@@ -288,7 +288,7 @@ module rec TypeTerm : sig
     | Cast of { lower: reason; upper: reason }
     | ClassExtendsCheck of { def: reason; name: reason; extends: reason }
     | ClassImplementsCheck of { def: reason; name: reason; implements: reason }
-    | ClassOwnProtoCheck of { prop: string; own_loc: Loc.t option; proto_loc: Loc.t option }
+    | ClassOwnProtoCheck of { prop: string; own_loc: ALoc.t option; proto_loc: ALoc.t option }
     | Coercion of { from: reason; target: reason }
     | FunCall of {
         op: reason;
@@ -307,7 +307,7 @@ module rec TypeTerm : sig
     | GetProperty of reason
     | Internal of internal_use_op
     | JSXCreateElement of { op: reason; component: reason }
-    | ReactCreateElementCall of { op: reason; component: reason; children: Loc.t }
+    | ReactCreateElementCall of { op: reason; component: reason; children: ALoc.t }
     | ReactGetIntrinsic of { literal: reason }
     | Speculation of use_op
     | TypeApplication of { type': reason }
@@ -321,7 +321,7 @@ module rec TypeTerm : sig
     | FunParam of { n: int; name: string option; lower: reason; upper: reason }
     | FunRestParam of { lower: reason; upper: reason }
     | FunReturn of { lower: reason; upper: reason }
-    | ImplicitTypeParam of Loc.t
+    | ImplicitTypeParam of ALoc.t
     | IndexerKeyCompatibility of { lower: reason; upper: reason }
     | PropertyCompatibility of {
         prop: string option;
@@ -540,7 +540,7 @@ module rec TypeTerm : sig
     | ExportNamedT of
         reason
         * bool (* skip_duplicates *)
-        * (Loc.t option * t) SMap.t (* exports_tmap *)
+        * (ALoc.t option * t) SMap.t (* exports_tmap *)
         * t_out
     | ExportTypeT of
         reason
@@ -700,13 +700,13 @@ module rec TypeTerm : sig
     | RightP of binary_test * t
 
     (* Only track locations of existence checks created when walking the AST *)
-    | ExistsP (* truthy *) of Loc.t option (* Location of the existence check *)
+    | ExistsP (* truthy *) of ALoc.t option (* Location of the existence check *)
     | NullP (* null *)
     | MaybeP (* null or undefined *)
 
-    | SingletonBoolP of Loc.t * bool (* true or false *)
-    | SingletonStrP of Loc.t * bool * string (* string literal *)
-    | SingletonNumP of Loc.t * bool * number_literal
+    | SingletonBoolP of ALoc.t * bool (* true or false *)
+    | SingletonStrP of ALoc.t * bool * string (* string literal *)
+    | SingletonNumP of ALoc.t * bool * number_literal
 
     | BoolP (* boolean *)
     | FunP (* function *)
@@ -718,7 +718,7 @@ module rec TypeTerm : sig
     | ArrP (* Array.isArray *)
 
     (* `if (a.b)` yields `flow (a, PredicateT(PropExistsP (reason, "b", loc), tout))` *)
-    | PropExistsP of reason * string * Loc.t option (* Location of the property in the existence check *)
+    | PropExistsP of reason * string * ALoc.t option (* Location of the property in the existence check *)
 
     (* Encondes the latent predicate associated with the i-th parameter
        of a function, whose type is the second element of the triplet. *)
@@ -751,7 +751,7 @@ module rec TypeTerm : sig
   and funtype = {
     this_t: t;
     params: (string option * t) list;
-    rest_param: (string option * Loc.t * t) option;
+    rest_param: (string option * ALoc.t * t) option;
     return_t: t;
     closure_t: int;
     is_predicate: bool;
@@ -908,11 +908,11 @@ module rec TypeTerm : sig
 
   (* Locations refer to the location of the identifier, if one exists *)
   and property =
-    | Field of Loc.t option * t * polarity
-    | Get of Loc.t option * t
-    | Set of Loc.t option * t
-    | GetSet of Loc.t option * t * Loc.t option * t
-    | Method of Loc.t option * t
+    | Field of ALoc.t option * t * polarity
+    | Get of ALoc.t option * t
+    | Set of ALoc.t option * t
+    | GetSet of ALoc.t option * t * ALoc.t option * t
+    | Method of ALoc.t option * t
 
   (* This has to go here so that Type doesn't depend on Scope *)
   and class_binding = {
@@ -1214,9 +1214,9 @@ and Property : sig
   val write_t: ?ctx:TypeTerm.write_ctx -> t -> TypeTerm.t option
   val access: TypeTerm.rw -> t -> TypeTerm.t option
 
-  val read_loc: t -> Loc.t option
-  val write_loc: t -> Loc.t option
-  val first_loc: t -> Loc.t option
+  val read_loc: t -> ALoc.t option
+  val write_loc: t -> ALoc.t option
+  val first_loc: t -> ALoc.t option
 
   val iter_t: (TypeTerm.t -> unit) -> t -> unit
   val fold_t: ('a -> TypeTerm.t -> 'a) -> 'a -> t -> 'a
@@ -1286,7 +1286,7 @@ end = struct
         | None, None -> None
         | Some loc, None | None, Some loc -> Some loc
         | Some loc1, Some loc2 ->
-          let k = Loc.compare loc1 loc2 in
+          let k = ALoc.compare loc1 loc2 in
           let loc = if k <= 0 then loc1 else loc2 in
           Some loc
 
@@ -1354,10 +1354,10 @@ and Properties : sig
   module Set : Set.S with type elt = id
   type map = t Map.t
 
-  val add_field: string -> Polarity.t -> Loc.t option -> TypeTerm.t -> t -> t
-  val add_getter: string -> Loc.t option -> TypeTerm.t -> t -> t
-  val add_setter: string -> Loc.t option -> TypeTerm.t -> t -> t
-  val add_method: string -> Loc.t option -> TypeTerm.t -> t -> t
+  val add_field: string -> Polarity.t -> ALoc.t option -> TypeTerm.t -> t -> t
+  val add_getter: string -> ALoc.t option -> TypeTerm.t -> t -> t
+  val add_setter: string -> ALoc.t option -> TypeTerm.t -> t -> t
+  val add_method: string -> ALoc.t option -> TypeTerm.t -> t -> t
 
   val mk_id: unit -> id
   val fake_id: id
@@ -1433,7 +1433,7 @@ end = struct
 end
 
 and Exports : sig
-  type t = (Loc.t option * TypeTerm.t) SMap.t
+  type t = (ALoc.t option * TypeTerm.t) SMap.t
 
   type id
   module Map : MyMap.S with type key = id
@@ -1442,7 +1442,7 @@ and Exports : sig
   val mk_id: unit -> id
   val string_of_id: id -> string
 end = struct
-  type t = (Loc.t option * TypeTerm.t) SMap.t
+  type t = (ALoc.t option * TypeTerm.t) SMap.t
 
   type id = int
   module Map : MyMap.S with type key = id = MyMap.Make(struct
@@ -2086,8 +2086,8 @@ and TypeUtil : sig
   val reason_of_use_t_add_id: TypeTerm.use_t -> reason
 
   val desc_of_t: TypeTerm.t -> reason_desc
-  val loc_of_t: TypeTerm.t -> Loc.t
-  val def_loc_of_t: TypeTerm.t -> Loc.t
+  val loc_of_t: TypeTerm.t -> ALoc.t
+  val def_loc_of_t: TypeTerm.t -> ALoc.t
 
   val mod_reason_of_t: (reason -> reason) -> TypeTerm.t -> TypeTerm.t
   val mod_reason_of_defer_use_t: (reason -> reason) -> TypeTerm.defer_use_t -> TypeTerm.defer_use_t
@@ -2254,9 +2254,9 @@ end = struct
 
   let desc_of_t t = desc_of_reason (reason_of_t t)
 
-  let loc_of_t t = aloc_of_reason (reason_of_t t) |> ALoc.to_loc
+  let loc_of_t t = aloc_of_reason (reason_of_t t)
 
-  let def_loc_of_t t = def_aloc_of_reason (reason_of_t t) |> ALoc.to_loc
+  let def_loc_of_t t = def_aloc_of_reason (reason_of_t t)
 
   (* TODO make a type visitor *)
   let rec mod_reason_of_t f = function

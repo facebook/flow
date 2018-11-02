@@ -24,7 +24,7 @@ val flow_p:
   Type.propref ->
   (Type.property * Type.property) -> unit
 
-val reposition: Context.t -> ?trace:Trace.t -> Loc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t
+val reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t
 
 (* constraint utils *)
 val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
@@ -109,8 +109,8 @@ module Members : sig
     | FailureUnhandledType of Type.t
 
   type t = (
-    (* Success *) (Loc.t option * Type.t) SMap.t,
-    (* SuccessModule *) (Loc.t option * Type.t) SMap.t * (Type.t option)
+    (* Success *) (ALoc.t option * Type.t) SMap.t,
+    (* SuccessModule *) (ALoc.t option * Type.t) SMap.t * (Type.t option)
   ) generic_t
 
   (* For debugging purposes *)

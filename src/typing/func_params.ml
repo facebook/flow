@@ -21,9 +21,9 @@ open Type
 open Destructuring
 
 type param = string option * Type.t
-type rest = string option * Loc.t * Type.t
-type default = (Loc.t, Loc.t) Flow_ast.Expression.t Default.t
-type binding = string * Loc.t * Type.t * default option
+type rest = string option * ALoc.t * Type.t
+type default = (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t
+type binding = string * ALoc.t * Type.t * default option
 
 type t = {
   params_rev: param list;
@@ -62,7 +62,7 @@ let add_complex cx ~expr ?default patt t x =
     let t = match type_of_pattern patt with
     | Flow_ast.Type.Missing _ -> t
     | Flow_ast.Type.Available _ ->
-      let reason = mk_reason (RIdentifier name) (loc |> ALoc.of_loc) in
+      let reason = mk_reason (RIdentifier name) loc in
       EvalT (t, DestructuringT (reason, Become), mk_id())
     in
     Type_table.set (Context.type_table cx) loc t;

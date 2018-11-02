@@ -33,7 +33,7 @@ type resolution_acc = {
 val imported_module:
   options: Options.t ->
   node_modules_containers: SSet.t ->
-  File_key.t -> Loc.t Nel.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
+  File_key.t -> ALoc.t Nel.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
   (File_key.t -> string -> Modulename.t) Expensive.t

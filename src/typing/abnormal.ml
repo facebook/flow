@@ -25,9 +25,9 @@ let to_string = function
   | Continue label -> opt_label "Continue" label
 
 type payload =
-  | Expr of Loc.t * ((Loc.t, Loc.t * Type.t) Flow_ast.Expression.t)
-  | Stmt of (Loc.t, Loc.t * Type.t) Flow_ast.Statement.t
-  | Stmts of (Loc.t, Loc.t * Type.t) Flow_ast.Statement.t list
+  | Expr of ALoc.t * ((ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t)
+  | Stmt of (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t
+  | Stmts of (ALoc.t, ALoc.t * Type.t) Flow_ast.Statement.t list
 
 exception Exn of payload * t
 

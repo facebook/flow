@@ -8,7 +8,7 @@
 open Constraint
 open Type
 
-module LocMap = Utils_js.LocMap
+module ALocMap = Utils_js.ALocMap
 module P = Type.Polarity
 module Marked = Marked.IdMarked
 
@@ -167,7 +167,7 @@ let init ~master_cx =
 let mark cx state =
   state
   (* Mark tvars reachable from imports. *)
-  |> LocMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
+  |> ALocMap.fold (fun _ t acc -> gc#type_ cx Negative acc t) (Context.require_map cx)
   (* Mark tvars reachable from exports. *)
   |> SMap.fold (fun _ t acc -> gc#type_ cx Positive acc t) (Context.module_map cx)
 

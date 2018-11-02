@@ -9,5 +9,5 @@ val key: ('loc, 'loc) Flow_ast.Expression.t -> Key.t option
 val get:
   Context.t ->
   ('loc, 'loc) Flow_ast.Expression.t ->
-  Loc.t ->
+  ALoc.t ->
   Type.t option

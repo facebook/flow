@@ -534,6 +534,7 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env file file_sig 
   let resolved_requires =
     let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r locs resolved_rs ->
+      let locs = Nel.map ALoc.of_loc locs in
       let resolved_r = Module_js.imported_module
         ~options
         ~node_modules_containers:!Files.node_modules_containers

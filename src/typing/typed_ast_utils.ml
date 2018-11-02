@@ -8,14 +8,16 @@
 module Ast = Flow_ast
 module LocMap = Utils_js.LocMap
 
+(* TODO(nmote) come up with a consistent story for abstract/concrete locations in this module *)
+
 class type_parameter_mapper = object(_)
   inherit [
-    Loc.t, Loc.t * Type.t,
-    Loc.t, Loc.t * Type.t
+    ALoc.t, ALoc.t * Type.t,
+    ALoc.t, ALoc.t * Type.t
   ] Flow_polymorphic_ast_mapper.mapper as super
 
-  method on_loc_annot (x: Loc.t) = x
-  method on_type_annot (x: Loc.t * Type.t) = x
+  method on_loc_annot (x: ALoc.t) = x
+  method on_type_annot (x: ALoc.t * Type.t) = x
 
   (* Since the mapper wasn't originally written to pass an accumulator value
      through the calls, we're maintaining this accumulator imperatively. *)
@@ -60,7 +62,7 @@ class type_parameter_mapper = object(_)
       let name_loc = Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
       { Type.
         name = "this";
-        reason = Reason.mk_reason (Reason.RType name) (name_loc |> ALoc.of_loc);
+        reason = Reason.mk_reason (Reason.RType name) name_loc;
         bound = self_t;
         polarity = Type.Positive;
         default = None;
@@ -77,7 +79,7 @@ end
 
 (* Find identifier under location *)
 
-exception Found of Loc.t * Type.TypeScheme.t
+exception Found of ALoc.t * Type.TypeScheme.t
 
 (* Kinds of nodes that "type-at-pos" is interested in:
  * - identifiers              (handled in t_identifier)
@@ -85,13 +87,13 @@ exception Found of Loc.t * Type.TypeScheme.t
  * - `this`, `super`          (handled in expression)
  * - private property names   (handled in expression)
  *)
-class type_at_pos_searcher target_loc = object(self)
+class type_at_pos_searcher (target_loc: Loc.t) = object(self)
   inherit type_parameter_mapper as super
 
   method covers_target loc =
-    Reason.in_range target_loc loc
+    Reason.in_range target_loc (ALoc.to_loc loc)
 
-  method find_loc: 'a . Loc.t -> Type.t -> Type.typeparam list -> 'a =
+  method find_loc: 'a . ALoc.t -> Type.t -> Type.typeparam list -> 'a =
     fun loc t tparams ->
       raise (Found (loc, { Type.TypeScheme.tparams; type_ = t}))
 
@@ -137,7 +139,7 @@ class type_at_loc_map_folder = object(_)
   method! on_type_annot x =
     let loc, type_ = x in
     let scheme = Type.TypeScheme.{ type_; tparams = bound_tparams; } in
-    map <- LocMap.add loc scheme map;
+    map <- LocMap.add (ALoc.to_loc loc) scheme map;
     x
   method to_map = map
 end
@@ -147,18 +149,19 @@ class type_at_loc_list_folder = object(_)
   val mutable l = []
   method! on_type_annot x =
     let loc, type_ = x in
+    let loc = ALoc.to_loc loc in
     l <- (loc, Type.TypeScheme.{ type_; tparams = bound_tparams; }) :: l;
     x
   method to_list = l
 end
 
-let find_type_at_pos_annotation typed_ast loc =
+let find_type_at_pos_annotation (typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.program) (loc: Loc.t) =
   let searcher = new type_at_pos_searcher loc in
   try
     let _ = searcher#program typed_ast in
     None
   with
-  | Found (loc, scheme) -> Some (loc, scheme)
+  | Found (loc, scheme) -> Some (ALoc.to_loc loc, scheme)
   | exc -> raise exc
 
 let typed_ast_to_map typed_ast =

@@ -8,14 +8,14 @@
 module LocMap = Utils_js.LocMap
 
 val find_type_at_pos_annotation :
-  (Loc.t, Loc.t * Type.t) Flow_ast.program ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   Loc.t ->
   (Loc.t * Type.TypeScheme.t) option
 
 val typed_ast_to_map :
-  (Loc.t, Loc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
+  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
   Type.TypeScheme.t LocMap.t
 
 val typed_ast_to_list :
-  (Loc.t, Loc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
+  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
   (Loc.t * Type.TypeScheme.t) list

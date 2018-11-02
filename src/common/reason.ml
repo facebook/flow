@@ -135,8 +135,8 @@ type reason_desc =
   | RType of string
   | RTypeAlias of string * bool (* trust in normalization *) * reason_desc
   | ROpaqueType of string
-  | RTypeParam of string * (reason_desc * Loc.t) (*reason op *)
-                * (reason_desc * Loc.t) (* reason tapp *)
+  | RTypeParam of string * (reason_desc * ALoc.t) (*reason op *)
+                * (reason_desc * ALoc.t) (* reason tapp *)
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option
@@ -337,7 +337,7 @@ let func_reason {Ast.Function.async; generator; _} =
   | false, true -> RGenerator
   | false, false -> RNormal
   in
-  ALoc.of_loc %> mk_reason (RFunction func_desc)
+  mk_reason (RFunction func_desc)
 
 
 let aloc_of_reason r = r.aloc
@@ -607,7 +607,7 @@ let uninternal_module_name name =
     name
 
 let internal_pattern_name loc =
-  spf ".$pattern__%s" (string_of_loc loc)
+  spf ".$pattern__%s" (string_of_aloc loc)
 
 (* Instantiable reasons identify tvars that are created for the purpose of
    instantiation: they are fresh rather than shared, and should become types
@@ -737,13 +737,13 @@ let replace_reason_const ?(keep_def_loc=false) desc r =
 let repos_reason loc ?(annot_loc: ALoc.t option) reason =
   let def_aloc_opt =
     let def_loc = def_aloc_of_reason reason in
-    if loc = (ALoc.to_loc def_loc) then None else Some def_loc
+    if loc = def_loc then None else Some def_loc
   in
   let annot_aloc_opt = match annot_loc with
   | Some annot_loc -> Some annot_loc
   | None -> reason.annot_aloc_opt
   in
-  mk_reason_with_test_id reason.test_id reason.desc (loc |> ALoc.of_loc) def_aloc_opt annot_aloc_opt
+  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt annot_aloc_opt
 
 let annot_reason reason =
   {reason with annot_aloc_opt = Some reason.aloc}
@@ -1014,15 +1014,15 @@ and code_desc_of_literal x = Ast.(match x.Literal.value with
 
 let rec mk_expression_reason = Ast.Expression.(function
 | (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
-| (loc, Object _) -> mk_reason RObjectLit (loc |> ALoc.of_loc)
-| (loc, Array _) -> mk_reason RArrayLit (loc |> ALoc.of_loc)
+| (loc, Object _) -> mk_reason RObjectLit loc
+| (loc, Array _) -> mk_reason RArrayLit loc
 | (loc, ArrowFunction f) -> func_reason f loc
 | (loc, Function f) -> func_reason f loc
 | (loc, Ast.Expression.Literal {Ast.Literal.value = Ast.Literal.String ""; _}) ->
-  mk_reason (RStringLit "") (loc |> ALoc.of_loc)
-| (loc, TaggedTemplate _) -> mk_reason RTemplateString (loc |> ALoc.of_loc)
-| (loc, TemplateLiteral _) -> mk_reason RTemplateString (loc |> ALoc.of_loc)
-| (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) (loc |> ALoc.of_loc)
+  mk_reason (RStringLit "") loc
+| (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
+| (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
+| (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 )
 
 (* TODO: replace RCustom descriptions with proper descriptions *)
