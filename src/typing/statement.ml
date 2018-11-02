@@ -4826,18 +4826,20 @@ and jsx_fragment cx fragment: Type.t * (Loc.t, Loc.t * Type.t) Ast.JSX.fragment 
 and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
   let loc_element, _, _ = locs in
   let loc, { Opening.name; attributes; selfClosing } = openingElement in
+  let facebook_fbs = Context.facebook_fbs cx in
   let facebook_fbt = Context.facebook_fbt cx in
   let jsx_mode = Context.jsx cx in
 
-  let t, name, attributes = match (name, facebook_fbt, jsx_mode) with
-  | Identifier (loc_id, ({ Identifier.name = "fbt" } as id)), Some facebook_fbt, _ ->
+  let t, name, attributes = match (name, jsx_mode, (facebook_fbs, facebook_fbt)) with
+  | Identifier (loc_id, ({ Identifier.name = "fbs"} as id)), _, (Some custom_jsx_type, _)
+  | Identifier (loc_id, ({ Identifier.name = "fbt"} as id)), _, (_, Some custom_jsx_type) ->
     let fbt_reason = mk_reason RFbt (loc_element |> ALoc.of_loc) in
-    let t = Flow.get_builtin_type cx fbt_reason facebook_fbt in
+    let t = Flow.get_builtin_type cx fbt_reason custom_jsx_type in
     let name = Identifier ((loc_id, t), id) in
     let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
     t, name, attributes
 
-  | Identifier (loc, { Identifier.name }), _, Options.Jsx_react ->
+  | Identifier (loc, { Identifier.name }), Options.Jsx_react, _ ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let t = AnyT.at (loc_element |> ALoc.of_loc) in
       let name = Identifier ((loc, t), { Identifier.name }) in
@@ -4856,7 +4858,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
       let name = Identifier ((loc, t), { Identifier.name }) in
       t, name, attributes'
 
-  | Identifier (loc, { Identifier.name }), _, Options.Jsx_pragma _ ->
+  | Identifier (loc, { Identifier.name }), Options.Jsx_pragma _, _ ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let t = AnyT.at (loc_element |> ALoc.of_loc) in
       let name = Identifier ((loc, t), { Identifier.name }) in
@@ -4875,7 +4877,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
       let name = Identifier ((loc, t), { Identifier.name }) in
       t, name, attributes'
 
-  | Identifier (loc, { Identifier.name }), _, Options.Jsx_csx ->
+  | Identifier (loc, { Identifier.name }), Options.Jsx_csx, _ ->
     (**
      * It's a bummer to duplicate this case, but CSX does not want the
      * "if name = String.capitalize name" restriction.
@@ -4894,7 +4896,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
       let name = Identifier ((loc, t), { Identifier.name }) in
       t, name, attributes'
 
-  | MemberExpression member, _, Options.Jsx_react ->
+  | MemberExpression member, Options.Jsx_react, _ ->
     let name = jsx_title_member_to_string member in
     let el = RReactElement (Some name) in
     let reason = mk_reason el (loc_element |> ALoc.of_loc) in

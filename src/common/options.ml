@@ -60,6 +60,7 @@ type t = {
   opt_esproposal_export_star_as: esproposal_feature_mode;
   opt_esproposal_optional_chaining: esproposal_feature_mode;
   opt_esproposal_nullish_coalescing: esproposal_feature_mode;
+  opt_facebook_fbs: string option;
   opt_facebook_fbt: string option;
   opt_flowconfig_name: string;
   opt_file_options: Files.options;
@@ -133,6 +134,7 @@ let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let no_saved_state opts = opts.opt_no_saved_state
 let root opts = opts.opt_root
 let root_name opts = opts.opt_root_name
+let facebook_fbs opts = opts.opt_facebook_fbs
 let facebook_fbt opts = opts.opt_facebook_fbt
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 
