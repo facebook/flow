@@ -7,6 +7,7 @@
  *
  *)
 
+open Core_kernel
 open ServerMonitorUtils
 
 let server_exists lock_file = not (Lock.check lock_file)
@@ -47,9 +48,9 @@ let establish_connection ~timeout config =
   let sock_name = Socket.get_path config.socket_file in
   let sockaddr =
     if Sys.win32 then
-      let ic = open_in_bin sock_name in
-      let port = input_binary_int ic in
-      close_in ic;
+      let ic = In_channel.create ~binary:true sock_name in
+      let port = Option.value_exn (In_channel.input_binary_int ic) in
+      In_channel.close ic;
       Unix.(ADDR_INET (inet_addr_loopback, port))
     else
       Unix.ADDR_UNIX sock_name in
@@ -132,7 +133,7 @@ let consume_prehandoff_messages ~timeout ic oc =
     ~on_timeout:(fun _ -> Error ServerMonitorUtils.Server_dormant_out_of_retries)
 
 let connect_to_monitor ~timeout config =
-  let open Core_result in
+  let open Result in
   Timeout.with_timeout
     ~timeout
     ~on_timeout:(fun _ ->
@@ -177,7 +178,7 @@ let connect_to_monitor ~timeout config =
     end
 
 let connect_and_shut_down config =
-  let open Core_result in
+  let open Result in
   connect_to_monitor ~timeout:3 config >>= fun (ic, oc, cstate) ->
   verify_cstate ic cstate >>= fun () ->
   send_shutdown_rpc oc;
@@ -292,7 +293,7 @@ let connect_once ~timeout config handoff_options =
   (*       -> "hh_client lsp" -> raise Lsp.Error_server_start.               *)
   (*   | catch any exception -> unhandled.                                   *)
   (***************************************************************************)
-  let open Core_result in
+  let open Result in
   let start_t = Unix.gettimeofday () in
   connect_to_monitor ~timeout config >>= fun (ic, oc, cstate) ->
   verify_cstate ic cstate >>= fun () ->
