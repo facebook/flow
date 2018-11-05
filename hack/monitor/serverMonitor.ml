@@ -20,7 +20,7 @@
    *    its fate to the next client.
 *)
 
-open Hh_core
+open Core_kernel
 open ServerProcess
 open ServerMonitorUtils
 
@@ -317,7 +317,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      * monitor, even if messaging to channel or event logger fails. *)
     (try client_out_of_date_ client_fd mismatch_info with
      | e -> Hh_logger.log
-         "Handling client_out_of_date threw with: %s" (Printexc.to_string e));
+         "Handling client_out_of_date threw with: %s" (Exn.to_string e));
     wait_for_server_exit_with_check env.server kill_signal_time;
     Exit_status.exit Exit_status.Build_id_mismatch
 
@@ -382,8 +382,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           client_fd PH.Server_dormant_connections_limit_reached in
         env
       else
-        let () = Queue.add (handoff_options, client_fd)
-          env.purgatory_clients in
+        let () = Queue.enqueue env.purgatory_clients
+          (handoff_options, client_fd) in
         env
 
   and ack_and_handoff_client env client_fd =
@@ -408,15 +408,15 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
      * an EBADF. Control flow is easier this way than trying to manage an
      * immutable env in the face of exceptions. *)
     let clients = Queue.create () in
-    Queue.transfer env.purgatory_clients clients;
-    let env = Queue.fold begin
+    Queue.blit_transfer ~src:env.purgatory_clients ~dst:clients ();
+    let env = Queue.fold ~f:begin
       fun env (handoff_options, client_fd) ->
         try client_prehandoff ~is_purgatory_client:true env handoff_options client_fd with
         | Unix.Unix_error(Unix.EPIPE, _, _)
         | Unix.Unix_error(Unix.EBADF, _, _) ->
           Hh_logger.log "Purgatory client disconnected. Dropping.";
           env
-    end env clients in
+    end ~init:env clients in
     env
 
   and maybe_push_purgatory_clients env =
@@ -576,7 +576,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
           Exit_status.exit Exit_status.Uncaught_exception
         end;
         Hh_logger.log "check_and_run_loop_ threw with exception: %s - %s"
-          (Printexc.to_string e) stack;
+          (Exn.to_string e) stack;
         env, consecutive_throws + 1
       in
       check_and_run_loop ~consecutive_throws env monitor_config socket
@@ -630,13 +630,13 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     Option.iter waiting_client begin fun fd ->
       let oc = Unix.out_channel_of_descr fd in
       try
-        output_string oc (ServerMonitorUtils.ready^"\n");
-        close_out oc;
+        Out_channel.output_string oc (ServerMonitorUtils.ready^"\n");
+        Out_channel.close oc;
       with
       | Sys_error _
       | Unix.Unix_error _ as e ->
         Printf.eprintf "Caught exception while waking client: %s\n%!"
-          (Printexc.to_string e)
+          (Exn.to_string e)
     end;
     (** It is essential that we initiate the Informant before the server if we
      * want to give the opportunity for the Informant to truly take
