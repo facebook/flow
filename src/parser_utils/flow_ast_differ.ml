@@ -1091,13 +1091,10 @@ let program (algo : diff_algorithm)
   and member (member1: (Loc.t, Loc.t) Ast.Expression.Member.t)
               (member2: (Loc.t, Loc.t) Ast.Expression.Member.t): node change list option =
     let open Ast.Expression.Member in
-    let { _object = obj1; property = prop1; computed = computed1 } = member1 in
-    let { _object = obj2; property = prop2; computed = computed2 } = member2 in
+    let { _object = obj1; property = prop1 } = member1 in
+    let { _object = obj2; property = prop2 } = member2 in
     let obj = Some (diff_if_changed expression obj1 obj2) in
-    let prop = if computed1 != computed2 then
-      None
-    else
-      diff_if_changed_ret_opt member_property prop1 prop2 in
+    let prop = diff_if_changed_ret_opt member_property prop1 prop2 in
     join_diff_list [obj; prop]
 
   and member_property (prop1: (Loc.t, Loc.t) Ast.Expression.Member.property)

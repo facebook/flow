@@ -709,7 +709,6 @@ module Expression
       let member = Expression.Member.({
         _object  = as_expression env left;
         property = PropertyExpression expr;
-        computed = true;
       }) in
       let member = if in_optional_chain
         then Expression.(OptionalMember { OptionalMember.
@@ -737,7 +736,6 @@ module Expression
       let member = Expression.Member.({
         _object = as_expression env left;
         property;
-        computed = false;
       }) in
       let member = if in_optional_chain
         then Expression.(OptionalMember { OptionalMember.

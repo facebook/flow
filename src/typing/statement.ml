@@ -3540,7 +3540,6 @@ and subscript =
         Call.callee = (callee_loc, Member {
           Member._object = (_, Identifier (_, "Object") as obj);
           property = Member.PropertyIdentifier (prop_loc, name);
-          computed;
         } as expr);
         targs;
         arguments;
@@ -3557,7 +3556,6 @@ and subscript =
             callee = (callee_loc, t), Member { Member.
               _object = obj_ast;
               property = Member.PropertyIdentifier ((prop_loc, t), name);
-              computed;
             };
             targs;
             arguments;
@@ -3568,7 +3566,6 @@ and subscript =
         Call.callee = (callee_loc, Member {
           Member._object = super_loc, Super;
           property = Member.PropertyIdentifier (ploc, name);
-          computed;
         }) as callee;
         targs;
         arguments;
@@ -3607,7 +3604,6 @@ and subscript =
             callee = (callee_loc, prop_t), Member { Member.
               _object = (super_loc, super), Super;
               property = Member.PropertyIdentifier ((ploc, prop_t), name);
-              computed;
             };
             targs;
             arguments = argument_asts;
@@ -3618,7 +3614,6 @@ and subscript =
         Call.callee = (lookup_loc, Member { Member.
           _object;
           property;
-          computed;
         }) as callee;
         targs;
         arguments;
@@ -3671,7 +3666,6 @@ and subscript =
             callee = (lookup_loc, prop_t), Member { Member.
               _object;
               property;
-              computed;
             };
             targs;
             arguments = argument_asts;
@@ -3835,7 +3829,6 @@ and subscript =
     | Member {
         Member._object;
         property = Member.PropertyExpression index;
-        computed;
       } ->
         let reason = mk_reason (RProperty None) loc in
         let (_, tind), _ as index = expression cx index in
@@ -3857,7 +3850,6 @@ and subscript =
             member_ast { Member.
               _object = _object_ast;
               property = Member.PropertyExpression index;
-              computed;
             }
           )
         | NewChain ->
@@ -3868,7 +3860,6 @@ and subscript =
             member_ast { Member.
               _object = _object_ast;
               property = Member.PropertyExpression index;
-              computed;
             }
           )
         | ContinueChain ->
@@ -3880,7 +3871,6 @@ and subscript =
             member_ast { Member.
               _object = _object_ast;
               property = Member.PropertyExpression index;
-              computed;
             }
           )
         end
@@ -3888,7 +3878,6 @@ and subscript =
     | Member {
         Member._object = object_loc, Identifier (id_loc, "module");
         property = Member.PropertyIdentifier (ploc, ("exports" as name));
-        computed;
       } -> let lhs_t = get_module_exports cx loc in
         ex, lhs_t, acc, (
           (loc, lhs_t),
@@ -3898,7 +3887,6 @@ and subscript =
           member_ast { Member.
             _object = (object_loc, t), Identifier ((id_loc, t), name);
             property;
-            computed;
           }
         )
 
@@ -3906,7 +3894,6 @@ and subscript =
         Member._object =
           object_loc, Identifier (id_loc, ("ReactGraphQL" | "ReactGraphQLLegacy"));
         property = Member.PropertyIdentifier (ploc, ("Mixin" as name));
-        computed;
       } ->
         let reason = mk_reason (RCustom "ReactGraphQLMixin") loc in
         let lhs_t = Flow.get_builtin cx "ReactGraphQLMixin" reason in
@@ -3918,14 +3905,12 @@ and subscript =
           member_ast { Member.
             _object = (object_loc, t), Identifier ((id_loc, t), name);
             property;
-            computed;
           }
         )
 
     | Member {
         Member._object = super_loc, Super;
         property = Member.PropertyIdentifier (ploc, name);
-        computed;
       } ->
         let super = super_ cx super_loc in
         let id_info = "super", super, Type_table.Other in
@@ -3955,14 +3940,12 @@ and subscript =
           member_ast { Member.
             _object = (super_loc, super), Super;
             property;
-            computed;
           }
         )
 
     | Member {
         Member._object;
         property = Member.PropertyIdentifier (ploc, name);
-        computed;
       } ->
         let expr_reason = mk_reason (RProperty (Some name)) loc in
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
@@ -3980,7 +3963,7 @@ and subscript =
           let property = Member.PropertyIdentifier ((ploc, lhs_t), name) in
           ex, lhs_t, acc, tobj, (
             (loc, lhs_t),
-            member_ast { Member._object = _object_ast; property; computed; }
+            member_ast { Member._object = _object_ast; property; }
           )
         | NewChain ->
           let (_, lhs_t), _ as _object_ast = expression cx _object in
@@ -3990,7 +3973,7 @@ and subscript =
           let property = Member.PropertyIdentifier ((ploc, tout), name) in
           _object, lhs_t, ref (loc, opt_use, tout) :: acc, lhs_t, (
             (loc, tout),
-            member_ast { Member._object = _object_ast; property; computed; }
+            member_ast { Member._object = _object_ast; property; }
           )
         | ContinueChain ->
           let tout = AnyT.at ploc in
@@ -4005,7 +3988,7 @@ and subscript =
           let property = Member.PropertyIdentifier ((ploc, tout), name) in
           lhs, lhs_t, chain, tobj, (
             (loc, tout),
-            member_ast { Member._object = _object_ast; property; computed; }
+            member_ast { Member._object = _object_ast; property; }
           )
         end
         |> begin fun (lhs, lhs_t, chain, tobj, ((_, tout), _ as ast)) ->
@@ -4017,7 +4000,6 @@ and subscript =
     | Member {
         Member._object;
         property = Member.PropertyPrivateName (ploc, (_, name)) as property;
-        computed;
       } ->
         let expr_reason = mk_reason (RPrivateProperty name) loc in
         let use_op = Op (GetProperty (mk_expression_reason ex)) in
@@ -4034,7 +4016,7 @@ and subscript =
           ) in
           ex, lhs_t, acc, (
             (loc, lhs_t),
-            member_ast { Member._object = _object_ast; property; computed; }
+            member_ast { Member._object = _object_ast; property; }
           )
         | NewChain ->
           let (_, lhs_t), _ as _object_ast = expression cx _object in
@@ -4043,7 +4025,7 @@ and subscript =
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           _object, lhs_t, ref (loc, opt_use, tout) :: acc, (
             (loc, tout),
-            member_ast { Member._object = _object_ast; property; computed; }
+            member_ast { Member._object = _object_ast; property; }
           )
         | ContinueChain ->
           let tout = AnyT.at ploc in
@@ -4057,7 +4039,7 @@ and subscript =
           in
           lhs, lhs_t, chain, (
             (loc, tout),
-            member_ast { Member._object = _object_ast; property; computed; }
+            member_ast { Member._object = _object_ast; property; }
           )
         end
         |> begin fun (lhs, lhs_t, chain, ((_, t), _ as ast)) ->
@@ -4517,7 +4499,6 @@ and assignment cx loc = Ast.Expression.(function
         | lhs_loc, Ast.Pattern.Expression (pat_loc, Member {
             Member._object = object_loc, Ast.Expression.Identifier (id_loc, ("module" as mod_name));
             property = Member.PropertyIdentifier (ploc, ("exports" as name));
-            computed
           }) ->
             set_module_kind cx lhs_loc (Context.CommonJSModule(Some(lhs_loc)));
             set_module_exports cx lhs_loc t;
@@ -4529,14 +4510,12 @@ and assignment cx loc = Ast.Expression.(function
             (lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), Member { Member.
               _object = (object_loc, t), Ast.Expression.Identifier ((id_loc, t), mod_name);
               property;
-              computed;
             })
 
         (* super.name = e *)
         | lhs_loc, Ast.Pattern.Expression ((pat_loc, Member {
             Member._object = super_loc, Super;
             property = Member.PropertyIdentifier (prop_loc, name);
-            computed
           }) as rx) ->
             let reason =
               mk_reason (RPropertyAssignment (Some name)) lhs_loc in
@@ -4559,14 +4538,12 @@ and assignment cx loc = Ast.Expression.(function
             (lhs_loc, prop_t), Ast.Pattern.Expression ((pat_loc, prop_t), Member { Member.
               _object = (super_loc, super), Super;
               property;
-              computed;
             })
 
         (* _object.#name = e *)
         | lhs_loc, Ast.Pattern.Expression ((pat_loc, Member {
             Member._object;
             property = Member.PropertyPrivateName (prop_loc, (_, name)) as property;
-            computed;
           }) as expr) ->
             let (_, o), _ as _object = expression cx _object in
             let prop_t =
@@ -4596,14 +4573,12 @@ and assignment cx loc = Ast.Expression.(function
             (lhs_loc, prop_t), Ast.Pattern.Expression ((pat_loc, prop_t), Member { Member.
               _object;
               property;
-              computed;
             })
 
         (* _object.name = e *)
         | lhs_loc, Ast.Pattern.Expression ((pat_loc, Member {
             Member._object;
             property = Member.PropertyIdentifier (prop_loc, name);
-            computed;
           }) as expr) ->
             let wr_ctx = match _object, Env.var_scope_kind () with
               | (_, This), Scope.Ctor -> ThisInCtor
@@ -4637,14 +4612,12 @@ and assignment cx loc = Ast.Expression.(function
             (lhs_loc, prop_t), Ast.Pattern.Expression ((pat_loc, prop_t), Member { Member.
               _object;
               property;
-              computed;
             })
 
         (* _object[index] = e *)
         | lhs_loc, Ast.Pattern.Expression ((pat_loc, Member {
             Member._object;
             property = Member.PropertyExpression ((iloc, _) as index);
-            computed;
           }) as rx) ->
             let reason = mk_reason (RPropertyAssignment None) lhs_loc in
             let (_, a), _ as _object = expression cx _object in
@@ -4663,7 +4636,6 @@ and assignment cx loc = Ast.Expression.(function
             (lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), Member { Member.
               _object;
               property = Member.PropertyExpression index;
-              computed;
             })
 
         (* other r structures are handled as destructuring assignments *)
@@ -5265,7 +5237,6 @@ and jsx_title_member_to_expression member =
     (mloc, Ast.Expression.Member {
       _object;
       property = PropertyIdentifier property;
-      computed = false;
     })
   )
 
@@ -5275,7 +5246,6 @@ and expression_to_jsx_title_member = function
       Ast.Expression.Member {
         _object = (mloc, _), obj_expr;
         property = PropertyIdentifier (pannot, name);
-        computed = false;
       }) ->
     let _object = match obj_expr with
     | Ast.Expression.Identifier ((id_loc, t), name) ->
@@ -5348,7 +5318,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
       (expr_loc, Member {
         Member._object;
         property = Member.PropertyIdentifier (prop_loc, prop_name);
-        computed;
       }) ->
       (* use `expression` instead of `condition` because `_object` is the object
          in a member expression; if it itself is a member expression, it must
@@ -5389,7 +5358,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
         Member { Member.
           _object = _object_ast;
           property;
-          computed;
         }
       ), refinement
     | _ ->
@@ -5676,7 +5644,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
   | loc, Member {
       Member._object;
       property = Member.PropertyIdentifier (prop_loc, prop_name);
-      computed;
     } ->
       let (_, obj_t), _ as _object_ast = match _object with
       | super_loc, Super ->
@@ -5706,7 +5673,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
             expr_reason ~use_op obj_t (prop_reason, prop_name)
       in
       let property = Member.PropertyIdentifier ((prop_loc, t), prop_name) in
-      let ast = (loc, t), Member { Member._object = _object_ast; property; computed; } in
+      let ast = (loc, t), Member { Member._object = _object_ast; property; } in
 
       (* since we never called `expression cx e`, we have to add to the
          type table ourselves *)
@@ -5777,7 +5744,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
       Call.callee = callee_loc, Member {
         Member._object = (_, Identifier (_, "Array") as o);
         property = Member.PropertyIdentifier (prop_loc, ("isArray" as prop_name));
-        computed;
       };
       targs;
       arguments = [Expression arg];
@@ -5811,7 +5777,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let ast =
         (loc, bool),
         Call { Call.
-          callee = (callee_loc, fn_t), Member { Member._object; property; computed; };
+          callee = (callee_loc, fn_t), Member { Member._object; property; };
           targs = None;
           arguments = [ Expression arg ];
         }

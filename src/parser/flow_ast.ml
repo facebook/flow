@@ -884,7 +884,6 @@ and Expression : sig
     and ('M, 'T) t = {
       _object: ('M, 'T) Expression.t;
       property: ('M, 'T) property;
-      computed: bool;
     }
 
     [@@deriving show]

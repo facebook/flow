@@ -785,8 +785,7 @@ class ruleset_base = object(self)
     let mk_prop_read (obj : (Loc.t, Loc.t) E.t') (prop : (Loc.t, Loc.t) E.t') : (Loc.t, Loc.t) E.t' =
       let open E.Member in
       E.Member {_object = (Loc.none, obj);
-                property = PropertyExpression (Loc.none, prop);
-                computed = false} in
+                property = PropertyExpression (Loc.none, prop)} in
 
     let rec get_prop (oname : (Loc.t, Loc.t) E.t') (ot : (Loc.t, Loc.t) T.Object.t) (depth : int) : env_elt_t =
       let prop = self#choose depth (fun () -> self#require_prop (T.Object ot) true) in
@@ -827,8 +826,7 @@ class ruleset_base = object(self)
     let mk_prop_read (obj : (Loc.t, Loc.t) E.t') (prop : (Loc.t, Loc.t) E.t') : (Loc.t, Loc.t) E.t' =
       let open E.Member in
       E.Member {_object = (Loc.none, obj);
-                property = PropertyExpression (Loc.none, prop);
-                computed = false} in
+                property = PropertyExpression (Loc.none, prop)} in
 
     let rec get_prop (oname : (Loc.t, Loc.t) E.t') (ot : (Loc.t, Loc.t) T.Object.t) (depth : int) : env_elt_t =
       let prop = self#choose depth (fun () -> self#require_optional_prop (T.Object ot)) in

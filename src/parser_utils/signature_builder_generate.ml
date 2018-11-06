@@ -793,7 +793,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
 
   and member stuff =
     let open Ast.Expression.Member in
-    let { _object; property; computed = _ } = stuff in
+    let { _object; property } = stuff in
     let path_loc, t = ref_expr _object in
     let name = match property with
       | PropertyIdentifier (loc, x) -> loc, x

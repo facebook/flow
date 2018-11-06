@@ -967,11 +967,11 @@ class ['loc] mapper = object(this)
 
   method member _loc (expr: ('loc, 'loc) Flow_ast.Expression.Member.t) =
     let open Flow_ast.Expression.Member in
-    let { _object; property; computed = _ } = expr in
+    let { _object; property } = expr in
     let _object' = this#expression _object in
     let property' = this#member_property property in
     if _object == _object' && property == property' then expr
-    else { expr with _object = _object'; property = property' }
+    else { _object = _object'; property = property' }
 
   method optional_member loc (expr: ('loc, 'loc) Flow_ast.Expression.OptionalMember.t) =
     let open Flow_ast.Expression.OptionalMember in

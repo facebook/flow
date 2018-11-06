@@ -1479,16 +1479,15 @@ end with type t = Impl.t) = struct
     "arguments", array_of_list expression_or_spread call.arguments;
   ])
 
-  and member_node_properties member = Expression.Member.(
-    let property = match member.property with
-    | PropertyIdentifier id -> identifier id
-    | PropertyPrivateName name -> private_name name
-    | PropertyExpression expr -> expression expr
+  and member_node_properties { Expression.Member._object; property } =
+    let property, computed = match property with
+    | Expression.Member.PropertyIdentifier id -> identifier id, false
+    | Expression.Member.PropertyPrivateName name -> private_name name, false
+    | Expression.Member.PropertyExpression expr -> expression expr, true
     in
     [
-      "object", expression member._object;
+      "object", expression _object;
       "property", property;
-      "computed", bool member.computed;
+      "computed", bool computed;
     ]
-  )
 end

@@ -831,7 +831,7 @@ Ast.Expression.(match x with
 | Ast.Expression.Literal x -> code_desc_of_literal x
 | Logical { Logical.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Logical operator) right)
-| Member { Member._object; property; computed = _ } -> Member.(
+| Member { Member._object; property } -> Member.(
   let o = code_desc_of_expression ~wrap:true _object in
   o ^ (match property with
   | PropertyIdentifier (_, x) -> "." ^ x
@@ -868,7 +868,7 @@ Ast.Expression.(match x with
     (if optional then "?." else "") ^
     targ_string ^ arg_string
 | OptionalMember { OptionalMember.
-    member = { Member._object; property; computed = _ };
+    member = { Member._object; property };
     optional;
   } ->
   let o = code_desc_of_expression ~wrap:true _object in

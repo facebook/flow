@@ -344,22 +344,13 @@ module Expressions = struct
     { Member.
       _object;
       property = Member.PropertyIdentifier (Loc.none, property);
-      computed = false;
     }
 
   (* _object[property] *)
   let member_computed ~property _object =
     { Member.
       _object;
-      property = Member.PropertyIdentifier (Loc.none, property);
-      computed = true;
-    }
-
-  let member_computed_expr ~property _object =
-    { Member.
-      _object;
       property = Member.PropertyExpression property;
-      computed = true;
     }
 
   let member_expression expr =
@@ -369,7 +360,7 @@ module Expressions = struct
     member_expression (member obj ~property: name)
 
   let member_expression_computed_string obj (str: string) =
-    member_expression (member_computed_expr obj
+    member_expression (member_computed obj
       ~property:(literal (Literals.string str)))
 
   let optional_member_expression ~optional expr =

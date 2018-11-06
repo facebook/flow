@@ -110,7 +110,6 @@ let parse_json_file ~fail content file =
   let module_exports = loc_none, Expression.(Member { Member.
     _object = loc_none, Identifier (loc_none, "module");
     property = Member.PropertyIdentifier (loc_none, "exports");
-    computed = false;
   }) in
   let loc = fst expr in
   let statement =

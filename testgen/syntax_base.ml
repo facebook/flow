@@ -109,8 +109,7 @@ let mk_check_opt_prop (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t')
     let open E.Member in
     match read with
     | E.Member {_object = (_, obj);
-                property = _;
-                computed = _} -> get_obj obj (obj :: acc)
+                property = _} -> get_obj obj (obj :: acc)
     | _ -> List.rev acc in
 
   (* We want to make sure the parent is not undefined *)
@@ -194,8 +193,7 @@ let mk_prop_read
     (prop_name : string) : t =
   let open E.Member in
   Expr (E.Member {_object = (Loc.none, E.Identifier (Loc.none, obj_name));
-                  property = PropertyIdentifier (Loc.none, prop_name);
-                  computed = false})
+                  property = PropertyIdentifier (Loc.none, prop_name)})
 
 let mk_prop_write
     (oname : string)
