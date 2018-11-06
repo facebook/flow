@@ -77,7 +77,7 @@ class visitor ~cxs = object(this)
     let open Ast.Expression.Object.Property in
     let prop = super#object_property prop in
     match prop with
-    | loc, Method ({ value = (fn_loc, fn); _ } as meth) ->
+    | loc, Method { value = (fn_loc, fn); key } ->
       (* NOTE here we are indexing the type tables through the location of
          the entire method. The coverage tables should account for that.
          Alternatively, we could have used the location of the identifier,
@@ -85,9 +85,10 @@ class visitor ~cxs = object(this)
          deeper unfolding.) For the moment we need both tables, but revisit
          this if this changes.
       *)
+      let key' = this#object_key key in
       let fn' = this#method_return fn_loc fn in
-      if fn == fn' then prop
-      else (loc, Method { meth with value = (fn_loc, fn') })
+      if key == key' && fn == fn' then prop
+      else (loc, Method { key = key'; value = (fn_loc, fn') })
     | _ -> prop
 
   method! class_method loc (meth: (Loc.t, Loc.t) Ast.Class.Method.t') =
