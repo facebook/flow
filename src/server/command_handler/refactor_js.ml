@@ -81,6 +81,7 @@ class rename_mapper refs new_name = object(this)
           Literal (x, _) | Identifier (x, _) | PrivateName (x, _) | Computed (x, _) -> x
         in
         let ref_kinds = get_ref_kinds refs key_loc in
+        (* What about computed properties? *)
         let key' =
           if List.mem FindRefsTypes.PropertyDefinition ref_kinds then
             this#object_key key
