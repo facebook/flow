@@ -190,7 +190,7 @@ Generic types work a lot like variables or function parameters except that they
 are used for types. You can use them whenever they are in scope.
 
 ```js
-function constant<T>(value: T) {
+function constant<T>(value: T): () => T {
   return function(): T {
     return value;
   };
