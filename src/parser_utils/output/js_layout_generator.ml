@@ -1014,7 +1014,12 @@ and literal { Ast.Literal.raw; value; } =
   | _ -> Atom raw
 
 and member ?(optional=false) ~precedence ~ctxt member_node =
-  let { Ast.Expression.Member._object; property; computed } = member_node in
+  let { Ast.Expression.Member._object; property } = member_node in
+  let computed = match property with
+  | Ast.Expression.Member.PropertyExpression _ -> true
+  | Ast.Expression.Member.PropertyIdentifier _
+  | Ast.Expression.Member.PropertyPrivateName _ -> false
+  in
   let ldelim, rdelim = begin match computed, optional with
   | false, false -> Atom ".", Empty
   | false, true -> Atom "?.", Empty

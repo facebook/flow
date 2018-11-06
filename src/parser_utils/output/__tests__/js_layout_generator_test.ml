@@ -358,7 +358,7 @@ let tests = "js_layout_generator" >::: [
 
       (* x()[y] *)
       let computed = E.member_expression (
-        E.member_computed (E.call x) ~property:"y"
+        E.member_computed (E.call x) ~property:(E.identifier "y")
       ) in
       assert_expression ~ctxt "x()[y]" computed;
 

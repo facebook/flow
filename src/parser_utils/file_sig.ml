@@ -459,7 +459,7 @@ module Make
     method! member loc (expr: (L.t, L.t) Ast.Expression.Member.t) =
       let open Ast.Expression in
       let open Ast.Expression.Member in
-      let { _object; property; computed = _ } = expr in
+      let { _object; property } = expr in
       (* Strip the loc to simplify the patterns *)
       let _, _object = _object in
       (* This gets called when patterns like `module.id` appear on the LHS of an

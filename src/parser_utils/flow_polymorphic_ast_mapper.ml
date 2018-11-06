@@ -1027,10 +1027,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method member (expr: ('M, 'T) Ast.Expression.Member.t) : ('N, 'U) Ast.Expression.Member.t =
     let open Ast.Expression.Member in
-    let { _object; property; computed } = expr in
+    let { _object; property } = expr in
     let _object' = this#expression _object in
     let property' = this#member_property property in
-    { _object = _object'; property = property'; computed }
+    { _object = _object'; property = property' }
 
   method optional_member (expr: ('M, 'T) Ast.Expression.OptionalMember.t)
                               : ('N, 'U) Ast.Expression.OptionalMember.t =
