@@ -3,7 +3,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `d.getTime()` to `x` because number [1] is incompatible with string [2].
 
    date.js:2:16
-     2| var x:string = d.getTime();
+     2| var x:string = d.getTime(); // expect error
                        ^^^^^^^^^^^
 
 References:
@@ -11,8 +11,25 @@ References:
    363|     getTime(): number;
                        ^^^^^^ [1]
    date.js:2:7
-     2| var x:string = d.getTime();
+     2| var x:string = d.getTime(); // expect error
               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- date.js:4:16
+
+Cannot assign `d` to `y` because `Date` [1] is incompatible with number [2].
+
+   date.js:4:16
+   4| var y:number = d; // expect error
+                     ^
+
+References:
+   date.js:1:9
+   1| var d = new Date(0);
+              ^^^^^^^^^^^ [1]
+   date.js:4:7
+   4| var y:number = d; // expect error
+            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:18:1
@@ -187,8 +204,56 @@ References:
                               ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- date.js:31:17
 
-Found 10 errors
+Cannot add `d` and `12` because `Date` [1] is incompatible with number [2].
+
+   date.js:31:17
+   31| var n3:number = d + 12; // expect error
+                       ^^^^^^
+
+References:
+   date.js:1:9
+    1| var d = new Date(0);
+               ^^^^^^^^^^^ [1]
+   date.js:31:21
+   31| var n3:number = d + 12; // expect error
+                           ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- date.js:32:16
+
+Cannot add `d` and `12` because `Date` [1] is incompatible with number [2].
+
+   date.js:32:16
+   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
+                      ^^^^^^
+
+References:
+   date.js:1:9
+    1| var d = new Date(0);
+               ^^^^^^^^^^^ [1]
+   date.js:32:20
+   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
+                          ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- date.js:32:16
+
+Cannot assign `d + 12` to `s` because number [1] is incompatible with string [2].
+
+   date.js:32:16
+   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
+                      ^^^^^^ [1]
+
+References:
+   date.js:32:7
+   32| var s:string = d + 12; // fixme? in js this coerces both to string and concats them
+             ^^^^^^ [2]
+
+
+
+Found 14 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

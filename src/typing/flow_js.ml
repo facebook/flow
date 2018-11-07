@@ -5836,7 +5836,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* arithmetic/bitwise/update operations besides addition *)
     (*********************************************************)
 
-    | _, AssertArithmeticOperandT _ when numeric l -> ()
+    | _, AssertArithmeticOperandT _ when numberesque l -> ()
     | _, AssertArithmeticOperandT _ ->
       add_output cx ~trace (FlowError.EArithmeticOperand (reason_of_t l))
 
@@ -6621,7 +6621,7 @@ and flow_comparator cx trace reason flip l r =
   let (l, r) = if flip then (r, l) else (l, r) in
   match l, r with
   | DefT (_, StrT _), DefT (_, StrT _) -> ()
-  | (_, _) when numeric l && numeric r -> ()
+  | (_, _) when numberesque l && numberesque r -> ()
   | (_, _) ->
     let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
     add_output cx ~trace (FlowError.EComparison reasons)
@@ -7308,11 +7308,14 @@ and any_propagated_use cx trace use_op any = function
 and numeric = function
   | DefT (_, NumT _) -> true
   | DefT (_, SingletonNumT _) -> true
+  | _ -> false
 
+and dateiform = function
   | DefT (reason, InstanceT _) ->
     DescFormat.name_of_instance_reason reason = "Date"
-
   | _ -> false
+
+and numberesque = function x -> numeric x || dateiform x
 
 and object_like = function
   | DefT (_, (AnyObjT | ObjT _ | InstanceT _)) -> true
