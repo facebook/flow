@@ -42,6 +42,7 @@ can be overridden with command line flags.
 * [`sharedmemory.minimum_available`](#toc-sharedmemory-minimum-available-unsigned-integer)
 * [`sharedmemory.dep_table_pow`](#toc-sharedmemory-dep-table-pow-unsigned-integer)
 * [`sharedmemory.hash_table_pow`](#toc-sharedmemory-hash-table-pow-unsigned-integer)
+* [`sharedmemory.heap_size`](#toc-sharedmemory-heap-size-unsigned-integer)
 * [`sharedmemory.log_level`](#toc-sharedmemory-log-level-unsigned-integer)
 * [`strip_root`](#toc-strip-root-boolean)
 * [`suppress_comment`](#toc-suppress-comment-regex)
@@ -328,6 +329,17 @@ Setting this option to X means the table will support up to 2^X elements,
 which is 16*2^X bytes.
 
 By default, this is set to 19 (Table size is 2^19, which is 8 megabytes)
+
+#### `sharedmemory.heap_size` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-heap-size-unsigned-integer" href="#toc-sharedmemory-heap-size-unsigned-integer"></a>
+
+This option configures the maximum possible size for the shared heap. You should
+most likely not need to configure this, as it doesn't really affect how much
+RSS Flow uses. However, if you are working on a massive codebase you might see
+the following error after init: "Heap init size is too close to max heap size;
+GC will never get triggered!" In this case, you may need to increase the size
+of the heap.
+
+By default, this is set to 26843545600 (25 * 2^30 bytes, which is 25GiB)
 
 #### `sharedmemory.log_level` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-log-level-unsigned-integer" href="#toc-sharedmemory-log-level-unsigned-integer"></a>
 

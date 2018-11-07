@@ -920,6 +920,15 @@ let parse_options config lines =
       });
     }
 
+    |> define_opt "sharedmemory.heap_size" {
+      initializer_ = USE_DEFAULT;
+      flags = [];
+      optparser = optparse_uint;
+      setter = (fun opts shm_heap_size -> Ok {
+        opts with shm_heap_size;
+      });
+    }
+
     |> define_opt "sharedmemory.log_level" {
       initializer_ = USE_DEFAULT;
       flags = [];
