@@ -36,8 +36,5 @@ let set_server_options ~server_options =
   let lazy_mode = Option.value_map
     (Options.lazy_mode server_options) ~default:"off" ~f:Options.lazy_mode_to_string
   in
-  let cancelable_rechecks =
-    if Options.enable_cancelable_rechecks server_options then "on" else "off"
-  in
 
-  FlowEventLogger.set_server_options ~lazy_mode ~cancelable_rechecks
+  FlowEventLogger.set_server_options ~lazy_mode
