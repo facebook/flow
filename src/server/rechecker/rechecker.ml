@@ -61,16 +61,9 @@ let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
   let process_updates = process_updates genv env in
   let run_thread = f () in
   let cancel_thread =
-    let%lwt () =
-      if Options.enable_cancelable_rechecks genv.ServerEnv.options
-      then begin
-        let%lwt () = ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates in
-        Hh_logger.info "Canceling due to new file changes";
-        Lwt.cancel run_thread;
-        Lwt.return_unit
-      end else
-        Lwt.return_unit
-    in
+    let%lwt () = ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates in
+    Hh_logger.info "Canceling due to new file changes";
+    Lwt.cancel run_thread;
     Lwt.return_unit
   in
   try%lwt

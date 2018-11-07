@@ -53,7 +53,7 @@ let set_root _ = ()
 let set_root_name _ = ()
 let set_saved_state_filename _ = ()
 let set_monitor_options ~file_watcher:_  = ()
-let set_server_options ~lazy_mode:_ ~cancelable_rechecks:_ = ()
+let set_server_options ~lazy_mode:_ = ()
 
 let status_response ~num_errors:_ = ()
 let init_done ~profiling:_ = ()
