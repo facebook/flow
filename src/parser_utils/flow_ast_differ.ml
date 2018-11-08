@@ -519,15 +519,29 @@ let program (algo : diff_algorithm)
       predicate = predicate2; return = return2; tparams = tparams2;
     } = func2 in
 
-    if id1 != id2 || params1 != params2 || (* body handled below *) async1 != async2
+    if id1 != id2 || (* body handled below *) async1 != async2
         || generator1 != generator2 || predicate1 != predicate2
         || tparams1 != tparams2
     then
       None
     else
+      let params = diff_if_changed_ret_opt function_params params1 params2 in
       let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
       let returns = diff_if_changed type_annotation_hint return1 return2 |> Option.return in
-      join_diff_list [fnbody; returns]
+      join_diff_list [params; fnbody; returns]
+
+  and function_params
+      (params1: (Loc.t, Loc.t) Ast.Function.Params.t)
+      (params2: (Loc.t, Loc.t) Ast.Function.Params.t)
+      : node change list option =
+    let open Ast.Function.Params in
+    let (_, { params = param_lst1; rest = rest1 }) = params1 in
+    let (_, { params = param_lst2; rest = rest2 }) = params2 in
+    let params_diff =
+      diff_and_recurse_nonopt_no_trivial function_param_pattern param_lst1 param_lst2 in
+    let rest_diff =
+      diff_if_changed_nonopt_fn function_rest_element rest1 rest2 in
+    join_diff_list [params_diff; rest_diff]
 
   and function_body_any (body1 : (Loc.t, Loc.t) Ast.Function.body)
                         (body2 : (Loc.t, Loc.t) Ast.Function.body)
@@ -1292,6 +1306,18 @@ let program (algo : diff_algorithm)
     let consequent = statement_list consequent1 consequent2 in
     join_diff_list [test; consequent]
 
+  and function_param_pattern
+      (pat1: (Loc.t, Loc.t) Ast.Pattern.t)
+      (pat2: (Loc.t, Loc.t) Ast.Pattern.t)
+      : node change list =
+    binding_pattern pat1 pat2
+
+  and binding_pattern
+      (pat1: (Loc.t, Loc.t) Ast.Pattern.t)
+      (pat2: (Loc.t, Loc.t) Ast.Pattern.t)
+      : node change list =
+    pattern pat1 pat2
+
   and pattern (p1: (Loc.t, Loc.t) Ast.Pattern.t)
               (p2: (Loc.t, Loc.t) Ast.Pattern.t)
       : node change list =
@@ -1415,6 +1441,15 @@ let program (algo : diff_algorithm)
       let ids = diff_if_changed identifier name1 name2 |> Option.return in
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       join_diff_list [ids; annots]
+
+  and function_rest_element
+      (elem1: (Loc.t, Loc.t) Ast.Function.RestElement.t)
+      (elem2: (Loc.t, Loc.t) Ast.Function.RestElement.t)
+      : node change list =
+    let open Ast.Function.RestElement in
+    let _, { argument = arg1 } = elem1 in
+    let _, { argument = arg2 } = elem2 in
+    binding_pattern arg1 arg2
 
   and type_
       ((loc1, type1): (Loc.t, Loc.t) Ast.Type.t)

@@ -676,6 +676,25 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((14, 15), "5")] ~source ~expected:"(function() { 5; })"
     ~mapper:(new useless_mapper)
   end;
+  "function_rest" >:: begin fun ctxt ->
+    let source = "(function(...rename) { return; })" in
+    assert_edits_equal ctxt ~edits:[(13, 19), "gotRenamed"] ~source
+    ~expected:"(function(...gotRenamed) { return; })"
+    ~mapper:(new useless_mapper)
+  end;
+  "function_param" >:: begin fun ctxt ->
+    let source = "(function(rename, ...dontRename) { return; })" in
+    assert_edits_equal ctxt ~edits:[(10, 16), "gotRenamed"] ~source
+    ~expected:"(function(gotRenamed, ...dontRename) { return; })"
+    ~mapper:(new useless_mapper)
+  end;
+  "function_params" >:: begin fun ctxt ->
+    let source = "(function(rename, dontRename, rename) { return; })" in
+    assert_edits_equal ctxt ~source
+    ~edits:[((10, 16), "gotRenamed"); ((30, 36), "gotRenamed")]
+    ~expected:"(function(gotRenamed, dontRename, gotRenamed) { return; })"
+    ~mapper:(new useless_mapper)
+  end;
   "arrow_function" >:: begin fun ctxt ->
     let source = "let bar = (x) => 4;" in
     assert_edits_equal ctxt ~edits:[(17, 18), "5"] ~source
