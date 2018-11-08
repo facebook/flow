@@ -1,5 +1,6 @@
 #!/bin/bash
 
+THIS_DIR=$(cd -P "$(dirname "$(readlink "${BASH_SOURCE[0]}" || echo "${BASH_SOURCE[0]}")")" && pwd)
 
 # Use the assert functions below to expect specific exit codes.
 
@@ -66,13 +67,14 @@ show_help() {
 
 export IN_FLOW_TEST=1
 export FLOW_LOG_LEVEL=debug
+export FLOW_NODE_BINARY=${FLOW_NODE_BINARY:-${NODE_BINARY:-$(which node)}}
 
 OPTIND=1
 record=0
 saved_state=0
 verbose=0
 quiet=0
-relative="$(dirname "${BASH_SOURCE[0]}")"
+relative="$THIS_DIR"
 list_tests=0
 while getopts "b:d:f:lqrst:vh?" opt; do
   case "$opt" in
@@ -500,6 +502,7 @@ runtest() {
 
                 if create_saved_state "$root" "$flowconfig_name"
                 then
+                  PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                   "$FLOW" start "$root" \
                     $all $flowlib --wait \
                     --saved-state-fetcher "local" \
@@ -515,6 +518,7 @@ runtest() {
                 fi
               else
                 # start server and wait
+                PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                 "$FLOW" start "$root" \
                   $all $flowlib --wait \
                   --file-watcher "$file_watcher" \
@@ -539,6 +543,7 @@ runtest() {
               # run test script in subshell so it inherits functions
               (
                 set -e # The script should probably use this option
+                export PATH="$THIS_DIR/scripts/tests_bin:$PATH"
                 source "$shell" "$FLOW"
               ) 1> "$abs_out_file" 2> "$stderr_dest"
               code=$?
