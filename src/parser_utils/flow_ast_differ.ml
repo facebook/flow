@@ -526,9 +526,9 @@ let program (algo : diff_algorithm)
       None
     else
       let params = diff_if_changed_ret_opt function_params params1 params2 in
-      let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
       let returns = diff_if_changed type_annotation_hint return1 return2 |> Option.return in
-      join_diff_list [params; fnbody; returns]
+      let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
+      join_diff_list [params; returns; fnbody]
 
   and function_params
       (params1: (Loc.t, Loc.t) Ast.Function.Params.t)

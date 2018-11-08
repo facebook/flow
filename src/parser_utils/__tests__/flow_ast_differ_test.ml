@@ -695,6 +695,13 @@ let tests = "ast_differ" >::: [
     ~expected:"(function(gotRenamed, dontRename, gotRenamed) { return; })"
     ~mapper:(new useless_mapper)
   end;
+  "function_combo" >:: begin fun ctxt ->
+    let source = "(function(rename): Rename { return 4; })" in
+    assert_edits_equal ctxt ~source
+    ~edits:[((10, 16), "gotRenamed"); ((17, 25), ": GotRenamed"); ((35, 36), "5")]
+    ~expected:"(function(gotRenamed): GotRenamed { return 5; })"
+    ~mapper:(new useless_mapper)
+  end;
   "arrow_function" >:: begin fun ctxt ->
     let source = "let bar = (x) => 4;" in
     assert_edits_equal ctxt ~edits:[(17, 18), "5"] ~source
