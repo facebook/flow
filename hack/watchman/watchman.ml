@@ -7,7 +7,7 @@
  *
  **)
 
-open Hh_core
+open Core_kernel
 open Utils
 
 (*
@@ -49,19 +49,19 @@ module Watchman_process_helpers = struct
       let warning = J.get_string_val "warning" obj in
       EventLogger.watchman_warning warning;
       Hh_logger.log "Watchman warning: %s\n" warning
-    with Not_found -> ());
+    with Caml.Not_found -> ());
     (try
       let error = J.get_string_val "error" obj in
       EventLogger.watchman_error error;
       raise @@ Watchman_error error
-    with Not_found -> ());
+    with Caml.Not_found -> ());
     (try
       let canceled = J.get_bool_val "canceled" obj in
       if canceled then begin
       EventLogger.watchman_error "Subscription canceled by watchman";
       raise @@ Subscription_canceled_by_watchman
       end else ()
-    with Not_found -> ())
+    with Caml.Not_found -> ())
 
   (* Verifies that a watchman response is valid JSON and free from common errors *)
   let sanitize_watchman_response ~debug_logging output =
@@ -71,7 +71,7 @@ module Watchman_process_helpers = struct
     with e ->
       let stack = Printexc.get_backtrace () in
       Hh_logger.error "Failed to parse string as JSON: %s\nEXCEPTION:%s\nSTACK:%s\n"
-        output (Printexc.to_string e) stack;
+        output (Exn.to_string e) stack;
       raise e
     in
     assert_no_error response;
@@ -86,7 +86,7 @@ end = struct
   include Watchman_process_helpers
 
   type 'a result = 'a
-  type conn = Buffered_line_reader.t * out_channel
+  type conn = Buffered_line_reader.t * Out_channel.t
 
   let (>>=) a f = f a
   let (>|=) a f = f a
@@ -105,9 +105,9 @@ end = struct
   let send_request ~debug_logging oc json =
     let json_str = Hh_json.(json_to_string json) in
     if debug_logging then Hh_logger.info "Watchman request: %s" json_str ;
-    output_string oc json_str;
-    output_string oc "\n";
-    flush oc
+    Out_channel.output_string oc json_str;
+    Out_channel.output_string oc "\n";
+    Out_channel.flush oc
 
   (***************************************************************************)
   (* Handling requests and responses. *)
@@ -212,7 +212,7 @@ end = struct
   let get_reader (reader, _) = reader
 
   module Testing = struct
-    let get_test_conn () = (Buffered_line_reader.get_null_reader (), open_out "/dev/null")
+    let get_test_conn () = (Buffered_line_reader.get_null_reader (), Out_channel.create "/dev/null")
   end
 end
 
@@ -530,7 +530,7 @@ struct
     let files = try J.get_array_val "files" json with
       (** When an hg.update happens, it shows up in the watchman subscription
        * as a notification with no files key present. *)
-      | Not_found -> []
+      | Caml.Not_found -> []
     in
     let files = List.map files begin fun json ->
       let s = Hh_json.get_string_exn json in
@@ -626,7 +626,7 @@ struct
             Hh_logger.log "Watchman error: %s. Closing channel" msg;
             close_channel_on_instance env
           | e ->
-            let msg = Printf.sprintf "%s\n%s" (Printexc.to_string e) stack in
+            let msg = Printf.sprintf "%s\n%s" (Exn.to_string e) stack in
             EventLogger.watchman_uncaught_failure msg;
             raise Exit_status.(Exit_with Watchman_failed)
         )
@@ -681,10 +681,10 @@ struct
         assert_no_fresh_instance data;
         try env, make_state_change_response `Enter
           (J.get_string_val "state-enter" data) data with
-        | Not_found ->
+        | Caml.Not_found ->
         try env, make_state_change_response `Leave
           (J.get_string_val "state-leave" data) data with
-        | Not_found ->
+        | Caml.Not_found ->
           env, Files_changed (set_of_list @@ extract_file_names env data)
     end
 
