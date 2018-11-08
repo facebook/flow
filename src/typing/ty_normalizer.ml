@@ -35,6 +35,7 @@ type error_kind =
   | BadPoly
   | BadTypeAlias
   | BadTypeApp
+  | BadImport
   | BadInternalT
   | BadInstanceT
   | BadEvalT
@@ -56,6 +57,7 @@ let error_kind_to_string = function
   | BadTypeApp -> "Bad type application"
   | BadInternalT -> "Bad internal type"
   | BadInstanceT -> "Bad instance type"
+  | BadImport -> "Bad import type"
   | BadEvalT -> "Bad eval"
   | BadUse -> "Bad use"
   | ShadowTypeParam -> "Shadowed type parameters"
@@ -1616,23 +1618,15 @@ end = struct
     let extract_ident ~options ~genv (x, scheme) = Ty.(
       let { Type.TypeScheme.tparams; type_ = t } = scheme in
       let env = Env.init ~options ~genv ~tparams ~imported_names:SMap.empty in
-      type__ ~env t >>| fun ty ->
+      type__ ~env t >>= fun ty ->
       match ty with
       | TypeAlias { ta_name = { loc; _ } ; _ }
       | ClassDecl ({ loc; _ }, _)
       | InterfaceDecl ({ loc; _ }, _) ->
-        Some (x, loc)
-      | _ -> None
+        return (x, loc)
+      | _ ->
+        terr ~kind:BadImport ~msg:x (Some t)
     )
-
-    let extract_idents ~options ~genv imported_schemes =
-      mapM (extract_ident ~options ~genv) (SMap.bindings imported_schemes) >>|
-      List.fold_left (fun acc x ->
-        match x with
-        | Some (x, id) -> SMap.add x id acc
-        | None -> acc
-      ) SMap.empty
-
   end
 
   let run_imports ~options ~genv =
@@ -1643,13 +1637,12 @@ end = struct
     let type_table = genv.Env.type_table in
     let imported_locs = from_requires requires in
     let imported_schemes = extract_schemes type_table imported_locs in
-    match run state (extract_idents ~options ~genv imported_schemes) with
-    | Ok x, _state -> x
-    | Error _, _state ->
-      (* Fall back to empty imports map.
-       * TODO provide more fine grained handling of errors
-       *)
-      SMap.empty
+    let _, imports_map = SMap.fold (fun k v (st, acc) ->
+      match run st (extract_ident ~options ~genv (k, v)) with
+      | Ok (x, loc), st -> (st, SMap.add x loc acc)
+      | Error _, st -> (st, acc)
+    ) imported_schemes (state, SMap.empty) in
+    imports_map
 
 end
 
