@@ -1,3 +1,62 @@
+Error ------------------------------------------------------------------------------------------- createContext.js:16:13
+
+Cannot create `Consumer` element because enum [1] is incompatible with string [2] in the first argument of property
+`children`.
+
+   createContext.js:16:13
+                   v---------
+   16|             <Consumer>
+   17|               {(Tag: 'div' | 'span' | 'img') => <Tag />}
+   18|             </Consumer>
+                   ----------^
+
+References:
+   createContext.js:17:22
+   17|               {(Tag: 'div' | 'span' | 'img') => <Tag />}
+                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   createContext.js:21:25
+   21|         <Provider value='spam'> {/* Error: enum is incompatible with string */}
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- createContext.js:22:11
+
+Cannot create `Consumer` element because enum [1] is incompatible with string [2] in the first argument of property
+`children`.
+
+   createContext.js:22:11
+                 v---------
+   22|           <Consumer>
+   23|             {(Tag: 'div' | 'span' | 'img') => <Tag />}
+   24|           </Consumer>
+                 ----------^
+
+References:
+   createContext.js:23:20
+   23|             {(Tag: 'div' | 'span' | 'img') => <Tag />}
+                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   createContext.js:21:25
+   21|         <Provider value='spam'> {/* Error: enum is incompatible with string */}
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- createContext.js:32:42
+
+Cannot assign `this.divRef.current` to `image` because `HTMLDivElement` [1] is incompatible with `HTMLImageElement` [2].
+
+   createContext.js:32:42
+   32|     var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
+                                                ^^^^^^^^^^^^^^^^^^^
+
+References:
+   createContext.js:9:28
+    9|   divRef: {current: null | HTMLDivElement} = React.createRef();
+                                  ^^^^^^^^^^^^^^ [1]
+   createContext.js:32:23
+   32|     var image: null | HTMLImageElement = this.divRef.current; // Error: HTMLDivElement is incompatible with HTMLImageElement
+                             ^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------ createElementRequiredProp_string.js:17:13
 
 Cannot create `Cmp` element because property `test` is missing in props [1] but exists in object type [2].
@@ -3146,8 +3205,525 @@ References:
                                                          ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ useCallback_hook.js:6:3
 
-Found 193 errors
+Cannot call `React.useCallback` because function [1] requires another argument.
+
+   useCallback_hook.js:6:3
+     6|   React.useCallback(); // Error: function requires another argument.
+          ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:308:38
+                                             v---
+   308|   declare export function useCallback<T>(
+   309|     callback: () => T | void,
+   310|     inputs: $ReadOnlyArray<mixed> | void | null,
+   311|   ): T;
+          ---^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- useCallback_hook.js:14:13
+
+Cannot assign `React.useCallback(...)` to `numeric` because string [1] is incompatible with number [2].
+
+   useCallback_hook.js:14:13
+   14|   numeric = React.useCallback(() => 'abc'); // Error: is incompatible with number
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   useCallback_hook.js:14:37
+   14|   numeric = React.useCallback(() => 'abc'); // Error: is incompatible with number
+                                           ^^^^^ [1]
+   useCallback_hook.js:10:16
+   10|   let numeric: number;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- useCallback_hook.js:15:42
+
+Cannot call `React.useCallback` with object literal bound to `inputs` because object literal [1] is incompatible with
+read-only array type [2].
+
+   useCallback_hook.js:15:42
+    15|   numeric = React.useCallback(() => 123, {}); // Error: object literal is incompatible with +read-only array type
+                                                 ^^ [1]
+
+References:
+   <BUILTINS>/react.js:310:13
+   310|     inputs: $ReadOnlyArray<mixed> | void | null,
+                    ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- useContext_hook.js:6:3
+
+Cannot call `React.useMutationEffect` because function [1] requires another argument.
+
+   useContext_hook.js:6:3
+     6|   React.useMutationEffect(); // Error: function requires another argument.
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:298:44
+                                                   v
+   298|   declare export function useMutationEffect(
+   299|     create: () => MaybeCleanUpFn,
+   300|     inputs: $ReadOnlyArray<mixed> | void | null,
+   301|   ): void;
+          ------^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- useContext_hook.js:21:18
+
+Cannot assign `React.useContext(...)` to `numericValue` because string [1] is incompatible with number [2].
+
+   useContext_hook.js:21:18
+   21|   numericValue = React.useContext(StringContext); // Error: string is incompatible with number
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   useContext_hook.js:19:45
+   19|   const StringContext = React.createContext('hello');
+                                                   ^^^^^^^ [1]
+   useContext_hook.js:16:21
+   16|   let numericValue: number;
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- useContext_hook.js:23:53
+
+Cannot assign `React.createContext(...)` to `InvalidContext` because inexact string [1] is incompatible with exact
+`CustomType` [2] in type argument `T` [3].
+
+   useContext_hook.js:23:53
+    23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   useContext_hook.js:23:73
+    23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
+                                                                                ^^^^^^^ [1]
+   useContext_hook.js:23:39
+    23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
+                                              ^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:198:28
+   198| declare type React$Context<T> = {
+                                   ^ [3]
+
+
+Error ----------------------------------------------------------------------------------------- useContext_hook.js:29:17
+
+Cannot assign `React.useContext(...)` to `stringValue` because `CustomType` [1] is incompatible with string [2].
+
+   useContext_hook.js:29:17
+   29|   stringValue = React.useContext(CustomContext); // Error: CustomType is incompatible with string
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   useContext_hook.js:25:38
+   25|   const CustomContext: React$Context<CustomType> = React.createContext({
+                                            ^^^^^^^^^^ [1]
+   useContext_hook.js:15:20
+   15|   let stringValue: string;
+                          ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- useEffect_hook.js:6:3
+
+Cannot call `React.useEffect` because function [1] requires another argument.
+
+   useEffect_hook.js:6:3
+     6|   React.useEffect(); // Error: function requires another argument.
+          ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:293:36
+                                           v
+   293|   declare export function useEffect(
+   294|     create: () => MaybeCleanUpFn,
+   295|     inputs: $ReadOnlyArray<mixed> | void | null,
+   296|   ): void;
+          ------^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ useEffect_hook.js:22:19
+
+Cannot call `React.useEffect` with `1` bound to `create` because number [1] is incompatible with function type [2].
+
+   useEffect_hook.js:22:19
+    22|   React.useEffect(1); // Error: number is incompatible with function type
+                          ^ [1]
+
+References:
+   <BUILTINS>/react.js:294:13
+   294|     create: () => MaybeCleanUpFn,
+                    ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ useEffect_hook.js:23:29
+
+Cannot call `React.useEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
+type [2].
+
+   useEffect_hook.js:23:29
+    23|   React.useEffect(() => {}, 1); // Error: number is incompatible with function react-only array
+                                    ^ [1]
+
+References:
+   <BUILTINS>/react.js:295:13
+   295|     inputs: $ReadOnlyArray<mixed> | void | null,
+                    ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- useImperativeMethods_hook.js:6:3
+
+Cannot call `React.useImperativeMethods` because function [1] requires another argument.
+
+   useImperativeMethods_hook.js:6:3
+     6|   React.useImperativeMethods(); // Error: function requires another argument.
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:318:47
+                                                      v---
+   318|   declare export function useImperativeMethods<T>(
+   319|     ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+   320|     create: () => T,
+   321|     inputs: $ReadOnlyArray<mixed> | void | null,
+   322|   ): void;
+          ------^ [1]
+
+
+Error ------------------------------------------------------------------------------- useImperativeMethods_hook.js:31:35
+
+Cannot call `React.useImperativeMethods` with function bound to `create` because inexact object literal [1] is
+incompatible with exact `Interface` [2] in the return value.
+
+   useImperativeMethods_hook.js:31:35
+   31|   React.useImperativeMethods(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+                                         ^^^^^^^^^^
+
+References:
+   useImperativeMethods_hook.js:31:42
+   31|   React.useImperativeMethods(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+                                                ^^ [1]
+   useImperativeMethods_hook.js:30:31
+   30|   const ref: {current: null | Interface } = React.createRef();
+                                     ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- useImperativeMethods_hook.js:34:41
+
+Cannot call `React.useImperativeMethods` with function bound to `create` because inexact `Interface` [1] is incompatible
+with exact object literal [2] in the return value.
+
+   useImperativeMethods_hook.js:34:41
+   34|   React.useImperativeMethods(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+                                               ^^^^^^^^^^
+
+References:
+   useImperativeMethods_hook.js:33:39
+   33|   const refSetter = (instance: null | Interface) => {};
+                                             ^^^^^^^^^ [1]
+   useImperativeMethods_hook.js:34:48
+   34|   React.useImperativeMethods(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+                                                      ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- useLayoutEffect_hook.js:6:3
+
+Cannot call `React.useLayoutEffect` because function [1] requires another argument.
+
+   useLayoutEffect_hook.js:6:3
+     6|   React.useLayoutEffect(); // Error: function requires another argument.
+          ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:303:42
+                                                 v
+   303|   declare export function useLayoutEffect(
+   304|     create: () => MaybeCleanUpFn,
+   305|     inputs: $ReadOnlyArray<mixed> | void | null,
+   306|   ): void;
+          ------^ [1]
+
+
+Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:22:25
+
+Cannot call `React.useLayoutEffect` with `1` bound to `create` because number [1] is incompatible with function
+type [2].
+
+   useLayoutEffect_hook.js:22:25
+    22|   React.useLayoutEffect(1); // Error: number is incompatible with function type
+                                ^ [1]
+
+References:
+   <BUILTINS>/react.js:304:13
+   304|     create: () => MaybeCleanUpFn,
+                    ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:23:35
+
+Cannot call `React.useLayoutEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
+type [2].
+
+   useLayoutEffect_hook.js:23:35
+    23|   React.useLayoutEffect(() => {}, 1); // Error: number is incompatible with function react-only array
+                                          ^ [1]
+
+References:
+   <BUILTINS>/react.js:305:13
+   305|     inputs: $ReadOnlyArray<mixed> | void | null,
+                    ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- useMemo_hook.js:6:3
+
+Cannot call `React.useMemo` because function [1] requires another argument.
+
+   useMemo_hook.js:6:3
+     6|   React.useMemo(); // Error: function requires another argument.
+          ^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:313:34
+                                         v---
+   313|   declare export function useMemo<T>(
+   314|     create: () => T,
+   315|     inputs: $ReadOnlyArray<mixed> | void | null,
+   316|   ): T;
+          ---^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- useMemo_hook.js:17:27
+
+Cannot assign `React.useMemo(...)` to `invalid` because string [1] is incompatible with number [2].
+
+   useMemo_hook.js:17:27
+   17|   const invalid: number = React.useMemo(() => "abc"); // Error: string iss incompatible with number
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   useMemo_hook.js:17:47
+   17|   const invalid: number = React.useMemo(() => "abc"); // Error: string iss incompatible with number
+                                                     ^^^^^ [1]
+   useMemo_hook.js:17:18
+   17|   const invalid: number = React.useMemo(() => "abc"); // Error: string iss incompatible with number
+                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:6:3
+
+Cannot call `React.useMutationEffect` because function [1] requires another argument.
+
+   useMutationEffect_hook.js:6:3
+     6|   React.useMutationEffect(); // Error: function requires another argument.
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:298:44
+                                                   v
+   298|   declare export function useMutationEffect(
+   299|     create: () => MaybeCleanUpFn,
+   300|     inputs: $ReadOnlyArray<mixed> | void | null,
+   301|   ): void;
+          ------^ [1]
+
+
+Error ---------------------------------------------------------------------------------- useMutationEffect_hook.js:22:27
+
+Cannot call `React.useMutationEffect` with `1` bound to `create` because number [1] is incompatible with function
+type [2].
+
+   useMutationEffect_hook.js:22:27
+    22|   React.useMutationEffect(1); // Error: number is incompatible with function type
+                                  ^ [1]
+
+References:
+   <BUILTINS>/react.js:299:13
+   299|     create: () => MaybeCleanUpFn,
+                    ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- useMutationEffect_hook.js:23:37
+
+Cannot call `React.useMutationEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
+type [2].
+
+   useMutationEffect_hook.js:23:37
+    23|   React.useMutationEffect(() => {}, 1); // Error: number is incompatible with function react-only array
+                                            ^ [1]
+
+References:
+   <BUILTINS>/react.js:300:13
+   300|     inputs: $ReadOnlyArray<mixed> | void | null,
+                    ^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- useReducer_hook.js:6:3
+
+Cannot call `React.useReducer` because function [1] requires another argument.
+
+   useReducer_hook.js:6:3
+     6|   React.useReducer(); // Error: function requires another argument.
+          ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:285:37
+                                            v------
+   285|   declare export function useReducer<S, A>(
+   286|     reducer: (S, A) => S,
+   287|     initialState: S,
+   288|     initialAction: A | void | null,
+   289|   ): [S, Dispatch<A>];
+          ------------------^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ useReducer_hook.js:17:4
+
+Cannot cast `state` to string because:
+ - number [1] is incompatible with string [2].
+ - number [3] is incompatible with string [2].
+
+   useReducer_hook.js:17:4
+   17|   (state: string); // Error: number is incompatible with string
+          ^^^^^
+
+References:
+   useReducer_hook.js:12:5
+   12|     1
+           ^ [1]
+   useReducer_hook.js:17:11
+   17|   (state: string); // Error: number is incompatible with string
+                 ^^^^^^ [2]
+   useReducer_hook.js:14:20
+   14|   dispatch({value: 2});
+                          ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:16:42
+
+Cannot assign `React.useRef(...)` to `stringValue` because number [1] is incompatible with string [2] in property
+`current`.
+
+   useRef_hook.js:16:42
+   16|   const stringValue: {current: string} = React.useRef(123); // Error: number is incompatible with string in property current
+                                                ^^^^^^^^^^^^^^^^^
+
+References:
+   useRef_hook.js:16:55
+   16|   const stringValue: {current: string} = React.useRef(123); // Error: number is incompatible with string in property current
+                                                             ^^^ [1]
+   useRef_hook.js:16:32
+   16|   const stringValue: {current: string} = React.useRef(123); // Error: number is incompatible with string in property current
+                                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:17:42
+
+Cannot assign `React.useRef(...)` to `numberValue` because string [1] is incompatible with number [2] in property
+`current`.
+
+   useRef_hook.js:17:42
+   17|   const numberValue: {current: number} = React.useRef("abc"); // Error: string is incompatible with number in property current
+                                                ^^^^^^^^^^^^^^^^^^^
+
+References:
+   useRef_hook.js:17:55
+   17|   const numberValue: {current: number} = React.useRef("abc"); // Error: string is incompatible with number in property current
+                                                             ^^^^^ [1]
+   useRef_hook.js:17:32
+   17|   const numberValue: {current: number} = React.useRef("abc"); // Error: string is incompatible with number in property current
+                                      ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:18:44
+
+Cannot assign `React.useRef(...)` to `booleanValue` because null [1] is incompatible with boolean [2] in property
+`current`.
+
+   useRef_hook.js:18:44
+   18|   const booleanValue: {current: boolean} = React.useRef(null); // Error: null is incompatible boolean in property current
+                                                  ^^^^^^^^^^^^^^^^^^
+
+References:
+   useRef_hook.js:18:57
+   18|   const booleanValue: {current: boolean} = React.useRef(null); // Error: null is incompatible boolean in property current
+                                                               ^^^^ [1]
+   useRef_hook.js:18:33
+   18|   const booleanValue: {current: boolean} = React.useRef(null); // Error: null is incompatible boolean in property current
+                                       ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:19:38
+
+Cannot assign `React.useRef(...)` to `nullValue` because boolean [1] is incompatible with null [2] in property
+`current`.
+
+   useRef_hook.js:19:38
+   19|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
+                                            ^^^^^^^^^^^^^^^^^^
+
+References:
+   useRef_hook.js:19:51
+   19|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
+                                                         ^^^^ [1]
+   useRef_hook.js:19:30
+   19|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
+                                    ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:27:31
+
+Cannot assign `React.useRef(...)` to `foo` because `Bar` [1] is incompatible with `Foo` [2] in property `current`.
+
+   useRef_hook.js:27:31
+   27|   const foo: {current: Foo} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+                                     ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   useRef_hook.js:27:44
+   27|   const foo: {current: Foo} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+                                                  ^^^^^^^^^ [1]
+   useRef_hook.js:27:24
+   27|   const foo: {current: Foo} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+                              ^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- useState_hook.js:10:2
+
+Cannot cast `count` to string because number [1] is incompatible with string [2].
+
+   useState_hook.js:10:2
+   10| (count: string); // Error: number is incompatible with string
+        ^^^^^
+
+References:
+   useState_hook.js:7:42
+    7| const [count, setCount] = React.useState(1);
+                                                ^ [1]
+   useState_hook.js:10:9
+   10| (count: string); // Error: number is incompatible with string
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- useState_hook.js:13:10
+
+Cannot call `setCount` with `true` bound to the first parameter because boolean [1] is incompatible with number [2].
+
+   useState_hook.js:13:10
+   13| setCount(true); // Error: boolean is incompatible with number
+                ^^^^ [1]
+
+References:
+   useState_hook.js:7:42
+    7| const [count, setCount] = React.useState(1);
+                                                ^ [2]
+
+
+
+Found 227 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
