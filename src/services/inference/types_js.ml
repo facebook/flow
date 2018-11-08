@@ -9,8 +9,6 @@
 
 open Utils_js
 
-module File_sig = File_sig.With_Loc
-
 (****************** typecheck job helpers *********************)
 
 let clear_errors (files: FilenameSet.t) errors =
@@ -75,6 +73,7 @@ let collate_parse_results ~options parse_results =
      * them. *)
     if options.Options.opt_enforce_well_formed_exports then
       FilenameMap.fold (fun file file_sig_errors errors ->
+        let file_sig_errors = File_sig.abstractify_tolerable_errors file_sig_errors in
         let errset = Inference_utils.set_of_file_sig_tolerable_errors
           ~source_file:file file_sig_errors in
         update_errset errors file errset
@@ -532,7 +531,7 @@ let ensure_parsed ~options ~profiling ~workers files =
    StartRecheck and EndRecheck messages. *)
 let ensure_checked_dependencies ~options ~profiling ~workers ~env file file_sig =
   let resolved_requires =
-    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+    let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r locs resolved_rs ->
       let locs = Nel.map ALoc.of_loc locs in
       let resolved_r = Module_js.imported_module
@@ -618,9 +617,13 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       let errors = Context.errors cx in
       let errors =
         if options.Options.opt_enforce_well_formed_exports then
+          let tolerable_errors =
+            File_sig.With_Loc.(file_sig.tolerable_errors)
+            |> File_sig.abstractify_tolerable_errors
+          in
           Inference_utils.set_of_file_sig_tolerable_errors
             ~source_file:filename
-            file_sig.File_sig.tolerable_errors
+            tolerable_errors
           |> Errors.ErrorSet.union errors
         else
           errors

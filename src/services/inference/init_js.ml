@@ -78,7 +78,7 @@ let load_lib_files ~master_cx ~options files =
         let%lwt result = parse_lib_file options file in
         Lwt.return (match result with
         | Parsing.Parse_ok (ast, file_sig) ->
-
+          let file_sig = File_sig.abstractify_locs file_sig in
           let metadata =
             let open Context in
             let metadata = metadata_of_options options in
@@ -90,7 +90,7 @@ let load_lib_files ~master_cx ~options files =
           Flow.mk_builtins cx;
 
           let syms = Infer.infer_lib_file cx ast
-            ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig:(File_sig.abstractify_locs file_sig)
+            ~exclude_syms ~lint_severities ~file_options:(Some file_options) ~file_sig
           in
 
           Context.merge_into (Context.sig_cx master_cx) sig_cx;
@@ -106,7 +106,7 @@ let load_lib_files ~master_cx ~options files =
             if options.Options.opt_enforce_well_formed_exports then
               Inference_utils.set_of_file_sig_tolerable_errors
                 ~source_file:lib_file
-                file_sig.File_sig.With_Loc.tolerable_errors
+                file_sig.File_sig.With_ALoc.tolerable_errors
               |> Errors.ErrorSet.union errors
             else
               errors

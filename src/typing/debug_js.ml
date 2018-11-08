@@ -2812,4 +2812,4 @@ let dump_flow_error =
     | EUnexpectedTemporaryBaseType loc ->
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
     | ESignatureVerification sve ->
-      spf "ESignatureVerification (%s)" (Signature_builder_deps.With_Loc.Error.debug_to_string sve)
+      spf "ESignatureVerification (%s)" (Signature_builder_deps.With_ALoc.Error.debug_to_string sve)
