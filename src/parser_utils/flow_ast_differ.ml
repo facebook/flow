@@ -22,6 +22,15 @@ type diff_algorithm = Trivial | Standard
 (* Position in the list is necessary to figure out what Loc.t to assign to insertions. *)
 type 'a diff_result = (int (* position *) * 'a change')
 
+(* Compares changes based on location. *)
+let change_compare (pos1, chg1) (pos2, chg2) =
+  if pos1 <> pos2 then compare pos1 pos2 else
+  (* Orders the change types alphabetically. This puts same-indexed inserts before deletes *)
+  match chg1, chg2 with
+  | Insert _, Delete _ | Delete _, Replace _ | Insert _, Replace _ -> -1
+  | Delete _, Insert _ | Replace _, Delete _ | Replace _, Insert _ -> 1
+  | _ -> 0
+
 (* diffs based on identity *)
 (* return None if no good diff was found (max edit distance exceeded, etc.) *)
 let trivial_list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_result list) option =
@@ -112,14 +121,6 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_resu
         (start, Insert (None, (gen_inserts first last))) :: script
         |> add_inserts (k + 1)
       else add_inserts (k + 1) script in
-
-    let change_compare (pos1, chg1) (pos2, chg2) =
-      if pos1 <> pos2 then compare pos1 pos2 else
-      (* Orders the change types alphabetically. This puts same-indexed inserts before deletes *)
-      match chg1, chg2 with
-      | Insert _, Delete _ | Delete _, Replace _ | Insert _, Replace _ -> -1
-      | Delete _, Insert _ | Replace _, Delete _ | Replace _, Insert _ -> 1
-      | _ -> 0 in
 
     (* Convert like-indexed deletes and inserts into a replacement. This relies
        on the fact that sorting the script with our change_compare function will order all
@@ -1576,4 +1577,4 @@ let program (algo : diff_algorithm)
     ({loc with _end = loc.start}, Insert (Some "", [Raw "("])) :: (List.rev append_annot_rev)
 in
 
-program' program1 program2
+program' program1 program2 |> List.sort change_compare
