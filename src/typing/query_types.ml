@@ -8,6 +8,8 @@
 module Ast = Flow_ast
 open Typed_ast_utils
 
+open Utils_js
+
 (*****************)
 (* Query/Suggest *)
 (*****************)

@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module LocMap = Utils_js.LocMap
-
 val find_type_at_pos_annotation :
   (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
   Loc.t ->
@@ -14,7 +12,7 @@ val find_type_at_pos_annotation :
 
 val typed_ast_to_map :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
-  Type.TypeScheme.t LocMap.t
+  Type.TypeScheme.t Utils_js.LocMap.t
 
 val typed_ast_to_list :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
