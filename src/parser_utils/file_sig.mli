@@ -13,3 +13,5 @@ module With_ALoc: File_sig_sig.S
     and module Signature_builder_deps = Signature_builder_deps.With_ALoc
 
 val abstractify_locs: With_Loc.t -> With_ALoc.t
+
+val abstractify_tolerable_errors: With_Loc.tolerable_error list -> With_ALoc.tolerable_error list

@@ -1239,6 +1239,17 @@ module With_ALoc = Make
     (Scope_builder.With_ALoc)
     (Signature_builder_deps.With_ALoc)
 
+let abstractify_tolerable_errors =
+  let module WL = With_Loc in
+  let module WA = With_ALoc in
+  let abstractify_tolerable_error = function
+  | WL.BadExportPosition loc -> WA.BadExportPosition (ALoc.of_loc loc)
+  | WL.BadExportContext (name, loc) -> WA.BadExportContext (name, ALoc.of_loc loc)
+  | WL.SignatureVerificationError err ->
+    WA.SignatureVerificationError (Signature_builder_deps.abstractify_error err)
+  in
+  List.map abstractify_tolerable_error
+
 let abstractify_locs: With_Loc.t -> With_ALoc.t =
   let module WL = With_Loc in
   let module WA = With_ALoc in
@@ -1364,13 +1375,6 @@ let abstractify_locs: With_Loc.t -> With_ALoc.t =
   let abstractify_declare_modules =
     SMap.map (fun (loc, module_sig) -> (ALoc.of_loc loc, abstractify_module_sig module_sig))
   in
-  let abstractify_tolerable_error = function
-  | WL.BadExportPosition loc -> WA.BadExportPosition (ALoc.of_loc loc)
-  | WL.BadExportContext (name, loc) -> WA.BadExportContext (name, ALoc.of_loc loc)
-  | WL.SignatureVerificationError err ->
-    WA.SignatureVerificationError (Signature_builder_deps.abstractify_error err)
-  in
-  let abstractify_tolerable_errors = List.map abstractify_tolerable_error in
   fun { WL.module_sig; declare_modules; tolerable_errors } ->
     {
       WA.module_sig = abstractify_module_sig module_sig;
