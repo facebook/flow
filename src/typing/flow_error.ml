@@ -170,7 +170,7 @@ type error_message =
   | EInexactSpread of reason * reason
   | EDeprecatedCallSyntax of ALoc.t
   | EUnexpectedTemporaryBaseType of ALoc.t
-  | ESignatureVerification of Signature_builder_deps.With_Loc.Error.t
+  | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -1172,7 +1172,6 @@ let rec error_of_msg ~trace_reasons ~source_file =
   in
 
   let mk_signature_verification_error loc msgs =
-    let loc = ALoc.of_loc loc in
     mk_error ~trace_infos loc
       ((text "Could not build a typed interface for this module. ")::msgs)
   in
@@ -1828,7 +1827,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     ]
 
   | ESignatureVerification sve ->
-    let open Signature_builder_deps.With_Loc.Error in
+    let open Signature_builder_deps.With_ALoc.Error in
     begin match sve with
       | ExpectedSort (sort, x, loc) ->
         mk_signature_verification_error loc [
