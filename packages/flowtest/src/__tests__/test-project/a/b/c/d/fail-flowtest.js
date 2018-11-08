@@ -1,4 +1,0 @@
-//@flow
-
-// Unused Suppressions
-// $FlowFixMe
