@@ -1,3 +1,46 @@
+### 0.86.0
+
+Likely to cause new Flow errors:
+* New errors may arise from generic definitions which lack the necessary annotations. Flow does not infer generic types, and the types it used to infer in their place occasionally masked errors. The types it now infers are still not generic, but will mask fewer errors.
+* Fixed bug in union type checking which caused Flow to miss some errors when used in conjunction with generics and certain [utility types](https://flow.org/en/docs/types/utilities/).
+* Improvements to constraints involving `any` may result in new errors.
+
+New Features:
+* `type-at-pos` can reconstruct spread objects when evaluation of the spread is not possible.
+* `type-at-pos` now supports implicit instantiation with `_`.
+* Added core types `$ReadOnlyMap`, `$ReadOnlyWeakMap`, `$ReadOnlySet`, and `$ReadOnlyWeakSet`. These types and their mutable counterparts mostly follow the pattern of `$ReadOnlyArray` and `Array`: the read-only parent class provides non-mutating methods, and the usual mutable class extends it. **Unlike `$ReadOnlyArray`, the new types are _invariant_ in their type parameters.**
+* Added the `React.StrictMode` type.
+* Added the [`flowtest` package](https://github.com/facebook/flow/tree/master/packages/flowtest). `flowtest` is a CLI tool for running tests on Flow types.
+* Added the `sharedmemory.heap_size` option.
+
+Notable bug fixes:
+* Restructured file signatures to support overloading in exports.
+* Allow named exports in exact `module.exports` objects.
+* Fixed forward references for `declare function`.
+* Various bug fixes to the type normalizer and to `type-at-pos`.
+* `flow suggest` no longer outputs `<<anonymous class>>`.
+* Imported symbols should no longer appear `Remote` in `type-at-pos`.
+
+Misc:
+* Improved formatting in JavaScript output.
+* Improved the way the element type of an array is determined.
+* Various improvements to the AST differ.
+* `WeakMap` keys must now be objects.
+* Improved profiling for error collation and formatting.
+* When a union lower bound flows into a union upper bound, if both unions are enums, we use the underlying set representation to handle this in O(n log n) time instead of quadratic time.
+* The type normalizer properly represents utility types instead of treating them as generics.
+* The type normalizer provides more accurate information about generics.
+* Flowing a string lower bound into a union upper bound occurs in O(log n) instead of O(n) when the union is an enum.
+* CJS modules' namespace objects are now treated as covariant.
+* The type normalizer reconstructs literal types more precisely when `preserve_inferred_literal_types` is set. This does not change the behavior of `type-at-pos`.
+* Deleted the `experimental.cancelable_rechecks` option.
+
+Parser:
+* Removed the deprecated `expression` field from `Function` nodes in the AST.
+* Enabled some tail call optimizations in `flow_parser.js` which should cause it to stack overflow in fewer cases.
+* The layout generator no longer prints empty statements as `{}` instead of `;` in pretty mode.
+* Allow anonymous function parameter types inside generics inside arrow function return types. For example, we disallow `var x = (): (string) => number => 123` because the first `=>` is ambiguous. However, `var x = (): T<(string) => number> => 123` is not ambiguous and we no longer disallow it.
+
 ### 0.85.0
 
 Likely to cause new Flow errors:
