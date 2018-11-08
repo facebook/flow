@@ -47,22 +47,10 @@ let concretize_loc_pairs pair_list =
 let sort_loc_pairs pair_list =
   List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
 
-let types_in_file ~full_cx ~file ~file_sig ~expand_aliases ~type_table typed_ast =
-  let options = {
-    Ty_normalizer_env.
-    fall_through_merged = false;
-    expand_internal_types = false;
-    expand_type_aliases = expand_aliases;
-    flag_shadowed_type_params = false;
-    preserve_inferred_literal_types = true;
-  } in
+let types_in_file ~options ~full_cx ~file ~file_sig ~type_table typed_ast =
   let type_scheme_list = Typed_ast_utils.typed_ast_to_list typed_ast in
   let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~type_table in
-  let ty_list = Ty_normalizer.from_schemes
-    ~options
-    ~genv
-    type_scheme_list
-  in
+  let ty_list = Ty_normalizer.from_schemes ~options ~genv type_scheme_list in
   List.fold_left (fun map (loc, result) ->
     match result with
     | Ok ty -> LocMap.add loc ty map
