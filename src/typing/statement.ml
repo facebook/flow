@@ -4782,14 +4782,12 @@ and jsx_fragment cx fragment: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragmen
   let { frag_openingElement; frag_children; frag_closingElement } = fragment in
   let locs =
     let open_ = frag_openingElement in
-    match frag_closingElement with
-    | Some close ->
-      let open_concrete = ALoc.to_loc open_ in
-      let close_concrete = ALoc.to_loc close in
-      Loc.btwn open_concrete close_concrete |> ALoc.of_loc,
-      open_,
-      Loc.btwn_exclusive open_concrete close_concrete |> ALoc.of_loc
-    | _ -> open_, open_, open_
+    let close = frag_closingElement in
+    let open_concrete = ALoc.to_loc open_ in
+    let close_concrete = ALoc.to_loc close in
+    Loc.btwn open_concrete close_concrete |> ALoc.of_loc,
+    open_,
+    Loc.btwn_exclusive open_concrete close_concrete |> ALoc.of_loc
   in
   let _, loc_opening, _ = locs in
   let unresolved_params, frag_children = collapse_children cx frag_children in

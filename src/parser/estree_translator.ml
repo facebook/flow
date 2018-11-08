@@ -1302,7 +1302,7 @@ end with type t = Impl.t) = struct
     node "JSXFragment" loc [
       "openingFragment", jsx_opening_fragment fragment.frag_openingElement;
       "children", array_of_list jsx_child fragment.frag_children;
-      "closingFragment", option jsx_closing_fragment fragment.frag_closingElement
+      "closingFragment", jsx_closing_fragment fragment.frag_closingElement
     ]
   )
 
