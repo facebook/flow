@@ -169,6 +169,14 @@ class useless_mapper = object(this)
       | Implicit loc -> Explicit (loc, Ast.Type.Any) in
     (loc, List.map f targs)
 
+  method! update_expression loc (expr: (Loc.t, Loc.t) Ast.Expression.Update.t) =
+    let open Ast.Expression.Update in
+    let expr = super#update_expression loc expr in
+    let { operator; _ } = expr in
+    match operator with
+    | Increment -> expr
+    | _ -> { expr with operator=Increment }
+
 end
 
 class literal_mapper = object
@@ -1523,5 +1531,15 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(25, 25), ": number"] ~source
       ~expected:"[{ render() { class A { f: number = (x: string) => x; } return new A() } }]"
       ~mapper:(new prop_annot_mapper)
+  end;
+  "update_same_op" >:: begin fun ctxt ->
+    let source = "++rename" in
+    assert_edits_equal ctxt ~edits:[((2, 8), "gotRenamed")] ~source ~expected:"++gotRenamed"
+      ~mapper:(new useless_mapper)
+  end;
+  "update_diff_op" >:: begin fun ctxt ->
+    let source = "--rename" in
+    assert_edits_equal ctxt ~edits:[((0, 8), "(++gotRenamed)")] ~source ~expected:"(++gotRenamed)"
+      ~mapper:(new useless_mapper)
   end;
 ]

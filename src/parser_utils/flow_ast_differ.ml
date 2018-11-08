@@ -756,6 +756,8 @@ let program (algo : diff_algorithm)
         array arr1 arr2
       | expr, (loc, TypeCast t2) ->
         Some (type_cast_added expr loc t2)
+      | (_, Update update1), (_, Update update2) ->
+        update update1 update2
       | _, _ ->
         None
     in
@@ -1575,6 +1577,17 @@ let program (algo : diff_algorithm)
       ({loc with start = loc._end }, Insert (Some "", [TypeAnnotation annot2; Raw ")"]))
       :: expr_diff_rev in
     ({loc with _end = loc.start}, Insert (Some "", [Raw "("])) :: (List.rev append_annot_rev)
+
+  and update
+      (update1: (Loc.t, Loc.t) Ast.Expression.Update.t)
+      (update2: (Loc.t, Loc.t) Ast.Expression.Update.t): node change list option =
+    let open Ast.Expression.Update in
+    let { operator = op1; argument = arg1; prefix = p1 } = update1 in
+    let { operator = op2; argument = arg2; prefix = p2 } = update2 in
+    if op1 != op2 || p1 != p2 then
+      None
+    else
+      Some (expression arg1 arg2)
 in
 
 program' program1 program2 |> List.sort change_compare
