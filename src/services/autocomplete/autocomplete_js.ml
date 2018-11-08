@@ -12,7 +12,7 @@ type autocomplete_type =
 
 type autocomplete_state = {
   ac_name: string;
-  ac_loc: Loc.t;
+  ac_loc: ALoc.t;
   ac_type: autocomplete_type;
 }
 

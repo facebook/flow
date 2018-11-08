@@ -125,20 +125,24 @@ let set_def_loc_hook prop_access_info literal_key_info target_loc =
       end
   in
   let use_hook ret _ctxt name loc ty =
+    let loc = ALoc.to_loc loc in
     begin if Loc.contains loc target_loc then
       set_prop_access_info (Use (ty, name))
     end;
     ret
   in
   let class_def_hook _ctxt ty static name loc =
+    let loc = ALoc.to_loc loc in
     if Loc.contains loc target_loc then
       set_prop_access_info (Class_def (ty, name, static))
   in
   let obj_def_hook _ctxt name loc =
+    let loc = ALoc.to_loc loc in
     if Loc.contains loc target_loc then
       set_prop_access_info (Obj_def (loc, name))
   in
   let export_named_hook name loc =
+    let loc = ALoc.to_loc loc in
     if Loc.contains loc target_loc then
       set_prop_access_info (Obj_def (loc, name))
   in

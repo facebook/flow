@@ -46,7 +46,7 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
       (* Replace previous bindings of `loc`. We should always use the result of the last call to
        * the hook for a given location. For details see the comment on the generate_tests function
        * in flow_js.ml *)
-      potential_refs := LocMap.add loc ty !potential_refs
+      potential_refs := ALocMap.add loc ty !potential_refs
     end;
     ret
   in
@@ -98,11 +98,11 @@ let type_matches_locs cx ty prop_def_info name =
 
 let process_prop_refs cx potential_refs file_key prop_def_info name =
   potential_refs |>
-    LocMap.bindings |>
+    ALocMap.bindings |>
     List.map begin fun (ref_loc, ty) ->
       type_matches_locs cx ty prop_def_info name
       >>| function
-      | true -> Some ref_loc
+      | true -> Some (ALoc.to_loc ref_loc)
       | false -> None
     end
     |> Result.all
@@ -119,7 +119,7 @@ let process_prop_refs cx potential_refs file_key prop_def_info name =
     end
 
 let property_find_refs_in_file options ast_info file_key def_info name =
-  let potential_refs: Type.t LocMap.t ref = ref LocMap.empty in
+  let potential_refs: Type.t ALocMap.t ref = ref ALocMap.empty in
   let potential_matching_literals: (Loc.t * Type.t) list ref = ref [] in
   let (ast, file_sig, info) = ast_info in
   let info = Docblock.set_flow_mode_for_ide_command info in

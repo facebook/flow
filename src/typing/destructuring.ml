@@ -123,7 +123,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 Type_inference_hooks_js.dispatch_lval_hook
                   cx
                   name
-                  (ALoc.to_loc loc)
+                  loc
                   (Type_inference_hooks_js.Parent parent_pattern_t);
                 let pattern = recurse ~parent_pattern_t tvar init default p in
                 let key = match prop.Property.key with
@@ -188,7 +188,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
        * location where the binding is introduced.
        *)
       | None ->
-        Type_inference_hooks_js.dispatch_lval_hook cx name (ALoc.to_loc loc) Type_inference_hooks_js.Id
+        Type_inference_hooks_js.dispatch_lval_hook cx name loc Type_inference_hooks_js.Id
       end;
       let curr_t = mod_reason_of_t (replace_reason (function
       | RDefaultValue

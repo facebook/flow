@@ -462,7 +462,7 @@ let bind_entry cx name entry loc =
         | LexScope, Value { Entry.kind = Const _; _ }
         | LexScope, Class _
         | VarScope _, _ ->
-          let loc = entry_loc entry |> ALoc.to_loc in
+          let loc = entry_loc entry in
           Type_inference_hooks_js.dispatch_ref_hook cx loc loc;
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)
@@ -768,7 +768,7 @@ let allow_forward_ref = Scope.Entry.(function
 let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
   let scope, entry = find_entry cx name ?desc loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.entry_loc entry |> ALoc.to_loc) (ALoc.to_loc loc);
+    (Entry.entry_loc entry) loc;
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
@@ -891,7 +891,7 @@ let get_refinement cx key loc =
 let update_var ?(track_ref=false) op cx ~use_op name specific loc =
   let scope, entry = find_entry cx name loc in
   if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.entry_loc entry |> ALoc.to_loc) (ALoc.to_loc loc);
+    (Entry.entry_loc entry) loc;
   Entry.(match entry with
   | Value ({
       Entry.kind = (Let _ as kind); value_state = State.Undeclared; _

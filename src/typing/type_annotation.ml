@@ -908,7 +908,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | Ast.Expression.Object.Property.Literal
           (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
       | Ast.Expression.Object.Property.Identifier (loc, name) ->
-          Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name (loc |> ALoc.to_loc);
+          Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc;
           let (_, t), _ as value_ast = convert cx tparams_map value in
           let prop_ast t = { prop with Object.Property.
             key = begin match key with
@@ -1355,7 +1355,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     tparams, tparams_map, tparams_ast
 
 and type_identifier cx name loc =
-  if Type_inference_hooks_js.dispatch_id_hook cx name (loc |> ALoc.to_loc)
+  if Type_inference_hooks_js.dispatch_id_hook cx name loc
   then AnyT.at loc
   else if name = "undefined"
   then VoidT.at loc
