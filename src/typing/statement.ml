@@ -1940,7 +1940,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               "only exist for default exports!"
             )
           | _, FunctionDeclaration {Ast.Function.id = Some (id_loc, name); _} ->
-            Type_inference_hooks_js.dispatch_export_named_hook name (ALoc.to_loc id_loc);
+            Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
             [(spf "function %s() {}" name, id_loc, name, None)]
           | _, ClassDeclaration {Ast.Class.id = None; _} ->
             failwith (
@@ -1948,11 +1948,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               "only exist for default exports"
             )
           | _, ClassDeclaration {Ast.Class.id = Some (id_loc, name); _} ->
-            Type_inference_hooks_js.dispatch_export_named_hook name (ALoc.to_loc id_loc);
+            Type_inference_hooks_js.dispatch_export_named_hook name id_loc;
             [(spf "class %s {}" name, id_loc, name, None)]
           | _, VariableDeclaration {VariableDeclaration.declarations; _} ->
             Flow_ast_utils.fold_bindings_of_variable_declarations (fun acc (loc, name) ->
-              Type_inference_hooks_js.dispatch_export_named_hook name (ALoc.to_loc loc);
+              Type_inference_hooks_js.dispatch_export_named_hook name loc;
               (spf "var %s" name, loc, name, None)::acc
             ) [] declarations
             |> List.rev
@@ -1975,7 +1975,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
 
   | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration }) ->
-      Type_inference_hooks_js.dispatch_export_named_hook "default" (ALoc.to_loc default);
+      Type_inference_hooks_js.dispatch_export_named_hook "default" default;
       let declaration, export_info = match declaration with
       | ExportDefaultDeclaration.Declaration decl ->
           let decl, undo_nameify = nameify_default_export_decl decl in
@@ -2067,7 +2067,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               mk_reason (RNamedImportedType (module_name, local_name)) (fst remote)
             in
             if Type_inference_hooks_js.dispatch_member_hook
-              cx remote_name (ALoc.to_loc remote_name_loc) module_t
+              cx remote_name remote_name_loc module_t
             then AnyT.why import_reason
             else
               let import_kind = type_kind_of_kind (Option.value ~default:importKind kind) in
@@ -2097,7 +2097,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       | Some (ImportDeclaration.ImportNamespaceSpecifier (ns_loc, local)) as specifiers ->
         let local_name = ident_name local in
 
-        Type_inference_hooks_js.dispatch_import_hook cx (ALoc.to_loc source_loc, module_name) (ALoc.to_loc ns_loc);
+        Type_inference_hooks_js.dispatch_import_hook cx (source_loc, module_name) ns_loc;
 
         let import_reason =
           let import_reason_desc =
@@ -2146,7 +2146,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) loc in
           let imported_t =
             if Type_inference_hooks_js.dispatch_member_hook
-              cx "default" (ALoc.to_loc loc) module_t
+              cx "default" loc module_t
             then AnyT.why import_reason
             else
               let import_kind = type_kind_of_kind importKind in
@@ -2674,7 +2674,7 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
          local definitions introduced by the pattern. This information is used
          by commands to automatically "follow" such definitions to the actual
          definitions in the required module. *)
-      Type_inference_hooks_js.dispatch_require_pattern_hook (ALoc.to_loc loc)
+      Type_inference_hooks_js.dispatch_require_pattern_hook loc
     | _ -> ()
   );
   match id with
@@ -2693,7 +2693,7 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
         let has_anno = match annot with
         | Ast.Type.Available _ -> true
         | Ast.Type.Missing _ -> false in
-        Type_inference_hooks_js.(dispatch_lval_hook cx name (ALoc.to_loc loc) (Val t));
+        Type_inference_hooks_js.(dispatch_lval_hook cx name loc (Val t));
         let id = (loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
           name = (id_loc, t), name;
           annot = annot_ast;
@@ -3580,7 +3580,7 @@ and subscript =
         let argts, argument_asts = arguments
           |> List.map (expression_or_spread cx)
           |> List.split in
-        Type_inference_hooks_js.dispatch_call_hook cx name (ALoc.to_loc ploc) super;
+        Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
         let prop_t = Tvar.mk cx reason_prop in
         let lhs_t = Tvar.mk_where cx reason (fun t ->
           let funtype = mk_methodcalltype super targts argts t in
@@ -3920,7 +3920,7 @@ and subscript =
         | Some t -> t
         | None ->
           let prop_reason = mk_reason (RProperty (Some name)) ploc in
-          if Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc ploc) super
+          if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
           then AnyT.at ploc
           else Tvar.mk_where cx expr_reason (fun tvar ->
             let use_op = Op (GetProperty (mk_expression_reason ex)) in
@@ -3953,7 +3953,7 @@ and subscript =
         begin match opt_state with
         | NonOptional ->
           let (_, tobj), _ as _object_ast = expression cx _object in
-          let lhs_t = if Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc ploc) tobj
+          let lhs_t = if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
           then AnyT.at ploc
           else begin match Refinement.get cx (loc, e) loc with
           | Some t -> t
@@ -3967,7 +3967,7 @@ and subscript =
           )
         | NewChain ->
           let (_, lhs_t), _ as _object_ast = expression cx _object in
-          let tout = if Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc ploc) lhs_t
+          let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
             then AnyT.at ploc else Tvar.mk cx expr_reason in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
           let property = Member.PropertyIdentifier ((ploc, tout), name) in
@@ -3981,7 +3981,7 @@ and subscript =
           let step = ref (loc, opt_use, tout) in
           let lhs, lhs_t, chain, ((_, tobj), _ as _object_ast) =
             build_chain ~is_cond cx _object (step :: acc) in
-          let tout = if (Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc ploc) tobj)
+          let tout = if (Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj)
             then tout
             else let tout = Tvar.mk cx expr_reason in step := (loc, opt_use, tout); tout
           in
@@ -4010,7 +4010,7 @@ and subscript =
             match Refinement.get cx (loc, e) loc with
             | Some t -> t
             | None ->
-              if Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc ploc) tobj
+              if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
               then AnyT.at ploc
               else get_private_field cx expr_reason ~use_op tobj name
           ) in
@@ -4020,7 +4020,7 @@ and subscript =
           )
         | NewChain ->
           let (_, lhs_t), _ as _object_ast = expression cx _object in
-          let tout = if Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc ploc) lhs_t
+          let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
             then AnyT.at ploc else Tvar.mk cx expr_reason in
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           _object, lhs_t, ref (loc, opt_use, tout) :: acc, (
@@ -4033,7 +4033,7 @@ and subscript =
           let step = ref (loc, opt_use, tout) in
           let lhs, lhs_t, chain, ((_, tobj), _ as _object_ast) =
             build_chain ~is_cond cx _object (step :: acc) in
-          let tout = if (Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc ploc) tobj)
+          let tout = if (Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj)
             then tout
             else let tout = Tvar.mk cx expr_reason in step := (loc, opt_use, tout); tout
           in
@@ -4136,7 +4136,7 @@ and func_call cx reason ~use_op ?(call_strict_arity=true) func_t targts argts =
 (* returns (type of method itself, type returned from method) *)
 and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
     (expr, obj_t, name) targts argts =
-  Type_inference_hooks_js.dispatch_call_hook cx name (ALoc.to_loc prop_loc) obj_t;
+  Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
   (match Refinement.get cx expr (aloc_of_reason reason) with
   | Some f ->
       (* note: the current state of affairs is that we understand
@@ -4174,7 +4174,7 @@ and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
   )
 
 and identifier_ cx name loc =
-  if Type_inference_hooks_js.dispatch_id_hook cx name (ALoc.to_loc loc)
+  if Type_inference_hooks_js.dispatch_id_hook cx name loc
   then AnyT.at loc
   else (
     let t = Env.var_ref ~lookup_mode:ForValue cx name loc in
@@ -4548,7 +4548,7 @@ and assignment cx loc = Ast.Expression.(function
             let (_, o), _ as _object = expression cx _object in
             let prop_t =
             (* if we fire this hook, it means the assignment is a sham. *)
-            if Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc prop_loc) o
+            if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
             then AnyT.at prop_loc
             else
               let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
@@ -4587,7 +4587,7 @@ and assignment cx loc = Ast.Expression.(function
             let (_, o), _ as _object = expression cx _object in
             let prop_t =
             (* if we fire this hook, it means the assignment is a sham. *)
-            if Type_inference_hooks_js.dispatch_member_hook cx name (ALoc.to_loc prop_loc) o
+            if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
             then AnyT.at prop_loc
             else
               let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
@@ -4820,7 +4820,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     t, name, attributes
 
   | Identifier (loc, { Identifier.name }), Options.Jsx_react, _ ->
-    if Type_inference_hooks_js.dispatch_id_hook cx name (ALoc.to_loc loc) then
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let t = AnyT.at loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
       let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
@@ -4839,7 +4839,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
       t, name, attributes'
 
   | Identifier (loc, { Identifier.name }), Options.Jsx_pragma _, _ ->
-    if Type_inference_hooks_js.dispatch_id_hook cx name (ALoc.to_loc loc) then
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let t = AnyT.at loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
       let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
@@ -4862,7 +4862,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
      * It's a bummer to duplicate this case, but CSX does not want the
      * "if name = String.capitalize name" restriction.
      *)
-    if Type_inference_hooks_js.dispatch_id_hook cx name (ALoc.to_loc loc)
+    if Type_inference_hooks_js.dispatch_id_hook cx name loc
     then
       let t = AnyT.at loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
@@ -5001,7 +5001,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
       }) ->
       (* Get the type for the attribute's value. *)
       let atype, value =
-        if Type_inference_hooks_js.dispatch_jsx_hook cx aname (ALoc.to_loc attr_loc) c
+        if Type_inference_hooks_js.dispatch_jsx_hook cx aname attr_loc c
         then AnyT.at attr_loc, None
         else
           match value with
@@ -5331,7 +5331,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       | Some t -> t
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx
-          prop_name (ALoc.to_loc prop_loc) obj_t
+          prop_name prop_loc obj_t
         then AnyT.at prop_loc
         else
           let use_op = Op (GetProperty prop_reason) in
@@ -5665,7 +5665,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       | Some t -> t
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx
-          prop_name (ALoc.to_loc prop_loc) obj_t
+          prop_name prop_loc obj_t
         then AnyT.at prop_loc
         else
           let use_op = Op (GetProperty (mk_expression_reason e)) in
@@ -6288,7 +6288,7 @@ and mk_class_sig =
         decorators;
       }) ->
 
-      Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name (ALoc.to_loc id_loc);
+      Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
       warn_or_ignore_decorators cx decorators;
 
       (match kind with
@@ -6334,7 +6334,7 @@ and mk_class_sig =
         static;
         variance;
       }) ->
-        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name (ALoc.to_loc id_loc);
+        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
         if value <> None
         then warn_or_ignore_class_properties cx ~static loc;
@@ -6358,7 +6358,7 @@ and mk_class_sig =
         static;
         variance;
       }) ->
-        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name (ALoc.to_loc id_loc);
+        Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
 
         if value <> None
         then warn_or_ignore_class_properties cx ~static loc;

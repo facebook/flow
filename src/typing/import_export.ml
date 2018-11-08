@@ -68,21 +68,20 @@ let mk_resource_module_t cx loc f =
 let require_t_of_ref_unsafe cx (loc, _) =
   Context.find_require cx loc
 
-let require cx ((source_loc, module_ref) as source) require_loc =
-  let source_concrete_loc = (ALoc.to_loc source_loc, module_ref) in
-  Type_inference_hooks_js.dispatch_import_hook cx source_concrete_loc (require_loc |> ALoc.to_loc);
+let require cx ((_, module_ref) as source) require_loc =
+  Type_inference_hooks_js.dispatch_import_hook cx source require_loc;
   let module_t = require_t_of_ref_unsafe cx source in
   let reason = mk_reason (RCommonJSExports module_ref) require_loc in
   Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (module_t, CJSRequireT(reason, t, Context.is_strict cx))
   )
 
-let import cx ((aloc, str) as source) import_loc =
-  Type_inference_hooks_js.dispatch_import_hook cx (ALoc.to_loc aloc, str) (ALoc.to_loc import_loc);
+let import cx source import_loc =
+  Type_inference_hooks_js.dispatch_import_hook cx source import_loc;
   require_t_of_ref_unsafe cx source
 
-let import_ns cx reason ((aloc, str) as source) import_loc =
-  Type_inference_hooks_js.dispatch_import_hook cx (ALoc.to_loc aloc, str) (ALoc.to_loc import_loc);
+let import_ns cx reason source import_loc =
+  Type_inference_hooks_js.dispatch_import_hook cx source import_loc;
   let module_t = require_t_of_ref_unsafe cx source in
   Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (module_t, ImportModuleNsT(reason, t, Context.is_strict cx))

@@ -43,11 +43,13 @@ let id state name =
   )
 
 let getdef_id (state, loc1) _cx name loc2 =
+  let loc2 = ALoc.to_loc loc2 in
   if Reason.in_range loc1 loc2
   then id state name;
   false
 
 let getdef_lval (state, loc1) _cx name loc2 rhs =
+  let loc2 = ALoc.to_loc loc2 in
   if Reason.in_range loc1 loc2
   then match rhs with
   | Type_inference_hooks_js.Val v ->
@@ -57,13 +59,16 @@ let getdef_lval (state, loc1) _cx name loc2 rhs =
   | Type_inference_hooks_js.Id ->
     id state name
 
-let getdef_import (state, user_requested_loc) _cx source import_loc =
+let getdef_import (state, user_requested_loc) _cx (loc, name) import_loc =
+  let source = (ALoc.to_loc loc, name) in
+  let import_loc = ALoc.to_loc import_loc in
   if (Reason.in_range user_requested_loc import_loc)
   then (
     state.getdef_type <- Some (Gdrequire (source, import_loc))
   )
 
 let getdef_require_pattern state loc =
+  let loc = ALoc.to_loc loc in
   state.getdef_require_patterns <- loc::state.getdef_require_patterns
 
 let extract_member_def cx this name =

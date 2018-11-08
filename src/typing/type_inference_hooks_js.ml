@@ -67,17 +67,17 @@ type def =
 type hook_state_t = {
   id_hook:
      (Context.t ->
-      string -> Loc.t ->
+      string -> ALoc.t ->
       bool);
 
   lval_hook:
     (Context.t ->
-      string -> Loc.t -> def ->
+      string -> ALoc.t -> def ->
       unit);
 
   member_hook:
      (Context.t ->
-      string -> Loc.t -> Type.t ->
+      string -> ALoc.t -> Type.t ->
       bool);
 
 (* TODO: This is inconsistent with the way the id/member hooks work, but we
@@ -85,42 +85,42 @@ type hook_state_t = {
          things a bit *)
   call_hook:
      (Context.t ->
-      string -> Loc.t -> Type.t ->
+      string -> ALoc.t -> Type.t ->
       unit);
 
   import_hook:
       (Context.t ->
        (* Location of the string identifiying the imported module, and the contents of that string. *)
-       (Loc.t * string) ->
+       (ALoc.t * string) ->
        (* Location of the entire import statement/require call *)
-       Loc.t ->
+       ALoc.t ->
        unit);
 
   jsx_hook:
       (Context.t ->
-       string -> Loc.t -> Type.t ->
+       string -> ALoc.t -> Type.t ->
        bool);
 
   ref_hook:
       (Context.t ->
-       Loc.t ->
-       Loc.t ->
+       ALoc.t ->
+       ALoc.t ->
        unit);
 
   class_member_decl_hook:
      (Context.t ->
       Type.t (* self *) ->
       bool (* static *) ->
-      string -> Loc.t ->
+      string -> ALoc.t ->
       unit);
 
   obj_prop_decl_hook:
       (Context.t ->
-        string -> Loc.t ->
+        string -> ALoc.t ->
         unit);
 
   require_pattern_hook:
-    Loc.t -> unit;
+    ALoc.t -> unit;
 
   (* Called when ObjT 1 ~> ObjT 2 *)
   obj_to_obj_hook:
@@ -137,7 +137,7 @@ type hook_state_t = {
         unit);
 
   (* Dispatched with "default" for default exports *)
-  export_named_hook: string (* name *) -> Loc.t -> unit;
+  export_named_hook: string (* name *) -> ALoc.t -> unit;
 }
 
 let nop_hook_state = {
