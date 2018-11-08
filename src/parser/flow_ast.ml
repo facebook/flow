@@ -1103,7 +1103,7 @@ and JSX : sig
 
   and ('M, 'T) fragment = {
     frag_openingElement: 'M;
-    frag_closingElement: 'M option;
+    frag_closingElement: 'M;
     frag_children: ('M, 'T) child list;
   }
 

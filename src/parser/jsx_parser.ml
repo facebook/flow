@@ -314,8 +314,10 @@ module JSX (Parse: Parser_common.PARSER) = struct
           Loc.btwn (fst openingElement) end_loc, `Fragment JSX.({
             frag_openingElement = fst openingElement;
             frag_closingElement = (match closingElement with
-                              | `Fragment loc -> Some loc
-                              | _ -> None);
+                              | `Fragment loc -> loc
+                              (* the following are parse erros *)
+                              | `Element (loc, _) -> loc
+                              | _ -> end_loc);
             frag_children = children;
           })
 

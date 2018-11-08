@@ -897,7 +897,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.JSX in
     let { frag_openingElement; frag_closingElement; frag_children } = expr in
     let opening' = this#on_loc_annot frag_openingElement in
-    let closing' = Option.map ~f:this#on_loc_annot frag_closingElement in
+    let closing' = this#on_loc_annot frag_closingElement in
     let children' = List.map this#jsx_child frag_children in
     { frag_openingElement = opening'; frag_closingElement = closing'; frag_children = children' }
 

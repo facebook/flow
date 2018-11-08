@@ -1655,10 +1655,7 @@ and jsx_fragment loc { Ast.JSX.frag_openingElement; frag_closingElement; frag_ch
   fuse [
     jsx_fragment_opening frag_openingElement;
     jsx_children loc frag_children;
-    begin match frag_closingElement with
-    | Some closing -> jsx_closing_fragment closing
-    | _ -> Empty
-    end;
+    jsx_closing_fragment frag_closingElement;
   ]
 
 and jsx_identifier (loc, { Ast.JSX.Identifier.name }) = identifier_with_comments (loc, name)
