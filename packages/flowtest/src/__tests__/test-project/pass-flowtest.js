@@ -1,3 +1,0 @@
-//@flow
-
-// No unused suppressions.
