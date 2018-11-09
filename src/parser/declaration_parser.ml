@@ -219,33 +219,36 @@ module Declaration
 
   let _function = with_loc (fun env ->
     let async = async env in
-    Expect.token env T_FUNCTION;
-    let generator = generator env in
-    let (tparams, id) = (
-      match in_export env, Peek.token env with
-      | true, T_LPAREN -> (None, None)
-      | true, T_LESS_THAN ->
-        let typeParams = Type.type_parameter_declaration env in
-        let id = if Peek.token env = T_LPAREN then None else Some (
-          Parse.identifier ~restricted_error:Error.StrictFunctionName env
-        ) in
-        (typeParams, id)
-      | _ ->
-        let id =
-          Parse.identifier ~restricted_error:Error.StrictFunctionName env
+    let sig_loc, (generator, tparams, id, params, return, predicate) = with_loc (fun env ->
+      Expect.token env T_FUNCTION;
+      let generator = generator env in
+      let (tparams, id) = (
+        match in_export env, Peek.token env with
+        | true, T_LPAREN -> (None, None)
+        | true, T_LESS_THAN ->
+          let typeParams = Type.type_parameter_declaration env in
+          let id = if Peek.token env = T_LPAREN then None else Some (
+            Parse.identifier ~restricted_error:Error.StrictFunctionName env
+          ) in
+          (typeParams, id)
+        | _ ->
+          let id =
+            Parse.identifier ~restricted_error:Error.StrictFunctionName env
+          in
+          (Type.type_parameter_declaration env, Some id)
+      ) in
+      let params =
+        let yield, await = match async, generator with
+        | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorDeclaration *)
+        | true, false -> false, allow_await env (* #prod-AsyncFunctionDeclaration *)
+        | false, true -> true, false (* #prod-GeneratorDeclaration *)
+        | false, false -> false, false (* #prod-FunctionDeclaration *)
         in
-        (Type.type_parameter_declaration env, Some id)
-    ) in
-    let params =
-      let yield, await = match async, generator with
-      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorDeclaration *)
-      | true, false -> false, allow_await env (* #prod-AsyncFunctionDeclaration *)
-      | false, true -> true, false (* #prod-GeneratorDeclaration *)
-      | false, false -> false, false (* #prod-FunctionDeclaration *)
+        function_params ~await ~yield env
       in
-      function_params ~await ~yield env
-    in
-    let (return, predicate) = Type.annotation_and_predicate_opt env in
+      let (return, predicate) = Type.annotation_and_predicate_opt env in
+      (generator, tparams, id, params, return, predicate)
+    ) env in
     let _, body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in
     strict_post_check env ~strict ~simple id params;
@@ -258,6 +261,7 @@ module Declaration
       predicate;
       return;
       tparams;
+      sig_loc;
     }
   )
 

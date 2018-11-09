@@ -272,7 +272,7 @@ and statement_decl cx = Ast.Statement.(
   | (loc, DeclareFunction ({ DeclareFunction.
       id = (id_loc, name);
       _; } as declare_function)) ->
-      (match declare_function_to_function_declaration cx declare_function with
+      (match declare_function_to_function_declaration cx loc declare_function with
       | None ->
           let r = mk_reason (RCustom (spf "declare %s" name)) loc in
           let t = Tvar.mk cx r in
@@ -1657,12 +1657,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
   | (_, Debugger) as stmt -> stmt
 
   | (loc, FunctionDeclaration func) ->
-      let {Ast.Function.id; params; return; _} = func in
-      let sig_loc = match params, return with
-      | _, Ast.Type.Available (end_loc, _)
-      | (end_loc, _), Ast.Type.Missing _
-         -> Loc.btwn (ALoc.to_loc loc) (ALoc.to_loc end_loc) |> ALoc.of_loc
-      in
+      let {Ast.Function.id; sig_loc; _} = func in
       let fn_type, func_ast = mk_function None cx sig_loc func in
       let type_table_loc = Type_table.function_decl_loc id loc in
       Type_table.set (Context.type_table cx) type_table_loc fn_type;
@@ -1693,7 +1688,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       }
 
   | (loc, DeclareFunction declare_function) ->
-      (match declare_function_to_function_declaration cx declare_function with
+      (match declare_function_to_function_declaration cx loc declare_function with
       | Some (func_decl, reconstruct_ast) ->
           loc, DeclareFunction (reconstruct_ast (statement cx (loc, func_decl)))
       | None ->
@@ -3111,12 +3106,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (loc, t), Sequence { Sequence.expressions }
 
   | Function func ->
-      let {Ast.Function.id; params; return; predicate; _} = func in
-      let sig_loc = match params, return with
-      | _, Ast.Type.Available (end_loc, _)
-      | (end_loc, _), Ast.Type.Missing _
-         -> Loc.btwn (ALoc.to_loc loc) (ALoc.to_loc end_loc) |> ALoc.of_loc
-      in
+      let {Ast.Function.id; predicate; sig_loc; _} = func in
 
       (match predicate with
       | Some (_, Ast.Type.Predicate.Inferred) ->
@@ -6582,7 +6572,7 @@ and mk_arrow cx loc func =
    predicate declared for the funcion *)
 (* Also returns a function for reversing this process, for the sake of
    typed AST construction. *)
-and declare_function_to_function_declaration cx
+and declare_function_to_function_declaration cx declare_loc
   { Ast.Statement.DeclareFunction.id; annot; predicate; } =
   match predicate with
   | Some (loc, Ast.Type.Predicate.Inferred) ->
@@ -6638,6 +6628,7 @@ and declare_function_to_function_declaration cx
             predicate = Some (loc, Ast.Type.Predicate.Inferred);
             return;
             tparams;
+            sig_loc = declare_loc;
           }, function
           | _, Ast.Statement.FunctionDeclaration { Ast.Function.
               id = Some ((id_loc, fun_type), id_name);

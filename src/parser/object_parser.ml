@@ -87,21 +87,24 @@ module Object
       (* #sec-function-definitions-static-semantics-early-errors *)
       let env = env |> with_allow_super Super_prop in
 
-      (* It's not clear how type params on getters & setters would make sense
-       * in Flow's type system. Since this is a Flow syntax extension, we might
-       * as well disallow it until we need it *)
-      let tparams = None in
-      let params = Declaration.function_params ~await:false ~yield:false env in
-      begin match is_getter, params with
-      | true, (_, { Ast.Function.Params.params = []; rest = None }) -> ()
-      | false, (_, { Ast.Function.Params.rest = Some _; _ }) ->
-          (* rest params don't make sense on a setter *)
-          error_at env (key_loc, Error.SetterArity)
-      | false, (_, { Ast.Function.Params.params = [_]; _ }) -> ()
-      | true, _ -> error_at env (key_loc, Error.GetterArity)
-      | false, _ -> error_at env (key_loc, Error.SetterArity)
-      end;
-      let return = Type.annotation_opt env in
+      let sig_loc, (tparams, params, return) = with_loc (fun env ->
+        (* It's not clear how type params on getters & setters would make sense
+         * in Flow's type system. Since this is a Flow syntax extension, we might
+         * as well disallow it until we need it *)
+        let tparams = None in
+        let params = Declaration.function_params ~await:false ~yield:false env in
+        begin match is_getter, params with
+        | true, (_, { Ast.Function.Params.params = []; rest = None }) -> ()
+        | false, (_, { Ast.Function.Params.rest = Some _; _ }) ->
+            (* rest params don't make sense on a setter *)
+            error_at env (key_loc, Error.SetterArity)
+        | false, (_, { Ast.Function.Params.params = [_]; _ }) -> ()
+        | true, _ -> error_at env (key_loc, Error.GetterArity)
+        | false, _ -> error_at env (key_loc, Error.SetterArity)
+        end;
+        let return = Type.annotation_opt env in
+        (tparams, params, return)
+      ) env in
       let _, body, strict = Declaration.function_body env ~async ~generator in
       let simple = Declaration.is_simple_function_params params in
       Declaration.strict_post_check env ~strict ~simple None params;
@@ -114,6 +117,7 @@ module Object
         predicate = None; (* setters/getter are not predicates *)
         return;
         tparams;
+        sig_loc;
       }
     ) env in
     key, value
@@ -170,17 +174,20 @@ module Object
         (* #sec-function-definitions-static-semantics-early-errors *)
         let env = env |> with_allow_super Super_prop in
 
-        let tparams = Type.type_parameter_declaration env in
-        let params =
-          let yield, await = match async, generator with
-          | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
-          | true, false -> false, allow_await env (* #prod-AsyncMethod *)
-          | false, true -> true, false (* #prod-GeneratorMethod *)
-          | false, false -> false, false (* #prod-MethodDefinition *)
+        let sig_loc, (tparams, params, return) = with_loc (fun env ->
+          let tparams = Type.type_parameter_declaration env in
+          let params =
+            let yield, await = match async, generator with
+            | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+            | true, false -> false, allow_await env (* #prod-AsyncMethod *)
+            | false, true -> true, false (* #prod-GeneratorMethod *)
+            | false, false -> false, false (* #prod-MethodDefinition *)
+            in
+            Declaration.function_params ~await ~yield env
           in
-          Declaration.function_params ~await ~yield env
-        in
-        let return = Type.annotation_opt env in
+          let return = Type.annotation_opt env in
+          (tparams, params, return)
+        ) env in
         let _, body, strict =
           Declaration.function_body env ~async ~generator in
         let simple = Declaration.is_simple_function_params params in
@@ -195,6 +202,7 @@ module Object
           predicate = None;
           return;
           tparams;
+          sig_loc;
         }
       ) in
 
@@ -532,17 +540,20 @@ module Object
             env |> with_allow_super Super_prop
         in
         let value = with_loc (fun env ->
-          let tparams = Type.type_parameter_declaration env in
-          let params =
-            let yield, await = match async, generator with
-            | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
-            | true, false -> false, allow_await env (* #prod-AsyncMethod *)
-            | false, true -> true, false (* #prod-GeneratorMethod *)
-            | false, false -> false, false (* #prod-MethodDefinition *)
+          let sig_loc, (tparams, params, return) = with_loc (fun env ->
+            let tparams = Type.type_parameter_declaration env in
+            let params =
+              let yield, await = match async, generator with
+              | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorMethod *)
+              | true, false -> false, allow_await env (* #prod-AsyncMethod *)
+              | false, true -> true, false (* #prod-GeneratorMethod *)
+              | false, false -> false, false (* #prod-MethodDefinition *)
+              in
+              Declaration.function_params ~await ~yield env
             in
-            Declaration.function_params ~await ~yield env
-          in
-          let return = Type.annotation_opt env in
+            let return = Type.annotation_opt env in
+            (tparams, params, return)
+          ) env in
           let _, body, strict =
             Declaration.function_body env ~async ~generator in
           let simple = Declaration.is_simple_function_params params in
@@ -557,6 +568,7 @@ module Object
             predicate = None;
             return;
             tparams;
+            sig_loc;
           }
         ) env in
         Ast.Class.(Body.Method (Loc.btwn start_loc (fst value), { Method.

@@ -792,31 +792,34 @@ module Expression
   and _function env =
     let start_loc = Peek.loc env in
     let async = Declaration.async env in
-    Expect.token env T_FUNCTION;
-    let generator = Declaration.generator env in
-    let yield, await = match async, generator with
-    | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorExpression *)
-    | true, false -> false, true (* #prod-AsyncFunctionExpression *)
-    | false, true -> true, false (* #prod-GeneratorExpression *)
-    | false, false -> false, false (* #prod-FunctionExpression *)
-    in
-    let id, tparams =
-      if Peek.token env = T_LPAREN
-      then None, None
-      else begin
-        let id = match Peek.token env with
-          | T_LESS_THAN -> None
-          | _ ->
-            let env = env |> with_allow_await await |> with_allow_yield yield in
-            Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
-        id, Type.type_parameter_declaration env
-      end in
+    let sig_loc, (id, params, generator, predicate, return, tparams) = with_loc (fun env ->
+      Expect.token env T_FUNCTION;
+      let generator = Declaration.generator env in
+      let yield, await = match async, generator with
+      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorExpression *)
+      | true, false -> false, true (* #prod-AsyncFunctionExpression *)
+      | false, true -> true, false (* #prod-GeneratorExpression *)
+      | false, false -> false, false (* #prod-FunctionExpression *)
+      in
+      let id, tparams =
+        if Peek.token env = T_LPAREN
+        then None, None
+        else begin
+          let id = match Peek.token env with
+            | T_LESS_THAN -> None
+            | _ ->
+              let env = env |> with_allow_await await |> with_allow_yield yield in
+              Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
+          id, Type.type_parameter_declaration env
+        end in
 
-    (* #sec-function-definitions-static-semantics-early-errors *)
-    let env = env |> with_allow_super No_super in
+      (* #sec-function-definitions-static-semantics-early-errors *)
+      let env = env |> with_allow_super No_super in
 
-    let params = Declaration.function_params ~await ~yield env in
-    let return, predicate = Type.annotation_and_predicate_opt env in
+      let params = Declaration.function_params ~await ~yield env in
+      let return, predicate = Type.annotation_and_predicate_opt env in
+      (id, params, generator, predicate, return, tparams)
+    ) env in
     let end_loc, body, strict =
       Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
@@ -830,6 +833,7 @@ module Expression
       predicate;
       return;
       tparams;
+      sig_loc;
     }))
 
   and number env kind raw =
@@ -1077,8 +1081,8 @@ module Expression
       (* a T_ASYNC could either be a parameter name or it could be indicating
        * that it's an async function *)
       let async = Peek.ith_token ~i:1 env <> T_ARROW && Declaration.async env in
-      let tparams = Type.type_parameter_declaration env in
-      let params, return, predicate =
+      let sig_loc, (tparams, params, return, predicate) = with_loc (fun env ->
+        let tparams = Type.type_parameter_declaration env in
         (* Disallow all fancy features for identifier => body *)
         if Peek.is_identifier env && tparams = None
         then
@@ -1089,6 +1093,7 @@ module Expression
                                annot= Ast.Type.Missing (Peek.loc_skip_lookahead env);
                                optional=false;
           } in
+          tparams,
           (loc, { Ast.Function.Params.params = [param]; rest = None }),
           Ast.Type.Missing Loc.({ loc with start = loc._end }),
           None
@@ -1105,7 +1110,8 @@ module Expression
           let return, predicate = env
             |> with_no_anon_function_type true
             |> Type.annotation_and_predicate_opt in
-          params, return, predicate in
+          tparams, params, return, predicate
+      ) env in
 
       (* It's hard to tell if an invalid expression was intended to be an
        * arrow function before we see the =>. If there are no params, that
@@ -1142,6 +1148,7 @@ module Expression
         predicate;
         return;
         tparams;
+        sig_loc;
       }))
 
   and sequence env acc =

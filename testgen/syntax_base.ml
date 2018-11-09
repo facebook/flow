@@ -168,7 +168,8 @@ let mk_func_def
      generator = false;
      predicate = None;
      return = T.Available (Loc.none, (Loc.none, rtype));
-     tparams = None} in
+     tparams = None;
+     sig_loc = Loc.none} in
   Stmt (S.FunctionDeclaration func)
 
 let mk_func_call (fid : (Loc.t, Loc.t) E.t') (param : (Loc.t, Loc.t) E.t') : t =
