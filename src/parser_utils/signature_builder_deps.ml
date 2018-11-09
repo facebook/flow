@@ -18,9 +18,9 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
       | ExpectedSort of Sort.t * string * L.t
       | ExpectedAnnotation of L.t
       | InvalidTypeParamUse of L.t
-      | UnexpectedObjectKey of L.t
-      | UnexpectedObjectSpread of L.t
-      | UnexpectedArraySpread of L.t
+      | UnexpectedObjectKey of L.t * L.t
+      | UnexpectedObjectSpread of L.t * L.t
+      | UnexpectedArraySpread of L.t * L.t
       | UnexpectedArrayHole of L.t
       | EmptyArray of L.t
       | EmptyObject of L.t
@@ -36,12 +36,18 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
           x (L.debug_to_string loc) (Sort.to_string sort)
       | ExpectedAnnotation loc -> spf "Expected annotation @ %s" (L.debug_to_string loc)
       | InvalidTypeParamUse loc -> spf "Invalid use of type parameter @ %s" (L.debug_to_string loc)
-      | UnexpectedObjectKey loc -> spf "Expected simple object key @ %s" (L.debug_to_string loc)
-      | UnexpectedObjectSpread loc -> spf "Unexpected object spread @ %s" (L.debug_to_string loc)
-      | UnexpectedArraySpread loc -> spf "Unexpected array spread @ %s" (L.debug_to_string loc)
+      | UnexpectedObjectKey (_loc, key_loc) ->
+        spf "Expected simple object key @ %s" (L.debug_to_string key_loc)
+      | UnexpectedObjectSpread (_loc, spread_loc) ->
+        spf "Unexpected object spread @ %s" (L.debug_to_string spread_loc)
+      | UnexpectedArraySpread (_loc, spread_loc) ->
+        spf "Unexpected array spread @ %s" (L.debug_to_string spread_loc)
       | UnexpectedArrayHole loc -> spf "Unexpected array hole @ %s" (L.debug_to_string loc)
-      | EmptyArray loc -> spf "Cannot determine element type of empty array @ %s" (L.debug_to_string loc)
-      | EmptyObject loc -> spf "Cannot determine types of initialized properties of empty object @ %s" (L.debug_to_string loc)
+      | EmptyArray loc ->
+        spf "Cannot determine element type of empty array @ %s" (L.debug_to_string loc)
+      | EmptyObject loc ->
+        spf "Cannot determine types of initialized properties of empty object @ %s"
+          (L.debug_to_string loc)
       | UnexpectedExpression (loc, esort) ->
         spf "Expected literal expression instead of %s @ %s"
           (Ast_utils.ExpressionSort.to_string esort) (L.debug_to_string loc)
@@ -172,9 +178,12 @@ let abstractify_error =
   | WL.ExpectedSort (sort, str, loc) -> WA.ExpectedSort (sort, str, ALoc.of_loc loc)
   | WL.ExpectedAnnotation loc -> WA.ExpectedAnnotation (ALoc.of_loc loc)
   | WL.InvalidTypeParamUse loc -> WA.InvalidTypeParamUse (ALoc.of_loc loc)
-  | WL.UnexpectedObjectKey loc -> WA.UnexpectedObjectKey (ALoc.of_loc loc)
-  | WL.UnexpectedObjectSpread loc -> WA.UnexpectedObjectSpread (ALoc.of_loc loc)
-  | WL.UnexpectedArraySpread loc -> WA.UnexpectedArraySpread (ALoc.of_loc loc)
+  | WL.UnexpectedObjectKey (loc, key_loc) ->
+    WA.UnexpectedObjectKey (ALoc.of_loc loc, ALoc.of_loc key_loc)
+  | WL.UnexpectedObjectSpread (loc, spread_loc) ->
+    WA.UnexpectedObjectSpread (ALoc.of_loc loc, ALoc.of_loc spread_loc)
+  | WL.UnexpectedArraySpread (loc, spread_loc) ->
+    WA.UnexpectedArraySpread (ALoc.of_loc loc, ALoc.of_loc spread_loc)
   | WL.UnexpectedArrayHole loc -> WA.UnexpectedArrayHole (ALoc.of_loc loc)
   | WL.EmptyArray loc -> WA.EmptyArray (ALoc.of_loc loc)
   | WL.EmptyObject loc -> WA.EmptyObject (ALoc.of_loc loc)

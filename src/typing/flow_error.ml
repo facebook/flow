@@ -1842,17 +1842,17 @@ let rec error_of_msg ~trace_reasons ~source_file =
         mk_signature_verification_error loc [
           text "Invalid use of type parameter:"
         ]
-      | UnexpectedObjectKey loc ->
+      | UnexpectedObjectKey (loc, _key_loc) ->
         mk_signature_verification_error loc [
-          text "Expected simple object key:"
+          text "Expected simple key in object:"
         ]
-      | UnexpectedObjectSpread loc ->
+      | UnexpectedObjectSpread (loc, _spread_loc) ->
         mk_signature_verification_error loc [
-          text "Unexpected object spread:"
+          text "Unexpected spread in object:"
         ]
-      | UnexpectedArraySpread loc ->
+      | UnexpectedArraySpread (loc, _spread_loc) ->
         mk_signature_verification_error loc [
-          text "Unexpected array spread:"
+          text "Unexpected spread in array:"
         ]
       | UnexpectedArrayHole loc ->
         mk_signature_verification_error loc [

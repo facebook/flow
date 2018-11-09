@@ -293,7 +293,7 @@ module Eval(Env: EvalEnv) = struct
         let open Ast.Expression.Object in
         let { properties } = stuff in
         if properties = [] then Deps.top (Error.EmptyObject loc)
-        else object_ tps properties
+        else object_ tps loc properties
       | loc, Array stuff ->
         let open Ast.Expression.Array in
         let { elements } = stuff in
@@ -389,7 +389,7 @@ module Eval(Env: EvalEnv) = struct
     match property with
       | PropertyIdentifier _
       | PropertyPrivateName _ -> deps
-      | PropertyExpression _ -> Deps.top (Error.UnexpectedObjectKey loc)
+      | PropertyExpression (key_loc, _) -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
 
   and arith_unary tps operator loc argument =
     let open Ast.Expression.Unary in
@@ -497,7 +497,7 @@ module Eval(Env: EvalEnv) = struct
       match expr_or_spread_opt with
         | None -> Deps.top (Error.UnexpectedArrayHole loc)
         | Some (Expression expr) -> literal_expr tps expr
-        | Some (Spread (loc, _spread)) -> Deps.top (Error.UnexpectedArraySpread loc)
+        | Some (Spread (spread_loc, _spread)) -> Deps.top (Error.UnexpectedArraySpread (loc, spread_loc))
     in
     fun tps loc elements ->
       Nel.fold_left (Deps.reduce_join (array_element tps loc)) Deps.bot elements
@@ -509,15 +509,15 @@ module Eval(Env: EvalEnv) = struct
     Deps.join (deps, type_args tps targs)
 
   and object_ =
-    let object_property tps =
+    let object_property tps loc =
       let open Ast.Expression.Object.Property in
-      let object_key (loc, key) =
+      let object_key (key_loc, key) =
         let open Ast.Expression.Object.Property in
         match key with
           | Literal _
           | Identifier _
           | PrivateName _ -> Deps.bot
-          | Computed _ -> Deps.top (Error.UnexpectedObjectKey loc)
+          | Computed _ -> Deps.top (Error.UnexpectedObjectKey (loc, key_loc))
       in function
         | loc, Init { key; value; _ } ->
           let deps = object_key (loc, key) in
@@ -531,12 +531,12 @@ module Eval(Env: EvalEnv) = struct
           let { generator; tparams; params; return; body; _ } = fn in
           Deps.join (deps, function_ tps generator tparams params return body)
     in
-    fun tps properties ->
+    fun tps loc properties ->
       let open Ast.Expression.Object in
       List.fold_left (fun deps prop ->
         match prop with
-          | Property p -> Deps.join (deps, object_property tps p)
-          | SpreadProperty (loc, _p) -> Deps.top (Error.UnexpectedObjectSpread loc)
+          | Property p -> Deps.join (deps, object_property tps loc p)
+          | SpreadProperty (spread_loc, _p) -> Deps.top (Error.UnexpectedObjectSpread (loc, spread_loc))
       ) Deps.bot properties
 
 end
