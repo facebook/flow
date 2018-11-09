@@ -12227,10 +12227,11 @@ module Members : sig
 
   val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
 
-  val extract: Context.t -> Type.t -> t
+  val extract: ?exclude_proto_members: bool -> Context.t -> Type.t -> t
 
   val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
-  val extract_members: Context.t -> (Type.t, Type.t) generic_t -> t
+  (* `exclude_proto_members` defaults to false. If true, only `own` props will be included. *)
+  val extract_members: ?exclude_proto_members: bool -> Context.t -> (Type.t, Type.t) generic_t -> t
 
 end = struct
 
@@ -12389,7 +12390,7 @@ end = struct
       ->
         FailureUnhandledType this_t
 
-  let rec extract_members cx = function
+  let rec extract_members ?(exclude_proto_members=false) cx = function
     | FailureNullishType -> FailureNullishType
     | FailureAnyType -> FailureAnyType
     | FailureUnhandledType t -> FailureUnhandledType t
@@ -12409,17 +12410,20 @@ end = struct
           in
           SMap.add x (loc, t) acc
         ) (find_props cx own_props) SMap.empty in
-        (* TODO: own props should take precedence *)
-        let members = SMap.fold (fun x p acc ->
-          match Property.read_t p with
-          | Some t ->
-              let loc = Property.read_loc p in
-              SMap.add x (loc, t) acc
-          | None -> acc
-        ) (find_props cx proto_props) members in
-        let super_t = resolve_type cx super in
-        let super_flds = extract_members_as_map cx super_t in
-        Success (AugmentableSMap.augment super_flds ~with_bindings:members)
+        if exclude_proto_members then Success members
+        else
+          (* TODO: own props should take precedence *)
+          let members = SMap.fold (fun x p acc ->
+              match Property.read_t p with
+              | Some t ->
+                  let loc = Property.read_loc p in
+                  SMap.add x (loc, t) acc
+              | None -> acc
+            ) (find_props cx proto_props) members
+          in
+          let super_t = resolve_type cx super in
+          let super_flds = extract_members_as_map ~exclude_proto_members cx super_t in
+          Success (AugmentableSMap.augment super_flds ~with_bindings:members)
     | Success (DefT (_, ObjT {props_tmap = flds; proto_t = proto; _})) ->
         let proto_reason = reason_of_t proto in
         let rep = InterRep.make
@@ -12428,7 +12432,10 @@ end = struct
           []
         in
         let proto_t = resolve_type cx (DefT (proto_reason, IntersectionT rep)) in
-        let prot_members = extract_members_as_map cx proto_t in
+        let prot_members =
+          if exclude_proto_members then SMap.empty
+          else extract_members_as_map ~exclude_proto_members cx proto_t
+        in
         let members = SMap.fold (fun x p acc ->
           match Property.read_t p with
           | Some t ->
@@ -12448,15 +12455,15 @@ end = struct
     | Success (DefT (_, FunT (static, proto, _))) ->
         let static_t = resolve_type cx static in
         let proto_t = resolve_type cx proto in
-        let members = extract_members_as_map cx static_t in
-        let prot_members = extract_members_as_map cx proto_t in
+        let members = extract_members_as_map ~exclude_proto_members cx static_t in
+        let prot_members = extract_members_as_map ~exclude_proto_members cx proto_t in
         Success (AugmentableSMap.augment prot_members ~with_bindings:members)
     | Success (DefT (_, IntersectionT rep)) ->
         (* Intersection type should autocomplete for every property of
            every type in the intersection *)
         let ts = InterRep.members rep in
         let ts = List.map (resolve_type cx) ts in
-        let members = List.map (extract_members_as_map cx) ts in
+        let members = List.map (extract_members_as_map ~exclude_proto_members cx) ts in
         Success (List.fold_left (fun acc members ->
           AugmentableSMap.augment acc ~with_bindings:members
         ) SMap.empty members)
@@ -12470,19 +12477,19 @@ end = struct
              | DefT (_, (AnyT | AnyObjT | AnyFunT | NullT | VoidT)) -> false
              | _ -> true
              )
-          |> List.map (extract_members_as_map cx)
+          |> List.map (extract_members_as_map ~exclude_proto_members cx)
           |> intersect_members cx in
         Success members
     | Success t | SuccessModule t ->
         FailureUnhandledType t
 
   (* TODO: Think of a better place to put this *)
-  and extract cx this_t =
+  and extract ?exclude_proto_members cx this_t =
     let t = extract_type cx this_t in
-    extract_members cx t
+    extract_members ?exclude_proto_members cx t
 
-  and extract_members_as_map cx this_t =
-    let members = extract cx this_t in
+  and extract_members_as_map ~exclude_proto_members cx this_t =
+    let members = extract ~exclude_proto_members cx this_t in
     match to_command_result_aloc members with
     | Ok map -> map
     | Error _ -> SMap.empty

@@ -104,13 +104,13 @@ let autocomplete_filter_members members =
     not (Reason.is_internal_name key)
   ) members
 
-let autocomplete_member ~ac_type cx file_sig this ac_name ac_loc docblock = Flow_js.(
+let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name ac_loc docblock = Flow_js.(
   let ac_loc = ALoc.to_loc ac_loc in
   let this_t = resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
   let this_t = resolve_builtin_class cx this_t in
-  let result = Members.extract cx this_t in
+  let result = Members.extract ~exclude_proto_members cx this_t in
 
   let open Hh_json in
 
@@ -210,7 +210,8 @@ let autocomplete_jsx cx file_sig cls ac_name ac_loc docblock = Flow_js.(
         component_instance,
         Type.GetPropT (use_op, reason, Type.Named (reason, "props"), tvar))
     ) in
-    autocomplete_member ~ac_type:"Acjsx" cx file_sig props_object ac_name ac_loc docblock
+    (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
+    autocomplete_member ~exclude_proto_members:true ~ac_type:"Acjsx" cx file_sig props_object ac_name ac_loc docblock
   )
 
 let autocomplete_get_results cx file_sig state docblock =
@@ -219,7 +220,7 @@ let autocomplete_get_results cx file_sig state docblock =
   | Some { ac_type = Acid (env); _; } ->
     autocomplete_id cx file_sig env
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-    autocomplete_member ~ac_type:"Acmem" cx file_sig this ac_name ac_loc docblock
+    autocomplete_member ~exclude_proto_members:false ~ac_type:"Acmem" cx file_sig this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
     autocomplete_jsx cx file_sig cls ac_name ac_loc docblock
   | None -> Ok ([], None)

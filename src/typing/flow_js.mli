@@ -118,7 +118,7 @@ module Members : sig
 
   val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
 
-  val extract: Context.t -> Type.t -> t
+  val extract: ?exclude_proto_members: bool -> Context.t -> Type.t -> t
   val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
-  val extract_members: Context.t -> (Type.t, Type.t) generic_t -> t
+  val extract_members: ?exclude_proto_members: bool -> Context.t -> (Type.t, Type.t) generic_t -> t
 end
