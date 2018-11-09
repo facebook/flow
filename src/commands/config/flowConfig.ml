@@ -19,6 +19,8 @@ let default_shm_min_avail = 1024 * 1024 * 512
 
 let version_regex = Str.regexp_string "<VERSION>"
 
+let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version (Flow_version.version)
+
 let map_add map (key, value) = SMap.add key value map
 
 let multi_error (errs:(int * string) list) =
@@ -32,6 +34,8 @@ let multi_error (errs:(int * string) list) =
 let error ln msg = multi_error [(ln, msg)]
 
 module Opts = struct
+  let (>>=) = Core_result.(>>=)
+
   type t = {
     all: bool;
     emoji: bool;
@@ -83,30 +87,6 @@ module Opts = struct
     traces: int;
     version: string option;
     weak: bool;
-  }
-
-  type initializer_ =
-    | USE_DEFAULT
-    | INIT_FN of (t -> t)
-
-  type option_flag =
-    | ALLOW_DUPLICATE
-
-  type 'a option_definition = {
-    (**
-     * The initializer_ gets set on the options object immediately before
-     * parsing the *first* occurrence of the user-specified config option. This
-     * is useful in cases where the user's value should blow away the default
-     * value (rather than being aggregated to it).
-     *
-     * For example: We want the default value of 'module.file_ext' to be
-     * ['.js'; '.jsx'], but if the user specifies any 'module.file_ext'
-     * settings, we want to start from a clean list.
-     *)
-    initializer_: initializer_;
-    flags: option_flag list;
-    setter: (t -> 'a -> (t, string) result);
-    optparser: (string -> ('a, string) result);
   }
 
   let get_defined_opts (raw_opts, config) =
@@ -198,7 +178,7 @@ module Opts = struct
     weak = false;
   }
 
-  let parse =
+  let parse_lines =
     let parse_line map (line_num, line) =
       if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0
       then
@@ -212,42 +192,57 @@ module Opts = struct
       else error line_num "Unable to parse line."
     in
 
-    fun config lines ->
+    fun lines ->
       let lines = lines
         |> List.map (fun (ln, line) -> ln, String.trim line)
         |> List.filter (fun (_, s) -> s <> "")
       in
       let raw_options = List.fold_left parse_line SMap.empty lines in
-      (raw_options, config)
+      raw_options
 
-  let define_opt key definition (raw_opts, config) =
+  (**
+    * `init` gets called on the options object immediately before
+    * parsing the *first* occurrence of the user-specified config option. This
+    * is useful in cases where the user's value should blow away the default
+    * value (rather than being aggregated to it).
+    *
+    * For example: We want the default value of 'module.file_ext' to be
+    * ['.js'; '.jsx'], but if the user specifies any 'module.file_ext'
+    * settings, we want to start from a clean list.
+    *)
+  let opt
+      (optparser: (string -> ('a, string) result))
+      ?init
+      ?(multiple=false)
+      (setter: (t -> 'a -> (t, string) result))
+      key
+      (raw_opts, config) =
     let new_raw_opts = SMap.remove key raw_opts in
 
     match SMap.get key raw_opts with
     | None -> (new_raw_opts, config)
     | Some values ->
         let config = (
-          match definition.initializer_ with
-          | USE_DEFAULT -> config
-          | INIT_FN f -> f config
+          match init with
+          | None -> config
+          | Some f -> f config
         ) in
 
         (* Error when duplicate options were incorrectly given *)
-        let allow_dupes = List.mem ALLOW_DUPLICATE definition.flags in
-        if (not allow_dupes) && (List.length values) > 1 then (
+        if (not multiple) && (List.length values) > 1 then (
           let line_num = fst (List.nth values 1) in
           error line_num (spf "Duplicate option: \"%s\"" key)
         );
 
         let config = List.fold_left (fun config (line_num, value_str) ->
           let value =
-            match definition.optparser value_str with
+            match optparser value_str with
             | Ok value -> value
             | Error msg -> error line_num (
               spf "Error parsing value for \"%s\". %s" key msg
             )
           in
-          match definition.setter config value with
+          match setter config value with
           | Ok config -> config
           | Error msg -> error line_num (
             spf "Error setting value for \"%s\". %s" key msg
@@ -255,25 +250,6 @@ module Opts = struct
         ) config values in
 
         (new_raw_opts, config)
-
-  let optparse_enum values str =
-    let values = List.fold_left map_add SMap.empty values in
-    match SMap.get str values with
-    | Some v -> Ok v
-    | None -> Error (
-        spf "Unsupported value: \"%s\". Supported values are: %s"
-          str
-          (String.concat ", " (SMap.keys values))
-      )
-
-  let optparse_boolean = optparse_enum [
-    ("true", true);
-    ("false", false);
-  ]
-
-  let optparse_uint str =
-    let v = int_of_string str in
-    if v < 0 then Error "Number cannot be negative!" else Ok v
 
   let optparse_string str =
     try Ok (Scanf.unescaped str)
@@ -291,7 +267,19 @@ module Opts = struct
       end
     | Error _ as err -> err
 
-  let optparse_esproposal_feature_flag ?(allow_enable=false) =
+  let enum values =
+    opt (fun str ->
+      let values = List.fold_left map_add SMap.empty values in
+      match SMap.get str values with
+      | Some v -> Ok v
+      | None -> Error (
+          spf "Unsupported value: \"%s\". Supported values are: %s"
+            str
+            (String.concat ", " (SMap.keys values))
+        )
+    )
+
+  let esproposal_feature_flag ?(allow_enable=false) =
     let values = [
       ("ignore", Options.ESPROPOSAL_IGNORE);
       ("warn", Options.ESPROPOSAL_WARN);
@@ -301,9 +289,9 @@ module Opts = struct
       then ("enable", Options.ESPROPOSAL_ENABLE)::values
       else values
     in
-    optparse_enum values
+    enum values
 
-  let optparse_filepath str = Ok (Path.make str)
+  let filepath = opt (fun str -> Ok (Path.make str))
 
   let optparse_mapping str =
     let regexp_str = "^'\\([^']*\\)'[ \t]*->[ \t]*'\\([^']*\\)'$" in
@@ -316,6 +304,280 @@ module Opts = struct
         "'single-quoted-string' -> 'single-quoted-string'"
       )
 
+  let boolean =
+    enum [("true", true); ("false", false)]
+
+  let string =
+    opt optparse_string
+
+  let uint =
+    opt (fun str ->
+      let v = int_of_string str in
+      if v < 0 then Error "Number cannot be negative!" else Ok v
+    )
+
+  let mapping fn =
+    opt (fun str ->
+      match optparse_mapping str with
+      | Ok x -> fn x
+      | Error _ as err -> err
+    )
+
+  let parsers = [
+    "emoji",
+      boolean (fun opts v -> Ok { opts with emoji = v });
+
+    "esproposal.class_instance_fields",
+      esproposal_feature_flag
+        ~allow_enable:true
+        (fun opts v -> Ok { opts with esproposal_class_instance_fields = v });
+
+    "esproposal.class_static_fields",
+      esproposal_feature_flag
+        ~allow_enable:true
+        (fun opts v -> Ok { opts with esproposal_class_static_fields = v });
+
+    "esproposal.decorators",
+      esproposal_feature_flag
+        (fun opts v -> Ok { opts with esproposal_decorators = v });
+
+    "esproposal.export_star_as",
+      esproposal_feature_flag
+        ~allow_enable:true
+        (fun opts v -> Ok { opts with esproposal_export_star_as = v });
+
+    "esproposal.optional_chaining",
+      esproposal_feature_flag
+        ~allow_enable:true
+        (fun opts v -> Ok { opts with esproposal_optional_chaining = v });
+
+    "esproposal.nullish_coalescing",
+      esproposal_feature_flag
+        ~allow_enable:true
+        (fun opts v -> Ok { opts with esproposal_nullish_coalescing = v });
+
+    "facebook.fbs",
+      string (fun opts v -> Ok { opts with facebook_fbs = Some v });
+
+    "facebook.fbt",
+      string (fun opts v -> Ok { opts with facebook_fbt = Some v });
+
+    "file_watcher",
+      enum
+        [
+          "none", Options.NoFileWatcher;
+          "dfind", Options.DFind;
+          "watchman", Options.Watchman;
+        ]
+        (fun opts v -> Ok { opts with file_watcher = Some v });
+
+    "include_warnings",
+      boolean (fun opts v -> Ok { opts with include_warnings = v });
+
+    "merge_timeout",
+      uint
+        (fun opts v ->
+          let merge_timeout = if v = 0 then None else Some v in
+          Ok {opts with merge_timeout}
+        );
+
+    "module.system.haste.module_ref_prefix",
+      string (fun opts v -> Ok { opts with haste_module_ref_prefix = Some v });
+
+    "module.system.haste.name_reducers",
+      mapping
+        ~init:(fun opts -> { opts with haste_name_reducers = [] })
+        ~multiple: true
+        (fun (pattern, template) -> Ok (Str.regexp pattern, template))
+        (fun opts v -> Ok {
+          opts with haste_name_reducers = v::(opts.haste_name_reducers);
+        });
+
+    "module.system.haste.paths.blacklist",
+      string
+        ~init: (fun opts -> { opts with haste_paths_blacklist = [] })
+        ~multiple: true
+        (fun opts v -> Ok {
+          opts with haste_paths_blacklist = v::(opts.haste_paths_blacklist);
+        });
+
+    "module.system.haste.paths.whitelist",
+      string
+        ~init: (fun opts -> { opts with haste_paths_whitelist = [] })
+        ~multiple: true
+        (fun opts v -> Ok {
+          opts with haste_paths_whitelist = v::(opts.haste_paths_whitelist);
+        });
+
+    "module.system.haste.use_name_reducers",
+      boolean
+        ~init: (fun opts -> { opts with haste_use_name_reducers = false })
+        (fun opts v -> Ok { opts with haste_use_name_reducers = v });
+
+    "log.file",
+      filepath (fun opts v -> Ok { opts with log_file = Some v });
+
+    "max_header_tokens",
+      uint (fun opts v -> Ok { opts with max_header_tokens = v });
+
+    "module.ignore_non_literal_requires",
+      boolean (fun opts v -> Ok { opts with ignore_non_literal_requires = v });
+
+    "module.file_ext",
+      string
+        ~init: (fun opts -> { opts with module_file_exts = SSet.empty })
+        ~multiple: true
+        (fun opts v ->
+          if String_utils.string_ends_with v Files.flow_ext
+          then Error (
+            "Cannot use file extension '" ^
+            v ^
+            "' since it ends with the reserved extension '"^
+            Files.flow_ext^
+            "'"
+          ) else
+            let module_file_exts = SSet.add v opts.module_file_exts in
+            Ok {opts with module_file_exts;}
+        );
+
+    "module.name_mapper",
+      mapping
+        ~multiple: true
+        (fun (pattern, template) -> Ok (Str.regexp pattern, template))
+        (fun opts v ->
+          let module_name_mappers = v :: opts.module_name_mappers in
+          Ok {opts with module_name_mappers;}
+        );
+
+    "module.name_mapper.extension",
+      mapping
+        ~multiple: true
+        (fun (file_ext, template) -> Ok (
+          Str.regexp ("^\\(.*\\)\\." ^ (Str.quote file_ext) ^ "$"),
+          template
+        ))
+        (fun opts v ->
+          let module_name_mappers = v :: opts.module_name_mappers in
+          Ok {opts with module_name_mappers;}
+        );
+
+    "module.resolver",
+      filepath (fun opts v -> Ok { opts with module_resolver = Some v });
+
+    "module.system",
+      enum
+        [
+          ("node", Options.Node);
+          ("haste", Options.Haste);
+        ]
+        (fun opts v -> Ok { opts with module_system = v });
+
+    "module.system.node.resolve_dirname",
+      string
+        ~init: (fun opts -> { opts with node_resolver_dirnames = [] })
+        ~multiple: true
+        (fun opts v ->
+          let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
+          Ok {opts with node_resolver_dirnames;}
+        );
+
+    "module.use_strict",
+      boolean (fun opts v -> Ok { opts with modules_are_use_strict = v });
+
+    "munge_underscores",
+      boolean (fun opts v -> Ok { opts with munge_underscores = v });
+
+    "name",
+      string
+        (fun opts v ->
+          FlowEventLogger.set_root_name (Some v);
+          Ok {opts with root_name = Some v;}
+        );
+
+    "server.max_workers",
+      uint (fun opts v -> Ok { opts with max_workers = v });
+
+    "all",
+      boolean (fun opts v -> Ok { opts with all = v });
+
+    "weak",
+      boolean (fun opts v -> Ok { opts with weak = v });
+
+    "suppress_comment",
+      string
+        ~init: (fun opts -> { opts with suppress_comments = [] })
+        ~multiple: true
+        (fun opts v ->
+          Str.split_delim version_regex v
+          |> String.concat (">=" ^ less_or_equal_curr_version)
+          |> String.escaped
+          |> Core_result.return
+          >>= optparse_regexp
+          >>= fun v -> Ok { opts with suppress_comments = v::(opts.suppress_comments) }
+        );
+
+    "suppress_type",
+      string
+        ~init: (fun opts -> { opts with suppress_types = SSet.empty })
+        ~multiple: true
+        (fun opts v -> Ok { opts with suppress_types = SSet.add v opts.suppress_types });
+
+    "temp_dir",
+      string (fun opts v -> Ok { opts with temp_dir = v });
+
+    "saved_state.fetcher",
+      enum
+        [
+          ("none", Options.Dummy_fetcher);
+          ("local", Options.Local_fetcher);
+          ("fb", Options.Fb_fetcher);
+        ]
+        (fun opts saved_state_fetcher -> Ok { opts with saved_state_fetcher });
+
+    "sharedmemory.dirs",
+      string
+        ~multiple: true
+        (fun opts v -> Ok { opts with shm_dirs = opts.shm_dirs @ [v] });
+
+    "sharedmemory.minimum_available",
+      uint (fun opts shm_min_avail -> Ok { opts with shm_min_avail });
+
+    "sharedmemory.dep_table_pow",
+      uint (fun opts shm_dep_table_pow -> Ok { opts with shm_dep_table_pow });
+
+    "sharedmemory.hash_table_pow",
+      uint (fun opts shm_hash_table_pow -> Ok { opts with shm_hash_table_pow });
+
+    "sharedmemory.heap_size",
+      uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size });
+
+    "sharedmemory.log_level",
+      uint (fun opts shm_log_level -> Ok { opts with shm_log_level });
+
+    "traces",
+      uint (fun opts v -> Ok { opts with traces = v });
+
+    "max_literal_length",
+      uint (fun opts v -> Ok { opts with max_literal_length = v });
+
+    "experimental.const_params",
+      boolean (fun opts v -> Ok { opts with enable_const_params = v });
+
+    "experimental.strict_call_arity",
+      boolean (fun opts v -> Ok { opts with enforce_strict_call_arity = v });
+
+    "experimental.well_formed_exports",
+      boolean (fun opts v -> Ok { opts with enforce_well_formed_exports = v });
+
+    "no_flowlib",
+      boolean (fun opts v -> Ok { opts with no_flowlib = v });
+  ]
+
+  let parse init lines =
+    let raw_options = parse_lines lines in
+    parsers
+    |> List.fold_left (fun acc (key, f) -> f key acc) (raw_options, init)
+    |> get_defined_opts
 end
 
 type config = {
@@ -361,25 +623,25 @@ end = struct
     List.iter (fun lib -> (fprintf o "%s\n" lib)) libs
 
   let options =
-    let opt o name value = fprintf o "%s=%s\n" name value
+    let pp_opt o name value = fprintf o "%s=%s\n" name value
 
     in let module_system = function
       | Options.Node -> "node"
       | Options.Haste -> "haste"
 
-    in fun o config -> Opts.(
+    in fun o config ->
+      let open Opts in
       let options = config.options in
       if options.module_system <> default_options.module_system
-      then opt o "module.system" (module_system options.module_system);
+      then pp_opt o "module.system" (module_system options.module_system);
       if options.all <> default_options.all
-      then opt o "all" (string_of_bool options.all);
+      then pp_opt o "all" (string_of_bool options.all);
       if options.weak <> default_options.weak
-      then opt o "weak" (string_of_bool options.weak);
+      then pp_opt o "weak" (string_of_bool options.weak);
       if options.temp_dir <> default_options.temp_dir
-      then opt o "temp_dir" options.temp_dir;
+      then pp_opt o "temp_dir" options.temp_dir;
       if options.include_warnings <> default_options.include_warnings
-      then opt o "include_warnings" (string_of_bool options.include_warnings)
-    )
+      then pp_opt o "include_warnings" (string_of_bool options.include_warnings)
 
   let lints o config =
     let open Lints in
@@ -470,8 +732,6 @@ let trim_labeled_lines lines =
   |> List.map (fun (label, line) -> (label, String.trim line))
   |> List.filter (fun (_, s) -> s <> "")
 
-let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version (Flow_version.version)
-
 (* parse [include] lines *)
 let parse_includes config lines =
   let includes = trim_lines lines in
@@ -494,504 +754,7 @@ let parse_declarations config lines =
   { config with declarations; }
 
 let parse_options config lines =
-  let open Opts in
-  let (>>=) = Core_result.(>>=) in
-  let options = parse config.options lines
-    |> define_opt "emoji" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with emoji = v;}
-      );
-    }
-
-    |> define_opt "esproposal.class_instance_fields" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
-      setter = (fun opts v -> Ok {
-        opts with esproposal_class_instance_fields = v;
-      });
-    }
-
-    |> define_opt "esproposal.class_static_fields" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
-      setter = (fun opts v -> Ok {
-        opts with esproposal_class_static_fields = v;
-      });
-    }
-
-    |> define_opt "esproposal.decorators" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_esproposal_feature_flag;
-      setter = (fun opts v -> Ok {
-        opts with esproposal_decorators = v;
-      });
-    }
-
-    |> define_opt "esproposal.export_star_as" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
-      setter = (fun opts v -> Ok {
-        opts with esproposal_export_star_as = v;
-      });
-    }
-
-    |> define_opt "esproposal.optional_chaining" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
-      setter = (fun opts v -> Ok {
-        opts with esproposal_optional_chaining = v;
-      });
-    }
-
-    |> define_opt "esproposal.nullish_coalescing" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_esproposal_feature_flag ~allow_enable:true;
-      setter = (fun opts v -> Ok {
-        opts with esproposal_nullish_coalescing = v;
-      });
-    }
-
-    |> define_opt "facebook.fbs" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with facebook_fbs = Some v;
-      });
-    }
-
-    |> define_opt "facebook.fbt" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with facebook_fbt = Some v;
-      });
-    }
-
-    |> define_opt "file_watcher" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_enum [
-        "none", Options.NoFileWatcher;
-        "dfind", Options.DFind;
-        "watchman", Options.Watchman;
-      ];
-      setter = (fun opts v -> Ok {
-        opts with file_watcher = Some v;
-      });
-    }
-
-    |> define_opt "include_warnings" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with include_warnings = v;}
-      );
-    }
-
-    |> define_opt "merge_timeout" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts v ->
-        let merge_timeout = if v = 0 then None else Some v in
-        Ok {opts with merge_timeout}
-      );
-    }
-
-    |> define_opt "module.system.haste.module_ref_prefix" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with haste_module_ref_prefix = Some v;
-      });
-    }
-
-    |> define_opt "module.system.haste.name_reducers" {
-      initializer_ = INIT_FN (fun opts -> {
-        opts with haste_name_reducers = [];
-      });
-      flags = [ALLOW_DUPLICATE];
-      optparser = (fun str ->
-        match optparse_mapping str with
-        | Ok (pattern, template) -> Ok (Str.regexp pattern, template)
-        | Error _ as err -> err
-      );
-      setter = (fun opts v -> Ok {
-        opts with haste_name_reducers = v::(opts.haste_name_reducers);
-      });
-    }
-
-    |> define_opt "module.system.haste.paths.blacklist" {
-      initializer_ = INIT_FN (fun opts -> {
-        opts with haste_paths_blacklist = [];
-      });
-      flags = [ALLOW_DUPLICATE];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with haste_paths_blacklist = v::(opts.haste_paths_blacklist);
-      });
-    }
-
-    |> define_opt "module.system.haste.paths.whitelist" {
-      initializer_ = INIT_FN (fun opts -> {
-        opts with haste_paths_whitelist = [];
-      });
-      flags = [ALLOW_DUPLICATE];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with haste_paths_whitelist = v::(opts.haste_paths_whitelist);
-      });
-    }
-
-    |> define_opt "module.system.haste.use_name_reducers" {
-      initializer_ = INIT_FN (fun opts -> {
-        opts with haste_use_name_reducers = false;
-      });
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with haste_use_name_reducers = v;}
-      );
-    }
-
-    |> define_opt "log.file" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_filepath;
-      setter = (fun opts v -> Ok {
-        opts with log_file = Some v;
-      });
-    }
-
-    |> define_opt "max_header_tokens" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts v ->
-        Ok {opts with max_header_tokens = v;}
-      );
-    }
-
-    |> define_opt "module.ignore_non_literal_requires" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with ignore_non_literal_requires = v;}
-      );
-    }
-
-    |> define_opt "module.file_ext" {
-      initializer_ = INIT_FN (fun opts -> {
-        opts with module_file_exts = SSet.empty;
-      });
-      flags = [ALLOW_DUPLICATE];
-      optparser = optparse_string;
-      setter = (fun opts v ->
-        if String_utils.string_ends_with v Files.flow_ext
-        then Error (
-          "Cannot use file extension '" ^
-          v ^
-          "' since it ends with the reserved extension '"^
-          Files.flow_ext^
-          "'"
-        ) else
-          let module_file_exts = SSet.add v opts.module_file_exts in
-          Ok {opts with module_file_exts;}
-      );
-    }
-
-    |> define_opt "module.name_mapper" {
-      initializer_ = USE_DEFAULT;
-      flags = [ALLOW_DUPLICATE];
-      optparser = (fun str ->
-        match optparse_mapping str with
-        | Ok (pattern, template) -> Ok (Str.regexp pattern, template)
-        | Error _ as err -> err
-      );
-      setter = (fun opts v ->
-        let module_name_mappers = v :: opts.module_name_mappers in
-        Ok {opts with module_name_mappers;}
-      );
-    }
-
-    |> define_opt "module.name_mapper.extension" {
-      initializer_ = USE_DEFAULT;
-      flags = [ALLOW_DUPLICATE];
-      optparser = (fun str ->
-        match optparse_mapping str with
-        | Ok (file_ext, template) -> Ok (
-            Str.regexp ("^\\(.*\\)\\." ^ (Str.quote file_ext) ^ "$"),
-            template
-          )
-        | Error _ as err -> err
-      );
-      setter = (fun opts v ->
-        let module_name_mappers = v :: opts.module_name_mappers in
-        Ok {opts with module_name_mappers;}
-      );
-    }
-
-    |> define_opt "module.resolver" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_filepath;
-      setter = (fun opts v -> Ok {
-        opts with module_resolver = Some v;
-      });
-    }
-
-    |> define_opt "module.system" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_enum [
-        ("node", Options.Node);
-        ("haste", Options.Haste);
-      ];
-      setter = (fun opts v -> Ok {
-        opts with module_system = v;
-      });
-    }
-
-    |> define_opt "module.system.node.resolve_dirname" {
-      initializer_ = INIT_FN (fun opts -> {
-        opts with node_resolver_dirnames = [];
-      });
-      flags = [ALLOW_DUPLICATE];
-      optparser = optparse_string;
-      setter = (fun opts v ->
-        let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
-        Ok {opts with node_resolver_dirnames;}
-      );
-    }
-
-    |> define_opt "module.use_strict" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with modules_are_use_strict = v;}
-      );
-    }
-
-    |> define_opt "munge_underscores" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with munge_underscores = v;}
-      );
-    }
-
-    |> define_opt "name" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_string;
-      setter = (fun opts v ->
-        FlowEventLogger.set_root_name (Some v);
-        Ok {opts with root_name = Some v;}
-      );
-    }
-
-    |> define_opt "server.max_workers" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts v ->
-        Ok {opts with max_workers = v;}
-      );
-    }
-
-    |> define_opt "all" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with all = v;}
-      );
-    }
-
-    |> define_opt "weak" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with weak = v;}
-      );
-    }
-
-    |> define_opt "suppress_comment" {
-      initializer_ = INIT_FN (fun opts ->
-        {opts with suppress_comments = [];}
-      );
-      flags = [ALLOW_DUPLICATE];
-      optparser = optparse_string;
-      setter = (fun opts v ->
-        Str.split_delim version_regex v
-        |> String.concat (">=" ^ less_or_equal_curr_version)
-        |> String.escaped
-        |> Core_result.return
-        >>= optparse_regexp
-        >>= fun v -> Ok { opts with suppress_comments = v::(opts.suppress_comments) }
-      );
-    }
-
-    |> define_opt "suppress_type" {
-      initializer_ = INIT_FN (fun opts ->
-        {opts with suppress_types = SSet.empty;}
-      );
-      flags = [ALLOW_DUPLICATE];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with suppress_types = SSet.add v opts.suppress_types;
-      });
-    }
-
-    |> define_opt "temp_dir" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with temp_dir = v;
-      });
-    }
-
-    |> define_opt "saved_state.fetcher" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_enum [
-        ("none", Options.Dummy_fetcher);
-        ("local", Options.Local_fetcher);
-        ("fb", Options.Fb_fetcher);
-      ];
-      setter = (fun opts saved_state_fetcher -> Ok {
-        opts with saved_state_fetcher;
-      });
-    }
-
-    |> define_opt "sharedmemory.dirs" {
-      initializer_ = USE_DEFAULT;
-      flags = [ALLOW_DUPLICATE];
-      optparser = optparse_string;
-      setter = (fun opts v -> Ok {
-        opts with shm_dirs = opts.shm_dirs @ [v];
-      });
-    }
-
-    |> define_opt "sharedmemory.minimum_available" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts shm_min_avail -> Ok {
-        opts with shm_min_avail;
-      });
-    }
-
-    |> define_opt "sharedmemory.dep_table_pow" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts shm_dep_table_pow -> Ok {
-        opts with shm_dep_table_pow;
-      });
-    }
-
-    |> define_opt "sharedmemory.hash_table_pow" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts shm_hash_table_pow -> Ok {
-        opts with shm_hash_table_pow;
-      });
-    }
-
-    |> define_opt "sharedmemory.heap_size" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts shm_heap_size -> Ok {
-        opts with shm_heap_size;
-      });
-    }
-
-    |> define_opt "sharedmemory.log_level" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts shm_log_level -> Ok {
-        opts with shm_log_level;
-      });
-    }
-
-    |> define_opt "traces" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts v ->
-        Ok {opts with traces = v;}
-      );
-    }
-
-    |> define_opt "max_literal_length" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_uint;
-      setter = (fun opts v ->
-        Ok {opts with max_literal_length = v;}
-      );
-    }
-
-    |> define_opt "experimental.const_params" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with enable_const_params = v;}
-      );
-    }
-
-    |> define_opt "experimental.strict_call_arity" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with enforce_strict_call_arity = v;}
-      );
-    }
-
-    |> define_opt "experimental.well_formed_exports" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with enforce_well_formed_exports = v;}
-      );
-    }
-
-    |> define_opt "no_flowlib" {
-      initializer_ = USE_DEFAULT;
-      flags = [];
-      optparser = optparse_boolean;
-      setter = (fun opts v ->
-        Ok {opts with no_flowlib = v;}
-      );
-    }
-
-    |> get_defined_opts
-  in
+  let options = Opts.parse config.options lines in
   {config with options}
 
 let parse_version config lines =
