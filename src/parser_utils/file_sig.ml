@@ -197,8 +197,10 @@ module Make
     let string_of_module_sig module_sig =
       let string_of_require_list require_list =
         let string_of_require_bindings = function
-        | BindIdent (_, name) -> "BindIdent: " ^ name
-        | BindNamed _ -> "BindNamed"
+        | BindIdent (_, name) -> Printf.sprintf "BindIdent: %s" name
+        | BindNamed name_map ->
+          Printf.sprintf "BindNamed: %s"
+            (String.concat ", " @@ SMap.ordered_keys name_map)
         in
         let string_of_require = function
         | Require {source=(_, name); bindings; _} ->
@@ -249,12 +251,8 @@ module Make
         "type_exports_star", PP.items_to_list_string 2 @@ List.map string_of_export_star module_sig.type_exports_star;
       ]
     in
-    let string_of_declare_modules _ = "TODO" in
-    let string_of_tolerable_errors _ = "TODO" in
     PP.items_to_record_string 0 [
       "module_sig", string_of_module_sig t.module_sig;
-      "declare_modules", string_of_declare_modules t.declare_modules;
-      "tolerable_errors", string_of_tolerable_errors t.tolerable_errors;
     ]
 
   let combine_nel _ a b = Some (Nel.concat (a, [b]))
