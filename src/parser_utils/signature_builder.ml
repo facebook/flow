@@ -184,21 +184,19 @@ module Signature = struct
       ) ids env
     ) named_imports env
 
-  let add_require_bindings toplevel_names require_loc source require_bindings env =
+  let rec add_require_bindings toplevel_names require_loc source ?name require_bindings env =
     let filter (_, x) = SSet.mem x toplevel_names in
     let open File_sig in
     match require_bindings with
-      | BindIdent id -> if filter id then add_env env (Entry.require require_loc id source) else env
+      | BindIdent id ->
+        if filter id then add_env env (Entry.require require_loc id ?name source) else env
       | BindNamed named_requires ->
-        SMap.fold (fun remote ids env ->
-          SMap.fold (fun local locs env ->
-            Nel.fold_left (fun env { File_sig.remote_loc; local_loc } ->
-              let id = local_loc, local in
-              let name = remote_loc, remote in
-              if filter id then add_env env (Entry.require require_loc id ~name source) else env
-            ) env locs
-          ) ids env
-        ) named_requires env
+        List.fold_left (fun env (remote, require_bindings) ->
+          let name = match name with
+            | None -> Nel.one remote
+            | Some name -> Nel.cons remote name in
+          add_require_bindings toplevel_names require_loc source ~name require_bindings env
+        ) env named_requires
 
   let add_ns_imports import_loc source kind ns_imports env =
     match ns_imports with

@@ -60,7 +60,7 @@ module Make
 
   and require_bindings =
     | BindIdent of L.t Ast_utils.ident
-    | BindNamed of imported_locs Nel.t SMap.t SMap.t
+    | BindNamed of (L.t Ast_utils.ident * require_bindings) list
 
   and module_kind =
     | CommonJS of {
@@ -198,9 +198,9 @@ module Make
       let string_of_require_list require_list =
         let string_of_require_bindings = function
         | BindIdent (_, name) -> Printf.sprintf "BindIdent: %s" name
-        | BindNamed name_map ->
+        | BindNamed named ->
           Printf.sprintf "BindNamed: %s"
-            (String.concat ", " @@ SMap.ordered_keys name_map)
+            (String.concat ", " @@ List.map (fun ((_, name), _) -> name) named)
         in
         let string_of_require = function
         | Require {source=(_, name); bindings; _} ->
@@ -753,28 +753,27 @@ module Make
       end;
       super#variable_declarator ~kind decl
 
+    method private require_pattern (pattern: (L.t, L.t) Ast.Pattern.t) =
+      match pattern with
+        | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } -> Some (BindIdent name)
+        | _, Ast.Pattern.Object { Ast.Pattern.Object.properties; _ } ->
+          let named_opt = ListUtils.fold_left_opt (fun named prop ->
+            match prop with
+              | Ast.Pattern.Object.Property (_, {
+                  Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier remote;
+                  pattern;
+                  _
+                }) ->
+                let bindings = this#require_pattern pattern in
+                Option.map bindings (fun bindings -> (remote, bindings) :: named)
+              | _ -> None
+          ) [] properties in
+          Option.map named_opt (fun named -> BindNamed named)
+        | _ -> None
+
     method private handle_require (left: (L.t, L.t) Ast.Pattern.t) (right: (L.t, L.t) Ast.Expression.t) =
       let open Ast.Expression in
-      let bindings = begin match left with
-      | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } -> Some (BindIdent name)
-      | _, Ast.Pattern.Object { Ast.Pattern.Object.properties; _ } ->
-        let add_named remote local loc acc =
-          let locals = SMap.singleton local (Nel.one loc) in
-          let combine_nel_smap a b = SMap.union a b ~combine:combine_nel in
-          SMap.add remote locals acc ~combine:combine_nel_smap
-        in
-        Some (BindNamed (List.fold_left (fun acc prop ->
-          match prop with
-          | Ast.Pattern.Object.Property (_, {
-              Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier (remote_loc, remote_name);
-              pattern = _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (local_loc, local_name); _ };
-              _
-            }) ->
-            add_named remote_name local_name { local_loc; remote_loc } acc
-          | _ -> acc
-        ) SMap.empty properties))
-      | _ -> None
-      end in
+      let bindings = this#require_pattern left in
       begin match right with
       | call_loc, Call { Call.callee; targs = _; arguments } ->
         this#handle_call call_loc callee arguments bindings
@@ -1048,7 +1047,13 @@ module Make
         then require_bindings
         else BindIdent ident'
       | BindNamed named ->
-        let named' = SMapUtils.ident_map (SMapUtils.ident_map (Nel.ident_map this#imported_locs)) named in
+        let named' = ListUtils.ident_map (fun ((remote, require_bindings) as x) ->
+          let remote' = this#ident remote in
+          let require_bindings' = this#require_bindings require_bindings in
+          if remote == remote' && require_bindings == require_bindings'
+          then x
+          else (remote', require_bindings')
+        ) named in
         if named == named'
         then require_bindings
         else BindNamed named'
@@ -1261,9 +1266,11 @@ let abstractify_locs: With_Loc.t -> With_ALoc.t =
   let abstractify_imported_locs_map =
     SMap.map (SMap.map (Nel.map abstractify_imported_locs))
   in
-  let abstractify_require_bindings = function
+  let rec abstractify_require_bindings = function
   | WL.BindIdent x -> WA.BindIdent (abstractify_fst x)
-  | WL.BindNamed map -> WA.BindNamed (abstractify_imported_locs_map map)
+  | WL.BindNamed named -> WA.BindNamed (List.map (fun (remote, require_bindings) ->
+      abstractify_fst remote, abstractify_require_bindings require_bindings
+    ) named)
   in
   let abstractify_require = function
   | WL.Require { source; require_loc; bindings } ->

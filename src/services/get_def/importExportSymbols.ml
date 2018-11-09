@@ -30,6 +30,17 @@ let find_related_symbol_from_module_kind loc = function
     let exports = List.map snd named in
     ListUtils.first_some_map (find_related_symbol_from_export loc) exports
 
+let rec find_related_symbol_from_bindings loc remote_loc bindings =
+  match bindings with
+    | BindIdent (local_loc, _) -> if_one_return_other loc remote_loc local_loc
+    | BindNamed named ->
+      let loc_records (* list of related loc *) =
+        List.fold_left (fun acc ((remote_loc, _), bindings) ->
+          (find_related_symbol_from_bindings loc remote_loc bindings)::acc
+        ) [] named
+      in
+      loc_records |> ListUtils.first_some_map (fun x -> x)
+
 let find_related_symbol_from_require loc = function
   | Import {named; _} ->
     let loc_records (* list of {remote_loc, local_loc} *) =
@@ -43,20 +54,7 @@ let find_related_symbol_from_require loc = function
       if_one_return_other loc remote_loc local_loc
     end
   | Require {bindings=Some bindings; require_loc; _} ->
-    begin match bindings with
-    | BindIdent (id_loc, _) -> if_one_return_other loc require_loc id_loc
-    | BindNamed named ->
-      let loc_records (* list of {remote_loc, local_loc} *) =
-        SMap.fold begin fun _ local_name_to_locs acc ->
-          SMap.fold begin fun _ locs acc ->
-            List.rev_append (Nel.to_list locs) acc
-          end local_name_to_locs acc
-        end named []
-      in
-      loc_records |> ListUtils.first_some_map begin fun {remote_loc; local_loc} ->
-        if_one_return_other loc remote_loc local_loc
-      end
-    end
+    find_related_symbol_from_bindings loc require_loc bindings
   | _ -> None
 
 let find_related_symbol_from_requires loc requires =

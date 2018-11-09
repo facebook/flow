@@ -83,7 +83,7 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
         }
       | Require of {
           source: L.t Ast_utils.source;
-          name: L.t Ast_utils.ident option;
+          name: L.t Ast_utils.ident Nel.t option;
         }
       | Global of local
 
@@ -117,7 +117,8 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
         | Require { source = (_, m); name } ->
           begin match name with
             | None -> spf "require('%s')" m
-            | Some (_, n) -> spf "require('%s').%s" m n
+            | Some ns ->
+              spf "require('%s').%s" m (ListUtils.to_string "." snd @@ Nel.to_list ns)
           end
         | Global local -> spf "global %s" (string_of_local local)
       in function
