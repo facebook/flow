@@ -1302,6 +1302,11 @@ and Function : sig
     predicate: ('M, 'T) Type.Predicate.t option;
     return: ('M, 'T) Type.annotation_or_hint;
     tparams: ('M, 'T) Type.ParameterDeclaration.t option;
+    (* Location of the signature portion of a function, e.g.
+     * function foo(): void {}
+     * ^^^^^^^^^^^^^^^^^^^^
+     *)
+    sig_loc: 'M;
   }
 
   and ('M, 'T) body =

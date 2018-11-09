@@ -87,6 +87,7 @@ module Functions = struct
       predicate = None;
       return = Ast.Type.Missing Loc.none;
       tparams = None;
+      sig_loc = Loc.none;
     }
 end
 

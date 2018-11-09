@@ -513,11 +513,11 @@ let program (algo : diff_algorithm)
     let open Ast.Function in
     let {
       id = id1; params = params1; body = body1; async = async1; generator = generator1;
-      predicate = predicate1; return = return1; tparams = tparams1;
+      predicate = predicate1; return = return1; tparams = tparams1; sig_loc = _;
     } = func1 in
     let {
       id = id2; params = params2; body = body2; async = async2; generator = generator2;
-      predicate = predicate2; return = return2; tparams = tparams2;
+      predicate = predicate2; return = return2; tparams = tparams2; sig_loc = _;
     } = func2 in
 
     if id1 != id2 || (* body handled below *) async1 != async2

@@ -697,7 +697,7 @@ class ['loc] mapper = object(this)
     let open Flow_ast.Function in
     let {
       id = ident; params; body; async; generator;
-      predicate; return; tparams;
+      predicate; return; tparams; sig_loc;
     } = expr in
     let ident' = map_opt this#function_identifier ident in
     let params' = this#function_params params in
@@ -709,7 +709,7 @@ class ['loc] mapper = object(this)
       && tparams == tparams' then expr
     else {
       id = ident'; params = params'; return = return'; body = body';
-      async; generator; predicate; tparams = tparams';
+      async; generator; predicate; tparams = tparams'; sig_loc;
     }
 
   method function_params (params: ('loc, 'loc) Flow_ast.Function.Params.t) =

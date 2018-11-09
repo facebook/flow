@@ -188,6 +188,7 @@ module Function = struct
     predicate = None;
     return = Ast.Type.Missing error_annot;
     tparams = None;
+    sig_loc = ALoc.none;
   }
 
 end

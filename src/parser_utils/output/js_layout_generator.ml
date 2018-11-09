@@ -1211,7 +1211,7 @@ and variable_declarator ~ctxt (loc, {
 
 and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
   params; body; async; predicate; return; tparams;
-  generator=_; id=_; (* arrows don't have ids and can't be generators *)
+  generator=_; id=_; (* arrows don't have ids and can't be generators *) sig_loc = _;
 } =
   let params_and_stuff = match params, return, predicate, tparams with
   | (_, { Ast.Function.Params.params = [(
@@ -1256,7 +1256,9 @@ and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
   ]
 
 and function_ func =
-  let { Ast.Function.id; params; body; async; generator; predicate; return; tparams; } = func in
+  let {
+    Ast.Function.id; params; body; async; generator; predicate; return; tparams; sig_loc = _;
+  } = func in
   let prefix =
     let s_func = fuse [
       Atom "function";
@@ -1350,7 +1352,7 @@ and class_method (
   let module M = Ast.Class.Method in
   let { Ast.Function.
     params; body; async; generator; predicate; return; tparams;
-    id = _; (* methods don't use id; see `key` *)
+    id = _; (* methods don't use id; see `key` *) sig_loc = _;
   } = func in
   source_location_with_comments (loc, begin
     let s_key = object_property_key key in
@@ -1583,7 +1585,7 @@ and object_property property =
   | O.Property (loc, O.Property.Method { key; value = (fn_loc, func) }) ->
     let s_key = object_property_key key in
     let { Ast.Function.
-      id; params; body; async; generator; predicate; return; tparams;
+      id; params; body; async; generator; predicate; return; tparams; sig_loc = _;
     } = func in
     assert (id = None); (* methods don't have ids, see `key` *)
     let prefix = fuse [
@@ -1599,7 +1601,7 @@ and object_property property =
     )
   | O.Property (loc, O.Property.Get { key; value = (fn_loc, func) }) ->
     let { Ast.Function.
-      id; params; body; async; generator; predicate; return; tparams;
+      id; params; body; async; generator; predicate; return; tparams; sig_loc = _;
     } = func in
     assert (id = None); (* getters don't have ids, see `key` *)
     assert (not async); (* getters can't be async *)
@@ -1617,7 +1619,7 @@ and object_property property =
     )
   | O.Property (loc, O.Property.Set { key; value = (fn_loc, func) }) ->
     let { Ast.Function.
-      id; params; body; async; generator; predicate; return; tparams;
+      id; params; body; async; generator; predicate; return; tparams; sig_loc = _;
     } = func in
     assert (id = None); (* setters don't have ids, see `key` *)
     assert (not async); (* setters can't be async *)
