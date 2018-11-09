@@ -158,17 +158,15 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
-      assert_equal ~ctxt 2 (SMap.cardinal map);
-      let foo_loc, foo_loc' = match SMap.find_unsafe "foo" map with
-      | locals when SMap.mem "foo" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "foo" locals in
-        loc, loc'
+      assert_equal ~ctxt 2 (List.length map);
+      let foo_loc, foo_loc' = match List.find_all (fun ((_, x), _) -> x = "foo") map with
+      | [(foo_loc', _), BindIdent (foo_loc, "foo")] ->
+        foo_loc, foo_loc'
       | _ -> assert_failure "Unexpected requires"
       in
-      let baz_loc, bar_loc = match SMap.find_unsafe "bar" map with
-      | locals when SMap.mem "baz" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "baz" locals in
-        loc, loc'
+      let baz_loc, bar_loc = match List.find_all (fun ((_, x), _) -> x = "bar") map with
+      | [(bar_loc, _), BindIdent (baz_loc, "baz")] ->
+        baz_loc, bar_loc
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "foo" source foo_loc;
@@ -189,17 +187,10 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
-      assert_equal ~ctxt 1 (SMap.cardinal map);
-      let bar_loc, foo_loc = match SMap.find_unsafe "foo" map with
-      | locals when SMap.mem "bar" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "bar" locals in
-        loc, loc'
-      | _ -> assert_failure "Unexpected requires"
-      in
-      let baz_loc, foo_loc' = match SMap.find_unsafe "foo" map with
-      | locals when SMap.mem "baz" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "baz" locals in
-        loc, loc'
+      assert_equal ~ctxt 2 (List.length map);
+      let bar_loc, foo_loc, baz_loc, foo_loc' = match List.find_all (fun ((_, x), _) -> x = "foo") map with
+      | [(foo_loc', _), BindIdent (baz_loc, "baz"); (foo_loc, _), BindIdent (bar_loc, "bar")] ->
+        bar_loc, foo_loc, baz_loc, foo_loc'
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "foo" source foo_loc;
@@ -220,11 +211,10 @@ let tests = "require" >::: [
       }] ->
       assert_substring_equal ~ctxt "'foo'" source source_loc;
       assert_substring_equal ~ctxt "require('foo')" source require_loc;
-      assert_equal ~ctxt 2 (SMap.cardinal map);
-      let bar_loc, baz_loc = match SMap.find_unsafe "baz" map with
-      | locals when SMap.mem "bar" locals ->
-        let { local_loc = loc; remote_loc = loc' } = Nel.hd @@ SMap.find "bar" locals in
-        loc, loc'
+      assert_equal ~ctxt 2 (List.length map);
+      let bar_loc, baz_loc = match List.find_all (fun ((_, x), _) -> x = "baz") map with
+      | [(baz_loc, _), BindIdent (bar_loc, "bar")] ->
+        bar_loc, baz_loc
       | _ -> assert_failure "Unexpected requires"
       in
       assert_substring_equal ~ctxt "bar" source bar_loc;

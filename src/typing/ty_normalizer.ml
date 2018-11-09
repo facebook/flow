@@ -1581,10 +1581,12 @@ end = struct
         ) remote_map acc
       ) map acc
 
-    let from_binding binding acc =
+    let rec from_binding binding acc =
       match binding with
       | BindIdent (loc, x) -> SMap.add x loc acc
-      | BindNamed map -> from_imported_locs_map map acc
+      | BindNamed map -> List.fold_left (fun acc (_, binding) ->
+          from_binding binding acc
+        ) acc map
 
     let from_bindings bindings_opt acc =
       Option.value_map ~default:acc ~f:(fun bs -> from_binding bs acc)

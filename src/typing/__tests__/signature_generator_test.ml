@@ -387,6 +387,13 @@ let tests = "signature_generator" >::: ([
     ["const {C: C2} = require(\"./foo\");";
      "declare module.exports: C2;"];
 
+  "require_destructured_deep" >:: mk_signature_generator_test
+    ["const { C: C2, D: { E: E2 } } = require('./foo')";
+     "declare module.exports: [ C2, E2 ]"]
+    ["const {C: C2} = require(\"./foo\");";
+     "const {D: {E: E2}} = require(\"./foo\");";
+     "declare module.exports: [C2, E2];"];
+
   "require_destructured_local_dead" >:: mk_signature_generator_test
     ["const { C: C2 } = require('./foo')";
      "declare module.exports: C"]

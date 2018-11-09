@@ -56,7 +56,7 @@ module type S = sig
         }
       | Require of {
           source: L.t Flow_ast_utils.source;
-          name: L.t Flow_ast_utils.ident option;
+          name: L.t Flow_ast_utils.ident Nel.t option;
         }
       | Global of local
 
@@ -93,7 +93,7 @@ module type S = sig
 
   val import_named: Sort.t -> L.t Flow_ast_utils.source -> L.t Flow_ast_utils.ident -> t
   val import_star: Sort.t -> L.t Flow_ast_utils.source -> t
-  val require: ?name: L.t Flow_ast_utils.ident -> L.t Flow_ast_utils.source -> t
+  val require: ?name: L.t Flow_ast_utils.ident Nel.t -> L.t Flow_ast_utils.source -> t
   val global: Dep.local -> t
 
   val reduce_join: ('a -> t) -> t -> 'a -> t

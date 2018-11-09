@@ -59,7 +59,7 @@ module T = struct
       }
     | Require of {
         source: Loc.t Ast_utils.source;
-        name: Loc.t Ast_utils.ident option;
+        name: Loc.t Ast_utils.ident Nel.t option;
       }
 
   and generic = Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
@@ -463,17 +463,33 @@ module T = struct
     } in
     match name_opt with
       | None -> id_pattern
-      | Some name ->
-        fst id, Ast.Pattern.Object {
+      | Some (name, names) ->
+        let pattern = fst name, Ast.Pattern.Object {
           Ast.Pattern.Object.properties = [
-            Ast.Pattern.Object.Property (fst id, {
+            Ast.Pattern.Object.Property (fst name, {
               Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier name;
               pattern = id_pattern;
               shorthand = (snd id = snd name);
             })
           ];
-          annot = Ast.Type.Missing (fst id);
-        }
+          annot = Ast.Type.Missing (fst name);
+        } in
+        wrap_name_pattern pattern names
+
+  and wrap_name_pattern pattern = function
+    | [] -> pattern
+    | name::names ->
+      let pattern = fst name, Ast.Pattern.Object {
+        Ast.Pattern.Object.properties = [
+          Ast.Pattern.Object.Property (fst name, {
+            Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier name;
+            pattern;
+            shorthand = false;
+          })
+        ];
+        annot = Ast.Type.Missing (fst name);
+      } in
+      wrap_name_pattern pattern names
 
   and stmt_of_decl outlined decl_loc id = function
     | Type { tparams; right; } ->

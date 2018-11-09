@@ -116,8 +116,8 @@ module type S = sig
     | BindIdent of L.t Flow_ast_utils.ident
     (* map from remote name to local names of requires
      * source: const {a, b: c} = require('./foo');
-     * result: {a: {a: [a_loc]}, b: {c: [c_loc]}} *)
-    | BindNamed of imported_locs Nel.t SMap.t SMap.t
+     * result: {a: (a_loc, a), b: (c_loc, c)} *)
+    | BindNamed of (L.t Flow_ast_utils.ident * require_bindings) list
 
   (* All modules are assumed to be CommonJS to start with, but if we see an ES
    * module-style export, we switch to ES. *)
