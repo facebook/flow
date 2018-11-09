@@ -2043,13 +2043,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         named_specifiers
         |> List.map (function { ImportDeclaration.local; remote; kind;} ->
           let (remote_name_loc, remote_name) = remote in
-          let (loc, local_name) = (
-            match local with
-            | Some local ->
-              (Loc.btwn (fst remote |> ALoc.to_loc) (fst local |> ALoc.to_loc) |> ALoc.of_loc, ident_name local)
-            | None ->
-              (fst remote, remote_name)
-          ) in
+          let (loc, local_name) = Option.value ~default:remote local in
           let imported_t =
             let import_reason =
               mk_reason (RNamedImportedType (module_name, local_name)) (fst remote)
