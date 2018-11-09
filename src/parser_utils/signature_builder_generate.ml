@@ -283,18 +283,14 @@ module T = struct
         properties = List.map (type_of_object_property outlined) (pt :: pts)
       }
     | loc, ArrayLiteral ets ->
-      loc, Ast.Type.Array (match summarize_array loc ets with
-        | None ->
-          begin match ets with
-            | et, [] -> type_of_array_element outlined et
-            | et1, et2::ets ->
-              loc, Ast.Type.Union (
-                type_of_array_element outlined et1,
-                type_of_array_element outlined et2,
-                List.map (type_of_array_element outlined) ets
-              )
-          end
-        | Some et -> type_of_expr_type outlined (loc, et)
+      loc, Ast.Type.Array (match ets with
+        | et, [] -> type_of_array_element outlined et
+        | et1, et2::ets ->
+          loc, Ast.Type.Union (
+            type_of_array_element outlined et1,
+            type_of_array_element outlined et2,
+            List.map (type_of_array_element outlined) ets
+          )
       )
 
     | loc, ValueRef reference ->
@@ -302,9 +298,18 @@ module T = struct
         Ast.Type.Generic.id = generic_id_of_reference reference;
         targs = None;
       }))
-    | loc, NumberLiteral nt -> loc, Ast.Type.NumberLiteral nt
-    | loc, StringLiteral st -> loc, Ast.Type.StringLiteral st
-    | loc, BooleanLiteral b -> loc, Ast.Type.BooleanLiteral b
+    | loc, NumberLiteral nt -> loc, Ast.Type.Generic {
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$TEMPORARY$number");
+        targs = Some (loc, [loc, Ast.Type.NumberLiteral nt])
+      }
+    | loc, StringLiteral st -> loc, Ast.Type.Generic {
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$TEMPORARY$string");
+        targs = Some (loc, [loc, Ast.Type.StringLiteral st])
+      }
+    | loc, BooleanLiteral b -> loc, Ast.Type.Generic {
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$TEMPORARY$boolean");
+        targs = Some (loc, [loc, Ast.Type.BooleanLiteral b])
+      }
     | loc, Number -> loc, Ast.Type.Number
     | loc, String -> loc, Ast.Type.String
     | loc, Boolean -> loc, Ast.Type.Boolean

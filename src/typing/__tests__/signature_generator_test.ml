@@ -152,19 +152,19 @@ let tests = "signature_generator" >::: ([
 
   "module_exports_literal" >:: mk_signature_generator_test
     ["module.exports = 'hello'"]
-    ["declare module.exports: 'hello';"];
+    ["declare module.exports: $TEMPORARY$string<'hello'>;"];
 
   "module_exports_object" >:: mk_signature_generator_test
     ["module.exports = { x: 'hello' }"]
-    ["declare module.exports: {|x: 'hello'|};"];
+    ["declare module.exports: {|x: $TEMPORARY$string<'hello'>|};"];
 
   "module_exports_array_one" >:: mk_signature_generator_test
     ["module.exports = ['hello']"]
-    ["declare module.exports: Array<'hello'>;"];
+    ["declare module.exports: Array<$TEMPORARY$string<'hello'>>;"];
 
   "module_exports_array_many" >:: mk_signature_generator_test
     ["module.exports = ['hello', 42]"]
-    ["declare module.exports: Array<'hello' | 42>;"];
+    ["declare module.exports: Array<$TEMPORARY$string<'hello'> | $TEMPORARY$number<42>>;"];
 
   "module_exports_class_expression" >:: mk_signature_generator_test
     ["module.exports = class { m(x: number): number { return x; } }"]
@@ -506,18 +506,27 @@ let tests = "signature_generator" >::: ([
 
   "array_summary_number" >:: mk_signature_generator_test
     ["module.exports = [1, 2, 3]"]
-    ["declare module.exports: Array<number>;"];
+    ["declare module.exports: Array<";
+     "  | $TEMPORARY$number<1>";
+     "  | $TEMPORARY$number<2>";
+     "  | $TEMPORARY$number<3>>;"];
 
   "array_summary_array" >:: mk_signature_generator_test
     ["module.exports = [[1, 2], [3]]"]
-    ["declare module.exports: Array<Array<number>>;"];
+    ["declare module.exports: Array<";
+     "  | Array<$TEMPORARY$number<1> | $TEMPORARY$number<2>>";
+     "  | Array<$TEMPORARY$number<3>>>;"];
 
   "array_summary_object" >:: mk_signature_generator_test
     ["module.exports = [{ x: 1 }, { x: 2 }]"]
-    ["declare module.exports: Array<{|x: number|}>;"];
+    ["declare module.exports: Array<";
+     "  | {|x: $TEMPORARY$number<1>|}";
+     "  | {|x: $TEMPORARY$number<2>|}>;"];
 
   "array_summary_object_array" >:: mk_signature_generator_test
     ["module.exports = [{ x: [1, 2] }, { x: [3] }]"]
-    ["declare module.exports: Array<{|x: Array<number>|}>;"];
+    ["declare module.exports: Array<";
+     "  | {|x: Array<$TEMPORARY$number<1> | $TEMPORARY$number<2>>|}";
+     "  | {|x: Array<$TEMPORARY$number<3>>|}>;"];
 
 ] @ verified_signature_generator_tests)
