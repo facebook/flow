@@ -15,12 +15,12 @@ module type S = sig
       | ExpectedSort of Sort.t * string * L.t
       | ExpectedAnnotation of L.t
       | InvalidTypeParamUse of L.t
-      | UnexpectedObjectKey of L.t
-      | UnexpectedObjectSpread of L.t
-      | UnexpectedArraySpread of L.t
-      | UnexpectedArrayHole of L.t
-      | EmptyArray of L.t
-      | EmptyObject of L.t
+      | UnexpectedObjectKey of L.t (* object loc *) * L.t (* key loc *)
+      | UnexpectedObjectSpread of L.t (* object loc *) * L.t (* spread loc *)
+      | UnexpectedArraySpread of L.t (* array loc *) * L.t (* spread loc *)
+      | UnexpectedArrayHole of L.t (* array loc *)
+      | EmptyArray of L.t (* array loc *)
+      | EmptyObject of L.t (* object loc *)
       | UnexpectedExpression of L.t * Flow_ast_utils.ExpressionSort.t
       | SketchyToplevelDef of L.t
       | TODO of string * L.t

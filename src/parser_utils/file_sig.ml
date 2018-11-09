@@ -1168,21 +1168,24 @@ module Make
             if loc == loc'
             then tolerable_error
             else SignatureVerificationError (InvalidTypeParamUse loc')
-          | UnexpectedObjectKey loc ->
+          | UnexpectedObjectKey (loc, key_loc) ->
             let loc' = this#loc loc in
-            if loc == loc'
+            let key_loc' = this#loc key_loc in
+            if loc == loc' && key_loc == key_loc'
             then tolerable_error
-            else SignatureVerificationError (UnexpectedObjectKey loc')
-          | UnexpectedObjectSpread loc ->
+            else SignatureVerificationError (UnexpectedObjectKey (loc', key_loc'))
+          | UnexpectedObjectSpread (loc, spread_loc) ->
             let loc' = this#loc loc in
-            if loc == loc'
+            let spread_loc' = this#loc spread_loc in
+            if loc == loc' && spread_loc == spread_loc'
             then tolerable_error
-            else SignatureVerificationError (UnexpectedObjectSpread loc')
-          | UnexpectedArraySpread loc ->
+            else SignatureVerificationError (UnexpectedObjectSpread (loc', spread_loc'))
+          | UnexpectedArraySpread (loc, spread_loc) ->
             let loc' = this#loc loc in
-            if loc == loc'
+            let spread_loc' = this#loc spread_loc in
+            if loc == loc' && spread_loc == spread_loc'
             then tolerable_error
-            else SignatureVerificationError (UnexpectedArraySpread loc')
+            else SignatureVerificationError (UnexpectedArraySpread (loc', spread_loc'))
           | UnexpectedArrayHole loc ->
             let loc' = this#loc loc in
             if loc == loc'
