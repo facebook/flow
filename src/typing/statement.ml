@@ -386,14 +386,7 @@ and statement_decl cx = Ast.Statement.(
 
         | ImportDeclaration.ImportNamedSpecifiers named_specifiers ->
           List.iter (fun { ImportDeclaration.local; remote; kind;} ->
-            let remote_name = ident_name remote in
-            let (local_name, loc) = (
-              match local with
-              | Some local ->
-                (ident_name local, Loc.btwn (fst remote |> ALoc.to_loc) (fst local |> ALoc.to_loc) |> ALoc.of_loc)
-              | None ->
-                (remote_name, fst remote)
-            ) in
+            let (loc, local_name) = Option.value ~default:remote local in
             let isType = isType || (
               match kind with
               | None -> isType

@@ -49,9 +49,9 @@ Cannot reference type `ClassFoo2T` [1] from a value position.
            ^^^^^^^^^^
 
 References:
-   import_typeof.js:20:16
+   import_typeof.js:20:29
    20| import typeof {ClassFoo2 as ClassFoo2T} from "./ExportNamed_Class";
-                      ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                                   ^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:35:22
