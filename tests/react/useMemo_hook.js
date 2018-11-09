@@ -14,5 +14,5 @@ import React from 'react';
 }
 
 {
-  const invalid: number = React.useMemo(() => "abc"); // Error: string iss incompatible with number
+  const invalid: number = React.useMemo(() => "abc"); // Error: string is incompatible with number
 }
