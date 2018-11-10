@@ -3635,66 +3635,46 @@ References:
                                             ^^^ [7]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:16:42
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:16:62
 
-Cannot assign `React.useRef(...)` to `stringValue` because number [1] is incompatible with string [2] in property
-`current`.
+Cannot call `React.useRef` with `123` bound to `initialValue` because number [1] is incompatible with string [2].
 
-   useRef_hook.js:16:42
-   16|   const stringValue: {current: string} = React.useRef(123); // Error: number is incompatible with string in property current
-                                                ^^^^^^^^^^^^^^^^^
+   useRef_hook.js:16:62
+   16|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
+                                                                    ^^^ [1]
 
 References:
-   useRef_hook.js:16:55
-   16|   const stringValue: {current: string} = React.useRef(123); // Error: number is incompatible with string in property current
-                                                             ^^^ [1]
    useRef_hook.js:16:32
-   16|   const stringValue: {current: string} = React.useRef(123); // Error: number is incompatible with string in property current
+   16|   const stringValue: {current: string | null} = React.useRef(123); // Error: number is incompatible with string in property current
                                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:17:42
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:17:62
 
-Cannot assign `React.useRef(...)` to `numberValue` because string [1] is incompatible with number [2] in property
-`current`.
+Cannot call `React.useRef` with `"abc"` bound to `initialValue` because string [1] is incompatible with number [2].
 
-   useRef_hook.js:17:42
-   17|   const numberValue: {current: number} = React.useRef("abc"); // Error: string is incompatible with number in property current
-                                                ^^^^^^^^^^^^^^^^^^^
+   useRef_hook.js:17:62
+   17|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
+                                                                    ^^^^^ [1]
 
 References:
-   useRef_hook.js:17:55
-   17|   const numberValue: {current: number} = React.useRef("abc"); // Error: string is incompatible with number in property current
-                                                             ^^^^^ [1]
    useRef_hook.js:17:32
-   17|   const numberValue: {current: number} = React.useRef("abc"); // Error: string is incompatible with number in property current
+   17|   const numberValue: {current: number | null} = React.useRef("abc"); // Error: string is incompatible with number in property current
                                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:18:38
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:18:51
 
-Cannot assign `React.useRef(...)` to `nullValue` because boolean [1] is incompatible with null [2] in property
-`current`.
+Cannot call `React.useRef` with `true` bound to `initialValue` because boolean [1] is incompatible with null [2].
 
-   useRef_hook.js:18:38
-   18|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
-                                            ^^^^^^^^^^^^^^^^^^
-
-References:
    useRef_hook.js:18:51
    18|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
                                                          ^^^^ [1]
+
+References:
    useRef_hook.js:18:30
    18|   const nullValue: {current: null} = React.useRef(true); // Error: boolean is incompatible with null in property current
                                     ^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:22:42
-
-Cannot resolve name `useRef`.
-
-   22|   const stringValue: {current: string} = useRef();
-                                                ^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------- useRef_hook.js:24:25
@@ -3707,24 +3687,21 @@ Cannot assign `123` to `stringValue.current` because number [1] is incompatible 
 
 References:
    useRef_hook.js:22:32
-   22|   const stringValue: {current: string} = useRef();
+   22|   const stringValue: {current: string | null} = React.useRef();
                                       ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- useRef_hook.js:32:31
+Error --------------------------------------------------------------------------------------------- useRef_hook.js:32:51
 
-Cannot assign `React.useRef(...)` to `foo` because `Bar` [1] is incompatible with `Foo` [2] in property `current`.
+Cannot call `React.useRef` with `new Bar()` bound to `initialValue` because `Bar` [1] is incompatible with `Foo` [2].
 
-   useRef_hook.js:32:31
-   32|   const foo: {current: Foo} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
-                                     ^^^^^^^^^^^^^^^^^^^^^^^
+   useRef_hook.js:32:51
+   32|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+                                                         ^^^^^^^^^ [1]
 
 References:
-   useRef_hook.js:32:44
-   32|   const foo: {current: Foo} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
-                                                  ^^^^^^^^^ [1]
    useRef_hook.js:32:24
-   32|   const foo: {current: Foo} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
+   32|   const foo: {current: Foo | null} = React.useRef(new Bar()); // Error: Bar is incompatible with Foo in property current
                               ^^^ [2]
 
 
@@ -3760,7 +3737,7 @@ References:
 
 
 
-Found 233 errors
+Found 232 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
