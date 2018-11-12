@@ -684,6 +684,12 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((14, 15), "5")] ~source ~expected:"(function() { 5; })"
     ~mapper:(new useless_mapper)
   end;
+  "function_id" >:: begin fun ctxt ->
+    let source = "(function rename() { return; })" in
+    assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed")] ~source
+    ~expected:"(function gotRenamed() { return; })"
+    ~mapper:(new useless_mapper)
+  end;
   "function_rest" >:: begin fun ctxt ->
     let source = "(function(...rename) { return; })" in
     assert_edits_equal ctxt ~edits:[(13, 19), "gotRenamed"] ~source
@@ -703,11 +709,18 @@ let tests = "ast_differ" >::: [
     ~expected:"(function(gotRenamed, dontRename, gotRenamed) { return; })"
     ~mapper:(new useless_mapper)
   end;
+  "function_type_params" >:: begin fun ctxt ->
+    let source = "(function<RENAME>() { return; })" in
+    assert_edits_equal ctxt ~edits:[(10, 16), "GOT_RENAMED"] ~source
+    ~expected:"(function<GOT_RENAMED>() { return; })"
+    ~mapper:(new useless_mapper)
+  end;
   "function_combo" >:: begin fun ctxt ->
-    let source = "(function(rename): Rename { return 4; })" in
+    let source = "(function rename<RENAME>(rename): Rename { return 4; })" in
     assert_edits_equal ctxt ~source
-    ~edits:[((10, 16), "gotRenamed"); ((17, 25), ": GotRenamed"); ((35, 36), "5")]
-    ~expected:"(function(gotRenamed): GotRenamed { return 5; })"
+    ~edits:[((10, 16), "gotRenamed"); ((17, 23), "GOT_RENAMED"); ((25, 31), "gotRenamed");
+      ((32, 40), ": GotRenamed"); ((50, 51), "5")]
+    ~expected:"(function gotRenamed<GOT_RENAMED>(gotRenamed): GotRenamed { return 5; })"
     ~mapper:(new useless_mapper)
   end;
   "arrow_function" >:: begin fun ctxt ->
