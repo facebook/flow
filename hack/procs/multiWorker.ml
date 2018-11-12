@@ -7,7 +7,8 @@
  *
  *)
 
-open Hh_core
+module Hh_bucket = Bucket
+open Core_kernel
 
 (* Hide the worker type from our users *)
 type worker = WorkerController.worker
@@ -22,17 +23,17 @@ let single_threaded_call_with_worker_id job merge neutral next =
    * mode.
    *)
   let _ = Marshal.to_string job [Marshal.Closures] in
-  while !x <> Bucket.Done do
+  while !x <> Hh_bucket.Done do
     match !x with
-    | Bucket.Wait ->
+    | Hh_bucket.Wait ->
         (* this state should never be reached in single threaded mode, since
            there is no hope for ever getting out of this state *)
         failwith "stuck!"
-    | Bucket.Job l ->
+    | Hh_bucket.Job l ->
       let res = job neutral l in
       acc := merge (0, res) !acc;
       x := next()
-    | Bucket.Done -> ()
+    | Hh_bucket.Done -> ()
   done;
   !acc
 
@@ -50,7 +51,7 @@ module type CALLER = sig
     ('c -> 'a -> 'b) ->
     (WorkerController.worker_id * 'b -> 'c -> 'c) ->
     'c ->
-    'a Bucket.next ->
+    'a Hh_bucket.next ->
     'c result
 end
 
@@ -59,7 +60,7 @@ module CallFunctor(Caller: CALLER): sig
     WorkerController.worker list option ->
     job:('c -> 'a -> 'b) ->
     merge:(WorkerController.worker_id * 'b -> 'c -> 'c) -> neutral:'c ->
-    next:'a Bucket.next ->
+    next:'a Hh_bucket.next ->
     'c Caller.result
 end = struct
   let call workers ~job ~merge ~neutral ~next =
@@ -96,7 +97,7 @@ let call_with_interrupt ?on_cancelled workers ~job ~merge ~neutral ~next ~interr
       interrupt
 
 let next ?progress_fn ?max_size workers =
-  Bucket.make
+  Hh_bucket.make
     ~num_workers: (match workers with Some w -> List.length w | None -> 1)
     ?progress_fn
     ?max_size

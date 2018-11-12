@@ -7,6 +7,8 @@
  *
  *)
 
+module Hh_bucket = Bucket
+
 let report_canceled_callback = ref (fun ~total:_ ~finished:_ -> ())
 let set_report_canceled_callback callback = report_canceled_callback := callback
 let report_canceled ~total ~finished = (!report_canceled_callback) ~total ~finished
@@ -22,7 +24,7 @@ include MultiWorker.CallFunctor (struct
     (job: c -> a -> b)
     (merge: WorkerController.worker_id * b -> c -> c)
     (neutral: c)
-    (next: a Bucket.next) =
+    (next: a Hh_bucket.next) =
 
     let acc = ref neutral in
 
@@ -47,9 +49,9 @@ include MultiWorker.CallFunctor (struct
     (* Returns None if there will never be any more jobs *)
     let rec get_job () =
       match next () with
-      | Bucket.Job bucket -> Lwt.return (Some bucket)
-      | Bucket.Done -> Lwt.return None
-      | Bucket.Wait ->
+      | Hh_bucket.Job bucket -> Lwt.return (Some bucket)
+      | Hh_bucket.Done -> Lwt.return None
+      | Hh_bucket.Wait ->
         let%lwt () = Lwt_condition.wait wait_signal in
         get_job ()
     in
@@ -120,7 +122,7 @@ let call workers ~job ~merge ~neutral ~next =
 type worker = WorkerController.worker
 
 let next ?progress_fn ?max_size workers =
-  Bucket.make
+  Hh_bucket.make
     ~num_workers: (match workers with Some w -> List.length w | None -> 1)
     ?progress_fn
     ?max_size
