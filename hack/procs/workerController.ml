@@ -7,7 +7,7 @@
  *
  *)
 
-open Hh_core
+open Core_kernel
 open Worker
 
 (*****************************************************************************
@@ -57,9 +57,9 @@ let failure_to_string f = match f with
   | Worker_oomed -> "Worker_oomed"
   | Worker_quit s -> Printf.sprintf "(Worker_quit %s)" (status_string s)
 
-let () = Printexc.register_printer @@ function
+let () = Caml.Printexc.register_printer @@ function
   | Worker_failed_to_send_job Other_send_job_failure exn ->
-    Some (Printf.sprintf "Other_send_job_failure: %s" (Printexc.to_string exn))
+    Some (Printf.sprintf "Other_send_job_failure: %s" (Exn.to_string exn))
   | Worker_failed_to_send_job Worker_already_exited status ->
     Some (Printf.sprintf "Worker_already_exited: %s" (status_string status))
   | Worker_failed (id, failure) ->
@@ -466,13 +466,13 @@ let select ds additional_fds =
     else
       Sys_utils.select_non_intr (fds @ additional_fds) [] [] ~-.1. in
   let additional_ready_fds =
-    List.filter ~f:(List.mem ready_fds) additional_fds in
+    List.filter ~f:(List.mem ~equal:(=) ready_fds) additional_fds in
   List.fold_right
     ~f:(fun d acc ->
       match snd !d with
       | Cached _ | Canceled | Failed _ ->
           { acc with readys = d :: acc.readys }
-      | Processing s when List.mem ready_fds s.infd ->
+      | Processing s when List.mem ~equal:(=) ready_fds s.infd ->
           { acc with readys = d :: acc.readys }
       | Processing _ ->
           { acc with waiters = d :: acc.waiters})
