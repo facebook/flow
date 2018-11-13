@@ -68,8 +68,8 @@ References:
    api.js:14:25
     14| Children.forEach(a, (x: number) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:255:38
-   255|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:257:38
+   257|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
 
 
@@ -90,8 +90,8 @@ References:
    api.js:16:25
     16| Children.forEach(a, (x: string) => {}); // Error
                                 ^^^^^^ [2]
-   <BUILTINS>/react.js:255:38
-   255|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   <BUILTINS>/react.js:257:38
+   257|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                              ^ [3]
    api.js:5:25
      5| const a: ChildrenArray<?number> = [
@@ -107,8 +107,8 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:267:42
-   267|     count(children: ChildrenArray<any>): number;
+   <BUILTINS>/react.js:269:42
+   269|     count(children: ChildrenArray<any>): number;
                                                  ^^^^^^ [1]
    api.js:29:15
     29| function s(x: string) {}
