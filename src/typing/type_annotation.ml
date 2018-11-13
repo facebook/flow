@@ -584,6 +584,10 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$ComposeReverse" ->
       mk_custom_fun cx loc targs ident (Compose true)
 
+  | "React$AbstractComponent" ->
+      check_type_arg_arity cx loc targs 3 (fun () ->
+        error_type cx loc (FlowError.EAbstractComponentNotYetSupported loc)
+      )
   | "React$PropType$Primitive" ->
       check_type_arg_arity cx loc targs 1 (fun () ->
         let ts, targs = convert_type_params () in
