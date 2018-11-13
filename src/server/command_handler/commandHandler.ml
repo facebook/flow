@@ -332,7 +332,7 @@ let handle_ephemeral_deferred_unsafe
   in
   let options = genv.ServerEnv.options in
   let workers = genv.ServerEnv.workers in
-  Hh_logger.debug "Request: %s" (ServerProt.Request.to_string command);
+  Hh_logger.info "Request: %s" (ServerProt.Request.to_string command);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
@@ -512,7 +512,7 @@ let handle_ephemeral_immediately_unsafe
     MonitorRPC.respond_to_request ~request_id ~response:msg
 
   in
-  Hh_logger.debug "Request: %s" (ServerProt.Request.to_string command);
+  Hh_logger.info "Request: %s" (ServerProt.Request.to_string command);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
@@ -1048,7 +1048,7 @@ let handle_persistent
     (request: Persistent_connection_prot.request)
   : ServerEnv.env Lwt.t =
   let open Persistent_connection_prot in
-  Hh_logger.debug "Persistent request: %s" (string_of_request request);
+  Hh_logger.info "Persistent request: %s" (string_of_request request);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
   match Persistent_connection.get_client env.connections client_id with
