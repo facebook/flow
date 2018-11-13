@@ -171,6 +171,7 @@ type error_message =
   | EDeprecatedCallSyntax of ALoc.t
   | EUnexpectedTemporaryBaseType of ALoc.t
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
+  | EAbstractComponentNotYetSupported of ALoc.t
 
 and binding_error =
   | ENameAlreadyBound
@@ -399,6 +400,7 @@ let util_use_op_of_msg nope util = function
 | EDeprecatedCallSyntax _
 | EUnexpectedTemporaryBaseType _
 | ESignatureVerification _
+| EAbstractComponentNotYetSupported _
   -> nope
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
@@ -1882,6 +1884,9 @@ let rec error_of_msg ~trace_reasons ~source_file =
           text (spf "TODO: %s is not supported yet, try using a type cast." msg)
         ]
     end
+
+  | EAbstractComponentNotYetSupported loc ->
+      mk_error ~trace_infos loc [text "React$AbstractComponent is not supported yet."]
 
   | EUnreachable loc ->
     mk_error ~trace_infos ~kind:InferWarning loc
