@@ -1,0 +1,23 @@
+(library
+  (name procs_bucket)
+  (wrapped false)
+  (modules
+    bucket)
+  (libraries
+    imported_core))
+
+(library
+  (name procs_multi_worker)
+  (wrapped false)
+  (modules
+    mem_profile
+    multiThreadedCall
+    multiWorker
+    worker
+    workerController)
+  (libraries
+    heap_shared_mem
+    marshal_tools
+    procs_bucket
+    sys_utils
+    worker_cancel))
