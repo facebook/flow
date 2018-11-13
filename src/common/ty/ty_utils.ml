@@ -109,3 +109,58 @@ let symbols_of_t : Ty.t -> Ty_symbol.symbol list =
     method! on_symbol _env s = [s]
   end in
   fun t -> o#on_t () t
+
+(* Simplify union/intersection types
+
+   This visitor:
+   - removes identical nodes from union and intersection types. (At the moment
+     the comparison used is `Pervasives.compare`, but perhaps something more
+     clever can replace this.)
+   - removes the neutral element for union (resp. intersection) types, which
+     is the bottom (resp. top) type.
+
+   The Any state of this visitor is used to capture any change to the type
+   structure.
+*)
+let simplify_unions_inters =
+  let open Ty in
+  let simplify_zero_one ~zero ~one =
+    let rec simplify_aux acc = function
+    | [] -> acc
+    | t::ts ->
+      if t = zero then [t]
+      else if t = one then simplify_aux acc ts
+      else simplify_aux (t::acc) ts
+    in
+    simplify_aux []
+  in
+  let o = object (self)
+    inherit [_] endo_ty
+    method private simplify env ~break ~zero ~one ~make ts =
+      let ts' = self#on_list self#on_t env ts in
+      let ts' = List.concat (List.map break ts') in
+      let ts' = List.sort Pervasives.compare ts' in
+      let ts' = ListUtils.uniq ts' in
+      let ts' = simplify_zero_one ~zero ~one ts' in
+      if List.length ts = List.length ts'
+      then None (* no change *)
+      else Some (make ts')
+
+    method! on_t env t =
+      match t with
+      | Union (t0,t1,ts) ->
+        let opt = self#simplify ~break:Ty.bk_union ~zero:Ty.Top
+          ~one:Ty.Bot ~make:Ty.mk_union env (t0::t1::ts) in
+        Option.value ~default:t opt
+      | Inter (t0,t1,ts) ->
+        let opt = self#simplify ~break:Ty.bk_inter ~zero:Ty.Bot
+          ~one:Ty.Top ~make:Ty.mk_inter env (t0::t1::ts) in
+        Option.value ~default:t opt
+      (* WARNING: do not descend to other constructors or this will get slow *)
+      | _ -> t
+  end in
+  let rec go t =
+    let t' = o#on_t () t in
+    if t == t' then t else go t'
+  in
+  fun t -> go t

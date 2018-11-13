@@ -282,66 +282,11 @@ end = struct
   (* Type ops   *)
   (**************)
 
-  (* Simplify union/intersection types
-
-     This visitor:
-     - removes identical nodes from union and intersection types. (At the moment
-       the comparison used is `Pervasives.compare`, but perhaps something more
-       clever can replace this.)
-     - removes the neutral element for union (resp. intersection) types, which
-       is the bottom (resp. top) type.
-
-     The Any state of this visitor is used to capture any change to the type
-     structure.
-  *)
-  let simplify_unions_inters =
-    let open Ty in
-    let simplify_zero_one ~zero ~one =
-      let rec simplify_aux acc = function
-      | [] -> acc
-      | t::ts ->
-        if t = zero then [t]
-        else if t = one then simplify_aux acc ts
-        else simplify_aux (t::acc) ts
-      in
-      simplify_aux []
-    in
-    let o = object (self)
-      inherit [_] endo_ty
-      method private simplify env ~break ~zero ~one ~make ts =
-        let ts' = self#on_list self#on_t env ts in
-        let ts' = List.concat (List.map break ts') in
-        let ts' = List.sort Pervasives.compare ts' in
-        let ts' = ListUtils.uniq ts' in
-        let ts' = simplify_zero_one ~zero ~one ts' in
-        if List.length ts = List.length ts'
-        then None (* no change *)
-        else Some (make ts')
-
-      method! on_t env t =
-        match t with
-        | Union (t0,t1,ts) ->
-          let opt = self#simplify ~break:Ty.bk_union ~zero:Ty.Top
-            ~one:Ty.Bot ~make:Ty.mk_union env (t0::t1::ts) in
-          Option.value ~default:t opt
-        | Inter (t0,t1,ts) ->
-          let opt = self#simplify ~break:Ty.bk_inter ~zero:Ty.Bot
-            ~one:Ty.Top ~make:Ty.mk_inter env (t0::t1::ts) in
-          Option.value ~default:t opt
-        (* WARNING: do not descend to other constructors or this will get slow *)
-        | _ -> t
-    end in
-    let rec go t =
-      let t' = o#on_t () t in
-      if t == t' then t else go t'
-    in
-    fun t -> go t
-
   (* We wrap the union and intersection constructors with the following
      functions that keep types as small as possible.
   *)
-  let uniq_union ts = ts |> Ty.mk_union |> simplify_unions_inters
-  let uniq_inter ts = ts |> Ty.mk_inter |> simplify_unions_inters
+  let uniq_union ts = ts |> Ty.mk_union |> Ty_utils.simplify_unions_inters
+  let uniq_inter ts = ts |> Ty.mk_inter |> Ty_utils.simplify_unions_inters
 
   let generic_class name targs =
     Ty.mk_generic_class name targs
@@ -498,7 +443,7 @@ end = struct
       (* Recursive, but still might be a degenerate case *)
       let t' = remove_toplevel_tvar i t in
       let changed = not (t == t') in
-      let t' = if changed then simplify_unions_inters t' else t' in
+      let t' = if changed then Ty_utils.simplify_unions_inters t' else t' in
       (* If not changed then all free_vars are still in, o.w. recompute free vars *)
       mk_mu ~definitely_appears:(not changed) i t'
   end
@@ -537,7 +482,7 @@ end = struct
     let run vs ts t =
       let env = init_env vs ts in
       let t' = visitor#on_t env t in
-      if t != t' then simplify_unions_inters t' else t'
+      if t != t' then Ty_utils.simplify_unions_inters t' else t'
   end
 
   (***********************)
