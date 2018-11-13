@@ -1,2 +1,0 @@
-/* @flow */
-`foo bar`;

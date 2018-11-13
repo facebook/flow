@@ -1,0 +1,180 @@
+react_component.js:3:9 = {
+  "type":"{|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<$NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>}, +ChildrenArray: type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T, +Component: class React$Component<Props, State = void>, +ComponentType: type ComponentType<P> = React$ComponentType<P>, +ConcurrentMode: ({children: ?React$Node}) => React$Node, +Context: type Context<T> = React$Context<T>, +DOM: any, +Element: type Element<+C> = React$Element<C>, +ElementConfig: type ElementConfig<C> = React$ElementConfig<C>, +ElementProps: type ElementProps<C> = React$ElementProps<C>, +ElementRef: type ElementRef<C> = React$ElementRef<C>, +ElementType: type ElementType = React$ElementType, +Fragment: ({children: ?React$Node}) => React$Node, +Key: type Key = React$Key, +Node: type Node = React$Node, +Portal: type Portal = React$Portal, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +Ref: type Ref<C> = React$Ref<C>, +StatelessFunctionalComponent: type StatelessFunctionalComponent<P> = React$StatelessFunctionalComponent<P>, +StrictMode: ({children: ?React$Node}) => React$Node, +checkPropTypes: <V>(propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T, calculateChangedBits: ?((a: T, b: T) => number)) => React$Context<T>, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <T>() => {current: (null | T)}, +default: {|+Children: {+count: (children: ChildrenArray<any>) => number, +forEach: <T>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg?: mixed) => void, +map: <T, U>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg?: mixed) => Array<$NonMaybeType<U>>, +only: <T>(children: ChildrenArray<T>) => $NonMaybeType<T>, +toArray: <T>(children: ChildrenArray<T>) => Array<$NonMaybeType<T>>}, +Component: class React$Component<Props, State = void>, +ConcurrentMode: ({children: ?React$Node}) => React$Node, +DOM: any, +Fragment: ({children: ?React$Node}) => React$Node, +PropTypes: ReactPropTypes, +PureComponent: class React$PureComponent<Props, State = void>, +StrictMode: ({children: ?React$Node}) => React$Node, +checkPropTypes: <V>(propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>, values: V, location: string, componentName: string, getStack: ?(() => ?string)) => void, +cloneElement: React$CloneElement, +createClass: React$CreateClass, +createContext: <T>(defaultValue: T, calculateChangedBits: ?((a: T, b: T) => number)) => React$Context<T>, +createElement: React$CreateElement, +createFactory: <ElementType: React$ElementType>(type: ElementType) => React$ElementFactory<ElementType>, +createRef: <T>() => {current: (null | T)}, +isValidElement: (element: any) => boolean, +useCallback: <T>(callback: () => (T | void), inputs: ?$ReadOnlyArray<mixed>) => T, +useContext: <T>(context: React$Context<T>, observedBits: (void | number | boolean)) => T, +useEffect: (create: () => MaybeCleanUpFn, inputs: ?$ReadOnlyArray<mixed>) => void, +useImperativeMethods: <T>(ref: ?({current: (T | null)} | ((inst: (T | null)) => mixed)), create: () => T, inputs: ?$ReadOnlyArray<mixed>) => void, +useLayoutEffect: (create: () => MaybeCleanUpFn, inputs: ?$ReadOnlyArray<mixed>) => void, +useMemo: <T>(create: () => T, inputs: ?$ReadOnlyArray<mixed>) => T, +useMutationEffect: (create: () => MaybeCleanUpFn, inputs: ?$ReadOnlyArray<mixed>) => void, +useReducer: <S, A>(reducer: (S, A) => S, initialState: S, initialAction: ?A) => [S, Dispatch<A>], +useRef: <T>(initialValue: ?T) => {current: (T | null)}, +useState: <S>(initialState: ((() => S) | S)) => [S, Dispatch<BasicStateAction<S>>], +version: string|}, +isValidElement: (element: any) => boolean, +useCallback: <T>(callback: () => (T | void), inputs: ?$ReadOnlyArray<mixed>) => T, +useContext: <T>(context: React$Context<T>, observedBits: (void | number | boolean)) => T, +useEffect: (create: () => MaybeCleanUpFn, inputs: ?$ReadOnlyArray<mixed>) => void, +useImperativeMethods: <T>(ref: ?({current: (T | null)} | ((inst: (T | null)) => mixed)), create: () => T, inputs: ?$ReadOnlyArray<mixed>) => void, +useLayoutEffect: (create: () => MaybeCleanUpFn, inputs: ?$ReadOnlyArray<mixed>) => void, +useMemo: <T>(create: () => T, inputs: ?$ReadOnlyArray<mixed>) => T, +useMutationEffect: (create: () => MaybeCleanUpFn, inputs: ?$ReadOnlyArray<mixed>) => void, +useReducer: <S, A>(reducer: (S, A) => S, initialState: S, initialAction: ?A) => [S, Dispatch<A>], +useRef: <T>(initialValue: ?T) => {current: (T | null)}, +useState: <S>(initialState: ((() => S) | S)) => [S, Dispatch<BasicStateAction<S>>], +version: string|}",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":7,"offset":16},
+    "end":{"line":3,"column":11,"offset":21}
+  },
+  "path":"react_component.js",
+  "line":3,
+  "endline":3,
+  "start":7,
+  "end":11
+}
+react_component.js:13:33 = {
+  "type":"class React$Component<Props, State = void>",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":29,"offset":146},
+    "end":{"line":13,"column":37,"offset":155}
+  },
+  "path":"react_component.js",
+  "line":13,
+  "endline":13,
+  "start":29,
+  "end":37
+}
+react_component.js:18:17 = {
+  "type":"{|enabled: boolean|} | State",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":14,"offset":233},
+    "end":{"line":18,"column":18,"offset":238}
+  },
+  "path":"react_component.js",
+  "line":18,
+  "endline":18,
+  "start":14,
+  "end":18
+}
+react_component.js:31:7 = {
+  "expanded_type":{
+    "kind":"Fun",
+    "typeParams":null,
+    "paramTypes":[
+      {
+        "kind":"Obj",
+        "exact":false,
+        "frozen":false,
+        "props":[
+          {
+            "kind":"NamedProp",
+            "prop":{
+              "name":"children",
+              "prop":{
+                "kind":"field",
+                "type":{
+                  "kind":"Union",
+                  "types":[
+                    {"kind":"Void"},
+                    {"kind":"Null"},
+                    {
+                      "kind":"Generic",
+                      "type":{
+                        "provenance":{"kind":"Library","loc":"[LIB] react.js:14:5,20:25"},
+                        "name":"React$Node"
+                      },
+                      "kind":"type alias"
+                    }
+                  ]
+                },
+                "polarity":"Neutral",
+                "optional":false
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "paramNames":["_"],
+    "restParam":null,
+    "returnType":{
+      "kind":"Generic",
+      "type":{
+        "provenance":{"kind":"Library","loc":"[LIB] react.js:14:5,20:25"},
+        "name":"React$Node"
+      },
+      "kind":"type alias"
+    }
+  },
+  "type":"({children: ?React$Node}) => React$Node",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":31,"column":7,"offset":435},
+    "end":{"line":31,"column":14,"offset":443}
+  },
+  "path":"react_component.js",
+  "line":31,
+  "endline":31,
+  "start":7,
+  "end":14
+}
+react_component.js:32:13 = {
+  "expanded_type":{
+    "kind":"Generic",
+    "typeArgs":[{"kind":"Num"}],
+    "type":{
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:241:42-60"},
+      "name":"ComponentType"
+    },
+    "kind":"type alias"
+  },
+  "type":"ComponentType<number>",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":13,"offset":456},
+    "end":{"line":32,"column":20,"offset":464}
+  },
+  "path":"react_component.js",
+  "line":32,
+  "endline":32,
+  "start":13,
+  "end":20
+}
+react_component.js:32:29 = {
+  "expanded_type":{
+    "kind":"TypeAlias",
+    "name":{
+      "provenance":{"kind":"Library","loc":"[LIB] react.js:241:42-60"},
+      "name":"ComponentType"
+    },
+    "typeParams":[{"name":"P","bound":null,"polarity":"Neutral"}],
+    "body":{
+      "kind":"Generic",
+      "typeArgs":[{"kind":"Bound","bound":"P"}],
+      "type":{
+        "provenance":{"kind":"Library","loc":"[LIB] react.js:153:5,154:38"},
+        "name":"React$ComponentType"
+      },
+      "kind":"type alias"
+    }
+  },
+  "type":"type ComponentType<P> = React$ComponentType<P>",
+  "reasons":[],
+  "loc":{
+    "source":"react_component.js",
+    "type":"SourceFile",
+    "start":{"line":32,"column":29,"offset":472},
+    "end":{"line":32,"column":41,"offset":485}
+  },
+  "path":"react_component.js",
+  "line":32,
+  "endline":32,
+  "start":29,
+  "end":41
+}
+react.js:2:7 = {
+  "type":"React$CreateElement",
+  "reasons":[],
+  "loc":{
+    "source":"react.js",
+    "type":"SourceFile",
+    "start":{"line":2,"column":7,"offset":33},
+    "end":{"line":2,"column":19,"offset":46}
+  },
+  "path":"react.js",
+  "line":2,
+  "endline":2,
+  "start":7,
+  "end":19
+}
