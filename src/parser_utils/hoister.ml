@@ -63,17 +63,7 @@ class ['loc] hoister = object(this)
   inherit ['loc Bindings.t, 'loc] visitor ~init:Bindings.empty as super
 
   method private add_binding entry =
-    (* `event` is a global in old IE and jsxmin lazily avoids renaming it. it
-       should be safe to shadow it, i.e. `function(event){event.target}` can be
-       renamed to `function(a){a.target}`, because code relying on the global
-       would have to have written `function(){event.target}` or
-       `function(event) {(event || window.event).target}`, both of which are
-       compatible with renaming.
-
-       TODO[jsxmin]: remove this. *)
-    let _loc, x = entry in
-    if x = "event" then () else
-      this#update_acc (Bindings.add entry)
+    this#update_acc (Bindings.add entry)
 
   (* Ignore expressions. This includes, importantly, function expressions (whose
      ids should not be hoisted). *)
