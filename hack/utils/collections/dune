@@ -1,0 +1,3 @@
+(library
+  (name collections)
+  (wrapped false))
