@@ -4,6 +4,7 @@
   (modules
     bucket)
   (libraries
+    core_kernel
     imported_core))
 
 (library
@@ -16,6 +17,7 @@
     worker
     workerController)
   (libraries
+    core_kernel
     heap_shared_mem
     marshal_tools
     procs_bucket
