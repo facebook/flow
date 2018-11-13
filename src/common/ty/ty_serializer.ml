@@ -248,7 +248,7 @@ and obj_spread_prop t =
 and arr { arr_readonly; arr_elt_t } =
   type_ arr_elt_t >>| fun t ->
   if arr_readonly
-  then builtin_from_string "ReadOnlyArray" ~targs:(Loc.none, [t])
+  then builtin_from_string "$ReadOnlyArray" ~targs:(Loc.none, [t])
   else (Loc.none, T.Array t)
 
 and type_params ts =
