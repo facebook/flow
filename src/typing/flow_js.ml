@@ -6070,6 +6070,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          surround it. *)
       rec_flow cx trace (l, GetPropT (unknown_use, reason_op, propref, tout))
 
+    | DefT (r, MixedT (Mixed_truthy | Mixed_non_maybe)), TestPropT (_, id, _, tout) ->
+      (* Special-case property tests of definitely non-null/non-void values to
+         return mixed and treat them as a hit. *)
+      Context.test_prop_hit cx id;
+      rec_flow_t cx trace (DefT (r, MixedT Mixed_everything), tout)
+
     | _, TestPropT (reason_op, id, propref, tout) ->
       (* NonstrictReturning lookups unify their result, but we don't want to
          unify with the tout tvar directly, so we create an indirection here to
@@ -6292,11 +6298,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace FlowError.(EInternal (loc, ShadowWriteComputed))
 
     (* LookupT is a non-strict lookup *)
-    | (DefT (_, NullT) |
-       ObjProtoT _ |
-       FunProtoT _ |
-       (* TODO: why would mixed appear here? *)
-       DefT (_, MixedT (Mixed_truthy | Mixed_non_maybe))),
+    | (DefT (_, NullT) | ObjProtoT _ | FunProtoT _),
       LookupT (_, NonstrictReturning (t_opt, test_opt), [], propref, action) ->
       (* don't fire
 
@@ -6313,11 +6315,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let use_op = Option.value ~default:unknown_use (use_op_of_lookup_action action) in
 
       Option.iter test_opt ~f:(fun (id, reasons) ->
-        (* TODO - as mentioned above, it's unclear why mixed is included in this case. Since you
-         * can read any property from mixed, we don't want to treat it as a miss *)
-        match l with
-        | DefT (_, MixedT _) -> Context.test_prop_hit cx id
-        | _ -> Context.test_prop_miss cx id (name_of_propref propref) reasons use_op
+        Context.test_prop_miss cx id (name_of_propref propref) reasons use_op
       );
 
       begin match t_opt with
