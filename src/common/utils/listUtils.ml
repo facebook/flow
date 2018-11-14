@@ -99,6 +99,14 @@ let first_n n lst =
 let last_n n lst =
   fold_left_for n (fun rl x -> x :: rl) [] (List.rev lst)
 
+(* split a list into a list of lists, each of length n except the last whose length is in [0, n) *)
+let bucket_n n lst =
+  let _, curr, all = List.fold_left (fun (i, curr, all) result ->
+    if i = n then 1, [result], (List.rev curr)::all
+    else i+1, result::curr, all
+  ) (0, [], []) lst in
+  List.rev ((List.rev curr)::all)
+
 (* make a list of n copies of a given value *)
 let copy_n n v =
   let rec loop acc = function
