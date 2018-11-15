@@ -9,6 +9,45 @@ open Reason
 open Type
 open React
 
+
+(* Lookup the defaultProps of a component and flow with upper depending
+ * on the given polarity.
+ *)
+let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
+  let name = "defaultProps" in
+  let reason_missing =
+    replace_reason_const (RReactDefaultProps) (reason_of_t component) in
+  let reason_prop =
+    replace_reason_const (RProperty (Some name)) reason_op in
+  (* NOTE: This is intentionally unsound. Function statics are modeled
+   * as an unsealed object and so a `GetPropT` would perform a shadow
+   * lookup since a write to an unsealed property may happen at any
+   * time. If we were to perform a shadow lookup for `defaultProps` and
+   * `defaultProps` was never written then our lookup would stall and
+   * therefore so would our props analysis. So instead we make the
+   * stateful assumption that `defaultProps` was already written to
+   * the component statics which may not always be true. *)
+  let strict = NonstrictReturning (Some
+    (DefT (reason_missing, VoidT), upper), None) in
+  let propref = Named (reason_prop, name) in
+  let action = LookupProp (unknown_use, Field (None, upper, pole)) in
+  (* Lookup the `defaultProps` property. *)
+  rec_flow cx trace (component,
+    LookupT (reason_op, strict, [], propref, action))
+
+(* Get a type for the default props of a component. If a component has no
+ * default props then either the type will be Some {||} or we will
+ * return None. *)
+let get_defaults cx trace component ~reason_op ~rec_flow =
+  match component with
+  | DefT (_, ClassT _)
+  | DefT (_, FunT _) ->
+    let tvar = Tvar.mk cx reason_op in
+    lookup_defaults cx trace component ~reason_op ~rec_flow tvar Positive;
+    Some tvar
+  (* Everything else will not have default props we should diff out. *)
+  | _ -> None
+
 let run cx trace ~use_op reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
   ~(reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t)
@@ -244,40 +283,6 @@ let run cx trace ~use_op reason_op l u
     | _ -> err_incompatible (reason_of_t component)
   in
 
-  (* Get a type for the default props of a component. If a component has no
-   * default props then either the type will be Some void or we will
-   * return None. *)
-  let get_defaults () =
-    let component = l in
-    match component with
-    | DefT (_, ClassT _)
-    | DefT (_, FunT _) ->
-      Some (Tvar.mk_where cx reason_op (fun tvar ->
-        let name = "defaultProps" in
-        let reason_missing =
-          replace_reason_const (RMissingProperty (Some name)) reason_op in
-        let reason_prop =
-          replace_reason_const (RProperty (Some name)) reason_op in
-        (* NOTE: This is intentionally unsound. Function statics are modeled
-         * as an unsealed object and so a `GetPropT` would perform a shadow
-         * lookup since a write to an unsealed property may happen at any
-         * time. If we were to perform a shadow lookup for `defaultProps` and
-         * `defaultProps` was never written then our lookup would stall and
-         * therefore so would our props analysis. So instead we make the
-         * stateful assumption that `defaultProps` was already written to
-         * the component statics which may not always be true. *)
-        let strict = NonstrictReturning (Some
-          (DefT (reason_missing, VoidT), tvar), None) in
-        let propref = Named (reason_prop, name) in
-        let action = LookupProp (unknown_use, Field (None, tvar, Positive)) in
-        (* Lookup the `defaultProps` property. *)
-        rec_flow cx trace (component,
-          LookupT (reason_op, strict, [], propref, action))
-      ))
-    (* Everything else will not have default props we should diff out. *)
-    | _ -> None
-  in
-
   let coerce_children_args (children, children_spread) =
     match children, children_spread with
     (* If we have no children and no variable spread argument then React will
@@ -414,7 +419,7 @@ let run cx trace ~use_op reason_op l u
     in
     (* For class components and function components we want to lookup the
      * static default props property so that we may add it to our config input. *)
-    let defaults = get_defaults () in
+    let defaults = get_defaults cx trace l ~reason_op ~rec_flow in
     (* Use object spread to add children to config (if we have children)
      * and remove key and ref since we already checked key and ref. Finally in
      * this block we will flow the final config to our props type. *)
@@ -465,7 +470,7 @@ let run cx trace ~use_op reason_op l u
    * destructor annotations. Like object spread, $Diff, and $Rest. *)
   let get_config tout =
     let props = Tvar.mk_where cx reason_op props_to_tout in
-    let defaults = get_defaults () in
+    let defaults = get_defaults cx trace l ~reason_op ~rec_flow in
     match defaults with
     | None -> rec_flow cx trace (props, UseT (use_op, tout))
     | Some defaults ->

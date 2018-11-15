@@ -2631,11 +2631,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (_, AnyWithUpperBoundT t) ->
       rec_flow_t cx trace (l, t)
 
-
-    | _, UseT (_, DefT (r, ReactAbstractComponentT _))
-    | DefT (r, ReactAbstractComponentT _), _ ->
-        add_output cx ~trace (FlowError.EAbstractComponentNotYetSupported (def_aloc_of_reason r))
-
     | _, ReactKitT (use_op, reason_op, React.CreateElement0 (clone, config, children, tout)) ->
       let tool = React.CreateElement (clone, l, config, children, tout) in
       rec_flow cx trace (l, ReactKitT (use_op, reason_op, tool))
@@ -3993,6 +3988,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (ThisClassT (r, i), _) ->
       let reason = reason_of_use_t u in
       rec_flow cx trace (fix_this_class cx trace reason (r, i), u)
+
+    (*****************************)
+    (* React Abstract Components *)
+    (*****************************)
+
+    (* Class component ~> AbstractComponent *)
+    | DefT (r, ClassT this),
+      UseT (_, DefT (reason_op, ReactAbstractComponentT {props; default_props; instance})) ->
+        (* Unify Props by flowing l to React$Component<props> *)
+        let class_component =
+          DefT (r, ClassT (get_builtin_typeapp cx r "React$Component" [props; AnyT.why r])) in
+        rec_flow_t cx trace (l, class_component);
+        (* Unify DefaultProps *)
+        React_kit.lookup_defaults cx trace l ~reason_op ~rec_flow default_props Neutral;
+        (* check this <: Instance. All react does with Instance is write a value of Instance to
+         * the current field of a ref object. All we care about there is making sure that
+         * Instance is a subtype of that field. If this <: Instance and Instance <: current, then
+         * this <: current
+         *)
+        rec_flow_t cx trace (this, instance);
+
+    | _, UseT (_, DefT (r, ReactAbstractComponentT _))
+    | DefT (r, ReactAbstractComponentT _), _ ->
+        add_output cx ~trace (FlowError.EAbstractComponentNotYetSupported (aloc_of_reason r))
 
     (***********************************************)
     (* function types deconstruct into their parts *)

@@ -1,6 +1,6 @@
 //@flow
 
-function test1(x: React$AbstractComponent<any, any, any>): React$ComponentType<{}> { // Error not yet supported
+function test1(x: React$AbstractComponent<any, any, any>): React$AbstractComponent<any,any,any> { // Error not yet supported
   return x;
 }
 

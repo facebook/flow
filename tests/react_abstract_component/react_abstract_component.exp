@@ -1,12 +1,12 @@
-Error ----------------------------------------------------------------------------------------------------- test.js:3:19
+Error ---------------------------------------------------------------------------------------------------- arity.js:3:60
 
 React$AbstractComponent is not supported yet.
 
-   3| function test1(x: React$AbstractComponent<any, any, any>): React$ComponentType<{}> { // Error not yet supported
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   3| function test1(x: React$AbstractComponent<any, any, any>): React$AbstractComponent<any,any,any> { // Error not yet supported
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ----------------------------------------------------------------------------------------------------- test.js:7:19
+Error ---------------------------------------------------------------------------------------------------- arity.js:7:19
 
 Cannot use type without exactly 3 type arguments.
 
@@ -14,7 +14,7 @@ Cannot use type without exactly 3 type arguments.
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:11:19
+Error --------------------------------------------------------------------------------------------------- arity.js:11:19
 
 Cannot use type without exactly 3 type arguments.
 
@@ -22,7 +22,7 @@ Cannot use type without exactly 3 type arguments.
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:15:19
+Error --------------------------------------------------------------------------------------------------- arity.js:15:19
 
 Cannot use type without exactly 3 type arguments.
 
@@ -30,5 +30,197 @@ Cannot use type without exactly 3 type arguments.
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------- classes_lower.js:5:7
 
-Found 4 errors
+`Component` [1] is incompatible with `Subclass` [2].
+
+   classes_lower.js:5:7
+    5| class Component extends React.Component<{}> {}
+             ^^^^^^^^^ [1]
+
+References:
+   classes_lower.js:30:47
+   30| (Component: React$AbstractComponent<any, any, Subclass>); // Ok, Instance is invariant
+                                                     ^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- classes_lower.js:9:2
+
+Property `foo` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
+
+   classes_lower.js:9:2
+    9| (Component: React$AbstractComponent<{foo: number}, any, any>); // Error, foo not in {}
+        ^^^^^^^^^
+
+References:
+   classes_lower.js:5:41
+    5| class Component extends React.Component<{}> {}
+                                               ^^ [1]
+   classes_lower.js:9:37
+    9| (Component: React$AbstractComponent<{foo: number}, any, any>); // Error, foo not in {}
+                                           ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- classes_lower.js:10:42
+
+object type [1] is incompatible with default props of React component [2].
+
+   classes_lower.js:10:42
+   10| (Component: React$AbstractComponent<any, {}, any>); // Error no defaults
+                                                ^^ [1]
+
+References:
+   classes_lower.js:10:2
+   10| (Component: React$AbstractComponent<any, {}, any>); // Error no defaults
+        ^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:11:2
+
+Inexact default props of React component [1] is incompatible with exact object type [2].
+
+   classes_lower.js:11:2
+   11| (Component: React$AbstractComponent<any, {| foo: number |}, any>); // Error extra default props
+        ^^^^^^^^^ [1]
+
+References:
+   classes_lower.js:11:42
+   11| (Component: React$AbstractComponent<any, {| foo: number |}, any>); // Error extra default props
+                                                ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- classes_lower.js:11:42
+
+object type [1] is incompatible with default props of React component [2].
+
+   classes_lower.js:11:42
+   11| (Component: React$AbstractComponent<any, {| foo: number |}, any>); // Error extra default props
+                                                ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes_lower.js:11:2
+   11| (Component: React$AbstractComponent<any, {| foo: number |}, any>); // Error extra default props
+        ^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:13:7
+
+`ComponentNarrower` [1] is incompatible with `Component` [2].
+
+   classes_lower.js:13:7
+   13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+             ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes_lower.js:22:55
+   22| (ComponentNarrower: React$AbstractComponent<any, any, Component>); // Error instance type is wrong
+                                                             ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- classes_lower.js:14:24
+
+Inexact object type [1] is incompatible with exact object type [2].
+
+   classes_lower.js:14:24
+   14|   static defaultProps: { foo: number } = {foo: 3};
+                              ^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes_lower.js:19:73
+   19| (ComponentNarrower: React$AbstractComponent<{foo: number, bar: number}, {|foo: number|}, any>); // Error inexact vs exact
+                                                                               ^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- classes_lower.js:14:24
+
+Property `bar` is missing in object type [1] but exists in object type [2].
+
+   classes_lower.js:14:24
+   14|   static defaultProps: { foo: number } = {foo: 3};
+                              ^^^^^^^^^^^^^^^ [1]
+
+References:
+   classes_lower.js:25:50
+   25| (ComponentNarrower: React$AbstractComponent<any, { foo: number, bar: number }, any>); // Error, bar is not in default props
+                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:20:2
+
+Property `bar` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
+
+   classes_lower.js:20:2
+   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in props
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:20:45
+   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in props
+                                                   ^^ [1]
+   classes_lower.js:13:49
+   13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:20:2
+
+Property `foo` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
+
+   classes_lower.js:20:2
+   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in props
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:20:45
+   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in props
+                                                   ^^ [1]
+   classes_lower.js:13:49
+   13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:21:2
+
+Property `bar` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
+
+   classes_lower.js:21:2
+   21| (ComponentNarrower: React$AbstractComponent<{foo: number}, any, any>); // Error missing bar in props
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:21:45
+   21| (ComponentNarrower: React$AbstractComponent<{foo: number}, any, any>); // Error missing bar in props
+                                                   ^^^^^^^^^^^^^ [1]
+   classes_lower.js:13:49
+   13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:26:31
+   26| declare class React$Component<Props, State = void> {
+                                     ^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------- classes_lower.js:24:50
+
+Property `foo` is missing in object type [1] but exists in object type [2].
+
+   classes_lower.js:24:50
+   24| (ComponentNarrower: React$AbstractComponent<any, {}, any>); // Error, missing foo in default props
+                                                        ^^ [1]
+
+References:
+   classes_lower.js:14:24
+   14|   static defaultProps: { foo: number } = {foo: 3};
+                              ^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 16 errors
