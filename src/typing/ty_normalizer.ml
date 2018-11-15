@@ -78,7 +78,7 @@ module NormalizerMonad : sig
   val run_type :
     options:Env.options ->
     genv:Env.genv ->
-    imported_names:Loc.t SMap.t ->
+    imported_names:ALoc.t SMap.t ->
     tparams:Type.typeparam list ->
     State.t ->
     Type.t ->
@@ -87,7 +87,7 @@ module NormalizerMonad : sig
   val run_imports:
     options:Env.options ->
     genv:Env.genv ->
-    Loc.t SMap.t
+    ALoc.t SMap.t
 
 end = struct
 
@@ -201,7 +201,7 @@ end = struct
     let open Type in
     let pred { name; reason; _ } = (
       name = tp_name &&
-      Reason.def_aloc_of_reason reason |> ALoc.to_loc = tp_loc
+      Reason.def_aloc_of_reason reason = tp_loc
     ) in
     match List.find_opt pred env.Env.tparams with
     | Some _ ->
@@ -210,7 +210,7 @@ end = struct
         let shadow_pred { name; _ } = (name = tp_name) in
         match List.find_opt shadow_pred env.Env.tparams with
         | Some { reason; _ }
-          when Reason.def_aloc_of_reason reason |> ALoc.to_loc <> tp_loc ->
+          when Reason.def_aloc_of_reason reason <> tp_loc ->
           terr ~kind:ShadowTypeParam (Some t)
         | Some _ ->
           return (Ty.Bound {
@@ -510,7 +510,7 @@ end = struct
 
   let symbol_from_loc env loc name =
     let open File_key in
-    let symbol_source = Loc.source loc in
+    let symbol_source = ALoc.source loc in
     let provenance =
       match symbol_source with
       | Some LibFile _ -> Ty.Library
@@ -538,7 +538,7 @@ end = struct
   (* TODO due to repositioninig `reason_loc` may not point to the actual
      location where `name` was defined. *)
   let symbol_from_reason env reason name =
-    let def_loc = Reason.def_aloc_of_reason reason |> ALoc.to_loc in
+    let def_loc = Reason.def_aloc_of_reason reason in
     symbol_from_loc env def_loc name
 
 
@@ -563,7 +563,7 @@ end = struct
     let reason = Type.reason_of_t t in
     match desc_of_reason ~unwrap:false reason with
     | RPolyTest (name, _) ->
-      let loc = Reason.def_aloc_of_reason reason |> ALoc.to_loc in
+      let loc = Reason.def_aloc_of_reason reason in
       let default t = type_with_alias_reason ~env t in
       lookup_tparam ~default env t name loc
     | _ ->
@@ -957,7 +957,7 @@ end = struct
       | Ty.Bound (Ty.{ loc; name = bname; _ }) ->
         let pred Type.{ name; reason; _ } = (
           name = bname &&
-          Reason.def_aloc_of_reason reason |> ALoc.to_loc = loc
+          Reason.def_aloc_of_reason reason = loc
         ) in
         begin match List.find_opt pred env.Env.tparams with
           | Some Type.{ bound; _ } ->

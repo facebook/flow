@@ -235,7 +235,7 @@ let debug_string_of_provenance_ctor = function
 
 let debug_string_of_symbol { provenance; loc; name; _ } =
   Utils_js.spf "%s (%s:%s)" name (debug_string_of_provenance_ctor provenance)
-    (Reason.string_of_loc loc)
+    (Reason.string_of_aloc loc)
 
 let debug_string_of_generic_kind = function
   | ClassKind -> "class"

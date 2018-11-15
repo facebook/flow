@@ -14,14 +14,14 @@ type provenance =
 
 type symbol = {
   provenance: provenance;
-  loc: Loc.t;
+  loc: ALoc.t;
   name: string;
   anonymous: bool;
 }
 
 let builtin_symbol name = {
   provenance = Builtin;
-  loc = Loc.none;
+  loc = ALoc.none;
   name;
   anonymous = false;
 }

@@ -121,7 +121,7 @@ type t = {
      useful to keep the list of imported names and the corresponding
      location available. We can then make this decision by comparing the
      source file with the current context's file information. *)
-  imported_names: Loc.t SMap.t;
+  imported_names: ALoc.t SMap.t;
 
   (* For debugging purposes mostly *)
   depth: int;
