@@ -1,0 +1,9 @@
+Invalid flowconfig should fail
+.flowconfig:2 Unsupported option specified! (invalid_option1)
+.flowconfig:3 Unsupported option specified! (invalid_option2)
+.flowconfig:4 Unsupported option specified! (invalid_option2)
+Invalid flowconfig should pass
+.flowconfig:2 Unsupported option specified! (invalid_option1)
+.flowconfig:3 Unsupported option specified! (invalid_option2)
+.flowconfig:4 Unsupported option specified! (invalid_option2)
+Found 0 errors

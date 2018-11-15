@@ -37,7 +37,7 @@ exception FailedToKillNicely
 let main base_flags temp_dir from quiet root () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
-  let config = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
+  let config = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
   let root_s = Path.to_string root in
   let tmp_dir = match temp_dir with
   | Some x -> x

@@ -356,6 +356,31 @@ let log_file_flags =
         ~env:"FLOW_MONITOR_LOG_FILE"
   )
 
+let flowconfig_multi_error rev_errs =
+  let msg =
+    rev_errs
+    |> List.map (fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> String.concat "\n"
+  in
+  FlowExitStatus.(exit ~msg Invalid_flowconfig)
+
+let flowconfig_multi_warn rev_errs =
+  let msg =
+    rev_errs
+    |> List.map (fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> String.concat "\n"
+  in
+  prerr_endline msg
+
+let read_config_or_exit ?(enforce_warnings=true) ?allow_cache flowconfig_path =
+  match FlowConfig.get ?allow_cache flowconfig_path with
+  | Ok (config, []) -> config
+  | Ok (config, warnings) ->
+    if enforce_warnings then flowconfig_multi_error warnings
+    else flowconfig_multi_warn warnings;
+    config
+  | Error err -> flowconfig_multi_error [err]
+
 let check_version required_version =
   match required_version with
   | None -> Ok ()
@@ -925,7 +950,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
 
 let make_env flowconfig_name connect_flags root =
   let flowconfig_path = Server_files_js.config_file flowconfig_name root in
-  let flowconfig = FlowConfig.get flowconfig_path in
+  let flowconfig = read_config_or_exit flowconfig_path in
   let normalize dir = Path.(dir |> make |> to_string) in
   let tmp_dir = Option.value_map
     ~f:normalize
@@ -1080,7 +1105,7 @@ let rec connect_and_make_request flowconfig_name =
   let rec wait_for_response ?timeout ~quiet ~root (ic: Timeout.in_channel) =
     let use_emoji = Tty.supports_emoji () &&
       Server_files_js.config_file flowconfig_name root
-      |> FlowConfig.get
+      |> read_config_or_exit
       |> FlowConfig.emoji in
 
     let response: MonitorProt.monitor_to_client_message = try

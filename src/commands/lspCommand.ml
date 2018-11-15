@@ -185,7 +185,7 @@ let to_stdout (json: Hh_json.json) : unit =
 
 let get_current_version flowconfig_name (root: Path.t) : string option =
   Server_files_js.config_file flowconfig_name root
-    |> FlowConfig.get ~allow_cache:false
+    |> read_config_or_exit ~allow_cache:false
     |> FlowConfig.required_version
 
 let get_root (state: state) : Path.t option =
@@ -901,7 +901,7 @@ let parse_and_cache flowconfig_name (state: state) (uri: string)
     let root = get_root state in
     let use_strict = Option.value_map root ~default:false ~f:(fun root ->
       Server_files_js.config_file flowconfig_name root
-      |> FlowConfig.get |> FlowConfig.modules_are_use_strict) in
+      |> read_config_or_exit |> FlowConfig.modules_are_use_strict) in
     Some Parser_env.({
       esproposal_class_instance_fields = true;
       esproposal_class_static_fields = true;

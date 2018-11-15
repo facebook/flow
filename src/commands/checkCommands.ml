@@ -97,7 +97,10 @@ module CheckCommand = struct
 
     let flowconfig_name = base_flags.Base_flags.flowconfig_name in
     let root = CommandUtils.guess_root flowconfig_name path_opt in
-    let flowconfig = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
+    let flowconfig =
+      let flowconfig_path = Server_files_js.config_file flowconfig_name root in
+      read_config_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
+    in
     let options = make_options ~flowconfig_name ~flowconfig ~lazy_mode:None ~root options_flags in
 
     if Options.should_profile options && not Sys.win32
@@ -180,7 +183,7 @@ module FocusCheckCommand = struct
       then root
       else match filenames with [] -> None | x::_ -> Some x
     ) in
-    let flowconfig = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
+    let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
     let options = make_options ~flowconfig_name ~flowconfig ~lazy_mode:None ~root options_flags in
 
     (* initialize loggers before doing too much, especially anything that might exit *)

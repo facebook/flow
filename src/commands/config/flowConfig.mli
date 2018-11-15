@@ -6,8 +6,10 @@
  *)
 
 type config
+type warning = int * string
+type error = int * string
 
-val get: ?allow_cache:bool -> string -> config
+val get: ?allow_cache:bool -> string -> (config * warning list, error) result
 val get_hash: ?allow_cache:bool -> string -> Xx.hash
 val empty_config: config
 
@@ -19,7 +21,7 @@ val init:
   libs: string list ->
   options: string list ->
   lints: string list ->
-  config
+  (config * warning list, error) result
 val write: config -> out_channel -> unit
 
 (* Accessors *)

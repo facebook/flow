@@ -38,6 +38,14 @@ let spec = {
   )
 }
 
+let error (errs:(int * string) list) =
+  let msg =
+    errs
+    |> List.map (fun (ln, msg) -> Utils_js.spf ".flowconfig:%d %s" ln msg)
+    |> String.concat "\n"
+  in
+  FlowExitStatus.(exit ~msg Invalid_flowconfig)
+
 let main base_flags from flowconfig_flags options root () =
   FlowEventLogger.set_from from;
   let root = match root with
@@ -64,6 +72,12 @@ let main base_flags from flowconfig_flags options root () =
   end;
 
   let config = FlowConfig.init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints in
+
+  let config = match config with
+  | Ok (config, []) -> config
+  | Ok (_, warnings) -> error warnings (* TODO: write warnings to stderr instead of exiting *)
+  | Error err -> error [err]
+  in
 
   let out = Sys_utils.open_out_no_fail file in
   FlowConfig.write config out;

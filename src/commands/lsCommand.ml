@@ -109,7 +109,7 @@ let rec iter_get_next ~f get_next =
       iter_get_next ~f get_next
 
 let make_options ~flowconfig_name ~root ~ignore_flag ~include_flag ~untyped_flag ~declaration_flag =
-  let flowconfig = FlowConfig.get (Server_files_js.config_file flowconfig_name root) in
+  let flowconfig = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
   let temp_dir = FlowConfig.temp_dir flowconfig in
   let includes = CommandUtils.list_of_string_arg include_flag in
   let ignores = CommandUtils.list_of_string_arg ignore_flag in

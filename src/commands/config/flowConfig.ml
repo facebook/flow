@@ -7,6 +7,13 @@
 
 open Utils_js
 
+let (>>=) = Core_result.(>>=)
+
+type line = int * string
+type section = line * line list
+type warning = int * string
+type error = int * string
+
 let default_temp_dir = Filename.concat Sys_utils.temp_dir_name "flow"
 let default_shm_dirs =
   try
@@ -23,19 +30,7 @@ let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version (Fl
 
 let map_add map (key, value) = SMap.add key value map
 
-let multi_error (errs:(int * string) list) =
-  let msg =
-    errs
-    |> List.map (fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
-    |> String.concat "\n"
-  in
-  FlowExitStatus.(exit ~msg Invalid_flowconfig)
-
-let error ln msg = multi_error [(ln, msg)]
-
 module Opts = struct
-  let (>>=) = Core_result.(>>=)
-
   type t = {
     all: bool;
     emoji: bool;
@@ -89,22 +84,16 @@ module Opts = struct
     weak: bool;
   }
 
-  let get_defined_opts (raw_opts, config) =
-    (* If the user specified any options that aren't defined, issue an error *)
-    if SMap.cardinal raw_opts > 0 then (
-      let errors =
-        SMap.elements raw_opts
-        |> List.map (fun (k, v) ->
+  let warn_on_unknown_opts (raw_opts, config) : (t * warning list, error) result =
+    (* If the user specified any options that aren't defined, issue a warning *)
+    let warnings =
+      SMap.elements raw_opts
+      |> List.fold_left (fun acc (k, v) ->
           let msg = spf "Unsupported option specified! (%s)" k in
-          List.map (fun (line_num, _) -> (line_num, msg)) v
-        )
-        |> List.flatten
-        |> List.rev
-      in
-      multi_error errors
-    );
-
-    config
+          List.fold_left (fun acc (line_num, _) -> (line_num, msg)::acc) acc v
+        ) []
+    in
+    Ok (config, warnings)
 
   let module_file_exts = SSet.empty
     |> SSet.add ".js"
@@ -178,27 +167,31 @@ module Opts = struct
     weak = false;
   }
 
-  let parse_lines =
-    let parse_line map (line_num, line) =
-      if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0
-      then
-        let key = Str.matched_group 1 line in
-        let value = Str.matched_group 2 line in
-        SMap.add key ((line_num, value)::(
-          match SMap.get key map with
-          | Some values -> values
-          | None -> []
-        )) map
-      else error line_num "Unable to parse line."
-    in
+  let parse_lines : line list -> ((int * string) list SMap.t, error) result =
+    let rec loop acc lines = acc >>= (fun map ->
+      match lines with
+      | [] -> Ok map
+      | (line_num, line)::rest ->
+        if Str.string_match (Str.regexp "^\\([a-zA-Z0-9._]+\\)=\\(.*\\)$") line 0
+        then
+          let key = Str.matched_group 1 line in
+          let value = Str.matched_group 2 line in
+          let map = SMap.add key ((line_num, value)::(
+            match SMap.get key map with
+            | Some values -> values
+            | None -> []
+          )) map in
+          loop (Ok map) rest
+        else
+          Error (line_num, "Unable to parse line.")
+    ) in
 
     fun lines ->
       let lines = lines
         |> List.map (fun (ln, line) -> ln, String.trim line)
         |> List.filter (fun (_, s) -> s <> "")
       in
-      let raw_options = List.fold_left parse_line SMap.empty lines in
-      raw_options
+      loop (Ok SMap.empty) lines
 
   (**
     * `init` gets called on the options object immediately before
@@ -210,46 +203,50 @@ module Opts = struct
     * ['.js'; '.jsx'], but if the user specifies any 'module.file_ext'
     * settings, we want to start from a clean list.
     *)
-  let opt
+  let opt =
+    let rec loop optparser setter key values config =
+      match values with
+      | [] -> Ok config
+      | (line_num, value_str)::rest ->
+        let value =
+          optparser value_str
+          |> Core_result.map_error
+              ~f:(fun msg -> line_num, spf "Error parsing value for \"%s\". %s" key msg)
+        in
+        let config =
+          value >>= fun value ->
+          setter config value
+          |> Core_result.map_error
+              ~f:(fun msg -> line_num, spf "Error setting value for \"%s\". %s" key msg)
+        in
+        config >>= loop optparser setter key rest
+    in
+    fun
       (optparser: (string -> ('a, string) result))
       ?init
       ?(multiple=false)
       (setter: (t -> 'a -> (t, string) result))
       key
-      (raw_opts, config) =
-    let new_raw_opts = SMap.remove key raw_opts in
-
+      (raw_opts, config)
+  : ((int * string) list SMap.t * t, error) result ->
     match SMap.get key raw_opts with
-    | None -> (new_raw_opts, config)
+    | None -> Ok (raw_opts, config)
     | Some values ->
-        let config = (
-          match init with
-          | None -> config
-          | Some f -> f config
-        ) in
-
-        (* Error when duplicate options were incorrectly given *)
-        if (not multiple) && (List.length values) > 1 then (
-          let line_num = fst (List.nth values 1) in
-          error line_num (spf "Duplicate option: \"%s\"" key)
-        );
-
-        let config = List.fold_left (fun config (line_num, value_str) ->
-          let value =
-            match optparser value_str with
-            | Ok value -> value
-            | Error msg -> error line_num (
-              spf "Error parsing value for \"%s\". %s" key msg
-            )
-          in
-          match setter config value with
-          | Ok config -> config
-          | Error msg -> error line_num (
-            spf "Error setting value for \"%s\". %s" key msg
-          )
-        ) config values in
-
-        (new_raw_opts, config)
+      let config =
+        match init with
+        | None -> config
+        | Some f -> f config
+      in
+      (* Error when duplicate options were incorrectly given *)
+      match multiple, values with
+      | false, _::(dupe_ln, _)::_ ->
+        Error (dupe_ln, spf "Duplicate option: \"%s\"" key)
+      | _ ->
+        Ok config
+        >>= loop optparser setter key values
+        >>= fun config ->
+          let new_raw_opts = SMap.remove key raw_opts in
+          Ok (new_raw_opts, config)
 
   let optparse_string str =
     try Ok (Scanf.unescaped str)
@@ -258,14 +255,11 @@ module Opts = struct
     )
 
   let optparse_regexp str =
-    match optparse_string str with
-    | Ok unescaped ->
-      begin try Ok (Str.regexp unescaped)
-      with Failure reason -> Error (
-        spf "Invalid regex \"%s\" (%s)" unescaped reason
-      )
-      end
-    | Error _ as err -> err
+    optparse_string str >>= fun unescaped ->
+    try Ok (Str.regexp unescaped)
+    with Failure reason -> Error (
+      spf "Invalid regex \"%s\" (%s)" unescaped reason
+    )
 
   let enum values =
     opt (fun str ->
@@ -317,11 +311,7 @@ module Opts = struct
     )
 
   let mapping fn =
-    opt (fun str ->
-      match optparse_mapping str with
-      | Ok x -> fn x
-      | Error _ as err -> err
-    )
+    opt (fun str -> optparse_mapping str >>= fn)
 
   let parsers = [
     "emoji",
@@ -573,11 +563,18 @@ module Opts = struct
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
   ]
 
-  let parse init lines =
-    let raw_options = parse_lines lines in
-    parsers
-    |> List.fold_left (fun acc (key, f) -> f key acc) (raw_options, init)
-    |> get_defined_opts
+  let parse =
+    let rec loop acc parsers =
+      acc >>= fun acc ->
+      match parsers with
+      | [] -> Ok acc
+      | (key, f)::rest ->
+        loop (f key acc) rest
+    in
+    fun (init: t) (lines: line list) : (t * warning list, error) result ->
+      parse_lines lines >>= fun raw_options ->
+      loop (Ok (raw_options, init)) parsers >>=
+      warn_on_unknown_opts
 end
 
 type config = {
@@ -705,22 +702,31 @@ let empty_config = {
   options = Opts.default_options
 }
 
-let group_into_sections lines =
+let group_into_sections : line list -> (section list, error) result =
   let is_section_header = Str.regexp "^\\[\\(.*\\)\\]$" in
-  let _, sections, section =
-    List.fold_left (fun (seen, sections, (section, lines)) (ln, line) ->
+  let rec loop acc lines = acc >>= fun (seen, sections, (section_name, section_lines)) ->
+    match lines with
+    | [] ->
+      let section = section_name, List.rev section_lines in
+      Ok (List.rev (section::sections))
+    | (ln, line)::rest ->
       if Str.string_match is_section_header line 0
       then begin
-        let sections = (section, List.rev lines)::sections in
+        let sections = (section_name, List.rev section_lines)::sections in
         let section_name = Str.matched_group 1 line in
-        if SSet.mem section_name seen
-        then error ln (spf "contains duplicate section: \"%s\"" section_name);
-        SSet.add section_name seen, sections, ((ln, section_name), [])
+        if SSet.mem section_name seen then
+          Error (ln, spf "contains duplicate section: \"%s\"" section_name)
+        else
+          let seen = SSet.add section_name seen in
+          let section = (ln, section_name), [] in
+          let acc = Ok (seen, sections, section) in
+          loop acc rest
       end else
-        seen, sections, (section, (ln, line)::lines)
-    ) (SSet.empty, [], ((0, ""), [])) lines in
-  let (section, section_lines) = section in
-  List.rev ((section, List.rev section_lines)::sections)
+        let acc = Ok (seen, sections, (section_name, (ln, line)::section_lines)) in
+        loop acc rest
+  in
+  fun lines ->
+    loop (Ok (SSet.empty, [], ((0, ""), []))) lines
 
 let trim_lines lines =
   lines
@@ -733,31 +739,31 @@ let trim_labeled_lines lines =
   |> List.filter (fun (_, s) -> s <> "")
 
 (* parse [include] lines *)
-let parse_includes config lines =
+let parse_includes lines config =
   let includes = trim_lines lines in
-  { config with includes; }
+  Ok ({ config with includes; }, [])
 
-let parse_libs config lines =
+let parse_libs lines config : (config * warning list, error) result =
   let libs = trim_lines lines in
-  { config with libs; }
+  Ok ({ config with libs; }, [])
 
-let parse_ignores config lines =
+let parse_ignores lines config =
   let ignores = trim_lines lines in
-  { config with ignores; }
+  Ok ({ config with ignores; }, [])
 
-let parse_untyped config lines =
+let parse_untyped lines config =
   let untyped = trim_lines lines in
-  { config with untyped; }
+  Ok ({ config with untyped; }, [])
 
-let parse_declarations config lines =
+let parse_declarations lines config =
   let declarations = trim_lines lines in
-  { config with declarations; }
+  Ok ({ config with declarations; }, [])
 
-let parse_options config lines =
-  let options = Opts.parse config.options lines in
-  {config with options}
+let parse_options lines config : (config * warning list, error) result =
+  Opts.parse config.options lines >>= fun (options, warnings) ->
+  Ok ({ config with options}, warnings)
 
-let parse_version config lines =
+let parse_version lines config =
   let potential_versions = lines
   |> List.map (fun (ln, line) -> ln, String.trim line)
   |> List.filter (fun (_, s) -> s <> "")
@@ -766,45 +772,55 @@ let parse_version config lines =
   match potential_versions with
   | (ln, version_str) :: _ ->
     if not (Semver.is_valid_range version_str) then
-      error ln (
+      Error (ln, (
         spf
           "Expected version to match %%d.%%d.%%d, with an optional leading ^, got %s"
           version_str
-      );
+      ))
+    else
+      let options = { config.options with Opts.version = Some version_str } in
+      Ok ({ config with options }, [])
+  | _ -> Ok (config, [])
 
-    let options = { config.options with Opts.version = Some version_str } in
-    { config with options }
-  | _ -> config
+let parse_lints lines config : (config * warning list, error) result =
+  let lines = trim_labeled_lines lines in
+  LintSettings.of_lines config.lint_severities lines >>= fun lint_severities ->
+  Ok ({config with lint_severities}, [])
 
-let parse_lints config lines =
-  match lines |> trim_labeled_lines |> LintSettings.of_lines config.lint_severities with
-  | Ok lint_severities -> {config with lint_severities}
-  | Error (ln, msg) -> error ln msg
+let parse_strict lines config =
+  let lines = trim_labeled_lines lines in
+  StrictModeSettings.of_lines lines >>= fun strict_mode ->
+  Ok ({config with strict_mode}, [])
 
-let parse_strict config lines =
-  match lines |> trim_labeled_lines |> StrictModeSettings.of_lines with
-  | Ok strict_mode -> {config with strict_mode}
-  | Error (ln, msg) -> error ln msg
-
-let parse_section config ((section_ln, section), lines) =
+let parse_section config ((section_ln, section), lines) : (config * warning list, error) result =
   match section, lines with
-  | "", [] when section_ln = 0 -> config
+  | "", [] when section_ln = 0 -> Ok (config, [])
   | "", (ln, _)::_ when section_ln = 0 ->
-      error ln "Unexpected config line not in any section"
-  | "include", _ -> parse_includes config lines
-  | "ignore", _ -> parse_ignores config lines
-  | "libs", _ -> parse_libs config lines
-  | "lints", _ -> parse_lints config lines
-  | "declarations", _ -> parse_declarations config lines
-  | "strict", _ -> parse_strict config lines
-  | "options", _ -> parse_options config lines
-  | "untyped", _ -> parse_untyped config lines
-  | "version", _ -> parse_version config lines
-  | _ -> error section_ln (spf "Unsupported config section: \"%s\"" section)
+      Error (ln, "Unexpected config line not in any section")
+  | "include", _ -> parse_includes lines config
+  | "ignore", _ -> parse_ignores lines config
+  | "libs", _ -> parse_libs lines config
+  | "lints", _ -> parse_lints lines config
+  | "declarations", _ -> parse_declarations lines config
+  | "strict", _ -> parse_strict lines config
+  | "options", _ -> parse_options lines config
+  | "untyped", _ -> parse_untyped lines config
+  | "version", _ -> parse_version lines config
+  | _ -> Ok (config, [section_ln, (spf "Unsupported config section: \"%s\"" section)])
 
-let parse config lines =
-  let sections = group_into_sections lines in
-  List.fold_left parse_section config sections
+let parse =
+  let rec loop acc sections =
+    acc >>= fun (config, warn_acc) ->
+    match sections with
+    | [] -> Ok (config, List.rev warn_acc)
+    | section::rest ->
+      parse_section config section >>= fun (config, warnings) ->
+      let acc = Ok (config, List.rev_append warnings warn_acc) in
+      loop acc rest
+  in
+  fun config lines ->
+    group_into_sections lines
+    >>= loop (Ok (config, []))
 
 let is_not_comment =
   let comment_regexps = [
@@ -831,16 +847,26 @@ let read filename =
   let lines = contents
     |> Sys_utils.split_lines
     |> List.mapi (fun i line -> (i+1, String.trim line))
-    |> List.filter is_not_comment in
-  let config = {
-    empty_config with
-    lint_severities = List.fold_left (fun acc (lint, severity) ->
-      LintSettings.set_value lint severity acc
-    ) empty_config.lint_severities default_lint_severities
-  } in
-  parse config lines, hash
+    |> List.filter is_not_comment
+  in
+  lines, hash
+
+let get_empty_config () =
+  let lint_severities = List.fold_left (fun acc (lint, severity) ->
+    LintSettings.set_value lint severity acc
+  ) empty_config.lint_severities default_lint_severities in
+  { empty_config with lint_severities }
 
 let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
+  let (>>=)
+    (acc: (config * warning list, error) result)
+    (fn: config -> (config * warning list, error) result)
+  =
+    let (>>=) = Core_result.(>>=) in
+    acc >>= fun (config, warn_acc) ->
+    fn config >>= fun (config, warnings) ->
+    Ok (config, List.rev_append warnings warn_acc)
+  in
   let ignores_lines = List.map (fun s -> (1, s)) ignores in
   let untyped_lines = List.map (fun s -> (1, s)) untyped in
   let declarations_lines = List.map (fun s -> (1, s)) declarations in
@@ -848,14 +874,14 @@ let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =
   let options_lines = List.map (fun s -> (1, s)) options in
   let lib_lines = List.map (fun s -> (1, s)) libs in
   let lint_lines = List.map (fun s -> (1, s)) lints in
-  let config = parse_ignores empty_config ignores_lines in
-  let config = parse_untyped config untyped_lines in
-  let config = parse_declarations config declarations_lines in
-  let config = parse_includes config includes_lines in
-  let config = parse_options config options_lines in
-  let config = parse_libs config lib_lines in
-  let config = parse_lints config lint_lines in
-  config
+  Ok (empty_config, [])
+  >>= (parse_ignores ignores_lines)
+  >>= (parse_untyped untyped_lines)
+  >>= (parse_declarations declarations_lines)
+  >>= (parse_includes includes_lines)
+  >>= (parse_options options_lines)
+  >>= (parse_libs lib_lines)
+  >>= (parse_lints lint_lines)
 
 let write config oc = Pp.config oc config
 
@@ -868,10 +894,11 @@ let get_from_cache ?(allow_cache=true) filename =
       assert (filename = cached_filename);
       cached_data
   | _ ->
-      let config, hash = read filename in
+      let lines, hash = read filename in
+      let config = parse (get_empty_config ()) lines in
       let cached_data = filename, config, hash in
       cache := Some cached_data;
-      filename, config, hash
+      cached_data
 
 let get ?allow_cache filename =
   let (_, config, _) = get_from_cache ?allow_cache filename in

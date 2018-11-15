@@ -348,6 +348,7 @@ runtest() {
         # stop the server after the script exits.
         #
         all=" --all"
+        auto_start=true
         flowlib=" --no-flowlib"
         shell=""
         cmd="check"
@@ -363,6 +364,11 @@ runtest() {
             if [ "$(awk '$1=="all:"{print $2}' .testconfig)" == "false" ]
             then
                 all=""
+            fi
+            # auto_start
+            if [ "$(awk '$1=="auto_start:"{print $2}' .testconfig)" == "false" ]
+            then
+                auto_start=false
             fi
             # cwd (current directory)
             cwd="$(awk '$1=="cwd:"{print $2}' .testconfig)"
@@ -395,6 +401,7 @@ runtest() {
             fi
             # cmd
             config_cmd="$(awk '$1=="cmd:"{$1="";print}' .testconfig)"
+            config_cmd="${config_cmd## }" # trim leading space
             if [ "$config_cmd" != "" ]
             then
                 cmd="$config_cmd"
@@ -533,38 +540,46 @@ runtest() {
             start_flow () {
               assert_ok start_flow_unsafe "$@"
             }
-            start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
-            code=$?
-            if [ $code -ne 0 ]; then
-              # flow failed to start
-              printf "flow start exited code %s\\n" "$code" >> "$abs_out_file"
-              return_status=$RUNTEST_ERROR
-            elif [ "$shell" != "" ]; then
-              # run test script in subshell so it inherits functions
-              (
-                set -e # The script should probably use this option
-                export PATH="$THIS_DIR/scripts/tests_bin:$PATH"
-                source "$shell" "$FLOW"
-              ) 1> "$abs_out_file" 2> "$stderr_dest"
+
+            if [ $auto_start = true ]; then
+              start_flow_unsafe . $start_args > /dev/null 2>> "$abs_err_file"
               code=$?
               if [ $code -ne 0 ]; then
-                printf "%s exited code %s\\n" "$shell" "$code" >> "$abs_out_file"
+                # flow failed to start
+                printf "flow start exited code %s\\n" "$code" >> "$abs_out_file"
                 return_status=$RUNTEST_ERROR
               fi
-            else
-            # If there's stdin, then direct that in
-            # cmd should NOT be double quoted...it may contain many commands
-            # and we do want word splitting
-                if [ "$stdin" != "" ]
-                then
-                    cmd="$FLOW $cmd < $stdin 1> $abs_out_file 2> $stderr_dest"
-                else
-                    cmd="$FLOW $cmd 1> $abs_out_file 2> $stderr_dest"
-                fi
-                eval "$cmd"
             fi
-            # stop server
-            "$FLOW" stop . 1> /dev/null 2>&1
+
+            if [ $return_status -ne $RUNTEST_ERROR ]; then
+              if [ "$shell" != "" ]; then
+                # run test script in subshell so it inherits functions
+                (
+                  set -e # The script should probably use this option
+                  export PATH="$THIS_DIR/scripts/tests_bin:$PATH"
+                  source "$shell" "$FLOW"
+                ) 1> "$abs_out_file" 2> "$stderr_dest"
+                code=$?
+                if [ $code -ne 0 ]; then
+                  printf "%s exited code %s\\n" "$shell" "$code" >> "$abs_out_file"
+                  return_status=$RUNTEST_ERROR
+                fi
+              else
+              # If there's stdin, then direct that in
+              # cmd should NOT be double quoted...it may contain many commands
+              # and we do want word splitting
+                  if [ "$stdin" != "" ]
+                  then
+                      cmd="$FLOW $cmd < $stdin 1> $abs_out_file 2> $stderr_dest"
+                  else
+                      cmd="$FLOW $cmd 1> $abs_out_file 2> $stderr_dest"
+                  fi
+                  eval "$cmd"
+              fi
+
+              # stop server, even if we didn't start it
+              "$FLOW" stop . 1> /dev/null 2>&1
+            fi
         fi
 
         if [ "$cwd" != "" ]; then
