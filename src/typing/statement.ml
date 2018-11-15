@@ -6145,15 +6145,12 @@ and mk_class_sig =
 
   let warn_or_ignore_decorators cx = function
   | [] -> ()
-  | (start_loc, _)::ds ->
-    let loc = List.fold_left (fun start_loc (end_loc, _) ->
-      Loc.btwn (ALoc.to_loc start_loc) (ALoc.to_loc end_loc) |> ALoc.of_loc
-    ) start_loc ds in
+  | decorators ->
     match Context.esproposal_decorators cx with
     | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
     | Options.ESPROPOSAL_IGNORE -> ()
     | Options.ESPROPOSAL_WARN ->
-      Flow.add_output cx (Flow_error.EExperimentalDecorators loc)
+      decorators |> List.iter (fun (loc, _) -> Flow.add_output cx (Flow_error.EExperimentalDecorators loc))
   in
 
   let warn_or_ignore_class_properties cx ~static loc =
