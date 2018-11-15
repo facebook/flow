@@ -29,5 +29,14 @@ References:
        ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------------- D.js:10:3
 
-Found 2 errors
+Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of `C`?
+(`untyped-import`)
+
+   10|   'm#C',
+         ^^^^^
+
+
+
+Found 3 errors
