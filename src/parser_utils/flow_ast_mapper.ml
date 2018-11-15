@@ -240,12 +240,15 @@ class ['loc] mapper = object(this)
     if call == call' then expr
     else { expr with call = call' }
 
+  method catch_body (body: 'loc * ('loc, 'loc) Flow_ast.Statement.Block.t) =
+    map_loc this#block body
+
   method catch_clause _loc (clause: ('loc, 'loc) Flow_ast.Statement.Try.CatchClause.t') =
     let open Flow_ast.Statement.Try.CatchClause in
     let { param; body } = clause in
 
     let param' = map_opt this#catch_clause_pattern param in
-    let body' = map_loc this#block body in
+    let body' = this#catch_body body in
     if param == param' && body == body' then clause
     else { param = param'; body = body' }
 
