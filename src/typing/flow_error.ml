@@ -1022,6 +1022,11 @@ let rec error_of_msg ~trace_reasons ~source_file =
               [text "the expected type is not parametric in "; ref upper;
                text ", perhaps due to the use of "; code "*";
                text " or the lack of a type annotation";]
+          | RLongStringLit n , RStringLit _ ->
+            mk_use_op_error (aloc_of_reason lower) use_op
+              [ref lower; text " is incompatible with "; ref upper;
+              text " because strings longer than "; code (string_of_int n);
+              text " characters are not treated as literals"]
           | _ ->
             mk_use_op_error (aloc_of_reason lower) use_op
               [ref lower; text " is incompatible with "; ref upper]

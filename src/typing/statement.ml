@@ -4190,12 +4190,12 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
     | _ ->
       (* It's too expensive to track literal information for large strings.*)
       let max_literal_length = Context.max_literal_length cx in
-      let lit =
+      let lit, r_desc =
         if max_literal_length = 0 || String.length s < max_literal_length
-        then Literal (None, s)
-        else AnyLiteral
+        then Literal (None, s), RString
+        else AnyLiteral, RLongStringLit (max_literal_length)
       in
-      DefT (annot_reason (mk_reason RString loc), StrT lit)
+      DefT (annot_reason (mk_reason r_desc loc), StrT lit)
   end
 
   | Boolean b ->

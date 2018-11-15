@@ -61,6 +61,7 @@ end
 type reason_desc =
   | RNumber | RString | RBoolean | RMixed | REmpty | RAny | RVoid | RNull
   | RNullOrVoid
+  | RLongStringLit of int (* Max length *)
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
@@ -365,7 +366,8 @@ let prettify_react_util s =
 
 let rec string_of_desc = function
   | RNumber -> "number"
-  | RString -> "string"
+  | RString
+  | RLongStringLit _ -> "string"
   | RBoolean -> "boolean"
   | RMixed -> "mixed"
   | REmpty -> "empty"
@@ -1049,6 +1051,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RNumber
 | RString
 | RBoolean
+| RLongStringLit _
 | RStringLit _
 | RNumberLit _
 | RBooleanLit _
