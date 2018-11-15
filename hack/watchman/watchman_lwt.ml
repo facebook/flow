@@ -80,7 +80,10 @@ struct
 
   let close_connection (reader, oc) =
     let%lwt () = Lwt_unix.close @@ Buffered_line_reader_lwt.get_fd reader in
-    Lwt_io.close oc
+    (* As mention above, if we open the connection with Unix.open_connection, we use a single fd for
+     * both input and output. That means we might be trying to close it twice here. If so, this
+     * second close with throw. So let's catch that exception and ignore it. *)
+    try%lwt Lwt_io.close oc with Unix.Unix_error(Unix.EBADF, _, _) -> Lwt.return_unit
 
   let with_watchman_conn ~timeout f =
     let%lwt conn = open_connection ~timeout in
