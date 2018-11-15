@@ -1,32 +1,106 @@
-Error ---------------------------------------------------------------------------------------------------- arity.js:3:60
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:12:10
 
-React$AbstractComponent is not supported yet.
+Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
 
-   3| function test1(x: React$AbstractComponent<any, any, any>): React$AbstractComponent<any,any,any> { // Error not yet supported
-                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   abstract_vs_abstract.js:12:10
+   12|   return x;
+                ^
+
+References:
+   abstract_vs_abstract.js:11:43
+   11| function test2(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{foo: number}, {}, Component> { // Error props don't unify
+                                                 ^^ [1]
+   abstract_vs_abstract.js:11:88
+   11| function test2(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{foo: number}, {}, Component> { // Error props don't unify
+                                                                                              ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:16:10
+
+Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
+
+   abstract_vs_abstract.js:16:10
+   16|   return x;
+                ^
+
+References:
+   abstract_vs_abstract.js:15:99
+   15| function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error props don't unify
+                                                                                                         ^^ [1]
+   abstract_vs_abstract.js:15:43
+   15| function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error props don't unify
+                                                 ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:20:10
+
+Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
+
+   abstract_vs_abstract.js:20:10
+   20|   return x;
+                ^
+
+References:
+   abstract_vs_abstract.js:19:47
+   19| function test4(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{}, {foo: number}, Component> { // Error default props don't unify
+                                                     ^^ [1]
+   abstract_vs_abstract.js:19:92
+   19| function test4(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{}, {foo: number}, Component> { // Error default props don't unify
+                                                                                                  ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:24:10
+
+Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
+
+   abstract_vs_abstract.js:24:10
+   24|   return x;
+                ^
+
+References:
+   abstract_vs_abstract.js:23:103
+   23| function test5(x: React$AbstractComponent<{}, {foo: number}, Component>): React$AbstractComponent<{}, {}, Component> { // Error default props don't unify
+                                                                                                             ^^ [1]
+   abstract_vs_abstract.js:23:47
+   23| function test5(x: React$AbstractComponent<{}, {foo: number}, Component>): React$AbstractComponent<{}, {}, Component> { // Error default props don't unify
+                                                     ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:27:51
+
+`Component` [1] is incompatible with `Subcomponent` [2].
+
+   abstract_vs_abstract.js:27:51
+   27| function test6(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{}, {}, Subcomponent> { // Error instance is covariant
+                                                         ^^^^^^^^^ [1]
+
+References:
+   abstract_vs_abstract.js:27:96
+   27| function test6(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{}, {}, Subcomponent> { // Error instance is covariant
+                                                                                                      ^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- arity.js:3:19
+
+Cannot use type without exactly 3 type arguments.
+
+   3| function test1(x: React$AbstractComponent<any>) { // Not enough targs
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------------------------------------- arity.js:7:19
 
 Cannot use type without exactly 3 type arguments.
 
-   7| function test2(x: React$AbstractComponent<any>) { // Not enough targs
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   7| function test2(x: React$AbstractComponent<any,any>) { // Not enough targs
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- arity.js:11:19
 
 Cannot use type without exactly 3 type arguments.
 
-   11| function test3(x: React$AbstractComponent<any,any>) { // Not enough targs
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------------------- arity.js:15:19
-
-Cannot use type without exactly 3 type arguments.
-
-   15| function test4(x: React$AbstractComponent<any,any,any,any>) { // Too many targs
+   11| function test3(x: React$AbstractComponent<any,any,any,any>) { // Too many targs
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -223,4 +297,4 @@ References:
 
 
 
-Found 16 errors
+Found 20 errors

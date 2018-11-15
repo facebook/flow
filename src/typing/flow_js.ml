@@ -4009,6 +4009,19 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          *)
         rec_flow_t cx trace (this, instance);
 
+    (* AbstractComponent ~> AbstractComponent *)
+    | DefT (_, ReactAbstractComponentT {props = propsl;
+        default_props = default_propsl;
+        instance = instancel}),
+      UseT (use_op, DefT (_, ReactAbstractComponentT {props = propsu;
+        default_props = default_propsu;
+        instance = instanceu}))
+      ->
+        rec_unify cx trace ~use_op propsl propsu;
+        rec_unify cx trace ~use_op default_propsl default_propsu;
+        (* See ClassT ~> AbstractComponentT for justification *)
+        rec_flow_t cx trace (instancel, instanceu);
+
     | _, UseT (_, DefT (r, ReactAbstractComponentT _))
     | DefT (r, ReactAbstractComponentT _), _ ->
         add_output cx ~trace (FlowError.EAbstractComponentNotYetSupported (aloc_of_reason r))
