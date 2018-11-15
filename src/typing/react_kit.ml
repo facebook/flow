@@ -151,8 +151,10 @@ let run cx trace ~use_op reason_op l u
       any,
       {
         this_t = any;
-        params = [(None, props)];
-        rest_param = Some (None, aloc_of_reason reason_op, any);
+        (* There is a deprecated optional second argument on function components.
+         * In order to support them, we have a second any argument here *)
+        params = [(None, props); (None, any)];
+        rest_param = None;
         return_t = if with_return_t
           then get_builtin_type cx reason_op "React$Node"
           else any;
