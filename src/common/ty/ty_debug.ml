@@ -108,7 +108,7 @@ and dump_generics ~depth = function
 and dump_tvar (RVar i) = spf "T_%d" i
 
 and dump_symbol { provenance; loc; name; _ } =
-  spf "(%s, %s) %s" (Ty.string_of_provenance_ctor provenance)
+  spf "(%s, %s) %s" (Ty.debug_string_of_provenance_ctor provenance)
     (Reason.string_of_loc loc) name
 
 and dump_utility ~depth u =
@@ -131,7 +131,7 @@ and dump_t ?(depth = 10) t =
   | Generic (s, kind, ts) ->
     spf "Generic (%s, kind= %s, params=%s)"
       (dump_symbol s)
-      (Ty.string_of_generic_kind kind)
+      (Ty.debug_string_of_generic_kind kind)
       (dump_generics ~depth ts)
   | Any -> "Any"
   | AnyObj -> "AnyObj"
@@ -219,7 +219,7 @@ let string_of_ctor = function
 let json_of_t ~strip_root =
 
   let json_of_provenance loc p = Hh_json.(JSON_Object [
-      "kind", JSON_String (Ty.string_of_provenance_ctor p);
+      "kind", JSON_String (Ty.debug_string_of_provenance_ctor p);
       "loc", JSON_String (Reason.string_of_loc ~strip_root loc);
     ])
   in
@@ -243,7 +243,7 @@ let json_of_t ~strip_root =
     | Generic (s, k, targs_opt) ->
       json_of_targs targs_opt @ [
         "type", json_of_symbol s;
-        "kind", JSON_String (Ty.string_of_generic_kind k);
+        "kind", JSON_String (Ty.debug_string_of_generic_kind k);
       ]
     | Any | AnyObj | AnyFun
     | Top | Bot

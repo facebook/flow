@@ -226,18 +226,18 @@ let mk_array ~readonly t =
 let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }
 
-let string_of_provenance_ctor = function
+let debug_string_of_provenance_ctor = function
   | Local -> "Local"
   | Imported -> "Imported"
   | Remote -> "Remote"
   | Library -> "Library"
   | Builtin -> "Builtin"
 
-let string_of_symbol { provenance; loc; name; _ } =
-  Utils_js.spf "%s (%s:%s)" name (string_of_provenance_ctor provenance)
+let debug_string_of_symbol { provenance; loc; name; _ } =
+  Utils_js.spf "%s (%s:%s)" name (debug_string_of_provenance_ctor provenance)
     (Reason.string_of_loc loc)
 
-let string_of_generic_kind = function
+let debug_string_of_generic_kind = function
   | ClassKind -> "class"
   | InterfaceKind -> "interface"
   | TypeAliasKind -> "type alias"
