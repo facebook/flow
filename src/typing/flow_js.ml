@@ -937,6 +937,9 @@ module ResolvableTypeJob = struct
       let ts = InterRep.members rep in
       collect_of_types ?log_unresolved cx reason acc ts
 
+    | DefT (_, ReactAbstractComponentT {props; default_props; instance}) ->
+      collect_of_types ?log_unresolved cx reason acc [props; default_props; instance]
+
     | OpaqueT (_, {underlying_t; super_t; _}) ->
       let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx reason) in
       let acc = Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx reason) in
@@ -2628,6 +2631,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, UseT (_, AnyWithUpperBoundT t) ->
       rec_flow_t cx trace (l, t)
 
+
+    | _, UseT (_, DefT (r, ReactAbstractComponentT _))
+    | DefT (r, ReactAbstractComponentT _), _ ->
+        add_output cx ~trace (FlowError.EAbstractComponentNotYetSupported (def_aloc_of_reason r))
 
     | _, ReactKitT (use_op, reason_op, React.CreateElement0 (clone, config, children, tout)) ->
       let tool = React.CreateElement (clone, l, config, children, tout) in
@@ -7812,6 +7819,11 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace Positive c;
     check_polarity_typeapp cx ?trace polarity c ts
 
+  | DefT (_, ReactAbstractComponentT {props; default_props; instance}) ->
+      check_polarity cx ?trace Neutral props;
+      check_polarity cx ?trace Neutral default_props;
+      check_polarity cx ?trace Neutral instance;
+
   | OpaqueT (_, opaquetype) ->
     Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.underlying_t;
     Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.super_t
@@ -12347,6 +12359,9 @@ end = struct
     | DefT (_, IdxWrapper t) ->
         let t = resolve_type cx t in
         extract_type cx t
+
+    | DefT (_, ReactAbstractComponentT _) as t ->
+        Success t
 
     | ReposT (_, t)
     | InternalT (ReposUpperT (_, t)) ->

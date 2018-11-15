@@ -245,6 +245,15 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t
           else IdxWrapper t''
+      | ReactAbstractComponentT {props; default_props; instance} ->
+          let props' = self#type_ cx map_cx props in
+          let default_props' = self#type_ cx map_cx default_props in
+          let instance' = self#type_ cx map_cx instance in
+          if props' == props && default_props' == default_props && instance' == instance
+          then t
+          else ReactAbstractComponentT {props = props';
+            default_props = default_props';
+            instance = instance'}
 
   method defer_use_type cx map_cx t =
     match t with

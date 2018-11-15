@@ -172,6 +172,7 @@ type hash =
   | ExtendsUseH
   | ToStringH
   | InvariantH
+  | ReactAbstractComponentH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -194,6 +195,7 @@ let hash_of_def_ctor = Type.(function
   | NumT _ -> NumH
   | ObjT _ -> ObjH
   | OptionalT _ -> OptionalH
+  | ReactAbstractComponentT _ -> ReactAbstractComponentH
   | SingletonBoolT _ -> SingletonBoolH
   | SingletonNumT _ -> SingletonNumH
   | SingletonStrT _ -> SingletonStrH

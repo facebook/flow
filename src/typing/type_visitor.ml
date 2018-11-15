@@ -186,6 +186,11 @@ class ['a] t = object(self)
   | IdxWrapper t ->
     self#type_ cx pole acc t
 
+  | ReactAbstractComponentT {props; default_props; instance} ->
+    let acc = self#type_ cx Neutral acc props in
+    let acc = self#type_ cx Neutral acc default_props in
+    self#type_ cx Neutral acc instance
+
   method targ cx pole acc = function
   | ImplicitArg _ -> acc
   | ExplicitArg t -> self#type_ cx pole acc t

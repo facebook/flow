@@ -257,6 +257,9 @@ module rec TypeTerm : sig
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
 
+    (* React$AbstractComponent<Props, DefaultProps, Instance> *)
+    | ReactAbstractComponentT of {props: t; default_props: t; instance: t}
+
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
@@ -2864,6 +2867,7 @@ let string_of_def_ctor = function
   | ObjT _ -> "ObjT"
   | OptionalT _ -> "OptionalT"
   | PolyT _ -> "PolyT"
+  | ReactAbstractComponentT _ -> "ReactAbstractComponentT"
   | SingletonBoolT _ -> "SingletonBoolT"
   | SingletonNumT _ -> "SingletonNumT"
   | SingletonStrT _ -> "SingletonStrT"

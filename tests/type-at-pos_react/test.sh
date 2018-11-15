@@ -17,3 +17,7 @@ assert_ok "$FLOW" type-at-pos react_component.js 32 29 --strip-root --pretty --e
 # react.js
 printf "react.js:2:7 = "
 assert_ok "$FLOW" type-at-pos react.js 2 7 --strip-root --pretty
+
+printf "react_abstract_component.js:3:15 ="
+assert_ok "$FLOW" type-at-pos react_abstract_component.js 3 15 --strip-root --pretty
+

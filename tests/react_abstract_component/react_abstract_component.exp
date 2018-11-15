@@ -2,7 +2,7 @@ Error --------------------------------------------------------------------------
 
 React$AbstractComponent is not supported yet.
 
-   3| function test1(x: React$AbstractComponent<any, any, any>) { // Error not yet supported
+   3| function test1(x: React$AbstractComponent<any, any, any>): React$ComponentType<{}> { // Error not yet supported
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 

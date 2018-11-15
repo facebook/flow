@@ -257,6 +257,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "wrappedObj", _json_of_t json_cx t
     ]
 
+  | DefT (_, ReactAbstractComponentT {props; default_props; instance}) -> [
+      "props", _json_of_t json_cx props;
+      "default_props", _json_of_t json_cx default_props;
+      "instance", _json_of_t json_cx instance;
+    ]
+
   | ShapeT t -> [
       "type", _json_of_t json_cx t
     ]
@@ -1782,6 +1788,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | DefT (_, AnyObjT)
   | DefT (_, AnyFunT) -> p t
   | DefT (_, IdxWrapper inner_obj) -> p ~extra:(kid inner_obj) t
+  | DefT (_, ReactAbstractComponentT _) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
   | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t

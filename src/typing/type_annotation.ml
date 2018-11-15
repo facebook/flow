@@ -586,7 +586,12 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   | "React$AbstractComponent" ->
       check_type_arg_arity cx loc targs 3 (fun () ->
-        error_type cx loc (FlowError.EAbstractComponentNotYetSupported loc)
+        let ts, targs = convert_type_params () in
+        let props = List.nth ts 0 in
+        let default_props = List.nth ts 1 in
+        let instance = List.nth ts 2 in
+        reconstruct_ast (DefT (mk_reason (RCustom "AbstractComponent") loc,
+          ReactAbstractComponentT {props; default_props; instance})) targs
       )
   | "React$PropType$Primitive" ->
       check_type_arg_arity cx loc targs 1 (fun () ->

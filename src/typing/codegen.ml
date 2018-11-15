@@ -311,6 +311,11 @@ let rec gen_type t env = Type.(
   | DefT (_, UnionT union) -> gen_union_list union env
   | DefT (_, VoidT) -> add_str "void" env
   | InternalT (OptionalChainVoidT _) -> add_str "void" env
+  | DefT (_, ReactAbstractComponentT {props; default_props; instance}) ->
+      add_str "React$AbstractComponent<" env |> gen_type props
+        |> add_str ", " |> gen_type default_props
+        |> add_str ", " |> gen_type instance
+        |> add_str ">"
 
   (**
    * These types can't be expressed in code well so we fail back to `mixed`.
