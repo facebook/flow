@@ -2168,6 +2168,8 @@ and type_function ~sep { Ast.Type.Function.
     option type_parameter tparams;
     group [
       new_list
+        (* Calls should not allow a trailing comma *)
+        ~trailing_sep:false
         ~wrap:(Atom "(", Atom ")")
         ~sep:(Atom ",")
         params;

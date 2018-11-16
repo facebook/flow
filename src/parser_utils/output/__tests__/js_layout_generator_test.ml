@@ -2030,8 +2030,11 @@ let tests = "js_layout_generator" >::: [
       assert_statement_string ~ctxt ~pretty:true "type a = (a?: b, c) => c;";
       assert_statement_string ~ctxt ~pretty:true "type a = <a>(a?: b, c) => c;";
       assert_statement_string ~ctxt ~pretty:true (
-        "type a = <a>(\n  a?: b,\n  " ^ String.make 80 'c' ^ ",\n) => c;"
+        "type a = <a>(\n  a?: b,\n  " ^ String.make 80 'c' ^ "\n) => c;"
       );
+      let a30 = String.make 30 'a' in
+      let b30 = String.make 30 'b' in
+      assert_expression_string ~ctxt ("(" ^ a30 ^ ":" ^ a30 ^ ",..." ^ b30 ^ ":" ^ b30 ^"):c=>{}");
     end;
 
   "type_object" >::
