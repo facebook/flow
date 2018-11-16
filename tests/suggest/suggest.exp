@@ -256,7 +256,7 @@ class D {
   declare var x: {o: O, ...C};
   return x;
 };
-(): {f?: O} & {g?: O} => {
+(): {...C} & {...D} => {
   declare var x: {...C} & {...D};
   return x;
 };

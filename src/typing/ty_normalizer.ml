@@ -108,16 +108,6 @@ end = struct
       *)
       tvar_cache: (Ty.t, error) result IMap.t;
 
-      (* A cache for resolved EvalTs
-
-         It is important to cache these results because we should only invoke
-         Flow_js.evaluate_type_destructor once for every EvalT. If we fail to do
-         so the result for calls that result to exceptions will not be cached in
-         Context.evaluated and subsequent calls may result to different results.
-         In particular we might get Empty instead of an exception.
-      *)
-      eval_t_cache: (Ty.t, error) result IMap.t;
-
       (* This set is useful for synthesizing recursive types. It holds the set
          of type variables that are encountered "free". We say that a type
          variable is free when it appears in the body of its own definition.
@@ -132,7 +122,6 @@ end = struct
     let empty = {
       counter = 0;
       tvar_cache = IMap.empty;
-      eval_t_cache = IMap.empty;
       free_tvars = VSet.empty;
     }
 
@@ -173,17 +162,6 @@ end = struct
     let open State in
     get >>| fun st ->
     IMap.get root_id st.tvar_cache
-
-  let update_eval_t_cache i t =
-    let open State in
-    get >>= fun st ->
-    let eval_t_cache = IMap.add i t st.eval_t_cache in
-    put { st with eval_t_cache }
-
-  let find_eval_t id =
-    let open State in
-    get >>| fun st ->
-    IMap.get id st.eval_t_cache
 
 
   (* Lookup a type parameter T in the current environment. There are three outcomes:
@@ -229,53 +207,6 @@ end = struct
         })
     | None ->
       default t
-
-
-  (****************)
-  (* Type queries *)
-  (****************)
-
-  exception FoundFreeBoundInType
-
-  (* Note: only use toplevel_* functions from outside the class *)
-  let free_bound_t_finder = object (self)
-    inherit [unit] Type_visitor.t as super
-
-    val mutable polys = []
-
-    method toplevel_type cx t =
-      polys <- [];
-      match self#type_ cx Type.Positive () t with
-      | exception FoundFreeBoundInType -> true
-      | _ -> false
-
-    method toplevel_destructor cx t =
-      polys <- [];
-      match self#destructor cx () t with
-      | exception FoundFreeBoundInType -> true
-      | _ -> false
-
-    method! type_ cx pole () = function
-      | Type.BoundT (_, bname, _) ->
-        if List.mem bname polys
-        then ()
-        else raise FoundFreeBoundInType
-      | Type.DefT (_, Type.PolyT (_, tparams, _, _)) as t ->
-        let old_polys = polys in
-        Nel.iter (fun tparam -> polys <- tparam.Type.name::polys) tparams;
-        let result = super#type_ cx pole () t in
-        polys <- old_polys;
-        result
-      | Type.ThisClassT _ as t ->
-        let old_polys = polys in
-        polys <- "this"::polys;
-        let result = super#type_ cx pole () t in
-        polys <- old_polys;
-        result
-      | t ->
-        super#type_ cx pole () t
-
-  end
 
 
   (**************)
@@ -1370,42 +1301,37 @@ end = struct
   (* EvalT    *)
   (************)
 
-  and destructuring_t ~env t id r s =
-    let cx = Env.get_cx env in
-    match Flow_js.eval_selector cx r t s id with
-    | exception Flow_js.Not_expect_bound _ ->
-      terr ~kind:BadEvalT ~msg:"destructuring" (Some t)
-    | t -> type__ ~env t
+  and destructuring_t ~env t =
+    type__ ~env t
 
   and spread =
     let spread_of_ty = function
       | Ty.Obj { Ty.obj_props; _ } -> obj_props
       | t -> [Ty.SpreadProp t]
     in
-    let obj_exact t target =
+    let obj_exact target =
       match target with
       | Type.Object.Spread.(Annot { make_exact }) ->
         return make_exact
       | Type.Object.Spread.Value ->
-        terr ~kind:BadEvalT ~msg:"spread-target-value" (Some t)
+        terr ~kind:BadEvalT ~msg:"spread-target-value" None
     in
-    let mk_spread t target prefix_tys ty =
-      obj_exact t target >>| fun obj_exact ->
+    let mk_spread ty target prefix_tys =
+      obj_exact target >>| fun obj_exact ->
       Ty.Obj { Ty.
         obj_props = prefix_tys @ spread_of_ty ty;
         obj_exact;
         obj_frozen = false; (* default *)
       }
     in
-    fun ~env t target ts_rev ->
+    fun ~env ty target ts_rev ->
       mapM (type__ ~env) ts_rev >>= fun tys_rev ->
       let prefix_tys = List.fold_left (fun acc t ->
         List.rev_append (spread_of_ty t) acc
       ) [] tys_rev in
-      type__ ~env t >>= fun ty ->
-      mk_spread t target prefix_tys ty
+      mk_spread ty target prefix_tys
 
-  and named_type_destructor_t ~env t d =
+  and type_destructor_t ~env t d =
     type__ ~env t >>= fun ty ->
     match d with
     | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
@@ -1427,60 +1353,23 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Rest (ty, ty'))
     | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
-    | T.SpreadType (target, ts) -> spread ~env t target ts
-
+    | T.SpreadType (target, ts) -> spread ~env ty target ts
     | T.ReactElementPropsType -> return (generic_builtin_t "React$ElementProps" [ty])
     | T.ReactElementConfigType -> return (generic_builtin_t "React$ElementConfig" [ty])
     | T.ReactElementRefType -> return (generic_builtin_t "React$ElementRef" [ty])
-
     | T.RestType (T.Object.Rest.ReactConfigMerge, _)
-    | T.Bind _ ->
-      terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) (Some t)
+    | T.Bind _ as d ->
+      terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 
-  and resolve_type_destructor_t ~env t id use_op reason d =
-    let cx = Env.get_cx env in
-    let tparams = env.Env.tparams in
-    if List.length tparams > 0 &&
-      (free_bound_t_finder#toplevel_type cx t ||
-        free_bound_t_finder#toplevel_destructor cx d)
-    then named_type_destructor_t ~env t d
-    else
-      let trace = Trace.dummy_trace in
-      match Flow_js.mk_type_destructor cx ~trace use_op reason t d id with
-      | exception Flow_js.Not_expect_bound _ ->
-        terr ~kind:BadEvalT ~msg:"type_destructor" (Some t)
-      | _, t -> type__ ~env t
-
-  and evaluate_type_destructor ~env t id use_op reason d =
+  and eval_t ~env t id d =
     let cx = Env.get_cx env in
     let evaluated = Context.evaluated cx in
     match IMap.get id evaluated with
-    | Some cached_t -> type__ ~env cached_t
-    | None -> resolve_type_destructor_t ~env t id use_op reason d
-
-  and type_destructor_t ~env t id use_op reason d =
-    find_eval_t id >>= function
-    | Some (Ok t) -> return t
-    | Some (Error e) -> error e
+    | Some t -> type__ ~env t
     | None ->
-      get >>= fun in_st ->
-      (* To store the complete result (including error case) we need to run
-         evaluation outside the monad and then update the state of the main monad.
-      *)
-      let result, out_st = run in_st (
-        evaluate_type_destructor ~env t id use_op reason d
-      ) in
-      put out_st >>= fun _ ->
-      update_eval_t_cache id result >>= fun _ ->
-      begin match result with
-      | Ok ty -> return ty
-      | Error e -> error e end
-
-  and eval_t ~env t id = function
-    | Type.DestructuringT (r, s) ->
-      destructuring_t ~env t id r s
-    | Type.TypeDestructorT (use_op, reason, d) ->
-      type_destructor_t ~env t id use_op reason d
+      match d with
+      | Type.DestructuringT (_r, _s) -> destructuring_t ~env t
+      | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env t d
 
   and module_t env reason t =
     match desc_of_reason reason with

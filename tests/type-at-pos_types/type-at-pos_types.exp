@@ -1472,7 +1472,7 @@ spread.js:39:6 = {
   "end":8
 }
 spread.js:40:6 = {
-  "type":"type ECtor1 = {|name?: string, o: O|}",
+  "type":"type ECtor1 = {|...Ctor, o: O|}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1487,7 +1487,7 @@ spread.js:40:6 = {
   "end":11
 }
 spread.js:41:6 = {
-  "type":"type ECtor2 = {|name?: string, o: mixed|}",
+  "type":"type ECtor2 = {|o: O, ...Ctor|}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1917,7 +1917,7 @@ type-destructor.js:3:6 = {
   "end":6
 }
 type-destructor.js:4:6 = {
-  "type":"type D = {|f: ?string|}",
+  "type":"type D = {|f: $PropertyType<C, \"f\">|}",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -1932,7 +1932,7 @@ type-destructor.js:4:6 = {
   "end":6
 }
 type-destructor.js:5:6 = {
-  "type":"type E = {+x: number}",
+  "type":"type E = $ReadOnly<{x: number}>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -1947,7 +1947,7 @@ type-destructor.js:5:6 = {
   "end":6
 }
 type-destructor.js:8:6 = {
-  "type":"type F = {|vs: (\"b\" | \"a\")|}",
+  "type":"type F = {|vs: $Values<{|A: string, B: string|}>|}",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -2082,7 +2082,7 @@ type-destructor.js:21:6 = {
   "end":7
 }
 type-destructor.js:23:6 = {
-  "type":"type N = any",
+  "type":"type N = $ElementType<H, \"c\">",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -2142,7 +2142,7 @@ type-destructor.js:29:5 = {
   "end":5
 }
 type-destructor.js:33:6 = {
-  "type":"type Q = number",
+  "type":"type Q = $NonMaybeType<?number>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -2172,7 +2172,7 @@ type-destructor.js:34:6 = {
   "end":7
 }
 type-destructor.js:36:6 = {
-  "type":"type R = number | string",
+  "type":"type R = $Values<H>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -2202,7 +2202,7 @@ type-destructor.js:37:6 = {
   "end":7
 }
 type-destructor.js:41:6 = {
-  "type":"type S = {|y?: OY|}",
+  "type":"type S = $Rest<{|y: OY|}, {|[string]: OY|}>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -2232,7 +2232,7 @@ type-destructor.js:42:6 = {
   "end":7
 }
 type-destructor.js:44:6 = {
-  "type":"type U = {a: Array<number>, b?: Array<number>}",
+  "type":"type U = $ObjMap<{a: number, b?: number}, <T>(T) => Array<T>>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -2262,7 +2262,7 @@ type-destructor.js:45:6 = {
   "end":7
 }
 type-destructor.js:47:6 = {
-  "type":"type V = [\"FOO\", \"FOO\"]",
+  "type":"type V = $TupleMap<[mixed, mixed], <K>(k: K) => \"FOO\">",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
