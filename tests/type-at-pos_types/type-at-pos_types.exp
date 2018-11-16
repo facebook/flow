@@ -512,7 +512,7 @@ implicit-instantiation.js:10:21{
   "end":21
 }
 mixed.js:18:17 = {
-  "type":"any",
+  "type":"AB",
   "reasons":[],
   "loc":{
     "source":"mixed.js",
@@ -1072,8 +1072,8 @@ spread.js:11:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":11,"column":6,"offset":187},
-    "end":{"line":11,"column":9,"offset":191}
+    "start":{"line":11,"column":6,"offset":193},
+    "end":{"line":11,"column":9,"offset":197}
   },
   "path":"spread.js",
   "line":11,
@@ -1087,8 +1087,8 @@ spread.js:12:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":12,"column":6,"offset":234},
-    "end":{"line":12,"column":10,"offset":239}
+    "start":{"line":12,"column":6,"offset":240},
+    "end":{"line":12,"column":10,"offset":245}
   },
   "path":"spread.js",
   "line":12,
@@ -1097,13 +1097,13 @@ spread.js:12:6 = {
   "end":10
 }
 spread.js:13:6 = {
-  "type":"type C1 = {f?: O, o: O}",
+  "type":"type C1 = {f: O, o: O}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":13,"column":6,"offset":285},
-    "end":{"line":13,"column":7,"offset":287}
+    "start":{"line":13,"column":6,"offset":291},
+    "end":{"line":13,"column":7,"offset":293}
   },
   "path":"spread.js",
   "line":13,
@@ -1112,13 +1112,13 @@ spread.js:13:6 = {
   "end":7
 }
 spread.js:14:6 = {
-  "type":"type C2 = {f?: O, o: mixed}",
+  "type":"type C2 = {f: O, o: O}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":14,"column":6,"offset":313},
-    "end":{"line":14,"column":7,"offset":315}
+    "start":{"line":14,"column":6,"offset":319},
+    "end":{"line":14,"column":7,"offset":321}
   },
   "path":"spread.js",
   "line":14,
@@ -1127,13 +1127,13 @@ spread.js:14:6 = {
   "end":7
 }
 spread.js:15:6 = {
-  "type":"type EC1 = {|f?: O, o: O|}",
+  "type":"type EC1 = {|f: O, o: O|}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":15,"column":6,"offset":341},
-    "end":{"line":15,"column":8,"offset":344}
+    "start":{"line":15,"column":6,"offset":347},
+    "end":{"line":15,"column":8,"offset":350}
   },
   "path":"spread.js",
   "line":15,
@@ -1142,13 +1142,13 @@ spread.js:15:6 = {
   "end":8
 }
 spread.js:16:6 = {
-  "type":"type EC2 = {|f?: O, o: mixed|}",
+  "type":"type EC2 = {|f: O, o: O|}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":16,"column":6,"offset":371},
-    "end":{"line":16,"column":8,"offset":374}
+    "start":{"line":16,"column":6,"offset":385},
+    "end":{"line":16,"column":8,"offset":388}
   },
   "path":"spread.js",
   "line":16,
@@ -1162,8 +1162,8 @@ spread.js:17:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":17,"column":6,"offset":401},
-    "end":{"line":17,"column":10,"offset":406}
+    "start":{"line":17,"column":6,"offset":415},
+    "end":{"line":17,"column":10,"offset":420}
   },
   "path":"spread.js",
   "line":17,
@@ -1177,8 +1177,8 @@ spread.js:18:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":18,"column":6,"offset":432},
-    "end":{"line":18,"column":10,"offset":437}
+    "start":{"line":18,"column":6,"offset":446},
+    "end":{"line":18,"column":10,"offset":451}
   },
   "path":"spread.js",
   "line":18,
@@ -1192,8 +1192,8 @@ spread.js:19:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":19,"column":6,"offset":463},
-    "end":{"line":19,"column":7,"offset":465}
+    "start":{"line":19,"column":6,"offset":477},
+    "end":{"line":19,"column":7,"offset":479}
   },
   "path":"spread.js",
   "line":19,
@@ -1207,8 +1207,8 @@ spread.js:20:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":20,"column":6,"offset":494},
-    "end":{"line":20,"column":7,"offset":496}
+    "start":{"line":20,"column":6,"offset":508},
+    "end":{"line":20,"column":7,"offset":510}
   },
   "path":"spread.js",
   "line":20,
@@ -1222,8 +1222,8 @@ spread.js:21:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":21,"column":6,"offset":525},
-    "end":{"line":21,"column":7,"offset":527}
+    "start":{"line":21,"column":6,"offset":539},
+    "end":{"line":21,"column":7,"offset":541}
   },
   "path":"spread.js",
   "line":21,
@@ -1237,8 +1237,8 @@ spread.js:22:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":22,"column":6,"offset":558},
-    "end":{"line":22,"column":8,"offset":561}
+    "start":{"line":22,"column":6,"offset":572},
+    "end":{"line":22,"column":8,"offset":575}
   },
   "path":"spread.js",
   "line":22,
@@ -1247,13 +1247,13 @@ spread.js:22:6 = {
   "end":8
 }
 spread.js:23:6 = {
-  "type":"type Inter1 = {w?: mixed, x?: O, y?: O, z?: O} & {f?: O, o: O}",
+  "type":"type Inter1 = {w?: mixed, x?: O, y?: O, z?: O} & {f?: O, o?: O}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":23,"column":6,"offset":604},
-    "end":{"line":23,"column":11,"offset":610}
+    "start":{"line":23,"column":6,"offset":618},
+    "end":{"line":23,"column":11,"offset":624}
   },
   "path":"spread.js",
   "line":23,
@@ -1267,8 +1267,8 @@ spread.js:26:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":26,"column":6,"offset":656},
-    "end":{"line":26,"column":7,"offset":658}
+    "start":{"line":26,"column":6,"offset":669},
+    "end":{"line":26,"column":7,"offset":671}
   },
   "path":"spread.js",
   "line":26,
@@ -1282,8 +1282,8 @@ spread.js:27:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":27,"column":6,"offset":700},
-    "end":{"line":27,"column":7,"offset":702}
+    "start":{"line":27,"column":6,"offset":713},
+    "end":{"line":27,"column":7,"offset":715}
   },
   "path":"spread.js",
   "line":27,
@@ -1297,8 +1297,8 @@ spread.js:28:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":28,"column":6,"offset":731},
-    "end":{"line":28,"column":7,"offset":733}
+    "start":{"line":28,"column":6,"offset":744},
+    "end":{"line":28,"column":7,"offset":746}
   },
   "path":"spread.js",
   "line":28,
@@ -1312,8 +1312,8 @@ spread.js:29:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":29,"column":6,"offset":762},
-    "end":{"line":29,"column":7,"offset":764}
+    "start":{"line":29,"column":6,"offset":775},
+    "end":{"line":29,"column":7,"offset":777}
   },
   "path":"spread.js",
   "line":29,
@@ -1327,8 +1327,8 @@ spread.js:30:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":30,"column":6,"offset":800},
-    "end":{"line":30,"column":7,"offset":802}
+    "start":{"line":30,"column":6,"offset":813},
+    "end":{"line":30,"column":7,"offset":815}
   },
   "path":"spread.js",
   "line":30,
@@ -1342,8 +1342,8 @@ spread.js:31:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":31,"column":6,"offset":862},
-    "end":{"line":31,"column":8,"offset":865}
+    "start":{"line":31,"column":6,"offset":875},
+    "end":{"line":31,"column":8,"offset":878}
   },
   "path":"spread.js",
   "line":31,
@@ -1357,8 +1357,8 @@ spread.js:32:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":32,"column":6,"offset":909},
-    "end":{"line":32,"column":8,"offset":912}
+    "start":{"line":32,"column":6,"offset":922},
+    "end":{"line":32,"column":8,"offset":925}
   },
   "path":"spread.js",
   "line":32,
@@ -1372,8 +1372,8 @@ spread.js:33:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":33,"column":6,"offset":943},
-    "end":{"line":33,"column":8,"offset":946}
+    "start":{"line":33,"column":6,"offset":956},
+    "end":{"line":33,"column":8,"offset":959}
   },
   "path":"spread.js",
   "line":33,
@@ -1387,8 +1387,8 @@ spread.js:34:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":34,"column":6,"offset":977},
-    "end":{"line":34,"column":8,"offset":980}
+    "start":{"line":34,"column":6,"offset":990},
+    "end":{"line":34,"column":8,"offset":993}
   },
   "path":"spread.js",
   "line":34,
@@ -1402,8 +1402,8 @@ spread.js:35:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":35,"column":6,"offset":1018},
-    "end":{"line":35,"column":8,"offset":1021}
+    "start":{"line":35,"column":6,"offset":1031},
+    "end":{"line":35,"column":8,"offset":1034}
   },
   "path":"spread.js",
   "line":35,
@@ -1417,8 +1417,8 @@ spread.js:36:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":36,"column":6,"offset":1083},
-    "end":{"line":36,"column":9,"offset":1087}
+    "start":{"line":36,"column":6,"offset":1096},
+    "end":{"line":36,"column":9,"offset":1100}
   },
   "path":"spread.js",
   "line":36,
@@ -1432,8 +1432,8 @@ spread.js:37:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":37,"column":6,"offset":1120},
-    "end":{"line":37,"column":9,"offset":1124}
+    "start":{"line":37,"column":6,"offset":1133},
+    "end":{"line":37,"column":9,"offset":1137}
   },
   "path":"spread.js",
   "line":37,
@@ -1447,8 +1447,8 @@ spread.js:38:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":38,"column":6,"offset":1157},
-    "end":{"line":38,"column":8,"offset":1160}
+    "start":{"line":38,"column":6,"offset":1170},
+    "end":{"line":38,"column":8,"offset":1173}
   },
   "path":"spread.js",
   "line":38,
@@ -1462,8 +1462,8 @@ spread.js:39:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":39,"column":6,"offset":1190},
-    "end":{"line":39,"column":8,"offset":1193}
+    "start":{"line":39,"column":6,"offset":1203},
+    "end":{"line":39,"column":8,"offset":1206}
   },
   "path":"spread.js",
   "line":39,
@@ -1477,8 +1477,8 @@ spread.js:40:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":40,"column":6,"offset":1223},
-    "end":{"line":40,"column":11,"offset":1229}
+    "start":{"line":40,"column":6,"offset":1236},
+    "end":{"line":40,"column":11,"offset":1242}
   },
   "path":"spread.js",
   "line":40,
@@ -1492,8 +1492,8 @@ spread.js:41:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":41,"column":6,"offset":1256},
-    "end":{"line":41,"column":11,"offset":1262}
+    "start":{"line":41,"column":6,"offset":1269},
+    "end":{"line":41,"column":11,"offset":1275}
   },
   "path":"spread.js",
   "line":41,
@@ -1507,8 +1507,8 @@ spread.js:42:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":42,"column":6,"offset":1289},
-    "end":{"line":42,"column":9,"offset":1293}
+    "start":{"line":42,"column":6,"offset":1302},
+    "end":{"line":42,"column":9,"offset":1306}
   },
   "path":"spread.js",
   "line":42,
@@ -1522,8 +1522,8 @@ spread.js:43:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":43,"column":6,"offset":1324},
-    "end":{"line":43,"column":8,"offset":1327}
+    "start":{"line":43,"column":6,"offset":1337},
+    "end":{"line":43,"column":8,"offset":1340}
   },
   "path":"spread.js",
   "line":43,
@@ -1537,8 +1537,8 @@ spread.js:44:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":44,"column":6,"offset":1393},
-    "end":{"line":44,"column":10,"offset":1398}
+    "start":{"line":44,"column":6,"offset":1406},
+    "end":{"line":44,"column":10,"offset":1411}
   },
   "path":"spread.js",
   "line":44,
@@ -1552,8 +1552,8 @@ spread.js:45:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":45,"column":6,"offset":1426},
-    "end":{"line":45,"column":10,"offset":1431}
+    "start":{"line":45,"column":6,"offset":1439},
+    "end":{"line":45,"column":10,"offset":1444}
   },
   "path":"spread.js",
   "line":45,
@@ -1567,8 +1567,8 @@ spread.js:46:6 = {
   "loc":{
     "source":"spread.js",
     "type":"SourceFile",
-    "start":{"line":46,"column":6,"offset":1464},
-    "end":{"line":46,"column":10,"offset":1469}
+    "start":{"line":46,"column":6,"offset":1477},
+    "end":{"line":46,"column":10,"offset":1482}
   },
   "path":"spread.js",
   "line":46,
@@ -1947,7 +1947,7 @@ type-destructor.js:5:6 = {
   "end":6
 }
 type-destructor.js:8:6 = {
-  "type":"type F = {|vs: empty|}",
+  "type":"type F = {|vs: (\"b\" | \"a\")|}",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -2292,7 +2292,7 @@ type-destructor.js:48:6 = {
   "end":7
 }
 type-destructor.js:62:6 = {
-  "type":"type ReactA = any",
+  "type":"type ReactA = ElementProps<class MyComponent>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
@@ -2307,7 +2307,7 @@ type-destructor.js:62:6 = {
   "end":11
 }
 type-destructor.js:63:6 = {
-  "type":"type ReactAP<X> = any",
+  "type":"type ReactAP<X> = ElementProps<X>",
   "reasons":[],
   "loc":{
     "source":"type-destructor.js",
