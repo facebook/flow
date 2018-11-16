@@ -10,11 +10,11 @@ First install `@babel/cli` and `@babel/preset-flow` with either
 ```
 
 Next you need to create a `.babelrc` file at the root of your project with
-`"flow"` in your `"presets"`.
+`"@babel/preset-flow"` in your `"presets"`.
 
 ```json
 {
-  "presets": ["@babel/flow"]
+  "presets": ["@babel/preset-flow"]
 }
 ```
 
@@ -33,7 +33,8 @@ You can add this to your `package.json` scripts easily.
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src/ -d lib/",
-    "prepublish": "{{include.package_manager}} run build"
+    "prepublish": "{{include.package_manager}} run build",
+    "flow": "flow"
   }
 }
 ```
