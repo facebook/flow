@@ -442,6 +442,8 @@ let program (algo : diff_algorithm)
       export_named_declaration export1 export2
     | (_, Try try1), (_, Try try2) ->
       try_ try1 try2
+    | (_, DeclareTypeAlias d_t_alias1), (_, DeclareTypeAlias d_t_alias2) ->
+      type_alias d_t_alias1 d_t_alias2
     | (_, TypeAlias t_alias1), (_, TypeAlias t_alias2) ->
       type_alias t_alias1 t_alias2
     | (_, OpaqueType o_type1), (_, OpaqueType o_type2) ->

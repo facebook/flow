@@ -1426,6 +1426,12 @@ let tests = "ast_differ" >::: [
     ~source ~expected:"<>{gotRenamed}</>"
     ~mapper:(new useless_mapper)
   end;
+  "declare_type_alias_id" >:: begin fun ctxt ->
+    let source = "declare type Rename = string" in
+    assert_edits_equal ctxt ~edits:[(13, 19), "GotRenamed"]
+    ~source ~expected:"declare type GotRenamed = string"
+    ~mapper:(new useless_mapper)
+  end;
   "type_alias_id" >:: begin fun ctxt ->
     let source = "type Rename = string" in
     assert_edits_equal ctxt ~edits:[(5, 11), "GotRenamed"]
@@ -1488,6 +1494,12 @@ let tests = "ast_differ" >::: [
     ~edits:[((11, 12), "+"); ((12, 18), "GOT_RENAMED");
         ((20, 26), "GOT_RENAMED"); ((26, 34), ": string")]
     ~source ~expected:"type alias<+GOT_RENAMED, GOT_RENAMED: string> = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "declare_type_alias_right" >:: begin fun ctxt ->
+    let source = "declare type alias = number" in
+    assert_edits_equal ctxt ~edits:[(21, 27), "string"]
+    ~source ~expected:"declare type alias = string"
     ~mapper:(new useless_mapper)
   end;
   "type_alias_right" >:: begin fun ctxt ->
