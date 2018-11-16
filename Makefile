@@ -89,6 +89,7 @@ MODULES=\
   src/monitor/utils\
   src/parser\
   src/parser_utils\
+  src/parser_utils/aloc\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parsing\
