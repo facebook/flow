@@ -90,6 +90,7 @@ module Opts = struct
     munge_underscores: bool;
     no_flowlib: bool;
     node_resolver_dirnames: string list;
+    node_resolver_aliases: string list;
     recursion_limit: int;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
@@ -139,6 +140,7 @@ module Opts = struct
     |> SSet.add ".mp4"
     |> SSet.add ".webm"
 
+<<<<<<< HEAD
   let default_options =
     {
       abstract_locations = false;
@@ -185,6 +187,7 @@ module Opts = struct
       munge_underscores = false;
       no_flowlib = false;
       node_resolver_dirnames = ["node_modules"];
+      node_resolver_aliases = [];
       recursion_limit = 10000;
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
@@ -457,6 +460,13 @@ module Opts = struct
           (fun opts v ->
             let node_resolver_dirnames = v :: opts.node_resolver_dirnames in
             Ok { opts with node_resolver_dirnames }) );
+      ( "module.system.node.resolve_alias",
+        string
+          ~init: (fun opts -> { opts with node_resolver_aliases = [] })
+          ~multiple: true
+          (fun opts v ->
+            let node_resolver_aliases = v :: opts.node_resolver_aliases in
+            Ok {opts with node_resolver_aliases;}) );
       ("module.use_strict", boolean (fun opts v -> Ok { opts with modules_are_use_strict = v }));
       ("munge_underscores", boolean (fun opts v -> Ok { opts with munge_underscores = v }));
       ( "name",
@@ -979,7 +989,7 @@ let is_not_comment =
       (* Line starts with ; *)
         Str.regexp_string "\240\159\146\169";
         (* Line starts with poop emoji *)
-      
+
     ]
   in
   fun (_, line) ->
@@ -1164,6 +1174,8 @@ let munge_underscores c = c.options.Opts.munge_underscores
 let no_flowlib c = c.options.Opts.no_flowlib
 
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
+
+let node_resolver_aliases c = c.options.Opts.node_resolver_aliases
 
 let recursion_limit c = c.options.Opts.recursion_limit
 

@@ -17,6 +17,7 @@ type options = {
   module_file_exts: SSet.t;
   module_resource_exts: SSet.t;
   node_resolver_dirnames: string list;
+  node_resolver_aliases: string list;
 }
 
 let default_lib_dir options = options.default_lib_dir
@@ -36,6 +37,7 @@ let module_file_exts options = options.module_file_exts
 let module_resource_exts options = options.module_resource_exts
 
 let node_resolver_dirnames options = options.node_resolver_dirnames
+let node_resolver_aliases options = options.node_resolver_aliases
 
 let node_modules_containers = ref SSet.empty
 
@@ -105,6 +107,9 @@ let is_valid_path =
       (not (is_dot_file basename)) && (check_ext file_exts basename || basename = "package.json")
 
 let is_node_module options path = List.mem (Filename.basename path) options.node_resolver_dirnames
+
+let is_module_alias options path =
+  List.mem (Filename.basename path) options.node_resolver_aliases
 
 let is_flow_file ~options =
   let is_valid_path = is_valid_path ~options in
@@ -185,7 +190,7 @@ let max_files = 1000
 
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter paths =
   let prefix_checkers = Core_list.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -207,7 +212,7 @@ let make_next_files_and_symlinks
           else
             process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
-          if node_module_filter file then
+          if node_module_filter file || module_alias_filter file then
             node_modules_containers := SSet.add (Filename.dirname file) !node_modules_containers;
           let dirfiles = Array.to_list @@ try_readdir path in
           let symlinks =
@@ -243,12 +248,13 @@ let make_next_files_and_symlinks
    and including any directories that are symlinked to even if they are outside
    of `paths`. *)
 let make_next_files_following_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter paths =
   let paths = Core_list.map ~f:Path.to_string paths in
   let cb =
     ref
       (make_next_files_and_symlinks
          ~node_module_filter
+         ~module_alias_filter
          ~path_filter
          ~realpath_filter
          ~error_filter
@@ -281,6 +287,7 @@ let make_next_files_following_symlinks
       cb :=
         make_next_files_and_symlinks
           ~node_module_filter
+          ~module_alias_filter
           ~path_filter:realpath_filter
           ~realpath_filter
           ~error_filter
@@ -302,6 +309,7 @@ let get_all =
 
 let init ?(flowlibs_only = false) (options : options) =
   let node_module_filter = is_node_module options in
+  let module_alias_filter = is_module_alias options in
   let libs =
     if flowlibs_only then
       []
@@ -328,6 +336,7 @@ let init ?(flowlibs_only = false) (options : options) =
         let filter' path = (path = lib_str || filter path) && not (is_json_file path) in
         make_next_files_following_symlinks
           ~node_module_filter
+          ~module_alias_filter
           ~path_filter:filter'
           ~realpath_filter:filter'
           ~error_filter:(fun _ -> true)
@@ -403,6 +412,7 @@ let watched_paths options = Path_matcher.stems options.includes
  *)
 let make_next_files ~root ~all ~subdir ~options ~libs =
   let node_module_filter = is_node_module options in
+  let module_alias_filter = is_module_alias options in
   let filter =
     if all then
       fun _ ->
@@ -441,6 +451,7 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
   in
   make_next_files_following_symlinks
     ~node_module_filter
+    ~module_alias_filter
     ~path_filter
     ~realpath_filter
     ~error_filter:filter
@@ -571,6 +582,14 @@ let is_within_node_modules ~root ~options path =
   let directories = Str.split dir_sep path |> SSet.of_list in
   let node_resolver_dirnames = node_resolver_dirnames options |> SSet.of_list in
   not (SSet.inter directories node_resolver_dirnames |> SSet.is_empty)
+
+(* Given a path, we want to know if it's a resolve alias. *)
+let is_within_alias_directory ~root ~options path =
+  (* We use paths that are relative to the root, so that we ignore ancestor directories *)
+  let path = relative_path (Path.to_string root) path in
+  let directories = Str.split dir_sep path |> SSet.of_list in
+  let node_resolver_aliases = node_resolver_aliases options |> SSet.of_list in
+  not (SSet.inter directories node_resolver_aliases |> SSet.is_empty)
 
 (* realpath doesn't work for non-existent paths. So let's find the longest existent prefix, run
  * realpath on that, and then append the rest to it
