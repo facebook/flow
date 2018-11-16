@@ -407,12 +407,24 @@ module Node = struct
     lazy_seq [
       lazy (
         if SSet.mem dir node_modules_containers then
-          lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
-            lazy (resolve_relative
-              ~options ~reader
-              loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
-            )
-          ))
+          lazy_seq([
+            lazy (
+              lazy_seq (Files.node_resolver_aliases file_options |> Core_list.map ~f:(fun dirname ->
+                lazy (resolve_relative
+                  ~options
+                  loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
+                )
+              ))
+            );
+            lazy (
+              lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
+                lazy (resolve_relative
+                  ~options ~reader
+                  loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
+                )
+              ))
+            );
+          ])
         else None
       );
 

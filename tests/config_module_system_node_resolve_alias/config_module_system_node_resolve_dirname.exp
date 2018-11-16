@@ -1,0 +1,53 @@
+Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ subdir/sublevel.js:6:2
+
+Cannot cast name to string literal custom_resolve_dir/testproj2 because string
+literal subdir/custom_resolve_dir/testproj2 [1] is incompatible with string literal
+custom_resolve_dir/testproj2 [2].
+
+     subdir/sublevel.js
+     3│ import {name} from "testproj2";
+     4│
+     5│ (name: "subdir/custom_resolve_dir/testproj2");
+ [2] 6│ (name: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+     7│ (name: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+     8│
+
+     subdir/custom_resolve_dir/testproj2/index.js
+ [1] 3│ export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
+
+
+Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ subdir/sublevel.js:7:2
+
+Cannot cast name to string literal node_modules/testproj2 because string literal
+subdir/custom_resolve_dir/testproj2 [1] is incompatible with string literal
+node_modules/testproj2 [2].
+
+     subdir/sublevel.js
+      4│
+      5│ (name: "subdir/custom_resolve_dir/testproj2");
+      6│ (name: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+ [2]  7│ (name: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+      8│
+
+     subdir/custom_resolve_dir/testproj2/index.js
+ [1]  3│ export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
+
+
+Error ┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈┈ toplevel.js:6:2
+
+Cannot cast name to string literal node_modules/testproj because string literal
+custom_resolve_dir/testproj [1] is incompatible with string literal
+node_modules/testproj [2].
+
+     toplevel.js
+     3│ import {name} from "testproj";
+     4│
+     5│ (name: "custom_resolve_dir/testproj");
+ [2] 6│ (name: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+
+     custom_resolve_dir/testproj/index.js
+ [1] 3│ export var name: "custom_resolve_dir/testproj" = "custom_resolve_dir/testproj";
+
+
+
+Found 3 errors

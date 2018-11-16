@@ -17,6 +17,7 @@ type options = {
   module_file_exts: SSet.t;
   module_resource_exts: SSet.t;
   node_resolver_dirnames: string list;
+  node_resolver_aliases: string list;
 }
 
 val default_lib_dir: options -> Path.t option
@@ -28,6 +29,7 @@ val lib_paths: options -> Path.t list
 val module_file_exts: options -> SSet.t
 val module_resource_exts: options -> SSet.t
 val node_resolver_dirnames: options -> string list
+val node_resolver_aliases: options -> string list
 
 val node_modules_containers: SSet.t ref
 
@@ -106,6 +108,7 @@ val filename_from_string: options: options -> string -> File_key.t
 val mkdirp: string -> Unix.file_perm -> unit
 
 val is_within_node_modules: root:Path.t -> options: options -> string -> bool
+val is_within_alias_directory: root:Path.t -> options: options -> string -> bool
 
 val imaginary_realpath: string -> string
 val canonicalize_filenames:

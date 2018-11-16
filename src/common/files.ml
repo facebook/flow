@@ -17,6 +17,7 @@ type options = {
   module_file_exts: SSet.t;
   module_resource_exts: SSet.t;
   node_resolver_dirnames: string list;
+  node_resolver_aliases: string list;
 }
 
 let default_lib_dir options = options.default_lib_dir
@@ -28,6 +29,7 @@ let lib_paths options = options.lib_paths
 let module_file_exts options = options.module_file_exts
 let module_resource_exts options = options.module_resource_exts
 let node_resolver_dirnames options = options.node_resolver_dirnames
+let node_resolver_aliases options = options.node_resolver_aliases
 
 let node_modules_containers = ref SSet.empty
 
@@ -104,6 +106,9 @@ let is_valid_path =
 let is_node_module options path =
   List.mem (Filename.basename path) options.node_resolver_dirnames
 
+let is_module_alias options path =
+  List.mem (Filename.basename path) options.node_resolver_aliases
+
 let is_flow_file ~options =
   let is_valid_path = is_valid_path ~options in
   fun path -> is_valid_path path && not (is_directory path)
@@ -177,7 +182,7 @@ let max_files = 1000
 
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
+    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter paths =
   let prefix_checkers = Core_list.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
@@ -193,7 +198,7 @@ let make_next_files_and_symlinks
           then process (sz+1) (real :: acc, symlinks) files dir stack
           else process sz (acc, symlinks) files dir stack
         | Dir (path, is_symlink) ->
-          if node_module_filter file
+          if node_module_filter file || module_alias_filter file
           then node_modules_containers := SSet.add (Filename.dirname file) !node_modules_containers;
           let dirfiles = Array.to_list @@ try_readdir path in
           let symlinks =
@@ -229,13 +234,14 @@ let make_next_files_and_symlinks
    of `paths`. *)
 let make_next_files_following_symlinks
   ~node_module_filter
+  ~module_alias_filter
   ~path_filter
   ~realpath_filter
   ~error_filter
   paths =
   let paths = Core_list.map ~f:Path.to_string paths in
   let cb = ref (make_next_files_and_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths
+    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter paths
   ) in
   let symlinks = ref SSet.empty in
   let seen_symlinks = ref SSet.empty in
@@ -254,7 +260,7 @@ let make_next_files_following_symlinks
       symlinks := SSet.empty;
       (* since we're following a symlink, use realpath_filter for both *)
       cb := make_next_files_and_symlinks
-        ~node_module_filter ~path_filter:realpath_filter ~realpath_filter ~error_filter paths;
+        ~node_module_filter ~module_alias_filter ~path_filter:realpath_filter ~realpath_filter ~error_filter paths;
       rec_cb ()
     end
   in
@@ -273,6 +279,7 @@ let get_all =
 
 let init ?(flowlibs_only=false) (options: options) =
   let node_module_filter = is_node_module options in
+  let module_alias_filter = is_module_alias options in
   let libs = if flowlibs_only then [] else options.lib_paths in
   let libs, filter = match options.default_lib_dir with
     | None -> libs, is_valid_path ~options
@@ -291,6 +298,7 @@ let init ?(flowlibs_only=false) (options: options) =
         let filter' path = path = lib_str || filter path in
         make_next_files_following_symlinks
           ~node_module_filter
+          ~module_alias_filter
           ~path_filter:filter'
           ~realpath_filter:filter'
           ~error_filter:(fun _ -> true)
@@ -364,6 +372,7 @@ let watched_paths options =
  *)
 let make_next_files ~root ~all ~subdir ~options ~libs =
   let node_module_filter = is_node_module options in
+  let module_alias_filter = is_module_alias options in
   let filter = if all then fun _ -> true else wanted ~options libs in
 
   (* The directories from which we start our search *)
@@ -399,7 +408,7 @@ let make_next_files ~root ~all ~subdir ~options ~libs =
       )
   in
   make_next_files_following_symlinks
-    ~node_module_filter ~path_filter ~realpath_filter ~error_filter:filter starting_points
+    ~node_module_filter ~module_alias_filter ~path_filter ~realpath_filter ~error_filter:filter starting_points
 
 let is_windows_root root =
   Sys.win32 &&
@@ -526,6 +535,14 @@ let is_within_node_modules ~root ~options path =
   let directories = Str.split dir_sep path |> SSet.of_list in
   let node_resolver_dirnames = node_resolver_dirnames options |> SSet.of_list in
   not (SSet.inter directories node_resolver_dirnames |> SSet.is_empty)
+
+(* Given a path, we want to know if it's a resolve alias. *)
+let is_within_alias_directory ~root ~options path =
+  (* We use paths that are relative to the root, so that we ignore ancestor directories *)
+  let path = relative_path (Path.to_string root) path in
+  let directories = Str.split dir_sep path |> SSet.of_list in
+  let node_resolver_aliases = node_resolver_aliases options |> SSet.of_list in
+  not (SSet.inter directories node_resolver_aliases |> SSet.is_empty)
 
 (* realpath doesn't work for non-existent paths. So let's find the longest existent prefix, run
  * realpath on that, and then append the rest to it
