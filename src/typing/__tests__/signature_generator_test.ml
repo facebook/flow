@@ -47,6 +47,24 @@ let mk_signature_generator_test contents expected_msgs =
       expected_msgs msgs
   end
 
+let mk_generated_signature_file_sig_test contents expected_msgs =
+  begin fun ctxt ->
+    let msgs = match verify_and_generate contents with
+      | Ok program ->
+        begin match File_sig.With_Loc.program ~ast:program ~module_ref_prefix:None with
+          | Ok fs -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
+          | Error _ -> []
+        end
+      | Error _errors -> []
+    in
+    let printer v = "\n" ^ (String.concat "\n" v) in
+    assert_equal ~ctxt
+      ~cmp:(Signature_verifier_test.eq printer)
+      ~printer
+      ~msg:"Results don't match!"
+      expected_msgs msgs
+  end
+
 let mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes contents =
   begin fun ctxt ->
     let msgs = match verify_and_generate ?prevent_munge ?ignore_static_propTypes contents with
@@ -75,6 +93,28 @@ let verified_signature_generator_tests =
          contents) :: acc
     else acc
   ) [] Signature_verifier_test.tests_data
+
+let generated_signature_file_sig_tests = [
+  "multiple_bindings_destructured_require" >:: mk_generated_signature_file_sig_test
+    ["const {";
+     "  foo: foo2,";
+     "  bar: { barX },";
+     "} = require('./something');";
+     "module.exports = { foo2, barX }"]
+    ["{";
+     "  module_sig: {";
+     "    requires: [";
+     "      Require (./something, Some (BindNamed: bar));";
+     "      Require (./something, Some (BindNamed: foo));";
+     "    ];";
+     "    module_kind: CommonJS;";
+     "    type_exports_named: {";
+     "    };";
+     "    type_exports_star: [";
+     "    ];";
+     "  };";
+     "}"];
+]
 
 let tests = "signature_generator" >::: ([
   "dead_type" >:: mk_signature_generator_test
@@ -536,4 +576,4 @@ let tests = "signature_generator" >::: ([
      "  | {|x: Array<$TEMPORARY$number<1> | $TEMPORARY$number<2>>|}";
      "  | {|x: Array<$TEMPORARY$number<3>>|}>;"];
 
-] @ verified_signature_generator_tests)
+] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)

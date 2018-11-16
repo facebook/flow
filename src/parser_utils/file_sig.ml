@@ -377,9 +377,16 @@ module Make
 
     val mutable curr_declare_module: exports_info module_sig' option = None;
 
-    (* This ensures that we do not add `require`s to `module_sig.requires` twice:
-     * once in `variable_declarator`/`assignment` and once in `call`. *)
-    val mutable visited_requires: L.LSet.t = L.LSet.empty;
+    (* This ensures that we do not add a `require` with no bindings to `module_sig.requires` (when
+     * processing a `call`) when we have already added that `require` with bindings (when processing
+     * a `variable_declarator`). *)
+    val mutable visited_requires_with_bindings: L.LSet.t = L.LSet.empty;
+    method private visited_requires_with_bindings loc bindings =
+      bindings = None
+      && L.LSet.mem loc visited_requires_with_bindings
+    method private visit_requires_with_bindings loc bindings =
+      if bindings <> None
+      then visited_requires_with_bindings <- L.LSet.add loc visited_requires_with_bindings
 
     method private update_module_sig f =
       match curr_declare_module with
@@ -733,12 +740,6 @@ module Make
         ignore (super#assignment loc expr)
       end;
 
-      (* Handle imports *)
-      begin match operator with
-      | Assign -> this#handle_require left right
-      | _ -> ()
-      end
-
     method private handle_cjs_default_export module_loc mod_exp_loc cjs_exports_def =
       (* expressions not allowed in declare module body *)
       assert (curr_declare_module = None);
@@ -782,8 +783,8 @@ module Make
 
     method private handle_call call_loc callee arguments bindings =
       let open Ast.Expression in
-      if not (L.LSet.mem call_loc visited_requires) then begin
-        visited_requires <- L.LSet.add call_loc visited_requires;
+      if not (this#visited_requires_with_bindings call_loc bindings) then begin
+        this#visit_requires_with_bindings call_loc bindings;
         match callee, arguments with
         | ((_, Identifier (loc, "require")), [Expression (source_loc, (
             Literal { Ast.Literal.value = Ast.Literal.String name; _ } |
