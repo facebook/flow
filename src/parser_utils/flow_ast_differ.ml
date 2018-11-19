@@ -559,10 +559,9 @@ let program (algo : diff_algorithm)
     let open Ast.Statement.VariableDeclaration.Declarator in
     let (_, { id = id1; init = init1 }) = decl1 in
     let (_, { id = id2; init = init2 }) = decl2 in
-    if id1 != id2 then
-      Some (pattern id1 id2)
-    else
-      diff_if_changed_nonopt_fn expression init1 init2
+    let id_diff = diff_if_changed pattern id1 id2 |> Option.return in
+    let expr_diff = diff_if_changed_nonopt_fn expression init1 init2 in
+    join_diff_list [id_diff; expr_diff]
 
   and variable_declaration (var1: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) (var2: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t)
       : node change list option =

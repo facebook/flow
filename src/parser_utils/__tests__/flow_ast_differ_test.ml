@@ -1122,6 +1122,11 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(11,19), ": string"] ~source
       ~expected:"(dontrename: string)" ~mapper:(new useless_mapper)
   end;
+  "type_cast_assign" >:: begin fun ctxt ->
+    let source = "const x : number = (dontrename: number)" in
+    assert_edits_equal ctxt ~edits:[(8,16), ": string"; (30, 38),": string"] ~source
+      ~expected:"const x : string = (dontrename: string)" ~mapper:(new useless_mapper)
+  end;
   "type_cast_add" >:: begin fun ctxt ->
     let source = "const dontrename = call( /* preserve spaces */  )" in
     assert_edits_equal ctxt ~edits:[(19, 19), "("; (49, 49), ": any)"]
