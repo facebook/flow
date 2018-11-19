@@ -429,26 +429,16 @@ end) : Key with type userkey = UserKeyType.t = struct
 end
 
 (*****************************************************************************)
-(* Raw interface to shared memory (cf hh_shared.c for the underlying
+(* Immediate interface to shared memory (cf hh_shared.c for the underlying
  * representation).
  *)
 (*****************************************************************************)
-module Raw (Key: Key) (Value:Value.Type): sig
+module Immediate (Key: Key) (Value:Value.Type): sig
   val add    : Key.md5 -> Value.t -> unit
   val mem    : Key.md5 -> bool
   val get    : Key.md5 -> Value.t
   val remove : Key.md5 -> unit
   val move   : Key.md5 -> Key.md5 -> unit
-
-  module LocalChanges : sig
-    val has_local_changes : unit -> bool
-    val push_stack : unit -> unit
-    val pop_stack : unit -> unit
-    val revert : Key.md5 -> unit
-    val commit : Key.md5 -> unit
-    val revert_all : unit -> unit
-    val commit_all : unit -> unit
-  end
 end = struct
   (* Returns the number of bytes allocated in the heap, or a negative number
    * if no new memory was allocated *)
@@ -496,6 +486,46 @@ end = struct
       Measure.sample ("ALL bytes allocated for deserialized value") localheap
     end
 
+  let add key value =
+    let compressed_size, original_size = hh_add key value in
+    if hh_log_level() > 0 && compressed_size > 0
+    then log_serialize compressed_size original_size
+
+  let mem key =
+    hh_mem key
+
+  let get key =
+    let v = hh_get_and_deserialize key in
+    if hh_log_level() > 0
+    then (log_deserialize (hh_get_size key) (Obj.repr v));
+    v
+
+  let remove key =
+    hh_remove key
+
+  let move from_key to_key =
+    hh_move from_key to_key
+end
+
+(*****************************************************************************)
+(* Direct access to shared memory, but with a layer of local changes that allow
+ * us to decide whether or not to commit specific values.
+ *)
+(*****************************************************************************)
+module WithLocalChanges : functor (Key : Key) -> functor (Value : Value.Type) -> sig
+  include module type of Immediate (Key) (Value)
+  module LocalChanges : sig
+    val has_local_changes : unit -> bool
+    val push_stack : unit -> unit
+    val pop_stack : unit -> unit
+    val revert : Key.md5 -> unit
+    val commit : Key.md5 -> unit
+    val revert_all : unit -> unit
+    val commit_all : unit -> unit
+  end
+end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
+  module Immediate = Immediate (Key) (Value)
+
   (**
    * Represents a set of local changes to the view of the shared memory heap
    * WITHOUT materializing to the changes in the actual heap. This allows us to
@@ -539,18 +569,14 @@ end = struct
 
     let rec mem stack_opt key =
       match stack_opt with
-      | None -> hh_mem key
+      | None -> Immediate.mem key
       | Some stack ->
         try Hashtbl.find stack.current key <> Remove
         with Not_found -> mem stack.prev key
 
     let rec get stack_opt key =
       match stack_opt with
-      | None ->
-        let v = hh_get_and_deserialize key in
-        if hh_log_level() > 0
-        then (log_deserialize (hh_get_size key) (Obj.repr v));
-        v
+      | None -> Immediate.get key
       | Some stack ->
         try match Hashtbl.find stack.current key with
           | Remove -> failwith "Trying to get a non-existent value"
@@ -587,7 +613,7 @@ end = struct
      *)
     let remove stack_opt key =
       match stack_opt with
-      | None -> hh_remove key
+      | None -> Immediate.remove key
       | Some stack ->
         try match Hashtbl.find stack.current key with
           | Remove -> failwith "Trying to remove a non-existent value"
@@ -610,9 +636,7 @@ end = struct
     let add stack_opt key value =
       match stack_opt with
       | None ->
-        let compressed_size, original_size = hh_add key value in
-        if hh_log_level() > 0 && compressed_size > 0
-        then log_serialize compressed_size original_size
+        Immediate.add key value
       | Some stack ->
         try match Hashtbl.find stack.current key with
           | Remove
@@ -626,7 +650,7 @@ end = struct
 
     let move stack_opt from_key to_key =
       match stack_opt with
-      | None -> hh_move from_key to_key
+      | None -> Immediate.move from_key to_key
       | Some _stack ->
         assert (mem stack_opt from_key);
         assert (not @@ mem stack_opt to_key);
@@ -716,19 +740,19 @@ module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
    *)
   val oldify      : Key.t -> unit
 
-  module Raw: module type of Raw (Key) (Value)
+  module WithLocalChanges: module type of WithLocalChanges (Key) (Value)
 
 end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
-  module Raw = Raw (Key) (Value)
+  module WithLocalChanges = WithLocalChanges (Key) (Value)
 
-  let add key value = Raw.add (Key.md5 key) value
-  let mem key = Raw.mem (Key.md5 key)
+  let add key value = WithLocalChanges.add (Key.md5 key) value
+  let mem key = WithLocalChanges.mem (Key.md5 key)
 
   let get key =
     let key = Key.md5 key in
-    if Raw.mem key
-    then Some (Raw.get key)
+    if WithLocalChanges.mem key
+    then Some (WithLocalChanges.get key)
     else None
 
   let find_unsafe key =
@@ -738,10 +762,10 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
   let remove key =
     let key = Key.md5 key in
-    if Raw.mem key
+    if WithLocalChanges.mem key
     then begin
-      Raw.remove key;
-      assert (not (Raw.mem key));
+      WithLocalChanges.remove key;
+      assert (not (WithLocalChanges.mem key));
     end
     else ()
 
@@ -749,13 +773,13 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
     if mem key
     then
       let old_key = Key.to_old key in
-      Raw.move (Key.md5 key) (Key.md5_old old_key)
+      WithLocalChanges.move (Key.md5 key) (Key.md5_old old_key)
     else ()
 end
 
 (* Same as new, but for old values *)
 module Old : functor (Key : Key) -> functor (Value : Value.Type) ->
-  functor (Raw : module type of Raw (Key) (Value)) -> sig
+  functor (WithLocalChanges : module type of WithLocalChanges (Key) (Value)) -> sig
 
   val get         : Key.old -> Value.t option
   val remove      : Key.old -> unit
@@ -764,19 +788,19 @@ module Old : functor (Key : Key) -> functor (Value : Value.Type) ->
   val revive      : Key.old -> unit
 
 end = functor (Key : Key) -> functor (Value: Value.Type) ->
-  functor (Raw : module type of Raw (Key) (Value)) -> struct
+  functor (WithLocalChanges : module type of WithLocalChanges (Key) (Value)) -> struct
 
   let get key =
     let key = Key.md5_old key in
-    if Raw.mem key
-    then Some (Raw.get key)
+    if WithLocalChanges.mem key
+    then Some (WithLocalChanges.get key)
     else None
 
-  let mem key = Raw.mem (Key.md5_old key)
+  let mem key = WithLocalChanges.mem (Key.md5_old key)
 
   let remove key =
     if mem key
-    then Raw.remove (Key.md5_old key)
+    then WithLocalChanges.remove (Key.md5_old key)
 
   let revive key =
   if mem key
@@ -784,9 +808,9 @@ end = functor (Key : Key) -> functor (Value: Value.Type) ->
     let new_key = Key.new_from_old key in
     let new_key = Key.md5 new_key in
     let old_key = Key.md5_old key in
-    if Raw.mem new_key
-    then Raw.remove new_key;
-    Raw.move old_key new_key
+    if WithLocalChanges.mem new_key
+    then WithLocalChanges.remove new_key;
+    WithLocalChanges.move old_key new_key
 end
 
 (*****************************************************************************)
@@ -848,7 +872,7 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   module Key = KeyFunctor (UserKeyType)
   module New = New (Key) (Value)
-  module Old = Old (Key) (Value) (New.Raw)
+  module Old = Old (Key) (Value) (New.WithLocalChanges)
   module KeySet = Set.Make (UserKeyType)
   module KeyMap = MyMap.Make (UserKeyType)
 
@@ -921,7 +945,7 @@ module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
     end xs
 
   module LocalChanges = struct
-    include New.Raw.LocalChanges
+    include New.WithLocalChanges.LocalChanges
     let revert_batch keys =
       KeySet.iter begin fun str_key ->
         let key = Key.make Value.prefix str_key in
