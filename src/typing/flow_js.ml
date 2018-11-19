@@ -2914,12 +2914,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ObjT { flags; props_tmap; dict_t; _ }), GetKeysT (reason_op, keys) ->
       begin match flags.sealed with
       | Sealed ->
-        (* flow each key of l to keys *)
-        Context.iter_props cx props_tmap (fun x _ ->
+        (* flow the union of keys of l to keys *)
+        let keylist = SMap.fold (fun x _ acc ->
           let reason = replace_reason_const (RStringLit x) reason_op in
-          let t = DefT (reason, StrT (Literal (None, x))) in
-          rec_flow cx trace (t, keys)
-        );
+          DefT (reason, StrT (Literal (None, x)))::acc
+        ) (Context.find_props cx props_tmap) [] in
+        rec_flow cx trace (union_of_ts reason_op keylist, keys);
         Option.iter dict_t (fun { key; _ } ->
           rec_flow cx trace (key, ToStringT (reason_op, keys))
         );
@@ -2930,11 +2930,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, InstanceT (_, _, _, instance)), GetKeysT (reason_op, keys) ->
       (* methods are not enumerable, so only walk fields *)
       let own_props = Context.find_props cx instance.own_props in
-      own_props |> SMap.iter (fun x _ ->
+      let keylist = SMap.fold (fun x _ acc ->
         let reason = replace_reason_const (RStringLit x) reason_op in
-        let t = DefT (reason, StrT (Literal (None, x))) in
-        rec_flow cx trace (t, keys)
-      )
+        DefT (reason, StrT (Literal (None, x)))::acc
+      ) own_props [] in
+      rec_flow cx trace (union_of_ts reason_op keylist, keys)
 
     | DefT (reason, (AnyObjT | AnyFunT)), GetKeysT (_, keys) ->
       rec_flow cx trace (StrT.why reason, keys)
