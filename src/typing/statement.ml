@@ -4184,7 +4184,7 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
     match Context.haste_module_ref_prefix cx with
     | Some prefix when String_utils.string_starts_with s prefix ->
       let m = String_utils.lstrip s prefix in
-      let t = require cx (loc, m) ALoc.none in
+      let t = require cx (loc, m) loc in
       let reason = mk_reason (RCustom "module reference") loc in
       Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [t]
     | _ ->
