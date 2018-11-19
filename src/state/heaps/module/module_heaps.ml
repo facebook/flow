@@ -8,7 +8,7 @@
 (********************************** Name Heap *********************************)
 (* Maps module names to the filenames which provide those modules             *)
 
-module NameHeap = SharedMem_js.WithCache (Modulename.Key) (struct
+module NameHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (Modulename.Key) (struct
   type t = File_key.t
   let prefix = Prefix.make()
   let description = "Name"
@@ -45,7 +45,7 @@ type resolved_requires = {
                                  references need to be re-resolved. *)
 }
 
-module ResolvedRequiresHeap = SharedMem_js.WithCache (File_key) (struct
+module ResolvedRequiresHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
   type t = resolved_requires
   let prefix = Prefix.make()
   let description = "ResolvedRequires"
@@ -71,7 +71,7 @@ type info = {
   parsed: bool; (* if false, it's a tracking record only *)
 }
 
-module InfoHeap = SharedMem_js.WithCache (File_key) (struct
+module InfoHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
   type t = info
   let prefix = Prefix.make()
   let description = "Info"
@@ -94,7 +94,7 @@ let is_tracked_file = InfoHeap.mem
 
 
 (* shared heap for package.json tokens by filename *)
-module PackageHeap = SharedMem_js.WithCache (StringKey) (struct
+module PackageHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (StringKey) (struct
     type t = Package_json.t
     let prefix = Prefix.make()
     let description = "Package"
@@ -102,7 +102,7 @@ module PackageHeap = SharedMem_js.WithCache (StringKey) (struct
   end)
 
 (* shared heap for package.json directories by package name *)
-module ReversePackageHeap = SharedMem_js.WithCache (StringKey) (struct
+module ReversePackageHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (StringKey) (struct
     type t = string
     let prefix = Prefix.make()
     let description = "ReversePackage"

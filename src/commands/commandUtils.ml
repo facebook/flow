@@ -253,6 +253,7 @@ let shm_config shm_flags flowconfig =
     ~default:(FlowConfig.shm_min_avail flowconfig) in
   let log_level = Option.value shm_flags.shm_log_level
     ~default:(FlowConfig.shm_log_level flowconfig) in
+  let sample_rate = 0.0 in
   { SharedMem_js.
     global_size = FlowConfig.shm_global_size flowconfig;
     heap_size = FlowConfig.shm_heap_size flowconfig;
@@ -261,6 +262,7 @@ let shm_config shm_flags flowconfig =
     shm_dirs;
     shm_min_avail;
     log_level;
+    sample_rate;
   }
 
 let from_flag prev = CommandSpec.ArgSpec.(

@@ -9,7 +9,7 @@ open Utils_js
 
 (****************** shared context heap *********************)
 
-module SigContextHeap = SharedMem_js.WithCache (File_key) (struct
+module SigContextHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
   type t = Context.sig_t
   let prefix = Prefix.make()
   let description = "SigContext"
@@ -40,14 +40,14 @@ let find_sig file =
   | Some cx -> cx
   | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
 
-module SigHashHeap = SharedMem_js.NoCache (File_key) (struct
+module SigHashHeap = SharedMem_js.NoCache (SharedMem_js.Immediate) (File_key) (struct
   type t = Xx.hash
   let prefix = Prefix.make()
   let description = "SigHash"
   let use_sqlite_fallback () = false
 end)
 
-module LeaderHeap = SharedMem_js.WithCache (File_key) (struct
+module LeaderHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
   type t = File_key.t
   let prefix = Prefix.make()
   let description = "Leader"

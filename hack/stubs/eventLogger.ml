@@ -35,6 +35,7 @@ let sharedmem_less_than_minimum_available
   ~shm_dir:_
   ~shm_min_avail:_
   ~avail:_ = ()
+let sharedmem_access_sample ~heap_name:_ ~key:_ ~write_time:_ = ()
 let find_done ~time_taken:_ ~name:_ = ()
 let log_gc_stats () = ()
 let flush _ = ()

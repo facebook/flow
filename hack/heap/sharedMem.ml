@@ -19,6 +19,7 @@ type config = {
   shm_dirs         : string list;
   shm_min_avail    : int;
   log_level        : int;
+  sample_rate      : float;
 }
 
 (* Allocated in C only. *)
@@ -242,6 +243,11 @@ external heap_size: unit -> int = "hh_heap_size"
 external hh_log_level : unit -> int = "hh_log_level"
 
 (*****************************************************************************)
+(* The sample rate for shared memory statistics *)
+(*****************************************************************************)
+external hh_sample_rate : unit -> float = "hh_sample_rate"
+
+(*****************************************************************************)
 (* The number of used slots in our hashtable *)
 (*****************************************************************************)
 external hash_used_slots : unit -> int * int = "hh_hash_used_slots"
@@ -428,8 +434,16 @@ end) : Key with type userkey = UserKeyType.t = struct
   let string_of_md5 x = x
 end
 
+module type Raw = functor (Key : Key) -> functor (Value : Value.Type) -> sig
+  val add    : Key.md5 -> Value.t -> unit
+  val mem    : Key.md5 -> bool
+  val get    : Key.md5 -> Value.t
+  val remove : Key.md5 -> unit
+  val move   : Key.md5 -> Key.md5 -> unit
+end
+
 (*****************************************************************************)
-(* Immediate interface to shared memory (cf hh_shared.c for the underlying
+(* Immediate access to shared memory (cf hh_shared.c for the underlying
  * representation).
  *)
 (*****************************************************************************)
@@ -507,13 +521,60 @@ end = struct
     hh_move from_key to_key
 end
 
+module ProfiledImmediate : functor (Key : Key) -> functor (Value : Value.Type) -> sig
+  include module type of Immediate (Key) (Value)
+end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
+  module ProfiledValue = struct
+    (** Tagging a value as Raw (the 99.9999% case) only increases its marshalled
+        size by 1 byte, and does not change its unmarshalled memory
+        representation provided Value.t is a record type containing at least one
+        non-float member. *)
+    type t =
+      | Raw of Value.t
+      | Profiled of { entry: Value.t; write_time: float; }
+    let prefix = Value.prefix
+    let description = Value.description
+    let use_sqlite_fallback = Value.use_sqlite_fallback
+  end
+
+  module Immediate = Immediate (Key) (ProfiledValue)
+
+  let add x y =
+    let sample_rate = hh_sample_rate() in
+    let entry =
+      if hh_log_level() <> 0 && Random.float 1.0 < sample_rate
+      then ProfiledValue.Profiled { entry = y; write_time = Unix.gettimeofday () }
+      else ProfiledValue.Raw y
+    in
+    Immediate.add x entry
+
+  let get x =
+    match Immediate.get x with
+    | ProfiledValue.Raw y -> y
+    | ProfiledValue.Profiled { entry; write_time } ->
+      EventLogger.(log_if_initialized @@ fun () ->
+        sharedmem_access_sample
+          ~heap_name:Value.description
+          ~key:(Key.string_of_md5 x)
+          ~write_time);
+      entry
+
+  let mem = Immediate.mem
+  let remove = Immediate.remove
+  let move = Immediate.move
+end
+
 (*****************************************************************************)
 (* Direct access to shared memory, but with a layer of local changes that allow
  * us to decide whether or not to commit specific values.
  *)
 (*****************************************************************************)
-module WithLocalChanges : functor (Key : Key) -> functor (Value : Value.Type) -> sig
-  include module type of Immediate (Key) (Value)
+module WithLocalChanges
+  :  functor (Raw : Raw)
+  -> functor (Key : Key)
+  -> functor (Value : Value.Type)
+-> sig
+  include module type of Raw (Key) (Value)
   module LocalChanges : sig
     val has_local_changes : unit -> bool
     val push_stack : unit -> unit
@@ -523,8 +584,8 @@ module WithLocalChanges : functor (Key : Key) -> functor (Value : Value.Type) ->
     val revert_all : unit -> unit
     val commit_all : unit -> unit
   end
-end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
-  module Immediate = Immediate (Key) (Value)
+end = functor (Raw : Raw) -> functor (Key : Key) -> functor (Value : Value.Type) -> struct
+  module Raw = Raw (Key) (Value)
 
   (**
    * Represents a set of local changes to the view of the shared memory heap
@@ -569,14 +630,14 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
     let rec mem stack_opt key =
       match stack_opt with
-      | None -> Immediate.mem key
+      | None -> Raw.mem key
       | Some stack ->
         try Hashtbl.find stack.current key <> Remove
         with Not_found -> mem stack.prev key
 
     let rec get stack_opt key =
       match stack_opt with
-      | None -> Immediate.get key
+      | None -> Raw.get key
       | Some stack ->
         try match Hashtbl.find stack.current key with
           | Remove -> failwith "Trying to get a non-existent value"
@@ -613,7 +674,7 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
      *)
     let remove stack_opt key =
       match stack_opt with
-      | None -> Immediate.remove key
+      | None -> Raw.remove key
       | Some stack ->
         try match Hashtbl.find stack.current key with
           | Remove -> failwith "Trying to remove a non-existent value"
@@ -636,7 +697,7 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
     let add stack_opt key value =
       match stack_opt with
       | None ->
-        Immediate.add key value
+        Raw.add key value
       | Some stack ->
         try match Hashtbl.find stack.current key with
           | Remove
@@ -650,7 +711,7 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
     let move stack_opt from_key to_key =
       match stack_opt with
-      | None -> Immediate.move from_key to_key
+      | None -> Raw.move from_key to_key
       | Some _stack ->
         assert (mem stack_opt from_key);
         assert (not @@ mem stack_opt to_key);
@@ -721,7 +782,7 @@ end
  *)
 (*****************************************************************************)
 
-module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
+module New : functor (Raw : Raw) -> functor (Key : Key) -> functor(Value: Value.Type) -> sig
 
   (* Adds a binding to the table, the table is left unchanged if the
    * key was already bound.
@@ -740,11 +801,11 @@ module New : functor (Key : Key) -> functor(Value: Value.Type) -> sig
    *)
   val oldify      : Key.t -> unit
 
-  module WithLocalChanges: module type of WithLocalChanges (Key) (Value)
+  module WithLocalChanges: module type of WithLocalChanges (Raw) (Key) (Value)
 
-end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
+end = functor (Raw : Raw) -> functor (Key : Key) -> functor (Value : Value.Type) -> struct
 
-  module WithLocalChanges = WithLocalChanges (Key) (Value)
+  module WithLocalChanges = WithLocalChanges (Raw) (Key) (Value)
 
   let add key value = WithLocalChanges.add (Key.md5 key) value
   let mem key = WithLocalChanges.mem (Key.md5 key)
@@ -778,8 +839,8 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
 end
 
 (* Same as new, but for old values *)
-module Old : functor (Key : Key) -> functor (Value : Value.Type) ->
-  functor (WithLocalChanges : module type of WithLocalChanges (Key) (Value)) -> sig
+module Old : functor (Raw : Raw) -> functor (Key : Key) -> functor (Value : Value.Type) ->
+  functor (WithLocalChanges : module type of WithLocalChanges (Raw) (Key) (Value)) -> sig
 
   val get         : Key.old -> Value.t option
   val remove      : Key.old -> unit
@@ -787,8 +848,8 @@ module Old : functor (Key : Key) -> functor (Value : Value.Type) ->
   (* Takes an old value and moves it back to a "new" one *)
   val revive      : Key.old -> unit
 
-end = functor (Key : Key) -> functor (Value: Value.Type) ->
-  functor (WithLocalChanges : module type of WithLocalChanges (Key) (Value)) -> struct
+end = functor (Raw : Raw) -> functor (Key : Key) -> functor (Value: Value.Type) ->
+  functor (WithLocalChanges : module type of WithLocalChanges (Raw) (Key) (Value)) -> struct
 
   let get key =
     let key = Key.md5_old key in
@@ -868,11 +929,11 @@ end
 (* A functor returning an implementation of the S module without caching. *)
 (*****************************************************************************)
 
-module NoCache (UserKeyType : UserKeyType) (Value : Value.Type) = struct
+module NoCache (Raw : Raw) (UserKeyType : UserKeyType) (Value : Value.Type) = struct
 
   module Key = KeyFunctor (UserKeyType)
-  module New = New (Key) (Value)
-  module Old = Old (Key) (Value) (New.WithLocalChanges)
+  module New = New (Raw) (Key) (Value)
+  module Old = Old (Raw) (Key) (Value) (New.WithLocalChanges)
   module KeySet = Set.Make (UserKeyType)
   module KeyMap = MyMap.Make (UserKeyType)
 
@@ -1189,9 +1250,9 @@ end
  * much time. The caches keep a deserialized version of the types.
  *)
 (*****************************************************************************)
-module WithCache (UserKeyType : UserKeyType) (Value:Value.Type) = struct
+module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value:Value.Type) = struct
 
-  module Direct = NoCache (UserKeyType) (Value)
+  module Direct = NoCache (Raw) (UserKeyType) (Value)
 
   type key = Direct.key
   type t = Direct.t
