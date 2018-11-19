@@ -236,11 +236,14 @@ let main
       if reason
       then
         files
-        |> List.map (explain ~flowconfig_name ~root ~options ~libs)
-        |> List.map (fun (f, r) -> normalize_filename f, r)
+        (* Mapping may cause a stack overflow. To avoid that, we always use rev_map.
+         * Since the amount of rev_maps we use is odd, we reverse the list once more
+         * at the end *)
+        |> List.rev_map (explain ~flowconfig_name ~root ~options ~libs)
+        |> List.rev_map (fun (f, r) -> normalize_filename f, r)
         |> json_of_files_with_explanations
       else JSON_Array (
-        List.map (fun f -> JSON_String (normalize_filename f)) files
+        List.rev (List.rev_map (fun f -> JSON_String (normalize_filename f)) files)
       ) in
     print_json_endline ~pretty json
   end) else begin
