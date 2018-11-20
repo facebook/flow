@@ -68,7 +68,6 @@ type hash =
   | AnyWithLowerBoundH
   | AnyWithUpperBoundH
   | MergedH
-  | AnyFunH
   | ShapeH
   | KeysH
   | SingletonStrH
@@ -178,7 +177,6 @@ let hash_of_def_ctor = Type.(function
   | PolyT _ -> failwith "undefined hash of PolyT"
   | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
 
-  | AnyFunT -> AnyFunH
   | AnyT _ -> AnyH
   | ArrT _ -> ArrH
   | BoolT _ -> BoolH

@@ -436,40 +436,6 @@ Cannot resolve name `React`.
          ^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ function.js:29:19
-
-Cannot assign `x` to `a` because function type [1] is incompatible with number [2].
-
-   function.js:29:19
-   29|   var a: number = x; // Error
-                         ^
-
-References:
-   function.js:28:17
-   28| function bad(x: Function, y: Object): void {
-                       ^^^^^^^^ [1]
-   function.js:29:10
-   29|   var a: number = x; // Error
-                ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ function.js:30:19
-
-Cannot assign `x` to `b` because function type [1] is incompatible with string [2].
-
-   function.js:30:19
-   30|   var b: string = x; // Error
-                         ^
-
-References:
-   function.js:28:17
-   28| function bad(x: Function, y: Object): void {
-                       ^^^^^^^^ [1]
-   function.js:30:10
-   30|   var b: string = x; // Error
-                ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- function.js:37:6
 
 Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2].
@@ -785,4 +751,4 @@ References:
 
 
 
-Found 56 errors
+Found 54 errors

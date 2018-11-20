@@ -3127,7 +3127,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     } ->
     let expressions = List.map (expression cx) expressions in
     (* TODO what is the type of "query"? is it in the environment? *)
-    let id_t = AnyFunT.at tag_loc in
+    let id_t = AnyT.at AnyFunction tag_loc in
     (*parse_graphql cx encaps;*)
     (loc, VoidT.at loc),
     TaggedTemplate { TaggedTemplate.
@@ -3423,7 +3423,7 @@ and subscript =
           AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
       ) in
       (* TODO(vijayramamurthy) type of require ? *)
-      let id_t = AnyFunT.at callee_loc in
+      let id_t = AnyT.at AnyFunction callee_loc in
       ex, lhs_t, acc, (
         (loc, lhs_t),
         call_ast { Call.
@@ -3508,7 +3508,7 @@ and subscript =
 
       ) in
       (* TODO(vijayramamurthy) does "requireLazy" have a type? *)
-      let id_t = AnyFunT.at callee_loc in
+      let id_t = AnyT.at AnyFunction callee_loc in
       ex, lhs_t, acc, (
         (loc, lhs_t),
         call_ast { Call.
@@ -3532,7 +3532,7 @@ and subscript =
         in
         ex, lhs_t, acc, (
           (loc, lhs_t),
-          let t = AnyFunT.at callee_loc in
+          let t = AnyT.at AnyFunction callee_loc in
           call_ast { Call.
             (* TODO(vijayramamurthy): what is the type of `Object.name` ? *)
             callee = (callee_loc, t), Member { Member.
@@ -3633,7 +3633,7 @@ and subscript =
           let reason_lookup = mk_reason (RProperty None) lookup_loc in
           let (_, elem_t), _ as expr = expression cx expr in
           (* TODO: (pvekris) T33113417 make type more precise *)
-          (AnyFunT.at lookup_loc,
+          (AnyT.at AnyFunction lookup_loc,
           Tvar.mk_where cx reason_call (fun t ->
             let frame = Env.peek_frame () in
             let funtype = mk_methodcalltype ot targts argts t ~frame in
@@ -6292,7 +6292,7 @@ and mk_class_sig =
       let set_type t = func_t_ref := Some t in
       let get_element () =
         let body = Option.value (!body_ref) ~default:Typed_ast.Function.body_error in
-        let func_t = Option.value (!func_t_ref) ~default:(AnyFunT.at id_loc) in
+        let func_t = Option.value (!func_t_ref) ~default:(AnyT.at AnyFunction id_loc) in
         let func = reconstruct_func body func_t in
         Body.Method ((loc, func_t), { Method.
           key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), name);

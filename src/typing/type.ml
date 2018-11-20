@@ -250,9 +250,6 @@ module rec TypeTerm : sig
     (* | types *)
     | UnionT of UnionRep.t
 
-    (* specializations of AnyT *)
-    | AnyFunT (* any function *)
-
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
 
@@ -752,6 +749,7 @@ module rec TypeTerm : sig
   and any_source =
     | Annotated
     | AnyError
+    | AnyFunction
     | Unsound
     | Untyped
 
@@ -2667,6 +2665,7 @@ module AnyT = struct
   let why  source   = replace_reason_const ~keep_def_loc:true desc %> make source
   let annot      = why Annotated
   let error      = why AnyError
+  let anyfunction   = why AnyFunction
   let unsound    = why Unsound
   let untyped    = why Untyped
 
@@ -2675,6 +2674,7 @@ module AnyT = struct
   let source = function
   | DefT(_, AnyT Annotated) -> Annotated
   | DefT(_, AnyT AnyError)  -> AnyError
+  | DefT(_, AnyT AnyFunction) -> AnyFunction
   | DefT(_, AnyT Unsound)   -> Unsound
   | DefT(_, AnyT Untyped)   -> Untyped
   | _ -> failwith "not an any type"
@@ -2698,11 +2698,6 @@ end)
 module NullProtoT = Primitive (struct
   let desc = RNull
   let make r = NullProtoT r
-end)
-
-module AnyFunT = Primitive (struct
-  let desc = RAnyFunction
-  let make r = DefT (r, AnyFunT)
 end)
 
 (* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
@@ -2864,7 +2859,6 @@ let string_of_defer_use_ctor = function
 let string_of_def_ctor = function
   | ArrT _ -> "ArrT"
   | AnyT _ -> "AnyT"
-  | AnyFunT -> "AnyFunT"
   | BoolT _ -> "BoolT"
   | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
@@ -3236,7 +3230,7 @@ let unknown_use = Op UnknownUse
    want to encourage this pattern, but we also don't want to block uses of this
    pattern. Thus, we compromise by not tracking the property types. *)
 let dummy_static reason =
-  DefT (replace_reason (fun desc -> RStatics desc) reason, AnyFunT)
+  DefT (replace_reason (fun desc -> RStatics desc) reason, AnyT AnyFunction)
 
 let dummy_prototype =
   ObjProtoT (locationless_reason RDummyPrototype)

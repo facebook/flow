@@ -249,9 +249,6 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "uses", JSON_Array (List.map (_json_of_use_t json_cx) uses);
     ]
 
-  | DefT (_, AnyFunT) ->
-    []
-
   | DefT (_, IdxWrapper t) -> [
       "wrappedObj", _json_of_t json_cx t
     ]
@@ -1673,6 +1670,7 @@ let rec dump_t_ (depth, tvars) cx t =
   let string_of_any_source = function
     | Annotated -> "Annotated"
     | AnyError -> "Error"
+    | AnyFunction -> "Function"
     | Unsound -> "Unsound"
     | Untyped -> "Untyped"
   in
@@ -1791,7 +1789,6 @@ let rec dump_t_ (depth, tvars) cx t =
   | MergedT (_, uses) -> p ~extra:("[" ^
       (String.concat ", " (List.map (dump_use_t_ (depth - 1, tvars) cx) uses))
     ^ "]") t
-  | DefT (_, AnyFunT) -> p t
   | DefT (_, IdxWrapper inner_obj) -> p ~extra:(kid inner_obj) t
   | DefT (_, ReactAbstractComponentT _) -> p t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t

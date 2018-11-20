@@ -239,7 +239,6 @@ class virtual ['a] t = object(self)
           let urep' = UnionRep.ident_map (self#type_ cx map_cx) urep in
           if urep' == urep then t
           else UnionT urep'
-      | AnyFunT -> t
       | IdxWrapper t' ->
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t

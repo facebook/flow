@@ -774,23 +774,6 @@ References:
                ^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- mixed.js:47:17
-
-Cannot call `takesString` with `x` bound to `x` because function [1] is incompatible with string [2].
-
-   mixed.js:47:17
-   47|     takesString(x); // error
-                       ^
-
-References:
-   mixed.js:45:17
-   45| function fun(x: mixed) {
-                       ^^^^^ [1]
-   mixed.js:4:25
-    4| function takesString(x: string) {}
-                               ^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- mixed.js:53:17
 
 Cannot call `takesString` with `x` bound to `x` because:
@@ -3151,4 +3134,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 228 errors
+Found 227 errors

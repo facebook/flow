@@ -554,7 +554,6 @@ end = struct
       Ty.Utility (Ty.Supertype t)
     | DefT (_, MixedT _) -> return Ty.Top
     | DefT (_, AnyT _) -> return Ty.Any
-    | DefT (_, AnyFunT) -> return Ty.AnyFun
     | DefT (_, VoidT) -> return Ty.Void
     | DefT (_, NumT (Literal (_, (_, x))))
       when Env.preserve_inferred_literal_types env ->

@@ -43,7 +43,6 @@ type reason_desc =
   | RUnaryOperator of string * reason_desc
   | RBinaryOperator of string * reason_desc * reason_desc
   | RLogical of string * reason_desc * reason_desc
-  | RAnyFunction
   | RTemplateString
   | RUnknownString
   | REnum

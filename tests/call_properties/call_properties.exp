@@ -190,23 +190,6 @@ References:
                           ^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------- C.js:33:10
-
-Cannot return `x` because a callable signature is missing in object type [1] but exists in function type [2].
-
-   C.js:33:10
-   33|   return x; // error
-                ^
-
-References:
-   C.js:32:15
-   32| function g(x: {}): Function {
-                     ^^ [1]
-   C.js:32:20
-   32| function g(x: {}): Function {
-                          ^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------------- D.js:12:3
 
 Cannot assign function to `c` because function [1] requires another argument from function type [2].
@@ -470,7 +453,7 @@ References:
 
 
 
-Found 31 errors
+Found 30 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

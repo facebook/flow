@@ -682,149 +682,7 @@ union.js = {
   ]
 }
 object_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
-function_builtins.js = {
-  "result":[
-    {
-      "name":"apply",
-      "type":"(thisArg: any, argArray?: any) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"argArray?","type":"any"}]
-      },
-      "path":"[LIB] core.js",
-      "line":106,
-      "endline":106,
-      "start":18,
-      "end":41
-    },
-    {
-      "name":"arguments",
-      "type":"any",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":110,
-      "endline":110,
-      "start":16,
-      "end":18
-    },
-    {
-      "name":"bind",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":107,
-      "endline":107,
-      "start":17,
-      "end":39
-    },
-    {
-      "name":"call",
-      "type":"(thisArg: any, ...argArray: Array<any>) => any",
-      "func_details":{
-        "return_type":"any",
-        "params":[{"name":"thisArg","type":"any"},{"name":"...argArray","type":"Array<any>"}]
-      },
-      "path":"[LIB] core.js",
-      "line":108,
-      "endline":108,
-      "start":17,
-      "end":39
-    },
-    {
-      "name":"caller",
-      "type":"Function | null",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":111,
-      "endline":111,
-      "start":13,
-      "end":27
-    },
-    {
-      "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
-      "start":5,
-      "end":38
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
-      "start":5,
-      "end":34
-    },
-    {
-      "name":"length",
-      "type":"number",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":112,
-      "endline":112,
-      "start":13,
-      "end":18
-    },
-    {
-      "name":"name",
-      "type":"string",
-      "func_details":null,
-      "path":"[LIB] core.js",
-      "line":113,
-      "endline":113,
-      "start":11,
-      "end":16
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
-      "start":5,
-      "end":44
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
-      "start":5,
-      "end":20
-    }
-  ]
-}
+function_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
 fun.js = {
   "result":[
     {
@@ -878,7 +736,7 @@ fun.js = {
     },
     {
       "name":"caller",
-      "type":"Function | null",
+      "type":"any | null",
       "func_details":null,
       "path":"[LIB] core.js",
       "line":111,

@@ -150,7 +150,6 @@ let rec gen_type t env = Type.(
   | AnnotT (_, source_t, _) -> gen_type (resolve_type source_t env) env
   | OpaqueT (_, {underlying_t = Some t; _}) -> gen_type t env
   | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
-  | DefT (_, AnyFunT) -> add_str "Function" env
   | DefT (_, AnyT _)
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _

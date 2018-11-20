@@ -2153,23 +2153,6 @@ References:
                              ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- proptype_func.js:14:21
-
-Cannot create `Example` element because number [1] is incompatible with function type [2] in property `func`.
-
-   proptype_func.js:14:21
-    14| var fail_mistyped = <Example func={2} />
-                            ^^^^^^^^^^^^^^^^^^^^
-
-References:
-   proptype_func.js:14:36
-    14| var fail_mistyped = <Example func={2} />
-                                           ^ [1]
-   <BUILTINS>/react.js:390:34
-   390|   func: React$PropType$Primitive<Function>;
-                                         ^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------ proptype_incompatible.js:5:10
 
 number [1] is not a React propType.
@@ -3720,7 +3703,7 @@ References:
 
 
 
-Found 231 errors
+Found 230 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

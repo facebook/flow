@@ -74,7 +74,6 @@ let type_ ?(size=5000) t =
     | TVar (v, ts) -> type_generic ~depth (type_var v) ts
     | Bound { name; _ } -> Atom name
     | Any -> Atom "any"
-    | AnyFun -> Atom "Function"
     | Top -> Atom "mixed"
     | Bot -> Atom "empty"
     | Void -> Atom "void"

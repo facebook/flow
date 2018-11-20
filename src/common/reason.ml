@@ -94,7 +94,6 @@ type reason_desc =
   | RUnaryOperator of string * reason_desc
   | RBinaryOperator of string * reason_desc * reason_desc
   | RLogical of string * reason_desc * reason_desc
-  | RAnyFunction
   | RTemplateString
   | RUnknownString
   | REnum
@@ -414,7 +413,6 @@ let rec string_of_desc = function
     spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
   | RLogical (operator, left, right) ->
     spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
-  | RAnyFunction -> "any function"
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
   | REnum -> "enum"
@@ -1098,7 +1096,6 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RUnaryOperator _
 | RBinaryOperator _
 | RLogical _
-| RAnyFunction
 | RGetterSetterProperty
 | RThis
 | RThisType

@@ -94,7 +94,7 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (t,
         get_builtin_type cx reason_op "ReactPropsCheckType");
       Error reason
-    | DefT (reason, AnyT _) | DefT (reason, AnyFunT) ->
+    | DefT (reason, AnyT _) ->
       Error reason
     | t ->
       let reason = reason_of_t t in
@@ -245,9 +245,6 @@ let run cx trace ~use_op reason_op l u
     (* Intrinsic components. *)
     | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
 
-    (* any and any specializations *)
-    | DefT (reason,  AnyFunT) ->
-      rec_flow_t cx trace (tin, AnyT.untyped reason)
     | DefT (reason, AnyT source) ->
       rec_flow_t cx trace (tin, AnyT.why source reason)
 
@@ -279,11 +276,8 @@ let run cx trace ~use_op reason_op l u
     (* Special case for intrinsic components. *)
     | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tout, Positive))
 
-    (* any and any specializations *)
     | DefT (reason, AnyT source) ->
       rec_flow_t cx trace (AnyT.why source reason, tout)
-    | DefT (reason, AnyFunT) ->
-      rec_flow_t cx trace (AnyT.untyped reason, tout)
 
     (* ...otherwise, error. *)
     | _ -> err_incompatible (reason_of_t component)
@@ -505,11 +499,8 @@ let run cx trace ~use_op reason_op l u
     (* Intrinsic components. *)
     | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
 
-    (* any and any specializations *)
     | DefT (reason, AnyT source) ->
       rec_flow_t cx trace (AnyT.why source reason, tout)
-    | DefT (reason, AnyFunT) ->
-      rec_flow_t cx trace (AnyT.untyped reason, tout)
 
     (* ...otherwise, error. *)
     | _ -> err_incompatible (reason_of_t component)

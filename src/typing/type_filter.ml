@@ -87,7 +87,6 @@ let rec not_exists t = match t with
     | InstanceT _
     | AnyT _
     | FunT _
-    | AnyFunT
     | SingletonNumT _
     | NumT (Literal _ | Truthy)
     | MixedT Mixed_truthy
@@ -330,13 +329,13 @@ let function_ t =
   match t with
   | DefT (r, MixedT _) ->
     let desc = RFunction RNormal in
-    DefT (replace_reason_const desc r, AnyFunT)
-  | DefT (_, (AnyT _ | AnyFunT | FunT _ | ClassT _)) -> t
+    DefT (replace_reason_const desc r, AnyT AnyFunction)
+  | DefT (_, (AnyT _ | FunT _ | ClassT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_function t =
   match t with
-  | DefT (_, (AnyT _ | AnyFunT | FunT _ | ClassT _)) -> DefT (reason_of_t t, EmptyT)
+  | DefT (_, (AnyT _ | FunT _ | ClassT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t
 
 let array t =
