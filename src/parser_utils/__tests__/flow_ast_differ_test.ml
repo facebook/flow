@@ -521,6 +521,42 @@ let tests = "ast_differ" >::: [
       ~expected:"class A { f: number = (x: string) => x; }"
       ~mapper:(new prop_annot_mapper)
   end;
+  "interface_id" >:: begin fun ctxt ->
+    let source = "interface Rename { }" in
+    assert_edits_equal ctxt ~edits:[((10, 16), "GotRenamed")] ~source
+      ~expected:"interface GotRenamed { }" ~mapper:(new useless_mapper)
+  end;
+  "interface_tparams" >:: begin fun ctxt ->
+    let source = "interface Foo<RENAME> { }" in
+    assert_edits_equal ctxt ~edits:[((14, 20), "GOT_RENAMED")] ~source
+      ~expected:"interface Foo<GOT_RENAMED> { }" ~mapper:(new useless_mapper)
+  end;
+  "interface_extends_id" >:: begin fun ctxt ->
+    let source = "interface Foo extends Rename { }" in
+    assert_edits_equal ctxt ~edits:[((22, 28), "GotRenamed")] ~source
+      ~expected:"interface Foo extends GotRenamed { }" ~mapper:(new useless_mapper)
+  end;
+  "interface_extends_targ_simple" >:: begin fun ctxt ->
+    let source = "interface Foo extends Bar<RENAME> { }" in
+    assert_edits_equal ctxt ~edits:[((26, 32), "GOT_RENAMED")] ~source
+      ~expected:"interface Foo extends Bar<GOT_RENAMED> { }"
+      ~mapper:(new useless_mapper)
+  end;
+  "interface_extends_targs" >:: begin fun ctxt ->
+    let source = "interface Foo extends Bar<RENAME, RENAME> { }" in
+    assert_edits_equal ctxt
+      ~edits:[((26, 32), "GOT_RENAMED"); ((34, 40), "GOT_RENAMED")] ~source
+      ~expected:"interface Foo extends Bar<GOT_RENAMED, GOT_RENAMED> { }"
+      ~mapper:(new useless_mapper)
+  end;
+  "interface_combo" >:: begin fun ctxt ->
+    let source = "interface Rename extends Rename<RENAME> { }" in
+    assert_edits_equal ctxt
+      ~edits:[((10, 16), "GotRenamed"); ((25, 31), "GotRenamed"); ((32, 38), "GOT_RENAMED")]
+      ~source
+      ~expected:"interface GotRenamed extends GotRenamed<GOT_RENAMED> { }"
+      ~mapper:(new useless_mapper)
+  end;
   "obj_prop" >:: begin fun ctxt ->
     let source = "let x = { rename : 4 }" in
     assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed"); ((19, 20), "5")] ~source

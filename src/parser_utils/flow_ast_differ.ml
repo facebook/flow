@@ -407,6 +407,8 @@ let program (algo : diff_algorithm)
       function_declaration func1 func2
     | (_, ClassDeclaration class1), (_, ClassDeclaration class2) ->
       class_ class1 class2
+    | (_, InterfaceDeclaration intf1), (_, InterfaceDeclaration intf2) ->
+      interface intf1 intf2
     | (_, If if1), (_, If if2) ->
       if_statement if1 if2
     | (_, Ast.Statement.Expression expr1), (_, Ast.Statement.Expression expr2) ->
@@ -644,6 +646,19 @@ let program (algo : diff_algorithm)
     else
       (* just body changed *)
       class_body body1 body2
+
+  and interface
+      (intf1: (Loc.t, Loc.t) Ast.Statement.Interface.t)
+      (intf2: (Loc.t, Loc.t) Ast.Statement.Interface.t)
+      : node change list option =
+    let open Ast.Statement.Interface in
+    let { id = id1; tparams = tparams1; extends = extends1; body = body1 } = intf1 in
+    let { id = id2; tparams = tparams2; extends = extends2; body = body2 } = intf2 in
+    let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+    let tparams_diff = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
+    let extends_diff = diff_and_recurse_no_trivial generic_type extends1 extends2 in
+    let body_diff = if body1 == body2 then Some [] else None in (* TODO *)
+    join_diff_list [id_diff; tparams_diff; extends_diff; body_diff]
 
   and class_body (class_body1: (Loc.t, Loc.t) Ast.Class.Body.t) (class_body2: (Loc.t, Loc.t) Ast.Class.Body.t)
       : node change list option =
@@ -1460,6 +1475,29 @@ let program (algo : diff_algorithm)
       : node change list =
     [loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
 
+  and generic_type
+      ((_loc1, gt1): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      ((_loc2, gt2): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      : node change list option =
+    let open Ast.Type.Generic in
+    let { id = id1; targs = targs1 } = gt1 in
+    let { id = id2; targs = targs2 } = gt2 in
+    let id_diff = diff_if_changed_ret_opt generic_identifier_type id1 id2 in
+    let targs_diff =
+      diff_if_changed_opt type_parameter_instantiation targs1 targs2 in
+    join_diff_list [id_diff; targs_diff]
+
+  and generic_identifier_type
+      (git1: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t)
+      (git2: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t)
+      : node change list option =
+    let open Ast.Type.Generic.Identifier in
+    match git1, git2 with
+    | Unqualified id1, Unqualified id2 ->
+      diff_if_changed identifier id1 id2 |> Option.return
+    | Qualified _, Qualified _ -> None (* TODO *)
+    | _ -> None
+
   and type_or_implicit
       (t1: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
       (t2: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
@@ -1477,6 +1515,14 @@ let program (algo : diff_algorithm)
     let _, t_args1 = pi1 in
     let _, t_args2 = pi2 in
     diff_and_recurse_no_trivial type_or_implicit t_args1 t_args2
+
+  and type_parameter_instantiation
+      (pi1: (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t)
+      (pi2: (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t)
+      : node change list option =
+    let _, t_args1 = pi1 in
+    let _, t_args2 = pi2 in
+    diff_and_recurse_nonopt_no_trivial type_ t_args1 t_args2
 
   and type_alias
       (t_alias1: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)
