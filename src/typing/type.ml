@@ -251,7 +251,6 @@ module rec TypeTerm : sig
     | UnionT of UnionRep.t
 
     (* specializations of AnyT *)
-    | AnyObjT (* any object *)
     | AnyFunT (* any function *)
 
     (* Type that wraps object types for the CustomFunT(Idx) function *)
@@ -753,6 +752,7 @@ module rec TypeTerm : sig
   and any_source =
     | Annotated
     | AnyError
+    | AnyObject
     | Unsound
     | Untyped
 
@@ -2666,16 +2666,18 @@ module AnyT = struct
   let make source r = DefT (r, AnyT source)
   let at   source   = mk_reason desc %> annot_reason %> make source
   let why  source   = replace_reason_const ~keep_def_loc:true desc %> make source
-  let annot   = why Annotated
-  let error   = why AnyError
-  let unsound = why Unsound
-  let untyped = why Untyped
+  let annot      = why Annotated
+  let error      = why AnyError
+  let any_object = why AnyObject
+  let unsound    = why Unsound
+  let untyped    = why Untyped
 
   let locationless source = locationless_reason desc |> make source
 
   let source = function
   | DefT(_, AnyT Annotated) -> Annotated
   | DefT(_, AnyT AnyError)  -> AnyError
+  | DefT(_, AnyT AnyObject) -> AnyObject
   | DefT(_, AnyT Unsound)   -> Unsound
   | DefT(_, AnyT Untyped)   -> Untyped
   | _ -> failwith "not an any type"
@@ -2699,11 +2701,6 @@ end)
 module NullProtoT = Primitive (struct
   let desc = RNull
   let make r = NullProtoT r
-end)
-
-module AnyObjT = Primitive (struct
-  let desc = RAnyObject
-  let make r = DefT (r, AnyObjT)
 end)
 
 module AnyFunT = Primitive (struct
@@ -2870,7 +2867,6 @@ let string_of_defer_use_ctor = function
 let string_of_def_ctor = function
   | ArrT _ -> "ArrT"
   | AnyT _ -> "AnyT"
-  | AnyObjT -> "AnyObjT"
   | AnyFunT -> "AnyFunT"
   | BoolT _ -> "BoolT"
   | CharSetT _ -> "CharSetT"

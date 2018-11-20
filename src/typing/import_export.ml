@@ -52,7 +52,7 @@ let mk_resource_module_t cx loc f =
   let reason, exports_t = match Utils_js.extension_of_filename f with
   | Some ".css" ->
     let reason = Reason.mk_reason RObjectType loc in
-    reason, Type.DefT (reason, Type.AnyObjT)
+    reason, Type.AnyT.make Type.AnyObject reason
   | Some _ ->
     let reason = Reason.mk_reason RString loc in
     reason, Type.StrT.why reason

@@ -68,7 +68,6 @@ type hash =
   | AnyWithLowerBoundH
   | AnyWithUpperBoundH
   | MergedH
-  | AnyObjH
   | AnyFunH
   | ShapeH
   | KeysH
@@ -180,7 +179,6 @@ let hash_of_def_ctor = Type.(function
   | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
 
   | AnyFunT -> AnyFunH
-  | AnyObjT -> AnyObjH
   | AnyT _ -> AnyH
   | ArrT _ -> ArrH
   | BoolT _ -> BoolH

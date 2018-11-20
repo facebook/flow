@@ -134,7 +134,6 @@ and dump_t ?(depth = 10) t =
       (Ty.debug_string_of_generic_kind kind)
       (dump_generics ~depth ts)
   | Any -> "Any"
-  | AnyObj -> "AnyObj"
   | AnyFun -> "AnyFun"
   | Top -> "Top"
   | Bot -> "Bot"
@@ -189,7 +188,6 @@ let string_of_ctor = function
   | Bound _ -> "Bound"
   | Generic _ -> "Generic"
   | Any -> "Any"
-  | AnyObj -> "AnyObj"
   | AnyFun -> "AnyFun"
   | Top -> "Top"
   | Bot -> "Bot"
@@ -245,7 +243,7 @@ let json_of_t ~strip_root =
         "type", json_of_symbol s;
         "kind", JSON_String (Ty.debug_string_of_generic_kind k);
       ]
-    | Any | AnyObj | AnyFun
+    | Any | AnyFun
     | Top | Bot
     | Void | Null
     | Num _ | Str _ | Bool _ -> []

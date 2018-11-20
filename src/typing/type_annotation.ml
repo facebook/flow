@@ -551,7 +551,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     add_unclear_type_error_if_not_lib_file cx loc;
     check_type_arg_arity cx loc targs 0 (fun () ->
       let reason = mk_reason RObjectType loc in
-      reconstruct_ast (DefT (reason, AnyObjT)) None
+      reconstruct_ast (AnyT.make AnyObject reason) None
     )
 
   | "Function$Prototype$Apply" ->
@@ -690,12 +690,6 @@ let rec convert cx tparams_map = Ast.Type.(function
     (* Optional type params are info-only, validated then forgotten. *)
     let _, targs = convert_type_params () in
     reconstruct_ast (AnyT.at Annotated loc) targs
-
-  (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
-     as well: e.g., where AnyT is used to model prototypes and statics we
-     don't care about; but then again, some of these uses may be internal,
-     so while using AnyObjT may offer some sanity checking it might not
-     reveal user-facing errors. *)
 
   (* in-scope type vars *)
   | _ when SMap.mem name tparams_map ->

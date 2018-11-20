@@ -681,70 +681,7 @@ union.js = {
     }
   ]
 }
-object_builtins.js = {
-  "result":[
-    {
-      "name":"hasOwnProperty",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":63,
-      "endline":63,
-      "start":5,
-      "end":38
-    },
-    {
-      "name":"isPrototypeOf",
-      "type":"(o: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":64,
-      "endline":64,
-      "start":5,
-      "end":34
-    },
-    {
-      "name":"propertyIsEnumerable",
-      "type":"(prop: any) => boolean",
-      "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
-      "path":"[LIB] core.js",
-      "line":65,
-      "endline":65,
-      "start":5,
-      "end":44
-    },
-    {
-      "name":"toLocaleString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
-      "start":5,
-      "end":28
-    },
-    {
-      "name":"toString",
-      "type":"() => string",
-      "func_details":{"return_type":"string","params":[]},
-      "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
-      "start":5,
-      "end":22
-    },
-    {
-      "name":"valueOf",
-      "type":"() => mixed",
-      "func_details":{"return_type":"mixed","params":[]},
-      "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
-      "start":5,
-      "end":20
-    }
-  ]
-}
+object_builtins.js = {"error":"not enough type information to autocomplete","result":[]}
 function_builtins.js = {
   "result":[
     {
@@ -1368,7 +1305,7 @@ customfun.js = {
     },
     {
       "name":"idx",
-      "type":"<IdxObject: Object, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
+      "type":"<IdxObject: any, IdxResult>(obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult) => ?IdxResult",
       "func_details":{
         "return_type":"?IdxResult",
         "params":[

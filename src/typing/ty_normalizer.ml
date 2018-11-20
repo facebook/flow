@@ -554,7 +554,6 @@ end = struct
       Ty.Utility (Ty.Supertype t)
     | DefT (_, MixedT _) -> return Ty.Top
     | DefT (_, AnyT _) -> return Ty.Any
-    | DefT (_, AnyObjT) -> return Ty.AnyObj
     | DefT (_, AnyFunT) -> return Ty.AnyFun
     | DefT (_, VoidT) -> return Ty.Void
     | DefT (_, NumT (Literal (_, (_, x))))
@@ -880,7 +879,6 @@ end = struct
       | Ty.Utility (Ty.Class _ | Ty.Exists)
       | Ty.Bot
       | Ty.Any
-      | Ty.AnyObj
       | Ty.Top
       | Ty.Union _
       | Ty.Inter _ ->
@@ -1080,7 +1078,7 @@ end = struct
       return (mk_fun ~params Ty.Any)
 
     (* var idx:
-       <IdxObject: AnyObj, IdxResult>
+       <IdxObject: Any, IdxResult>
        (obj: IdxObject, pathCallback: (demaybefiedObj: IdxObject) => IdxResult)
        => ?IdxResult;
     *)
@@ -1088,7 +1086,7 @@ end = struct
       let idxObject = Ty.Bound (Ty.builtin_symbol "IdxObject") in
       let idxResult = Ty.Bound (Ty.builtin_symbol "IdxResult") in
       let tparams = [
-        mk_tparam ~bound:Ty.AnyObj "IdxObject";
+        mk_tparam ~bound:Ty.Any "IdxObject";
         mk_tparam "IdxResult";
       ]
       in

@@ -85,7 +85,7 @@ let rec not_exists t = match t with
     | ArrT _
     | ObjT _
     | InstanceT _
-    | AnyObjT
+    | AnyT _
     | FunT _
     | AnyFunT
     | SingletonNumT _
@@ -317,12 +317,12 @@ let object_ cx t =
       DefT (reason, UnionT (UnionRep.make (NullT.why r) obj []))
     | Empty_intersection -> DefT (r, EmptyT)
     end
-  | DefT (_, (AnyT _ | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) -> t
+  | DefT (_, (AnyT _ | ObjT _ | ArrT _ | NullT | InstanceT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_object t =
   match t with
-  | DefT (_, (AnyT _ | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) ->
+  | DefT (_, (AnyT _ | ObjT _ | ArrT _ | NullT | InstanceT _)) ->
     DefT (reason_of_t t, EmptyT)
   | _ -> t
 

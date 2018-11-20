@@ -12,7 +12,7 @@ type t =
   | TVar of tvar * t list option
   | Bound of symbol
   | Generic of symbol * gen_kind * t list option
-  | Any | AnyObj | AnyFun
+  | Any | AnyFun
   | Top | Bot
   | Void | Null
   | Num of string option
@@ -209,7 +209,7 @@ let rec mk_exact ty =
     TypeAlias { a with ta_type }
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)
-  | Any | AnyObj | AnyFun | Top | Bot | Void | Null
+  | Any | AnyFun | Top | Bot | Void | Null
   | Num _ | Str _ | Bool _ | NumLit _ | StrLit _ | BoolLit _
   | Fun _ | Arr _ | Tup _ -> ty
   (* Do not nest $Exact *)

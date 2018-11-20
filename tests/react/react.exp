@@ -2212,23 +2212,6 @@ References:
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- proptype_object.js:13:21
-
-Cannot create `Example` element because number [1] is incompatible with object type [2] in property `object`.
-
-   proptype_object.js:13:21
-    13| var fail_mistyped = <Example object={2} />
-                            ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   proptype_object.js:13:38
-    13| var fail_mistyped = <Example object={2} />
-                                             ^ [1]
-   <BUILTINS>/react.js:392:36
-   392|   object: React$PropType$Primitive<Object>;
-                                           ^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:13:20
 
 Cannot create `Example` element because property `obj` is missing in props [1] but exists in propTypes of React
@@ -3737,7 +3720,7 @@ References:
 
 
 
-Found 232 errors
+Found 231 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

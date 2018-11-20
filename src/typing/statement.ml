@@ -3864,7 +3864,7 @@ and subscript =
         ex, lhs_t, acc, (
           (loc, lhs_t),
           (* TODO(vijayramamurthy) like in assignment, revisit the type of `module` *)
-          let t = AnyObjT.at object_loc in
+          let t = AnyT.at AnyObject object_loc in
           let property = Member.PropertyIdentifier ((ploc, t), name) in
           member_ast { Member.
             _object = (object_loc, t), Identifier ((id_loc, t), name);
@@ -3882,7 +3882,7 @@ and subscript =
         ex, lhs_t, acc, (
           (loc, lhs_t),
           (* TODO(vijayramamurthy) what's the type of "ReactGraphQL"? *)
-          let t = AnyObjT.at object_loc in
+          let t = AnyT.at AnyObject object_loc in
           let property = Member.PropertyIdentifier ((ploc, t), name) in
           member_ast { Member.
             _object = (object_loc, t), Identifier ((id_loc, t), name);
@@ -4494,7 +4494,7 @@ and assignment cx loc = Ast.Expression.(function
             (* TODO: we should revisit what the type of "module" is once we make
               the treatment of module.exports accurate (this isn't sensitive to
               shadowing of the "module" variable, etc.) *)
-            let t = AnyObjT.at object_loc in
+            let t = AnyT.at AnyObject object_loc in
             let property = Member.PropertyIdentifier ((ploc, t), name) in
             (lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), Member { Member.
               _object = (object_loc, t), Ast.Expression.Identifier ((id_loc, t), mod_name);
@@ -5960,7 +5960,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     [
       Expression e_ast;
       (* TODO(vijayramamurthy) construct object type *)
-      Expression ((obj_loc, AnyObjT.at obj_loc), Object { Object.properties })
+      Expression ((obj_loc, AnyT.at AnyObject obj_loc), Object { Object.properties })
     ]
 
   | ("getOwnPropertyNames" | "keys"), None, [Expression e] ->
@@ -6029,7 +6029,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     [
       Expression e_ast;
       (* TODO(vijayramamurthy) construct object type *)
-      Expression ((obj_loc, AnyObjT.at obj_loc), Object { Object.properties })
+      Expression ((obj_loc, AnyT.at AnyObject obj_loc), Object { Object.properties })
     ]
 
   (* Freezing an object literal is supported since there's no way it could

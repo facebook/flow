@@ -55,7 +55,6 @@ let rec type_ t =
   | Bound s -> builtin_from_symbol s
   | Generic (x, _, ts) -> generic x ts
   | Any -> just T.Any
-  | AnyObj -> return (builtin_from_string "Object")
   | AnyFun -> return (builtin_from_string "Function")
   | Top -> just T.Mixed
   | Bot -> just T.Empty

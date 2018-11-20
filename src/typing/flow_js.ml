@@ -194,7 +194,6 @@ let rec merge_type cx =
   | DefT (_, BoolT _), (DefT (_, BoolT _) as t)
   | DefT (_, NullT), (DefT (_, NullT) as t)
   | DefT (_, VoidT), (DefT (_, VoidT) as t)
-  | DefT (_, AnyObjT), (DefT (_, AnyObjT) as t)
     -> t
 
   | (ObjProtoT _, (ObjProtoT _ as t))
@@ -983,7 +982,6 @@ module ResolvableTypeJob = struct
     | DefT (_, SingletonNumT _)
     | DefT (_, SingletonStrT _)
     | DefT (_, AnyT _)
-    | DefT (_, AnyObjT)
     | DefT (_, AnyFunT)
     | DefT (_, CharSetT _)
       -> acc
@@ -1836,7 +1834,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (target_module_t, t_out)
 
     (* There is nothing to copy from a module exporting `any` or `Object`. *)
-    | DefT (_, (AnyT _ | AnyObjT)), CopyNamedExportsT(_, target_module, t) ->
+    | DefT (_, AnyT _), CopyNamedExportsT(_, target_module, t) ->
       rec_flow_t cx trace (target_module, t)
 
     (**
@@ -1903,7 +1901,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* If the module is exporting any or Object, then we allow any named
      * import
      *)
-    | DefT (_, (AnyT _ | AnyObjT)),
+    | DefT (_, AnyT _),
       CJSExtractNamedExportsT(_, (module_t_reason, exporttypes, is_strict), t_out) ->
       let module_t = ModuleT (
         module_t_reason,
@@ -2096,7 +2094,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* imports are `any`-typed when they are from (1) unchecked modules or (2)
        modules with `any`-typed exports *)
-    | DefT (_, AnyObjT),
+    | DefT (_, AnyT AnyObject),
         ( CJSRequireT(reason, t, _)
         | ImportModuleNsT(reason, t, _)
         | ImportDefaultT(reason, _, _, t, _)
@@ -2160,8 +2158,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, DefT (_, NumT _))) when numeric l -> ()
 
-    | (_, UseT (_, DefT (_, AnyObjT))) when object_like l -> ()
-    | (DefT (_, AnyObjT), UseT (_, u)) when object_like u -> ()
+    | (_, UseT (_, DefT (_, AnyT AnyObject))) when object_like l -> ()
+    | (DefT (_, AnyT AnyObject), UseT (_, u)) when object_like u -> ()
 
     | (_, UseT (_, DefT (_, AnyFunT))) when function_like l -> ()
 
@@ -2438,7 +2436,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) ->
       Context.mark_optional_chain cx (aloc_of_reason r') lhs_reason ~useful:(
         match l with
-        | DefT (_, (MixedT _ | AnyT _ | AnyObjT | AnyFunT)) -> true
+        | DefT (_, (MixedT _ | AnyT _ | AnyFunT)) -> true
         | _ -> false
       );
       let lhs_t = ref l in
@@ -2912,8 +2910,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let err = FlowError.EPropNotFound (None, (reason_op, reason_o), use_op) in
         add_output cx ~trace err
 
-    (* AnyObjT has every prop *)
-    | DefT (_, AnyObjT), HasOwnPropT _ -> ()
+    (* AnyT has every prop *)
+    | DefT (_, AnyT AnyObject), HasOwnPropT _ -> ()
 
     | DefT (_, ObjT { flags; props_tmap; dict_t; _ }), GetKeysT (reason_op, keys) ->
       begin match flags.sealed with
@@ -2940,7 +2938,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) own_props [] in
       rec_flow cx trace (union_of_ts reason_op keylist, keys)
 
-    | DefT (reason, (AnyObjT | AnyFunT)), GetKeysT (_, keys) ->
+    | DefT (reason, (AnyT AnyObject | AnyFunT)), GetKeysT (_, keys) ->
       rec_flow cx trace (StrT.why reason, keys)
 
     | DefT (_, AnyT src), GetKeysT (reason_op, keys) ->
@@ -3017,8 +3015,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Any will always be ok *)
     | DefT (_, AnyT src), GetValuesT (reason, values) ->
       rec_flow_t cx trace (AnyT.why src reason, values)
-    | DefT (_, AnyObjT), GetValuesT (reason, values) ->
-      rec_flow_t cx trace (AnyT.untyped reason, values)
 
     (********************************)
     (* union and intersection types *)
@@ -3353,7 +3349,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* `any` is obviously fine as a spread element. `Object` is fine because
      * any Iterable can be spread, and `Object` is the any type that covers
      * iterable objects. *)
-    | DefT (r, (AnyT _ | AnyObjT)),
+    | DefT (r, AnyT _),
       ResolveSpreadT (use_op, reason_op, {
         rrt_resolved;
         rrt_unresolved;
@@ -3557,7 +3553,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     (* any specializations ~> $Exact<UB>. unwrap exact *)
-    | DefT (_, AnyObjT), UseT (use_op, ExactT (_, t))
+    | DefT (_, AnyT AnyObject), UseT (use_op, ExactT (_, t))
     | DefT (_, AnyFunT), UseT (use_op, ExactT (_, t)) ->
       rec_flow cx trace (l, UseT (use_op, t))
 
@@ -4517,8 +4513,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       then rec_flow cx trace (l, u)
       else rec_flow cx trace (default, u)
 
-    | DefT (_, (AnyT _ | AnyObjT)), ObjTestProtoT (reason_op, u) ->
-      rec_flow_t cx trace (AnyT.untyped reason_op, u)
+    | DefT (_, AnyT src), ObjTestProtoT (reason_op, u) ->
+      rec_flow_t cx trace (AnyT.why src reason_op, u)
 
     | DefT (_, NullT), ObjTestProtoT (reason_op, u) ->
       rec_flow_t cx trace (NullProtoT.why reason_op, u)
@@ -4713,7 +4709,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       call_args_iter
         (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op)))
         args;
-      rec_flow_t cx trace (DefT (reason_o, AnyObjT), t);
+      rec_flow_t cx trace (AnyT.make AnyObject reason_o, t);
 
     | DefT (_, AnyT _), ConstructorT (use_op, reason_op, targs, args, t) ->
       ignore targs; (* An untyped receiver can't do anything with type args *)
@@ -4771,7 +4767,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let proto = ObjProtoT (repos_reason (aloc_of_reason reason_op) reason) in
       rec_flow_t cx trace (proto, t)
 
-    | DefT (_, (AnyT _ | AnyObjT | AnyFunT)), GetProtoT (reason_op, t) ->
+    | DefT (_, (AnyT _ | AnyFunT)), GetProtoT (reason_op, t) ->
       let proto = AnyT.untyped reason_op in
       rec_flow_t cx trace (proto, t)
 
@@ -4779,7 +4775,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* __proto__ setter *)
     (********************)
 
-    | DefT (_, (AnyObjT | AnyFunT)), SetProtoT _ -> ()
+    | DefT (_, (AnyT AnyObject | AnyFunT)), SetProtoT _ -> ()
 
     | _, SetProtoT (reason_op, _) ->
       add_output cx ~trace (FlowError.EUnsupportedSetProto reason_op)
@@ -5048,7 +5044,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             (reason_prop, reason_op), Some x, Property.polarity p, Read, unknown_use
           ))
       );
-      if dict_t <> None then rec_flow_t cx trace (DefT (reason_op, AnyObjT), t)
+      if dict_t <> None then rec_flow_t cx trace (AnyT.make AnyObject reason_op, t)
       else begin
         if error_flags.assert_exact && not flags.exact
         then add_output cx ~trace (FlowError.EInexactSpread (lreason, reason_op));
@@ -5077,12 +5073,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       );
       rec_flow_t cx trace (to_obj, t)
 
-    (* AnyObjT has every prop, each one typed as `any`, so spreading it into an
+    (* AnyT has every prop, each one typed as `any`, so spreading it into an
        existing object destroys all of the keys, turning the result into an
-       AnyObjT as well. TODO: wait for `to_obj` to be resolved, and then call
+       AnyT as well. TODO: wait for `to_obj` to be resolved, and then call
        `SetPropT (_, _, _, AnyT, _)` on all of its props. *)
-    | DefT (_, AnyObjT), ObjAssignFromT (reason, _, t, ObjAssign _) ->
-      rec_flow_t cx trace (DefT (reason, AnyObjT), t)
+    | DefT (_, AnyT AnyObject), ObjAssignFromT (reason, _, t, ObjAssign _) ->
+      rec_flow_t cx trace (AnyT.make AnyObject reason, t)
 
     | DefT (_, AnyT _), ObjAssignFromT (_, _, t, _) ->
       rec_flow_t cx trace (l, t)
@@ -5169,12 +5165,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       rec_flow_t cx trace (o, t)
 
+    (* ...AnyFunT yields AnyT AnyObject *)
+    | DefT (_, AnyFunT), ObjRestT (reason, _, t) ->
+      rec_flow_t cx trace (AnyT.make AnyObject reason, t)
+
     | DefT (_, AnyT src), ObjRestT (reason, _, t) ->
       rec_flow_t cx trace (AnyT.why src reason, t)
-
-    (* ...AnyObjT and AnyFunT yield AnyObjT *)
-    | DefT (_, (AnyFunT | AnyObjT)), ObjRestT (reason, _, t) ->
-      rec_flow_t cx trace (DefT (reason, AnyObjT), t)
 
     | (ObjProtoT _, ObjRestT (reason, _, t)) ->
       let obj = Obj_type.mk_with_proto cx reason l in
@@ -5198,9 +5194,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, AnyT src), ObjSealT (reason, tout) ->
       rec_flow_t cx trace (AnyT.why src reason, tout)
 
-    | DefT (_, AnyObjT), ObjSealT (reason, tout) ->
-      rec_flow_t cx trace (DefT (reason, AnyObjT), tout)
-
     (*************************)
     (* objects can be frozen *)
     (*************************)
@@ -5217,9 +5210,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (_, AnyT src), ObjFreezeT (reason_op, t) ->
       rec_flow_t cx trace (AnyT.why src reason_op, t)
-
-    | DefT (_, AnyObjT), ObjFreezeT (reason_op, t) ->
-      rec_flow_t cx trace (DefT (reason_op, AnyObjT), t)
 
     (*******************************************)
     (* objects may have their fields looked up *)
@@ -5244,7 +5234,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow cx trace (o.proto_t,
           LookupT (reason_op, strict, try_ts_on_failure, propref, action)));
 
-    | DefT (reason, (AnyT _ | AnyObjT)),
+    | DefT (reason, AnyT _),
       LookupT (reason_op, kind, _, propref, action) ->
       (match action with
       | SuperProp (_, lp) when Property.write_t lp = None ->
@@ -5287,14 +5277,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_t
 
     (* Since we don't know the type of the prop, use AnyT. *)
-    | DefT (_, (AnyT _ | AnyObjT)), SetPropT (use_op, reason_op, _, _, t, prop_t) ->
+    | DefT (_, AnyT _), SetPropT (use_op, reason_op, _, _, t, prop_t) ->
       Option.iter ~f:(fun t -> rec_flow_t cx trace (AnyT.untyped reason_op, t)) prop_t;
       rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op))
 
     | DefT (reason_obj, ObjT o), MatchPropT (use_op, reason_op, propref, proptype) ->
         match_obj_prop cx trace ~use_op o propref reason_obj reason_op proptype
 
-    | DefT (_, (AnyT _ | AnyObjT | AnyFunT)), MatchPropT (use_op, reason_op, _, t) ->
+    | DefT (_, (AnyT _ | AnyFunT)), MatchPropT (use_op, reason_op, _, t) ->
         rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op))
 
     (*****************************)
@@ -5307,7 +5297,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason_obj, ObjT o), GetPropT (use_op, reason_op, propref, tout) ->
       read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout
 
-    | DefT (_, (AnyObjT | AnyT _)), GetPropT (_, reason_op, _, tout) ->
+    | DefT (_, AnyT _), GetPropT (_, reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.untyped reason_op, tout)
 
     (********************************)
@@ -5324,9 +5314,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (t, prop_t)) prop_t;
       rec_flow cx trace (t, CallT (use_op, reason_call, funtype))
 
-    (* Since we don't know the signature of a method on AnyObjT, assume every
+    (* Since we don't know the signature of a method on AnyT, assume every
        parameter is an AnyT. *)
-    | DefT (_, (AnyObjT | AnyT _)),
+    | DefT (_, AnyT _),
       MethodT (use_op, reason_op, _, _, { call_args_tlist; call_tout; _}, prop_t) ->
       let any = AnyT.untyped reason_op in
       Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (any, prop_t)) prop_t;
@@ -5351,13 +5341,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects/arrays may have their properties/elements written and read *)
     (**********************************************************************)
 
-    | DefT (_, (ObjT _ | AnyObjT | ArrT _ | AnyT _)), SetElemT (use_op, reason_op, key, tin, tout) ->
+    | DefT (_, (ObjT _ | ArrT _ | AnyT _)),
+      SetElemT (use_op, reason_op, key, tin, tout) ->
       rec_flow cx trace (key, ElemT (use_op, reason_op, l, WriteElem (tin, tout)))
 
-    | DefT (_, (ObjT _ | AnyObjT | ArrT _ | AnyT _)), GetElemT (use_op, reason_op, key, tout) ->
+    | DefT (_, (ObjT _ | ArrT _ | AnyT _)),
+      GetElemT (use_op, reason_op, key, tout) ->
       rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem tout))
 
-    | DefT (_, (ObjT _ | AnyObjT | ArrT _ | AnyT _)),
+    | DefT (_, (ObjT _ | ArrT _ | AnyT _)),
       CallElemT (reason_call, reason_lookup, key, ft) ->
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
@@ -5378,7 +5370,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | CallElem (reason_call, ft) ->
         rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, None)))
 
-    | _, ElemT (use_op, reason_op, (DefT (_, (AnyObjT | AnyT _)) as obj), action) ->
+    | _, ElemT (use_op, reason_op, (DefT (_, AnyT _) as obj), action) ->
       let value = AnyT.untyped reason_op in
       perform_elem_action cx trace ~use_op reason_op obj value action
 
@@ -5467,7 +5459,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types can be mapped over a structure  *)
     (**************************************************)
 
-    | DefT (_, (AnyT _ | AnyObjT)), MapTypeT (reason_op, _, tout) ->
+    | DefT (_, AnyT _), MapTypeT (reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.untyped reason_op, tout)
 
     | DefT (_, ArrT arrtype), MapTypeT (reason_op, TupleMap funt, tout) ->
@@ -5943,7 +5935,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects are allowed. arrays _could_ be, but are not because it's
        generally safer to use a for or for...of loop instead. *)
     | _, AssertForInRHST _ when object_like l -> ()
-    | (DefT (_, AnyObjT) | ObjProtoT _), AssertForInRHST _ -> ()
+    | (DefT (_, AnyT AnyObject) | ObjProtoT _), AssertForInRHST _ -> ()
 
     (* null/undefined are allowed *)
     | DefT (_, (NullT | VoidT)), AssertForInRHST _ -> ()
@@ -6379,7 +6371,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
-    | DefT (_, AnyObjT), ExtendsUseT _ -> ()
+    | DefT (_, AnyT AnyObject), ExtendsUseT _ -> ()
 
     | DefT (lreason, ObjT { proto_t; _ }), ExtendsUseT _ ->
       let l = reposition cx ~trace (aloc_of_reason lreason) proto_t in
@@ -7360,7 +7352,7 @@ and numeric = function
   | _ -> false
 
 and object_like = function
-  | DefT (_, (AnyObjT | ObjT _ | InstanceT _)) -> true
+  | DefT (_, (AnyT AnyObject | ObjT _ | InstanceT _)) -> true
   | t -> function_like t
 
 and object_use = function
@@ -7374,7 +7366,7 @@ and object_like_op = function
   | GetKeysT _ | HasOwnPropT _ | GetValuesT _
   | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
   | SetElemT _ | GetElemT _
-  | UseT (_, DefT (_, AnyObjT)) -> true
+  | UseT (_, DefT (_, AnyT AnyObject)) -> true
   | _ -> false
 
 and function_use = function
@@ -7785,7 +7777,6 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, SingletonStrT _)
   | DefT (_, SingletonNumT _)
   | DefT (_, SingletonBoolT _)
-  | DefT (_, AnyObjT)
   | DefT (_, AnyFunT)
   | DefT (_, CharSetT _)
     -> ()
@@ -11103,8 +11094,8 @@ and instantiate_poly_t cx t = function
           prerr_endline "Instantiating poly type failed";
           t
       )
-      | DefT (_, (AnyT _ | AnyObjT))
-      | DefT (_, (TypeT (_, DefT (_, (AnyT _ | AnyObjT))))) ->
+      | DefT (_, AnyT _)
+      | DefT (_, (TypeT (_, DefT (_, AnyT _)))) ->
           t
       | _ ->
         assert_false ("unexpected args passed to instantiate_poly_t: " ^ (string_of_ctor t))
@@ -12207,8 +12198,6 @@ and object_kit =
     (* Propagate any. *)
     | DefT (_, AnyT src) ->
       rec_flow cx trace (AnyT.why src reason, UseT (use_op, tout))
-    | DefT (_, AnyObjT) ->
-      rec_flow cx trace (AnyT.untyped reason, UseT (use_op, tout))
     (* Other types have reasonable object representations that may be added as
      * new uses of the object kit resolution code is found. *)
     | t ->
@@ -12230,7 +12219,7 @@ and object_kit =
       in
       let resolve_tool = Super (acc, resolve_tool) in
       rec_flow cx trace (super, ObjKitT (use_op, reason, resolve_tool, tool, tout))
-    | DefT (_, (AnyT _ | AnyObjT)) ->
+    | DefT (_, AnyT _) ->
       rec_flow cx trace (AnyT.untyped reason, UseT (use_op, tout))
     | _ ->
       next tool cx trace use_op reason tout (Nel.one acc)
@@ -12343,10 +12332,10 @@ end = struct
     | DefT (_, (NullT | VoidT))
     | InternalT (OptionalChainVoidT _) ->
         FailureNullishType
+    | DefT (reason, AnyT AnyObject) ->
+        extract_type cx (get_builtin_type cx reason "Object")
     | DefT (_, AnyT _) ->
         FailureAnyType
-    | DefT (reason, AnyObjT) ->
-        extract_type cx (get_builtin_type cx reason "Object")
     | DefT (reason, AnyFunT) ->
         let rep = InterRep.make
           (get_builtin_type cx reason "Function")
@@ -12533,7 +12522,7 @@ end = struct
         let members = ts
           (* Although we'll ignore the any-ish and nullish members of the union *)
           |> List.filter (function
-             | DefT (_, (AnyT _ | AnyObjT | AnyFunT | NullT | VoidT)) -> false
+             | DefT (_, (AnyT _ | AnyFunT | NullT | VoidT)) -> false
              | _ -> true
              )
           |> List.map (extract_members_as_map ~exclude_proto_members cx)

@@ -470,23 +470,6 @@ References:
                 ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ function.js:31:21
-
-Cannot assign `y` to `c` because object type [1] is incompatible with function type [2].
-
-   function.js:31:21
-   31|   var c: Function = y; // Object is not a Function
-                           ^
-
-References:
-   function.js:28:30
-   28| function bad(x: Function, y: Object): void {
-                                    ^^^^^^ [1]
-   function.js:31:10
-   31|   var c: Function = y; // Object is not a Function
-                ^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- function.js:37:6
 
 Cannot cast `x.length` to undefined because number [1] is incompatible with undefined [2].
@@ -802,4 +785,4 @@ References:
 
 
 
-Found 57 errors
+Found 56 errors

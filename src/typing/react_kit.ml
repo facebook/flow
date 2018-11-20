@@ -78,7 +78,7 @@ let run cx trace ~use_op reason_op l u
   let coerce_object = function
     | DefT (reason, ObjT { props_tmap; dict_t; flags; _ }) ->
       Ok (reason, Context.find_props cx props_tmap, dict_t, flags)
-    | DefT (reason, AnyT _) | DefT (reason, AnyObjT) ->
+    | DefT (reason, AnyT _) ->
       Error reason
     | _ ->
       let reason = reason_of_t l in
@@ -246,7 +246,7 @@ let run cx trace ~use_op reason_op l u
     | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
 
     (* any and any specializations *)
-    | DefT (reason, (AnyObjT | AnyFunT)) ->
+    | DefT (reason,  AnyFunT) ->
       rec_flow_t cx trace (tin, AnyT.untyped reason)
     | DefT (reason, AnyT source) ->
       rec_flow_t cx trace (tin, AnyT.why source reason)
@@ -282,7 +282,7 @@ let run cx trace ~use_op reason_op l u
     (* any and any specializations *)
     | DefT (reason, AnyT source) ->
       rec_flow_t cx trace (AnyT.why source reason, tout)
-    | DefT (reason, (AnyObjT | AnyFunT)) ->
+    | DefT (reason, AnyFunT) ->
       rec_flow_t cx trace (AnyT.untyped reason, tout)
 
     (* ...otherwise, error. *)
@@ -508,7 +508,7 @@ let run cx trace ~use_op reason_op l u
     (* any and any specializations *)
     | DefT (reason, AnyT source) ->
       rec_flow_t cx trace (AnyT.why source reason, tout)
-    | DefT (reason, (AnyObjT | AnyFunT)) ->
+    | DefT (reason, AnyFunT) ->
       rec_flow_t cx trace (AnyT.untyped reason, tout)
 
     (* ...otherwise, error. *)
@@ -798,7 +798,7 @@ let run cx trace ~use_op reason_op l u
         | None ->
           let reason = replace_reason_const RReactDefaultProps reason_op in
           Obj_type.mk cx reason
-        | Some (Unknown reason) -> DefT (reason, AnyObjT)
+        | Some (Unknown reason) -> AnyT.make AnyObject reason
         | Some (Known (reason, props, dict, _)) ->
           Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
@@ -814,7 +814,7 @@ let run cx trace ~use_op reason_op l u
         | None ->
           let reason = replace_reason_const RReactState reason_op in
           Obj_type.mk cx reason
-        | Some (Unknown reason) -> DefT (reason, AnyObjT)
+        | Some (Unknown reason) -> AnyT.make AnyObject reason
         | Some (Known (Null reason)) -> DefT (reason, NullT)
         | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
           let sealed = not (exact && sealed_in_op reason_op sealed) in
@@ -861,8 +861,8 @@ let run cx trace ~use_op reason_op l u
          stricter, we could use an empty object type, but that would require all
          components to specify propTypes *)
       let props_t = match spec.prop_types with
-      | None -> DefT (reason_op, AnyObjT)
-      | Some (Unknown reason) -> DefT (reason, AnyObjT)
+      | None -> AnyT.make AnyObject reason_op
+      | Some (Unknown reason) -> AnyT.make AnyObject reason
       | Some (Known (reason, props, dict, _)) ->
         Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
           ?dict ~sealed:true ~exact:false

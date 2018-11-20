@@ -129,7 +129,6 @@ class ['a] t = object(self)
   | MixedT _
   | NullT
   | VoidT
-  | AnyObjT
   | AnyFunT
     -> acc
 
