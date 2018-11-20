@@ -387,9 +387,6 @@ and resolve_type cx = function
   | MergedT (_, uses) -> resolve_merged_t cx uses
   | t -> t
 
-
-and default_locationless_any = AnyT.locationless Unsound
-
 and resolve_tvar cx (_, id) =
   let ts = possible_types cx id in
   (* The list of types returned by possible_types is often empty, and the
@@ -405,12 +402,12 @@ and resolve_tvar cx (_, id) =
      improve failure tolerance.  *)
   List.fold_left (fun u t ->
     merge_type cx (t, u)
-  ) default_locationless_any ts
+  ) (locationless_reason RAny |> Unsoundness.dummy_any) ts
 
 and resolve_merged_t cx uses =
   let ts = List.map (possible_types_of_use cx) uses in
   match List.flatten ts with
-  | [] -> default_locationless_any
+  | [] -> locationless_reason RAny |> Unsoundness.dummy_any
   | [x] -> x
   | x::y::ts -> create_intersection (InterRep.make x y ts)
 
@@ -1367,7 +1364,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, UseT (use_op, u))
 
     | MergedT (reason, _), _ ->
-      rec_flow cx trace (AnyT.why Unsound reason, u)
+      rec_flow cx trace (Unsoundness.why Merged reason, u)
 
     (****************)
     (* eval, contd. *)
@@ -2387,10 +2384,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let funtype = DefT (fun_reason_new, FunT (
         dummy_static reason,
         (*TODO: T35904222*)
-        DefT (mk_reason RPrototype fun_loc, AnyT Unsound),
+        mk_reason RPrototype fun_loc |> Unsoundness.dummy_any,
         {
           (*TODO: T35904222*)
-          this_t = DefT (mk_reason RThis fun_loc, AnyT Unsound);
+          this_t = mk_reason RThis fun_loc |> Unsoundness.dummy_any;
           params = [(Some "value", MixedT.at fun_loc)];
           rest_param = None;
           return_t = return_t;
@@ -3362,7 +3359,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let reason = reason_of_t l in
         let element_tvar = Tvar.mk cx reason in
         let iterable =
-          let targs = [element_tvar; AnyT.unsound reason; AnyT.unsound reason] in
+          let targs = [element_tvar; Unsoundness.why ResolveSpread reason;
+                                     Unsoundness.why ResolveSpread reason] in
           get_builtin_typeapp cx
             (replace_reason_const (RCustom "Iterable expected for spread") reason)
             "$Iterable" targs
@@ -3980,7 +3978,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (_, DefT (reason_op, ReactAbstractComponentT {props; default_props; instance})) ->
         (* Unify Props by flowing l to React$Component<props> *)
         let class_component =
-          DefT (r, ClassT (get_builtin_typeapp cx r "React$Component" [props; AnyT.unsound r])) in
+          DefT (r,
+            ClassT (get_builtin_typeapp cx r "React$Component" [props; Unsoundness.why React r])) in
         rec_flow_t cx trace (l, class_component);
         (* Unify DefaultProps *)
         React_kit.lookup_defaults cx trace l ~reason_op ~rec_flow default_props Neutral;
@@ -4311,7 +4310,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
 
     | CustomFunT (reason, _), _ when function_like_op u ->
-      rec_flow cx trace (AnyT.make Unsound reason, u)
+      rec_flow cx trace (Unsoundness.custom_fun_any reason, u)
 
     (*********************************************)
     (* object types deconstruct into their parts *)
@@ -4485,7 +4484,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | (_, UseT (_, ShapeT (o))) ->
         let reason = reason_of_t o in
         rec_flow cx trace (l,
-          ObjAssignFromT (reason, o, AnyT.locationless Unsound, default_obj_assign_kind))
+          ObjAssignFromT (reason, o,
+            AnyT.locationless Unsoundness.shape_assign, default_obj_assign_kind))
 
     | DefT (_, AnyT src), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why src reason_op, u)
@@ -5263,7 +5263,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*****************************)
 
     | DefT (_, ObjT _), GetPropT (_, reason_op, Named (_, "constructor"), tout) ->
-      rec_flow_t cx trace (AnyT.unsound reason_op, tout)
+      rec_flow_t cx trace (Unsoundness.why Constructor reason_op, tout)
 
     | DefT (reason_obj, ObjT o), GetPropT (use_op, reason_op, propref, tout) ->
       read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout
@@ -5388,7 +5388,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
 
     | DefT (_, ArrT _), GetPropT (_, reason_op, Named (_, "constructor"), tout) ->
-      rec_flow_t cx trace (AnyT.unsound reason_op, tout)
+      rec_flow_t cx trace (Unsoundness.why Constructor reason_op, tout)
 
     | DefT (_, ArrT _), SetPropT (_, _, Named (_, "constructor"), _, _, _)
     | DefT (_, ArrT _), MethodT (_, _, _, Named (_, "constructor"), _, _) ->
@@ -5507,7 +5507,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (_, FunT (_, t, _)), SetPropT (_, reason_op, Named (_, "prototype"), _, tin, _) ->
       rec_flow cx trace (tin, ObjAssignFromT (reason_op, t,
-        AnyT.locationless Unsound, default_obj_assign_kind))
+        AnyT.locationless Unsoundness.function_proto, default_obj_assign_kind))
 
     (*********************************)
     (* ... and their prototypes read *)
@@ -6196,7 +6196,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | DefT (_, StrT _) | DefT (_, NumT _) ->
         (* string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
-        let p = Field (None, AnyT.unsound reason_op, Neutral) in
+        let p = Field (None, Unsoundness.why ComputedLiteralKey reason_op, Neutral) in
         perform_lookup_action cx trace propref p reason reason_op action
       | _ ->
         let reason_prop = reason_of_t elem_t in
@@ -7939,7 +7939,7 @@ and instantiate_poly_default_args cx trace ~use_op ~reason_op ~reason_tapp (tpar
   let ts, _ = Nel.fold_left
     (fun (ts, map) typeparam ->
       let t = match typeparam.bound with
-      | DefT (_, MixedT _) -> AnyT.unsound reason_op
+      | DefT (_, MixedT _) -> Unsoundness.why InstanceOfRefinement reason_op
       | other_bound -> AnyWithUpperBoundT (subst cx ~use_op map other_bound) in
       (t::ts, SMap.add typeparam.name t map)
     ) ([], SMap.empty)
@@ -8319,7 +8319,7 @@ and bindings_of_jobs cx trace jobs =
     | Some speculation_id ->
       Speculation.add_unresolved_to_speculation cx speculation_id id
     | None ->
-      resolve_id cx trace ~use_op:unknown_use id (AnyT.make Unsound reason)
+      Unsoundness.unresolved_any reason |> resolve_id cx trace ~use_op:unknown_use id
     end;
     bindings
   ) jobs []
@@ -8876,7 +8876,7 @@ and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
       | DefT (_, StrT _) | DefT (_, NumT _) ->
         (* string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
-        rec_flow_t cx trace (AnyT.unsound reason_op, tout)
+        rec_flow_t cx trace (Unsoundness.why ComputedLiteralKey reason_op, tout)
       | _ ->
         let reason_prop = reason_of_t elem_t in
         add_output cx ~trace (FlowError.EObjectComputedPropertyAccess
@@ -8914,7 +8914,7 @@ and writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t ac
       | DefT (_, StrT _) | DefT (_, NumT _) ->
         (* string and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
-        rec_flow_t cx trace (prop_t, AnyT.unsound reason_op)
+        rec_flow_t cx trace (prop_t, Unsoundness.why ComputedLiteralKey reason_op)
       | _ ->
         let reason_prop = reason_of_t elem_t in
         add_output cx ~trace (FlowError.EObjectComputedPropertyAssign
@@ -11026,7 +11026,7 @@ and instantiate_poly_t cx t = function
 and instantiate_type t =
   match t with
   | ThisClassT (_, t) | DefT (_, ClassT t) -> t
-  | _ -> reason_of_t t |> AnyT.unsound (* ideally, assert false *)
+  | _ -> reason_of_t t |> Unsoundness.why TypeInstance (* ideally, assert false *)
 
 and call_args_iter f = List.iter (function Arg t | SpreadArg t -> f t)
 
@@ -12554,7 +12554,7 @@ class assert_ground_visitor r ~max_reasons = object (self)
         match pole with
         | Neutral | Negative ->
           (* TODO: T35904222 *)
-          unify_opt cx ~unify_any:true (OpenT (r, id)) (AnyT.locationless Unsound);
+          Unsoundness.dummy |> AnyT.locationless |> unify_opt cx ~unify_any:true (OpenT (r, id));
           let trace_reasons = if max_reasons = 0
              then []
              else List.map (fun reason ->
@@ -12665,7 +12665,7 @@ class assert_ground_visitor r ~max_reasons = object (self)
         seen
       | DefT (r, FunT (static, prototype, ft)) ->
         (* TODO: T35904222 *)
-        let any = AnyT.locationless Unsound in
+        let any = AnyT.locationless Unsoundness.dummy in
         unify_opt cx ~unify_any:true static any;
         unify_opt cx ~unify_any:true prototype any;
         unify_opt cx ~unify_any:true ft.this_t any;

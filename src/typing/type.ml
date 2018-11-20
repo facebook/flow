@@ -749,8 +749,33 @@ module rec TypeTerm : sig
   and any_source =
     | Annotated
     | AnyError
-    | Unsound
+    | Unsound of unsoundness_kind
     | Untyped
+
+  (* Tracks the kinds of unsoundness inherent in Flow. If you can't find a kind that matches
+     your use case, make one *)
+  and unsoundness_kind =
+    | Chain
+    | ComputedLiteralKey
+    | Constructor
+    | CustomFun
+    | DummyType
+    | Existential
+    | Exports
+    | FunctionPrototype
+    | InferenceHooks
+    | InstanceOfRefinement
+    | ForOfIteration
+    | Merged
+    | React
+    | RefineFromMixed
+    | ResolveSpread
+    | ShapeAssign
+    | TaggedTemplateType
+    | TypeInstance
+    | Unimplemented
+    | UnresolvedType
+    | WeakContext
 
   (* used by FunT *)
   and funtype = {
@@ -2664,18 +2689,67 @@ module AnyT = struct
   let why  source   = replace_reason_const ~keep_def_loc:true desc %> make source
   let annot      = why Annotated
   let error      = why AnyError
-  let unsound    = why Unsound
   let untyped    = why Untyped
 
   let locationless source = locationless_reason desc |> make source
 
   let source = function
-  | DefT(_, AnyT Annotated) -> Annotated
-  | DefT(_, AnyT AnyError)  -> AnyError
-  | DefT(_, AnyT Unsound)   -> Unsound
-  | DefT(_, AnyT Untyped)   -> Untyped
+  | DefT(_, AnyT Annotated)   -> Annotated
+  | DefT(_, AnyT AnyError)    -> AnyError
+  | DefT(_, AnyT (Unsound k)) -> Unsound k
+  | DefT(_, AnyT Untyped)     -> Untyped
   | _ -> failwith "not an any type"
 end
+
+module Unsoundness = struct
+  let chain                = Unsound Chain
+  let custom_fun           = Unsound CustomFun
+  let constructor          = Unsound Constructor
+  let computed_lit_key     = Unsound ComputedLiteralKey
+  let function_proto       = Unsound FunctionPrototype
+  let dummy                = Unsound DummyType
+  let merged               = Unsound Merged
+  let react                = Unsound React
+  let instance_of_refi     = Unsound InstanceOfRefinement
+  let unresolved           = Unsound UnresolvedType
+  let type_instance        = Unsound TypeInstance
+  let resolve_spread       = Unsound ResolveSpread
+  let shape_assign         = Unsound ShapeAssign
+  let refi_from_mixed      = Unsound RefineFromMixed
+  let unimplemented        = Unsound Unimplemented
+  let weak_context         = Unsound WeakContext
+  let inference_hooks      = Unsound InferenceHooks
+  let for_of_iter          = Unsound ForOfIteration
+  let tagged_template      = Unsound TaggedTemplateType
+  let exports              = Unsound Exports
+  let existential          = Unsound Existential
+
+  let custom_fun_any       = AnyT.make custom_fun
+  let dummy_any            = AnyT.make dummy
+  let merged_any           = AnyT.make merged
+  let react_any            = AnyT.make react
+  let instance_of_refi_any = AnyT.make instance_of_refi
+  let unresolved_any       = AnyT.make unresolved
+  let type_instance_any    = AnyT.make type_instance
+  let resolve_spread_any   = AnyT.make resolve_spread
+  let shape_assign_any     = AnyT.make shape_assign
+  let constructor_any      = AnyT.make constructor
+  let function_proto_any   = AnyT.make function_proto
+  let computed_lit_key_any = AnyT.make computed_lit_key
+  let refi_from_mixed_any  = AnyT.make refi_from_mixed
+  let unimplemented_any    = AnyT.make unimplemented
+  let weak_context_any     = AnyT.make weak_context
+  let inference_hooks_any  = AnyT.make inference_hooks
+  let for_of_iter_any      = AnyT.make for_of_iter
+  let tagged_template_any  = AnyT.make tagged_template
+  let chain_any            = AnyT.make chain
+  let exports_any          = AnyT.make exports
+  let existential_any      = AnyT.make existential
+
+  let why kind = Unsound kind |> AnyT.why
+  let at  kind = Unsound kind |> AnyT.at
+end
+
 
 module VoidT = Primitive (struct
   let desc = RVoid
@@ -3226,17 +3300,16 @@ let unknown_use = Op UnknownUse
 (* Methods may use a dummy statics object type to carry properties. We do not
    want to encourage this pattern, but we also don't want to block uses of this
    pattern. Thus, we compromise by not tracking the property types. *)
-let dummy_static reason =
+let dummy_static =
   (* TODO: T35904222 *)
-  DefT (replace_reason (fun desc -> RStatics desc) reason, AnyT Unsound)
+  replace_reason (fun desc -> RStatics desc) %> Unsoundness.dummy_any
 
 let dummy_prototype =
   ObjProtoT (locationless_reason RDummyPrototype)
 
 let dummy_this =
   (* TODO: T35904222 *)
-  let reason = locationless_reason RDummyThis in
-  DefT (reason, AnyT Unsound)
+  locationless_reason RDummyThis |> Unsoundness.dummy_any
 
 let global_this reason =
   let reason = replace_reason_const (RCustom "global object") reason in

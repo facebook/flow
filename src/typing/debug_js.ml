@@ -1670,7 +1670,7 @@ let rec dump_t_ (depth, tvars) cx t =
   let string_of_any_source = function
     | Annotated -> "Annotated"
     | AnyError -> "Error"
-    | Unsound -> "Unsound"
+    | Unsound _ -> "Unsound"
     | Untyped -> "Untyped"
   in
 

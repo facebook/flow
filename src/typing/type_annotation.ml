@@ -713,12 +713,12 @@ let rec convert cx tparams_map = Ast.Type.(function
           ListUtils.range 0 n |>
           List.map (fun i -> Some ("x_" ^ Pervasives.string_of_int i)) in
         let emp = Key_map.empty in
-        let tins = ListUtils.repeat n (AnyT.at Unsound loc) in
+        let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
         let tout = OpenPredT (out_reason, MixedT.at loc, emp, emp) in
         reconstruct_ast
           (DefT (fun_reason, FunT (
             dummy_static static_reason,
-            DefT (mk_reason RPrototype loc, AnyT Unsound),
+            mk_reason RPrototype loc |> Unsoundness.function_proto_any,
             mk_functiontype fun_reason tins tout
               ~rest_param:None ~def_reason:fun_reason
               ~params_names:key_strs ~is_predicate:true
@@ -801,9 +801,9 @@ let rec convert cx tparams_map = Ast.Type.(function
   let ft =
     DefT (reason, FunT (
       dummy_static reason,
-      DefT (mk_reason RPrototype loc, AnyT Unsound),
+      mk_reason RPrototype loc |> Unsoundness.function_proto_any,
       {
-        this_t = DefT (mk_reason RThis loc, AnyT Unsound);
+        this_t = mk_reason RThis loc |> Unsoundness.dummy_any;
         params = List.rev rev_params;
         rest_param;
         return_t;
@@ -1249,7 +1249,7 @@ and mk_type cx tparams_map reason = function
   | None ->
       let t =
         if Context.is_weak cx
-        then AnyT.unsound reason
+        then Unsoundness.why WeakContext reason
         else Tvar.mk cx reason
       in
       Hashtbl.replace (Context.annot_table cx) (aloc_of_reason reason |> ALoc.to_loc) t;
@@ -1359,7 +1359,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
 
 and type_identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
-  then AnyT.at Unsound loc
+  then Unsoundness.at InferenceHooks loc
   else if name = "undefined"
   then VoidT.at loc
   else Env.var_ref ~lookup_mode:ForType cx name loc

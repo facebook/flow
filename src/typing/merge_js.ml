@@ -488,7 +488,7 @@ let merge_tvar =
       | [] ->
         let uses = Flow_js.possible_uses cx id in
         if uses = [] || existential
-          then AnyT.locationless Unsound
+          then AnyT.locationless Unsoundness.existential
           else MergedT (r, uses)
 
 (****************** signature contexts *********************)

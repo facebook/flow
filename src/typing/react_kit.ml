@@ -136,7 +136,7 @@ let run cx trace ~use_op reason_op l u
   let component_class props =
     let reason = reason_of_t l in
     DefT (reason, ClassT (get_builtin_typeapp cx reason
-      "React$Component" [props; AnyT.unsound reason]))
+      "React$Component" [props; Unsoundness.why React reason]))
   in
 
   (* We create our own FunT instead of using
@@ -145,7 +145,7 @@ let run cx trace ~use_op reason_op l u
    * function is called multiple times *)
   let component_function ?(with_return_t=true) props =
     let reason = replace_reason_const RReactSFC reason_op in
-    let any = AnyT.make Unsound reason_op in
+    let any = Unsoundness.react_any reason_op in
     DefT (reason, FunT (
       any,
       any,
@@ -550,7 +550,7 @@ let run cx trace ~use_op reason_op l u
       let props = SMap.empty in
       let dict = {
         dict_name = None;
-        key = AnyT.locationless Unsound;
+        key = AnyT.locationless Unsoundness.react;
         value;
         dict_polarity = Neutral;
       } in
@@ -911,7 +911,7 @@ let run cx trace ~use_op reason_op l u
           | Some t ->
             (* Tie the `this` knot with BindT *)
             (* TODO: T35904222 *)
-            let dummy_return = DefT (reason_op, AnyT Unsound) in
+            let dummy_return = Unsoundness.dummy_any reason_op in
             let calltype = mk_methodcalltype knot.this None [] dummy_return in
             rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
             (* Because we are creating an instance type, which can be used as an
@@ -953,7 +953,7 @@ let run cx trace ~use_op reason_op l u
           let dict = Some {
             dict_name = None;
             key = StrT.why reason;
-            value = AnyT.unsound reason;
+            value = Unsoundness.why React reason;
             dict_polarity = Neutral;
           } in
           reason, static_props, dict, false, true
@@ -1017,7 +1017,7 @@ let run cx trace ~use_op reason_op l u
         (match stack' with
         | [] ->
           (* The root spec is unknown *)
-          rec_flow_t cx trace (AnyT.unsound reason_op, tout)
+          rec_flow_t cx trace (Unsoundness.why React reason_op, tout)
         | ((obj, spec), todo, mixins_rev)::stack' ->
           (* A mixin is unknown *)
           let mixins_rev = Unknown reason :: mixins_rev in
