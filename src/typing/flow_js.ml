@@ -2092,16 +2092,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ) in
         rec_flow_t cx trace (import_t, t)
 
-    (* imports are `any`-typed when they are from (1) unchecked modules or (2)
-       modules with `any`-typed exports *)
-    | DefT (_, AnyT AnyObject),
-        ( CJSRequireT(reason, t, _)
-        | ImportModuleNsT(reason, t, _)
-        | ImportDefaultT(reason, _, _, t, _)
-        | ImportNamedT(reason, _, _, _, t, _)
-        ) ->
-      rec_flow_t cx trace (AnyT.untyped reason, t)
-
     | DefT (lreason, AnyT src), (CJSRequireT(reason, t, _) | ImportModuleNsT(reason, t, _)) ->
       let () = match desc_of_reason lreason with
         (* Use a special reason so we can tell the difference between an any-typed import
@@ -2158,8 +2148,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, DefT (_, NumT _))) when numeric l -> ()
 
-    | (_, UseT (_, DefT (_, AnyT AnyObject))) when object_like l -> ()
-    | (DefT (_, AnyT AnyObject), UseT (_, u)) when object_like u -> ()
+    | (_, UseT (_, DefT (_, AnyT _))) when object_like l -> ()
+    | (DefT (_, AnyT _), UseT (_, u)) when object_like u -> ()
 
     | (_, UseT (_, DefT (_, AnyFunT))) when function_like l -> ()
 
@@ -2911,7 +2901,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace err
 
     (* AnyT has every prop *)
-    | DefT (_, AnyT AnyObject), HasOwnPropT _ -> ()
+    | DefT (_, AnyT _), HasOwnPropT _ -> ()
 
     | DefT (_, ObjT { flags; props_tmap; dict_t; _ }), GetKeysT (reason_op, keys) ->
       begin match flags.sealed with
@@ -2938,7 +2928,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) own_props [] in
       rec_flow cx trace (union_of_ts reason_op keylist, keys)
 
-    | DefT (reason, (AnyT AnyObject | AnyFunT)), GetKeysT (_, keys) ->
+    | DefT (reason, AnyFunT), GetKeysT (_, keys) ->
       rec_flow cx trace (StrT.why reason, keys)
 
     | DefT (_, AnyT src), GetKeysT (reason_op, keys) ->
@@ -3553,7 +3543,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     (* any specializations ~> $Exact<UB>. unwrap exact *)
-    | DefT (_, AnyT AnyObject), UseT (use_op, ExactT (_, t))
+    | DefT (_, AnyT _), UseT (use_op, ExactT (_, t))
     | DefT (_, AnyFunT), UseT (use_op, ExactT (_, t)) ->
       rec_flow cx trace (l, UseT (use_op, t))
 
@@ -4709,7 +4699,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       call_args_iter
         (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op)))
         args;
-      rec_flow_t cx trace (AnyT.make AnyObject reason_o, t);
+      rec_flow_t cx trace (AnyT.make Untyped reason_o, t);
 
     | DefT (_, AnyT _), ConstructorT (use_op, reason_op, targs, args, t) ->
       ignore targs; (* An untyped receiver can't do anything with type args *)
@@ -4775,7 +4765,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* __proto__ setter *)
     (********************)
 
-    | DefT (_, (AnyT AnyObject | AnyFunT)), SetProtoT _ -> ()
+    | DefT (_, (AnyT _ | AnyFunT)), SetProtoT _ -> ()
 
     | _, SetProtoT (reason_op, _) ->
       add_output cx ~trace (FlowError.EUnsupportedSetProto reason_op)
@@ -5044,7 +5034,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             (reason_prop, reason_op), Some x, Property.polarity p, Read, unknown_use
           ))
       );
-      if dict_t <> None then rec_flow_t cx trace (AnyT.make AnyObject reason_op, t)
+      if dict_t <> None then rec_flow_t cx trace (AnyT.make Untyped reason_op, t)
       else begin
         if error_flags.assert_exact && not flags.exact
         then add_output cx ~trace (FlowError.EInexactSpread (lreason, reason_op));
@@ -5077,8 +5067,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        existing object destroys all of the keys, turning the result into an
        AnyT as well. TODO: wait for `to_obj` to be resolved, and then call
        `SetPropT (_, _, _, AnyT, _)` on all of its props. *)
-    | DefT (_, AnyT AnyObject), ObjAssignFromT (reason, _, t, ObjAssign _) ->
-      rec_flow_t cx trace (AnyT.make AnyObject reason, t)
+    | DefT (_, AnyT src), ObjAssignFromT (reason, _, t, ObjAssign _) ->
+      rec_flow_t cx trace (AnyT.make src reason, t)
 
     | DefT (_, AnyT _), ObjAssignFromT (_, _, t, _) ->
       rec_flow_t cx trace (l, t)
@@ -5165,9 +5155,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       rec_flow_t cx trace (o, t)
 
-    (* ...AnyFunT yields AnyT AnyObject *)
+    (* ...AnyFunT yields AnyT *)
     | DefT (_, AnyFunT), ObjRestT (reason, _, t) ->
-      rec_flow_t cx trace (AnyT.make AnyObject reason, t)
+      rec_flow_t cx trace (AnyT.make Untyped reason, t)
 
     | DefT (_, AnyT src), ObjRestT (reason, _, t) ->
       rec_flow_t cx trace (AnyT.why src reason, t)
@@ -5935,7 +5925,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* objects are allowed. arrays _could_ be, but are not because it's
        generally safer to use a for or for...of loop instead. *)
     | _, AssertForInRHST _ when object_like l -> ()
-    | (DefT (_, AnyT AnyObject) | ObjProtoT _), AssertForInRHST _ -> ()
+    | (DefT (_, AnyT _) | ObjProtoT _), AssertForInRHST _ -> ()
 
     (* null/undefined are allowed *)
     | DefT (_, (NullT | VoidT)), AssertForInRHST _ -> ()
@@ -6371,7 +6361,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (** ExtendsT searches for a nominal superclass. The search terminates with
         either failure at the root or a structural subtype check. **)
 
-    | DefT (_, AnyT AnyObject), ExtendsUseT _ -> ()
+    | DefT (_, AnyT _), ExtendsUseT _ -> ()
 
     | DefT (lreason, ObjT { proto_t; _ }), ExtendsUseT _ ->
       let l = reposition cx ~trace (aloc_of_reason lreason) proto_t in
@@ -7352,7 +7342,7 @@ and numeric = function
   | _ -> false
 
 and object_like = function
-  | DefT (_, (AnyT AnyObject | ObjT _ | InstanceT _)) -> true
+  | DefT (_, (AnyT _ | ObjT _ | InstanceT _)) -> true
   | t -> function_like t
 
 and object_use = function
@@ -7366,7 +7356,7 @@ and object_like_op = function
   | GetKeysT _ | HasOwnPropT _ | GetValuesT _
   | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
   | SetElemT _ | GetElemT _
-  | UseT (_, DefT (_, AnyT AnyObject)) -> true
+  | UseT (_, DefT (_, AnyT _)) -> true
   | _ -> false
 
 and function_use = function
@@ -12332,8 +12322,6 @@ end = struct
     | DefT (_, (NullT | VoidT))
     | InternalT (OptionalChainVoidT _) ->
         FailureNullishType
-    | DefT (reason, AnyT AnyObject) ->
-        extract_type cx (get_builtin_type cx reason "Object")
     | DefT (_, AnyT _) ->
         FailureAnyType
     | DefT (reason, AnyFunT) ->

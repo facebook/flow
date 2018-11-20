@@ -798,7 +798,7 @@ let run cx trace ~use_op reason_op l u
         | None ->
           let reason = replace_reason_const RReactDefaultProps reason_op in
           Obj_type.mk cx reason
-        | Some (Unknown reason) -> AnyT.make AnyObject reason
+        | Some (Unknown reason) -> AnyT.make Untyped reason
         | Some (Known (reason, props, dict, _)) ->
           Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
             ?dict ~sealed:true ~exact:false
@@ -814,7 +814,7 @@ let run cx trace ~use_op reason_op l u
         | None ->
           let reason = replace_reason_const RReactState reason_op in
           Obj_type.mk cx reason
-        | Some (Unknown reason) -> AnyT.make AnyObject reason
+        | Some (Unknown reason) -> AnyT.make Untyped reason
         | Some (Known (Null reason)) -> DefT (reason, NullT)
         | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
           let sealed = not (exact && sealed_in_op reason_op sealed) in
@@ -861,8 +861,8 @@ let run cx trace ~use_op reason_op l u
          stricter, we could use an empty object type, but that would require all
          components to specify propTypes *)
       let props_t = match spec.prop_types with
-      | None -> AnyT.make AnyObject reason_op
-      | Some (Unknown reason) -> AnyT.make AnyObject reason
+      | None -> AnyT.make Untyped reason_op
+      | Some (Unknown reason) -> AnyT.make Untyped reason
       | Some (Known (reason, props, dict, _)) ->
         Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
           ?dict ~sealed:true ~exact:false

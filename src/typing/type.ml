@@ -752,7 +752,6 @@ module rec TypeTerm : sig
   and any_source =
     | Annotated
     | AnyError
-    | AnyObject
     | Unsound
     | Untyped
 
@@ -2668,7 +2667,6 @@ module AnyT = struct
   let why  source   = replace_reason_const ~keep_def_loc:true desc %> make source
   let annot      = why Annotated
   let error      = why AnyError
-  let any_object = why AnyObject
   let unsound    = why Unsound
   let untyped    = why Untyped
 
@@ -2677,7 +2675,6 @@ module AnyT = struct
   let source = function
   | DefT(_, AnyT Annotated) -> Annotated
   | DefT(_, AnyT AnyError)  -> AnyError
-  | DefT(_, AnyT AnyObject) -> AnyObject
   | DefT(_, AnyT Unsound)   -> Unsound
   | DefT(_, AnyT Untyped)   -> Untyped
   | _ -> failwith "not an any type"
