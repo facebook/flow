@@ -37,5 +37,14 @@ module Reordered_argument_set (S : Set.S) = struct
   let of_list l = List.fold_left add S.empty l
 end
 
-module SSet = Reordered_argument_set(SSet)
-module SMap = Reordered_argument_map(SMap)
+module SSet = struct
+  include Reordered_argument_set(SSet)
+  let pp = SSet.pp
+  let show = SSet.show
+end
+
+module SMap = struct
+  include Reordered_argument_map(SMap)
+  let pp = SMap.pp
+  let show = SMap.show
+end
