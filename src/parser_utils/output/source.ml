@@ -100,19 +100,6 @@ let add_newline source =
 let add_space num b =
   add_string (String.make num ' ') b
 
-(* Merge two source builders. The first is mutated *)
-let add_source src1 src2 =
-  (* TODO: handle merging source mappings, currently you will get incorrect
-     source maps after merging (the compact printer doesn't use this API) *)
-  Buffer.add_buffer src1.buffer src2.buffer;
-  let pos =
-    let open Sourcemap in
-    let line = src1.pos.line + src2.pos.line - 1 in
-    let col = if src2.pos.line > 1 then src2.pos.col else src1.pos.col + src2.pos.col in
-    { line; col }
-  in
-  { src1 with pos }
-
 let contents b = Buffer.contents b.buffer
 
 let json_of_source source =

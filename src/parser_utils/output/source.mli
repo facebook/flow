@@ -22,7 +22,6 @@ val add_string: ?name:string -> string -> t -> t
 val add_identifier: Loc.t -> string -> t -> t
 val add_newline: t -> t
 val add_space: int -> t -> t
-val add_source: t -> t -> t
 
 val contents: t -> string
 val json_of_source : t -> Hh_json.json
