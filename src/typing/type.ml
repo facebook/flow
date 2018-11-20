@@ -218,7 +218,7 @@ module rec TypeTerm : sig
     (* type aliases *)
     | TypeT of type_t_kind * t
 
-    | AnyT
+    | AnyT of any_source
 
     (* type of an optional parameter *)
     | OptionalT of t
@@ -749,6 +749,12 @@ module rec TypeTerm : sig
     | Mixed_non_null
     | Mixed_non_void
     | Empty_intersection
+
+  and any_source =
+    | Annotated
+    | AnyError
+    | Unsound
+    | Untyped
 
   (* used by FunT *)
   and funtype = {
@@ -2655,10 +2661,25 @@ module EmptyT = Primitive (struct
   let make r = DefT (r, EmptyT)
 end)
 
-module AnyT = Primitive (struct
+module AnyT = struct
   let desc = RAny
-  let make r = DefT (r, AnyT)
-end)
+  let make source r = DefT (r, AnyT source)
+  let at   source   = mk_reason desc %> annot_reason %> make source
+  let why  source   = replace_reason_const ~keep_def_loc:true desc %> make source
+  let annot   = why Annotated
+  let error   = why AnyError
+  let unsound = why Unsound
+  let untyped = why Untyped
+
+  let locationless source = locationless_reason desc |> make source
+
+  let source = function
+  | DefT(_, AnyT Annotated) -> Annotated
+  | DefT(_, AnyT AnyError)  -> AnyError
+  | DefT(_, AnyT Unsound)   -> Unsound
+  | DefT(_, AnyT Untyped)   -> Untyped
+  | _ -> failwith "not an any type"
+end
 
 module VoidT = Primitive (struct
   let desc = RVoid
@@ -2705,7 +2726,6 @@ module Locationless = struct
   module BoolT = LocationLess (BoolT)
   module MixedT = LocationLess (MixedT)
   module EmptyT = LocationLess (EmptyT)
-  module AnyT = LocationLess (AnyT)
   module VoidT = LocationLess (VoidT)
   module NullT = LocationLess (NullT)
 end
@@ -2736,7 +2756,7 @@ let is_top = function
 | _ -> false
 
 let is_any = function
-| DefT (_, AnyT) -> true
+| DefT (_, AnyT _) -> true
 | _ -> false
 
 (* Primitives, like string, will be promoted to their wrapper object types for
@@ -2849,7 +2869,7 @@ let string_of_defer_use_ctor = function
 
 let string_of_def_ctor = function
   | ArrT _ -> "ArrT"
-  | AnyT -> "AnyT"
+  | AnyT _ -> "AnyT"
   | AnyObjT -> "AnyObjT"
   | AnyFunT -> "AnyFunT"
   | BoolT _ -> "BoolT"
@@ -3230,7 +3250,7 @@ let dummy_prototype =
 
 let dummy_this =
   let reason = locationless_reason RDummyThis in
-  DefT (reason, AnyT)
+  DefT (reason, AnyT Unsound)
 
 let global_this reason =
   let reason = replace_reason_const (RCustom "global object") reason in

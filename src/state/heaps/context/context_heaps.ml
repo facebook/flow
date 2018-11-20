@@ -162,7 +162,7 @@ end = struct
     in
     let module_refs = List.map (fun f ->
       let module_ref = Files.module_ref f in
-      let module_t = Type.Locationless.AnyT.t in
+      let module_t = Type.AnyT.locationless Type.AnyError in
       Context.add_module cx module_ref module_t;
       (* Ideally we'd assert that f is a member of the oldified files too *)
       LeaderHeap.add f leader_f;

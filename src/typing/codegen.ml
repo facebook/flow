@@ -152,7 +152,7 @@ let rec gen_type t env = Type.(
   | OpaqueT (_, {super_t = Some t; _}) -> gen_type t env
   | DefT (_, AnyFunT) -> add_str "Function" env
   | DefT (_, AnyObjT) -> add_str "Object" env
-  | DefT (_, AnyT)
+  | DefT (_, AnyT _)
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
   | MergedT _

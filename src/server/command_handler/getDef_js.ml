@@ -164,7 +164,7 @@ let getdef_get_result_from_hooks ~options cx state =
             get_imported_file ()
           else
             loc
-      | DefT (_, AnyT) ->
+      | DefT (_, AnyT _) ->
           get_imported_file ()
       | _ -> failwith (
         spf "Internal Flow Error: Expected ModuleT for %S, but got %S!"

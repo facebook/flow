@@ -21,8 +21,8 @@ module T = Type
 
 type program = (ALoc.t, ALoc.t * Type.t) Ast.program
 
-let error_annot = ALoc.none, Type.Locationless.AnyT.t
-let unimplemented_annot = ALoc.none, Type.Locationless.AnyT.t
+let error_annot = ALoc.none, Type.AnyT.locationless Type.AnyError
+let unimplemented_annot = ALoc.none, Type.AnyT.locationless Type.Unsound
 
 module Type = struct
   open Ast.Type

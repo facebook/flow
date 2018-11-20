@@ -212,7 +212,7 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else TypeT (s, t'')
-      | AnyT -> t
+      | AnyT _ -> t
       | OptionalT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

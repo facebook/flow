@@ -121,7 +121,7 @@ class ['a] t = object(self)
   | InternalT (OptionalChainVoidT _) -> acc
 
   method def_type cx pole acc = function
-  | AnyT
+  | AnyT _
   | NumT _
   | StrT _
   | BoolT _

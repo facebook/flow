@@ -119,7 +119,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | DefT (_, EmptyT)
   | DefT (_, MixedT _)
-  | DefT (_, AnyT)
+  | DefT (_, AnyT _)
   | DefT (_, NullT)
   | DefT (_, VoidT)
     -> []
@@ -849,7 +849,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         | ResolvedSpreadArg (r, at) ->
           "ResolvedSpreadArg", DefT (r, ArrT at)
         | ResolvedAnySpreadArg r ->
-          "ResolvedAnySpreadArg", DefT (r, AnyT)
+          "ResolvedAnySpreadArg", AnyT.make Untyped r
         in
         JSON_Object [
           "kind", JSON_String kind;
@@ -1671,6 +1671,13 @@ let rec dump_t_ (depth, tvars) cx t =
     | Empty_intersection -> "Empty_intersection"
   in
 
+  let string_of_any_source = function
+    | Annotated -> "Annotated"
+    | AnyError -> "Error"
+    | Unsound -> "Unsound"
+    | Untyped -> "Untyped"
+  in
+
   let custom_fun =
     let react_prop_type =
       let open React.PropType in
@@ -1726,9 +1733,9 @@ let rec dump_t_ (depth, tvars) cx t =
         (kid this_t)
         (String.concat "; " (List.map (fun (_, t) -> kid t) params))
         (kid return_t)) t
+  | DefT (_, AnyT src) -> p ~extra:(string_of_any_source src) t
   | DefT (_, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
   | DefT (_, EmptyT)
-  | DefT (_, AnyT)
   | DefT (_, NullT)
   | DefT (_, VoidT)
       -> p t

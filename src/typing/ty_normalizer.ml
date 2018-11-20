@@ -553,7 +553,7 @@ end = struct
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Supertype t)
     | DefT (_, MixedT _) -> return Ty.Top
-    | DefT (_, AnyT) -> return Ty.Any
+    | DefT (_, AnyT _) -> return Ty.Any
     | DefT (_, AnyObjT) -> return Ty.AnyObj
     | DefT (_, AnyFunT) -> return Ty.AnyFun
     | DefT (_, VoidT) -> return Ty.Void

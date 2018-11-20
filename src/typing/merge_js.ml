@@ -129,7 +129,8 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
   let m_name = Reason.internal_module_name m in
   let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
-    (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t), None)) from_t;
+    (Type.NonstrictReturning (Some (Type.DefT (reason,
+       Type.AnyT Type.Untyped), from_t), None)) from_t;
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -489,7 +490,7 @@ let merge_tvar =
       | [] ->
         let uses = Flow_js.possible_uses cx id in
         if uses = [] || existential
-          then Locationless.AnyT.t
+          then AnyT.locationless Unsound
           else MergedT (r, uses)
 
 (****************** signature contexts *********************)

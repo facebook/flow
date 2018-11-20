@@ -1569,7 +1569,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
       let element_tvar = Tvar.mk cx reason in
       let o =
-        let targs = [element_tvar; AnyT.at loc; AnyT.at loc] in
+        let targs = [element_tvar; AnyT.at Unsound loc; AnyT.at Unsound loc] in
         if async then
           let reason = mk_reason
             (RCustom "async iteration expected on AsyncIterable") loc in
@@ -2050,7 +2050,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
             in
             if Type_inference_hooks_js.dispatch_member_hook
               cx remote_name remote_name_loc module_t
-            then AnyT.why import_reason
+            then AnyT.unsound import_reason
             else
               let import_kind = type_kind_of_kind (Option.value ~default:importKind kind) in
               get_imported_t import_reason import_kind remote_name local_name
@@ -2129,7 +2129,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           let imported_t =
             if Type_inference_hooks_js.dispatch_member_hook
               cx "default" loc module_t
-            then AnyT.why import_reason
+            then AnyT.unsound import_reason
             else
               let import_kind = type_kind_of_kind importKind in
               get_imported_t import_reason import_kind "default" local_name
@@ -2310,7 +2310,7 @@ and export_statement cx loc
         let remote_namespace_t =
           if parse_export_star_as = Options.ESPROPOSAL_ENABLE
           then import_ns cx reason (source_loc, source_module_name) loc
-          else AnyT.why (
+          else AnyT.untyped (
             let config_value =
               if parse_export_star_as = Options.ESPROPOSAL_IGNORE
               then "ignore"
@@ -2923,7 +2923,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           reason_arity = Reason.(locationless_reason (RType "Function"));
           expected_arity = 0;
         });
-        (loc, AnyT.at loc),
+        (loc, AnyT.at AnyError loc),
         New {
           New.callee = callee_annot, Identifier ((id_loc, id_t), name);
           targs = Some (targts_loc, snd targts);
@@ -3147,7 +3147,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let ret = Tvar.mk cx reason in
       let args =
         [ Arg (DefT (reason_array, ArrT (ArrayAT (StrT.why reason, None))));
-          SpreadArg (AnyT.why reason) ] in
+          SpreadArg (AnyT.unsound reason) ] in
       let ft = mk_functioncalltype reason None args ret in
       let use_op = Op (FunCall {
         op = mk_expression_reason ex;
@@ -3324,7 +3324,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       then
         Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ImportDynamicArgument));
-      (loc, AnyT.at loc), Typed_ast.Expression.error
+      (loc, AnyT.at AnyError loc), Typed_ast.Expression.error
   )
 )
 
@@ -3411,7 +3411,7 @@ and subscript =
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = 0;
           });
-          AnyT.at loc, Typed_ast.Expression.expression_or_spread_list_error
+          AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
         | _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
           let ignore_non_literals =
@@ -3420,7 +3420,7 @@ and subscript =
           then
             Flow.add_output cx
               Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-          AnyT.at loc, Typed_ast.Expression.expression_or_spread_list_error
+          AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
       ) in
       (* TODO(vijayramamurthy) type of require ? *)
       let id_t = AnyFunT.at callee_loc in
@@ -3495,12 +3495,17 @@ and subscript =
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = 0;
           });
-          AnyT.at loc, Typed_ast.Expression.expression_or_spread_list_error
+          AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
         | _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
           Flow.add_output cx
             Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-          AnyT.at loc, Typed_ast.Expression.expression_or_spread_list_error
+          AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
+
+
+
+
+
       ) in
       (* TODO(vijayramamurthy) does "requireLazy" have a type? *)
       let id_t = AnyFunT.at callee_loc in
@@ -3898,7 +3903,7 @@ and subscript =
         | None ->
           let prop_reason = mk_reason (RProperty (Some name)) ploc in
           if Type_inference_hooks_js.dispatch_member_hook cx name ploc super
-          then AnyT.at ploc
+          then AnyT.at Unsound ploc
           else Tvar.mk_where cx expr_reason (fun tvar ->
             let use_op = Op (GetProperty (mk_expression_reason ex)) in
             Flow.flow cx (
@@ -3931,7 +3936,7 @@ and subscript =
         | NonOptional ->
           let (_, tobj), _ as _object_ast = expression cx _object in
           let lhs_t = if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
-          then AnyT.at ploc
+          then AnyT.at Unsound ploc
           else begin match Refinement.get cx (loc, e) loc with
           | Some t -> t
           | None ->
@@ -3945,7 +3950,7 @@ and subscript =
         | NewChain ->
           let (_, lhs_t), _ as _object_ast = expression cx _object in
           let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
-            then AnyT.at ploc else Tvar.mk cx expr_reason in
+            then AnyT.at Unsound ploc else Tvar.mk cx expr_reason in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
           let property = Member.PropertyIdentifier ((ploc, tout), name) in
           _object, lhs_t, ref (loc, opt_use, tout) :: acc, lhs_t, (
@@ -3953,7 +3958,8 @@ and subscript =
             member_ast { Member._object = _object_ast; property; }
           )
         | ContinueChain ->
-          let tout = AnyT.at ploc in
+          (* TODO: T35904222 *)
+          let tout = AnyT.at Unsound ploc in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
           let step = ref (loc, opt_use, tout) in
           let lhs, lhs_t, chain, ((_, tobj), _ as _object_ast) =
@@ -3988,7 +3994,7 @@ and subscript =
             | Some t -> t
             | None ->
               if Type_inference_hooks_js.dispatch_member_hook cx name ploc tobj
-              then AnyT.at ploc
+              then AnyT.at Unsound ploc
               else get_private_field cx expr_reason ~use_op tobj name
           ) in
           ex, lhs_t, acc, (
@@ -3998,14 +4004,20 @@ and subscript =
         | NewChain ->
           let (_, lhs_t), _ as _object_ast = expression cx _object in
           let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
-            then AnyT.at ploc else Tvar.mk cx expr_reason in
+            then AnyT.at Unsound ploc else Tvar.mk cx expr_reason in
+
+
+
+
+
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           _object, lhs_t, ref (loc, opt_use, tout) :: acc, (
             (loc, tout),
             member_ast { Member._object = _object_ast; property; }
           )
         | ContinueChain ->
-          let tout = AnyT.at ploc in
+          (* TODO: T35904222 *)
+          let tout = AnyT.at Unsound ploc in
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           let step = ref (loc, opt_use, tout) in
           let lhs, lhs_t, chain, ((_, tobj), _ as _object_ast) =
@@ -4152,7 +4164,7 @@ and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
 
 and identifier_ cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
-  then AnyT.at loc
+  then AnyT.at Unsound loc
   else (
     let t = Env.var_ref ~lookup_mode:ForValue cx name loc in
     (* We want to make sure that the reason description for the type we return
@@ -4439,7 +4451,7 @@ and assignment_lhs cx = Ast.Pattern.(function
   | loc, Object _
   | loc, Array _ ->
       Flow.add_output cx (Flow_error.EInvalidLHSInAssignment loc);
-      ((loc, AnyT.at loc), Typed_ast.Pattern.error)
+      ((loc, AnyT.at AnyError loc), Typed_ast.Pattern.error)
 
   | pat_loc, Identifier { Identifier.name = (loc, name); optional; annot; } ->
       let t = identifier cx name loc in
@@ -4449,7 +4461,7 @@ and assignment_lhs cx = Ast.Pattern.(function
         | Ast.Type.Available (loc, _) ->
           Ast.Type.Available (loc, (Typed_ast.error_annot, Typed_ast.Type.error))
         | Ast.Type.Missing hint ->
-          Ast.Type.Missing (hint, Type.Locationless.AnyT.t));
+          Ast.Type.Missing (hint, AnyT.locationless Untyped));
         optional;
       })
 
@@ -4526,7 +4538,7 @@ and assignment cx loc = Ast.Expression.(function
             let prop_t =
             (* if we fire this hook, it means the assignment is a sham. *)
             if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
-            then AnyT.at prop_loc
+            then AnyT.at Unsound prop_loc
             else
               let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
 
@@ -4565,7 +4577,7 @@ and assignment cx loc = Ast.Expression.(function
             let prop_t =
             (* if we fire this hook, it means the assignment is a sham. *)
             if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
-            then AnyT.at prop_loc
+            then AnyT.at Unsound prop_loc
             else
               let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
               let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
@@ -4796,7 +4808,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
 
   | Identifier (loc, { Identifier.name }), Options.Jsx_react, _ ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-      let t = AnyT.at loc_element in
+      let t = AnyT.at Unsound loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
       let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
       t, name, attributes
@@ -4815,7 +4827,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
 
   | Identifier (loc, { Identifier.name }), Options.Jsx_pragma _, _ ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-      let t = AnyT.at loc_element in
+      let t = AnyT.at Unsound loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
       let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
       t, name, attributes
@@ -4839,7 +4851,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
      *)
     if Type_inference_hooks_js.dispatch_id_hook cx name loc
     then
-      let t = AnyT.at loc_element in
+      let t = AnyT.at Unsound loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
       let attributes' = Typed_ast.JSX.Opening.error_attribute_list attributes in
       t, name, attributes'
@@ -4865,7 +4877,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
 
   | _ ->
       (* TODO? covers namespaced names as element names *)
-    let t = AnyT.at loc_element in
+    let t = AnyT.at Unsound loc_element in
     let name = Typed_ast.JSX.error_name in
     let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
     t, name, attributes
@@ -4977,7 +4989,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
       (* Get the type for the attribute's value. *)
       let atype, value =
         if Type_inference_hooks_js.dispatch_jsx_hook cx aname attr_loc c
-        then AnyT.at attr_loc, None
+        then AnyT.at Unsound attr_loc, None
         else
           match value with
             (* <element name="literal" /> *)
@@ -5061,7 +5073,7 @@ and jsx_desugar cx name component_t props attributes children locs =
         | UnresolvedArg a -> a
         | UnresolvedSpreadArg a ->
             Flow.add_output cx Flow_error.(EUnsupportedSyntax (loc_children, SpreadArgument));
-            AnyT.why (reason_of_t a)
+            reason_of_t a |> AnyT.error
       ) children in
       Tvar.mk_where cx reason (fun tvar ->
         let reason_createElement =
@@ -5307,7 +5319,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx
           prop_name prop_loc obj_t
-        then AnyT.at prop_loc
+        then AnyT.at Unsound prop_loc
         else
           let use_op = Op (GetProperty prop_reason) in
           get_prop ~is_cond:true cx
@@ -5641,7 +5653,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       | None ->
         if Type_inference_hooks_js.dispatch_member_hook cx
           prop_name prop_loc obj_t
-        then AnyT.at prop_loc
+        then AnyT.at Unsound prop_loc
         else
           let use_op = Op (GetProperty (mk_expression_reason e)) in
           get_prop ~is_cond:true cx
@@ -6051,7 +6063,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       reason_arity = Reason.(locationless_reason (RFunction RNormal));
       expected_arity = 0;
     });
-    AnyT.at loc,
+    AnyT.at AnyError loc,
     Some (targs_loc, targs),
     args
 
@@ -6440,7 +6452,7 @@ and mk_func_sig =
       | loc, _ ->
         Flow_js.add_output cx
           Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
-        params, ((loc, AnyT.at loc), Typed_ast.Pattern.error)
+        params, ((loc, AnyT.at AnyError loc), Typed_ast.Pattern.error)
     in
     let add_param = function
       | _, Ast.Pattern.Assignment { Ast.Pattern.Assignment.left; right; } ->

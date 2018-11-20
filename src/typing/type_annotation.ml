@@ -32,7 +32,7 @@ let ident_name (_, name) = name
 
 let error_type cx loc msg =
   Flow.add_output cx msg;
-  (loc, AnyT.at loc), Typed_ast.Type.error
+  (loc, AnyT.at AnyError loc), Typed_ast.Type.error
 
 let is_suppress_type cx type_name =
   SSet.mem type_name (Context.suppress_types cx)
@@ -91,7 +91,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, (Any as t_ast) ->
   add_unclear_type_error_if_not_lib_file cx loc;
-  (loc, AnyT.at loc), t_ast
+  (loc, AnyT.at Annotated loc), t_ast
 
 | loc, (Mixed as t_ast) -> (loc, MixedT.at loc), t_ast
 
@@ -528,7 +528,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       )
     else (
       Flow.add_output cx (FlowError.EUnexpectedThisType loc);
-      (loc, Locationless.AnyT.t), Any (* why locationless? *)
+      (loc, AnyT.locationless AnyError), Any (* why locationless? *)
     )
 
   (* Class<T> is the type of the class whose instances are of type T *)
@@ -689,7 +689,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | type_name when is_suppress_type cx type_name ->
     (* Optional type params are info-only, validated then forgotten. *)
     let _, targs = convert_type_params () in
-    reconstruct_ast (AnyT.at loc) targs
+    reconstruct_ast (AnyT.at Annotated loc) targs
 
   (* TODO: presumably some existing uses of AnyT can benefit from AnyObjT
      as well: e.g., where AnyT is used to model prototypes and statics we
@@ -719,12 +719,12 @@ let rec convert cx tparams_map = Ast.Type.(function
           ListUtils.range 0 n |>
           List.map (fun i -> Some ("x_" ^ Pervasives.string_of_int i)) in
         let emp = Key_map.empty in
-        let tins = ListUtils.repeat n (AnyT.at loc) in
+        let tins = ListUtils.repeat n (AnyT.at Unsound loc) in
         let tout = OpenPredT (out_reason, MixedT.at loc, emp, emp) in
         reconstruct_ast
           (DefT (fun_reason, FunT (
             dummy_static static_reason,
-            DefT (mk_reason RPrototype loc, AnyT),
+            DefT (mk_reason RPrototype loc, AnyT Unsound),
             mk_functiontype fun_reason tins tout
               ~rest_param:None ~def_reason:fun_reason
               ~params_names:key_strs ~is_predicate:true
@@ -807,9 +807,9 @@ let rec convert cx tparams_map = Ast.Type.(function
   let ft =
     DefT (reason, FunT (
       dummy_static reason,
-      DefT (mk_reason RPrototype loc, AnyT),
+      DefT (mk_reason RPrototype loc, AnyT Unsound),
       {
-        this_t = DefT (mk_reason RThis loc, AnyT);
+        this_t = DefT (mk_reason RThis loc, AnyT Unsound);
         params = List.rev rev_params;
         rest_param;
         return_t;
@@ -1255,7 +1255,7 @@ and mk_type cx tparams_map reason = function
   | None ->
       let t =
         if Context.is_weak cx
-        then AnyT.why reason
+        then AnyT.unsound reason
         else Tvar.mk cx reason
       in
       Hashtbl.replace (Context.annot_table cx) (aloc_of_reason reason |> ALoc.to_loc) t;
@@ -1365,7 +1365,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
 
 and type_identifier cx name loc =
   if Type_inference_hooks_js.dispatch_id_hook cx name loc
-  then AnyT.at loc
+  then AnyT.at Unsound loc
   else if name = "undefined"
   then VoidT.at loc
   else Env.var_ref ~lookup_mode:ForType cx name loc
@@ -1488,8 +1488,8 @@ and add_interface_properties cx tparams_map properties s =
             | { Func_sig.tparams=None; fparams; _ } ->
               (match Func_params.value fparams with
               | [_, t] -> t
-              | _ -> AnyT.at id_loc (* error case: report any ok *))
-            | _ -> AnyT.at id_loc (* error case: report any ok *) in
+              | _ -> AnyT.at AnyError id_loc (* error case: report any ok *))
+            | _ -> AnyT.at AnyError id_loc (* error case: report any ok *) in
             add_setter ~static name id_loc fsig x,
             Ast.Type.(loc, { prop with Object.Property.
               key = Property.Identifier ((id_loc, prop_t), name);

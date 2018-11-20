@@ -430,7 +430,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
             (Reason.RCustom "undefined exports")
             reason_exports_module,
           Type.EmptyT))
-        (Type.DefT (reason_exports_module, Type.AnyT)))
+        (Type.DefT (reason_exports_module, Type.AnyT Type.Unsound)))
       scope;
 
     scope

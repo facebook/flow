@@ -181,7 +181,7 @@ let hash_of_def_ctor = Type.(function
 
   | AnyFunT -> AnyFunH
   | AnyObjT -> AnyObjH
-  | AnyT -> AnyH
+  | AnyT _ -> AnyH
   | ArrT _ -> ArrH
   | BoolT _ -> BoolH
   | CharSetT _ -> CharSetH

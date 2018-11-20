@@ -334,7 +334,7 @@ let global_lexicals = [
 let cache_global cx name ?desc loc global_scope =
   let t =
     if List.mem name global_any
-    then AnyT.at loc
+    then AnyT.at Annotated loc
     else if List.mem name global_lexicals
     then ObjProtoT (mk_reason (RCustom "global object") loc)
     else
@@ -774,7 +774,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
   | Type _ when lookup_mode != ForType ->
     let msg = FlowError.ETypeInValuePosition in
     binding_error msg cx name entry loc;
-    AnyT.at (entry_loc entry)
+    AnyT.at AnyError (entry_loc entry)
 
   | Type t ->
     t._type
@@ -787,7 +787,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
       when lookup_mode = ForValue && not (allow_forward_ref kind)
       && same_activation scope ->
       tdz_error cx name loc v;
-      AnyT.at value_declare_loc
+      AnyT.at AnyError value_declare_loc
     | _ ->
       Changeset.Global.change_var (scope.id, name, Changeset.Read);
       let s, g = value_entry_types ~lookup_mode scope v in

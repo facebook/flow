@@ -121,7 +121,7 @@ let maybe = function
   | DefT (_, NullT) as t -> t
   | DefT (_, VoidT) as t -> t
   | DefT (r, OptionalT _) -> VoidT.why r
-  | DefT (_, AnyT) as t -> t
+  | DefT (_, AnyT _) as t -> t
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
@@ -144,7 +144,7 @@ let null = function
   | DefT (_, NullT) as t -> t
   | DefT (r, MixedT Mixed_everything)
   | DefT (r, MixedT Mixed_non_void) -> NullT.why r
-  | DefT (_, AnyT) as t -> t
+  | DefT (_, AnyT _) as t -> t
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
@@ -167,7 +167,7 @@ let undefined = function
   | DefT (r, OptionalT _) -> VoidT.why r
   | DefT (r, MixedT Mixed_everything)
   | DefT (r, MixedT Mixed_non_null) -> VoidT.why r
-  | DefT (_, AnyT) as t -> t
+  | DefT (_, AnyT _) as t -> t
   | t ->
     let reason = reason_of_t t in
     EmptyT.why reason
@@ -196,7 +196,7 @@ let string_literal expected_loc sense expected t =
     DefT (lit_reason r, StrT (Literal (None, expected)))
   | DefT (r, MixedT _) ->
     DefT (lit_reason r, StrT (Literal (None, expected)))
-  | DefT (_, AnyT) as t -> t
+  | DefT (_, AnyT _) as t -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_string_literal expected = function
@@ -217,7 +217,7 @@ let number_literal expected_loc sense expected t =
     DefT (lit_reason r, NumT (Literal (None, expected)))
   | DefT (r, MixedT _) ->
     DefT (lit_reason r, NumT (Literal (None, expected)))
-  | DefT (_, AnyT) as t -> t
+  | DefT (_, AnyT _) as t -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_number_literal expected = function
@@ -230,7 +230,7 @@ let true_ t =
   | DefT (r, BoolT (Some true)) -> DefT (lit_reason r, BoolT (Some true))
   | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some true))
   | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some true))
-  | DefT (_, AnyT) as t -> t
+  | DefT (_, AnyT _) as t -> t
   | t -> DefT (reason_of_t t, EmptyT)
 
 let not_true t =
@@ -246,7 +246,7 @@ let false_ t =
   | DefT (r, BoolT (Some false)) -> DefT (lit_reason r, BoolT (Some false))
   | DefT (r, BoolT None) -> DefT (lit_reason r, BoolT (Some false))
   | DefT (r, MixedT _) -> DefT (lit_reason r, BoolT (Some false))
-  | DefT (_, AnyT) as t -> t
+  | DefT (_, AnyT _) as t -> t
   | t -> DefT (reason_of_t t, EmptyT)
 
 let not_false t =
@@ -260,39 +260,39 @@ let boolean t =
   match t with
   | DefT (r, MixedT Mixed_truthy) -> DefT (replace_reason_const BoolT.desc r, BoolT (Some true))
   | DefT (r, MixedT _) -> BoolT.why r
-  | DefT (_, (AnyT | BoolT _)) -> t
+  | DefT (_, (AnyT _ | BoolT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_boolean t =
   match t with
   (* TODO: this is wrong, AnyT can be a bool *)
-  | DefT (_, (AnyT | BoolT _)) -> DefT (reason_of_t t, EmptyT)
+  | DefT (_, (AnyT _ | BoolT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t
 
 let string t =
   match t with
   | DefT (r, MixedT Mixed_truthy) -> DefT (replace_reason_const StrT.desc r, StrT Truthy)
   | DefT (r, MixedT _) -> StrT.why r
-  | DefT (_, (AnyT | StrT _)) -> t
+  | DefT (_, (AnyT _ | StrT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_string t =
   match t with
   (* TODO: this is wrong, AnyT can be a string *)
-  | DefT (_, (AnyT | StrT _)) -> DefT (reason_of_t t, EmptyT)
+  | DefT (_, (AnyT _ | StrT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t
 
 let number t =
   match t with
   | DefT (r, MixedT Mixed_truthy) -> DefT (replace_reason_const NumT.desc r, NumT Truthy)
   | DefT (r, MixedT _) -> NumT.why r
-  | DefT (_, (AnyT | NumT _)) -> t
+  | DefT (_, (AnyT _ | NumT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_number t =
   match t with
   (* TODO: this is wrong, AnyT can be a number *)
-  | DefT (_, (AnyT | NumT _)) -> DefT (reason_of_t t, EmptyT)
+  | DefT (_, (AnyT _ | NumT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t
 
 let object_ cx t =
@@ -317,12 +317,12 @@ let object_ cx t =
       DefT (reason, UnionT (UnionRep.make (NullT.why r) obj []))
     | Empty_intersection -> DefT (r, EmptyT)
     end
-  | DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) -> t
+  | DefT (_, (AnyT _ | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_object t =
   match t with
-  | DefT (_, (AnyT | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) ->
+  | DefT (_, (AnyT _ | AnyObjT | ObjT _ | ArrT _ | NullT | InstanceT _)) ->
     DefT (reason_of_t t, EmptyT)
   | _ -> t
 
@@ -331,12 +331,12 @@ let function_ t =
   | DefT (r, MixedT _) ->
     let desc = RFunction RNormal in
     DefT (replace_reason_const desc r, AnyFunT)
-  | DefT (_, (AnyT | AnyFunT | FunT _ | ClassT _)) -> t
+  | DefT (_, (AnyT _ | AnyFunT | FunT _ | ClassT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
 let not_function t =
   match t with
-  | DefT (_, (AnyT | AnyFunT | FunT _ | ClassT _)) -> DefT (reason_of_t t, EmptyT)
+  | DefT (_, (AnyT _ | AnyFunT | FunT _ | ClassT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t
 
 let array t =
@@ -345,12 +345,12 @@ let array t =
     DefT (replace_reason_const RArray r,
       ArrT (ArrayAT (DefT (r, MixedT Mixed_everything), None))
     )
-  | DefT (_, (AnyT | ArrT _)) ->
+  | DefT (_, (AnyT _ | ArrT _)) ->
     t
   | _ ->
     DefT (reason_of_t t, EmptyT)
 
 let not_array t =
   match t with
-  | DefT (_, (AnyT | ArrT _)) -> DefT (reason_of_t t, EmptyT)
+  | DefT (_, (AnyT _ | ArrT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t

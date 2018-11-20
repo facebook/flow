@@ -25,8 +25,8 @@ module Action = struct
     | _ -> acc
     in
     function
-    | Flow ((DefT (_, AnyT) | DefT (_, EmptyT)), _)
-    | Flow (_, UseT (_, (DefT (_, AnyT) | DefT (_, MixedT _))))
+    | Flow ((DefT (_, AnyT _) | DefT (_, EmptyT)), _)
+    | Flow (_, UseT (_, (DefT (_, AnyT _) | DefT (_, MixedT _))))
       -> IMap.empty
     | Flow (t1, UseT (_, t2)) -> f t1 (f t2 IMap.empty)
     | Flow (t1, _) -> f t1 IMap.empty

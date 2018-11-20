@@ -202,9 +202,10 @@ let toplevels id cx this super ~decls ~stmts ~expr
       new_kind cx name t loc
   );
 
-  (* early-add our own name binding for recursive calls *)
+  (* early-add our own name binding for recursive calls.
+     TODO (T35904222): is this going to taint all recursive calls? *)
   Option.iter id ~f:(fun (loc, name) ->
-    let entry = Scope.Entry.new_var ~loc (AnyT.at loc) in
+    let entry = AnyT.at Unsound loc |> Scope.Entry.new_var ~loc in
     Scope.add_entry name entry function_scope
   );
 

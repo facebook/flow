@@ -78,7 +78,7 @@ let run cx trace ~use_op reason_op l u
   let coerce_object = function
     | DefT (reason, ObjT { props_tmap; dict_t; flags; _ }) ->
       Ok (reason, Context.find_props cx props_tmap, dict_t, flags)
-    | DefT (reason, AnyT) | DefT (reason, AnyObjT) ->
+    | DefT (reason, AnyT _) | DefT (reason, AnyObjT) ->
       Error reason
     | _ ->
       let reason = reason_of_t l in
@@ -94,7 +94,7 @@ let run cx trace ~use_op reason_op l u
       rec_flow_t cx trace (t,
         get_builtin_type cx reason_op "ReactPropsCheckType");
       Error reason
-    | DefT (reason, AnyT) | DefT (reason, AnyFunT) ->
+    | DefT (reason, AnyT _) | DefT (reason, AnyFunT) ->
       Error reason
     | t ->
       let reason = reason_of_t t in
@@ -105,7 +105,7 @@ let run cx trace ~use_op reason_op l u
   let coerce_array = function
     | DefT (_, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) ->
       Ok ts
-    | DefT (reason, ArrT _) | DefT (reason, AnyT) ->
+    | DefT (reason, ArrT _) | DefT (reason, AnyT _) ->
       Error reason
     | t ->
       let reason = reason_of_t t in
@@ -136,7 +136,7 @@ let run cx trace ~use_op reason_op l u
   let component_class props =
     let reason = reason_of_t l in
     DefT (reason, ClassT (get_builtin_typeapp cx reason
-      "React$Component" [props; AnyT.why reason]))
+      "React$Component" [props; AnyT.unsound reason]))
   in
 
   (* We create our own FunT instead of using
@@ -145,7 +145,7 @@ let run cx trace ~use_op reason_op l u
    * function is called multiple times *)
   let component_function ?(with_return_t=true) props =
     let reason = replace_reason_const RReactSFC reason_op in
-    let any = DefT (reason_op, AnyT) in
+    let any = AnyT.make Unsound reason_op in
     DefT (reason, FunT (
       any,
       any,
@@ -246,8 +246,10 @@ let run cx trace ~use_op reason_op l u
     | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
 
     (* any and any specializations *)
-    | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
-      rec_flow_t cx trace (tin, AnyT.why reason)
+    | DefT (reason, (AnyObjT | AnyFunT)) ->
+      rec_flow_t cx trace (tin, AnyT.untyped reason)
+    | DefT (reason, AnyT source) ->
+      rec_flow_t cx trace (tin, AnyT.why source reason)
 
     (* ...otherwise, error. *)
     | _ -> err_incompatible (reason_of_t component)
@@ -278,8 +280,10 @@ let run cx trace ~use_op reason_op l u
     | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tout, Positive))
 
     (* any and any specializations *)
-    | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
-      rec_flow_t cx trace (AnyT.why reason, tout)
+    | DefT (reason, AnyT source) ->
+      rec_flow_t cx trace (AnyT.why source reason, tout)
+    | DefT (reason, (AnyObjT | AnyFunT)) ->
+      rec_flow_t cx trace (AnyT.untyped reason, tout)
 
     (* ...otherwise, error. *)
     | _ -> err_incompatible (reason_of_t component)
@@ -502,8 +506,10 @@ let run cx trace ~use_op reason_op l u
     | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
 
     (* any and any specializations *)
-    | DefT (reason, (AnyT | AnyObjT | AnyFunT)) ->
-      rec_flow_t cx trace (AnyT.why reason, tout)
+    | DefT (reason, AnyT source) ->
+      rec_flow_t cx trace (AnyT.why source reason, tout)
+    | DefT (reason, (AnyObjT | AnyFunT)) ->
+      rec_flow_t cx trace (AnyT.untyped reason, tout)
 
     (* ...otherwise, error. *)
     | _ -> err_incompatible (reason_of_t component)
@@ -534,7 +540,7 @@ let run cx trace ~use_op reason_op l u
       (* TODO: Don't ignore the required flag. *)
       let elem_t = match coerce_prop_type l with
         | Ok (_required, t) -> t
-        | Error reason -> DefT (reason, AnyT)
+        | Error reason -> AnyT.make AnyError reason
       in
       let reason = replace_reason_const RArrayType reason_op in
       let t = DefT (reason, ArrT (ArrayAT (elem_t, None))) in
@@ -548,12 +554,12 @@ let run cx trace ~use_op reason_op l u
       (* TODO: Don't ignore the required flag. *)
       let value = match coerce_prop_type l with
         | Ok (_required, t) -> t
-        | Error reason -> DefT (reason, AnyT)
+        | Error reason -> AnyT.make AnyError reason
       in
       let props = SMap.empty in
       let dict = {
         dict_name = None;
-        key = Locationless.AnyT.t;
+        key = AnyT.locationless Unsound;
         value;
         dict_polarity = Neutral;
       } in
@@ -577,11 +583,11 @@ let run cx trace ~use_op reason_op l u
       | ResolveArray ->
         (match coerce_array l with
         | Ok todo -> next todo []
-        | Error _ -> resolve (DefT (reason_op, AnyT)))
+        | Error _ -> AnyT.make AnyError reason_op |> resolve)
       | ResolveElem (todo, done_rev) ->
         (match coerce_singleton l with
         | Ok t -> next todo (t::done_rev)
-        | Error _ -> resolve (DefT (reason_op, AnyT))))
+        | Error _ -> AnyT.make AnyError reason_op |> resolve))
 
     | OneOfType tool ->
       (* TODO: This is _very_ similar to `one_of` above. *)
@@ -598,12 +604,12 @@ let run cx trace ~use_op reason_op l u
       | ResolveArray ->
         (match coerce_array l with
         | Ok todo -> next todo []
-        | Error _ -> resolve (DefT (reason_op, AnyT)))
+        | Error _ -> AnyT.make AnyError reason_op |> resolve)
       | ResolveElem (todo, done_rev) ->
         (* TODO: Don't ignore the required flag. *)
         (match coerce_prop_type l with
         | Ok (_required, t) -> next todo (t::done_rev)
-        | Error _ -> resolve (DefT (reason_op, AnyT))))
+        | Error _ -> AnyT.make AnyError reason_op |> resolve))
 
     | Shape tool ->
       (* TODO: This is _very_ similar to `CreateClass.PropTypes` below, except
@@ -651,17 +657,17 @@ let run cx trace ~use_op reason_op l u
             rec_flow cx trace (dicttype.value, ReactKitT (unknown_use, reason_op,
               SimplifyPropType (Shape
                 (ResolveDict (dicttype, todo, shape)), tout))))
-        | Error _ -> resolve (DefT (reason_op, AnyT)))
+        | Error _ -> AnyT.make AnyError reason_op |> resolve)
       | ResolveDict (dicttype, todo, shape) ->
         let dict = match coerce_prop_type l with
         | Ok (_, t) -> {dicttype with value = t}
-        | Error reason -> {dicttype with value = DefT (reason, AnyT)}
+        | Error reason -> {dicttype with value = AnyT.make AnyError reason}
         in
         next todo (add_dict dict shape)
       | ResolveProp (k, todo, shape) ->
         let t = match coerce_prop_type l with
         | Ok (required, t) -> if required then t else Type.optional t
-        | Error _ -> Type.optional (DefT (reason_op, AnyT))
+        | Error _ -> AnyT.make AnyError reason_op |> Type.optional
         in
         next todo (add_prop k t shape))
   in
@@ -913,7 +919,8 @@ let run cx trace ~use_op reason_op l u
           | None -> v
           | Some t ->
             (* Tie the `this` knot with BindT *)
-            let dummy_return = DefT (reason_op, AnyT) in
+            (* TODO: T35904222 *)
+            let dummy_return = DefT (reason_op, AnyT Unsound) in
             let calltype = mk_methodcalltype knot.this None [] dummy_return in
             rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
             (* Because we are creating an instance type, which can be used as an
@@ -955,7 +962,7 @@ let run cx trace ~use_op reason_op l u
           let dict = Some {
             dict_name = None;
             key = StrT.why reason;
-            value = AnyT.why reason;
+            value = AnyT.unsound reason;
             dict_polarity = Neutral;
           } in
           reason, static_props, dict, false, true
@@ -1019,7 +1026,7 @@ let run cx trace ~use_op reason_op l u
         (match stack' with
         | [] ->
           (* The root spec is unknown *)
-          rec_flow_t cx trace (AnyT.why reason_op, tout)
+          rec_flow_t cx trace (AnyT.unsound reason_op, tout)
         | ((obj, spec), todo, mixins_rev)::stack' ->
           (* A mixin is unknown *)
           let mixins_rev = Unknown reason :: mixins_rev in
@@ -1107,13 +1114,13 @@ let run cx trace ~use_op reason_op l u
       | ResolveDict (dicttype, todo, prop_types) ->
         let dict = match coerce_prop_type l with
         | Ok (_, t) -> {dicttype with value = t}
-        | Error reason -> {dicttype with value = DefT (reason, AnyT)}
+        | Error reason -> {dicttype with value = AnyT.make AnyError reason}
         in
         next todo (add_dict dict prop_types)
       | ResolveProp (k, todo, prop_types) ->
         let t = match coerce_prop_type l with
         | Ok (required, t) -> if required then t else Type.optional t
-        | Error reason -> Type.optional (DefT (reason, AnyT))
+        | Error reason -> AnyT.make AnyError reason |> Type.optional
         in
         next todo (add_prop k t prop_types))
 
