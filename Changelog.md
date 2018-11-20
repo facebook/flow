@@ -1,3 +1,43 @@
+### 0.87.0
+
+Likely to cause new Flow errors:
+* Fixed an error in the `React.createRef` definition. Refs are for any type of value,
+not just React elements.
+
+New Features:
+* Added support for subcommands to the CLI and a `flow config find` command that
+finds the .flowconfig governing path.
+
+Notable bug fixes:
+* Fixed file_sig for deep destructured requires.
+* Fixed a stack overflow in the `flow ls --json` command.
+* Fixed a crash when the module reference prefix is used on an untyped module.
+
+Misc:
+* Removed the `flow port` command.
+* Various improvements to the AST differ.
+* Made progress in shifting from concrete to abstracting locations, by
+  - functorizing a number of modules over their use of locations, and
+  - updating the core typechecking logic to operate solely on structures containing
+  abstract locations.
+* Removed the redundant Expression.Member.computed field from the AST.
+* Allow configuring path to node in runtests.sh.
+* Refactored `JSX.frag_closingElement` of the AST to not be an option.
+* Fixed error localization in `import type` and `import typeof` with default.
+* Added the location of function signatures to the AST.
+* Removed prototype members when autocompleting JSX props.
+* Cleaned-up handling of the mixed case from LookupT.
+* Optimized the case of enumerations when used as keys.
+
+Library definition changes:
+* Made geolocation `PositionOptions` optional.
+* Added flow definitions for React hooks.
+* Added a `calculateChangedBits` parameter to the `React.createContext` definition.
+* Added `React.ConcurrentMode` and `React.StrictMode` definitions.
+
+Parser:
+* Refactored flowconfig option parsing into a list of parsers.
+
 ### 0.86.0
 
 Likely to cause new Flow errors:
