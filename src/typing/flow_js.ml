@@ -2147,17 +2147,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (_, UseT (_, DefT (_, NumT _))) when numeric l -> ()
 
-    | (_, UseT (_, DefT (_, AnyT AnyFunction))) when function_like l -> ()
+    | (_, UseT (_, DefT (_, AnyT _))) when function_like l -> ()
 
-    | DefT (reason, AnyT AnyFunction), GetPropT (_, _, Named (_, x), _)
-    | DefT (reason, AnyT AnyFunction), SetPropT (_, _, Named (_, x), _, _, _)
-    | DefT (reason, AnyT AnyFunction), LookupT (_, _, _, Named (_, x), _)
-    | DefT (reason, AnyT AnyFunction), MethodT (_, _, _, Named (_, x), _, _)
-        when is_function_prototype x ->
-      rec_flow cx trace (FunProtoT reason, u)
-    | DefT (_, AnyT AnyFunction), UseT (_, u) when function_like u -> ()
-    | DefT (_, AnyT AnyFunction), UseT (_, u) when object_like u -> ()
-    | DefT (_, AnyT AnyFunction), UseT (_, DefT (_, AnyT AnyFunction)) -> ()
+    | DefT (_, AnyT _), GetPropT (_, _, Named (_, x), _)
+    | DefT (_, AnyT _), SetPropT (_, _, Named (_, x), _, _, _)
+    | DefT (_, AnyT _), LookupT (_, _, _, Named (_, x), _)
+    | DefT (_, AnyT _), MethodT (_, _, _, Named (_, x), _, _)
+        when is_function_prototype x -> ()
+    | DefT (_, AnyT _), UseT (_, u) when function_like u -> ()
+    | DefT (_, AnyT _), UseT (_, u) when object_like u -> ()
 
     | (_, UseT (_, DefT (_, AnyT _))) when object_like l -> ()
     | (DefT (_, AnyT _), UseT (_, u)) when object_like u -> ()
@@ -2926,9 +2924,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         DefT (reason, StrT (Literal (None, x)))::acc
       ) own_props [] in
       rec_flow cx trace (union_of_ts reason_op keylist, keys)
-
-    | DefT (reason, AnyT AnyFunction), GetKeysT (_, keys) ->
-      rec_flow cx trace (StrT.why reason, keys)
 
     | DefT (_, AnyT src), GetKeysT (reason_op, keys) ->
       rec_flow cx trace (AnyT.why src reason_op, keys)
@@ -4316,7 +4311,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
 
     | CustomFunT (reason, _), _ when function_like_op u ->
-      rec_flow cx trace (AnyT.make AnyFunction reason, u)
+      rec_flow cx trace (AnyT.make Unsound reason, u)
 
     (*********************************************)
     (* object types deconstruct into their parts *)
@@ -4404,12 +4399,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (****************************************)
 
     | DefT (reason, (ObjT _ | InstanceT _)), (
-        UseT (use_op, DefT (reason_op, (FunT _ | AnyT AnyFunction))) |
+        UseT (use_op, DefT (reason_op, (FunT _ | AnyT _))) |
         CallT (use_op, reason_op, _)
       ) ->
       let prop_name = Some "$call" in
       let use_op = match u with
-      | UseT (_, DefT (_, (FunT _ | AnyT AnyFunction))) ->
+      | UseT (_, DefT (_, (FunT _ | AnyT _))) ->
         Frame (PropertyCompatibility {
           prop = prop_name;
           lower = reason;
@@ -4428,7 +4423,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         AnyT.error reason_op
       in
       (match u with
-      | UseT (_, (DefT (_, (FunT _ | AnyT AnyFunction)) as u_def)) ->
+      | UseT (_, (DefT (_, (FunT _ | AnyT _)) as u_def)) ->
         rec_flow cx trace (fun_t, UseT (use_op, u_def))
       | _ -> rec_flow cx trace (fun_t, u))
 
@@ -4691,14 +4686,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let reason_o = replace_reason_const RConstructorReturn reason_op in
       rec_flow cx trace (ret, ObjTestT(reason_o, new_obj, t))
 
-    | DefT (_, AnyT AnyFunction), ConstructorT (use_op, reason_op, targs, args, t) ->
-      let reason_o = replace_reason_const RConstructorReturn reason_op in
-      ignore targs; (* An untyped receiver can't do anything with type args *)
-      call_args_iter
-        (fun t -> rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op)))
-        args;
-      rec_flow_t cx trace (AnyT.make Untyped reason_o, t);
-
     | DefT (_, AnyT _), ConstructorT (use_op, reason_op, targs, args, t) ->
       ignore targs; (* An untyped receiver can't do anything with type args *)
       call_args_iter (fun t ->
@@ -4708,7 +4695,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Since we don't know the signature of a method on AnyT, assume every
        parameter is an AnyT. *)
-    | DefT (_, AnyT AnyFunction),
+    | DefT (_, AnyT _),
       MethodT (use_op, reason_op, _, _, { call_args_tlist; call_tout; _}, prop_t) ->
       let any = AnyT.untyped reason_op in
       call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
@@ -5153,10 +5140,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       rec_flow_t cx trace (o, t)
 
-    (* ...AnyT Function yields AnyT *)
-    | DefT (_, AnyT AnyFunction), ObjRestT (reason, _, t) ->
-      rec_flow_t cx trace (AnyT.make Untyped reason, t)
-
     | DefT (_, AnyT src), ObjRestT (reason, _, t) ->
       rec_flow_t cx trace (AnyT.why src reason, t)
 
@@ -5301,15 +5284,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) in
       Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (t, prop_t)) prop_t;
       rec_flow cx trace (t, CallT (use_op, reason_call, funtype))
-
-    (* Since we don't know the signature of a method on AnyT, assume every
-       parameter is an AnyT. *)
-    | DefT (_, AnyT _),
-      MethodT (use_op, reason_op, _, _, { call_args_tlist; call_tout; _}, prop_t) ->
-      let any = AnyT.untyped reason_op in
-      Option.iter ~f:(fun prop_t -> rec_flow_t cx trace (any, prop_t)) prop_t;
-      call_args_iter (fun t -> rec_flow cx trace (t, UseT (use_op, any))) call_args_tlist;
-      rec_flow_t cx trace (any, call_tout)
 
     (******************************************)
     (* strings may have their characters read *)
@@ -6913,7 +6887,7 @@ and is_dictionary_exempt = function
 and quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
   let statics_own_props = match statics with
     | DefT (_, ObjT { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
-    | DefT (_, AnyT AnyFunction)
+    | DefT (_, AnyT _)
     | DefT (_, MixedT _) -> Some SMap.empty
     | _ -> None
   in
@@ -7337,7 +7311,7 @@ and function_like = function
 and function_like_op = function
   | CallT _
   | ConstructorT _
-  | UseT (_, DefT (_, AnyT AnyFunction)) -> true
+  | UseT (_, DefT (_, AnyT _)) -> true
   | t -> object_like_op t
 
 and equatable = function
@@ -12281,13 +12255,6 @@ end = struct
     | DefT (_, (NullT | VoidT))
     | InternalT (OptionalChainVoidT _) ->
         FailureNullishType
-    | DefT (reason, AnyT AnyFunction) ->
-        let rep = InterRep.make
-          (get_builtin_type cx reason "Function")
-          (get_builtin_type cx reason "Object")
-          []
-        in
-        extract_type cx (DefT (reason, IntersectionT rep))
     | DefT (_, AnyT _) ->
         FailureAnyType
     | AnnotT (_, source_t, _) ->

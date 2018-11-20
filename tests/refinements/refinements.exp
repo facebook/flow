@@ -2168,34 +2168,6 @@ References:
                            ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- tagged_union.js:133:20
-
-number [1] is incompatible with function type [2].
-
-   tagged_union.js:133:20
-   133|     if (s.call === 0) {} // Error
-                           ^ [1]
-
-References:
-   <BUILTINS>/core.js:108:17
-   108|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
-                        ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- tagged_union.js:137:20
-
-number [1] is incompatible with function type [2].
-
-   tagged_union.js:137:20
-   137|     if (t.call === 0) {} // Error
-                           ^ [1]
-
-References:
-   <BUILTINS>/core.js:108:17
-   108|     proto call: Function$Prototype$Call; // (thisArg: any, ...argArray: Array<any>) => any
-                        ^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- tagged_union.js:139:8
 
 Cannot cast `t.calll` to empty because number literal `0` [1] is incompatible with empty [2].
@@ -3134,4 +3106,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 227 errors
+Found 225 errors

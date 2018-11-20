@@ -544,7 +544,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     add_unclear_type_error_if_not_lib_file cx loc;
     check_type_arg_arity cx loc targs 0 (fun () ->
       let reason = mk_reason RFunctionType loc in
-      reconstruct_ast (DefT (reason, AnyT AnyFunction)) None
+      reconstruct_ast (AnyT.make Annotated reason) None
     )
 
   | "Object" ->

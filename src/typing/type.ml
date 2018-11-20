@@ -749,7 +749,6 @@ module rec TypeTerm : sig
   and any_source =
     | Annotated
     | AnyError
-    | AnyFunction
     | Unsound
     | Untyped
 
@@ -2665,7 +2664,6 @@ module AnyT = struct
   let why  source   = replace_reason_const ~keep_def_loc:true desc %> make source
   let annot      = why Annotated
   let error      = why AnyError
-  let anyfunction   = why AnyFunction
   let unsound    = why Unsound
   let untyped    = why Untyped
 
@@ -2674,7 +2672,6 @@ module AnyT = struct
   let source = function
   | DefT(_, AnyT Annotated) -> Annotated
   | DefT(_, AnyT AnyError)  -> AnyError
-  | DefT(_, AnyT AnyFunction) -> AnyFunction
   | DefT(_, AnyT Unsound)   -> Unsound
   | DefT(_, AnyT Untyped)   -> Untyped
   | _ -> failwith "not an any type"
@@ -3230,12 +3227,14 @@ let unknown_use = Op UnknownUse
    want to encourage this pattern, but we also don't want to block uses of this
    pattern. Thus, we compromise by not tracking the property types. *)
 let dummy_static reason =
-  DefT (replace_reason (fun desc -> RStatics desc) reason, AnyT AnyFunction)
+  (* TODO: T35904222 *)
+  DefT (replace_reason (fun desc -> RStatics desc) reason, AnyT Unsound)
 
 let dummy_prototype =
   ObjProtoT (locationless_reason RDummyPrototype)
 
 let dummy_this =
+  (* TODO: T35904222 *)
   let reason = locationless_reason RDummyThis in
   DefT (reason, AnyT Unsound)
 

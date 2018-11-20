@@ -181,20 +181,6 @@ References:
                                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ bind.js:7:7
-
-Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2].
-
-   bind.js:7:7
-   7|     y(123); // error, number !~> string
-            ^^^ [1]
-
-References:
-   bind.js:4:30
-   4|   function(x: (a: string, b: string) => void) {
-                                   ^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- bind.js:14:7
 
 Cannot call `y` with `123` bound to `b` because number [1] is incompatible with string [2].
@@ -453,40 +439,6 @@ References:
                        ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:38:6
-
-Cannot cast `y.length` to undefined because number [1] is incompatible with undefined [2].
-
-   function.js:38:6
-    38|     (y.length: void); // error, it's a number
-             ^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:112:13
-   112|     length: number;
-                    ^^^^^^ [1]
-   function.js:38:16
-    38|     (y.length: void); // error, it's a number
-                       ^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- function.js:39:6
-
-Cannot cast `z.length` to undefined because number [1] is incompatible with undefined [2].
-
-   function.js:39:6
-    39|     (z.length: void); // error, it's a number
-             ^^^^^^^^
-
-References:
-   <BUILTINS>/core.js:112:13
-   112|     length: number;
-                    ^^^^^^ [1]
-   function.js:39:16
-    39|     (z.length: void); // error, it's a number
-                       ^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------- function.js:41:6
 
 Cannot cast `x.name` to undefined because string [1] is incompatible with undefined [2].
@@ -504,40 +456,6 @@ References:
                      ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- function.js:42:6
-
-Cannot cast `y.name` to undefined because string [1] is incompatible with undefined [2].
-
-   function.js:42:6
-    42|     (y.name: void); // error, it's a string
-             ^^^^^^
-
-References:
-   <BUILTINS>/core.js:113:11
-   113|     name: string;
-                  ^^^^^^ [1]
-   function.js:42:14
-    42|     (y.name: void); // error, it's a string
-                     ^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------- function.js:43:6
-
-Cannot cast `z.name` to undefined because string [1] is incompatible with undefined [2].
-
-   function.js:43:6
-    43|     (z.name: void); // error, it's a string
-             ^^^^^^
-
-References:
-   <BUILTINS>/core.js:113:11
-   113|     name: string;
-                  ^^^^^^ [1]
-   function.js:43:14
-    43|     (z.name: void); // error, it's a string
-                     ^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ function.js:48:16
 
 Cannot assign `'foo'` to `x.length` because string [1] is incompatible with number [2].
@@ -552,68 +470,12 @@ References:
                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ function.js:49:16
-
-Cannot assign `'foo'` to `y.length` because string [1] is incompatible with number [2].
-
-   function.js:49:16
-    49|     y.length = 'foo'; // error, it's a number
-                       ^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:112:13
-   112|     length: number;
-                    ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ function.js:50:16
-
-Cannot assign `'foo'` to `z.length` because string [1] is incompatible with number [2].
-
-   function.js:50:16
-    50|     z.length = 'foo'; // error, it's a number
-                       ^^^^^ [1]
-
-References:
-   <BUILTINS>/core.js:112:13
-   112|     length: number;
-                    ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ function.js:52:14
 
 Cannot assign `123` to `x.name` because number [1] is incompatible with string [2].
 
    function.js:52:14
     52|     x.name = 123; // error, it's a string
-                     ^^^ [1]
-
-References:
-   <BUILTINS>/core.js:113:11
-   113|     name: string;
-                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ function.js:53:14
-
-Cannot assign `123` to `y.name` because number [1] is incompatible with string [2].
-
-   function.js:53:14
-    53|     y.name = 123; // error, it's a string
-                     ^^^ [1]
-
-References:
-   <BUILTINS>/core.js:113:11
-   113|     name: string;
-                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ function.js:54:14
-
-Cannot assign `123` to `z.name` because number [1] is incompatible with string [2].
-
-   function.js:54:14
-    54|     z.name = 123; // error, it's a string
                      ^^^ [1]
 
 References:
@@ -751,4 +613,4 @@ References:
 
 
 
-Found 54 errors
+Found 45 errors

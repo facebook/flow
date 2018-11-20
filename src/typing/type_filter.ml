@@ -329,7 +329,7 @@ let function_ t =
   match t with
   | DefT (r, MixedT _) ->
     let desc = RFunction RNormal in
-    DefT (replace_reason_const desc r, AnyT AnyFunction)
+    replace_reason_const desc r |> AnyT.make Unsound
   | DefT (_, (AnyT _ | FunT _ | ClassT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 
