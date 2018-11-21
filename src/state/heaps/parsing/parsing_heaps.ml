@@ -17,6 +17,28 @@ module ASTHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (str
     let use_sqlite_fallback () = false
 end)
 
+let source_remover = object(this)
+  inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+
+  method private remove_source loc = { loc with Loc.source = None }
+
+  method on_loc_annot = this#remove_source
+  method on_type_annot = this#remove_source
+end
+
+let remove_source ast = source_remover#program ast
+
+let source_adder source = object(this)
+  inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
+
+  method private add_source loc = { loc with Loc.source; }
+
+  method on_loc_annot = this#add_source
+  method on_type_annot = this#add_source
+end
+
+let add_source file ast = (source_adder (Some file))#program ast
+
 module DocblockHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
     type t = Docblock.t
     let prefix = Prefix.make()
@@ -60,7 +82,7 @@ end)
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
   let add file ast info file_sig =
-    ASTHeap.add file ast;
+    ASTHeap.add file (remove_source ast);
     DocblockHeap.add file info;
     FileSigHeap.add file file_sig
 
@@ -156,7 +178,9 @@ let has_ast = ASTHeap.mem
 
 let has_old_ast = ASTHeap.mem_old
 
-let get_ast = ASTHeap.get
+let get_ast key =
+  let ast = ASTHeap.get key in
+  Option.map ~f:(add_source key) ast
 
 let get_docblock = DocblockHeap.get
 
@@ -168,7 +192,7 @@ let get_old_file_hash = FileHashHeap.get_old
 
 exception Ast_not_found of string
 let get_ast_unsafe file =
-  try ASTHeap.find_unsafe file
+  try ASTHeap.find_unsafe file |> add_source file
   with Not_found -> raise (Ast_not_found (File_key.to_string file))
 
 exception Docblock_not_found of string
