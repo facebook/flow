@@ -1224,10 +1224,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method pattern_object_property ?kind (prop: ('M, 'T) Ast.Pattern.Object.Property.t')
                                             : ('N, 'U) Ast.Pattern.Object.Property.t' =
     let open Ast.Pattern.Object.Property in
-    let { key; pattern; shorthand = _ } = prop in
+    let { key; pattern; shorthand } = prop in
     let key' = this#pattern_object_property_key ?kind key in
     let pattern' = this#pattern_object_property_pattern ?kind pattern in
-    { key = key'; pattern = pattern'; shorthand = false }
+    { key = key'; pattern = pattern'; shorthand; }
 
   method pattern_object_property_key ?kind (key: ('M, 'T) Ast.Pattern.Object.Property.key) =
     let open Ast.Pattern.Object.Property in
