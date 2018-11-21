@@ -3,9 +3,10 @@
 import type {PathNode} from './getPathToLoc';
 import type {FlowLoc} from '../flowResult';
 
-export opaque type Context = 'normal' | 'jsx' | 'template';
+export opaque type Context = 'normal' | 'jsx' | 'jsx_fragment' | 'template';
 export const NORMAL: Context = 'normal';
 export const JSX: Context = 'jsx';
+export const JSX_FRAGMENT: Context = 'jsx_fragment';
 export const TEMPLATE: Context = 'template';
 
 export default function(loc: FlowLoc, path: Array<PathNode>): [Context, Object /* ast */] {
@@ -23,6 +24,12 @@ export default function(loc: FlowLoc, path: Array<PathNode>): [Context, Object /
         path[i+1].key === 'children') {
       // We've entered a JSX children block
       inside = JSX;
+      i++;
+    } else if (i < path.length - 1 &&
+        ast.type === 'JSXFragment' &&
+        path[i+1].key === 'children') {
+      // We've entered a JSX fragment block
+      inside = JSX_FRAGMENT;
       i++;
     } else if (i < path.length - 1 &&
         ast.type === 'TemplateLiteral' &&

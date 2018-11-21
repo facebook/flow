@@ -14,7 +14,7 @@ import {
 } from '../flowResult';
 import getPathToLoc from './getPathToLoc';
 import getFlowErrors from './getFlowErrors';
-import getContext, {NORMAL, JSX, TEMPLATE} from './getContext';
+import getContext, {NORMAL, JSX, JSX_FRAGMENT, TEMPLATE} from './getContext';
 import getAst from './getAst';
 
 import type {PathNode} from './getPathToLoc';
@@ -733,7 +733,7 @@ function addCommentToCode(comment: string, code: string, loc: FlowLoc, path: Arr
       formatComment(comment, lines[loc.start.line-1]),
       lines.slice(loc.start.line-1),
     ).join("\n");
-  } else if (inside === JSX && ast.type === 'JSXElement') {
+  } else if ((inside === JSX_FRAGMENT || inside === JSX) && ast.type === 'JSXElement') {
     /* Ok, so we have something like
      * <jsx>
      *   <foo id={10*'hello'} />
