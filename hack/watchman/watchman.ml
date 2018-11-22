@@ -579,8 +579,10 @@ struct
       else
         Watchman_process.return instance
 
+  let close env = Watchman_process.close_connection env.conn
+
   let close_channel_on_instance env =
-    Watchman_process.close_connection env.conn >|= fun () ->
+    close env >|= fun () ->
     EventLogger.watchman_died_caught ();
     Watchman_dead (dead_env_from_alive env), Watchman_unavailable
 
@@ -922,6 +924,8 @@ module Watchman_mock = struct
   let get_changes_since_mergebase _  = []
 
   let get_mergebase _ = "mergebase"
+
+  let close _ = ()
 end
 
 module type S = sig

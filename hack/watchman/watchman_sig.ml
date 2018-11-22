@@ -132,6 +132,8 @@ module type S = sig
 
   val conn_of_instance: watchman_instance -> conn option
 
+  val close: env -> unit result
+
   (** Expose some things for testing. *)
   module Testing : sig
     val get_test_env : unit -> env result
