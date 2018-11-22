@@ -665,19 +665,30 @@ struct
     | `Leave ->
       State_leave (name, metadata)
 
-  let make_mergebase_changed_response env data =
+  let extract_mergebase data =
     let open Hh_json.Access in
     let accessor = return data in
-    accessor >>=
+    let ret =
+      accessor >>=
       get_obj "clock" >>=
-      get_string "clock" >>= fun (clock, _) ->
-    accessor >>= get_obj "clock" >>=
-      get_obj "scm" >>=
-      get_string "mergebase" >>= fun (mergebase, keytrace) ->
-    let files = set_of_list @@ extract_file_names env data in
-    env.clockspec <- clock;
-    let response = Changed_merge_base (mergebase, files, clock) in
-    Ok ((env, response), keytrace)
+      get_string "clock" >>=
+      fun (clock, _) ->
+        accessor >>= get_obj "clock" >>=
+        get_obj "scm" >>=
+        get_string "mergebase" >>=
+        fun (mergebase, _) ->
+          return (clock, mergebase)
+    in
+    to_option ret
+
+  let make_mergebase_changed_response env data =
+    match extract_mergebase data with
+    | None -> Error "Failed to extract mergebase"
+    | Some (clock, mergebase) ->
+      let files = set_of_list @@ extract_file_names env data in
+      env.clockspec <- clock;
+      let response = Changed_merge_base (mergebase, files, clock) in
+      Ok (env, response)
 
   let transform_asynchronous_get_changes_response env data = match data with
     | None ->
@@ -685,7 +696,7 @@ struct
     | Some data -> begin
 
       match make_mergebase_changed_response env data with
-      | Ok ((env, response), _) -> env, response
+      | Ok (env, response) -> env, response
       | Error _ ->
         env.clockspec <- J.get_string_val "clock" data;
         assert_no_fresh_instance data;
@@ -723,6 +734,16 @@ struct
       ~debug_logging:env.settings.debug_logging
       (get_changes_since_mergebase_query env)
     >|= extract_file_names env
+
+  let get_mergebase env =
+    Watchman_process.request
+      ~timeout:(float_of_int env.settings.init_timeout)
+      ~debug_logging:env.settings.debug_logging
+      (get_changes_since_mergebase_query env)
+    >|= fun response ->
+      match extract_mergebase response with
+      | Some (_clock, mergebase) -> mergebase
+      | None -> raise (Watchman_error "Failed to extract mergebase from response")
 
   let flush_request ~(timeout:int) watch_root =
     let open Hh_json in
@@ -900,6 +921,7 @@ module Watchman_mock = struct
 
   let get_changes_since_mergebase _  = []
 
+  let get_mergebase _ = "mergebase"
 end
 
 module type S = sig
