@@ -191,6 +191,7 @@ let collect_lazy_flags main lazy_ lazy_mode =
   | None when lazy_ -> Some Options.LAZY_MODE_FILESYSTEM
   | Some `Fs -> Some Options.LAZY_MODE_FILESYSTEM
   | Some `Ide -> Some Options.LAZY_MODE_IDE
+  | Some `Watchman -> Some Options.LAZY_MODE_WATCHMAN
   | _ -> None)
 
 let lazy_flags prev = CommandSpec.ArgSpec.(
@@ -198,8 +199,9 @@ let lazy_flags prev = CommandSpec.ArgSpec.(
   |> collect collect_lazy_flags
   |> flag "--lazy" no_arg
       ~doc:"EXPERIMENTAL: Don't run a full check"
-  |> flag "--lazy-mode" (enum ["fs", `Fs; "ide", `Ide])
-      ~doc:"EXPERIMENTAL: Which type of lazy mode to use: fs or ide (default: fs, implies --lazy)"
+  |> flag "--lazy-mode" (enum ["fs", `Fs; "ide", `Ide; "watchman", `Watchman])
+      ~doc:("EXPERIMENTAL: Which type of lazy mode to use: fs, watchman or ide " ^
+            "(default: fs, implies --lazy)")
 )
 
 let input_file_flag verb prev = CommandSpec.ArgSpec.(

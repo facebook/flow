@@ -43,7 +43,7 @@ let is_incompatible_package_json =
  * 2. If we do care, are we unable to incrementally check this change. For example, maybe a libdef
  *    changed or the .flowconfig changed. Maybe one day we'll learn to incrementally check those
  *    changes, but for now we just need to exit and restart from scratch *)
-let process_updates ~options ~libs updates =
+let process_updates ?(skip_incompatible=false) ~options ~libs updates =
   let open Core_result in
   let file_options = Options.file_options options in
   let all_libs =
@@ -59,7 +59,7 @@ let process_updates ~options ~libs updates =
   Ok ()
   >>= fun () ->
     (* Die if the .flowconfig changed *)
-    if SSet.mem config_path updates
+    if not skip_incompatible && SSet.mem config_path updates
     then
       Error {
         msg = spf "%s changed in an incompatible way. Exiting." config_path;
@@ -71,7 +71,7 @@ let process_updates ~options ~libs updates =
 
     (* Die if a package.json changed in an incompatible way *)
     let incompatible_packages = SSet.filter is_incompatible_package_json updates in
-    if not (SSet.is_empty incompatible_packages)
+    if not skip_incompatible && not (SSet.is_empty incompatible_packages)
     then
       let messages = SSet.elements incompatible_packages
       |> List.rev_map (spf "Modified package: %s")
@@ -84,7 +84,7 @@ let process_updates ~options ~libs updates =
   >>= fun () ->
     Option.value_map (Options.module_resolver options) ~default:(Ok ()) ~f:(fun module_resolver ->
       let str_module_resolver = Path.to_string module_resolver in
-      if SSet.mem str_module_resolver updates
+      if not skip_incompatible && SSet.mem str_module_resolver updates
       then
         Error {
           msg = Printf.sprintf "Module resolver %s changed in an incompatible way. Exiting.\n%!"
@@ -109,7 +109,7 @@ let process_updates ~options ~libs updates =
 
     (* Die if a lib file changed *)
     let libs = updates |> SSet.filter is_changed_lib in
-    if not (SSet.is_empty libs)
+    if not skip_incompatible && not (SSet.is_empty libs)
     then
       let messages = SSet.elements libs
       |> List.rev_map (spf "Modified lib file: %s")

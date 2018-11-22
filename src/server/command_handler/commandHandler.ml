@@ -602,6 +602,7 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
       end;
       Lwt.return env
     | Some Options.LAZY_MODE_FILESYSTEM
+    | Some Options.LAZY_MODE_WATCHMAN
     | None ->
       (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
        * a new file is opened is to send the errors to the client *)

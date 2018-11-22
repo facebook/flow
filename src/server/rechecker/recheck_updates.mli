@@ -8,6 +8,7 @@
 type error = { msg: string; exit_status: FlowExitStatus.t; }
 
 val process_updates:
+  ?skip_incompatible:bool ->
   options:Options.t ->
   libs:SSet.t ->
   SSet.t ->

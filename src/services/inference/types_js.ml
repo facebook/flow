@@ -1097,6 +1097,7 @@ let recheck_with_profiling
     with_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
       match Options.lazy_mode options with
       | None (* Non lazy mode treats every file as focused. *)
+      | Some Options.LAZY_MODE_WATCHMAN (* Watchman mode treats every modified file as focused *)
       | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
         let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
         let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
@@ -1521,8 +1522,60 @@ let load_saved_state ~profiling ~workers options =
         else Lwt.return_none
     )
 
+let query_watchman_for_changed_files ~options =
+  match Options.lazy_mode options with
+  | None
+  | Some Options.LAZY_MODE_FILESYSTEM
+  | Some Options.LAZY_MODE_IDE -> Lwt.return (fun ~libs:_ -> Lwt.return FilenameSet.(empty, empty))
+  | Some Options.LAZY_MODE_WATCHMAN -> begin
+    let init_settings = {
+      (* We're not setting up a subscription, we're just sending a single query *)
+      Watchman_lwt.subscribe_mode = None;
+      (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
+       * use 10 seconds *)
+      init_timeout = 10;
+      expression_terms = Watchman_expression_terms.make ~options;
+      subscription_prefix = "flow_server_watcher";
+      roots = Files.watched_paths (Options.file_options options);
+      debug_logging = Options.is_debug_mode options;
+    } in
+    let%lwt watchman_env = Watchman_lwt.init init_settings () in
+    let%lwt changed_files = match watchman_env with
+    | None ->
+      failwith "Failed to set up Watchman in order to get the changes since the mergebase"
+    | Some watchman_env ->
+      let%lwt changed_files = Watchman_lwt.get_changes_since_mergebase watchman_env in
+      let%lwt () = Watchman_lwt.close watchman_env in
+      Lwt.return (SSet.of_list changed_files)
+    in
+    Lwt.return (fun ~libs ->
+      let updates = Recheck_updates.process_updates
+        ~skip_incompatible:true
+        ~options
+        ~libs
+        changed_files
+      in
+
+      begin match updates with
+      | Core_result.Error ({ Recheck_updates.msg; _; }) ->
+        failwith
+          (Printf.sprintf "skip_incompatible was set to true, how did we manage to error? %S" msg)
+      | Core_result.Ok updates ->
+        Hh_logger.info
+          "Watchman reports %d files changed since mergebase & we care about %d of them"
+          (SSet.cardinal changed_files)
+          (FilenameSet.cardinal updates);
+        (* We have to explicitly focus on these files, since we just parsed them and it will appear
+         * to the rechecker that they're unchanged *)
+        let files_to_focus = updates in
+        Lwt.return (updates, files_to_focus)
+      end
+    )
+  end
+
 let init ~profiling ~workers options =
-  let%lwt updates, (parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors) =
+  let%lwt get_watchman_updates = query_watchman_for_changed_files ~options
+  and updates, (parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors) =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
@@ -1532,6 +1585,11 @@ let init ~profiling ~workers options =
       (* We loaded a saved state successfully! We are awesome! *)
       let%lwt init_ret = init_from_saved_state ~profiling ~workers ~saved_state options in
       Lwt.return (updates, init_ret)
+  in
+
+  let%lwt updates, files_to_focus =
+    let%lwt watchman_updates, files_to_focus = get_watchman_updates ~libs in
+    Lwt.return (FilenameSet.union updates watchman_updates, files_to_focus)
   in
 
   let env = { ServerEnv.
@@ -1547,11 +1605,11 @@ let init ~profiling ~workers options =
   } in
 
   (* Don't recheck if the libs are not ok *)
-  if FilenameSet.is_empty updates || not libs_ok
+  if (FilenameSet.is_empty updates && FilenameSet.is_empty files_to_focus) || not libs_ok
   then Lwt.return (libs_ok, env)
   else begin
     let%lwt recheck_profiling, _summary, env =
-      recheck ~options ~workers ~updates env ~files_to_focus:FilenameSet.empty
+      recheck ~options ~workers ~updates env ~files_to_focus
     in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
     Lwt.return (true, env)

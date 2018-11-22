@@ -22,6 +22,7 @@ type module_system =
 type lazy_mode =
 | LAZY_MODE_FILESYSTEM
 | LAZY_MODE_IDE
+| LAZY_MODE_WATCHMAN
 
 type jsx_mode =
   (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
@@ -157,3 +158,4 @@ let lazy_mode_to_string lazy_mode =
   match lazy_mode with
   | LAZY_MODE_FILESYSTEM -> "fs"
   | LAZY_MODE_IDE -> "ide"
+  | LAZY_MODE_WATCHMAN -> "watchman"

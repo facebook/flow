@@ -65,8 +65,7 @@ let start_flow_server env =
   |> arg_map "--sharedmemory-minimum-available" ~f:string_of_int shm_min_avail
   |> arg_map "--sharedmemory-log-level" ~f:string_of_int shm_log_level
   |> arg_map "--sharedmemory-dirs" ~f:(String.concat ",") shm_dirs
-  |> arg_map "--lazy-mode" lazy_mode
-       ~f:(function Options.LAZY_MODE_FILESYSTEM -> "fs" | Options.LAZY_MODE_IDE -> "ide")
+  |> arg_map "--lazy-mode" lazy_mode ~f:(Options.lazy_mode_to_string)
   |> arg "--temp-dir" (Some tmp_dir)
   |> arg "--from" FlowEventLogger.((get_context ()).from)
   |> flag "--ignore-version" ignore_version

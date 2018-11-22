@@ -1094,7 +1094,7 @@ let show_recheck_progress (cenv: connected_env) : state =
       when checked_files < total_files ->
       let message = Printf.sprintf
         "Flow: done recheck. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
-        Options.(match mode with LAZY_MODE_FILESYSTEM -> "fs" | LAZY_MODE_IDE -> "ide")
+        (Options.lazy_mode_to_string mode)
         checked_files total_files "https://flow.org/en/docs/lang/lazy-modes/" in
       MessageType.InfoMessage, message, None, None, None
     | false, _, _ ->
