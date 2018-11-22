@@ -349,6 +349,16 @@ struct
       ~extra_expressions:([Hh_json.JSON_String "exists"])
       Query env
 
+  let get_changes_since_mergebase_query env =
+    let extra_kv = [
+      "since", Hh_json.JSON_Object [
+        ("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String "master")])
+      ]
+    ] in
+    request_json
+      ~extra_kv
+      Query env
+
   let since_query env =
     request_json
       ~extra_kv: ["since", Hh_json.JSON_String env.clockspec;
@@ -707,6 +717,13 @@ struct
         let env, changes = transform_asynchronous_get_changes_response env (Some response) in
         env, Watchman_synchronous [changes]
 
+  let get_changes_since_mergebase env =
+    Watchman_process.request
+      ~timeout:(float_of_int env.settings.init_timeout)
+      ~debug_logging:env.settings.debug_logging
+      (get_changes_since_mergebase_query env)
+    >|= extract_file_names env
+
   let flush_request ~(timeout:int) watch_root =
     let open Hh_json in
     let directive = JSON_Object [
@@ -880,6 +897,8 @@ module Watchman_mock = struct
     let result = !Mocking.all_files in
     Mocking.all_files := [];
     result
+
+  let get_changes_since_mergebase _  = []
 
 end
 
