@@ -586,6 +586,15 @@ struct
     EventLogger.watchman_died_caught ();
     Watchman_dead (dead_env_from_alive env), Watchman_unavailable
 
+
+  let with_instance instance ~try_to_restart ~on_alive ~on_dead =
+    (if try_to_restart
+    then maybe_restart_instance instance
+    else Watchman_process.return instance)
+    >>= function
+    | Watchman_dead dead_env -> on_dead dead_env
+    | Watchman_alive env -> on_alive env
+
   (** Calls f on the instance, maybe restarting it if its dead and maybe
    * reverting it to a dead state if things go south. For example, if watchman
    * shuts the connection on us, or shuts down, or crashes, we revert to a dead
@@ -593,12 +602,12 @@ struct
    * Alternatively, we also proactively revert to a dead instance if it appears
    * to be unresponsive (Timeout), and if reading the payload from it is
    * taking too long. *)
-  let call_on_instance instance source f =
-    maybe_restart_instance instance >>= fun instance ->
-    match instance with
-    | Watchman_dead _ ->
-      Watchman_process.return (instance, Watchman_unavailable)
-    | Watchman_alive env -> begin
+  let call_on_instance =
+    let on_dead dead_env =
+      Watchman_process.return (Watchman_dead dead_env, Watchman_unavailable)
+    in
+
+    let on_alive source f env =
       Watchman_process.catch
         ~f:(fun () ->
           with_crash_record_exn source (fun () -> f env) >|= fun (env, result) ->
@@ -642,7 +651,10 @@ struct
             EventLogger.watchman_uncaught_failure msg;
             raise Exit_status.(Exit_with Watchman_failed)
         )
-    end
+    in
+
+    fun instance source f ->
+      with_instance instance ~try_to_restart:true ~on_dead ~on_alive:(on_alive source f)
 
   (** This is a large >50MB payload, which could longer than 2 minutes for
    * Watchman to generate and push down the channel. *)
@@ -926,6 +938,11 @@ module Watchman_mock = struct
   let get_mergebase _ = "mergebase"
 
   let close _ = ()
+
+  let with_instance instance ~try_to_restart:_ ~on_alive ~on_dead =
+    match instance with
+    | Watchman_dead dead_env -> on_dead dead_env
+    | Watchman_alive env -> on_alive env
 end
 
 module type S = sig

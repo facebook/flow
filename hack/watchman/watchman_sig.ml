@@ -134,6 +134,14 @@ module type S = sig
 
   val close: env -> unit result
 
+  val with_instance:
+    watchman_instance ->
+    try_to_restart:bool ->
+    on_alive:(env -> 'a result) ->
+    on_dead:(dead_env -> 'a result) ->
+    'a result
+
+
   (** Expose some things for testing. *)
   module Testing : sig
     val get_test_env : unit -> env result
