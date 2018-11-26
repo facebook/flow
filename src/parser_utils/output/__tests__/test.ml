@@ -10,6 +10,7 @@ open OUnit2
 let tests = "output" >::: [
   Js_layout_generator_test.tests;
   Layout_test.tests;
+  Source_test.tests;
 ]
 
 let () = run_test_tt_main tests

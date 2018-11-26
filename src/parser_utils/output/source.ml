@@ -101,6 +101,7 @@ let add_space num b =
   add_string (String.make num ' ') b
 
 let contents b = Buffer.contents b.buffer
+let sourcemap b = b.sourcemap
 
 let json_of_source source =
   let open Hh_json in
