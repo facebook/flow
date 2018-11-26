@@ -38,6 +38,8 @@ let empty = FilenameMap.empty
 let is_empty = FilenameMap.is_empty
 let of_focused_list = List.fold_left (fun acc f -> FilenameMap.add f Focused acc) empty
 
+let cardinal = FilenameMap.cardinal
+
 let mem = FilenameMap.mem
 
 let add =

@@ -10,6 +10,8 @@ val empty: t
 val is_empty: t -> bool
 val of_focused_list: File_key.t list -> t
 
+val cardinal: t -> int
+
 val mem: File_key.t -> t -> bool
 val add:
   ?focused:Utils_js.FilenameSet.t ->
