@@ -116,13 +116,72 @@ class dfind (monitor_options: FlowServerMonitorOptions.t) : watcher =
 module WatchmanFileWatcher : sig
   class watchman : FlowServerMonitorOptions.t -> watcher
 end = struct
+  (* We need to keep track of when hg transactions start and end. It's generally unsafe to read the
+   * state of the repo in the middle of a transaction, so we often need to avoid reading scm info
+   * until all transactions are done *)
+  module HgTransaction: sig
+    type t
+    val empty: t
+    val enter: t -> t
+    val leave: t -> t Lwt.t
+    val register_callback: t -> (unit -> unit Lwt.t) -> t Lwt.t
+  end = struct
+    type t = {
+      count: int;
+      callbacks: (unit -> unit Lwt.t) list
+    }
+
+    let empty = { count = 0; callbacks = []; }
+
+    let enter t =
+      { t with count = t.count + 1 }
+
+    let leave t =
+      let t = { t with count = t.count - 1; } in
+      if t.count = 0
+      then
+        let%lwt () = Lwt_list.iter_s (fun f -> f ()) (List.rev t.callbacks) in
+        Lwt.return { t with callbacks = []; }
+      else
+        Lwt.return t
+
+    let register_callback t f =
+      if t.count = 0
+      then
+        let%lwt () = f () in
+        Lwt.return t
+      else
+        Lwt.return { t with callbacks = f :: t.callbacks }
+  end
+
+
   type env = {
     mutable instance: Watchman_lwt.watchman_instance;
     mutable files: SSet.t;
     mutable metadata: MonitorProt.file_watcher_metadata;
+    mutable mergebase: string option;
+    mutable hg_transactions: HgTransaction.t;
     listening_thread: unit Lwt.t;
     changes_condition: unit Lwt_condition.t;
+    init_settings: Watchman_lwt.init_settings;
+    should_track_mergebase: bool;
   }
+
+  let get_mergebase env =
+    if env.should_track_mergebase
+    then
+      Watchman_lwt.with_instance env.instance
+        ~try_to_restart:true
+        ~on_alive:(fun watchman_env ->
+          env.instance <- Watchman_lwt.Watchman_alive watchman_env;
+          let%lwt mergebase = Watchman_lwt.get_mergebase watchman_env in
+          Lwt.return (Some mergebase)
+        )
+        ~on_dead:(fun dead_env ->
+          env.instance <- Watchman_lwt.Watchman_dead dead_env;
+          failwith "Failed to connect to Watchman to get mergebase"
+        )
+    else Lwt.return_none
 
   module WatchmanListenLoop = LwtLoop.Make(struct
     module J = Hh_json_helpers.AdhocJsonHelpers
@@ -149,22 +208,57 @@ end = struct
         begin match pushed_changes with
         | Watchman_lwt.Files_changed new_files ->
           env.files <- SSet.union env.files new_files;
-          broadcast env
+          broadcast env;
+          Lwt.return env
         | Watchman_lwt.State_enter (name, metadata) ->
-          if name = "hg.update"
-          then
+          (match name with
+          | "hg.update" ->
             let distance, rev = extract_hg_update_metadata metadata in
             Logger.info
               "Watchman reports an hg.update just started. Moving %s revs from %s" distance rev
+          | "hg.transaction" ->
+            env.hg_transactions <- HgTransaction.enter env.hg_transactions
+          | _ -> ());
+          Lwt.return env
         | Watchman_lwt.State_leave (name, metadata) ->
-          if name = "hg.update"
-          then
+          (match name with
+          | "hg.update" ->
             let distance, rev = extract_hg_update_metadata metadata in
             env.metadata <- MonitorProt.({ env.metadata with
               total_update_distance = env.metadata.total_update_distance + (int_of_string distance);
             });
             Logger.info
-              "Watchman reports an hg.update just finished. Moved %s revs to %s" distance rev
+              "Watchman reports an hg.update just finished. Moved %s revs to %s" distance rev;
+
+            let old_mergebase = env.mergebase in
+
+            let%lwt hg_trans = HgTransaction.register_callback env.hg_transactions @@ fun () ->
+              (* If the mergebase has changed for some reason before this callback runs, then
+               * don't run this callback. For example, I could imagine multiple hg.update's inside a
+               * single transaction queueing up multiple callbacks. *)
+              if env.mergebase <> old_mergebase
+              then Lwt.return_unit
+              else begin
+                let%lwt new_mergebase = get_mergebase env in
+                match new_mergebase, old_mergebase with
+                | (Some new_mergebase), (Some old_mergebase) when new_mergebase <> old_mergebase ->
+                  Logger.info
+                    "Watchman reports mergebase changed from %S to %S"
+                    old_mergebase
+                    new_mergebase;
+                  env.mergebase <- Some new_mergebase;
+                  env.metadata <- { env.metadata with MonitorProt.changed_mergebase = true; };
+                  Lwt.return_unit
+                | _ -> Lwt.return_unit
+              end
+            in
+            env.hg_transactions <- hg_trans;
+            Lwt.return env
+          | "hg.transaction" ->
+            let%lwt hg_trans = HgTransaction.leave env.hg_transactions in
+            env.hg_transactions <- hg_trans;
+            Lwt.return env
+          | _ -> Lwt.return env)
         | Watchman_lwt.Changed_merge_base _ ->
           failwith "We're not using an scm aware subscription, so we should never get these"
         end
@@ -172,9 +266,9 @@ end = struct
         failwith "Flow should never use the synchronous watchman API"
       | Watchman_lwt.Watchman_unavailable ->
         (* TODO (glevi) - Should we die if we get this for too long? *)
-        Logger.error "Watchman unavailable. Retrying..."
-      end;
-      Lwt.return env
+        Logger.error "Watchman unavailable. Retrying...";
+        Lwt.return env
+      end
 
     external reraise : exn -> 'a = "%reraise"
 
@@ -190,6 +284,7 @@ end = struct
     object (self)
       val mutable env = None
       val mutable init_thread = None
+      val mutable init_settings = None
 
       method name = "watchman"
 
@@ -205,7 +300,7 @@ end = struct
 
         let watchman_expression_terms = Watchman_expression_terms.make ~options:server_options in
 
-        init_thread <- Some (Watchman_lwt.init {
+        let settings = {
           (* Defer updates during `hg.update` *)
           Watchman_lwt.subscribe_mode = Some Watchman_lwt.Defer_changes;
           (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
@@ -215,28 +310,43 @@ end = struct
           subscription_prefix = "flow_watcher";
           roots = Files.watched_paths file_options;
           debug_logging = file_watcher_debug;
-        } ())
+        } in
+
+        init_settings <- Some settings;
+
+        init_thread <- Some (Watchman_lwt.init settings ())
 
       method wait_for_init =
         let%lwt watchman = Option.value_exn init_thread in
         init_thread <- None;
 
-        begin match watchman with
+        let should_track_mergebase =
+          let server_options = monitor_options.FlowServerMonitorOptions.server_options in
+          Options.lazy_mode server_options = Some Options.LAZY_MODE_WATCHMAN
+        in
+
+        match watchman with
         | Some watchman ->
           let waiter, wakener = Lwt.task () in
           let new_env = {
             instance = Watchman_lwt.Watchman_alive watchman;
             files = SSet.empty;
             listening_thread = (let%lwt env = waiter in WatchmanListenLoop.run env);
+            mergebase = None;
+            hg_transactions = HgTransaction.empty;
             changes_condition = Lwt_condition.create ();
             metadata = MonitorProt.empty_file_watcher_metadata;
+            init_settings = Option.value_exn init_settings;
+            should_track_mergebase;
           } in
+          let%lwt mergebase = get_mergebase new_env in
+          Option.iter mergebase ~f:(Logger.info "Watchman reports the initial mergebase as %S");
+          let new_env = { new_env with mergebase; } in
           env <- Some new_env;
-          Lwt.wakeup wakener new_env
+          Lwt.wakeup wakener new_env;
+          Lwt.return_unit
         | None ->
           failwith "Failed to initialize watchman"
-        end;
-        Lwt.return_unit
 
       (* Should we throw away metadata even if files is empty? glevi thinks that's fine, since we
        * probably don't care about hg updates or mergebase changing if no files were affected *)
