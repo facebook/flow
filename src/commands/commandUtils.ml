@@ -187,21 +187,27 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
 )
 
 let collect_lazy_flags main lazy_ lazy_mode =
-  main (match lazy_mode with
-  | None when lazy_ -> Some Options.LAZY_MODE_FILESYSTEM
-  | Some `Fs -> Some Options.LAZY_MODE_FILESYSTEM
-  | Some `Ide -> Some Options.LAZY_MODE_IDE
-  | Some `Watchman -> Some Options.LAZY_MODE_WATCHMAN
-  | _ -> None)
+  let lazy_mode =
+    if lazy_ && lazy_mode = None
+    then Some (Some Options.LAZY_MODE_FILESYSTEM) (* --lazy === --lazy-mode fs *)
+    else lazy_mode
+  in
+  main lazy_mode
 
 let lazy_flags prev = CommandSpec.ArgSpec.(
   prev
   |> collect collect_lazy_flags
   |> flag "--lazy" no_arg
-      ~doc:"EXPERIMENTAL: Don't run a full check"
-  |> flag "--lazy-mode" (enum ["fs", `Fs; "ide", `Ide; "watchman", `Watchman])
-      ~doc:("EXPERIMENTAL: Which type of lazy mode to use: fs, watchman or ide " ^
-            "(default: fs, implies --lazy)")
+      ~doc:"Don't run a full check. Shorthand for `--lazy-mode fs`"
+  |> flag "--lazy-mode"
+      (enum [
+        "fs", Some Options.LAZY_MODE_FILESYSTEM;
+        "ide", Some Options.LAZY_MODE_IDE;
+        "watchman", Some Options.LAZY_MODE_WATCHMAN;
+        "none", None;
+      ])
+      ~doc:("Which lazy mode to use: 'fs', 'watchman' or 'ide'. Using 'none' explicitly will " ^
+            "override the lazy mode set in the .flowconfig (default: none)")
 )
 
 let input_file_flag verb prev = CommandSpec.ArgSpec.(
@@ -589,7 +595,7 @@ type connect_params = {
   timeout            : int option;
   no_auto_start      : bool;
   autostop           : bool;
-  lazy_mode          : Options.lazy_mode option;
+  lazy_mode          : Options.lazy_mode option option;
   temp_dir           : string option;
   shm_flags          : shared_mem_params;
   ignore_version     : bool;
@@ -891,10 +897,12 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     ~default:(FlowConfig.saved_state_fetcher flowconfig)
   in
 
+  let opt_lazy_mode = Option.value lazy_mode ~default:(FlowConfig.lazy_mode flowconfig) in
+
   let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
     opt_flowconfig_name = flowconfig_name;
-    opt_lazy_mode = lazy_mode;
+    opt_lazy_mode;
     opt_root = root;
     opt_root_name = FlowConfig.root_name flowconfig;
     opt_debug = options_flags.debug;

@@ -53,6 +53,7 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
+    lazy_mode: Options.lazy_mode option;
     log_file: Path.t option;
     max_header_tokens: int;
     max_literal_length: int;
@@ -136,6 +137,7 @@ module Opts = struct
     haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
     include_warnings = false;
+    lazy_mode = None;
     log_file = None;
     max_header_tokens = 10;
     max_literal_length = 100;
@@ -363,6 +365,16 @@ module Opts = struct
 
     "include_warnings",
       boolean (fun opts v -> Ok { opts with include_warnings = v });
+
+    "lazy_mode",
+      enum
+        [
+          "fs", Some Options.LAZY_MODE_FILESYSTEM;
+          "ide", Some Options.LAZY_MODE_IDE;
+          "watchman", Some Options.LAZY_MODE_WATCHMAN;
+          "none", None;
+        ]
+        (fun opts v -> Ok { opts with lazy_mode = v });
 
     "merge_timeout",
       uint
@@ -944,6 +956,7 @@ let haste_paths_whitelist c = c.options.Opts.haste_paths_whitelist
 let haste_use_name_reducers c = c.options.Opts.haste_use_name_reducers
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 let include_warnings c = c.options.Opts.include_warnings
+let lazy_mode c = c.options.Opts.lazy_mode
 let log_file c = c.options.Opts.log_file
 let max_header_tokens c = c.options.Opts.max_header_tokens
 let max_workers c = c.options.Opts.max_workers

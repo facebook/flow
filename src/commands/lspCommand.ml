@@ -1138,7 +1138,8 @@ module RagePrint = struct
     p.from p.retries p.retry_if_init p.no_auto_start p.autostop
     p.ignore_version p.quiet (Option.value ~default:"None" p.temp_dir)
     (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
-    (Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string)
+    (Option.value_map p.lazy_mode
+      ~default:"None" ~f:(Option.value_map ~default:"None" ~f:Options.lazy_mode_to_string))
 
   let string_of_open_file {o_open_doc; o_ast; o_live_diagnostics} : string =
     Printf.sprintf "(uri=%s version=%d text=[%d bytes] ast=[%s] diagnostics=[%s])"
@@ -1353,7 +1354,7 @@ let rec main
     base_flags
     (temp_dir: string option)
     (shm_flags: CommandUtils.shared_mem_params)
-    (lazy_mode: Options.lazy_mode option)
+    (lazy_mode: Options.lazy_mode option option)
     (autostop: bool)
     (from: string option)
     ((): unit)
