@@ -28,6 +28,7 @@ val recheck:
   updates:FilenameSet.t ->
   ServerEnv.env ->
   files_to_focus:FilenameSet.t ->
+  file_watcher_metadata:MonitorProt.file_watcher_metadata ->
   (Profiling_js.finished * ServerStatus.summary * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)

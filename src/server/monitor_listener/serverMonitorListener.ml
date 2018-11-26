@@ -28,8 +28,8 @@ module ListenLoop = LwtLoop.Make (struct
       connections = Persistent_connection.remove_client env.connections client_id
     });
     Lwt.return_unit
-  | MonitorProt.FileWatcherNotification changed_files ->
-    ServerMonitorListenerState.push_files_to_recheck changed_files;
+  | MonitorProt.FileWatcherNotification (changed_files, metadata) ->
+    ServerMonitorListenerState.push_files_to_recheck ?metadata changed_files;
     Lwt.return_unit
   | MonitorProt.PleaseDie please_die_reason ->
     (* TODO - find a way to gracefully kill the workers. At the moment, if the workers are in the

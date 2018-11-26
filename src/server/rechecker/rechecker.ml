@@ -30,7 +30,7 @@ let process_updates genv env updates =
   end
 
 (* on notification, execute client commands or recheck files *)
-let recheck genv env ?(files_to_focus=FilenameSet.empty) updates =
+let recheck genv env ~files_to_focus ~file_watcher_metadata updates =
   (* Caller should have already checked this *)
   assert (not (FilenameSet.is_empty updates));
 
@@ -40,7 +40,7 @@ let recheck genv env ?(files_to_focus=FilenameSet.empty) updates =
   let workers = genv.ServerEnv.workers in
 
   let%lwt profiling, summary, env =
-    Types_js.recheck ~options ~workers ~updates env ~files_to_focus in
+    Types_js.recheck ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadata in
 
   let lazy_stats = get_lazy_stats genv env in
   Persistent_connection.send_end_recheck ~lazy_stats env.connections;
@@ -79,6 +79,7 @@ let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
 let rec recheck_single
     ?(files_to_recheck=FilenameSet.empty)
     ?(files_to_focus=FilenameSet.empty)
+    ?(file_watcher_metadata=MonitorProt.empty_file_watcher_metadata)
     genv env =
   let open ServerMonitorListenerState in
   let env = update_env env in
@@ -86,6 +87,9 @@ let rec recheck_single
   let workload = get_and_clear_recheck_workload ~process_updates in
   let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
   let files_to_focus = FilenameSet.union files_to_focus workload.files_to_focus in
+  let file_watcher_metadata =
+    MonitorProt.merge_file_watcher_metadata file_watcher_metadata workload.metadata
+  in
   let all_files = FilenameSet.union files_to_recheck files_to_focus in
   if FilenameSet.is_empty all_files
   then begin
@@ -95,21 +99,18 @@ let rec recheck_single
     let on_cancel () =
       Hh_logger.info
         "Recheck successfully canceled. Restarting the recheck to include new file changes";
-      recheck_single ~files_to_recheck:all_files ~files_to_focus genv env
+      recheck_single ~files_to_recheck:all_files ~files_to_focus ~file_watcher_metadata genv env
     in
     let f () =
-      let%lwt profiling, env = recheck genv env ~files_to_focus all_files in
+      let%lwt profiling, env = recheck genv env ~files_to_focus ~file_watcher_metadata all_files in
       List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
       Lwt.return (Ok (profiling, env))
     in
 
     run_but_cancel_on_file_changes genv env ~f ~on_cancel
 
-let rec recheck_loop
-    ?(files_to_recheck=FilenameSet.empty)
-    ?(files_to_focus=FilenameSet.empty)
-    genv env =
-  match%lwt recheck_single ~files_to_recheck ~files_to_focus genv env with
+let rec recheck_loop genv env =
+  match%lwt recheck_single genv env with
   | Error env ->
     (* No more work to do for now *)
     Lwt.return env

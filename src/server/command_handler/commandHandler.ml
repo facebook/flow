@@ -521,7 +521,7 @@ let handle_ephemeral_immediately_unsafe
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
         let fileset = SSet.of_list files in
           let push = ServerMonitorListenerState.(
-            if focus then push_files_to_focus else push_files_to_recheck
+            if focus then push_files_to_focus else push_files_to_recheck ?metadata:None
           ) in
 
           if profile

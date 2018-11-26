@@ -163,12 +163,12 @@ end = struct
     (* In order to try and avoid races between the file system and a command (like `flow status`),
      * we check for file system notification before sending a request to the server *)
     let send_file_watcher_notification watcher conn =
-      let%lwt files = watcher#get_and_clear_changed_files in
+      let%lwt files, metadata = watcher#get_and_clear_changed_files in
       if not (SSet.is_empty files)
       then begin
         let count = SSet.cardinal files in
         Logger.info "File watcher reported %d file%s changed" count (if count = 1 then "" else "s");
-        send_request ~msg:(MonitorProt.FileWatcherNotification files) conn
+        send_request ~msg:(MonitorProt.FileWatcherNotification (files, metadata)) conn
       end;
       Lwt.return_unit
 

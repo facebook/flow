@@ -788,12 +788,27 @@ let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
       focused_files_to_infer ~focused ~dependency_graph
   )
 
+let restart_if_faster_than_recheck ~options ~env:_ ~to_merge:_ ~file_watcher_metadata =
+  match Options.lazy_mode options with
+  | Some Options.LAZY_MODE_WATCHMAN ->
+    (* TODO (glevi) - The question we want to answer here is "Will restarting be faster than
+     * rechecking". *)
+    Hh_logger.info "File watcher moved %d revisions and %s mergebase"
+      file_watcher_metadata.MonitorProt.total_update_distance
+      (if file_watcher_metadata.MonitorProt.changed_mergebase then "changed" else "did not change");
+    ()
+  | None
+  | Some Options.LAZY_MODE_FILESYSTEM
+  | Some Options.LAZY_MODE_IDE ->
+    (* Only watchman mode might restart *)
+    ()
+
 (* We maintain the following invariant across rechecks: The set of
    `files` contains files that parsed successfully in the previous
    phase (which could be the init phase or a previous recheck phase)
 *)
 let recheck_with_profiling
-    ~profiling ~transaction ~options ~workers ~updates env ~files_to_focus =
+    ~profiling ~transaction ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadata =
   let errors = env.ServerEnv.errors in
 
   (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
@@ -1160,6 +1175,8 @@ let recheck_with_profiling
       ~direct_dependent_files
   in
 
+  restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata;
+
   let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
 
   (* recheck *)
@@ -1223,20 +1240,27 @@ let recheck_with_profiling
     (new_or_changed, deleted, all_dependent_files, cycle_leaders, skipped_count))
   )
 
-let recheck ~options ~workers ~updates env ~files_to_focus =
+let recheck ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadata =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, (modified, deleted, dependent_files, cycle_leaders, skipped_count)) =
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
         Transaction.with_transaction (fun transaction ->
           recheck_with_profiling
-            ~profiling ~transaction ~options ~workers ~updates env ~files_to_focus
+            ~profiling ~transaction ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadata
         )
       )
     )
   in
   (** TODO: update log to reflect current terminology **)
-  FlowEventLogger.recheck ~modified ~deleted ~dependent_files ~profiling ~skipped_count;
+  FlowEventLogger.recheck
+    ~modified
+    ~deleted
+    ~dependent_files
+    ~profiling
+    ~skipped_count
+    ~scm_update_distance:file_watcher_metadata.MonitorProt.total_update_distance
+    ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase;
 
   let duration = Profiling_js.get_profiling_duration profiling in
   let dependent_file_count = Utils_js.FilenameSet.cardinal dependent_files in
@@ -1609,7 +1633,13 @@ let init ~profiling ~workers options =
   then Lwt.return (libs_ok, env)
   else begin
     let%lwt recheck_profiling, _summary, env =
-      recheck ~options ~workers ~updates env ~files_to_focus
+      recheck
+        ~options
+        ~workers
+        ~updates
+        env
+        ~files_to_focus
+        ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
     in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
     Lwt.return (true, env)

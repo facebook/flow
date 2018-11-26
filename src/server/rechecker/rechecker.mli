@@ -15,13 +15,12 @@ val process_updates :
 val recheck_single:
   ?files_to_recheck:Utils_js.FilenameSet.t ->
   ?files_to_focus:Utils_js.FilenameSet.t ->
+  ?file_watcher_metadata:MonitorProt.file_watcher_metadata ->
   ServerEnv.genv ->
   ServerEnv.env ->
   (Profiling_js.finished * ServerEnv.env, ServerEnv.env) result Lwt.t
 
 val recheck_loop:
-  ?files_to_recheck:Utils_js.FilenameSet.t ->
-  ?files_to_focus:Utils_js.FilenameSet.t ->
   ServerEnv.genv ->
   ServerEnv.env ->
   ServerEnv.env Lwt.t

@@ -20,7 +20,7 @@ class type watcher =
     method name: string
     method start_init: unit
     method wait_for_init: unit Lwt.t
-    method get_and_clear_changed_files: SSet.t Lwt.t
+    method get_and_clear_changed_files: (SSet.t * MonitorProt.file_watcher_metadata option) Lwt.t
     method wait_for_changed_files: unit Lwt.t
     method stop: unit Lwt.t
     method waitpid: Unix.process_status Lwt.t
@@ -31,7 +31,7 @@ class dummy : watcher = object
   method name = "dummy"
   method start_init = ()
   method wait_for_init = Lwt.return_unit
-  method get_and_clear_changed_files = Lwt.return SSet.empty
+  method get_and_clear_changed_files = Lwt.return (SSet.empty, None)
   method wait_for_changed_files = Lwt.return_unit
   method stop = Lwt.return_unit
   method waitpid = let wait_forever_thread, _ = Lwt.task () in wait_forever_thread
@@ -81,7 +81,7 @@ class dfind (monitor_options: FlowServerMonitorOptions.t) : watcher =
 
     method get_and_clear_changed_files =
       let%lwt () = self#fetch in
-      let ret = files in
+      let ret = files, None in
       files <- SSet.empty;
       Lwt.return ret
 
@@ -119,6 +119,7 @@ end = struct
   type env = {
     mutable instance: Watchman_lwt.watchman_instance;
     mutable files: SSet.t;
+    mutable metadata: MonitorProt.file_watcher_metadata;
     listening_thread: unit Lwt.t;
     changes_condition: unit Lwt_condition.t;
   }
@@ -159,6 +160,9 @@ end = struct
           if name = "hg.update"
           then
             let distance, rev = extract_hg_update_metadata metadata in
+            env.metadata <- MonitorProt.({ env.metadata with
+              total_update_distance = env.metadata.total_update_distance + (int_of_string distance);
+            });
             Logger.info
               "Watchman reports an hg.update just finished. Moved %s revs to %s" distance rev
         | Watchman_lwt.Changed_merge_base _ ->
@@ -225,6 +229,7 @@ end = struct
             files = SSet.empty;
             listening_thread = (let%lwt env = waiter in WatchmanListenLoop.run env);
             changes_condition = Lwt_condition.create ();
+            metadata = MonitorProt.empty_file_watcher_metadata;
           } in
           env <- Some new_env;
           Lwt.wakeup wakener new_env
@@ -233,10 +238,13 @@ end = struct
         end;
         Lwt.return_unit
 
+      (* Should we throw away metadata even if files is empty? glevi thinks that's fine, since we
+       * probably don't care about hg updates or mergebase changing if no files were affected *)
       method get_and_clear_changed_files =
         let env = self#get_env in
-        let ret = env.files in
+        let ret = env.files, Some env.metadata in
         env.files <- SSet.empty;
+        env.metadata <- MonitorProt.empty_file_watcher_metadata;
         Lwt.return ret
 
       method wait_for_changed_files =

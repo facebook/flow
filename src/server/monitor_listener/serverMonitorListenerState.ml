@@ -34,12 +34,15 @@ type recheck_msg = {
   files: SSet.t;
   callback: (Profiling_js.finished option -> unit) option;
   focus: bool;
+  file_watcher_metadata: MonitorProt.file_watcher_metadata option;
 }
 (* Files which have changed *)
 let recheck_stream, push_recheck_msg = Lwt_stream.create ()
-let push_recheck_msg ~focus ?callback files = push_recheck_msg (Some { files; callback; focus; })
-let push_files_to_recheck = push_recheck_msg ~focus:false
-let push_files_to_focus = push_recheck_msg ~focus:true
+let push_recheck_msg ~focus ?metadata ?callback files =
+  push_recheck_msg (Some { files; callback; focus; file_watcher_metadata = metadata; })
+let push_files_to_recheck ?metadata ?callback files =
+  push_recheck_msg ~focus:false ?metadata ?callback files
+let push_files_to_focus = push_recheck_msg ~focus:true ?metadata:None
 
 let pop_next_workload () =
   match Lwt_stream.get_available_up_to 1 workload_stream with
@@ -55,20 +58,25 @@ type recheck_workload = {
   files_to_recheck: FilenameSet.t;
   files_to_focus: FilenameSet.t;
   profiling_callbacks: (Profiling_js.finished option -> unit) list;
+  metadata: MonitorProt.file_watcher_metadata;
 }
 let empty_recheck_workload = {
   files_to_recheck = FilenameSet.empty;
   files_to_focus = FilenameSet.empty;
   profiling_callbacks = [];
+  metadata = MonitorProt.empty_file_watcher_metadata;
 }
 
-let recheck_workload_is_empty { files_to_recheck; files_to_focus; profiling_callbacks=_; } =
+let recheck_workload_is_empty workload =
+  let { files_to_recheck; files_to_focus; profiling_callbacks=_; metadata=_;} = workload in
   FilenameSet.is_empty files_to_recheck && FilenameSet.is_empty files_to_focus
 let recheck_acc = ref empty_recheck_workload
 let recheck_fetch ~process_updates =
   recheck_acc :=
     Lwt_stream.get_available recheck_stream (* Get all the files which have changed *)
-    |> Core_list.fold_left ~init:(!recheck_acc) ~f:(fun workload { files; callback; focus; } ->
+    |> Core_list.fold_left
+      ~init:(!recheck_acc)
+      ~f:(fun workload { files; callback; focus; file_watcher_metadata; } ->
         let files = process_updates files in
         let workload = match callback with
         | None -> workload
@@ -81,6 +89,15 @@ let recheck_fetch ~process_updates =
           end else
             { workload with profiling_callbacks = callback :: workload.profiling_callbacks; }
         in
+        let workload = MonitorProt.(match file_watcher_metadata with
+        | None -> workload
+        | Some { total_update_distance; changed_mergebase; } ->
+          let total_update_distance =
+            total_update_distance + workload.metadata.total_update_distance
+          in
+          let changed_mergebase = changed_mergebase || workload.metadata.changed_mergebase in
+          { workload with metadata = { total_update_distance; changed_mergebase; }; }
+        ) in
         if focus
         then { workload with files_to_focus = FilenameSet.union files workload.files_to_focus; }
         else { workload with files_to_recheck = FilenameSet.union files workload.files_to_recheck; }
