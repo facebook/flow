@@ -273,11 +273,8 @@ end = struct
     external reraise : exn -> 'a = "%reraise"
 
     let catch _ exn =
-      match exn with
-      | Lwt.Canceled -> Lwt.return_unit
-      | _ ->
-        Logger.error ~exn "Uncaught exception in Watchman listening loop";
-        reraise exn
+      Logger.error ~exn "Uncaught exception in Watchman listening loop";
+      reraise exn
   end)
 
   class watchman (monitor_options: FlowServerMonitorOptions.t) : watcher =
@@ -365,8 +362,12 @@ end = struct
         (* Flow doesn't own the watchman process, so it's not Flow's job to stop the watchman
          * process. What we can do, though, is stop listening to the messages *)
         let env = self#get_env in
+        Logger.info "Canceling Watchman listening thread & closing connection";
         Lwt.cancel env.listening_thread;
-        Lwt.return_unit
+        Watchman_lwt.with_instance env.instance
+          ~try_to_restart:false
+          ~on_alive:Watchman_lwt.close
+          ~on_dead:(fun _ -> Lwt.return_unit)
 
       method waitpid =
         (* If watchman dies, we can start it back up again and use clockspec to make sure we didn't
