@@ -1210,3 +1210,21 @@ let get_check_or_status_exit_code errors warnings max_warnings =
     | None | Some _ -> No_error
   end else
     Type_error
+
+
+let choose_file_watcher ~options ~file_watcher ~flowconfig =
+  match Options.lazy_mode options, file_watcher with
+  | Some Options.LAZY_MODE_WATCHMAN, (None | Some Options.Watchman) ->
+    (* --lazy-mode watchman implies --file-watcher watchman *)
+    Options.Watchman
+  | Some Options.LAZY_MODE_WATCHMAN, Some _ ->
+    (* Error on something like --lazy-mode watchman --file-watcher dfind *)
+    let msg =
+      "Using Watchman lazy mode implicitly uses the Watchman file watcher, "
+      ^ "but you tried to use a different file watcher via the `--file-watcher` flag."
+    in
+    raise (CommandSpec.Failed_to_parse ("--file-watcher", msg))
+  | _, Some file_watcher ->
+    file_watcher
+  | _, None ->
+    Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
