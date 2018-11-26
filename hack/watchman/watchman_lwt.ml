@@ -20,10 +20,14 @@ struct
   let (>|=) = Lwt.(>|=)
   let return = Lwt.return
 
+  external reraise : exn -> 'a = "%reraise"
+
   let catch ~f ~catch = Lwt.catch f (fun e ->
-    (* TODO(ljw): what if the backtract has been corrupted by the time we get here? *)
-    let dodgy_stack = Printexc.get_backtrace () in
-    catch ~stack:dodgy_stack e)
+    match e with
+    | Lwt.Canceled -> reraise e
+    | e ->
+      catch ~stack:(Printexc.get_backtrace ()) e
+  )
 
   let list_fold_values l ~init ~f =
     Lwt_list.fold_left_s f init l
