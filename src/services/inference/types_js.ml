@@ -796,15 +796,45 @@ let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
       focused_files_to_infer ~focused ~dependency_graph
   )
 
-let restart_if_faster_than_recheck ~options ~env:_ ~to_merge:_ ~file_watcher_metadata =
+let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
   match Options.lazy_mode options with
   | Some Options.LAZY_MODE_WATCHMAN ->
     (* TODO (glevi) - The question we want to answer here is "Will restarting be faster than
      * rechecking". *)
+    let { MonitorProt.total_update_distance; changed_mergebase; } = file_watcher_metadata in
     Hh_logger.info "File watcher moved %d revisions and %s mergebase"
-      file_watcher_metadata.MonitorProt.total_update_distance
-      (if file_watcher_metadata.MonitorProt.changed_mergebase then "changed" else "did not change");
-    ()
+      total_update_distance
+      (if changed_mergebase then "changed" else "did not change");
+
+    if changed_mergebase then begin
+      let files_already_checked = CheckedSet.cardinal env.ServerEnv.checked_files in
+      let files_about_to_recheck = CheckedSet.cardinal to_merge in
+
+      Hh_logger.info "We've already checked %d files. We're about to recheck %d files"
+        files_already_checked
+        files_about_to_recheck;
+
+      let init_time = Recheck_stats.get_init_time () in
+      let per_file_time = Recheck_stats.get_per_file_time () in
+
+      let time_to_restart =
+        init_time +. per_file_time *. (float_of_int files_already_checked)
+      in
+      let time_to_recheck =
+        per_file_time *. (float_of_int files_about_to_recheck)
+      in
+
+      Hh_logger.debug "Estimated restart time: %fs to init + (%fs * %d files) = %fs"
+        init_time per_file_time files_already_checked time_to_restart;
+      Hh_logger.debug "Estimated recheck time: %fs * %d files = %fs"
+        per_file_time files_about_to_recheck time_to_recheck;
+
+      Hh_logger.info "Estimating a recheck would take %.2fs and a restart would take %.2fs"
+        time_to_recheck
+        time_to_restart;
+      if time_to_restart < time_to_recheck
+      then FlowExitStatus.(exit ~msg:"Restarting after a rebase to save time" Restart)
+    end
   | None
   | Some Options.LAZY_MODE_FILESYSTEM
   | Some Options.LAZY_MODE_IDE ->
