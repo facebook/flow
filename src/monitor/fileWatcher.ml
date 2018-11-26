@@ -267,6 +267,10 @@ end = struct
       | Watchman_lwt.Watchman_unavailable ->
         (* TODO (glevi) - Should we die if we get this for too long? *)
         Logger.error "Watchman unavailable. Retrying...";
+        (* Watchman_lwt.get_changes will restart the connection. However it has some backoff
+         * built in and will do nothing if called too early. That turns this LwtLoop module into a
+         * busy wait. So let's add a sleep here to yield and prevent spamming the logs too much. *)
+        let%lwt () = Lwt_unix.sleep 1.0 in
         Lwt.return env
       end
 
