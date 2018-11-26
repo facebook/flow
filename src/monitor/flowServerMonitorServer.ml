@@ -476,6 +476,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Dfind_died
       | Dfind_unresponsive
       | Killed_by_monitor (* The server died because we asked it to die *)
+      | Restart (* The server asked to be restarted *)
         -> false
 
       (**** Unrelated exit codes. If we see them then something is wrong ****)

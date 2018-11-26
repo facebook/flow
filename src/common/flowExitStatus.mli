@@ -25,6 +25,7 @@ type t =
   | Autostop
   | Killed_by_monitor
   | Invalid_saved_state
+  | Restart
   | Socket_error
   | Dfind_died
   | Dfind_unresponsive

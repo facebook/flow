@@ -53,6 +53,8 @@ type t =
   | Killed_by_monitor
   (* The saved state file is invalid and we're running with --saved-state-no-fallback *)
   | Invalid_saved_state
+  (* The server would like to restart, likely since re-init'ing is faster than a recheck *)
+  | Restart
 
   (* The hack code might throw this *)
   | Socket_error
@@ -99,6 +101,7 @@ let error_code = function
   | Autostop -> 18
   | Killed_by_monitor -> 19
   | Invalid_saved_state -> 20
+  | Restart -> 21
   | Commandline_usage_error -> 64
   | No_input -> 66
   | Server_start_failed _ -> 78
@@ -133,6 +136,7 @@ let error_type = function
   | 18 -> Autostop
   | 19 -> Killed_by_monitor
   | 20 -> Invalid_saved_state
+  | 21 -> Restart
   | 64 -> Commandline_usage_error
   | 66 -> No_input
   (* The process status is made up *)
@@ -183,6 +187,7 @@ let to_string = function
   | Autostop -> "Autostop"
   | Killed_by_monitor -> "Killed_by_monitor"
   | Invalid_saved_state -> "Invalid_saved_state"
+  | Restart -> "Restart"
 
 exception Exit_with of t
 
