@@ -25,5 +25,3 @@ val add_space: int -> t -> t
 
 val contents: t -> string
 val sourcemap: t -> Sourcemap.t option
-val json_of_source : t -> Hh_json.json
-val json_of_source_map: t -> Hh_json.json

@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Json_sourcemap
-
 module LocMap = Utils_js.LocMap
 
 type t = {
@@ -102,19 +100,3 @@ let add_space num b =
 
 let contents b = Buffer.contents b.buffer
 let sourcemap b = b.sourcemap
-
-let json_of_source source =
-  let open Hh_json in
-  let rev_props = ["code", JSON_String (contents source)] in
-  let rev_props = match source.sourcemap with
-  | Some sourcemap ->
-    ("sourceMap", json_of_sourcemap sourcemap)::rev_props
-  | None -> rev_props
-  in
-  JSON_Object (List.rev rev_props)
-
-let json_of_source_map source =
-  match source.sourcemap with
-  | Some sourcemap ->
-    json_of_sourcemap sourcemap
-  | None -> Hh_json.JSON_Object ([])
