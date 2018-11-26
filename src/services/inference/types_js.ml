@@ -469,6 +469,8 @@ let merge
         transaction (FilenameSet.union files_to_merge deleted)
     in
 
+    let merge_start_time = Unix.gettimeofday () in
+
     let%lwt merge_errors, suppressions, severity_cover_set, skipped_count =
       run_merge_service
         ~master_mutator
@@ -489,6 +491,12 @@ let merge
       )
       else Lwt.return_unit
     in
+
+    Recheck_stats.record_merge_time
+      ~options
+      ~total_time:(Unix.gettimeofday () -. merge_start_time)
+      ~merged_files:(CheckedSet.cardinal to_merge);
+
     Hh_logger.info "Done";
     Lwt.return (merge_errors, suppressions, severity_cover_set, skipped_count)
   in
@@ -1598,6 +1606,8 @@ let query_watchman_for_changed_files ~options =
   end
 
 let init ~profiling ~workers options =
+  let start_time = Unix.gettimeofday () in
+
   let%lwt get_watchman_updates = query_watchman_for_changed_files ~options
   and updates, (parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors) =
     match%lwt load_saved_state ~profiling ~workers options with
@@ -1610,6 +1620,10 @@ let init ~profiling ~workers options =
       let%lwt init_ret = init_from_saved_state ~profiling ~workers ~saved_state options in
       Lwt.return (updates, init_ret)
   in
+
+  let init_time = Unix.gettimeofday () -. start_time in
+
+  let%lwt () = Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal parsed) in
 
   let%lwt updates, files_to_focus =
     let%lwt watchman_updates, files_to_focus = get_watchman_updates ~libs in

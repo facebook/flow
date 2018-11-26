@@ -16,3 +16,4 @@ val pids_file: flowconfig_name:string -> tmp_dir:string -> Path.t -> string
 val socket_file: flowconfig_name:string -> tmp_dir:string -> Path.t -> string
 val legacy2_socket_file: flowconfig_name:string -> tmp_dir:string -> Path.t -> string
 val legacy1_socket_file: flowconfig_name:string -> tmp_dir:string -> Path.t -> string
+val recheck_stats_file: flowconfig_name:string -> tmp_dir:string -> Path.t -> string
