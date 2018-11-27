@@ -270,6 +270,17 @@ let rec convert cx tparams_map = Ast.Type.(function
         | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc)
     )
 
+  | "$TEMPORARY$Object$freeze" ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
+      let ts, targs = convert_type_params () in
+      let t = List.hd ts in
+      let reason_arg = mk_reason (RFrozen RObjectLit) loc in
+      let tout = Tvar.mk_where cx reason_arg (fun tvar ->
+        Flow.flow cx (t, ObjFreezeT (reason_arg, tvar));
+      ) in
+      (* TODO fix targs *)
+      reconstruct_ast tout targs
+    )
 
   (* Array<T> *)
   | "Array" ->

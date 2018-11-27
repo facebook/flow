@@ -576,4 +576,10 @@ let tests = "signature_generator" >::: ([
      "  | {|x: Array<$TEMPORARY$number<1> | $TEMPORARY$number<2>>|}";
      "  | {|x: Array<$TEMPORARY$number<3>>|}>;"];
 
+  "frozen_object" >:: mk_signature_generator_test
+    ["module.exports = Object.freeze({ foo: 42, bar: 'hello' })"]
+    ["declare module.exports: $TEMPORARY$Object$freeze<";
+     "  {|foo: $TEMPORARY$number<42>, bar: $TEMPORARY$string<'hello'>|},";
+     ">;"];
+
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)

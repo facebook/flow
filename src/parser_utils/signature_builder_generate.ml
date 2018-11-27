@@ -74,7 +74,10 @@ module T = struct
     (* types and expressions *)
     | Function of function_t
 
-    | ObjectLiteral of (Loc.t * object_property_t) Nel.t
+    | ObjectLiteral of {
+        frozen: bool;
+        properties: (Loc.t * object_property_t) Nel.t
+      }
     | ArrayLiteral of array_element_t Nel.t
 
     | ValueRef of reference (* typeof `x` *)
@@ -167,14 +170,19 @@ module T = struct
         | None -> None
         | Some et -> Some (ArrayLiteral (AInit (loc, et), []))
       end
-    | ObjectLiteral object1, ObjectLiteral object2 ->
+    | ObjectLiteral { frozen = frozen1; properties = object1 },
+        ObjectLiteral { frozen = frozen2; properties = object2 } ->
+      let frozen' = match frozen1, frozen2 with
+        | true, true -> Some true
+        | false, false -> Some false
+        | _ -> None in
       let object' = summarize_object_pair loc object1 object2 in
-      begin match object' with
-        | None -> None
-        | Some xets ->
-          Some (ObjectLiteral (Nel.rev_map (fun (x, et) ->
+      begin match frozen', object' with
+        | Some frozen, Some xets ->
+          Some (ObjectLiteral { frozen; properties = Nel.rev_map (fun (x, et) ->
             loc, OInit (x, (loc, et))
-          ) xets))
+          ) xets })
+        | _ -> None
       end
     | (NumberLiteral _ | Number), (NumberLiteral _ | Number) -> Some Number
     | (StringLiteral _ | String), (StringLiteral _ | String) -> Some String
@@ -276,7 +284,17 @@ module T = struct
 
   let rec type_of_expr_type outlined = function
     | loc, Function function_t -> type_of_function outlined (loc, function_t)
-    | loc, ObjectLiteral (pt, pts) ->
+    | loc, ObjectLiteral { frozen = true; properties = (pt, pts) } ->
+      let ot = loc, Ast.Type.Object {
+        Ast.Type.Object.exact = true;
+        inexact = false;
+        properties = List.map (type_of_object_property outlined) (pt :: pts)
+      } in
+      loc, Ast.Type.Generic {
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$TEMPORARY$Object$freeze");
+        targs = Some (loc, [ot])
+      }
+    | loc, ObjectLiteral { frozen = false; properties = (pt, pts) } ->
       loc, Ast.Type.Object {
         Ast.Type.Object.exact = true;
         inexact = false;
@@ -741,7 +759,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | loc, Object stuff ->
         let open Ast.Expression.Object in
         let { properties } = stuff in
-        loc, T.ObjectLiteral (object_ properties)
+        loc, T.ObjectLiteral { frozen = false; properties = object_ properties }
       | loc, Array stuff ->
         let open Ast.Expression.Array in
         let { elements } = stuff in
@@ -762,6 +780,18 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw }))
       | (loc, Call { Ast.Expression.Call.callee = (_, Identifier (_, "require")); _ }) as expr ->
         loc, T.Outline (T.DynamicRequire expr)
+      | _, Call {
+          Ast.Expression.Call.
+          callee = (_, Member {
+            Ast.Expression.Member._object = (_, Identifier (_, "Object"));
+            property = Ast.Expression.Member.PropertyIdentifier (_, "freeze");
+          });
+          targs = None;
+          arguments = [Expression (loc, Object stuff)]
+        } ->
+        let open Ast.Expression.Object in
+        let { properties } = stuff in
+        loc, T.ObjectLiteral { frozen = true; properties = object_ properties }
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
         let { operator; argument } = stuff in

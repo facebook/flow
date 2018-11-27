@@ -470,6 +470,11 @@ let tests_data = [
   ["Unexpected toplevel definition that needs hoisting @ (2, 23) to (2, 24)"],
   [];
 
+  name "frozen_object",
+  ["module.exports = Object.freeze({ foo: 42, bar: 'hello' })"],
+  [],
+  [];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =

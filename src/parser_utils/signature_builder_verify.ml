@@ -308,13 +308,20 @@ module Eval(Env: EvalEnv) = struct
         type_ tps t
       | loc, Member stuff -> member loc stuff
       | loc, Import _ -> Deps.dynamic_import loc
-      | loc, Call stuff
-          when begin
-            let { Ast.Expression.Call.callee; _ } = stuff in
-            match callee with
-              | _, Identifier (_, "require") -> true
-              | _ -> false
-          end -> Deps.dynamic_require loc
+      | loc, Call {
+          Ast.Expression.Call.
+          callee = (_, Identifier (_, "require"));
+          _
+        } -> Deps.dynamic_require loc
+      | _, Call {
+          Ast.Expression.Call.
+          callee = (_, Member {
+            Ast.Expression.Member._object = (_, Identifier (_, "Object"));
+            property = Ast.Expression.Member.PropertyIdentifier (_, "freeze");
+          });
+          targs = None;
+          arguments = [Expression ((_, Object _) as expr)]
+        } -> literal_expr tps expr
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
         let { operator; argument; _ } = stuff in
