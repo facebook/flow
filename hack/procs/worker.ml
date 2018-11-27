@@ -186,6 +186,19 @@ let maybe_send_status_to_controller fd status =
           to_controller fd (Slave_terminated status)
         )
 
+(* On Unix each job runs in a forked process. The first thing these jobs do is
+ * deserialize a marshaled closure which is the job.
+ *
+ * The marshaled representation of a closure includes a MD5 digest of the code
+ * segment and an offset. The digest is lazily computed, but if it has not been
+ * computed before the fork, then each forked process will need to compute it.
+ *
+ * To avoid this, we deserialize a dummy closure before forking, so that we only
+ * need to calculate the digest once per worker instead of once per job. *)
+let dummy_closure_bytes =
+  let closure () = () in
+  Marshal.to_bytes closure [Marshal.Closures]
+
 (**
  * On Windows, the Worker is a process and runs the job directly. See above.
  *
@@ -211,6 +224,8 @@ let maybe_send_status_to_controller fd status =
  *)
 let unix_worker_main restore (state, controller_fd) (ic, oc) =
   restore state;
+  (* see dummy_closure_bytes above *)
+  ignore (Marshal.from_bytes dummy_closure_bytes 0);
   let in_fd = Daemon.descr_of_in_channel ic in
   if !Utils.profile then Utils.log := prerr_endline;
   try
