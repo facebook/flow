@@ -34,6 +34,7 @@ Library definition changes:
 * Added flow definitions for React hooks.
 * Added a `calculateChangedBits` parameter to the `React.createContext` definition.
 * Added `React.ConcurrentMode` and `React.StrictMode` definitions.
+* Added `React.lazy` and `React.memo` definitions.
 
 Parser:
 * Refactored flowconfig option parsing into a list of parsers.
