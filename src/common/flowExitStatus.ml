@@ -197,7 +197,10 @@ let json_mode = ref None
 let set_json_mode ~pretty =
   json_mode := Some { pretty }
 
-let format_json ~msg t =
+let unset_json_mode () =
+  json_mode := None
+
+let json_props_of_t ?msg t =
   let open Hh_json in
 
   let exit_props = [
@@ -205,14 +208,12 @@ let format_json ~msg t =
     "reason", JSON_String (to_string t);
   ] @ Option.value_map msg ~default:[] ~f:(fun msg -> [ "msg", JSON_String msg ]) in
 
-  let props = [
+  [
     "flowVersion", JSON_String Flow_version.version;
     "exit", JSON_Object exit_props;
-  ] in
+  ]
 
-  JSON_Object props
-
-let print_json ~msg t =
+let print_json ?msg t =
   match t with
   (* Commands that exit with these exit codes handle json output themselves *)
   | No_error | Type_error -> ()
@@ -220,13 +221,14 @@ let print_json ~msg t =
     match !json_mode with
     | None -> ()
     | Some { pretty } ->
-      format_json ~msg t |> Hh_json.print_json_endline ~pretty
+      let json = Hh_json.JSON_Object (json_props_of_t ?msg t) in
+      Hh_json.print_json_endline ~pretty json
   end
 
 let exit ?msg t =
   (match msg with
   | Some msg -> prerr_endline msg
   | None -> ());
-  print_json ~msg t;
+  print_json ?msg t;
   FlowEventLogger.exit msg (to_string t);
   Pervasives.exit (error_code t)
