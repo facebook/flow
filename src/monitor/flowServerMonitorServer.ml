@@ -96,7 +96,7 @@ let command_stream, push_to_command_stream = Lwt_stream.create ()
  * interacting with a Flow server instance *)
 module ServerInstance : sig
   type t
-  val start: FlowServerMonitorOptions.t -> t Lwt.t
+  val start: FlowServerMonitorOptions.t -> ServerStatus.restart_reason option -> t Lwt.t
   val cleanup: t -> unit Lwt.t
   val pid_of: t -> int
 end = struct
@@ -325,7 +325,7 @@ end = struct
   let server_num = ref 0
 
   (* Spawn a brand new Flow server *)
-  let start monitor_options =
+  let start monitor_options restart_reason =
     Logger.info "Creating a new Flow server";
     let { FlowServerMonitorOptions.
       shared_mem_config;
@@ -336,7 +336,7 @@ end = struct
       _;
     } = monitor_options in
 
-    let%lwt () = StatusStream.reset file_watcher in
+    let%lwt () = StatusStream.reset file_watcher restart_reason in
 
     let watcher = match file_watcher with
     | Options.NoFileWatcher ->
@@ -440,12 +440,15 @@ end
 
 (* A loop who's job is to start a server and then wait for it to die *)
 module KeepAliveLoop = LwtLoop.Make (struct
-  type acc = FlowServerMonitorOptions.t
+  type acc = FlowServerMonitorOptions.t * ServerStatus.restart_reason option
 
-  (* Given that a Flow server has just exited with this exit status, should the monitor exit too? *)
-  let should_monitor_exit_with_server monitor_options exit_status =
+  (* Given that a Flow server has just exited with this exit status, should the monitor exit too?
+   *
+   * Returns the tuple (should_monitor_exit_with_server, restart_reason)
+   *)
+  let process_server_exit monitor_options exit_status =
     if monitor_options.FlowServerMonitorOptions.no_restart
-    then true
+    then (true, None)
     else begin
       let open FlowExitStatus in
       match exit_status with
@@ -467,17 +470,20 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Build_id_mismatch (* Client build differs from server build - only monitor uses this *)
       | Lock_stolen (* Lock lost - only monitor should use this *)
       | Socket_error (* Failed to set up socket - only monitor should use this *)
-        -> true
+      | Dfind_died (* Any file watcher died (it's misnamed) - only monitor should use this *)
+      | Dfind_unresponsive (* Not used anymore *)
+        -> (true, None)
 
       (**** Things the server might exit with which the monitor can survive ****)
 
       | Server_out_of_date (* Server needs to restart, but monitor can survive *)
+        -> (false, Some ServerStatus.Server_out_of_date)
       | Out_of_shared_memory (* The monitor doesn't used sharedmem so we can survive *)
-      | Dfind_died
-      | Dfind_unresponsive
+        -> (false, Some ServerStatus.Out_of_shared_memory)
       | Killed_by_monitor (* The server died because we asked it to die *)
+        -> (false, None)
       | Restart (* The server asked to be restarted *)
-        -> false
+        -> (false, Some ServerStatus.Restart)
 
       (**** Unrelated exit codes. If we see them then something is wrong ****)
 
@@ -493,7 +499,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Missing_flowlib
       | Server_start_failed _
       | Autostop (* is used by monitor to exit, not server *)
-        -> true
+        -> (true, None)
     end
 
   let should_monitor_exit_with_signaled_server signal =
@@ -541,9 +547,13 @@ module KeepAliveLoop = LwtLoop.Make (struct
           with _ -> ()
         in
         PersistentConnectionMap.get_all_clients () |> List.iter send_close;
-        if should_monitor_exit_with_server monitor_options exit_type
+
+        let should_monitor_exit_with_server, restart_reason =
+          process_server_exit monitor_options exit_type
+        in
+        if should_monitor_exit_with_server
         then exit ~msg:"Dying along with server" exit_type
-        else Lwt.return_unit
+        else (Lwt.return restart_reason)
       end
     | Unix.WSIGNALED signal ->
       Logger.error "Flow server (pid %d) was killed with %s signal"
@@ -552,7 +562,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       FlowEventLogger.report_from_monitor_server_exit_due_to_signal signal;
       if should_monitor_exit_with_signaled_server signal
       then exit ~msg:"Dying along with signaled server" FlowExitStatus.Interrupted
-      else Lwt.return_unit
+      else Lwt.return_none
     | Unix.WSTOPPED signal ->
       (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
         * could try to signal it to resume. Or we could wait for it to start up again. But killing
@@ -562,7 +572,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (PrintSignal.string_of_signal signal);
       (* kill is not a blocking system call, which is likely why it is missing from Lwt_unix *)
       Unix.kill pid Sys.sigkill;
-      Lwt.return_unit
+      Lwt.return_none
 
   (* The RequestMap will contain all the requests which have been sent to the server but never
    * received a response. If we're starting up a new server, we can resend all these requests to
@@ -581,12 +591,12 @@ module KeepAliveLoop = LwtLoop.Make (struct
     PersistentConnectionMap.get_all_clients ()
     |> Lwt_list.iter_p PersistentConnection.close_immediately
 
-  let main monitor_options =
+  let main (monitor_options, restart_reason) =
     let%lwt () = requeue_stalled_requests () in
-    let%lwt server = ServerInstance.start monitor_options in
-    let%lwt () = wait_for_server_to_die monitor_options server in
+    let%lwt server = ServerInstance.start monitor_options restart_reason in
+    let%lwt restart_reason = wait_for_server_to_die monitor_options server in
     let%lwt () = killall_persistent_connections () in
-    Lwt.return monitor_options
+    Lwt.return (monitor_options, restart_reason)
 
   let catch _ exn =
     Logger.error ~exn "Exception in KeepAliveLoop";
@@ -621,7 +631,7 @@ let setup_signal_handlers =
 let start monitor_options =
   Lwt.async Doomsday.start_clock;
   setup_signal_handlers ();
-  KeepAliveLoop.run ~cancel_condition:ExitSignal.signal monitor_options
+  KeepAliveLoop.run ~cancel_condition:ExitSignal.signal (monitor_options, None)
 
 let send_request ~client ~request =
   Logger.debug

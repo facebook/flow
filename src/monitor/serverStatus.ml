@@ -57,10 +57,16 @@ type typecheck_status =
 | Collating_errors (* We sometimes collate errors during typecheck *)
 | Finishing_typecheck of summary (* haven't reached free state yet *)
 
+type restart_reason =
+| Server_out_of_date
+| Out_of_shared_memory
+| Restart
+
 type typecheck_mode =
 | Initializing (* Flow is busy starting up *)
 | Rechecking (* Flow is busy rechecking *)
 | Handling_request (* Flow is busy handling a request *)
+| Restarting of restart_reason (* Same as initializing but with a reason why we restarted *)
 
 type status =
 | Starting_up (* The server's initial state *)
@@ -161,6 +167,11 @@ let string_of_typecheck_status ~use_emoji = function
 | Finishing_typecheck _ ->
   spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
 
+let string_of_restart_reason = function
+| Server_out_of_date -> "restarting due to change which cannot be handled incrementally"
+| Out_of_shared_memory -> "restarting due to running out of shared memory"
+| Restart -> "restarting to save time"
+
 let string_of_status ?(use_emoji=false) ?(terse=false) status =
   let status_string = match status with
   | Starting_up ->
@@ -173,6 +184,8 @@ let string_of_status ?(use_emoji=false) ?(terse=false) status =
     spf "rechecking (%s)" (string_of_typecheck_status ~use_emoji tcs)
   | Typechecking (Handling_request, tcs) ->
     spf "handling a request (%s)" (string_of_typecheck_status ~use_emoji tcs)
+  | Typechecking (Restarting reason, tcs) ->
+    spf "%s (%s)" (string_of_restart_reason reason) (string_of_typecheck_status ~use_emoji tcs)
   | Garbage_collecting ->
     spf "garbage collecting shared memory%s" (render_emoji ~use_emoji ~pad:Before Wastebasket)
   | Unknown ->
@@ -331,3 +344,13 @@ let log_of_summaries ~(root: Path.t) (summaries: summary list)
       acc
     in
     Core_list.fold summaries ~init ~f
+
+(* When the server is initializing it will publish statuses that say it is initializing. The
+ * monitor might know that the server actually is restarting. This function turns a initializing
+ * status into a restarting status *)
+let change_init_to_restart restart_reason status =
+  Option.value_map restart_reason ~default:status ~f:(fun restart_reason ->
+    match status with
+    | Typechecking (Initializing, tcs) -> Typechecking (Restarting restart_reason, tcs)
+    | _ -> status
+  )
