@@ -507,8 +507,8 @@ let merge
   let errors = { ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set } in
   let cycle_leaders = component_map
     |> Utils_js.FilenameMap.elements
-    |> List.map (fun (leader, members) -> (leader, Nel.length members))
-    |> List.filter (fun (_, member_count) -> member_count > 1) in
+    |> Core_list.map ~f:(fun (leader, members) -> (leader, Nel.length members))
+    |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
   Lwt.return (checked, cycle_leaders, errors, skipped_count)
 
 let ensure_parsed ~options ~profiling ~workers files =
