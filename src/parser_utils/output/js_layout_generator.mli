@@ -60,6 +60,7 @@ val comment: Loc.t Flow_ast.Comment.t -> Layout.layout_node
 val template_literal: (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t -> Layout.layout_node
 val jsx_identifier: LocMap.key Flow_ast.JSX.Identifier.t -> Layout.layout_node
 val jsx_child: (LocMap.key, LocMap.key) Flow_ast.JSX.child -> (LocMap.key * Layout.layout_node) option
+val arrow_function_params: (LocMap.key, LocMap.key) Flow_ast.Function.Params.t -> Layout.layout_node
 
 val better_quote: string -> string
 val utf8_escape: quote:string -> string -> string

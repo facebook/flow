@@ -1224,12 +1224,7 @@ and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
   | _, _, _, _ ->
     fuse [
       option type_parameter tparams;
-      group [
-        new_list
-          ~wrap:(Atom "(", Atom ")")
-          ~sep:(Atom ",")
-          (function_params ~ctxt:normal_context params);
-      ];
+      arrow_function_params params;
       function_return return predicate;
     ]
   in
@@ -1254,6 +1249,14 @@ and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
       expression_with_parens ~precedence ~ctxt expr
     end;
   ]
+
+and arrow_function_params params =
+  group [
+    new_list
+      ~wrap:(Atom "(", Atom ")")
+      ~sep:(Atom ",")
+      (function_params ~ctxt:normal_context params);
+  ];
 
 and function_ func =
   let {

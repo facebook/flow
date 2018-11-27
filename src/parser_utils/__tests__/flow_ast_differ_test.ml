@@ -1608,4 +1608,12 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((0, 8), "(++gotRenamed)")] ~source ~expected:"(++gotRenamed)"
       ~mapper:(new useless_mapper)
   end;
+  "update_arrow_function_single_param" >:: begin fun ctxt ->
+    let source = "const x = bla => { return 0; };" in
+    assert_edits_equal ctxt
+      ~edits:[((7, 7), ": number"); ((10, 13), "(bla: number)"); ((13, 13), ": number")]
+      ~source
+      ~expected:"const x: number = (bla: number): number => { return 0; };"
+      ~mapper:(new insert_annot_mapper)
+  end;
 ]

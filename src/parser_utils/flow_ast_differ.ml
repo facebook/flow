@@ -168,6 +168,7 @@ type node =
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
   | Identifier of Loc.t Ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
+  | Params of (Loc.t, Loc.t) Ast.Function.Params.t
   | Variance of (Loc.t) Ast.Variance.t
   | Type of (Loc.t, Loc.t) Flow_ast.Type.t
   | TypeParam of (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t
@@ -512,7 +513,10 @@ let program (algo : diff_algorithm)
 
   and function_declaration func1 func2 = function_ func1 func2
 
-  and function_ (func1: (Loc.t, Loc.t) Ast.Function.t) (func2: (Loc.t, Loc.t) Ast.Function.t)
+  and function_
+      ?(is_arrow= false)
+      (func1: (Loc.t, Loc.t) Ast.Function.t)
+      (func2: (Loc.t, Loc.t) Ast.Function.t)
       : node change list option =
     let open Ast.Function in
     let {
@@ -530,6 +534,14 @@ let program (algo : diff_algorithm)
       let id = diff_if_changed_nonopt_fn identifier id1 id2 in
       let tparams = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
       let params = diff_if_changed_ret_opt function_params params1 params2 in
+      let params = match is_arrow, params1, params2, params with
+      | true, (l, {Params.params=[_p1]; rest=None}), (_, {Params.params=[_p2]; rest=None}),
+        Some (_::[]) ->
+        (* reprint the parameter if it's the single parameter of a lambda to add () *)
+        Some [l, Replace (Params params1, Params params2)]
+      | _ ->
+        params
+      in
       let returns = diff_if_changed type_annotation_hint return1 return2 |> Option.return in
       let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
       join_diff_list [id; tparams; params; returns; fnbody]
@@ -747,7 +759,9 @@ let program (algo : diff_algorithm)
         member member1 member2
       | (_, Call call1), (_, Call call2) ->
         call call1 call2
-      | (_, Function f1), (_, Function f2) | (_, ArrowFunction f1), (_, ArrowFunction f2) ->
+      | (_, ArrowFunction f1), (_, ArrowFunction f2) ->
+        function_ ~is_arrow:true f1 f2
+      | (_, Function f1), (_, Function f2) ->
         function_ f1 f2
       | (_, Class class1), (_, Class class2) ->
         class_ class1 class2
