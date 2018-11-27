@@ -93,8 +93,13 @@ References:
    test.js:105:12
    105|   string1={null}
                    ^^^^ [1]
+<<<<<<< HEAD
    <BUILTINS>/react.js:406:36
    406|   string: React$PropType$Primitive<string>;
+=======
+   <BUILTINS>/react.js:405:36
+   405|   string: React$PropType$Primitive<string>;
+>>>>>>> Add React.Suspense component and tests
                                            ^^^^^^ [2]
    test.js:106:12
    106|   string2={null}
@@ -102,8 +107,13 @@ References:
    test.js:107:13
    107|   boolean1={null}
                     ^^^^ [4]
+<<<<<<< HEAD
    <BUILTINS>/react.js:402:34
    402|   bool: React$PropType$Primitive<boolean>;
+=======
+   <BUILTINS>/react.js:401:34
+   401|   bool: React$PropType$Primitive<boolean>;
+>>>>>>> Add React.Suspense component and tests
                                          ^^^^^^^ [5]
    test.js:108:13
    108|   boolean2={null}
@@ -111,8 +121,13 @@ References:
    test.js:109:11
    109|   number={null}
                   ^^^^ [7]
+<<<<<<< HEAD
    <BUILTINS>/react.js:404:36
    404|   number: React$PropType$Primitive<number>;
+=======
+   <BUILTINS>/react.js:403:36
+   403|   number: React$PropType$Primitive<number>;
+>>>>>>> Add React.Suspense component and tests
                                            ^^^^^^ [8]
 
 
@@ -161,8 +176,13 @@ References:
    test.js:135:54
    135|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
                                                              ^^^^^^^ [1]
+<<<<<<< HEAD
    <BUILTINS>/react.js:404:36
    404|   number: React$PropType$Primitive<number>;
+=======
+   <BUILTINS>/react.js:403:36
+   403|   number: React$PropType$Primitive<number>;
+>>>>>>> Add React.Suspense component and tests
                                            ^^^^^^ [2]
 
 
@@ -1654,8 +1674,13 @@ References:
    <BUILTINS>/core.js:13:24
     13| declare var undefined: void;
                                ^^^^ [1]
+<<<<<<< HEAD
    <BUILTINS>/react.js:404:36
    404|   number: React$PropType$Primitive<number>;
+=======
+   <BUILTINS>/react.js:403:36
+   403|   number: React$PropType$Primitive<number>;
+>>>>>>> Add React.Suspense component and tests
                                            ^^^^^^ [2]
 
 
@@ -1675,8 +1700,13 @@ References:
    test.js:788:7
    788|   foo="nope"
               ^^^^^^ [1]
+<<<<<<< HEAD
    <BUILTINS>/react.js:404:36
    404|   number: React$PropType$Primitive<number>;
+=======
+   <BUILTINS>/react.js:403:36
+   403|   number: React$PropType$Primitive<number>;
+>>>>>>> Add React.Suspense component and tests
                                            ^^^^^^ [2]
 
 
@@ -1696,8 +1726,13 @@ References:
    test.js:793:7
    793|   bar="nope"
               ^^^^^^ [1]
+<<<<<<< HEAD
    <BUILTINS>/react.js:404:36
    404|   number: React$PropType$Primitive<number>;
+=======
+   <BUILTINS>/react.js:403:36
+   403|   number: React$PropType$Primitive<number>;
+>>>>>>> Add React.Suspense component and tests
                                            ^^^^^^ [2]
 
 

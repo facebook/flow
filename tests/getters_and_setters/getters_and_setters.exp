@@ -465,8 +465,13 @@ References:
    react.js:17:13
     17| (<Example a="bad" />); // error: number ~> string
                     ^^^^^ [1]
+<<<<<<< HEAD
    <BUILTINS>/react.js:404:36
    404|   number: React$PropType$Primitive<number>;
+=======
+   <BUILTINS>/react.js:403:36
+   403|   number: React$PropType$Primitive<number>;
+>>>>>>> Add React.Suspense component and tests
                                            ^^^^^^ [2]
 
 
@@ -482,8 +487,13 @@ References:
    react.js:18:20
     18| (<Example a={0} c={0} />); // error: number ~> string
                            ^ [1]
+<<<<<<< HEAD
    <BUILTINS>/react.js:406:36
    406|   string: React$PropType$Primitive<string>;
+=======
+   <BUILTINS>/react.js:405:36
+   405|   string: React$PropType$Primitive<string>;
+>>>>>>> Add React.Suspense component and tests
                                            ^^^^^^ [2]
 
 

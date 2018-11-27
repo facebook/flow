@@ -68,8 +68,13 @@ References:
    api.js:14:25
     14| Children.forEach(a, (x: number) => {}); // Error
                                 ^^^^^^ [2]
+<<<<<<< HEAD
    <BUILTINS>/react.js:265:38
    265|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+=======
+   <BUILTINS>/react.js:263:38
+   263|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+>>>>>>> Add React.Suspense component and tests
                                              ^ [3]
 
 
@@ -90,8 +95,13 @@ References:
    api.js:16:25
     16| Children.forEach(a, (x: string) => {}); // Error
                                 ^^^^^^ [2]
+<<<<<<< HEAD
    <BUILTINS>/react.js:265:38
    265|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+=======
+   <BUILTINS>/react.js:263:38
+   263|   declare export type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+>>>>>>> Add React.Suspense component and tests
                                              ^ [3]
    api.js:5:25
      5| const a: ChildrenArray<?number> = [
@@ -107,8 +117,13 @@ Cannot call `s` with `Children.count(...)` bound to `x` because number [1] is in
           ^^^^^^^^^^^^^^^^^
 
 References:
+<<<<<<< HEAD
    <BUILTINS>/react.js:277:42
    277|     count(children: ChildrenArray<any>): number;
+=======
+   <BUILTINS>/react.js:275:42
+   275|     count(children: ChildrenArray<any>): number;
+>>>>>>> Add React.Suspense component and tests
                                                  ^^^^^^ [1]
    api.js:29:15
     29| function s(x: string) {}

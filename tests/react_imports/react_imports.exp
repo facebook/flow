@@ -47,8 +47,13 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
+<<<<<<< HEAD
    <BUILTINS>/react.js:371:27
    371|   declare module.exports: $Exports<'react'>;
+=======
+   <BUILTINS>/react.js:370:27
+   370|   declare module.exports: $Exports<'react'>;
+>>>>>>> Add React.Suspense component and tests
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,8 +160,13 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
+<<<<<<< HEAD
    <BUILTINS>/react.js:371:27
    371|   declare module.exports: $Exports<'react'>;
+=======
+   <BUILTINS>/react.js:370:27
+   370|   declare module.exports: $Exports<'react'>;
+>>>>>>> Add React.Suspense component and tests
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -186,6 +196,7 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
                           ^^^^^^^^^^
 
 References:
+<<<<<<< HEAD
    <BUILTINS>/react.js:336:26
                                  v-
    336|   declare export default {|
@@ -218,6 +229,41 @@ References:
    363|     +useMemo: typeof useMemo,
    364|     +useImperativeMethods: typeof useImperativeMethods,
    365|   |};
+=======
+   <BUILTINS>/react.js:334:26
+                                 v-
+   334|   declare export default {|
+   335|     +DOM: typeof DOM,
+   336|     +PropTypes: typeof PropTypes,
+   337|     +version: typeof version,
+   338|     +checkPropTypes: typeof checkPropTypes,
+   339|     +memo: typeof memo,
+   340|     +lazy: typeof lazy,
+   341|     +createClass: typeof createClass,
+   342|     +createContext: typeof createContext,
+   343|     +createElement: typeof createElement,
+   344|     +cloneElement: typeof cloneElement,
+   345|     +createFactory: typeof createFactory,
+   346|     +createRef: typeof createRef,
+   347|     +isValidElement: typeof isValidElement,
+   348|     +Component: typeof Component,
+      :
+   350|     +Fragment: typeof Fragment,
+   351|     +Children: typeof Children,
+   352|     +ConcurrentMode: typeof ConcurrentMode,
+   353|     +StrictMode: typeof StrictMode,
+   354|     +Suspense: typeof Suspense,
+   355|     +useContext: typeof useContext,
+   356|     +useState: typeof useState,
+   357|     +useReducer: typeof useReducer,
+   358|     +useRef: typeof useRef,
+   359|     +useEffect: typeof useEffect,
+   360|     +useLayoutEffect: typeof useLayoutEffect,
+   361|     +useCallback: typeof useCallback,
+   362|     +useMemo: typeof useMemo,
+   363|     +useImperativeMethods: typeof useImperativeMethods,
+   364|   |};
+>>>>>>> Add React.Suspense component and tests
           -^ [1]
 
 
@@ -230,6 +276,7 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
              ^^^^^^^^^^
 
 References:
+<<<<<<< HEAD
    <BUILTINS>/react.js:336:26
                                  v-
    336|   declare export default {|
@@ -262,6 +309,41 @@ References:
    363|     +useMemo: typeof useMemo,
    364|     +useImperativeMethods: typeof useImperativeMethods,
    365|   |};
+=======
+   <BUILTINS>/react.js:334:26
+                                 v-
+   334|   declare export default {|
+   335|     +DOM: typeof DOM,
+   336|     +PropTypes: typeof PropTypes,
+   337|     +version: typeof version,
+   338|     +checkPropTypes: typeof checkPropTypes,
+   339|     +memo: typeof memo,
+   340|     +lazy: typeof lazy,
+   341|     +createClass: typeof createClass,
+   342|     +createContext: typeof createContext,
+   343|     +createElement: typeof createElement,
+   344|     +cloneElement: typeof cloneElement,
+   345|     +createFactory: typeof createFactory,
+   346|     +createRef: typeof createRef,
+   347|     +isValidElement: typeof isValidElement,
+   348|     +Component: typeof Component,
+      :
+   350|     +Fragment: typeof Fragment,
+   351|     +Children: typeof Children,
+   352|     +ConcurrentMode: typeof ConcurrentMode,
+   353|     +StrictMode: typeof StrictMode,
+   354|     +Suspense: typeof Suspense,
+   355|     +useContext: typeof useContext,
+   356|     +useState: typeof useState,
+   357|     +useReducer: typeof useReducer,
+   358|     +useRef: typeof useRef,
+   359|     +useEffect: typeof useEffect,
+   360|     +useLayoutEffect: typeof useLayoutEffect,
+   361|     +useCallback: typeof useCallback,
+   362|     +useMemo: typeof useMemo,
+   363|     +useImperativeMethods: typeof useImperativeMethods,
+   364|   |};
+>>>>>>> Add React.Suspense component and tests
           -^ [1]
 
 
@@ -274,6 +356,7 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                ^^^^^^^^^^^^^
 
 References:
+<<<<<<< HEAD
    <BUILTINS>/react.js:336:26
                                  v-
    336|   declare export default {|
@@ -306,6 +389,41 @@ References:
    363|     +useMemo: typeof useMemo,
    364|     +useImperativeMethods: typeof useImperativeMethods,
    365|   |};
+=======
+   <BUILTINS>/react.js:334:26
+                                 v-
+   334|   declare export default {|
+   335|     +DOM: typeof DOM,
+   336|     +PropTypes: typeof PropTypes,
+   337|     +version: typeof version,
+   338|     +checkPropTypes: typeof checkPropTypes,
+   339|     +memo: typeof memo,
+   340|     +lazy: typeof lazy,
+   341|     +createClass: typeof createClass,
+   342|     +createContext: typeof createContext,
+   343|     +createElement: typeof createElement,
+   344|     +cloneElement: typeof cloneElement,
+   345|     +createFactory: typeof createFactory,
+   346|     +createRef: typeof createRef,
+   347|     +isValidElement: typeof isValidElement,
+   348|     +Component: typeof Component,
+      :
+   350|     +Fragment: typeof Fragment,
+   351|     +Children: typeof Children,
+   352|     +ConcurrentMode: typeof ConcurrentMode,
+   353|     +StrictMode: typeof StrictMode,
+   354|     +Suspense: typeof Suspense,
+   355|     +useContext: typeof useContext,
+   356|     +useState: typeof useState,
+   357|     +useReducer: typeof useReducer,
+   358|     +useRef: typeof useRef,
+   359|     +useEffect: typeof useEffect,
+   360|     +useLayoutEffect: typeof useLayoutEffect,
+   361|     +useCallback: typeof useCallback,
+   362|     +useMemo: typeof useMemo,
+   363|     +useImperativeMethods: typeof useImperativeMethods,
+   364|   |};
+>>>>>>> Add React.Suspense component and tests
           -^ [1]
 
 

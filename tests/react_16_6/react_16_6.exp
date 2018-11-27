@@ -1,3 +1,65 @@
+Error ------------------------------------------------------------------------------------------------- Suspense.js:12:3
+
+Cannot create `Suspense` element because property `fallback` is missing in props [1] but exists in object type [2].
+
+   Suspense.js:12:3
+    12|   <Suspense /> // Error: fallback is missing in props
+          ^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:253:52
+                                                           v
+   253|   declare export var Suspense: React$ComponentType<{
+   254|     children?: ?React$Node,
+   255|     fallback: React$Node,
+   256|     maxDuration?: number
+   257|   }>; // 16.6+
+          ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Suspense.js:16:3
+
+Cannot create `Suspense` element because string [1] is incompatible with number [2] in property `maxDuration`.
+
+   Suspense.js:16:3
+    16|   <Suspense fallback={<Loading />} maxDuration="abc" /> // Error: string is incompatible with number
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   Suspense.js:16:48
+    16|   <Suspense fallback={<Loading />} maxDuration="abc" /> // Error: string is incompatible with number
+                                                       ^^^^^ [1]
+   <BUILTINS>/react.js:256:19
+   256|     maxDuration?: number
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- Suspense.js:20:3
+
+Cannot create `Suspense` element because in property `fallback`:
+ - Either inexact function [1] is incompatible with exact `React.Element` [2].
+ - Or function [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in function [1] but exists in `$Iterable` [4].
+
+   Suspense.js:20:3
+   20|   <Suspense fallback={Loading} /> // Error: function is incompatible with exact React.Element
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   Suspense.js:7:1
+    7| function Loading() {
+       ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
 Error ---------------------------------------------------------------------------------------------------- lazy.js:12:12
 
 Cannot create `LazyFunctionComponent` element because property `foo` is missing in props [1] but exists in `Props` [2].
@@ -179,4 +241,7 @@ References:
 
 
 
-Found 12 errors
+Found 15 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
