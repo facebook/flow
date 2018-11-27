@@ -1766,12 +1766,20 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
     let initial_module_t = module_t_of_cx cx in
 
-    let elements_ast, elements_abnormal =
-      Abnormal.catch_stmts_control_flow_exception (fun () ->
-        toplevel_decls cx elements;
-        toplevels cx elements;
+    let (elements_ast, elements_abnormal), local_exports =
+      Scope.with_declare_module_local_exports module_scope (fun _ ->
+        Abnormal.catch_stmts_control_flow_exception (fun () ->
+          toplevel_decls cx elements;
+          toplevels cx elements;
+        )
       )
     in
+    if not (SMap.is_empty local_exports) then begin
+      let reason = mk_reason (RCustom (spf "export * from %S" name)) loc in
+      set_module_t cx reason (fun t ->
+        Flow.flow cx (module_t_of_cx cx, ExportNamedT (reason, false, local_exports, t))
+      );
+    end;
 
     let reason = mk_reason (RModule name) loc in
     let module_t = match Context.module_kind cx with
@@ -2200,15 +2208,31 @@ and export_statement cx loc
       set_module_kind cx loc Context.ESModule);
 
     let local_name = if (Option.is_some default) then "default" else local_name in
-    set_module_t cx reason (fun t ->
-      Flow.flow cx (
-        module_t_of_cx cx,
-        (* Use the location of the "default" keyword if this is a default export. For named exports,
-         * use the location of the identifier. *)
-        let loc = Option.value ~default:loc default in
-        ExportNamedT(reason, false, SMap.singleton local_name (Some loc, local_tvar), t)
+
+    (**
+      * Special-casing 'declare module' to avoid long chains of ModuleT ~>
+      * ExportNamedT, known to cause exceptions due to "Maximum call stack size
+      * exceeded" errors. Here we track the named export and later in the main
+      * DeclareModule handler we create a single flow to ExportedNamedT with a
+      * map containing all bindings included in the declare module.
+      *
+      * Note that by looking up `local_tvar` in the environment we account for
+      * multiple declarations of the same name. So storing these types in an SMap
+      * does not cause loss of information.
+      *)
+    if Context.in_declare_module cx then
+      let scope = Env.peek_scope () in
+      Scope.set_declare_module_local_export scope local_name loc local_tvar
+    else
+      set_module_t cx reason (fun t ->
+        Flow.flow cx (
+          module_t_of_cx cx,
+          (* Use the location of the "default" keyword if this is a default export. For named exports,
+           * use the location of the identifier. *)
+          let loc = Option.value ~default:loc default in
+          ExportNamedT(reason, false, SMap.singleton local_name (Some loc, local_tvar), t)
+        )
       )
-    )
   ) in
 
   (match (declaration_export_info, specifiers) with

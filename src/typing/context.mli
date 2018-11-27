@@ -130,6 +130,7 @@ val merge_into: sig_t -> sig_t -> unit
 
 val push_declare_module: t -> string -> unit
 val pop_declare_module: t -> unit
+val in_declare_module: t -> bool
 
 (* mutators *)
 val add_env: t -> int -> env -> unit

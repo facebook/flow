@@ -244,6 +244,9 @@ let pop_declare_module cx =
   | None -> failwith "pop empty declare module"
   | Some _ -> cx.declare_module_ref <- None
 
+let in_declare_module cx =
+  Option.is_some cx.declare_module_ref
+
 (* accessors *)
 let all_unresolved cx = cx.sig_cx.all_unresolved
 let annot_table cx = cx.annot_table
