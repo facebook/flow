@@ -9,10 +9,6 @@ function Loading() {
 }
 
 {
-  <Suspense /> // Error: fallback is missing in props
-}
-
-{
   <Suspense fallback={<Loading />} maxDuration="abc" /> // Error: string is incompatible with number
 }
 
@@ -25,17 +21,29 @@ function Loading() {
 }
 
 {
-  <Suspense fallback={<Loading/>}>
-    <Loading />
-  </Suspense>
-}
-
-{
   <Suspense fallback={<Loading/>} maxDuration={1000} />
 }
 
 {
   <Suspense fallback={<Loading/>} maxDuration={1000}>
-    <Loading />
+    <div>Hello</div>
+  </Suspense>
+}
+
+{
+  <Suspense fallback={<Loading/>}>
+    <Suspense />
+  </Suspense>
+}
+
+{
+  <Suspense fallback={<Loading/>}>
+    <Suspense fallback={undefined} />
+  </Suspense>
+}
+
+{
+  <Suspense fallback={<Loading/>}>
+    <Suspense fallback={null} />
   </Suspense>
 }
