@@ -164,8 +164,8 @@ module Function = struct
   open Ast.Function
   let body_error = BodyExpression (error_annot, Expression.error)
 
-  module RestElement = struct
-    open RestElement
+  module RestParam = struct
+    open RestParam
     let error = {
       argument = error_annot, Pattern.error
     }

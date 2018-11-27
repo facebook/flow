@@ -448,12 +448,18 @@ module Eval(Env: EvalEnv) = struct
 
   and function_ =
     let open Ast.Function in
-    let function_params tps params =
+    let function_param tps (_, { Param.argument }) =
+      pattern tps argument
+
+    in let function_rest_param tps (_, { RestParam.argument }) =
+      pattern tps argument
+
+    in let function_params tps params =
       let _, { Params.params; rest; } = params in
-      let deps = List.fold_left (Deps.reduce_join (pattern tps)) Deps.bot params in
+      let deps = List.fold_left (Deps.reduce_join (function_param tps)) Deps.bot params in
       match rest with
         | None -> deps
-        | Some (_, { RestElement.argument }) -> Deps.join (deps, pattern tps argument)
+        | Some param -> Deps.join (deps, function_rest_param tps param)
 
     in fun tps generator tparams params return body ->
       let tps, deps = type_params tps tparams in

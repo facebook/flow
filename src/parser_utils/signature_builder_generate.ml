@@ -904,13 +904,19 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | Instanceof -> loc, T.Boolean
 
   and function_ =
-    let function_params params =
+    let function_param (_, { Ast.Function.Param.argument }) =
+      pattern argument
+
+    in let function_rest_param (loc, { Ast.Function.RestParam.argument }) =
+      (loc, pattern argument)
+
+    in let function_params params =
       let open Ast.Function in
       let params_loc, { Params.params; rest; } = params in
-      let params = List.map pattern params in
+      let params = List.map function_param params in
       let rest = match rest with
         | None -> None
-        | Some (loc, { RestElement.argument }) -> Some (loc, pattern argument) in
+        | Some param -> Some (function_rest_param param) in
       params_loc, params, rest
 
     in fun generator tparams params return body ->

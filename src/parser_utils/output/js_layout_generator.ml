@@ -1213,13 +1213,22 @@ and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
   params; body; async; predicate; return; tparams;
   generator=_; id=_; (* arrows don't have ids and can't be generators *) sig_loc = _;
 } =
-  let params_and_stuff = match params, return, predicate, tparams with
-  | (_, { Ast.Function.Params.params = [(
-      _,
-      Ast.Pattern.Identifier {
-        Ast.Pattern.Identifier.optional=false; annot=Ast.Type.Missing _; _;
-      }
-    )]; rest = None}), Ast.Type.Missing _, None, None ->
+  let is_single_simple_param =
+    match params with
+    | (_, { Ast.Function.Params.
+        params = [(_, { Ast.Function.Param.
+          argument = (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+            optional = false;
+            annot = Ast.Type.Missing _;
+            _;
+          })
+        })];
+        rest = None;
+      }) -> true
+    | _ -> false
+  in
+  let params_and_stuff = match is_single_simple_param, return, predicate, tparams with
+  | true, Ast.Type.Missing _, None, None ->
       List.hd (function_params ~ctxt params)
   | _, _, _, _ ->
     fuse [
@@ -1292,9 +1301,11 @@ and function_base ~prefix ~params ~body ~predicate ~return ~tparams =
   ]
 
 and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
-  let s_params = List.map (pattern ~ctxt) params in
+  let s_params = List.map (fun (loc, { Ast.Function.Param.argument }) ->
+    source_location_with_comments (loc, pattern ~ctxt argument)
+  ) params in
   match rest with
-  | Some (loc, {Ast.Function.RestElement.argument}) ->
+  | Some (loc, {Ast.Function.RestParam.argument}) ->
       let s_rest = source_location_with_comments (loc, fuse [
         Atom "..."; pattern ~ctxt argument
       ]) in

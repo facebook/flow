@@ -115,25 +115,31 @@ module Declaration
           if is_future_reserved name || is_strict_reserved name
           then strict_error_at env (loc, Error.StrictReservedWord)
       | None -> ());
-      let acc = List.fold_left check_param (env, SSet.empty) params in
+      let acc = List.fold_left (fun acc (_, { Function.Param.argument }) ->
+        check_param acc argument
+      ) (env, SSet.empty) params in
       match rest with
-      | Some (_, { Function.RestElement.argument }) ->
+      | Some (_, { Function.RestParam.argument }) ->
         ignore (check_param acc argument)
       | None ->
         ()
 
   let function_params =
-    let rec param env =
-      let start_loc = Peek.loc env in
-      let left = Parse.pattern env Error.StrictParamName in
-      if Peek.token env = T_ASSIGN then
-        let loc, right = with_loc ~start_loc (fun env ->
-          Expect.token env T_ASSIGN;
-          Parse.assignment env
-        ) env in
-        (loc, Pattern.Assignment { Pattern.Assignment.left; right })
-      else
-        left
+    let rec param = with_loc (fun env ->
+      let argument =
+        let start_loc = Peek.loc env in
+        let left = Parse.pattern env Error.StrictParamName in
+        if Peek.token env = T_ASSIGN then begin
+          let loc, right = with_loc ~start_loc (fun env ->
+            Expect.token env T_ASSIGN;
+            Parse.assignment env
+          ) env in
+          (loc, Pattern.Assignment { Pattern.Assignment.left; right })
+        end else
+          left
+      in
+      { Function.Param.argument }
+    )
     and param_list env acc =
       match Peek.token env with
       | T_EOF
@@ -145,7 +151,7 @@ module Declaration
                 Expect.token env T_ELLIPSIS;
                 Parse.pattern env Error.StrictParamName
               ) env in
-              Some (loc, { Function.RestElement.argument = id; })
+              Some (loc, { Function.RestParam.argument = id; })
             end else
               None
           in
@@ -211,7 +217,7 @@ module Declaration
 
   let is_simple_function_params =
     let is_simple_param = function
-    | _, Pattern.Identifier _ ->  true
+    | _, { Ast.Function.Param.argument = (_, Pattern.Identifier _) } ->  true
     | _ -> false
 
     in fun (_, { Ast.Function.Params.params; rest }) ->

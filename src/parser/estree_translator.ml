@@ -832,16 +832,19 @@ end with type t = Impl.t) = struct
         pattern_identifier loc pattern_id
     | _loc, Expression expr -> expression expr)
 
+  and function_param (_loc, { Ast.Function.Param.argument }) =
+    pattern argument
+
   and function_params = Ast.Function.Params.(function
-    | _, { params; rest = Some (rest_loc, { Function.RestElement.argument }) } ->
+    | _, { params; rest = Some (rest_loc, { Function.RestParam.argument }) } ->
       let rest = node "RestElement" rest_loc [
         "argument", pattern argument;
       ] in
-      let rev_params = List.rev_map pattern params in
+      let rev_params = List.rev_map function_param params in
       let params = List.rev (rest::rev_params) in
       array params
     | _, { params; rest = None } ->
-      array_of_list pattern params
+      array_of_list function_param params
   )
 
   and array_pattern_element = Pattern.Array.(function

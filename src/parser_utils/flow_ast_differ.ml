@@ -554,10 +554,18 @@ let program (algo : diff_algorithm)
     let (_, { params = param_lst1; rest = rest1 }) = params1 in
     let (_, { params = param_lst2; rest = rest2 }) = params2 in
     let params_diff =
-      diff_and_recurse_nonopt_no_trivial function_param_pattern param_lst1 param_lst2 in
+      diff_and_recurse_nonopt_no_trivial function_param param_lst1 param_lst2 in
     let rest_diff =
-      diff_if_changed_nonopt_fn function_rest_element rest1 rest2 in
+      diff_if_changed_nonopt_fn function_rest_param rest1 rest2 in
     join_diff_list [params_diff; rest_diff]
+
+  and function_param
+      (param1: (Loc.t, Loc.t) Ast.Function.Param.t)
+      (param2: (Loc.t, Loc.t) Ast.Function.Param.t)
+      : node change list =
+    let (_, { Ast.Function.Param.argument = arg1 }) = param1 in
+    let (_, { Ast.Function.Param.argument = arg2 }) = param2 in
+    diff_if_changed function_param_pattern arg1 arg2
 
   and function_body_any (body1 : (Loc.t, Loc.t) Ast.Function.body)
                         (body2 : (Loc.t, Loc.t) Ast.Function.body)
@@ -1474,11 +1482,11 @@ let program (algo : diff_algorithm)
       let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
       join_diff_list [ids; annots]
 
-  and function_rest_element
-      (elem1: (Loc.t, Loc.t) Ast.Function.RestElement.t)
-      (elem2: (Loc.t, Loc.t) Ast.Function.RestElement.t)
+  and function_rest_param
+      (elem1: (Loc.t, Loc.t) Ast.Function.RestParam.t)
+      (elem2: (Loc.t, Loc.t) Ast.Function.RestParam.t)
       : node change list =
-    let open Ast.Function.RestElement in
+    let open Ast.Function.RestParam in
     let _, { argument = arg1 } = elem1 in
     let _, { argument = arg2 } = elem2 in
     binding_pattern arg1 arg2

@@ -6474,11 +6474,15 @@ and mk_func_sig =
           Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
         params, ((loc, AnyT.at AnyError loc), Typed_ast.Pattern.error)
     in
-    let add_param = function
-      | _, Ast.Pattern.Assignment { Ast.Pattern.Assignment.left; right; } ->
-        add_param_with_default (Some right) left
-      | patt ->
-        add_param_with_default None patt
+    let add_param (loc, { Ast.Function.Param.argument }) acc =
+      let acc, arg_ast =
+        match argument with
+        | _, Ast.Pattern.Assignment { Ast.Pattern.Assignment.left; right; } ->
+          add_param_with_default (Some right) left acc
+        | patt ->
+          add_param_with_default None patt acc
+      in
+      acc, (loc, { Ast.Function.Param.argument = arg_ast })
     in
     let (params_loc, { Ast.Function.Params.params; rest }) = params in
     let params, rev_param_asts =
@@ -6487,17 +6491,18 @@ and mk_func_sig =
         acc, param_ast::rev_param_asts
       ) (Func_params.empty, []) params
     in
-    match rest with
-    | Some (rest_loc, { Ast.Function.RestElement.argument }) ->
-      let params, rest = add_rest argument params in
-      params, (params_loc, { Ast.Function.Params.
-        params = List.rev rev_param_asts;
-        rest = Some (rest_loc, { Ast.Function.RestElement.argument = rest });
-      })
-    | None -> params, (params_loc, { Ast.Function.Params.
-        params = List.rev rev_param_asts;
-        rest = None;
-      })
+    let params, rest_ast =
+      match rest with
+      | Some (rest_loc, { Ast.Function.RestParam.argument }) ->
+        let params, rest = add_rest argument params in
+        params, Some (rest_loc, { Ast.Function.RestParam.argument = rest })
+      | None ->
+        params, None
+    in
+    params, (params_loc, { Ast.Function.Params.
+      params = List.rev rev_param_asts;
+      rest = rest_ast;
+    })
   in
 
   fun cx tparams_map loc func ->
@@ -6628,12 +6633,15 @@ and declare_function_to_function_declaration cx declare_loc
               }) in
               (l, Ast.Pattern.Identifier name')
           ) in
-          let params = List.map param_type_to_param params in
+          let params = List.map (fun param ->
+            let (loc, _) as argument = param_type_to_param param in
+            (loc, { Ast.Function.Param.argument })
+          ) params in
           let rest = Ast.Type.Function.(
             match rest with
             | Some (rest_loc, { RestParam.argument; }) ->
               let argument = param_type_to_param argument in
-              Some (rest_loc, { Ast.Function.RestElement.argument; })
+              Some (rest_loc, { Ast.Function.RestParam.argument; })
             | None -> None
           ) in
           let body = Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body = [
@@ -6675,9 +6683,11 @@ and declare_function_to_function_declaration cx declare_loc
                   { Ast.Type.Function.Param.name = Some ((name_loc, t), name); annot; optional; }
                 | _ -> assert_false "Function declaration AST has unexpected shape"
               in
-              let params = List.map param_to_param_type params in
+              let params = List.map (fun (_, { Ast.Function.Param.argument }) ->
+                param_to_param_type argument
+              ) params in
               let rest = Option.map
-              ~f:(fun (rest_loc, { Ast.Function.RestElement.argument }) ->
+              ~f:(fun (rest_loc, { Ast.Function.RestParam.argument }) ->
                 rest_loc, { Ast.Type.Function.RestParam.argument = param_to_param_type argument }
               ) rest in
               let annot : (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation =

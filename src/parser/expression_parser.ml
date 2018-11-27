@@ -1086,12 +1086,14 @@ module Expression
         (* Disallow all fancy features for identifier => body *)
         if Peek.is_identifier env && tparams = None
         then
-          let loc, name =
+          let (loc, _) as name =
             Parse.identifier ~restricted_error:Error.StrictParamName env in
-          let param = loc, Pattern.Identifier {
-            Pattern.Identifier.name = loc, name;
-                               annot= Ast.Type.Missing (Peek.loc_skip_lookahead env);
-                               optional=false;
+          let param = loc, { Ast.Function.Param.
+            argument = loc, Pattern.Identifier { Pattern.Identifier.
+              name;
+              annot = Ast.Type.Missing (Peek.loc_skip_lookahead env);
+              optional = false;
+            }
           } in
           tparams,
           (loc, { Ast.Function.Params.params = [param]; rest = None }),

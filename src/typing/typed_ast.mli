@@ -72,8 +72,8 @@ end
 module Function : sig
   val body_error : (ALoc.t, ALoc.t * T.t) Flow_ast.Function.body
   val error : (ALoc.t, ALoc.t * T.t) Flow_ast.Function.t
-  module RestElement : sig
-    val error : (ALoc.t, ALoc.t * T.t) Flow_ast.Function.RestElement.t'
+  module RestParam : sig
+    val error : (ALoc.t, ALoc.t * T.t) Flow_ast.Function.RestParam.t'
   end
   module Params : sig
     val error : (ALoc.t, ALoc.t * T.t) Flow_ast.Function.Params.t'

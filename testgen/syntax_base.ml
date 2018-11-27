@@ -155,10 +155,14 @@ let mk_func_def
         | Empty -> acc) [] body in
     {body = stmt_list} in
 
-  let param = let open P.Identifier in
-    (Loc.none, P.Identifier {name = (Loc.none, pname);
-                             annot = T.Available (Loc.none, (Loc.none, ptype));
-                             optional = false}) in
+  let param =
+    (Loc.none, { Ast.Function.Param.
+      argument = (Loc.none, P.Identifier { P.Identifier.
+        name = (Loc.none, pname);
+        annot = T.Available (Loc.none, (Loc.none, ptype));
+        optional = false;
+      });
+    }) in
 
   let func = let open Ast.Function in
     {id = Some (Loc.none, fname);

@@ -772,8 +772,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     this#type_parameter_declaration_opt tparams (fun tparams' ->
       let params' =
         let annot, { Params.params = params_list; rest } = params in
-        let params_list' = List.map this#function_param_pattern params_list in
-        let rest' = Option.map ~f:this#function_rest_element rest in
+        let params_list' = List.map this#function_param params_list in
+        let rest' = Option.map ~f:this#function_rest_param rest in
         this#on_loc_annot annot, { Params.params = params_list'; rest = rest' }
       in
       let return' = this#type_annotation_hint return in
@@ -790,6 +790,17 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
         async; generator; predicate = predicate'; tparams = tparams'; sig_loc = sig_loc'
       }
     )
+
+  method function_param (param: ('M, 'T) Ast.Function.Param.t) : ('N, 'U) Ast.Function.Param.t =
+    let open Ast.Function.Param in
+    let annot, { argument } = param in
+    this#on_loc_annot annot, { argument = this#function_param_pattern argument }
+
+  method function_rest_param (expr: ('M, 'T) Ast.Function.RestParam.t)
+                                  : ('N, 'U) Ast.Function.RestParam.t =
+    let open Ast.Function.RestParam in
+    let annot, { argument } = expr in
+    this#on_loc_annot annot, { argument = this#function_param_pattern argument }
 
   method function_body (block: ('M, 'T) Ast.Statement.Block.t) : ('N, 'U) Ast.Statement.Block.t =
     this#block block
@@ -1297,12 +1308,6 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method predicate_expression (expr: ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
     this#expression expr
-
-  method function_rest_element (expr: ('M, 'T) Ast.Function.RestElement.t)
-                                    : ('N, 'U) Ast.Function.RestElement.t =
-    let open Ast.Function.RestElement in
-    let annot, { argument } = expr in
-    this#on_loc_annot annot, { argument = this#pattern argument }
 
   method return (stmt: ('M, 'T) Ast.Statement.Return.t) : ('N, 'U) Ast.Statement.Return.t =
     let open Ast.Statement.Return in

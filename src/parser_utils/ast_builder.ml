@@ -66,6 +66,9 @@ end
 module Functions = struct
   open Ast.Function
 
+  let param argument =
+    Loc.none, { Ast.Function.Param.argument }
+
   let body_block stmts =
     BodyBlock (Loc.none, { Ast.Statement.Block.
       body = stmts;

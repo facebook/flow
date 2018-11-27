@@ -151,6 +151,11 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
   | _ -> failwith "unknown expr"
 
 and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
+  let string_of_function_param param =
+    match param with
+    | (_, { Ast.Function.Param.argument = (_, patt) }) ->
+      string_of_pattern patt
+  in
   match stmt with
   | S.Block b ->
     S.Block.(b.body)
@@ -166,8 +171,7 @@ and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
     let params_str =
       let (_, { Ast.Function.Params.params; rest = _ }) = func.params in
       params
-      |> List.map snd
-      |> List.map string_of_pattern
+      |> List.map string_of_function_param
       |> String.concat ", " in
     let body_str = match func.body with
       | BodyBlock (_, s) -> string_of_stmt (S.Block s)

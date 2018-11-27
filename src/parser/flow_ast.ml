@@ -1277,7 +1277,14 @@ and Class : sig
 end = Class
 
 and Function : sig
-  module RestElement : sig
+  module RestParam : sig
+    type ('M, 'T) t = 'M * ('M, 'T) t'
+    and ('M, 'T) t' = {
+      argument: ('M, 'T) Pattern.t;
+    }
+    [@@deriving show]
+  end
+  module Param : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
     and ('M, 'T) t' = {
       argument: ('M, 'T) Pattern.t;
@@ -1287,8 +1294,8 @@ and Function : sig
   module Params : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
     and ('M, 'T) t' = {
-      params: ('M, 'T) Pattern.t list;
-      rest: ('M, 'T) RestElement.t option;
+      params: ('M, 'T) Param.t list;
+      rest: ('M, 'T) RestParam.t option;
     }
     [@@deriving show]
   end

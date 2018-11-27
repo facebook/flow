@@ -718,13 +718,17 @@ class ['loc] mapper = object(this)
   method function_params (params: ('loc, 'loc) Flow_ast.Function.Params.t) =
     let open Flow_ast.Function in
     let (loc, { Params.params = params_list; rest }) = params in
-    let params_list' = this#function_param_patterns params_list in
-    let rest' = map_opt this#function_rest_element rest in
+    let params_list' = ListUtils.ident_map this#function_param params_list in
+    let rest' = map_opt this#function_rest_param rest in
     if params_list == params_list' && rest == rest' then params
     else (loc, { Params.params = params_list'; rest = rest' })
 
-  method function_param_patterns (params_list: ('loc, 'loc) Flow_ast.Pattern.t list) =
-    ListUtils.ident_map this#function_param_pattern params_list
+  method function_param (param: ('loc, 'loc) Flow_ast.Function.Param.t) =
+    let open Flow_ast.Function.Param in
+    let (loc, { argument }) = param in
+    let argument' = this#function_param_pattern argument in
+    if argument == argument' then param
+    else (loc, { argument = argument' })
 
   method function_body_any (body: ('loc, 'loc) Flow_ast.Function.body) =
     match body with
@@ -1234,8 +1238,8 @@ class ['loc] mapper = object(this)
   method predicate_expression (expr: ('loc, 'loc) Flow_ast.Expression.t) =
     this#expression expr
 
-  method function_rest_element (expr: ('loc, 'loc) Flow_ast.Function.RestElement.t) =
-    let open Flow_ast.Function.RestElement in
+  method function_rest_param (expr: ('loc, 'loc) Flow_ast.Function.RestParam.t) =
+    let open Flow_ast.Function.RestParam in
     let loc, { argument } = expr in
     id this#binding_pattern argument expr (fun argument -> loc, { argument })
 
