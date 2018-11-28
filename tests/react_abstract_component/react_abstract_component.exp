@@ -402,6 +402,62 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error --------------------------------------------------------------------------------------------- get_set_props.js:8:3
+
+Cannot call `x.displayName.toString` because:
+ - property `toString` is missing in null or undefined [1].
+ - property `toString` is missing in undefined [1].
+ - property `toString` is missing in null [2].
+
+   get_set_props.js:8:3
+     8|   x.displayName.toString(); // Error maybe null or undefined
+          ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:134:17
+   134|   displayName?: ?string,
+                        ^^^^^^^ [1]
+   get_set_props.js:6:21
+     6|     x.displayName = null;
+                            ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- get_set_props.js:9:3
+
+Cannot get `x.definitelyNotHere` because property `definitelyNotHere` is missing in
+`React.AbstractComponentStatics` [1].
+
+   get_set_props.js:9:3
+     9|   x.definitelyNotHere.toString(); // Error missing prop
+          ^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:132:61
+                                                                    v
+   132| declare type React$AbstractComponentStatics<DefaultProps> = {
+   133|   defaultProps: DefaultProps,
+   134|   displayName?: ?string,
+   135|   // This is only on function components, but trying to access name when
+   136|   // displayName is undefined is a common pattern.
+   137|   name?: ?string,
+   138| };
+        ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- get_set_props.js:11:19
+
+Cannot assign `3` to `x.displayName` because number [1] is incompatible with string [2].
+
+   get_set_props.js:11:19
+    11|   x.displayName = 3; // Error num ~> string
+                          ^ [1]
+
+References:
+   <BUILTINS>/react.js:134:18
+   134|   displayName?: ?string,
+                         ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7
 
 Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` [1].
@@ -424,7 +480,7 @@ References:
 
 
 
-Found 30 errors
+Found 35 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

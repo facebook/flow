@@ -4043,11 +4043,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_unify cx trace ~use_op default_propsl default_propsu;
         rec_flow_t cx trace (instancel, instanceu);
 
-    | DefT (r, ReactAbstractComponentT {default_props; _}), TestPropT _ ->
+    (* When looking at properties of an AbstractComponent, we delegate to a union of
+     * funciton component and class component
+     *)
+    | DefT (r, ReactAbstractComponentT {default_props; _}),(
+        TestPropT _
+      | GetPropT  _
+      | SetPropT _
+    ) ->
       let statics = get_builtin_typeapp cx ~trace r "React$AbstractComponentStatics"
         [default_props] in
       rec_flow cx trace (statics, u)
-
 
     (***********************************************)
     (* function types deconstruct into their parts *)
