@@ -4014,6 +4014,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* check instancel <: instanceu *)
         rec_flow_t cx trace (this, instance);
 
+    (* Function Component ~> AbstractComponent *)
+    | DefT (r, (FunT _ | ObjT {call_t = Some _; _})),
+      UseT (use_op, DefT (reason_op, ReactAbstractComponentT {config; default_props; instance})) ->
+        (* Contravariant config check *)
+        React_kit.get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t
+          ~get_builtin_typeapp ~get_builtin_type ~add_output
+          (React.GetConfig l) Negative config;
+
+        (* Ensure this is a function component by flowing to (any) => React$Node *)
+        let component_function = React_kit.component_function cx ~reason_op ~get_builtin_type
+          (Unsoundness.why React r) in
+        rec_flow_t cx trace (l, component_function);
+        (* Unify DefaultProps *)
+        React_kit.lookup_defaults cx trace l ~reason_op ~rec_flow default_props Neutral;
+        (* A function component instance type is always void, so flow void to instance *)
+        rec_flow_t cx trace ((VoidT.make (replace_reason_const RVoid r)), instance);
+
     (* AbstractComponent ~> AbstractComponent *)
     | DefT (_, ReactAbstractComponentT {config = configl;
         default_props = default_propsl;

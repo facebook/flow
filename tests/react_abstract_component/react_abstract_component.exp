@@ -238,5 +238,143 @@ References:
                               ^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- function_lower.js:7:37
 
-Found 18 errors
+Property `foo` is missing in object type [1] but exists in `Props` [2].
+
+   function_lower.js:7:37
+   7| (Component: React$AbstractComponent<{}, void, void>); // Error, missing foo
+                                          ^^ [1]
+
+References:
+   function_lower.js:4:23
+   4| function Component(x: Props): React$Node { return null; }
+                            ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:9:44
+
+object type [1] is incompatible with default props of React component [2].
+
+   function_lower.js:9:44
+   9| (Component: React$AbstractComponent<Props, {foo: number}, void>); // Error, default props don't unify
+                                                 ^^^^^^^^^^^^^ [1]
+
+References:
+   function_lower.js:9:2
+   9| (Component: React$AbstractComponent<Props, {foo: number}, void>); // Error, default props don't unify
+       ^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:11:2
+
+undefined [1] is incompatible with number [2].
+
+   function_lower.js:11:2
+   11| (Component: React$AbstractComponent<Props, void, number>); // Error void ~> number
+        ^^^^^^^^^ [1]
+
+References:
+   function_lower.js:11:50
+   11| (Component: React$AbstractComponent<Props, void, number>); // Error void ~> number
+                                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_lower.js:18:62
+
+Property `bar` is missing in object type [1] but exists in object type [2].
+
+   function_lower.js:18:62
+   18| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number}, void>);
+                                                                    ^^^^^^^^^^^^^ [1]
+
+References:
+   function_lower.js:21:62
+   21| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number, bar: number}, void>); // Error, default props don't unify
+                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_lower.js:19:53
+
+Property `bar` is missing in object type [1] but exists in `Props2` [2].
+
+   function_lower.js:19:53
+   19| (ComponentWithDefaultProps: React$AbstractComponent<{}, {foo: number}, void>); // Error, missing foo and bar
+                                                           ^^ [1]
+
+References:
+   function_lower.js:15:39
+   15| function ComponentWithDefaultProps(x: Props2) { return null; }
+                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_lower.js:19:53
+
+Property `foo` is missing in object type [1] but exists in `Props2` [2].
+
+   function_lower.js:19:53
+   19| (ComponentWithDefaultProps: React$AbstractComponent<{}, {foo: number}, void>); // Error, missing foo and bar
+                                                           ^^ [1]
+
+References:
+   function_lower.js:15:39
+   15| function ComponentWithDefaultProps(x: Props2) { return null; }
+                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ function_lower.js:20:62
+
+Property `foo` is missing in object type [1] but exists in object type [2].
+
+   function_lower.js:20:62
+   20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {}, void>); // Error, default props don't unify
+                                                                    ^^ [1]
+
+References:
+   function_lower.js:18:62
+   18| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number}, void>);
+                                                                    ^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:23:2
+
+undefined [1] is incompatible with number [2].
+
+   function_lower.js:23:2
+   23| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number}, number>); // Error, void ~> number
+        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   function_lower.js:23:77
+   23| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number}, number>); // Error, void ~> number
+                                                                                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:25:7
+
+Cannot assign class `NotAComponent` to `NotAComponent` because:
+ - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
+ - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
+
+   function_lower.js:25:7
+   25| class NotAComponent {}; // Error, not a component
+             ^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+
+Found 27 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

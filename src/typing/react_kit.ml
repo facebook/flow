@@ -270,6 +270,10 @@ let run cx trace ~use_op reason_op l u
   let err_incompatible reason = err_incompatible cx trace ~use_op ~reason_op ~add_output reason u
   in
 
+  let component_function ?(with_return_t=true) props =
+    component_function cx ~with_return_t ~get_builtin_type ~reason_op props
+  in
+
   (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce
      some outflow, usually some flavor of `any`, along with an error. However,
      not every unexpected inflow should cause an error. For example, `any`
@@ -336,9 +340,6 @@ let run cx trace ~use_op reason_op l u
   in
 
   let component_class = component_class cx l ~get_builtin_typeapp
-  in
-
-  let component_function = component_function cx ~reason_op ~get_builtin_type
   in
 
   let get_intrinsic = get_intrinsic cx trace l ~reason_op ~rec_flow ~get_builtin_type
