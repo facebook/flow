@@ -9,6 +9,103 @@ open Reason
 open Type
 open React
 
+let err_incompatible
+  cx
+  trace
+  ~use_op
+  ~reason_op
+  ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
+  reason
+  u
+=
+  add_output cx ~trace (Flow_error.EReactKit
+    ((reason_op, reason), u, use_op))
+
+let component_class
+  cx
+  component
+  ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
+  props
+=
+  let reason = reason_of_t component in
+  DefT (reason, ClassT (get_builtin_typeapp cx reason
+    "React$Component" [props; Unsoundness.why React reason]))
+
+(* We create our own FunT instead of using
+ * React$StatelessFunctionalComponent in the same way as for class components
+ * because there seems to be a bug where reasons get mixed up when this
+ * function is called multiple times *)
+let component_function cx ~reason_op ?(with_return_t=true) props
+  ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
+=
+  let reason = replace_reason_const RReactSFC reason_op in
+  let any = Unsoundness.why React reason_op in
+  DefT (reason, FunT (
+    any,
+    any,
+    {
+      this_t = any;
+      (* There is a deprecated optional second argument on function components.
+       * In order to support them, we have a second any argument here *)
+      params = [(None, props); (None, any)];
+      rest_param = None;
+      return_t = if with_return_t
+        then get_builtin_type cx reason_op "React$Node"
+        else any;
+      closure_t = 0;
+      is_predicate = false;
+      changeset = Changeset.empty;
+      def_reason = reason_op;
+    }
+  ))
+
+let get_intrinsic cx trace component ~reason_op artifact literal prop ~rec_flow
+  ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
+=
+  let reason = reason_of_t component in
+  (* Get the internal $JSXIntrinsics map. *)
+  let intrinsics =
+    let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t component) in
+    get_builtin_type cx ~trace reason "$JSXIntrinsics"
+  in
+  (* Create a use_op for the upcoming operations. *)
+  let use_op = Op (ReactGetIntrinsic {
+    literal = (match literal with
+      | Literal (_, name) -> replace_reason_const (RIdentifier name) reason
+      | _ -> reason);
+  }) in
+  (* GetPropT with a non-literal when there is not a dictionary will propagate
+   * any. Run the HasOwnPropT check to give the user an error if they use a
+   * non-literal without a dictionary. *)
+  (match literal with
+    | Literal _ -> ()
+    | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, literal)));
+  (* Create a type variable which will represent the specific intrinsic we
+   * find in the intrinsics map. *)
+  let intrinsic = Tvar.mk cx reason in
+  (* Get the intrinsic from the map. *)
+  rec_flow cx trace (intrinsics, GetPropT (use_op, reason, (match literal with
+    | Literal (_, name) ->
+      Named (replace_reason_const (RReactElement (Some name)) reason, name)
+    | _ -> Computed component
+  ), intrinsic));
+  (* Get the artifact from the intrinsic. *)
+  let propref =
+    let name = match artifact with
+    | `Props -> "props"
+    | `Instance -> "instance"
+    in
+    Named (replace_reason_const (RCustom name) reason_op, name)
+  in
+  (* TODO: if intrinsic is null, we will treat it like prototype termination,
+   * but we should error like a GetPropT would instead. *)
+  rec_flow cx trace (intrinsic, LookupT (
+    reason_op,
+    Strict reason_op,
+    [],
+    propref,
+    LookupProp (unknown_use, prop)
+  ))
 
 (* Lookup the defaultProps of a component and flow with upper depending
  * on the given polarity.
@@ -48,6 +145,112 @@ let get_defaults cx trace component ~reason_op ~rec_flow =
   (* Everything else will not have default props we should diff out. *)
   | _ -> None
 
+let props_to_tout
+  cx
+  trace
+  component
+  ~use_op
+  ~reason_op
+  ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
+  ~rec_flow
+  ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
+  ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
+  ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
+  u
+  tout
+=
+  match component with
+  (* Class components or legacy components. *)
+  | DefT (_, ClassT _) ->
+    let props = Tvar.mk cx reason_op in
+    rec_flow_t cx trace (props, tout);
+    rec_flow_t cx trace (component, component_class cx component ~get_builtin_typeapp props)
+
+  (* Stateless functional components. *)
+  | DefT (_, FunT _) ->
+    (* This direction works because function arguments are flowed in the
+     * opposite direction. *)
+    rec_flow_t cx trace (component_function cx ~reason_op ~get_builtin_type ~with_return_t:false tout, component)
+
+  (* Stateless functional components, again. This time for callable `ObjT`s. *)
+  | DefT (_, ObjT { call_t = Some _; _ }) ->
+    (* This direction works because function arguments are flowed in the
+     * opposite direction. *)
+    rec_flow_t cx trace (component_function cx ~reason_op ~get_builtin_type ~with_return_t:false tout, component)
+
+  (* Special case for intrinsic components. *)
+  | DefT (_, StrT lit) -> get_intrinsic cx trace component
+    ~reason_op
+    ~rec_flow
+    ~get_builtin_type
+    `Props
+    lit
+    (Field (None, tout, Positive))
+
+  (* any and any specializations *)
+  | DefT (reason, AnyT _) ->
+    rec_flow_t cx trace (Unsoundness.why React reason, tout)
+
+  (* ...otherwise, error. *)
+  | _ -> err_incompatible cx trace ~use_op ~reason_op ~add_output (reason_of_t component) u
+
+(* Creates the type that we expect for a React config by diffing out default
+ * props with ObjKitT(Rest). The config does not include types for `key`
+ * or `ref`.
+ *
+ * There is some duplication between the logic used here to get a config type
+ * and ObjKitT(ReactConfig). In create_element, we want to produce a props
+ * object from the config object and the defaultProps object. This way we can
+ * add a lower bound to components who have a type variable for props. e.g.
+ *
+ *     const MyComponent = props => null;
+ *     <MyComponent foo={42} />;
+ *
+ * Here, MyComponent has no annotation for props so Flow must infer a type.
+ * However, get_config must produce a valid type from only the component type.
+ *
+ * This approach may stall if props never gets a lower bound. Using the result
+ * of get_config as an upper bound won't give props a lower bound. However,
+ * the places in which this approach stalls are the same places as other type
+ * destructor annotations. Like object spread, $Diff, and $Rest. *)
+let get_config
+  cx
+  trace
+  component
+  ~use_op
+  ~reason_op
+  ~rec_flow
+  ~rec_flow_t
+  ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
+  ~get_builtin_type
+  ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
+  u
+  tout
+=
+  let props = Tvar.mk_where cx reason_op (props_to_tout
+    cx
+    trace
+    component
+    ~use_op
+    ~reason_op
+    ~rec_flow_t
+    ~rec_flow
+    ~get_builtin_typeapp
+    ~get_builtin_type
+    ~add_output
+    u
+  ) in
+  let defaults = get_defaults cx trace component ~reason_op ~rec_flow in
+  match defaults with
+  | None -> rec_flow cx trace (props, UseT (use_op, tout))
+  | Some defaults ->
+    let open Object in
+    let open Object.Rest in
+    let tool = Resolve Next in
+    let state = One defaults in
+    rec_flow cx trace (props,
+      ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge, state), tout))
+
 let run cx trace ~use_op reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
   ~(reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t)
@@ -63,9 +266,7 @@ let run cx trace ~use_op reason_op l u
   ~(union_of_ts: reason -> Type.t list -> Type.t)
   ~(filter_maybe: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t)
   =
-  let err_incompatible reason =
-    add_output cx ~trace (Flow_error.EReactKit
-      ((reason_op, reason), u, use_op))
+  let err_incompatible reason = err_incompatible cx trace ~use_op ~reason_op ~add_output reason u
   in
 
   (* ReactKit can't stall, so even if `l` is an unexpected type, we must produce
@@ -133,84 +334,13 @@ let run cx trace ~use_op reason_op l u
       Error (reason_of_t t)
   in
 
-  let component_class props =
-    let reason = reason_of_t l in
-    DefT (reason, ClassT (get_builtin_typeapp cx reason
-      "React$Component" [props; Unsoundness.why React reason]))
+  let component_class = component_class cx l ~get_builtin_typeapp
   in
 
-  (* We create our own FunT instead of using
-   * React$StatelessFunctionalComponent in the same way as for class components
-   * because there seems to be a bug where reasons get mixed up when this
-   * function is called multiple times *)
-  let component_function ?(with_return_t=true) props =
-    let reason = replace_reason_const RReactSFC reason_op in
-    let any = Unsoundness.react_any reason_op in
-    DefT (reason, FunT (
-      any,
-      any,
-      {
-        this_t = any;
-        (* There is a deprecated optional second argument on function components.
-         * In order to support them, we have a second any argument here *)
-        params = [(None, props); (None, any)];
-        rest_param = None;
-        return_t = if with_return_t
-          then get_builtin_type cx reason_op "React$Node"
-          else any;
-        closure_t = 0;
-        is_predicate = false;
-        changeset = Changeset.empty;
-        def_reason = reason_op;
-      }
-    ))
+  let component_function = component_function cx ~reason_op ~get_builtin_type
   in
 
-  let get_intrinsic artifact literal prop =
-    let reason = reason_of_t l in
-    (* Get the internal $JSXIntrinsics map. *)
-    let intrinsics =
-      let reason = mk_reason (RType "$JSXIntrinsics") (loc_of_t l) in
-      get_builtin_type cx ~trace reason "$JSXIntrinsics"
-    in
-    (* Create a use_op for the upcoming operations. *)
-    let use_op = Op (ReactGetIntrinsic {
-      literal = (match literal with
-        | Literal (_, name) -> replace_reason_const (RIdentifier name) reason
-        | _ -> reason);
-    }) in
-    (* GetPropT with a non-literal when there is not a dictionary will propagate
-     * any. Run the HasOwnPropT check to give the user an error if they use a
-     * non-literal without a dictionary. *)
-    (match literal with
-      | Literal _ -> ()
-      | _ -> rec_flow cx trace (intrinsics, HasOwnPropT (use_op, reason, literal)));
-    (* Create a type variable which will represent the specific intrinsic we
-     * find in the intrinsics map. *)
-    let intrinsic = Tvar.mk cx reason in
-    (* Get the intrinsic from the map. *)
-    rec_flow cx trace (intrinsics, GetPropT (use_op, reason, (match literal with
-      | Literal (_, name) ->
-        Named (replace_reason_const (RReactElement (Some name)) reason, name)
-      | _ -> Computed l
-    ), intrinsic));
-    (* Get the artifact from the intrinsic. *)
-    let propref =
-      let name = match artifact with
-      | `Props -> "props"
-      | `Instance -> "instance"
-      in
-      Named (replace_reason_const (RCustom name) reason_op, name)
-    in
-    (* TODO: if intrinsic is null, we will treat it like prototype termination,
-     * but we should error like a GetPropT would instead. *)
-    rec_flow cx trace (intrinsic, LookupT (
-      reason_op,
-      Strict reason_op,
-      [],
-      propref,
-      LookupProp (unknown_use, prop)
-    ))
+  let get_intrinsic = get_intrinsic cx trace l ~reason_op ~rec_flow ~get_builtin_type
   in
 
   (* This function creates a constraint *from* tin *to* props so that props is
@@ -252,35 +382,9 @@ let run cx trace ~use_op reason_op l u
     | _ -> err_incompatible (reason_of_t component)
   in
 
-  let props_to_tout tout =
-    let component = l in
-    match component with
-    (* Class components or legacy components. *)
-    | DefT (_, ClassT _) ->
-      let props = Tvar.mk cx reason_op in
-      rec_flow_t cx trace (props, tout);
-      rec_flow_t cx trace (component, component_class props)
-
-    (* Stateless functional components. *)
-    | DefT (_, FunT _) ->
-      (* This direction works because function arguments are flowed in the
-       * opposite direction. *)
-      rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
-
-    (* Stateless functional components, again. This time for callable `ObjT`s. *)
-    | DefT (_, ObjT { call_t = Some _; _ }) ->
-      (* This direction works because function arguments are flowed in the
-       * opposite direction. *)
-      rec_flow_t cx trace (component_function ~with_return_t:false tout, component)
-
-    (* Special case for intrinsic components. *)
-    | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tout, Positive))
-
-    | DefT (reason, AnyT source) ->
-      rec_flow_t cx trace (AnyT.why source reason, tout)
-
-    (* ...otherwise, error. *)
-    | _ -> err_incompatible (reason_of_t component)
+  let props_to_tout =
+    props_to_tout cx trace l ~use_op ~reason_op ~rec_flow_t ~rec_flow ~get_builtin_typeapp
+    ~get_builtin_type ~add_output u
   in
 
   let coerce_children_args (children, children_spread) =
@@ -449,37 +553,8 @@ let run cx trace ~use_op reason_op l u
     )
   in
 
-  (* Creates the type that we expect for a React config by diffing out default
-   * props with ObjKitT(Rest). The config does not include types for `key`
-   * or `ref`.
-   *
-   * There is some duplication between the logic used here to get a config type
-   * and ObjKitT(ReactConfig). In create_element, we want to produce a props
-   * object from the config object and the defaultProps object. This way we can
-   * add a lower bound to components who have a type variable for props. e.g.
-   *
-   *     const MyComponent = props => null;
-   *     <MyComponent foo={42} />;
-   *
-   * Here, MyComponent has no annotation for props so Flow must infer a type.
-   * However, get_config must produce a valid type from only the component type.
-   *
-   * This approach may stall if props never gets a lower bound. Using the result
-   * of get_config as an upper bound won't give props a lower bound. However,
-   * the places in which this approach stalls are the same places as other type
-   * destructor annotations. Like object spread, $Diff, and $Rest. *)
-  let get_config tout =
-    let props = Tvar.mk_where cx reason_op props_to_tout in
-    let defaults = get_defaults cx trace l ~reason_op ~rec_flow in
-    match defaults with
-    | None -> rec_flow cx trace (props, UseT (use_op, tout))
-    | Some defaults ->
-      let open Object in
-      let open Object.Rest in
-      let tool = Resolve Next in
-      let state = One defaults in
-      rec_flow cx trace (props,
-        ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge, state), tout))
+  let get_config = get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t
+    ~get_builtin_typeapp ~get_builtin_type ~add_output u
   in
 
   let get_instance tout =
