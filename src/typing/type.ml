@@ -253,8 +253,8 @@ module rec TypeTerm : sig
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
 
-    (* React$AbstractComponent<Props, DefaultProps, Instance> *)
-    | ReactAbstractComponentT of {props: t; default_props: t; instance: t}
+    (* React$AbstractComponent<Config, DefaultProps, Instance> *)
+    | ReactAbstractComponentT of {config: t; default_props: t; instance: t}
 
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)

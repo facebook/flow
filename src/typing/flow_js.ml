@@ -933,8 +933,8 @@ module ResolvableTypeJob = struct
       let ts = InterRep.members rep in
       collect_of_types ?log_unresolved cx reason acc ts
 
-    | DefT (_, ReactAbstractComponentT {props; default_props; instance}) ->
-      collect_of_types ?log_unresolved cx reason acc [props; default_props; instance]
+    | DefT (_, ReactAbstractComponentT {config; default_props; instance}) ->
+      collect_of_types ?log_unresolved cx reason acc [config; default_props; instance]
 
     | OpaqueT (_, {underlying_t; super_t; _}) ->
       let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx reason) in
@@ -3975,11 +3975,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Class component ~> AbstractComponent *)
     | DefT (r, ClassT this),
-      UseT (_, DefT (reason_op, ReactAbstractComponentT {props; default_props; instance})) ->
+      UseT (_, DefT (reason_op, ReactAbstractComponentT {config; default_props; instance})) ->
         (* Unify Props by flowing l to React$Component<props> *)
         let class_component =
           DefT (r,
-            ClassT (get_builtin_typeapp cx r "React$Component" [props; Unsoundness.why React r])) in
+            ClassT (get_builtin_typeapp cx r "React$Component" [config; Unsoundness.why React r])) in
         rec_flow_t cx trace (l, class_component);
         (* Unify DefaultProps *)
         React_kit.lookup_defaults cx trace l ~reason_op ~rec_flow default_props Neutral;
@@ -3991,14 +3991,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (this, instance);
 
     (* AbstractComponent ~> AbstractComponent *)
-    | DefT (_, ReactAbstractComponentT {props = propsl;
+    | DefT (_, ReactAbstractComponentT {config = configl;
         default_props = default_propsl;
         instance = instancel}),
-      UseT (use_op, DefT (_, ReactAbstractComponentT {props = propsu;
+      UseT (use_op, DefT (_, ReactAbstractComponentT {config = configu;
         default_props = default_propsu;
         instance = instanceu}))
       ->
-        rec_unify cx trace ~use_op propsl propsu;
+        rec_unify cx trace ~use_op configl configu;
         rec_unify cx trace ~use_op default_propsl default_propsu;
         (* See ClassT ~> AbstractComponentT for justification *)
         rec_flow_t cx trace (instancel, instanceu);
@@ -7773,8 +7773,8 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace Positive c;
     check_polarity_typeapp cx ?trace polarity c ts
 
-  | DefT (_, ReactAbstractComponentT {props; default_props; instance}) ->
-      check_polarity cx ?trace Neutral props;
+  | DefT (_, ReactAbstractComponentT {config; default_props; instance}) ->
+      check_polarity cx ?trace Neutral config;
       check_polarity cx ?trace Neutral default_props;
       check_polarity cx ?trace Neutral instance;
 

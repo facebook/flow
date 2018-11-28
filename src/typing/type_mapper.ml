@@ -243,13 +243,13 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t
           else IdxWrapper t''
-      | ReactAbstractComponentT {props; default_props; instance} ->
-          let props' = self#type_ cx map_cx props in
+      | ReactAbstractComponentT {config; default_props; instance} ->
+          let config' = self#type_ cx map_cx config in
           let default_props' = self#type_ cx map_cx default_props in
           let instance' = self#type_ cx map_cx instance in
-          if props' == props && default_props' == default_props && instance' == instance
+          if config' == config&& default_props' == default_props && instance' == instance
           then t
-          else ReactAbstractComponentT {props = props';
+          else ReactAbstractComponentT {config = config';
             default_props = default_props';
             instance = instance'}
 

@@ -601,12 +601,12 @@ end = struct
     | DefT (r, InstanceT (_, _, _, t)) -> instance_t ~env r t
     | DefT (_, ClassT t) -> class_t ~env t None
     | DefT (_, IdxWrapper t) -> type__ ~env t
-    | DefT (_, ReactAbstractComponentT {props; default_props; instance}) ->
-        type__ ~env props >>= fun props ->
+    | DefT (_, ReactAbstractComponentT {config; default_props; instance}) ->
+        type__ ~env config >>= fun config ->
         type__ ~env default_props >>= fun default_props ->
         type__ ~env instance >>= fun instance ->
         return @@ generic_talias (Ty_symbol.builtin_symbol "React$AbstractComponent")
-          (Some [props; default_props; instance])
+          (Some [config; default_props; instance])
     | ThisClassT (_, t) -> this_class_t ~env t None
     | ThisTypeAppT (_, c, _, ts) -> type_app ~env c ts
     | KeysT (_, t) ->
