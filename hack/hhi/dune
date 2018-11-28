@@ -1,8 +1,0 @@
-(library
-  (name hhi)
-  (wrapped false)
-  (libraries
-    global_config
-    relative_path
-    sys_utils)
-  (preprocess (pps ppx_gen_hhi -- -hhi-dir ../../hhi)))
