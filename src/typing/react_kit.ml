@@ -142,6 +142,10 @@ let get_defaults cx trace component ~reason_op ~rec_flow =
     let tvar = Tvar.mk cx reason_op in
     lookup_defaults cx trace component ~reason_op ~rec_flow tvar Positive;
     Some tvar
+  | DefT (_, ReactAbstractComponentT {default_props; _}) ->
+    Some (Tvar.mk_where cx reason_op (fun tvar ->
+      rec_flow cx trace (default_props, UseT (unknown_use, tvar))
+    ))
   (* Everything else will not have default props we should diff out. *)
   | _ -> None
 
@@ -191,6 +195,9 @@ let props_to_tout
   | DefT (reason, AnyT _) ->
     rec_flow_t cx trace (Unsoundness.why React reason, tout)
 
+  | DefT (reason, ReactAbstractComponentT _) ->
+    rec_flow_t cx trace (MixedT.why reason, tout)
+
   (* ...otherwise, error. *)
   | _ -> err_incompatible cx trace ~use_op ~reason_op ~add_output (reason_of_t component) u
 
@@ -219,8 +226,9 @@ let get_config
   component
   ~use_op
   ~reason_op
+  ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
   ~rec_flow
-  ~rec_flow_t
+  ~(rec_unify: Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
   ~get_builtin_type
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
@@ -228,35 +236,44 @@ let get_config
   pole
   tout
 =
-  let props = Tvar.mk_where cx reason_op (props_to_tout
-    cx
-    trace
-    component
-    ~use_op
-    ~reason_op
-    ~rec_flow_t
-    ~rec_flow
-    ~get_builtin_typeapp
-    ~get_builtin_type
-    ~add_output
-    u
-  ) in
-  let defaults = get_defaults cx trace component ~reason_op ~rec_flow in
-  match defaults with
-  | None -> rec_flow cx trace (props, UseT (use_op, tout))
-  | Some defaults ->
-    let open Object in
-    let open Object.Rest in
-    let tool = Resolve Next in
-    let state = One defaults in
-    rec_flow cx trace (props,
-      ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge pole, state), tout))
+  match component with
+  | DefT (_, ReactAbstractComponentT {config; _}) ->
+      begin match pole with
+      | Positive -> rec_flow_t cx trace (config, tout)
+      | Negative -> rec_flow_t cx trace (tout, config)
+      | Neutral -> rec_unify cx trace ~use_op tout config
+      end
+  | _ ->
+    let props = Tvar.mk_where cx reason_op (props_to_tout
+      cx
+      trace
+      component
+      ~use_op
+      ~reason_op
+      ~rec_flow_t
+      ~rec_flow
+      ~get_builtin_typeapp
+      ~get_builtin_type
+      ~add_output
+      u
+    ) in
+    let defaults = get_defaults cx trace component ~reason_op ~rec_flow in
+    match defaults with
+    | None -> rec_flow cx trace (props, UseT (use_op, tout))
+    | Some defaults ->
+      let open Object in
+      let open Object.Rest in
+      let tool = Resolve Next in
+      let state = One defaults in
+      rec_flow cx trace (props,
+        ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge pole, state), tout))
 
 let run cx trace ~use_op reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
   ~(reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t)
   ~(rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit)
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
+  ~(rec_unify: Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
   ~(get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t)
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
@@ -373,6 +390,10 @@ let run cx trace ~use_op reason_op l u
       (* This direction works because function arguments are flowed in the
        * opposite direction. *)
       rec_flow_t cx trace (component, component_function tin)
+
+    (* Abstract components. *)
+    | DefT (reason, ReactAbstractComponentT _) ->
+      rec_flow_t cx trace (tin, MixedT.why reason);
 
     (* Intrinsic components. *)
     | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
@@ -555,7 +576,7 @@ let run cx trace ~use_op reason_op l u
     )
   in
 
-  let get_config = get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t
+  let get_config = get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t ~rec_unify
     ~get_builtin_typeapp ~get_builtin_type ~add_output u Positive
   in
 
@@ -572,6 +593,10 @@ let run cx trace ~use_op reason_op l u
     (* Stateless functional components, again. This time for callable `ObjT`s. *)
     | DefT (r, ObjT { call_t = Some _; _ }) ->
       rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
+
+    (* Abstract components. *)
+    | DefT (_, ReactAbstractComponentT {instance; _}) ->
+      rec_flow_t cx trace (instance, tout);
 
     (* Intrinsic components. *)
     | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))

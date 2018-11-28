@@ -4001,7 +4001,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (r, ClassT this),
       UseT (use_op, DefT (reason_op, ReactAbstractComponentT {config; default_props; instance})) ->
         (* Contravariant config check *)
-        React_kit.get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t
+        React_kit.get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t ~rec_unify
           ~get_builtin_typeapp ~get_builtin_type ~add_output
           (React.GetConfig l) Negative config;
         (* Ensure l is a React.Component by flowing l to React$Component<any, any> *)
@@ -4018,7 +4018,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (r, (FunT _ | ObjT {call_t = Some _; _})),
       UseT (use_op, DefT (reason_op, ReactAbstractComponentT {config; default_props; instance})) ->
         (* Contravariant config check *)
-        React_kit.get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t
+        React_kit.get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t ~rec_unify
           ~get_builtin_typeapp ~get_builtin_type ~add_output
           (React.GetConfig l) Negative config;
 
@@ -4042,10 +4042,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (configu, configl);
         rec_unify cx trace ~use_op default_propsl default_propsu;
         rec_flow_t cx trace (instancel, instanceu);
-
-    | _, UseT (_, DefT (r, ReactAbstractComponentT _))
-    | DefT (r, ReactAbstractComponentT _), _ ->
-        add_output cx ~trace (FlowError.EAbstractComponentNotYetSupported (aloc_of_reason r))
 
     (***********************************************)
     (* function types deconstruct into their parts *)
@@ -11262,6 +11258,7 @@ and react_kit cx trace ~use_op reason_op l u =
     ~reposition
     ~rec_flow
     ~rec_flow_t
+    ~rec_unify
     ~get_builtin
     ~get_builtin_type
     ~get_builtin_typeapp
