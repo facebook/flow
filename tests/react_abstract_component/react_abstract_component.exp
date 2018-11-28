@@ -1,34 +1,14 @@
-Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:12:10
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:15:99
 
-Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
+Property `foo` is missing in object type [1] but exists in object type [2].
 
-   abstract_vs_abstract.js:12:10
-   12|   return x;
-                ^
-
-References:
-   abstract_vs_abstract.js:11:43
-   11| function test2(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{foo: number}, {}, Component> { // Error props don't unify
-                                                 ^^ [1]
-   abstract_vs_abstract.js:11:88
-   11| function test2(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{foo: number}, {}, Component> { // Error props don't unify
-                                                                                              ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:16:10
-
-Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
-
-   abstract_vs_abstract.js:16:10
-   16|   return x;
-                ^
-
-References:
    abstract_vs_abstract.js:15:99
-   15| function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error props don't unify
+   15| function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error missing props
                                                                                                          ^^ [1]
+
+References:
    abstract_vs_abstract.js:15:43
-   15| function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error props don't unify
+   15| function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error missing props
                                                  ^^^^^^^^^^^^^ [2]
 
 
@@ -114,28 +94,8 @@ Error --------------------------------------------------------------------------
 
 References:
    classes_lower.js:30:47
-   30| (Component: React$AbstractComponent<any, any, Subclass>); // Ok, Instance is invariant
+   30| (Component: React$AbstractComponent<any, any, Subclass>); // Ok, Instance is covariant
                                                      ^^^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- classes_lower.js:9:2
-
-Property `foo` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
-
-   classes_lower.js:9:2
-    9| (Component: React$AbstractComponent<{foo: number}, any, any>); // Error, foo not in {}
-        ^^^^^^^^^
-
-References:
-   classes_lower.js:5:41
-    5| class Component extends React.Component<{}> {}
-                                               ^^ [1]
-   classes_lower.js:9:37
-    9| (Component: React$AbstractComponent<{foo: number}, any, any>); // Error, foo not in {}
-                                           ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- classes_lower.js:10:42
@@ -203,9 +163,9 @@ Inexact object type [1] is incompatible with exact object type [2].
                               ^^^^^^^^^^^^^^^ [1]
 
 References:
-   classes_lower.js:19:73
-   19| (ComponentNarrower: React$AbstractComponent<{foo: number, bar: number}, {|foo: number|}, any>); // Error inexact vs exact
-                                                                               ^^^^^^^^^^^^^^^ [2]
+   classes_lower.js:19:76
+   19| (ComponentNarrower: React$AbstractComponent<{+foo?: number, +bar: number}, {|foo: number|}, any>); // Error inexact vs exact
+                                                                                  ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- classes_lower.js:14:24
@@ -218,68 +178,50 @@ Property `bar` is missing in object type [1] but exists in object type [2].
 
 References:
    classes_lower.js:25:50
-   25| (ComponentNarrower: React$AbstractComponent<any, { foo: number, bar: number }, any>); // Error, bar is not in default props
+   25| (ComponentNarrower: React$AbstractComponent<any, { foo: number, bar: number }, any>); // Error, bar is not in default config
                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- classes_lower.js:20:2
+Error ------------------------------------------------------------------------------------------- classes_lower.js:20:45
 
-Property `bar` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
+Property `bar` is missing in object type [1] but exists in object type [2].
 
-   classes_lower.js:20:2
-   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in props
-        ^^^^^^^^^^^^^^^^^
+   classes_lower.js:20:45
+   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in config
+                                                   ^^ [1]
 
 References:
-   classes_lower.js:20:45
-   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in props
-                                                   ^^ [1]
    classes_lower.js:13:49
    13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- classes_lower.js:20:2
+Error ------------------------------------------------------------------------------------------- classes_lower.js:20:45
 
-Property `foo` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
+Property `foo` is missing in object type [1] but exists in object type [2].
 
-   classes_lower.js:20:2
-   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in props
-        ^^^^^^^^^^^^^^^^^
+   classes_lower.js:20:45
+   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in config
+                                                   ^^ [1]
 
 References:
-   classes_lower.js:20:45
-   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in props
-                                                   ^^ [1]
    classes_lower.js:13:49
    13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [3]
 
 
-Error -------------------------------------------------------------------------------------------- classes_lower.js:21:2
+Error ------------------------------------------------------------------------------------------- classes_lower.js:21:45
 
-Property `bar` is missing in object type [1] but exists in object type [2] in type argument `Props` [3].
+Property `bar` is missing in object type [1] but exists in object type [2].
 
-   classes_lower.js:21:2
-   21| (ComponentNarrower: React$AbstractComponent<{foo: number}, any, any>); // Error missing bar in props
-        ^^^^^^^^^^^^^^^^^
-
-References:
    classes_lower.js:21:45
-   21| (ComponentNarrower: React$AbstractComponent<{foo: number}, any, any>); // Error missing bar in props
-                                                   ^^^^^^^^^^^^^ [1]
+   21| (ComponentNarrower: React$AbstractComponent<{+foo?: number}, any, any>); // Error missing bar in config
+                                                   ^^^^^^^^^^^^^^^ [1]
+
+References:
    classes_lower.js:13:49
    13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:26:31
-   26| declare class React$Component<Props, State = void> {
-                                     ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- classes_lower.js:24:50
@@ -287,7 +229,7 @@ Error --------------------------------------------------------------------------
 Property `foo` is missing in object type [1] but exists in object type [2].
 
    classes_lower.js:24:50
-   24| (ComponentNarrower: React$AbstractComponent<any, {}, any>); // Error, missing foo in default props
+   24| (ComponentNarrower: React$AbstractComponent<any, {}, any>); // Error, missing foo in default config
                                                         ^^ [1]
 
 References:
@@ -297,4 +239,4 @@ References:
 
 
 
-Found 20 errors
+Found 18 errors

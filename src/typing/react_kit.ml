@@ -225,6 +225,7 @@ let get_config
   ~get_builtin_type
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
   u
+  pole
   tout
 =
   let props = Tvar.mk_where cx reason_op (props_to_tout
@@ -249,7 +250,7 @@ let get_config
     let tool = Resolve Next in
     let state = One defaults in
     rec_flow cx trace (props,
-      ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge, state), tout))
+      ObjKitT (use_op, reason_op, tool, Rest (ReactConfigMerge pole, state), tout))
 
 let run cx trace ~use_op reason_op l u
   ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
@@ -554,7 +555,7 @@ let run cx trace ~use_op reason_op l u
   in
 
   let get_config = get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t
-    ~get_builtin_typeapp ~get_builtin_type ~add_output u
+    ~get_builtin_typeapp ~get_builtin_type ~add_output u Positive
   in
 
   let get_instance tout =

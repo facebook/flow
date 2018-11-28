@@ -1354,7 +1354,7 @@ end = struct
     | T.ReactElementPropsType -> return (generic_builtin_t "React$ElementProps" [ty])
     | T.ReactElementConfigType -> return (generic_builtin_t "React$ElementConfig" [ty])
     | T.ReactElementRefType -> return (generic_builtin_t "React$ElementRef" [ty])
-    | T.RestType (T.Object.Rest.ReactConfigMerge, _)
+    | T.RestType (T.Object.Rest.ReactConfigMerge _, _)
     | T.Bind _ as d ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 

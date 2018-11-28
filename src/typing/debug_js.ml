@@ -1179,7 +1179,7 @@ and json_of_destructor_impl json_cx = Hh_json.(function
       "mergeMode", JSON_String (match merge_mode with
         | Sound -> "Sound"
         | IgnoreExactAndOwn -> "IgnoreExactAndOwn"
-        | ReactConfigMerge -> "ReactConfigMerge");
+        | ReactConfigMerge _ -> "ReactConfigMerge");
       "restType", _json_of_t json_cx t;
     ]
   | ValuesType -> JSON_Object [
@@ -2003,7 +2003,7 @@ and dump_use_t_ (depth, tvars) cx t =
         (match merge_mode with
           | Sound -> "Sound"
           | IgnoreExactAndOwn -> "IgnoreExactAndOwn"
-          | ReactConfigMerge -> "ReactConfigMerge")
+          | ReactConfigMerge _ -> "ReactConfigMerge")
         (match state with
           | One t -> spf "One (%s)" (kid t)
           | Done o -> spf "Done (%s)" (resolved o))

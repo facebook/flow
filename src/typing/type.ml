@@ -1994,7 +1994,7 @@ and Object : sig
     type merge_mode =
       | Sound
       | IgnoreExactAndOwn
-      | ReactConfigMerge
+      | ReactConfigMerge of Polarity.t
   end
 
   module ReactConfig : sig

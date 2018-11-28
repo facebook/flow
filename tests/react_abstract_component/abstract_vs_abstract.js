@@ -8,11 +8,11 @@ function test1(x: React$AbstractComponent<{}, {}, Component>): React$AbstractCom
   return x;
 }
 
-function test2(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{foo: number}, {}, Component> { // Error props don't unify
+function test2(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{foo: number}, {}, Component> { // Extra props is ok
   return x;
 }
 
-function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error props don't unify
+function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error missing props
   return x;
 }
 

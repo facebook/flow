@@ -3972,22 +3972,46 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*****************************)
     (* React Abstract Components *)
     (*****************************)
+    (*
+     * In all of these cases, we check:
+     *  1. configu <: configl
+     *  2. default_propsl = default_propsu
+     *  3. instancel <: instanceu
+     *
+     *  2. is necessary because we allow the default props of a component to be read and
+     *  written.
+     *
+     *  1. Is necessary because we need to ensure that any config object that is passed to u
+     *  is compatible with the config of l. This also is sufficient; unification is not required.
+     *  We can think of AbstractComponents as some sort of callable that accepts a config object.
+     *  The only place that the config object type would appear is in the callable signature, which
+     *  is contravariant.
+     *
+     *  In reality, a component is turned into an element via createElement, which accepts a
+     *  component and a config object. From there, it creates an object that will become the
+     *  props of a component by combining the config object with the component's default props.
+     *  This process creates a new fresh unaliased props object, which is passed to the component.
+     *
+     *  3. Is necessary because we need to ensure the ref passed in is compatible with the instance
+     *  type of the component. React will assign ref.current to the instance of the component, so we
+     *  need to ensure that the type we assign is compatible with the type ref.current.
+     *)
 
     (* Class component ~> AbstractComponent *)
     | DefT (r, ClassT this),
-      UseT (_, DefT (reason_op, ReactAbstractComponentT {config; default_props; instance})) ->
-        (* Unify Props by flowing l to React$Component<props> *)
+      UseT (use_op, DefT (reason_op, ReactAbstractComponentT {config; default_props; instance})) ->
+        (* Contravariant config check *)
+        React_kit.get_config cx trace l ~use_op ~reason_op ~rec_flow ~rec_flow_t
+          ~get_builtin_typeapp ~get_builtin_type ~add_output
+          (React.GetConfig l) Negative config;
+        (* Ensure l is a React.Component by flowing l to React$Component<any, any> *)
         let class_component =
           DefT (r,
-            ClassT (get_builtin_typeapp cx r "React$Component" [config; Unsoundness.why React r])) in
+            ClassT (get_builtin_typeapp cx r "React$Component" [Unsoundness.why React r; Unsoundness.why React r])) in
         rec_flow_t cx trace (l, class_component);
         (* Unify DefaultProps *)
         React_kit.lookup_defaults cx trace l ~reason_op ~rec_flow default_props Neutral;
-        (* check this <: Instance. All react does with Instance is write a value of Instance to
-         * the current field of a ref object. All we care about there is making sure that
-         * Instance is a subtype of that field. If this <: Instance and Instance <: current, then
-         * this <: current
-         *)
+        (* check instancel <: instanceu *)
         rec_flow_t cx trace (this, instance);
 
     (* AbstractComponent ~> AbstractComponent *)
@@ -3998,9 +4022,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         default_props = default_propsu;
         instance = instanceu}))
       ->
-        rec_unify cx trace ~use_op configl configu;
+        rec_flow_t cx trace (configu, configl);
         rec_unify cx trace ~use_op default_propsl default_propsu;
-        (* See ClassT ~> AbstractComponentT for justification *)
         rec_flow_t cx trace (instancel, instanceu);
 
     | _, UseT (_, DefT (r, ReactAbstractComponentT _))
@@ -11668,7 +11691,7 @@ and object_kit =
 
         (* If neither object has the prop then we don't add a prop to our
          * result here. *)
-        | (Sound | IgnoreExactAndOwn | ReactConfigMerge),
+        | (Sound | IgnoreExactAndOwn | ReactConfigMerge _),
           None, None, _
             -> None
 
@@ -11677,7 +11700,7 @@ and object_kit =
          * non-own then sometimes we may not copy it over so we mark it
          * as optional. *)
         | IgnoreExactAndOwn, Some (t, _), None, _ -> Some (Field (None, t, Neutral))
-        | ReactConfigMerge, Some (t, _), None, _ -> Some (Field (None, t, Positive))
+        | ReactConfigMerge _, Some (t, _), None, _ -> Some (Field (None, t, Positive))
         | Sound, Some (t, true), None, _ -> Some (Field (None, t, Neutral))
         | Sound, Some (t, false), None, _ -> Some (Field (None, optional t, Neutral))
 
@@ -11694,7 +11717,7 @@ and object_kit =
          * {...{p?}, ...{p?}} is {p?} instead of {p}. This is inconsistent with
          * the behavior of other object rest merge modes implemented in this
          * pattern match. *)
-        | ReactConfigMerge,
+        | ReactConfigMerge _,
           Some (t1, _), Some (DefT (_, OptionalT t2), _), _ ->
           (* We only test the subtyping relation of t1 and t2 if both t1 and t2
            * are optional types. If t1 is required then t2 will always
@@ -11711,7 +11734,7 @@ and object_kit =
          * solution unless that empty object is exact. Even for exact objects,
          * {|p?|} is the best solution since it accepts more valid
          * programs then {||}. *)
-        | ReactConfigMerge,
+        | ReactConfigMerge _,
           Some (t1, _), Some (t2, _), _ ->
           (* The DP type for p must be a subtype of the P type for p. *)
           rec_flow_t cx trace (t2, t1);
@@ -11722,7 +11745,7 @@ and object_kit =
          *
          * For C there will be no prop. However, if the props object is exact
          * then we need to throw an error. *)
-        | ReactConfigMerge,
+        | ReactConfigMerge _,
           None, Some (_, _), _ ->
           if flags1.exact then (
             let use_op = Frame (PropertyCompatibility {
@@ -11782,7 +11805,14 @@ and object_kit =
           | (x0, x1::xs) -> DefT (reason, UnionT (UnionRep.make x0 x1 xs))
         in
         (* Intentional UnknownUse here. *)
-        rec_flow_t cx trace (t, tout)
+        match options with
+        | ReactConfigMerge Neutral ->
+            rec_unify cx trace ~use_op t tout
+        | ReactConfigMerge Negative ->
+            rec_flow_t cx trace (tout, t)
+        | ReactConfigMerge Positive
+        | _ ->
+            rec_flow_t cx trace (t, tout)
   in
 
   (********************)
