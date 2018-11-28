@@ -402,8 +402,29 @@ References:
            ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
+Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7
 
-Found 29 errors
+Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` [1].
+
+   test_prop.js:5:7
+     5|   if (x.notOnEitherSFCOrClass) {} // Error Not on any component
+              ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:132:61
+                                                                    v
+   132| declare type React$AbstractComponentStatics<DefaultProps> = {
+   133|   defaultProps: DefaultProps,
+   134|   displayName?: ?string,
+   135|   // This is only on function components, but trying to access name when
+   136|   // displayName is undefined is a common pattern.
+   137|   name?: ?string,
+   138| };
+        ^ [1]
+
+
+
+Found 30 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
