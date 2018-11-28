@@ -47,13 +47,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-<<<<<<< HEAD
-   <BUILTINS>/react.js:371:27
-   371|   declare module.exports: $Exports<'react'>;
-=======
-   <BUILTINS>/react.js:370:27
-   370|   declare module.exports: $Exports<'react'>;
->>>>>>> Add React.Suspense component and tests
+   <BUILTINS>/react.js:378:27
+   378|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -160,13 +155,8 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-<<<<<<< HEAD
-   <BUILTINS>/react.js:371:27
-   371|   declare module.exports: $Exports<'react'>;
-=======
-   <BUILTINS>/react.js:370:27
-   370|   declare module.exports: $Exports<'react'>;
->>>>>>> Add React.Suspense component and tests
+   <BUILTINS>/react.js:378:27
+   378|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -196,74 +186,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
                           ^^^^^^^^^^
 
 References:
-<<<<<<< HEAD
-   <BUILTINS>/react.js:336:26
+   <BUILTINS>/react.js:342:26
                                  v-
-   336|   declare export default {|
-   337|     +DOM: typeof DOM,
-   338|     +PropTypes: typeof PropTypes,
-   339|     +version: typeof version,
-   340|     +checkPropTypes: typeof checkPropTypes,
-   341|     +memo: typeof memo,
-   342|     +lazy: typeof lazy,
-   343|     +createClass: typeof createClass,
-   344|     +createContext: typeof createContext,
-   345|     +createElement: typeof createElement,
-   346|     +cloneElement: typeof cloneElement,
-   347|     +createFactory: typeof createFactory,
-   348|     +createRef: typeof createRef,
-   349|     +isValidElement: typeof isValidElement,
-   350|     +Component: typeof Component,
-   351|     +PureComponent: typeof PureComponent,
-   352|     +Fragment: typeof Fragment,
-   353|     +Children: typeof Children,
-   354|     +ConcurrentMode: typeof ConcurrentMode,
-   355|     +StrictMode: typeof StrictMode,
-   356|     +useContext: typeof useContext,
-   357|     +useState: typeof useState,
-   358|     +useReducer: typeof useReducer,
-   359|     +useRef: typeof useRef,
-   360|     +useEffect: typeof useEffect,
-   361|     +useLayoutEffect: typeof useLayoutEffect,
-   362|     +useCallback: typeof useCallback,
-   363|     +useMemo: typeof useMemo,
-   364|     +useImperativeMethods: typeof useImperativeMethods,
-   365|   |};
-=======
-   <BUILTINS>/react.js:334:26
-                                 v-
-   334|   declare export default {|
-   335|     +DOM: typeof DOM,
-   336|     +PropTypes: typeof PropTypes,
-   337|     +version: typeof version,
-   338|     +checkPropTypes: typeof checkPropTypes,
-   339|     +memo: typeof memo,
-   340|     +lazy: typeof lazy,
-   341|     +createClass: typeof createClass,
-   342|     +createContext: typeof createContext,
-   343|     +createElement: typeof createElement,
-   344|     +cloneElement: typeof cloneElement,
-   345|     +createFactory: typeof createFactory,
-   346|     +createRef: typeof createRef,
-   347|     +isValidElement: typeof isValidElement,
-   348|     +Component: typeof Component,
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
       :
-   350|     +Fragment: typeof Fragment,
-   351|     +Children: typeof Children,
-   352|     +ConcurrentMode: typeof ConcurrentMode,
-   353|     +StrictMode: typeof StrictMode,
-   354|     +Suspense: typeof Suspense,
-   355|     +useContext: typeof useContext,
-   356|     +useState: typeof useState,
-   357|     +useReducer: typeof useReducer,
-   358|     +useRef: typeof useRef,
-   359|     +useEffect: typeof useEffect,
-   360|     +useLayoutEffect: typeof useLayoutEffect,
-   361|     +useCallback: typeof useCallback,
-   362|     +useMemo: typeof useMemo,
-   363|     +useImperativeMethods: typeof useImperativeMethods,
-   364|   |};
->>>>>>> Add React.Suspense component and tests
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
           -^ [1]
 
 
@@ -276,74 +231,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
              ^^^^^^^^^^
 
 References:
-<<<<<<< HEAD
-   <BUILTINS>/react.js:336:26
+   <BUILTINS>/react.js:342:26
                                  v-
-   336|   declare export default {|
-   337|     +DOM: typeof DOM,
-   338|     +PropTypes: typeof PropTypes,
-   339|     +version: typeof version,
-   340|     +checkPropTypes: typeof checkPropTypes,
-   341|     +memo: typeof memo,
-   342|     +lazy: typeof lazy,
-   343|     +createClass: typeof createClass,
-   344|     +createContext: typeof createContext,
-   345|     +createElement: typeof createElement,
-   346|     +cloneElement: typeof cloneElement,
-   347|     +createFactory: typeof createFactory,
-   348|     +createRef: typeof createRef,
-   349|     +isValidElement: typeof isValidElement,
-   350|     +Component: typeof Component,
-   351|     +PureComponent: typeof PureComponent,
-   352|     +Fragment: typeof Fragment,
-   353|     +Children: typeof Children,
-   354|     +ConcurrentMode: typeof ConcurrentMode,
-   355|     +StrictMode: typeof StrictMode,
-   356|     +useContext: typeof useContext,
-   357|     +useState: typeof useState,
-   358|     +useReducer: typeof useReducer,
-   359|     +useRef: typeof useRef,
-   360|     +useEffect: typeof useEffect,
-   361|     +useLayoutEffect: typeof useLayoutEffect,
-   362|     +useCallback: typeof useCallback,
-   363|     +useMemo: typeof useMemo,
-   364|     +useImperativeMethods: typeof useImperativeMethods,
-   365|   |};
-=======
-   <BUILTINS>/react.js:334:26
-                                 v-
-   334|   declare export default {|
-   335|     +DOM: typeof DOM,
-   336|     +PropTypes: typeof PropTypes,
-   337|     +version: typeof version,
-   338|     +checkPropTypes: typeof checkPropTypes,
-   339|     +memo: typeof memo,
-   340|     +lazy: typeof lazy,
-   341|     +createClass: typeof createClass,
-   342|     +createContext: typeof createContext,
-   343|     +createElement: typeof createElement,
-   344|     +cloneElement: typeof cloneElement,
-   345|     +createFactory: typeof createFactory,
-   346|     +createRef: typeof createRef,
-   347|     +isValidElement: typeof isValidElement,
-   348|     +Component: typeof Component,
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
       :
-   350|     +Fragment: typeof Fragment,
-   351|     +Children: typeof Children,
-   352|     +ConcurrentMode: typeof ConcurrentMode,
-   353|     +StrictMode: typeof StrictMode,
-   354|     +Suspense: typeof Suspense,
-   355|     +useContext: typeof useContext,
-   356|     +useState: typeof useState,
-   357|     +useReducer: typeof useReducer,
-   358|     +useRef: typeof useRef,
-   359|     +useEffect: typeof useEffect,
-   360|     +useLayoutEffect: typeof useLayoutEffect,
-   361|     +useCallback: typeof useCallback,
-   362|     +useMemo: typeof useMemo,
-   363|     +useImperativeMethods: typeof useImperativeMethods,
-   364|   |};
->>>>>>> Add React.Suspense component and tests
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
           -^ [1]
 
 
@@ -356,74 +276,39 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                ^^^^^^^^^^^^^
 
 References:
-<<<<<<< HEAD
-   <BUILTINS>/react.js:336:26
+   <BUILTINS>/react.js:342:26
                                  v-
-   336|   declare export default {|
-   337|     +DOM: typeof DOM,
-   338|     +PropTypes: typeof PropTypes,
-   339|     +version: typeof version,
-   340|     +checkPropTypes: typeof checkPropTypes,
-   341|     +memo: typeof memo,
-   342|     +lazy: typeof lazy,
-   343|     +createClass: typeof createClass,
-   344|     +createContext: typeof createContext,
-   345|     +createElement: typeof createElement,
-   346|     +cloneElement: typeof cloneElement,
-   347|     +createFactory: typeof createFactory,
-   348|     +createRef: typeof createRef,
-   349|     +isValidElement: typeof isValidElement,
-   350|     +Component: typeof Component,
-   351|     +PureComponent: typeof PureComponent,
-   352|     +Fragment: typeof Fragment,
-   353|     +Children: typeof Children,
-   354|     +ConcurrentMode: typeof ConcurrentMode,
-   355|     +StrictMode: typeof StrictMode,
-   356|     +useContext: typeof useContext,
-   357|     +useState: typeof useState,
-   358|     +useReducer: typeof useReducer,
-   359|     +useRef: typeof useRef,
-   360|     +useEffect: typeof useEffect,
-   361|     +useLayoutEffect: typeof useLayoutEffect,
-   362|     +useCallback: typeof useCallback,
-   363|     +useMemo: typeof useMemo,
-   364|     +useImperativeMethods: typeof useImperativeMethods,
-   365|   |};
-=======
-   <BUILTINS>/react.js:334:26
-                                 v-
-   334|   declare export default {|
-   335|     +DOM: typeof DOM,
-   336|     +PropTypes: typeof PropTypes,
-   337|     +version: typeof version,
-   338|     +checkPropTypes: typeof checkPropTypes,
-   339|     +memo: typeof memo,
-   340|     +lazy: typeof lazy,
-   341|     +createClass: typeof createClass,
-   342|     +createContext: typeof createContext,
-   343|     +createElement: typeof createElement,
-   344|     +cloneElement: typeof cloneElement,
-   345|     +createFactory: typeof createFactory,
-   346|     +createRef: typeof createRef,
-   347|     +isValidElement: typeof isValidElement,
-   348|     +Component: typeof Component,
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
       :
-   350|     +Fragment: typeof Fragment,
-   351|     +Children: typeof Children,
-   352|     +ConcurrentMode: typeof ConcurrentMode,
-   353|     +StrictMode: typeof StrictMode,
-   354|     +Suspense: typeof Suspense,
-   355|     +useContext: typeof useContext,
-   356|     +useState: typeof useState,
-   357|     +useReducer: typeof useReducer,
-   358|     +useRef: typeof useRef,
-   359|     +useEffect: typeof useEffect,
-   360|     +useLayoutEffect: typeof useLayoutEffect,
-   361|     +useCallback: typeof useCallback,
-   362|     +useMemo: typeof useMemo,
-   363|     +useImperativeMethods: typeof useImperativeMethods,
-   364|   |};
->>>>>>> Add React.Suspense component and tests
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
           -^ [1]
 
 

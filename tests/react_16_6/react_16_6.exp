@@ -10,8 +10,8 @@ References:
    Suspense.js:12:48
     12|   <Suspense fallback={<Loading />} maxDuration="abc" /> // Error: string is incompatible with number
                                                        ^^^^^ [1]
-   <BUILTINS>/react.js:256:19
-   256|     maxDuration?: number
+   <BUILTINS>/react.js:264:19
+   264|     maxDuration?: number
                           ^^^^^^ [2]
 
 
