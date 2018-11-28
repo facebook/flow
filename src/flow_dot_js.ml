@@ -241,7 +241,7 @@ let check filename =
 let set_libs_js js_libs =
   Js.to_array js_libs
   |> Array.to_list
-  |> List.map (fun x -> Js.to_string x)
+  |> List.map Js.to_string
   |> set_libs
 
 let check_js js_file =

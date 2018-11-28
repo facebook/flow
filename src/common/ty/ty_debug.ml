@@ -20,7 +20,7 @@ let rec dump_opt (f: 'a -> string) (o: 'a option) = match o with
 
 and dump_list : 'a . ('a -> string) -> ?sep:string -> 'a list -> string =
   fun f ?(sep=", ") ls ->
-    List.map f ls |> String.concat sep
+    Core_list.map ~f:f ls |> String.concat sep
 
 and dump_param_opt = function
   | { prm_optional = true } -> "?"
@@ -115,7 +115,7 @@ and dump_utility ~depth u =
   let ctor = Ty.string_of_utility_ctor u in
   match Ty.types_of_utility u with
   | Some ts ->
-    List.map (dump_t ~depth) ts |>
+    Core_list.map ~f:(dump_t ~depth) ts |>
     String.concat ", " |>
     spf "%s (%s)" ctor
   | None -> ctor
@@ -175,7 +175,7 @@ and dump_t ?(depth = 10) t =
 let dump_binding (v, ty) =
   Utils_js.spf "type %s = %s" (dump_tvar v) (dump_t ty)
 
-let dump_env_t s = List.map dump_binding s |> String.concat "\n"
+let dump_env_t s = Core_list.map ~f:dump_binding s |> String.concat "\n"
 
 let string_of_polarity = function
   | Negative -> "Negative"
@@ -256,20 +256,20 @@ let json_of_t ~strip_root =
     | Obj { obj_exact; obj_props; obj_frozen } -> [
         "exact", JSON_Bool obj_exact;
         "frozen", JSON_Bool obj_frozen;
-        "props", JSON_Array (List.map json_of_prop obj_props);
+        "props", JSON_Array (Core_list.map ~f:json_of_prop obj_props);
       ]
     | Arr { arr_readonly; arr_elt_t } -> [
         "readonly", JSON_Bool arr_readonly;
         "type", json_of_t arr_elt_t;
       ]
     | Tup ts -> [
-        "types", JSON_Array (List.map json_of_t ts);
+        "types", JSON_Array (Core_list.map ~f:json_of_t ts);
       ]
     | Union (t0,t1,ts) -> [
-        "types", JSON_Array (List.map json_of_t (t0::t1::ts));
+        "types", JSON_Array (Core_list.map ~f:json_of_t (t0::t1::ts));
       ]
     | Inter (t0,t1,ts) -> [
-        "types", JSON_Array (List.map json_of_t (t0::t1::ts));
+        "types", JSON_Array (Core_list.map ~f:json_of_t (t0::t1::ts));
       ]
     | TypeAlias { ta_name; ta_tparams; ta_type } -> [
         "name", json_of_symbol ta_name;
@@ -277,7 +277,7 @@ let json_of_t ~strip_root =
         "body", Option.value_map ~f:json_of_t ~default:JSON_Null ta_type
       ]
     | TypeOf (path, name) -> [
-        "path", JSON_Array (List.map (fun x -> JSON_String x) path);
+        "path", JSON_Array (Core_list.map ~f:(fun x -> JSON_String x) path);
         "name", JSON_String name;
       ]
     | Module name -> [
@@ -307,7 +307,7 @@ let json_of_t ~strip_root =
         "typeParams", json_of_type_params fun_type_params;
       ] @ [
         "paramTypes",
-        JSON_Array (List.map (fun (_, t, _) -> json_of_t t) fun_params)
+        JSON_Array (Core_list.map ~f:(fun (_, t, _) -> json_of_t t) fun_params)
       ] @ [
         "paramNames", JSON_Array (List.rev_map (function
           | (Some n, _, _) -> JSON_String n
@@ -329,12 +329,12 @@ let json_of_t ~strip_root =
   and json_of_type_params ps = Hh_json.(
     match ps with
     | None -> JSON_Null
-    | Some tparams -> JSON_Array (List.map json_of_typeparam tparams)
+    | Some tparams -> JSON_Array (Core_list.map ~f:json_of_typeparam tparams)
   )
 
   and json_of_targs targs_opt = Hh_json.(
     match targs_opt with
-    | Some targs -> [ "typeArgs", JSON_Array (List.map json_of_t targs) ]
+    | Some targs -> [ "typeArgs", JSON_Array (Core_list.map ~f:json_of_t targs) ]
     | None -> []
   )
 

@@ -249,7 +249,7 @@ end
 
 (* Stringify a list given a separator and a printer for the element type *)
 let to_string separator printer list =
-  String.concat separator @@ List.map printer list
+  String.concat separator @@ Core_list.map ~f:printer list
 
 (* Stringify an association list given a separator, a printer for the key type, a key/value
    separator, and a printer for the value type *)

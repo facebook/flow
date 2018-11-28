@@ -155,7 +155,7 @@ let of_lines base_settings =
     in
 
     (* Artificially locate the lines to detect unused lines *)
-    let located_lines = List.map locate_fun lint_lines in
+    let located_lines = Core_list.map ~f:locate_fun lint_lines in
     let settings = loop base_settings located_lines in
 
     settings >>= (fun settings ->

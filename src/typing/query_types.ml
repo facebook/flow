@@ -42,7 +42,7 @@ type result =
 | Success of Loc.t * Ty.t
 
 let concretize_loc_pairs pair_list =
-  List.map (fun (loc, x) -> ALoc.to_loc loc, x) pair_list
+  Core_list.map ~f:(fun (loc, x) -> ALoc.to_loc loc, x) pair_list
 
 let sort_loc_pairs pair_list =
   List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list

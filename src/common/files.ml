@@ -178,7 +178,7 @@ let max_files = 1000
     If kind_of_path fails, then we only emit a warning if error_filter passes *)
 let make_next_files_and_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths =
-  let prefix_checkers = List.map is_prefix paths in
+  let prefix_checkers = Core_list.map ~f:is_prefix paths in
   let rec process sz (acc, symlinks) files dir stack =
     if sz >= max_files then
       ((acc, symlinks), S_Dir (files, dir, stack))
@@ -233,7 +233,7 @@ let make_next_files_following_symlinks
   ~realpath_filter
   ~error_filter
   paths =
-  let paths = List.map Path.to_string paths in
+  let paths = Core_list.map ~f:Path.to_string paths in
   let cb = ref (make_next_files_and_symlinks
     ~node_module_filter ~path_filter ~realpath_filter ~error_filter paths
   ) in
@@ -297,7 +297,7 @@ let init ?(flowlibs_only=false) (options: options) =
           [lib]
       in
       libs
-      |> List.map (fun lib -> SSet.elements (get_all (get_next lib)))
+      |> Core_list.map ~f:(fun lib -> SSet.elements (get_all (get_next lib)))
       |> List.flatten
   in
   (libs, SSet.of_list libs)
@@ -318,7 +318,7 @@ let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
 (* true if a file path matches an [ignore] entry in config *)
 let is_ignored (options: options) =
-  let list = List.map snd options.ignores in
+  let list = Core_list.map ~f:snd options.ignores in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
@@ -327,7 +327,7 @@ let is_ignored (options: options) =
 
 (* true if a file path matches an [untyped] entry in config *)
 let is_untyped (options: options) =
-  let list = List.map snd options.untyped in
+  let list = Core_list.map ~f:snd options.untyped in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
@@ -336,7 +336,7 @@ let is_untyped (options: options) =
 
 (* true if a file path matches a [declarations] entry in config *)
 let is_declaration (options: options) =
-  let list = List.map snd options.declarations in
+  let list = Core_list.map ~f:snd options.declarations in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
@@ -552,7 +552,7 @@ let imaginary_realpath =
     | Some abs -> List.fold_left Filename.concat abs rev_suffix
 
 let canonicalize_filenames ~cwd ~handle_imaginary filenames =
-  List.map (fun filename ->
+  Core_list.map ~f:(fun filename ->
     let filename = Sys_utils.expanduser filename in (* normalize ~ *)
     let filename = normalize_path cwd filename in (* normalize ./ and ../ *)
     match Sys_utils.realpath filename with (* normalize symlinks *)

@@ -160,7 +160,7 @@ end = struct
       let module_ref = Files.module_ref leader_f in
       Context.make sig_cx metadata leader_f module_ref
     in
-    let module_refs = List.map (fun f ->
+    let module_refs = Core_list.map ~f:(fun f ->
       let module_ref = Files.module_ref f in
       let module_t = Type.AnyT.locationless Type.AnyError in
       Context.add_module cx module_ref module_t;

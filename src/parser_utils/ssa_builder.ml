@@ -97,7 +97,7 @@ module Make
       Loc loc
 
     let all locs =
-      join (List.map (fun loc -> Loc loc) locs)
+      join (Core_list.map ~f:(fun loc -> Loc loc) locs)
 
     (* Resolving unresolved to t essentially models an equation of the form
        unresolved = t, where unresolved is a reference to an unknown and t is the
@@ -130,7 +130,7 @@ module Make
     (* Simplification converts a Val.t to a list of locations. *)
     let simplify t =
       let vals = normalize t in
-      List.map (function
+      Core_list.map ~f:(function
         | Uninitialized -> Ssa_api.Uninitialized
         | Loc loc -> Ssa_api.Write loc
         | REF { contents = Unresolved _ } -> failwith "An unresolved REF cannot be simplified"

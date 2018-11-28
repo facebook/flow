@@ -368,10 +368,10 @@ and program_simple (loc, statements, _) =
   source_location_with_comments (loc, nodes)
 
 and combine_directives_and_comments directives comments : Layout.layout_node =
-  let directives = List.map (fun ((loc, _) as x) -> loc, Statement x) directives in
-  let comments = List.map (fun ((loc, _) as x) -> loc, Comment x) comments in
+  let directives = Core_list.map ~f:(fun ((loc, _) as x) -> loc, Statement x) directives in
+  let comments = Core_list.map ~f:(fun ((loc, _) as x) -> loc, Comment x) comments in
   let merged = List.merge (fun (a, _) (b, _) -> Loc.compare a b) directives comments in
-  let nodes = List.map (function
+  let nodes = Core_list.map ~f:(function
     | loc, Statement s -> loc, statement s
     | loc, Comment c -> loc, comment c
   ) merged in
@@ -411,7 +411,7 @@ and statement_list_with_locs ?(pretty_semicolon=false) (stmts: (Loc.t, Loc.t) As
 and statement_list ?pretty_semicolon (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
   stmts
   |> statement_list_with_locs ?pretty_semicolon
-  |> List.map (fun (_loc, layout) -> layout)
+  |> Core_list.map ~f:(fun (_loc, layout) -> layout)
 
 (**
  * Renders a statement
@@ -722,7 +722,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
          around the right side. we can force that by bumping the minimum
          precedence. *)
       let precedence = precedence + 1 in
-      let layouts = List.map (expression_with_parens ~precedence ~ctxt) expressions in
+      let layouts = Core_list.map ~f:(expression_with_parens ~precedence ~ctxt) expressions in
       group [join (fuse [Atom ","; pretty_line]) layouts]
     | E.Identifier ident -> identifier ident
     | E.Literal lit -> literal lit
@@ -838,7 +838,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         new_list
           ~wrap:(Atom "(", Atom ")")
           ~sep:(Atom ",")
-          (List.map expression_or_spread arguments);
+          (Core_list.map ~f:expression_or_spread arguments);
       ];
     | E.Unary { E.Unary.operator; argument } ->
       let s_operator, needs_space = begin match operator with
@@ -950,7 +950,7 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
           new_list
             ~wrap:(Atom less_than, Atom ">")
             ~sep:(Atom ",")
-            (List.map explicit_or_implicit args);
+            (Core_list.map ~f:explicit_or_implicit args);
         ]
       ), "("
     in
@@ -961,7 +961,7 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
         new_list
           ~wrap:(Atom lparen, Atom ")")
           ~sep:(Atom ",")
-          (List.map expression_or_spread arguments);
+          (Core_list.map ~f:expression_or_spread arguments);
       ]
     ]
 
@@ -1180,7 +1180,7 @@ and variable_declaration ?(ctxt=normal_context) (loc, {
     | single_decl::[] -> variable_declarator ~ctxt single_decl
     | hd::tl ->
       let hd = variable_declarator ~ctxt hd in
-      let tl = List.map (variable_declarator ~ctxt) tl in
+      let tl = Core_list.map ~f:(variable_declarator ~ctxt) tl in
       group [
         hd; Atom ",";
         Indent (fuse [
@@ -1301,7 +1301,7 @@ and function_base ~prefix ~params ~body ~predicate ~return ~tparams =
   ]
 
 and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
-  let s_params = List.map (fun (loc, { Ast.Function.Param.argument }) ->
+  let s_params = Core_list.map ~f:(fun (loc, { Ast.Function.Param.argument }) ->
     source_location_with_comments (loc, pattern ~ctxt argument)
   ) params in
   match rest with
@@ -1424,7 +1424,7 @@ and class_body (loc, { Ast.Class.Body.body }) =
       group [
         wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [
           join pretty_hardline (
-            List.map (function
+            Core_list.map ~f:(function
             | Ast.Class.Body.Method meth -> class_method meth
             | Ast.Class.Body.Property prop -> class_property prop
             | Ast.Class.Body.PrivateField field -> class_private_field field
@@ -1524,7 +1524,7 @@ and list_with_newlines (nodes: (Loc.t * Layout.layout_node) list) =
 
 and statements_list_with_newlines statements =
   statements
-  |> List.map (fun (loc, s) -> loc, statement (loc, s))
+  |> Core_list.map ~f:(fun (loc, s) -> loc, statement (loc, s))
   |> list_with_newlines
 
 and object_properties_with_newlines properties =
@@ -1759,7 +1759,7 @@ and jsx_opening_helper loc nameOpt attributes =
     if attributes <> [] then
       Layout.Indent (fuse [
         line;
-        join pretty_line (List.map jsx_opening_attr attributes);
+        join pretty_line (Core_list.map ~f:jsx_opening_attr attributes);
       ])
     else Empty;
     Atom ">";
@@ -1768,7 +1768,7 @@ and jsx_opening_helper loc nameOpt attributes =
 and jsx_self_closing (loc, { Ast.JSX.Opening.
   name; attributes; selfClosing=_
 }) =
-  let attributes = List.map jsx_opening_attr attributes in
+  let attributes = Core_list.map ~f:jsx_opening_attr attributes in
   source_location_with_comments (loc, group [
     Atom "<";
     jsx_element_name name;
@@ -1798,7 +1798,7 @@ and jsx_closing_fragment loc =
 
 and jsx_children loc children =
   let open Loc in
-  let processed_children = deoptionalize (List.map jsx_child children) in
+  let processed_children = deoptionalize (Core_list.map ~f:jsx_child children) in
   (* Check for empty children *)
   if List.length processed_children <= 0 then Empty
   (* If start and end lines don't match check inner breaks *)
@@ -1828,7 +1828,7 @@ and jsx_children loc children =
       pretty_hardline;
     ]
   (* Single line *)
-  end else fuse (List.map (fun (loc, child) -> SourceLocation (loc, child)) processed_children)
+  end else fuse (Core_list.map ~f:(fun (loc, child) -> SourceLocation (loc, child)) processed_children)
 
 and jsx_child (loc, child) =
   match child with
@@ -1892,7 +1892,7 @@ and import_named_specifiers named_specifiers =
     new_list
       ~wrap:(Atom "{", Atom "}")
       ~sep:(Atom ",")
-      (List.map import_named_specifier named_specifiers);
+      (Core_list.map ~f:import_named_specifier named_specifiers);
   ]
 
 and import_declaration { Ast.Statement.ImportDeclaration.
@@ -2073,7 +2073,7 @@ and type_parameter (loc, params) =
       new_list
         ~wrap:(Atom "<", Atom ">")
         ~sep:(Atom ",")
-        (List.map type_param params);
+        (Core_list.map ~f:type_param params);
     ]
   )
 
@@ -2084,7 +2084,7 @@ and type_parameter_instantiation_with_implicit (loc, args) =
       new_list
         ~wrap:(Atom "<", Atom ">")
         ~sep:(Atom ",")
-        (List.map explicit_or_implicit args);
+        (Core_list.map ~f:explicit_or_implicit args);
     ]
   )
 
@@ -2095,7 +2095,7 @@ and type_parameter_instantiation (loc, args) =
       new_list
         ~wrap:(Atom "<", Atom ">")
         ~sep:(Atom ",")
-        (List.map type_ args);
+        (Core_list.map ~f:type_ args);
     ]
   )
 
@@ -2171,7 +2171,7 @@ and type_function ~sep { Ast.Type.Function.
   return;
   tparams;
 } =
-  let params = List.map type_function_param params in
+  let params = Core_list.map ~f:type_function_param params in
   let params = match restParams with
   | Some (loc, { Ast.Type.Function.RestParam.argument }) -> params@[
       source_location_with_comments (loc, fuse [Atom "..."; type_function_param argument]);
@@ -2271,7 +2271,7 @@ and type_object_property = Ast.Type.Object.(function
 
 and type_object ?(sep=(Atom ",")) { Ast.Type.Object.exact; properties; inexact} =
   let s_exact = if exact then Atom "|" else Empty in
-  let props = List.map type_object_property properties in
+  let props = Core_list.map ~f:type_object_property properties in
   let props = if inexact then props @ [Atom "..."] else props in
   group [
     new_list
@@ -2355,7 +2355,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
       type_union_or_intersection ~sep:(Atom "&") (t1::t2::ts)
     | T.Typeof t -> fuse [Atom "typeof"; space; type_ t]
     | T.Tuple ts ->
-      group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (List.map type_ ts)]
+      group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:type_ ts)]
     | T.StringLiteral { Ast.StringLiteral.raw; _ }
     | T.NumberLiteral { Ast.NumberLiteral.raw; _ } -> Atom raw
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")

@@ -245,13 +245,13 @@ let subst_sig cx map s =
     methods = SMap.map (Nel.map subst_func_sig) s.methods;
     getters = SMap.map (subst_func_sig) s.getters;
     setters = SMap.map (subst_func_sig) s.setters;
-    calls = List.map (Flow.subst cx map) s.calls;
+    calls = Core_list.map ~f:(Flow.subst cx map) s.calls;
     call_deprecated = Option.map ~f:(Flow.subst cx map) s.call_deprecated;
   }
 
 let subst_typeapp cx map (loc, c, targs) =
   let c = Flow.subst cx map c in
-  let targs = Option.map ~f:(List.map (Flow.subst cx map)) targs in
+  let targs = Option.map ~f:(Core_list.map ~f:(Flow.subst cx map)) targs in
   (loc, c, targs)
 
 let subst_extends cx map = function
@@ -261,14 +261,14 @@ let subst_extends cx map = function
 let subst_super cx map = function
   | Interface { extends; callable } ->
     Interface {
-      extends = List.map (subst_typeapp cx map) extends;
+      extends = Core_list.map ~f:(subst_typeapp cx map) extends;
       callable;
     }
   | Class { extends; mixins; implements } ->
     Class {
       extends = subst_extends cx map extends;
-      mixins = List.map (subst_typeapp cx map) mixins;
-      implements = List.map (subst_typeapp cx map) implements;
+      mixins = Core_list.map ~f:(subst_typeapp cx map) mixins;
+      implements = Core_list.map ~f:(subst_typeapp cx map) implements;
     }
 
 let generate_tests cx f x =
@@ -312,7 +312,7 @@ let elements cx ?constructor s =
       match ms with
       | (loc, t, _), [] -> loc, t
       | (loc0, t0, _), (_, t1, _)::ts ->
-          let ts = List.map (fun (_loc, t, _) -> t) ts in
+          let ts = Core_list.map ~f:(fun (_loc, t, _) -> t) ts in
           loc0, DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts))
     ) s.methods
   in
@@ -454,12 +454,12 @@ let insttype cx ~initialized_static_fields s =
     | [] -> None
     | [x] -> Some x
     | (loc0, t0)::(_loc1, t1)::ts ->
-      let ts = List.map snd ts in
+      let ts = Core_list.map ~f:snd ts in
       let open Type in
       let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
       Some (loc0, t)
   in
-  let type_args = List.map (fun {Type.name; reason; polarity; _} ->
+  let type_args = Core_list.map ~f:(fun {Type.name; reason; polarity; _} ->
     let t = SMap.find_unsafe name s.tparams_map in
     name, reason, t, polarity
   ) (Type.TypeParams.to_list s.tparams) in
@@ -485,7 +485,7 @@ let add_this self cx reason tparams tparams_map =
     | None ->
       Flow.mk_instance cx reason self
     | _ ->
-      let targs = List.map (fun tp ->
+      let targs = Core_list.map ~f:(fun tp ->
         let {Type.reason; name; polarity; _} = tp in
         Type.BoundT (reason, name, polarity)
       ) (Type.TypeParams.to_list tparams) in
@@ -541,7 +541,7 @@ let supertype cx tparams_with_this x =
   let open Type in
   match x.super with
   | Interface {extends; callable} ->
-    let extends = List.map (function
+    let extends = Core_list.map ~f:(function
     | loc, c, None ->
       let reason = annot_reason (repos_reason loc (reason_of_t c)) in
       Flow.mk_instance cx reason c
@@ -595,7 +595,7 @@ let thistype cx x =
   let implements = match x.super with
   | Interface _ -> []
   | Class {implements; _} ->
-    List.map (function
+    Core_list.map ~f:(function
       | loc, c, None ->
         let reason = annot_reason (repos_reason loc (Type.reason_of_t c)) in
         Flow.mk_instance cx reason c

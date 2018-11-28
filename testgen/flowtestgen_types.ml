@@ -58,7 +58,7 @@ let mk_union_type (tarray : T.t' array) : T.t' =
 (* Make an object type output of a list of properties *)
 let mk_obj_type (props : (string * T.t') list) : T.t' =
   let open T.Object in
-  let plist = List.map (fun (p, t) ->
+  let plist = Core_list.map ~f:(fun (p, t) ->
       let key = E.Object.Property.(Identifier (Loc.none, p)) in
       let value = T.Object.Property.(Init (Loc.none, t)) in
       let open T.Object.Property in
@@ -76,7 +76,7 @@ let mk_obj_type (props : (string * T.t') list) : T.t' =
             properties = plist}
 
 let mk_tuple_type (tlist : T.t' list) : T.t' =
-  T.Tuple (List.map (fun t -> (Loc.none, t)) tlist)
+  T.Tuple (Core_list.map ~f:(fun t -> (Loc.none, t)) tlist)
 
 (* Return a string literal of a given type *)
 let strlit_of_type (t : T.t') : E.t' =
@@ -103,7 +103,7 @@ let rec mk_literal_expr (t : T.t') : Code.t' =
     let lit = Ast.Literal.({value = Boolean false; raw = "false"}) in
     {expr = E.Literal lit; expr_deps = []}
   | T.Union (t1, t2, rest) ->
-    let all_types = (t1 :: t2 :: rest) |> (List.map snd) in
+    let all_types = (t1 :: t2 :: rest) |> (Core_list.map ~f:snd) in
     let t = Utils.random_choice (Array.of_list all_types) in
     mk_literal_expr t
   | T.Object obj_t -> mk_obj_literal_expr obj_t
@@ -123,7 +123,7 @@ let rec mk_literal_expr (t : T.t') : Code.t' =
     let lit = Ast.Literal.({value = Boolean value; raw}) in
     {expr = E.Literal lit; expr_deps = []}
   | T.Tuple tlist ->
-    let elements = List.map (fun (_, tt) ->
+    let elements = Core_list.map ~f:(fun (_, tt) ->
         let e = mk_literal_expr tt in
         Some (E.Expression (Loc.none, e.expr))) tlist in
     {expr = E.Array.(E.Array {elements});
@@ -137,7 +137,7 @@ let rec mk_literal_expr (t : T.t') : Code.t' =
 and mk_obj_literal_expr (t : T.Object.t) : Code.t' =
   let open Code in
   let prop_init_list =
-    List.map (fun p ->
+    Core_list.map ~f:(fun p ->
         let open T.Object.Property in
         match p with
         | T.Object.Property (_, {key = k;
@@ -149,7 +149,7 @@ and mk_obj_literal_expr (t : T.Object.t) : Code.t' =
         | _ -> failwith "Unsupported property") T.Object.(t.properties)
     (* Randomly remove some optional properties *)
     |> List.filter (fun (_, o, _) -> not o || (Random.bool ()))
-    |> List.map (fun (key, _, expr_t) ->
+    |> Core_list.map ~f:(fun (key, _, expr_t) ->
        let open E.Object.Property in
        E.Object.Property (Loc.none, {key;
                                      value = Init (Loc.none, expr_t.expr);

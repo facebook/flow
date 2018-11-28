@@ -43,7 +43,7 @@ let mk_patch_ast_differ (diff : Flow_ast_differ.node Flow_ast_differ.change list
 
    let attached_comments = Some (Flow_prettier_comments.attach_comments ast) in
    Ast_diff_printer.edits_of_changes attached_comments diff
-   |> List.map (fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
+   |> Core_list.map ~f:(fun (loc, text) -> Loc.(offset loc.start, offset loc._end, text))
 
 let print (patch : patch) (file_path : string) : string =
   let patch_sorted = List.sort

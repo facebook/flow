@@ -11,7 +11,7 @@ open Core_result
 open Ty
 module T = Flow_ast.Type
 
-let mapM f ts = all (List.map f ts)
+let mapM f ts = all (Core_list.map ~f:f ts)
 
 let opt f t =
   match t with

@@ -35,7 +35,7 @@ let remove ~request_id =
 let remove_all () =
   (* TODO(ljw): doesn't really need mutexes since it doesn't yield *)
   Lwt_mutex.with_lock mutex (fun () ->
-    let ret = SMap.elements !map |> List.map snd in
+    let ret = SMap.elements !map |> Core_list.map ~f:snd in
     map := SMap.empty;
     Lwt.return ret
   )

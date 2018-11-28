@@ -53,7 +53,7 @@ end = struct
     then
       C.cprint to_print
     else
-      let strings = List.map snd to_print in
+      let strings = Core_list.map ~f:snd to_print in
       List.iter (Printf.printf "%s") strings
 
   type case_expectation =

@@ -486,9 +486,9 @@ let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents 
     let errors, remote_dependencies, env =
       Signature_builder.Signature.verify ?prevent_munge ?ignore_static_propTypes signature
     in
-    let error_msgs = List.map Signature_builder_deps.Error.debug_to_string @@
+    let error_msgs = Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
       Signature_builder_deps.ErrorSet.elements errors in
-    let remote_dependency_msgs = List.map Signature_builder_deps.Dep.to_string @@
+    let remote_dependency_msgs = Core_list.map ~f:Signature_builder_deps.Dep.to_string @@
       Signature_builder_deps.DepSet.elements remote_dependencies in
     let reachable_msg_opt =
       if SMap.is_empty env then []
@@ -503,7 +503,7 @@ let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents 
   end
 
 let tests = "signature_verifier" >:::
-  (List.map (fun (
+  (Core_list.map ~f:(fun (
     (prevent_munge, ignore_static_propTypes, name),
     contents,
     error_msgs,

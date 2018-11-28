@@ -86,7 +86,7 @@ let dependencies = filter_into_set ~f:(fun kind -> kind = Dependency)
 let debug_to_string ?(limit) =
   let string_of_set set =
     let files = Utils_js.FilenameSet.elements set
-      |> List.map (fun f -> spf "\"%s\"" (File_key.to_string f)) in
+      |> Core_list.map ~f:(fun f -> spf "\"%s\"" (File_key.to_string f)) in
     let files = match limit with
       | None -> files
       | Some n -> ListUtils.first_upto_n n (fun t -> Some (spf "[shown %d/%d]" n t)) files

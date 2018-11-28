@@ -108,7 +108,7 @@ let lib_before_and_after_stmts file_name =
   add_require_tvars cx file_sig;
   let module_scope = Scope.fresh () in
   Env.init_env cx module_scope;
-  let stmts = List.map Ast_loc_utils.abstractify_mapper#statement stmts in
+  let stmts = Core_list.map ~f:Ast_loc_utils.abstractify_mapper#statement stmts in
   let t_stmts =
     try
       Statement.toplevel_decls cx stmts;
@@ -128,7 +128,7 @@ end
 
 let generate_stmts_layout (stmts: ('a, 'b) Flow_ast.Statement.t list) =
   let none_mapper = new loc_none_mapper in
-  let prog = Loc.none, List.map none_mapper#statement stmts, [] in
+  let prog = Loc.none, Core_list.map ~f:none_mapper#statement stmts, [] in
   let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
   layout |> Pretty_printer.print ~source_maps:None |> Source.contents
 

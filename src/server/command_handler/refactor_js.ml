@@ -15,7 +15,7 @@ let (>>|) = Core_result.(>>|)
 let get_ref_kinds refs loc =
   refs
   |> List.filter (fun (_, ref_loc) -> ref_loc = loc)
-  |> List.map fst
+  |> Core_list.map ~f:fst
 
 class rename_mapper refs new_name = object(this)
   inherit [Loc.t] Flow_ast_mapper.mapper as super

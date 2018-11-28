@@ -1896,7 +1896,7 @@ end = struct
   let members (t0, t1, ts) = t0::t1::ts
   let members_nel (t0, t1, ts) = t0, (t1, ts)
 
-  let map f (t0, t1, ts) = make (f t0) (f t1) (List.map f ts)
+  let map f (t0, t1, ts) = make (f t0) (f t1) (Core_list.map ~f:f ts)
 
   let append ts2 (t0, t1, ts1) = make t0 t1 (ts1 @ ts2)
 
@@ -3325,7 +3325,7 @@ let mk_methodtype
   this_t = this;
   params = (
     match params_names with
-    | None -> List.map (fun t -> None, t) tins
+    | None -> Core_list.map ~f:(fun t -> None, t) tins
     | Some xs -> List.map2 (fun x t -> (x, t)) xs tins
   );
   rest_param;

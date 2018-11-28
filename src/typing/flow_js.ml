@@ -405,7 +405,7 @@ and resolve_tvar cx (_, id) =
   ) (locationless_reason RAny |> Unsoundness.dummy_any) ts
 
 and resolve_merged_t cx uses =
-  let ts = List.map (possible_types_of_use cx) uses in
+  let ts = Core_list.map ~f:(possible_types_of_use cx) uses in
   match List.flatten ts with
   | [] -> locationless_reason RAny |> Unsoundness.dummy_any
   | [x] -> x
@@ -503,7 +503,7 @@ end = struct
      elements of the list to strings. Should probably be moved somewhere else
      for general reuse. *)
   let string_of_list list sep f =
-    list |> List.map f |> String.concat sep
+    list |> Core_list.map ~f:f |> String.concat sep
 
   let string_of_desc_of_t t = DescFormat.name_of_instance_reason (reason_of_t t)
 
@@ -548,7 +548,7 @@ end = struct
       in loop false (prev_tss, tss)
 
     in fun cx (c, ts) ->
-      let tss = List.map (collect_roots cx) ts in
+      let tss = Core_list.map ~f:(collect_roots cx) ts in
       let loop = !stack |> List.exists (fun (prev_c, prev_tss) ->
         c = prev_c && possibly_expanding_targs prev_tss tss
       ) in
@@ -1026,7 +1026,7 @@ module ResolvableTypeJob = struct
     collect_of_type ?log_unresolved cx reason acc t
   | CallT (_, _, fct) ->
     let arg_types =
-      List.map (function Arg t | SpreadArg t -> t) fct.call_args_tlist in
+      Core_list.map ~f:(function Arg t | SpreadArg t -> t) fct.call_args_tlist in
     collect_of_types ?log_unresolved cx reason acc (arg_types @ [fct.call_tout])
   | GetPropT (_, _, _, t_out) ->
     collect_of_type ?log_unresolved cx reason acc t_out
@@ -1190,7 +1190,7 @@ let print_if_verbose_lazy cx trace
     let prefix = String.make (indent * num_spaces) ' ' in
     let pid = Context.pid_prefix cx in
     let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
-    let lines = List.map add_prefix lines in
+    let lines = Core_list.map ~f:add_prefix lines in
     prerr_endline (String.concat delim lines)
   | None ->
     ()
@@ -1198,7 +1198,7 @@ let print_if_verbose_lazy cx trace
 let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines: string list) =
   match Context.verbose cx with
   | Some _ ->
-    let lines = List.map (fun line -> lazy line) lines in
+    let lines = Core_list.map ~f:(fun line -> lazy line) lines in
     print_if_verbose_lazy cx trace ~delim ~indent lines
   | None ->
     ()
@@ -3941,7 +3941,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | CallT (use_op, _, calltype) when not (is_typemap_reason reason_op) ->
         begin match calltype.call_targs with
         | None ->
-          let arg_reasons = List.map (function
+          let arg_reasons = Core_list.map ~f:(function
             | Arg t -> reason_of_t t
             | SpreadArg t -> reason_of_t t
           ) calltype.call_args_tlist in
@@ -5427,8 +5427,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, ArrT arrtype), MapTypeT (reason_op, TupleMap funt, tout) ->
       let f x = EvalT (funt, TypeDestructorT (unknown_use, reason_op, CallType [x]), mk_id ()) in
       let arrtype = match arrtype with
-      | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(List.map f) ts)
-      | TupleAT (elemt, ts) -> TupleAT (f elemt, List.map f ts)
+      | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(Core_list.map ~f:f) ts)
+      | TupleAT (elemt, ts) -> TupleAT (f elemt, Core_list.map ~f:f ts)
       | ROArrayAT (elemt) -> ROArrayAT (f elemt) in
       let t =
         let reason = replace_reason_const RArrayType reason_op in
@@ -6984,7 +6984,7 @@ and expand_any _cx any t =
   | DefT (r, ArrT (ArrayAT _)) ->
       DefT (r, ArrT (ArrayAT (any, None)))
   | DefT (r, ArrT (TupleAT (_, ts))) ->
-      DefT (r, ArrT (TupleAT (any, List.map only_any ts)))
+      DefT (r, ArrT (TupleAT (any, Core_list.map ~f:only_any ts)))
 
   | OpaqueT (r, ({ underlying_t; super_t; opaque_type_args; _} as opaquetype)) ->
       let opaquetype = { opaquetype with
@@ -7403,7 +7403,7 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
   | [] -> [SMap.empty]
   | params ->
     let all = mk_argmap (mk_bound cx) params in
-    let each = List.map (fun ({ name; _ } as p) ->
+    let each = Core_list.map ~f:(fun ({ name; _ } as p) ->
       SMap.add name (mk_bot SMap.empty p) all
     ) params in
     List.rev (all :: each)
@@ -7412,8 +7412,8 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
   let powerset cx params arg_map =
     let none = mk_argmap mk_bot params in
     List.fold_left (fun maps ({ name; _ } as p) ->
-      let bots = List.map (SMap.add name (SMap.find_unsafe name none)) maps in
-      let bounds = List.map (fun m -> SMap.add name (mk_bound cx m p) m) maps in
+      let bots = Core_list.map ~f:(SMap.add name (SMap.find_unsafe name none)) maps in
+      let bounds = Core_list.map ~f:(fun m -> SMap.add name (mk_bound cx m p) m) maps in
       bots @ bounds
     ) [arg_map] params
   in
@@ -7423,7 +7423,7 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
     let is_free = function { bound = DefT (_, MixedT _); _ } -> true | _ -> false in
     let free_params, dep_params = List.partition is_free params in
     let free_sets = linear cx free_params in
-    let powersets = List.map (powerset cx dep_params) free_sets in
+    let powersets = Core_list.map ~f:(powerset cx dep_params) free_sets in
     let hd_map, tl_maps =
       match List.flatten powersets with
       | x::xs -> x, xs
@@ -7661,7 +7661,7 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     ObjKitT (use_op, reason, Resolve (Next), ReadOnly, tout)
   | ValuesType -> GetValuesT (reason, tout)
   | CallType args ->
-    let args = List.map (fun arg -> Arg arg) args in
+    let args = Core_list.map ~f:(fun arg -> Arg arg) args in
     let call = mk_functioncalltype reason None args tout in
     let call = {call with call_strict_arity = false} in
     CallT (use_op, reason, call)
@@ -8648,7 +8648,7 @@ and long_path_speculative_matches cx trace r speculation_id spec = Speculation.C
    during a trial.
 *)
 and blame_unresolved cx trace prev_i i cases case_r r tvars =
-  let rs = tvars |> List.map (fun (_, r) -> r) |> List.sort compare in
+  let rs = tvars |> Core_list.map ~f:(fun (_, r) -> r) |> List.sort compare in
   let prev_case = reason_of_t (List.nth cases prev_i) in
   let case = reason_of_t (List.nth cases i) in
   add_output cx ~trace (FlowError.ESpeculationAmbiguous (
@@ -10710,7 +10710,7 @@ and finish_resolve_spread_list =
    * basically a spread argument that we'd like to resolve *)
   let finish_call_t cx ?trace ~use_op ~reason_op funcalltype resolved tin =
     let flattened = flatten_spread_args resolved in
-    let call_args_tlist = List.map (function
+    let call_args_tlist = Core_list.map ~f:(function
       | ResolvedArg t -> Arg t
       | ResolvedSpreadArg (r, arrtype) -> SpreadArg (DefT (r, ArrT arrtype))
       | ResolvedAnySpreadArg r -> SpreadArg (AnyT.untyped r)) flattened in
@@ -11584,7 +11584,7 @@ and object_kit =
           DefT (reason, UnionT (UnionRep.make
             (mk_object cx reason options x0)
             (mk_object cx reason options x1)
-            (List.map (mk_object cx reason options) xs)))
+            (Core_list.map ~f:(mk_object cx reason options) xs)))
         in
         (* Intentional UnknownUse here. *)
         rec_flow_t cx trace (t, tout)
@@ -12424,22 +12424,22 @@ end = struct
         (* Intersection type should autocomplete for every property of
            every type in the intersection *)
         let ts = InterRep.members rep in
-        let ts = List.map (resolve_type cx) ts in
-        let members = List.map (extract_members_as_map ~exclude_proto_members cx) ts in
+        let ts = Core_list.map ~f:(resolve_type cx) ts in
+        let members = Core_list.map ~f:(extract_members_as_map ~exclude_proto_members cx) ts in
         Success (List.fold_left (fun acc members ->
           AugmentableSMap.augment acc ~with_bindings:members
         ) SMap.empty members)
     | Success (DefT (_, UnionT rep)) ->
         (* Union type should autocomplete for only the properties that are in
         * every type in the intersection *)
-        let ts = List.map (resolve_type cx) (UnionRep.members rep) in
+        let ts = Core_list.map ~f:(resolve_type cx) (UnionRep.members rep) in
         let members = ts
           (* Although we'll ignore the any-ish and nullish members of the union *)
           |> List.filter (function
              | DefT (_, (AnyT _ | NullT | VoidT)) -> false
              | _ -> true
              )
-          |> List.map (extract_members_as_map ~exclude_proto_members cx)
+          |> Core_list.map ~f:(extract_members_as_map ~exclude_proto_members cx)
           |> intersect_members cx in
         Success members
     | Success t | SuccessModule t ->
@@ -12557,7 +12557,7 @@ class assert_ground_visitor r ~max_reasons = object (self)
           Unsoundness.dummy |> AnyT.locationless |> unify_opt cx ~unify_any:true (OpenT (r, id));
           let trace_reasons = if max_reasons = 0
              then []
-             else List.map (fun reason ->
+             else Core_list.map ~f:(fun reason ->
                  repos_reason (def_aloc_of_reason reason) reason)
                (Nel.to_list !reason_stack) in
           add_output cx (FlowError.EMissingAnnotation (r, trace_reasons));

@@ -258,7 +258,7 @@ end = struct
     | Concat items ->
       let items =
         items
-        |> List.map string_of_layout
+        |> Core_list.map ~f:string_of_layout
         |> String.concat "; "
       in
       spf "Concat [%s]" items
@@ -266,7 +266,7 @@ end = struct
     | Group items ->
       let items =
         items
-        |> List.map string_of_layout
+        |> Core_list.map ~f:string_of_layout
         |> String.concat "; "
       in
       spf "Group [%s]" items
@@ -280,7 +280,7 @@ end = struct
       in
       let nodes =
         node_list
-        |> List.map string_of_layout
+        |> Core_list.map ~f:string_of_layout
         |> String.concat "; "
       in
       spf "Sequence (%s, [%s])" config nodes
@@ -319,7 +319,7 @@ end = struct
         Atom "Concat";
         pretty_space;
         list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
-          (List.map layout_of_layout items);
+          (Core_list.map ~f:layout_of_layout items);
       ]
 
     | Group items ->
@@ -327,7 +327,7 @@ end = struct
         Atom "Group";
         pretty_space;
         list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
-          (List.map layout_of_layout items);
+          (Core_list.map ~f:layout_of_layout items);
       ]
 
     | Sequence ({ break; inline=(inline_before, inline_after); indent; }, node_list) ->
@@ -337,7 +337,7 @@ end = struct
         Atom (spf "indent=%d" indent);
       ] in
       let nodes = list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ";")
-        (List.map layout_of_layout node_list) in
+        (Core_list.map ~f:layout_of_layout node_list) in
       Concat [
         Atom "Sequence";
         pretty_space;

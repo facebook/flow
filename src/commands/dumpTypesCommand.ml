@@ -38,7 +38,7 @@ let spec = {
 let types_to_json types ~strip_root =
   let open Hh_json in
   let open Reason in
-  let types_json = types |> List.map (fun (loc, t) ->
+  let types_json = types |> Core_list.map ~f:(fun (loc, t) ->
     let json_assoc = (
       ("type", JSON_String t) ::
       ("reasons", JSON_Array []) ::
@@ -56,7 +56,7 @@ let handle_response types ~json ~pretty ~strip_root =
     Hh_json.print_json_endline ~pretty types_json
   ) else (
     let out = types
-      |> List.map (fun (loc, str) ->
+      |> Core_list.map ~f:(fun (loc, str) ->
         (spf "%s: %s" (Reason.string_of_loc ~strip_root loc) str)
       )
       |> String.concat "\n"

@@ -60,7 +60,7 @@ let print_json result ~pretty ~strip_root =
       JSON_Object [
         "kind", JSON_String "symbol-found";
         "name", JSON_String name;
-        "locs", JSON_Array (List.map (Reason.json_of_loc ~strip_root) locs)
+        "locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root) locs)
       ]
   in
   print_json_endline ~pretty json
@@ -72,8 +72,8 @@ let to_string result option_values ~strip_root =
   in
   String.concat "\n" @@
     if option_values.from = "vim" || option_values.from = "emacs"
-    then List.map (Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
-    else List.map (range_string_of_loc ~strip_root) locs
+    then Core_list.map ~f:(Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
+    else Core_list.map ~f:(range_string_of_loc ~strip_root) locs
 
 
     (* find-refs command handler.

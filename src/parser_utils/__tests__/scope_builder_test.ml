@@ -27,8 +27,8 @@ let mk_scope_builder_locs_of_defs_of_all_uses_test contents expected_locs_of_def
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in
     let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
-    let defs = List.map (Scope_api.def_of_use info) all_uses in
-    let locs_of_defs = List.map (
+    let defs = Core_list.map ~f:(Scope_api.def_of_use info) all_uses in
+    let locs_of_defs = Core_list.map ~f:(
       fun { Scope_api.Def.locs; _ } -> Nel.to_list locs
     ) defs in
     let printer = print_list @@ print_list Loc.to_string in
@@ -43,7 +43,7 @@ let mk_scope_builder_uses_of_all_uses_test contents expected_uses =
   begin fun ctxt ->
     let info = Scope_builder.program (parse contents) in
     let all_uses = Utils_js.LocSet.elements @@ Scope_api.all_uses info in
-    let uses = List.map (fun use ->
+    let uses = Core_list.map ~f:(fun use ->
       Utils_js.LocSet.elements @@ Scope_api.uses_of_use ~exclude_def:true info use
     ) all_uses in
     let printer = print_list @@ (fun list ->

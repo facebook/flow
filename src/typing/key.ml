@@ -13,7 +13,7 @@ and t = string * proj list
 
 let rec string_of_key (base, projs) =
   base ^ String.concat "" (
-    (List.rev projs) |> List.map (function
+    (List.rev projs) |> Core_list.map ~f:(function
       | Prop name -> spf ".%s" name
       | PrivateField name -> spf "private.%s" name
       | Elem expr -> spf "[%s]" (string_of_key expr)

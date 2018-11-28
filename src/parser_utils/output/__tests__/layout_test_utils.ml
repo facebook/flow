@@ -173,7 +173,7 @@ module Layout_builder = struct
         | Phrase str -> spf "  %s%s;" indent str
       in
       let str = nodes
-      |> List.map f
+      |> Core_list.map ~f:f
       |> String.concat "\n"
       in
       spf "[\n%s\n%s]" str indent

@@ -418,7 +418,7 @@ and toplevels =
          check for unreachable code and rethrow *)
       let warn_unreachable loc =
         Flow.add_output cx (Flow_error.EUnreachable loc) in
-      let rest_opts = List.map Ast.Statement.(fun stmt ->
+      let rest_opts = Core_list.map ~f:Ast.Statement.(fun stmt ->
         match stmt with
         | (_, Empty) as stmt -> Some stmt
         (* function declarations are hoisted, so not unreachable *)
@@ -437,7 +437,7 @@ and toplevels =
       let rest =
         rest_opts
         |> List.filter Option.is_some
-        |> List.map (fun stmt_opt -> Option.value_exn stmt_opt)
+        |> Core_list.map ~f:(fun stmt_opt -> Option.value_exn stmt_opt)
       in
       Abnormal.throw_stmts_control_flow_exception
         (List.rev_append acc (stmt::rest))
@@ -449,7 +449,7 @@ and toplevels =
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
 and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Statement.(
   let variables cx { VariableDeclaration.declarations; kind } =
-    let declarations = List.map (fun vdecl -> variable cx kind vdecl) declarations in
+    let declarations = Core_list.map ~f:(fun vdecl -> variable cx kind vdecl) declarations in
     { VariableDeclaration.declarations; kind; }
   in
 
@@ -789,7 +789,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       let typeparams, typeparams_map, tparams_ast =
         Anno.mk_type_param_declarations cx tparams in
       let underlying_t, impltype_ast = Anno.convert_opt cx typeparams_map impltype in
-      let opaque_type_args = List.map (fun {name; reason; polarity; _} ->
+      let opaque_type_args = Core_list.map ~f:(fun {name; reason; polarity; _} ->
         let t = SMap.find_unsafe name typeparams_map in
         name, reason, t, polarity
       ) (TypeParams.to_list typeparams) in
@@ -880,7 +880,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       in
 
       (* traverse case list, get list of control flow exits and list of ASTs *)
-      let exits, cases_ast = cases |> List.map (
+      let exits, cases_ast = cases |> Core_list.map ~f:(
         fun (loc, { Switch.Case.test; consequent }) ->
 
         (* compute predicates implied by case expr or default *)
@@ -2050,7 +2050,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       | Some (ImportDeclaration.ImportNamedSpecifiers named_specifiers) ->
         let named_specifiers, named_specifiers_ast =
         named_specifiers
-        |> List.map (function { ImportDeclaration.local; remote; kind;} ->
+        |> Core_list.map ~f:(function { ImportDeclaration.local; remote; kind;} ->
           let (remote_name_loc, remote_name) = remote in
           let (loc, local_name) = Option.value ~default:remote local in
           let imported_t =
@@ -2788,7 +2788,7 @@ and expression_or_spread cx = Ast.Expression.(function
 )
 
 and expression_or_spread_list cx undef_loc = Ast.Expression.(
-  Fn.compose List.split (List.map (function
+  Fn.compose List.split (Core_list.map ~f:(function
   | Some (Expression e) ->
     let (_, t), _ as e = expression cx e in
     UnresolvedArg t, Some (Expression e)
@@ -2916,7 +2916,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         targts_loc, convert_tparam_instantiations cx SMap.empty args
       ) in
       let argts, arges = arguments
-        |> List.map (expression_or_spread cx)
+        |> Core_list.map ~f:(expression_or_spread cx)
         |> List.split in
       let id_t = identifier cx name callee_loc in
       let callee_annot = callee_loc, id_t in
@@ -2964,7 +2964,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let targts = Option.map targs (fun (loc, args) ->
         loc, (convert_tparam_instantiations cx SMap.empty args)
       ) in
-      let args = List.map (expression_or_spread cx) arguments in
+      let args = Core_list.map ~f:(expression_or_spread cx) arguments in
       let result = match targts, args with
       | Some (loc, ([t], [elem_t])), [Arg argt, arg] -> Ok (Some (loc, elem_t, t), argt, arg)
       | None, [Arg argt, arg] -> Ok (None, argt, arg)
@@ -3010,7 +3010,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let targts, targs_ast = convert_targs cx targs in
       let argts, arguments_ast =
         arguments
-        |> List.map (expression_or_spread cx)
+        |> Core_list.map ~f:(expression_or_spread cx)
         |> List.split in
       let reason = mk_reason (RConstructorCall (desc_of_t class_)) loc in
       let use_op = Op (FunCall {
@@ -3119,7 +3119,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (loc, t), Assignment { Assignment.operator; left; right; }
 
   | Sequence { Sequence.expressions } ->
-      let expressions = List.map (expression cx) expressions in
+      let expressions = Core_list.map ~f:(expression cx) expressions in
       (* t = last element of ts. The parser guarantees sequence expressions are nonempty. *)
       let t = List.(expressions |> map snd_fst |> rev |> hd) in
       (loc, t), Sequence { Sequence.expressions }
@@ -3150,7 +3150,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (* TODO: walk quasis? *)
       quasi = quasi_loc, { TemplateLiteral.quasis; expressions }
     } ->
-    let expressions = List.map (expression cx) expressions in
+    let expressions = Core_list.map ~f:(expression cx) expressions in
     (* TODO what is the type of "query"? is it in the environment? *)
     let id_t = Unsoundness.at TaggedTemplateType tag_loc in
     (*parse_graphql cx encaps;*)
@@ -3165,7 +3165,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (* TODO: walk quasis? *)
       quasi = quasi_loc, { TemplateLiteral.quasis; expressions }
     } ->
-      let expressions = List.map (expression cx) expressions in
+      let expressions = Core_list.map ~f:(expression cx) expressions in
       let (_, t), _ as tag_ast = expression cx tag in
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_reason_const RArray reason in
@@ -3199,7 +3199,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           literal cx elem_loc lit, []
       | _ ->
           let t_out = StrT.at loc in
-          let expressions = List.map (fun expr ->
+          let expressions = Core_list.map ~f:(fun expr ->
               let (_, t), _ as e = expression cx expr in
               Flow.flow cx (t, UseT (Op (Coercion {
                 from = mk_expression_reason expr;
@@ -3585,7 +3585,7 @@ and subscript =
         Type_table.set_info super_loc id_info (Context.type_table cx);
         let targts, targs = convert_targs cx targs in
         let argts, argument_asts = arguments
-          |> List.map (expression_or_spread cx)
+          |> Core_list.map ~f:(expression_or_spread cx)
           |> List.split in
         Type_inference_hooks_js.dispatch_call_hook cx name ploc super;
         let prop_t = Tvar.mk cx reason_prop in
@@ -3629,7 +3629,7 @@ and subscript =
         let (_, ot), _ as _object = expression cx _object in
         let targts, targs = convert_targs cx targs in
         let argts, argument_asts = arguments
-          |> List.map (expression_or_spread cx)
+          |> Core_list.map ~f:(expression_or_spread cx)
           |> List.split in
         let (prop_t, lhs_t), property = (match property with
         | Member.PropertyPrivateName (prop_loc, (name_loc, name)) ->
@@ -3686,7 +3686,7 @@ and subscript =
       } ->
         let targts, targs = convert_targs cx targs in
         let argts, argument_asts = arguments
-          |> List.map (expression_or_spread cx)
+          |> Core_list.map ~f:(expression_or_spread cx)
           |> List.split in
         let reason = mk_reason (RFunctionCall RSuper) loc in
 
@@ -3754,7 +3754,7 @@ and subscript =
             } as lit_exp))::arguments ->
             (* invariant(false, ...) is treated like a throw *)
             let arguments =
-              List.map (Fn.compose snd (expression_or_spread cx)) arguments in
+              Core_list.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
             Env.reset_current_activation loc;
             Abnormal.save Abnormal.Throw;
             let lit_exp = expression cx lit_exp in
@@ -3766,19 +3766,19 @@ and subscript =
               })))
               Abnormal.Throw
           | None, (Expression cond)::arguments ->
-            let arguments = List.map (Fn.compose snd (expression_or_spread cx)) arguments in
+            let arguments = Core_list.map ~f:(Fn.compose snd (expression_or_spread cx)) arguments in
             let ((_, cond_t), _ as cond), preds, _, xtypes = predicates_of_condition cx cond in
             let _ = Env.refine_with_preds cx loc preds xtypes in
             let reason = mk_reason (RFunctionCall (desc_of_t callee_t)) loc in
             Flow.flow cx (cond_t, InvariantT reason);
             Expression cond :: arguments
           | _, (Spread _)::_ ->
-            ignore (List.map (expression_or_spread cx) arguments);
+            ignore (Core_list.map ~f:(expression_or_spread cx) arguments);
             Flow.add_output cx
               Flow_error.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
             Typed_ast.Expression.expression_or_spread_list_error
           | Some _, _ ->
-            ignore (List.map (expression_or_spread cx) arguments);
+            ignore (Core_list.map ~f:(expression_or_spread cx) arguments);
             Flow.add_output cx Flow_error.(ECallTypeArity {
               call_loc = loc;
               is_new = false;
@@ -3798,7 +3798,7 @@ and subscript =
         end;
         let targts, targs = convert_targs cx targs in
         let argts, argument_asts = arguments
-          |> List.map (expression_or_spread cx)
+          |> Core_list.map ~f:(expression_or_spread cx)
           |> List.split in
         let use_op = Op (FunCall {
           op = mk_expression_reason ex;
@@ -4098,25 +4098,25 @@ and predicated_call_expression cx loc call =
 *)
 and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; arguments } =
   let targts, targ_asts = convert_targs cx targs in
-  let args = arguments |> List.map (function
+  let args = arguments |> Core_list.map ~f:(function
     | Ast.Expression.Expression e -> e
     | _ -> Utils_js.assert_false "No spreads should reach here"
   ) in
   let (_, f), _ as callee_ast = expression cx callee in
   let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
-  let arg_asts = List.map (expression cx) args in
-  let argts = List.map snd_fst arg_asts in
-  let argks = List.map Refinement.key args in
+  let arg_asts = Core_list.map ~f:(expression cx) args in
+  let argts = Core_list.map ~f:snd_fst arg_asts in
+  let argks = Core_list.map ~f:Refinement.key args in
   let use_op = Op (FunCall {
     op = reason;
     fn = mk_expression_reason callee;
     args = mk_initial_arguments_reason arguments;
   }) in
-  let t = func_call cx reason ~use_op f targts (List.map (fun e -> Arg e) argts) in
+  let t = func_call cx reason ~use_op f targts (Core_list.map ~f:(fun e -> Arg e) argts) in
   f, argks, argts, t, { Ast.Expression.Call.
     callee = callee_ast;
     targs = targ_asts;
-    arguments = List.map (fun e -> Ast.Expression.Expression e) arg_asts;
+    arguments = Core_list.map ~f:(fun e -> Ast.Expression.Expression e) arg_asts;
   }
 
 (* We assume that constructor functions return void
@@ -5089,7 +5089,7 @@ and jsx_desugar cx name component_t props attributes children locs =
   | Options.Jsx_react ->
       let reason = mk_reason (RReactElement (Some name)) loc_element in
       let react = Env.var_ref ~lookup_mode:ForValue cx "React" loc_opening in
-      let children = List.map (function
+      let children = Core_list.map ~f:(function
         | UnresolvedArg a -> a
         | UnresolvedSpreadArg a ->
             Flow.add_output cx Flow_error.(EUnsupportedSyntax (loc_children, SpreadArgument));
@@ -5111,7 +5111,7 @@ and jsx_desugar cx name component_t props attributes children locs =
           mk_methodcalltype
             react
             None
-            ([Arg component_t; Arg props] @ List.map (fun c -> Arg c) children)
+            ([Arg component_t; Arg props] @ Core_list.map ~f:(fun c -> Arg c) children)
             tvar,
           None
         ))
@@ -5126,7 +5126,7 @@ and jsx_desugar cx name component_t props attributes children locs =
       | _ -> props in
       let argts =
         [Arg component_t; Arg props] @
-        (List.map (function
+        (Core_list.map ~f:(function
           | UnresolvedArg c -> Arg c
           | UnresolvedSpreadArg c -> SpreadArg c
         ) children) in
@@ -6076,7 +6076,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     Some (targs_loc, targs),
     _ ->
     let targs = snd (convert_tparam_instantiations cx SMap.empty targs) in
-    let args = List.map (fun arg -> snd (expression_or_spread cx arg)) args in
+    let args = Core_list.map ~f:(fun arg -> snd (expression_or_spread cx arg)) args in
     Flow.add_output cx Flow_error.(ECallTypeArity {
       call_loc = loc;
       is_new = false;
@@ -6092,7 +6092,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     let targts, targ_asts = convert_targs cx targs in
     let argts, arg_asts =
       args
-      |> List.map (expression_or_spread cx)
+      |> Core_list.map ~f:(expression_or_spread cx)
       |> List.split in
     let reason = mk_reason (RMethodCall (Some m)) loc in
     let use_op = Op (FunCallMethod {
@@ -6221,7 +6221,7 @@ and mk_class_sig =
   let class_sig, extends_ast, implements_ast =
     let id = Context.make_nominal cx in
     let extends, extends_ast = mk_extends cx tparams_map extends in
-    let implements, implements_ast = implements |> List.map (fun (loc, i) ->
+    let implements, implements_ast = implements |> Core_list.map ~f:(fun (loc, i) ->
       let { Ast.Class.Implements.id = (id_loc, name); targs } = i in
       let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
       let typeapp, targs = match targs with
@@ -6411,7 +6411,7 @@ and mk_class_sig =
   (fun class_t -> { Ast.Class.
     id = Option.map ~f:(fun (loc, name) -> (loc, class_t), name) id;
     body = (body_loc, self'), { Ast.Class.Body.
-      body = List.map (fun f -> f ()) elements;
+      body = Core_list.map ~f:(fun f -> f ()) elements;
     };
     tparams = tparams_ast;
     extends = extends_ast;
@@ -6633,7 +6633,7 @@ and declare_function_to_function_declaration cx declare_loc
               }) in
               (l, Ast.Pattern.Identifier name')
           ) in
-          let params = List.map (fun param ->
+          let params = Core_list.map ~f:(fun param ->
             let (loc, _) as argument = param_type_to_param param in
             (loc, { Ast.Function.Param.argument })
           ) params in
@@ -6683,7 +6683,7 @@ and declare_function_to_function_declaration cx declare_loc
                   { Ast.Type.Function.Param.name = Some ((name_loc, t), name); annot; optional; }
                 | _ -> assert_false "Function declaration AST has unexpected shape"
               in
-              let params = List.map (fun (_, { Ast.Function.Param.argument }) ->
+              let params = Core_list.map ~f:(fun (_, { Ast.Function.Param.argument }) ->
                 param_to_param_type argument
               ) params in
               let rest = Option.map

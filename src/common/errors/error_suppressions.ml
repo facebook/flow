@@ -233,7 +233,7 @@ let check err (suppressions: t) severity_cover (unused: t) =
 let all_locs map =
   map
   |> FilenameMap.values
-  |> List.map FileSuppressions.all_locs
+  |> Core_list.map ~f:FileSuppressions.all_locs
   |> List.fold_left LocSet.union LocSet.empty
   |> LocSet.elements
 

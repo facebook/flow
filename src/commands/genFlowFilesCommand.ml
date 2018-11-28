@@ -123,7 +123,7 @@ let main base_flags option_values root error_flags strip_root ignore_flag
       let files = Files.get_all next_files in
       let num_files = SSet.cardinal files in
       print_endlinef "Found %d files, generating libdefs..." num_files;
-      List.map (fun f -> File_input.FileName f) (SSet.elements files)
+      Core_list.map ~f:(fun f -> File_input.FileName f) (SSet.elements files)
     )
   in
 

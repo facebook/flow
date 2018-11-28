@@ -184,9 +184,9 @@ end = struct
 
     range
     |> Str.split (Str.regexp_string " ")
-    |> List.map expand_comparator
+    |> Core_list.map ~f:expand_comparator
     |> List.flatten
-    |> List.map Comparator.parse
+    |> Core_list.map ~f:Comparator.parse
 
   let satisfies range version =
     List.for_all (Comparator.satisfies version) range

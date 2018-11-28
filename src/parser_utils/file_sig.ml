@@ -156,7 +156,7 @@ module Make
       let indent_str = String.make (indent * 2) ' ' in
       let items_str =
         items
-      |> List.map (Printf.sprintf "%s%s;\n" (indent_str ^ "  "))
+      |> Core_list.map ~f:(Printf.sprintf "%s%s;\n" (indent_str ^ "  "))
       |> String.concat ""
       in
       Printf.sprintf "%s\n%s%s%s" open_ items_str indent_str close
@@ -165,7 +165,7 @@ module Make
       items_to_collection_string indent "[" "]" items
 
     let items_to_record_string indent items =
-      let items = items |> List.map (fun (label, value) ->
+      let items = items |> Core_list.map ~f:(fun (label, value) ->
         Printf.sprintf "%s: %s" label value
       ) in
       items_to_collection_string indent "{" "}" items
@@ -180,11 +180,11 @@ module Make
     let string_of_module_kind_info = function
       | CommonJSInfo _ -> "CommonJSInfo"
       | ESInfo named ->
-        PP.items_to_list_string 2 @@ List.map string_of_es_export_def named
+        PP.items_to_list_string 2 @@ Core_list.map ~f:string_of_es_export_def named
     in
     PP.items_to_record_string 1 [
       "module_kind_info", string_of_module_kind_info exports_info.module_kind_info;
-      "type_exports_named_info", PP.items_to_list_string 2 @@ List.map string_of_es_export_def exports_info.type_exports_named_info;
+      "type_exports_named_info", PP.items_to_list_string 2 @@ Core_list.map ~f:string_of_es_export_def exports_info.type_exports_named_info;
     ]
 
   (* Applications may not care about the info carried by signatures. *)
@@ -200,7 +200,7 @@ module Make
         | BindIdent (_, name) -> Printf.sprintf "BindIdent: %s" name
         | BindNamed named ->
           Printf.sprintf "BindNamed: %s"
-            (String.concat ", " @@ List.map (fun ((_, name), _) -> name) named)
+            (String.concat ", " @@ Core_list.map ~f:(fun ((_, name), _) -> name) named)
         in
         let string_of_require = function
         | Require {source=(_, name); bindings; _} ->
@@ -211,7 +211,7 @@ module Make
         | Import0 _ -> "Import0"
         | Import _ -> "Import"
         in
-        PP.items_to_list_string 2 (List.map string_of_require require_list)
+        PP.items_to_list_string 2 (Core_list.map ~f:string_of_require require_list)
       in
       let string_of_named_export_kind = function
         | NamedDeclaration -> "NamedDeclaration"
@@ -240,15 +240,15 @@ module Make
         | CommonJS _ -> "CommonJS"
         | ES { named; star } ->
           PP.items_to_record_string 2 [
-            "named", PP.items_to_record_string 3 @@ List.map string_of_export named;
-            "star", PP.items_to_list_string 3 @@ List.map string_of_export_star star;
+            "named", PP.items_to_record_string 3 @@ Core_list.map ~f:string_of_export named;
+            "star", PP.items_to_list_string 3 @@ Core_list.map ~f:string_of_export_star star;
           ]
       in
       PP.items_to_record_string 1 [
         "requires", string_of_require_list module_sig.requires;
         "module_kind", string_of_module_kind module_sig.module_kind;
-        "type_exports_named", PP.items_to_record_string 2 @@ List.map string_of_type_export module_sig.type_exports_named;
-        "type_exports_star", PP.items_to_list_string 2 @@ List.map string_of_export_star module_sig.type_exports_star;
+        "type_exports_named", PP.items_to_record_string 2 @@ Core_list.map ~f:string_of_type_export module_sig.type_exports_named;
+        "type_exports_star", PP.items_to_list_string 2 @@ Core_list.map ~f:string_of_export_star module_sig.type_exports_star;
       ]
     in
     PP.items_to_record_string 0 [
@@ -312,7 +312,7 @@ module Make
     Ok ({ msig with requires })
 
   let add_type_exports named named_info star msig =
-    let named = List.map (fun (name, export) ->
+    let named = Core_list.map ~f:(fun (name, export) ->
       let type_export = match export with
         | export_loc, ExportNamed { loc; kind; } -> export_loc, TypeExportNamed { loc; kind; }
         | _, ExportDefault _ -> failwith "export default type"
@@ -1255,7 +1255,7 @@ let abstractify_tolerable_errors =
   | WL.SignatureVerificationError err ->
     WA.SignatureVerificationError (Signature_builder_deps.abstractify_error err)
   in
-  List.map abstractify_tolerable_error
+  Core_list.map ~f:abstractify_tolerable_error
 
 let abstractify_locs: With_Loc.t -> With_ALoc.t =
   let module WL = With_Loc in
@@ -1269,7 +1269,7 @@ let abstractify_locs: With_Loc.t -> With_ALoc.t =
   in
   let rec abstractify_require_bindings = function
   | WL.BindIdent x -> WA.BindIdent (abstractify_fst x)
-  | WL.BindNamed named -> WA.BindNamed (List.map (fun (remote, require_bindings) ->
+  | WL.BindNamed named -> WA.BindNamed (Core_list.map ~f:(fun (remote, require_bindings) ->
       abstractify_fst remote, abstractify_require_bindings require_bindings
     ) named)
   in
@@ -1307,7 +1307,7 @@ let abstractify_locs: With_Loc.t -> With_ALoc.t =
     }
   in
   let abstractify_requires =
-    List.map abstractify_require
+    Core_list.map ~f:abstractify_require
   in
   let abstractify_named_export_kind = function
   | WL.NamedDeclaration -> WA.NamedDeclaration
@@ -1338,7 +1338,7 @@ let abstractify_locs: With_Loc.t -> With_ALoc.t =
   let abstractify_named_export (name, (loc, export)) =
     (name, (ALoc.of_loc loc, abstractify_export export))
   in
-  let abstractify_named_exports = List.map abstractify_named_export in
+  let abstractify_named_exports = Core_list.map ~f:abstractify_named_export in
   let abstractify_export_star = function WL.ExportStar { star_loc; source } ->
     WA.ExportStar {
       star_loc = ALoc.of_loc star_loc;
@@ -1346,7 +1346,7 @@ let abstractify_locs: With_Loc.t -> With_ALoc.t =
     }
   in
   let abstractify_es_star =
-    List.map (fun (loc, export_star) -> (ALoc.of_loc loc, abstractify_export_star export_star))
+    Core_list.map ~f:(fun (loc, export_star) -> (ALoc.of_loc loc, abstractify_export_star export_star))
   in
   let abstractify_module_kind = function
   | WL.CommonJS { mod_exp_loc } ->
@@ -1361,7 +1361,7 @@ let abstractify_locs: With_Loc.t -> With_ALoc.t =
     WA.TypeExportNamed { loc = ALoc.of_loc loc; kind = abstractify_named_export_kind kind }
   in
   let abstractify_type_exports_named =
-    List.map (fun (name, (loc, type_export)) ->
+    Core_list.map ~f:(fun (name, (loc, type_export)) ->
       (name, (ALoc.of_loc loc, abstractify_type_export type_export))
     )
   in

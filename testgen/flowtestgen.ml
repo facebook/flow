@@ -50,7 +50,7 @@ let move_func (prog : Syntax.t list) =
 (* Main entry functions for generating code *)
 let mk_code engine prog_num =
   engine#gen_prog prog_num
-  |> (List.map (fun (slist, env) ->
+  |> (Core_list.map ~f:(fun (slist, env) ->
       (* We add type assertions at the end *)
       let prog = slist |> move_func in
       Printf.sprintf "%s\n%!" ((Syntax.combine_syntax prog) ^ (Ruleset_base.str_of_env env))))

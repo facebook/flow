@@ -21,7 +21,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let (annot, statements, comments) = program in
     let annot' = this#on_loc_annot annot in
     let statements' = this#toplevel_statement_list statements in
-    let comments' = List.map (this#comment) comments in
+    let comments' = Core_list.map ~f:(this#comment) comments in
     annot', statements', comments'
 
   method statement ((annot, stmt): ('M, 'T) Ast.Statement.t) : ('N, 'U) Ast.Statement.t =
@@ -153,7 +153,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method array (expr: ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
     let open Ast.Expression in
     let { Array.elements } = expr in
-    let elements' = List.map (Option.map ~f:this#expression_or_spread) elements in
+    let elements' = Core_list.map ~f:(Option.map ~f:this#expression_or_spread) elements in
     { Array.elements = elements' }
 
   method arrow_function (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
@@ -191,7 +191,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
     let targs' = Option.map ~f:this#type_parameter_instantiation_with_implicit targs in
-    let arguments' = List.map this#expression_or_spread arguments in
+    let arguments' = Core_list.map ~f:this#expression_or_spread arguments in
     { callee = callee'; targs = targs'; arguments = arguments' }
 
   method optional_call annot (expr: ('M, 'T) Ast.Expression.OptionalCall.t)
@@ -216,8 +216,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     this#type_parameter_declaration_opt tparams (fun tparams' ->
       let extends' = Option.map ~f:this#class_extends extends in
       let body' = this#class_body body in
-      let implements' = List.map this#class_implements implements in
-      let classDecorators' = List.map this#class_decorator classDecorators in
+      let implements' = Core_list.map ~f:this#class_implements implements in
+      let classDecorators' = Core_list.map ~f:this#class_decorator classDecorators in
       {
         id = id';
         body = body';
@@ -247,7 +247,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method class_body (cls_body: ('M, 'T) Ast.Class.Body.t) : ('N, 'U) Ast.Class.Body.t =
     let open Ast.Class.Body in
     let annot, { body } = cls_body in
-    let body' = List.map this#class_element body in
+    let body' = Core_list.map ~f:this#class_element body in
     this#on_type_annot annot, { body = body' }
 
   method class_element (elem: ('M, 'T) Ast.Class.Body.element) : ('N, 'U) Ast.Class.Body.element =
@@ -265,7 +265,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { kind; key; value; static; decorators; } = meth in
     let key' = this#object_key key in
     let value' = (this#on_loc_annot * this#function_) value in
-    let decorators' = List.map this#class_decorator decorators in
+    let decorators' = Core_list.map ~f:this#class_decorator decorators in
     { kind; key = key'; value = value'; static; decorators = decorators' }
 
   method class_property (prop: ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t' =
@@ -290,7 +290,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                             : ('N, 'U) Ast.Expression.Comprehension.t =
     let open Ast.Expression.Comprehension in
     let { blocks; filter } = expr in
-    let blocks' = List.map this#comprehension_block blocks in
+    let blocks' = Core_list.map ~f:this#comprehension_block blocks in
     let filter' = Option.map ~f:this#expression filter in
     { blocks = blocks'; filter = filter' }
 
@@ -330,8 +330,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
         let a, b = body in
         this#on_loc_annot a, this#object_type b in
       let extends' = Option.map ~f:(this#on_loc_annot * this#generic_type) extends in
-      let mixins' = List.map (this#on_loc_annot * this#generic_type) mixins in
-      let implements' = List.map this#class_implements implements in
+      let mixins' = Core_list.map ~f:(this#on_loc_annot * this#generic_type) mixins in
+      let implements' = Core_list.map ~f:this#class_implements implements in
       {
         id = id';
         tparams = tparams';
@@ -469,7 +469,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                                     : 'N Ast.Statement.ExportNamedDeclaration.specifier =
     let open Ast.Statement.ExportNamedDeclaration in
     match spec with
-    | ExportSpecifiers specs -> ExportSpecifiers (List.map this#export_specifier specs)
+    | ExportSpecifiers specs -> ExportSpecifiers (Core_list.map ~f:this#export_specifier specs)
     | ExportBatchSpecifier (annot, name) ->
       let annot' = this#on_loc_annot annot in
       let name' = Option.map ~f:(this#on_loc_annot * id) name in
@@ -570,7 +570,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       tparams;
     } = ft in
     this#type_parameter_declaration_opt tparams (fun tparams' ->
-      let ps' = List.map this#function_param_type ps in
+      let ps' = Core_list.map ~f:this#function_param_type ps in
       let rpo' = Option.map ~f:this#function_rest_param_type rpo in
       let return' = this#type_ return in
       {
@@ -605,7 +605,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method object_type (ot: ('M, 'T) Ast.Type.Object.t) : ('N, 'U) Ast.Type.Object.t =
     let open Ast.Type.Object in
     let { properties ; exact; inexact } = ot in
-    let properties' = List.map this#object_type_property properties in
+    let properties' = Core_list.map ~f:this#object_type_property properties in
     { properties = properties'; exact; inexact }
 
   method object_type_property (prop : ('M, 'T) Ast.Type.Object.property)
@@ -638,7 +638,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method interface_type (i: ('M, 'T) Ast.Type.Interface.t) : ('N, 'U) Ast.Type.Interface.t =
     let open Ast.Type.Interface in
     let { extends; body } = i in
-    let extends' = List.map (this#on_loc_annot * this#generic_type) extends in
+    let extends' = Core_list.map ~f:(this#on_loc_annot * this#generic_type) extends in
     let body' = (this#on_loc_annot * this#object_type) body in
     { extends = extends'; body = body' }
 
@@ -655,14 +655,14 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method type_parameter_instantiation (pi: ('M, 'T) Ast.Type.ParameterInstantiation.t)
                                        : ('N, 'U) Ast.Type.ParameterInstantiation.t =
     let annot, targs = pi in
-    let targs' = List.map this#type_ targs in
+    let targs' = Core_list.map ~f:this#type_ targs in
     this#on_loc_annot annot, targs'
 
   method type_parameter_instantiation_with_implicit
     (pi: ('M, 'T) Ast.Expression.TypeParameterInstantiation.t)
     : ('N, 'U) Ast.Expression.TypeParameterInstantiation.t =
     let annot, targs = pi in
-    let targs' = List.map this#explicit_or_implicit targs in
+    let targs' = Core_list.map ~f:this#explicit_or_implicit targs in
     this#on_loc_annot annot, targs'
 
   method type_parameter_declaration_opt :
@@ -672,7 +672,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
         let pd' =
           Option.map ~f:(fun pd ->
             let annot, type_params = pd in
-            let type_params' = List.map this#type_parameter_declaration_type_param type_params in
+            let type_params' = Core_list.map ~f:this#type_parameter_declaration_type_param type_params in
             this#on_loc_annot annot, type_params'
           ) pd
         in
@@ -731,15 +731,15 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | Union (t0, t1, ts) ->
       let t0' = this#type_ t0 in
       let t1' = this#type_ t1 in
-      let ts' = List.map this#type_ ts in
+      let ts' = Core_list.map ~f:this#type_ ts in
       Union (t0', t1', ts')
     | Intersection (t0, t1, ts) ->
       let t0' = this#type_ t0 in
       let t1' = this#type_ t1 in
-      let ts' = List.map this#type_ ts in
+      let ts' = Core_list.map ~f:this#type_ ts in
       Intersection (t0', t1', ts')
     | Tuple ts ->
-      let ts' = List.map this#type_ ts in
+      let ts' = Core_list.map ~f:this#type_ ts in
       Tuple ts'
 
   method implicit (t: 'T): 'U = this#on_type_annot t
@@ -772,7 +772,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     this#type_parameter_declaration_opt tparams (fun tparams' ->
       let params' =
         let annot, { Params.params = params_list; rest } = params in
-        let params_list' = List.map this#function_param params_list in
+        let params_list' = Core_list.map ~f:this#function_param params_list in
         let rest' = Option.map ~f:this#function_rest_param rest in
         this#on_loc_annot annot, { Params.params = params_list'; rest = rest' }
       in
@@ -818,7 +818,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                         : ('N, 'U) Ast.Expression.Generator.t =
     let open Ast.Expression.Generator in
     let { blocks; filter } = expr in
-    let blocks' = List.map this#comprehension_block blocks in
+    let blocks' = Core_list.map ~f:this#comprehension_block blocks in
     let filter' = Option.map ~f:this#expression filter in
     { blocks = blocks'; filter = filter' }
 
@@ -834,7 +834,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { id = ident; tparams; extends; body } = interface in
     let id' = this#class_identifier ident in
     this#type_parameter_declaration_opt tparams (fun tparams' ->
-      let extends' = List.map (this#on_loc_annot * this#generic_type) extends in
+      let extends' = Core_list.map ~f:(this#on_loc_annot * this#generic_type) extends in
       let body' = (this#on_loc_annot * this#object_type) body in
       { id = id'; tparams = tparams'; extends = extends'; body = body' }
     )
@@ -877,7 +877,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.Statement.ImportDeclaration in
     match specifier with
     | ImportNamedSpecifiers named_specifiers ->
-      let named_specifiers' = List.map this#import_named_specifier named_specifiers in
+      let named_specifiers' = Core_list.map ~f:this#import_named_specifier named_specifiers in
       ImportNamedSpecifiers named_specifiers'
     | ImportNamespaceSpecifier (annot, ident) ->
       let ident' = this#import_namespace_specifier ident in
@@ -902,7 +902,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { openingElement; closingElement; children } = expr in
     let openingElement' = this#jsx_opening_element openingElement in
     let closingElement' = Option.map ~f:this#jsx_closing_element closingElement in
-    let children' = List.map this#jsx_child children in
+    let children' = Core_list.map ~f:this#jsx_child children in
     { openingElement = openingElement'; closingElement = closingElement'; children = children' }
 
   method jsx_fragment (expr: ('M, 'T) Ast.JSX.fragment) : ('N, 'U) Ast.JSX.fragment =
@@ -910,14 +910,14 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { frag_openingElement; frag_closingElement; frag_children } = expr in
     let opening' = this#on_loc_annot frag_openingElement in
     let closing' = this#on_loc_annot frag_closingElement in
-    let children' = List.map this#jsx_child frag_children in
+    let children' = Core_list.map ~f:this#jsx_child frag_children in
     { frag_openingElement = opening'; frag_closingElement = closing'; frag_children = children' }
 
   method jsx_opening_element (elem: ('M, 'T) Ast.JSX.Opening.t) : ('N, 'U) Ast.JSX.Opening.t =
     let open Ast.JSX.Opening in
     let annot, { name; selfClosing; attributes } = elem in
     let name' = this#jsx_name name in
-    let attributes' = List.map this#jsx_opening_attribute attributes in
+    let attributes' = Core_list.map ~f:this#jsx_opening_attribute attributes in
     this#on_loc_annot annot, { name = name'; selfClosing; attributes = attributes' }
 
   method jsx_closing_element (elem: ('M, 'T) Ast.JSX.Closing.t) : ('N, 'U) Ast.JSX.Closing.t =
@@ -1082,13 +1082,13 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
     let targs' = Option.map ~f:this#type_parameter_instantiation_with_implicit targs in
-    let arguments' = List.map this#expression_or_spread arguments in
+    let arguments' = Core_list.map ~f:this#expression_or_spread arguments in
     { callee = callee'; targs = targs'; arguments = arguments' }
 
   method object_ (expr: ('M, 'T) Ast.Expression.Object.t) : ('N, 'U) Ast.Expression.Object.t =
     let open Ast.Expression.Object in
     let { properties } = expr in
-    let properties' = List.map (fun prop ->
+    let properties' = Core_list.map ~f:(fun prop ->
       match prop with
       | Property p ->
         let p' = this#object_property p in
@@ -1194,11 +1194,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     this#on_type_annot annot,
     match patt with
     | Object { Object.properties; annot } ->
-      let properties' = List.map (this#pattern_object_p ?kind) properties in
+      let properties' = Core_list.map ~f:(this#pattern_object_p ?kind) properties in
       let annot' = this#type_annotation_hint annot in
       Object { Object.properties = properties'; annot = annot' }
     | Array { Array.elements; annot } ->
-      let elements' = List.map (Option.map ~f:(this#pattern_array_e ?kind)) elements in
+      let elements' = Core_list.map ~f:(Option.map ~f:(this#pattern_array_e ?kind)) elements in
       let annot' = this#type_annotation_hint annot in
       Array { Array.elements = elements'; annot = annot' }
     | Assignment { Assignment.left; right } ->
@@ -1318,7 +1318,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method sequence (expr: ('M, 'T) Ast.Expression.Sequence.t) : ('N, 'U) Ast.Expression.Sequence.t =
     let open Ast.Expression.Sequence in
     let { expressions } = expr in
-    let expressions' = List.map this#expression expressions in
+    let expressions' = Core_list.map ~f:this#expression expressions in
     { expressions = expressions' }
 
   method toplevel_statement_list (stmts: ('M, 'T) Ast.Statement.t list)
@@ -1326,7 +1326,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     this#statement_list stmts
 
   method statement_list (stmts: ('M, 'T) Ast.Statement.t list) : ('N, 'U) Ast.Statement.t list =
-    List.map this#statement stmts
+    Core_list.map ~f:this#statement stmts
 
   method spread_element (expr: ('M, 'T) Ast.Expression.SpreadElement.t)
                             : ('N, 'U) Ast.Expression.SpreadElement.t =
@@ -1344,7 +1344,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.Statement.Switch in
     let { discriminant; cases } = switch in
     let discriminant' = this#expression discriminant in
-    let cases' = List.map (this#on_loc_annot * this#switch_case) cases in
+    let cases' = Core_list.map ~f:(this#on_loc_annot * this#switch_case) cases in
     { discriminant = discriminant'; cases = cases' }
 
   method switch_case (case: ('M, 'T) Ast.Statement.Switch.Case.t') =
@@ -1366,8 +1366,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                               : ('N, 'U) Ast.Expression.TemplateLiteral.t =
     let open Ast.Expression.TemplateLiteral in
     let { quasis; expressions } = expr in
-    let quasis' = List.map this#template_literal_element quasis in
-    let expressions' = List.map this#expression expressions in
+    let quasis' = Core_list.map ~f:this#template_literal_element quasis in
+    let expressions' = Core_list.map ~f:this#expression expressions in
     { quasis = quasis'; expressions = expressions' }
 
   method template_literal_element ((annot, elem): 'M Ast.Expression.TemplateLiteral.Element.t)
@@ -1416,7 +1416,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                                   : ('N, 'U) Ast.Statement.VariableDeclaration.t =
     let open Ast.Statement.VariableDeclaration in
     let { declarations; kind } = decl in
-    let decls' = List.map (this#variable_declarator ~kind) declarations in
+    let decls' = Core_list.map ~f:(this#variable_declarator ~kind) declarations in
     { declarations = decls'; kind }
 
   method variable_declarator ~kind (decl: ('M, 'T) Ast.Statement.VariableDeclaration.Declarator.t)

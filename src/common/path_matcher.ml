@@ -49,7 +49,7 @@ let path_patt =
       |> Sys_utils.normalize_filename_dir_sep in
     (* because we accept both * and **, convert in 2 steps *)
     let results = Str.full_split star2 str in
-    let results = List.map (fun r -> match r with
+    let results = Core_list.map ~f:(fun r -> match r with
       | Str.Text s ->
           (* note: unix directory seperators specifiers only. Windows directory
            * seperators will already have been normalized to unix directory

@@ -589,7 +589,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
 
   let info_of_reason r = mk_info r [] in
 
-  let trace_infos = List.map info_of_reason trace_reasons in
+  let trace_infos = Core_list.map ~f:info_of_reason trace_reasons in
 
   (* Flip the lower/upper reasons of a frame_use_op. *)
   let flip_frame = function
@@ -951,7 +951,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   (* Make a friendly error based on failed speculation. *)
   let mk_use_op_speculation_error loc use_op branches =
     let (root, loc, frames) = unwrap_use_ops loc use_op in
-    let speculation_errors = List.map (fun (_, msg) ->
+    let speculation_errors = Core_list.map ~f:(fun (_, msg) ->
       let score = score_of_msg msg in
       let error = error_of_msg ~trace_reasons:[] ~source_file msg in
       (score, error)
@@ -1478,7 +1478,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
         text "may work but if it doesn't "; ref case_r; text " looks promising ";
         text "too. To fix add a type annotation ";
       ] @
-      (conjunction_concat ~conjunction:"or" (List.map (fun case_r ->
+      (conjunction_concat ~conjunction:"or" (Core_list.map ~f:(fun case_r ->
         let text = "to " ^ (string_of_desc (desc_of_reason case_r)) in
         [ref (mk_reason (RCustom text) (aloc_of_reason case_r))]
       ) case_rs)) @
@@ -1723,7 +1723,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
      * visitor is just visiting types. Instead, we collect a list of types we
      * visited to get to the missing annotation error and report that as the
      * trace *)
-    let trace_infos = List.map info_of_reason trace_reasons in
+    let trace_infos = Core_list.map ~f:info_of_reason trace_reasons in
     mk_error ~trace_infos (aloc_of_reason reason) msg
 
   | EBindingError (binding_error, loc, x, entry) ->

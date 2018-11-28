@@ -217,7 +217,7 @@ end = struct
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
       |> List.filter (is_not_in_flowlib ~options)
-      |> List.map (Files.relative_path root)
+      |> Core_list.map ~f:(Files.relative_path root)
     in
     let local_errors = FilenameMap.fold (fun fn error_set acc ->
       let normalized_fn = normalize_file_key ~root fn in
@@ -465,7 +465,7 @@ end = struct
       denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
     in
 
-    let ordered_non_flowlib_libs = List.map (Files.absolute_path root) ordered_non_flowlib_libs in
+    let ordered_non_flowlib_libs = Core_list.map ~f:(Files.absolute_path root) ordered_non_flowlib_libs in
 
     let local_errors = FilenameMap.fold (fun normalized_fn normalized_error_set acc ->
       let fn = denormalize_file_key ~root normalized_fn in

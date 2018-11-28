@@ -18,7 +18,7 @@ let protocol_options = [
   "human-readable", `Human_readable;
 ]
 
-let protocol_options_string = String.concat ", " (List.map fst protocol_options)
+let protocol_options_string = String.concat ", " (Core_list.map ~f:fst protocol_options)
 
 let spec = {
   CommandSpec.
@@ -77,7 +77,7 @@ module HumanReadable: ClientProtocol = struct
     | Ok completions ->
         print_endline "Autocomplete results:";
         completions |>
-        List.map (fun r -> r.ServerProt.Response.res_name) |>
+        Core_list.map ~f:(fun r -> r.ServerProt.Response.res_name) |>
         List.iter (Printf.printf "  %s\n");
         flush stdout
 

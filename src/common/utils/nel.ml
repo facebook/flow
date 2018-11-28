@@ -24,16 +24,16 @@ let one x = (x, [])
 let cons x0 (x1, xs) = (x0, x1::xs)
 
 let mem y (x1, xs) =
-  x1 = y || List.mem y xs
+  x1 = y || Core_list.mem xs y
 
 let exists f (x1, xs) =
-  f x1 || List.exists f xs
+  f x1 || Core_list.exists ~f xs
 
 let iter f (x, xs) =
   f x;
-  List.iter f xs
+  Core_list.iter ~f xs
 
-let map f (x, xs) = (f x, List.map f xs)
+let map f (x, xs) = (f x, Core_list.map ~f xs)
 
 let (>>|) l f = map f l
 
@@ -45,48 +45,48 @@ let ident_map f ((x, xs) as original) =
 
 let concat (xs, xss) =
   let xs = to_list xs in
-  let xss = List.map to_list xss in
-  match List.concat (xs::xss) with
+  let xss = Core_list.map ~f:to_list xss in
+  match Core_list.join (xs::xss) with
   | [] -> failwith "impossible"
   | x::xs -> (x, xs)
 
 let map_concat f (x, xs) =
-  let xss = List.map (fun x -> to_list (f x)) (x::xs) in
-  match List.concat xss with
+  let xss = Core_list.map ~f:(fun x -> to_list (f x)) (x::xs) in
+  match Core_list.join xss with
   | [] -> failwith "impossible"
   | x::xs -> (x, xs)
 
 let (>>=) l f = map_concat f l
 
 let rev (x, xs) =
-  match List.rev (x::xs) with
+  match Core_list.rev (x::xs) with
   | [] -> failwith "impossible"
   | x::xs -> (x, xs)
 
 let rev_map f (x, xs) =
-  match List.rev_map f (x::xs) with
+  match Core_list.rev_map ~f (x::xs) with
   | [] -> failwith "impossible"
   | x::xs -> (x, xs)
 
 let rev_append xs ys =
-  match List.rev_append (to_list xs) (to_list ys) with
+  match Core_list.rev_append (to_list xs) (to_list ys) with
   | [] -> failwith "impossible"
   | z::zs -> (z, zs)
 
 let append xs ys =
-  match List.append (to_list xs) (to_list ys) with
+  match Core_list.append (to_list xs) (to_list ys) with
   | [] -> failwith "impossible"
   | z::zs -> (z, zs)
 
-let length (_, xs) = 1 + List.length xs
+let length (_, xs) = 1 + Core_list.length xs
 
-let fold_left f acc (x, xs) = List.fold_left f acc (x::xs)
+let fold_left f acc (x, xs) = Core_list.fold_left ~f ~init:acc (x::xs)
 
 let hd (x, _) = x
 
 let tl (_, xs) = xs
 
-let nth nel n = List.nth (to_list nel) n
+let nth nel n = Core_list.nth_exn (to_list nel) n
 
 let result_all = function
   | Ok x, rest ->

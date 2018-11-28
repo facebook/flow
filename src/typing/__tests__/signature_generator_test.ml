@@ -36,7 +36,7 @@ let mk_signature_generator_test contents expected_msgs =
       | Ok program ->
         String.split_on_char '\n' @@ pretty_print program
       | Error errors ->
-        List.map Signature_builder_deps.Error.debug_to_string @@
+        Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
           Signature_builder_deps.ErrorSet.elements errors
     in
     let printer v = "\n" ^ (String.concat "\n" v) in
@@ -70,7 +70,7 @@ let mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes
     let msgs = match verify_and_generate ?prevent_munge ?ignore_static_propTypes contents with
       | Ok _program -> []
       | Error errors ->
-        List.map Signature_builder_deps.Error.debug_to_string @@
+        Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
           Signature_builder_deps.ErrorSet.elements errors
     in
     let printer v = String.concat "\n" v in

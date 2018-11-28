@@ -49,7 +49,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     }
   else
     let command_info = CommandList.commands
-      |> List.map (fun (command) ->
+      |> Core_list.map ~f:(fun (command) ->
         (CommandSpec.name command, CommandSpec.doc command)
       )
       |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
@@ -58,7 +58,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let col_width = List.fold_left
       (fun acc (cmd, _) -> max acc (String.length cmd)) 0 command_info in
     let cmd_usage = command_info
-      |> List.map (fun (cmd, doc) ->
+      |> Core_list.map ~f:(fun (cmd, doc) ->
             Utils_js.spf "  %-*s  %s" col_width cmd doc
          )
       |> String.concat "\n"

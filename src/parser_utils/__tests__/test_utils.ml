@@ -21,7 +21,7 @@ let mk_loc (line1, column1) (line2, column2) = Loc.{
 }
 
 let print_list printer list =
-  String.concat ", " @@ List.map printer list
+  String.concat ", " @@ Core_list.map ~f:printer list
 
 let eq printer v1 v2 =
   printer v1 = printer v2

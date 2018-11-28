@@ -70,7 +70,7 @@ let print_json result ~pretty ~strip_root =
     | Some {refactor_edits} ->
       JSON_Object [
         "kind", JSON_String "refactor-performed";
-        "edits", JSON_Array (List.map json_of_edit refactor_edits);
+        "edits", JSON_Array (Core_list.map ~f:json_of_edit refactor_edits);
       ]
   in
   print_json_endline ~pretty json
@@ -90,7 +90,7 @@ let to_string result option_values ~strip_root =
   let string_of_edit (loc, new_text) =
     Printf.sprintf "%s: %s" (string_of_loc loc) new_text
   in
-  String.concat "\n" @@ List.map string_of_edit edits
+  String.concat "\n" @@ Core_list.map ~f:string_of_edit edits
 
 let main base_flags option_values json pretty root strip_root from path rename args () =
   FlowEventLogger.set_from from;

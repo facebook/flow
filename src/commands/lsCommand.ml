@@ -211,7 +211,7 @@ let main
       get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary None
   | files_or_dirs ->
       files_or_dirs
-      |> List.map (fun f -> get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f))
+      |> Core_list.map ~f:(fun f -> get_ls_files ~root ~all ~options ~libs:SSet.empty ~imaginary (Some f))
       |> concat_get_next) in
 
   let root_str = spf "%s%s" (Path.to_string root) Filename.dir_sep in

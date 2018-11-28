@@ -138,7 +138,7 @@ let simplify_unions_inters =
     inherit [_] endo_ty
     method private simplify env ~break ~zero ~one ~make ts =
       let ts' = self#on_list self#on_t env ts in
-      let ts' = List.concat (List.map break ts') in
+      let ts' = List.concat (Core_list.map ~f:break ts') in
       let ts' = List.sort Pervasives.compare ts' in
       let ts' = ListUtils.uniq ts' in
       let ts' = simplify_zero_one ~zero ~one ts' in

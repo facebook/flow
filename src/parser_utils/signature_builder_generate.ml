@@ -298,7 +298,7 @@ module T = struct
       loc, Ast.Type.Object {
         Ast.Type.Object.exact = true;
         inexact = false;
-        properties = List.map (type_of_object_property outlined) (pt :: pts)
+        properties = Core_list.map ~f:(type_of_object_property outlined) (pt :: pts)
       }
     | loc, ArrayLiteral ets ->
       loc, Ast.Type.Array (match ets with
@@ -307,7 +307,7 @@ module T = struct
           loc, Ast.Type.Union (
             type_of_array_element outlined et1,
             type_of_array_element outlined et2,
-            List.map (type_of_array_element outlined) ets
+            Core_list.map ~f:(type_of_array_element outlined) ets
           )
       )
 
@@ -451,7 +451,7 @@ module T = struct
       loc, {
         Ast.Type.Function.tparams;
         params = params_loc, {
-          Ast.Type.Function.Params.params = List.map param_of_type params;
+          Ast.Type.Function.Params.params = Core_list.map ~f:param_of_type params;
           rest = match rest with
             | None -> None
             | Some (loc, rest) -> Some (loc, {
@@ -522,7 +522,7 @@ module T = struct
       let body = body_loc, {
         Ast.Type.Object.exact = false;
         inexact = false;
-        properties = List.map (object_type_property_of_class_element outlined) body;
+        properties = Core_list.map ~f:(object_type_property_of_class_element outlined) body;
       } in
       let mixins = [] in
       decl_loc, Ast.Statement.DeclareClass {
@@ -681,7 +681,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
 
   and type_args = function
     | None -> None
-    | Some (loc, ts) -> Some (loc, List.map (type_) ts)
+    | Some (loc, ts) -> Some (loc, Core_list.map ~f:(type_) ts)
 
   let rec annot_path = function
     | Kind.Annot_path.Annot (_, t) -> type_ t
@@ -913,7 +913,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     in let function_params params =
       let open Ast.Function in
       let params_loc, { Params.params; rest; } = params in
-      let params = List.map function_param params in
+      let params = Core_list.map ~f:function_param params in
       let rest = match rest with
         | None -> None
         | Some param -> Some (function_rest_param param) in
@@ -980,7 +980,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
             targs = type_args super_targs;
           })
       in
-      let implements = List.map class_implement implements in
+      let implements = Core_list.map ~f:class_implement implements in
       T.CLASS {
         tparams;
         extends;
@@ -1066,8 +1066,8 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         let extends = match extends with
           | None -> None
           | Some r -> Some (Eval.generic r) in
-        let mixins = List.map (Eval.generic) mixins in
-        let implements = List.map Eval.class_implement implements in
+        let mixins = Core_list.map ~f:(Eval.generic) mixins in
+        let implements = Core_list.map ~f:Eval.class_implement implements in
         T.ClassDecl (T.DECLARE_CLASS {
           tparams;
           extends;
@@ -1094,7 +1094,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         }
       | Kind.InterfaceDef { tparams; extends; body = (body_loc, body) } ->
         let tparams = Eval.type_params tparams in
-        let extends = List.map (Eval.generic) extends in
+        let extends = Core_list.map ~f:(Eval.generic) extends in
         let body = Eval.object_type body in
         T.Interface {
           tparams;
@@ -1129,7 +1129,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
         [mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot)]
       | Some mod_exp_loc, list ->
-        let properties = List.map (function
+        let properties = Core_list.map ~f:(function
           | File_sig.AddModuleExportsDef (id, expr) ->
             let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
             let open Ast.Type.Object in
@@ -1181,7 +1181,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     eval_entry (Entry.class_ loc class_)
 
   let eval_variable_declaration loc variable_declaration =
-    List.map eval_entry @@
+    Core_list.map ~f:eval_entry @@
       Entry.variable_declaration loc variable_declaration
 
   let eval_export_default_declaration = Ast.Statement.ExportDefaultDeclaration.(function

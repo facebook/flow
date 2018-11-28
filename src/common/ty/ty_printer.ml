@@ -106,7 +106,7 @@ let type_ ?(size=5000) t =
     | BoolLit value -> Atom (if value then "true" else "false")
     | TypeAlias ta -> type_alias ta
     | TypeOf (path, name) ->
-      let path = List.map (fun x -> [Atom x; Atom "."]) path in
+      let path = Core_list.map ~f:(fun x -> [Atom x; Atom "."]) path in
       let value = (List.concat path) @ [Atom name] in
       fuse ([Atom "typeof"; space] @ value)
     | Module { name; _ } -> fuse [Atom "module"; space; identifier name]
@@ -369,7 +369,7 @@ let type_ ?(size=5000) t =
   (* Main call *)
   let type_layout = type_ ~depth:0 t in
   (* Run type_ first so that env_map has been populated *)
-  let env_layout = List.map env_ (IMap.bindings !env_map) in
+  let env_layout = Core_list.map ~f:env_ (IMap.bindings !env_map) in
   Layout.(join Newline (env_layout @ [type_layout]))
 
 (* Same as Compact_printer with the exception of:

@@ -95,7 +95,7 @@ let get_overlap ~old_range ~new_range =
 let update_entry ((old_range, old_value) as original) new_range map_fun builder =
   let overlap, remaining_ranges = get_overlap ~old_range ~new_range in
   let new_overlap = (overlap, map_fun old_value) in
-  let new_remaining = List.map (fun loc -> (loc, old_value)) remaining_ranges in
+  let new_remaining = Core_list.map ~f:(fun loc -> (loc, old_value)) remaining_ranges in
   let builder = builder |> remove original |> add new_overlap in
   List.fold_left (Fn.flip add) builder new_remaining
 
@@ -111,7 +111,7 @@ let update_range range map_fun builder =
 let update_settings =
   let map_fun setting_list old_settings =
     let setting_list =
-      List.map (fun (kind, (state, loc)) -> (kind, (state, Some loc))) setting_list
+      Core_list.map ~f:(fun (kind, (state, loc)) -> (kind, (state, Some loc))) setting_list
     in
     LintSettings.set_all setting_list old_settings
   in

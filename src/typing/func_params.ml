@@ -97,7 +97,7 @@ let subst_rest cx map (name, loc, t) = (name, loc, Flow.subst cx map t)
 let subst_binding cx map (name, loc, t, default) = (name, loc, Flow.subst cx map t, default)
 
 let subst cx map { params_rev; rest; bindings_rev } = {
-  params_rev = List.map (subst_param cx map) params_rev;
+  params_rev = Core_list.map ~f:(subst_param cx map) params_rev;
   rest = Option.map ~f:(subst_rest cx map) rest;
-  bindings_rev = List.map (subst_binding cx map) bindings_rev;
+  bindings_rev = Core_list.map ~f:(subst_binding cx map) bindings_rev;
 }

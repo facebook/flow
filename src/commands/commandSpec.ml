@@ -80,12 +80,12 @@ module ArgSpec = struct
   let enum values = {
     parse = (fun ~name -> function
     | Some [x] ->
-        begin match List.find_opt (fun (s, _) -> s = x) values with
+        begin match Core_list.find ~f:(fun (s, _) -> s = x) values with
         | Some (_, v) -> Some v
         | None ->
           raise (Failed_to_parse (name, Utils_js.spf
             "expected one of: %s"
-            (String.concat ", " (List.map fst values))
+            (String.concat ", " (Core_list.map ~f:fst values))
           ))
         end
     | _ -> None
@@ -141,7 +141,7 @@ module ArgSpec = struct
     parse = (fun ~name -> function
       | None -> Some []
       | Some values ->
-        Some (List.map (fun x ->
+        Some (Core_list.map ~f:(fun x ->
           match arg_type.parse ~name (Some [x]) with
           | Some result -> result
           | None -> raise (Failed_to_parse (name, Utils_js.spf
@@ -155,7 +155,7 @@ module ArgSpec = struct
     parse = (fun ~name -> function
     | Some [x] ->
       let args = Str.split (Str.regexp_string delim) x in
-      Some (List.map (fun arg ->
+      Some (Core_list.map ~f:(fun arg ->
         match arg_type.parse ~name (Some [arg]) with
         | None ->
           raise (Failed_to_parse (name, Utils_js.spf "wrong type for value: %s" arg))
@@ -221,13 +221,13 @@ module ArgSpec = struct
   let anon name arg_type prev = {
     f = apply_arg name arg_type prev.f;
     flags = prev.flags;
-    anons = List.append prev.anons [(name, arg_type.arg)];
+    anons = Core_list.append prev.anons [(name, arg_type.arg)];
   }
 
   let rest prev = {
     f = apply_arg "--" (optional (list_of string)) prev.f;
     flags = prev.flags;
-    anons = List.append prev.anons [("--", Arg_Rest)];
+    anons = Core_list.append prev.anons [("--", Arg_Rest)];
   }
 
 
@@ -269,8 +269,8 @@ let is_arg arg = String.length arg > 1 && arg <> "--" && arg.[0] = '-'
 
 let consume_args args =
   let is_done = ref false in
-  List.partition
-    (fun value ->
+  Core_list.partition_tf
+    ~f:(fun value ->
       (if not !is_done && is_arg value then is_done := true);
       not !is_done
     )
@@ -362,13 +362,13 @@ let usage_string spec =
   let usage = spec.usage in
   let flags = SMap.fold (fun k v a -> (k, v)::a) spec.args.ArgSpec.flags [] in
   let cmp (a, _) (b, _) = String.compare (no_dashes a) (no_dashes b) in
-  let flags = List.sort cmp flags in
-  let col_width = flags |> List.fold_left (fun acc (a, _) ->
+  let flags = Core_list.sort ~cmp flags in
+  let col_width = flags |> Core_list.fold_left ~f:(fun acc (a, _) ->
     max acc (String.length a)
-  ) 0 in
+  ) ~init:0 in
   let flag_usage = flags
-    |> List.filter (fun (_, meta) -> meta.ArgSpec.doc <> "")
-    |> List.map (fun (name, meta) ->
+    |> Core_list.filter ~f:(fun (_, meta) -> meta.ArgSpec.doc <> "")
+    |> Core_list.map ~f:(fun (name, meta) ->
           Utils_js.spf "  %-*s  %s" col_width name meta.ArgSpec.doc
        )
     |> String.concat "\n"

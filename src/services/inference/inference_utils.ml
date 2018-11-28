@@ -47,5 +47,5 @@ let error_of_file_sig_tolerable_error ~source_file err =
 
 let set_of_file_sig_tolerable_errors ~source_file errors =
   errors
-  |> List.map (error_of_file_sig_tolerable_error ~source_file)
+  |> Core_list.map ~f:(error_of_file_sig_tolerable_error ~source_file)
   |> Errors.ErrorSet.of_list

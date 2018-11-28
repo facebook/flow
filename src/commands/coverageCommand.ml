@@ -192,16 +192,16 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
   if json then
     let covered_locs, uncovered_locs =
       let covered, uncovered = List.partition (fun (_, is_covered) -> is_covered) types in
-      let locs_of = List.map (fun (loc, _) -> loc) in
+      let locs_of = Core_list.map ~f:(fun (loc, _) -> loc) in
       locs_of covered, locs_of uncovered
     in
     let open Hh_json in
     JSON_Object [
       "expressions", JSON_Object [
         "covered_count", int_ covered;
-        "covered_locs", JSON_Array (covered_locs |> List.map Reason.json_of_loc);
+        "covered_locs", JSON_Array (covered_locs |> Core_list.map ~f:Reason.json_of_loc);
         "uncovered_count", int_ (total - covered);
-        "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
+        "uncovered_locs", JSON_Array (uncovered_locs |> Core_list.map ~f:Reason.json_of_loc);
       ];
     ]
     |> print_json_endline ~pretty

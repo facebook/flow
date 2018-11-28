@@ -130,7 +130,7 @@ end = struct
   include StateResult.Make(State)
 
   (* Monadic helper functions *)
-  let mapM f xs = all (List.map f xs)
+  let mapM f xs = all (Core_list.map ~f:f xs)
   let optMapM f = function
     | Some xs -> mapM f xs >>| fun ys -> Some ys
     | None as y -> return y
@@ -813,7 +813,7 @@ end = struct
     in
     let multi_call ts =
       mapM (method_ty ~env) ts >>| fun ts ->
-      List.map (fun t -> Ty.CallProp t) ts
+      Core_list.map ~f:(fun t -> Ty.CallProp t) ts
     in
     function
     | T.Method (_, t) -> intersection t |> multi_call

@@ -52,9 +52,9 @@ let print_values =
   in
   fun values ->
     let kvlist = Utils_js.LocMap.bindings values in
-    let strlist = List.map (fun (read_loc, write_locs) ->
+    let strlist = Core_list.map ~f:(fun (read_loc, write_locs) ->
       Printf.sprintf "%s => { %s }"
         (Loc.to_string read_loc)
-        (String.concat ", " @@ List.map print_write_loc write_locs)
+        (String.concat ", " @@ Core_list.map ~f:print_write_loc write_locs)
     ) kvlist in
     Printf.sprintf "[ %s ]" (String.concat "; " strlist)

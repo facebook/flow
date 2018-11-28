@@ -32,7 +32,7 @@ let autocomplete_result_to_json ~strip_root result =
     match details with
      | Some fd -> Hh_json.JSON_Object [
          "return_type", Hh_json.JSON_String fd.return_ty;
-         "params", Hh_json.JSON_Array (List.map func_param_to_json fd.param_tys);
+         "params", Hh_json.JSON_Array (Core_list.map ~f:func_param_to_json fd.param_tys);
        ]
      | None -> Hh_json.JSON_Null
   in
@@ -67,7 +67,7 @@ let parameter_name is_opt name =
 let autocomplete_create_result ((name, loc), ty) =
   Ty.(match ty with
   | Fun {fun_params; fun_rest_param; fun_return; _} ->
-      let param_tys = List.map (fun (n, t, fp) ->
+      let param_tys = Core_list.map ~f:(fun (n, t, fp) ->
         let param_name = parameter_name fp.prm_optional n in
         let param_ty = Ty_printer.string_of_t t in
         { param_name; param_ty }
@@ -155,7 +155,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
      | l, Ok s -> Some (l, s)
      | _ -> None
      )
-    |> List.map autocomplete_create_result
+    |> Core_list.map ~f:autocomplete_create_result
     |> List.rev in
     Ok (result, Some json_data_to_log)
 )

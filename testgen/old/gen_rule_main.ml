@@ -82,8 +82,8 @@ let mk_rule_from_string
     (pre : (string * string) list)
     (post : (string * string) list) : Gen.rule_t =
   let grammar = grm in
-  let premises = List.map parse_type_rule pre in
-  let cons = List.map parse_type_rule post in
+  let premises = Core_list.map ~f:parse_type_rule pre in
+  let cons = Core_list.map ~f:parse_type_rule post in
   Obj_rule.({grammar; premises; cons});;
 
 (* We set up three simple rules: object decl, prop read and prop write *)

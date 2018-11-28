@@ -168,14 +168,14 @@ let rec bk_inter = function
 (* Type constructors *)
 
 let mk_union ts =
-  let ts = List.concat (List.map bk_union ts) in
+  let ts = List.concat (Core_list.map ~f:bk_union ts) in
   match ts with
   | [] -> Bot
   | [t] -> t
   | t1::t2::ts -> Union (t1, t2, ts)
 
 let mk_inter ts =
-  let ts = List.concat (List.map bk_inter ts) in
+  let ts = List.concat (Core_list.map ~f:bk_inter ts) in
   match ts with
   | [] -> Top
   | [t] -> t
@@ -185,7 +185,7 @@ let mk_maybe t =
   mk_union [Null; Void; t]
 
 let mk_field_props prop_list =
-  List.map (fun (id, t, opt) -> NamedProp (id,
+  Core_list.map ~f:(fun (id, t, opt) -> NamedProp (id,
     Field (t, { fld_polarity = Neutral; fld_optional = opt })
   )) prop_list
 

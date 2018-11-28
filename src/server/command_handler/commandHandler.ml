@@ -226,14 +226,14 @@ let gen_flow_files ~options env files =
       | Some e -> Error e
       | None ->
         try
-          let flow_file_cxs = List.map (fun file ->
+          let flow_file_cxs = Core_list.map ~f:(fun file ->
             let component = Nel.one file in
             let { Merge_service.cx; _ } = Merge_service.merge_strict_context ~options component in
             cx
           ) flow_files in
 
           (* Non-@flow files *)
-          let result_contents = non_flow_files |> List.map (fun file ->
+          let result_contents = non_flow_files |> Core_list.map ~f:(fun file ->
             (File_key.to_string file, ServerProt.Response.GenFlowFiles_NonFlowFile)
           ) in
 
@@ -261,7 +261,7 @@ let convert_find_refs_result
     (result: FindRefsTypes.find_refs_ok)
     : ServerProt.Response.find_refs_success =
   Option.map result ~f:begin fun (name, refs) ->
-    (name, List.map snd refs)
+    (name, Core_list.map ~f:snd refs)
   end
 
 let find_refs ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
@@ -816,7 +816,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
         let metadata = with_data ~extra_data metadata in
         begin match result with
           | Ok items ->
-            let items = List.map Flow_lsp_conversions.flow_completion_to_lsp items in
+            let items = Core_list.map ~f:Flow_lsp_conversions.flow_completion_to_lsp items in
             let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
             let response = ResponseMessage (id, r) in
             Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
@@ -840,7 +840,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
           range = Flow_lsp_conversions.loc_to_lsp_range loc;
           kind = Some DocumentHighlight.Text;
         } in
-        let r = DocumentHighlightResult (List.map loc_to_highlight locs) in
+        let r = DocumentHighlightResult (Core_list.map ~f:loc_to_highlight locs) in
         let response = ResponseMessage (id, r) in
         Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
       | Ok (None) ->
@@ -980,7 +980,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
       in
       (* Convert all of the edits to LSP edits *)
       let file_to_textedits: (TextEdit.t list SMap.t, string) result =
-        file_to_edits >>| SMap.map (List.map Flow_lsp_conversions.flow_edit_to_textedit)
+        file_to_edits >>| SMap.map (Core_list.map ~f:Flow_lsp_conversions.flow_edit_to_textedit)
       in
       let workspace_edit: (WorkspaceEdit.t, string) result =
         file_to_textedits >>| fun file_to_textedits ->
@@ -1017,12 +1017,12 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let dependency_to_string (file, deps) =
       let file = File_key.to_string file in
       let deps = Utils_js.FilenameSet.elements deps
-        |> List.map File_key.to_string
+        |> Core_list.map ~f:File_key.to_string
         |> ListUtils.first_upto_n 20 (fun t -> Some (Printf.sprintf " ...%d more" t))
         |> String.concat "," in
       file ^ ":" ^ deps ^ "\n" in
     let dependencies = Utils_js.FilenameMap.bindings env.ServerEnv.dependency_graph
-      |> List.map dependency_to_string
+      |> Core_list.map ~f:dependency_to_string
       |> ListUtils.first_upto_n 200 (fun t -> Some (Printf.sprintf "[shown 200/%d]\n" t))
       |> String.concat "" in
     let data = "DEPENDENCIES:\n" ^ dependencies in

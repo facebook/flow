@@ -20,7 +20,7 @@ let mk_comments_test
       (fun loc comments a -> a @ [
           (
             loc,
-            List.map (fun (_, (_, comment)) ->
+            Core_list.map ~f:(fun (_, (_, comment)) ->
               match comment with | Ast.Comment.Block s | Ast.Comment.Line s -> s
             ) comments
           )

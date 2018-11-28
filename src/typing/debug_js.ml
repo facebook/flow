@@ -146,14 +146,14 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "kind", JSON_String "Array";
       "elemType", _json_of_t json_cx elemt;
       "tupleType", match tuple_types with
-      | Some tuplet -> JSON_Array (List.map (_json_of_t json_cx) tuplet)
+      | Some tuplet -> JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuplet)
       | None -> JSON_Null
     ]
 
   | DefT (_, ArrT (TupleAT (elemt, tuple_types))) -> [
       "kind", JSON_String "Tuple";
       "elemType", _json_of_t json_cx elemt;
-      "tupleType", JSON_Array (List.map (_json_of_t json_cx) tuple_types);
+      "tupleType", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) tuple_types);
     ]
 
   | DefT (_, ArrT (ROArrayAT (elemt))) -> [
@@ -172,7 +172,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | DefT (_, InstanceT (static, super, implements, instance)) -> [
       "static", _json_of_t json_cx static;
       "super", _json_of_t json_cx super;
-      "implements", JSON_Array (List.map (_json_of_t json_cx) implements);
+      "implements", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) implements);
       "instance", json_of_insttype json_cx instance
     ]
 
@@ -192,12 +192,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | DefT (_, PolyT (_, tparams, t, id)) -> [
       "id", JSON_Number (string_of_int id);
-      "typeParams", JSON_Array (List.map (json_of_typeparam json_cx) (Nel.to_list tparams));
+      "typeParams", JSON_Array (Core_list.map ~f:(json_of_typeparam json_cx) (Nel.to_list tparams));
       "type", _json_of_t json_cx t
     ]
 
   | DefT (_, TypeAppT (_, t, targs)) -> [
-      "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs);
+      "typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs);
       "type", _json_of_t json_cx t
     ]
 
@@ -207,7 +207,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | ThisTypeAppT (_, t, this, targs_opt) -> (
       match targs_opt with
-        | Some targs -> [ "typeArgs", JSON_Array (List.map (_json_of_t json_cx) targs) ]
+        | Some targs -> [ "typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs) ]
         | None -> []
     ) @ [
       "thisArg", _json_of_t json_cx this;
@@ -232,12 +232,12 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | DefT (_, IntersectionT rep) -> [
       let ts = InterRep.members rep in
-      "types", JSON_Array (List.map (_json_of_t json_cx) ts)
+      "types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)
     ]
 
   | DefT (_, UnionT rep) -> [
       let ts = UnionRep.members rep in
-      "types", JSON_Array (List.map (_json_of_t json_cx) ts)
+      "types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)
     ]
 
   | AnyWithLowerBoundT t
@@ -246,7 +246,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     ]
 
   | MergedT (_, uses) -> [
-      "uses", JSON_Array (List.map (_json_of_use_t json_cx) uses);
+      "uses", JSON_Array (Core_list.map ~f:(_json_of_use_t json_cx) uses);
     ]
 
   | DefT (_, IdxWrapper t) -> [
@@ -345,7 +345,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | OpenPredT (_,t, pos_preds, neg_preds) -> [
       let json_key_map f map = JSON_Object (
         Key_map.elements map |>
-        List.map (Utils_js.map_pair Key.string_of_key f)
+        Core_list.map ~f:(Utils_js.map_pair Key.string_of_key f)
       ) in
       let json_pred_key_map = json_key_map (json_of_pred json_cx) in
       "OpenPred", JSON_Object [
@@ -490,8 +490,8 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | ConstructorT (_, _, targs, args, t) -> [
       "typeArgs", (match targs with
         | None -> JSON_Null
-        | Some ts -> JSON_Array (List.map (_json_of_targ json_cx) ts));
-      "argTypes", JSON_Array (List.map (json_of_funcallarg json_cx) args);
+        | Some ts -> JSON_Array (Core_list.map ~f:(_json_of_targ json_cx) ts));
+      "argTypes", JSON_Array (Core_list.map ~f:(json_of_funcallarg json_cx) args);
       "type", _json_of_t json_cx t
     ]
 
@@ -557,7 +557,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "cache", json_of_specialize_cache json_cx cache
     ] @ (
       match targs_opt with
-        | Some targs -> [ "types", JSON_Array (List.map (_json_of_t json_cx) targs) ]
+        | Some targs -> [ "types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs) ]
         | None -> []
     ) @ [
       "tvar", _json_of_t json_cx tvar
@@ -567,12 +567,12 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ("this", _json_of_t json_cx this) :: _json_of_cont json_cx k
 
   | VarianceCheckT (_, targs, polarity) -> [
-      "types", JSON_Array (List.map (_json_of_t json_cx) targs);
+      "types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs);
       "polarity", json_of_polarity json_cx polarity
     ]
 
   | TypeAppVarianceCheckT (_, _, _, targs) -> [
-      "typeArgs", JSON_Array (List.map (fun (t1, t2) ->
+      "typeArgs", JSON_Array (Core_list.map ~f:(fun (t1, t2) ->
         JSON_Object [
           "t1", _json_of_t json_cx t1;
           "t2", _json_of_t json_cx t2;
@@ -582,9 +582,9 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | ConcretizeTypeAppsT (_, (ts1, _, _), (t2, ts2, _, _), will_flip) -> [
       "willFlip", JSON_Bool will_flip;
-      "currentTypeArgs", JSON_Array (List.map (_json_of_t json_cx) ts1);
+      "currentTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts1);
       "currentUpper", _json_of_t json_cx t2;
-      "currentUpperTypeArgs", JSON_Array (List.map (_json_of_t json_cx) ts2);
+      "currentUpperTypeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts2);
     ]
 
   | LookupT (_, rstrict, _, propref, action) ->
@@ -603,11 +603,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
           "strictReason", json_of_reason ~strip_root:json_cx.strip_root r
         ]
       | ShadowRead (_, ids) -> [
-          "shadowRead", JSON_Array (Nel.to_list ids |> List.map (fun id ->
+          "shadowRead", JSON_Array (Nel.to_list ids |> Core_list.map ~f:(fun id ->
             JSON_Number (Properties.string_of_id id)
         ))]
       | ShadowWrite ids -> [
-          "shadowWrite", JSON_Array (Nel.to_list ids |> List.map (fun id ->
+          "shadowWrite", JSON_Array (Nel.to_list ids |> Core_list.map ~f:(fun id ->
             JSON_Number (Properties.string_of_id id)
         ))]
     ) @ [
@@ -632,7 +632,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     ]
 
   | ObjRestT (_, excludes, tvar) -> [
-      "excludedProps", JSON_Array (List.map (fun s -> JSON_String s) excludes);
+      "excludedProps", JSON_Array (Core_list.map ~f:(fun s -> JSON_String s) excludes);
       "resultType", _json_of_t json_cx tvar;
     ]
 
@@ -748,7 +748,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | ReactKitT (_, _, React.CreateElement0 (shape, config, (children, children_spread), t_out)) -> [
       "shape", JSON_Bool shape;
       "config", _json_of_t json_cx config;
-      "children", JSON_Array (List.map (_json_of_t json_cx) children);
+      "children", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) children);
       "childrenSpread", (match children_spread with
         | Some children_spread -> _json_of_t json_cx children_spread
         | None -> JSON_Null);
@@ -759,7 +759,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "shape", JSON_Bool shape;
       "component", _json_of_t json_cx component;
       "config", _json_of_t json_cx config;
-      "children", JSON_Array (List.map (_json_of_t json_cx) children);
+      "children", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) children);
       "childrenSpread", (match children_spread with
         | Some children_spread -> _json_of_t json_cx children_spread
         | None -> JSON_Null);
@@ -822,7 +822,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | SubstOnPredT (_, subst, t) -> [
       "PredWithSubst", JSON_Object [
         ("subst", JSON_Array (subst |> SMap.elements |>
-          List.map (fun (x,k) ->
+          Core_list.map ~f:(fun (x,k) ->
             JSON_Array [JSON_String x; JSON_String (Key.string_of_key k)])));
         ("pred_t", _json_of_t_impl json_cx t)
       ]
@@ -839,7 +839,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
     rrt_unresolved;
     rrt_resolve_to;
   }) -> [
-      "resolved", JSON_Array (List.map (fun param ->
+      "resolved", JSON_Array (Core_list.map ~f:(fun param ->
         let kind, t = match param with
         | ResolvedArg t -> "ResolvedArg", t
         | ResolvedSpreadArg (r, at) ->
@@ -852,7 +852,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
           "type", _json_of_t_impl json_cx t;
         ]
       ) rrt_resolved);
-      "unresolved", JSON_Array (List.map (fun param ->
+      "unresolved", JSON_Array (Core_list.map ~f:(fun param ->
         let kind, t = match param with
         | UnresolvedArg t -> "UnresolvedArg", t
         | UnresolvedSpreadArg t -> "UnresolvedSpreadArg", t in
@@ -924,7 +924,7 @@ and json_of_sentinel_impl json_cx = function
   | Enum.One enum -> _json_of_enum json_cx enum
   | Enum.Many enums ->
     Hh_json.JSON_Array (
-      List.map (_json_of_enum json_cx) @@ EnumSet.elements enums
+      Core_list.map ~f:(_json_of_enum json_cx) @@ EnumSet.elements enums
     )
 
 and json_of_polarity json_cx = check_depth json_of_polarity_impl json_cx
@@ -1038,7 +1038,7 @@ and json_of_funtype_impl json_cx {
   in
   JSON_Object ([
     "thisType", _json_of_t json_cx this_t;
-    "paramTypes", JSON_Array (List.map (fun (_, t) -> _json_of_t json_cx t) params)
+    "paramTypes", JSON_Array (Core_list.map ~f:(fun (_, t) -> _json_of_t json_cx t) params)
   ] @ (match params_names (false, []) params with
     | None -> []
     | Some names_rev -> [
@@ -1071,12 +1071,12 @@ and json_of_funcalltype_impl json_cx {
   call_closure_t;
   call_strict_arity;
 } = Hh_json.(
-  let arg_types = List.map (json_of_funcallarg json_cx) call_args_tlist in
+  let arg_types = Core_list.map ~f:(json_of_funcallarg json_cx) call_args_tlist in
   JSON_Object ([
     "thisType", _json_of_t json_cx call_this_t;
     "typeArgs", (match call_targs with
       | None -> JSON_Null
-      | Some ts -> JSON_Array (List.map (_json_of_targ json_cx) ts));
+      | Some ts -> JSON_Array (Core_list.map ~f:(_json_of_targ json_cx) ts));
     "argTypes", JSON_Array arg_types;
     "tout", _json_of_t json_cx call_tout;
     "closureIndex", int_ call_closure_t;
@@ -1102,7 +1102,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
     "classId", int_ insttype.class_id;
-    "typeArgs", JSON_Array (List.map (fun (x, _, t, p) ->
+    "typeArgs", JSON_Array (Core_list.map ~f:(fun (x, _, t, p) ->
       JSON_Object [
         "name", JSON_String x;
         "type", _json_of_t json_cx t;
@@ -1125,7 +1125,7 @@ and json_of_selector_impl json_cx = Hh_json.(function
       "keyType", _json_of_t json_cx key;
     ]
   | ObjRest excludes -> JSON_Object [
-      "excludedProps", JSON_Array (List.map (fun s -> JSON_String s) excludes);
+      "excludedProps", JSON_Array (Core_list.map ~f:(fun s -> JSON_String s) excludes);
     ]
   | ArrRest i -> JSON_Object [
       "index", JSON_Number (string_of_int i);
@@ -1170,7 +1170,7 @@ and json_of_destructor_impl json_cx = Hh_json.(function
             "makeExact", JSON_Bool make_exact;
           ]
       ) @ [
-        "spread", JSON_Array (List.map (_json_of_t json_cx) ts);
+        "spread", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts);
       ]
     )
   | RestType (merge_mode, t) ->
@@ -1186,7 +1186,7 @@ and json_of_destructor_impl json_cx = Hh_json.(function
       "values", JSON_Bool true;
     ]
   | CallType args -> JSON_Object [
-      "args", JSON_Array (List.map (_json_of_t json_cx) args);
+      "args", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) args);
     ]
   | TypeMap tmap -> json_of_type_map json_cx tmap
   | ReactElementPropsType -> JSON_Object [
@@ -1445,7 +1445,7 @@ and json_of_specialize_cache_impl json_cx cache = Hh_json.(
     | None -> []
     | Some rs -> [
         "reasons", JSON_Array
-          (List.map (json_of_reason ~strip_root:json_cx.strip_root) rs);
+          (Core_list.map ~f:(json_of_reason ~strip_root:json_cx.strip_root) rs);
       ]
   )
 )
@@ -1595,7 +1595,7 @@ let json_of_scope = Scope.(
 )
 
 let json_of_env ?(size=5000) ?(depth=1000) cx env =
-  Hh_json.JSON_Array (List.map (json_of_scope ~size ~depth cx) env)
+  Hh_json.JSON_Array (Core_list.map ~f:(json_of_scope ~size ~depth cx) env)
 
 (*****************************************************************)
 
@@ -1727,7 +1727,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | DefT (_, FunT (_, _, {params; return_t; this_t; _})) -> p
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid this_t)
-        (String.concat "; " (List.map (fun (_, t) -> kid t) params))
+        (String.concat "; " (Core_list.map ~f:(fun (_, t) -> kid t) params))
         (kid return_t)) t
   | DefT (_, AnyT src) -> p ~extra:(string_of_any_source src) t
   | DefT (_, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
@@ -1743,7 +1743,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | FunProtoCallT _ -> p t
   | DefT (_, PolyT (_, tps, c, id)) -> p ~extra:(spf "%s [%s] #%d"
       (kid c)
-      (String.concat "; " (List.map (fun tp -> tp.name) (Nel.to_list tps)))
+      (String.concat "; " (Core_list.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
       id) t
   | ThisClassT (_, inst) -> p ~extra:(kid inst) t
   | BoundT (_, name, _) -> p ~extra:name t
@@ -1753,9 +1753,9 @@ let rec dump_t_ (depth, tvars) cx t =
   | DefT (_, ArrT (ArrayAT (elemt, None))) -> p ~extra:(spf "Array %s" (kid elemt)) t
   | DefT (_, ArrT (ArrayAT (elemt, Some tup))) -> p
       ~extra:(spf "Array %s, %s" (kid elemt)
-        (spf "[%s]" (String.concat "; " (List.map kid tup)))) t
+        (spf "[%s]" (String.concat "; " (Core_list.map ~f:kid tup)))) t
   | DefT (_, ArrT (TupleAT (_, tup))) -> p
-      ~extra:(spf "Tuple [%s]" (String.concat ", " (List.map kid tup))) t
+      ~extra:(spf "Tuple [%s]" (String.concat ", " (Core_list.map ~f:kid tup))) t
   | DefT (_, ArrT (ROArrayAT (elemt))) -> p
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
   | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
@@ -1770,23 +1770,23 @@ let rec dump_t_ (depth, tvars) cx t =
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
   | DefT (_, TypeAppT (_, base, args)) -> p ~extra:(spf "%s, [%s]"
-      (kid base) (String.concat "; " (List.map kid args))) t
+      (kid base) (String.concat "; " (Core_list.map ~f:kid args))) t
   | ThisTypeAppT (_, base, this, args_opt) -> p ~reason:false
       ~extra:begin match args_opt with
         | Some args -> spf "%s, %s, [%s]" (kid base) (kid this)
-            (String.concat "; " (List.map kid args))
+            (String.concat "; " (Core_list.map ~f:kid args))
         | None -> spf "%s, %s" (kid base) (kid this)
       end t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, MaybeT arg) -> p ~extra:(kid arg) t
   | DefT (_, IntersectionT rep) -> p ~extra:(spf "[%s]"
-      (String.concat "; " (List.map kid (InterRep.members rep)))) t
+      (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
   | DefT (_, UnionT rep) -> p ~extra:(spf "[%s]"
-      (String.concat "; " (List.map kid (UnionRep.members rep)))) t
+      (String.concat "; " (Core_list.map ~f:kid (UnionRep.members rep)))) t
   | AnyWithLowerBoundT arg
   | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
   | MergedT (_, uses) -> p ~extra:("[" ^
-      (String.concat ", " (List.map (dump_use_t_ (depth - 1, tvars) cx) uses))
+      (String.concat ", " (Core_list.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses))
     ^ "]") t
   | DefT (_, IdxWrapper inner_obj) -> p ~extra:(kid inner_obj) t
   | DefT (_, ReactAbstractComponentT _) -> p t
@@ -1804,10 +1804,10 @@ let rec dump_t_ (depth, tvars) cx t =
     (string_of_destructor s) (kid x)) t
   | OpenPredT (_, arg, p_pos, p_neg) -> p t
       ~extra:(spf "%s, {%s}, {%s}" (kid arg)
-      (String.concat "; " (List.map (fun (k,p) ->
+      (String.concat "; " (Core_list.map ~f:(fun (k,p) ->
         spf "%s: %s" (Key.string_of_key k) (string_of_predicate p)
       ) (Key_map.elements p_pos)))
-      (String.concat "; " (List.map (fun (k,p) ->
+      (String.concat "; " (Core_list.map ~f:(fun (k,p) ->
         spf "%s: %s" (Key.string_of_key k) (string_of_predicate p)
       ) (Key_map.elements p_neg))))
   | ReposT (_, arg)
@@ -1836,7 +1836,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | SpreadArg t -> spf "...%s" (kid t)
   in
 
-  let tlist ts = spf "[%s]" (String.concat "; " (List.map kid ts)) in
+  let tlist ts = spf "[%s]" (String.concat "; " (Core_list.map ~f:kid ts)) in
   let props map = spf "{%s}" (String.concat "; " (
     SMap.fold (fun k p acc ->
       spf "%s = %s" k (prop p) :: acc
@@ -1855,9 +1855,9 @@ and dump_use_t_ (depth, tvars) cx t =
       (Option.value_map testid_opt ~default:"" ~f:(fun (id, _) -> spf " for test id %d" id))
   | Strict r -> spf "Strict %S" (dump_reason cx r)
   | ShadowRead (_, ids) -> spf "ShadowRead [%s]"
-      (String.concat "; " (Nel.to_list ids |> List.map Properties.string_of_id))
+      (String.concat "; " (Nel.to_list ids |> Core_list.map ~f:Properties.string_of_id))
   | ShadowWrite ids -> spf "ShadowWrite [%s]"
-      (String.concat "; " (Nel.to_list ids |> List.map Properties.string_of_id))
+      (String.concat "; " (Nel.to_list ids |> Core_list.map ~f:Properties.string_of_id))
   in
 
   let lookup_action = function
@@ -1871,7 +1871,7 @@ and dump_use_t_ (depth, tvars) cx t =
   let specialize_cache = function
     | None -> "None"
     | Some rs -> spf "Some [%s]"
-        (String.concat "; " @@ List.map (dump_reason cx) rs)
+        (String.concat "; " @@ Core_list.map ~f:(dump_reason cx) rs)
   in
 
   let try_flow = function
@@ -1879,9 +1879,9 @@ and dump_use_t_ (depth, tvars) cx t =
         spf "(%s, %s, [%s])"
           (string_of_use_op use_op)
           (kid t)
-          (String.concat "; " (List.map kid ts))
+          (String.concat "; " (Core_list.map ~f:kid ts))
     | IntersectionCases (ts, use_t) ->
-        spf "([%s], %s)" (String.concat "; " (List.map kid ts)) (use_kid use_t)
+        spf "([%s], %s)" (String.concat "; " (Core_list.map ~f:kid ts)) (use_kid use_t)
   in
 
   let react_kit =
@@ -1931,7 +1931,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | CreateElement (_, _, config, (children, children_spread), tout) -> p
         ~extra:(spf "CreateElement (%s; %s%s) => %s"
           (kid config)
-          (String.concat "; " (List.map kid children))
+          (String.concat "; " (Core_list.map ~f:kid children))
           (match children_spread with
             | Some children_spread -> spf "; ...%s" (kid children_spread)
             | None -> "")
@@ -1964,18 +1964,18 @@ and dump_use_t_ (depth, tvars) cx t =
     let open Object in
     let join (_loc, op) = match op with And -> "And" | Or -> "Or" in
     let resolved xs =
-      spf "[%s]" (String.concat "; " (List.map slice (Nel.to_list xs)))
+      spf "[%s]" (String.concat "; " (Core_list.map ~f:slice (Nel.to_list xs)))
     in
     let resolve = function
       | Next -> "Next"
       | List0 (todo, j) ->
         spf "List0 ([%s], %s)"
-          (String.concat "; " (List.map kid (Nel.to_list todo)))
+          (String.concat "; " (Core_list.map ~f:kid (Nel.to_list todo)))
           (join j)
       | List (todo, done_rev, j) ->
         spf "List ([%s], [%s], %s)"
-          (String.concat "; " (List.map kid todo))
-          (String.concat "; " (List.map resolved (Nel.to_list done_rev)))
+          (String.concat "; " (Core_list.map ~f:kid todo))
+          (String.concat "; " (Core_list.map ~f:resolved (Nel.to_list done_rev)))
           (join j)
     in
     let resolve_tool = function
@@ -1992,8 +1992,8 @@ and dump_use_t_ (depth, tvars) cx t =
       let state =
         let {todo_rev; acc} = state in
         spf "{todo_rev=[%s]; acc=[%s]}"
-          (String.concat "; " (List.map kid todo_rev))
-          (String.concat "; " (List.map resolved acc))
+          (String.concat "; " (Core_list.map ~f:kid todo_rev))
+          (String.concat "; " (Core_list.map ~f:resolved acc))
       in
       spf "Spread (%s, %s)" target state
     in
@@ -2051,7 +2051,7 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "%s, <this: %s>(%s) => %s"
         (string_of_use_op use_op)
         (kid call_this_t)
-        (String.concat "; " (List.map call_arg_kid call_args_tlist))
+        (String.concat "; " (Core_list.map ~f:call_arg_kid call_args_tlist))
         (kid call_tout)) t
   | CallLatentPredT _ -> p t
   | CallOpenPredT _ -> p t
@@ -2072,7 +2072,7 @@ and dump_use_t_ (depth, tvars) cx t =
       ~extra:(spf "%s, {%s}"
         (kid arg)
         (String.concat "; "
-          (List.map (fun (x,_) -> x)
+          (Core_list.map ~f:(fun (x,_) -> x)
             (SMap.bindings tmap))))
   | ExportTypeT _ -> p t
   | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
@@ -2168,7 +2168,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | SetProtoT (_, arg) -> p ~extra:(kid arg) t
   | SpecializeT (_, _, _, cache, args_opt, ret) -> p ~extra:begin match args_opt with
       | Some args -> spf "%s, [%s], %s"
-          (specialize_cache cache) (String.concat "; " (List.map kid args)) (kid ret)
+          (specialize_cache cache) (String.concat "; " (Core_list.map ~f:kid args)) (kid ret)
       | None -> spf "%s, %s"
           (specialize_cache cache) (kid ret)
     end t
@@ -2184,7 +2184,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | UnaryMinusT _ -> p t
   | UnifyT (x, y) -> p ~reason:false ~extra:(spf "%s, %s" (kid x) (kid y)) t
   | VarianceCheckT (_, args, pol) -> p ~extra:(spf "[%s], %s"
-      (String.concat "; " (List.map kid args)) (Polarity.string pol)) t
+      (String.concat "; " (Core_list.map ~f:kid args)) (Polarity.string pol)) t
   | ConcretizeTypeAppsT _ -> p t
   | TypeAppVarianceCheckT _ -> p t
   | CondT (_, then_t, else_t, tout) -> p t
@@ -2193,7 +2193,7 @@ and dump_use_t_ (depth, tvars) cx t =
         (kid else_t)
         (kid tout))
   | ExtendsUseT (_, _, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
-    (String.concat "; " (List.map kid nexts)) (kid l) (kid u)) t
+    (String.concat "; " (Core_list.map ~f:kid nexts)) (kid l) (kid u)) t
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then spf "%d, ^" id else

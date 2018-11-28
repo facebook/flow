@@ -17,7 +17,7 @@ let run_command command argv =
     FlowExitStatus.(exit No_error)
   | CommandSpec.Failed_to_parse (arg_name, msg) ->
     begin try
-      let json_arg = List.find (fun s ->
+      let json_arg = Core_list.find_exn ~f:(fun s ->
         String_utils.string_starts_with s "--pretty" || String_utils.string_starts_with s "--json")
         argv in
       let pretty = String_utils.string_starts_with json_arg "--pretty" in
@@ -33,7 +33,7 @@ let run_command command argv =
     FlowExitStatus.(exit ~msg Commandline_usage_error)
 
 let expand_file_list ?options filenames =
-  let paths = List.map Path.make filenames in
+  let paths = Core_list.map ~f:Path.make filenames in
   let next_files = match paths with
   | [] -> fun () -> []
   | _ ->
@@ -44,8 +44,8 @@ let expand_file_list ?options filenames =
       end in
     Find.make_next_files
       ~filter
-      ~others:(List.tl paths)
-      (List.hd paths) in
+      ~others:(Core_list.tl_exn paths)
+      (Core_list.hd_exn paths) in
     Files.get_all next_files
 
 let get_filenames_from_input ?(allow_imaginary=false) input_file filenames =
@@ -256,7 +256,7 @@ let shm_config shm_flags flowconfig =
   let shm_dirs = Option.value_map shm_flags.shm_dirs
     ~default:(FlowConfig.shm_dirs flowconfig)
     ~f:(Str.split (Str.regexp ","))
-    |> List.map Path.(fun dir -> dir |> make |> to_string) in
+    |> Core_list.map ~f:Path.(make %> to_string) in
   let shm_min_avail = Option.value shm_flags.shm_min_avail
     ~default:(FlowConfig.shm_min_avail flowconfig) in
   let log_level = Option.value shm_flags.shm_log_level
@@ -369,7 +369,7 @@ let log_file_flags =
 let flowconfig_multi_error rev_errs =
   let msg =
     rev_errs
-    |> List.map (fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> Core_list.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
   FlowExitStatus.(exit ~msg Invalid_flowconfig)
@@ -377,7 +377,7 @@ let flowconfig_multi_error rev_errs =
 let flowconfig_multi_warn rev_errs =
   let msg =
     rev_errs
-    |> List.map (fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
+    |> Core_list.map ~f:(fun (ln, msg) -> spf ".flowconfig:%d %s" ln msg)
     |> String.concat "\n"
   in
   prerr_endline msg
@@ -448,8 +448,8 @@ let file_options =
       FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   in
   let ignores_of_arg root patterns extras =
-    let patterns = List.rev_append extras patterns in
-    List.map (fun s ->
+    let patterns = Core_list.rev_append extras patterns in
+    Core_list.map ~f:(fun s ->
      let root = Path.to_string root
        |> Sys_utils.normalize_filename_dir_sep in
      let reg = s
@@ -461,27 +461,27 @@ let file_options =
   in
   let includes_of_arg ~root ~lib_paths paths =
     (* Explicitly included paths are always added to the path_matcher *)
-    let path_matcher = List.fold_left (fun acc path ->
+    let path_matcher = Core_list.fold_left ~f:(fun acc path ->
       Path_matcher.add acc (Files.make_path_absolute root path)
-    ) Path_matcher.empty paths in
+    ) ~init:Path_matcher.empty paths in
     (* Implicitly included paths are added only if they're not already being watched *)
     let path_len path = path |> Path.to_string |> String.length in
     let implicitly_included_paths_sorted =
-      List.sort (fun a b -> (path_len a) - (path_len b)) (root::lib_paths) (* Shortest path first *)
+      Core_list.sort ~cmp:(fun a b -> (path_len a) - (path_len b)) (root::lib_paths) (* Shortest path first *)
     in
-    List.fold_left (fun acc path ->
+    Core_list.fold_left ~f:(fun acc path ->
       (* If this include is already covered by an explicit include or a shorter implicit include,
        * then skip it *)
       if Path_matcher.matches acc (Path.to_string path)
       then acc
       else Path_matcher.add acc path
-    ) path_matcher implicitly_included_paths_sorted
+    ) ~init:path_matcher implicitly_included_paths_sorted
   in
   let lib_paths ~root flowconfig extras =
     let flowtyped_path = Files.get_flowtyped_path root in
     let has_explicit_flowtyped_lib = ref false in
     let config_libs =
-      List.fold_right (fun lib abs_libs ->
+      Core_list.fold_right ~f:(fun lib abs_libs ->
         let abs_lib = Files.make_path_absolute root lib in
         (**
          * "flow-typed" is always included in the libs list for convenience,
@@ -489,7 +489,7 @@ let file_options =
          *)
         if abs_lib = flowtyped_path then has_explicit_flowtyped_lib := true;
         abs_lib::abs_libs
-      ) (FlowConfig.libs flowconfig) []
+      ) (FlowConfig.libs flowconfig) ~init:[]
     in
     let config_libs =
       if !has_explicit_flowtyped_lib = false
@@ -499,7 +499,7 @@ let file_options =
     in
     match extras with
     | [] -> config_libs
-    | _ -> config_libs @ (List.map (Files.make_path_absolute root) extras)
+    | _ -> config_libs @ (Core_list.map ~f:(Files.make_path_absolute root) extras)
   in
   fun ~root ~no_flowlib ~temp_dir ~includes ~ignores ~libs ~untyped ~declarations flowconfig ->
     let default_lib_dir =
@@ -521,7 +521,7 @@ let file_options =
     let lib_paths = lib_paths ~root flowconfig libs in
     let includes =
       includes
-      |> List.rev_append (FlowConfig.includes flowconfig)
+      |> Core_list.rev_append (FlowConfig.includes flowconfig)
       |> includes_of_arg ~root ~lib_paths in
     { Files.
       default_lib_dir;
@@ -708,7 +708,7 @@ end
 let parse_lints_flag =
   let number =
     let rec number' index acc = function
-      | [] -> List.rev acc
+      | [] -> Core_list.rev acc
       | head::tail -> number' (index + 1) ((index, head)::acc) tail
     in number' 1 []
   in
@@ -969,7 +969,7 @@ let make_env flowconfig_name connect_flags root =
     ~default:(FlowConfig.temp_dir flowconfig)
     connect_flags.temp_dir in
   let shm_dirs = Option.map
-    ~f:(fun dirs -> dirs |> Str.split (Str.regexp ",") |> List.map normalize)
+    ~f:(Str.split (Str.regexp ",") %> Core_list.map ~f:normalize)
     connect_flags.shm_flags.shm_dirs in
   let log_file =
     Path.to_string (server_log_file ~flowconfig_name ~tmp_dir root flowconfig) in

@@ -169,17 +169,17 @@ let detect_sketchy_null_checks cx =
 
 let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
-  List.iter (fun (name, reasons, use_op) ->
+  Core_list.iter ~f:(fun (name, reasons, use_op) ->
     Flow_js.add_output cx (Flow_error.EPropNotFound (name, reasons, use_op))
   ) misses
 
 let detect_unnecessary_optional_chains cx =
-  List.iter (fun (loc, lhs_reason) ->
+  Core_list.iter ~f:(fun (loc, lhs_reason) ->
     Flow_js.add_output cx (Flow_error.EUnnecessaryOptionalChain (loc, lhs_reason))
   ) (Context.unnecessary_optional_chains cx)
 
 let detect_unnecessary_invariants cx =
-  List.iter (fun (loc, reason) ->
+  Core_list.iter ~f:(fun (loc, reason) ->
     Flow_js.add_output cx (Flow_error.EUnnecessaryInvariant (loc, reason))
   ) (Context.unnecessary_invariants cx)
 
@@ -241,7 +241,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
         wrap (Type.desc_of_t t)
     )
   in
-  List.iter (fun cx ->
+  Core_list.iter ~f:(fun cx ->
     let file = Context.file cx in
     let type_table = Context.type_table cx in
     let targs_map = Type_table.targs_hashtbl type_table in
@@ -251,7 +251,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
   ) cxs
 
 let force_annotations leader_cx other_cxs =
-  List.iter (fun cx ->
+  Core_list.iter ~f:(fun cx ->
     Context.module_ref cx
     |> Flow_js.lookup_module leader_cx
     |> Flow_js.enforce_strict leader_cx
@@ -375,14 +375,14 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
 
     cx::cxs, tast::tasts, FilenameMap.add filename cx impl_cxs, gc_state
   ) ([], [], FilenameMap.empty, init_gc_state) component in
-  let cxs = List.rev rev_cxs in
-  let tasts = List.rev rev_tasts in
+  let cxs = Core_list.rev rev_cxs in
+  let tasts = Core_list.rev rev_tasts in
 
-  let cx, other_cxs = List.hd cxs, List.tl cxs in
+  let cx, other_cxs = Core_list.hd_exn cxs, Core_list.tl_exn cxs in
 
   Flow_js.Cache.clear();
 
-  dep_cxs |> List.iter (Context.merge_into sig_cx);
+  dep_cxs |> Core_list.iter ~f:(Context.merge_into sig_cx);
 
   let open Reqs in
 
@@ -441,7 +441,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
 
   force_annotations cx other_cxs;
 
-  match List.combine cxs tasts with
+  match Core_list.zip_exn cxs tasts with
   | [] -> failwith "there is at least one cx"
   | x::xs -> x, xs
 
@@ -449,7 +449,7 @@ let merge_tvar =
   let open Type in
   let possible_types = Flow_js.possible_types in
   let rec collect_lowers ~filter_empty cx seen acc = function
-    | [] -> List.rev acc
+    | [] -> Core_list.rev acc
     | t::ts ->
       match t with
       (* Recursively unwrap unseen tvars *)
@@ -752,7 +752,7 @@ module ContextOptimizer = struct
   (* walk a context from a list of exports *)
   let reduce_context cx module_refs =
     let reducer = new context_optimizer in
-    List.iter (reducer#reduce cx) module_refs;
+    Core_list.iter ~f:(reducer#reduce cx) module_refs;
     reducer#sig_hash (), reducer
 
   (* reduce a context to a "signature context" *)

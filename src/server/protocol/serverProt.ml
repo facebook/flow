@@ -59,7 +59,7 @@ module Request = struct
         "force-recheck %s (focus = %b)" (String.concat " " files) focus
   | GEN_FLOW_FILES (files, _) ->
       Printf.sprintf "gen-flow-files %s"
-        (files |> List.map File_input.filename_of_file_input |> String.concat " ")
+        (files |> Core_list.map ~f:File_input.filename_of_file_input |> String.concat " ")
   | GET_DEF (fn, line, char) ->
       Printf.sprintf "get-def %s:%d:%d"
         (File_input.filename_of_file_input fn) line char

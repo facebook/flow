@@ -21,10 +21,10 @@ let sort_and_dedup =
         (* Extract the loc from each ref, then sort and dedup by loc. This will have to be revisited
          * if we ever need to report multiple ref kinds for a single location. *)
         refs
-        |> List.map (fun ((_, loc) as reference) -> (loc, reference))
+        |> Core_list.map ~f:(fun ((_, loc) as reference) -> (loc, reference))
         |> locmap_of_bindings
         |> LocMap.bindings
-        |> List.map snd
+        |> Core_list.map ~f:snd
       in
       name, refs
     end

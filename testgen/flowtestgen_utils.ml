@@ -91,7 +91,7 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
          | Identifier (_, name), (_, e) -> name ^ " : " ^ (string_of_expr e)
          | _ -> failwith "Unsupported expression")
       | _ -> failwith "Unsupported property" in
-    String.concat ", " (List.map helper plist) in
+    String.concat ", " (Core_list.map ~f:helper plist) in
 
   let string_of_assign_op op =
     let open E.Assignment in
@@ -119,10 +119,10 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
     let callee_str = string_of_expr (snd call.callee) in
     let arglist_str =
       call.arguments
-      |> List.map (fun a -> match a with
+      |> Core_list.map ~f:(fun a -> match a with
           | E.Expression (_, e) -> e
           | E.Spread _ -> failwith "[string_of_expr] call does not support spread argument.")
-      |> List.map string_of_expr
+      |> Core_list.map ~f:string_of_expr
       |> String.concat ", " in
     callee_str ^ "(" ^ arglist_str ^ ")"
   | E.Identifier (_, id) -> id
@@ -142,7 +142,7 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
   | E.Array array ->
     let open E.Array in
     "[" ^
-    (List.map (fun elt -> match elt with
+    (Core_list.map ~f:(fun elt -> match elt with
          | Some (E.Expression (_, e)) -> string_of_expr e
          | Some (E.Spread (_, e)) -> string_of_expr (E.SpreadElement.((snd e.argument)))
          | None -> "") array.elements
@@ -159,8 +159,8 @@ and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
   match stmt with
   | S.Block b ->
     S.Block.(b.body)
-    |> List.map snd
-    |> List.map string_of_stmt
+    |> Core_list.map ~f:snd
+    |> Core_list.map ~f:string_of_stmt
     |> String.concat "\n"
   | S.Empty -> "\n"
   | S.FunctionDeclaration func ->
@@ -171,7 +171,7 @@ and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
     let params_str =
       let (_, { Ast.Function.Params.params; rest = _ }) = func.params in
       params
-      |> List.map string_of_function_param
+      |> Core_list.map ~f:string_of_function_param
       |> String.concat ", " in
     let body_str = match func.body with
       | BodyBlock (_, s) -> string_of_stmt (S.Block s)
@@ -199,8 +199,8 @@ and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
       | Var -> "var"
       | Let -> "let"
       | Const -> "const" in
-    let dlist = List.map snd decl.declarations in
-    let dlist_str = String.concat ", " (List.map string_of_dtor dlist) in
+    let dlist = Core_list.map ~f:snd decl.declarations in
+    let dlist_str = String.concat ", " (Core_list.map ~f:string_of_dtor dlist) in
     kind_str ^ " " ^ dlist_str ^ "\n"
   | S.Expression e ->
     let open S.Expression in
@@ -236,14 +236,14 @@ and string_of_type (t : (Loc.t, Loc.t) T.t') =
         key_str ^ opt ^ " : " ^ t_str
       | _ -> failwith "[string_of_prop] unsupported property" in
     let prop_str_list = ot.properties
-      |> List.map string_of_prop
+      |> Core_list.map ~f:string_of_prop
       |> String.concat ", " in
     if ot.exact then "{|" ^ prop_str_list ^ "|}"
     else "{" ^ prop_str_list ^ "}"
   | T.Union ((_, t1), (_, t2), trest) ->
     let t_strlist =
       [(string_of_type t1); (string_of_type t2)]
-      @ (trest |> (List.map snd) |> (List.map string_of_type)) in
+      @ (trest |> (Core_list.map ~f:snd) |> (Core_list.map ~f:string_of_type)) in
     String.concat " | " t_strlist
   | T.StringLiteral st -> Ast.StringLiteral.(st.raw)
   | T.NumberLiteral nt -> Ast.NumberLiteral.(nt.raw)
@@ -260,8 +260,8 @@ and string_of_type (t : (Loc.t, Loc.t) T.t') =
     let params_str =
       let (_, { T.Function.Params.params; rest = _ }) = func.params in
       params
-      |> List.map snd
-      |> List.map string_of_param
+      |> Core_list.map ~f:snd
+      |> Core_list.map ~f:string_of_param
       |> String.concat ", " in
     let ret_type_str = (string_of_type (snd func.return)) in
     "(" ^ params_str ^ ") => " ^ ret_type_str
@@ -411,7 +411,7 @@ module Config = struct
     let open E.Object in
 
     (* get all the properties *)
-    let prop_list = (List.map (fun p -> match p with
+    let prop_list = (Core_list.map ~f:(fun p -> match p with
         | Property (_, E.Object.Property.Init { key = k; value = (_, e); _ }) ->
           let k = (match k with
               | E.Object.Property.Literal (_, id) -> Ast.Literal.(match id.value with
@@ -448,7 +448,7 @@ module Config = struct
     let open E.Object in
     let prop_list =
       let open E.Object.Property in
-      List.map (fun (k, v) ->
+      Core_list.map ~f:(fun (k, v) ->
           let key = Identifier (Loc.none, "\"" ^ k ^ "\"") in
           let value = Loc.none, expr_of_value v in
           Property (Loc.none, Init {key;
@@ -652,11 +652,11 @@ let flow_check (code : string) : string option =
                    (int_of_string (get_number_exn (List.assoc "offset" end_json)))) in
               Printf.sprintf "Error: %sStart: %s\nEnd: %s\n" desc start eend
             in
-            String.concat "" (List.map msg_helper (get_array_exn (List.assoc "message" error)))
+            String.concat "" (Core_list.map ~f:msg_helper (get_array_exn (List.assoc "message" error)))
           in
           (List.assoc "errors" (get_object_exn json))
           |> get_array_exn
-          |> List.map string_of_error
+          |> Core_list.map ~f:string_of_error
           |> String.concat "\n"
         in
 
@@ -775,10 +775,10 @@ let batch_run (code_list : string list) : (string option) list =
   (* Split the batch run output into a list of single-program outputs *)
   let to_msg_list (output : string) : (string option) list =
     let msg_list = Str.split (Str.regexp "====\n") output in
-    List.map (fun m -> if (String.trim m) = "Done" then None else Some m) msg_list in
+    Core_list.map ~f:(fun m -> if (String.trim m) = "Done" then None else Some m) msg_list in
 
   (* Convert all programs into a string for batch run *)
-  let progs = List.map to_stmt code_list in
+  let progs = Core_list.map ~f:to_stmt code_list in
   let progs_string = String.concat "console.log('====');\n" progs in
 
   (* run all the programs *)

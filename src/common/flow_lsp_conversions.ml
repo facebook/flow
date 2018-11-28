@@ -15,7 +15,7 @@ let flow_completion_to_lsp
   let trunc n s = if String.length s < n then s else (String.sub s 0 n) ^ "..." in
   let trunc80 s = trunc 80 s in
   let flow_params_to_string params =
-    let params = List.map (fun p -> p.param_name ^ ": " ^ p.param_ty) params in
+    let params = Core_list.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
     "(" ^ (String.concat ", " params) ^ ")"
   in
   let kind, itemType, inlineDetail, detail = match item.func_details with

@@ -246,7 +246,7 @@ module JSX = struct
   module Opening = struct
     open Ast.JSX.Opening
     let error_attribute_list attributes =
-      List.map (function
+      Core_list.map ~f:(function
         | Attribute _ -> Attribute Attribute.error
         | SpreadAttribute _ -> SpreadAttribute SpreadAttribute.error
       ) attributes

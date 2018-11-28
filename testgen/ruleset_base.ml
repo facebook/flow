@@ -86,7 +86,7 @@ class ruleset_base = object(self)
   method is_subtype (t1 : (Loc.t, Loc.t) T.t') (t2 : (Loc.t, Loc.t) T.t') : bool =
     match t1, t2 with
     | (T.Union ((_, tu1), (_, tu2), tlist), t) ->
-      List.mem t (tu1 :: tu2 :: (List.map snd tlist))
+      List.mem t (tu1 :: tu2 :: (Core_list.map ~f:snd tlist))
     | T.Object o1, T.Object o2 -> self#is_subtype_obj o1 o2
     | T.Function f1, T.Function f2 -> self#is_subtype_func f1 f2
     | _ when t1 = t2 -> true
@@ -268,18 +268,18 @@ class ruleset_base = object(self)
         let index = !count in
         count := !count + 1;
         r, index in
-      List.map (fun elt -> match elt with
+      Core_list.map ~f:(fun elt -> match elt with
           | Expr (e, t) -> let pname, index = mk_prop () in pname, (e, t), index
           | _ -> failwith "This has to be an expression.") elist in
 
     (* get the literal syntax and its type *)
-    let lit = Syntax.mk_obj_lit (List.map (fun (n, e, _) -> n, e) props) in
+    let lit = Syntax.mk_obj_lit (Core_list.map ~f:(fun (n, e, _) -> n, e) props) in
     let lit_expr = (match lit with
         | Syntax.Expr e -> e
         | _ -> failwith "[rule_obj_lit] Literal has to be an expr") in
     let ret_type =
       let prop_types =
-        List.map (fun (name, (_, e), index) ->
+        Core_list.map ~f:(fun (name, (_, e), index) ->
             let open T.Object.Property in
             T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, name);
                                           value = Init (Loc.none, e);
@@ -309,14 +309,14 @@ class ruleset_base = object(self)
         let index = !count in
         count := !count + 1;
         r, index in
-      List.map (fun elt -> match elt with
+      Core_list.map ~f:(fun elt -> match elt with
           | Type t -> let pname, index = mk_prop () in pname, t, index
           | _ -> failwith "This has to be an expression.") tlist in
 
     (* get the literal syntax and its type *)
     let ret_type =
       let prop_types =
-        List.map (fun (name, t, index) ->
+        Core_list.map ~f:(fun (name, t, index) ->
             let open T.Object.Property in
             T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, name);
                                           value = Init (Loc.none, t);

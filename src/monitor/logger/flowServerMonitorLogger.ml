@@ -87,7 +87,7 @@ let init_logger log_fd =
   (* Format the messages and write the to the log and stderr *)
   let output section level messages =
     let buffer = Buffer.create 42 in
-    let formatted_messages = List.map (fun message ->
+    let formatted_messages = Core_list.map ~f:(fun message ->
       Buffer.clear buffer;
       Lwt_log.render ~buffer ~template ~section ~level ~message;
       Buffer.add_char buffer '\n';

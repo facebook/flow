@@ -121,7 +121,7 @@ module Mk_Generator(Gen_rule : Gen_rule_t) = struct
         [], []
       else
         (* get their corresponding rules *)
-        let new_rules = List.map (fun cond -> Gen_rule.cond_to_rule all_rules cond) to_sat in
+        let new_rules = Core_list.map ~f:(fun cond -> Gen_rule.cond_to_rule all_rules cond) to_sat in
 
         (* exercise necessary rules *)
         let result = List.fold_left (fun acc r ->

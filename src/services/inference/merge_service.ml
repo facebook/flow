@@ -123,7 +123,7 @@ let merge_strict_context ~options component =
     FilenameMap.add file typed_ast typed_asts
   ) FilenameMap.empty cx_nel in
 
-  let other_cxs = List.map fst other_cxs in
+  let other_cxs = Core_list.map ~f:fst other_cxs in
 
   { cx; other_cxs; master_cx; file_sigs; loc_file_sigs; typed_asts }
 
@@ -247,7 +247,7 @@ let merge_strict_job ~worker_mutator ~job ~options merged elements =
          multiple files indicate a cycle. *)
       let files = component
       |> Nel.to_list
-      |> List.map File_key.to_string
+      |> Core_list.map ~f:File_key.to_string
       |> String.concat "\n\t"
       in
 

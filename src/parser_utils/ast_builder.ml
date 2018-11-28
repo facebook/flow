@@ -36,7 +36,7 @@ module Patterns = struct
     }
 
   let array elements =
-    let elements = List.map (function
+    let elements = Core_list.map ~f:(function
       | Some i -> Some (Array.Element i)
       | None -> None
     ) elements in

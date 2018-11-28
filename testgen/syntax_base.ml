@@ -36,9 +36,9 @@ let rec mk_literal_expr (t : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) E.t' =
     E.Literal (Ast.Literal.({value = Boolean false; raw = "false"}))
   | T.Union (t1, t2, rest) ->
     let elements = (t1 :: t2 :: rest)
-                   |> List.map snd
-                   |> List.map mk_literal_expr
-                   |> List.map (fun e -> Some (E.Expression (Loc.none, e))) in
+                   |> Core_list.map ~f:snd
+                   |> Core_list.map ~f:mk_literal_expr
+                   |> Core_list.map ~f:(fun e -> Some (E.Expression (Loc.none, e))) in
     E.Array.(E.Array {elements})
   | T.Object obj_t -> mk_obj_literal_expr obj_t
   | T.StringLiteral lit ->
@@ -53,7 +53,7 @@ let rec mk_literal_expr (t : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) E.t' =
     let raw = if value then "true" else "false" in
     E.Literal (Ast.Literal.({value = Boolean value; raw}))
   | T.Tuple tlist ->
-    let elements = List.map (fun (_, tt) ->
+    let elements = Core_list.map ~f:(fun (_, tt) ->
         let e = mk_literal_expr tt in
         Some (E.Expression (Loc.none, e))) tlist in
     E.Array.(E.Array {elements})
@@ -64,7 +64,7 @@ let rec mk_literal_expr (t : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) E.t' =
 (* Make an object literal based on its type *)
 and mk_obj_literal_expr (t : (Loc.t, Loc.t) T.Object.t) : (Loc.t, Loc.t) E.t' =
   let prop_init_list =
-    List.map (fun p ->
+    Core_list.map ~f:(fun p ->
         let open T.Object.Property in
         match p with
         | T.Object.Property (_, {key = k;
@@ -77,7 +77,7 @@ and mk_obj_literal_expr (t : (Loc.t, Loc.t) T.Object.t) : (Loc.t, Loc.t) E.t' =
         | _ -> failwith "Unsupported property") T.Object.(t.properties)
     (* Randomly remove some optional properties *)
     (* |> List.filter (fun (_, o, _) -> (not o) || Random.bool ()) *)
-    |> List.map (fun (key, _, expr_t) ->
+    |> Core_list.map ~f:(fun (key, _, expr_t) ->
         let open E.Object.Property in
         E.Object.Property (Loc.none, Init {
           key;
@@ -116,7 +116,7 @@ let mk_check_opt_prop (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t')
   let parent_array =
     let elements =
       (get_obj expr [])
-      |> List.map (fun e -> Some (E.Expression (Loc.none, e))) in
+      |> Core_list.map ~f:(fun e -> Some (E.Expression (Loc.none, e))) in
     E.Array.(E.Array {elements}) in
   let arguments =
     [E.Expression (Loc.none, parent_array);
@@ -240,7 +240,7 @@ let mk_vardecl ?etype (vname : string) (expr : (Loc.t, Loc.t) E.t') : t =
   Stmt (S.VariableDeclaration var_decl)
 
 let mk_obj_lit (plist : (string * ((Loc.t, Loc.t) E.t' * (Loc.t, Loc.t) T.t')) list) : t =
-  let props = List.map (fun p ->
+  let props = Core_list.map ~f:(fun p ->
       let pname = fst p in
       let expr = fst (snd p) in
       let open E.Object.Property in
@@ -260,7 +260,7 @@ let combine_syntax (prog : t list) : string =
          | Stmt _ -> true
          | Expr (E.Call _) -> true
          | _ -> false) prog)
-     |> (List.map (fun c -> match c with
+     |> (Core_list.map ~f:(fun c -> match c with
          | Empty -> failwith "This cannot be empty"
          | Stmt _ -> c
          | Expr e ->
@@ -268,4 +268,4 @@ let combine_syntax (prog : t list) : string =
            Stmt
              (S.Expression {expression = (Loc.none, e);
                             directive = None})))
-     |> List.rev |> (List.map str_of_syntax))
+     |> List.rev |> (Core_list.map ~f:str_of_syntax))

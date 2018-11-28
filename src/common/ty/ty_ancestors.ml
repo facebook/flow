@@ -27,7 +27,7 @@ class ['self] map_ty_base = object (_: 'self)
 
   method private on_list
     : 'env 'a 'b . ('env -> 'a -> 'b) -> 'env -> 'a list -> 'b list
-    = fun f env -> List.map (f env)
+    = fun f env -> Core_list.map ~f:(f env)
   method private on_option
     : 'env 'a 'b . ('env -> 'a -> 'b) -> 'env -> 'a option -> 'b option
     = fun f env -> Option.map ~f:(f env)

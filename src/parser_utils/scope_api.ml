@@ -163,7 +163,7 @@ module Make (L: Loc_sig.S) = struct
   *)
   let rec compute_free_and_bound_variables = function
     | Tree.Node (scope, children) ->
-      let children' = List.map compute_free_and_bound_variables children in
+      let children' = Core_list.map ~f:compute_free_and_bound_variables children in
       let free_children, bound_children = List.fold_left (fun (facc, bacc) -> function
         | Tree.Node ((_, free, bound), _) -> SSet.union free facc, SSet.union bound bacc
       ) (SSet.empty, SSet.empty) children' in

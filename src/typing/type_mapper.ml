@@ -21,7 +21,7 @@ let maybe_known f x =
    that all tvars have been resolved. *)
 let union_flatten =
   let rec union_flatten cx seen ts =
-    List.flatten @@ List.map (flatten cx seen) ts
+    List.flatten @@ Core_list.map ~f:(flatten cx seen) ts
   and flatten cx seen t = match t with
     | OpenT (_, id) ->
       if ISet.mem id !seen then []

@@ -59,9 +59,9 @@ let json_of_request = let open Hh_json in function
 | Autocomplete (f, _) -> JSON_Object ["method", JSON_String "autocomplete";
     "file", JSON_String (File_input.filename_of_file_input f)]
 | DidOpen files -> JSON_Object ["method", JSON_String "didOpen";
-    "files", JSON_Array (files |> Nel.to_list |> List.map Hh_json.string_)]
+    "files", JSON_Array (files |> Nel.to_list |> Core_list.map ~f:Hh_json.string_)]
 | DidClose files -> JSON_Object ["method", JSON_String "didClose";
-    "files", JSON_Array (files |> Nel.to_list |> List.map Hh_json.string_)]
+    "files", JSON_Array (files |> Nel.to_list |> Core_list.map ~f:Hh_json.string_)]
 | LspToServer (_, metadata) -> metadata.start_json_truncated
 
 type response =

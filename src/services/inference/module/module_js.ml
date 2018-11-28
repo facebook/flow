@@ -335,7 +335,7 @@ module Node = struct
       else (record_path path resolution_acc; None)
 
   let path_if_exists_with_file_exts ~file_options resolution_acc path file_exts =
-    lazy_seq (file_exts |> List.map (fun ext ->
+    lazy_seq (file_exts |> Core_list.map ~f:(fun ext ->
       lazy (path_if_exists ~file_options resolution_acc (path ^ ext))
     ))
 
@@ -408,7 +408,7 @@ module Node = struct
     lazy_seq [
       lazy (
         if SSet.mem dir node_modules_containers then
-          lazy_seq (Files.node_resolver_dirnames file_options |> List.map (fun dirname ->
+          lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
             lazy (resolve_relative
               ~options
               loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)

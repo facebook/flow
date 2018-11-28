@@ -138,11 +138,11 @@ let standard_list_diff (old_list : 'a list) (new_list : 'a list) : ('a diff_resu
     (* Deletes are added for every element of old_list that does not have a
        match point with new_list *)
     let deletes =
-      List.map fst trace
+      Core_list.map ~f:fst trace
       |> ISet.of_list
       |> ISet.diff (ListUtils.range 0 n |> ISet.of_list)
       |> ISet.elements
-      |> List.map (fun pos -> (pos, Delete (old_arr.(pos)))) in
+      |> Core_list.map ~f:(fun pos -> (pos, Delete (old_arr.(pos)))) in
 
     deletes
     |> add_inserts (-1)
@@ -306,9 +306,9 @@ let program (algo : diff_algorithm)
           if index = -1 then List.hd old_list |> trivial >>| fst >>| Loc.start_loc
           (* Otherwise insert it after the current element *)
           else List.nth old_list index |> trivial >>| fst >>| Loc.end_loc in
-        List.map trivial lst
+        Core_list.map ~f:trivial lst
         |>  all
-        >>| List.map snd (* drop the loc *)
+        >>| Core_list.map ~f:snd (* drop the loc *)
         >>| (fun x -> Insert (break, x))
         |>  both loc
         >>| Core_list.return
@@ -318,7 +318,7 @@ let program (algo : diff_algorithm)
         >>| Core_list.return in
 
     let recurse_into_changes =
-      List.map recurse_into_change
+      Core_list.map ~f:recurse_into_change
       %> all
       %> map ~f:List.concat in
     recurse_into_changes diffs
@@ -369,7 +369,7 @@ let program (algo : diff_algorithm)
 
     let split_len =
       all [imports_diff; body_diff]
-      >>| List.map List.length
+      >>| Core_list.map ~f:List.length
       >>| List.fold_left (+) 0
       |> value ~default:max_int in
     let whole_len =

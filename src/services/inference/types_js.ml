@@ -446,7 +446,7 @@ let merge
   let%lwt merge_errors, suppressions, severity_cover_set, skipped_count =
     let intermediate_result_callback results =
       let errors = lazy (
-        List.map (fun (file, result) ->
+        Core_list.map ~f:(fun (file, result) ->
           match result with
           | Ok (errors, suppressions, severity_cover) ->
             file, errors, suppressions, severity_cover
@@ -1330,7 +1330,7 @@ let make_next_files ~libs ~file_options root =
     total := finished + length;
 
     files
-    |> List.map (Files.filename_from_string ~options:file_options)
+    |> Core_list.map ~f:(Files.filename_from_string ~options:file_options)
     |> Bucket.of_list
 
 let init_from_saved_state ~profiling ~workers ~saved_state options =

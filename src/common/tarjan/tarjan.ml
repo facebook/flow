@@ -126,7 +126,7 @@ module Make
       then
         let nodes = mc
         |> Nel.to_list
-        |> List.map N.to_string
+        |> Core_list.map ~f:N.to_string
         |> String.concat "\n\t"
         in
         Printf.ksprintf prerr_endline

@@ -32,5 +32,5 @@ let get_value_unsafe thread = match Lwt.state thread with
 let all threads =
   let%lwt () = iter_all threads in
   threads
-  |> List.map get_value_unsafe
+  |> Core_list.map ~f:get_value_unsafe
   |> Lwt.return

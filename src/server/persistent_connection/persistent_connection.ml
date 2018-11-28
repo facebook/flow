@@ -24,7 +24,7 @@ let to_string (clients: t) : string =
       client.client_id (SMap.cardinal client.opened_files)
       client.subscribed client.logging_context.FlowEventLogger.start_time
   in
-  let clients_str = List.map client_to_string clients in
+  let clients_str = Core_list.map ~f:client_to_string clients in
   Printf.sprintf "[%s]" (String.concat ", " clients_str)
 
 let empty = []
@@ -55,7 +55,7 @@ let send_errors =
   in
 
   fun ~errors ~warnings client ->
-    let opened_filenames = SMap.bindings client.opened_files |> List.map fst in
+    let opened_filenames = SMap.bindings client.opened_files |> Core_list.map ~f:fst in
     let warnings = List.fold_right
       (fun filename warn_acc ->
         let file_warns = get_warnings_for_file filename warnings in
