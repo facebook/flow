@@ -15,6 +15,7 @@ type averages = {
 }
 let averages = ref None
 
+(* window should be a positive integer *)
 let moving_average ~window ~avg ~sample ~sample_count =
   let window = float_of_int window in
   let sample_count = float_of_int sample_count in
@@ -126,9 +127,13 @@ let with_averages f =
   | Some averages -> f averages
 
 let record_merge_time ~options ~total_time ~merged_files =
-  with_averages @@ fun { init_time; per_file_time; parsed_count; } ->
+  (* merged_files should be non-negative. If it's 0, then we have no new information to add *)
+  if merged_files > 0
+  then with_averages @@ fun { init_time; per_file_time; parsed_count; } ->
+    (* What should we do for tiny repositories? Let's make the window at least 15 samples big *)
+    let window = max parsed_count 15 in
     let per_file_time = moving_average
-      ~window:parsed_count
+      ~window
       ~avg:per_file_time
       ~sample:(total_time /. (float_of_int merged_files))
       ~sample_count:merged_files
