@@ -485,7 +485,7 @@ class virtual ['a] t = object(self)
       t.upper <- upper';
     t
 
-  method virtual use_type: Context.t -> 'a -> Type.UseTypeMap.key -> Type.UseTypeMap.key
+  method virtual use_type: Context.t -> 'a -> Type.use_t -> Type.use_t
 
   method predicate cx map_cx p =
     match p with
@@ -555,7 +555,7 @@ class virtual ['a] t = object(self)
 
   method virtual props: Context.t -> 'a -> Properties.id -> Properties.id
 
-  method virtual eval_id: Context.t -> 'a -> IMap.key -> IMap.key
+  method virtual eval_id: Context.t -> 'a -> int -> int
 
   method prop cx map_cx prop =
     match prop with
