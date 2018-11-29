@@ -1393,8 +1393,11 @@ class ['loc] mapper = object(this)
     if id == id' && right == right' && tparams == tparams' then stuff
     else { id = id'; tparams = tparams'; right = right' }
 
-  (* TODO *)
-  method yield _loc (expr: ('loc, 'loc) Flow_ast.Expression.Yield.t) = expr
+  method yield _loc (expr: ('loc, 'loc) Flow_ast.Expression.Yield.t) =
+    let open Flow_ast.Expression.Yield in
+    let { argument; delegate } = expr in
+    let argument' = map_opt this#expression argument in
+    if argument == argument' then expr else { argument = argument'; delegate }
 
 end
 
