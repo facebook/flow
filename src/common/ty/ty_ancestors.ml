@@ -12,6 +12,7 @@ class ['self] iter_ty_base = object (_: 'self)
   method private on_bool  : 'env . 'env -> bool       -> unit = fun _env _x -> ()
   method private on_int   : 'env . 'env -> int        -> unit = fun _env _x -> ()
   method private on_symbol: 'env . 'env -> symbol     -> unit = fun _env _x -> ()
+  method private on_aloc  : 'env . 'env -> ALoc.t     -> unit = fun _env _x -> ()
 
   method private on_option: 'env 'a 'b . ('env -> 'a -> 'b) -> 'env -> 'a option -> 'b option
     = fun f env -> Option.map ~f:(f env)
@@ -24,6 +25,7 @@ class ['self] map_ty_base = object (_: 'self)
   method private on_bool  : 'env -> bool       -> bool       = fun _ x -> x
   method private on_int   : 'env -> int        -> int        = fun _ x -> x
   method private on_symbol: 'env -> symbol     -> symbol     = fun _ x -> x
+  method private on_aloc  : 'env -> ALoc.t     -> ALoc.t     = fun _ x -> x
 
   method private on_list
     : 'env 'a 'b . ('env -> 'a -> 'b) -> 'env -> 'a list -> 'b list
@@ -38,6 +40,7 @@ class ['self] endo_ty_base = object (_self : 'self)
   method private on_bool  : 'env -> bool       -> bool       = fun _ x -> x
   method private on_int   : 'env -> int        -> int        = fun _ x -> x
   method private on_symbol: 'env -> symbol     -> symbol     = fun _ x -> x
+  method private on_aloc  : 'env -> ALoc.t     -> ALoc.t     = fun _ x -> x
 
   (* Copied from
    * https://github.com/facebook/hhvm/blob/master/hphp/hack/src/ast/ast_defs_visitors_ancestors.ml
@@ -124,6 +127,7 @@ class virtual ['self] reduce_ty_base = object (self : 'self)
   method private on_int   : 'env . 'env -> int        -> 'acc = fun _ _ -> self#zero
   method private on_bool  : 'env . 'env -> bool       -> 'acc = fun _ _ -> self#zero
   method private on_symbol: 'env . 'env -> symbol     -> 'acc = fun _ _ -> self#zero
+  method private on_aloc  : 'env . 'env -> ALoc.t     -> 'acc = fun _ _ -> self#zero
 
   method private on_list: 'env 'a . ('env -> 'a -> 'acc) -> 'env -> 'a list -> 'acc
     = fun f env xs -> self#list_fold_left f env self#zero xs

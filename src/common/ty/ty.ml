@@ -8,9 +8,11 @@
 include Ty_symbol
 include Ty_ancestors
 
+type aloc = ALoc.t
+
 type t =
   | TVar of tvar * t list option
-  | Bound of symbol
+  | Bound of aloc * string
   | Generic of symbol * gen_kind * t list option
   | Any
   | Top | Bot

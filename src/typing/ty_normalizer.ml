@@ -191,20 +191,10 @@ end = struct
           when Reason.def_aloc_of_reason reason <> tp_loc ->
           terr ~kind:ShadowTypeParam (Some t)
         | Some _ ->
-          return (Ty.Bound {
-            Ty.provenance = Ty.Local;
-            loc = tp_loc;
-            anonymous = false;
-            name = tp_name
-          })
+          return (Ty.Bound (tp_loc, tp_name))
         | None -> assert false
       else
-        return (Ty.Bound {
-          Ty.provenance = Ty.Local;
-          loc = tp_loc;
-          anonymous = false;
-          name = tp_name
-        })
+        return (Ty.Bound (tp_loc, tp_name))
     | None ->
       default t
 
@@ -402,7 +392,7 @@ end = struct
         | Fun { fun_type_params = ps; _ } ->
           let env = remove_params env ps in
           super#on_t env t
-        | Bound { name; _ } ->
+        | Bound (_, name) ->
           let t' = Option.value (SMap.get name env) ~default:t in
           super#on_t env t'
         | _ ->
@@ -741,8 +731,8 @@ end = struct
       uniq_union
 
   and bound_t ~env reason name =
-    let symbol = symbol_from_reason env reason name in
-    return (Ty.Bound symbol)
+    let { Ty.loc; name; _ } = symbol_from_reason env reason name in
+    return (Ty.Bound (loc, name))
 
   and fun_ty ~env f fun_type_params =
     let {T.params; rest_param; return_t; _} = f in
@@ -882,7 +872,7 @@ end = struct
       | Ty.Union _
       | Ty.Inter _ ->
         return (Ty.Utility (Ty.Class ty))
-      | Ty.Bound (Ty.{ loc; name = bname; _ }) ->
+      | Ty.Bound (loc, bname) ->
         let pred Type.{ name; reason; _ } = (
           name = bname &&
           Reason.def_aloc_of_reason reason = loc
@@ -1082,8 +1072,8 @@ end = struct
        => ?IdxResult;
     *)
     | Idx ->
-      let idxObject = Ty.Bound (Ty.builtin_symbol "IdxObject") in
-      let idxResult = Ty.Bound (Ty.builtin_symbol "IdxResult") in
+      let idxObject = Ty.Bound (ALoc.none, "IdxObject") in
+      let idxResult = Ty.Bound (ALoc.none, "IdxResult") in
       let tparams = [
         mk_tparam ~bound:Ty.Any "IdxObject";
         mk_tparam "IdxResult";
@@ -1110,7 +1100,7 @@ end = struct
     | TypeAssertThrows ->
       let tparams = [ mk_tparam "TypeAssertT" ] in
       let params = [ (Some "value", Ty.Top, non_opt_param) ] in
-      let ret = Ty.Bound (Ty.builtin_symbol "TypeAssertT") in
+      let ret = Ty.Bound (ALoc.none, "TypeAssertT") in
       return (mk_fun ~tparams ~params ret)
 
     (* Result<T> = {success: true, value: T} | {success: false, error: string}
@@ -1164,7 +1154,7 @@ end = struct
     | ReactElementFactory _ -> return Ty.(
         let param_t = mk_tparam "T" in
         let tparams = [param_t] in
-        let t = Bound (builtin_symbol "T") in
+        let t = Bound (ALoc.none, "T") in
         let params = [
           (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);

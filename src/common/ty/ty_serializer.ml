@@ -33,10 +33,6 @@ let mk_generic x targs =
     targs;
   }
 
-let builtin_from_symbol x =
-  id_from_symbol x >>| fun x ->
-  mk_generic x None
-
 let builtin_from_string ?targs x =
   let x = id_from_string x in
   mk_generic x targs
@@ -52,7 +48,7 @@ let rec type_ t =
   let just t = return (Loc.none, t) in
   match t with
   | TVar (v, _) -> tvar v
-  | Bound s -> builtin_from_symbol s
+  | Bound (_, name) -> Ok (builtin_from_string name)
   | Generic (x, _, ts) -> generic x ts
   | Any -> just T.Any
   | Top -> just T.Mixed

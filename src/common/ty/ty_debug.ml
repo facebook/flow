@@ -127,7 +127,7 @@ and dump_t ?(depth = 10) t =
   | TVar (v, ts) ->
     spf "TVAR(%s, params=%s)" (dump_tvar v)
       (dump_generics ~depth ts)
-  | Bound s -> spf "Bound(%s)" (dump_symbol s)
+  | Bound (_, s) -> spf "Bound(%s)" s
   | Generic (s, kind, ts) ->
     spf "Generic (%s, kind= %s, params=%s)"
       (dump_symbol s)
@@ -233,7 +233,7 @@ let json_of_t ~strip_root =
     ] @
     match t with
     | TVar (v, ts) -> json_of_tvar v @ json_of_targs ts
-    | Bound (Ty.{ name; _ }) -> [
+    | Bound (_, name) -> [
         "bound", JSON_String name
       ]
     | Generic (s, k, targs_opt) ->

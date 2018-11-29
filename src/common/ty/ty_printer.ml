@@ -72,7 +72,7 @@ let type_ ?(size=5000) t =
   and type_impl ~depth (t: Ty.t) =
     match t with
     | TVar (v, ts) -> type_generic ~depth (type_var v) ts
-    | Bound { name; _ } -> Atom name
+    | Bound (_, name) -> Atom name
     | Any -> Atom "any"
     | Top -> Atom "mixed"
     | Bot -> Atom "empty"
