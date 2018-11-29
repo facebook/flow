@@ -238,6 +238,48 @@ References:
                               ^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------- create_element.js:9:12
+
+Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
+
+   create_element.js:9:12
+   9| const _c = <C baz={4} />; // Error missing bar
+                 ^^^^^^^^^^^^^ [1]
+
+References:
+   create_element.js:5:40
+   5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, mixed, number>;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ create_element.js:10:12
+
+Cannot create `C` element because property `baz` is missing in props [1] but exists in object type [2].
+
+   create_element.js:10:12
+   10| const _d = <C bar={3} />; // Error missing baz
+                  ^^^^^^^^^^^^^ [1]
+
+References:
+   create_element.js:5:40
+    5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, mixed, number>;
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- destructors.js:9:12
+
+Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
+
+   destructors.js:9:12
+   9| const _b = <C baz={3} />; // Error, bar missing
+                 ^^^^^^^^^^^^^ [1]
+
+References:
+   destructors.js:5:40
+   5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, {foo: number}, void>;
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- destructors.js:14:2
 
 Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with undefined [2].
@@ -480,7 +522,7 @@ References:
 
 
 
-Found 35 errors
+Found 38 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

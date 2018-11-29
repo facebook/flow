@@ -490,9 +490,33 @@ let run cx trace ~use_op reason_op l u
     (* Create a type variable for our props. *)
     (* If we are cloning an existing element, the config does not need to
      * provide the entire props type. *)
-    let props = if clone
-      then ShapeT (Tvar.mk_where cx reason_op props_to_tout)
-      else Tvar.mk_where cx reason_op tin_to_props
+    let props, defaults  =
+      match l with
+      | DefT (_, ReactAbstractComponentT {config; _}) ->
+          (* This is a bit of a hack. We will be passing these props and
+           * default props to react_config in flow_js.ml to calculate the
+           * config and check the passed config against it. Since our config is
+           * already calculated, we can pretend the props type is the config
+           * type and that we have no defaultProps for identical behavior.
+           *
+           * This hack is necessary because we (by design) do not calculate
+           * props from Config and DefaultProps. Even if we did do that, we would
+           * just introduce unnecessary work here-- we would calculate the props from
+           * the config and defaultProps just so that we could re-calculate the config
+           * down the line.
+           *
+           * Additionally, this hack enables us to not have to explicitly handle
+           * AbstractComponent past this point. *)
+          (if clone
+          then ShapeT (config)
+          else config), None
+      | _ ->
+        (if clone
+        then ShapeT (Tvar.mk_where cx reason_op props_to_tout)
+        else Tvar.mk_where cx reason_op tin_to_props),
+        (* For class components and function components we want to lookup the
+         * static default props property so that we may add it to our config input. *)
+        get_defaults cx trace l ~reason_op ~rec_flow
     in
     (* Check the type of React keys in the config input.
      *
@@ -544,9 +568,6 @@ let run cx trace ~use_op reason_op l u
       rec_flow cx trace (config,
         LookupT (reason_ref, kind, [], propref, action))
     in
-    (* For class components and function components we want to lookup the
-     * static default props property so that we may add it to our config input. *)
-    let defaults = get_defaults cx trace l ~reason_op ~rec_flow in
     (* Use object spread to add children to config (if we have children)
      * and remove key and ref since we already checked key and ref. Finally in
      * this block we will flow the final config to our props type. *)
