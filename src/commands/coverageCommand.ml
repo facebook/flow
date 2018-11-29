@@ -28,6 +28,7 @@ let spec = {
     |> base_flags
     |> connect_and_json_flags
     |> root_flag
+    |> strip_root_flag
     |> from_flag
     |> flag "--color" no_arg
         ~doc:("Print the file with colors showing which parts have unknown types. " ^
@@ -176,7 +177,7 @@ let rec split_overlapping_ranges accum = Loc.(function
       split_overlapping_ranges accum todo
 )
 
-let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) content =
+let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bool) list) content =
   if debug then List.iter debug_range types;
 
   begin if color then
@@ -199,9 +200,9 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
     JSON_Object [
       "expressions", JSON_Object [
         "covered_count", int_ covered;
-        "covered_locs", JSON_Array (covered_locs |> Core_list.map ~f:Reason.json_of_loc);
+        "covered_locs", JSON_Array (covered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root));
         "uncovered_count", int_ (total - covered);
-        "uncovered_locs", JSON_Array (uncovered_locs |> Core_list.map ~f:Reason.json_of_loc);
+        "uncovered_locs", JSON_Array (uncovered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root));
       ];
     ]
     |> print_json_endline ~pretty
@@ -210,7 +211,7 @@ let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) co
       "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 
 let main
-    base_flags option_values json pretty root from color debug path respect_pragma
+    base_flags option_values json pretty root strip_root from color debug path respect_pragma
     all filename () =
   FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
@@ -221,6 +222,7 @@ let main
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
+  let strip_root = if strip_root then Some root else None in
 
   if not option_values.quiet && all && respect_pragma then prerr_endline
     "Warning: --all and --respect-pragma cannot be used together. --all wins.";
@@ -247,7 +249,7 @@ let main
     handle_error ~json ~pretty err
   | ServerProt.Response.COVERAGE (Ok resp) ->
     let content = File_input.content_of_file_input_unsafe file in
-    handle_response ~json ~pretty ~color ~debug resp content
+    handle_response ~json ~pretty ~strip_root ~color ~debug resp content
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main
