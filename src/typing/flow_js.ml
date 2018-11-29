@@ -2922,8 +2922,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) own_props [] in
       rec_flow cx trace (union_of_ts reason_op keylist, keys)
 
-    | DefT (_, AnyT src), GetKeysT (reason_op, keys) ->
-      rec_flow cx trace (AnyT.why src reason_op, keys)
+    | DefT (_, AnyT _), GetKeysT (reason_op, keys) ->
+      rec_flow cx trace (StrT.why reason_op, keys)
 
     (** In general, typechecking is monotonic in the sense that more constraints
         produce more errors. However, sometimes we may want to speculatively try
