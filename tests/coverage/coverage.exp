@@ -1,35 +1,35 @@
-// check coverage of declare module
+[0m// check coverage of declare module
 
-declare module foo {
-}
-
+[0m[0mdeclare module foo {
+}[0m[0m
+[0m
 Covered: 100.00% (1 of 1 expressions)
 
-// This file triggers a violation of the "disjoint-or-nested ranges invariant"
+[0m// This file triggers a violation of the "disjoint-or-nested ranges invariant"
 // that we implicitly assume in type-at-pos and coverage implementations. In
 // particular, when unchecked it causes a crash with coverage --color.
 
-declare module foo {
-}
+[0m[0mdeclare module foo {
+}[0m[0m
 
-declare module bar {
-}
-
+[0m[0mdeclare module bar {
+}[0m[0m
+[0m
 Covered: 100.00% (2 of 2 expressions)
 
-// This file triggers a violation of the "disjoint-or-nested ranges invariant"
+[0m// This file triggers a violation of the "disjoint-or-nested ranges invariant"
 // that we implicitly assume in type-at-pos and coverage implementations. In
 // particular, when unchecked it causes non-termination with coverage --color.
 
-declare module foo {
-}
+[0m[0mdeclare module foo {
+}[0m[0m
 
-declare module bar {
-}
+[0m[0mdeclare module bar {
+}[0m[0m
 
-declare class qux {
-}
-
+[0m[0mdeclare class qux {
+}[0m[0m
+[0m
 Covered: 100.00% (3 of 3 expressions)
 
 Covered: 75.00% (3 of 4 expressions)
@@ -144,15 +144,15 @@ coverage.js
     ]
   }
 }
-// @flow
+[0m// @flow
 
-const foo = 5 + 3 + 2;
+const [0m[0mfoo[0m[0m = [0m[0m5[0m[0m [0m[0m+[0m[0m [0m[0m3[0m[0m [0m[0m+[0m[0m [0m[0m2[0m[0m;
 
-const bar: any = foo - 2;
+const [0m[31mbar: any[0m[0m = [0m[0mfoo[0m[0m [0m[0m-[0m[0m [0m[0m2[0m[0m;
 
-const baz = bar + 1;
+const [0m[31mbaz[0m[0m = [0m[31mbar[0m[0m [0m[31m+[0m[0m [0m[0m1[0m[0m;
 
-baz;
-
+[0m[31mbaz[0m[0m;
+[0m
 Covered: 66.67% (10 of 15 expressions)
 
