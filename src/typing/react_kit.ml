@@ -244,12 +244,13 @@ let get_config
       | Neutral -> rec_unify cx trace ~use_op tout config
       end
   | _ ->
-    let props = Tvar.mk_where cx reason_op (props_to_tout
+    let reason_component = (reason_of_t component) in
+    let props = Tvar.mk_where cx (replace_reason_const RReactProps reason_component) (props_to_tout
       cx
       trace
       component
       ~use_op
-      ~reason_op
+      ~reason_op:reason_component
       ~rec_flow_t
       ~rec_flow
       ~get_builtin_typeapp
