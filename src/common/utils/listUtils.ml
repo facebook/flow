@@ -7,6 +7,20 @@
 
 module M_ = Monad
 
+let rev_filter_map f lst =
+  let rec loop lst acc =
+    match lst with
+    | [] -> acc
+    | hd :: tl ->
+      match f hd with
+      | Some x -> loop tl (x :: acc)
+      | None   -> loop tl acc
+  in
+  loop lst []
+;;
+
+let filter_map f lst = List.rev (rev_filter_map f lst)
+
 (** like List.fold_left, but f returns an option and so do we.
     f acc v = Some acc proceeds as usual; None stops the fold.
     Eg
@@ -133,6 +147,20 @@ let ident_map f lst =
   let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
     let item_ = f item in
     item_::lst_, changed || item_ != item
+  ) ([], false) lst in
+  if changed then List.rev rev_lst else lst
+
+let ident_mapi f lst =
+  let _, rev_lst, changed = List.fold_left (fun (index, lst_, changed) item ->
+    let item_ = f index item in
+    index + 1, item_::lst_, changed || item_ != item
+  ) (0, [], false) lst in
+  if changed then List.rev rev_lst else lst
+
+let ident_map_multiple f lst =
+  let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
+    let items = List.rev (f item) in
+    (List.concat [items; lst_]), changed || List.length items != 1 || List.hd items != item
   ) ([], false) lst in
   if changed then List.rev rev_lst else lst
 

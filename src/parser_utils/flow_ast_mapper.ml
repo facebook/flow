@@ -773,13 +773,16 @@ class ['loc] mapper = object(this)
     ignore has_else;
     this#statement stmt
 
+  method if_alternate_statement (stmt: ('loc, 'loc) Flow_ast.Statement.t) =
+    this#statement stmt
+
   method if_statement _loc (stmt: ('loc, 'loc) Flow_ast.Statement.If.t) =
     let open Flow_ast.Statement.If in
     let { test; consequent; alternate } = stmt in
     let test' = this#predicate_expression test in
     let consequent' =
       this#if_consequent_statement ~has_else:(alternate <> None) consequent in
-    let alternate' = map_opt this#statement alternate in
+    let alternate' = map_opt this#if_alternate_statement alternate in
     if test == test' && consequent == consequent' && alternate == alternate'
     then stmt
     else { test = test'; consequent = consequent'; alternate = alternate' }
@@ -1259,7 +1262,10 @@ class ['loc] mapper = object(this)
     this#statement_list stmts
 
   method statement_list (stmts: ('loc, 'loc) Flow_ast.Statement.t list) =
-    ListUtils.ident_map this#statement stmts
+    ListUtils.ident_map_multiple this#statement_fork_point stmts
+
+  method statement_fork_point (stmt: ('loc, 'loc) Flow_ast.Statement.t) =
+    [this#statement stmt]
 
   method spread_element (expr: ('loc, 'loc) Flow_ast.Expression.SpreadElement.t) =
     let open Flow_ast.Expression.SpreadElement in

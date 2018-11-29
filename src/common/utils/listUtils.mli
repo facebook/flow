@@ -7,6 +7,9 @@
 
 module M_ = Monad
 
+val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
+val filter_map : ('a -> 'b option) -> 'a list -> 'b list
+
 val fold_left_opt : ('a -> 'b -> 'a option) -> 'a -> 'b list -> 'a option
 val fold_left_until : ('a -> 'b -> bool * 'a) -> 'a -> 'b list -> 'a
 val fold_left_while : ('a -> 'b -> bool) ->
@@ -21,6 +24,8 @@ val copy_n : int -> 'a -> 'a list
 val uniq : 'a list -> 'a list
 val phys_uniq : 'a list -> 'a list
 val ident_map : ('a -> 'a) -> 'a list -> 'a list
+val ident_mapi : (int -> 'a -> 'a) -> 'a list -> 'a list
+val ident_map_multiple : ('a -> 'a list) -> 'a list -> 'a list
 val combine3 : 'a list * 'b list * 'c list -> ('a * 'b * 'c) list
 val split3 : ('a * 'b * 'c) list -> 'a list * 'b list * 'c list
 val zipi : 'a list -> 'b list -> (int * 'a * 'b) list
