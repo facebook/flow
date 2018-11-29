@@ -4050,6 +4050,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         TestPropT _
       | GetPropT  _
       | SetPropT _
+      | GetElemT _
+      | SetElemT _
     ) ->
       let statics = get_builtin_typeapp cx ~trace r "React$AbstractComponentStatics"
         [default_props] in
