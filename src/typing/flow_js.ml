@@ -7824,9 +7824,9 @@ and check_polarity cx ?trace polarity = function
     check_polarity_typeapp cx ?trace polarity c ts
 
   | DefT (_, ReactAbstractComponentT {config; default_props; instance}) ->
-      check_polarity cx ?trace Neutral config;
+      check_polarity cx ?trace Negative config;
       check_polarity cx ?trace Neutral default_props;
-      check_polarity cx ?trace Neutral instance;
+      check_polarity cx ?trace Positive instance;
 
   | OpaqueT (_, opaquetype) ->
     Option.iter ~f:(check_polarity cx ?trace polarity) opaquetype.underlying_t;
