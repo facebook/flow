@@ -505,8 +505,7 @@ CAMLprim value hh_heap_size(void) {
 }
 
 CAMLprim value hh_log_level(void) {
-  CAMLparam0();
-  CAMLreturn(Val_long(*log_level));
+  return Val_long(*log_level);
 }
 
 CAMLprim value hh_sample_rate(void) {

@@ -240,7 +240,7 @@ external heap_size: unit -> int = "hh_heap_size"
 (* 0 = nothing *)
 (* 1 = log totals, averages, min, max bytes marshalled and unmarshalled *)
 (*****************************************************************************)
-external hh_log_level : unit -> int = "hh_log_level"
+external hh_log_level : unit -> int = "hh_log_level" [@@noalloc]
 
 (*****************************************************************************)
 (* The sample rate for shared memory statistics *)
@@ -490,13 +490,16 @@ end = struct
 
   let log_deserialize l r =
     let sharedheap = float l in
-    let localheap = float (value_size r) in
-    begin
-      Measure.sample (Value.description
-        ^ " (bytes deserialized from shared heap)") sharedheap;
-      Measure.sample ("ALL bytes deserialized from shared heap") sharedheap;
-      Measure.sample (Value.description
-        ^ " (bytes allocated for deserialized value)") localheap;
+
+    Measure.sample (Value.description ^ " (bytes deserialized from shared heap)") sharedheap;
+    Measure.sample ("ALL bytes deserialized from shared heap") sharedheap;
+
+    if hh_log_level() > 1
+    then begin
+      (* value_size is a bit expensive to call this often, so only run with log levels >= 2 *)
+      let localheap = float (value_size r) in
+
+      Measure.sample (Value.description ^ " (bytes allocated for deserialized value)") localheap;
       Measure.sample ("ALL bytes allocated for deserialized value") localheap
     end
 
