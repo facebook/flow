@@ -35,3 +35,6 @@ let short_string_with_alphabet alphabet =
 
 let short_string () =
   short_string_with_alphabet base64_alphabet
+
+let short_alphanumeric_string () =
+  short_string_with_alphabet alphanumeric_alphabet
