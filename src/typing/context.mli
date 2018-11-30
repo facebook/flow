@@ -66,6 +66,7 @@ val find_module_sig: sig_t -> string -> Type.t
 (* accessors *)
 val all_unresolved: t -> ISet.t IMap.t
 val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
+val metadata: t -> metadata
 val max_literal_length: t -> int
 val enable_const_params: t -> bool
 val enforce_strict_call_arity: t -> bool

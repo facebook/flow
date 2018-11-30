@@ -257,7 +257,7 @@ let force_annotations leader_cx other_cxs =
     |> Flow_js.enforce_strict leader_cx
   ) (leader_cx::other_cxs)
 
-let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
+let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
   let open Context in
 
   let metadata =
@@ -268,7 +268,7 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
     | Some Docblock.Csx_pragma -> Options.Jsx_csx
     | None -> Options.Jsx_react
     in
-    { metadata with jsx }
+    { mtdt with jsx }
   in
 
   let metadata = match Docblock.flow docblock_info with

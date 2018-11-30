@@ -251,6 +251,8 @@ let in_declare_module cx =
 let all_unresolved cx = cx.sig_cx.all_unresolved
 let annot_table cx = cx.annot_table
 let envs cx = cx.sig_cx.envs
+
+let metadata cx = cx.metadata
 let max_literal_length cx = cx.metadata.max_literal_length
 let enable_const_params cx =
   cx.metadata.enable_const_params || cx.metadata.strict || cx.metadata.strict_local
