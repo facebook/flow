@@ -17,20 +17,20 @@ export default suite(
     test('initialize error for wrong version', [
       ideStart({mode: 'lsp', needsFlowServer: false}),
       ideRequest('initialize', lspInitializeParams)
-        .waitUntilIDEMessage(10000, 'initialize')
+        .waitUntilIDEMessage(30000, 'initialize')
         .verifyAllIDEMessagesInStep(
           ['initialize{Wrong version of Flow. The config specifies}'],
           [...lspIgnoreStatusAndCancellation],
         ),
       ideRequest('shutdown')
-        .waitUntilIDEMessage(3000, 'shutdown')
+        .waitUntilIDEMessage(10000, 'shutdown')
         .verifyAllIDEMessagesInStep(
           ['shutdown'],
           [...lspIgnoreStatusAndCancellation],
         ),
       ideNotification('exit')
-        .waitUntilIDEStatus(3000, 'stopped')
-        .waitUntilServerStatus(3000, 'stopped')
+        .waitUntilIDEStatus(10000, 'stopped')
+        .waitUntilServerStatus(10000, 'stopped')
         .verifyIDEStatus('stopped')
         .verifyServerStatus('stopped'),
     ]),
