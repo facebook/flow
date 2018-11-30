@@ -219,6 +219,13 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
    * of state transitions. See docs on the ServerProcess.server_process ADT for
    * state transitions.  *)
   let kill_and_maybe_restart_server ?target_mini_state env exit_status =
+    (* Ideally, all restarts should be triggered by Changed_merge_base notification
+     * which generate target mini state. There are other kind of restarts too, mostly
+     * related to server crashing - if we just restart and keep going, we risk
+     * Changed_merge_base eventually arriving and restarting the already started server
+     * for no reason. Re-issuing merge base query here should bring the Monitor and Server
+     * understanding of current revision to be the same *)
+    if Option.is_none target_mini_state then Informant.reinit env.informant;
     kill_server_and_wait_for_exit env;
     let version_matches = is_config_version_matching env in
     match env.server, version_matches with
@@ -469,6 +476,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         None, Informant_sig.Server_dead in
     env, exit_status, server_state
 
+  let server_not_started env = { env with server = Not_yet_started }
+
   let update_status env monitor_config =
     let env, exit_status, server_state = update_status_ env monitor_config in
     let informant_report = Informant.report env.informant server_state in
@@ -524,36 +533,31 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         Hh_logger.log "Watchman died. Restarting hh_server (attempt: %d)"
           (env.watchman_retries + 1);
         let env = { env with watchman_retries = env.watchman_retries + 1} in
-        kill_and_maybe_restart_server env exit_status
+        server_not_started env
       end else if is_decl_heap_elems_bug then begin
         Hh_logger.log "hh_server died due to Decl_heap_elems_bug. Restarting";
-        kill_and_maybe_restart_server env exit_status
+        server_not_started env
       end else if is_worker_error then begin
         Hh_logger.log "hh_server died due to worker error. Restarting";
-        kill_and_maybe_restart_server env exit_status
+        server_not_started env
       end else if is_config_changed then begin
         Hh_logger.log "hh_server died from hh config change. Restarting";
-        kill_and_maybe_restart_server env exit_status
+        server_not_started env
       end else if is_heap_stale then begin
         Hh_logger.log
           "Several large rebases caused shared heap to be stale. Restarting";
-        kill_and_maybe_restart_server env exit_status
+        server_not_started env
       end else if is_big_rebase then begin
-        (* Server detected rebase sooner than monitor. If we keep going,
-        * monitor will eventually discover the same rebase and restart the
-        * server again for no reason. Reinitializing informant to bring it to
-        * the same understanding of current revision as server. *)
-        Informant.reinit env.informant;
         Hh_logger.log
           "Server exited because of big rebase. Restarting";
-        kill_and_maybe_restart_server env exit_status
+        server_not_started env
       end else if is_sql_assertion_failure
           && (env.sql_retries < max_sql_retries) then begin
         Hh_logger.log
           "Sql failed. Restarting hh_server in fresh mode (attempt: %d)"
           (env.sql_retries + 1);
         let env = { env with sql_retries = env.sql_retries + 1} in
-        kill_and_maybe_restart_server env exit_status
+        server_not_started env
       end else
         env
 
