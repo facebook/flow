@@ -356,6 +356,34 @@ References:
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ double_wrapped.js:23:12
+
+Cannot create `WrappedBoth` element because property `bar` is missing in object type [1] but exists in props [2].
+
+   double_wrapped.js:23:12
+   23| const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   double_wrapped.js:4:43
+    4| class MyComponent extends React.Component<{| foo: number |}> {
+                                                 ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ double_wrapped.js:24:12
+
+Cannot create `WrappedBoth` element because property `foo` is missing in props [1] but exists in object type [2].
+
+   double_wrapped.js:24:12
+   24| const _b = <WrappedBoth />; // Error, missing prop foo
+                  ^^^^^^^^^^^^^^^ [1]
+
+References:
+   double_wrapped.js:4:43
+    4| class MyComponent extends React.Component<{| foo: number |}> {
+                                                 ^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------- error_positioning.js:31:28
 
 Property `mock` is missing in React stateless functional component [1] but exists in `MockFn` [2].
@@ -616,7 +644,7 @@ References:
 
 
 
-Found 43 errors
+Found 45 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
