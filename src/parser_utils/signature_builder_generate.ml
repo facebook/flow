@@ -158,7 +158,10 @@ module T = struct
   module FixMe = struct
 
     let mk_type loc =
-      loc, Ast.Type.Any
+      loc, Ast.Type.Generic {
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$FlowFixMe");
+        targs = None;
+      }
 
     let mk_little_annotation loc =
       TYPE (mk_type loc)
