@@ -29,6 +29,7 @@ type t =
   | Socket_error
   | Dfind_died
   | Dfind_unresponsive
+  | Watchman_error
   | Unknown_error
 
 exception Exit_with of t

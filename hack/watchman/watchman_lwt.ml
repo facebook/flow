@@ -95,8 +95,9 @@ struct
       try%lwt
         f conn
       with e ->
+        let e = Exception.wrap e in
         let%lwt () = close_connection conn in
-        raise e
+        Exception.reraise e
     in
     let%lwt () = close_connection conn in
     Lwt.return result

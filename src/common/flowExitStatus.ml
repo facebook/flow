@@ -63,6 +63,9 @@ type t =
   (* The hack code might throw this *)
   | Dfind_unresponsive
 
+  (* A fatal error with Watchman *)
+  | Watchman_error
+
   (* A generic something-else-went-wrong *)
   | Unknown_error
 
@@ -109,6 +112,7 @@ let error_code = function
   | Socket_error -> 98
   | Dfind_died -> 99
   | Dfind_unresponsive -> 100
+  | Watchman_error -> 101
   | Unknown_error -> 110
 
 
@@ -145,6 +149,7 @@ let error_type = function
   | 98 -> Socket_error
   | 99 -> Dfind_died
   | 100 -> Dfind_unresponsive
+  | 101 -> Watchman_error
   | 110 -> Unknown_error
   | _ -> raise Not_found
 
@@ -180,6 +185,7 @@ let to_string = function
   | Missing_flowlib -> "Missing_flowlib"
   | Dfind_died -> "Dfind_died"
   | Dfind_unresponsive -> "Dfind_unresponsive"
+  | Watchman_error -> "Watchman_error"
   | Unknown_error -> "Unknown_error"
   | Commandline_usage_error -> "Commandline_usage_error"
   | No_input -> "No_input"
