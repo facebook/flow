@@ -602,6 +602,17 @@ let run cx trace ~use_op reason_op l u
     ~get_builtin_typeapp ~get_builtin_type ~add_output u Positive
   in
 
+  let get_config_with_props_and_defaults default_props tout =
+    let open Object in
+    let open Object.Rest in
+    let props = l in
+    let tool = Resolve Next in
+    let state = One default_props in
+    rec_flow cx trace (props,
+      ObjKitT (Op UnknownUse, reason_op, tool, Rest (ReactConfigMerge Neutral, state), tout))
+  in
+
+
   let get_instance tout =
     let component = l in
     match component with
@@ -1262,6 +1273,7 @@ let run cx trace ~use_op reason_op l u
     create_element clone component config children tout
   | GetProps tout -> props_to_tout tout
   | GetConfig tout -> get_config tout
+  | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout
   | GetRef tout -> get_instance tout
   | SimplifyPropType (tool, tout) -> simplify_prop_type tout tool
   | CreateClass (tool, knot, tout) -> create_class knot tout tool

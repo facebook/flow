@@ -238,6 +238,58 @@ References:
                               ^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- config.js:13:2
+
+Cannot cast `y` to `NotTheRightConfig` because:
+ - property `baz` is missing in `Props` [1] but exists in `NotTheRightConfig` [2].
+ - property `qux` is missing in `Props` [1] but exists in `NotTheRightConfig` [2].
+
+   config.js:13:2
+   13| (y: NotTheRightConfig); // Error, configs don't match
+        ^
+
+References:
+   config.js:8:29
+    8| declare var y: React$Config<Props, DefaultProps>;
+                                   ^^^^^ [1]
+   config.js:13:5
+   13| (y: NotTheRightConfig); // Error, configs don't match
+           ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- config.js:16:2
+
+Cannot cast `z` to config of React component because:
+ - property `bar` is missing in `NotTheRightConfig` [1] but exists in `Props` [2].
+ - property `foo` is missing in `NotTheRightConfig` [1] but exists in `Props` [2].
+
+   config.js:16:2
+   16| (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+        ^
+
+References:
+   config.js:15:16
+   15| declare var z: NotTheRightConfig;
+                      ^^^^^^^^^^^^^^^^^ [1]
+   config.js:16:18
+   16| (z: React$Config<Props, DefaultProps>); // Error, configs don't match
+                        ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- config.js:39:12
+
+Cannot create `WrappedComponent` element because property `bar` is missing in props [1] but exists in object type [2].
+
+   config.js:39:12
+   39| const _c = <WrappedComponent foo={3} />; // Error missing bar
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   config.js:30:41
+   30| class Component extends React.Component<{foo: number, bar: number}> {
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- create_element.js:9:12
 
 Cannot create `C` element because property `bar` is missing in props [1] but exists in object type [2].
@@ -644,7 +696,7 @@ References:
 
 
 
-Found 45 errors
+Found 50 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

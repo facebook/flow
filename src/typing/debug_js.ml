@@ -1198,6 +1198,10 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ReactElementRefType -> JSON_Object [
       "reactElementRef", JSON_Bool true
     ]
+  | ReactConfigType t -> JSON_Object [
+      "reactConfig", JSON_Bool true;
+      "default_props", _json_of_t json_cx t
+  ]
 )
 
 and json_of_type_map json_cx = check_depth json_of_type_map_impl json_cx
@@ -1636,6 +1640,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | ReactElementPropsType -> "React element props"
   | ReactElementConfigType -> "React element config"
   | ReactElementRefType -> "React element instance"
+  | ReactConfigType _ -> "React config"
   in
 
   let defer_use =
@@ -1938,6 +1943,8 @@ and dump_use_t_ (depth, tvars) cx t =
           (kid tout)) t
     | GetProps tout -> spf "GetProps (%s)" (kid tout)
     | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
+    | GetConfigType (default_props, tout) ->
+        spf "GetConfigType (%s, %s)" (kid default_props) (kid tout)
     | GetRef tout -> spf "GetRef (%s)" (kid tout)
     | SimplifyPropType (tool, tout) ->
       spf "SimplifyPropType (%s, %s)" (simplify_prop_type tool) (kid tout)
@@ -2361,6 +2368,7 @@ let string_of_destructor = function
   | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
   | ReactElementRefType -> "ReactElementRef"
+  | ReactConfigType _ -> "ReactConfig"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->

@@ -204,6 +204,7 @@ type reason_desc =
   | RReactChildrenOrType of reason_desc
   | RReactChildrenOrUndefinedOrType of reason_desc
   | RReactSFC
+  | RReactConfig
 
 and reason_desc_function =
   | RAsync
@@ -547,6 +548,7 @@ let rec string_of_desc = function
   | RReactChildrenOrUndefinedOrType desc ->
     spf "children array or %s" (string_of_desc desc)
   | RReactSFC -> "React stateless functional component"
+  | RReactConfig -> "config of React component"
 
 let string_of_reason ?(strip_root=None) r =
   let spos = string_of_loc ~strip_root (aloc_of_reason r |> ALoc.to_loc) in
@@ -1197,6 +1199,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RReactChildrenOrType _
 | RReactChildrenOrUndefinedOrType _
 | RReactSFC
+| RReactConfig
   -> `Unclassified
 
 let is_nullish_reason r =

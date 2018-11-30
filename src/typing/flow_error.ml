@@ -1958,6 +1958,8 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | CreateElement0 _
     | CreateElement _
       -> "is not a React component"
+    | GetConfigType _
+      -> "cannot calculate config"
     | SimplifyPropType (tool, _) ->
       SimplifyPropType.(match tool with
       | ArrayOf -> is_not_prop_type

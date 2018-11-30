@@ -1009,9 +1009,11 @@ module ResolvableTypeJob = struct
     | ValuesType -> acc
     | CallType ts -> collect_of_types ?log_unresolved cx reason acc ts
     | TypeMap tmap -> collect_of_type_map ?log_unresolved cx reason acc tmap
+    | ReactConfigType default_props -> collect_of_type ?log_unresolved cx reason acc default_props
     | ReactElementPropsType
     | ReactElementConfigType
-    | ReactElementRefType -> acc
+    | ReactElementRefType
+      -> acc
 
   and collect_of_type_map ?log_unresolved cx reason acc = function
     | TupleMap t | ObjectMap t | ObjectMapi t ->
@@ -7720,6 +7722,8 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
   | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps tout)
   | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig tout)
   | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef tout)
+  | ReactConfigType default_props ->
+      ReactKitT (use_op, reason, React.GetConfigType (default_props, tout))
   )
 
 and match_this_binding map f =

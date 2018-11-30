@@ -1344,6 +1344,9 @@ end = struct
     | T.ReactElementPropsType -> return (generic_builtin_t "React$ElementProps" [ty])
     | T.ReactElementConfigType -> return (generic_builtin_t "React$ElementConfig" [ty])
     | T.ReactElementRefType -> return (generic_builtin_t "React$ElementRef" [ty])
+    | T.ReactConfigType default_props ->
+        type__ ~env default_props >>| fun default_props' ->
+          generic_builtin_t "React$Config" [ty; default_props']
     | T.RestType (T.Object.Rest.ReactConfigMerge _, _)
     | T.Bind _ as d ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None

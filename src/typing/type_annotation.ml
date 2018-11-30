@@ -604,6 +604,19 @@ let rec convert cx tparams_map = Ast.Type.(function
         reconstruct_ast (DefT (mk_reason (RCustom "AbstractComponent") loc,
           ReactAbstractComponentT {config; default_props; instance})) targs
       )
+  | "React$Config" ->
+      check_type_arg_arity cx loc targs 2 (fun () ->
+        let ts, targs = convert_type_params () in
+        let props = List.nth ts 0 in
+        let default_props = List.nth ts 1 in
+        let reason = mk_reason RReactConfig loc in
+        reconstruct_ast
+          (EvalT (props, TypeDestructorT
+          (use_op reason, reason,
+            ReactConfigType default_props), mk_id ()))
+          targs
+      )
+
   | "React$PropType$Primitive" ->
       check_type_arg_arity cx loc targs 1 (fun () ->
         let ts, targs = convert_type_params () in

@@ -396,6 +396,10 @@ class virtual ['a] t = object(self)
           let tmap' = self#type_map cx map_cx tmap in
           if tmap' == tmap then t
           else TypeMap tmap'
+      | ReactConfigType default_props ->
+          let default_props' = self#type_ cx map_cx default_props in
+          if default_props' == default_props then t
+          else ReactConfigType default_props'
       | ReactElementPropsType
       | ReactElementConfigType
       | ReactElementRefType
@@ -1227,6 +1231,11 @@ class virtual ['a] t_with_uses = object(self)
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t
       else GetConfig tout'
+    | GetConfigType (default_props, tout) ->
+      let default_props' = self#type_ cx map_cx default_props in
+      let tout' = self#type_ cx map_cx tout in
+      if tout' == tout && default_props' == default_props then t
+      else GetConfigType (default_props', tout')
     | GetRef tout ->
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t

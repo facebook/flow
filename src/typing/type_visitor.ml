@@ -238,6 +238,7 @@ class ['a] t = object(self)
   | ReactElementConfigType
   | ReactElementRefType
     -> acc
+  | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
   | ElementType t -> self#type_ cx pole_TODO acc t
   | Bind t -> self#type_ cx pole_TODO acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx pole_TODO) acc ts
@@ -481,6 +482,9 @@ class ['a] t = object(self)
   | ReactKitT (_, _, tool) -> (match tool with
     | React.GetProps t | React.GetConfig t | React.GetRef t
       -> self#type_ cx pole_TODO acc t
+    | React.GetConfigType (default_props, t) ->
+        let acc = self#type_ cx pole_TODO acc default_props in
+        self#type_ cx pole_TODO acc t
     | React.CreateElement0 (_, config, (children, children_spread), tout) ->
       let acc = self#type_ cx pole_TODO acc config in
       let acc = List.fold_left (self#type_ cx pole_TODO) acc children in
