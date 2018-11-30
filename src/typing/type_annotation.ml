@@ -243,7 +243,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match List.hd elemts with
         | DefT (r, SingletonNumT num_lit) ->
           reconstruct_ast
-            (DefT (r, NumT (Literal (None, num_lit))))
+            (DefT (replace_reason_const RNumber r, NumT (Literal (None, num_lit))))
             targs
         | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc)
     )
@@ -254,7 +254,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match List.hd elemts with
         | DefT (r, SingletonStrT str_lit) ->
           reconstruct_ast
-            (DefT (r, StrT (Literal (None, str_lit))))
+            (DefT (replace_reason_const RString r, StrT (Literal (None, str_lit))))
             targs
         | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc)
     )
@@ -265,7 +265,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       match List.hd elemts with
         | DefT (r, SingletonBoolT bool) ->
           reconstruct_ast
-            (DefT (r, BoolT (Some bool)))
+            (DefT (replace_reason_const RBoolean r, BoolT (Some bool)))
             targs
         | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc)
     )
