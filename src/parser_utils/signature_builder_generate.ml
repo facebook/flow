@@ -98,6 +98,8 @@ module T = struct
 
     | ObjectDestruct of (Loc.t * expr_type) * (Loc.t * string)
 
+    | FixMe
+
   and object_type = (Loc.t, Loc.t) Ast.Type.Object.t
 
   and object_key = (Loc.t, Loc.t) Ast.Expression.Object.Property.key
@@ -152,6 +154,30 @@ module T = struct
   and reference =
     | RLexical of Loc.t * string
     | RPath of Loc.t * reference * (Loc.t * string)
+
+  module FixMe = struct
+
+    let mk_type loc =
+      loc, Ast.Type.Any
+
+    let mk_little_annotation loc =
+      TYPE (mk_type loc)
+
+    let mk_pattern default loc =
+      if default
+      then loc, Some (loc, "_"), true, mk_type loc
+      else loc, None, false, mk_type loc
+
+    let mk_expr_type loc =
+      loc, FixMe
+
+    let mk_extends _loc =
+      None
+
+    let mk_decl loc =
+      VariableDecl (mk_little_annotation loc)
+
+  end
 
   let rec summarize_array loc = function
     | AInit (_, et), aes ->
@@ -358,6 +384,9 @@ module T = struct
         });
         targs = None;
       }));
+
+    | loc, FixMe ->
+      FixMe.mk_type loc
 
   and generic_id_of_reference = function
     | RLexical (loc, x) -> Ast.Type.Generic.Identifier.Unqualified (loc, x)
@@ -666,8 +695,6 @@ end
    and ideally would be verified as well, but we're punting on them right now.
 *)
 module Eval(Env: Signature_builder_verify.EvalEnv) = struct
-  exception Error of string
-  exception Unreachable
 
   let rec type_ t = t
 
@@ -695,17 +722,17 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         | path_loc, T.ValueRef reference -> T.ValueRef (T.RPath (path_loc, reference, (loc, x)))
         | _ -> T.ObjectDestruct (expr_type, (loc, x))
 
-  and annotation ?init annot =
+  and annotation loc ?init annot =
     match annot with
       | Some path -> T.TYPE (annot_path path)
       | None ->
         begin match init with
           | Some path -> T.EXPR (init_path path)
-          | None -> raise (Error "annotation")
+          | None -> T.FixMe.mk_little_annotation loc
         end
 
   and annotated_type = function
-    | Ast.Type.Missing _ -> raise (Error "annotation")
+    | Ast.Type.Missing loc -> T.FixMe.mk_type loc
     | Ast.Type.Available (_, t) -> type_ t
 
   and pattern ?(default=false) patt =
@@ -722,7 +749,8 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         then loc, Some (loc, "_"), true, annotated_type annot
         else loc, None, false, annotated_type annot
       | _, Assignment { Assignment.left; right = _ } -> pattern ~default:true left
-      | _loc (* TODO *), Expression _ -> raise (Error "pattern")
+      | loc, Expression _ ->
+        T.FixMe.mk_pattern default loc
 
   and literal_expr =
     let open Ast.Expression in
@@ -733,7 +761,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           | Ast.Literal.Number value -> loc, T.NumberLiteral { Ast.NumberLiteral.value; raw }
           | Ast.Literal.Boolean b -> loc, T.BooleanLiteral b
           | Ast.Literal.Null -> loc, T.Null
-          | _ -> raise (Error "literal_expr")
+          | _ -> T.FixMe.mk_expr_type loc
         end
       | loc, TemplateLiteral _ -> loc, T.String
       | loc, Identifier stuff -> loc, T.ValueRef (identifier stuff)
@@ -759,17 +787,27 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | loc, Object stuff ->
         let open Ast.Expression.Object in
         let { properties } = stuff in
-        loc, T.ObjectLiteral { frozen = false; properties = object_ properties }
+        begin match object_ properties with
+          | Some o -> loc, T.ObjectLiteral { frozen = false; properties = o }
+          | None -> T.FixMe.mk_expr_type loc
+        end
       | loc, Array stuff ->
         let open Ast.Expression.Array in
         let { elements } = stuff in
-        loc, T.ArrayLiteral (array_ elements)
+        begin match array_ elements with
+          | Some a -> loc, T.ArrayLiteral a
+          | None -> T.FixMe.mk_expr_type loc
+        end
       | loc, TypeCast stuff ->
         let open Ast.Expression.TypeCast in
         let { annot; expression = _ } = stuff in
         let _, t = annot in
         loc, T.TypeCast (type_ t)
-      | loc, Member stuff -> loc, T.ValueRef (member stuff)
+      | loc, Member stuff ->
+        begin match member stuff with
+          | Some ref_expr -> loc, T.ValueRef ref_expr
+          | None -> T.FixMe.mk_expr_type loc
+        end
       | loc, Import (source_loc,
          (Literal { Ast.Literal.value = Ast.Literal.String value; raw } |
           TemplateLiteral {
@@ -791,7 +829,10 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         } ->
         let open Ast.Expression.Object in
         let { properties } = stuff in
-        loc, T.ObjectLiteral { frozen = true; properties = object_ properties }
+        begin match object_ properties with
+          | Some o -> loc, T.ObjectLiteral { frozen = true; properties = o }
+          | None -> T.FixMe.mk_expr_type loc
+        end
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
         let { operator; argument } = stuff in
@@ -800,19 +841,19 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         let open Ast.Expression.Binary in
         let { operator; left; right } = stuff in
         arith_binary operator loc left right
-      | _, Sequence stuff ->
+      | loc, Sequence stuff ->
         let open Ast.Expression.Sequence in
         let { expressions } = stuff in
         begin match List.rev expressions with
           | expr::_ -> literal_expr expr
-          | [] -> raise (Error "sequence")
+          | [] -> T.FixMe.mk_expr_type loc
         end
-      | _, Assignment stuff ->
+      | loc, Assignment stuff ->
         let open Ast.Expression.Assignment in
         let { operator; left = _; right } = stuff in
         begin match operator with
           | Assign -> literal_expr right
-          | _ -> raise (Error "assignment")
+          | _ -> T.FixMe.mk_expr_type loc
         end
       | loc, Update stuff ->
         let open Ast.Expression.Update in
@@ -820,23 +861,23 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         let { operator = _; argument = _; prefix = _ } = stuff in
         loc, T.Number
 
-      | _loc, Call _
-      | _loc, Comprehension _
-      | _loc, Conditional _
-      | _loc, Generator _
-      | _loc, Import _
-      | _loc, JSXElement _
-      | _loc, JSXFragment _
-      | _loc, Logical _
-      | _loc, MetaProperty _
-      | _loc, New _
-      | _loc, OptionalCall _
-      | _loc, OptionalMember _
-      | _loc, Super
-      | _loc, TaggedTemplate _
-      | _loc, This
-      | _loc, Yield _
-        -> raise (Error "other expression")
+      | loc, Call _
+      | loc, Comprehension _
+      | loc, Conditional _
+      | loc, Generator _
+      | loc, Import _
+      | loc, JSXElement _
+      | loc, JSXFragment _
+      | loc, Logical _
+      | loc, MetaProperty _
+      | loc, New _
+      | loc, OptionalCall _
+      | loc, OptionalMember _
+      | loc, Super
+      | loc, TaggedTemplate _
+      | loc, This
+      | loc, Yield _
+        -> T.FixMe.mk_expr_type loc
 
   and identifier stuff =
     let loc, name = stuff in
@@ -845,20 +886,26 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
   and member stuff =
     let open Ast.Expression.Member in
     let { _object; property } = stuff in
-    let path_loc, t = ref_expr _object in
-    let name = match property with
-      | PropertyIdentifier (loc, x) -> loc, x
-      | PropertyPrivateName (_, (loc, x)) -> loc, x
-      | PropertyExpression _ -> raise (Error "member")
+    let ref_expr_opt = ref_expr _object in
+    let name_opt = match property with
+      | PropertyIdentifier (loc, x) -> Some (loc, x)
+      | PropertyPrivateName (_, (loc, x)) -> Some (loc, x)
+      | PropertyExpression _ -> None
     in
-    T.RPath (path_loc, t, name)
+    match ref_expr_opt, name_opt with
+      | Some (path_loc, t), Some name -> Some (T.RPath (path_loc, t, name))
+      | None, _ | _, None -> None
 
   and ref_expr expr =
     let open Ast.Expression in
     match expr with
-      | loc, Identifier stuff -> loc, identifier stuff
-      | loc, Member stuff -> loc, member stuff
-      | _ -> raise (Error "ref_expr") (* TODO: verification error *)
+      | loc, Identifier stuff -> Some (loc, identifier stuff)
+      | loc, Member stuff ->
+        begin match member stuff with
+          | Some ref_expr -> Some (loc, ref_expr)
+          | None -> None
+        end
+      | _ -> None
 
   and arith_unary operator loc _argument =
     let open Ast.Expression.Unary in
@@ -874,12 +921,14 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
 
       | Await ->
         (* The result type of this operation depends in a complicated way on the argument type. *)
-        raise (Error "await")
+        T.FixMe.mk_expr_type loc
 
   and arith_binary operator loc _left _right =
     let open Ast.Expression.Binary in
     match operator with
-      | Plus -> raise (Error "plus") (* TODO: verification error *)
+      | Plus ->
+        (* The result type of this operation depends in a complicated way on the argument type. *)
+        T.FixMe.mk_expr_type loc
       (* These operations have simple result types. *)
       | Equal -> loc, T.Boolean
       | NotEqual -> loc, T.Boolean
@@ -925,7 +974,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       let return = match return with
         | Ast.Type.Missing loc ->
           if not generator && Signature_utils.Procedure_decider.is body then T.EXPR (loc, T.Void)
-          else raise (Error (Printf.sprintf "%s (%s)" "not void" (Loc.to_string loc)))
+          else T.FixMe.mk_little_annotation loc
         | Ast.Type.Available (_, t) -> T.TYPE (type_ t) in
       (* TODO: It is unclear whether what happens for async or generator functions. In particular,
          what do declarations of such functions look like, aside from the return type being
@@ -974,11 +1023,14 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       let extends = match super with
         | None -> None
         | Some expr ->
-          let loc, reference = ref_expr expr in
-          Some (loc, {
-            Ast.Type.Generic.id = T.generic_id_of_reference reference;
-            targs = type_args super_targs;
-          })
+          let ref_expr_opt = ref_expr expr in
+          begin match ref_expr_opt with
+            | Some (loc, reference) -> Some (loc, {
+                Ast.Type.Generic.id = T.generic_id_of_reference reference;
+                targs = type_args super_targs;
+              })
+            | None -> T.FixMe.mk_extends (fst expr)
+          end
       in
       let implements = Core_list.map ~f:class_implement implements in
       T.CLASS {
@@ -992,13 +1044,15 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     let array_element expr_or_spread_opt =
       let open Ast.Expression in
       match expr_or_spread_opt with
-        | None -> raise (Error "hole element") (* TODO: verification error *)
+        | None -> assert false
         | Some (Expression expr) -> T.AInit (literal_expr expr)
-        | Some (Spread _spread) -> raise (Error "spread element") (* TODO: verification error *)
+        | Some (Spread _spread) -> assert false
     in
     function
-      | [] -> raise (Error "empty array") (* TODO: verification error *)
-      | t::ts -> Nel.map array_element (t, ts)
+      | [] -> None
+      | t::ts ->
+        try Some (Nel.map array_element (t, ts))
+        with _ -> None
 
   and class_implement implement = implement
 
@@ -1035,13 +1089,14 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           loc, T.OSet (x, (fn_loc, function_ generator tparams params return body))
     in
     function
-      | [] -> raise (Error "empty object") (* TODO: verification error *)
+      | [] -> None
       | property::properties ->
         let open Ast.Expression.Object in
-        Nel.map (function
+        try Some (Nel.map (function
           | Property p -> object_property p
-          | SpreadProperty _p -> raise (Error "spread property") (* TODO: verification error *)
-        ) (property, properties)
+          | SpreadProperty _p -> assert false
+        ) (property, properties))
+        with _ -> None
 
 end
 
@@ -1052,7 +1107,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
   let eval (loc, kind) =
     match kind with
       | Kind.VariableDef { annot; init } ->
-        T.VariableDecl (Eval.annotation ?init annot)
+        T.VariableDecl (Eval.annotation loc ?init annot)
       | Kind.FunctionDef { generator; tparams; params; return; body; } ->
         T.FunctionDecl (T.EXPR
           (loc, T.Function (Eval.function_ generator tparams params return body)))
@@ -1108,7 +1163,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       | Kind.RequireDef { source; name } ->
         T.Require { source; name }
       | Kind.SketchyToplevelDef ->
-        raise (Eval.Error "sketchy toplevel def")
+        T.FixMe.mk_decl loc
 
   let make_env outlined env =
     SMap.fold (fun n entries acc ->
@@ -1129,7 +1184,8 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
         [mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot)]
       | Some mod_exp_loc, list ->
-        let properties = Core_list.map ~f:(function
+        let properties =
+          try Core_list.map ~f:(function
           | File_sig.AddModuleExportsDef (id, expr) ->
             let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
             let open Ast.Type.Object in
@@ -1142,8 +1198,9 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
               _method = true;
               variance = None;
             })
-          | _ -> raise (Eval.Error "weird cjs exports")
-        ) list in
+          | _ -> assert false
+          ) list
+          with _ -> [] in
         let ot = {
           Ast.Type.Object.exact = true;
           inexact = false;
@@ -1151,7 +1208,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         } in
         let t = mod_exp_loc, Ast.Type.Object ot in
         [mod_exp_loc, Ast.Statement.DeclareModuleExports (mod_exp_loc, t)]
-      | _ -> raise (Eval.Error "weird cjs exports")
+      | _ -> []
 
   let eval_entry (id, kind) =
     id, eval kind
@@ -1206,7 +1263,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         | None -> None, None
         | Some (_, { Ast.Class.Extends.expr; targs; }) -> Some expr, targs in
       `Expr (loc, T.Outline (T.Class (None, Eval.class_ tparams body super super_targs implements)))
-    | Declaration _stmt -> raise Eval.Unreachable (* TODO: update signature verifier *)
+    | Declaration _stmt -> assert false
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
       `Decl (Entry.function_declaration loc function_)
     | Expression expr -> `Expr (Eval.literal_expr expr)
