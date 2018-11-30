@@ -248,15 +248,16 @@ let get_next_event_from_server (fd: Unix.file_descr) : event =
   let r = begin try
     Server_message (Marshal_tools.from_fd_with_preamble fd)
   with e ->
-    let message = Printexc.to_string e in
-    let stack = Printexc.get_backtrace () in
+    let e = Exception.wrap e in
+    let message = Exception.get_ctor_string e in
+    let stack = Exception.get_backtrace_string e in
     raise (Server_fatal_connection_exception { Marshal_tools.message; stack; })
   end in
   (* The server sends an explicit 'EOF' message in case the underlying *)
   (* transport protocol doesn't result in EOF normally. We'll respond  *)
   (* to it by synthesizing the EOF exception we'd otherwise get. *)
   if r = Server_message Persistent_connection_prot.EOF then begin
-    let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+    let stack = Exception.get_current_callstack_string 100 in
     raise (Server_fatal_connection_exception { Marshal_tools.message="End_of_file"; stack; });
   end else
     r
@@ -779,7 +780,7 @@ let track_from_server (state: state) (c: Lsp.lsp_message) : state =
 let dismiss_tracks (state: state) : state =
   let decline_request_to_server (id: lsp_id) : unit =
     let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "Connection to server has been lost") in
-    let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+    let stack = Exception.get_current_callstack_string 100 in
     let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
     to_stdout json
   in
@@ -1256,7 +1257,9 @@ let do_rage flowconfig_name (state: state) : Rage.result =
       let stack = try Sys_utils.exec_read_lines ~reverse:true ("pstack " ^ pid)
       with _ -> begin
         try Sys_utils.exec_read_lines ~reverse:true ("gstack " ^ pid)
-        with e -> ["unable to pstack - " ^ (Printexc.to_string e)]
+        with e ->
+          let e = Exception.wrap e in
+          ["unable to pstack - " ^ (Exception.get_ctor_string e)]
       end in
       let stack = String.concat "\n" stack in
       add_string items (Printf.sprintf "PSTACK %s (%s) - %s\n\n" pid reason stack)
@@ -1309,9 +1312,8 @@ let do_rage flowconfig_name (state: state) : Rage.result =
         in
         Core_list.fold pids ~init:items ~f:add_pid
       with e ->
-        let message = Printexc.to_string e in
-        let stack = Printexc.get_backtrace () in
-        add_string items (Printf.sprintf "Failed to get PIDs: %s - %s" message stack)
+        let e = Exception.wrap e in
+        add_string items (Printf.sprintf "Failed to get PIDs: %s" (Exception.to_string e))
       in
       items
   in
@@ -1378,13 +1380,19 @@ let rec main
 
 and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit =
   let event = try Ok (get_next_event state client (parse_json state))
-    with e -> Error (state, e, Utils.Callstack (Printexc.get_backtrace ())) in
+    with e ->
+      let exn = Exception.wrap e in
+      let stack = Exception.get_backtrace_string exn in
+      Error (state, e, Utils.Callstack stack) in
   let result = match event with
     | Error (state, e, stack) -> Error (state, e, stack, None)
     | Ok event ->
       let (client_duration, result) = with_timer (fun () ->
         try main_handle_unsafe flowconfig_name state event
-          with e -> Error (state, e, Utils.Callstack (Printexc.get_backtrace ()))) in
+          with e ->
+            let exn = Exception.wrap e in
+            let stack = Exception.get_backtrace_string exn in
+            Error (state, e, Utils.Callstack stack)) in
       match result with
       | Ok (state, logneeded) -> Ok (state, logneeded, client_duration)
       | Error (state, e, stack) -> Error (state, e, stack, Some event)
@@ -1557,7 +1565,7 @@ begin
     let (state, _) = track_to_server state c in
     let method_ = Lsp_fmt.denorm_message_to_string c in
     let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
-    let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+    let stack = Exception.get_current_callstack_string 100 in
     Error (state, e, Utils.Callstack stack)
 
   | Post_shutdown, Client_message (_, _metadata) ->

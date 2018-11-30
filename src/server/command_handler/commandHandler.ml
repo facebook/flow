@@ -244,13 +244,16 @@ let gen_flow_files ~options env files =
               let code = FlowFileGen.flow_file cx in
               (file_path, ServerProt.Response.GenFlowFiles_FlowFile code)::results
             with exn ->
-              failwith (spf "%s: %s" file_path (Printexc.to_string exn))
+              let exn = Exception.wrap exn in
+              failwith (spf "%s: %s" file_path (Exception.get_ctor_string exn))
           ) result_contents flow_files flow_file_cxs in
 
           Ok result_contents
-        with exn -> Error (
-          ServerProt.Response.GenFlowFiles_UnexpectedError (Printexc.to_string exn)
-        )
+        with exn ->
+          let exn = Exception.wrap exn in
+          Error (
+            ServerProt.Response.GenFlowFiles_UnexpectedError (Exception.get_ctor_string exn)
+          )
       end
     end else
       Error (ServerProt.Response.GenFlowFiles_TypecheckError {errors; warnings})
@@ -465,16 +468,12 @@ let wrap_ephemeral_handler handler genv arg (request_id, command) =
       ~profiling;
     Lwt.return ret
   with exn ->
-    let backtrace = String.trim (Printexc.get_backtrace ()) in
-    let exn_str = Printf.sprintf
-      "%s%s%s"
-      (Printexc.to_string exn)
-      (if backtrace = "" then "" else "\n")
-      backtrace in
+    let exn = Exception.wrap exn in
+    let exn_str = Exception.to_string exn in
     Hh_logger.error
-      "Uncaught exception while handling a request (%s): %s"
-      (ServerProt.Request.to_string command.ServerProt.Request.command)
-      exn_str;
+      ~exn
+      "Uncaught exception while handling a request (%s)"
+      (ServerProt.Request.to_string command.ServerProt.Request.command);
     FlowEventLogger.ephemeral_command_failure
       ~client_context:command.ServerProt.Request.client_logging_context
       ~json_data:(Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ]);
@@ -627,7 +626,7 @@ let with_error
     (metadata: Persistent_connection_prot.metadata)
   : Persistent_connection_prot.metadata =
   let open Persistent_connection_prot in
-  let local_stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+  let local_stack = Exception.get_current_callstack_string 100 in
   let stack = Option.value stack ~default:(Utils.Callstack local_stack) in
   let error_info = Some (ExpectedError, reason, stack) in
   { metadata with error_info }
@@ -801,8 +800,8 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
         try
           Ok (Some fn, Sys_utils.cat fn)
         with e ->
-          let stack = Printexc.get_backtrace () in
-          Error (Printexc.to_string e, Utils.Callstack stack)
+          let e = Exception.wrap e in
+          Error (Exception.get_ctor_string e, Utils.Callstack (Exception.get_backtrace_string e))
     in
     begin match fn_content with
       | Error (reason, stack) ->
@@ -1067,8 +1066,9 @@ let handle_persistent
         try%lwt
           handle_persistent_unsafe genv env client profiling request
         with e ->
-          let stack = Utils.Callstack (Printexc.get_backtrace ()) in
-          let reason = Printexc.to_string e in
+          let e = Exception.wrap e in
+          let stack = Utils.Callstack (Exception.get_backtrace_string e) in
+          let reason = Exception.get_ctor_string e in
           let error_info = (UnexpectedError, reason, stack) in
           begin match request with
             | LspToServer (_, metadata) ->

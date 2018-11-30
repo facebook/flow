@@ -32,7 +32,7 @@ module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
 end)
 
 let assert_false s =
-  let callstack = Printexc.(get_callstack 10 |> raw_backtrace_to_string) in
+  let callstack = Exception.get_current_callstack_string 10 in
   prerr_endline (spf "%s%s\n%s:\n%s%s%s"
     (* this clowny shit is to evade hg's conflict marker detection *)
     "<<<<" "<<<<" s callstack ">>>>" ">>>>"
@@ -51,12 +51,6 @@ let call_succeeds try_function function_input =
   | Failure msg -> prerr_endline msg;
                    false
   | _ -> false
-
-(* quick exception format *)
-
-let fmt_exc exc = Printexc.((to_string exc) ^ "\n" ^ (get_backtrace ()))
-
-let fmt_file_exc file exc = file ^ ": " ^ (fmt_exc exc)
 
 let map_pair f g (a,b) = (f a, g b)
 let map_fst f (a,b) = (f a, b)
@@ -240,30 +234,22 @@ let (%>>|)
 let bind2 ~f x y = Core_result.bind x (fun x -> Core_result.bind y (f x))
 let map2 ~f x y = Core_result.bind x (fun x -> Core_result.map y ~f:(f x))
 
-let to_exn_string backtrace exn =
-  let backtrace = String.trim backtrace in
-  Printf.sprintf "%s%s%s"
-    (Printexc.to_string exn)
-    (if backtrace = "" then "" else "\n")
-    backtrace
-
 let try_with_json f =
   try%lwt f () with exn ->
-    let backtrace = Printexc.get_backtrace () in
-    Lwt.return (Error (to_exn_string backtrace exn, None))
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn, None))
 
 let try_with f =
   try%lwt f () with exn ->
-    let backtrace = Printexc.get_backtrace () in
-    Lwt.return (Error (to_exn_string backtrace exn))
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn))
 
 let split_result = function
 | Ok (success, extra) -> Ok success, extra
 | Error (error, extra) -> Error error, extra
 
 let debug_print_current_stack_trace () =
-  let open Printexc in
-  get_callstack 200 |> raw_backtrace_to_string |> Hh_logger.info "Current backtrace:\n%s"
+   Hh_logger.info "Current backtrace:\n%s" (Exception.get_current_callstack_string 200)
 
 (* Pass through a result; logging if it is an Error. Includes the provided string context, which is
  * computed lazily under the assumption that the error case is the uncommon case *)

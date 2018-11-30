@@ -495,8 +495,8 @@ end = struct
       Lwt_unix.openfile filename [Unix.O_RDONLY; Unix.O_NONBLOCK] 0o666
     with
     | Unix.Unix_error(Unix.ENOENT, _, _) as exn ->
-      let stack = Printexc.get_backtrace () in
-      Hh_logger.error "Failed to open %S\n%s\n%s" filename (Printexc.to_string exn) stack;
+      let exn = Exception.wrap exn in
+      Hh_logger.error "Failed to open %S\n%s" filename (Exception.to_string exn);
       raise (Invalid_saved_state File_does_not_exist)
     in
 
@@ -504,8 +504,8 @@ end = struct
     let%lwt (data: saved_state_data) =
       try%lwt Marshal_tools_lwt.from_fd_with_preamble fd
       with exn ->
-        let stack = Printexc.get_backtrace () in
-        Hh_logger.error "Failed to parsed saved state data\n%s\n%s" (Printexc.to_string exn) stack;
+        let exn = Exception.wrap exn in
+        Hh_logger.error "Failed to parsed saved state data\n%s" (Exception.to_string exn);
         raise (Invalid_saved_state Failed_to_marshal)
     in
 

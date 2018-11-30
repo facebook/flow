@@ -51,11 +51,9 @@ module WriteLoop = LwtLoop.Make (struct
   (* If we failed to write to an fd throw an exception and exit. I'm not 100% sure this is the
    * best behavior - should logging errors cause the monitor (and server) to crash? *)
   let catch _ exn =
-    Printf.eprintf
-      "Logger.WriteLoop exception:\n%s\n%s"
-      (Printexc.to_string exn)
-      (Printexc.get_backtrace ());
-    raise exn
+    let exn = Exception.wrap exn in
+    Printf.eprintf "Logger.WriteLoop exception:\n%s" (Exception.to_string exn);
+    Exception.reraise exn
 end)
 
 let initialized = ref false

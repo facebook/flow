@@ -282,14 +282,15 @@ let merge_strict_job ~worker_mutator ~job ~options merged elements =
       | SharedMem_js.Hash_table_full
       | SharedMem_js.Dep_table_full as exc -> raise exc
       (* A catch all suppression is probably a bad idea... *)
-      | exc ->
-        (* Do this first, to grab the backtrace in case it's overwritten *)
-        let exn_str = fmt_file_exc files exc in
+      | unwrapped_exc ->
+        let exc = Exception.wrap unwrapped_exc in
+
+        let exn_str = Printf.sprintf "%s: %s" files (Exception.to_string exc) in
         (* Ensure heaps are in a good state before continuing. *)
         Context_heaps.Merge_context_mutator.add_merge_on_exn
           ~audit:Expensive.ok worker_mutator ~options component;
         (* In dev mode, fail hard, but log and continue in prod. *)
-        if Build_mode.dev then raise exc else
+        if Build_mode.dev then Exception.reraise exc else
           prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
             (Unix.getpid()) (Nel.length component) exn_str;
         (* An errored component is always changed. *)
@@ -298,7 +299,7 @@ let merge_strict_job ~worker_mutator ~job ~options merged elements =
         (* We can't pattern match on the exception type once it's marshalled
            back to the master process, so we pattern match on it here to create
            an error result. *)
-        let result = Error Flow_error.(match exc with
+        let result = Error Flow_error.(match unwrapped_exc with
         | EDebugThrow loc -> EInternal (loc, DebugThrow)
         | EMergeTimeout s -> EInternal (file_loc, MergeTimeout s)
         | _ -> EInternal (file_loc, MergeJobException exc)

@@ -183,8 +183,9 @@ let client_did_change
       let new_client = update_opened_files client in
       let new_connections = modify_item clients client update_opened_files in
       Ok (new_connections, new_client)
-  end with Not_found ->
-    let stack = Printexc.get_backtrace () in
+  end with Not_found as e ->
+    let e = Exception.wrap e in
+    let stack = Exception.get_backtrace_string e in
     Error (Printf.sprintf "File %s wasn't open to change" fn, Utils.Callstack stack)
 
 

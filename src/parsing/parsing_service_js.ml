@@ -376,7 +376,8 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false) ~
   | Parse_error.Error (first_parse_error::_) ->
     Parse_fail (Parse_error first_parse_error)
   | e ->
-    let s = Printexc.to_string e in
+    let e = Exception.wrap e in
+    let s = Exception.get_ctor_string e in
     let loc = Loc.({ none with source = Some file }) in
     let err = loc, Parse_error.Assertion s in
     Parse_fail (Parse_error err)
@@ -409,10 +410,11 @@ let reducer
     let filename_string = File_key.to_string file in
     try Some (cat filename_string)
     with e ->
+      let e = Exception.wrap e in
       prerr_endlinef
         "Parsing service failed to cat %s, so skipping it. Exception: %s"
         filename_string
-        (Printexc.to_string e);
+        (Exception.to_string e);
       None in
   match content with
   | Some content ->

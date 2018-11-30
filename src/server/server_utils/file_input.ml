@@ -25,4 +25,6 @@ let content_of_file_input_unsafe = function
 
 let content_of_file_input file =
   try Ok (content_of_file_input_unsafe file)
-  with exn -> Error (Printexc.to_string exn)
+  with exn ->
+    let exn = Exception.wrap exn in
+    Error (Exception.to_string exn)

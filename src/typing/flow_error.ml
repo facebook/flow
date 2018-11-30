@@ -208,7 +208,7 @@ and internal_error =
   | InterfaceTypeSpread
   | DebugThrow
   | MergeTimeout of float
-  | MergeJobException of exn
+  | MergeJobException of Exception.t
   | UnexpectedTypeapp of string
 
 and unsupported_syntax =
@@ -1626,7 +1626,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | MergeTimeout s ->
         spf "merge job timed out after %0.2f seconds" s
     | MergeJobException exc ->
-        "uncaught exception: "^(Utils_js.fmt_exc exc)
+        "uncaught exception: "^(Exception.to_string exc)
     | UnexpectedTypeapp s ->
         "unexpected typeapp: "^s
     in

@@ -88,9 +88,10 @@ let start_flow_server env =
         let msg = "Could not start Flow server!" in
         Error (msg, FlowExitStatus.Server_start_failed status)
   with exn ->
+    let exn = Exception.wrap exn in
     let msg = Printf.sprintf
       "Could not start Flow server! Unexpected exception: %s"
-      (Printexc.to_string exn) in
+      (Exception.to_string exn) in
     Error (msg, FlowExitStatus.Unknown_error)
 
 type retry_info = {

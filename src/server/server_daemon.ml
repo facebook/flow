@@ -39,11 +39,12 @@ let open_log_file file =
       then Sys.remove old_file;
       Sys.rename file old_file
     with e ->
+      let e = Exception.wrap e in
       Utils.prerr_endlinef
         "Log rotate: failed to move '%s' to '%s'\n%s"
         file
         old_file
-        (Printexc.to_string e)
+        (Exception.to_string e)
     )
   end;
   Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666

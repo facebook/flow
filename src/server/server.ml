@@ -161,17 +161,15 @@ let run ~monitor_channels ~shared_mem_config options =
 let run_from_daemonize ~monitor_channels ~shared_mem_config options =
   try run ~monitor_channels ~shared_mem_config options
   with
-  | SharedMem_js.Out_of_shared_memory ->
-      let bt = Printexc.get_backtrace () in
-      let msg = Utils.spf "Out of shared memory%s" (if bt = "" then bt else ":\n"^bt) in
-      FlowExitStatus.(exit ~msg Out_of_shared_memory)
+  | SharedMem_js.Out_of_shared_memory as exn ->
+    let exn = Exception.wrap exn in
+    let bt = Exception.get_backtrace_string exn in
+    let msg = Utils.spf "Out of shared memory%s" (if bt = "" then bt else ":\n"^bt) in
+    FlowExitStatus.(exit ~msg Out_of_shared_memory)
   | e ->
-      let bt = Printexc.get_backtrace () in
-      let msg = Utils.spf "Unhandled exception: %s%s"
-        (Printexc.to_string e)
-        (if bt = "" then bt else "\n"^bt)
-      in
-      FlowExitStatus.(exit ~msg Unknown_error)
+    let e = Exception.wrap e in
+    let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
+    FlowExitStatus.(exit ~msg Unknown_error)
 
 let check_once ~shared_mem_config ~format_errors ?focus_targets options =
   PidLog.disable ();

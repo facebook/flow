@@ -90,9 +90,9 @@ let save_averages ~options ({ init_time=_; per_file_time; parsed_count=_; } as n
       | Unix.Unix_error(Unix.ENOENT, _, _) ->
         Lwt_result.fail "File doesn't exist"
       | exn ->
-        let stack = Printexc.get_backtrace () in
+        let exn = Exception.wrap exn in
         Lwt_result.fail (
-          Printf.sprintf "Failed to open file\n%s\n%s" (Printexc.to_string exn) stack
+          Printf.sprintf "Failed to open file\n%s" (Exception.to_string exn)
         )
       end
 
@@ -101,9 +101,9 @@ let save_averages ~options ({ init_time=_; per_file_time; parsed_count=_; } as n
           let%lwt () = Lwt_io.write oc json_str in
           Lwt_result.ok @@ Lwt_io.close oc
         with exn ->
-          let stack = Printexc.get_backtrace () in
+          let exn = Exception.wrap exn in
           Lwt_result.fail (
-            Printf.sprintf "Failed to write file\n%s\n%s" (Printexc.to_string exn) stack
+            Printf.sprintf "Failed to write file\n%s" (Exception.to_string exn)
           )
       end
     in

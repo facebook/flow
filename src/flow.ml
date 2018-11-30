@@ -95,7 +95,7 @@ let _ =
      exit via FlowExitStatus.exit instead. *)
   let () = Sys_utils.set_signal Sys.sigpipe Sys.Signal_ignore in
 
-  let () = Printexc.record_backtrace true in
+  let () = Exception.record_backtrace true in
 
   let () = if Sys_utils.get_env "IN_FLOW_TEST" <> None then EventLogger.disable_logging () in
 
@@ -103,16 +103,14 @@ let _ =
     Daemon.check_entry_point (); (* this call might not return *)
     FlowShell.main ()
   with
-  | SharedMem_js.Out_of_shared_memory ->
-      let bt = Printexc.get_backtrace () in
+  | SharedMem_js.Out_of_shared_memory as e ->
+      let e = Exception.wrap e in
+      let bt = Exception.get_backtrace_string e in
       let msg = Utils.spf "Out of shared memory%s" (if bt = "" then bt else ":\n"^bt) in
       FlowExitStatus.(exit ~msg Out_of_shared_memory)
   | e ->
-      let bt = Printexc.get_backtrace () in
-      let msg = Utils.spf "Unhandled exception: %s%s"
-        (Printexc.to_string e)
-        (if bt = "" then bt else "\n"^bt)
-      in
+      let e = Exception.wrap e in
+      let msg = Utils.spf "Unhandled exception: %s" (Exception.to_string e) in
       FlowExitStatus.(exit ~msg Unknown_error)
 
 (* If we haven't exited yet, let's exit now for logging's sake *)

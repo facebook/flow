@@ -705,8 +705,8 @@ let basic_check_contents ~options ~workers ~env ~profiling contents filename =
   with
   | Lwt.Canceled as exn -> raise exn
   | exn ->
-    let stack = Printexc.get_backtrace () in
-    let e = spf "%s\n%s" (Printexc.to_string exn) stack in
+    let exn = Exception.wrap exn in
+    let e = Exception.to_string exn in
     Hh_logger.error "Uncaught exception in basic_check_contents\n%s" e;
     Lwt.return (Error e)
 
