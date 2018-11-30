@@ -2821,5 +2821,3 @@ let dump_flow_error =
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
     | ESignatureVerification sve ->
       spf "ESignatureVerification (%s)" (Signature_builder_deps.With_ALoc.Error.debug_to_string sve)
-    | EAbstractComponentNotYetSupported loc ->
-      spf "EAbstractComponentNotYetSupported (%s)" (string_of_aloc loc)
