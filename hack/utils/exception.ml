@@ -40,3 +40,8 @@ let to_string t =
   let ctor = get_ctor_string t in
   let bt = get_backtrace_string t in
   if bt = "" then ctor else (ctor ^ "\n" ^ bt)
+
+let get_current_callstack_string n =
+  Printexc.get_callstack n |> Printexc.raw_backtrace_to_string
+
+let record_backtrace = Printexc.record_backtrace
