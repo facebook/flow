@@ -23,10 +23,10 @@ declare function fn<TArguments: $ReadOnlyArray<*>, TReturn>(
   implementation?: (...args: TArguments) => TReturn,
 ): MockFn<TArguments, TReturn>
 
-const Component = fn(({user}) => ( // Error
+const Component = fn(({user}) => (
   <div />
 ));
 
 
-let RefetchContainer = HOC(Component);
-<RefetchContainer />; // Error
+let RefetchContainer = HOC(Component); // Error, mock is not a Component
+<RefetchContainer />;

@@ -10,8 +10,8 @@ References:
    Suspense.js:12:48
     12|   <Suspense fallback={<Loading />} maxDuration="abc" /> // Error: string is incompatible with number
                                                        ^^^^^ [1]
-   <BUILTINS>/react.js:264:19
-   264|     maxDuration?: number
+   <BUILTINS>/react.js:266:19
+   266|     maxDuration?: number
                           ^^^^^^ [2]
 
 
@@ -54,8 +54,8 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:294:22
-   294|     component: () => Promise<{ default: React$ComponentType<P> }>,
+   <BUILTINS>/react.js:296:22
+   296|     component: () => Promise<{ default: React$ComponentType<P> }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -72,8 +72,8 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:294:22
-   294|     component: () => Promise<{ default: React$ComponentType<P> }>,
+   <BUILTINS>/react.js:296:22
+   296|     component: () => Promise<{ default: React$ComponentType<P> }>,
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -90,8 +90,8 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:294:30
-   294|     component: () => Promise<{ default: React$ComponentType<P> }>,
+   <BUILTINS>/react.js:296:30
+   296|     component: () => Promise<{ default: React$ComponentType<P> }>,
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:612:24
    612| declare class Promise<+R> {
@@ -111,8 +111,8 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:294:30
-   294|     component: () => Promise<{ default: React$ComponentType<P> }>,
+   <BUILTINS>/react.js:296:30
+   296|     component: () => Promise<{ default: React$ComponentType<P> }>,
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:612:24
    612| declare class Promise<+R> {

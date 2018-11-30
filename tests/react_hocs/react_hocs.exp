@@ -1,41 +1,3 @@
-Error ----------------------------------------------------------------------------------------------------- Bad.js:11:13
-
-Property `foo` is missing in object type [1] but exists in `Props` [2] in the first argument.
-
-   Bad.js:11:13
-   11| const Bad = (props: Props) => null;
-                   ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   hocs.js:15:25
-                               v-
-   15| ): (React.ComponentType<{|
-   16|   ...Props,
-   17|   ...ExtraProps,
-   18| |}>) => React.ComponentType<Props> {
-       -^ [1]
-   Bad.js:11:21
-   11| const Bad = (props: Props) => null;
-                           ^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- Bad.js:11:21
-
-number [1] is incompatible with string [2] in property `bar` of the first argument.
-
-   Bad.js:11:21
-    11| const Bad = (props: Props) => null;
-                            ^^^^^
-
-References:
-   Bad.js:8:8
-     8|   bar: number,
-               ^^^^^^ [1]
-   <BUILTINS>/core.js:144:31
-   144|     toString(radix?: number): string;
-                                      ^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------------- Good_use.js:7:1
 
 Cannot create `Good` element because property `qux` is missing in props [1] but exists in object type [2].
@@ -110,6 +72,45 @@ References:
    Good.js:23:62
    23| )(Good): React.ComponentType<{foo: number, buz: number, qux: number}>);
                                                                     ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- hocs.js:15:25
+
+Property `foo` is missing in object type [1] but exists in `Props` [2].
+
+   hocs.js:15:25
+                               v-
+   15| ): (React.ComponentType<{|
+   16|   ...Props,
+   17|   ...ExtraProps,
+   18| |}>) => React.ComponentType<Props> {
+       -^ [1]
+
+References:
+   Bad.js:11:21
+   11| const Bad = (props: Props) => null;
+                           ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- hocs.js:15:25
+
+string [1] is incompatible with number [2] in property `bar`.
+
+   hocs.js:15:25
+                                v-
+    15| ): (React.ComponentType<{|
+    16|   ...Props,
+    17|   ...ExtraProps,
+    18| |}>) => React.ComponentType<Props> {
+        -^
+
+References:
+   <BUILTINS>/core.js:144:31
+   144|     toString(radix?: number): string;
+                                      ^^^^^^ [1]
+   Bad.js:8:8
+     8|   bar: number,
+               ^^^^^^ [2]
 
 
 
