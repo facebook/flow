@@ -27,6 +27,7 @@ type lint_kind =
  | UnnecessaryOptionalChain
  | UnnecessaryInvariant
  | DeprecatedCallSyntax
+ | SignatureVerificationFailure
 
 val string_of_kind: lint_kind -> string
 

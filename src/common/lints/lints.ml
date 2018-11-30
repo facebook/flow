@@ -27,6 +27,7 @@ type lint_kind =
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
   | DeprecatedCallSyntax
+  | SignatureVerificationFailure
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool -> "sketchy-null-bool"
@@ -50,6 +51,7 @@ let string_of_kind = function
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | DeprecatedCallSyntax -> "deprecated-call-syntax"
+  | SignatureVerificationFailure -> "signature-verification-failure"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [

@@ -1179,7 +1179,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   in
 
   let mk_signature_verification_error loc msgs =
-    mk_error ~trace_infos loc
+    mk_error ~trace_infos ~kind:(LintError Lints.SignatureVerificationFailure) loc
       ((text "Could not build a typed interface for this module. ")::msgs)
   in
 
