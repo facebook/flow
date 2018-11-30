@@ -47,6 +47,10 @@ type saved_state_fetcher =
 | Local_fetcher
 | Fb_fetcher
 
+type arch =
+  | Classic
+  | TypesFirst
+
 type t = {
   opt_all : bool;
   opt_debug : bool;
@@ -96,6 +100,7 @@ type t = {
   opt_max_header_tokens: int;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_strict_mode: StrictModeSettings.t;
+  opt_arch: arch;
 }
 
 let all opts = opts.opt_all

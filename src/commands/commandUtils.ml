@@ -958,6 +958,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_saved_state_fetcher;
     opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
     opt_no_saved_state = options_flags.no_saved_state;
+    opt_arch = Options.Classic;
   }
 
 let make_env flowconfig_name connect_flags root =
