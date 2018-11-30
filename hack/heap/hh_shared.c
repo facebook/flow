@@ -1415,6 +1415,12 @@ void hh_add_dep(value ocaml_dep) {
   CAMLreturn0;
 }
 
+void kill_dep_used_slots(void) {
+  CAMLparam0();
+  memset(deptbl, 0, dep_size_b);
+  memset(deptbl_bindings, 0, bindings_size_b);
+}
+
 CAMLprim value hh_dep_used_slots(void) {
   CAMLparam0();
   uint64_t count = 0;
@@ -2045,6 +2051,8 @@ void hh_remove(value key) {
 // not at the end of saving the state.
 void hh_cleanup_sqlite(void) {
   CAMLparam0();
+
+  // Reset the SQLite database file name
   size_t page_size = getpagesize();
   memset(db_filename, 0, page_size);
   CAMLreturn0;
@@ -2219,6 +2227,24 @@ query_result_t get_dep_sqlite_blob_with_duration(
   return result;
 }
 
+static void hh_swap_in_db(sqlite3 *db_out) {
+  if (g_get_dep_select_stmt != NULL) {
+    assert_sql(sqlite3_clear_bindings(g_get_dep_select_stmt), SQLITE_OK);
+    assert_sql(sqlite3_reset(g_get_dep_select_stmt), SQLITE_OK);
+    assert_sql(sqlite3_finalize(g_get_dep_select_stmt), SQLITE_OK);
+    g_get_dep_select_stmt = NULL;
+  }
+
+  if (g_db != NULL) {
+    sqlite3_close_v2(g_db);
+    g_db = NULL;
+  }
+
+  g_db = db_out;
+
+  kill_dep_used_slots();
+}
+
 // Add all the entries in the in-memory deptable
 // into the connected database. This adds edges only, so the
 // resulting deptable may contain more edges than truly represented
@@ -2226,8 +2252,8 @@ query_result_t get_dep_sqlite_blob_with_duration(
 // any (modulo bugs).
 static size_t hh_update_dep_table_helper(
     sqlite3* const db_out,
-    const char* const build_info
-) {
+    const char* const build_info,
+    const size_t replace_state_after_saving) {
   struct timeval start_t = { 0 };
   gettimeofday(&start_t, NULL);
   // Create header for verification
@@ -2244,7 +2270,7 @@ static size_t hh_update_dep_table_helper(
   assert_sql(sqlite3_exec(db_out, "BEGIN TRANSACTION", NULL, 0, NULL),
     SQLITE_OK);
 
-  // Create entries on the table
+  // Create entries in the table
   size_t slot = 0;
   size_t count = 0;
   size_t prev_count = 0;
@@ -2334,16 +2360,34 @@ static size_t hh_update_dep_table_helper(
       existing_rows_lookup_duration);
   fprintf(stderr, "Wrote %lu new rows\n", new_rows_count);
   fprintf(stderr, "Updated %lu existing rows\n", existing_rows_updated_count);
-  destroy_prepared_stmt(&select_dep_stmt);
-  assert_sql(sqlite3_close(db_out), SQLITE_OK);
-  log_duration("Finished closing SQL connection", start_t);
+
+  if (replace_state_after_saving) {
+    hh_swap_in_db(db_out);
+  } else {
+    destroy_prepared_stmt(&select_dep_stmt);
+    assert_sql(sqlite3_close(db_out), SQLITE_OK);
+    log_duration("Finished closing SQL connection", start_t);
+  }
+
   return edges_added;
+}
+
+static void set_db_filename(const char* const out_filename) {
+  size_t filename_len = strlen(out_filename);
+
+  /* Since we save the filename on the heap, and have allocated only
+   * getpagesize() space
+   */
+  assert(filename_len < getpagesize());
+
+  memcpy(db_filename, out_filename, filename_len);
+  db_filename[filename_len] = '\0';
 }
 
 static size_t hh_save_dep_table_helper_sqlite(
     const char* const out_filename,
-    const char* const build_info
-) {
+    const char* const build_info,
+    const size_t replace_state_after_saving) {
   // This can only happen in the master
   assert_master();
 
@@ -2352,9 +2396,18 @@ static size_t hh_save_dep_table_helper_sqlite(
   gettimeofday(&tv, NULL);
 
   sqlite3 *db_out = connect_and_create_dep_table_helper(out_filename);
-  size_t edges_added = hh_update_dep_table_helper(db_out, build_info);
+  size_t edges_added = hh_update_dep_table_helper(
+    db_out,
+    build_info,
+    replace_state_after_saving);
+
+  if (replace_state_after_saving) {
+    set_db_filename(out_filename);
+  }
+
   tv2 = log_duration("Writing dependency file with sqlite", tv);
   UNUSED(tv2);
+
   return edges_added;
 }
 
@@ -2365,23 +2418,28 @@ static size_t hh_save_dep_table_helper_sqlite(
  */
 CAMLprim value hh_save_dep_table_sqlite(
     value out_filename,
-    value build_revision
-) {
-  CAMLparam2(out_filename, build_revision);
+    value build_revision,
+    value replace_state_after_saving) {
+  CAMLparam3(out_filename, build_revision, replace_state_after_saving);
   char *out_filename_raw = String_val(out_filename);
   char *build_revision_raw = String_val(build_revision);
-  size_t edges_added =
-    hh_save_dep_table_helper_sqlite(out_filename_raw, build_revision_raw);
+  size_t replace_state_after_saving_raw = Bool_val(replace_state_after_saving);
+  size_t edges_added = hh_save_dep_table_helper_sqlite(
+    out_filename_raw,
+    build_revision_raw,
+    replace_state_after_saving_raw);
+
   CAMLreturn(Val_long(edges_added));
 }
 
 CAMLprim value hh_update_dep_table_sqlite(
     value out_filename,
-    value build_revision
-) {
-  CAMLparam2(out_filename, build_revision);
+    value build_revision,
+    value replace_state_after_saving) {
+  CAMLparam3(out_filename, build_revision, replace_state_after_saving);
   char *out_filename_raw = String_val(out_filename);
   char *build_revision_raw = String_val(build_revision);
+  size_t replace_state_after_saving_raw = Bool_val(replace_state_after_saving);
   sqlite3 *db_out = NULL;
 
   // This can only happen in the master
@@ -2392,7 +2450,16 @@ CAMLprim value hh_update_dep_table_sqlite(
   gettimeofday(&tv, NULL);
 
   assert_sql(sqlite3_open(out_filename_raw, &db_out), SQLITE_OK);
-  size_t edges_added = hh_update_dep_table_helper(db_out, build_revision_raw);
+
+  size_t edges_added = hh_update_dep_table_helper(
+    db_out,
+    build_revision_raw,
+    replace_state_after_saving_raw);
+
+  if (replace_state_after_saving_raw) {
+    set_db_filename(out_filename_raw);
+  }
+
   UNUSED(log_duration("Updated dependency file with sqlite", tv));
   CAMLreturn(Val_long(edges_added));
 }
@@ -2458,15 +2525,7 @@ CAMLprim value hh_load_dep_table_sqlite(
   assert_master();
 
   const char *filename = String_val(in_filename);
-  size_t filename_len = strlen(filename);
-
-  /* Since we save the filename on the heap, and have allocated only
-   * getpagesize() space
-   */
-  assert(filename_len < getpagesize());
-
-  memcpy(db_filename, filename, filename_len);
-  db_filename[filename_len] = '\0';
+  set_db_filename(filename);
 
   // SQLITE_OPEN_READONLY makes sure that we throw if the db doesn't exist
   assert_sql(sqlite3_open_v2(db_filename, &g_db, SQLITE_OPEN_READONLY, NULL),
@@ -2586,6 +2645,9 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   uint32_t *values = NULL;
   // The caller is required to pass a 32-bit node ID.
   const uint64_t key64 = Long_val(ocaml_key);
+
+  sqlite3_stmt *insert_stmt = NULL;
+
   query_result_t query_result =
     get_dep_sqlite_blob(g_db, key64, &g_get_dep_select_stmt);
   // Make sure we don't have malformed output
@@ -2617,7 +2679,8 @@ CAMLprim value hh_get_loaded_dep_table_filename() {
 
 CAMLprim value hh_save_dep_table_sqlite(
     value out_filename,
-    value build_revision
+    value build_revision,
+    value replace_state_after_saving
 ) {
   CAMLparam0();
   CAMLreturn(Val_long(0));
@@ -2625,7 +2688,8 @@ CAMLprim value hh_save_dep_table_sqlite(
 
 CAMLprim value hh_update_dep_table_sqlite(
     value out_filename,
-    value build_revision
+    value build_revision,
+    value replace_state_after_saving
 ) {
   CAMLparam0();
   CAMLreturn(Val_long(0));

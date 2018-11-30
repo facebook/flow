@@ -105,7 +105,13 @@ void hh_cleanup_sqlite(void);
 /* Dependency table. */
 CAMLprim value hh_save_dep_table_sqlite(
         value out_filename,
-        value build_revision
+        value build_revision,
+        value replace_state_after_saving
+);
+CAMLprim value hh_update_dep_table_sqlite(
+    value out_filename,
+    value build_revision,
+    value replace_state_after_saving
 );
 CAMLprim value hh_load_dep_table_sqlite(
         value in_filename,
