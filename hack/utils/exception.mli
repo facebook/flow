@@ -10,3 +10,5 @@ type t
 val wrap: exn -> t
 val reraise: t -> 'a
 val to_string: t -> string
+val get_ctor_string: t -> string
+val get_backtrace_string: t -> string

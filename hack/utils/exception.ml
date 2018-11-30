@@ -30,5 +30,13 @@ let wrap exn =
 let reraise { exn; backtrace } =
   Printexc.raise_with_backtrace exn backtrace
 
-let to_string { exn; backtrace } =
-  Printf.sprintf "%s\n%s" (Printexc.to_string exn) (Printexc.raw_backtrace_to_string backtrace)
+let get_ctor_string { exn; backtrace=_; } =
+  Printexc.to_string exn
+
+let get_backtrace_string { exn=_; backtrace;} =
+  Printexc.raw_backtrace_to_string backtrace
+
+let to_string t =
+  let ctor = get_ctor_string t in
+  let bt = get_backtrace_string t in
+  if bt = "" then ctor else (ctor ^ "\n" ^ bt)

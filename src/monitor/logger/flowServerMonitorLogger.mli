@@ -12,7 +12,8 @@ type 'a logger_fn =
   ('a, unit, string, unit) format4 ->
   'a
 
-type 'a logger_noexn_fn =
+type 'a logger_fn_s =
+  ?exn : Exception.t ->
   ('a, unit, string, unit) format4 ->
   'a
 
@@ -24,8 +25,8 @@ val info: 'a logger_fn
 val debug: 'a logger_fn
 
 (* Sync APIs *)
-val fatal_s: 'a logger_noexn_fn
-val error_s: 'a logger_noexn_fn
-val warn_s: 'a logger_noexn_fn
-val info_s: 'a logger_noexn_fn
-val debug_s: 'a logger_noexn_fn
+val fatal_s: 'a logger_fn_s
+val error_s: 'a logger_fn_s
+val warn_s: 'a logger_fn_s
+val info_s: 'a logger_fn_s
+val debug_s: 'a logger_fn_s

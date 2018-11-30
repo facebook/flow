@@ -24,7 +24,8 @@ type 'a logger_fn =
   ('a, unit, string, unit) format4 ->
   'a
 
-type 'a logger_noexn_fn =
+type 'a logger_fn_s =
+  ?exn : Exception.t ->
   ('a, unit, string, unit) format4 ->
   'a
 
