@@ -66,6 +66,8 @@ module type Server_config = sig
     server_start_options ->
     ServerProcess.process_data
 
+  val server_restart_options: server_start_options -> server_start_options
+
   val kill_server : ServerProcess.process_data -> unit
 
   val wait_for_server_exit : ServerProcess.process_data ->

@@ -213,6 +213,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     { env with
       server = new_server;
       retries = env.retries + 1;
+      server_start_options = SC.server_restart_options env.server_start_options;
     }
 
   (** Kill the server (if it's running) and restart it - maybe. Obeying the rules
