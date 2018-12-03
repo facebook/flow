@@ -4288,6 +4288,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when object_use u || function_use u || function_like_op u ->
       rec_flow cx trace (get_builtin_prop_type cx ~trace reason kind, u)
 
+    | CustomFunT (_, ReactPropType React.PropType.Primitive (is_req1, t1)),
+      UseT (use_op, CustomFunT (_, ReactPropType React.PropType.Primitive (is_req2, t2)))
+        when not is_req2 || is_req1 ->
+      rec_unify cx trace ~use_op t1 t2
+
     | CustomFunT (_, ReactCreateClass),
       CallT (use_op, reason_op, { call_targs = None; call_args_tlist = arg1::_; call_tout; _ }) ->
       let loc_op = aloc_of_reason reason_op in
