@@ -2250,10 +2250,11 @@ static void hh_swap_in_db(sqlite3 *db_out) {
 // resulting deptable may contain more edges than truly represented
 // in the code-base (after incremental changes), but never misses
 // any (modulo bugs).
-static size_t hh_update_dep_table_helper(
+static size_t hh_save_dep_table_helper(
     sqlite3* const db_out,
     const char* const build_info,
-    const size_t replace_state_after_saving) {
+    const size_t replace_state_after_saving,
+    int is_update) {
   struct timeval start_t = { 0 };
   gettimeofday(&start_t, NULL);
   // Create header for verification
@@ -2286,6 +2287,8 @@ static size_t hh_update_dep_table_helper(
   size_t existing_rows_updated_count = 0;
   size_t edges_added = 0;
   size_t new_rows_count = 0;
+  query_result_t existing = { 0 };
+
   for (slot = 0; slot < dep_size; ++slot) {
     count = deptbl_entry_count_for_slot(slot);
     if (count == 0) {
@@ -2293,12 +2296,14 @@ static size_t hh_update_dep_table_helper(
     }
     deptbl_entry_t slotval = deptbl[slot];
 
-    query_result_t existing =
-      get_dep_sqlite_blob_with_duration(
-          db_out,
-          slotval.s.key.num,
-          &select_dep_stmt,
-          &existing_rows_lookup_duration);
+    if (is_update) {
+      existing = get_dep_sqlite_blob_with_duration(
+        db_out,
+        slotval.s.key.num,
+        &select_dep_stmt,
+        &existing_rows_lookup_duration);
+    }
+
     // Make sure we don't have malformed output
     assert(existing.size % sizeof(uint32_t) == 0);
     size_t existing_count = existing.size / sizeof(uint32_t);
@@ -2396,10 +2401,11 @@ static size_t hh_save_dep_table_helper_sqlite(
   gettimeofday(&tv, NULL);
 
   sqlite3 *db_out = connect_and_create_dep_table_helper(out_filename);
-  size_t edges_added = hh_update_dep_table_helper(
+  size_t edges_added = hh_save_dep_table_helper(
     db_out,
     build_info,
-    replace_state_after_saving);
+    replace_state_after_saving,
+    0); // is_update == false
 
   if (replace_state_after_saving) {
     set_db_filename(out_filename);
@@ -2451,10 +2457,11 @@ CAMLprim value hh_update_dep_table_sqlite(
 
   assert_sql(sqlite3_open(out_filename_raw, &db_out), SQLITE_OK);
 
-  size_t edges_added = hh_update_dep_table_helper(
+  size_t edges_added = hh_save_dep_table_helper(
     db_out,
     build_revision_raw,
-    replace_state_after_saving_raw);
+    replace_state_after_saving_raw,
+    1); // is_update == true
 
   if (replace_state_after_saving_raw) {
     set_db_filename(out_filename_raw);
