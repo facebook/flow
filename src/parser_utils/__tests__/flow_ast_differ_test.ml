@@ -393,6 +393,25 @@ class insert_annot_mapper = object
     | Type.Missing _loc -> Type.Available (_loc, (_loc, Type.Number))
 end
 
+class insert_function_annot_mapper = object
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+  method! type_annotation_hint return =
+    match super#type_annotation_hint return with
+    | Type.Available _ -> return
+    | Type.Missing loc ->
+      Type.Available (loc,
+        (loc, Type.Function {
+          Type.Function.tparams = None;
+          params =
+            (loc, {
+              Type.Function.Params.params= [];
+              rest= None
+            });
+          return= loc, Type.Number
+        } ))
+end
+
 class prop_annot_mapper = object
   inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -1615,5 +1634,17 @@ let tests = "ast_differ" >::: [
       ~source
       ~expected:"const x: number = (bla: number): number => { return 0; };"
       ~mapper:(new insert_annot_mapper)
+  end;
+  "update_arrow_function_function_return" >:: begin fun ctxt ->
+    let source = "const x = bla => { return 0; };" in
+    assert_edits_equal ctxt
+      ~edits:[
+        ((7, 7), ": (() => number)");
+        ((10, 13), "(bla: () => number)");
+        ((13, 13), ": (() => number)")
+      ]
+      ~source
+      ~expected:"const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
+      ~mapper:(new insert_function_annot_mapper)
   end;
 ]

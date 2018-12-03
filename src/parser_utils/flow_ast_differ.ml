@@ -173,6 +173,7 @@ type node =
   | Type of (Loc.t, Loc.t) Flow_ast.Type.t
   | TypeParam of (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.TypeParam.t
   | TypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
+  | FunctionTypeAnnotation of (Loc.t, Loc.t) Flow_ast.Type.annotation
   | ClassProperty of (Loc.t, Loc.t) Flow_ast.Class.Property.t
   | ObjectProperty of (Loc.t, Loc.t) Flow_ast.Expression.Object.property
   | TemplateLiteral of (Loc.t, Loc.t) Ast.Expression.TemplateLiteral.t
@@ -542,7 +543,9 @@ let program (algo : diff_algorithm)
       | _ ->
         params
       in
-      let returns = diff_if_changed type_annotation_hint return1 return2 |> Option.return in
+      let returns = diff_if_changed type_annotation_hint return1 return2
+        |> Option.return
+      in
       let fnbody = diff_if_changed_ret_opt function_body_any body1 body2 in
       join_diff_list [id; tparams; params; returns; fnbody]
 
@@ -1611,17 +1614,33 @@ let program (algo : diff_algorithm)
         (return1: (Loc.t, Loc.t) Ast.Type.annotation_or_hint)
         (return2: (Loc.t, Loc.t) Ast.Type.annotation_or_hint): node change list =
     let open Ast.Type in
+    let annot_change typ = match return2 with
+    | Ast.Type.Available (_, (_, Ast.Type.Function _)) ->
+      FunctionTypeAnnotation typ
+    | _ ->
+      TypeAnnotation typ
+    in
     match return1, return2 with
     | Missing _, Missing _ -> []
-    | Missing loc1, Available (loc2, typ) -> [loc1, Insert (None, [TypeAnnotation (loc2, typ)])]
-    | Available (loc1, typ), Missing _ -> [loc1, Delete (TypeAnnotation (loc1, typ))]
-    | Available (loc1, typ1), Available (loc2, typ2) ->
-     [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+    | Available (loc1, typ), Missing _ ->
+      [loc1, Delete (TypeAnnotation (loc1, typ))]
+    | Missing loc1, Available annot ->
+      [loc1, Insert (None, [annot_change annot])]
+    | Available (loc1, typ1), Available annot2 ->
+      [loc1, Replace (TypeAnnotation (loc1, typ1), annot_change annot2)]
 
-  and type_annotation ((loc1, typ1): (Loc.t, Loc.t) Ast.Type.annotation)
-                      ((loc2, typ2): (Loc.t, Loc.t) Ast.Type.annotation)
-      : node change list =
-    [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+  and type_annotation
+        ((loc1, typ1): (Loc.t, Loc.t) Ast.Type.annotation)
+        ((loc2, typ2): (Loc.t, Loc.t) Ast.Type.annotation)
+        : node change list =
+    let is_function = match typ2 with
+    | _, Ast.Type.Function _ -> true
+    | _ -> false
+    in
+    if is_function then
+      [loc1, Replace (TypeAnnotation (loc1, typ1), FunctionTypeAnnotation (loc2, typ2))]
+    else
+      [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
 
   and type_cast
       (type_cast1: (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)

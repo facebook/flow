@@ -31,7 +31,8 @@ let layout_of_node comments node =
   | Variance var -> Js_layout_generator.variance var
   | Type typ -> Js_layout_generator.type_ typ
   | TypeParam t_param -> Js_layout_generator.type_param t_param
-  | TypeAnnotation annot -> Js_layout_generator.type_annotation annot
+  | TypeAnnotation annot -> Js_layout_generator.type_annotation ~parens:false annot
+  | FunctionTypeAnnotation annot -> Js_layout_generator.type_annotation ~parens:true annot
   | ClassProperty prop -> Js_layout_generator.class_property prop
   | ObjectProperty prop -> Js_layout_generator.object_property prop
   | TemplateLiteral t_lit -> Js_layout_generator.template_literal t_lit

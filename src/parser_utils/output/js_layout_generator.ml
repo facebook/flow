@@ -2122,11 +2122,11 @@ and opaque_type ~declare { Ast.Statement.OpaqueType.id; tparams; impltype; super
     | Some impltype -> [pretty_space; Atom "="; pretty_space; type_ impltype]
     | None -> [])))
 
-and type_annotation (loc, t) =
+and type_annotation ?(parens=false) (loc, t) =
   source_location_with_comments (loc, fuse [
     Atom ":";
     pretty_space;
-    type_ t;
+    if parens then wrap_in_parens (type_ t) else type_ t;
   ])
 
 and type_predicate (loc, pred) =
