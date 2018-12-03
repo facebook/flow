@@ -625,6 +625,14 @@ let rec convert cx tparams_map = Ast.Type.(function
         let (_, prop_t), _ = mk_custom_fun cx loc None ident prop_type in
         reconstruct_ast prop_t targs
       )
+  | "React$PropType$Primitive$Required" ->
+      check_type_arg_arity cx loc targs 1 (fun () ->
+        let ts, targs = convert_type_params () in
+        let t = List.hd ts in
+        let prop_type = (ReactPropType (React.PropType.Primitive (true, t))) in
+        let (_, prop_t), _ = mk_custom_fun cx loc None ident prop_type in
+        reconstruct_ast prop_t targs
+      )
   | "React$PropType$ArrayOf" ->
       mk_react_prop_type cx loc targs ident React.PropType.ArrayOf
   | "React$PropType$InstanceOf" ->
