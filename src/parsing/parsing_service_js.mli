@@ -100,6 +100,7 @@ val do_parse:
   info: Docblock.t ->
   ?prevent_munge: bool ->
   module_ref_prefix: string option ->
+  facebook_fbt: string option ->
   string ->                 (* contents of the file *)
   File_key.t ->               (* filename *)
   result

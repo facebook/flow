@@ -22,6 +22,7 @@ module Dep = Deps.Dep
 module type EvalEnv = sig
   val prevent_munge: bool
   val ignore_static_propTypes: bool
+  val facebook_fbt: string option
 end
 
 (* A signature of a module is described by exported expressions / definitions, but what we're really
@@ -350,6 +351,15 @@ module Eval(Env: EvalEnv) = struct
         let { argument = _; _ } = stuff in
         Deps.bot
 
+      | loc, JSXElement e ->
+        let open Ast.JSX in
+        let { openingElement; closingElement = _; children = _ } = e in
+        let _loc, { Opening.name; selfClosing = _; attributes = _ } = openingElement in
+        begin match name, Env.facebook_fbt with
+          | Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt"}), Some _ -> Deps.bot
+          | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXElement))
+        end
+
       | loc, Call _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Call))
       | loc, Comprehension _ ->
@@ -358,8 +368,6 @@ module Eval(Env: EvalEnv) = struct
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Conditional))
       | loc, Generator _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Generator))
-      | loc, JSXElement _ ->
-        Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXElement))
       | loc, JSXFragment _ ->
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXFragment))
       | loc, Logical _ ->

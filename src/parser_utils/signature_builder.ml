@@ -237,19 +237,21 @@ module Signature = struct
     ) env imports_info in
     env, file_sig
 
-  let verify ?(prevent_munge=false) ?(ignore_static_propTypes=false) (env, file_sig) =
+  let verify ?(prevent_munge=false) ?(ignore_static_propTypes=false) ~facebook_fbt (env, file_sig) =
     let module Verify = V(struct
       let prevent_munge = prevent_munge
       let ignore_static_propTypes = ignore_static_propTypes
+      let facebook_fbt = facebook_fbt
     end) in
     Verify.check env file_sig @@ Verify.exports file_sig
 
-  let verify_and_generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) (env, file_sig) program =
-    let errors, _, env = verify ~prevent_munge ~ignore_static_propTypes (env, file_sig) in
+  let verify_and_generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) ~facebook_fbt (env, file_sig) program =
+    let errors, _, env = verify ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (env, file_sig) in
     if Signature_builder_deps.ErrorSet.is_empty errors then
       let module Generate = G(struct
         let prevent_munge = prevent_munge
         let ignore_static_propTypes = ignore_static_propTypes
+        let facebook_fbt = facebook_fbt
       end) in
       try Ok (Generate.make env file_sig program)
       with _ ->

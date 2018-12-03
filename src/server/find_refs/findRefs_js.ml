@@ -38,8 +38,8 @@ let find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop =
   | Error err -> Lwt.return (Error err, None)
   | Ok content ->
     let%lwt result =
-      let module_ref_prefix = Options.haste_module_ref_prefix genv.ServerEnv.options in
-      FindRefsUtils.compute_ast_result ~module_ref_prefix file_key content %>>= fun (ast, _, _) ->
+      let options = genv.ServerEnv.options in
+      FindRefsUtils.compute_ast_result options file_key content %>>= fun (ast, _, _) ->
       let property_find_refs start_loc =
         let%lwt def_info = GetDefUtils.get_def_info genv env profiling file_key content start_loc in
         PropertyFindRefs.find_refs genv env ~content file_key def_info ~global ~multi_hop

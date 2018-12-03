@@ -7,10 +7,17 @@
 
 open OUnit2
 
-let run ctxt expected name text =
-  let (ast, _, _) =
-    FindRefsUtils.compute_ast_result ~module_ref_prefix:None (File_key.SourceFile "/dummy.js") text
-    |> Core_result.ok_or_failwith
+let run ctxt expected name content =
+  let file = File_key.SourceFile "/dummy.js" in
+  let info = FindRefsUtils.compute_docblock file content in
+  let result = Parsing_service_js.do_parse ~fail:false
+    ~types_mode:Parsing_service_js.TypesAllowed
+    ~use_strict:true ~info ~module_ref_prefix:None ~facebook_fbt:None
+    content file in
+  let ast = match result with
+    | Parsing_service_js.Parse_ok (ast, _) -> ast
+    | Parsing_service_js.Parse_fail _ -> failwith "Parse unexpectedly failed"
+    | Parsing_service_js.Parse_skip _ -> failwith "Parse unexpectedly skipped"
   in
   let result = PropertyAccessSearcher.search name ast in
   assert_equal ~ctxt expected result

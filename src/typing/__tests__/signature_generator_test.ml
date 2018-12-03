@@ -32,7 +32,7 @@ let verify_and_generate ?prevent_munge ?ignore_static_propTypes contents =
 
 let mk_signature_generator_test contents expected_msgs =
   begin fun ctxt ->
-    let msgs = match verify_and_generate contents with
+    let msgs = match verify_and_generate ~facebook_fbt:(Some "FbtElement") contents with
       | Ok program ->
         String.split_on_char '\n' @@ pretty_print program
       | Error errors ->
@@ -49,7 +49,7 @@ let mk_signature_generator_test contents expected_msgs =
 
 let mk_generated_signature_file_sig_test contents expected_msgs =
   begin fun ctxt ->
-    let msgs = match verify_and_generate contents with
+    let msgs = match verify_and_generate ~facebook_fbt:(Some "FbtElement") contents with
       | Ok program ->
         begin match File_sig.With_Loc.program ~ast:program ~module_ref_prefix:None with
           | Ok fs -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
@@ -67,7 +67,8 @@ let mk_generated_signature_file_sig_test contents expected_msgs =
 
 let mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes contents =
   begin fun ctxt ->
-    let msgs = match verify_and_generate ?prevent_munge ?ignore_static_propTypes contents with
+    let msgs = match verify_and_generate ?prevent_munge ?ignore_static_propTypes
+      ~facebook_fbt:(Some "FbtElement") contents with
       | Ok _program -> []
       | Error errors ->
         Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
@@ -581,5 +582,18 @@ let tests = "signature_generator" >::: ([
     ["declare module.exports: $TEMPORARY$Object$freeze<";
      "  {|foo: $TEMPORARY$number<42>, bar: $TEMPORARY$string<'hello'>|},";
      ">;"];
+
+  "fbt_empty_open_close" >:: mk_signature_generator_test
+    ["module.exports = <fbt></fbt>"]
+    ["declare module.exports: FbtElement;"];
+
+  "fbt_empty_open" >:: mk_signature_generator_test
+    ["module.exports = <fbt/>"]
+    ["declare module.exports: FbtElement;"];
+
+  "fbt_with_child" >:: mk_signature_generator_test
+    ["function foo(){}";
+     "module.exports = <fbt desc={foo()}></fbt>"]
+    ["declare module.exports: FbtElement;"];
 
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)

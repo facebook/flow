@@ -89,6 +89,8 @@ module T = struct
     | String
     | Boolean
 
+    | JSXLiteral of generic
+
     | Void
     | Null
 
@@ -362,6 +364,8 @@ module T = struct
     | loc, Boolean -> loc, Ast.Type.Boolean
     | loc, Void -> loc, Ast.Type.Void
     | loc, Null -> loc, Ast.Type.Null
+
+    | _loc, JSXLiteral g -> type_of_generic g
 
     | _loc, TypeCast t -> t
 
@@ -864,12 +868,24 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         let { operator = _; argument = _; prefix = _ } = stuff in
         loc, T.Number
 
+      | loc, JSXElement e ->
+        let open Ast.JSX in
+        let { openingElement; closingElement = _; children = _} = e in
+        let _loc, { Opening.name; selfClosing = _; attributes = _ } = openingElement in
+        begin match name, Env.facebook_fbt with
+          | Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt" }), Some custom_jsx_type ->
+              loc, T.JSXLiteral (loc, {
+                Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, custom_jsx_type);
+                targs = None
+              })
+          | _ -> T.FixMe.mk_expr_type loc
+        end
+
       | loc, Call _
       | loc, Comprehension _
       | loc, Conditional _
       | loc, Generator _
       | loc, Import _
-      | loc, JSXElement _
       | loc, JSXFragment _
       | loc, Logical _
       | loc, MetaProperty _

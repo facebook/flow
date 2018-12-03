@@ -475,6 +475,27 @@ let tests_data = [
   [],
   [];
 
+  name "fbt_empty_open_close",
+  ["module.exports = <fbt></fbt>"],
+  [],
+  [];
+
+  name "fbt_empty_open",
+  ["module.exports = <fbt/>"],
+  [],
+  [];
+
+  name "fbt_with_child",
+  ["function foo(){}";
+   "module.exports = <fbt desc={foo()}></fbt>"],
+  [],
+  [];
+
+  name "jsx_div",
+  ["module.exports = <div></div>"],
+  ["Expected literal expression instead of JSXElement @ (1, 17) to (1, 28)"],
+  [];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =
@@ -484,7 +505,8 @@ let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents 
       | Ok signature -> signature
       | Error _ -> failwith "Signature builder failure!" in
     let errors, remote_dependencies, env =
-      Signature_builder.Signature.verify ?prevent_munge ?ignore_static_propTypes signature
+      Signature_builder.Signature.verify ?prevent_munge ?ignore_static_propTypes
+        ~facebook_fbt:(Some "FbtElement") signature
     in
     let error_msgs = Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
       Signature_builder_deps.ErrorSet.elements errors in

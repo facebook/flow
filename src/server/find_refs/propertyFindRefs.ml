@@ -447,8 +447,7 @@ let find_refs_global genv env multi_hop def_info =
   Lwt.return @@ Some ((display_name_of_def_info def_info, refs), Some dependent_file_count)
 
 let find_refs_local genv file_key content def_info =
-  let module_ref_prefix = Options.haste_module_ref_prefix (genv.options) in
-  compute_ast_result ~module_ref_prefix file_key content >>= fun ast_info ->
+  compute_ast_result genv.options file_key content >>= fun ast_info ->
   find_refs_in_file genv.options ast_info file_key def_info >>= fun refs ->
   Ok (Some ((display_name_of_def_info def_info, refs), None))
 

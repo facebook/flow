@@ -8,7 +8,7 @@
 val compute_docblock: File_key.t -> string (* content *) -> Docblock.t
 
 val compute_ast_result:
-  module_ref_prefix: string option ->
+  Options.t ->
   File_key.t ->
   string (* content *) ->
   ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
