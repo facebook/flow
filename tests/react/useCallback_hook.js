@@ -7,10 +7,17 @@ import React from 'react';
 }
 
 {
-  let numeric: number;
-  numeric = React.useCallback(() => 123); // Ok
-  numeric = React.useCallback(() => 123, []); // Ok
-  numeric = React.useCallback(() => 123, [1, 2, 3]); // Ok
-  numeric = React.useCallback(() => 'abc'); // Error: is incompatible with number
-  numeric = React.useCallback(() => 123, {}); // Error: object literal is incompatible with +read-only array type
+  const callback = React.useCallback(() => 123);
+  const num: number = callback();
+  const str: string = callback();// Error: number is incompatible with string.
+}
+
+{
+  const callback = React.useCallback((num: number, str: string) => {
+    (num: number);
+    (str: string);
+  });
+  callback(123, 'abc'); // Ok
+  callback(true); // Error: function requires another argument.
+  callback('123', 'abc'); // Error: string is incompatible with number.
 }

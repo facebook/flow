@@ -80,8 +80,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:7:22
      7|     (this.props.foo: empty); // error: string ~> empty
@@ -97,8 +97,8 @@ Cannot cast `this.props.bar` to empty because number [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [1]
    create_class.js:8:22
      8|     (this.props.bar: empty); // error: number ~> empty
@@ -251,8 +251,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:117:22
    117|     (this.props.foo: empty); // string ~> empty
@@ -268,8 +268,8 @@ Cannot cast `this.state.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:118:22
    118|     (this.state.foo: empty); // string ~> empty
@@ -285,8 +285,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:133:22
    133|     (this.props.foo: empty); // string ~> empty
@@ -302,8 +302,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:137:22
    137|     (this.props.foo: empty); // string ~> empty
@@ -319,8 +319,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:141:22
    141|     (this.props.foo: empty); // string ~> empty
@@ -336,8 +336,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:142:21
    142|     (nextProps.foo: empty); // string ~> empty
@@ -353,8 +353,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:146:22
    146|     (this.props.foo: empty); // string ~> empty
@@ -387,8 +387,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:148:21
    148|     (nextProps.foo: empty); // string ~> empty
@@ -435,8 +435,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:153:22
    153|     (this.props.foo: empty); // string ~> empty
@@ -469,8 +469,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:155:21
    155|     (nextProps.foo: empty); // string ~> empty
@@ -503,8 +503,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:160:22
    160|     (this.props.foo: empty); // string ~> empty
@@ -537,8 +537,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:162:21
    162|     (nextProps.foo: empty); // string ~> empty
@@ -571,8 +571,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:167:22
    167|     (this.props.foo: empty); // string ~> empty
@@ -1904,8 +1904,8 @@ References:
    jsx_spread.js:10:19
     10| var props = {bar: 42};
                           ^^ [1]
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
 
 
@@ -2018,8 +2018,8 @@ References:
    proptype_arrayOf.js:15:45
     15| var fail_mistyped_elems = <Example arr={[1, "foo"]} />
                                                     ^^^^^ [1]
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2035,8 +2035,8 @@ References:
    proptype_arrayOf.js:20:36
     20| var todo_required = <Example arr={[null]} />
                                            ^^^^ [1]
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2053,8 +2053,8 @@ References:
    proptype_arrayOf.js:30:25
     30| (<OptionalExample arr={[""]} />); // error: string ~> number
                                 ^^ [1]
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2092,8 +2092,8 @@ Cannot cast `propName` to empty because string [1] is incompatible with empty [2
                ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:382:13
-   382|   propName: string,
+   <BUILTINS>/react.js:383:13
+   383|   propName: string,
                     ^^^^^^ [1]
    proptype_custom_validator.js:8:18
      8|       (propName: empty); // error: propName is a string
@@ -2109,8 +2109,8 @@ Cannot cast `componentName` to empty because string [1] is incompatible with emp
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:383:18
-   383|   componentName: string,
+   <BUILTINS>/react.js:384:18
+   384|   componentName: string,
                          ^^^^^^ [1]
    proptype_custom_validator.js:9:23
      9|       (componentName: empty); // error: componentName is a string
@@ -2128,8 +2128,8 @@ Cannot cast `href` to empty because:
                ^^^^
 
 References:
-   <BUILTINS>/react.js:384:10
-   384|   href?: string) => ?Error;
+   <BUILTINS>/react.js:385:10
+   385|   href?: string) => ?Error;
                  ^^^^^^ [1]
    proptype_custom_validator.js:10:14
     10|       (href: empty); // error: href is an optional string
@@ -2148,8 +2148,8 @@ References:
    proptype_custom_validator.js:11:18
     11|       return (0: mixed); // error: should return ?Error
                          ^^^^^ [1]
-   <BUILTINS>/react.js:384:22
-   384|   href?: string) => ?Error;
+   <BUILTINS>/react.js:385:22
+   385|   href?: string) => ?Error;
                              ^^^^^ [2]
 
 
@@ -2242,8 +2242,8 @@ References:
    proptype_objectOf.js:15:47
     15| var fail_mistyped_props = <Example obj={{foo: "foo"}} />
                                                       ^^^^^ [1]
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2259,8 +2259,8 @@ References:
    proptype_objectOf.js:20:38
     20| var todo_required = <Example obj={{p:null}} />
                                              ^^^^ [1]
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2276,8 +2276,8 @@ References:
    proptype_objectOf.js:30:27
     30| (<OptionalExample obj={{p:""}} />); // error: string ~> number
                                   ^^ [1]
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2452,11 +2452,11 @@ References:
    proptype_oneOfType.js:24:32
     24| var fail_bool = <Example prop={true} />;
                                        ^^^^ [1]
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [3]
 
 
@@ -2474,11 +2474,11 @@ References:
    proptype_oneOfType.js:29:36
     29| var todo_required = <Example prop={null} />;
                                            ^^^^ [1]
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:410:36
-   410|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:411:36
+   411|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [3]
 
 
@@ -2494,8 +2494,8 @@ References:
    proptype_oneOfType.js:41:22
     41| (<OptionalExample p={0} />); // error: number ~> string
                              ^ [1]
-   <BUILTINS>/react.js:412:36
-   412|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:413:36
+   413|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
 
 
@@ -2577,14 +2577,14 @@ Cannot cast `React.PropTypes.arrayOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:392:17
-   392|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:393:17
+   393|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:392:41
-   392|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:393:41
+   393|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2601,8 +2601,8 @@ empty [2] in the return value.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:394:27
-   394|   (expectedClass: any) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:395:27
+   395|   (expectedClass: any) => ReactPropsChainableTypeChecker;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2620,14 +2620,14 @@ Cannot cast `React.PropTypes.objectOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:396:17
-   396|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:397:17
+   397|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:396:41
-   396|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:397:41
+   397|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2645,14 +2645,14 @@ Cannot cast `React.PropTypes.oneOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:398:20
-   398|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:399:20
+   399|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                            ^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:398:35
-   398|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:399:35
+   399|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2670,14 +2670,14 @@ Cannot cast `React.PropTypes.oneOfType` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:400:25
-   400|   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+   <BUILTINS>/react.js:401:25
+   401|   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:401:5
-   401|     ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:402:5
+   402|     ReactPropsChainableTypeChecker;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2695,14 +2695,14 @@ Cannot cast `React.PropTypes.shape` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:403:16
-   403|   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+   <BUILTINS>/react.js:404:16
+   404|   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:404:5
-   404|     ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:405:5
+   405|     ReactPropsChainableTypeChecker;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -3180,63 +3180,121 @@ Cannot call `React.useCallback` because function [1] requires another argument.
           ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:325:38
-                                             v---
-   325|   declare export function useCallback<T>(
-   326|     callback: () => T | void,
-   327|     inputs: ?$ReadOnlyArray<mixed>,
-   328|   ): T;
+   <BUILTINS>/react.js:326:38
+                                             v----------------------------------------------
+   326|   declare export function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+   327|     callback: T,
+   328|     inputs: ?$ReadOnlyArray<mixed>,
+   329|   ): T;
           ---^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- useCallback_hook.js:14:13
+Error ---------------------------------------------------------------------------------------- useCallback_hook.js:12:23
 
-Cannot assign `React.useCallback(...)` to `numeric` because string [1] is incompatible with number [2].
+Cannot assign `callback()` to `str` because number [1] is incompatible with string [2].
 
-   useCallback_hook.js:14:13
-   14|   numeric = React.useCallback(() => 'abc'); // Error: is incompatible with number
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   useCallback_hook.js:14:37
-   14|   numeric = React.useCallback(() => 'abc'); // Error: is incompatible with number
-                                           ^^^^^ [1]
-   useCallback_hook.js:10:16
-   10|   let numeric: number;
-                      ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- useCallback_hook.js:15:42
-
-Cannot call `React.useCallback` with object literal bound to `inputs` because object literal [1] is incompatible with
-read-only array type [2].
-
-   useCallback_hook.js:15:42
-    15|   numeric = React.useCallback(() => 123, {}); // Error: object literal is incompatible with +read-only array type
-                                                 ^^ [1]
+   useCallback_hook.js:12:23
+   12|   const str: string = callback();// Error: number is incompatible with string.
+                             ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:327:14
-   327|     inputs: ?$ReadOnlyArray<mixed>,
-                     ^^^^^^^^^^^^^^^^^^^^^ [2]
+   useCallback_hook.js:10:44
+   10|   const callback = React.useCallback(() => 123);
+                                                  ^^^ [1]
+   useCallback_hook.js:12:14
+   12|   const str: string = callback();// Error: number is incompatible with string.
+                    ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- useCallback_hook.js:21:3
+
+Cannot call `callback` because function [1] requires another argument.
+
+   useCallback_hook.js:21:3
+   21|   callback(true); // Error: function requires another argument.
+         ^^^^^^^^^^^^^^
+
+References:
+   useCallback_hook.js:16:38
+                                            v------------------------------
+   16|   const callback = React.useCallback((num: number, str: string) => {
+   17|     (num: number);
+   18|     (str: string);
+   19|   });
+         ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- useCallback_hook.js:21:12
+
+Cannot call `callback` with `true` bound to `num` because boolean [1] is incompatible with number [2].
+
+   useCallback_hook.js:21:12
+   21|   callback(true); // Error: function requires another argument.
+                  ^^^^ [1]
+
+References:
+   useCallback_hook.js:16:44
+   16|   const callback = React.useCallback((num: number, str: string) => {
+                                                  ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- useCallback_hook.js:22:12
+
+Cannot call `callback` with `'123'` bound to `num` because string [1] is incompatible with number [2].
+
+   useCallback_hook.js:22:12
+   22|   callback('123', 'abc'); // Error: string is incompatible with number.
+                  ^^^^^ [1]
+
+References:
+   useCallback_hook.js:16:44
+   16|   const callback = React.useCallback((num: number, str: string) => {
+                                                  ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- useContext_hook.js:6:3
 
-Cannot call `React.useMutationEffect` because function [1] requires another argument.
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
 
    useContext_hook.js:6:3
      6|   React.useMutationEffect(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:315:44
-                                                   v
-   315|   declare export function useMutationEffect(
-   316|     create: () => MaybeCleanUpFn,
-   317|     inputs: ?$ReadOnlyArray<mixed>,
-   318|   ): void;
-          ------^ [1]
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- useContext_hook.js:21:18
@@ -3320,12 +3378,12 @@ Cannot call `React.useEffect` because function [1] requires another argument.
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:310:36
+   <BUILTINS>/react.js:316:36
                                            v
-   310|   declare export function useEffect(
-   311|     create: () => MaybeCleanUpFn,
-   312|     inputs: ?$ReadOnlyArray<mixed>,
-   313|   ): void;
+   316|   declare export function useEffect(
+   317|     create: () => MaybeCleanUpFn,
+   318|     inputs: ?$ReadOnlyArray<mixed>,
+   319|   ): void;
           ------^ [1]
 
 
@@ -3338,8 +3396,8 @@ Cannot call `React.useEffect` with `1` bound to `create` because number [1] is i
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:311:13
-   311|     create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:317:13
+   317|     create: () => MaybeCleanUpFn,
                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3353,8 +3411,8 @@ type [2].
                                     ^ [1]
 
 References:
-   <BUILTINS>/react.js:312:14
-   312|     inputs: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:318:14
+   318|     inputs: ?$ReadOnlyArray<mixed>,
                      ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3367,13 +3425,13 @@ Cannot call `React.useImperativeMethods` because function [1] requires another a
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:335:47
+   <BUILTINS>/react.js:336:47
                                                       v---
-   335|   declare export function useImperativeMethods<T>(
-   336|     ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
-   337|     create: () => T,
-   338|     inputs: ?$ReadOnlyArray<mixed>,
-   339|   ): void;
+   336|   declare export function useImperativeMethods<T>(
+   337|     ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+   338|     create: () => T,
+   339|     inputs: ?$ReadOnlyArray<mixed>,
+   340|   ): void;
           ------^ [1]
 
 
@@ -3422,12 +3480,12 @@ Cannot call `React.useLayoutEffect` because function [1] requires another argume
           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:320:42
+   <BUILTINS>/react.js:321:42
                                                  v
-   320|   declare export function useLayoutEffect(
-   321|     create: () => MaybeCleanUpFn,
-   322|     inputs: ?$ReadOnlyArray<mixed>,
-   323|   ): void;
+   321|   declare export function useLayoutEffect(
+   322|     create: () => MaybeCleanUpFn,
+   323|     inputs: ?$ReadOnlyArray<mixed>,
+   324|   ): void;
           ------^ [1]
 
 
@@ -3441,8 +3499,8 @@ type [2].
                                 ^ [1]
 
 References:
-   <BUILTINS>/react.js:321:13
-   321|     create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:322:13
+   322|     create: () => MaybeCleanUpFn,
                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3456,8 +3514,8 @@ type [2].
                                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:322:14
-   322|     inputs: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:323:14
+   323|     inputs: ?$ReadOnlyArray<mixed>,
                      ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3470,12 +3528,12 @@ Cannot call `React.useMemo` because function [1] requires another argument.
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:330:34
+   <BUILTINS>/react.js:331:34
                                          v---
-   330|   declare export function useMemo<T>(
-   331|     create: () => T,
-   332|     inputs: ?$ReadOnlyArray<mixed>,
-   333|   ): T;
+   331|   declare export function useMemo<T>(
+   332|     create: () => T,
+   333|     inputs: ?$ReadOnlyArray<mixed>,
+   334|   ): T;
           ---^ [1]
 
 
@@ -3498,50 +3556,407 @@ References:
 
 Error ------------------------------------------------------------------------------------ useMutationEffect_hook.js:6:3
 
-Cannot call `React.useMutationEffect` because function [1] requires another argument.
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
 
    useMutationEffect_hook.js:6:3
      6|   React.useMutationEffect(); // Error: function requires another argument.
           ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:315:44
-                                                   v
-   315|   declare export function useMutationEffect(
-   316|     create: () => MaybeCleanUpFn,
-   317|     inputs: ?$ReadOnlyArray<mixed>,
-   318|   ): void;
-          ------^ [1]
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
 
 
-Error ---------------------------------------------------------------------------------- useMutationEffect_hook.js:22:27
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:11:3
 
-Cannot call `React.useMutationEffect` with `1` bound to `create` because number [1] is incompatible with function
-type [2].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
 
-   useMutationEffect_hook.js:22:27
+   useMutationEffect_hook.js:11:3
+    11|   React.useMutationEffect(() => {});
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
+
+
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:12:3
+
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+
+   useMutationEffect_hook.js:12:3
+    12|   React.useMutationEffect(() => {}, []);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
+
+
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:13:3
+
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+
+   useMutationEffect_hook.js:13:3
+    13|   React.useMutationEffect(() => {}, [1, 2, 3]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
+
+
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:16:3
+
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+
+   useMutationEffect_hook.js:16:3
+    16|   React.useMutationEffect(() => () => {});
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
+
+
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:17:3
+
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+
+   useMutationEffect_hook.js:17:3
+    17|   React.useMutationEffect(() => () => {}, []);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
+
+
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:18:3
+
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+
+   useMutationEffect_hook.js:18:3
+    18|   React.useMutationEffect(() => () => {}, [1, 2, 3]);
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
+
+
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:22:3
+
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
+
+   useMutationEffect_hook.js:22:3
     22|   React.useMutationEffect(1); // Error: number is incompatible with function type
-                                  ^ [1]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:316:13
-   316|     create: () => MaybeCleanUpFn,
-                    ^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
 
 
-Error ---------------------------------------------------------------------------------- useMutationEffect_hook.js:23:37
+Error ----------------------------------------------------------------------------------- useMutationEffect_hook.js:23:3
 
-Cannot call `React.useMutationEffect` with `1` bound to `inputs` because number [1] is incompatible with read-only array
-type [2].
+Cannot call `React.useMutationEffect` because property `useMutationEffect` is missing in object type [1].
 
-   useMutationEffect_hook.js:23:37
+   useMutationEffect_hook.js:23:3
     23|   React.useMutationEffect(() => {}, 1); // Error: number is incompatible with function react-only array
-                                            ^ [1]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:317:14
-   317|     inputs: ?$ReadOnlyArray<mixed>,
-                     ^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:342:26
+                                 v-
+   342|   declare export default {|
+   343|     +DOM: typeof DOM,
+   344|     +PropTypes: typeof PropTypes,
+   345|     +version: typeof version,
+   346|     +checkPropTypes: typeof checkPropTypes,
+   347|     +memo: typeof memo,
+   348|     +lazy: typeof lazy,
+   349|     +createClass: typeof createClass,
+   350|     +createContext: typeof createContext,
+   351|     +createElement: typeof createElement,
+   352|     +cloneElement: typeof cloneElement,
+   353|     +createFactory: typeof createFactory,
+   354|     +createRef: typeof createRef,
+   355|     +isValidElement: typeof isValidElement,
+   356|     +Component: typeof Component,
+      :
+   358|     +Fragment: typeof Fragment,
+   359|     +Children: typeof Children,
+   360|     +ConcurrentMode: typeof ConcurrentMode,
+   361|     +StrictMode: typeof StrictMode,
+   362|     +Suspense: typeof Suspense,
+   363|     +useContext: typeof useContext,
+   364|     +useState: typeof useState,
+   365|     +useReducer: typeof useReducer,
+   366|     +useRef: typeof useRef,
+   367|     +useEffect: typeof useEffect,
+   368|     +useLayoutEffect: typeof useLayoutEffect,
+   369|     +useCallback: typeof useCallback,
+   370|     +useMemo: typeof useMemo,
+   371|     +useImperativeMethods: typeof useImperativeMethods,
+   372|   |};
+          -^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- useReducer_hook.js:6:3
@@ -3553,13 +3968,13 @@ Cannot call `React.useReducer` because function [1] requires another argument.
           ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:302:37
+   <BUILTINS>/react.js:308:37
                                             v------
-   302|   declare export function useReducer<S, A>(
-   303|     reducer: (S, A) => S,
-   304|     initialState: S,
-   305|     initialAction: ?A,
-   306|   ): [S, A => void];
+   308|   declare export function useReducer<S, A>(
+   309|     reducer: (S, A) => S,
+   310|     initialState: S,
+   311|     initialAction: ?A,
+   312|   ): [S, A => void];
           ----------------^ [1]
 
 
@@ -3703,7 +4118,7 @@ References:
 
 
 
-Found 230 errors
+Found 238 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
