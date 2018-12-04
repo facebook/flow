@@ -275,6 +275,23 @@ let shm_config shm_flags flowconfig =
 
 let from_flag =
   let collector main from =
+    let from = match from with
+    | Some from -> Some from
+    | None -> begin
+      let open Core_result in
+      let parent_cmdline =
+        Proc.get_proc_stat (Unix.getpid ())
+        >>= fun proc_stat ->
+          let ppid = proc_stat.Proc.ppid in
+          Proc.get_proc_stat ppid
+        >>| fun parent_proc_stat ->
+          String.trim parent_proc_stat.Proc.cmdline
+      in
+      match parent_cmdline with
+      | Ok cmdline -> Some ("parent cmdline: " ^ cmdline)
+      | Error _ -> None
+    end in
+
     FlowEventLogger.set_from from;
     main
   in
