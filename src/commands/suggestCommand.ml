@@ -99,9 +99,8 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
     with_errors_and_warnings true errors Errors.ErrorSet.empty None @@ fun () ->
     failwith "SuggestCommand: Parsing failed with no errors"
 
-let main base_flags option_values root error_flags strip_root from path
+let main base_flags option_values root error_flags strip_root path
   fail_on_tc_errors fail_on_suggest_warnings filename () =
-  FlowEventLogger.set_from from;
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
     path (Option.map ~f:expand_path filename) in

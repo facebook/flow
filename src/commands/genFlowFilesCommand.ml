@@ -87,8 +87,7 @@ let write_file strip_root root content perm src_file_path dest_file_path =
   Unix.close fd
 
 let main base_flags option_values root error_flags strip_root ignore_flag
-  include_flag untyped_flag declaration_flag from src out_dir () = (
-  FlowEventLogger.set_from from;
+  include_flag untyped_flag declaration_flag src out_dir () = (
   let src = expand_path src in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (

@@ -68,7 +68,7 @@ let start_flow_server env =
   |> arg_map "--lazy-mode"
     lazy_mode ~f:(Option.value_map ~default:"none" ~f:Options.lazy_mode_to_string)
   |> arg "--temp-dir" (Some tmp_dir)
-  |> arg "--from" FlowEventLogger.((get_context ()).from)
+  |> arg "--from" (FlowEventLogger.get_from_I_AM_A_CLOWN ())
   |> flag "--ignore-version" ignore_version
   |> flag "--quiet" quiet
   |> flag "--autostop" autostop

@@ -56,8 +56,7 @@ let parse_args path args =
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
  *)
-let main base_flags option_values json pretty root strip_root from path args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root path args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
@@ -81,7 +80,8 @@ let main base_flags option_values json pretty root strip_root from path args () 
         JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
       print_json_endline ~pretty json
     ) else
-      if option_values.from = "vim" || option_values.from = "emacs"
+      let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
+      if from = Some "vim" || from = Some "emacs"
       then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
       else print_endline (range_string_of_loc ~strip_root loc)
   | ServerProt.Response.GET_DEF (Error exn_msg) ->

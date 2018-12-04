@@ -68,8 +68,7 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main base_flags option_values json pretty root strip_root from args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root args () =
   let file = parse_args args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (

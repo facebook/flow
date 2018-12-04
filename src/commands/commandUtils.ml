@@ -273,10 +273,17 @@ let shm_config shm_flags flowconfig =
     sample_rate;
   }
 
-let from_flag prev = CommandSpec.ArgSpec.(
-  prev
-  |> flag "--from" (optional string)
-      ~doc:"Specify client (for use by editor plugins)"
+let from_flag =
+  let collector main from =
+    FlowEventLogger.set_from from;
+    main
+  in
+
+  fun prev ->CommandSpec.ArgSpec.(
+    prev
+    |> collect collector
+    |> flag "--from" (optional string)
+        ~doc:"Specify who is calling this CLI command (used by logging)"
 )
 
 let strip_root_flag prev = CommandSpec.ArgSpec.(
@@ -589,7 +596,6 @@ let flowconfig_flags prev = CommandSpec.ArgSpec.(
 )
 
 type connect_params = {
-  from               : string;
   retries            : int;
   retry_if_init      : bool;
   timeout            : int option;
@@ -610,20 +616,17 @@ let collect_connect_flags
     no_auto_start
     temp_dir
     shm_flags
-    from
     ignore_version
     quiet =
   let default def = function
   | Some x -> x
   | None -> def in
-  FlowEventLogger.set_from from;
   (match timeout with
   | Some n when n <= 0 ->
     let msg = spf "Timeout must be a positive integer. Got %d" n in
     FlowExitStatus.(exit ~msg Commandline_usage_error)
   | _ -> ());
   main {
-    from = (default "" from);
     retries = (default 3 retries);
     retry_if_init = (default true retry_if_init);
     timeout = timeout;

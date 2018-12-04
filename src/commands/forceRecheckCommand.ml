@@ -79,9 +79,7 @@ let rec find_parent_that_exists path =
     else find_parent_that_exists newpath
   end
 
-let main base_flags connect_flags json pretty root from profile focus input_file files () =
-  FlowEventLogger.set_from from;
-
+let main base_flags connect_flags json pretty root profile focus input_file files () =
   begin match input_file, files with
   | None, (None | Some []) ->
     CommandSpec.usage spec;

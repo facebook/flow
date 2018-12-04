@@ -65,13 +65,14 @@ let print_json result ~pretty ~strip_root =
   in
   print_json_endline ~pretty json
 
-let to_string result option_values ~strip_root =
+let to_string result ~strip_root =
   let locs = match result with
     | None -> []
     | Some (_, locs) -> locs
   in
+  let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
   String.concat "\n" @@
-    if option_values.from = "vim" || option_values.from = "emacs"
+    if from = Some "vim" || from = Some "emacs"
     then Core_list.map ~f:(Errors.Vim_emacs_output.string_of_loc ~strip_root) locs
     else Core_list.map ~f:(range_string_of_loc ~strip_root) locs
 
@@ -84,8 +85,7 @@ let to_string result option_values ~strip_root =
    - multi_hop indicates whether to include properties on related objects (even slower)
    - args is mandatory command args; see parse_args above
     *)
-let main base_flags option_values json pretty root strip_root from path global multi_hop args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root path global multi_hop args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
@@ -102,7 +102,7 @@ let main base_flags option_values json pretty root strip_root from path global m
     (* format output *)
     if json || pretty
     then print_json result ~pretty ~strip_root
-    else print_endline (to_string result option_values ~strip_root)
+    else print_endline (to_string result ~strip_root)
   | ServerProt.Response.FIND_REFS (Error exn_msg) ->
     Utils_js.prerr_endlinef
       "Could not find refs for %s:%d:%d\n%s"

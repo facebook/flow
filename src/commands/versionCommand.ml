@@ -30,8 +30,7 @@ let spec = {
   )
 }
 
-let main json pretty from _root () =
-  FlowEventLogger.set_from from;
+let main json pretty _root () =
   if json || pretty
   then begin
     let open Hh_json in

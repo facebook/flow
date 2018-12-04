@@ -178,13 +178,12 @@ let get_next_append_const get_next const =
 
 let main
   base_flags strip_root ignore_flag include_flag untyped_flag declaration_flag root_flag json pretty
-  from all imaginary reason
+  all imaginary reason
   input_file root_or_files () =
 
   let files_or_dirs = get_filenames_from_input ~allow_imaginary:true input_file root_or_files in
 
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
-  FlowEventLogger.set_from from;
   let root = guess_root flowconfig_name (
     match root_flag with
     | Some root -> Some root
