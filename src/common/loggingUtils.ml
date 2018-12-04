@@ -28,8 +28,7 @@ let set_hh_logger_min_level ?(min_level=Hh_logger.Level.Info) options =
       | None -> min_level
   )
 
-let init_loggers ~from ~options ?min_level () =
-  FlowEventLogger.set_from from;
+let init_loggers ~options ?min_level () =
   set_hh_logger_min_level ?min_level options
 
 let set_server_options ~server_options =

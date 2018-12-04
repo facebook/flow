@@ -33,8 +33,7 @@ let spec = {
   )
 }
 
-let main base_flags option_values json pretty root strip_root from modules () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root modules () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
 

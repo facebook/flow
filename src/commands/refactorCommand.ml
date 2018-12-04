@@ -75,14 +75,15 @@ let print_json result ~pretty ~strip_root =
   in
   print_json_endline ~pretty json
 
-let to_string result option_values ~strip_root =
+let to_string result ~strip_root =
   let open ServerProt.Response in
   let edits = match result with
     | None -> []
     | Some {refactor_edits} -> refactor_edits
   in
   let string_of_loc =
-    if option_values.from = "vim" || option_values.from = "emacs" then
+    let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
+    if from = Some "vim" || from = Some "emacs" then
       Errors.Vim_emacs_output.string_of_loc ~strip_root
     else
       range_string_of_loc ~strip_root
@@ -92,8 +93,7 @@ let to_string result option_values ~strip_root =
   in
   String.concat "\n" @@ Core_list.map ~f:string_of_edit edits
 
-let main base_flags option_values json pretty root strip_root from path rename args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root path rename args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
@@ -115,7 +115,7 @@ let main base_flags option_values json pretty root strip_root from path rename a
     (* format output *)
     if json || pretty
     then print_json result ~pretty ~strip_root
-    else print_endline (to_string result option_values ~strip_root)
+    else print_endline (to_string result ~strip_root)
   | ServerProt.Response.REFACTOR (Error exn_msg) ->
     Utils_js.prerr_endlinef
       "Could not refactor for %s:%d:%d\n%s"

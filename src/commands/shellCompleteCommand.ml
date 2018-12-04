@@ -56,8 +56,7 @@ module Command(CommandList : COMMAND_LIST) = struct
           )
       | _ -> "ARGUMENT"
 
-  let main from current rest () =
-    FlowEventLogger.set_from from;
+  let main current rest () =
     let current = match current with Some x -> x | None -> 0 in
     let rest = match rest with Some x -> x | None -> [] in
     if current <= 1 then (

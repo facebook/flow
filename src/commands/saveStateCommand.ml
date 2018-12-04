@@ -31,7 +31,7 @@ let spec = {
   )
 }
 
-let main base_flags option_values root _from out () =
+let main base_flags option_values root out () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
 

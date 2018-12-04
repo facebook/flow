@@ -92,7 +92,7 @@ module CheckCommand = struct
 
   let main
       base_flags error_flags include_suppressed options_flags json pretty json_version
-      shm_flags ignore_version from path_opt
+      shm_flags ignore_version path_opt
       () =
 
     let flowconfig_name = base_flags.Base_flags.flowconfig_name in
@@ -116,7 +116,7 @@ module CheckCommand = struct
     end;
 
     (* initialize loggers before doing too much, especially anything that might exit *)
-    LoggingUtils.init_loggers ~from ~options ~min_level:Hh_logger.Level.Error ();
+    LoggingUtils.init_loggers ~options ~min_level:Hh_logger.Level.Error ();
 
     if not ignore_version then assert_version flowconfig;
 
@@ -173,7 +173,7 @@ module FocusCheckCommand = struct
 
   let main
       base_flags error_flags include_suppressed options_flags json pretty json_version
-      shm_flags ignore_version from root input_file filenames
+      shm_flags ignore_version root input_file filenames
       () =
 
     let filenames = get_filenames_from_input input_file filenames in
@@ -191,7 +191,7 @@ module FocusCheckCommand = struct
     in
 
     (* initialize loggers before doing too much, especially anything that might exit *)
-    LoggingUtils.init_loggers ~from ~options ();
+    LoggingUtils.init_loggers ~options ();
 
     (* do this after loggers are initialized, so we can complain properly *)
     let file_options = Options.file_options options in

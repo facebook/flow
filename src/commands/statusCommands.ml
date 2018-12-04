@@ -93,7 +93,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
   type args = {
     root: Path.t;
-    from: string;
     output_json: bool;
     output_json_version: Errors.Json_output.json_version option;
     pretty: bool;
@@ -142,9 +141,10 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
     | ServerProt.Response.ERRORS {errors; warnings} ->
       let error_flags = args.error_flags in
+      let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
       begin if args.output_json then
         print_json ~errors ~warnings ()
-      else if args.from = "vim" || args.from = "emacs" then
+      else if from = Some "vim" || from = Some "emacs" then
         Errors.Vim_emacs_output.print_errors ~strip_root
           stdout ~errors ~warnings ()
       else
@@ -170,9 +170,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-  let main base_flags connect_flags json pretty json_version error_flags strip_root from version
+  let main base_flags connect_flags json pretty json_version error_flags strip_root version
     root () =
-    FlowEventLogger.set_from from;
     if version then (
       prerr_endline "Warning: \
         `flow --version` is deprecated in favor of `flow version`";
@@ -187,7 +186,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
 
     let args = {
       root;
-      from = connect_flags.CommandUtils.from;
       output_json = json;
       output_json_version = json_version;
       pretty;

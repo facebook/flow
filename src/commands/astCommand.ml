@@ -63,8 +63,7 @@ end)
 
 module Token_translator = Token_translator.Translate (Json_of_estree)
 
-let main include_tokens pretty check debug file_type_opt use_strict from path filename () =
-  FlowEventLogger.set_from from;
+let main include_tokens pretty check debug file_type_opt use_strict path filename () =
   let use_relative_path = Option.value_map filename ~default:false ~f:Filename.is_relative in
   let file = get_file path filename in
   let content = File_input.content_of_file_input_unsafe file in

@@ -76,8 +76,7 @@ let handle_error err ~json ~pretty ~strip_root =
     prerr_endline err
   )
 
-let main base_flags option_values json pretty root strip_root from path filename () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root path filename () =
   let json = json || pretty in
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
     path filename in

@@ -40,9 +40,8 @@ let spec = {
   )
 }
 
-let main base_flags option_values json pretty json_version root error_flags strip_root verbose from
+let main base_flags option_values json pretty json_version root error_flags strip_root verbose
   respect_pragma all file () =
-  FlowEventLogger.set_from from;
   let file = get_file_from_filename_or_stdin file
     ~cmd:CommandSpec.(spec.name) None in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in

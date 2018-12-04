@@ -367,8 +367,7 @@ end
 module VeryUnstableProtocol = ProtocolFunctor(VeryUnstable)
 module HumanReadableProtocol = ProtocolFunctor(HumanReadable)
 
-let main base_flags option_values root from protocol strip_root json_version () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values root protocol strip_root json_version () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = CommandUtils.guess_root flowconfig_name root in
   let strip_root = if strip_root then Some root else None in

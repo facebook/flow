@@ -46,8 +46,7 @@ let error (errs:(int * string) list) =
   in
   FlowExitStatus.(exit ~msg Invalid_flowconfig)
 
-let main base_flags from flowconfig_flags options root () =
-  FlowEventLogger.set_from from;
+let main base_flags flowconfig_flags options root () =
   let root = match root with
   | None -> Sys.getcwd () |> Path.make
   | Some root -> Path.make root

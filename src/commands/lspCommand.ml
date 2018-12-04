@@ -1132,10 +1132,10 @@ module RagePrint = struct
   let string_of_connect_params (p: connect_params) : string =
     let open CommandUtils in
     Printf.sprintf (
-      "from=%s, retries=%d, retry_if_init=%B, no_auto_start=%B, autostop=%B, \
+      "retries=%d, retry_if_init=%B, no_auto_start=%B, autostop=%B, \
       ignore_version=%B quiet=%B, temp_dir=%s, \
       timeout=%s, lazy_mode=%s")
-    p.from p.retries p.retry_if_init p.no_auto_start p.autostop
+    p.retries p.retry_if_init p.no_auto_start p.autostop
     p.ignore_version p.quiet (Option.value ~default:"None" p.temp_dir)
     (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
     (Option.value_map p.lazy_mode
@@ -1356,11 +1356,9 @@ let rec main
     (shm_flags: CommandUtils.shared_mem_params)
     (lazy_mode: Options.lazy_mode option option)
     (autostop: bool)
-    (from: string option)
     ((): unit)
   : unit =
   let connect_params = {
-    from = Option.value from ~default:"";
     retries = 0;
     retry_if_init = false;
     timeout = None;

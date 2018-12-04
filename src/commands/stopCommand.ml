@@ -34,7 +34,7 @@ let spec = {
 
 exception FailedToKillNicely
 
-let main base_flags temp_dir from quiet root () =
+let main base_flags temp_dir quiet root () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
   let config = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
@@ -44,7 +44,6 @@ let main base_flags temp_dir from quiet root () =
   | None -> FlowConfig.temp_dir config
   in
   let tmp_dir = Path.to_string (Path.make tmp_dir) in
-  FlowEventLogger.set_from from;
   if not quiet then prerr_endlinef "Trying to connect to server for `%s`" (Path.to_string root);
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;

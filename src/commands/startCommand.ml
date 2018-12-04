@@ -41,7 +41,7 @@ let spec = { CommandSpec.
 
 let main
     base_flags options_flags json pretty server_log_file monitor_log_file wait lazy_mode
-    autostop shm_flags ignore_version from no_restart file_watcher file_watcher_debug path_opt () =
+    autostop shm_flags ignore_version no_restart file_watcher file_watcher_debug path_opt () =
 
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = CommandUtils.guess_root flowconfig_name path_opt in
@@ -54,7 +54,7 @@ let main
   let options = make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root options_flags in
 
   (* initialize loggers before doing too much, especially anything that might exit *)
-  LoggingUtils.init_loggers ~from ~options ();
+  LoggingUtils.init_loggers ~options ();
 
   if not ignore_version then assert_version flowconfig;
 

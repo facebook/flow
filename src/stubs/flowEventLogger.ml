@@ -38,7 +38,7 @@ type persistent_delay = {
   recheck_worst_cycle_size: int option;
 }
 
-let get_context _ = {
+let context = ref {
   argv = "";
   command = None;
   from = None;
@@ -46,9 +46,12 @@ let get_context _ = {
   root_name = None;
   start_time = 0.0;
 }
+
+let get_context () = !context
+let get_from_I_AM_A_CLOWN () = !context.from
 let restore_context _ = ()
 let set_command _ = ()
-let set_from _ = ()
+let set_from from = context := { !context with from; }
 let set_root _ = ()
 let set_root_name _ = ()
 let set_saved_state_filename _ = ()

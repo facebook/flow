@@ -157,8 +157,7 @@ let command =
     )
   }
   in
-  let main from (cmd, argv) () =
-    FlowEventLogger.set_from from;
+  let main (cmd, argv) () =
     CommandUtils.run_command cmd argv
   in
   CommandSpec.command spec main
