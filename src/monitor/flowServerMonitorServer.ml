@@ -472,6 +472,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Socket_error (* Failed to set up socket - only monitor should use this *)
       | Dfind_died (* Any file watcher died (it's misnamed) - only monitor should use this *)
       | Dfind_unresponsive (* Not used anymore *)
+      | Watchman_error (* We ran into an issue with Watchman - only monitor should use this *)
         -> (true, None)
 
       (**** Things the server might exit with which the monitor can survive ****)
@@ -599,8 +600,15 @@ module KeepAliveLoop = LwtLoop.Make (struct
     Lwt.return (monitor_options, restart_reason)
 
   let catch _ exn =
-    Logger.error ~exn "Exception in KeepAliveLoop";
-    raise exn
+    let e = Exception.wrap exn in
+    begin match exn with
+    | Watchman_lwt.Timeout ->
+      let msg = Printf.sprintf "Watchman timed out.\n%s" (Exception.to_string e) in
+      FlowExitStatus.(exit ~msg Watchman_error)
+    | _ ->
+      Logger.error ~exn "Exception in KeepAliveLoop";
+      Exception.reraise e
+    end
 end)
 
 let setup_signal_handlers =

@@ -274,11 +274,10 @@ end = struct
         Lwt.return env
       end
 
-    external reraise : exn -> 'a = "%reraise"
-
     let catch _ exn =
+      let e = Exception.wrap exn in
       Logger.error ~exn "Uncaught exception in Watchman listening loop";
-      reraise exn
+      Exception.reraise e
   end)
 
   class watchman (monitor_options: FlowServerMonitorOptions.t) : watcher =
@@ -305,7 +304,7 @@ end = struct
           (* Defer updates during `hg.update` *)
           Watchman_lwt.subscribe_mode = Some Watchman_lwt.Defer_changes;
           (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
-           * use 10 seconds *)
+           * use 10 seconds. *)
           init_timeout = 10;
           expression_terms = watchman_expression_terms;
           subscription_prefix = "flow_watcher";
