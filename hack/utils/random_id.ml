@@ -9,14 +9,9 @@
 
 let initialized = ref false
 
-let base64_alphabet =
-  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
-
+(* Do not use / in random ids as they appear in filenames. *)
 let alphanumeric_alphabet =
   "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
-
-let () =
-  assert (String.length base64_alphabet = 64)
 
 let short_string_with_alphabet alphabet =
   (* If we haven't seeded random then do it now *)
@@ -34,7 +29,4 @@ let short_string_with_alphabet alphabet =
   String.concat "" !cs
 
 let short_string () =
-  short_string_with_alphabet base64_alphabet
-
-let short_alphanumeric_string () =
   short_string_with_alphabet alphanumeric_alphabet
