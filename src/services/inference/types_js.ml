@@ -1655,9 +1655,9 @@ let query_watchman_for_changed_files ~options =
     let init_settings = {
       (* We're not setting up a subscription, we're just sending a single query *)
       Watchman_lwt.subscribe_mode = None;
-      (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
-       * use 10 seconds *)
-      init_timeout = 10;
+      (* Make this quite large. We don't need Watchman to timeout, we'll timeout outselves if
+       * need be *)
+      init_timeout = 10000;
       expression_terms = Watchman_expression_terms.make ~options;
       subscription_prefix = "flow_server_watcher";
       roots = Files.watched_paths (Options.file_options options);
@@ -1713,15 +1713,28 @@ let init ~profiling ~workers options =
       Lwt.return (updates, init_ret)
   in
 
+  let%lwt updates, files_to_focus =
+    let now = Unix.gettimeofday () in
+    (* If init took N seconds, let's give Watchman another max(15,N) seconds. *)
+    let timeout = max 15.0 (now -. start_time) in
+    let deadline = now +. timeout in
+    MonitorRPC.status_update ~event:(ServerStatus.Watchman_wait_start deadline);
+    let%lwt watchman_updates, files_to_focus =
+      try%lwt
+        Lwt_unix.with_timeout timeout @@ fun () -> get_watchman_updates ~libs
+      with Lwt_unix.Timeout ->
+        let msg = Printf.sprintf "Timed out after %ds waiting for Watchman."
+          (Unix.gettimeofday () -. start_time |> int_of_float)
+        in
+        FlowExitStatus.(exit ~msg Watchman_error)
+    in
+    Lwt.return (FilenameSet.union updates watchman_updates, files_to_focus)
+  in
+
   let init_time = Unix.gettimeofday () -. start_time in
 
   let%lwt last_estimates =
     Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal parsed)
-  in
-
-  let%lwt updates, files_to_focus =
-    let%lwt watchman_updates, files_to_focus = get_watchman_updates ~libs in
-    Lwt.return (FilenameSet.union updates watchman_updates, files_to_focus)
   in
 
   let env = { ServerEnv.
