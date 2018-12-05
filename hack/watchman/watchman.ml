@@ -742,16 +742,16 @@ struct
         let env, changes = transform_asynchronous_get_changes_response env (Some response) in
         env, Watchman_synchronous [changes]
 
-  let get_changes_since_mergebase env =
+  let get_changes_since_mergebase ?timeout env =
     Watchman_process.request
-      ~timeout:(float_of_int env.settings.init_timeout)
+      ?timeout
       ~debug_logging:env.settings.debug_logging
       (get_changes_since_mergebase_query env)
     >|= extract_file_names env
 
-  let get_mergebase env =
+  let get_mergebase ?timeout env =
     Watchman_process.request
-      ~timeout:(float_of_int env.settings.init_timeout)
+      ?timeout
       ~debug_logging:env.settings.debug_logging
       (get_changes_since_mergebase_query env)
     >|= fun response ->
@@ -933,9 +933,9 @@ module Watchman_mock = struct
     Mocking.all_files := [];
     result
 
-  let get_changes_since_mergebase _  = []
+  let get_changes_since_mergebase ?timeout:_ _  = []
 
-  let get_mergebase _ = "mergebase"
+  let get_mergebase ?timeout:_ _ = "mergebase"
 
   let close _ = ()
 

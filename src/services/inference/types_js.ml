@@ -1654,9 +1654,9 @@ let query_watchman_for_changed_files ~options =
     let init_settings = {
       (* We're not setting up a subscription, we're just sending a single query *)
       Watchman_lwt.subscribe_mode = None;
-      (* Make this quite large. We don't need Watchman to timeout, we'll timeout outselves if
-       * need be *)
-      init_timeout = 10000;
+      (* Hack makes this configurable in their local config. Apparently buck & hgwatchman also
+       * use 10 seconds. *)
+      init_timeout = 10;
       expression_terms = Watchman_expression_terms.make ~options;
       subscription_prefix = "flow_server_watcher";
       roots = Files.watched_paths (Options.file_options options);
@@ -1667,7 +1667,10 @@ let query_watchman_for_changed_files ~options =
     | None ->
       failwith "Failed to set up Watchman in order to get the changes since the mergebase"
     | Some watchman_env ->
-      let%lwt changed_files = Watchman_lwt.get_changes_since_mergebase watchman_env in
+      (* Huge timeout. We'll time this out ourselves after init if we need *)
+      let%lwt changed_files =
+        Watchman_lwt.get_changes_since_mergebase ~timeout:10000. watchman_env
+      in
       let%lwt () = Watchman_lwt.close watchman_env in
       Lwt.return (SSet.of_list changed_files)
     in
