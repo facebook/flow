@@ -73,6 +73,12 @@ let recheck
     ~dependent_files:_
     ~skipped_count:_
     ~profiling:_
+    ~estimated_time_to_recheck:_
+    ~estimated_time_to_restart:_
+    ~estimated_time_to_init:_
+    ~estimated_time_to_merge_a_file:_
+    ~estimated_files_to_merge:_
+    ~estimated_files_to_init:_
     ~scm_update_distance:_
     ~scm_changed_mergebase:_ = ()
 let murdered_by_oom_killer _ = ()
