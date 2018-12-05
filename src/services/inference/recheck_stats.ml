@@ -8,6 +8,15 @@
 let per_file_time_guess = 0.003
 let per_file_time_key = "per_file_time"
 
+type estimates = {
+  estimated_time_to_recheck: float;
+  estimated_time_to_restart: float;
+  estimated_time_to_init: float;
+  estimated_time_to_merge_a_file: float;
+  estimated_files_to_merge: int;
+  estimated_files_to_init: int;
+}
+
 type averages = {
   init_time: float;
   per_file_time: float;
