@@ -330,15 +330,14 @@ let pid_prefix (cx: t) =
   then Printf.sprintf "[%d] " (Unix.getpid ())
   else ""
 
+(* Create a shallow copy of this context, so that mutations to the sig_cx's
+ * fields will not affect the copy. *)
 let copy_of_context cx = {
   cx with
   sig_cx = {
     cx.sig_cx with
-    graph = IMap.map Constraint.copy_node cx.sig_cx.graph;
-    property_maps = cx.sig_cx.property_maps;
-    call_props = cx.sig_cx.call_props;
+    graph = cx.sig_cx.graph;
   };
-  type_table = Type_table.copy cx.type_table;
 }
 
 (* mutators *)

@@ -94,12 +94,3 @@ let new_bounds () = {
 
 let new_unresolved_root () =
   Root { rank = 0; constraints = Unresolved (new_bounds ()) }
-
-let copy_bounds = function
-  | { lower; upper; lowertvars; uppertvars; } ->
-    { lower; upper; lowertvars; uppertvars; }
-
-let copy_node node = match node with
-  | Root { rank; constraints = Unresolved bounds } ->
-    Root { rank; constraints = Unresolved (copy_bounds bounds) }
-  | _ -> node

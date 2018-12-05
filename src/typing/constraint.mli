@@ -31,5 +31,3 @@ and bounds = {
 }
 
 val new_unresolved_root: unit -> node
-
-val copy_node: node -> node
