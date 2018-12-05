@@ -133,18 +133,21 @@ References:
             ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:37:2
+Error ----------------------------------------------------------------------------------------------------- type.js:37:3
 
-Cannot cast object literal to `O4` because property `p` is missing in object literal [1] but exists in object type [2].
+Cannot cast object literal to `O4` because property `p` is missing in object type [1] but exists in object type [2].
 
-   type.js:37:2
-   37| ({}: O4); // error: property `p` not found
-        ^^ [1]
+   type.js:37:3
+   37| (({}:{}): O4); // error: property `p` not found
+         ^^^^^
 
 References:
    type.js:37:6
-   37| ({}: O4); // error: property `p` not found
-            ^^ [2]
+   37| (({}:{}): O4); // error: property `p` not found
+            ^^ [1]
+   type.js:37:11
+   37| (({}:{}): O4); // error: property `p` not found
+                 ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:39:2
@@ -212,18 +215,21 @@ References:
                    ^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------------- type.js:56:2
+Error ----------------------------------------------------------------------------------------------------- type.js:56:3
 
-Cannot cast object literal to `O6` because property `p` is missing in object literal [1] but exists in `O6` [2].
+Cannot cast object literal to `O6` because property `p` is missing in object type [1] but exists in `O6` [2].
 
-   type.js:56:2
-   56| ({}: O6); // error: property `p` not found
-        ^^ [1]
+   type.js:56:3
+   56| (({}:{}): O6); // error: property `p` not found
+         ^^^^^
 
 References:
    type.js:56:6
-   56| ({}: O6); // error: property `p` not found
-            ^^ [2]
+   56| (({}:{}): O6); // error: property `p` not found
+            ^^ [1]
+   type.js:56:11
+   56| (({}:{}): O6); // error: property `p` not found
+                 ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- type.js:57:2

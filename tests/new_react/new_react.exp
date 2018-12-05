@@ -500,54 +500,6 @@ References:
                                ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ propTypes.js:13:1
-
-Cannot create `C` element because property `label` is missing in object literal [1] but exists in object type [2] in
-array element of property `statistics`.
-
-   propTypes.js:13:1
-       v---------------
-   13| <C statistics={[
-   14|   {},
-   15|   {label:"",value:undefined},
-   16| ]}/>; // error (label is required, value not required)
-       ---^
-
-References:
-   propTypes.js:14:3
-   14|   {},
-         ^^ [1]
-   propTypes.js:6:35
-                                         v----------------
-    6|     statistics: PropTypes.arrayOf(PropTypes.shape({
-    7|       label: PropTypes.string.isRequired,
-    8|       value: PropTypes.number,
-    9|     })).isRequired,
-           -^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------- propTypes.js:18:53
-
-Cannot assign array literal to `props` because property `label` is missing in object literal [1] but exists in object
-type [2] in array element.
-
-   propTypes.js:18:53
-                                                           v
-   18| var props: Array<{label: string, value?: number}> = [
-   19|   {},
-   20|   {label:"",value:undefined},
-   21| ]; // error (same as ^)
-       ^
-
-References:
-   propTypes.js:19:3
-   19|   {},
-         ^^ [1]
-   propTypes.js:18:18
-   18| var props: Array<{label: string, value?: number}> = [
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error --------------------------------------------------------------------------------------------------- props.js:14:25
 
 Cannot assign `this.props.x` to `a` because:
@@ -949,7 +901,7 @@ References:
 
 
 
-Found 61 errors
+Found 59 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

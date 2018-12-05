@@ -9,4 +9,4 @@ x.defaultProps = {foo: 3};
 x.defaultProps = {foo: 3, bar: 3}; // Ok, default props still hold, but won't be reflected in
                                    // config calculation.
 
-x.defaultProps = {}; // error, missing foo.
+x.defaultProps = {bar: 3}; // error, missing foo.

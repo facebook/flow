@@ -399,8 +399,8 @@ Cannot cast object literal to `React.ElementConfig` because property `bar` is mi
 in object type [2].
 
    destructors.js:21:2
-   21| ({}: React$ElementConfig<typeof C>); // Error, bar missing
-        ^^ [1]
+   21| ({baz: 3}: React$ElementConfig<typeof C>); // Error, bar missing
+        ^^^^^^^^ [1]
 
 References:
    destructors.js:5:40
@@ -665,8 +665,8 @@ Cannot assign object literal to `x.defaultProps` because property `foo` is missi
 object type [2].
 
    rw_default_props.js:12:18
-   12| x.defaultProps = {}; // error, missing foo.
-                        ^^ [1]
+   12| x.defaultProps = {bar: 3}; // error, missing foo.
+                        ^^^^^^^^ [1]
 
 References:
    rw_default_props.js:3:55

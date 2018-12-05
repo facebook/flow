@@ -6833,6 +6833,17 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
           LookupT (ureason, NonstrictReturning (None, None), [], propref,
             LookupProp (use_op, up)))
       | _ ->
+        (* When an object type is unsealed, typing it as another object type should add properties
+           of that object type to it as needed. We do this when not speculating, because adding
+           properties changes state, and the state change is necessary to enforce
+           consistency.
+
+           TODO: adding properties to unsealed objects directly is done whether speculating or not,
+           and that should also be done when not speculating; during speculating, it should be a
+           deferred action. *)
+        if not (Obj_type.sealed_in_op ureason lflags.sealed) && not (Speculation.speculating ())
+        then Context.set_prop cx lflds s up
+        else
         (* otherwise, look up the property in the prototype *)
         let strict = match Obj_type.sealed_in_op ureason lflags.sealed, ldict with
         | false, None -> ShadowRead (Some lreason, Nel.one lflds)
@@ -6842,8 +6853,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         rec_flow cx trace (lproto,
           LookupT (ureason, strict, [], propref,
             LookupProp (use_op, up)))
-        (* TODO: instead, consider extending inflowing type with s:t2 when it
-           is not sealed *)
   );
 
   (* Any properties in l but not u must match indexer *)

@@ -1100,19 +1100,22 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- element_config.js:58:2
+Error ------------------------------------------------------------------------------------------- element_config.js:58:3
 
-Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object literal [1] but exists in
+Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object type [1] but exists in
 object type [2].
 
-   element_config.js:58:2
-   58| ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
-        ^^ [1]
+   element_config.js:58:3
+   58| (({}: {}): React.ElementConfig<typeof C>); // Error: missing property `p`
+         ^^^^^^
 
 References:
-   element_config.js:58:6
-   58| ({}: React.ElementConfig<typeof C>); // Error: missing property `p`
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   element_config.js:58:7
+   58| (({}: {}): React.ElementConfig<typeof C>); // Error: missing property `p`
+             ^^ [1]
+   element_config.js:58:12
+   58| (({}: {}): React.ElementConfig<typeof C>); // Error: missing property `p`
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- element_config.js:60:2
@@ -1132,19 +1135,22 @@ References:
                                             ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- element_config.js:62:2
+Error ------------------------------------------------------------------------------------------- element_config.js:62:3
 
-Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object literal [1] but exists in
+Cannot cast object literal to `React.ElementConfig` because property `p` is missing in object type [1] but exists in
 object type [2].
 
-   element_config.js:62:2
-   62| ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
-        ^^ [1]
+   element_config.js:62:3
+   62| (({}: {}): React.ElementConfig<typeof D>); // Error: missing property `p`
+         ^^^^^^
 
 References:
-   element_config.js:62:6
-   62| ({}: React.ElementConfig<typeof D>); // Error: missing property `p`
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   element_config.js:62:7
+   62| (({}: {}): React.ElementConfig<typeof D>); // Error: missing property `p`
+             ^^ [1]
+   element_config.js:62:12
+   62| (({}: {}): React.ElementConfig<typeof D>); // Error: missing property `p`
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- element_config.js:64:2

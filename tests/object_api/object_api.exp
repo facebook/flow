@@ -12,24 +12,6 @@ References:
                             ^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- object_assign.js:7:44
-
-Cannot assign `Object.assign(...)` to `decl_export_` because property `bar` is missing in object literal [1] but exists
-in object type [2].
-
-   object_assign.js:7:44
-   7| var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   object_assign.js:7:58
-   7| var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                                                               ^^ [1]
-   object_assign.js:7:19
-   7| var decl_export_: { foo: any; bar: any } = Object.assign({}, export_);
-                        ^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error -------------------------------------------------------------------------------------------- object_create.js:12:2
 
 Cannot cast object literal to `C` because object literal [1] is incompatible with `C` [2].
@@ -588,4 +570,4 @@ References:
 
 
 
-Found 39 errors
+Found 38 errors

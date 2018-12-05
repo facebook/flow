@@ -56,20 +56,23 @@ References:
               ^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------- identity.js:29:2
+Error ------------------------------------------------------------------------------------------------- identity.js:29:3
 
 Cannot cast object literal to `Foo` because:
- - property `a` is missing in object literal [1] but exists in object type [2].
- - property `b` is missing in object literal [1] but exists in object type [2].
+ - property `a` is missing in object type [1] but exists in object type [2].
+ - property `b` is missing in object type [1] but exists in object type [2].
 
-   identity.js:29:2
-   29| ({}: Foo); // Error: `a` and `b` are not defined.
-        ^^ [1]
+   identity.js:29:3
+   29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+         ^^^^^^
 
 References:
-   identity.js:29:6
-   29| ({}: Foo); // Error: `a` and `b` are not defined.
-            ^^^ [2]
+   identity.js:29:7
+   29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+             ^^ [1]
+   identity.js:29:12
+   29| (({}: {}): Foo); // Error: `a` and `b` are not defined.
+                  ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- identity.js:31:3

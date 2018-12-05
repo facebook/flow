@@ -18,4 +18,4 @@ const _b = <C baz={3} />; // Error, bar missing
 ({foo: 3, bar: 3}: React$ElementConfig<typeof C>);
 ({bar: 3}: React$ElementConfig<typeof C>);
 ({foo: 3, bar: 3, baz: 3}: React$ElementConfig<typeof C>);
-({}: React$ElementConfig<typeof C>); // Error, bar missing
+({baz: 3}: React$ElementConfig<typeof C>); // Error, bar missing
