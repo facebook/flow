@@ -11,7 +11,7 @@ val init:
   profiling:Profiling_js.running ->
   workers:MultiWorkerLwt.worker list option ->
   Options.t ->
-  (bool (* libs_ok *) * ServerEnv.env) Lwt.t
+  (bool (* libs_ok *) * ServerEnv.env * Recheck_stats.estimates option) Lwt.t
 
 val calc_deps:
   options:Options.t ->

@@ -492,10 +492,11 @@ let merge
       else Lwt.return_unit
     in
 
-    Recheck_stats.record_merge_time
+    let%lwt () = Recheck_stats.record_merge_time
       ~options
       ~total_time:(Unix.gettimeofday () -. merge_start_time)
       ~merged_files:(CheckedSet.cardinal to_merge);
+    in
 
     Hh_logger.info "Done";
     Lwt.return (merge_errors, suppressions, severity_cover_set, skipped_count)
@@ -798,6 +799,11 @@ let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
   match Options.lazy_mode options with
+  | None
+  | Some Options.LAZY_MODE_FILESYSTEM
+  | Some Options.LAZY_MODE_IDE ->
+    (* Only watchman mode might restart *)
+    Lwt.return_none
   | Some Options.LAZY_MODE_WATCHMAN ->
     let { MonitorProt.total_update_distance; changed_mergebase; } = file_watcher_metadata in
     Hh_logger.info "File watcher moved %d revisions and %s mergebase"
@@ -850,17 +856,17 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
       Hh_logger.info "Estimating a recheck would take %.2fs and a restart would take %.2fs"
         time_to_recheck
         time_to_restart;
-      if time_to_restart < time_to_recheck
-      then FlowExitStatus.(exit ~msg:"Restarting after a rebase to save time" Restart);
+      let%lwt () =
+        if time_to_restart < time_to_recheck
+        then
+          let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
+          FlowExitStatus.(exit ~msg:"Restarting after a rebase to save time" Restart)
+        else Lwt.return_unit
+      in
 
-      Some estimates
+      Lwt.return (Some estimates)
     end else
-      None
-  | None
-  | Some Options.LAZY_MODE_FILESYSTEM
-  | Some Options.LAZY_MODE_IDE ->
-    (* Only watchman mode might restart *)
-    None
+      Lwt.return_none
 
 (* We maintain the following invariant across rechecks: The set of
    `files` contains files that parsed successfully in the previous
@@ -1234,7 +1240,9 @@ let recheck_with_profiling
       ~direct_dependent_files
   in
 
-  let estimates = restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata in
+  let%lwt estimates =
+    restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata
+  in
 
   let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
 
@@ -1706,7 +1714,9 @@ let init ~profiling ~workers options =
 
   let init_time = Unix.gettimeofday () -. start_time in
 
-  let%lwt () = Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal parsed) in
+  let%lwt last_estimates =
+    Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal parsed)
+  in
 
   let%lwt updates, files_to_focus =
     let%lwt watchman_updates, files_to_focus = get_watchman_updates ~libs in
@@ -1727,7 +1737,7 @@ let init ~profiling ~workers options =
 
   (* Don't recheck if the libs are not ok *)
   if (FilenameSet.is_empty updates && FilenameSet.is_empty files_to_focus) || not libs_ok
-  then Lwt.return (libs_ok, env)
+  then Lwt.return (libs_ok, env, last_estimates)
   else begin
     let%lwt recheck_profiling, _summary, env =
       recheck
@@ -1739,7 +1749,7 @@ let init ~profiling ~workers options =
         ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
     in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
-    Lwt.return (true, env)
+    Lwt.return (true, env, last_estimates)
   end
 
 let full_check ~profiling ~options ~workers ~focus_targets env =
