@@ -174,7 +174,9 @@ end = struct
         ~try_to_restart:true
         ~on_alive:(fun watchman_env ->
           env.instance <- Watchman_lwt.Watchman_alive watchman_env;
-          let%lwt mergebase = Watchman_lwt.get_mergebase watchman_env in
+          (* scm queries can be a little slow, but they should usually be only a few seconds.
+           * Lets set our worst case to 30s before we exit *)
+          let%lwt mergebase = Watchman_lwt.get_mergebase ~timeout:30. watchman_env in
           Lwt.return (Some mergebase)
         )
         ~on_dead:(fun dead_env ->

@@ -121,9 +121,9 @@ module type S = sig
 
   val get_all_files: env -> string list result
 
-  val get_changes_since_mergebase: env -> string list result
+  val get_changes_since_mergebase: ?timeout:float -> env -> string list result
 
-  val get_mergebase: env -> string result
+  val get_mergebase: ?timeout:float -> env -> string result
 
   val get_changes: ?deadline:float ->
     watchman_instance -> (watchman_instance * changes) result
