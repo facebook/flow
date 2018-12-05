@@ -43,6 +43,7 @@ type event =
 | Handling_request_start (* The server is starting to handle an ephemeral/persistent request *)
 | GC_start (* The server is starting to GC *)
 | Collating_errors_start (* The server is collating the errors *)
+| Watchman_wait_start of (* deadline *) float (* The server is now blocked waiting for Watchman *)
 
 type typecheck_status =
 | Starting_typecheck (* A typecheck's initial state *)
@@ -56,6 +57,7 @@ type typecheck_status =
 | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
 | Collating_errors (* We sometimes collate errors during typecheck *)
 | Finishing_typecheck of summary (* haven't reached free state yet *)
+| Waiting_for_watchman of (* deadline *) float
 
 type restart_reason =
 | Server_out_of_date
@@ -85,6 +87,7 @@ type emoji =
 | Bicyclist
 | Closed_book
 | Cookie
+| Eyes
 | File_cabinet
 | Ghost
 | Open_book
@@ -99,6 +102,7 @@ let string_of_emoji = function
 | Bicyclist -> "\xF0\x9F\x9A\xB4"
 | Closed_book -> "\xF0\x9F\x93\x95"
 | Cookie -> "\xF0\x9F\x8D\xAA"
+| Eyes -> "\xF0\x9F\x91\x80"
 | File_cabinet -> "\xF0\x9F\x97\x84"
 | Ghost -> "\xF0\x9F\x91\xBB"
 | Open_book -> "\xF0\x9F\x93\x96"
@@ -141,6 +145,7 @@ let string_of_event = function
 | Handling_request_start -> "Handling_request_start"
 | GC_start -> "GC_start"
 | Collating_errors_start -> "Collating_errors_start"
+| Watchman_wait_start deadline -> spf "Watchman_wait_start %f" deadline
 
 let string_of_typecheck_status ~use_emoji = function
 | Starting_typecheck ->
@@ -164,6 +169,10 @@ let string_of_typecheck_status ~use_emoji = function
   spf "%sgarbage collecting shared memory" (render_emoji ~use_emoji Wastebasket)
 | Collating_errors ->
   spf "%scollating errors" (render_emoji ~use_emoji File_cabinet)
+| Waiting_for_watchman deadline ->
+  spf "%swaiting for Watchman - giving up in %d seconds"
+    (render_emoji ~use_emoji Eyes)
+    (max 0 (int_of_float @@ (deadline -. (Unix.gettimeofday ()))))
 | Finishing_typecheck _ ->
   spf "%sfinishing up" (render_emoji ~use_emoji Cookie)
 
@@ -215,6 +224,8 @@ let update ~event ~status =
   | Canceling_progress progress, Typechecking (mode, _) -> Typechecking (mode, Canceling progress)
   | GC_start, Typechecking (mode, _) -> Typechecking (mode, Garbage_collecting_typecheck)
   | Collating_errors_start, Typechecking (mode, _) -> Typechecking (mode, Collating_errors)
+  | Watchman_wait_start deadline, Typechecking (mode, _) ->
+      Typechecking (mode, Waiting_for_watchman deadline)
   | Finishing_up summary, Typechecking (mode, _) -> Typechecking (mode, Finishing_typecheck summary)
 
   | GC_start, _ -> Garbage_collecting
@@ -259,6 +270,7 @@ let is_significant_transition old_status new_status =
     | _, Merging _
     | _, Canceling _
     | _, Garbage_collecting_typecheck
+    | _, Waiting_for_watchman _
     | _, Collating_errors
     | _, Finishing_typecheck _ -> true
     end

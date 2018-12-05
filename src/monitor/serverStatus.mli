@@ -36,6 +36,7 @@ type event =
 | Handling_request_start
 | GC_start
 | Collating_errors_start
+| Watchman_wait_start of float
 
 type status
 

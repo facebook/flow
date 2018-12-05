@@ -463,6 +463,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Invalid_saved_state (* The saved state file won't automatically recover by restarting *)
       | Unused_server (* The server appears unused for long enough that it decided to just die *)
       | Unknown_error (* Uncaught exn. We probably could survive this, but it's a little risky *)
+      | Watchman_error (* We ran into an issue with Watchman *)
 
       (**** Things that the server shouldn't use, but would imply that the monitor should exit ****)
 
@@ -472,7 +473,6 @@ module KeepAliveLoop = LwtLoop.Make (struct
       | Socket_error (* Failed to set up socket - only monitor should use this *)
       | Dfind_died (* Any file watcher died (it's misnamed) - only monitor should use this *)
       | Dfind_unresponsive (* Not used anymore *)
-      | Watchman_error (* We ran into an issue with Watchman - only monitor should use this *)
         -> (true, None)
 
       (**** Things the server might exit with which the monitor can survive ****)
