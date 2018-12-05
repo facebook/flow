@@ -42,7 +42,7 @@ let init ~profiling ~focus_targets genv =
 
   MonitorRPC.status_update ~event:ServerStatus.Init_start;
 
-  let%lwt libs_ok, env = Types_js.init ~profiling ~workers options in
+  let%lwt libs_ok, env, last_estimates = Types_js.init ~profiling ~workers options in
 
   (* If any libs errored, skip typechecking and just show lib errors. Note
    * that `init` above has done all parsing, not just lib parsing, resolved
@@ -63,7 +63,7 @@ let init ~profiling ~focus_targets genv =
   (* Return an env that initializes invariants required and maintained by
      recheck, namely that `files` contains files that parsed successfully, and
      `errors` contains the current set of errors. *)
-  Lwt.return env
+  Lwt.return (env, last_estimates)
 
 let rec run_workload genv env workload =
   let on_cancel () =
@@ -131,7 +131,7 @@ let run ~monitor_channels ~shared_mem_config options =
       Hh_logger.info "Initializing Server (This might take some time)";
 
       let should_print_summary = Options.should_profile options in
-      let%lwt profiling, env = Profiling_js.with_profiling_lwt program_init
+      let%lwt profiling, (env, last_estimates) = Profiling_js.with_profiling_lwt program_init
         ~label:"Init" ~should_print_summary
       in
 
@@ -140,7 +140,26 @@ let run ~monitor_channels ~shared_mem_config options =
         info = InitSummary}) in
       MonitorRPC.status_update ~event;
 
-      FlowEventLogger.init_done ~profiling;
+      begin match last_estimates with
+      | None ->
+        FlowEventLogger.init_done profiling
+      | Some { Recheck_stats.
+          estimated_time_to_recheck;
+          estimated_time_to_restart;
+          estimated_time_to_init;
+          estimated_time_to_merge_a_file;
+          estimated_files_to_merge;
+          estimated_files_to_init;
+        } ->
+          FlowEventLogger.init_done
+            ~estimated_time_to_recheck
+            ~estimated_time_to_restart
+            ~estimated_time_to_init
+            ~estimated_time_to_merge_a_file
+            ~estimated_files_to_merge
+            ~estimated_files_to_init
+            profiling
+      end;
 
       Hh_logger.info "Server is READY";
 
@@ -184,7 +203,7 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
     let should_print_summary = Options.should_profile options in
     let%lwt profiling, (print_errors, errors, warnings) =
       Profiling_js.with_profiling_lwt ~label:"Init" ~should_print_summary (fun profiling ->
-        let%lwt env = program_init profiling in
+        let%lwt env, _ = program_init profiling in
         let%lwt ((errors, warnings, _) as collated_errors) =
           Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling
             ~f:(fun () -> Lwt.return (ErrorCollator.get env))
@@ -204,7 +223,7 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
       info = InitSummary}) in
     MonitorRPC.status_update ~event;
 
-    FlowEventLogger.init_done ~profiling;
+    FlowEventLogger.init_done profiling;
 
     Lwt.return (errors, warnings)
   in

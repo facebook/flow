@@ -59,7 +59,14 @@ let set_monitor_options ~file_watcher:_  = ()
 let set_server_options ~lazy_mode:_ = ()
 
 let status_response ~num_errors:_ = ()
-let init_done ~profiling:_ = ()
+let init_done
+  ?estimated_time_to_recheck:_
+  ?estimated_time_to_restart:_
+  ?estimated_time_to_init:_
+  ?estimated_time_to_merge_a_file:_
+  ?estimated_files_to_merge:_
+  ?estimated_files_to_init:_
+  _profiling = ()
 let init_flow_command ~version:_ = ()
 let killed _ = ()
 let lock_lost _ = ()
