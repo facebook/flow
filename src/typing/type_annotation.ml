@@ -302,9 +302,10 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
 
+  (* These utilities are no longer supported *)
   (* $Supertype<T> acts as any over supertypes of T *)
   | "$Supertype" ->
-    add_unclear_type_error_if_not_lib_file cx loc;
+    FlowError.EDeprecatedUtility (loc, name) |> Flow_js.add_output cx;
     check_type_arg_arity cx loc targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
@@ -313,7 +314,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   (* $Subtype<T> acts as any over subtypes of T *)
   | "$Subtype" ->
-    add_unclear_type_error_if_not_lib_file cx loc;
+    FlowError.EDeprecatedUtility (loc, name) |> Flow_js.add_output cx;
     check_type_arg_arity cx loc targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in

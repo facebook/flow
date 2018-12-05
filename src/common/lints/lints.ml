@@ -22,6 +22,7 @@ type lint_kind =
   | NonstrictImport
   | UnclearType
   | DeprecatedType
+  | DeprecatedUtility
   | UnsafeGettersSetters
   | InexactSpread
   | UnnecessaryOptionalChain
@@ -46,6 +47,7 @@ let string_of_kind = function
   | NonstrictImport -> "nonstrict-import"
   | UnclearType -> "unclear-type"
   | DeprecatedType -> "deprecated-type"
+  | DeprecatedUtility -> "deprecated-utility"
   | UnsafeGettersSetters -> "unsafe-getters-setters"
   | InexactSpread -> "inexact-spread"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
@@ -73,6 +75,7 @@ let kinds_of_string = function
   | "untyped-import" -> Some [UntypedImport]
   | "unclear-type" -> Some [UnclearType]
   | "deprecated-type" -> Some [DeprecatedType]
+  | "deprecated-utility" -> Some [DeprecatedUtility]
   | "unsafe-getters-setters" -> Some [UnsafeGettersSetters]
   | "inexact-spread" -> Some [InexactSpread]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]

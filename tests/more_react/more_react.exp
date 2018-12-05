@@ -61,7 +61,7 @@ References:
    <BUILTINS>/react.js:219:41
                                                 v---
    219|   declare export function checkPropTypes<V>(
-   220|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+   220|     propTypes : any,
    221|     values: V,
    222|     location: string,
    223|     componentName: string,
@@ -82,22 +82,13 @@ References:
    <BUILTINS>/react.js:219:41
                                                 v---
    219|   declare export function checkPropTypes<V>(
-   220|     propTypes: $Subtype<{[_: $Keys<V>]: ReactPropsCheckType}>,
+   220|     propTypes : any,
    221|     values: V,
    222|     location: string,
    223|     componentName: string,
    224|     getStack: ?(() => ?string)
    225|   ) : void;
           -------^ [1]
-
-
-Error ------------------------------------------------------------------------------------------ checkPropTypes.js:10:43
-
-Cannot call `checkPropTypes` with object literal bound to `values` because property `bar` is missing in object
-literal [1].
-
-   10| checkPropTypes({ bar: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent'); // error: property not found
-                                                 ^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ checkPropTypes.js:12:85
@@ -139,4 +130,4 @@ References:
 
 
 
-Found 9 errors
+Found 8 errors

@@ -1,7 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- index.js:3:10
 
-Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype<...>` types is not safe!
-(`unclear-type`)
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
    3| const a: any = 5;
                ^^^
@@ -9,8 +8,7 @@ Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype
 
 Error ---------------------------------------------------------------------------------------------------- index.js:7:10
 
-Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype<...>` types is not safe!
-(`unclear-type`)
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
    7| const c: Object = {a: 5};
                ^^^^^^
@@ -18,8 +16,7 @@ Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype
 
 Error ---------------------------------------------------------------------------------------------------- index.js:9:10
 
-Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype<...>` types is not safe!
-(`unclear-type`)
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
    9| const d: Function = () => 0;
                ^^^^^^^^
@@ -27,8 +24,7 @@ Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype
 
 Error --------------------------------------------------------------------------------------------------- index.js:11:16
 
-Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype<...>` types is not safe!
-(`unclear-type`)
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
    11| const e: () => any = () => 0;
                       ^^^
@@ -36,8 +32,7 @@ Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype
 
 Error --------------------------------------------------------------------------------------------------- index.js:13:11
 
-Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype<...>` types is not safe!
-(`unclear-type`)
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
    13| const f: (Object) => Function = ({}) => function() {};
                  ^^^^^^
@@ -45,8 +40,7 @@ Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype
 
 Error --------------------------------------------------------------------------------------------------- index.js:13:22
 
-Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype<...>` types is not safe!
-(`unclear-type`)
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
    13| const f: (Object) => Function = ({}) => function() {};
                             ^^^^^^^^
@@ -54,8 +48,7 @@ Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype
 
 Error --------------------------------------------------------------------------------------------------- index.js:15:15
 
-Unclear type. Using `any`, `Object`, `Function`, `$Subtype<...>`, or `$Supertype<...>` types is not safe!
-(`unclear-type`)
+Unclear type. Using `any`, `Object`, or `Function` types is not safe! (`unclear-type`)
 
    15| type f2 = <T: Object>(x: T) => T;
                      ^^^^^^

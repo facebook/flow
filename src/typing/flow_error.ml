@@ -152,6 +152,7 @@ type error_message =
   | ENonstrictImport of ALoc.t
   | EUnclearType of ALoc.t
   | EDeprecatedType of ALoc.t
+  | EDeprecatedUtility of ALoc.t * string
   | EUnsafeGettersSetters of ALoc.t
   | EUnusedSuppression of ALoc.t
   | ELintSetting of LintSettings.lint_parse_error
@@ -384,7 +385,8 @@ let util_use_op_of_msg nope util = function
 | EUntypedImport (_, _)
 | ENonstrictImport (_)
 | EUnclearType (_)
-| EDeprecatedType (_)
+| EDeprecatedType _
+| EDeprecatedUtility _
 | EUnsafeGettersSetters (_)
 | EUnusedSuppression (_)
 | ELintSetting (_)
@@ -2072,13 +2074,18 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | EUnclearType loc ->
     mk_error ~trace_infos ~kind:(LintError Lints.UnclearType) loc [
       text "Unclear type. Using "; code "any"; text ", ";
-      code "Object"; text ", "; code "Function"; text ", ";
-      code "$Subtype<...>"; text ", or "; code "$Supertype<...>"; text " types is not safe!"
+      code "Object"; text ", or "; code "Function";
+      text " types is not safe!"
     ]
 
   | EDeprecatedType loc ->
     mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedType) loc [
       text "Deprecated type. Using "; code "*"; text " types is not recommended!"
+    ]
+
+  | EDeprecatedUtility (loc, name) ->
+    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedUtility) loc [
+      text "Deprecated utility. Using "; code name; text " types is not recommended!"
     ]
 
   | EUnsafeGettersSetters loc ->
@@ -2187,6 +2194,7 @@ let is_lint_error = function
   | ENonstrictImport _
   | EUnclearType _
   | EDeprecatedType _
+  | EDeprecatedUtility _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _

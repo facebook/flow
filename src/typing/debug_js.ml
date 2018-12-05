@@ -2773,6 +2773,8 @@ let dump_flow_error =
       spf "ENonstrictImport (%s)" (string_of_aloc loc)
     | EUnclearType loc ->
       spf "EUnclearType (%s)" (string_of_aloc loc)
+    | EDeprecatedUtility (loc, name) ->
+      spf "EDeprecatedUtility (%s, %s)" (string_of_aloc loc) name
     | EDeprecatedType loc ->
       spf "EDeprecatedType (%s)" (string_of_aloc loc)
     | EUnsafeGettersSetters loc ->
