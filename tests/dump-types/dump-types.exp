@@ -195,7 +195,7 @@
     "end":10
   },
   {
-    "type":"(val: ?(string | any)) => (string | void | any)",
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -210,7 +210,7 @@
     "end":21
   },
   {
-    "type":"?string | any",
+    "type":"?any | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -225,7 +225,7 @@
     "end":27
   },
   {
-    "type":"(val: ?(string | any)) => (string | void | any)",
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -240,7 +240,7 @@
     "end":61
   },
   {
-    "type":"?string | any",
+    "type":"?any | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -255,7 +255,7 @@
     "end":34
   },
   {
-    "type":"string | void | any",
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -300,7 +300,7 @@
     "end":55
   },
   {
-    "type":"string | void | any",
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -315,7 +315,7 @@
     "end":61
   },
   {
-    "type":"(x: ?any) => (string | void | any)",
+    "type":"(x: ?any) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -345,7 +345,7 @@
     "end":22
   },
   {
-    "type":"(val: ?(string | any)) => (string | void | any)",
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -360,7 +360,7 @@
     "end":48
   },
   {
-    "type":"string | void | any",
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -390,7 +390,7 @@
     "end":50
   },
   {
-    "type":"(x: ?any) => (string | void | any)",
+    "type":"(x: ?any) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -420,7 +420,7 @@
     "end":22
   },
   {
-    "type":"(val: ?(string | any)) => (string | void | any)",
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -435,7 +435,7 @@
     "end":48
   },
   {
-    "type":"string | void | any",
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -465,7 +465,7 @@
     "end":50
   },
   {
-    "type":"(x: ?string) => (string | void | any)",
+    "type":"(x: ?string) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -495,7 +495,7 @@
     "end":22
   },
   {
-    "type":"(val: ?(string | any)) => (string | void | any)",
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -510,7 +510,7 @@
     "end":48
   },
   {
-    "type":"string | void | any",
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -540,7 +540,7 @@
     "end":50
   },
   {
-    "type":"(x: ?string) => (string | void | any)",
+    "type":"(x: ?string) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -570,7 +570,7 @@
     "end":22
   },
   {
-    "type":"(val: ?(string | any)) => (string | void | any)",
+    "type":"(val: ?(any | string)) => (any | void | string)",
     "reasons":[],
     "loc":{
       "source":"test.js",
@@ -585,7 +585,7 @@
     "end":48
   },
   {
-    "type":"string | void | any",
+    "type":"any | void | string",
     "reasons":[],
     "loc":{
       "source":"test.js",

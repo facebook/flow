@@ -138,26 +138,22 @@ let simplify_unions_inters =
   in
   let o = object (self)
     inherit [_] endo_ty as super
-    method private simplify env ~break ~zero ~one ~make ts =
-      let ts' = self#on_list self#on_t env ts in
-      let ts' = List.concat (Core_list.map ~f:break ts') in
-      let ts' = List.sort Pervasives.compare ts' in
-      let ts' = ListUtils.uniq ts' in
-      let ts' = simplify_zero_one ~zero ~one ts' in
-      if List.length ts = List.length ts'
-      then None (* no change *)
-      else Some (make ts')
+    method private simplify env ~break ~zero ~one ~make ~default ts0 =
+      let ts1 = self#on_list self#on_t env ts0 in
+      let ts2 = ts1 |> Core_list.map ~f:break |> Core_list.concat in
+      let ts2 = if List.length ts1 <> List.length ts2 then ts2 else ts1 in
+      let ts3 = ts2 |> simplify_zero_one ~zero ~one |> Core_list.dedup in
+      let ts3 = if List.length ts2 <> List.length ts3 then ts3 else ts2 in
+      if ts0 == ts3 then default else make ts3
 
     method! on_t env t =
       match t with
       | Union (t0,t1,ts) ->
-        let opt = self#simplify ~break:Ty.bk_union ~zero:Ty.Top
-          ~one:Ty.Bot ~make:Ty.mk_union env (t0::t1::ts) in
-        Option.value ~default:t opt
+        self#simplify ~break:Ty.bk_union ~zero:Ty.Top
+          ~one:Ty.Bot ~make:Ty.mk_union ~default:t env (t0::t1::ts)
       | Inter (t0,t1,ts) ->
-        let opt = self#simplify ~break:Ty.bk_inter ~zero:Ty.Bot
-          ~one:Ty.Top ~make:Ty.mk_inter env (t0::t1::ts) in
-        Option.value ~default:t opt
+        self#simplify ~break:Ty.bk_inter ~zero:Ty.Bot
+          ~one:Ty.Top ~make:Ty.mk_inter ~default:t env (t0::t1::ts)
       | _ ->
         super#on_t env t
   end in

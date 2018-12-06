@@ -329,7 +329,7 @@ literals.js:9:7 = {
   "end":7
 }
 literals.js:10:7 = {
-  "type":"boolean | string | number",
+  "type":"number | string | boolean",
   "reasons":[],
   "loc":{
     "source":"literals.js",

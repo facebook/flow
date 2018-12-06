@@ -260,7 +260,7 @@ class D {
   declare var x: {...C} & {...D};
   return x;
 };
-<T: {}, S: {f: O}>(): {f?: mixed, o: O} | S | T => {
+<T: {}, S: {f: O}>(): T | S | {f?: mixed, o: O} => {
   declare var x: {...T, ...S, o: O};
   return x;
 };
@@ -302,7 +302,7 @@ declare var class_of_C_number: Class<C<number>>;
 
 union-0.js
 // @flow
-function foo(x: (() => void) | string | number | void): void {}
+function foo(x: void | number | string | (() => void)): void {}
 
 foo(1);
 foo("1");

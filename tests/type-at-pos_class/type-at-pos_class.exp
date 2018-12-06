@@ -569,7 +569,7 @@ class-statics.js:20:11 = {
   "end":11
 }
 class-statics-poly.js:4:10 = {
-  "type":"() => (Class<B<empty>> | Class<B<mixed>> | void)",
+  "type":"() => (void | Class<B<mixed>> | Class<B<empty>>)",
   "reasons":[],
   "loc":{
     "source":"class-statics-poly.js",
