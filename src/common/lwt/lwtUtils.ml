@@ -34,3 +34,14 @@ let all threads =
   threads
   |> Core_list.map ~f:get_value_unsafe
   |> Lwt.return
+
+let output_graph out strip_root graph =
+  let%lwt () = Lwt_io.fprint out "digraph {\n" in
+  let%lwt () = Lwt_list.iter_s (fun (f, dep_fs) ->
+    Lwt_list.iter_s (fun dep_f ->
+      Lwt_io.fprintf out "  \"%s\" -> \"%s\"\n"
+        (strip_root f)
+        (strip_root dep_f)
+    ) dep_fs
+  ) graph in
+  Lwt_io.fprint out "}"

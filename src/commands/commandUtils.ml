@@ -1240,7 +1240,6 @@ let get_check_or_status_exit_code errors warnings max_warnings =
   end else
     Type_error
 
-
 let choose_file_watcher ~options ~file_watcher ~flowconfig =
   match Options.lazy_mode options, file_watcher with
   | Some Options.LAZY_MODE_WATCHMAN, (None | Some Options.Watchman) ->

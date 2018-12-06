@@ -42,18 +42,10 @@ let main base_flags option_values root strip_root file () =
   let request = ServerProt.Request.CYCLE file in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CYCLE (Error msg) ->
-    prerr_endline msg
+    FlowExitStatus.(exit ~msg Unknown_error)
   | ServerProt.Response.CYCLE (Ok dep_graph) ->
     (* print .dot file to stdout *)
-    print_endline "digraph {";
-    List.iter (fun (f, dep_fs) ->
-      List.iter (fun dep_f ->
-        print_endlinef "  \"%s\" -> \"%s\""
-          (strip_root f)
-          (strip_root dep_f)
-      ) dep_fs
-    ) dep_graph;
-    print_endline "}"
+    LwtUtils.output_graph Lwt_io.stdout strip_root dep_graph |> Lwt_main.run
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

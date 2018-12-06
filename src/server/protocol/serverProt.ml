@@ -18,6 +18,7 @@ module Request = struct
       bool (* include_warnings *)
   | COVERAGE of File_input.t * bool (* force *)
   | CYCLE of string
+  | GRAPH_DEP_GRAPH of string (* root *) * bool (* strip root *) * string (* outfile *)
   | DUMP_TYPES of File_input.t
   | FIND_MODULE of string * string
   | FIND_REFS of File_input.t * int * int * bool * bool (* filename, line, char, global, multi_hop *)
@@ -48,6 +49,8 @@ module Request = struct
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input fn)
   | CYCLE fn ->
       Printf.sprintf "cycle %s" fn
+  | GRAPH_DEP_GRAPH _ ->
+      Printf.sprintf "dep-graph"
   | DUMP_TYPES (fn) ->
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input fn)
   | FIND_MODULE (moduleref, filename) ->
@@ -154,8 +157,8 @@ module Response = struct
     string
   ) result
 
-  type cycle_response = (cycle_response_subgraph, string) result
-  and cycle_response_subgraph = (string * string list) list
+  type graph_response = (graph_response_subgraph, string) result
+  and graph_response_subgraph = (string * string list) list
 
   type gen_flow_files_error =
     | GenFlowFiles_TypecheckError of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
@@ -191,7 +194,8 @@ module Response = struct
   | AUTOCOMPLETE of autocomplete_response
   | CHECK_FILE of check_file_response
   | COVERAGE of coverage_response
-  | CYCLE of cycle_response
+  | CYCLE of graph_response
+  | GRAPH_DEP_GRAPH of (unit, string) result
   | DUMP_TYPES of dump_types_response
   | FIND_MODULE of find_module_response
   | FIND_REFS of find_refs_response
@@ -210,6 +214,7 @@ module Response = struct
   | CHECK_FILE _ -> "check_file response"
   | COVERAGE _ -> "coverage response"
   | CYCLE _ -> "cycle reponse"
+  | GRAPH_DEP_GRAPH _ -> "dep-graph response"
   | DUMP_TYPES _ -> "dump_types response"
   | FIND_MODULE _ -> "find_module response"
   | FIND_REFS _ -> "find_refs response"

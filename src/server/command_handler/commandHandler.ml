@@ -134,37 +134,46 @@ let coverage ~options ~workers ~env ~profiling ~force file_input =
       Type_info_service.coverage ~options ~workers ~env ~profiling ~force file content
     end
 
+let serialize_graph graph =
+  (* Convert from map/set to lists for serialization to client. *)
+  FilenameMap.fold (fun f dep_fs acc ->
+    let f = File_key.to_string f in
+    let dep_fs = FilenameSet.fold (fun dep_f acc ->
+      (File_key.to_string dep_f)::acc
+    ) dep_fs [] in
+    (f, dep_fs)::acc
+  ) graph []
+
+let output_dependencies ~env:env root strip_root outfile =
+  let strip_root = if strip_root then Files.relative_path root else fun x -> x in
+  let graph = serialize_graph !env.ServerEnv.dependency_graph in
+  Hh_logger.info "printing dependency graph to %s\n" outfile;
+  let%lwt out = Lwt_io.open_file ~mode:Lwt_io.Output outfile in
+  let%lwt () = LwtUtils.output_graph out strip_root graph in
+  let%lwt () = Lwt_io.close out in
+  ok_unit |> Lwt.return
+
 let get_cycle ~env fn =
   (* Re-calculate SCC *)
   let parsed = !env.ServerEnv.files in
   let dependency_graph = !env.ServerEnv.dependency_graph in
-  Lwt.return (
+  Lwt.return (Ok (
     let components = Sort_js.topsort ~roots:parsed dependency_graph in
 
     (* Get component for target file *)
     let component = List.find (Nel.mem fn) components in
 
     (* Restrict dep graph to only in-cycle files *)
-    let subgraph = Nel.fold_left (fun acc f ->
+    Nel.fold_left (fun acc f ->
       Option.fold (FilenameMap.get f dependency_graph) ~init:acc ~f:(fun acc deps ->
         let subdeps = FilenameSet.filter (fun f -> Nel.mem f component) deps in
         if FilenameSet.is_empty subdeps
         then acc
         else FilenameMap.add f subdeps acc
       )
-    ) FilenameMap.empty component in
-
-    (* Convert from map/set to lists for serialization to client. *)
-    let subgraph = FilenameMap.fold (fun f dep_fs acc ->
-      let f = File_key.to_string f in
-      let dep_fs = FilenameSet.fold (fun dep_f acc ->
-        (File_key.to_string dep_f)::acc
-      ) dep_fs [] in
-      (f, dep_fs)::acc
-    ) subgraph [] in
-
-    Ok subgraph
-  )
+    ) FilenameMap.empty component
+    |> serialize_graph
+  ))
 
 let suggest ~options ~workers ~env ~profiling file_input =
   let file = File_input.filename_of_file_input file_input in
@@ -360,11 +369,16 @@ let handle_ephemeral_deferred_unsafe
           ServerProt.Response.COVERAGE response
           |> respond;
           Lwt.return None
-      | ServerProt.Request.CYCLE fn ->
+      | ServerProt.Request.CYCLE fn  ->
           let file_options = Options.file_options options in
           let fn = Files.filename_from_string ~options:file_options fn in
           let%lwt response = get_cycle ~env fn in
           ServerProt.Response.CYCLE response
+          |> respond;
+          Lwt.return None
+      | ServerProt.Request.GRAPH_DEP_GRAPH (root, strip_root, outfile) ->
+          let%lwt response = output_dependencies ~env root strip_root outfile in
+          ServerProt.Response.GRAPH_DEP_GRAPH response
           |> respond;
           Lwt.return None
       | ServerProt.Request.DUMP_TYPES (fn) ->
@@ -490,6 +504,7 @@ let should_handle_immediately { ServerProt.Request.client_logging_context=_; com
     | ServerProt.Request.CHECK_FILE _
     | ServerProt.Request.COVERAGE _
     | ServerProt.Request.CYCLE _
+    | ServerProt.Request.GRAPH_DEP_GRAPH _
     | ServerProt.Request.DUMP_TYPES _
     | ServerProt.Request.FIND_MODULE _
     | ServerProt.Request.FIND_REFS _
@@ -543,6 +558,7 @@ let handle_ephemeral_immediately_unsafe
       | ServerProt.Request.CHECK_FILE _
       | ServerProt.Request.COVERAGE _
       | ServerProt.Request.CYCLE _
+      | ServerProt.Request.GRAPH_DEP_GRAPH _
       | ServerProt.Request.DUMP_TYPES _
       | ServerProt.Request.FIND_MODULE _
       | ServerProt.Request.FIND_REFS _
