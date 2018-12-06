@@ -107,22 +107,25 @@ let covered_types cx file_sig ~should_check =
   } in
   let file = Context.file cx in
   let type_table = Context.type_table cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
-  let f =
+  let htbl = Type_table.coverage_hashtbl type_table in
+  let result_pairs =
     if should_check then
-      fun acc (loc, result) ->
-        match result with
-        | Ok t -> (loc, is_covered t)::acc
-        | _ -> (loc, false)::acc
+      let f acc (loc, result) =
+        let cov = match result with
+          | Ok t -> is_covered t
+          | Error _ -> false
+        in
+        (ALoc.to_loc loc, cov)::acc
+      in
+      let g x = x in
+      let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+      Ty_normalizer.fold_hashtbl ~options ~genv ~f ~g ~htbl []
     else
-      fun acc (loc, _) -> (loc, false)::acc
+      Hashtbl.fold (fun loc _ acc ->
+        (ALoc.to_loc loc, false)::acc
+      ) htbl []
   in
-  let g x = x in
-  let htbl = Type_table.coverage_hashtbl (Context.type_table cx) in
-  let coverage = Ty_normalizer.fold_hashtbl ~options ~genv ~f ~g ~htbl [] in
-  coverage
-  |> concretize_loc_pairs
-  |> sort_loc_pairs
+  sort_loc_pairs result_pairs
 
 (* 'suggest' can use as many types in the type tables as possible, which is why
    we are querying the tables from both "coverage" and "type_info". Coverage
