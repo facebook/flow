@@ -225,6 +225,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     expand_type_aliases = true;
     flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
+    optimize_types = true;
   } in
   let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
     Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->

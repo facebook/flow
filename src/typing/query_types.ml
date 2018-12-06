@@ -65,6 +65,7 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~typed
     expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
+    optimize_types = true;
   } in
   match find_type_at_pos_annotation typed_ast loc with
   | None -> FailureNoMatch
@@ -77,7 +78,15 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~type_table ~typed
       FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
 
 let dump_types cx file_sig ~printer =
-  let options = Ty_normalizer_env.default_opts in
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = false;
+    flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
+    optimize_types = true;
+  } in
   let file = Context.file cx in
   let type_table = Context.type_table cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
@@ -91,9 +100,13 @@ let dump_types cx file_sig ~printer =
   |> concretize_loc_pairs
   |> sort_loc_pairs
 
-let is_covered = function
+let rec is_covered = function
   | Ty.Any
   | Ty.Bot -> false
+  | Ty.Union (t1, t2, ts) ->
+    List.exists is_covered (t1::t2::ts)
+  | Ty.Inter (t1, t2, ts) ->
+    List.for_all is_covered (t1::t2::ts)
   | _ -> true
 
 let covered_types cx file_sig ~should_check =
@@ -104,6 +117,7 @@ let covered_types cx file_sig ~should_check =
     expand_type_aliases = false;
     flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
+    optimize_types = false;
   } in
   let file = Context.file cx in
   let type_table = Context.type_table cx in
@@ -141,6 +155,7 @@ let suggest_types cx file_sig =
     expand_type_aliases = false;
     flag_shadowed_type_params = true;
     preserve_inferred_literal_types = false;
+    optimize_types = true;
   } in
   let type_table = Context.type_table cx in
   let file = Context.file cx in

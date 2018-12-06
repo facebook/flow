@@ -47,14 +47,10 @@ type options = {
 
   (* Makes the normalizer more aggressive in preserving inferred literal types *)
   preserve_inferred_literal_types: bool;
-}
 
-let default_opts = {
-  fall_through_merged = false;
-  expand_internal_types = false;
-  expand_type_aliases = false;
-  flag_shadowed_type_params = false;
-  preserve_inferred_literal_types = false;
+  (* Run an optimization pass that removes duplicates from unions and intersections.
+     WARNING May be slow for large types *)
+  optimize_types: bool;
 }
 
 (* This is a global environment that should not change during normalization *)

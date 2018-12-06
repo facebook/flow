@@ -121,6 +121,8 @@ let symbols_of_t : Ty.t -> Ty_symbol.symbol list =
 
    The Any state of this visitor is used to capture any change to the type
    structure.
+
+   WARNING: This visitor will do a deep type traversal
 *)
 let simplify_unions_inters =
   let open Ty in
@@ -135,7 +137,7 @@ let simplify_unions_inters =
     simplify_aux []
   in
   let o = object (self)
-    inherit [_] endo_ty
+    inherit [_] endo_ty as super
     method private simplify env ~break ~zero ~one ~make ts =
       let ts' = self#on_list self#on_t env ts in
       let ts' = List.concat (Core_list.map ~f:break ts') in
@@ -156,8 +158,8 @@ let simplify_unions_inters =
         let opt = self#simplify ~break:Ty.bk_inter ~zero:Ty.Bot
           ~one:Ty.Top ~make:Ty.mk_inter env (t0::t1::ts) in
         Option.value ~default:t opt
-      (* WARNING: do not descend to other constructors or this will get slow *)
-      | _ -> t
+      | _ ->
+        super#on_t env t
   end in
   let rec go t =
     let t' = o#on_t () t in

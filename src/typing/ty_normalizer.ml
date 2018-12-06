@@ -202,14 +202,8 @@ end = struct
 
 
   (**************)
-  (* Type ops   *)
+  (* Type ctors *)
   (**************)
-
-  (* We wrap the union and intersection constructors with the following
-     functions that keep types as small as possible.
-  *)
-  let uniq_union ts = ts |> Ty.mk_union |> Ty_utils.simplify_unions_inters
-  let uniq_inter ts = ts |> Ty.mk_inter |> Ty_utils.simplify_unions_inters
 
   let generic_class name targs =
     Ty.mk_generic_class name targs
@@ -366,7 +360,6 @@ end = struct
       (* Recursive, but still might be a degenerate case *)
       let t' = remove_toplevel_tvar i t in
       let changed = not (t == t') in
-      let t' = if changed then Ty_utils.simplify_unions_inters t' else t' in
       (* If not changed then all free_vars are still in, o.w. recompute free vars *)
       mk_mu ~definitely_appears:(not changed) i t'
   end
@@ -418,10 +411,7 @@ end = struct
       size := 0;
       match visitor#on_t env t with
       | exception SizeCutOff -> terr ~kind:TypeTooBig None
-      | t' ->
-        if t != t'
-        then return (Ty_utils.simplify_unions_inters t')
-        else return t'
+      | t' -> return t'
   end
 
   (***********************)
@@ -583,9 +573,9 @@ end = struct
     | DefT (_, SingletonStrT lit) -> return (Ty.StrLit lit)
     | DefT (_, SingletonBoolT lit) -> return (Ty.BoolLit lit)
     | DefT (_, MaybeT t) ->
-      type__ ~env t >>| fun t -> uniq_union [Ty.Void; Ty.Null; t]
+      type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; Ty.Null; t]
     | DefT (_, OptionalT t) ->
-      type__ ~env t >>| fun t -> uniq_union [Ty.Void; t]
+      type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; t]
     | DefT (_, FunT (_, _, f)) ->
       fun_ty ~env f None >>| fun t -> Ty.Fun t
     | DefT (_, ObjT o) ->
@@ -596,13 +586,13 @@ end = struct
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
-      uniq_union (t0::t1::ts)
+      Ty.mk_union (t0::t1::ts)
     | DefT (_, IntersectionT rep) ->
       let t0, (t1, ts) = InterRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
-      uniq_inter (t0::t1::ts)
+      Ty.mk_inter (t0::t1::ts)
     | DefT (_, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
     | DefT (r, TypeT (kind, t)) -> type_t ~env r kind t None
     | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t (Some ts)
@@ -746,7 +736,7 @@ end = struct
     | Unresolved bounds ->
       let ts = T.TypeMap.keys bounds.lower in
       mapM (type__ ~env) ts >>|
-      uniq_union
+      Ty.mk_union
 
   and bound_t ~env reason name =
     let { Ty.loc; name; _ } = symbol_from_reason env reason name in
@@ -1405,11 +1395,17 @@ end = struct
   and merged_t ~env uses =
     if Env.fall_through_merged env
     then return Ty.Top
-    else mapM (use_t ~env) uses >>| uniq_inter
+    else mapM (use_t ~env) uses >>| Ty.mk_inter
 
   let run_type ~options ~genv ~imported_names ~tparams state t =
     let env = Env.init ~options ~genv ~tparams ~imported_names in
-    run state (type__ ~env t)
+    let result, state = run state (type__ ~env t) in
+    let result = match result with
+      | Ok t when options.Env.optimize_types ->
+        Ok (Ty_utils.simplify_unions_inters t)
+      | _ -> result
+    in
+    result, state
 
   (* Before we start normalizing the input type we populate our environment with
      aliases that are in scope due to typed imports. These appear inside

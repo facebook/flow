@@ -1262,7 +1262,7 @@ spread.js:22:6 = {
   "end":8
 }
 spread.js:23:6 = {
-  "type":"type Inter1 = {w?: mixed, x?: O, y?: O, z?: O} & {f?: O, o?: O}",
+  "type":"type Inter1 = {w?: (O | mixed), x?: O, y?: O, z?: O} & {f?: O, o?: O}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
