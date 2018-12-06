@@ -56,13 +56,49 @@ let select
     write_task;
   ] in
   let tasks =
-    if timeout >= 0.0
+    if timeout > 0.0
     then
       let timeout_task =
         let%lwt () = Lwt_unix.sleep timeout in
         Lwt.return ([], [], [])
       in
       timeout_task :: tasks
-    else tasks
+    else
+      failwith "Timeout <= 0 not implemented"
   in
   Lwt.pick tasks
+
+let with_context ~enter ~exit ~do_ =
+  enter ();
+  let result =
+    try%lwt
+      let%lwt result = do_ () in
+      Lwt.return result
+    with e ->
+      exit ();
+      raise e
+  in
+  exit ();
+  result
+
+let wrap_non_reentrant_section
+    ~(name: string)
+    ~(lock: bool ref)
+    ~(f : unit -> 'a Lwt.t)
+    : 'a Lwt.t =
+  let wrapped_f () =
+    let () =
+      if !lock
+      then failwith (Printf.sprintf
+        ("Function '%s' was called more than once in parallel (e.g. with Lwt), "
+         ^^ "but it is marked as non-reentrant. Serialize your calls to '%s'.")
+         name
+         name)
+    in
+    with_context
+      ~enter:(fun () -> lock := true)
+      ~exit:(fun () -> lock := false)
+      ~do_:f
+  in
+  let%lwt result = wrapped_f () in
+  Lwt.return result
