@@ -61,7 +61,7 @@ class BlessedError {
     if (this.selectedMessage != null) {
       return this.messages[this.selectedMessage].loc;
     } else {
-      return mainLocOfError(this.error);
+      return mainSourceLocOfError(this.error);
     }
   }
 
@@ -122,11 +122,21 @@ class BlessedError {
   }
 }
 
+function mainSourceLocOfError(error: FlowError): ?FlowLoc {
+  const { operation, message } = error;
+  for (const msg of [operation, ...message]) {
+    if (msg && msg.loc && msg.loc.type === 'SourceFile') {
+      return msg.loc;
+    }
+  }
+  return null;
+}
+
 /**
- * Filter out errors without a main location
+ * Filter out errors without a main location or a source file
  */
 function filterErrors(errors: Array<FlowError>): Array<FlowError> {
-  return errors.filter(e => mainLocOfError(e) != null);
+  return errors.filter(e => mainSourceLocOfError(e) != null);
 }
 
 /**
