@@ -1,0 +1,10 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:5
+
+Could not build a typed interface for this module. Missing type annotation: (`signature-verification-failure`)
+
+   3| var x = 0;
+          ^
+
+
+
+Found 1 error

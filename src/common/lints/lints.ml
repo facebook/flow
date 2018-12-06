@@ -81,6 +81,7 @@ let kinds_of_string = function
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "deprecated-call-syntax" -> Some [DeprecatedCallSyntax]
+  | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | _ -> None
 
 module LintKind = struct
