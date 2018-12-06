@@ -24,6 +24,7 @@ type error_kind =
   | ShadowTypeParam
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
+  | TypeTooBig
 
 type error = error_kind * string
 

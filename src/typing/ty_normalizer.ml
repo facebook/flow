@@ -43,6 +43,7 @@ type error_kind =
   | ShadowTypeParam
   | UnsupportedTypeCtor
   | UnsupportedUseCtor
+  | TypeTooBig
 
 type error = error_kind * string
 
@@ -63,6 +64,7 @@ let error_kind_to_string = function
   | ShadowTypeParam -> "Shadowed type parameters"
   | UnsupportedTypeCtor -> "Unsupported type constructor"
   | UnsupportedUseCtor -> "Unsupported use constructor"
+  | TypeTooBig -> "Type too big"
 
 let error_to_string (kind, msg) =
   spf "[%s] %s" (error_kind_to_string kind) msg
@@ -372,6 +374,11 @@ end = struct
 
   module Substitution = struct
     open Ty
+    (* NOTE Traversing huge types may lead to merge-timeouts. We cut off the size
+     * of the recursion at 10K nodes. *)
+    let max_size = 10000
+    exception SizeCutOff
+    let size = ref 0
 
     let init_env tparams types =
       let rec step acc = function
@@ -387,6 +394,9 @@ end = struct
     let visitor = object
       inherit [_] endo_ty as super
       method! on_t env t =
+        size := !size + 1;
+        if !size > max_size then
+          raise SizeCutOff;
         match t with
         | TypeAlias { ta_tparams = ps; _ }
         | Fun { fun_type_params = ps; _ } ->
@@ -400,12 +410,18 @@ end = struct
         | _ ->
           super#on_t env t
     end
-      (* Replace a list of type parameters with a list of types in the given type.
-       * These lists might not match exactly in length. *)
+
+    (* Replace a list of type parameters with a list of types in the given type.
+     * These lists might not match exactly in length. *)
     let run vs ts t =
       let env = init_env vs ts in
-      let t' = visitor#on_t env t in
-      if t != t' then Ty_utils.simplify_unions_inters t' else t'
+      size := 0;
+      match visitor#on_t env t with
+      | exception SizeCutOff -> terr ~kind:TypeTooBig None
+      | t' ->
+        if t != t'
+        then return (Ty_utils.simplify_unions_inters t')
+        else return t'
   end
 
   (***********************)
@@ -989,13 +1005,12 @@ end = struct
       | Ty.InterfaceDecl (name, _) ->
         return (generic_interface name targs)
       | Ty.TypeAlias { Ty.ta_name; ta_tparams; ta_type } ->
-        begin
-          match ta_type with
+        begin match ta_type with
           | Some ta_type when Env.expand_type_aliases env ->
-            let t = match Option.both ta_tparams targs with
+            begin match Option.both ta_tparams targs with
               | Some (ps, ts) -> Substitution.run ps ts ta_type
-              | None -> ta_type
-            in return t
+              | None -> return ta_type
+            end
           | _ ->
             return (generic_talias ta_name targs)
         end

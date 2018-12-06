@@ -25,12 +25,8 @@ type options = {
   *)
   expand_internal_types: bool;
 
-  (* AnnotT is used to hide information of the lower bound flowing in and
-     provides instead a type interface that then flows to the upper bounds.
-     For the normalizer this is good point to cut down on the recursion to
-     AnnotT's lower bounds and instead return a type constructed from the name
-     associated with the annotation. Typically this coincides with types used as
-     annotations, so this is a natural type type to return for type queries.
+  (* If set to `true` type aliase names will be expanded to the types they represent.
+     WARNING: This can cause a blow-up in the size of the produced types.
   *)
   expand_type_aliases: bool;
 
@@ -49,7 +45,7 @@ type options = {
   *)
   flag_shadowed_type_params: bool;
 
-  (* Makes the normalizer more aggressive is preserving inferred literal types *)
+  (* Makes the normalizer more aggressive in preserving inferred literal types *)
   preserve_inferred_literal_types: bool;
 }
 
