@@ -256,7 +256,6 @@ module Eval(Env: EvalEnv) = struct
       | loc, Object { Object.annot; _ }
       | loc, Array { Array.annot; _ }
         -> annotated_type tps loc annot
-      | _, Assignment { Assignment.left; _ } -> pattern tps left
       | loc, Expression _ -> Deps.todo loc "Expression"
 
   and literal_expr tps =
@@ -456,7 +455,7 @@ module Eval(Env: EvalEnv) = struct
 
   and function_ =
     let open Ast.Function in
-    let function_param tps (_, { Param.argument }) =
+    let function_param tps (_, { Param.argument; default = _ }) =
       pattern tps argument
 
     in let function_rest_param tps (_, { RestParam.argument }) =

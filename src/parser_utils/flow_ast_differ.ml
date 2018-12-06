@@ -557,7 +557,7 @@ let program (algo : diff_algorithm)
     let (_, { params = param_lst1; rest = rest1 }) = params1 in
     let (_, { params = param_lst2; rest = rest2 }) = params2 in
     let params_diff =
-      diff_and_recurse_nonopt_no_trivial function_param param_lst1 param_lst2 in
+      diff_and_recurse_no_trivial function_param param_lst1 param_lst2 in
     let rest_diff =
       diff_if_changed_nonopt_fn function_rest_param rest1 rest2 in
     join_diff_list [params_diff; rest_diff]
@@ -565,10 +565,12 @@ let program (algo : diff_algorithm)
   and function_param
       (param1: (Loc.t, Loc.t) Ast.Function.Param.t)
       (param2: (Loc.t, Loc.t) Ast.Function.Param.t)
-      : node change list =
-    let (_, { Ast.Function.Param.argument = arg1 }) = param1 in
-    let (_, { Ast.Function.Param.argument = arg2 }) = param2 in
-    diff_if_changed function_param_pattern arg1 arg2
+      : node change list option =
+    let (_, { Ast.Function.Param.argument = arg1; default = def1 }) = param1 in
+    let (_, { Ast.Function.Param.argument = arg2; default = def2 }) = param2 in
+    let param_diff = diff_if_changed function_param_pattern arg1 arg2 |> Option.return in
+    let default_diff = diff_if_changed_nonopt_fn expression def1 def2 in
+    join_diff_list [param_diff; default_diff]
 
   and function_body_any (body1 : (Loc.t, Loc.t) Ast.Function.body)
                         (body2 : (Loc.t, Loc.t) Ast.Function.body)
@@ -1371,8 +1373,6 @@ let program (algo : diff_algorithm)
           pattern_array a1 a2
       | (_, Ast.Pattern.Object o1), (_, Ast.Pattern.Object o2) ->
           pattern_object o1 o2
-      | (_, Ast.Pattern.Assignment a1), (_, Ast.Pattern.Assignment a2) ->
-          Some (pattern_assignment a1 a2)
       | (_, Ast.Pattern.Expression e1), (_, Ast.Pattern.Expression e2) ->
           Some (expression e1 e2)
       | _, _ ->
@@ -1380,16 +1380,6 @@ let program (algo : diff_algorithm)
         in
       let old_loc = Ast_utils.loc_of_pattern p1 in
       Option.value changes ~default:[(old_loc, Replace (Pattern p1, Pattern p2))]
-
-  and pattern_assignment (a1: (Loc.t, Loc.t) Ast.Pattern.Assignment.t)
-                         (a2: (Loc.t, Loc.t) Ast.Pattern.Assignment.t)
-      : node change list =
-    let open Ast.Pattern.Assignment in
-    let { left = left1; right = right1 } = a1 in
-    let { left = left2; right = right2 } = a2 in
-    let left_diffs = diff_if_changed pattern left1 left2 in
-    let right_diffs = diff_if_changed expression right1 right2 in
-    left_diffs @ right_diffs
 
   and pattern_object (o1: (Loc.t, Loc.t) Ast.Pattern.Object.t)
                      (o2: (Loc.t, Loc.t) Ast.Pattern.Object.t)
@@ -1409,12 +1399,13 @@ let program (algo : diff_algorithm)
     match p1, p2 with
     | (Property (_, p3), Property (_, p4)) ->
         let open Ast.Pattern.Object.Property in
-        let { key = key1; pattern = pattern1; shorthand = shorthand1; } = p3 in
-        let { key = key2; pattern = pattern2; shorthand = shorthand2; } = p4 in
+        let { key = key1; pattern = pattern1; default = default1; shorthand = shorthand1; } = p3 in
+        let { key = key2; pattern = pattern2; default = default2; shorthand = shorthand2; } = p4 in
         let keys = diff_if_changed_ret_opt pattern_object_property_key key1 key2 in
         let pats = Some (diff_if_changed pattern pattern1 pattern2) in
+        let defaults = diff_if_changed_nonopt_fn expression default1 default2 in
         (match shorthand1, shorthand2 with
-        | false, false -> join_diff_list [keys; pats]
+        | false, false -> join_diff_list [keys; pats; defaults]
         | _, _ ->
           None)
     | (RestProperty (_, rp1) ,RestProperty (_, rp2)) ->
@@ -1446,23 +1437,33 @@ let program (algo : diff_algorithm)
     let { elements = elements1; annot = annot1 } = a1 in
     let { elements = elements2; annot = annot2 } = a2 in
     let elements_diff =
-      diff_and_recurse_no_trivial pattern_array_element elements1 elements2 in
+      diff_and_recurse_no_trivial pattern_array_e elements1 elements2 in
     let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Option.return in
     join_diff_list [elements_diff; annot_diff]
 
-  and pattern_array_element (eo1: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
+  and pattern_array_e (eo1: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
                             (eo2: (Loc.t, Loc.t) Ast.Pattern.Array.element option)
       : node change list option =
     let open Ast.Pattern.Array in
     match eo1, eo2 with
     | Some (Element p1), Some (Element p2) ->
-        Some (pattern p1 p2)
+        pattern_array_element p1 p2
     | Some (RestElement re1), Some (RestElement re2) ->
         Some (pattern_array_rest re1 re2)
     | None, None ->
         Some [] (* Both elements elided *)
     | _, _ ->
         None (* one element is elided and another is not *)
+
+  and pattern_array_element ((_, e1): (Loc.t, Loc.t) Ast.Pattern.Array.Element.t)
+                            ((_, e2): (Loc.t, Loc.t) Ast.Pattern.Array.Element.t)
+      : node change list option =
+    let open Ast.Pattern.Array.Element in
+    let { argument = argument1; default = default1 } = e1 in
+    let { argument = argument2; default = default2 } = e2 in
+    let args = Some (diff_if_changed pattern argument1 argument2) in
+    let defaults = diff_if_changed_nonopt_fn expression default1 default2 in
+    join_diff_list [args; defaults]
 
   and pattern_array_rest ((_, r1): (Loc.t, Loc.t) Ast.Pattern.Array.RestElement.t)
                          ((_, r2): (Loc.t, Loc.t) Ast.Pattern.Array.RestElement.t)

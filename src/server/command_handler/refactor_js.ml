@@ -43,7 +43,7 @@ class rename_mapper refs new_name = object(this)
 
   method! pattern_object_property ?kind (prop: (Loc.t, Loc.t) Ast.Pattern.Object.Property.t') =
     let open Ast.Pattern.Object.Property in
-    let { key; pattern; shorthand } = prop in
+    let { key; pattern; default; shorthand } = prop in
     if not shorthand then
       super#pattern_object_property prop
     else begin
@@ -63,11 +63,13 @@ class rename_mapper refs new_name = object(this)
         else
           pattern
       in
-      if key == key' && pattern == pattern' then
+      (* TODO *)
+      let default' = default in
+      if key == key' && pattern == pattern' && default == default' then
         prop
       else
         (* TODO if both changed (e.g. destructuring requires) then retain shorthand *)
-        { key = key'; pattern = pattern'; shorthand = false }
+        { key = key'; pattern = pattern'; default = default'; shorthand = false }
     end
 
   method! object_property (prop: (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =

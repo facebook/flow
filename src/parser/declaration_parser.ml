@@ -38,7 +38,6 @@ module Declaration
     let rec pattern ((env, _) as check_env) (loc, p) = Pattern.(match p with
       | Object o -> _object check_env o
       | Array arr -> _array check_env arr
-      | Assignment { Assignment.left; _ } -> pattern check_env left
       | Identifier id -> identifier_pattern check_env id
       | Expression _ -> (
           error_at env (loc, Error.ExpectedPatternFoundExpression);
@@ -69,7 +68,7 @@ module Declaration
 
     and array_element check_env = Pattern.Array.(function
       | None -> check_env
-      | Some (Element p) -> pattern check_env p
+      | Some (Element (_, { Element.argument; default = _ })) -> pattern check_env argument
       | Some (RestElement (_, { RestElement.argument; })) ->
           pattern check_env argument)
 
@@ -115,7 +114,7 @@ module Declaration
           if is_future_reserved name || is_strict_reserved name
           then strict_error_at env (loc, Error.StrictReservedWord)
       | None -> ());
-      let acc = List.fold_left (fun acc (_, { Function.Param.argument }) ->
+      let acc = List.fold_left (fun acc (_, { Function.Param.argument; default = _ }) ->
         check_param acc argument
       ) (env, SSet.empty) params in
       match rest with
@@ -126,19 +125,15 @@ module Declaration
 
   let function_params =
     let rec param = with_loc (fun env ->
-      let argument =
-        let start_loc = Peek.loc env in
-        let left = Parse.pattern env Error.StrictParamName in
+      let argument = Parse.pattern env Error.StrictParamName in
+      let default =
         if Peek.token env = T_ASSIGN then begin
-          let loc, right = with_loc ~start_loc (fun env ->
-            Expect.token env T_ASSIGN;
-            Parse.assignment env
-          ) env in
-          (loc, Pattern.Assignment { Pattern.Assignment.left; right })
+          Expect.token env T_ASSIGN;
+          Some (Parse.assignment env)
         end else
-          left
+          None
       in
-      { Function.Param.argument }
+      { Function.Param.argument; default }
     )
     and param_list env acc =
       match Peek.token env with
@@ -217,7 +212,7 @@ module Declaration
 
   let is_simple_function_params =
     let is_simple_param = function
-    | _, { Ast.Function.Param.argument = (_, Pattern.Identifier _) } ->  true
+    | _, { Ast.Function.Param.argument = (_, Pattern.Identifier _); default = None } ->  true
     | _ -> false
 
     in fun (_, { Ast.Function.Params.params; rest }) ->

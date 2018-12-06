@@ -432,7 +432,6 @@ module Make
             (* given `o.x = e`, read o then read e *)
             ignore @@ this#assignment_pattern left;
             ignore @@ this#expression right
-          | _, Assignment _ -> failwith "unexpected AST node"
           end
         | _ ->
           let open Ast.Pattern in
@@ -446,7 +445,7 @@ module Make
               (* given `o.x += e`, read o then read e *)
               ignore @@ this#assignment_pattern left;
               ignore @@ this#expression right
-            | _, (Object _ | Array _ | Assignment _) -> failwith "unexpected AST node"
+            | _, (Object _ | Array _) -> failwith "unexpected AST node"
           end
       end;
       expr
@@ -467,7 +466,7 @@ module Make
               (* `var x;` is not a write of `x` *)
               ()
           end
-        | _, (Expression _ | Assignment _) -> failwith "unexpected AST node"
+        | _, Expression _ -> failwith "unexpected AST node"
       end;
       decl
 

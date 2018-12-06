@@ -1081,22 +1081,18 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
           (List.map
             (function
             | P.Object.Property (loc, { P.Object.Property.
-                key; pattern=pat; shorthand
+                key; pattern=pat; default; shorthand
               }) ->
-              source_location_with_comments (loc,
-                begin match pat, shorthand with
-                (* Special case shorthand assignments *)
-                | (_, P.Assignment _), true -> pattern pat
-                (* Shorthand property *)
-                | _, true -> pattern_object_property_key key
-                (*  *)
-                | _, false -> fuse [
-                  pattern_object_property_key key;
-                  Atom ":"; pretty_space;
-                  pattern pat
-                ]
-                end;
-              )
+              let prop = pattern_object_property_key key in
+              let prop = match shorthand with
+              | false -> fuse [prop; Atom ":"; pretty_space; pattern pat]
+              | true -> prop
+              in
+              let prop = match default with
+              | Some expr -> fuse_with_default prop expr
+              | None -> prop
+              in
+              source_location_with_comments (loc, prop)
             | P.Object.RestProperty (loc, { P.Object.RestProperty.argument }) ->
               source_location_with_comments (loc, fuse [Atom "..."; pattern argument])
             )
@@ -1113,7 +1109,16 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
           (List.map
             (function
             | None -> Empty
-            | Some P.Array.Element pat -> pattern pat
+            | Some P.Array.Element (loc, { P.Array.Element.
+                argument;
+                default;
+              }) ->
+              let elem = pattern argument in
+              let elem = match default with
+              | Some expr -> fuse_with_default elem expr
+              | None -> elem
+              in
+              source_location_with_comments (loc, elem)
             | Some P.Array.RestElement (loc, { P.Array.RestElement.
                 argument
               }) ->
@@ -1121,17 +1126,6 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
             )
             elements);
         hint type_annotation annot;
-      ]
-    | P.Assignment { P.Assignment.left; right } ->
-      fuse [
-        pattern left;
-        pretty_space; Atom "="; pretty_space;
-        begin
-          let ctxt = context_after_token ctxt in
-          expression_with_parens
-            ~precedence:precedence_of_assignment
-            ~ctxt right
-        end;
       ]
     | P.Identifier { P.Identifier.name; annot; optional } ->
       fuse [
@@ -1141,6 +1135,16 @@ and pattern ?(ctxt=normal_context) ((loc, pat): (Loc.t, Loc.t) Ast.Pattern.t) =
       ]
     | P.Expression expr -> expression ~ctxt expr
   )
+
+and fuse_with_default ?(ctxt=normal_context) node expr =
+  fuse [
+    node;
+    pretty_space; Atom "="; pretty_space;
+    expression_with_parens
+      ~precedence:precedence_of_assignment
+      ~ctxt:(context_after_token ctxt)
+      expr;
+  ]
 
 and template_literal { Ast.Expression.TemplateLiteral.quasis; expressions } =
   let module T = Ast.Expression.TemplateLiteral in
@@ -1221,7 +1225,8 @@ and arrow_function ?(ctxt=normal_context) ~precedence { Ast.Function.
             optional = false;
             annot = Ast.Type.Missing _;
             _;
-          })
+          });
+          default = None;
         })];
         rest = None;
       }) -> true
@@ -1301,8 +1306,13 @@ and function_base ~prefix ~params ~body ~predicate ~return ~tparams =
   ]
 
 and function_params ~ctxt (_, { Ast.Function.Params.params; rest }) =
-  let s_params = Core_list.map ~f:(fun (loc, { Ast.Function.Param.argument }) ->
-    source_location_with_comments (loc, pattern ~ctxt argument)
+  let s_params = Core_list.map ~f:(fun (loc, { Ast.Function.Param.argument; default }) ->
+    let node = pattern ~ctxt argument in
+    let node = match default with
+    | Some expr -> fuse_with_default node expr
+    | None -> node
+    in
+    source_location_with_comments (loc, node)
   ) params in
   match rest with
   | Some (loc, {Ast.Function.RestParam.argument}) ->

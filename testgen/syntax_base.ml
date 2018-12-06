@@ -162,6 +162,7 @@ let mk_func_def
         annot = T.Available (Loc.none, (Loc.none, ptype));
         optional = false;
       });
+      default = None;
     }) in
 
   let func = let open Ast.Function in

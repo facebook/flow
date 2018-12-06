@@ -10,6 +10,7 @@ module T = Type
 type program = (ALoc.t, ALoc.t * Type.t) Flow_ast.program
 
 val error_annot : ALoc.t * Type.t
+val unimplemented_annot : ALoc.t * Type.t
 
 module Type : sig
   val error : (ALoc.t, ALoc.t * T.t) Flow_ast.Type.t'

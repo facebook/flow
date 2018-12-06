@@ -803,17 +803,19 @@ end with type t = Impl.t) = struct
           "elements", array_of_list (option array_pattern_element) elements;
           "typeAnnotation", hint type_annotation annot;
         ]
-    | loc, Assignment { Assignment.left; right } ->
-        node "AssignmentPattern" loc [
-          "left", pattern left;
-          "right", expression right
-        ]
     | loc, Identifier pattern_id ->
         pattern_identifier loc pattern_id
     | _loc, Expression expr -> expression expr)
 
-  and function_param (_loc, { Ast.Function.Param.argument }) =
-    pattern argument
+  and function_param (loc, { Ast.Function.Param.argument; default }) =
+    match default with
+    | Some default ->
+      node "AssignmentPattern" loc [
+        "left", pattern argument;
+        "right", expression default;
+      ]
+    | None ->
+      pattern argument
 
   and function_params = Ast.Function.Params.(function
     | _, { params; rest = Some (rest_loc, { Function.RestParam.argument }) } ->
@@ -828,7 +830,13 @@ end with type t = Impl.t) = struct
   )
 
   and array_pattern_element = Pattern.Array.(function
-    | Element p -> pattern p
+    | Element (loc, { Element.argument; default = Some default; }) ->
+        node "AssignmentPattern" loc [
+          "left", pattern argument;
+          "right", expression default;
+        ]
+    | Element (_loc, { Element.argument; default = None; }) ->
+        pattern argument
     | RestElement (loc, { RestElement.argument; }) ->
         node "RestElement" loc [
           "argument", pattern argument;
@@ -869,15 +877,25 @@ end with type t = Impl.t) = struct
   ))
 
   and object_pattern_property = Pattern.Object.(function
-    | Property (loc, { Property.key; pattern = patt; shorthand }) ->
+    | Property (loc, { Property.key; pattern = patt; default; shorthand }) ->
       let key, computed = (match key with
       | Property.Literal lit -> literal lit, false
       | Property.Identifier id -> identifier id, false
       | Property.Computed expr -> expression expr, true)
       in
+      let value = match default with
+      | Some default ->
+        let loc = Loc.btwn (fst patt) (fst default) in
+        node "AssignmentPattern" loc [
+          "left", pattern patt;
+          "right", expression default;
+        ]
+      | None ->
+        pattern patt
+      in
       node "Property" loc [
         "key", key;
-        "value", pattern patt;
+        "value", value;
         "kind", string "init";
         "method", bool false;
         "shorthand", bool shorthand;

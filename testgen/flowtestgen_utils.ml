@@ -75,11 +75,6 @@ let rec string_of_pattern (pattern : (Loc.t, Loc.t) P.t') =
      | Ast.Type.Available (_, (_, t)) -> " : " ^ (string_of_type t)
      | Ast.Type.Missing _ -> "")
   | P.Expression (_, e) -> string_of_expr e
-  | P.Assignment assign ->
-    let open P.Assignment in
-    (string_of_pattern (snd assign.left)) ^
-    " = " ^
-    (string_of_expr (snd assign.right))
   | _ -> failwith "[string_of_pattern] unsupported pattern"
 
 and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
@@ -151,10 +146,11 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
   | _ -> failwith "unknown expr"
 
 and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
-  let string_of_function_param param =
-    match param with
-    | (_, { Ast.Function.Param.argument = (_, patt) }) ->
-      string_of_pattern patt
+  let string_of_function_param = function
+  | (_, { Ast.Function.Param.argument = (_, patt); default = None }) ->
+    string_of_pattern patt
+  | (_, { Ast.Function.Param.argument = (_, patt); default = Some (_, expr) }) ->
+    (string_of_pattern patt) ^ " = " ^ (string_of_expr expr)
   in
   match stmt with
   | S.Block b ->

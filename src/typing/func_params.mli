@@ -24,10 +24,9 @@ val add_complex: Context.t ->
     Context.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
     (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
   ) ->
-  ?default: (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-  (ALoc.t, ALoc.t) Flow_ast.Pattern.t -> Type.t ->
+  (ALoc.t, ALoc.t) Flow_ast.Function.Param.t -> Type.t ->
   t ->
-  t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.t
+  t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Function.Param.t
 
 val add_rest: Context.t ->
   ALoc.t -> (ALoc.t * string) option -> Type.t ->

@@ -725,10 +725,11 @@ class ['loc] mapper = object(this)
 
   method function_param (param: ('loc, 'loc) Flow_ast.Function.Param.t) =
     let open Flow_ast.Function.Param in
-    let (loc, { argument }) = param in
+    let (loc, { argument; default }) = param in
     let argument' = this#function_param_pattern argument in
-    if argument == argument' then param
-    else (loc, { argument = argument' })
+    let default' = map_opt this#expression default in
+    if argument == argument' && default == default' then param
+    else (loc, { argument = argument'; default = default' })
 
   method function_body_any (body: ('loc, 'loc) Flow_ast.Function.body) =
     match body with
@@ -1139,11 +1140,6 @@ class ['loc] mapper = object(this)
         let annot' = this#type_annotation_hint annot in
         if elements' == elements && annot' == annot then patt
         else Array { Array.elements = elements'; annot = annot' }
-      | Assignment { Assignment.left; right } ->
-        let left' = this#pattern_assignment_pattern ?kind left in
-        let right' = this#expression right in
-        if left == left' && right == right' then patt
-        else Assignment { Assignment.left = left'; right = right' }
       | Identifier { Identifier.name; annot; optional } ->
         let name' = this#pattern_identifier ?kind name in
         let annot' = this#type_annotation_hint annot in
@@ -1172,11 +1168,12 @@ class ['loc] mapper = object(this)
 
   method pattern_object_property ?kind (prop: ('loc, 'loc) Flow_ast.Pattern.Object.Property.t') =
     let open Flow_ast.Pattern.Object.Property in
-    let { key; pattern; shorthand = _ } = prop in
+    let { key; pattern; default; shorthand = _ } = prop in
     let key' = this#pattern_object_property_key ?kind key in
     let pattern' = this#pattern_object_property_pattern ?kind pattern in
-    if key' == key && pattern' == pattern then prop
-    else { key = key'; pattern = pattern'; shorthand = false }
+    let default' = map_opt this#expression default in
+    if key' == key && pattern' == pattern && default' == default then prop
+    else { key = key'; pattern = pattern'; default = default'; shorthand = false }
 
   method pattern_object_property_key ?kind (key: ('loc, 'loc) Flow_ast.Pattern.Object.Property.key) =
     let open Flow_ast.Pattern.Object.Property in
@@ -1214,13 +1211,21 @@ class ['loc] mapper = object(this)
   method pattern_array_e ?kind (e: ('loc, 'loc) Flow_ast.Pattern.Array.element) =
     let open Flow_ast.Pattern.Array in
     match e with
-    | Element elem ->
-      id (this#pattern_array_element_pattern ?kind) elem e (fun elem -> Element elem)
+    | Element (loc, elem) ->
+      id (this#pattern_array_element ?kind) elem e (fun elem -> Element (loc, elem))
     | RestElement (loc, elem) ->
       id (this#pattern_array_rest_element ?kind) elem e (fun elem -> RestElement (loc, elem))
 
-  method pattern_array_element_pattern ?kind (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
-    this#pattern ?kind expr
+  method pattern_array_element ?kind (elem: ('loc, 'loc) Flow_ast.Pattern.Array.Element.t') =
+    let open Flow_ast.Pattern.Array.Element in
+    let { argument; default } = elem in
+    let argument' = this#pattern_array_element_pattern ?kind argument in
+    let default' = map_opt this#expression default in
+    if argument == argument' && default == default' then elem
+    else { argument = argument'; default = default' }
+
+  method pattern_array_element_pattern ?kind (patt: ('loc, 'loc) Flow_ast.Pattern.t) =
+    this#pattern ?kind patt
 
   method pattern_array_rest_element ?kind (elem: ('loc, 'loc) Flow_ast.Pattern.Array.RestElement.t') =
     let open Flow_ast.Pattern.Array.RestElement in

@@ -6434,25 +6434,32 @@ and mk_func_sig =
   in
 
   let mk_params cx tparams_map params =
-    let add_param_with_default default patt params = match patt with
-      | loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+    let add_param param params =
+      let (loc, { Ast.Function.Param.argument; default }) = param in
+      match argument with
+      | arg_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
           name = (name_loc, name_str) as name;
           annot;
           optional;
         } ->
-        let reason = mk_reason (RParameter (Some name_str)) loc in
+        let reason = mk_reason (RParameter (Some name_str)) arg_loc in
         let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
-        Func_params.add_simple cx ~optional ?default loc (Some name) t params,
-        ((loc, t), Ast.Pattern.Identifier {
+        Func_params.add_simple cx ~optional ?default arg_loc (Some name) t params,
+        let argument = (arg_loc, t), Ast.Pattern.Identifier {
           Ast.Pattern.Identifier.name = ((name_loc, t), name_str);
           annot;
           optional;
-        })
-      | loc, _ ->
-        let reason = mk_reason RDestructuring loc in
-        let annot = Destructuring.type_of_pattern patt in
+        } in
+        let default = match default with
+        | Some _ -> Some (Typed_ast.unimplemented_annot, Typed_ast.Expression.unimplemented)
+        | None -> None
+        in
+        (loc, { Ast.Function.Param.argument; default })
+      | arg_log, _ ->
+        let reason = mk_reason RDestructuring arg_log in
+        let annot = Destructuring.type_of_pattern argument in
         let t, _ = Anno.mk_type_annotation cx tparams_map reason annot in
-        Func_params.add_complex cx ~expr:expression ?default patt t params
+        Func_params.add_complex cx ~expr:expression param t params
     in
     let add_rest patt params =
       match patt with
@@ -6473,16 +6480,6 @@ and mk_func_sig =
         Flow_js.add_output cx
           Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
         params, ((loc, AnyT.at AnyError loc), Typed_ast.Pattern.error)
-    in
-    let add_param (loc, { Ast.Function.Param.argument }) acc =
-      let acc, arg_ast =
-        match argument with
-        | _, Ast.Pattern.Assignment { Ast.Pattern.Assignment.left; right; } ->
-          add_param_with_default (Some right) left acc
-        | patt ->
-          add_param_with_default None patt acc
-      in
-      acc, (loc, { Ast.Function.Param.argument = arg_ast })
     in
     let (params_loc, { Ast.Function.Params.params; rest }) = params in
     let params, rev_param_asts =
@@ -6635,7 +6632,7 @@ and declare_function_to_function_declaration cx declare_loc
           ) in
           let params = Core_list.map ~f:(fun param ->
             let (loc, _) as argument = param_type_to_param param in
-            (loc, { Ast.Function.Param.argument })
+            (loc, { Ast.Function.Param.argument; default = None })
           ) params in
           let rest = Ast.Type.Function.(
             match rest with
@@ -6683,7 +6680,9 @@ and declare_function_to_function_declaration cx declare_loc
                   { Ast.Type.Function.Param.name = Some ((name_loc, t), name); annot; optional; }
                 | _ -> assert_false "Function declaration AST has unexpected shape"
               in
-              let params = Core_list.map ~f:(fun (_, { Ast.Function.Param.argument }) ->
+              let params = Core_list.map ~f:(fun (_, { Ast.Function.Param.argument; default }) ->
+                if default <> None then
+                  assert_false "Function declaration AST has unexpected shape";
                 param_to_param_type argument
               ) params in
               let rest = Option.map

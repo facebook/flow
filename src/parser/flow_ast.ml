@@ -1121,6 +1121,7 @@ and Pattern : sig
       and ('M, 'T) t' = {
         key: ('M, 'T) key;
         pattern: ('M, 'T) Pattern.t;
+        default: ('M, 'T) Expression.t option;
         shorthand: bool;
       }
       [@@deriving show]
@@ -1142,6 +1143,14 @@ and Pattern : sig
     [@@deriving show]
   end
   module Array : sig
+    module Element : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+      and ('M, 'T) t' = {
+        argument: ('M, 'T) Pattern.t;
+        default: ('M, 'T) Expression.t option;
+      }
+      [@@deriving show]
+    end
     module RestElement : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
       and ('M, 'T) t' = {
@@ -1150,18 +1159,11 @@ and Pattern : sig
       [@@deriving show]
     end
     type ('M, 'T) element =
-      | Element of ('M, 'T) Pattern.t
+      | Element of ('M, 'T) Element.t
       | RestElement of ('M, 'T) RestElement.t
     and ('M, 'T) t = {
       elements: ('M, 'T) element option list;
       annot: ('M, 'T) Type.annotation_or_hint;
-    }
-    [@@deriving show]
-  end
-  module Assignment : sig
-    type ('M, 'T) t = {
-      left: ('M, 'T) Pattern.t;
-      right: ('M, 'T) Expression.t;
     }
     [@@deriving show]
   end
@@ -1177,7 +1179,6 @@ and Pattern : sig
   and ('M, 'T) t' =
     | Object of ('M, 'T) Object.t
     | Array of ('M, 'T) Array.t
-    | Assignment of ('M, 'T) Assignment.t
     | Identifier of ('M, 'T) Identifier.t
     | Expression of ('M, 'T) Expression.t
   [@@deriving show]
@@ -1288,6 +1289,7 @@ and Function : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
     and ('M, 'T) t' = {
       argument: ('M, 'T) Pattern.t;
+      default: ('M, 'T) Expression.t option;
     }
     [@@deriving show]
   end

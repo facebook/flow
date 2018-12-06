@@ -318,7 +318,7 @@ and get_children_nodes_pattern (_loc, pattern) =
       properties
       |> Core_list.map ~f:(fun property ->
              match property with
-             | Object.Property (_, {Object.Property.key; pattern; _}) ->
+             | Object.Property (_, {Object.Property.key; pattern; default; shorthand = _}) ->
                  let key_nodes =
                    match key with
                    | Object.Property.Literal _ -> []
@@ -327,7 +327,8 @@ and get_children_nodes_pattern (_loc, pattern) =
                        get_children_nodes_expr expr
                  in
                  let pattern_nodes = get_children_nodes_pattern pattern in
-                 key_nodes @ pattern_nodes
+                 let default_nodes = node_list_of_option ~f:get_children_nodes_expr default in
+                 key_nodes @ pattern_nodes @ default_nodes
              | Object.RestProperty (_, {Object.RestProperty.argument}) ->
                  get_children_nodes_pattern argument )
       |> List.flatten
@@ -335,14 +336,14 @@ and get_children_nodes_pattern (_loc, pattern) =
       elements
       |> Core_list.map ~f:(fun element_opt ->
              match element_opt with
-             | Some (Array.Element pattern) ->
-                 get_children_nodes_pattern pattern
+             | Some (Array.Element (_, {Array.Element.argument; default})) ->
+                 let pattern_nodes = get_children_nodes_pattern argument in
+                 let default_nodes = node_list_of_option ~f:get_children_nodes_expr default in
+                 pattern_nodes @ default_nodes
              | Some (Array.RestElement (_, {Array.RestElement.argument})) ->
                  get_children_nodes_pattern argument
              | None -> [] )
       |> List.flatten
-  | Assignment {Assignment.left; right} ->
-      get_children_nodes_pattern left @ get_children_nodes_expr right
   | Identifier _ -> []
   | Expression expr -> get_children_nodes_expr expr
 

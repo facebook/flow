@@ -37,18 +37,12 @@ module Patterns = struct
 
   let array elements =
     let elements = Core_list.map ~f:(function
-      | Some i -> Some (Array.Element i)
+      | Some i -> Some (Array.Element (Loc.none, { Array.Element.argument = i; default = None }))
       | None -> None
     ) elements in
     Loc.none, Array { Array.
       elements;
       annot = Ast.Type.Missing Loc.none;
-    }
-
-  let assignment str expr =
-    Loc.none, Assignment { Assignment.
-      left = identifier str;
-      right = expr;
     }
 
   let object_ str =
@@ -57,6 +51,7 @@ module Patterns = struct
       properties = [Property (Loc.none, { Property.
         key = Property.Identifier (Loc.none, str);
         pattern = identifier str;
+        default = None;
         shorthand = true;
       })];
       annot = Ast.Type.Missing Loc.none;
@@ -66,8 +61,8 @@ end
 module Functions = struct
   open Ast.Function
 
-  let param argument =
-    Loc.none, { Ast.Function.Param.argument }
+  let param ?default argument =
+    Loc.none, { Ast.Function.Param.argument; default }
 
   let body_block stmts =
     BodyBlock (Loc.none, { Ast.Statement.Block.

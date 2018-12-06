@@ -793,8 +793,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method function_param (param: ('M, 'T) Ast.Function.Param.t) : ('N, 'U) Ast.Function.Param.t =
     let open Ast.Function.Param in
-    let annot, { argument } = param in
-    this#on_loc_annot annot, { argument = this#function_param_pattern argument }
+    let annot, { argument; default } = param in
+    let annot' = this#on_loc_annot annot in
+    let argument' = this#function_param_pattern argument in
+    let default' = Option.map ~f:this#expression default in
+    annot', { argument = argument'; default = default' }
 
   method function_rest_param (expr: ('M, 'T) Ast.Function.RestParam.t)
                                   : ('N, 'U) Ast.Function.RestParam.t =
@@ -1201,10 +1204,6 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       let elements' = Core_list.map ~f:(Option.map ~f:(this#pattern_array_e ?kind)) elements in
       let annot' = this#type_annotation_hint annot in
       Array { Array.elements = elements'; annot = annot' }
-    | Assignment { Assignment.left; right } ->
-      let left' = this#pattern_assignment_pattern ?kind left in
-      let right' = this#expression right in
-      Assignment { Assignment.left = left'; right = right' }
     | Identifier { Identifier.name; annot; optional } ->
       let name' = this#t_pattern_identifier ?kind name in
       let annot' = this#type_annotation_hint annot in
@@ -1235,10 +1234,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method pattern_object_property ?kind (prop: ('M, 'T) Ast.Pattern.Object.Property.t')
                                             : ('N, 'U) Ast.Pattern.Object.Property.t' =
     let open Ast.Pattern.Object.Property in
-    let { key; pattern; shorthand } = prop in
+    let { key; pattern; default; shorthand } = prop in
     let key' = this#pattern_object_property_key ?kind key in
     let pattern' = this#pattern_object_property_pattern ?kind pattern in
-    { key = key'; pattern = pattern'; shorthand; }
+    let default' = Option.map ~f:this#expression default in
+    { key = key'; pattern = pattern'; default = default'; shorthand }
 
   method pattern_object_property_key ?kind (key: ('M, 'T) Ast.Pattern.Object.Property.key) =
     let open Ast.Pattern.Object.Property in
@@ -1281,10 +1281,18 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                                 : ('N, 'U) Ast.Pattern.Array.element =
     let open Ast.Pattern.Array in
     match e with
-    | Element elem ->
-      Element (this#pattern_array_element_pattern ?kind elem)
+    | Element (annot, elem) ->
+      Element (this#on_loc_annot annot, this#pattern_array_element ?kind elem)
     | RestElement (annot, elem) ->
       RestElement (this#on_loc_annot annot, this#pattern_array_rest_element ?kind elem)
+
+  method pattern_array_element ?kind (elem: ('M, 'T) Ast.Pattern.Array.Element.t')
+                                          : ('N, 'U) Ast.Pattern.Array.Element.t' =
+    let open Ast.Pattern.Array.Element in
+    let { argument; default } = elem in
+    let argument' = this#pattern_array_element_pattern ?kind argument in
+    let default' = Option.map ~f:this#expression default in
+    { argument = argument'; default = default' }
 
   method pattern_array_element_pattern ?kind (expr: ('M, 'T) Ast.Pattern.t)
                                                   : ('N, 'U) Ast.Pattern.t =

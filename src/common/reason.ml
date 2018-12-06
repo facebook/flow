@@ -921,8 +921,6 @@ Ast.Expression.(match x with
 and code_desc_of_pattern (_, x) = Ast.Pattern.(match x with
 | Object _ -> "{...}"
 | Array _ -> "[...]"
-| Assignment { Assignment.left; right } ->
-  code_desc_of_pattern left ^ " = " ^ code_desc_of_expression ~wrap:false right
 | Identifier { Identifier.name = (_, name); _ } -> name
 | Expression x -> code_desc_of_expression ~wrap:false x
 )

@@ -95,8 +95,7 @@ class ['loc] hoister = object(this)
       | Identifier { Identifier.name; _ } ->
         this#add_binding name
       | Object _
-      | Array _
-      | Assignment _ -> run (super#pattern ?kind) expr
+      | Array _ -> run (super#pattern ?kind) expr
       | Expression _ -> ()
       end;
       expr
@@ -166,8 +165,7 @@ class ['loc] lexical_hoister = object(this)
       | Identifier { Identifier.name; _ } ->
         this#add_binding name
       | Object _
-      | Array _
-      | Assignment _ -> run (super#pattern ?kind) expr
+      | Array _ -> run (super#pattern ?kind) expr
       | _ -> ()
       end;
       expr

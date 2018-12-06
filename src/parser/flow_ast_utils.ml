@@ -24,7 +24,7 @@ let rec fold_bindings_of_pattern =
     let open Array in
     function
     | None -> acc
-    | Some (Element (_, p))
+    | Some (Element (_, { Element.argument = (_, p); default = _ }))
     | Some (RestElement (_, { RestElement.argument = (_, p) })) ->
       fold_bindings_of_pattern f acc p
   in
@@ -36,8 +36,6 @@ let rec fold_bindings_of_pattern =
       List.fold_left (property f) acc properties
     | Array { Array.elements; _ } ->
       List.fold_left (element f) acc elements
-    | Assignment { Assignment.left = (_, p); _ } ->
-      fold_bindings_of_pattern f acc p
     | Expression _ ->
       failwith "expression pattern"
 

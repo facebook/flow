@@ -215,7 +215,7 @@ let tests = [
               atom "[";
               indent ((fused [
                 softline;
-                loc (id "a");
+                loc (loc (id "a"));
               ]));
               softline;
               atom "]";

@@ -896,12 +896,11 @@ module Statement
       | (_, Array {Array.elements; _;}) ->
         List.fold_left Array.(fun acc elem ->
           match elem with
-          | Some (Element pattern)
+          | Some (Element (_, {Element.argument = pattern; default = _}))
           | Some (RestElement (_, {RestElement.argument = pattern;}))
             -> fold acc pattern
           | None -> acc
         ) acc elements
-      | (_, Assignment {Assignment.left;_;}) -> fold acc left
       | (_, Identifier {Pattern.Identifier.name; _; }) ->
         name::acc
       | (_, Expression _) ->

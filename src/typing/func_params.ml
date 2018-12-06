@@ -55,11 +55,11 @@ let add_simple cx ~optional ?default loc id t x =
   in
   { x with params_rev; bindings_rev }
 
-let add_complex cx ~expr ?default patt t x =
-  let default = Option.map default Default.expr in
+let add_complex cx ~expr (loc, { Flow_ast.Function.Param.argument; default = def_expr }) t x =
+  let default = Option.map def_expr Default.expr in
   let bindings_rev = ref x.bindings_rev in
-  let patt = destructuring cx ~expr t None default patt ~f:(fun ~use_op:_ loc name default t ->
-    let t = match type_of_pattern patt with
+  let argument = destructuring cx ~expr t None default argument ~f:(fun ~use_op:_ loc name default t ->
+    let t = match type_of_pattern argument with
     | Flow_ast.Type.Missing _ -> t
     | Flow_ast.Type.Available _ ->
       let reason = mk_reason (RIdentifier name) loc in
@@ -71,7 +71,12 @@ let add_complex cx ~expr ?default patt t x =
   let t = if default <> None then Type.optional t else t in
   let params_rev = (None, t) :: x.params_rev in
   let bindings_rev = !bindings_rev in
-  { x with params_rev; bindings_rev }, patt
+  let def_expr = match def_expr with
+  | Some _ -> Some (Typed_ast.unimplemented_annot, Typed_ast.Expression.unimplemented)
+  | None -> None
+  in
+  let param = loc, { Flow_ast.Function.Param.argument = argument; default = def_expr } in
+  { x with params_rev; bindings_rev }, param
 
 let add_rest cx loc id t x =
   let name = Option.map id ~f:(fun (id_loc, name) ->

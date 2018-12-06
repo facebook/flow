@@ -524,6 +524,7 @@ module T = struct
               Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier name;
               pattern = id_pattern;
               shorthand = (snd id = snd name);
+              default = None;
             })
           ];
           annot = Ast.Type.Missing (fst name);
@@ -539,6 +540,7 @@ module T = struct
             Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier name;
             pattern;
             shorthand = false;
+            default = None;
           })
         ];
         annot = Ast.Type.Missing (fst name);
@@ -755,7 +757,6 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         if default
         then loc, Some (loc, "_"), true, annotated_type annot
         else loc, None, false, annotated_type annot
-      | _, Assignment { Assignment.left; right = _ } -> pattern ~default:true left
       | loc, Expression _ ->
         T.FixMe.mk_pattern default loc
 
@@ -972,8 +973,8 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | Instanceof -> loc, T.Boolean
 
   and function_ =
-    let function_param (_, { Ast.Function.Param.argument }) =
-      pattern argument
+    let function_param (_, { Ast.Function.Param.argument; default }) =
+      pattern ~default:(default <> None) argument
 
     in let function_rest_param (loc, { Ast.Function.RestParam.argument }) =
       (loc, pattern argument)

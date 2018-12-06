@@ -1093,7 +1093,8 @@ module Expression
               name;
               annot = Ast.Type.Missing (Peek.loc_skip_lookahead env);
               optional = false;
-            }
+            };
+            default = None;
           } in
           tparams,
           (loc, { Ast.Function.Params.params = [param]; rest = None }),
