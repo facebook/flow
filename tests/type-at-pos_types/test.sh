@@ -148,6 +148,12 @@ assert_ok "$FLOW" type-at-pos optional.js 10 14 --strip-root --pretty
 printf "optional.js:14:10 = "
 assert_ok "$FLOW" type-at-pos optional.js 14 10 --strip-root --pretty
 
+# stack-overflow-bugfix.js
+# This used to cause Stack overflow due to a normalizer bug in Substitution
+# with a mapping of the form: A -> Bound(A)
+printf "stack-overflow-bugfix.js:14:10 = "
+assert_ok "$FLOW" type-at-pos stack-overflow-bugfix.js 5 6 --strip-root --pretty --expand-type-aliases
+
 # recursive.js
 printf "recursive.js:3:25 = "
 assert_ok "$FLOW" type-at-pos recursive.js 3 25 --strip-root --pretty

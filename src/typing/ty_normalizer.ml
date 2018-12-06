@@ -393,8 +393,10 @@ end = struct
           let env = remove_params env ps in
           super#on_t env t
         | Bound (_, name) ->
-          let t' = Option.value (SMap.get name env) ~default:t in
-          super#on_t env t'
+          begin match SMap.get name env with
+            | Some t' -> t'
+            | None -> super#on_t env t
+          end
         | _ ->
           super#on_t env t
     end
@@ -1268,11 +1270,16 @@ end = struct
     | Some d -> type__ ~env d >>= fun d -> return (Some d)
     | _ -> return None
 
-  and type_param ~env { T.name; bound; polarity; default; _ } =
+  and type_param ~env tp =
+    let { T.name; bound; polarity; default; _ } = tp in
     let tp_polarity = type_polarity polarity in
     param_bound ~env bound >>= fun tp_bound ->
-    default_t ~env default >>= fun tp_default ->
-    return { Ty.tp_name = name; tp_bound; tp_polarity; tp_default }
+    default_t ~env default >>| fun tp_default ->
+    { Ty.
+      tp_name = name;
+      tp_bound;
+      tp_polarity;
+      tp_default }
 
   and opt_t ~env t =
     let t, opt = match t with
