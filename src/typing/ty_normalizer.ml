@@ -1249,9 +1249,11 @@ end = struct
   and react_prop_type ~env =
     let open T.React.PropType in
     function
-    | Primitive (_, t)   ->
+    | Primitive (is_req, t)   ->
       type__ ~env t >>| fun t ->
-      generic_builtin_t "React$PropType$Primitive" [t]
+      generic_builtin_t
+        (if is_req then "React$PropType$Primitive$Required" else "React$PropType$Primitive")
+        [t]
     | Complex ArrayOf -> return (builtin_t "React$PropType$ArrayOf")
     | Complex InstanceOf -> return (builtin_t "React$PropType$ArrayOf")
     | Complex ObjectOf -> return (builtin_t "React$PropType$dbjectOf")
