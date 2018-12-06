@@ -162,7 +162,9 @@ end
 
 module Function = struct
   open Ast.Function
-  let body_error = BodyExpression (error_annot, Expression.error)
+  let body_error = BodyBlock (ALoc.none, { Ast.Statement.Block.body = [
+    Statement.error
+  ]})
 
   module RestParam = struct
     open RestParam
@@ -182,7 +184,7 @@ module Function = struct
   let error = {
     id = Some (error_annot, "Error");
     params = ALoc.none, Params.error;
-    body = BodyExpression (error_annot, Expression.error);
+    body = body_error;
     async = false;
     generator = false;
     predicate = None;
