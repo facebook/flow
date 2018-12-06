@@ -133,7 +133,7 @@ declare module "some-es-module" {
 
   // Declares a named "concatPath" export which returns an instance of the
   // `Path` class (defined above)
-  declare export function concatPath(dirA: string, dirB: string): Path,
+  declare export function concatPath(dirA: string, dirB: string): Path;
 }
 ```
 
