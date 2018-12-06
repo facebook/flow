@@ -7,18 +7,19 @@ class MyComponent extends React.Component<{| foo: number |}> {
   }
 }
 
-function wrapper<TProps: {}, TDefaultProps: ?{}, TInstance>(
-  base: React$AbstractComponent<TProps, TDefaultProps, TInstance>,
-): React$AbstractComponent<TProps, TDefaultProps, TInstance> {
+function wrapper<TProps: {}, TInstance>(
+  base: React$AbstractComponent<TProps, TInstance>,
+): React$AbstractComponent<TProps, TInstance> {
   return base;
 }
 
-function wrapper2<TProps: {}, TDefaultProps: ?{}, TInstance>(
-  base: React$AbstractComponent<TProps, TDefaultProps, TInstance>,
-): React$AbstractComponent<TProps, TDefaultProps, TInstance> {
+function wrapper2<TProps: {}, TInstance>(
+  base: React$AbstractComponent<TProps, TInstance>,
+): React$AbstractComponent<TProps, TInstance> {
   return base;
 }
 
 const WrappedBoth = wrapper(wrapper2(MyComponent));
 const _a = <WrappedBoth foo={42} bar={43} />; // Error, extra prop bar
 const _b = <WrappedBoth />; // Error, missing prop foo
+const _c = <WrappedBoth foo={42} />;

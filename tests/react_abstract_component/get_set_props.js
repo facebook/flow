@@ -1,6 +1,6 @@
 //@flow
 
-function test(x: React$AbstractComponent<any, any, any>) {
+function test(x: React$AbstractComponent<any, any>) {
   if (x.displayName) {
     x.displayName;
     x.displayName = null;

@@ -253,9 +253,8 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "wrappedObj", _json_of_t json_cx t
     ]
 
-  | DefT (_, ReactAbstractComponentT {config; default_props; instance}) -> [
+  | DefT (_, ReactAbstractComponentT {config; instance}) -> [
       "config", _json_of_t json_cx config;
-      "default_props", _json_of_t json_cx default_props;
       "instance", _json_of_t json_cx instance;
     ]
 

@@ -142,10 +142,7 @@ let get_defaults cx trace component ~reason_op ~rec_flow =
     let tvar = Tvar.mk cx reason_op in
     lookup_defaults cx trace component ~reason_op ~rec_flow tvar Positive;
     Some tvar
-  | DefT (_, ReactAbstractComponentT {default_props; _}) ->
-    Some (Tvar.mk_where cx reason_op (fun tvar ->
-      rec_flow cx trace (default_props, UseT (unknown_use, tvar))
-    ))
+  | DefT (_, ReactAbstractComponentT _) -> None
   (* Everything else will not have default props we should diff out. *)
   | _ -> None
 

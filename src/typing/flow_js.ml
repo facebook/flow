@@ -933,8 +933,8 @@ module ResolvableTypeJob = struct
       let ts = InterRep.members rep in
       collect_of_types ?log_unresolved cx reason acc ts
 
-    | DefT (_, ReactAbstractComponentT {config; default_props; instance}) ->
-      collect_of_types ?log_unresolved cx reason acc [config; default_props; instance]
+    | DefT (_, ReactAbstractComponentT {config; instance}) ->
+      collect_of_types ?log_unresolved cx reason acc [config; instance]
 
     | OpaqueT (_, {underlying_t; super_t; _}) ->
       let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx reason) in
@@ -4001,7 +4001,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Class component ~> AbstractComponent *)
     | DefT (r, ClassT this),
-      UseT (use_op, DefT (_, ReactAbstractComponentT {config; default_props; instance})) ->
+      UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
         (* Contravariant config check *)
         React_kit.get_config cx trace l ~use_op ~reason_op:r ~rec_flow ~rec_flow_t ~rec_unify
           ~get_builtin_typeapp ~get_builtin_type ~add_output
@@ -4012,14 +4012,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ClassT (get_builtin_typeapp cx r
               "React$Component" [Unsoundness.why React r; Unsoundness.why React r])) in
         rec_flow_t cx trace (l, class_component);
-        (* Unify DefaultProps *)
-        React_kit.lookup_defaults cx trace l ~reason_op:r ~rec_flow default_props Neutral;
         (* check instancel <: instanceu *)
         rec_flow_t cx trace (this, instance);
 
     (* Function Component ~> AbstractComponent *)
     | DefT (r, (FunT _ | ObjT {call_t = Some _; _})),
-      UseT (use_op, DefT (_, ReactAbstractComponentT {config; default_props; instance})) ->
+      UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
         (* Contravariant config check *)
         React_kit.get_config cx trace l ~use_op ~reason_op:r ~rec_flow ~rec_flow_t ~rec_unify
           ~get_builtin_typeapp ~get_builtin_type ~add_output
@@ -4029,35 +4027,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let component_function = React_kit.component_function cx ~reason_op:r ~get_builtin_type
           (Unsoundness.why React r) in
         rec_flow_t cx trace (l, component_function);
-        (* Unify DefaultProps *)
-        React_kit.lookup_defaults cx trace l ~reason_op:r ~rec_flow default_props Neutral;
         (* A function component instance type is always void, so flow void to instance *)
         rec_flow_t cx trace ((VoidT.make (replace_reason_const RVoid r)), instance);
 
     (* AbstractComponent ~> AbstractComponent *)
     | DefT (_, ReactAbstractComponentT {config = configl;
-        default_props = default_propsl;
         instance = instancel}),
-      UseT (use_op, DefT (_, ReactAbstractComponentT {config = configu;
-        default_props = default_propsu;
+      UseT (_, DefT (_, ReactAbstractComponentT {config = configu;
         instance = instanceu}))
       ->
         rec_flow_t cx trace (configu, configl);
-        rec_unify cx trace ~use_op default_propsl default_propsu;
         rec_flow_t cx trace (instancel, instanceu);
 
     (* When looking at properties of an AbstractComponent, we delegate to a union of
      * funciton component and class component
      *)
-    | DefT (r, ReactAbstractComponentT {default_props; _}),(
+    | DefT (r, ReactAbstractComponentT _),(
         TestPropT _
       | GetPropT  _
       | SetPropT _
       | GetElemT _
       | SetElemT _
     ) ->
-      let statics = get_builtin_typeapp cx ~trace r "React$AbstractComponentStatics"
-        [default_props] in
+      let statics = get_builtin_type cx ~trace r "React$AbstractComponentStatics" in
       rec_flow cx trace (statics, u)
 
     (***********************************************)
@@ -7842,9 +7834,8 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace Positive c;
     check_polarity_typeapp cx ?trace polarity c ts
 
-  | DefT (_, ReactAbstractComponentT {config; default_props; instance}) ->
+  | DefT (_, ReactAbstractComponentT {config; instance}) ->
       check_polarity cx ?trace Negative config;
-      check_polarity cx ?trace Neutral default_props;
       check_polarity cx ?trace Positive instance;
 
   | OpaqueT (_, opaquetype) ->

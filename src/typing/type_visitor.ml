@@ -184,9 +184,8 @@ class ['a] t = object(self)
   | IdxWrapper t ->
     self#type_ cx pole acc t
 
-  | ReactAbstractComponentT {config; default_props; instance} ->
+  | ReactAbstractComponentT {config; instance} ->
     let acc = self#type_ cx Neutral acc config in
-    let acc = self#type_ cx Neutral acc default_props in
     self#type_ cx Neutral acc instance
 
   method targ cx pole acc = function

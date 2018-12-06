@@ -7,7 +7,7 @@ const FancyButton = React.forwardRef<Props, _>((props, ref) => (
   </button>
 ));
 
-(FancyButton: React.AbstractComponent<Props, void, HTMLButtonElement>);
+(FancyButton: React.AbstractComponent<Props, HTMLButtonElement>);
 
 const _a = <FancyButton />; // Error, missing foo
 const _b = <FancyButton foo={3} />;

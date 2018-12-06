@@ -254,7 +254,7 @@ module rec TypeTerm : sig
     | IdxWrapper of t
 
     (* React$AbstractComponent<Config, DefaultProps, Instance> *)
-    | ReactAbstractComponentT of {config: t; default_props: t; instance: t}
+    | ReactAbstractComponentT of {config: t; instance: t}
 
   and defer_use_t =
     (* type of a variable / parameter / property extracted from a pattern *)

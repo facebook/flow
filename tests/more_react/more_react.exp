@@ -58,15 +58,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:219:41
+   <BUILTINS>/react.js:218:41
                                                 v---
-   219|   declare export function checkPropTypes<V>(
-   220|     propTypes : any,
-   221|     values: V,
-   222|     location: string,
-   223|     componentName: string,
-   224|     getStack: ?(() => ?string)
-   225|   ) : void;
+   218|   declare export function checkPropTypes<V>(
+   219|     propTypes : any,
+   220|     values: V,
+   221|     location: string,
+   222|     componentName: string,
+   223|     getStack: ?(() => ?string)
+   224|   ) : void;
           -------^ [1]
 
 
@@ -79,15 +79,15 @@ Cannot call `checkPropTypes` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:219:41
+   <BUILTINS>/react.js:218:41
                                                 v---
-   219|   declare export function checkPropTypes<V>(
-   220|     propTypes : any,
-   221|     values: V,
-   222|     location: string,
-   223|     componentName: string,
-   224|     getStack: ?(() => ?string)
-   225|   ) : void;
+   218|   declare export function checkPropTypes<V>(
+   219|     propTypes : any,
+   220|     values: V,
+   221|     location: string,
+   222|     componentName: string,
+   223|     getStack: ?(() => ?string)
+   224|   ) : void;
           -------^ [1]
 
 
@@ -104,8 +104,8 @@ References:
    checkPropTypes.js:12:91
     12| checkPropTypes({ foo: PropTypes.string }, { foo: 'foo' }, 'value', 'TestComponent', () => 123); // error: number ~> string
                                                                                                   ^^^ [1]
-   <BUILTINS>/react.js:224:24
-   224|     getStack: ?(() => ?string)
+   <BUILTINS>/react.js:223:24
+   223|     getStack: ?(() => ?string)
                                ^^^^^^ [2]
 
 

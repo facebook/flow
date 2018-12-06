@@ -6,19 +6,18 @@ class Component extends React.Component<{|foo: number, bar: number|}> {
   static defaultProps: {| foo: number |} = {foo: 3};
 }
 
-function TrivialHOC<Props, DefaultProps: ?{}, Instance>(
-  x: React.AbstractComponent<Props, DefaultProps, Instance>,
-): React.AbstractComponent<Props, DefaultProps, Instance> {
+function TrivialHOC<Props, Instance>(
+  x: React.AbstractComponent<Props, Instance>,
+): React.AbstractComponent<Props, Instance> {
   return x;
 }
 
 const TrivialWrap = TrivialHOC(Component);
-// Note: Default props still intact
-(TrivialWrap: React.AbstractComponent<{|foo: number, bar: number|}, {| foo: number |}, Component>);
+(TrivialWrap: React.AbstractComponent<{|foo?: number, bar: number|}, Component>);
 
-function WrapInDivWithExtraProp<Props, DefaultProps, Instance>(
-  x: React.AbstractComponent<Props, DefaultProps, Instance>,
-): React.AbstractComponent<{| ...Props, baz: number |}, DefaultProps, void> {
+function WrapInDivWithExtraProp<Props, Instance>(
+  x: React.AbstractComponent<Props, Instance>,
+): React.AbstractComponent<{| ...Props, baz: number |}, void> {
   const C = (props: {|...Props, baz: number|}) =>
     <div>
       {props.baz}
@@ -29,11 +28,11 @@ function WrapInDivWithExtraProp<Props, DefaultProps, Instance>(
 }
 
 const WrappedInDivWithExtraProp = WrapInDivWithExtraProp(Component); // Note, we lose instance type here
-(WrappedInDivWithExtraProp: React.AbstractComponent<{| foo: number, bar: number, baz: number |}, {| foo: number |}, void>);
+(WrappedInDivWithExtraProp: React.AbstractComponent<{| foo?: number, bar: number, baz: number |}, void>);
 
-function AddPropWithDefault<Props, DefaultProps, Instance>(
-  x: React.AbstractComponent<Props, DefaultProps, Instance>
-): React.AbstractComponent<{| ...Props, baz:number |}, {| ...DefaultProps, baz: number |}, void> {
+function AddPropWithDefault<Props, Instance>(
+  x: React.AbstractComponent<Props, Instance>
+): React.AbstractComponent<{| ...Props, baz?:number |}, void> {
   const C = (props: {| ...Props, baz: number |}) =>
     <div>
       {props.baz}
@@ -45,7 +44,6 @@ function AddPropWithDefault<Props, DefaultProps, Instance>(
 
 const WrappedAddPropWithDefault = AddPropWithDefault(Component);
 (WrappedAddPropWithDefault: React.AbstractComponent<
-  {| foo: number, bar: number, baz: number |},
-  {| foo: number, baz: number |},
+  {| foo?: number, bar: number, baz?: number |},
   void,
  >);

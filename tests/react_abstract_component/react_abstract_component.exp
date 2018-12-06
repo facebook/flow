@@ -1,87 +1,73 @@
-Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:15:99
+Error ----------------------------------------------------------------------------------------------------- HOC.js:26:24
+
+Cannot get `x.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
+
+   HOC.js:26:24
+   26|   C.defaultProps = {...x.defaultProps};
+                              ^^^^^^^^^^^^^^
+
+References:
+   HOC.js:19:6
+   19|   x: React.AbstractComponent<Props, Instance>,
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- HOC.js:41:24
+
+Cannot get `x.defaultProps` because property `defaultProps` is missing in `React.AbstractComponentStatics` [1].
+
+   HOC.js:41:24
+   41|   C.defaultProps = {...x.defaultProps, baz: 3};
+                              ^^^^^^^^^^^^^^
+
+References:
+   HOC.js:34:6
+   34|   x: React.AbstractComponent<Props, Instance>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:15:95
 
 Property `foo` is missing in object type [1] but exists in object type [2].
 
-   abstract_vs_abstract.js:15:99
-   15| function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error missing props
-                                                                                                         ^^ [1]
+   abstract_vs_abstract.js:15:95
+   15| function test3(x: React$AbstractComponent<{foo: number}, Component>): React$AbstractComponent<{}, Component> { // Error missing props
+                                                                                                     ^^ [1]
 
 References:
    abstract_vs_abstract.js:15:43
-   15| function test3(x: React$AbstractComponent<{foo: number}, {}, Component>): React$AbstractComponent<{}, {}, Component> { // Error missing props
+   15| function test3(x: React$AbstractComponent<{foo: number}, Component>): React$AbstractComponent<{}, Component> { // Error missing props
                                                  ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:20:10
-
-Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
-
-   abstract_vs_abstract.js:20:10
-   20|   return x;
-                ^
-
-References:
-   abstract_vs_abstract.js:19:47
-   19| function test4(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{}, {foo: number}, Component> { // Error default props don't unify
-                                                     ^^ [1]
-   abstract_vs_abstract.js:19:92
-   19| function test4(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{}, {foo: number}, Component> { // Error default props don't unify
-                                                                                                  ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:24:10
-
-Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
-
-   abstract_vs_abstract.js:24:10
-   24|   return x;
-                ^
-
-References:
-   abstract_vs_abstract.js:23:103
-   23| function test5(x: React$AbstractComponent<{}, {foo: number}, Component>): React$AbstractComponent<{}, {}, Component> { // Error default props don't unify
-                                                                                                             ^^ [1]
-   abstract_vs_abstract.js:23:47
-   23| function test5(x: React$AbstractComponent<{}, {foo: number}, Component>): React$AbstractComponent<{}, {}, Component> { // Error default props don't unify
-                                                     ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:27:51
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:19:47
 
 `Component` [1] is incompatible with `Subcomponent` [2].
 
-   abstract_vs_abstract.js:27:51
-   27| function test6(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{}, {}, Subcomponent> { // Error instance is covariant
-                                                         ^^^^^^^^^ [1]
+   abstract_vs_abstract.js:19:47
+   19| function test4(x: React$AbstractComponent<{}, Component>): React$AbstractComponent<{}, Subcomponent> { // Error instance is covariant
+                                                     ^^^^^^^^^ [1]
 
 References:
-   abstract_vs_abstract.js:27:96
-   27| function test6(x: React$AbstractComponent<{}, {}, Component>): React$AbstractComponent<{}, {}, Subcomponent> { // Error instance is covariant
-                                                                                                      ^^^^^^^^^^^^ [2]
+   abstract_vs_abstract.js:19:88
+   19| function test4(x: React$AbstractComponent<{}, Component>): React$AbstractComponent<{}, Subcomponent> { // Error instance is covariant
+                                                                                              ^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- arity.js:3:19
 
-Cannot use type without exactly 3 type arguments.
+Cannot use type without exactly 2 type arguments.
 
    3| function test1(x: React$AbstractComponent<any>) { // Not enough targs
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- arity.js:7:19
-
-Cannot use type without exactly 3 type arguments.
-
-   7| function test2(x: React$AbstractComponent<any,any>) { // Not enough targs
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
 Error --------------------------------------------------------------------------------------------------- arity.js:11:19
 
-Cannot use type without exactly 3 type arguments.
+Cannot use type without exactly 2 type arguments.
 
-   11| function test3(x: React$AbstractComponent<any,any,any,any>) { // Too many targs
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   11| function test3(x: React$AbstractComponent<any,any,any>) { // Too many targs
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------- classes_lower.js:5:7
@@ -93,149 +79,73 @@ Error --------------------------------------------------------------------------
              ^^^^^^^^^ [1]
 
 References:
-   classes_lower.js:30:47
-   30| (Component: React$AbstractComponent<any, any, Subclass>); // Ok, Instance is covariant
-                                                     ^^^^^^^^ [2]
+   classes_lower.js:25:42
+   25| (Component: React$AbstractComponent<any, Subclass>); // Ok, Instance is covariant
+                                                ^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- classes_lower.js:10:42
-
-object type [1] is incompatible with default props of React component [2].
-
-   classes_lower.js:10:42
-   10| (Component: React$AbstractComponent<any, {}, any>); // Error no defaults
-                                                ^^ [1]
-
-References:
-   classes_lower.js:10:2
-   10| (Component: React$AbstractComponent<any, {}, any>); // Error no defaults
-        ^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- classes_lower.js:11:2
-
-Inexact default props of React component [1] is incompatible with exact object type [2].
-
-   classes_lower.js:11:2
-   11| (Component: React$AbstractComponent<any, {| foo: number |}, any>); // Error extra default props
-        ^^^^^^^^^ [1]
-
-References:
-   classes_lower.js:11:42
-   11| (Component: React$AbstractComponent<any, {| foo: number |}, any>); // Error extra default props
-                                                ^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- classes_lower.js:11:42
-
-object type [1] is incompatible with default props of React component [2].
-
-   classes_lower.js:11:42
-   11| (Component: React$AbstractComponent<any, {| foo: number |}, any>); // Error extra default props
-                                                ^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   classes_lower.js:11:2
-   11| (Component: React$AbstractComponent<any, {| foo: number |}, any>); // Error extra default props
-        ^^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- classes_lower.js:13:7
+Error -------------------------------------------------------------------------------------------- classes_lower.js:11:7
 
 `ComponentNarrower` [1] is incompatible with `Component` [2].
 
-   classes_lower.js:13:7
-   13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+   classes_lower.js:11:7
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
              ^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   classes_lower.js:22:55
-   22| (ComponentNarrower: React$AbstractComponent<any, any, Component>); // Error instance type is wrong
-                                                             ^^^^^^^^^ [2]
+   classes_lower.js:19:50
+   19| (ComponentNarrower: React$AbstractComponent<any, Component>); // Error instance type is wrong
+                                                        ^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- classes_lower.js:14:24
+Error ------------------------------------------------------------------------------------------- classes_lower.js:15:21
 
-Inexact object type [1] is incompatible with exact object type [2].
+Cannot use type without exactly 2 type arguments.
 
-   classes_lower.js:14:24
-   14|   static defaultProps: { foo: number } = {foo: 3};
-                              ^^^^^^^^^^^^^^^ [1]
-
-References:
-   classes_lower.js:19:76
-   19| (ComponentNarrower: React$AbstractComponent<{+foo?: number, +bar: number}, {|foo: number|}, any>); // Error inexact vs exact
-                                                                                  ^^^^^^^^^^^^^^^ [2]
+   15| (ComponentNarrower: React$AbstractComponent<any, any, any>);
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- classes_lower.js:14:24
+Error ------------------------------------------------------------------------------------------- classes_lower.js:17:45
 
 Property `bar` is missing in object type [1] but exists in object type [2].
 
-   classes_lower.js:14:24
-   14|   static defaultProps: { foo: number } = {foo: 3};
-                              ^^^^^^^^^^^^^^^ [1]
-
-References:
-   classes_lower.js:25:50
-   25| (ComponentNarrower: React$AbstractComponent<any, { foo: number, bar: number }, any>); // Error, bar is not in default config
-                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- classes_lower.js:20:45
-
-Property `bar` is missing in object type [1] but exists in object type [2].
-
-   classes_lower.js:20:45
-   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in config
+   classes_lower.js:17:45
+   17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
                                                    ^^ [1]
 
 References:
-   classes_lower.js:13:49
-   13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+   classes_lower.js:11:49
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- classes_lower.js:20:45
+Error ------------------------------------------------------------------------------------------- classes_lower.js:17:45
 
 Property `foo` is missing in object type [1] but exists in object type [2].
 
-   classes_lower.js:20:45
-   20| (ComponentNarrower: React$AbstractComponent<{}, any, any>); // Error missing foo and bar in config
+   classes_lower.js:17:45
+   17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
                                                    ^^ [1]
 
 References:
-   classes_lower.js:13:49
-   13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+   classes_lower.js:11:49
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- classes_lower.js:21:45
+Error ------------------------------------------------------------------------------------------- classes_lower.js:18:45
 
 Property `bar` is missing in object type [1] but exists in object type [2].
 
-   classes_lower.js:21:45
-   21| (ComponentNarrower: React$AbstractComponent<{+foo?: number}, any, any>); // Error missing bar in config
+   classes_lower.js:18:45
+   18| (ComponentNarrower: React$AbstractComponent<{+foo?: number}, any>); // Error missing bar in config
                                                    ^^^^^^^^^^^^^^^ [1]
 
 References:
-   classes_lower.js:13:49
-   13| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+   classes_lower.js:11:49
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- classes_lower.js:24:50
-
-Property `foo` is missing in object type [1] but exists in object type [2].
-
-   classes_lower.js:24:50
-   24| (ComponentNarrower: React$AbstractComponent<any, {}, any>); // Error, missing foo in default config
-                                                        ^^ [1]
-
-References:
-   classes_lower.js:14:24
-   14|   static defaultProps: { foo: number } = {foo: 3};
-                              ^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- config.js:13:2
@@ -300,7 +210,7 @@ Cannot create `C` element because property `bar` is missing in props [1] but exi
 
 References:
    create_element.js:5:40
-   5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, mixed, number>;
+   5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -314,7 +224,7 @@ Cannot create `C` element because property `baz` is missing in props [1] but exi
 
 References:
    create_element.js:5:40
-    5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, mixed, number>;
+    5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -332,14 +242,14 @@ References:
    create_element.js:15:32
     15| const refBad = React.createRef<string>();
                                        ^^^^^^ [1]
-   create_element.js:5:101
-     5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, mixed, number>;
-                                                                                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:238:6
-   238|   ): {current: null | T};
+   create_element.js:5:94
+     5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
+                                                                                                     ^^^^^^ [2]
+   <BUILTINS>/react.js:237:6
+   237|   ): {current: null | T};
              ^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:196:6
-   196|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:195:6
+   195|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -357,11 +267,11 @@ References:
    create_element.js:19:49
     19| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
                                                         ^^^^^^^^ [1]
-   <BUILTINS>/react.js:189:26
-   189| declare type React$Key = string | number;
+   <BUILTINS>/react.js:188:26
+   188| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:189:35
-   189| declare type React$Key = string | number;
+   <BUILTINS>/react.js:188:35
+   188| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -375,7 +285,7 @@ Cannot create `C` element because property `bar` is missing in props [1] but exi
 
 References:
    destructors.js:5:40
-   5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, {foo: number}, void>;
+   5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, void>;
                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -388,9 +298,9 @@ Cannot cast `3` to `React.ElementRef` because number [1] is incompatible with un
         ^ [1]
 
 References:
-   destructors.js:5:84
-    5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, {foo: number}, void>;
-                                                                                          ^^^^ [2]
+   destructors.js:5:69
+    5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, void>;
+                                                                           ^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- destructors.js:21:2
@@ -404,7 +314,7 @@ in object type [2].
 
 References:
    destructors.js:5:40
-    5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, {foo: number}, void>;
+    5| declare var C: React$AbstractComponent<{foo?: number, bar: number}, void>;
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -455,7 +365,7 @@ Error --------------------------------------------------------------------------
 Property `foo` is missing in object type [1] but exists in `Props` [2].
 
    function_lower.js:7:37
-   7| (Component: React$AbstractComponent<{}, void, void>); // Error, missing foo
+   7| (Component: React$AbstractComponent<{}, void>); // Error, missing foo
                                           ^^ [1]
 
 References:
@@ -464,113 +374,71 @@ References:
                             ^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:9:44
-
-object type [1] is incompatible with default props of React component [2].
-
-   function_lower.js:9:44
-   9| (Component: React$AbstractComponent<Props, {foo: number}, void>); // Error, default props don't unify
-                                                 ^^^^^^^^^^^^^ [1]
-
-References:
-   function_lower.js:9:2
-   9| (Component: React$AbstractComponent<Props, {foo: number}, void>); // Error, default props don't unify
-       ^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- function_lower.js:11:2
+Error ------------------------------------------------------------------------------------------- function_lower.js:10:2
 
 undefined [1] is incompatible with number [2].
 
-   function_lower.js:11:2
-   11| (Component: React$AbstractComponent<Props, void, number>); // Error void ~> number
+   function_lower.js:10:2
+   10| (Component: React$AbstractComponent<Props, number>); // Error void ~> number
         ^^^^^^^^^ [1]
 
 References:
-   function_lower.js:11:50
-   11| (Component: React$AbstractComponent<Props, void, number>); // Error void ~> number
-                                                        ^^^^^^ [2]
+   function_lower.js:10:44
+   10| (Component: React$AbstractComponent<Props, number>); // Error void ~> number
+                                                  ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ function_lower.js:18:62
-
-Property `bar` is missing in object type [1] but exists in object type [2].
-
-   function_lower.js:18:62
-   18| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number}, void>);
-                                                                    ^^^^^^^^^^^^^ [1]
-
-References:
-   function_lower.js:21:62
-   21| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number, bar: number}, void>); // Error, default props don't unify
-                                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ function_lower.js:19:53
+Error ------------------------------------------------------------------------------------------ function_lower.js:18:53
 
 Property `bar` is missing in object type [1] but exists in `Props2` [2].
 
-   function_lower.js:19:53
-   19| (ComponentWithDefaultProps: React$AbstractComponent<{}, {foo: number}, void>); // Error, missing foo and bar
+   function_lower.js:18:53
+   18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
                                                            ^^ [1]
 
 References:
-   function_lower.js:15:39
-   15| function ComponentWithDefaultProps(x: Props2) { return null; }
+   function_lower.js:14:39
+   14| function ComponentWithDefaultProps(x: Props2) { return null; }
                                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ function_lower.js:19:53
+Error ------------------------------------------------------------------------------------------ function_lower.js:18:53
 
 Property `foo` is missing in object type [1] but exists in `Props2` [2].
 
-   function_lower.js:19:53
-   19| (ComponentWithDefaultProps: React$AbstractComponent<{}, {foo: number}, void>); // Error, missing foo and bar
+   function_lower.js:18:53
+   18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
                                                            ^^ [1]
 
 References:
-   function_lower.js:15:39
-   15| function ComponentWithDefaultProps(x: Props2) { return null; }
+   function_lower.js:14:39
+   14| function ComponentWithDefaultProps(x: Props2) { return null; }
                                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ function_lower.js:20:62
-
-Property `foo` is missing in object type [1] but exists in object type [2].
-
-   function_lower.js:20:62
-   20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {}, void>); // Error, default props don't unify
-                                                                    ^^ [1]
-
-References:
-   function_lower.js:18:62
-   18| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number}, void>);
-                                                                    ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- function_lower.js:23:2
+Error ------------------------------------------------------------------------------------------- function_lower.js:20:2
 
 undefined [1] is incompatible with number [2].
 
-   function_lower.js:23:2
-   23| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number}, number>); // Error, void ~> number
+   function_lower.js:20:2
+   20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, number>); // Error, void ~> number
         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   function_lower.js:23:77
-   23| (ComponentWithDefaultProps: React$AbstractComponent<Config2, {foo: number}, number>); // Error, void ~> number
-                                                                                   ^^^^^^ [2]
+   function_lower.js:20:62
+   20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, number>); // Error, void ~> number
+                                                                    ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:25:7
+Error ------------------------------------------------------------------------------------------- function_lower.js:22:7
 
 Cannot assign class `NotAComponent` to `NotAComponent` because:
  - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
-   function_lower.js:25:7
-   25| class NotAComponent {}; // Error, not a component
+   function_lower.js:22:7
+   22| class NotAComponent {}; // Error, not a component
              ^^^^^^^^^^^^^ [1]
 
 References:
@@ -597,8 +465,8 @@ Cannot call `x.displayName.toString` because:
           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:134:17
-   134|   displayName?: ?string,
+   <BUILTINS>/react.js:133:17
+   133|   displayName?: ?string,
                         ^^^^^^^ [1]
    get_set_props.js:6:21
      6|     x.displayName = null;
@@ -615,15 +483,14 @@ Cannot get `x.definitelyNotHere` because property `definitelyNotHere` is missing
           ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:132:61
-                                                                    v
-   132| declare type React$AbstractComponentStatics<DefaultProps> = {
-   133|   defaultProps: DefaultProps,
-   134|   displayName?: ?string,
-   135|   // This is only on function components, but trying to access name when
-   136|   // displayName is undefined is a common pattern.
-   137|   name?: ?string,
-   138| };
+   <BUILTINS>/react.js:132:47
+                                                      v
+   132| declare type React$AbstractComponentStatics = {
+   133|   displayName?: ?string,
+   134|   // This is only on function components, but trying to access name when
+   135|   // displayName is undefined is a common pattern.
+   136|   name?: ?string,
+   137| };
         ^ [1]
 
 
@@ -636,42 +503,9 @@ Cannot assign `3` to `x.displayName` because number [1] is incompatible with str
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:134:18
-   134|   displayName?: ?string,
+   <BUILTINS>/react.js:133:18
+   133|   displayName?: ?string,
                          ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ rw_default_props.js:8:2
-
-Cannot cast `x.defaultProps` to object type because property `bar` is missing in object literal [1] but exists in object
-type [2].
-
-   rw_default_props.js:8:2
-   8| (x.defaultProps: {foo: number, bar: number}); // Error, bar not in defaultProps.
-       ^^^^^^^^^^^^^^
-
-References:
-   rw_default_props.js:6:18
-   6| x.defaultProps = {foo: 3};
-                       ^^^^^^^^ [1]
-   rw_default_props.js:8:18
-   8| (x.defaultProps: {foo: number, bar: number}); // Error, bar not in defaultProps.
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- rw_default_props.js:12:18
-
-Cannot assign object literal to `x.defaultProps` because property `foo` is missing in object literal [1] but exists in
-object type [2].
-
-   rw_default_props.js:12:18
-   12| x.defaultProps = {bar: 3}; // error, missing foo.
-                        ^^^^^^^^ [1]
-
-References:
-   rw_default_props.js:3:55
-    3| declare var x: React$AbstractComponent<{foo: number}, {foo: number}, void>;
-                                                             ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7
@@ -683,20 +517,19 @@ Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` 
               ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:132:61
-                                                                    v
-   132| declare type React$AbstractComponentStatics<DefaultProps> = {
-   133|   defaultProps: DefaultProps,
-   134|   displayName?: ?string,
-   135|   // This is only on function components, but trying to access name when
-   136|   // displayName is undefined is a common pattern.
-   137|   name?: ?string,
-   138| };
+   <BUILTINS>/react.js:132:47
+                                                      v
+   132| declare type React$AbstractComponentStatics = {
+   133|   displayName?: ?string,
+   134|   // This is only on function components, but trying to access name when
+   135|   // displayName is undefined is a common pattern.
+   136|   name?: ?string,
+   137| };
         ^ [1]
 
 
 
-Found 50 errors
+Found 39 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

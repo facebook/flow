@@ -43,11 +43,11 @@ References:
    <BUILTINS>/react-dom.js:281:22
    281|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
                              ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:238:6
-   238|   ): {current: null | T};
+   <BUILTINS>/react.js:237:6
+   237|   ): {current: null | T};
              ^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:196:6
-   196|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:195:6
+   195|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -65,8 +65,8 @@ References:
    forwardRef.js:23:39
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:195:5
-   195|   | {current: React$ElementRef<ElementType> | null}
+   <BUILTINS>/react.js:194:5
+   194|   | {current: React$ElementRef<ElementType> | null}
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type

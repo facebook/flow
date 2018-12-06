@@ -597,13 +597,12 @@ let rec convert cx tparams_map = Ast.Type.(function
       mk_custom_fun cx loc targs ident (Compose true)
 
   | "React$AbstractComponent" ->
-      check_type_arg_arity cx loc targs 3 (fun () ->
+      check_type_arg_arity cx loc targs 2 (fun () ->
         let ts, targs = convert_type_params () in
         let config = List.nth ts 0 in
-        let default_props = List.nth ts 1 in
-        let instance = List.nth ts 2 in
+        let instance = List.nth ts 1 in
         reconstruct_ast (DefT (mk_reason (RCustom "AbstractComponent") loc,
-          ReactAbstractComponentT {config; default_props; instance})) targs
+          ReactAbstractComponentT {config; instance})) targs
       )
   | "React$Config" ->
       check_type_arg_arity cx loc targs 2 (fun () ->
