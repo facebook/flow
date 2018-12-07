@@ -59,4 +59,3 @@ echo ""
 echo "flow status --json-version=2 --pretty"
 assert_errors "$FLOW" status . --strip-root --json-version=2 --pretty
 echo ""
-echo ""

@@ -26,13 +26,25 @@ let spec = {
     empty
     |> CommandUtils.json_flags
     |> CommandUtils.from_flag
+    |> flag "--semver" no_arg
+        ~doc:"Return only the version number"
     |> anon "root" (optional string)
   )
 }
 
-let main json pretty _root () =
-  if json || pretty
-  then begin
+let print_semver json pretty =
+  if json || pretty then
+    let open Hh_json in
+    let json = JSON_Object [
+      "semver", JSON_String Flow_version.version;
+    ] in
+    print_json_endline ~pretty json
+  else
+    print_endline Flow_version.version
+
+let main json pretty semver _root () =
+  if semver then print_semver json pretty
+  else if json || pretty then begin
     let open Hh_json in
     let json = JSON_Object [
       "semver", JSON_String Flow_version.version;

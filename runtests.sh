@@ -139,6 +139,9 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
 else
   FLOW=$(readlink -f "$FLOW")
 fi
+
+VERSION=$("$FLOW" version --semver)
+
 if [ -t 1 ]; then
   COLOR_RESET="\x1b[0m"
   COLOR_DEFAULT="\x1b[39;49;0m"
@@ -186,8 +189,11 @@ print_failure() {
     fi
 
     if [[ "$record" -eq 1 ]]; then
-      mv "${dir}${name}.out" "${dir}${name}.exp"
-      rm "$err_file"
+      # Copy .out to .exp, replacing the current version, if present, with
+      # <VERSION>, so that the .exp doesn't have to be updated on each release.
+      sed 's/'"${VERSION//./\\.}"'/<VERSION>/g' "${dir}${name}.out" > "${dir}${name}.exp"
+      rm "${dir}${name}.out"
+      rm -f "$err_file"
       rm "$diff_file"
     fi
 }
@@ -591,7 +597,15 @@ runtest() {
 
         if [ $return_status -eq $RUNTEST_SUCCESS ]; then
           pushd "$OUT_PARENT_DIR" >/dev/null
-          diff -u --strip-trailing-cr "$exp_file" "$out_file" > "$diff_file" 2>&1
+          # When diffing the .exp against the .out, replace <VERSION> in the
+          # .exp with the actual version, so the diff shows which version we
+          # were expecting, but the .exp doesn't need to be updated for each
+          # release.
+          diff -u --strip-trailing-cr \
+            --label "$exp_file" --label "$out_file" \
+            <(sed 's/<VERSION>/'"$VERSION"'/g' "$exp_file") \
+            "$out_file" \
+            > "$diff_file" 2>&1
           popd >/dev/null
         fi
 
