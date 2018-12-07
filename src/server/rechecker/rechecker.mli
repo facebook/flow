@@ -23,7 +23,7 @@ val recheck_single:
 val recheck_loop:
   ServerEnv.genv ->
   ServerEnv.env ->
-  ServerEnv.env Lwt.t
+  (Profiling_js.finished list * ServerEnv.env) Lwt.t
 
 val run_but_cancel_on_file_changes:
   ServerEnv.genv ->

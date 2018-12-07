@@ -334,134 +334,125 @@ let save_state ~saved_state_filename ~genv ~env =
     Lwt.return (Ok ())
   )
 
+let run_ephemeral_command_unsafe ~profiling genv env command =
+  let options = genv.options in
+  match command with
+  | ServerProt.Request.AUTOCOMPLETE fn ->
+      let%lwt result, json_data = autocomplete ~options ~env ~profiling fn in
+      Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
+  | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
+      let options = { options with Options.
+        opt_verbose = verbose;
+        opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
+      } in
+      let%lwt response = check_file ~options ~env ~force ~profiling fn in
+      Lwt.return (ServerProt.Response.CHECK_FILE response, None)
+  | ServerProt.Request.COVERAGE (fn, force) ->
+      let%lwt response = coverage ~options ~env ~profiling ~force fn in
+      Lwt.return (ServerProt.Response.COVERAGE response, None)
+  | ServerProt.Request.CYCLE fn ->
+      let file_options = Options.file_options options in
+      let fn = Files.filename_from_string ~options:file_options fn in
+      let%lwt response = get_cycle ~env fn in
+      Lwt.return (ServerProt.Response.CYCLE response, None)
+  | ServerProt.Request.GRAPH_DEP_GRAPH (root, strip_root, outfile) ->
+      let%lwt response = output_dependencies ~env root strip_root outfile in
+      Lwt.return (ServerProt.Response.GRAPH_DEP_GRAPH response, None)
+  | ServerProt.Request.DUMP_TYPES (fn) ->
+      let%lwt response = dump_types ~options ~env ~profiling fn in
+      Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
+  | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
+      let response = find_module ~options (moduleref, filename) in
+      Lwt.return (ServerProt.Response.FIND_MODULE response, None)
+  | ServerProt.Request.FIND_REFS (fn, line, char, global, multi_hop) ->
+      let%lwt result, json_data =
+        find_refs ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
+      Lwt.return (ServerProt.Response.FIND_REFS result, json_data)
+  | ServerProt.Request.FORCE_RECHECK _ ->
+      failwith "force-recheck cannot be deferred"
+  | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
+      let options = { options with Options.
+        opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
+      } in
+      let response = gen_flow_files ~options !env files in
+      Lwt.return (ServerProt.Response.GEN_FLOW_FILES response, None)
+  | ServerProt.Request.GET_DEF (fn, line, char) ->
+      let%lwt result, json_data = get_def ~options ~env ~profiling (fn, line, char) in
+      Lwt.return (ServerProt.Response.GET_DEF result, json_data)
+  | ServerProt.Request.GET_IMPORTS module_names ->
+      let response = get_imports ~options module_names in
+      Lwt.return (ServerProt.Response.GET_IMPORTS response, None)
+  | ServerProt.Request.INFER_TYPE (fn, line, char, verbose, expand_aliases) ->
+      let%lwt result, json_data =
+        infer_type ~options ~env ~profiling (fn, line, char, verbose, expand_aliases)
+      in
+      Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
+  | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
+      let open ServerProt.Response in
+      let%lwt result =
+        Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+      in
+      let result =
+        result
+        |> Core_result.map ~f:(Option.map ~f:(fun refactor_edits -> {refactor_edits}))
+      in
+      Lwt.return (REFACTOR (result), None)
+  | ServerProt.Request.STATUS (client_root, include_warnings) ->
+      let genv = {genv with
+        options = let open Options in {genv.options with
+          opt_include_warnings = genv.options.opt_include_warnings || include_warnings
+        }
+      } in
+      let status_response, lazy_stats = get_status genv !env client_root in
+      Lwt.return (ServerProt.Response.STATUS {status_response; lazy_stats}, None)
+  | ServerProt.Request.SUGGEST fn ->
+      let%lwt result = suggest ~options ~env ~profiling fn in
+      Lwt.return (ServerProt.Response.SUGGEST result, None)
+  | ServerProt.Request.SAVE_STATE out ->
+      let%lwt result = save_state ~saved_state_filename:out ~genv ~env in
+      Lwt.return (ServerProt.Response.SAVE_STATE result, None)
+
 let handle_ephemeral_deferred_unsafe
   genv env (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
-  let env = ref env in
-  let respond msg =
-    MonitorRPC.respond_to_request ~request_id ~response:msg
 
-  in
-  let options = genv.ServerEnv.options in
+  let env = ref env in
+
   Hh_logger.info "Request: %s" (ServerProt.Request.to_string command);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
-      match command with
-      | ServerProt.Request.AUTOCOMPLETE fn ->
-          let%lwt result, json_data = autocomplete ~options ~env ~profiling fn in
-          ServerProt.Response.AUTOCOMPLETE result
-          |> respond;
-          Lwt.return json_data
-      | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
-          let options = { options with Options.
-            opt_verbose = verbose;
-            opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
-          } in
-          let%lwt response = check_file ~options ~env ~force ~profiling fn in
-          ServerProt.Response.CHECK_FILE response
-          |> respond;
-          Lwt.return None
-      | ServerProt.Request.COVERAGE (fn, force) ->
-          let%lwt response = coverage ~options ~env ~profiling ~force fn in
-          ServerProt.Response.COVERAGE response
-          |> respond;
-          Lwt.return None
-      | ServerProt.Request.CYCLE fn  ->
-          let file_options = Options.file_options options in
-          let fn = Files.filename_from_string ~options:file_options fn in
-          let%lwt response = get_cycle ~env fn in
-          ServerProt.Response.CYCLE response
-          |> respond;
-          Lwt.return None
-      | ServerProt.Request.GRAPH_DEP_GRAPH (root, strip_root, outfile) ->
-          let%lwt response = output_dependencies ~env root strip_root outfile in
-          ServerProt.Response.GRAPH_DEP_GRAPH response
-          |> respond;
-          Lwt.return None
-      | ServerProt.Request.DUMP_TYPES (fn) ->
-          let%lwt response = dump_types ~options ~env ~profiling fn in
-          ServerProt.Response.DUMP_TYPES response
-          |> respond;
-          Lwt.return None
-      | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
-          ServerProt.Response.FIND_MODULE (
-            find_module ~options (moduleref, filename): File_key.t option
-          ) |> respond;
-          Lwt.return None
-      | ServerProt.Request.FIND_REFS (fn, line, char, global, multi_hop) ->
-          let%lwt result, json_data =
-            find_refs ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
-          ServerProt.Response.FIND_REFS result |> respond;
-          Lwt.return json_data
-      | ServerProt.Request.FORCE_RECHECK _ ->
-          failwith "force-recheck cannot be deferred"
-      | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
-          let options = { options with Options.
-            opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
-          } in
-          ServerProt.Response.GEN_FLOW_FILES (
-            gen_flow_files ~options !env files: ServerProt.Response.gen_flow_files_response
-          ) |> respond;
-          Lwt.return None
-      | ServerProt.Request.GET_DEF (fn, line, char) ->
-          let%lwt result, json_data = get_def ~options ~env ~profiling (fn, line, char) in
-          ServerProt.Response.GET_DEF result
-          |> respond;
-          Lwt.return json_data
-      | ServerProt.Request.GET_IMPORTS module_names ->
-          ServerProt.Response.GET_IMPORTS (
-            get_imports ~options module_names: ServerProt.Response.get_imports_response
-          ) |> respond;
-          Lwt.return None
-      | ServerProt.Request.INFER_TYPE (fn, line, char, verbose, expand_aliases) ->
-          let%lwt result, json_data =
-            infer_type ~options ~env ~profiling (fn, line, char, verbose, expand_aliases)
-          in
-          ServerProt.Response.INFER_TYPE result
-          |> respond;
-          Lwt.return json_data
-      | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
-          let open ServerProt.Response in
-          let%lwt result =
-            Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
-          in
-          let result =
-            result
-            |> Core_result.map ~f:(Option.map ~f:(fun refactor_edits -> {refactor_edits}))
-          in
-          REFACTOR (result)
-          |> respond;
-          Lwt.return None
-      | ServerProt.Request.STATUS (client_root, include_warnings) ->
-          let genv = {genv with
-            options = let open Options in {genv.options with
-              opt_include_warnings = genv.options.opt_include_warnings || include_warnings
-            }
-          } in
-          let status_response, lazy_stats = get_status genv !env client_root in
-          respond (ServerProt.Response.STATUS {status_response; lazy_stats});
-          begin match status_response with
-            | ServerProt.Response.DIRECTORY_MISMATCH {ServerProt.Response.server; client} ->
-                Hh_logger.fatal "Status: Error";
-                Hh_logger.fatal "server_dir=%s, client_dir=%s"
-                  (Path.to_string server)
-                  (Path.to_string client);
-                Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
-                FlowExitStatus.(exit Server_client_directory_mismatch)
-            | _ -> ()
-          end;
-          Lwt.return None
-      | ServerProt.Request.SUGGEST fn ->
-          let%lwt result = suggest ~options ~env ~profiling fn in
-          ServerProt.Response.SUGGEST result
-          |> respond;
-          Lwt.return None
-      | ServerProt.Request.SAVE_STATE out ->
-          let%lwt result = save_state ~saved_state_filename:out ~genv ~env in
-          ServerProt.Response.SAVE_STATE result
-          |> respond;
-          Lwt.return None
+      let rec run_command () =
+        let on_cancel () =
+          Hh_logger.info
+            "Command successfully canceled. Running a recheck before restarting the command";
+          let%lwt recheck_profiling, env' = Rechecker.recheck_loop genv !env in
+          env := env';
+          List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
+          Hh_logger.info "Now restarting the command";
+          run_command ()
+        in
+        Rechecker.run_but_cancel_on_file_changes genv (!env) ~on_cancel ~f:(fun () ->
+          run_ephemeral_command_unsafe ~profiling genv env command
+        )
+      in
+
+      let%lwt response, json_data = run_command () in
+
+      MonitorRPC.respond_to_request ~request_id ~response;
+
+      ServerProt.Response.(match response with
+        | STATUS { lazy_stats=_; status_response=DIRECTORY_MISMATCH {server; client}; } ->
+            Hh_logger.fatal "Status: Error";
+            Hh_logger.fatal "server_dir=%s, client_dir=%s"
+              (Path.to_string server)
+              (Path.to_string client);
+            Hh_logger.fatal "flow server is not listening to the same directory. Exiting.";
+            FlowExitStatus.(exit Server_client_directory_mismatch)
+        | _ -> ()
+      );
+      Lwt.return json_data
     end
   in
   let event = ServerStatus.(Finishing_up {
@@ -1085,7 +1076,20 @@ let handle_persistent
       ~label:"Command" ~should_print_summary
       (fun profiling ->
         try%lwt
-          handle_persistent_unsafe genv env client profiling request
+          let rec run_command env =
+            let on_cancel () =
+              Hh_logger.info
+                "Persistent command successfully canceled. Running a recheck before restarting the command";
+              let%lwt recheck_profiling, env = Rechecker.recheck_loop genv env in
+              List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
+              Hh_logger.info "Now restarting the persistent command";
+              run_command env
+            in
+            Rechecker.run_but_cancel_on_file_changes genv env ~on_cancel ~f:(fun () ->
+              handle_persistent_unsafe genv env client profiling request
+            )
+          in
+          run_command env
         with e ->
           let e = Exception.wrap e in
           let stack = Utils.Callstack (Exception.get_backtrace_string e) in

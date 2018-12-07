@@ -65,15 +65,6 @@ let init ~profiling ~focus_targets genv =
      `errors` contains the current set of errors. *)
   Lwt.return (env, last_estimates)
 
-let rec run_workload genv env workload =
-  let on_cancel () =
-    Hh_logger.info "Workload successfully canceled. Running a recheck to pick up new file changes";
-    let%lwt env = Rechecker.recheck_loop genv env in
-    Hh_logger.info "Now restarting the workload";
-    run_workload genv env workload
-  in
-  Rechecker.run_but_cancel_on_file_changes genv env ~f:(fun () -> workload env) ~on_cancel
-
 let rec serve ~genv ~env =
   Hh_logger.debug "Starting aggressive shared mem GC";
   SharedMem_js.collect `aggressive;
@@ -87,12 +78,12 @@ let rec serve ~genv ~env =
   in
 
   (* If there's anything to recheck or updates to the env from the monitor, let's consume them *)
-  let%lwt env = Rechecker.recheck_loop genv env in
+  let%lwt _profiling, env = Rechecker.recheck_loop genv env in
 
   (* Run a workload (if there is one) *)
   let%lwt env = Option.value_map (ServerMonitorListenerState.pop_next_workload ())
     ~default:(Lwt.return env)
-    ~f:(run_workload genv env) in
+    ~f:(fun workload -> workload env) in
 
   (* Flush the logs asynchronously *)
   Lwt.async EventLoggerLwt.flush;

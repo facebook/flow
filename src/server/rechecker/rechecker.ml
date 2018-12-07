@@ -115,11 +115,22 @@ let rec recheck_single
 
     run_but_cancel_on_file_changes genv env ~f ~on_cancel
 
-let rec recheck_loop genv env =
-  match%lwt recheck_single genv env with
-  | Error env ->
-    (* No more work to do for now *)
-    Lwt.return env
-  | Ok (_profiling, env) ->
-    (* We just finished a recheck. Let's see if there's any more stuff to recheck *)
-    recheck_loop genv env
+let recheck_loop =
+  (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
+   * rechecks. But something is better than nothing... *)
+  let rec loop
+      ?(files_to_recheck=FilenameSet.empty)
+      ?(files_to_force=CheckedSet.empty)
+      ?(profiling=[])
+      genv env =
+    match%lwt recheck_single ~files_to_recheck ~files_to_force genv env with
+    | Error env ->
+      (* No more work to do for now *)
+      Lwt.return (List.rev profiling, env)
+    | Ok (recheck_profiling, env) ->
+      (* We just finished a recheck. Let's see if there's any more stuff to recheck *)
+      loop ~profiling:(recheck_profiling::profiling) genv env
+  in
+
+  fun genv env ->
+    loop genv env
