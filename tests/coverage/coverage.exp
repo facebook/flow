@@ -156,3 +156,75 @@ const [0m[31mbaz[0m[0m = [0m[31mbar[0m[0m [0m[31m+[0m[0m [0m[0m1[
 [0m
 Covered: 66.67% (10 of 15 expressions)
 
+-----------------------------
+unicode.js
+-----------------------------
+
+{
+  "expressions":{
+    "covered_count":5,
+    "covered_locs":[
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":2,"offset":11},
+        "end":{"line":3,"column":5,"offset":15}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":7,"offset":30},
+        "end":{"line":5,"column":11,"offset":35}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":15,"offset":38},
+        "end":{"line":5,"column":17,"offset":41}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":21,"offset":44},
+        "end":{"line":5,"column":24,"offset":48}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":7,"column":2,"offset":58},
+        "end":{"line":7,"column":5,"offset":62}
+      }
+    ],
+    "uncovered_count":3,
+    "uncovered_locs":[
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":3,"column":2,"offset":11},
+        "end":{"line":3,"column":10,"offset":20}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":5,"column":21,"offset":44},
+        "end":{"line":5,"column":29,"offset":53}
+      },
+      {
+        "source":"unicode.js",
+        "type":"SourceFile",
+        "start":{"line":7,"column":2,"offset":58},
+        "end":{"line":7,"column":10,"offset":67}
+      }
+    ]
+  }
+}
+[0m// @flow
+
+([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
+
+const [0m[0memoji[0m[0m = [0m[0m"ðŸ[0m[0m’©"[0m[0m; (n[0m[0mu[0m[31mll: [0m[0many);[0m[0m
+
+(n[0m[0mu[0m[31mll: [0m[0many);
+[0m
+Covered: 62.50% (5 of 8 expressions)
+
