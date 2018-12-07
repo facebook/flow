@@ -26,14 +26,13 @@ end
 let node_list_of_option ~f = Option.value_map ~default:[] ~f
 
 (* comments.js#findExpressionIndexForComment *)
-let find_expression_index_for_node quasis ({Loc.start= {Loc.offset; _}; _}, _) =
-  let start_offset = offset in
+let find_expression_index_for_node quasis ({Loc.start=orig_start; _}, _) =
   try
     let found, _ =
       List.tl quasis
       |> List.mapi (fun i q -> (i, q))
-      |> List.find (fun (_, ({Loc.start= {Loc.offset; _}; _}, _)) ->
-             start_offset < offset )
+      |> List.find (fun (_, ({Loc.start; _}, _)) ->
+             Loc.pos_cmp orig_start start < 0)
     in
     found - 1
   with Not_found -> 0
