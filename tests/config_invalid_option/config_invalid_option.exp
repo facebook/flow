@@ -28,7 +28,7 @@ flow config check:
       "level":"warning"
     }
   ],
-  "flowVersion":"0.87.0",
+  "flowVersion":"0.88.0",
   "exit":{"code":8,"reason":"Invalid_flowconfig"}
 }
 
