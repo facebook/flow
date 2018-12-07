@@ -64,7 +64,27 @@ let fold f acc checked =
 
 let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
 
-let diff a b = FilenameMap.filter (fun k _ -> not (FilenameMap.mem k b)) a
+(* Remove from `a` every key which exists in `b` and which has an equal or higher kind in `b` than
+ * it does in `a`, where Focused > Dependent > Dependency. So
+ *
+ * diff
+ *  { A: Focused, B: Focused,   C: Dependency, D: Dependent }
+ *  { A: Focused, B: Dependent, C: Dependent}
+ *
+ * = { B: Focused, D: Dependent }
+ *)
+let diff a b = FilenameMap.filter
+  (fun k kind1 ->
+    let kind2 = FilenameMap.get k b in
+    match kind1, kind2 with
+    | _, None -> true (* Key doesn't exist in b, so keep k around *)
+    | _, Some Focused -> false (* Focused removes anything *)
+    | Focused, _ -> true (* Focused survives anything except Focused *)
+    | _, Some Dependent -> false (* Dependent removes anything except Focused *)
+    | Dependent, Some Dependency -> true (* Dependent survives Dependency *)
+    | Dependency, Some Dependency -> false (* Dependency removes Dependency *)
+  )
+  a
 
 let filter ~f checked = FilenameMap.filter (fun k _ -> f k) checked
 

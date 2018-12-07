@@ -748,7 +748,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
     ) (true, local_errors, suppressions, severity_cover_set) lib_files
   )
 
-(* Given a set of focused files and a set of parsed files, calculate all the dependents and
+(* Given a CheckedSet of focused files and a dependency graph, calculate all the dependents and
  * dependencies and return them as a CheckedSet
  *
  * This is pretty darn expensive for large repos (on the order of a few seconds). What is taking
@@ -756,16 +756,28 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
  *
  * - Around 75% of the time is dependent_files looking up the dependents
  * - Around 20% of the time is calc_dependency_graph building the dependency graph
+ *
+ * There are no expected invariants for the input set. The returned set has the following invariants
+ * 1. Every dependent of a focused or dependent file will be in the focused set or the dependent set
+ * 2. Every dependency of a focused, dependent, or dependency file will be in the focused set,
+ *    dependent set, or dependency set
  **)
-let focused_files_to_infer ~focused ~dependency_graph =
-  let focused = focused |> FilenameSet.filter (fun f ->
+let focused_files_to_infer ~input ~dependency_graph =
+  (* Filter unchecked files out of the input *)
+  let input = CheckedSet.filter input ~f:(fun f ->
     Module_heaps.is_tracked_file f (* otherwise, f is probably a directory *)
     && Module_js.checked_file ~audit:Expensive.warn f)
   in
 
-  let roots = Dep_service.calc_all_reverse_dependencies dependency_graph focused in
+  let focused = CheckedSet.focused input in
 
-  let dependencies = Dep_service.calc_all_dependencies dependency_graph roots in
+  (* Roots is the set of all focused files and all dependent files *)
+  let roots = Dep_service.calc_all_reverse_dependencies dependency_graph focused
+  |> FilenameSet.union (CheckedSet.dependents input) in
+
+  let dependencies = Dep_service.calc_all_dependencies dependency_graph roots
+  |> FilenameSet.union (CheckedSet.dependencies input) in
+
   let dependents = FilenameSet.diff roots focused in
 
   Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
@@ -778,23 +790,40 @@ let filter_out_node_modules ~options =
     not (Files.is_within_node_modules ~root ~options:file_options filename_str)
   )
 
-(* Focus on every file as long as it's not in node_modules. Node modules can only be dependencies.
+(* Filesystem lazy mode focuses on any file which changes. Non-lazy mode focuses on every file in
+ * the repo. In both cases, we never want node_modules to appear in the focused or dependent sets.
+ *
+ * We do need to calculate dependencies in order to check the files in node_modules which are
+ * imported.
+ *
+ * There are no expected invariants for the input set. The returned set has the following invariants
+ * 1. Node modules will only appear in the dependency set
+ * 2. Every dependent of a focused or dependent file will be in the focused set or the dependent set
+ * 3. Every dependency of a focused, dependent, or dependency file will be in the focused set,
+ *    dependent set, or dependency set
  *)
-let unfocused_files_to_infer ~options ~focused ~dependency_graph =
-  (* All the non-node_modules files *)
-  let focused = filter_out_node_modules ~options focused in
+let unfocused_files_to_infer ~options ~input ~dependency_graph =
+  let focused = filter_out_node_modules ~options (CheckedSet.focused input) in
+  let dependents = filter_out_node_modules ~options (CheckedSet.dependents input) in
 
   (* Calculate dependencies to figure out which node_modules stuff we depend on *)
-  let dependencies = Dep_service.calc_all_dependencies dependency_graph focused in
-  Lwt.return (CheckedSet.add ~focused ~dependencies CheckedSet.empty)
+  let dependencies =
+    (* Calculate the dependencies of focused and dependent files *)
+    let roots = FilenameSet.union focused dependents in
+    Dep_service.calc_all_dependencies dependency_graph roots
+    |> FilenameSet.union (CheckedSet.dependencies input)  (* Add in the forced dependencies *)
+  in
+  Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
 
 let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focused with
     | None ->
-      unfocused_files_to_infer ~options ~focused:parsed ~dependency_graph
+      let input = CheckedSet.add ~focused:parsed CheckedSet.empty in
+      unfocused_files_to_infer ~options ~input ~dependency_graph
     | Some focused ->
-      focused_files_to_infer ~focused ~dependency_graph
+      let input = CheckedSet.add ~focused CheckedSet.empty in
+      focused_files_to_infer ~input ~dependency_graph
   )
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
@@ -873,8 +902,13 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
    phase (which could be the init phase or a previous recheck phase)
 *)
 let recheck_with_profiling
-    ~profiling ~transaction ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadata =
+    ~profiling ~transaction ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata =
   let errors = env.ServerEnv.errors in
+
+  (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
+   * or focused file. We can ignore a request if the file is already checked at the desired level
+   * or at a more important level *)
+  let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
 
   (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
    * updated too. This is because sometimes we decide what foo.js.flow
@@ -926,7 +960,7 @@ let recheck_with_profiling
    * unchanged_parse - Set of files who's file hash didn't changes
    * new_local_errors - Parse errors, docblock errors, etc
   *)
-  let%lwt new_or_changed, freshparsed, unparsed, unchanged_parse, new_local_errors =
+  let%lwt new_or_changed, freshparsed, unparsed, _unchanged_parse, new_local_errors =
      reparse ~options ~profiling ~transaction ~workers ~modified ~deleted
    in
 
@@ -1097,14 +1131,10 @@ let recheck_with_profiling
     Module_js.calc_old_modules workers ~all_providers_mutator ~options new_or_changed_or_deleted
   ) in
 
-  (* We may be focusing on some unchanged files. If these files haven't been focused yet, we can't
-   * skip them like all the other unchanged files *)
-  let unchanged_files_to_focus =
-    FilenameSet.diff
-      (FilenameSet.inter files_to_focus unchanged_parse) (* unchanged files to focus... *)
-      (CheckedSet.focused env.ServerEnv.checked_files)   (* ...which aren't already focused... *)
-    |> FilenameSet.filter (fun f -> FilenameSet.mem f old_parsed) (* ...and are parsed *)
-  in
+  (* We may be forcing a recheck on some unchanged files *)
+  let unchanged_files_to_force = CheckedSet.filter files_to_force ~f:(fun fn ->
+    not (FilenameSet.mem fn new_or_changed) && FilenameSet.mem fn old_parsed
+  ) in
 
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let%lwt changed_modules, errors =
@@ -1123,10 +1153,18 @@ let recheck_with_profiling
       ~errors
       ~is_init:false in
 
-  (* Figure out which modules the unchanged focused files provide. We need these to figure out
+
+  (* We can ignore unchanged files which were forced as dependencies. We don't care about their
+   * dependents *)
+  let unchanged_files_with_dependents = FilenameSet.union
+    (CheckedSet.focused unchanged_files_to_force)
+    (CheckedSet.dependents unchanged_files_to_force)
+  in
+
+  (* Figure out which modules the unchanged forced files provide. We need these to figure out
    * which dependents need to be added to the checked set *)
   let%lwt unchanged_modules = with_timer_lwt ~options "CalcUnchangedModules" profiling (fun () ->
-    Module_js.calc_unchanged_modules workers unchanged_files_to_focus
+    Module_js.calc_unchanged_modules workers unchanged_files_with_dependents
   ) in
 
   let parsed = FilenameSet.union freshparsed unchanged in
@@ -1139,8 +1177,8 @@ let recheck_with_profiling
     with_timer_lwt ~options "DependentFiles" profiling (fun () ->
       Dep_service.dependent_files
         workers
-        ~candidates:(FilenameSet.diff unchanged unchanged_files_to_focus)
-        ~root_files:(FilenameSet.union new_or_changed unchanged_files_to_focus)
+        ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
+        ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
         ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
     ) in
 
@@ -1164,7 +1202,7 @@ let recheck_with_profiling
   ) in
 
   let acceptable_files_to_focus =
-    FilenameSet.union freshparsed unchanged_files_to_focus
+    FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
   in
 
   Hh_logger.info "Recalculating dependency graph";
@@ -1190,9 +1228,10 @@ let recheck_with_profiling
         let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
         let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
         let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
-        let focused = FilenameSet.union old_focus_targets acceptable_files_to_focus in
+        let focused = FilenameSet.union old_focus_targets freshparsed in
+        let input = CheckedSet.add ~focused files_to_force in
         let%lwt updated_checked_files = unfocused_files_to_infer
-          ~options ~focused ~dependency_graph in
+          ~options ~input ~dependency_graph in
         Lwt.return (updated_checked_files, all_dependent_files)
       | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
         (* Unfortunately, our checked_files set might be out of date. This update could have added
@@ -1209,12 +1248,6 @@ let recheck_with_profiling
          * set might be missing that file. If that file reappears, we must remember to refocus on
          * it.
          **)
-        let old_focused = CheckedSet.focused env.ServerEnv.checked_files in
-        let new_focused =
-          filter_out_node_modules ~options
-            (FilenameSet.inter files_to_focus acceptable_files_to_focus)
-        in
-
         let open_in_ide =
           let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
           FilenameSet.filter (function
@@ -1225,10 +1258,19 @@ let recheck_with_profiling
             | File_key.Builtins -> false
           ) freshparsed
         in
-        let focused = old_focused
-          |> FilenameSet.union open_in_ide
-          |> FilenameSet.union new_focused in
-        let%lwt updated_checked_files = focused_files_to_infer ~focused ~dependency_graph in
+        let input =
+          let focused = CheckedSet.focused files_to_force (* Files to force to be focused *)
+            |> filter_out_node_modules ~options (* Never focus node modules *)
+            |> FilenameSet.union (CheckedSet.focused env.ServerEnv.checked_files) (* old focused *)
+            |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
+          in
+          let dependents = CheckedSet.dependents files_to_force
+            |> filter_out_node_modules ~options
+          in
+          let dependencies = CheckedSet.dependencies files_to_force in
+          CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
+        in
+        let%lwt updated_checked_files = focused_files_to_infer ~input ~dependency_graph in
 
         (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
          * dependency. That's fine if foo.js is in the checked set. But if it's just some random
@@ -1325,8 +1367,9 @@ let recheck ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadat
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
         Transaction.with_transaction (fun transaction ->
+          let files_to_force = CheckedSet.add ~focused:files_to_focus CheckedSet.empty in
           recheck_with_profiling
-            ~profiling ~transaction ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadata
+            ~profiling ~transaction ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata
         )
       )
     )
