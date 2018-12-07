@@ -1672,7 +1672,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         type` to `import` followed by `type`.
 
     **)
-    | DefT (_, ObjT _), ImportTypeT(_, "default", t) ->
+    | (ExactT (_, DefT (_, ObjT _)) | DefT (_, ObjT _)), ImportTypeT(_, "default", t) ->
       rec_flow_t cx trace (l, t)
 
     | (exported_type, ImportTypeT(reason, export_name, t)) ->
