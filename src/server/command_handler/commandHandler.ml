@@ -537,9 +537,14 @@ let handle_ephemeral_immediately_unsafe
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
-        let fileset = SSet.of_list files in
-          let push = ServerMonitorListenerState.(
-            if focus then push_files_to_focus else push_files_to_recheck ?metadata:None
+          let fileset = SSet.of_list files in
+
+          (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
+           * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
+           * focused *)
+          let push ?callback files = ServerMonitorListenerState.(
+            if focus then push_files_to_force_focused files;
+            push_files_to_recheck ?metadata:None ?callback files (* Only register the callback once *)
           ) in
 
           if profile

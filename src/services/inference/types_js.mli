@@ -27,7 +27,7 @@ val recheck:
   workers:MultiWorkerLwt.worker list option ->
   updates:FilenameSet.t ->
   ServerEnv.env ->
-  files_to_focus:FilenameSet.t ->
+  files_to_force:CheckedSet.t ->
   file_watcher_metadata:MonitorProt.file_watcher_metadata ->
   (Profiling_js.finished * ServerStatus.summary * ServerEnv.env) Lwt.t
 

@@ -30,9 +30,9 @@ let process_updates genv env updates =
   end
 
 (* on notification, execute client commands or recheck files *)
-let recheck genv env ~files_to_focus ~file_watcher_metadata updates =
+let recheck genv env ?(files_to_force=CheckedSet.empty) ~file_watcher_metadata updates =
   (* Caller should have already checked this *)
-  assert (not (FilenameSet.is_empty updates));
+  assert (not (FilenameSet.is_empty updates && CheckedSet.is_empty files_to_force));
 
   MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
   Persistent_connection.send_start_recheck env.connections;
@@ -40,7 +40,8 @@ let recheck genv env ~files_to_focus ~file_watcher_metadata updates =
   let workers = genv.ServerEnv.workers in
 
   let%lwt profiling, summary, env =
-    Types_js.recheck ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadata in
+    Types_js.recheck ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata
+  in
 
   let lazy_stats = get_lazy_stats genv env in
   Persistent_connection.send_end_recheck ~lazy_stats env.connections;
@@ -74,6 +75,7 @@ let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
     Lwt.cancel cancel_thread;
     Lwt.return ret
   with Lwt.Canceled ->
+    Lwt.cancel cancel_thread;
     on_cancel ()
 
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
@@ -81,7 +83,7 @@ let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
  * to include the new changes *)
 let rec recheck_single
     ?(files_to_recheck=FilenameSet.empty)
-    ?(files_to_focus=FilenameSet.empty)
+    ?(files_to_force=CheckedSet.empty)
     ?(file_watcher_metadata=MonitorProt.empty_file_watcher_metadata)
     genv env =
   let open ServerMonitorListenerState in
@@ -89,12 +91,11 @@ let rec recheck_single
   let process_updates = process_updates genv env in
   let workload = get_and_clear_recheck_workload ~process_updates in
   let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
-  let files_to_focus = FilenameSet.union files_to_focus workload.files_to_focus in
+  let files_to_force = CheckedSet.union files_to_force workload.files_to_force in
   let file_watcher_metadata =
     MonitorProt.merge_file_watcher_metadata file_watcher_metadata workload.metadata
   in
-  let all_files = FilenameSet.union files_to_recheck files_to_focus in
-  if FilenameSet.is_empty all_files
+  if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force
   then begin
     List.iter (fun callback -> callback None) workload.profiling_callbacks;
     Lwt.return (Error env) (* Nothing to do *)
@@ -102,10 +103,12 @@ let rec recheck_single
     let on_cancel () =
       Hh_logger.info
         "Recheck successfully canceled. Restarting the recheck to include new file changes";
-      recheck_single ~files_to_recheck:all_files ~files_to_focus ~file_watcher_metadata genv env
+      recheck_single ~files_to_recheck ~files_to_force ~file_watcher_metadata genv env
     in
     let f () =
-      let%lwt profiling, env = recheck genv env ~files_to_focus ~file_watcher_metadata all_files in
+      let%lwt profiling, env =
+        recheck genv env ~files_to_force ~file_watcher_metadata files_to_recheck
+      in
       List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
       Lwt.return (Ok (profiling, env))
     in

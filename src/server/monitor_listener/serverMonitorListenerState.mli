@@ -12,11 +12,14 @@ type env_update = ServerEnv.env -> ServerEnv.env
 val push_new_workload: workload -> unit
 val push_new_env_update: env_update -> unit
 val push_files_to_recheck:
-  ?metadata: MonitorProt.file_watcher_metadata ->
+  ?metadata:MonitorProt.file_watcher_metadata ->
   ?callback:(Profiling_js.finished option -> unit) ->
   SSet.t ->
   unit
-val push_files_to_focus: ?callback:(Profiling_js.finished option -> unit) -> SSet.t -> unit
+val push_files_to_force_focused: ?callback:(Profiling_js.finished option -> unit) -> SSet.t -> unit
+val push_checked_set_to_force:
+  ?callback:(Profiling_js.finished option -> unit) -> CheckedSet.t -> unit
+
 val cancellation_requests: Lsp.IdSet.t ref
 
 (* APIs to wait *)
@@ -30,7 +33,7 @@ val wait_for_updates_for_recheck:
 (* APIs to consume *)
 type recheck_workload = {
   files_to_recheck: Utils_js.FilenameSet.t;
-  files_to_focus: Utils_js.FilenameSet.t;
+  files_to_force: CheckedSet.t;
   profiling_callbacks: (Profiling_js.finished option -> unit) list;
   metadata: MonitorProt.file_watcher_metadata;
 }

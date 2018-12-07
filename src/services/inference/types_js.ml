@@ -1361,13 +1361,12 @@ let recheck_with_profiling
     (new_or_changed, deleted, all_dependent_files, cycle_leaders, skipped_count, estimates))
   )
 
-let recheck ~options ~workers ~updates env ~files_to_focus ~file_watcher_metadata =
+let recheck ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, stats) =
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
         Transaction.with_transaction (fun transaction ->
-          let files_to_force = CheckedSet.add ~focused:files_to_focus CheckedSet.empty in
           recheck_with_profiling
             ~profiling ~transaction ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata
         )
@@ -1816,7 +1815,7 @@ let init ~profiling ~workers options =
         ~workers
         ~updates
         env
-        ~files_to_focus
+        ~files_to_force:CheckedSet.(add ~focused:files_to_focus empty)
         ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
     in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
