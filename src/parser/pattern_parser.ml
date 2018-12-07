@@ -27,39 +27,36 @@ module Pattern
     let rec properties env acc = Ast.Expression.Object.(function
       | [] -> List.rev acc
       | Property (loc, prop)::remaining ->
-          let key, pattern, default, shorthand = match prop with
+          let acc = match prop with
           | Property.Init { key; value; shorthand } ->
             let open Ast.Expression in
+            let key = match key with
+            | Property.Literal lit -> Pattern.Object.Property.Literal lit
+            | Property.Identifier id -> Pattern.Object.Property.Identifier id
+            | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
+            | Property.Computed expr -> Pattern.Object.Property.Computed expr
+            in
             let pattern, default = match value with
             | (_loc, Assignment { Assignment.operator = Assignment.Assign; left; right }) ->
               left, Some right
             | _ ->
               from_expr env value, None
             in
-            key, pattern, default, shorthand
-          | Property.Method { key; value = (loc, f) } ->
+            (Pattern.Object.Property (loc, { Pattern.Object.Property.
+              key;
+              pattern;
+              default;
+              shorthand;
+            }))::acc
+          | Property.Method { key = _; value = (loc, _) } ->
             error_at env (loc, Parse_error.MethodInDestructuring);
-            let pattern = (loc, Pattern.Expression (loc, Ast.Expression.Function f)) in
-            key, pattern, None, false
-          | Property.Get { key; value = (loc, f) }
-          | Property.Set { key; value = (loc, f) } ->
+            acc
+          | Property.Get { key = _; value = (loc, _) }
+          | Property.Set { key = _; value = (loc, _) } ->
             (* these should never happen *)
             error_at env (loc, Parse_error.UnexpectedIdentifier);
-            let pattern = (loc, Pattern.Expression (loc, Ast.Expression.Function f)) in
-            key, pattern, None, false
+            acc
           in
-          let key = match key with
-          | Property.Literal lit -> Pattern.Object.Property.Literal lit
-          | Property.Identifier id -> Pattern.Object.Property.Identifier id
-          | Property.PrivateName _ -> failwith "Internal Error: Found object private prop"
-          | Property.Computed expr -> Pattern.Object.Property.Computed expr
-          in
-          let acc = Pattern.(Object.Property (loc, { Object.Property.
-            key;
-            pattern;
-            default;
-            shorthand;
-          })) :: acc in
           properties env acc remaining
       | SpreadProperty (loc, { SpreadProperty.argument; })::[] ->
           let acc = Pattern.Object.(RestProperty (loc, { RestProperty.
