@@ -1942,8 +1942,8 @@ incompatible with `Element` [2].
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:703:52
-   703|   getElementById(elementId: string): HTMLElement | null;
+   <BUILTINS>/dom.js:710:52
+   710|   getElementById(elementId: string): HTMLElement | null;
                                                            ^^^^ [1]
    <BUILTINS>/react-dom.js:30:16
     30|     container: Element,
@@ -2963,8 +2963,8 @@ with `Element` [2].
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:941:50
-   941|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:948:50
+   948|   querySelector(selector: string): HTMLElement | null;
                                                          ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,
@@ -2981,8 +2981,8 @@ with `Element` [2].
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:941:50
-   941|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:948:50
+   948|   querySelector(selector: string): HTMLElement | null;
                                                          ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,
@@ -2999,8 +2999,8 @@ with `Element` [2].
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:941:50
-   941|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:948:50
+   948|   querySelector(selector: string): HTMLElement | null;
                                                          ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,
@@ -3031,8 +3031,8 @@ with `Element` [2].
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:941:50
-   941|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:948:50
+   948|   querySelector(selector: string): HTMLElement | null;
                                                          ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,
@@ -3064,8 +3064,8 @@ with `Element` [2].
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:941:50
-   941|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:948:50
+   948|   querySelector(selector: string): HTMLElement | null;
                                                          ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,
@@ -3097,8 +3097,8 @@ with `Element` [2].
                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:941:50
-   941|   querySelector(selector: string): HTMLElement | null;
+   <BUILTINS>/dom.js:948:50
+   948|   querySelector(selector: string): HTMLElement | null;
                                                          ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,

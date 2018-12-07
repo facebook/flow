@@ -7,8 +7,8 @@ Cannot assign `fetch(...)` to `b` because `Response` [1] is incompatible with st
                                     ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1047:76
-   1047| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+   <BUILTINS>/bom.js:1059:76
+   1059| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                     ^^^^^^^^ [1]
    fetch.js:12:18
      12| const b: Promise<string> = fetch(myRequest); // incorrect
@@ -30,8 +30,8 @@ References:
    fetch.js:25:18
      25| const d: Promise<Blob> = fetch('image.png'); // incorrect
                           ^^^^ [1]
-   <BUILTINS>/bom.js:1047:76
-   1047| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+   <BUILTINS>/bom.js:1059:76
+   1059| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                     ^^^^^^^^ [2]
    <BUILTINS>/core.js:612:24
     612| declare class Promise<+R> {
@@ -272,56 +272,56 @@ Cannot call `Request` with `c` bound to `init` because:
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1027:12
-   1027|     cache: CacheType;
+   <BUILTINS>/bom.js:1028:12
+   1028|     cache: CacheType;
                     ^^^^^^^^^ [1]
    <BUILTINS>/bom.js:976:13
     976|     cache?: CacheType;
                      ^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:1028:18
-   1028|     credentials: CredentialsType;
+   <BUILTINS>/bom.js:1029:18
+   1029|     credentials: CredentialsType;
                           ^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/bom.js:977:19
     977|     credentials?: CredentialsType;
                            ^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/bom.js:1029:14
-   1029|     headers: Headers;
+   <BUILTINS>/bom.js:1030:14
+   1030|     headers: Headers;
                       ^^^^^^^ [5]
    <BUILTINS>/bom.js:978:15
     978|     headers?: HeadersInit;
                        ^^^^^^^^^^^ [6]
-   <BUILTINS>/bom.js:1030:16
-   1030|     integrity: string;
+   <BUILTINS>/bom.js:1031:16
+   1031|     integrity: string;
                         ^^^^^^ [7]
    <BUILTINS>/bom.js:979:17
     979|     integrity?: string;
                          ^^^^^^ [8]
-   <BUILTINS>/bom.js:1031:13
-   1031|     method: string;
+   <BUILTINS>/bom.js:1032:13
+   1032|     method: string;
                      ^^^^^^ [9]
    <BUILTINS>/bom.js:981:14
     981|     method?: string;
                       ^^^^^^ [10]
-   <BUILTINS>/bom.js:1032:11
-   1032|     mode: ModeType;
+   <BUILTINS>/bom.js:1033:11
+   1033|     mode: ModeType;
                    ^^^^^^^^ [11]
    <BUILTINS>/bom.js:982:12
     982|     mode?: ModeType;
                     ^^^^^^^^ [12]
-   <BUILTINS>/bom.js:1033:15
-   1033|     redirect: RedirectType;
+   <BUILTINS>/bom.js:1034:15
+   1034|     redirect: RedirectType;
                        ^^^^^^^^^^^^ [13]
    <BUILTINS>/bom.js:983:16
     983|     redirect?: RedirectType;
                         ^^^^^^^^^^^^ [14]
-   <BUILTINS>/bom.js:1034:15
-   1034|     referrer: string;
+   <BUILTINS>/bom.js:1035:15
+   1035|     referrer: string;
                        ^^^^^^ [15]
    <BUILTINS>/bom.js:984:16
     984|     referrer?: string;
                         ^^^^^^ [16]
-   <BUILTINS>/bom.js:1035:21
-   1035|     referrerPolicy: ReferrerPolicyType;
+   <BUILTINS>/bom.js:1036:21
+   1036|     referrerPolicy: ReferrerPolicyType;
                              ^^^^^^^^^^^^^^^^^^ [17]
    <BUILTINS>/bom.js:985:22
     985|     referrerPolicy?: ReferrerPolicyType;
@@ -359,8 +359,8 @@ References:
    request.js:24:19
      24| h.text().then((t: Buffer) => t); // incorrect
                            ^^^^^^ [1]
-   <BUILTINS>/bom.js:1044:21
-   1044|     text(): Promise<string>;
+   <BUILTINS>/bom.js:1045:21
+   1045|     text(): Promise<string>;
                              ^^^^^^ [2]
 
 
@@ -373,8 +373,8 @@ Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible wit
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1040:28
-   1040|     arrayBuffer(): Promise<ArrayBuffer>;
+   <BUILTINS>/bom.js:1041:28
+   1041|     arrayBuffer(): Promise<ArrayBuffer>;
                                     ^^^^^^^^^^^ [1]
    request.js:26:27
      26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
@@ -440,8 +440,8 @@ References:
    response.js:8:28
      8| new Response("", { status: "404" }); // incorrect
                                    ^^^^^ [1]
-   <BUILTINS>/bom.js:990:14
-   990|     status?: number;
+   <BUILTINS>/bom.js:991:14
+   991|     status?: number;
                      ^^^^^^ [2]
 
 
@@ -458,8 +458,8 @@ References:
    response.js:9:28
      9| new Response("", { status: null }); // incorrect
                                    ^^^^ [1]
-   <BUILTINS>/bom.js:990:14
-   990|     status?: number;
+   <BUILTINS>/bom.js:991:14
+   991|     status?: number;
                      ^^^^^^ [2]
 
 
@@ -546,8 +546,8 @@ References:
    response.js:42:19
      42| h.text().then((t: Buffer) => t); // incorrect
                            ^^^^^^ [1]
-   <BUILTINS>/bom.js:1018:21
-   1018|     text(): Promise<string>;
+   <BUILTINS>/bom.js:1019:21
+   1019|     text(): Promise<string>;
                              ^^^^^^ [2]
 
 
@@ -560,8 +560,8 @@ Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible wit
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1014:28
-   1014|     arrayBuffer(): Promise<ArrayBuffer>;
+   <BUILTINS>/bom.js:1015:28
+   1015|     arrayBuffer(): Promise<ArrayBuffer>;
                                     ^^^^^^^^^^^ [1]
    response.js:44:27
      44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect

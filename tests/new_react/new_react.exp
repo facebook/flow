@@ -716,8 +716,8 @@ Cannot call `ReactDOM.render` with `document.body` bound to `container` because 
           ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:621:27
-   621|   body: HTMLBodyElement | null;
+   <BUILTINS>/dom.js:628:27
+   628|   body: HTMLBodyElement | null;
                                   ^^^^ [1]
    <BUILTINS>/react-dom.js:18:16
     18|     container: Element,
