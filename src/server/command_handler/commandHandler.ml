@@ -481,7 +481,11 @@ let wrap_ephemeral_handler handler genv arg (request_id, command) =
       ~client_context:command.ServerProt.Request.client_logging_context
       ~profiling;
     Lwt.return ret
-  with exn ->
+  with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
     let exn = Exception.wrap exn in
     let exn_str = Exception.to_string exn in
     Hh_logger.error

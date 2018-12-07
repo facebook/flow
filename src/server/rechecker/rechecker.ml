@@ -59,7 +59,9 @@ let recheck genv env ~files_to_focus ~file_watcher_metadata updates =
  * thread is canceled, on_cancel is called and its result returned *)
 let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
   let process_updates = process_updates genv env in
-  let run_thread = f () in
+  (* We don't want to start running f until we're in the try block *)
+  let waiter, wakener = Lwt.task () in
+  let run_thread = let%lwt () = waiter in f () in
   let cancel_thread =
     let%lwt () = ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates in
     Hh_logger.info "Canceling due to new file changes";
@@ -67,6 +69,7 @@ let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
     Lwt.return_unit
   in
   try%lwt
+    Lwt.wakeup wakener ();
     let%lwt ret = run_thread in
     Lwt.cancel cancel_thread;
     Lwt.return ret

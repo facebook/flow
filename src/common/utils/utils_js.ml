@@ -235,12 +235,22 @@ let bind2 ~f x y = Core_result.bind x (fun x -> Core_result.bind y (f x))
 let map2 ~f x y = Core_result.bind x (fun x -> Core_result.map y ~f:(f x))
 
 let try_with_json f =
-  try%lwt f () with exn ->
+  try%lwt f ()
+  with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
     let exn = Exception.wrap exn in
     Lwt.return (Error (Exception.to_string exn, None))
 
 let try_with f =
-  try%lwt f () with exn ->
+  try%lwt f ()
+  with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
     let exn = Exception.wrap exn in
     Lwt.return (Error (Exception.to_string exn))
 
