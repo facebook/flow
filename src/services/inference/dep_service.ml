@@ -177,28 +177,32 @@ let calc_all_dependents modules module_dependents_tbl fileset =
    files. The latter modules, marked "changed," are calculated earlier when
    picking providers.
 
-   - unchanged is all unchanged files in the current state
-   - new_or_changed is all files that have just been through local inference and
-   all skipped files that were also new or unchanged
-   - changed_modules is a conservative approximation of modules that no longer have
-   the same providers, or whose providers are changed files
+   - candidates is the set of files which could be dependents. The returned sets will be subsets of
+   the candidates set. For example, if we're calculating the dependents of all the changed files
+   then this would be the set of unchanged files
+   - root_files is the set of files for which we'd like to calculate dependents. This should be
+   disjoint from candidates. If we wanted to calculate the dependents of all the changed files then
+   this would be the set of changed files
+   - root_modules is the set of modules for which we'd like to calculate dependents. This is the
+   modules names of the files in the root_files set. If we wanted to calculate the dependents of all
+   the changed files then this would be the set of module names of the changed files
 
-   Return the subset of unchanged transitively dependent on updates, and
-   the subset directly dependent on them.
+   Return the subset of candidates transitively dependent on root_files and the subset directly
+   dependent on root_modules.
 *)
-let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
-  (* Get the modules provided by unchanged files, the reverse dependency map
-     for unchanged files, and the subset of unchanged files whose resolution
+let dependent_files workers ~candidates ~root_files ~root_modules =
+  (* Get the modules provided by candidate files, the reverse dependency map
+     for candidate files, and the subset of candidate files whose resolution
      paths may encounter new or changed modules. *)
   let%lwt modules, module_dependents_tbl, resolution_path_files =
-    dependent_calc_utils workers unchanged new_or_changed
+    dependent_calc_utils workers candidates root_files
   in
 
-  (* resolution_path_files, plus files that require changed_modules *)
+  (* resolution_path_files, plus files that require root_modules *)
   let direct_dependents = Modulename.Set.fold (fun m acc ->
     let files = Hashtbl.find_all module_dependents_tbl m in
     List.fold_left (fun acc f -> FilenameSet.add f acc) acc files
-  ) changed_modules resolution_path_files in
+  ) root_modules resolution_path_files in
 
   (* (transitive dependents are re-merged, directs are also re-resolved) *)
   Lwt.return (

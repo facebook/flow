@@ -832,6 +832,33 @@ let get_files_unsafe ~audit filename module_name =
     if f_module = module_name then []
     else [f_module, Module_heaps.get_file_unsafe ~audit f_module]
 
+let calc_modules_helper workers files =
+  MultiWorkerLwt.call workers
+    ~job: (List.fold_left (fun acc file ->
+      match Module_heaps.get_info ~audit:Expensive.ok file with
+      | Some info ->
+        let { Module_heaps.module_name; _ } = info in
+        (file,
+         get_files_unsafe ~audit:Expensive.ok file module_name) :: acc
+      | None -> acc
+    ))
+    ~neutral: []
+    ~merge: List.rev_append
+    ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files))
+
+(* Given a set of files which are unchanged, return the set of modules which those files provide *)
+let calc_unchanged_modules workers unchanged =
+  let%lwt old_file_module_assoc = calc_modules_helper workers unchanged in
+  let unchanged_modules = List.fold_left (fun unchanged_modules (file, module_provider_assoc) ->
+    List.fold_left (fun unchanged_modules (module_name, provider) ->
+      if provider = file
+      then Modulename.Set.add module_name unchanged_modules
+      else unchanged_modules
+    ) unchanged_modules module_provider_assoc
+  ) Modulename.Set.empty old_file_module_assoc in
+  Lwt.return unchanged_modules
+
+
 (* Calculate the set of modules whose current providers are changed or deleted files.
 
    Possibilities:
@@ -872,20 +899,7 @@ let calc_old_modules =
   in
 
   fun workers ~all_providers_mutator ~options new_or_changed_or_deleted ->
-    let%lwt old_file_module_assoc = MultiWorkerLwt.call workers
-      ~job: (List.fold_left (fun acc file ->
-        match Module_heaps.get_info ~audit:Expensive.ok file with
-        | Some info ->
-          let { Module_heaps.module_name; _ } = info in
-          (file,
-           get_files_unsafe ~audit:Expensive.ok file module_name) :: acc
-        | None -> acc
-      ))
-      ~neutral: []
-      ~merge: List.rev_append
-      ~next: (MultiWorkerLwt.next workers (FilenameSet.elements new_or_changed_or_deleted))
-    in
-
+    let%lwt old_file_module_assoc = calc_modules_helper workers new_or_changed_or_deleted in
     Lwt.return (calc_from_module_assocs ~all_providers_mutator ~options old_file_module_assoc)
 
 

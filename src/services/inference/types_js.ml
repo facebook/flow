@@ -778,12 +778,11 @@ let filter_out_node_modules ~options =
     not (Files.is_within_node_modules ~root ~options:file_options filename_str)
   )
 
-(* Without a set of focused files, we just focus on every parsed file. We won't focus on
- * node_modules. If a node module is a dependency, then we'll just treat it as a dependency.
- * Otherwise, we'll ignore it. *)
-let unfocused_files_to_infer ~options ~parsed ~dependency_graph =
+(* Focus on every file as long as it's not in node_modules. Node modules can only be dependencies.
+ *)
+let unfocused_files_to_infer ~options ~focused ~dependency_graph =
   (* All the non-node_modules files *)
-  let focused = filter_out_node_modules ~options parsed in
+  let focused = filter_out_node_modules ~options focused in
 
   (* Calculate dependencies to figure out which node_modules stuff we depend on *)
   let dependencies = Dep_service.calc_all_dependencies dependency_graph focused in
@@ -793,7 +792,7 @@ let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focused with
     | None ->
-      unfocused_files_to_infer ~options ~parsed ~dependency_graph
+      unfocused_files_to_infer ~options ~focused:parsed ~dependency_graph
     | Some focused ->
       focused_files_to_infer ~focused ~dependency_graph
   )
@@ -919,34 +918,18 @@ let recheck_with_profiling
 
   Hh_logger.info "Parsing";
   (* reparse modified files, updating modified to new_or_changed to reflect
-     removal of unchanged files *)
+   * removal of unchanged files
+   *
+   * new_or_changed - Set of files which are not unchanged. This includes freshparsed, fails & skips
+   * freshparsed - Set of files which parsed successfully
+   * unparsed - Set of files which were skipped (e.g. no @flow) or which we failed to parse
+   * unchanged_parse - Set of files who's file hash didn't changes
+   * new_local_errors - Parse errors, docblock errors, etc
+  *)
   let%lwt new_or_changed, freshparsed, unparsed, unchanged_parse, new_local_errors =
-     reparse ~options ~profiling ~transaction ~workers ~modified ~deleted in
+     reparse ~options ~profiling ~transaction ~workers ~modified ~deleted
+   in
 
-  let%lwt new_or_changed, freshparsed =
-    if not (FilenameSet.is_empty files_to_focus) then begin
-      (* Normally we can ignore files which are unmodified. However, if someone passed force_focus,
-       * then we may need to ressurect some unmodified files into the new_or_changed and freshparsed
-       * sets. For example, if someone ran `flow force-recheck --focus a.js` and a.js is not
-       * focused, then we need to recheck it even if the file is unchanged
-       *
-       * We avoid rechecking already-focused unmodified files since they're already focused and
-       * haven't changed :P *)
-      let unchanged_files_to_focus =
-        FilenameSet.diff
-          (FilenameSet.inter files_to_focus unchanged_parse) (* unchanged files to focus... *)
-          (CheckedSet.focused env.ServerEnv.checked_files)   (* ...which aren't already focused *)
-        |> FilenameSet.filter (fun f -> FilenameSet.mem f env.ServerEnv.files) (* Only parsed *)
-      in
-      let%lwt () = ensure_parsed ~options ~profiling ~workers
-        (CheckedSet.add ~focused:unchanged_files_to_focus CheckedSet.empty)
-      in
-      Lwt.return (
-        FilenameSet.union new_or_changed unchanged_files_to_focus,
-        FilenameSet.union freshparsed unchanged_files_to_focus
-      )
-    end else Lwt.return (new_or_changed, freshparsed)
-  in
 
   let unparsed_set =
     List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
@@ -1114,6 +1097,15 @@ let recheck_with_profiling
     Module_js.calc_old_modules workers ~all_providers_mutator ~options new_or_changed_or_deleted
   ) in
 
+  (* We may be focusing on some unchanged files. If these files haven't been focused yet, we can't
+   * skip them like all the other unchanged files *)
+  let unchanged_files_to_focus =
+    FilenameSet.diff
+      (FilenameSet.inter files_to_focus unchanged_parse) (* unchanged files to focus... *)
+      (CheckedSet.focused env.ServerEnv.checked_files)   (* ...which aren't already focused... *)
+    |> FilenameSet.filter (fun f -> FilenameSet.mem f old_parsed) (* ...and are parsed *)
+  in
+
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
   let%lwt changed_modules, errors =
     commit_modules_and_resolve_requires
@@ -1131,7 +1123,14 @@ let recheck_with_profiling
       ~errors
       ~is_init:false in
 
+  (* Figure out which modules the unchanged focused files provide. We need these to figure out
+   * which dependents need to be added to the checked set *)
+  let%lwt unchanged_modules = with_timer_lwt ~options "CalcUnchangedModules" profiling (fun () ->
+    Module_js.calc_unchanged_modules workers unchanged_files_to_focus
+  ) in
+
   let parsed = FilenameSet.union freshparsed unchanged in
+
 
   (* direct_dependent_files are unchanged files which directly depend on changed modules,
      or are new / changed files that are phantom dependents. dependent_files are
@@ -1140,9 +1139,9 @@ let recheck_with_profiling
     with_timer_lwt ~options "DependentFiles" profiling (fun () ->
       Dep_service.dependent_files
         workers
-        ~unchanged
-        ~new_or_changed
-        ~changed_modules
+        ~candidates:(FilenameSet.diff unchanged unchanged_files_to_focus)
+        ~root_files:(FilenameSet.union new_or_changed unchanged_files_to_focus)
+        ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
     ) in
 
   Hh_logger.info "Re-resolving directly dependent files";
@@ -1164,10 +1163,18 @@ let recheck_with_profiling
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
   ) in
 
+  let acceptable_files_to_focus =
+    FilenameSet.union freshparsed unchanged_files_to_focus
+  in
+
   Hh_logger.info "Recalculating dependency graph";
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+    let files_to_include_in_dependency_graph =
+      freshparsed
+      |> FilenameSet.union direct_dependent_files
+    in
     let%lwt updated_dependency_graph = Dep_service.calc_partial_dependency_graph workers
-      (FilenameSet.union freshparsed direct_dependent_files) ~parsed in
+      files_to_include_in_dependency_graph ~parsed in
     let old_dependency_graph = env.ServerEnv.dependency_graph in
     old_dependency_graph
     |> FilenameSet.fold FilenameMap.remove deleted
@@ -1183,9 +1190,9 @@ let recheck_with_profiling
         let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
         let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
         let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
-        let parsed = FilenameSet.union old_focus_targets freshparsed in
+        let focused = FilenameSet.union old_focus_targets acceptable_files_to_focus in
         let%lwt updated_checked_files = unfocused_files_to_infer
-          ~options ~parsed ~dependency_graph in
+          ~options ~focused ~dependency_graph in
         Lwt.return (updated_checked_files, all_dependent_files)
       | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
         (* Unfortunately, our checked_files set might be out of date. This update could have added
@@ -1204,7 +1211,8 @@ let recheck_with_profiling
          **)
         let old_focused = CheckedSet.focused env.ServerEnv.checked_files in
         let new_focused =
-          filter_out_node_modules ~options (FilenameSet.inter files_to_focus freshparsed)
+          filter_out_node_modules ~options
+            (FilenameSet.inter files_to_focus acceptable_files_to_focus)
         in
 
         let open_in_ide =
@@ -1232,8 +1240,11 @@ let recheck_with_profiling
     )
   in
 
-  let infer_input =
-    CheckedSet.filter ~f:(fun fn -> FilenameSet.mem fn freshparsed) updated_checked_files in
+  (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
+   * will be focused *)
+  let infer_input = CheckedSet.filter updated_checked_files ~f:(fun fn ->
+    FilenameSet.mem fn acceptable_files_to_focus
+  ) in
 
   let%lwt to_merge, components, recheck_map =
     include_dependencies_and_dependents

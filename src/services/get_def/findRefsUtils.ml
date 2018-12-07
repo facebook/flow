@@ -61,9 +61,9 @@ let get_dependents options workers env file_key content =
     workers
     (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's
     probably worth looking at if you are searching for optimizations *)
-    ~unchanged:ServerEnv.(CheckedSet.all !env.checked_files)
-    ~new_or_changed:(FilenameSet.singleton file_key)
-    ~changed_modules:(Modulename.Set.singleton modulename)
+    ~candidates:ServerEnv.(CheckedSet.all !env.checked_files)
+    ~root_files:(FilenameSet.singleton file_key)
+    ~root_modules:(Modulename.Set.singleton modulename)
 
 let lazy_mode_focus genv env path =
   let%lwt env, _ = Lazy_mode_utils.focus_and_check genv env (Nel.one path) in
