@@ -1,10 +1,10 @@
 flow config check:
 {
-  "flowVersion":"0.87.0",
+  "flowVersion":"0.88.0",
   "exit":{
     "code":8,
     "reason":"Invalid_flowconfig",
-    "msg":"Wrong version of Flow. The config specifies version ^0.1 but this is version 0.87.0"
+    "msg":"Wrong version of Flow. The config specifies version ^0.1 but this is version 0.88.0"
   }
 }
 

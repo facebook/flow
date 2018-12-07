@@ -1,3 +1,31 @@
+### 0.88.0
+
+Likely to cause new Flow errors:
+
+* Made `Function` and `Object` types be aliases for `any`. They were always unsafe types, just like `any`, but they had peculiar behavior. This change revealed places where they were handled improperly within Flow, and ended up surfacing type errors that were previously missed.
+
+New Features:
+
+* Added the experimental Watchman lazy mode (`flow start --lazy-mode watchman`). This improves the lazy mode experience for repositories which use Mercurial and Watchman. We will document it more when/if it proves itself.
+* Added `flow config check` which validates the `.flowconfig`.
+
+Misc:
+
+* Made miscellaneous improvements to the AST differ, which improves the output of global rename.
+* Made `.flowconfig` parsing less strict (in particular, if the `--ignore-version` flag is passed, do not fatal on unrecognized config options).
+* Performed a code cleanup in type normalization that caused some types in `type-at-pos` to be displayed differently.
+* Removed redundant information in stored ASTs resulting in a modest reduction in memory usage.
+* Flow assigns long string literals type `string`, rather than the singleton type of that literal. Now, this fact is surfaced in error messages.
+* Fixed stack overflows:
+  * When checking a large number of files.
+  * When a large number of errors are present.
+
+Libdefs:
+
+* Added `React.Suspense`.
+* Removed `React.useMutationEffect` hook.
+
+
 ### 0.87.0
 
 Likely to cause new Flow errors:
