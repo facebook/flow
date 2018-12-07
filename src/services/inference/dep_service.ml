@@ -183,32 +183,40 @@ let calc_all_dependents modules module_dependents_tbl fileset =
    - root_files is the set of files for which we'd like to calculate dependents. This should be
    disjoint from candidates. If we wanted to calculate the dependents of all the changed files then
    this would be the set of changed files
-   - root_modules is the set of modules for which we'd like to calculate dependents. This is the
-   modules names of the files in the root_files set. If we wanted to calculate the dependents of all
-   the changed files then this would be the set of module names of the changed files
+   - root_modules is the set of modules for which we'd like to calculate dependents. If we wanted to
+   calculate the dependents of all the changed files then this would be the set of module names
+   which have new providers.
 
    Return the subset of candidates transitively dependent on root_files and the subset directly
    dependent on root_modules.
 *)
 let dependent_files workers ~candidates ~root_files ~root_modules =
-  (* Get the modules provided by candidate files, the reverse dependency map
-     for candidate files, and the subset of candidate files whose resolution
-     paths may encounter new or changed modules. *)
-  let%lwt modules, module_dependents_tbl, resolution_path_files =
-    dependent_calc_utils workers candidates root_files
-  in
+  if FilenameSet.is_empty root_files && Modulename.Set.is_empty root_modules
+  then begin
+    (* dependent_calc_utils is O(candidates), but if root_files and root_modules are empty then we
+     * can immediately return. We know that the empty set has no direct or transitive dependencies.
+     * This can save us a lot of time on very large repositories *)
+    Lwt.return (FilenameSet.empty, FilenameSet.empty)
+  end else begin
+    (* Get the modules provided by candidate files, the reverse dependency map
+       for candidate files, and the subset of candidate files whose resolution
+       paths may encounter new or changed modules. *)
+    let%lwt modules, module_dependents_tbl, resolution_path_files =
+      dependent_calc_utils workers candidates root_files
+    in
 
-  (* resolution_path_files, plus files that require root_modules *)
-  let direct_dependents = Modulename.Set.fold (fun m acc ->
-    let files = Hashtbl.find_all module_dependents_tbl m in
-    List.fold_left (fun acc f -> FilenameSet.add f acc) acc files
-  ) root_modules resolution_path_files in
+    (* resolution_path_files, plus files that require root_modules *)
+    let direct_dependents = Modulename.Set.fold (fun m acc ->
+      let files = Hashtbl.find_all module_dependents_tbl m in
+      List.fold_left (fun acc f -> FilenameSet.add f acc) acc files
+    ) root_modules resolution_path_files in
 
-  (* (transitive dependents are re-merged, directs are also re-resolved) *)
-  Lwt.return (
-    calc_all_dependents modules module_dependents_tbl direct_dependents,
-    direct_dependents
-  )
+    (* (transitive dependents are re-merged, directs are also re-resolved) *)
+    Lwt.return (
+      calc_all_dependents modules module_dependents_tbl direct_dependents,
+      direct_dependents
+    )
+  end
 
 (* Calculate module dependencies. Since this involves a lot of reading from
    shared memory, it is useful to parallelize this process (leading to big
