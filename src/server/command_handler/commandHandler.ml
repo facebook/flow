@@ -48,7 +48,7 @@ let get_status genv env client_root =
   in
   status_response, lazy_stats
 
-let autocomplete ~options ~workers ~env ~profiling file_input =
+let autocomplete ~options ~env ~profiling file_input =
   let path, content = match file_input with
     | File_input.FileName _ -> failwith "Not implemented"
     | File_input.FileContent (_, content) ->
@@ -57,7 +57,7 @@ let autocomplete ~options ~workers ~env ~profiling file_input =
   let state = Autocomplete_js.autocomplete_set_hooks () in
   let path = File_key.SourceFile path in
   let%lwt check_contents_result =
-    Types_js.basic_check_contents ~options ~workers ~env ~profiling content path
+    Types_js.basic_check_contents ~options ~env ~profiling content path
   in
   let%lwt autocomplete_result =
     map_error ~f:(fun str -> str, None) check_contents_result
@@ -73,7 +73,7 @@ let autocomplete ~options ~workers ~env ~profiling file_input =
   Autocomplete_js.autocomplete_unset_hooks ();
   Lwt.return (results, json_data_to_log)
 
-let check_file ~options ~workers ~env ~profiling ~force file_input =
+let check_file ~options ~env ~profiling ~force file_input =
   let file = File_input.filename_of_file_input file_input in
   match file_input with
   | File_input.FileName _ -> failwith "Not implemented"
@@ -90,7 +90,7 @@ let check_file ~options ~workers ~env ~profiling ~force file_input =
       if should_check then
         let file = File_key.SourceFile file in
         let%lwt _, errors, warnings =
-          Types_js.typecheck_contents ~options ~workers ~env ~profiling content file
+          Types_js.typecheck_contents ~options ~env ~profiling content file
         in
         Lwt.return (convert_errors ~errors ~warnings)
       else
@@ -98,7 +98,6 @@ let check_file ~options ~workers ~env ~profiling ~force file_input =
 
 let infer_type
     ~(options: Options.t)
-    ~(workers: MultiWorkerLwt.worker list option)
     ~(env: ServerEnv.env ref)
     ~(profiling: Profiling_js.running)
     ((file_input, line, col, verbose, expand_aliases):
@@ -111,27 +110,27 @@ let infer_type
   | Error e -> Lwt.return (Error e, None)
   | Ok content ->
     let%lwt result = try_with_json (fun () ->
-      Type_info_service.type_at_pos ~options ~workers ~env ~profiling ~expand_aliases
+      Type_info_service.type_at_pos ~options ~env ~profiling ~expand_aliases
         file content line col
     ) in
     Lwt.return (split_result result)
 
-let dump_types ~options ~workers ~env ~profiling file_input =
+let dump_types ~options ~env ~profiling file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input
   %>>= fun content ->
     try_with begin fun () ->
-      Type_info_service.dump_types ~options ~workers ~env ~profiling file content
+      Type_info_service.dump_types ~options ~env ~profiling file content
     end
 
-let coverage ~options ~workers ~env ~profiling ~force file_input =
+let coverage ~options ~env ~profiling ~force file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input
   %>>= fun content ->
     try_with begin fun () ->
-      Type_info_service.coverage ~options ~workers ~env ~profiling ~force file content
+      Type_info_service.coverage ~options ~env ~profiling ~force file content
     end
 
 let serialize_graph graph =
@@ -175,13 +174,13 @@ let get_cycle ~env fn =
     |> serialize_graph
   ))
 
-let suggest ~options ~workers ~env ~profiling file_input =
+let suggest ~options ~env ~profiling file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input
   %>>= fun content -> try_with (fun _ ->
     let%lwt result =
-      Type_info_service.suggest ~options ~workers ~env ~profiling file content
+      Type_info_service.suggest ~options ~env ~profiling file content
     in
     match result with
     | Ok (tc_errors, tc_warnings, suggest_warnings, annotated_program) ->
@@ -285,8 +284,8 @@ let find_refs ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
-let get_def ~options ~workers ~env ~profiling position =
-  GetDef_js.get_def ~options ~workers ~env ~profiling ~depth:0 position
+let get_def ~options ~env ~profiling position =
+  GetDef_js.get_def ~options ~env ~profiling ~depth:0 position
 
 let module_name_of_string ~options module_name_str =
   let file_options = Options.file_options options in
@@ -343,7 +342,6 @@ let handle_ephemeral_deferred_unsafe
 
   in
   let options = genv.ServerEnv.options in
-  let workers = genv.ServerEnv.workers in
   Hh_logger.info "Request: %s" (ServerProt.Request.to_string command);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
   let should_print_summary = Options.should_profile genv.options in
@@ -351,7 +349,7 @@ let handle_ephemeral_deferred_unsafe
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
       match command with
       | ServerProt.Request.AUTOCOMPLETE fn ->
-          let%lwt result, json_data = autocomplete ~options ~workers ~env ~profiling fn in
+          let%lwt result, json_data = autocomplete ~options ~env ~profiling fn in
           ServerProt.Response.AUTOCOMPLETE result
           |> respond;
           Lwt.return json_data
@@ -360,12 +358,12 @@ let handle_ephemeral_deferred_unsafe
             opt_verbose = verbose;
             opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
           } in
-          let%lwt response = check_file ~options ~workers ~env ~force ~profiling fn in
+          let%lwt response = check_file ~options ~env ~force ~profiling fn in
           ServerProt.Response.CHECK_FILE response
           |> respond;
           Lwt.return None
       | ServerProt.Request.COVERAGE (fn, force) ->
-          let%lwt response = coverage ~options ~workers ~env ~profiling ~force fn in
+          let%lwt response = coverage ~options ~env ~profiling ~force fn in
           ServerProt.Response.COVERAGE response
           |> respond;
           Lwt.return None
@@ -382,7 +380,7 @@ let handle_ephemeral_deferred_unsafe
           |> respond;
           Lwt.return None
       | ServerProt.Request.DUMP_TYPES (fn) ->
-          let%lwt response = dump_types ~options ~workers ~env ~profiling fn in
+          let%lwt response = dump_types ~options ~env ~profiling fn in
           ServerProt.Response.DUMP_TYPES response
           |> respond;
           Lwt.return None
@@ -407,7 +405,7 @@ let handle_ephemeral_deferred_unsafe
           ) |> respond;
           Lwt.return None
       | ServerProt.Request.GET_DEF (fn, line, char) ->
-          let%lwt result, json_data = get_def ~options ~workers ~env ~profiling (fn, line, char) in
+          let%lwt result, json_data = get_def ~options ~env ~profiling (fn, line, char) in
           ServerProt.Response.GET_DEF result
           |> respond;
           Lwt.return json_data
@@ -418,8 +416,7 @@ let handle_ephemeral_deferred_unsafe
           Lwt.return None
       | ServerProt.Request.INFER_TYPE (fn, line, char, verbose, expand_aliases) ->
           let%lwt result, json_data =
-            infer_type ~options ~workers ~env ~profiling
-              (fn, line, char, verbose, expand_aliases)
+            infer_type ~options ~env ~profiling (fn, line, char, verbose, expand_aliases)
           in
           ServerProt.Response.INFER_TYPE result
           |> respond;
@@ -456,7 +453,7 @@ let handle_ephemeral_deferred_unsafe
           end;
           Lwt.return None
       | ServerProt.Request.SUGGEST fn ->
-          let%lwt result = suggest ~options ~workers ~env ~profiling fn in
+          let%lwt result = suggest ~options ~env ~profiling fn in
           ServerProt.Response.SUGGEST result
           |> respond;
           Lwt.return None
@@ -693,7 +690,6 @@ type persistent_handling_result =
 let handle_persistent_unsafe genv env client profiling msg : persistent_handling_result Lwt.t =
   let open Persistent_connection_prot in
   let options = genv.ServerEnv.options in
-  let workers = genv.ServerEnv.workers in
 
   match msg with
   | LspToServer (RequestMessage (id, _), metadata)
@@ -711,7 +707,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
 
   | Autocomplete (file_input, id) ->
       let env = ref env in
-      let%lwt results, json_data = autocomplete ~options ~workers ~env ~profiling file_input in
+      let%lwt results, json_data = autocomplete ~options ~env ~profiling file_input in
       let wrapped = AutocompleteResult (results, id) in
       Persistent_connection.send_message wrapped client;
       Lwt.return (IdeResponse (Ok (!env, json_data)))
@@ -770,7 +766,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let open TextDocumentPositionParams in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let%lwt (result, extra_data) =
-      get_def ~options ~workers ~env ~profiling (file, line, char) in
+      get_def ~options ~env ~profiling (file, line, char) in
     let metadata = with_data ~extra_data metadata in
     begin match result with
       | Ok loc when loc = Loc.none ->
@@ -792,7 +788,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let verbose = None in (* if Some, would write to server logs *)
     let%lwt result, extra_data =
-      infer_type ~options ~workers ~env ~profiling (file, line, char, verbose, false)
+      infer_type ~options ~env ~profiling (file, line, char, verbose, false)
     in
     let metadata = with_data ~extra_data metadata in
     begin match result with
@@ -835,7 +831,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
         let content_with_token = AutocompleteService_js.add_autocomplete_token content line char in
         let file_with_token = File_input.FileContent (fn, content_with_token) in
         let%lwt result, extra_data =
-          autocomplete ~options ~workers ~env ~profiling file_with_token
+          autocomplete ~options ~env ~profiling file_with_token
         in
         let metadata = with_data ~extra_data metadata in
         begin match result with
@@ -890,7 +886,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
       | Error _ -> false in
     let%lwt result = if is_flow then
       let force = false in (* 'true' makes it report "unknown" for all exprs in non-flow files *)
-      coverage ~options ~workers ~env ~profiling ~force file
+      coverage ~options ~env ~profiling ~force file
     else
       Lwt.return (Ok [])
     in

@@ -423,7 +423,7 @@ let add_literal_properties literal_key_info def_info =
   Result.map def_info ~f:(Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
 
 let get_def_info genv env profiling file_key content loc: (def_info option, string) result Lwt.t =
-  let {options; workers} = genv in
+  let options = genv.options in
   let props_access_info = ref (Ok None) in
   compute_ast_result options file_key content %>>= fun (ast, file_sig, info) ->
   (* Check if it's an exported symbol *)
@@ -434,7 +434,7 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
     set_def_loc_hook props_access_info literal_key_info loc;
     let%lwt cx, _ = Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
       let%lwt () =
-        Types_js.ensure_checked_dependencies ~options ~profiling ~workers ~env file_key file_sig
+        Types_js.ensure_checked_dependencies ~options ~env file_key file_sig
       in
       Lwt.return @@
         Merge_service.merge_contents_context options file_key ast info file_sig

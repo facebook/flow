@@ -8,8 +8,8 @@
 open Core_result
 let (>|=) = Lwt.(>|=)
 
-let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content line col =
-  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
+let type_at_pos ~options ~env ~profiling ~expand_aliases file content line col =
+  Types_js.basic_check_contents ~options ~env ~profiling content file >|=
   function
   | Error str -> Error (str, None)
   | Ok (cx, _info, file_sig, typed_ast) ->
@@ -43,25 +43,25 @@ let type_at_pos ~options ~workers ~env ~profiling ~expand_aliases file content l
 
     Ok ((loc, ty), Some json_data)
 
-let dump_types ~options ~workers ~env ~profiling file content =
+let dump_types ~options ~env ~profiling file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
-  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
+  Types_js.basic_check_contents ~options ~env ~profiling content file >|=
   map ~f:(fun (cx, _info, file_sig, _) -> Query_types.dump_types cx (File_sig.abstractify_locs file_sig) ~printer)
 
 
-let coverage ~options ~workers ~env ~profiling ~force file content =
+let coverage ~options ~env ~profiling ~force file content =
   let should_check =
     if force then true else
       let (_, docblock) =
         Parsing_service_js.(parse_docblock docblock_max_tokens file content) in
       Docblock.is_flow docblock
   in
-  Types_js.basic_check_contents ~options ~workers ~env ~profiling content file >|=
+  Types_js.basic_check_contents ~options ~env ~profiling content file >|=
   map ~f:(fun (cx, _, file_sig, _) -> Query_types.covered_types cx (File_sig.abstractify_locs file_sig) ~should_check)
 
-let suggest ~options ~workers ~env ~profiling file content =
-  Types_js.typecheck_contents ~options ~workers ~env ~profiling content file >|=
+let suggest ~options ~env ~profiling file content =
+  Types_js.typecheck_contents ~options ~env ~profiling content file >|=
   function
   | (Some (cx, ast, file_sig, _), tc_errors, tc_warnings) ->
     let cxs = Query_types.suggest_types cx (File_sig.abstractify_locs file_sig) in

@@ -539,7 +539,7 @@ let ensure_parsed ~options ~profiling ~workers files =
    should be able to emit errors, even places like propertyFindRefs.get_def_info
    that invoke this function. But it looks like this codepath fails to emit
    StartRecheck and EndRecheck messages. *)
-let ensure_checked_dependencies ~options ~profiling ~workers ~env file file_sig =
+let ensure_checked_dependencies ~options ~env file file_sig =
   let resolved_requires =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r locs resolved_rs ->
@@ -565,49 +565,17 @@ let ensure_checked_dependencies ~options ~profiling ~workers ~env file file_sig 
   (* Often, all dependencies have already been checked, so infer_input contains no unchecked files.
    * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
    * large repos *)
-  if CheckedSet.is_empty (CheckedSet.diff infer_input unchanged_checked)
+  let unchecked_dependencies = CheckedSet.diff infer_input unchanged_checked in
+  if CheckedSet.is_empty unchecked_dependencies
   then Lwt.return_unit
   else begin
-    let errors = !env.ServerEnv.errors in
-    let all_dependent_files = FilenameSet.empty in
-    let direct_dependent_files = FilenameSet.empty in
-    let persistent_connections = Some (!env.ServerEnv.connections) in
-    let dependency_graph = !env.ServerEnv.dependency_graph in
-    let deleted = FilenameSet.empty in
-
-    let%lwt to_merge, components, recheck_map =
-      include_dependencies_and_dependents
-        ~options ~profiling ~unchanged_checked ~infer_input ~dependency_graph ~all_dependent_files
-        ~direct_dependent_files
-    in
-
-    let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
-
-    let%lwt checked, _cycle_leaders, errors, _skipped_count = Transaction.with_transaction (fun transaction ->
-      merge
-        ~transaction ~options ~profiling ~workers ~errors
-        ~unchanged_checked ~to_merge ~components ~recheck_map
-        ~dependency_graph ~deleted
-        ~persistent_connections
-        ~prep_merge:None
-    ) in
-
-    (* During a normal initialization or recheck, we update the env with the errors and
-     * calculate the collated errors. However, this code is for when the server is in lazy mode,
-     * is trying to using typecheck_contents, and is making sure the dependencies are checked. Since
-     * we're messing with env.errors, we also need to set collated_errors to None. This will force
-     * us to recompute them the next time someone needs them *)
-    !env.ServerEnv.collated_errors := None;
-    env := { !env with ServerEnv.
-      checked_files = checked;
-      errors;
-    };
-    Lwt.return_unit
+    ServerMonitorListenerState.push_checked_set_to_force unchecked_dependencies;
+    raise Lwt.Canceled
   end
 
 (* Another special case, similar assumptions as above. *)
 (** TODO: handle case when file+contents don't agree with file system state **)
-let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents filename =
+let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename =
   let%lwt errors, parse_result, info =
     parse_contents ~options ~profiling ~check_syntax filename contents in
 
@@ -619,7 +587,7 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       (* merge *)
       let%lwt cx, typed_ast = with_timer_lwt ~options "MergeContents" profiling (fun () ->
         let%lwt () =
-          ensure_checked_dependencies ~options ~profiling ~workers ~env filename file_sig
+          ensure_checked_dependencies ~options ~env filename file_sig
         in
         Lwt.return @@ Merge_service.merge_contents_context options filename ast info file_sig
       ) in
@@ -690,16 +658,16 @@ let typecheck_contents_ ~options ~workers ~env ~check_syntax ~profiling contents
       (* should never happen *)
       Lwt.return (None, errors, Errors.ErrorSet.empty, info)
 
-let typecheck_contents ~options ~workers ~env ~profiling contents filename =
+let typecheck_contents ~options ~env ~profiling contents filename =
   let%lwt cx_opt, errors, warnings, _info =
-    typecheck_contents_ ~options ~workers ~env ~check_syntax:true ~profiling contents filename in
+    typecheck_contents_ ~options ~env ~check_syntax:true ~profiling contents filename in
   Lwt.return (cx_opt, errors, warnings)
 
-let basic_check_contents ~options ~workers ~env ~profiling contents filename =
+let basic_check_contents ~options ~env ~profiling contents filename =
   try%lwt
     let%lwt cx_opt, _errors, _warnings, info =
       typecheck_contents_
-        ~options ~workers ~env ~check_syntax:false ~profiling contents filename in
+        ~options ~env ~check_syntax:false ~profiling contents filename in
     let cx, file_sig, typed_ast = match cx_opt with
       | Some (cx, _, file_sig, typed_ast) -> cx, file_sig, typed_ast
       | None -> failwith "Couldn't parse file" in
@@ -963,7 +931,6 @@ let recheck_with_profiling
   let%lwt new_or_changed, freshparsed, unparsed, _unchanged_parse, new_local_errors =
      reparse ~options ~profiling ~transaction ~workers ~modified ~deleted
    in
-
 
   let unparsed_set =
     List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed

@@ -42,7 +42,6 @@ val full_check:
 
 val basic_check_contents:
   options: Options.t ->
-  workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
   profiling: Profiling_js.running ->
   string ->               (* contents *)
@@ -55,7 +54,6 @@ val basic_check_contents:
 
 val typecheck_contents:
   options: Options.t ->
-  workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
   profiling: Profiling_js.running ->
   string ->                                 (* contents *)
@@ -69,8 +67,6 @@ val typecheck_contents:
 
 val ensure_checked_dependencies:
   options: Options.t ->
-  profiling: Profiling_js.running ->
-  workers: MultiWorkerLwt.worker list option ->
   env: ServerEnv.env ref ->
   File_key.t ->
   File_sig.With_Loc.t ->
