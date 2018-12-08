@@ -277,8 +277,8 @@ Cannot cast `y['hasOwnProperty']` to string because function type [1] is incompa
         ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:63:5
-   63|     hasOwnProperty(prop: any): boolean;
+   <BUILTINS>/core.js:65:5
+   65|     hasOwnProperty(prop: any): boolean;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    objects.js:18:23
    18| (y['hasOwnProperty']: string); // error, prototype method is not a string

@@ -2060,8 +2060,8 @@ number [1] is incompatible with function type [2].
                                ^ [1]
 
 References:
-   <BUILTINS>/core.js:144:5
-   144|     toString(radix?: number): string;
+   <BUILTINS>/core.js:146:5
+   146|     toString(radix?: number): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2110,8 +2110,8 @@ number [1] is incompatible with function type [2].
                               ^ [1]
 
 References:
-   <BUILTINS>/core.js:119:5
-   119|     valueOf(): boolean;
+   <BUILTINS>/core.js:121:5
+   121|     valueOf(): boolean;
             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -2944,8 +2944,8 @@ Cannot get `x[0]` because an indexer property is missing in `Boolean` [1].
             ^^^^
 
 References:
-   <BUILTINS>/core.js:116:15
-   116| declare class Boolean {
+   <BUILTINS>/core.js:118:15
+   118| declare class Boolean {
                       ^^^^^^^ [1]
 
 

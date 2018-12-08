@@ -105,8 +105,8 @@ string [1] is incompatible with number [2] in property `bar`.
         -^
 
 References:
-   <BUILTINS>/core.js:144:31
-   144|     toString(radix?: number): string;
+   <BUILTINS>/core.js:146:31
+   146|     toString(radix?: number): string;
                                       ^^^^^^ [1]
    Bad.js:8:8
      8|   bar: number,

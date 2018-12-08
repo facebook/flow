@@ -7,8 +7,8 @@ Cannot call `str.toFixed` because property `toFixed` is missing in `String` [1].
                        ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:141:39
-   141|     toFixed(fractionDigits?: number): string;
+   <BUILTINS>/core.js:143:39
+   143|     toFixed(fractionDigits?: number): string;
                                               ^^^^^^ [1]
 
 
