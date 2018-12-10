@@ -109,6 +109,64 @@ References:
                                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ inexact_config.js:12:12
+
+Cannot create `Component2` element because:
+ - property `bar` is missing in `Props` [1] but exists in props [2].
+ - property `foo` is missing in `Props` [1] but exists in props [2].
+
+   inexact_config.js:12:12
+   12| const _c = <Component2 foo={3} bar={3} />; // error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   inexact_config.js:10:29
+   10| function Component2(props : Props) : React$Node { return null; }
+                                   ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexact_config.js:13:12
+
+Cannot create `Component2` element because property `children` is missing in `Props` [1] but exists in props [2].
+
+   inexact_config.js:13:12
+   13| const _d = <Component2>{"foo"}</Component2>; //error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   inexact_config.js:10:29
+   10| function Component2(props : Props) : React$Node { return null; }
+                                   ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexact_config.js:22:12
+
+Cannot create `Component4` element because property `bar` is missing in object type [1] but exists in props [2].
+
+   inexact_config.js:22:12
+   22| const _g = <Component4 foo={3} bar={3} />; //error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   inexact_config.js:20:29
+   20| function Component4(props : {| foo : number |}) : React$Node { return null; }
+                                   ^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexact_config.js:23:12
+
+Cannot create `Component4` element because property `foo` is missing in props [1] but exists in object type [2].
+
+   inexact_config.js:23:12
+   23| const _h = <Component4></Component4>; //error
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   inexact_config.js:20:29
+   20| function Component4(props : {| foo : number |}) : React$Node { return null; }
+                                   ^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ propTypes.js:15:1
 
 Cannot create `D` element because:
@@ -130,4 +188,4 @@ References:
 
 
 
-Found 8 errors
+Found 13 errors

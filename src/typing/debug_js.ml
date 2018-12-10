@@ -827,6 +827,14 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       ]
     ]
 
+  | ReactPropsToOut (_, props) -> [
+      "props", _json_of_t json_cx props;
+    ]
+
+  | ReactInToProps (_, props) -> [
+      "props", _json_of_t json_cx props;
+    ]
+
   | RefineT (_, p, t) -> [
       "Refined", JSON_Object [
         ("pred_t", json_of_pred json_cx p);
@@ -2135,6 +2143,8 @@ and dump_use_t_ (depth, tvars) cx t =
   | ReactKitT (use_op, _, tool) -> p t
       ~extra:(spf "%s, %s" (string_of_use_op use_op) (react_kit tool))
   | RefineT _ -> p t
+  | ReactPropsToOut (_, props)
+  | ReactInToProps (_, props) -> p ~extra:(kid props |> spf "%s") t
   | ReposLowerT (_, use_desc, arg) -> p t
       ~extra:(spf "use_desc=%b, %s" use_desc (use_kid arg))
   | ReposUseT (_, use_desc, use_op, arg) -> p t

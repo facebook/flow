@@ -4004,7 +4004,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
         (* Contravariant config check *)
         React_kit.get_config cx trace l ~use_op ~reason_op:r ~rec_flow ~rec_flow_t ~rec_unify
-          ~get_builtin_typeapp ~get_builtin_type ~add_output
+          ~get_builtin_type ~add_output
           (React.GetConfig l) Negative config;
         (* Ensure l is a React.Component by flowing l to React$Component<any, any> *)
         let class_component =
@@ -4020,7 +4020,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
         (* Contravariant config check *)
         React_kit.get_config cx trace l ~use_op ~reason_op:r ~rec_flow ~rec_flow_t ~rec_unify
-          ~get_builtin_typeapp ~get_builtin_type ~add_output
+          ~get_builtin_type ~add_output
           (React.GetConfig l) Negative config;
 
         (* Ensure this is a function component by flowing to (any) => React$Node *)
@@ -4040,7 +4040,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (instancel, instanceu);
 
     (* When looking at properties of an AbstractComponent, we delegate to a union of
-     * funciton component and class component
+     * function component and class component
      *)
     | DefT (r, ReactAbstractComponentT _),(
         TestPropT _
@@ -4051,6 +4051,47 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     ) ->
       let statics = get_builtin_type cx ~trace r "React$AbstractComponentStatics" in
       rec_flow cx trace (statics, u)
+
+    (******************)
+    (* React GetProps *)
+    (******************)
+
+    (* props is invariant in the class *)
+    | DefT (_, ClassT _), (ReactPropsToOut (_, props) | ReactInToProps (_, props)) ->
+        let c = React_kit.component_class cx l ~get_builtin_typeapp props in
+        rec_flow_t cx trace (l, c)
+
+    (* Functions with rest params or that are predicates cannot be React components *)
+    | DefT (reason, FunT (_, _, { params; rest_param = None; is_predicate = false; _})),
+      ReactPropsToOut (_, props) ->
+        (* Contravariance *)
+        Core_list.hd params
+        |> Option.value_map ~f:snd ~default:(Obj_type.mk cx reason)
+        |> fun t -> rec_flow_t cx trace (t, props)
+
+    | DefT (reason, FunT (_, _, { params; return_t; rest_param = None; is_predicate = false; _})),
+      ReactInToProps (reason_op, props) ->
+        (* Contravariance *)
+        Core_list.hd params
+        |> Option.value_map ~f:snd ~default:(Obj_type.mk cx reason)
+        |> fun t -> rec_flow_t cx trace (props, t);
+        rec_flow_t cx trace (return_t, get_builtin_type cx reason_op "React$Node")
+
+    | DefT (r, FunT _), (ReactInToProps (reason_op, props) | ReactPropsToOut (reason_op, props)) ->
+        React.GetProps props
+        |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
+
+    | DefT (r, ObjT { call_t = Some id; _ }),
+      (ReactInToProps (reason_op, props) |  ReactPropsToOut (reason_op, props)) ->
+        begin match Context.find_call cx id with
+          | DefT (_, FunT (_, _, { rest_param = None; is_predicate = false; _ }))
+          | DefT (_, PolyT (_, _, DefT (_, FunT _), _)) as fun_t ->
+              (* Keep the object's reason for better error reporting *)
+              rec_flow cx trace (Fn.const r |> Fn.flip mod_reason_of_t fun_t, u)
+          | _ ->
+              React.GetProps props
+              |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
+        end
 
     (***********************************************)
     (* function types deconstruct into their parts *)
@@ -7178,6 +7219,8 @@ and any_propagated cx trace any = function
   | UseT (_, MatchingPropT _)
   | UseT (_, DefT (_, IdxWrapper _))
   | UseT (_, ModuleT _)
+  | ReactPropsToOut _
+  | ReactInToProps _
 
   (* Ideally, any would pollute every member of the union. However, it should be safe to only
      taint the type in the branch that flow picks when generating constraints for this, so

@@ -674,6 +674,11 @@ module rec TypeTerm : sig
     (* util for deciding subclassing relations *)
     | ExtendsUseT of use_op * reason * t list * t * t
 
+    (* Models the GetProps React functionality *)
+    | ReactPropsToOut of reason * t
+    | ReactInToProps of reason * t
+
+
   (* use_ts which can be part of an optional chain, with t_out factored out *)
   and opt_use_t =
   | OptCallT of use_op * reason * opt_funcalltype
@@ -2273,6 +2278,8 @@ end = struct
     | ConcretizeTypeAppsT (_, _, (_, _, _, reason), _) -> reason
     | CondT (reason, _, _, _) -> reason
     | MatchPropT (_, reason, _, _) -> reason
+    | ReactPropsToOut (reason, _)
+    | ReactInToProps (reason, _) -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2444,6 +2451,8 @@ end = struct
         ConcretizeTypeAppsT (use_op, t1, (t2, ts2, op2, f r2), targs)
     | CondT (reason, then_t, else_t, tout) -> CondT (f reason, then_t, else_t, tout)
     | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
+    | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
+    | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
 
   and mod_reason_of_opt_use_t f = function
   | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
@@ -2558,6 +2567,8 @@ end = struct
   | SubstOnPredT (_, _, _)
   | RefineT (_, _, _)
   | CondT (_, _, _, _)
+  | ReactPropsToOut _
+  | ReactInToProps _
     -> nope u
 
   let use_op_of_use_t =
@@ -3158,11 +3169,12 @@ let string_of_use_ctor = function
   | TypeAppVarianceCheckT _ -> "TypeAppVarianceCheck"
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"
+  | ReactPropsToOut _ -> "ReactPropsToOut"
+  | ReactInToProps _ -> "ReactInToProps"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
   | SentinelProp key -> "sentinel prop " ^ key
-
 
 let rec string_of_predicate = function
   | AndP (p1,p2) ->

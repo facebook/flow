@@ -838,6 +838,14 @@ class virtual ['a] t_with_uses = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else GetValuesT (r, t'')
+      | ReactPropsToOut (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else ReactPropsToOut (r, t'')
+      | ReactInToProps (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else ReactInToProps (r, t'')
       | ElemT (use_op, r, t', action) ->
           let t'' = self#type_ cx map_cx t' in
           let action' = self#elem_action cx map_cx action in

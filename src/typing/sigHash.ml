@@ -171,6 +171,8 @@ type hash =
   | ToStringH
   | InvariantH
   | ReactAbstractComponentH
+  | ReactPropsToOutH
+  | ReactInToPropsH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -325,6 +327,8 @@ let hash_of_use_ctor = Type.(function
   | ExtendsUseT _ -> ExtendsUseH
   | ToStringT _ -> ToStringH
   | InvariantT _ -> InvariantH
+  | ReactPropsToOut _ -> ReactPropsToOutH
+  | ReactInToProps _ -> ReactInToPropsH
 )
 
 let add = Xx.update

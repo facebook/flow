@@ -348,16 +348,16 @@ References:
 
 Error --------------------------------------------------------------------------------------- error_positioning.js:31:28
 
-Property `mock` is missing in React stateless functional component [1] but exists in `MockFn` [2].
+`MockFn` [1] is not a React component.
 
    error_positioning.js:31:28
    31| let RefetchContainer = HOC(Component); // Error, mock is not a Component
-                                  ^^^^^^^^^ [1]
+                                  ^^^^^^^^^
 
 References:
    error_positioning.js:24:4
    24| ): MockFn<TArguments, TReturn>
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:7:37
