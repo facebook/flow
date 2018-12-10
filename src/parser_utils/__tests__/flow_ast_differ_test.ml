@@ -412,6 +412,46 @@ class insert_function_annot_mapper = object
         } ))
 end
 
+class insert_import_and_annot_mapper = object
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+  method! type_annotation_hint return =
+    match super#type_annotation_hint return with
+    | Type.Available _ -> return
+    | Type.Missing loc ->
+      Type.Available (loc,
+        (loc, Type.Function {
+          Type.Function.tparams = None;
+          params =
+            (loc, {
+              Type.Function.Params.params= [];
+              rest= None
+            });
+          return= loc, Type.Number
+        } ))
+
+    method! program prog =
+      let (loc, stmts, comments) = super#program prog in
+      let import num =
+        let imp = Printf.sprintf "new_import%d" num in
+        Ast.Statement.(Loc.none, ImportDeclaration {
+          ImportDeclaration.
+          importKind = ImportDeclaration.ImportType;
+          source = (Loc.none, {
+            Ast.StringLiteral.value = imp;
+            raw = imp;
+          });
+          default = None;
+          specifiers = Some ImportDeclaration.(ImportNamedSpecifiers [{
+            kind = None;
+            local = Some (Loc.none, "here");
+            remote = (Loc.none, "there");
+           }])
+        })
+      in
+      loc, (List.hd stmts) :: (import 1) :: (import 2) :: (List.tl stmts), comments
+end
+
 class prop_annot_mapper = object
   inherit [Loc.t] Flow_ast_mapper.mapper as super
 
@@ -1646,5 +1686,20 @@ let tests = "ast_differ" >::: [
       ~source
       ~expected:"const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
       ~mapper:(new insert_function_annot_mapper)
+  end;
+  "new_imports_after_directive_dont_reprint_the_file" >:: begin fun ctxt ->
+    let source = "'use strict';const x = bla => { return 0; };" in
+    assert_edits_equal_standard_only ctxt
+      ~edits:[
+        ((13, 13), "import type {there as here} from \"new_import1\";
+import type {there as here} from \"new_import2\";");
+        ((20, 20), ": (() => number)");
+        ((23, 26), "(bla: () => number)");
+        ((26, 26), ": (() => number)")
+      ]
+      ~source
+      ~expected:"'use strict';import type {there as here} from \"new_import1\";
+import type {there as here} from \"new_import2\";const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
+      ~mapper:(new insert_import_and_annot_mapper)
   end;
 ]

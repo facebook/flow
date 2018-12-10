@@ -228,11 +228,12 @@ let is_import_expr (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     | _ -> false
 
 (* Guess whether a statement is an import or not *)
-let is_import_stmt (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
+let is_import_or_directive_stmt (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
   let open Ast.Statement.Expression in
   let open Ast.Statement.VariableDeclaration in
   let open Ast.Statement.VariableDeclaration.Declarator in
   match stmt with
+    | _, Ast.Statement.Expression {directive= Some _; _}
     | _, Ast.Statement.ImportDeclaration _ -> true
     | _, Ast.Statement.Expression { expression = expr; _ } -> is_import_expr expr
     | _, Ast.Statement.VariableDeclaration { declarations = decs; _ } ->
@@ -245,8 +246,8 @@ let partition_imports (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
   let rec partition_import_helper rec_stmts top =
     match rec_stmts with
       | [] -> List.rev top, []
-      | hd::tl -> if is_import_stmt hd then partition_import_helper tl (hd::top)
-          else List.rev top, rec_stmts
+      | hd::tl when is_import_or_directive_stmt hd -> partition_import_helper tl (hd::top)
+      | _ -> List.rev top, rec_stmts
   in partition_import_helper stmts []
 
 (* Outline:
