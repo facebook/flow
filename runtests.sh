@@ -603,7 +603,7 @@ runtest() {
           # release.
           diff -u --strip-trailing-cr \
             --label "$exp_file" --label "$out_file" \
-            <(sed 's/<VERSION>/'"$VERSION"'/g' "$exp_file") \
+            <(awk '{gsub(/<VERSION>/, "'"$VERSION"'"); print $0}' "$exp_file") \
             "$out_file" \
             > "$diff_file" 2>&1
           popd >/dev/null
