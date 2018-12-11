@@ -162,7 +162,12 @@ let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bo
 
   begin if color then
     let coverage_offsets =
-      List.map (fun (loc, covered) -> (Loc.(loc.start.offset, loc._end.offset), covered)) types
+      let offset_table = Offset_utils.make content in
+      let loc_to_offset_pair loc =
+        let open Loc in
+        (Offset_utils.offset offset_table loc.start, Offset_utils.offset offset_table loc._end)
+      in
+      List.map (fun (loc, covered) -> (loc_to_offset_pair loc, covered)) types
     in
     let coverage_offsets = split_overlapping_ranges [] coverage_offsets |> List.rev in
     let colors, _ = colorize_file content 0 [] coverage_offsets in

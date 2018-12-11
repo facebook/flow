@@ -222,9 +222,9 @@ unicode.js
 
 ([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
 
-const [0m[0memoji[0m[0m = [0m[0m"ðŸ[0m[0m’©"[0m[0m; (n[0m[0mu[0m[31mll: [0m[0many);[0m[0m
+const [0m[0memoji[0m[0m = [0m[0m"ðŸ’©"[0m[0m; ([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
 
-(n[0m[0mu[0m[31mll: [0m[0many);
+([0m[0mnull[0m[0m:[0m[31m any[0m[0m);
 [0m
 Covered: 62.50% (5 of 8 expressions)
 
