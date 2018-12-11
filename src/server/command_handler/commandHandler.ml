@@ -199,75 +199,6 @@ let find_module ~options (moduleref, filename) =
     file (Nel.one (ALoc.of_loc loc)) moduleref in
   Module_heaps.get_file ~audit:Expensive.warn module_name
 
-let gen_flow_files ~options env files =
-  let errors, warnings, _ = ErrorCollator.get env in
-  let warnings = if Options.should_include_warnings options
-    then warnings
-    else Errors.ErrorSet.empty
-  in
-  let result = if Errors.ErrorSet.is_empty errors
-    then begin
-      let (flow_files, non_flow_files, error) =
-        List.fold_left (fun (flow_files, non_flow_files, error) file ->
-          if error <> None then (flow_files, non_flow_files, error) else
-          match file with
-          | File_input.FileContent _ ->
-            let error_msg = "This command only works with file paths." in
-            let error =
-              Some (ServerProt.Response.GenFlowFiles_UnexpectedError error_msg)
-            in
-            (flow_files, non_flow_files, error)
-          | File_input.FileName fn ->
-            let file = File_key.SourceFile fn in
-            let checked =
-              let open Module_heaps in
-              match get_info file ~audit:Expensive.warn with
-              | Some info -> info.checked
-              | None -> false
-            in
-            if checked
-            then file::flow_files, non_flow_files, error
-            else flow_files, file::non_flow_files, error
-        ) ([], [], None) files
-      in
-      begin match error with
-      | Some e -> Error e
-      | None ->
-        try
-          let flow_file_cxs = Core_list.map ~f:(fun file ->
-            let component = Nel.one file in
-            let { Merge_service.cx; _ } = Merge_service.merge_strict_context ~options component in
-            cx
-          ) flow_files in
-
-          (* Non-@flow files *)
-          let result_contents = non_flow_files |> Core_list.map ~f:(fun file ->
-            (File_key.to_string file, ServerProt.Response.GenFlowFiles_NonFlowFile)
-          ) in
-
-          (* Codegen @flow files *)
-          let result_contents = List.fold_left2 (fun results file cx ->
-            let file_path = File_key.to_string file in
-            try
-              let code = FlowFileGen.flow_file cx in
-              (file_path, ServerProt.Response.GenFlowFiles_FlowFile code)::results
-            with exn ->
-              let exn = Exception.wrap exn in
-              failwith (spf "%s: %s" file_path (Exception.get_ctor_string exn))
-          ) result_contents flow_files flow_file_cxs in
-
-          Ok result_contents
-        with exn ->
-          let exn = Exception.wrap exn in
-          Error (
-            ServerProt.Response.GenFlowFiles_UnexpectedError (Exception.get_ctor_string exn)
-          )
-      end
-    end else
-      Error (ServerProt.Response.GenFlowFiles_TypecheckError {errors; warnings})
-  in
-  result
-
 let convert_find_refs_result
     (result: FindRefsTypes.find_refs_ok)
     : ServerProt.Response.find_refs_success =
@@ -370,12 +301,6 @@ let run_ephemeral_command_unsafe ~profiling genv env command =
       Lwt.return (ServerProt.Response.FIND_REFS result, json_data)
   | ServerProt.Request.FORCE_RECHECK _ ->
       failwith "force-recheck cannot be deferred"
-  | ServerProt.Request.GEN_FLOW_FILES (files, include_warnings) ->
-      let options = { options with Options.
-        opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
-      } in
-      let response = gen_flow_files ~options !env files in
-      Lwt.return (ServerProt.Response.GEN_FLOW_FILES response, None)
   | ServerProt.Request.GET_DEF (fn, line, char) ->
       let%lwt result, json_data = get_def ~options ~env ~profiling (fn, line, char) in
       Lwt.return (ServerProt.Response.GET_DEF result, json_data)
@@ -500,7 +425,6 @@ let should_handle_immediately { ServerProt.Request.client_logging_context=_; com
     | ServerProt.Request.DUMP_TYPES _
     | ServerProt.Request.FIND_MODULE _
     | ServerProt.Request.FIND_REFS _
-    | ServerProt.Request.GEN_FLOW_FILES _
     | ServerProt.Request.GET_DEF _
     | ServerProt.Request.GET_IMPORTS _
     | ServerProt.Request.INFER_TYPE _
@@ -559,7 +483,6 @@ let handle_ephemeral_immediately_unsafe
       | ServerProt.Request.DUMP_TYPES _
       | ServerProt.Request.FIND_MODULE _
       | ServerProt.Request.FIND_REFS _
-      | ServerProt.Request.GEN_FLOW_FILES _
       | ServerProt.Request.GET_DEF _
       | ServerProt.Request.GET_IMPORTS _
       | ServerProt.Request.INFER_TYPE _

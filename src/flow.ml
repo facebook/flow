@@ -28,7 +28,6 @@ end = struct
     FindModuleCommand.command;
     FindRefsCommand.command;
     ForceRecheckCommand.command;
-    GenFlowFilesCommand.command;
     GetDefCommand.command;
     GetImportsCommand.command;
     IdeCommand.command;

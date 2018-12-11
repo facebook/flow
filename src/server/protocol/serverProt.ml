@@ -22,7 +22,6 @@ module Request = struct
   | DUMP_TYPES of File_input.t
   | FIND_MODULE of string * string
   | FIND_REFS of File_input.t * int * int * bool * bool (* filename, line, char, global, multi_hop *)
-  | GEN_FLOW_FILES of File_input.t list * bool (* include_warnings *)
   | GET_DEF of File_input.t * int * int (* filename, line, char *)
   | GET_IMPORTS of string list
   | INFER_TYPE of
@@ -60,9 +59,6 @@ module Request = struct
   | FORCE_RECHECK {files; focus; profile=_} ->
       Printf.sprintf
         "force-recheck %s (focus = %b)" (String.concat " " files) focus
-  | GEN_FLOW_FILES (files, _) ->
-      Printf.sprintf "gen-flow-files %s"
-        (files |> Core_list.map ~f:File_input.filename_of_file_input |> String.concat " ")
   | GET_DEF (fn, line, char) ->
       Printf.sprintf "get-def %s:%d:%d"
         (File_input.filename_of_file_input fn) line char
