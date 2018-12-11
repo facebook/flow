@@ -825,9 +825,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
           if is_covered then None else Some loc) in
         (* Imagine a tree of uncovered spans based on range inclusion. *)
         (* This sorted list is a pre-order flattening of that tree. *)
-        let sorted = Core_list.sort uncovereds ~cmp:(fun a b -> Pervasives.compare
-          (a.Loc.start.Loc.offset, a.Loc._end.Loc.offset)
-          (b.Loc.start.Loc.offset, b.Loc._end.Loc.offset)) in
+        let sorted = Core_list.sort uncovereds ~cmp:Loc.compare in
         (* We can use that sorted list to remove any span which contains another, so *)
         (* the user only sees actionable reports of the smallest causes of untypedness. *)
         (* The algorithm: accept a range if its immediate successor isn't contained by it. *)
