@@ -353,6 +353,10 @@ assert_ok "$FLOW" type-at-pos type-destructor.js 63 6 --strip-root --pretty
 printf "type-destructor.js:68:13 = "
 assert_ok "$FLOW" type-at-pos type-destructor.js 68 13 --strip-root --pretty
 
+# type-destructor-trigger.js
+printf "type-destructor-trigger.js:11:7 = "
+assert_ok "$FLOW" type-at-pos type-destructor-trigger.js 11 7 --strip-root --pretty
+
 # unions.js
 printf "unions.js:9:3 = "
 assert_ok "$FLOW" type-at-pos unions.js 9 3 --strip-root --pretty

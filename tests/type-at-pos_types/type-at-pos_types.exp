@@ -2351,6 +2351,21 @@ type-destructor.js:68:13 = {
   "start":13,
   "end":13
 }
+type-destructor-trigger.js:11:7 = {
+  "type":"KeyMirrorRecursive<{|A: string|}>",
+  "reasons":[],
+  "loc":{
+    "source":"type-destructor-trigger.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":7,"offset":476},
+    "end":{"line":11,"column":27,"offset":497}
+  },
+  "path":"type-destructor-trigger.js",
+  "line":11,
+  "endline":11,
+  "start":7,
+  "end":27
+}
 unions.js:9:3 = {
   "type":"(() => number) | (() => string)",
   "reasons":[],

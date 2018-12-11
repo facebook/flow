@@ -505,7 +505,12 @@ end = struct
     (* These type are treated as transparent when it comes to the type alias
        annotation. *)
     match t with
-    | OpenT _ | EvalT _ ->
+    | OpenT _
+    | EvalT _
+    (* TypeDestructorTriggerT might hold a type-app, so avoid using the type here.
+     * Instead do the fallback action which is to normalize to Bot. The trigger
+     * should have actually produced another concrete type as a lower bound. *)
+    | TypeDestructorTriggerT _ ->
       type_after_reason ~env t
     | _ ->
       begin match desc_of_reason ~unwrap:false reason with
