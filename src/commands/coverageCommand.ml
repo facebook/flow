@@ -72,42 +72,35 @@ let debug_range (loc, is_covered) = Loc.(
     is_covered
 )
 
-let rec colorize_file content last_offset accum = Loc.(function
+let rec colorize_file content last_offset accum = function
   | [] -> colorize content last_offset (String.length content) Tty.Default accum
-  | (loc, is_covered)::rest ->
-    let offset, end_offset = loc.start.offset, loc._end.offset in
-
+  | ((offset, end_offset), is_covered)::rest ->
     (* catch up to the start of this range *)
     let accum, offset = colorize content last_offset offset Tty.Default accum in
 
     let color = if not (is_covered) then Tty.Red else Tty.Default in
     let accum, offset = colorize content offset end_offset color accum in
     colorize_file content offset accum rest
-)
 
-let sort_ranges (a_loc, _) (b_loc, _) = Loc.(Pervasives.compare
-  (a_loc.start.offset, a_loc._end.offset)
-  (b_loc.start.offset, b_loc._end.offset)
-)
+let sort_ranges (a_loc, _) (b_loc, _) = Pervasives.compare a_loc b_loc
 
-let rec split_overlapping_ranges accum = Loc.(function
+let rec split_overlapping_ranges accum = function
   | [] -> accum
   | range::[] -> range::accum
   | (loc1, is_covered1)::(loc2, is_covered2)::rest ->
+      let (loc1_start, loc1_end), (loc2_start, loc2_end) = loc1, loc2 in
       let accum, todo =
-        if loc1._end.offset < loc2.start.offset then
+        if loc1_end < loc2_start then
           (* range 1 is completely before range 2, so consume range 1 *)
           (loc1, is_covered1)::accum,
           (loc2, is_covered2)::rest
 
-        else if loc1.start.offset = loc2.start.offset then
+        else if loc1_start = loc2_start then
           (* range 1 and 2 start at the same place, so consume range 1 and
              create a new range for the remainder of range 2, if any *)
           let rest =
-            if loc1._end.offset <> loc2._end.offset then
-              let tail_loc = { loc2 with
-                start = { loc2.start with offset = loc1._end.offset + 1 }
-              } in
+            if loc1_end <> loc2_end then
+              let tail_loc = (loc1_end + 1, loc2_end) in
               List.sort sort_ranges (
                 (loc1, is_covered1)::
                 (tail_loc, is_covered2)::
@@ -118,16 +111,14 @@ let rec split_overlapping_ranges accum = Loc.(function
           in
           accum, rest
 
-        else if loc1._end.offset = loc2._end.offset then
+        else if loc1_end = loc2_end then
           (* range 1 and 2 end at the same place, so split range 1 and consume
              the first part, which doesn't overlap *)
-          let head_loc = { loc1 with
-            _end = { loc1._end with offset = loc2.start.offset - 1 }
-          } in
+          let head_loc = (loc1_start, loc2_start - 1) in
           (head_loc, is_covered1)::accum,
           (loc2, is_covered2)::rest
 
-        else if loc1._end.offset < loc2._end.offset then
+        else if loc1_end < loc2_end then
           (* TODO: Given that at this point we also have loc1.start.offset <
              loc2.start.offset, it means that range 1 and 2 overlap but don't
              nest. Ideally, this case should never arise: we should be able to
@@ -144,15 +135,9 @@ let rec split_overlapping_ranges accum = Loc.(function
              range1 or range2 is covered (because the alternative is 1-token
              islands of uncovered stuff).
           *)
-          let head_loc = { loc1 with
-            _end = { loc1._end with offset = loc2.start.offset - 1 }
-          } in
-          let overlap_loc = { loc1 with
-            start = loc2.start
-          } in
-          let tail_loc = { loc2 with
-            start = { loc2.start with offset = loc1._end.offset + 1 }
-          } in
+          let head_loc = (loc1_start, loc2_start - 1) in
+          let overlap_loc = (loc2_start, loc1_end) in
+          let tail_loc = (loc1_end + 1, loc2_end) in
           (head_loc, is_covered1)::(overlap_loc, is_covered1 || is_covered2)::accum,
           (tail_loc, is_covered2)::rest
 
@@ -160,12 +145,8 @@ let rec split_overlapping_ranges accum = Loc.(function
           (* range 2 is in the middle of range 1, so split range 1 and consume
              the first part, which doesn't overlap, and then recurse on
              range2::range1tail::rest *)
-          let head_loc = { loc1 with
-            _end = { loc1._end with offset = loc2.start.offset - 1 }
-          } in
-          let tail_loc = { loc1 with
-            start = { loc1.start with offset = loc2._end.offset + 1 }
-          } in
+          let head_loc = (loc1_start, loc2_start - 1) in
+          let tail_loc = (loc2_end + 1, loc1_end) in
           let todo =
             (loc2, is_covered2)::
             (tail_loc, is_covered1)::
@@ -175,14 +156,16 @@ let rec split_overlapping_ranges accum = Loc.(function
           List.sort sort_ranges todo
       in
       split_overlapping_ranges accum todo
-)
 
 let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bool) list) content =
   if debug then List.iter debug_range types;
 
   begin if color then
-    let types = split_overlapping_ranges [] types |> List.rev in
-    let colors, _ = colorize_file content 0 [] types in
+    let coverage_offsets =
+      List.map (fun (loc, covered) -> (Loc.(loc.start.offset, loc._end.offset), covered)) types
+    in
+    let coverage_offsets = split_overlapping_ranges [] coverage_offsets |> List.rev in
+    let colors, _ = colorize_file content 0 [] coverage_offsets in
     Tty.cprint ~color_mode:Tty.Color_Always (List.rev colors);
     print_endline ""
   end;
