@@ -153,9 +153,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     let ready_socket_l, _, _ = Unix.select [socket] [] [] (1.0) in
     ready_socket_l <> []
 
-  let start_server ?target_mini_state ~informant_managed options exit_status =
+  let start_server ?target_saved_state ~informant_managed options exit_status =
     let server_process = SC.start_server
-      ?target_mini_state
+      ?target_saved_state
       ~prior_exit_status:exit_status
       ~informant_managed options in
     setup_autokill_server_on_exit server_process;
@@ -206,9 +206,9 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       String.equal cv nv
 
   (** Actually starts a new server. *)
-  let start_new_server ?target_mini_state env exit_status =
+  let start_new_server ?target_saved_state env exit_status =
     let informant_managed = Informant.is_managing env.informant in
-    let new_server = start_server ?target_mini_state
+    let new_server = start_server ?target_saved_state
       ~informant_managed env.server_start_options exit_status in
     { env with
       server = new_server;
@@ -218,21 +218,21 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
   (** Kill the server (if it's running) and restart it - maybe. Obeying the rules
    * of state transitions. See docs on the ServerProcess.server_process ADT for
    * state transitions.  *)
-  let kill_and_maybe_restart_server ?target_mini_state env exit_status =
+  let kill_and_maybe_restart_server ?target_saved_state env exit_status =
     (* Ideally, all restarts should be triggered by Changed_merge_base notification
      * which generate target mini state. There are other kind of restarts too, mostly
      * related to server crashing - if we just restart and keep going, we risk
      * Changed_merge_base eventually arriving and restarting the already started server
      * for no reason. Re-issuing merge base query here should bring the Monitor and Server
      * understanding of current revision to be the same *)
-    if Option.is_none target_mini_state then Informant.reinit env.informant;
+    if Option.is_none target_saved_state then Informant.reinit env.informant;
     kill_server_and_wait_for_exit env;
     let version_matches = is_config_version_matching env in
     match env.server, version_matches with
     | Died_config_changed, _ ->
       (** Now we can start a new instance safely.
        * See diagram on ServerProcess.server_process docs. *)
-      start_new_server ?target_mini_state env exit_status
+      start_new_server ?target_saved_state env exit_status
     | Not_yet_started, false
     | Alive _, false
     | Informant_killed, false
@@ -247,7 +247,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     | Died_unexpectedly _, true ->
       (** Start new server instance because config matches.
        * See diagram on ServerProcess.server_process docs. *)
-      start_new_server ?target_mini_state env exit_status
+      start_new_server ?target_saved_state env exit_status
 
   let read_version fd =
     let client_build_id: string = Marshal_tools.from_fd_with_preamble fd in
@@ -523,10 +523,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       Hh_logger.log "%s" @@ "Ignoring Informant directed restart - waiting for next client " ^
         "connection to verify server version first";
       env
-    | Informant_sig.Restart_server target_mini_state ->
+    | Informant_sig.Restart_server target_saved_state ->
       Hh_logger.log "Informant directed server restart. Restarting server.";
       HackEventLogger.informant_induced_restart ();
-      kill_and_maybe_restart_server ?target_mini_state env exit_status
+      kill_and_maybe_restart_server ?target_saved_state env exit_status
     | Informant_sig.Move_along ->
       if (is_watchman_failed || is_watchman_fresh_instance)
         && (env.watchman_retries < max_watchman_retries) then begin

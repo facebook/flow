@@ -12,7 +12,7 @@ type report =
   (** Nothing to see here. *)
   | Move_along
   (** Kill the server (if one is running) and start a new one. *)
-  | Restart_server of ServerMonitorUtils.target_mini_state option
+  | Restart_server of ServerMonitorUtils.target_saved_state option
 
 type server_state =
   | Server_not_yet_started
