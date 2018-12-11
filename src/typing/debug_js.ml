@@ -301,7 +301,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     | None -> JSON_Null in
     [
       "type", t;
-      "id", JSON_String (string_of_int opaquetype.opaque_id);
+      "id", JSON_String (ALoc.to_string opaquetype.opaque_id);
       "supertype", st
   ]
 
@@ -1108,7 +1108,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let own_props = Context.find_props json_cx.cx insttype.own_props in
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
-    "classId", int_ insttype.class_id;
+    "classId", json_of_loc (ALoc.to_loc insttype.class_id);
     "typeArgs", JSON_Array (Core_list.map ~f:(fun (x, _, t, p) ->
       JSON_Object [
         "name", JSON_String x;
@@ -1550,7 +1550,7 @@ let json_of_scope = Scope.(
   let json_of_class json_cx c =
     let pmap = Context.find_props json_cx.cx c.class_private_fields in
     JSON_Object [
-      "class_id", JSON_String (string_of_int c.class_binding_id);
+      "class_id", JSON_String (ALoc.to_string c.class_binding_id);
       "class_private_fields", json_of_pmap json_cx pmap;
     ] in
 
@@ -1772,7 +1772,7 @@ let rec dump_t_ (depth, tvars) cx t =
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
   | DefT (_, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
   | DefT (_, ClassT inst) -> p ~extra:(kid inst) t
-  | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%d" class_id) t
+  | DefT (_, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%s" (ALoc.to_string class_id)) t
   | DefT (_, TypeT (_, arg)) -> p ~extra:(kid arg) t
   | AnnotT (_, arg, use_desc) ->
     p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
@@ -2300,7 +2300,7 @@ let string_of_scope_entry = Scope.(
   fun cx -> Entry.(function
   | Value r -> spf "Value %s" (string_of_value_binding cx r)
   | Type r -> spf "Type %s" (string_of_type_binding cx r)
-  | Class r -> spf "Class %s" (string_of_int r.class_binding_id)
+  | Class r -> spf "Class %s" (ALoc.to_string r.class_binding_id)
   )
 )
 

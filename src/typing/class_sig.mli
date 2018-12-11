@@ -41,7 +41,7 @@ and typeapp = ALoc.t * Type.t * Type.t list option
 
 (** Create signature with no elements. *)
 val empty:
-  int -> (* id *)
+  ALoc.t -> (* id *)
   Reason.t ->
   Type.typeparams ->
   Type.t SMap.t -> (* tparams_map *)

@@ -551,9 +551,7 @@ module ContextOptimizer = struct
       stable_id
 
     val mutable stable_tvar_ids = IMap.empty
-    val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
-    val mutable stable_opaque_ids = IMap.empty
     val mutable stable_poly_ids = IMap.empty
     val mutable reduced_module_map = SMap.empty;
     val mutable reduced_graph = IMap.empty;
@@ -657,30 +655,12 @@ module ContextOptimizer = struct
       | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
       | OpenT _ -> super#type_ cx pole t
       | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
-        let id =
-          if Context.mem_nominal_id cx class_id
-          then match IMap.get class_id stable_nominal_ids with
-          | None ->
-            let id = self#fresh_stable_id in
-            stable_nominal_ids <- IMap.add class_id id stable_nominal_ids;
-            id
-          | Some id -> id
-          else class_id in
-        SigHash.add_int sig_hash id;
+        let id = class_id in
+        SigHash.add_aloc sig_hash id;
         super#type_ cx pole t
-      | OpaqueT (_, opaquetype) ->
-        let id =
-          let {opaque_id; _} = opaquetype in
-          if Context.mem_nominal_id cx opaque_id
-          then match IMap.get opaque_id stable_opaque_ids with
-          | None ->
-            let id = self#fresh_stable_id in
-            stable_opaque_ids <- IMap.add opaque_id id stable_opaque_ids;
-            id
-          | Some id -> id
-          else opaque_id
-        in
-        SigHash.add_int sig_hash id;
+      | OpaqueT (_, { opaque_id; _ }) ->
+        let id = opaque_id in
+        SigHash.add_aloc sig_hash id;
         super#type_ cx pole t
       | DefT (_, PolyT (_, _, _, poly_id)) ->
         let id =
@@ -738,9 +718,7 @@ module ContextOptimizer = struct
       (seen', id)
 
     method get_stable_tvar_ids = stable_tvar_ids
-    method get_stable_nominal_ids = stable_nominal_ids
     method get_stable_eval_ids = stable_eval_ids
-    method get_stable_opaque_ids = stable_opaque_ids
     method get_stable_poly_ids = stable_poly_ids
     method get_reduced_module_map = reduced_module_map
     method get_reduced_graph = reduced_graph

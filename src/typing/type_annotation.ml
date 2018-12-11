@@ -1135,7 +1135,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let body_loc, {Ast.Type.Object.properties; exact; inexact = _inexact } = body in
   let reason = mk_reason RInterfaceType loc in
   let iface_sig, extend_asts =
-    let id = Context.make_nominal cx in
+    let id = ALoc.none in
     let extends, extend_asts = extends
       |> Core_list.map ~f:(mk_interface_super cx tparams_map)
       |> List.split
@@ -1581,7 +1581,7 @@ let mk_interface_sig cx reason decl =
   Type_table.set_info id_loc id_info (Context.type_table cx);
 
   let iface_sig, extends_ast =
-    let id = Context.make_nominal cx in
+    let id = id_loc in
     let extends, extends_ast =
       extends
       |> Core_list.map ~f:(mk_interface_super cx tparams_map)
@@ -1656,7 +1656,7 @@ let mk_declare_class_sig =
     Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
 
     let iface_sig, extends_ast, mixins_ast, implements_ast =
-      let id = Context.make_nominal cx in
+      let id = id_loc in
       let extends, extends_ast =
         match extends with
         | Some (loc, {Ast.Type.Generic.id; targs}) ->

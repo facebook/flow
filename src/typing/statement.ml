@@ -797,7 +797,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       let opaquetype = {
         underlying_t;
         super_t;
-        opaque_id = Context.make_nominal cx;
+        opaque_id = name_loc;
         opaque_type_args;
         opaque_name = name
       } in
@@ -1713,7 +1713,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = DescFormat.instance_reason name name_loc in
       Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
-      let class_t, c_ast = mk_class cx class_loc reason c in
+      let class_t, c_ast = mk_class cx class_loc ~name_loc reason c in
       Type_table.set (Context.type_table cx) class_loc class_t;
       Option.iter c.Ast.Class.id ~f:(fun (id_loc, id_name) ->
         let id_info = id_name, class_t, Type_table.Other in
@@ -3220,8 +3220,9 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (loc, t), JSXFragment f
 
   | Class c ->
-      let (name_loc, name) = extract_class_name loc c in
-      let reason = mk_reason (RIdentifier name) loc in
+      let class_loc = loc in
+      let (name_loc, name) = extract_class_name class_loc c in
+      let reason = mk_reason (RIdentifier name) class_loc in
       (match c.Ast.Class.id with
       | Some _ ->
           let tvar = Tvar.mk cx reason in
@@ -3236,13 +3237,13 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
             add_entry name entry scope
           );
           Env.push_var_scope cx scope;
-          let class_t, c = mk_class cx loc reason c in
+          let class_t, c = mk_class cx class_loc ~name_loc reason c in
           Env.pop_var_scope ();
           Flow.flow_t cx (class_t, tvar);
-          (loc, class_t), Class c
+          (class_loc, class_t), Class c
       | None ->
-          let class_t, c = mk_class cx loc reason c in
-          (loc, class_t), Class c
+          let class_t, c = mk_class cx class_loc ~name_loc reason c in
+          (class_loc, class_t), Class c
       )
 
   | Yield { Yield.argument; delegate = false } ->
@@ -6111,11 +6112,11 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   | None -> (class_loc, "<<anonymous class>>")
 )
 
-and mk_class cx loc reason c =
-  let def_reason = repos_reason loc reason in
+and mk_class cx class_loc ~name_loc reason c =
+  let def_reason = repos_reason class_loc reason in
   let this_in_class = Class_sig.This.in_class c in
   let self = Tvar.mk cx reason in
-  let class_sig, class_ast_f = mk_class_sig cx loc reason self c in
+  let class_sig, class_ast_f = mk_class_sig cx name_loc reason self c in
   class_sig |> Class_sig.with_typeparams cx (fun () ->
     class_sig |> Class_sig.generate_tests cx (fun class_sig ->
       Class_sig.check_super cx def_reason class_sig;
@@ -6199,7 +6200,7 @@ and mk_class_sig =
         (Flow_error.EExperimentalClassProperties (loc, static))
   in
 
-  fun cx _loc reason self { Ast.Class.
+  fun cx name_loc reason self { Ast.Class.
     id;
     body = (body_loc, { Ast.Class.Body.body = elements });
     tparams;
@@ -6219,7 +6220,7 @@ and mk_class_sig =
   in
 
   let class_sig, extends_ast, implements_ast =
-    let id = Context.make_nominal cx in
+    let id = name_loc in
     let extends, extends_ast = mk_extends cx tparams_map extends in
     let implements, implements_ast = implements |> Core_list.map ~f:(fun (loc, i) ->
       let { Ast.Class.Implements.id = (id_loc, name); targs } = i in

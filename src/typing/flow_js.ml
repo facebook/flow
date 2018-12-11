@@ -888,7 +888,7 @@ module ResolvableTypeJob = struct
       collect_of_type ?log_unresolved cx reason acc elemt
     | DefT (_, InstanceT (static, super, _,
         { class_id; type_args; own_props; proto_props; inst_call_t; _ })) ->
-      let ts = if class_id = 0 then [] else [super; static] in
+      let ts = if class_id = ALoc.none then [] else [super; static] in
       let ts = List.fold_left (fun ts (_, _, t, _) -> t::ts) ts type_args in
       let props_tmap = SMap.union
         (Context.find_props cx own_props)
@@ -4673,8 +4673,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (DefT (_, InstanceT (_, _, _, instance_super)) as u)) ->
       if instance.class_id = instance_super.class_id
       then begin
-          (if instance.class_id != instance_super.class_id then
-            assert_false "unexpected difference in class_ids in flow_instts");
           let { type_args = tmap1; _ } = instance in
           let { type_args = tmap2; _ } = instance_super in
           let ureason = replace_reason (function RExtends desc -> desc | desc -> desc) reason_op in

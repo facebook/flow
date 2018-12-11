@@ -391,6 +391,9 @@ let add_loc state loc =
   add_int state loc._end.line;
   add_int state loc._end.column
 
+let add_aloc state aloc =
+  add_loc state (ALoc.to_loc aloc)
+
 let add_reason state r =
   let open Reason in
   add_loc state (aloc_of_reason r |> ALoc.to_loc);

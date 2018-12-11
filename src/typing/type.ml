@@ -951,13 +951,13 @@ module rec TypeTerm : sig
 
   (* This has to go here so that Type doesn't depend on Scope *)
   and class_binding = {
-    class_binding_id: ident;
+    class_binding_id: ALoc.t;
     class_private_fields: Properties.id;
     class_private_static_fields: Properties.id;
   }
 
   and insttype = {
-    class_id: ident;
+    class_id: ALoc.t;
     type_args: (string * reason * t * polarity) list;
     own_props: Properties.id;
     proto_props: Properties.id;
@@ -969,7 +969,7 @@ module rec TypeTerm : sig
   }
 
   and opaquetype = {
-    opaque_id: int;
+    opaque_id: ALoc.t;
     underlying_t: t option;
     super_t: t option;
     opaque_type_args: (string * reason * t * polarity) list;

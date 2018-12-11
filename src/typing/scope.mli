@@ -51,7 +51,7 @@ module Entry :
       _type : Type.t;
     }
     type t = Value of value_binding | Type of type_binding | Class of Type.class_binding
-    val new_class : int -> Type.Properties.id -> Type.Properties.id -> t
+    val new_class : ALoc.t -> Type.Properties.id -> Type.Properties.id -> t
     val new_value : value_kind -> State.t -> Type.t -> Type.t -> ALoc.t -> t
     val new_const :
       loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.t -> t

@@ -41,7 +41,7 @@ type signature = {
 }
 
 type t = {
-  id: int;
+  id: ALoc.t;
   tparams: Type.typeparams;
   tparams_map: Type.t SMap.t;
   super: super;
