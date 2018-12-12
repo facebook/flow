@@ -1500,7 +1500,13 @@ let program (algo : diff_algorithm)
       ((loc1, type1): (Loc.t, Loc.t) Ast.Type.t)
       ((_loc2, type2): (Loc.t, Loc.t) Ast.Type.t)
       : node change list =
-    [loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
+    let open Ast.Type in
+    let type_diff =
+      match type1, type2 with
+      | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
+      | _ -> None in
+    Option.value type_diff
+      ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
 
   and generic_type
       ((_loc1, gt1): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
@@ -1550,6 +1556,47 @@ let program (algo : diff_algorithm)
     let _, t_args1 = pi1 in
     let _, t_args2 = pi2 in
     diff_and_recurse_nonopt_no_trivial type_ t_args1 t_args2
+
+  and function_param_type
+      (fpt1: (Loc.t, Loc.t) Ast.Type.Function.Param.t)
+      (fpt2: (Loc.t, Loc.t) Ast.Type.Function.Param.t)
+      : node change list option =
+    let open Ast.Type.Function.Param in
+    let _loc1, { annot = annot1; name = name1; optional = opt1 } = fpt1 in
+    let _loc2, { annot = annot2; name = name2; optional = opt2 } = fpt2 in
+    (* These are boolean literals, so structural equality is ok *)
+    let optional_diff = if opt1 = opt2 then Some [] else None in
+    let name_diff = diff_if_changed_nonopt_fn identifier name1 name2 in
+    let annot_diff = diff_if_changed type_ annot1 annot2 |> Option.return in
+    join_diff_list [optional_diff; name_diff; annot_diff]
+
+  and function_rest_param_type
+      (frpt1: (Loc.t, Loc.t) Ast.Type.Function.RestParam.t)
+      (frpt2: (Loc.t, Loc.t) Ast.Type.Function.RestParam.t)
+      : node change list option =
+    let open Ast.Type.Function.RestParam in
+    let _loc1, { argument = arg1 } = frpt1 in
+    let _loc2, { argument = arg2 } = frpt2 in
+    diff_if_changed_ret_opt function_param_type arg1 arg2
+
+  and function_type
+      (ft1: (Loc.t, Loc.t) Ast.Type.Function.t)
+      (ft2: (Loc.t, Loc.t) Ast.Type.Function.t)
+      : node change list option =
+    let open Ast.Type.Function in
+    let {
+      params = (_params_loc1, { Params.params = params1; rest = rest1});
+      return = return1; tparams = tparams1;
+    } = ft1 in
+    let {
+      params = (_params_loc2, { Params.params = params2; rest = rest2});
+      return = return2; tparams = tparams2;
+    } = ft2 in
+    let tparams_diff = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
+    let params_diff = diff_and_recurse_no_trivial function_param_type params1 params2 in
+    let rest_diff = diff_if_changed_opt function_rest_param_type rest1 rest2 in
+    let return_diff = diff_if_changed type_ return1 return2 |> Option.return in
+    join_diff_list [tparams_diff; params_diff; rest_diff; return_diff]
 
   and type_alias
       (t_alias1: (Loc.t, Loc.t) Ast.Statement.TypeAlias.t)

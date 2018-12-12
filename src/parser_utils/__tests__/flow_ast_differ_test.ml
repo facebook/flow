@@ -169,6 +169,14 @@ class useless_mapper = object(this)
       | Implicit loc -> Explicit (loc, Ast.Type.Any) in
     (loc, Core_list.map ~f:f targs)
 
+  method! function_param_type (fpt: (Loc.t, Loc.t) Ast.Type.Function.Param.t) =
+    let open Ast.Type.Function.Param in
+    let loc, fpt' as fpt = super#function_param_type fpt in
+    let { name; _ } = fpt' in
+    let name' = Flow_ast_mapper.map_opt this#identifier name in
+    if name' == name then fpt
+    else loc, { fpt' with name = name'}
+
   method! update_expression loc (expr: (Loc.t, Loc.t) Ast.Expression.Update.t) =
     let open Ast.Expression.Update in
     let expr = super#update_expression loc expr in
@@ -1606,6 +1614,26 @@ let tests = "ast_differ" >::: [
     let source = "type alias = number" in
     assert_edits_equal ctxt ~edits:[(13, 19), "string"]
     ~source ~expected:"type alias = string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_right_function_type_params" >:: begin fun ctxt ->
+    let source = "type alias = (rename: string, bar: number, ...rename: string) => string" in
+    assert_edits_equal ctxt
+    ~edits:[((14, 20), "gotRenamed"); ((35, 41), "string"); ((46, 52), "gotRenamed")]
+    ~source
+    ~expected:"type alias = (gotRenamed: string, bar: string, ...gotRenamed: string) => string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_right_function_type_tparams" >:: begin fun ctxt ->
+    let source = "type alias = <RENAME>(param: string) => string" in
+    assert_edits_equal ctxt ~edits:[(14, 20), "GOT_RENAMED"]
+    ~source ~expected:"type alias = <GOT_RENAMED>(param: string) => string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_right_function_type_return" >:: begin fun ctxt ->
+    let source = "type alias = string => number" in
+    assert_edits_equal ctxt ~edits:[(23, 29), "string"]
+    ~source ~expected:"type alias = string => string"
     ~mapper:(new useless_mapper)
   end;
   "opaque_type_id" >:: begin fun ctxt ->
