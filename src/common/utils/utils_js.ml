@@ -55,6 +55,9 @@ let call_succeeds try_function function_input =
 let map_pair f g (a,b) = (f a, g b)
 let map_fst f (a,b) = (f a, b)
 let map_snd g (a,b) = (a, g b)
+let swap (a, b) = (b, a)
+let mk_tuple x y = (x, y)
+let mk_tuple_swapped x y = (y, x)
 
 let rec iter2opt f = function
   | x::xs, y::ys ->
