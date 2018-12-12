@@ -13,11 +13,3 @@ The Lwt main loop is an event loop pumped by [Unix.select], and so regular
 function does not use [Unix.select] at all, but Lwt primitives that accomplish
 the same thing.
 *)
-
-val wrap_non_reentrant_section :
-  name:string ->
-  lock:(bool ref) ->
-  f:(unit -> 'a Lwt.t) ->
-  'a Lwt.t
-(** Used in the implementation of a function to enforce that it is not called in
-parallel. *)
