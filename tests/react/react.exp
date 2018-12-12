@@ -3128,8 +3128,8 @@ Cannot get `child.tagName` because property `tagName` is missing in `React.Compo
                   ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:88:19
-   88|     test: (child: React$Component<any, any>) => boolean,
+   <BUILTINS>/react-dom.js:90:19
+   90|     test: (child: React$Component<any, any>) => boolean,
                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
