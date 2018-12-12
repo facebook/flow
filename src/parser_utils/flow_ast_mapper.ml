@@ -528,11 +528,12 @@ class ['loc] mapper = object(this)
     let ps' = ListUtils.ident_map this#function_param_type ps in
     let rpo' = map_opt this#function_rest_param_type rpo in
     let return' = this#type_ return in
-    if ps' == ps && rpo' == rpo && return' == return then ft
+    let tparams' = map_opt this#type_parameter_declaration tparams in
+    if ps' == ps && rpo' == rpo && return' == return && tparams' == tparams then ft
     else {
       params = (params_loc, { Params.params = ps'; rest = rpo' });
       return = return';
-      tparams
+      tparams = tparams'
     }
 
   method label_identifier (ident: 'loc Flow_ast.Identifier.t) =
