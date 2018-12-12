@@ -589,6 +589,11 @@ module Cache = struct
   module FlowConstraint = struct
     let cache = ref FlowSet.empty
 
+    let rec toplevel_use_op = function
+      | Frame (_frame, use_op) -> toplevel_use_op use_op
+      | Op (Speculation use_op) -> toplevel_use_op use_op
+      | use_op -> use_op
+
     (* attempt to read LB/UB pair from cache, add if absent *)
     let get cx (l, u) = match l, u with
       (* Don't cache constraints involving type variables, since the
@@ -598,11 +603,8 @@ module Cache = struct
         (* Use ops are purely for better error messages: they should have no
            effect on type checking. However, recursively nested use ops can pose
            non-termination problems. To ensure proper caching, we hash use ops
-           to just their top-level structure. *)
-        let u = mod_use_op_of_use_t (function
-        | Frame (frame, use_op) when use_op <> unknown_use -> Frame (frame, unknown_use)
-        | Op (Speculation use_op) when use_op <> unknown_use -> Op (Speculation unknown_use)
-        | use_op -> use_op) u in
+           to just their toplevel structure. *)
+        let u = mod_use_op_of_use_t toplevel_use_op u in
         let found = FlowSet.cache (l, u) cache in
         if found && Context.is_verbose cx then
           prerr_endlinef "%sFlowConstraint cache hit on (%s, %s)"
