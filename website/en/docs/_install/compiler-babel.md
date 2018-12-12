@@ -14,7 +14,7 @@ Next you need to create a `.babelrc` file at the root of your project with
 
 ```json
 {
-  "presets": ["flow"]
+  "presets": ["@babel/preset-flow"]
 }
 ```
 
