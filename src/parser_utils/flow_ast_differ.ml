@@ -678,12 +678,12 @@ let program (algo : diff_algorithm)
       (intf2: (Loc.t, Loc.t) Ast.Statement.Interface.t)
       : node change list option =
     let open Ast.Statement.Interface in
-    let { id = id1; tparams = tparams1; extends = extends1; body = body1 } = intf1 in
-    let { id = id2; tparams = tparams2; extends = extends2; body = body2 } = intf2 in
+    let { id = id1; tparams = tparams1; extends = extends1; body = (_loc1, body1) } = intf1 in
+    let { id = id2; tparams = tparams2; extends = extends2; body = (_loc2, body2) } = intf2 in
     let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
     let tparams_diff = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
     let extends_diff = diff_and_recurse_no_trivial generic_type extends1 extends2 in
-    let body_diff = if body1 == body2 then Some [] else None in (* TODO *)
+    let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
     join_diff_list [id_diff; tparams_diff; extends_diff; body_diff]
 
   and class_body (class_body1: (Loc.t, Loc.t) Ast.Class.Body.t) (class_body2: (Loc.t, Loc.t) Ast.Class.Body.t)
@@ -1504,6 +1504,7 @@ let program (algo : diff_algorithm)
     let type_diff =
       match type1, type2 with
       | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
+      | Object obj1, Object obj2 -> diff_if_changed_ret_opt object_type obj1 obj2
       | _ -> None in
     Option.value type_diff
       ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
@@ -1529,6 +1530,66 @@ let program (algo : diff_algorithm)
     | Unqualified id1, Unqualified id2 ->
       diff_if_changed identifier id1 id2 |> Option.return
     | Qualified _, Qualified _ -> None (* TODO *)
+    | _ -> None
+
+  and object_type
+      (ot1: (Loc.t, Loc.t) Ast.Type.Object.t)
+      (ot2: (Loc.t, Loc.t) Ast.Type.Object.t)
+      : node change list option =
+    let open Ast.Type.Object in
+    let { properties = props1; exact = exact1; inexact = inexact1} = ot1 in
+    let { properties = props2; exact = exact2; inexact = inexact2} = ot2 in
+    (* These are boolean literals, so structural equality is ok *)
+    let exact_diff = if exact1 = exact2 then Some [] else None in
+    let inexact_diff = if inexact1 = inexact2 then Some [] else None in
+    let properties_diff =
+      diff_and_recurse_no_trivial object_type_property props1 props2 in
+    join_diff_list [exact_diff; inexact_diff; properties_diff]
+
+  and object_type_property
+      (prop1: (Loc.t, Loc.t) Ast.Type.Object.property)
+      (prop2: (Loc.t, Loc.t) Ast.Type.Object.property)
+      : node change list option =
+    let open Ast.Type.Object in
+    match prop1, prop2 with
+    | Property p1, Property p2 -> diff_if_changed_ret_opt object_property_type p1 p2
+    | SpreadProperty _p1, SpreadProperty _p2 -> None (* TODO *)
+    | Indexer _p1, Indexer _p2 -> None (* TODO *)
+    | CallProperty _p1, CallProperty _p2 -> None (* TODO *)
+    | InternalSlot _s1, InternalSlot _s2 -> None (* TODO *)
+    | _ -> None
+
+  and object_property_type
+      (optype1: (Loc.t, Loc.t) Ast.Type.Object.Property.t)
+      (optype2: (Loc.t, Loc.t) Ast.Type.Object.Property.t)
+      : node change list option =
+    let open Ast.Type.Object.Property in
+    let _loc1, {
+      key = key1; value = value1; optional = opt1; static = static1; proto = proto1;
+      _method = method1; variance = var1
+    } = optype1 in
+    let _loc2, {
+      key = key2; value = value2; optional = opt2; static = static2; proto = proto2;
+      _method = method2; variance = var2
+    } = optype2 in
+    if opt1 != opt2 || static1 != static2 || proto1 != proto2 || method1 != method2
+    then None
+    else
+      let variance_diff = diff_if_changed_ret_opt variance var1 var2 in
+      let key_diff = diff_if_changed_ret_opt object_key key1 key2 in
+      let value_diff = diff_if_changed_ret_opt object_property_value_type value1 value2 in
+      join_diff_list [variance_diff; key_diff; value_diff]
+
+  and object_property_value_type
+      (opvt1: (Loc.t, Loc.t) Ast.Type.Object.Property.value)
+      (opvt2: (Loc.t, Loc.t) Ast.Type.Object.Property.value)
+      : node change list option =
+    let open Ast.Type.Object.Property in
+    match opvt1, opvt2 with
+    | Init t1, Init t2 -> diff_if_changed type_ t1 t2 |> Option.return
+    | Get (_loc1, ft1), Get (_loc2, ft2)
+    | Set (_loc1, ft1), Set (_loc2, ft2) ->
+      diff_if_changed_ret_opt function_type ft1 ft2
     | _ -> None
 
   and type_or_implicit

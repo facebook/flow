@@ -185,6 +185,15 @@ class useless_mapper = object(this)
     | Increment -> expr
     | _ -> { expr with operator=Increment }
 
+  method! object_property_type (opt: (Loc.t, Loc.t) Ast.Type.Object.Property.t) =
+    let open Ast.Type.Object.Property in
+    let loc, opt' as opt = super#object_property_type opt in
+    let { key; variance; _ } = opt' in
+    let key' = this#object_key key in
+    let variance' = this#variance variance in
+    if key' == key && variance' == variance then opt
+    else loc, { opt' with key = key'; variance = variance' }
+
 end
 
 class literal_mapper = object
@@ -623,6 +632,16 @@ let tests = "ast_differ" >::: [
       ~source
       ~expected:"interface GotRenamed extends GotRenamed<GOT_RENAMED> { }"
       ~mapper:(new useless_mapper)
+  end;
+  "interface_body_object_property_key" >:: begin fun ctxt ->
+    let source = "interface Foo { rename: string }" in
+    assert_edits_equal ctxt ~edits:[((16, 22), "gotRenamed")] ~source
+      ~expected:"interface Foo { gotRenamed: string }" ~mapper:(new useless_mapper)
+  end;
+  "interface_body_object_property_value_init" >:: begin fun ctxt ->
+    let source = "interface Foo { bar: number }" in
+    assert_edits_equal ctxt ~edits:[((21, 27), "string")] ~source
+      ~expected:"interface Foo { bar: string }" ~mapper:(new useless_mapper)
   end;
   "obj_prop" >:: begin fun ctxt ->
     let source = "let x = { rename : 4 }" in
@@ -1634,6 +1653,30 @@ let tests = "ast_differ" >::: [
     let source = "type alias = string => number" in
     assert_edits_equal ctxt ~edits:[(23, 29), "string"]
     ~source ~expected:"type alias = string => string"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_right_object_type" >:: begin fun ctxt ->
+    let source = "type alias = { rename: string }" in
+    assert_edits_equal ctxt ~edits:[(15, 21), "gotRenamed"]
+    ~source ~expected:"type alias = { gotRenamed: string }"
+    ~mapper:(new useless_mapper)
+  end;
+  "type_alias_right_object_property_value_get" >:: begin fun ctxt ->
+    let source = "type alias = { get rename(): void; }" in
+    assert_edits_equal ctxt ~edits:[((19, 25), "gotRenamed")] ~source
+      ~expected:"type alias = { get gotRenamed(): void; }"
+      ~mapper:(new useless_mapper)
+  end;
+  "type_alias_right_object_property_value_set" >:: begin fun ctxt ->
+    let source = "type alias = { set foo(value: number): void; }" in
+    assert_edits_equal ctxt ~edits:[((30, 36), "string")] ~source
+      ~expected:"type alias = { set foo(value: string): void; }"
+      ~mapper:(new useless_mapper)
+  end;
+  "type_alias_right_object_variance" >:: begin fun ctxt ->
+    let source = "type alias = { -foo: string }" in
+    assert_edits_equal ctxt ~edits:[(15, 16), "+"]
+    ~source ~expected:"type alias = { +foo: string }"
     ~mapper:(new useless_mapper)
   end;
   "opaque_type_id" >:: begin fun ctxt ->
