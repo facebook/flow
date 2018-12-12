@@ -280,7 +280,16 @@ let parse_test acc filename =
 
 let run_test (name, frontmatter, content) =
   let (filename, use_strict) = name in
-  let parse_options = Parser_env.({ default_parse_options with use_strict }) in
+  let parse_options = { Parser_env.
+      esproposal_class_instance_fields = true;
+      esproposal_class_static_fields = true;
+      esproposal_decorators = false;
+      esproposal_export_star_as = false;
+      esproposal_optional_chaining = false;
+      esproposal_nullish_coalescing = false;
+      types = false;
+      use_strict;
+  } in
   let (_ast, errors) = Parser_flow.program_file
     ~fail:false ~parse_options:(Some parse_options)
     content (Some (File_key.SourceFile filename)) in
