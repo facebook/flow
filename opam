@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "flowtype"
-version: "0.88.0"
+version: "0.89.0"
 maintainer: "flow@fb.com"
 homepage: "https://flow.org"
 dev-repo: "https://github.com/facebook/flow.git"
