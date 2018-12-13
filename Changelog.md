@@ -1,3 +1,21 @@
+### 0.89.0
+
+Likely to cause new Flow errors:
+* Big revamp to React typing with the goal of adding support for `React.forwardRef` and better typing higher-order components. [Docs are available here](https://flow.org/en/docs/react/hoc).
+
+New Features:
+* New `deprecated-utility` lint complains about deprecated Flow types. To start off, `$Supertype` and `$Subtype` are now deprecated. They were unsound and can usually be replaced using shapes or bounded generics.
+* [`React.AbstractComponent`](https://flow.org/en/docs/react/types/#toc-react-abstractcomponent) makes it [way easier to type React higher-order components](https://flow.org/en/docs/react/hoc).
+* [`React.Config`](https://our.intern.facebook.com/intern/sandcastle/group/nonce/29220374533/) is also intended to help type React higher-order components.
+
+Notable bug fixes:
+* `flow coverage --color` handles multi-byte characters better
+* `flow coverage` now supports `--strip-root`
+
+Misc:
+* We've deleted `flow gen-flow-files` due to bitrot. We do plan on building a better version in the future.
+* Various libdef updates. Thanks for all the PRs!
+
 ### 0.88.0
 
 Likely to cause new Flow errors:
