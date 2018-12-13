@@ -6,7 +6,7 @@ First install `@babel/cli` and `@babel/preset-flow` with either
 [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/).
 
 ```sh
-{{include.install_command}} @babel/cli @babel/preset-flow
+{{include.install_command}} @babel/core @babel/cli @babel/preset-flow
 ```
 
 Next you need to create a `.babelrc` file at the root of your project with
