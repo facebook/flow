@@ -143,3 +143,38 @@ class virtual ['self] reduce_ty_base = object (self : 'self)
         let acc = self#plus acc (f env y) in
         self#list_fold_left f env acc ys
 end
+
+class virtual ['self] mapreduce_ty_base = object (self: 'self)
+  inherit ['acc] monoid
+  method private on_string: 'env -> string -> string * 'acc = fun _ x -> x, self#zero
+  method private on_bool  : 'env -> bool   -> bool   * 'acc = fun _ x -> x, self#zero
+  method private on_int   : 'env -> int    -> int    * 'acc = fun _ x -> x, self#zero
+  method private on_symbol: 'env -> symbol -> symbol * 'acc = fun _ x -> x, self#zero
+  method private on_aloc  : 'env -> ALoc.t -> ALoc.t * 'acc = fun _ x -> x, self#zero
+
+  method private on_list:
+    'a 'b . ('env -> 'a -> 'b * 'acc) -> 'env -> 'a list -> 'b list * 'acc =
+    fun f env -> self#list_fold_left f env ([], self#zero)
+
+  method private on_option:
+    'a 'b . ('env -> 'a -> 'b * 'acc) -> 'env -> 'a option -> 'b option * 'acc =
+    fun f env x ->
+      match x with
+      | None -> None, self#zero
+      | Some x ->
+        let x', acc = f env x in
+        Some x', acc
+
+  method private list_fold_left:
+    'a 'b . ('env -> 'a -> 'b * 'acc) -> 'env -> ('b list * 'acc) -> 'a list -> 'b list * 'acc =
+    fun f env acc xs ->
+      match xs with
+      | [] ->
+        let ys_rev, acc = acc in
+        List.rev ys_rev, acc
+      | y::ys ->
+        let acc_ys, acc = acc in
+        let y', acc' = f env y in
+        let acc'' = self#plus acc acc' in
+        self#list_fold_left f env (y'::acc_ys, acc'') ys
+end

@@ -153,6 +153,12 @@ and polarity = Positive | Negative | Neutral
   nude = true;
   visit_prefix = "on_";
   ancestors = ["endo_ty_base"];
+}, visitors {
+  name="mapreduce_ty";
+  variety = "mapreduce";
+  nude = true;
+  visit_prefix = "on_";
+  ancestors = ["mapreduce_ty_base"];
 }]
 
 
