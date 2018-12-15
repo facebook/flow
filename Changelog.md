@@ -6,7 +6,7 @@ Likely to cause new Flow errors:
 New Features:
 * New `deprecated-utility` lint complains about deprecated Flow types. To start off, `$Supertype` and `$Subtype` are now deprecated. They were unsound and can usually be replaced using shapes or bounded generics.
 * [`React.AbstractComponent`](https://flow.org/en/docs/react/types/#toc-react-abstractcomponent) makes it [way easier to type React higher-order components](https://flow.org/en/docs/react/hoc).
-* [`React.Config`](https://our.intern.facebook.com/intern/sandcastle/group/nonce/29220374533/) is also intended to help type React higher-order components.
+* [`React.Config`](https://flow.org/en/docs/react/types/#toc-react-config) is also intended to help type React higher-order components.
 
 Notable bug fixes:
 * `flow coverage --color` handles multi-byte characters better
