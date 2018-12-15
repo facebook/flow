@@ -325,11 +325,15 @@ let not_object t =
     DefT (reason_of_t t, EmptyT)
   | _ -> t
 
-let function_ t =
+let function_ t u =
   match t with
-  | DefT (r, MixedT _) ->
-    let desc = RFunction RNormal in
-    replace_reason_const desc r |> Unsoundness.refi_from_mixed_any
+  | DefT (_, MixedT _) ->
+    let fn_name = "abstract function ((empty, ...Array<empty>) => mixed)" in
+    reason_of_t u
+    |> replace_reason_const (RCustom ("the type of an " ^ fn_name))
+    |> mk_uncallable_function_type
+        (RCustom ("the argument expected by " ^ fn_name))
+        (RCustom ("the return type expected by " ^ fn_name))
   | DefT (_, (AnyT _ | FunT _ | ClassT _)) -> t
   | _ -> DefT (reason_of_t t, EmptyT)
 

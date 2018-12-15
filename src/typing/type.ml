@@ -773,7 +773,6 @@ module rec TypeTerm : sig
     | ForOfIteration
     | Merged
     | React
-    | RefineFromMixed
     | ResolveSpread
     | ShapeAssign
     | TaggedTemplateType
@@ -2291,11 +2290,11 @@ end = struct
   | t -> reason_of_t t *)
   let reason_of_use_t_add_id = reason_of_use_t
 
-  let desc_of_t t = desc_of_reason (reason_of_t t)
+  let desc_of_t = reason_of_t %> desc_of_reason
 
-  let loc_of_t t = aloc_of_reason (reason_of_t t)
+  let loc_of_t = reason_of_t %> aloc_of_reason
 
-  let def_loc_of_t t = def_aloc_of_reason (reason_of_t t)
+  let def_loc_of_t = reason_of_t %> def_aloc_of_reason
 
   (* TODO make a type visitor *)
   let rec mod_reason_of_t f = function
@@ -2634,7 +2633,6 @@ end = struct
     | DefT (_, NumT actual), DefT (_, SingletonNumT expected) -> number_literal_eq expected actual
     | DefT (_, BoolT actual), DefT (_, SingletonBoolT expected) -> boolean_literal_eq expected actual
     | _ -> reasonless_eq t1 t2
-
 end
 
 (* Type scheme: a type and an attendant environment of type parameters.
@@ -2728,7 +2726,6 @@ module Unsoundness = struct
   let type_instance        = Unsound TypeInstance
   let resolve_spread       = Unsound ResolveSpread
   let shape_assign         = Unsound ShapeAssign
-  let refi_from_mixed      = Unsound RefineFromMixed
   let unimplemented        = Unsound Unimplemented
   let weak_context         = Unsound WeakContext
   let inference_hooks      = Unsound InferenceHooks
@@ -2749,7 +2746,6 @@ module Unsoundness = struct
   let constructor_any      = AnyT.make constructor
   let function_proto_any   = AnyT.make function_proto
   let computed_lit_key_any = AnyT.make computed_lit_key
-  let refi_from_mixed_any  = AnyT.make refi_from_mixed
   let unimplemented_any    = AnyT.make unimplemented
   let weak_context_any     = AnyT.make weak_context
   let inference_hooks_any  = AnyT.make inference_hooks
@@ -3376,6 +3372,19 @@ let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 
 let mk_opt_functioncalltype reason targs args clos strict =
   (global_this reason, targs, args, clos, strict)
+
+(* Produces a function of type empty => mixed that can never be invoked. This is useful if you want
+   to express a type that is an unknown function in a sound way. *)
+let mk_uncallable_function_type empty_desc mixed_desc def_reason =
+  let empty = def_reason |> replace_reason_const empty_desc |> EmptyT.make in
+  let rest_param = begin
+    Some "...empty",
+    aloc_of_reason def_reason,
+    DefT (def_reason, ArrT (ROArrayAT (empty)))
+  end |> Option.return in
+  let tout = def_reason |> replace_reason_const mixed_desc |> MixedT.make in
+  DefT (def_reason, FunT (dummy_static def_reason, FunProtoT def_reason,
+    mk_functiontype def_reason [empty] ~rest_param ~def_reason ~params_names:[None] tout))
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without

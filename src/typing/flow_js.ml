@@ -9253,7 +9253,7 @@ and predicate cx trace t l p = match p with
   (***********************)
 
   | FunP ->
-    rec_flow_t cx trace (Type_filter.function_ l, t)
+    rec_flow_t cx trace (Type_filter.function_ l t, t)
 
   | NotP FunP ->
     rec_flow_t cx trace (Type_filter.not_function l, t)

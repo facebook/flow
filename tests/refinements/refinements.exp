@@ -374,6 +374,286 @@ References:
                                          ^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
+
+Cannot call `takesBotFunction` with `x` bound to `x` because the return type expected by abstract function ((empty,
+...Array<empty>) => mixed) [1] is incompatible with empty [2] in the return value.
+
+   fn.js:14:22
+   14|     takesBotFunction(x); //error
+                            ^
+
+References:
+   fn.js:13:7
+   13|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn.js:3:41
+    3| function takesBotFunction (x : empty => empty) {}
+                                               ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fn.js:20:22
+
+Cannot call `takesTopFunction` with `x` bound to `x` because the argument expected by abstract function ((empty,
+...Array<empty>) => mixed) [1] is incompatible with mixed [2] in the first argument.
+
+   fn.js:20:22
+   20|     takesTopFunction(x); // error
+                            ^
+
+References:
+   fn.js:19:7
+   19|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn.js:4:32
+    4| function takesTopFunction (x : mixed => mixed) {}
+                                      ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fn.js:32:23
+
+Cannot call `takesMidFunction2` with `x` bound to `x` because:
+ - the argument expected by abstract function ((empty, ...Array<empty>) => mixed) [1] is incompatible with mixed [2] in
+   the first argument.
+ - the return type expected by abstract function ((empty, ...Array<empty>) => mixed) [1] is incompatible with empty [3]
+   in the return value.
+
+   fn.js:32:23
+   32|     takesMidFunction2(x); // error
+                             ^
+
+References:
+   fn.js:31:7
+   31|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn.js:6:33
+    6| function takesMidFunction2 (x : mixed => empty) {}
+                                       ^^^^^ [2]
+   fn.js:6:42
+    6| function takesMidFunction2 (x : mixed => empty) {}
+                                                ^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ fn.js:38:24
+
+Cannot call `takesHigherOrderFn` with `x` bound to `x` because the return type expected by abstract function ((empty,
+...Array<empty>) => mixed) [1] is incompatible with function type [2] in the return value.
+
+   fn.js:38:24
+   38|     takesHigherOrderFn(x); // error
+                              ^
+
+References:
+   fn.js:37:7
+   37|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn.js:7:43
+    7| function takesHigherOrderFn (x : empty => empty => mixed) {}
+                                                 ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fn.js:44:25
+
+Cannot call `takesHigherOrderFn2` with `x` bound to `x` because the argument expected by abstract function ((empty,
+...Array<empty>) => mixed) [1] is incompatible with function type [2] in the first argument.
+
+   fn.js:44:25
+   44|     takesHigherOrderFn2(x); // error
+                               ^
+
+References:
+   fn.js:43:7
+   43|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn.js:8:36
+    8| function takesHigherOrderFn2 (x : (empty => mixed) => mixed) {}
+                                          ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fn.js:56:22
+
+Cannot call `takesMultiArgFn2` with `x` bound to `x` because:
+ - the argument expected by abstract function ((empty, ...Array<empty>) => mixed) [1] is incompatible with mixed [2] in
+   array element.
+ - the argument expected by abstract function ((empty, ...Array<empty>) => mixed) [1] is incompatible with mixed [3] in
+   the first argument.
+
+   fn.js:56:22
+   56|     takesMultiArgFn2(x); // error
+                            ^
+
+References:
+   fn.js:55:7
+   55|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   fn.js:10:40
+   10| function takesMultiArgFn2 (x : (mixed, mixed) => mixed) {}
+                                              ^^^^^ [2]
+   fn.js:10:33
+   10| function takesMultiArgFn2 (x : (mixed, mixed) => mixed) {}
+                                       ^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------- fn.js:62:7
+
+Cannot call `x` with `y` bound to the first parameter because mixed [1] is incompatible with the argument expected by
+abstract function ((empty, ...Array<empty>) => mixed) [2].
+
+   fn.js:62:7
+   62|     x(y); // error
+             ^
+
+References:
+   fn.js:60:29
+   60| function fun9(x: mixed, y : mixed, z : empty) {
+                                   ^^^^^ [1]
+   fn.js:61:7
+   61|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- fn.js:64:7
+
+Cannot call `x` with `x` bound to the first parameter because the type of an abstract function ((empty, ...Array<empty>)
+=> mixed) [1] is incompatible with the argument expected by abstract function ((empty, ...Array<empty>) => mixed) [1].
+
+   fn.js:64:7
+   64|     x(x); // error
+             ^
+
+References:
+   fn.js:61:7
+   61|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- fn.js:65:5
+
+Cannot call `x` because:
+ - number [1] is incompatible with the argument expected by abstract function ((empty, ...Array<empty>) => mixed) [2] in
+   array element.
+ - number [3] is incompatible with the argument expected by abstract function ((empty, ...Array<empty>) => mixed) [2] in
+   array element.
+ - number [4] is incompatible with the argument expected by abstract function ((empty, ...Array<empty>) => mixed) [2] in
+   array element.
+ - number [5] is incompatible with the argument expected by abstract function ((empty, ...Array<empty>) => mixed) [2] in
+   array element.
+
+   fn.js:65:5
+   65|     x(1,2,3,4,5); //error
+           ^^^^^^^^^^^^
+
+References:
+   fn.js:65:9
+   65|     x(1,2,3,4,5); //error
+               ^ [1]
+   fn.js:61:7
+   61|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   fn.js:65:11
+   65|     x(1,2,3,4,5); //error
+                 ^ [3]
+   fn.js:65:13
+   65|     x(1,2,3,4,5); //error
+                   ^ [4]
+   fn.js:65:15
+   65|     x(1,2,3,4,5); //error
+                     ^ [5]
+
+
+Error ------------------------------------------------------------------------------------------------------- fn.js:65:7
+
+Cannot call `x` with `1` bound to the first parameter because number [1] is incompatible with the argument expected by
+abstract function ((empty, ...Array<empty>) => mixed) [2].
+
+   fn.js:65:7
+   65|     x(1,2,3,4,5); //error
+             ^ [1]
+
+References:
+   fn.js:61:7
+   61|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- fn.js:66:5
+
+Cannot call `x` because number [1] is incompatible with the argument expected by abstract function ((empty,
+...Array<empty>) => mixed) [2] in array element.
+
+   fn.js:66:5
+   66|     x(...[1,2]); //error
+           ^^^^^^^^^^^
+
+References:
+   fn.js:66:13
+   66|     x(...[1,2]); //error
+                   ^ [1]
+   fn.js:61:7
+   61|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fn.js:66:11
+
+Cannot call `x` with number bound to the first parameter because number [1] is incompatible with the argument expected
+by abstract function ((empty, ...Array<empty>) => mixed) [2].
+
+   fn.js:66:11
+   66|     x(...[1,2]); //error
+                 ^ [1]
+
+References:
+   fn.js:61:7
+   61|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- fn.js:67:5
+
+Cannot call `x` because the type of an abstract function ((empty, ...Array<empty>) => mixed) [1] requires another
+argument.
+
+   fn.js:67:5
+   67|     x();
+           ^^^
+
+References:
+   fn.js:61:7
+   61|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ fn.js:73:23
+
+Cannot call `obj.field` with `0` bound to the first parameter because number [1] is incompatible with the argument
+expected by abstract function ((empty, ...Array<empty>) => mixed) [2].
+
+   fn.js:73:23
+   73|   const f = obj.field(0); // error
+                             ^ [1]
+
+References:
+   fn.js:72:5
+   72| if (typeof obj.field === 'function') {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ fn.js:74:14
+
+Cannot get `f.foo` because property `foo` is missing in the return type expected by abstract function ((empty,
+...Array<empty>) => mixed) [1].
+
+   fn.js:74:14
+   74|   const f2 = f.foo; // error
+                    ^^^^^
+
+References:
+   fn.js:72:5
+   72| if (typeof obj.field === 'function') {
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- hasOwnProperty.js:4:3
 
 Cannot call `x.y` because undefined [1] is not a function.
@@ -772,6 +1052,24 @@ References:
    mixed.js:35:9
    35|     (x: true); // error: we don't know the truthiness of x
                ^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- mixed.js:47:17
+
+Cannot call `takesString` with `x` bound to `x` because the type of an abstract function ((empty, ...Array<empty>) =>
+mixed) [1] is incompatible with string [2].
+
+   mixed.js:47:17
+   47|     takesString(x); // error
+                       ^
+
+References:
+   mixed.js:46:7
+   46|   if (typeof x === "function") {
+             ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   mixed.js:4:25
+    4| function takesString(x: string) {}
+                               ^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:53:17
@@ -3106,4 +3404,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 225 errors
+Found 246 errors
