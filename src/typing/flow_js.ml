@@ -6741,7 +6741,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         (Field (None, lv, lpolarity), Field (None, uv, upolarity))
     | _ -> ());
 
-  if rflags.exact && rflags.sealed = Sealed && not (is_literal_object_reason ureason)
+  if udict = None && rflags.exact && rflags.sealed = Sealed && not (is_literal_object_reason ureason)
   then (
     iter_real_props cx lflds (fun ~is_sentinel s _ ->
       if not (Context.has_prop cx uflds s)

@@ -164,6 +164,55 @@ References:
                                                            ^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- exact_indexer.js:4:2
+
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `a`.
+
+   exact_indexer.js:4:2
+   4| ({ a: 123 }: {| ['a']: string |}); // error
+       ^^^^^^^^^^
+
+References:
+   exact_indexer.js:4:7
+   4| ({ a: 123 }: {| ['a']: string |}); // error
+            ^^^ [1]
+   exact_indexer.js:4:24
+   4| ({ a: 123 }: {| ['a']: string |}); // error
+                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- exact_indexer.js:5:2
+
+Cannot cast object literal to object type because string `a` [1] is incompatible with string literal `b` [2] in the
+indexer property's key.
+
+   exact_indexer.js:5:2
+   5| ({ a: 123 }: {| ['b']: number |}); // error
+       ^^^^^^^^^^ [1]
+
+References:
+   exact_indexer.js:5:18
+   5| ({ a: 123 }: {| ['b']: number |}); // error
+                       ^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- exact_indexer.js:7:2
+
+Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `a`.
+
+   exact_indexer.js:7:2
+   7| ({ a: 123 }: {| [string]: string |}); // error
+       ^^^^^^^^^^
+
+References:
+   exact_indexer.js:7:7
+   7| ({ a: 123 }: {| [string]: string |}); // error
+            ^^^ [1]
+   exact_indexer.js:7:27
+   7| ({ a: 123 }: {| [string]: string |}); // error
+                                ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- objmap.js:11:32
 
 Cannot assign object literal to `doesError` because number [1] is incompatible with number literal `2` [2] in property
@@ -333,4 +382,4 @@ References:
 
 
 
-Found 20 errors
+Found 23 errors
