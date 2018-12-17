@@ -70,8 +70,8 @@ let reqs_of_component ~reader component required =
             dep_cxs, Reqs.add_impl m file locs reqs
           else
             (* look up impl sig_context *)
-            let leader = Context_heaps.find_leader dep in
-            let dep_cx = Context_heaps.find_sig leader in
+            let leader = Context_heaps.Reader_dispatcher.find_leader ~reader dep in
+            let dep_cx = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
             dep_cx::dep_cxs, Reqs.add_dep_impl m file (dep_cx, locs) reqs
         else
           (* unchecked implementation exists *)
@@ -83,7 +83,7 @@ let reqs_of_component ~reader component required =
     ) ([], Reqs.empty) required
   in
 
-  let master_cx = Context_heaps.find_sig File_key.Builtins in
+  let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
 
   master_cx, dep_cxs, reqs
 
@@ -337,7 +337,7 @@ let merge_runner
     workers
     ~job: (merge_strict_job ~worker_mutator ~reader ~options ~job)
     ~neutral: []
-    ~merge:(merge ~master_mutator)
+    ~merge:(merge ~master_mutator ~reader)
     ~next
   in
   let total_number_of_files = Merge_stream.get_total_files stats in

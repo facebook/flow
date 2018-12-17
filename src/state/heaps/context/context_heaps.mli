@@ -5,11 +5,23 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val find_sig: File_key.t -> Context.sig_t
+module type READER = sig
+  type reader
 
-val find_leader: File_key.t -> File_key.t
+  val find_sig: reader:reader -> File_key.t -> Context.sig_t
 
-val sig_hash_changed: File_key.t -> bool
+  val find_leader: reader:reader -> File_key.t -> File_key.t
+end
+
+module Mutator_reader: sig
+  include READER with type reader = Mutator_state_reader.t
+
+  val sig_hash_changed: reader:reader -> File_key.t -> bool
+end
+
+module Reader: READER with type reader = State_reader.t
+
+module Reader_dispatcher: READER with type reader = Abstract_state_reader.t
 
 module Init_master_context_mutator: sig
   val add_master_sig: (Context.t -> unit) Expensive.t

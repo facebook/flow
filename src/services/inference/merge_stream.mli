@@ -19,6 +19,7 @@ type 'a merge_stream = {
   next: unit -> element list Bucket.bucket;
   merge:
     master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
+    reader: Mutator_state_reader.t ->
     (* merged *)
     'a merge_result ->
     (* accumulator *)

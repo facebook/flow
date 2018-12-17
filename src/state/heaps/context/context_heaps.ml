@@ -25,21 +25,6 @@ let add_sig ~audit cx =
   if cx_file = File_key.Builtins then master_sig := None;
   add_sig_context ~audit cx_file (Context.sig_cx cx)
 
-let find_sig file =
-  let cx_opt =
-    if file = File_key.Builtins then
-      match !master_sig with
-      | Some cx_opt -> cx_opt
-      | None ->
-        let cx_opt = SigContextHeap.get file in
-        master_sig := Some cx_opt;
-        cx_opt
-    else SigContextHeap.get file
-  in
-  match cx_opt with
-  | Some cx -> cx
-  | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
-
 module SigHashHeap = SharedMem_js.NoCache (SharedMem_js.Immediate) (File_key) (struct
   type t = Xx.hash
   let prefix = Prefix.make()
@@ -53,20 +38,6 @@ module LeaderHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (
   let description = "Leader"
   let use_sqlite_fallback () = false
 end)
-
-let find_leader file =
-  match LeaderHeap.get file with
-  | Some leader -> leader
-  | None -> raise (Key_not_found ("LeaderHeap", (File_key.to_string file)))
-
-let sig_hash_changed f =
-  match SigHashHeap.get f with
-  | None -> false
-  | Some xx ->
-    match SigHashHeap.get_old f with
-    | None -> true
-    | Some xx_old ->
-      File_key.check_suffix f Files.flow_ext || xx <> xx_old
 
 let oldify_merge_batch files =
   LeaderHeap.oldify_batch files;
@@ -91,6 +62,7 @@ end = struct
     add_sig ~audit cx
 end
 
+let currently_oldified_files: FilenameSet.t ref option ref = ref None
 module Merge_context_mutator: sig
   type master_mutator
   type worker_mutator
@@ -107,16 +79,19 @@ end = struct
   let commit oldified_files =
     Hh_logger.debug "Committing context heaps";
     remove_old_merge_batch oldified_files;
+    currently_oldified_files := None;
     Lwt.return_unit
 
   let rollback oldified_files =
     Hh_logger.debug "Rolling back context heaps";
     revive_merge_batch oldified_files;
+    currently_oldified_files := None;
     Lwt.return_unit
 
   let create transaction files =
     let master_mutator = ref files in
     let worker_mutator = () in
+    currently_oldified_files := Some master_mutator;
 
     let commit () = commit (!master_mutator) in
     let rollback () = rollback (!master_mutator) in
@@ -177,4 +152,90 @@ end = struct
     assert (FilenameSet.is_empty (FilenameSet.diff files (!oldified_files)));
     oldified_files := FilenameSet.diff (!oldified_files) files;
     revive_merge_batch files
+end
+
+module type READER = sig
+  type reader
+
+  val find_sig: reader:reader -> File_key.t -> Context.sig_t
+
+  val find_leader: reader:reader -> File_key.t -> File_key.t
+end
+
+let find_sig ~get_sig ~reader:_ file =
+  let cx_opt =
+    if file = File_key.Builtins then
+      match !master_sig with
+      | Some cx_opt -> cx_opt
+      | None ->
+        let cx_opt = get_sig file in
+        master_sig := Some cx_opt;
+        cx_opt
+    else get_sig file
+  in
+  match cx_opt with
+  | Some cx -> cx
+  | None -> raise (Key_not_found ("SigContextHeap", File_key.to_string file))
+
+module Mutator_reader: sig
+  include READER with type reader = Mutator_state_reader.t
+
+  val sig_hash_changed: reader:reader -> File_key.t -> bool
+end = struct
+  type reader = Mutator_state_reader.t
+
+  let find_sig = find_sig ~get_sig:SigContextHeap.get
+
+  let find_leader ~reader:_ file =
+    match LeaderHeap.get file with
+    | Some leader -> leader
+    | None -> raise (Key_not_found ("LeaderHeap", (File_key.to_string file)))
+
+  let sig_hash_changed ~reader:_ f =
+    match SigHashHeap.get f with
+    | None -> false
+    | Some xx ->
+      match SigHashHeap.get_old f with
+      | None -> true
+      | Some xx_old ->
+        File_key.check_suffix f Files.flow_ext || xx <> xx_old
+end
+
+module Reader: READER with type reader = State_reader.t = struct
+  type reader = State_reader.t
+
+  let should_use_oldified file =
+    match !currently_oldified_files with
+    | None -> false
+    | Some oldified_files -> FilenameSet.mem file !oldified_files
+
+  let find_sig ~reader file =
+    if should_use_oldified file
+    then find_sig ~get_sig:SigContextHeap.get_old ~reader file
+    else find_sig ~get_sig:SigContextHeap.get ~reader file
+
+  let find_leader ~reader:_ file =
+    let leader =
+      if should_use_oldified file
+      then LeaderHeap.get_old file
+      else LeaderHeap.get file
+    in
+    match leader with
+    | Some leader -> leader
+    | None -> raise (Key_not_found ("LeaderHeap", (File_key.to_string file)))
+end
+
+module Reader_dispatcher: READER with type reader = Abstract_state_reader.t = struct
+  type reader = Abstract_state_reader.t
+  open Abstract_state_reader
+
+  let find_sig ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.find_sig ~reader
+    | State_reader reader -> Reader.find_sig ~reader
+
+  let find_leader ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.find_leader ~reader
+    | State_reader reader -> Reader.find_leader ~reader
 end

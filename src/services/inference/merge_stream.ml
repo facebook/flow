@@ -54,6 +54,7 @@ type 'a merge_stream = {
   next: unit -> element list Bucket.bucket;
   merge:
     master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
+    reader: Mutator_state_reader.t ->
     (* merged *)
     'a merge_result ->
     (* accumulator *)
@@ -224,10 +225,10 @@ let make
         ) else skipped
       ) (FilenameMap.find_unsafe leader_f !dependents) skipped
     in
-    fun ~master_mutator merged merged_acc ->
+    fun ~master_mutator ~reader merged merged_acc ->
       let () = intermediate_result_callback (lazy merged) in
       let skipped = List.fold_left (fun skipped (leader_f, _) ->
-        let diff = Context_heaps.sig_hash_changed leader_f in
+        let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
         let () =
           let fs =
             FilenameMap.find_unsafe leader_f !components
