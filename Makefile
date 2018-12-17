@@ -224,7 +224,7 @@ all-homebrew:
 	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
 	export OPAMYES="1"; \
 	export FLOW_RELEASE="1"; \
-	opam init --no-setup && \
+	opam init --no-setup --disable-sandboxing && \
 	opam pin add -n flowtype . && \
 	opam config exec -- opam install flowtype --deps-only && \
 	opam config exec -- make
