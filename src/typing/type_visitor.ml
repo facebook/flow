@@ -185,8 +185,8 @@ class ['a] t = object(self)
     self#type_ cx pole acc t
 
   | ReactAbstractComponentT {config; instance} ->
-    let acc = self#type_ cx Neutral acc config in
-    self#type_ cx Neutral acc instance
+    let acc = self#type_ cx (P.inv pole) acc config in
+    self#type_ cx pole acc instance
 
   method targ cx pole acc = function
   | ImplicitArg _ -> acc

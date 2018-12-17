@@ -528,8 +528,26 @@ References:
         ^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- type_visitor.js:10:18
 
-Found 39 errors
+Missing type annotation for `Config`. `Config` is a type parameter declared in function type [1] and was implicitly
+instantiated at call of `HOC` [2].
+
+   type_visitor.js:10:18
+   10| module.exports = HOC(A); // Error, missing annotation only for Config
+                        ^^^^^^ [2]
+
+References:
+   type_visitor.js:4:21
+                           v----------------------
+    4| declare function HOC<Config: {}, Instance>(
+    5|     x: React.AbstractComponent<Config, Instance>,
+    6| ): React.AbstractComponent<Config, Instance>;
+       -------------------------------------------^ [1]
+
+
+
+Found 40 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
