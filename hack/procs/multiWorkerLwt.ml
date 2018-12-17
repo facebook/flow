@@ -77,7 +77,7 @@ include MultiWorker.CallFunctor (struct
         let%lwt idle_start_times = LwtUtils.all worker_threads in
         let idle_end_wall_time = Unix.gettimeofday () in
         List.iter (fun idle_start_wall_time ->
-          Measure.sample "worker_idle" (idle_end_wall_time -. idle_start_wall_time);
+          Measure.sample "worker_done" (idle_end_wall_time -. idle_start_wall_time);
         ) idle_start_times;
         Lwt.return_unit
       with Lwt.Canceled ->
