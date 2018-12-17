@@ -9,9 +9,24 @@
    maintained and used by commit_modules and remove_files *)
 (** TODO [perf]: investigate whether this takes too much memory **)
 let all_providers = ref (Hashtbl.create 0)
+let currently_oldified_all_providers
+  : (Modulename.t, Utils_js.FilenameSet.t) Hashtbl.t option ref
+  = ref None
 
 let find_in_all_providers_unsafe modulename =
   Hashtbl.find (!all_providers) modulename
+
+module type READER = sig
+  type reader
+
+  val find_in_all_providers_unsafe: reader:reader -> Modulename.t -> Utils_js.FilenameSet.t
+end
+
+module Mutator_reader: READER with type reader = Mutator_state_reader.t = struct
+  type reader = Mutator_state_reader.t
+
+  let find_in_all_providers_unsafe ~reader:_ = find_in_all_providers_unsafe
+end
 
 module All_providers_mutator: sig
   type t
@@ -23,18 +38,21 @@ end = struct
 
   let create transaction =
     let old_table = Hashtbl.copy !all_providers in
+    currently_oldified_all_providers := Some old_table;
 
     let commit () =
       Hh_logger.debug "Committing all_providers hashtable";
+      currently_oldified_all_providers := None;
       Lwt.return_unit
     in
     let rollback () =
       Hh_logger.debug "Rolling back all_providers hashtable";
       all_providers := old_table;
+      currently_oldified_all_providers := None;
       Lwt.return_unit
     in
 
-    Transaction.add ~commit ~rollback transaction
+    Transaction.add ~singleton:"All providers" ~commit ~rollback transaction
 
   (* Note that the module provided by a file is always accessible via its full
      path, so that it may be imported by specifying (a part of) that path in any
@@ -73,7 +91,9 @@ end = struct
     Hashtbl.replace !all_providers m provs
 end
 
-(* We actually don't need a mutator for module_name_candidates_cache. There are a few reasons why
+(* We actually don't need a mutator or reader for module_name_candidates_cache. There are a few
+ * reasons why:
+ *
  * 1. It's really only used for memoization. We never remove or replace anything
  * 2. The code which populates it never changes during the lifetime of a server. So we never
  *    really need to roll anything back ever *)

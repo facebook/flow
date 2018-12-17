@@ -773,14 +773,14 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
    (b) remove the unregistered modules from NameHeap
    (c) register the new providers in NameHeap
 *)
-let commit_modules ~transaction ~workers ~options ~is_init new_or_changed dirty_modules =
+let commit_modules ~transaction ~workers ~options ~reader ~is_init new_or_changed dirty_modules =
   let debug = Options.is_debug_mode options in
 
   let mutator = Module_heaps.Commit_modules_mutator.create transaction is_init in
   (* prep for registering new mappings in NameHeap *)
   let to_remove, providers, to_replace, errmap, changed_modules = List.fold_left
     (fun (rem, prov, rep, errmap, diff) (m, f_opt) ->
-    match Module_hashtables.find_in_all_providers_unsafe m with
+    match Module_hashtables.Mutator_reader.find_in_all_providers_unsafe ~reader m with
     | ps when FilenameSet.is_empty ps ->
         if debug then prerr_endlinef
           "no remaining providers: %S"

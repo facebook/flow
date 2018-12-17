@@ -81,6 +81,7 @@ val commit_modules:
   transaction: Transaction.t ->
   workers: MultiWorkerLwt.worker list option ->
   options: Options.t ->
+  reader: Mutator_state_reader.t ->
   is_init: bool ->
   FilenameSet.t ->                    (* parsed / unparsed files *)
   (Modulename.t * File_key.t option) list -> (* dirty modules *)

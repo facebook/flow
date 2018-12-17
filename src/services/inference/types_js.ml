@@ -127,8 +127,8 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
 
 (* commit providers for old and new modules, collect errors. *)
 let commit_modules, commit_modules_from_saved_state =
-  let commit_modules_generic ~introduce_files ~transaction ~all_providers_mutator ~options ~is_init
-      ~profiling ~workers ~parsed ~parsed_set ~unparsed ~unparsed_set ~old_modules ~deleted
+  let commit_modules_generic ~introduce_files ~transaction ~reader ~all_providers_mutator ~options
+      ~is_init ~profiling ~workers ~parsed ~parsed_set ~unparsed ~unparsed_set ~old_modules ~deleted
       ~local_errors ~new_or_changed =
     (* conservatively approximate set of modules whose providers will change *)
     (* register providers for modules, warn on dupes etc. *)
@@ -142,7 +142,9 @@ let commit_modules, commit_modules_from_saved_state =
         in
         let dirty_modules = List.rev_append old_modules new_modules in
         let%lwt providers, changed_modules, errmap =
-          Module_js.commit_modules ~transaction ~workers ~options ~is_init new_or_changed dirty_modules in
+          Module_js.commit_modules
+            ~transaction ~workers ~options ~reader ~is_init new_or_changed dirty_modules
+        in
     (* Providers might be new but not changed. This typically happens when old
       providers are deleted, and previously duplicate providers become new
       providers. In such cases, we must clear the old duplicate provider errors
@@ -167,10 +169,11 @@ let commit_modules, commit_modules_from_saved_state =
     )
   in
   let commit_modules ~transaction ~reader =
-    commit_modules_generic ~introduce_files:(Module_js.introduce_files ~reader) ~transaction
+    commit_modules_generic ~introduce_files:(Module_js.introduce_files ~reader) ~transaction ~reader
   in
-  let commit_modules_from_saved_state =
-    commit_modules_generic ~introduce_files:Module_js.introduce_files_from_saved_state
+  let commit_modules_from_saved_state ~transaction ~reader =
+    commit_modules_generic
+      ~introduce_files:Module_js.introduce_files_from_saved_state ~transaction ~reader
   in
   commit_modules, commit_modules_from_saved_state
 
@@ -1546,6 +1549,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
   let%lwt _ =
     commit_modules_from_saved_state
       ~transaction
+      ~reader
       ~all_providers_mutator
       ~options
       ~is_init:true
