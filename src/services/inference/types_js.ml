@@ -854,8 +854,8 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
       in
 
       let estimates = { Recheck_stats.
-        estimated_time_to_recheck = time_to_restart;
-        estimated_time_to_restart = time_to_recheck;
+        estimated_time_to_recheck = time_to_recheck;
+        estimated_time_to_restart = time_to_restart;
         estimated_time_to_init = init_time;
         estimated_time_to_merge_a_file = per_file_time;
         estimated_files_to_merge = files_about_to_recheck;
