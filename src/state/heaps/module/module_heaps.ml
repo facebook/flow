@@ -15,15 +15,6 @@ module NameHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (Modulename.Ke
   let use_sqlite_fallback () = false
 end)
 
-let get_file = Expensive.wrap NameHeap.get
-let module_exists = NameHeap.mem
-
-let get_file_unsafe ~audit m =
-  match get_file ~audit m with
-  | Some file -> file
-  | None -> failwith
-      (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
-
 (*************************** Resolved Requires Heap ***************************)
 (* Maps filenames to which other modules they require                         *)
 
@@ -52,13 +43,6 @@ module ResolvedRequiresHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (F
   let use_sqlite_fallback () = false
 end)
 
-let get_resolved_requires_unsafe = Expensive.wrap (fun f ->
-  match ResolvedRequiresHeap.get f with
-  | Some resolved_requires -> resolved_requires
-  | None -> failwith
-      (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
-)
-
 (********************************** Info Heap *********************************)
 (* Maps filenames to info about a module, including the module's name.        *)
 (* note: currently we may have many files for one module name.                *)
@@ -77,15 +61,6 @@ module InfoHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (st
   let description = "Info"
   let use_sqlite_fallback () = false
 end)
-
-let get_info = Expensive.wrap InfoHeap.get
-
-let get_info_unsafe ~audit f =
-  match get_info ~audit f with
-  | Some info -> info
-  | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
-
-let is_tracked_file = InfoHeap.mem
 
 (******************************** Package Heaps *******************************)
 (* Maps filenames to info about a module, including the module's name.        *)
@@ -109,11 +84,9 @@ module ReversePackageHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (Str
     let use_sqlite_fallback () = false
   end)
 
-let get_package = PackageHeap.get
-let get_package_directory = ReversePackageHeap.get
-
 (*********************************** Mutators *********************************)
 
+let currently_oldified_nameheap_modulenames: Modulename.Set.t ref option ref = ref None
 module Commit_modules_mutator: sig
   type t
   val create: Transaction.t -> is_init:bool -> t
@@ -124,34 +97,37 @@ module Commit_modules_mutator: sig
     to_replace:(Modulename.t *  File_key.t) list ->
     unit Lwt.t
 end = struct
-  type t' = {
+  type t = {
     is_init: bool;
-    changed_files: Modulename.Set.t;
+    changed_files: Modulename.Set.t ref;
   }
-  type t = t' ref
 
   let commit mutator =
     Hh_logger.debug "Committing NameHeap";
     if not mutator.is_init
-    then NameHeap.remove_old_batch mutator.changed_files;
+    then NameHeap.remove_old_batch !(mutator.changed_files);
+    currently_oldified_nameheap_modulenames := None;
     Lwt.return_unit
 
   let rollback mutator =
     Hh_logger.debug "Rolling back NameHeap";
     if not mutator.is_init
-    then NameHeap.revive_batch mutator.changed_files;
+    then NameHeap.revive_batch !(mutator.changed_files);
+    currently_oldified_nameheap_modulenames := None;
     Lwt.return_unit
 
   let create transaction ~is_init =
-    let mutator = ref { changed_files = Modulename.Set.empty; is_init; } in
-    let commit () = commit (!mutator) in
-    let rollback () = rollback (!mutator) in
+    let changed_files = ref Modulename.Set.empty in
+    currently_oldified_nameheap_modulenames := Some changed_files;
+    let mutator = { changed_files; is_init; } in
+    let commit () = commit mutator in
+    let rollback () = rollback mutator in
     Transaction.add ~singleton:"Commit_modules" ~commit ~rollback transaction;
     mutator
 
   let remove_and_replace mutator ~workers ~to_remove ~to_replace =
     (* During init we don't need to worry about oldifying, reviving, or removing old entries *)
-    if not !mutator.is_init
+    if not mutator.is_init
     then begin
       (* Verify there are no files we're both trying to remove and replace
        * - Note, to_replace may be a VERY LARGE list so avoid non-tail-recursive calls *)
@@ -161,7 +137,7 @@ end = struct
 
       (* to_remove_set and to_replace_set should be disjoint sets *)
       let changed_files = Modulename.Set.union to_remove to_replace_set in
-      mutator := { !mutator with changed_files; };
+      mutator.changed_files := changed_files;
 
       (* Save the old data *)
       NameHeap.oldify_batch changed_files;
@@ -179,6 +155,8 @@ end = struct
       ~next: (MultiWorkerLwt.next workers to_replace)
 end
 
+let currently_oldified_resolved_requires: Utils_js.FilenameSet.t ref =
+  ref Utils_js.FilenameSet.empty
 module Resolved_requires_mutator: sig
   type t
   val create: Transaction.t -> Utils_js.FilenameSet.t -> t
@@ -188,7 +166,7 @@ end = struct
 
   (* We actually may have multiple Resolved_requires_mutator's in a single transaction. So we need to
   * assert that they never interfere with each other *)
-  let active_files = ref Utils_js.FilenameSet.empty
+  let active_files = currently_oldified_resolved_requires
 
   let commit files =
     Hh_logger.debug "Committing ResolvedRequiresHeap";
@@ -218,6 +196,7 @@ end = struct
     ResolvedRequiresHeap.add file resolved_requires
 end
 
+let currently_oldified_infoheap_files: Utils_js.FilenameSet.t option ref = ref None
 module Introduce_files_mutator : sig
   type t
   val create: Transaction.t -> Utils_js.FilenameSet.t -> t
@@ -228,14 +207,17 @@ end = struct
   let commit oldified_files =
     Hh_logger.debug "Committing InfoHeap";
     InfoHeap.remove_old_batch oldified_files;
+    currently_oldified_infoheap_files := None;
     Lwt.return_unit
 
   let rollback oldified_files =
     Hh_logger.debug "Rolling back InfoHeap";
     InfoHeap.revive_batch oldified_files;
+    currently_oldified_infoheap_files := None;
     Lwt.return_unit
 
   let create transaction oldified_files =
+    currently_oldified_infoheap_files := Some oldified_files;
     InfoHeap.oldify_batch oldified_files;
     let commit () = commit oldified_files in
     let rollback () = rollback oldified_files in
@@ -260,6 +242,174 @@ end = struct
       ReversePackageHeap.add name (Filename.dirname filename)
     | None -> ()
     end
+end
+
+(*********************************** Readers **********************************)
+
+module type READER = sig
+  type reader
+
+  val get_file: reader:reader -> (Modulename.t -> File_key.t option) Expensive.t
+  val get_file_unsafe: reader:reader -> (Modulename.t -> File_key.t) Expensive.t
+  val module_exists: reader:reader -> Modulename.t -> bool
+
+  val get_resolved_requires_unsafe: reader:reader -> (File_key.t -> resolved_requires) Expensive.t
+
+  (* given a filename, returns module info *)
+  val get_info_unsafe: reader:reader -> (File_key.t -> info) Expensive.t
+  val get_info: reader:reader -> (File_key.t -> info option) Expensive.t
+  val is_tracked_file: reader:reader -> File_key.t -> bool
+
+  val get_package: reader:reader -> string -> Package_json.t option
+  val get_package_directory: reader:reader -> string -> string option
+end
+
+module Mutator_reader: READER with type reader = Mutator_state_reader.t = struct
+  type reader = Mutator_state_reader.t
+
+  let get_file ~reader:_ = Expensive.wrap NameHeap.get
+
+  let module_exists ~reader:_ = NameHeap.mem
+
+  let get_file_unsafe ~reader ~audit m =
+    match get_file ~reader ~audit m with
+    | Some file -> file
+    | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
+
+  let get_resolved_requires_unsafe ~reader:_ = Expensive.wrap (fun f ->
+    match ResolvedRequiresHeap.get f with
+    | Some resolved_requires -> resolved_requires
+    | None -> failwith
+        (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
+  )
+
+  let get_info ~reader:_ = Expensive.wrap InfoHeap.get
+
+  let get_info_unsafe ~reader ~audit f =
+    match get_info ~reader ~audit f with
+    | Some info -> info
+    | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
+
+  let is_tracked_file ~reader:_ = InfoHeap.mem
+
+  let get_package ~reader:_ = PackageHeap.get
+
+  let get_package_directory ~reader:_ = ReversePackageHeap.get
+end
+
+module Reader: READER with type reader = State_reader.t = struct
+  type reader = State_reader.t
+
+  let should_use_old_nameheap key =
+    match !currently_oldified_nameheap_modulenames with
+    | None -> false
+    | Some oldified_modulenames -> Modulename.Set.mem key !oldified_modulenames
+
+  let should_use_old_resolved_requires f =
+    Utils_js.FilenameSet.mem f !currently_oldified_resolved_requires
+
+  let should_use_old_infoheap f =
+    match !currently_oldified_infoheap_files with
+    | None -> false
+    | Some oldified_files -> Utils_js.FilenameSet.mem f oldified_files
+
+  let get_file ~reader:_ ~audit key =
+    if should_use_old_nameheap key
+    then Expensive.wrap NameHeap.get_old ~audit key
+    else Expensive.wrap NameHeap.get ~audit key
+
+  let module_exists ~reader:_ key =
+    if should_use_old_nameheap key
+    then NameHeap.mem_old key
+    else NameHeap.mem key
+
+  let get_file_unsafe ~reader ~audit m =
+    match get_file ~reader ~audit m with
+    | Some file -> file
+    | None -> failwith (Printf.sprintf "file name not found for module %s" (Modulename.to_string m))
+
+  let get_resolved_requires_unsafe ~reader:_ = Expensive.wrap (fun f ->
+    let resolved_requires =
+      if should_use_old_resolved_requires f
+      then ResolvedRequiresHeap.get_old f
+      else ResolvedRequiresHeap.get f
+    in
+    match resolved_requires with
+    | Some resolved_requires -> resolved_requires
+    | None -> failwith
+        (Printf.sprintf "resolved requires not found for file %s" (File_key.to_string f))
+  )
+
+  let get_info ~reader:_ ~audit f =
+    if should_use_old_infoheap f
+    then Expensive.wrap InfoHeap.get_old ~audit f
+    else Expensive.wrap InfoHeap.get ~audit f
+
+  let get_info_unsafe ~reader ~audit f =
+    match get_info ~reader ~audit f with
+    | Some info -> info
+    | None -> failwith (Printf.sprintf "module info not found for file %s" (File_key.to_string f))
+
+  let is_tracked_file ~reader:_ f =
+    if should_use_old_infoheap f
+    then InfoHeap.mem_old f
+    else InfoHeap.mem f
+
+  (* We don't support incrementally updating the package heaps, so we never actually oldify
+   * anything. Therefore we always can read from the package heap directly *)
+  let get_package ~reader:_ = PackageHeap.get
+  let get_package_directory ~reader:_ = ReversePackageHeap.get
+end
+
+module Reader_dispatcher: READER with type reader = Abstract_state_reader.t = struct
+  type reader = Abstract_state_reader.t
+
+  open Abstract_state_reader
+
+  let get_file ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_file ~reader
+    | State_reader reader -> Reader.get_file ~reader
+
+  let module_exists ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.module_exists ~reader
+    | State_reader reader -> Reader.module_exists ~reader
+
+  let get_file_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_file_unsafe ~reader
+    | State_reader reader -> Reader.get_file_unsafe ~reader
+
+  let get_resolved_requires_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_resolved_requires_unsafe ~reader
+    | State_reader reader -> Reader.get_resolved_requires_unsafe ~reader
+
+  let get_info ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_info ~reader
+    | State_reader reader -> Reader.get_info ~reader
+
+  let get_info_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_info_unsafe ~reader
+    | State_reader reader -> Reader.get_info_unsafe ~reader
+
+  let is_tracked_file ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.is_tracked_file ~reader
+    | State_reader reader -> Reader.is_tracked_file ~reader
+
+  let get_package ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_package ~reader
+    | State_reader reader -> Reader.get_package ~reader
+
+  let get_package_directory ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_package_directory ~reader
+    | State_reader reader -> Reader.get_package_directory ~reader
 end
 
 (******************** APIs for saving/loading saved state *********************)

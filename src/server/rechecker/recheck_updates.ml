@@ -11,7 +11,7 @@ let spf = Printf.sprintf
 
 type error = { msg: string; exit_status: FlowExitStatus.t; }
 
-let is_incompatible_package_json =
+let is_incompatible_package_json ~reader =
   (* WARNING! Be careful when adding new incompatibilities to this function. While dfind will
    * return any file which changes within the watched directories, watchman only watches for
    * specific extensions and files. Make sure to update the watchman_expression_terms in our
@@ -23,7 +23,7 @@ let is_incompatible_package_json =
     | Some content ->
       try
         let ast = Parsing_service_js.parse_json_file ~fail:true content filename in
-        Module_js.package_incompatible filename_str ast
+        Module_js.package_incompatible ~reader filename_str ast
       with _ -> true (* Failed to parse package.json *)
   in
 
@@ -45,6 +45,7 @@ let is_incompatible_package_json =
  *    changes, but for now we just need to exit and restart from scratch *)
 let process_updates ?(skip_incompatible=false) ~options ~libs updates =
   let open Core_result in
+  let reader = State_reader.create () in
   let file_options = Options.file_options options in
   let all_libs =
     let known_libs = libs in
@@ -67,7 +68,9 @@ let process_updates ?(skip_incompatible=false) ~options ~libs updates =
       }
     else Ok ()
   >>= fun () ->
-    let is_incompatible_package_json = is_incompatible_package_json ~want ~sroot ~file_options in
+    let is_incompatible_package_json =
+      is_incompatible_package_json ~reader ~want ~sroot ~file_options
+    in
 
     (* Die if a package.json changed in an incompatible way *)
     let incompatible_packages = SSet.filter is_incompatible_package_json updates in
@@ -96,7 +99,6 @@ let process_updates ?(skip_incompatible=false) ~options ~libs updates =
   >>= fun () ->
 
     let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
-    let reader = State_reader.create () in
     let is_changed_lib filename =
       let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
       is_lib &&

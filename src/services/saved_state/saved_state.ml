@@ -162,9 +162,10 @@ end = struct
 
     let file_data = {
       package;
-      info = Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
+      info = Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
       file_sig = Parsing_heaps.Reader.get_file_sig_unsafe ~reader fn;
-      resolved_requires = Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
+      resolved_requires =
+        Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
       hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
     } in
 
@@ -177,7 +178,8 @@ end = struct
   (* Collect all the data for a single unparsed file *)
   let collect_normalized_data_for_unparsed_file ~root ~reader unparsed_heaps fn  =
     let relative_file_data = {
-      unparsed_info = normalize_info ~root @@ Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
+      unparsed_info =
+        normalize_info ~root @@ Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
       unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
     } in
 

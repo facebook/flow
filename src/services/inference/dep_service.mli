@@ -8,6 +8,7 @@
 open Utils_js
 
 val dependent_files:
+  reader: Abstract_state_reader.t ->
   MultiWorkerLwt.worker list option -> (* workers *)
   candidates:FilenameSet.t ->
   root_files:FilenameSet.t ->

@@ -34,6 +34,7 @@ val merge_strict_context:
   merge_strict_context_result
 
 val merge_contents_context:
+  reader: State_reader.t ->
   Options.t ->
   File_key.t ->
   (Loc.t, Loc.t) Flow_ast.program ->

@@ -544,13 +544,14 @@ let ensure_parsed ~options ~profiling ~workers ~reader files =
    should be able to emit errors, even places like propertyFindRefs.get_def_info
    that invoke this function. But it looks like this codepath fails to emit
    StartRecheck and EndRecheck messages. *)
-let ensure_checked_dependencies ~options ~env file file_sig =
+let ensure_checked_dependencies ~options ~reader ~env file file_sig =
   let resolved_requires =
     let require_loc_map = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r locs resolved_rs ->
       let locs = Nel.map ALoc.of_loc locs in
       let resolved_r = Module_js.imported_module
         ~options
+        ~reader:(Abstract_state_reader.State_reader reader)
         ~node_modules_containers:!Files.node_modules_containers
         file locs r in
       Modulename.Set.add resolved_r resolved_rs
@@ -558,9 +559,11 @@ let ensure_checked_dependencies ~options ~env file file_sig =
   in
 
   let infer_input = Modulename.Set.fold (fun m acc ->
-    match Module_heaps.get_file m ~audit:Expensive.warn with
+    match Module_heaps.Reader.get_file ~reader m ~audit:Expensive.warn with
     | Some f ->
-      if FilenameSet.mem f !env.ServerEnv.files && Module_js.checked_file f ~audit:Expensive.warn
+      let reader = Abstract_state_reader.State_reader reader in
+      if FilenameSet.mem f !env.ServerEnv.files &&
+        Module_js.checked_file ~reader f ~audit:Expensive.warn
       then CheckedSet.add ~dependencies:(FilenameSet.singleton f) acc
       else acc
     | None -> acc (* complain elsewhere about required module not found *)
@@ -584,6 +587,8 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
   let%lwt errors, parse_result, info =
     parse_contents ~options ~profiling ~check_syntax filename contents in
 
+  let reader = State_reader.create () in
+
   match parse_result with
   | Parsing_service_js.Parse_ok (ast, file_sig) ->
       (* override docblock info *)
@@ -592,9 +597,9 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       (* merge *)
       let%lwt cx, typed_ast = with_timer_lwt ~options "MergeContents" profiling (fun () ->
         let%lwt () =
-          ensure_checked_dependencies ~options ~env filename file_sig
+          ensure_checked_dependencies ~options ~reader ~env filename file_sig
         in
-        Lwt.return @@ Merge_service.merge_contents_context options filename ast info file_sig
+        Lwt.return (Merge_service.merge_contents_context ~reader options filename ast info file_sig)
       ) in
 
       let errors = Context.errors cx in
@@ -736,12 +741,15 @@ let init_libs
  * 2. Every dependency of a focused, dependent, or dependency file will be in the focused set,
  *    dependent set, or dependency set
  **)
-let focused_files_to_infer ~input ~dependency_graph =
+let focused_files_to_infer ~reader ~input ~dependency_graph =
   (* Filter unchecked files out of the input *)
   let input = CheckedSet.filter input ~f:(fun f ->
-    Module_heaps.is_tracked_file f (* otherwise, f is probably a directory *)
-    && Module_js.checked_file ~audit:Expensive.warn f)
-  in
+    Module_heaps.Mutator_reader.is_tracked_file ~reader f (* otherwise, f is probably a directory *)
+    && Module_js.checked_file
+      ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+      ~audit:Expensive.warn
+      f
+  ) in
 
   let focused = CheckedSet.focused input in
 
@@ -789,7 +797,7 @@ let unfocused_files_to_infer ~options ~input ~dependency_graph =
   in
   Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
 
-let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
+let files_to_infer ~options ~reader ~focused ~profiling ~parsed ~dependency_graph =
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focused with
     | None ->
@@ -797,7 +805,7 @@ let files_to_infer ~options ~focused ~profiling ~parsed ~dependency_graph =
       unfocused_files_to_infer ~options ~input ~dependency_graph
     | Some focused ->
       let input = CheckedSet.add ~focused CheckedSet.empty in
-      focused_files_to_infer ~input ~dependency_graph
+      focused_files_to_infer ~reader ~input ~dependency_graph
   )
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
@@ -1102,7 +1110,8 @@ let recheck_with_profiling
 
   (* clear out records of files, and names of modules provided by those files *)
   let%lwt old_modules = with_timer_lwt ~options "ModuleClearFiles" profiling (fun () ->
-    Module_js.calc_old_modules workers ~all_providers_mutator ~options new_or_changed_or_deleted
+    Module_js.calc_old_modules
+      ~reader workers ~all_providers_mutator ~options new_or_changed_or_deleted
   ) in
 
   (* We may be forcing a recheck on some unchanged files *)
@@ -1139,7 +1148,7 @@ let recheck_with_profiling
   (* Figure out which modules the unchanged forced files provide. We need these to figure out
    * which dependents need to be added to the checked set *)
   let%lwt unchanged_modules = with_timer_lwt ~options "CalcUnchangedModules" profiling (fun () ->
-    Module_js.calc_unchanged_modules workers unchanged_files_with_dependents
+    Module_js.calc_unchanged_modules ~reader workers unchanged_files_with_dependents
   ) in
 
   let parsed = FilenameSet.union freshparsed unchanged in
@@ -1151,6 +1160,7 @@ let recheck_with_profiling
   let%lwt all_dependent_files, direct_dependent_files =
     with_timer_lwt ~options "DependentFiles" profiling (fun () ->
       Dep_service.dependent_files
+        ~reader:(Abstract_state_reader.Mutator_state_reader reader)
         workers
         ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
         ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
@@ -1245,7 +1255,7 @@ let recheck_with_profiling
           let dependencies = CheckedSet.dependencies files_to_force in
           CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
         in
-        let%lwt updated_checked_files = focused_files_to_infer ~input ~dependency_graph in
+        let%lwt updated_checked_files = focused_files_to_infer ~reader ~input ~dependency_graph in
 
         (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
          * dependency. That's fine if foo.js is in the checked set. But if it's just some random
@@ -1814,7 +1824,7 @@ let full_check ~profiling ~options ~workers ~focus_targets env =
   let { ServerEnv.files = parsed; dependency_graph; errors; _; } = env in
   let%lwt (checked_files, _, errors, _skipped_count) = with_transaction (fun transaction reader ->
     let%lwt infer_input = files_to_infer
-      ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
+      ~options ~reader ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
 
     let unchanged_checked = CheckedSet.empty in
     let%lwt to_merge, components, recheck_map =

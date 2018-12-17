@@ -14,10 +14,12 @@ val compute_ast_result:
   ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
 
 val get_ast_result:
+  reader:State_reader.t ->
   File_key.t ->
   ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result
 
 val get_dependents:
+  reader:State_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
   ServerEnv.env ref ->
@@ -25,9 +27,3 @@ val get_dependents:
   string (* content *) ->
   (* transitive dependents, direct dependents *)
   (Utils_js.FilenameSet.t * Utils_js.FilenameSet.t) Lwt.t
-
-val lazy_mode_focus:
-  ServerEnv.genv ->
-  ServerEnv.env ->
-  string (* path *) ->
-  ServerEnv.env Lwt.t

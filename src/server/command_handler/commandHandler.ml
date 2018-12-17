@@ -191,13 +191,15 @@ let suggest ~options ~env ~profiling file_input =
       Lwt.return (Ok (ServerProt.Response.Suggest_Error errors))
   )
 
-let find_module ~options (moduleref, filename) =
+let find_module ~options ~reader (moduleref, filename) =
   let file = File_key.SourceFile filename in
   let loc = {Loc.none with Loc.source = Some file} in
   let module_name = Module_js.imported_module
-    ~options ~node_modules_containers:!Files.node_modules_containers
+    ~options
+    ~reader:(Abstract_state_reader.State_reader reader)
+    ~node_modules_containers:!Files.node_modules_containers
     file (Nel.one (ALoc.of_loc loc)) moduleref in
-  Module_heaps.get_file ~audit:Expensive.warn module_name
+  Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name
 
 let convert_find_refs_result
     (result: FindRefsTypes.find_refs_ok)
@@ -206,9 +208,9 @@ let convert_find_refs_result
     (name, Core_list.map ~f:snd refs)
   end
 
-let find_refs ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
+let find_refs ~reader ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
   let%lwt result, json =
-    FindRefs_js.find_refs ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop
+    FindRefs_js.find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop
   in
   let result = Core_result.map result ~f:convert_find_refs_result in
   Lwt.return (result, json)
@@ -225,11 +227,10 @@ let module_name_of_string ~options module_name_str =
   then Modulename.Filename (File_key.SourceFile path)
   else Modulename.String module_name_str
 
-let get_imports ~options module_names =
-  let reader = State_reader.create () in
+let get_imports ~options ~reader module_names =
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
-    match Module_heaps.get_file ~audit:Expensive.warn module_name with
+    match Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn module_name with
     | Some file ->
       (* We do not process all modules which are stored in our module
        * database. In case we do not process a module its requirements
@@ -237,10 +238,10 @@ let get_imports ~options module_names =
        * client that these modules have not been processed.
        *)
       let { Module_heaps.checked; _ } =
-        Module_heaps.get_info_unsafe ~audit:Expensive.warn file in
+        Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.warn file in
       if checked then
         let { Module_heaps.resolved_modules; _ } =
-          Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.warn file in
+          Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.warn file in
         let fsig = Parsing_heaps.Reader.get_file_sig_unsafe ~reader file in
         let requires = File_sig.With_Loc.(require_loc_map fsig.module_sig) in
         let mlocs = SMap.fold (fun mref locs acc ->
@@ -268,6 +269,7 @@ let save_state ~saved_state_filename ~genv ~env =
 
 let run_ephemeral_command_unsafe ~profiling genv env command =
   let options = genv.options in
+  let reader = State_reader.create () in
   match command with
   | ServerProt.Request.AUTOCOMPLETE fn ->
       let%lwt result, json_data = autocomplete ~options ~env ~profiling fn in
@@ -294,19 +296,19 @@ let run_ephemeral_command_unsafe ~profiling genv env command =
       let%lwt response = dump_types ~options ~env ~profiling fn in
       Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
   | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
-      let response = find_module ~options (moduleref, filename) in
+      let response = find_module ~options ~reader (moduleref, filename) in
       Lwt.return (ServerProt.Response.FIND_MODULE response, None)
   | ServerProt.Request.FIND_REFS (fn, line, char, global, multi_hop) ->
       let%lwt result, json_data =
-        find_refs ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
+        find_refs ~reader ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
       Lwt.return (ServerProt.Response.FIND_REFS result, json_data)
   | ServerProt.Request.FORCE_RECHECK _ ->
       failwith "force-recheck cannot be deferred"
   | ServerProt.Request.GET_DEF (fn, line, char) ->
-      let%lwt result, json_data = get_def ~options ~env ~profiling (fn, line, char) in
+      let%lwt result, json_data = get_def ~reader ~options ~env ~profiling (fn, line, char) in
       Lwt.return (ServerProt.Response.GET_DEF result, json_data)
   | ServerProt.Request.GET_IMPORTS module_names ->
-      let response = get_imports ~options module_names in
+      let response = get_imports ~options ~reader module_names in
       Lwt.return (ServerProt.Response.GET_IMPORTS response, None)
   | ServerProt.Request.INFER_TYPE (fn, line, char, verbose, expand_aliases) ->
       let%lwt result, json_data =
@@ -316,7 +318,7 @@ let run_ephemeral_command_unsafe ~profiling genv env command =
   | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
       let open ServerProt.Response in
       let%lwt result =
-        Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+        Refactor_js.refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
       in
       let result =
         result
@@ -605,6 +607,7 @@ type persistent_handling_result =
 let handle_persistent_unsafe genv env client profiling msg : persistent_handling_result Lwt.t =
   let open Persistent_connection_prot in
   let options = genv.ServerEnv.options in
+  let reader = State_reader.create () in
 
   match msg with
   | LspToServer (RequestMessage (id, _), metadata)
@@ -681,7 +684,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let open TextDocumentPositionParams in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let%lwt (result, extra_data) =
-      get_def ~options ~env ~profiling (file, line, char) in
+      get_def ~options ~reader ~env ~profiling (file, line, char) in
     let metadata = with_data ~extra_data metadata in
     begin match result with
       | Ok loc when loc = Loc.none ->
@@ -765,7 +768,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let global, multi_hop = false, false in (* multi_hop implies global *)
     let%lwt result, extra_data =
-      find_refs ~genv ~env ~profiling (file, line, char, global, multi_hop)
+      find_refs ~reader ~genv ~env ~profiling (file, line, char, global, multi_hop)
     in
     let metadata = with_data ~extra_data metadata in
     begin match result with
@@ -861,7 +864,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client in
     let global = true in
     let%lwt result, extra_data =
-      find_refs ~genv ~env ~profiling (file, line, char, global, multi_hop)
+      find_refs ~reader ~genv ~env ~profiling (file, line, char, global, multi_hop)
     in
     let metadata = with_data ~extra_data metadata in
     begin match result with
@@ -892,7 +895,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let (line, col) = Flow_lsp_conversions.lsp_position_to_flow position in
     let refactor_variant = ServerProt.Request.RENAME newName in
     let%lwt result =
-      Refactor_js.refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+      Refactor_js.refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
     in
     let edits_to_response (edits: (Loc.t * string) list) =
       (* Extract the path from each edit and convert into a map from file to edits for that file *)

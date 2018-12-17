@@ -6,6 +6,7 @@
  *)
 
 val find_refs:
+  reader: State_reader.t ->
   genv: ServerEnv.genv ->
   env: ServerEnv.env ref ->
   profiling: Profiling_js.running ->

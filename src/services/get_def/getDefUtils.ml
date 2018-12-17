@@ -339,13 +339,14 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
 
 (* Takes the file key where the module reference appeared, as well as the module reference, and
  * returns the file name for the module that the module reference refers to. *)
-let file_key_of_module_ref file_key module_ref =
+let file_key_of_module_ref ~reader file_key module_ref =
   let resolved = Module_js.find_resolved_module
+    ~reader:(Abstract_state_reader.State_reader reader)
     ~audit:Expensive.warn
     file_key
     module_ref
   in
-  Module_heaps.get_file ~audit:Expensive.warn resolved
+  Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn resolved
 
 let def_info_of_typecheck_results cx props_access_info =
   let def_info_of_class_member_locs locs =
@@ -422,9 +423,9 @@ let add_literal_properties literal_key_info def_info =
   in
   Result.map def_info ~f:(Option.map ~f:(fun (prop_def_info, name) -> Property (prop_def_info, name)))
 
-let get_def_info genv env profiling file_key content loc: (def_info option, string) result Lwt.t =
+let get_def_info
+    ~reader genv env profiling file_key content loc: (def_info option, string) result Lwt.t =
   let options = genv.options in
-  let reader = State_reader.create () in
   let props_access_info = ref (Ok None) in
   compute_ast_result options file_key content %>>= fun (ast, file_sig, info) ->
   (* Check if it's an exported symbol *)
@@ -435,10 +436,10 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
     set_def_loc_hook props_access_info literal_key_info loc;
     let%lwt cx, _ = Profiling_js.with_timer_lwt profiling ~timer:"MergeContents" ~f:(fun () ->
       let%lwt () =
-        Types_js.ensure_checked_dependencies ~options ~env file_key file_sig
+        Types_js.ensure_checked_dependencies ~options ~reader ~env file_key file_sig
       in
       Lwt.return @@
-        Merge_service.merge_contents_context options file_key ast info file_sig
+        Merge_service.merge_contents_context ~reader options file_key ast info file_sig
     ) in
     Lwt.return cx
   in
@@ -460,7 +461,7 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
         | Ok (Some _) -> Error "Did not expect multiple requires to match one location"
         | Ok None ->
           let external_file_sig =
-            let filename = file_key_of_module_ref file_key module_ref in
+            let filename = file_key_of_module_ref ~reader file_key module_ref in
             Option.bind filename (Parsing_heaps.Reader.get_file_sig ~reader)
           in
           Result.return @@ Option.bind external_file_sig begin fun external_file_sig ->

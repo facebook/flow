@@ -95,10 +95,10 @@ let add_package filename ast =
   | Error parse_err ->
     assert_false (spf "%s: %s" filename parse_err)
 
-let package_incompatible filename ast =
+let package_incompatible ~reader filename ast =
   match Package_json.parse ast with
   | Ok new_package ->
-    begin match Module_heaps.get_package filename with
+    begin match Module_heaps.Reader.get_package ~reader filename with
     | None -> true
     | Some old_package -> old_package <> new_package
     end
@@ -126,6 +126,7 @@ module type MODULE_SYSTEM = sig
      record paths that were looked up but not found during resolution. *)
   val imported_module:
     options: Options.t ->
+    reader:Abstract_state_reader.t ->
     SSet.t ->
     File_key.t -> ALoc.t Nel.t ->
     ?resolution_acc:resolution_acc ->
@@ -343,12 +344,13 @@ module Node = struct
       lazy (path_if_exists ~file_options resolution_acc (path ^ ext))
     ))
 
-  let parse_main ~root ~file_options (loc: ALoc.t) resolution_acc package_filename file_exts =
+  let parse_main
+      ~reader ~root ~file_options (loc: ALoc.t) resolution_acc package_filename file_exts =
     let package_filename = resolve_symlinks package_filename in
     if not (file_exists package_filename) || (Files.is_ignored file_options package_filename)
     then None
     else
-      let package = match Module_heaps.get_package package_filename with
+      let package = match Module_heaps.Reader_dispatcher.get_package ~reader package_filename with
       | Some package -> package
       | None ->
         let msg =
@@ -388,7 +390,7 @@ module Node = struct
           lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
         ]
 
-  let resolve_relative ~options ((loc: ALoc.t), _) ?resolution_acc root_path rel_path =
+  let resolve_relative ~options ~reader ((loc: ALoc.t), _) ?resolution_acc root_path rel_path =
     let file_options = Options.file_options options in
     let path = Files.normalize_path root_path rel_path in
     if Files.is_flow_file ~options:file_options path
@@ -402,19 +404,23 @@ module Node = struct
       let root = Options.root options in
       lazy_seq ([
         lazy (path_if_exists_with_file_exts ~file_options resolution_acc path file_exts);
-        lazy (parse_main ~root ~file_options loc resolution_acc (Filename.concat path "package.json") file_exts);
+        lazy (
+          parse_main
+            ~reader ~root ~file_options
+            loc resolution_acc (Filename.concat path "package.json") file_exts
+        );
         lazy (path_if_exists_with_file_exts ~file_options resolution_acc path_w_index file_exts);
       ])
     )
 
-  let rec node_module ~options node_modules_containers file loc resolution_acc dir r =
+  let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
     let file_options = Options.file_options options in
     lazy_seq [
       lazy (
         if SSet.mem dir node_modules_containers then
           lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
             lazy (resolve_relative
-              ~options
+              ~options ~reader
               loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
             )
           ))
@@ -424,7 +430,10 @@ module Node = struct
       lazy (
         let parent_dir = Filename.dirname dir in
         if dir = parent_dir then None
-        else node_module ~options node_modules_containers file loc resolution_acc (Filename.dirname dir) r
+        else
+          node_module
+            ~options ~reader node_modules_containers
+            file loc resolution_acc (Filename.dirname dir) r
       );
     ]
 
@@ -435,20 +444,23 @@ module Node = struct
     Str.string_match Files.current_dir_name r 0
     || Str.string_match Files.parent_dir_name r 0
 
-  let resolve_import ~options node_modules_containers f loc ?resolution_acc import_str =
+  let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
     if explicitly_relative import_str || absolute import_str
-    then resolve_relative ~options loc ?resolution_acc dir import_str
-    else node_module ~options node_modules_containers f loc resolution_acc dir import_str
+    then resolve_relative ~options ~reader loc ?resolution_acc dir import_str
+    else node_module ~options ~reader node_modules_containers f loc resolution_acc dir import_str
 
-  let imported_module ~options node_modules_containers file loc ?resolution_acc import_str =
+  let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str =
     let candidates = module_name_candidates ~options import_str in
 
     let rec choose_candidate = function
       | [] -> None
       | candidate :: candidates ->
-        match resolve_import ~options node_modules_containers file loc ?resolution_acc candidate with
+        let resolved =
+          resolve_import ~options ~reader node_modules_containers file loc ?resolution_acc candidate
+        in
+        match resolved with
         | None -> choose_candidate candidates
         | Some _ as result -> result
     in
@@ -551,28 +563,28 @@ module Haste: MODULE_SYSTEM = struct
     | None ->
       Modulename.Filename file
 
-  let expanded_name r =
+  let expanded_name ~reader r =
     match Str.split_delim (Str.regexp_string "/") r with
     | [] -> None
     | package_name::rest ->
-        Module_heaps.get_package_directory package_name |> Option.map ~f:(fun package ->
-          Files.construct_path package rest
-        )
+        Module_heaps.Reader_dispatcher.get_package_directory ~reader package_name
+        |> Option.map ~f:(fun package -> Files.construct_path package rest)
 
   (* similar to Node resolution, with possible special cases *)
-  let resolve_import ~options node_modules_containers f loc ?resolution_acc r =
+  let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc r =
     let file = File_key.to_string f in
     lazy_seq [
       lazy (External.resolve_import options f r);
-      lazy (Node.resolve_import ~options node_modules_containers f loc ?resolution_acc r);
-      lazy (match expanded_name r with
+      lazy (Node.resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc r);
+      lazy (match expanded_name ~reader r with
         | Some r ->
-          Node.resolve_relative ~options loc ?resolution_acc (Filename.dirname file) r
+          Node.resolve_relative ~options ~reader loc ?resolution_acc (Filename.dirname file) r
         | None -> None
       );
     ]
 
-  let imported_module ~options node_modules_containers file loc ?resolution_acc imported_name =
+  let imported_module
+      ~options ~reader node_modules_containers file loc ?resolution_acc imported_name =
     let candidates = module_name_candidates ~options imported_name in
 
     (**
@@ -587,7 +599,12 @@ module Haste: MODULE_SYSTEM = struct
      *)
     let chosen_candidate = List.hd candidates in
 
-    match resolve_import ~options node_modules_containers file loc ?resolution_acc chosen_candidate with
+    let resolved =
+      resolve_import
+        ~options ~reader node_modules_containers file loc ?resolution_acc chosen_candidate
+    in
+
+    match resolved with
     | Some name ->
         let options = Options.file_options options in
         eponymous_module (Files.filename_from_string ~options name)
@@ -637,18 +654,18 @@ let exported_module ~options ~reader file info =
   let module M = (val (get_module_system options)) in
   M.exported_module ~reader options file info
 
-let imported_module ~options ~node_modules_containers file loc ?resolution_acc r =
+let imported_module ~options ~reader ~node_modules_containers file loc ?resolution_acc r =
   let module M = (val (get_module_system options)) in
-  M.imported_module ~options node_modules_containers file loc ?resolution_acc r
+  M.imported_module ~options ~reader node_modules_containers file loc ?resolution_acc r
 
-let imported_modules ~options node_modules_containers file require_loc =
+let imported_modules ~options ~reader node_modules_containers file require_loc =
   (* Resolve all reqs relative to the given cx. Accumulate dependent paths in
      resolution_acc. Return the map of reqs to their resolved names, and the set
      containing the resolved names. *)
   let resolution_acc = { paths = SSet.empty; errors = [] } in
   let resolved_modules = SMap.fold (fun mref loc acc ->
     let m = imported_module file loc mref
-      ~options ~node_modules_containers ~resolution_acc in
+      ~options ~reader ~node_modules_containers ~resolution_acc in
     SMap.add mref m acc
   ) require_loc  SMap.empty in
   resolved_modules, resolution_acc
@@ -662,22 +679,22 @@ let choose_provider ~options m files errmap =
 (******************)
 
 (* Look up cached resolved module. *)
-let find_resolved_module ~audit file r =
+let find_resolved_module ~reader ~audit file r =
   let { Module_heaps.resolved_modules; _ } =
-    Module_heaps.get_resolved_requires_unsafe ~audit file
+    Module_heaps.Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit file
   in
   SMap.find_unsafe r resolved_modules
 
-let checked_file ~audit f =
-  let info = f |> Module_heaps.get_info_unsafe ~audit in
+let checked_file ~reader ~audit f =
+  let info = f |> Module_heaps.Reader_dispatcher.get_info_unsafe ~reader ~audit in
   info.Module_heaps.checked
 
 (* TODO [perf]: measure size and possibly optimize *)
 (* Extract and process information from context. In particular, resolve
    references to required modules in a file, and record the results.  *)
-let resolved_requires_of ~options node_modules_containers f require_loc =
+let resolved_requires_of ~options ~reader node_modules_containers f require_loc =
   let resolved_modules, { paths; errors } =
-    imported_modules ~options node_modules_containers f require_loc in
+    imported_modules ~options ~reader node_modules_containers f require_loc in
   errors, { Module_heaps.
     resolved_modules;
     phantom_dependents = paths;
@@ -689,7 +706,9 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
   in
   let require_loc = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
-    resolved_requires_of ~options node_modules_containers file require_loc in
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    resolved_requires_of ~options ~reader node_modules_containers file require_loc
+  in
   Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires;
   List.fold_left (fun acc msg ->
     Errors.ErrorSet.add (Flow_error.error_of_msg
@@ -829,26 +848,26 @@ let commit_modules ~transaction ~workers ~options ~is_init new_or_changed dirty_
   if debug then prerr_endlinef "*** done committing modules ***";
   Lwt.return (providers, changed_modules, errmap)
 
-let get_files ~audit filename module_name =
-  (module_name, Module_heaps.get_file ~audit module_name)::
+let get_files ~reader ~audit filename module_name =
+  (module_name, Module_heaps.Reader_dispatcher.get_file ~reader ~audit module_name)::
     let f_module = eponymous_module filename in
     if f_module = module_name then []
-    else [f_module, Module_heaps.get_file ~audit f_module]
+    else [f_module, Module_heaps.Reader_dispatcher.get_file ~reader ~audit f_module]
 
-let get_files_unsafe ~audit filename module_name =
-  (module_name, Module_heaps.get_file_unsafe ~audit module_name)::
+let get_files_unsafe ~reader ~audit filename module_name =
+  (module_name, Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit module_name)::
     let f_module = eponymous_module filename in
     if f_module = module_name then []
-    else [f_module, Module_heaps.get_file_unsafe ~audit f_module]
+    else [f_module, Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit f_module]
 
-let calc_modules_helper workers files =
+let calc_modules_helper ~reader workers files =
   MultiWorkerLwt.call workers
     ~job: (List.fold_left (fun acc file ->
-      match Module_heaps.get_info ~audit:Expensive.ok file with
+      match Module_heaps.Mutator_reader.get_info ~reader ~audit:Expensive.ok file with
       | Some info ->
         let { Module_heaps.module_name; _ } = info in
         (file,
-         get_files_unsafe ~audit:Expensive.ok file module_name) :: acc
+         get_files_unsafe ~reader ~audit:Expensive.ok file module_name) :: acc
       | None -> acc
     ))
     ~neutral: []
@@ -856,8 +875,8 @@ let calc_modules_helper workers files =
     ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files))
 
 (* Given a set of files which are unchanged, return the set of modules which those files provide *)
-let calc_unchanged_modules workers unchanged =
-  let%lwt old_file_module_assoc = calc_modules_helper workers unchanged in
+let calc_unchanged_modules ~reader workers unchanged =
+  let%lwt old_file_module_assoc = calc_modules_helper ~reader workers unchanged in
   let unchanged_modules = List.fold_left (fun unchanged_modules (file, module_provider_assoc) ->
     List.fold_left (fun unchanged_modules (module_name, provider) ->
       if provider = file
@@ -907,8 +926,8 @@ let calc_old_modules =
     old_modules
   in
 
-  fun workers ~all_providers_mutator ~options new_or_changed_or_deleted ->
-    let%lwt old_file_module_assoc = calc_modules_helper workers new_or_changed_or_deleted in
+  fun workers ~all_providers_mutator ~options ~reader new_or_changed_or_deleted ->
+    let%lwt old_file_module_assoc = calc_modules_helper ~reader workers new_or_changed_or_deleted in
     Lwt.return (calc_from_module_assocs ~all_providers_mutator ~options old_file_module_assoc)
 
 
@@ -993,7 +1012,7 @@ end = struct
     new_modules
 
   let introduce_files_generic
-      ~add_parsed_info ~add_unparsed_info
+      ~add_parsed_info ~add_unparsed_info ~reader
       ~all_providers_mutator ~workers ~options ~parsed ~unparsed =
 
     (* add tracking modules for unparsed files *)
@@ -1001,7 +1020,7 @@ end = struct
       ~job: (List.fold_left (fun file_module_assoc unparsed_file ->
         let filename, m = add_unparsed_info ~options unparsed_file in
         (filename,
-         get_files ~audit:Expensive.ok filename m) :: file_module_assoc
+         get_files ~reader ~audit:Expensive.ok filename m) :: file_module_assoc
       ))
       ~neutral: []
       ~merge: List.rev_append
@@ -1012,7 +1031,7 @@ end = struct
       ~job: (List.fold_left (fun file_module_assoc parsed_file ->
         let filename, m = add_parsed_info ~options parsed_file in
         (filename,
-         get_files ~audit:Expensive.ok filename m) :: file_module_assoc
+         get_files ~reader ~audit:Expensive.ok filename m) :: file_module_assoc
       ))
       ~neutral: []
       ~merge: List.rev_append
@@ -1027,15 +1046,18 @@ end = struct
     let add_parsed_info = add_parsed_info ~mutator ~reader in
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let add_unparsed_info = add_unparsed_info ~mutator ~reader in
-    introduce_files_generic ~add_parsed_info ~add_unparsed_info
+    introduce_files_generic ~add_parsed_info ~add_unparsed_info ~reader
 
   let introduce_files_from_saved_state ~mutator =
     let add_info_from_saved_state ~options:_ (filename, info) =
       Module_heaps.Introduce_files_mutator.add_info mutator filename info;
       filename, info.Module_heaps.module_name
     in
+    let reader = Abstract_state_reader.State_reader (State_reader.create ()) in
     introduce_files_generic
-      ~add_parsed_info:add_info_from_saved_state ~add_unparsed_info:add_info_from_saved_state
+      ~add_parsed_info:add_info_from_saved_state
+      ~add_unparsed_info:add_info_from_saved_state
+      ~reader
 end
 
 let introduce_files = IntroduceFiles.introduce_files

@@ -6,6 +6,7 @@
  *)
 
 val find_refs:
+  reader: State_reader.t ->
   ServerEnv.genv ->
   ServerEnv.env ref ->
   content: string ->

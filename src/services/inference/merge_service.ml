@@ -52,16 +52,16 @@ type merge_strict_context_result = {
    (g) decls: edges between files in the component and libraries, classified
    by requires (when implementations of such requires are not found).
 *)
-let reqs_of_component component required =
+let reqs_of_component ~reader component required =
   let dep_cxs, reqs =
     List.fold_left (fun (dep_cxs, reqs) req ->
       let r, locs, resolved_r, file = req in
       let locs = locs |> Nel.to_list |> ALocSet.of_list in
-      Module_heaps.(match get_file Expensive.ok resolved_r with
+      Module_heaps.(match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok resolved_r with
       | Some (File_key.ResourceFile f) ->
         dep_cxs, Reqs.add_res f file locs reqs
       | Some dep ->
-        let info = get_info_unsafe ~audit:Expensive.ok dep in
+        let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
         if info.checked && info.parsed then
           (* checked implementation exists *)
           let m = Files.module_ref dep in
@@ -96,7 +96,7 @@ let merge_strict_context ~options ~reader component =
       let loc_file_sigs = FilenameMap.add file loc_file_sig loc_file_sigs in
       let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
       let required = SMap.fold (fun r locs acc ->
-        let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
+        let resolved_r = Module_js.find_resolved_module ~reader ~audit:Expensive.ok
           file r in
         (r, locs, resolved_r, file) :: acc
       ) require_loc_map required in
@@ -104,7 +104,7 @@ let merge_strict_context ~options ~reader component =
     ) ([], FilenameMap.empty, FilenameMap.empty) component in
 
   let master_cx, dep_cxs, file_reqs =
-    reqs_of_component component required
+    reqs_of_component ~reader component required
   in
 
   let metadata = Context.metadata_of_options options in
@@ -130,13 +130,15 @@ let merge_strict_context ~options ~reader component =
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let merge_contents_context options file ast info file_sig =
+let merge_contents_context ~reader options file ast info file_sig =
+  let reader = Abstract_state_reader.State_reader reader in
   let file_sig = File_sig.abstractify_locs file_sig in
   let required =
     let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
     SMap.fold (fun r (locs: ALoc.t Nel.t) required ->
       let resolved_r = Module_js.imported_module
         ~options
+        ~reader
         ~node_modules_containers:!Files.node_modules_containers
         file locs r in
       (r, locs, resolved_r, file) :: required
@@ -147,7 +149,7 @@ let merge_contents_context options file ast info file_sig =
   let component = Nel.one file in
 
   let master_cx, dep_cxs, file_reqs =
-    begin try reqs_of_component component required with
+    begin try reqs_of_component ~reader component required with
       | Key_not_found _  ->
         failwith "not all dependencies are ready yet, aborting..."
       | e -> raise e
@@ -183,7 +185,7 @@ let merge_strict_component ~worker_mutator ~options ~reader merged_acc component
 
      It also follows when file is checked, other_files must be checked too!
   *)
-  let info = Module_heaps.get_info_unsafe ~audit:Expensive.ok file in
+  let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let { cx; other_cxs = _; master_cx; _ } = merge_strict_context ~options ~reader component in

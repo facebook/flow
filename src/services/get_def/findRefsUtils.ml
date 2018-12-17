@@ -36,7 +36,8 @@ let compute_ast_result options file content =
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped"
 
-let get_ast_result file : ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result =
+let get_ast_result ~reader file
+    : ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t * Docblock.t, string) result =
   let open Parsing_heaps in
   let get_result f kind =
     let error =
@@ -46,7 +47,6 @@ let get_ast_result file : ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
     in
     Result.of_option ~error (f file)
   in
-  let reader = State_reader.create () in
   let ast_result = get_result (Reader.get_ast ~reader) "AST" in
   let file_sig_result = get_result (Reader.get_file_sig ~reader) "file sig" in
   let docblock_result = get_result (Reader.get_docblock ~reader) "docblock" in
@@ -55,18 +55,15 @@ let get_ast_result file : ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
   docblock_result >>= fun docblock ->
   Ok (ast, file_sig, docblock)
 
-let get_dependents options workers env file_key content =
+let get_dependents ~reader options workers env file_key content =
   let docblock = compute_docblock file_key content in
-  let reader = Abstract_state_reader.State_reader (State_reader.create ()) in
+  let reader = Abstract_state_reader.State_reader reader in
   let modulename = Module_js.exported_module ~options ~reader file_key docblock in
   Dep_service.dependent_files
+    ~reader
     workers
     (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's
     probably worth looking at if you are searching for optimizations *)
     ~candidates:ServerEnv.(CheckedSet.all !env.checked_files)
     ~root_files:(FilenameSet.singleton file_key)
     ~root_modules:(Modulename.Set.singleton modulename)
-
-let lazy_mode_focus genv env path =
-  let%lwt env, _ = Lazy_mode_utils.focus_and_check genv env (Nel.one path) in
-  Lwt.return env

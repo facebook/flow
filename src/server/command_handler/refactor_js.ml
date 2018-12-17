@@ -128,10 +128,10 @@ let apply_rename_to_file _file ast refs new_name =
   let mapper = new rename_mapper refs new_name in
   mapper_to_edits mapper ast
 
-let apply_rename_to_files refs_by_file new_name =
+let apply_rename_to_files ~reader refs_by_file new_name =
   FilenameMap.fold begin fun file refs acc ->
     acc >>= fun edits ->
-    FindRefsUtils.get_ast_result file
+    FindRefsUtils.get_ast_result ~reader file
     >>| fun (ast, _, _) ->
     let file_edits = apply_rename_to_file file ast refs new_name in
     List.rev_append file_edits edits
@@ -140,11 +140,12 @@ let apply_rename_to_files refs_by_file new_name =
 
 type refactor_result = ((Loc.t * string) list option, string) result Lwt.t
 
-let rename ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
+let rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
   (* TODO verify that new name is a valid identifier *)
   (* TODO maybe do something with the json? *)
   (* TODO support rename based on multi-hop find-refs *)
   let%lwt find_refs_response, _ = FindRefs_js.find_refs
+    ~reader
     ~genv
     ~env
     ~profiling
@@ -161,13 +162,14 @@ let rename ~genv ~env ~profiling ~file_input ~line ~col ~new_name =
     (* TODO only rename renameable locations (e.g. not `default` in `export default`) *)
     split_by_source refs
     %>>= begin fun refs_by_file ->
-      apply_rename_to_files refs_by_file new_name
+      apply_rename_to_files ~reader refs_by_file new_name
       %>>= fun (edits: (Loc.t * string) list) ->
       Lwt.return @@ Ok (Some edits)
     end
   end
 
-let refactor ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant : refactor_result =
+let refactor
+    ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant : refactor_result =
   match refactor_variant with
   | ServerProt.Request.RENAME new_name ->
-    rename ~genv ~env ~profiling ~file_input ~line ~col ~new_name
+    rename ~reader ~genv ~env ~profiling ~file_input ~line ~col ~new_name

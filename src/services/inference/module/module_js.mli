@@ -33,13 +33,15 @@ type resolution_acc = {
 }
 val imported_module:
   options: Options.t ->
+  reader:Abstract_state_reader.t ->
   node_modules_containers: SSet.t ->
   File_key.t -> ALoc.t Nel.t -> ?resolution_acc:resolution_acc -> string -> Modulename.t
 
 val find_resolved_module:
+  reader:Abstract_state_reader.t ->
   (File_key.t -> string -> Modulename.t) Expensive.t
 
-val checked_file: (File_key.t -> bool) Expensive.t
+val checked_file: reader:Abstract_state_reader.t -> (File_key.t -> bool) Expensive.t
 
 (* add module records for given files;
    returns the set of modules added
@@ -61,6 +63,7 @@ val calc_old_modules:
   MultiWorkerLwt.worker list option ->
   all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
   options:Options.t ->
+  reader:Mutator_state_reader.t ->
   FilenameSet.t ->
     (Modulename.t * File_key.t option) list Lwt.t
 
@@ -68,6 +71,7 @@ val calc_old_modules:
  * modules.
 *)
 val calc_unchanged_modules:
+  reader:Mutator_state_reader.t ->
   MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
   Modulename.Set.t Lwt.t
@@ -95,7 +99,7 @@ val add_parsed_resolved_requires:
 
 val add_package: string -> (Loc.t, Loc.t) Flow_ast.program -> unit
 
-val package_incompatible: string -> (Loc.t, Loc.t) Flow_ast.program -> bool
+val package_incompatible: reader:State_reader.t -> string -> (Loc.t, Loc.t) Flow_ast.program -> bool
 
 (***************************************************)
 

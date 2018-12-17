@@ -117,7 +117,7 @@ let getdef_from_type_table cx loc =
 (* TODO: the uses of `resolve_type` in the implementation below are pretty
    delicate, since in many cases the resulting type lacks location
    information. Edit with caution. *)
-let getdef_get_result_from_hooks ~options cx state =
+let getdef_get_result_from_hooks ~options ~reader cx state =
   Ok begin match state.getdef_type with
   | Some Gdloc loc ->
     if List.exists (fun range -> Loc.contains range loc) state.getdef_require_patterns
@@ -139,8 +139,8 @@ let getdef_get_result_from_hooks ~options cx state =
       let module_t = Flow_js.resolve_type cx (Context.find_require cx (ALoc.of_loc source_loc)) in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
-        let filename = Module_heaps.get_file Expensive.warn (
-          Module_js.imported_module ~options
+        let filename = Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn (
+          Module_js.imported_module ~options ~reader:(Abstract_state_reader.State_reader reader)
             ~node_modules_containers:!Files.node_modules_containers
             (Context.file cx) (Nel.one (ALoc.of_loc require_loc)) name
         ) in
@@ -175,10 +175,10 @@ let getdef_get_result_from_hooks ~options cx state =
   | None -> Done Loc.none, None
   end
 
-let getdef_get_result ~options cx state loc =
+let getdef_get_result ~options ~reader cx state loc =
   match getdef_from_type_table cx loc with
   | Some x -> Ok x
-  | None -> getdef_get_result_from_hooks ~options cx state
+  | None -> getdef_get_result_from_hooks ~options ~reader cx state
 
 let getdef_set_hooks pos =
   let state = { getdef_type = None; getdef_require_patterns = [] } in
@@ -191,7 +191,7 @@ let getdef_set_hooks pos =
 let getdef_unset_hooks () =
   Type_inference_hooks_js.reset_hooks ()
 
-let rec get_def ~options ~env ~profiling ~depth (file_input, line, col) =
+let rec get_def ~options ~reader ~env ~profiling ~depth (file_input, line, col) =
   let filename = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile filename in
   let loc = Loc.make file line col in
@@ -205,7 +205,7 @@ let rec get_def ~options ~env ~profiling ~depth (file_input, line, col) =
   let%lwt getdef_result =
     map_error ~f:(fun str -> str, None) check_result
     %>>= (fun (cx, _, _, _) -> Profiling_js.with_timer_lwt profiling ~timer:"GetResult" ~f:(fun () ->
-      try_with_json (fun () -> Lwt.return (getdef_get_result ~options cx state loc))
+      try_with_json (fun () -> Lwt.return (getdef_get_result ~reader ~options cx state loc))
     ))
   in
   let result, json_object = split_result getdef_result in
@@ -216,7 +216,7 @@ let rec get_def ~options ~env ~profiling ~depth (file_input, line, col) =
     | Done loc -> Lwt.return (Ok loc, json_object)
     | Chain (line, col) ->
       let%lwt result, chain_json_object =
-        get_def ~options ~env ~profiling ~depth:(depth+1) (file_input, line, col) in
+        get_def ~options ~reader ~env ~profiling ~depth:(depth+1) (file_input, line, col) in
       Lwt.return (match result with
       | Error e -> Error e, json_object
       | Ok loc' ->

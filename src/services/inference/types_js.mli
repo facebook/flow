@@ -67,6 +67,7 @@ val typecheck_contents:
 
 val ensure_checked_dependencies:
   options: Options.t ->
+  reader: State_reader.t ->
   env: ServerEnv.env ref ->
   File_key.t ->
   File_sig.With_Loc.t ->

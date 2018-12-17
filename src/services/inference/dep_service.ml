@@ -74,7 +74,7 @@ module File_sig = File_sig.With_Loc
        the value is the subset of files which require that module directly
    (3) a subset of those files that phantom depend on root_fileset
  *)
-let dependent_calc_utils workers fileset root_fileset = Module_heaps.(
+let dependent_calc_utils ~reader workers fileset root_fileset = Module_heaps.(
   let root_fileset = FilenameSet.fold (fun f root_fileset ->
     match f with
       | File_key.SourceFile s
@@ -85,11 +85,13 @@ let dependent_calc_utils workers fileset root_fileset = Module_heaps.(
   ) root_fileset SSet.empty in
   (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
   let job = List.fold_left (fun utils f ->
-    let resolved_requires = get_resolved_requires_unsafe ~audit:Expensive.ok f in
+    let resolved_requires =
+      Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok f
+    in
     let required = Modulename.Set.of_list
       (SMap.values resolved_requires.resolved_modules)
     in
-    let info = get_info_unsafe ~audit:Expensive.ok f in
+    let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok f in
     (* Add f |-> info._module to the `modules` map. This will be used downstream
        in calc_all_dependents.
 
@@ -190,7 +192,7 @@ let calc_all_dependents modules module_dependents_tbl fileset =
    Return the subset of candidates transitively dependent on root_files and the subset directly
    dependent on root_modules.
 *)
-let dependent_files workers ~candidates ~root_files ~root_modules =
+let dependent_files ~reader workers ~candidates ~root_files ~root_modules =
   if FilenameSet.is_empty root_files && Modulename.Set.is_empty root_modules
   then begin
     (* dependent_calc_utils is O(candidates), but if root_files and root_modules are empty then we
@@ -202,7 +204,7 @@ let dependent_files workers ~candidates ~root_files ~root_modules =
        for candidate files, and the subset of candidate files whose resolution
        paths may encounter new or changed modules. *)
     let%lwt modules, module_dependents_tbl, resolution_path_files =
-      dependent_calc_utils workers candidates root_files
+      dependent_calc_utils ~reader workers candidates root_files
     in
 
     (* resolution_path_files, plus files that require root_modules *)
@@ -223,27 +225,29 @@ let dependent_files workers ~candidates ~root_files ~root_modules =
    savings in init and recheck times). *)
 
 
-let checked_module ~audit m =
-  m |> Module_heaps.get_file_unsafe ~audit |> Module_js.checked_file ~audit
+let checked_module ~reader ~audit m =
+  m
+  |> Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit
+  |> Module_js.checked_file ~reader:(Abstract_state_reader.Mutator_state_reader reader) ~audit
 
 (* A file is considered to implement a required module r only if the file is
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file ~audit r =
-  if Module_heaps.module_exists r && checked_module ~audit r
-  then Some (Module_heaps.get_file_unsafe ~audit r)
+let implementation_file ~reader ~audit r =
+  if Module_heaps.Mutator_reader.module_exists ~reader r && checked_module ~reader ~audit r
+  then Some (Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit r)
   else None
 
 let file_dependencies ~audit ~reader file =
   let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
   let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let { Module_heaps.resolved_modules; _ } =
-    Module_heaps.get_resolved_requires_unsafe ~audit file
+    Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
   in
   SMap.fold (fun mref _ files ->
     let m = SMap.find_unsafe mref resolved_modules in
-    match implementation_file m ~audit:Expensive.ok with
+    match implementation_file ~reader m ~audit:Expensive.ok with
     | Some f -> FilenameSet.add f files
     | None -> files
   ) require_loc FilenameSet.empty
