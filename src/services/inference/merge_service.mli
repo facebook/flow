@@ -11,6 +11,7 @@ type 'a merge_job_results = (File_key.t * ('a, Flow_error.error_message) result)
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
+  reader: Mutator_state_reader.t ->
   'a merge_job_results ->
   File_key.t Nel.t ->
   'a merge_job_results
@@ -28,6 +29,7 @@ type merge_strict_context_result = {
 
 val merge_strict_context:
   options: Options.t ->
+  reader: Abstract_state_reader.t ->
   File_key.t Nel.t ->
   merge_strict_context_result
 
@@ -43,6 +45,7 @@ val merge_runner:
   job: 'a merge_job ->
   master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
+  reader: Mutator_state_reader.t ->
   intermediate_result_callback: ('a merge_job_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: MultiWorkerLwt.worker list option ->
@@ -54,6 +57,7 @@ val merge_runner:
 val merge_strict:
   master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
+  reader: Mutator_state_reader.t ->
   intermediate_result_callback:
     ((Errors.ErrorSet.t *
       Error_suppressions.t *

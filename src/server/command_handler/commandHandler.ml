@@ -226,6 +226,7 @@ let module_name_of_string ~options module_name_str =
   else Modulename.String module_name_str
 
 let get_imports ~options module_names =
+  let reader = State_reader.create () in
   let add_to_results (map, non_flow) module_name_str =
     let module_name = module_name_of_string ~options module_name_str in
     match Module_heaps.get_file ~audit:Expensive.warn module_name with
@@ -240,7 +241,7 @@ let get_imports ~options module_names =
       if checked then
         let { Module_heaps.resolved_modules; _ } =
           Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.warn file in
-        let fsig = Parsing_heaps.get_file_sig_unsafe file in
+        let fsig = Parsing_heaps.Reader.get_file_sig_unsafe ~reader file in
         let requires = File_sig.With_Loc.(require_loc_map fsig.module_sig) in
         let mlocs = SMap.fold (fun mref locs acc ->
           let m = SMap.find_unsafe mref resolved_modules in

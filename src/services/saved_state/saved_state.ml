@@ -152,7 +152,7 @@ end = struct
     }
 
   (* Collect all the data for a single parsed file *)
-  let collect_normalized_data_for_parsed_file ~root parsed_heaps fn =
+  let collect_normalized_data_for_parsed_file ~root ~reader parsed_heaps fn =
     let package =
       match fn with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
@@ -163,9 +163,9 @@ end = struct
     let file_data = {
       package;
       info = Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
-      file_sig = Parsing_heaps.get_file_sig_unsafe fn;
+      file_sig = Parsing_heaps.Reader.get_file_sig_unsafe ~reader fn;
       resolved_requires = Module_heaps.get_resolved_requires_unsafe ~audit:Expensive.ok fn;
-      hash = Parsing_heaps.get_file_hash_unsafe fn;
+      hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -175,10 +175,10 @@ end = struct
     FilenameMap.add relative_fn relative_file_data parsed_heaps
 
   (* Collect all the data for a single unparsed file *)
-  let collect_normalized_data_for_unparsed_file ~root unparsed_heaps fn  =
+  let collect_normalized_data_for_unparsed_file ~root ~reader unparsed_heaps fn  =
     let relative_file_data = {
       unparsed_info = normalize_info ~root @@ Module_heaps.get_info_unsafe ~audit:Expensive.ok fn;
-      unparsed_hash = Parsing_heaps.get_file_hash_unsafe fn;
+      unparsed_hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -202,14 +202,15 @@ end = struct
   let collect_data ~workers ~genv ~env =
     let options = genv.ServerEnv.options in
     let root = Options.root options |> Path.to_string in
+    let reader = State_reader.create () in
     let%lwt parsed_heaps = MultiWorkerLwt.call workers
-      ~job:(List.fold_left (collect_normalized_data_for_parsed_file ~root) )
+      ~job:(List.fold_left (collect_normalized_data_for_parsed_file ~root ~reader) )
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.files))
     in
     let%lwt unparsed_heaps = MultiWorkerLwt.call workers
-      ~job:(List.fold_left (collect_normalized_data_for_unparsed_file ~root) )
+      ~job:(List.fold_left (collect_normalized_data_for_unparsed_file ~root ~reader) )
       ~neutral:FilenameMap.empty
       ~merge:FilenameMap.union
       ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.unparsed))

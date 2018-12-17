@@ -12,6 +12,7 @@ type 'a merge_job_results = (File_key.t * ('a, Flow_error.error_message) result)
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
+  reader: Mutator_state_reader.t ->
   'a merge_job_results ->
   File_key.t Nel.t ->
   'a merge_job_results
@@ -86,10 +87,10 @@ let reqs_of_component component required =
 
   master_cx, dep_cxs, reqs
 
-let merge_strict_context ~options component =
+let merge_strict_context ~options ~reader component =
   let required, file_sigs, loc_file_sigs =
     Nel.fold_left (fun (required, file_sigs, loc_file_sigs) file ->
-      let loc_file_sig = Parsing_heaps.get_file_sig_unsafe file in
+      let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
       let file_sig = File_sig.abstractify_locs loc_file_sig in
       let file_sigs = FilenameMap.add file file_sig file_sigs in
       let loc_file_sigs = FilenameMap.add file loc_file_sig loc_file_sigs in
@@ -112,8 +113,8 @@ let merge_strict_context ~options component =
   let strict_mode = Options.strict_mode options in
   let ((cx, _), other_cxs) as cx_nel = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
-    ~get_ast_unsafe:Parsing_heaps.get_ast_unsafe
-    ~get_docblock_unsafe:Parsing_heaps.get_docblock_unsafe
+    ~get_ast_unsafe:(Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader)
+    ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
     ~do_gc:(Options.is_debug_mode options)
     component file_reqs dep_cxs master_cx
   in
@@ -167,7 +168,7 @@ let merge_contents_context options file ast info file_sig =
   cx
 
 (* Entry point for merging a component *)
-let merge_strict_component ~worker_mutator ~options merged_acc component =
+let merge_strict_component ~worker_mutator ~options ~reader merged_acc component =
   let file = Nel.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -184,7 +185,8 @@ let merge_strict_component ~worker_mutator ~options merged_acc component =
   *)
   let info = Module_heaps.get_info_unsafe ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
-    let { cx; other_cxs = _; master_cx; _ } = merge_strict_context ~options component in
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let { cx; other_cxs = _; master_cx; _ } = merge_strict_context ~options ~reader component in
 
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
@@ -240,7 +242,7 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   cancel_timer ();
   ret
 
-let merge_strict_job ~worker_mutator ~job ~options merged elements =
+let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
   List.fold_left (fun merged -> function
     | Merge_stream.Component component ->
       (* A component may have several files: there's always at least one, and
@@ -265,7 +267,7 @@ let merge_strict_job ~worker_mutator ~job ~options merged elements =
         ~f:(fun () ->
           let start_time = Unix.gettimeofday () in
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-          let ret = job ~worker_mutator ~options merged component in
+          let ret = job ~worker_mutator ~options ~reader merged component in
           let merge_time = Unix.gettimeofday () -. start_time in
           if Options.should_profile options then begin
             let length = Nel.length component in
@@ -309,7 +311,7 @@ let merge_strict_job ~worker_mutator ~job ~options merged elements =
 
 (* make a map from component leaders to components *)
 let merge_runner
-    ~job ~master_mutator ~worker_mutator ~intermediate_result_callback ~options ~workers
+    ~job ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
     dependency_graph component_map recheck_map =
   (* make a map from files to their component leaders *)
   let leader_map =
@@ -331,7 +333,7 @@ let merge_runner
   (* returns parallel lists of filenames, error sets, and suppression sets *)
   let%lwt ret = MultiWorkerLwt.call
     workers
-    ~job: (merge_strict_job ~worker_mutator ~options ~job)
+    ~job: (merge_strict_job ~worker_mutator ~reader ~options ~job)
     ~neutral: []
     ~merge:(merge ~master_mutator)
     ~next

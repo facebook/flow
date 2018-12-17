@@ -90,17 +90,17 @@ let collate_parse_results ~options parse_results =
 
   parse_ok, unparsed, parse_unchanged, local_errors
 
-let parse ~options ~profiling ~workers parse_next =
+let parse ~options ~profiling ~workers ~reader parse_next =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
-    let%lwt results = Parsing_service_js.parse_with_defaults options workers parse_next in
+    let%lwt results = Parsing_service_js.parse_with_defaults ~reader options workers parse_next in
     Lwt.return (collate_parse_results ~options results)
   )
 
-let reparse ~options ~profiling ~transaction ~workers ~modified ~deleted =
+let reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted =
   with_timer_lwt ~options "Parsing" profiling (fun () ->
     let%lwt new_or_changed, results =
       Parsing_service_js.reparse_with_defaults
-        ~transaction ~with_progress:true ~workers ~modified ~deleted options
+        ~transaction ~reader ~with_progress:true ~workers ~modified ~deleted options
     in
     let parse_ok, unparsed, unchanged, local_errors = collate_parse_results ~options results in
     Lwt.return (new_or_changed, parse_ok, unparsed, unchanged, local_errors)
@@ -135,6 +135,7 @@ let commit_modules, commit_modules_from_saved_state =
       with_timer_lwt ~options "CommitModules" profiling (fun () ->
         let all_files_set = FilenameSet.union (FilenameSet.union parsed_set unparsed_set) deleted in
         let mutator = Module_heaps.Introduce_files_mutator.create transaction all_files_set in
+
         let%lwt new_modules =
           introduce_files
             ~mutator ~all_providers_mutator ~workers ~options ~parsed ~unparsed
@@ -165,22 +166,22 @@ let commit_modules, commit_modules_from_saved_state =
       )
     )
   in
-  let commit_modules =
-    commit_modules_generic ~introduce_files:Module_js.introduce_files
+  let commit_modules ~transaction ~reader =
+    commit_modules_generic ~introduce_files:(Module_js.introduce_files ~reader) ~transaction
   in
   let commit_modules_from_saved_state =
     commit_modules_generic ~introduce_files:Module_js.introduce_files_from_saved_state
   in
   commit_modules, commit_modules_from_saved_state
 
-let resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_set =
+let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set =
   let node_modules_containers = !Files.node_modules_containers in
   let mutator = Module_heaps.Resolved_requires_mutator.create transaction parsed_set in
   with_timer_lwt ~options "ResolveRequires" profiling (fun () ->
     MultiWorkerLwt.call workers
       ~job: (List.fold_left (fun errors_acc filename ->
         let errors = Module_js.add_parsed_resolved_requires filename
-          ~mutator ~options ~node_modules_containers in
+          ~mutator ~reader ~options ~node_modules_containers in
         if Errors.ErrorSet.is_empty errors
         then errors_acc
         else FilenameMap.add filename errors errors_acc
@@ -193,6 +194,7 @@ let resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_s
 
 let commit_modules_and_resolve_requires
   ~transaction
+  ~reader
   ~all_providers_mutator
   ~options
   ~profiling
@@ -213,12 +215,12 @@ let commit_modules_and_resolve_requires
   let parsed = FilenameSet.elements parsed_set in
 
   let%lwt changed_modules, local_errors = commit_modules
-    ~transaction ~all_providers_mutator ~options ~is_init ~profiling ~workers ~parsed ~parsed_set
-    ~unparsed ~unparsed_set ~old_modules ~deleted ~local_errors ~new_or_changed
+    ~transaction ~reader ~all_providers_mutator ~options ~is_init ~profiling ~workers ~parsed
+    ~parsed_set ~unparsed ~unparsed_set ~old_modules ~deleted ~local_errors ~new_or_changed
   in
 
   let%lwt resolve_errors =
-    resolve_requires ~transaction ~options ~profiling ~workers ~parsed ~parsed_set
+    resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~parsed_set
   in
   let local_errors = FilenameMap.union resolve_errors local_errors in
 
@@ -303,6 +305,7 @@ let include_dependencies_and_dependents
 let run_merge_service
     ~master_mutator
     ~worker_mutator
+    ~reader
     ~intermediate_result_callback
     ~options
     ~profiling
@@ -314,7 +317,7 @@ let run_merge_service
     =
   with_timer_lwt ~options "Merge" profiling (fun () ->
     let%lwt merged, skipped_count = Merge_service.merge_strict
-      ~master_mutator ~worker_mutator ~intermediate_result_callback ~options ~workers
+      ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
       dependency_graph component_map recheck_map
     in
     let errs, suppressions, severity_cover_set = List.fold_left (fun acc (file, result) ->
@@ -345,6 +348,7 @@ let run_merge_service
  * (though we may later decline to typecheck some files due to recheck optimizations) *)
 let merge
   ~transaction
+  ~reader
   ~options
   ~profiling
   ~workers
@@ -476,6 +480,7 @@ let merge
       run_merge_service
         ~master_mutator
         ~worker_mutator
+        ~reader
         ~intermediate_result_callback
         ~options
         ~profiling
@@ -513,10 +518,10 @@ let merge
     |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
   Lwt.return (checked, cycle_leaders, errors, skipped_count)
 
-let ensure_parsed ~options ~profiling ~workers files =
+let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
     let%lwt parse_hash_mismatch_skips =
-      Parsing_service_js.ensure_parsed options workers (CheckedSet.all files)
+      Parsing_service_js.ensure_parsed ~reader options workers (CheckedSet.all files)
     in
 
     if FilenameSet.is_empty parse_hash_mismatch_skips
@@ -680,19 +685,20 @@ let basic_check_contents ~options ~env ~profiling contents filename =
     Hh_logger.error "Uncaught exception in basic_check_contents\n%s" e;
     Lwt.return (Error e)
 
-let init_package_heap ~options ~profiling parsed =
+let init_package_heap ~options ~profiling ~reader parsed =
   with_timer_lwt ~options "PackageHeap" profiling (fun () ->
     FilenameSet.iter (fun filename ->
       match filename with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
-        let ast = Parsing_heaps.get_ast_unsafe filename in
+        let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader filename in
         Module_js.add_package str ast
       | _ -> ()
     ) parsed;
     Lwt.return_unit
   )
 
-let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs =
+let init_libs
+    ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ~reader ordered_libs =
   with_timer_lwt ~options "InitLibs" profiling (fun () ->
     let%lwt lib_files =
       let options = match Options.verbose options with
@@ -702,7 +708,7 @@ let init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_se
           { options with Options.opt_verbose = None; }
         | _ -> options
       in
-      Init_js.init ~options ordered_libs
+      Init_js.init ~options ~reader ordered_libs
     in
 
     Lwt.return @@ List.fold_left (fun acc (lib_file, ok, errs, suppressions, severity_cover) ->
@@ -870,7 +876,8 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
    phase (which could be the init phase or a previous recheck phase)
 *)
 let recheck_with_profiling
-    ~profiling ~transaction ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata =
+    ~profiling ~transaction ~reader ~options ~workers ~updates env
+    ~files_to_force ~file_watcher_metadata =
   let errors = env.ServerEnv.errors in
 
   (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
@@ -883,7 +890,7 @@ let recheck_with_profiling
    * provides based on the existence of foo.js *)
   let updates = FilenameSet.fold (fun file updates ->
     if not (File_key.check_suffix file Files.flow_ext) &&
-      Parsing_heaps.has_ast (File_key.with_suffix file Files.flow_ext)
+      Parsing_heaps.Mutator_reader.has_ast ~reader (File_key.with_suffix file Files.flow_ext)
     then FilenameSet.add (File_key.with_suffix file Files.flow_ext) updates
     else updates
   ) updates updates in
@@ -929,7 +936,7 @@ let recheck_with_profiling
    * new_local_errors - Parse errors, docblock errors, etc
   *)
   let%lwt new_or_changed, freshparsed, unparsed, _unchanged_parse, new_local_errors =
-     reparse ~options ~profiling ~transaction ~workers ~modified ~deleted
+     reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
    in
 
   let unparsed_set =
@@ -1107,6 +1114,7 @@ let recheck_with_profiling
   let%lwt changed_modules, errors =
     commit_modules_and_resolve_requires
       ~transaction
+      ~reader
       ~all_providers_mutator
       ~options
       ~profiling
@@ -1159,7 +1167,7 @@ let recheck_with_profiling
       ~job: (fun () files ->
         List.iter (fun filename ->
           let errors = Module_js.add_parsed_resolved_requires filename
-            ~mutator ~options ~node_modules_containers in
+            ~mutator ~reader ~options ~node_modules_containers in
           ignore errors (* TODO: why, FFS, why? *)
         ) files
       )
@@ -1178,7 +1186,7 @@ let recheck_with_profiling
       freshparsed
       |> FilenameSet.union direct_dependent_files
     in
-    let%lwt updated_dependency_graph = Dep_service.calc_partial_dependency_graph workers
+    let%lwt updated_dependency_graph = Dep_service.calc_partial_dependency_graph ~reader workers
       files_to_include_in_dependency_graph ~parsed in
     let old_dependency_graph = env.ServerEnv.dependency_graph in
     old_dependency_graph
@@ -1265,11 +1273,12 @@ let recheck_with_profiling
     restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata
   in
 
-  let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
+  let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
   (* recheck *)
   let%lwt checked, cycle_leaders, errors, skipped_count = merge
     ~transaction
+    ~reader
     ~options
     ~profiling
     ~workers
@@ -1328,14 +1337,20 @@ let recheck_with_profiling
     (new_or_changed, deleted, all_dependent_files, cycle_leaders, skipped_count, estimates))
   )
 
+let with_transaction f =
+  Transaction.with_transaction @@ fun transaction ->
+    let reader = Mutator_state_reader.create transaction in
+    f transaction reader
+
 let recheck ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, stats) =
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
-        Transaction.with_transaction (fun transaction ->
+        with_transaction (fun transaction reader ->
           recheck_with_profiling
-            ~profiling ~transaction ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata
+            ~profiling ~transaction ~reader ~options ~workers ~updates env
+            ~files_to_force ~file_watcher_metadata
         )
       )
     )
@@ -1416,7 +1431,7 @@ let make_next_files ~libs ~file_options root =
     |> Bucket.of_list
 
 let init_from_saved_state ~profiling ~workers ~saved_state options =
-  Transaction.with_transaction @@ fun transaction ->
+  with_transaction @@ fun transaction reader ->
 
   let file_options = Options.file_options options in
   (* We don't want to walk the file system for the checked in files. But we still need to find the
@@ -1493,7 +1508,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
   let%lwt libs_ok, local_errors, suppressions, severity_cover_set =
     let suppressions = Error_suppressions.empty in
     let severity_cover_set = FilenameMap.empty in
-    init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs
+    init_libs
+      ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ~reader ordered_libs
   in
 
   Hh_logger.info "Resolving dependencies";
@@ -1543,7 +1559,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
   } in
 
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-    Dep_service.calc_dependency_graph workers ~parsed:parsed_set
+    Dep_service.calc_dependency_graph ~reader workers ~parsed:parsed_set
   ) in
 
   Lwt.return (parsed_set, unparsed_set, dependency_graph, ordered_libs, libs, libs_ok, errors)
@@ -1551,7 +1567,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
 let init ~profiling ~workers options =
   let file_options = Options.file_options options in
 
-  Transaction.with_transaction @@ fun transaction ->
+  with_transaction @@ fun transaction reader ->
+
   (* TODO - explicitly order the libs.
    *
    * Should we let the filesystem dictate the order that we merge libs? Are we sheep? No! We are
@@ -1567,20 +1584,23 @@ let init ~profiling ~workers options =
   let ordered_libs, libs = Files.init file_options in
   let next_files = make_next_files ~libs ~file_options (Options.root options) in
 
+
   Hh_logger.info "Parsing";
   let%lwt parsed, unparsed, unchanged, local_errors =
-    parse ~options ~profiling ~workers next_files in
+    parse ~options ~profiling ~workers ~reader next_files in
 
   assert (FilenameSet.is_empty unchanged);
 
   Hh_logger.info "Building package heap";
-  let%lwt () = init_package_heap ~options ~profiling parsed in
+  let%lwt () = init_package_heap ~options ~profiling ~reader parsed in
 
   Hh_logger.info "Loading libraries";
   let%lwt libs_ok, local_errors, suppressions, (severity_cover_set: ExactCover.lint_severity_cover Utils_js.FilenameMap.t) =
     let suppressions = Error_suppressions.empty in
     let severity_cover_set = FilenameMap.empty in
-    init_libs ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ordered_libs in
+    init_libs
+      ~options ~profiling ~local_errors ~suppressions ~severity_cover_set ~reader ordered_libs
+  in
 
   Hh_logger.info "Resolving dependencies";
   MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
@@ -1600,6 +1620,7 @@ let init ~profiling ~workers options =
     } in
     commit_modules_and_resolve_requires
       ~transaction
+      ~reader
       ~all_providers_mutator
       ~options
       ~profiling
@@ -1614,7 +1635,7 @@ let init ~profiling ~workers options =
       ~is_init:true
   in
   let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-    Dep_service.calc_dependency_graph workers ~parsed
+    Dep_service.calc_dependency_graph ~reader workers ~parsed
   ) in
   Lwt.return (parsed, unparsed_set, dependency_graph, ordered_libs, libs, libs_ok, errors)
 
@@ -1791,7 +1812,7 @@ let init ~profiling ~workers options =
 
 let full_check ~profiling ~options ~workers ~focus_targets env =
   let { ServerEnv.files = parsed; dependency_graph; errors; _; } = env in
-  let%lwt (checked_files, _, errors, _skipped_count) = Transaction.with_transaction (fun transaction ->
+  let%lwt (checked_files, _, errors, _skipped_count) = with_transaction (fun transaction reader ->
     let%lwt infer_input = files_to_infer
       ~options ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
 
@@ -1806,10 +1827,11 @@ let full_check ~profiling ~options ~workers ~focus_targets env =
         ~direct_dependent_files:FilenameSet.empty
     in
 
-    let%lwt () = ensure_parsed ~options ~profiling ~workers to_merge in
+    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
     merge
       ~transaction
+      ~reader
       ~options
       ~profiling
       ~workers

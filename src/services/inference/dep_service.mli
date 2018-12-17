@@ -16,11 +16,13 @@ val dependent_files:
   (FilenameSet.t * FilenameSet.t) Lwt.t
 
 val calc_dependency_graph:
+  reader: Mutator_state_reader.t ->
   MultiWorkerLwt.worker list option -> (* workers *)
   parsed:FilenameSet.t ->
   FilenameSet.t FilenameMap.t Lwt.t
 
 val calc_partial_dependency_graph:
+  reader: Mutator_state_reader.t ->
   MultiWorkerLwt.worker list option -> (* workers *)
   FilenameSet.t -> (* files *)
   parsed:FilenameSet.t ->

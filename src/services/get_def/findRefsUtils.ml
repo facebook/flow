@@ -46,9 +46,10 @@ let get_ast_result file : ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
     in
     Result.of_option ~error (f file)
   in
-  let ast_result = get_result get_ast "AST" in
-  let file_sig_result = get_result get_file_sig "file sig" in
-  let docblock_result = get_result get_docblock "docblock" in
+  let reader = State_reader.create () in
+  let ast_result = get_result (Reader.get_ast ~reader) "AST" in
+  let file_sig_result = get_result (Reader.get_file_sig ~reader) "file sig" in
+  let docblock_result = get_result (Reader.get_docblock ~reader) "docblock" in
   ast_result >>= fun ast ->
   file_sig_result >>= fun file_sig ->
   docblock_result >>= fun docblock ->
@@ -56,7 +57,8 @@ let get_ast_result file : ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
 
 let get_dependents options workers env file_key content =
   let docblock = compute_docblock file_key content in
-  let modulename = Module_js.exported_module options file_key docblock in
+  let reader = Abstract_state_reader.State_reader (State_reader.create ()) in
+  let modulename = Module_js.exported_module ~options ~reader file_key docblock in
   Dep_service.dependent_files
     workers
     (* Surprisingly, creating this set doesn't seem to cause horrible performance but it's

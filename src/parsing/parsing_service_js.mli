@@ -58,6 +58,7 @@ individually *)
 val parse_with_defaults:
   ?types_mode: types_mode ->
   ?use_strict: bool ->
+  reader: Mutator_state_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
   File_key.t list Bucket.next ->
@@ -65,6 +66,7 @@ val parse_with_defaults:
 
 val reparse_with_defaults:
   transaction: Transaction.t ->
+  reader: Mutator_state_reader.t ->
   ?types_mode: types_mode ->
   ?use_strict: bool ->
   ?with_progress: bool ->
@@ -75,6 +77,7 @@ val reparse_with_defaults:
   (FilenameSet.t * results) Lwt.t
 
 val ensure_parsed:
+  reader: Mutator_state_reader.t ->
   Options.t ->
   MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
@@ -112,4 +115,8 @@ val next_of_filename_set:
   FilenameSet.t ->
   File_key.t list Bucket.next
 
-val does_content_match_file_hash: File_key.t -> string -> bool
+val does_content_match_file_hash:
+  reader:State_reader.t ->
+  File_key.t ->
+  string ->
+  bool

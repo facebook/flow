@@ -114,7 +114,12 @@ type resolution_acc = {
    model both Haste and Node, but should be further generalized. *)
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
-  val exported_module: Options.t -> File_key.t -> Docblock.t -> Modulename.t
+  val exported_module:
+    reader:Abstract_state_reader.t ->
+    Options.t ->
+    File_key.t ->
+    Docblock.t ->
+    Modulename.t
 
   (* Given a file and a reference in it to an imported module, make the name of
      the module it refers to. If given an optional reference to an accumulator,
@@ -313,7 +318,7 @@ end
 (*******************************)
 
 module Node = struct
-  let exported_module _ file _ =
+  let exported_module ~reader:_ _ file _ =
     eponymous_module file
 
   let record_path path = function
@@ -511,7 +516,7 @@ module Haste: MODULE_SYSTEM = struct
       (File_key.to_string file)
       (Options.haste_name_reducers options)
 
-  let rec exported_module options file info =
+  let rec exported_module ~reader options file info =
     match file with
     | File_key.SourceFile _ ->
       if is_mock file
@@ -520,25 +525,27 @@ module Haste: MODULE_SYSTEM = struct
       then
         if is_haste_file options file
         then Modulename.String (haste_name options file)
-        else exported_non_haste_module options file
+        else exported_non_haste_module ~reader options file
       else begin match Docblock.providesModule info with
         | Some m -> Modulename.String m
         | None ->
             (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
              * and use its @providesModule instead *)
-            exported_non_haste_module options file
+            exported_non_haste_module ~reader options file
       end
     | _ ->
       (* Lib files, resource files, etc don't have any fancy haste name *)
       Modulename.Filename file
 
-  and exported_non_haste_module options file =
+  and exported_non_haste_module ~reader options file =
     match Files.chop_flow_ext file with
     | Some file_without_flow_ext ->
-      if Parsing_heaps.has_ast file_without_flow_ext
+      if Parsing_heaps.Reader_dispatcher.has_ast ~reader file_without_flow_ext
       then
-        let info = Parsing_heaps.get_docblock_unsafe file_without_flow_ext in
-        exported_module options file_without_flow_ext info
+        let info =
+          Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file_without_flow_ext
+        in
+        exported_module ~reader options file_without_flow_ext info
       else
         Modulename.Filename (file_without_flow_ext)
     | None ->
@@ -626,9 +633,9 @@ let get_module_system opts =
     module_system := Some system;
     system
 
-let exported_module ~options file info =
+let exported_module ~options ~reader file info =
   let module M = (val (get_module_system options)) in
-  M.exported_module options file info
+  M.exported_module ~reader options file info
 
 let imported_module ~options ~node_modules_containers file loc ?resolution_acc r =
   let module M = (val (get_module_system options)) in
@@ -676,8 +683,10 @@ let resolved_requires_of ~options node_modules_containers f require_loc =
     phantom_dependents = paths;
   }
 
-let add_parsed_resolved_requires ~mutator ~options ~node_modules_containers file =
-  let file_sig = Parsing_heaps.get_file_sig_unsafe file |> File_sig.abstractify_locs in
+let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_containers file =
+  let file_sig =
+    Parsing_heaps.Mutator_reader.get_file_sig_unsafe ~reader file |> File_sig.abstractify_locs
+  in
   let require_loc = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let errors, resolved_requires =
     resolved_requires_of ~options node_modules_containers file require_loc in
@@ -906,6 +915,7 @@ let calc_old_modules =
 module IntroduceFiles : sig
   val introduce_files:
     mutator:Module_heaps.Introduce_files_mutator.t ->
+    reader: Mutator_state_reader.t ->
     all_providers_mutator:Module_hashtables.All_providers_mutator.t ->
     workers:MultiWorkerLwt.worker list option ->
     options: Options.t ->
@@ -925,10 +935,11 @@ end = struct
   (* Before and after inference, we add per-file module info to the shared heap
      from worker processes. Note that we wait to choose providers until inference
      is complete. *)
-  let add_parsed_info ~mutator ~options file =
+  let add_parsed_info ~mutator ~reader ~options file =
     let force_check = Options.all options in
-    let docblock = Parsing_heaps.get_docblock_unsafe file in
-    let module_name = exported_module ~options file docblock in
+    let docblock = Parsing_heaps.Mutator_reader.get_docblock_unsafe ~reader file in
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let module_name = exported_module ~options ~reader file docblock in
     let checked =
       force_check ||
       Docblock.is_flow docblock
@@ -948,9 +959,9 @@ end = struct
      the module names of unparsed files, we're able to tell whether an
      unparsed file has been required/imported.
    *)
-  let add_unparsed_info ~mutator ~options (file, docblock) =
+  let add_unparsed_info ~mutator ~reader ~options (file, docblock) =
     let force_check = Options.all options in
-    let module_name = exported_module ~options file docblock in
+    let module_name = exported_module ~options ~reader file docblock in
     let checked =
       force_check ||
       File_key.is_lib_file file ||
@@ -1012,9 +1023,10 @@ end = struct
 
     Lwt.return (calc_new_modules ~all_providers_mutator ~options new_file_module_assoc)
 
-  let introduce_files ~mutator =
-    let add_parsed_info = add_parsed_info ~mutator in
-    let add_unparsed_info = add_unparsed_info ~mutator in
+  let introduce_files ~mutator ~reader =
+    let add_parsed_info = add_parsed_info ~mutator ~reader in
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let add_unparsed_info = add_unparsed_info ~mutator ~reader in
     introduce_files_generic ~add_parsed_info ~add_unparsed_info
 
   let introduce_files_from_saved_state ~mutator =

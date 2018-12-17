@@ -20,7 +20,7 @@ module Flow = Flow_js
 module Parsing = Parsing_service_js
 module Infer = Type_inference_js
 
-let parse_lib_file options file =
+let parse_lib_file ~reader options file =
   (* types are always allowed in lib files *)
   let types_mode = Parsing.TypesAllowed in
   (* lib files are always "use strict" *)
@@ -32,14 +32,15 @@ let parse_lib_file options file =
     let%lwt results = Parsing.parse_with_defaults
       ~types_mode
       ~use_strict
+      ~reader
       options
       (* workers *) None
       next
     in
     Lwt.return (
       if not (FilenameMap.is_empty results.Parsing.parse_ok) then
-        let ast = Parsing_heaps.get_ast_unsafe lib_file in
-        let file_sig = Parsing_heaps.get_file_sig_unsafe lib_file in
+        let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
+        let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
         Parsing.Parse_ok (ast, file_sig)
       else if List.length results.Parsing.parse_fails > 0 then
         let _, _, parse_fails = List.hd results.Parsing.parse_fails in
@@ -62,7 +63,7 @@ let parse_lib_file options file =
 
    returns list of (filename, success, errors, suppressions) tuples
  *)
-let load_lib_files ~master_cx ~options files =
+let load_lib_files ~master_cx ~options ~reader files =
 
   let verbose = Options.verbose options in
 
@@ -75,7 +76,7 @@ let load_lib_files ~master_cx ~options files =
         let lib_file = File_key.LibFile file in
         let lint_severities = options.Options.opt_lint_severities in
         let file_options = Options.file_options options in
-        let%lwt result = parse_lib_file options file in
+        let%lwt result = parse_lib_file ~reader options file in
         Lwt.return (match result with
         | Parsing.Parse_ok (ast, file_sig) ->
           let file_sig = File_sig.abstractify_locs file_sig in
@@ -166,7 +167,7 @@ let load_lib_files ~master_cx ~options files =
    parse and do local inference on library files, and set up master context.
    returns list of (lib file, success) pairs.
  *)
-let init ~options lib_files =
+let init ~options ~reader lib_files =
   let master_cx =
     let sig_cx = Context.make_sig () in
     let metadata =
@@ -179,7 +180,7 @@ let init ~options lib_files =
 
   Flow_js.mk_builtins master_cx;
 
-  let%lwt result = load_lib_files ~master_cx ~options lib_files in
+  let%lwt result = load_lib_files ~master_cx ~options ~reader lib_files in
 
   Flow.Cache.clear();
   let reason = Reason.builtin_reason (Reason.RCustom "module") in

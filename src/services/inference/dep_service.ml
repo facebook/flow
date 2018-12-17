@@ -235,8 +235,8 @@ let implementation_file ~audit r =
   then Some (Module_heaps.get_file_unsafe ~audit r)
   else None
 
-let file_dependencies ~audit file =
-  let file_sig = Parsing_heaps.get_file_sig_unsafe file in
+let file_dependencies ~audit ~reader file =
+  let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
   let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.get_resolved_requires_unsafe ~audit file
@@ -250,11 +250,11 @@ let file_dependencies ~audit file =
 
 (* Calculates the dependency graph as a map from files to their dependencies.
  * Dependencies not in parsed are ignored. *)
-let calc_partial_dependency_graph workers files ~parsed =
+let calc_partial_dependency_graph ~reader workers files ~parsed =
   let%lwt dependency_graph = MultiWorkerLwt.call
     workers
     ~job: (List.fold_left (fun dependency_graph file ->
-      FilenameMap.add file (file_dependencies ~audit:Expensive.ok file) dependency_graph
+      FilenameMap.add file (file_dependencies ~audit:Expensive.ok ~reader file) dependency_graph
     ))
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
@@ -262,8 +262,8 @@ let calc_partial_dependency_graph workers files ~parsed =
   FilenameMap.map (FilenameSet.inter parsed) dependency_graph
   |> Lwt.return
 
-let calc_dependency_graph workers ~parsed =
-  calc_partial_dependency_graph workers parsed ~parsed
+let calc_dependency_graph ~reader workers ~parsed =
+  calc_partial_dependency_graph ~reader workers parsed ~parsed
 
 (* Returns a copy of the dependency graph with only those file -> dependency edges where file and
    dependency are in files *)

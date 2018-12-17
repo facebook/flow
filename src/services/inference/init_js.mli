@@ -12,6 +12,7 @@
  *)
 val init :
   options: Options.t ->
+  reader: Mutator_state_reader.t ->
   string list ->
   (File_key.t *
     bool *

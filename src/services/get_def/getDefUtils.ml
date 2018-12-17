@@ -424,6 +424,7 @@ let add_literal_properties literal_key_info def_info =
 
 let get_def_info genv env profiling file_key content loc: (def_info option, string) result Lwt.t =
   let options = genv.options in
+  let reader = State_reader.create () in
   let props_access_info = ref (Ok None) in
   compute_ast_result options file_key content %>>= fun (ast, file_sig, info) ->
   (* Check if it's an exported symbol *)
@@ -460,7 +461,7 @@ let get_def_info genv env profiling file_key content loc: (def_info option, stri
         | Ok None ->
           let external_file_sig =
             let filename = file_key_of_module_ref file_key module_ref in
-            Option.bind filename Parsing_heaps.get_file_sig
+            Option.bind filename (Parsing_heaps.Reader.get_file_sig ~reader)
           in
           Result.return @@ Option.bind external_file_sig begin fun external_file_sig ->
             match external_file_sig.module_sig.module_kind with

@@ -96,6 +96,7 @@ let process_updates ?(skip_incompatible=false) ~options ~libs updates =
   >>= fun () ->
 
     let flow_typed_path = Path.to_string (Files.get_flowtyped_path root) in
+    let reader = State_reader.create () in
     let is_changed_lib filename =
       let is_lib = SSet.mem filename all_libs || filename = flow_typed_path in
       is_lib &&
@@ -104,7 +105,7 @@ let process_updates ?(skip_incompatible=false) ~options ~libs updates =
         | None -> true (* Failed to read lib file *)
         | Some content ->
           (* Check if the lib file's hash has changed *)
-          not (Parsing_service_js.does_content_match_file_hash file content)
+          not (Parsing_service_js.does_content_match_file_hash ~reader file content)
     in
 
     (* Die if a lib file changed *)

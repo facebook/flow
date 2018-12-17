@@ -388,16 +388,16 @@ let hash_content content =
   Xx.update state content;
   Xx.digest state
 
-let does_content_match_file_hash file content =
+let does_content_match_file_hash ~reader file content =
   let content_hash = hash_content content in
-  match Parsing_heaps.get_file_hash file with
+  match Parsing_heaps.Reader.get_file_hash ~reader file with
   | None -> false
   | Some hash -> hash = content_hash
 
 (* parse file, store AST to shared heap on success.
  * Add success/error info to passed accumulator. *)
 let reducer
-  ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch
+  ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch
   ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix
   ~facebook_fbt
   parse_results file
@@ -423,7 +423,8 @@ let reducer
       (* If skip_hash_mismatch is true, then we're currently ensuring some files are parsed. That
        * means we don't currently have the file's AST but we might have the file's hash in the
        * non-oldified heap. What we want to avoid is parsing files which differ from the hash *)
-      if skip_hash_mismatch && Some new_hash <> Parsing_heaps.get_file_hash file
+      if skip_hash_mismatch &&
+        Some new_hash <> Parsing_heaps.Mutator_reader.get_file_hash ~reader file
       then
         let parse_hash_mismatch_skips =
           FilenameSet.add file parse_results.parse_hash_mismatch_skips
@@ -431,7 +432,7 @@ let reducer
         { parse_results with parse_hash_mismatch_skips }
       else
         let unchanged =
-          match Parsing_heaps.get_old_file_hash file with
+          match Parsing_heaps.Mutator_reader.get_old_file_hash ~reader file with
           | Some old_hash when old_hash = new_hash ->
             (* If this optimization is turned off then still parse the file, even though it's
              * unchanged *)
@@ -529,13 +530,13 @@ let next_of_filename_set ?(with_progress=false) workers filenames =
   then MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements filenames)
   else MultiWorkerLwt.next workers (FilenameSet.elements filenames)
 
-let parse ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch ~profile ~max_header_tokens
-  ~noflow ~parse_unchanged ~module_ref_prefix ~facebook_fbt workers next
+let parse ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch ~profile
+  ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix ~facebook_fbt workers next
 : results Lwt.t =
   let t = Unix.gettimeofday () in
   let reducer =
     reducer
-      ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch
+      ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch
        ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix
        ~facebook_fbt
   in
@@ -561,7 +562,7 @@ let parse ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch ~profile ~
   Lwt.return results
 
 let reparse
-  ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
+  ~transaction ~reader ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
   ~parse_unchanged ~module_ref_prefix ~with_progress ~workers ~modified:files ~deleted
   ~facebook_fbt =
   (* save old parsing info for files *)
@@ -569,7 +570,7 @@ let reparse
   let master_mutator, worker_mutator = Parsing_heaps.Reparse_mutator.create transaction all_files in
   let next = next_of_filename_set ?with_progress workers files in
   let%lwt results =
-    parse ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch:false ~profile
+    parse ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch:false ~profile
       ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix ~facebook_fbt workers next
   in
   let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
@@ -586,7 +587,7 @@ let reparse
   Parsing_heaps.Reparse_mutator.revive_files master_mutator unchanged;
   Lwt.return (modified, results)
 
-let parse_with_defaults ?types_mode ?use_strict options workers next =
+let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode ~use_strict options
   in
@@ -595,12 +596,12 @@ let parse_with_defaults ?types_mode ?use_strict options workers next =
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   let facebook_fbt = Options.facebook_fbt options in
   parse
-    ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch:false
+    ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch:false
     ~profile ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix
     ~facebook_fbt workers next
 
 let reparse_with_defaults
-  ~transaction ?types_mode ?use_strict ?with_progress
+  ~transaction ~reader ?types_mode ?use_strict ?with_progress
   ~workers ~modified ~deleted options =
   let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode ~use_strict options
@@ -609,14 +610,14 @@ let reparse_with_defaults
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
   let facebook_fbt = Options.facebook_fbt options in
   reparse
-    ~transaction ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
+    ~transaction ~reader ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
     ~parse_unchanged ~module_ref_prefix ~with_progress ~workers ~modified ~deleted
     ~facebook_fbt
 
 (* ensure_parsed takes a set of files, finds the files which haven't been parsed, and parses them.
  * Any not-yet-parsed files who's on-disk contents don't match their already-known hash are skipped
  * and returned to the caller. *)
-let ensure_parsed options workers files =
+let ensure_parsed ~reader options workers files =
   let types_mode, use_strict, profile, max_header_tokens, noflow =
     get_defaults ~types_mode:None ~use_strict:None options
   in
@@ -634,7 +635,7 @@ let ensure_parsed options workers files =
 
   let%lwt files_missing_asts = MultiWorkerLwt.call workers
     ~job:(List.fold_left (fun acc fn ->
-      if Parsing_heaps.has_ast fn
+      if Parsing_heaps.Mutator_reader.has_ast ~reader fn
       then acc
       else FilenameSet.add fn acc
     ))
@@ -649,7 +650,7 @@ let ensure_parsed options workers files =
   let facebook_fbt = Options.facebook_fbt options in
 
   let%lwt results = parse
-    ~worker_mutator ~types_mode ~use_strict ~skip_hash_mismatch:true
+    ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch:true
     ~profile ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix
     ~facebook_fbt workers next
   in
