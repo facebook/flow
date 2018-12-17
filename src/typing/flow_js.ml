@@ -4546,8 +4546,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         iter_real_props cx mapr (fun ~is_sentinel x p ->
           let use_op = Frame (PropertyCompatibility {
             prop = Some x;
-            lower = reason;
-            upper = reason_of_t proto;
+            upper = reason;
+            lower = reason_of_t proto;
             is_sentinel;
           }, use_op') in
           let reason_prop = replace_reason (fun desc ->

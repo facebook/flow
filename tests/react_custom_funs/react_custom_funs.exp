@@ -141,17 +141,17 @@ References:
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:40:1
 
-Cannot call `React.cloneElement` because property `bar` is missing in props [1] but exists in call of method
-`cloneElement` [2].
+Cannot call `React.cloneElement` because property `bar` is missing in call of method `cloneElement` [1] but exists in
+props [2].
 
    clone_element.js:40:1
    40| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    clone_element.js:40:23
    40| React.cloneElement(a, {foo: 1, bar: 2}); // OK
-                             ^^^^^^^^^^^^^^^^ [1]
+                             ^^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- clone_element.js:41:1

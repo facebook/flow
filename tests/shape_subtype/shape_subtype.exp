@@ -1,58 +1,58 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:12:28
 
-Cannot assign object literal to `z2` because property `s` is missing in object literal [1] but exists in
-`typeof o2` [2].
+Cannot assign object literal to `z2` because property `s` is missing in `typeof o2` [1] but exists in object
+literal [2].
 
    test.js:12:28
    12| let z2:$Shape<typeof o2> = {s : 4}; // flow error
-                                  ^^^^^^^ [1]
+                                  ^^^^^^^ [2]
 
 References:
    test.js:12:15
    12| let z2:$Shape<typeof o2> = {s : 4}; // flow error
-                     ^^^^^^^^^ [2]
+                     ^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:29
 
-Cannot assign object literal to `z8` because property `y` is missing in object literal [1] but exists in `typeof a` [2].
+Cannot assign object literal to `z8` because property `y` is missing in `typeof a` [1] but exists in object literal [2].
 
    test.js:25:29
    25| let z8 : $Shape<typeof a> = {y : 4}; // flow error
-                                   ^^^^^^^ [1]
+                                   ^^^^^^^ [2]
 
 References:
    test.js:25:17
    25| let z8 : $Shape<typeof a> = {y : 4}; // flow error
-                       ^^^^^^^^ [2]
+                       ^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:27
 
-Cannot assign object literal to `z9` because property `x` is missing in object literal [1] but exists in number [2].
+Cannot assign object literal to `z9` because property `x` is missing in number [1] but exists in object literal [2].
 
    test.js:28:27
    28| let z9 : $Shape<number> = {x : 3}; // flow error
-                                 ^^^^^^^ [1]
+                                 ^^^^^^^ [2]
 
 References:
    test.js:28:17
    28| let z9 : $Shape<number> = {x : 3}; // flow error
-                       ^^^^^^ [2]
+                       ^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:31:28
 
-Cannot assign object literal to `z11` because property `x` is missing in object literal [1] but exists in string [2].
+Cannot assign object literal to `z11` because property `x` is missing in string [1] but exists in object literal [2].
 
    test.js:31:28
    31| let z11 : $Shape<string> = {x : 3}; // flow error
-                                  ^^^^^^^ [1]
+                                  ^^^^^^^ [2]
 
 References:
    test.js:31:18
    31| let z11 : $Shape<string> = {x : 3}; // flow error
-                        ^^^^^^ [2]
+                        ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:36:2
@@ -79,73 +79,73 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:38:24
 
-Cannot assign object literal to `z14` because property `p` is missing in object literal [1] but exists in object
-type [2].
+Cannot assign object literal to `z14` because property `p` is missing in object type [1] but exists in object
+literal [2].
 
    test.js:38:24
    38| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
-                              ^^^^^^^^^^^ [1]
+                              ^^^^^^^^^^^ [2]
 
 References:
    test.js:38:18
    38| let z14 : $Shape<{}> = {p : 'foo'}; // flow error
-                        ^^ [2]
+                        ^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:72:22
 
-Cannot assign object literal to `_b` because property `y` is missing in object literal [1] but exists in `A` [2].
+Cannot assign object literal to `_b` because property `y` is missing in `A` [1] but exists in object literal [2].
 
    test.js:72:22
    72| let _b : $Shape<A> = { y : 4 }; // flow error
-                            ^^^^^^^^^ [1]
+                            ^^^^^^^^^ [2]
 
 References:
    test.js:72:17
    72| let _b : $Shape<A> = { y : 4 }; // flow error
-                       ^ [2]
+                       ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:75:22
 
-Cannot assign object literal to `_e` because property `z` is missing in object literal [1] but exists in `B` [2].
+Cannot assign object literal to `_e` because property `z` is missing in `B` [1] but exists in object literal [2].
 
    test.js:75:22
    75| let _e : $Shape<B> = { z : 4 }; // flow error
-                            ^^^^^^^^^ [1]
+                            ^^^^^^^^^ [2]
 
 References:
    test.js:75:17
    75| let _e : $Shape<B> = { z : 4 }; // flow error
-                       ^ [2]
+                       ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:79:22
 
-Cannot assign object literal to `_i` because property `a` is missing in object literal [1] but exists in `C` [2].
+Cannot assign object literal to `_i` because property `a` is missing in `C` [1] but exists in object literal [2].
 
    test.js:79:22
    79| let _i : $Shape<C> = { a : 4 }; // flow error
-                            ^^^^^^^^^ [1]
+                            ^^^^^^^^^ [2]
 
 References:
    test.js:79:17
    79| let _i : $Shape<C> = { a : 4 }; // flow error
-                       ^ [2]
+                       ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:81:25
 
-Cannot assign object literal to `_k` because property `x` is missing in object literal [1] but exists in `Empt` [2].
+Cannot assign object literal to `_k` because property `x` is missing in `Empt` [1] but exists in object literal [2].
 
    test.js:81:25
    81| let _k : $Shape<Empt> = { x : 4 }; // flow error
-                               ^^^^^^^^^ [1]
+                               ^^^^^^^^^ [2]
 
 References:
    test.js:81:17
    81| let _k : $Shape<Empt> = { x : 4 }; // flow error
-                       ^^^^ [2]
+                       ^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:92:22
