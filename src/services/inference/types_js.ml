@@ -557,7 +557,7 @@ let finalize ~options ~reader ~workers errors checked_files =
         ~job
         ~neutral
         ~merge
-        ~next:(MultiWorkerLwt.next ~progress_fn workers
+        ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers
                  (FilenameSet.elements files))
     in
     Lwt.return { errors with
