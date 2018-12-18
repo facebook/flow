@@ -262,7 +262,7 @@ let include_dependencies_and_dependents
     ~profiling
     ~unchanged_checked
     ~infer_input
-    ~dependency_graph
+    ~dependency_info
     ~all_dependent_files
     ~direct_dependent_files =
   let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
@@ -270,11 +270,14 @@ let include_dependencies_and_dependents
      * the dependencies of dependencies, since we need to check transitive dependencies *)
     let preliminary_to_merge = CheckedSet.all
       (CheckedSet.add ~dependents:all_dependent_files infer_input) in
+    let preliminary_to_merge = Dep_service.calc_direct_dependencies dependency_info
+      preliminary_to_merge in
     (* So we want to prune our dependencies to only the dependencies which changed. However,
      * two dependencies A and B might be in a cycle. If A changed and B did not, we still need to
      * check both of them. So we need to calculate components before we can prune *)
     (* Grab the subgraph containing all our dependencies and sort it into the strongly connected
      * cycles *)
+    let dependency_graph = Dependency_info.dependency_graph dependency_info in
     let components = Sort_js.topsort ~roots:preliminary_to_merge dependency_graph in
     let dependencies = List.fold_left (fun dependencies component ->
       if Nel.exists (fun fn -> not (CheckedSet.mem fn unchanged_checked)) component
@@ -787,7 +790,7 @@ let init_libs
  * 2. Every dependency of a focused, dependent, or dependency file will be in the focused set,
  *    dependent set, or dependency set
  **)
-let focused_files_to_infer ~reader ~input ~dependency_graph =
+let focused_files_to_infer ~reader ~input ~dependency_info =
   (* Filter unchecked files out of the input *)
   let input = CheckedSet.filter input ~f:(fun f ->
     Module_heaps.Mutator_reader.is_tracked_file ~reader f (* otherwise, f is probably a directory *)
@@ -800,10 +803,10 @@ let focused_files_to_infer ~reader ~input ~dependency_graph =
   let focused = CheckedSet.focused input in
 
   (* Roots is the set of all focused files and all dependent files *)
-  let roots = Dep_service.calc_all_reverse_dependencies dependency_graph focused
+  let roots = Dep_service.calc_all_reverse_dependencies dependency_info focused
   |> FilenameSet.union (CheckedSet.dependents input) in
 
-  let dependencies = Dep_service.calc_all_dependencies dependency_graph roots
+  let dependencies = Dep_service.calc_all_dependencies dependency_info roots
   |> FilenameSet.union (CheckedSet.dependencies input) in
 
   let dependents = FilenameSet.diff roots focused in
@@ -830,7 +833,7 @@ let filter_out_node_modules ~options =
  * 3. Every dependency of a focused, dependent, or dependency file will be in the focused set,
  *    dependent set, or dependency set
  *)
-let unfocused_files_to_infer ~options ~input ~dependency_graph =
+let unfocused_files_to_infer ~options ~input ~dependency_info =
   let focused = filter_out_node_modules ~options (CheckedSet.focused input) in
   let dependents = filter_out_node_modules ~options (CheckedSet.dependents input) in
 
@@ -838,20 +841,20 @@ let unfocused_files_to_infer ~options ~input ~dependency_graph =
   let dependencies =
     (* Calculate the dependencies of focused and dependent files *)
     let roots = FilenameSet.union focused dependents in
-    Dep_service.calc_all_dependencies dependency_graph roots
+    Dep_service.calc_all_dependencies dependency_info roots
     |> FilenameSet.union (CheckedSet.dependencies input)  (* Add in the forced dependencies *)
   in
   Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
 
-let files_to_infer ~options ~reader ~focused ~profiling ~parsed ~dependency_graph =
+let files_to_infer ~options ~reader ~focused ~profiling ~parsed ~dependency_info =
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focused with
     | None ->
       let input = CheckedSet.add ~focused:parsed CheckedSet.empty in
-      unfocused_files_to_infer ~options ~input ~dependency_graph
+      unfocused_files_to_infer ~options ~input ~dependency_info
     | Some focused ->
       let input = CheckedSet.add ~focused CheckedSet.empty in
-      focused_files_to_infer ~reader ~input ~dependency_graph
+      focused_files_to_infer ~reader ~input ~dependency_info
   )
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
@@ -1237,18 +1240,28 @@ let recheck_with_profiling
   in
 
   Hh_logger.info "Recalculating dependency graph";
-  let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-    let files_to_include_in_dependency_graph =
+  let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+    let files_to_include_in_dependency_info =
       freshparsed
       |> FilenameSet.union direct_dependent_files
     in
-    let%lwt updated_dependency_graph = Dep_service.calc_partial_dependency_graph ~reader workers
-      files_to_include_in_dependency_graph ~parsed in
-    let old_dependency_graph = env.ServerEnv.dependency_graph in
-    old_dependency_graph
-    |> FilenameSet.fold FilenameMap.remove deleted
-    |> FilenameMap.union updated_dependency_graph
-    |> Lwt.return
+    let%lwt updated_dependency_info = Dep_service.calc_partial_dependency_info ~options ~reader workers
+      files_to_include_in_dependency_info ~parsed in
+    let old_dependency_info = env.ServerEnv.dependency_info in
+    match old_dependency_info, updated_dependency_info with
+      | Dependency_info.Classic old_map, Dependency_info.Classic updated_map ->
+        Lwt.return (Dependency_info.Classic (
+          old_map
+          |> FilenameSet.fold FilenameMap.remove deleted
+          |> FilenameMap.union updated_map
+        ))
+      | Dependency_info.TypesFirst old_map, Dependency_info.TypesFirst updated_map ->
+        Lwt.return (Dependency_info.TypesFirst (
+          old_map
+          |> FilenameSet.fold FilenameMap.remove deleted
+          |> FilenameMap.union updated_map
+        ))
+      | _ -> assert false
   ) in
   let%lwt updated_checked_files, all_dependent_files =
     with_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
@@ -1262,7 +1275,7 @@ let recheck_with_profiling
         let focused = FilenameSet.union old_focus_targets freshparsed in
         let input = CheckedSet.add ~focused files_to_force in
         let%lwt updated_checked_files = unfocused_files_to_infer
-          ~options ~input ~dependency_graph in
+          ~options ~input ~dependency_info in
         Lwt.return (updated_checked_files, all_dependent_files)
       | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
         (* Unfortunately, our checked_files set might be out of date. This update could have added
@@ -1301,7 +1314,7 @@ let recheck_with_profiling
           let dependencies = CheckedSet.dependencies files_to_force in
           CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
         in
-        let%lwt updated_checked_files = focused_files_to_infer ~reader ~input ~dependency_graph in
+        let%lwt updated_checked_files = focused_files_to_infer ~reader ~input ~dependency_info in
 
         (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
          * dependency. That's fine if foo.js is in the checked set. But if it's just some random
@@ -1321,7 +1334,7 @@ let recheck_with_profiling
 
   let%lwt to_merge, components, recheck_map =
     include_dependencies_and_dependents
-      ~options ~profiling ~unchanged_checked ~infer_input ~dependency_graph ~all_dependent_files
+      ~options ~profiling ~unchanged_checked ~infer_input ~dependency_info ~all_dependent_files
       ~direct_dependent_files
   in
 
@@ -1331,6 +1344,7 @@ let recheck_with_profiling
 
   let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
+  let dependency_graph = Dependency_info.dependency_graph dependency_info in
   (* recheck *)
   let%lwt checked_files, cycle_leaders, errors, skipped_count = merge
     ~transaction
@@ -1388,7 +1402,7 @@ let recheck_with_profiling
     ({ env with ServerEnv.
       files = parsed;
       unparsed;
-      dependency_graph;
+      dependency_info;
       checked_files;
       errors;
     },
@@ -1617,11 +1631,11 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
     severity_cover_set;
   } in
 
-  let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-    Dep_service.calc_dependency_graph ~reader workers ~parsed:parsed_set
+  let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+    Dep_service.calc_dependency_info ~options ~reader workers ~parsed:parsed_set
   ) in
 
-  Lwt.return (parsed_set, unparsed_set, dependency_graph, ordered_libs, libs, libs_ok, errors)
+  Lwt.return (parsed_set, unparsed_set, dependency_info, ordered_libs, libs, libs_ok, errors)
 
 let init ~profiling ~workers options =
   let file_options = Options.file_options options in
@@ -1693,10 +1707,10 @@ let init ~profiling ~workers options =
       ~errors
       ~is_init:true
   in
-  let%lwt dependency_graph = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-    Dep_service.calc_dependency_graph ~reader workers ~parsed
+  let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+    Dep_service.calc_dependency_info ~options ~reader workers ~parsed
   ) in
-  Lwt.return (parsed, unparsed_set, dependency_graph, ordered_libs, libs, libs_ok, errors)
+  Lwt.return (parsed, unparsed_set, dependency_info, ordered_libs, libs, libs_ok, errors)
 
 (* Does a best-effort job to load a saved state. If it fails, returns None *)
 let load_saved_state ~profiling ~workers options =
@@ -1804,7 +1818,7 @@ let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
 
   let%lwt get_watchman_updates = query_watchman_for_changed_files ~options
-  and updates, (parsed, unparsed, dependency_graph, ordered_libs, libs, libs_ok, errors) =
+  and updates, (parsed, unparsed, dependency_info, ordered_libs, libs, libs_ok, errors) =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
@@ -1843,7 +1857,7 @@ let init ~profiling ~workers options =
   let env = { ServerEnv.
     files = parsed;
     unparsed;
-    dependency_graph;
+    dependency_info;
     checked_files = CheckedSet.empty;
     ordered_libs;
     libs;
@@ -1870,24 +1884,27 @@ let init ~profiling ~workers options =
   end
 
 let full_check ~profiling ~options ~workers ~focus_targets env =
-  let { ServerEnv.files = parsed; dependency_graph; errors; _; } = env in
+  let { ServerEnv.files = parsed; dependency_info; errors; _; } = env in
   with_transaction (fun transaction reader ->
     let%lwt infer_input = files_to_infer
-      ~options ~reader ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
+      ~options ~reader
+      ~focused:focus_targets ~profiling ~parsed ~dependency_info in
 
     let unchanged_checked = CheckedSet.empty in
+
     let%lwt to_merge, components, recheck_map =
       include_dependencies_and_dependents
         ~options ~profiling
         ~unchanged_checked
         ~infer_input
-        ~dependency_graph
+        ~dependency_info
         ~all_dependent_files:FilenameSet.empty
         ~direct_dependent_files:FilenameSet.empty
     in
 
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
+    let dependency_graph = Dependency_info.dependency_graph dependency_info in
     let%lwt (checked_files, _, errors, _) = merge
       ~transaction
       ~reader

@@ -145,7 +145,7 @@ let serialize_graph graph =
 
 let output_dependencies ~env:env root strip_root outfile =
   let strip_root = if strip_root then Files.relative_path root else fun x -> x in
-  let graph = serialize_graph !env.ServerEnv.dependency_graph in
+  let graph = serialize_graph (Dependency_info.all_dependency_graph !env.ServerEnv.dependency_info) in
   Hh_logger.info "printing dependency graph to %s\n" outfile;
   let%lwt out = Lwt_io.open_file ~mode:Lwt_io.Output outfile in
   let%lwt () = LwtUtils.output_graph out strip_root graph in
@@ -155,7 +155,8 @@ let output_dependencies ~env:env root strip_root outfile =
 let get_cycle ~env fn =
   (* Re-calculate SCC *)
   let parsed = !env.ServerEnv.files in
-  let dependency_graph = !env.ServerEnv.dependency_graph in
+  let dependency_info = !env.ServerEnv.dependency_info in
+  let dependency_graph = Dependency_info.dependency_graph dependency_info in
   Lwt.return (Ok (
     let components = Sort_js.topsort ~roots:parsed dependency_graph in
 
@@ -957,7 +958,8 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
         |> ListUtils.first_upto_n 20 (fun t -> Some (Printf.sprintf " ...%d more" t))
         |> String.concat "," in
       file ^ ":" ^ deps ^ "\n" in
-    let dependencies = Utils_js.FilenameMap.bindings env.ServerEnv.dependency_graph
+    let dependencies = Dependency_info.all_dependency_graph env.ServerEnv.dependency_info
+      |> Utils_js.FilenameMap.bindings
       |> Core_list.map ~f:dependency_to_string
       |> ListUtils.first_upto_n 200 (fun t -> Some (Printf.sprintf "[shown 200/%d]\n" t))
       |> String.concat "" in

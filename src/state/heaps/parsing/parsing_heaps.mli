@@ -13,6 +13,7 @@ module type READER = sig
   val get_ast: reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program option
   val get_docblock: reader:reader -> File_key.t -> Docblock.t option
   val get_file_sig: reader:reader -> File_key.t -> File_sig.With_Loc.t option
+  val get_sig_file_sig: reader:reader -> File_key.t -> File_sig.With_Loc.t option
   val get_file_hash: reader:reader -> File_key.t -> Xx.hash option
 
   val get_ast_unsafe: reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program

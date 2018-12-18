@@ -41,7 +41,7 @@ type env = {
     (* All the files that we at least parse. *)
     files: Utils_js.FilenameSet.t;
     (* All the files that we at least parse. *)
-    dependency_graph: Utils_js.FilenameSet.t Utils_js.FilenameMap.t;
+    dependency_info: Dependency_info.t;
     (* All the current files we typecheck. *)
     checked_files: CheckedSet.t;
     ordered_libs: string list; (* The lib files, in their merge order *)
