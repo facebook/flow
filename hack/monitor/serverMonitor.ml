@@ -118,6 +118,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     purgatory_clients : (MonitorRpc.handoff_options * Unix.file_descr) Queue.t;
     (** Whether to ignore hh version mismatches *)
     ignore_hh_version : bool;
+    (* What server is doing now *)
+    server_progress : string option;
+    (* Why what it is doing now might not be going as well as it could *)
+    server_progress_warning : string option;
   }
 
   type t = env * ServerMonitorUtils.monitor_config * Unix.file_descr
@@ -441,6 +445,17 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
     | Not_yet_started, _ | Informant_killed, _ | Died_unexpectedly _, _->
       env
 
+  let rec read_server_messages process env =
+    let msg = ServerProgress.(make_pipe_from_server process.in_fd |> read_from_server) in
+    match msg with
+    | None -> env
+    | Some msg ->
+      let env = match msg with
+        | MonitorRpc.PROGRESS msg -> { env with server_progress = msg }
+        | MonitorRpc.PROGRESS_WARNING msg -> { env with server_progress_warning = msg }
+      in
+      read_server_messages process env
+
   (** Kill command from client is handled by server server, so the monitor
    * needs to check liveness of the server process to know whether
    * to stop itself. *)
@@ -451,7 +466,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         (match pid, proc_stat with
           | 0, _ ->
             (* "pid=0" means the pid we waited for (i.e. process) hasn't yet died/stopped *)
-            env
+            read_server_messages process env
           | _, _ ->
             (* "pid<>0" means the pid has died or received a stop signal *)
             let oom_code = Exit_status.(exit_code Out_of_shared_memory) in
@@ -461,7 +476,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
             SC.on_server_exit monitor_config;
             ServerProcessTools.check_exit_status proc_stat process monitor_config;
             { env with server = Died_unexpectedly (proc_stat, was_oom) })
-      | _ -> env
+      | _ -> { env with
+          server_progress = None;
+          server_progress_warning = None;
+        }
     in
     let exit_status, server_state = match env.server with
       | Alive _ ->
@@ -666,6 +684,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       sql_retries = 0;
       watchman_retries = 0;
       ignore_hh_version = Informant.should_ignore_hh_version informant_init_env;
+      server_progress_warning = None;
+      server_progress = None;
     } in
     env, monitor_config, socket
 
