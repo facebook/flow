@@ -37,6 +37,7 @@ type event =
 | Resolving_dependencies_progress
 | Calculating_dependencies_progress
 | Merging_progress of progress
+| Checking_progress of progress
 | Canceling_progress of progress
 | Finishing_up of summary (* Server's finishing up typechecking or other work *)
 | Recheck_start (* The server is starting to recheck *)
@@ -53,6 +54,7 @@ type typecheck_status =
 | Resolving_dependencies
 | Calculating_dependencies
 | Merging of progress
+| Checking of progress
 | Canceling of progress
 | Garbage_collecting_typecheck (* We garbage collect during typechecks sometime *)
 | Collating_errors (* We sometimes collate errors during typecheck *)
@@ -97,6 +99,7 @@ type emoji =
 | Smiling_face_with_mouth_open
 | Taco
 | Wastebasket
+| Skier
 
 let string_of_emoji = function
 | Bicyclist -> "\xF0\x9F\x9A\xB4"
@@ -112,6 +115,7 @@ let string_of_emoji = function
 | Smiling_face_with_mouth_open -> "\xF0\x9F\x98\x83"
 | Taco -> "\xF0\x9F\x8C\xAE"
 | Wastebasket -> "\xF0\x9F\x97\x91"
+| Skier -> "\xE2\x9B\xB7"
 
 type pad_emoji =
 | Before
@@ -138,6 +142,8 @@ let string_of_event = function
 | Resolving_dependencies_progress -> "Resolving_dependencies_progress"
 | Merging_progress progress ->
   spf "Merging_progress %s" (string_of_progress progress)
+| Checking_progress progress ->
+  spf "Checking_progress files %s" (string_of_progress progress)
 | Canceling_progress progress ->
   spf "Canceling_progress %s" (string_of_progress progress)
 | Finishing_up _ -> "Finishing_up"
@@ -162,6 +168,8 @@ let string_of_typecheck_status ~use_emoji = function
   spf "%scalculating dependencies" (render_emoji ~use_emoji Taco)
 | Merging progress ->
   spf "%smerged files %s" (render_emoji ~use_emoji Bicyclist) (string_of_progress progress)
+| Checking progress ->
+  spf "%schecking files %s" (render_emoji ~use_emoji Skier) (string_of_progress progress)
 | Canceling progress ->
   spf "%scanceling workers %s"
     (render_emoji ~use_emoji Recycling_symbol) (string_of_progress progress)
@@ -221,6 +229,7 @@ let update ~event ~status =
   | Calculating_dependencies_progress, Typechecking (mode, _) ->
       Typechecking (mode, Calculating_dependencies)
   | Merging_progress progress, Typechecking (mode, _) -> Typechecking (mode, Merging progress)
+  | Checking_progress progress, Typechecking (mode, _) -> Typechecking (mode, Checking progress)
   | Canceling_progress progress, Typechecking (mode, _) -> Typechecking (mode, Canceling progress)
   | GC_start, Typechecking (mode, _) -> Typechecking (mode, Garbage_collecting_typecheck)
   | Collating_errors_start, Typechecking (mode, _) -> Typechecking (mode, Collating_errors)
@@ -268,6 +277,7 @@ let is_significant_transition old_status new_status =
     | _, Resolving_dependencies
     | _, Calculating_dependencies
     | _, Merging _
+    | _, Checking _
     | _, Canceling _
     | _, Garbage_collecting_typecheck
     | _, Waiting_for_watchman _

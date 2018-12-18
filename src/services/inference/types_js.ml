@@ -545,12 +545,16 @@ let finalize ~options ~reader ~workers errors checked_files =
       FilenameMap.union new_severity_cover severity_cover in
 
     Hh_logger.info "Checking files";
+    let progress_fn ~total ~start ~length:_ =
+      MonitorRPC.status_update
+        ServerStatus.(Checking_progress { total = Some total; finished = start })
+    in
     let%lwt merge_errors, suppressions, severity_cover_set = MultiWorkerLwt.call
         workers
         ~job
         ~neutral
         ~merge
-        ~next:(MultiWorkerLwt.next workers
+        ~next:(MultiWorkerLwt.next ~progress_fn workers
                  (FilenameSet.elements files))
     in
     Lwt.return { errors with
