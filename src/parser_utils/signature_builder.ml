@@ -245,22 +245,21 @@ module Signature = struct
     end) in
     Verify.check env file_sig @@ Verify.exports file_sig
 
+  let generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) ~facebook_fbt (env, file_sig) program =
+    let module Generate = G(struct
+      let prevent_munge = prevent_munge
+      let ignore_static_propTypes = ignore_static_propTypes
+      let facebook_fbt = facebook_fbt
+    end) in
+    Generate.make env file_sig program
+
   let verify_and_generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) ~facebook_fbt (env, file_sig) program =
-    let errors, _, env = verify ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (env, file_sig) in
+    let errors, _, pruned_env = verify ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (env, file_sig) in
+    errors,
     if Signature_builder_deps.ErrorSet.is_empty errors then
-      let module Generate = G(struct
-        let prevent_munge = prevent_munge
-        let ignore_static_propTypes = ignore_static_propTypes
-        let facebook_fbt = facebook_fbt
-      end) in
-      try Ok (Generate.make env file_sig program)
-      with _ ->
-        let program_loc, _, _ = program in
-        Error (Signature_builder_deps.ErrorSet.singleton (
-          Signature_builder_deps.Error.TODO ("signature generation failed", program_loc)
-        ))
+      generate ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (pruned_env, file_sig) program
     else
-      Error errors
+      generate ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (env, file_sig) program
 end
 
 class type_hoister = object(this)

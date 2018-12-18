@@ -42,6 +42,12 @@ val merge_contents_context:
   File_sig.With_Loc.t ->
   Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program
 
+val check_file:
+  Options.t ->
+  reader:Module_heaps.Mutator_reader.reader ->
+  File_key.t ->
+  (Errors.ErrorSet.t * Error_suppressions.t * ExactCover.lint_severity_cover Utils_js.FilenameMap.t)
+
 val merge_runner:
   job: 'a merge_job ->
   master_mutator: Context_heaps.Merge_context_mutator.master_mutator ->

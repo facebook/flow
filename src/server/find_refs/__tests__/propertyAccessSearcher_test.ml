@@ -15,7 +15,8 @@ let run ctxt expected name content =
     ~use_strict:true ~info ~module_ref_prefix:None ~facebook_fbt:None
     content file in
   let ast = match result with
-    | Parsing_service_js.Parse_ok (ast, _) -> ast
+    | Parsing_service_js.Parse_ok parse_ok ->
+      let ast, _ = Parsing_service_js.basic parse_ok in ast
     | Parsing_service_js.Parse_fail _ -> failwith "Parse unexpectedly failed"
     | Parsing_service_js.Parse_skip _ -> failwith "Parse unexpectedly skipped"
   in

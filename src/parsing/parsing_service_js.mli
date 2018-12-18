@@ -11,9 +11,16 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
+type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
+type parse_ok =
+  | Classic of t
+  | TypesFirst of t * t (* sig *)
+
+val basic: parse_ok -> t
+
 (* result of individual parse *)
 type result =
-  | Parse_ok of (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
+  | Parse_ok of parse_ok
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 

@@ -31,7 +31,9 @@ let compute_ast_result options file content =
   let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock
     ~module_ref_prefix ~facebook_fbt content file in
   match result with
-    | Parse_ok (ast, file_sig) -> Ok (ast, file_sig, docblock)
+    | Parse_ok parse_ok ->
+      let ast, file_sig = basic parse_ok in
+      Ok (ast, file_sig, docblock)
     (* The parse should not fail; we have passed ~fail:false *)
     | Parse_fail _ -> Error "Parse unexpectedly failed"
     | Parse_skip _ -> Error "Parse unexpectedly skipped"

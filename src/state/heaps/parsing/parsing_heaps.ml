@@ -17,6 +17,13 @@ module ASTHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (str
     let use_sqlite_fallback () = false
 end)
 
+module SigASTHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
+    type t = (Loc.t, Loc.t) Flow_ast.program
+    let prefix = Prefix.make()
+    let description = "AST"
+    let use_sqlite_fallback () = false
+end)
+
 let source_remover = object(this)
   inherit [Loc.t, Loc.t, Loc.t, Loc.t] Flow_polymorphic_ast_mapper.mapper
 
@@ -53,6 +60,13 @@ module FileSigHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) 
     let use_sqlite_fallback () = false
 end)
 
+module SigFileSigHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
+    type t = File_sig.t
+    let prefix = Prefix.make()
+    let description = "Requires"
+    let use_sqlite_fallback () = false
+end)
+
 (* Contains the hash for every file we even consider parsing *)
 module FileHashHeap = SharedMem_js.WithCache (SharedMem_js.Immediate)
  (File_key) (struct
@@ -81,34 +95,53 @@ end)
 
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
-  let add file ast info file_sig =
+  let add file info (ast, file_sig) sig_opt =
+    let sig_ast_opt, sig_file_sig_opt = match sig_opt with
+      | None -> None, None
+      | Some (sig_ast, sig_file_sig) -> Some sig_ast, Some sig_file_sig in
     ASTHeap.add file (remove_source ast);
+    begin match sig_ast_opt with
+      | None -> ()
+      | Some sig_ast -> SigASTHeap.add file (remove_source sig_ast)
+    end;
     DocblockHeap.add file info;
-    FileSigHeap.add file file_sig
+    FileSigHeap.add file file_sig;
+    begin match sig_file_sig_opt with
+      | None -> ()
+      | Some sig_file_sig -> SigFileSigHeap.add file sig_file_sig
+    end
 
   let oldify_batch files =
     ASTHeap.oldify_batch files;
+    SigASTHeap.oldify_batch files;
     DocblockHeap.oldify_batch files;
     FileSigHeap.oldify_batch files;
+    SigFileSigHeap.oldify_batch files;
     FileHashHeap.oldify_batch files
 
   let remove_old_batch files =
     ASTHeap.remove_old_batch files;
+    SigASTHeap.remove_old_batch files;
     DocblockHeap.remove_old_batch files;
     FileSigHeap.remove_old_batch files;
+    SigFileSigHeap.remove_old_batch files;
     FileHashHeap.remove_old_batch files;
     SharedMem_js.collect `gentle
 
   let revive_batch files =
     ASTHeap.revive_batch files;
+    SigASTHeap.revive_batch files;
     DocblockHeap.revive_batch files;
     FileSigHeap.revive_batch files;
+    SigFileSigHeap.revive_batch files;
     FileHashHeap.revive_batch files
 end
 
 exception Ast_not_found of string
+exception Sig_ast_not_found of string
 exception Docblock_not_found of string
 exception Requires_not_found of string
+exception Sig_requires_not_found of string
 exception Hash_not_found of string
 
 module type READER = sig
@@ -122,8 +155,10 @@ module type READER = sig
   val get_file_hash: reader:reader -> File_key.t -> Xx.hash option
 
   val get_ast_unsafe: reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program
+  val get_sig_ast_unsafe: reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program
   val get_docblock_unsafe: reader:reader -> File_key.t -> Docblock.t
   val get_file_sig_unsafe: reader:reader -> File_key.t -> File_sig.t
+  val get_sig_file_sig_unsafe: reader:reader -> File_key.t -> File_sig.t
   val get_file_hash_unsafe: reader:reader -> File_key.t -> Xx.hash
 end
 
@@ -153,6 +188,10 @@ end = struct
     try ASTHeap.find_unsafe file |> add_source file
     with Not_found -> raise (Ast_not_found (File_key.to_string file))
 
+  let get_sig_ast_unsafe ~reader:_ file =
+    try SigASTHeap.find_unsafe file |> add_source file
+    with Not_found -> raise (Sig_ast_not_found (File_key.to_string file))
+
   let get_docblock_unsafe ~reader:_ file =
     try DocblockHeap.find_unsafe file
     with Not_found -> raise (Docblock_not_found (File_key.to_string file))
@@ -161,6 +200,10 @@ end = struct
     try FileSigHeap.find_unsafe file
     with Not_found -> raise (Requires_not_found (File_key.to_string file))
 
+  let get_sig_file_sig_unsafe ~reader:_ file =
+    try SigFileSigHeap.find_unsafe file
+    with Not_found -> raise (Sig_requires_not_found (File_key.to_string file))
+
   let get_file_hash_unsafe ~reader:_ file =
     try FileHashHeap.find_unsafe file
     with Not_found -> raise (Hash_not_found (File_key.to_string file))
@@ -168,8 +211,9 @@ end
 
 (* For use by a worker process *)
 type worker_mutator = {
-  add_file: File_key.t -> (Loc.t, Loc.t) Flow_ast.program -> Docblock.t -> File_sig.t -> unit;
-  add_hash: File_key.t -> Xx.hash -> unit;
+  add_file: File_key.t -> Docblock.t -> ((Loc.t, Loc.t) Flow_ast.program * File_sig.t) ->
+            ((Loc.t, Loc.t) Flow_ast.program * File_sig.t) option -> unit;
+  add_hash: File_key.t -> Xx.hash -> unit
 }
 
 (* Parsing is pretty easy - there is no before state and no chance of rollbacks, so we don't
@@ -210,8 +254,8 @@ end = struct
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
-  let add_file file ast info file_sig =
-    ParsingHeaps.add file ast info file_sig
+  let add_file file info (ast, file_sig) sig_opt =
+    ParsingHeaps.add file info (ast, file_sig) sig_opt
 
   (* Ideally we'd assert that file was oldified and not revived, but it's too expensive to pass the
    * set of oldified files to the worker *)
@@ -261,6 +305,14 @@ module Reader: READER with type reader = State_reader.t = struct
     in
     Option.map ~f:(add_source key) ast
 
+  let get_sig_ast ~reader:_ key =
+    let ast =
+      if should_use_oldified key
+      then SigASTHeap.get_old key
+      else SigASTHeap.get key
+    in
+    Option.map ~f:(add_source key) ast
+
   let get_docblock ~reader:_ key =
     if should_use_oldified key
     then DocblockHeap.get_old key
@@ -270,6 +322,11 @@ module Reader: READER with type reader = State_reader.t = struct
     if should_use_oldified key
     then FileSigHeap.get_old key
     else FileSigHeap.get key
+
+  let get_sig_file_sig ~reader:_ key =
+    if should_use_oldified key
+    then SigFileSigHeap.get_old key
+    else SigFileSigHeap.get key
 
   let get_file_hash ~reader:_ key =
     if should_use_oldified key
@@ -281,6 +338,11 @@ module Reader: READER with type reader = State_reader.t = struct
     | Some ast -> ast
     | None -> raise (Ast_not_found (File_key.to_string file))
 
+  let get_sig_ast_unsafe ~reader file =
+    match get_sig_ast ~reader file with
+    | Some ast -> ast
+    | None -> raise (Sig_ast_not_found (File_key.to_string file))
+
   let get_docblock_unsafe ~reader file =
     match get_docblock ~reader file with
     | Some docblock -> docblock
@@ -290,6 +352,11 @@ module Reader: READER with type reader = State_reader.t = struct
     match get_file_sig ~reader file with
     | Some file_sig -> file_sig
     | None -> raise (Requires_not_found (File_key.to_string file))
+
+  let get_sig_file_sig_unsafe ~reader file =
+    match get_sig_file_sig ~reader file with
+    | Some file_sig -> file_sig
+    | None -> raise (Sig_requires_not_found (File_key.to_string file))
 
   let get_file_hash_unsafe ~reader file =
     match get_file_hash ~reader file with
@@ -333,6 +400,11 @@ module Reader_dispatcher: READER with type reader = Abstract_state_reader.t = st
     | Mutator_state_reader reader -> Mutator_reader.get_ast_unsafe ~reader
     | State_reader reader -> Reader.get_ast_unsafe ~reader
 
+  let get_sig_ast_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_sig_ast_unsafe ~reader
+    | State_reader reader -> Reader.get_sig_ast_unsafe ~reader
+
   let get_docblock_unsafe ~reader =
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_docblock_unsafe ~reader
@@ -342,6 +414,11 @@ module Reader_dispatcher: READER with type reader = Abstract_state_reader.t = st
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_file_sig_unsafe ~reader
     | State_reader reader -> Reader.get_file_sig_unsafe ~reader
+
+  let get_sig_file_sig_unsafe ~reader =
+    match reader with
+    | Mutator_state_reader reader -> Mutator_reader.get_sig_file_sig_unsafe ~reader
+    | State_reader reader -> Reader.get_sig_file_sig_unsafe ~reader
 
   let get_file_hash_unsafe ~reader =
     match reader with

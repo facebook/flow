@@ -11,8 +11,21 @@ module File_sig = File_sig.With_Loc
 open Utils_js
 open Sys_utils
 
+type t = (Loc.t, Loc.t) Ast.program * File_sig.t
+type parse_ok =
+  | Classic of t
+  | TypesFirst of t * t (* sig *)
+
+let basic = function
+  | Classic t -> t
+  | TypesFirst (t, _) -> t
+
+let sig_opt = function
+  | Classic _ -> None
+  | TypesFirst (_, t) -> Some t
+
 type result =
-  | Parse_ok of (Loc.t, Loc.t) Ast.program * File_sig.t
+  | Parse_ok of parse_ok
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -335,7 +348,7 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false)
     match file with
     | File_key.JsonFile _ ->
       let ast = parse_json_file ~fail content file in
-      Parse_ok (ast, File_sig.init)
+      Parse_ok (Classic (ast, File_sig.init))
     | File_key.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
@@ -363,17 +376,17 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false)
           let ignore_static_propTypes = true in
           match Signature_builder.program ast ~module_ref_prefix with
           | Ok signature ->
-            let errors = match Signature_builder.Signature.verify_and_generate
-                ?prevent_munge ~ignore_static_propTypes ~facebook_fbt signature ast with
-              | Ok _signature_ast -> Signature_builder_deps.With_Loc.ErrorSet.empty
-              | Error errors -> errors
-            in
-            let verified_file_sig = File_sig.verified errors (snd signature) in
-            Parse_ok (ast, verified_file_sig)
+            let errors, sig_ast = Signature_builder.Signature.verify_and_generate
+              ?prevent_munge ~ignore_static_propTypes ~facebook_fbt signature ast in
+            let file_sig = File_sig.verified errors (snd signature) in
+            let sig_file_sig = match File_sig.program ~ast:sig_ast ~module_ref_prefix with
+              | Ok fs -> fs
+              | Error _ -> assert false in
+            Parse_ok (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig)))
           | Error e -> Parse_fail (File_sig_error e)
         else
-          Parse_ok (ast, File_sig.init))
-  with
+          Parse_ok (Classic (ast, File_sig.init))
+  ) with
   | Parse_error.Error (first_parse_error::_) ->
     Parse_fail (Parse_error first_parse_error)
   | e ->
@@ -457,8 +470,10 @@ let reducer
           in
           begin match (do_parse ~types_mode ~use_strict ~info ~module_ref_prefix
             ~facebook_fbt content file) with
-          | Parse_ok (ast, file_sig) ->
-              worker_mutator.Parsing_heaps.add_file file ast info file_sig;
+          | Parse_ok parse_ok ->
+              let ast, file_sig = basic parse_ok in
+              let sig_opt = sig_opt parse_ok in
+              worker_mutator.Parsing_heaps.add_file file info (ast, file_sig) sig_opt;
               let parse_ok =
                 FilenameMap.add file file_sig.File_sig.tolerable_errors parse_results.parse_ok
               in

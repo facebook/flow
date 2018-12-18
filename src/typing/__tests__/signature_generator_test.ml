@@ -32,12 +32,9 @@ let verify_and_generate ?prevent_munge ?ignore_static_propTypes contents =
 
 let mk_signature_generator_test contents expected_msgs =
   begin fun ctxt ->
-    let msgs = match verify_and_generate ~facebook_fbt:(Some "FbtElement") contents with
-      | Ok program ->
-        String.split_on_char '\n' @@ pretty_print program
-      | Error errors ->
-        Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
-          Signature_builder_deps.ErrorSet.elements errors
+    let msgs =
+      let _errors, program = verify_and_generate ~facebook_fbt:(Some "FbtElement") contents in
+      String.split_on_char '\n' @@ pretty_print program
     in
     let printer v = "\n" ^ (String.concat "\n" v) in
     assert_equal ~ctxt
@@ -49,13 +46,12 @@ let mk_signature_generator_test contents expected_msgs =
 
 let mk_generated_signature_file_sig_test contents expected_msgs =
   begin fun ctxt ->
-    let msgs = match verify_and_generate ~facebook_fbt:(Some "FbtElement") contents with
-      | Ok program ->
-        begin match File_sig.With_Loc.program ~ast:program ~module_ref_prefix:None with
-          | Ok fs -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
-          | Error _ -> []
-        end
-      | Error _errors -> []
+    let msgs =
+      let _errors, program = verify_and_generate ~facebook_fbt:(Some "FbtElement") contents in
+      begin match File_sig.With_Loc.program ~ast:program ~module_ref_prefix:None with
+        | Ok fs -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
+        | Error _ -> []
+      end
     in
     let printer v = "\n" ^ (String.concat "\n" v) in
     assert_equal ~ctxt
@@ -67,12 +63,10 @@ let mk_generated_signature_file_sig_test contents expected_msgs =
 
 let mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes contents =
   begin fun ctxt ->
-    let msgs = match verify_and_generate ?prevent_munge ?ignore_static_propTypes
-      ~facebook_fbt:(Some "FbtElement") contents with
-      | Ok _program -> []
-      | Error errors ->
-        Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
-          Signature_builder_deps.ErrorSet.elements errors
+    let msgs =
+      let _errors, _program = verify_and_generate ?prevent_munge ?ignore_static_propTypes
+        ~facebook_fbt:(Some "FbtElement") contents in
+      []
     in
     let printer v = String.concat "\n" v in
     assert_equal ~ctxt

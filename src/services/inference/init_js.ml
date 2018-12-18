@@ -41,7 +41,7 @@ let parse_lib_file ~reader options file =
       if not (FilenameMap.is_empty results.Parsing.parse_ok) then
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe reader lib_file in
         let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader lib_file in
-        Parsing.Parse_ok (ast, file_sig)
+        Parsing.Parse_ok (Parsing.Classic (ast, file_sig))
       else if List.length results.Parsing.parse_fails > 0 then
         let _, _, parse_fails = List.hd results.Parsing.parse_fails in
         Parsing.Parse_fail parse_fails
@@ -78,7 +78,8 @@ let load_lib_files ~master_cx ~options ~reader files =
         let file_options = Options.file_options options in
         let%lwt result = parse_lib_file ~reader options file in
         Lwt.return (match result with
-        | Parsing.Parse_ok (ast, file_sig) ->
+        | Parsing.Parse_ok parse_ok ->
+          let ast, file_sig = Parsing.basic parse_ok in
           let file_sig = File_sig.abstractify_locs file_sig in
           let metadata =
             let open Context in

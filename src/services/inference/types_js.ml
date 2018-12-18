@@ -521,6 +521,44 @@ let merge
     |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
   Lwt.return (checked, cycle_leaders, errors, skipped_count)
 
+let finalize ~options ~reader ~workers errors checked_files =
+  let files = FilenameSet.union (CheckedSet.focused checked_files) (CheckedSet.dependents checked_files) in
+  match options.Options.opt_arch with
+  | Options.Classic -> Lwt.return errors
+  | Options.TypesFirst ->
+    let job = List.fold_left (fun (errors, suppressions, severity_cover) file ->
+      let new_errors, new_suppressions, new_severity_cover =
+        Merge_service.check_file options ~reader file in
+      update_errset errors file new_errors,
+      Error_suppressions.update_suppressions suppressions new_suppressions,
+      FilenameMap.union new_severity_cover severity_cover
+    ) in
+    let neutral =
+      FilenameMap.empty,
+      Error_suppressions.empty,
+      FilenameMap.empty in
+    let merge
+        (errors, suppressions, severity_cover)
+        (new_errors, new_suppressions, new_severity_cover) =
+      FilenameMap.union errors new_errors,
+      Error_suppressions.update_suppressions suppressions new_suppressions,
+      FilenameMap.union new_severity_cover severity_cover in
+
+    Hh_logger.info "Checking files";
+    let%lwt merge_errors, suppressions, severity_cover_set = MultiWorkerLwt.call
+        workers
+        ~job
+        ~neutral
+        ~merge
+        ~next:(MultiWorkerLwt.next workers
+                 (FilenameSet.elements files))
+    in
+    Lwt.return { errors with
+      ServerEnv.merge_errors;
+      suppressions;
+      severity_cover_set;
+    }
+
 let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
     let%lwt parse_hash_mismatch_skips =
@@ -593,8 +631,9 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
   let reader = State_reader.create () in
 
   match parse_result with
-  | Parsing_service_js.Parse_ok (ast, file_sig) ->
+  | Parsing_service_js.Parse_ok parse_ok ->
       (* override docblock info *)
+      let ast, file_sig = Parsing_service_js.basic parse_ok in
       let info = Docblock.set_flow_mode_for_ide_command info in
 
       (* merge *)
@@ -1289,7 +1328,7 @@ let recheck_with_profiling
   let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
   (* recheck *)
-  let%lwt checked, cycle_leaders, errors, skipped_count = merge
+  let%lwt checked_files, cycle_leaders, errors, skipped_count = merge
     ~transaction
     ~reader
     ~options
@@ -1327,6 +1366,8 @@ let recheck_with_profiling
     ))
   in
 
+  let%lwt errors = finalize ~options ~reader ~workers errors checked_files in
+
   (* Here's how to update unparsed:
    * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
    * 2. Remove the deleted files. This removes any previously unparsed file which was deleted
@@ -1344,7 +1385,7 @@ let recheck_with_profiling
       files = parsed;
       unparsed;
       dependency_graph;
-      checked_files = checked;
+      checked_files;
       errors;
     },
     (new_or_changed, deleted, all_dependent_files, cycle_leaders, skipped_count, estimates))
@@ -1826,7 +1867,7 @@ let init ~profiling ~workers options =
 
 let full_check ~profiling ~options ~workers ~focus_targets env =
   let { ServerEnv.files = parsed; dependency_graph; errors; _; } = env in
-  let%lwt (checked_files, _, errors, _skipped_count) = with_transaction (fun transaction reader ->
+  with_transaction (fun transaction reader ->
     let%lwt infer_input = files_to_infer
       ~options ~reader ~focused:focus_targets ~profiling ~parsed ~dependency_graph in
 
@@ -1843,7 +1884,7 @@ let full_check ~profiling ~options ~workers ~focus_targets env =
 
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
-    merge
+    let%lwt (checked_files, _, errors, _) = merge
       ~transaction
       ~reader
       ~options
@@ -1857,6 +1898,7 @@ let full_check ~profiling ~options ~workers ~focus_targets env =
       ~dependency_graph
       ~deleted:FilenameSet.empty
       ~persistent_connections:None
-      ~prep_merge:None
-  ) in
-  Lwt.return { env with ServerEnv.checked_files; errors }
+      ~prep_merge:None in
+    let%lwt errors = finalize ~options ~reader ~workers errors checked_files in
+    Lwt.return { env with ServerEnv.checked_files; errors }
+  )

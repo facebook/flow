@@ -87,10 +87,10 @@ let reqs_of_component ~reader component required =
 
   master_cx, dep_cxs, reqs
 
-let merge_strict_context ~options ~reader component =
+let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe component =
   let required, file_sigs, loc_file_sigs =
     Nel.fold_left (fun (required, file_sigs, loc_file_sigs) file ->
-      let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
+      let loc_file_sig = get_file_sig_unsafe ~reader file in
       let file_sig = File_sig.abstractify_locs loc_file_sig in
       let file_sigs = FilenameMap.add file file_sig file_sigs in
       let loc_file_sigs = FilenameMap.add file loc_file_sig loc_file_sigs in
@@ -113,7 +113,7 @@ let merge_strict_context ~options ~reader component =
   let strict_mode = Options.strict_mode options in
   let ((cx, _), other_cxs) as cx_nel = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
-    ~get_ast_unsafe:(Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader)
+    ~get_ast_unsafe:(get_ast_unsafe ~reader)
     ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
     ~do_gc:(Options.is_debug_mode options)
     component file_reqs dep_cxs master_cx
@@ -127,6 +127,16 @@ let merge_strict_context ~options ~reader component =
   let other_cxs = Core_list.map ~f:fst other_cxs in
 
   { cx; other_cxs; master_cx; file_sigs; loc_file_sigs; typed_asts }
+
+let merge_strict_context ~options ~reader component =
+  merge_strict_context_generic ~options ~reader
+    ~get_ast_unsafe:(match options.Options.opt_arch with
+      | Options.Classic -> Parsing_heaps.Reader_dispatcher.get_ast_unsafe
+      | Options.TypesFirst -> Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe)
+    ~get_file_sig_unsafe:(match options.Options.opt_arch with
+      | Options.Classic -> Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe
+      | Options.TypesFirst -> Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe)
+    component
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
@@ -219,6 +229,30 @@ let merge_strict_component ~worker_mutator ~options ~reader merged_acc component
         (ExactCover.file_cover file (Options.lint_severities options))
     in
     (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
+
+let check_file options ~reader file =
+  let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
+  if info.Module_heaps.checked then (
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let { cx; _ } = merge_strict_context_generic ~options ~reader
+      ~get_ast_unsafe:Parsing_heaps.Reader_dispatcher.get_ast_unsafe
+      ~get_file_sig_unsafe:Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe
+      (Nel.one file) in
+    let errors = Context.errors cx in
+    let suppressions = Context.error_suppressions cx in
+    let severity_cover = Context.severity_cover cx in
+    (errors, suppressions, severity_cover)
+  )
+  else
+    let errors = Errors.ErrorSet.empty in
+    let suppressions = Error_suppressions.empty in
+    let severity_cover =
+      Utils_js.FilenameMap.singleton
+        file
+        (ExactCover.file_cover file (Options.lint_severities options))
+    in
+    (errors, suppressions, severity_cover)
+
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
