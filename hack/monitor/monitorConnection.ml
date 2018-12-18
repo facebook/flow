@@ -44,6 +44,14 @@ let send_shutdown_rpc oc =
     MonitorRpc.SHUT_DOWN
   |> ignore
 
+let send_server_progress_rpc oc =
+  let _ : int = Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel oc)
+    MonitorRpc.SERVER_PROGRESS in
+  ()
+
+let read_server_progress ic : string option * string option=
+  from_channel_without_buffering ic
+
 let establish_connection ~timeout config =
   let sock_name = Socket.get_path config.socket_file in
   let sockaddr =
@@ -301,3 +309,12 @@ let connect_once ~timeout config handoff_options =
   let elapsed_t = int_of_float (Unix.gettimeofday () -. start_t) in
   let timeout = max (timeout - elapsed_t) 1 in
   consume_prehandoff_messages ~timeout ic oc
+
+let connect_to_monitor_and_get_server_progress ~timeout config =
+  let open Result in
+  connect_to_monitor ~timeout config >>= fun (ic, oc, cstate) ->
+  verify_cstate ic cstate >>= fun () ->
+  (* This is similar to connect_once up to this point, where instead of
+   * being handed off to server we just get our answer from monitor *)
+  send_server_progress_rpc oc;
+  Ok (read_server_progress ic)

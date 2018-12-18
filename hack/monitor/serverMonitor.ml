@@ -274,6 +274,12 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       kill_server_with_check env.server;
       wait_for_server_exit_with_check env.server kill_signal_time;
       Exit_status.(exit No_error)
+    | MonitorRpc.SERVER_PROGRESS ->
+      msg_to_channel client_fd
+        (env.server_progress, env.server_progress_warning);
+      Unix.close client_fd;
+      env
+
 
   and hand_off_client_connection server_fd client_fd =
     let status = Libancillary.ancil_send_fd server_fd client_fd in
