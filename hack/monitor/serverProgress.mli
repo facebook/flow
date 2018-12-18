@@ -21,4 +21,6 @@ val read_from_server : pipe_from_server -> MonitorRpc.server_to_monitor_message 
 val make_pipe_to_monitor : Unix.file_descr -> unit
 val send_to_monitor : MonitorRpc.server_to_monitor_message -> unit
 (* This is basically signature of "Printf.printf" *)
-val send_progress_to_monitor : ('a, unit, string, unit) format4 -> 'a
+val send_progress_to_monitor :
+  ?include_in_logs:bool ->
+  ('a, unit, string, unit) format4 -> 'a

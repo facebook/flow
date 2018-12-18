@@ -42,8 +42,9 @@ let send_to_monitor msg =
       ()
     end
 
-let send_progress_to_monitor fmt =
+let send_progress_to_monitor ?(include_in_logs=true) fmt =
   let f s =
+    if include_in_logs then Hh_logger.log "%s" s;
     send_to_monitor (MonitorRpc.PROGRESS (Some s))
   in
   Printf.ksprintf f fmt
