@@ -14,8 +14,8 @@ References:
    array.js:7:19
      7| (["hi"]: Iterable<number>); // Error string ~> number
                           ^^^^^^ [2]
-   <BUILTINS>/core.js:487:22
-   487| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:488:22
+   488| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -35,8 +35,8 @@ References:
    array.js:8:22
      8| (["hi", 1]: Iterable<string>); // Error number ~> string
                              ^^^^^^ [2]
-   <BUILTINS>/core.js:487:22
-   487| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:488:22
+   488| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -56,8 +56,8 @@ References:
    caching_bug.js:21:62
     21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:487:22
-   487| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:488:22
+   488| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -73,8 +73,8 @@ References:
    iterator_result.js:17:40
     17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
                                                ^^^^^^^ [1]
-   <BUILTINS>/core.js:485:13
-   485|   | { done: false, +value: Yield };
+   <BUILTINS>/core.js:486:13
+   486|   | { done: false, +value: Yield };
                     ^^^^^ [2]
 
 
@@ -90,8 +90,8 @@ References:
    iterator_result.js:17:40
     17| function makeIterator(coin_flip: () => boolean ): Iterator<string> {
                                                ^^^^^^^ [1]
-   <BUILTINS>/core.js:484:13
-   484|   | { done: true, +value?: Return }
+   <BUILTINS>/core.js:485:13
+   485|   | { done: true, +value?: Return }
                     ^^^^ [2]
 
 
@@ -105,14 +105,14 @@ value of property `@@iterator`.
                  ^^^
 
 References:
-   <BUILTINS>/core.js:543:28
-   543|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:544:28
+   544|     @@iterator(): Iterator<[K, V]>;
                                    ^^^^^^ [1]
    map.js:13:55
     13| function mapTest4(map: Map<number, string>): Iterable<string> {
                                                               ^^^^^^ [2]
-   <BUILTINS>/core.js:487:22
-   487| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:488:22
+   488| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -132,8 +132,8 @@ References:
    set.js:13:47
     13| function setTest4(set: Set<string>): Iterable<number> {
                                                       ^^^^^^ [2]
-   <BUILTINS>/core.js:487:22
-   487| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:488:22
+   488| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
@@ -153,8 +153,8 @@ References:
    string.js:5:17
      5| ("hi": Iterable<number>); // Error - string is a Iterable<string>
                         ^^^^^^ [2]
-   <BUILTINS>/core.js:487:22
-   487| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:488:22
+   488| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
 
 
