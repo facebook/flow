@@ -13,8 +13,8 @@ continuing.
 
 Table of contents:
 
-- [Flow version >= 0.89.0](#toc-react-hocs-as-of-0-89-0)
-- [Flow version < 0.89.0](#toc-react-hocs-before-0-89-0)
+- [Flow version >= 0.89.0](#toc-hocs-as-of-0-89-0)
+- [Flow version < 0.89.0](#toc-hocs-before-0-89-0)
 
 ## HOCs as of 0.89.0 <a class="toc" id="toc-hocs-as-of-0-89-0" href="#toc-hocs-as-of-0-89-0"></a>
 
