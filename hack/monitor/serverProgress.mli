@@ -24,3 +24,5 @@ val send_to_monitor : MonitorRpc.server_to_monitor_message -> unit
 val send_progress_to_monitor :
   ?include_in_logs:bool ->
   ('a, unit, string, unit) format4 -> 'a
+val send_percentage_progress_to_monitor :
+  string -> int -> int -> string -> unit

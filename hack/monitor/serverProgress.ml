@@ -48,3 +48,9 @@ let send_progress_to_monitor ?(include_in_logs=true) fmt =
     send_to_monitor (MonitorRpc.PROGRESS (Some s))
   in
   Printf.ksprintf f fmt
+
+let send_percentage_progress_to_monitor s1 x y s2 =
+  let s2 = if s2 = "" then s2 else s2 ^ " " in
+  let percent = (100.0 *. (float_of_int x)) /. (float_of_int y) in
+  send_progress_to_monitor ~include_in_logs:false
+    "%s %d/%d %s(%.1f%%)" s1 x y s2 percent
