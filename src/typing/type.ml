@@ -774,7 +774,6 @@ module rec TypeTerm : sig
     | Merged
     | React
     | ResolveSpread
-    | ShapeAssign
     | TaggedTemplateType
     | TypeInstance
     | Unimplemented
@@ -2725,7 +2724,6 @@ module Unsoundness = struct
   let unresolved           = Unsound UnresolvedType
   let type_instance        = Unsound TypeInstance
   let resolve_spread       = Unsound ResolveSpread
-  let shape_assign         = Unsound ShapeAssign
   let unimplemented        = Unsound Unimplemented
   let weak_context         = Unsound WeakContext
   let inference_hooks      = Unsound InferenceHooks
@@ -2742,7 +2740,6 @@ module Unsoundness = struct
   let unresolved_any       = AnyT.make unresolved
   let type_instance_any    = AnyT.make type_instance
   let resolve_spread_any   = AnyT.make resolve_spread
-  let shape_assign_any     = AnyT.make shape_assign
   let constructor_any      = AnyT.make constructor
   let function_proto_any   = AnyT.make function_proto
   let computed_lit_key_any = AnyT.make computed_lit_key

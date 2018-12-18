@@ -32,6 +32,7 @@ Cannot extend property `Component` [1] with `Foo` because:
  - property `y_` is missing in function type [2] but exists in object type [3] in the first argument of property
    `setState`.
  - property `y_` is missing in `State` [4] but exists in object type [3] in the first argument of property `setState`.
+ - object type [3] is incompatible with null or undefined [5] in the first argument of property `setState`.
 
    classes.js:7:1
        v------------------------------------------------
@@ -71,15 +72,18 @@ References:
    classes.js:7:19
     7| class Foo extends React.Component<Props, State> {
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:35:36
-   35|     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:35:37
+   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    classes.js:23:15
    23|   setState(o: { y_: string }): void { }
                      ^^^^^^^^^^^^^^ [3]
    classes.js:7:42
     7| class Foo extends React.Component<Props, State> {
                                                 ^^^^^ [4]
+   <BUILTINS>/react.js:35:19
+   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+                         ^^^^^^^^^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:15:21
@@ -206,9 +210,9 @@ Property `y_` is missing in function type [1] but exists in object type [2].
                  ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:35:36
-   35|     partialState: $Shape<State> | ((State, Props) => $Shape<State> | void),
-                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:35:37
+   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    classes.js:64:15
    64|   setState(o: { y_: string }): void { },
                      ^^^^^^^^^^^^^^ [2]
@@ -229,6 +233,20 @@ References:
    classes.js:64:15
    64|   setState(o: { y_: string }): void { },
                      ^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- classes.js:64:15
+
+object type [1] is incompatible with null or undefined [2].
+
+   classes.js:64:15
+   64|   setState(o: { y_: string }): void { },
+                     ^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:35:19
+   35|     partialState: ?$Shape<State> | ((State, Props) => ?$Shape<State>),
+                         ^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:79:17
@@ -901,7 +919,7 @@ References:
 
 
 
-Found 59 errors
+Found 61 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

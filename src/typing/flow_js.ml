@@ -4538,7 +4538,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         ObjRestT express related meta-operations on objects. Consolidate these
         meta-operations and ensure consistency of their semantics. **)
 
-    | (ShapeT (o), _) -> rec_flow cx trace (o, u)
+    | ShapeT o, _ -> rec_flow cx trace (o, u)
 
     | DefT (reason, ObjT { props_tmap = mapr; call_t = None; _ }), UseT (use_op', ShapeT proto) ->
         (* TODO: ShapeT should have its own reason *)
@@ -4564,21 +4564,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ))
         )
 
+    | DefT (r, InstanceT (_, _, _, {inst_call_t = None; own_props; proto_props; _})) as instance,
+      UseT (use_op, ShapeT proto) ->
+        rec_flow cx trace (proto,
+          GetPropT (use_op, r, Named (reason_of_t proto, "constructor"), class_type instance));
+        structural_subtype cx trace ~use_op ~ignore_polarity:true ~skip_ctor:true proto r
+          (own_props, proto_props, None);
+
     (* Function definitions are incompatible with ShapeT. ShapeT is meant to
      * match an object type with a subset of the props in the type being
      * destructured. It would be complicated and confusing to use a function for
      * this.
      *
      * This invariant is important for the React setState() type definition. *)
-    | DefT (_, (FunT _ | ObjT {call_t = Some _; _})), UseT (use_op, ShapeT o) ->
+    | DefT (_, (FunT _
+                | ObjT {call_t = Some _; _}
+                | InstanceT (_, _, _, {inst_call_t = Some _; _}))),
+      UseT (use_op, ShapeT o) ->
         add_output cx ~trace
           (FlowError.EFunctionIncompatibleWithShape (reason_of_t l, reason_of_t o, use_op))
 
-    | (_, UseT (_, ShapeT (o))) ->
-        let reason = reason_of_t o in
-        rec_flow cx trace (l,
-          ObjAssignFromT (reason, o,
-            AnyT.locationless Unsoundness.shape_assign, default_obj_assign_kind))
+    |  (_, UseT (_, ShapeT (o))) ->
+         let reason = reason_of_t o in
+         rec_flow cx trace (l,
+           ObjAssignFromT (reason, o, reason_of_t l |> EmptyT.make, default_obj_assign_kind))
 
     | DefT (_, AnyT src), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why src reason_op, u)
@@ -7562,12 +7571,16 @@ and inherited_method x = x <> "constructor"
 (* TODO: own_props/proto_props is misleading, since they come from interfaces,
    which don't have an own/proto distinction. *)
 and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
-  (own_props, proto_props, call_id) =
+  ?(ignore_polarity=false) ?(skip_ctor=false) (own_props, proto_props, call_id) =
+  let action use_op = function
+    | Field (_, t, _) when ignore_polarity -> MatchProp (use_op, t)
+    | p -> LookupProp (use_op, p) in
   let lreason = reason_of_t lower in
   let own_props = Context.find_props cx own_props in
   let proto_props = Context.find_props cx proto_props in
   let call_t = Option.map call_id ~f:(Context.find_call cx) in
   own_props |> SMap.iter (fun s p ->
+    if skip_ctor && s = "constructor" then () else
     let use_op = Frame (PropertyCompatibility {
       prop = Some s;
       lower = lreason;
@@ -7584,7 +7597,7 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
       in
       rec_flow cx trace (lower,
         LookupT (reason_struct, NonstrictReturning (None, None), [], propref,
-          LookupProp (use_op, Field (None, t, polarity))))
+          Field (None, t, polarity) |> action use_op))
     | _ ->
       let propref =
         let reason_prop = replace_reason (fun desc ->
@@ -7593,10 +7606,10 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
         Named (reason_prop, s)
       in
       rec_flow cx trace (lower,
-        LookupT (reason_struct, Strict lreason, [], propref,
-          LookupProp (use_op, p)))
+        LookupT (reason_struct, Strict lreason, [], propref, action use_op p))
   );
   proto_props |> SMap.iter (fun s p ->
+    if skip_ctor && s = "constructor" then () else
     let use_op = Frame (PropertyCompatibility {
       prop = Some s;
       lower = lreason;
@@ -7610,8 +7623,7 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
       Named (reason_prop, s)
     in
     rec_flow cx trace (lower,
-      LookupT (reason_struct, Strict lreason, [], propref,
-        LookupProp (use_op, p)))
+      LookupT (reason_struct, Strict lreason, [], propref, action use_op p))
   );
   call_t |> Option.iter ~f:(fun ut ->
     let prop_name = Some "$call" in
