@@ -714,6 +714,7 @@ module Options_flags = struct
     strip_root: bool;
     temp_dir: string option;
     traces: int option;
+    types_first: bool;
     verbose: Verbose.t option;
     weak: bool;
   }
@@ -745,7 +746,7 @@ let options_flags =
   let collect_options_flags main
     debug profile all weak traces no_flowlib munge_underscore_members max_workers
     include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
-    merge_timeout saved_state_fetcher saved_state_no_fallback no_saved_state =
+    merge_timeout saved_state_fetcher saved_state_no_fallback no_saved_state types_first =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -771,6 +772,7 @@ let options_flags =
       saved_state_fetcher;
       saved_state_no_fallback;
       no_saved_state;
+      types_first;
    }
   in
   fun prev ->
@@ -814,6 +816,8 @@ let options_flags =
       ~doc:"If saved state fails to load, exit (normally fallback is to initialize from scratch)"
     |> flag "--no-saved-state" no_arg
       ~doc:"Do not load from a saved state even if one is available"
+    |> flag "--types-first" no_arg
+        ~doc:"[EXPERIMENTAL] types-first architecture"
 
 let flowconfig_name_flag prev =
   let open CommandSpec.ArgSpec in
@@ -919,6 +923,11 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
 
   let opt_lazy_mode = Option.value lazy_mode ~default:(FlowConfig.lazy_mode flowconfig) in
 
+  let opt_arch =
+    if options_flags.types_first
+    then Options.TypesFirst
+    else Options.Classic in
+
   let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
     opt_flowconfig_name = flowconfig_name;
@@ -978,7 +987,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_saved_state_fetcher;
     opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
     opt_no_saved_state = options_flags.no_saved_state;
-    opt_arch = Options.Classic;
+    opt_arch;
   }
 
 let make_env flowconfig_name connect_flags root =
