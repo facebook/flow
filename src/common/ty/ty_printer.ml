@@ -249,7 +249,7 @@ let type_ ?(size=5000) t =
         type_ ~depth t;
       ]
 
-  and type_array ~depth { arr_readonly; arr_elt_t } =
+  and type_array ~depth { arr_readonly; arr_literal = _; arr_elt_t } =
     fuse [
       Atom (if arr_readonly then "$ReadOnlyArray" else "Array");
       Atom "<";
@@ -257,7 +257,7 @@ let type_ ?(size=5000) t =
       Atom ">";
     ]
 
-  and type_object ~depth ?(sep=(Atom ",")) { obj_exact; obj_props; obj_frozen = _ } =
+  and type_object ~depth ?(sep=(Atom ",")) { obj_exact; obj_props; _ } =
     let s_exact = if obj_exact then Atom "|" else Empty in
     list
       ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])

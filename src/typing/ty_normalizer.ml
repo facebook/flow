@@ -583,9 +583,8 @@ end = struct
       type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; t]
     | DefT (_, FunT (_, _, f)) ->
       fun_ty ~env f None >>| fun t -> Ty.Fun t
-    | DefT (_, ObjT o) ->
-      obj_ty ~env o >>| fun t -> Ty.Obj t
-    | DefT (_, ArrT a) -> arr_ty ~env a
+    | DefT (r, ObjT o) -> obj_ty ~env r o
+    | DefT (r, ArrT a) -> arr_ty ~env r a
     | DefT (_, UnionT rep) ->
       let t0, (t1, ts) = UnionRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
@@ -641,7 +640,11 @@ end = struct
         (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
-          ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = Any })
+          ~rest:(Some "argArray", Arr {
+            arr_readonly = false;
+            arr_literal = false;
+            arr_elt_t = Any
+          })
           Any)
       else
          return Ty.(TypeOf (["Function"; "prototype"], "bind"))
@@ -651,7 +654,11 @@ end = struct
         (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
           ~params:[(Some "thisArg", Any, non_opt_param)]
-          ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = Any })
+          ~rest:(Some "argArray", Arr {
+            arr_readonly = false;
+            arr_literal = false;
+            arr_elt_t = Any;
+          })
           Any)
       else
          return Ty.(TypeOf (["Function"; "prototype"], "call"))
@@ -772,11 +779,15 @@ end = struct
     | Some (x, _, t) -> type__ ~env t >>| fun t -> Some (x,t)
     | _ -> return None
 
-  and obj_ty ~env {T.flags = {T.exact; T.frozen; _}; props_tmap; dict_t; _} =
-    let obj_exact = exact in
-    let obj_frozen = frozen in
+  and obj_ty ~env reason o =
+    let { T.flags; props_tmap; dict_t; _ } = o in
+    let { T.exact = obj_exact; T.frozen = obj_frozen; _ } = flags in
+    let obj_literal = match Reason.desc_of_reason reason with
+      | Reason.RObjectLit -> true
+      | _ -> false
+    in
     obj_props ~env props_tmap dict_t >>| fun obj_props ->
-    {Ty.obj_exact; obj_frozen; obj_props}
+    Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
 
   and obj_props ~env id dict =
     let dispatch (x, p) =
@@ -829,13 +840,18 @@ end = struct
     type__ ~env value >>| fun dict_value ->
     Ty.(IndexProp {dict_polarity; dict_name; dict_key; dict_value})
 
-  and arr_ty ~env = function
+  and arr_ty ~env reason elt_t =
+    let arr_literal = match Reason.desc_of_reason reason with
+      | Reason.RArrayLit -> true
+      | _ -> false
+    in
+    match elt_t with
     | T.ArrayAT (t, _) ->
       type__ ~env t >>| fun t ->
-      Ty.(Arr { arr_readonly = false; arr_elt_t = t})
+      Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t = t }
     | T.ROArrayAT t ->
       type__ ~env t >>| fun t ->
-      Ty.(Arr { arr_readonly = true; arr_elt_t = t})
+      Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
     | T.TupleAT (_, ts) ->
       mapM (type__ ~env) ts >>| fun ts -> Ty.Tup ts
 
@@ -1061,7 +1077,11 @@ end = struct
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
     | ObjectAssign -> return Ty.(mk_fun
         ~params:[(Some "target", Any, non_opt_param)]
-        ~rest:(Some "sources", Arr { arr_readonly = false; arr_elt_t = Any })
+        ~rest:(Some "sources", Arr {
+          arr_readonly = false;
+          arr_literal = false;
+          arr_elt_t = Any
+        })
         Any
       )
 
@@ -1132,9 +1152,12 @@ end = struct
 
     (* debugPrint: (_: any[]) => void *)
     | DebugPrint -> return Ty.(
-        mk_fun ~params:[
-          (Some "_", Arr { arr_readonly = false; arr_elt_t = Any }, non_opt_param)
-        ] Void
+        mk_fun ~params:[(Some "_", Arr {
+            arr_readonly = false;
+            arr_literal = false;
+            arr_elt_t = Any;
+          }, non_opt_param
+        )] Void
       )
 
     (* debugThrow: () => empty *)
@@ -1326,6 +1349,7 @@ end = struct
       Ty.Obj { Ty.
         obj_props = prefix_tys @ spread_of_ty ty;
         obj_exact;
+        obj_literal = false;
         obj_frozen = false; (* default *)
       }
     in

@@ -56,11 +56,13 @@ and fun_t = {
 and obj_t = {
   obj_exact: bool;
   obj_frozen: bool;
+  obj_literal: bool;
   obj_props: prop list;
 }
 
 and arr_t = {
   arr_readonly: bool;
+  arr_literal: bool;
   arr_elt_t: t;
 }
 
@@ -197,8 +199,8 @@ let mk_field_props prop_list =
     Field (t, { fld_polarity = Neutral; fld_optional = opt })
   )) prop_list
 
-let mk_object ?(obj_exact=false) ?(obj_frozen=false) obj_props =
-  Obj { obj_exact; obj_frozen; obj_props }
+let mk_object ?(obj_exact=false) ?(obj_frozen=false) ?(obj_literal = false) obj_props =
+  Obj { obj_exact; obj_frozen; obj_literal; obj_props }
 
 let mk_generic_class symbol targs =
   Generic (symbol, ClassKind, targs)
@@ -228,8 +230,8 @@ let rec mk_exact ty =
   | Utility _ | Module _ ->
     Utility (Exact ty)
 
-let mk_array ~readonly t =
-  Arr { arr_readonly = readonly; arr_elt_t = t }
+let mk_array ~readonly ~literal t =
+  Arr { arr_readonly = readonly; arr_literal = literal; arr_elt_t = t }
 
 let named_alias ?ta_tparams ?ta_type name =
   TypeAlias { ta_name=name; ta_tparams; ta_type }

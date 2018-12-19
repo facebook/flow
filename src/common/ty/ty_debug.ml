@@ -92,12 +92,12 @@ and dump_dict ~depth { dict_polarity; dict_name; dict_key; dict_value } =
 and dump_spread ~depth t =
   spf "...%s" (dump_t ~depth t)
 
-and dump_obj ~depth { obj_exact; obj_props; obj_frozen = _ } =
+and dump_obj ~depth { obj_exact; obj_props; _ } =
   if obj_exact
     then spf "{|%s|}" (dump_list (dump_prop ~depth) obj_props)
     else spf "{%s}"   (dump_list (dump_prop ~depth) obj_props)
 
-and dump_arr ~depth { arr_readonly; arr_elt_t } =
+and dump_arr ~depth { arr_readonly; arr_elt_t; _ } =
   let ctor = if arr_readonly then "$ReadOnlyArray" else "Array" in
   spf "%s<%s>" ctor (dump_t ~depth arr_elt_t)
 
@@ -253,13 +253,15 @@ let json_of_t ~strip_root =
         "literal", JSON_Bool b
       ]
     | Fun f -> json_of_fun_t f
-    | Obj { obj_exact; obj_props; obj_frozen } -> [
+    | Obj { obj_exact; obj_props; obj_literal; obj_frozen } -> [
         "exact", JSON_Bool obj_exact;
         "frozen", JSON_Bool obj_frozen;
+        "literal", JSON_Bool obj_literal;
         "props", JSON_Array (Core_list.map ~f:json_of_prop obj_props);
       ]
-    | Arr { arr_readonly; arr_elt_t } -> [
+    | Arr { arr_readonly; arr_literal; arr_elt_t; } -> [
         "readonly", JSON_Bool arr_readonly;
+        "literal", JSON_Bool arr_literal;
         "type", json_of_t arr_elt_t;
       ]
     | Tup ts -> [

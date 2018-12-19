@@ -52,6 +52,7 @@ react_component.js:31:7 = {
         "kind":"Obj",
         "exact":false,
         "frozen":false,
+        "literal":false,
         "props":[
           {
             "kind":"NamedProp",

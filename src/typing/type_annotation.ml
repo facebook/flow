@@ -282,6 +282,28 @@ let rec convert cx tparams_map = Ast.Type.(function
       reconstruct_ast tout targs
     )
 
+  | "$TEMPORARY$ObjectLit" ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
+      let ts, targs = convert_type_params () in
+      let t = List.hd ts in
+      let tout = match t with
+        | ExactT (_, DefT (r, ObjT o)) ->
+          let r = replace_reason_const RObjectLit r in
+          DefT (r, ObjT { o with flags = { o.flags with exact = true } })
+        | _ -> t
+      in
+      reconstruct_ast tout targs
+  )
+
+  | "$TEMPORARY$ArrayLit" ->
+    check_type_arg_arity cx loc targs 1 (fun () ->
+      let elemts, targs = convert_type_params () in
+      let elemt = List.hd elemts in
+      reconstruct_ast
+        (DefT (mk_reason RArrayLit loc, ArrT (ArrayAT (elemt, None))))
+        targs
+  )
+
   (* Array<T> *)
   | "Array" ->
     check_type_arg_arity cx loc targs 1 (fun () ->
