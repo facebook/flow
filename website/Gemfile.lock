@@ -45,7 +45,7 @@ GEM
       domain_name (~> 0.5)
     i18n (0.9.5)
       concurrent-ruby (~> 1.0)
-    jekyll (3.3.1)
+    jekyll (3.4.5)
       addressable (~> 2.4)
       colorator (~> 1.0)
       jekyll-sass-converter (~> 1.0)
@@ -131,7 +131,7 @@ PLATFORMS
 
 DEPENDENCIES
   crowdin-cli
-  jekyll (~> 3.3.0)
+  jekyll (~> 3.4.0)
   jekyll-assets (~> 2.2)
   jekyll-paginate
   jekyll-redirect-from
