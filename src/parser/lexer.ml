@@ -1000,6 +1000,7 @@ let rec regexp_body env buf lexbuf =
   | line_terminator_sequence ->
     let loc = loc_of_lexbuf env lexbuf in
     let env = lex_error env loc Parse_error.UnterminatedRegExp in
+    let env = new_line env lexbuf in
     env, ""
 
   (* match multi-char substrings that don't contain the start chars of the above patterns *)

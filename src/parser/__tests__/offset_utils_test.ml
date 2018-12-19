@@ -184,4 +184,8 @@ let tests = "offset_utils" >::: [
    let source = "throw\n" in
     run_full_test source
   end;
+  "lexing_error_regex_newline" >:: begin fun _ctxt ->
+    let source = "/\n/" in
+    run_full_test source
+  end;
 ]
