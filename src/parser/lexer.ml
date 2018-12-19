@@ -547,7 +547,15 @@ let rec string_quote env q buf raw octal lexbuf =
     Array.iter (Wtf8.add_wtf_8 buf) codes;
     string_quote env q buf raw octal lexbuf
 
-  | '\n' | eof ->
+  | '\n' ->
+    let x = lexeme lexbuf in
+    Buffer.add_string raw x;
+    let env = illegal env (loc_of_lexbuf env lexbuf) in
+    let env = new_line env lexbuf in
+    Buffer.add_string buf x;
+    env, end_pos_of_lexbuf env lexbuf, octal
+
+  | eof ->
     let x = lexeme lexbuf in
     Buffer.add_string raw x;
     let env = illegal env (loc_of_lexbuf env lexbuf) in

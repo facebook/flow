@@ -41,6 +41,25 @@ let extract_locs ast =
   let _: (unit, unit) Flow_ast.program = extractor#program ast in
   List.rev (extractor#get_locs)
 
+(* This tests to make sure that we can find an offset for all real-world locations that the parser
+ * can produce, and that I haven't made any incorrect assumptions about edge cases in the rest of
+ * the tests. *)
+let run_full_test source =
+  let ast, _ = Parser_flow.program ~fail:false source in
+  let all_locs = extract_locs ast in
+  let all_positions =
+    let open Loc in
+    let all_starts = List.map (fun {start;_} -> start) all_locs in
+    let all_ends = List.map (fun {_end;_} -> _end) all_locs in
+    all_starts @ all_ends
+  in
+  let offset_table = Offset_utils.make source in
+  (* Just make sure it doesn't crash *)
+  List.iter begin fun loc ->
+    let _: int = Offset_utils.offset offset_table loc in
+    ()
+  end all_positions
+
 let tests = "offset_utils" >::: [
   "empty_line" >:: begin fun ctxt ->
     run ctxt
@@ -151,26 +170,14 @@ let tests = "offset_utils" >::: [
       (2, 0)
       13
   end;
-  "full_test" >:: begin fun ctxt ->
-    (* This tests to make sure that we can find an offset for all real-world locations that the
-     * parser can produce, and that I haven't made any incorrect assumptions about edge cases in the
-     * rest of the tests. Note that there is no newline at the end of the string -- I found a bug in
-     * an initial version which was exposed by not having a final newline character. *)
+  "full_test" >:: begin fun _ctxt ->
+    (* Note that there is no newline at the end of the string -- I found a bug in an initial version
+     * which was exposed by not having a final newline character. *)
     let source = "const foo = 4;\nconst bar = foo + 2;" in
-    let ast, _ = Parser_flow.program source in
-    let all_locs = extract_locs ast in
-    let all_positions =
-      let open Loc in
-      let all_starts = List.map (fun {start;_} -> start) all_locs in
-      let all_ends = List.map (fun {_end;_} -> _end) all_locs in
-      all_starts @ all_ends
-    in
-    let offset_table = Offset_utils.make source in
-    assert_equal ~ctxt 16 (List.length all_locs);
-    (* Just make sure it doesn't crash *)
-    List.iter begin fun loc ->
-      let _: int = Offset_utils.offset offset_table loc in
-      ()
-    end all_positions
+    run_full_test source
+  end;
+  "lexing_error_newline_test" >:: begin fun _ctxt ->
+    let source = "\"foo\nbar\"" in
+    run_full_test source
   end;
 ]
