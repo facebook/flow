@@ -353,9 +353,9 @@ let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
       | (loc, _)::_ -> comments_before_loc loc comments
       in
       (combine_directives_and_comments directives comments)::
-        (statements_list_with_newlines statements)
+        (statement_list statements)
     else
-      statements_list_with_newlines statements
+      statement_list statements
   in
   let nodes = group [join pretty_hardline nodes] in
   let nodes = maybe_embed_checksum nodes checksum in
@@ -363,7 +363,7 @@ let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
   source_location_with_comments (loc, nodes)
 
 and program_simple (loc, statements, _) =
-  let nodes = group [join pretty_hardline (statements_list_with_newlines statements)] in
+  let nodes = group [join pretty_hardline (statement_list statements)] in
   let loc = { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }} in
   source_location_with_comments (loc, nodes)
 
@@ -397,21 +397,6 @@ and comment (loc, comment) =
       Newline;
     ]
   )
-
-and statement_list_with_locs ?(pretty_semicolon=false) (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
-  let rec mapper acc = function
-  | [] -> List.rev acc
-  | ((loc, _) as stmt)::rest ->
-    let pretty_semicolon = pretty_semicolon && rest = [] in
-    let acc = (loc, statement ~pretty_semicolon stmt)::acc in
-    (mapper [@tailcall]) acc rest
-  in
-  mapper [] stmts
-
-and statement_list ?pretty_semicolon (stmts: (Loc.t, Loc.t) Ast.Statement.t list) =
-  stmts
-  |> statement_list_with_locs ?pretty_semicolon
-  |> Core_list.map ~f:(fun (_loc, layout) -> layout)
 
 (**
  * Renders a statement
@@ -1334,11 +1319,7 @@ and function_return return predicate =
   | Ast.Type.Available ret, None -> type_annotation ret
 
 and block (loc, { Ast.Statement.Block.body }) =
-  let statements =
-    body
-    |> statement_list_with_locs ~pretty_semicolon:true
-    |> list_with_newlines
-  in
+  let statements = statement_list ~pretty_semicolon:true body in
   source_location_with_comments (
     loc,
     if statements <> [] then
@@ -1532,9 +1513,15 @@ and list_with_newlines (nodes: (Loc.t * Layout.layout_node) list) =
   ) ([], None) nodes in
   List.rev nodes
 
-and statements_list_with_newlines statements =
-  statements
-  |> Core_list.map ~f:(fun (loc, s) -> loc, statement (loc, s))
+and statement_list ?(pretty_semicolon=false) statements =
+  let rec mapper acc = function
+  | [] -> List.rev acc
+  | ((loc, _) as stmt)::rest ->
+    let pretty_semicolon = pretty_semicolon && rest = [] in
+    let acc = (loc, statement ~pretty_semicolon stmt)::acc in
+    (mapper [@tailcall]) acc rest
+  in
+  mapper [] statements
   |> list_with_newlines
 
 and object_properties_with_newlines properties =
@@ -2054,7 +2041,10 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent }) =
       let statements = statement_list ~pretty_semicolon:last consequent in
       fuse [
         case_left;
-        Indent (fuse (pretty_hardline::statements));
+        Indent (fuse [
+          pretty_hardline;
+          join pretty_hardline statements;
+        ]);
       ]
   )
 

@@ -2189,8 +2189,14 @@ let tests = "js_layout_generator" >::: [
     } in
     let layout = Js_layout_generator.statement (
       S.switch (E.identifier "x") [
-        S.switch_case ~loc:case1_loc ~test:(E.literal (Literals.string "a")) [S.break ()];
-        S.switch_case ~loc:case2_loc ~test:(E.literal (Literals.string "b")) [S.break ()];
+        S.switch_case ~loc:case1_loc ~test:(E.literal (Literals.string "a")) [
+          S.expression (E.increment ~prefix:false (E.identifier "x"));
+          S.break ();
+        ];
+        S.switch_case ~loc:case2_loc ~test:(E.literal (Literals.string "b")) [
+          S.expression (E.increment ~prefix:false (E.identifier "x"));
+          S.break ();
+        ];
       ]
     ) in
     assert_layout ~ctxt
@@ -2222,6 +2228,14 @@ let tests = "js_layout_generator" >::: [
             indent ((fused [
               pretty_hardline;
               loc (fused [
+                loc (fused [
+                  loc (id "x");
+                  atom "++";
+                ]);
+                atom ";";
+              ]);
+              pretty_hardline;
+              loc (fused [
                 atom "break";
                 atom ";";
               ]);
@@ -2241,6 +2255,14 @@ let tests = "js_layout_generator" >::: [
             indent ((fused [
               pretty_hardline;
               loc (fused [
+                loc (fused [
+                  loc (id "x");
+                  atom "++";
+                ]);
+                atom ";";
+              ]);
+              pretty_hardline;
+              loc (fused [
                 atom "break";
                 Layout.IfPretty ((atom ";"), empty);
               ]);
@@ -2251,13 +2273,15 @@ let tests = "js_layout_generator" >::: [
         atom "}";
       ]))
       layout;
-    assert_output ~ctxt "switch(x){case\"a\":break;case\"b\":break}" layout;
+    assert_output ~ctxt "switch(x){case\"a\":x++;break;case\"b\":x++;break}" layout;
     assert_output ~ctxt ~pretty:true
       ("switch (x) {\n"^
        "  case \"a\":\n"^
+       "    x++;\n"^
        "    break;\n"^
        "  \n"^ (* TODO: fix trailing whitespace *)
        "  case \"b\":\n"^
+       "    x++;\n"^
        "    break;\n"^
        "}")
       layout;
