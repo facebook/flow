@@ -7,11 +7,11 @@ layout: default
 <div class="feature feature-hero">
   <div class="container">
     <h1 class="feature-heading">
-      {{i18n.homepage_hero_title | replace: '|', '<br class="hidden-lg-up">' | replace: '[', '<span>' | replace: ']', '</span>'}}
+      {{i18n.homepage_hero_title | replace: '|', '<br class="d-lg-none">' | replace: '[', '<span>' | replace: ']', '</span>'}}
     </h1>
 
-    <a class="feature-btn hidden-sm-down" href="{{url_base}}/docs/getting-started/"><span>{{i18n.homepage_get_started}}</span></a>
-    <a class="feature-btn hidden-sm-down" href="{{url_base}}/docs/install/"><span>{{i18n.homepage_install_flow}}</span></a>
+    <a class="feature-btn d-none d-md-inline-block" href="{{url_base}}/docs/getting-started/"><span>{{i18n.homepage_get_started}}</span></a>
+    <a class="feature-btn d-none d-md-inline-block" href="{{url_base}}/docs/install/"><span>{{i18n.homepage_install_flow}}</span></a>
 
     <iframe class="gh-btn"
       src="https://ghbtns.com/github-btn.html?user=facebook&repo=flow&type=star&count=true&size=large"
@@ -133,13 +133,13 @@ layout: default
   <div class="feature-decoration feature-decoration-rise"></div>
   <div class="feature-decoration feature-decoration-drop"></div>
 
-  <div class="container text-xs-center">
+  <div class="container text-sm-center">
     <h2 class="feature-heading">
       {{i18n.homepage_ready_to_get_going}}
     </h2>
     <div class="mt-2">
       <a class="feature-btn" href="{{url_base}}/docs/getting-started/"><span>{{i18n.homepage_get_started}}</span></a>
-      <a class="feature-btn mr-0 hidden-sm-down" href="{{url_base}}/docs/install/"><span>{{i18n.homepage_install_flow}}</span></a>
+      <a class="feature-btn mr-0 d-none d-md-inline-block" href="{{url_base}}/docs/install/"><span>{{i18n.homepage_install_flow}}</span></a>
     </div>
   </div>
 </div>

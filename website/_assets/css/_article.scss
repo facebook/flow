@@ -25,8 +25,8 @@
     }
 
     em code {
-      background: $code-bg;
-      color: $code-color;
+      background: $gray-200;
+      color: #bd4147;
     }
   }
 
@@ -35,11 +35,11 @@
   blockquote {
     margin-bottom: 1.2rem;
     padding: (1.2rem + $fix-margin-collapse) 1.2rem $fix-margin-collapse;
-    background: $gray-lightest;
-    border-left: $border-radius solid $gray-light;
+    background: $gray-100;
+    border-left: $border-radius solid $gray-600;
 
     p code {
-      background-color: $gray-lighter;
+      background-color: $gray-200;
     }
   }
 

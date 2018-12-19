@@ -33,15 +33,14 @@
         baseUrl: '/assets',
         waitSeconds: 30,
         shim: {
-          'bootstrap': { 'deps': ['jquery', 'tether'] }
+          'bootstrap': { 'deps': ['jquery'] }
         },
         paths: {
           {% for script in page.scripts %}
           '{% asset_name {{script}} %}': '{{ script | asset_path | strip_extension }}',
           {% endfor %}
-          'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.0/jquery.min',
-          'tether-min': 'https://cdnjs.cloudflare.com/ajax/libs/tether/1.3.7/js/tether.min',
-          'bootstrap': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha.5/js/bootstrap.min',
+          'jquery': 'https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min',
+          'bootstrap': 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0/js/bootstrap.bundle.min',
           'docsearch': 'https://cdnjs.cloudflare.com/ajax/libs/docsearch.js/2.1.8/docsearch.min',
           'codemirror/lib/codemirror': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/codemirror.min',
           'codemirror/addon/lint/lint': 'https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.20.2/addon/lint/lint.min',

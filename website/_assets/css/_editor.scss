@@ -2,7 +2,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 .language-sh pre {
-  background: $gray-dark;
+  background: $gray-900;
   color: white !important;
   -webkit-font-smoothing: antialiased;
   border-left: 4px solid $editor-accent-alt;
@@ -12,7 +12,7 @@
   }
 
   span.c {
-    color: lighten($gray-light, 15%) !important;
+    color: lighten($gray-600, 15%) !important;
   }
 }
 

@@ -20,12 +20,12 @@ mobile_search: true
     {% endif %}
 
     <div class="col-lg-4">
-      <a class="card guide-card" href="{{url_base}}{{guide.pages[0].path}}">
-        <div class="card-block">
+      <a class="card mb-3 guide-card" href="{{url_base}}{{guide.pages[0].path}}">
+        <div class="card-body">
           <h4 class="card-title">{{i18n.guides[guide.id].title}}</h4>
           <p class="card-text text-muted">
             {{i18n.guides[guide.id].description}}
-            <span class="float-xs-right text-primary">
+            <span class="float-right text-primary">
               {{i18n.docs_read_more}}
             </span>
           </p>

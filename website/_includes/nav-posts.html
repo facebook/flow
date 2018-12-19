@@ -1,4 +1,4 @@
-<ul class="nav nav-stacked guide-nav">
+<ul class="nav flex-column guide-nav">
   {% for post in site.posts %}
     <li class="nav-item">
       {% if post.url == url_relative %}
@@ -7,11 +7,11 @@
           <span class="sr-only">(current)</span>
         </strong>
       {% elsif post.medium-link %}
-        <a class="nav-link" href="{{post.medium-link}}">
+        <a href="{{post.medium-link}}">
           {{post.short-title | default: post.title}}
         </a>
       {% else %}
-        <a class="nav-link" href="{{site.baseurl}}{{post.url}}">
+        <a href="{{site.baseurl}}{{post.url}}">
           {{post.short-title | default: post.title}}
         </a>
       {% endif %}
