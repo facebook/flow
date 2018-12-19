@@ -139,9 +139,10 @@ let main include_tokens pretty check debug file_type_opt use_strict path filenam
           "tokens", JSON_Array (List.rev !tokens);
         ]
       else
+        let offset_table = Some (Offset_utils.make content) in
         let translated_ast = match ast with
-        | Ast_js ast -> Translate.program ast
-        | Ast_json ast -> Translate.expression ast
+        | Ast_js ast -> Translate.program offset_table ast
+        | Ast_json ast -> Translate.expression offset_table ast
         in
         match translated_ast with
         | JSON_Object params ->

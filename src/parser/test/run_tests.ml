@@ -498,7 +498,8 @@ end = struct
   let parse_file ?parse_options content =
     let (ast, errors) = Parser_flow.program_file
       ~fail:false ~parse_options content None in
-    match Translate.program ast with
+    let offset_table = Some (Offset_utils.make content) in
+    match Translate.program offset_table ast with
     | JSON_Object params ->
         let params =
           if errors = [] then params

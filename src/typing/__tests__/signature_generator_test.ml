@@ -19,7 +19,7 @@ let pretty_print program =
     Js_layout_generator.program_simple program
 
 let print_ast program =
-  Hh_json.json_to_string ~pretty:true @@ Translate.program program
+  Hh_json.json_to_string ~pretty:true @@ Translate.program None program
 
 let verify_and_generate ?prevent_munge ?ignore_static_propTypes contents =
   let contents = String.concat "\n" contents in

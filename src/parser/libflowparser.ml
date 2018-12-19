@@ -77,7 +77,8 @@ let parse content options =
     content
   in
 
-  match Translate.program ast with
+  let offset_table = Some (Offset_utils.make content) in
+  match Translate.program offset_table ast with
   | JObject params ->
     let params = ("errors", Translate.errors errors)::params in
     let params =
