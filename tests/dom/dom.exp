@@ -7,8 +7,8 @@ Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompati
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1909:13
-   1909|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:1911:13
+   1911|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
@@ -21,8 +21,8 @@ Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompati
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1909:24
-   1909|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:1911:24
+   1911|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
@@ -231,8 +231,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2837:43
-   2837|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2839:43
+   2839|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -245,8 +245,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2837:43
-   2837|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2839:43
+   2839|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -262,8 +262,8 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3178:45
-   3178|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3180:45
+   3180|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
@@ -279,8 +279,8 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3179:78
-   3179|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3181:78
+   3181|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
@@ -293,8 +293,8 @@ Cannot get `form.action` because property `action` is missing in null [1].
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3239:27
-   3239|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3241:27
+   3241|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -307,8 +307,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3257:44
-   3257|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3259:44
+   3259|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -321,8 +321,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3258:48
-   3258|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3260:48
+   3260|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -368,20 +368,20 @@ References:
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- path2d.js:9:6
+Error --------------------------------------------------------------------------------------------------- path2d.js:16:6
 
 Cannot call `path.arcTo` because string [1] is incompatible with number [2].
 
-   path2d.js:9:6
-      9|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
+   path2d.js:16:6
+     16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   path2d.js:9:33
-      9|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
+   path2d.js:16:33
+     16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                          ^^^^ [1]
-   <BUILTINS>/dom.js:1774:83
-   1774|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
+   <BUILTINS>/dom.js:1776:83
+   1776|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                            ^^^^^^ [2]
 
 
@@ -788,11 +788,11 @@ References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3721:1
+   <BUILTINS>/dom.js:3723:1
          v--------------------------------
-   3721| typeof NodeFilter.FILTER_ACCEPT |
-   3722| typeof NodeFilter.FILTER_REJECT |
-   3723| typeof NodeFilter.FILTER_SKIP;
+   3723| typeof NodeFilter.FILTER_ACCEPT |
+   3724| typeof NodeFilter.FILTER_REJECT |
+   3725| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -809,11 +809,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3721:1
+   <BUILTINS>/dom.js:3723:1
          v--------------------------------
-   3721| typeof NodeFilter.FILTER_ACCEPT |
-   3722| typeof NodeFilter.FILTER_REJECT |
-   3723| typeof NodeFilter.FILTER_SKIP;
+   3723| typeof NodeFilter.FILTER_ACCEPT |
+   3724| typeof NodeFilter.FILTER_REJECT |
+   3725| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -872,11 +872,11 @@ References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3721:1
+   <BUILTINS>/dom.js:3723:1
          v--------------------------------
-   3721| typeof NodeFilter.FILTER_ACCEPT |
-   3722| typeof NodeFilter.FILTER_REJECT |
-   3723| typeof NodeFilter.FILTER_SKIP;
+   3723| typeof NodeFilter.FILTER_ACCEPT |
+   3724| typeof NodeFilter.FILTER_REJECT |
+   3725| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -893,11 +893,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3721:1
+   <BUILTINS>/dom.js:3723:1
          v--------------------------------
-   3721| typeof NodeFilter.FILTER_ACCEPT |
-   3722| typeof NodeFilter.FILTER_REJECT |
-   3723| typeof NodeFilter.FILTER_SKIP;
+   3723| typeof NodeFilter.FILTER_ACCEPT |
+   3724| typeof NodeFilter.FILTER_REJECT |
+   3725| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
