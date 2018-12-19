@@ -74,6 +74,14 @@ let tests = "offset_utils" >::: [
       (3, 0)
       5
   end;
+  "Loc.none" >:: begin fun ctxt ->
+    (* This is a fake location but it's used often enough that we should at least not crash when
+     * encountering it. *)
+    run ctxt
+      ""
+      (0, 0)
+      0
+  end;
   "first_char" >:: begin fun ctxt ->
     run ctxt
       "foo bar\n"

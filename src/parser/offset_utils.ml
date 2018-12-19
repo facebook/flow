@@ -118,6 +118,11 @@ let lookup arr i pos context_string =
 
 let offset table pos =
   let open Loc in
-  (* lines are 1-indexed, columns are zero-indexed *)
-  let line_table = lookup table (pos.line - 1) pos "line" in
-  lookup line_table pos.column pos "column"
+  (* Special-case `Loc.none` so we don't try to look up line -1. *)
+  if pos.line = 0 && pos.column = 0 then
+    (* Loc.none sets the offset as 0, so that's what we'll return here. *)
+    0
+  else
+    (* lines are 1-indexed, columns are zero-indexed *)
+    let line_table = lookup table (pos.line - 1) pos "line" in
+    lookup line_table pos.column pos "column"
