@@ -38,7 +38,7 @@ GEM
     faraday (0.14.0)
       multipart-post (>= 1.2, < 3)
     fastimage (2.1.1)
-    ffi (1.9.23)
+    ffi (1.9.25)
     forwardable-extended (2.6.0)
     gli (2.17.1)
     http-cookie (1.0.3)
