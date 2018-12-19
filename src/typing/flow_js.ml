@@ -10789,8 +10789,7 @@ and finish_resolve_spread_list =
     let funt = DefT (reason_op, FunT (
       dummy_static bound_reason,
       dummy_prototype,
-      mk_boundfunctiontype params_tlist return_t
-        ~rest_param ~def_reason ~params_names
+      mk_methodtype dummy_this params_tlist return_t ~rest_param ~def_reason ~params_names
     )) in
     rec_flow_t cx trace (funt, tout)
 

@@ -760,6 +760,7 @@ module rec TypeTerm : sig
   (* Tracks the kinds of unsoundness inherent in Flow. If you can't find a kind that matches
      your use case, make one *)
   and unsoundness_kind =
+    | BoundFunctionThis
     | Chain
     | ComputedLiteralKey
     | Constructor
@@ -2731,6 +2732,7 @@ module Unsoundness = struct
   let tagged_template      = Unsound TaggedTemplateType
   let exports              = Unsound Exports
   let existential          = Unsound Existential
+  let bound_fn_this        = Unsound BoundFunctionThis
 
   let custom_fun_any       = AnyT.make custom_fun
   let dummy_any            = AnyT.make dummy
@@ -2751,6 +2753,7 @@ module Unsoundness = struct
   let chain_any            = AnyT.make chain
   let exports_any          = AnyT.make exports
   let existential_any      = AnyT.make existential
+  let bound_fn_this_any    = AnyT.make bound_fn_this
 
   let why kind = Unsound kind |> AnyT.why
   let at  kind = Unsound kind |> AnyT.at
@@ -3314,9 +3317,11 @@ let dummy_static =
 let dummy_prototype =
   ObjProtoT (locationless_reason RDummyPrototype)
 
+let bound_function_dummy_this =
+  locationless_reason RDummyThis |> Unsoundness.bound_fn_this_any
+
 let dummy_this =
-  (* TODO: T35904222 *)
-  locationless_reason RDummyThis |> Unsoundness.dummy_any
+  locationless_reason RDummyThis |> MixedT.make
 
 let global_this reason =
   let reason = replace_reason_const (RCustom "global object") reason in
@@ -3357,7 +3362,7 @@ let mk_methodcalltype
    a type is given to a method when it can be considered bound: in other words,
    when calling that method through any object would be fine, since the object
    would be ignored. *)
-let mk_boundfunctiontype = mk_methodtype dummy_this
+let mk_boundfunctiontype = mk_methodtype bound_function_dummy_this
 
 (* A function type has `this` = `mixed`. Such a type can be given to functions
    that are meant to be called directly. On the other hand, it deliberately
