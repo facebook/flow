@@ -4402,8 +4402,12 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       resolve_call_list cx ~trace ~use_op reason_op args (
         ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
 
-    | CustomFunT (reason, _), _ when function_like_op u ->
-      rec_flow cx trace (Unsoundness.custom_fun_any reason, u)
+    | CustomFunT (_, (ObjectAssign | ObjectGetPrototypeOf | ObjectSetPrototypeOf)),
+      MethodT (use_op, reason_call, _, Named (_, "call"), calltype, _) ->
+        rec_flow cx trace (l, CallT (use_op, reason_call, calltype))
+
+    (* Custom functions are still functions, so they have all the prototype properties *)
+    | CustomFunT (r, _), _ when function_like_op u -> rec_flow cx trace (FunProtoT r, u)
 
     (*********************************************)
     (* object types deconstruct into their parts *)

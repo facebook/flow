@@ -764,7 +764,6 @@ module rec TypeTerm : sig
     | Chain
     | ComputedLiteralKey
     | Constructor
-    | CustomFun
     | DummyType
     | Existential
     | Exports
@@ -2714,7 +2713,6 @@ end
 
 module Unsoundness = struct
   let chain                = Unsound Chain
-  let custom_fun           = Unsound CustomFun
   let constructor          = Unsound Constructor
   let computed_lit_key     = Unsound ComputedLiteralKey
   let function_proto       = Unsound FunctionPrototype
@@ -2734,7 +2732,6 @@ module Unsoundness = struct
   let existential          = Unsound Existential
   let bound_fn_this        = Unsound BoundFunctionThis
 
-  let custom_fun_any       = AnyT.make custom_fun
   let dummy_any            = AnyT.make dummy
   let merged_any           = AnyT.make merged
   let react_any            = AnyT.make react
