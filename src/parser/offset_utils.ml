@@ -63,11 +63,20 @@ let make text =
     (* As described in the `folder` function, we need to make sure we have an entry after the last
      * column. If the final line did not have a terminating newline character, we won't end up with
      * one, so let's add one here. If it did, one more entry won't hurt. *)
-    let (last_line, _, _) as last_entry = match rev with
+    let (last_actual_line, _, last_offset) as extra_column_entry = match rev with
     | [] -> (0, 0, 0)
     | (line, col, offset)::_ -> (line, col + 1, offset + 1)
     in
-    (List.rev (last_entry::rev), last_line + 1)
+    let last_line = last_actual_line + 1 in
+    let num_lines = last_line + 1 in
+    (* For a similar reason that we add a phantom column at the end of each line, we also want to
+     * add a phantom line at the end of the file. Since end positions are reported exclusively, it
+     * is possible for the lexer to output an end position with a line number one higher than the
+     * last line, to indicate something such as "the entire last line." For this purpose, we can
+     * return the offset that is one higher than the last legitimate offset, since it could only be
+     * correctly used as an exclusive index. *)
+    let extra_line_entry = (last_line, 0, last_offset) in
+    (List.rev (extra_line_entry::extra_column_entry::rev), num_lines)
   in
   (* Build up the table, a 2D array indexed by line, then column. The top level array needs to have
    * the same number of entries as the number of lines, and the second-level arrays need to have one
