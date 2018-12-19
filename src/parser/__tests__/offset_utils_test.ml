@@ -25,6 +25,13 @@ let run ctxt text (line, col) expected_offset =
   let offset = Offset_utils.offset table (pos line col) in
   assert_equal ~ctxt expected_offset offset
 
+let run_expect_failure text (line, col) expected_msg =
+  let table = Offset_utils.make text in
+  let p = pos line col in
+  let f = fun () -> Offset_utils.offset table p in
+  let expected_exn = Offset_utils.Offset_lookup_failed (p, expected_msg) in
+  assert_raises expected_exn f
+
 class loc_extractor = object(this)
   inherit [Loc.t, Loc.t, unit, unit] Flow_polymorphic_ast_mapper.mapper
 
@@ -169,6 +176,18 @@ let tests = "offset_utils" >::: [
       str_with_smiley
       (2, 0)
       13
+  end;
+  "out_of_bounds_line" >:: begin fun _ctxt ->
+    run_expect_failure
+      "foo\n"
+      (5, 0)
+      "Failure while looking up line. Index: 4. Length: 2."
+  end;
+  "out_of_bounds_column" >:: begin fun _ctxt ->
+    run_expect_failure
+      "foo\n"
+      (1, 10)
+      "Failure while looking up column. Index: 10. Length: 5."
   end;
   "full_test" >:: begin fun _ctxt ->
     (* Note that there is no newline at the end of the string -- I found a bug in an initial version

@@ -102,7 +102,22 @@ let make text =
   List.iter (fun (line, col, offset) -> table.(line).(col) <- offset) tuples;
   table
 
+exception Offset_lookup_failed of Loc.position * string
+
+let lookup arr i pos context_string =
+  try
+    arr.(i)
+  with Invalid_argument _ ->
+    let msg =
+      Printf.sprintf "Failure while looking up %s. Index: %d. Length: %d."
+        context_string
+        i
+        (Array.length arr)
+    in
+    raise (Offset_lookup_failed (pos, msg))
+
 let offset table pos =
   let open Loc in
   (* lines are 1-indexed, columns are zero-indexed *)
-  table.(pos.line - 1).(pos.column)
+  let line_table = lookup table (pos.line - 1) pos "line" in
+  lookup line_table pos.column pos "column"

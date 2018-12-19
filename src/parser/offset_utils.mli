@@ -36,6 +36,10 @@ type t
  * O(n) space, where `n` is the size of the given program text. *)
 val make: string (* program text *) -> t
 
+exception Offset_lookup_failed of Loc.position * string
+
 (* Returns the offset for the given location. This is the offset in bytes (not characters!) into the
- * file where the given position can be found. Constant time operation. *)
+ * file where the given position can be found. Constant time operation. Raises
+ * `Offset_lookup_failed` if the given position does not exist in the file contents which were used
+ * to construct the table. *)
 val offset: t -> Loc.position -> int
