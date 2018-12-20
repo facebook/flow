@@ -282,7 +282,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       reconstruct_ast tout targs
     )
 
-  | "$TEMPORARY$ObjectLit" ->
+  | "$TEMPORARY$object" ->
     check_type_arg_arity cx loc targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
@@ -295,7 +295,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       reconstruct_ast tout targs
   )
 
-  | "$TEMPORARY$ArrayLit" ->
+  | "$TEMPORARY$array" ->
     check_type_arg_arity cx loc targs 1 (fun () ->
       let elemts, targs = convert_type_params () in
       let elemt = List.hd elemts in
