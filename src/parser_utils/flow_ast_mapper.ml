@@ -815,19 +815,14 @@ class ['loc] mapper = object(this)
   method import_named_specifier (specifier: 'loc Flow_ast.Statement.ImportDeclaration.named_specifier) =
     let open Flow_ast.Statement.ImportDeclaration in
     let { kind; local; remote } = specifier in
-    begin match kind with
-    | None ->
-      let ident = match local with
-        | None -> remote
-        | Some ident -> ident
-      in
-      let local' = id (this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let)
-        ident local (fun ident -> Some ident)
-      in
-      if local == local' then specifier
-      else { kind; local = local'; remote }
-    | Some _importKind -> specifier (* TODO *)
-    end
+    let remote' = this#identifier remote in
+    let local' = begin match local with
+      | None -> None
+      | Some ident -> id (this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let)
+          ident local (fun ident -> Some ident)
+      end in
+    if local == local' && remote == remote' then specifier
+    else { kind; local = local'; remote = remote'}
 
   method import_default_specifier (id: 'loc Flow_ast.Identifier.t) =
     this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let id
