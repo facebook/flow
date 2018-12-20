@@ -26,7 +26,7 @@ let sample_init_memory profiling =
        profiling
   ) memory_metrics
 
-let init ~profiling ~focus_targets genv =
+let init ~profiling ?focus_targets genv =
   (* write binary path and version to server log *)
   Hh_logger.info "executable=%s" (Sys_utils.executable_path ());
   Hh_logger.info "version=%s" Flow_version.version;
@@ -53,7 +53,7 @@ let init ~profiling ~focus_targets genv =
   let%lwt env =
     if not libs_ok || Options.is_lazy_mode options
     then Lwt.return env
-    else Types_js.full_check ~profiling ~workers ~focus_targets ~options env
+    else Types_js.full_check ~profiling ~workers ?focus_targets ~options env
   in
 
   sample_init_memory profiling;
@@ -96,12 +96,12 @@ let rec serve ~genv ~env =
 * type-checker succeeded. So to know if there is some work to be done,
 * we look if env.modified changed.
 *)
-let create_program_init ~shared_mem_config ~focus_targets options =
+let create_program_init ~shared_mem_config ?focus_targets options =
   let handle = SharedMem_js.init shared_mem_config in
   let genv = ServerEnvBuild.make_genv options handle in
 
   let program_init = fun profiling ->
-    let%lwt env = init ~profiling ~focus_targets genv in
+    let%lwt env = init ~profiling ?focus_targets genv in
     if shared_mem_config.SharedMem_js.log_level > 0 then Measure.print_stats ();
     Lwt.return env
   in
@@ -110,7 +110,7 @@ let create_program_init ~shared_mem_config ~focus_targets options =
 let run ~monitor_channels ~shared_mem_config options =
   MonitorRPC.init ~channels:monitor_channels;
   let genv, program_init =
-    create_program_init ~shared_mem_config ~focus_targets:None options in
+    create_program_init ~shared_mem_config options in
 
   let initial_lwt_thread () =
     (* Read messages from the server monitor and add them to a stream as they come in *)
@@ -189,7 +189,7 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
 
   let initial_lwt_thread () =
     let _, program_init =
-      create_program_init ~shared_mem_config ~focus_targets options in
+      create_program_init ~shared_mem_config ?focus_targets options in
 
     let should_print_summary = Options.should_profile options in
     let%lwt profiling, (print_errors, errors, warnings) =

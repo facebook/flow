@@ -846,9 +846,21 @@ let unfocused_files_to_infer ~options ~input ~dependency_info =
   in
   Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
 
-let files_to_infer ~options ~reader ~focused ~profiling ~parsed ~dependency_info =
+(* Called on initialization in non-lazy mode, with optional focus targets.
+
+   When focus targets are not provided, the result is a checked set focusing on parsed files minus
+   node modules, plus no dependents (because effectively any dependent is already focused), plus all
+   their dependencies (minus those that are already focused). The set of dependencies might contain
+   node modules.
+
+   When focus targets are provided, the result is a checked set focusing on those files, plus their
+   dependents, plus all their combined dependencies. All these sets might contain node modules.
+
+   In either case, we can consider the result to be "closed" in terms of expected invariants.
+*)
+let files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info =
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
-    match focused with
+    match focus_targets with
     | None ->
       let input = CheckedSet.add ~focused:parsed CheckedSet.empty in
       unfocused_files_to_infer ~options ~input ~dependency_info
@@ -1883,12 +1895,11 @@ let init ~profiling ~workers options =
     Lwt.return (true, env, last_estimates)
   end
 
-let full_check ~profiling ~options ~workers ~focus_targets env =
+let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _; } = env in
   with_transaction (fun transaction reader ->
     let%lwt infer_input = files_to_infer
-      ~options ~reader
-      ~focused:focus_targets ~profiling ~parsed ~dependency_info in
+      ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info in
 
     let unchanged_checked = CheckedSet.empty in
 
@@ -1901,6 +1912,9 @@ let full_check ~profiling ~options ~workers ~focus_targets env =
         ~all_dependent_files:FilenameSet.empty
         ~direct_dependent_files:FilenameSet.empty
     in
+    (* The values to_merge and recheck_map are essentially the same as infer_input, aggregated. This
+       is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
+       of calling include_dependencies_and_dependents is to compute components. *)
 
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 

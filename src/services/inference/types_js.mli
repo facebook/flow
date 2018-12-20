@@ -36,7 +36,7 @@ val full_check:
   profiling:Profiling_js.running ->
   options:Options.t ->
   workers:MultiWorkerLwt.worker list option ->
-  focus_targets:FilenameSet.t option ->
+  ?focus_targets:FilenameSet.t ->
   ServerEnv.env ->
   ServerEnv.env Lwt.t
 
