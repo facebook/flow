@@ -604,11 +604,11 @@ const person5: PersonDetails = {age: 28, name: 'a'};  // OK
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 
-Work in progress
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-utility) for details.
 
 ## `$Subtype<T>` <a class="toc" id="toc-subtype" href="#toc-subtype"></a>
 
-Work in progress
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-utility) for details.
 
 ## Existential Type (`*`) <a class="toc" id="toc-existential-type" href="#toc-existential-type"></a>
 
