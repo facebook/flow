@@ -328,22 +328,21 @@ module T = struct
         properties = List.map (type_of_object_property outlined) (pt :: pts)
       })
     | loc, ObjectLiteral { frozen = false; properties = (pt, pts) } ->
-      loc, Ast.Type.Object {
+      temporary_type "$TEMPORARY$object" loc (Ast.Type.Object {
         Ast.Type.Object.exact = true;
         inexact = false;
         properties = Core_list.map ~f:(type_of_object_property outlined) (pt :: pts)
-      }
+      })
     | loc, ArrayLiteral ets ->
-      loc, Ast.Type.Array (match ets with
-        | et, [] -> type_of_array_element outlined et
+      temporary_type "$TEMPORARY$array" loc (match ets with
+        | et, [] -> snd (type_of_array_element outlined et)
         | et1, et2::ets ->
-          loc, Ast.Type.Union (
+          Ast.Type.Union (
             type_of_array_element outlined et1,
             type_of_array_element outlined et2,
             Core_list.map ~f:(type_of_array_element outlined) ets
           )
       )
-
     | loc, ValueRef reference ->
       loc, Ast.Type.Typeof (type_of_generic (loc, {
         Ast.Type.Generic.id = generic_id_of_reference reference;

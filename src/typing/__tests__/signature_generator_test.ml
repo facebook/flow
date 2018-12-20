@@ -191,15 +191,17 @@ let tests = "signature_generator" >::: ([
 
   "module_exports_object" >:: mk_signature_generator_test
     ["module.exports = { x: 'hello' }"]
-    ["declare module.exports: {|x: $TEMPORARY$string<'hello'>|};"];
+    ["declare module.exports: $TEMPORARY$object<{|x: $TEMPORARY$string<'hello'>|}>;"];
 
   "module_exports_array_one" >:: mk_signature_generator_test
     ["module.exports = ['hello']"]
-    ["declare module.exports: Array<$TEMPORARY$string<'hello'>>;"];
+    ["declare module.exports: $TEMPORARY$array<$TEMPORARY$string<'hello'>>;"];
 
   "module_exports_array_many" >:: mk_signature_generator_test
     ["module.exports = ['hello', 42]"]
-    ["declare module.exports: Array<$TEMPORARY$string<'hello'> | $TEMPORARY$number<42>>;"];
+    ["declare module.exports: $TEMPORARY$array<";
+     "  $TEMPORARY$string<'hello'> | $TEMPORARY$number<42>,";
+     ">;"];
 
   "module_exports_class_expression" >:: mk_signature_generator_test
     ["module.exports = class { m(x: number): number { return x; } }"]
@@ -230,13 +232,10 @@ let tests = "signature_generator" >::: ([
     ["declare function foo(): void;";
      "declare class C {}";
      "declare var x: number;";
-     "declare var o: {|p: typeof x|};";
-     "declare module.exports: {|";
-     "  foo: typeof foo,";
-     "  C: typeof C,";
-     "  x: typeof x,";
-     "  p: typeof o.p,";
-     "|};"];
+     "declare var o: $TEMPORARY$object<{|p: typeof x|}>;";
+     "declare module.exports: $TEMPORARY$object<";
+     "  {|foo: typeof foo, C: typeof C, x: typeof x, p: typeof o.p|},";
+     ">;"];
 
   "declare_module_exports" >:: mk_signature_generator_test
     ["declare module.exports: () => void"]
@@ -531,7 +530,7 @@ let tests = "signature_generator" >::: ([
      "module.exports = Bar;"]
     ["import Foo from \"foo\";";
      "declare var Bar: typeof $1.Foo;";
-     "declare var $1: {|Foo: typeof Foo|};";
+     "declare var $1: $TEMPORARY$object<{|Foo: typeof Foo|}>;";
      "declare module.exports: typeof Bar;"];
 
   "optional_param" >:: mk_signature_generator_test
@@ -548,28 +547,35 @@ let tests = "signature_generator" >::: ([
 
   "array_summary_number" >:: mk_signature_generator_test
     ["module.exports = [1, 2, 3]"]
-    ["declare module.exports: Array<";
-     "  | $TEMPORARY$number<1>";
-     "  | $TEMPORARY$number<2>";
-     "  | $TEMPORARY$number<3>>;"];
+    ["declare module.exports: $TEMPORARY$array<";
+     "  $TEMPORARY$number<1> | $TEMPORARY$number<2> | $TEMPORARY$number<3>,";
+     ">;"];
 
   "array_summary_array" >:: mk_signature_generator_test
     ["module.exports = [[1, 2], [3]]"]
-    ["declare module.exports: Array<";
-     "  | Array<$TEMPORARY$number<1> | $TEMPORARY$number<2>>";
-     "  | Array<$TEMPORARY$number<3>>>;"];
+    ["declare module.exports: $TEMPORARY$array<";
+     "  ";
+     "    | $TEMPORARY$array<$TEMPORARY$number<1> | $TEMPORARY$number<2>>";
+     "    | $TEMPORARY$array<$TEMPORARY$number<3>>,";
+     ">;"];
 
   "array_summary_object" >:: mk_signature_generator_test
     ["module.exports = [{ x: 1 }, { x: 2 }]"]
-    ["declare module.exports: Array<";
-     "  | {|x: $TEMPORARY$number<1>|}";
-     "  | {|x: $TEMPORARY$number<2>|}>;"];
+    ["declare module.exports: $TEMPORARY$array<";
+     "  ";
+     "    | $TEMPORARY$object<{|x: $TEMPORARY$number<1>|}>";
+     "    | $TEMPORARY$object<{|x: $TEMPORARY$number<2>|}>,";
+     ">;"];
 
   "array_summary_object_array" >:: mk_signature_generator_test
     ["module.exports = [{ x: [1, 2] }, { x: [3] }]"]
-    ["declare module.exports: Array<";
-     "  | {|x: Array<$TEMPORARY$number<1> | $TEMPORARY$number<2>>|}";
-     "  | {|x: Array<$TEMPORARY$number<3>>|}>;"];
+    ["declare module.exports: $TEMPORARY$array<";
+     "  ";
+     "    | $TEMPORARY$object<";
+     "      {|x: $TEMPORARY$array<$TEMPORARY$number<1> | $TEMPORARY$number<2>>|},";
+     "    >";
+     "    | $TEMPORARY$object<{|x: $TEMPORARY$array<$TEMPORARY$number<3>>|}>,";
+     ">;"];
 
   "frozen_object" >:: mk_signature_generator_test
     ["module.exports = Object.freeze({ foo: 42, bar: 'hello' })"]
