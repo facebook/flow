@@ -774,7 +774,6 @@ module rec TypeTerm : sig
     | React
     | ResolveSpread
     | TaggedTemplateType
-    | TypeInstance
     | Unimplemented
     | UnresolvedType
     | WeakContext
@@ -2719,7 +2718,6 @@ module Unsoundness = struct
   let react                = Unsound React
   let instance_of_refi     = Unsound InstanceOfRefinement
   let unresolved           = Unsound UnresolvedType
-  let type_instance        = Unsound TypeInstance
   let resolve_spread       = Unsound ResolveSpread
   let unimplemented        = Unsound Unimplemented
   let weak_context         = Unsound WeakContext
@@ -2734,7 +2732,6 @@ module Unsoundness = struct
   let react_any            = AnyT.make react
   let instance_of_refi_any = AnyT.make instance_of_refi
   let unresolved_any       = AnyT.make unresolved
-  let type_instance_any    = AnyT.make type_instance
   let resolve_spread_any   = AnyT.make resolve_spread
   let constructor_any      = AnyT.make constructor
   let function_proto_any   = AnyT.make function_proto

@@ -259,10 +259,10 @@ let intersect_members cx members =
           loc, merge_type cx (acc, t)
       ) (None, Locationless.EmptyT.t)) map
 
-let instantiate_type t =
-  match t with
-  | ThisClassT (_, t) | DefT (_, ClassT t) -> t
-  | _ -> reason_of_t t |> Unsoundness.why TypeInstance (* ideally, assert false *)
+and instantiate_type = function
+  | ThisClassT (_, t) | DefT (_, ClassT t)
+  | (DefT (_, AnyT _) as t) | DefT(_, TypeT (_, t)) | (DefT (_, EmptyT) as t) -> t
+  | t -> "cannot instantiate non-class type " ^ string_of_ctor t |> assert_false
 
 let possible_types_of_use cx = function
   | UseT (_, t) -> possible_types_of_type cx t
