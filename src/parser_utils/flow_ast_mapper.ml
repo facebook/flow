@@ -792,14 +792,10 @@ class ['loc] mapper = object(this)
   method import_declaration _loc (decl: ('loc, 'loc) Flow_ast.Statement.ImportDeclaration.t) =
     let open Flow_ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
-    match importKind with
-    | ImportValue
-    | ImportType ->
-      let specifiers' = map_opt this#import_specifier specifiers in
-      let default' = map_opt this#import_default_specifier default in
-      if specifiers == specifiers' && default == default' then decl
-      else { importKind; source; specifiers = specifiers'; default = default' }
-    | ImportTypeof -> decl (* TODO *)
+    let specifiers' = map_opt this#import_specifier specifiers in
+    let default' = map_opt this#import_default_specifier default in
+    if specifiers == specifiers' && default == default' then decl
+    else { importKind; source; specifiers = specifiers'; default = default' }
 
   method import_specifier (specifier: ('loc, 'loc) Flow_ast.Statement.ImportDeclaration.specifier) =
     let open Flow_ast.Statement.ImportDeclaration in
