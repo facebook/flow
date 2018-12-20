@@ -1449,9 +1449,7 @@ let jsx_child env start buf raw lexbuf =
   | '{' -> env, T_LCURLY
 
   | any ->
-    let c = lexeme lexbuf in
-    Buffer.add_string raw c;
-    Buffer.add_string buf c;
+    Sedlexing.rollback lexbuf; (* let jsx_text consume this char *)
     let env = jsx_text env JSX_CHILD_TEXT buf raw lexbuf in
     let _end = end_pos_of_lexbuf env lexbuf in
     let value = Buffer.contents buf in
