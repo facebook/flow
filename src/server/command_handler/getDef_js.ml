@@ -72,10 +72,10 @@ let getdef_require_pattern state loc =
   state.getdef_require_patterns <- loc::state.getdef_require_patterns
 
 let extract_member_def cx this name =
-  let this_t = Flow_js.Members.resolve_type cx this in
-  let member_result = Flow_js.Members.extract cx this_t in
+  let this_t = Members.resolve_type cx this in
+  let member_result = Members.extract cx this_t in
 
-  let result_str, t = Flow_js.Members.(match member_result with
+  let result_str, t = Members.(match member_result with
     | Success _ -> "SUCCESS", this
     | SuccessModule _ -> "SUCCESS", this
     | FailureNullishType -> "FAILURE_NULLABLE", this
@@ -88,7 +88,7 @@ let extract_member_def cx this name =
     "result", JSON_String result_str;
   ]) in
 
-  let command_result = Flow_js.Members.to_command_result member_result in
+  let command_result = Members.to_command_result member_result in
   Done begin match command_result with
   | Error _ -> Loc.none
   | Ok result_map ->
@@ -139,7 +139,7 @@ let getdef_get_result_from_hooks ~options ~reader cx state =
       let module_t =
       ALoc.of_loc source_loc
       |> Context.find_require cx
-      |> Flow_js.Members.resolve_type cx in
+      |> Members.resolve_type cx in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
         let filename = Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn (

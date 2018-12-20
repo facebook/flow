@@ -92,33 +92,6 @@ val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:boo
 (* strict *)
 val types_of: Constraint.constraints -> Type.t list
 val enforce_strict: Context.t -> Type.t -> unit
-val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
-val resolve_tvar: Context.t -> Type.tvar -> Type.t
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
 val possible_uses: Context.t -> Constraint.ident -> Type.use_t list
-
-module Members : sig
-  type ('success, 'success_module) generic_t =
-    | Success of 'success
-    | SuccessModule of 'success_module
-    | FailureNullishType
-    | FailureAnyType
-    | FailureUnhandledType of Type.t
-
-  type t = (
-    (* Success *) (ALoc.t option * Type.t) SMap.t,
-    (* SuccessModule *) (ALoc.t option * Type.t) SMap.t * (Type.t option)
-  ) generic_t
-
-  (* For debugging purposes *)
-  val string_of_extracted_type: (Type.t, Type.t) generic_t -> string
-
-  val to_command_result: t -> ((Loc.t option * Type.t) SMap.t, string) result
-
-  val extract: ?exclude_proto_members: bool -> Context.t -> Type.t -> t
-  val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
-  val extract_members: ?exclude_proto_members: bool -> Context.t -> (Type.t, Type.t) generic_t -> t
-  val resolve_type: Context.t -> Type.t -> Type.t
-  val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
-end

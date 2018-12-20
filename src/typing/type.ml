@@ -3418,6 +3418,9 @@ let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
   call_strict_arity = strict;
 }
 
+let create_intersection rep =
+  DefT (locationless_reason (RCustom "intersection"), IntersectionT rep)
+
 let apply_opt_use opt_use t_out = match opt_use with
 | OptCallT (u, r, f) ->
   CallT (u, r, apply_opt_funcalltype f t_out)

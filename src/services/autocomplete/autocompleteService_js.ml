@@ -104,7 +104,7 @@ let autocomplete_filter_members members =
     not (Reason.is_internal_name key)
   ) members
 
-let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name ac_loc docblock = Flow_js.(
+let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name ac_loc docblock =
   let ac_loc = ALoc.to_loc ac_loc in
   let this_t = Members.resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
@@ -159,7 +159,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
     |> Core_list.map ~f:autocomplete_create_result
     |> List.rev in
     Ok (result, Some json_data_to_log)
-)
+
 
 (* env is all visible bound names at cursor *)
 let autocomplete_id cx file_sig env =

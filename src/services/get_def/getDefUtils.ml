@@ -249,7 +249,7 @@ let rec debug_string_of_def_loc = function
 
 let extract_instancet cx ty : (Type.t, string) result =
   let open Type in
-  let resolved = Flow_js.Members.resolve_type cx ty in
+  let resolved = Members.resolve_type cx ty in
   match resolved with
     | ThisClassT (_, t)
     | DefT (_, PolyT (_, _, ThisClassT (_, t), _)) -> Ok t
@@ -257,11 +257,11 @@ let extract_instancet cx ty : (Type.t, string) result =
       let type_string = string_of_ctor resolved in
       Error ("Expected a class type to extract an instance type from, got " ^ type_string)
 
-(* Must be called with the result from Flow_js.Members.extract_type *)
+(* Must be called with the result from Members.extract_type *)
 let get_def_loc_from_extracted_type cx extracted_type name =
   extracted_type
-  |> Flow_js.Members.extract_members cx
-  |> Flow_js.Members.to_command_result
+  |> Members.extract_members cx
+  |> Members.to_command_result
   >>| fun map -> match SMap.get name map with
     | None -> None
     (* Currently some types (e.g. spreads) do not contain locations for their properties. For now
@@ -271,7 +271,7 @@ let get_def_loc_from_extracted_type cx extracted_type name =
     | Some (Some loc, _) -> Some loc
 
 let rec extract_def_loc cx ty name : (def_loc, string) result =
-  let resolved = Flow_js.Members.resolve_type cx ty in
+  let resolved = Members.resolve_type cx ty in
   extract_def_loc_resolved cx resolved name
 
 (* The same as get_def_loc_from_extracted_type except it recursively checks for overridden
@@ -305,9 +305,9 @@ and extract_def_loc_from_instancet cx extracted_type super name : (def_loc, stri
   end
 
 and extract_def_loc_resolved cx ty name : (def_loc, string) result =
-  let open Flow_js.Members in
+  let open Members in
   let open Type in
-  match Flow_js.Members.extract_type cx ty with
+  match extract_type cx ty with
     | Success (DefT (_, InstanceT (_, super, _, _))) as extracted_type ->
         extract_def_loc_from_instancet cx extracted_type super name
     | Success (DefT (_, ObjT _)) | SuccessModule _ as extracted_type ->
