@@ -313,18 +313,20 @@ module T = struct
   let source_of_source (loc, x) =
     loc, { Ast.StringLiteral.value = x; raw = x; }
 
+  let temporary_type name loc t =
+    loc, Ast.Type.Generic {
+      Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, name);
+      targs = Some (loc, [loc, t])
+    }
+
   let rec type_of_expr_type outlined = function
     | loc, Function function_t -> type_of_function outlined (loc, function_t)
     | loc, ObjectLiteral { frozen = true; properties = (pt, pts) } ->
-      let ot = loc, Ast.Type.Object {
+      temporary_type "$TEMPORARY$Object$freeze" loc (Ast.Type.Object {
         Ast.Type.Object.exact = true;
         inexact = false;
         properties = List.map (type_of_object_property outlined) (pt :: pts)
-      } in
-      loc, Ast.Type.Generic {
-        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$TEMPORARY$Object$freeze");
-        targs = Some (loc, [ot])
-      }
+      })
     | loc, ObjectLiteral { frozen = false; properties = (pt, pts) } ->
       loc, Ast.Type.Object {
         Ast.Type.Object.exact = true;
@@ -347,18 +349,9 @@ module T = struct
         Ast.Type.Generic.id = generic_id_of_reference reference;
         targs = None;
       }))
-    | loc, NumberLiteral nt -> loc, Ast.Type.Generic {
-        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$TEMPORARY$number");
-        targs = Some (loc, [loc, Ast.Type.NumberLiteral nt])
-      }
-    | loc, StringLiteral st -> loc, Ast.Type.Generic {
-        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$TEMPORARY$string");
-        targs = Some (loc, [loc, Ast.Type.StringLiteral st])
-      }
-    | loc, BooleanLiteral b -> loc, Ast.Type.Generic {
-        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$TEMPORARY$boolean");
-        targs = Some (loc, [loc, Ast.Type.BooleanLiteral b])
-      }
+    | loc, NumberLiteral nt -> temporary_type "$TEMPORARY$number" loc (Ast.Type.NumberLiteral nt)
+    | loc, StringLiteral st -> temporary_type "$TEMPORARY$string" loc (Ast.Type.StringLiteral st)
+    | loc, BooleanLiteral b -> temporary_type "$TEMPORARY$boolean" loc (Ast.Type.BooleanLiteral b)
     | loc, Number -> loc, Ast.Type.Number
     | loc, String -> loc, Ast.Type.String
     | loc, Boolean -> loc, Ast.Type.Boolean
