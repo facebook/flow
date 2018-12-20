@@ -1773,4 +1773,130 @@ import type {there as here} from \"new_import2\";");
 import type {there as here} from \"new_import2\";const x: (() => number) = (bla: () => number): (() => number) => { return 0; };"
       ~mapper:(new insert_import_and_annot_mapper)
   end;
+  "import_renamed_simple" >:: begin fun ctxt ->
+    let source = "import rename from \"foo\";" in
+    assert_edits_equal ctxt
+      ~edits:[((7, 13), "gotRenamed")]
+      ~source ~expected:"import gotRenamed from \"foo\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_renamed_simple_multiple1" >:: begin fun ctxt ->
+    let source = "import rename, {bar} from \"foo\";" in
+    assert_edits_equal ctxt
+      ~edits:[((7, 13), "gotRenamed")]
+      ~source ~expected:"import gotRenamed, {bar} from \"foo\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_renamed_simple_multiple2" >:: begin fun ctxt ->
+    let source = "import bar, {rename} from \"foo\";" in
+    assert_edits_equal ctxt
+      ~edits:[((13, 19), "gotRenamed")]
+      ~source ~expected:"import bar, {gotRenamed} from \"foo\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_renamed_simple1" >:: begin fun ctxt ->
+    let source = "import {rename} from \"foo\";" in
+    assert_edits_equal ctxt
+      ~edits:[((8, 14), "gotRenamed")]
+      ~source ~expected:"import {gotRenamed} from \"foo\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_renamed_multiple" >:: begin fun ctxt ->
+    let source = "import {rename, bar} from \"foo\";" in
+    assert_edits_equal ctxt
+      ~edits:[((8,14), "gotRenamed")]
+      ~source ~expected:"import {gotRenamed, bar} from \"foo\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_renamed_whole_module" >:: begin fun ctxt ->
+    let source = "import * as rename from \"foo\";" in
+    assert_edits_equal ctxt
+      ~edits:[((12, 18), "gotRenamed")]
+      ~source ~expected:"import * as gotRenamed from \"foo\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_type1" >:: begin fun ctxt ->
+    let source = "import type rename from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((12, 18), "gotRenamed")]
+      ~source ~expected:"import type gotRenamed from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_type_and_fn2" >:: begin fun ctxt ->
+    let source = "import rename, {type foo} from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((7, 13), "gotRenamed")]
+      ~source ~expected:"import gotRenamed, {type foo} from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_multiple_names1" >:: begin fun ctxt ->
+    let source = "import rename, {myBar, myBaz} from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((7, 13), "gotRenamed")]
+      ~source ~expected:"import gotRenamed, {myBar, myBaz} from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_multiple_names2" >:: begin fun ctxt ->
+    let source = "import myBar, {rename, myBaz} from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((15, 21), "gotRenamed")]
+      ~source ~expected:"import myBar, {gotRenamed, myBaz} from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_type2" >:: begin fun ctxt ->
+    let source = "import type {rename} from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((13, 19), "gotRenamed")]
+      ~source ~expected:"import type {gotRenamed} from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_fn_and_rename_module1" >:: begin fun ctxt ->
+    let source = "import rename, * as myModule from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((7, 13), "gotRenamed")]
+      ~source ~expected:"import gotRenamed, * as myModule from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_fn_and_rename_module2" >:: begin fun ctxt ->
+    let source = "import foo, * as rename from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((17, 23), "gotRenamed")]
+      ~source ~expected:"import foo, * as gotRenamed from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_rename" >:: begin fun ctxt ->
+    let source = "import {rename as bar} from \"foo\";" in
+    assert_edits_equal ctxt
+      ~edits:[((8, 14), "gotRenamed")]
+      ~source ~expected:"import {gotRenamed as bar} from \"foo\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_type_and_fn1" >:: begin fun ctxt ->
+    let source = "import foo, {type rename} from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((18,24), "gotRenamed")]
+      ~source ~expected:"import foo, {type gotRenamed} from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_type3" >:: begin fun ctxt ->
+    let source = "import {type rename} from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((13, 19), "gotRenamed")]
+      ~source ~expected:"import {type gotRenamed} from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_typeof1" >:: begin fun ctxt ->
+    let source = "import typeof rename from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((14, 20), "gotRenamed")]
+      ~source ~expected:"import typeof gotRenamed from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
+  "import_typeof2" >:: begin fun ctxt ->
+    let source = "import typeof {rename} from \"bar\";" in
+    assert_edits_equal ctxt
+      ~edits:[((15, 21), "gotRenamed")]
+      ~source ~expected:"import typeof {gotRenamed} from \"bar\";"
+      ~mapper:(new useless_mapper)
+  end;
 ]

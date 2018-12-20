@@ -1,4 +1,4 @@
-(**
+  (**
  * Copyright (c) 2014, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
@@ -442,6 +442,9 @@ let program (algo : diff_algorithm)
     | (_, DeclareExportDeclaration export1),
       (_, DeclareExportDeclaration export2) ->
       declare_export export1 export2
+   | (_, ImportDeclaration import1),
+     (_, ImportDeclaration import2) ->
+      import_declaration import1 import2
     | (_, ExportNamedDeclaration export1),
       (_, ExportNamedDeclaration export2) ->
       export_named_declaration export1 export2
@@ -512,6 +515,50 @@ let program (algo : diff_algorithm)
     let { default = default2; declaration = decl2; specifiers = specs2; source = src2 } = export2 in
     if default1 != default2 || src1 != src2 || decl1 != decl2 then None else
     diff_if_changed_opt export_named_declaration_specifier specs1 specs2
+
+  and import_default_specifier
+      (ident1: Loc.t Ast.Identifier.t option)
+      (ident2: Loc.t Ast.Identifier.t option): node change list option =
+    diff_if_changed_nonopt_fn identifier ident1 ident2
+
+  and import_namespace_specifier
+      (ident1: Loc.t Ast.Identifier.t)
+      (ident2: Loc.t Ast.Identifier.t): node change list option =
+    diff_if_changed identifier ident1 ident2 |> Option.return
+
+  and import_named_specifier
+      (nm_spec1: Loc.t Ast.Statement.ImportDeclaration.named_specifier)
+      (nm_spec2: Loc.t Ast.Statement.ImportDeclaration.named_specifier): node change list option =
+    let open Ast.Statement.ImportDeclaration in
+    let { kind = kind1; local = local1; remote = remote1 } = nm_spec1 in
+    let { kind = kind2; local = local2; remote = remote2 } = nm_spec2 in
+    if kind1 != kind2 then None else begin
+      let locals = diff_if_changed_nonopt_fn identifier local1 local2 in
+      let remotes = diff_if_changed identifier remote1 remote2 |> Option.return in
+      join_diff_list [locals;remotes]
+    end
+
+  and import_specifier
+      (spec1: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.specifier)
+      (spec2: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.specifier): node change list option =
+    let open Ast.Statement.ImportDeclaration in
+    match spec1, spec2 with
+    | ImportNamedSpecifiers nm_specs1, ImportNamedSpecifiers nm_specs2 ->
+      diff_and_recurse_no_trivial import_named_specifier nm_specs1 nm_specs2
+    | ImportNamespaceSpecifier (_, ident1), ImportNamespaceSpecifier (_, ident2) ->
+      diff_if_changed_ret_opt import_namespace_specifier ident1 ident2
+    | _ -> None
+
+  and import_declaration
+      (import1: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t)
+      (import2: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t): node change list option =
+    let open Ast.Statement.ImportDeclaration in
+    let { importKind = imprt_knd1; source = src1; default = dflt1; specifiers = spec1 } = import1 in
+    let { importKind = imprt_knd2; source = src2; default = dflt2; specifiers = spec2 } = import2 in
+    if imprt_knd1 != imprt_knd2 || src1 != src2 then None else
+    let dflt_diff = import_default_specifier dflt1 dflt2 in
+    let spec_diff = diff_if_changed_opt import_specifier spec1 spec2 in
+    join_diff_list [dflt_diff; spec_diff]
 
   and function_declaration func1 func2 = function_ func1 func2
 
