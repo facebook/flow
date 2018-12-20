@@ -1020,8 +1020,7 @@ let run cx trace ~use_op reason_op l u
           | None -> v
           | Some t ->
             (* Tie the `this` knot with BindT *)
-            (* TODO: T35904222 *)
-            let dummy_return = Unsoundness.dummy_any reason_op in
+            let dummy_return = MixedT.make reason_op in
             let calltype = mk_methodcalltype knot.this None [] dummy_return in
             rec_flow cx trace (t, BindT (unknown_use, reason_op, calltype, true));
             (* Because we are creating an instance type, which can be used as an

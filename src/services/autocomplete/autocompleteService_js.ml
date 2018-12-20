@@ -106,10 +106,10 @@ let autocomplete_filter_members members =
 
 let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name ac_loc docblock = Flow_js.(
   let ac_loc = ALoc.to_loc ac_loc in
-  let this_t = resolve_type cx this in
+  let this_t = Members.resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
-  let this_t = resolve_builtin_class cx this_t in
+  let this_t = Members.resolve_builtin_class cx this_t in
   let result = Members.extract ~exclude_proto_members cx this_t in
 
   let open Hh_json in

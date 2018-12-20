@@ -3984,7 +3984,6 @@ and subscript =
             member_ast { Member._object = _object_ast; property; }
           )
         | ContinueChain ->
-          (* TODO: T35904222 *)
           let tout = Unsoundness.at Chain ploc in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
           let step = ref (loc, opt_use, tout) in
@@ -4037,7 +4036,6 @@ and subscript =
             member_ast { Member._object = _object_ast; property; }
           )
         | ContinueChain ->
-          (* TODO: T35904222 *)
           let tout = Unsoundness.at Chain ploc in
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           let step = ref (loc, opt_use, tout) in
@@ -6313,7 +6311,7 @@ and mk_class_sig =
       let set_type t = func_t_ref := Some t in
       let get_element () =
         let body = Option.value (!body_ref) ~default:Typed_ast.Function.body_error in
-        let func_t = Option.value (!func_t_ref) ~default:(Unsoundness.at DummyType id_loc) in
+        let func_t = Option.value (!func_t_ref) ~default:(EmptyT.at id_loc) in
         let func = reconstruct_func body func_t in
         Body.Method ((loc, func_t), { Method.
           key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), name);

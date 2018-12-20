@@ -249,7 +249,7 @@ let rec debug_string_of_def_loc = function
 
 let extract_instancet cx ty : (Type.t, string) result =
   let open Type in
-  let resolved = Flow_js.resolve_type cx ty in
+  let resolved = Flow_js.Members.resolve_type cx ty in
   match resolved with
     | ThisClassT (_, t)
     | DefT (_, PolyT (_, _, ThisClassT (_, t), _)) -> Ok t
@@ -271,7 +271,7 @@ let get_def_loc_from_extracted_type cx extracted_type name =
     | Some (Some loc, _) -> Some loc
 
 let rec extract_def_loc cx ty name : (def_loc, string) result =
-  let resolved = Flow_js.resolve_type cx ty in
+  let resolved = Flow_js.Members.resolve_type cx ty in
   extract_def_loc_resolved cx resolved name
 
 (* The same as get_def_loc_from_extracted_type except it recursively checks for overridden

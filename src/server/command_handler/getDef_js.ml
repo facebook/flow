@@ -72,7 +72,7 @@ let getdef_require_pattern state loc =
   state.getdef_require_patterns <- loc::state.getdef_require_patterns
 
 let extract_member_def cx this name =
-  let this_t = Flow_js.resolve_type cx this in
+  let this_t = Flow_js.Members.resolve_type cx this in
   let member_result = Flow_js.Members.extract cx this_t in
 
   let result_str, t = Flow_js.Members.(match member_result with
@@ -136,7 +136,10 @@ let getdef_get_result_from_hooks ~options ~reader cx state =
   | Some Gdmem (name, this) ->
       extract_member_def cx this name
   | Some Gdrequire ((source_loc, name), require_loc) ->
-      let module_t = Flow_js.resolve_type cx (Context.find_require cx (ALoc.of_loc source_loc)) in
+      let module_t =
+      ALoc.of_loc source_loc
+      |> Context.find_require cx
+      |> Flow_js.Members.resolve_type cx in
       (* function just so we don't do the work unless it's actually needed. *)
       let get_imported_file () =
         let filename = Module_heaps.Reader.get_file ~reader ~audit:Expensive.warn (

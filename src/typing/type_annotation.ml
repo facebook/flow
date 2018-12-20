@@ -857,7 +857,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       dummy_static reason,
       mk_reason RPrototype loc |> Unsoundness.function_proto_any,
       {
-        this_t = mk_reason RThis loc |> Unsoundness.dummy_any;
+        this_t = bound_function_dummy_this;
         params = List.rev rev_params;
         rest_param;
         return_t;

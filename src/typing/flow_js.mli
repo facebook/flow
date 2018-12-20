@@ -84,7 +84,6 @@ val builtins: Context.t -> Type.t
 val get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t
 val lookup_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.lookup_kind -> Type.t -> unit
 val get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t
-val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 val set_builtin: Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
 
 val mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t
@@ -94,7 +93,6 @@ val mk_typeof_annotation: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:boo
 val types_of: Constraint.constraints -> Type.t list
 val enforce_strict: Context.t -> Type.t -> unit
 val merge_type: Context.t -> (Type.t * Type.t) -> Type.t
-val resolve_type: Context.t -> Type.t -> Type.t
 val resolve_tvar: Context.t -> Type.tvar -> Type.t
 val possible_types: Context.t -> Constraint.ident -> Type.t list
 val possible_types_of_type: Context.t -> Type.t -> Type.t list
@@ -121,4 +119,6 @@ module Members : sig
   val extract: ?exclude_proto_members: bool -> Context.t -> Type.t -> t
   val extract_type: Context.t -> Type.t -> (Type.t, Type.t) generic_t
   val extract_members: ?exclude_proto_members: bool -> Context.t -> (Type.t, Type.t) generic_t -> t
+  val resolve_type: Context.t -> Type.t -> Type.t
+  val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 end

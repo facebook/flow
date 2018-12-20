@@ -381,12 +381,6 @@ let rec merge_type cx =
   | (t1, t2) ->
       create_union (UnionRep.make t1 t2 [])
 
-and resolve_type cx = function
-  | OpenT tvar -> resolve_type cx (resolve_tvar cx tvar)
-  | AnnotT (_, t, _) -> resolve_type cx t
-  | MergedT (_, uses) -> resolve_merged_t cx uses
-  | t -> t
-
 and resolve_tvar cx (_, id) =
   let ts = possible_types cx id in
   (* The list of types returned by possible_types is often empty, and the
@@ -402,14 +396,7 @@ and resolve_tvar cx (_, id) =
      improve failure tolerance.  *)
   List.fold_left (fun u t ->
     merge_type cx (t, u)
-  ) (locationless_reason RAny |> Unsoundness.dummy_any) ts
-
-and resolve_merged_t cx uses =
-  let ts = Core_list.map ~f:(possible_types_of_use cx) uses in
-  match List.flatten ts with
-  | [] -> locationless_reason RAny |> Unsoundness.dummy_any
-  | [x] -> x
-  | x::y::ts -> create_intersection (InterRep.make x y ts)
+  ) (locationless_reason RAny |> Unsoundness.unresolved_any) ts
 
 (**************)
 (* builtins *)
@@ -2387,11 +2374,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
       let funtype = DefT (fun_reason_new, FunT (
         dummy_static reason,
-        (*TODO: T35904222*)
-        mk_reason RPrototype fun_loc |> Unsoundness.dummy_any,
+        mk_reason RPrototype fun_loc |> Unsoundness.function_proto_any,
         {
-          (*TODO: T35904222*)
-          this_t = mk_reason RThis fun_loc |> Unsoundness.dummy_any;
+          this_t = mk_reason RThis fun_loc |> MixedT.make;
           params = [(Some "value", MixedT.at fun_loc)];
           rest_param = None;
           return_t = return_t;
@@ -11138,6 +11123,8 @@ and instantiate_poly_t cx t = function
           prerr_endline "Instantiating poly type failed";
           t
       )
+      | DefT (_, EmptyT)
+      | DefT (_, MixedT _)
       | DefT (_, AnyT _)
       | DefT (_, (TypeT (_, DefT (_, AnyT _)))) ->
           t
@@ -11161,32 +11148,6 @@ and extract_non_spread cx ~trace = function
     let loc = loc_of_t arr in
     add_output cx ~trace (FlowError.(EUnsupportedSyntax (loc, SpreadArgument)));
     AnyT.error reason
-
-(** TODO: this should rather be moved close to ground_type_impl/resolve_type
-    etc. but Ocaml name resolution rules make that require a lot more moving
-    code around. **)
-and resolve_builtin_class cx ?trace = function
-  | DefT (reason, BoolT _) ->
-    let bool_t = get_builtin_type cx ?trace reason "Boolean" in
-    resolve_type cx bool_t
-  | DefT (reason, NumT _) ->
-    let num_t = get_builtin_type cx ?trace reason "Number" in
-    resolve_type cx num_t
-  | DefT (reason, StrT _) ->
-    let string_t = get_builtin_type cx ?trace reason "String" in
-    resolve_type cx string_t
-  | DefT (reason, ArrT arrtype) ->
-    let builtin, elemt = match arrtype with
-    | ArrayAT (elemt, _) -> get_builtin cx ?trace "Array" reason, elemt
-    | TupleAT (elemt, _)
-    | ROArrayAT (elemt) -> get_builtin cx ?trace "$ReadOnlyArray" reason, elemt
-    in
-    let array_t = resolve_type cx builtin in
-    let array_t = instantiate_poly_t cx array_t (Some [elemt]) in
-    instantiate_type array_t
-  | t ->
-    t
-
 and set_builtin cx ?trace x t =
   let reason = builtin_reason (RCustom x) in
   let propref = Named (reason, x) in
@@ -12330,6 +12291,9 @@ module Members : sig
   (* `exclude_proto_members` defaults to false. If true, only `own` props will be included. *)
   val extract_members: ?exclude_proto_members: bool -> Context.t -> (Type.t, Type.t) generic_t -> t
 
+  val resolve_type: Context.t -> Type.t -> Type.t
+
+  val resolve_builtin_class: Context.t -> ?trace:Trace.t -> Type.t -> Type.t
 end = struct
 
   type ('success, 'success_module) generic_t =
@@ -12378,6 +12342,36 @@ end = struct
       not (String.length key >= 1 && key.[0] = '$')
     ) (Context.find_props cx fields)
 
+  let rec resolve_type cx = function
+    | OpenT tvar -> resolve_tvar cx tvar |> resolve_type cx
+    | AnnotT (_, t, _) -> resolve_type cx t
+    | MergedT (_, uses) ->
+        begin match Core_list.(uses >>= possible_types_of_use cx) with
+        (* The unit of intersection is normally mixed, but MergedT is hacky and empty
+        fits better here *)
+        | [] -> locationless_reason REmpty |> EmptyT.make
+        | [x] -> x
+        | x::y::ts -> InterRep.make x y ts |> create_intersection
+        end
+    | t -> t
+
+  let resolve_builtin_class cx ?trace = function
+    | DefT (reason, BoolT _) ->
+      get_builtin_type cx ?trace reason "Boolean" |> resolve_type cx
+    | DefT (reason, NumT _) ->
+      get_builtin_type cx ?trace reason "Number" |> resolve_type cx
+    | DefT (reason, StrT _) ->
+      get_builtin_type cx ?trace reason "String" |> resolve_type cx
+    | DefT (reason, ArrT arrtype) ->
+      let builtin, elemt = match arrtype with
+      | ArrayAT (elemt, _) -> get_builtin cx ?trace "Array" reason, elemt
+      | TupleAT (elemt, _)
+      | ROArrayAT (elemt) -> get_builtin cx ?trace "$ReadOnlyArray" reason, elemt
+      in
+      let array_t = resolve_type cx builtin in
+      Some [elemt] |> instantiate_poly_t cx array_t |> instantiate_type
+    | t ->
+      t
   let rec extract_type cx this_t = match this_t with
     | DefT (_, MaybeT ty) ->
         extract_type cx ty
@@ -12682,8 +12676,7 @@ class assert_ground_visitor r ~max_reasons = object (self)
       | Some (pole, seen) ->
         match pole with
         | Neutral | Negative ->
-          (* TODO: T35904222 *)
-          Unsoundness.dummy |> AnyT.locationless |> unify_opt cx ~unify_any:true (OpenT (r, id));
+          AnyT.locationless AnyError |> unify_opt cx ~unify_any:true (OpenT (r, id));
           let trace_reasons = if max_reasons = 0
              then []
              else Core_list.map ~f:(fun reason ->
@@ -12793,13 +12786,13 @@ class assert_ground_visitor r ~max_reasons = object (self)
         );
         seen
       | DefT (r, FunT (static, prototype, ft)) ->
-        (* TODO: T35904222 *)
-        let any = AnyT.locationless Unsoundness.dummy in
-        unify_opt cx ~unify_any:true static any;
-        unify_opt cx ~unify_any:true prototype any;
-        unify_opt cx ~unify_any:true ft.this_t any;
-        super#type_ cx pole seen
-          (DefT (r, FunT (any, any, {ft with this_t = any})))
+          (* This won't propagate to any other types because this happens post-merge *)
+          let any = AnyT.locationless Untyped in
+          unify_opt cx ~unify_any:true static any;
+          unify_opt cx ~unify_any:true prototype any;
+          unify_opt cx ~unify_any:true ft.this_t any;
+          super#type_ cx pole seen
+            (DefT (r, FunT (any, any, {ft with this_t = any})))
       | _ -> super#type_ cx pole seen t
     in
     seen)
