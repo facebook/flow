@@ -111,6 +111,7 @@ val do_parse:
   ?prevent_munge: bool ->
   module_ref_prefix: string option ->
   facebook_fbt: string option ->
+  ?arch: Options.arch ->
   string ->                 (* contents of the file *)
   File_key.t ->               (* filename *)
   result

@@ -24,12 +24,13 @@ let compute_docblock file content =
 let compute_ast_result options file content =
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
+  let arch = options.Options.opt_arch in
   let docblock = compute_docblock file content in
   let open Parsing_service_js in
   let types_mode = TypesAllowed in
   let use_strict = true in
   let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock
-    ~module_ref_prefix ~facebook_fbt content file in
+    ~module_ref_prefix ~facebook_fbt ~arch content file in
   match result with
     | Parse_ok parse_ok ->
       let ast, file_sig = basic parse_ok in

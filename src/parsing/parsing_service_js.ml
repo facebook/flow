@@ -343,7 +343,7 @@ let types_checked types_mode info =
     | Some Docblock.OptInWeak -> true
 
 let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false)
-  ~module_ref_prefix ~facebook_fbt content file =
+  ~module_ref_prefix ~facebook_fbt ?(arch=Options.Classic) content file =
   try (
     match file with
     | File_key.JsonFile _ ->
@@ -382,7 +382,12 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false)
             let sig_file_sig = match File_sig.program ~ast:sig_ast ~module_ref_prefix with
               | Ok fs -> fs
               | Error _ -> assert false in
-            Parse_ok (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig)))
+            begin match arch with
+              | Options.Classic ->
+                Parse_ok (Classic (ast, file_sig))
+              | Options.TypesFirst ->
+                Parse_ok (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig)))
+            end
           | Error e -> Parse_fail (File_sig_error e)
         else
           Parse_ok (Classic (ast, File_sig.init))
@@ -412,7 +417,7 @@ let does_content_match_file_hash ~reader file content =
 let reducer
   ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch
   ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix
-  ~facebook_fbt
+  ~facebook_fbt ~arch
   parse_results file
 : results =
   (* It turns out that sometimes files appear and disappear very quickly. Just
@@ -469,7 +474,7 @@ let reducer
             else info
           in
           begin match (do_parse ~types_mode ~use_strict ~info ~module_ref_prefix
-            ~facebook_fbt content file) with
+            ~facebook_fbt ~arch content file) with
           | Parse_ok parse_ok ->
               let ast, file_sig = basic parse_ok in
               let sig_opt = sig_opt parse_ok in
@@ -546,14 +551,14 @@ let next_of_filename_set ?(with_progress=false) workers filenames =
   else MultiWorkerLwt.next workers (FilenameSet.elements filenames)
 
 let parse ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch ~profile
-  ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix ~facebook_fbt workers next
+  ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix ~facebook_fbt ~arch workers next
 : results Lwt.t =
   let t = Unix.gettimeofday () in
   let reducer =
     reducer
       ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch
        ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix
-       ~facebook_fbt
+      ~facebook_fbt ~arch
   in
   let%lwt results = MultiWorkerLwt.call
     workers
@@ -579,14 +584,14 @@ let parse ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch ~p
 let reparse
   ~transaction ~reader ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
   ~parse_unchanged ~module_ref_prefix ~with_progress ~workers ~modified:files ~deleted
-  ~facebook_fbt =
+  ~facebook_fbt ~arch =
   (* save old parsing info for files *)
   let all_files = FilenameSet.union files deleted in
   let master_mutator, worker_mutator = Parsing_heaps.Reparse_mutator.create transaction all_files in
   let next = next_of_filename_set ?with_progress workers files in
   let%lwt results =
     parse ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch:false ~profile
-      ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix ~facebook_fbt workers next
+      ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix ~facebook_fbt ~arch workers next
   in
   let modified = results.parse_ok |> FilenameMap.keys |> FilenameSet.of_list in
   let modified = List.fold_left (fun acc (fail, _, _) ->
@@ -610,10 +615,11 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   let parse_unchanged = true in (* This isn't a recheck, so there shouldn't be any unchanged *)
   let worker_mutator = Parsing_heaps.Parse_mutator.create () in
   let facebook_fbt = Options.facebook_fbt options in
+  let arch = options.Options.opt_arch in
   parse
     ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch:false
     ~profile ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix
-    ~facebook_fbt workers next
+    ~facebook_fbt ~arch workers next
 
 let reparse_with_defaults
   ~transaction ~reader ?types_mode ?use_strict ?with_progress
@@ -624,10 +630,11 @@ let reparse_with_defaults
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
   let facebook_fbt = Options.facebook_fbt options in
+  let arch = options.Options.opt_arch in
   reparse
     ~transaction ~reader ~types_mode ~use_strict ~profile ~max_header_tokens ~noflow
     ~parse_unchanged ~module_ref_prefix ~with_progress ~workers ~modified ~deleted
-    ~facebook_fbt
+    ~facebook_fbt ~arch
 
 (* ensure_parsed takes a set of files, finds the files which haven't been parsed, and parses them.
  * Any not-yet-parsed files who's on-disk contents don't match their already-known hash are skipped
@@ -663,11 +670,12 @@ let ensure_parsed ~reader options workers files =
     MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts)
   in
   let facebook_fbt = Options.facebook_fbt options in
+  let arch = options.Options.opt_arch in
 
   let%lwt results = parse
     ~worker_mutator ~reader ~types_mode ~use_strict ~skip_hash_mismatch:true
     ~profile ~max_header_tokens ~noflow ~parse_unchanged ~module_ref_prefix
-    ~facebook_fbt workers next
+    ~facebook_fbt ~arch workers next
   in
 
   Lwt.return results.parse_hash_mismatch_skips
