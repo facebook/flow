@@ -1899,4 +1899,9 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
       ~source ~expected:"import typeof {gotRenamed} from \"bar\";"
       ~mapper:(new useless_mapper)
   end;
+  "throw" >:: begin fun ctxt ->
+    let source = "throw \"rename\";" in
+    assert_edits_equal ctxt ~edits:[((6, 14), "\"gotRenamed\"")]
+    ~source ~expected:"throw \"gotRenamed\";" ~mapper:(new literal_mapper)
+  end;
 ]

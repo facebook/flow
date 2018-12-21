@@ -450,6 +450,8 @@ let program (algo : diff_algorithm)
       export_named_declaration export1 export2
     | (_, Try try1), (_, Try try2) ->
       try_ try1 try2
+    | (_, Throw throw1), (_, Throw throw2) ->
+      Some (throw_statement throw1 throw2)
     | (_, DeclareTypeAlias d_t_alias1), (_, DeclareTypeAlias d_t_alias2) ->
       type_alias d_t_alias1 d_t_alias2
     | (_, TypeAlias t_alias1), (_, TypeAlias t_alias2) ->
@@ -1367,6 +1369,14 @@ let program (algo : diff_algorithm)
     let { argument = argument1; } = stmt1 in
     let { argument = argument2; } = stmt2 in
     diff_if_changed_nonopt_fn expression argument1 argument2
+
+  and throw_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Throw.t)
+                      (stmt2: (Loc.t, Loc.t) Ast.Statement.Throw.t)
+      : node change list =
+    let open Ast.Statement.Throw in
+    let { argument = argument1; } = stmt1 in
+    let { argument = argument2; } = stmt2 in
+    diff_if_changed expression argument1 argument2
 
   and labeled_statement
       (labeled1: (Loc.t, Loc.t) Ast.Statement.Labeled.t)
