@@ -822,29 +822,29 @@ let filter_out_node_modules ~options =
   )
 
 (* Filesystem lazy mode focuses on any file which changes. Non-lazy mode focuses on every file in
- * the repo. In both cases, we never want node_modules to appear in the focused or dependent sets.
+ * the repo. In both cases, we never want node_modules to appear in the focused sets.
  *
  * We do need to calculate dependencies in order to check the files in node_modules which are
  * imported.
  *
- * There are no expected invariants for the input set. The returned set has the following invariants
- * 1. Node modules will only appear in the dependency set
- * 2. Every dependent of a focused or dependent file will be in the focused set or the dependent set
- * 3. Every dependency of a focused, dependent, or dependency file will be in the focused set,
- *    dependent set, or dependency set
+ * There are no expected invariants for the input sets. The returned set has the following invariants
+ * 1. Node modules will only appear in the dependency set.
+ * 2. Dependent files are empty.
+ * 3. Every recursive dependency of a focused file will be in the focused set or dependency set.
+ *    Dependency files provided in the input set are preserved.
  *)
-let unfocused_files_to_infer ~options ~input ~dependency_info =
-  let focused = filter_out_node_modules ~options (CheckedSet.focused input) in
-  let dependents = filter_out_node_modules ~options (CheckedSet.dependents input) in
+let unfocused_files_to_infer ~options ~input_focused ~input_dependencies ~dependency_info =
+  let focused = filter_out_node_modules ~options input_focused in
 
   (* Calculate dependencies to figure out which node_modules stuff we depend on *)
   let dependencies =
-    (* Calculate the dependencies of focused and dependent files *)
-    let roots = FilenameSet.union focused dependents in
-    Dep_service.calc_all_dependencies dependency_info roots
-    |> FilenameSet.union (CheckedSet.dependencies input)  (* Add in the forced dependencies *)
+    (* Calculate the dependencies of focused files *)
+    let dependencies = Dep_service.calc_all_dependencies dependency_info focused in
+    match input_dependencies with
+      | Some input_dependencies -> FilenameSet.union input_dependencies dependencies
+      | None -> dependencies
   in
-  Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
+  Lwt.return (CheckedSet.add ~focused ~dependencies CheckedSet.empty)
 
 (* Called on initialization in non-lazy mode, with optional focus targets.
 
@@ -862,8 +862,7 @@ let files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependenc
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focus_targets with
     | None ->
-      let input = CheckedSet.add ~focused:parsed CheckedSet.empty in
-      unfocused_files_to_infer ~options ~input ~dependency_info
+      unfocused_files_to_infer ~options ~input_focused:parsed ~input_dependencies:None ~dependency_info
     | Some focused ->
       let input = CheckedSet.add ~focused CheckedSet.empty in
       focused_files_to_infer ~reader ~input ~dependency_info
@@ -1285,9 +1284,9 @@ let recheck_with_profiling
         let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
         let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
         let focused = FilenameSet.union old_focus_targets freshparsed in
-        let input = CheckedSet.add ~focused files_to_force in
-        let%lwt updated_checked_files = unfocused_files_to_infer
-          ~options ~input ~dependency_info in
+        let input_focused = FilenameSet.union focused (CheckedSet.focused files_to_force) in
+        let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
+        let%lwt updated_checked_files = unfocused_files_to_infer ~options ~input_focused ~input_dependencies ~dependency_info in
         Lwt.return (updated_checked_files, all_dependent_files)
       | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
         (* Unfortunately, our checked_files set might be out of date. This update could have added
