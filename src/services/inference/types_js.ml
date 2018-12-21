@@ -785,12 +785,16 @@ let init_libs
  * - Around 75% of the time is dependent_files looking up the dependents
  * - Around 20% of the time is calc_dependency_graph building the dependency graph
  *
- * There are no expected invariants for the input set. The returned set has the following invariants
- * 1. Every dependent of a focused or dependent file will be in the focused set or the dependent set
- * 2. Every dependency of a focused, dependent, or dependency file will be in the focused set,
+ * There are no expected invariants for the input sets. The returned set has the following invariants
+ * 1. Every recursive dependent of a focused file will be in the focused set or the dependent set
+ * 2. Every recursive dependency of a focused file or recursive dependent will be in the focused set,
  *    dependent set, or dependency set
  **)
-let focused_files_to_infer ~reader ~input ~dependency_info =
+let focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependency_info =
+  let input = CheckedSet.add
+    ~focused:input_focused
+    ~dependencies:(Option.value ~default:FilenameSet.empty input_dependencies)
+    CheckedSet.empty in
   (* Filter unchecked files out of the input *)
   let input = CheckedSet.filter input ~f:(fun f ->
     Module_heaps.Mutator_reader.is_tracked_file ~reader f (* otherwise, f is probably a directory *)
@@ -803,8 +807,7 @@ let focused_files_to_infer ~reader ~input ~dependency_info =
   let focused = CheckedSet.focused input in
 
   (* Roots is the set of all focused files and all dependent files *)
-  let roots = Dep_service.calc_all_reverse_dependencies dependency_info focused
-  |> FilenameSet.union (CheckedSet.dependents input) in
+  let roots = Dep_service.calc_all_reverse_dependencies dependency_info focused in
 
   let dependencies = Dep_service.calc_all_dependencies dependency_info roots
   |> FilenameSet.union (CheckedSet.dependencies input) in
@@ -863,9 +866,8 @@ let files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependenc
     match focus_targets with
     | None ->
       unfocused_files_to_infer ~options ~input_focused:parsed ~input_dependencies:None ~dependency_info
-    | Some focused ->
-      let input = CheckedSet.add ~focused CheckedSet.empty in
-      focused_files_to_infer ~reader ~input ~dependency_info
+    | Some input_focused ->
+      focused_files_to_infer ~reader ~input_focused ~input_dependencies:None ~dependency_info
   )
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
@@ -1313,19 +1315,13 @@ let recheck_with_profiling
             | File_key.Builtins -> false
           ) freshparsed
         in
-        let input =
-          let focused = CheckedSet.focused files_to_force (* Files to force to be focused *)
+        let input_focused = CheckedSet.focused files_to_force (* Files to force to be focused *)
             |> filter_out_node_modules ~options (* Never focus node modules *)
             |> FilenameSet.union (CheckedSet.focused env.ServerEnv.checked_files) (* old focused *)
             |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
-          in
-          let dependents = CheckedSet.dependents files_to_force
-            |> filter_out_node_modules ~options
-          in
-          let dependencies = CheckedSet.dependencies files_to_force in
-          CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty
         in
-        let%lwt updated_checked_files = focused_files_to_infer ~reader ~input ~dependency_info in
+        let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
+        let%lwt updated_checked_files = focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependency_info in
 
         (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
          * dependency. That's fine if foo.js is in the checked set. But if it's just some random
