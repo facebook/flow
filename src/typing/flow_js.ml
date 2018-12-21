@@ -6890,6 +6890,11 @@ and any_propagated cx trace any = function
       rec_flow_t cx trace ~use_op (any, t);
       true
 
+  | UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
+      rec_flow_t cx trace ~use_op (config, any); (* Flip because config is contravariant *)
+      rec_flow_t cx trace ~use_op (any, instance);
+      true
+
   (* Some types just need to be expanded and filled with any types *)
   | UseT (use_op, (DefT (_, ArrT (ArrayAT _)) as t))
   | UseT (use_op, (DefT (_, ArrT (TupleAT _)) as t))
@@ -7073,6 +7078,11 @@ and any_propagated_use cx trace use_op any = function
   | DefT (_, ClassT t)
   | DefT (_, ArrT (ROArrayAT t)) ->
       rec_flow_t cx trace ~use_op (t, any);
+      true
+
+  | DefT (_, ReactAbstractComponentT {config; instance}) ->
+      rec_flow_t cx trace ~use_op (any, config); (* Flip because config is contravariant *)
+      rec_flow_t cx trace ~use_op (instance, any);
       true
 
   (* These types have no negative positions in their lower bounds *)
