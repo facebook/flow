@@ -328,7 +328,7 @@ let mk_reason desc aloc =
 
 (* Lift a string to a reason. Usually used as a dummy reason. *)
 let locationless_reason desc =
-  mk_reason_with_test_id None desc (ALoc.of_loc Loc.none) None None
+  mk_reason_with_test_id None desc (ALoc.none) None None
 
 let func_reason {Ast.Function.async; generator; _} =
   let func_desc = match async, generator with
