@@ -3818,9 +3818,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (******************)
 
     (* props is invariant in the class *)
-    | DefT (_, ClassT _), (ReactPropsToOut (_, props) | ReactInToProps (_, props)) ->
-        let c = React_kit.component_class cx l ~get_builtin_typeapp props in
-        rec_flow_t cx trace (l, c)
+    | DefT (r, ClassT _), (ReactPropsToOut (_, props) | ReactInToProps (_, props)) ->
+        rec_flow_t cx trace (l, React_kit.component_class cx r ~get_builtin_typeapp props);
 
     (* Functions with rest params or that are predicates cannot be React components *)
     | DefT (reason, FunT (_, _, { params; rest_param = None; is_predicate = false; _})),
@@ -3853,6 +3852,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               React.GetProps props
               |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
         end
+
+    | DefT (_, AnyT _), ReactPropsToOut (_, props) ->
+        rec_flow_t cx trace (l, props)
+
+    | DefT (_, AnyT _), ReactInToProps (_, props) ->
+        rec_flow_t cx trace (props, l)
+
+    | DefT (r, _), (ReactPropsToOut (reason_op, props) | ReactInToProps (reason_op, props)) ->
+        React.GetProps props
+        |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
 
     (***********************************************)
     (* function types deconstruct into their parts *)

@@ -23,13 +23,11 @@ let err_incompatible
 
 let component_class
   cx
-  component
+  reason
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
   props
 =
-  let reason = reason_of_t component in
-  DefT (reason, ClassT (get_builtin_typeapp cx reason
-    "React$Component" [props; Unsoundness.why React reason]))
+  DefT (reason, ClassT (get_builtin_typeapp cx reason "React$Component" [props; Tvar.mk cx reason]))
 
 (* We create our own FunT instead of using
  * React$StatelessFunctionalComponent in the same way as for class components
