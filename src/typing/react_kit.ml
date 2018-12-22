@@ -20,7 +20,6 @@ let err_incompatible
 =
   add_output cx ~trace (Flow_error.EReactKit
     ((reason_op, reason), u, use_op))
-
 let component_class
   cx
   reason
@@ -28,34 +27,6 @@ let component_class
   props
 =
   DefT (reason, ClassT (get_builtin_typeapp cx reason "React$Component" [props; Tvar.mk cx reason]))
-
-(* We create our own FunT instead of using
- * React$StatelessFunctionalComponent in the same way as for class components
- * because there seems to be a bug where reasons get mixed up when this
- * function is called multiple times *)
-let component_function cx ~reason_op ?(with_return_t=true) props
-  ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
-=
-  let reason = replace_reason_const RReactSFC reason_op in
-  let any = Unsoundness.why React reason_op in
-  DefT (reason, FunT (
-    any,
-    any,
-    {
-      this_t = any;
-      (* There is a deprecated optional second argument on function components.
-       * In order to support them, we have a second any argument here *)
-      params = [(None, props); (None, any)];
-      rest_param = None;
-      return_t = if with_return_t
-        then get_builtin_type cx reason_op "React$Node"
-        else any;
-      closure_t = 0;
-      is_predicate = false;
-      changeset = Changeset.empty;
-      def_reason = reason_op;
-    }
-  ))
 
 let get_intrinsic cx trace component ~reason_op artifact literal prop ~rec_flow
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
@@ -658,7 +629,7 @@ let run cx trace ~use_op reason_op l u
       let props = SMap.empty in
       let dict = {
         dict_name = None;
-        key = AnyT.locationless Unsoundness.react;
+        key = tout |> reason_of_t |> StrT.why;
         value;
         dict_polarity = Neutral;
       } in
@@ -1060,7 +1031,7 @@ let run cx trace ~use_op reason_op l u
           let dict = Some {
             dict_name = None;
             key = StrT.why reason;
-            value = Unsoundness.why React reason;
+            value = EmptyT.why reason;
             dict_polarity = Neutral;
           } in
           reason, static_props, dict, false, true

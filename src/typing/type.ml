@@ -772,7 +772,6 @@ module rec TypeTerm : sig
     | InstanceOfRefinement
     | ForOfIteration
     | Merged
-    | React
     | ResolveSpread
     | TaggedTemplateType
     | Unimplemented
@@ -2716,7 +2715,6 @@ module Unsoundness = struct
   let computed_lit_key     = Unsound ComputedLiteralKey
   let function_proto       = Unsound FunctionPrototype
   let merged               = Unsound Merged
-  let react                = Unsound React
   let instance_of_refi     = Unsound InstanceOfRefinement
   let unresolved           = Unsound UnresolvedType
   let resolve_spread       = Unsound ResolveSpread
@@ -2730,7 +2728,6 @@ module Unsoundness = struct
   let bound_fn_this        = Unsound BoundFunctionThis
 
   let merged_any           = AnyT.make merged
-  let react_any            = AnyT.make react
   let instance_of_refi_any = AnyT.make instance_of_refi
   let unresolved_any       = AnyT.make unresolved
   let resolve_spread_any   = AnyT.make resolve_spread

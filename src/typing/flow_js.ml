@@ -3767,29 +3767,34 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         React_kit.get_config cx trace l ~use_op ~reason_op:r ~rec_flow ~rec_flow_t ~rec_unify
           ~get_builtin_type ~add_output
           (React.GetConfig l) Negative config;
-        (* Ensure l is a React.Component by flowing l to React$Component<any, any> *)
-        let class_component =
-          DefT (r,
-            ClassT (get_builtin_typeapp cx r
-              "React$Component" [Unsoundness.why React r; Unsoundness.why React r])) in
-        rec_flow_t cx trace (l, class_component);
         (* check instancel <: instanceu *)
         rec_flow_t cx trace (this, instance);
 
     (* Function Component ~> AbstractComponent *)
-    | DefT (r, (FunT _ | ObjT {call_t = Some _; _})),
+    | DefT (r, FunT (_, _, { return_t; _ })),
       UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
         (* Contravariant config check *)
         React_kit.get_config cx trace l ~use_op ~reason_op:r ~rec_flow ~rec_flow_t ~rec_unify
           ~get_builtin_type ~add_output
           (React.GetConfig l) Negative config;
 
-        (* Ensure this is a function component by flowing to (any) => React$Node *)
-        let component_function = React_kit.component_function cx ~reason_op:r ~get_builtin_type
-          (Unsoundness.why React r) in
-        rec_flow_t cx trace (l, component_function);
+        (* Ensure this is a function component *)
+        rec_flow_t cx trace (return_t, get_builtin_type cx r "React$Node");
+
         (* A function component instance type is always void, so flow void to instance *)
         rec_flow_t cx trace ((VoidT.make (replace_reason_const RVoid r)), instance);
+
+    (* Object Component ~> AbstractComponent *)
+    | DefT (r, ObjT {call_t = Some id; _}),
+      UseT (_, DefT (reason_op, ReactAbstractComponentT _)) ->
+        begin match Context.find_call cx id with
+          | DefT (_, FunT (_, _, { rest_param = None; is_predicate = false; _ }))
+          | DefT (_, PolyT (_, _, DefT (_, FunT _), _)) as fun_t ->
+              rec_flow cx trace (fun_t, u)
+          | _ ->
+              React.GetConfig l
+              |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
+        end
 
     (* AbstractComponent ~> AbstractComponent *)
     | DefT (_, ReactAbstractComponentT {config = configl;
