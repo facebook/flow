@@ -15,3 +15,8 @@ declare opaque type T;
 ((any: {-p: T}): {p: T}); // Error: write-only ~> readable
 ((any: {-p: T}): {+p: T}); // Error: write-only ~> read-only
 ((any: {-p: T}): {-p: T}); // Ok
+
+type Ob = {|+foo: {| +bar: string |}|};
+declare var update: Ob;
+
+({ foo: { bar: 'valid' }, ...update }: Ob); // Ok
