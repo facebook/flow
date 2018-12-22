@@ -6276,6 +6276,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
       rec_flow cx trace (l, UseT (use_op, obj_proto))
 
+    (*****************************************************)
+    (* Nice error messages for mixed function refinement *)
+    (*****************************************************)
+    | DefT (lreason, MixedT Mixed_function),
+        (MethodT _ | SetPropT _ | GetPropT _ | MatchPropT _ | LookupT _) ->
+        rec_flow cx trace (FunProtoT lreason, u)
+
+    | DefT (lreason, MixedT Mixed_function),
+      (CallT (use_op, ureason, _) | UseT (use_op, DefT (ureason, FunT _))) ->
+        add_output cx ~trace (FlowError.EIncompatible {
+          lower = lreason, None;
+          upper = ureason, Flow_error.IncompatibleMixedCallT;
+          use_op = Some use_op;
+          branches = [];
+        });
+        rec_flow cx trace (AnyT.make AnyError lreason, u);
+
     (* Special cases of FunT *)
     | FunProtoApplyT reason, _
     | FunProtoBindT reason, _
@@ -9041,7 +9058,7 @@ and predicate cx trace t l p = match p with
   (***********************)
 
   | FunP ->
-    rec_flow_t cx trace (Type_filter.function_ l t, t)
+    rec_flow_t cx trace (Type_filter.function_ l, t)
 
   | NotP FunP ->
     rec_flow_t cx trace (Type_filter.not_function l, t)

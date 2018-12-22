@@ -159,6 +159,7 @@ and reason_desc_function =
   | RGenerator
   | RAsyncGenerator
   | RNormal
+  | RUnknown
 
 type reason
 type t = reason (* convenience *)

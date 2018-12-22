@@ -254,6 +254,7 @@ and upper_kind =
   | IncompatibleSetPrivatePropT
   | IncompatibleMethodT of ALoc.t * string option
   | IncompatibleCallT
+  | IncompatibleMixedCallT
   | IncompatibleConstructorT
   | IncompatibleGetElemT of ALoc.t
   | IncompatibleSetElemT of ALoc.t
@@ -1089,6 +1090,9 @@ let rec error_of_msg ~trace_reasons ~source_file =
     | IncompatibleGetPrivatePropT
     | IncompatibleSetPrivatePropT
       -> nope "is not a class with private properties"
+    | IncompatibleMixedCallT
+      -> mk_use_op_error use_loc use_op
+           [text "the parameter types of an "; ref lower; text " are unknown"]
     | IncompatibleCallT
     | IncompatibleConstructorT
       -> nope "is not a function"

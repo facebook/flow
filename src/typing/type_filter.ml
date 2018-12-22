@@ -310,6 +310,7 @@ let object_ cx t =
     | Mixed_truthy
     | Mixed_non_maybe
     | Mixed_non_null -> obj
+    | Mixed_function
     | Mixed_everything
     | Mixed_non_void ->
       let reason = replace_reason_const RUnion (reason_of_t t) in
@@ -325,17 +326,11 @@ let not_object t =
     DefT (reason_of_t t, EmptyT)
   | _ -> t
 
-let function_ t u =
-  match t with
-  | DefT (_, MixedT _) ->
-    let fn_name = "abstract function ((empty, ...Array<empty>) => mixed)" in
-    reason_of_t u
-    |> replace_reason_const (RCustom ("the type of an " ^ fn_name))
-    |> mk_uncallable_function_type
-        (RCustom ("the argument expected by " ^ fn_name))
-        (RCustom ("the return type expected by " ^ fn_name))
-  | DefT (_, (AnyT _ | FunT _ | ClassT _)) -> t
-  | _ -> DefT (reason_of_t t, EmptyT)
+let function_ = function
+  | DefT (r, MixedT _) ->
+      DefT (replace_reason_const (RFunction RUnknown) r, MixedT Mixed_function)
+  | DefT (_, (AnyT _ | FunT _ | ClassT _)) as t -> t
+  | t -> DefT (reason_of_t t, EmptyT)
 
 let not_function t =
   match t with

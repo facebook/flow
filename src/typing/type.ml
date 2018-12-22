@@ -749,6 +749,7 @@ module rec TypeTerm : sig
     | Mixed_non_maybe
     | Mixed_non_null
     | Mixed_non_void
+    | Mixed_function
     | Empty_intersection
 
   and any_source =
@@ -3364,19 +3365,6 @@ let mk_functioncalltype reason = mk_methodcalltype (global_this reason)
 
 let mk_opt_functioncalltype reason targs args clos strict =
   (global_this reason, targs, args, clos, strict)
-
-(* Produces a function of type empty => mixed that can never be invoked. This is useful if you want
-   to express a type that is an unknown function in a sound way. *)
-let mk_uncallable_function_type empty_desc mixed_desc def_reason =
-  let empty = def_reason |> replace_reason_const empty_desc |> EmptyT.make in
-  let rest_param = begin
-    Some "...empty",
-    aloc_of_reason def_reason,
-    DefT (def_reason, ArrT (ROArrayAT (empty)))
-  end |> Option.return in
-  let tout = def_reason |> replace_reason_const mixed_desc |> MixedT.make in
-  DefT (def_reason, FunT (dummy_static def_reason, FunProtoT def_reason,
-    mk_functiontype def_reason [empty] ~rest_param ~def_reason ~params_names:[None] tout))
 
 (* An object type has two flags, sealed and exact. A sealed object type cannot
    be extended. An exact object type accurately describes objects without

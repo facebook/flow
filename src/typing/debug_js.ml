@@ -1672,6 +1672,7 @@ let rec dump_t_ (depth, tvars) cx t =
 
   let string_of_mixed_flavor = function
     | Mixed_everything -> "Mixed_everything"
+    | Mixed_function -> "Mixed_function"
     | Mixed_truthy -> "Mixed_truthy"
     | Mixed_non_maybe -> "Mixed_non_maybe"
     | Mixed_non_null -> "Mixed_non_null"
@@ -2423,6 +2424,7 @@ let dump_flow_error =
   | IncompatibleSetPrivatePropT -> "IncompatibleSetPrivatePropT"
   | IncompatibleMethodT _ -> "IncompatibleMethodT"
   | IncompatibleCallT -> "IncompatibleCallT"
+  | IncompatibleMixedCallT -> "IncompatibleMixedCallT"
   | IncompatibleConstructorT -> "IncompatibleConstructorT"
   | IncompatibleGetElemT _ -> "IncompatibleGetElemT"
   | IncompatibleSetElemT _ -> "IncompatibleSetElemT"

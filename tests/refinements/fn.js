@@ -23,7 +23,7 @@ function fun2(x: mixed) {
 
 function fun3(x: mixed) {
   if (typeof x === "function") {
-    takesMidFunction(x);
+    takesMidFunction(x); // error
   }
 }
 
@@ -47,7 +47,7 @@ function fun6(x: mixed) {
 
 function fun7(x: mixed) {
   if (typeof x === "function") {
-    takesMultiArgFn(x);
+    takesMultiArgFn(x); // error
   }
 }
 
@@ -72,4 +72,14 @@ declare var obj : {field : mixed};
 if (typeof obj.field === 'function') {
   const f = obj.field(0); // error
   const f2 = f.foo; // error
+}
+
+function fun10(x: mixed) {
+  if (typeof x === "function") {
+    x.name;
+    x.length;
+    x.foo; // error
+    x.name = "bar"
+    x.length = 3;
+  }
 }

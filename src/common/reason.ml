@@ -211,6 +211,7 @@ and reason_desc_function =
   | RGenerator
   | RAsyncGenerator
   | RNormal
+  | RUnknown
 
 type reason = {
   test_id: int option;
@@ -356,6 +357,7 @@ let function_desc_prefix = function
   | RGenerator -> "generator "
   | RAsyncGenerator -> "async generator "
   | RNormal -> ""
+  | RUnknown -> "unknown "
 
 let prettify_react_util s =
   let length = String.length s in
