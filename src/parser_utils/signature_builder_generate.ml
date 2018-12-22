@@ -176,8 +176,11 @@ module T = struct
     let mk_expr_type loc =
       loc, FixMe
 
-    let mk_extends _loc =
-      None
+    let mk_extends loc =
+      Some (loc, {
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$FlowFixMe");
+        targs = None;
+      })
 
     let mk_decl loc =
       VariableDecl (mk_little_annotation loc)
