@@ -788,8 +788,6 @@ let init_libs
  *
  * There are no expected invariants for the input sets. The returned set has the following invariants
  * 1. Every recursive dependent of a focused file will be in the focused set or the dependent set
- * 2. Every recursive dependency of a focused file or recursive dependent will be in the focused set,
- *    dependent set, or dependency set
  **)
 let focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependency_info =
   let input = CheckedSet.add
@@ -809,11 +807,9 @@ let focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependenc
 
   (* Roots is the set of all focused files and all dependent files *)
   let roots = Dep_service.calc_all_reverse_dependencies dependency_info focused in
-
-  let dependencies = Dep_service.calc_all_dependencies dependency_info roots
-  |> FilenameSet.union (CheckedSet.dependencies input) in
-
   let dependents = FilenameSet.diff roots focused in
+
+  let dependencies = CheckedSet.dependencies input in
 
   Lwt.return (CheckedSet.add ~focused ~dependents ~dependencies CheckedSet.empty)
 
@@ -828,26 +824,15 @@ let filter_out_node_modules ~options =
 (* Filesystem lazy mode focuses on any file which changes. Non-lazy mode focuses on every file in
  * the repo. In both cases, we never want node_modules to appear in the focused sets.
  *
- * We do need to calculate dependencies in order to check the files in node_modules which are
- * imported.
- *
  * There are no expected invariants for the input sets. The returned set has the following invariants
  * 1. Node modules will only appear in the dependency set.
  * 2. Dependent files are empty.
- * 3. Every recursive dependency of a focused file will be in the focused set or dependency set.
- *    Dependency files provided in the input set are preserved.
  *)
-let unfocused_files_to_infer ~options ~input_focused ~input_dependencies ~dependency_info =
+let unfocused_files_to_infer ~options ~input_focused ~input_dependencies =
   let focused = filter_out_node_modules ~options input_focused in
 
-  (* Calculate dependencies to figure out which node_modules stuff we depend on *)
-  let dependencies =
-    (* Calculate the dependencies of focused files *)
-    let dependencies = Dep_service.calc_all_dependencies dependency_info focused in
-    match input_dependencies with
-      | Some input_dependencies -> FilenameSet.union input_dependencies dependencies
-      | None -> dependencies
-  in
+  let dependencies = Option.value ~default:FilenameSet.empty input_dependencies in
+
   Lwt.return (CheckedSet.add ~focused ~dependencies CheckedSet.empty)
 
 (* Called on initialization in non-lazy mode, with optional focus targets.
@@ -866,7 +851,7 @@ let files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependenc
   with_timer_lwt ~options "FilesToInfer" profiling (fun () ->
     match focus_targets with
     | None ->
-      unfocused_files_to_infer ~options ~input_focused:parsed ~input_dependencies:None ~dependency_info
+      unfocused_files_to_infer ~options ~input_focused:parsed ~input_dependencies:None
     | Some input_focused ->
       focused_files_to_infer ~reader ~input_focused ~input_dependencies:None ~dependency_info
   )
@@ -1287,9 +1272,9 @@ let recheck_with_profiling
         let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
         let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
         let focused = FilenameSet.union old_focus_targets freshparsed in
-        let input_focused = FilenameSet.union focused (CheckedSet.focused files_to_force) in
-        let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
-        let%lwt updated_checked_files = unfocused_files_to_infer ~options ~input_focused ~input_dependencies ~dependency_info in
+        let%lwt updated_checked_files = unfocused_files_to_infer ~options
+            ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
+            ~input_dependencies:(Some (CheckedSet.dependencies files_to_force)) in
         Lwt.return (updated_checked_files, all_dependent_files)
       | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
         (* Unfortunately, our checked_files set might be out of date. This update could have added
