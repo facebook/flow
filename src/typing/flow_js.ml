@@ -10929,12 +10929,9 @@ and flow_opt_p cx ?trace ~use_op ~report_polarity lreason ureason propref =
   | Field (_, lt, Neutral),
     Field (_, ut, Neutral) ->
     unify_opt cx ?trace ~use_op lt ut
-  | Field (_, DefT (lreason, lt), Positive),
-    Field (_, DefT (ureason, ut), Neutral) ->
-    flow_opt cx ?trace (DefT (lreason, lt), UseT (use_op, DefT (ureason, ut)))
-  | Field (_, ExactT (lreason, lt), Positive),
-    Field (_, DefT (ureason, ut), Neutral) ->
-    flow_opt cx ?trace (ExactT (lreason, lt), UseT (use_op, DefT (ureason, ut)))
+  | Field (_, (DefT (_, _) | ExactT (_, _) as lt), Positive),
+    Field (_, (DefT (_, _) as ut), Neutral) ->
+    flow_opt cx ?trace (lt, UseT (use_op, ut))
   (* directional cases *)
   | lp, up ->
     let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
