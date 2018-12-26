@@ -84,24 +84,19 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test3.js:17:18
 
-Cannot assign `s.y` to `t` because:
- - string [1] is incompatible with boolean [2].
- - number [3] is incompatible with boolean [2].
+Cannot assign `s.y` to `t` because number [1] is incompatible with boolean [2].
 
    test3.js:17:18
    17| var t: boolean = s.y; // error, string or number
                         ^^^
 
 References:
-   test3.js:1:14
-    1| var p = { y: "" };
-                    ^^ [1]
+   test3.js:12:14
+   12| var r = { y: 123 };
+                    ^^^ [1]
    test3.js:17:8
    17| var t: boolean = s.y; // error, string or number
               ^^^^^^^ [2]
-   test3.js:12:14
-   12| var r = { y: 123 };
-                    ^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test6.js:10:2
@@ -222,25 +217,20 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- unsealed.js:25:4
 
-Cannot cast `b2.x` to string because:
- - number [1] is incompatible with string [2].
- - number [3] is incompatible with string [2].
+Cannot cast `b2.x` to string because number [1] is incompatible with string [2].
 
    unsealed.js:25:4
    25|   (b2.x: string); // expected error: number ~/~> string
           ^^^^
 
 References:
-   unsealed.js:9:31
-    9| function foo2(b: bool): { x?: number } {
-                                     ^^^^^^ [1]
+   unsealed.js:16:18
+   16|   const a = { x: 42 };
+                        ^^ [1]
    unsealed.js:25:10
    25|   (b2.x: string); // expected error: number ~/~> string
                 ^^^^^^ [2]
-   unsealed.js:16:18
-   16|   const a = { x: 42 };
-                        ^^ [3]
 
 
 
-Found 16 errors
+Found 14 errors

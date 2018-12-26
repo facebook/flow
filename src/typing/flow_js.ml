@@ -4860,7 +4860,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         when O2 is resolved, we make the switch. **)
 
     | DefT (lreason, ObjT { props_tmap = mapr; flags; dict_t; _ }),
-      ObjAssignFromT (reason_op, to_obj, t, ObjAssign error_flags) ->
+      ObjAssignFromT (reason_op, (DefT (_, ObjT ob) as to_obj), t, ObjAssign error_flags) ->
       Context.iter_props cx mapr (fun x p ->
         (* move the reason to the call site instead of the definition, so
            that it is in the same scope as the Object.assign, so that
@@ -4871,12 +4871,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           |> repos_reason (aloc_of_reason reason_op)
         in
         match Property.read_t p with
-        | Some t ->
-          let propref = Named (reason_prop, x) in
-          let t = filter_optional cx ~trace reason_prop t in
-          rec_flow cx trace (to_obj, SetPropT (
-            unknown_use, reason_prop, propref, Normal, t, None
-          ))
+        | Some _ ->
+          Context.set_prop cx ob.props_tmap x p
         | None ->
           add_output cx ~trace (FlowError.EPropAccess (
             (reason_prop, reason_op), Some x, Property.polarity p, Read, unknown_use
