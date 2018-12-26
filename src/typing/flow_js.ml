@@ -4871,7 +4871,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           |> repos_reason (aloc_of_reason reason_op)
         in
         match Property.read_t p, to_obj with
-        | Some _, (DefT (_, ObjT ob)) ->
+        | Some _, (DefT (_, ObjT ob)) when not ob.flags.frozen ->
           Context.set_prop cx ob.props_tmap x p
         | Some t, to_obj ->
             let propref = Named (reason_prop, x) in
