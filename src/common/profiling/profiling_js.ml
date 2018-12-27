@@ -548,7 +548,7 @@ end = struct
     let print_summary_single_raw
       key (result_wall, result_cpu, (run, read, send, idle, done_, gc_minor, gc_major)) total =
       let run = run -. gc_minor -. gc_major in (* run time includes gc time *)
-      let worker_total = idle +. read +. run +. send +. gc_minor +. gc_major in
+      let worker_total = idle +. done_ +. read +. run +. send +. gc_minor +. gc_major in
       let worker_total = if worker_total = 0.0 then 1.0 else worker_total in
       let worker_idle_pct = idle /. worker_total *. 100. in
       let worker_read_pct = read /. worker_total *. 100. in
