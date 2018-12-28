@@ -7,12 +7,23 @@
 
 module FilenameSet = Utils_js.FilenameSet
 
-type workload = ServerEnv.env -> ServerEnv.env Lwt.t
 type env_update = ServerEnv.env -> ServerEnv.env
 
 (* Workloads are client requests which we processes FIFO *)
-let workload_stream, push_new_workload = Lwt_stream.create ()
-let push_new_workload workload = push_new_workload (Some workload)
+let workload_stream = WorkloadStream.create ()
+let push_new_workload workload = WorkloadStream.push workload workload_stream
+let push_new_parallelizable_workload workload =
+  WorkloadStream.push_parallelizable workload workload_stream
+
+let deferred_parallelizable_workloads_rev = ref []
+let defer_parallelizable_workload workload =
+  deferred_parallelizable_workloads_rev := workload :: !deferred_parallelizable_workloads_rev
+let requeue_deferred_parallelizable_workloads () =
+  let workloads = !deferred_parallelizable_workloads_rev in
+  deferred_parallelizable_workloads_rev := [];
+  Core_list.iter workloads
+    ~f:(fun workload -> WorkloadStream.requeue_parallelizable workload workload_stream)
+
 (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
  * but are quick to handle *)
 let env_update_stream, push_new_env_update = Lwt_stream.create ()
@@ -51,10 +62,13 @@ let push_checked_set_to_force ?callback checked_set =
   push_recheck_msg ?callback (CheckedSetToForce checked_set)
 
 let pop_next_workload () =
-  match Lwt_stream.get_available_up_to 1 workload_stream with
-  | [ workload ] -> Some workload
-  | [] -> None
-  | _ -> failwith "Unreachable"
+  WorkloadStream.pop workload_stream
+
+let rec wait_and_pop_parallelizable_workload () =
+  let%lwt () = WorkloadStream.wait_for_parallelizable_workload workload_stream in
+  match WorkloadStream.pop_parallelizable workload_stream with
+  | Some workload -> Lwt.return workload
+  | None -> wait_and_pop_parallelizable_workload ()
 
 let update_env env =
   Lwt_stream.get_available env_update_stream
@@ -134,7 +148,7 @@ let rec wait_for_updates_for_recheck ~process_updates =
 (* Block until any stream receives something *)
 let wait_for_anything ~process_updates =
   let%lwt () = Lwt.pick [
-    (let%lwt _ = Lwt_stream.is_empty workload_stream in Lwt.return_unit);
+    (WorkloadStream.wait_for_workload workload_stream);
     (let%lwt _ = Lwt_stream.is_empty env_update_stream in Lwt.return_unit);
     (let%lwt _ = Lwt_stream.is_empty recheck_stream in Lwt.return_unit);
     wait_for_updates_for_recheck ~process_updates;
