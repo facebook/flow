@@ -96,6 +96,7 @@ type t = {
   opt_temp_dir: string;
   opt_traces : int;
   opt_verbose : Verbose.t option;
+  opt_wait_for_recheck : bool;
   opt_weak : bool;
   opt_max_header_tokens: int;
   opt_lint_severities: Severity.severity LintSettings.t;
@@ -153,6 +154,7 @@ let suppress_comments opts = opts.opt_suppress_comments
 let suppress_types opts = opts.opt_suppress_types
 let temp_dir opts = opts.opt_temp_dir
 let verbose opts = opts.opt_verbose
+let wait_for_recheck opts = opts.opt_wait_for_recheck
 let weak_by_default opts = opts.opt_weak
 
 let lint_severities opts = opts.opt_lint_severities

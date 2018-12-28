@@ -716,6 +716,7 @@ module Options_flags = struct
     traces: int option;
     types_first: bool;
     verbose: Verbose.t option;
+    wait_for_recheck: bool option;
     weak: bool;
   }
 end
@@ -744,7 +745,7 @@ let parse_lints_flag =
 
 let options_flags =
   let collect_options_flags main
-    debug profile all weak traces no_flowlib munge_underscore_members max_workers
+    debug profile all wait_for_recheck weak traces no_flowlib munge_underscore_members max_workers
     include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
     merge_timeout saved_state_fetcher saved_state_no_fallback no_saved_state types_first =
     (match merge_timeout with
@@ -756,6 +757,7 @@ let options_flags =
       debug;
       profile;
       all;
+      wait_for_recheck;
       weak;
       traces;
       no_flowlib;
@@ -784,6 +786,8 @@ let options_flags =
     |> profile_flag
     |> flag "--all" no_arg
         ~doc:"Typecheck all files, not just @flow"
+    |> flag "--wait-for-recheck" (optional bool)
+        ~doc:"If true, always wait for rechecks to finish before serving commands (default: false)"
     |> flag "--weak" no_arg
         ~doc:"Typecheck with weak inference, assuming dynamic types by default"
     |> flag "--traces" (optional int)
@@ -926,7 +930,12 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
   let opt_arch =
     if options_flags.types_first
     then Options.TypesFirst
-    else Options.Classic in
+    else Options.Classic
+  in
+
+  let opt_wait_for_recheck =
+    Option.value options_flags.wait_for_recheck ~default:(FlowConfig.wait_for_recheck flowconfig)
+  in
 
   let strict_mode = FlowConfig.strict_mode flowconfig in
   { Options.
@@ -937,6 +946,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_debug = options_flags.debug;
     opt_verbose = options_flags.verbose;
     opt_all = options_flags.all || FlowConfig.all flowconfig;
+    opt_wait_for_recheck;
     opt_weak = options_flags.weak || FlowConfig.weak flowconfig;
     opt_traces = Option.value options_flags.traces ~default:(FlowConfig.traces flowconfig);
     opt_quiet = options_flags.Options_flags.quiet;

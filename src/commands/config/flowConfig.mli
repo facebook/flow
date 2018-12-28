@@ -88,6 +88,7 @@ val suppress_comments: config -> Str.regexp list
 val suppress_types: config -> SSet.t
 val temp_dir: config -> string
 val traces: config -> int
+val wait_for_recheck: config -> bool
 val weak: config -> bool
 
 (* global defaults for lint suppressions and strict mode *)

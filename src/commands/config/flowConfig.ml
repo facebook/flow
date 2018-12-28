@@ -82,6 +82,7 @@ module Opts = struct
     temp_dir: string;
     traces: int;
     version: string option;
+    wait_for_recheck: bool;
     weak: bool;
   }
 
@@ -166,6 +167,7 @@ module Opts = struct
     temp_dir = default_temp_dir;
     traces = 0;
     version = None;
+    wait_for_recheck = false;
     weak = false;
   }
 
@@ -501,6 +503,9 @@ module Opts = struct
 
     "all",
       boolean (fun opts v -> Ok { opts with all = v });
+
+    "wait_for_recheck",
+      boolean (fun opts v -> Ok { opts with wait_for_recheck = v });
 
     "weak",
       boolean (fun opts v -> Ok { opts with weak = v });
@@ -984,6 +989,7 @@ let suppress_types c = c.options.Opts.suppress_types
 let temp_dir c = c.options.Opts.temp_dir
 let traces c = c.options.Opts.traces
 let required_version c = c.options.Opts.version
+let wait_for_recheck c = c.options.Opts.wait_for_recheck
 let weak c = c.options.Opts.weak
 
 (* global defaults for lint severities and strict mode *)
