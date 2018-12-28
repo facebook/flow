@@ -98,7 +98,7 @@ let check_file ~options ~env ~profiling ~force file_input =
 
 let infer_type
     ~(options: Options.t)
-    ~(env: ServerEnv.env ref)
+    ~(env: ServerEnv.env)
     ~(profiling: Profiling_js.running)
     ((file_input, line, col, verbose, expand_aliases):
       (File_input.t * int * int * Verbose.t option * bool))
@@ -143,9 +143,9 @@ let serialize_graph graph =
     (f, dep_fs)::acc
   ) graph []
 
-let output_dependencies ~env:env root strip_root outfile =
+let output_dependencies ~env root strip_root outfile =
   let strip_root = if strip_root then Files.relative_path root else fun x -> x in
-  let graph = serialize_graph (Dependency_info.all_dependency_graph !env.ServerEnv.dependency_info) in
+  let graph = serialize_graph (Dependency_info.all_dependency_graph env.ServerEnv.dependency_info) in
   Hh_logger.info "printing dependency graph to %s\n" outfile;
   let%lwt out = Lwt_io.open_file ~mode:Lwt_io.Output outfile in
   let%lwt () = LwtUtils.output_graph out strip_root graph in
@@ -154,8 +154,8 @@ let output_dependencies ~env:env root strip_root outfile =
 
 let get_cycle ~env fn =
   (* Re-calculate SCC *)
-  let parsed = !env.ServerEnv.files in
-  let dependency_info = !env.ServerEnv.dependency_info in
+  let parsed = env.ServerEnv.files in
+  let dependency_info = env.ServerEnv.dependency_info in
   let dependency_graph = Dependency_info.dependency_graph dependency_info in
   Lwt.return (Ok (
     let components = Sort_js.topsort ~roots:parsed dependency_graph in
@@ -209,12 +209,19 @@ let convert_find_refs_result
     (name, Core_list.map ~f:snd refs)
   end
 
+(* Find refs is a really weird command. Whereas other commands will cancel themselves if they find
+ * unchecked code, find refs will focus that code and keep chugging along. It may therefore change
+ * the env. Furthermore, it is written using a lot of `result`'s, which make it really hard to
+ * properly pass through the env. Therefore, it uses an `ServerEnv.env ref` instead of an
+ * `ServerEnv.env`. *)
 let find_refs ~reader ~genv ~env ~profiling (file_input, line, col, global, multi_hop) =
+  let env = ref env in
   let%lwt result, json =
     FindRefs_js.find_refs ~reader ~genv ~env ~profiling ~file_input ~line ~col ~global ~multi_hop
   in
+  let env = !env in
   let result = Core_result.map result ~f:convert_find_refs_result in
-  Lwt.return (result, json)
+  Lwt.return (env, result, json)
 
 (* This returns result, json_data_to_log, where json_data_to_log is the json data from
  * getdef_get_result which we end up using *)
@@ -264,110 +271,111 @@ let get_imports ~options ~reader module_names =
 
 let save_state ~saved_state_filename ~genv ~env =
   try_with (fun () ->
-    let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env:!env in
+    let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env in
     Lwt.return (Ok ())
   )
 
-let run_ephemeral_command_unsafe ~profiling genv env command =
+let run_ephemeral_command_unsafe ~profiling genv (env: ServerEnv.env) command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
   | ServerProt.Request.AUTOCOMPLETE fn ->
       let%lwt result, json_data = autocomplete ~options ~env ~profiling fn in
-      Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
+      Lwt.return (env, ServerProt.Response.AUTOCOMPLETE result, json_data)
   | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
       let options = { options with Options.
         opt_verbose = verbose;
         opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
       } in
       let%lwt response = check_file ~options ~env ~force ~profiling fn in
-      Lwt.return (ServerProt.Response.CHECK_FILE response, None)
+      Lwt.return (env, ServerProt.Response.CHECK_FILE response, None)
   | ServerProt.Request.COVERAGE (fn, force) ->
       let%lwt response = coverage ~options ~env ~profiling ~force fn in
-      Lwt.return (ServerProt.Response.COVERAGE response, None)
+      Lwt.return (env, ServerProt.Response.COVERAGE response, None)
   | ServerProt.Request.CYCLE fn ->
       let file_options = Options.file_options options in
       let fn = Files.filename_from_string ~options:file_options fn in
       let%lwt response = get_cycle ~env fn in
-      Lwt.return (ServerProt.Response.CYCLE response, None)
+      Lwt.return (env, ServerProt.Response.CYCLE response, None)
   | ServerProt.Request.GRAPH_DEP_GRAPH (root, strip_root, outfile) ->
       let%lwt response = output_dependencies ~env root strip_root outfile in
-      Lwt.return (ServerProt.Response.GRAPH_DEP_GRAPH response, None)
+      Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
   | ServerProt.Request.DUMP_TYPES (fn) ->
       let%lwt response = dump_types ~options ~env ~profiling fn in
-      Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
+      Lwt.return (env, ServerProt.Response.DUMP_TYPES response, None)
   | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
       let response = find_module ~options ~reader (moduleref, filename) in
-      Lwt.return (ServerProt.Response.FIND_MODULE response, None)
+      Lwt.return (env, ServerProt.Response.FIND_MODULE response, None)
   | ServerProt.Request.FIND_REFS (fn, line, char, global, multi_hop) ->
-      let%lwt result, json_data =
+      let%lwt env, result, json_data =
         find_refs ~reader ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
-      Lwt.return (ServerProt.Response.FIND_REFS result, json_data)
+      Lwt.return (env, ServerProt.Response.FIND_REFS result, json_data)
   | ServerProt.Request.FORCE_RECHECK _ ->
       failwith "force-recheck cannot be deferred"
   | ServerProt.Request.GET_DEF (fn, line, char) ->
       let%lwt result, json_data = get_def ~reader ~options ~env ~profiling (fn, line, char) in
-      Lwt.return (ServerProt.Response.GET_DEF result, json_data)
+      Lwt.return (env, ServerProt.Response.GET_DEF result, json_data)
   | ServerProt.Request.GET_IMPORTS module_names ->
       let response = get_imports ~options ~reader module_names in
-      Lwt.return (ServerProt.Response.GET_IMPORTS response, None)
+      Lwt.return (env, ServerProt.Response.GET_IMPORTS response, None)
   | ServerProt.Request.INFER_TYPE (fn, line, char, verbose, expand_aliases) ->
       let%lwt result, json_data =
         infer_type ~options ~env ~profiling (fn, line, char, verbose, expand_aliases)
       in
-      Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
+      Lwt.return (env, ServerProt.Response.INFER_TYPE result, json_data)
   | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
+      (* Refactor is another weird command that may mutate the env by doing a bunch of rechecking,
+       * since that's what find-refs does and refactor delegates to find-refs *)
       let open ServerProt.Response in
+      let env = ref env in
       let%lwt result =
         Refactor_js.refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
       in
+      let env = !env in
       let result =
         result
         |> Core_result.map ~f:(Option.map ~f:(fun refactor_edits -> {refactor_edits}))
       in
-      Lwt.return (REFACTOR (result), None)
+      Lwt.return (env, REFACTOR (result), None)
   | ServerProt.Request.STATUS (client_root, include_warnings) ->
       let genv = {genv with
         options = let open Options in {genv.options with
           opt_include_warnings = genv.options.opt_include_warnings || include_warnings
         }
       } in
-      let status_response, lazy_stats = get_status genv !env client_root in
-      Lwt.return (ServerProt.Response.STATUS {status_response; lazy_stats}, None)
+      let status_response, lazy_stats = get_status genv env client_root in
+      Lwt.return (env, ServerProt.Response.STATUS {status_response; lazy_stats}, None)
   | ServerProt.Request.SUGGEST fn ->
       let%lwt result = suggest ~options ~env ~profiling fn in
-      Lwt.return (ServerProt.Response.SUGGEST result, None)
+      Lwt.return (env, ServerProt.Response.SUGGEST result, None)
   | ServerProt.Request.SAVE_STATE out ->
       let%lwt result = save_state ~saved_state_filename:out ~genv ~env in
-      Lwt.return (ServerProt.Response.SAVE_STATE result, None)
+      Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 let handle_ephemeral_deferred_unsafe
   genv env (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
-
-  let env = ref env in
 
   Hh_logger.info "Request: %s" (ServerProt.Request.to_string command);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
   let should_print_summary = Options.should_profile genv.options in
-  let%lwt profiling, json_data =
+  let%lwt profiling, (env, json_data) =
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
-      let rec run_command () =
+      let rec run_command env =
         let on_cancel () =
           Hh_logger.info
             "Command successfully canceled. Running a recheck before restarting the command";
-          let%lwt recheck_profiling, env' = Rechecker.recheck_loop genv !env in
-          env := env';
+          let%lwt recheck_profiling, env' = Rechecker.recheck_loop genv env in
           List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
           Hh_logger.info "Now restarting the command";
-          run_command ()
+          run_command env'
         in
-        Rechecker.run_but_cancel_on_file_changes genv (!env) ~on_cancel ~f:(fun () ->
+        Rechecker.run_but_cancel_on_file_changes genv env ~on_cancel ~f:(fun () ->
           run_ephemeral_command_unsafe ~profiling genv env command
         )
       in
 
-      let%lwt response, json_data = run_command () in
+      let%lwt env, response, json_data = run_command env in
 
       MonitorRPC.respond_to_request ~request_id ~response;
 
@@ -381,14 +389,14 @@ let handle_ephemeral_deferred_unsafe
             FlowExitStatus.(exit Server_client_directory_mismatch)
         | _ -> ()
       );
-      Lwt.return json_data
+      Lwt.return (env, json_data)
     end
   in
   let event = ServerStatus.(Finishing_up {
     duration = Profiling_js.get_profiling_duration profiling;
     info = CommandSummary (ServerProt.Request.to_string command)}) in
   MonitorRPC.status_update ~event;
-  Lwt.return (!env, profiling, json_data)
+  Lwt.return (env, profiling, json_data)
 
 let wrap_ephemeral_handler handler genv arg (request_id, command) =
   try%lwt
@@ -625,11 +633,10 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
       Lwt.return (IdeResponse (Ok ({ env with connections = new_connections }, None)))
 
   | Autocomplete (file_input, id) ->
-      let env = ref env in
       let%lwt results, json_data = autocomplete ~options ~env ~profiling file_input in
       let wrapped = AutocompleteResult (results, id) in
       Persistent_connection.send_message wrapped client;
-      Lwt.return (IdeResponse (Ok (!env, json_data)))
+      Lwt.return (IdeResponse (Ok (env, json_data)))
 
   | DidOpen filenames ->
     Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
@@ -681,7 +688,6 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     Lwt.return (LspResponse (Ok (env, None, metadata)))
 
   | LspToServer (RequestMessage (id, DefinitionRequest params), metadata) ->
-    let env = ref env in
     let open TextDocumentPositionParams in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let%lwt (result, extra_data) =
@@ -690,20 +696,19 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     begin match result with
       | Ok loc when loc = Loc.none ->
         let response = ResponseMessage (id, DefinitionResult []) in
-        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        Lwt.return (LspResponse (Ok (env, Some response, metadata)))
       | Ok loc ->
         let default_uri = params.textDocument.TextDocumentIdentifier.uri in
         let location = Flow_lsp_conversions.loc_to_lsp_with_default ~default_uri loc in
         let definition_location = { Lsp.DefinitionLocation.location; title = None } in
         let response = ResponseMessage (id, DefinitionResult [definition_location]) in
-        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        Lwt.return (LspResponse (Ok (env, Some response, metadata)))
       | Error reason ->
-        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
+        Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
     end
 
   | LspToServer (RequestMessage (id, HoverRequest params), metadata) ->
     let open TextDocumentPositionParams in
-    let env = ref env in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let verbose = None in (* if Some, would write to server logs *)
     let%lwt result, extra_data =
@@ -724,13 +729,12 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
           | None, None -> None
           | _, _ -> Some {Lsp.Hover.contents; range;} in
         let response = ResponseMessage (id, HoverResult r) in
-        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        Lwt.return (LspResponse (Ok (env, Some response, metadata)))
       | Error reason ->
-        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
+        Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
     end
 
   | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
-    let env = ref env in
     let open Completion in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.loc ~client in
     let fn_content = match file with
@@ -745,7 +749,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     in
     begin match fn_content with
       | Error (reason, stack) ->
-        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason ~stack)))
+        Lwt.return (LspResponse (Error (env, with_error metadata ~reason ~stack)))
       | Ok (fn, content) ->
         let content_with_token = AutocompleteService_js.add_autocomplete_token content line char in
         let file_with_token = File_input.FileContent (fn, content_with_token) in
@@ -758,17 +762,16 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
             let items = Core_list.map ~f:Flow_lsp_conversions.flow_completion_to_lsp items in
             let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
             let response = ResponseMessage (id, r) in
-            Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+            Lwt.return (LspResponse (Ok (env, Some response, metadata)))
           | Error reason ->
-            Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
+            Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
         end
     end
 
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params), metadata) ->
-    let env = ref env in
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
     let global, multi_hop = false, false in (* multi_hop implies global *)
-    let%lwt result, extra_data =
+    let%lwt env, result, extra_data =
       find_refs ~reader ~genv ~env ~profiling (file, line, char, global, multi_hop)
     in
     let metadata = with_data ~extra_data metadata in
@@ -781,18 +784,17 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
         } in
         let r = DocumentHighlightResult (Core_list.map ~f:loc_to_highlight locs) in
         let response = ResponseMessage (id, r) in
-        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        Lwt.return (LspResponse (Ok (env, Some response, metadata)))
       | Ok (None) ->
         (* e.g. if it was requested on a place that's not even an identifier *)
         let r = DocumentHighlightResult [] in
         let response = ResponseMessage (id, r) in
-        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        Lwt.return (LspResponse (Ok (env, Some response, metadata)))
       | Error reason ->
-        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
+        Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
     end
 
   | LspToServer (RequestMessage (id, TypeCoverageRequest params), metadata) ->
-    let env = ref env in
     let textDocument = params.TypeCoverage.textDocument in
     let file = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow ~client textDocument in
     (* if it isn't a flow file (i.e. lacks a @flow directive) then we won't do anything *)
@@ -818,7 +820,7 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
           defaultMessage = "Use @flow to get type coverage for this file";
         } in
         let response = ResponseMessage (id, r) in
-        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        Lwt.return (LspResponse (Ok (env, Some response, metadata)))
       | true, Ok (all_locs) ->
         (* Figure out the percentages *)
         let accum_coverage (covered, total) (_loc, is_covered) =
@@ -852,19 +854,18 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
           defaultMessage = "Un-type checked code. Consider adding type annotations.";
         } in
         let response = ResponseMessage (id, r) in
-        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        Lwt.return (LspResponse (Ok (env, Some response, metadata)))
       | true, Error reason ->
-        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
+        Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
     end
 
   | LspToServer (RequestMessage (id, FindReferencesRequest params), metadata) ->
     let open FindReferences in
-    let env = ref env in
     let { loc; context = { includeDeclaration=_; includeIndirectReferences=multi_hop } } = params in
     (* TODO: respect includeDeclaration *)
     let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client in
     let global = true in
-    let%lwt result, extra_data =
+    let%lwt env, result, extra_data =
       find_refs ~reader ~genv ~env ~profiling (file, line, char, global, multi_hop)
     in
     let metadata = with_data ~extra_data metadata in
@@ -876,28 +877,29 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
         begin match lsp_locs with
         | Ok lsp_locs ->
           let response = ResponseMessage (id, FindReferencesResult lsp_locs) in
-          Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+          Lwt.return (LspResponse (Ok (env, Some response, metadata)))
         | Error reason ->
-          Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
+          Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
         end
       | Ok (None) ->
         (* e.g. if it was requested on a place that's not even an identifier *)
         let r = FindReferencesResult [] in
         let response = ResponseMessage (id, r) in
-        Lwt.return (LspResponse (Ok (!env, Some response, metadata)))
+        Lwt.return (LspResponse (Ok (env, Some response, metadata)))
       | Error reason ->
-        Lwt.return (LspResponse (Error (!env, with_error metadata ~reason)))
+        Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
     end
 
   | LspToServer (RequestMessage (id, RenameRequest params), metadata) ->
-    let env = ref env in
     let { Rename.textDocument; position; newName } = params in
     let file_input = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client in
     let (line, col) = Flow_lsp_conversions.lsp_position_to_flow position in
     let refactor_variant = ServerProt.Request.RENAME newName in
+    let env = ref env in
     let%lwt result =
       Refactor_js.refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
     in
+    let env = !env in
     let edits_to_response (edits: (Loc.t * string) list) =
       (* Extract the path from each edit and convert into a map from file to edits for that file *)
       let file_to_edits: ((Loc.t * string) list SMap.t, string) result =
@@ -926,15 +928,15 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
       match workspace_edit with
         | Ok x ->
           let response = ResponseMessage (id, RenameResult x) in
-          LspResponse (Ok (!env, Some response, metadata))
+          LspResponse (Ok (env, Some response, metadata))
         | Error reason ->
-          LspResponse (Error (!env, with_error metadata ~reason))
+          LspResponse (Error (env, with_error metadata ~reason))
     in
     Lwt.return begin match result with
       | Ok (Some edits) -> edits_to_response edits
       | Ok None -> edits_to_response []
       | Error reason ->
-        LspResponse (Error (!env, with_error metadata ~reason))
+        LspResponse (Error (env, with_error metadata ~reason))
     end
 
   | LspToServer (RequestMessage (id, RageRequest), metadata) ->

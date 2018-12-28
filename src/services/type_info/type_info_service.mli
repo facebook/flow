@@ -7,7 +7,7 @@
 
 val type_at_pos :
   options:Options.t ->
-  env:ServerEnv.env ref ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   expand_aliases:bool ->
   File_key.t ->
@@ -19,7 +19,7 @@ val type_at_pos :
 
 val dump_types :
   options:Options.t ->
-  env:ServerEnv.env ref ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   File_key.t ->
   string ->
@@ -27,7 +27,7 @@ val dump_types :
 
 val coverage :
   options:Options.t ->
-  env:ServerEnv.env ref ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   force:bool ->
   File_key.t ->
@@ -35,7 +35,7 @@ val coverage :
 
 val suggest :
   options:Options.t ->
-  env:ServerEnv.env ref ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   File_key.t ->
   string ->

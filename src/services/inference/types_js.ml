@@ -611,13 +611,13 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
     match Module_heaps.Reader.get_file ~reader m ~audit:Expensive.warn with
     | Some f ->
       let reader = Abstract_state_reader.State_reader reader in
-      if FilenameSet.mem f !env.ServerEnv.files &&
+      if FilenameSet.mem f env.ServerEnv.files &&
         Module_js.checked_file ~reader f ~audit:Expensive.warn
       then CheckedSet.add ~dependencies:(FilenameSet.singleton f) acc
       else acc
     | None -> acc (* complain elsewhere about required module not found *)
   ) resolved_requires CheckedSet.empty in
-  let unchanged_checked = !env.ServerEnv.checked_files in
+  let unchanged_checked = env.ServerEnv.checked_files in
 
   (* Often, all dependencies have already been checked, so infer_input contains no unchecked files.
    * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
@@ -673,7 +673,7 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       let suppressions =
         let open ServerEnv in
         let new_suppressions = Context.error_suppressions cx in
-        let { suppressions; _ } = !env.errors in
+        let { suppressions; _ } = env.errors in
         Error_suppressions.update_suppressions suppressions new_suppressions
       in
 
@@ -681,7 +681,7 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       let severity_cover =
         let open ServerEnv in
         let file_severity_cover = Context.severity_cover cx in
-        let { severity_cover_set; _ } = !env.errors in
+        let { severity_cover_set; _ } = env.errors in
         FilenameMap.union file_severity_cover severity_cover_set
       in
 

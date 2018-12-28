@@ -42,7 +42,7 @@ val full_check:
 
 val basic_check_contents:
   options: Options.t ->
-  env: ServerEnv.env ref ->
+  env: ServerEnv.env ->
   profiling: Profiling_js.running ->
   string ->               (* contents *)
   File_key.t ->           (* fake file-/module name *)
@@ -54,7 +54,7 @@ val basic_check_contents:
 
 val typecheck_contents:
   options: Options.t ->
-  env: ServerEnv.env ref ->
+  env: ServerEnv.env ->
   profiling: Profiling_js.running ->
   string ->                                 (* contents *)
   File_key.t ->                             (* fake file-/module name *)
@@ -68,7 +68,7 @@ val typecheck_contents:
 val ensure_checked_dependencies:
   options: Options.t ->
   reader: State_reader.t ->
-  env: ServerEnv.env ref ->
+  env: ServerEnv.env ->
   File_key.t ->
   File_sig.With_Loc.t ->
   unit Lwt.t
