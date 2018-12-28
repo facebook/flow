@@ -29,10 +29,16 @@ let process_updates genv env updates =
     FlowExitStatus.exit ~msg exit_status
   end
 
+let files_currently_being_forced_by_a_recheck = ref CheckedSet.empty
+let forced_files_after_recheck env () =
+  CheckedSet.union env.checked_files (!files_currently_being_forced_by_a_recheck)
+
 (* on notification, execute client commands or recheck files *)
 let recheck genv env ?(files_to_force=CheckedSet.empty) ~file_watcher_metadata updates =
   (* Caller should have already checked this *)
   assert (not (FilenameSet.is_empty updates && CheckedSet.is_empty files_to_force));
+
+  files_currently_being_forced_by_a_recheck := files_to_force;
 
   MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
   Persistent_connection.send_start_recheck env.connections;
@@ -63,8 +69,11 @@ let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
   (* We don't want to start running f until we're in the try block *)
   let waiter, wakener = Lwt.task () in
   let run_thread = let%lwt () = waiter in f () in
+  let get_forced = forced_files_after_recheck env in
   let cancel_thread =
-    let%lwt () = ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates in
+    let%lwt () =
+      ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced
+    in
     Hh_logger.info "Canceling due to new file changes";
     Lwt.cancel run_thread;
     Lwt.return_unit
@@ -89,7 +98,8 @@ let rec recheck_single
   let open ServerMonitorListenerState in
   let env = update_env env in
   let process_updates = process_updates genv env in
-  let workload = get_and_clear_recheck_workload ~process_updates in
+  let get_forced = forced_files_after_recheck env in
+  let workload = get_and_clear_recheck_workload ~process_updates ~get_forced in
   let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
   let files_to_force = CheckedSet.union files_to_force workload.files_to_force in
   let file_watcher_metadata =

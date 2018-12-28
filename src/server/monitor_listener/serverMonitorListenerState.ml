@@ -91,7 +91,18 @@ let recheck_workload_is_empty workload =
   let { files_to_recheck; files_to_force; profiling_callbacks=_; metadata=_;} = workload in
   FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force
 let recheck_acc = ref empty_recheck_workload
-let recheck_fetch ~process_updates =
+
+(* Process the messages which are currently in the recheck stream and return the resulting workload
+ *
+ * The recheck stream gives us files as a set of strings. `process_updates` takes that set of
+ * strings and returns a `FilenameSet.t`. It filters out stuff we don't care about and causes us to
+ * exit on incompatible changes.
+ *
+ * `get_forced` is a function which gives us the `CheckedSet.t` of currently forced files. So if
+ * the recheck stream is asking us to focus `foo.js` but it's already focused, then we can ignore
+ * it.
+ *)
+let recheck_fetch ~process_updates ~get_forced =
   recheck_acc :=
     Lwt_stream.get_available recheck_stream (* Get all the files which have changed *)
     |> Core_list.fold_left
@@ -104,9 +115,11 @@ let recheck_fetch ~process_updates =
             { workload with files_to_recheck = FilenameSet.union updates workload.files_to_recheck }
         | FilesToForceFocused forced_focused_files ->
           let focused = process_updates forced_focused_files in
+          let focused = FilenameSet.diff focused (get_forced () |> CheckedSet.focused) in
           FilenameSet.is_empty focused,
             { workload with files_to_force = CheckedSet.add ~focused workload.files_to_force }
         | CheckedSetToForce checked_set ->
+          let checked_set = CheckedSet.diff checked_set (get_forced ()) in
           CheckedSet.is_empty checked_set,
             { workload with files_to_force = CheckedSet.union checked_set workload.files_to_force }
         in
@@ -132,25 +145,25 @@ let recheck_fetch ~process_updates =
         )
     )
 
-let get_and_clear_recheck_workload ~process_updates =
-  recheck_fetch ~process_updates;
+let get_and_clear_recheck_workload ~process_updates ~get_forced =
+  recheck_fetch ~process_updates ~get_forced;
   let recheck_workload = !recheck_acc in
   recheck_acc := empty_recheck_workload;
   recheck_workload
 
-let rec wait_for_updates_for_recheck ~process_updates =
+let rec wait_for_updates_for_recheck ~process_updates ~get_forced =
   let%lwt _ = Lwt_stream.is_empty recheck_stream in
-  recheck_fetch ~process_updates;
+  recheck_fetch ~process_updates ~get_forced;
   if recheck_workload_is_empty !recheck_acc
-  then wait_for_updates_for_recheck ~process_updates
+  then wait_for_updates_for_recheck ~process_updates ~get_forced
   else Lwt.return_unit
 
 (* Block until any stream receives something *)
-let wait_for_anything ~process_updates =
+let wait_for_anything ~process_updates ~get_forced =
   let%lwt () = Lwt.pick [
     (WorkloadStream.wait_for_workload workload_stream);
     (let%lwt _ = Lwt_stream.is_empty env_update_stream in Lwt.return_unit);
     (let%lwt _ = Lwt_stream.is_empty recheck_stream in Lwt.return_unit);
-    wait_for_updates_for_recheck ~process_updates;
+    wait_for_updates_for_recheck ~process_updates ~get_forced;
   ] in
   Lwt.return_unit

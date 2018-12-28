@@ -27,9 +27,11 @@ val cancellation_requests: Lsp.IdSet.t ref
 (* APIs to wait *)
 val wait_for_anything:
   process_updates:(SSet.t -> Utils_js.FilenameSet.t) ->
+  get_forced:(unit -> CheckedSet.t) ->
   unit Lwt.t
 val wait_for_updates_for_recheck:
   process_updates:(SSet.t -> Utils_js.FilenameSet.t) ->
+  get_forced:(unit -> CheckedSet.t) ->
   unit Lwt.t
 
 (* APIs to consume *)
@@ -48,4 +50,5 @@ val wait_and_pop_parallelizable_workload:
 val update_env: ServerEnv.env -> ServerEnv.env
 val get_and_clear_recheck_workload:
   process_updates:(SSet.t -> Utils_js.FilenameSet.t) ->
+  get_forced:(unit -> CheckedSet.t) ->
   recheck_workload
