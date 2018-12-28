@@ -444,7 +444,7 @@ runtest() {
             set -e
             # start lazy server and wait
             "$FLOW" start "$root" \
-              $all $flowlib --wait --lazy \
+              $all $flowlib --wait --wait-for-recheck true --lazy \
               --file-watcher "$file_watcher" \
               --flowconfig-name "$flowconfig_name" \
               --log-file "$abs_log_file" \
@@ -517,7 +517,7 @@ runtest() {
                 then
                   PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                   "$FLOW" start "$root" \
-                    $all $flowlib --wait \
+                    $all $flowlib --wait --wait-for-recheck true \
                     --saved-state-fetcher "local" \
                     --saved-state-no-fallback \
                     --file-watcher "$file_watcher" \
@@ -533,7 +533,7 @@ runtest() {
                 # start server and wait
                 PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                 "$FLOW" start "$root" \
-                  $all $flowlib --wait \
+                  $all $flowlib --wait --wait-for-recheck true  \
                   --file-watcher "$file_watcher" \
                   --log-file "$abs_log_file" \
                   --monitor-log-file "$abs_monitor_log_file" \
