@@ -626,6 +626,8 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
   if CheckedSet.is_empty unchecked_dependencies
   then Lwt.return_unit
   else begin
+    Hh_logger.info "Canceling command due to %d unchecked dependencies"
+      (CheckedSet.cardinal unchecked_dependencies);
     ServerMonitorListenerState.push_checked_set_to_force unchecked_dependencies;
     raise Lwt.Canceled
   end

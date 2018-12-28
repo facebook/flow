@@ -8,6 +8,54 @@
 open ServerEnv
 open Utils_js
 
+module Parallelizable_workload_loop = LwtLoop.Make (struct
+  type acc = unit Lwt.t * ServerEnv.env
+
+  let main (wait_for_cancel, env) =
+    (* The Lwt.pick will arbitrarily choose one or the other thread if they are both ready. So let's
+     * explicitly check if the wait_for_cancel thread has resolved to give it priority *)
+    let () = match Lwt.state wait_for_cancel with
+    | Lwt.Return () -> raise Lwt.Canceled
+    | Lwt.Fail exn -> let exn = Exception.wrap exn in Exception.reraise exn
+    | Lwt.Sleep -> ()
+    in
+
+    (* Lwt.pick waits until one of these two promises is resolved (returns or fails). Then it
+     * cancels the other one and returns/fails.
+     *
+     * Normally, the wait_and_pop_parallelizable_workload thread will finish first. Then Lwt.pick
+     * will cancel the `let%lwt () = ... in raise Lwt.Canceled` thread. The `wait_for_cancel` thread
+     * is NOT cancelable so that will stay unresolved.
+     *
+     * Eventually, wait_for_cancel will resolve. Then we'll cancel the
+     * wait_and_pop_parallelizable_workload thread throw Lwt.Canceled *)
+    let%lwt workload = Lwt.pick [
+      ServerMonitorListenerState.wait_and_pop_parallelizable_workload ();
+      (let%lwt () = wait_for_cancel in raise Lwt.Canceled)
+    ] in
+
+    (* We have a workload! Let's run it! *)
+    Hh_logger.info "Running a parallel workload";
+    let%lwt () = workload env in
+
+    Lwt.return (wait_for_cancel, env)
+
+  let catch _ exn =
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+end)
+
+let with_parallelizable_workloads env f =
+  (* The wait_for_cancel thread itself is NOT cancelable *)
+  let wait_for_cancel, wakener = Lwt.wait () in
+  let loop_thread = Parallelizable_workload_loop.run (wait_for_cancel, env) in
+  let%lwt ret = f () in
+  (* Tell the loop to cancel at its earliest convinience *)
+  Lwt.wakeup wakener ();
+  (* Wait for the loop to finish *)
+  let%lwt () = loop_thread in
+  Lwt.return ret
+
 let get_lazy_stats genv env =
   { ServerProt.Response.
     lazy_mode = Options.lazy_mode genv.options;
@@ -74,7 +122,7 @@ let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
     let%lwt () =
       ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced
     in
-    Hh_logger.info "Canceling due to new file changes";
+    Hh_logger.info "Canceling since a recheck is needed";
     Lwt.cancel run_thread;
     Lwt.return_unit
   in
@@ -116,10 +164,12 @@ let rec recheck_single
       recheck_single ~files_to_recheck ~files_to_force ~file_watcher_metadata genv env
     in
     let f () =
-      let%lwt profiling, env =
+      let%lwt profiling, env = with_parallelizable_workloads env @@ fun () ->
         recheck genv env ~files_to_force ~file_watcher_metadata files_to_recheck
       in
       List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
+      (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
+      ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
       Lwt.return (Ok (profiling, env))
     in
 

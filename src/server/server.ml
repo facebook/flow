@@ -84,7 +84,10 @@ let rec serve ~genv ~env =
   (* Run a workload (if there is one) *)
   let%lwt env = Option.value_map (ServerMonitorListenerState.pop_next_workload ())
     ~default:(Lwt.return env)
-    ~f:(fun workload -> workload env) in
+    ~f:(fun workload ->
+      Hh_logger.info "Running a serial workload";
+      workload env
+    ) in
 
   (* Flush the logs asynchronously *)
   Lwt.async EventLoggerLwt.flush;
