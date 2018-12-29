@@ -25,6 +25,7 @@ let string_of_pred_ctor = function
   | FunP -> "FunP"
   | ObjP -> "ObjP"
   | ArrP -> "ArrP"
+  | SymbolP -> "SymbolP"
   | SingletonBoolP _ -> "SingletonBoolP"
   | SingletonStrP _ -> "SingletonStrP"
   | SingletonNumP _ -> "SingletonNumP"
@@ -1335,6 +1336,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | MaybeP
   | BoolP
   | StrP
+  | SymbolP
   | NumP
   | FunP
   | ObjP
@@ -1677,6 +1679,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | Mixed_non_maybe -> "Mixed_non_maybe"
     | Mixed_non_null -> "Mixed_non_null"
     | Mixed_non_void -> "Mixed_non_void"
+    | Mixed_symbol -> "Mixed_symbol"
     | Empty_intersection -> "Empty_intersection"
   in
 

@@ -3081,6 +3081,23 @@ References:
                ^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- typeof.js:83:6
+
+Cannot cast `x` to string because symbol [1] is incompatible with string [2].
+
+   typeof.js:83:6
+   83|     (x: string); // error
+            ^
+
+References:
+   typeof.js:81:24
+   81| function testSymbol(x: mixed) {
+                              ^^^^^ [1]
+   typeof.js:83:9
+   83|     (x: string); // error
+               ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- undef.js:31:13
 
 Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -3350,4 +3367,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 242 errors
+Found 243 errors

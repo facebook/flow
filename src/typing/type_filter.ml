@@ -281,6 +281,19 @@ let not_string t =
   | DefT (_, (AnyT _ | StrT _)) -> DefT (reason_of_t t, EmptyT)
   | _ -> t
 
+let symbol t =
+  match t with
+  | DefT (r, MixedT _) ->
+      DefT (replace_reason_const RSymbol r, MixedT Mixed_symbol)
+  | _ ->
+    (* TODO: since symbols aren't supported, `t` is never a symbol so always empty *)
+    let reason = reason_of_t t in
+    DefT (replace_reason_const RSymbol reason, EmptyT)
+
+let not_symbol t =
+  (* TODO: since symbols aren't supported, `t` is never a symbol so always pass it through *)
+  t
+
 let number t =
   match t with
   | DefT (r, MixedT Mixed_truthy) -> DefT (replace_reason_const NumT.desc r, NumT Truthy)
@@ -307,6 +320,7 @@ let object_ cx t =
     let proto = ObjProtoT reason in
     let obj = Obj_type.mk_with_proto cx reason ?dict proto in
     begin match flavor with
+    | Mixed_symbol
     | Mixed_truthy
     | Mixed_non_maybe
     | Mixed_non_null -> obj
