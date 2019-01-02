@@ -525,7 +525,7 @@ let merge
     |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
   Lwt.return (checked, cycle_leaders, errors, skipped_count)
 
-let finalize ~options ~reader ~workers errors checked_files =
+let check_files ~options ~reader ~workers errors checked_files =
   let files = FilenameSet.union (CheckedSet.focused checked_files) (CheckedSet.dependents checked_files) in
   match options.Options.opt_arch with
   | Options.Classic -> Lwt.return errors
@@ -1379,7 +1379,7 @@ let recheck_with_profiling
     ))
   in
 
-  let%lwt errors = finalize ~options ~reader ~workers errors checked_files in
+  let%lwt errors = check_files ~options ~reader ~workers errors checked_files in
 
   (* Here's how to update unparsed:
    * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
@@ -1917,6 +1917,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~deleted:FilenameSet.empty
       ~persistent_connections:None
       ~prep_merge:None in
-    let%lwt errors = finalize ~options ~reader ~workers errors checked_files in
+    let%lwt errors = check_files ~options ~reader ~workers errors checked_files in
     Lwt.return { env with ServerEnv.checked_files; errors }
   )
