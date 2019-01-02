@@ -770,7 +770,6 @@ module rec TypeTerm : sig
     | FunctionPrototype
     | InferenceHooks
     | InstanceOfRefinement
-    | ForOfIteration
     | Merged
     | ResolveSpread
     | TaggedTemplateType
@@ -2721,7 +2720,6 @@ module Unsoundness = struct
   let unimplemented        = Unsound Unimplemented
   let weak_context         = Unsound WeakContext
   let inference_hooks      = Unsound InferenceHooks
-  let for_of_iter          = Unsound ForOfIteration
   let tagged_template      = Unsound TaggedTemplateType
   let exports              = Unsound Exports
   let existential          = Unsound Existential
@@ -2737,7 +2735,6 @@ module Unsoundness = struct
   let unimplemented_any    = AnyT.make unimplemented
   let weak_context_any     = AnyT.make weak_context
   let inference_hooks_any  = AnyT.make inference_hooks
-  let for_of_iter_any      = AnyT.make for_of_iter
   let tagged_template_any  = AnyT.make tagged_template
   let chain_any            = AnyT.make chain
   let exports_any          = AnyT.make exports

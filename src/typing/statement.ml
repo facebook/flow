@@ -1569,8 +1569,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
       let element_tvar = Tvar.mk cx reason in
       let o =
-        let targs = [element_tvar; Unsoundness.at ForOfIteration loc;
-                                   Unsoundness.at ForOfIteration loc] in
+        (* Second and third args here are never relevant to the loop, but they should be as
+        general as possible to allow iterating over arbitrary generators *)
+        let targs = [element_tvar; MixedT.why reason; EmptyT.why reason] in
         if async then
           let reason = mk_reason
             (RCustom "async iteration expected on AsyncIterable") loc in
