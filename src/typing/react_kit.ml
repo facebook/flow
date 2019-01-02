@@ -228,40 +228,14 @@ let get_config
 
 module type REACT = sig
   val run: Context.t -> Trace.t -> use_op:use_op -> reason -> Type.t -> Type.React.tool ->
-  add_output:(Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit) ->
-  reposition:(Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t) ->
-  rec_flow:(Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit) ->
-  rec_flow_t:(Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit) ->
-  rec_unify:(Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit) ->
-  get_builtin:(Context.t -> ?trace:Trace.t -> string -> reason -> Type.t) ->
-  get_builtin_type:(Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t) ->
-  get_builtin_typeapp:(Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t) ->
-  mk_instance:(Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t) ->
-  string_key:(string -> reason -> Type.t) ->
-  mk_type_destructor:(Context.t -> trace:Trace.t -> use_op -> reason -> t -> Type.destructor -> int -> bool * Type.t) ->
-  sealed_in_op:(reason -> Type.sealtype -> bool) ->
-  union_of_ts:(reason -> Type.t list -> Type.t) ->
-  filter_maybe:(Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t) ->
   unit
 end
 
 module Kit (Flow: Flow_common.S): REACT = struct
-  let run cx trace ~use_op reason_op l u
-    ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
-    ~(reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t)
-    ~(rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit)
-    ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
-    ~(rec_unify: Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
-    ~(get_builtin: Context.t -> ?trace:Trace.t -> string -> reason -> Type.t)
-    ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
-    ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
-    ~(mk_instance: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> Type.t -> Type.t)
-    ~(string_key: string -> reason -> Type.t)
-    ~(mk_type_destructor: Context.t -> trace:Trace.t -> use_op -> reason -> t -> Type.destructor -> int -> bool * Type.t)
-    ~(sealed_in_op: reason -> Type.sealtype -> bool)
-    ~(union_of_ts: reason -> Type.t list -> Type.t)
-    ~(filter_maybe: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t)
-    =
+  include Flow
+  let sealed_in_op = Obj_type.sealed_in_op
+
+  let run cx trace ~use_op reason_op l u =
     let err_incompatible reason = err_incompatible cx trace ~use_op ~reason_op ~add_output reason u
     in
 

@@ -9,9 +9,11 @@ open Reason
 open Type
 
 module type S = sig
+  val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
   val check_polarity: Context.t -> ?trace:Trace.t -> polarity -> Type.t -> unit
   val eval_selector: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> int ->
     Type.t
+  val filter_maybe: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
   val filter_optional: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.t
   val flow: Context.t -> Type.t * Type.use_t -> unit
   val flow_p: Context.t -> ?use_op:use_op -> reason -> reason -> Type.propref ->
@@ -32,11 +34,16 @@ module type S = sig
     Type.destructor -> int -> bool * Type.t
   val reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t ->
     Type.t -> Type.t
+  val rec_flow: Context.t -> Trace.t -> (Type.t * Type.use_t) -> unit
+  val rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit
+  val rec_unify: Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit
   val resolve_spread_list: Context.t -> use_op:use_op -> reason_op:reason ->
     unresolved_param list -> spread_resolve -> unit
   val set_builtin: Context.t -> ?trace:Trace.t -> string -> Type.t -> unit
+  val string_key: string -> reason -> Type.t
   val tvar_with_constraint: Context.t -> ?trace:Trace.t -> ?derivable:bool -> Type.use_t -> Type.t
   val unify: Context.t -> Type.t -> Type.t -> unit
   val unify_opt: Context.t -> ?trace:Trace.t -> ?use_op:Type.use_op -> ?unify_any:bool -> Type.t ->
     Type.t -> unit
+  val union_of_ts: reason -> Type.t list -> Type.t
 end

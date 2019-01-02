@@ -3676,7 +3676,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           (React.SimplifyPropType.InstanceOf, _) as tool)) ->
         let l = instantiate_poly_default_args cx trace
           ~use_op ~reason_op ~reason_tapp (tparams_loc, ids, t) in
-        react_kit cx trace ~use_op reason_op l tool
+        ReactJs.run cx trace ~use_op reason_op l tool
       (* Calls to polymorphic functions may cause non-termination, e.g. when the
          results of the calls feed back as subtle variations of the original
          arguments. This is similar to how we may have non-termination with
@@ -4121,7 +4121,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         React.CreateClass (React.CreateClass.Spec [], knot, call_tout)));
 
     | _, ReactKitT (use_op, reason_op, tool) ->
-      react_kit cx trace ~use_op reason_op l tool
+      ReactJs.run cx trace ~use_op reason_op l tool
 
     (* Facebookisms are special Facebook-specific functions that are not
        expressable with our current type syntax, so we've hacked in special
@@ -11088,24 +11088,6 @@ and continue_repos cx trace reason ?(use_desc=false) t = function
   | Lower (use_op, l) -> rec_flow cx trace (t, ReposUseT (reason, use_desc, use_op, l))
   | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
 
-and react_kit cx trace ~use_op reason_op l u =
-  ReactJs.run
-    ~add_output
-    ~reposition
-    ~rec_flow
-    ~rec_flow_t
-    ~rec_unify
-    ~get_builtin
-    ~get_builtin_type
-    ~get_builtin_typeapp
-    ~mk_instance
-    ~string_key
-    ~mk_type_destructor
-    ~sealed_in_op:Obj_type.sealed_in_op
-    ~union_of_ts
-    ~filter_maybe
-    cx trace ~use_op reason_op l u
-
 and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match kind with
   | Compose reverse ->
     (* Drop the specific argument reasons since run_compose will emit CallTs
@@ -12037,6 +12019,7 @@ end
 module rec FlowJs: Flow_common.S = struct
   module React = React_kit.Kit (FlowJs)
   include M__flow (React)
+  let add_output = add_output
 end
 include FlowJs
 (************* end of slab **************************************************)
