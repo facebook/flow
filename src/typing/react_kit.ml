@@ -245,7 +245,7 @@ module type REACT = sig
   unit
 end
 
-module Kit: REACT = struct
+module Kit (Flow: Flow_common.S): REACT = struct
   let run cx trace ~use_op reason_op l u
     ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
     ~(reposition: Context.t -> ?trace:Trace.t -> ALoc.t -> ?desc:reason_desc -> ?annot_loc:ALoc.t -> Type.t -> Type.t)

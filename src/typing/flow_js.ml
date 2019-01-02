@@ -984,7 +984,7 @@ let print_types_if_verbose cx trace
 let subst = Subst.subst
 
 (********************** start of slab **********************************)
-module M__flow = struct
+module M__flow (ReactJs: React_kit.REACT)= struct
 
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
@@ -11089,7 +11089,7 @@ and continue_repos cx trace reason ?(use_desc=false) t = function
   | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
 
 and react_kit cx trace ~use_op reason_op l u =
-  React_kit.Kit.run
+  ReactJs.run
     ~add_output
     ~reposition
     ~rec_flow
@@ -12035,7 +12035,8 @@ and object_kit =
 
 end
 module rec FlowJs: Flow_common.S = struct
-  include M__flow
+  module React = React_kit.Kit (FlowJs)
+  include M__flow (React)
 end
 include FlowJs
 (************* end of slab **************************************************)
