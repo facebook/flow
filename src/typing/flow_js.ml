@@ -985,6 +985,8 @@ let subst = Subst.subst
 
 (********************** start of slab **********************************)
 
+module M__flow = struct
+
 (** NOTE: Do not call this function directly. Instead, call the wrapper
     functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
     this module, and the function `flow` outside this module. **)
@@ -12032,6 +12034,8 @@ and object_kit =
     | Resolve resolve_tool -> resolve cx trace use_op reason resolve_tool tool tout l
     | Super (acc, resolve_tool) -> super cx trace use_op reason resolve_tool tool tout acc l
 
+end
+include M__flow
 (************* end of slab **************************************************)
 
 class type_finder t = object (_self)
