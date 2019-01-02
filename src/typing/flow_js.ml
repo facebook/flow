@@ -984,7 +984,6 @@ let print_types_if_verbose cx trace
 let subst = Subst.subst
 
 (********************** start of slab **********************************)
-
 module M__flow = struct
 
 (** NOTE: Do not call this function directly. Instead, call the wrapper
@@ -12035,7 +12034,10 @@ and object_kit =
     | Super (acc, resolve_tool) -> super cx trace use_op reason resolve_tool tool tout acc l
 
 end
-include M__flow
+module rec FlowJs: Flow_common.S = struct
+  include M__flow
+end
+include FlowJs
 (************* end of slab **************************************************)
 
 class type_finder t = object (_self)
