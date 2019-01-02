@@ -11090,7 +11090,7 @@ and continue_repos cx trace reason ?(use_desc=false) t = function
   | Upper u -> rec_flow cx trace (t, ReposLowerT (reason, use_desc, u))
 
 and react_kit cx trace ~use_op reason_op l u =
-  React_kit.run
+  React_kit.Kit.run
     ~add_output
     ~reposition
     ~rec_flow
