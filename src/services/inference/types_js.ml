@@ -561,6 +561,7 @@ let check_files ~options ~reader ~workers errors checked_files =
         ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers
                  (FilenameSet.elements files))
     in
+    Hh_logger.info "Done";
     Lwt.return { errors with
       ServerEnv.merge_errors;
       suppressions;
