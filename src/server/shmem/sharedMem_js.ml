@@ -1,12 +1,8 @@
 include SharedMem
 
-module Prefix = struct
-  include Prefix
-end
+module Prefix = Prefix
 
-module Ident = struct
-  include Ident
-end
+module Ident = Ident
 
 module Collect : sig
   val collect: [ `aggressive | `gentle ] -> unit
