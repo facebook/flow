@@ -186,6 +186,12 @@ let check_locs locs lint_kind (suppressions: t) severity_cover (unused: t) =
     (Err, LocSet.empty, unused, true)
     locs
 
+let in_node_modules loc =
+  match ALoc.source loc with
+  | None -> false
+  | Some file ->
+    String_utils.is_substring "/node_modules/" (File_key.to_string file)
+
 let check err (suppressions: t) severity_cover (unused: t) =
   let locs =
     Errors.locs_of_error err
@@ -198,7 +204,11 @@ let check err (suppressions: t) severity_cover (unused: t) =
   let lint_kind, ignore =
     match Errors.kind_of_error err with
       | Errors.LintError kind ->
+        (* Ignore lints in node_modules folders (which we assume to be dependencies). *)
+        (* TODO: this should not show up with --include-suppressed *)
+        if in_node_modules (Errors.loc_of_error err) then Some kind, true else
         let severity, is_explicit = List.fold_left (fun (s, e) loc ->
+          if in_node_modules loc then (s, e) else
           let loc = ALoc.to_loc loc in
           let lint_settings = lint_settings_at_loc loc severity_cover in
           let s' = LintSettings.get_value kind lint_settings in
@@ -213,19 +223,11 @@ let check err (suppressions: t) severity_cover (unused: t) =
   let result, used, unused, _ =
     check_locs locs lint_kind suppressions severity_cover unused
   in
-  (* Ignore lints in node_modules folders (which we assume to be dependencies). *)
-  let is_in_dependency =
-    let primary_loc = Errors.loc_of_error err in
-    Option.value_map (ALoc.source primary_loc) ~default:false ~f:(fun filename ->
-      String_utils.is_substring "/node_modules/" (File_key.to_string filename))
-  in
   let result = match Errors.kind_of_error err with
     | Errors.RecursionLimitError ->
       (* TODO: any related suppressions should not be considered used *)
       Err
-    | _ -> if (is_in_dependency && (Option.is_some lint_kind))
-      then Off (* TODO: this should not show up with --include-suppressed *)
-      else result
+    | _ -> result
   in Some (result, used, unused)
 
 (* Gets the locations of the suppression comments that are yet unused *)
