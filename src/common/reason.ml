@@ -1213,5 +1213,5 @@ let is_array_reason r =
   classification_of_reason r = `Array
 
 let invalidate_rtype_alias = function
-  | RTypeAlias (name, _, desc) -> RTypeAlias (name, false, desc)
+  | RTypeAlias (name, true, desc) -> RTypeAlias (name, false, desc)
   | desc -> desc

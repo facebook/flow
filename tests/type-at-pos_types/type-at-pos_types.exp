@@ -1591,6 +1591,96 @@ spread.js:46:6 = {
   "start":6,
   "end":10
 }
+subst.js:13:7 = {
+  "type":"{f: number}",
+  "reasons":[],
+  "loc":{
+    "source":"subst.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":7,"offset":268},
+    "end":{"line":13,"column":8,"offset":270}
+  },
+  "path":"subst.js",
+  "line":13,
+  "endline":13,
+  "start":7,
+  "end":8
+}
+subst.js:14:7 = {
+  "type":"Poly<number>",
+  "reasons":[],
+  "loc":{
+    "source":"subst.js",
+    "type":"SourceFile",
+    "start":{"line":14,"column":7,"offset":292},
+    "end":{"line":14,"column":8,"offset":294}
+  },
+  "path":"subst.js",
+  "line":14,
+  "endline":14,
+  "start":7,
+  "end":8
+}
+subst.js:17:7 = {
+  "type":"Mono",
+  "reasons":[],
+  "loc":{
+    "source":"subst.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":7,"offset":333},
+    "end":{"line":17,"column":8,"offset":335}
+  },
+  "path":"subst.js",
+  "line":17,
+  "endline":17,
+  "start":7,
+  "end":8
+}
+subst.js:18:7 = {
+  "type":"Mono",
+  "reasons":[],
+  "loc":{
+    "source":"subst.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":7,"offset":357},
+    "end":{"line":18,"column":8,"offset":359}
+  },
+  "path":"subst.js",
+  "line":18,
+  "endline":18,
+  "start":7,
+  "end":8
+}
+subst.js:21:7 = {
+  "type":"{|+key: (React$Key | null), +props: React$ElementProps<any>, +ref: any, +type: any|}",
+  "reasons":[],
+  "loc":{
+    "source":"subst.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":7,"offset":397},
+    "end":{"line":21,"column":8,"offset":399}
+  },
+  "path":"subst.js",
+  "line":21,
+  "endline":21,
+  "start":7,
+  "end":8
+}
+subst.js:22:7 = {
+  "type":"React$Element<any>",
+  "reasons":[],
+  "loc":{
+    "source":"subst.js",
+    "type":"SourceFile",
+    "start":{"line":22,"column":7,"offset":424},
+    "end":{"line":22,"column":8,"offset":426}
+  },
+  "path":"subst.js",
+  "line":22,
+  "endline":22,
+  "start":7,
+  "end":8
+}
 type-alias.js:3:6 = {
   "type":"type A = empty",
   "reasons":[],

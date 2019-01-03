@@ -244,6 +244,20 @@ assert_ok "$FLOW" type-at-pos spread.js 45 6 --strip-root --pretty
 printf "spread.js:46:6 = "
 assert_ok "$FLOW" type-at-pos spread.js 46 6 --strip-root --pretty
 
+# subst.js
+printf "subst.js:13:7 = "
+assert_ok "$FLOW" type-at-pos subst.js 13 7 --strip-root --pretty
+printf "subst.js:14:7 = "
+assert_ok "$FLOW" type-at-pos subst.js 14 7 --strip-root --pretty
+printf "subst.js:17:7 = "
+assert_ok "$FLOW" type-at-pos subst.js 17 7 --strip-root --pretty
+printf "subst.js:18:7 = "
+assert_ok "$FLOW" type-at-pos subst.js 18 7 --strip-root --pretty
+printf "subst.js:21:7 = "
+assert_ok "$FLOW" type-at-pos subst.js 21 7 --strip-root --pretty
+printf "subst.js:22:7 = "
+assert_ok "$FLOW" type-at-pos subst.js 22 7 --strip-root --pretty
+
 
 # type-alias.js
 printf "type-alias.js:3:6 = "
