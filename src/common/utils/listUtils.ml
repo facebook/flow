@@ -159,8 +159,10 @@ let ident_mapi f lst =
 
 let ident_map_multiple f lst =
   let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
-    let items = List.rev (f item) in
-    (List.concat [items; lst_]), changed || List.length items != 1 || List.hd items != item
+    match f item with
+    | [] -> lst_, true
+    | [item_] -> item_ :: lst_, changed || item != item_
+    | items_ -> List.rev_append items_ lst_, true
   ) ([], false) lst in
   if changed then List.rev rev_lst else lst
 
