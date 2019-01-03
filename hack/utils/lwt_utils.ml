@@ -1,17 +1,16 @@
 open Core_kernel
 
 let select
-    (read_fds : Unix.file_descr list)
-    (write_fds : Unix.file_descr list)
-    (exn_fds : Unix.file_descr list)
-    (timeout : float)
+    (read_fds: Unix.file_descr list)
+    (write_fds: Unix.file_descr list)
+    (exn_fds: Unix.file_descr list)
+    (timeout: float)
     : (Unix.file_descr list * Unix.file_descr list * Unix.file_descr list) Lwt.t =
   let make_task
-      ~(fds : Unix.file_descr list)
-      ~(condition : Lwt_unix.file_descr -> bool)
-      ~(wait_f : Lwt_unix.file_descr -> unit Lwt.t)
-      : (Unix.file_descr list, Unix.file_descr list) result Lwt.t
-      =
+      ~(fds: Unix.file_descr list)
+      ~(condition: Lwt_unix.file_descr -> bool)
+      ~(wait_f: Lwt_unix.file_descr -> unit Lwt.t)
+      : (Unix.file_descr list, Unix.file_descr list) result Lwt.t =
     try%lwt
       let fds = List.map fds ~f:Lwt_unix.of_unix_file_descr in
       let%lwt () = Lwt.pick (List.map fds ~f:wait_f) in

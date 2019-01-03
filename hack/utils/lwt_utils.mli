@@ -1,9 +1,9 @@
-val select :
-    Unix.file_descr list ->
-    Unix.file_descr list ->
-    Unix.file_descr list ->
-    float ->
-    (Unix.file_descr list * Unix.file_descr list * Unix.file_descr list) Lwt.t
+val select:
+  Unix.file_descr list ->
+  Unix.file_descr list ->
+  Unix.file_descr list ->
+  float ->
+  (Unix.file_descr list * Unix.file_descr list * Unix.file_descr list) Lwt.t
 (** Drop-in replacement for [Unix.select] that works even when the Lwt main loop
 is running (i.e. your function has [Lwt_main.run] somewhere higher up in the
 call stack).
