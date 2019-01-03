@@ -1,4 +1,4 @@
-open Hh_core
+open Core_kernel
 
 let select
     (read_fds : Unix.file_descr list)
@@ -26,7 +26,7 @@ let select
       this list, so we could in theory just return any list (or not return any
       exceptional file descriptors at all). *)
       let exceptional_fds = List.filter exn_fds
-        ~f:(fun fd -> List.mem fds fd) in
+        ~f:(fun fd -> List.mem ~equal:(=) fds fd) in
       Lwt.return (Error exceptional_fds)
   in
 
