@@ -80,6 +80,10 @@ flow init
 ``` javascript
 /* @flow */
 ```
+or
+``` javascript
+// @flow
+```
 
 - Run and see the magic happen
 ```
