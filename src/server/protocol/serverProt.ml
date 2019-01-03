@@ -209,7 +209,7 @@ module Response = struct
   | AUTOCOMPLETE _ -> "autocomplete response"
   | CHECK_FILE _ -> "check_file response"
   | COVERAGE _ -> "coverage response"
-  | CYCLE _ -> "cycle reponse"
+  | CYCLE _ -> "cycle response"
   | GRAPH_DEP_GRAPH _ -> "dep-graph response"
   | DUMP_TYPES _ -> "dump_types response"
   | FIND_MODULE _ -> "find_module response"
