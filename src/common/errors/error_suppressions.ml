@@ -115,7 +115,7 @@ let lint_settings_at_loc loc severity_cover =
   let file = file_of_loc_unsafe loc in
   let file_cover = match FilenameMap.get file severity_cover with
   | Some x -> x
-  | None -> raise (Missing_lint_settings (Loc.to_string loc))
+  | None -> raise (Missing_lint_settings (Loc.to_string ~include_source:true loc))
   in
   ExactCover.find loc file_cover
 
