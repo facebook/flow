@@ -475,7 +475,7 @@ let score_of_use_op use_op =
       (* ImplicitTypeParam is an internal marker use_op that doesn't get
        * rendered in error messages. So it doesn't necessarily signal anything
        * about the user's intent. *)
-      | ImplicitTypeParam _ -> 0
+      | ImplicitTypeParam -> 0
       | _ -> frame_score)))
     use_op
   in
@@ -607,7 +607,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | TypeArgCompatibility c -> TypeArgCompatibility {c with lower = c.upper; upper = c.lower}
   | TypeParamBound _
   | FunMissingArg _
-  | ImplicitTypeParam _
+  | ImplicitTypeParam
   | UnifyFlip
     as use_op -> use_op
   in
@@ -876,7 +876,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
         `NextWithLoc (lower, use_op)
 
       | Frame (FunMissingArg _, use_op)
-      | Frame (ImplicitTypeParam _, use_op)
+      | Frame (ImplicitTypeParam, use_op)
       | Frame (ReactConfigCheck, use_op)
       | Frame (UnifyFlip, use_op)
         -> `Next use_op

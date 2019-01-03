@@ -1088,8 +1088,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | (OpenT(r, tvar), t2) ->
       let t2 = match desc_of_reason r with
-      | RTypeParam (_, (_, loc), _) ->
-        mod_use_op_of_use_t (fun op -> Frame (ImplicitTypeParam loc, op)) t2
+      | RTypeParam _ -> mod_use_op_of_use_t (fun op -> Frame (ImplicitTypeParam, op)) t2
       | _ -> t2
       in
 
@@ -4172,7 +4171,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             reason_arity = lreason;
             expected_arity = 0;
           }));
-
+      let make_op_nonlocal = function
+        | FunCall op -> FunCall {op with local = false}
+        | FunCallMethod op -> FunCallMethod {op with local = false}
+        | op -> op in
+      let use_op = mod_root_of_use_op make_op_nonlocal use_op in
       resolve_call_list cx ~trace ~use_op reason_op args (
         ResolveSpreadsToCustomFunCall (mk_id (), kind, tout))
 
@@ -5406,8 +5409,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       CallT (use_op, reason_op, ({call_this_t = func; call_args_tlist; _} as funtype)) ->
       (* Drop the first argument in the use_op. *)
       let use_op = match use_op with
-      | Op FunCall {op; fn; args = _ :: args} -> Op (FunCall {op; fn; args})
-      | Op FunCallMethod {op; fn; prop; args = _ :: args} -> Op (FunCallMethod {op; fn; prop; args})
+      | Op FunCall {op; fn; args = _ :: args; local} -> Op (FunCall {op; fn; args; local})
+      | Op FunCallMethod {op; fn; prop; args = _ :: args; local} ->
+          Op (FunCallMethod {op; fn; prop; args; local})
       | _ -> use_op
       in
       begin match call_args_tlist with
@@ -5442,8 +5446,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       (* Drop the specific AST derived argument reasons. Our new arguments come
        * from arbitrary positions in the array. *)
       let use_op = match use_op with
-      | Op FunCall {op; fn; args = _} -> Op (FunCall {op; fn; args = []})
-      | Op FunCallMethod {op; fn; prop; args = _} -> Op (FunCallMethod {op; fn; prop; args = []})
+      | Op FunCall {op; fn; args = _; local} -> Op (FunCall {op; fn; args = []; local})
+      | Op FunCallMethod {op; fn; prop; args = _; local} ->
+          Op (FunCallMethod {op; fn; prop; args = []; local})
       | _ -> use_op
       in
       begin match call_args_tlist with
@@ -9511,7 +9516,6 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
 (*******************************************************************)
 (* /predicate *)
 (*******************************************************************)
-
 and flow_use_op op1 u =
   let ignore_root = function
   | UnknownUse -> true
@@ -9524,6 +9528,23 @@ and flow_use_op op1 u =
   | Speculation _ -> not (Speculation.speculating ())
   | _ -> false
   in
+  let local_root = function
+  | FunCall {local; _} | FunCallMethod {local; _} ->
+      local
+  | Addition _
+  | AssignVar _
+  | Coercion _
+  | FunImplicitReturn _ | FunReturnStatement _
+  | GetProperty _ | SetProperty _
+  | JSXCreateElement _
+    -> true
+  | Cast _
+  | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _
+  | GeneratorYield _
+  | Internal _
+  | ReactCreateElementCall _ | ReactGetIntrinsic _
+  | Speculation _ | TypeApplication _ | UnknownUse
+    -> false in
   mod_use_op_of_use_t (fun op2 ->
     let alt = fold_use_op
       (* If the root of the previous use_op is UnknownUse and our alternate
@@ -9533,24 +9554,14 @@ and flow_use_op op1 u =
       (fun alt -> function
         (* If the use was added to an implicit type param then we want to use
          * our alternate if the implicit type param use_op chain is inside
-         * the implicit type param instantiation. This means we always prefer
-         * pointing to the use_op chain outside of the type parameter
-         * instantiation. This ensures suppression comments are added to the
-         * correct location.
-         *
-         * Instead of using locs to pick our chain, there may be some type
-         * theory rule we can employ. However, such a rule would likely depend
-         * on tracking the inputs/outputs when type parameters are instantiated.
-         * For now, using locs is cleaner then adding unreliable bits to type
-         * parameter uses in inputs/outputs. *)
-        | ImplicitTypeParam loc_op when not alt ->
-          let loc_op = ALoc.to_loc loc_op in
-          let loc2 = loc_of_root_use_op (root_of_use_op op2) in
-          Loc.contains loc_op loc2
+         * the implicit type param instantiation. Since we can't directly compare
+         * abstract locations, we determine whether to do this using a heuristic
+         * based on the 'locality' of the use_op root. *)
+        | ImplicitTypeParam when not alt -> root_of_use_op op2 |> local_root
         | _ -> alt)
       op2
     in
-    if alt && not (ignore_root (root_of_use_op op1)) then op1 else op2
+    if alt && not (ignore_root (root_of_use_op op1))  then op1 else op2
   ) u
 
 (***********************)
@@ -11093,8 +11104,9 @@ and custom_fun_call cx trace ~use_op reason_op kind args spread_arg tout = match
     (* Drop the specific argument reasons since run_compose will emit CallTs
      * with completely unrelated argument reasons. *)
     let use_op = match use_op with
-    | Op FunCall {op; fn; args = _} -> Op (FunCall {op; fn; args = []})
-    | Op FunCallMethod {op; fn; prop; args = _} -> Op (FunCallMethod {op; fn; prop; args = []})
+    | Op FunCall {op; fn; args = _; local} -> Op (FunCall {op; fn; args = []; local})
+    | Op FunCallMethod {op; fn; prop; args = _; local} ->
+        Op (FunCallMethod {op; fn; prop; args = []; local})
     | _ -> use_op
     in
     let tin = Tvar.mk cx reason_op in

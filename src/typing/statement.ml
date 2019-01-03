@@ -3018,6 +3018,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         op = mk_expression_reason ex;
         fn = mk_expression_reason callee;
         args = mk_initial_arguments_reason arguments;
+        local = true;
       }) in
       (loc, new_call cx reason ~use_op class_ targts argts),
       New {New.
@@ -3179,6 +3180,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         op = mk_expression_reason ex;
         fn = mk_expression_reason tag;
         args = [];
+        local = true;
       }) in
       Flow.flow cx (t, CallT (use_op, reason, ft));
       (loc, ret),
@@ -3508,6 +3510,7 @@ and subscript =
             op = mk_expression_reason ex;
             fn = mk_expression_reason callback_expr;
             args = [];
+            local = true;
           }) in
           let _ = func_call cx reason ~use_op callback_expr_t None module_tvars in
 
@@ -3598,6 +3601,7 @@ and subscript =
             fn = mk_expression_reason callee;
             prop = reason_prop;
             args = mk_initial_arguments_reason arguments;
+            local = true;
           }) in
           let id_info = name, prop_t, Type_table.PropertyAccess super in
           Type_table.set_info ploc id_info (Context.type_table cx);
@@ -3641,6 +3645,7 @@ and subscript =
             fn = mk_expression_reason callee;
             prop = mk_reason (RProperty (Some name)) prop_loc;
             args = mk_initial_arguments_reason arguments;
+            local = true;
           }) in
           method_call cx reason_call ~use_op prop_loc (callee, ot, name) targts argts,
           Member.PropertyPrivateName (prop_loc, (name_loc, name))
@@ -3651,6 +3656,7 @@ and subscript =
             fn = mk_expression_reason callee;
             prop = mk_reason (RProperty (Some name)) prop_loc;
             args = mk_initial_arguments_reason arguments;
+            local = true;
           }) in
           let (prop_t, _) as x =
             method_call cx reason_call ~use_op prop_loc (callee, ot, name) targts argts in
@@ -3708,6 +3714,7 @@ and subscript =
             op = mk_expression_reason ex;
             fn = mk_expression_reason callee;
             args = mk_initial_arguments_reason arguments;
+            local = true;
           }) in
           Flow.flow cx (super, MethodT (use_op, reason, super_reason, propref, funtype, None))
         ) in
@@ -3806,6 +3813,7 @@ and subscript =
           op = mk_expression_reason ex;
           fn = mk_expression_reason callee;
           args = mk_initial_arguments_reason arguments;
+          local = true;
         }) in
         let exp callee = call_ast { Call.callee; targs; arguments = argument_asts } in
         begin match opt_state with
@@ -4111,6 +4119,7 @@ and predicated_call_expression_ cx loc { Ast.Expression.Call.callee; targs; argu
     op = reason;
     fn = mk_expression_reason callee;
     args = mk_initial_arguments_reason arguments;
+    local = true;
   }) in
   let t = func_call cx reason ~use_op f targts (Core_list.map ~f:(fun e -> Arg e) argts) in
   f, argks, argts, t, { Ast.Expression.Call.
@@ -4309,6 +4318,7 @@ and unary cx loc = Ast.Expression.Unary.(function
       op = reason;
       fn = reason_of_t await;
       args = [mk_expression_reason argument];
+      local = true;
     }) in
     func_call cx reason ~use_op await None [Arg arg],
     { operator = Await; argument = argument_ast }
@@ -6100,6 +6110,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       fn = mk_reason (RMethod (Some m)) callee_loc;
       prop = mk_reason (RProperty (Some m)) prop_loc;
       args = mk_initial_arguments_reason args;
+      local = true;
     }) in
     snd (method_call cx reason ~use_op prop_loc (expr, obj_t, m) targts argts),
     targ_asts,

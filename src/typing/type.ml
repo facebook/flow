@@ -293,12 +293,14 @@ module rec TypeTerm : sig
         op: reason;
         fn: reason;
         args: reason list;
+        local: bool; (* Whether we can blame back to the function def *)
       }
     | FunCallMethod of {
         op: reason;
         fn: reason;
         prop: reason;
         args: reason list;
+        local: bool; (* Whether we can blame back to the function def *)
       }
     | FunReturnStatement of { value: reason }
     | FunImplicitReturn of { fn: reason; upper: reason }
@@ -320,7 +322,7 @@ module rec TypeTerm : sig
     | FunParam of { n: int; name: string option; lower: reason; upper: reason }
     | FunRestParam of { lower: reason; upper: reason }
     | FunReturn of { lower: reason; upper: reason }
-    | ImplicitTypeParam of ALoc.t
+    | ImplicitTypeParam
     | IndexerKeyCompatibility of { lower: reason; upper: reason }
     | PropertyCompatibility of {
         prop: string option;
@@ -2128,6 +2130,8 @@ and TypeUtil : sig
 
   val use_op_of_use_t: TypeTerm.use_t -> TypeTerm.use_op option
   val mod_use_op_of_use_t: (TypeTerm.use_op -> TypeTerm.use_op) -> TypeTerm.use_t -> TypeTerm.use_t
+  val mod_root_of_use_op: (TypeTerm.root_use_op -> TypeTerm.root_use_op)
+    -> TypeTerm.use_op -> TypeTerm.use_op
 
   val reasonless_compare: TypeTerm.t -> TypeTerm.t -> int
   val reasonless_eq: TypeTerm.t -> TypeTerm.t -> bool
@@ -2578,6 +2582,10 @@ end = struct
         let op' = f op in
         if op' == op then u else make op')
 
+  let rec mod_root_of_use_op f = function
+      | Op op -> Op (f op)
+      | Frame (fr, o) -> Frame (fr, mod_root_of_use_op f o)
+
   (* type comparison mod reason *)
   let reasonless_compare =
     let rec swap_reason t2 t1 =
@@ -3022,7 +3030,7 @@ let string_of_frame_use_op = function
 | FunParam _ -> "FunParam"
 | FunRestParam _ -> "FunRestParam"
 | FunReturn _ -> "FunReturn"
-| ImplicitTypeParam _ -> "ImplicitTypeParam"
+| ImplicitTypeParam -> "ImplicitTypeParam"
 | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
 | PropertyCompatibility _ -> "PropertyCompatibility"
 | ReactConfigCheck -> "ReactConfigCheck"
