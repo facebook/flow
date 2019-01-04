@@ -167,6 +167,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/config/options/":
   title: ".flowconfig [options]"
   description: "How to configure Flow's various options"
+"/docs/config/untyped/":
+  title: ".flowconfig [untyped]"
+  description: "How to configure Flow to treat certain files as untyped"
 "/docs/config/version/":
   title: ".flowconfig [version]"
   description: "How to pin your project to a specific version of Flow"

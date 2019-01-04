@@ -88,6 +88,7 @@
     - path: "/docs/config/"
     - path: "/docs/config/include/"
     - path: "/docs/config/ignore/"
+    - path: "/docs/config/untyped/"
     - path: "/docs/config/libs/"
     - path: "/docs/config/lints/"
     - path: "/docs/config/options/"
