@@ -46,4 +46,9 @@ module type S = sig
   val unify_opt: Context.t -> ?trace:Trace.t -> ?use_op:Type.use_op -> ?unify_any:bool -> Type.t ->
     Type.t -> unit
   val union_of_ts: reason -> Type.t list -> Type.t
+
+  (* Can't include ASSERT_GROUND here because it will cause a dependency cycle.
+   * Instead, we duplicate the function signature of enforce strict
+   *)
+  val enforce_strict: Context.t -> Type.t -> unit
 end
