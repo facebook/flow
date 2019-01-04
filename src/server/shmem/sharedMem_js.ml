@@ -5,7 +5,7 @@ module Prefix = Prefix
 module Ident = Ident
 
 module Collect : sig
-  val collect: [ `aggressive | `gentle ] -> unit
+  val collect: [ `gentle | `aggressive | `always_TEST ] -> unit
   val with_memory_profiling_lwt:
     profiling:Profiling_js.running ->
     collect_at_end:bool ->

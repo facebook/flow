@@ -491,17 +491,16 @@ static size_t used_heap_size(void) {
 
 static long removed_count = 0;
 
-/* Part of the heap not reachable from hashtable entries. Can be reclaimed with
- * hh_collect. */
-static size_t get_wasted_heap_size(void) {
-  assert(wasted_heap_size != NULL);
-  return *wasted_heap_size;
+/* Expose so we can display diagnostics */
+CAMLprim value hh_used_heap_size(void) {
+  return Val_long(used_heap_size());
 }
 
-/* Expose so we can display diagnostics */
-CAMLprim value hh_heap_size(void) {
-  CAMLparam0();
-  CAMLreturn(Val_long(used_heap_size()));
+/* Part of the heap not reachable from hashtable entries. Can be reclaimed with
+ * hh_collect. */
+CAMLprim value hh_wasted_heap_size(void) {
+  assert(wasted_heap_size != NULL);
+  return Val_long(*wasted_heap_size);
 }
 
 CAMLprim value hh_log_level(void) {
@@ -1522,29 +1521,13 @@ value hh_check_heap_overflow(void) {
  */
 /*****************************************************************************/
 
-static int should_collect(int aggressive) {
-  float space_overhead = aggressive ? 1.2 : 2.0;
-  size_t used = used_heap_size();
-  size_t reachable = used - get_wasted_heap_size();
-  return used >= (size_t)(space_overhead * reachable);
-}
-
-CAMLprim value hh_should_collect(value aggressive_val) {
-  return Val_bool(should_collect(Bool_val(aggressive_val)));
-}
-
-CAMLprim value hh_collect(value aggressive_val) {
+CAMLprim value hh_collect(void) {
   // NOTE: explicitly do NOT call CAMLparam or any of the other functions/macros
   // defined in caml/memory.h .
   // This function takes a boolean and returns unit.
   // Those are both immediates in the OCaml runtime.
-  int aggressive  = Bool_val(aggressive_val);
   assert_master();
   assert_allow_removes();
-
-  if (!should_collect(aggressive)) {
-    return Val_unit;
-  }
 
   // Step 1: Walk the hashtbl entries, which are the roots of our marking pass.
 

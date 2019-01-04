@@ -21,7 +21,8 @@ value hh_connect(value connector, value is_master);
 /*****************************************************************************/
 /* Heap diagnostics. */
 /*****************************************************************************/
-CAMLprim value hh_heap_size(void);
+CAMLprim value hh_used_heap_size(void);
+CAMLprim value hh_wasted_heap_size(void);
 CAMLprim value hh_log_level(void);
 CAMLprim value hh_sample_rate(void);
 CAMLprim value hh_hash_used_slots(void);
@@ -52,8 +53,7 @@ void hh_shared_clear(void);
 /*****************************************************************************/
 /* Garbage collection. */
 /*****************************************************************************/
-CAMLprim value hh_should_collect(value aggressive_val);
-CAMLprim value hh_collect(value aggressive_val);
+CAMLprim value hh_collect(void);
 
 /*****************************************************************************/
 /* Deserialization. */

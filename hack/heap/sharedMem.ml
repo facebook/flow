@@ -164,9 +164,7 @@ external connect : handle -> is_master:bool -> unit = "hh_connect"
  * free data (cf hh_shared.c for the underlying C implementation).
  *)
 (*****************************************************************************)
-external hh_should_collect: bool -> bool = "hh_should_collect" [@@noalloc]
-
-external hh_collect: bool -> unit = "hh_collect" [@@noalloc]
+external hh_collect: unit -> unit = "hh_collect" [@@noalloc]
 
 (*****************************************************************************)
 (* Serializes the dependency table and writes it to a file *)
@@ -235,7 +233,12 @@ external cleanup_sqlite: unit -> unit = "hh_cleanup_sqlite"
 (*****************************************************************************)
 (* The size of the dynamically allocated shared memory section *)
 (*****************************************************************************)
-external heap_size: unit -> int = "hh_heap_size"
+external heap_size: unit -> int = "hh_used_heap_size" [@@noalloc]
+
+(*****************************************************************************)
+(* Part of the heap not reachable from hashtable entries. *)
+(*****************************************************************************)
+external wasted_heap_size: unit -> int = "hh_wasted_heap_size" [@@noalloc]
 
 (*****************************************************************************)
 (* The logging level for shared memory statistics *)
@@ -316,15 +319,23 @@ let hash_stats () =
     slots = hash_slots ();
   }
 
-let should_collect (effort : [ `gentle | `aggressive ]) =
-  hh_should_collect (effort = `aggressive)
+let should_collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
+  let overhead = match effort with
+  | `always_TEST -> 1.0
+  | `aggressive -> 1.2
+  | `gentle -> 2.0
+  in
+  let used = heap_size () in
+  let wasted = wasted_heap_size () in
+  let reachable = used - wasted in
+  used >= truncate ((float reachable) *. overhead)
 
-let collect (effort : [ `gentle | `aggressive ]) =
+let collect (effort : [ `gentle | `aggressive | `always_TEST ]) =
   let old_size = heap_size () in
   Stats.update_max_heap_size old_size;
   let start_t = Unix.gettimeofday () in
   (* The wrapper is used to run the function in a worker instead of master. *)
-  hh_collect (effort = `aggressive);
+  if should_collect effort then hh_collect ();
   let new_size = heap_size () in
   let time_taken = Unix.gettimeofday () -. start_t in
   if old_size <> new_size then begin
