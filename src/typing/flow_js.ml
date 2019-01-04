@@ -6907,30 +6907,39 @@ and expand_any _cx any t =
   | _ -> (* Just returning any would result in infinite recursion in most cases *)
       failwith "no any expansion defined for this case"
 
+and any_prop_to_function use_op {this_t; params; rest_param; return_t;
+    closure_t = _; is_predicate = _; changeset = _; def_reason = _;} covariant contravariant =
+  List.iter (snd %> contravariant ~use_op) params;
+  Option.iter ~f:(fun (_, _, t) -> contravariant ~use_op t) rest_param;
+  contravariant ~use_op this_t;
+  covariant ~use_op return_t
 
 (* types trapped for any propagation. Returns true if this function handles the any case, either
    by propagating or by doing the trivial case. False if the usetype needs to be handled
    separately. *)
-and any_propagated cx trace any = function
+and any_propagated cx trace any u =
+  let covariant_flow ~use_op t = rec_flow_t cx trace ~use_op (any, t) in
+  let contravariant_flow ~use_op t = rec_flow_t cx trace ~use_op (t, any) in
+  match u with
   | NotT (reason, t) ->
       rec_flow_t cx trace (AnyT.why (AnyT.source any) reason, t);
       true
 
   | SubstOnPredT (_, _, OpenPredT (_, t, _, _)) ->
-      rec_flow_t cx trace (any, t);
+      covariant_flow ~use_op:unknown_use t;
       true
 
   | UseT (use_op, DefT (_, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
   | UseT (use_op, DefT (_, ClassT t)) (* mk_instance ~for_type:false *)
   | UseT (use_op, ExactT (_, t))
   | UseT (use_op, ShapeT t) ->
-      rec_flow_t cx trace ~use_op (any, t);
+      covariant_flow ~use_op t;
       true
 
   | UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
-      rec_flow_t cx trace ~use_op (config, any); (* Flip because config is contravariant *)
-      rec_flow_t cx trace ~use_op (any, instance);
-      true
+    contravariant_flow ~use_op config;
+    covariant_flow ~use_op instance;
+    true
 
   (* Some types just need to be expanded and filled with any types *)
   | UseT (use_op, (DefT (_, ArrT (ArrayAT _)) as t))
@@ -6940,12 +6949,7 @@ and any_propagated cx trace any = function
       true
 
   | UseT (use_op, DefT (_, FunT (_, _, funtype))) -> (* function type *)
-      let { this_t; params; rest_param; return_t;
-            closure_t = _; is_predicate = _; changeset = _; def_reason = _; } = funtype in
-      List.iter (fun (_, t) -> rec_flow_t cx trace ~use_op (t, any)) params;
-      Option.iter ~f:(fun (_, _, t) -> rec_flow_t cx trace ~use_op (t, any)) rest_param;
-      rec_flow_t cx trace ~use_op (this_t, any);
-      rec_flow_t cx trace ~use_op (any, return_t);
+      any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
 
   | UseT (_, DefT (reason, TypeT (_, t))) -> (* import type *)
@@ -7092,14 +7096,12 @@ and any_propagated cx trace any = function
 
 (* Propagates any flows in case of contravariant/invariant subtypes: the any must pollute
    all types in contravariant positions when t <: any. *)
-and any_propagated_use cx trace use_op any = function
+and any_propagated_use cx trace use_op any l =
+  let covariant_flow ~use_op t = rec_flow_t cx trace ~use_op (t, any) in
+  let contravariant_flow ~use_op t = rec_flow_t cx trace ~use_op (any, t) in
+  match l with
   | DefT (_, FunT (_, _, funtype)) -> (* function types are contravariant in the arguments *)
-      let { this_t; params; rest_param; return_t;
-            closure_t = _; is_predicate = _; changeset = _; def_reason = _; } = funtype in
-      List.iter (fun (_, t) -> rec_flow_t cx trace ~use_op (any, t)) params;
-      Option.iter ~f:(fun (_, _, t) -> rec_flow_t cx trace ~use_op (any, t)) rest_param;
-      rec_flow_t cx trace ~use_op (any, this_t);
-      rec_flow_t cx trace ~use_op (return_t, any);
+      any_prop_to_function use_op funtype covariant_flow contravariant_flow;
       true
 
   (* Some types just need to be expanded and filled with any types *)
@@ -7114,12 +7116,12 @@ and any_propagated_use cx trace use_op any = function
 
   | DefT (_, ClassT t)
   | DefT (_, ArrT (ROArrayAT t)) ->
-      rec_flow_t cx trace ~use_op (t, any);
+      covariant_flow ~use_op t;
       true
 
   | DefT (_, ReactAbstractComponentT {config; instance}) ->
-      rec_flow_t cx trace ~use_op (any, config); (* Flip because config is contravariant *)
-      rec_flow_t cx trace ~use_op (instance, any);
+      contravariant_flow ~use_op config;
+      covariant_flow ~use_op instance;
       true
 
   (* These types have no negative positions in their lower bounds *)
