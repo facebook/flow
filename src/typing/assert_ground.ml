@@ -32,11 +32,7 @@ end
 *)
 (* need to consider only "def" types *)
 
-module type ASSERT_GROUND = sig
-  val enforce_strict: Context.t -> Type.t -> unit
-end
-
-module Kit (Flow: Flow_common.S) = struct
+module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
   include Flow
   class assert_ground_visitor r ~max_reasons = object (self)
     inherit [Marked.t] Type_visitor.t as super

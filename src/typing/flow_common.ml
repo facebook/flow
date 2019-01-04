@@ -8,6 +8,12 @@
 open Reason
 open Type
 
+(* This is here instead of assert_ground.ml to avoid the duplication of the enforce strict
+ * signature *)
+module type ASSERT_GROUND = sig
+  val enforce_strict: Context.t -> Type.t -> unit
+end
+
 module type S = sig
   val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
   val check_polarity: Context.t -> ?trace:Trace.t -> polarity -> Type.t -> unit
@@ -47,8 +53,5 @@ module type S = sig
     Type.t -> unit
   val union_of_ts: reason -> Type.t list -> Type.t
 
-  (* Can't include ASSERT_GROUND here because it will cause a dependency cycle.
-   * Instead, we duplicate the function signature of enforce strict
-   *)
-  val enforce_strict: Context.t -> Type.t -> unit
+  include ASSERT_GROUND
 end
