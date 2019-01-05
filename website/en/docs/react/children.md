@@ -205,7 +205,7 @@ React components.
 ## Only allowing a specific element type as children. <a class="toc" id="toc-only-allowing-a-specific-element-type-as-children" href="#toc-only-allowing-a-specific-element-type-as-children"></a>
 
 Sometimes you only want a specific component as the children to your React
-component. This often happens when are building a table component which needs
+component. This often happens when you are building a table component which needs
 specific column children components, or a tab bar which needs specific
 configuration for each tab. One such tab bar component that uses this pattern is
 React Native's `<TabBarIOS>` component.
