@@ -24,7 +24,6 @@ open Constraint
 open Type
 
 module FlowError = Flow_error
-module ResolvableTypeJob = Resolvable_type_job
 
 (* type exemplar set - reasons are not considered in compare *)
 module TypeExSet = Set.Make(struct
