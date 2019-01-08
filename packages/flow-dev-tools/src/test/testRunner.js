@@ -68,8 +68,8 @@ function startWatchAndRun(suites, args) {
   };
 
   const startListeningForShortcuts = () => {
-    if (process.stdin instanceof tty$ReadStream) {
-      process.stdin.setRawMode(true);
+    if (typeof process.stdin.setRawMode === 'function') {
+      (process.stdin.setRawMode: any).call(process.stdin, true);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
       process.stdin.on('data', keydown);
@@ -79,8 +79,8 @@ function startWatchAndRun(suites, args) {
   };
 
   const stopListeningForShortcuts = () => {
-    if (process.stdin instanceof tty$ReadStream) {
-      process.stdin.setRawMode(false);
+    if (typeof process.stdin.setRawMode === 'function') {
+      (process.stdin.setRawMode: any).call(process.stdin, false);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
       process.stdin.removeListener('data', keydown);
