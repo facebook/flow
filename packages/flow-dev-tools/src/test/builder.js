@@ -337,6 +337,8 @@ export class TestBuilder {
       '--no-auto-restart',
       '--file-watcher',
       'none',
+      '--wait-for-recheck',
+      'true',
     ]
       .concat(lazyMode)
       .concat([this.dir]);
