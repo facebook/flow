@@ -364,6 +364,7 @@ runtest() {
         cwd=""
         start_args=""
         file_watcher="none"
+        wait_for_recheck="true"
         if [ -e ".testconfig" ]
         then
             # all
@@ -424,6 +425,12 @@ runtest() {
             then
                 return $RUNTEST_SKIP
             fi
+
+            # wait_for_recheck
+            if [ "$(awk '$1=="wait_for_recheck:"{print $2}' .testconfig)" == "false" ]
+            then
+                wait_for_recheck="false"
+            fi
         fi
 
         if [ "$cwd" != "" ]; then
@@ -444,7 +451,9 @@ runtest() {
             set -e
             # start lazy server and wait
             "$FLOW" start "$root" \
-              $all $flowlib --wait --wait-for-recheck true --lazy \
+              $all $flowlib --wait \
+              --wait-for-recheck "$wait_for_recheck" \
+              --lazy \
               --file-watcher "$file_watcher" \
               --flowconfig-name "$flowconfig_name" \
               --log-file "$abs_log_file" \
@@ -517,7 +526,8 @@ runtest() {
                 then
                   PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                   "$FLOW" start "$root" \
-                    $all $flowlib --wait --wait-for-recheck true \
+                    $all $flowlib --wait \
+                    --wait-for-recheck "$wait_for_recheck" \
                     --saved-state-fetcher "local" \
                     --saved-state-no-fallback \
                     --file-watcher "$file_watcher" \
@@ -533,7 +543,7 @@ runtest() {
                 # start server and wait
                 PATH="$THIS_DIR/scripts/tests_bin:$PATH" \
                 "$FLOW" start "$root" \
-                  $all $flowlib --wait --wait-for-recheck true  \
+                  $all $flowlib --wait --wait-for-recheck "$wait_for_recheck" \
                   --file-watcher "$file_watcher" \
                   --log-file "$abs_log_file" \
                   --monitor-log-file "$abs_monitor_log_file" \
