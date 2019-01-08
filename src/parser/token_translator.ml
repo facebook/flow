@@ -8,12 +8,12 @@
 
 module Translate (Impl : Translator_intf.S) : (sig
   type t
-  val token: Parser_env.token_sink_result -> t
-  val token_list: Parser_env.token_sink_result list -> t
+  val token: Offset_utils.t -> Parser_env.token_sink_result -> t
+  val token_list: Offset_utils.t -> Parser_env.token_sink_result list -> t
 end with type t = Impl.t) = struct
   type t = Impl.t
 
-  let token { Parser_env.token_loc; token; token_context } =
+  let token offset_table { Parser_env.token_loc; token; token_context } =
     let open Loc in
 
     Impl.obj [
@@ -38,13 +38,13 @@ end with type t = Impl.t) = struct
         ]);
       ]);
       ("range", Impl.array [
-        Impl.number (float token_loc.start.offset);
-        Impl.number (float token_loc._end.offset);
+        Impl.number (float (Offset_utils.offset offset_table token_loc.start));
+        Impl.number (float (Offset_utils.offset offset_table token_loc._end));
       ]);
       ("value", Impl.string (Token.value_of_token token));
     ]
 
-  let token_list tokens =
-    Impl.array (List.rev_map token tokens |> List.rev)
+  let token_list offset_table tokens =
+    Impl.array (List.rev_map (token offset_table) tokens |> List.rev)
 
 end

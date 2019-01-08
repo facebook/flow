@@ -87,8 +87,8 @@ let parse_options jsopts = Parser_env.(
   opts
 )
 
-let translate_tokens tokens =
-  JsTranslator.array (List.rev_map Token_translator.token tokens)
+let translate_tokens offset_table tokens =
+  JsTranslator.array (List.rev_map (Token_translator.token offset_table) tokens)
 
 let parse content options =
   let options =
@@ -114,9 +114,9 @@ let parse content options =
 
   let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options ~token_sink content in
   JsTranslator.translation_errors := [];
-  let offset_table = Some (Offset_utils.make content) in
-  let ret = Translate.program offset_table ocaml_ast in
+  let offset_table = Offset_utils.make content in
+  let ret = Translate.program (Some offset_table) ocaml_ast in
   let translation_errors = !JsTranslator.translation_errors in
   Js.Unsafe.set ret "errors" (Translate.errors (errors @ translation_errors));
-  if include_tokens then Js.Unsafe.set ret "tokens" (translate_tokens !rev_tokens);
+  if include_tokens then Js.Unsafe.set ret "tokens" (translate_tokens offset_table !rev_tokens);
   ret

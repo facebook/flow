@@ -36,8 +36,8 @@ end)
 
 module Token_translator = Token_translator.Translate (AbstractTranslator)
 
-let translate_tokens tokens =
-  AbstractTranslator.array (List.rev_map Token_translator.token tokens)
+let translate_tokens offset_table tokens =
+  AbstractTranslator.array (List.rev_map (Token_translator.token offset_table) tokens)
 
 let convert_options opts =
   let open Parser_env in
@@ -77,12 +77,12 @@ let parse content options =
     content
   in
 
-  let offset_table = Some (Offset_utils.make content) in
-  match Translate.program offset_table ast with
+  let offset_table = Offset_utils.make content in
+  match Translate.program (Some offset_table) ast with
   | JObject params ->
     let params = ("errors", Translate.errors errors)::params in
     let params =
-      if include_tokens then ("tokens", translate_tokens !rev_tokens)::params
+      if include_tokens then ("tokens", translate_tokens offset_table !rev_tokens)::params
       else params
     in
     JObject params

@@ -84,9 +84,10 @@ let main include_tokens pretty check debug file_type_opt use_strict path filenam
    * order.
    *)
   let tokens = ref [] in
+  let offset_table = lazy (Offset_utils.make content) in
   let token_sink =
     if not include_tokens then None else (Some(fun token_data ->
-    tokens := (Token_translator.token token_data)::!tokens
+    tokens := (Token_translator.token (Lazy.force offset_table) token_data)::!tokens
   )) in
 
   let open Hh_json in
