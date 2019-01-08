@@ -34,6 +34,7 @@ let spec = {
     |> strip_root_flag
     |> verbose_flags
     |> from_flag
+    |> wait_for_recheck_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg ~doc:"Ignore absence of an @flow pragma"
     |> anon "filename" (optional string)
@@ -41,7 +42,7 @@ let spec = {
 }
 
 let main base_flags option_values json pretty json_version root error_flags strip_root verbose
-  respect_pragma all file () =
+  wait_for_recheck respect_pragma all file () =
   let file = get_file_from_filename_or_stdin file
     ~cmd:CommandSpec.(spec.name) None in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
@@ -74,6 +75,7 @@ let main base_flags option_values json pretty json_version root error_flags stri
     verbose;
     force = all;
     include_warnings;
+    wait_for_recheck;
   } in
   let response = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CHECK_FILE response -> response

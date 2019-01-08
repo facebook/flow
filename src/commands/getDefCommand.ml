@@ -30,6 +30,7 @@ let spec = {
     |> strip_root_flag
     |> from_flag
     |> path_flag
+    |> wait_for_recheck_flag
     |> anon "args" (required (list_of string))
   )
 }
@@ -56,7 +57,7 @@ let parse_args path args =
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
  *)
-let main base_flags option_values json pretty root strip_root path args () =
+let main base_flags option_values json pretty root strip_root path wait_for_recheck args () =
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
@@ -66,7 +67,9 @@ let main base_flags option_values json pretty root strip_root path args () =
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.Request.GET_DEF { filename = file; line; char = column; } in
+  let request =
+    ServerProt.Request.GET_DEF { filename = file; line; char = column; wait_for_recheck; }
+  in
 
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.GET_DEF (Ok loc) ->

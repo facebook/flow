@@ -410,8 +410,10 @@ type command_handler =
 
 (* This command is parallelizable, but we will treat it as nonparallelizable if we've been told
  * to wait_for_recheck by the .flowconfig or CLI *)
-let mk_parallelizable ?(wait_for_recheck=false) ~options f =
-  let wait_for_recheck = wait_for_recheck || Options.wait_for_recheck options in
+let mk_parallelizable ~wait_for_recheck ~options f =
+  let wait_for_recheck =
+    Option.value wait_for_recheck ~default:(Options.wait_for_recheck options)
+  in
   if wait_for_recheck
   then
     Handle_nonparallelizable (fun ~profiling ~env ->
@@ -428,24 +430,26 @@ let get_ephemeral_handler genv command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
-  | ServerProt.Request.AUTOCOMPLETE { input; } ->
-    mk_parallelizable ~options (handle_autocomplete ~options ~input)
-  | ServerProt.Request.CHECK_FILE { input; verbose; force; include_warnings; } ->
+  | ServerProt.Request.AUTOCOMPLETE { input; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_autocomplete ~options ~input)
+  | ServerProt.Request.CHECK_FILE { input; verbose; force; include_warnings; wait_for_recheck; } ->
     let options = { options with Options.
       opt_verbose = verbose;
       opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
     } in
-    mk_parallelizable ~options (handle_check_file ~options ~force ~input)
-  | ServerProt.Request.COVERAGE { input; force; } ->
-    mk_parallelizable ~options (handle_coverage ~options ~force ~input)
-  | ServerProt.Request.CYCLE { filename; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_check_file ~options ~force ~input)
+  | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~input)
+  | ServerProt.Request.CYCLE { filename; wait_for_recheck; } ->
     let file_options = Options.file_options options in
     let fn = Files.filename_from_string ~options:file_options filename in
-    mk_parallelizable ~options (handle_cycle ~fn)
-  | ServerProt.Request.DUMP_TYPES { input; } ->
-    mk_parallelizable ~options (handle_dump_types ~options ~input)
-  | ServerProt.Request.FIND_MODULE { moduleref; filename; } ->
-    mk_parallelizable ~options (handle_find_module ~options ~reader ~moduleref ~filename)
+    mk_parallelizable ~wait_for_recheck ~options (handle_cycle ~fn)
+  | ServerProt.Request.DUMP_TYPES { input; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_dump_types ~options ~input)
+  | ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (
+      handle_find_module ~options ~reader ~moduleref ~filename
+    )
   | ServerProt.Request.FIND_REFS { filename; line; char; global; multi_hop; } ->
     (* find-refs can take a while and may use MultiWorker. Furthermore, it may do a recheck and
      * change env. Each of these 3 facts disqualifies find-refs from being parallelizable *)
@@ -454,14 +458,18 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
     Handle_immediately (handle_force_recheck ~files ~focus ~profile)
-  | ServerProt.Request.GET_DEF { filename; line; char; } ->
-    mk_parallelizable ~options (handle_get_def ~reader ~options ~filename ~line ~char)
-  | ServerProt.Request.GET_IMPORTS { module_names; } ->
-    mk_parallelizable ~options (handle_get_imports ~options ~reader ~module_names)
-  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; } ->
-    mk_parallelizable ~options (handle_graph_dep_graph ~root ~strip_root ~outfile)
-  | ServerProt.Request.INFER_TYPE { input; line; char; verbose; expand_aliases; } ->
-    mk_parallelizable ~options (
+  | ServerProt.Request.GET_DEF { filename; line; char; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (
+      handle_get_def ~reader ~options ~filename ~line ~char
+    )
+  | ServerProt.Request.GET_IMPORTS { module_names; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_get_imports ~options ~reader ~module_names)
+  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_graph_dep_graph ~root ~strip_root ~outfile)
+  | ServerProt.Request.INFER_TYPE {
+      input; line; char; verbose; expand_aliases; wait_for_recheck;
+    } ->
+    mk_parallelizable ~wait_for_recheck ~options (
       handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
     )
   | ServerProt.Request.REFACTOR { input; line; char; refactor_variant; } ->
@@ -481,8 +489,8 @@ let get_ephemeral_handler genv command =
      * for the current recheck to finish. So even though we could technically make `flow status`
      * parallelizable, we choose to make it nonparallelizable *)
     Handle_nonparallelizable (handle_status ~genv ~client_root)
-  | ServerProt.Request.SUGGEST { input; } ->
-    mk_parallelizable ~options (handle_suggest ~options ~input)
+  | ServerProt.Request.SUGGEST { input; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_suggest ~options ~input)
   | ServerProt.Request.SAVE_STATE { outfile; } ->
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)

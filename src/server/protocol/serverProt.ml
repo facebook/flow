@@ -10,17 +10,18 @@ module Request = struct
     | RENAME of string (* new name *)
 
   type command =
-  | AUTOCOMPLETE of { input: File_input.t; }
+  | AUTOCOMPLETE of { input: File_input.t; wait_for_recheck: bool option; }
   | CHECK_FILE of {
       input: File_input.t;
       verbose: Verbose.t option;
       force: bool;
       include_warnings: bool;
+      wait_for_recheck: bool option;
     }
-  | COVERAGE of { input: File_input.t; force: bool; }
-  | CYCLE of { filename: string; }
-  | DUMP_TYPES of { input: File_input.t; }
-  | FIND_MODULE of { moduleref: string; filename: string; }
+  | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; }
+  | CYCLE of { filename: string; wait_for_recheck: bool option; }
+  | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
+  | FIND_MODULE of { moduleref: string; filename: string; wait_for_recheck: bool option; }
   | FIND_REFS of {
       filename: File_input.t;
       line: int;
@@ -33,12 +34,14 @@ module Request = struct
       filename: File_input.t;
       line: int;
       char: int;
+      wait_for_recheck: bool option;
     }
-  | GET_IMPORTS of { module_names: string list; }
+  | GET_IMPORTS of { module_names: string list; wait_for_recheck: bool option; }
   | GRAPH_DEP_GRAPH of {
       root: string;
       strip_root: bool;
       outfile: string;
+      wait_for_recheck: bool option;
     }
   | INFER_TYPE of {
       input: File_input.t;
@@ -46,6 +49,7 @@ module Request = struct
       char: int;
       verbose: Verbose.t option;
       expand_aliases: bool;
+      wait_for_recheck: bool option;
     }
   | REFACTOR of {
       input: File_input.t;
@@ -55,25 +59,25 @@ module Request = struct
     }
   | SAVE_STATE of { outfile: Path.t; }
   | STATUS of { client_root: Path.t; include_warnings: bool; }
-  | SUGGEST of { input: File_input.t; }
+  | SUGGEST of { input: File_input.t; wait_for_recheck: bool option; }
 
   let string_of_refactor_variant = function
     | RENAME new_name -> Printf.sprintf "rename(%s)" new_name
 
   let to_string = function
-  | AUTOCOMPLETE { input; } ->
+  | AUTOCOMPLETE { input; wait_for_recheck=_; } ->
     Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
-  | CHECK_FILE { input; verbose=_; force=_; include_warnings=_; } ->
+  | CHECK_FILE { input; verbose=_; force=_; include_warnings=_; wait_for_recheck=_; } ->
     Printf.sprintf "check %s" (File_input.filename_of_file_input input)
-  | COVERAGE { input; force=_; } ->
+  | COVERAGE { input; force=_; wait_for_recheck=_; } ->
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)
-  | CYCLE { filename; } ->
+  | CYCLE { filename; wait_for_recheck=_; } ->
       Printf.sprintf "cycle %s" filename
   | GRAPH_DEP_GRAPH _ ->
       Printf.sprintf "dep-graph"
-  | DUMP_TYPES { input; } ->
+  | DUMP_TYPES { input; wait_for_recheck=_; } ->
       Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
-  | FIND_MODULE { moduleref; filename; } ->
+  | FIND_MODULE { moduleref; filename; wait_for_recheck=_; } ->
       Printf.sprintf "find-module %s %s" moduleref filename
   | FIND_REFS { filename; line; char; global; multi_hop; } ->
       Printf.sprintf "find-refs %s:%d:%d:%B:%B"
@@ -81,12 +85,12 @@ module Request = struct
   | FORCE_RECHECK { files; focus; profile=_; } ->
       Printf.sprintf
         "force-recheck %s (focus = %b)" (String.concat " " files) focus
-  | GET_DEF { filename; line; char; } ->
+  | GET_DEF { filename; line; char; wait_for_recheck=_; } ->
       Printf.sprintf "get-def %s:%d:%d"
         (File_input.filename_of_file_input filename) line char
-  | GET_IMPORTS { module_names; } ->
+  | GET_IMPORTS { module_names; wait_for_recheck=_; } ->
       Printf.sprintf "get-imports %s" (String.concat " " module_names)
-  | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; } ->
+  | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; wait_for_recheck=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input input) line char
   | REFACTOR { input; line; char; refactor_variant; } ->

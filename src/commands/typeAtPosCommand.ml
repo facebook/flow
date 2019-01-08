@@ -32,6 +32,7 @@ let spec = {
     |> verbose_flags
     |> from_flag
     |> path_flag
+    |> wait_for_recheck_flag
     |> flag "--expand-json-output" no_arg
         ~doc:"Includes an expanded version of the returned JSON type (implies --json)"
     |> flag "--expand-type-aliases" no_arg
@@ -106,7 +107,7 @@ let handle_error err ~json ~pretty =
     prerr_endline err
   )
 
-let main base_flags option_values json pretty root strip_root verbose path expanded
+let main base_flags option_values json pretty root strip_root verbose path wait_for_recheck expanded
     expand_aliases args () =
   let json = json || pretty || expanded in
   let (file, line, column) = parse_args path args in
@@ -127,6 +128,7 @@ let main base_flags option_values json pretty root strip_root verbose path expan
     char = column;
     verbose;
     expand_aliases;
+    wait_for_recheck;
   } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty

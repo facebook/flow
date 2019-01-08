@@ -309,6 +309,13 @@ let strip_root_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Print paths without the root"
 )
 
+let wait_for_recheck_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--wait-for-recheck" (optional bool)
+      ~doc:("If the server is rechecking, wait for it to complete rather than run sooner using " ^
+            "outdated data")
+)
+
 let path_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--path" (optional string)

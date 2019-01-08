@@ -30,6 +30,7 @@ let spec = {
     |> root_flag
     |> strip_root_flag
     |> from_flag
+    |> wait_for_recheck_flag
     |> flag "--color" no_arg
         ~doc:("Print the file with colors showing which parts have unknown types. " ^
               "Cannot be used with --json or --pretty")
@@ -199,8 +200,8 @@ let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bo
       "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 
 let main
-    base_flags option_values json pretty root strip_root color debug path respect_pragma
-    all filename () =
+    base_flags option_values json pretty root strip_root wait_for_recheck color debug path
+    respect_pragma all filename () =
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
     path filename in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
@@ -229,7 +230,7 @@ let main
   if debug && json
   then raise (CommandSpec.Failed_to_parse ("--debug", "Can't be used with json flags"));
 
-  let request = ServerProt.Request.COVERAGE { input = file; force = all; } in
+  let request = ServerProt.Request.COVERAGE { input = file; force = all; wait_for_recheck; } in
 
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.COVERAGE (Error err) ->

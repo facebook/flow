@@ -33,6 +33,7 @@ let spec = {
     |> strip_root_flag
     |> from_flag
     |> path_flag
+    |> wait_for_recheck_flag
     |> flag "--fail-on-tc-errors" no_arg
         ~doc:"Fail on typechecking errors (similar behavior to \"check\")"
     |> flag "--fail-on-suggest-warnings" no_arg
@@ -99,7 +100,7 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
     with_errors_and_warnings true errors Errors.ErrorSet.empty None @@ fun () ->
     failwith "SuggestCommand: Parsing failed with no errors"
 
-let main base_flags option_values root error_flags strip_root path
+let main base_flags option_values root error_flags strip_root path wait_for_recheck
   fail_on_tc_errors fail_on_suggest_warnings filename () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
@@ -110,7 +111,7 @@ let main base_flags option_values root error_flags strip_root path
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  let request = ServerProt.Request.SUGGEST { input = file; } in
+  let request = ServerProt.Request.SUGGEST { input = file; wait_for_recheck; } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.SUGGEST (Ok result) ->
     handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_warnings result;
