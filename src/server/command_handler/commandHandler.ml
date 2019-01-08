@@ -275,110 +275,291 @@ let save_state ~saved_state_filename ~genv ~env =
     Lwt.return (Ok ())
   )
 
-let run_ephemeral_command_unsafe ~profiling genv (env: ServerEnv.env) command =
+let handle_autocomplete ~options ~fn ~profiling ~env =
+  let%lwt result, json_data = autocomplete ~options ~env ~profiling fn in
+  Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
+
+let handle_check_file ~options ~force ~fn ~profiling ~env =
+  let%lwt response = check_file ~options ~env ~force ~profiling fn in
+  Lwt.return (ServerProt.Response.CHECK_FILE response, None)
+
+let handle_coverage ~options ~force ~fn ~profiling ~env =
+  let%lwt response = coverage ~options ~env ~profiling ~force fn in
+  Lwt.return (ServerProt.Response.COVERAGE response, None)
+
+let handle_cycle ~fn ~profiling:_ ~env =
+  let%lwt response = get_cycle ~env fn in
+  Lwt.return (ServerProt.Response.CYCLE response, None)
+
+let handle_dump_types ~options ~fn ~profiling ~env =
+  let%lwt response = dump_types ~options ~env ~profiling fn in
+  Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
+
+let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_ =
+  let response = find_module ~options ~reader (moduleref, filename) in
+  Lwt.return (ServerProt.Response.FIND_MODULE response, None)
+
+let handle_find_refs ~reader ~genv ~fn ~line ~char ~global ~multi_hop ~profiling ~env =
+  let%lwt env, result, json_data =
+    find_refs ~reader ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
+  Lwt.return (env, ServerProt.Response.FIND_REFS result, json_data)
+
+let handle_force_recheck ~files ~focus ~profile ~profiling =
+  let fileset = SSet.of_list files in
+
+  (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
+   * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
+   * focused *)
+  let push ?callback files = ServerMonitorListenerState.(
+    if focus then push_files_to_force_focused files;
+    push_files_to_recheck ?metadata:None ?callback files (* Only register the callback once *)
+  ) in
+
+  if profile
+  then begin
+    let wait_for_recheck_thread, wakener = Lwt.task () in
+    push ~callback:(fun profiling -> Lwt.wakeup wakener profiling) fileset;
+    let%lwt recheck_profiling = wait_for_recheck_thread in
+    Option.iter recheck_profiling ~f:(fun recheck_profiling ->
+      Profiling_js.merge ~from:recheck_profiling ~into:profiling
+    );
+    Lwt.return (ServerProt.Response.FORCE_RECHECK recheck_profiling, None)
+  end else begin
+    (* If we're not profiling the recheck, then respond immediately *)
+    push fileset;
+    Lwt.return (ServerProt.Response.FORCE_RECHECK None, None)
+  end
+
+let handle_get_def ~reader ~options ~fn ~line ~char ~profiling ~env =
+  let%lwt result, json_data = get_def ~reader ~options ~env ~profiling (fn, line, char) in
+  Lwt.return (ServerProt.Response.GET_DEF result, json_data)
+
+let handle_get_imports ~options ~reader ~module_names ~profiling:_ ~env:_ =
+  let response = get_imports ~options ~reader module_names in
+  Lwt.return (ServerProt.Response.GET_IMPORTS response, None)
+
+
+let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
+  let%lwt response = output_dependencies ~env root strip_root outfile in
+  Lwt.return (ServerProt.Response.GRAPH_DEP_GRAPH response, None)
+
+let handle_infer_type ~options ~fn ~line ~char ~verbose ~expand_aliases ~profiling ~env =
+  let%lwt result, json_data =
+    infer_type ~options ~env ~profiling (fn, line, char, verbose, expand_aliases)
+  in
+  Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
+
+let handle_refactor ~reader ~genv ~file_input ~line ~col ~refactor_variant ~profiling ~env =
+  (* Refactor is another weird command that may mutate the env by doing a bunch of rechecking,
+   * since that's what find-refs does and refactor delegates to find-refs *)
+  let open ServerProt.Response in
+  let env = ref env in
+  let%lwt result =
+    Refactor_js.refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
+  in
+  let env = !env in
+  let result =
+    result
+    |> Core_result.map ~f:(Option.map ~f:(fun refactor_edits -> {refactor_edits}))
+  in
+  Lwt.return (env, REFACTOR (result), None)
+
+let handle_status ~genv ~client_root ~profiling:_ ~env =
+  let status_response, lazy_stats = get_status genv env client_root in
+  Lwt.return (env, ServerProt.Response.STATUS {status_response; lazy_stats}, None)
+
+let handle_suggest ~options ~fn ~profiling ~env =
+  let%lwt result = suggest ~options ~env ~profiling fn in
+  Lwt.return (ServerProt.Response.SUGGEST result, None)
+
+let handle_save_state ~saved_state_filename ~genv ~profiling:_ ~env =
+  let%lwt result = save_state ~saved_state_filename ~genv ~env in
+  Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
+
+
+type command_handler =
+(* A command can be handled immediately if it is super duper fast and doesn't require the env.
+ * These commands will be handled as soon as we read them off the pipe. Almost nothing should ever
+ * be handled immediately *)
+| Handle_immediately of (
+  profiling:Profiling_js.running ->
+  (ServerProt.Response.response * Hh_json.json option) Lwt.t
+)
+(* A command is parallelizable if it passes four conditions
+ *
+ * 1. It is fast. Running it in parallel will block the current recheck, so it needs to be really
+ *    fast.
+ * 2. It doesn't use the workers. Currently we can't deal with the recheck using the workers at the
+ *    same time as a command using the workers
+ * 3. It doesn't return a new env. It really should be just a read-only job
+ * 4. It doesn't mind using slightly out of date data. During a recheck, it will be reading the
+ *    oldified data
+ *)
+| Handle_parallelizable of (
+  profiling:Profiling_js.running ->
+  env:ServerEnv.env ->
+  (ServerProt.Response.response * Hh_json.json option) Lwt.t
+)
+(* A command is nonparallelizable if it can't be handled immediately or parallelized. *)
+| Handle_nonparallelizable of (
+  profiling:Profiling_js.running ->
+  env:ServerEnv.env ->
+  (ServerEnv.env * ServerProt.Response.response * (Hh_json.json option)) Lwt.t
+)
+
+(* This command is parallelizable, but we will treat it as nonparallelizable if we've been told
+ * to wait_for_recheck by the .flowconfig or CLI *)
+let mk_parallelizable ?(wait_for_recheck=false) ~options f =
+  let wait_for_recheck = wait_for_recheck || Options.wait_for_recheck options in
+  if wait_for_recheck
+  then
+    Handle_nonparallelizable (fun ~profiling ~env ->
+      let%lwt response, json_data = f ~profiling ~env in
+      Lwt.return (env, response, json_data)
+    )
+  else
+    Handle_parallelizable f
+
+(* This function is called as soon as we read an ephemeral command from the pipe. It decides whether
+ * the command should be handled immediately or deferred as parallelizable or nonparallelizable.
+ * This function does NOT run any handling code itself. *)
+let get_ephemeral_handler genv command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
   | ServerProt.Request.AUTOCOMPLETE fn ->
-      let%lwt result, json_data = autocomplete ~options ~env ~profiling fn in
-      Lwt.return (env, ServerProt.Response.AUTOCOMPLETE result, json_data)
+    mk_parallelizable ~options (handle_autocomplete ~options ~fn)
   | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
-      let options = { options with Options.
-        opt_verbose = verbose;
-        opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
-      } in
-      let%lwt response = check_file ~options ~env ~force ~profiling fn in
-      Lwt.return (env, ServerProt.Response.CHECK_FILE response, None)
+    let options = { options with Options.
+      opt_verbose = verbose;
+      opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
+    } in
+    mk_parallelizable ~options (handle_check_file ~options ~force ~fn)
   | ServerProt.Request.COVERAGE (fn, force) ->
-      let%lwt response = coverage ~options ~env ~profiling ~force fn in
-      Lwt.return (env, ServerProt.Response.COVERAGE response, None)
+    mk_parallelizable ~options (handle_coverage ~options ~force ~fn)
   | ServerProt.Request.CYCLE fn ->
-      let file_options = Options.file_options options in
-      let fn = Files.filename_from_string ~options:file_options fn in
-      let%lwt response = get_cycle ~env fn in
-      Lwt.return (env, ServerProt.Response.CYCLE response, None)
-  | ServerProt.Request.GRAPH_DEP_GRAPH (root, strip_root, outfile) ->
-      let%lwt response = output_dependencies ~env root strip_root outfile in
-      Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
+    let file_options = Options.file_options options in
+    let fn = Files.filename_from_string ~options:file_options fn in
+    mk_parallelizable ~options (handle_cycle ~fn)
   | ServerProt.Request.DUMP_TYPES (fn) ->
-      let%lwt response = dump_types ~options ~env ~profiling fn in
-      Lwt.return (env, ServerProt.Response.DUMP_TYPES response, None)
+    mk_parallelizable ~options (handle_dump_types ~options ~fn)
   | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
-      let response = find_module ~options ~reader (moduleref, filename) in
-      Lwt.return (env, ServerProt.Response.FIND_MODULE response, None)
+    mk_parallelizable ~options (handle_find_module ~options ~reader ~moduleref ~filename)
   | ServerProt.Request.FIND_REFS (fn, line, char, global, multi_hop) ->
-      let%lwt env, result, json_data =
-        find_refs ~reader ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
-      Lwt.return (env, ServerProt.Response.FIND_REFS result, json_data)
-  | ServerProt.Request.FORCE_RECHECK _ ->
-      failwith "force-recheck cannot be deferred"
+    (* find-refs can take a while and may use MultiWorker. Furthermore, it may do a recheck and
+     * change env. Each of these 3 facts disqualifies find-refs from being parallelizable *)
+    Handle_nonparallelizable (handle_find_refs ~reader ~genv ~fn ~line ~char ~global ~multi_hop)
+  | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
+    Handle_immediately (handle_force_recheck ~files ~focus ~profile)
   | ServerProt.Request.GET_DEF (fn, line, char) ->
-      let%lwt result, json_data = get_def ~reader ~options ~env ~profiling (fn, line, char) in
-      Lwt.return (env, ServerProt.Response.GET_DEF result, json_data)
+    mk_parallelizable ~options (handle_get_def ~reader ~options ~fn ~line ~char)
   | ServerProt.Request.GET_IMPORTS module_names ->
-      let response = get_imports ~options ~reader module_names in
-      Lwt.return (env, ServerProt.Response.GET_IMPORTS response, None)
+    mk_parallelizable ~options (handle_get_imports ~options ~reader ~module_names)
+  | ServerProt.Request.GRAPH_DEP_GRAPH (root, strip_root, outfile) ->
+    mk_parallelizable ~options (handle_graph_dep_graph ~root ~strip_root ~outfile)
   | ServerProt.Request.INFER_TYPE (fn, line, char, verbose, expand_aliases) ->
-      let%lwt result, json_data =
-        infer_type ~options ~env ~profiling (fn, line, char, verbose, expand_aliases)
-      in
-      Lwt.return (env, ServerProt.Response.INFER_TYPE result, json_data)
+    mk_parallelizable ~options (handle_infer_type ~options ~fn ~line ~char ~verbose ~expand_aliases)
   | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
-      (* Refactor is another weird command that may mutate the env by doing a bunch of rechecking,
-       * since that's what find-refs does and refactor delegates to find-refs *)
-      let open ServerProt.Response in
-      let env = ref env in
-      let%lwt result =
-        Refactor_js.refactor ~reader ~genv ~env ~profiling ~file_input ~line ~col ~refactor_variant
-      in
-      let env = !env in
-      let result =
-        result
-        |> Core_result.map ~f:(Option.map ~f:(fun refactor_edits -> {refactor_edits}))
-      in
-      Lwt.return (env, REFACTOR (result), None)
+   (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
+    * parallelizable *)
+    Handle_nonparallelizable (
+      handle_refactor ~reader ~genv ~file_input ~line ~col ~refactor_variant
+    )
   | ServerProt.Request.STATUS (client_root, include_warnings) ->
-      let genv = {genv with
-        options = let open Options in {genv.options with
-          opt_include_warnings = genv.options.opt_include_warnings || include_warnings
-        }
-      } in
-      let status_response, lazy_stats = get_status genv env client_root in
-      Lwt.return (env, ServerProt.Response.STATUS {status_response; lazy_stats}, None)
+    let genv = {genv with
+      options = let open Options in {genv.options with
+        opt_include_warnings = genv.options.opt_include_warnings || include_warnings
+      }
+    } in
+    (* `flow status` is often used by users to get all the current errors. After talking to some
+     * coworkers and users, glevi decided that users would rather that `flow status` always waits
+     * for the current recheck to finish. So even though we could technically make `flow status`
+     * parallelizable, we choose to make it nonparallelizable *)
+    Handle_nonparallelizable (handle_status ~genv ~client_root)
   | ServerProt.Request.SUGGEST fn ->
-      let%lwt result = suggest ~options ~env ~profiling fn in
-      Lwt.return (env, ServerProt.Response.SUGGEST result, None)
+    mk_parallelizable ~options (handle_suggest ~options ~fn)
   | ServerProt.Request.SAVE_STATE out ->
-      let%lwt result = save_state ~saved_state_filename:out ~genv ~env in
-      Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
+    (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
+     * of date data. So save-state is not parallelizable *)
+    Handle_nonparallelizable (handle_save_state ~saved_state_filename:out ~genv)
 
-let handle_ephemeral_deferred_unsafe
-  genv env (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
 
-  Hh_logger.info "Request: %s" (ServerProt.Request.to_string command);
-  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
+(* This is the common code which wraps each command handler. It deals with stuff like logging and
+ * catching exceptions *)
+let wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str arg =
+  try%lwt
+    Hh_logger.info "Request: %s" cmd_str;
+    MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
+    let%lwt ret, profiling, json_data = handler ~genv ~request_id ~workload arg in
+
+    let event = ServerStatus.(Finishing_up {
+      duration = Profiling_js.get_profiling_duration profiling;
+      info = CommandSummary cmd_str}) in
+    MonitorRPC.status_update ~event;
+    FlowEventLogger.ephemeral_command_success
+      ?json_data
+      ~client_context
+      ~profiling;
+    Lwt.return (Ok ret)
+  with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    let exn_str = Exception.to_string exn in
+    Hh_logger.error ~exn "Uncaught exception while handling a request (%s)" cmd_str;
+    FlowEventLogger.ephemeral_command_failure
+      ~client_context
+      ~json_data:(Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ]);
+    MonitorRPC.request_failed ~request_id ~exn_str;
+    Lwt.return (Error ())
+
+(* A few commands need to be handled immediately, as soon as they arrive from the monitor. An
+ * `env` is NOT available, since we don't have the server's full attention *)
+let handle_ephemeral_immediately_unsafe ~genv ~request_id ~workload () =
   let should_print_summary = Options.should_profile genv.options in
-  let%lwt profiling, (env, json_data) =
-    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
-      let rec run_command env =
-        let on_cancel () =
-          Hh_logger.info
-            "Command successfully canceled. Running a recheck before restarting the command";
-          let%lwt recheck_profiling, env' = Rechecker.recheck_loop genv env in
-          List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
-          Hh_logger.info "Now restarting the command";
-          run_command env'
+  let%lwt profiling, (response, json_data) =
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
+      workload ~profiling
+    )
+  in
+
+  MonitorRPC.respond_to_request ~request_id ~response;
+
+  Lwt.return ((), profiling, json_data)
+
+
+let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
+
+let rec handle_parallelizable_ephemeral_unsafe
+    ~client_context ~cmd_str ~genv ~request_id ~workload env =
+  let should_print_summary = Options.should_profile genv.options in
+  let%lwt profiling, json_data =
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
+      (* A parallelizable command, if canceled, just requeues itself. It can't be run again until
+       * a recheck finishes *)
+      let on_cancel () =
+        Hh_logger.info
+          "Command successfully canceled. Requeuing the command for after the next recheck.";
+        let workload =
+          handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
         in
+        ServerMonitorListenerState.defer_parallelizable_workload workload;
+        raise Lwt.Canceled
+      in
+
+      let%lwt response, json_data =
         Rechecker.run_but_cancel_on_file_changes genv env ~on_cancel ~f:(fun () ->
-          run_ephemeral_command_unsafe ~profiling genv env command
+          workload ~profiling ~env
         )
       in
 
-      let%lwt env, response, json_data = run_command env in
-
       MonitorRPC.respond_to_request ~request_id ~response;
 
+      (* It sucks this has to live here. We need a better way to handle post-send logic
+       * TODO - Do we actually need this error? Why do we even send the path? *)
       ServerProt.Response.(match response with
         | STATUS { lazy_stats=_; status_response=DIRECTORY_MISMATCH {server; client}; } ->
             Hh_logger.fatal "Status: Error";
@@ -389,138 +570,89 @@ let handle_ephemeral_deferred_unsafe
             FlowExitStatus.(exit Server_client_directory_mismatch)
         | _ -> ()
       );
+      Lwt.return json_data
+    )
+  in
+  Lwt.return ((), profiling, json_data)
+
+and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
+  try%lwt
+    let%lwt result =
+      wrap_ephemeral_handler (handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str)
+        ~genv ~request_id ~client_context ~workload ~cmd_str env
+    in
+    match result with
+    | Ok ()
+    | Error () -> Lwt.return_unit
+  with Lwt.Canceled ->
+    (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
+    Lwt.return_unit
+
+let handle_nonparallelizable_ephemeral_unsafe ~genv ~request_id ~workload env =
+  let should_print_summary = Options.should_profile genv.options in
+  let%lwt profiling, (env, json_data) =
+    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
+      let rec run_command env =
+        (* If a nonparallelizable command is canceled, we immediately run a recheck and then
+         * immediately re-run the command *)
+        let on_cancel () =
+          Hh_logger.info
+            "Command successfully canceled. Running a recheck before restarting the command";
+          let%lwt recheck_profiling, env = Rechecker.recheck_loop genv env in
+          List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
+          Hh_logger.info "Now restarting the command";
+          run_command env
+        in
+        Rechecker.run_but_cancel_on_file_changes genv (env) ~on_cancel ~f:(fun () ->
+          workload ~profiling ~env
+        )
+      in
+
+      let%lwt env, response, json_data = run_command env in
+
+      MonitorRPC.respond_to_request ~request_id ~response;
+
       Lwt.return (env, json_data)
     end
   in
-  let event = ServerStatus.(Finishing_up {
-    duration = Profiling_js.get_profiling_duration profiling;
-    info = CommandSummary (ServerProt.Request.to_string command)}) in
-  MonitorRPC.status_update ~event;
+
   Lwt.return (env, profiling, json_data)
 
-let wrap_ephemeral_handler handler genv arg (request_id, command) =
-  try%lwt
-    let%lwt ret, profiling, json_data = handler genv arg (request_id, command) in
-    FlowEventLogger.ephemeral_command_success
-      ?json_data
-      ~client_context:command.ServerProt.Request.client_logging_context
-      ~profiling;
-    Lwt.return ret
-  with
-  | Lwt.Canceled as exn ->
-    let exn = Exception.wrap exn in
-    Exception.reraise exn
-  | exn ->
-    let exn = Exception.wrap exn in
-    let exn_str = Exception.to_string exn in
-    Hh_logger.error
-      ~exn
-      "Uncaught exception while handling a request (%s)"
-      (ServerProt.Request.to_string command.ServerProt.Request.command);
-    FlowEventLogger.ephemeral_command_failure
-      ~client_context:command.ServerProt.Request.client_logging_context
-      ~json_data:(Hh_json.JSON_Object [ "exn", Hh_json.JSON_String exn_str ]);
-    MonitorRPC.request_failed ~request_id ~exn_str;
-    Lwt.return arg
-let handle_ephemeral_deferred = wrap_ephemeral_handler handle_ephemeral_deferred_unsafe
-
-let should_handle_immediately { ServerProt.Request.client_logging_context=_; command; } =
-  match command with
-    | ServerProt.Request.FORCE_RECHECK _ ->
-      true
-
-    | ServerProt.Request.AUTOCOMPLETE _
-    | ServerProt.Request.CHECK_FILE _
-    | ServerProt.Request.COVERAGE _
-    | ServerProt.Request.CYCLE _
-    | ServerProt.Request.GRAPH_DEP_GRAPH _
-    | ServerProt.Request.DUMP_TYPES _
-    | ServerProt.Request.FIND_MODULE _
-    | ServerProt.Request.FIND_REFS _
-    | ServerProt.Request.GET_DEF _
-    | ServerProt.Request.GET_IMPORTS _
-    | ServerProt.Request.INFER_TYPE _
-    | ServerProt.Request.REFACTOR _
-    | ServerProt.Request.STATUS _
-    | ServerProt.Request.SUGGEST _
-    | ServerProt.Request.SAVE_STATE _ ->
-      false
-
-(* A few commands need to be handled immediately, as soon as they arrive from the monitor. An
- * `env` is NOT available, since we don't have the server's full attention *)
-let handle_ephemeral_immediately_unsafe
-    genv () (request_id, { ServerProt.Request.client_logging_context=_; command; }) =
-  let respond msg =
-    MonitorRPC.respond_to_request ~request_id ~response:msg
-
+let handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
+  let%lwt result =
+    wrap_ephemeral_handler handle_nonparallelizable_ephemeral_unsafe
+      ~genv ~request_id ~client_context ~workload ~cmd_str env
   in
-  Hh_logger.info "Request: %s" (ServerProt.Request.to_string command);
-  MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
-  let should_print_summary = Options.should_profile genv.options in
-  let%lwt profiling, json_data =
-    Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
-      match command with
-      | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
-          let fileset = SSet.of_list files in
+  match result with
+  | Ok env -> Lwt.return env
+  | Error () -> Lwt.return env
 
-          (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
-           * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
-           * focused *)
-          let push ?callback files = ServerMonitorListenerState.(
-            if focus then push_files_to_force_focused files;
-            push_files_to_recheck ?metadata:None ?callback files (* Only register the callback once *)
-          ) in
-
-          if profile
-          then begin
-            let wait_for_recheck_thread, wakener = Lwt.task () in
-            push ~callback:(fun profiling -> Lwt.wakeup wakener profiling) fileset;
-            let%lwt recheck_profiling = wait_for_recheck_thread in
-            respond (ServerProt.Response.FORCE_RECHECK recheck_profiling);
-            Option.iter recheck_profiling ~f:(fun recheck_profiling ->
-              Profiling_js.merge ~from:recheck_profiling ~into:profiling
-            );
-            Lwt.return None
-          end else begin
-            (* If we're not profiling the recheck, then respond immediately *)
-            respond (ServerProt.Response.FORCE_RECHECK None);
-            push fileset;
-            Lwt.return None
-          end
-      | ServerProt.Request.AUTOCOMPLETE _
-      | ServerProt.Request.CHECK_FILE _
-      | ServerProt.Request.COVERAGE _
-      | ServerProt.Request.CYCLE _
-      | ServerProt.Request.GRAPH_DEP_GRAPH _
-      | ServerProt.Request.DUMP_TYPES _
-      | ServerProt.Request.FIND_MODULE _
-      | ServerProt.Request.FIND_REFS _
-      | ServerProt.Request.GET_DEF _
-      | ServerProt.Request.GET_IMPORTS _
-      | ServerProt.Request.INFER_TYPE _
-      | ServerProt.Request.REFACTOR _
-      | ServerProt.Request.STATUS _
-      | ServerProt.Request.SUGGEST _
-      | ServerProt.Request.SAVE_STATE _ ->
-          failwith (spf "Command %s must be deferred" (ServerProt.Request.to_string command))
-    end
-  in
-  let event = ServerStatus.(Finishing_up {
-    duration = Profiling_js.get_profiling_duration profiling;
-    info = CommandSummary (ServerProt.Request.to_string command)}) in
-  MonitorRPC.status_update ~event;
-  Lwt.return ((), profiling, json_data)
-
-let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
-
-let enqueue_or_handle_ephemeral genv (request_id, command) =
-  if should_handle_immediately command
-  then handle_ephemeral_immediately genv () (request_id, command)
-  else begin
-    ServerMonitorListenerState.push_new_workload
-      (fun env -> handle_ephemeral_deferred genv env (request_id, command));
+let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
+  let { ServerProt.Request.
+    client_logging_context=client_context;
+    command;
+  } = command_with_context in
+  let cmd_str = ServerProt.Request.to_string command in
+  match get_ephemeral_handler genv command with
+  | Handle_immediately workload ->
+    let%lwt result =
+      handle_ephemeral_immediately ~genv ~request_id ~client_context ~workload ~cmd_str ()
+    in
+    (match result with
+    | Ok ()
+    | Error () -> Lwt.return_unit)
+  | Handle_parallelizable workload ->
+    let workload =
+      handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
+    in
+    ServerMonitorListenerState.push_new_parallelizable_workload workload;
     Lwt.return_unit
-  end
+  | Handle_nonparallelizable workload ->
+    let workload =
+      handle_nonparallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
+    in
+    ServerMonitorListenerState.push_new_workload workload;
+    Lwt.return_unit
 
 let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
