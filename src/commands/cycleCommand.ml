@@ -39,7 +39,7 @@ let main base_flags option_values root strip_root file () =
     else f
   in
   (* connect to server *)
-  let request = ServerProt.Request.CYCLE file in
+  let request = ServerProt.Request.CYCLE { filename = file; } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CYCLE (Error msg) ->
     FlowExitStatus.(exit ~msg Unknown_error)

@@ -10,74 +10,97 @@ module Request = struct
     | RENAME of string (* new name *)
 
   type command =
-  | AUTOCOMPLETE of File_input.t
-  | CHECK_FILE of
-      File_input.t *
-      Verbose.t option *
-      bool * (* force *)
-      bool (* include_warnings *)
-  | COVERAGE of File_input.t * bool (* force *)
-  | CYCLE of string
-  | GRAPH_DEP_GRAPH of string (* root *) * bool (* strip root *) * string (* outfile *)
-  | DUMP_TYPES of File_input.t
-  | FIND_MODULE of string * string
-  | FIND_REFS of File_input.t * int * int * bool * bool (* filename, line, char, global, multi_hop *)
-  | GET_DEF of File_input.t * int * int (* filename, line, char *)
-  | GET_IMPORTS of string list
-  | INFER_TYPE of
-      File_input.t * (* filename|content *)
-      int * (* line *)
-      int * (* char *)
-      Verbose.t option *
-      bool (* expand type aliases *)
-  | REFACTOR of File_input.t * int * int * refactor_variant (* filename, line, char, refactor variant *)
-  | STATUS of Path.t * bool (* include_warnings *)
-  | FORCE_RECHECK of { files: string list; focus:bool; profile:bool }
-  | SUGGEST of File_input.t
-  | SAVE_STATE of Path.t
+  | AUTOCOMPLETE of { input: File_input.t; }
+  | CHECK_FILE of {
+      input: File_input.t;
+      verbose: Verbose.t option;
+      force: bool;
+      include_warnings: bool;
+    }
+  | COVERAGE of { input: File_input.t; force: bool; }
+  | CYCLE of { filename: string; }
+  | DUMP_TYPES of { input: File_input.t; }
+  | FIND_MODULE of { moduleref: string; filename: string; }
+  | FIND_REFS of {
+      filename: File_input.t;
+      line: int;
+      char: int;
+      global: bool;
+      multi_hop: bool;
+    }
+  | FORCE_RECHECK of { files: string list; focus: bool; profile: bool; }
+  | GET_DEF of {
+      filename: File_input.t;
+      line: int;
+      char: int;
+    }
+  | GET_IMPORTS of { module_names: string list; }
+  | GRAPH_DEP_GRAPH of {
+      root: string;
+      strip_root: bool;
+      outfile: string;
+    }
+  | INFER_TYPE of {
+      input: File_input.t;
+      line: int;
+      char: int;
+      verbose: Verbose.t option;
+      expand_aliases: bool;
+    }
+  | REFACTOR of {
+      input: File_input.t;
+      line: int;
+      char: int;
+      refactor_variant: refactor_variant;
+    }
+  | SAVE_STATE of { outfile: Path.t; }
+  | STATUS of { client_root: Path.t; include_warnings: bool; }
+  | SUGGEST of { input: File_input.t; }
 
   let string_of_refactor_variant = function
     | RENAME new_name -> Printf.sprintf "rename(%s)" new_name
 
   let to_string = function
-  | AUTOCOMPLETE fn ->
-    Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input fn)
-  | CHECK_FILE (fn, _, _, _) ->
-    Printf.sprintf "check %s" (File_input.filename_of_file_input fn)
-  | COVERAGE (fn, _) ->
-      Printf.sprintf "coverage %s" (File_input.filename_of_file_input fn)
-  | CYCLE fn ->
-      Printf.sprintf "cycle %s" fn
+  | AUTOCOMPLETE { input; } ->
+    Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
+  | CHECK_FILE { input; verbose=_; force=_; include_warnings=_; } ->
+    Printf.sprintf "check %s" (File_input.filename_of_file_input input)
+  | COVERAGE { input; force=_; } ->
+      Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)
+  | CYCLE { filename; } ->
+      Printf.sprintf "cycle %s" filename
   | GRAPH_DEP_GRAPH _ ->
       Printf.sprintf "dep-graph"
-  | DUMP_TYPES (fn) ->
-      Printf.sprintf "dump-types %s" (File_input.filename_of_file_input fn)
-  | FIND_MODULE (moduleref, filename) ->
+  | DUMP_TYPES { input; } ->
+      Printf.sprintf "dump-types %s" (File_input.filename_of_file_input input)
+  | FIND_MODULE { moduleref; filename; } ->
       Printf.sprintf "find-module %s %s" moduleref filename
-  | FIND_REFS (fn, line, char, global, multi_hop) ->
-      Printf.sprintf "find-refs %s:%d:%d:%B:%B" (File_input.filename_of_file_input fn) line char global multi_hop
-  | FORCE_RECHECK {files; focus; profile=_} ->
+  | FIND_REFS { filename; line; char; global; multi_hop; } ->
+      Printf.sprintf "find-refs %s:%d:%d:%B:%B"
+        (File_input.filename_of_file_input filename) line char global multi_hop
+  | FORCE_RECHECK { files; focus; profile=_; } ->
       Printf.sprintf
         "force-recheck %s (focus = %b)" (String.concat " " files) focus
-  | GET_DEF (fn, line, char) ->
+  | GET_DEF { filename; line; char; } ->
       Printf.sprintf "get-def %s:%d:%d"
-        (File_input.filename_of_file_input fn) line char
-  | GET_IMPORTS module_names ->
+        (File_input.filename_of_file_input filename) line char
+  | GET_IMPORTS { module_names; } ->
       Printf.sprintf "get-imports %s" (String.concat " " module_names)
-  | INFER_TYPE (fn, line, char, _, _) ->
+  | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
-        (File_input.filename_of_file_input fn) line char
-  | REFACTOR (fn, line, char, kind) ->
+        (File_input.filename_of_file_input input) line char
+  | REFACTOR { input; line; char; refactor_variant; } ->
       Printf.sprintf "refactor %s:%d:%d:%s"
-        (File_input.filename_of_file_input fn)
+        (File_input.filename_of_file_input input)
         line
         char
-        (string_of_refactor_variant kind)
-  | STATUS (_, _) ->
+        (string_of_refactor_variant refactor_variant)
+  | STATUS { client_root=_; include_warnings=_; } ->
       "status"
-  | SUGGEST (_) ->
+  | SUGGEST _ ->
       "suggest"
-  | SAVE_STATE out -> Printf.sprintf "save-state %s" (Path.to_string out)
+  | SAVE_STATE { outfile; } ->
+      Printf.sprintf "save-state %s" (Path.to_string outfile)
 
   type command_with_context = {
     client_logging_context: FlowEventLogger.logging_context;

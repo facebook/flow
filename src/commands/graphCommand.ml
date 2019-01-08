@@ -45,7 +45,11 @@ let depgraph_subcommand =
     (* Create the outfile if it doesn't already exist *)
     let outpath = Files.imaginary_realpath outfile |> Path.make |> Path.to_string in
     (* connect to server *)
-    let request = ServerProt.Request.GRAPH_DEP_GRAPH (Path.to_string root, strip_root, outpath) in
+    let request = ServerProt.Request.GRAPH_DEP_GRAPH {
+      root = Path.to_string root;
+      strip_root;
+      outfile = outpath;
+    } in
     match connect_and_make_request flowconfig_name option_values root request with
     | ServerProt.Response.GRAPH_DEP_GRAPH (Error msg) ->
       FlowExitStatus.(exit ~msg Unknown_error)

@@ -121,8 +121,13 @@ let main base_flags option_values json pretty root strip_root verbose path expan
   if not json && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
-  let request = ServerProt.Request.INFER_TYPE
-    (file, line, column, verbose, expand_aliases) in
+  let request = ServerProt.Request.INFER_TYPE {
+    input = file;
+    line;
+    char = column;
+    verbose;
+    expand_aliases;
+  } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
   | ServerProt.Response.INFER_TYPE (Ok resp) ->

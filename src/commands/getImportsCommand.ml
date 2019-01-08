@@ -37,7 +37,7 @@ let main base_flags option_values json pretty root strip_root modules () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name root in
 
-  let request = ServerProt.Request.GET_IMPORTS modules in
+  let request = ServerProt.Request.GET_IMPORTS { module_names = modules; } in
   let (requirements_map, non_flow) = match connect_and_make_request flowconfig_name option_values
     root request with
   | ServerProt.Response.GET_IMPORTS response -> response

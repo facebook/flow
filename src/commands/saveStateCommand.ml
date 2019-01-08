@@ -40,7 +40,7 @@ let main base_flags option_values root out () =
   let out_str = Path.to_string out in
   Printf.printf "Asking server to create a saved-state file at `%s`\n%!" out_str;
 
-  let request = ServerProt.Request.SAVE_STATE out in
+  let request = ServerProt.Request.SAVE_STATE { outfile = out; } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.SAVE_STATE (Error err) ->
     Printf.printf "Failed to create saved-state file `%s`:\n%s\n%!" out_str err

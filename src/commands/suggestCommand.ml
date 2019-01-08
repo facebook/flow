@@ -110,7 +110,7 @@ let main base_flags option_values root error_flags strip_root path
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  let request = ServerProt.Request.SUGGEST file in
+  let request = ServerProt.Request.SUGGEST { input = file; } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.SUGGEST (Ok result) ->
     handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_warnings result;

@@ -66,7 +66,7 @@ let main base_flags option_values json pretty root strip_root path args () =
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.Request.GET_DEF (file, line, column) in
+  let request = ServerProt.Request.GET_DEF { filename = file; line; char = column; } in
 
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.GET_DEF (Ok loc) ->

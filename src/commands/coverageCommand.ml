@@ -229,7 +229,7 @@ let main
   if debug && json
   then raise (CommandSpec.Failed_to_parse ("--debug", "Can't be used with json flags"));
 
-  let request = ServerProt.Request.COVERAGE (file, all) in
+  let request = ServerProt.Request.COVERAGE { input = file; force = all; } in
 
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.COVERAGE (Error err) ->

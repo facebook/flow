@@ -89,7 +89,7 @@ let main base_flags option_values json pretty root strip_root path filename () =
 
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.Request.DUMP_TYPES file in
+  let request = ServerProt.Request.DUMP_TYPES { input = file; } in
 
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.DUMP_TYPES (Error err) ->

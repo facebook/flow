@@ -108,7 +108,12 @@ let main base_flags option_values json pretty root strip_root path rename args (
     | None -> usage "The kind of refactor (e.g. rename) must be specified with a flag"
   in
 
-  let request = ServerProt.Request.REFACTOR (file, line, column, refactor_variant) in
+  let request = ServerProt.Request.REFACTOR {
+    input = file;
+    line;
+    char = column;
+    refactor_variant;
+  } in
   (* command result will be a position structure with full file path *)
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.REFACTOR (Ok result) ->

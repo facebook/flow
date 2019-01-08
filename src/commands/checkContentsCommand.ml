@@ -69,7 +69,12 @@ let main base_flags option_values json pretty json_version root error_flags stri
 
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-  let request = ServerProt.Request.CHECK_FILE (file, verbose, all, include_warnings) in
+  let request = ServerProt.Request.CHECK_FILE {
+    input = file;
+    verbose;
+    force = all;
+    include_warnings;
+  } in
   let response = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CHECK_FILE response -> response
   | response -> failwith_bad_response ~request ~response

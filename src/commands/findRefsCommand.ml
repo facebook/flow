@@ -95,7 +95,13 @@ let main base_flags option_values json pretty root strip_root path global multi_
   ) in
   let strip_root = if strip_root then Some root else None in
 
-  let request = ServerProt.Request.FIND_REFS (file, line, column, global, multi_hop) in
+  let request = ServerProt.Request.FIND_REFS {
+    filename = file;
+    line;
+    char = column;
+    global;
+    multi_hop;
+  } in
   (* command result will be a position structure with full file path *)
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.FIND_REFS (Ok result) ->

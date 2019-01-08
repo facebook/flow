@@ -104,7 +104,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let name = "flow" in
 
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
-    let request = ServerProt.Request.STATUS (args.root, include_warnings) in
+    let request = ServerProt.Request.STATUS { client_root = args.root; include_warnings; } in
     let response, lazy_stats = match connect_and_make_request flowconfig_name connect_flags
       args.root request with
     | ServerProt.Response.STATUS {status_response; lazy_stats} -> status_response, lazy_stats

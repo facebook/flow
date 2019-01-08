@@ -275,33 +275,33 @@ let save_state ~saved_state_filename ~genv ~env =
     Lwt.return (Ok ())
   )
 
-let handle_autocomplete ~options ~fn ~profiling ~env =
-  let%lwt result, json_data = autocomplete ~options ~env ~profiling fn in
+let handle_autocomplete ~options ~input ~profiling ~env =
+  let%lwt result, json_data = autocomplete ~options ~env ~profiling input in
   Lwt.return (ServerProt.Response.AUTOCOMPLETE result, json_data)
 
-let handle_check_file ~options ~force ~fn ~profiling ~env =
-  let%lwt response = check_file ~options ~env ~force ~profiling fn in
+let handle_check_file ~options ~force ~input ~profiling ~env =
+  let%lwt response = check_file ~options ~env ~force ~profiling input in
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
 
-let handle_coverage ~options ~force ~fn ~profiling ~env =
-  let%lwt response = coverage ~options ~env ~profiling ~force fn in
+let handle_coverage ~options ~force ~input ~profiling ~env =
+  let%lwt response = coverage ~options ~env ~profiling ~force input in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
 let handle_cycle ~fn ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn in
   Lwt.return (ServerProt.Response.CYCLE response, None)
 
-let handle_dump_types ~options ~fn ~profiling ~env =
-  let%lwt response = dump_types ~options ~env ~profiling fn in
+let handle_dump_types ~options ~input ~profiling ~env =
+  let%lwt response = dump_types ~options ~env ~profiling input in
   Lwt.return (ServerProt.Response.DUMP_TYPES response, None)
 
 let handle_find_module ~options ~reader ~moduleref ~filename ~profiling:_ ~env:_ =
   let response = find_module ~options ~reader (moduleref, filename) in
   Lwt.return (ServerProt.Response.FIND_MODULE response, None)
 
-let handle_find_refs ~reader ~genv ~fn ~line ~char ~global ~multi_hop ~profiling ~env =
+let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~profiling ~env =
   let%lwt env, result, json_data =
-    find_refs ~reader ~genv ~env ~profiling (fn, line, char, global, multi_hop) in
+    find_refs ~reader ~genv ~env ~profiling (filename, line, char, global, multi_hop) in
   Lwt.return (env, ServerProt.Response.FIND_REFS result, json_data)
 
 let handle_force_recheck ~files ~focus ~profile ~profiling =
@@ -330,8 +330,8 @@ let handle_force_recheck ~files ~focus ~profile ~profiling =
     Lwt.return (ServerProt.Response.FORCE_RECHECK None, None)
   end
 
-let handle_get_def ~reader ~options ~fn ~line ~char ~profiling ~env =
-  let%lwt result, json_data = get_def ~reader ~options ~env ~profiling (fn, line, char) in
+let handle_get_def ~reader ~options ~filename ~line ~char ~profiling ~env =
+  let%lwt result, json_data = get_def ~reader ~options ~env ~profiling (filename, line, char) in
   Lwt.return (ServerProt.Response.GET_DEF result, json_data)
 
 let handle_get_imports ~options ~reader ~module_names ~profiling:_ ~env:_ =
@@ -343,13 +343,14 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
   let%lwt response = output_dependencies ~env root strip_root outfile in
   Lwt.return (ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
-let handle_infer_type ~options ~fn ~line ~char ~verbose ~expand_aliases ~profiling ~env =
+let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~profiling ~env =
   let%lwt result, json_data =
-    infer_type ~options ~env ~profiling (fn, line, char, verbose, expand_aliases)
+    infer_type ~options ~env ~profiling (input, line, char, verbose, expand_aliases)
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
-let handle_refactor ~reader ~genv ~file_input ~line ~col ~refactor_variant ~profiling ~env =
+let handle_refactor
+    ~reader ~genv ~input:file_input ~line ~char:col ~refactor_variant ~profiling ~env =
   (* Refactor is another weird command that may mutate the env by doing a bunch of rechecking,
    * since that's what find-refs does and refactor delegates to find-refs *)
   let open ServerProt.Response in
@@ -368,8 +369,8 @@ let handle_status ~genv ~client_root ~profiling:_ ~env =
   let status_response, lazy_stats = get_status genv env client_root in
   Lwt.return (env, ServerProt.Response.STATUS {status_response; lazy_stats}, None)
 
-let handle_suggest ~options ~fn ~profiling ~env =
-  let%lwt result = suggest ~options ~env ~profiling fn in
+let handle_suggest ~options ~input ~profiling ~env =
+  let%lwt result = suggest ~options ~env ~profiling input in
   Lwt.return (ServerProt.Response.SUGGEST result, None)
 
 let handle_save_state ~saved_state_filename ~genv ~profiling:_ ~env =
@@ -427,45 +428,49 @@ let get_ephemeral_handler genv command =
   let options = genv.options in
   let reader = State_reader.create () in
   match command with
-  | ServerProt.Request.AUTOCOMPLETE fn ->
-    mk_parallelizable ~options (handle_autocomplete ~options ~fn)
-  | ServerProt.Request.CHECK_FILE (fn, verbose, force, include_warnings) ->
+  | ServerProt.Request.AUTOCOMPLETE { input; } ->
+    mk_parallelizable ~options (handle_autocomplete ~options ~input)
+  | ServerProt.Request.CHECK_FILE { input; verbose; force; include_warnings; } ->
     let options = { options with Options.
       opt_verbose = verbose;
       opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
     } in
-    mk_parallelizable ~options (handle_check_file ~options ~force ~fn)
-  | ServerProt.Request.COVERAGE (fn, force) ->
-    mk_parallelizable ~options (handle_coverage ~options ~force ~fn)
-  | ServerProt.Request.CYCLE fn ->
+    mk_parallelizable ~options (handle_check_file ~options ~force ~input)
+  | ServerProt.Request.COVERAGE { input; force; } ->
+    mk_parallelizable ~options (handle_coverage ~options ~force ~input)
+  | ServerProt.Request.CYCLE { filename; } ->
     let file_options = Options.file_options options in
-    let fn = Files.filename_from_string ~options:file_options fn in
+    let fn = Files.filename_from_string ~options:file_options filename in
     mk_parallelizable ~options (handle_cycle ~fn)
-  | ServerProt.Request.DUMP_TYPES (fn) ->
-    mk_parallelizable ~options (handle_dump_types ~options ~fn)
-  | ServerProt.Request.FIND_MODULE (moduleref, filename) ->
+  | ServerProt.Request.DUMP_TYPES { input; } ->
+    mk_parallelizable ~options (handle_dump_types ~options ~input)
+  | ServerProt.Request.FIND_MODULE { moduleref; filename; } ->
     mk_parallelizable ~options (handle_find_module ~options ~reader ~moduleref ~filename)
-  | ServerProt.Request.FIND_REFS (fn, line, char, global, multi_hop) ->
+  | ServerProt.Request.FIND_REFS { filename; line; char; global; multi_hop; } ->
     (* find-refs can take a while and may use MultiWorker. Furthermore, it may do a recheck and
      * change env. Each of these 3 facts disqualifies find-refs from being parallelizable *)
-    Handle_nonparallelizable (handle_find_refs ~reader ~genv ~fn ~line ~char ~global ~multi_hop)
+    Handle_nonparallelizable (
+      handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop
+    )
   | ServerProt.Request.FORCE_RECHECK { files; focus; profile; } ->
     Handle_immediately (handle_force_recheck ~files ~focus ~profile)
-  | ServerProt.Request.GET_DEF (fn, line, char) ->
-    mk_parallelizable ~options (handle_get_def ~reader ~options ~fn ~line ~char)
-  | ServerProt.Request.GET_IMPORTS module_names ->
+  | ServerProt.Request.GET_DEF { filename; line; char; } ->
+    mk_parallelizable ~options (handle_get_def ~reader ~options ~filename ~line ~char)
+  | ServerProt.Request.GET_IMPORTS { module_names; } ->
     mk_parallelizable ~options (handle_get_imports ~options ~reader ~module_names)
-  | ServerProt.Request.GRAPH_DEP_GRAPH (root, strip_root, outfile) ->
+  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; } ->
     mk_parallelizable ~options (handle_graph_dep_graph ~root ~strip_root ~outfile)
-  | ServerProt.Request.INFER_TYPE (fn, line, char, verbose, expand_aliases) ->
-    mk_parallelizable ~options (handle_infer_type ~options ~fn ~line ~char ~verbose ~expand_aliases)
-  | ServerProt.Request.REFACTOR (file_input, line, col, refactor_variant) ->
+  | ServerProt.Request.INFER_TYPE { input; line; char; verbose; expand_aliases; } ->
+    mk_parallelizable ~options (
+      handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
+    )
+  | ServerProt.Request.REFACTOR { input; line; char; refactor_variant; } ->
    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
     * parallelizable *)
     Handle_nonparallelizable (
-      handle_refactor ~reader ~genv ~file_input ~line ~col ~refactor_variant
+      handle_refactor ~reader ~genv ~input ~line ~char ~refactor_variant
     )
-  | ServerProt.Request.STATUS (client_root, include_warnings) ->
+  | ServerProt.Request.STATUS { client_root; include_warnings; } ->
     let genv = {genv with
       options = let open Options in {genv.options with
         opt_include_warnings = genv.options.opt_include_warnings || include_warnings
@@ -476,12 +481,12 @@ let get_ephemeral_handler genv command =
      * for the current recheck to finish. So even though we could technically make `flow status`
      * parallelizable, we choose to make it nonparallelizable *)
     Handle_nonparallelizable (handle_status ~genv ~client_root)
-  | ServerProt.Request.SUGGEST fn ->
-    mk_parallelizable ~options (handle_suggest ~options ~fn)
-  | ServerProt.Request.SAVE_STATE out ->
+  | ServerProt.Request.SUGGEST { input; } ->
+    mk_parallelizable ~options (handle_suggest ~options ~input)
+  | ServerProt.Request.SAVE_STATE { outfile; } ->
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)
-    Handle_nonparallelizable (handle_save_state ~saved_state_filename:out ~genv)
+    Handle_nonparallelizable (handle_save_state ~saved_state_filename:outfile ~genv)
 
 
 (* This is the common code which wraps each command handler. It deals with stuff like logging and

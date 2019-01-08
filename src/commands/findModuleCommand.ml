@@ -40,7 +40,7 @@ let main base_flags option_values json pretty root strip_root moduleref filename
     match root with Some root -> Some root | None -> Some filename
   ) in
 
-  let request = ServerProt.Request.FIND_MODULE (moduleref, filename) in
+  let request = ServerProt.Request.FIND_MODULE { moduleref; filename; } in
 
   let result = match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.FIND_MODULE (
