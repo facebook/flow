@@ -133,6 +133,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
+      # https://github.com/Homebrew/brew/issues/5513
+      - run:
+          name: Fix homebrew python
+          command: brew update
       # https://github.com/Homebrew/homebrew-core/issues/26358
       - run:
           name: Fix homebrew python
