@@ -97,7 +97,7 @@ let load_per_file_time ~options =
   match result with
   | Result.Ok (per_file_time, last_estimates) -> Lwt.return (per_file_time, last_estimates)
   | Result.Error reason -> (
-    Hh_logger.error "Failed to load recheck stats from %S. Reason: %S" file reason;
+    Hh_logger.info "Failed to load recheck stats from %S. Reason: %S" file reason;
     Lwt.return (per_file_time_guess, None)
   )
 
