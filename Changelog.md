@@ -1,3 +1,23 @@
+## 0.90.0
+
+Likely to cause new Flow errors:
+* Removed unsafe rule allowing Date instances to be used as a number
+* Changed $Shape<> types to reject null and void as subtypes
+* Removed unsafe refinement from mixed to a function type using typeof
+
+Pull Requests:
+* #7290 Add support for Path2D constructor arguments (thanks @zpao!)
+* #7221 use package that works with 7.x in babel doc (thanks @rob2d!)
+* #7231 Improve type of 'mkdir' and 'mkdirSync' (thanks @mrtnzlml!)
+* #7278 fix: update toc links in hoc pages (thanks @evenchange4!)
+
+Notable bug fixes:
+* Fixed issue where errors involving $Shape<> types were positioned poorly
+
+Parser:
+* Fixed decoding of html entities at beginning of JSX children
+* Fixed offset calculation in estree output to account for multibyte characters
+
 ### 0.89.0
 
 Likely to cause new Flow errors:
