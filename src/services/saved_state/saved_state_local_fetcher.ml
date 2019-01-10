@@ -1,10 +1,8 @@
 (**
  * Copyright (c) Facebook, Inc. and its affiliates.
- * All rights reserved.
  *
  * This source code is licensed under the MIT license found in the
- * LICENSE file in the "hack" directory of this source tree.
- *
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This saved state fetcher is intended to be used mainly by tests. It assumes that there are 2

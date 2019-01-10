@@ -27,7 +27,7 @@
    changed meaningfully.
 
    Finally, these structures may be huge, so we instead compare their digests,
-   tolerating improbable collisions (cf. SharedMem).
+   tolerating improbable collisions (cf. SharedMem_js).
 *)
 
 (* NOTE: it's critical that these are all constant constructors, which are
