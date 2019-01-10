@@ -26,6 +26,7 @@ val phys_uniq : 'a list -> 'a list
 val ident_map : ('a -> 'a) -> 'a list -> 'a list
 val ident_mapi : (int -> 'a -> 'a) -> 'a list -> 'a list
 val ident_map_multiple : ('a -> 'a list) -> 'a list -> 'a list
+val ident_filter : ('a -> bool) -> 'a list -> 'a list
 val combine3 : 'a list * 'b list * 'c list -> ('a * 'b * 'c) list
 val split3 : ('a * 'b * 'c) list -> 'a list * 'b list * 'c list
 val zipi : 'a list -> 'b list -> (int * 'a * 'b) list

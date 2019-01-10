@@ -166,6 +166,13 @@ let ident_map_multiple f lst =
   ) ([], false) lst in
   if changed then List.rev rev_lst else lst
 
+(** performs a filter, but returns the original list if there is no change **)
+let ident_filter f lst =
+  let rev_lst, changed = List.fold_left (fun (lst', changed) item ->
+    if f item then item::lst', changed else lst', true
+  ) ([], false) lst in
+  if changed then List.rev rev_lst else lst
+
 let rec combine3 = function
   | ([], [], []) -> []
   | (a1::l1, a2::l2, a3::l3) -> (a1, a2, a3) :: combine3 (l1, l2, l3)
