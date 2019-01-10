@@ -800,21 +800,28 @@ let get_lines ~start ~len content =
   in
   loop ~start ~len ~acc:[] ~pos:0 content
 
+let read_file filename =
+  if Filename.is_relative filename then failwith
+    (Utils_js.spf "Expected absolute location, got %s" filename);
+  try
+    Some (Sys_utils.cat filename)
+  with Sys_error _ ->
+    None
+
 let read_lines_in_file loc filename stdin_file =
   match filename with
   | None ->
       None
   | Some filename ->
-      try begin
-        let content = match stdin_file with
-        | Some (stdin_filename, content)
-          when Path.to_string stdin_filename = filename ->
-            content
-        | _ ->
-          if Filename.is_relative filename then failwith
-            (Utils_js.spf "Expected absolute location, got %s" filename);
-          Sys_utils.cat filename
-        in
+      let content_opt = match stdin_file with
+      | Some (stdin_filename, content) when Path.to_string stdin_filename = filename ->
+        Some content
+      | _ ->
+        read_file filename
+      in
+      match content_opt with
+      | None -> None
+      | Some content ->
         try
           let open Loc in
           let lines = get_lines
@@ -825,7 +832,6 @@ let read_lines_in_file loc filename stdin_file =
           | [] -> None
           | first::rest -> Some (first, rest)
         with Invalid_argument _ -> None
-      end with Sys_error _ -> None
 
 let file_of_source source =
   match source with
