@@ -2511,7 +2511,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* If the ids are equal, we use flow_type_args to make sure that the type arguments of each
      * are compatible with each other. If there are no type args, this doesn't do anything *)
     | OpaqueT (lreason, {opaque_id = id1; opaque_type_args = ltargs; _}),
-      UseT (use_op, OpaqueT (ureason, {opaque_id = id2; opaque_type_args = utargs; _})) when id1 = id2 ->
+      UseT (use_op, OpaqueT (ureason, {opaque_id = id2; opaque_type_args = utargs; _}))
+      when ALoc.equal id1 id2 ->
         flow_type_args cx trace ~use_op lreason ureason ltargs utargs
 
     (* Repositioning should happen before opaque types are considered so that we can
@@ -4459,7 +4460,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (reason, InstanceT (_, super, implements, instance)),
       ExtendsUseT (use_op, reason_op, try_ts_on_failure, l,
         (DefT (_, InstanceT (_, _, _, instance_super)) as u)) ->
-      if instance.class_id = instance_super.class_id
+      if ALoc.equal instance.class_id instance_super.class_id
       then begin
           let { type_args = tmap1; _ } = instance in
           let { type_args = tmap2; _ } = instance_super in
@@ -9323,7 +9324,7 @@ and instanceof_test cx trace result = function
     (InternalT (ExtendsT (_, c, DefT (_, InstanceT (_, _, _, instance_a)))) as right)
     -> (* TODO: intersection *)
 
-    if instance_a.class_id = instance_c.class_id
+    if ALoc.equal instance_a.class_id instance_c.class_id
     then rec_flow_t cx trace (c, result)
     else
       (** Recursively check whether super(C) extends A, with enough context. **)
@@ -9376,7 +9377,7 @@ and instanceof_test cx trace result = function
     (InternalT (ExtendsT(_, _, DefT (_, InstanceT (_, _, _, instance_a)))) as right)
     ->
 
-    if instance_a.class_id = instance_c.class_id
+    if ALoc.equal instance_a.class_id instance_c.class_id
     then ()
     else
       let u = PredicateT(NotP(LeftP(InstanceofTest, right)), result) in
