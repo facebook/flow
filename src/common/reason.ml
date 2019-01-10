@@ -277,7 +277,36 @@ let string_of_loc ?(strip_root=None) loc = Loc.(
 
 let string_of_aloc ?strip_root aloc = string_of_loc ?strip_root (ALoc.to_loc aloc)
 
-let json_of_loc_props ?(strip_root=None) loc = Hh_json.(Loc.(
+let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_table loc = Hh_json.(Loc.(
+  let offset_entry offset_table pos =
+    let offset = try
+      int_ (Offset_utils.offset offset_table pos)
+    with Offset_utils.Offset_lookup_failed _ as exn ->
+      if catch_offset_errors then JSON_Null
+      else raise exn
+    in
+    ["offset", offset]
+  in
+  let start =
+    [
+      "line", int_ loc.start.line;
+      (* It's not ideal that we use a different column numbering system here
+       * versus other places (like the estree translator) *)
+      "column", int_ (loc.start.column + 1);
+    ] @ begin match offset_table with
+      | None -> []
+      | Some table -> offset_entry table loc.start
+    end
+  in
+  let end_ =
+    [
+      "line", int_ loc._end.line;
+      "column", int_ loc._end.column;
+    ] @ begin match offset_table with
+      | None -> []
+      | Some table -> offset_entry table loc._end
+    end
+  in
   [
     "source", (
       match loc.source with
@@ -291,26 +320,17 @@ let json_of_loc_props ?(strip_root=None) loc = Hh_json.(Loc.(
     | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
     | Some File_key.Builtins -> JSON_String "Builtins"
     | None -> JSON_Null);
-    "start", JSON_Object [
-      "line", int_ loc.start.line;
-      (* It's not ideal that we use a different column numbering system here
-       * versus other places (like the estree translator) *)
-      "column", int_ (loc.start.column + 1);
-      "offset", int_ loc.start.offset;
-    ];
-    "end", JSON_Object [
-      "line", int_ loc._end.line;
-      "column", int_ loc._end.column;
-      "offset", int_ loc._end.offset;
-    ];
+    "start", JSON_Object start;
+    "end", JSON_Object end_;
   ]
 ))
 
-let json_of_loc ?strip_root loc = Hh_json.(
-  JSON_Object (json_of_loc_props ?strip_root loc)
+let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc = Hh_json.(
+  JSON_Object (json_of_loc_props ?strip_root ?catch_offset_errors ~offset_table loc)
 )
 
-let json_of_aloc ?strip_root aloc = json_of_loc ?strip_root (ALoc.to_loc aloc)
+let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
+  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc aloc)
 
 (* reason constructors, accessors, etc. *)
 
@@ -563,9 +583,9 @@ let string_of_reason ?(strip_root=None) r =
     else spf "%s:\n%s" spos desc
   )
 
-let json_of_reason ?(strip_root=None) r = Hh_json.(
+let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
   JSON_Object ([
-    "pos", json_of_loc ~strip_root (aloc_of_reason r |> ALoc.to_loc);
+    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc);
     "desc", JSON_String (string_of_desc r.desc)
   ])
 )

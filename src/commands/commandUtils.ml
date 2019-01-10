@@ -1282,3 +1282,20 @@ let choose_file_watcher ~options ~file_watcher ~flowconfig =
     file_watcher
   | _, None ->
     Option.value ~default:Options.DFind (FlowConfig.file_watcher flowconfig)
+
+(* Reads the file from disk to compute the offset. This can lead to strange results -- if the file
+ * has changed since the location was constructed, the offset could be incorrect. If the file has
+ * changed such that the contents no longer have text at the given line/column, the offset is not
+ * included in the JSON output. *)
+let json_of_loc_with_offset ?stdin_file ~strip_root loc =
+  let open Option in
+  let file_content =
+    let path = Loc.source loc >>= (File_key.to_path %> Core_result.ok) in
+    match stdin_file with
+    | Some fileinput when path = File_input.path_of_file_input fileinput ->
+      Some (File_input.content_of_file_input_unsafe fileinput)
+    | _ ->
+      path >>= Sys_utils.cat_or_failed
+  in
+  let offset_table = Option.map file_content ~f:Offset_utils.make in
+  Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc

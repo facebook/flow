@@ -36,24 +36,25 @@ let spec = {
   )
 }
 
-let types_to_json types ~strip_root =
+let types_to_json ~file_content types ~strip_root =
   let open Hh_json in
   let open Reason in
+  let offset_table = Option.map file_content ~f:Offset_utils.make in
   let types_json = types |> Core_list.map ~f:(fun (loc, t) ->
     let json_assoc = (
       ("type", JSON_String t) ::
       ("reasons", JSON_Array []) ::
-      ("loc", json_of_loc ~strip_root loc) ::
+      ("loc", json_of_loc ~strip_root ~offset_table loc) ::
       (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     JSON_Object json_assoc
   ) in
   JSON_Array types_json
 
-let handle_response types ~json ~pretty ~strip_root =
+let handle_response types ~json ~file_content ~pretty ~strip_root =
   if json
   then (
-    let types_json = types_to_json types ~strip_root in
+    let types_json = types_to_json ~file_content types ~strip_root in
     Hh_json.print_json_endline ~pretty types_json
   ) else (
     let out = types
@@ -65,14 +66,14 @@ let handle_response types ~json ~pretty ~strip_root =
     print_endline out
   )
 
-let handle_error err ~json ~pretty ~strip_root =
+let handle_error err ~file_content ~json ~pretty ~strip_root =
   if json
   then (
     let open Hh_json in
     let error_json = JSON_Object ["error", JSON_String err] in
     prerr_json_endline ~pretty error_json;
     (* also output an empty array on stdout, for JSON parsers *)
-    handle_response [] ~json ~pretty ~strip_root
+    handle_response [] ~file_content ~json ~pretty ~strip_root
   ) else (
     prerr_endline err
   )
@@ -81,6 +82,7 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
   let json = json || pretty in
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
     path filename in
+  let file_content = File_input.content_of_file_input file |> Core_result.ok in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let root = guess_root flowconfig_name (
     match root with
@@ -94,9 +96,9 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
 
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.DUMP_TYPES (Error err) ->
-    handle_error err ~json ~pretty ~strip_root
+    handle_error err ~file_content ~json ~pretty ~strip_root
   | ServerProt.Response.DUMP_TYPES (Ok resp) ->
-    handle_response resp ~json ~pretty ~strip_root
+    handle_response resp ~file_content ~json ~pretty ~strip_root
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

@@ -180,19 +180,19 @@ unicode.js
         "source":"unicode.js",
         "type":"SourceFile",
         "start":{"line":5,"column":15,"offset":38},
-        "end":{"line":5,"column":17,"offset":41}
+        "end":{"line":5,"column":17,"offset":44}
       },
       {
         "source":"unicode.js",
         "type":"SourceFile",
-        "start":{"line":5,"column":21,"offset":44},
-        "end":{"line":5,"column":24,"offset":48}
+        "start":{"line":5,"column":21,"offset":47},
+        "end":{"line":5,"column":24,"offset":51}
       },
       {
         "source":"unicode.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":2,"offset":58},
-        "end":{"line":7,"column":5,"offset":62}
+        "start":{"line":7,"column":2,"offset":61},
+        "end":{"line":7,"column":5,"offset":65}
       }
     ],
     "uncovered_count":3,
@@ -206,14 +206,14 @@ unicode.js
       {
         "source":"unicode.js",
         "type":"SourceFile",
-        "start":{"line":5,"column":21,"offset":44},
-        "end":{"line":5,"column":29,"offset":53}
+        "start":{"line":5,"column":21,"offset":47},
+        "end":{"line":5,"column":29,"offset":56}
       },
       {
         "source":"unicode.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":2,"offset":58},
-        "end":{"line":7,"column":10,"offset":67}
+        "start":{"line":7,"column":2,"offset":61},
+        "end":{"line":7,"column":10,"offset":70}
       }
     ]
   }

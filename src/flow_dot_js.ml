@@ -287,7 +287,7 @@ let types_to_json types ~strip_root =
     let json_assoc = (
       ("type", JSON_String str) ::
       ("reasons", JSON_Array []) ::
-      ("loc", json_of_loc ~strip_root loc) ::
+      ("loc", json_of_loc ~strip_root ~offset_table:None loc) ::
       (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     JSON_Object json_assoc

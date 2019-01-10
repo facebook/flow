@@ -808,6 +808,19 @@ let read_file filename =
   with Sys_error _ ->
     None
 
+let get_offset_table_expensive ~stdin_file loc =
+  let open Option in
+  let open Utils_js in
+  let content =
+    let path = Loc.source loc >>= (File_key.to_path %> Core_result.ok) in
+    match stdin_file with
+    | Some (stdin_path, contents) when path = Some (Path.to_string stdin_path) ->
+      Some contents
+    | _ ->
+      path >>= read_file
+  in
+  content >>| Offset_utils.make
+
 let read_lines_in_file loc filename stdin_file =
   match filename with
   | None ->
@@ -2740,7 +2753,7 @@ module Json_output = struct
   | BlameM (loc, str) when loc <> Loc.none -> str, Some loc
   | BlameM (_, str) | CommentM str -> str, None
 
-  let json_of_message_props ~strip_root message =
+  let json_of_message_props ~stdin_file ~strip_root message =
     let open Hh_json in
     let desc, loc = unwrap_message message in
     let type_ = match message with
@@ -2751,7 +2764,8 @@ module Json_output = struct
     match loc with
     | None -> deprecated_json_props_of_loc ~strip_root Loc.none
     | Some loc ->
-      ("loc", Reason.json_of_loc ~strip_root loc) ::
+      let offset_table = get_offset_table_expensive ~stdin_file loc in
+      ("loc", Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc) ::
       deprecated_json_props_of_loc ~strip_root loc
 
   (* Returns the first line of the context *)
@@ -2805,7 +2819,8 @@ module Json_output = struct
   let json_of_loc_with_context ~strip_root ~stdin_file loc =
     let open Hh_json in
     let props =
-      Reason.json_of_loc_props ~strip_root loc @
+      let offset_table = get_offset_table_expensive ~stdin_file loc in
+      Reason.json_of_loc_props ~strip_root ~offset_table ~catch_offset_errors:true loc @
         [("context", json_of_loc_context_abridged ~stdin_file ~max_len:5 (Some loc))]
     in
     JSON_Object props
@@ -2814,7 +2829,7 @@ module Json_output = struct
     let open Hh_json in
     let _, loc = unwrap_message message in
     let context = ("context", json_of_loc_context ~stdin_file loc) in
-    JSON_Object (context :: (json_of_message_props ~strip_root message))
+    JSON_Object (context :: (json_of_message_props ~stdin_file ~strip_root message))
 
   let json_of_infos ~json_of_message infos =
     let open Hh_json in
@@ -2945,7 +2960,8 @@ module Json_output = struct
     let suppressions = suppression_locs
     |> Utils_js.LocSet.elements
     |> Core_list.map ~f:(fun loc ->
-        JSON_Object [ "loc", Reason.json_of_loc ~strip_root loc]
+        let offset_table = get_offset_table_expensive ~stdin_file loc in
+        JSON_Object [ "loc", Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc]
       ) in
     let props = [
       "kind", JSON_String kind_str;

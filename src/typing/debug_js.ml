@@ -97,7 +97,7 @@ and _json_of_targ json_cx t = Hh_json.(
 
 and _json_of_t_impl json_cx t = Hh_json.(
   JSON_Object ([
-    "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_t t);
+    "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None (reason_of_t t);
     "kind", JSON_String (string_of_ctor t)
   ] @
   match t with
@@ -410,7 +410,7 @@ and _json_of_custom_fun_kind kind = Hh_json.JSON_String (match kind with
 and _json_of_use_t json_cx = check_depth _json_of_use_t_impl json_cx
 and _json_of_use_t_impl json_cx t = Hh_json.(
   JSON_Object ([
-    "reason", json_of_reason ~strip_root:json_cx.strip_root (reason_of_use_t t);
+    "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None (reason_of_use_t t);
     "kind", JSON_String (string_of_use_ctor t)
   ] @
   match t with
@@ -599,7 +599,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
         in
         Option.value_map test_opt ~default:ret ~f:(fun (id, _) -> ("testID", int_ id) :: ret)
       | Strict r -> [
-          "strictReason", json_of_reason ~strip_root:json_cx.strip_root r
+          "strictReason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None r
         ]
       | ShadowRead (_, ids) -> [
           "shadowRead", JSON_Array (Nel.to_list ids |> Core_list.map ~f:(fun id ->
@@ -910,7 +910,7 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
   | ResolveSpreadsToMultiflowPartial (id, ft, call_reason, tout) -> [
     "id", JSON_Number (string_of_int id);
     "funtype", json_of_funtype json_cx ft;
-    "callReason", json_of_reason ~strip_root:json_cx.strip_root call_reason;
+    "callReason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None call_reason;
     "t_out", _json_of_t json_cx tout;
   ]
   | ResolveSpreadsToCallT (fct, tin) -> [
@@ -941,7 +941,7 @@ and json_of_polarity_impl _json_cx polarity =
 and json_of_typeparam json_cx = check_depth json_of_typeparam_impl json_cx
 and json_of_typeparam_impl json_cx tparam = Hh_json.(
   JSON_Object ([
-    "reason", json_of_reason ~strip_root:json_cx.strip_root tparam.reason;
+    "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None tparam.reason;
     "name", JSON_String tparam.name;
     "bound", _json_of_t json_cx tparam.bound;
     "polarity", json_of_polarity json_cx tparam.polarity;
@@ -1065,7 +1065,7 @@ and json_of_funtype_impl json_cx {
     "isPredicate", JSON_Bool is_predicate;
     "closureIndex", int_ closure_t;
     "changeset", json_of_changeset json_cx changeset;
-    "defLoc", json_of_reason ~strip_root:json_cx.strip_root def_reason;
+    "defLoc", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None def_reason;
   ])
 )
 
@@ -1108,7 +1108,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let own_props = Context.find_props json_cx.cx insttype.own_props in
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
-    "classId", json_of_loc (ALoc.to_loc insttype.class_id);
+    "classId", json_of_loc ~offset_table:None (ALoc.to_loc insttype.class_id);
     "typeArgs", JSON_Array (Core_list.map ~f:(fun (x, _, t, p) ->
       JSON_Object [
         "name", JSON_String x;
@@ -1227,7 +1227,7 @@ and json_of_type_map_impl json_cx = Hh_json.(function
 and json_of_propref json_cx = check_depth json_of_propref_impl json_cx
 and json_of_propref_impl json_cx = Hh_json.(function
   | Named (r, x) -> JSON_Object [
-      "reason", json_of_reason ~strip_root:json_cx.strip_root r;
+      "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None r;
       "name", JSON_String x;
     ]
   | Computed t -> JSON_Object [
@@ -1295,7 +1295,7 @@ and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
 and json_of_type_binding_impl json_cx (name, (loc, t)) = Hh_json.(
   let loc_json = match loc with
     | None -> Hh_json.JSON_Null
-    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root (ALoc.to_loc loc)
+    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root ~offset_table:None (ALoc.to_loc loc)
   in
   JSON_Object [
     "name", JSON_String name;
@@ -1456,7 +1456,7 @@ and json_of_specialize_cache_impl json_cx cache = Hh_json.(
     | None -> []
     | Some rs -> [
         "reasons", JSON_Array
-          (Core_list.map ~f:(json_of_reason ~strip_root:json_cx.strip_root) rs);
+          (Core_list.map ~f:(json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None) rs);
       ]
   )
 )
@@ -1527,9 +1527,9 @@ let json_of_scope = Scope.(
       "kind", JSON_String (Entry.string_of_value_kind kind);
       "value_state", JSON_String (State.to_string value_state);
       "value_declare_loc",
-        json_of_aloc ~strip_root:json_cx.strip_root value_declare_loc;
+        json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None value_declare_loc;
       "value_assign_loc",
-        json_of_aloc ~strip_root:json_cx.strip_root value_assign_loc;
+        json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None value_assign_loc;
       "specific", _json_of_t json_cx specific;
       "general", _json_of_t json_cx general;
     ]
@@ -1541,7 +1541,7 @@ let json_of_scope = Scope.(
     JSON_Object [
       "entry_type", JSON_String "Type";
       "type_state", JSON_String (State.to_string type_state);
-      "type_loc", json_of_aloc ~strip_root:json_cx.strip_root type_loc;
+      "type_loc", json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None type_loc;
       "_type", _json_of_t json_cx _type;
     ]
   in
@@ -1573,7 +1573,7 @@ let json_of_scope = Scope.(
 
   let json_of_refi_impl json_cx { refi_loc; refined; original } =
     JSON_Object [
-      "refi_loc", json_of_aloc ~strip_root:json_cx.strip_root refi_loc;
+      "refi_loc", json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None refi_loc;
       "refined", _json_of_t json_cx refined;
       "original", _json_of_t json_cx original;
     ]

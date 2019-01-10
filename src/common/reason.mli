@@ -179,9 +179,9 @@ val string_of_desc: reason_desc -> string
 val string_of_loc_pos: Loc.t -> string
 val string_of_loc: ?strip_root:Path.t option -> Loc.t -> string
 val string_of_aloc: ?strip_root:Path.t option -> ALoc.t -> string
-val json_of_loc: ?strip_root:Path.t option -> Loc.t -> Hh_json.json
-val json_of_aloc: ?strip_root:Path.t option -> ALoc.t -> Hh_json.json
-val json_of_loc_props: ?strip_root:Path.t option -> Loc.t -> (string * Hh_json.json) list
+val json_of_loc: ?strip_root:Path.t option -> ?catch_offset_errors:bool -> offset_table:Offset_utils.t option -> Loc.t -> Hh_json.json
+val json_of_aloc: ?strip_root:Path.t option -> ?catch_offset_errors:bool -> offset_table:Offset_utils.t option -> ALoc.t -> Hh_json.json
+val json_of_loc_props: ?strip_root:Path.t option -> ?catch_offset_errors:bool -> offset_table:Offset_utils.t option -> Loc.t -> (string * Hh_json.json) list
 
 val locationless_reason: reason_desc -> reason
 
@@ -223,7 +223,7 @@ val reasons_overlap: reason -> reason -> bool
 
 val string_of_source: ?strip_root:Path.t option -> File_key.t -> string
 val string_of_reason: ?strip_root:Path.t option -> reason -> string
-val json_of_reason: ?strip_root:Path.t option -> reason -> Hh_json.json
+val json_of_reason: ?strip_root:Path.t option -> offset_table:Offset_utils.t option -> reason -> Hh_json.json
 val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
