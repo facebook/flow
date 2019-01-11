@@ -54,10 +54,9 @@ let parse_content file content =
     types = true;
     use_strict = false;
   }) in
-  let ast, parse_errors =
+  let ast, _parse_errors =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
-  assert_equal parse_errors [];
   match File_sig.program ~ast ~module_ref_prefix:None with
   | Ok fsig -> ast, fsig
   | Error _ -> assert_failure "File_sig.program failed"
