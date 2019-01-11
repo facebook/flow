@@ -134,7 +134,9 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                   (Type_inference_hooks_js.Parent parent_pattern_t);
                 let p, d = recurse_with_default_opt ~parent_pattern_t tvar init default loc p d in
                 let key = match prop.Property.key with
-                  | (Property.Literal _ | Property.Identifier _) as key -> key
+                  | Property.Literal _ as key -> key
+                  | Property.Identifier (loc, name) ->
+                    Property.Identifier ((loc, tvar), name)
                   | Property.Computed _ -> assert_false "precondition not met"
                 in
                 name :: xs,

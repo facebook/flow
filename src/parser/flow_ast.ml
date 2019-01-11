@@ -1115,7 +1115,7 @@ and Pattern : sig
     module Property : sig
       type ('M, 'T) key =
         | Literal of ('M * Literal.t)
-        | Identifier of 'M Identifier.t
+        | Identifier of 'T Identifier.t
         | Computed of ('M, 'T) Expression.t
       and ('M, 'T) t = 'M * ('M, 'T) t'
       and ('M, 'T) t' = {

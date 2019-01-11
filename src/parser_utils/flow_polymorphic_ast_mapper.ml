@@ -1263,9 +1263,9 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method pattern_object_property_literal_key ?kind (key: Ast.Literal.t) : Ast.Literal.t =
     this#pattern_literal ?kind key
 
-  method pattern_object_property_identifier_key ?kind (key: 'M Ast.Identifier.t)
-                                                          : 'N Ast.Identifier.t =
-    this#pattern_identifier ?kind key
+  method pattern_object_property_identifier_key ?kind (key: 'T Ast.Identifier.t)
+                                                          : 'U Ast.Identifier.t =
+    this#t_pattern_identifier ?kind key
 
   method pattern_object_property_computed_key ?kind (key: ('M, 'T) Ast.Expression.t)
                                                         : ('N, 'U) Ast.Expression.t =
