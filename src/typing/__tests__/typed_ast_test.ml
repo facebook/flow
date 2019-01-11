@@ -58,8 +58,8 @@ let parse_content file content =
     Parser_flow.program_file ~fail:false ~parse_options content (Some file)
   in
   match File_sig.program ~ast ~module_ref_prefix:None with
-  | Ok fsig -> ast, fsig
-  | Error _ -> assert_failure "File_sig.program failed"
+  | Ok fsig -> Ok (ast, fsig)
+  | Error e -> Error e
 
 (* copied from Type_inference_js *)
 (* TODO: consider whether require tvars are necessary, and if not, take this out *)
@@ -94,41 +94,43 @@ let add_require_tvars =
       ) (require_loc_map module_sig)
     ) file_sig.declare_modules
 
-let lib_before_and_after_stmts file_name =
+let before_and_after_stmts file_name =
   let content = Sys_utils.cat file_name in
   let file_key = File_key.LibFile file_name in
-  let (_, stmts, _), file_sig = parse_content file_key content in
-  let cx =
-    let sig_cx = Context.make_sig () in
-    Context.make sig_cx metadata file_key Files.lib_module_ref
-  in
-  Flow_js.mk_builtins cx;
-  Flow_js.Cache.clear ();
-  add_require_tvars cx file_sig;
-  let module_scope = Scope.fresh () in
-  Env.init_env cx module_scope;
-  let stmts = Core_list.map ~f:Ast_loc_utils.abstractify_mapper#statement stmts in
-  let t_stmts =
-    try
-      Statement.toplevel_decls cx stmts;
-      Statement.toplevels cx stmts
-    with
-      | Abnormal.Exn (Abnormal.Stmts t_stmts, _) -> t_stmts
-      | Abnormal.Exn (Abnormal.Stmt t_stmt, _) -> [t_stmt]
-      | Abnormal.Exn (Abnormal.Expr (annot, t_expr), _) ->
-        [annot, Flow_ast.Statement.Expression {
-          Flow_ast.Statement.Expression.
-          expression = t_expr;
-          directive = None;
-        }]
-    | e ->
-      let e = Exception.wrap e in
-      let message = Exception.get_ctor_string e in
-      let stack = Exception.get_backtrace_string e in
-      assert_failure (Utils_js.spf "Exception: %s\nStack:\n%s\n" message stack)
+  match parse_content file_key content with
+  | Error e -> Error e
+  | Ok ((_, stmts, _), file_sig) ->
+    let cx =
+      let sig_cx = Context.make_sig () in
+      Context.make sig_cx metadata file_key Files.lib_module_ref
+    in
+    Flow_js.mk_builtins cx;
+    Flow_js.Cache.clear ();
+    add_require_tvars cx file_sig;
+    let module_scope = Scope.fresh () in
+    Env.init_env cx module_scope;
+    let stmts = Core_list.map ~f:Ast_loc_utils.abstractify_mapper#statement stmts in
+    let t_stmts =
+      try
+        Statement.toplevel_decls cx stmts;
+        Statement.toplevels cx stmts
+      with
+        | Abnormal.Exn (Abnormal.Stmts t_stmts, _) -> t_stmts
+        | Abnormal.Exn (Abnormal.Stmt t_stmt, _) -> [t_stmt]
+        | Abnormal.Exn (Abnormal.Expr (annot, t_expr), _) ->
+          [annot, Flow_ast.Statement.Expression {
+            Flow_ast.Statement.Expression.
+            expression = t_expr;
+            directive = None;
+          }]
+      | e ->
+        let e = Exception.wrap e in
+        let message = Exception.get_ctor_string e in
+        let stack = Exception.get_backtrace_string e in
+        assert_failure (Utils_js.spf "Exception: %s\nStack:\n%s\n" message stack)
 
-  in
-  stmts, t_stmts
+    in
+    Ok (stmts, t_stmts)
 
 
 class ['a, 'b] loc_none_mapper = object(_)
@@ -151,7 +153,7 @@ let diff_dir =
   let extension = Printf.sprintf "typed_ast_test_%d" (Random.int 0x3FFFFFFF) in
   Server_files_js.file_of_root extension ~flowconfig_name ~tmp_dir root
 
-let check_structural_equality (stmts1, stmts2) =
+let check_structural_equality stmts1 stmts2 =
   let diff_output : int option ref = ref None in
   let err : exn option ref = ref None in
   begin try
@@ -177,7 +179,9 @@ let check_structural_equality (stmts1, stmts2) =
   end
 
 let test_case file_name _ =
-  file_name |> lib_before_and_after_stmts |> check_structural_equality
+  match before_and_after_stmts file_name with
+  | Ok (s, s') -> check_structural_equality s s'
+  | Error (File_sig.IndeterminateModuleType _) -> ()
 
 let tests = "TypedAST" >::: [
   "lib_serviceworkers" >:: test_case "flow/lib/serviceworkers.js"
