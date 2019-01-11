@@ -113,8 +113,20 @@ let lib_before_and_after_stmts file_name =
       Statement.toplevel_decls cx stmts;
       Statement.toplevels cx stmts
     with
-    | Abnormal.Exn (Abnormal.Stmts t_stmts, Abnormal.Throw) -> t_stmts
-    | _ -> assert_failure "constraint generation raised unexpected exception"
+      | Abnormal.Exn (Abnormal.Stmts t_stmts, _) -> t_stmts
+      | Abnormal.Exn (Abnormal.Stmt t_stmt, _) -> [t_stmt]
+      | Abnormal.Exn (Abnormal.Expr (annot, t_expr), _) ->
+        [annot, Flow_ast.Statement.Expression {
+          Flow_ast.Statement.Expression.
+          expression = t_expr;
+          directive = None;
+        }]
+    | e ->
+      let e = Exception.wrap e in
+      let message = Exception.get_ctor_string e in
+      let stack = Exception.get_backtrace_string e in
+      assert_failure (Utils_js.spf "Exception: %s\nStack:\n%s\n" message stack)
+
   in
   stmts, t_stmts
 
