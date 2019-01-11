@@ -3890,17 +3890,14 @@ and subscript =
         end
 
     | Member {
-        Member._object = object_loc, Identifier (id_loc, "module");
-        property = Member.PropertyIdentifier (ploc, ("exports" as name));
+        Member._object = _, Identifier (_, "module") as _object;
+        property = Member.PropertyIdentifier (ploc, ("exports" as exports_name));
       } -> let lhs_t = get_module_exports cx loc in
         ex, lhs_t, acc, (
           (loc, lhs_t),
-          (* TODO(vijayramamurthy) like in assignment, revisit the type of `module` *)
-          let t = AnyT.at Untyped object_loc in
-          let property = Member.PropertyIdentifier ((ploc, t), name) in
           member_ast { Member.
-            _object = (object_loc, t), Identifier ((id_loc, t), name);
-            property;
+            _object = Typed_ast_utils.unchecked_mapper#expression _object;
+            property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name);
           }
         )
 
