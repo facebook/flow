@@ -270,9 +270,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
     match statements_abnormal with
     | Some Return -> false
     | Some Throw -> false (* NOTE *)
-    | Some exn ->
-        (* TODO: look into where this throws to. Is it ok that this throws? *)
-        throw_stmt_control_flow_exception Typed_ast.Statement.error exn
+    | Some Break _
+    | Some Continue _ -> failwith "Illegal toplevel abnormal directive"
     | None -> true
   ) in
   let body_ast = reconstruct_body statements_ast in

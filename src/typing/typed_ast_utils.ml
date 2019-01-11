@@ -37,7 +37,12 @@ class type_parameter_mapper = object(_)
       | Ast.Type.Missing _ -> Type.MixedT.make reason
       | Ast.Type.Available (_, ((_, t), _)) -> t
       in
-      let polarity = Type_annotation.polarity variance in
+      let polarity = Ast.Variance.(
+        match variance with
+        | Some (_, Plus) -> Type.Positive
+        | Some (_, Minus) -> Type.Negative
+        | None -> Type.Neutral
+      ) in
       let default = Option.map default ~f:(fun ((_, t), _) -> t)
       in
       { Type.reason; name; bound; polarity; default; }
@@ -173,3 +178,30 @@ let typed_ast_to_list typed_ast: (Loc.t * Type.TypeScheme.t) list =
   let folder = new type_at_loc_list_folder in
   ignore (folder#program typed_ast);
   folder#to_list
+
+
+(** Mappers
+ *  Used to construct error nodes during type checking.
+ *)
+
+(* Error nodes are typed at `any`. Do not change this type as it might change
+ * current behavior. *)
+let error_mapper = object(_)
+  inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+  method on_loc_annot loc = loc
+  method on_type_annot loc = loc, Type.AnyT.at Type.AnyError loc
+end
+
+(* Used in unimplemented cases or unsupported nodes *)
+let unimplemented_mapper = object(_)
+  inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+  method on_loc_annot loc = loc
+  method on_type_annot loc = loc, Type.(AnyT.at (Unsound Unimplemented)) loc
+end
+
+(* Code is not checked at all *)
+let unchecked_mapper = object(_)
+  inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+  method on_loc_annot loc = loc
+  method on_type_annot loc = loc, Type.(AnyT.at (Unsound Unchecked)) loc
+end

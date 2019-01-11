@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+module Tast_utils = Typed_ast_utils
 
 (* AST handling for destructuring exprs *)
 
@@ -34,7 +35,7 @@ open Type
 
 let destructuring cx ~expr ~f = Ast.Pattern.(
   let rec recurse ?parent_pattern_t curr_t init default = function
-  | top_loc, Array { Array.elements; _; } -> Array.(
+  | top_loc, Array { Array.elements; annot; } -> Array.(
       let elements = elements |> List.mapi (fun i -> function
         | Some (Element (loc, { Element.argument = p; default = d })) ->
             let key = DefT (mk_reason RNumber loc, NumT (
@@ -78,11 +79,11 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       )
       in
       (* Type annotations in patterns are currently ignored *)
-      let annot = Ast.Type.Missing Typed_ast.error_annot in
+      let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
       (top_loc, curr_t), Array { elements; annot; }
     )
 
-  | top_loc, Object { Object.properties; _; } -> Object.(
+  | top_loc, Object { Object.properties; annot; } -> Object.(
       let _, rev_props = List.fold_left (fun (xs, rev_props) -> function
         | Property (loc, prop) ->
             begin match prop with
@@ -183,11 +184,11 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       in
       let properties = List.rev rev_props in
       (* Type annotations in patterns are currently ignored *)
-      let annot = Ast.Type.Missing Typed_ast.error_annot in
+      let annot = Typed_ast_utils.unimplemented_mapper#type_annotation_hint annot in
       (top_loc, curr_t), Object { Object.properties; annot }
     )
 
-  | loc, Identifier { Identifier.name = (id_loc, name); optional; _ } ->
+  | loc, Identifier { Identifier.name = (id_loc, name); optional; annot } ->
       begin match parent_pattern_t with
       (* If there was a parent pattern, we already dispatched the hook if relevant. *)
       | Some _ -> ()
@@ -216,13 +217,13 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       }) in
       f ~use_op loc name default curr_t;
       (* Type annotations in patterns are currently ignored *)
-      let annot = Ast.Type.Missing Typed_ast.error_annot in
+      let annot = Typed_ast_utils.unimplemented_mapper#type_annotation_hint annot in
       (loc, curr_t), Identifier { Identifier.name = ((id_loc, curr_t), name); optional; annot; }
 
-  | loc, Expression _ ->
+  | loc, Expression e ->
       Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
         (loc, DestructuringExpressionPattern));
-      (loc, curr_t), Expression (Typed_ast.error_annot, Typed_ast.Expression.error)
+      (loc, curr_t), Expression (Tast_utils.error_mapper#expression e)
 
   and recurse_with_default
     ?parent_pattern_t curr_t init
@@ -237,7 +238,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       EvalT (curr_t, DestructuringT (reason, Default), mk_id())
     in
     let patt = recurse ?parent_pattern_t tvar init default patt in
-    let expr = Typed_ast.error_annot, Typed_ast.Expression.unimplemented in
+    let expr = Tast_utils.unimplemented_mapper#expression expr in
     (patt, expr)
 
   and recurse_with_default_opt ?parent_pattern_t curr_t init default loc patt expr_opt =

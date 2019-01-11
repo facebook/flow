@@ -72,7 +72,7 @@ let add_complex cx ~expr (loc, { Flow_ast.Function.Param.argument; default = def
   let params_rev = (None, t) :: x.params_rev in
   let bindings_rev = !bindings_rev in
   let def_expr = match def_expr with
-  | Some _ -> Some (Typed_ast.unimplemented_annot, Typed_ast.Expression.unimplemented)
+  | Some e -> Some (Typed_ast_utils.unimplemented_mapper#expression e)
   | None -> None
   in
   let param = loc, { Flow_ast.Function.Param.argument = argument; default = def_expr } in

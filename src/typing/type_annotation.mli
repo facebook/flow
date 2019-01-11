@@ -80,7 +80,7 @@ val polarity: 'a Flow_ast.Variance.t option -> Type.polarity
 val qualified_name: (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t -> string
 
 val error_type:
-  Context.t
-  -> ALoc.t
-  -> Flow_error.error_message
-  -> (ALoc.t * Type.t) * (ALoc.t, ALoc.t * Typed_ast.T.t) Flow_ast.Type.t'
+  Context.t ->
+  ALoc.t -> Flow_error.error_message ->
+  (ALoc.t, ALoc.t) Flow_ast.Type.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t

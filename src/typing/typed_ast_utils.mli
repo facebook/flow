@@ -17,3 +17,7 @@ val typed_ast_to_map :
 val typed_ast_to_list :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
   (Loc.t * Type.TypeScheme.t) list
+
+val error_mapper: (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
+val unimplemented_mapper: (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper
+val unchecked_mapper: (ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.mapper

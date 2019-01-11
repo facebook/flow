@@ -775,6 +775,7 @@ module rec TypeTerm : sig
     | Merged
     | ResolveSpread
     | TaggedTemplateType
+    | Unchecked
     | Unimplemented
     | UnresolvedType
     | WeakContext

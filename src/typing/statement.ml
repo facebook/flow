@@ -6,6 +6,7 @@
  *)
 
 module Ast = Flow_ast
+module Tast_utils = Typed_ast_utils
 
 (* This module contains the traversal functions which set up subtyping
    constraints for every expression, statement, and declaration form in a
@@ -114,9 +115,9 @@ let rec variable_decl cx entry = Ast.Statement.(
       (* TODO: delay resolution of type annotation like above? *)
       let t, _ = Anno.mk_type_annotation cx SMap.empty r annot in
       bind cx pattern_name t loc;
-      let expr _ _ =
+      let expr _ e =
         (* don't eval computed property keys *)
-        Typed_ast.error_annot, Typed_ast.Expression.error in
+        Tast_utils.error_mapper#expression e in
       (destructuring cx ~expr t None None p ~f:(fun ~use_op:_ loc name _default t ->
         let t = match annot with
         | Ast.Type.Missing _ -> t
@@ -491,7 +492,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
     toplevel_decls cx b.Block.body;
     toplevels cx b.Block.body) in
 
-  let catch_clause cx { Try.CatchClause.param; body = (b_loc, b) } =
+  let catch_clause cx catch_clause =
+    let { Try.CatchClause.param; body = (b_loc, b) } = catch_clause in
     Ast.Pattern.(match param with
       | Some p -> (match p with
         | loc, Identifier {
@@ -522,12 +524,12 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         | loc, Identifier _ ->
             Flow.add_output cx
               Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation));
-            Typed_ast.Statement.Try.CatchClause.error, None
+            Tast_utils.error_mapper#catch_clause catch_clause, None
 
         | loc, _ ->
             Flow.add_output cx
               Flow_error.(EUnsupportedSyntax (loc, CatchParameterDeclaration));
-            Typed_ast.Statement.Try.CatchClause.error, None
+            Tast_utils.error_mapper#catch_clause catch_clause, None
       )
       | None ->
         let stmts, abnormal_opt = Env.in_lex_scope cx (fun () ->
@@ -744,9 +746,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       Abnormal.save abnormal;
       Abnormal.throw_stmt_control_flow_exception ast abnormal
 
-  | (loc, With _) ->
+  | (_, With _) as s ->
       (* TODO or disallow? *)
-      loc, snd Typed_ast.Statement.error
+      Tast_utils.error_mapper#statement s
 
   |((loc, DeclareTypeAlias {TypeAlias.id=(name_loc, name); tparams; right;})
   | (loc, TypeAlias {TypeAlias.id=(name_loc, name); tparams; right;})) as stmt ->
@@ -1520,8 +1522,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               ForIn.LeftPattern ((pat_loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
                 name = ((name_loc, t), name_str);
                 annot = (match annot with
-                  | Ast.Type.Available (a_loc, _) ->
-                    Ast.Type.Available (a_loc, (Typed_ast.error_annot, Typed_ast.Type.error))
+                  | Ast.Type.Available _ ->
+                    Tast_utils.unimplemented_mapper#type_annotation_hint annot
                   | Ast.Type.Missing loc ->
                     Ast.Type.Missing (loc, t));
                 optional;
@@ -1529,7 +1531,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
           | _ ->
               Flow.add_output cx Flow_error.(EInternal (loc, ForInLHS));
-              Typed_ast.Statement.ForIn.left_error
+              Tast_utils.error_mapper#for_in_statement_lhs left
         in
 
         let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
@@ -1622,8 +1624,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
                 Ast.Pattern.Identifier { Ast.Pattern.Identifier.
                   name = ((name_loc, element_tvar), name_str);
                   annot = (match annot with
-                    | Ast.Type.Available (loc, _) ->
-                      Ast.Type.Available (loc, (Typed_ast.error_annot, Typed_ast.Type.error))
+                    | Ast.Type.Available annot ->
+                      Ast.Type.Available (Tast_utils.error_mapper#type_annotation annot)
                     | Ast.Type.Missing loc ->
                       Ast.Type.Missing (loc, element_tvar));
                   optional;
@@ -1632,7 +1634,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
           | _ ->
               Flow.add_output cx Flow_error.(EInternal (loc, ForOfLHS));
-              Typed_ast.Statement.ForOf.left_error
+              Tast_utils.error_mapper#for_of_statement_lhs left
         in
 
         let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
@@ -2392,7 +2394,8 @@ and export_statement cx loc
       List.iter export_from_local export_info
   )
 
-and object_prop cx map = Ast.Expression.Object.(function
+and object_prop cx map prop = Ast.Expression.Object.(
+  match prop with
   (* named prop *)
   | Property (prop_loc, Property.Init {
       key =
@@ -2485,7 +2488,7 @@ and object_prop cx map = Ast.Expression.Object.(function
   | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
-    map, Typed_ast.Expression.Object.property_error
+    map, Tast_utils.error_mapper#object_property_or_spread_property prop
 
   (* computed getters and setters aren't supported yet regardless of the
      `enable_getters_and_setters` config option *)
@@ -2493,16 +2496,16 @@ and object_prop cx map = Ast.Expression.Object.(function
   | Property (loc, Property.Set { key = Property.Computed _; _ }) ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
-    map, Typed_ast.Expression.Object.property_error
+    map, Tast_utils.error_mapper#object_property_or_spread_property prop
 
   (* computed LHS silently ignored for now *)
   | Property (_, Property.Init { key = Property.Computed _; _ })
   | Property (_, Property.Method { key = Property.Computed _; _ }) ->
-    map, Typed_ast.Expression.Object.property_error
+    map, Tast_utils.error_mapper#object_property_or_spread_property prop
 
   (* spread prop *)
   | SpreadProperty _ ->
-    map, Typed_ast.Expression.Object.property_error
+    map, Tast_utils.error_mapper#object_property_or_spread_property prop
 
   | Property (_, Property.Init { key = Property.PrivateName _; _ })
   | Property (_, Property.Method { key = Property.PrivateName _; _ })
@@ -3002,8 +3005,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         }
       | Error err ->
         Flow.add_output cx err;
-        Typed_ast.error_annot,
-        Typed_ast.Expression.error
+        Tast_utils.error_mapper#expression ex
     )
 
   | New { New.callee; targs; arguments } ->
@@ -3309,17 +3311,17 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | Comprehension _ ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, ComprehensionExpression));
-    (loc, EmptyT.at loc), Typed_ast.Expression.error
+    Tast_utils.unimplemented_mapper#expression ex
 
   | Generator _ ->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, GeneratorExpression));
-    (loc, EmptyT.at loc), Typed_ast.Expression.error
+    Tast_utils.unimplemented_mapper#expression ex
 
   | MetaProperty _->
     Flow.add_output cx
       Flow_error.(EUnsupportedSyntax (loc, MetaPropertyExpression));
-    (loc, EmptyT.at loc), Typed_ast.Expression.error
+    Tast_utils.unimplemented_mapper#expression ex
 
   | Import arg -> (
     match arg with
@@ -3353,7 +3355,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       then
         Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ImportDynamicArgument));
-      (loc, AnyT.at AnyError loc), Typed_ast.Expression.error
+      Tast_utils.unimplemented_mapper#expression ex
   )
 )
 
@@ -3440,7 +3442,7 @@ and subscript =
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = 0;
           });
-          AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
+          AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
         | _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
           let ignore_non_literals =
@@ -3449,7 +3451,7 @@ and subscript =
           then
             Flow.add_output cx
               Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
-          AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
+          AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
       ) in
       (* TODO(vijayramamurthy) type of require ? *)
       let id_t = Unsoundness.at Chain callee_loc in
@@ -3525,17 +3527,12 @@ and subscript =
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = 0;
           });
-          AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
+          AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
         | _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
           Flow.add_output cx
             Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-          AnyT.at AnyError loc, Typed_ast.Expression.expression_or_spread_list_error
-
-
-
-
-
+          AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
       ) in
       (* TODO(vijayramamurthy) does "requireLazy" have a type? *)
       let id_t = Unsoundness.at Chain callee_loc in
@@ -3785,7 +3782,7 @@ and subscript =
             ignore (Core_list.map ~f:(expression_or_spread cx) arguments);
             Flow.add_output cx
               Flow_error.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
-            Typed_ast.Expression.expression_or_spread_list_error
+            List.map Tast_utils.error_mapper#expression_or_spread arguments
           | Some _, _ ->
             ignore (Core_list.map ~f:(expression_or_spread cx) arguments);
             Flow.add_output cx Flow_error.(ECallTypeArity {
@@ -3794,7 +3791,7 @@ and subscript =
               reason_arity = Reason.(locationless_reason (RFunction RNormal));
               expected_arity = 0;
             });
-            Typed_ast.Expression.expression_or_spread_list_error
+            List.map Tast_utils.error_mapper#expression_or_spread arguments
         in
         let lhs_t = VoidT.at loc in
         ex, lhs_t, acc, ((loc, lhs_t), call_ast { Call.callee; targs; arguments; })
@@ -4479,17 +4476,17 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right } =
 
 and assignment_lhs cx = Ast.Pattern.(function
   | loc, Object _
-  | loc, Array _ ->
+  | loc, Array _ as p ->
       Flow.add_output cx (Flow_error.EInvalidLHSInAssignment loc);
-      ((loc, AnyT.at AnyError loc), Typed_ast.Pattern.error)
+      Tast_utils.error_mapper#pattern p
 
   | pat_loc, Identifier { Identifier.name = (loc, name); optional; annot; } ->
       let t = identifier cx name loc in
       ((pat_loc, t), Identifier { Identifier.
         name = (loc, t), name;
         annot = (match annot with
-        | Ast.Type.Available (loc, _) ->
-          Ast.Type.Available (loc, (Typed_ast.error_annot, Typed_ast.Type.error))
+        | Ast.Type.Available annot ->
+          Ast.Type.Available (Tast_utils.error_mapper#type_annotation annot)
         | Ast.Type.Missing hint ->
           Ast.Type.Missing (hint, AnyT.locationless Untyped));
         optional;
@@ -4833,14 +4830,14 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     let fbt_reason = mk_reason RFbt loc_element in
     let t = Flow.get_builtin_type cx fbt_reason custom_jsx_type in
     let name = Identifier ((loc_id, t), id) in
-    let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
+    let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
     t, name, attributes
 
   | Identifier (loc, { Identifier.name }), Options.Jsx_react, _ ->
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let t = Unsoundness.at InferenceHooks loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
-      let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
+      let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
       t, name, attributes
     else
       let reason = mk_reason (RReactElement (Some name)) loc_element in
@@ -4859,7 +4856,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     if Type_inference_hooks_js.dispatch_id_hook cx name loc then
       let t = Unsoundness.at InferenceHooks loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
-      let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
+      let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
       t, name, attributes
     else
       let reason = mk_reason (RJSXElement (Some name)) loc_element in
@@ -4883,7 +4880,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     then
       let t = Unsoundness.at InferenceHooks loc_element in
       let name = Identifier ((loc, t), { Identifier.name }) in
-      let attributes' = Typed_ast.JSX.Opening.error_attribute_list attributes in
+      let attributes' = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
       t, name, attributes'
     else
       let reason = mk_reason (RJSXElement (Some name)) loc_element in
@@ -4902,14 +4899,17 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     let c = mod_reason_of_t (replace_reason_const (RIdentifier name)) t in
     let o, attributes' = jsx_mk_props cx reason c name attributes children in
     let t = jsx_desugar cx name c o attributes children locs in
-    let name' = MemberExpression (expression_to_jsx_title_member m_expr') in
-    (t, name', attributes')
+    let member' = match expression_to_jsx_title_member m_expr' with
+    | Some member -> member
+    | None -> Tast_utils.error_mapper#jsx_member_expression member
+    in
+    (t, MemberExpression member', attributes')
 
   | _ ->
       (* TODO? covers namespaced names as element names *)
     let t = Unsoundness.at InferenceHooks loc_element in
-    let name = Typed_ast.JSX.error_name in
-    let attributes = Typed_ast.JSX.Opening.error_attribute_list attributes in
+    let name = Tast_utils.error_mapper#jsx_name name in
+    let attributes = List.map Tast_utils.error_mapper#jsx_opening_attribute attributes in
     t, name, attributes
   in
 
@@ -4944,7 +4944,7 @@ and jsx_match_closing_element =
     | Ast.JSX.MemberExpression.MemberExpression o_exp,
       Ast.JSX.MemberExpression.MemberExpression c_exp ->
       Ast.JSX.MemberExpression.MemberExpression (match_member_expressions o_exp c_exp)
-    | _, _ -> Typed_ast.JSX.MemberExpression.error_object
+    | _, _ -> Tast_utils.error_mapper#jsx_member_expression_object c_obj
   in
   let match_namespaced_names o_id c_id =
     let _, { Ast.JSX.NamespacedName.namespace = o_ns; name = o_name } = o_id in
@@ -4963,7 +4963,7 @@ and jsx_match_closing_element =
     | MemberExpression o_mexp, MemberExpression c_mexp ->
         MemberExpression (match_member_expressions o_mexp c_mexp)
     | _, _ ->
-        Typed_ast.JSX.error_name
+        Tast_utils.error_mapper#jsx_name c_name
   )
 
 and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
@@ -5037,12 +5037,9 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
                       ExpressionContainer.Expression e
                   }))
             (* <element name={} /> *)
-            | Some (Attribute.ExpressionContainer (ec_loc, _)) ->
+            | Some (Attribute.ExpressionContainer _ as ec) ->
                 let t = EmptyT.at attr_loc in
-                t, Some (Attribute.ExpressionContainer (
-                  (ec_loc, t), ExpressionContainer.({
-                    expression = Expression Typed_ast.(error_annot, Expression.error)
-                  })))
+                t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec)
             (* <element name /> *)
             | None ->
                 DefT (mk_reason RBoolean attr_loc, BoolT (Some true)), None
@@ -5266,15 +5263,20 @@ and expression_to_jsx_title_member = function
       }) ->
     let _object = match obj_expr with
     | Ast.Expression.Identifier ((id_loc, t), name) ->
-      Ast.JSX.MemberExpression.Identifier ((id_loc, t), { Ast.JSX.Identifier.name })
+      Some (
+        Ast.JSX.MemberExpression.Identifier (
+          (id_loc, t), { Ast.JSX.Identifier.name }
+        )
+      )
     | _ ->
-      let jsx_expr = expression_to_jsx_title_member obj_expr in
-      Ast.JSX.MemberExpression.MemberExpression jsx_expr
+      expression_to_jsx_title_member obj_expr
+      |> Option.map ~f:(fun e -> Ast.JSX.MemberExpression.MemberExpression e)
     in
     let property = pannot, { Ast.JSX.Identifier.name = name } in
-    mloc, Ast.JSX.MemberExpression.{ _object; property; }
+    Option.map _object ~f:(fun _object ->
+      (mloc, Ast.JSX.MemberExpression.{ _object; property; }))
   | _ ->
-    Typed_ast.JSX.MemberExpression.error
+    None
 
 (* Given an expression found in a test position, notices certain
    type refinements which follow from the test's success or failure,
@@ -6171,7 +6173,7 @@ and mk_class_sig =
           (fun (_, value_opt) -> value_ref := Some (Option.value_exn value_opt))
         ),
         (fun () -> Some (Option.value (!value_ref)
-          ~default:(Typed_ast.error_annot, Typed_ast.Expression.error)))
+          ~default:(Tast_utils.error_mapper#expression expr)))
     in
     field, annot_t, annot_ast, get_init
   in
@@ -6322,7 +6324,8 @@ and mk_class_sig =
       let func_t_ref : Type.t option ref = ref None in
       let set_type t = func_t_ref := Some t in
       let get_element () =
-        let body = Option.value (!body_ref) ~default:Typed_ast.Function.body_error in
+        let body = Option.value (!body_ref)
+          ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body) in
         let func_t = Option.value (!func_t_ref) ~default:(EmptyT.at id_loc) in
         let func = reconstruct_func body func_t in
         Body.Method ((loc, func_t), { Method.
@@ -6398,10 +6401,10 @@ and mk_class_sig =
     | Body.Property (loc, {
         Property.key = Ast.Expression.Object.Property.Literal _;
         _
-      }) ->
+      }) as elem ->
         Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
-        c, (fun () -> Typed_ast.Class.Body.element_error)::rev_elements
+        c, (fun () -> Tast_utils.error_mapper#class_element elem)::rev_elements
 
     (* computed LHS *)
     | Body.Method (loc, {
@@ -6411,10 +6414,10 @@ and mk_class_sig =
     | Body.Property (loc, {
         Property.key = Ast.Expression.Object.Property.Computed _;
         _
-      }) ->
+      }) as elem ->
         Flow.add_output cx
           Flow_error.(EUnsupportedSyntax (loc, ClassPropertyComputed));
-        c, (fun () -> Typed_ast.Class.Body.element_error)::rev_elements
+        c, (fun () -> Tast_utils.error_mapper#class_element elem)::rev_elements
   ) (class_sig, []) elements
   in
   let elements = List.rev rev_elements in
@@ -6462,7 +6465,7 @@ and mk_func_sig =
           optional;
         } in
         let default = match default with
-        | Some _ -> Some (Typed_ast.unimplemented_annot, Typed_ast.Expression.unimplemented)
+        | Some e -> Some (Tast_utils.unimplemented_mapper#expression e)
         | None -> None
         in
         (loc, { Ast.Function.Param.argument; default })
@@ -6490,7 +6493,7 @@ and mk_func_sig =
       | loc, _ ->
         Flow_js.add_output cx
           Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
-        params, ((loc, AnyT.at AnyError loc), Typed_ast.Pattern.error)
+        params, Tast_utils.error_mapper#pattern patt
     in
     let (params_loc, { Ast.Function.Params.params; rest }) = params in
     let params, rev_param_asts =
@@ -6533,12 +6536,12 @@ and mk_func_sig =
           let fresh_t, _ = Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc) in
           Flow.flow_t cx (fresh_t, return_t);
           fresh_t, Some (loc, Inferred)
-      | Some (loc, Declared _) ->
+      | Some ((loc, Declared _) as pred) ->
           Flow_js.add_output cx Flow_error.(
             EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)
           );
           fst (Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)),
-          Some (loc, Declared (Typed_ast.error_annot, Typed_ast.Expression.error))
+          Some (Tast_utils.error_mapper#type_predicate pred)
     ) in
     {Func_sig.reason; kind; tparams; tparams_map; fparams; body; return_t},
     (fun body fun_type -> { func with Ast.Function.
@@ -6608,8 +6611,8 @@ and mk_arrow cx loc func =
    predicate declared for the funcion *)
 (* Also returns a function for reversing this process, for the sake of
    typed AST construction. *)
-and declare_function_to_function_declaration cx declare_loc
-  { Ast.Statement.DeclareFunction.id; annot; predicate; } =
+and declare_function_to_function_declaration cx declare_loc func_decl =
+  let { Ast.Statement.DeclareFunction.id; annot; predicate; } = func_decl in
   match predicate with
   | Some (loc, Ast.Type.Predicate.Inferred) ->
       Flow.add_output cx Flow_error.(
@@ -6715,7 +6718,7 @@ and declare_function_to_function_declaration cx declare_loc
                 annot;
                 predicate = Some (pred_loc, Ast.Type.Predicate.Declared e)
               }
-          | _ -> Typed_ast.Statement.DeclareFunction.error
+          | _ -> failwith "Internal error: malformed predicate declare function"
           )
 
       | _ ->

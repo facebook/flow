@@ -484,12 +484,13 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     this#on_loc_annot annot, { local = local'; exported = exported' }
 
   method expression_statement (stmt: ('M, 'T) Ast.Statement.Expression.t)
-                                  : ('N, 'U) Ast.Statement.Expression.t =
+                                   : ('N, 'U) Ast.Statement.Expression.t =
     let open Ast.Statement.Expression in
     let { expression = expr; directive; } = stmt in
     { expression = this#expression expr; directive; }
 
-  method expression_or_spread expr_or_spread =
+  method expression_or_spread (expr_or_spread: ('M, 'T) Ast.Expression.expression_or_spread)
+                                             : ('N, 'U) Ast.Expression.expression_or_spread =
     let open Ast.Expression in
     match expr_or_spread with
     | Expression expr ->
@@ -506,7 +507,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     { left = left'; right = right'; body = body'; each }
 
   method for_in_statement_lhs (left: ('M, 'T) Ast.Statement.ForIn.left)
-                                  : ('N, 'U) Ast.Statement.ForIn.left =
+                                   : ('N, 'U) Ast.Statement.ForIn.left =
     let open Ast.Statement.ForIn in
     match left with
     | LeftDeclaration (annot, decl) ->
@@ -602,6 +603,24 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
     this#on_loc_annot annot, { key = key'; value = value'; optional; static; proto; _method; variance = variance' }
 
+  method object_indexer_type (oit: ('M, 'T) Ast.Type.Object.Indexer.t)
+                                 : ('N, 'U) Ast.Type.Object.Indexer.t =
+    let open Ast.Type.Object.Indexer in
+    let annot, { id = id_; key; value; static; variance } = oit in
+    let id' = Option.map ~f:(this#on_loc_annot * id) id_ in
+    let key' = this#type_ key in
+    let value' = this#type_ value in
+    let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
+    this#on_loc_annot annot, { id = id'; key = key'; value = value'; static; variance = variance' }
+
+  method object_internal_slot_type (islot: ('M, 'T) Ast.Type.Object.InternalSlot.t)
+                                         : ('N, 'U) Ast.Type.Object.InternalSlot.t =
+    let open Ast.Type.Object.InternalSlot in
+    let annot, { id = id_; value; optional; static; _method } = islot in
+    let id' = (this#on_loc_annot * id) id_ in
+    let value' = this#type_ value in
+    this#on_loc_annot annot, { id = id'; value = value'; optional; static; _method; }
+
   method object_type (ot: ('M, 'T) Ast.Type.Object.t) : ('N, 'U) Ast.Type.Object.t =
     let open Ast.Type.Object in
     let { properties ; exact; inexact } = ot in
@@ -616,24 +635,12 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | SpreadProperty (annot, { SpreadProperty.argument }) ->
       let argument' = this#type_ argument in
       SpreadProperty (this#on_loc_annot annot, { SpreadProperty.argument = argument' })
-    | Indexer (annot, indexer) ->
-      let open Indexer in
-      let { id = id_; key; value; static; variance } = indexer in
-      let id' = Option.map ~f:(this#on_loc_annot * id) id_ in
-      let key' = this#type_ key in
-      let value' = this#type_ value in
-      let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
-      Indexer (this#on_loc_annot annot, { id = id'; key = key'; value = value'; static; variance = variance' })
+    | Indexer indexer -> Indexer (this#object_indexer_type indexer)
     | CallProperty (annot, { CallProperty.value; static }) ->
       let open CallProperty in
       let value' = (this#on_loc_annot * this#function_type) value in
       CallProperty (this#on_loc_annot annot, { value = value'; static })
-    | InternalSlot (annot, islot) ->
-      let open InternalSlot in
-      let { id = id_; value; _ } = islot in
-      let id' = (this#on_loc_annot * id) id_ in
-      let value' = this#type_ value in
-      InternalSlot (this#on_loc_annot annot, { islot with id = id'; value = value' })
+    | InternalSlot islot -> InternalSlot (this#object_internal_slot_type islot)
 
   method interface_type (i: ('M, 'T) Ast.Type.Interface.t) : ('N, 'U) Ast.Type.Interface.t =
     let open Ast.Type.Interface in
@@ -777,12 +784,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
         this#on_loc_annot annot, { Params.params = params_list'; rest = rest' }
       in
       let return' = this#type_annotation_hint return in
-      let body' = match body with
-        | BodyBlock (annot, block) ->
-          BodyBlock (this#on_loc_annot annot, this#function_body block)
-        | BodyExpression expr ->
-          BodyExpression (this#expression expr)
-      in
+      let body' = this#function_body body in
       let predicate' = Option.map ~f:this#type_predicate predicate in
       let sig_loc' = this#on_loc_annot sig_loc in
       {
@@ -805,8 +807,13 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let annot, { argument } = expr in
     this#on_loc_annot annot, { argument = this#function_param_pattern argument }
 
-  method function_body (block: ('M, 'T) Ast.Statement.Block.t) : ('N, 'U) Ast.Statement.Block.t =
-    this#block block
+  method function_body body =
+    let open Ast.Function in
+    match body with
+     | BodyBlock (annot, block) ->
+       BodyBlock (this#on_loc_annot annot, this#block block)
+     | BodyExpression expr ->
+       BodyExpression (this#expression expr)
 
   method function_identifier (ident: 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
     this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
@@ -1009,16 +1016,20 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                                           : ('N, 'U) Ast.JSX.MemberExpression.t =
     let open Ast.JSX in
     let annot, {MemberExpression._object; MemberExpression.property} = member_exp in
-    let _object' = match _object with
-      | MemberExpression.Identifier id ->
-        let id' = this#jsx_identifier id in
-        MemberExpression.Identifier id'
-      | MemberExpression.MemberExpression nested_exp ->
-        let nested_exp' = this#jsx_member_expression nested_exp in
-        MemberExpression.MemberExpression nested_exp'
-    in
+    let _object' = this#jsx_member_expression_object _object in
     let property' = this#jsx_identifier property in
     this#on_loc_annot annot, MemberExpression.({_object=_object'; property=property'})
+
+  method jsx_member_expression_object (_object: ('M, 'T) Ast.JSX.MemberExpression._object)
+                                              : ('N, 'U) Ast.JSX.MemberExpression._object =
+    let open Ast.JSX.MemberExpression in
+    match _object with
+      | Identifier id ->
+        let id' = this#jsx_identifier id in
+        Identifier id'
+      | MemberExpression nested_exp ->
+        let nested_exp' = this#jsx_member_expression nested_exp in
+        MemberExpression nested_exp'
 
   method jsx_identifier ((annot, name): 'T Ast.JSX.Identifier.t) : 'U Ast.JSX.Identifier.t =
     this#on_type_annot annot, name
@@ -1091,16 +1102,15 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method object_ (expr: ('M, 'T) Ast.Expression.Object.t) : ('N, 'U) Ast.Expression.Object.t =
     let open Ast.Expression.Object in
     let { properties } = expr in
-    let properties' = Core_list.map ~f:(fun prop ->
-      match prop with
-      | Property p ->
-        let p' = this#object_property p in
-        Property p'
-      | SpreadProperty s ->
-        let s' = this#spread_property s in
-        SpreadProperty s'
-    ) properties in
+    let properties' = List.map this#object_property_or_spread_property properties in
     { properties = properties' }
+
+  method object_property_or_spread_property (prop: ('M, 'T) Ast.Expression.Object.property)
+                                                 : ('N, 'U) Ast.Expression.Object.property =
+    let open Ast.Expression.Object in
+    match prop with
+    | Property p -> Property (this#object_property p)
+    | SpreadProperty s -> SpreadProperty (this#spread_property s)
 
   method object_property (prop: ('M, 'T) Ast.Expression.Object.Property.t)
                               : ('N, 'U) Ast.Expression.Object.Property.t =
