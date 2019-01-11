@@ -1449,12 +1449,10 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       start = {
         line = program_loc._end.line + loc.start.line;
         column = loc.start.column;
-        offset = 0;
       };
       _end = {
         line = program_loc._end.line + loc._end.line;
         column = loc._end.column;
-        offset = 0;
       };
     }
 

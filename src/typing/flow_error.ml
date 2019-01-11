@@ -2015,7 +2015,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
 
   | EDuplicateModuleProvider {module_name; provider; conflict} ->
     let (loc1, loc2) = Loc.(
-      let pos = { line = 1; column = 0; offset = 0 } in
+      let pos = { line = 1; column = 0; } in
       let loc1 = { source = Some conflict; start = pos; _end = pos } in
       let loc2 = { source = Some provider; start = pos; _end = pos } in
       (loc1, loc2)

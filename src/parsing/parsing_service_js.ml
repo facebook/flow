@@ -232,19 +232,16 @@ let extract_docblock =
           let line_incr = if delim = "\r" then 0 else 1 in
           let column = 0 in
           let line = _end.line + line_incr in
-          let offset = _end.offset + (String.length delim) in
-          { column; line; offset; }
+          { column; line; }
       | Str.Text text ->
           let length = String.length text in
           let column = _end.column + length in
-          let offset = _end.offset + length in
-          { _end with column; offset; }
+          { _end with column; }
     ) start in
   let split loc s =
     (* Need to add 2 characters for the start of the comment *)
     let start = Loc.({ loc.start with
       column = loc.start.column + 2;
-      offset = loc.start.offset + 2;
     }) in
     Str.full_split attributes_rx s
     |> List.fold_left (fun (start, attributes) elem ->

@@ -13,8 +13,8 @@ let mk_source ?(source_maps=Some Source_map_config.default) () =
 
 let mk_loc (start_line, start_col) (end_line, end_col) =
   { Loc.none with Loc.
-    start = { Loc.line = start_line; column = start_col; offset = 0 };
-    _end = { Loc.line = end_line; column = end_col; offset = 0 };
+    start = { Loc.line = start_line; column = start_col };
+    _end = { Loc.line = end_line; column = end_col };
   }
 
 let assert_contents_equal =

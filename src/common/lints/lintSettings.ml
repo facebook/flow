@@ -141,8 +141,8 @@ let of_lines base_settings =
 
   let loc_of_line line =
     let open Loc in
-    let start = {line; column = 0; offset = 0} in
-    let _end = {line = line + 1; column = 0; offset = 0} in
+    let start = {line; column = 0} in
+    let _end = {line = line + 1; column = 0} in
     {source = None; start; _end}
   in
 

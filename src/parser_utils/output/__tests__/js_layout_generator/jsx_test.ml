@@ -18,8 +18,8 @@ module L = Layout_builder
 
 let make_loc start_line end_line = Loc.{
     source = None;
-    start = { line = start_line; column = 0; offset = 0; };
-    _end = { line = end_line; column = 0; offset = 0; };
+    start = { line = start_line; column = 0; };
+    _end = { line = end_line; column = 0; };
   }
 
 let tests = [

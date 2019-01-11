@@ -256,8 +256,8 @@ let mk_loc file line col =
   {
     Loc.
     source = Some file;
-    start = { Loc.line; column = col; offset = 0; };
-    _end = { Loc.line; column = col + 1; offset = 0; };
+    start = { Loc.line; column = col; };
+    _end = { Loc.line; column = col + 1; };
   }
 
 let infer_type filename content line col =

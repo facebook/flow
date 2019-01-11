@@ -47,8 +47,8 @@ end = struct
 
   let add loc { suppressions; lint_suppressions } =
     let suppression_loc = Loc.(
-      let start = { loc.start with line = loc._end.line + 1; column = 0 } in
-      let _end = { loc._end with line = loc._end.line + 2; column = 0 } in
+      let start = { line = loc._end.line + 1; column = 0 } in
+      let _end = { line = loc._end.line + 2; column = 0 } in
       { loc with start; _end }
     ) in
     let suppressions =
