@@ -3411,11 +3411,11 @@ and subscript =
         targs;
         arguments;
       } when not (Env.local_scope_entry_exists name) ->
+      let targs = Option.map targs (fun (_, args) ->
+        loc, snd (convert_tparam_instantiations cx SMap.empty args)
+      ) in
       let lhs_t, arguments = (
-        let targts = Option.map targs (fun (_, args) ->
-          snd (convert_tparam_instantiations cx SMap.empty args)
-        ) in
-        match targts, arguments with
+        match targs, arguments with
         | None, [ Expression (source_loc, Ast.Expression.Literal {
             Ast.Literal.value = Ast.Literal.String module_name; _;
           } as lit_exp) ] ->
@@ -3456,7 +3456,7 @@ and subscript =
         (loc, lhs_t),
         call_ast { Call.
           callee = (callee_loc, id_t), Identifier ((id_loc, id_t), name);
-          targs = None;
+          targs;
           arguments;
         }
       )
@@ -3466,11 +3466,11 @@ and subscript =
         targs;
         arguments;
       } when not (Env.local_scope_entry_exists name) ->
+      let targs = Option.map targs (fun (loc, args) ->
+        loc, snd (convert_tparam_instantiations cx SMap.empty args)
+      ) in
       let lhs_t, arguments = (
-        let targts = Option.map targs (fun (_, args) ->
-          snd (convert_tparam_instantiations cx SMap.empty args)
-        ) in
-        match targts, arguments with
+        match targs, arguments with
         | None, [
             Expression(_, Array({Array.elements;}) as elems_exp);
             Expression(callback_expr);
@@ -3512,7 +3512,6 @@ and subscript =
             local = true;
           }) in
           let _ = func_call cx reason ~use_op callback_expr_t None module_tvars in
-
           NullT.at loc,
           [ Expression (expression cx elems_exp); Expression callback_ast ]
 
@@ -3524,12 +3523,14 @@ and subscript =
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
             expected_arity = 0;
           });
-          AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
+          AnyT.at AnyError loc,
+          List.map Tast_utils.error_mapper#expression_or_spread arguments
         | _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
           Flow.add_output cx
             Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
-          AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
+          AnyT.at AnyError loc,
+          List.map Tast_utils.error_mapper#expression_or_spread arguments
       ) in
       (* TODO(vijayramamurthy) does "requireLazy" have a type? *)
       let id_t = Unsoundness.at Chain callee_loc in
@@ -3537,7 +3538,7 @@ and subscript =
         (loc, lhs_t),
         call_ast { Call.
           callee = (callee_loc, id_t), Identifier ((id_loc, id_t), name);
-          targs = None;
+          targs;
           arguments;
         }
       )

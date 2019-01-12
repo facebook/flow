@@ -209,7 +209,6 @@ let blacklist = SSet.of_list [
   "predicates-parsing/fail-0.js";
   "this_type/interface.js";
   "type-at-pos_expression/optional_chaining.js";
-  "typeapp_call/require.js";
 ]
 
 let tests =
