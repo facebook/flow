@@ -564,7 +564,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       )
     else (
       Flow.add_output cx (FlowError.EUnexpectedThisType loc);
-      (loc, AnyT.locationless AnyError), Any (* why locationless? *)
+      Tast_utils.error_mapper#type_ t_ast
+
     )
 
   (* Class<T> is the type of the class whose instances are of type T *)

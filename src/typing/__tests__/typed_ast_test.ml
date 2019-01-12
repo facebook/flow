@@ -201,7 +201,6 @@ let test_case relative_path file_name _ =
 let blacklist = SSet.of_list [
   "invariant_reachability/index.js";
   "predicates-parsing/fail-0.js";
-  "this_type/interface.js";
 ]
 
 let tests =
