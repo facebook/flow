@@ -419,27 +419,24 @@ and toplevels =
          check for unreachable code and rethrow *)
       let warn_unreachable loc =
         Flow.add_output cx (Flow_error.EUnreachable loc) in
-      let rest_opts = Core_list.map ~f:Ast.Statement.(fun stmt ->
+      let rest = Core_list.map ~f:Ast.Statement.(fun stmt ->
         match stmt with
-        | (_, Empty) as stmt -> Some stmt
+        | (_, Empty) as stmt -> stmt
         (* function declarations are hoisted, so not unreachable *)
-        | (_, FunctionDeclaration _ ) -> Some (statement cx stmt)
+        | (_, FunctionDeclaration _ ) -> statement cx stmt
         (* variable declarations are hoisted, but associated assignments are
            not, so skip variable declarations with no assignments.
            Note: this does not seem like a practice anyone would use *)
-        | (_, VariableDeclaration d) -> VariableDeclaration.(d.declarations |>
+        | (_, VariableDeclaration d) as stmt -> VariableDeclaration.(d.declarations |>
             List.iter Declarator.(function
             | (_, { init = Some (loc, _); _ } ) -> warn_unreachable loc
             | _ -> ()
           ));
-          None
-        | (loc, _) -> warn_unreachable loc; None
+          Tast_utils.unreachable_mapper#statement stmt
+        | (loc, _) as stmt ->
+          warn_unreachable loc;
+          Tast_utils.unreachable_mapper#statement stmt
       ) stmts in
-      let rest =
-        rest_opts
-        |> List.filter Option.is_some
-        |> Core_list.map ~f:(fun stmt_opt -> Option.value_exn stmt_opt)
-      in
       Abnormal.throw_stmts_control_flow_exception
         (List.rev_append acc (stmt::rest))
         abnormal

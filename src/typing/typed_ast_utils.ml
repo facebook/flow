@@ -205,3 +205,9 @@ let unchecked_mapper = object(_)
   method on_loc_annot loc = loc
   method on_type_annot loc = loc, Type.(AnyT.at (Unsound Unchecked)) loc
 end
+
+let unreachable_mapper = object(_)
+  inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
+  method on_loc_annot loc = loc
+  method on_type_annot loc = loc, Type.(AnyT.at Unreachable) loc
+end

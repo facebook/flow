@@ -208,11 +208,8 @@ let blacklist = SSet.of_list [
   "optional_chaining/static_members.js";
   "predicates-parsing/fail-0.js";
   "this_type/interface.js";
-  "try/return.js";
-  "try/test.js";
   "type-at-pos_expression/optional_chaining.js";
   "typeapp_call/require.js";
-  "unreachable/unreachable.js";
 ]
 
 let tests =
