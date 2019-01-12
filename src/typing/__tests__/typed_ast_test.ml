@@ -26,7 +26,7 @@ let metadata = { Context.
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
   esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
-  esproposal_decorators = Options.ESPROPOSAL_ENABLE;
+  esproposal_decorators = Options.ESPROPOSAL_WARN;
   esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
@@ -201,8 +201,6 @@ let test_case relative_path file_name _ =
 let blacklist = SSet.of_list [
   "ast_error_description/expression.js";
   "autocomplete/optional_chaining_continue.js";
-  "esproposal_decorators.ignore/test.js";
-  "esproposal_decorators.warn/test.js";
   "find-refs-local/optional-chaining.js";
   "get-def/optional_chaining.js";
   "invariant_reachability/index.js";

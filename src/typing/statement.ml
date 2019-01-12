@@ -6325,12 +6325,13 @@ and mk_class_sig =
           ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body) in
         let func_t = Option.value (!func_t_ref) ~default:(EmptyT.at id_loc) in
         let func = reconstruct_func body func_t in
+        let decorators = List.map Tast_utils.unimplemented_mapper#class_decorator decorators in
         Body.Method ((loc, func_t), { Method.
           key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), name);
           value = func_loc, func;
           kind;
           static;
-          decorators = []; (* we don't currently typecheck decorators *)
+          decorators;
         })
       in
       let add = match kind with
@@ -6427,7 +6428,8 @@ and mk_class_sig =
     tparams = tparams_ast;
     extends = extends_ast;
     implements = implements_ast;
-    classDecorators = []; (* class decorators not yet supported *)
+    classDecorators =
+      List.map Tast_utils.unimplemented_mapper#class_decorator classDecorators;
   })
 
 and mk_func_sig =
