@@ -284,3 +284,17 @@ export function prompt(message: string): Promise<string> {
     });
   });
 }
+
+export function withTimeout<A, B>(
+  timeout_ms: number,
+  promise: Promise<A>,
+  onTimeout: () => B,
+): Promise<A | B> {
+  let timer;
+  const timeout = new Promise(resolve => {
+    timer = setTimeout(() => resolve(onTimeout()), timeout_ms);
+  });
+  return Promise.race([timeout, promise]).finally(
+    () => timer && clearTimeout(timer),
+  );
+}
