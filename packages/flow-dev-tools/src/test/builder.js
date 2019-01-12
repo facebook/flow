@@ -67,6 +67,7 @@ export class TestBuilder {
   testErrors = [];
   allowFlowServerToDie = false;
   logStream: stream$Writable | null;
+  waitForRecheck: boolean;
 
   constructor(
     bin: string,
@@ -76,6 +77,7 @@ export class TestBuilder {
     testNum: number,
     flowConfigFilename: string,
     lazyMode: 'ide' | 'fs' | null,
+    wait_for_recheck: boolean,
   ) {
     this.bin = bin;
     // If we're testing lazy mode, then we must use status
@@ -90,6 +92,7 @@ export class TestBuilder {
     this.lazyMode = lazyMode;
     this.ide = null;
     this.ideMessages = [];
+    this.waitForRecheck = wait_for_recheck;
   }
 
   getFileName(): string {
@@ -338,7 +341,7 @@ export class TestBuilder {
       '--file-watcher',
       'none',
       '--wait-for-recheck',
-      'true',
+      String(this.waitForRecheck),
     ]
       .concat(lazyMode)
       .concat([this.dir]);
@@ -1085,6 +1088,7 @@ export default class Builder {
     testNum: number,
     flowConfigFilename: string,
     lazyMode: 'fs' | 'ide' | null,
+    wait_for_recheck: boolean,
   ): Promise<TestBuilder> {
     const testBuilder = new TestBuilder(
       bin,
@@ -1094,6 +1098,7 @@ export default class Builder {
       testNum,
       flowConfigFilename,
       lazyMode,
+      wait_for_recheck,
     );
     Builder.builders.push(testBuilder);
     await testBuilder.createFreshDir();
