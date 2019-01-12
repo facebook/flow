@@ -3402,7 +3402,7 @@ and subscript =
     in
     let member_ast member = match opt_state with
     | NewChain -> OptionalMember { OptionalMember.member; optional = true }
-    | ContinueChain -> OptionalMember { OptionalMember.member; optional = true }
+    | ContinueChain -> OptionalMember { OptionalMember.member; optional = false }
     | NonOptional -> Member member
     in
 

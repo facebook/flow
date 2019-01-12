@@ -199,15 +199,9 @@ let test_case relative_path file_name _ =
 (* This list includes files for which the produced Typed AST differs in structure
  * from the parsed AST. *)
 let blacklist = SSet.of_list [
-  "autocomplete/optional_chaining_continue.js";
-  "find-refs-local/optional-chaining.js";
-  "get-def/optional_chaining.js";
   "invariant_reachability/index.js";
-  "optional_chaining/computed_properties.js";
-  "optional_chaining/static_members.js";
   "predicates-parsing/fail-0.js";
   "this_type/interface.js";
-  "type-at-pos_expression/optional_chaining.js";
 ]
 
 let tests =
