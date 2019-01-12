@@ -153,7 +153,7 @@ let diff_dir =
   let extension = Printf.sprintf "typed_ast_test_%d" (Random.int 0x3FFFFFFF) in
   Server_files_js.file_of_root extension ~flowconfig_name ~tmp_dir root
 
-let check_structural_equality stmts1 stmts2 =
+let check_structural_equality relative_path file_name stmts1 stmts2 =
   let diff_output : int option ref = ref None in
   let err : exn option ref = ref None in
   begin try
@@ -175,14 +175,62 @@ let check_structural_equality stmts1 stmts2 =
   begin match !diff_output with
   | None -> assert_failure "diff wasn't able to run for some reason"
   | Some 0 -> ()
-  | Some _ -> assert_failure "ASTs are different."
+  | Some _ ->
+    let path = match Sys_utils.realpath file_name with
+      | Some path -> path
+      | None -> relative_path
+    in
+    assert_failure (
+      path ^ ":\n" ^
+      "The structure of the produced Typed AST differs from that of the parsed AST.\n\n" ^
+      "To fix this do one of the following:\n" ^
+      " * restore the produced Typed AST, or\n" ^
+      " * include \"" ^ relative_path ^ "\" in the blacklist section\n" ^
+      "   in src/typing/__tests__/typed_ast_test.ml and file a task with the\n" ^
+      "   'flow-typed-ast' tag.\n"
+    )
   end
 
-let test_case file_name _ =
+let test_case relative_path file_name _ =
   match before_and_after_stmts file_name with
-  | Ok (s, s') -> check_structural_equality s s'
+  | Ok (s, s') -> check_structural_equality relative_path file_name s s'
   | Error (File_sig.IndeterminateModuleType _) -> ()
 
-let tests = "TypedAST" >::: [
-  "lib_serviceworkers" >:: test_case "flow/lib/serviceworkers.js"
+(* This list includes files for which the produced Typed AST differs in structure
+ * from the parsed AST. *)
+let blacklist = SSet.of_list [
+  "ast_error_description/expression.js";
+  "autocomplete/optional_chaining_continue.js";
+  "esproposal_decorators.ignore/test.js";
+  "esproposal_decorators.warn/test.js";
+  "find-refs-local/optional-chaining.js";
+  "get-def/optional_chaining.js";
+  "invariant_reachability/index.js";
+  "optional_chaining/computed_properties.js";
+  "optional_chaining/static_members.js";
+  "predicates-parsing/fail-0.js";
+  "this_type/interface.js";
+  "try/return.js";
+  "try/test.js";
+  "type-at-pos_expression/optional_chaining.js";
+  "typeapp_call/require.js";
+  "unreachable/unreachable.js";
 ]
+
+let tests =
+  let relative_test_dir = "flow/tests" in
+  let root = Option.value_exn (Sys_utils.realpath relative_test_dir) in
+  let files = CommandUtils.expand_file_list [relative_test_dir] in
+  let tests =
+    let slash_regex = Str.regexp_string "/" in
+    SSet.fold (fun file acc ->
+    let relative_path = Files.relative_path root file in
+    if SSet.mem relative_path blacklist then acc else
+    let test_name = relative_path
+      |> Str.global_replace slash_regex "_"
+      |> Filename.chop_extension
+    in
+    (test_name >:: test_case relative_path (relative_test_dir ^ "/" ^ relative_path))::acc
+  ) files []
+  in
+  "TypedAST" >::: tests
