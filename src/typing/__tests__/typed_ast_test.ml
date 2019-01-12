@@ -200,7 +200,6 @@ let test_case relative_path file_name _ =
  * from the parsed AST. *)
 let blacklist = SSet.of_list [
   "invariant_reachability/index.js";
-  "predicates-parsing/fail-0.js";
 ]
 
 let tests =
