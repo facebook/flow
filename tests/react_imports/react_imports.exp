@@ -217,7 +217,7 @@ References:
    377|     +useLayoutEffect: typeof useLayoutEffect,
    378|     +useCallback: typeof useCallback,
    379|     +useMemo: typeof useMemo,
-   380|     +useImperativeMethods: typeof useImperativeMethods,
+   380|     +useImperativeHandle: typeof useImperativeHandle,
    381|   |};
           -^ [1]
 
@@ -262,7 +262,7 @@ References:
    377|     +useLayoutEffect: typeof useLayoutEffect,
    378|     +useCallback: typeof useCallback,
    379|     +useMemo: typeof useMemo,
-   380|     +useImperativeMethods: typeof useImperativeMethods,
+   380|     +useImperativeHandle: typeof useImperativeHandle,
    381|   |};
           -^ [1]
 
@@ -307,7 +307,7 @@ References:
    377|     +useLayoutEffect: typeof useLayoutEffect,
    378|     +useCallback: typeof useCallback,
    379|     +useMemo: typeof useMemo,
-   380|     +useImperativeMethods: typeof useImperativeMethods,
+   380|     +useImperativeHandle: typeof useImperativeHandle,
    381|   |};
           -^ [1]
 
