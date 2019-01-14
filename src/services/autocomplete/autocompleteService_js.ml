@@ -126,7 +126,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
     "ac_name", JSON_String ac_name;
     (* don't need to strip root for logging *)
     "ac_loc", JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root:None ac_loc);
-    "loc", Reason.json_of_loc ac_loc;
+    "loc", Reason.json_of_loc ~offset_table:None ac_loc;
     "docblock", Docblock.json_of_docblock docblock;
     "result", JSON_String result_str;
     "type", Debug_js.json_of_t ~depth:3 cx t;

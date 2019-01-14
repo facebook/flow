@@ -17,7 +17,7 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases file content line col =
     let json_data, loc, ty =
       let mk_data result_str loc ty_json = Hh_json.JSON_Object [
         "result", Hh_json.JSON_String result_str;
-        "loc", Reason.json_of_loc loc;
+        "loc", Reason.json_of_loc ~offset_table:None loc;
         "type", ty_json;
       ] in
       Query_types.(

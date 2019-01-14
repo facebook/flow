@@ -55,12 +55,12 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let print_json result ~pretty ~strip_root =
+let print_json result ~stdin_file ~pretty ~strip_root =
   let open Hh_json in
   let open ServerProt.Response in
   let json_of_edit (loc, text) =
     JSON_Object [
-      "oldRange", (Reason.json_of_loc ~strip_root loc);
+      "oldRange", (json_of_loc_with_offset ~stdin_file ~strip_root loc);
       "newText", JSON_String text;
     ]
   in
@@ -119,7 +119,7 @@ let main base_flags option_values json pretty root strip_root path rename args (
   | ServerProt.Response.REFACTOR (Ok result) ->
     (* format output *)
     if json || pretty
-    then print_json result ~pretty ~strip_root
+    then print_json result ~stdin_file:file ~pretty ~strip_root
     else print_endline (to_string result ~strip_root)
   | ServerProt.Response.REFACTOR (Error exn_msg) ->
     Utils_js.prerr_endlinef

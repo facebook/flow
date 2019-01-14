@@ -161,9 +161,10 @@ let rec split_overlapping_ranges accum = function
 let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bool) list) content =
   if debug then List.iter debug_range types;
 
+  let offset_table = lazy (Offset_utils.make content) in
   begin if color then
     let coverage_offsets =
-      let offset_table = Offset_utils.make content in
+      let offset_table = Lazy.force offset_table in
       let loc_to_offset_pair loc =
         let open Loc in
         (Offset_utils.offset offset_table loc.start, Offset_utils.offset offset_table loc._end)
@@ -180,6 +181,7 @@ let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bo
   let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
 
   if json then
+    let offset_table = Some (Lazy.force offset_table) in
     let covered_locs, uncovered_locs =
       let covered, uncovered = List.partition (fun (_, is_covered) -> is_covered) types in
       let locs_of = Core_list.map ~f:(fun (loc, _) -> loc) in
@@ -189,9 +191,9 @@ let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bo
     JSON_Object [
       "expressions", JSON_Object [
         "covered_count", int_ covered;
-        "covered_locs", JSON_Array (covered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root));
+        "covered_locs", JSON_Array (covered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table));
         "uncovered_count", int_ (total - covered);
-        "uncovered_locs", JSON_Array (uncovered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root));
+        "uncovered_locs", JSON_Array (uncovered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table));
       ];
     ]
     |> print_json_endline ~pretty

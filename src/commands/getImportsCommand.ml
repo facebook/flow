@@ -77,7 +77,7 @@ let main base_flags option_values json pretty root strip_root wait_for_recheck m
         Nel.fold_left (fun acc loc ->
           JSON_Object (
             ("import", JSON_String req) ::
-            ("loc", Reason.json_of_loc ~strip_root loc) ::
+            ("loc", json_of_loc_with_offset ~strip_root loc) ::
             (Errors.deprecated_json_props_of_loc ~strip_root loc)
           ) :: acc
         ) acc locs

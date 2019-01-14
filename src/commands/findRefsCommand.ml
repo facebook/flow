@@ -52,7 +52,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let print_json result ~pretty ~strip_root =
+let print_json result ~stdin_file ~pretty ~strip_root =
   let open Hh_json in
   let json = match result with
     | None -> JSON_Object ["kind", JSON_String "no-symbol-found"]
@@ -60,7 +60,7 @@ let print_json result ~pretty ~strip_root =
       JSON_Object [
         "kind", JSON_String "symbol-found";
         "name", JSON_String name;
-        "locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root) locs)
+        "locs", JSON_Array (Core_list.map ~f:(json_of_loc_with_offset ~stdin_file ~strip_root) locs)
       ]
   in
   print_json_endline ~pretty json
@@ -107,7 +107,7 @@ let main base_flags option_values json pretty root strip_root path global multi_
   | ServerProt.Response.FIND_REFS (Ok result) ->
     (* format output *)
     if json || pretty
-    then print_json result ~pretty ~strip_root
+    then print_json result ~stdin_file:file ~pretty ~strip_root
     else print_endline (to_string result ~strip_root)
   | ServerProt.Response.FIND_REFS (Error exn_msg) ->
     Utils_js.prerr_endlinef

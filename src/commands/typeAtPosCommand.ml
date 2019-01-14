@@ -66,7 +66,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t) ~json ~pretty ~strip_root ~expanded =
+let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded =
   let ty = match t with
     | None -> "(unknown)"
     | Some ty -> Ty_printer.string_of_t ty
@@ -75,10 +75,11 @@ let handle_response (loc, t) ~json ~pretty ~strip_root ~expanded =
   then (
     let open Hh_json in
     let open Reason in
+    let offset_table = Option.map file_contents ~f:Offset_utils.make in
     let json_assoc = (
         ("type", JSON_String ty) ::
         ("reasons", JSON_Array []) ::
-        ("loc", json_of_loc ~strip_root loc) ::
+        ("loc", json_of_loc ~strip_root ~offset_table loc) ::
         (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     let json_assoc =
@@ -130,10 +131,11 @@ let main base_flags option_values json pretty root strip_root verbose path wait_
     expand_aliases;
     wait_for_recheck;
   } in
+  let file_contents = File_input.content_of_file_input file |> Core_result.ok in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
   | ServerProt.Response.INFER_TYPE (Ok resp) ->
-    handle_response resp ~json ~pretty ~strip_root ~expanded
+    handle_response resp ~file_contents ~json ~pretty ~strip_root ~expanded
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main
