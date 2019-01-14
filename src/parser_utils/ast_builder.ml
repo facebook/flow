@@ -21,6 +21,9 @@ module Literals = struct
   let number value raw =
     { value = Number value; raw; }
 
+  let int value =
+    number (float_of_int value) (Printf.sprintf "%d" value)
+
   let bool is_true =
     { value = Boolean is_true; raw = if is_true then "true" else "false" }
 end
@@ -28,10 +31,10 @@ end
 module Patterns = struct
   open Ast.Pattern
 
-  let identifier str =
-    Loc.none, Identifier { Identifier.
-      name = Loc.none, str;
-      annot = Ast.Type.Missing Loc.none;
+  let identifier ?(loc=Loc.none) str =
+    loc, Identifier { Identifier.
+      name = loc, str;
+      annot = Ast.Type.Missing loc;
       optional = false;
     }
 
@@ -214,8 +217,8 @@ module Statements = struct
   let if_ test consequent alternate =
     Loc.none, If { If.test; consequent; alternate }
 
-  let return expr =
-    Loc.none, Return { Return.argument = expr }
+  let return ?(loc=Loc.none) expr =
+    loc, Return { Return.argument = expr }
 
   let directive txt =
     let expr = Loc.none, Ast.Expression.Literal (Literals.string txt) in
@@ -237,8 +240,8 @@ end
 module Expressions = struct
   open Ast.Expression
 
-  let identifier name =
-    Loc.none, Identifier (Loc.none, name)
+  let identifier ?(loc=Loc.none) name =
+    loc, Identifier (loc, name)
 
   let array elements =
     Loc.none, Array { Array.elements }
@@ -265,8 +268,8 @@ module Expressions = struct
   let class_ ?super ?id elements =
     Loc.none, Class (Classes.make ?super ?id elements)
 
-  let literal lit =
-    Loc.none, Literal lit
+  let literal ?(loc=Loc.none) lit =
+    loc, Literal lit
 
   let assignment left ?(operator=Ast.Expression.Assignment.Assign) right =
     Loc.none, Assignment { Assignment.operator; left; right; }
@@ -316,8 +319,8 @@ module Expressions = struct
   let object_property_key_literal k =
     Object.Property.Literal (Loc.none, k)
 
-  let object_property_key_literal_from_string (k: string) =
-    Object.Property.Literal (Loc.none, Literals.string k)
+  let object_property_key_literal_from_string ?(loc=Loc.none) (k: string) =
+    Object.Property.Literal (loc, Literals.string k)
 
   let object_property_computed_key k =
     Object.Property.Computed k
@@ -396,6 +399,13 @@ module Expressions = struct
       expression;
       annot = Types.annotation annotation;
     }
+
+  module Literals = struct
+    let string ?loc value = literal ?loc (Literals.string value)
+    let number ?loc value raw = literal ?loc (Literals.number value raw)
+    let int ?loc value = literal ?loc (Literals.int value)
+    let bool ?loc is_true = literal ?loc (Literals.bool is_true)
+  end
 end
 
 module Comments = struct
