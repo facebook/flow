@@ -26,6 +26,7 @@ can be overridden with command line flags.
 * [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
+* [`lazy_mode`](#toc-lazy-mode-fs-ide-watchman-none)
 * [`log.file`](#toc-log-file-string)
 * [`max_header_tokens`](#toc-max-header-tokens-integer)
 * [`module.file_ext`](#toc-module-file-ext-string)
@@ -144,6 +145,16 @@ Warnings are hidden by default in the CLI to avoid console spew. (An IDE is a
 much better interface to show warnings.)
 
 The default value is `false`.
+
+#### `lazy_mode` _`(fs|ide|watchman|none)`_ <a class="toc" id="toc-lazy-mode-fs-ide-watchman-none" href="#toc-lazy-mode-fs-ide-watchman-none"></a>
+
+For more on lazy modes, see the [lazy modes docs](/en/docs/lang/lazy-modes/).
+
+Setting `lazy_mode` in the `.flowconfig` will cause new Flow servers for that
+root to use that lazy mode (or no lazy mode if set to `none`). This option can
+be overridden from the CLI using the `--lazy-mode` flag.
+
+The default value is `none`.
 
 #### `log.file` _`(string)`_ <a class="toc" id="toc-log-file-string" href="#toc-log-file-string"></a>
 
