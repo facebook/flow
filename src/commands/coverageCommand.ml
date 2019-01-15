@@ -83,7 +83,9 @@ let rec colorize_file content last_offset accum = function
     let accum, offset = colorize content offset end_offset color accum in
     colorize_file content offset accum rest
 
-let sort_ranges (a_loc, _) (b_loc, _) = Pervasives.compare a_loc b_loc
+let sort_ranges ((a_line, a_col), _) ((b_line, b_col), _) =
+  let line = a_line - b_line in
+  if line = 0 then a_col - b_col else line
 
 let rec split_overlapping_ranges accum = function
   | [] -> accum
