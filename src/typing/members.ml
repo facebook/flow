@@ -314,7 +314,7 @@ let resolve_tvar cx (_, id) =
      improve failure tolerance.  *)
   List.fold_left (fun u t ->
     merge_type cx (t, u)
-  ) (locationless_reason RAny |> Unsoundness.unresolved_any) ts
+  ) (RAnyImplicit |> locationless_reason |> Unsoundness.unresolved_any) ts
 
 let rec resolve_type cx = function
   | OpenT tvar -> resolve_tvar cx tvar |> resolve_type cx

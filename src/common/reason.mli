@@ -8,7 +8,8 @@
 val mk_id: unit -> int
 
 type reason_desc =
-  | RNumber | RString | RBoolean | RMixed | REmpty | RAny | RVoid | RNull
+  | RAnyExplicit | RAnyImplicit
+  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
@@ -139,7 +140,6 @@ type reason_desc =
   | RCommonJSExports of string
   | RModule of string
   | ROptionalChain
-
   | RReactProps
   | RReactElement of string option
   | RReactClass

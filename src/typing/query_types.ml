@@ -101,7 +101,7 @@ let dump_types cx file_sig ~printer =
   |> sort_loc_pairs
 
 let rec is_covered = function
-  | Ty.Any
+  | Ty.Any _
   | Ty.Bot -> false
   | Ty.Union (t1, t2, ts) ->
     List.exists is_covered (t1::t2::ts)

@@ -133,7 +133,8 @@ and dump_t ?(depth = 10) t =
       (dump_symbol s)
       (Ty.debug_string_of_generic_kind kind)
       (dump_generics ~depth ts)
-  | Any -> "Any"
+  | Any Implicit -> "Implicit Any"
+  | Any Explicit -> "Explicit Any"
   | Top -> "Top"
   | Bot -> "Bot"
   | Void -> "Void"
@@ -186,7 +187,8 @@ let string_of_ctor = function
   | TVar (RVar _, _) -> "RecVar"
   | Bound _ -> "Bound"
   | Generic _ -> "Generic"
-  | Any -> "Any"
+  | Any Implicit -> "Implicit Any"
+  | Any Explicit -> "Explicit Any"
   | Top -> "Top"
   | Bot -> "Bot"
   | Void -> "Void"
@@ -241,7 +243,7 @@ let json_of_t ~strip_root =
         "type", json_of_symbol s;
         "kind", JSON_String (Ty.debug_string_of_generic_kind k);
       ]
-    | Any
+    | Any _
     | Top | Bot
     | Void | Null
     | Num _ | Str _ | Bool _ -> []

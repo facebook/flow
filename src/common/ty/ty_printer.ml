@@ -73,7 +73,7 @@ let type_ ?(size=5000) t =
     match t with
     | TVar (v, ts) -> type_generic ~depth (type_var v) ts
     | Bound (_, name) -> Atom name
-    | Any -> Atom "any"
+    | Any _ -> Atom "any"
     | Top -> Atom "mixed"
     | Bot -> Atom "empty"
     | Void -> Atom "void"

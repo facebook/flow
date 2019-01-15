@@ -556,7 +556,7 @@ end = struct
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Supertype t)
     | DefT (_, MixedT _) -> return Ty.Top
-    | DefT (_, AnyT _) -> return Ty.Any
+    | DefT (_, AnyT _) -> Ty.Any Ty.Explicit |> return (* TODO: Actually disambiguate this *)
     | DefT (_, VoidT) -> return Ty.Void
     | DefT (_, NumT (Literal (_, (_, x))))
       when Env.preserve_inferred_literal_types env ->
@@ -628,10 +628,10 @@ end = struct
         (* Function.prototype.apply: (thisArg: any, argArray?: any): any *)
         return Ty.(mk_fun
           ~params:[
-            (Some "thisArg", Any, non_opt_param);
-            (Some "argArray", Any, opt_param);
+            (Some "thisArg", Any Explicit, non_opt_param);
+            (Some "argArray", Any Explicit, opt_param);
           ]
-          Any)
+          (Any Explicit))
       else
         return Ty.(TypeOf (["Function"; "prototype"], "apply"))
 
@@ -639,13 +639,13 @@ end = struct
       if Env.expand_internal_types env then
         (* Function.prototype.bind: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
-          ~params:[(Some "thisArg", Any, non_opt_param)]
+          ~params:[(Some "thisArg", Any Explicit, non_opt_param)]
           ~rest:(Some "argArray", Arr {
             arr_readonly = false;
             arr_literal = false;
-            arr_elt_t = Any
+            arr_elt_t = Any Explicit
           })
-          Any)
+          (Any Explicit))
       else
          return Ty.(TypeOf (["Function"; "prototype"], "bind"))
 
@@ -653,13 +653,13 @@ end = struct
       if Env.expand_internal_types env then
         (* Function.prototype.call: (thisArg: any, ...argArray: Array<any>): any *)
         return Ty.(mk_fun
-          ~params:[(Some "thisArg", Any, non_opt_param)]
+          ~params:[(Some "thisArg", Any Explicit, non_opt_param)]
           ~rest:(Some "argArray", Arr {
             arr_readonly = false;
             arr_literal = false;
-            arr_elt_t = Any;
+            arr_elt_t = Any Explicit;
           })
-          Any)
+          (Any Explicit))
       else
          return Ty.(TypeOf (["Function"; "prototype"], "call"))
 
@@ -895,7 +895,7 @@ end = struct
         end
       | Ty.Utility (Ty.Class _ | Ty.Exists)
       | Ty.Bot
-      | Ty.Any
+      | Ty.Any _
       | Ty.Top
       | Ty.Union _
       | Ty.Inter _ ->
@@ -1024,7 +1024,7 @@ end = struct
           | _ ->
             return (generic_talias ta_name targs)
         end
-      | Ty.(Any | Bot | Top) as ty -> return ty
+      | Ty.(Any _ | Bot | Top) as ty -> return ty
       (* "Fix" type application on recursive types *)
       | Ty.TVar (Ty.RVar v, None) ->
         return (Ty.TVar (Ty.RVar v, targs))
@@ -1076,26 +1076,26 @@ end = struct
     function
     (* Object.assign: (target: any, ...sources: Array<any>): any *)
     | ObjectAssign -> return Ty.(mk_fun
-        ~params:[(Some "target", Any, non_opt_param)]
+        ~params:[(Some "target", Any Explicit, non_opt_param)]
         ~rest:(Some "sources", Arr {
           arr_readonly = false;
           arr_literal = false;
-          arr_elt_t = Any
+          arr_elt_t = Any Explicit
         })
-        Any
+        (Any Explicit)
       )
 
     (* Object.getPrototypeOf: (o: any): any *)
     | ObjectGetPrototypeOf ->
-      return Ty.(mk_fun ~params:[(Some "o", Any, non_opt_param)] Any)
+      return Ty.(mk_fun ~params:[(Some "o", Any Explicit, non_opt_param)] (Any Explicit))
 
     (* Object.setPrototypeOf: (o: any, p: any): any *)
     | ObjectSetPrototypeOf ->
       let params = [
-        (Some "o", Ty.Any, non_opt_param);
-        (Some "p", Ty.Any, non_opt_param);
+        (Some "o", Ty.Any Ty.Explicit, non_opt_param);
+        (Some "p", Ty.Any Ty.Explicit, non_opt_param);
       ] in
-      return (mk_fun ~params Ty.Any)
+      return (mk_fun ~params (Ty.Any Ty.Explicit))
 
     (* var idx:
        <IdxObject: Any, IdxResult>
@@ -1106,7 +1106,7 @@ end = struct
       let idxObject = Ty.Bound (ALoc.none, "IdxObject") in
       let idxResult = Ty.Bound (ALoc.none, "IdxResult") in
       let tparams = [
-        mk_tparam ~bound:Ty.Any "IdxObject";
+        mk_tparam ~bound:(Ty.Any Ty.Explicit) "IdxObject";
         mk_tparam "IdxResult";
       ]
       in
@@ -1155,7 +1155,7 @@ end = struct
         mk_fun ~params:[(Some "_", Arr {
             arr_readonly = false;
             arr_literal = false;
-            arr_elt_t = Any;
+            arr_elt_t = Any Explicit;
           }, non_opt_param
         )] Void
       )
@@ -1169,13 +1169,13 @@ end = struct
       )
 
     (* reactPropType: any (TODO) *)
-    | ReactPropType _ -> return Ty.Any
+    | ReactPropType _ -> Ty.Any Ty.Explicit |> return
 
     (* reactCreateClass: (spec: any) => ReactClass<any> *)
     | ReactCreateClass ->
-      let params = [(Some "spec", Ty.Any, non_opt_param)] in
+      let params = [(Some "spec", Ty.Any Ty.Explicit, non_opt_param)] in
       let x = Ty.builtin_symbol "ReactClass" in
-      return (mk_fun ~params (generic_talias x (Some [Ty.Any])))
+      return (mk_fun ~params (generic_talias x (Some [Ty.Any Ty.Explicit])))
 
     (* 1. Component class:
           <T>(name: ReactClass<T>, config: T, children?: any) => React$Element<T>
@@ -1192,21 +1192,21 @@ end = struct
         let params = [
           (Some "name", generic_builtin_t "ReactClass" [t], non_opt_param);
           (Some "config", t, non_opt_param);
-          (Some "children", Any, opt_param);
+          (Some "children", Any Ty.Explicit, opt_param);
         ]
         in
         let reactElement = generic_builtin_t "React$Element" [t] in
         let f1 = mk_fun ~tparams ~params reactElement in
         let params = [
           (Some "config", t, non_opt_param);
-          (Some "context", Any, non_opt_param);
+          (Some "context", Any Ty.Explicit, non_opt_param);
         ]
         in
         let sfc = mk_fun ~tparams ~params reactElement in
         let params = [
           (Some "fn", sfc, non_opt_param);
           (Some "config", t, non_opt_param);
-          (Some "children", Any, opt_param);
+          (Some "children", Any Ty.Explicit, opt_param);
         ]
         in
         let f2 = mk_fun ~tparams ~params reactElement in

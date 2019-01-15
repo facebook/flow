@@ -204,7 +204,8 @@ let check_type_visitor wrap =
     | Fun _ -> wrap Reason.RFunctionType
     | Generic (_, _, Some _) -> wrap (Reason.RCustom "class with generics")
     | Mu _ -> wrap (Reason.RCustom "recursive type")
-    | Any -> wrap Reason.RAny
+    | Any Implicit -> Reason.RAnyImplicit |> wrap
+    | Any Explicit -> Reason.RAnyExplicit |> wrap
     | Bound (_, name) -> wrap (Reason.RCustom ("bound type var " ^ name))
     | Top -> wrap Reason.RMixed
     | Bot -> wrap Reason.REmpty

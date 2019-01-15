@@ -2701,15 +2701,15 @@ module EmptyT = Primitive (struct
 end)
 
 module AnyT = struct
-  let desc = RAny
+  let desc = function Annotated -> RAnyExplicit | _ -> RAnyImplicit
   let make source r = DefT (r, AnyT source)
-  let at   source   = mk_reason desc %> annot_reason %> make source
-  let why  source   = replace_reason_const ~keep_def_loc:true desc %> make source
+  let at   source   = mk_reason (desc source) %> annot_reason %> make source
+  let why  source   = replace_reason_const ~keep_def_loc:true (desc source) %> make source
   let annot      = why Annotated
   let error      = why AnyError
   let untyped    = why Untyped
 
-  let locationless source = locationless_reason desc |> make source
+  let locationless source = desc source |> locationless_reason |> make source
 
   let source = function
   | DefT(_, AnyT Annotated)   -> Annotated

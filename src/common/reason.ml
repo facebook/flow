@@ -59,7 +59,8 @@ module TestID = struct
 end
 
 type reason_desc =
-  | RNumber | RString | RBoolean | RMixed | REmpty | RAny | RVoid | RNull
+  | RAnyExplicit | RAnyImplicit
+  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
@@ -392,7 +393,8 @@ let rec string_of_desc = function
   | RBoolean -> "boolean"
   | RMixed -> "mixed"
   | REmpty -> "empty"
-  | RAny -> "any"
+  | RAnyImplicit -> "implicit 'any'"
+  | RAnyExplicit -> "explicit 'any'"
   | RVoid -> "undefined"
   | RNull -> "null"
   | RNullOrVoid -> "null or undefined"
@@ -1096,7 +1098,8 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
   -> `Array
 | RMixed
 | REmpty
-| RAny
+| RAnyExplicit
+| RAnyImplicit
 | RMatchingProp _
 | RObject
 | RObjectLit

@@ -14,7 +14,7 @@ type t =
   | TVar of tvar * t list option
   | Bound of aloc * string
   | Generic of symbol * gen_kind * t list option
-  | Any
+  | Any of any_kind
   | Top | Bot
   | Void | Null
   | Num of string option
@@ -40,6 +40,8 @@ type t =
 and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
 
 and path = string list
+
+and any_kind = Implicit | Explicit
 
 and gen_kind =
   | ClassKind
@@ -191,6 +193,9 @@ let mk_inter ts =
   | [t] -> t
   | t1::t2::ts -> Inter (t1, t2, ts)
 
+let explicit_any = Any Explicit
+let implicit_any = Any Implicit
+
 let mk_maybe t =
   mk_union [Null; Void; t]
 
@@ -219,7 +224,7 @@ let rec mk_exact ty =
     TypeAlias { a with ta_type }
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)
-  | Any | Top | Bot | Void | Null
+  | Any _ | Top | Bot | Void | Null
   | Num _ | Str _ | Bool _ | NumLit _ | StrLit _ | BoolLit _
   | Fun _ | Arr _ | Tup _ -> ty
   (* Do not nest $Exact *)

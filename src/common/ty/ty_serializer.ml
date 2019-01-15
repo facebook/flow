@@ -50,7 +50,7 @@ let rec type_ t =
   | TVar (v, _) -> tvar v
   | Bound (_, name) -> Ok (builtin_from_string name)
   | Generic (x, _, ts) -> generic x ts
-  | Any -> just T.Any
+  | Any _ -> just T.Any
   | Top -> just T.Mixed
   | Bot -> just T.Empty
   | Void -> just T.Void
