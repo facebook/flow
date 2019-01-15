@@ -3,7 +3,7 @@
 import React from 'react';
 
 {
-  React.useImperativeMethods(); // Error: function requires another argument.
+  React.useImperativeHandle(); // Error: function requires another argument.
 }
 
 type Interface = {|
@@ -16,10 +16,10 @@ type Interface = {|
   };
 
   const ref: {current: null | Interface } = React.createRef();
-  React.useImperativeMethods(ref, () => api); // Ok
+  React.useImperativeHandle(ref, () => api); // Ok
 
   const refSetter = (instance: null | Interface) => {};
-  React.useImperativeMethods(refSetter, () => api); // Ok
+  React.useImperativeHandle(refSetter, () => api); // Ok
 }
 
 {
@@ -28,8 +28,8 @@ type Interface = {|
   };
 
   const ref: {current: null | Interface } = React.createRef();
-  React.useImperativeMethods(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+  React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
 
   const refSetter = (instance: null | Interface) => {};
-  React.useImperativeMethods(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+  React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
 }
