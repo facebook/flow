@@ -307,11 +307,11 @@ type Ref<C> =
 
 ## `React.ElementProps<typeof Component>` <a class="toc" id="toc-react-elementprops" href="#toc-react-elementprops"></a>
 
-Gets the props for a React element type, *without* preserving the optionality of `defaultProps`. `Type` could be a React class
-component, a stateless functional component, or a JSX intrinsic string. This
-type is used for the `props` property on [`React.Element<typeof Component>`](#toc-react-element).
+Gets the props for a React element type, *without* preserving the optionality of `defaultProps`.
+`typeof Component` could be the type of a React class component, a stateless functional component, or a JSX intrinsic string.
+This type is used for the `props` property on [`React.Element<typeof Component>`](#toc-react-element).
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `Type` must be the
+Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
 type *of* a React component so you need to use `typeof` as in
 `React.ElementProps<typeof MyComponent>`.
 
@@ -342,7 +342,7 @@ class MyComponent extends React.Component<{foo: number}> {
 ({}: React.ElementConfig<typeof MyComponent>);
 ```
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `Type` must be the
+Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
 type *of* a React component so you need to use `typeof` as in
 `React.ElementProps<typeof MyComponent>`.
 
@@ -361,7 +361,7 @@ various component types:
   `React.ElementRef<'div'>` that would be `HTMLDivElement`. For
   `React.ElementRef<'input'>` that would be `HTMLInputElement`.
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `Type` must be the
+Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
 type *of* a React component so you need to use `typeof` as in
 `React.ElementRef<typeof MyComponent>`.
 
