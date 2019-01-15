@@ -206,8 +206,8 @@ let lazy_flags prev = CommandSpec.ArgSpec.(
         "watchman", Some Options.LAZY_MODE_WATCHMAN;
         "none", None;
       ])
-      ~doc:("Which lazy mode to use: 'fs', 'watchman' or 'ide'. Using 'none' explicitly will " ^
-            "override the lazy mode set in the .flowconfig (default: none)")
+      ~doc:("Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to " ^
+            "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)")
 )
 
 let input_file_flag verb prev = CommandSpec.ArgSpec.(
@@ -638,6 +638,7 @@ let collect_connect_flags
     retries
     retry_if_init
     no_auto_start
+    lazy_mode
     temp_dir
     shm_flags
     ignore_version
@@ -657,7 +658,7 @@ let collect_connect_flags
     no_auto_start = no_auto_start;
     temp_dir;
     autostop = false;
-    lazy_mode = None;
+    lazy_mode;
     shm_flags;
     ignore_version;
     quiet;
@@ -674,6 +675,7 @@ let connect_flags prev = CommandSpec.ArgSpec.(
       ~doc:"retry if the server is initializing (default: true)"
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server is not running, do not start it; just exit"
+  |> lazy_flags
   |> temp_dir_flag
   |> shm_flags
   |> from_flag
