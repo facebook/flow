@@ -8,7 +8,6 @@
 type position = {
   line: int;
   column: int;
-  offset: int;
 } [@@deriving show]
 
 type t = {
@@ -19,8 +18,8 @@ type t = {
 
 let none = {
   source = None;
-  start = { line = 0; column = 0; offset = 0; };
-  _end = { line = 0; column = 0; offset = 0; };
+  start = { line = 0; column = 0; };
+  _end = { line = 0; column = 0; };
 }
 
 let btwn loc1 loc2 = {
@@ -40,11 +39,11 @@ let btwn_exclusive loc1 loc2 = {
    char on the same line. *)
 let char_before loc =
   let start =
-    let { line; column; offset } = loc.start in
-    let column, offset = if column > 0
-    then column - 1, offset - 1
-    else column, offset in
-    { line; column; offset }
+    let { line; column; } = loc.start in
+    let column = if column > 0
+    then column - 1
+    else column in
+    { line; column }
   in
   let _end = loc.start in
   { loc with start; _end }
@@ -53,7 +52,7 @@ let char_before loc =
  * first line is a newline character, but is still consistent with loc orderings. *)
 let first_char loc =
   let start = loc.start in
-  let _end = {start with column = start.column + 1; offset = start.offset + 1} in
+  let _end = {start with column = start.column + 1; } in
   {loc with _end}
 
 let pos_cmp a b =
@@ -120,8 +119,8 @@ let source loc = loc.source
 let make file line col =
   {
     source = Some file;
-    start = { line; column = col; offset = 0; };
-    _end = { line; column = col + 1; offset = 0; };
+    start = { line; column = col; };
+    _end = { line; column = col + 1; };
   }
 
 let start_loc loc = {loc with _end = loc.start}

@@ -8,8 +8,7 @@
 open OUnit2
 
 let pos line column =
-  (* Offset_utils doesn't use `offset`, so we can just stub it out. *)
-  Loc.({line; column; offset=0})
+  Loc.({line; column})
 
 (* UTF-8 encoding of code point 0x2028, line separator *)
 let line_sep = "\xe2\x80\xa8"

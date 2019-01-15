@@ -20,7 +20,7 @@ module Layout_builder = struct
     SourceLocation (loc, node)
 
   let program_loc loc =
-    { loc with Loc.start = { Loc.line = 1; column = 0; offset = 0; }}
+    { loc with Loc.start = { Loc.line = 1; column = 0; }}
 
   let program ?loc:(prog_loc=Loc.none) node =
     loc ~loc:(program_loc prog_loc) node
@@ -85,16 +85,16 @@ module Layout_builder = struct
       let open Loc in
       match loc with
       | { source = None;
-          start = { line = 1; column = 0; offset = 0 };
-          _end = { line = 0; column = 0; offset = 0 }
+          start = { line = 1; column = 0; };
+          _end = { line = 0; column = 0; }
         } -> true
       | _ -> false
     in
     let string_of_loc loc =
       let open Loc in
-      spf "{Loc.none with start={Loc.line=%d; column=%d; offset=%d}; _end={Loc.line=%d; column=%d; offset=%d}}"
-        loc.start.line loc.start.column loc.start.offset
-        loc._end.line loc._end.column loc._end.offset
+      spf "{Loc.none with start={Loc.line=%d; column=%d}; _end={Loc.line=%d; column=%d}}"
+        loc.start.line loc.start.column
+        loc._end.line loc._end.column
     in
     let string_of_when_to_break = function
     | Break_if_needed -> "Layout.Break_if_needed"

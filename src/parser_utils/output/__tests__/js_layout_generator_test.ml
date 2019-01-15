@@ -2180,12 +2180,12 @@ let tests = "js_layout_generator" >::: [
 
   "switch" >:: begin fun ctxt ->
     let case1_loc = Loc.{ none with
-      start = { line = 1; column = 1; offset = 0 };
-      _end = { line = 2; column = 3; offset = 0 }
+      start = { line = 1; column = 1 };
+      _end = { line = 2; column = 3 }
     } in
     let case2_loc = Loc.{ none with
-      start = { line = 4; column = 1; offset = 0 };
-      _end = { line = 5; column = 3; offset = 0 }
+      start = { line = 4; column = 1 };
+      _end = { line = 5; column = 3 }
     } in
     let layout = Js_layout_generator.statement (
       S.switch (E.identifier "x") [

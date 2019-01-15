@@ -16,8 +16,8 @@ let parse contents =
 
 let mk_loc (line1, column1) (line2, column2) = Loc.{
   source = None;
-  start = { line = line1; column = column1; offset = 0; };
-  _end = { line = line2; column = column2; offset = 0; };
+  start = { line = line1; column = column1; };
+  _end = { line = line2; column = column2; };
 }
 
 let print_list printer list =

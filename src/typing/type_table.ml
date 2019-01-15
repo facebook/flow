@@ -135,7 +135,6 @@ let function_decl_loc id loc =
         line = loc.start.line;
         (* len('function') is 8 *)
         column = loc.start.column + 8;
-        offset = loc.start.offset + 8;
       };
     })
     |> ALoc.of_loc

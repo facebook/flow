@@ -124,7 +124,6 @@ let pos_at_offset env offset =
   { Loc.
     line = Lex_env.line env;
     column = offset - Lex_env.bol_offset env;
-    offset = offset;
   }
 
 let loc_of_offsets env start_offset end_offset =
@@ -427,13 +426,12 @@ let rec line_comment env buf lexbuf =
     env, end_pos_of_lexbuf env lexbuf
 
   | line_terminator_sequence ->
-    let { Loc.line; column; offset } = end_pos_of_lexbuf env lexbuf in
+    let { Loc.line; column } = end_pos_of_lexbuf env lexbuf in
     let env = new_line env lexbuf in
     let len = Sedlexing.lexeme_length lexbuf in
     let end_pos = { Loc.
       line;
       column = column - len;
-      offset = offset - len;
     } in
     env, end_pos
 

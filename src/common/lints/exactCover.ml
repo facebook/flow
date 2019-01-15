@@ -17,8 +17,8 @@ type 'a builder = (Loc.t * 'a) list
 let new_builder =
   let open Loc in
   let full_range source =
-    let start = {line = 0; column = 0; offset = 0} in
-    let _end = {line = max_int / 2; column = max_int / 2; offset = max_int / 2} in
+    let start = {line = 0; column = 0} in
+    let _end = {line = max_int / 2; column = max_int / 2} in
     {source; start; _end}
   in fun source value -> [full_range (Some source), value]
 

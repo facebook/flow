@@ -79,10 +79,10 @@ let scan_for_lint_suppressions =
           match str.[index] with
           | '\r' ->
             if index + 1 < length && str.[index + 1] = '\n' then
-              {line = pos.line + 1; column = 0; offset = pos.offset + 2}, 2
-            else {line = pos.line + 1; column = 0; offset = pos.offset + 1}, 1
-          | '\n' -> {line = pos.line + 1; column = 0; offset = pos.offset + 1}, 1
-          | _ -> {pos with column = pos.column + 1; offset = pos.offset + 1}, 1
+              {line = pos.line + 1; column = 0; }, 2
+            else {line = pos.line + 1; column = 0; }, 1
+          | '\n' -> {line = pos.line + 1; column = 0; }, 1
+          | _ -> {pos with column = pos.column + 1; }, 1
         in update_pos' new_loc str (index + ind_diff) length
       else
         pos
@@ -220,13 +220,13 @@ let scan_for_lint_suppressions =
     let open Loc in
 
     let range_of_line source line =
-      let start = {line; column = 0; offset = 0} in
-      let _end = {line = line + 1; column = 0; offset = 0} in
+      let start = {line; column = 0;} in
+      let _end = {line = line + 1; column = 0;} in
       {source; start; _end}
     in
 
     let range_unending loc =
-      let new_end = {line = max_int / 2; column = max_int / 2; offset = max_int / 2}
+      let new_end = {line = max_int / 2; column = max_int / 2;}
       in {loc with _end = new_end}
     in
 
@@ -244,17 +244,14 @@ let scan_for_lint_suppressions =
     match comment with
     | Ast.Comment.Block s ->
       let new_start = {loc.start with
-        column = loc.start.column + 2;
-        offset = loc.start.offset + 2} in
+        column = loc.start.column + 2} in
       let new_end = {loc._end with
-        column = loc._end.column - 2;
-        offset = loc._end.offset - 2} in
+        column = loc._end.column - 2} in
       let new_loc = {loc with start = new_start; _end = new_end} in
       {loc = new_loc; value = s}
     | Ast.Comment.Line s ->
       let new_start = {loc.start with
-        column = loc.start.column + 2;
-        offset = loc.start.offset + 2} in
+        column = loc.start.column + 2} in
       let new_loc = {loc with start = new_start} in
       {loc = new_loc; value = s}
   in
