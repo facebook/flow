@@ -106,43 +106,38 @@ Cannot use type without exactly 2 type arguments.
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------- classes_lower.js:17:45
+Error -------------------------------------------------------------------------------------------- classes_lower.js:17:2
 
-Property `bar` is missing in object type [1] but exists in object type [2].
+Cannot cast `ComponentNarrower` to AbstractComponent because:
+ - property `bar` is missing in object type [1] but exists in object type [2].
+ - property `foo` is missing in object type [1] but exists in object type [2].
 
+   classes_lower.js:17:2
+   17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
+        ^^^^^^^^^^^^^^^^^
+
+References:
    classes_lower.js:17:45
    17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
                                                    ^^ [1]
-
-References:
    classes_lower.js:11:49
    11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- classes_lower.js:17:45
+Error -------------------------------------------------------------------------------------------- classes_lower.js:18:2
 
-Property `foo` is missing in object type [1] but exists in object type [2].
+Cannot cast `ComponentNarrower` to AbstractComponent because property `bar` is missing in object type [1] but exists in
+object type [2].
 
-   classes_lower.js:17:45
-   17| (ComponentNarrower: React$AbstractComponent<{}, any>); // Error missing foo and bar in config
-                                                   ^^ [1]
+   classes_lower.js:18:2
+   18| (ComponentNarrower: React$AbstractComponent<{+foo?: number}, any>); // Error missing bar in config
+        ^^^^^^^^^^^^^^^^^
 
 References:
-   classes_lower.js:11:49
-   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
-                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- classes_lower.js:18:45
-
-Property `bar` is missing in object type [1] but exists in object type [2].
-
    classes_lower.js:18:45
    18| (ComponentNarrower: React$AbstractComponent<{+foo?: number}, any>); // Error missing bar in config
                                                    ^^^^^^^^^^^^^^^ [1]
-
-References:
    classes_lower.js:11:49
    11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -346,29 +341,51 @@ References:
                                                  ^^^^^^^^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- error_positioning.js:31:28
+Error --------------------------------------------------------------------- error_positioning/error_positioning.js:31:28
 
 `MockFn` [1] is not a React component.
 
-   error_positioning.js:31:28
+   error_positioning/error_positioning.js:31:28
    31| let RefetchContainer = HOC(Component); // Error, mock is not a Component
                                   ^^^^^^^^^
 
 References:
-   error_positioning.js:24:4
+   error_positioning/error_positioning.js:24:4
    24| ): MockFn<TArguments, TReturn>
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:7:37
+Error --------------------------------------------------------------------- error_positioning/error_positioning.js:39:12
 
-Property `foo` is missing in object type [1] but exists in `Props` [2].
+Cannot create `C` element because property `component` is missing in object type [1] but exists in props [2] in property
+`component`.
 
+   error_positioning/error_positioning.js:39:12
+   39| const _a = <C component={View}></ C>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   error_positioning/View.js:4:54
+    4| type ViewNativeComponentType = Class<React.Component<{||}>>;
+                                                            ^^^^ [1]
+   error_positioning/C.js:16:7
+   16|       <Component {...this.props} />
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- function_lower.js:7:2
+
+Cannot cast `Component` to AbstractComponent because property `foo` is missing in object type [1] but exists in
+`Props` [2].
+
+   function_lower.js:7:2
+   7| (Component: React$AbstractComponent<{}, void>); // Error, missing foo
+       ^^^^^^^^^
+
+References:
    function_lower.js:7:37
    7| (Component: React$AbstractComponent<{}, void>); // Error, missing foo
                                           ^^ [1]
-
-References:
    function_lower.js:4:23
    4| function Component(x: Props): React$Node { return null; }
                             ^^^^^ [2]
@@ -388,29 +405,20 @@ References:
                                                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ function_lower.js:18:53
+Error ------------------------------------------------------------------------------------------- function_lower.js:18:2
 
-Property `bar` is missing in object type [1] but exists in `Props2` [2].
+Cannot cast `ComponentWithDefaultProps` to AbstractComponent because:
+ - property `bar` is missing in object type [1] but exists in `Props2` [2].
+ - property `foo` is missing in object type [1] but exists in `Props2` [2].
 
+   function_lower.js:18:2
+   18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
    function_lower.js:18:53
    18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
                                                            ^^ [1]
-
-References:
-   function_lower.js:14:39
-   14| function ComponentWithDefaultProps(x: Props2) { return null; }
-                                             ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ function_lower.js:18:53
-
-Property `foo` is missing in object type [1] but exists in `Props2` [2].
-
-   function_lower.js:18:53
-   18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
-                                                           ^^ [1]
-
-References:
    function_lower.js:14:39
    14| function ComponentWithDefaultProps(x: Props2) { return null; }
                                              ^^^^^^ [2]
@@ -547,7 +555,7 @@ References:
 
 
 
-Found 40 errors
+Found 41 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

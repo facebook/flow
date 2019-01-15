@@ -1268,46 +1268,22 @@ References:
                                              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------ element_with_component_type.js:8:51
+Error ------------------------------------------------------------------------------- element_with_component_type.js:8:2
 
-Property `a` is missing in object type [1] but exists in object type [2].
+Cannot cast `<Foo />` to `React.Element` because property `a` is missing in object type [1] but exists in object
+type [2] in property `type`.
 
+   element_with_component_type.js:8:2
+   8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
+       ^^^^^^^^^^^^^
+
+References:
    element_with_component_type.js:8:51
    8| (<Foo a={42}/>: React.Element<React.ComponentType<{b: number}>>); // Error
                                                         ^^^^^^^^^^^ [1]
-
-References:
    element_with_component_type.js:5:35
    5| class Foo extends React.Component<{a: number}> {}
                                         ^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------ hoc.js:6:40
-
-number [1] is incompatible with string [2].
-
-   hoc.js:6:40
-    6|   Component: React$ComponentType<{foo: number, bar: number}>,
-                                              ^^^^^^ [1]
-
-References:
-   hoc.js:35:49
-   35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
-                                                       ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------ hoc.js:6:40
-
-number [1] is incompatible with string [2].
-
-   hoc.js:6:40
-    6|   Component: React$ComponentType<{foo: number, bar: number}>,
-                                              ^^^^^^ [1]
-
-References:
-   hoc.js:36:35
-   36| myHOC(function Empty(props: {foo: string}) {}); // Error
-                                         ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:11:7
@@ -1338,6 +1314,42 @@ References:
    hoc.js:6:34
     6|   Component: React$ComponentType<{foo: number, bar: number}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ hoc.js:35:7
+
+Cannot call `myHOC` with `class { ... }` bound to `Component` because string [1] is incompatible with number [2] in
+property `foo`.
+
+   hoc.js:35:7
+   35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hoc.js:35:49
+   35| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
+                                                       ^^^^^^ [1]
+   hoc.js:6:40
+    6|   Component: React$ComponentType<{foo: number, bar: number}>,
+                                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------ hoc.js:36:7
+
+Cannot call `myHOC` with function bound to `Component` because string [1] is incompatible with number [2] in property
+`foo`.
+
+   hoc.js:36:7
+   36| myHOC(function Empty(props: {foo: string}) {}); // Error
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hoc.js:36:35
+   36| myHOC(function Empty(props: {foo: string}) {}); // Error
+                                         ^^^^^^ [1]
+   hoc.js:6:40
+    6|   Component: React$ComponentType<{foo: number, bar: number}>,
+                                              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:36:43
@@ -1387,15 +1399,21 @@ References:
                               ^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc2.js:6:34
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:23:37
 
-Property `a` is missing in object type [1] but exists in object type [2].
+Cannot call `connect` with `MyComponent` bound to `Component` because:
+ - property `a` is missing in object type [1] but exists in object type [2].
+ - property `b` is missing in object type [1] but exists in object type [2].
+ - number [3] is incompatible with string [4] in property `a`.
 
+   hoc2.js:23:37
+   23| const MyEnhancedComponent = connect(MyComponent);
+                                           ^^^^^^^^^^^
+
+References:
    hoc2.js:6:34
     6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
    hoc2.js:11:43
                                                  v-
    11| class MyComponent extends React.Component<{|
@@ -1404,97 +1422,43 @@ References:
    14|   prop: number,
    15| |}> { render() { return null }}
        -^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc2.js:6:34
-
-Property `a` is missing in object type [1] but exists in object type [2].
-
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   hoc2.js:17:37
-                                           v-
-   17| function MyFunctionComponent(props: {|
-   18|   a: number,
-   19|   b: number,
-   20|   prop: number,
-   21| |}) { return null }
-       -^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc2.js:6:34
-
-Property `b` is missing in object type [1] but exists in object type [2].
-
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   hoc2.js:11:43
-                                                 v-
-   11| class MyComponent extends React.Component<{|
-   12|   a: number,
-   13|   b: number,
-   14|   prop: number,
-   15| |}> { render() { return null }}
-       -^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc2.js:6:34
-
-Property `b` is missing in object type [1] but exists in object type [2].
-
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   hoc2.js:17:37
-                                           v-
-   17| function MyFunctionComponent(props: {|
-   18|   a: number,
-   19|   b: number,
-   20|   prop: number,
-   21| |}) { return null }
-       -^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc2.js:6:34
-
-string [1] is incompatible with number [2] in property `a`.
-
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   hoc2.js:28:24
-   28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
-                              ^^^^^ [1]
    hoc2.js:12:6
    12|   a: number,
-            ^^^^^^ [2]
+            ^^^^^^ [3]
+   hoc2.js:28:24
+   28| <MyEnhancedComponent a="foo" b={2} />; // Error: string ~> number
+                              ^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc2.js:6:34
+Error ---------------------------------------------------------------------------------------------------- hoc2.js:24:45
 
-string [1] is incompatible with number [2] in property `a`.
+Cannot call `connect` with `MyFunctionComponent` bound to `Component` because:
+ - property `a` is missing in object type [1] but exists in object type [2].
+ - property `b` is missing in object type [1] but exists in object type [2].
+ - number [3] is incompatible with string [4] in property `a`.
 
-   hoc2.js:6:34
-    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   hoc2.js:24:45
+   24| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
+                                                   ^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc2.js:32:32
-   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                      ^^^^^ [1]
+   hoc2.js:6:34
+    6|   Component: React.ComponentType<{|...TProps, prop: number|}>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   hoc2.js:17:37
+                                           v-
+   17| function MyFunctionComponent(props: {|
+   18|   a: number,
+   19|   b: number,
+   20|   prop: number,
+   21| |}) { return null }
+       -^ [2]
    hoc2.js:18:6
    18|   a: number,
-            ^^^^^^ [2]
+            ^^^^^^ [3]
+   hoc2.js:32:32
+   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
+                                      ^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:26:1
