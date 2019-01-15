@@ -196,9 +196,10 @@ let get_config
 =
   match component with
   | DefT (_, ReactAbstractComponentT {config; _}) ->
+      let use_op = Frame (ReactGetConfig {polarity = pole}, use_op) in
       begin match pole with
-      | Positive -> rec_flow_t cx trace (config, tout)
-      | Negative -> rec_flow_t cx trace (tout, config)
+      | Positive -> rec_flow_t ~use_op cx trace (config, tout)
+      | Negative -> rec_flow_t ~use_op cx trace (tout, config)
       | Neutral -> rec_unify cx trace ~use_op tout config
       end
   | _ ->

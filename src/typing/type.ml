@@ -331,6 +331,7 @@ module rec TypeTerm : sig
         is_sentinel: bool;
       }
     | ReactConfigCheck
+    | ReactGetConfig of { polarity: Polarity.t }
     | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
     | TypeArgCompatibility of {
         name: string;
@@ -3036,6 +3037,7 @@ let string_of_frame_use_op = function
 | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
 | PropertyCompatibility _ -> "PropertyCompatibility"
 | ReactConfigCheck -> "ReactConfigCheck"
+| ReactGetConfig _ -> "ReactGetConfig"
 | TupleElementCompatibility _ -> "TupleElementCompatibility"
 | TypeArgCompatibility _ -> "TypeArgCompatibility"
 | TypeParamBound _ -> "TypeParamBound"

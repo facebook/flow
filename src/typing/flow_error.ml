@@ -608,6 +608,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
   | TypeParamBound _
   | FunMissingArg _
   | ImplicitTypeParam
+  | ReactGetConfig _
   | UnifyFlip
     as use_op -> use_op
   in
@@ -657,6 +658,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     let is_contravariant = function
     | FunParam _, Frame (FunCompatibility _, _) -> (true, true)
     | FunRestParam _, Frame (FunCompatibility _, _) -> (true, true)
+    | ReactGetConfig {polarity = Negative }, _ -> (true, false)
     | TypeArgCompatibility {polarity = Negative; _}, _ -> (true, false)
     | _ -> (false, false)
     in
@@ -878,6 +880,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam, use_op)
       | Frame (ReactConfigCheck, use_op)
+      | Frame (ReactGetConfig _, use_op)
       | Frame (UnifyFlip, use_op)
         -> `Next use_op
       in

@@ -11158,14 +11158,16 @@ and object_kit =
           | (x, []) -> x
           | (x0, x1::xs) -> DefT (reason, UnionT (UnionRep.make x0 x1 xs))
         in
-        (* Intentional UnknownUse here. *)
+        let use_op p = Frame (ReactGetConfig {polarity = p}, use_op) in
         match options with
         | ReactConfigMerge Neutral ->
-            rec_unify cx trace ~use_op t tout
+            rec_unify cx trace ~use_op:(use_op Neutral) t tout
         | ReactConfigMerge Negative ->
-            rec_flow_t cx trace (tout, t)
-        | ReactConfigMerge Positive
+            rec_flow_t cx trace ~use_op:(use_op Negative) (tout, t)
+        | ReactConfigMerge Positive ->
+            rec_flow_t cx trace ~use_op:(use_op Positive) (t, tout)
         | _ ->
+            (* Intentional UnknownUse here. *)
             rec_flow_t cx trace (t, tout)
   in
 
