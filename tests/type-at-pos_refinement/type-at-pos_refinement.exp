@@ -1,5 +1,5 @@
 predicates.js - undefined: {
-  "type":"any",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"predicates.js",
@@ -29,7 +29,7 @@ predicates.js - Array: {
   "end":9
 }
 predicates.js - isArray: {
-  "type":"any",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"predicates.js",

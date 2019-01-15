@@ -165,7 +165,6 @@ and polarity = Positive | Negative | Neutral
   ancestors = ["mapreduce_ty_base"];
 }]
 
-
 (* Type descructors *)
 
 let rec bk_union = function
@@ -195,7 +194,7 @@ let mk_inter ts =
 
 let explicit_any = Any Explicit
 let implicit_any = Any Implicit
-
+let is_dynamic = function Any _ -> true | _ -> false
 let mk_maybe t =
   mk_union [Null; Void; t]
 

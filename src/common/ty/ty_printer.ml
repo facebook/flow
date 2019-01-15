@@ -40,7 +40,7 @@ let property_key_quotes_needed x =
 (* Main Transformation   *)
 (*************************)
 
-let type_ ?(size=5000) t =
+let type_ ?(size=5000) ?(with_comments=true) t =
 
   let env_map: (Layout.layout_node IMap.t) ref = ref IMap.empty in
   let size = ref size in
@@ -73,7 +73,7 @@ let type_ ?(size=5000) t =
     match t with
     | TVar (v, ts) -> type_generic ~depth (type_var v) ts
     | Bound (_, name) -> Atom name
-    | Any _ -> Atom "any"
+    | Any k -> any ~depth k
     | Top -> Atom "mixed"
     | Bot -> Atom "empty"
     | Void -> Atom "void"
@@ -130,6 +130,13 @@ let type_ ?(size=5000) t =
       (counted_map (type_ ~depth) params)
 
   and identifier name = Atom name
+
+  and any ~depth kind =
+    let kind = match kind with Explicit -> "explicit" | Implicit -> "implicit" in
+    fuse [
+      Atom "any";
+      if depth = 1 && with_comments then fuse [pretty_space; Atom kind |> wrap_in_parens] else Empty
+    ]
 
   and type_alias { ta_name = { provenance; name; _ }; ta_tparams; ta_type } =
     match provenance with
@@ -395,5 +402,5 @@ let print ~force_single_line ~source_maps node =
     in
   print_node (Source.create ~source_maps ()) node
 
-let string_of_t ?(force_single_line=false) (ty: Ty.t) : string =
-  print ~force_single_line ~source_maps:None (type_ ty) |> Source.contents
+let string_of_t ?(force_single_line=false) ?(with_comments=true) (ty: Ty.t): string =
+  print ~force_single_line ~source_maps:None (type_ ~with_comments ty) |> Source.contents

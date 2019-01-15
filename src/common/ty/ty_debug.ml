@@ -243,7 +243,8 @@ let json_of_t ~strip_root =
         "type", json_of_symbol s;
         "kind", JSON_String (Ty.debug_string_of_generic_kind k);
       ]
-    | Any _
+    | Any Implicit -> [ "any", JSON_String "implicit" ]
+    | Any Explicit -> [ "any", JSON_String "explicit" ]
     | Top | Bot
     | Void | Null
     | Num _ | Str _ | Bool _ -> []

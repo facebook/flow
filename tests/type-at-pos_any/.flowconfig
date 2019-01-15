@@ -1,0 +1,5 @@
+[ignore]
+.*/lib/.*
+
+[options]
+suppress_type=$Broken

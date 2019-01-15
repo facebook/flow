@@ -113,7 +113,7 @@ import_lib_named.js:3:27 (--expand-json-output) = {
   "end":36
 }
 import-class-as-type.js:6:13 = {
-  "type":"any",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"import-class-as-type.js",

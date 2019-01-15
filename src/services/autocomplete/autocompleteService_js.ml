@@ -69,25 +69,25 @@ let autocomplete_create_result ((name, loc), ty) =
   | Fun {fun_params; fun_rest_param; fun_return; _} ->
       let param_tys = Core_list.map ~f:(fun (n, t, fp) ->
         let param_name = parameter_name fp.prm_optional n in
-        let param_ty = Ty_printer.string_of_t t in
+        let param_ty = Ty_printer.string_of_t ~with_comments:false t in
         { param_name; param_ty }
       ) fun_params in
       let param_tys = match fun_rest_param with
       | None -> param_tys
       | Some (name, t) ->
         let param_name = "..." ^ parameter_name false name in
-        let param_ty = Ty_printer.string_of_t t in
+        let param_ty = Ty_printer.string_of_t ~with_comments:false t in
         param_tys @ [{ param_name; param_ty; }]
       in
-      let return = Ty_printer.string_of_t fun_return in
+      let return = Ty_printer.string_of_t ~with_comments:false fun_return in
       { res_loc = loc;
         res_name = name;
-        res_ty = Ty_printer.string_of_t ty;
+        res_ty = Ty_printer.string_of_t ~with_comments:false ty;
         func_details = Some { param_tys; return_ty = return } }
   | _ ->
       { res_loc = loc;
         res_name = name;
-        res_ty = Ty_printer.string_of_t ty;
+        res_ty = Ty_printer.string_of_t ~with_comments:false ty;
         func_details = None }
   )
 

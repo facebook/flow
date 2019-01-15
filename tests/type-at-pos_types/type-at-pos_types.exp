@@ -1,5 +1,5 @@
 any.js:3:15 = {
-  "type":"any",
+  "type":"any (explicit)",
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -14,7 +14,7 @@ any.js:3:15 = {
   "end":15
 }
 any.js:4:2 = {
-  "type":"any",
+  "type":"any (explicit)",
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -29,7 +29,7 @@ any.js:4:2 = {
   "end":3
 }
 any.js:4:6 = {
-  "type":"any",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -44,7 +44,7 @@ any.js:4:6 = {
   "end":7
 }
 any.js:5:5 = {
-  "type":"any",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -59,7 +59,7 @@ any.js:5:5 = {
   "end":7
 }
 any.js:7:13 = {
-  "type":"any",
+  "type":"any (explicit)",
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -74,7 +74,7 @@ any.js:7:13 = {
   "end":19
 }
 any.js:8:5 = {
-  "type":"any",
+  "type":"any (explicit)",
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -89,7 +89,7 @@ any.js:8:5 = {
   "end":7
 }
 any.js:8:10 = {
-  "type":"any",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -104,7 +104,7 @@ any.js:8:10 = {
   "end":11
 }
 any.js:9:10 = {
-  "type":"any",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"any.js",
@@ -209,7 +209,7 @@ destructuring.js:3:6 = {
   "end":6
 }
 destructuring.js:17:13 = {
-  "type":"any",
+  "type":"any (implicit)",
   "reasons":[],
   "loc":{
     "source":"destructuring.js",
