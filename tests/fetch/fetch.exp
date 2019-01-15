@@ -7,8 +7,8 @@ Cannot assign `fetch(...)` to `b` because `Response` [1] is incompatible with st
                                     ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1074:76
-   1074| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+   <BUILTINS>/bom.js:1059:76
+   1059| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                     ^^^^^^^^ [1]
    fetch.js:12:18
      12| const b: Promise<string> = fetch(myRequest); // incorrect
@@ -30,8 +30,8 @@ References:
    fetch.js:25:18
      25| const d: Promise<Blob> = fetch('image.png'); // incorrect
                           ^^^^ [1]
-   <BUILTINS>/bom.js:1074:76
-   1074| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
+   <BUILTINS>/bom.js:1059:76
+   1059| declare function fetch(input: RequestInfo, init?: RequestOptions): Promise<Response>;
                                                                                     ^^^^^^^^ [2]
    <BUILTINS>/core.js:613:24
     613| declare class Promise<+R> {
@@ -49,11 +49,11 @@ Cannot call `Headers` with `''Content-T...'` bound to `init` because:
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:939:20
-   939| type HeadersInit = Headers | {[key: string]: string};
+   <BUILTINS>/bom.js:924:20
+   924| type HeadersInit = Headers | {[key: string]: string};
                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:939:30
-   939| type HeadersInit = Headers | {[key: string]: string};
+   <BUILTINS>/bom.js:924:30
+   924| type HeadersInit = Headers | {[key: string]: string};
                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -68,11 +68,11 @@ Cannot call `Headers` with array literal bound to `init` because:
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:939:20
-   939| type HeadersInit = Headers | {[key: string]: string};
+   <BUILTINS>/bom.js:924:20
+   924| type HeadersInit = Headers | {[key: string]: string};
                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:939:30
-   939| type HeadersInit = Headers | {[key: string]: string};
+   <BUILTINS>/bom.js:924:30
+   924| type HeadersInit = Headers | {[key: string]: string};
                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -85,8 +85,8 @@ Cannot call `e.append` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:947:5
-   947|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:932:5
+   932|     append(name: string, value: string): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -99,8 +99,8 @@ Cannot call `e.append` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:947:5
-   947|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:932:5
+   932|     append(name: string, value: string): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -113,8 +113,8 @@ Cannot call `e.append` with object literal bound to `name` because object litera
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:947:18
-   947|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:932:18
+   932|     append(name: string, value: string): void;
                          ^^^^^^ [2]
 
 
@@ -127,8 +127,8 @@ Cannot call `e.set` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:954:5
-   954|     set(name: string, value: string): void;
+   <BUILTINS>/bom.js:939:5
+   939|     set(name: string, value: string): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -141,8 +141,8 @@ Cannot call `e.set` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:954:5
-   954|     set(name: string, value: string): void;
+   <BUILTINS>/bom.js:939:5
+   939|     set(name: string, value: string): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -155,8 +155,8 @@ Cannot call `e.set` with object literal bound to `name` because object literal [
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:954:15
-   954|     set(name: string, value: string): void;
+   <BUILTINS>/bom.js:939:15
+   939|     set(name: string, value: string): void;
                       ^^^^^^ [2]
 
 
@@ -169,8 +169,8 @@ Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with 
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:947:42
-   947|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:932:42
+   932|     append(name: string, value: string): void;
                                                  ^^^^ [1]
    headers.js:15:10
     15| const f: Headers = e.append('Content-Type', 'image/jpeg'); // not correct
@@ -186,8 +186,8 @@ Cannot assign `e.get(...)` to `g` because null [1] is incompatible with string [
                           ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:951:24
-   951|     get(name: string): null | string;
+   <BUILTINS>/bom.js:936:24
+   936|     get(name: string): null | string;
                                ^^^^ [1]
    headers.js:17:10
     17| const g: string = e.get('Content-Type'); // correct
@@ -205,14 +205,14 @@ Cannot assign `e.get(...)` to `h` because:
                           ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:951:24
-   951|     get(name: string): null | string;
+   <BUILTINS>/bom.js:936:24
+   936|     get(name: string): null | string;
                                ^^^^ [1]
    headers.js:18:10
     18| const h: number = e.get('Content-Type'); // not correct
                  ^^^^^^ [2]
-   <BUILTINS>/bom.js:951:31
-   951|     get(name: string): null | string;
+   <BUILTINS>/bom.js:936:31
+   936|     get(name: string): null | string;
                                       ^^^^^^ [3]
 
 
@@ -242,14 +242,14 @@ Cannot call `Request` because:
                            ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:986:20
-   986| type RequestInfo = Request | URL | string;
+   <BUILTINS>/bom.js:971:20
+   971| type RequestInfo = Request | URL | string;
                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:986:30
-   986| type RequestInfo = Request | URL | string;
+   <BUILTINS>/bom.js:971:30
+   971| type RequestInfo = Request | URL | string;
                                      ^^^ [3]
-   <BUILTINS>/bom.js:986:36
-   986| type RequestInfo = Request | URL | string;
+   <BUILTINS>/bom.js:971:36
+   971| type RequestInfo = Request | URL | string;
                                            ^^^^^^ [4]
 
 
@@ -272,59 +272,59 @@ Cannot call `Request` with `c` bound to `init` because:
                                            ^
 
 References:
-   <BUILTINS>/bom.js:1043:12
-   1043|     cache: CacheType;
+   <BUILTINS>/bom.js:1028:12
+   1028|     cache: CacheType;
                     ^^^^^^^^^ [1]
-   <BUILTINS>/bom.js:991:13
-    991|     cache?: CacheType;
+   <BUILTINS>/bom.js:976:13
+    976|     cache?: CacheType;
                      ^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:1044:18
-   1044|     credentials: CredentialsType;
+   <BUILTINS>/bom.js:1029:18
+   1029|     credentials: CredentialsType;
                           ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/bom.js:992:19
-    992|     credentials?: CredentialsType;
+   <BUILTINS>/bom.js:977:19
+    977|     credentials?: CredentialsType;
                            ^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/bom.js:1045:14
-   1045|     headers: Headers;
+   <BUILTINS>/bom.js:1030:14
+   1030|     headers: Headers;
                       ^^^^^^^ [5]
-   <BUILTINS>/bom.js:993:15
-    993|     headers?: HeadersInit;
+   <BUILTINS>/bom.js:978:15
+    978|     headers?: HeadersInit;
                        ^^^^^^^^^^^ [6]
-   <BUILTINS>/bom.js:1046:16
-   1046|     integrity: string;
+   <BUILTINS>/bom.js:1031:16
+   1031|     integrity: string;
                         ^^^^^^ [7]
-   <BUILTINS>/bom.js:994:17
-    994|     integrity?: string;
+   <BUILTINS>/bom.js:979:17
+    979|     integrity?: string;
                          ^^^^^^ [8]
-   <BUILTINS>/bom.js:1047:13
-   1047|     method: string;
+   <BUILTINS>/bom.js:1032:13
+   1032|     method: string;
                      ^^^^^^ [9]
-   <BUILTINS>/bom.js:996:14
-    996|     method?: string;
+   <BUILTINS>/bom.js:981:14
+    981|     method?: string;
                       ^^^^^^ [10]
-   <BUILTINS>/bom.js:1048:11
-   1048|     mode: ModeType;
+   <BUILTINS>/bom.js:1033:11
+   1033|     mode: ModeType;
                    ^^^^^^^^ [11]
-   <BUILTINS>/bom.js:997:12
-    997|     mode?: ModeType;
+   <BUILTINS>/bom.js:982:12
+    982|     mode?: ModeType;
                     ^^^^^^^^ [12]
-   <BUILTINS>/bom.js:1049:15
-   1049|     redirect: RedirectType;
+   <BUILTINS>/bom.js:1034:15
+   1034|     redirect: RedirectType;
                        ^^^^^^^^^^^^ [13]
-   <BUILTINS>/bom.js:998:16
-    998|     redirect?: RedirectType;
+   <BUILTINS>/bom.js:983:16
+    983|     redirect?: RedirectType;
                         ^^^^^^^^^^^^ [14]
-   <BUILTINS>/bom.js:1050:15
-   1050|     referrer: string;
+   <BUILTINS>/bom.js:1035:15
+   1035|     referrer: string;
                        ^^^^^^ [15]
-   <BUILTINS>/bom.js:999:16
-    999|     referrer?: string;
+   <BUILTINS>/bom.js:984:16
+    984|     referrer?: string;
                         ^^^^^^ [16]
-   <BUILTINS>/bom.js:1051:21
-   1051|     referrerPolicy: ReferrerPolicyType;
+   <BUILTINS>/bom.js:1036:21
+   1036|     referrerPolicy: ReferrerPolicyType;
                              ^^^^^^^^^^^^^^^^^^ [17]
-   <BUILTINS>/bom.js:1000:22
-   1000|     referrerPolicy?: ReferrerPolicyType;
+   <BUILTINS>/bom.js:985:22
+    985|     referrerPolicy?: ReferrerPolicyType;
                               ^^^^^^^^^^^^^^^^^^ [18]
 
 
@@ -339,11 +339,11 @@ Cannot call `Request` with object literal bound to `input` because:
                                        ^^ [1]
 
 References:
-   <BUILTINS>/bom.js:986:20
-   986| type RequestInfo = Request | URL | string;
+   <BUILTINS>/bom.js:971:20
+   971| type RequestInfo = Request | URL | string;
                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:986:30
-   986| type RequestInfo = Request | URL | string;
+   <BUILTINS>/bom.js:971:30
+   971| type RequestInfo = Request | URL | string;
                                      ^^^ [3]
 
 
@@ -359,8 +359,8 @@ References:
    request.js:24:19
      24| h.text().then((t: Buffer) => t); // incorrect
                            ^^^^^^ [1]
-   <BUILTINS>/bom.js:1060:21
-   1060|     text(): Promise<string>;
+   <BUILTINS>/bom.js:1045:21
+   1045|     text(): Promise<string>;
                              ^^^^^^ [2]
 
 
@@ -373,8 +373,8 @@ Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible wit
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1056:28
-   1056|     arrayBuffer(): Promise<ArrayBuffer>;
+   <BUILTINS>/bom.js:1041:28
+   1041|     arrayBuffer(): Promise<ArrayBuffer>;
                                     ^^^^^^^^^^^ [1]
    request.js:26:27
      26| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
@@ -401,11 +401,11 @@ References:
    request.js:56:12
     56|   headers: 'Content-Type: image/jpeg',
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/bom.js:939:20
-   939| type HeadersInit = Headers | {[key: string]: string};
+   <BUILTINS>/bom.js:924:20
+   924| type HeadersInit = Headers | {[key: string]: string};
                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:939:30
-   939| type HeadersInit = Headers | {[key: string]: string};
+   <BUILTINS>/bom.js:924:30
+   924| type HeadersInit = Headers | {[key: string]: string};
                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -422,8 +422,8 @@ References:
    request.js:63:28
     63| new Request('/', { method: null }); // incorrect
                                    ^^^^ [1]
-   <BUILTINS>/bom.js:996:14
-   996|     method?: string;
+   <BUILTINS>/bom.js:981:14
+   981|     method?: string;
                      ^^^^^^ [2]
 
 
@@ -433,16 +433,16 @@ Cannot call `Response` with object literal bound to `init` because string [1] is
 property `status`.
 
    response.js:8:18
-      8| new Response("", { status: "404" }); // incorrect
-                          ^^^^^^^^^^^^^^^^^
+     8| new Response("", { status: "404" }); // incorrect
+                         ^^^^^^^^^^^^^^^^^
 
 References:
    response.js:8:28
-      8| new Response("", { status: "404" }); // incorrect
-                                    ^^^^^ [1]
-   <BUILTINS>/bom.js:1006:14
-   1006|     status?: number;
-                      ^^^^^^ [2]
+     8| new Response("", { status: "404" }); // incorrect
+                                   ^^^^^ [1]
+   <BUILTINS>/bom.js:991:14
+   991|     status?: number;
+                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- response.js:9:18
@@ -451,16 +451,16 @@ Cannot call `Response` with object literal bound to `init` because null [1] is i
 `status`.
 
    response.js:9:18
-      9| new Response("", { status: null }); // incorrect
-                          ^^^^^^^^^^^^^^^^
+     9| new Response("", { status: null }); // incorrect
+                         ^^^^^^^^^^^^^^^^
 
 References:
    response.js:9:28
-      9| new Response("", { status: null }); // incorrect
-                                    ^^^^ [1]
-   <BUILTINS>/bom.js:1006:14
-   1006|     status?: number;
-                      ^^^^^^ [2]
+     9| new Response("", { status: null }); // incorrect
+                                   ^^^^ [1]
+   <BUILTINS>/bom.js:991:14
+   991|     status?: number;
+                     ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ response.js:11:50
@@ -481,11 +481,11 @@ References:
    response.js:13:14
     13|     headers: "'Content-Type': 'image/jpeg'"
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/bom.js:939:20
-   939| type HeadersInit = Headers | {[key: string]: string};
+   <BUILTINS>/bom.js:924:20
+   924| type HeadersInit = Headers | {[key: string]: string};
                            ^^^^^^^ [2]
-   <BUILTINS>/bom.js:939:30
-   939| type HeadersInit = Headers | {[key: string]: string};
+   <BUILTINS>/bom.js:924:30
+   924| type HeadersInit = Headers | {[key: string]: string};
                                      ^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -511,17 +511,17 @@ Cannot call `Response` with object literal bound to `input` because:
         ^ [1]
 
 References:
-   <BUILTINS>/bom.js:984:26
-   984| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
+   <BUILTINS>/bom.js:969:26
+   969| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                  ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/bom.js:984:44
-   984| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
+   <BUILTINS>/bom.js:969:44
+   969| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                    ^^^^^^^^ [3]
-   <BUILTINS>/bom.js:984:55
-   984| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
+   <BUILTINS>/bom.js:969:55
+   969| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                               ^^^^ [4]
-   <BUILTINS>/bom.js:984:62
-   984| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
+   <BUILTINS>/bom.js:969:62
+   969| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                                      ^^^^^^^^^^^ [5]
    <BUILTINS>/core.js:658:25
    658| type $ArrayBufferView = $TypedArray | DataView;
@@ -529,8 +529,8 @@ References:
    <BUILTINS>/core.js:658:39
    658| type $ArrayBufferView = $TypedArray | DataView;
                                               ^^^^^^^^ [7]
-   <BUILTINS>/bom.js:984:95
-   984| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
+   <BUILTINS>/bom.js:969:95
+   969| type BodyInit = string | URLSearchParams | FormData | Blob | ArrayBuffer | $ArrayBufferView | ReadableStream;
                                                                                                       ^^^^^^^^^^^^^^ [8]
 
 
@@ -546,8 +546,8 @@ References:
    response.js:42:19
      42| h.text().then((t: Buffer) => t); // incorrect
                            ^^^^^^ [1]
-   <BUILTINS>/bom.js:1034:21
-   1034|     text(): Promise<string>;
+   <BUILTINS>/bom.js:1019:21
+   1019|     text(): Promise<string>;
                              ^^^^^^ [2]
 
 
@@ -560,8 +560,8 @@ Cannot call `h.arrayBuffer().then` because `ArrayBuffer` [1] is incompatible wit
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:1030:28
-   1030|     arrayBuffer(): Promise<ArrayBuffer>;
+   <BUILTINS>/bom.js:1015:28
+   1015|     arrayBuffer(): Promise<ArrayBuffer>;
                                     ^^^^^^^^^^^ [1]
    response.js:44:27
      44| h.arrayBuffer().then((ab: Buffer) => ab); // incorrect
@@ -582,8 +582,8 @@ References:
    urlsearchparams.js:4:32
      4| const b = new URLSearchParams(['key1', 'value1']); // not correct
                                        ^^^^^^ [1]
-   <BUILTINS>/bom.js:960:58
-   960|     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
+   <BUILTINS>/bom.js:945:58
+   945|     constructor(query?: string | URLSearchParams | Array<[string, string]> | {[string]: string} ): void;
                                                                  ^^^^^^^^^^^^^^^^ [2]
    urlsearchparams.js:4:40
      4| const b = new URLSearchParams(['key1', 'value1']); // not correct
@@ -599,8 +599,8 @@ Cannot call `e.append` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:961:5
-   961|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:946:5
+   946|     append(name: string, value: string): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -613,8 +613,8 @@ Cannot call `e.append` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:961:5
-   961|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:946:5
+   946|     append(name: string, value: string): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -627,8 +627,8 @@ Cannot call `e.append` with object literal bound to `name` because object litera
                  ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:961:18
-   961|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:946:18
+   946|     append(name: string, value: string): void;
                          ^^^^^^ [2]
 
 
@@ -641,8 +641,8 @@ Cannot call `e.set` because function [1] requires another argument.
         ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:969:5
-   969|     set(name: string, value: string): void;
+   <BUILTINS>/bom.js:954:5
+   954|     set(name: string, value: string): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -655,8 +655,8 @@ Cannot call `e.set` because function [1] requires another argument.
         ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:969:5
-   969|     set(name: string, value: string): void;
+   <BUILTINS>/bom.js:954:5
+   954|     set(name: string, value: string): void;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -669,8 +669,8 @@ Cannot call `e.set` with object literal bound to `name` because object literal [
               ^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/bom.js:969:15
-   969|     set(name: string, value: string): void;
+   <BUILTINS>/bom.js:954:15
+   954|     set(name: string, value: string): void;
                       ^^^^^^ [2]
 
 
@@ -683,8 +683,8 @@ Cannot assign `e.append(...)` to `f` because undefined [1] is incompatible with 
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:961:42
-   961|     append(name: string, value: string): void;
+   <BUILTINS>/bom.js:946:42
+   946|     append(name: string, value: string): void;
                                                  ^^^^ [1]
    urlsearchparams.js:15:10
     15| const f: URLSearchParams = e.append('key1', 'value1'); // not correct
@@ -700,8 +700,8 @@ Cannot assign `e.get(...)` to `g` because null [1] is incompatible with string [
                           ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:965:24
-   965|     get(name: string): null | string;
+   <BUILTINS>/bom.js:950:24
+   950|     get(name: string): null | string;
                                ^^^^ [1]
    urlsearchparams.js:17:10
     17| const g: string = e.get('key1'); // correct
@@ -719,14 +719,14 @@ Cannot assign `e.get(...)` to `h` because:
                           ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:965:24
-   965|     get(name: string): null | string;
+   <BUILTINS>/bom.js:950:24
+   950|     get(name: string): null | string;
                                ^^^^ [1]
    urlsearchparams.js:18:10
     18| const h: number = e.get('key1'); // not correct
                  ^^^^^^ [2]
-   <BUILTINS>/bom.js:965:31
-   965|     get(name: string): null | string;
+   <BUILTINS>/bom.js:950:31
+   950|     get(name: string): null | string;
                                       ^^^^^^ [3]
 
 
