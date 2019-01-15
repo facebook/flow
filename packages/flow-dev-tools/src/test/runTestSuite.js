@@ -103,6 +103,7 @@ export default (async function(
         testNum,
         test.flowConfigFilename,
         test.lazyMode,
+        false,
       );
 
       let firstIdeStartStep = null;
