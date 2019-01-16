@@ -552,10 +552,18 @@ module T = struct
     | Interface { tparams; extends; body; } ->
       decl_loc, Ast.Statement.InterfaceDeclaration { Ast.Statement.Interface.id; tparams; extends; body }
     | ClassDecl (CLASS { tparams; extends; implements; body = (body_loc, body) }) ->
+      (* FIXME(T39206072, festevezga) Private properties are filtered to prevent an exception surfaced in https://github.com/facebook/flow/issues/7355 *)
+      let filtered_body_FIXME = Core_list.filter
+        ~f:(fun prop ->
+          match prop with
+          | _loc, CPrivateField _ -> false
+          | _ -> true)
+        body
+      in
       let body = body_loc, {
         Ast.Type.Object.exact = false;
         inexact = false;
-        properties = Core_list.map ~f:(object_type_property_of_class_element outlined) body;
+        properties = Core_list.map ~f:(object_type_property_of_class_element outlined) filtered_body_FIXME;
       } in
       let mixins = [] in
       decl_loc, Ast.Statement.DeclareClass {
