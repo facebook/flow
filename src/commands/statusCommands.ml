@@ -86,7 +86,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         |> strip_root_flag
         |> from_flag
         |> flag "--version" no_arg
-            ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
+            ~doc:"Print version number and exit"
         |> anon "root" (optional string)
       )
     }
@@ -176,8 +176,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
   let main base_flags connect_flags json pretty json_version error_flags strip_root
     version root () =
     if version then (
-      prerr_endline "Warning: \
-        `flow --version` is deprecated in favor of `flow version`";
       print_version ();
       FlowExitStatus.(exit No_error)
     );
