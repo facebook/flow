@@ -185,7 +185,7 @@ val json_of_loc_props: ?strip_root:Path.t option -> ?catch_offset_errors:bool ->
 
 val locationless_reason: reason_desc -> reason
 
-val func_reason: (ALoc.t, ALoc.t) Flow_ast.Function.t -> ALoc.t -> reason
+val func_reason: async:bool -> generator:bool -> ALoc.t -> reason
 
 val is_internal_name: string -> bool
 val internal_name: string -> string

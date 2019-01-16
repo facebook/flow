@@ -341,8 +341,15 @@ end with type t = Impl.t) = struct
           ]
       | loc, Function _function -> function_expression (loc, _function)
       | loc, ArrowFunction { Function.
-          id; params; async; generator; predicate = predicate_; tparams; return; body;
+          params;
+          async;
+          predicate = predicate_;
+          tparams;
+          return;
+          body;
           sig_loc = _;
+          (* TODO: arrows shouldn't have these: *)
+          id = _; generator = _;
         } ->
           let body, expression = match body with
           | Function.BodyBlock b -> block b, false
@@ -352,11 +359,11 @@ end with type t = Impl.t) = struct
           | Ast.Type.Missing _ -> None
           | Ast.Type.Available t -> Some t in
           node "ArrowFunctionExpression" loc [
-            "id", option identifier id;
+            "id", null;
             "params", function_params params;
             "body", body;
             "async", bool async;
-            "generator", bool generator;
+            "generator", bool false;
             "predicate", option predicate predicate_;
             "expression", bool expression;
             "returnType", option type_annotation return;
@@ -513,9 +520,10 @@ end with type t = Impl.t) = struct
       id; params; async; generator; predicate = predicate_; tparams; return; body;
       sig_loc = _;
     }) =
-      let body, expression = match body with
-      | Function.BodyBlock b -> block b, false
-      | Function.BodyExpression b -> expression b, true in
+      let body = match body with
+      | Function.BodyBlock b -> b
+      | Function.BodyExpression _ -> failwith "Unexpected FunctionDeclaration with BodyExpression"
+      in
       let return = match return with
       | Ast.Type.Missing _ -> None
       | Ast.Type.Available t -> Some t in
@@ -525,11 +533,11 @@ end with type t = Impl.t) = struct
            do it too. see https://github.com/estree/estree/issues/98 *)
         "id", option identifier id;
         "params", function_params params;
-        "body", body;
+        "body", block body;
         "async", bool async;
         "generator", bool generator;
         "predicate", option predicate predicate_;
-        "expression", bool expression;
+        "expression", bool false;
         "returnType", option type_annotation return;
         "typeParameters", option type_parameter_declaration tparams;
       ]
@@ -538,9 +546,9 @@ end with type t = Impl.t) = struct
       id; params; async; generator; predicate = predicate_; tparams; return; body;
       sig_loc = _;
     }) =
-      let body, expression = match body with
-      | Function.BodyBlock b -> block b, false
-      | Function.BodyExpression expr -> expression expr, true
+      let body = match body with
+      | Function.BodyBlock b -> b
+      | Function.BodyExpression _ -> failwith "Unexpected FunctionExpression with BodyExpression"
       in
       let return = match return with
       | Ast.Type.Missing _ -> None
@@ -548,11 +556,11 @@ end with type t = Impl.t) = struct
       node "FunctionExpression" loc [
         "id", option identifier id;
         "params", function_params params;
-        "body", body;
+        "body", block body;
         "async", bool async;
         "generator", bool generator;
         "predicate", option predicate predicate_;
-        "expression", bool expression;
+        "expression", bool false;
         "returnType", option type_annotation return;
         "typeParameters", option type_parameter_declaration tparams;
       ]

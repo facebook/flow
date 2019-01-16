@@ -64,11 +64,13 @@ module Statement
     let func = Declaration._function env in
     if in_strict_mode env then
       function_as_statement_error_at env (fst func)
-    else begin match func with
-      | _, Ast.Statement.FunctionDeclaration { Ast.Function.async = true; _ } ->
-        error_at env (fst func, Parse_error.AsyncFunctionAsStatement)
-      | _, Ast.Statement.FunctionDeclaration { Ast.Function.generator = true; _ } ->
-        error_at env (fst func, Parse_error.GeneratorFunctionAsStatement)
+    else begin
+      let open Ast.Statement in
+      match func with
+      | loc, FunctionDeclaration { Ast.Function.async = true; _ } ->
+        error_at env (loc, Parse_error.AsyncFunctionAsStatement)
+      | loc, FunctionDeclaration { Ast.Function.generator = true; _ } ->
+        error_at env (loc, Parse_error.GeneratorFunctionAsStatement)
       | _ -> ()
     end;
     func

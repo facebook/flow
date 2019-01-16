@@ -352,7 +352,7 @@ let mk_reason desc aloc =
 let locationless_reason desc =
   mk_reason_with_test_id None desc (ALoc.none) None None
 
-let func_reason {Ast.Function.async; generator; _} =
+let func_reason ~async ~generator =
   let func_desc = match async, generator with
   | true, true -> RAsyncGenerator
   | true, false -> RAsync
@@ -1038,8 +1038,8 @@ let rec mk_expression_reason = Ast.Expression.(function
 | (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
 | (loc, Object _) -> mk_reason RObjectLit loc
 | (loc, Array _) -> mk_reason RArrayLit loc
-| (loc, ArrowFunction f) -> func_reason f loc
-| (loc, Function f) -> func_reason f loc
+| (loc, ArrowFunction { Ast.Function.async; _ }) -> func_reason ~async ~generator:false loc
+| (loc, Function { Ast.Function.async; generator; _ }) -> func_reason ~async ~generator loc
 | (loc, Ast.Expression.Literal {Ast.Literal.value = Ast.Literal.String ""; _}) ->
   mk_reason (RStringLit "") loc
 | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc

@@ -251,10 +251,10 @@ and statement_decl cx = Ast.Statement.(
 
   | (_, Debugger) -> ()
 
-  | (loc, FunctionDeclaration func) ->
-      (match func.Ast.Function.id with
+  | (loc, FunctionDeclaration { Ast.Function.id; async; generator; _ }) ->
+      (match id with
       | Some (_, name) ->
-        let r = func_reason func loc in
+        let r = func_reason ~async ~generator loc in
         let tvar = Tvar.mk cx r in
         Env.bind_fun cx name tvar loc
       | None ->
@@ -1659,7 +1659,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
   | (loc, FunctionDeclaration func) ->
       let {Ast.Function.id; sig_loc; _} = func in
-      let fn_type, func_ast = mk_function None cx sig_loc func in
+      let fn_type, func_ast = mk_function_declaration None cx sig_loc func in
       let type_table_loc = Type_table.function_decl_loc id loc in
       Type_table.set (Context.type_table cx) type_table_loc fn_type;
       (match id with
@@ -2448,7 +2448,7 @@ and object_prop cx map prop = Ast.Expression.Object.(
       value = (vloc, func);
     }) ->
     Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
-    let function_type, func = mk_function None cx vloc func in
+    let function_type, func = mk_function_expression None cx vloc func in
     let return_t = Type.extract_getter_type function_type in
     let id_info = name, return_t, Type_table.Other in
     Type_table.set_info id_loc id_info (Context.type_table cx);
@@ -2469,7 +2469,7 @@ and object_prop cx map prop = Ast.Expression.Object.(
       value = vloc, func;
     }) ->
     Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
-    let function_type, func = mk_function None cx vloc func in
+    let function_type, func = mk_function_expression None cx vloc func in
     let param_t = Type.extract_setter_type function_type in
     let id_info = name, param_t, Type_table.Other in
     Type_table.set_info id_loc id_info (Context.type_table cx);
@@ -3136,7 +3136,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           )
       | _ -> ());
 
-      let t, func = mk_function id cx sig_loc func in
+      let t, func = mk_function_expression id cx sig_loc func in
       (match id with
       | Some (id_loc, name) ->
           let id_info = name, t, Type_table.Other in
@@ -6435,7 +6435,7 @@ and mk_class_sig =
 and mk_func_sig =
   let open Func_sig in
 
-  let function_kind {Ast.Function.async; generator; predicate; _ } =
+  let function_kind ~async ~generator ~predicate =
     Ast.Type.Predicate.(match async, generator, predicate with
     | true, true, None -> AsyncGenerator
     | true, false, None -> Async
@@ -6516,9 +6516,19 @@ and mk_func_sig =
   in
 
   fun cx tparams_map loc func ->
-    let {Ast.Function.tparams; return; body; predicate; params; id; _} = func in
-    let reason = func_reason func loc in
-    let kind = function_kind func in
+    let {Ast.Function.
+      tparams;
+      return;
+      body;
+      predicate;
+      params;
+      id;
+      async;
+      generator;
+      sig_loc = _;
+    } = func in
+    let reason = func_reason ~async ~generator loc in
+    let kind = function_kind ~async ~generator ~predicate in
     let tparams, tparams_map, tparams_ast =
       Anno.mk_type_param_declarations cx ~tparams_map tparams
     in
@@ -6580,7 +6590,15 @@ and define_internal cx reason x =
   let t = Env.get_var_declared_type cx ix loc in
   Env.init_let cx ~use_op:unknown_use ix ~has_anno:false t loc
 
-(* Process a function definition, returning a (polymorphic) function type. *)
+(* Process a function declaration, returning a (polymorphic) function type. *)
+and mk_function_declaration id cx loc func =
+  mk_function id cx loc func
+
+(* Process a function expression, returning a (polymorphic) function type. *)
+and mk_function_expression id cx loc func =
+  mk_function id cx loc func
+
+(* Internal helper function. Use `mk_function_declaration` and `mk_function_expression` instead. *)
 and mk_function id cx loc func =
   let this_t = Tvar.mk cx (mk_reason RThis loc) in
   let this = Scope.Entry.new_let this_t ~loc ~state:Scope.State.Initialized in
