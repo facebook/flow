@@ -559,3 +559,14 @@ let canonicalize_filenames ~cwd ~handle_imaginary filenames =
     | Some abs -> abs
     | None -> handle_imaginary filename
   ) filenames
+
+let expand_project_root_token_to_string ~root str =
+  let root = Path.to_string root
+    |> Sys_utils.normalize_filename_dir_sep in
+  str
+    |> Str.split_delim project_root_token
+    |> String.concat root
+
+let expand_project_root_token_to_regexp ~root str =
+  expand_project_root_token_to_string ~root str
+    |> Str.regexp

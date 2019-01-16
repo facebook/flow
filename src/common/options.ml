@@ -58,6 +58,7 @@ type t = {
   opt_enable_const_params: bool;
   opt_enforce_strict_call_arity: bool;
   opt_enforce_well_formed_exports: bool;
+  opt_enforce_well_formed_exports_whitelist: string list;
   opt_esproposal_class_static_fields: esproposal_feature_mode;
   opt_esproposal_class_instance_fields: esproposal_feature_mode;
   opt_esproposal_decorators: esproposal_feature_mode;

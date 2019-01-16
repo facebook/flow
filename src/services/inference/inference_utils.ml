@@ -49,3 +49,34 @@ let set_of_file_sig_tolerable_errors ~source_file errors =
   errors
   |> Core_list.map ~f:(error_of_file_sig_tolerable_error ~source_file)
   |> Errors.ErrorSet.of_list
+
+(* This is an options-aware fold over the files in `m`. Function `f` will be applied
+ * to a file FILE in `m` iff:
+ *  - flag 'opt_enforce_well_formed_exportst' is set to true, and
+ *  - if at least one 'opt_enforce_well_formed_exports_whitelist=PATH' has been
+ *    set, then there exists PATH for which FILE is within PATH.
+ *)
+let fold_whitelisted_well_formed_exports ~f options m acc =
+  if not (options.Options.opt_enforce_well_formed_exports) then acc else
+  match options.Options.opt_enforce_well_formed_exports_whitelist with
+  | [] -> Utils_js.FilenameMap.fold f m acc
+  | paths ->
+    let root = Options.root options in
+    let paths = Core_list.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
+    Utils_js.FilenameMap.fold (fun file v b ->
+      let file_str = File_key.to_string file in
+      if List.exists (fun r -> String_utils.is_substring r file_str) paths
+      then f file v b
+      else b
+    ) m acc
+
+let well_formed_exports_enabled options file =
+  options.Options.opt_enforce_well_formed_exports && (
+    match options.Options.opt_enforce_well_formed_exports_whitelist with
+    | [] -> true
+    | paths ->
+      let root = Options.root options in
+      let paths = Core_list.map ~f:(Files.expand_project_root_token_to_string ~root) paths in
+      let file_str = File_key.to_string file in
+      List.exists (fun r -> String_utils.is_substring r file_str) paths
+  )

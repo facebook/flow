@@ -105,10 +105,9 @@ let load_lib_files ~master_cx ~options ~reader files =
 
           let errors = Context.errors cx in
           let errors =
-            if options.Options.opt_enforce_well_formed_exports then
-              Inference_utils.set_of_file_sig_tolerable_errors
-                ~source_file:lib_file
-                file_sig.File_sig.With_ALoc.tolerable_errors
+            if Inference_utils.well_formed_exports_enabled options lib_file then
+              file_sig.File_sig.With_ALoc.tolerable_errors
+              |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
               |> Errors.ErrorSet.union errors
             else
               errors
