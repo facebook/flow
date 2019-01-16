@@ -37,6 +37,7 @@ module Opts = struct
     enable_const_params: bool;
     enforce_strict_call_arity: bool;
     enforce_well_formed_exports: bool;
+    enforce_well_formed_exports_whitelist: string list;
     esproposal_class_instance_fields: Options.esproposal_feature_mode;
     esproposal_class_static_fields: Options.esproposal_feature_mode;
     esproposal_decorators: Options.esproposal_feature_mode;
@@ -122,6 +123,7 @@ module Opts = struct
     enable_const_params = false;
     enforce_strict_call_arity = true;
     enforce_well_formed_exports = false;
+    enforce_well_formed_exports_whitelist = [];
     esproposal_class_instance_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
     esproposal_decorators = Options.ESPROPOSAL_WARN;
@@ -576,6 +578,19 @@ module Opts = struct
     "experimental.well_formed_exports",
       boolean (fun opts v -> Ok { opts with enforce_well_formed_exports = v });
 
+    "experimental.well_formed_exports.whitelist",
+      string
+        ~init: (fun opts -> { opts with enforce_well_formed_exports_whitelist = [] })
+        ~multiple: true
+        (fun opts v ->
+          if opts.enforce_well_formed_exports then
+            Ok { opts with enforce_well_formed_exports_whitelist =
+              v::(opts.enforce_well_formed_exports_whitelist) }
+          else
+            Error "This option requires \"experimental.enforce_well_formed_exports\" \
+            set to \"true\"."
+        );
+
     "no_flowlib",
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
   ]
@@ -945,6 +960,7 @@ let max_literal_length c = c.options.Opts.max_literal_length
 let enable_const_params c = c.options.Opts.enable_const_params
 let enforce_strict_call_arity c = c.options.Opts.enforce_strict_call_arity
 let enforce_well_formed_exports c = c.options.Opts.enforce_well_formed_exports
+let enforce_well_formed_exports_whitelist c = c.options.Opts.enforce_well_formed_exports_whitelist
 let esproposal_class_instance_fields c = c.options.Opts.esproposal_class_instance_fields
 let esproposal_class_static_fields c = c.options.Opts.esproposal_class_static_fields
 let esproposal_decorators c = c.options.Opts.esproposal_decorators

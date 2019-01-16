@@ -71,15 +71,13 @@ let collate_parse_results ~options parse_results =
     (* In practice, the only `tolerable_errors` are related to well formed exports. If this flag
      * were not temporary in nature, it would be worth adding some complexity to avoid conflating
      * them. *)
-    if options.Options.opt_enforce_well_formed_exports then
-      FilenameMap.fold (fun file file_sig_errors errors ->
+    Inference_utils.fold_whitelisted_well_formed_exports ~f:(
+      fun file file_sig_errors errors ->
         let file_sig_errors = File_sig.abstractify_tolerable_errors file_sig_errors in
         let errset = Inference_utils.set_of_file_sig_tolerable_errors
           ~source_file:file file_sig_errors in
         update_errset errors file errset
-      ) parse_ok local_errors
-    else
-      local_errors
+    ) options parse_ok local_errors
   in
 
   let unparsed = List.fold_left (fun unparsed (file, info, _) ->
@@ -656,15 +654,12 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       ) in
 
       let errors = Context.errors cx in
+
       let errors =
-        if options.Options.opt_enforce_well_formed_exports then
-          let tolerable_errors =
-            File_sig.With_Loc.(file_sig.tolerable_errors)
-            |> File_sig.abstractify_tolerable_errors
-          in
-          Inference_utils.set_of_file_sig_tolerable_errors
-            ~source_file:filename
-            tolerable_errors
+        if Inference_utils.well_formed_exports_enabled options filename then
+          File_sig.With_Loc.(file_sig.tolerable_errors)
+          |> File_sig.abstractify_tolerable_errors
+          |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
           |> Errors.ErrorSet.union errors
         else
           errors

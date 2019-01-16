@@ -503,12 +503,7 @@ module Haste: MODULE_SYSTEM = struct
         Str.string_match mock_path file 0
 
   let expand_project_root_token options str =
-    let root = Path.to_string (Options.root options)
-      |> Sys_utils.normalize_filename_dir_sep in
-    str
-      |> Str.split_delim Files.project_root_token
-      |> String.concat root
-      |> Str.regexp
+    Files.expand_project_root_token_to_regexp ~root:(Options.root options) str
 
   let is_haste_file options file =
     let matched_haste_paths_whitelist file = List.exists

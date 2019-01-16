@@ -1,0 +1,13 @@
+[libs]
+libA/
+libB/
+
+[options]
+experimental.well_formed_exports=true
+experimental.well_formed_exports.whitelist=<PROJECT_ROOT>/a.js
+experimental.well_formed_exports.whitelist=<PROJECT_ROOT>/dirA
+experimental.well_formed_exports.whitelist=<PROJECT_ROOT>/libA
+experimental.well_formed_exports.whitelist=<PROJECT_ROOT>/node_modules/a.js
+
+[lints]
+signature-verification-failure=error
