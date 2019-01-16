@@ -259,6 +259,11 @@ let tests = "signature_generator" >::: ([
     ["declare class C {x: number}";
      "export {C as default};"];
 
+  "export_default_class_declaration_with_private_fields" >:: mk_signature_generator_test
+    ["export default class C { #x: number = 0; }"]
+    ["declare class C {}";
+     "export {C as default};"];
+
   "declare_export_default_function_declaration" >:: mk_signature_generator_test
     ["declare export default function foo(): void;"]
     ["declare function foo(): void;";
