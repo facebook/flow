@@ -19,3 +19,5 @@ const _e = <MemoComponent foo={3} />;
 const _f = <MemoComponent />; // Error missing foo
 const _g = <MemoComponent foo={3} bar={3} />; // Error extra bar
 const _h = <MemoComponent foo="string" />; // Error wrong type for foo
+
+const _i = React.memo(React.forwardRef(Component));
