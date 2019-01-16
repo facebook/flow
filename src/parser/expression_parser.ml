@@ -1074,6 +1074,18 @@ module Expression
       (* Everything else causes a rollback *)
       | _ -> raise Try.Rollback) in
 
+    let concise_function_body env ~async =
+      (* arrow functions can't be generators *)
+      let env = enter_function env ~async ~generator:false in
+      match Peek.token env with
+      | T_LCURLY ->
+          let loc, body, strict = Parse.function_block_body env in
+          Function.BodyBlock (loc, body), strict
+      | _ ->
+          let expr = Parse.assignment env in
+          Function.BodyExpression expr, in_strict_mode env
+    in
+
     fun env ->
       let env = env |> with_error_callback error_callback in
 
@@ -1135,10 +1147,7 @@ module Expression
       (* Now we know for sure this is an arrow function *)
       let env = without_error_callback env in
 
-      let end_loc, (body, strict) = with_loc
-        (Declaration.concise_function_body ~async ~generator:false)
-        env
-      in
+      let end_loc, (body, strict) = with_loc (concise_function_body ~async) env in
       let simple = Declaration.is_simple_function_params params in
       Declaration.strict_post_check env ~strict ~simple None params;
       let loc = Loc.btwn start_loc end_loc in

@@ -22,7 +22,6 @@ module type DECLARATION = sig
   val function_body: env -> async:bool -> generator:bool -> Loc.t * (Loc.t, Loc.t) Function.body * bool
   val is_simple_function_params: (Loc.t, Loc.t) Ast.Function.Params.t -> bool
   val strict_post_check: env -> strict:bool -> simple:bool -> Loc.t Identifier.t option -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
-  val concise_function_body: env -> async:bool -> generator:bool -> (Loc.t, Loc.t) Function.body * bool
   val let_: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val const: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
   val var: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
@@ -175,17 +174,6 @@ module Declaration
     let env = enter_function env ~async ~generator in
     let loc, block, strict = Parse.function_block_body env in
     loc, Function.BodyBlock (loc, block), strict
-
-  let concise_function_body env ~async ~generator =
-    let env = env |> with_in_function true in
-    match Peek.token env with
-    | T_LCURLY ->
-        let _, body, strict = function_body env ~async ~generator in
-        body, strict
-    | _ ->
-        let env = enter_function env ~async ~generator in
-        let expr = Parse.assignment env in
-        Function.BodyExpression expr, in_strict_mode env
 
   let variance env is_async is_generator =
     let loc = Peek.loc env in
