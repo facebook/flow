@@ -758,7 +758,6 @@ module rec TypeTerm : sig
   and any_source =
     | Annotated
     | AnyError
-    | Unreachable
     | Unsound of unsoundness_kind
     | Untyped
 
