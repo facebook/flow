@@ -26,6 +26,7 @@ let regenerate =
   let open Error_suppressions in
   let add_unused_suppression_warnings checked unused warnings =
     (* For each unused suppression, create an warning *)
+    let deps = CheckedSet.dependencies checked in
     Error_suppressions.all_locs unused
     |> List.fold_left
       (fun warnings loc ->
@@ -37,7 +38,7 @@ let regenerate =
          * This means there might be an unused suppression comment warning in a dependency which
          * only shows up in lazy mode. To avoid this, we'll just avoid raising this kind of
          * warning in any dependency.*)
-        if not (CheckedSet.dependencies checked |> FilenameSet.mem source_file)
+        if not (FilenameSet.mem source_file deps)
         then begin
           let err =
             let msg = Flow_error.EUnusedSuppression (ALoc.of_loc loc) in
