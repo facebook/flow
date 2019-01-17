@@ -19,7 +19,7 @@ let rev_filter_map f lst =
   loop lst []
 ;;
 
-let filter_map f lst = List.rev (rev_filter_map f lst)
+let filter_map f lst = rev_filter_map f lst |> Core_list.rev
 
 (** like List.fold_left, but f returns an option and so do we.
     f acc v = Some acc proceeds as usual; None stops the fold.
@@ -107,19 +107,19 @@ let first_upto_n n f lst =
 
 (* truncate a list to first 0 < n <= len items *)
 let first_n n lst =
-  List.rev (fold_left_for n (fun rl x -> x :: rl) [] lst)
+  fold_left_for n (Fn.flip Core_list.cons) [] lst |> Core_list.rev
 
 (* truncate a list to last 0 < n <= len items *)
 let last_n n lst =
-  fold_left_for n (fun rl x -> x :: rl) [] (List.rev lst)
+  Core_list.rev lst |> fold_left_for n (Fn.flip Core_list.cons) []
 
 (* split a list into a list of lists, each of length n except the last whose length is in [0, n) *)
 let bucket_n n lst =
-  let _, curr, all = List.fold_left (fun (i, curr, all) result ->
-    if i = n then 1, [result], (List.rev curr)::all
+  let _, curr, all = Core_list.fold_left ~f:(fun (i, curr, all) result ->
+    if i = n then 1, [result], (Core_list.rev curr)::all
     else i+1, result::curr, all
-  ) (0, [], []) lst in
-  List.rev ((List.rev curr)::all)
+  ) ~init:(0, [], []) lst in
+  (Core_list.rev curr)::all |> Core_list.rev
 
 (* make a list of n copies of a given value *)
 let copy_n n v =
@@ -144,34 +144,34 @@ let rec phys_uniq = function
 
 (** performs a map, but returns the original list if there is no change **)
 let ident_map f lst =
-  let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
+  let rev_lst, changed = Core_list.fold_left ~f:(fun (lst_, changed) item ->
     let item_ = f item in
     item_::lst_, changed || item_ != item
-  ) ([], false) lst in
-  if changed then List.rev rev_lst else lst
+  ) ~init:([], false) lst in
+  if changed then Core_list.rev rev_lst else lst
 
 let ident_mapi f lst =
-  let _, rev_lst, changed = List.fold_left (fun (index, lst_, changed) item ->
+  let _, rev_lst, changed = Core_list.fold_left ~f:(fun (index, lst_, changed) item ->
     let item_ = f index item in
     index + 1, item_::lst_, changed || item_ != item
-  ) (0, [], false) lst in
-  if changed then List.rev rev_lst else lst
+  ) ~init:(0, [], false) lst in
+  if changed then Core_list.rev rev_lst else lst
 
 let ident_map_multiple f lst =
-  let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
+  let rev_lst, changed = Core_list.fold_left ~f:(fun (lst_, changed) item ->
     match f item with
     | [] -> lst_, true
     | [item_] -> item_ :: lst_, changed || item != item_
-    | items_ -> List.rev_append items_ lst_, true
-  ) ([], false) lst in
-  if changed then List.rev rev_lst else lst
+    | items_ -> Core_list.rev_append items_ lst_, true
+  ) ~init:([], false) lst in
+  if changed then Core_list.rev rev_lst else lst
 
 (** performs a filter, but returns the original list if there is no change **)
 let ident_filter f lst =
-  let rev_lst, changed = List.fold_left (fun (lst', changed) item ->
+  let rev_lst, changed = Core_list.fold_left ~f:(fun (lst', changed) item ->
     if f item then item::lst', changed else lst', true
-  ) ([], false) lst in
-  if changed then List.rev rev_lst else lst
+  ) ~init:([], false) lst in
+  if changed then Core_list.rev rev_lst else lst
 
 let rec combine3 = function
   | ([], [], []) -> []
@@ -184,7 +184,7 @@ let rec split3 = function
       let (rx, ry,rz) = split3 l in (x::rx, y::ry, z::rz)
 
 let zipi xs ys =
-  List.combine xs ys |> List.mapi (fun i (x, y) -> (i,x,y))
+  Core_list.zip_exn xs ys |> Core_list.mapi ~f:(fun i (x, y) -> (i,x,y))
 
 let range_with f a b =
   if a > b then []
@@ -209,25 +209,25 @@ let rec cat_maybes = function
     accumulator
   *)
 let fold_map f acc xs =
-  let acc', ys = List.fold_left (fun (a, ys) x ->
+  let acc', ys = Core_list.fold_left ~f:(fun (a, ys) x ->
     let (a', y) = f a x in
     (a', y :: ys)
-  ) (acc, []) xs in
-  (acc', List.rev ys)
+  ) ~init:(acc, []) xs in
+  (acc', Core_list.rev ys)
 
 let concat_fold f acc items =
-  let acc, lists = List.fold_left (fun (acc, lists) item ->
+  let acc, lists = Core_list.fold_left ~f:(fun (acc, lists) item ->
     let acc, list = f acc item in
     acc, list :: lists
-  ) (acc, []) items in
-  acc, List.concat lists
+  ) ~init:(acc, []) items in
+  acc, Core_list.concat lists
 
 let last_opt l =
   let rec last l v = match l with
   | [] -> v
   | x :: xs -> last xs x
   in
-  List.nth_opt l 0
+  Core_list.nth l 0
   |> Option.map ~f:(last l)
 
 (** Monadic versions of previous folding operations
@@ -246,18 +246,18 @@ module Monad (M : M_.S) = struct
   end)
 
   let fold_map_m f init xs =
-    List.fold_left (fun acc x -> acc >>= (fun (s, ys) ->
+    Core_list.fold_left ~f:(fun acc x -> acc >>= (fun (s, ys) ->
       f s x >>| fun (s', y) ->
       (s', y :: ys)
-    )) (return (init, [])) xs >>| fun (acc', ys) ->
-    (acc', List.rev ys)
+    )) ~init:(return (init, [])) xs >>| fun (acc', ys) ->
+    (acc', Core_list.rev ys)
 
   let concat_fold_m f init items =
-    List.fold_left (fun a item -> a >>= fun (acc, lists) ->
+    Core_list.fold_left ~f:(fun a item -> a >>= fun (acc, lists) ->
       f acc item >>| fun (acc, list) ->
       (acc, list :: lists)
-    ) (return (init, [])) items >>| fun (acc, lists) ->
-    (acc, List.concat lists)
+    ) ~init:(return (init, [])) items >>| fun (acc, lists) ->
+    (acc, Core_list.concat lists)
 end
 
 module Monad2 (M : M_.S2) = struct
@@ -270,18 +270,18 @@ module Monad2 (M : M_.S2) = struct
   end)
 
   let fold_map_m f init xs =
-    List.fold_left (fun acc x -> acc >>= (fun (s, ys) ->
+    Core_list.fold_left ~f:(fun acc x -> acc >>= (fun (s, ys) ->
       f s x >>| fun (s', y) ->
       (s', y :: ys)
-    )) (return (init, [])) xs >>| fun (acc', ys) ->
-    (acc', List.rev ys)
+    )) ~init:(return (init, [])) xs >>| fun (acc', ys) ->
+    (acc', Core_list.rev ys)
 
   let concat_fold_m f init items =
-    List.fold_left (fun a item -> a >>= fun (acc, lists) ->
+    Core_list.fold_left ~f:(fun a item -> a >>= fun (acc, lists) ->
       f acc item >>| fun (acc, list) ->
       (acc, list :: lists)
-    ) (return (init, [])) items >>| fun (acc, lists) ->
-    (acc, List.concat lists)
+    ) ~init:(return (init, [])) items >>| fun (acc, lists) ->
+    (acc, Core_list.concat lists)
 end
 
 (* Stringify a list given a separator and a printer for the element type *)
