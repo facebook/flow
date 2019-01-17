@@ -471,11 +471,17 @@ module Eval(Env: EvalEnv) = struct
     in fun tps generator tparams params return body ->
       let tps, deps = type_params tps tparams in
       let deps = Deps.join (deps, function_params tps params) in
-      match return with
-        | Ast.Type.Missing loc ->
-          if not generator && Signature_utils.Procedure_decider.is body then deps
-          else Deps.top (Error.ExpectedAnnotation loc)
-        | Ast.Type.Available (_, t) -> Deps.join (deps, type_ tps t)
+      let deps =
+        let return_deps =
+          match return with
+          | Ast.Type.Missing loc ->
+            if not generator && Signature_utils.Procedure_decider.is body then Deps.bot
+            else Deps.top (Error.ExpectedAnnotation loc)
+          | Ast.Type.Available (_, t) -> type_ tps t
+        in
+        Deps.join (deps, return_deps)
+      in
+      deps
 
   and class_ =
     let class_element tps element =

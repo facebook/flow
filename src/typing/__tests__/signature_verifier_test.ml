@@ -496,6 +496,20 @@ let tests_data = [
   ["Expected literal expression instead of JSXElement @ (1, 17) to (1, 28)"],
   [];
 
+  name "function_return",
+  ["var n = false;";
+   "export function foo<X: typeof n>(x: X) { return 1; };"],
+  ["Expected annotation @ (1, 4) to (1, 5)";
+   "Expected annotation @ (2, 38) to (2, 38)"],
+  ["Reachable: foo, n"];
+
+  name "function_return_2",
+  ["var n = false;";
+   "export function bar(x: (typeof n) => void) { return 1; };"],
+  ["Expected annotation @ (1, 4) to (1, 5)";
+   "Expected annotation @ (2, 42) to (2, 42)"],
+  ["Reachable: bar, n"];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =
