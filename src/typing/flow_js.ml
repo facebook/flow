@@ -971,7 +971,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (*************)
 
     | _, DebugPrintT reason ->
-      let str = Debug_js.jstr_of_t cx l in
+      let str = Debug_js.jstr_of_t ~depth:10 cx l in
       add_output cx ~trace (FlowError.EDebugPrint (reason, str))
 
     | DefT (_, NumT (Literal (_, (n, _)))), DebugSleepT _ ->
