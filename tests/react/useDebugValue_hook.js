@@ -2,7 +2,25 @@
 
 import React from 'react';
 
-const undefinedValue = React.useDebugValue(123);
+{
+  // Accepts any type of value
+  React.useDebugValue('abc');
+  React.useDebugValue(123);
+  React.useDebugValue(true);
+  React.useDebugValue(['a','b','c']);
+  React.useDebugValue({foo: 1, bar: 2});
+}
 
-(undefinedValue: typeof undefined); // Ok
-(undefinedValue: string); // Error: undefined is incompatible with string
+{
+  // Has an undefined return type
+  ((React.useDebugValue(123)): typeof undefined);
+}
+
+{
+  // Supports optional formatting function
+  const date = new Date();
+  React.useDebugValue(
+    date,
+    date => date.toDateString(),
+  );
+}
