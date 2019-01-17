@@ -26,29 +26,35 @@ References:
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:15:95
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:16:10
 
-Property `foo` is missing in object type [1] but exists in object type [2].
+Cannot return `x` because property `foo` is missing in object type [1] but exists in object type [2].
 
+   abstract_vs_abstract.js:16:10
+   16|   return x;
+                ^
+
+References:
    abstract_vs_abstract.js:15:95
    15| function test3(x: React$AbstractComponent<{foo: number}, Component>): React$AbstractComponent<{}, Component> { // Error missing props
                                                                                                      ^^ [1]
-
-References:
    abstract_vs_abstract.js:15:43
    15| function test3(x: React$AbstractComponent<{foo: number}, Component>): React$AbstractComponent<{}, Component> { // Error missing props
                                                  ^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:19:47
+Error ------------------------------------------------------------------------------------ abstract_vs_abstract.js:20:10
 
-`Component` [1] is incompatible with `Subcomponent` [2].
+Cannot return `x` because `Component` [1] is incompatible with `Subcomponent` [2].
 
+   abstract_vs_abstract.js:20:10
+   20|   return x;
+                ^
+
+References:
    abstract_vs_abstract.js:19:47
    19| function test4(x: React$AbstractComponent<{}, Component>): React$AbstractComponent<{}, Subcomponent> { // Error instance is covariant
                                                      ^^^^^^^^^ [1]
-
-References:
    abstract_vs_abstract.js:19:88
    19| function test4(x: React$AbstractComponent<{}, Component>): React$AbstractComponent<{}, Subcomponent> { // Error instance is covariant
                                                                                               ^^^^^^^^^^^^ [2]
@@ -68,34 +74,6 @@ Cannot use type without exactly 2 type arguments.
 
    11| function test3(x: React$AbstractComponent<any,any,any>) { // Too many targs
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error --------------------------------------------------------------------------------------------- classes_lower.js:5:7
-
-`Component` [1] is incompatible with `Subclass` [2].
-
-   classes_lower.js:5:7
-    5| class Component extends React.Component<{}> {}
-             ^^^^^^^^^ [1]
-
-References:
-   classes_lower.js:25:42
-   25| (Component: React$AbstractComponent<any, Subclass>); // Ok, Instance is covariant
-                                                ^^^^^^^^ [2]
-
-
-Error -------------------------------------------------------------------------------------------- classes_lower.js:11:7
-
-`ComponentNarrower` [1] is incompatible with `Component` [2].
-
-   classes_lower.js:11:7
-   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
-             ^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   classes_lower.js:19:50
-   19| (ComponentNarrower: React$AbstractComponent<any, Component>); // Error instance type is wrong
-                                                        ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- classes_lower.js:15:21
@@ -141,6 +119,41 @@ References:
    classes_lower.js:11:49
    11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:19:2
+
+Cannot cast `ComponentNarrower` to AbstractComponent because `ComponentNarrower` [1] is incompatible with
+`Component` [2].
+
+   classes_lower.js:19:2
+   19| (ComponentNarrower: React$AbstractComponent<any, Component>); // Error instance type is wrong
+        ^^^^^^^^^^^^^^^^^
+
+References:
+   classes_lower.js:11:7
+   11| class ComponentNarrower extends React.Component<{foo: number, bar: number}> {
+             ^^^^^^^^^^^^^^^^^ [1]
+   classes_lower.js:19:50
+   19| (ComponentNarrower: React$AbstractComponent<any, Component>); // Error instance type is wrong
+                                                        ^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- classes_lower.js:25:2
+
+Cannot cast `Component` to AbstractComponent because `Component` [1] is incompatible with `Subclass` [2].
+
+   classes_lower.js:25:2
+   25| (Component: React$AbstractComponent<any, Subclass>); // Ok, Instance is covariant
+        ^^^^^^^^^
+
+References:
+   classes_lower.js:5:7
+    5| class Component extends React.Component<{}> {}
+             ^^^^^^^^^ [1]
+   classes_lower.js:25:42
+   25| (Component: React$AbstractComponent<any, Subclass>); // Ok, Instance is covariant
+                                                ^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- config.js:13:2
@@ -393,7 +406,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:10:2
 
-undefined [1] is incompatible with number [2].
+Cannot cast `Component` to AbstractComponent because undefined [1] is incompatible with number [2].
 
    function_lower.js:10:2
    10| (Component: React$AbstractComponent<Props, number>); // Error void ~> number
@@ -426,7 +439,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:20:2
 
-undefined [1] is incompatible with number [2].
+Cannot cast `ComponentWithDefaultProps` to AbstractComponent because undefined [1] is incompatible with number [2].
 
    function_lower.js:20:2
    20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, number>); // Error, void ~> number
@@ -438,18 +451,21 @@ References:
                                                                     ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------- function_lower.js:22:7
+Error ------------------------------------------------------------------------------------------- function_lower.js:28:2
 
-Cannot assign class `NotAComponent` to `NotAComponent` because:
+Cannot cast `NotAFunctionComponent` to AbstractComponent because:
  - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
  - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
  - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
 
+   function_lower.js:28:2
+   28| (NotAFunctionComponent: React$AbstractComponent<Props, void>);
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
    function_lower.js:22:7
    22| class NotAComponent {}; // Error, not a component
              ^^^^^^^^^^^^^ [1]
-
-References:
    <BUILTINS>/react.js:18:5
    18|   | React$Element<any>
            ^^^^^^^^^^^^^^^^^^ [2]
