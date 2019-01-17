@@ -803,10 +803,7 @@ let get_lines ~start ~len content =
 let read_file filename =
   if Filename.is_relative filename then failwith
     (Utils_js.spf "Expected absolute location, got %s" filename);
-  try
-    Some (Sys_utils.cat filename)
-  with Sys_error _ ->
-    None
+  Sys_utils.cat_or_failed filename
 
 let get_offset_table_expensive ~stdin_file loc =
   let open Option in
