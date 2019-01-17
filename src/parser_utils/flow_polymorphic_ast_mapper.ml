@@ -1476,6 +1476,3 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     { argument = argument'; delegate }
 
 end
-
-let fold_program mappers ast =
-  List.fold_left (fun ast m -> m#program ast) ast mappers
