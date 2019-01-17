@@ -1336,8 +1336,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:36:7
 
-Cannot call `myHOC` with function bound to `Component` because string [1] is incompatible with number [2] in property
-`foo`.
+Cannot call `myHOC` with function bound to `Component` because:
+ - string [1] is incompatible with number [2] in property `foo`.
+ - all branches are incompatible:
+    - Either undefined [3] is incompatible with null [4].
+    - Or property `@@iterator` is missing in undefined [3] but exists in `$Iterable` [5].
 
    hoc.js:36:7
    36| myHOC(function Empty(props: {foo: string}) {}); // Error
@@ -1350,25 +1353,15 @@ References:
    hoc.js:6:40
     6|   Component: React$ComponentType<{foo: number, bar: number}>,
                                               ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc.js:36:43
-
-Cannot expect return as the return type of function because:
- - Either undefined [1] is incompatible with null [2].
- - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
-
    hoc.js:36:43
    36| myHOC(function Empty(props: {foo: string}) {}); // Error
-                                                 ^ [1]
-
-References:
+                                                 ^ [3]
    <BUILTINS>/react.js:14:5
    14|   | null
-           ^^^^ [2]
+           ^^^^ [4]
    <BUILTINS>/react.js:20:5
    20|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [3]
+           ^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:41:1

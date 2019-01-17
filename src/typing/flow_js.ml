@@ -3453,28 +3453,29 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      *)
 
     (* Class component ~> AbstractComponent *)
-    | DefT (r, ClassT this),
-      UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
+    | DefT (reasonl, ClassT this),
+      UseT (use_op, DefT (_reasonu, ReactAbstractComponentT {config; instance})) ->
         (* Contravariant config check *)
-        React_kit.get_config cx trace l ~use_op ~reason_op:r ~rec_flow ~rec_flow_t ~rec_unify
-          ~get_builtin_type ~add_output
+        React_kit.get_config cx trace l ~use_op ~reason_op:reasonl ~rec_flow
+          ~rec_flow_t ~rec_unify ~get_builtin_type ~add_output
           (React.GetConfig l) Negative config;
         (* check instancel <: instanceu *)
-        rec_flow_t cx trace (this, instance);
+        rec_flow_t cx trace ~use_op (this, instance);
 
     (* Function Component ~> AbstractComponent *)
-    | DefT (r, FunT (_, _, { return_t; _ })),
-      UseT (use_op, DefT (_, ReactAbstractComponentT {config; instance})) ->
+    | DefT (reasonl, FunT (_, _, { return_t; _ })),
+      UseT (use_op, DefT (_reasonu, ReactAbstractComponentT {config; instance})) ->
         (* Contravariant config check *)
-        React_kit.get_config cx trace l ~use_op ~reason_op:r ~rec_flow ~rec_flow_t ~rec_unify
-          ~get_builtin_type ~add_output
+        React_kit.get_config cx trace l ~use_op ~reason_op:reasonl ~rec_flow
+          ~rec_flow_t ~rec_unify ~get_builtin_type ~add_output
           (React.GetConfig l) Negative config;
 
         (* Ensure this is a function component *)
-        rec_flow_t cx trace (return_t, get_builtin_type cx r "React$Node");
+        rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl "React$Node");
 
         (* A function component instance type is always void, so flow void to instance *)
-        rec_flow_t cx trace ((VoidT.make (replace_reason_const RVoid r)), instance);
+        rec_flow_t cx trace ~use_op
+          ((VoidT.make (replace_reason_const RVoid reasonl)), instance);
 
     (* Object Component ~> AbstractComponent *)
     | DefT (r, ObjT {call_t = Some id; _}),
@@ -3489,13 +3490,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         end
 
     (* AbstractComponent ~> AbstractComponent *)
-    | DefT (_, ReactAbstractComponentT {config = configl;
+    | DefT (_reasonl, ReactAbstractComponentT {config = configl;
         instance = instancel}),
-      UseT (_, DefT (_, ReactAbstractComponentT {config = configu;
+      UseT (use_op, DefT (_reasonu, ReactAbstractComponentT {config = configu;
         instance = instanceu}))
       ->
-        rec_flow_t cx trace (configu, configl);
-        rec_flow_t cx trace (instancel, instanceu);
+        rec_flow_t cx trace ~use_op (configu, configl);
+        rec_flow_t cx trace ~use_op (instancel, instanceu);
 
     (* When looking at properties of an AbstractComponent, we delegate to a union of
      * function component and class component
