@@ -2672,8 +2672,8 @@ let dump_flow_error =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           msg
-    | EFunctionIncompatibleWithShape (lower, upper, use_op) ->
-        spf "EFunctionIncompatibleWithShape (%s, %s, %s)"
+    | EIncompatibleWithShape (lower, upper, use_op) ->
+        spf "EIncompatibleWithShape (%s, %s, %s)"
           (dump_reason cx lower)
           (dump_reason cx upper)
           (string_of_use_op use_op)

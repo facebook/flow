@@ -4052,17 +4052,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * this.
      *
      * This invariant is important for the React setState() type definition. *)
-    | DefT (_, (FunT _
-                | ObjT {call_t = Some _; _}
-                | InstanceT (_, _, _, {inst_call_t = Some _; _}))),
-      UseT (use_op, ShapeT o) ->
-        add_output cx ~trace
-          (FlowError.EFunctionIncompatibleWithShape (reason_of_t l, reason_of_t o, use_op))
-
-    |  (_, UseT (_, ShapeT (o))) ->
-         let reason = reason_of_t o in
-         rec_flow cx trace (l,
-           ObjAssignFromT (reason, o, reason_of_t l |> EmptyT.make, default_obj_assign_kind))
+    | _, UseT (use_op, ShapeT o) ->
+      add_output cx ~trace
+        (FlowError.EIncompatibleWithShape (reason_of_t l, reason_of_t o, use_op))
 
     | DefT (_, AnyT src), ObjTestT (reason_op, _, u) ->
       rec_flow_t cx trace (AnyT.why src reason_op, u)

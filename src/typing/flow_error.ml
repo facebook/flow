@@ -108,7 +108,7 @@ type error_message =
   | ERefineAnnot of ALoc.t
   | EUnexpectedTypeof of ALoc.t
   | EFunPredCustom of (reason * reason) * string
-  | EFunctionIncompatibleWithShape of reason * reason * use_op
+  | EIncompatibleWithShape of reason * reason * use_op
   | EInternal of ALoc.t * internal_error
   | EUnsupportedSyntax of ALoc.t * unsupported_syntax
   | EUseArrayLiteral of ALoc.t
@@ -313,8 +313,8 @@ let util_use_op_of_msg nope util = function
 | EIncompatibleWithExact (rs, op) -> util op (fun op -> EIncompatibleWithExact (rs, op))
 | EInvalidCharSet {invalid; valid; use_op} ->
   util use_op (fun use_op -> EInvalidCharSet {invalid; valid; use_op})
-| EFunctionIncompatibleWithShape (l, u, use_op) ->
-  util use_op (fun use_op -> EFunctionIncompatibleWithShape (l, u, use_op))
+| EIncompatibleWithShape (l, u, use_op) ->
+  util use_op (fun use_op -> EIncompatibleWithShape (l, u, use_op))
 | EInvalidObjectKit {tool; reason; reason_op; use_op} ->
   util use_op (fun use_op -> EInvalidObjectKit {tool; reason; reason_op; use_op})
 | EIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> EIncompatibleWithUseOp (rl, ru, op))
@@ -1586,7 +1586,7 @@ let rec error_of_msg ~trace_reasons ~source_file =
     mk_error (aloc_of_reason a)
       [ref a; text ". "; text msg; text " "; ref b; text "."]
 
-  | EFunctionIncompatibleWithShape (lower, upper, use_op) ->
+  | EIncompatibleWithShape (lower, upper, use_op) ->
     mk_use_op_error (aloc_of_reason lower) use_op [
       ref lower; text " is incompatible with "; code "$Shape"; text " of ";
       ref upper;
