@@ -786,15 +786,17 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           | None -> None, None
           | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
         loc, T.Outline (T.Class (id, class_ tparams body super super_targs implements))
-      | loc, Function stuff
-      | loc, ArrowFunction stuff
-        ->
-        let open Ast.Function in
-        let {
+      | loc, Function { Ast.Function.
           generator; tparams; params; return; body;
           id = _; async = _; predicate = _; sig_loc = _;
-        } = stuff in
+        } ->
         loc, T.Function (function_ generator tparams params return body)
+      | loc, ArrowFunction { Ast.Function.
+          tparams; params; return; body; async = _; predicate = _; sig_loc = _;
+          (* TODO: arrow functions can't have ids or be generators: *)
+          id = _; generator = _;
+        } ->
+        loc, T.Function (function_ false tparams params return body)
       | loc, Object stuff ->
         let open Ast.Expression.Object in
         let { properties } = stuff in
@@ -975,38 +977,43 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | In -> loc, T.Boolean
       | Instanceof -> loc, T.Boolean
 
-  and function_ =
-    let function_param (_, { Ast.Function.Param.argument; default }) =
-      pattern ~default:(default <> None) argument
+  and function_param (_, { Ast.Function.Param.argument; default }) =
+    pattern ~default:(default <> None) argument
 
-    in let function_rest_param (loc, { Ast.Function.RestParam.argument }) =
-      (loc, pattern argument)
+  and function_rest_param (loc, { Ast.Function.RestParam.argument }) =
+    (loc, pattern argument)
 
-    in let function_params params =
-      let open Ast.Function in
-      let params_loc, { Params.params; rest; } = params in
-      let params = Core_list.map ~f:function_param params in
-      let rest = match rest with
-        | None -> None
-        | Some param -> Some (function_rest_param param) in
-      params_loc, params, rest
+  and function_params params =
+    let open Ast.Function in
+    let params_loc, { Params.params; rest; } = params in
+    let params = Core_list.map ~f:function_param params in
+    let rest = match rest with
+      | None -> None
+      | Some param -> Some (function_rest_param param) in
+    params_loc, params, rest
 
-    in fun generator tparams params return body ->
-      let tparams = type_params tparams in
-      let params = function_params params in
-      let return = match return with
-        | Ast.Type.Missing loc ->
-          if not generator && Signature_utils.Procedure_decider.is body then T.EXPR (loc, T.Void)
-          else T.FixMe.mk_little_annotation loc
-        | Ast.Type.Available (_, t) -> T.TYPE (type_ t) in
-      (* TODO: It is unclear whether what happens for async or generator functions. In particular,
-         what do declarations of such functions look like, aside from the return type being
-         `Promise<...>` or `Generator<...>`? *)
-      T.FUNCTION {
-        tparams;
-        params;
-        return
-      }
+  and function_return ~is_missing_ok return =
+    match return with
+    | Ast.Type.Missing loc ->
+      if is_missing_ok () then T.EXPR (loc, T.Void)
+      else T.FixMe.mk_little_annotation loc
+    | Ast.Type.Available (_, t) -> T.TYPE (type_ t)
+
+  and function_ generator tparams params return body =
+    let tparams = type_params tparams in
+    let params = function_params params in
+    let return =
+      let is_missing_ok () = not generator && Signature_utils.Procedure_decider.is body in
+      function_return ~is_missing_ok return
+    in
+    (* TODO: It is unclear whether what happens for async or generator functions. In particular,
+       what do declarations of such functions look like, aside from the return type being
+       `Promise<...>` or `Generator<...>`? *)
+    T.FUNCTION {
+      tparams;
+      params;
+      return
+    }
 
   and class_ =
     let class_element acc element =
@@ -1088,24 +1095,21 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           loc, T.OInit (x, literal_expr value)
         | loc, Method { key; value = (fn_loc, fn) } ->
           let x = object_key key in
-          let open Ast.Function in
-          let {
+          let { Ast.Function.
             generator; tparams; params; return; body;
             id = _; async = _; predicate = _; sig_loc = _;
           } = fn in
           loc, T.OMethod (x, (fn_loc, function_ generator tparams params return body))
         | loc, Get { key; value = (fn_loc, fn) } ->
           let x = object_key key in
-          let open Ast.Function in
-          let {
+          let { Ast.Function.
             generator; tparams; params; return; body;
             id = _; async = _; predicate = _; sig_loc = _;
           } = fn in
           loc, T.OGet (x, (fn_loc, function_ generator tparams params return body))
         | loc, Set { key; value = (fn_loc, fn) } ->
           let x = object_key key in
-          let open Ast.Function in
-          let {
+          let { Ast.Function.
             generator; tparams; params; return; body;
             id = _; async = _; predicate = _; sig_loc = _;
           } = fn in

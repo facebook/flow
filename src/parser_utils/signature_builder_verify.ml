@@ -453,35 +453,35 @@ module Eval(Env: EvalEnv) = struct
         (* The result type of this operation depends in a complicated way on the left/right types. *)
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Binary))
 
-  and function_ =
+  and function_param tps (_, { Ast.Function.Param.argument; default = _ }) =
+    pattern tps argument
+
+  and function_rest_param tps (_, { Ast.Function.RestParam.argument }) =
+    pattern tps argument
+
+  and function_params tps params =
     let open Ast.Function in
-    let function_param tps (_, { Param.argument; default = _ }) =
-      pattern tps argument
+    let _, { Params.params; rest; } = params in
+    let deps = List.fold_left (Deps.reduce_join (function_param tps)) Deps.bot params in
+    match rest with
+      | None -> deps
+      | Some param -> Deps.join (deps, function_rest_param tps param)
 
-    in let function_rest_param tps (_, { RestParam.argument }) =
-      pattern tps argument
+  and function_return tps ~is_missing_ok return =
+    match return with
+    | Ast.Type.Missing loc ->
+      if is_missing_ok () then Deps.bot
+      else Deps.top (Error.ExpectedAnnotation loc)
+    | Ast.Type.Available (_, t) -> type_ tps t
 
-    in let function_params tps params =
-      let _, { Params.params; rest; } = params in
-      let deps = List.fold_left (Deps.reduce_join (function_param tps)) Deps.bot params in
-      match rest with
-        | None -> deps
-        | Some param -> Deps.join (deps, function_rest_param tps param)
-
-    in fun tps generator tparams params return body ->
-      let tps, deps = type_params tps tparams in
-      let deps = Deps.join (deps, function_params tps params) in
-      let deps =
-        let return_deps =
-          match return with
-          | Ast.Type.Missing loc ->
-            if not generator && Signature_utils.Procedure_decider.is body then Deps.bot
-            else Deps.top (Error.ExpectedAnnotation loc)
-          | Ast.Type.Available (_, t) -> type_ tps t
-        in
-        Deps.join (deps, return_deps)
-      in
-      deps
+  and function_ tps generator tparams params return body =
+    let tps, deps = type_params tps tparams in
+    let deps = Deps.join (deps, function_params tps params) in
+    let deps =
+      let is_missing_ok () = not generator && Signature_utils.Procedure_decider.is body in
+      Deps.join (deps, function_return tps ~is_missing_ok return)
+    in
+    deps
 
   and class_ =
     let class_element tps element =
@@ -553,8 +553,7 @@ module Eval(Env: EvalEnv) = struct
         | loc, Set { key; value = (_, fn) }
           ->
           let deps = object_key (loc, key) in
-          let open Ast.Function in
-          let { generator; tparams; params; return; body; _ } = fn in
+          let { Ast.Function.generator; tparams; params; return; body; _ } = fn in
           Deps.join (deps, function_ tps generator tparams params return body)
     in
     fun tps loc properties ->
@@ -640,6 +639,9 @@ module Verifier(Env: EvalEnv) = struct
   let eval_function_declaration loc function_declaration =
     eval_entry (Entry.function_declaration loc function_declaration)
 
+  let eval_function_expression loc function_expression =
+    eval_entry (Entry.function_expression loc function_expression)
+
   let eval_class loc class_ =
     eval_entry (Entry.class_ loc class_)
 
@@ -662,9 +664,9 @@ module Verifier(Env: EvalEnv) = struct
         ({ Ast.Function.id = Some _; _ } as function_declaration)
       ) ->
       eval_function_declaration loc function_declaration
-    | Declaration (_, Ast.Statement.FunctionDeclaration
-        ({ Ast.Function.id = None; generator; tparams; params; return; body; _ })
-      ) ->
+    | Declaration (_, Ast.Statement.FunctionDeclaration ({ Ast.Function.
+        id = None; generator; tparams; params; return; body; _
+      })) ->
       Eval.function_ SSet.empty generator tparams params return body
     | Declaration (loc, Ast.Statement.ClassDeclaration ({ Ast.Class.id = Some _; _ } as class_)) ->
       eval_class loc class_
@@ -677,7 +679,7 @@ module Verifier(Env: EvalEnv) = struct
       Eval.class_ tparams body super super_targs implements
     | Declaration _stmt -> Deps.unreachable
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-      eval_function_declaration loc function_
+      eval_function_expression loc function_
     | Expression expr -> Eval.literal_expr SSet.empty expr
   )
 

@@ -31,6 +31,9 @@ module Signature = struct
   let add_function_declaration env loc function_declaration =
     add_env env (Entry.function_declaration loc function_declaration)
 
+  let add_function_expression env loc function_expression =
+    add_env env (Entry.function_expression loc function_expression)
+
   let add_class env loc class_ =
     add_env env (Entry.class_ loc class_)
 
@@ -71,7 +74,7 @@ module Signature = struct
       add_class env loc class_
     | Declaration _ -> assert false
     | Expression (loc, Ast.Expression.Function ({ Ast.Function.id = Some _; _ } as function_)) ->
-      add_function_declaration env loc function_
+      add_function_expression env loc function_
     | Expression _ -> assert false (* TODO: class? *)
   )
 

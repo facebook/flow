@@ -61,9 +61,14 @@ let variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclara
     acc @ (pattern loc ?init_path:(Kind.Init_path.mk_init init) id)
   ) [] declarations
 
-let function_declaration loc function_declaration =
-  let open Ast.Function in
-  let { id; generator; tparams; params; return; body; _ } = function_declaration in
+let function_declaration loc { Ast.Function.
+  id; generator; tparams; params; return; body; _
+} =
+  Option.value_exn id, (loc, Kind.FunctionDef { generator; tparams; params; return; body })
+
+let function_expression loc { Ast.Function.
+  id; generator; tparams; params; return; body; _
+} =
   Option.value_exn id, (loc, Kind.FunctionDef { generator; tparams; params; return; body })
 
 let class_ loc class_ =
