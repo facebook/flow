@@ -1,3 +1,24 @@
+### 0.91.0
+
+Likely to cause new Flow errors:
+
+* Better positioning for React error messages. This may move already existing (and suppressed) errors to new positions.
+
+New Features:
+
+* The `--lazy-mode` flag was added to all commands that may autostart a server
+
+Notable bug fixes:
+
+* Fix a crash when using private class fields (fixes https://github.com/facebook/flow/issues/7355)
+
+Misc:
+
+* Various additions and typo fixes on flow.org docs and README (thanks @fschindler, @dominicfraser, @keithamus, and @fterh)
+* Misc OCaml tweaks (thanks @rvantonder)
+* Huge reduction (~15%) in total memory usage (thanks @nmote)
+* Huge reduction in error collation time (thanks @panagosg7)
+
 ## 0.90.0
 
 Likely to cause new Flow errors:
