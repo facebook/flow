@@ -927,7 +927,7 @@ end
 
 module type WithCache = sig
   include NoCache
-  val write_through : key -> t -> unit
+  val write_around : key -> t -> unit
   val get_no_cache : key -> t option
 end
 
@@ -1287,7 +1287,7 @@ module WithCache (Raw : Raw) (UserKeyType : UserKeyType) (Value:Value.Type) = st
 
   let get_no_cache = Direct.get
 
-  let write_through x y =
+  let write_around x y =
     (* Note that we do not need to do any cache invalidation here because
      * Direct.add is a no-op if the key already exists. *)
     Direct.add x y
