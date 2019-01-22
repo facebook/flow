@@ -755,10 +755,10 @@ type 'a persistent_handling_result =
       'a * Persistent_connection_prot.metadata
     ) result
 
-let handle_persistent_canceled ~id ~metadata ~client:_ ~profiling:_ =
+let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "cancelled") in
   let response = ResponseMessage (id, ErrorResult (e, "")) in
-  Lwt.return (LspResponse (Ok ((), Some response, metadata)))
+  Lwt.return (LspResponse (Ok (ret, Some response, metadata)))
 
 let handle_persistent_subscribe ~client ~profiling:_ ~env =
   let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings env in
@@ -1181,7 +1181,7 @@ let get_persistent_handler ~genv ~request : persistent_command_handler =
       when IdSet.mem id !(ServerMonitorListenerState.cancellation_requests) ->
     (* We don't do any work, we just immediately tell the monitor that this request was already
      * canceled *)
-    Handle_persistent_immediately (handle_persistent_canceled ~id ~metadata)
+    Handle_persistent_immediately (handle_persistent_canceled ~ret:() ~id ~metadata)
 
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
@@ -1223,7 +1223,17 @@ let get_persistent_handler ~genv ~request : persistent_command_handler =
     )
 
   | LspToServer (NotificationMessage (CancelRequestNotification params), metadata) ->
-    (* This mutates env, so it can't run in parallel *)
+    (* The general idea here is this:
+     *
+     * 1. As soon as we get a cancel notification, add the ID to the canceled requests set.
+     * 2. When a request comes in or runs with the canceled ID, cancel that request and immediately
+     *    respond that the request has been canceled.
+     * 3. When we go to run a request that has been canceled, skip it's normal handler and instead
+     *    respond that the request has been canceled.
+     * 4. When the nonparallelizable cancel notification workload finally runs, remove the ID from
+     *    the set. We're guaranteed that the canceled request will not show up later *)
+    let id = params.CancelRequest.id in
+    ServerMonitorListenerState.(cancellation_requests := IdSet.add id !cancellation_requests);
     Handle_nonparallelizable_persistent (
       handle_persistent_cancel_notification ~params ~metadata
     )
@@ -1314,25 +1324,35 @@ let wrap_persistent_handler
     let%lwt profiling, result = Profiling_js.with_profiling_lwt
       ~label:"Command" ~should_print_summary
       (fun profiling ->
-        try%lwt
-          handler ~genv ~workload ~client ~profiling arg
-        with
-        | Lwt.Canceled as e ->
-          (* Don't swallow Lwt.Canceled. Parallelizable commands may be canceled and run again
-           * later. *)
-          let e = Exception.wrap e in
-          Exception.reraise e
-        | e ->
-          let e = Exception.wrap e in
-          let stack = Utils.Callstack (Exception.get_backtrace_string e) in
-          let reason = Exception.get_ctor_string e in
-          let error_info = (UnexpectedError, reason, stack) in
-          begin match request with
-            | LspToServer (_, metadata) ->
-              Lwt.return (LspResponse (Error (default_ret, {metadata with error_info=Some error_info})))
-            | _ ->
-              Lwt.return (IdeResponse (Error (default_ret, error_info)))
-          end)
+        match request with
+        | LspToServer (RequestMessage (id, _), metadata)
+            when IdSet.mem id !(ServerMonitorListenerState.cancellation_requests) ->
+          Hh_logger.info "Skipping canceled persistent request: %s" (string_of_request request);
+          (* We can't actually skip a canceled request...we need to send a response. But we can
+           * skip the normal handler *)
+          handle_persistent_canceled ~ret:default_ret ~id ~metadata ~client ~profiling
+        | _ -> begin
+          try%lwt
+            handler ~genv ~workload ~client ~profiling arg
+          with
+          | Lwt.Canceled as e ->
+            (* Don't swallow Lwt.Canceled. Parallelizable commands may be canceled and run again
+             * later. *)
+            let e = Exception.wrap e in
+            Exception.reraise e
+          | e ->
+            let e = Exception.wrap e in
+            let stack = Utils.Callstack (Exception.get_backtrace_string e) in
+            let reason = Exception.get_ctor_string e in
+            let error_info = (UnexpectedError, reason, stack) in
+            begin match request with
+              | LspToServer (_, metadata) ->
+                Lwt.return (LspResponse (Error (default_ret, {metadata with error_info=Some error_info})))
+              | _ ->
+                Lwt.return (IdeResponse (Error (default_ret, error_info)))
+            end
+        end
+      )
     in
 
     (* we'll send this "Finishing_up" event only after sending the LSP response *)
