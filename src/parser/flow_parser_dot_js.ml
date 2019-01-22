@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Js = Js_of_ocaml.Js
+
 let () =
   let exports =
     if (Js.typeof (Js.Unsafe.js_expr "exports") != Js.string "undefined")

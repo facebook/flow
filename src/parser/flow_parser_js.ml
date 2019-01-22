@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Js = Js_of_ocaml.Js
+
 module JsTranslator : sig
   val translation_errors: (Loc.t * Parse_error.t) list ref
   include Translator_intf.S
