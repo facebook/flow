@@ -201,6 +201,13 @@ let tests = "scope_builder" >::: [
      mk_loc (1, 38) (1, 41);
      mk_loc (1, 44) (1, 47);
      mk_loc (1, 51) (1, 52)];
+  "switch" >:: mk_scope_builder_all_uses_test
+    "switch ('') { case '': const foo = ''; foo; };"
+    [];
+    (* TODO this should be the output, but there is a bug:
+    [mk_loc (1, 29) (1, 32);
+     mk_loc (1, 39) (1, 42)];
+    *)
   "scope_loc_function_declaration" >:: mk_scope_builder_scope_loc_test
     "function a() {};"
     [0, mk_loc (1, 0) (1, 16); (* program *)
