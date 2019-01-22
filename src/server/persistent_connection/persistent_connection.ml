@@ -16,13 +16,20 @@ type single_client = {
   lsp_initialize_params: Lsp.Initialize.params option;
 }
 
-type t = single_client list
+type t = Persistent_connection_prot.client_id list
+
+let active_clients: single_client IMap.t ref = ref IMap.empty
+
+let get_client client_id = IMap.get client_id !active_clients
 
 let to_string (clients: t) : string =
-  let client_to_string (client: single_client) : string =
-    Printf.sprintf "{id:%d opened:%d subscribed:%B context:%f}"
-      client.client_id (SMap.cardinal client.opened_files)
-      client.subscribed client.logging_context.FlowEventLogger.start_time
+  let client_to_string client_id : string =
+    match get_client client_id with
+    | None -> "{id:%d DEAD CLIENT}"
+    | Some client ->
+      Printf.sprintf "{id:%d opened:%d subscribed:%B context:%f}"
+        client.client_id (SMap.cardinal client.opened_files)
+        client.subscribed client.logging_context.FlowEventLogger.start_time
   in
   let clients_str = Core_list.map ~f:client_to_string clients in
   Printf.sprintf "[%s]" (String.concat ", " clients_str)
@@ -88,16 +95,28 @@ let add_client clients client_id logging_context lsp =
       lsp_initialize_params = lsp;
     }
   in
+  active_clients := IMap.add client_id new_client !active_clients;
   Hh_logger.info "Adding new persistent connection #%d" new_client.client_id;
-  (new_client :: clients)
+  (client_id :: clients)
 
 let remove_client clients client_id =
   Hh_logger.info "Removing persistent connection client #%d" client_id;
-  List.filter (fun client -> client.client_id != client_id) clients
+  active_clients := IMap.remove client_id !active_clients;
+  List.filter (fun id -> id != client_id) clients
 
-let get_subscribed_clients = List.filter (fun c -> c.subscribed)
+let get_subscribed_clients =
+  List.fold_left (fun acc client_id ->
+    match get_client client_id with
+    | Some client when client.subscribed -> client::acc
+    | _ -> acc
+  ) []
 
-let get_subscribed_lsp_clients = List.filter (fun c -> c.subscribed && c.is_lsp)
+let get_subscribed_lsp_clients =
+  List.fold_left (fun acc client_id ->
+    match get_client client_id with
+    | Some client when client.subscribed && client.is_lsp -> client::acc
+    | _ -> acc
+  ) []
 
 let update_clients ~clients ~calc_errors_and_warnings =
   let subscribed_clients = get_subscribed_clients clients in
@@ -129,30 +148,32 @@ let send_end_recheck ~lazy_stats clients =
     |> get_subscribed_clients
     |> List.iter (send_single_end_recheck ~lazy_stats)
 
-let rec modify_item lst item f = match lst with
-  | [] -> raise Not_found
-  | hd::tl ->
-      (* Use identity, not structural equality *)
-      if hd == item then
-        (f hd)::tl
-      else
-        hd::(modify_item tl item f)
+let modify_client client f =
+  if not (IMap.mem client.client_id !active_clients)
+  then raise Not_found;
 
-let subscribe_client ~clients ~client ~current_errors ~current_warnings =
+  let new_client = f client in
+
+  if new_client.client_id <> client.client_id
+  then failwith "Changing the client_id is not supported";
+
+  active_clients := IMap.add client.client_id new_client !active_clients
+
+
+let subscribe_client ~client ~current_errors ~current_warnings =
   Hh_logger.info "Subscribing client #%d to push diagnostics" client.client_id;
   if client.subscribed then
     (* noop *)
-    clients
+    ()
   else begin
     send_errors ~errors:current_errors ~warnings:current_warnings client;
-    modify_item clients client (fun c -> { c with subscribed = true })
+    modify_client client (fun c -> { c with subscribed = true })
   end
 
 let client_did_open
-    (clients: single_client list)
     (client: single_client)
     ~(files: (string * string) Nel.t)
-  : (single_client list * single_client) option =
+  : single_client option =
   Hh_logger.info "Client #%d opened %d file(s)" client.client_id (Nel.length files);
   let add_file acc (filename, content) = SMap.add filename content acc in
   let new_opened_files = Nel.fold_left add_file client.opened_files files in
@@ -164,15 +185,14 @@ let client_did_open
   else
     let update_opened_files c = {c with opened_files = new_opened_files} in
     let new_client = update_opened_files client in
-    let new_connections = modify_item clients client update_opened_files in
-    Some (new_connections, new_client)
+    let () = modify_client client update_opened_files in
+    Some new_client
 
 let client_did_change
-    (clients: single_client list)
     (client: single_client)
     (fn: string)
     (changes: Lsp.DidChange.textDocumentContentChangeEvent list)
-  : (single_client list * single_client, string * Utils.callstack) result =
+  : (single_client, string * Utils.callstack) result =
   try begin
     let content = SMap.find fn client.opened_files in
     match Lsp_helpers.apply_changes content changes with
@@ -181,8 +201,8 @@ let client_did_change
       let new_opened_files = SMap.add fn new_content client.opened_files in
       let update_opened_files c = {c with opened_files = new_opened_files} in
       let new_client = update_opened_files client in
-      let new_connections = modify_item clients client update_opened_files in
-      Ok (new_connections, new_client)
+      let () = modify_client client update_opened_files in
+      Ok new_client
   end with Not_found as e ->
     let e = Exception.wrap e in
     let stack = Exception.get_backtrace_string e in
@@ -190,10 +210,9 @@ let client_did_change
 
 
 let client_did_close
-    (clients: single_client list)
     (client: single_client)
     ~(filenames: string Nel.t)
-  : (single_client list * single_client) option =
+  : single_client option =
   Hh_logger.info "Client #%d closed %d file(s)" client.client_id (Nel.length filenames);
   let remove_file acc filename = SMap.remove filename acc in
   let new_opened_files = Nel.fold_left remove_file client.opened_files filenames in
@@ -205,8 +224,8 @@ let client_did_close
   else
     let update_opened_files c = {c with opened_files = new_opened_files} in
     let new_client = update_opened_files client in
-    let new_connections = modify_item clients client update_opened_files in
-    Some (new_connections, new_client)
+    let () = modify_client client update_opened_files in
+    Some new_client
 
 let get_file (client: single_client) (fn: string) : File_input.t =
   let content_opt = SMap.get fn client.opened_files in
@@ -216,10 +235,11 @@ let get_file (client: single_client) (fn: string) : File_input.t =
 
 let get_logging_context client = client.logging_context
 
-let get_opened_files (clients: single_client list) : SSet.t =
+let get_opened_files (clients: t) : SSet.t =
   let per_file filename _content acc = SSet.add filename acc in
-  let per_client acc client = SMap.fold per_file client.opened_files acc
+  let per_client acc client_id =
+    match get_client client_id with
+    | None -> acc
+    | Some client -> SMap.fold per_file client.opened_files acc
   in
   List.fold_left per_client SSet.empty clients
-
-let get_client clients client_id = List.find_opt (fun c -> c.client_id = client_id) clients

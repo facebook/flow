@@ -669,11 +669,9 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
 
 let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
-  begin match Persistent_connection.client_did_open env.connections client ~files with
+  begin match Persistent_connection.client_did_open client ~files with
   | None -> Lwt.return env (* No new files were opened, so do nothing *)
-  | Some (connections, client) ->
-    let env = {env with connections} in
-
+  | Some client ->
     match Options.lazy_mode options with
     | Some Options.LAZY_MODE_IDE ->
       (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
@@ -704,12 +702,12 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
     end
 
 let did_close _genv env client (filenames: string Nel.t) : ServerEnv.env Lwt.t =
-  begin match Persistent_connection.client_did_close env.connections client ~filenames with
+  begin match Persistent_connection.client_did_close client ~filenames with
     | None -> Lwt.return env (* No new files were closed, so do nothing *)
-    | Some (connections, client) ->
+    | Some client ->
       let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
       Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-      Lwt.return {env with connections}
+      Lwt.return env
   end
 
 
@@ -772,10 +770,8 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
 
   | Subscribe ->
       let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings env in
-      let new_connections = Persistent_connection.subscribe_client
-        ~clients:env.connections ~client ~current_errors ~current_warnings
-      in
-      Lwt.return (IdeResponse (Ok ({ env with connections = new_connections }, None)))
+      Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
+      Lwt.return (IdeResponse (Ok (env, None)))
 
   | Autocomplete (file_input, id) ->
       let%lwt results, json_data = autocomplete ~options ~env ~profiling file_input in
@@ -802,9 +798,9 @@ let handle_persistent_unsafe genv env client profiling msg : persistent_handling
     let open VersionedTextDocumentIdentifier in
     let open Persistent_connection in
     let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-    begin match client_did_change env.connections client fn params.contentChanges with
-      | Ok (connections, _client) ->
-        Lwt.return (LspResponse (Ok ({ env with connections; }, None, metadata)))
+    begin match client_did_change client fn params.contentChanges with
+      | Ok _client ->
+        Lwt.return (LspResponse (Ok (env, None, metadata)))
       | Error (reason, stack) ->
         Lwt.return (LspResponse (Error (env, with_error metadata ~reason ~stack)))
     end
@@ -1137,7 +1133,7 @@ let handle_persistent
   Hh_logger.info "Persistent request: %s" (string_of_request request);
   MonitorRPC.status_update ~event:ServerStatus.Handling_request_start;
 
-  match Persistent_connection.get_client env.connections client_id with
+  match Persistent_connection.get_client client_id with
   | None ->
     Hh_logger.error "Unknown persistent client %d. Maybe connection went away?" client_id;
     Lwt.return env

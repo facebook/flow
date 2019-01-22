@@ -42,29 +42,26 @@ val send_errors_if_subscribed:
 
 (* getters/setters on single_client *)
 val subscribe_client:
-  clients:t ->
   client:single_client ->
   current_errors:Errors.ErrorSet.t ->
-  current_warnings:Errors.ErrorSet.t Utils_js.FilenameMap.t -> t
+  current_warnings:Errors.ErrorSet.t Utils_js.FilenameMap.t ->
+  unit
 
 val client_did_open:
-  t ->
   single_client ->
   files:(string * string) Nel.t ->
-  (t * single_client) option
+  single_client option
 
 val client_did_change:
-  t ->
   single_client ->
   string ->
   Lsp.DidChange.textDocumentContentChangeEvent list ->
-  (t * single_client, string * Utils.callstack) result
+  (single_client, string * Utils.callstack) result
 
 val client_did_close:
-  t ->
   single_client ->
   filenames:string Nel.t
-  -> (t * single_client) option
+  -> single_client option
 
 val get_logging_context: single_client -> FlowEventLogger.logging_context
 
@@ -77,4 +74,4 @@ val get_opened_files: t -> SSet.t
    client, or FileName if it wasn't. *)
 val get_file: single_client -> string -> File_input.t
 
-val get_client: t -> Prot.client_id -> single_client option
+val get_client: Prot.client_id -> single_client option
