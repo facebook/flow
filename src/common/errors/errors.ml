@@ -32,18 +32,16 @@ type 'a message =
 
 (* simple structure for callers to specify error message content,
    converted to message internally. *)
-type 'a info' = 'a * string list
-type info = ALoc.t info'
+type 'a info = 'a * string list
 
 (** for extra info, enough structure to do simple tree-shaped output *)
-type 'a info_tree' =
-  | InfoLeaf of 'a info' list
-  | InfoNode of 'a info' list * 'a info_tree' list
-type info_tree = ALoc.t info_tree'
+type 'a info_tree =
+  | InfoLeaf of 'a info list
+  | InfoNode of 'a info list * 'a info_tree list
 
 type 'a classic_error = {
   messages: 'a message list;
-  extra: 'a info_tree' list
+  extra: 'a info_tree list
 }
 
 module LocSet = Utils_js.LocSet
@@ -671,7 +669,7 @@ let infos_to_messages infos =
 
 let mk_error
   ?(kind=InferError)
-  ?(trace_infos: info list option)
+  ?(trace_infos: ALoc.t info list option)
   ?(root: (ALoc.t * ALoc.t Friendly.message) option)
   ?(frames: ALoc.t Friendly.message list option)
   (loc: ALoc.t)

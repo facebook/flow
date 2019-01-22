@@ -21,14 +21,12 @@ val string_of_kind: error_kind -> string
     [ location1, ["number"; "Type is incompatible with"];
       location2, ["string"] ]
   *)
-type 'a info' = 'a * string list
-type info = ALoc.t info'
+type 'a info = 'a * string list
 
 (** for extra info, enough structure to do simple tree-shaped output *)
-type 'a info_tree' =
-  | InfoLeaf of 'a info' list
-  | InfoNode of 'a info' list * 'a info_tree' list
-type info_tree = ALoc.t info_tree'
+type 'a info_tree =
+  | InfoLeaf of 'a info list
+  | InfoNode of 'a info list * 'a info_tree list
 
 module Friendly : sig
   type t
@@ -57,7 +55,7 @@ type 'loc error
 
 val mk_error:
   ?kind:error_kind ->
-  ?trace_infos:info list ->
+  ?trace_infos:ALoc.t info list ->
   ?root:(ALoc.t * ALoc.t Friendly.message) ->
   ?frames:(ALoc.t Friendly.message list) ->
   ALoc.t ->
@@ -66,7 +64,7 @@ val mk_error:
 
 val mk_speculation_error:
   ?kind:error_kind ->
-  ?trace_infos:info list ->
+  ?trace_infos:ALoc.t info list ->
   loc:ALoc.t ->
   root:(ALoc.t * ALoc.t Friendly.message) option ->
   frames:(ALoc.t Friendly.message list) ->
