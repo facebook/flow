@@ -617,7 +617,7 @@ and handle_parallelizable_ephemeral
     match result with
     | Ok ()
     | Error () -> Lwt.return_unit
-  with Lwt.Canceled ->
+  with Lwt.Canceled when not is_serial ->
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 
@@ -1430,8 +1430,12 @@ let rec handle_parallelizable_persistent_unsafe
 
 and handle_parallelizable_persistent
     ~genv ~client_id ~request ~workload ~is_serial env: unit Lwt.t =
-  wrap_persistent_handler (handle_parallelizable_persistent_unsafe ~request ~is_serial)
-    ~genv ~client_id ~request ~workload ~default_ret:() env
+  try%lwt
+    wrap_persistent_handler (handle_parallelizable_persistent_unsafe ~request ~is_serial)
+      ~genv ~client_id ~request ~workload ~default_ret:() env
+  with Lwt.Canceled when not is_serial->
+    (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
+    Lwt.return_unit
 
 let handle_nonparallelizable_persistent_unsafe ~genv ~workload ~client ~profiling env =
   let workload = workload ~client in
