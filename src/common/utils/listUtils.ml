@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module M_ = Monad
-
 let rev_filter_map f lst =
   let rec loop lst acc =
     match lst with
@@ -229,60 +227,6 @@ let last_opt l =
   in
   Core_list.nth l 0
   |> Option.map ~f:(last l)
-
-(** Monadic versions of previous folding operations
-
-    It's unfortunate that we have to replicate the definitions for
-    the cases where the monadic module accepts 1 or 2 type paramenters.
-  *)
-
-module Monad (M : M_.S) = struct
-
-  include M_.Make(struct
-    type 'a t = 'a M.t
-    let bind   = M.bind
-    let return = M.return
-    let map = `Custom M.map
-  end)
-
-  let fold_map_m f init xs =
-    Core_list.fold_left ~f:(fun acc x -> acc >>= (fun (s, ys) ->
-      f s x >>| fun (s', y) ->
-      (s', y :: ys)
-    )) ~init:(return (init, [])) xs >>| fun (acc', ys) ->
-    (acc', Core_list.rev ys)
-
-  let concat_fold_m f init items =
-    Core_list.fold_left ~f:(fun a item -> a >>= fun (acc, lists) ->
-      f acc item >>| fun (acc, list) ->
-      (acc, list :: lists)
-    ) ~init:(return (init, [])) items >>| fun (acc, lists) ->
-    (acc, Core_list.concat lists)
-end
-
-module Monad2 (M : M_.S2) = struct
-
-  include M_.Make2(struct
-    type ('a, 'b) t = ('a,'b) M.t
-    let bind   = M.bind
-    let return = M.return
-    let map = `Custom M.map
-  end)
-
-  let fold_map_m f init xs =
-    Core_list.fold_left ~f:(fun acc x -> acc >>= (fun (s, ys) ->
-      f s x >>| fun (s', y) ->
-      (s', y :: ys)
-    )) ~init:(return (init, [])) xs >>| fun (acc', ys) ->
-    (acc', Core_list.rev ys)
-
-  let concat_fold_m f init items =
-    Core_list.fold_left ~f:(fun a item -> a >>= fun (acc, lists) ->
-      f acc item >>| fun (acc, list) ->
-      (acc, list :: lists)
-    ) ~init:(return (init, [])) items >>| fun (acc, lists) ->
-    (acc, Core_list.concat lists)
-end
 
 (* Stringify a list given a separator and a printer for the element type *)
 let to_string separator printer list =

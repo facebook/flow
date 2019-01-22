@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module M_ = Monad
-
 val rev_filter_map : ('a -> 'b option) -> 'a list -> 'b list
 val filter_map : ('a -> 'b option) -> 'a list -> 'b list
 
@@ -37,22 +35,6 @@ val cat_maybes : 'a option list -> 'a list
 val fold_map : ('a -> 'b -> 'a * 'c) -> 'a -> 'b list -> 'a * 'c list
 val concat_fold : ('a -> 'b -> 'a * 'c list) -> 'a -> 'b list -> 'a * 'c list
 val last_opt : 'a list -> 'a option
-
-module Monad (M : M_.S) : sig
-  include M_.S with type 'a t := 'a M.t
-  val fold_map_m : ('a -> 'b -> ('a * 'c) M.t) -> 'a -> 'b list -> ('a * 'c list) M.t
-  val concat_fold_m : ('a -> 'b -> ('a * 'c list) M.t)
-                   -> 'a -> 'b list
-                   -> ('a * 'c list) M.t
-end
-
-module Monad2 (M : M_.S2) : sig
-  include M_.S2 with type ('a,'b) t := ('a,'b) M.t
-  val fold_map_m : ('a -> 'b -> ('a * 'c, 'd) M.t) -> 'a -> 'b list -> ('a * 'c list, 'd) M.t
-  val concat_fold_m : ('a -> 'b -> ('a * 'c list, 'd) M.t)
-                   -> 'a -> 'b list
-                   -> ('a * 'c list, 'd) M.t
-end
 
 val to_string: string -> ('a -> string) -> ('a list -> string)
 val assoc_to_string: string -> ('a -> string) -> string -> ('b -> string) ->
