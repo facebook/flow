@@ -200,17 +200,6 @@ and file_exists path =
 let resolve_symlinks path =
   Path.to_string (Path.make path)
 
-(**
- * Given a list of lazy "option" expressions, evaluate each in the list
- * sequentially until one produces a `Some` (and do not evaluate any remaining).
- *)
-let lazy_seq: 'a option Lazy.t list -> 'a option =
-  List.fold_left (fun acc lazy_expr ->
-    match acc with
-    | None -> Lazy.force lazy_expr
-    | Some _ -> acc
-  ) None
-
 (* Every <file>.js can be imported by its path, so it effectively exports a
    module by the name <file>.js. Every <file>.js.flow shadows the corresponding
    <file>.js, so it effectively exports a module by the name <file>.js. *)

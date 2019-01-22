@@ -81,6 +81,18 @@ let curry f x y = f (x, y)
 let ( %> ) f g x = g (f x)
 
 (**
+ * Given a list of lazy "option" expressions, evaluate each in the list
+ * sequentially until one produces a `Some` (and do not evaluate any remaining).
+ *)
+let lazy_seq (lst: 'a option Lazy.t list): 'a option =
+  List.fold_left (fun acc lazy_expr ->
+    match acc with
+    | None -> Lazy.force lazy_expr
+    | Some _ -> acc
+  ) None lst
+
+
+(**
  * Useful for various places where a user might have typoed a string and the
  * set of possible intended strings is known (i.e. variable names).
  *)
