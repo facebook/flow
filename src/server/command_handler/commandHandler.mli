@@ -14,4 +14,4 @@ val enqueue_persistent:
   ServerEnv.genv ->
   Persistent_connection_prot.client_id ->
   Persistent_connection_prot.request ->
-  unit
+  unit Lwt.t

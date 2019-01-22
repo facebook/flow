@@ -243,3 +243,5 @@ let get_opened_files (clients: t) : SSet.t =
     | Some client -> SMap.fold per_file client.opened_files acc
   in
   List.fold_left per_client SSet.empty clients
+
+let get_id client = client.client_id

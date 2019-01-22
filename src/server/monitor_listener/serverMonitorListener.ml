@@ -16,8 +16,7 @@ module ListenLoop = LwtLoop.Make (struct
   | MonitorProt.Request (request_id, command) ->
     CommandHandler.enqueue_or_handle_ephemeral genv (request_id, command)
   | MonitorProt.PersistentConnectionRequest (client_id, request) ->
-    CommandHandler.enqueue_persistent genv client_id request;
-    Lwt.return_unit
+    CommandHandler.enqueue_persistent genv client_id request
   | MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) ->
     ServerMonitorListenerState.push_new_env_update (fun env -> { env with
       connections = Persistent_connection.add_client env.connections client_id logging_context lsp
