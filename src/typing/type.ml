@@ -775,7 +775,6 @@ module rec TypeTerm : sig
     | InstanceOfRefinement
     | Merged
     | ResolveSpread
-    | TaggedTemplateType
     | Unchecked
     | Unimplemented
     | UnresolvedType
@@ -2730,7 +2729,6 @@ module Unsoundness = struct
   let unimplemented        = Unsound Unimplemented
   let weak_context         = Unsound WeakContext
   let inference_hooks      = Unsound InferenceHooks
-  let tagged_template      = Unsound TaggedTemplateType
   let exports              = Unsound Exports
   let existential          = Unsound Existential
   let bound_fn_this        = Unsound BoundFunctionThis
@@ -2745,7 +2743,6 @@ module Unsoundness = struct
   let unimplemented_any    = AnyT.make unimplemented
   let weak_context_any     = AnyT.make weak_context
   let inference_hooks_any  = AnyT.make inference_hooks
-  let tagged_template_any  = AnyT.make tagged_template
   let chain_any            = AnyT.make chain
   let exports_any          = AnyT.make exports
   let existential_any      = AnyT.make existential

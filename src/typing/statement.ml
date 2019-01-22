@@ -3148,21 +3148,6 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let t, f = mk_arrow cx loc func in (loc, t), ArrowFunction f
 
   | TaggedTemplate {
-      TaggedTemplate.tag = tag_loc, (Identifier (id_loc, ("query" as name)));
-      (* TODO: walk quasis? *)
-      quasi = quasi_loc, { TemplateLiteral.quasis; expressions }
-    } ->
-    let expressions = Core_list.map ~f:(expression cx) expressions in
-    (* TODO what is the type of "query"? is it in the environment? *)
-    let id_t = Unsoundness.at TaggedTemplateType tag_loc in
-    (*parse_graphql cx encaps;*)
-    (loc, VoidT.at loc),
-    TaggedTemplate { TaggedTemplate.
-      tag = (tag_loc, id_t), Identifier ((id_loc, id_t), name);
-      quasi = quasi_loc, { TemplateLiteral.quasis; expressions; };
-    }
-
-  | TaggedTemplate {
       TaggedTemplate.tag;
       (* TODO: walk quasis? *)
       quasi = quasi_loc, { TemplateLiteral.quasis; expressions }
