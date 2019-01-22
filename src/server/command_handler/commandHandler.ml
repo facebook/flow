@@ -1344,6 +1344,8 @@ let wrap_persistent_handler
       let metadata = {metadata with server_profiling; server_logging_context; } in
       let response = LspFromServer (lsp_response, metadata) in
       Persistent_connection.send_message response client;
+      Hh_logger.info "Persistent response: Ok lspFromServer %s"
+        (Option.value_map lsp_response ~default:"None" ~f:Lsp_fmt.message_name_to_string);
       MonitorRPC.status_update ~event;
       Lwt.return ret
 
@@ -1362,10 +1364,13 @@ let wrap_persistent_handler
         | _ -> None in
       let response = LspFromServer (lsp_response, metadata) in
       Persistent_connection.send_message response client;
+      Hh_logger.info "Persistent response: Error lspFromServer %s"
+        (Option.value_map lsp_response ~default:"None" ~f:Lsp_fmt.message_name_to_string);
       MonitorRPC.status_update ~event;
       Lwt.return ret
 
     | IdeResponse (Ok (ret, extra_data)) ->
+      Hh_logger.info "Persistent response: Ok IdeResponse";
       let request = json_of_request request |> Hh_json.json_to_string in
       let extra_data = keyvals_of_json extra_data in
       FlowEventLogger.persistent_command_success
@@ -1381,6 +1386,7 @@ let wrap_persistent_handler
         ~server_logging_context:None ~extra_data:[]
         ~persistent_context:None ~persistent_delay:None ~request ~client_context
         ~server_profiling ~client_duration:None ~wall_start ~error:(Some (reason, stack));
+      Hh_logger.info "Persistent response: ExpectedError IdeResponse";
       MonitorRPC.status_update ~event;
       Lwt.return ret
 

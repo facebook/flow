@@ -52,7 +52,7 @@ let string_of_request = function
 | Autocomplete _ -> "autocomplete"
 | DidOpen _ -> "didOpen"
 | DidClose _ -> "didClose"
-| LspToServer _ -> "lspToServer"
+| LspToServer (msg, _) -> Printf.sprintf "lspToServer %s" (Lsp_fmt.message_name_to_string msg)
 
 let json_of_request = let open Hh_json in function
 | Subscribe -> JSON_Object ["method", JSON_String "subscribe"]
