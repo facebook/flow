@@ -55,12 +55,12 @@ type 'loc error
 
 val mk_error:
   ?kind:error_kind ->
-  ?trace_infos:ALoc.t info list ->
-  ?root:(ALoc.t * ALoc.t Friendly.message) ->
-  ?frames:(ALoc.t Friendly.message list) ->
-  ALoc.t ->
-  ALoc.t Friendly.message ->
-  ALoc.t error
+  ?trace_infos: 'loc info list ->
+  ?root:('loc * 'loc Friendly.message) ->
+  ?frames:('loc Friendly.message list) ->
+  'loc ->
+  'loc Friendly.message ->
+  'loc error
 
 val mk_speculation_error:
   ?kind:error_kind ->

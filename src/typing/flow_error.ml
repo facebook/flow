@@ -568,7 +568,7 @@ let ordered_reasons ((rl, ru) as reasons) =
   then ru, rl
   else reasons
 
-let rec error_of_msg ~trace_reasons ~source_file =
+let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Errors.error =
   let open Errors in
 
   let mk_info reason extras =

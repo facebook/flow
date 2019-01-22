@@ -669,12 +669,12 @@ let infos_to_messages infos =
 
 let mk_error
   ?(kind=InferError)
-  ?(trace_infos: ALoc.t info list option)
-  ?(root: (ALoc.t * ALoc.t Friendly.message) option)
-  ?(frames: ALoc.t Friendly.message list option)
-  (loc: ALoc.t)
-  (message: ALoc.t Friendly.message)
-  : ALoc.t error
+  ?(trace_infos: 'loc info list option)
+  ?(root: ('loc * 'loc Friendly.message) option)
+  ?(frames: 'loc Friendly.message list option)
+  (loc: 'loc)
+  (message: 'loc Friendly.message)
+  : 'loc error
 =
   let open Friendly in
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
