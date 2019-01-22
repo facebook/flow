@@ -49,11 +49,22 @@ let with_parallelizable_workloads env f =
   (* The wait_for_cancel thread itself is NOT cancelable *)
   let wait_for_cancel, wakener = Lwt.wait () in
   let loop_thread = Parallelizable_workload_loop.run (wait_for_cancel, env) in
-  let%lwt ret = f () in
-  (* Tell the loop to cancel at its earliest convinience *)
-  Lwt.wakeup wakener ();
-  (* Wait for the loop to finish *)
-  let%lwt () = loop_thread in
+  let finally () =
+    (* Tell the loop to cancel at its earliest convinience *)
+    Lwt.wakeup wakener ();
+    (* Wait for the loop to finish *)
+    loop_thread
+  in
+  let%lwt ret =
+    try%lwt f ()
+    with exn ->
+      let exn = Exception.wrap exn in
+      let%lwt () = finally () in
+      Exception.reraise exn
+  in
+
+  let%lwt () = finally () in
+
   Lwt.return ret
 
 let get_lazy_stats genv env =
