@@ -165,7 +165,7 @@ and polarity = Positive | Negative | Neutral
   ancestors = ["mapreduce_ty_base"];
 }]
 
-(* Type descructors *)
+(* Type destructors *)
 
 let rec bk_union = function
   | Union (t1,t2,ts) -> Core_list.concat_map ~f:bk_union (t1::t2::ts)
@@ -179,15 +179,13 @@ let rec bk_inter = function
 (* Type constructors *)
 
 let mk_union ts =
-  let ts = List.concat (Core_list.map ~f:bk_union ts) in
-  match ts with
+  match Core_list.(ts >>= bk_union) with
   | [] -> Bot
   | [t] -> t
   | t1::t2::ts -> Union (t1, t2, ts)
 
 let mk_inter ts =
-  let ts = List.concat (Core_list.map ~f:bk_inter ts) in
-  match ts with
+  match Core_list.(ts >>= bk_inter) with
   | [] -> Top
   | [t] -> t
   | t1::t2::ts -> Inter (t1, t2, ts)
