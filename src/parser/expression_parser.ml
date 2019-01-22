@@ -789,8 +789,7 @@ module Expression
   and member ?(allow_optional_chain=true) env start_loc left =
     as_expression env (member_cover ~allow_optional_chain env start_loc (Cover_expr left))
 
-  and _function env =
-    let start_loc = Peek.loc env in
+  and _function env = with_loc (fun env ->
     let async = Declaration.async env in
     let sig_loc, (id, params, generator, predicate, return, tparams) = with_loc (fun env ->
       Expect.token env T_FUNCTION;
@@ -820,11 +819,10 @@ module Expression
       let return, predicate = Type.annotation_and_predicate_opt env in
       (id, params, generator, predicate, return, tparams)
     ) env in
-    let end_loc, body, strict =
-      Declaration.function_body env ~async ~generator in
+    let body, strict = Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
     Declaration.strict_post_check env ~strict ~simple id params;
-    Loc.btwn start_loc end_loc, Expression.(Function Function.({
+    Expression.Function { Function.
       id;
       params;
       body;
@@ -834,7 +832,8 @@ module Expression
       return;
       tparams;
       sig_loc;
-    }))
+    }
+  ) env
 
   and number env kind raw =
     let value = match kind with

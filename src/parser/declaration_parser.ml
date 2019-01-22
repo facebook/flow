@@ -19,7 +19,7 @@ module type DECLARATION = sig
   val generator: env -> bool
   val variance: env -> bool -> bool -> Loc.t Variance.t option
   val function_params: await:bool -> yield:bool -> env -> (Loc.t, Loc.t) Ast.Function.Params.t
-  val function_body: env -> async:bool -> generator:bool -> Loc.t * (Loc.t, Loc.t) Function.body * bool
+  val function_body: env -> async:bool -> generator:bool -> (Loc.t, Loc.t) Function.body * bool
   val is_simple_function_params: (Loc.t, Loc.t) Ast.Function.Params.t -> bool
   val strict_post_check: env -> strict:bool -> simple:bool -> Loc.t Identifier.t option -> (Loc.t, Loc.t) Ast.Function.Params.t -> unit
   val let_: env -> (Loc.t, Loc.t) Statement.VariableDeclaration.t * (Loc.t * Error.t) list
@@ -173,7 +173,7 @@ module Declaration
   let function_body env ~async ~generator =
     let env = enter_function env ~async ~generator in
     let loc, block, strict = Parse.function_block_body env in
-    loc, Function.BodyBlock (loc, block), strict
+    Function.BodyBlock (loc, block), strict
 
   let variance env is_async is_generator =
     let loc = Peek.loc env in
@@ -238,7 +238,7 @@ module Declaration
       let (return, predicate) = Type.annotation_and_predicate_opt env in
       (generator, tparams, id, params, return, predicate)
     ) env in
-    let _, body, strict = function_body env ~async ~generator in
+    let body, strict = function_body env ~async ~generator in
     let simple = is_simple_function_params params in
     strict_post_check env ~strict ~simple id params;
     Statement.FunctionDeclaration { Function.
