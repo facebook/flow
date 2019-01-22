@@ -546,27 +546,46 @@ let handle_ephemeral_immediately_unsafe ~genv ~request_id ~workload () =
 
 let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immediately_unsafe
 
+(* If command running in serial (i.e. not in parallel with a recheck) is canceled, it kicks off a
+ * recheck itself and then reruns itself
+ *
+ * While parallelizable commands can be run out of order (some might get deferred),
+ * nonparallelizable commands always run in order. So that's why we don't defer commands here.
+ *)
+let rec run_command_in_serial ~genv ~env ~profiling ~workload =
+  try%lwt workload ~profiling ~env
+  with Lwt.Canceled ->
+    Hh_logger.info
+      "Command successfully canceled. Running a recheck before restarting the command";
+    let%lwt recheck_profiling, env = Rechecker.recheck_loop genv env in
+    List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
+    Hh_logger.info "Now restarting the command";
+    run_command_in_serial ~genv ~env ~profiling ~workload
+
+(* A command that is running in parallel with a recheck, if canceled, can't just run a recheck
+ * itself. It needs to defer itself until later. *)
+let run_command_in_parallel ~env ~profiling ~workload ~mk_workload =
+  try%lwt workload ~profiling ~env
+  with Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Hh_logger.info
+      "Command successfully canceled. Requeuing the command for after the next recheck.";
+    ServerMonitorListenerState.defer_parallelizable_workload (mk_workload ());
+    Exception.reraise exn
+
 let rec handle_parallelizable_ephemeral_unsafe
-    ~client_context ~cmd_str ~genv ~request_id ~workload env =
+    ~client_context ~cmd_str ~genv ~request_id ~workload ~is_serial env =
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
-      (* A parallelizable command, if canceled, just requeues itself. It can't be run again until
-       * a recheck finishes *)
-      let on_cancel () =
-        Hh_logger.info
-          "Command successfully canceled. Requeuing the command for after the next recheck.";
-        let workload =
-          handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
-        in
-        ServerMonitorListenerState.defer_parallelizable_workload workload;
-        raise Lwt.Canceled
-      in
-
       let%lwt response, json_data =
-        Rechecker.run_but_cancel_on_file_changes genv env ~on_cancel ~f:(fun () ->
-          workload ~profiling ~env
-        )
+        if is_serial
+        then run_command_in_serial ~genv ~env ~profiling ~workload
+        else
+          let mk_workload () =
+            handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
+          in
+          run_command_in_parallel ~env ~profiling ~workload ~mk_workload
       in
 
       MonitorRPC.respond_to_request ~request_id ~response;
@@ -588,11 +607,12 @@ let rec handle_parallelizable_ephemeral_unsafe
   in
   Lwt.return ((), profiling, json_data)
 
-and handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str env =
+and handle_parallelizable_ephemeral
+    ~genv ~request_id ~client_context ~workload ~cmd_str ~is_serial env =
   try%lwt
+    let handler = handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str ~is_serial in
     let%lwt result =
-      wrap_ephemeral_handler (handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str)
-        ~genv ~request_id ~client_context ~workload ~cmd_str env
+      wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str env
     in
     match result with
     | Ok ()
@@ -605,23 +625,7 @@ let handle_nonparallelizable_ephemeral_unsafe ~genv ~request_id ~workload env =
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, (env, json_data) =
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary begin fun profiling ->
-      let rec run_command env =
-        (* If a nonparallelizable command is canceled, we immediately run a recheck and then
-         * immediately re-run the command *)
-        let on_cancel () =
-          Hh_logger.info
-            "Command successfully canceled. Running a recheck before restarting the command";
-          let%lwt recheck_profiling, env = Rechecker.recheck_loop genv env in
-          List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
-          Hh_logger.info "Now restarting the command";
-          run_command env
-        in
-        Rechecker.run_but_cancel_on_file_changes genv (env) ~on_cancel ~f:(fun () ->
-          workload ~profiling ~env
-        )
-      in
-
-      let%lwt env, response, json_data = run_command env in
+      let%lwt env, response, json_data = run_command_in_serial ~genv ~env ~profiling ~workload in
 
       MonitorRPC.respond_to_request ~request_id ~response;
 
@@ -1409,46 +1413,29 @@ let handle_persistent_immediately ~genv ~client_id ~request ~workload =
   wrap_persistent_handler handle_persistent_immediately_unsafe
     ~genv ~client_id ~request ~workload ~default_ret:() ()
 
-let rec handle_parallelizable_persistent_unsafe ~request ~genv ~workload ~client ~profiling env: unit persistent_handling_result Lwt.t =
-  (* A parallelizable command, if canceled, just requeues itself. It can't be run again until
-   * a recheck finishes *)
-  let on_cancel () =
-    Hh_logger.info
-      "Command successfully canceled. Requeuing the command for after the next recheck.";
-    let client_id = Persistent_connection.get_id client in
-    let workload =
+let rec handle_parallelizable_persistent_unsafe
+    ~request ~is_serial ~genv ~workload ~client ~profiling env
+    : unit persistent_handling_result Lwt.t =
+  if is_serial
+  then
+    let workload = workload ~client in
+    run_command_in_serial ~genv ~env ~profiling ~workload
+  else
+    let mk_workload () =
+      let client_id = Persistent_connection.get_id client in
       handle_parallelizable_persistent ~genv ~client_id ~request ~workload
     in
-    ServerMonitorListenerState.defer_parallelizable_workload workload;
-    raise Lwt.Canceled
-  in
+    let workload = workload ~client in
+    run_command_in_parallel ~env ~profiling ~workload ~mk_workload
 
-  Rechecker.run_but_cancel_on_file_changes genv env ~on_cancel ~f:(fun () ->
-    workload ~client ~profiling ~env
-  )
-
-and handle_parallelizable_persistent ~genv ~client_id ~request ~workload env: unit Lwt.t =
-  wrap_persistent_handler (handle_parallelizable_persistent_unsafe ~request)
+and handle_parallelizable_persistent
+    ~genv ~client_id ~request ~workload ~is_serial env: unit Lwt.t =
+  wrap_persistent_handler (handle_parallelizable_persistent_unsafe ~request ~is_serial)
     ~genv ~client_id ~request ~workload ~default_ret:() env
 
 let handle_nonparallelizable_persistent_unsafe ~genv ~workload ~client ~profiling env =
-  let rec run_command env =
-    (* If a nonparallelizable command is canceled, we immediately run a recheck and then
-     * immediately re-run the command *)
-    let on_cancel () =
-      Hh_logger.info
-        "Command successfully canceled. Running a recheck before restarting the command";
-      let%lwt recheck_profiling, env = Rechecker.recheck_loop genv env in
-      List.iter (fun from -> Profiling_js.merge ~into:profiling ~from) recheck_profiling;
-      Hh_logger.info "Now restarting the command";
-      run_command env
-    in
-    Rechecker.run_but_cancel_on_file_changes genv env ~on_cancel ~f:(fun () ->
-      workload ~client ~profiling ~env
-    )
-  in
-
-  run_command env
+  let workload = workload ~client in
+  run_command_in_serial ~genv ~env ~profiling ~workload
 
 let handle_nonparallelizable_persistent ~genv ~client_id ~request ~workload env =
   wrap_persistent_handler handle_nonparallelizable_persistent_unsafe

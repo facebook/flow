@@ -19,10 +19,11 @@
 type workload = ServerEnv.env -> ServerEnv.env Lwt.t
 
 type parallelizable_workload = ServerEnv.env -> unit Lwt.t
+type pending_parallelizable_workload = is_serial:bool -> parallelizable_workload
 
 type t = {
-  mutable parallelizable: (float * parallelizable_workload) ImmQueue.t;
-  mutable requeued_parallelizable: parallelizable_workload list;
+  mutable parallelizable: (float * pending_parallelizable_workload) ImmQueue.t;
+  mutable requeued_parallelizable: pending_parallelizable_workload list;
   mutable nonparallelizable: (float * workload) ImmQueue.t;
   signal: unit Lwt_condition.t;
 }
@@ -53,7 +54,7 @@ let requeue_parallelizable workload stream =
 
 (* Cast a parallelizable workload to a nonparallelizable workload. *)
 let workload_of_parallelizable_workload parallelizable_workload env =
-  let%lwt () = parallelizable_workload env in
+  let%lwt () = parallelizable_workload ~is_serial:true env in
   Lwt.return env
 
 (* Pop the oldest workload *)
@@ -98,11 +99,11 @@ let pop_parallelizable stream =
   | workload::rest ->
     (* Always prefer requeued parallelizable jobs *)
     stream.requeued_parallelizable <- rest;
-    Some workload
+    Some (workload ~is_serial:false)
   | [] ->
     let entry_opt, parallelizable = ImmQueue.pop stream.parallelizable in
     stream.parallelizable <- parallelizable;
-    Option.map entry_opt ~f:snd
+    Option.map entry_opt ~f:(fun (_, workload) -> workload ~is_serial:false)
 
 (* Wait until there's a workload in the stream *)
 let rec wait_for_workload stream =

@@ -25,12 +25,4 @@ val recheck_loop:
   ServerEnv.env ->
   (Profiling_js.finished list * ServerEnv.env) Lwt.t
 
-val run_but_cancel_on_file_changes:
-  ?get_forced:(unit -> CheckedSet.t) ->
-  ServerEnv.genv ->
-  ServerEnv.env ->
-  f:(unit -> 'a Lwt.t) ->
-  on_cancel:(unit -> 'a Lwt.t) ->
-  'a Lwt.t
-
 val get_lazy_stats: ServerEnv.genv -> ServerEnv.env -> ServerProt.Response.lazy_stats

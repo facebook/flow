@@ -120,12 +120,11 @@ let recheck
 
 (* Runs a function which should be canceled if we are notified about any file changes. After the
  * thread is canceled, on_cancel is called and its result returned *)
-let run_but_cancel_on_file_changes ?get_forced genv env ~f ~on_cancel =
+let run_but_cancel_on_file_changes genv env ~get_forced ~f ~on_cancel =
   let process_updates = process_updates genv env in
   (* We don't want to start running f until we're in the try block *)
   let waiter, wakener = Lwt.task () in
   let run_thread = let%lwt () = waiter in f () in
-  let get_forced = Option.value get_forced ~default:(fun () -> env.ServerEnv.checked_files) in
   let cancel_thread =
     let%lwt () =
       ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced
@@ -192,7 +191,7 @@ let rec recheck_single
       Lwt.return (Ok (profiling, env))
     in
 
-    run_but_cancel_on_file_changes ~get_forced genv env ~f ~on_cancel
+    run_but_cancel_on_file_changes genv env ~get_forced ~f ~on_cancel
 
 let recheck_loop =
   (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
