@@ -9,8 +9,8 @@ val regenerate: ServerEnv.env -> ServerEnv.collated_errors
 
 val get_with_separate_warnings:
   ServerEnv.env ->
-  Errors.ErrorSet.t * Errors.ErrorSet.t Utils_js.FilenameMap.t * (Errors.error * Utils_js.LocSet.t) list
+  Errors.ErrorSet.t * Errors.ErrorSet.t Utils_js.FilenameMap.t * (ALoc.t Errors.error * Utils_js.LocSet.t) list
 
 val get:
   ServerEnv.env ->
-  Errors.ErrorSet.t * Errors.ErrorSet.t * (Errors.error * Utils_js.LocSet.t) list
+  Errors.ErrorSet.t * Errors.ErrorSet.t * (ALoc.t Errors.error * Utils_js.LocSet.t) list

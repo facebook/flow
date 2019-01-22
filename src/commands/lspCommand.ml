@@ -845,7 +845,7 @@ let lsp_DocumentIdentifier_to_flow
 let error_to_lsp
     ~(severity: PublishDiagnostics.diagnosticSeverity option)
     ~(default_uri: string)
-    (error: Errors.error)
+    (error: ALoc.t Errors.error)
   : string * PublishDiagnostics.diagnostic =
   let error = Errors.Lsp_output.lsp_of_error error in
   let location = Flow_lsp_conversions.loc_to_lsp_with_default

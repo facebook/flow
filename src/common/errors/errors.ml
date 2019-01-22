@@ -587,13 +587,12 @@ module Friendly = struct
     }
 end
 
-type 'a error' = error_kind * 'a message list * 'a Friendly.t'
-type error = ALoc.t error'
+type 'loc error = error_kind * 'loc message list * 'loc Friendly.t'
 
 class virtual ['a, 'b] mapper' = object(this)
   method virtual loc: 'a -> 'b
 
-  method error (error: 'a error') : 'b error' =
+  method error (error: 'a error) : 'b error =
     let (error_kind, messages, friendly_error) = error in
     let error_kind' = this#error_kind error_kind in
     let messages' = Core_list.map ~f:this#message messages in
@@ -677,7 +676,7 @@ let mk_error
   ?(frames: ALoc.t Friendly.message list option)
   (loc: ALoc.t)
   (message: ALoc.t Friendly.message)
-  : error
+  : ALoc.t error
 =
   let open Friendly in
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
@@ -860,10 +859,10 @@ let file_of_source source =
     | Some File_key.Builtins -> None
     | None -> None
 
-let loc_of_error ((_, _, { Friendly.loc; _ }): error) =
+let loc_of_error ((_, _, { Friendly.loc; _ }): ALoc.t error) =
   loc
 
-let loc_of_error_for_compare ((_, _, err): error) =
+let loc_of_error_for_compare ((_, _, err): ALoc.t error) =
   let open Friendly in
   match err with
   | { root=Some {root_loc; _}; _ } -> root_loc
@@ -901,7 +900,7 @@ let locs_of_error =
     locs
   ) in
 
-  fun ((_, _, error): error) ->
+  fun ((_, _, error): ALoc.t error) ->
     locs_of_friendly_error [] error
 
 let kind_of_error (kind, _, _) = kind
@@ -1017,7 +1016,7 @@ let rec compare =
     else k
 
 module Error = struct
-  type t = error
+  type t = ALoc.t error
   let compare = compare
 end
 
@@ -3098,7 +3097,7 @@ module Vim_emacs_output = struct
       );
       Buffer.contents buf
     in
-    let to_string ~strip_root prefix (full_error : error) : string =
+    let to_string ~strip_root prefix (full_error : ALoc.t error) : string =
       let (_, trace, error) = loc_concretizer#error full_error in
       classic_to_string ~strip_root prefix trace (Friendly.to_classic error) in
     fun ~strip_root oc ~errors ~warnings () ->
@@ -3128,7 +3127,7 @@ module Lsp_output = struct
     relatedLocations: (Loc.t * string) list;
   }
 
-  let lsp_of_error (error: error) : t =
+  let lsp_of_error (error: ALoc.t error) : t =
     (* e.g. "Error about `code` in type Ref(`foo`)"                    *)
     (* will produce LSP message "Error about `code` in type `foo` [1]" *)
     (* and the LSP related location will have message "[1]: `foo`"      *)

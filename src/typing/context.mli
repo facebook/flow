@@ -135,7 +135,7 @@ val in_declare_module: t -> bool
 
 (* mutators *)
 val add_env: t -> int -> env -> unit
-val add_error: t -> Errors.error -> unit
+val add_error: t -> ALoc.t Errors.error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_severity_cover: t -> File_key.t -> ExactCover.lint_severity_cover -> unit
 val add_lint_suppressions: t -> LocSet.t -> unit

@@ -53,7 +53,7 @@ end
 
 (* error structure *)
 
-type error
+type 'loc error
 
 val mk_error:
   ?kind:error_kind ->
@@ -62,7 +62,7 @@ val mk_error:
   ?frames:(ALoc.t Friendly.message list) ->
   ALoc.t ->
   ALoc.t Friendly.message ->
-  error
+  ALoc.t error
 
 val mk_speculation_error:
   ?kind:error_kind ->
@@ -70,18 +70,18 @@ val mk_speculation_error:
   loc:ALoc.t ->
   root:(ALoc.t * ALoc.t Friendly.message) option ->
   frames:(ALoc.t Friendly.message list) ->
-  speculation_errors:((int * error) list) ->
-  error
+  speculation_errors:((int * ALoc.t error) list) ->
+  ALoc.t error
 
-val is_duplicate_provider_error: error -> bool
+val is_duplicate_provider_error: ALoc.t error -> bool
 
-val loc_of_error: error -> ALoc.t
-val locs_of_error: error -> ALoc.t list
-val kind_of_error: error -> error_kind
+val loc_of_error: ALoc.t error -> ALoc.t
+val locs_of_error: ALoc.t error -> ALoc.t list
+val kind_of_error: ALoc.t error -> error_kind
 
 (* we store errors in sets, currently, because distinct
    traces may share endpoints, and produce the same error *)
-module ErrorSet : Set.S with type elt = error
+module ErrorSet : Set.S with type elt = ALoc.t error
 
 (* formatters/printers *)
 
@@ -138,7 +138,7 @@ module Json_output : sig
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
-    suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (ALoc.t error * Utils_js.LocSet.t) list ->
     ?version:json_version ->
     errors: ErrorSet.t ->
     warnings: ErrorSet.t ->
@@ -147,7 +147,7 @@ module Json_output : sig
 
   val full_status_json_of_errors :
     strip_root: Path.t option ->
-    suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (ALoc.t error * Utils_js.LocSet.t) list ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
     errors: ErrorSet.t ->
@@ -157,7 +157,7 @@ module Json_output : sig
   val print_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (ALoc.t error * Utils_js.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
@@ -168,7 +168,7 @@ module Json_output : sig
   val format_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    suppressed_errors: (error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (ALoc.t error * Utils_js.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
@@ -197,11 +197,11 @@ module Lsp_output : sig
     code: string;  (* an error code *)
     relatedLocations: (Loc.t * string) list;
   }
-  val lsp_of_error: error -> t
+  val lsp_of_error: ALoc.t error -> t
 end
 
 class mapper : object
-  method error: error -> error
+  method error: ALoc.t error -> ALoc.t error
   method friendly_error: Friendly.t -> Friendly.t
   method error_kind: error_kind -> error_kind
   method friendly_message: ALoc.t Friendly.message -> ALoc.t Friendly.message

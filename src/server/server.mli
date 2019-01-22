@@ -10,7 +10,7 @@ val check_once :
   format_errors: (
     (Errors.ErrorSet.t * (* errors *)
      Errors.ErrorSet.t * (* warnings *)
-     (Errors.error * Utils_js.LocSet.t) list) (* suppressed errors *) ->
+     (ALoc.t Errors.error * Utils_js.LocSet.t) list) (* suppressed errors *) ->
     (Profiling_js.finished -> unit) (* print errors *)
   ) ->
   ?focus_targets:Utils_js.FilenameSet.t ->
