@@ -76,6 +76,7 @@ export class TestStep {
   _startsIde: boolean;
   _readsIdeMessages: boolean;
   _allowServerToDie: boolean;
+  _timeout: ?number;
 
   constructor(step?: TestStep) {
     this._actions = step == null ? [] : step._actions.slice();
@@ -86,6 +87,7 @@ export class TestStep {
     this._startsIde = step == null ? false : step._startsIde;
     this._readsIdeMessages = step == null ? false : step._readsIdeMessages;
     this._allowServerToDie = step == null ? false : step._allowServerToDie;
+    this._timeout = step == null ? null : step._timeout;
   }
 
   async performActions(
@@ -125,6 +127,10 @@ export class TestStep {
 
   allowFlowServerToDie(): boolean {
     return this._allowServerToDie;
+  }
+
+  getTimeout(): ?number {
+    return this._timeout;
   }
 }
 
@@ -180,6 +186,12 @@ class TestStepFirstOrSecondStage extends TestStep {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion(ideStderr(expected, assertLoc));
     ret._needsFlowCheck = true;
+    return ret;
+  }
+
+  timeout(seconds: number): TestStepSecondStage {
+    const ret = new TestStepSecondStage(this);
+    ret._timeout = seconds;
     return ret;
   }
 
