@@ -3172,17 +3172,25 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_reason_const RArray reason in
       let ret = Tvar.mk cx reason in
-      let args =
-        [ Arg (DefT (reason_array, ArrT (ArrayAT (StrT.why reason, None))));
-          SpreadArg (Unsoundness.why TaggedTemplateType reason) ] in
-      let ft = mk_functioncalltype reason None args ret in
-      let use_op = Op (FunCall {
-        op = mk_expression_reason ex;
-        fn = mk_expression_reason tag;
-        args = [];
-        local = true;
-      }) in
-      Flow.flow cx (t, CallT (use_op, reason, ft));
+
+      (* tag`a${b}c${d}` -> tag(['a', 'c'], b, d) *)
+      let call_t =
+        let args =
+          let quasi_t = DefT (reason_array, ArrT (ArrayAT (StrT.why reason, None))) in
+          let exprs_t = Core_list.map ~f:(fun ((_, t), _) -> Arg t) expressions in
+          (Arg quasi_t)::exprs_t
+        in
+        let ft = mk_functioncalltype reason None args ret in
+        let use_op = Op (FunCall {
+          op = mk_expression_reason ex;
+          fn = mk_expression_reason tag;
+          args = [];
+          local = true;
+        }) in
+        CallT (use_op, reason, ft)
+      in
+      Flow.flow cx (t, call_t);
+
       (loc, ret),
       TaggedTemplate { TaggedTemplate.
         tag = tag_ast;
