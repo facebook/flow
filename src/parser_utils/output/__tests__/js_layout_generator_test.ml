@@ -12,6 +12,7 @@ open Layout_generator_test_utils
 
 module S = Ast_builder.Statements
 module E = Ast_builder.Expressions
+module F = Ast_builder.Functions
 module J = Ast_builder.JSXs
 module L = Layout_builder
 
@@ -809,9 +810,9 @@ let tests = "js_layout_generator" >::: [
       (* sequences get split across lines and wrapped in parens *)
       let x40 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" in
       let y40 = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy" in
-      let func = S.function_declaration (Loc.none, "f") ~body:[
+      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [
         S.return (Some (E.sequence [E.identifier x40; E.identifier y40]));
-      ] in
+      ]) in
       assert_layout_result ~ctxt
         L.(loc (fused [
           atom "return";
@@ -840,7 +841,7 @@ let tests = "js_layout_generator" >::: [
 
       (* logicals get split *)
       let logical = E.logical_and (E.identifier x40) (E.identifier y40) in
-      let func = S.function_declaration (Loc.none, "f") ~body:[S.return (Some logical)] in
+      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [S.return (Some logical)]) in
       assert_layout_result ~ctxt
         L.(loc (fused [
           atom "return";
@@ -863,9 +864,9 @@ let tests = "js_layout_generator" >::: [
 
       (* binary expressions get split *)
       let plus = E.plus (E.identifier x40) (E.identifier y40) in
-      let func = S.function_declaration (Loc.none, "f") ~body:[
+      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [
         S.return (Some plus)
-      ] in
+      ]) in
       assert_layout_result ~ctxt
         L.(loc (fused [
           atom "return";
@@ -889,7 +890,7 @@ let tests = "js_layout_generator" >::: [
       (* jsx gets split *)
       let long_name = String.make 80 'A' in
       let jsx = E.jsx_element (J.element (J.identifier long_name)) in
-      let func = S.function_declaration (Loc.none, "f") ~body:[S.return (Some jsx)] in
+      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [S.return (Some jsx)]) in
       assert_layout_result ~ctxt
         L.(loc (fused [
           atom "return";
@@ -912,9 +913,9 @@ let tests = "js_layout_generator" >::: [
 
       (* a string doesn't get split *)
       let x80 = x40 ^ x40 in
-      let func = S.function_declaration (Loc.none, "f") ~body:[
+      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [
         S.return (Some (E.identifier x80))
-      ] in
+      ]) in
       assert_layout_result ~ctxt
         L.(loc (fused [
           atom "return";

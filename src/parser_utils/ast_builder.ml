@@ -64,27 +64,34 @@ end
 module Functions = struct
   open Ast.Function
 
-  let param ?default argument =
-    Loc.none, { Ast.Function.Param.argument; default }
+  let params ?(loc=Loc.none) ?rest ps =
+    loc, { Ast.Function.Params.params = ps; rest }
 
-  let body_block stmts =
-    BodyBlock (Loc.none, { Ast.Statement.Block.
+  let param ?(loc=Loc.none) ?default argument =
+    loc, { Ast.Function.Param.argument; default }
+
+  let body ?(loc=Loc.none) stmts =
+    BodyBlock (loc, { Ast.Statement.Block.
       body = stmts;
     })
 
   let body_expression expr =
     BodyExpression expr
 
-  let make ~id ~params ?(generator=false) ?(async=false) ?body () =
-    let body = match body with
-    | Some body -> body
-    | None -> body_block []
+  let make ~id ?params:params_ ?(generator=false) ?(async=false) ?body:body_ () =
+    let params = match params_ with
+    | Some ps -> ps
+    | None -> params []
+    in
+    let body = match body_ with
+    | Some body_ -> body_
+    | None -> body []
     in
     { id;
-      params = Loc.none, { Ast.Function.Params.params; rest = None };
+      params;
       body;
       async;
-      generator = generator;
+      generator;
       predicate = None;
       return = Ast.Type.Missing Loc.none;
       tparams = None;
@@ -203,12 +210,11 @@ module Statements = struct
   let const_declaration declarations =
     variable_declaration ~kind:Ast.Statement.VariableDeclaration.Const declarations
 
-  let function_declaration ?(loc=Loc.none) ?(params=[]) ?body id =
-    let body = match body with
-    | Some stmts -> Some (Functions.body_block stmts)
-    | None -> None
-    in
-    let fn = Functions.make ~params ~id:(Some id) ?body () in
+  let function_declaration
+    ?(loc=Loc.none) ?(async=false) ?(generator=false) ?params ?body
+    id
+  =
+    let fn = Functions.make ?params ~id:(Some id) ~async ~generator ?body () in
     loc, FunctionDeclaration fn
 
   let class_declaration ?super ?implements ?id elements =
@@ -257,13 +263,13 @@ module Expressions = struct
       optional;
     }
 
-  let function_ ?(generator=false) ?(params=[]) ?body () =
-    let fn = Functions.make ~generator ~params ~id:None ?body () in
-    Loc.none, Function fn
+  let function_ ?(loc=Loc.none) ?(async=false) ?(generator=false) ?params ?id ?body () =
+    let fn = Functions.make ~async ~generator ?params ~id ?body () in
+    loc, Function fn
 
-  let arrow_function ?(params=[]) ?body () =
-    let fn = Functions.make ~params ~id:None ?body () in
-    Loc.none, ArrowFunction fn
+  let arrow_function ?(loc=Loc.none) ?(async=false) ?params ?body () =
+    let fn = Functions.make ~async ~generator:false ?params ~id:None ?body () in
+    loc, ArrowFunction fn
 
   let class_ ?super ?id elements =
     Loc.none, Class (Classes.make ?super ?id elements)
@@ -325,8 +331,8 @@ module Expressions = struct
   let object_property_computed_key k =
     Object.Property.Computed k
 
-  let object_method ?body ?(params=[]) ?(generator=false) ?(async=false) key =
-    let fn = Functions.make ~id:None ~params ~generator ~async ?body () in
+  let object_method ?body ?params ?(generator=false) ?(async=false) key =
+    let fn = Functions.make ~id:None ?params ~generator ~async ?body () in
     let prop = Object.Property.Method { key; value = (Loc.none, fn) } in
     Object.Property (Loc.none, prop)
 
