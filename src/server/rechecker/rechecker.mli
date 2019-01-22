@@ -26,6 +26,7 @@ val recheck_loop:
   (Profiling_js.finished list * ServerEnv.env) Lwt.t
 
 val run_but_cancel_on_file_changes:
+  ?get_forced:(unit -> CheckedSet.t) ->
   ServerEnv.genv ->
   ServerEnv.env ->
   f:(unit -> 'a Lwt.t) ->

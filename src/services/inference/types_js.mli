@@ -29,6 +29,7 @@ val recheck:
   ServerEnv.env ->
   files_to_force:CheckedSet.t ->
   file_watcher_metadata:MonitorProt.file_watcher_metadata ->
+  will_be_checked_files:CheckedSet.t ref ->
   (Profiling_js.finished * ServerStatus.summary * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)

@@ -931,7 +931,7 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
 *)
 let recheck_with_profiling
     ~profiling ~transaction ~reader ~options ~workers ~updates env
-    ~files_to_force ~file_watcher_metadata =
+    ~files_to_force ~file_watcher_metadata ~will_be_checked_files =
   let errors = env.ServerEnv.errors in
 
   (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
@@ -1329,6 +1329,10 @@ let recheck_with_profiling
       ~direct_dependent_files
   in
 
+  (* This is a much better estimate of what checked_files will be after the merge finishes. We now
+   * include the dependencies and dependents that are being implicitly included in the recheck. *)
+  will_be_checked_files := CheckedSet.union env.ServerEnv.checked_files to_merge;
+
   let%lwt estimates =
     restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata
   in
@@ -1405,7 +1409,8 @@ let with_transaction f =
     let reader = Mutator_state_reader.create transaction in
     f transaction reader
 
-let recheck ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata =
+let recheck
+    ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata ~will_be_checked_files =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, stats) =
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
@@ -1413,7 +1418,7 @@ let recheck ~options ~workers ~updates env ~files_to_force ~file_watcher_metadat
         with_transaction (fun transaction reader ->
           recheck_with_profiling
             ~profiling ~transaction ~reader ~options ~workers ~updates env
-            ~files_to_force ~file_watcher_metadata
+            ~files_to_force ~file_watcher_metadata ~will_be_checked_files
         )
       )
     )
@@ -1861,14 +1866,16 @@ let init ~profiling ~workers options =
   if (FilenameSet.is_empty updates && FilenameSet.is_empty files_to_focus) || not libs_ok
   then Lwt.return (libs_ok, env, last_estimates)
   else begin
+    let files_to_force = CheckedSet.(add ~focused:files_to_focus empty) in
     let%lwt recheck_profiling, _summary, env =
       recheck
         ~options
         ~workers
         ~updates
         env
-        ~files_to_force:CheckedSet.(add ~focused:files_to_focus empty)
+        ~files_to_force
         ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
+        ~will_be_checked_files:(ref files_to_force)
     in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
     Lwt.return (true, env, last_estimates)

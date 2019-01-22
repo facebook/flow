@@ -77,16 +77,12 @@ let process_updates genv env updates =
     FlowExitStatus.exit ~msg exit_status
   end
 
-let files_currently_being_forced_by_a_recheck = ref CheckedSet.empty
-let forced_files_after_recheck env () =
-  CheckedSet.union env.checked_files (!files_currently_being_forced_by_a_recheck)
-
 (* on notification, execute client commands or recheck files *)
-let recheck genv env ?(files_to_force=CheckedSet.empty) ~file_watcher_metadata updates =
+let recheck
+    genv env ?(files_to_force=CheckedSet.empty) ~file_watcher_metadata ~will_be_checked_files
+    updates =
   (* Caller should have already checked this *)
   assert (not (FilenameSet.is_empty updates && CheckedSet.is_empty files_to_force));
-
-  files_currently_being_forced_by_a_recheck := files_to_force;
 
   MonitorRPC.status_update ~event:ServerStatus.Recheck_start;
   Persistent_connection.send_start_recheck env.connections;
@@ -94,7 +90,8 @@ let recheck genv env ?(files_to_force=CheckedSet.empty) ~file_watcher_metadata u
   let workers = genv.ServerEnv.workers in
 
   let%lwt profiling, summary, env =
-    Types_js.recheck ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata
+    Types_js.recheck
+      ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata ~will_be_checked_files
   in
 
   let lazy_stats = get_lazy_stats genv env in
@@ -112,12 +109,12 @@ let recheck genv env ?(files_to_force=CheckedSet.empty) ~file_watcher_metadata u
 
 (* Runs a function which should be canceled if we are notified about any file changes. After the
  * thread is canceled, on_cancel is called and its result returned *)
-let run_but_cancel_on_file_changes genv env ~f ~on_cancel =
+let run_but_cancel_on_file_changes ?get_forced genv env ~f ~on_cancel =
   let process_updates = process_updates genv env in
   (* We don't want to start running f until we're in the try block *)
   let waiter, wakener = Lwt.task () in
   let run_thread = let%lwt () = waiter in f () in
-  let get_forced = forced_files_after_recheck env in
+  let get_forced = Option.value get_forced ~default:(fun () -> env.ServerEnv.checked_files) in
   let cancel_thread =
     let%lwt () =
       ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced
@@ -146,7 +143,17 @@ let rec recheck_single
   let open ServerMonitorListenerState in
   let env = update_env env in
   let process_updates = process_updates genv env in
-  let get_forced = forced_files_after_recheck env in
+
+  (* This ref is an estimate of the files which will be checked by the time the recheck is done.
+   * As the recheck progresses, the estimate will get better. We use this estimate to prevent
+   * canceling the recheck to force a file which we were already going to check
+   *
+   * This early estimate is not a very good estimate, since it's missing new dependents and
+   * dependencies. However it should be good enough to prevent rechecks continuously restarting as
+   * the server gets spammed with autocomplete requests *)
+  let will_be_checked_files = ref (CheckedSet.union env.ServerEnv.checked_files files_to_force) in
+  let get_forced () = !will_be_checked_files in
+
   let workload = get_and_clear_recheck_workload ~process_updates ~get_forced in
   let files_to_recheck = FilenameSet.union files_to_recheck workload.files_to_recheck in
   let files_to_force = CheckedSet.union files_to_force workload.files_to_force in
@@ -165,7 +172,8 @@ let rec recheck_single
     in
     let f () =
       let%lwt profiling, env = with_parallelizable_workloads env @@ fun () ->
-        recheck genv env ~files_to_force ~file_watcher_metadata files_to_recheck
+        recheck
+          genv env ~files_to_force ~file_watcher_metadata ~will_be_checked_files files_to_recheck
       in
       List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
       (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
@@ -173,7 +181,7 @@ let rec recheck_single
       Lwt.return (Ok (profiling, env))
     in
 
-    run_but_cancel_on_file_changes genv env ~f ~on_cancel
+    run_but_cancel_on_file_changes ~get_forced genv env ~f ~on_cancel
 
 let recheck_loop =
   (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
