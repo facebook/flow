@@ -104,13 +104,6 @@ get-imports without --wait-for-recheck runs immediately:
 }
 
 
-graph cycle without --wait-for-recheck runs immediately:
-digraph {
-}
-
-graph dep-graph without --wait-for-recheck runs immediately:
-
-
 suggest without --wait-for-recheck runs immediately:
 // @flow
 import val from "./dependency.js";

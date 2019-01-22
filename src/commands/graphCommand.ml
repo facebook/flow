@@ -46,6 +46,7 @@ let depgraph_subcommand =
     (* Create the outfile if it doesn't already exist *)
     let outpath = Files.imaginary_realpath outfile |> Path.make |> Path.to_string in
     (* connect to server *)
+    let wait_for_recheck = if wait_for_recheck = None then Some true else wait_for_recheck in
     let request = ServerProt.Request.GRAPH_DEP_GRAPH {
       root = Path.to_string root;
       strip_root;

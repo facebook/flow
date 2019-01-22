@@ -39,6 +39,7 @@ let main base_flags option_values root strip_root wait_for_recheck file () =
     then Files.relative_path (Path.to_string root) f
     else f
   in
+  let wait_for_recheck = if wait_for_recheck = None then Some true else wait_for_recheck in
   (* connect to server *)
   let request = ServerProt.Request.CYCLE { filename = file; wait_for_recheck; } in
   match connect_and_make_request flowconfig_name option_values root request with
