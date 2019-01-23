@@ -19,7 +19,7 @@ module Request = struct
       wait_for_recheck: bool option;
     }
   | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; }
-  | CYCLE of { filename: string; wait_for_recheck: bool option; }
+  | CYCLE of { filename: string; }
   | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
   | FIND_MODULE of { moduleref: string; filename: string; wait_for_recheck: bool option; }
   | FIND_REFS of {
@@ -41,7 +41,6 @@ module Request = struct
       root: string;
       strip_root: bool;
       outfile: string;
-      wait_for_recheck: bool option;
     }
   | INFER_TYPE of {
       input: File_input.t;
@@ -71,7 +70,7 @@ module Request = struct
     Printf.sprintf "check %s" (File_input.filename_of_file_input input)
   | COVERAGE { input; force=_; wait_for_recheck=_; } ->
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)
-  | CYCLE { filename; wait_for_recheck=_; } ->
+  | CYCLE { filename; } ->
       Printf.sprintf "cycle %s" filename
   | GRAPH_DEP_GRAPH _ ->
       Printf.sprintf "dep-graph"

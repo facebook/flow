@@ -35,13 +35,6 @@ printf "\\n\\nget-imports times out:\\n"
 assert_exit 3 "$FLOW" get-imports \
   --timeout 1 --strip-root --pretty focused.js
 
-printf "\\n\\ngraph cycle times out:\\n"
-assert_exit 3 "$FLOW" graph cycle --timeout 1 --strip-root focused.js
-
-printf "\\n\\ngraph dep-graph times out:\\n"
-assert_exit 3 "$FLOW" graph dep-graph \
-  --timeout 1 --strip-root --out /dev/null
-
 printf "\\n\\nsuggest times out:\\n"
 assert_exit 3 "$FLOW" suggest --timeout 1 --strip-root focused.js
 

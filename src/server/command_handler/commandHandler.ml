@@ -289,7 +289,7 @@ let handle_coverage ~options ~force ~input ~profiling ~env =
 
 let handle_cycle ~fn ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn in
-  Lwt.return (ServerProt.Response.CYCLE response, None)
+  Lwt.return (env, ServerProt.Response.CYCLE response, None)
 
 let handle_dump_types ~options ~input ~profiling ~env =
   let%lwt response = dump_types ~options ~env ~profiling input in
@@ -341,7 +341,7 @@ let handle_get_imports ~options ~reader ~module_names ~profiling:_ ~env:_ =
 
 let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
   let%lwt response = output_dependencies ~env root strip_root outfile in
-  Lwt.return (ServerProt.Response.GRAPH_DEP_GRAPH response, None)
+  Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
 let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~profiling ~env =
   let%lwt result, json_data =
@@ -440,10 +440,11 @@ let get_ephemeral_handler genv command =
     mk_parallelizable ~wait_for_recheck ~options (handle_check_file ~options ~force ~input)
   | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~input)
-  | ServerProt.Request.CYCLE { filename; wait_for_recheck; } ->
+  | ServerProt.Request.CYCLE { filename; } ->
+    (* The user preference is to make this wait for up-to-date data *)
     let file_options = Options.file_options options in
     let fn = Files.filename_from_string ~options:file_options filename in
-    mk_parallelizable ~wait_for_recheck ~options (handle_cycle ~fn)
+    Handle_nonparallelizable (handle_cycle ~fn)
   | ServerProt.Request.DUMP_TYPES { input; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_dump_types ~options ~input)
   | ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck; } ->
@@ -464,8 +465,9 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.GET_IMPORTS { module_names; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_get_imports ~options ~reader ~module_names)
-  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; wait_for_recheck; } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_graph_dep_graph ~root ~strip_root ~outfile)
+  | ServerProt.Request.GRAPH_DEP_GRAPH { root; strip_root; outfile; } ->
+    (* The user preference is to make this wait for up-to-date data *)
+    Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~outfile)
   | ServerProt.Request.INFER_TYPE {
       input; line; char; verbose; expand_aliases; wait_for_recheck;
     } ->

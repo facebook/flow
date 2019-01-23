@@ -36,12 +36,6 @@ get-imports with --wait-for-recheck true times out:
 }
 
 
-graph cycle with --wait-for-recheck true times out:
-
-
-graph dep-graph with --wait-for-recheck true times out:
-
-
 suggest with --wait-for-recheck true times out:
 
 

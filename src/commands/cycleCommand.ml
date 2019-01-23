@@ -25,12 +25,11 @@ let spec = {
     |> connect_flags
     |> root_flag
     |> strip_root_flag
-    |> wait_for_recheck_flag
     |> anon "FILE..." (required string)
   )
 }
 
-let main base_flags option_values root strip_root wait_for_recheck file () =
+let main base_flags option_values root strip_root file () =
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let file = expand_path file in
   let root = guess_root flowconfig_name root in
@@ -39,9 +38,8 @@ let main base_flags option_values root strip_root wait_for_recheck file () =
     then Files.relative_path (Path.to_string root) f
     else f
   in
-  let wait_for_recheck = if wait_for_recheck = None then Some true else wait_for_recheck in
   (* connect to server *)
-  let request = ServerProt.Request.CYCLE { filename = file; wait_for_recheck; } in
+  let request = ServerProt.Request.CYCLE { filename = file; } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CYCLE (Error msg) ->
     FlowExitStatus.(exit ~msg Unknown_error)

@@ -34,24 +34,21 @@ let depgraph_subcommand =
       |> base_flags
       |> connect_flags
       |> strip_root_flag
-      |> wait_for_recheck_flag
       |> flag "--out" (required string) ~doc:"Location to print the output file"
       |> root_flag
     )
   } in
 
-  let main base_flags option_values strip_root wait_for_recheck outfile path_opt () =
+  let main base_flags option_values strip_root outfile path_opt () =
     let flowconfig_name = base_flags.Base_flags.flowconfig_name in
     let root = CommandUtils.guess_root flowconfig_name path_opt in
     (* Create the outfile if it doesn't already exist *)
     let outpath = Files.imaginary_realpath outfile |> Path.make |> Path.to_string in
     (* connect to server *)
-    let wait_for_recheck = if wait_for_recheck = None then Some true else wait_for_recheck in
     let request = ServerProt.Request.GRAPH_DEP_GRAPH {
       root = Path.to_string root;
       strip_root;
       outfile = outpath;
-      wait_for_recheck;
     } in
     match connect_and_make_request flowconfig_name option_values root request with
     | ServerProt.Response.GRAPH_DEP_GRAPH (Error msg) ->

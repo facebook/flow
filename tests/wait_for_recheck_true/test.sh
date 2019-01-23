@@ -35,13 +35,6 @@ printf "\\n\\nget-imports with --wait-for-recheck false runs immediately:\\n"
 assert_ok "$FLOW" get-imports \
   --strip-root --pretty --wait-for-recheck false focused.js
 
-printf "\\n\\ngraph cycle with --wait-for-recheck false runs immediately:\\n"
-assert_ok "$FLOW" graph cycle --strip-root --wait-for-recheck false focused.js
-
-printf "\\n\\ngraph dep-graph with --wait-for-recheck false runs immediately:\\n"
-assert_ok "$FLOW" graph dep-graph \
-  --strip-root --out /dev/null --wait-for-recheck false
-
 printf "\\n\\nsuggest with --wait-for-recheck false runs immediately:\\n"
 assert_ok "$FLOW" suggest --strip-root --wait-for-recheck false focused.js
 

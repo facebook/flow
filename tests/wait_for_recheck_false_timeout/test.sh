@@ -37,14 +37,6 @@ printf "\\n\\nget-imports with --wait-for-recheck true times out:\\n"
 assert_exit 3 "$FLOW" get-imports \
   --timeout 1 --wait-for-recheck true --strip-root --pretty focused.js
 
-printf "\\n\\ngraph cycle with --wait-for-recheck true times out:\\n"
-assert_exit 3 "$FLOW" graph cycle \
-  --timeout 1 --wait-for-recheck true --strip-root focused.js
-
-printf "\\n\\ngraph dep-graph with --wait-for-recheck true times out:\\n"
-assert_exit 3 "$FLOW" graph dep-graph \
-  --timeout 1 --wait-for-recheck true --strip-root --out /dev/null
-
 printf "\\n\\nsuggest with --wait-for-recheck true times out:\\n"
 assert_exit 3 "$FLOW" suggest \
   --timeout 1 --wait-for-recheck true --strip-root focused.js
