@@ -10,10 +10,11 @@ module Prot = Persistent_connection_prot
 type single_client = {
   is_lsp: bool;
   logging_context: FlowEventLogger.logging_context;
-  subscribed: bool;
-  opened_files: string SMap.t; (* map from filename to content *)
   client_id: Persistent_connection_prot.client_id;
   lsp_initialize_params: Lsp.Initialize.params option;
+
+  mutable subscribed: bool;
+  mutable opened_files: string SMap.t; (* map from filename to content *)
 }
 
 type t = Persistent_connection_prot.client_id list
@@ -148,18 +149,6 @@ let send_end_recheck ~lazy_stats clients =
     |> get_subscribed_clients
     |> List.iter (send_single_end_recheck ~lazy_stats)
 
-let modify_client client f =
-  if not (IMap.mem client.client_id !active_clients)
-  then raise Not_found;
-
-  let new_client = f client in
-
-  if new_client.client_id <> client.client_id
-  then failwith "Changing the client_id is not supported";
-
-  active_clients := IMap.add client.client_id new_client !active_clients
-
-
 let subscribe_client ~client ~current_errors ~current_warnings =
   Hh_logger.info "Subscribing client #%d to push diagnostics" client.client_id;
   if client.subscribed then
@@ -167,7 +156,7 @@ let subscribe_client ~client ~current_errors ~current_warnings =
     ()
   else begin
     send_errors ~errors:current_errors ~warnings:current_warnings client;
-    modify_client client (fun c -> { c with subscribed = true })
+    client.subscribed <- true;
   end
 
 let client_did_open
@@ -182,11 +171,10 @@ let client_did_open
   if new_opened_files == client.opened_files then
     (* noop *)
     None
-  else
-    let update_opened_files c = {c with opened_files = new_opened_files} in
-    let new_client = update_opened_files client in
-    let () = modify_client client update_opened_files in
-    Some new_client
+  else (
+    client.opened_files <- new_opened_files;
+    Some client
+  )
 
 let client_did_change
     (client: single_client)
@@ -197,12 +185,11 @@ let client_did_change
     let content = SMap.find fn client.opened_files in
     match Lsp_helpers.apply_changes content changes with
     | Error (reason, stack) -> Error (reason, stack)
-    | Ok new_content ->
+    | Ok new_content -> (
       let new_opened_files = SMap.add fn new_content client.opened_files in
-      let update_opened_files c = {c with opened_files = new_opened_files} in
-      let new_client = update_opened_files client in
-      let () = modify_client client update_opened_files in
-      Ok new_client
+      client.opened_files <- new_opened_files;
+      Ok client
+    )
   end with Not_found as e ->
     let e = Exception.wrap e in
     let stack = Exception.get_backtrace_string e in
@@ -221,11 +208,10 @@ let client_did_close
   if new_opened_files == client.opened_files then
     (* noop *)
     None
-  else
-    let update_opened_files c = {c with opened_files = new_opened_files} in
-    let new_client = update_opened_files client in
-    let () = modify_client client update_opened_files in
-    Some new_client
+  else (
+    client.opened_files <- new_opened_files;
+    Some client
+  )
 
 let get_file (client: single_client) (fn: string) : File_input.t =
   let content_opt = SMap.get fn client.opened_files in
