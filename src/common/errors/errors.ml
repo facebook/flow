@@ -857,7 +857,7 @@ let file_of_source source =
     | Some File_key.Builtins -> None
     | None -> None
 
-let loc_of_error ((_, _, { Friendly.loc; _ }): ALoc.t error) =
+let loc_of_error ((_, _, { Friendly.loc; _ }): 'loc error) =
   loc
 
 let loc_of_error_for_compare ((_, _, err): ALoc.t error) =
@@ -898,7 +898,7 @@ let locs_of_error =
     locs
   ) in
 
-  fun ((_, _, error): ALoc.t error) ->
+  fun ((_, _, error): 'loc error) ->
     locs_of_friendly_error [] error
 
 let kind_of_error (kind, _, _) = kind

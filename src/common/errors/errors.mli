@@ -73,9 +73,9 @@ val mk_speculation_error:
 
 val is_duplicate_provider_error: ALoc.t error -> bool
 
-val loc_of_error: ALoc.t error -> ALoc.t
-val locs_of_error: ALoc.t error -> ALoc.t list
-val kind_of_error: ALoc.t error -> error_kind
+val loc_of_error: 'loc error -> 'loc
+val locs_of_error: 'loc error -> 'loc list
+val kind_of_error: 'loc error -> error_kind
 
 (* we store errors in sets, currently, because distinct
    traces may share endpoints, and produce the same error *)
