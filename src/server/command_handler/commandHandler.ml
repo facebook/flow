@@ -822,9 +822,15 @@ let handle_persistent_cancel_notification ~params ~metadata ~client:_ ~profiling
   ServerMonitorListenerState.(cancellation_requests := IdSet.remove id !cancellation_requests);
   Lwt.return (LspResponse (Ok (env, None, metadata)))
 
-let handle_persistent_get_def ~reader ~options ~id ~params ~metadata ~client ~profiling ~env =
+let handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let open TextDocumentPositionParams in
-  let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
+  let (file, line, char) = match loc with
+  | Some loc -> loc
+  | None ->
+    (* We must have failed to get the client when we first tried. We could throw here, but this is
+     * a little more defensive. The only danger here is that the file contents may have changed *)
+    Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
+  in
   let%lwt (result, extra_data) =
     get_def ~options ~reader ~env ~profiling (file, line, char) in
   let metadata = with_data ~extra_data metadata in
@@ -842,9 +848,15 @@ let handle_persistent_get_def ~reader ~options ~id ~params ~metadata ~client ~pr
       Lwt.return (LspResponse (Error ((), with_error metadata ~reason)))
   end
 
-let handle_persistent_infer_type ~options ~id ~params ~metadata ~client ~profiling ~env =
+let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let open TextDocumentPositionParams in
-  let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client in
+  let (file, line, char) = match loc with
+  | Some loc -> loc
+  | None ->
+    (* We must have failed to get the client when we first tried. We could throw here, but this is
+     * a little more defensive. The only danger here is that the file contents may have changed *)
+    Flow_lsp_conversions.lsp_DocumentPosition_to_flow params client
+  in
   let verbose = None in (* if Some, would write to server logs *)
   let%lwt result, extra_data =
     infer_type ~options ~env ~profiling (file, line, char, verbose, false)
@@ -869,9 +881,15 @@ let handle_persistent_infer_type ~options ~id ~params ~metadata ~client ~profili
       Lwt.return (LspResponse (Error ((), with_error metadata ~reason)))
   end
 
-let handle_persistent_autocomplete_lsp ~options ~id ~params ~metadata ~client ~profiling ~env =
+let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
   let open Completion in
-  let (file, line, char) = Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.loc ~client in
+  let (file, line, char) = match loc with
+  | Some loc -> loc
+  | None ->
+    (* We must have failed to get the client when we first tried. We could throw here, but this is
+     * a little more defensive. The only danger here is that the file contents may have changed *)
+    Flow_lsp_conversions.lsp_DocumentPosition_to_flow params.loc client
+  in
   let fn_content = match file with
     | File_input.FileContent (fn, content) ->
       Ok (fn, content)
@@ -930,9 +948,15 @@ let handle_persistent_document_highlight
       Lwt.return (LspResponse (Error (env, with_error metadata ~reason)))
   end
 
-let handle_persistent_coverage ~options ~id ~params ~metadata ~client ~profiling ~env =
+let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~profiling ~env =
   let textDocument = params.TypeCoverage.textDocument in
-  let file = Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow ~client textDocument in
+  let file = match file with
+  | Some file -> file
+  | None ->
+    (* We must have failed to get the client when we first tried. We could throw here, but this is
+     * a little more defensive. The only danger here is that the file contents may have changed *)
+     Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client
+  in
   (* if it isn't a flow file (i.e. lacks a @flow directive) then we won't do anything *)
   let fkey = File_key.SourceFile (File_input.filename_of_file_input file) in
   let content = File_input.content_of_file_input file in
@@ -1274,18 +1298,31 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     )
 
   | LspToServer (RequestMessage (id, DefinitionRequest params), metadata) ->
+    (* Grab the file contents immediately in case of any future didChanges *)
+    let loc = Option.map (Persistent_connection.get_client client_id)
+      ~f:(fun client -> Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
+    in
     mk_parallelizable_persistent ~options (
-      handle_persistent_get_def ~reader ~options ~id ~params ~metadata
+      handle_persistent_get_def ~reader ~options ~id ~params ~loc ~metadata
     )
 
   | LspToServer (RequestMessage (id, HoverRequest params), metadata) ->
+    (* Grab the file contents immediately in case of any future didChanges *)
+    let loc = Option.map (Persistent_connection.get_client client_id)
+      ~f:(fun client -> Flow_lsp_conversions.lsp_DocumentPosition_to_flow params ~client)
+    in
     mk_parallelizable_persistent ~options (
-      handle_persistent_infer_type ~options ~id ~params ~metadata
+      handle_persistent_infer_type ~options ~id ~params ~loc ~metadata
     )
 
   | LspToServer (RequestMessage (id, CompletionRequest params), metadata) ->
+    (* Grab the file contents immediately in case of any future didChanges *)
+    let loc = params.Completion.loc in
+    let loc = Option.map (Persistent_connection.get_client client_id)
+      ~f:(fun client -> Flow_lsp_conversions.lsp_DocumentPosition_to_flow loc ~client)
+    in
     mk_parallelizable_persistent ~options (
-      handle_persistent_autocomplete_lsp ~options ~id ~params ~metadata
+      handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata
     )
 
   | LspToServer (RequestMessage (id, DocumentHighlightRequest params), metadata) ->
@@ -1295,8 +1332,13 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
     )
 
   | LspToServer (RequestMessage (id, TypeCoverageRequest params), metadata) ->
+    (* Grab the file contents immediately in case of any future didChanges *)
+    let textDocument = params.TypeCoverage.textDocument in
+    let file = Option.map (Persistent_connection.get_client client_id)
+      ~f:(fun client -> Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow textDocument ~client)
+    in
     mk_parallelizable_persistent ~options (
-      handle_persistent_coverage ~options ~id ~params ~metadata
+      handle_persistent_coverage ~options ~id ~params ~file ~metadata
     )
 
   | LspToServer (RequestMessage (id, FindReferencesRequest params), metadata) ->
