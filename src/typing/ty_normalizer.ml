@@ -136,7 +136,7 @@ end = struct
   let optMapM f = function
     | Some xs -> mapM f xs >>| fun ys -> Some ys
     | None as y -> return y
-  let concat_fold_m f xs = mapM f xs >>| List.concat
+  let concat_fold_m f xs = mapM f xs >>| Core_list.concat
 
   let fresh_num =
     let open State in
@@ -746,9 +746,11 @@ end = struct
     function
     | Resolved t | FullyResolved t -> type__ ~env t
     | Unresolved bounds ->
-      let ts = T.TypeMap.keys bounds.lower in
-      mapM (type__ ~env) ts >>|
-      Ty.mk_union
+      T.TypeMap.keys bounds.lower |>
+      mapM (fun t -> type__ ~env t >>| Ty.bk_union) >>|
+      Core_list.concat >>|
+      Core_list.dedup >>|
+      Ty.mk_union ~flattened:true
 
   and bound_t ~env reason name =
     let { Ty.loc; name; _ } = symbol_from_reason env reason name in

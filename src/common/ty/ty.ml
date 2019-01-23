@@ -167,25 +167,27 @@ and polarity = Positive | Negative | Neutral
 
 (* Type destructors *)
 
-let rec bk_union = function
+let rec bk_union ?(flattened=false) = function
+  | Union (t1,t2,ts) when flattened -> t1::t2::ts
   | Union (t1,t2,ts) -> Core_list.concat_map ~f:bk_union (t1::t2::ts)
   | t -> [t]
 
-let rec bk_inter = function
+let rec bk_inter ?(flattened=false) = function
+  | Inter (t1,t2,ts) when flattened -> t1::t2::ts
   | Inter (t1,t2,ts) -> Core_list.concat_map ~f:bk_inter (t1::t2::ts)
   | t -> [t]
 
 
 (* Type constructors *)
 
-let mk_union ts =
-  match Core_list.(ts >>= bk_union) with
+let mk_union ?(flattened=false) ts =
+  match Core_list.(ts >>= bk_union ~flattened) with
   | [] -> Bot
   | [t] -> t
   | t1::t2::ts -> Union (t1, t2, ts)
 
-let mk_inter ts =
-  match Core_list.(ts >>= bk_inter) with
+let mk_inter ?(flattened=false) ts =
+  match Core_list.(ts >>= bk_inter ~flattened) with
   | [] -> Top
   | [t] -> t
   | t1::t2::ts -> Inter (t1, t2, ts)

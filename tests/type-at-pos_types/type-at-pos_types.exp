@@ -496,8 +496,8 @@ implicit-instantiation.js:6:10{
   "end":10
 }
 implicit-instantiation.js:10:21{
-  "expanded_type":{"kind":"Union","types":[{"kind":"Str"},{"kind":"Num"}]},
-  "type":"string | number",
+  "expanded_type":{"kind":"Union","types":[{"kind":"Num"},{"kind":"Str"}]},
+  "type":"number | string",
   "reasons":[],
   "loc":{
     "source":"implicit-instantiation.js",
@@ -962,7 +962,7 @@ recursive.js:3:25 = {
   "end":27
 }
 recursive.js:6:11 = {
-  "type":"type V$2 = {|data: number, next: V$2|} | null;\n(n: number) => ({|data: number, next: V$2|} | null)",
+  "type":"type V$2 = null | {|data: number, next: V$2|};\n(n: number) => (null | {|data: number, next: V$2|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -977,7 +977,7 @@ recursive.js:6:11 = {
   "end":14
 }
 recursive.js:13:12 = {
-  "type":"type V$3 = {|data: number, next: V$3|} | null;\ntype V$5 = {|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$5|} | null | string;\n(n: number) => ({|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$5|} | null | string)",
+  "type":"type V$3 = null | {|data: number, next: V$3|};\ntype V$5 = null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$5|};\n(n: number) => (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$5|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -992,7 +992,7 @@ recursive.js:13:12 = {
   "end":14
 }
 recursive.js:23:12 = {
-  "type":"type V$3 = {|data: number, next: V$3|} | null;\ntype V$7 = {|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$7|} | null | string;\ntype V$9 = {|a_next: ({|data: number, next: V$3|} | null), b_next: ({|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$7|} | null | string), data: number, next: V$9|} | null | string;\n(n: number) => ({|a_next: ({|data: number, next: V$3|} | null), b_next: ({|a_next: ({|data: number, next: V$3|} | null), data: number, next: V$7|} | null | string), data: number, next: V$9|} | null | string)",
+  "type":"type V$3 = null | {|data: number, next: V$3|};\ntype V$7 = null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|};\ntype V$9 = null | string | {|a_next: (null | {|data: number, next: V$3|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}), data: number, next: V$9|};\n(n: number) => (null | string | {|a_next: (null | {|data: number, next: V$3|}), b_next: (null | string | {|a_next: (null | {|data: number, next: V$3|}), data: number, next: V$7|}), data: number, next: V$9|})",
   "reasons":[],
   "loc":{
     "source":"recursive.js",
@@ -2487,7 +2487,7 @@ unions.js:15:2 = {
   "end":3
 }
 unions.js:24:3 = {
-  "type":"{+f: string} | {+f: number}",
+  "type":"{+f: number} | {+f: string}",
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -2502,7 +2502,7 @@ unions.js:24:3 = {
   "end":3
 }
 unions.js:43:3 = {
-  "type":"(() => string) | (() => number)",
+  "type":"(() => number) | (() => string)",
   "reasons":[],
   "loc":{
     "source":"unions.js",
@@ -2517,7 +2517,7 @@ unions.js:43:3 = {
   "end":7
 }
 unions.js:44:3 = {
-  "type":"((x: string) => void) | ((x: number) => void)",
+  "type":"((x: number) => void) | ((x: string) => void)",
   "reasons":[],
   "loc":{
     "source":"unions.js",

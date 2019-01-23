@@ -264,7 +264,7 @@ class D {
   declare var x: {...T, ...S, o: O};
   return x;
 };
-<T: {}>(): {o: O} | T => {
+<T: {}>(): T | {o: O} => {
   declare var x: {...T, o: O};
   return x;
 };

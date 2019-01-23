@@ -29,7 +29,7 @@ react_component.js:13:33 = {
   "end":37
 }
 react_component.js:18:17 = {
-  "type":"{|enabled: boolean|} | State",
+  "type":"State | {|enabled: boolean|}",
   "reasons":[],
   "loc":{
     "source":"react_component.js",

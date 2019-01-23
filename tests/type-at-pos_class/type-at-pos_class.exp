@@ -134,7 +134,7 @@ class-0.js:24:5 = {
   "end":5
 }
 class-1.js:4:3 = {
-  "type":"() => (number | void)",
+  "type":"() => (void | number)",
   "reasons":[],
   "loc":{
     "source":"class-1.js",
@@ -464,7 +464,7 @@ class-poly-1.js:9:11 = {
   "end":11
 }
 class-statics.js:4:10 = {
-  "type":"() => (Class<B> | void)",
+  "type":"() => (void | Class<B>)",
   "reasons":[],
   "loc":{
     "source":"class-statics.js",
