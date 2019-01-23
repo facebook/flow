@@ -645,10 +645,6 @@ module Verifier(Env: EvalEnv) = struct
   let eval_class loc class_ =
     eval_entry (Entry.class_ loc class_)
 
-  let eval_variable_declaration loc variable_declaration =
-    List.fold_left (Deps.reduce_join eval_entry) Deps.bot @@
-      Entry.variable_declaration loc variable_declaration
-
   let eval_declare_export_declaration = Ast.Statement.DeclareExportDeclaration.(function
     | Variable (loc, declare_variable) -> eval_declare_variable loc declare_variable
     | Function (loc, declare_function) -> eval_declare_function loc declare_function

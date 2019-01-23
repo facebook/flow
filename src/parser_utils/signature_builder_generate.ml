@@ -1237,37 +1237,6 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         [mod_exp_loc, Ast.Statement.DeclareModuleExports (mod_exp_loc, t)]
       | _ -> []
 
-  let eval_entry (id, kind) =
-    id, eval kind
-
-  let eval_declare_variable loc declare_variable =
-    eval_entry (Entry.declare_variable loc declare_variable)
-
-  let eval_declare_function loc declare_function =
-    eval_entry (Entry.declare_function loc declare_function)
-
-  let eval_declare_class loc declare_class =
-    eval_entry (Entry.declare_class loc declare_class)
-
-  let eval_type_alias loc type_alias =
-    eval_entry (Entry.type_alias loc type_alias)
-
-  let eval_opaque_type loc opaque_type =
-    eval_entry (Entry.opaque_type loc opaque_type)
-
-  let eval_interface loc interface =
-    eval_entry (Entry.interface loc interface)
-
-  let eval_function_declaration loc function_declaration =
-    eval_entry (Entry.function_declaration loc function_declaration)
-
-  let eval_class loc class_ =
-    eval_entry (Entry.class_ loc class_)
-
-  let eval_variable_declaration loc variable_declaration =
-    Core_list.map ~f:eval_entry @@
-      Entry.variable_declaration loc variable_declaration
-
   let eval_export_default_declaration = Ast.Statement.ExportDefaultDeclaration.(function
     | Declaration (loc, Ast.Statement.FunctionDeclaration
         ({ Ast.Function.id = Some _; _ } as function_declaration)
