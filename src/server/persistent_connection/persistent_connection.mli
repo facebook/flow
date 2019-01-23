@@ -17,9 +17,10 @@ val to_string: t -> string
 val empty: t
 
 val add_client:
-  t -> Prot.client_id -> FlowEventLogger.logging_context -> Lsp.Initialize.params option -> t
-val remove_client:
-  t -> Prot.client_id -> t
+  Prot.client_id -> FlowEventLogger.logging_context -> Lsp.Initialize.params option -> unit
+val remove_client: Prot.client_id -> unit
+val add_client_to_clients: t -> Prot.client_id -> t
+val remove_client_from_clients: t -> Prot.client_id -> t
 
 (* Send updates to all clients that are subscribed *)
 val update_clients:
@@ -50,18 +51,18 @@ val subscribe_client:
 val client_did_open:
   single_client ->
   files:(string * string) Nel.t ->
-  single_client option
+  bool
 
 val client_did_change:
   single_client ->
   string ->
   Lsp.DidChange.textDocumentContentChangeEvent list ->
-  (single_client, string * Utils.callstack) result
+  (unit, string * Utils.callstack) result
 
 val client_did_close:
   single_client ->
   filenames:string Nel.t
-  -> single_client option
+  -> bool
 
 val get_logging_context: single_client -> FlowEventLogger.logging_context
 

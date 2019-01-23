@@ -675,46 +675,38 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
 
 let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
-  begin match Persistent_connection.client_did_open client ~files with
-  | None -> Lwt.return env (* No new files were opened, so do nothing *)
-  | Some client ->
-    match Options.lazy_mode options with
-    | Some Options.LAZY_MODE_IDE ->
-      (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
-       * opens. So when an IDE opens a new file, that file is now focused.
-       *
-       * If the newly opened file was previously unchecked or checked as a dependency, then
-       * we will do a new recheck.
-       *
-       * If the newly opened file was already checked, then we'll just send the errors to
-       * the client
-       *)
-      let filenames = Nel.map (fun (fn, _content) -> fn) files in
-      let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
-      if not triggered_recheck then begin
-        (* This open doesn't trigger a recheck, but we'll still send down the errors *)
-        let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-        Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
-      end;
-      Lwt.return env
-    | Some Options.LAZY_MODE_FILESYSTEM
-    | Some Options.LAZY_MODE_WATCHMAN
-    | None ->
-      (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
-       * a new file is opened is to send the errors to the client *)
+  match Options.lazy_mode options with
+  | Some Options.LAZY_MODE_IDE ->
+    (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
+     * opens. So when an IDE opens a new file, that file is now focused.
+     *
+     * If the newly opened file was previously unchecked or checked as a dependency, then
+     * we will do a new recheck.
+     *
+     * If the newly opened file was already checked, then we'll just send the errors to
+     * the client
+     *)
+    let filenames = Nel.map (fun (fn, _content) -> fn) files in
+    let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
+    if not triggered_recheck then begin
+      (* This open doesn't trigger a recheck, but we'll still send down the errors *)
       let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-      Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-      Lwt.return env
-    end
+      Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
+    end;
+    Lwt.return env
+  | Some Options.LAZY_MODE_FILESYSTEM
+  | Some Options.LAZY_MODE_WATCHMAN
+  | None ->
+    (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
+     * a new file is opened is to send the errors to the client *)
+    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+    Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+    Lwt.return env
 
-let did_close _genv env client (filenames: string Nel.t) : ServerEnv.env Lwt.t =
-  begin match Persistent_connection.client_did_close client ~filenames with
-    | None -> Lwt.return env (* No new files were closed, so do nothing *)
-    | Some client ->
-      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
-      Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
-      Lwt.return env
-  end
+let did_close _genv env client : ServerEnv.env Lwt.t =
+  let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+  Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+  Lwt.return env
 
 
 let with_error
@@ -776,27 +768,31 @@ let handle_persistent_autocomplete ~options ~file_input ~id ~client ~profiling ~
 let handle_persistent_did_open ~genv ~filenames ~client ~profiling:_ ~env =
   Persistent_connection.send_message Persistent_connection_prot.DidOpenAck client;
   let files = Nel.map (fun fn -> (fn, "%%Legacy IDE has no content")) filenames in
-  let%lwt env = did_open genv env client files in
+  let%lwt env =
+    if Persistent_connection.client_did_open client ~files
+    then did_open genv env client files
+    else Lwt.return env  (* No new files were opened, so do nothing *)
+  in
   Lwt.return (IdeResponse (Ok (env, None)))
 
-let handle_persistent_did_open_notification ~genv ~params ~metadata ~client ~profiling:_ ~env =
-  let open Lsp.DidOpen in
-  let open TextDocumentItem in
-  let content = params.textDocument.text in
-  let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-  let%lwt env = did_open genv env client (Nel.one (fn, content)) in
+let handle_persistent_did_open_notification
+    ~genv ~files ~metadata ~client ~profiling:_ ~env =
+  let%lwt env = did_open genv env client files in
   Lwt.return (LspResponse (Ok (env, None, metadata)))
 
-let handle_persistent_did_change_notification ~params ~metadata ~client ~profiling:_ ~env =
+let handle_persistent_did_open_notification_no_op ~metadata ~client:_ ~profiling:_ =
+  Lwt.return (LspResponse (Ok ((), None, metadata)))
+
+let handle_persistent_did_change_notification ~params ~metadata ~client ~profiling:_ =
   let open Lsp.DidChange in
   let open VersionedTextDocumentIdentifier in
   let open Persistent_connection in
   let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
   begin match client_did_change client fn params.contentChanges with
-    | Ok _client ->
-      Lwt.return (LspResponse (Ok (env, None, metadata)))
+    | Ok () ->
+      Lwt.return (LspResponse (Ok ((), None, metadata)))
     | Error (reason, stack) ->
-      Lwt.return (LspResponse (Error (env, with_error metadata ~reason ~stack)))
+      Lwt.return (LspResponse (Error ((), with_error metadata ~reason ~stack)))
   end
 
 let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
@@ -804,15 +800,19 @@ let handle_persistent_did_save_notification ~metadata ~client:_ ~profiling:_ =
 
 let handle_persistent_did_close ~genv ~filenames ~client ~profiling:_ ~env =
   Persistent_connection.send_message Persistent_connection_prot.DidCloseAck client;
-  let%lwt env = did_close genv env client filenames in
+  let%lwt env =
+    if Persistent_connection.client_did_close client ~filenames
+    then did_close genv env client
+    else Lwt.return env (* No new files were closed, so do nothing *)
+  in
   Lwt.return (IdeResponse (Ok (env, None)))
 
-let handle_persistent_did_close_notification ~genv ~params ~metadata ~client ~profiling:_ ~env =
-  let open Lsp.DidClose in
-  let open TextDocumentIdentifier in
-  let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
-  let%lwt env = did_close genv env client (Nel.one fn) in
+let handle_persistent_did_close_notification ~genv ~metadata ~client ~profiling:_ ~env =
+  let%lwt env = did_close genv env client in
   Lwt.return (LspResponse (Ok (env, None, metadata)))
+
+let handle_persistent_did_close_notification_no_op ~metadata ~client:_ ~profiling:_ =
+  Lwt.return (LspResponse (Ok ((), None, metadata)))
 
 let handle_persistent_cancel_notification ~params ~metadata ~client:_ ~profiling:_ ~env =
   let id = params.CancelRequest.id in
@@ -1169,11 +1169,10 @@ let mk_parallelizable_persistent ~options f =
   else
     Handle_parallelizable_persistent f
 
-(** get_persistent_handler:
-   either this method returns Ok (and optionally returns some logging data),
-   or it returns Error for some well-understood reason string,
-   or it might raise/Lwt.fail, indicating a misunderstood coding bug. *)
-let get_persistent_handler ~genv ~request : persistent_command_handler =
+(* get_persistent_handler can do a tiny little bit of work, but it's main job is just returning the
+ * persistent command's handler.
+ *)
+let get_persistent_handler ~genv ~client_id ~request : persistent_command_handler =
   let open Persistent_connection_prot in
   let options = genv.ServerEnv.options in
   let reader = State_reader.create () in
@@ -1199,14 +1198,32 @@ let get_persistent_handler ~genv ~request : persistent_command_handler =
     Handle_nonparallelizable_persistent (handle_persistent_did_open ~genv ~filenames)
 
   | LspToServer (NotificationMessage (DidOpenNotification params), metadata) ->
-    (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (
-      handle_persistent_did_open_notification ~genv ~params ~metadata
-    )
+    let open Lsp.DidOpen in
+    let open TextDocumentItem in
+    let content = params.textDocument.text in
+    let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
+    let files = Nel.one (fn, content) in
+    let did_anything_change =
+      match Persistent_connection.get_client client_id with
+      | None -> false
+      | Some client ->
+        (* We want to create a local copy of this file immediately, so we can respond to requests
+         * about this file *)
+        Persistent_connection.client_did_open client ~files
+    in
+    if did_anything_change
+    then
+      (* This mutates env, so it can't run in parallel *)
+      Handle_nonparallelizable_persistent (
+        handle_persistent_did_open_notification ~genv ~files ~metadata
+      )
+    else
+      (* It's a no-op, so we can respond immediately *)
+      Handle_persistent_immediately (handle_persistent_did_open_notification_no_op ~metadata)
 
   | LspToServer (NotificationMessage (DidChangeNotification params), metadata) ->
-    (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (
+    (* This just updates our copy of the file in question. We want to do this immediately *)
+    Handle_persistent_immediately (
       handle_persistent_did_change_notification ~params ~metadata
     )
 
@@ -1219,10 +1236,26 @@ let get_persistent_handler ~genv ~request : persistent_command_handler =
     Handle_nonparallelizable_persistent (handle_persistent_did_close ~genv ~filenames)
 
   | LspToServer (NotificationMessage (DidCloseNotification params), metadata) ->
-    (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent (
-      handle_persistent_did_close_notification ~genv ~params ~metadata
-    )
+    let open Lsp.DidClose in
+    let open TextDocumentIdentifier in
+    let fn = params.textDocument.uri |> Lsp_helpers.lsp_uri_to_path in
+    let filenames = (Nel.one fn) in
+    let did_anything_change =
+      match Persistent_connection.get_client client_id with
+      | None -> false
+      | Some client ->
+        (* Close this file immediately in case another didOpen comes soon *)
+        Persistent_connection.client_did_close client ~filenames
+    in
+    if did_anything_change
+    then
+      (* This mutates env, so it can't run in parallel *)
+      Handle_nonparallelizable_persistent (
+        handle_persistent_did_close_notification ~genv ~metadata
+      )
+    else
+      (* It's a no-op, so we can respond immediately *)
+      Handle_persistent_immediately (handle_persistent_did_close_notification_no_op ~metadata)
 
   | LspToServer (NotificationMessage (CancelRequestNotification params), metadata) ->
     (* The general idea here is this:
@@ -1472,7 +1505,7 @@ let enqueue_persistent
     (client_id: Persistent_connection.Prot.client_id)
     (request: Persistent_connection_prot.request)
   : unit Lwt.t =
-  match get_persistent_handler ~genv ~request with
+  match get_persistent_handler ~genv ~client_id ~request with
   | Handle_persistent_immediately workload ->
     handle_persistent_immediately ~genv ~client_id ~request ~workload
   | Handle_parallelizable_persistent workload ->

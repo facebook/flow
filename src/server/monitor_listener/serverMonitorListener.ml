@@ -18,13 +18,17 @@ module ListenLoop = LwtLoop.Make (struct
   | MonitorProt.PersistentConnectionRequest (client_id, request) ->
     CommandHandler.enqueue_persistent genv client_id request
   | MonitorProt.NewPersistentConnection (client_id, logging_context, lsp) ->
+    (* Immediately register the new client *)
+    Persistent_connection.add_client client_id logging_context lsp;
     ServerMonitorListenerState.push_new_env_update (fun env -> { env with
-      connections = Persistent_connection.add_client env.connections client_id logging_context lsp
+      connections = Persistent_connection.add_client_to_clients env.connections client_id;
     });
     Lwt.return_unit
   | MonitorProt.DeadPersistentConnection client_id ->
+    (* Immediately remove the dead client *)
+    Persistent_connection.remove_client client_id;
     ServerMonitorListenerState.push_new_env_update (fun env -> { env with
-      connections = Persistent_connection.remove_client env.connections client_id
+      connections = Persistent_connection.remove_client_from_clients env.connections client_id;
     });
     Lwt.return_unit
   | MonitorProt.FileWatcherNotification (changed_files, metadata) ->
