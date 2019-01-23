@@ -1,0 +1,237 @@
+--- react_imports.exp
++++ react_imports.out
+@@ -47,8 +47,8 @@
+                ^^^^^^^^^^^^^
+ 
+ References:
+-   <BUILTINS>/react.js:389:27
+-   389|   declare module.exports: $Exports<'react'>;
++   <BUILTINS>/react.js:392:27
++   392|   declare module.exports: $Exports<'react'>;
+                                   ^^^^^^^^^^^^^^^^^ [1]
+ 
+ 
+@@ -155,8 +155,8 @@
+                ^^^^^^^^^^^^^
+ 
+ References:
+-   <BUILTINS>/react.js:389:27
+-   389|   declare module.exports: $Exports<'react'>;
++   <BUILTINS>/react.js:392:27
++   392|   declare module.exports: $Exports<'react'>;
+                                   ^^^^^^^^^^^^^^^^^ [1]
+ 
+ 
+@@ -186,39 +186,39 @@
+                           ^^^^^^^^^^
+ 
+ References:
+-   <BUILTINS>/react.js:352:26
++   <BUILTINS>/react.js:355:26
+                                  v-
+-   352|   declare export default {|
+-   353|     +DOM: typeof DOM,
+-   354|     +PropTypes: typeof PropTypes,
+-   355|     +version: typeof version,
+-   356|     +checkPropTypes: typeof checkPropTypes,
+-   357|     +memo: typeof memo,
+-   358|     +lazy: typeof lazy,
+-   359|     +createClass: typeof createClass,
+-   360|     +createContext: typeof createContext,
+-   361|     +createElement: typeof createElement,
+-   362|     +cloneElement: typeof cloneElement,
+-   363|     +createFactory: typeof createFactory,
+-   364|     +createRef: typeof createRef,
+-   365|     +forwardRef: typeof forwardRef,
+-   366|     +isValidElement: typeof isValidElement,
++   355|   declare export default {|
++   356|     +DOM: typeof DOM,
++   357|     +PropTypes: typeof PropTypes,
++   358|     +version: typeof version,
++   359|     +checkPropTypes: typeof checkPropTypes,
++   360|     +memo: typeof memo,
++   361|     +lazy: typeof lazy,
++   362|     +createClass: typeof createClass,
++   363|     +createContext: typeof createContext,
++   364|     +createElement: typeof createElement,
++   365|     +cloneElement: typeof cloneElement,
++   366|     +createFactory: typeof createFactory,
++   367|     +createRef: typeof createRef,
++   368|     +forwardRef: typeof forwardRef,
++   369|     +isValidElement: typeof isValidElement,
+       :
+-   369|     +Fragment: typeof Fragment,
+-   370|     +Children: typeof Children,
+-   371|     +ConcurrentMode: typeof ConcurrentMode,
+-   372|     +StrictMode: typeof StrictMode,
+-   373|     +Suspense: typeof Suspense,
+-   374|     +useContext: typeof useContext,
+-   375|     +useState: typeof useState,
+-   376|     +useReducer: typeof useReducer,
+-   377|     +useRef: typeof useRef,
+-   378|     +useEffect: typeof useEffect,
+-   379|     +useLayoutEffect: typeof useLayoutEffect,
+-   380|     +useCallback: typeof useCallback,
+-   381|     +useMemo: typeof useMemo,
+-   382|     +useImperativeHandle: typeof useImperativeHandle,
+-   383|   |};
++   372|     +Fragment: typeof Fragment,
++   373|     +Children: typeof Children,
++   374|     +ConcurrentMode: typeof ConcurrentMode,
++   375|     +StrictMode: typeof StrictMode,
++   376|     +Suspense: typeof Suspense,
++   377|     +useContext: typeof useContext,
++   378|     +useState: typeof useState,
++   379|     +useReducer: typeof useReducer,
++   380|     +useRef: typeof useRef,
++   381|     +useEffect: typeof useEffect,
++   382|     +useLayoutEffect: typeof useLayoutEffect,
++   383|     +useCallback: typeof useCallback,
++   384|     +useMemo: typeof useMemo,
++   385|     +useImperativeHandle: typeof useImperativeHandle,
++   386|   |};
+           -^ [1]
+ 
+ 
+@@ -231,39 +231,39 @@
+              ^^^^^^^^^^
+ 
+ References:
+-   <BUILTINS>/react.js:352:26
++   <BUILTINS>/react.js:355:26
+                                  v-
+-   352|   declare export default {|
+-   353|     +DOM: typeof DOM,
+-   354|     +PropTypes: typeof PropTypes,
+-   355|     +version: typeof version,
+-   356|     +checkPropTypes: typeof checkPropTypes,
+-   357|     +memo: typeof memo,
+-   358|     +lazy: typeof lazy,
+-   359|     +createClass: typeof createClass,
+-   360|     +createContext: typeof createContext,
+-   361|     +createElement: typeof createElement,
+-   362|     +cloneElement: typeof cloneElement,
+-   363|     +createFactory: typeof createFactory,
+-   364|     +createRef: typeof createRef,
+-   365|     +forwardRef: typeof forwardRef,
+-   366|     +isValidElement: typeof isValidElement,
++   355|   declare export default {|
++   356|     +DOM: typeof DOM,
++   357|     +PropTypes: typeof PropTypes,
++   358|     +version: typeof version,
++   359|     +checkPropTypes: typeof checkPropTypes,
++   360|     +memo: typeof memo,
++   361|     +lazy: typeof lazy,
++   362|     +createClass: typeof createClass,
++   363|     +createContext: typeof createContext,
++   364|     +createElement: typeof createElement,
++   365|     +cloneElement: typeof cloneElement,
++   366|     +createFactory: typeof createFactory,
++   367|     +createRef: typeof createRef,
++   368|     +forwardRef: typeof forwardRef,
++   369|     +isValidElement: typeof isValidElement,
+       :
+-   369|     +Fragment: typeof Fragment,
+-   370|     +Children: typeof Children,
+-   371|     +ConcurrentMode: typeof ConcurrentMode,
+-   372|     +StrictMode: typeof StrictMode,
+-   373|     +Suspense: typeof Suspense,
+-   374|     +useContext: typeof useContext,
+-   375|     +useState: typeof useState,
+-   376|     +useReducer: typeof useReducer,
+-   377|     +useRef: typeof useRef,
+-   378|     +useEffect: typeof useEffect,
+-   379|     +useLayoutEffect: typeof useLayoutEffect,
+-   380|     +useCallback: typeof useCallback,
+-   381|     +useMemo: typeof useMemo,
+-   382|     +useImperativeHandle: typeof useImperativeHandle,
+-   383|   |};
++   372|     +Fragment: typeof Fragment,
++   373|     +Children: typeof Children,
++   374|     +ConcurrentMode: typeof ConcurrentMode,
++   375|     +StrictMode: typeof StrictMode,
++   376|     +Suspense: typeof Suspense,
++   377|     +useContext: typeof useContext,
++   378|     +useState: typeof useState,
++   379|     +useReducer: typeof useReducer,
++   380|     +useRef: typeof useRef,
++   381|     +useEffect: typeof useEffect,
++   382|     +useLayoutEffect: typeof useLayoutEffect,
++   383|     +useCallback: typeof useCallback,
++   384|     +useMemo: typeof useMemo,
++   385|     +useImperativeHandle: typeof useImperativeHandle,
++   386|   |};
+           -^ [1]
+ 
+ 
+@@ -276,39 +276,39 @@
+                ^^^^^^^^^^^^^
+ 
+ References:
+-   <BUILTINS>/react.js:352:26
++   <BUILTINS>/react.js:355:26
+                                  v-
+-   352|   declare export default {|
+-   353|     +DOM: typeof DOM,
+-   354|     +PropTypes: typeof PropTypes,
+-   355|     +version: typeof version,
+-   356|     +checkPropTypes: typeof checkPropTypes,
+-   357|     +memo: typeof memo,
+-   358|     +lazy: typeof lazy,
+-   359|     +createClass: typeof createClass,
+-   360|     +createContext: typeof createContext,
+-   361|     +createElement: typeof createElement,
+-   362|     +cloneElement: typeof cloneElement,
+-   363|     +createFactory: typeof createFactory,
+-   364|     +createRef: typeof createRef,
+-   365|     +forwardRef: typeof forwardRef,
+-   366|     +isValidElement: typeof isValidElement,
++   355|   declare export default {|
++   356|     +DOM: typeof DOM,
++   357|     +PropTypes: typeof PropTypes,
++   358|     +version: typeof version,
++   359|     +checkPropTypes: typeof checkPropTypes,
++   360|     +memo: typeof memo,
++   361|     +lazy: typeof lazy,
++   362|     +createClass: typeof createClass,
++   363|     +createContext: typeof createContext,
++   364|     +createElement: typeof createElement,
++   365|     +cloneElement: typeof cloneElement,
++   366|     +createFactory: typeof createFactory,
++   367|     +createRef: typeof createRef,
++   368|     +forwardRef: typeof forwardRef,
++   369|     +isValidElement: typeof isValidElement,
+       :
+-   369|     +Fragment: typeof Fragment,
+-   370|     +Children: typeof Children,
+-   371|     +ConcurrentMode: typeof ConcurrentMode,
+-   372|     +StrictMode: typeof StrictMode,
+-   373|     +Suspense: typeof Suspense,
+-   374|     +useContext: typeof useContext,
+-   375|     +useState: typeof useState,
+-   376|     +useReducer: typeof useReducer,
+-   377|     +useRef: typeof useRef,
+-   378|     +useEffect: typeof useEffect,
+-   379|     +useLayoutEffect: typeof useLayoutEffect,
+-   380|     +useCallback: typeof useCallback,
+-   381|     +useMemo: typeof useMemo,
+-   382|     +useImperativeHandle: typeof useImperativeHandle,
+-   383|   |};
++   372|     +Fragment: typeof Fragment,
++   373|     +Children: typeof Children,
++   374|     +ConcurrentMode: typeof ConcurrentMode,
++   375|     +StrictMode: typeof StrictMode,
++   376|     +Suspense: typeof Suspense,
++   377|     +useContext: typeof useContext,
++   378|     +useState: typeof useState,
++   379|     +useReducer: typeof useReducer,
++   380|     +useRef: typeof useRef,
++   381|     +useEffect: typeof useEffect,
++   382|     +useLayoutEffect: typeof useLayoutEffect,
++   383|     +useCallback: typeof useCallback,
++   384|     +useMemo: typeof useMemo,
++   385|     +useImperativeHandle: typeof useImperativeHandle,
++   386|   |};
+           -^ [1]
+ 
+ 

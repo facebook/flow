@@ -50,3 +50,8 @@ import React from 'react';
     },
   );
 }
+
+{
+  const ThemeContext = createContext("light");
+  ThemeContext.displayName = "ThemeContext";
+}

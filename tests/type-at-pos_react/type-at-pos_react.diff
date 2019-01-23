@@ -1,0 +1,20 @@
+--- type-at-pos_react.exp
++++ type-at-pos_react.out
+@@ -113,7 +113,7 @@
+     "kind":"Generic",
+     "typeArgs":[{"kind":"Num"}],
+     "type":{
+-      "provenance":{"kind":"Library","loc":"[LIB] react.js:245:43-61"},
++      "provenance":{"kind":"Library","loc":"[LIB] react.js:248:43-61"},
+       "name":"ComponentType"
+     },
+     "kind":"type alias"
+@@ -136,7 +136,7 @@
+   "expanded_type":{
+     "kind":"TypeAlias",
+     "name":{
+-      "provenance":{"kind":"Library","loc":"[LIB] react.js:245:43-61"},
++      "provenance":{"kind":"Library","loc":"[LIB] react.js:248:43-61"},
+       "name":"ComponentType"
+     },
+     "typeParams":[{"name":"P","bound":null,"polarity":"Negative"}],
