@@ -103,9 +103,9 @@ let make
   (* Counts the number of blocked leaders. *)
   let blocked = ref 0 in
 
-  let total_number_of_files = ref (FilenameMap.fold (fun _ files acc ->
+  let total_number_of_files = FilenameMap.fold (fun _ files acc ->
     Nel.length files + acc
-  ) component_map 0) in
+  ) component_map 0 in
   let stats = MergeStats.make () in
   let record_merged x =
     MergeStats.increment_total_files stats x
@@ -147,11 +147,8 @@ let make
     ) dependency_dag;
 
     (* TODO: remember reverse dependencies to quickly calculate remerge sets *)
-    ref (Sort_js.reverse dependency_dag)
+    Sort_js.reverse dependency_dag
   in
-
-  (* For each leader, maps the files in its component *)
-  let components = ref component_map in
 
   (* For each leader, specifies whether to recheck its component *)
   let to_recheck: bool FilenameMap.t ref = ref recheck_leader_map in
@@ -164,7 +161,7 @@ let make
       else begin
         let (f, stream') = Stream.pop_unsafe !stream in
         stream := stream';
-        let fs = FilenameMap.find_unsafe f !components in
+        let fs = FilenameMap.find_unsafe f component_map in
         let fs_len = Nel.length fs in
         loop ((Component fs)::acc) (fs_len+len) (n-fs_len)
       end
@@ -191,7 +188,7 @@ let make
         if components <> [] then begin
           MonitorRPC.status_update ServerStatus.(Merging_progress {
             finished = MergeStats.get_total_files stats;
-            total = Some !total_number_of_files;
+            total = Some total_number_of_files;
           });
           record_merged num_files;
           Bucket.Job components
@@ -223,7 +220,7 @@ let make
             skipped
           ) else push (dep_leader_f::skipped) dep_leader_f false
         ) else skipped
-      ) (FilenameMap.find_unsafe leader_f !dependents) skipped
+      ) (FilenameMap.find_unsafe leader_f dependents) skipped
     in
     fun ~master_mutator ~reader merged merged_acc ->
       let () = intermediate_result_callback (lazy merged) in
@@ -231,7 +228,7 @@ let make
         let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
         let () =
           let fs =
-            FilenameMap.find_unsafe leader_f !components
+            FilenameMap.find_unsafe leader_f component_map
             |> Nel.to_list
             |> FilenameSet.of_list
           in
@@ -242,7 +239,7 @@ let make
       ) [] merged in
       let skipped_length = List.fold_left (fun acc leader_f ->
         let fs =
-          FilenameMap.find_unsafe leader_f !components
+          FilenameMap.find_unsafe leader_f component_map
           |> Nel.to_list
           |> FilenameSet.of_list
         in
@@ -253,7 +250,7 @@ let make
         record_skipped skipped_length;
         MonitorRPC.status_update ServerStatus.(Merging_progress {
           finished = MergeStats.get_total_files stats;
-          total = Some !total_number_of_files;
+          total = Some total_number_of_files;
         })
       end;
       List.rev_append merged merged_acc
