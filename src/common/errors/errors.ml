@@ -1022,6 +1022,11 @@ end
    traces may share endpoints, and produce the same error *)
 module ErrorSet = Set.Make(Error)
 
+module ConcreteLocErrorSet = Set.Make (struct
+  type t = Loc.t error
+  let compare = compare Loc.compare
+end)
+
 type 'a error_group =
   (* Friendly errors without a root are never grouped. When traces are enabled
    * all friendly errors will never group. *)

@@ -81,6 +81,8 @@ val kind_of_error: 'loc error -> error_kind
    traces may share endpoints, and produce the same error *)
 module ErrorSet : Set.S with type elt = ALoc.t error
 
+module ConcreteLocErrorSet : Set.S with type elt = Loc.t error
+
 (* formatters/printers *)
 
 type stdin_file = (Path.t * string) option
