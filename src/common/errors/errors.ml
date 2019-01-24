@@ -860,7 +860,7 @@ let file_of_source source =
 let loc_of_error ((_, _, { Friendly.loc; _ }): 'loc error) =
   loc
 
-let loc_of_error_for_compare ((_, _, err): ALoc.t error) =
+let loc_of_error_for_compare ((_, _, err): 'a error) =
   let open Friendly in
   match err with
   | { root=Some {root_loc; _}; _ } -> root_loc
@@ -920,7 +920,7 @@ let deprecated_json_props_of_loc ~strip_root loc = Loc.(
    positions match then first message, then second message, etc.
 
    for friendly errors check the location, docs slug, and then message. *)
-let rec compare =
+let rec compare compare_loc =
   let kind_cmp =
     (* show internal errors first, then duplicate provider errors, then parse
        errors, then recursion limit errors. then both infer warnings and errors
@@ -967,7 +967,7 @@ let rec compare =
     | Inline _, Reference _ -> 1
     | Reference _, Inline _ -> -1
     | Reference (m1, loc1), Reference (m2, loc2) ->
-      let k = ALoc.compare loc1 loc2 in
+      let k = compare_loc loc1 loc2 in
       if k = 0 then compare_lists compare_message_inline m1 m2 else k
   in
   let compare_friendly_message m1 m2 =
@@ -984,7 +984,7 @@ let rec compare =
         let k = List.length b1 - List.length b2 in
         if k = 0 then
           compare_lists (fun (_, err1) (_, err2) ->
-            compare (InferError, [], err1) (InferError, [], err2)
+            compare compare_loc (InferError, [], err1) (InferError, [], err2)
           ) b1 b2
         else k
       else k
@@ -993,7 +993,7 @@ let rec compare =
     let open Friendly in
     let loc1, loc2 = loc_of_error_for_compare err1, loc_of_error_for_compare err2 in
     let (k1, _, err1), (k2, _, err2) = err1, err2 in
-    let k = ALoc.compare loc1 loc2 in
+    let k = compare_loc loc1 loc2 in
     if k = 0 then
       let k = kind_cmp k1 k2 in
       if k = 0 then match err1, err2 with
@@ -1003,7 +1003,7 @@ let rec compare =
         { root=Some { root_message=rm2; _ }; loc=loc2; message=m2 } ->
         let k = compare_lists compare_message_feature rm1 rm2 in
         if k = 0 then
-          let k = ALoc.compare loc1 loc2 in
+          let k = compare_loc loc1 loc2 in
           if k = 0 then compare_friendly_message m1 m2
           else k
         else k
@@ -1015,7 +1015,7 @@ let rec compare =
 
 module Error = struct
   type t = ALoc.t error
-  let compare = compare
+  let compare = compare ALoc.compare
 end
 
 (* we store errors in sets, currently, because distinct
