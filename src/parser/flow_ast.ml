@@ -10,7 +10,16 @@
  * https://developer.mozilla.org/en-US/docs/SpiderMonkey/Parser_API
  *)
 
-module%gen rec Identifier : sig
+module%gen rec Syntax: sig
+  type ('M, 'internal) t = {
+    leading: 'M Comment.t list;
+    trailing: 'M Comment.t list;
+    internal: 'internal
+  }
+  [@@deriving show]
+end = Syntax
+
+and Identifier : sig
   type 'M t = 'M * string
   [@@deriving show]
 end = Identifier
