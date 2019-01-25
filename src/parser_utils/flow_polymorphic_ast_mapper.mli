@@ -153,10 +153,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Function.body -> ('N, 'U) Ast.Function.body
     method function_declaration :
       ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
+    method function_expression :
+      ('M, 'T) Ast.Function.t -> ('N, 'U) Ast.Function.t
     method function_identifier :
       'M Flow_ast.Identifier.t -> 'N Ast.Identifier.t
     method function_param :
       ('M, 'T) Flow_ast.Function.Param.t -> ('N, 'U) Ast.Function.Param.t
+    method function_params :
+      ('M, 'T) Flow_ast.Function.Params.t -> ('N, 'U) Ast.Function.Params.t
     method function_param_pattern :
       ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
     method function_param_type :

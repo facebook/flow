@@ -581,20 +581,18 @@ module Make
       super#import_declaration import_loc decl
 
     method! export_default_declaration stmt_loc (decl: (L.t, L.t) Ast.Statement.ExportDefaultDeclaration.t) =
-      let open Ast.Statement in
       let open Ast.Statement.ExportDefaultDeclaration in
       let { default = default_loc; declaration } = decl in
       let local = match declaration with
-      | Declaration (_, FunctionDeclaration { Ast.Function.id; _ }) -> id
-      | Declaration (_, ClassDeclaration { Ast.Class.id; _ }) -> id
-      (* There's some ambiguity about the name Expression. This satisfies the compiler. *)
-      | ExportDefaultDeclaration.Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
+      | Declaration (_, Ast.Statement.FunctionDeclaration { Ast.Function.id; _ }) -> id
+      | Declaration (_, Ast.Statement.ClassDeclaration { Ast.Class.id; _ }) -> id
+      | Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
       | _ -> None
       in
       let local = Option.map ~f:(Flow_ast_utils.source_of_ident) local in
       let export = stmt_loc, ExportDefault { default_loc; local } in
       let export_info = ExportDefaultDef declaration in
-      this#add_exports stmt_loc ExportValue ["default", export] [export_info] None;
+      this#add_exports stmt_loc Ast.Statement.ExportValue ["default", export] [export_info] None;
       super#export_default_declaration stmt_loc decl
 
     method! export_named_declaration stmt_loc (decl: (L.t, L.t) Ast.Statement.ExportNamedDeclaration.t) =

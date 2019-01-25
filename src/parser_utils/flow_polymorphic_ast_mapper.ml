@@ -147,7 +147,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | Class x -> Class (this#class_ x)
     | Comprehension x -> Comprehension (this#comprehension x)
     | Conditional x -> Conditional (this#conditional x)
-    | Function x -> Function (this#function_ x)
+    | Function x -> Function (this#function_expression x)
     | Generator x -> Generator (this#generator x)
     | Identifier x -> Identifier (this#t_identifier x)
     | Import x -> Import (this#import annot x)
@@ -283,7 +283,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.Class.Method in
     let { kind; key; value; static; decorators; } = meth in
     let key' = this#object_key key in
-    let value' = (this#on_loc_annot * this#function_) value in
+    let value' = (this#on_loc_annot * this#function_expression) value in
     let decorators' = Core_list.map ~f:this#class_decorator decorators in
     { kind; key = key'; value = value'; static; decorators = decorators' }
 
@@ -788,6 +788,13 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | Available annot -> Available (this#type_annotation annot)
     | Missing loc -> Missing (this#on_type_annot loc)
 
+  method function_declaration (stmt: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
+    this#function_ stmt
+
+  method function_expression (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
+    this#function_ expr
+
+  (* Internal helper for function declarations, function expressions and arrow functions *)
   method function_ (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
     let open Ast.Function in
     let {
@@ -796,12 +803,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     } = expr in
     let ident' = Option.map ~f:this#t_function_identifier ident in
     this#type_parameter_declaration_opt tparams (fun tparams' ->
-      let params' =
-        let annot, { Params.params = params_list; rest } = params in
-        let params_list' = Core_list.map ~f:this#function_param params_list in
-        let rest' = Option.map ~f:this#function_rest_param rest in
-        this#on_loc_annot annot, { Params.params = params_list'; rest = rest' }
-      in
+      let params' = this#function_params params in
       let return' = this#type_annotation_hint return in
       let body' = this#function_body body in
       let predicate' = Option.map ~f:this#type_predicate predicate in
@@ -811,6 +813,12 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
         async; generator; predicate = predicate'; tparams = tparams'; sig_loc = sig_loc'
       }
     )
+
+  method function_params (params: ('M, 'T) Ast.Function.Params.t) : ('N, 'U) Ast.Function.Params.t =
+    let annot, { Ast.Function.Params.params = params_list; rest } = params in
+    let params_list' = Core_list.map ~f:this#function_param params_list in
+    let rest' = Option.map ~f:this#function_rest_param rest in
+    this#on_loc_annot annot, { Ast.Function.Params.params = params_list'; rest = rest' }
 
   method function_param (param: ('M, 'T) Ast.Function.Param.t) : ('N, 'U) Ast.Function.Param.t =
     let open Ast.Function.Param in
@@ -829,8 +837,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method function_body body =
     let open Ast.Function in
     match body with
-     | BodyBlock (annot, block) ->
-       BodyBlock (this#on_loc_annot annot, this#block block)
+     | BodyBlock body ->
+       BodyBlock ((this#on_loc_annot * this#block) body)
      | BodyExpression expr ->
        BodyExpression (this#expression expr)
 
@@ -839,9 +847,6 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method t_function_identifier (ident: 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
     this#t_pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
-
-  method function_declaration (stmt: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
-    this#function_ stmt
 
   method generator (expr: ('M, 'T) Ast.Expression.Generator.t)
                         : ('N, 'U) Ast.Expression.Generator.t =
@@ -1150,17 +1155,17 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
     | Method { key; value = fn_annot, fn } ->
       let key' = this#object_key key in
-      let fn' = this#function_ fn in
+      let fn' = this#function_expression fn in
       Method { key = key'; value = this#on_loc_annot fn_annot, fn' }
 
     | Get { key; value = fn_annot, fn } ->
       let key' = this#object_key key in
-      let fn' = this#function_ fn in
+      let fn' = this#function_expression fn in
       Get { key = key'; value = this#on_loc_annot fn_annot, fn' }
 
     | Set { key; value = fn_annot, fn } ->
       let key' = this#object_key key in
-      let fn' = this#function_ fn in
+      let fn' = this#function_expression fn in
       Set { key = key'; value = this#on_loc_annot fn_annot, fn' }
 
   method object_key (key: ('M, 'T) Ast.Expression.Object.Property.key) =

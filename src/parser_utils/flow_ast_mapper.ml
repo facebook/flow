@@ -164,7 +164,7 @@ class ['loc] mapper = object(this)
     | loc, Class x -> id_loc this#class_ loc x expr (fun x -> loc, Class x)
     | loc, Comprehension x -> id_loc this#comprehension loc x expr (fun x -> loc, Comprehension x)
     | loc, Conditional x -> id_loc this#conditional loc x expr (fun x -> loc, Conditional x)
-    | loc, Function x -> id_loc this#function_ loc x expr (fun x -> loc, Function x)
+    | loc, Function x -> id_loc this#function_expression loc x expr (fun x -> loc, Function x)
     | loc, Generator x -> id_loc this#generator loc x expr (fun x -> loc, Generator x)
     | loc, Identifier x -> id this#identifier x expr (fun x -> loc, Identifier x)
     | loc, Import x -> id (this#import loc) x expr (fun x -> loc, Import x)
@@ -295,7 +295,7 @@ class ['loc] mapper = object(this)
     let open Flow_ast.Class.Method in
     let { kind = _; key; value; static = _; decorators = _; } = meth in
     let key' = this#object_key key in
-    let value' = map_loc this#function_ value in
+    let value' = map_loc this#function_expression value in
     if key == key' && value == value' then meth
     else { meth with key = key'; value = value' }
 
@@ -697,6 +697,13 @@ class ['loc] mapper = object(this)
       else Available annot'
     | Missing _loc -> return
 
+  method function_declaration loc (stmt: ('loc, 'loc) Flow_ast.Function.t) =
+    this#function_ loc stmt
+
+  method function_expression loc (stmt: ('loc, 'loc) Flow_ast.Function.t) =
+    this#function_ loc stmt
+
+  (* Internal helper for function declarations, function expressions and arrow functions *)
   method function_ _loc (expr: ('loc, 'loc) Flow_ast.Function.t) =
     let open Flow_ast.Function in
     let {
@@ -744,9 +751,6 @@ class ['loc] mapper = object(this)
 
   method function_identifier (ident: 'loc Flow_ast.Identifier.t) =
     this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Var ident
-
-  method function_declaration loc (stmt: ('loc, 'loc) Flow_ast.Function.t) =
-    this#function_ loc stmt
 
   (* TODO *)
   method generator _loc (expr: ('loc, 'loc) Flow_ast.Expression.Generator.t) = expr
@@ -1042,19 +1046,19 @@ class ['loc] mapper = object(this)
 
     | loc, Method { key; value = fn } ->
       let key' = this#object_key key in
-      let fn' = map_loc this#function_ fn in
+      let fn' = map_loc this#function_expression fn in
       if key == key' && fn == fn' then prop
       else (loc, Method { key = key'; value = fn' })
 
     | loc, Get { key; value = fn } ->
       let key' = this#object_key key in
-      let fn' = map_loc this#function_ fn in
+      let fn' = map_loc this#function_expression fn in
       if key == key' && fn == fn' then prop
       else (loc, Get { key = key'; value = fn' })
 
     | loc, Set { key; value = fn } ->
       let key' = this#object_key key in
-      let fn' = map_loc this#function_ fn in
+      let fn' = map_loc this#function_expression fn in
       if key == key' && fn == fn' then prop
       else (loc, Set { key = key'; value = fn' })
 
