@@ -7,8 +7,8 @@ Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompati
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1913:13
-   1913|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:1914:13
+   1914|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
@@ -21,8 +21,8 @@ Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompati
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1913:24
-   1913|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:1914:24
+   1914|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
@@ -107,8 +107,8 @@ References:
    Element.js:14:40
      14|     element.scrollIntoView({ behavior: 'invalid' });
                                                 ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1383:49
-   1383|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1384:49
+   1384|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -125,8 +125,8 @@ References:
    Element.js:15:37
      15|     element.scrollIntoView({ block: 'invalid' });
                                              ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1383:90
-   1383|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1384:90
+   1384|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -139,8 +139,8 @@ Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] 
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1383:25
-   1383|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1384:25
+   1384|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                  ^^^^^^^ [2]
 
 
@@ -185,8 +185,8 @@ References:
    HTMLElement.js:14:40
      14|     element.scrollIntoView({ behavior: 'invalid' });
                                                 ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1383:49
-   1383|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1384:49
+   1384|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -203,8 +203,8 @@ References:
    HTMLElement.js:15:37
      15|     element.scrollIntoView({ block: 'invalid' });
                                              ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1383:90
-   1383|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1384:90
+   1384|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -217,8 +217,8 @@ Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] 
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1383:25
-   1383|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1384:25
+   1384|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                  ^^^^^^^ [2]
 
 
@@ -231,8 +231,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2841:43
-   2841|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2842:43
+   2842|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -245,8 +245,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2841:43
-   2841|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2842:43
+   2842|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -262,8 +262,8 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3182:45
-   3182|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3183:45
+   3183|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
@@ -279,8 +279,8 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3183:78
-   3183|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3184:78
+   3184|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
@@ -293,8 +293,8 @@ Cannot get `form.action` because property `action` is missing in null [1].
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3243:27
-   3243|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3244:27
+   3244|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -307,8 +307,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3261:44
-   3261|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3262:44
+   3262|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -321,8 +321,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3262:48
-   3262|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3263:48
+   3263|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -380,8 +380,8 @@ References:
    path2d.js:16:33
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                          ^^^^ [1]
-   <BUILTINS>/dom.js:1778:83
-   1778|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
+   <BUILTINS>/dom.js:1779:83
+   1779|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                            ^^^^^^ [2]
 
 
@@ -472,128 +472,128 @@ References:
    traversal.js:29:33
      29|     document.createNodeIterator({}); // invalid
                                          ^^ [1]
-   <BUILTINS>/dom.js:1035:33
-   1035|   createNodeIterator<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Attr>;
+   <BUILTINS>/dom.js:1036:33
+   1036|   createNodeIterator<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Attr>;
                                          ^^^^ [2]
-   <BUILTINS>/dom.js:1043:33
-   1043|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document>;
-                                         ^^^^^^^^ [3]
    <BUILTINS>/dom.js:1044:33
-   1044|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element>;
-                                         ^^^^^^^^ [4]
+   1044|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document>;
+                                         ^^^^^^^^ [3]
    <BUILTINS>/dom.js:1045:33
-   1045|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text>;
-                                         ^^^^^^^^ [5]
+   1045|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element>;
+                                         ^^^^^^^^ [4]
    <BUILTINS>/dom.js:1046:33
-   1046|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text>;
-                                         ^^^^^^^^ [6]
+   1046|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text>;
+                                         ^^^^^^^^ [5]
    <BUILTINS>/dom.js:1047:33
-   1047|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Comment>;
-                                         ^^^^^^^^ [7]
+   1047|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text>;
+                                         ^^^^^^^^ [6]
    <BUILTINS>/dom.js:1048:33
-   1048|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Comment>;
-                                         ^^^^^^^^ [8]
+   1048|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Comment>;
+                                         ^^^^^^^^ [7]
    <BUILTINS>/dom.js:1049:33
-   1049|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text|Comment>;
-                                         ^^^^^^^^ [9]
+   1049|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Comment>;
+                                         ^^^^^^^^ [8]
    <BUILTINS>/dom.js:1050:33
-   1050|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text|Comment>;
-                                         ^^^^^^^^ [10]
+   1050|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Text|Comment>;
+                                         ^^^^^^^^ [9]
    <BUILTINS>/dom.js:1051:33
-   1051|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType>;
-                                         ^^^^^^^^ [11]
+   1051|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Document|Element|Text|Comment>;
+                                         ^^^^^^^^ [10]
    <BUILTINS>/dom.js:1052:33
-   1052|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element>;
-                                         ^^^^^^^^ [12]
+   1052|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType>;
+                                         ^^^^^^^^ [11]
    <BUILTINS>/dom.js:1053:33
-   1053|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text>;
-                                         ^^^^^^^^ [13]
+   1053|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element>;
+                                         ^^^^^^^^ [12]
    <BUILTINS>/dom.js:1054:33
-   1054|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text>;
-                                         ^^^^^^^^ [14]
+   1054|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text>;
+                                         ^^^^^^^^ [13]
    <BUILTINS>/dom.js:1055:33
-   1055|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Comment>;
-                                         ^^^^^^^^ [15]
+   1055|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text>;
+                                         ^^^^^^^^ [14]
    <BUILTINS>/dom.js:1056:33
-   1056|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Comment>;
-                                         ^^^^^^^^ [16]
+   1056|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Comment>;
+                                         ^^^^^^^^ [15]
    <BUILTINS>/dom.js:1057:33
-   1057|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text|Comment>;
-                                         ^^^^^^^^ [17]
+   1057|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Comment>;
+                                         ^^^^^^^^ [16]
    <BUILTINS>/dom.js:1058:33
-   1058|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text|Comment>;
-                                         ^^^^^^^^ [18]
+   1058|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Text|Comment>;
+                                         ^^^^^^^^ [17]
    <BUILTINS>/dom.js:1059:33
-   1059|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document>;
-                                         ^^^^^^^^ [19]
+   1059|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Element|Text|Comment>;
+                                         ^^^^^^^^ [18]
    <BUILTINS>/dom.js:1060:33
-   1060|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element>;
-                                         ^^^^^^^^ [20]
+   1060|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document>;
+                                         ^^^^^^^^ [19]
    <BUILTINS>/dom.js:1061:33
-   1061|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text>;
-                                         ^^^^^^^^ [21]
+   1061|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element>;
+                                         ^^^^^^^^ [20]
    <BUILTINS>/dom.js:1062:33
-   1062|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text>;
-                                         ^^^^^^^^ [22]
+   1062|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text>;
+                                         ^^^^^^^^ [21]
    <BUILTINS>/dom.js:1063:33
-   1063|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Comment>;
-                                         ^^^^^^^^ [23]
+   1063|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text>;
+                                         ^^^^^^^^ [22]
    <BUILTINS>/dom.js:1064:33
-   1064|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Comment>;
-                                         ^^^^^^^^ [24]
+   1064|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Comment>;
+                                         ^^^^^^^^ [23]
    <BUILTINS>/dom.js:1065:33
-   1065|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text|Comment>;
-                                         ^^^^^^^^ [25]
+   1065|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Comment>;
+                                         ^^^^^^^^ [24]
    <BUILTINS>/dom.js:1066:33
-   1066|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text|Comment>;
+   1066|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Text|Comment>;
+                                         ^^^^^^^^ [25]
+   <BUILTINS>/dom.js:1067:33
+   1067|   createNodeIterator<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentType|Document|Element|Text|Comment>;
                                          ^^^^^^^^ [26]
-   <BUILTINS>/dom.js:1094:33
-   1094|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment>;
-                                         ^^^^^^^^^^^^^^^^ [27]
    <BUILTINS>/dom.js:1095:33
-   1095|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element>;
-                                         ^^^^^^^^^^^^^^^^ [28]
+   1095|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment>;
+                                         ^^^^^^^^^^^^^^^^ [27]
    <BUILTINS>/dom.js:1096:33
-   1096|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text>;
-                                         ^^^^^^^^^^^^^^^^ [29]
+   1096|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element>;
+                                         ^^^^^^^^^^^^^^^^ [28]
    <BUILTINS>/dom.js:1097:33
-   1097|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text>;
-                                         ^^^^^^^^^^^^^^^^ [30]
+   1097|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text>;
+                                         ^^^^^^^^^^^^^^^^ [29]
    <BUILTINS>/dom.js:1098:33
-   1098|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Comment>;
-                                         ^^^^^^^^^^^^^^^^ [31]
+   1098|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text>;
+                                         ^^^^^^^^^^^^^^^^ [30]
    <BUILTINS>/dom.js:1099:33
-   1099|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Comment>;
-                                         ^^^^^^^^^^^^^^^^ [32]
+   1099|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Comment>;
+                                         ^^^^^^^^^^^^^^^^ [31]
    <BUILTINS>/dom.js:1100:33
-   1100|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text|Comment>;
-                                         ^^^^^^^^^^^^^^^^ [33]
+   1100|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Comment>;
+                                         ^^^^^^^^^^^^^^^^ [32]
    <BUILTINS>/dom.js:1101:33
-   1101|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text|Comment>;
+   1101|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Text|Comment>;
+                                         ^^^^^^^^^^^^^^^^ [33]
+   <BUILTINS>/dom.js:1102:33
+   1102|   createNodeIterator<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface): NodeIterator<RootNodeT, DocumentFragment|Element|Text|Comment>;
                                          ^^^^^^^^^^^^^^^^ [34]
-   <BUILTINS>/dom.js:1114:33
-   1114|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
-                                         ^^^^ [35]
    <BUILTINS>/dom.js:1115:33
-   1115|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
-                                         ^^^^ [36]
+   1115|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
+                                         ^^^^ [35]
    <BUILTINS>/dom.js:1116:33
-   1116|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
-                                         ^^^^ [37]
+   1116|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
+                                         ^^^^ [36]
    <BUILTINS>/dom.js:1117:33
-   1117|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
-                                         ^^^^ [38]
+   1117|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
+                                         ^^^^ [37]
    <BUILTINS>/dom.js:1118:33
-   1118|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
-                                         ^^^^ [39]
+   1118|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
+                                         ^^^^ [38]
    <BUILTINS>/dom.js:1119:33
-   1119|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
-                                         ^^^^ [40]
+   1119|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
+                                         ^^^^ [39]
    <BUILTINS>/dom.js:1120:33
-   1120|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
+   1120|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
+                                         ^^^^ [40]
+   <BUILTINS>/dom.js:1121:33
+   1121|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
                                          ^^^^ [41]
-   <BUILTINS>/dom.js:1131:33
-   1131|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
+   <BUILTINS>/dom.js:1132:33
+   1132|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Node>;
                                          ^^^^ [42]
 
 
@@ -650,128 +650,128 @@ References:
    traversal.js:33:31
      33|     document.createTreeWalker({}); // invalid
                                        ^^ [1]
-   <BUILTINS>/dom.js:1036:31
-   1036|   createTreeWalker<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Attr>;
+   <BUILTINS>/dom.js:1037:31
+   1037|   createTreeWalker<RootNodeT: Attr>(root: RootNodeT, whatToShow: 2, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Attr>;
                                        ^^^^ [2]
-   <BUILTINS>/dom.js:1067:31
-   1067|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document>;
-                                       ^^^^^^^^ [3]
    <BUILTINS>/dom.js:1068:31
-   1068|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element>;
-                                       ^^^^^^^^ [4]
+   1068|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 256, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document>;
+                                       ^^^^^^^^ [3]
    <BUILTINS>/dom.js:1069:31
-   1069|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text>;
-                                       ^^^^^^^^ [5]
+   1069|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 257, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element>;
+                                       ^^^^^^^^ [4]
    <BUILTINS>/dom.js:1070:31
-   1070|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text>;
-                                       ^^^^^^^^ [6]
+   1070|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 260, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text>;
+                                       ^^^^^^^^ [5]
    <BUILTINS>/dom.js:1071:31
-   1071|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Comment>;
-                                       ^^^^^^^^ [7]
+   1071|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 261, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text>;
+                                       ^^^^^^^^ [6]
    <BUILTINS>/dom.js:1072:31
-   1072|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Comment>;
-                                       ^^^^^^^^ [8]
+   1072|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 384, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Comment>;
+                                       ^^^^^^^^ [7]
    <BUILTINS>/dom.js:1073:31
-   1073|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text|Comment>;
-                                       ^^^^^^^^ [9]
+   1073|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 385, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Comment>;
+                                       ^^^^^^^^ [8]
    <BUILTINS>/dom.js:1074:31
-   1074|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text|Comment>;
-                                       ^^^^^^^^ [10]
+   1074|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 388, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Text|Comment>;
+                                       ^^^^^^^^ [9]
    <BUILTINS>/dom.js:1075:31
-   1075|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType>;
-                                       ^^^^^^^^ [11]
+   1075|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 389, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Document|Element|Text|Comment>;
+                                       ^^^^^^^^ [10]
    <BUILTINS>/dom.js:1076:31
-   1076|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element>;
-                                       ^^^^^^^^ [12]
+   1076|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 512, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType>;
+                                       ^^^^^^^^ [11]
    <BUILTINS>/dom.js:1077:31
-   1077|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text>;
-                                       ^^^^^^^^ [13]
+   1077|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 513, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element>;
+                                       ^^^^^^^^ [12]
    <BUILTINS>/dom.js:1078:31
-   1078|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text>;
-                                       ^^^^^^^^ [14]
+   1078|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 516, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text>;
+                                       ^^^^^^^^ [13]
    <BUILTINS>/dom.js:1079:31
-   1079|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Comment>;
-                                       ^^^^^^^^ [15]
+   1079|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 517, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text>;
+                                       ^^^^^^^^ [14]
    <BUILTINS>/dom.js:1080:31
-   1080|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Comment>;
-                                       ^^^^^^^^ [16]
+   1080|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 640, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Comment>;
+                                       ^^^^^^^^ [15]
    <BUILTINS>/dom.js:1081:31
-   1081|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text|Comment>;
-                                       ^^^^^^^^ [17]
+   1081|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 641, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Comment>;
+                                       ^^^^^^^^ [16]
    <BUILTINS>/dom.js:1082:31
-   1082|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text|Comment>;
-                                       ^^^^^^^^ [18]
+   1082|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 644, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Text|Comment>;
+                                       ^^^^^^^^ [17]
    <BUILTINS>/dom.js:1083:31
-   1083|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document>;
-                                       ^^^^^^^^ [19]
+   1083|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 645, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Element|Text|Comment>;
+                                       ^^^^^^^^ [18]
    <BUILTINS>/dom.js:1084:31
-   1084|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element>;
-                                       ^^^^^^^^ [20]
+   1084|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 768, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document>;
+                                       ^^^^^^^^ [19]
    <BUILTINS>/dom.js:1085:31
-   1085|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text>;
-                                       ^^^^^^^^ [21]
+   1085|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 769, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element>;
+                                       ^^^^^^^^ [20]
    <BUILTINS>/dom.js:1086:31
-   1086|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text>;
-                                       ^^^^^^^^ [22]
+   1086|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 772, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text>;
+                                       ^^^^^^^^ [21]
    <BUILTINS>/dom.js:1087:31
-   1087|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Comment>;
-                                       ^^^^^^^^ [23]
+   1087|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 773, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text>;
+                                       ^^^^^^^^ [22]
    <BUILTINS>/dom.js:1088:31
-   1088|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Comment>;
-                                       ^^^^^^^^ [24]
+   1088|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 896, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Comment>;
+                                       ^^^^^^^^ [23]
    <BUILTINS>/dom.js:1089:31
-   1089|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text|Comment>;
-                                       ^^^^^^^^ [25]
+   1089|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 897, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Comment>;
+                                       ^^^^^^^^ [24]
    <BUILTINS>/dom.js:1090:31
-   1090|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text|Comment>;
+   1090|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 900, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Text|Comment>;
+                                       ^^^^^^^^ [25]
+   <BUILTINS>/dom.js:1091:31
+   1091|   createTreeWalker<RootNodeT: Document>(root: RootNodeT, whatToShow: 901, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentType|Document|Element|Text|Comment>;
                                        ^^^^^^^^ [26]
-   <BUILTINS>/dom.js:1102:31
-   1102|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment>;
-                                       ^^^^^^^^^^^^^^^^ [27]
    <BUILTINS>/dom.js:1103:31
-   1103|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element>;
-                                       ^^^^^^^^^^^^^^^^ [28]
+   1103|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1024, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment>;
+                                       ^^^^^^^^^^^^^^^^ [27]
    <BUILTINS>/dom.js:1104:31
-   1104|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text>;
-                                       ^^^^^^^^^^^^^^^^ [29]
+   1104|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1025, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element>;
+                                       ^^^^^^^^^^^^^^^^ [28]
    <BUILTINS>/dom.js:1105:31
-   1105|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text>;
-                                       ^^^^^^^^^^^^^^^^ [30]
+   1105|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1028, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text>;
+                                       ^^^^^^^^^^^^^^^^ [29]
    <BUILTINS>/dom.js:1106:31
-   1106|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Comment>;
-                                       ^^^^^^^^^^^^^^^^ [31]
+   1106|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1029, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text>;
+                                       ^^^^^^^^^^^^^^^^ [30]
    <BUILTINS>/dom.js:1107:31
-   1107|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Comment>;
-                                       ^^^^^^^^^^^^^^^^ [32]
+   1107|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1152, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Comment>;
+                                       ^^^^^^^^^^^^^^^^ [31]
    <BUILTINS>/dom.js:1108:31
-   1108|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text|Comment>;
-                                       ^^^^^^^^^^^^^^^^ [33]
+   1108|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1153, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Comment>;
+                                       ^^^^^^^^^^^^^^^^ [32]
    <BUILTINS>/dom.js:1109:31
-   1109|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text|Comment>;
+   1109|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1156, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Text|Comment>;
+                                       ^^^^^^^^^^^^^^^^ [33]
+   <BUILTINS>/dom.js:1110:31
+   1110|   createTreeWalker<RootNodeT: DocumentFragment>(root: RootNodeT, whatToShow: 1157, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, DocumentFragment|Element|Text|Comment>;
                                        ^^^^^^^^^^^^^^^^ [34]
-   <BUILTINS>/dom.js:1121:31
-   1121|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
-                                       ^^^^ [35]
    <BUILTINS>/dom.js:1122:31
-   1122|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
-                                       ^^^^ [36]
+   1122|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
+                                       ^^^^ [35]
    <BUILTINS>/dom.js:1123:31
-   1123|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
-                                       ^^^^ [37]
+   1123|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
+                                       ^^^^ [36]
    <BUILTINS>/dom.js:1124:31
-   1124|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
-                                       ^^^^ [38]
+   1124|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
+                                       ^^^^ [37]
    <BUILTINS>/dom.js:1125:31
-   1125|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
-                                       ^^^^ [39]
+   1125|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
+                                       ^^^^ [38]
    <BUILTINS>/dom.js:1126:31
-   1126|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
-                                       ^^^^ [40]
+   1126|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
+                                       ^^^^ [39]
    <BUILTINS>/dom.js:1127:31
-   1127|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
+   1127|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
+                                       ^^^^ [40]
+   <BUILTINS>/dom.js:1128:31
+   1128|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
                                        ^^^^ [41]
-   <BUILTINS>/dom.js:1132:31
-   1132|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
+   <BUILTINS>/dom.js:1133:31
+   1133|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow?: number, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Node>;
                                        ^^^^ [42]
 
 
@@ -788,11 +788,11 @@ References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3725:1
+   <BUILTINS>/dom.js:3726:1
          v--------------------------------
-   3725| typeof NodeFilter.FILTER_ACCEPT |
-   3726| typeof NodeFilter.FILTER_REJECT |
-   3727| typeof NodeFilter.FILTER_SKIP;
+   3726| typeof NodeFilter.FILTER_ACCEPT |
+   3727| typeof NodeFilter.FILTER_REJECT |
+   3728| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -809,11 +809,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3725:1
+   <BUILTINS>/dom.js:3726:1
          v--------------------------------
-   3725| typeof NodeFilter.FILTER_ACCEPT |
-   3726| typeof NodeFilter.FILTER_REJECT |
-   3727| typeof NodeFilter.FILTER_SKIP;
+   3726| typeof NodeFilter.FILTER_ACCEPT |
+   3727| typeof NodeFilter.FILTER_REJECT |
+   3728| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -836,26 +836,26 @@ References:
    traversal.js:189:48
     189|     document.createNodeIterator(document_body, -1, {}); // invalid
                                                         ^^ [1]
-   <BUILTINS>/dom.js:1114:68
-   1114|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
-                                                                            ^ [2]
    <BUILTINS>/dom.js:1115:68
-   1115|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
-                                                                            ^ [3]
+   1115|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element>;
+                                                                            ^ [2]
    <BUILTINS>/dom.js:1116:68
-   1116|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
-                                                                            ^ [4]
+   1116|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text>;
+                                                                            ^ [3]
    <BUILTINS>/dom.js:1117:68
-   1117|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
-                                                                            ^^^ [5]
+   1117|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Text>;
+                                                                            ^ [4]
    <BUILTINS>/dom.js:1118:68
-   1118|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
-                                                                            ^^^ [6]
+   1118|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Comment>;
+                                                                            ^^^ [5]
    <BUILTINS>/dom.js:1119:68
-   1119|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
-                                                                            ^^^ [7]
+   1119|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Element|Comment>;
+                                                                            ^^^ [6]
    <BUILTINS>/dom.js:1120:68
-   1120|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
+   1120|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Comment>;
+                                                                            ^^^ [7]
+   <BUILTINS>/dom.js:1121:68
+   1121|   createNodeIterator<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface): NodeIterator<RootNodeT, Text|Element|Comment>;
                                                                             ^^^ [8]
 
 
@@ -872,11 +872,11 @@ References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3725:1
+   <BUILTINS>/dom.js:3726:1
          v--------------------------------
-   3725| typeof NodeFilter.FILTER_ACCEPT |
-   3726| typeof NodeFilter.FILTER_REJECT |
-   3727| typeof NodeFilter.FILTER_SKIP;
+   3726| typeof NodeFilter.FILTER_ACCEPT |
+   3727| typeof NodeFilter.FILTER_REJECT |
+   3728| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -893,11 +893,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3725:1
+   <BUILTINS>/dom.js:3726:1
          v--------------------------------
-   3725| typeof NodeFilter.FILTER_ACCEPT |
-   3726| typeof NodeFilter.FILTER_REJECT |
-   3727| typeof NodeFilter.FILTER_SKIP;
+   3726| typeof NodeFilter.FILTER_ACCEPT |
+   3727| typeof NodeFilter.FILTER_REJECT |
+   3728| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -920,26 +920,26 @@ References:
    traversal.js:196:46
     196|     document.createTreeWalker(document_body, -1, {}); // invalid
                                                       ^^ [1]
-   <BUILTINS>/dom.js:1121:66
-   1121|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
-                                                                          ^ [2]
    <BUILTINS>/dom.js:1122:66
-   1122|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
-                                                                          ^ [3]
+   1122|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 1, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element>;
+                                                                          ^ [2]
    <BUILTINS>/dom.js:1123:66
-   1123|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
-                                                                          ^ [4]
+   1123|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 4, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text>;
+                                                                          ^ [3]
    <BUILTINS>/dom.js:1124:66
-   1124|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
-                                                                          ^^^ [5]
+   1124|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 5, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Text>;
+                                                                          ^ [4]
    <BUILTINS>/dom.js:1125:66
-   1125|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
-                                                                          ^^^ [6]
+   1125|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 128, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Comment>;
+                                                                          ^^^ [5]
    <BUILTINS>/dom.js:1126:66
-   1126|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
-                                                                          ^^^ [7]
+   1126|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 129, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Element|Comment>;
+                                                                          ^^^ [6]
    <BUILTINS>/dom.js:1127:66
-   1127|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
+   1127|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 132, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Comment>;
+                                                                          ^^^ [7]
+   <BUILTINS>/dom.js:1128:66
+   1128|   createTreeWalker<RootNodeT: Node>(root: RootNodeT, whatToShow: 133, filter?: NodeFilterInterface, entityReferenceExpansion?: boolean): TreeWalker<RootNodeT, Text|Element|Comment>;
                                                                           ^^^ [8]
 
 
