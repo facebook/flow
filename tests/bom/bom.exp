@@ -578,8 +578,8 @@ Cannot assign `headers.get(...)` to `b` because null [1] is incompatible with st
                           ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:936:24
-   936|     get(name: string): null | string;
+   <BUILTINS>/bom.js:951:24
+   951|     get(name: string): null | string;
                                ^^^^ [1]
    Headers.js:8:10
      8| const b: string = headers.get('foo'); // incorrect
@@ -803,8 +803,8 @@ Cannot assign `params.get(...)` to `b` because null [1] is incompatible with str
                           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:950:24
-   950|     get(name: string): null | string;
+   <BUILTINS>/bom.js:965:24
+   965|     get(name: string): null | string;
                                ^^^^ [1]
    URLSearchParams.js:8:10
      8| const b: string = params.get('foo'); // incorrect
