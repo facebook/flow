@@ -429,7 +429,7 @@ module Make
       begin match expr with
       (* Disallow expressions consisting of `module` or `exports`. These are dangerous because they
        * can allow aliasing and mutation. *)
-      | _, Identifier (loc, (("module" | "exports") as name))
+      | _, Identifier (loc, ({ Ast.Identifier.name= ("module" | "exports") as name; comments= _ }))
           when not (Scope_api.is_local_use scope_info loc) ->
         this#add_tolerable_error (BadExportContext (name, loc))
       | _ -> ()
@@ -440,7 +440,7 @@ module Make
       let open Ast.Expression in
       let open Ast.Expression.Binary in
       let is_module_or_exports = function
-        | _, Identifier (_, ("module" | "exports")) -> true
+        | _, Identifier (_, { Ast.Identifier.name= ("module" | "exports"); comments= _ }) -> true
         | _ -> false
       in
       let is_legal_operator = function
@@ -475,17 +475,17 @@ module Make
        * don't arrive here in those cases. *)
       begin match _object, property with
         (* Allow `module.anythingButExports` *)
-        | Identifier (_, "module"), PropertyIdentifier (_, prop) when prop <> "exports" -> ()
+        | Identifier (_, { Ast.Identifier.name= "module"; comments= _ }), PropertyIdentifier (_, { Ast.Identifier.name= prop; comments= _ }) when prop <> "exports" -> ()
         (* Allow `module.exports.whatever` -- this is safe because handle_assignment has already
          * looked for assignments to it before recursing down here. *)
         | Member {
-            _object=(_, Identifier (_, "module"));
-            property = PropertyIdentifier (_, "exports");
+            _object=(_, Identifier (_, { Ast.Identifier.name= "module"; comments= _ }));
+            property = PropertyIdentifier (_, { Ast.Identifier.name= "exports"; comments= _ });
             _;
           },
           PropertyIdentifier _
         (* Allow `exports.whatever`, for the same reason as above *)
-        | Identifier (_, "exports"), PropertyIdentifier _ ->
+        | Identifier (_, { Ast.Identifier.name= "exports"; comments= _ }), PropertyIdentifier _ ->
           (* In these cases we don't know much about the property so we should recurse *)
           ignore (this#member_property property)
         | _ -> ignore (super#member loc expr)
@@ -550,11 +550,11 @@ module Make
           if !ref = None then ref := Some (loc, local)
           else failwith "unreachable"
         in
-        Option.iter ~f:(fun (loc, local) ->
+        Option.iter ~f:(fun (loc, { Ast.Identifier.name= local; comments= _ }) ->
           add_named "default" local {remote_loc=loc; local_loc=loc} (ref_of_kind importKind)
         ) default;
         Option.iter ~f:(function
-          | ImportNamespaceSpecifier (loc, (_, local)) ->
+          | ImportNamespaceSpecifier (loc, (_, { Ast.Identifier.name= local; comments= _ })) ->
             (match importKind with
             | ImportType -> failwith "import type * is a parse error"
             | ImportTypeof -> set_ns local loc typesof_ns
@@ -562,8 +562,8 @@ module Make
           | ImportNamedSpecifiers named_specifiers ->
             List.iter (function {local; remote; kind} ->
               let importKind = match kind with Some k -> k | None -> importKind in
-              let local_loc, local_name = match local with Some x -> x | None -> remote in
-              let remote_loc, remote_name = remote in
+              let local_loc, { Ast.Identifier.name= local_name; comments= _ } = match local with Some x -> x | None -> remote in
+              let remote_loc, { Ast.Identifier.name= remote_name; comments= _ } = remote in
               add_named remote_name local_name {remote_loc; local_loc} (ref_of_kind importKind)
             ) named_specifiers
         ) specifiers;
@@ -591,6 +591,7 @@ module Make
       | ExportDefaultDeclaration.Expression (_, Ast.Expression.Function { Ast.Function.id; _ }) -> id
       | _ -> None
       in
+      let local = Option.map ~f:(Flow_ast_utils.source_of_ident) local in
       let export = stmt_loc, ExportDefault { default_loc; local } in
       let export_info = ExportDefaultDef declaration in
       this#add_exports stmt_loc ExportValue ["default", export] [export_info] None;
@@ -611,13 +612,13 @@ module Make
         let kind = NamedDeclaration in
         let export_info = ExportNamedDef (loc, stmt) in
         match stmt with
-        | FunctionDeclaration { Ast.Function.id = Some (loc, name); _ }
-        | ClassDeclaration { Ast.Class.id = Some (loc, name); _ } ->
+        | FunctionDeclaration { Ast.Function.id = Some (loc, { Ast.Identifier.name; comments= _ }); _ }
+        | ClassDeclaration { Ast.Class.id = Some (loc, { Ast.Identifier.name; comments= _ }); _ } ->
           let export = stmt_loc, ExportNamed { loc; kind; } in
           this#add_exports stmt_loc ExportValue [name, export] [export_info] None
         | VariableDeclaration { VariableDeclaration.declarations = decls; _ } ->
           let rev_named, rev_info = Ast_utils.fold_bindings_of_variable_declarations
-            (fun (named, infos) (loc, name) ->
+            (fun (named, infos) (loc, { Ast.Identifier.name; comments= _ }) ->
               let export = stmt_loc, ExportNamed { loc; kind } in
               ((name, export)::named), (export_info::infos))
             ([], [])
@@ -628,7 +629,7 @@ module Make
         | OpaqueType { OpaqueType.id; _ }
         | InterfaceDeclaration { Interface.id; _ } ->
           let export = stmt_loc, ExportNamed { loc; kind } in
-          this#add_exports stmt_loc ExportType [snd id, export] [export_info] None;
+          this#add_exports stmt_loc ExportType [Flow_ast_utils.name_of_ident id, export] [export_info] None;
         | _ -> failwith "unsupported declaration"
       end;
       begin match specifiers with
@@ -663,8 +664,8 @@ module Make
         | Function (_, { DeclareFunction.id; _ })
         | Class (_, { DeclareClass.id; _ }) ->
           let name, export = match default with
-            | Some default_loc -> "default", (stmt_loc, ExportDefault { default_loc; local = Some id })
-            | None -> snd id, (stmt_loc, ExportNamed { loc = fst id; kind })
+            | Some default_loc -> "default", (stmt_loc, ExportDefault { default_loc; local = Some (Flow_ast_utils.source_of_ident id) })
+            | None -> Flow_ast_utils.name_of_ident id, (stmt_loc, ExportNamed { loc = fst id; kind })
           in
           this#add_exports stmt_loc ExportValue [name, export] [export_info] None
         | DefaultType _ ->
@@ -679,7 +680,7 @@ module Make
         | Interface (_, { Interface.id; _ }) ->
           assert (Option.is_none default);
           let export = stmt_loc, ExportNamed { loc = fst id; kind } in
-          this#add_exports stmt_loc ExportType [snd id, export] [export_info] None
+          this#add_exports stmt_loc ExportType [Flow_ast_utils.name_of_ident id, export] [export_info] None
       end;
       begin match specifiers with
       | None -> () (* assert declaration <> None *)
@@ -704,8 +705,8 @@ module Make
       begin match operator, left with
       (* module.exports = ... *)
       | Assign, (mod_exp_loc, Ast.Pattern.Expression (_, Member { Member.
-          _object = module_loc, Identifier (_, "module");
-          property = Member.PropertyIdentifier (_, "exports"); _
+          _object = module_loc, Identifier (_, { Ast.Identifier.name= "module"; comments= _ });
+          property = Member.PropertyIdentifier (_, { Ast.Identifier.name= "exports"; comments= _ }); _
         })) when not (Scope_api.is_local_use scope_info module_loc) ->
         this#handle_cjs_default_export module_loc mod_exp_loc (SetModuleExportsDef right);
         ignore (this#expression right);
@@ -713,26 +714,26 @@ module Make
           this#add_tolerable_error (BadExportPosition mod_exp_loc)
       (* exports.foo = ... *)
       | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
-          _object = mod_exp_loc as module_loc, Identifier (_, "exports");
+          _object = mod_exp_loc as module_loc, Identifier (_, { Ast.Identifier.name= "exports"; comments= _ });
           property = Member.PropertyIdentifier id; _
         }))
       (* module.exports.foo = ... *)
       | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
           _object = mod_exp_loc, Member { Member.
-            _object = module_loc, Identifier (_, "module");
-            property = Member.PropertyIdentifier (_, "exports"); _
+            _object = module_loc, Identifier (_, { Ast.Identifier.name= "module"; comments= _ });
+            property = Member.PropertyIdentifier (_, { Ast.Identifier.name= "exports"; comments= _ }); _
           };
           property = Member.PropertyIdentifier id; _
         })) when not (Scope_api.is_local_use scope_info module_loc) ->
         (* expressions not allowed in declare module body *)
         assert (curr_declare_module = None);
-        this#add_cjs_export mod_exp_loc (AddModuleExportsDef (id, right));
+        this#add_cjs_export mod_exp_loc (AddModuleExportsDef (Flow_ast_utils.source_of_ident id, right));
         ignore (this#expression right);
         if not is_toplevel then
           this#add_tolerable_error (BadExportPosition mod_exp_loc)
       (* module = ... *)
       | Assign, (_, Ast.Pattern.Identifier {
-          Ast.Pattern.Identifier.name=(loc, ("exports" | "module" as id)); _
+          Ast.Pattern.Identifier.name=(loc, { Ast.Identifier.name= ("exports" | "module") as id; comments= _ }); _
         }) when not (Scope_api.is_local_use scope_info loc) ->
         ignore (this#expression right);
         this#add_tolerable_error (BadExportContext (id, loc))
@@ -756,7 +757,8 @@ module Make
 
     method private require_pattern (pattern: (L.t, L.t) Ast.Pattern.t) =
       match pattern with
-        | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } -> Some (BindIdent name)
+        | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
+          Some (BindIdent (Flow_ast_utils.source_of_ident name))
         | _, Ast.Pattern.Object { Ast.Pattern.Object.properties; _ } ->
           let named_opt = ListUtils.fold_left_opt (fun named prop ->
             match prop with
@@ -769,7 +771,12 @@ module Make
                 Option.map bindings (fun bindings -> (remote, bindings) :: named)
               | _ -> None
           ) [] properties in
-          Option.map named_opt (fun named -> BindNamed named)
+          Option.map named_opt (fun named ->
+            let named_bind =
+              List.map (fun (id, bind) -> Flow_ast_utils.source_of_ident id, bind) named
+            in
+            BindNamed named_bind
+          )
         | _ -> None
 
     method private handle_require (left: (L.t, L.t) Ast.Pattern.t) (right: (L.t, L.t) Ast.Expression.t) =
@@ -786,7 +793,7 @@ module Make
       if not (this#visited_requires_with_bindings call_loc bindings) then begin
         this#visit_requires_with_bindings call_loc bindings;
         match callee, arguments with
-        | ((_, Identifier (loc, "require")), [Expression (source_loc, (
+        | ((_, Identifier (loc, { Ast.Identifier.name= "require"; comments= _ })), [Expression (source_loc, (
             Literal { Ast.Literal.value = Ast.Literal.String name; _ } |
             TemplateLiteral { TemplateLiteral.
               quasis = [_, { TemplateLiteral.Element.
@@ -801,7 +808,7 @@ module Make
               require_loc = call_loc;
               bindings;
             })
-        | ((_, Identifier (loc, "requireLazy")),
+        | ((_, Identifier (loc, { Ast.Identifier.name= "requireLazy"; comments= _ })),
            [Expression (_, Array ({ Array.elements })); Expression (_);])
           ->
           let element = function
@@ -835,7 +842,7 @@ module Make
 
     method! declare_module loc (m: (L.t, L.t) Ast.Statement.DeclareModule.t) =
       let name = Ast.Statement.DeclareModule.(match m.id with
-      | Identifier (_, name) -> name
+      | Identifier (_, { Ast.Identifier.name; comments= _ }) -> name
       | Literal (_, { Ast.StringLiteral.value; _ }) -> value
       ) in
       curr_declare_module <- Some (mk_module_sig init_exports_info);
@@ -854,7 +861,7 @@ module Make
     method private export_specifiers stmt_loc kind source =
       let open Ast.Statement.ExportNamedDeclaration in
       function
-      | ExportBatchSpecifier (star_loc, Some (loc, name)) ->
+      | ExportBatchSpecifier (star_loc, Some (loc, { Ast.Identifier.name; comments= _ })) ->
         (* export type * as X from "foo" unsupported *)
         assert (kind = Ast.Statement.ExportValue);
         let mref = match source with
@@ -872,12 +879,12 @@ module Make
         this#add_exports stmt_loc kind [] [] (Some export)
       | ExportSpecifiers specs ->
         let bindings = List.fold_left ExportSpecifier.(fun acc (_, spec) ->
-          let name, loc = match spec.exported with
+          let { Ast.Identifier.name; comments= _ }, loc = match spec.exported with
           | None -> snd spec.local, fst spec.local
           | Some remote -> snd remote, fst remote
           in
           let export =
-            stmt_loc, ExportNamed { loc; kind = NamedSpecifier { local = spec.local; source } } in
+            stmt_loc, ExportNamed { loc; kind = NamedSpecifier { local = Flow_ast_utils.source_of_ident spec.local; source } } in
           (name, export) :: acc
         ) [] specs in
         this#add_exports stmt_loc kind bindings [] None

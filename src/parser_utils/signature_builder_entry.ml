@@ -25,7 +25,7 @@ let rec pattern loc ?annot_path ?init_path (p: (Loc.t, Loc.t) Ast.Pattern.t) =
       List.fold_left (fun acc -> function
         | Property (prop_loc, { Property.key; pattern = p; _ }) ->
           begin match key with
-            | Property.Identifier (key_loc, x) ->
+            | Property.Identifier (key_loc, { Ast.Identifier.name= x; comments= _ }) ->
               let annot_path = Kind.Annot_path.mk_object ?annot_path x in
               let init_path = Kind.Init_path.mk_object prop_loc ?init_path (key_loc, x) in
               acc @ (pattern loc ?annot_path ?init_path p)

@@ -18,7 +18,7 @@ let opt f t =
   | Some t -> f t >>| fun t -> Some t
   | _ -> return None
 
-let id_from_string x = Loc.none, x
+let id_from_string x = Flow_ast_utils.ident_of_source (Loc.none, x)
 
 let id_from_symbol x =
   let { name; anonymous; _ } = x in
@@ -173,7 +173,7 @@ and obj_named_prop =
       let value = Ast.Literal.String raw in
       Ast.Expression.Object.Property.Literal (Loc.none, { Ast.Literal.value; raw })
     else
-      Ast.Expression.Object.Property.Identifier (Loc.none, x)
+      Ast.Expression.Object.Property.Identifier (id_from_string x)
   in
   fun x prop ->
   match prop with
@@ -253,7 +253,7 @@ and type_param tp =
   opt type_ tp.tp_default >>| fun default ->
   (Loc.none, {
     T.ParameterDeclaration.TypeParam.
-    name = Loc.none, tp.tp_name;
+    name = id_from_string tp.tp_name;
     bound = (match bound with
     | Some t -> T.Available t
     | None -> T.Missing Loc.none);

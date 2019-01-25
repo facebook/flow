@@ -565,7 +565,7 @@ end with type t = Impl.t) = struct
         "typeParameters", option type_parameter_declaration tparams;
       ]
 
-    and identifier (loc, name) =
+    and identifier (loc, { Identifier.name; comments= _ }) =
       node "Identifier" loc [
         "name", string name;
         "typeAnnotation", null;
@@ -578,7 +578,7 @@ end with type t = Impl.t) = struct
       ]
 
     and pattern_identifier loc { Pattern.Identifier.
-      name = (_, name); annot; optional;
+      name = (_, { Identifier.name; comments= _ }); annot; optional;
     } =
       node "Identifier" loc [
         "name", string name;
@@ -1051,7 +1051,7 @@ end with type t = Impl.t) = struct
     )
 
     and implicit loc = generic_type (loc,
-      {Type.Generic.id = Type.Generic.Identifier.Unqualified (loc, "_"); targs = None})
+      {Type.Generic.id = Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "_")); targs = None})
 
     and explicit_or_implicit_targ x = match x with
     | Expression.TypeParameterInstantiation.Explicit t -> _type t
@@ -1286,7 +1286,7 @@ end with type t = Impl.t) = struct
       ]
 
     and type_param (loc, { Type.ParameterDeclaration.TypeParam.
-      name = (_, name);
+      name = (_, { Identifier.name; comments= _ });
       bound;
       variance = tp_var;
       default;

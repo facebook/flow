@@ -15,7 +15,7 @@ module Error = Parse_error
 
 module type TYPE = sig
   val _type : env -> (Loc.t, Loc.t) Ast.Type.t
-  val type_identifier : env -> Loc.t * string
+  val type_identifier : env -> Loc.t Ast.Identifier.t
   val type_parameter_declaration : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
   val type_parameter_declaration_with_defaults : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
   val type_parameter_instantiation : env -> (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option
@@ -549,7 +549,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       let is_constructor = String.equal "constructor" in
       let is_prototype = String.equal "prototype" in
       match key with
-      | Expression.Object.Property.Identifier (loc, name)
+      | Expression.Object.Property.Identifier (loc, { Identifier.name; comments= _ })
         when is_class && (is_constructor name || (is_static && is_prototype name)) ->
         error_at env (loc, Error.InvalidFieldName (name, is_static, false))
       | _ -> ()
@@ -659,20 +659,20 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           (* We speculatively parsed `static` as a static modifier, but now
              that we've parsed the next token, we changed our minds and want
              to parse `static` as the key of a named property. *)
-          let key = Expression.Object.Property.Identifier (
+          let key = Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source (
             static_loc,
             "static"
-          ) in
+          )) in
           let static = None in
           init_property env start_loc ~variance ~static ~proto key
         | None, Some proto_loc, (T_PLING | T_COLON) ->
           (* We speculatively parsed `proto` as a proto modifier, but now
              that we've parsed the next token, we changed our minds and want
              to parse `proto` as the key of a named property. *)
-          let key = Expression.Object.Property.Identifier (
+          let key = Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source (
             proto_loc,
             "proto"
-          ) in
+          )) in
           let proto = None in
           init_property env start_loc ~variance ~static ~proto key
         | _ ->
@@ -684,7 +684,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           in
           match object_key env with
           | _, (Expression.Object.Property.Identifier
-                (_, ("get" | "set" as name)) as key) ->
+                (_, { Identifier.name= ("get" | "set" as name); comments= _ }) as key) ->
               begin match Peek.token env with
               | T_LESS_THAN
               | T_LPAREN ->
@@ -747,9 +747,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       { Type.Interface.extends; body }
 
   and type_identifier env =
-    let loc, name = identifier_name env in
+    let loc, { Identifier.name; comments } = identifier_name env in
     if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType);
-    loc, name
+    loc, { Identifier.name; comments }
 
   and bounded_type env = with_loc (fun env ->
     let name = type_identifier env in

@@ -25,7 +25,7 @@ module Make
     method! expression (expr: (L.t, L.t) Ast.Expression.t) =
       let open Ast.Expression in
       if this#acc = true then expr else match expr with
-      | (_, Call { Call.callee = (_, Identifier (_, "eval")); _}) ->
+      | (_, Call { Call.callee = (_, Identifier (_, { Ast.Identifier.name= "eval"; comments= _ })); _}) ->
         this#set_acc true;
         expr
       | _ -> super#expression expr
@@ -129,7 +129,7 @@ module Make
           let locals = SMap.fold (fun _ def locals ->
             Nel.fold_left (fun locals loc -> L.LMap.add loc def locals) locals def.Def.locs
           ) defs L.LMap.empty in
-          let locals, globals = List.fold_left (fun (locals, globals) (loc, x) ->
+          let locals, globals = List.fold_left (fun (locals, globals) (loc, { Ast.Identifier.name= x; comments= _ }) ->
             match Env.get x env with
             | Some def -> L.LMap.add loc def locals, globals
             | None -> locals, SSet.add x globals
@@ -150,7 +150,7 @@ module Make
     method! jsx_identifier (id: L.t Ast.JSX.Identifier.t) =
       let open Ast.JSX.Identifier in
       let loc, {name} = id in
-      uses <- (loc, name)::uses;
+      uses <- Flow_ast_utils.ident_of_source(loc, name)::uses;
       id
 
     (* don't rename the `foo` in `x.foo` *)

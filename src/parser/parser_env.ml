@@ -276,7 +276,7 @@ let error_at env (loc, e) =
   match env.error_callback with
   | None -> ()
   | Some callback -> callback env e
-let record_export env (loc, export_name) =
+let record_export env (loc, { Identifier.name= export_name; comments= _ }) =
   if export_name = "" then () else (* empty identifiers signify an error, don't export it *)
   let exports = !(env.exports) in
   if SSet.mem export_name exports

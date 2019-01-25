@@ -88,7 +88,7 @@ val strict_error : env -> Parse_error.t -> unit
 val strict_error_at : env -> Loc.t * Parse_error.t -> unit
 val function_as_statement_error_at : env -> Loc.t -> unit
 val error_list : env -> (Loc.t * Parse_error.t) list -> unit
-val record_export: env -> Loc.t * string -> unit
+val record_export: env -> Loc.t Flow_ast.Identifier.t -> unit
 val enter_class : env -> unit
 val exit_class : env -> unit
 val add_declared_private : env -> string -> unit

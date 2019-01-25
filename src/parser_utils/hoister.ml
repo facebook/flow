@@ -35,14 +35,14 @@ end = struct
   let push = List.append
   let exists = List.exists
   let to_assoc t =
-    let xs, map = List.fold_left (fun (xs, map) (loc, x) ->
+    let xs, map = List.fold_left (fun (xs, map) (loc, { Ast.Identifier.name= x; comments= _ }) ->
       match SMap.get x map with
         | Some locs -> xs, SMap.add x (Nel.cons loc locs) map
         | None -> x::xs, SMap.add x (Nel.one loc) map
     ) ([], SMap.empty) (List.rev t) in
     List.rev_map (fun x -> x, Nel.rev @@ SMap.find x map) xs
   let to_map t =
-    let map = List.fold_left (fun map (loc, x) ->
+    let map = List.fold_left (fun map (loc, { Ast.Identifier.name= x; comments= _ }) ->
       match SMap.get x map with
         | Some locs -> SMap.add x (loc::locs) map
         | None -> SMap.add x [loc] map

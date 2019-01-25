@@ -31,7 +31,7 @@ class type_parameter_mapper = object(_)
     let res = super#type_parameter_declaration_type_param tparam in
     (* Recover the Type.typeparams corresponding to AST type parameters *)
     let tparam = Ast.Type.ParameterDeclaration.(
-      let _, { TypeParam.name = (_, t), name; bound; variance; default; } = tparam in
+      let _, { TypeParam.name = (_, t), { Ast.Identifier.name; comments= _ }; bound; variance; default; } = tparam in
       let reason = Type.reason_of_t t in
       let bound = match bound with
       | Ast.Type.Missing _ -> Type.MixedT.make reason
@@ -63,7 +63,7 @@ class type_parameter_mapper = object(_)
   method! class_ cls =
     let this_tparam = Ast.Class.(
       let { body = ((body_loc, self_t), _); id; _ } = cls in
-      let name = Option.value_map ~f:snd id ~default:"<<anonymous class>>" in
+      let name = Option.value_map ~f:Flow_ast_utils.name_of_ident id ~default:"<<anonymous class>>" in
       let name_loc = Option.value_map ~f:(fun ((loc, _), _) -> loc) id ~default:body_loc in
       { Type.
         name = "this";

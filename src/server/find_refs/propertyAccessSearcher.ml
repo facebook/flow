@@ -12,7 +12,7 @@ class property_access_searcher name = object(this)
   method! member loc expr =
     let open Ast.Expression.Member in
     begin match expr.property with
-      | PropertyIdentifier (_, x) when x = name ->
+      | PropertyIdentifier (_, { Ast.Identifier.name= id; comments= _ }) when id = name ->
           this#set_acc true
       | _ -> ()
     end;
@@ -20,7 +20,7 @@ class property_access_searcher name = object(this)
   method! object_key (key: (Loc.t, Loc.t) Ast.Expression.Object.Property.key) =
     let open Ast.Expression.Object.Property in
     begin match key with
-    | Identifier (_, x) when x = name ->
+    | Identifier (_, { Ast.Identifier.name= id; comments= _ }) when id = name ->
       this#set_acc true
     | _ -> ()
     end;
@@ -29,7 +29,7 @@ class property_access_searcher name = object(this)
     let open Ast.Pattern.Object.Property in
     let { key; _ } = prop in
     begin match key with
-    | Identifier (_, x) when x = name ->
+    | Identifier (_, { Ast.Identifier.name= id; comments= _ }) when id = name ->
       this#set_acc true
     | _ -> ()
     end;
@@ -44,13 +44,13 @@ class property_access_searcher name = object(this)
     let { declaration; _ } = decl in
     let open Ast.Statement in
     begin match declaration with
-    | Some (_, FunctionDeclaration { Ast.Function.id = Some (_, exported_name); _ })
-    | Some (_, ClassDeclaration { Ast.Class.id = Some (_, exported_name); _ }) ->
+    | Some (_, FunctionDeclaration { Ast.Function.id = Some (_, { Ast.Identifier.name= exported_name; comments= _ }); _ })
+    | Some (_, ClassDeclaration { Ast.Class.id = Some (_, { Ast.Identifier.name= exported_name; comments= _ }); _ }) ->
       if exported_name = name then
         this#set_acc true
     | Some (_, VariableDeclaration { VariableDeclaration.declarations = decls; _ }) ->
       Flow_ast_utils.fold_bindings_of_variable_declarations
-        (fun () (_, exported_name) -> if exported_name = name then this#set_acc true)
+        (fun () (_, { Ast.Identifier.name= exported_name; comments= _ }) -> if exported_name = name then this#set_acc true)
         () decls
     | _ -> ()
     (* TODO add type exports when find-refs supports them *)
@@ -69,7 +69,7 @@ class property_access_searcher name = object(this)
        * property references. *)
       | ImportNamespaceSpecifier _ -> ()
       | ImportNamedSpecifiers named_specifiers ->
-        named_specifiers |> List.iter begin fun {remote=(_, remote_name); _} ->
+        named_specifiers |> List.iter begin fun {remote=(_, { Ast.Identifier.name= remote_name; comments= _ }); _} ->
           if remote_name = name then
             this#set_acc true
         end

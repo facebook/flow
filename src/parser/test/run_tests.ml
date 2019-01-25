@@ -491,7 +491,7 @@ end = struct
       | _ -> Some expected
       end
     | (_, Literal _) -> Some diff
-    | (_, Identifier (_, "undefined")) ->
+    | (_, Identifier (_, { Ast.Identifier.name= "undefined"; comments= _ })) ->
         None
     | _ -> failwith "Invalid diff format"
 

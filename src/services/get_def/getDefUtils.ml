@@ -62,7 +62,7 @@ end = struct
         (key: (Loc.t, Loc.t) Flow_ast.Expression.Object.Property.key) =
       let open Flow_ast.Expression.Object in
       match key with
-      | Property.Identifier (prop_loc, name) when Loc.contains prop_loc target_loc ->
+      | Property.Identifier (prop_loc, { Flow_ast.Identifier.name; comments= _ }) when Loc.contains prop_loc target_loc ->
         this#set_acc (Some (literal_loc, prop_loc, name))
       | _ -> ()
   end

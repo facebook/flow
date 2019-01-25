@@ -848,7 +848,7 @@ Ast.Expression.(match x with
     (code_desc_of_expression ~wrap:false alternate)
   )
 | Function _ -> "function () { ... }"
-| Identifier (_, x) -> x
+| Identifier (_, { Ast.Identifier.name= x; comments= _ }) -> x
 | Import x -> "import(" ^ code_desc_of_expression ~wrap:false x ^ ")"
 | JSXElement x -> code_desc_of_jsx_element x
 | JSXFragment _ -> "<>...</>"
@@ -858,11 +858,12 @@ Ast.Expression.(match x with
 | Member { Member._object; property } -> Member.(
   let o = code_desc_of_expression ~wrap:true _object in
   o ^ (match property with
-  | PropertyIdentifier (_, x) -> "." ^ x
-  | PropertyPrivateName (_, (_, x)) -> ".#" ^ x
+  | PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) -> "." ^ x
+  | PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) -> ".#" ^ x
   | PropertyExpression x -> "[" ^ code_desc_of_expression ~wrap:false x ^ "]"
   ))
-| MetaProperty { MetaProperty.meta = (_, o); property = (_, p) } -> o ^ "." ^ p
+| MetaProperty { MetaProperty.meta = (_, { Ast.Identifier.name= o; comments= _ }); property = (_, { Ast.Identifier.name= p; comments= _ }) } ->
+  o ^ "." ^ p
 | New { New.callee; targs; arguments } ->
   let targs = match targs with
   | None -> ""
@@ -897,8 +898,8 @@ Ast.Expression.(match x with
   } ->
   let o = code_desc_of_expression ~wrap:true _object in
   o ^ Member.(match property with
-  | PropertyIdentifier (_, x) -> (if optional then "?." else ".") ^ x
-  | PropertyPrivateName (_, (_, x)) -> (if optional then "?.#" else ".#") ^ x
+  | PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) -> (if optional then "?." else ".") ^ x
+  | PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) -> (if optional then "?.#" else ".#") ^ x
   | PropertyExpression x ->
     (if optional then "?.[" else "[") ^ code_desc_of_expression ~wrap:false x ^ "]"
   )
@@ -945,7 +946,7 @@ Ast.Expression.(match x with
 and code_desc_of_pattern (_, x) = Ast.Pattern.(match x with
 | Object _ -> "{...}"
 | Array _ -> "[...]"
-| Identifier { Identifier.name = (_, name); _ } -> name
+| Identifier { Identifier.name = (_, { Ast.Identifier.name; comments= _ }); _ } -> name
 | Expression x -> code_desc_of_expression ~wrap:false x
 )
 

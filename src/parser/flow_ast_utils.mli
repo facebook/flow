@@ -10,13 +10,13 @@ type 'loc ident = 'loc * string
 type 'loc source = 'loc * string
 
 val fold_bindings_of_pattern:
-  ('a -> 'loc binding -> 'a) ->
+  ('a -> 'loc Flow_ast.Identifier.t -> 'a) ->
   'a ->
   ('loc, 'loc) Flow_ast.Pattern.t' ->
   'a
 
 val fold_bindings_of_variable_declarations:
-  ('a -> 'loc binding -> 'a) ->
+  ('a -> 'loc Flow_ast.Identifier.t -> 'a) ->
   'a ->
   ('loc, 'loc) Flow_ast.Statement.VariableDeclaration.Declarator.t list ->
   'a
@@ -37,6 +37,22 @@ val loc_of_statement:
 
 val loc_of_pattern:
   ('a, 'a) Flow_ast.Pattern.t -> 'a
+
+val loc_of_ident:
+  ('a) Flow_ast.Identifier.t -> 'a
+
+val name_of_ident:
+  ('a) Flow_ast.Identifier.t -> string
+
+val source_of_ident:
+  ('a) Flow_ast.Identifier.t -> 'a source
+
+val ident_of_source:
+  'a source -> ('a) Flow_ast.Identifier.t
+
+val mk_no_comments:
+  'a ->
+  ('loc, 'a) Flow_ast.Syntax.t
 
 module ExpressionSort: sig
   type t =

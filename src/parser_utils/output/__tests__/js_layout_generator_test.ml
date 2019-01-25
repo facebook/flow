@@ -10,6 +10,7 @@ open Ast_builder
 open Layout_test_utils
 open Layout_generator_test_utils
 
+module I = Ast_builder.Identifiers
 module S = Ast_builder.Statements
 module E = Ast_builder.Expressions
 module F = Ast_builder.Functions
@@ -810,7 +811,7 @@ let tests = "js_layout_generator" >::: [
       (* sequences get split across lines and wrapped in parens *)
       let x40 = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" in
       let y40 = "yyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyyy" in
-      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [
+      let func = S.function_declaration (I.identifier "f") ~body:(F.body [
         S.return (Some (E.sequence [E.identifier x40; E.identifier y40]));
       ]) in
       assert_layout_result ~ctxt
@@ -841,7 +842,7 @@ let tests = "js_layout_generator" >::: [
 
       (* logicals get split *)
       let logical = E.logical_and (E.identifier x40) (E.identifier y40) in
-      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [S.return (Some logical)]) in
+      let func = S.function_declaration (I.identifier "f") ~body:(F.body [S.return (Some logical)]) in
       assert_layout_result ~ctxt
         L.(loc (fused [
           atom "return";
@@ -864,7 +865,7 @@ let tests = "js_layout_generator" >::: [
 
       (* binary expressions get split *)
       let plus = E.plus (E.identifier x40) (E.identifier y40) in
-      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [
+      let func = S.function_declaration (I.identifier "f") ~body:(F.body [
         S.return (Some plus)
       ]) in
       assert_layout_result ~ctxt
@@ -890,7 +891,7 @@ let tests = "js_layout_generator" >::: [
       (* jsx gets split *)
       let long_name = String.make 80 'A' in
       let jsx = E.jsx_element (J.element (J.identifier long_name)) in
-      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [S.return (Some jsx)]) in
+      let func = S.function_declaration (I.identifier "f") ~body:(F.body [S.return (Some jsx)]) in
       assert_layout_result ~ctxt
         L.(loc (fused [
           atom "return";
@@ -913,7 +914,7 @@ let tests = "js_layout_generator" >::: [
 
       (* a string doesn't get split *)
       let x80 = x40 ^ x40 in
-      let func = S.function_declaration (Loc.none, "f") ~body:(F.body [
+      let func = S.function_declaration (I.identifier "f") ~body:(F.body [
         S.return (Some (E.identifier x80))
       ]) in
       assert_layout_result ~ctxt
@@ -1028,7 +1029,7 @@ let tests = "js_layout_generator" >::: [
     begin fun ctxt ->
       let ast = S.if_
         (E.identifier "x")
-        (S.labeled (Loc.none, "y") (S.expression (E.identifier "z")))
+        (S.labeled (I.identifier "y") (S.expression (E.identifier "z")))
         (Some (S.expression (E.identifier "z")))
       in
       assert_statement ~ctxt "if(x)y:z;else z;" ast;
@@ -1172,7 +1173,7 @@ let tests = "js_layout_generator" >::: [
   "do_while_statements" >::
     begin fun ctxt ->
       let ast = S.do_while
-        (S.labeled (Loc.none, "x") (S.expression (E.identifier "z")))
+        (S.labeled (I.identifier "x") (S.expression (E.identifier "z")))
         (E.identifier "y")
       in
       assert_statement ~ctxt "do x:z;while(y);" ast;
@@ -1187,7 +1188,7 @@ let tests = "js_layout_generator" >::: [
 
   "labeled_empty_statement" >:: begin fun ctxt ->
     let layout = Js_layout_generator.statement (
-      S.labeled (Loc.none, "x") (S.empty ())
+      S.labeled (I.identifier "x") (S.empty ())
     ) in
     assert_output ~ctxt "x:;" layout;
     assert_output ~ctxt ~pretty:true "x: ;" layout;
@@ -1371,9 +1372,9 @@ let tests = "js_layout_generator" >::: [
 
       begin
         let ast = S.class_declaration
-          ~id:(Loc.none, "a")
+          ~id:(I.identifier "a")
           ~super:(E.identifier "b")
-          ~implements:[Ast_builder.Classes.implements (Loc.none, "c")]
+          ~implements:[Ast_builder.Classes.implements (I.identifier "c")]
           []
         in
         let layout = Js_layout_generator.statement ast in
@@ -1407,7 +1408,7 @@ let tests = "js_layout_generator" >::: [
       begin
         let x35 = String.make 35 'x' in
         let y29 = String.make 29 'y' in
-        let c2 = S.class_declaration ~id:(Loc.none, x35) ~super:(E.identifier y29) [] in
+        let c2 = S.class_declaration ~id:(I.identifier x35) ~super:(E.identifier y29) [] in
         let ast = S.block [c2] in
         let layout = Js_layout_generator.statement ast in
         assert_layout ~ctxt

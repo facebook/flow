@@ -44,7 +44,7 @@ class ruleset_rtest = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 

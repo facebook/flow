@@ -112,12 +112,12 @@ module DocumentSymbols = struct
     let open Ast.Expression.Object.Property in
     match key with
     | Literal (_, { Ast.Literal.raw; _ }) -> Some raw
-    | Identifier (_, id) -> Some id
-    | PrivateName (_, (_, id)) -> Some id
+    | Identifier (_, { Ast.Identifier.name= id; comments= _ }) -> Some id
+    | PrivateName (_, (_, { Ast.Identifier.name= id; comments= _ })) -> Some id
     | Computed (_, _) -> None
 
-  let name_of_id ((_, id): Loc.t Ast.Identifier.t) : string =
-    id
+  let name_of_id ((_, { Ast.Identifier.name; comments= _ }): Loc.t Ast.Identifier.t) : string =
+    name
 
   let name_of_id_opt (id_opt: Loc.t Ast.Identifier.t option) : string option =
     Option.map id_opt ~f:name_of_id
@@ -168,7 +168,7 @@ module DocumentSymbols = struct
       ast_key ~uri ~containerName ~acc ~loc ~key ~kind:Lsp.SymbolInformation.Property
     | Body.Property (loc, { Property.key; _ }) ->
       ast_key ~uri ~containerName ~acc ~loc ~key ~kind:Lsp.SymbolInformation.Property
-    | Body.PrivateField (loc, { PrivateField.key = (_, (_, name)); _ }) ->
+    | Body.PrivateField (loc, { PrivateField.key = (_, (_, { Ast.Identifier.name; comments= _ })); _ }) ->
       ast_name ~uri ~containerName ~acc ~loc ~name ~kind:Lsp.SymbolInformation.Field
 
   let ast_class

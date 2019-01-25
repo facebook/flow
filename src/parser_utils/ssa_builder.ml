@@ -155,7 +155,7 @@ module Make
       | Return
       | Throw
 
-    let label_opt = Option.map ~f:(fun (_loc, label) -> label)
+    let label_opt = Option.map ~f:(Flow_ast_utils.name_of_ident)
 
     let break x = Break (label_opt x)
     let continue x = Continue (label_opt x)
@@ -389,7 +389,7 @@ module Make
     (* write *)
     method! pattern_identifier ?kind (ident: L.t Ast.Identifier.t) =
       ignore kind;
-      let loc, x = ident in
+      let loc, { Ast.Identifier.name= x; comments= _ } = ident in
       begin match SMap.get x ssa_env with
         | Some { val_ref; havoc } ->
           val_ref := Val.one loc;
@@ -407,7 +407,7 @@ module Make
       end;
 
     method! identifier (ident: L.t Ast.Identifier.t) =
-      let loc, x = ident in
+      let loc, { Ast.Identifier.name= x; comments= _ } = ident in
       this#any_identifier loc x;
       super#identifier ident
 

@@ -69,7 +69,7 @@ let rec string_of_pattern (pattern : (Loc.t, Loc.t) P.t') =
   match pattern with
   | P.Identifier id ->
     let open P.Identifier in
-    (snd id.name) ^
+    (Flow_ast_utils.name_of_ident id.name) ^
     (if id.optional then "?" else "") ^ " " ^
     (match id.annot with
      | Ast.Type.Available (_, (_, t)) -> " : " ^ (string_of_type t)
@@ -83,7 +83,7 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
       | E.Object.Property (_, E.Object.Property.Init p) ->
         let open E.Object.Property in
         (match p.key, p.value with
-         | Identifier (_, name), (_, e) -> name ^ " : " ^ (string_of_expr e)
+         | Identifier (_, { Ast.Identifier.name; comments= _ }), (_, e) -> name ^ " : " ^ (string_of_expr e)
          | _ -> failwith "Unsupported expression")
       | _ -> failwith "Unsupported property" in
     String.concat ", " (Core_list.map ~f:helper plist) in
@@ -120,14 +120,14 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
       |> Core_list.map ~f:string_of_expr
       |> String.concat ", " in
     callee_str ^ "(" ^ arglist_str ^ ")"
-  | E.Identifier (_, id) -> id
+  | E.Identifier (_, { Ast.Identifier.name; comments= _ }) -> name
   | E.Member mem ->
     let open E.Member in
     let obj_str = string_of_expr (snd mem._object) in
     let prop_str = match mem.property with
-      | PropertyIdentifier (_, id) -> id
+      | PropertyIdentifier (_, { Ast.Identifier.name; comments= _ }) -> name
       | PropertyExpression (_, e) -> string_of_expr e
-      | PropertyPrivateName (_, (_, id)) -> id in
+      | PropertyPrivateName (_, (_, { Ast.Identifier.name; comments= _ })) -> name in
     obj_str ^ "." ^ prop_str
   | E.TypeCast cast ->
     let open E.TypeCast in
@@ -162,7 +162,7 @@ and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
   | S.FunctionDeclaration func ->
     let open Ast.Function in
     let fname = match func.id with
-      | Some (_, n) -> n
+      | Some (_, { Ast.Identifier.name; comments= _ }) -> name
       | None -> "" in
     let params_str =
       let (_, { Ast.Function.Params.params; rest = _ }) = func.params in
@@ -221,8 +221,8 @@ and string_of_type (t : (Loc.t, Loc.t) T.t') =
         let open T.Object.Property in
         let key_str = match p.key with
           | E.Object.Property.Literal (_, lit)  -> Ast.Literal.(lit.raw)
-          | E.Object.Property.Identifier (_, name) -> name
-          | E.Object.Property.PrivateName (_, (_, name)) -> name
+          | E.Object.Property.Identifier (_, { Ast.Identifier.name; comments= _ }) -> name
+          | E.Object.Property.PrivateName (_, (_, { Ast.Identifier.name; comments= _ })) -> name
           | E.Object.Property.Computed (_, e) -> string_of_expr e in
         let t_str = match p.value with
           | Init (_, init_t) -> string_of_type init_t
@@ -250,7 +250,7 @@ and string_of_type (t : (Loc.t, Loc.t) T.t') =
       let open T.Function.Param in
       let opt_str = if param.optional then "?" else "" in
       let name_str = match param.name with
-        | Some (_, id) -> id ^ opt_str ^ " : "
+        | Some (_, { Ast.Identifier.name; comments= _ }) -> name ^ opt_str ^ " : "
         | None -> "" in
       name_str ^ (string_of_type (snd param.annot)) in
     let params_str =
@@ -339,7 +339,7 @@ let rm_vardecl
   let is_target (decl : (Loc.t, Loc.t) S.VariableDeclaration.Declarator.t) =
     let decl' = (snd decl) in
     match decl'.id with
-    | (_, P.Identifier { P.Identifier.name = (_, name); _;})
+    | (_, P.Identifier { P.Identifier.name = (_, { Ast.Identifier.name; comments= _ }); _;})
       -> name != vname
     | _ -> true in
 
@@ -445,7 +445,7 @@ module Config = struct
     let prop_list =
       let open E.Object.Property in
       Core_list.map ~f:(fun (k, v) ->
-          let key = Identifier (Loc.none, "\"" ^ k ^ "\"") in
+          let key = Identifier (Flow_ast_utils.ident_of_source (Loc.none, "\"" ^ k ^ "\"")) in
           let value = Loc.none, expr_of_value v in
           Property (Loc.none, Init {key;
                                value;

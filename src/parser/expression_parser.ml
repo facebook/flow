@@ -37,7 +37,7 @@ module Expression
     a_prec >= b_prec
 
   let is_assignable_lhs = Expression.(function
-    | _, MetaProperty { MetaProperty.meta = (_, "new"); property = (_, "target") }
+    | _, MetaProperty { MetaProperty.meta = (_, { Identifier.name= "new"; comments= _ }); property = (_, { Identifier.name= "target"; comments= _ }) }
       -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
 
     | _, Array _
@@ -127,7 +127,7 @@ module Expression
       (* async x => 123 -- and we've already parsed async as an identifier
        * expression *)
       | _ when Peek.is_identifier env -> begin match ret with
-        | Cover_expr (_, Expression.Identifier (_, "async"))
+        | Cover_expr (_, Expression.Identifier (_, { Identifier.name= "async"; comments= _ }))
             when not (Peek.is_line_terminator env) ->
           raise Try.Rollback
         | _ -> ret
@@ -191,7 +191,7 @@ module Expression
   ) env
 
   and is_lhs = Expression.(function
-    | _, MetaProperty { MetaProperty.meta = (_, "new"); property = (_, "target") }
+    | _, MetaProperty { MetaProperty.meta = (_, { Identifier.name= "new"; comments= _ }); property = (_, { Identifier.name= "target"; comments= _ }) }
       -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
 
     | _, Identifier _
@@ -423,7 +423,7 @@ module Expression
             if not (is_lhs argument)
             then error_at env (fst argument, Error.InvalidLHSInAssignment);
             (match argument with
-            | _, Expression.Identifier (_, name)
+            | _, Expression.Identifier (_, { Identifier.name; comments= _ })
               when is_restricted name ->
                 strict_error env Error.StrictLHSPrefix
             | _ -> ());
@@ -470,7 +470,7 @@ module Expression
         if not (is_lhs argument)
         then error_at env (fst argument, Error.InvalidLHSInAssignment);
         (match argument with
-        | _, Expression.Identifier (_, name)
+        | _, Expression.Identifier (_, { Identifier.name; comments= _ })
           when is_restricted name ->
             strict_error env Error.StrictLHSPostfix
         | _ -> ());
@@ -512,7 +512,7 @@ module Expression
       let super =
         if not allowed then begin
           error_at env (loc, Parse_error.UnexpectedSuper);
-          loc, Expression.Identifier (loc, "super")
+          loc, Expression.Identifier (Flow_ast_utils.ident_of_source(loc, "super"))
         end else
           super
       in
@@ -521,7 +521,7 @@ module Expression
       let super =
         if not call_allowed then begin
           error_at env (loc, Parse_error.UnexpectedSuperCall);
-          loc, Expression.Identifier (loc, "super")
+          loc, Expression.Identifier (Flow_ast_utils.ident_of_source(loc, "super"))
         end else
           super
       in
@@ -586,7 +586,7 @@ module Expression
 
     if in_function env && Peek.token env = T_PERIOD then begin
       Expect.token env T_PERIOD;
-      let meta = start_loc, "new" in
+      let meta = Flow_ast_utils.ident_of_source(start_loc, "new") in
       match Peek.token env with
       | T_IDENTIFIER { raw = "target"; _ } ->
         let property = Parse.identifier env in
@@ -723,7 +723,7 @@ module Expression
     let static ?(allow_optional_chain=true) ?(in_optional_chain=false)
                ?(optional=false) env start_loc left =
       let id_loc, id, is_private = property_name_include_private env in
-      if is_private then add_used_private env (snd id) id_loc;
+      if is_private then add_used_private env (Flow_ast_utils.name_of_ident id) id_loc;
       let loc = Loc.btwn start_loc id_loc in
       let open Expression.Member in
       let property = if is_private then PropertyPrivateName (id_loc, id)
@@ -1179,7 +1179,7 @@ module Expression
   and property_name_include_private env =
     let start_loc = Peek.loc env in
     let is_private = Expect.maybe env T_POUND in
-    let id_loc, ident = identifier_name env in
+    let (id_loc, _) as id = identifier_name env in
     let loc = Loc.btwn start_loc id_loc in
-    loc, (id_loc, ident), is_private
+    loc, id, is_private
 end

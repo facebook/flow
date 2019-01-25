@@ -790,7 +790,7 @@ module This = struct
     method! generic_identifier_type (git: (ALoc.t, ALoc.t) Ast.Type.Generic.Identifier.t) =
       let open Ast.Type.Generic.Identifier in
       match git with
-      | Unqualified (_, "this") -> raise FoundInClass
+      | Unqualified (_, { Ast.Identifier.name= "this"; comments= _ }) -> raise FoundInClass
       | _ -> super#generic_identifier_type git
   end
 

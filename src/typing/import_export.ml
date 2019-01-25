@@ -147,7 +147,7 @@ let nameify_default_export_decl decl = Flow_ast.Statement.(
     if func_decl.id <> None then decl, identity else
       (loc, FunctionDeclaration {
         func_decl with
-          id = Some (loc, internal_name "*default*");
+          id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
       }), (function
         | x, FunctionDeclaration func_decl ->
           x, FunctionDeclaration { func_decl with id = None }
@@ -159,7 +159,7 @@ let nameify_default_export_decl decl = Flow_ast.Statement.(
     if class_decl.id <> None then decl, identity else
       (loc, ClassDeclaration {
         class_decl with
-          id = Some (loc, internal_name "*default*");
+          id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
       }), (function
         | x, ClassDeclaration class_decl ->
           x, ClassDeclaration { class_decl with id = None }

@@ -203,7 +203,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   );
 
   (* early-add our own name binding for recursive calls. *)
-  Option.iter id ~f:(fun (loc, name) ->
+  Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) ->
     let entry = EmptyT.at loc |> Scope.Entry.new_var ~loc in
     Scope.add_entry name entry function_scope
   );

@@ -340,7 +340,7 @@ let layout_node_with_comments current_loc layout_node =
 let source_location_with_comments (current_loc, layout_node) =
   layout_node_with_comments current_loc (SourceLocation (current_loc, layout_node))
 
-let identifier_with_comments (current_loc, name) =
+let identifier_with_comments (current_loc, { Ast.Identifier.name; comments= _ }) =
   layout_node_with_comments current_loc (Identifier (current_loc, name))
 
 (* Generate JS layouts *)
@@ -907,7 +907,7 @@ and call ?(optional=false) ~precedence ~ctxt call_node =
   (* __d hack, force parens around factory function.
     More details at: https://fburl.com/b1wv51vj
     TODO: This is FB only, find generic way to add logic *)
-  | (_, Ast.Expression.Identifier (_, "__d")), None, [a; b; c; d] ->
+  | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name= "__d"; comments= _ })), None, [a; b; c; d] ->
     let lparen = if optional then ".?(" else "(" in
     group [
       Atom "__d";
@@ -1022,9 +1022,9 @@ and member ?(optional=false) ~precedence ~ctxt member_node =
     end;
     ldelim;
     begin match property with
-    | Ast.Expression.Member.PropertyIdentifier (loc, id) ->
+    | Ast.Expression.Member.PropertyIdentifier (loc, { Ast.Identifier.name= id; comments= _ }) ->
       source_location_with_comments (loc, Atom id)
-    | Ast.Expression.Member.PropertyPrivateName (loc, (_, id)) ->
+    | Ast.Expression.Member.PropertyPrivateName (loc, (_, { Ast.Identifier.name= id; comments= _ })) ->
       source_location_with_comments (loc, Atom ("#" ^ id))
     | Ast.Expression.Member.PropertyExpression expr ->
       expression ~ctxt expr
@@ -1403,9 +1403,9 @@ and class_property (loc, { Ast.Class.Property.
   class_property_helper loc (object_property_key key) value static annot variance
 
 and class_private_field (loc, { Ast.Class.PrivateField.
-  key = (ident_loc, ident); value; static; annot; variance
+  key = (ident_loc, (_, { Ast.Identifier.name; comments= _ })); value; static; annot; variance
 }) =
-  class_property_helper loc (identifier (ident_loc, "#" ^ (snd ident))) value static annot
+  class_property_helper loc (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name))) value static annot
     variance
 
 and class_body (loc, { Ast.Class.Body.body }) =
@@ -1671,7 +1671,8 @@ and jsx_fragment loc { Ast.JSX.frag_openingElement; frag_closingElement; frag_ch
     jsx_closing_fragment frag_closingElement;
   ]
 
-and jsx_identifier (loc, { Ast.JSX.Identifier.name }) = identifier_with_comments (loc, name)
+and jsx_identifier (loc, { Ast.JSX.Identifier.name }) =
+  identifier_with_comments @@ Flow_ast_utils.ident_of_source (loc, name)
 
 and jsx_namespaced_name (loc, { Ast.JSX.NamespacedName.namespace; name }) =
   source_location_with_comments (loc, fuse [
@@ -2049,7 +2050,7 @@ and switch_case ~last (loc, { Ast.Statement.Switch.Case.test; consequent }) =
   )
 
 and type_param (_, { Ast.Type.ParameterDeclaration.TypeParam.
-  name = (loc, name); bound; variance = variance_; default
+  name = (loc, { Ast.Identifier.name; comments= _ }); bound; variance = variance_; default
 }) =
   fuse [
     option variance variance_;

@@ -88,7 +88,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
         | Property (loc, prop) ->
             begin match prop with
             | { Property.
-                key = Property.Identifier (loc, name);
+                key = Property.Identifier (loc, { Ast.Identifier.name; comments= _ });
                 pattern = p;
                 default = d;
                 shorthand;
@@ -105,7 +105,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 let init = Option.map init (fun init ->
                   loc, Ast.Expression.(Member Member.({
                     _object = init;
-                    property = PropertyIdentifier (loc, name);
+                    property = PropertyIdentifier (Flow_ast_utils.ident_of_source (loc, name));
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->
@@ -135,8 +135,9 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 let p, d = recurse_with_default_opt ~parent_pattern_t tvar init default loc p d in
                 let key = match prop.Property.key with
                   | Property.Literal _ as key -> key
-                  | Property.Identifier (loc, name) ->
-                    Property.Identifier ((loc, tvar), name)
+                  | Property.Identifier (loc, { Ast.Identifier.name; comments= _ }) ->
+                    (* Stripping comments is okay because they're not relevant in this context *)
+                    Property.Identifier ((loc, tvar), { Ast.Identifier.name; comments= None })
                   | Property.Computed _ -> assert_false "precondition not met"
                 in
                 name :: xs,
@@ -190,7 +191,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       (top_loc, curr_t), Object { Object.properties; annot }
     )
 
-  | loc, Identifier { Identifier.name = (id_loc, name); optional; annot } ->
+  | loc, Identifier { Identifier.name = (id_loc, { Ast.Identifier.name; comments= _ }); optional; annot } ->
       begin match parent_pattern_t with
       (* If there was a parent pattern, we already dispatched the hook if relevant. *)
       | Some _ -> ()
@@ -220,7 +221,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
       f ~use_op loc name default curr_t;
       (* Type annotations in patterns are currently ignored *)
       let annot = Typed_ast_utils.unimplemented_mapper#type_annotation_hint annot in
-      (loc, curr_t), Identifier { Identifier.name = ((id_loc, curr_t), name); optional; annot; }
+      (loc, curr_t), Identifier { Identifier.name = (Flow_ast_utils.ident_of_source ((id_loc, curr_t), name)); optional; annot; }
 
   | loc, Expression e ->
       Flow_js.add_output cx Flow_error.(EUnsupportedSyntax

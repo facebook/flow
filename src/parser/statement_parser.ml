@@ -87,7 +87,7 @@ module Statement
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
         then None
         else begin
-          let (_, name) as label =
+          let (_, { Identifier.name; comments= _ }) as label =
             Parse.identifier env in
           if not (SSet.mem name (labels env))
           then error env (Error.UnknownLabel name);
@@ -108,7 +108,7 @@ module Statement
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
         then None
         else begin
-          let (_, name) as label =
+          let (_, { Identifier.name; comments= _ }) as label =
             Parse.identifier env in
           if not (SSet.mem name (labels env))
           then error env (Error.UnknownLabel name);
@@ -496,7 +496,7 @@ module Statement
   and maybe_labeled = with_loc (fun env ->
     match (Parse.expression env, Peek.token env) with
     | ((loc, Ast.Expression.Identifier label), T_COLON) ->
-        let _, name = label in
+        let _, { Identifier.name; comments= _ } = label in
         Expect.token env T_COLON;
         if SSet.mem name (labels env)
         then error_at env (loc, Error.Redeclaration ("Label", name));
@@ -910,7 +910,7 @@ module Statement
     ) in
     List.fold_left fold
 
-  and extract_ident_name (_, name) = name
+  and extract_ident_name (_, { Identifier.name; comments= _ }) = name
 
   and export_specifiers ?(preceding_comma=true) env specifiers =
     match Peek.token env with
@@ -958,7 +958,7 @@ module Statement
         let default, () = with_loc (fun env ->
           Expect.token env T_DEFAULT
         ) env in
-        record_export env (Loc.btwn start_loc (Peek.loc env), "default");
+        record_export env (Flow_ast_utils.ident_of_source (Loc.btwn start_loc (Peek.loc env), "default"));
         let declaration =
           if Peek.is_function env then
             (* export default [async] function [foo] (...) { ... } *)
@@ -998,7 +998,7 @@ module Statement
           }
         | _ ->
           let loc, type_alias = with_loc type_alias_helper env in
-          record_export env (loc, extract_ident_name type_alias.Statement.TypeAlias.id);
+          record_export env (Flow_ast_utils.ident_of_source(loc, extract_ident_name type_alias.Statement.TypeAlias.id));
           let type_alias = (loc, Statement.TypeAlias type_alias) in
           Statement.ExportNamedDeclaration {
             declaration = Some type_alias;
@@ -1011,7 +1011,7 @@ module Statement
         (* export opaque type ... *)
         let open Statement.ExportNamedDeclaration in
         let loc, opaque_t = with_loc opaque_type_helper env in
-        record_export env (loc, extract_ident_name opaque_t.Statement.OpaqueType.id);
+        record_export env (Flow_ast_utils.ident_of_source((loc, extract_ident_name opaque_t.Statement.OpaqueType.id)));
         let opaque_t = (loc, Statement.OpaqueType opaque_t) in
         Statement.ExportNamedDeclaration {
           declaration = Some opaque_t;
@@ -1027,7 +1027,7 @@ module Statement
         let interface = interface env in
         (match interface with
           | (loc, Statement.InterfaceDeclaration {Statement.Interface.id; _;}) ->
-            record_export env (loc, extract_ident_name id)
+            record_export env (Flow_ast_utils.ident_of_source(loc, extract_ident_name id))
           | _ -> failwith (
               "Internal Flow Error! Parsed `export interface` into something " ^
               "other than an interface declaration!"
@@ -1061,7 +1061,7 @@ module Statement
             ) [] declarations
           | (loc, ClassDeclaration { Class.id = Some id; _; })
           | (loc, FunctionDeclaration { Function.id = Some id; _; })
-            -> [(loc, extract_ident_name id)]
+            -> [Flow_ast_utils.ident_of_source (loc, extract_ident_name id)]
           | (loc, ClassDeclaration { Class.id = None; _; }) ->
             error_at env (loc, Error.ExportNamelessClass);
             []

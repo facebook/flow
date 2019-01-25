@@ -20,7 +20,12 @@ module%gen rec Syntax: sig
 end = Syntax
 
 and Identifier : sig
-  type 'M t = 'M * string
+  type 'M t = 'M * 'M t'
+
+  and 'M t' = {
+    name: string;
+    comments: ('M, unit) Syntax.t option
+  }
   [@@deriving show]
 end = Identifier
 

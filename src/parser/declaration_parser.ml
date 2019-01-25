@@ -74,14 +74,14 @@ module Declaration
     and identifier_pattern check_env {Pattern.Identifier.name=id; _;} =
       identifier check_env id
 
-    and identifier (env, param_names) (loc, name as id) =
+    and identifier (env, param_names) (loc, { Identifier.name; comments= _ } as id) =
       if SSet.mem name param_names
       then error_at env (loc, Error.StrictParamDupe);
       let env, param_names =
         identifier_no_dupe_check (env, param_names) id in
       env, SSet.add name param_names
 
-    and identifier_no_dupe_check (env, param_names) (loc, name) =
+    and identifier_no_dupe_check (env, param_names) (loc, { Identifier.name; comments= _ }) =
       if is_restricted name
       then strict_error_at env (loc, Error.StrictParamName);
       if is_future_reserved name || is_strict_reserved name
@@ -107,7 +107,7 @@ module Declaration
         then env |> with_strict (not (Parser_env.in_strict_mode env))
         else env in
       (match id with
-      | Some (loc, name) ->
+      | Some (loc, { Identifier.name; comments= _ }) ->
           if is_restricted name
           then strict_error_at env (loc, Error.StrictFunctionName);
           if is_future_reserved name || is_strict_reserved name

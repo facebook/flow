@@ -281,7 +281,7 @@ class ruleset_base = object(self)
       let prop_types =
         Core_list.map ~f:(fun (name, (_, e), index) ->
             let open T.Object.Property in
-            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, name);
+            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, name));
                                           value = Init (Loc.none, e);
                                           optional = if index >= prop_num then true else false;
                                           static = false;
@@ -318,7 +318,7 @@ class ruleset_base = object(self)
       let prop_types =
         Core_list.map ~f:(fun (name, t, index) ->
             let open T.Object.Property in
-            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, name);
+            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, name));
                                           value = Init (Loc.none, t);
                                           optional = if index >= prop_num then true else false;
                                           static = false;
@@ -398,9 +398,9 @@ class ruleset_base = object(self)
       let o_type = match otype with
         | T.Object o -> o
         | _ -> failwith "Has to be an object type" in
-      if pexpr = E.Identifier (Loc.none, "_number_prop_") then
+      if pexpr = E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, "_number_prop_")) then
         let new_prop = let open T.Object.Property in
-          {key = E.Object.Property.Identifier (Loc.none, (Utils.string_of_expr pexpr));
+          {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, (Utils.string_of_expr pexpr)));
            value = Init (Loc.none, T.Number);
            optional = false;
            static = false;
@@ -432,7 +432,7 @@ class ruleset_base = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), init_type)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), init_type)) in
     let new_env = self#add_binding new_env (Type init_type) in
     var_decl, new_env
 
@@ -458,7 +458,7 @@ class ruleset_base = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 
@@ -539,7 +539,7 @@ class ruleset_base = object(self)
 
     (* We don't support recursion at this point, since in the syntax
        there's no way to stop recursion *)
-    let fenv = (Expr (E.Identifier (Loc.none, pname), param_type)) :: env in
+    let fenv = (Expr (E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname)), param_type)) :: env in
 
     (* return expression and its type *)
     let func_return_type =
@@ -572,7 +572,7 @@ class ruleset_base = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, fname)), ret_type)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, fname))), ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
     func_def, new_env
 
@@ -620,7 +620,7 @@ class ruleset_base = object(self)
     (* produce a write syntax *)
     let write =
       Syntax.mk_prop_write
-        (Utils.string_of_expr (E.Identifier (Loc.none, pname)))
+        (Utils.string_of_expr (E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname))))
         (Utils.string_of_expr pexpr)
         rhs_expr in
 
@@ -641,7 +641,7 @@ class ruleset_base = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, fname)), ret_type)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, fname))), ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
     func_def, new_env
 

@@ -34,7 +34,7 @@ module type PARSER = sig
   val identifier : ?restricted_error:Error.t -> env -> Loc.t Identifier.t
   val identifier_with_type : env -> ?no_optional:bool -> Error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
   val assert_identifier_name_is_identifier :
-    ?restricted_error:Error.t -> env -> Loc.t * string -> unit
+    ?restricted_error:Error.t -> env -> Loc.t Identifier.t -> unit
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
   val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
   val jsx_element_or_fragment :
@@ -123,7 +123,7 @@ let identifier_name env =
   | _ -> error_unexpected env; ""
   in
   Eat.token env;
-  loc, name
+  Flow_ast_utils.ident_of_source (loc, name)
 
 (**
  * The abstract operation IsLabelledFunction

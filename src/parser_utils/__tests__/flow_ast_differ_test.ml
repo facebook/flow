@@ -63,11 +63,11 @@ class useless_mapper = object(this)
       { expr with operator=Minus }
 
   method! identifier id =
-    let (loc, name) = id in
+    let (loc, { Ast.Identifier.name; comments= _ }) = id in
     match name with
-      | "rename" -> (loc, "gotRenamed")
-      | "Rename" -> (loc, "GotRenamed")
-      | "RENAME" -> (loc, "GOT_RENAMED")
+      | "rename" -> Flow_ast_utils.ident_of_source (loc, "gotRenamed")
+      | "Rename" -> Flow_ast_utils.ident_of_source (loc, "GotRenamed")
+      | "RENAME" -> Flow_ast_utils.ident_of_source (loc, "GOT_RENAMED")
       | _ -> id
 
   method! variable_declaration loc (decl: (Loc.t, Loc.t) Ast.Statement.VariableDeclaration.t) =
@@ -287,7 +287,7 @@ class insert_import_mapper = object
           specifiers = Some
             (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
               [{ kind = None;
-                 local = None; remote = (loc, "baz") }])}
+                 local = None; remote = Flow_ast_utils.ident_of_source (loc, "baz") }])}
         in
       imp::stmts
     end else super#statement_list stmts
@@ -310,7 +310,7 @@ class insert_second_import_mapper = object
           specifiers = Some
             (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers
               [{ kind = None;
-                 local = None; remote = (loc, "baz") }])}
+                 local = None; remote = Flow_ast_utils.ident_of_source (loc, "baz") }])}
         in
       (List.hd stmts)::imp::(List.tl stmts)
     end else super#statement_list stmts
@@ -329,7 +329,7 @@ class insert_second_cjsimport_mapper = object
       let loc, _ = List.hd stmts in
       let imp = (loc, Ast.Statement.Expression (
         { expression = (loc, Ast.Expression.Call {
-            callee = (loc, Ast.Expression.Identifier (loc, "require"));
+            callee = (loc, Ast.Expression.Identifier (Flow_ast_utils.ident_of_source (loc, "require")));
             targs = None; arguments = [
               Ast.Expression.Expression (loc, Ast.Expression.Literal
                 { value = Ast.Literal.String "baz"; raw = "\"baz\""})
@@ -351,7 +351,7 @@ class add_body_mapper = object
       let loc, _ = List.rev stmts |> List.hd in
       let imp = (loc, Ast.Statement.Expression (
         { expression = (loc, Ast.Expression.Call {
-            callee = (loc, Ast.Expression.Identifier (loc, "foo"));
+            callee = (loc, Ast.Expression.Identifier (Flow_ast_utils.ident_of_source (loc, "foo")));
             targs = None; arguments = [
               Ast.Expression.Expression (loc, Ast.Expression.Literal
                 { value = Ast.Literal.String "baz"; raw = "\"baz\""})
@@ -461,8 +461,8 @@ class insert_import_and_annot_mapper = object
           default = None;
           specifiers = Some ImportDeclaration.(ImportNamedSpecifiers [{
             kind = None;
-            local = Some (Loc.none, "here");
-            remote = (Loc.none, "there");
+            local = Some (Flow_ast_utils.ident_of_source (Loc.none, "here"));
+            remote = (Flow_ast_utils.ident_of_source (Loc.none, "there"));
            }])
         })
       in

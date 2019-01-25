@@ -7,6 +7,10 @@
 
 module Ast = Flow_ast
 
+module Identifiers = struct
+  let identifier name = Flow_ast_utils.ident_of_source (Loc.none, name)
+end
+
 module Types = struct
   let mixed = Loc.none, Ast.Type.Mixed
   let annotation t = Loc.none, t
@@ -33,7 +37,7 @@ module Patterns = struct
 
   let identifier ?(loc=Loc.none) str =
     loc, Identifier { Identifier.
-      name = loc, str;
+      name = Flow_ast_utils.ident_of_source (loc, str);
       annot = Ast.Type.Missing loc;
       optional = false;
     }
@@ -52,7 +56,7 @@ module Patterns = struct
     let open Object in
     Loc.none, Object {
       properties = [Property (Loc.none, { Property.
-        key = Property.Identifier (Loc.none, str);
+        key = Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, str));
         pattern = identifier str;
         default = None;
         shorthand = true;
@@ -246,8 +250,8 @@ end
 module Expressions = struct
   open Ast.Expression
 
-  let identifier ?(loc=Loc.none) name =
-    loc, Identifier (loc, name)
+  let identifier ?(loc=Loc.none) ?(comments=None) name =
+    loc, Identifier (loc, { Ast.Identifier.name; comments })
 
   let array elements =
     Loc.none, Array { Array.elements }
@@ -320,7 +324,7 @@ module Expressions = struct
     update ~op:Update.Decrement ~prefix argument
 
   let object_property_key (k: string) =
-    Object.Property.Identifier (Loc.none, k)
+    Object.Property.Identifier (Flow_ast_utils.ident_of_source(Loc.none, k))
 
   let object_property_key_literal k =
     Object.Property.Literal (Loc.none, k)
@@ -351,7 +355,7 @@ module Expressions = struct
   let member ~property _object =
     { Member.
       _object;
-      property = Member.PropertyIdentifier (Loc.none, property);
+      property = Member.PropertyIdentifier (Flow_ast_utils.ident_of_source(Loc.none, property));
     }
 
   (* _object[property] *)

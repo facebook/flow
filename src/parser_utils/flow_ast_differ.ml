@@ -223,7 +223,7 @@ let is_import_expr (expr: (Loc.t, Loc.t) Ast.Expression.t) =
   let open Ast.Expression.Call in
   match expr with
     | _, Ast.Expression.Import _ -> true
-    | _, Ast.Expression.Call { callee = (_, Ast.Expression.Identifier (_, name)); _ } ->
+    | _, Ast.Expression.Call { callee = (_, Ast.Expression.Identifier (_, { Ast.Identifier.name; comments= _ })); _ } ->
       name = "require"
     | _ -> false
 

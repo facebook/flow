@@ -114,6 +114,25 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method comment ((annot, c): 'M Ast.Comment.t) : 'N Ast.Comment.t =
     this#on_loc_annot annot, c
 
+  method t_comment ((annot, c): 'T Ast.Comment.t) : 'U Ast.Comment.t =
+    this#on_type_annot annot, c
+
+  method syntax (attached: ('M, unit) Ast.Syntax.t)
+                         : ('N, unit) Ast.Syntax.t =
+    let open Ast.Syntax in
+    let { leading; trailing; internal } = attached in
+    let leading' = List.map this#comment leading in
+    let trailing' = List.map this#comment trailing in
+    { leading = leading'; trailing = trailing'; internal }
+
+  method t_syntax (attached: ('T, unit) Ast.Syntax.t)
+                           : ('U, unit) Ast.Syntax.t =
+    let open Ast.Syntax in
+    let { leading; trailing; internal } = attached in
+    let leading' = List.map this#t_comment leading in
+    let trailing' = List.map this#t_comment trailing in
+    { leading = leading'; trailing = trailing'; internal }
+
   method expression ((annot, expr'): ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
     let open Ast.Expression in
     this#on_type_annot annot,
@@ -404,7 +423,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let open Ast.Statement.DeclareModule in
     let { id; body; kind } = m in
     let id' = match id with
-      | Identifier (annot, name) -> Identifier (this#on_type_annot annot, name)
+      | Identifier id -> Identifier (this#t_identifier id)
       | Literal (annot, name) -> Literal (this#on_type_annot annot, name)
     in
     let kind' = match kind with
@@ -472,15 +491,15 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | ExportSpecifiers specs -> ExportSpecifiers (Core_list.map ~f:this#export_specifier specs)
     | ExportBatchSpecifier (annot, name) ->
       let annot' = this#on_loc_annot annot in
-      let name' = Option.map ~f:(this#on_loc_annot * id) name in
+      let name' = Option.map ~f:this#identifier name in
       ExportBatchSpecifier (annot', name')
 
   method export_specifier (spec : 'M Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t)
                                 : 'N Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t =
     let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
     let annot, { local; exported } = spec in
-    let local' = (this#on_loc_annot * id) local in
-    let exported' = Option.map ~f:(this#on_loc_annot * id) exported in
+    let local' = this#identifier local in
+    let exported' = Option.map ~f:this#identifier exported in
     this#on_loc_annot annot, { local = local'; exported = exported' }
 
   method expression_statement (stmt: ('M, 'T) Ast.Statement.Expression.t)
@@ -607,7 +626,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                                  : ('N, 'U) Ast.Type.Object.Indexer.t =
     let open Ast.Type.Object.Indexer in
     let annot, { id = id_; key; value; static; variance } = oit in
-    let id' = Option.map ~f:(this#on_loc_annot * id) id_ in
+    let id' = Option.map ~f:this#identifier id_ in
     let key' = this#type_ key in
     let value' = this#type_ value in
     let variance' = Option.map ~f:(this#on_loc_annot * id) variance in
@@ -617,7 +636,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                                          : ('N, 'U) Ast.Type.Object.InternalSlot.t =
     let open Ast.Type.Object.InternalSlot in
     let annot, { id = id_; value; optional; static; _method } = islot in
-    let id' = (this#on_loc_annot * id) id_ in
+    let id' = this#identifier id_ in
     let value' = this#type_ value in
     this#on_loc_annot annot, { id = id'; value = value'; optional; static; _method; }
 
@@ -832,11 +851,17 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let filter' = Option.map ~f:this#expression filter in
     { blocks = blocks'; filter = filter' }
 
-  method identifier ((annot, name): 'M Ast.Identifier.t) : 'N Ast.Identifier.t =
-    this#on_loc_annot annot, name
+  method identifier ((annot, { Ast.Identifier.name; comments }): 'M Ast.Identifier.t)
+                                                               : 'N Ast.Identifier.t =
+    let annot = this#on_loc_annot annot in
+    let comments = Option.map ~f:this#syntax comments in
+    (annot, { Ast.Identifier.name; comments })
 
-  method t_identifier ((annot, name): 'T Ast.Identifier.t) : 'U Ast.Identifier.t =
-    this#on_type_annot annot, name
+  method t_identifier ((annot, { Ast.Identifier.name; comments }): 'T Ast.Identifier.t)
+                                                                 : 'U Ast.Identifier.t =
+    let annot = this#on_type_annot annot in
+    let comments = Option.map ~f:this#t_syntax comments in
+    (annot, { Ast.Identifier.name; comments })
 
   method interface (interface: ('M, 'T) Ast.Statement.Interface.t)
                             : ('N, 'U) Ast.Statement.Interface.t =
@@ -1089,7 +1114,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                             : 'N Ast.Expression.MetaProperty.t =
     let open Ast.Expression.MetaProperty in
     let { meta; property } = expr in
-    { meta = (this#on_loc_annot * id) meta; property = (this#on_loc_annot * id) property }
+    { meta = this#identifier meta; property = this#identifier property }
 
   method new_ (expr: ('M, 'T) Ast.Expression.New.t) : ('N, 'U) Ast.Expression.New.t =
     let open Ast.Expression.New in

@@ -175,7 +175,7 @@ module Eval(Env: EvalEnv) = struct
     let rec qualified_type_ref tps qualification =
       let open Identifier in
       match qualification with
-        | Unqualified (_, name) ->
+        | Unqualified (_, { Ast.Identifier.name; comments= _ }) ->
           if SSet.mem name tps then Deps.bot else Deps.type_ name
         | Qualified (_, { qualification; _ }) -> qualified_type_ref tps qualification
     in
@@ -189,7 +189,7 @@ module Eval(Env: EvalEnv) = struct
     let rec qualified_value_ref tps qualification =
       let open Identifier in
       match qualification with
-        | Unqualified (loc, name) ->
+        | Unqualified (loc, { Ast.Identifier.name; comments= _ }) ->
           if SSet.mem name tps then Deps.top (Error.InvalidTypeParamUse loc) else Deps.value name
         | Qualified (_, { qualification; _ }) -> qualified_value_ref tps qualification
     in
@@ -205,7 +205,7 @@ module Eval(Env: EvalEnv) = struct
   and type_params =
     let type_param tps tparam =
       let open Ast.Type.ParameterDeclaration.TypeParam in
-      let _, { name = (_, x); bound; default; _ } = tparam in
+      let _, { name = (_, { Ast.Identifier.name= x; comments= _ }); bound; default; _ } = tparam in
       let deps = match bound with
         | Ast.Type.Missing _ -> Deps.bot
         | Ast.Type.Available (_, t) -> type_ tps t in
@@ -281,7 +281,7 @@ module Eval(Env: EvalEnv) = struct
         let deps = class_ tparams body super super_targs implements in
         begin match id with
           | None -> deps
-          | Some x -> Deps.replace_local_with_dynamic_class x deps
+          | Some x -> Deps.replace_local_with_dynamic_class (Flow_ast_utils.source_of_ident x) deps
         end
       | _, Function stuff
       | _, ArrowFunction stuff
@@ -310,14 +310,14 @@ module Eval(Env: EvalEnv) = struct
       | loc, Import _ -> Deps.dynamic_import loc
       | loc, Call {
           Ast.Expression.Call.
-          callee = (_, Identifier (_, "require"));
+          callee = (_, Identifier (_, { Ast.Identifier.name= "require"; comments= _ }));
           _
         } -> Deps.dynamic_require loc
       | _, Call {
           Ast.Expression.Call.
           callee = (_, Member {
-            Ast.Expression.Member._object = (_, Identifier (_, "Object"));
-            property = Ast.Expression.Member.PropertyIdentifier (_, "freeze");
+            Ast.Expression.Member._object = (_, Identifier (_, { Ast.Identifier.name= "Object"; comments= _ }));
+            property = Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name= "freeze"; comments= _ });
           });
           targs = None;
           arguments = [Expression ((_, Object _) as expr)]
@@ -389,7 +389,7 @@ module Eval(Env: EvalEnv) = struct
         Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Yield))
 
   and identifier stuff =
-    let _, name = stuff in
+    let _, { Ast.Identifier.name; comments= _ } = stuff in
     Deps.value name
 
   and member loc stuff =
@@ -488,12 +488,12 @@ module Eval(Env: EvalEnv) = struct
       let open Ast.Class in
       match element with
         (* special cases *)
-        | Body.Method (_, { Method.key = (Ast.Expression.Object.Property.Identifier (_, name)); _ })
-        | Body.Property (_, { Property.key = (Ast.Expression.Object.Property.Identifier (_, name)); _ })
+        | Body.Method (_, { Method.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments= _ })); _ })
+        | Body.Property (_, { Property.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments= _ })); _ })
             when not Env.prevent_munge && Signature_utils.is_munged_property_name name ->
           Deps.bot
         | Body.Property (_, {
-            Property.key = (Ast.Expression.Object.Property.Identifier (_, "propTypes"));
+            Property.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name= "propTypes"; comments= _ }));
             static = true; _
           }) when Env.ignore_static_propTypes ->
           Deps.bot
@@ -530,7 +530,7 @@ module Eval(Env: EvalEnv) = struct
 
   and implement tps implement =
     let open Ast.Class.Implements in
-    let _, { id = (_, name); targs } = implement in
+    let _, { id = (_, { Ast.Identifier.name; comments= _ }); targs } = implement in
     let deps = if SSet.mem name tps then Deps.bot else Deps.type_ name in
     Deps.join (deps, type_args tps targs)
 

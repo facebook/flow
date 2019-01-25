@@ -55,7 +55,7 @@ class ruleset_depth = object(self)
       let prop =
         let open E.Object.Property in
         E.Object.Property (Loc.none, Init {
-          key = Identifier (Loc.none, pname);
+          key = Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
           value = Loc.none, expr;
           shorthand = false
         }) in
@@ -64,7 +64,7 @@ class ruleset_depth = object(self)
     let obj_type =
       let open T.Object.Property in
       let prop_type =
-        T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, pname);
+        T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
                                       value = Init (Loc.none, etype);
                                       optional = false;
                                       static = false;
@@ -166,7 +166,7 @@ class ruleset_depth = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 

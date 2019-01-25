@@ -255,7 +255,7 @@ module rec Parse : PARSER = struct
 
   and is_assignable_lhs = Expression.is_assignable_lhs
 
-  and assert_identifier_name_is_identifier ?restricted_error env (loc, name) =
+  and assert_identifier_name_is_identifier ?restricted_error env (loc, { Ast.Identifier.name; comments= _ }) =
     match name with
     | "let" ->
       (* "let" is disallowed as an identifier in a few situations. 11.6.2.1

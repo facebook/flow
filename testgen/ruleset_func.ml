@@ -86,7 +86,7 @@ class ruleset_func = object(self)
        correct way to do this is to change every expression
        that has the variable occurrences whose type is the super
        type of the parameter *)
-    let fenv = (Expr (E.Identifier (Loc.none, pname), param_type)) ::
+    let fenv = (Expr (E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname)), param_type)) ::
                (let open T.Function in
                 match param_type with
                 (* If the parameter is a function, we create new function calls *)
@@ -101,7 +101,7 @@ class ruleset_func = object(self)
                                       arguments = args}, _) ->
                         let ftype = self#get_type_from_expr fid env in
                         if self#is_subtype param_type ftype then begin
-                          (Expr (E.Call {callee = (Loc.none, E.Identifier (Loc.none, pname));
+                          (Expr (E.Call {callee = (Loc.none, E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname)));
                                          targs;
                                          arguments = args}, rt)) :: elt :: acc
                         end else elt :: acc
@@ -115,7 +115,7 @@ class ruleset_func = object(self)
                                         property = prop}, t) ->
                         let otype = self#get_type_from_expr obj env in
                         if self#is_subtype param_type otype then begin
-                          (Expr (E.Member {_object = (Loc.none, E.Identifier (Loc.none, pname));
+                          (Expr (E.Member {_object = (Loc.none, E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname)));
                                            property = prop}, t)) :: elt :: acc
                         end else elt :: acc
                       | _ -> elt :: acc) env []
@@ -152,7 +152,7 @@ class ruleset_func = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, fname)), ret_type)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, fname))), ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
     func_def, new_env
 

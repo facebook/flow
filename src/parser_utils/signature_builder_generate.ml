@@ -161,7 +161,7 @@ module T = struct
 
     let mk_type loc =
       loc, Ast.Type.Generic {
-        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$FlowFixMe");
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "$FlowFixMe"));
         targs = None;
       }
 
@@ -170,7 +170,7 @@ module T = struct
 
     let mk_pattern default loc =
       if default
-      then loc, Some (loc, "_"), true, mk_type loc
+      then loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, mk_type loc
       else loc, None, false, mk_type loc
 
     let mk_expr_type loc =
@@ -178,7 +178,7 @@ module T = struct
 
     let mk_extends loc =
       Some (loc, {
-        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, "$FlowFixMe");
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "$FlowFixMe"));
         targs = None;
       })
 
@@ -281,8 +281,8 @@ module T = struct
   module Outlined: sig
     type 'a t
     val create: unit -> 'a t
-    val next: 'a t -> Loc.t -> (Loc.t Ast.Identifier.t -> Loc.t Ast.Identifier.t option * 'a)
-      -> Loc.t Ast.Identifier.t
+    val next: 'a t -> Loc.t -> (Loc.t * string -> (Loc.t * string) option * 'a)
+      -> Loc.t * string
     val get: 'a t -> 'a list
   end = struct
     type 'a t = (int * 'a list) ref
@@ -318,7 +318,7 @@ module T = struct
 
   let temporary_type name loc t =
     loc, Ast.Type.Generic {
-      Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, name);
+      Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, name));
       targs = Some (loc, [loc, t])
     }
 
@@ -368,21 +368,21 @@ module T = struct
       let f = outlining_fun outlined loc ht in
       let id = Outlined.next outlined loc f in
       loc, Ast.Type.Typeof (type_of_generic (loc, {
-        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified id;
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
         targs = None;
       }))
 
     | loc, ObjectDestruct (expr_type, prop) ->
       let t = type_of_expr_type outlined expr_type in
       let f id = None, (fst expr_type, Ast.Statement.DeclareVariable {
-        Ast.Statement.DeclareVariable.id;
+        Ast.Statement.DeclareVariable.id = Flow_ast_utils.ident_of_source id;
         annot = Ast.Type.Available (fst t, t);
       }) in
       let id = Outlined.next outlined loc f in
       loc, Ast.Type.Typeof (type_of_generic (loc, {
         Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Qualified (loc, {
-          Ast.Type.Generic.Identifier.qualification = Ast.Type.Generic.Identifier.Unqualified id;
-          id = prop
+          Ast.Type.Generic.Identifier.qualification = Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source id);
+          id = Flow_ast_utils.ident_of_source prop
         });
         targs = None;
       }));
@@ -391,13 +391,14 @@ module T = struct
       FixMe.mk_type loc
 
   and generic_id_of_reference = function
-    | RLexical (loc, x) -> Ast.Type.Generic.Identifier.Unqualified (loc, x)
+    | RLexical (loc, x) -> Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, x))
     | RPath (path_loc, reference, (loc, x)) -> Ast.Type.Generic.Identifier.Qualified (path_loc, {
         Ast.Type.Generic.Identifier.qualification = generic_id_of_reference reference;
-        id = loc, x
+        id = Flow_ast_utils.ident_of_source (loc, x)
       })
 
-  and outlining_fun outlined decl_loc ht id = match ht with
+  and outlining_fun outlined decl_loc ht id =
+    match ht with
     | Class (id_opt, class_t) -> id_opt,
       let id = match id_opt with
         | None -> id
@@ -408,7 +409,7 @@ module T = struct
       let source = source_loc, source_lit in
       let default = None in
       let specifiers =
-        Some (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier (decl_loc, id)) in
+        Some (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier (decl_loc, Flow_ast_utils.ident_of_source id)) in
       decl_loc, Ast.Statement.ImportDeclaration {
         Ast.Statement.ImportDeclaration.importKind;
         source;
@@ -418,7 +419,7 @@ module T = struct
     | DynamicRequire require -> None,
       let kind = Ast.Statement.VariableDeclaration.Const in
       let pattern = decl_loc, Ast.Pattern.Identifier {
-        Ast.Pattern.Identifier.name = id;
+        Ast.Pattern.Identifier.name = Flow_ast_utils.ident_of_source id;
         annot = Ast.Type.Missing (fst id);
         optional = false;
       } in
@@ -513,12 +514,13 @@ module T = struct
     match name_opt with
       | None -> id_pattern
       | Some (name, names) ->
+        let _, { Ast.Identifier.name= id_name; comments= _ } = id in
         let pattern = fst name, Ast.Pattern.Object {
           Ast.Pattern.Object.properties = [
             Ast.Pattern.Object.Property (fst name, {
-              Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier name;
+              Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier (Flow_ast_utils.ident_of_source name);
               pattern = id_pattern;
-              shorthand = (snd id = snd name);
+              shorthand = (id_name = snd name);
               default = None;
             })
           ];
@@ -532,7 +534,7 @@ module T = struct
       let pattern = fst name, Ast.Pattern.Object {
         Ast.Pattern.Object.properties = [
           Ast.Pattern.Object.Property (fst name, {
-            Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier name;
+            Ast.Pattern.Object.Property.key = Ast.Pattern.Object.Property.Identifier (Flow_ast_utils.ident_of_source name);
             pattern;
             shorthand = false;
             default = None;
@@ -542,7 +544,9 @@ module T = struct
       } in
       wrap_name_pattern pattern names
 
-  and stmt_of_decl outlined decl_loc id = function
+  and stmt_of_decl outlined decl_loc id decl =
+    let id = Flow_ast_utils.ident_of_source id in
+    match decl with
     | Type { tparams; right; } ->
       decl_loc, Ast.Statement.TypeAlias { Ast.Statement.TypeAlias.id; tparams; right }
     | OpaqueType { tparams; supertype; } ->
@@ -589,11 +593,12 @@ module T = struct
       let source = source_of_source source in
       let default = if snd name = "default" then Some id else None in
       let specifiers =
+        let (_, { Ast.Identifier.name= id_name; comments= _ }) = id in
         if snd name = "default" then None else
           Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers [{
             Ast.Statement.ImportDeclaration.kind = None;
-            local = if snd id = snd name then None else Some id;
-            remote = name;
+            local = if id_name = snd name then None else Some id;
+            remote = Flow_ast_utils.ident_of_source name;
           }]) in
       decl_loc, Ast.Statement.ImportDeclaration {
         Ast.Statement.ImportDeclaration.importKind;
@@ -619,7 +624,7 @@ module T = struct
       let loc, x = source in
       let require = decl_loc, Ast.Expression.Call {
         Ast.Expression.Call.callee =
-          approx_loc decl_loc, Ast.Expression.Identifier (approx_loc decl_loc, "require");
+          approx_loc decl_loc, Ast.Expression.Identifier (Flow_ast_utils.ident_of_source (approx_loc decl_loc, "require"));
         targs = None;
         arguments = [Ast.Expression.Expression (loc, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.String x;
@@ -754,11 +759,11 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         loc, Some name, default || optional, annotated_type annot
       | loc, Object { Object.annot; properties = _ } ->
         if default
-        then loc, Some (loc, "_"), true, annotated_type annot
+        then loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot
         else loc, None, false, annotated_type annot
       | loc, Array { Array.annot; elements = _ } ->
         if default
-        then loc, Some (loc, "_"), true, annotated_type annot
+        then loc, Some (Flow_ast_utils.ident_of_source (loc, "_")), true, annotated_type annot
         else loc, None, false, annotated_type annot
       | loc, Expression _ ->
         T.FixMe.mk_pattern default loc
@@ -785,7 +790,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         let super, super_targs = match extends with
           | None -> None, None
           | Some (_, { Extends.expr; targs; }) -> Some expr, targs in
-        loc, T.Outline (T.Class (id, class_ tparams body super super_targs implements))
+        loc, T.Outline (T.Class (Option.map ~f:Flow_ast_utils.source_of_ident id, class_ tparams body super super_targs implements))
       | loc, Function { Ast.Function.
           generator; tparams; params; return; body;
           id = _; async = _; predicate = _; sig_loc = _;
@@ -829,13 +834,13 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
             }]; _
           })) ->
         loc, T.Outline (T.DynamicImport (source_loc, { Ast.StringLiteral.value; raw }))
-      | (loc, Call { Ast.Expression.Call.callee = (_, Identifier (_, "require")); _ }) as expr ->
+      | (loc, Call { Ast.Expression.Call.callee = (_, Identifier (_, { Ast.Identifier.name= "require"; comments= _ })); _ }) as expr ->
         loc, T.Outline (T.DynamicRequire expr)
       | _, Call {
           Ast.Expression.Call.
           callee = (_, Member {
-            Ast.Expression.Member._object = (_, Identifier (_, "Object"));
-            property = Ast.Expression.Member.PropertyIdentifier (_, "freeze");
+            Ast.Expression.Member._object = (_, Identifier (_, { Ast.Identifier.name= "Object"; comments= _ }));
+            property = Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name= "freeze"; comments= _ });
           });
           targs = None;
           arguments = [Expression (loc, Object stuff)]
@@ -881,7 +886,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         begin match name, Env.facebook_fbt with
           | Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt" }), Some custom_jsx_type ->
               loc, T.JSXLiteral (loc, {
-                Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (loc, custom_jsx_type);
+                Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, custom_jsx_type));
                 targs = None
               })
           | _ -> T.FixMe.mk_expr_type loc
@@ -905,7 +910,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         -> T.FixMe.mk_expr_type loc
 
   and identifier stuff =
-    let loc, name = stuff in
+    let loc, { Ast.Identifier.name; comments= _ } = stuff in
     T.RLexical (loc, name)
 
   and member stuff =
@@ -918,7 +923,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       | PropertyExpression _ -> None
     in
     match ref_expr_opt, name_opt with
-      | Some (path_loc, t), Some name -> Some (T.RPath (path_loc, t, name))
+      | Some (path_loc, t), Some name -> Some (T.RPath (path_loc, t, Flow_ast_utils.source_of_ident name))
       | None, _ | _, None -> None
 
   and ref_expr expr =
@@ -1019,12 +1024,12 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
     let class_element acc element =
       let open Ast.Class in
       match element with
-        | Body.Method (_, { Method.key = (Ast.Expression.Object.Property.Identifier (_, name)); _ })
-        | Body.Property (_, { Property.key = (Ast.Expression.Object.Property.Identifier (_, name)); _ })
+        | Body.Method (_, { Method.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments= _ })); _ })
+        | Body.Property (_, { Property.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; comments= _ })); _ })
             when not Env.prevent_munge && Signature_utils.is_munged_property_name name ->
           acc
         | Body.Property (_, {
-            Property.key = (Ast.Expression.Object.Property.Identifier (_, "propTypes"));
+            Property.key = (Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name= "propTypes"; comments= _ }));
             static = true; _
           }) when Env.ignore_static_propTypes ->
           acc
@@ -1041,7 +1046,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           let x = object_key key in
           (elem_loc, T.CProperty (x, static, variance, annotated_type annot)) :: acc
         | Body.PrivateField (elem_loc, {
-            PrivateField.key = (_, (_, x)); annot; static; variance; value = _
+            PrivateField.key = (_, (_, { Ast.Identifier.name= x; comments= _ })); annot; static; variance; value = _
           }) ->
           (elem_loc, T.CPrivateField (x, static, variance, annotated_type annot)) :: acc
 
@@ -1217,7 +1222,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
             let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
             let open Ast.Type.Object in
             Property (fst id, {
-              Property.key = Ast.Expression.Object.Property.Identifier id;
+              Property.key = Ast.Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source id);
               value = Property.Init annot;
               optional = false;
               static = false;
@@ -1270,7 +1275,8 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       Ast.Statement.ExportNamedDeclaration.declaration = None;
       specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportSpecifiers [
         approx_loc export_loc, {
-          Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local; exported;
+          Ast.Statement.ExportNamedDeclaration.ExportSpecifier.local= Flow_ast_utils.ident_of_source local;
+          exported = Option.map ~f:Flow_ast_utils.ident_of_source exported;
         }
       ]);
       source;
@@ -1288,7 +1294,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     export_loc, Ast.Statement.ExportNamedDeclaration {
       Ast.Statement.ExportNamedDeclaration.declaration = None;
       specifiers = Some (Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier (
-        star_loc, remote
+        star_loc, Option.map ~f:Flow_ast_utils.ident_of_source remote
       ));
       source = Some (T.source_of_source source);
       exportKind;
@@ -1354,7 +1360,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         | ExportDefault { default_loc; _ }, ExportDefaultDef decl ->
           begin match eval_export_default_declaration decl with
             | `Decl (id, _kind) ->
-              (export_value_default_named_declaration export_loc (default_loc, n) id) :: acc
+              (export_value_default_named_declaration export_loc (default_loc, n) (Flow_ast_utils.source_of_ident id)) :: acc
             | `Expr expr_type ->
               let declaration = Ast.Statement.DeclareExportDeclaration.DefaultType
                 (T.type_of_expr_type outlined expr_type) in

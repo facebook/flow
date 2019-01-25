@@ -121,8 +121,8 @@ let parse_json_file ~fail content file =
   let open Ast in
   let loc_none = Loc.none in
   let module_exports = loc_none, Expression.(Member { Member.
-    _object = loc_none, Identifier (loc_none, "module");
-    property = Member.PropertyIdentifier (loc_none, "exports");
+    _object = loc_none, Identifier (Flow_ast_utils.ident_of_source (loc_none, "module"));
+    property = Member.PropertyIdentifier (Flow_ast_utils.ident_of_source (loc_none, "exports"));
   }) in
   let loc = fst expr in
   let statement =

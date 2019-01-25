@@ -71,7 +71,7 @@ module Object
         ) env
     | T_POUND when class_body ->
         let loc, id, _is_private = Expression.property_name_include_private env in
-        add_declared_private env (snd id);
+        add_declared_private env (Flow_ast_utils.name_of_ident id);
         loc, PrivateName (loc, id)
     | _ ->
         let loc, id, is_private = Expression.property_name_include_private env in
@@ -152,7 +152,7 @@ module Object
         | Literal (loc, lit) ->
             error_at env (loc, Parse_error.LiteralShorthandProperty);
             loc, Ast.Expression.Literal lit
-        | Identifier ((loc, name) as id) ->
+        | Identifier ((loc, { Identifier.name; comments= _ }) as id) ->
             (* #sec-identifiers-static-semantics-early-errors *)
             begin
               if is_reserved name && name <> "yield" && name <> "await" then
@@ -420,17 +420,17 @@ module Object
           | Ast.Class.Body.Property (loc, p) ->
               let open Ast.Expression.Object.Property in
               (seen_constructor, begin match p.Ast.Class.Property.key with
-              | Identifier (_, x) when String.equal x "constructor" ||
+              | Identifier (_, { Identifier.name= x; comments= _ }) when String.equal x "constructor" ||
                 (String.equal x "prototype" && p.Ast.Class.Property.static) ->
                   error_at env (loc, Error.InvalidFieldName (x, String.equal x "prototype", false));
                   private_names
               | _ -> private_names
               end)
-            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, name)); _})
+            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, { Identifier.name; comments= _ })); _})
               when String.equal name "#constructor" ->
                 error_at env (loc, Error.InvalidFieldName (name, false, true));
                 (seen_constructor, private_names)
-            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, name)); _}) ->
+            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, { Identifier.name; comments= _ })); _}) ->
                 if SSet.mem name private_names then
                   error_at env (loc, Error.DuplicatePrivateFields name);
                 (seen_constructor, SSet.add name private_names)
@@ -527,7 +527,7 @@ module Object
       | _ ->
         error_unsupported_variance env variance;
         let kind, env = match static, key with
-          | false, Ast.Expression.Object.Property.Identifier (_, "constructor")
+          | false, Ast.Expression.Object.Property.Identifier (_, { Identifier.name= "constructor"; comments= _ })
           | false, Ast.Expression.Object.Property.Literal (_, {
               Literal.value = Literal.String "constructor";
               _;

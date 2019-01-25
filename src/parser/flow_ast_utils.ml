@@ -69,6 +69,17 @@ let loc_of_expression = fst
 
 let loc_of_pattern = fst
 
+let loc_of_ident = fst
+
+let name_of_ident (_, { Identifier.name; comments= _ }) = name
+
+let source_of_ident (loc, { Identifier.name; comments= _ }) = (loc, name)
+
+let ident_of_source (loc, name) = (loc, { Identifier.name; comments= None })
+
+let mk_no_comments a =
+  { Syntax.leading = []; trailing = []; internal = a }
+
 let string_of_binary_operator op =
   let open Flow_ast.Expression.Binary in
   match op with

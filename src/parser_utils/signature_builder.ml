@@ -180,7 +180,7 @@ module Signature = struct
     SMap.fold (fun remote ids env ->
       SMap.fold (fun local locs env ->
         Nel.fold_left (fun env { File_sig.remote_loc; local_loc } ->
-          let id = local_loc, local in
+          let id = Flow_ast_utils.ident_of_source (local_loc, local) in
           let name = remote_loc, remote in
           add_env env (Entry.import_named import_loc id name kind source)
         ) env locs
@@ -192,7 +192,7 @@ module Signature = struct
     let open File_sig in
     match require_bindings with
       | BindIdent id ->
-        if filter id then add_env env (Entry.require require_loc id ?name source) else env
+        if filter id then add_env env (Entry.require require_loc (Flow_ast_utils.ident_of_source id) ?name source) else env
       | BindNamed named_requires ->
         List.fold_left (fun env (remote, require_bindings) ->
           let name = match name with
@@ -232,10 +232,10 @@ module Signature = struct
       | Import { import_loc; source; named; ns; types; typesof; typesof_ns } ->
         let open Ast.Statement.ImportDeclaration in
         let env = add_named_imports import_loc source ImportValue named env in
-        let env = add_ns_imports import_loc source ImportValue ns env in
+        let env = add_ns_imports import_loc source ImportValue (Option.map ~f:Flow_ast_utils.ident_of_source ns) env in
         let env = add_named_imports import_loc source ImportType types env in
         let env = add_named_imports import_loc source ImportTypeof typesof env in
-        add_ns_imports import_loc source ImportTypeof typesof_ns env
+        add_ns_imports import_loc source ImportTypeof (Option.map ~f:Flow_ast_utils.ident_of_source typesof_ns) env
       | _ -> env
     ) env imports_info in
     env, file_sig

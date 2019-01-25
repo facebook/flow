@@ -23,7 +23,7 @@ class rename_mapper refs new_name = object(this)
   method! identifier (expr: Loc.t Ast.Identifier.t) =
     let loc, _ = expr in
     if List.exists (fun (_, ref_loc) -> ref_loc = loc) refs then
-      loc, new_name
+      Flow_ast_utils.ident_of_source (loc, new_name)
     else
       expr
 

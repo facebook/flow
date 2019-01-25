@@ -141,7 +141,7 @@ module Pattern
     Ast.Expression.(match expr with
     | Object obj -> object_from_expr env (loc, obj)
     | Array arr ->  array_from_expr env (loc, arr)
-    | Identifier ((id_loc, string_val) as name) ->
+    | Identifier ((id_loc, { Identifier.name= string_val; comments= _ }) as name) ->
         (* per #sec-destructuring-assignment-static-semantics-early-errors,
            it is a syntax error if IsValidSimpleAssignmentTarget of this
            IdentifierReference is false. That happens when `string_val` is
@@ -218,7 +218,7 @@ module Pattern
 
         | _ ->
           (match raw_key with
-          | _, Ast.Expression.Object.Property.Identifier ((id_loc, string_val) as name) ->
+          | _, Ast.Expression.Object.Property.Identifier ((id_loc, { Identifier.name= string_val; comments= _ }) as name) ->
             (* #sec-identifiers-static-semantics-early-errors *)
             begin
               if is_reserved string_val && string_val <> "yield" && string_val <> "await" then

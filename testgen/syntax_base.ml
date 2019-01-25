@@ -91,7 +91,7 @@ and mk_obj_literal_expr (t : (Loc.t, Loc.t) T.Object.t) : (Loc.t, Loc.t) E.t' =
 (* Check the expression is of the given type *)
 let mk_runtime_check (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t') : t =
   (* Make a variable decalration first *)
-  let callee = E.Identifier (Loc.none, "assert_type") in
+  let callee = E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, "assert_type")) in
   let arguments =
     [E.Expression (Loc.none, expr);
      E.Expression (Loc.none, (mk_literal_expr etype))] in
@@ -103,7 +103,7 @@ let mk_runtime_check (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t') 
 (* Check the expression is of the given type *)
 let mk_check_opt_prop (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t') : t =
   (* Make a variable decalration first *)
-  let callee = E.Identifier (Loc.none, "check_opt_prop") in
+  let callee = E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, "check_opt_prop")) in
 
   let rec get_obj (read : (Loc.t, Loc.t) E.t') (acc : (Loc.t, Loc.t) E.t' list) =
     let open E.Member in
@@ -145,7 +145,7 @@ let mk_func_def
   (* Add a runtime check for the parameter *)
   let body = body @ (match ptype with
       | T.Function _ -> []
-      | _ -> [(mk_runtime_check (E.Identifier (Loc.none, pname)) ptype)]) in
+      | _ -> [(mk_runtime_check (E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname))) ptype)]) in
 
   let body =
     let open S.Block in
@@ -158,7 +158,7 @@ let mk_func_def
   let param =
     (Loc.none, { Ast.Function.Param.
       argument = (Loc.none, P.Identifier { P.Identifier.
-        name = (Loc.none, pname);
+        name = Flow_ast_utils.ident_of_source (Loc.none, pname);
         annot = T.Available (Loc.none, (Loc.none, ptype));
         optional = false;
       });
@@ -166,7 +166,7 @@ let mk_func_def
     }) in
 
   let func = let open Ast.Function in
-    {id = Some (Loc.none, fname);
+    {id = Some (Flow_ast_utils.ident_of_source (Loc.none, fname));
      params = (Loc.none, { Params.params = [param]; rest = None });
      body = Ast.Function.BodyBlock (Loc.none, body);
      async = false;
@@ -198,8 +198,8 @@ let mk_prop_read
     (obj_name : string)
     (prop_name : string) : t =
   let open E.Member in
-  Expr (E.Member {_object = (Loc.none, E.Identifier (Loc.none, obj_name));
-                  property = PropertyIdentifier (Loc.none, prop_name)})
+  Expr (E.Member {_object = (Loc.none, E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, obj_name)));
+                  property = PropertyIdentifier (Flow_ast_utils.ident_of_source (Loc.none, prop_name))})
 
 let mk_prop_write
     (oname : string)
@@ -225,7 +225,7 @@ let mk_vardecl ?etype (vname : string) (expr : (Loc.t, Loc.t) E.t') : t =
 
   let id = let open P.Identifier in
     (Loc.none, P.Identifier
-       { name = (Loc.none, vname);
+       { name = (Flow_ast_utils.ident_of_source (Loc.none, vname));
          annot = t;
          optional = false}) in
 
@@ -246,7 +246,7 @@ let mk_obj_lit (plist : (string * ((Loc.t, Loc.t) E.t' * (Loc.t, Loc.t) T.t')) l
       let expr = fst (snd p) in
       let open E.Object.Property in
       E.Object.Property (Loc.none, Init {
-        key = Identifier (Loc.none, pname);
+        key = Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
         value = Loc.none, expr;
         shorthand = false
       })
