@@ -253,8 +253,8 @@ References:
    create_element.js:5:94
      5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
                                                                                                      ^^^^^^ [2]
-   <BUILTINS>/react.js:237:6
-   237|   ): {current: null | T};
+   <BUILTINS>/react.js:240:6
+   240|   ): {current: null | T};
              ^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:195:6
    195|   | ((React$ElementRef<ElementType> | null) => mixed)
