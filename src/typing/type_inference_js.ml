@@ -172,9 +172,7 @@ let scan_for_lint_suppressions =
   in
 
   let add_error cx (loc, kind) =
-    let err = FlowError.ELintSetting (loc, kind) in
-    FlowError.error_of_msg ~trace_reasons:[] ~source_file:(Context.file cx) err
-    |> Context.add_error cx
+    FlowError.ELintSetting (loc, kind) |> Flow_js.add_output cx
   in
 
   let parse_kind loc_str =
