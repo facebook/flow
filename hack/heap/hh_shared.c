@@ -233,6 +233,9 @@ static size_t bindings_size_b;
 static uint64_t hashtbl_size;
 static size_t hashtbl_size_b;
 
+/* Used for worker-local data */
+static size_t locals_size_b;
+
 typedef enum {
   KIND_STRING = 1,
   KIND_SERIALIZED = !KIND_STRING
@@ -249,8 +252,10 @@ typedef struct {
 
 /* Too lazy to use getconf */
 #define CACHE_LINE_SIZE (1 << 6)
-#define CACHE_MASK      (~(CACHE_LINE_SIZE - 1))
-#define ALIGNED(x)      (((x) + CACHE_LINE_SIZE - 1) & CACHE_MASK)
+
+#define __ALIGN_MASK(x,mask)    (((x)+(mask))&~(mask))
+#define ALIGN(x,a)              __ALIGN_MASK(x,(typeof(x))(a)-1)
+#define CACHE_ALIGN(x)          ALIGN(x,CACHE_LINE_SIZE)
 
 /* Fix the location of our shared memory so we can save and restore the
  * hashtable easily */
@@ -275,6 +280,13 @@ extern const char* const BuildInfo_kRevision;
 /*****************************************************************************/
 /* Types */
 /*****************************************************************************/
+
+/* Per-worker data which can be quickly updated non-atomically. Will be placed
+ * in cache-aligned array in the first few pages of shared memory, indexed by
+ * worker id. */
+typedef struct {
+  uint64_t counter;
+} local_t;
 
 // Every heap entry starts with a 64-bit header with the following layout:
 //
@@ -447,6 +459,10 @@ static uint64_t* hcounter = NULL;   // the number of slots taken in the table
 /* A counter increasing globally across all forks. */
 static uintptr_t* counter = NULL;
 
+/* Each process reserves a range of values at a time from the shared counter.
+ * Should be a power of two for more efficient modulo calculation. */
+#define COUNTER_RANGE 2048
+
 /* Logging level for shared memory statistics
  * 0 = nothing
  * 1 = log totals, averages, min, max bytes marshalled and unmarshalled
@@ -460,6 +476,10 @@ static size_t* workers_should_exit = NULL;
 static size_t* allow_removes = NULL;
 
 static size_t* allow_dependency_table_reads = NULL;
+
+/* Worker-local storage is cache line aligned. */
+static char* locals;
+#define LOCAL(id) ((local_t *)(locals + id * CACHE_ALIGN(sizeof(local_t))))
 
 /* This should only be used before forking */
 static uintptr_t early_counter = 0;
@@ -873,6 +893,10 @@ static void define_globals(char * shared_mem_init) {
   // Just checking that the page is large enough.
   assert(page_size > 11*CACHE_LINE_SIZE + (int)sizeof(int));
 
+  assert (CACHE_LINE_SIZE >= sizeof(local_t));
+  locals = mem;
+  mem += locals_size_b;
+
   /* File name we get in hh_load_dep_table_sqlite needs to be smaller than
    * page_size - it should be since page_size is quite big for a string
    */
@@ -916,7 +940,7 @@ static void define_globals(char * shared_mem_init) {
 static size_t get_shared_mem_size(void) {
   size_t page_size = getpagesize();
   return (global_size_b + dep_size_b + bindings_size_b + hashtbl_size_b +
-          heap_size + 2 * page_size);
+          heap_size + 2 * page_size + locals_size_b);
 }
 
 static void init_shared_globals(
@@ -928,13 +952,18 @@ static void init_shared_globals(
   // Initialize the number of element in the table
   *hcounter = 0;
   *dcounter = 0;
-  *counter = early_counter + 1;
+  // Ensure the global counter starts on a COUNTER_RANGE boundary
+  *counter = ALIGN(early_counter + 1, COUNTER_RANGE);
   *log_level = config_log_level;
   *sample_rate = config_sample_rate;
   *workers_should_exit = 0;
   *wasted_heap_size = 0;
   *allow_removes = 1;
   *allow_dependency_table_reads = 1;
+
+  for (uint64_t i = 0; i <= num_workers; i++) {
+    LOCAL(i)->counter = 0;
+  }
 
   // Initialize top heap pointers
   *heap = heap_init;
@@ -951,6 +980,8 @@ static void set_sizes(
   uint64_t config_hash_table_pow,
   uint64_t config_num_workers) {
 
+  size_t page_size = getpagesize();
+
   global_size_b = config_global_size;
   heap_size = config_heap_size;
 
@@ -960,7 +991,10 @@ static void set_sizes(
   hashtbl_size    = 1ul << config_hash_table_pow;
   hashtbl_size_b  = hashtbl_size * sizeof(hashtbl[0]);
 
+  // We will allocate a cache line for the master process and each worker
+  // process, then pad that out to the nearest page.
   num_workers = config_num_workers;
+  locals_size_b = ALIGN((1 + num_workers) * CACHE_LINE_SIZE, page_size);
 
   shared_mem_size = get_shared_mem_size();
 }
@@ -1090,7 +1124,12 @@ CAMLprim value hh_counter_next(void) {
 
   uintptr_t v = 0;
   if (counter) {
-    v = __sync_fetch_and_add(counter, 1);
+    v = LOCAL(worker_id)->counter;
+    if (v % COUNTER_RANGE == 0) {
+      v = __atomic_fetch_add(counter, COUNTER_RANGE, __ATOMIC_RELAXED);
+    }
+    ++v;
+    LOCAL(worker_id)->counter = v;
   } else {
     v = ++early_counter;
   }
@@ -1591,13 +1630,13 @@ CAMLprim value hh_collect(void) {
       // entry was not marked in the first pass and should be collected. Don't
       // move dest pointer, but advance src pointer to next heap entry.
       header = *(hh_header_t *)src;
-      aligned_size = ALIGNED(Heap_entry_total_size(header));
+      aligned_size = CACHE_ALIGN(Heap_entry_total_size(header));
     } else {
       // If the lsb is 0, this is a pointer to the addr field of the hashtable
       // element, which holds the header bytes. This entry is live.
       char *hashtbl_addr = *(char **)src;
       header = *(hh_header_t *)hashtbl_addr;
-      aligned_size = ALIGNED(Heap_entry_total_size(header));
+      aligned_size = CACHE_ALIGN(Heap_entry_total_size(header));
 
       // Fix the hashtbl addr field to point to our new location and restore the
       // heap header data temporarily stored in the addr field bits.
@@ -1639,7 +1678,7 @@ static void raise_heap_full(void) {
 static heap_entry_t* hh_alloc(hh_header_t header) {
   // the size of this allocation needs to be kept in sync with wasted_heap_size
   // modification in hh_remove
-  size_t slot_size = ALIGNED(Heap_entry_total_size(header));
+  size_t slot_size = CACHE_ALIGN(Heap_entry_total_size(header));
   char *chunk = __sync_fetch_and_add(heap, (char*) slot_size);
   if (chunk + slot_size > heap_max) {
     raise_heap_full();
@@ -2030,7 +2069,7 @@ void hh_remove(value key) {
   assert(hashtbl[slot].hash == get_hash(key));
   // see hh_alloc for the source of this size
   size_t slot_size =
-    ALIGNED(Heap_entry_total_size(hashtbl[slot].addr->header));
+    CACHE_ALIGN(Heap_entry_total_size(hashtbl[slot].addr->header));
   __sync_fetch_and_add(wasted_heap_size, slot_size);
   hashtbl[slot].addr = NULL;
   removed_count += 1;
