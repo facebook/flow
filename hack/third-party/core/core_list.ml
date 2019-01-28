@@ -486,7 +486,8 @@ let rev_filter_map l ~f =
   loop l []
 ;;
 
-let filter_map l ~f = List.rev (rev_filter_map l ~f)
+let filter_map (l : 'a list) ~(f : 'a -> 'b option): 'b list =
+  List.rev (rev_filter_map l ~f)
 
 let rev_filter_mapi l ~f =
   let rec loop i l accum =
