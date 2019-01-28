@@ -13,12 +13,12 @@ type printer =
   | Cli of Errors.Cli_output.error_flags
 
 (* helper - print errors. used in check-and-die runs *)
-let format_errors ~printer ~client_include_warnings ~include_suppressed options
+let format_errors ~printer ~client_include_warnings options
   (errors, warnings, suppressed_errors) =
 
   let include_warnings = client_include_warnings || Options.should_include_warnings options in
   let warnings = if include_warnings then warnings else Errors.ErrorSet.empty in
-  let suppressed_errors = if include_suppressed then suppressed_errors else [] in
+  let suppressed_errors = if Options.include_suppressions options then suppressed_errors else [] in
 
   let strip_root =
     if Options.should_strip_root options
@@ -73,8 +73,6 @@ module CheckCommand = struct
         empty
         |> base_flags
         |> error_flags
-        |> flag "--include-suppressed" no_arg
-          ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
         |> options_and_json_flags
         |> json_version_flag
         |> shm_flags
@@ -91,7 +89,7 @@ module CheckCommand = struct
   }
 
   let main
-      base_flags error_flags include_suppressed options_flags json pretty json_version
+      base_flags error_flags options_flags json pretty json_version
       shm_flags ignore_version path_opt
       () =
 
@@ -129,7 +127,7 @@ module CheckCommand = struct
           Json { pretty; version = json_version }
         else
           Cli error_flags in
-      format_errors ~printer ~client_include_warnings ~include_suppressed options
+      format_errors ~printer ~client_include_warnings options
     in
 
     let errors, warnings = Server.check_once options ~shared_mem_config ~format_errors in
@@ -149,8 +147,6 @@ module FocusCheckCommand = struct
         empty
         |> base_flags
         |> error_flags
-        |> flag "--include-suppressed" no_arg
-          ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
         |> options_and_json_flags
         |> json_version_flag
         |> shm_flags
@@ -172,7 +168,7 @@ module FocusCheckCommand = struct
   }
 
   let main
-      base_flags error_flags include_suppressed options_flags json pretty json_version
+      base_flags error_flags options_flags json pretty json_version
       shm_flags ignore_version root input_file filenames
       () =
 
@@ -214,7 +210,7 @@ module FocusCheckCommand = struct
           Json { pretty; version = json_version }
         else
           Cli error_flags in
-      format_errors ~printer ~client_include_warnings ~include_suppressed options
+      format_errors ~printer ~client_include_warnings options
     in
 
     let errors, warnings = Server.check_once options ~shared_mem_config ~focus_targets ~format_errors in

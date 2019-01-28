@@ -103,6 +103,7 @@ type t = {
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_strict_mode: StrictModeSettings.t;
   opt_arch: arch;
+  opt_include_suppressions : bool;
 }
 
 let all opts = opts.opt_all
@@ -158,6 +159,7 @@ let verbose opts = opts.opt_verbose
 let wait_for_recheck opts = opts.opt_wait_for_recheck
 let weak_by_default opts = opts.opt_weak
 
+let include_suppressions opts = opts.opt_include_suppressions
 let lint_severities opts = opts.opt_lint_severities
 let strict_mode opts = opts.opt_strict_mode
 

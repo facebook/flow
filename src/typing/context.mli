@@ -24,6 +24,7 @@ type metadata = {
   munge_underscores: bool;
   verbose: Verbose.t option;
   weak: bool;
+  include_suppressions : bool;
   jsx: Options.jsx_mode;
   strict: bool;
   strict_local: bool;
@@ -96,6 +97,7 @@ val is_verbose: t -> bool
 val is_weak: t -> bool
 val is_strict: t -> bool
 val is_strict_local: t -> bool
+val include_suppressions: t -> bool
 val severity_cover: t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t
 val max_trace_depth: t -> int
 val module_kind: t -> module_kind

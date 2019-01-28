@@ -529,6 +529,7 @@ let stub_metadata ~root ~checked = { Context.
   jsx = Options.Jsx_react;
   strict = true;
   strict_local = false;
+  include_suppressions = false;
   (* global *)
   max_literal_length = 100;
   enable_const_params = false;

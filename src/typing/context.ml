@@ -23,6 +23,7 @@ type metadata = {
   munge_underscores: bool;
   verbose: Verbose.t option;
   weak: bool;
+  include_suppressions : bool;
   jsx: Options.jsx_mode;
   strict: bool;
   strict_local: bool;
@@ -151,6 +152,7 @@ let metadata_of_options options = {
   munge_underscores = Options.should_munge_underscores options;
   verbose = Options.verbose options;
   weak = Options.weak_by_default options;
+  include_suppressions = Options.include_suppressions options;
   jsx = Options.Jsx_react;
   strict = false;
   strict_local = false;
@@ -292,6 +294,7 @@ let is_verbose cx = cx.metadata.verbose <> None
 let is_weak cx = cx.metadata.weak
 let is_strict cx = (Option.is_some cx.declare_module_ref) || cx.metadata.strict
 let is_strict_local cx = cx.metadata.strict_local
+let include_suppressions cx = cx.metadata.include_suppressions
 let severity_cover cx = cx.sig_cx.severity_cover
 let max_trace_depth cx = cx.metadata.max_trace_depth
 let module_kind cx = cx.module_kind
