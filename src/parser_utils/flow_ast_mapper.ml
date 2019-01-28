@@ -229,9 +229,12 @@ class ['loc] mapper = object(this)
     let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
     let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
-    let arguments' = ListUtils.ident_map this#expression_or_spread arguments in
+    let arguments' = this#call_arguments arguments in
     if callee == callee' && targs == targs' && arguments == arguments' then expr
     else { callee = callee'; targs = targs'; arguments = arguments' }
+
+  method call_arguments (arguments: ('loc, 'loc) Flow_ast.Expression.expression_or_spread list) =
+    ListUtils.ident_map this#expression_or_spread arguments
 
   method optional_call loc (expr: ('loc, 'loc) Flow_ast.Expression.OptionalCall.t) =
     let open Flow_ast.Expression.OptionalCall in
