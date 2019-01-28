@@ -9,14 +9,18 @@
 /*****************************************************************************/
 /* Initializes the shared heap. */
 /* Must be called by the master BEFORE forking the workers! */
-CAMLprim value hh_shared_init( value config_val, value shm_dir_val);
+CAMLprim value hh_shared_init(
+    value config_val,
+    value shm_dir_val,
+    value num_workers_val
+);
 /* Must be called after the program is done initializing. We keep the original
  * size of the heap to estimate how often we should garbage collect.
  */
 void hh_call_after_init(void);
 value hh_check_heap_overflow(void);
 /* Must be called by every worker before any operation is performed. */
-value hh_connect(value connector);
+value hh_connect(value connector, value worker_id_val);
 
 /*****************************************************************************/
 /* Heap diagnostics. */

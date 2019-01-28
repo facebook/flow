@@ -82,9 +82,13 @@ type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
  *****************************************************************************)
 
 type worker = {
-  id: int; (* Simple id for the worker. This is not the worker pid: on
-              Windows, we spawn a new worker for each job. *)
-
+  (* Simple id for the worker. This is not the worker pid: on Windows, we spawn
+   * a new worker for each job.
+   *
+   * This is also an offset into the shared heap segment, used to access
+   * worker-local data. As such, the numbering is important. The IDs must be
+   * dense and start at 1. (0 is the master process offset.) *)
+  id: int;
 
   (** The call wrapper will wrap any workload sent to the worker (via "call"
    * below) before invoking the workload.
@@ -189,15 +193,15 @@ let wrap_request w f x = match w.call_wrapper with
   | Some { wrap } -> Request (fun { send } -> send (wrap f x))
   | None -> Request (fun { send } -> send (f x))
 
-type 'a entry_state = 'a * Gc.control * SharedMem.handle
+type 'a entry_state = 'a * Gc.control * SharedMem.handle * int
 type 'a entry = ('a entry_state * (Unix.file_descr option), request, void) Daemon.entry
 
 let entry_counter = ref 0
 let register_entry_point ~restore =
   incr entry_counter;
-  let restore (st, gc_control, heap_handle) =
+  let restore (st, gc_control, heap_handle, worker_id) =
     restore st;
-    SharedMem.connect heap_handle;
+    SharedMem.connect heap_handle ~worker_id;
     Gc.set gc_control in
   let name = Printf.sprintf "slave_%d" !entry_counter in
   Daemon.register_entry_point
@@ -246,14 +250,14 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
       (** We don't use the side channel on Windows. *)
       None, None
   in
-  let spawn name child_fd () =
+  let spawn worker_id name child_fd () =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     (** Daemon.spawn runs exec after forking. We explicitly *do* want to "leak"
      * child_fd to this one spawned process because it will be using that FD to
      * send messages back up to us. Close_on_exec is probably already false, but
      * we force it again to be false here just in case. *)
     Option.iter child_fd ~f:Unix.clear_close_on_exec;
-    let state = (saved_state, gc_control, heap_handle) in
+    let state = (saved_state, gc_control, heap_handle, worker_id) in
     let handle =
       Daemon.spawn
         ~name
@@ -271,7 +275,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   for n = 1 to nbr_procs do
     let controller_fd, child_fd = setup_controller_fd () in
     let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pid in
-    made_workers := make_one ?call_wrapper controller_fd (spawn name child_fd) n :: !made_workers
+    made_workers := make_one ?call_wrapper controller_fd (spawn n name child_fd) n :: !made_workers
   done;
   !made_workers
 

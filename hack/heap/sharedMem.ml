@@ -76,14 +76,15 @@ let () =
 (* Initializes the shared memory. Must be called before forking. *)
 (*****************************************************************************)
 external hh_shared_init :
-  config:config -> shm_dir:string option -> handle = "hh_shared_init"
+  config:config -> shm_dir:string option -> num_workers:int -> handle = "hh_shared_init"
 
-let anonymous_init config =
+let anonymous_init config ~num_workers =
   hh_shared_init
     ~config
     ~shm_dir: None
+    ~num_workers
 
-let rec shm_dir_init config = function
+let rec shm_dir_init config ~num_workers = function
 | [] ->
     Hh_logger.log
       "We've run out of filesystems to use for shared memory";
@@ -98,6 +99,7 @@ let rec shm_dir_init config = function
       hh_shared_init
         ~config
         ~shm_dir:(Some shm_dir)
+        ~num_workers
     with
     | Less_than_minimum_available avail ->
         EventLogger.(log_if_initialized (fun () ->
@@ -113,7 +115,7 @@ let rec shm_dir_init config = function
           shm_dir
           avail
           config.shm_min_avail;
-        shm_dir_init config shm_dirs
+        shm_dir_init config ~num_workers shm_dirs
     | Unix.Unix_error (e, fn, arg) ->
         let fn_string =
           if fn = ""
@@ -129,7 +131,7 @@ let rec shm_dir_init config = function
           "Failed to use shm dir `%s`: %s"
           shm_dir
           reason;
-        shm_dir_init config shm_dirs
+        shm_dir_init config ~num_workers shm_dirs
     | Failed_to_use_shm_dir reason ->
         EventLogger.(log_if_initialized (fun () ->
           sharedmem_failed_to_use_shm_dir ~shm_dir ~reason
@@ -139,25 +141,25 @@ let rec shm_dir_init config = function
           "Failed to use shm dir `%s`: %s"
           shm_dir
           reason;
-        shm_dir_init config shm_dirs
+        shm_dir_init config ~num_workers shm_dirs
     end
 
-let init config =
- try anonymous_init config
+let init config ~num_workers =
+ try anonymous_init config ~num_workers
   with Failed_anonymous_memfd_init ->
     EventLogger.(log_if_initialized (fun () ->
       sharedmem_failed_anonymous_memfd_init ()
     ));
     if !Utils.debug
     then Hh_logger.log "Failed to use anonymous memfd init";
-    shm_dir_init config config.shm_dirs
+    shm_dir_init config ~num_workers config.shm_dirs
 
 external allow_removes : bool -> unit = "hh_allow_removes"
 
 external allow_hashtable_writes_by_current_process : bool -> unit
   = "hh_allow_hashtable_writes_by_current_process"
 
-external connect : handle -> unit = "hh_connect"
+external connect : handle -> worker_id:int -> unit = "hh_connect"
 
 (*****************************************************************************)
 (* The shared memory garbage collector. It must be called every time we

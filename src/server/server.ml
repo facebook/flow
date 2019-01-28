@@ -101,7 +101,8 @@ let rec serve ~genv ~env =
 * we look if env.modified changed.
 *)
 let create_program_init ~shared_mem_config ?focus_targets options =
-  let handle = SharedMem_js.init shared_mem_config in
+  let num_workers = Options.max_workers options in
+  let handle = SharedMem_js.init ~num_workers shared_mem_config in
   let genv = ServerEnvBuild.make_genv options handle in
 
   let program_init = fun profiling ->

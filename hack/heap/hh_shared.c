@@ -471,6 +471,12 @@ static char** heap = NULL;
 static pid_t* master_pid = NULL;
 static pid_t my_pid = 0;
 
+static size_t num_workers;
+
+/* This is a process-local value. The master process is 0, workers are numbered
+ * starting at 1. This is an offset into the worker local values in the heap. */
+static size_t worker_id;
+
 static size_t allow_hashtable_writes_by_current_process = 1;
 static size_t worker_can_exit = 1;
 
@@ -942,7 +948,8 @@ static void set_sizes(
   uint64_t config_global_size,
   uint64_t config_heap_size,
   uint64_t config_dep_table_pow,
-  uint64_t config_hash_table_pow) {
+  uint64_t config_hash_table_pow,
+  uint64_t config_num_workers) {
 
   global_size_b = config_global_size;
   heap_size = config_heap_size;
@@ -953,6 +960,8 @@ static void set_sizes(
   hashtbl_size    = 1ul << config_hash_table_pow;
   hashtbl_size_b  = hashtbl_size * sizeof(hashtbl[0]);
 
+  num_workers = config_num_workers;
+
   shared_mem_size = get_shared_mem_size();
 }
 
@@ -962,9 +971,10 @@ static void set_sizes(
 
 CAMLprim value hh_shared_init(
   value config_val,
-  value shm_dir_val
+  value shm_dir_val,
+  value num_workers_val
 ) {
-  CAMLparam2(config_val, shm_dir_val);
+  CAMLparam3(config_val, shm_dir_val, num_workers_val);
   CAMLlocal5(
     connector,
     config_global_size_val,
@@ -982,7 +992,8 @@ CAMLprim value hh_shared_init(
     Long_val(config_global_size_val),
     Long_val(config_heap_size_val),
     Long_val(config_dep_table_pow_val),
-    Long_val(config_hash_table_pow_val)
+    Long_val(config_hash_table_pow_val),
+    Long_val(num_workers_val)
   );
 
   // None -> NULL
@@ -1027,26 +1038,29 @@ CAMLprim value hh_shared_init(
   sigaction(SIGSEGV, &sigact, NULL);
 #endif
 
-  connector = caml_alloc_tuple(5);
+  connector = caml_alloc_tuple(6);
   Field(connector, 0) = Val_handle(memfd);
   Field(connector, 1) = config_global_size_val;
   Field(connector, 2) = config_heap_size_val;
   Field(connector, 3) = config_dep_table_pow_val;
   Field(connector, 4) = config_hash_table_pow_val;
+  Field(connector, 5) = num_workers_val;
 
   CAMLreturn(connector);
 }
 
 /* Must be called by every worker before any operation is performed */
-value hh_connect(value connector) {
-  CAMLparam1(connector);
+value hh_connect(value connector, value worker_id_val) {
+  CAMLparam2(connector, worker_id_val);
   memfd = Handle_val(Field(connector, 0));
   set_sizes(
     Long_val(Field(connector, 1)),
     Long_val(Field(connector, 2)),
     Long_val(Field(connector, 3)),
-    Long_val(Field(connector, 4))
+    Long_val(Field(connector, 4)),
+    Long_val(Field(connector, 5))
   );
+  worker_id = Long_val(worker_id_val);
 #ifdef _WIN32
   my_pid = 1; // Trick
 #else
