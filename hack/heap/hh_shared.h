@@ -16,7 +16,7 @@ CAMLprim value hh_shared_init( value config_val, value shm_dir_val);
 void hh_call_after_init(void);
 value hh_check_heap_overflow(void);
 /* Must be called by every worker before any operation is performed. */
-value hh_connect(value connector, value is_master);
+value hh_connect(value connector);
 
 /*****************************************************************************/
 /* Heap diagnostics. */

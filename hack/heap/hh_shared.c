@@ -1038,8 +1038,8 @@ CAMLprim value hh_shared_init(
 }
 
 /* Must be called by every worker before any operation is performed */
-value hh_connect(value connector, value is_master) {
-  CAMLparam2(connector, is_master);
+value hh_connect(value connector) {
+  CAMLparam1(connector);
   memfd = Handle_val(Field(connector, 0));
   set_sizes(
     Long_val(Field(connector, 1)),
@@ -1054,10 +1054,6 @@ value hh_connect(value connector, value is_master) {
 #endif
   char *shared_mem_init = memfd_map(shared_mem_size);
   define_globals(shared_mem_init);
-
-  if (Bool_val(is_master)) {
-    *master_pid = my_pid;
-  }
 
   CAMLreturn(Val_unit);
 }

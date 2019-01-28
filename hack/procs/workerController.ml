@@ -197,7 +197,7 @@ let register_entry_point ~restore =
   incr entry_counter;
   let restore (st, gc_control, heap_handle) =
     restore st;
-    SharedMem.connect heap_handle ~is_master:false;
+    SharedMem.connect heap_handle;
     Gc.set gc_control in
   let name = Printf.sprintf "slave_%d" !entry_counter in
   Daemon.register_entry_point
