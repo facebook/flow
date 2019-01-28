@@ -462,7 +462,7 @@ static size_t* allow_removes = NULL;
 static size_t* allow_dependency_table_reads = NULL;
 
 /* This should only be used before forking */
-static uintptr_t early_counter = 1;
+static uintptr_t early_counter = 0;
 
 /* The top of the heap */
 static char** heap = NULL;
