@@ -497,6 +497,26 @@ class insert_type_param_instantiation = object
     (loc, (Explicit (loc, Ast.Type.Any))::targs)
 end
 
+class true_to_false_mapper = object
+  inherit [Loc.t] Flow_ast_mapper.mapper
+
+  method! literal _loc (expr: Ast.Literal.t) =
+    let open Ast.Literal in
+    match expr.value with
+    | Boolean true ->
+      { value = Boolean false; raw = "false" }
+    | _ -> expr
+
+  method! type_annotation (annot: (Loc.t, Loc.t) Ast.Type.annotation) =
+    let open Ast.Type in
+    let t1, a = annot in
+    let t2, right_var = a in
+    match right_var with
+    | BooleanLiteral true ->
+      (t1, (t2, BooleanLiteral false))
+    | _ -> annot
+  end
+
 let edits_of_source algo source mapper =
   let ast, _ = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
@@ -1903,5 +1923,31 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
     let source = "throw \"rename\";" in
     assert_edits_equal ctxt ~edits:[((6, 14), "\"gotRenamed\"")]
     ~source ~expected:"throw \"gotRenamed\";" ~mapper:(new literal_mapper)
+  end;
+  "bool1" >:: begin fun ctxt ->
+    let source = "rename = true;" in
+    assert_edits_equal ctxt ~edits:[((0, 6), "gotRenamed")]
+    ~source ~expected:"gotRenamed = true;" ~mapper:(new useless_mapper)
+  end;
+  "bool2" >:: begin fun ctxt ->
+    let source = "const rename = 0; Boolean(rename);" in
+    assert_edits_equal ctxt ~edits:[((6, 12), "gotRenamed"); ((26, 32), "gotRenamed")]
+    ~source ~expected:"const gotRenamed = 0; Boolean(gotRenamed);" ~mapper:(new useless_mapper)
+  end;
+  "bool3" >:: begin fun ctxt ->
+    let source = "const rename = true; Boolean((false || rename));" in
+    assert_edits_equal ctxt ~edits:[((6, 12), "gotRenamed"); ((39, 45), "gotRenamed")]
+    ~source ~expected:"const gotRenamed = true; Boolean((false || gotRenamed));"
+    ~mapper:(new useless_mapper)
+  end;
+  "bool_change" >:: begin fun ctxt ->
+    let source = "const x = true; Boolean(true);" in
+    assert_edits_equal ctxt ~edits:[((10, 14), "false"); ((24, 28), "false")]
+    ~source ~expected:"const x = false; Boolean(false);" ~mapper:(new true_to_false_mapper)
+  end;
+  "bool_type_change" >:: begin fun ctxt ->
+    let source = "const x: true = 'garbage';" in
+    assert_edits_equal ctxt ~edits:[((7, 13), ": false")]
+    ~source ~expected:"const x: false = 'garbage';" ~mapper:(new true_to_false_mapper)
   end;
 ]
