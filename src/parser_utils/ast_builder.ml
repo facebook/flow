@@ -8,7 +8,7 @@
 module Ast = Flow_ast
 
 module Identifiers = struct
-  let identifier name = Flow_ast_utils.ident_of_source (Loc.none, name)
+  let identifier ?(loc=Loc.none) name = Flow_ast_utils.ident_of_source (loc, name)
 end
 
 module Types = struct
@@ -129,11 +129,11 @@ module JSXs = struct
 
   let identifier name = Identifier (Loc.none, { Identifier.name })
 
-  let attr_identifier name = Attribute.Identifier (Loc.none, { Identifier.name })
+  let attr_identifier ?(loc=Loc.none) name = Attribute.Identifier (loc, { Identifier.name })
 
   let attr_literal lit = Attribute.Literal (Loc.none, lit)
 
-  let attr name value = Opening.Attribute (Loc.none, { Attribute.name; value })
+  let attr ?(loc=Loc.none) name value = Opening.Attribute (loc, { Attribute.name; value })
 
   let element ?selfclosing:(selfClosing=false) ?attrs:(attributes=[]) ?(children=[]) name =
     { openingElement = Loc.none, { Opening.name; selfClosing; attributes };
@@ -197,16 +197,17 @@ module Statements = struct
       init;
     }
 
-  let variable_declarator ?init str =
-    Loc.none, { VariableDeclaration.Declarator.
-      id = Patterns.identifier str;
+  let variable_declarator ?init ?(loc=Loc.none) str =
+    loc, { VariableDeclaration.Declarator.
+      id = Patterns.identifier ~loc str;
       init;
     }
 
   let variable_declaration
       ?(kind = Ast.Statement.VariableDeclaration.Var)
+      ?(loc=Loc.none)
       declarations =
-    Loc.none, VariableDeclaration { VariableDeclaration.kind; declarations; }
+    loc, VariableDeclaration { VariableDeclaration.kind; declarations; }
 
   let let_declaration declarations =
     variable_declaration ~kind:Ast.Statement.VariableDeclaration.Let declarations
@@ -323,11 +324,11 @@ module Expressions = struct
   let decrement ~prefix argument =
     update ~op:Update.Decrement ~prefix argument
 
-  let object_property_key (k: string) =
-    Object.Property.Identifier (Flow_ast_utils.ident_of_source(Loc.none, k))
+  let object_property_key ?(loc=Loc.none) (k: string) =
+    Object.Property.Identifier (Flow_ast_utils.ident_of_source(loc, k))
 
-  let object_property_key_literal k =
-    Object.Property.Literal (Loc.none, k)
+  let object_property_key_literal ?(loc=Loc.none) k =
+    Object.Property.Literal (loc, k)
 
   let object_property_key_literal_from_string ?(loc=Loc.none) (k: string) =
     Object.Property.Literal (loc, Literals.string k)
@@ -340,16 +341,16 @@ module Expressions = struct
     let prop = Object.Property.Method { key; value = (Loc.none, fn) } in
     Object.Property (Loc.none, prop)
 
-  let object_property ?(shorthand=false) key value =
+  let object_property ?(shorthand=false) ?(loc=Loc.none) key value =
     let module Prop = Object.Property in
     let prop = Prop.Init { key; value; shorthand } in
-    Object.Property (Loc.none, prop)
+    Object.Property (loc, prop)
 
-  let object_property_with_literal ?(shorthand=false) k v =
-    object_property ~shorthand (object_property_key_literal k) v
+  let object_property_with_literal ?(shorthand=false) ?(loc=Loc.none) k v =
+    object_property ~shorthand ~loc (object_property_key_literal ~loc k) v
 
-  let object_ properties =
-    Loc.none, Object { Object.properties }
+  let object_ ?(loc=Loc.none) properties =
+    loc, Object { Object.properties }
 
   (* _object.property *)
   let member ~property _object =
