@@ -70,6 +70,8 @@ let send_errors =
         Errors.ErrorSet.union file_warns warn_acc)
       opened_filenames Errors.ErrorSet.empty
     in
+    let errors = Errors.concretize_errorset errors in
+    let warnings = Errors.concretize_errorset warnings in
     send_message (Prot.Errors {errors; warnings}) client
 
 let send_errors_if_subscribed ~client ~errors ~warnings =

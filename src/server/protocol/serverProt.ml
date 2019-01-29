@@ -167,12 +167,12 @@ module Response = struct
 
   type suggest_result =
   | Suggest_Ok of {
-      tc_errors: Errors.ErrorSet.t;
-      tc_warnings: Errors.ErrorSet.t;
-      suggest_warnings: Errors.ErrorSet.t;
+      tc_errors: Errors.ConcreteLocErrorSet.t;
+      tc_warnings: Errors.ConcreteLocErrorSet.t;
+      suggest_warnings: Errors.ConcreteLocErrorSet.t;
       annotated_program: (Loc.t, Loc.t) Flow_ast.program;
     }
-  | Suggest_Error of Errors.ErrorSet.t
+  | Suggest_Error of Errors.ConcreteLocErrorSet.t
 
   type suggest_response = (
     suggest_result,
@@ -198,7 +198,7 @@ module Response = struct
 
   type status_response =
   | DIRECTORY_MISMATCH of directory_mismatch
-  | ERRORS of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
+  | ERRORS of {errors: Errors.ConcreteLocErrorSet.t; warnings: Errors.ConcreteLocErrorSet.t}
   | NO_ERRORS
   | NOT_COVERED
 

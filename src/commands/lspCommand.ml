@@ -845,7 +845,7 @@ let lsp_DocumentIdentifier_to_flow
 let error_to_lsp
     ~(severity: PublishDiagnostics.diagnosticSeverity option)
     ~(default_uri: string)
-    (error: ALoc.t Errors.error)
+    (error: Loc.t Errors.error)
   : string * PublishDiagnostics.diagnostic =
   let error = Errors.Lsp_output.lsp_of_error error in
   let location = Flow_lsp_conversions.loc_to_lsp_with_default
@@ -884,7 +884,7 @@ let parse_and_cache flowconfig_name (state: state) (uri: string)
 
   let error_to_diagnostic (loc, parse_error) =
     let message = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) in
-    let error = Errors.mk_error ~kind:Errors.ParseError (loc |> ALoc.of_loc) message in
+    let error = Errors.mk_error ~kind:Errors.ParseError loc message in
     let _, diagnostic = error_to_lsp
       ~default_uri:uri ~severity:(Some PublishDiagnostics.Error) error in
     diagnostic in
@@ -1612,8 +1612,8 @@ begin
       SMap.add ~combine:List.append uri [diagnostic] all in
     (* First construct an SMap from uri to diagnostic list, which gathers together *)
     (* all the errors and warnings per uri *)
-    let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
-    let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
+    let all = Errors.ConcreteLocErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
+    let all = Errors.ConcreteLocErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
     in
     if cenv.c_is_rechecking then
       Ok (do_additional_diagnostics cenv all, LogNotNeeded)

@@ -230,6 +230,8 @@ let check_content ~filename ~content =
   | Error parse_errors ->
     parse_errors, Errors.ErrorSet.empty
   in
+  let errors = Errors.concretize_errorset errors in
+  let warnings = Errors.concretize_errorset warnings in
   let strip_root = Some root in
   Errors.Json_output.json_of_errors_with_context
     ~strip_root ~stdin_file ~suppressed_errors:[] ~errors ~warnings ()

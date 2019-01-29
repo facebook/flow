@@ -83,6 +83,9 @@ module ErrorSet : Set.S with type elt = ALoc.t error
 
 module ConcreteLocErrorSet : Set.S with type elt = Loc.t error
 
+val concretize_errorset: ErrorSet.t -> ConcreteLocErrorSet.t
+val concretize_error: ALoc.t error -> Loc.t error
+
 (* formatters/printers *)
 
 type stdin_file = (Path.t * string) option
@@ -114,8 +117,8 @@ module Cli_output : sig
     flags:error_flags ->
     ?stdin_file:stdin_file ->
     strip_root: Path.t option ->
-    errors: ErrorSet.t ->
-    warnings: ErrorSet.t ->
+    errors: ConcreteLocErrorSet.t ->
+    warnings: ConcreteLocErrorSet.t ->
     lazy_msg: string option ->
     unit -> unit
 
@@ -124,8 +127,8 @@ module Cli_output : sig
     flags:error_flags ->
     ?stdin_file:stdin_file ->
     strip_root: Path.t option ->
-    errors: ErrorSet.t ->
-    warnings: ErrorSet.t ->
+    errors: ConcreteLocErrorSet.t ->
+    warnings: ConcreteLocErrorSet.t ->
     lazy_msg: string option ->
     unit -> (Profiling_js.finished option -> unit) (* print errors *)
 end
@@ -138,42 +141,42 @@ module Json_output : sig
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
-    suppressed_errors: (ALoc.t error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (Loc.t error * Utils_js.LocSet.t) list ->
     ?version:json_version ->
-    errors: ErrorSet.t ->
-    warnings: ErrorSet.t ->
+    errors: ConcreteLocErrorSet.t ->
+    warnings: ConcreteLocErrorSet.t ->
     unit ->
     Hh_json.json
 
   val full_status_json_of_errors :
     strip_root: Path.t option ->
-    suppressed_errors: (ALoc.t error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (Loc.t error * Utils_js.LocSet.t) list ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
-    errors: ErrorSet.t ->
-    warnings: ErrorSet.t ->
+    errors: ConcreteLocErrorSet.t ->
+    warnings: ConcreteLocErrorSet.t ->
     unit -> (Profiling_js.finished option -> Hh_json.json)
 
   val print_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    suppressed_errors: (ALoc.t error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (Loc.t error * Utils_js.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
-    errors: ErrorSet.t ->
-    warnings: ErrorSet.t ->
+    errors: ConcreteLocErrorSet.t ->
+    warnings: ConcreteLocErrorSet.t ->
     unit -> unit
 
   val format_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    suppressed_errors: (ALoc.t error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (Loc.t error * Utils_js.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
-    errors: ErrorSet.t ->
-    warnings: ErrorSet.t ->
+    errors: ConcreteLocErrorSet.t ->
+    warnings: ConcreteLocErrorSet.t ->
     unit -> (Profiling_js.finished option -> unit) (* print errors *)
 end
 
@@ -184,8 +187,8 @@ module Vim_emacs_output : sig
   val print_errors:
     strip_root:Path.t option ->
     out_channel ->
-    errors:ErrorSet.t ->
-    warnings:ErrorSet.t ->
+    errors:ConcreteLocErrorSet.t ->
+    warnings:ConcreteLocErrorSet.t ->
     unit ->
     unit
 end
@@ -197,7 +200,7 @@ module Lsp_output : sig
     code: string;  (* an error code *)
     relatedLocations: (Loc.t * string) list;
   }
-  val lsp_of_error: ALoc.t error -> t
+  val lsp_of_error: Loc.t error -> t
 end
 
 class mapper : object

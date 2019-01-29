@@ -662,6 +662,8 @@ let flow_check (code : string) : string option =
           let stdin_file = None in
           let strip_root = None in
           let suppressed_errors = [] in
+          let errors = Errors.concretize_errorset errors in
+          let warnings = Errors.concretize_errorset warnings in
           let res = Errors.Json_output.full_status_json_of_errors ~strip_root ~stdin_file
               ~suppressed_errors ~errors ~warnings () None in
         (*

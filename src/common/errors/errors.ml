@@ -1027,6 +1027,13 @@ module ConcreteLocErrorSet = Set.Make (struct
   let compare = compare Loc.compare
 end)
 
+let concretize_errorset errors =
+  ErrorSet.fold begin fun err acc ->
+    ConcreteLocErrorSet.add (loc_concretizer#error err) acc
+  end errors ConcreteLocErrorSet.empty
+
+let concretize_error = loc_concretizer#error
+
 type 'a error_group =
   (* Friendly errors without a root are never grouped. When traces are enabled
    * all friendly errors will never group. *)
@@ -1047,8 +1054,7 @@ exception Interrupt_ErrorSet_fold of Loc.t error_group list
 let collect_errors_into_groups max set =
   let open Friendly in
   try
-    let (_, acc) = ErrorSet.fold (fun full_error (n, acc) ->
-      let (kind, trace, error) = loc_concretizer#error full_error in
+    let (_, acc) = ConcreteLocErrorSet.fold (fun (kind, trace, error) (n, acc) ->
       let omit = Option.value_map max ~default:false ~f:(fun max -> max <= n) in
       let acc = match error with
       | error when trace <> [] ->
@@ -2678,8 +2684,8 @@ module Cli_output = struct
       ~strip_root ~errors ~warnings ~lazy_msg () ->
       let truncate = not (flags.show_all_errors) in
       let max_count = if truncate then Some 50 else None in
-      let err_count = ErrorSet.cardinal errors in
-      let warn_count = ErrorSet.cardinal warnings in
+      let err_count = ConcreteLocErrorSet.cardinal errors in
+      let warn_count = ConcreteLocErrorSet.cardinal warnings in
       let errors = collect_errors_into_groups max_count errors in
       let warnings =
         collect_errors_into_groups
@@ -2990,16 +2996,16 @@ module Json_output = struct
     let f = json_of_error_with_context ~strip_root ~stdin_file ~version in
     let obj_props_rev =
       []
-      |> ErrorSet.fold (fun error acc ->
-        f ~severity:Err (loc_concretizer#error error, Utils_js.LocSet.empty) :: acc) errors
-      |> ErrorSet.fold (fun warn acc ->
-        f ~severity:Warn (loc_concretizer#error warn, Utils_js.LocSet.empty) :: acc) warnings
+      |> ConcreteLocErrorSet.fold (fun error acc ->
+        f ~severity:Err (error, Utils_js.LocSet.empty) :: acc) errors
+      |> ConcreteLocErrorSet.fold (fun warn acc ->
+        f ~severity:Warn (warn, Utils_js.LocSet.empty) :: acc) warnings
     in
     (* We want these to show up as "suppressed error"s, not "suppressed off"s *)
     let obj_props_rev = List.fold_left (fun acc suppressed_error ->
       let suppressed_error =
         let (err, suppressions) = suppressed_error in
-        (loc_concretizer#error err, suppressions)
+        (err, suppressions)
       in
       f ~severity:Err suppressed_error :: acc
     ) obj_props_rev suppressed_errors
@@ -3022,7 +3028,7 @@ module Json_output = struct
       "jsonVersion", JSON_String (match version with JsonV1 -> "1" | JsonV2 -> "2");
       "errors", json_of_errors_with_context
         ~strip_root ~stdin_file ~suppressed_errors ~version ~errors ~warnings ();
-      "passed", JSON_Bool (ErrorSet.is_empty errors);
+      "passed", JSON_Bool (ConcreteLocErrorSet.is_empty errors);
     ]
     in fun profiling ->
       let props = match profiling with
@@ -3100,15 +3106,14 @@ module Vim_emacs_output = struct
       );
       Buffer.contents buf
     in
-    let to_string ~strip_root prefix (full_error : ALoc.t error) : string =
-      let (_, trace, error) = loc_concretizer#error full_error in
+    let to_string ~strip_root prefix ((_, trace, error) : Loc.t error) : string =
       classic_to_string ~strip_root prefix trace (Friendly.to_classic error) in
     fun ~strip_root oc ~errors ~warnings () ->
       let sl = []
-        |> ErrorSet.fold (fun err acc ->
+        |> ConcreteLocErrorSet.fold (fun err acc ->
             (to_string ~strip_root "Error: " err)::acc
           ) (errors)
-        |> ErrorSet.fold (fun warn acc ->
+        |> ConcreteLocErrorSet.fold (fun warn acc ->
             (to_string ~strip_root "Warning: " warn)::acc
           ) (warnings)
         |> List.sort String.compare
@@ -3130,12 +3135,11 @@ module Lsp_output = struct
     relatedLocations: (Loc.t * string) list;
   }
 
-  let lsp_of_error (error: ALoc.t error) : t =
+  let lsp_of_error (error: Loc.t error) : t =
     (* e.g. "Error about `code` in type Ref(`foo`)"                    *)
     (* will produce LSP message "Error about `code` in type `foo` [1]" *)
     (* and the LSP related location will have message "[1]: `foo`"      *)
     let (kind, _, friendly) = error in
-    let friendly = loc_concretizer#friendly_error friendly in
     let (_, loc, group) =
       Friendly.message_group_of_error ~show_all_branches:false ~show_root:true friendly in
     let (references, group) = Friendly.extract_references group in

@@ -1269,9 +1269,9 @@ let failwith_bad_response ~request ~response =
 let get_check_or_status_exit_code errors warnings max_warnings =
   let open FlowExitStatus in
   let open Errors in
-  if ErrorSet.is_empty errors then begin
+  if ConcreteLocErrorSet.is_empty errors then begin
     match max_warnings with
-    | Some x when ErrorSet.cardinal warnings > x -> Type_error
+    | Some x when ConcreteLocErrorSet.cardinal warnings > x -> Type_error
     | None | Some _ -> No_error
   end else
     Type_error
