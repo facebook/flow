@@ -848,7 +848,7 @@ module Expression
       with Failure _ -> failwith ("Invalid binary/octal "^raw)
       end
     | NORMAL ->
-      begin try Lexer.FloatOfString.float_of_string raw
+      begin try Flow_lexer.FloatOfString.float_of_string raw
       with
       | _ when Sys.win32 ->
         error env Parse_error.WindowsFloatOfString;

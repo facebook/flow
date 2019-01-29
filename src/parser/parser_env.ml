@@ -90,12 +90,12 @@ end = struct
     let lex_env = t.la_lex_env in
     let lex_env, lex_result =
       match t.la_lex_mode with
-      | Lex_mode.NORMAL -> Lexer.token lex_env
-      | Lex_mode.TYPE -> Lexer.type_token lex_env
-      | Lex_mode.JSX_TAG -> Lexer.jsx_tag lex_env
-      | Lex_mode.JSX_CHILD -> Lexer.jsx_child lex_env
-      | Lex_mode.TEMPLATE -> Lexer.template_tail lex_env
-      | Lex_mode.REGEXP -> Lexer.regexp lex_env
+      | Lex_mode.NORMAL -> Flow_lexer.token lex_env
+      | Lex_mode.TYPE -> Flow_lexer.type_token lex_env
+      | Lex_mode.JSX_TAG -> Flow_lexer.jsx_tag lex_env
+      | Lex_mode.JSX_CHILD -> Flow_lexer.jsx_child lex_env
+      | Lex_mode.TEMPLATE -> Flow_lexer.template_tail lex_env
+      | Lex_mode.REGEXP -> Flow_lexer.regexp lex_env
     in
     let cloned_env = Lex_env.clone lex_env in
     t.la_lex_env <- lex_env;

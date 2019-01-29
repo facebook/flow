@@ -288,7 +288,7 @@ let extract_docblock =
       Lex_env.new_lex_env (Some filename) lb ~enable_types_in_comments:false in
     let rec get_first_comment_contents ?(i=0) env =
       if i < max_tokens then
-        let env, lexer_result = Lexer.token env in
+        let env, lexer_result = Flow_lexer.token env in
         match Lex_result.comments lexer_result with
         | [] -> Token.(
             (**
