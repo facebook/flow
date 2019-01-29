@@ -14,11 +14,11 @@ References:
    map.js:23:22
     23|     let x = new Map(['foo', 123]); // error
                              ^^^^^ [1]
-   <BUILTINS>/core.js:545:37
-   545|     constructor(iterable: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:546:37
+   546|     constructor(iterable: ?Iterable<[K, V]>): void;
                                             ^^^^^^ [2]
-   <BUILTINS>/core.js:488:22
-   488| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:489:22
+   489| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
    map.js:23:29
     23|     let x = new Map(['foo', 123]); // error
@@ -42,8 +42,8 @@ References:
    map.js:24:16
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                        ^^^^^^ [2]
-   <BUILTINS>/core.js:543:19
-   543| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
+   <BUILTINS>/core.js:544:19
+   544| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
                           ^ [3]
    map.js:24:51
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -51,8 +51,8 @@ References:
    map.js:24:24
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                ^^^^^^ [5]
-   <BUILTINS>/core.js:543:22
-   543| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
+   <BUILTINS>/core.js:544:22
+   544| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
                              ^ [6]
 
 
@@ -67,8 +67,8 @@ Cannot cast `x.get(...)` to boolean because:
              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:550:22
-   550|     get(key: K): V | void;
+   <BUILTINS>/core.js:551:22
+   551|     get(key: K): V | void;
                              ^^^^ [1]
    map.js:29:20
     29|     (x.get('foo'): boolean); // error, string | void
@@ -102,8 +102,8 @@ since `z` is not a member of the set.
                           ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:287:21
-   287| type RegExp$flags = $CharSet<"gimsuy">;
+   <BUILTINS>/core.js:288:21
+   288| type RegExp$flags = $CharSet<"gimsuy">;
                             ^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -117,8 +117,8 @@ since `z` is not a member of the set.
                               ^^^ [1]
 
 References:
-   <BUILTINS>/core.js:287:21
-   287| type RegExp$flags = $CharSet<"gimsuy">;
+   <BUILTINS>/core.js:288:21
+   288| type RegExp$flags = $CharSet<"gimsuy">;
                             ^^^^^^^^^^^^^^^^^^ [2]
 
 

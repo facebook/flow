@@ -93,8 +93,8 @@ References:
    <BUILTINS>/react.js:305:30
    305|     component: () => Promise<{ default: React$ComponentType<P> }>,
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:613:24
-   613| declare class Promise<+R> {
+   <BUILTINS>/core.js:614:24
+   614| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -114,8 +114,8 @@ References:
    <BUILTINS>/react.js:305:30
    305|     component: () => Promise<{ default: React$ComponentType<P> }>,
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:613:24
-   613| declare class Promise<+R> {
+   <BUILTINS>/core.js:614:24
+   614| declare class Promise<+R> {
                                ^ [3]
 
 
