@@ -39,9 +39,9 @@ val suggest :
   profiling:Profiling_js.running ->
   File_key.t ->
   string ->
-  ((Errors.ErrorSet.t *   (* Typechecking errors *)
-    Errors.ErrorSet.t *   (* Typechecking warnings *)
-    Errors.ErrorSet.t *   (* Suggest-related warnings (normalization etc.) *)
+  ((Errors.ConcreteLocErrorSet.t *   (* Typechecking errors *)
+    Errors.ConcreteLocErrorSet.t *   (* Typechecking warnings *)
+    Errors.ConcreteLocErrorSet.t *   (* Suggest-related warnings (normalization etc.) *)
     (Loc.t, Loc.t) Flow_ast.program),   (* Annotated program *)
-    Errors.ErrorSet.t     (* Parsing errors *)
+    Errors.ConcreteLocErrorSet.t     (* Parsing errors *)
   ) Core_result.t Lwt.t

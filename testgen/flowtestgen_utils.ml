@@ -615,11 +615,13 @@ let flow_check (code : string) : string option =
           (Nel.one filename) reqs [] master_sig_cx in
       let suppressions = Error_suppressions.empty in
       let severity_cover = Utils_js.FilenameMap.singleton filename (ExactCover.default_file_cover filename) in
+      let errors = Context.errors final_cx in
+      let errors = Errors.concretize_errorset errors in
       let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-          suppressions severity_cover (Context.errors final_cx)
+          suppressions severity_cover errors
           ~unused:suppressions
       in
-      let error_num = Errors.ErrorSet.cardinal errors in
+      let error_num = Errors.ConcreteLocErrorSet.cardinal errors in
       if error_num = 0 then
         None
       else begin
@@ -662,8 +664,6 @@ let flow_check (code : string) : string option =
           let stdin_file = None in
           let strip_root = None in
           let suppressed_errors = [] in
-          let errors = Errors.concretize_errorset errors in
-          let warnings = Errors.concretize_errorset warnings in
           let res = Errors.Json_output.full_status_json_of_errors ~strip_root ~stdin_file
               ~suppressed_errors ~errors ~warnings () None in
         (*

@@ -43,9 +43,10 @@ let regenerate =
           let err =
             let msg = Flow_error.EUnusedSuppression (ALoc.of_loc loc) in
             Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg in
+          let err = Errors.concretize_error err in
           let file_warnings = FilenameMap.get source_file warnings
-            |> Option.value ~default:ErrorSet.empty
-            |> ErrorSet.add err in
+            |> Option.value ~default:ConcreteLocErrorSet.empty
+            |> ConcreteLocErrorSet.add err in
           FilenameMap.add source_file file_warnings warnings
         end else
           warnings
@@ -54,9 +55,10 @@ let regenerate =
   in
   let acc_fun suppressions severity_cover filename file_errs
       (errors, warnings, suppressed, unused) =
+    let file_errs = Errors.concretize_errorset file_errs in
     let file_errs, file_warns, file_suppressed, unused =
       filter_suppressed_errors suppressions severity_cover file_errs ~unused in
-    let errors = ErrorSet.union file_errs errors in
+    let errors = ConcreteLocErrorSet.union file_errs errors in
     let warnings = FilenameMap.add filename file_warns warnings in
     let suppressed = List.rev_append file_suppressed suppressed in
     (errors, warnings, suppressed, unused)
@@ -69,7 +71,7 @@ let regenerate =
 
     let acc_fun = acc_fun suppressions severity_cover_set in
     let collated_errorset, warnings, collated_suppressed_errors, unused =
-      (ErrorSet.empty, FilenameMap.empty, [], suppressions)
+      (ConcreteLocErrorSet.empty, FilenameMap.empty, [], suppressions)
       |> FilenameMap.fold acc_fun local_errors
       |> FilenameMap.fold acc_fun merge_errors
     in
@@ -95,5 +97,5 @@ let get_with_separate_warnings env =
 let get env =
   let open Errors in
   let errors, warning_map, suppressed_errors = get_with_separate_warnings env in
-  let warnings = FilenameMap.fold (fun _key -> ErrorSet.union) warning_map ErrorSet.empty in
+  let warnings = FilenameMap.fold (fun _key -> ConcreteLocErrorSet.union) warning_map ConcreteLocErrorSet.empty in
   (errors, warnings, suppressed_errors)

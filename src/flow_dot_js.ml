@@ -224,14 +224,15 @@ let check_content ~filename ~content =
     let file_sig = File_sig.abstractify_locs file_sig in
     let cx, _ = infer_and_merge ~root filename ast file_sig in
     let suppressions = Error_suppressions.empty in (* TODO: support suppressions *)
+    let errors = Context.errors cx in
+    let errors = Errors.concretize_errorset errors in
     let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      suppressions (Context.severity_cover cx) (Context.errors cx) ~unused:suppressions
+      suppressions (Context.severity_cover cx) errors ~unused:suppressions
     in errors, warnings
   | Error parse_errors ->
-    parse_errors, Errors.ErrorSet.empty
+    let parse_errors = Errors.concretize_errorset parse_errors in
+    parse_errors, Errors.ConcreteLocErrorSet.empty
   in
-  let errors = Errors.concretize_errorset errors in
-  let warnings = Errors.concretize_errorset warnings in
   let strip_root = Some root in
   Errors.Json_output.json_of_errors_with_context
     ~strip_root ~stdin_file ~suppressed_errors:[] ~errors ~warnings ()

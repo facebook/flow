@@ -204,11 +204,6 @@ let check_once ~shared_mem_config ~format_errors ?focus_targets options =
           Profiling_js.with_timer_lwt ~timer:"CollateErrors" profiling
             ~f:(fun () -> Lwt.return (ErrorCollator.get env))
         in
-        let errors = Errors.concretize_errorset errors in
-        let warnings = Errors.concretize_errorset warnings in
-        let suppressed_errors = List.map begin fun (err, locs) ->
-          (Errors.concretize_error err, locs)
-        end suppressed_errors in
         let collated_errors = (errors, warnings, suppressed_errors) in
         let%lwt print_errors =
           Profiling_js.with_timer_lwt ~timer:"FormatErrors" profiling

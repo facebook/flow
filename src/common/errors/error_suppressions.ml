@@ -149,7 +149,6 @@ let remove_lint_suppression_from_map loc (suppressions_map: t) =
 
 let check_loc lint_kind suppressions severity_cover
   ((result, used, (unused: t), is_primary_loc) as acc) loc =
-  let loc = ALoc.to_loc loc in
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   match suppression_at_loc loc suppressions with
@@ -187,18 +186,18 @@ let check_locs locs lint_kind (suppressions: t) severity_cover (unused: t) =
     locs
 
 let in_node_modules loc =
-  match ALoc.source loc with
+  match Loc.source loc with
   | None -> false
   | Some file ->
     String_utils.is_substring "/node_modules/" (File_key.to_string file)
 
-let check err (suppressions: t) severity_cover (unused: t) =
+let check (err: Loc.t Errors.error) (suppressions: t) severity_cover (unused: t) =
   let locs =
     Errors.locs_of_error err
     (* It is possible for errors to contain locations without a source, but suppressions always
      * exist in an actual file so there is no point checking if suppressions exist at locations
      * without a source. *)
-    |> List.filter (fun loc -> Option.is_some (ALoc.source loc))
+    |> List.filter (fun loc -> Option.is_some (Loc.source loc))
   in
   (* Ignore lint errors which were never enabled in the first place. *)
   let lint_kind, ignore =
@@ -209,7 +208,6 @@ let check err (suppressions: t) severity_cover (unused: t) =
         if in_node_modules (Errors.loc_of_error err) then Some kind, true else
         let severity, is_explicit = List.fold_left (fun (s, e) loc ->
           if in_node_modules loc then (s, e) else
-          let loc = ALoc.to_loc loc in
           let lint_settings = lint_settings_at_loc loc severity_cover in
           let s' = LintSettings.get_value kind lint_settings in
           let e' = LintSettings.is_explicit kind lint_settings in
@@ -241,15 +239,15 @@ let all_locs map =
 
 let filter_suppressed_errors suppressions severity_cover errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
-  Errors.ErrorSet.fold (fun error ((errors, warnings, suppressed, unused) as acc) ->
+  Errors.ConcreteLocErrorSet.fold (fun error ((errors, warnings, suppressed, unused) as acc) ->
     match check error suppressions severity_cover unused with
     | None -> acc
     | Some (severity, used, unused) ->
       match severity with
       | Off -> errors, warnings, (error, used)::suppressed, unused
-      | Warn -> errors, Errors.ErrorSet.add error warnings, suppressed, unused
-      | Err -> Errors.ErrorSet.add error errors, warnings, suppressed, unused
-  ) errors (Errors.ErrorSet.empty, Errors.ErrorSet.empty, [], unused)
+      | Warn -> errors, Errors.ConcreteLocErrorSet.add error warnings, suppressed, unused
+      | Err -> Errors.ConcreteLocErrorSet.add error errors, warnings, suppressed, unused
+  ) errors (Errors.ConcreteLocErrorSet.empty, Errors.ConcreteLocErrorSet.empty, [], unused)
 
 let update_suppressions current_suppressions new_suppressions =
   FilenameMap.fold begin fun file file_suppressions acc ->

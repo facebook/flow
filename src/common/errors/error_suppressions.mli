@@ -25,5 +25,5 @@ val update_suppressions: t -> t -> t
 val all_locs: t -> Loc.t list
 
 val filter_suppressed_errors :
-  t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> Errors.ErrorSet.t -> unused:t ->
-  (Errors.ErrorSet.t * Errors.ErrorSet.t * (ALoc.t Errors.error * Utils_js.LocSet.t) list * t)
+  t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> Errors.ConcreteLocErrorSet.t -> unused:t ->
+  (Errors.ConcreteLocErrorSet.t * Errors.ConcreteLocErrorSet.t * (Loc.t Errors.error * Utils_js.LocSet.t) list * t)

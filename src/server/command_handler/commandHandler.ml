@@ -11,17 +11,15 @@ open Utils_js
 open Lsp
 
 let status_log errors =
-  if Errors.ErrorSet.is_empty errors
+  if Errors.ConcreteLocErrorSet.is_empty errors
     then Hh_logger.info "Status: OK"
     else Hh_logger.info "Status: Error";
   flush stdout
 
 let convert_errors ~errors ~warnings =
-  if Errors.ErrorSet.is_empty errors && Errors.ErrorSet.is_empty warnings then
+  if Errors.ConcreteLocErrorSet.is_empty errors && Errors.ConcreteLocErrorSet.is_empty warnings then
     ServerProt.Response.NO_ERRORS
   else
-    let errors = Errors.concretize_errorset errors in
-    let warnings = Errors.concretize_errorset warnings in
     ServerProt.Response.ERRORS {errors; warnings}
 
 let get_status genv env client_root =
@@ -38,13 +36,13 @@ let get_status genv env client_root =
       let errors, warnings, _ = ErrorCollator.get env in
       let warnings = if Options.should_include_warnings genv.options
         then warnings
-        else Errors.ErrorSet.empty
+        else Errors.ConcreteLocErrorSet.empty
       in
 
       (* TODO: check status.directory *)
       status_log errors;
       FlowEventLogger.status_response
-        ~num_errors:(Errors.ErrorSet.cardinal errors);
+        ~num_errors:(Errors.ConcreteLocErrorSet.cardinal errors);
       convert_errors errors warnings
     end
   in
@@ -187,14 +185,10 @@ let suggest ~options ~env ~profiling file_input =
     in
     match result with
     | Ok (tc_errors, tc_warnings, suggest_warnings, annotated_program) ->
-      let tc_errors = Errors.concretize_errorset tc_errors in
-      let tc_warnings = Errors.concretize_errorset tc_warnings in
-      let suggest_warnings = Errors.concretize_errorset suggest_warnings in
       Lwt.return (Ok (ServerProt.Response.Suggest_Ok {
         tc_errors; tc_warnings; suggest_warnings; annotated_program
       }))
     | Error errors ->
-      let errors = Errors.concretize_errorset errors in
       Lwt.return (Ok (ServerProt.Response.Suggest_Error errors))
   )
 
@@ -1135,8 +1129,6 @@ let handle_persistent_rage ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
   let items = { Lsp.Rage.title = Some (root ^ ":env.dependencies"); data; } :: items in
   (* env: errors *)
   let errors, warnings, _ = ErrorCollator.get env in
-  let errors = Errors.concretize_errorset errors in
-  let warnings = Errors.concretize_errorset warnings in
   let json = Errors.Json_output.json_of_errors_with_context ~strip_root:None ~stdin_file:None
     ~suppressed_errors:[] ~errors ~warnings () in
   let data = "ERRORS:\n" ^ (Hh_json.json_to_multiline json) in

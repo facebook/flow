@@ -382,8 +382,8 @@ let merge
          Intuitively, we will not see an error (or warning) before we've seen all the files involved
          in that error, and thus all the suppressions which could possibly suppress the error. *)
       let open Errors in
-      let curr_errors = ref ErrorSet.empty in
-      let curr_warnings = ref ErrorSet.empty in
+      let curr_errors = ref ConcreteLocErrorSet.empty in
+      let curr_warnings = ref ConcreteLocErrorSet.empty in
       let curr_suppressions = ref suppressions in
       let curr_severity_cover = ref severity_cover_set in
       let filter = Error_suppressions.filter_suppressed_errors in
@@ -398,32 +398,32 @@ let merge
               ~unused:Error_suppressions.empty (* TODO: track unused suppressions *)
             in
             (* Only add errors we haven't seen before. *)
-            let errs_acc = ErrorSet.fold (fun err acc ->
-              if ErrorSet.mem err !curr_errors
+            let errs_acc = ConcreteLocErrorSet.fold (fun err acc ->
+              if ConcreteLocErrorSet.mem err !curr_errors
               then acc
-              else ErrorSet.add err acc
+              else ConcreteLocErrorSet.add err acc
             ) errs errs_acc in
             (* Only add warnings we haven't seen before. Note that new warnings are stored by
                filename, because the clients only receive warnings for files they have open. *)
             let warns_acc =
-              let acc = Option.value (FilenameMap.get file warns_acc) ~default:ErrorSet.empty in
-              let acc = ErrorSet.fold (fun warn acc ->
-                if ErrorSet.mem warn !curr_warnings
+              let acc = Option.value (FilenameMap.get file warns_acc) ~default:ConcreteLocErrorSet.empty in
+              let acc = ConcreteLocErrorSet.fold (fun warn acc ->
+                if ConcreteLocErrorSet.mem warn !curr_warnings
                 then acc
-                else ErrorSet.add warn acc
+                else ConcreteLocErrorSet.add warn acc
               ) warns acc in
-              if ErrorSet.is_empty acc then warns_acc else FilenameMap.add file acc warns_acc
+              if ConcreteLocErrorSet.is_empty acc then warns_acc else FilenameMap.add file acc warns_acc
             in
             errs_acc, warns_acc, supps_acc, lints_acc
-          ) (ErrorSet.empty, FilenameMap.empty, !curr_suppressions, !curr_severity_cover) results
+          ) (ConcreteLocErrorSet.empty, FilenameMap.empty, !curr_suppressions, !curr_severity_cover) results
         in
 
-        curr_errors := ErrorSet.union new_errors !curr_errors;
-        curr_warnings := FilenameMap.fold (fun _ -> ErrorSet.union) new_warnings !curr_warnings;
+        curr_errors := ConcreteLocErrorSet.union new_errors !curr_errors;
+        curr_warnings := FilenameMap.fold (fun _ -> ConcreteLocErrorSet.union) new_warnings !curr_warnings;
         curr_suppressions := suppressions;
         curr_severity_cover := severity_cover;
 
-        if not (ErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings)
+        if not (ConcreteLocErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings)
         then Persistent_connection.update_clients
           ~clients
           ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
@@ -459,9 +459,11 @@ let merge
         Core_list.map ~f:(fun (file, result) ->
           match result with
           | Ok (errors, suppressions, severity_cover) ->
+            let errors = Errors.concretize_errorset errors in
             file, errors, suppressions, severity_cover
           | Error msg ->
             let errors = error_set_of_merge_error file msg in
+            let errors = Errors.concretize_errorset errors in
             let suppressions = Error_suppressions.empty in
             let severity_cover =
               Utils_js.FilenameMap.singleton
@@ -664,6 +666,7 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
         else
           errors
       in
+      let errors = Errors.concretize_errorset errors in
 
       (* Suppressions for errors in this file can come from dependencies *)
       let suppressions =
@@ -689,7 +692,7 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
 
       let warnings = if Options.should_include_warnings options
         then warnings
-        else Errors.ErrorSet.empty
+        else Errors.ConcreteLocErrorSet.empty
       in
 
       Lwt.return (Some (cx, ast, file_sig, typed_ast), errors, warnings, info)
@@ -708,13 +711,15 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
           let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
           Errors.ErrorSet.add err errors
       in
-      Lwt.return (None, errors, Errors.ErrorSet.empty, info)
+      let errors = Errors.concretize_errorset errors in
+      Lwt.return (None, errors, Errors.ConcreteLocErrorSet.empty, info)
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
     | Parsing_service_js.Skip_resource_file) ->
       (* should never happen *)
-      Lwt.return (None, errors, Errors.ErrorSet.empty, info)
+      let errors = Errors.concretize_errorset errors in
+      Lwt.return (None, errors, Errors.ConcreteLocErrorSet.empty, info)
 
 let typecheck_contents ~options ~env ~profiling contents filename =
   let%lwt cx_opt, errors, warnings, _info =
@@ -1010,7 +1015,8 @@ let recheck_with_profiling
       let error_set: Errors.ErrorSet.t =
         FilenameMap.fold (fun _ -> Errors.ErrorSet.union) new_local_errors Errors.ErrorSet.empty
       in
-      if Errors.ErrorSet.cardinal error_set > 0
+      let error_set = Errors.concretize_errorset error_set in
+      if Errors.ConcreteLocErrorSet.cardinal error_set > 0
       then Persistent_connection.update_clients
         ~clients:env.ServerEnv.connections
         ~calc_errors_and_warnings:(fun () -> error_set, FilenameMap.empty)
