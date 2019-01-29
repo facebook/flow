@@ -1,31 +1,29 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-module S = Ast.Statement;;
-module E = Ast.Expression;;
-module T = Ast.Type;;
-module P = Ast.Pattern;;
+module S = Flow_ast.Statement;;
+module E = Flow_ast.Expression;;
+module T = Flow_ast.Type;;
+module P = Flow_ast.Pattern;;
 module Utils = Flowtestgen_utils;;
-module FRandom = Utils.FRandom;;
 
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
 open Ruleset_base;;
 
-class ruleset_depth (depth : int) = object(self)
-  inherit Ruleset_base.ruleset_base depth
+class ruleset_depth = object(self)
+  inherit Ruleset_base.ruleset_base
+
+  method! get_name () : string = "depth"
 
   method! weak_assert b = self#backtrack_on_false b
 
-  method! is_subtype_obj (o1 : T.Object.t) (o2 : T.Object.t) =
-    let get_prop_set (o : T.Object.t) =
+  method! is_subtype_obj (o1 : (Loc.t, Loc.t) T.Object.t) (o2 : (Loc.t, Loc.t) T.Object.t) =
+    let get_prop_set (o : (Loc.t, Loc.t) T.Object.t) =
       let tbl = Hashtbl.create 1000 in
       let open T.Object.Property in
       List.iter (fun p -> match p with
@@ -33,6 +31,7 @@ class ruleset_depth (depth : int) = object(self)
                                    value = Init (_, t);
                                    optional = _;
                                    static = _;
+                                   proto = _;
                                    _method = _;
                                    variance = _;}) -> Hashtbl.add tbl name t
           | _ -> ()) T.Object.(o.properties);
@@ -50,84 +49,94 @@ class ruleset_depth (depth : int) = object(self)
 
   (* A helper funtions for wrapping an expression and a type
      into an object for mutation and expose type errors. *)
-  method wrap_in_obj (expr : E.t') (etype : T.t') : (E.t' * T.t') =
+  method wrap_in_obj (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t') : ((Loc.t, Loc.t) E.t' * (Loc.t, Loc.t) T.t') =
     let pname = "p_0" in
     let obj_expr =
       let prop =
         let open E.Object.Property in
-        E.Object.Property (Loc.none, {key = Identifier (Loc.none, pname);
-                    value = Init (Loc.none, expr);
-                    _method = false;
-                    shorthand = false}) in
+        E.Object.Property (Loc.none, Init {
+          key = Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
+          value = Loc.none, expr;
+          shorthand = false
+        }) in
       let properties = [prop] in
       E.Object.(E.Object {properties}) in
     let obj_type =
       let open T.Object.Property in
       let prop_type =
-        T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, pname);
+        T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
                                       value = Init (Loc.none, etype);
                                       optional = false;
                                       static = false;
+                                      proto = false;
                                       _method = false;
                                       variance = None;}) in
-      T.Object.(T.Object {exact = false; properties = [prop_type]}) in
+      T.Object.(T.Object {exact = false; properties = [prop_type]; inexact = true}) in
       obj_expr, obj_type
 
-  (* A rule for generating object literals *)
-  method! rule_obj_lit (env : env_t) : (Syntax.t * env_t) =
+  (* property update rule *)
+  method! rule_prop_update (env : env_t) : (Syntax.t * env_t) =
+    (* get an object variable *)
+    let obj = self#choose 0 (fun () -> self#require_expr env) in
+    self#backtrack_on_false (match obj with
+        | Expr (E.Identifier _, T.Object _) -> true
+        | _ -> false);
+    let oexpr, otype = match obj with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression" in
 
-    (* a helper function for generating expression for object
-       properties *)
-    let rec gen_expr_list
-        (count : int)
-        (limit : int)
-        (result : (E.t' * T.t') list) : (E.t' * T.t') list =
-      if count = limit then result
-      else
-        let expr = self#choose count (fun () -> self#require_expr env) in
-        let ep = match expr with
-          | Expr (e, t) -> (e, t)
-          | _ -> failwith "This has to be an expression" in
-        self#backtrack_on_false ((snd ep) = T.Number);
-        gen_expr_list (count + 1) limit (ep :: result) in
+    let prop = self#choose 1 (fun () -> self#require_prop otype true) in
+    let pexpr, ptype = match prop with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+    self#backtrack_on_false (match ptype with
+        | T.Object _ -> true
+        | _ -> false);
 
-    (* We are getting at most 2 properties *)
-    let elist = gen_expr_list 0 ((FRandom.rint 2) + 1) [] in
-    let props =
-      let count = ref 0 in
-      let mk_prop () =
-        let r = "p_" ^ (string_of_int !count) in
-        count := !count + 1;
-        r in
-      List.map (fun e -> mk_prop (), e) elist in
+    (* get the expression on the rhs of the update *)
+    let rhs = self#choose 2 (fun () -> self#require_expr env) in
+    let rhs_expr, rhs_type = match rhs with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+    self#backtrack_on_false (match rhs_expr with
+        | E.Object _ -> true
+        | _ -> false);
 
-    (* get the literal syntax and its type *)
-    let lit = Syntax.mk_obj_lit props in
-    let lit_expr = (match lit with
-         | Syntax.Expr e -> e
-         | _ -> failwith "[rule_obj_lit] Literal has to be an expr") in
+    (* assert that type(rhs) <: type(prop) *)
+    self#weak_assert (self#is_subtype rhs_type ptype);
+
+    (* produce a write syntax *)
+    let write =
+      Syntax.mk_prop_write
+        (Utils.string_of_expr oexpr)
+        (Utils.string_of_expr pexpr)
+        rhs_expr in
+
+    (* update the type of the object *)
     let ret_type =
-      let prop_types =
-        List.map (fun e ->
-            let open T.Object.Property in
-            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, fst e);
-                                          value = Init (Loc.none, snd (snd e));
-                                          optional = false;
-                                          static = false;
-                                          _method = false;
-                                          variance = None})) props in
-      let open T.Object in
-      T.Object {exact = false; properties = prop_types} in
+      let o_type = match otype with
+        | T.Object o -> o
+        | _ -> failwith "Has to be an object type" in
+        T.Object o_type in
 
-    (* Randomly wrap them into an object *)
-    let lit_expr, ret_type = match FRandom.rbool () with
-      | true -> self#wrap_in_obj lit_expr ret_type
-      | false -> lit_expr, ret_type in
+    let new_env = self#add_binding env (Expr (oexpr, ret_type)) in
+    let new_env = self#add_binding new_env (Type ret_type) in
+    (write, new_env)
+
+  (* A rule for generating object literals *)
+  method! rule_obj_lit (prop_num : int) (opt_num : int) (env : env_t) : (Syntax.t * env_t) =
+
+    let lit, lit_expr, ret_type = self#gen_obj_lit prop_num opt_num env in
+
+    let wrap_expr, wrap_ret_type = self#wrap_in_obj lit_expr ret_type in
     let new_env =
       self#add_binding
-        env
-        (Expr (lit_expr, ret_type)) in
+        (self#add_binding
+           env
+           (Expr (lit_expr, ret_type)))
+        (Expr (wrap_expr, wrap_ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
+    let new_env = self#add_binding new_env (Type wrap_ret_type) in
     lit, new_env
 
   (* Rule for declaring a variable with init and type annotation *)
@@ -157,20 +166,23 @@ class ruleset_depth (depth : int) = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 
   method! get_all_rules () =
     [|self#rule_num_lit;
-      self#rule_obj_lit;
+      self#rule_obj_lit 2 0;
       self#rule_vardecl_with_type;
-      self#rule_prop_read;
-      self#rule_prop_update;|]
+      self#rule_obj_lit 1 0;
+      self#rule_vardecl_with_type;
+      self#rule_prop_update;
+      self#rule_runtime_check;
+    |]
 end
 
-class ruleset_random_depth (depth : int) = object
-  inherit ruleset_depth depth
+class ruleset_random_depth = object
+  inherit ruleset_depth
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((Random.int 3) > 0) then raise Engine.Backtrack
 end

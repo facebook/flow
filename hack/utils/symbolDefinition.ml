@@ -2,13 +2,12 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
 
 type kind =
   | Function
@@ -32,31 +31,45 @@ and modifier =
   | Public
   | Protected
   | Async
+  | Inout
+
+and reactivity_attributes =
+  | Rx
+  | Shallow
+  | Local
+  | Nonreactive
+  | OnlyRxIfImpl
+  | AtMostRxAsArgs
 
 and 'a t = {
   kind : kind;
   name : string;
   full_name : string;
   id : string option;
-  pos : 'a Pos.pos;
-  span : 'a Pos.pos;
+  pos : 'a Pos.pos; (* covers the span of just the identifier *)
+  span : 'a Pos.pos; (* covers the span of the entire construct, including children *)
   modifiers : modifier list;
   children : 'a t list option;
   params : 'a t list option;
   docblock : string option;
+  reactivity_attributes : reactivity_attributes list
 }
 
 let rec to_absolute x = {
-  kind = x.kind;
-  name = x.name;
-  full_name = x.full_name;
-  id = x.id;
+  x with
   pos = Pos.to_absolute x.pos;
   span = Pos.to_absolute x.span;
-  modifiers = x.modifiers;
   children = Option.map x.children (fun x -> List.map x to_absolute);
   params = Option.map x.params (fun x -> List.map x to_absolute);
   docblock = x.docblock;
+}
+
+let rec to_relative x = {
+  x with
+  pos = Pos.to_relative x.pos;
+  span = Pos.to_relative x.span;
+  children = Option.map x.children (fun x -> List.map x to_relative);
+  params = Option.map x.params (fun x -> List.map x to_relative);
 }
 
 let string_of_kind = function
@@ -81,6 +94,15 @@ let string_of_modifier = function
   | Public -> "public"
   | Protected -> "protected"
   | Async -> "async"
+  | Inout -> "inout"
+
+let string_of_reactivity_attribute = function
+  | Rx -> "reactive"
+  | Shallow -> "shallow"
+  | Local -> "local"
+  | Nonreactive -> "non_reactive"
+  | OnlyRxIfImpl -> "only_rx_if_impl"
+  | AtMostRxAsArgs -> "at_most_rx_as_args"
 
 let function_kind_name = "function"
 let type_id_kind_name = "type_id"

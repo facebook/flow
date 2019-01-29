@@ -2,13 +2,15 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
-open Core
+open Hh_core
+
+(** Callstack is simply a typed way to indicate that a string is a callstack *)
+type callstack = Callstack of string
 
 let () = Random.self_init ()
 let debug = ref false
@@ -111,7 +113,7 @@ let is_prefix_dir dir fn =
   String.length fn > String.length prefix &&
   String.sub fn 0 (String.length prefix) = prefix
 
-let try_with_channel oc f1 f2 =
+let try_with_channel (oc: out_channel) (f1: out_channel -> 'a) (f2: exn -> 'a) : 'a =
   try
     let result = f1 oc in
     close_out oc;
@@ -119,6 +121,14 @@ let try_with_channel oc f1 f2 =
   with e ->
     close_out oc;
     f2 e
+
+let try_with_stack (f: unit -> 'a) : ('a, exn * callstack) result =
+  try
+    Ok (f ())
+  with exn ->
+    let stack = Callstack (Printexc.get_backtrace ()) in
+    Error (exn, stack)
+
 
 let iter_n_acc n f acc =
   let acc = ref acc in
@@ -137,6 +147,12 @@ let set_of_list l =
 let strip_ns s =
   if String.length s == 0 || s.[0] <> '\\' then s
   else String.sub s 1 ((String.length s) - 1)
+
+(* A\B\C -> \A\B\C *)
+let add_ns s =
+  if String.length s = 0 || s.[0] <> '\\'
+  then "\\" ^ s
+  else s
 
 (* \A\B\C -> C *)
 let strip_all_ns s =
@@ -212,3 +228,8 @@ let infimum (arr : 'a array)
     end
   end in
   binary_search 0 ((Array.length arr) - 1)
+
+let unwrap_snd (a, b_opt) =
+  match b_opt with
+  | None -> None
+  | Some b -> Some (a, b)

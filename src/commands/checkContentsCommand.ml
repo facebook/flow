@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -29,38 +26,39 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> base_flags
+    |> connect_and_json_flags
+    |> json_version_flag
     |> root_flag
     |> error_flags
     |> strip_root_flag
-    |> json_flags
     |> verbose_flags
-    |> flag "--graphml" no_arg
-        ~doc:"Output GraphML for checked content (<FILE>.graphml or contents.graphml)"
+    |> from_flag
+    |> wait_for_recheck_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg ~doc:"Ignore absence of an @flow pragma"
-    |> anon "filename" (optional string) ~doc:"Filename"
+    |> anon "filename" (optional string)
   )
 }
 
-let main option_values root error_flags strip_root json pretty verbose
-  graphml respect_pragma all file () =
-  let file = get_file_from_filename_or_stdin file None in
-  let root = guess_root (
+let main base_flags option_values json pretty json_version root error_flags strip_root verbose
+  wait_for_recheck respect_pragma all file () =
+  let file = get_file_from_filename_or_stdin file
+    ~cmd:CommandSpec.(spec.name) None in
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
 
-  let ic, oc = connect option_values root in
-
   (* pretty implies json *)
-  let json = json || pretty in
+  let json = json || Option.is_some json_version || pretty in
 
-  if not json && (verbose <> None)
+  if not option_values.quiet && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
-  if not json && all && respect_pragma then prerr_endline
+  if not option_values.quiet && all && respect_pragma then prerr_endline
     "Warning: --all and --respect-pragma cannot be used together. --all wins.";
 
   (* TODO: --respect-pragma is deprecated. We will soon flip the default. As a
@@ -72,8 +70,18 @@ let main option_values root error_flags strip_root json pretty verbose
 
   let include_warnings = error_flags.Errors.Cli_output.include_warnings in
 
-  send_command oc (ServerProt.CHECK_FILE (file, verbose, graphml, all, include_warnings));
-  let response = wait_for_response ic in
+  let request = ServerProt.Request.CHECK_FILE {
+    input = file;
+    verbose;
+    force = all;
+    include_warnings;
+    wait_for_recheck;
+  } in
+  let response = match connect_and_make_request flowconfig_name option_values root request with
+  | ServerProt.Response.CHECK_FILE response -> response
+  | response -> failwith_bad_response ~request ~response
+  in
+
   let stdin_file = match file with
     | File_input.FileContent (None, contents) ->
         Some (Path.make_unsafe "-", contents)
@@ -83,10 +91,11 @@ let main option_values root error_flags strip_root json pretty verbose
   in
   let strip_root = if strip_root then Some root else None in
   let print_json = Errors.Json_output.print_errors
-    ~out_channel:stdout ~strip_root ~pretty ~stdin_file
-    ~suppressed_errors:([]) in
+    ~out_channel:stdout ~strip_root ~pretty
+    ?version:json_version
+    ~stdin_file ~suppressed_errors:([]) in
   match response with
-  | ServerProt.ERRORS {errors; warnings} ->
+  | ServerProt.Response.ERRORS {errors; warnings} ->
       if json
       then
         print_json ~errors ~warnings ()
@@ -98,19 +107,20 @@ let main option_values root error_flags strip_root json pretty verbose
           ~strip_root
           ~errors
           ~warnings
+          ~lazy_msg:None
           ();
         (* Return a successful exit code if there were only warnings. *)
         let open FlowExitStatus in
-        if Errors.ErrorSet.is_empty errors then exit No_error else exit Type_error
+        exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
       )
-  | ServerProt.NO_ERRORS ->
+  | ServerProt.Response.NO_ERRORS ->
       if json then
-        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
+        print_json ~errors:Errors.ConcreteLocErrorSet.empty ~warnings:Errors.ConcreteLocErrorSet.empty ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
-  | ServerProt.NOT_COVERED ->
+  | ServerProt.Response.NOT_COVERED ->
       if json then
-        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
+        print_json ~errors:Errors.ConcreteLocErrorSet.empty ~warnings:Errors.ConcreteLocErrorSet.empty ()
       else Printf.printf "File is not @flow!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->

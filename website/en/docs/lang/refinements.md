@@ -98,7 +98,7 @@ function method(value: { prop?: string }) {
 }
 ```
 
-### Refinement Invalidations
+### Refinement Invalidations <a class="toc" id="toc-refinement-invalidations" href="#toc-refinement-invalidations"></a>
 
 It is also possible to invalidate refinements, for example:
 
@@ -139,8 +139,8 @@ function method(value: { prop?: string }) {
 method(obj);
 ```
 
-Inside of `otherMethod()` we are sometimes removing `prop`. Flow doesn't know
-if the `if (value.prop)` check is still true, so it invalidates the refinement.
+Inside of `otherMethod()` we sometimes remove `prop`. Flow doesn't know if the
+`if (value.prop)` check is still true, so it invalidates the refinement.
 
 There's a straightforward way to get around this. Store the value before
 calling another method and use the stored value instead. This way you can

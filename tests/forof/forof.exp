@@ -1,38 +1,174 @@
-Error: forof.js:7
-  7:     (x: string); // Error - number ~> string
-          ^ number. This type is incompatible with
-  7:     (x: string); // Error - number ~> string
-             ^^^^^^ string
+Error ----------------------------------------------------------------------------------------------------- forof.js:7:6
 
-Error: forof.js:13
- 13:     (x: string); // Error - number ~> string
-          ^ number. This type is incompatible with
- 13:     (x: string); // Error - number ~> string
-             ^^^^^^ string
+Cannot cast `x` to string because number [1] is incompatible with string [2].
 
-Error: forof.js:25
- 25:     (x: number); // Error - string ~> number
-          ^ string. This type is incompatible with
- 25:     (x: number); // Error - string ~> number
-             ^^^^^^ number
+   forof.js:7:6
+   7|     (x: string); // Error - number ~> string
+           ^
 
-Error: forof.js:32
- 32:     (elem: number); // Error - tuple ~> number
-          ^^^^ tuple type. This type is incompatible with
- 32:     (elem: number); // Error - tuple ~> number
-                ^^^^^^ number
-
-Error: forof.js:39
- 39:     (elem: number); // Error - tuple ~> number
-          ^^^^ tuple type. This type is incompatible with
- 39:     (elem: number); // Error - tuple ~> number
-                ^^^^^^ number
-
-Error: forof.js:45
- 45:     (x: number); // Error - string ~> number
-          ^ string. This type is incompatible with
- 45:     (x: number); // Error - string ~> number
-             ^^^^^^ number
+References:
+   forof.js:5:31
+   5| function testArray(arr: Array<number>): void {
+                                    ^^^^^^ [1]
+   forof.js:7:9
+   7|     (x: string); // Error - number ~> string
+              ^^^^^^ [2]
 
 
-Found 6 errors
+Error ---------------------------------------------------------------------------------------------------- forof.js:13:6
+
+Cannot cast `x` to string because number [1] is incompatible with string [2].
+
+   forof.js:13:6
+   13|     (x: string); // Error - number ~> string
+            ^
+
+References:
+   forof.js:11:43
+   11| function testIterable1(iterable: Iterable<number>): void {
+                                                 ^^^^^^ [1]
+   forof.js:13:9
+   13|     (x: string); // Error - number ~> string
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:25:6
+
+Cannot cast `x` to number because string [1] is incompatible with number [2].
+
+   forof.js:25:6
+    25|     (x: number); // Error - string ~> number
+             ^
+
+References:
+   <BUILTINS>/core.js:291:28
+   291|     @@iterator(): Iterator<string>;
+                                   ^^^^^^ [1]
+   forof.js:25:9
+    25|     (x: number); // Error - string ~> number
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:32:6
+
+Cannot cast `elem` to number because tuple type [1] is incompatible with number [2].
+
+   forof.js:32:6
+    32|     (elem: number); // Error - tuple ~> number
+             ^^^^
+
+References:
+   <BUILTINS>/core.js:544:28
+   544|     @@iterator(): Iterator<[K, V]>;
+                                   ^^^^^^ [1]
+   forof.js:32:12
+    32|     (elem: number); // Error - tuple ~> number
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:39:6
+
+Cannot cast `elem` to number because tuple type [1] is incompatible with number [2].
+
+   forof.js:39:6
+    39|     (elem: number); // Error - tuple ~> number
+             ^^^^
+
+References:
+   <BUILTINS>/core.js:544:28
+   544|     @@iterator(): Iterator<[K, V]>;
+                                   ^^^^^^ [1]
+   forof.js:39:12
+    39|     (elem: number); // Error - tuple ~> number
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:45:6
+
+Cannot cast `x` to number because string [1] is incompatible with number [2].
+
+   forof.js:45:6
+   45|     (x: number); // Error - string ~> number
+            ^
+
+References:
+   forof.js:43:28
+   43| function testSet1(set: Set<string>): void {
+                                  ^^^^^^ [1]
+   forof.js:45:9
+   45|     (x: number); // Error - string ~> number
+               ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:66:7
+
+Cannot perform arithmetic operation because string [1] is not a number.
+
+   forof.js:66:7
+   66|   x = x * 3; // error
+             ^
+
+References:
+   forof.js:55:48
+   55| declare var funky1 : { @@iterator(): $Iterator<string, number, boolean> };
+                                                      ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:85:4
+
+Cannot cast `x` to number because boolean [1] is incompatible with number [2].
+
+   forof.js:85:4
+   85|   (x : number); // error
+          ^
+
+References:
+   forof.js:61:9
+   61|   yield true;
+               ^^^^ [1]
+   forof.js:85:8
+   85|   (x : number); // error
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:86:4
+
+Cannot cast `x` to boolean because number [1] is incompatible with boolean [2].
+
+   forof.js:86:4
+   86|   (x : boolean); // error
+          ^
+
+References:
+   forof.js:60:9
+   60|   yield 0;
+               ^ [1]
+   forof.js:86:8
+   86|   (x : boolean); // error
+              ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- forof.js:87:4
+
+Cannot cast `x` to string because:
+ - number [1] is incompatible with string [2].
+ - boolean [3] is incompatible with string [2].
+
+   forof.js:87:4
+   87|   (x : string) //error
+          ^
+
+References:
+   forof.js:60:9
+   60|   yield 0;
+               ^ [1]
+   forof.js:87:8
+   87|   (x : string) //error
+              ^^^^^^ [2]
+   forof.js:61:9
+   61|   yield true;
+               ^^^^ [3]
+
+
+
+Found 11 errors

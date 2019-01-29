@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module Utils = Utils_js
@@ -152,59 +149,60 @@ let to_string =
 (* due to the current dependency situation, we locate the
    global changeset stack here for now, so it can be accessed
    from both Env and Flow_js. *)
+module Global = struct
+  type 'a stack = 'a list ref
+  let changesets: t stack = ref []
 
-type 'a stack = 'a list ref
-let changesets: t stack = ref []
+  let is_active () =
+    List.length !changesets > 0
 
-let is_active () =
-  List.length !changesets > 0
+  let init () =
+    changesets := []
 
-let init () =
-  changesets := []
+  let push () =
+    changesets := (EntryRefSet.empty, RefiRefSet.empty) :: !changesets
 
-let push () =
-  changesets := (EntryRefSet.empty, RefiRefSet.empty) :: !changesets
+  let pop () =
+    changesets := List.tl !changesets
 
-let pop () =
-  changesets := List.tl !changesets
+  (* return the current changeset *)
+  let peek () =
+    List.hd !changesets
 
-(* return the current changeset *)
-let peek () =
-  List.hd !changesets
+  (* helper: transform current changeset, given
+     transform functions for vars and/or refis.
+     swap, return prev *)
+  let swap f_vars f_refis =
+    let prev_vars, prev_refis = peek () in
+    let apply_opt arg = function None -> arg | Some f -> f arg in
+    let new_vars = apply_opt prev_vars f_vars in
+    let new_refis = apply_opt prev_refis f_refis in
+    changesets := (new_vars, new_refis) :: List.tl !changesets;
+    prev_vars, prev_refis
 
-(* helper: transform current changeset, given
-   transform functions for vars and/or refis.
-   swap, return prev *)
-let swap f_vars f_refis =
-  let prev_vars, prev_refis = peek () in
-  let apply_opt arg = function None -> arg | Some f -> f arg in
-  let new_vars = apply_opt prev_vars f_vars in
-  let new_refis = apply_opt prev_refis f_refis in
-  changesets := (new_vars, new_refis) :: List.tl !changesets;
-  prev_vars, prev_refis
+  (* clear changeset, return previous *)
+  let clear () =
+    swap (Some (fun _ -> EntryRefSet.empty)) (Some (fun _ -> RefiRefSet.empty))
 
-(* clear changeset, return previous *)
-let clear () =
-  swap (Some (fun _ -> EntryRefSet.empty)) (Some (fun _ -> RefiRefSet.empty))
+  (* restore passed changeset, return previous *)
+  let restore (vars, refis) =
+    swap (Some (fun _ -> vars)) (Some (fun _ -> refis))
 
-(* restore passed changeset, return previous *)
-let restore (vars, refis) =
-  swap (Some (fun _ -> vars)) (Some (fun _ -> refis))
+  (* merge changeset with passed one, return previous *)
+  let merge (vars, refis) =
+    swap (Some (EntryRefSet.union vars)) (Some (RefiRefSet.union refis))
 
-(* merge changeset with passed one, return previous *)
-let merge (vars, refis) =
-  swap (Some (EntryRefSet.union vars)) (Some (RefiRefSet.union refis))
+  (* filter changes targeting the given scope from the current changeset *)
+  let filter_scope_changes id =
+    swap
+      (Some (EntryRefSet.filter (fun (scope_id, _, _) -> scope_id != id)))
+      (Some (RefiRefSet.filter (fun (scope_id, _, _) -> scope_id != id)))
 
-(* filter changes targeting the given scope from the current changeset *)
-let filter_scope_changes id =
-  swap
-    (Some (EntryRefSet.filter (fun (scope_id, _, _) -> scope_id != id)))
-    (Some (RefiRefSet.filter (fun (scope_id, _, _) -> scope_id != id)))
+  (* record a changed var in current changeset *)
+  let change_var entry_ref =
+    ignore (swap (Some (EntryRefSet.add entry_ref)) None)
 
-(* record a changed var in current changeset *)
-let change_var entry_ref =
-  ignore (swap (Some (EntryRefSet.add entry_ref)) None)
-
-(* record a refinement in current changeset *)
-let change_refi refi_ref =
-  ignore (swap None (Some (RefiRefSet.add refi_ref)))
+  (* record a refinement in current changeset *)
+  let change_refi refi_ref =
+    ignore (swap None (Some (RefiRefSet.add refi_ref)))
+end

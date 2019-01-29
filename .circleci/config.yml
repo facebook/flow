@@ -1,0 +1,437 @@
+aliases:
+  - &opam_env
+    TERM: dumb
+    OPAMYES: true
+
+  - &docker_opam
+    docker:
+      - image: ocaml/opam:debian-8_ocaml-4.05.0
+        environment:
+          <<: *opam_env
+    working_directory: ~/flow
+
+  - &docker_node
+    docker:
+      - image: circleci/node:8
+    working_directory: ~/flow
+
+  # Saves the currently-installed opam version to a file, which we include
+  # in cache keys.
+  - &opam_version
+    name: Calculate opam version
+    command: opam --version > .circleci/opamversion
+
+  - &opam_deps
+    name: Install deps from opam
+    command: |
+      eval $(opam config env)
+      opam pin add -n flowtype-ci . | cat
+      opam depext flowtype-ci | cat
+      opam install --deps-only flowtype-ci | cat
+
+  - &restore_opam_cache
+    keys:
+      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
+      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0
+      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}
+
+  - &save_opam_cache
+    key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
+    paths:
+      - ~/.opam
+
+  - &run_on_tags
+    filters:
+      tags:
+        only: /.*/
+
+version: 2
+jobs:
+  checkout:
+    <<: *docker_node
+    steps:
+      - checkout
+      - run:
+          # This job does a lot of setup to be able to access github, so
+          # fetch the list of git tags that Try Flow uses here, instead of
+          # hitting github again later.
+          name: List versions
+          command: .circleci/list_versions.sh
+      - persist_to_workspace:
+          root: .
+          paths: .
+
+  build_linux:
+    <<: *docker_opam
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          # TODO: move this to a custom docker image
+          name: Install deps
+          command: sudo apt-get update && sudo apt-get install zip
+      - run: *opam_version
+      - restore_cache: *restore_opam_cache
+      - run:
+          name: Update opam repo
+          command: |
+            opam remote list -s | grep upstream >/dev/null || \
+              opam remote add upstream https://opam.ocaml.org | cat
+            opam update | cat
+      - run: *opam_deps
+      - run:
+          name: Install extra deps from opam
+          command: opam install js_of_ocaml.3.1.0 | cat
+      - save_cache: *save_opam_cache
+      - run:
+          name: Build flow
+          command: |
+            opam config exec -- make bin/flow dist/flow.zip
+            mkdir -p bin/linux && cp bin/flow bin/linux/flow
+      - run:
+          name: Build libflowparser
+          command: opam config exec -- make -C src/parser dist/libflowparser.zip
+      - run:
+          name: Build flow.js
+          command: opam config exec -- make js
+      - run:
+          name: Build flow_parser.js
+          command: opam config exec -- make -C src/parser js
+      - run:
+          name: Create artifacts
+          command: |
+            cp dist/flow.zip dist/flow-linux64.zip
+            cp src/parser/dist/libflowparser.zip dist/libflowparser-linux64.zip
+            cp src/parser/flow_parser.js dist/flow_parser.js
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/linux/flow
+            - bin/flow.js
+            - dist/flow-linux64.zip
+            - dist/libflowparser-linux64.zip
+            - dist/flow_parser.js
+      - store_artifacts:
+          path: dist/flow-linux64.zip
+          destination: flow-linux64.zip
+      - store_artifacts:
+          path: dist/libflowparser-linux64.zip
+          destination: libflowparser-linux64.zip
+      - store_artifacts:
+          path: bin/flow.js
+          destination: flow.js
+      - store_artifacts:
+          path: dist/flow_parser.js
+          destination: flow_parser.js
+
+  build_macos:
+    macos:
+      xcode: "9.0"
+    environment:
+      <<: *opam_env
+    working_directory: ~/flow
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      # https://github.com/Homebrew/brew/issues/5513
+      - run:
+          name: Fix homebrew python
+          command: brew update
+      # https://github.com/Homebrew/homebrew-core/issues/26358
+      - run:
+          name: Fix homebrew python
+          command: brew upgrade python
+      - run:
+          name: Install opam
+          command: command -v opam || brew install opam aspcud
+      - run: *opam_version
+      - restore_cache: *restore_opam_cache
+      - run:
+          name: Install ocaml
+          command: opam init --comp 4.05.0 -yn | cat
+      - save_cache:
+          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0
+          paths:
+            - ~/.opam
+      - run:
+          name: Update opam repo
+          command: opam update | cat
+      - run: *opam_deps
+      - save_cache: *save_opam_cache
+      - run:
+          name: Build flow
+          command: |
+            opam config exec -- make bin/flow dist/flow.zip
+            mkdir -p bin/macos && cp bin/flow bin/macos/flow
+      - run:
+          name: Build libflowparser
+          command: opam config exec -- make -C src/parser dist/libflowparser.zip
+      - run:
+          name: Create artifacts
+          command: |
+            cp dist/flow.zip dist/flow-osx.zip
+            cp src/parser/dist/libflowparser.zip dist/libflowparser-osx.zip
+      - persist_to_workspace:
+          root: .
+          paths:
+            - bin/macos/flow
+            - dist/flow-osx.zip
+            - dist/libflowparser-osx.zip
+      - store_artifacts:
+          path: dist/flow-osx.zip
+          destination: flow-osx.zip
+      - store_artifacts:
+          path: src/parser/dist/libflowparser.zip
+          destination: libflowparser-osx.zip
+
+  runtests_linux:
+    <<: *docker_node
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Run tests
+          command: ./runtests.sh bin/linux/flow | cat
+
+  runtests_macos:
+    macos:
+      xcode: "9.0"
+    working_directory: ~/flow
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Run tests
+          command: ./runtests.sh bin/macos/flow | cat
+
+  tool_test_linux:
+    <<: *docker_node
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Install tool deps from yarn
+          command: (cd packages/flow-dev-tools && yarn install | cat) # Force no tty mode
+      - run:
+          name: Run tool tests
+          command: ./tool test -p 4 --bin bin/linux/flow | cat # Limit parallelism
+
+  tool_test_macos:
+    macos:
+      xcode: "9.0"
+    working_directory: ~/flow
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Install tool deps from yarn
+          command: (cd packages/flow-dev-tools && yarn install | cat) # Force no tty mode
+      - run:
+          name: Run tool tests
+          command: ./tool test --bin bin/macos/flow | cat
+
+  npm_pack:
+    <<: *docker_node
+    steps:
+      - attach_workspace:
+          at: ~/flow
+      - run:
+          name: Pack flow-parser
+          command: |
+            mkdir -p packages/flow-parser/dist/
+            cp dist/flow_parser.js packages/flow-parser/dist/flow_parser.js
+            make dist/npm-flow-parser.tgz
+      - run:
+          name: Pack flow-parser-bin
+          command: |
+            mkdir -p packages/flow-parser-bin/dist/release/
+            cp dist/libflowparser-linux64.zip packages/flow-parser-bin/dist/release/libflowparser-linux64.zip
+            cp dist/libflowparser-osx.zip packages/flow-parser-bin/dist/release/libflowparser-osx.zip
+            make dist/npm-flow-parser-bin.tgz
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dist/npm-flow-parser.tgz
+            - dist/npm-flow-parser-bin.tgz
+      - store_artifacts:
+          path: dist/npm-flow-parser.tgz
+          destination: npm-flow-parser.tgz
+      - store_artifacts:
+          path: dist/npm-flow-parser-bin.tgz
+          destination: npm-flow-parser-bin.tgz
+
+  npm_deploy:
+    <<: *docker_node
+    steps:
+    - attach_workspace:
+        at: ~/flow
+    - run:
+        name: Deploy to npm
+        command: .circleci/deploy_npm.sh
+
+  github_linux:
+    docker:
+      - image: appropriate/curl:latest
+    working_directory: /flow
+    steps:
+    - attach_workspace:
+        at: /flow
+    - run:
+        name: Upload Linux binary
+        command: .circleci/github_upload.sh dist/flow-linux64.zip "flow-linux64-$CIRCLE_TAG.zip"
+    - run:
+        name: Upload Linux libflowparser
+        command: .circleci/github_upload.sh dist/libflowparser-linux64.zip "libflowparser-linux64-$CIRCLE_TAG.zip"
+
+  github_macos:
+    docker:
+      - image: appropriate/curl:latest
+    working_directory: /flow
+    steps:
+    - attach_workspace:
+        at: /flow
+    - run:
+        name: Upload Mac binary
+        command: .circleci/github_upload.sh dist/flow-osx.zip "flow-osx-$CIRCLE_TAG.zip"
+    - run:
+        name: Upload Mac libflowparser
+        command: .circleci/github_upload.sh dist/libflowparser-osx.zip "libflowparser-osx-$CIRCLE_TAG.zip"
+
+  website_deploy:
+    docker:
+      - image: flowtype/flow-website:latest
+    working_directory: ~/flow
+    steps:
+    - attach_workspace:
+        at: ~/flow
+    - restore_cache:
+        keys:
+          - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "website/yarn.lock" }}
+          - v2-node-{{ arch }}-{{ .Branch }}-
+    - run:
+        name: Install yarn deps
+        command: cd website && yarn install
+    - save_cache:
+        key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "website/yarn.lock" }}
+        paths:
+          - website/node_modules
+    - restore_cache:
+        keys:
+          - v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "website/Gemfile.lock" }}
+          - v2-gem-{{ arch }}-{{ .Branch }}-
+    - run:
+        name: Install gems
+        command: |
+          cd website && \
+          bundle install --path vendor/bundle && \
+          bundle exec s3_website install
+    - save_cache:
+        key: v2-gem-{{ arch }}-{{ .Branch }}-{{ checksum "website/Gemfile.lock" }}
+        paths:
+          - website/vendor/bundle
+    - run:
+        name: Build website
+        command: PATH=~/flow/bin/linux:$PATH .circleci/build_website.sh
+    - run:
+        name: Publish website
+        command: bundle exec s3_website push --config-dir=website/ --site=dist/flow.org
+
+  try_flow_deploy:
+    docker:
+      - image: xueshanf/awscli:latest
+    working_directory: ~/flow
+    steps:
+    - attach_workspace:
+        at: ~/flow
+    - run:
+        name: Assemble files
+        command: |
+          rm -rf ~/try_flow
+          mkdir ~/try_flow
+          cp bin/flow.js ~/try_flow/flow.js
+          cp -r lib ~/try_flow/flowlib
+    - run:
+        name: Upload to AWS
+        command: aws s3 cp ~/try_flow s3://${S3_BUCKET}/static/${CIRCLE_TAG}/ --recursive
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - checkout:
+          <<: *run_on_tags
+      - build_linux:
+          <<: *run_on_tags
+          requires:
+            - checkout
+      - build_macos:
+          <<: *run_on_tags
+          requires:
+            - checkout
+      - runtests_linux:
+          <<: *run_on_tags
+          requires:
+            - build_linux
+      - runtests_macos:
+          <<: *run_on_tags
+          requires:
+            - build_macos
+      - tool_test_linux:
+          <<: *run_on_tags
+          requires:
+            - build_linux
+      - tool_test_macos:
+          <<: *run_on_tags
+          requires:
+            - build_macos
+      - npm_pack:
+          <<: *run_on_tags
+          requires:
+            - build_linux
+            - build_macos
+      - npm_deploy:
+          requires:
+            - npm_pack
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - github_linux:
+          requires:
+            - runtests_linux
+            - tool_test_linux
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+      - github_macos:
+          requires:
+            - runtests_macos
+            - tool_test_macos
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+
+      # only deploy the website from master, so that it can include docs/blog
+      # posts about an upcoming release, and so the release branch doesn't
+      # revert those changes.
+      - website_deploy:
+          requires:
+            - build_linux
+          filters:
+            branches:
+              only: master
+
+      # deploys flow.js and the libdefs to Try Flow on release branches
+      - try_flow_deploy:
+          requires:
+            - build_linux
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/

@@ -1,10 +1,16 @@
-Error: test.js:6
-  6: (<C />); // error (`x` is a required prop)
-      ^^^^^ React element `C`
-  4:   props: { x: number };
-              ^^^^^^^^^^^^^ property `x`. Property not found in
-  6: (<C />); // error (`x` is a required prop)
-      ^^^^^ props of React element `C`
+Error ------------------------------------------------------------------------------------------------------ test.js:4:2
+
+Cannot create `C` element because property `x` is missing in props [1] but exists in object type [2].
+
+   test.js:4:2
+   4| (<C />); // error (`x` is a required prop)
+       ^^^^^ [1]
+
+References:
+   test.js:3:37
+   3| class C extends React.PureComponent<{ x: number }> {}
+                                          ^^^^^^^^^^^^^ [2]
+
 
 
 Found 1 error

@@ -1,55 +1,75 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
 
 val init:
-  profiling:Profiling_js.t ->
-  workers:Worker.t list option ->
+  profiling:Profiling_js.running ->
+  workers:MultiWorkerLwt.worker list option ->
   Options.t ->
-  Profiling_js.t * FilenameSet.t * SSet.t * bool * ServerEnv.errors
+  (bool (* libs_ok *) * ServerEnv.env * Recheck_stats.estimates option) Lwt.t
 
 val calc_deps:
   options:Options.t ->
-  profiling:Profiling_js.t ->
-  workers:Worker.t list option ->
-  filename list ->
-  Profiling_js.t * (FilenameSet.t FilenameMap.t * filename list FilenameMap.t)
+  profiling:Profiling_js.running ->
+  dependency_graph:FilenameSet.t FilenameMap.t ->
+  components:File_key.t Nel.t list ->
+  FilenameSet.t ->
+  (FilenameSet.t FilenameMap.t * File_key.t Nel.t FilenameMap.t) Lwt.t
 
 (* incremental typecheck entry point *)
 val recheck:
   options:Options.t ->
-  workers:Worker.t list option ->
+  workers:MultiWorkerLwt.worker list option ->
   updates:FilenameSet.t ->
-  ServerEnv.env -> ServerEnv.env
+  ServerEnv.env ->
+  files_to_force:CheckedSet.t ->
+  file_watcher_metadata:MonitorProt.file_watcher_metadata ->
+  will_be_checked_files:CheckedSet.t ref ->
+  (Profiling_js.finished * ServerStatus.summary * ServerEnv.env) Lwt.t
 
 (* initial (full) check *)
 val full_check:
-  profiling:Profiling_js.t ->
+  profiling:Profiling_js.running ->
   options:Options.t ->
-  workers:Worker.t list option ->
-  focus_targets:Loc.filename list ->
-  should_merge:bool ->
-  filename list ->
-  ServerEnv.errors ->
-  Profiling_js.t * Utils_js.FilenameSet.t * ServerEnv.errors
+  workers:MultiWorkerLwt.worker list option ->
+  ?focus_targets:FilenameSet.t ->
+  ServerEnv.env ->
+  ServerEnv.env Lwt.t
+
+val basic_check_contents:
+  options: Options.t ->
+  env: ServerEnv.env ->
+  profiling: Profiling_js.running ->
+  string ->               (* contents *)
+  File_key.t ->           (* fake file-/module name *)
+  (Context.t *
+   Docblock.t *
+   File_sig.With_Loc.t *
+   (ALoc.t, ALoc.t * Type.t) Flow_ast.program,
+   string) result Lwt.t
 
 val typecheck_contents:
   options: Options.t ->
-  workers: Worker.t list option ->
-  env: ServerEnv.env ref ->
-  ?check_syntax: bool ->
-  string ->               (* contents *)
-  filename ->             (* fake file-/module name *)
-  Profiling_js.t *
-    Context.t option *
-    Errors.ErrorSet.t * (* errors *)
-    Errors.ErrorSet.t * (* warnings *)
-    Docblock.t
+  env: ServerEnv.env ->
+  profiling: Profiling_js.running ->
+  string ->                                 (* contents *)
+  File_key.t ->                             (* fake file-/module name *)
+  ((Context.t *
+    (Loc.t, Loc.t) Flow_ast.program *
+    File_sig.With_Loc.t *
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.program) option *
+   Errors.ConcreteLocErrorSet.t *                      (* errors *)
+   Errors.ConcreteLocErrorSet.t) Lwt.t                 (* warnings *)
+
+val ensure_checked_dependencies:
+  options: Options.t ->
+  reader: State_reader.t ->
+  env: ServerEnv.env ->
+  File_key.t ->
+  File_sig.With_Loc.t ->
+  unit Lwt.t

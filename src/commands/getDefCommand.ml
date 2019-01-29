@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -27,13 +24,14 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> base_flags
+    |> connect_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
-    |> flag "--path" (optional string)
-        ~doc:"Specify (fake) path to file when reading data from stdin"
-    |> anon "args" (required (list_of string)) ~doc:"[FILE] LINE COL"
+    |> from_flag
+    |> path_flag
+    |> wait_for_recheck_flag
+    |> anon "args" (required (list_of string))
   )
 }
 
@@ -43,7 +41,7 @@ let parse_args path args =
       let file = expand_path file in
       File_input.FileName file, (int_of_string line), (int_of_string column)
   | [line; column] ->
-      get_file_from_filename_or_stdin path None,
+      get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path None,
       (int_of_string line),
       (int_of_string column)
   | _ ->
@@ -59,22 +57,22 @@ let parse_args path args =
    - path is a user-specified path to use as incoming content source path
    - args is mandatory command args; see parse_args above
  *)
-let main option_values root json pretty strip_root path args () =
+let main base_flags option_values json pretty root strip_root path wait_for_recheck args () =
   let (file, line, column) = parse_args path args in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  (* connect to server *)
-  let ic, oc = connect option_values root in
-  (* dispatch command *)
-  send_command oc (ServerProt.GET_DEF (file, line, column));
-  (* command result will be a position structure with full file path *)
-  let response: ServerProt.get_def_response = Timeout.input_value ic in
-  match response with
-  | Ok loc ->
+
+  let request =
+    ServerProt.Request.GET_DEF { filename = file; line; char = column; wait_for_recheck; }
+  in
+
+  match connect_and_make_request flowconfig_name option_values root request with
+  | ServerProt.Response.GET_DEF (Ok loc) ->
     (* format output *)
     if json || pretty
     then (
@@ -83,15 +81,17 @@ let main option_values root json pretty strip_root path args () =
       let open Hh_json in
       let json =
         JSON_Object (Errors.deprecated_json_props_of_loc ~strip_root loc) in
-      print_endline (json_to_string ~pretty json)
+      print_json_endline ~pretty json
     ) else
-      if option_values.from = "vim" || option_values.from = "emacs"
+      let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
+      if from = Some "vim" || from = Some "emacs"
       then print_endline (Errors.Vim_emacs_output.string_of_loc ~strip_root loc)
       else print_endline (range_string_of_loc ~strip_root loc)
-  | Error exn_msg ->
+  | ServerProt.Response.GET_DEF (Error exn_msg) ->
       Utils_js.prerr_endlinef
         "Could not get definition for %s:%d:%d\n%s"
         (File_input.filename_of_file_input file) line column
         exn_msg
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

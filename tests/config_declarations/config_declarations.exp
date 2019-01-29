@@ -1,0 +1,24 @@
+Error ------------------------------------------------------------------------------------------------------- A.js:16:21
+
+Cannot assign `123` to `test4` because number [1] is incompatible with string [2].
+
+   A.js:16:21
+   16| var test4: string = 123; // This error is NOT silenced
+                           ^^^ [1]
+
+References:
+   A.js:16:12
+   16| var test4: string = 123; // This error is NOT silenced
+                  ^^^^^^ [2]
+
+
+Warning ------------------------------------------------------------------------------------------------------ A.js:14:1
+
+Unused suppression comment.
+
+   14| // $FlowFixMe Error unused suppression
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 1 error and 1 warning

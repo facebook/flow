@@ -1,9 +1,9 @@
 /*
  * @flow
- * @lint-ignore-every LINE_WRAP1
+ * @lint-ignore-every LINEWRAP1
  */
 
-import {suite, test} from '../../tsrc/test/Tester';
+import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
 export default suite(({addFile, addFiles, addCode}) => [
   test('derived object reads must be compatible with prototype writes', [
@@ -20,9 +20,12 @@ export default suite(({addFile, addFiles, addCode}) => [
        `
          test.js:8
            8: (o.p: string);
-               ^^^ number. This type is incompatible with
-           8: (o.p: string);
-                    ^^^^^^ string
+               ^^^ Cannot cast \`o.p\` to string because number [1] is incompatible with string [2].
+           References:
+            10: proto.p = 0;
+                          ^ [1]
+             8: (o.p: string);
+                      ^^^^^^ [2]
        `,
      ),
   ]),
@@ -41,15 +44,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:       (a.p: string);
-                      ^^^ boolean. This type is incompatible with
-            7:       (a.p: string);
-                           ^^^^^^ string
+                      ^^^ Cannot cast \`a.p\` to string because boolean [1] is incompatible with string [2].
+            References:
+             11: proto.p = true;
+                           ^^^^ [1]
+              7:       (a.p: string);
+                             ^^^^^^ [2]
 
           test.js:8
             8:       (b.p: number);
-                      ^^^ boolean. This type is incompatible with
-            8:       (b.p: number);
-                           ^^^^^^ number
+                      ^^^ Cannot cast \`b.p\` to number because boolean [1] is incompatible with number [2].
+            References:
+             11: proto.p = true;
+                           ^^^^ [1]
+              8:       (b.p: number);
+                             ^^^^^^ [2]
         `,
       ),
   ]),
@@ -70,9 +79,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: (a.p: void);
-                ^^^ number. This type is incompatible with
-           12: (a.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`a.p\` to undefined because number [1] is incompatible with undefined [2].
+            References:
+              7:       a.p = 0;
+                             ^ [1]
+             12: (a.p: void);
+                       ^^^^ [2]
         `,
       ),
 
@@ -82,9 +94,12 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:14
            14: (b.p: void);
-                ^^^ string. This type is incompatible with
-           14: (b.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`b.p\` to undefined because string [1] is incompatible with undefined [2].
+            References:
+              8:       b.p = "";
+                             ^^ [1]
+             14: (b.p: void);
+                       ^^^^ [2]
         `,
       ),
 
@@ -94,27 +109,39 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:12
            12: (a.p: void);
-                ^^^ boolean. This type is incompatible with
-           12: (a.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`a.p\` to undefined because string [1] is incompatible with undefined [2].
+            References:
+              8:       b.p = "";
+                             ^^ [1]
+             12: (a.p: void);
+                       ^^^^ [2]
 
           test.js:12
            12: (a.p: void);
-                ^^^ string. This type is incompatible with
-           12: (a.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`a.p\` to undefined because boolean [1] is incompatible with undefined [2].
+            References:
+             16: proto.p = true;
+                           ^^^^ [1]
+             12: (a.p: void);
+                       ^^^^ [2]
 
           test.js:14
            14: (b.p: void);
-                ^^^ boolean. This type is incompatible with
-           14: (b.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`b.p\` to undefined because number [1] is incompatible with undefined [2].
+            References:
+              7:       a.p = 0;
+                             ^ [1]
+             14: (b.p: void);
+                       ^^^^ [2]
 
           test.js:14
            14: (b.p: void);
-                ^^^ number. This type is incompatible with
-           14: (b.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`b.p\` to undefined because boolean [1] is incompatible with undefined [2].
+            References:
+             16: proto.p = true;
+                           ^^^^ [1]
+             14: (b.p: void);
+                       ^^^^ [2]
         `,
       ),
   ]),
@@ -126,20 +153,7 @@ export default suite(({addFile, addFiles, addCode}) => [
     `).noNewErrors(),
 
     addCode(`var o: {p: string} = Object.create(proto);`)
-      .newErrors(
-        `
-          test.js:8
-            8: var o: {p: string} = Object.create(proto);
-                                    ^^^^^^^^^^^^^^^^^^^^ Object.create. This type is incompatible with
-            8: var o: {p: string} = Object.create(proto);
-                      ^^^^^^^^^^^ object type
-            Property \`p\` is incompatible:
-                5:       proto.p = 0;
-                                   ^ number. This type is incompatible with
-                8: var o: {p: string} = Object.create(proto);
-                              ^^^^^^ string
-        `,
-      ),
+      .noNewErrors(),
   ]),
 
   test('derived object subtyping -- read before write', [
@@ -151,26 +165,10 @@ export default suite(({addFile, addFiles, addCode}) => [
        inconsistent with GetPropT/MethodT. It would be confusing if this
        didn't error, though: var o: { p: string } = {} */
     addCode(`var o: {p: string} = Object.create(proto);`)
-      .newErrors(
-        `
-          test.js:7
-            7: var o: {p: string} = Object.create(proto);
-                      ^^^^^^^^^^^ property \`p\`. Property not found in
-            7: var o: {p: string} = Object.create(proto);
-                                    ^^^^^^^^^^^^^^^^^^^^ Object.create
-        `,
-      ),
+      .noNewErrors(),
 
     addCode(`proto.p = 0;`)
-      .newErrors(
-        `
-          test.js:9
-            9: proto.p = 0;
-                         ^ number. This type is incompatible with
-            7: var o: {p: string} = Object.create(proto);
-                          ^^^^^^ string
-        `,
-      ),
+      .noNewErrors(),
   ]),
 
   /* Because shadow operations execute on failure, a builtin or import can cause
@@ -194,15 +192,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:         (o.p: number);
-                        ^^^ boolean. This type is incompatible with
-            7:         (o.p: number);
-                             ^^^^^^ number
+                        ^^^ Cannot cast \`o.p\` to number because boolean [1] is incompatible with number [2].
+            References:
+             13: o.p = true;
+                       ^^^^ [1]
+              7:         (o.p: number);
+                               ^^^^^^ [2]
 
           test.js:9
             9:         (o.p: string);
-                        ^^^ boolean. This type is incompatible with
-            9:         (o.p: string);
-                             ^^^^^^ string
+                        ^^^ Cannot cast \`o.p\` to string because boolean [1] is incompatible with string [2].
+            References:
+             13: o.p = true;
+                       ^^^^ [1]
+              9:         (o.p: string);
+                               ^^^^^^ [2]
         `,
       ),
   ]),
@@ -227,15 +231,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:7
             7:         (o.p: void);
-                        ^^^ number. This type is incompatible with
-            7:         (o.p: void);
-                             ^^^^ undefined
+                        ^^^ Cannot cast \`o.p\` to undefined because number [1] is incompatible with undefined [2].
+            References:
+             13:         o.p = 0;
+                               ^ [1]
+              7:         (o.p: void);
+                               ^^^^ [2]
 
           test.js:7
             7:         (o.p: void);
-                        ^^^ string. This type is incompatible with
-            7:         (o.p: void);
-                             ^^^^ undefined
+                        ^^^ Cannot cast \`o.p\` to undefined because string [1] is incompatible with undefined [2].
+            References:
+             15:         o.p = "";
+                               ^^ [1]
+              7:         (o.p: void);
+                               ^^^^ [2]
         `,
       ),
   ]),
@@ -259,15 +269,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9:         (a.p: number);
-                        ^^^ boolean. This type is incompatible with
-            9:         (a.p: number);
-                             ^^^^^^ number
+                        ^^^ Cannot cast \`a.p\` to number because boolean [1] is incompatible with number [2].
+            References:
+             15: proto.p = true;
+                           ^^^^ [1]
+              9:         (a.p: number);
+                               ^^^^^^ [2]
 
           test.js:11
            11:         (b.p: string);
-                        ^^^ boolean. This type is incompatible with
-           11:         (b.p: string);
-                             ^^^^^^ string
+                        ^^^ Cannot cast \`b.p\` to string because boolean [1] is incompatible with string [2].
+            References:
+             15: proto.p = true;
+                           ^^^^ [1]
+             11:         (b.p: string);
+                               ^^^^^^ [2]
         `,
       ),
   ]),
@@ -289,15 +305,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:13
            13: (o.p: void);
-                ^^^ number. This type is incompatible with
-           13: (o.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`o.p\` to undefined because number [1] is incompatible with undefined [2].
+            References:
+              7:         o.p = 0;
+                               ^ [1]
+             13: (o.p: void);
+                       ^^^^ [2]
 
           test.js:13
            13: (o.p: void);
-                ^^^ string. This type is incompatible with
-           13: (o.p: void);
-                     ^^^^ undefined
+                ^^^ Cannot cast \`o.p\` to undefined because string [1] is incompatible with undefined [2].
+            References:
+              9:         o.p = "";
+                               ^^ [1]
+             13: (o.p: void);
+                       ^^^^ [2]
         `,
       ),
   ]),
@@ -322,15 +344,21 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:13
            13:         (o.p: number); // error: void ~> number
-                        ^^^ boolean. This type is incompatible with
-           13:         (o.p: number); // error: void ~> number
-                             ^^^^^^ number
+                        ^^^ Cannot cast \`o.p\` to number because boolean [1] is incompatible with number [2].
+            References:
+              7:         o.p = true;
+                               ^^^^ [1]
+             13:         (o.p: number); // error: void ~> number
+                               ^^^^^^ [2]
 
           test.js:15
            15:         (o.p: string); // error: void ~> string
-                        ^^^ boolean. This type is incompatible with
-           15:         (o.p: string); // error: void ~> string
-                             ^^^^^^ string
+                        ^^^ Cannot cast \`o.p\` to string because boolean [1] is incompatible with string [2].
+            References:
+              7:         o.p = true;
+                               ^^^^ [1]
+             15:         (o.p: string); // error: void ~> string
+                               ^^^^^^ [2]
         `,
       ),
   ]),

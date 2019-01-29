@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* Various data structures and functions used to prepare for and execute
@@ -17,7 +14,8 @@ module Action = struct
 
   type t =
   | Flow of Type.t * Type.use_t
-  | Unify of Type.t * Type.t
+  | Unify of Type.use_op * Type.t * Type.t
+  | Error of Flow_error.error_message
 
   (* Extract tvars involved in an action. *)
   let tvars =
@@ -27,19 +25,20 @@ module Action = struct
     | _ -> acc
     in
     function
-    | Flow ((DefT (_, AnyT) | DefT (_, EmptyT)), _)
-    | Flow (_, UseT (_, (DefT (_, AnyT) | DefT (_, MixedT _))))
+    | Flow ((DefT (_, AnyT _) | DefT (_, EmptyT)), _)
+    | Flow (_, UseT (_, (DefT (_, AnyT _) | DefT (_, MixedT _))))
       -> IMap.empty
     | Flow (t1, UseT (_, t2)) -> f t1 (f t2 IMap.empty)
     | Flow (t1, _) -> f t1 IMap.empty
-    | Unify (t1, t2) -> f t1 (f t2 IMap.empty)
+    | Unify (_, t1, t2) -> f t1 (f t2 IMap.empty)
+    | Error _ -> failwith "tvars of error actions don't make sense"
 
   (* Decide when two actions are the same. We use reasonless compare for types
      involved in the actions. *)
   let rec eq = function
     | Flow (t1, t2), Flow (t1_, t2_) ->
       eq_t (t1, t1_) && eq_use_t (t2, t2_)
-    | Unify (t1, t2), Unify (t1_, t2_) ->
+    | Unify (_, t1, t2), Unify (_, t1_, t2_) ->
       eq_t (t1, t1_) && eq_t (t2, t2_)
     | _ -> false
 
@@ -184,21 +183,27 @@ end = struct
   *)
   let defer_if_relevant cx branch action =
     let { ignore; speculation_id; case } = branch in
-    let action_tvars = Action.tvars action in
-    let all_unresolved =
-      IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
-    let relevant_action_tvars =
-      IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars in
-    let defer = not (IMap.is_empty relevant_action_tvars) in
-    if defer then Case.(
+    let open Case in
+    match action with
+    | Action.Error _ ->
+      case.actions <- case.actions @ [true, action];
+      true
+    | _ ->
+      let action_tvars = Action.tvars action in
+      let all_unresolved =
+        IMap.find_unsafe speculation_id (Context.all_unresolved cx) in
+      let relevant_action_tvars =
+        IMap.filter (fun id _ -> ISet.mem id all_unresolved) action_tvars in
+      let defer = not (IMap.is_empty relevant_action_tvars) in
+      if defer then Case.(
       let is_benign = IMap.exists (ignore_type ignore) action_tvars in
       if not is_benign
       then case.unresolved <-
         IMap.fold (fun id _ acc -> ISet.add id acc)
-          relevant_action_tvars case.unresolved;
+        relevant_action_tvars case.unresolved;
       case.actions <- case.actions @ [is_benign, action]
-    );
-    defer
+      );
+      defer
 
   let defer_action cx action =
     speculating() &&

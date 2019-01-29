@@ -9,6 +9,14 @@
       "message":"Unexpected token type"
     },
     {
+      "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":34}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
       "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
       "message":"Unexpected token ;"
     },
@@ -82,7 +90,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
             "range":[34,35],
-            "name":";",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -90,7 +98,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":35}},
             "range":[34,35],
-            "name":";",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This is a module for generating code that only has object decl,
@@ -15,10 +12,10 @@
    condition type or code type to have more complicated conditions
    such as type judgements *)
 
-module S = Ast.Statement;;
-module E = Ast.Expression;;
-module T = Ast.Type;;
-module P = Ast.Pattern;;
+module S = Flow_ast.Statement;;
+module E = Flow_ast.Expression;;
+module T = Flow_ast.Type;;
+module P = Flow_ast.Pattern;;
 module Utils = Flowtestgen_utils;;
 
 module Obj_rule = struct
@@ -85,8 +82,8 @@ let mk_rule_from_string
     (pre : (string * string) list)
     (post : (string * string) list) : Gen.rule_t =
   let grammar = grm in
-  let premises = List.map parse_type_rule pre in
-  let cons = List.map parse_type_rule post in
+  let premises = Core_list.map ~f:parse_type_rule pre in
+  let cons = Core_list.map ~f:parse_type_rule post in
   Obj_rule.({grammar; premises; cons});;
 
 (* We set up three simple rules: object decl, prop read and prop write *)

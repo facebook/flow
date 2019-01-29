@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandInfo
@@ -25,9 +22,10 @@ module Command(CommandList : COMMAND_LIST) = struct
         CommandUtils.exe_name;
     args = CommandSpec.ArgSpec.(
       empty
+      |> CommandUtils.from_flag
       |> flag "--current" (optional int)
           ~doc:"Current term in the argument list being completed."
-      |> rest ~doc:"Command to complete"
+      |> rest
     )
   }
 
@@ -62,7 +60,7 @@ module Command(CommandList : COMMAND_LIST) = struct
     let current = match current with Some x -> x | None -> 0 in
     let rest = match rest with Some x -> x | None -> [] in
     if current <= 1 then (
-      let commands = CommandList.commands |> List.map (fun (command) ->
+      let commands = CommandList.commands |> Core_list.map ~f:(fun (command) ->
         CommandSpec.name command
       ) in
       print_endline (String.concat " " commands)

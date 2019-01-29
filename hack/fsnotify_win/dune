@@ -1,0 +1,7 @@
+(library
+  (name fsnotify_Windows)
+  (wrapped false)
+  (c_names
+    fsnotify_stubs)
+  (libraries
+    utils_core))

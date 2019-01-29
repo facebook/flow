@@ -26,6 +26,7 @@
                 "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":55}},
                 "range":[7,55],
                 "exact":false,
+                "inexact":false,
                 "properties":[
                   {
                     "type":"ObjectTypeProperty",
@@ -52,8 +53,10 @@
                       "rest":null,
                       "typeParameters":null
                     },
+                    "method":false,
                     "optional":false,
                     "static":false,
+                    "proto":false,
                     "variance":null,
                     "kind":"get"
                   },
@@ -102,14 +105,17 @@
                       "rest":null,
                       "typeParameters":null
                     },
+                    "method":false,
                     "optional":false,
                     "static":false,
+                    "proto":false,
                     "variance":null,
                     "kind":"set"
                   }
                 ],
                 "indexers":[],
-                "callProperties":[]
+                "callProperties":[],
+                "internalSlots":[]
               }
             },
             "optional":false

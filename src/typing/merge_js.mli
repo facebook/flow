@@ -1,62 +1,42 @@
 (**
- * Copyright (c) 2014-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 module Reqs : sig
-  type impl = Loc.filename * string * string * Loc.filename
-  type dep_impl = Context.t * string * string * Loc.filename
-  type unchecked = string * Loc.t * Loc.filename
-  type res = string * Loc.t * string * Loc.filename
-  type decl = string * Loc.t * Modulename.t * Loc.filename
-  type t = {
-    impls: impl list;
-    dep_impls: dep_impl list;
-    unchecked: unchecked list;
-    res: res list;
-    decls: decl list;
-  }
+  type t
   val empty: t
-  val add_impl: impl -> t -> t
-  val add_dep_impl: dep_impl -> t -> t
-  val add_unchecked: unchecked -> t -> t
-  val add_res: res -> t -> t
-  val add_decl: decl -> t -> t
+  val add_impl: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
+  val add_dep_impl: string -> File_key.t -> (Context.sig_t * Utils_js.ALocSet.t) -> t -> t
+  val add_unchecked: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
+  val add_res: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
+  val add_decl:string -> File_key.t -> (Utils_js.ALocSet.t * Modulename.t) -> t -> t
 end
 
 val merge_component_strict:
   metadata: Context.metadata ->
-  lint_settings: LintSettings.t option ->
-  require_loc_maps: Loc.t SMap.t Utils_js.FilenameMap.t ->
-  get_ast_unsafe: (Loc.filename -> Ast.program) ->
-  get_docblock_unsafe: (Loc.filename -> Docblock.t) ->
+  lint_severities: Severity.severity LintSettings.t ->
+  file_options: Files.options option ->
+  strict_mode: StrictModeSettings.t ->
+  file_sigs: File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
+  get_ast_unsafe: (File_key.t -> (Loc.t, Loc.t) Flow_ast.program) ->
+  get_docblock_unsafe: (File_key.t -> Docblock.t) ->
+  ?do_gc: bool ->
   (* component *)
-  Loc.filename list ->
+  File_key.t Nel.t ->
   (* requires *)
   Reqs.t ->
   (* dependency cxs *)
-  Context.t list ->
+  Context.sig_t list ->
   (* master cx *)
-  Context.t ->
-  (* merged cx *)
-  Context.t
+  Context.sig_t ->
+  (* cxs in component order, hd is merged leader *)
+  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program) Nel.t
 
-val restore: Context.t ->
-  Context.t list -> Context.t -> unit
-
-val clear_master_shared: Context.t -> Context.t -> unit
-
-val merge_lib_file:
-  Context.t ->
-  Context.t ->
-  Errors.ErrorSet.t * Error_suppressions.t * LintSettingsMap.t
-
-val lowers_of_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
+val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 
 module ContextOptimizer: sig
-  val sig_context : Context.t -> string list -> SigHash.t
+  val sig_context : Context.t -> string list -> Xx.hash
 end

@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* This file defines a set of rules that can be used to
@@ -14,12 +11,11 @@
    programs that exposes type rule unsoundness
 *)
 
-module S = Ast.Statement;;
-module E = Ast.Expression;;
-module T = Ast.Type;;
-module P = Ast.Pattern;;
+module S = Flow_ast.Statement;;
+module E = Flow_ast.Expression;;
+module T = Flow_ast.Type;;
+module P = Flow_ast.Pattern;;
 module Utils = Flowtestgen_utils;;
-module FRandom = Utils.FRandom;;
 
 (* ESSENTIAL: Syntax type and related functions *)
 module Syntax = Syntax_base;;
@@ -27,8 +23,9 @@ module Syntax = Syntax_base;;
 
 (* ESSENTIAL: environment type and its element type. *)
 type env_elt_t =
-  | Expr of E.t' * T.t'
-  | Type of T.t'
+  | Expr of (Loc.t, Loc.t) E.t' * (Loc.t, Loc.t) T.t'
+  | Type of (Loc.t, Loc.t) T.t'
+  | Int of int
 type env_t = env_elt_t list
 
 (* string of functions *)
@@ -42,6 +39,7 @@ let str_of_env_elt (elt : env_elt_t) : string = match elt with
     Printf.sprintf
       "%s"
       (Utils.string_of_type t)
+  | Int i -> string_of_int i
 
 let str_of_env (env : env_t) : string =
   "\n/*\nEnv:\n" ^
@@ -59,36 +57,51 @@ let print_env (env : env_t) : unit =
    body for inner statements such as function definitions. This might
    change in the future when we have better strategy.
  *)
-class ruleset_base (depth : int) = object(self)
+class ruleset_base = object(self)
 
 
   (* ESSENTIAL: Users have to inherit from the engine type and
      implement the get_all_rules method *)
-  inherit [env_elt_t, env_t, Syntax.t] Engine.engine depth
+  inherit [env_elt_t, env_t, Syntax.t] Engine.engine
+
+  method get_name () : string = "base"
+
+  method print_stack () : unit =
+    Printf.printf "Stack: ============\n";
+    for i = size - 1 downto 0 do
+      List.iter (fun elt -> Printf.printf "%s\t" (str_of_env_elt elt)) stack.(i);
+      Printf.printf "\n----------------\n";
+    done
+
+  method print_env (env : env_t) : unit = print_env env
+
+  method print_syntax (s : Syntax.t) : unit = Printf.printf "%s\n" (Syntax.str_of_syntax s)
+  method combine_syntax (slist : Syntax.t list) : string = Syntax.combine_syntax slist
 
   (* We have a small chance to bypass this assertion *)
   method weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((Random.int 5) > 0) then raise Engine.Backtrack
 
   (* check t1 <: t2 *)
-  method is_subtype (t1 : T.t') (t2 : T.t') : bool =
+  method is_subtype (t1 : (Loc.t, Loc.t) T.t') (t2 : (Loc.t, Loc.t) T.t') : bool =
     match t1, t2 with
     | (T.Union ((_, tu1), (_, tu2), tlist), t) ->
-      List.mem t (tu1 :: tu2 :: (List.map snd tlist))
+      List.mem t (tu1 :: tu2 :: (Core_list.map ~f:snd tlist))
     | T.Object o1, T.Object o2 -> self#is_subtype_obj o1 o2
     | T.Function f1, T.Function f2 -> self#is_subtype_func f1 f2
     | _ when t1 = t2 -> true
     | _ -> false
 
   method is_subtype_func
-      (f1 : T.Function.t)
-      (f2 : T.Function.t) : bool =
+      (f1 : (Loc.t, Loc.t) T.Function.t)
+      (f2 : (Loc.t, Loc.t) T.Function.t) : bool =
     let open T.Function in
-    let get_type_list (f : T.Function.t) : T.t' list =
+    let get_type_list (f : (Loc.t, Loc.t) T.Function.t) : (Loc.t, Loc.t) T.t' list =
       let open T.Function.Param in
+      let (_, { T.Function.Params.params; rest = _ }) = f.params in
       List.map
-        (fun param -> (snd param).typeAnnotation |> snd)
-        (fst f.params) @ [f.returnType |> snd] in
+        (fun param -> (snd param).annot |> snd)
+        params @ [f.return |> snd] in
 
     let rec func_subtype_helper l1 l2 = match l1, l2 with
       | [], [] -> true
@@ -107,8 +120,8 @@ class ruleset_base (depth : int) = object(self)
     if (not ((List.length p1_list) = (List.length p2_list))) then false
     else func_subtype_helper p1_list p2_list
 
-  method is_subtype_obj (o1 : T.Object.t) (o2 : T.Object.t) =
-    let get_prop_set (o : T.Object.t) =
+  method is_subtype_obj (o1 : (Loc.t, Loc.t) T.Object.t) (o2 : (Loc.t, Loc.t) T.Object.t) =
+    let get_prop_set (o : (Loc.t, Loc.t) T.Object.t) =
       let tbl = Hashtbl.create 1000 in
 
       (* hash table for storing optional properties *)
@@ -119,6 +132,7 @@ class ruleset_base (depth : int) = object(self)
                                    value = Init (_, t);
                                    optional = o;
                                    static = _;
+                                   proto = _;
                                    _method = _;
                                    variance = _;}) ->
             if o then Hashtbl.add opt_tbl name t
@@ -157,8 +171,8 @@ class ruleset_base (depth : int) = object(self)
   (* get the type of an expression from the environment assuming
      we have the expression *)
   method get_type_from_expr
-      (expr : E.t')
-      (env : env_t) : T.t' =
+      (expr : (Loc.t, Loc.t) E.t')
+      (env : env_t) : (Loc.t, Loc.t) T.t' =
     let rec helper lst = match lst with
       | [] -> raise Not_found
       | Expr (e, t) :: _ when expr = e -> t
@@ -172,13 +186,18 @@ class ruleset_base (depth : int) = object(self)
         | Expr _ -> elt :: acc
         | _ -> acc) env []
 
+  method require_var (env : env_t) : env_elt_t list =
+    List.fold_right (fun elt acc -> match elt with
+        | Expr (E.Identifier _, _) -> elt :: acc
+        | _ -> acc) env []
+
   method require_type (env : env_t) : env_elt_t list =
     List.fold_right (fun elt acc -> match elt with
         | Type _ -> elt :: acc
         | _ -> acc) env []
 
   (* Requiring the object has some properties *)
-  method require_prop (ot : T.t') (take_opt : bool): env_elt_t list =
+  method require_prop (ot : (Loc.t, Loc.t) T.t') (take_opt : bool): env_elt_t list =
     let open T.Object.Property in
     let props = match ot with
       | T.Object o ->
@@ -187,6 +206,7 @@ class ruleset_base (depth : int) = object(self)
                                      value = Init (_, t);
                                      optional = o;
                                      static = _;
+                                     proto = _;
                                      _method = _;
                                      variance = _;}) ->
               if take_opt || (not o) then
@@ -196,6 +216,118 @@ class ruleset_base (depth : int) = object(self)
             | _ -> failwith "Unsupported property") T.Object.(o.properties) []
       | _ -> failwith "Input type is not an object type" in
       props
+
+  (* Getting only optional properties *)
+  method require_optional_prop (ot : (Loc.t, Loc.t) T.t') : env_elt_t list =
+    let open T.Object.Property in
+    let props = match ot with
+      | T.Object o ->
+        List.fold_right (fun p acc -> match p with
+            | T.Object.Property (_, {key = E.Object.Property.Identifier (_, name);
+                                     value = Init (_, t);
+                                     optional = true;
+                                     static = _;
+                                     proto = _;
+                                     _method = _;
+                                     variance = _;}) ->
+                Expr (E.Identifier (Loc.none, name), t) :: acc
+            | _ -> acc) T.Object.(o.properties) []
+      | _ -> failwith "Input type is not an object type" in
+      props
+
+  (* generate a list of env elements. Start should be provided if choose function is previously
+     used in a rule *)
+  method gen_elt_list
+      (start : int)
+      (require_func : env_t -> env_elt_t list)
+      (cons : env_elt_t -> bool)
+      (num : int)
+      (env : env_t) : env_elt_t list =
+    let rec helper count limit result =
+      if count = limit then result
+      else
+        let elt = self#choose (count + start) (fun () -> require_func env) in
+        self#backtrack_on_false (cons elt);
+        helper (count + 1) limit (elt :: result) in
+    helper start num []
+
+  (* A function for generating literal expressions and types *)
+  method gen_obj_lit
+      ?(start = 0)
+      ?(cons = (fun _ -> true))
+      (prop_num : int)
+      (option_num : int)
+      (env : env_t) : (Syntax.t * (Loc.t, Loc.t) E.t' * (Loc.t, Loc.t) T.t') =
+
+    (* We are getting 1 property *)
+    let elist = self#gen_elt_list start self#require_expr cons (prop_num + option_num) env in
+    let props =
+      let count = ref 0 in
+      let mk_prop () =
+        let r = "p_" ^ (string_of_int !count) in
+        let index = !count in
+        count := !count + 1;
+        r, index in
+      Core_list.map ~f:(fun elt -> match elt with
+          | Expr (e, t) -> let pname, index = mk_prop () in pname, (e, t), index
+          | _ -> failwith "This has to be an expression.") elist in
+
+    (* get the literal syntax and its type *)
+    let lit = Syntax.mk_obj_lit (Core_list.map ~f:(fun (n, e, _) -> n, e) props) in
+    let lit_expr = (match lit with
+        | Syntax.Expr e -> e
+        | _ -> failwith "[rule_obj_lit] Literal has to be an expr") in
+    let ret_type =
+      let prop_types =
+        Core_list.map ~f:(fun (name, (_, e), index) ->
+            let open T.Object.Property in
+            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, name));
+                                          value = Init (Loc.none, e);
+                                          optional = if index >= prop_num then true else false;
+                                          static = false;
+                                          proto = false;
+                                          _method = false;
+                                          variance = None})) props in
+      let open T.Object in
+      T.Object {exact = false; properties = prop_types; inexact = true} in
+    lit, lit_expr, ret_type
+
+  (* A function for generating literal expressions and types *)
+  method gen_obj_type
+      ?(start = 0)
+      ?(cons = (fun _ -> true))
+      (prop_num : int)
+      (option_num : int)
+      (env : env_t) : (Loc.t, Loc.t) T.t' =
+
+    (* We are getting 1 property *)
+    let tlist = self#gen_elt_list start self#require_type cons (prop_num + option_num) env in
+    let props =
+      let count = ref 0 in
+      let mk_prop () =
+        let r = "p_" ^ (string_of_int !count) in
+        let index = !count in
+        count := !count + 1;
+        r, index in
+      Core_list.map ~f:(fun elt -> match elt with
+          | Type t -> let pname, index = mk_prop () in pname, t, index
+          | _ -> failwith "This has to be an expression.") tlist in
+
+    (* get the literal syntax and its type *)
+    let ret_type =
+      let prop_types =
+        Core_list.map ~f:(fun (name, t, index) ->
+            let open T.Object.Property in
+            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, name));
+                                          value = Init (Loc.none, t);
+                                          optional = if index >= prop_num then true else false;
+                                          static = false;
+                                          proto = false;
+                                          _method = false;
+                                          variance = None})) props in
+      let open T.Object in
+      T.Object {exact = false; properties = prop_types; inexact = true} in
+    ret_type
 
   (* ESSENTIAL: rules *)
   (* Property read rule *)
@@ -266,17 +398,20 @@ class ruleset_base (depth : int) = object(self)
       let o_type = match otype with
         | T.Object o -> o
         | _ -> failwith "Has to be an object type" in
-      if pexpr = E.Identifier (Loc.none, "_number_prop_") then
+      if pexpr = E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, "_number_prop_")) then
         let new_prop = let open T.Object.Property in
-          {key = E.Object.Property.Identifier (Loc.none, (Utils.string_of_expr pexpr));
+          {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, (Utils.string_of_expr pexpr)));
            value = Init (Loc.none, T.Number);
            optional = false;
            static = false;
+           proto = false;
            _method = false;
            variance = None} in
         let open T.Object in
         T.Object {exact = o_type.exact;
-                  properties = Property (Loc.none, new_prop) :: o_type.properties}
+                  properties = Property (Loc.none, new_prop) :: o_type.properties;
+                  inexact = not o_type.exact;
+                 }
       else
         T.Object o_type in
 
@@ -297,7 +432,7 @@ class ruleset_base (depth : int) = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), init_type)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), init_type)) in
     let new_env = self#add_binding new_env (Type init_type) in
     var_decl, new_env
 
@@ -323,61 +458,20 @@ class ruleset_base (depth : int) = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 
   (* A rule for generating object literals *)
-  method rule_obj_lit (env : env_t) : (Syntax.t * env_t) =
+  method rule_obj_lit (prop_num : int) (opt_num : int) (env : env_t) : (Syntax.t * env_t) =
 
-    (* a helper function for generating expression for object
-       properties *)
-    let rec gen_expr_list
-        (count : int)
-        (limit : int)
-        (result : (E.t' * T.t') list) : (E.t' * T.t') list =
-      if count = limit then result
-      else
-        let expr = self#choose count (fun () -> self#require_expr env) in
-        let ep = match expr with
-          | Expr (e, t) -> (e, t)
-          | _ -> failwith "This has to be an expression" in
-        gen_expr_list (count + 1) limit (ep :: result) in
-
-    (* We are getting at most 2 properties *)
-    let elist = gen_expr_list 0 ((FRandom.rint 2) + 1) [] in
-    let props =
-      let count = ref 0 in
-      let mk_prop () =
-        let r = "p_" ^ (string_of_int !count) in
-        count := !count + 1;
-        r in
-      List.map (fun e -> mk_prop (), e) elist in
-
-    (* get the literal syntax and its type *)
-    let lit = Syntax.mk_obj_lit props in
-    let lit_expr = (match lit with
-         | Syntax.Expr e -> e
-         | _ -> failwith "[rule_obj_lit] Literal has to be an expr") in
-    let ret_type =
-      let prop_types =
-        List.map (fun e ->
-            let open T.Object.Property in
-            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, fst e);
-                                          value = Init (Loc.none, snd (snd e));
-                                          optional = false;
-                                          static = false;
-                                          _method = false;
-                                          variance = None})) props in
-      let open T.Object in
-      T.Object {exact = false; properties = prop_types} in
-
+    let lit, lit_expr, ret_type = self#gen_obj_lit prop_num opt_num env in
     let new_env =
       self#add_binding
         env
         (Expr (lit_expr, ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
-    Syntax.Empty, new_env
+    lit, new_env
 
   (* A rule for generating number literals *)
   method rule_num_lit (env : env_t) : (Syntax.t * env_t) =
@@ -407,18 +501,32 @@ class ruleset_base (depth : int) = object(self)
     let new_env = self#add_binding new_env (Type ret_type) in
     Syntax.Empty, new_env
 
+  (* A rule for generating number literals *)
+  method rule_bool_lit (env : env_t) : (Syntax.t * env_t) =
+    let lit = Syntax.mk_literal T.Boolean in
+    let ret_type = T.Boolean in
+    let new_env =
+      self#add_binding
+        env
+        (Expr ((match lit with
+         | Syntax.Expr e -> e
+         | _ -> failwith "[rule_num_list] Literal has to be an expr"),
+        ret_type)) in
+    let new_env = self#add_binding new_env (Type ret_type) in
+    Syntax.Empty, new_env
+
   (* A rule for generating function definitions *)
   method rule_funcdef (env : env_t) : (Syntax.t * env_t) =
-    let mk_func_type (ptype : T.t') (rtype : T.t') : T.t' =
+    let mk_func_type (ptype : (Loc.t, Loc.t) T.t') (rtype : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) T.t' =
       let param_type =
         (Loc.none, T.Function.Param.({name = None;
-                                      typeAnnotation = (Loc.none, ptype);
+                                      annot = (Loc.none, ptype);
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
-                              returnType = ret_type;
-                              typeParameters = None}) in
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
+                              return = ret_type;
+                              tparams = None}) in
 
     (* parameter type *)
     let param_type =
@@ -427,11 +535,11 @@ class ruleset_base (depth : int) = object(self)
       | _ -> failwith "has to be a type" in
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in
 
     (* We don't support recursion at this point, since in the syntax
        there's no way to stop recursion *)
-    let fenv = (Expr (E.Identifier (Loc.none, pname), param_type)) :: env in
+    let fenv = (Expr (E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname)), param_type)) :: env in
 
     (* return expression and its type *)
     let func_return_type =
@@ -443,16 +551,6 @@ class ruleset_base (depth : int) = object(self)
         | _ -> false);
 
     let fname = Utils.mk_func () in
-
-    (* This is the code for building function body recursively, but
-       we are not doing it at the moment *)
-    (*
-    let body, _ = if (FRandom.rint 10) > 7 then begin
-        let new_engine = new ruleset_base (depth + 1) in
-        new_engine#gen_prog fenv 2
-      end else [], fenv in
-       *)
-
 
     (* return expression and its type *)
     let ret_expr = self#choose 2 (fun () -> self#require_expr fenv) in
@@ -474,22 +572,22 @@ class ruleset_base (depth : int) = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, fname)), ret_type)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, fname))), ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
     func_def, new_env
 
   (* A rule for generating function definitions *)
   method rule_func_mutate (env : env_t) : (Syntax.t * env_t) =
-    let mk_func_type (ptype : T.t') (rtype : T.t') : T.t' =
+    let mk_func_type (ptype : (Loc.t, Loc.t) T.t') (rtype : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) T.t' =
       let param_type =
         (Loc.none, T.Function.Param.({name = None;
-                                      typeAnnotation = (Loc.none, ptype);
+                                      annot = (Loc.none, ptype);
                                       optional = false})) in
       let ret_type = (Loc.none, rtype) in
 
-      T.Function.(T.Function {params = [param_type], None;
-                              returnType = ret_type;
-                              typeParameters = None}) in
+      T.Function.(T.Function {params = (Loc.none, { Params.params = [param_type]; rest = None });
+                              return = ret_type;
+                              tparams = None}) in
 
     (* parameter type *)
     let param_type =
@@ -503,7 +601,7 @@ class ruleset_base (depth : int) = object(self)
         | _ -> false);
 
     (* We are assuming we only have one parameter for now *)
-    let pname = "param_" ^ (string_of_int depth) in
+    let pname = "param" in
 
     let prop = self#choose 1 (fun () -> self#require_prop param_type true) in
     let pexpr, ptype = match prop with
@@ -522,7 +620,7 @@ class ruleset_base (depth : int) = object(self)
     (* produce a write syntax *)
     let write =
       Syntax.mk_prop_write
-        (Utils.string_of_expr (E.Identifier (Loc.none, pname)))
+        (Utils.string_of_expr (E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname))))
         (Utils.string_of_expr pexpr)
         rhs_expr in
 
@@ -543,7 +641,7 @@ class ruleset_base (depth : int) = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, fname)), ret_type)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, fname))), ret_type)) in
     let new_env = self#add_binding new_env (Type ret_type) in
     func_def, new_env
 
@@ -562,10 +660,10 @@ class ruleset_base (depth : int) = object(self)
     let f_ptype =
       let open T.Function in
       match func_type with
-      | T.Function {params = plist, _;
-                    returnType = _;
-                    typeParameters = _} ->
-        T.Function.Param.((plist |> List.hd |> snd).typeAnnotation)
+      | T.Function {params = (_, { Params.params = plist; rest = _ });
+                    return = _;
+                    tparams = _} ->
+        T.Function.Param.((plist |> List.hd |> snd).annot)
       | _ -> failwith "This has to a function type" in
 
     (* parameter *)
@@ -579,8 +677,8 @@ class ruleset_base (depth : int) = object(self)
 
     let ret_type = T.Function.(match func_type with
         | T.Function {params = _;
-                      returnType = (_, rt);
-                      typeParameters =_} -> rt
+                      return = (_, rt);
+                      tparams =_} -> rt
         | _ -> failwith "This has to be a function type") in
     let new_env =
       self#add_binding
@@ -601,42 +699,24 @@ class ruleset_base (depth : int) = object(self)
         (Type T.String) in
     Syntax.Empty, new_env
 
-  (* A rule for adding object types *)
-  method rule_obj_type (env : env_t) : (Syntax.t * env_t) =
-    (* a helper function for generating object property types *)
-    let rec gen_type_list
-        (count : int)
-        (limit : int)
-        (result : T.t' list) : T.t' list =
+  method gen_type_list
+      (cons : ((Loc.t, Loc.t) T.t') -> bool)
+      (num : int)
+      (env : env_t) : ((Loc.t, Loc.t) T.t') list =
+    let rec helper count limit result =
       if count = limit then result
       else
-        let ptype = self#choose count (fun () -> self#require_type env) in
-        let ptype = match ptype with
+        let expr = self#choose count (fun () -> self#require_expr env) in
+        let t = match expr with
           | Type t -> t
-          | _ -> failwith "This has to be a type" in
-        gen_type_list (count + 1) limit (ptype :: result) in
+          | _ -> failwith "This has to be an expression" in
+        self#backtrack_on_false (cons t);
+        helper (count + 1) limit (t :: result) in
+    helper 0 num []
 
-    let prop_types = gen_type_list 0 ((FRandom.rint 2) + 1) [] in
-    let props =
-      let count = ref 0 in
-      let mk_prop () =
-        let r = "p_" ^ (string_of_int !count) in
-        count := !count + 1;
-        r in
-      List.map (fun t -> mk_prop (), t) prop_types in
-
-    let ret_type =
-      let prop_types =
-        List.map (fun p ->
-            let open T.Object.Property in
-            T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, fst p);
-                                          value = Init (Loc.none, snd p);
-                                          optional = FRandom.rbool ();
-                                          static = false;
-                                          _method = false;
-                                          variance = None})) props in
-      let open T.Object in
-      T.Object {exact = false; properties = prop_types} in
+  (* A rule for adding object types *)
+  method rule_obj_type (prop_num : int) (opt_num : int) (env : env_t) : (Syntax.t * env_t) =
+    let ret_type = self#gen_obj_type prop_num opt_num env in
     let new_env =
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
@@ -657,34 +737,40 @@ class ruleset_base (depth : int) = object(self)
 
     let ret_type =
       let param = T.Function.Param.({name = None;
-                                     typeAnnotation = (Loc.none, param_type);
+                                     annot = (Loc.none, param_type);
                                      optional = false}) in
-      T.Function.(T.Function {params = [(Loc.none, param)], None;
-                              returnType = (Loc.none, func_ret_type);
-                              typeParameters = None}) in
+      T.Function.(T.Function {
+        params = (Loc.none, { Params.
+          params = [(Loc.none, param)];
+          rest = None;
+        });
+        return = (Loc.none, func_ret_type);
+        tparams = None;
+      }) in
     let new_env =
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
 
   (* A rule for adding primitive types *)
-  method rule_union_type (env : env_t) : (Syntax.t * env_t) =
+  method rule_union_type (tnum : int) (env : env_t) : (Syntax.t * env_t) =
     (* a helper function for generating object property types *)
     let rec gen_type_list
         (count : int)
         (limit : int)
-        (result : T.t' list) : T.t' list =
+        (result : (Loc.t, Loc.t) T.t' list) : (Loc.t, Loc.t) T.t' list =
       if count = limit then result
       else
         let ptype = self#choose count (fun () -> self#require_type env) in
         let ptype = match ptype with
           | Type t -> t
           | _ -> failwith "This has to be a type" in
-
+        (* Do not pick the same type again! *)
+        self#backtrack_on_false (not (List.mem ptype result));
         gen_type_list (count + 1) limit (ptype :: result) in
 
     let ret_type =
       let open Array in
-      let tarray = (gen_type_list 0 ((FRandom.rint 1) + 2) []) |> of_list in
+      let tarray = (gen_type_list 0 tnum []) |> of_list in
       T.Union ((Loc.none, get tarray 0),
                (Loc.none, get tarray 1),
                (List.map
@@ -694,15 +780,97 @@ class ruleset_base (depth : int) = object(self)
       self#add_binding env (Type ret_type) in
     Syntax.Empty, new_env
 
+  (* A rule for adding runtime checks *)
+  method rule_runtime_check (env : env_t) : (Syntax.t * env_t) =
+    let mk_prop_read (obj : (Loc.t, Loc.t) E.t') (prop : (Loc.t, Loc.t) E.t') : (Loc.t, Loc.t) E.t' =
+      let open E.Member in
+      E.Member {_object = (Loc.none, obj);
+                property = PropertyExpression (Loc.none, prop)} in
+
+    let rec get_prop (oname : (Loc.t, Loc.t) E.t') (ot : (Loc.t, Loc.t) T.Object.t) (depth : int) : env_elt_t =
+      let prop = self#choose depth (fun () -> self#require_prop (T.Object ot) true) in
+      let pexpr, ptype = match prop with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+      let prop_elt = match ptype with
+      | T.Object t -> get_prop pexpr t (depth + 1)
+      | _ -> Expr (pexpr, ptype) in
+      match prop_elt with
+      | Expr (e, t) -> Expr (mk_prop_read oname e, t)
+      | _ -> failwith "This has to be an expression." in
+
+    let var = self#choose 0 (fun () -> self#require_var env) in
+    let vexpr, vtype = match var with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match vtype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    let final_expr = match vtype with
+      | T.Object ot -> get_prop vexpr ot 1
+      | _ -> var in
+    let fexpr, ftype = match final_expr with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match ftype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    Syntax.mk_runtime_check fexpr ftype, env
+
+  (* A rule for adding runtime checks *)
+  method rule_check_optional_prop (env : env_t) : (Syntax.t * env_t) =
+    let mk_prop_read (obj : (Loc.t, Loc.t) E.t') (prop : (Loc.t, Loc.t) E.t') : (Loc.t, Loc.t) E.t' =
+      let open E.Member in
+      E.Member {_object = (Loc.none, obj);
+                property = PropertyExpression (Loc.none, prop)} in
+
+    let rec get_prop (oname : (Loc.t, Loc.t) E.t') (ot : (Loc.t, Loc.t) T.Object.t) (depth : int) : env_elt_t =
+      let prop = self#choose depth (fun () -> self#require_optional_prop (T.Object ot)) in
+      let pexpr, ptype = match prop with
+        | Expr (e, t) -> e, t
+        | _ -> failwith "This has to be an expression" in
+      let prop_elt = match ptype with
+      | T.Object t -> get_prop pexpr t (depth + 1)
+      | _ -> Expr (pexpr, ptype) in
+      match prop_elt with
+      | Expr (e, t) -> Expr (mk_prop_read oname e, t)
+      | _ -> failwith "This has to be an expression." in
+
+    let var = self#choose 0 (fun () -> self#require_var env) in
+    let vexpr, vtype = match var with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match vtype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    let final_expr = match vtype with
+      | T.Object ot -> get_prop vexpr ot 1
+      | _ -> var in
+    let fexpr, ftype = match final_expr with
+      | Expr (e, t) -> e, t
+      | _ -> failwith "This has to be an expression." in
+    self#backtrack_on_false (match ftype with
+        | T.Function _ -> false
+        | T.Union _ -> false
+        | _ -> true);
+
+    Syntax.mk_check_opt_prop fexpr ftype, env
+
   method get_all_rules () =
     let all_rules = [|self#rule_num_lit;
                       self#rule_str_lit;
-                      self#rule_obj_lit;
-                      self#rule_obj_type;
+                      self#rule_obj_lit 1 0;
+                      self#rule_obj_type 1 0;
                       self#rule_vardecl;
                       self#rule_vardecl_with_type;
                       self#rule_func_type;
-                      self#rule_union_type;
+                      self#rule_union_type 2;
                       self#rule_prim_type;
                       self#rule_funcdef;
                       self#rule_func_call;
@@ -711,8 +879,8 @@ class ruleset_base (depth : int) = object(self)
     all_rules
 end;;
 
-class ruleset_random_base (depth : int) = object
-  inherit ruleset_base depth
+class ruleset_random_base = object
+  inherit ruleset_base
   method! weak_assert b =
-    if (not b) && ((FRandom.rint 20) > 0) then raise Engine.Fail
+    if (not b) && ((Random.int 5) > 0) then raise Engine.Backtrack
 end

@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -34,11 +31,13 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> base_flags
+    |> connect_and_json_flags
     |> root_flag
-    |> json_flags
     |> strip_root_flag
-    |> anon "args" (optional (list_of string)) ~doc:"[FILE] [LINE COL]"
+    |> from_flag
+    |> wait_for_recheck_flag
+    |> anon "args" (optional (list_of string))
   )
 }
 
@@ -70,31 +69,33 @@ let parse_args = function
       CommandSpec.usage spec;
       FlowExitStatus.(exit Commandline_usage_error)
 
-let main option_values root json pretty strip_root args () =
+let main base_flags option_values json pretty root strip_root wait_for_recheck args () =
   let file = parse_args args in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
   let strip_root = if strip_root then Some root else None in
-  let ic, oc = connect option_values root in
-  send_command oc (ServerProt.AUTOCOMPLETE file);
-  let results = (Timeout.input_value ic : ServerProt.autocomplete_response) in
+  let request = ServerProt.Request.AUTOCOMPLETE { input = file; wait_for_recheck; } in
+  let results = match connect_and_make_request flowconfig_name option_values root request with
+  | ServerProt.Response.AUTOCOMPLETE response -> response
+  | response -> failwith_bad_response ~request ~response
+  in
   if json || pretty
   then (
     results
       |> AutocompleteService_js.autocomplete_response_to_json ~strip_root
-      |> Hh_json.json_to_string ~pretty
-      |> print_endline
+      |> Hh_json.print_json_endline ~pretty
   ) else (
     match results with
     | Error error ->
       prerr_endlinef "Error: %s" error
     | Ok completions ->
       List.iter (fun res ->
-        let name = res.AutocompleteService_js.res_name in
-        let ty = res.AutocompleteService_js.res_ty in
+        let name = res.ServerProt.Response.res_name in
+        let ty = res.ServerProt.Response.res_ty in
         print_endline (Printf.sprintf "%s %s" name ty)
       ) completions
   )

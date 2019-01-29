@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -17,6 +16,7 @@ module Reordered_argument_map (S : MyMap.S) = struct
   let find_unsafe m k = find_unsafe k m
   let iter m ~f = iter f m
   let map m ~f = map f m
+  let mapi m ~f = mapi f m
   let mem m v = mem v m
   let remove m v = remove v m
   let exists m ~f = exists f m
@@ -37,5 +37,14 @@ module Reordered_argument_set (S : Set.S) = struct
   let of_list l = List.fold_left add S.empty l
 end
 
-module SSet = Reordered_argument_set(SSet)
-module SMap = Reordered_argument_map(SMap)
+module SSet = struct
+  include Reordered_argument_set(SSet)
+  let pp = SSet.pp
+  let show = SSet.show
+end
+
+module SMap = struct
+  include Reordered_argument_map(SMap)
+  let pp = SMap.pp
+  let show = SMap.show
+end

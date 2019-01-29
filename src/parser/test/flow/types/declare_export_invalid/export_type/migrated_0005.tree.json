@@ -9,6 +9,14 @@
       "message":"Unexpected token type"
     },
     {
+      "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":27}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":29}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
       "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":29}},
       "message":"Unexpected token {"
     },
@@ -78,7 +86,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":29}},
             "range":[28,29],
-            "name":"{",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -86,7 +94,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":28},"end":{"line":1,"column":29}},
             "range":[28,29],
-            "name":"{",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

@@ -56,6 +56,7 @@
               "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":32}},
               "range":[18,32],
               "exact":false,
+              "inexact":false,
               "properties":[
                 {
                   "type":"ObjectTypeProperty",
@@ -74,14 +75,17 @@
                     "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":29}},
                     "range":[23,29]
                   },
+                  "method":false,
                   "optional":false,
                   "static":false,
+                  "proto":false,
                   "variance":null,
                   "kind":"init"
                 }
               ],
               "indexers":[],
-              "callProperties":[]
+              "callProperties":[],
+              "internalSlots":[]
             }
           }
         }

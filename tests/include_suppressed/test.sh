@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "Without --include-suppressed\n"
 assert_errors "$FLOW" check --all --strip-root
 

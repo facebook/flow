@@ -1,96 +1,253 @@
-Error: test.js:2
-  2:   static x: number;
-                 ^^^^^^ number. This type is incompatible with
- 10:   static x: string; // error?
-                 ^^^^^^ string
+Error ---------------------------------------------------------------------------------- class_static_constructor.js:4:3
 
-Error: test.js:4
-  4:   static foo(x: number) { }
-                     ^^^^^^ number. This type is incompatible with the expected param type of
- 11:   static foo(x: string) { } // error?
-                     ^^^^^^ string
+Classes may not have fields named `constructor`.
 
-Error: test.js:7
-  7: A.qux = function(x: string) { } // error?
-       ^^^ property `qux`. Property not found in
-  7: A.qux = function(x: string) { } // error?
-     ^ statics of A
-
-Error: test.js:10
- 10:   static x: string; // error?
-                 ^^^^^^ string. This type is incompatible with
-  2:   static x: number;
-                 ^^^^^^ number
-
-Error: test.js:13
- 13:     B.x = 0; // error
-         ^^^ assignment of property `x`
- 13:     B.x = 0; // error
-               ^ number. This type is incompatible with
- 13:     B.x = 0; // error
-         ^^^ string
-
-Error: test.js:15
- 15:     B.foo(0); // error
-               ^ number. This type is incompatible with the expected param type of
- 11:   static foo(x: string) { } // error?
-                     ^^^^^^ string
-
-Error: test.js:17
- 17:     B.y = 0; // error
-         ^^^ assignment of property `y`
- 17:     B.y = 0; // error
-               ^ number. This type is incompatible with
-  3:   static y: string;
-                 ^^^^^^ string
-
-Error: test.js:18
- 18:     B.bar(0); // error
-               ^ number. This type is incompatible with the expected param type of
-  5:   static bar(y: string) { }
-                     ^^^^^^ string
-
-Error: test.js:19
- 19:     B.qux(0); // error
-           ^^^ property `qux`. Property not found in
- 19:     B.qux(0); // error
-         ^ statics of B
-
-Error: test.js:26
- 26:     return new this(); // error B ~> number
-                ^^^^^^^^^^ B. This type is incompatible with the expected return type of
- 25:   static badCreate(): number {
-                           ^^^^^^ number
-
-Error: test.js:40
- 40:     D.foo(0); // error?
-           ^^^ property `foo`. Property not found in
- 40:     D.foo(0); // error?
-         ^ statics of D
-
-Error: test.js:42
- 42:     D.bar(0);
-               ^ number. This type is incompatible with the expected param type of
- 38: class D extends C<string> {
-                       ^^^^^^ string
-
-Error: test.js:47
- 47: (new A: typeof A);
-      ^^^^^ A. This type is incompatible with
- 47: (new A: typeof A);
-             ^^^^^^^^ class type: A
-
-Error: test.js:53
- 53:     this.bar(); // error
-              ^^^ property `bar`. Property not found in
- 53:     this.bar(); // error
-         ^^^^ statics of E
-
-Error: test.js:54
- 54:     return this.x; // error
-                ^^^^^^ number. This type is incompatible with the expected return type of
- 52:   static foo(): string {
-                     ^^^^^^ string
+   4|   static constructor: Object; // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Found 15 errors
+Error ------------------------------------------------------------------------------------ class_static_prototype.js:4:3
+
+Classes may not have static fields named `prototype`.
+
+   4|   static prototype: Object; // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------ declared_class_static_constructor.js:4:10
+
+Classes may not have static fields named `constructor`.
+
+   4|   static constructor: Object; // error
+               ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- declared_class_static_prototype.js:4:10
+
+Classes may not have static fields named `prototype`.
+
+   4|   static prototype: Object; // error
+               ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+
+Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1].
+
+   test.js:7:1
+   7| A.qux = function(x: string) { } // error?
+      ^^^^^
+
+References:
+   test.js:1:7
+   1| class A {
+            ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot extend `A` [1] with `B` because:
+ - string [2] is incompatible with number [3] in property `x`.
+ - string [4] is incompatible with number [5] in the first argument of property `foo`.
+
+   test.js:9:1
+       v------------------
+    9| class B extends A {
+   10|   static x: string; // error?
+   11|   static foo(x: string) { } // error?
+   12|   static main() {
+   13|     B.x = 0; // error
+   14|     B.x = "";
+   15|     B.foo(0); // error
+   16|     B.foo("");
+   17|     B.y = 0; // error
+   18|     B.bar(0); // error
+   19|     B.qux(0); // error
+   20|   }
+   21|   static create(): A {
+   22|     return new this();
+   23|   }
+   24|
+   25|   static badCreate(): number {
+   26|     return new this(); // error B ~> number
+   27|   }
+   28| }
+       ^
+
+References:
+   test.js:9:17
+    9| class B extends A {
+                       ^ [1]
+   test.js:10:13
+   10|   static x: string; // error?
+                   ^^^^^^ [2]
+   test.js:2:13
+    2|   static x: number;
+                   ^^^^^^ [3]
+   test.js:11:17
+   11|   static foo(x: string) { } // error?
+                       ^^^^^^ [4]
+   test.js:4:17
+    4|   static foo(x: number) { }
+                       ^^^^^^ [5]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:13:11
+
+Cannot assign `0` to `B.x` because number [1] is incompatible with string [2].
+
+   test.js:13:11
+   13|     B.x = 0; // error
+                 ^ [1]
+
+References:
+   test.js:10:13
+   10|   static x: string; // error?
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:11
+
+Cannot call `B.foo` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   test.js:15:11
+   15|     B.foo(0); // error
+                 ^ [1]
+
+References:
+   test.js:11:17
+   11|   static foo(x: string) { } // error?
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:17:11
+
+Cannot assign `0` to `B.y` because number [1] is incompatible with string [2].
+
+   test.js:17:11
+   17|     B.y = 0; // error
+                 ^ [1]
+
+References:
+   test.js:3:13
+    3|   static y: string;
+                   ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:11
+
+Cannot call `B.bar` with `0` bound to `y` because number [1] is incompatible with string [2].
+
+   test.js:18:11
+   18|     B.bar(0); // error
+                 ^ [1]
+
+References:
+   test.js:5:17
+    5|   static bar(y: string) { }
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:5
+
+Cannot call `B.qux` because property `qux` is missing in statics of `B` [1].
+
+   test.js:19:5
+   19|     B.qux(0); // error
+           ^^^^^^^^
+
+References:
+   test.js:9:7
+    9| class B extends A {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:26:12
+
+Cannot return `new this()` because `B` [1] is incompatible with number [2].
+
+   test.js:26:12
+   26|     return new this(); // error B ~> number
+                  ^^^^^^^^^^ [1]
+
+References:
+   test.js:25:23
+   25|   static badCreate(): number {
+                             ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:40:5
+
+Cannot call `D.foo` because property `foo` is missing in statics of `D` [1].
+
+   test.js:40:5
+   40|     D.foo(0); // error?
+           ^^^^^^^^
+
+References:
+   test.js:38:7
+   38| class D extends C<string> {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:42:11
+
+Cannot call `D.bar` with `0` bound to `x` because number [1] is incompatible with string [2].
+
+   test.js:42:11
+   42|     D.bar(0);
+                 ^ [1]
+
+References:
+   test.js:38:19
+   38| class D extends C<string> {
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:2
+
+Cannot cast `new A()` to `typeof A` because `A` [1] is incompatible with class `A` [2].
+
+   test.js:47:2
+   47| (new A: typeof A);
+        ^^^^^ [1]
+
+References:
+   test.js:47:9
+   47| (new A: typeof A);
+               ^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:53:5
+
+Cannot call `this.bar` because property `bar` is missing in statics of `E` [1].
+
+   test.js:53:5
+   53|     this.bar(); // error
+           ^^^^^^^^^^
+
+References:
+   test.js:50:7
+   50| class E {
+             ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:54:12
+
+Cannot return `this.x` because number [1] is incompatible with string [2].
+
+   test.js:54:12
+   54|     return this.x; // error
+                  ^^^^^^
+
+References:
+   test.js:51:13
+   51|   static x: number;
+                   ^^^^^^ [1]
+   test.js:52:17
+   52|   static foo(): string {
+                       ^^^^^^ [2]
+
+
+
+Found 18 errors

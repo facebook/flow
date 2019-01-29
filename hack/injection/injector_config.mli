@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -15,5 +14,4 @@
  *
  * Note: Buck doesn't currently have a build rule to only build .mli files
  * into .cmi, so you need to compile against this file directly. *)
-val use_error_tracing: bool
 val use_test_stubbing: bool

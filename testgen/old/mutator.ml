@@ -1,17 +1,16 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-module S = Ast.Statement;;
-module E = Ast.Expression;;
-module T = Ast.Type;;
-module P = Ast.Pattern;;
+module Ast = Flow_ast
+
+module S = Flow_ast.Statement;;
+module E = Flow_ast.Expression;;
+module T = Flow_ast.Type;;
+module P = Flow_ast.Pattern;;
 module Utils = Flowtestgen_utils;;
 module Config = Flowtestgen_config;;
 module FTypes = Flowtestgen_types;;
@@ -45,7 +44,7 @@ let rec prop_read_of_list (plist : string list) : E.Member.t =
      property = PropertyExpression (Loc.none, E.Member (prop_read_of_list tl));
      computed = false}
 
-(* Make an experssion code into a statement code *)
+(* Make an expression code into a statement code *)
 let mk_expr_code (e : t') : t =
   let stmt = let open S.Expression in
     S.Expression {expression = (Loc.none, e.expr); directive = None} in

@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "\nStop any already-running server."
 assert_ok "$FLOW" stop .
 
@@ -30,6 +27,12 @@ printf "\nFocused check on a file and a directory:\n"
 assert_errors "$FLOW" focus-check test.js dir
 
 printf "\nFocused check on files specified in list.txt:\n"
-assert_errors "$FLOW" focus-check --input-file=list.txt 
+assert_errors "$FLOW" focus-check --input-file=list.txt
+
+printf "\nFocused check guessing root by looking at first file:\n"
+assert_errors "$FLOW" focus-check other_root/other_root_file.js
+
+printf "\nFocused check with explicit root:\n"
+assert_errors "$FLOW" focus-check --root . other_root/other_root_file.js
 
 printf "\nDone!\n"

@@ -1,30 +1,110 @@
-Error: main.js:5
-  5: (declare_module_exports: string); // Error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-  5: (declare_module_exports: string); // Error: number ~> string
-                              ^^^^^^ string
+Error ------------------------------------------------------------------------------------------------------ main.js:5:2
 
-Error: main.js:8
-  8: import {str} from "declare_m_e_with_other_value_declares";
-             ^^^ Named import from module `declare_m_e_with_other_value_declares`. This module only has a default export. Did you mean `import str from ...`?
+Cannot cast `declare_module_exports` to string because number [1] is incompatible with string [2].
 
-Error: main.js:12
- 12: (42: str2); // Error: number ~> string
-      ^^ number. This type is incompatible with
- 12: (42: str2); // Error: number ~> string
-          ^^^^ string
+   main.js:5:2
+   5| (declare_module_exports: string); // Error: number ~> string
+       ^^^^^^^^^^^^^^^^^^^^^^
 
-Error: main.js:21
- 21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 21: (DEPRECATED__declare_var_exports: string); // Error: number ~> string
-                                       ^^^^^^ string
-
-Error: main.js:25
- 25: (declare_m_e_with_declare_var_e: string); // Error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 25: (declare_m_e_with_declare_var_e: string); // Error: number ~> string
-                                      ^^^^^^ string
+References:
+   flow-typed/libs.js:2:27
+   2|   declare module.exports: number;
+                                ^^^^^^ [1]
+   main.js:5:26
+   5| (declare_module_exports: string); // Error: number ~> string
+                               ^^^^^^ [2]
 
 
-Found 5 errors
+Error ------------------------------------------------------------------------------------------------------ main.js:8:9
+
+Cannot import `str` because there is no `str` export in `declare_m_e_with_other_value_declares`. Did you mean
+`import str from "..."`?
+
+   8| import {str} from "declare_m_e_with_other_value_declares";
+              ^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:12:2
+
+Cannot cast `42` to `str2` because number [1] is incompatible with string [2].
+
+   main.js:12:2
+   12| (42: str2); // Error: number ~> string
+        ^^ [1]
+
+References:
+   main.js:12:6
+   12| (42: str2); // Error: number ~> string
+            ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:21:2
+
+Cannot cast `declare_var_exports.exports` to string because number [1] is incompatible with string [2].
+
+   main.js:21:2
+   21| (declare_var_exports.exports: string); // Error: number ~> string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/libs.js:21:24
+   21|   declare var exports: number;
+                              ^^^^^^ [1]
+   main.js:21:31
+   21| (declare_var_exports.exports: string); // Error: number ~> string
+                                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:25:2
+
+Cannot cast `declare_m_e_with_declare_var_e` to string because number [1] is incompatible with string [2].
+
+   main.js:25:2
+   25| (declare_m_e_with_declare_var_e: string); // Error: number ~> string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   flow-typed/libs.js:28:27
+   28|   declare module.exports: number;
+                                 ^^^^^^ [1]
+   main.js:25:34
+   25| (declare_m_e_with_declare_var_e: string); // Error: number ~> string
+                                        ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:29:2
+
+Cannot cast `foo(...)` to string because number [1] is incompatible with string [2].
+
+   main.js:29:2
+   29| (foo(0): string); // Error: number ~> string
+        ^^^^^^
+
+References:
+   flow-typed/libs.js:37:36
+   37|   declare function foo(x: number): number;
+                                          ^^^^^^ [1]
+   main.js:29:10
+   29| (foo(0): string); // Error: number ~> string
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:31:2
+
+Cannot cast `foo(...)` to number because string [1] is incompatible with number [2].
+
+   main.js:31:2
+   31| (foo(""): number); // Error: string ~> number
+        ^^^^^^^
+
+References:
+   flow-typed/libs.js:36:36
+   36|   declare function foo(x: string): string;
+                                          ^^^^^^ [1]
+   main.js:31:11
+   31| (foo(""): number); // Error: string ~> number
+                 ^^^^^^ [2]
+
+
+
+Found 7 errors

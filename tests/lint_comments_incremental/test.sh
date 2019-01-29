@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "After start:\n"
 assert_ok "$FLOW" status .
 
@@ -18,7 +15,7 @@ assert_ok "$FLOW" status .
 cp test3.js.fixture test.js
 printf "\nAfter fixing the lint error, leaving the suppression:\n"
 assert_ok "$FLOW" force-recheck test.js
-assert_errors "$FLOW" status .
+assert_ok "$FLOW" status . # 0 errors & 1 warning
 
 cp test4.js.fixture test.js
 printf "\nAfter removing the unused suppression:\n"

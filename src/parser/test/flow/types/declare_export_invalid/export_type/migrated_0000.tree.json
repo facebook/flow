@@ -10,7 +10,19 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
       "message":"Unexpected token ="
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":32}},
+      "message":"Missing comma between export specifiers"
+    },
+    {
+      "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
+      "message":"Missing comma between export specifiers"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
@@ -61,7 +73,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
             "range":[24,25],
-            "name":"=",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -69,7 +81,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
             "range":[24,25],
-            "name":"=",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }
@@ -103,7 +115,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
             "range":[32,33],
-            "name":";",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           },
@@ -111,7 +123,7 @@
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":32},"end":{"line":1,"column":33}},
             "range":[32,33],
-            "name":";",
+            "name":"",
             "typeAnnotation":null,
             "optional":false
           }

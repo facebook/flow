@@ -1,0 +1,31 @@
+{
+  "name": "flow-parser-bin",
+  "version": "0.91.0",
+  "description": "The Flow JavaScript parser, via bindings to the native OCaml implementation",
+  "main": "index.js",
+  "repository": "https://github.com/facebook/flow.git",
+  "author": "Flow Team <flow@fb.com>",
+  "license": "MIT",
+  "dependencies": {
+    "bindings": "^1.3.0",
+    "nan": "^2.8.0"
+  },
+  "scripts": {
+    "prepack": "make download && make dist",
+    "preinstall": "make",
+    "install": "node-gyp rebuild",
+    "verify": "shasum -c SHASUM256.txt"
+  },
+  "files": [
+    ".premade",
+    "lib",
+    "include",
+    "src",
+    "index.js",
+    "binding.gyp",
+    "Makefile",
+    "SHASUM256.txt"
+  ],
+  "os": ["darwin", "linux"],
+  "cpu": ["x64"]
+}

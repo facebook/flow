@@ -128,10 +128,6 @@ well. Classes (or constructor functions) being the more object-oriented side
 and functions (as lambdas) and objects tend to be more on the functional side,
 developers use both simultaneously.
 
-Object oriented languages tend to be more nominally typed (C++, Java, Swift),
-while functional languages tend to be more structurally typed (OCaml, Haskell,
-Elm).
-
 When someone writes a class, they are declaring a _thing_. This thing might
 have the same structure as something else but they still serve different
 purposes. Imagine two component classes that both have `render()` methods,

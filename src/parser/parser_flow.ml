@@ -1,12 +1,11 @@
-(*
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+(**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
+
+module Ast = Flow_ast
 
 open Token
 open Parser_env
@@ -37,9 +36,10 @@ let filter_duplicate_errors =
 module rec Parse : PARSER = struct
   module Type = Type_parser.Type (Parse)
   module Declaration = Declaration_parser.Declaration (Parse) (Type)
-  module Expression = Expression_parser.Expression (Parse) (Type) (Declaration)
-  module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression)
-  module Statement = Statement_parser.Statement (Parse) (Type) (Declaration) (Object)
+  module Pattern_cover = Pattern_cover.Cover (Parse)
+  module Expression = Expression_parser.Expression (Parse) (Type) (Declaration) (Pattern_cover)
+  module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression) (Pattern_cover)
+  module Statement = Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Pattern_cover)
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
   module JSX = Jsx_parser.JSX (Parse)
 
@@ -99,11 +99,11 @@ module rec Parse : PARSER = struct
     | T_EXPORT -> Statement.export_declaration ~decorators env
     | T_IMPORT ->
         error_on_decorators env decorators;
-        let statement = match Peek.token ~i:1 env with
+        let statement = match Peek.ith_token ~i:1 env with
           | T_LPAREN -> Statement.expression env
           | _ -> Statement.import_declaration env in
         statement
-    | T_DECLARE when Peek.token ~i:1 env = T_EXPORT ->
+    | T_DECLARE when Peek.ith_token ~i:1 env = T_EXPORT ->
         error_on_decorators env decorators;
         Statement.declare_export_declaration env
     | _ -> statement_list_item env ~decorators
@@ -148,7 +148,7 @@ module rec Parse : PARSER = struct
     (* Remember kids, these look like statements but they're not
       * statements... (see section 13) *)
     | T_LET -> let_ env
-    | T_CONST -> var_or_const env
+    | T_CONST -> const env
     | _ when Peek.is_function env -> Declaration._function env
     | _ when Peek.is_class env -> class_declaration env decorators
     | T_INTERFACE -> interface env
@@ -164,7 +164,7 @@ module rec Parse : PARSER = struct
         Peek.loc env, Ast.Statement.Empty
     | T_SEMICOLON -> empty env
     | T_LCURLY -> block env
-    | T_VAR -> var_or_const env
+    | T_VAR -> var env
     | T_BREAK -> break env
     | T_CONTINUE -> continue env
     | T_DEBUGGER -> debugger env
@@ -177,7 +177,6 @@ module rec Parse : PARSER = struct
     | T_TRY -> try_ env
     | T_WHILE -> while_ env
     | T_WITH -> with_ env
-    | _ when Peek.is_identifier env -> maybe_labeled env
     (* If we see an else then it's definitely an error, but we can probably
      * assume that this is a malformed if statement that is missing the if *)
     | T_ELSE -> if_ env
@@ -190,6 +189,7 @@ module rec Parse : PARSER = struct
     | T_RBRACKET
     | T_COMMA
     | T_PERIOD
+    | T_PLING_PERIOD
     | T_ARROW
     | T_IN
     | T_INSTANCEOF
@@ -204,7 +204,29 @@ module rec Parse : PARSER = struct
         error_unexpected env;
         Eat.token env;
         statement env
-    | _ -> expression env)
+
+    (* The rest of these patterns handle ExpressionStatement and its negative
+       lookaheads, which prevent ambiguities.
+       See https://tc39.github.io/ecma262/#sec-expression-statement *)
+
+    | _ when Peek.is_function env ->
+        let func = Declaration._function env in
+        function_as_statement_error_at env (fst func);
+        func
+    | T_LET when Peek.ith_token ~i:1 env = T_LBRACKET ->
+        (* `let [foo]` is ambiguous: either a let binding pattern, or a
+           member expression, so it is banned. *)
+        let loc = Loc.btwn (Peek.loc env) (Peek.ith_loc ~i:1 env) in
+        error_at env (loc, Parse_error.AmbiguousLetBracket);
+        Statement.expression env (* recover as a member expression *)
+    | _ when Peek.is_identifier env -> maybe_labeled env
+    | _ when Peek.is_class env ->
+        error_unexpected env;
+        Eat.token env;
+        Statement.expression env
+    | _ ->
+        Statement.expression env
+    )
 
   and expression env =
     let expr = Expression.assignment env in
@@ -213,6 +235,16 @@ module rec Parse : PARSER = struct
     | _ ->
         expr
 
+  and expression_or_pattern env =
+    let expr_or_pattern = Expression.assignment_cover env in
+    match Peek.token env with
+    | T_COMMA ->
+      let expr = Pattern_cover.as_expression env expr_or_pattern in
+      let seq = Expression.sequence env [expr] in
+      Cover_expr seq
+    | _ ->
+      expr_or_pattern
+
   and conditional = Expression.conditional
   and assignment = Expression.assignment
   and left_hand_side = Expression.left_hand_side
@@ -220,41 +252,43 @@ module rec Parse : PARSER = struct
   and object_key = Object.key
   and class_declaration = Object.class_declaration
   and class_expression = Object.class_expression
-  and array_initializer = Expression.array_initializer
 
   and is_assignable_lhs = Expression.is_assignable_lhs
 
-  and identifier ?restricted_error env =
-    let loc = Peek.loc env in
-    let name = Peek.value env in
-    (match Peek.token env with
-    | T_LET ->
-    (* So "let" is disallowed as an identifier in a few situations. 11.6.2.1
-     * lists them out. It is always disallowed in strict mode *)
-      if in_strict_mode env
-      then strict_error env Error.StrictReservedWord
-      else
-        if no_let env
-        then error env (Error.UnexpectedToken name);
-      Eat.token env
+  and assert_identifier_name_is_identifier ?restricted_error env (loc, { Ast.Identifier.name; comments= _ }) =
+    match name with
+    | "let" ->
+      (* "let" is disallowed as an identifier in a few situations. 11.6.2.1
+       * lists them out. It is always disallowed in strict mode *)
+      if in_strict_mode env then
+        strict_error_at env (loc, Error.StrictReservedWord)
+      else if no_let env then
+        error_at env (loc, Error.UnexpectedToken name)
+    | "await" ->
+      (* `allow_await` means that `await` is allowed to be a keyword,
+         which makes it illegal to use as an identifier.
+         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+      if allow_await env then error_at env (loc, Error.UnexpectedReserved)
+    | "yield" ->
+      (* `allow_yield` means that `yield` is allowed to be a keyword,
+         which makes it illegal to use as an identifier.
+         https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
+      if allow_yield env then error_at env (loc, Error.UnexpectedReserved)
+      else strict_error_at env (loc, Error.StrictReservedWord)
     | _ when is_strict_reserved name ->
-      strict_error env Error.StrictReservedWord;
-      Eat.token env
-    | T_DECLARE
-    | T_OF
-    | T_ASYNC
-    | T_AWAIT
-    | T_OPAQUE
-    | T_TYPE as t ->
-        (* These aren't real identifiers *)
-        Expect.token env t
-    | _ -> Expect.token env T_IDENTIFIER);
-    (match restricted_error with
-    | Some err when is_restricted name -> strict_error_at env (loc, err)
-    | _ -> ());
-    loc, name
+      strict_error_at env (loc, Error.StrictReservedWord)
+    | _ when is_reserved name ->
+      error_at env (loc, Error.UnexpectedToken name)
+    | _ ->
+      begin match restricted_error with
+      | Some err when is_restricted name -> strict_error_at env (loc, err)
+      | _ -> ()
+      end
 
-  and identifier_or_reserved_keyword = Expression.identifier_or_reserved_keyword
+  and identifier ?restricted_error env =
+    let id = identifier_name env in
+    assert_identifier_name_is_identifier ?restricted_error env id;
+    id
 
   and identifier_with_type =
     let with_loc_helper no_optional restricted_error env =
@@ -265,14 +299,11 @@ module rec Parse : PARSER = struct
         then error env Error.UnexpectedTypeAnnotation;
         Expect.token env T_PLING
       end;
-      let typeAnnotation =
-        if Peek.token env = T_COLON
-        then Some (Type.annotation env)
-        else None in
+      let annot = Type.annotation_opt env in
       Ast.Pattern.Identifier.({
         name;
         optional;
-        typeAnnotation;
+        annot;
       })
 
     in fun env ?(no_optional=false) restricted_error ->
@@ -296,7 +327,7 @@ module rec Parse : PARSER = struct
     Expect.token env T_RCURLY;
     Loc.btwn start_loc end_loc, { Ast.Statement.Block.body; }, strict
 
-  and jsx_element = JSX.element
+  and jsx_element_or_fragment = JSX.element_or_fragment
 
   and pattern = Pattern.pattern
   and pattern_from_expr = Pattern.from_expr
@@ -336,7 +367,7 @@ let json_file ?(fail=true) ?(token_sink=None) ?(parse_options=None) content file
   | T_NULL ->
     do_parse env Parse.expression fail
   | T_MINUS ->
-    (match Peek.token ~i:1 env with
+    (match Peek.ith_token ~i:1 env with
     | T_NUMBER _ ->
       do_parse env Parse.expression fail
     | _ ->

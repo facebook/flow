@@ -19,7 +19,7 @@ class MyComponent extends React.Component<Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<Props, State> {
+  (class extends React.Component<Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -30,7 +30,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -53,7 +53,7 @@ class MyComponent extends Component<Props, State> {
 }
 
 const expression = () =>
-  class extends Component<Props, State> {
+  (class extends Component<Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -64,7 +64,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -86,7 +86,7 @@ class MyComponent extends React.Component<Props> {
 }
 
 const expression = () =>
-  class extends React.Component<Props> {
+  (class extends React.Component<Props> {
     static defaultProps: DefaultProps = {};
 
     defaultProps: T;
@@ -96,7 +96,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -118,7 +118,7 @@ class MyComponent extends React.Component<Props> {
 }
 
 const expression = () =>
-  class extends React.Component<Props> {
+  (class extends React.Component<Props> {
     static defaultProps = {};
 
     defaultProps: T;
@@ -128,7 +128,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -150,7 +150,7 @@ class MyComponent extends React.Component<Props> {
 }
 
 const expression = () =>
-  class extends React.Component<Props> {
+  (class extends React.Component<Props> {
     static defaultProps: {a: number, b: number, c: number} = {a: 1, b: 2, c: 3};
 
     defaultProps: T;
@@ -160,7 +160,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -180,7 +180,7 @@ class MyComponent extends React.Component<Props> {
 }
 
 const expression = () =>
-  class extends React.Component<Props> {
+  (class extends React.Component<Props> {
     defaultProps: T;
     static props: T;
     static state: T;
@@ -188,7 +188,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -208,7 +208,7 @@ class MyComponent extends React.Component<Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<Props, State> {
+  (class extends React.Component<Props, State> {
     defaultProps: T;
     static props: T;
     static state: T;
@@ -216,7 +216,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -237,7 +237,7 @@ class MyComponent extends React.Component<Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<Props, State> {
+  (class extends React.Component<Props, State> {
     static defaultProps: any;
     defaultProps: T;
     static props: T;
@@ -246,7 +246,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -268,7 +268,7 @@ class MyComponent extends React.Component<Props> {
 }
 
 const expression = () =>
-  class extends React.Component<Props> {
+  (class extends React.Component<Props> {
     static defaultProps: DefaultProps;
 
     defaultProps: T;
@@ -278,7 +278,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -299,7 +299,7 @@ class MyComponent extends React.Component<Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<Props, State> {
+  (class extends React.Component<Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -310,7 +310,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -333,7 +333,7 @@ class MyComponent extends React.PureComponent<Props, State> {
 }
 
 const expression = () =>
-  class extends React.PureComponent<Props, State> {
+  (class extends React.PureComponent<Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -344,7 +344,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -367,7 +367,7 @@ class MyComponent extends PureComponent<Props, State> {
 }
 
 const expression = () =>
-  class extends PureComponent<Props, State> {
+  (class extends PureComponent<Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -378,7 +378,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -403,7 +403,7 @@ class MyComponent extends React.Component<Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<Props, State> {
+  (class extends React.Component<Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -414,6 +414,6 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;

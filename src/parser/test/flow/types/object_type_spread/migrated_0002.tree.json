@@ -21,6 +21,7 @@
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":20}},
         "range":[9,20],
         "exact":false,
+        "inexact":false,
         "properties":[
           {
             "type":"ObjectTypeProperty",
@@ -48,8 +49,10 @@
               },
               "typeParameters":null
             },
+            "method":false,
             "optional":false,
             "static":false,
+            "proto":false,
             "variance":null,
             "kind":"init"
           },
@@ -74,7 +77,8 @@
           }
         ],
         "indexers":[],
-        "callProperties":[]
+        "callProperties":[],
+        "internalSlots":[]
       }
     }
   ],

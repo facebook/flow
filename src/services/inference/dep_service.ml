@@ -1,14 +1,13 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
+
+module File_sig = File_sig.With_Loc
 
 (* sketch of baseline incremental alg:
 
@@ -75,11 +74,24 @@ open Utils_js
        the value is the subset of files which require that module directly
    (3) a subset of those files that phantom depend on root_fileset
  *)
-let dependent_calc_utils workers fileset root_fileset = Module_js.(
+let dependent_calc_utils ~reader workers fileset root_fileset = Module_heaps.(
+  let root_fileset = FilenameSet.fold (fun f root_fileset ->
+    match f with
+      | File_key.SourceFile s
+      | File_key.JsonFile s
+      | File_key.ResourceFile s -> SSet.add s root_fileset
+      | File_key.LibFile _
+      | File_key.Builtins -> root_fileset
+  ) root_fileset SSet.empty in
   (* Distribute work, looking up InfoHeap and ResolvedRequiresHeap once per file. *)
-  let job = List.fold_left (fun (modules, module_dependent_map, resolution_path_files) f ->
-    let resolved_requires = get_resolved_requires_unsafe ~audit:Expensive.ok f in
-    let info = get_info_unsafe ~audit:Expensive.ok f in
+  let job = List.fold_left (fun utils f ->
+    let resolved_requires =
+      Reader_dispatcher.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok f
+    in
+    let required = Modulename.Set.of_list
+      (SMap.values resolved_requires.resolved_modules)
+    in
+    let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok f in
     (* Add f |-> info._module to the `modules` map. This will be used downstream
        in calc_all_dependents.
 
@@ -91,81 +103,73 @@ let dependent_calc_utils workers fileset root_fileset = Module_js.(
        instead maintaining the map incrementally and hopefully reusing large
        parts of it.
     *)
-    let modules = FilenameMap.add f info.module_name modules in
-    (* For every r in resolved_requires.required, add f to the reverse dependency list for r,
-       stored in `module_dependent_map`. This will be used downstream when computing
+    let entry =
+      info.module_name,
+    (* For every required module m, add f to the reverse dependency list for m,
+       stored in `module_dependents_tbl`. This will be used downstream when computing
        direct_dependents, and also in calc_all_dependents.
 
        TODO: should generate this map once on startup, keep required_by in
        module records and update incrementally on recheck.
     *)
-
-    let module_dependent_map = Modulename.Set.fold (fun r module_dependent_map ->
-      Modulename.Map.add r FilenameSet.(
-        match Modulename.Map.get r module_dependent_map with
-        | None -> singleton f
-        | Some files -> add f files
-      ) module_dependent_map
-    ) resolved_requires.required module_dependent_map in
+      required,
     (* If f's phantom dependents are in root_fileset, then add f to
        `resolution_path_files`. These are considered direct dependencies (in
        addition to others computed by direct_dependents downstream). *)
-    let resolution_path_files =
-      if resolved_requires.phantom_dependents |> SSet.exists (fun f ->
-        FilenameSet.mem (Loc.SourceFile f) root_fileset ||
-        FilenameSet.mem (Loc.JsonFile f) root_fileset ||
-        FilenameSet.mem (Loc.ResourceFile f) root_fileset
-      ) then FilenameSet.add f resolution_path_files
-      else resolution_path_files in
-    modules, module_dependent_map, resolution_path_files
+      resolved_requires.phantom_dependents |> SSet.exists (fun f ->
+        SSet.mem f root_fileset
+      )
+
+    in
+    (f, entry) :: utils
   ) in
   (* merge results *)
-  let merge
-      (modules1, module_dependent_map1, resolution_path_files1)
-      (modules2, module_dependent_map2, resolution_path_files2) =
-    FilenameMap.union modules1 modules2,
-    Modulename.Map.merge (fun _ x y ->
-      match x, y with
-      | Some v, None
-      | None, Some v -> Some v
-      | Some v, Some w -> Some (FilenameSet.union v w)
-      | None, None -> None
-    ) module_dependent_map1 module_dependent_map2,
-    FilenameSet.union resolution_path_files1 resolution_path_files2
-  in
+  let merge = List.rev_append in
 
-  MultiWorker.call workers ~job ~merge
-    ~neutral: (FilenameMap.empty, Modulename.Map.empty, FilenameSet.empty)
-    ~next: (MultiWorker.next workers (FilenameSet.elements fileset))
+  let%lwt result =
+    MultiWorkerLwt.call workers ~job ~merge
+      ~neutral: []
+      ~next: (MultiWorkerLwt.next workers (FilenameSet.elements fileset))
+  in
+  let module_dependents_tbl = Hashtbl.create 0 in
+  let modules, resolution_path_files =
+  List.fold_left
+    (fun (modules, resolution_path_files) (f, (m, rs, b)) ->
+      Modulename.Set.iter (fun r ->
+        Hashtbl.add module_dependents_tbl r f
+      ) rs;
+      FilenameMap.add f m modules,
+      if b then FilenameSet.add f resolution_path_files else resolution_path_files
+    )
+    (FilenameMap.empty, FilenameSet.empty)
+    result in
+
+  Lwt.return (modules, module_dependents_tbl, resolution_path_files)
 )
 
 (* given a reverse dependency map (from modules to the files which
    require them), generate the closure of the dependencies of a
    given fileset, using get_info_unsafe to map files to modules
  *)
-let calc_all_dependents modules module_dependent_map fileset =
-  let module_dependents m = Modulename.Map.get m module_dependent_map in
+let calc_all_dependents modules module_dependents_tbl fileset =
+  let module_dependents m = Hashtbl.find_all module_dependents_tbl m in
   let file_dependents f =
     let m = FilenameMap.find_unsafe f modules in
     let f_module = Module_js.eponymous_module f in
     (* In general, a file exports its module via two names. See Modulename for
        details. It suffices to note here that dependents of the file can use
        either of those names to import the module. *)
-    match module_dependents m, module_dependents f_module with
-      | None, None -> FilenameSet.empty
-      | None, Some dependents
-      | Some dependents, None -> dependents
-      | Some dependents1, Some dependents2 -> FilenameSet.union dependents1 dependents2
+    List.rev_append (module_dependents m) (module_dependents f_module) |> FilenameSet.of_list
   in
-  let rec expand module_dependent_map fileset seen =
+  let rec expand fileset seen =
     FilenameSet.fold (fun f acc ->
       if FilenameSet.mem f !seen then acc else (
         seen := FilenameSet.add f !seen;
         let dependents = file_dependents f in
-        FilenameSet.add f (FilenameSet.union acc (expand module_dependent_map dependents seen))
+        FilenameSet.add f (FilenameSet.union acc (expand dependents seen))
       )
     ) fileset FilenameSet.empty
-  in expand module_dependent_map fileset (ref FilenameSet.empty)
+  in expand fileset (ref FilenameSet.empty)
 
 (* Identify the direct and transitive dependents of new, changed, and deleted
    files.
@@ -175,87 +179,160 @@ let calc_all_dependents modules module_dependent_map fileset =
    files. The latter modules, marked "changed," are calculated earlier when
    picking providers.
 
-   - unchanged is all unchanged files in the current state
-   - new_or_changed is all files that have just been through local inference and
-   all skipped files that were also new or unchanged
-   - changed_modules is a conservative approximation of modules that no longer have
-   the same providers, or whose providers are changed files
+   - candidates is the set of files which could be dependents. The returned sets will be subsets of
+   the candidates set. For example, if we're calculating the dependents of all the changed files
+   then this would be the set of unchanged files
+   - root_files is the set of files for which we'd like to calculate dependents. This should be
+   disjoint from candidates. If we wanted to calculate the dependents of all the changed files then
+   this would be the set of changed files
+   - root_modules is the set of modules for which we'd like to calculate dependents. If we wanted to
+   calculate the dependents of all the changed files then this would be the set of module names
+   which have new providers.
 
-   Return the subset of unchanged transitively dependent on updates, and
-   the subset directly dependent on them.
+   Return the subset of candidates transitively dependent on root_files and the subset directly
+   dependent on root_modules.
 *)
-let dependent_files workers ~unchanged ~new_or_changed ~changed_modules =
-  (* Get the modules provided by unchanged files, the reverse dependency map
-     for unchanged files, and the subset of unchanged files whose resolution
-     paths may encounter new or changed modules. *)
-  let modules,
-    module_dependent_map,
-    resolution_path_files
-    = dependent_calc_utils workers unchanged new_or_changed in
+let dependent_files ~reader workers ~candidates ~root_files ~root_modules =
+  if FilenameSet.is_empty root_files && Modulename.Set.is_empty root_modules
+  then begin
+    (* dependent_calc_utils is O(candidates), but if root_files and root_modules are empty then we
+     * can immediately return. We know that the empty set has no direct or transitive dependencies.
+     * This can save us a lot of time on very large repositories *)
+    Lwt.return (FilenameSet.empty, FilenameSet.empty)
+  end else begin
+    (* Get the modules provided by candidate files, the reverse dependency map
+       for candidate files, and the subset of candidate files whose resolution
+       paths may encounter new or changed modules. *)
+    let%lwt modules, module_dependents_tbl, resolution_path_files =
+      dependent_calc_utils ~reader workers candidates root_files
+    in
 
-  (* resolution_path_files, plus files that require changed_modules *)
-  let direct_dependents = Modulename.Set.fold (fun m acc ->
-    match Modulename.Map.get m module_dependent_map with
-    | Some files -> FilenameSet.union acc files
-    | None -> acc
-    ) changed_modules resolution_path_files
-  in
+    (* resolution_path_files, plus files that require root_modules *)
+    let direct_dependents = Modulename.Set.fold (fun m acc ->
+      let files = Hashtbl.find_all module_dependents_tbl m in
+      List.fold_left (fun acc f -> FilenameSet.add f acc) acc files
+    ) root_modules resolution_path_files in
 
-  (* (transitive dependents are re-merged, directs are also re-resolved) *)
-  calc_all_dependents modules module_dependent_map direct_dependents,
-  direct_dependents
-
+    (* (transitive dependents are re-merged, directs are also re-resolved) *)
+    Lwt.return (
+      calc_all_dependents modules module_dependents_tbl direct_dependents,
+      direct_dependents
+    )
+  end
 
 (* Calculate module dependencies. Since this involves a lot of reading from
    shared memory, it is useful to parallelize this process (leading to big
    savings in init and recheck times). *)
 
 
-let checked_module ~audit m = Module_js.(
-  m |> get_file_unsafe ~audit |> checked_file ~audit
-)
+let checked_module ~reader ~audit m =
+  m
+  |> Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit
+  |> Module_js.checked_file ~reader:(Abstract_state_reader.Mutator_state_reader reader) ~audit
 
 (* A file is considered to implement a required module r only if the file is
    registered to provide r and the file is checked. Such a file must be merged
    before any file that requires module r, so this notion naturally gives rise
    to a dependency ordering among files for merging. *)
-let implementation_file ~audit r = Module_js.(
-  if module_exists r && checked_module ~audit r
-  then Some (get_file_unsafe ~audit r)
+let implementation_file ~reader ~audit r =
+  if Module_heaps.Mutator_reader.module_exists ~reader r && checked_module ~reader ~audit r
+  then Some (Module_heaps.Mutator_reader.get_file_unsafe ~reader ~audit r)
   else None
-)
 
-let file_dependencies ~audit file = Module_js.(
-  let { required; _ } = get_resolved_requires_unsafe ~audit file in
-  Modulename.Set.fold (fun r files ->
-    match implementation_file ~audit:Expensive.ok r with
-    | Some f -> FilenameSet.add f files
-    | None -> files
-  ) required FilenameSet.empty
-)
+let file_dependencies ~audit ~reader file =
+  let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
+  let sig_file_sig_opt = Parsing_heaps.Mutator_reader.get_sig_file_sig reader file in
+  let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
+  let sig_require_loc = match sig_file_sig_opt with
+    | None -> require_loc
+    | Some sig_file_sig -> File_sig.(require_loc_map sig_file_sig.module_sig) in
+  let { Module_heaps.resolved_modules; _ } =
+    Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
+  in
+  SMap.fold (fun mref _ (sig_files, all_files) ->
+    let m = SMap.find_unsafe mref resolved_modules in
+    match implementation_file ~reader m ~audit:Expensive.ok with
+    | Some f ->
+      if SMap.mem mref sig_require_loc
+      then FilenameSet.add f sig_files, FilenameSet.add f all_files
+      else sig_files, FilenameSet.add f all_files
+    | None -> sig_files, all_files
+  ) require_loc (FilenameSet.empty, FilenameSet.empty)
 
-let calc_dependency_graph workers files =
-  let dependency_graph = MultiWorker.call
+type dependency_graph = FilenameSet.t FilenameMap.t
+
+(* Calculates the dependency graph as a map from files to their dependencies.
+ * Dependencies not in parsed are ignored. *)
+let calc_partial_dependency_info ~options ~reader workers files ~parsed =
+  let%lwt dependency_info = MultiWorkerLwt.call
     workers
-    ~job: (List.fold_left (fun dependency_graph file ->
-      FilenameMap.add file (file_dependencies ~audit:Expensive.ok file) dependency_graph
+    ~job: (List.fold_left (fun dependency_info file ->
+      FilenameMap.add file (file_dependencies ~audit:Expensive.ok ~reader file) dependency_info
     ))
     ~neutral: FilenameMap.empty
     ~merge: FilenameMap.union
-    ~next: (MultiWorker.next workers files) in
-  FilenameMap.map (
-    FilenameSet.filter (fun f -> FilenameMap.mem f dependency_graph)
-  ) dependency_graph
+    ~next: (MultiWorkerLwt.next workers (FilenameSet.elements files)) in
+  let dependency_info = match options.Options.opt_arch with
+    | Options.Classic ->
+      Dependency_info.Classic (FilenameMap.map (fun (_sig_files, all_files) ->
+        FilenameSet.inter parsed all_files
+      ) dependency_info)
+    | Options.TypesFirst ->
+      Dependency_info.TypesFirst (FilenameMap.map (fun (sig_files, all_files) ->
+        FilenameSet.inter parsed sig_files, FilenameSet.inter parsed all_files
+      ) dependency_info) in
+  Lwt.return dependency_info
 
-let calc_all_dependencies =
-  let rec loop dependency_graph =
-    FilenameSet.fold (fun file acc ->
-      match FilenameMap.get file dependency_graph with
+let calc_dependency_info ~options ~reader workers ~parsed =
+  calc_partial_dependency_info ~options ~reader workers parsed ~parsed
+
+(* `calc_direct_dependencies graph files` will return the set of direct dependencies of
+   `files`. This set includes `files`. *)
+let calc_direct_dependencies dependency_info files =
+  let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+  FilenameSet.fold (fun file acc ->
+    match FilenameMap.get file all_dependency_graph with
+      | Some files -> FilenameSet.union files acc
+      | None -> acc
+  ) files files
+
+let rec closure graph =
+  FilenameSet.fold (fun file acc ->
+    match FilenameMap.get file graph with
       | Some files ->
         let files = FilenameSet.diff files acc in
         let acc = FilenameSet.union files acc in
-        loop dependency_graph files acc
+        closure graph files acc
       | None -> acc
-    ) in
-  fun dependency_graph files ->
-    loop dependency_graph files files
+  )
+
+(* `calc_all_dependencies graph files` will return the set of direct and transitive dependencies
+ * of `files`. This set does include `files`.
+ *)
+let calc_all_dependencies dependency_info files =
+  let dependency_graph = Dependency_info.dependency_graph dependency_info in
+  closure dependency_graph files files
+
+let reverse graph =
+  let acc = Hashtbl.create 0 in
+  FilenameMap.iter (fun f -> FilenameSet.iter (fun f' ->
+    Hashtbl.add acc f' f
+  )) graph;
+  FilenameMap.mapi (fun f _ ->
+    FilenameSet.of_list @@ Hashtbl.find_all acc f
+  ) graph
+
+(* `calc_all_reverse_dependencies graph files` will return the set of direct and transitive
+ * dependents of `files`. This set does include `files`.  *)
+let calc_all_reverse_dependencies dependency_info files =
+  let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+  let rev_dependency_graph = reverse all_dependency_graph in
+  closure rev_dependency_graph files files
+
+(* Returns a copy of the dependency graph with only those file -> dependency edges where file and
+   dependency are in files *)
+let filter_dependency_graph dependency_graph files =
+  FilenameSet.fold (fun f ->
+    let fs = FilenameMap.find_unsafe f dependency_graph |> FilenameSet.inter files in
+    FilenameMap.add f fs
+  ) files FilenameMap.empty

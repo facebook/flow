@@ -10,3 +10,4 @@ function foo(x: ?string): $NonMaybeType<?string> {
 (0: $NonMaybeType<null>); // error
 (0: $NonMaybeType<?number>); // ok
 (0: $NonMaybeType<number | null>); // ok
+(0: $NonMaybeType<$PropertyType<{p?: number}, 'p'>>); // ok

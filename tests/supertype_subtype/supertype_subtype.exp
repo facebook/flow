@@ -1,0 +1,18 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:9
+
+Deprecated utility. Using `$Supertype` types is not recommended! (`deprecated-utility`)
+
+   3| let x : $Supertype<number> = 3;
+              ^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:4:9
+
+Deprecated utility. Using `$Subtype` types is not recommended! (`deprecated-utility`)
+
+   4| let y : $Subtype<number> = 3;
+              ^^^^^^^^^^^^^^^^
+
+
+
+Found 2 errors

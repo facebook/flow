@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -14,9 +11,16 @@ type types_mode =
   | TypesAllowed
   | TypesForbiddenByDefault
 
+type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
+type parse_ok =
+  | Classic of t
+  | TypesFirst of t * t (* sig *)
+
+val basic: parse_ok -> t
+
 (* result of individual parse *)
 type result =
-  | Parse_ok of Ast.program
+  | Parse_ok of parse_ok
   | Parse_fail of parse_failure
   | Parse_skip of parse_skip_reason
 
@@ -27,6 +31,7 @@ and parse_skip_reason =
 and parse_failure =
   | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
+  | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
 and docblock_error_kind =
@@ -38,86 +43,64 @@ and docblock_error_kind =
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: FilenameSet.t;
+  parse_ok: (File_sig.With_Loc.tolerable_error list) FilenameMap.t;
 
   (* list of skipped files *)
-  parse_skips: (filename * Docblock.t) list;
+  parse_skips: (File_key.t * Docblock.t) list;
+
+  (* list of files skipped due to an out of date hash *)
+  parse_hash_mismatch_skips: FilenameSet.t;
 
   (* list of failed files *)
-  parse_fails: (filename * Docblock.t * parse_failure) list;
+  parse_fails: (File_key.t * Docblock.t * parse_failure) list;
+
+  (* set of unchanged files *)
+  parse_unchanged: FilenameSet.t;
 }
 
 val docblock_max_tokens: int
-
-val extract_docblock:
-  max_tokens: int ->
-  Loc.filename ->
-  string ->
-  docblock_error list * Docblock.t
-
-(* initial parsing pass: success/failure info is returned,
- * asts are made available via get_ast_unsafe. *)
-val parse:
-  types_mode: types_mode ->
-  use_strict: bool ->
-  profile: bool ->
-  max_header_tokens: int ->
-  lazy_mode: bool ->
-  Worker.t list option ->       (* Some=parallel, None=serial *)
-  filename list Bucket.next ->  (* delivers buckets of filenames *)
-  results                       (* job results, not asts *)
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
 individually *)
 val parse_with_defaults:
   ?types_mode: types_mode ->
   ?use_strict: bool ->
+  reader: Mutator_state_reader.t ->
   Options.t ->
-  Worker.t list option ->
-  filename list Bucket.next ->
-  results
-
-(* for non-initial passes: updates asts for passed file set. *)
-val reparse:
-  types_mode: types_mode ->
-  use_strict: bool ->
-  profile: bool ->
-  max_header_tokens: int ->
-  lazy_mode: bool ->
-  options: Options.t ->
-  Worker.t list option ->   (* Some=parallel, None=serial *)
-  FilenameSet.t ->          (* filenames to reparse *)
-  FilenameSet.t * results   (* modified files and job results *)
+  MultiWorkerLwt.worker list option ->
+  File_key.t list Bucket.next ->
+  results Lwt.t
 
 val reparse_with_defaults:
+  transaction: Transaction.t ->
+  reader: Mutator_state_reader.t ->
   ?types_mode: types_mode ->
   ?use_strict: bool ->
+  ?with_progress: bool ->
+  workers: MultiWorkerLwt.worker list option ->
+  modified: FilenameSet.t ->
+  deleted: FilenameSet.t ->
   Options.t ->
-  Worker.t list option ->
+  (FilenameSet.t * results) Lwt.t
+
+val ensure_parsed:
+  reader: Mutator_state_reader.t ->
+  Options.t ->
+  MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
-  FilenameSet.t * results
+  FilenameSet.t Lwt.t
 
-val calc_requires:
-  ast:Ast.program ->
-  Loc.t SMap.t
-
-val has_ast: filename -> bool
-
-val get_ast: filename -> Ast.program option
-
-(* after parsing, retrieves ast and docblock by filename (unsafe) *)
-val get_ast_unsafe: filename -> Ast.program
-val get_docblock_unsafe: filename -> Docblock.t
-val get_requires_unsafe: filename -> Loc.t SMap.t
-
-(* remove asts and docblocks for given file set. *)
-val remove_batch: FilenameSet.t -> unit
-
-val get_docblock:
+val parse_docblock:
   max_tokens:int -> (* how many tokens to check in the beginning of the file *)
-  filename ->
+  File_key.t ->
   string ->
   docblock_error list * Docblock.t
+
+val parse_json_file :
+  fail:bool ->
+  string ->
+  File_key.t ->
+  Loc.t * (Loc.t * (Loc.t, Loc.t) Flow_ast.Statement.t') list * Loc.t Flow_ast.Comment.t list
 
 (* parse contents of a file *)
 val do_parse:
@@ -125,12 +108,23 @@ val do_parse:
   types_mode: types_mode ->
   use_strict: bool ->
   info: Docblock.t ->
+  ?prevent_munge: bool ->
+  module_ref_prefix: string option ->
+  facebook_fbt: string option ->
+  ?arch: Options.arch ->
   string ->                 (* contents of the file *)
-  filename ->               (* filename *)
+  File_key.t ->               (* filename *)
   result
 
 (* Utility to create the `next` parameter that `parse` requires *)
 val next_of_filename_set:
-  Worker.t list option ->
+  ?with_progress:bool ->
+  MultiWorkerLwt.worker list option ->
   FilenameSet.t ->
-  filename list Bucket.next
+  File_key.t list Bucket.next
+
+val does_content_match_file_hash:
+  reader:State_reader.t ->
+  File_key.t ->
+  string ->
+  bool

@@ -80,9 +80,11 @@ r(null);
 r("")
 
 function w(x) {
-  if (x) { /* sketchy because of calls; suppressed */ }
+  if (x) { /* sketchy because of calls; Not suppressed */ }
 }
 w(null);
+// This suppression comment is at the wrong location and does nothing, so
+// appears as an unused suppression comment
 /*flowlint sketchy-null:off*/w("");/*flowlint sketchy-null:error*/
 
 function s(x) {

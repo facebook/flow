@@ -2,9 +2,8 @@
  * Copyright (c) 2017, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -13,10 +12,14 @@
  * break) allowing binary search from an offset to a line number (the index in
  * the map itself + 1).
  *)
-type t
+type t [@@deriving show]
+
+val reset_global_state : unit -> unit
 
 (* Creates a line break map from/for the given string. *)
 val make : string -> t
+
+val offset_to_file_pos_triple: t -> int -> int * int * int
 
 (* Take a zero-based offset, produce a one-based (line, column) pair.
  *
@@ -25,7 +28,7 @@ val make : string -> t
  * an offset x where x < -l defaults to offset 0, i.e. offsets only wrap around\
  * once.
  *)
-val offset_to_position : ?cyclic_index:bool -> t -> int -> int * int
+val offset_to_position: t -> int -> int * int
 
 (* Take a one-based (line, column) pair, produce a zero-based offset.
  *
@@ -37,8 +40,7 @@ val offset_to_position : ?cyclic_index:bool -> t -> int -> int * int
  * last line in the original string. Without cyclic_index, Invalid_argument is
  * raised with an array-out-of-bounds message.
  *)
-val position_to_offset :
-  ?cyclic_index:bool -> ?existing:bool -> t -> int * int -> int
+val position_to_offset : ?existing:bool -> t -> int * int -> int
 
 (* Does what it says on the tin. *)
-val offset_to_line_start_offset : ?cyclic_index:bool -> t -> int -> int
+val offset_to_line_start_offset : t -> int -> int

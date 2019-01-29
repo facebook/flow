@@ -29,8 +29,8 @@
         "type":"Literal",
         "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":21}},
         "range":[17,21],
-        "value":"blah",
-        "raw":"blah"
+        "value":"",
+        "raw":""
       },
       "exportKind":"type"
     },

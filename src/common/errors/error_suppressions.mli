@@ -1,26 +1,29 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 type t
 
-val empty : t
-val is_empty : t -> bool
-val add : Loc.t -> t -> t
-val union : t -> t -> t
-val set_unused_lint_suppressions : Loc.LocSet.t -> t -> t
-val check : Errors.error -> LintSettingsMap.t -> t -> (LintSettings.lint_state * Loc.LocSet.t * t)
-val unused : t -> Loc.t list
+val empty: t
 
-(* combines suppressions collated by filename into one collection *)
-val union_suppressions : t Utils_js.FilenameMap.t -> t
+(* Raises if the given loc has `source` set to `None` *)
+val add: Loc.t -> t -> t
+val add_lint_suppressions: Utils_js.LocSet.t -> t -> t
+
+val remove: File_key.t -> t -> t
+
+(* Union the two collections of suppressions. If they both contain suppressions for a given file,
+ * include both sets of suppressions. *)
+val union: t -> t -> t
+(* Union the two collections of suppressions. If they both contain suppressions for a given file,
+ * discard those included in the first argument. *)
+val update_suppressions: t -> t -> t
+
+val all_locs: t -> Loc.t list
 
 val filter_suppressed_errors :
-  t -> LintSettingsMap.t -> Errors.ErrorSet.t ->
-  (Errors.ErrorSet.t * Errors.ErrorSet.t * (Errors.error * Loc.LocSet.t) list * t)
+  t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> Errors.ConcreteLocErrorSet.t -> unused:t ->
+  (Errors.ConcreteLocErrorSet.t * Errors.ConcreteLocErrorSet.t * (Loc.t Errors.error * Utils_js.LocSet.t) list * t)

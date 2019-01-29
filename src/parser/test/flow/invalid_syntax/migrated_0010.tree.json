@@ -1,21 +1,13 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":17}},
-      "message":"Unexpected token ILLEGAL"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":18}},
-      "message":"Unexpected token ILLEGAL"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":23}},
+      "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":22}},
       "message":"Unexpected identifier"
     }
   ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":23}},
-  "range":[32,55],
+  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":22}},
+  "range":[32,54],
   "body":[
     {
       "type":"VariableDeclaration",
@@ -48,13 +40,13 @@
     },
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":23}},
-      "range":[50,55],
+      "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":22}},
+      "range":[48,54],
       "expression":{
         "type":"Identifier",
-        "loc":{"source":null,"start":{"line":2,"column":18},"end":{"line":2,"column":23}},
-        "range":[50,55],
-        "name":"u0067",
+        "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":22}},
+        "range":[48,54],
+        "name":"g",
         "typeAnnotation":null,
         "optional":false
       },

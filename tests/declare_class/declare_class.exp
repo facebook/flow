@@ -1,36 +1,85 @@
-Library type error:
-lib/test.js:0
-inconsistent use of library definitions
-  8:   foo(): string;
-              ^^^^^^ string. This type is incompatible with
-  2:   foo(): number;
-              ^^^^^^ number
+Error -------------------------------------------------------------------------------------------------- lib/test.js:7:1
 
-Error: declare_class.js:8
-  8: C.x = "";
-     ^^^ assignment of property `x`
-  8: C.x = "";
-           ^^ string. This type is incompatible with
-  8: C.x = "";
-     ^^^ number
+Cannot extend mixins `_module.C` [1] with `D` because string [2] is incompatible with number [3] in the return value of
+property `foo`.
 
-Error: declare_class.js:9
-  9: C.foo("");
-           ^^ string. This type is incompatible with the expected param type of
-  3:     static foo(x: number): void;
-                       ^^^^^^ number
+   lib/test.js:7:1
+      v----------------------------------
+   7| declare class D extends _module.C {
+   8|   foo(): string;
+   9| }
+      ^
 
-Error: declare_class.js:12
- 12: (C.name: number); // error, it's a string
-      ^^^^^^ string. This type is incompatible with
- 12: (C.name: number); // error, it's a string
-              ^^^^^^ number
+References:
+   lib/test.js:7:25
+   7| declare class D extends _module.C {
+                              ^^^^^^^^^ [1]
+   lib/test.js:8:10
+   8|   foo(): string;
+               ^^^^^^ [2]
+   lib/test.js:2:10
+   2|   foo(): number;
+               ^^^^^^ [3]
 
-Error: declare_class.js:15
- 15: new D(123); // error, number ~> string
-           ^^^ number. This type is incompatible with the expected param type of
-  5:     constructor(x: string): void;
-                        ^^^^^^ string
+
+Error --------------------------------------------------------------------------------------------- declare_class.js:8:7
+
+Cannot assign empty string to `C.x` because string [1] is incompatible with number [2].
+
+   declare_class.js:8:7
+   8| C.x = "";
+            ^^ [1]
+
+References:
+   declare_class.js:2:15
+   2|     static x: number;
+                    ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declare_class.js:9:7
+
+Cannot call `C.foo` with empty string bound to `x` because string [1] is incompatible with number [2].
+
+   declare_class.js:9:7
+   9| C.foo("");
+            ^^ [1]
+
+References:
+   declare_class.js:3:19
+   3|     static foo(x: number): void;
+                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:12:2
+
+Cannot cast `C.name` to number because string [1] is incompatible with number [2].
+
+   declare_class.js:12:2
+   12| (C.name: number); // error, it's a string
+        ^^^^^^
+
+References:
+   declare_class.js:1:15
+    1| declare class C {
+                     ^ [1]
+   declare_class.js:12:10
+   12| (C.name: number); // error, it's a string
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:15:7
+
+Cannot call `D` with `123` bound to `x` because number [1] is incompatible with string [2].
+
+   declare_class.js:15:7
+   15| new D(123); // error, number ~> string
+             ^^^ [1]
+
+References:
+   declare_class.js:5:20
+    5|     constructor(x: string): void;
+                          ^^^^^^ [2]
+
 
 
 Found 5 errors

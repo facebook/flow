@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (* AST handling and type setup for import/export *)
@@ -21,7 +18,8 @@ let mk_module_t cx reason = ModuleT(
     exports_tmap = Context.make_export_map cx SMap.empty;
     cjs_export = None;
     has_every_named_export = false;
-  }
+  },
+  Context.is_strict cx
 )
 
 (**
@@ -39,24 +37,24 @@ let mk_commonjs_module_t cx reason_exports_module reason export_t =
     cjs_export = Some export_t;
     has_every_named_export = false;
   } in
-  Flow.mk_tvar_where cx reason (fun t ->
+  Tvar.mk_where cx reason (fun t ->
     Flow.flow cx (
       export_t,
-      CJSExtractNamedExportsT(reason, (reason_exports_module, exporttypes), t)
+      CJSExtractNamedExportsT(
+        reason,
+        (reason_exports_module, exporttypes, (Context.is_strict cx)),
+        t
+      )
     )
   )
 
 let mk_resource_module_t cx loc f =
   let reason, exports_t = match Utils_js.extension_of_filename f with
   | Some ".css" ->
-    let desc_str = "Flow assumes requiring a .css file returns an Object" in
-    let reason = Reason.mk_reason (RCustom desc_str) loc in
-    reason, Type.DefT (reason, Type.AnyObjT)
-  | Some ext ->
-    let desc_str =
-      Utils_js.spf "Flow assumes that requiring a %s file returns a string" ext
-    in
-    let reason = Reason.mk_reason (RCustom desc_str) loc in
+    let reason = Reason.mk_reason RObjectType loc in
+    reason, Type.AnyT.make Type.Untyped reason
+  | Some _ ->
+    let reason = Reason.mk_reason RString loc in
     reason, Type.StrT.why reason
   | _ -> failwith "How did we find a resource file without an extension?!"
   in
@@ -64,74 +62,43 @@ let mk_resource_module_t cx loc f =
   mk_commonjs_module_t cx reason reason exports_t
 
 
-let add_require_tvar cx r loc =
-  let tvar = Flow.mk_tvar cx (mk_reason (RCustom r) loc) in
-  Context.add_require cx r tvar
-
 (* given a module name, return associated tvar in module map (failing if not
    found); e.g., used to find tvars associated with requires *after* all
    requires already have entries in the module map *)
-let require_t_of_ref_unsafe cx m reason =
-  match Context.declare_module_t cx with
-  (**
-   * TODO: Imports within `declare module`s can only reference other
-   *       `declare module`s (for now). This won't fly forever so at some point
-   *       we'll need to move `declare module` storage into the modulemap just
-   *       like normal modules and merge them as such.
-   *)
-  | Some _ ->
-    Env.get_var_declared_type cx (internal_module_name m) (loc_of_reason reason)
-  | None ->
-    Context.find_require cx m
+let require_t_of_ref_unsafe cx (loc, _) =
+  Context.find_require cx loc
 
-let require cx module_ref loc =
-  Type_inference_hooks_js.dispatch_require_hook cx module_ref loc;
-  let reason = mk_reason (RCommonJSExports module_ref) loc in
-  Flow.mk_tvar_where cx reason (fun t ->
-    Flow.flow cx (
-      require_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
-      CJSRequireT(reason, t)
-    )
+let require cx ((_, module_ref) as source) require_loc =
+  Type_inference_hooks_js.dispatch_import_hook cx source require_loc;
+  let module_t = require_t_of_ref_unsafe cx source in
+  let reason = mk_reason (RCommonJSExports module_ref) require_loc in
+  Tvar.mk_where cx reason (fun t ->
+    Flow.flow cx (module_t, CJSRequireT(reason, t, Context.is_strict cx))
   )
 
-let import ?reason cx module_ref loc =
-  Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
-  let reason =
-    match reason with
-    | Some r -> r
-    | None -> mk_reason (RCustom module_ref) loc
-  in
-  require_t_of_ref_unsafe cx module_ref reason
+let import cx source import_loc =
+  Type_inference_hooks_js.dispatch_import_hook cx source import_loc;
+  require_t_of_ref_unsafe cx source
 
-let import_ns cx reason module_ref loc =
-  Type_inference_hooks_js.dispatch_import_hook cx module_ref loc;
-  Flow.mk_tvar_where cx reason (fun t ->
-    Flow.flow cx (
-      require_t_of_ref_unsafe cx module_ref (mk_reason (RCustom module_ref) loc),
-      ImportModuleNsT(reason, t)
-    )
+let import_ns cx reason source import_loc =
+  Type_inference_hooks_js.dispatch_import_hook cx source import_loc;
+  let module_t = require_t_of_ref_unsafe cx source in
+  Tvar.mk_where cx reason (fun t ->
+    Flow.flow cx (module_t, ImportModuleNsT(reason, t, Context.is_strict cx))
   )
 
 let module_t_of_cx cx =
-  match Context.declare_module_t cx with
+  let m = Context.module_ref cx in
+  match SMap.get m (Context.module_map cx) with
   | Some t -> t
   | None ->
-    let m = Context.module_ref cx in
-    match SMap.get m (Context.module_map cx) with
-    | Some t -> t
-    | None ->
-      let loc = Loc.({ none with source = Some (Context.file cx) }) in
-      let reason = (Reason.mk_reason (RCustom "exports") loc) in
-      Flow.mk_tvar_where cx reason (fun t -> Context.add_module cx m t)
+    let loc = Loc.({ none with source = Some (Context.file cx) }) in
+    let reason = (Reason.mk_reason (RCustom "exports") (loc |> ALoc.of_loc)) in
+    Tvar.mk_where cx reason (fun t -> Context.add_module cx m t)
 
 let set_module_t cx reason f =
-  match Context.declare_module_t cx with
-  | None -> (
-    let module_ref = Context.module_ref cx in
-    Context.add_module cx module_ref (Flow.mk_tvar_where cx reason f)
-  )
-  | Some _ ->
-    Context.set_declare_module_t cx (Some (Flow.mk_tvar_where cx reason f))
+  let module_ref = Context.module_ref cx in
+  Context.add_module cx module_ref (Tvar.mk_where cx reason f)
 
 (**
  * Before running inference, we assume that we're dealing with a CommonJS
@@ -160,7 +127,7 @@ let set_module_kind cx loc new_exports_kind = Context.(
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
-      Flow_js.add_output cx (Flow_error.EIndeterminateModuleType loc)
+      Flow.add_output cx (Flow_error.EIndeterminateModuleType loc)
   | _ -> ()
   );
   Context.set_module_kind cx new_exports_kind
@@ -170,33 +137,44 @@ let set_module_kind cx loc new_exports_kind = Context.(
  * Given an exported default declaration, identify nameless declarations and
  * name them with a special internal name that can be used to reference them
  * when assigning the export value.
+ *
+ * Paired with function which undoes this, for typed AST construction
  *)
-let nameify_default_export_decl decl = Ast.Statement.(
+let nameify_default_export_decl decl = Flow_ast.Statement.(
+  let identity x = x in
   match decl with
-  | loc, FunctionDeclaration func_decl -> Ast.Function.(
-    if func_decl.id <> None then decl else
-      loc, FunctionDeclaration {
+  | loc, FunctionDeclaration func_decl -> Flow_ast.Function.(
+    if func_decl.id <> None then decl, identity else
+      (loc, FunctionDeclaration {
         func_decl with
-          id = Some (loc, internal_name "*default*");
-      }
+          id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
+      }), (function
+        | x, FunctionDeclaration func_decl ->
+          x, FunctionDeclaration { func_decl with id = None }
+        | _ -> failwith "expected FunctionDeclaration"
+      )
     )
 
-  | loc, ClassDeclaration class_decl -> Ast.Class.(
-    if class_decl.id <> None then decl else
-      loc, ClassDeclaration {
+  | loc, ClassDeclaration class_decl -> Flow_ast.Class.(
+    if class_decl.id <> None then decl, identity else
+      (loc, ClassDeclaration {
         class_decl with
-          id = Some (loc, internal_name "*default*");
-      }
+          id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
+      }), (function
+        | x, ClassDeclaration class_decl ->
+          x, ClassDeclaration { class_decl with id = None }
+        | _ -> failwith "expected ClassDeclaration"
+      )
     )
 
-  | _ -> decl
+  | _ -> decl, identity
 )
 
 let warn_or_ignore_export_star_as cx name =
   if name = None then () else
   match Context.esproposal_export_star_as cx, name with
   | Options.ESPROPOSAL_WARN, Some(loc, _) ->
-    Flow_js.add_output cx (Flow_error.EExperimentalExportStarAs loc)
+    Flow.add_output cx (Flow_error.EExperimentalExportStarAs loc)
   | _ -> ()
 
 (* Module exports are treated differently than `exports`. The latter is a

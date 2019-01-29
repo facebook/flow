@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -29,21 +26,33 @@ let spec = {
     empty
     |> CommandUtils.json_flags
     |> CommandUtils.from_flag
-    |> anon "root" (optional string) ~doc:"Root directory"
+    |> flag "--semver" no_arg
+        ~doc:"Return only the version number"
+    |> anon "root" (optional string)
   )
 }
 
-let main json pretty from _root () =
-  FlowEventLogger.set_from from;
-  if json || pretty
-  then begin
+let print_semver json pretty =
+  if json || pretty then
+    let open Hh_json in
+    let json = JSON_Object [
+      "semver", JSON_String Flow_version.version;
+    ] in
+    print_json_endline ~pretty json
+  else
+    print_endline Flow_version.version
+
+let main json pretty semver _root () =
+  if semver then print_semver json pretty
+  else if json || pretty then begin
     let open Hh_json in
     let json = JSON_Object [
       "semver", JSON_String Flow_version.version;
       "binary", JSON_String (Sys_utils.executable_path ());
       "build_id", JSON_String Build_id.build_id_ohai;
+      "flow_build_id", JSON_String (Flow_build_id.get_build_id ());
     ] in
-    print_endline (json_to_string ~pretty json)
+    print_json_endline ~pretty json
   end else begin
     CommandUtils.print_version ()
   end;

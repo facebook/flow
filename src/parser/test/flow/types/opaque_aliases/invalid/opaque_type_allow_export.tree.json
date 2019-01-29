@@ -65,7 +65,7 @@
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":44},"end":{"line":2,"column":45}},
               "range":[67,68],
-              "name":";",
+              "name":"",
               "typeAnnotation":null,
               "optional":false
             }

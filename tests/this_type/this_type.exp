@@ -1,200 +1,583 @@
-Error: class_expr.js:6
-  6:     this.x = 123; // error: property not found (must be declared)
-              ^ property `x`. Property not found in
-  6:     this.x = 123; // error: property not found (must be declared)
-         ^^^^ class expr `Thing`
+Error ------------------------------------------------------------------------------------------------ class_expr.js:6:5
 
-Error: contra.js:4
-  4:   next: this; // error (see below for exploit): `this` should only appear in
-             ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
+Cannot assign `123` to `this.x` because property `x` is missing in `Thing` [1].
 
-Error: contra.js:15
- 15:   foo<X: this>(that: X) { } // error: can't hide contravariance using a bound
-              ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+   class_expr.js:6:5
+   6|     this.x = 123; // error: property not found (must be declared)
+          ^^^^^^
 
-Error: contra.js:19
- 19:   foo<Y: this>(that: Y) { } // error (see above, catches hidden override)
-              ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:25
- 25:   out_object(): { _: this } { return { _: this }; }
-                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:26
- 26:   in_object(_: { _: this }) { }
-                         ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:27
- 27:   inout_object: { _: this };
-                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:29
- 29:   out_array(): Array<this> { return [this]; }
-                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:30
- 30:   in_array(_: Array<this>) { }
-                         ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:31
- 31:   inout_array: Array<this>;
-                          ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:38
- 38:   out_set(): Set<this> { return new Set().add(this); }
-                      ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:39
- 39:   in_set(_: Set<this>) { }
-                     ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:40
- 40:   inout_set: Set<this>;
-                      ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:44
- 44:   in_promise(_: Promise<this>) { }
-                             ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:45
- 45:   inout_promise: Promise<this>;
-                              ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:48
- 48:   *out_generator(): Generator<this,this,this> {
-                                             ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:52
- 52:   in_generator(_: Generator<this,this,this>) { }
-                                 ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:52
- 52:   in_generator(_: Generator<this,this,this>) { }
-                                      ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:53
- 53:   inout_generator: Generator<this,this,this>;
-                                  ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:53
- 53:   inout_generator: Generator<this,this,this>;
-                                       ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: contra.js:53
- 53:   inout_generator: Generator<this,this,this>;
-                                            ^^^^ `this` type. invariant position (expected `this` to occur only covariantly)
-
-Error: generics.js:8
-  8: (new ImplicitNumber().val: string) // error: number ~> string
-      ^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
-  8: (new ImplicitNumber().val: string) // error: number ~> string
-                                ^^^^^^ string
-
-Error: import.js:8
-  8:   foo(): B1 { return new B1(); } // error
-              ^^ B1. This type is incompatible with
-  2:   foo(): this { return this; }
-              ^^^^ some incompatible instantiation of `this`. See: export.js:2
-
-Error: import.js:14
- 14:   foo(): B3<X> { return new B3(); } // error
-              ^^^^^ B3. This type is incompatible with
-  7:   foo(): this { return this; }
-              ^^^^ some incompatible instantiation of `this`. See: export.js:7
-
-Error: import.js:18
- 18: (new B3().qux(0): string); // error
-      ^^^^^^^^^^^^^^^ number. This type is incompatible with
- 18: (new B3().qux(0): string); // error
-                       ^^^^^^ string
-
-Error: import.js:21
- 21: ((new B3().bar(): B3<string>): A2<number>); // error
-                          ^^^^^^ string. This type is incompatible with
- 21: ((new B3().bar(): B3<string>): A2<number>); // error
-                                       ^^^^^^ number
-
-Error: import.js:21
- 21: ((new B3().bar(): B3<string>): A2<number>); // error
-                                       ^^^^^^ number. This type is incompatible with
- 21: ((new B3().bar(): B3<string>): A2<number>); // error
-                          ^^^^^^ string
-
-Error: import.js:22
- 22: ((new B3(): A2<number>).qux(0): string); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ number. This type is incompatible with
- 22: ((new B3(): A2<number>).qux(0): string); // error
-                                     ^^^^^^ string
-
-Error: interface.js:1
-  1: interface I { xs: Array<this>; }
-                             ^^^^ Unexpected use of `this` type
-
-Error: self.js:4
-  4:   bar(): this { return new A().foo(); } // same as returning : A, so error
-                            ^^^^^^^^^^^^^ A. This type is incompatible with the expected return type of
-  4:   bar(): this { return new A().foo(); } // same as returning : A, so error
-              ^^^^ some incompatible instantiation of `this`
-
-Error: statics.js:17
- 17: (A.make(): B); // error
-      ^^^^^^^^ A. This type is incompatible with
- 17: (A.make(): B); // error
-                ^ B
-
-Error: test.js:23
- 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
-      ^^^^^^^^^^^^^^^^^^^ Base. This type is incompatible with
- 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
-                           ^^^^^^^ Inherit
-
-Error: test.js:23
- 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
-      ^^^^^^^^^^^^^^^^^^^ Override. This type is incompatible with
- 23: (new Inherit().foo(): Inherit); // error (cf. OK below)
-                           ^^^^^^^ Inherit
-
-Error: test.js:29
- 29: (new InheritOverride().bar_caller(): InheritOverride); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Base. This type is incompatible with
- 29: (new InheritOverride().bar_caller(): InheritOverride); // error
-                                          ^^^^^^^^^^^^^^^ InheritOverride
-
-Error: test.js:29
- 29: (new InheritOverride().bar_caller(): InheritOverride); // error
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Override. This type is incompatible with
- 29: (new InheritOverride().bar_caller(): InheritOverride); // error
-                                          ^^^^^^^^^^^^^^^ InheritOverride
-
-Error: test.js:41
- 41:   corge(that: this) { }
-                   ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
-
-Error: test.js:42
- 42:   grault(that: Base2) { }
-                    ^^^^^ Base2. This type is incompatible with the expected param type of
- 56:   grault(that: this) { } // error, too
-                    ^^^^ Override2
-
-Error: test.js:42
- 42:   grault(that: Base2) { }
-                    ^^^^^ Base2. This type is incompatible with the expected param type of
- 56:   grault(that: this) { } // error, too
-                    ^^^^ some incompatible instantiation of `this`
-
-Error: test.js:51
- 51:   bar(): Override2 { return new Override2; } // error (cf. OK above)
-              ^^^^^^^^^ Override2. This type is incompatible with
- 38:   bar(): this { return this; }
-              ^^^^ some incompatible instantiation of `this`
-
-Error: test.js:54
- 54:   corge(that: this) { } // error
-                   ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
-
-Error: test.js:56
- 56:   grault(that: this) { } // error, too
-                    ^^^^ `this` type. contravariant position (expected `this` to occur only covariantly)
+References:
+   class_expr.js:4:15
+                    v------------
+   4| const Thing = class Thing {
+   5|   zark() {
+   6|     this.x = 123; // error: property not found (must be declared)
+   7|   }
+   8| };
+      ^ [1]
 
 
-Found 41 errors
+Error ---------------------------------------------------------------------------------------------------- contra.js:4:9
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:4:9
+   4|   next: this; // error (see below for exploit): `this` should only appear in
+              ^^^^
+
+References:
+   contra.js:3:7
+   3| class C {
+            ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:15:10
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:15:10
+   15|   foo<X: this>(that: X) { } // error: can't hide contravariance using a bound
+                ^^^^
+
+References:
+   contra.js:14:7
+   14| class A {
+             ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:19:10
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:19:10
+   19|   foo<Y: this>(that: Y) { } // error (see above, catches hidden override)
+                ^^^^
+
+References:
+   contra.js:18:7
+   18| class B extends A {
+             ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:25:22
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:25:22
+   25|   out_object(): { _: this } { return { _: this }; }
+                            ^^^^
+
+References:
+   contra.js:24:7
+   24| class Invariant {
+             ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:26:21
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:26:21
+   26|   in_object(_: { _: this }) { }
+                           ^^^^
+
+References:
+   contra.js:24:7
+   24| class Invariant {
+             ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:27:22
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:27:22
+   27|   inout_object: { _: this };
+                            ^^^^
+
+References:
+   contra.js:24:7
+   24| class Invariant {
+             ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:29:22
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:29:22
+   29|   out_array(): Array<this> { return [this]; }
+                            ^^^^
+
+References:
+   contra.js:24:7
+   24| class Invariant {
+             ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:30:21
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:30:21
+   30|   in_array(_: Array<this>) { }
+                           ^^^^
+
+References:
+   contra.js:24:7
+   24| class Invariant {
+             ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:31:22
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:31:22
+   31|   inout_array: Array<this>;
+                            ^^^^
+
+References:
+   contra.js:24:7
+   24| class Invariant {
+             ^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:38:18
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:38:18
+   38|   out_set(): Set<this> { return new Set().add(this); }
+                        ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:39:17
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:39:17
+   39|   in_set(_: Set<this>) { }
+                       ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:40:18
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:40:18
+   40|   inout_set: Set<this>;
+                        ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:44:25
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:44:25
+   44|   in_promise(_: Promise<this>) { }
+                               ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:45:26
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:45:26
+   45|   inout_promise: Promise<this>;
+                                ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:48:41
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:48:41
+   48|   *out_generator(): Generator<this,this,this> {
+                                               ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:52:29
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:52:29
+   52|   in_generator(_: Generator<this,this,this>) { }
+                                   ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:52:34
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:52:34
+   52|   in_generator(_: Generator<this,this,this>) { }
+                                        ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:53:30
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:53:30
+   53|   inout_generator: Generator<this,this,this>;
+                                    ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:53:35
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:53:35
+   53|   inout_generator: Generator<this,this,this>;
+                                         ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- contra.js:53:40
+
+Cannot use `this` [1] in an input/output position because `this` [1] is expected to occur only in output positions.
+
+   contra.js:53:40
+   53|   inout_generator: Generator<this,this,this>;
+                                              ^^^^
+
+References:
+   contra.js:36:7
+   36| class Misc {
+             ^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------- generics.js:6:30
+
+Cannot use `Implicit` [1] with fewer than 1 type argument.
+
+   generics.js:6:30
+   6| class ImplicitNumber extends Implicit { arg: number; }
+                                   ^^^^^^^^
+
+References:
+   generics.js:5:15
+   5| class Implicit<X> { arg: X; val: X; }
+                    ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- import.js:7:1
+
+Cannot extend `A1` [1] with `B1` because `B1` [2] is incompatible with `this` [3] in the return value of property `foo`.
+
+   import.js:7:1
+      v--------------------
+   7| class B1 extends A1 {
+   8|   foo(): B1 { return new B1(); } // error
+   9| }
+      ^
+
+References:
+   import.js:7:18
+   7| class B1 extends A1 {
+                       ^^ [1]
+   import.js:8:10
+   8|   foo(): B1 { return new B1(); } // error
+               ^^ [2]
+   export.js:2:10
+   2|   foo(): this { return this; }
+               ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:13:1
+
+Cannot extend `A3` [1] with `B3` because `B3` [2] is incompatible with `this` [3] in the return value of property `foo`.
+
+   import.js:13:1
+       v--------------------------
+   13| class B3<X> extends A3<X> {
+   14|   foo(): B3<X> { return new B3(); } // error
+   15| }
+       ^
+
+References:
+   import.js:13:21
+   13| class B3<X> extends A3<X> {
+                           ^^^^^ [1]
+   import.js:14:10
+   14|   foo(): B3<X> { return new B3(); } // error
+                ^^^^^ [2]
+   export.js:7:10
+    7|   foo(): this { return this; }
+                ^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:18:2
+
+Cannot cast `new B3().qux(...)` to string because number [1] is incompatible with string [2].
+
+   import.js:18:2
+   18| (new B3().qux(0): string); // error
+        ^^^^^^^^^^^^^^^
+
+References:
+   import.js:18:15
+   18| (new B3().qux(0): string); // error
+                     ^ [1]
+   import.js:18:19
+   18| (new B3().qux(0): string); // error
+                         ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:21:3
+
+Cannot cast `new B3().bar()` to `A2` because string [1] is incompatible with number [2] in type argument `X` [3].
+
+   import.js:21:3
+   21| ((new B3().bar(): B3<string>): A2<number>); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   import.js:21:22
+   21| ((new B3().bar(): B3<string>): A2<number>); // error
+                            ^^^^^^ [1]
+   import.js:21:35
+   21| ((new B3().bar(): B3<string>): A2<number>); // error
+                                         ^^^^^^ [2]
+   export.js:6:17
+    6| export class A2<X> {
+                       ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:22:2
+
+Cannot cast `new B3().qux(...)` to string because number [1] is incompatible with string [2].
+
+   import.js:22:2
+   22| ((new B3(): A2<number>).qux(0): string); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   import.js:22:16
+   22| ((new B3(): A2<number>).qux(0): string); // error
+                      ^^^^^^ [1]
+   import.js:22:33
+   22| ((new B3(): A2<number>).qux(0): string); // error
+                                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ interface.js:1:25
+
+Unexpected use of `this` type.
+
+   1| interface I { xs: Array<this>; }
+                              ^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- self.js:4:24
+
+Cannot return `new A().foo()` because `A` [1] is incompatible with `this` [2].
+
+   self.js:4:24
+   4|   bar(): this { return new A().foo(); } // same as returning : A, so error
+                             ^^^^^^^^^^^^^
+
+References:
+   self.js:1:7
+   1| class A {
+            ^ [1]
+   self.js:4:10
+   4|   bar(): this { return new A().foo(); } // same as returning : A, so error
+               ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- statics.js:17:2
+
+Cannot cast `A.make()` to `B` because `A` [1] is incompatible with `B` [2].
+
+   statics.js:17:2
+   17| (A.make(): B); // error
+        ^^^^^^^^
+
+References:
+   statics.js:4:18
+    4|   static make(): this { // factory method, whose return type `this` (still)
+                        ^^^^ [1]
+   statics.js:17:12
+   17| (A.make(): B); // error
+                  ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:23:2
+
+Cannot cast `new Inherit().foo()` to `Inherit` because:
+ - `Base` [1] is incompatible with `Inherit` [2].
+ - `Override` [3] is incompatible with `Inherit` [2].
+
+   test.js:23:2
+   23| (new Inherit().foo(): Inherit); // error (cf. OK below)
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:3:7
+    3| class Base {
+             ^^^^ [1]
+   test.js:23:23
+   23| (new Inherit().foo(): Inherit); // error (cf. OK below)
+                             ^^^^^^^ [2]
+   test.js:13:7
+   13| class Override extends Base {
+             ^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:29:2
+
+Cannot cast `new InheritOverride().bar_caller()` to `InheritOverride` because:
+ - `Base` [1] is incompatible with `InheritOverride` [2].
+ - `Override` [3] is incompatible with `InheritOverride` [2].
+
+   test.js:29:2
+   29| (new InheritOverride().bar_caller(): InheritOverride); // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:3:7
+    3| class Base {
+             ^^^^ [1]
+   test.js:29:38
+   29| (new InheritOverride().bar_caller(): InheritOverride); // error
+                                            ^^^^^^^^^^^^^^^ [2]
+   test.js:17:18
+   17|   bar() { return new Override; } // OK (cf. error below)
+                        ^^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:41:15
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+
+   test.js:41:15
+   41|   corge(that: this) { }
+                     ^^^^
+
+References:
+   test.js:34:7
+   34| class Base2 {
+             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:1
+
+Cannot extend `Base2` [1] with `Override2` because:
+ - `Override2` [2] is incompatible with `this` [3] in the return value of property `bar`.
+ - `Override2` [4] is incompatible with `Base2` [5] in the first argument of property `grault`.
+ - `this` [4] is incompatible with `Base2` [5] in the first argument of property `grault`.
+
+   test.js:47:1
+       v------------------------------
+   47| class Override2 extends Base2 {
+   48|   foo(): this { return this; } // OK
+   49|   qux(): this { return this; } // OK, too
+   50|
+   51|   bar(): Override2 { return new Override2; } // error (cf. OK above)
+   52|                                              // see exploit below
+   53|
+   54|   corge(that: this) { } // error
+   55|                         // see exploit below
+   56|   grault(that: this) { } // error, too
+   57| }
+       ^
+
+References:
+   test.js:47:25
+   47| class Override2 extends Base2 {
+                               ^^^^^ [1]
+   test.js:51:10
+   51|   bar(): Override2 { return new Override2; } // error (cf. OK above)
+                ^^^^^^^^^ [2]
+   test.js:38:10
+   38|   bar(): this { return this; }
+                ^^^^ [3]
+   test.js:56:16
+   56|   grault(that: this) { } // error, too
+                      ^^^^ [4]
+   test.js:42:16
+   42|   grault(that: Base2) { }
+                      ^^^^^ [5]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:54:15
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+
+   test.js:54:15
+   54|   corge(that: this) { } // error
+                     ^^^^
+
+References:
+   test.js:47:7
+   47| class Override2 extends Base2 {
+             ^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:56:16
+
+Cannot use `this` [1] in an input position because `this` [1] is expected to occur only in output positions.
+
+   test.js:56:16
+   56|   grault(that: this) { } // error, too
+                      ^^^^
+
+References:
+   test.js:47:7
+   47| class Override2 extends Base2 {
+             ^^^^^^^^^ [1]
+
+
+
+Found 40 errors

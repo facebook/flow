@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (***********************************************************************)
@@ -28,19 +25,23 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> base_flags
+    |> connect_and_json_flags
     |> root_flag
-    |> json_flags
+    |> strip_root_flag
+    |> from_flag
+    |> wait_for_recheck_flag
     |> flag "--color" no_arg
-        ~doc:"Print the file with colors showing which parts have unknown types"
+        ~doc:("Print the file with colors showing which parts have unknown types. " ^
+              "Cannot be used with --json or --pretty")
     |> flag "--debug" no_arg
-        ~doc:"Print debugging info about each range in the file to stderr"
-    |> flag "--path" (optional string)
-        ~doc:"Specify (fake) path to file when reading data from stdin"
+        ~doc:("Print debugging info about each range in the file to stderr. " ^
+              "Cannot be used with --json or --pretty")
+    |> path_flag
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg
         ~doc:"Ignore absence of @flow pragma"
-    |> anon "file" (optional string) ~doc:"[FILE]"
+    |> anon "file" (optional string)
   )
 }
 
@@ -49,7 +50,7 @@ let handle_error ~json ~pretty err =
   then (
     let open Hh_json in
     let json = JSON_Object ["error", JSON_String err] in
-    prerr_endline (json_to_string ~pretty json);
+    prerr_json_endline ~pretty json;
   ) else (
     prerr_endline err;
   )
@@ -72,42 +73,37 @@ let debug_range (loc, is_covered) = Loc.(
     is_covered
 )
 
-let rec colorize_file content last_offset accum = Loc.(function
+let rec colorize_file content last_offset accum = function
   | [] -> colorize content last_offset (String.length content) Tty.Default accum
-  | (loc, is_covered)::rest ->
-    let offset, end_offset = loc.start.offset, loc._end.offset in
-
+  | ((offset, end_offset), is_covered)::rest ->
     (* catch up to the start of this range *)
     let accum, offset = colorize content last_offset offset Tty.Default accum in
 
     let color = if not (is_covered) then Tty.Red else Tty.Default in
     let accum, offset = colorize content offset end_offset color accum in
     colorize_file content offset accum rest
-)
 
-let sort_ranges (a_loc, _) (b_loc, _) = Loc.(Pervasives.compare
-  (a_loc.start.offset, a_loc._end.offset)
-  (b_loc.start.offset, b_loc._end.offset)
-)
+let sort_ranges ((a_line, a_col), _) ((b_line, b_col), _) =
+  let line = a_line - b_line in
+  if line = 0 then a_col - b_col else line
 
-let rec split_overlapping_ranges accum = Loc.(function
+let rec split_overlapping_ranges accum = function
   | [] -> accum
   | range::[] -> range::accum
   | (loc1, is_covered1)::(loc2, is_covered2)::rest ->
+      let (loc1_start, loc1_end), (loc2_start, loc2_end) = loc1, loc2 in
       let accum, todo =
-        if loc1._end.offset < loc2.start.offset then
+        if loc1_end < loc2_start then
           (* range 1 is completely before range 2, so consume range 1 *)
           (loc1, is_covered1)::accum,
           (loc2, is_covered2)::rest
 
-        else if loc1.start.offset = loc2.start.offset then
+        else if loc1_start = loc2_start then
           (* range 1 and 2 start at the same place, so consume range 1 and
              create a new range for the remainder of range 2, if any *)
           let rest =
-            if loc1._end.offset <> loc2._end.offset then
-              let tail_loc = { loc2 with
-                start = { loc2.start with offset = loc1._end.offset + 1 }
-              } in
+            if loc1_end <> loc2_end then
+              let tail_loc = (loc1_end + 1, loc2_end) in
               List.sort sort_ranges (
                 (loc1, is_covered1)::
                 (tail_loc, is_covered2)::
@@ -118,16 +114,14 @@ let rec split_overlapping_ranges accum = Loc.(function
           in
           accum, rest
 
-        else if loc1._end.offset = loc2._end.offset then
+        else if loc1_end = loc2_end then
           (* range 1 and 2 end at the same place, so split range 1 and consume
              the first part, which doesn't overlap *)
-          let head_loc = { loc1 with
-            _end = { loc1._end with offset = loc2.start.offset - 1 }
-          } in
+          let head_loc = (loc1_start, loc2_start - 1) in
           (head_loc, is_covered1)::accum,
           (loc2, is_covered2)::rest
 
-        else if loc1._end.offset < loc2._end.offset then
+        else if loc1_end < loc2_end then
           (* TODO: Given that at this point we also have loc1.start.offset <
              loc2.start.offset, it means that range 1 and 2 overlap but don't
              nest. Ideally, this case should never arise: we should be able to
@@ -144,15 +138,9 @@ let rec split_overlapping_ranges accum = Loc.(function
              range1 or range2 is covered (because the alternative is 1-token
              islands of uncovered stuff).
           *)
-          let head_loc = { loc1 with
-            _end = { loc1._end with offset = loc2.start.offset - 1 }
-          } in
-          let overlap_loc = { loc1 with
-            start = loc2.start
-          } in
-          let tail_loc = { loc2 with
-            start = { loc2.start with offset = loc1._end.offset + 1 }
-          } in
+          let head_loc = (loc1_start, loc2_start - 1) in
+          let overlap_loc = (loc2_start, loc1_end) in
+          let tail_loc = (loc1_end + 1, loc2_end) in
           (head_loc, is_covered1)::(overlap_loc, is_covered1 || is_covered2)::accum,
           (tail_loc, is_covered2)::rest
 
@@ -160,12 +148,8 @@ let rec split_overlapping_ranges accum = Loc.(function
           (* range 2 is in the middle of range 1, so split range 1 and consume
              the first part, which doesn't overlap, and then recurse on
              range2::range1tail::rest *)
-          let head_loc = { loc1 with
-            _end = { loc1._end with offset = loc2.start.offset - 1 }
-          } in
-          let tail_loc = { loc1 with
-            start = { loc1.start with offset = loc2._end.offset + 1 }
-          } in
+          let head_loc = (loc1_start, loc2_start - 1) in
+          let tail_loc = (loc2_end + 1, loc1_end) in
           let todo =
             (loc2, is_covered2)::
             (tail_loc, is_covered1)::
@@ -175,57 +159,64 @@ let rec split_overlapping_ranges accum = Loc.(function
           List.sort sort_ranges todo
       in
       split_overlapping_ranges accum todo
-)
 
-let handle_response ~json ~pretty ~color ~debug (types : (Loc.t * bool) list) content =
-  if color && json then
-    prerr_endline "Error: --color and --json flags cannot be used together"
-  else if debug && json then
-    prerr_endline "Error: --debug and --json flags cannot be used together"
-  else (
-    if debug then List.iter debug_range types;
+let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bool) list) content =
+  if debug then List.iter debug_range types;
 
-    begin if color then
-      let types = split_overlapping_ranges [] types |> List.rev in
-      let colors, _ = colorize_file content 0 [] types in
-      Tty.cprint (List.rev colors);
-      print_endline ""
-    end;
-
-    let covered, total = List.fold_left accum_coverage (0, 0) types in
-    let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
-
-    if json then
-      let uncovered_locs = types
-        |> List.filter (fun (_, is_covered) -> not is_covered)
-        |> List.map (fun (loc, _) -> loc)
+  let offset_table = lazy (Offset_utils.make content) in
+  begin if color then
+    let coverage_offsets =
+      let offset_table = Lazy.force offset_table in
+      let loc_to_offset_pair loc =
+        let open Loc in
+        (Offset_utils.offset offset_table loc.start, Offset_utils.offset offset_table loc._end)
       in
-      let open Hh_json in
-      JSON_Object [
-        "expressions", JSON_Object [
-          "covered_count", int_ covered;
-          "uncovered_count", int_ (total - covered);
-          "uncovered_locs", JSON_Array (uncovered_locs |> List.map Reason.json_of_loc);
-        ];
-      ]
-      |> json_to_string ~pretty
-      |> print_endline
-    else
-      Utils_js.print_endlinef
-        "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
-  )
+      List.map (fun (loc, covered) -> (loc_to_offset_pair loc, covered)) types
+    in
+    let coverage_offsets = split_overlapping_ranges [] coverage_offsets |> List.rev in
+    let colors, _ = colorize_file content 0 [] coverage_offsets in
+    Tty.cprint ~color_mode:Tty.Color_Always (List.rev colors);
+    print_endline ""
+  end;
+
+  let covered, total = List.fold_left accum_coverage (0, 0) types in
+  let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
+
+  if json then
+    let offset_table = Some (Lazy.force offset_table) in
+    let covered_locs, uncovered_locs =
+      let covered, uncovered = List.partition (fun (_, is_covered) -> is_covered) types in
+      let locs_of = Core_list.map ~f:(fun (loc, _) -> loc) in
+      locs_of covered, locs_of uncovered
+    in
+    let open Hh_json in
+    JSON_Object [
+      "expressions", JSON_Object [
+        "covered_count", int_ covered;
+        "covered_locs", JSON_Array (covered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table));
+        "uncovered_count", int_ (total - covered);
+        "uncovered_locs", JSON_Array (uncovered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table));
+      ];
+    ]
+    |> print_json_endline ~pretty
+  else
+    Utils_js.print_endlinef
+      "Covered: %0.2f%% (%d of %d expressions)\n" percent covered total
 
 let main
-    option_values root json pretty color debug path respect_pragma
-    all filename () =
-  let file = get_file_from_filename_or_stdin path filename in
-  let root = guess_root (
+    base_flags option_values json pretty root strip_root wait_for_recheck color debug path
+    respect_pragma all filename () =
+  let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
+    path filename in
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
   ) in
+  let strip_root = if strip_root then Some root else None in
 
-  if not json && all && respect_pragma then prerr_endline
+  if not option_values.quiet && all && respect_pragma then prerr_endline
     "Warning: --all and --respect-pragma cannot be used together. --all wins.";
 
   (* TODO: --respect-pragma is deprecated. We will soon flip the default. As a
@@ -235,17 +226,22 @@ let main
      be removed. *)
   let all = all || not respect_pragma in
 
-  let ic, oc = connect option_values root in
-  send_command oc (ServerProt.COVERAGE (file, all));
-
   (* pretty implies json *)
   let json = json || pretty in
 
-  match (Timeout.input_value ic : ServerProt.coverage_response) with
-  | Error err ->
-      handle_error ~json ~pretty err
-  | Ok resp ->
-      let content = File_input.content_of_file_input file in
-      handle_response ~json ~pretty ~color ~debug resp content
+  if color && json
+  then raise (CommandSpec.Failed_to_parse ("--color", "Can't be used with json flags"));
+  if debug && json
+  then raise (CommandSpec.Failed_to_parse ("--debug", "Can't be used with json flags"));
+
+  let request = ServerProt.Request.COVERAGE { input = file; force = all; wait_for_recheck; } in
+
+  match connect_and_make_request flowconfig_name option_values root request with
+  | ServerProt.Response.COVERAGE (Error err) ->
+    handle_error ~json ~pretty err
+  | ServerProt.Response.COVERAGE (Ok resp) ->
+    let content = File_input.content_of_file_input_unsafe file in
+    handle_response ~json ~pretty ~strip_root ~color ~debug resp content
+  | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

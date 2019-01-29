@@ -1,138 +1,459 @@
-Error: A.js:8
-  8:   return f();
-              ^^^ string. This type is incompatible with the expected return type of
-  7: function b(f: { (): string }): number {
-                                    ^^^^^^ number
+Error -------------------------------------------------------------------------------------------------------- A.js:8:10
 
-Error: A.js:13
- 13:   return f("hello");
-                ^^^^^^^ string. This type is incompatible with the expected param type of
- 12: function c(f: { (x: number): number }): number {
-                         ^^^^^^ number
+Cannot return `f()` because string [1] is incompatible with number [2].
 
-Error: A.js:18
- 18:   return f();
-              ^^^ function call
- 18:   return f();
-              ^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
- 17: function d(f: { (x: number): number }): number {
-                         ^^^^^^ number
+   A.js:8:10
+   8|   return f();
+               ^^^
 
-Error: A.js:23
- 23:   return f();
-              ^^^ function call. Callable signature not found in
- 23:   return f();
-              ^ object type
-
-Error: A.js:29
- 29:   return x();
-              ^^^ function call. Callable signature not found in
- 29:   return x();
-              ^ object literal
-
-Error: B.js:5
-  5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ statics of function. This type is incompatible with
-  5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-            ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `$call` is incompatible:
-      5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                                                                ^^^^^^ string. This type is incompatible with
-      5: var b: { (x: number): number } = function (x: number): string { return "hi"; };
-                               ^^^^^^ number
-
-Error: B.js:8
-  8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                  ^^^^^^ string. This type is incompatible with the expected param type of
-  8: var c: { (x: string): string } = function (x: number): string { return "hi"; };
-                                                   ^^^^^^ number
-
-Error: B.js:11
- 11: var d: { (): string } = function (x: number): string { return "hi"; };
-              ^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
- 11: var d: { (): string } = function (x: number): string { return "hi"; };
-                                          ^^^^^^ number
-
-Error: C.js:7
-  7: function b(x: { (z: number): string }): (z: number) => number {
-                                  ^^^^^^ string. This type is incompatible with the expected return type of
-  7: function b(x: { (z: number): string }): (z: number) => number {
-                                                            ^^^^^^ number
-
-Error: C.js:12
- 12: function c(x: { (z: number): string }): (z: string) => string {
-                                                 ^^^^^^ string. This type is incompatible with the expected param type of
- 12: function c(x: { (z: number): string }): (z: string) => string {
-                         ^^^^^^ number
-
-Error: C.js:17
- 17: function d(x: { (z: number): string }): () => string {
-                                             ^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
- 17: function d(x: { (z: number): string }): () => string {
-                         ^^^^^^ number
-
-Error: C.js:22
- 22: function e(x: {}): () => string {
-                        ^^^^^^^^^^^^ function type. Callable signature not found in
- 23:   return x;
-              ^ object type
-
-Error: C.js:32
- 32: function g(x: {}): Function {
-                        ^^^^^^^^ function type. Callable signature not found in
- 33:   return x; // error
-              ^ object type
-
-Error: D.js:11
- 11: var c: { (): string; (x: number): string } =
-              ^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
- 12:   function (x: number): string { return "hi"; };
-                    ^^^^^^ number
-
-Error: D.js:20
- 20: function e(x: { (): string; (x: number): string }): () => number {
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ intersection. This type is incompatible with
- 20: function e(x: { (): string; (x: number): string }): () => number {
-                                                         ^^^^^^^^^^^^ function type
-  Member 1:
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                       ^^^^^^^^^^ function type
-  Error:
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                           ^^^^^^ string. This type is incompatible with the expected return type of
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                                                 ^^^^^^ number
-  Member 2:
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                   ^^^^^^^^^^^^^^^^^^^ function type
-  Error:
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                                           ^^^^^^^^^^^^ undefined (too few arguments, expected default/rest parameters). This type is incompatible with
-   20: function e(x: { (): string; (x: number): string }): () => number {
-                                       ^^^^^^ number
-
-Error: E.js:2
-  2: var a : { someProp: number } = function () {};
-             ^^^^^^^^^^^^^^^^^^^^ property `someProp` of object type. Property not found in
-  2: var a : { someProp: number } = function () {};
-                                    ^^^^^^^^^^^^^^ function
-
-Error: F.js:6
-  6: var b: { (x: number): number } = (x) => "hi"
-                                      ^^^^^^^^^^^ statics of function. This type is incompatible with
-  6: var b: { (x: number): number } = (x) => "hi"
-            ^^^^^^^^^^^^^^^^^^^^^^^ object type
-  Property `$call` is incompatible:
-      6: var b: { (x: number): number } = (x) => "hi"
-                                                 ^^^^ string. This type is incompatible with
-      6: var b: { (x: number): number } = (x) => "hi"
-                               ^^^^^^ number
-
-Error: F.js:9
-  9: var c: { (x: string): string } = (x) => x.toFixed()
-                                               ^^^^^^^ property `toFixed`. Property not found in
-  9: var c: { (x: string): string } = (x) => x.toFixed()
-                                             ^ String
+References:
+   A.js:7:21
+   7| function b(f: { (): string }): number {
+                          ^^^^^^ [1]
+   A.js:7:32
+   7| function b(f: { (): string }): number {
+                                     ^^^^^^ [2]
 
 
-Found 18 errors
+Error ------------------------------------------------------------------------------------------------------- A.js:13:12
+
+Cannot call `f` with `"hello"` bound to `x` because string [1] is incompatible with number [2].
+
+   A.js:13:12
+   13|   return f("hello");
+                  ^^^^^^^ [1]
+
+References:
+   A.js:12:21
+   12| function c(f: { (x: number): number }): number {
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:18:10
+
+Cannot call `f` because function [1] requires another argument.
+
+   A.js:18:10
+   18|   return f();
+                ^^^
+
+References:
+   A.js:17:17
+   17| function d(f: { (x: number): number }): number {
+                       ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:23:10
+
+Cannot call `f` because a callable signature is missing in object type [1].
+
+   A.js:23:10
+   23|   return f();
+                ^^^
+
+References:
+   A.js:22:15
+   22| function e(f: {}): number {
+                     ^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------------- A.js:29:10
+
+Cannot call `x` because a callable signature is missing in object literal [1].
+
+   A.js:29:10
+   29|   return x();
+                ^^^
+
+References:
+   A.js:28:11
+   28|   var x = {};
+                 ^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------------- B.js:5:34
+
+Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
+
+   B.js:5:34
+   5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   B.js:5:56
+   5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                                                             ^^^^^^ [1]
+   B.js:5:23
+   5| var b: { (x: number): number } = function (x: number): string { return "hi"; };
+                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- B.js:8:34
+
+Cannot assign function to `c` because number [1] is incompatible with string [2] in the first argument.
+
+   B.js:8:34
+   8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   B.js:8:47
+   8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                                                    ^^^^^^ [1]
+   B.js:8:14
+   8| var c: { (x: string): string } = function (x: number): string { return "hi"; };
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- B.js:11:25
+
+Cannot assign function to `d` because function [1] requires another argument from function type [2].
+
+   B.js:11:25
+   11| var d: { (): string } = function (x: number): string { return "hi"; };
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   B.js:11:25
+   11| var d: { (): string } = function (x: number): string { return "hi"; };
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   B.js:11:10
+   11| var d: { (): string } = function (x: number): string { return "hi"; };
+                ^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- C.js:8:10
+
+Cannot return `x` because string [1] is incompatible with number [2] in the return value.
+
+   C.js:8:10
+   8|   return x;
+               ^
+
+References:
+   C.js:7:30
+   7| function b(x: { (z: number): string }): (z: number) => number {
+                                   ^^^^^^ [1]
+   C.js:7:56
+   7| function b(x: { (z: number): string }): (z: number) => number {
+                                                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- C.js:13:10
+
+Cannot return `x` because number [1] is incompatible with string [2] in the first argument.
+
+   C.js:13:10
+   13|   return x;
+                ^
+
+References:
+   C.js:12:21
+   12| function c(x: { (z: number): string }): (z: string) => string {
+                           ^^^^^^ [1]
+   C.js:12:45
+   12| function c(x: { (z: number): string }): (z: string) => string {
+                                                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- C.js:18:10
+
+Cannot return `x` because function type [1] requires another argument from function type [2].
+
+   C.js:18:10
+   18|   return x;
+                ^
+
+References:
+   C.js:17:17
+   17| function d(x: { (z: number): string }): () => string {
+                       ^^^^^^^^^^^^^^^^^^^ [1]
+   C.js:17:41
+   17| function d(x: { (z: number): string }): () => string {
+                                               ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- C.js:23:10
+
+Cannot return `x` because a callable signature is missing in object type [1] but exists in function type [2].
+
+   C.js:23:10
+   23|   return x;
+                ^
+
+References:
+   C.js:22:15
+   22| function e(x: {}): () => string {
+                     ^^ [1]
+   C.js:22:20
+   22| function e(x: {}): () => string {
+                          ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- D.js:12:3
+
+Cannot assign function to `c` because function [1] requires another argument from function type [2].
+
+   D.js:12:3
+   12|   function (x: number): string { return "hi"; };
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   D.js:12:3
+   12|   function (x: number): string { return "hi"; };
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   D.js:11:10
+   11| var c: { (): string; (x: number): string } =
+                ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------------- D.js:21:10
+
+Cannot return `x` because string [1] is incompatible with number [2] in the return value of the callable signature.
+
+   D.js:21:10
+   21|   return x;
+                ^
+
+References:
+   D.js:20:21
+   20| function e(x: { (): string; (x: number): string }): () => number {
+                           ^^^^^^ [1]
+   D.js:20:59
+   20| function e(x: { (): string; (x: number): string }): () => number {
+                                                                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- E.js:2:32
+
+Cannot assign function to `a` because property `someProp` is missing in function [1] but exists in object type [2].
+
+   E.js:2:32
+   2| var a : { someProp: number } = function () {};
+                                     ^^^^^^^^^^^^^^
+
+References:
+   E.js:2:32
+   2| var a : { someProp: number } = function () {};
+                                     ^^^^^^^^^^^ [1]
+   E.js:2:9
+   2| var a : { someProp: number } = function () {};
+              ^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- F.js:6:34
+
+Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
+
+   F.js:6:34
+   6| var b: { (x: number): number } = (x) => "hi"
+                                       ^^^^^^^^^^^
+
+References:
+   F.js:6:41
+   6| var b: { (x: number): number } = (x) => "hi"
+                                              ^^^^ [1]
+   F.js:6:23
+   6| var b: { (x: number): number } = (x) => "hi"
+                            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- F.js:9:41
+
+Cannot call `x.toFixed` because property `toFixed` is missing in `String` [1].
+
+   F.js:9:41
+   9| var c: { (x: string): string } = (x) => x.toFixed()
+                                              ^^^^^^^^^^^
+
+References:
+   F.js:9:14
+   9| var c: { (x: string): string } = (x) => x.toFixed()
+                   ^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------------- G.js:5:1
+
+Cannot call `o` because a callable signature is missing in `Object.create` [1].
+
+   G.js:5:1
+   5| o(); // error: o is not callable
+      ^^^
+
+References:
+   G.js:4:9
+   4| var o = Object.create(f);
+              ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ deprecated.js:2:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   2|   $call: () => void;
+        ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ deprecated.js:6:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   6|   $call: () => void;
+        ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- deprecated.js:10:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   10|   $call: () => void;
+         ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- internal_slot.js:5:2
+
+Cannot cast object literal to `O` because a callable signature is missing in object literal [1] but exists in `O` [2].
+
+   internal_slot.js:5:2
+   5| ({}: O); // err: no callable property
+       ^^ [1]
+
+References:
+   internal_slot.js:5:6
+   5| ({}: O); // err: no callable property
+           ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- internal_slot.js:6:2
+
+Cannot cast function to `O` because number [1] is incompatible with undefined [2] in the return value.
+
+   internal_slot.js:6:2
+   6| (function() { return 0 }: O); // err: number ~> void
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   internal_slot.js:6:22
+   6| (function() { return 0 }: O); // err: number ~> void
+                           ^ [1]
+   internal_slot.js:2:15
+   2|   [[call]](): void;
+                    ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:13:2
+
+Cannot cast object literal to `I` because a callable signature is missing in object literal [1] but exists in `I` [2].
+
+   internal_slot.js:13:2
+   13| ({}: I); // err: no callable property
+        ^^ [1]
+
+References:
+   internal_slot.js:13:6
+   13| ({}: I); // err: no callable property
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:14:2
+
+Cannot cast function to `I` because number [1] is incompatible with undefined [2] in the return value.
+
+   internal_slot.js:14:2
+   14| (function() { return 0 }: I); // err: number ~> void
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   internal_slot.js:14:22
+   14| (function() { return 0 }: I); // err: number ~> void
+                            ^ [1]
+   internal_slot.js:10:15
+   10|   [[call]](): void;
+                     ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:20:2
+
+Cannot cast `C1()` to empty because undefined [1] is incompatible with empty [2].
+
+   internal_slot.js:20:2
+   20| (C1(): empty); // error: void ~> empty
+        ^^^^
+
+References:
+   internal_slot.js:18:22
+   18|   static [[call]](): void;
+                            ^^^^ [1]
+   internal_slot.js:20:8
+   20| (C1(): empty); // error: void ~> empty
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:23:1
+
+Cannot call `mixed_callable` because mixed [1] is not a function.
+
+   internal_slot.js:23:1
+   23| mixed_callable();
+       ^^^^^^^^^^^^^^^^
+
+References:
+   internal_slot.js:22:41
+   22| declare var mixed_callable: { [[call]]: mixed };
+                                               ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- internal_slot.js:28:16
+
+Cannot call `annot_callable` with `0` bound to the first parameter because number [1] is incompatible with string [2].
+
+   internal_slot.js:28:16
+   28| annot_callable(0); // error: number ~> string
+                      ^ [1]
+
+References:
+   internal_slot.js:26:11
+   26| type Fn = string => number;
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:29:2
+
+Cannot cast `annot_callable(...)` to empty because number [1] is incompatible with empty [2].
+
+   internal_slot.js:29:2
+   29| (annot_callable("foo"): empty); // error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   internal_slot.js:26:21
+   26| type Fn = string => number;
+                           ^^^^^^ [1]
+   internal_slot.js:29:25
+   29| (annot_callable("foo"): empty); // error: number ~> empty
+                               ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
+
+Cannot cast `a` to `B` because a callable signature is missing in object type [1] but exists in function type [2] in
+property `p`.
+
+   use_ops.js:4:2
+   4| (a: B); // error HERE and preserve use ops
+       ^
+
+References:
+   use_ops.js:1:15
+   1| type A = { p: {} }
+                    ^^ [1]
+   use_ops.js:2:16
+   2| type B = { +p: () => void }
+                     ^^^^^^^^^^ [2]
+
+
+
+Found 30 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

@@ -19,7 +19,7 @@ If you then put all your source files in a `src` directory you can compile them
 to another directory by running:
 
 ```sh
-yarn run flow-remove-types src/ -D lib/
+yarn run flow-remove-types src/ -d lib/
 ```
 
 You can add this to your `package.json` scripts easily.
@@ -29,7 +29,7 @@ You can add this to your `package.json` scripts easily.
   "name": "my-project",
   "main": "lib/index.js",
   "scripts": {
-    "build": "flow-remove-types src/ -D lib/",
+    "build": "flow-remove-types src/ -d lib/",
     "prepublish": "yarn run build"
   }
 }

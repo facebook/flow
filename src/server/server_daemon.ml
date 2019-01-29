@@ -1,27 +1,28 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
 
 module Server_files = Server_files_js
 
-type daemon_msg =
-  | Starting
-  | Ready
-
-type waiting_channel = daemon_msg Daemon.out_channel
+type args = {
+  shared_mem_config: SharedMem_js.config;
+  options: Options.t;
+  logging_context: FlowEventLogger.logging_context;
+  argv: string array;
+  parent_pid: int;
+  parent_logger_pid: int option;
+  file_watcher_pid: int option;
+}
 
 type entry_point = (
-  SharedMem_js.config * Options.t * Hh_logger.Level.t * FlowEventLogger.logging_context,
-  in_channel,
-  daemon_msg
+  args,
+  MonitorProt.monitor_to_server_message,
+  MonitorProt.server_to_monitor_message
 ) Daemon.entry
 
 let open_log_file file =
@@ -38,72 +39,15 @@ let open_log_file file =
       then Sys.remove old_file;
       Sys.rename file old_file
     with e ->
+      let e = Exception.wrap e in
       Utils.prerr_endlinef
         "Log rotate: failed to move '%s' to '%s'\n%s"
         file
         old_file
-        (Printexc.to_string e)
+        (Exception.to_string e)
     )
   end;
   Unix.openfile file [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_APPEND] 0o666
-
-(* The server can communicate with the process that forked it over a pipe.
- * The current scheme has it write a message when it starts up and has the
- * lock and then write another message when it has finished initializing.
- * It's up to the forking process whether it cares to wait for the
- * initialization to complete *)
-let rec wait_loop ~should_wait child_pid ic =
-  let msg = try
-    Daemon.from_channel ic
-    with End_of_file ->
-    (* The pipe broke before we got the alls-clear from the server. What kind
-     * of things could go wrong. Well we check the lock before forking the
-     * server, but maybe by the time the server started someone else had
-     * grabbed the lock, so it exited. I'm sure there's a million other
-     * things that could have gone wrong *)
-    let pid, status =
-      match Unix.(waitpid [ WNOHANG; WUNTRACED; ] child_pid) with
-      | 0, _ ->
-          (* Sometimes the End_of_file races the child process actually
-           * exiting. In case that's happening here, let's give the child 1
-           * second more to die *)
-          Unix.sleep 1;
-          Unix.(waitpid [ WNOHANG; WUNTRACED; ] child_pid)
-      | pid, status -> pid, status in
-    let exit_code =  FlowExitStatus.Server_start_failed status in
-    let msg, exit_code = if pid = 0
-    (* The server is still alive...not sure what happened *)
-    then
-      "Error: Failed to start server for some unknown reason.", exit_code
-    (* The server is dead. Shucks. *)
-    else
-      let reason, exit_code = match status with
-      | Unix.WEXITED code ->
-          if code = FlowExitStatus.(error_code Lock_stolen)
-          then
-            (* Sometimes when we actually go to start the server we find a
-             * server already running (race condition). If so, we can just
-             * forward that error code *)
-            "There is already a server running.",
-            FlowExitStatus.Lock_stolen
-          else if code = FlowExitStatus.(error_code Out_of_shared_memory)
-          then
-            "The server is failed to allocate shared memory.",
-            FlowExitStatus.Out_of_shared_memory
-          else
-            spf "exited prematurely with code %d." code, exit_code
-      | Unix.WSIGNALED signal ->
-          let signal_name = Sys_utils.name_of_signal signal in
-          spf "The server was killed prematurely with signal %s." signal_name,
-          exit_code
-      | Unix.WSTOPPED signal ->
-          spf "The server was stopped prematurely with signal %d." signal,
-          exit_code
-      in spf "Error: Failed to start server. %s" reason, exit_code
-    in FlowExitStatus.(exit ~msg exit_code)
-  in
-  if should_wait && msg <> Ready
-  then wait_loop ~should_wait child_pid ic
 
 let new_entry_point =
   let cpt = ref 0 in
@@ -113,26 +57,55 @@ let new_entry_point =
 
 let register_entry_point
   (main:
-    ?waiting_channel:waiting_channel ->
+    monitor_channels:MonitorRPC.channels ->
     shared_mem_config:SharedMem_js.config ->
     Options.t ->
     unit)
 : entry_point =
   Daemon.register_entry_point
     (new_entry_point ())
-    (fun (shared_mem_config, options, hh_logger_level, logging_context) (ic, waiting_channel) ->
-      ignore(Sys_utils.setsid());
-      Daemon.close_in ic;
-      Hh_logger.Level.set_min_level hh_logger_level;
-      FlowEventLogger.restore_context logging_context;
-      FlowEventLogger.init_flow_command ~version:Flow_version.version;
-      main ?waiting_channel:(Some waiting_channel) ~shared_mem_config options)
+    (fun args monitor_channels ->
+      let {
+        shared_mem_config;
+        options;
+        logging_context;
+        argv;
+        parent_pid;
+        parent_logger_pid;
+        file_watcher_pid;
+      } = args in
+      LoggingUtils.set_hh_logger_min_level options;
+      Hh_logger.info "argv=%s" (argv |> Array.to_list |> String.concat " ");
 
-let daemonize ~wait ~log_file ~shared_mem_config ~options ?on_spawn main_entry =
+      (* This server might have been started by a monitor process which is already pretty old, so
+      * the start_time might be way out of date. *)
+      FlowEventLogger.(restore_context {logging_context with start_time = Unix.gettimeofday (); });
+      (* It makes the logs easier if all server logs have the "command" column set to "server",
+       * regardless of whether they were started with `flow start` or `flow server` *)
+      FlowEventLogger.set_command (Some "server");
+      FlowEventLogger.init_flow_command ~version:Flow_version.version;
+
+      let root = Options.root options in
+      let tmp_dir = Options.temp_dir options in
+
+      (* Create the pid log and record all the processes that already exist *)
+      let flowconfig_name = Options.flowconfig_name options in
+      PidLog.init (Server_files_js.pids_file ~flowconfig_name ~tmp_dir root);
+      PidLog.log ~reason:"monitor" parent_pid;
+      Option.iter parent_logger_pid ~f:(PidLog.log ~reason:"monitor_logger");
+      Option.iter file_watcher_pid ~f:(PidLog.log ~reason:"file_watcher");
+      PidLog.log ~reason:"main" (Unix.getpid ());
+      Option.iter (EventLogger.logger_pid ()) ~f:(PidLog.log ~reason:"main_logger");
+
+      main ~monitor_channels ~shared_mem_config options)
+
+let daemonize ~log_file ~shared_mem_config ~argv ~options ~file_watcher_pid
+  main_entry =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root options in
   let tmp_dir = Options.temp_dir options in
-  let lock = Server_files.lock_file ~tmp_dir root in
+  let flowconfig_name = Options.flowconfig_name options in
+  let lock = Server_files.lock_file ~flowconfig_name ~tmp_dir root in
   if not (Lock.check lock)
   then begin
     let msg = spf
@@ -163,43 +136,12 @@ let daemonize ~wait ~log_file ~shared_mem_config ~options ?on_spawn main_entry =
     set_close_on_exec stdout;
     set_close_on_exec stderr
   with Unix_error (EINVAL, _, _) -> ());
-  let {Daemon.pid; channels = (waiting_channel_ic, waiting_channel_oc)} =
-    Daemon.spawn (null_fd, log_fd, log_fd) (main_entry) (
-      shared_mem_config,
-      options,
-      Hh_logger.Level.min_level (),
-      FlowEventLogger.get_context ()
-    )
-  in
-  (* detach ourselves from the parent process *)
-  Daemon.close_out waiting_channel_oc;
-  (* let original parent exit *)
-  let pretty_pid = Sys_utils.pid_of_handle pid in
-  Option.call pretty_pid ~f:on_spawn;
-  wait_loop ~should_wait:wait pid waiting_channel_ic
-
-(* Sends a message to the parent that forked us *)
-let wakeup_client oc msg =
-  Option.iter oc begin fun oc ->
-    try
-      Daemon.to_channel oc msg
-    with
-    (* The client went away *)
-    | Sys_error msg
-      when msg = "Broken pipe"  || msg = "Invalid argument" -> ()
-    | e ->
-      prerr_endlinef "wakeup_client: %s" (Printexc.to_string e)
-  end
-
-(* Closes the connection to the parent that forked us *)
-let close_waiting_channel oc =
-  Option.iter oc begin fun oc ->
-    try
-      Daemon.close_out oc
-    with
-    (* The client went away *)
-    | Sys_error msg
-      when msg = "Broken pipe"  || msg = "Invalid argument" -> ()
-    | e ->
-      prerr_endlinef "close_waiting_channel: %s" (Printexc.to_string e)
-  end
+  Daemon.spawn (null_fd, log_fd, log_fd) (main_entry) {
+    shared_mem_config;
+    options;
+    logging_context = FlowEventLogger.get_context ();
+    argv;
+    parent_pid = Unix.getpid ();
+    parent_logger_pid = EventLogger.logger_pid ();
+    file_watcher_pid;
+  }

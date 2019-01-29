@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
@@ -63,6 +60,8 @@ let trace_depth trace =
    a constraint generated in Type_inference_js *)
 let unit_trace lower upper =
   [lower, upper, Parent [], 1]
+
+let dummy_trace = []
 
 (* Single-step trace with a parent. This corresponds to a
    recursive invocation of the flow function.

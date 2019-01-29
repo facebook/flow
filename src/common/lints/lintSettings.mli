@@ -1,44 +1,49 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-type sketchy_null_kind =
-  | SketchyBool
-  | SketchyString
-  | SketchyNumber
-  | SketchyMixed
+open Lints
+open Severity
 
-type lint_kind =
-  | SketchyNull of sketchy_null_kind
-  | UntypedTypeImport
+type 'a t
 
-val string_of_kind: lint_kind -> string
+val of_default: 'a -> 'a t
 
-val kinds_of_string: string -> lint_kind list option
+val set_value: lint_kind -> ('a * Loc.t option) -> 'a t -> 'a t
 
-type lint_state =
-  | Off
-  | Warn
-  | Err
+val set_all: (lint_kind * ('a * Loc.t option)) list -> 'a t -> 'a t
 
-val string_of_state: lint_state -> string
-val output_string_of_state: lint_state -> string
+val get_default: 'a t -> 'a
+(* Get the state of a lint kind in the provided settings *)
+val get_value: lint_kind -> 'a t -> 'a
+(* True iff the severity for the provided lint has been explicitly set *)
+val is_explicit: lint_kind -> 'a t -> bool
+(* Get the location of the comment that set the value for a lint kind, or none if
+ * the active value was not set by a comment *)
+val get_loc: lint_kind -> 'a t -> Loc.t option
+(* Iterate over all lint kinds with an explicit value *)
+val iter: (lint_kind -> 'a * Loc.t option -> unit) -> 'a t -> unit
+(* Fold over all lint kinds with an explicit value *)
+val fold: (lint_kind -> 'a * Loc.t option -> 'b -> 'b) -> 'a t -> 'b -> 'b
+(* Map over all lint kinds with an explicit value *)
+val map: ('a * Loc.t option -> 'a * Loc.t option) -> 'a t -> 'a t
 
-val state_of_string: string -> lint_state option
+(* SEVERITY-SPECIFIC FUNCTIONS *)
 
-val state_cmp: lint_state -> lint_state -> int
-val state_min: lint_state -> lint_state -> lint_state
-val state_max: lint_state -> lint_state -> lint_state
+val empty_severities: severity t
+(* True iff get_state returns Warn or Err, false otherwise *)
+val is_enabled: lint_kind -> severity t -> bool
+(* Always the logical opposite of is_enabled *)
+val is_suppressed: lint_kind -> severity t -> bool
 
-type t
+val of_lines: severity t -> (int * string) list -> (severity t, int * string) result
+(* Intended for debugging purposes. *)
+val to_string: severity t -> string
 
-type error_kind =
+type lint_parse_error_kind =
 | Invalid_setting
 | Malformed_argument
 | Naked_comment
@@ -46,38 +51,4 @@ type error_kind =
 | Overwritten_argument
 | Redundant_argument
 
-type error = Loc.t * error_kind
-
-val default_settings: t
-
-val all_setting: lint_state -> t
-
-val set_state: lint_kind -> (lint_state * Loc.t option) -> t -> t
-
-val set_all: (lint_kind * (lint_state * Loc.t option)) list -> t -> t
-
-val get_default: t -> lint_state
-(* Get the state of a lint kind in the provided settings *)
-val get_state: lint_kind -> t -> lint_state
-(* True iff get_state returns Warn or Err, false otherwise *)
-val is_enabled: lint_kind -> t -> bool
-(* Always the logical opposite of is_enabled *)
-val is_suppressed: lint_kind -> t -> bool
-(* True iff the severity for the provided lint has been explicitly set *)
-val is_explicit: lint_kind -> t -> bool
-(* Get the location of the comment that set the value for a lint kind, or none if
- * the active value was not set by a comment *)
-val get_loc: lint_kind -> t -> Loc.t option
-(* Iterate over all lint kinds with an explicit setting *)
-val iter: (lint_kind -> lint_state * Loc.t option -> unit) -> t -> unit
-(* Fold over all lint kinds with an explicit setting *)
-val fold: (lint_kind -> lint_state * Loc.t option -> 'a -> 'a) -> t -> 'a -> 'a
-(* Map over all lint kinds with an explicit setting *)
-val map: (lint_state * Loc.t option -> lint_state * Loc.t option) -> t -> t
-(* Merge two LintSettings, with rules in higher_precedence overwriting
- * rules in lower_precedencse. *)
-val merge: low_prec:t -> high_prec:t -> t
-
-val of_lines: t -> (int * string) list -> (t, int * string) result
-(* Intended for debugging purposes. *)
-val to_string: t -> string
+type lint_parse_error = Loc.t * lint_parse_error_kind

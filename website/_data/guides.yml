@@ -58,6 +58,7 @@
     - path: "/docs/lang/width-subtyping/"
 
     - path: "/docs/lang/refinements/"
+    - path: "/docs/lang/lazy-modes/"
     # - path: "/docs/lang/sealing/"
 
 - id: cli
@@ -87,6 +88,7 @@
     - path: "/docs/config/"
     - path: "/docs/config/include/"
     - path: "/docs/config/ignore/"
+    - path: "/docs/config/untyped/"
     - path: "/docs/config/libs/"
     - path: "/docs/config/lints/"
     - path: "/docs/config/options/"
@@ -102,11 +104,17 @@
 #   pages:
 #     - path: "/docs/errors/"
 
-- id: frameworks
+- id: react
   pages:
-    - path: "/docs/frameworks/"
-    - path: "/docs/frameworks/react/"
-    - path: "/docs/frameworks/redux/"
+    - path: "/docs/react/"
+    - path: "/docs/react/components/"
+    - path: "/docs/react/events/"
+    - path: "/docs/react/refs/"
+    - path: "/docs/react/children/"
+    - path: "/docs/react/hoc/"
+    - path: "/docs/react/context/"
+    - path: "/docs/react/redux/"
+    - path: "/docs/react/types/"
 
 - id: tools
   pages:
@@ -131,3 +139,7 @@
     - path: "/docs/linting/flowlint-comments/"
     - path: "/docs/linting/ide-integration/"
     - path: "/docs/linting/rule-reference/"
+
+- id: strict
+  pages:
+    - path: "/docs/strict/"

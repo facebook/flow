@@ -1,19 +1,18 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
+
+module Ast = Flow_ast
 
 type t = {
   name: string option;
   main: string option;
 }
 
-let (>>=) = Result.(>>=)
+let (>>=) = Core_result.(>>=)
 
 let empty = { name = None; main = None; }
 let name package = package.name
@@ -48,9 +47,9 @@ let parse ast =
     let open Ast in
     let open Expression.Object in
     let extract_property package = function
-      | Property(_, { Property.
+      | Property (_, Property.Init {
           key = Property.Literal(_, { Literal.value = Literal.String key; _ });
-          value = Property.Init (_, Expression.Literal { Literal.
+          value = (_, Expression.Literal { Literal.
             value = Literal.String value;
             _
           });

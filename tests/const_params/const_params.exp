@@ -1,8 +1,16 @@
-Error: test.js:17
- 17:   x = "hey"; // error, const param cannot be reassigned
-       ^ x. const param cannot be reassigned (see experimental.const_params=true in .flowconfig)
- 16: function cannot_reassign(x: string) {
-                              ^^^^^^^^^ const param x
+Error ----------------------------------------------------------------------------------------------------- test.js:17:3
+
+Cannot reassign constant `x` [1].
+
+   test.js:17:3
+   17|   x = "hey"; // error, const param cannot be reassigned
+         ^
+
+References:
+   test.js:16:26
+   16| function cannot_reassign(x: string) {
+                                ^^^^^^^^^ [1]
+
 
 
 Found 1 error

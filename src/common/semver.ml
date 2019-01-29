@@ -1,10 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * This library contains portions based on third party software provided under
  * this license:
@@ -186,9 +184,9 @@ end = struct
 
     range
     |> Str.split (Str.regexp_string " ")
-    |> List.map expand_comparator
+    |> Core_list.map ~f:expand_comparator
     |> List.flatten
-    |> List.map Comparator.parse
+    |> Core_list.map ~f:Comparator.parse
 
   let satisfies range version =
     List.for_all (Comparator.satisfies version) range

@@ -1,0 +1,15 @@
+Default .flowconfig should typecheck:
+Found 0 errors
+
+Default .flowconfig looks like this:
+[ignore]
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+
+[strict]

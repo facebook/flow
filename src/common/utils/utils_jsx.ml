@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 (*
@@ -101,7 +98,7 @@ let trim_jsx_text =
       let start_column = String.index (List.nth lines first_line) first_char in
       let end_column = String.rindex (List.nth lines last_line) last_char + 1 in
 
-      (* If we're on the first line, then we need to see on whic column the line
+      (* If we're on the first line, then we need to see on which column the line
          starts *)
       let start_column =
         if first_line = 0
@@ -112,20 +109,14 @@ let trim_jsx_text =
         then end_column + loc.start.column
         else end_column in
 
-      (* For offset, we do a search in the whole JSXText string *)
-      let start_offset = loc.start.offset + (String.index value first_char) in
-      let end_offset = loc.start.offset + (String.rindex value last_char) + 1 in
-
       let loc = { loc with
         start = {
           line = start_line;
           column = start_column;
-          offset = start_offset;
         };
         _end = {
           line = end_line;
           column = end_column;
-          offset = end_offset;
         };
       } in
       Some (loc, trimmed)

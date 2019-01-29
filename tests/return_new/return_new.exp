@@ -1,38 +1,75 @@
-Error: test.js:2
-  2: var foo: number = new Foo(); // error (returns object literal above)
-                       ^^^^^^^^^ object literal. This type is incompatible with
-  2: var foo: number = new Foo(); // error (returns object literal above)
-              ^^^^^^ number
+Error ----------------------------------------------------------------------------------------------------- test.js:2:19
 
-Error: test.js:5
-  5: var bar: number = new Bar(); // error (returns new object)
-                       ^^^^^^^^^ new object. This type is incompatible with
-  5: var bar: number = new Bar(); // error (returns new object)
-              ^^^^^^ number
+Cannot assign `new Foo()` to `foo` because object literal [1] is incompatible with number [2].
 
-Error: test.js:8
-  8: var qux: number = new Qux(); // error (returns new object)
-                       ^^^^^^^^^ new object. This type is incompatible with
-  8: var qux: number = new Qux(); // error (returns new object)
-              ^^^^^^ number
+   test.js:2:19
+   2| var foo: number = new Foo(); // error (returns object literal above)
+                        ^^^^^^^^^
 
-Error: test.js:23
- 23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-                       ^^^^^^^^^^^ property `x`. Property not found in
- 23: (new makeUnion(): {x: string}); // error: `number` returns {}, missing prop x
-          ^^^^^^^^^ new object
-
-Error: test2.js:7
-  7: d.x = ""; // error, string ~/~ number (but property x is found)
-           ^^ string. This type is incompatible with
-  2:   constructor(): { x: number }; // OK
-                           ^^^^^^ number
-
-Error: test2.js:9
-  9: (new D: D); // error, new D is an object, D not in proto chain
-      ^^^^^ object type. This type is incompatible with
-  9: (new D: D); // error, new D is an object, D not in proto chain
-             ^ D
+References:
+   test.js:1:25
+   1| function Foo() { return {}; }
+                              ^^ [1]
+   test.js:2:10
+   2| var foo: number = new Foo(); // error (returns object literal above)
+               ^^^^^^ [2]
 
 
-Found 6 errors
+Error ----------------------------------------------------------------------------------------------------- test.js:5:19
+
+Cannot assign `new Bar()` to `bar` because new object [1] is incompatible with number [2].
+
+   test.js:5:19
+   5| var bar: number = new Bar(); // error (returns new object)
+                        ^^^^^^^^^ [1]
+
+References:
+   test.js:5:10
+   5| var bar: number = new Bar(); // error (returns new object)
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:8:19
+
+Cannot assign `new Qux()` to `qux` because new object [1] is incompatible with number [2].
+
+   test.js:8:19
+   8| var qux: number = new Qux(); // error (returns new object)
+                        ^^^^^^^^^ [1]
+
+References:
+   test.js:8:10
+   8| var qux: number = new Qux(); // error (returns new object)
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test2.js:7:7
+
+Cannot assign empty string to `d.x` because string [1] is incompatible with number [2].
+
+   test2.js:7:7
+   7| d.x = ""; // error, string ~/~ number (but property x is found)
+            ^^ [1]
+
+References:
+   test2.js:2:23
+   2|   constructor(): { x: number }; // OK
+                            ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test2.js:9:2
+
+Cannot cast `new D()` to `D` because object type [1] is incompatible with `D` [2].
+
+   test2.js:9:2
+   9| (new D: D); // error, new D is an object, D not in proto chain
+       ^^^^^ [1]
+
+References:
+   test2.js:9:9
+   9| (new D: D); // error, new D is an object, D not in proto chain
+              ^ [2]
+
+
+
+Found 5 errors

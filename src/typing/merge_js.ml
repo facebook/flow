@@ -1,70 +1,92 @@
 (**
- * Copyright (c) 2014-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
+module RequireMap = MyMap.Make (struct
+  (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
+  type t = string * File_key.t
+
+  let compare (r1, f1) (r2, f2) =
+    match String.compare r1 r2 with
+    | 0 -> File_key.compare f1 f2
+    | n -> n
+end)
+
 module FilenameMap = Utils_js.FilenameMap
+module ALocSet = Utils_js.ALocSet
 
 module Reqs = struct
-  type impl = Loc.filename * string * string * Loc.filename
-  type dep_impl = Context.t * string * string * Loc.filename
-  type unchecked = string * Loc.t * Loc.filename
-  type res = string * Loc.t * string * Loc.filename
-  type decl = string * Loc.t * Modulename.t * Loc.filename
+  type impl = ALocSet.t
+  type dep_impl = Context.sig_t * ALocSet.t
+  type unchecked = ALocSet.t
+  type res = ALocSet.t
+  type decl = ALocSet.t * Modulename.t
   type t = {
-    impls: impl list;
-    dep_impls: dep_impl list;
-    unchecked: unchecked list;
-    res: res list;
-    decls: decl list;
+    impls: impl RequireMap.t;
+    dep_impls: dep_impl RequireMap.t;
+    unchecked: unchecked RequireMap.t;
+    res: res RequireMap.t;
+    decls: decl RequireMap.t;
   }
 
   let empty = {
-    impls = [];
-    dep_impls = [];
-    unchecked = [];
-    res = [];
-    decls = [];
+    impls = RequireMap.empty;
+    dep_impls = RequireMap.empty;
+    unchecked = RequireMap.empty;
+    res = RequireMap.empty;
+    decls = RequireMap.empty;
   }
 
-  let add_impl impl reqs =
-    { reqs with impls = impl::reqs.impls }
+  let add_impl require requirer require_locs reqs =
+    let impls = RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.impls in
+    { reqs with impls }
 
-  let add_dep_impl dep_impl reqs =
-    { reqs with dep_impls = dep_impl::reqs.dep_impls }
+  let add_dep_impl =
+    let combine (from_cx, locs1) (_, locs2) = from_cx, ALocSet.union locs1 locs2 in
+    fun require requirer (from_cx, require_locs) reqs ->
+      let dep_impls =
+        RequireMap.add ~combine (require, requirer) (from_cx, require_locs) reqs.dep_impls
+      in
+      { reqs with dep_impls }
 
-  let add_unchecked unchecked reqs =
-    { reqs with unchecked = unchecked::reqs.unchecked }
+  let add_unchecked require requirer require_locs reqs =
+    let unchecked =
+      RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.unchecked
+    in
+    { reqs with unchecked }
 
-  let add_res res reqs =
-    { reqs with res = res::reqs.res }
+  let add_res require requirer require_locs reqs =
+    let res = RequireMap.add ~combine:ALocSet.union (require, requirer) require_locs reqs.res in
+    { reqs with res }
 
-  let add_decl decl reqs =
-    { reqs with decls = decl::reqs.decls }
+  let add_decl =
+    let combine (locs1, modulename) (locs2, _) = ALocSet.union locs1 locs2, modulename in
+    fun require requirer (require_locs, modulename) reqs ->
+    let decls = RequireMap.add ~combine (require, requirer) (require_locs, modulename) reqs.decls in
+    { reqs with decls }
 end
 
 (* Connect the builtins object in master_cx to the builtins reference in some
    arbitrary cx. *)
 let implicit_require_strict cx master_cx cx_to =
-  let from_t = Flow_js.lookup_module master_cx Files.lib_module_ref in
-  let to_t = Flow_js.lookup_module cx_to Files.lib_module_ref in
+  let from_t = Context.find_module_sig master_cx Files.lib_module_ref in
+  let to_t = Context.find_module cx_to Files.lib_module_ref in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect the export of cx_from to its import in cx_to. This happens in some
    arbitrary cx, so cx_from and cx_to should have already been copied to cx. *)
-let explicit_impl_require_strict cx (cx_from, m, r, cx_to) =
-  let from_t = Flow_js.lookup_module cx_from m in
-  let to_t = Context.find_require cx_to r in
+let explicit_impl_require_strict cx (cx_from, m, loc, cx_to) =
+  let from_t = Context.find_module_sig cx_from m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Create the export of a resource file on the fly and connect it to its import
    in cxs_to. This happens in some arbitrary cx, so cx_to should have already
    been copied to cx. *)
-let explicit_res_require_strict cx (r, loc, f, cx_to) =
+let explicit_res_require_strict cx (loc, f, cx_to) =
   (* Recall that a resource file is not parsed, so its export doesn't depend on
      its contents, just its extension. So, we create the export of a resource
      file on the fly by looking at its extension. The general alternative of
@@ -74,7 +96,7 @@ let explicit_res_require_strict cx (r, loc, f, cx_to) =
      unchecked files: we create the export (`any`) on the fly instead of writing
      / reading it to / from the context of each unchecked file. *)
   let from_t = Import_export.mk_resource_module_t cx loc f in
-  let to_t = Context.find_require cx_to r in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect a export of a declared module to its import in cxs_to. This happens
@@ -88,12 +110,12 @@ let explicit_decl_require_strict cx (m, loc, resolved_m, cx_to) =
     |> Modulename.to_string
     |> Reason.internal_module_name
   in
-  let from_t = Flow_js.mk_tvar cx reason in
+  let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
     (Type.Strict reason) from_t;
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 (* Connect exports of an unchecked module to its import in cx_to. Note that we
@@ -105,25 +127,25 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
    * from an untyped module and an any-typed type import from a nonexistent module. *)
   let reason = Reason.(mk_reason (RUntypedModule m) loc) in
   let m_name = Reason.internal_module_name m in
-  let from_t = Flow_js.mk_tvar cx reason in
+  let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
-    (Type.NonstrictReturning (Some (Type.DefT (reason, Type.AnyT), from_t))) from_t;
+    (Type.NonstrictReturning (Some (Type.DefT (reason,
+       Type.AnyT Type.Untyped), from_t), None)) from_t;
 
   (* flow the declared module type to importing context *)
-  let to_t = Context.find_require cx_to m in
+  let to_t = Context.find_require cx_to loc in
   Flow_js.flow_t cx (from_t, to_t)
 
 let detect_sketchy_null_checks cx =
   let add_error ~loc ~null_loc kind falsy_loc =
-    let msg = Flow_error.ESketchyNullLint { kind; loc; null_loc; falsy_loc } in
-    Flow_error.error_of_msg ~trace_reasons:[] ~op:None ~source_file:(Context.file cx) msg
-    |> Context.add_error cx
+    Flow_error.ESketchyNullLint { kind; loc; null_loc; falsy_loc }
+    |> Flow_js.add_output cx
   in
 
   let detect_function exists_excuses loc exists_check =
     let open ExistsCheck in
 
-    let exists_excuse = Utils_js.LocMap.get loc exists_excuses
+    let exists_excuse = Utils_js.ALocMap.get loc exists_excuses
       |> Option.value ~default:empty in
 
     begin match exists_check.null_loc with
@@ -131,45 +153,146 @@ let detect_sketchy_null_checks cx =
       | Some null_loc ->
         let add_error = add_error ~loc ~null_loc in
         if (Option.is_none exists_excuse.bool_loc) then
-          Option.iter exists_check.bool_loc ~f:(add_error LintSettings.SketchyBool);
+          Option.iter exists_check.bool_loc ~f:(add_error Lints.SketchyNullBool);
         if (Option.is_none exists_excuse.number_loc) then
-          Option.iter exists_check.number_loc ~f:(add_error LintSettings.SketchyNumber);
+          Option.iter exists_check.number_loc ~f:(add_error Lints.SketchyNullNumber);
         if (Option.is_none exists_excuse.string_loc) then
-          Option.iter exists_check.string_loc ~f:(add_error LintSettings.SketchyString);
+          Option.iter exists_check.string_loc ~f:(add_error Lints.SketchyNullString);
         if (Option.is_none exists_excuse.mixed_loc) then
-          Option.iter exists_check.mixed_loc ~f:(add_error LintSettings.SketchyMixed);
+          Option.iter exists_check.mixed_loc ~f:(add_error Lints.SketchyNullMixed);
         ()
     end
   in
 
-  Utils_js.LocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
+  Utils_js.ALocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
 
-let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
+let detect_test_prop_misses cx =
+  let misses = Context.test_prop_get_never_hit cx in
+  Core_list.iter ~f:(fun (name, reasons, use_op) ->
+    Flow_js.add_output cx (Flow_error.EPropNotFound (name, reasons, use_op))
+  ) misses
+
+let detect_unnecessary_optional_chains cx =
+  Core_list.iter ~f:(fun (loc, lhs_reason) ->
+    Flow_js.add_output cx (Flow_error.EUnnecessaryOptionalChain (loc, lhs_reason))
+  ) (Context.unnecessary_optional_chains cx)
+
+let detect_unnecessary_invariants cx =
+  Core_list.iter ~f:(fun (loc, reason) ->
+    Flow_js.add_output cx (Flow_error.EUnnecessaryInvariant (loc, reason))
+  ) (Context.unnecessary_invariants cx)
+
+let check_type_visitor wrap =
+  let open Ty in
+  object(self)
+  inherit [_] iter_ty as super
+
+  method! private on_prop env = function
+    | NamedProp (_, p) -> self#on_named_prop env p
+    | IndexProp d -> self#on_dict env d
+    | CallProp _ -> wrap (Reason.RCustom "object Call Property")
+    | SpreadProp _ -> wrap (Reason.RCustom "object Spread Property")
+
+  method! private on_named_prop env = function
+    | Field (t, _) -> self#on_t env t
+    | Method _ -> wrap (Reason.RMethod None)
+    | Get _ | Set _ -> wrap (Reason.RGetterSetterProperty)
+
+  method! on_t env = function
+    | TVar _ -> wrap (Reason.RCustom "recursive type")
+    | Fun _ -> wrap Reason.RFunctionType
+    | Generic (_, _, Some _) -> wrap (Reason.RCustom "class with generics")
+    | Mu _ -> wrap (Reason.RCustom "recursive type")
+    | Any Implicit -> Reason.RAnyImplicit |> wrap
+    | Any Explicit -> Reason.RAnyExplicit |> wrap
+    | Bound (_, name) -> wrap (Reason.RCustom ("bound type var " ^ name))
+    | Top -> wrap Reason.RMixed
+    | Bot -> wrap Reason.REmpty
+    | Module { Ty.name; _ } -> wrap (Reason.RModule name)
+    | TypeAlias { ta_name = { Ty.name; _ }; _} ->
+      wrap (Reason.RCustom ("type alias " ^ name))
+    | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
+    | (Void|Null|Num _|Str _|Bool _|NumLit _|StrLit _|BoolLit _|TypeOf _|
+      Generic _|ClassDecl _|InterfaceDecl _|Utility _) -> ()
+
+  end
+
+let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = true;
+    flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
+    optimize_types = true;
+  } in
+  let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
+    Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
+      let desc = Reason.RCustom "TypeAssert library function" in
+      let reason_main = Reason.mk_reason desc call_loc in
+      let wrap reason = Flow_js.add_output full_cx (Flow_error.EInvalidTypeArgs (
+        reason_main, Reason.mk_reason reason call_loc
+      )) in
+      match Ty_normalizer.from_scheme ~options ~genv scheme with
+      | Ok ty ->
+        (check_type_visitor wrap)#on_t () ty
+      | Error _ ->
+        let { Type.TypeScheme.type_ = t; _ } = scheme in
+        wrap (Type.desc_of_t t)
+    )
+  in
+  Core_list.iter ~f:(fun cx ->
+    let file = Context.file cx in
+    let type_table = Context.type_table cx in
+    let targs_map = Type_table.targs_hashtbl type_table in
+    let file_sig = FilenameMap.find_unsafe file file_sigs in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
+    Utils_js.ALocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
+  ) cxs
+
+let force_annotations leader_cx other_cxs =
+  Core_list.iter ~f:(fun cx ->
+    Context.module_ref cx
+    |> Flow_js.lookup_module leader_cx
+    |> Flow_js.enforce_strict leader_cx
+  ) (leader_cx::other_cxs)
+
+let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
   let open Context in
 
-  let local_metadata = metadata.local_metadata in
+  let metadata =
+    let jsx = match Docblock.jsx docblock_info with
+    | Some (Docblock.Jsx_pragma (expr, jsx_expr)) ->
+      let jsx_expr = Ast_loc_utils.abstractify_mapper#expression jsx_expr in
+      Options.Jsx_pragma (expr, jsx_expr)
+    | Some Docblock.Csx_pragma -> Options.Jsx_csx
+    | None -> Options.Jsx_react
+    in
+    { mtdt with jsx }
+  in
 
-  let local_metadata = { local_metadata with jsx = Docblock.jsx docblock_info } in
-
-  let local_metadata = match Docblock.flow docblock_info with
-  | None -> local_metadata
-  | Some Docblock.OptIn -> { local_metadata with checked = true; }
-  | Some Docblock.OptInWeak -> { local_metadata with checked = true; weak = true }
+  let metadata = match Docblock.flow docblock_info with
+  | None -> metadata
+  | Some Docblock.OptIn -> { metadata with checked = true; }
+  | Some Docblock.OptInStrict -> { metadata with checked = true; strict = true; }
+  | Some Docblock.OptInStrictLocal -> { metadata with checked = true; strict_local = true; }
+  | Some Docblock.OptInWeak -> { metadata with checked = true; weak = true }
 
   (* --all (which sets metadata.checked = true) overrides @noflow, so there are
      currently no scenarios where we'd change checked = true to false. in the
      future, there may be a case where checked defaults to true (but is not
      forced to be true ala --all), but for now we do *not* want to force
      checked = false here. *)
-  | Some Docblock.OptOut -> local_metadata
+  | Some Docblock.OptOut -> metadata
   in
 
-  let local_metadata = match Docblock.preventMunge docblock_info with
-  | Some value -> { local_metadata with munge_underscores = not value; }
-  | None -> local_metadata
+  let metadata = match Docblock.preventMunge docblock_info with
+  | Some value -> { metadata with munge_underscores = not value; }
+  | None -> metadata
   in
 
-  { metadata with local_metadata }
+  metadata
 
 
 (* Merge a component with its "implicit requires" and "explicit requires." The
@@ -204,134 +327,170 @@ let apply_docblock_overrides (metadata: Context.metadata) docblock_info =
 
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
-let merge_component_strict ~metadata ~lint_settings ~require_loc_maps
-  ~get_ast_unsafe ~get_docblock_unsafe
-  component reqs dep_cxs master_cx =
+let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
+  ~get_ast_unsafe ~get_docblock_unsafe ?(do_gc=false)
+  component reqs dep_cxs (master_cx: Context.sig_t) =
 
-  let rev_cxs, impl_cxs = List.fold_left (fun (cxs, impl_cxs) filename ->
-    let ast = get_ast_unsafe filename in
+  let sig_cx = Context.make_sig () in
+  let need_merge_master_cx = ref true in
+
+  let init_gc_state = if do_gc then Some (Gc_js.init ~master_cx) else None in
+
+  let rev_cxs, rev_tasts, impl_cxs, _ =
+    Nel.fold_left (fun (cxs, tasts, impl_cxs, gc_state) filename ->
+
+    (* create cx *)
     let info = get_docblock_unsafe filename in
     let metadata = apply_docblock_overrides metadata info in
-    let require_loc_map = FilenameMap.find_unsafe filename require_loc_maps in
-    let cx = Type_inference_js.infer_ast ast
-      ~metadata ~filename ~lint_settings ~require_loc_map
-    in
-    cx::cxs, FilenameMap.add filename cx impl_cxs
-  ) ([], FilenameMap.empty) component in
-  let cxs = List.rev rev_cxs in
+    let module_ref = Files.module_ref filename in
+    let cx = Context.make sig_cx metadata filename module_ref in
 
-  let cx, other_cxs = List.hd cxs, List.tl cxs in
+    (* create builtins *)
+    if !need_merge_master_cx then (
+      need_merge_master_cx := false;
+      Flow_js.mk_builtins cx;
+      Context.merge_into sig_cx master_cx;
+      implicit_require_strict cx master_cx cx
+    );
+
+    (* local inference *)
+    let ast = get_ast_unsafe filename in
+    let lint_severities =
+      if metadata.Context.strict || metadata.Context.strict_local
+      then StrictModeSettings.fold
+        (fun lint_kind lint_severities ->
+          LintSettings.set_value lint_kind (Severity.Err, None) lint_severities
+        ) strict_mode lint_severities
+      else lint_severities in
+    let file_sig = FilenameMap.find_unsafe filename file_sigs in
+    let tast =
+      Type_inference_js.infer_ast cx filename ast
+        ~lint_severities ~file_options ~file_sig
+    in
+
+    let gc_state = Option.map gc_state Gc_js.(fun gc_state ->
+      let gc_state = mark cx gc_state in
+      sweep ~master_cx cx gc_state;
+      gc_state
+    ) in
+
+    cx::cxs, tast::tasts, FilenameMap.add filename cx impl_cxs, gc_state
+  ) ([], [], FilenameMap.empty, init_gc_state) component in
+  let cxs = Core_list.rev rev_cxs in
+  let tasts = Core_list.rev rev_tasts in
+
+  let cx, other_cxs = Core_list.hd_exn cxs, Core_list.tl_exn cxs in
 
   Flow_js.Cache.clear();
 
-  dep_cxs |> List.iter (Context.merge_into cx);
-  other_cxs |> List.iter (Context.merge_into cx);
-  Context.merge_into cx master_cx;
+  dep_cxs |> Core_list.iter ~f:(Context.merge_into sig_cx);
 
   let open Reqs in
 
-  reqs.impls |> List.iter (fun (fn_from, m, r, fn_to) ->
-    let cx_from = FilenameMap.find_unsafe fn_from impl_cxs in
+  reqs.impls
+  |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_impl_require_strict cx (cx_from, m, r, cx_to);
-    Context.add_module cx m (Context.find_module cx_from m)
+    ALocSet.iter (fun loc ->
+      explicit_impl_require_strict cx (sig_cx, m, loc, cx_to);
+    ) locs;
   );
 
-  reqs.dep_impls |> List.iter (fun (cx_from, m, r, fn_to) ->
+  reqs.dep_impls
+  |> RequireMap.iter (fun (m, fn_to) (cx_from, locs) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_impl_require_strict cx (cx_from, m, r, cx_to)
+    ALocSet.iter (fun loc ->
+      explicit_impl_require_strict cx (cx_from, m, loc, cx_to)
+    ) locs
   );
 
-  reqs.res |> List.iter (fun (r, loc, f, fn_to) ->
+  reqs.res
+  |> RequireMap.iter (fun (f, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_res_require_strict cx (r, loc, f, cx_to)
+    ALocSet.iter (fun loc ->
+      explicit_res_require_strict cx (loc, f, cx_to)
+    ) locs
   );
 
-  reqs.decls |> List.iter (fun (m, loc, resolved_m, fn_to) ->
+  reqs.decls
+  |> RequireMap.iter (fun (m, fn_to) (locs, resolved_m) ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+    ALocSet.iter (fun loc ->
+      explicit_decl_require_strict cx (m, loc, resolved_m, cx_to)
+    ) locs
   );
 
-  reqs.unchecked |> List.iter (fun (m, loc, fn_to) ->
+  reqs.unchecked
+  |> RequireMap.iter (fun (m, fn_to) locs ->
     let cx_to = FilenameMap.find_unsafe fn_to impl_cxs in
-    explicit_unchecked_require_strict cx (m, loc, cx_to)
+    ALocSet.iter (fun loc ->
+      explicit_unchecked_require_strict cx (m, loc, cx_to)
+    ) locs
   );
 
-  other_cxs |> List.iter (implicit_require_strict cx master_cx);
-  implicit_require_strict cx master_cx cx;
-
+  (* Post-merge errors.
+   *
+   * At this point, all dependencies have been merged and the component has been
+   * linked together. Any constraints should have already been evaluated, which
+   * means we can complain about things that either haven't happened yet, or
+   * which require complete knowledge of tvar bounds.
+   *)
   detect_sketchy_null_checks cx;
+  detect_test_prop_misses cx;
+  detect_unnecessary_optional_chains cx;
+  detect_unnecessary_invariants cx;
+  detect_invalid_type_assert_calls ~full_cx:cx file_sigs cxs;
 
-  cx
+  force_annotations cx other_cxs;
 
-(* After merging dependencies into a context (but before optimizing the
-   context), it is important to restore the parts of the context that were
-   copied from other, already optimized contexts (dep_cxs and master_cx, see
-   above comment for details on what they mean). Indeed, merging is an
-   imperative process, and there is no guarantee that those parts of the context
-   would have remained unchanged.
+  match Core_list.zip_exn cxs tasts with
+  | [] -> failwith "there is at least one cx"
+  | x::xs -> x, xs
 
-   Restoration maintains consistency for "diamond-shaped" dependency relations:
-   it forces two contexts B and C that depend on the same context A to agree on
-   the meaning of the parts of A they share (and that meaning is dictated by A
-   itself), and so some context D that depends on both B and C (and perhaps A
-   too) is never confused when merging them.
-*)
-let restore cx dep_cxs master_cx =
-  dep_cxs |> List.iter (Context.merge_into cx);
-  Context.merge_into cx master_cx
-
-(* Given a sig context, it makes sense to clear the parts that are shared with
-   the master sig context. Why? The master sig context, which contains global
-   declarations, is an implicit dependency for every file, and so will be
-   "merged in" anyway, thus making those shared parts redundant to carry around
-   in other sig contexts. This saves a lot of shared memory as well as
-   deserialization time. *)
-let clear_master_shared cx master_cx =
-  Context.set_graph cx (Context.graph cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.graph master_cx))));
-  Context.set_property_maps cx (Context.property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
-    (Type.Properties.Map.mem id (Context.property_maps master_cx))));
-  Context.set_envs cx (Context.envs cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.envs master_cx))));
-  Context.set_evaluated cx (Context.evaluated cx |> IMap.filter (fun id _ -> not
-    (IMap.mem id (Context.evaluated master_cx))))
-
-let merge_lib_file cx master_cx =
-  Context.merge_into master_cx cx;
-  implicit_require_strict master_cx master_cx cx;
-
-  let errs = Context.errors cx in
-  Context.remove_all_errors cx;
-
-  errs, Context.error_suppressions cx, Context.lint_settings cx
-
-let lowers_of_tvar =
+let merge_tvar =
   let open Type in
   let possible_types = Flow_js.possible_types in
-  let finish r = function
-    | [] -> Locationless.AnyT.t
-    | [t] -> t
-    | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
-  in
-  let rec merge cx r seen acc = function
-    | [] -> finish r (List.rev acc)
+  let rec collect_lowers ~filter_empty cx seen acc = function
+    | [] -> Core_list.rev acc
     | t::ts ->
       match t with
-      (* Recursively unwrap unions *)
-      | DefT (_, UnionT rep) ->
-        merge cx r seen acc (UnionRep.members rep @ ts)
       (* Recursively unwrap unseen tvars *)
       | OpenT (_, id) ->
         if ISet.mem id seen
-        then merge cx r seen acc ts (* already unwrapped *)
-        else merge cx r (ISet.add id seen) acc (possible_types cx id @ ts)
-      (* Ignore empty *)
-      | DefT (_, EmptyT) -> merge cx r seen acc ts
+        then collect_lowers ~filter_empty cx seen acc ts (* already unwrapped *)
+        else
+          let seen = ISet.add id seen in
+          collect_lowers ~filter_empty cx seen acc (possible_types cx id @ ts)
+      (* Ignore empty in existentials. This behavior is sketchy, but the error
+         behavior without this filtering is worse. If an existential accumulates
+         an empty, we error but it's very non-obvious how the empty arose. *)
+      | DefT (_, EmptyT) when filter_empty ->
+        collect_lowers ~filter_empty cx seen acc ts
       (* Everything else becomes part of the merge typed *)
-      | _ -> merge cx r seen (t::acc) ts
+      | _ -> collect_lowers ~filter_empty cx seen (t::acc) ts
   in
-  fun cx r id -> merge cx r (ISet.singleton id) [] (possible_types cx id)
+  fun cx r id ->
+    (* Because the behavior of existentials are so difficult to predict, they
+       enjoy some special casing here. When existential types are finally
+       removed, this logic can be removed. *)
+    let existential =
+      let open Reason in
+      match desc_of_reason r with
+      | RExistential -> true
+      | _ -> false
+    in
+    let lowers =
+      let seen = ISet.singleton id in
+      collect_lowers cx seen [] (possible_types cx id)
+        ~filter_empty:existential
+    in
+    match lowers with
+      | [t] -> t
+      | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
+      | [] ->
+        let uses = Flow_js.possible_uses cx id in
+        if uses = [] || existential
+          then AnyT.locationless Unsoundness.existential
+          else MergedT (r, uses)
 
 (****************** signature contexts *********************)
 
@@ -366,33 +525,24 @@ let lowers_of_tvar =
    walks the context from its exports. Once the walk is done, we can replace the
    corresponding parts of the context (graph, property maps, envs) by their
    reduced forms.
+
+   NOTE: Changing ids of entities stored in the Context is dangerous here,
+   since it would require changing every occurence of that id. As such, the mapper
+   currently only traverses ids for side-effects, but returns the original id.
+
+   There are also several places where we add something to a map, recurse, then
+   readd. The original add makes sure we don't visit the same entity twice, the
+   second actually changes the entity in the exports.
 *)
 module ContextOptimizer = struct
   open Constraint
   open Type
 
-  type quotient = {
-    reduced_module_map : Type.t SMap.t;
-    reduced_graph : node IMap.t;
-    reduced_property_maps : Properties.map;
-    reduced_export_maps : Exports.map;
-    reduced_envs : Context.env IMap.t;
-    reduced_evaluated : Type.t IMap.t;
-    sig_hash : SigHash.t;
-  }
-
-  let empty = {
-    reduced_module_map = SMap.empty;
-    reduced_graph = IMap.empty;
-    reduced_property_maps = Properties.Map.empty;
-    reduced_export_maps = Exports.Map.empty;
-    reduced_envs = IMap.empty;
-    reduced_evaluated = IMap.empty;
-    sig_hash = SigHash.empty;
-  }
-
   class context_optimizer = object(self)
-    inherit [quotient] Type_visitor.t as super
+    inherit [Polarity.t] Type_mapper.t_with_uses as super
+
+    val sig_hash = Xx.init ()
+    method sig_hash () = Xx.digest sig_hash
 
     val mutable next_stable_id = 0
     method fresh_stable_id =
@@ -401,134 +551,202 @@ module ContextOptimizer = struct
       stable_id
 
     val mutable stable_tvar_ids = IMap.empty
-    val mutable stable_propmap_ids = Properties.Map.empty
-    val mutable stable_nominal_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
+    val mutable stable_poly_ids = IMap.empty
+    val mutable reduced_module_map = SMap.empty;
+    val mutable reduced_graph = IMap.empty;
+    val mutable reduced_property_maps = Properties.Map.empty;
+    val mutable reduced_call_props = IMap.empty;
+    val mutable reduced_export_maps = Exports.Map.empty;
+    val mutable reduced_evaluated = IMap.empty;
 
-    method reduce cx quotient module_ref =
-      let { reduced_module_map; _ } = quotient in
-      let export = Flow_js.lookup_module cx module_ref in
-      let reduced_module_map = SMap.add module_ref export reduced_module_map in
-      self#type_ cx { quotient with reduced_module_map } export
+    method reduce cx module_ref =
+      let export = Context.find_module cx module_ref in
+      let export' = self#type_ cx Neutral export in
+      reduced_module_map <- SMap.add module_ref export' reduced_module_map
 
-    method! tvar cx quotient r id =
-      let { reduced_graph; sig_hash; _ } = quotient in
-      if (IMap.mem id reduced_graph)
-      then
-        let stable_id = IMap.find_unsafe id stable_tvar_ids in
-        let sig_hash = SigHash.add stable_id sig_hash in
-        { quotient with sig_hash }
-      else
-        let t = lowers_of_tvar cx r id in
-        let node = Root { rank = 0; constraints = Resolved t } in
-        let reduced_graph = IMap.add id node reduced_graph in
-        let stable_id = self#fresh_stable_id in
-        stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids;
-        self#type_ cx { quotient with reduced_graph } t
+    method tvar cx pole r id =
+      let root_id, _ = Context.find_constraints cx id in
+      if id == root_id then
+        if IMap.mem id reduced_graph then
+          let stable_id = IMap.find_unsafe root_id stable_tvar_ids in
+          SigHash.add_int sig_hash stable_id;
+          id
+        else
+          let t = merge_tvar cx r id in
+          let node = Root { rank = 0; constraints = FullyResolved t } in
+          reduced_graph <- IMap.add id node reduced_graph;
+          let () =
+            let stable_id = self#fresh_stable_id in
+            stable_tvar_ids <- IMap.add id stable_id stable_tvar_ids
+          in
+          let t = (self#type_ cx pole t) in
+          let node = Root { rank = 0; constraints = FullyResolved t } in
+          reduced_graph <- IMap.add id node reduced_graph;
+          id
+      else (
+        ignore (self#tvar cx pole r root_id);
+        let node = Goto root_id in
+        reduced_graph <- IMap.add id node reduced_graph;
+        id
+      )
 
-    method! props cx quotient id =
-      let { reduced_property_maps; sig_hash; _ } = quotient in
+    method props cx pole id =
       if (Properties.Map.mem id reduced_property_maps)
       then
-        let stable_id = Properties.Map.find_unsafe id stable_propmap_ids in
-        let sig_hash = SigHash.add stable_id sig_hash in
-        { quotient with sig_hash }
+        let () = SigHash.add_int sig_hash (id :> int) in
+        id
       else
         let pmap = Context.find_props cx id in
-        let sig_hash = SigHash.add_props_map pmap sig_hash in
-        let reduced_property_maps =
-          Properties.Map.add id pmap reduced_property_maps in
-        let stable_id = self#fresh_stable_id in
-        stable_propmap_ids <- Properties.Map.add id stable_id stable_propmap_ids;
-        super#props cx { quotient with reduced_property_maps; sig_hash } id
+        let () = SigHash.add_props_map sig_hash pmap in
+        reduced_property_maps <- Properties.Map.add id pmap reduced_property_maps;
+        let pmap' = SMap.ident_map (self#prop cx pole) pmap in
+        reduced_property_maps <- Properties.Map.add id pmap' reduced_property_maps;
+        id
 
-    method! exports cx quotient id =
-      let { reduced_export_maps; sig_hash; _ } = quotient in
-      if (Exports.Map.mem id reduced_export_maps) then quotient
+    method call_prop cx pole id =
+      if (IMap.mem id reduced_call_props)
+      then
+        let () = SigHash.add_int sig_hash id in
+        id
+      else
+        let t = Context.find_call cx id in
+        reduced_call_props <- IMap.add id t reduced_call_props;
+        let t' = self#type_ cx pole t in
+        reduced_call_props <- IMap.add id t' reduced_call_props;
+        id
+
+    method exports cx pole id =
+      if (Exports.Map.mem id reduced_export_maps) then id
       else
         let tmap = Context.find_exports cx id in
-        let sig_hash = SigHash.add_exports_map tmap sig_hash in
-        let reduced_export_maps =
-          Exports.Map.add id tmap reduced_export_maps in
-        super#exports cx { quotient with reduced_export_maps; sig_hash } id
+        let map_pair (loc, t) = (loc, self#type_ cx pole t) in
+        reduced_export_maps <- Exports.Map.add id tmap reduced_export_maps;
+        let tmap' = SMap.ident_map map_pair tmap in
+        reduced_export_maps <- Exports.Map.add id tmap' reduced_export_maps;
+        SigHash.add_exports_map sig_hash tmap';
+        id
 
-    method! eval_id cx quotient id =
-      let { reduced_evaluated; sig_hash; _ } = quotient in
+    method eval_id cx pole id =
       if IMap.mem id reduced_evaluated
       then
         let stable_id = IMap.find_unsafe id stable_eval_ids in
-        let sig_hash = SigHash.add stable_id sig_hash in
-        { quotient with sig_hash }
+        SigHash.add_int sig_hash stable_id;
+        id
       else
         let stable_id = self#fresh_stable_id in
         stable_eval_ids <- IMap.add id stable_id stable_eval_ids;
         match IMap.get id (Context.evaluated cx) with
-        | None -> quotient
+        | None -> id
         | Some t ->
-          let t = match t with
-          | OpenT (r, id) -> lowers_of_tvar cx r id
-          | t -> t
-          in
-          let reduced_evaluated = IMap.add id t reduced_evaluated in
-          super#eval_id cx { quotient with reduced_evaluated } id
+          reduced_evaluated <- IMap.add id t reduced_evaluated;
+          let t' = self#type_ cx pole t in
+          reduced_evaluated <- IMap.add id t' reduced_evaluated;
+          id
 
-    method! fun_type cx quotient funtype =
-      let id = funtype.closure_t in
-      if id = 0 then super#fun_type cx quotient funtype
-      else
-        let { reduced_envs; _ } = quotient in
-        let closure = IMap.find_unsafe id (Context.envs cx) in
-        let reduced_envs = IMap.add id closure reduced_envs in
-        super#fun_type cx { quotient with reduced_envs } funtype
+    method! dict_type cx pole dicttype =
+      let dicttype' = super#dict_type cx pole dicttype in
+      SigHash.add_polarity sig_hash dicttype'.dict_polarity;
+      dicttype'
 
-    method! dict_type cx quotient dicttype =
-      let { sig_hash; _ } = quotient in
-      let sig_hash = SigHash.add dicttype.dict_polarity sig_hash in
-      super#dict_type cx { quotient with sig_hash } dicttype
-
-    method! type_ cx quotient t =
-      let quotient = { quotient with
-        sig_hash = SigHash.add (reason_of_t t) quotient.sig_hash
-      } in
+    method! type_ cx pole t =
+      SigHash.add_reason sig_hash (reason_of_t t);
       match t with
-      | OpenT _ -> super#type_ cx quotient t
+      | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
+      | OpenT _ -> super#type_ cx pole t
       | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
-        let { sig_hash; _ } = quotient in
+        let id = class_id in
+        SigHash.add_aloc sig_hash id;
+        super#type_ cx pole t
+      | OpaqueT (_, { opaque_id; _ }) ->
+        let id = opaque_id in
+        SigHash.add_aloc sig_hash id;
+        super#type_ cx pole t
+      | DefT (_, PolyT (_, _, _, poly_id)) ->
         let id =
-          if Context.mem_nominal_id cx class_id
-          then match IMap.get class_id stable_nominal_ids with
+          if Context.mem_nominal_id cx poly_id
+          then match IMap.get poly_id stable_poly_ids with
           | None ->
             let id = self#fresh_stable_id in
-            stable_nominal_ids <- IMap.add class_id id stable_nominal_ids;
+            stable_poly_ids <- IMap.add poly_id id stable_poly_ids;
             id
           | Some id -> id
-          else class_id in
-        let sig_hash = SigHash.add id sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+          else poly_id
+        in
+        SigHash.add_int sig_hash id;
+        super#type_ cx pole t
       | _ ->
-        let { sig_hash; _ } = quotient in
-        let sig_hash = SigHash.add_type t sig_hash in
-        super#type_ cx { quotient with sig_hash } t
+        let t' = super#type_ cx pole t in
+        SigHash.add_type sig_hash t';
+        t'
+
+    method! use_type cx pole use =
+      SigHash.add_reason sig_hash (reason_of_use_t use);
+      match use with
+      | UseT (u, t) ->
+          let t' = self#type_ cx Neutral t in
+          if t' == t then use
+          else UseT (u, t')
+      | _ ->
+        SigHash.add_use sig_hash use;
+        super#use_type cx pole use
+
+    method! choice_use_tool cx pole t =
+      match t with
+      | FullyResolveType id ->
+          ignore @@ self#type_graph cx pole ISet.empty id;
+          t
+      | _ -> super#choice_use_tool cx pole t
+
+    method private type_graph cx pole seen id =
+      let open Graph_explorer in
+      let seen' = ISet.add id seen in
+      if seen' == seen then (seen, id) else
+      let graph = Context.type_graph cx in
+      ignore @@ self#eval_id cx pole id;
+      let seen' = match IMap.get id graph.explored_nodes with
+      | None -> seen'
+      | Some {deps} ->
+        ISet.fold (fun id seen -> fst @@ self#type_graph cx pole seen id) deps seen'
+      in
+      let seen' =
+        match IMap.get id graph.unexplored_nodes with
+        | None -> seen'
+        | Some {rev_deps} ->
+          ISet.fold (fun id seen -> fst @@ self#type_graph cx pole seen id) rev_deps seen'
+      in
+      (seen', id)
+
+    method get_stable_tvar_ids = stable_tvar_ids
+    method get_stable_eval_ids = stable_eval_ids
+    method get_stable_poly_ids = stable_poly_ids
+    method get_reduced_module_map = reduced_module_map
+    method get_reduced_graph = reduced_graph
+    method get_reduced_property_maps = reduced_property_maps
+    method get_reduced_call_props = reduced_call_props
+    method get_reduced_export_maps = reduced_export_maps
+    method get_reduced_evaluated = reduced_evaluated
   end
 
   (* walk a context from a list of exports *)
   let reduce_context cx module_refs =
     let reducer = new context_optimizer in
-    List.fold_left (reducer#reduce cx) empty module_refs
+    Core_list.iter ~f:(reducer#reduce cx) module_refs;
+    reducer#sig_hash (), reducer
 
   (* reduce a context to a "signature context" *)
   let sig_context cx module_refs =
-    let quotient = reduce_context cx module_refs in
-    Context.set_module_map cx quotient.reduced_module_map;
-    Context.set_graph cx quotient.reduced_graph;
-    Context.set_property_maps cx quotient.reduced_property_maps;
-    Context.set_export_maps cx quotient.reduced_export_maps;
-    Context.set_envs cx quotient.reduced_envs;
-    Context.set_evaluated cx quotient.reduced_evaluated;
+    let sig_hash, reducer = reduce_context cx module_refs in
+    Context.set_module_map cx reducer#get_reduced_module_map;
+    Context.set_graph cx reducer#get_reduced_graph;
+    Context.set_property_maps cx reducer#get_reduced_property_maps;
+    Context.set_call_props cx reducer#get_reduced_call_props;
+    Context.set_export_maps cx reducer#get_reduced_export_maps;
+    Context.set_evaluated cx reducer#get_reduced_evaluated;
     Context.set_type_graph cx (
       Graph_explorer.new_graph
-        (IMap.fold (fun k _ -> ISet.add k) quotient.reduced_graph ISet.empty)
+        (IMap.fold (fun k _ -> ISet.add k) reducer#get_reduced_graph ISet.empty)
     );
-    quotient.sig_hash
+    sig_hash
 
 end

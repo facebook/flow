@@ -1,12 +1,9 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
-*)
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
 
 exception Key_not_found of (* message *) string * (* key *) string
 
@@ -16,37 +13,17 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let exe_name = Filename.basename Sys.executable_name
 
-(* See https://github.com/yarnpkg/yarn/issues/405. *)
-let can_emoji =
-  Sys.os_type <> "Win32" &&
-  Unix.isatty Unix.stdout &&
-  (try Sys.getenv "TERM" with Not_found -> "dumb") <> "dumb"
-
-(* JSON numbers must not end in a `.`, but string_of_float returns things like
-   `1.` instead of `1.0`, so we want to truncate the `.` *)
-(* TODO: ocaml's string_of_float in general differs from JavaScript's. once
-   we fix that (e.g. by pulling in double-conversion or dtoa), we can use that
-   when printing JSON. *)
-let string_of_float_trunc x =
-  let result = string_of_float x in
-  if String.get result (String.length result - 1) = '.' then
-    String.sub result 0 (String.length result - 1)
-  else
-    result
+module LocSet = Set.Make(Loc)
 
 module LocMap = MyMap.Make(Loc)
 
-(* alias stuff from `Loc` so that it can be used by doing `open Utils_js`
-   instead of `open Loc`, which pollutes too much. *)
-type filename = Loc.filename
-let string_of_filename = Loc.string_of_filename
+module ALocSet = Set.Make(ALoc)
 
-module FilenameSet = struct
-  include Set.Make(Loc.FilenameKey)
-  let of_list = List.fold_left (fun s f -> add f s) empty
-end
+module ALocMap = MyMap.Make(ALoc)
 
-module FilenameMap = MyMap.Make (Loc.FilenameKey)
+module FilenameSet = Set.Make(File_key)
+
+module FilenameMap = MyMap.Make (File_key)
 
 module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
   type t = Path.t
@@ -55,7 +32,7 @@ module PathMap : MyMap.S with type key = Path.t = MyMap.Make (struct
 end)
 
 let assert_false s =
-  let callstack = Printexc.(get_callstack 10 |> raw_backtrace_to_string) in
+  let callstack = Exception.get_current_callstack_string 10 in
   prerr_endline (spf "%s%s\n%s:\n%s%s%s"
     (* this clowny shit is to evade hg's conflict marker detection *)
     "<<<<" "<<<<" s callstack ">>>>" ">>>>"
@@ -75,48 +52,12 @@ let call_succeeds try_function function_input =
                    false
   | _ -> false
 
-(* quick exception format *)
-
-let fmt_exc exc = Printexc.((to_string exc) ^ "\n" ^ (get_backtrace ()))
-
-let fmt_file_exc file exc = file ^ ": " ^ (fmt_exc exc)
-
-let opt_map f = function
-  | None -> None
-  | Some x -> Some (f x)
-
-let opt_map_default f def = function
-  | None -> def
-  | Some x -> f x
-
-let opt_default def = function
-  | None -> def
-  | Some x -> x
-
-let rec zip lst1 lst2 = match lst1,lst2 with
-  | [], _ -> []
-  | _, [] -> []
-  | (x::xs), (y::ys) -> (x,y) :: zip xs ys
-
-let zipi xs ys =
-  zip xs ys |> List.mapi (fun i (x, y) -> (i,x,y))
-
 let map_pair f g (a,b) = (f a, g b)
 let map_fst f (a,b) = (f a, b)
 let map_snd g (a,b) = (a, g b)
-
-let range_with f a b =
-  if a > b then []
-  else
-    let rec loop j acc =
-      if a <= j then loop (j-1) (f j :: acc)
-      else acc
-    in
-    loop (b-1) []
-
-let range = range_with (fun x -> x)
-
-let repeat n a = range_with (fun _ -> a) 0 n
+let swap (a, b) = (b, a)
+let mk_tuple x y = (x, y)
+let mk_tuple_swapped x y = (y, x)
 
 let rec iter2opt f = function
   | x::xs, y::ys ->
@@ -129,6 +70,27 @@ let rec iter2opt f = function
     f None (Some y);
     iter2opt f ([], ys)
   | [], [] -> ()
+
+let rec toFixpoint f x =
+  let x' = f x in
+  if x = x' then x else toFixpoint f x'
+
+let uncurry f (x,y) = f x y
+let curry f x y = f (x, y)
+
+let ( %> ) f g x = g (f x)
+
+(**
+ * Given a list of lazy "option" expressions, evaluate each in the list
+ * sequentially until one produces a `Some` (and do not evaluate any remaining).
+ *)
+let lazy_seq (lst: 'a option Lazy.t list): 'a option =
+  List.fold_left (fun acc lazy_expr ->
+    match acc with
+    | None -> Lazy.force lazy_expr
+    | Some _ -> acc
+  ) None lst
+
 
 (**
  * Useful for various places where a user might have typoed a string and the
@@ -225,10 +187,25 @@ let extension_of_filename filename =
 
 (* ordinal of a number *)
 let ordinal = function
-  | 1 -> "1st"
-  | 2 -> "2nd"
-  | 3 -> "3rd"
-  | n -> spf "%dth" n
+  | 1 -> "first"
+  | 2 -> "second"
+  | 3 -> "third"
+  | 4 -> "fourth"
+  | 5 -> "fifth"
+  | 6 -> "sixth"
+  | 7 -> "seventh"
+  | 8 -> "eigth"
+  | 9 -> "ninth"
+  | n ->
+    let n = string_of_int n in
+    let th = String.get n ((String.length n) - 1) in
+    let th = match th with
+    | '1' -> "st"
+    | '2' -> "nd"
+    | '3' -> "rd"
+    | _ -> "th"
+    in
+    n ^ th
 
 
 (* Module implementing the recommended way to augment a map.
@@ -248,3 +225,79 @@ module Augmentable(M: MyMap.S) = struct
 end
 
 module AugmentableSMap = Augmentable(SMap)
+
+(* The problem with Core_result's >>= is that the function second argument cannot return
+ * an Lwt.t. This helper infix operator handles that case *)
+let (%>>=)
+  (result: ('ok, 'err) Core_result.t)
+  (f: 'ok -> ('a, 'err) Core_result.t Lwt.t)
+  : ('a, 'err) Core_result.t Lwt.t =
+  match result with
+  | Error e -> Lwt.return (Error e)
+  | Ok x -> f x
+
+let (%>>|)
+  (result: ('ok, 'err) Core_result.t)
+  (f: 'ok -> 'a Lwt.t)
+  : ('a, 'err) Core_result.t Lwt.t =
+  match result with
+  | Error e -> Lwt.return (Error e)
+  | Ok x ->
+    let%lwt new_x = f x in
+    Lwt.return (Ok new_x)
+
+let bind2 ~f x y = Core_result.bind x (fun x -> Core_result.bind y (f x))
+let map2 ~f x y = Core_result.bind x (fun x -> Core_result.map y ~f:(f x))
+
+let try_with_json f =
+  try%lwt f ()
+  with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn, None))
+
+let try_with f =
+  try%lwt f ()
+  with
+  | Lwt.Canceled as exn ->
+    let exn = Exception.wrap exn in
+    Exception.reraise exn
+  | exn ->
+    let exn = Exception.wrap exn in
+    Lwt.return (Error (Exception.to_string exn))
+
+let split_result = function
+| Ok (success, extra) -> Ok success, extra
+| Error (error, extra) -> Error error, extra
+
+let debug_print_current_stack_trace () =
+   Hh_logger.info "Current backtrace:\n%s" (Exception.get_current_callstack_string 200)
+
+(* Pass through a result; logging if it is an Error. Includes the provided string context, which is
+ * computed lazily under the assumption that the error case is the uncommon case *)
+let log_when_error (context: string Lazy.t) (result: ('a, string) result) : ('a, string) result =
+  begin match result with
+    | Ok _ -> ()
+    | Error msg ->
+        let lazy context = context in
+        Hh_logger.error "Error (%s): %s" context msg
+  end;
+  result
+
+(* Prints and then returns a value. Makes it easy to log an expression without pulling it out into a
+ * separate variable. e.g:
+ * `match some_complex_expression with ...`
+ * could become:
+ * `match some_complex_expression |> id_print "some info" printer with ...`
+ *)
+
+let id_print context f x =
+  Hh_logger.info "%s: %s" context (f x);
+  x
+
+let debug_string_of_result string_of_val = function
+  | Ok x -> Printf.sprintf "Ok (%s)" (string_of_val x)
+  | Error err -> Printf.sprintf "Error (%s)" err

@@ -1,26 +1,25 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
-(* Lint suppressions are handled iff lint_settings is Some. *)
+(* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_ast:
-  metadata: Context.metadata ->
-  filename: Loc.filename ->
-  lint_settings: LintSettings.t option ->
-  Ast.program ->
-  require_loc_map: Loc.t SMap.t ->
-  Context.t
-(* Lint suppressions are handled iff lint_settings is Some. *)
+  lint_severities: Severity.severity LintSettings.t ->
+  file_options: Files.options option ->
+  file_sig: File_sig.With_ALoc.t ->
+  Context.t ->
+  File_key.t ->
+  (Loc.t, Loc.t) Flow_ast.program ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.program
+(* Lint suppressions are handled iff lint_severities is Some. *)
 val infer_lib_file:
-  metadata: Context.metadata ->
   exclude_syms: SSet.t ->
-  lint_settings: LintSettings.t option ->
-  Utils_js.filename ->
-  Ast.program ->
-  Context.t * string list
+  lint_severities: Severity.severity LintSettings.t ->
+  file_options: Files.options option ->
+  file_sig: File_sig.With_ALoc.t ->
+  Context.t ->
+  (Loc.t, Loc.t) Flow_ast.program ->
+  string list

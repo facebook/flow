@@ -1,0 +1,46 @@
+Error ------------------------------------------------------------------------------------------------- libA/lib.js:5:16
+
+Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
+(`signature-verification-failure`)
+
+   5| export default foo();
+                     ^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------------- a.js:4:18
+
+Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
+(`signature-verification-failure`)
+
+   4| module.exports = foo();
+                       ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- dirA/a.js:4:16
+
+Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
+(`signature-verification-failure`)
+
+   4| export default foo(); // sig. verification error - file is whitelisted
+                     ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- dirA/b.js:4:16
+
+Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
+(`signature-verification-failure`)
+
+   4| export default foo(); // sig. verification error - dirA is whitelisted
+                     ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- parse-error.js:7:1
+
+Unexpected end of input
+
+   7|
+      
+
+
+
+Found 5 errors

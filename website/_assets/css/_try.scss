@@ -110,6 +110,14 @@ html.site-fullscreen .content {
     border-top: solid #eee 1px;
   }
 
+  li ul li,
+  li ul li + li {
+    padding: inherit;
+    padding-left: 20px;
+    margin: inherit;
+    border: none;
+  }
+
   .msgHighlight,
   .msgType {
     cursor: pointer;

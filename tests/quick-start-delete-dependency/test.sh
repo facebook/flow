@@ -1,14 +1,11 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "\nStop any already-running server.\n"
 assert_ok "$FLOW" stop .
 
 mkdir tmp
 
 printf "\nQuick start.\n"
-assert_ok "$FLOW" start --lazy .
+start_flow . --lazy
 
 printf "\nExpect no errors.\n"
 assert_ok "$FLOW" status --no-auto-start .

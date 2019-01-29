@@ -1,40 +1,83 @@
-(*
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+(**
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
+
+module Ast = Flow_ast
 
 open Token
 open Parser_env
-open Ast
+open Flow_ast
 module Error = Parse_error
 open Parser_common
 
 module type EXPRESSION = sig
-  val array_initializer: env -> Loc.t * Expression.Array.t
-  val assignment: env -> Expression.t
-  val conditional: env -> Expression.t
-  val identifier_or_reserved_keyword: env -> Identifier.t * (Loc.t * Parse_error.t) option
-  val is_assignable_lhs: Expression.t -> bool
-  val left_hand_side: env -> Expression.t
-  val number: env -> number_type -> float
-  val sequence: env -> Expression.t list -> Expression.t
+  val assignment: env -> (Loc.t, Loc.t) Expression.t
+  val assignment_cover: env -> pattern_cover
+  val conditional: env -> (Loc.t, Loc.t) Expression.t
+  val property_name_include_private: env -> Loc.t * Loc.t Identifier.t * bool
+  val is_assignable_lhs: (Loc.t, Loc.t) Expression.t -> bool
+  val left_hand_side: env -> (Loc.t, Loc.t) Expression.t
+  val number: env -> number_type -> string -> float
+  val sequence: env -> (Loc.t, Loc.t) Expression.t list -> (Loc.t, Loc.t) Expression.t
 end
 
 module Expression
   (Parse: PARSER)
   (Type: Type_parser.TYPE)
   (Declaration: Declaration_parser.DECLARATION)
+  (Pattern_cover: Pattern_cover.COVER)
 : EXPRESSION = struct
   type op_precedence = Left_assoc of int | Right_assoc of int
   let is_tighter a b =
     let a_prec = match a with Left_assoc x -> x | Right_assoc x -> x - 1 in
     let b_prec = match b with Left_assoc x -> x | Right_assoc x -> x in
     a_prec >= b_prec
+
+  let is_assignable_lhs = Expression.(function
+    | _, MetaProperty { MetaProperty.meta = (_, { Identifier.name= "new"; comments= _ }); property = (_, { Identifier.name= "target"; comments= _ }) }
+      -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+
+    | _, Array _
+    | _, Identifier _
+    | _, Member _
+    | _, MetaProperty _
+    | _, Object _
+      -> true
+
+    | _, ArrowFunction _
+    | _, Assignment _
+    | _, Binary _
+    | _, Call _
+    | _, Class _
+    | _, Comprehension _
+    | _, Conditional _
+    | _, Function _
+    | _, Generator _
+    | _, Import _
+    | _, JSXElement _
+    | _, JSXFragment _
+    | _, Literal _
+    | _, Logical _
+    | _, New _
+    | _, OptionalCall _
+    | _, OptionalMember _
+    | _, Sequence _
+    | _, Super
+    | _, TaggedTemplate _
+    | _, TemplateLiteral _
+    | _, This
+    | _, TypeCast _
+    | _, Unary _
+    | _, Update _
+    | _, Yield _
+      -> false
+  )
+
+  let as_expression = Pattern_cover.as_expression
+  let as_pattern = Pattern_cover.as_pattern
 
   (* AssignmentExpression :
    *   ConditionalExpression
@@ -45,32 +88,27 @@ module Expression
    *   Originally we were parsing this without backtracking, but
    *   ArrowFunctionExpression got too tricky. Oh well.
    *)
-  let rec assignment =
-    let assignment_but_not_arrow_function env =
-      let expr = conditional env in
-      (match assignment_op env with
+  let rec assignment_cover =
+    let assignment_but_not_arrow_function_cover env =
+      let expr_or_pattern = conditional_cover env in
+      match assignment_op env with
       | Some operator ->
-        if not (is_assignable_lhs expr)
-        then error_at env (fst expr, Error.InvalidLHSInAssignment);
-
-        (match expr with
-        | loc, Expression.Identifier (_, name)
-          when is_restricted name ->
-            strict_error_at env (loc, Error.StrictLHSAssignment)
-        | _ -> ());
-
-        let left = Parse.pattern_from_expr env expr in
+        let left = as_pattern env expr_or_pattern in
         let right = assignment env in
         let loc = Loc.btwn (fst left) (fst right) in
 
-        loc, Expression.(Assignment Assignment.({
+        Cover_expr (loc, Expression.(Assignment { Assignment.
           operator;
           left;
           right;
         }))
-      | _ -> expr)
+      | _ -> expr_or_pattern
 
-    in let error_callback _ _ = raise Try.Rollback
+    in let error_callback _ = function
+      (* Don't rollback on these errors. *)
+      | Error.StrictReservedWord -> ()
+      (* Everything else causes a rollback *)
+      | _ -> raise Try.Rollback
 
     (* So we may or may not be parsing the first part of an arrow function
      * (the part before the =>). We might end up parsing that whole thing or
@@ -80,7 +118,7 @@ module Expression
      * function *)
     in let try_assignment_but_not_arrow_function env =
       let env = env |> with_error_callback error_callback in
-      let ret = assignment_but_not_arrow_function env in
+      let ret = assignment_but_not_arrow_function_cover env in
       match Peek.token env with
       | T_ARROW -> (* x => 123 *)
         raise Try.Rollback
@@ -88,8 +126,8 @@ module Expression
         raise Try.Rollback
       (* async x => 123 -- and we've already parsed async as an identifier
        * expression *)
-      | _ when Peek.is_identifier env -> begin match snd ret with
-        | Expression.Identifier (_, "async")
+      | _ when Peek.is_identifier env -> begin match ret with
+        | Cover_expr (_, Expression.Identifier (_, { Identifier.name= "async"; comments= _ }))
             when not (Peek.is_line_terminator env) ->
           raise Try.Rollback
         | _ -> ret
@@ -97,7 +135,7 @@ module Expression
       | _ -> ret
     in fun env ->
       match Peek.token env, Peek.is_identifier env with
-      | T_YIELD, _ when (allow_yield env) -> yield env
+      | T_YIELD, _ when (allow_yield env) -> Cover_expr (yield env)
       | T_LPAREN, _
       | T_LESS_THAN, _
       | _, true ->
@@ -116,23 +154,36 @@ module Expression
                 (* Well shoot. It doesn't parse cleanly as a normal
                  * expression or as an arrow_function. Let's treat it as a
                  * normal assignment expression gone wrong *)
-                assignment_but_not_arrow_function env
+                assignment_but_not_arrow_function_cover env
           )
         )
-      | _ -> assignment_but_not_arrow_function env
+      | _ -> assignment_but_not_arrow_function_cover env
+
+  and assignment env =
+    as_expression env (assignment_cover env)
 
   and yield env = with_loc (fun env ->
+    if in_formal_parameters env then error env Error.YieldInFormalParameters;
     Expect.token env T_YIELD;
-    if not (allow_yield env)
-    then error env Error.IllegalYield;
-    let delegate = Expect.maybe env T_MULT in
-    let has_argument = not (
-      Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
-    ) in
-    let argument =
-      if delegate || has_argument
-      then Some (assignment env)
-      else None in
+    let argument, delegate =
+      if Peek.is_implicit_semicolon env then None, false
+      else
+        let delegate = Expect.maybe env T_MULT in
+        let has_argument = match Peek.token env with
+          | T_SEMICOLON
+          | T_RBRACKET
+          | T_RCURLY
+          | T_RPAREN
+          | T_COLON
+          | T_COMMA -> false
+          | _ -> true
+        in
+        let argument =
+          if delegate || has_argument
+          then Some (assignment env)
+          else None in
+        argument, delegate
+    in
     Expression.(Yield Yield.({
       argument;
       delegate;
@@ -140,6 +191,9 @@ module Expression
   ) env
 
   and is_lhs = Expression.(function
+    | _, MetaProperty { MetaProperty.meta = (_, { Identifier.name= "new"; comments= _ }); property = (_, { Identifier.name= "target"; comments= _ }) }
+      -> false (* #sec-static-semantics-static-semantics-isvalidsimpleassignmenttarget *)
+
     | _, Identifier _
     | _, Member _
     | _, MetaProperty _
@@ -157,10 +211,13 @@ module Expression
     | _, Generator _
     | _, Import _
     | _, JSXElement _
+    | _, JSXFragment _
     | _, Literal _
     | _, Logical _
     | _, New _
     | _, Object _
+    | _, OptionalCall _
+    | _, OptionalMember _
     | _, Sequence _
     | _, Super
     | _, TaggedTemplate _
@@ -172,41 +229,6 @@ module Expression
     | _, Yield _
       -> false
   )
-
-  and is_assignable_lhs = Expression.(function
-    | _, Array _
-    | _, Identifier _
-    | _, Member _
-    | _, MetaProperty _
-    | _, Object _
-      -> true
-
-    | _, ArrowFunction _
-    | _, Assignment _
-    | _, Binary _
-    | _, Call _
-    | _, Class _
-    | _, Comprehension _
-    | _, Conditional _
-    | _, Function _
-    | _, Generator _
-    | _, Import _
-    | _, JSXElement _
-    | _, Literal _
-    | _, Logical _
-    | _, New _
-    | _, Sequence _
-    | _, Super
-    | _, TaggedTemplate _
-    | _, TemplateLiteral _
-    | _, This
-    | _, TypeCast _
-    | _, Unary _
-    | _, Update _
-    | _, Yield _
-      -> false
-  )
-
 
   and assignment_op env =
     let op = Expression.Assignment.(match Peek.token env with
@@ -227,9 +249,9 @@ module Expression
     if op <> None then Eat.token env;
     op
 
-  and conditional env =
+  and conditional_cover env =
     let start_loc = Peek.loc env in
-    let expr = logical env in
+    let expr = logical_cover env in
     if Peek.token env = T_PLING
     then begin
       Expect.token env T_PLING;
@@ -239,41 +261,54 @@ module Expression
       Expect.token env T_COLON;
       let end_loc, alternate = with_loc assignment env in
       let loc = Loc.btwn start_loc end_loc in
-      loc, Expression.(Conditional Conditional.({
-        test = expr;
+      Cover_expr (loc, Expression.(Conditional { Conditional.
+        test = as_expression env expr;
         consequent;
         alternate;
       }))
     end else expr
 
-  and logical =
+  and conditional env = as_expression env (conditional_cover env)
+
+  and logical_cover =
     let open Expression in
-    let make_logical left right operator loc =
-      loc, Logical Logical.({operator; left; right;})
+    let make_logical env left right operator loc =
+      let left = as_expression env left in
+      let right = as_expression env right in
+      Cover_expr (loc, Logical {Logical.operator; left; right;})
     in let rec logical_and env left lloc =
       match Peek.token env with
       | T_AND ->
           Expect.token env T_AND;
-          let rloc, right = with_loc binary env in
+          let rloc, right = with_loc binary_cover env in
           let loc = Loc.btwn lloc rloc in
-          logical_and env (make_logical left right Logical.And loc) loc
+          logical_and env (make_logical env left right Logical.And loc) loc
       | _  -> lloc, left
     and logical_or env left lloc =
+      let options = parse_options env in
       match Peek.token env with
       | T_OR ->
           Expect.token env T_OR;
-          let rloc, right = with_loc binary env in
+          let rloc, right = with_loc binary_cover env in
           let rloc, right = logical_and env right rloc in
           let loc = Loc.btwn lloc rloc in
-          logical_or env (make_logical left right Logical.Or loc) loc
-      | _ -> lloc, left
-    in fun env ->
-      let loc, left = with_loc binary env in
-      let loc, left = logical_and env left loc in
-      let _, type_ = logical_or env left loc in
-      type_
+          logical_or env (make_logical env left right Logical.Or loc) loc
+      | T_PLING_PLING ->
+          if not options.esproposal_nullish_coalescing
+          then error env Parse_error.NullishCoalescingDisabled;
 
-  and binary =
+          Expect.token env T_PLING_PLING;
+          let rloc, right = with_loc binary_cover env in
+          let rloc, right = logical_and env right rloc in
+          let loc = Loc.btwn lloc rloc in
+          logical_or env (make_logical env left right Logical.NullishCoalesce loc) loc
+      | _ -> left
+    in fun env ->
+      let loc, left = with_loc binary_cover env in
+      let loc, left = logical_and env left loc in
+      logical_or env left loc
+
+  and binary_cover =
     let binary_op env =
       let ret = Expression.Binary.(match Peek.token env with
       (* Most BinaryExpression operators are left associative *)
@@ -327,27 +362,28 @@ module Expression
           collapse_stack (make_binary left right lop loc) loc rest
 
     in let rec helper env stack =
-      let start_loc = Peek.loc env in
-      let is_unary = peek_unary_op env <> None in
-      let right = unary (env |> with_no_in false) in
-      let end_loc = match last_loc env with
-      | Some loc -> loc
-      | None -> fst right
-      in
-      let right_loc = Loc.btwn start_loc end_loc in
+      let right_loc, (is_unary, right) = with_loc (fun env ->
+        let is_unary = peek_unary_op env <> None in
+        let right = unary_cover (env |> with_no_in false) in
+        is_unary, right
+      ) env in
       if Peek.token env = T_LESS_THAN
       then begin
         match right with
-        | _, Expression.JSXElement _ ->
+        | Cover_expr (_, Expression.JSXElement _) ->
             error env Error.AdjacentJSXElements
         | _ -> ()
       end;
-      match binary_op env with
-      | None ->
-        collapse_stack right right_loc stack
-      | Some (rop, rpri) ->
+      match stack, binary_op env with
+      | [], None ->
+        right
+      | _, None ->
+        let right = as_expression env right in
+        Cover_expr (collapse_stack right right_loc stack)
+      | _, Some (rop, rpri) ->
         if is_unary && rop = Expression.Binary.Exp then
           error_at env (right_loc, Error.InvalidLHSInExponentiation);
+        let right = as_expression env right in
         helper env (add_to_stack right (rop, rpri) right_loc stack)
 
     in fun env -> helper env []
@@ -370,7 +406,7 @@ module Expression
     | T_AWAIT when allow_await env -> Some Await
     | _ -> None
 
-  and unary env =
+  and unary_cover env =
     let begin_loc = Peek.loc env in
     let op = peek_unary_op env in
     match op with
@@ -380,18 +416,19 @@ module Expression
         | T_DECR -> Some Decrement
         | _ -> None) in
         match op with
-        | None -> postfix env
+        | None -> postfix_cover env
         | Some operator ->
             Eat.token env;
             let end_loc, argument = with_loc unary env in
             if not (is_lhs argument)
             then error_at env (fst argument, Error.InvalidLHSInAssignment);
             (match argument with
-            | _, Expression.Identifier (_, name)
+            | _, Expression.Identifier (_, { Identifier.name; comments= _ })
               when is_restricted name ->
                 strict_error env Error.StrictLHSPrefix
             | _ -> ());
-            Loc.btwn begin_loc end_loc, Expression.(Update Update.({
+            let loc = Loc.btwn begin_loc end_loc in
+            Cover_expr (loc, Expression.(Update { Update.
               operator;
               prefix = true;
               argument;
@@ -404,15 +441,21 @@ module Expression
       Expression.(match operator, argument with
       | Unary.Delete, (_, Identifier _) ->
           strict_error_at env (loc, Error.StrictDelete)
+      | Unary.Delete, (_, Member member) ->
+          begin match member.Ast.Expression.Member.property with
+          | Ast.Expression.Member.PropertyPrivateName _ ->
+              error_at env (loc, Error.PrivateDelete)
+          | _ -> () end
       | _ -> ());
-      loc, Expression.(Unary Unary.({
+      Cover_expr (loc, Expression.(Unary { Unary.
         operator;
-        prefix = true;
         argument;
       }))
 
-  and postfix env =
-    let argument = left_hand_side env in
+  and unary env = as_expression env (unary_cover env)
+
+  and postfix_cover env =
+    let argument = left_hand_side_cover env in
     (* No line terminator allowed before operator *)
     if Peek.is_line_terminator env
     then argument
@@ -423,72 +466,119 @@ module Expression
     match op with
     | None -> argument
     | Some operator ->
+        let argument = as_expression env argument in
         if not (is_lhs argument)
         then error_at env (fst argument, Error.InvalidLHSInAssignment);
         (match argument with
-        | _, Expression.Identifier (_, name)
+        | _, Expression.Identifier (_, { Identifier.name; comments= _ })
           when is_restricted name ->
             strict_error env Error.StrictLHSPostfix
         | _ -> ());
         let end_loc = Peek.loc env in
         Eat.token env;
-        Loc.btwn (fst argument) end_loc, Expression.(Update Update.({
+        let loc = Loc.btwn (fst argument) end_loc in
+        Cover_expr (loc, Expression.(Update { Update.
           operator;
           prefix = false;
           argument;
         }))
 
-  and left_hand_side env =
+  and left_hand_side_cover env =
     let start_loc = Peek.loc env in
     let allow_new = not (no_new env) in
     let env = with_no_new false env in
     let expr = match Peek.token env with
-    | T_NEW when allow_new -> new_expression env
-    | T_IMPORT -> import env start_loc
-    | _ when Peek.is_function env -> _function env
-    | _ -> primary env in
-    let expr = member env start_loc expr in
-    call env start_loc expr
+    | T_NEW when allow_new -> Cover_expr (new_expression env)
+    | T_IMPORT -> Cover_expr (import env)
+    | T_SUPER -> Cover_expr (super env)
+    | _ when Peek.is_function env -> Cover_expr (_function env)
+    | _ -> primary_cover env in
+    call_cover env start_loc expr
 
-  and import env start_loc =
+  and left_hand_side env = as_expression env (left_hand_side_cover env)
+
+  and super env =
+    let allowed, call_allowed = match allow_super env with
+    | No_super -> false, false
+    | Super_prop -> true, false
+    | Super_prop_or_call -> true, true
+    in
+    let loc = Peek.loc env in
+    Expect.token env T_SUPER;
+    let super = loc, Expression.Super in
+    match Peek.token env with
+    | T_PERIOD
+    | T_LBRACKET ->
+      let super =
+        if not allowed then begin
+          error_at env (loc, Parse_error.UnexpectedSuper);
+          loc, Expression.Identifier (Flow_ast_utils.ident_of_source(loc, "super"))
+        end else
+          super
+      in
+      call ~allow_optional_chain:false env loc super
+    | T_LPAREN ->
+      let super =
+        if not call_allowed then begin
+          error_at env (loc, Parse_error.UnexpectedSuperCall);
+          loc, Expression.Identifier (Flow_ast_utils.ident_of_source(loc, "super"))
+        end else
+          super
+      in
+      call ~allow_optional_chain:false env loc super
+    | _ ->
+      if not allowed
+        then error_at env (loc, Parse_error.UnexpectedSuper)
+        else error_unexpected env;
+      super
+
+  and import env = with_loc (fun env ->
     Expect.token env T_IMPORT;
     Expect.token env T_LPAREN;
     let arg = assignment (with_no_in false env) in
     Expect.token env T_RPAREN;
-    Expression.(Loc.btwn start_loc (fst arg), Import arg)
+    Expression.Import arg
+  ) env
 
-  and call env start_loc left =
-    match Peek.token env with
-    | T_LPAREN when not (no_call env) ->
-        let args_loc, arguments = arguments env in
-        let loc = Loc.btwn start_loc args_loc in
-        call env start_loc (loc, Expression.(Call Call.({
-          callee = left;
-          arguments;
-        })))
-    | T_LBRACKET ->
-        Expect.token env T_LBRACKET;
-        let expr = Parse.expression env in
-        let last_loc = Peek.loc env in
-        let loc = Loc.btwn start_loc last_loc in
-        Expect.token env T_RBRACKET;
-        call env start_loc (loc, Expression.(Member Member.({
-          _object  = left;
-          property = PropertyExpression expr;
-          computed = true;
-        })))
-    | T_PERIOD ->
-        Expect.token env T_PERIOD;
-        let id, _ = identifier_or_reserved_keyword env in
-        let loc = Loc.btwn start_loc (fst id) in
-        call env start_loc (loc, Expression.(Member Member.({
-          _object  = left;
-          property = PropertyIdentifier id;
-          computed = false;
-        })))
-    | T_TEMPLATE_PART part ->
-        call env start_loc (tagged_template env start_loc left part)
+  and call_cover ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left =
+    let left = member_cover ~allow_optional_chain ~in_optional_chain env start_loc left in
+    let optional = last_token env = Some T_PLING_PERIOD in
+    let arguments ?targs env =
+      let args_loc, arguments = arguments env in
+      let loc = Loc.btwn start_loc args_loc in
+      let call = { Expression.Call.
+        callee = as_expression env left;
+        targs;
+        arguments;
+      } in
+      let call = if optional || in_optional_chain
+        then Expression.(OptionalCall { OptionalCall.
+          call;
+          optional;
+        })
+        else Expression.Call call
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, call))
+    in
+    if no_call env then left
+    else match Peek.token env with
+    | T_LPAREN -> arguments env
+    | T_LESS_THAN when should_parse_types env ->
+        (* If we are parsing types, then f<T>(e) is a function call with a
+           type application. If we aren't, it's a nested binary expression. *)
+        let error_callback _ _ = raise Try.Rollback in
+        let env = env |> with_error_callback error_callback in
+        (* Parameterized call syntax is ambiguous, so we fall back to
+           standard parsing if it fails. *)
+        Try.or_else env ~fallback:left (fun env ->
+          let targs = type_parameter_instantiation env in
+          arguments ?targs env
+        )
     | _ -> left
+
+  and call ?(allow_optional_chain=true) env start_loc left =
+    as_expression env (call_cover ~allow_optional_chain env start_loc (Cover_expr left))
 
   and new_expression env =
     let start_loc = Peek.loc env in
@@ -496,40 +586,85 @@ module Expression
 
     if in_function env && Peek.token env = T_PERIOD then begin
       Expect.token env T_PERIOD;
-      let meta = start_loc, "new" in
-      if Peek.value env = "target" then
+      let meta = Flow_ast_utils.ident_of_source(start_loc, "new") in
+      match Peek.token env with
+      | T_IDENTIFIER { raw = "target"; _ } ->
         let property = Parse.identifier env in
         let end_loc = fst property in
         Loc.btwn start_loc end_loc, Expression.(MetaProperty MetaProperty.({
           meta;
           property;
         }))
-      else begin
+      | _ ->
         error_unexpected env;
         Eat.token env; (* skip unknown identifier *)
         start_loc, Expression.Identifier meta (* return `new` identifier *)
-      end
     end else
       let callee_loc = Peek.loc env in
       let expr = match Peek.token env with
       | T_NEW -> new_expression env
+      | T_SUPER -> super (env |> with_no_call true)
       | _ when Peek.is_function env -> _function env
       | _ -> primary env in
-      let callee = member (env |> with_no_call true) callee_loc expr in
+      let callee = member ~allow_optional_chain:false (env |> with_no_call true) callee_loc expr in
       (* You can do something like
        *   new raw`42`
        *)
       let callee = match Peek.token env with
       | T_TEMPLATE_PART part -> tagged_template env callee_loc callee part
       | _ -> callee in
-      let end_loc, arguments = match Peek.token env with
-      | T_LPAREN -> arguments env
+      let targs =
+        (* If we are parsing types, then new C<T>(e) is a constructor with a
+           type application. If we aren't, it's a nested binary expression. *)
+        if should_parse_types env
+        then
+          (* Parameterized call syntax is ambiguous, so we fall back to
+             standard parsing if it fails. *)
+          let error_callback _ _ = raise Try.Rollback in
+          let env = env |> with_error_callback error_callback in
+          Try.or_else env ~fallback:None type_parameter_instantiation
+        else
+          None
+      in
+      let end_loc, arguments = match Peek.token env, targs with
+      | T_LPAREN, _ -> arguments env
+      | _, Some (targs_loc, _) -> targs_loc, []
       | _ -> fst callee, [] in
 
       Loc.btwn start_loc end_loc, Expression.(New New.({
         callee;
+        targs;
         arguments;
       }))
+
+  and type_parameter_instantiation =
+    let args env acc =
+      let rec args_helper env acc =
+        match Peek.token env with
+      | T_EOF
+      | T_GREATER_THAN -> List.rev acc
+      | _ ->
+          let t = match Peek.token env with
+          | T_IDENTIFIER {value = "_"; _} ->
+              let loc = Peek.loc env in
+              Expect.identifier env "_";
+              Expression.TypeParameterInstantiation.Implicit loc
+          | _ -> Expression.TypeParameterInstantiation.Explicit(Type._type env)
+          in
+          let acc = t::acc in
+          if Peek.token env <> T_GREATER_THAN
+          then Expect.token env T_COMMA;
+          args_helper env acc
+      in args_helper env acc
+
+    in fun env -> if Peek.token env = T_LESS_THAN then
+      Some (with_loc (fun env ->
+        Expect.token env T_LESS_THAN;
+        let args = args env [] in
+        Expect.token env T_GREATER_THAN;
+        args
+      ) env)
+    else None
 
   and arguments =
     let argument env =
@@ -564,154 +699,224 @@ module Expression
       Expect.token env T_RPAREN;
       Loc.btwn start_loc end_loc, args
 
-  and member env start_loc left =
-    match Peek.token env with
-    | T_LBRACKET ->
-        Expect.token env T_LBRACKET;
-        let expr = Parse.expression (env |> with_no_call false) in
-        let last_loc = Peek.loc env in
-        Expect.token env T_RBRACKET;
-        let loc = Loc.btwn start_loc last_loc in
-        call env start_loc (loc, Expression.(Member Member.({
-          _object  = left;
-          property = PropertyExpression expr;
-          computed = true;
-        })))
-    | T_PERIOD ->
-        Expect.token env T_PERIOD;
-        let id, _ = identifier_or_reserved_keyword env in
-        let loc = Loc.btwn start_loc (fst id) in
-        call env start_loc (loc, Expression.(Member Member.({
-          _object  = left;
-          property = PropertyIdentifier id;
-          computed = false;
-        })))
-    | T_TEMPLATE_PART part ->
-        call env start_loc (tagged_template env start_loc left part)
-    | _ -> left
+  and member_cover =
+    let dynamic ?(allow_optional_chain=true) ?(in_optional_chain=false)
+                ?(optional=false) env start_loc left =
+      let expr = Parse.expression (env |> with_no_call false) in
+      let last_loc = Peek.loc env in
+      Expect.token env T_RBRACKET;
+      let loc = Loc.btwn start_loc last_loc in
+      let member = Expression.Member.({
+        _object  = as_expression env left;
+        property = PropertyExpression expr;
+      }) in
+      let member = if in_optional_chain
+        then Expression.(OptionalMember { OptionalMember.
+          member;
+          optional;
+        })
+        else Expression.Member member
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, member))
+    in
+    let static ?(allow_optional_chain=true) ?(in_optional_chain=false)
+               ?(optional=false) env start_loc left =
+      let id_loc, id, is_private = property_name_include_private env in
+      if is_private then add_used_private env (Flow_ast_utils.name_of_ident id) id_loc;
+      let loc = Loc.btwn start_loc id_loc in
+      let open Expression.Member in
+      let property = if is_private then PropertyPrivateName (id_loc, id)
+      else PropertyIdentifier id in
+      (* super.PrivateName is a syntax error *)
+      begin match left with
+      | Cover_expr (_, Ast.Expression.Super) when is_private ->
+          error_at env (loc, Error.SuperPrivate)
+      | _ -> () end;
+      let member = Expression.Member.({
+        _object = as_expression env left;
+        property;
+      }) in
+      let member = if in_optional_chain
+        then Expression.(OptionalMember { OptionalMember.
+          member;
+          optional;
+        })
+        else Expression.Member member
+      in
+      call_cover ~allow_optional_chain ~in_optional_chain env start_loc
+        (Cover_expr (loc, member))
+    in
+    fun ?(allow_optional_chain=true) ?(in_optional_chain=false) env start_loc left ->
+      let options = parse_options env in
+      match Peek.token env with
+      | T_PLING_PERIOD ->
+          if not options.esproposal_optional_chaining
+          then error env Parse_error.OptionalChainingDisabled;
 
-  and _function env =
-    let start_loc = Peek.loc env in
+          if not allow_optional_chain
+          then error env Parse_error.OptionalChainNew;
+
+          Expect.token env T_PLING_PERIOD;
+          begin match Peek.token env with
+          | T_TEMPLATE_PART _ ->
+            error env Parse_error.OptionalChainTemplate;
+            left
+          | T_LPAREN -> left
+          | T_LESS_THAN when should_parse_types env -> left
+          | T_LBRACKET ->
+            Expect.token env T_LBRACKET;
+            dynamic ~allow_optional_chain ~in_optional_chain:true
+                    ~optional:true env start_loc left
+          | _ ->
+            static ~allow_optional_chain ~in_optional_chain:true
+                   ~optional:true env start_loc left
+          end
+      | T_LBRACKET ->
+          Expect.token env T_LBRACKET;
+          dynamic ~allow_optional_chain ~in_optional_chain env start_loc left
+      | T_PERIOD ->
+          Expect.token env T_PERIOD;
+          static ~allow_optional_chain ~in_optional_chain env start_loc left
+      | T_TEMPLATE_PART part ->
+          if in_optional_chain
+          then error env Parse_error.OptionalChainTemplate;
+
+          let expr = tagged_template env start_loc (as_expression env left) part in
+          call_cover ~allow_optional_chain:false env start_loc (Cover_expr expr)
+      | _ -> left
+
+  and member ?(allow_optional_chain=true) env start_loc left =
+    as_expression env (member_cover ~allow_optional_chain env start_loc (Cover_expr left))
+
+  and _function env = with_loc (fun env ->
     let async = Declaration.async env in
-    Expect.token env T_FUNCTION;
-    let generator = Declaration.generator env in
-    let id, typeParameters =
-      if Peek.token env = T_LPAREN
-      then None, None
-      else begin
-        let id = match Peek.token env with
-          | T_LESS_THAN -> None
-          | _ -> Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
-        id, Type.type_parameter_declaration env
-      end in
-    let params = Declaration.function_params env in
-    let returnType, predicate = Type.annotation_and_predicate_opt env in
-    let end_loc, body, strict =
-      Declaration.function_body env ~async ~generator in
+    let sig_loc, (id, params, generator, predicate, return, tparams) = with_loc (fun env ->
+      Expect.token env T_FUNCTION;
+      let generator = Declaration.generator env in
+      let yield, await = match async, generator with
+      | true, true -> true, true (* proposal-async-iteration/#prod-AsyncGeneratorExpression *)
+      | true, false -> false, true (* #prod-AsyncFunctionExpression *)
+      | false, true -> true, false (* #prod-GeneratorExpression *)
+      | false, false -> false, false (* #prod-FunctionExpression *)
+      in
+      let id, tparams =
+        if Peek.token env = T_LPAREN
+        then None, None
+        else begin
+          let id = match Peek.token env with
+            | T_LESS_THAN -> None
+            | _ ->
+              let env = env |> with_allow_await await |> with_allow_yield yield in
+              Some (Parse.identifier ~restricted_error:Error.StrictFunctionName env) in
+          id, Type.type_parameter_declaration env
+        end in
+
+      (* #sec-function-definitions-static-semantics-early-errors *)
+      let env = env |> with_allow_super No_super in
+
+      let params = Declaration.function_params ~await ~yield env in
+      let return, predicate = Type.annotation_and_predicate_opt env in
+      (id, params, generator, predicate, return, tparams)
+    ) env in
+    let body, strict = Declaration.function_body env ~async ~generator in
     let simple = Declaration.is_simple_function_params params in
     Declaration.strict_post_check env ~strict ~simple id params;
-    let expression = Function.(
-      match body with
-      | BodyBlock _ -> false
-      | BodyExpression _ -> true) in
-    Loc.btwn start_loc end_loc, Expression.(Function Function.({
+    Expression.Function { Function.
       id;
       params;
       body;
       generator;
       async;
       predicate;
-      expression;
-      returnType;
-      typeParameters;
-    }))
+      return;
+      tparams;
+      sig_loc;
+    }
+  ) env
 
-  and number env number_type =
-    let value = Peek.value env in
-    let value = match number_type with
+  and number env kind raw =
+    let value = match kind with
     | LEGACY_OCTAL ->
       strict_error env Error.StrictOctalLiteral;
-      begin try Int64.to_float (Int64.of_string ("0o"^value))
-      with Failure _ -> failwith ("Invalid legacy octal "^value)
+      begin try Int64.to_float (Int64.of_string ("0o"^raw))
+      with Failure _ -> failwith ("Invalid legacy octal "^raw)
       end
     | BINARY
     | OCTAL ->
-      begin try Int64.to_float (Int64.of_string value)
-      with Failure _ -> failwith ("Invalid binary/octal "^value)
+      begin try Int64.to_float (Int64.of_string raw)
+      with Failure _ -> failwith ("Invalid binary/octal "^raw)
       end
     | NORMAL ->
-      begin try Lexer.FloatOfString.float_of_string value
+      begin try Lexer.FloatOfString.float_of_string raw
       with
       | _ when Sys.win32 ->
         error env Parse_error.WindowsFloatOfString;
         789.0
       | Failure _ ->
-        failwith ("Invalid number "^value)
+        failwith ("Invalid number "^raw)
       end
     in
-    Expect.token env (T_NUMBER number_type);
+    Expect.token env (T_NUMBER { kind; raw });
     value
 
-  and primary env =
+  and primary_cover env =
     let loc = Peek.loc env in
     match Peek.token env with
     | T_THIS ->
         Expect.token env T_THIS;
-        loc, Expression.This
-    | T_NUMBER number_type ->
-        let raw = Peek.value env in
-        let value = Literal.Number (number env number_type) in
-        loc, Expression.(Literal { Literal.value; raw; })
+        Cover_expr (loc, Expression.This)
+    | T_NUMBER { kind; raw } ->
+        let value = Literal.Number (number env kind raw) in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         let value = Literal.String value in
-        loc, Expression.(Literal { Literal.value; raw; })
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | (T_TRUE | T_FALSE) as token ->
-        let raw = Peek.value env in
         Expect.token env token;
-        let value = (Literal.Boolean (token = T_TRUE)) in
-        loc, Expression.(Literal { Literal.value; raw; })
+        let truthy = token = T_TRUE in
+        let raw = if truthy then "true" else "false" in
+        let value = Literal.Boolean truthy in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_NULL ->
-        let raw = Peek.value env in
         Expect.token env T_NULL;
+        let raw = "null" in
         let value = Literal.Null in
-        loc, Expression.(Literal { Literal.value; raw; })
-    | T_LPAREN -> group env
-    | T_LCURLY -> object_initializer env
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
+    | T_LPAREN -> Cover_expr (group env)
+    | T_LCURLY ->
+        let loc, obj, errs = Parse.object_initializer env in
+        Cover_patt ((loc, Expression.Object obj), errs)
     | T_LBRACKET ->
-        let loc, arr = array_initializer env in
-        loc, Expression.Array arr
+        let loc, arr, errs = array_initializer env in
+        Cover_patt ((loc, Expression.Array arr), errs)
     | T_DIV
-    | T_DIV_ASSIGN -> regexp env
+    | T_DIV_ASSIGN -> Cover_expr (regexp env)
     | T_LESS_THAN ->
-        let loc, element = Parse.jsx_element env in
-        loc, Expression.JSXElement element
+        let loc, expression = match Parse.jsx_element_or_fragment env with
+            | (loc, `Element e) -> (loc, Expression.JSXElement e)
+            | (loc, `Fragment f) -> (loc, Expression.JSXFragment f) in
+        Cover_expr (loc, expression)
     | T_TEMPLATE_PART part ->
         let loc, template = template_literal env part in
-        loc, Expression.(TemplateLiteral template)
-    | T_CLASS -> Parse.class_expression env
-    | T_SUPER ->
-        let loc = Peek.loc env in
-        Expect.token env T_SUPER;
-        loc, Expression.Super
+        Cover_expr (loc, Expression.TemplateLiteral template)
+    | T_CLASS -> Cover_expr (Parse.class_expression env)
     | _ when Peek.is_identifier env ->
         let id = Parse.identifier env in
-        fst id, Expression.Identifier id
+        Cover_expr (fst id, Expression.Identifier id)
     | t ->
         error_unexpected env;
         (* Let's get rid of the bad token *)
-        if t = T_ERROR
-        then Eat.token env;
+        begin match t with T_ERROR _ -> Eat.token env | _ -> () end;
         (* Really no idea how to recover from this. I suppose a null
          * expression is as good as anything *)
         let value = Literal.Null in
         let raw = "null" in
-        loc, Expression.(Literal { Literal.value; raw; })
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
 
-  and object_initializer env =
-    let loc, obj = Parse.object_initializer env in
-    loc, Expression.Object obj
+  and primary env = as_expression env (primary_cover env)
 
   and template_literal =
     let rec template_parts env quasis expressions =
@@ -772,62 +977,83 @@ module Expression
     let ret = (match Peek.token env with
     | T_COMMA -> sequence env [expression]
     | T_COLON ->
-        let typeAnnotation = Type.annotation env in
-        Expression.(Loc.btwn (fst expression) (fst typeAnnotation),
+        let annot = Type.annotation env in
+        Expression.(Loc.btwn (fst expression) (fst annot),
           TypeCast TypeCast.({
             expression;
-            typeAnnotation;
+            annot;
           }))
     | _ -> expression) in
     Expect.token env T_RPAREN;
     ret
 
   and array_initializer =
-    let rec elements env acc =
+    let rec elements env (acc, errs) =
       match Peek.token env with
       | T_EOF
-      | T_RBRACKET -> List.rev acc
+      | T_RBRACKET -> List.rev acc, Pattern_cover.rev_errors errs
       | T_COMMA ->
           Expect.token env T_COMMA;
-          elements env (None::acc)
+          elements env (None::acc, errs)
       | T_ELLIPSIS ->
-          let start_loc = Peek.loc env in
-          Expect.token env T_ELLIPSIS;
-          let argument = assignment env in
-          let loc = Loc.btwn start_loc (fst argument) in
+          let loc, (argument, new_errs) = with_loc (fun env ->
+            Expect.token env T_ELLIPSIS;
+            match assignment_cover env with
+            | Cover_expr argument -> argument, Pattern_cover.empty_errors
+            | Cover_patt (argument, new_errs) -> argument, new_errs
+          ) env in
           let elem = Expression.(Spread (loc, SpreadElement.({
             argument;
           }))) in
-          if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-          elements env ((Some elem)::acc)
+          let is_last = Peek.token env = T_RBRACKET in
+
+          (* if this array is interpreted as a pattern, the spread becomes an AssignmentRestElement
+             which must be the last element. We can easily error about additional elements since
+             they will be in the element list, but a trailing elision, like `[...x,]`, is not part
+             of the AST. so, keep track of the error so we can raise it if this is a pattern. *)
+          let new_errs =
+            if not is_last && Peek.ith_token ~i:1 env = T_RBRACKET then
+              let if_patt = (loc, Parse_error.ElementAfterRestElement)::new_errs.if_patt in
+              { new_errs with if_patt }
+            else new_errs
+          in
+
+          if not is_last then Expect.token env T_COMMA;
+          let acc = Some elem :: acc in
+          let errs = Pattern_cover.rev_append_errors new_errs errs in
+          elements env (acc, errs)
       | _ ->
-          let elem = Expression.Expression (assignment env) in
+          let elem, new_errs = match assignment_cover env with
+            | Cover_expr elem -> elem, Pattern_cover.empty_errors
+            | Cover_patt (elem, new_errs) -> elem, new_errs
+          in
           if Peek.token env <> T_RBRACKET then Expect.token env T_COMMA;
-          elements env ((Some elem)::acc)
+          let acc = Some (Expression.Expression elem) :: acc in
+          let errs = Pattern_cover.rev_append_errors new_errs errs in
+          elements env (acc, errs)
 
     in fun env ->
-      let start_loc = Peek.loc env in
-      Expect.token env T_LBRACKET;
-      let elements = elements env [] in
-      let end_loc = Peek.loc env in
-      Expect.token env T_RBRACKET;
-      Loc.btwn start_loc end_loc, Expression.Array.({
-        elements;
-      })
+      let loc, (elements, errs) = with_loc (fun env ->
+        Expect.token env T_LBRACKET;
+        let res = elements env ([], Pattern_cover.empty_errors) in
+        Expect.token env T_RBRACKET;
+        res
+      ) env in
+      loc, { Expression.Array.elements; }, errs
 
   and regexp env =
     Eat.push_lex_mode env Lex_mode.REGEXP;
     let loc = Peek.loc env in
     let raw, pattern, raw_flags = match Peek.token env with
       | T_REGEXP (_, pattern, flags) ->
-          let raw = Peek.value env in
           Eat.token env;
+          let raw = "/" ^ pattern ^ "/" ^ flags in
           raw, pattern, flags
       | _ -> assert false in
     Eat.pop_lex_mode env;
     let filtered_flags = Buffer.create (String.length raw_flags) in
     String.iter (function
-      | 'g' | 'i' | 'm' | 'u' | 'y' as c -> Buffer.add_char filtered_flags c
+      | 'g' | 'i' | 'm' | 's' | 'u' | 'y' as c -> Buffer.add_char filtered_flags c
       | _ -> ()) raw_flags;
     let flags = Buffer.contents filtered_flags in
     if flags <> raw_flags
@@ -840,10 +1066,24 @@ module Expression
     let error_callback _ = Error.(function
       (* Don't rollback on these errors. *)
       | StrictParamName
+      | StrictReservedWord
       | ParameterAfterRestParameter
-      | NewlineBeforeArrow -> ()
+      | NewlineBeforeArrow
+      | YieldInFormalParameters -> ()
       (* Everything else causes a rollback *)
       | _ -> raise Try.Rollback) in
+
+    let concise_function_body env ~async =
+      (* arrow functions can't be generators *)
+      let env = enter_function env ~async ~generator:false in
+      match Peek.token env with
+      | T_LCURLY ->
+          let loc, body, strict = Parse.function_block_body env in
+          Function.BodyBlock (loc, body), strict
+      | _ ->
+          let expr = Parse.assignment env in
+          Function.BodyExpression expr, in_strict_mode env
+    in
 
     fun env ->
       let env = env |> with_error_callback error_callback in
@@ -851,30 +1091,41 @@ module Expression
       let start_loc = Peek.loc env in
       (* a T_ASYNC could either be a parameter name or it could be indicating
        * that it's an async function *)
-      let async = Peek.token ~i:1 env <> T_ARROW && Declaration.async env in
-      let typeParameters = Type.type_parameter_declaration env in
-      let params, returnType, predicate =
+      let async = Peek.ith_token ~i:1 env <> T_ARROW && Declaration.async env in
+      let sig_loc, (tparams, params, return, predicate) = with_loc (fun env ->
+        let tparams = Type.type_parameter_declaration env in
         (* Disallow all fancy features for identifier => body *)
-        if Peek.is_identifier env && typeParameters = None
+        if Peek.is_identifier env && tparams = None
         then
-          let loc, name =
+          let (loc, _) as name =
             Parse.identifier ~restricted_error:Error.StrictParamName env in
-          let param = loc, Pattern.Identifier {
-            Pattern.Identifier.name = loc, name;
-                               typeAnnotation=None;
-                               optional=false;
+          let param = loc, { Ast.Function.Param.
+            argument = loc, Pattern.Identifier { Pattern.Identifier.
+              name;
+              annot = Ast.Type.Missing (Peek.loc_skip_lookahead env);
+              optional = false;
+            };
+            default = None;
           } in
-          ([param], None), None, None
+          tparams,
+          (loc, { Ast.Function.Params.params = [param]; rest = None }),
+          Ast.Type.Missing Loc.({ loc with start = loc._end }),
+          None
         else
-          let params = Declaration.function_params env in
+          let params =
+            let yield = allow_yield env in
+            let await = allow_await env in
+            Declaration.function_params ~await ~yield env
+          in
           (* There's an ambiguity if you use a function type as the return
            * type for an arrow function. So we disallow anonymous function
            * types in arrow function return types unless the function type is
            * enclosed in parens *)
-          let returnType, predicate = env
+          let return, predicate = env
             |> with_no_anon_function_type true
             |> Type.annotation_and_predicate_opt in
-          params, returnType, predicate in
+          tparams, params, return, predicate
+      ) env in
 
       (* It's hard to tell if an invalid expression was intended to be an
        * arrow function before we see the =>. If there are no params, that
@@ -883,8 +1134,8 @@ module Expression
        * param or an empty param list then we can disable the rollback and
        * instead generate errors as if we were parsing an arrow function *)
       let env = match params with
-        | _, Some _
-        | [], _ -> without_error_callback env
+        | _, { Ast.Function.Params.rest = Some _; _ }
+        | _, { Ast.Function.Params.params = []; _ } -> without_error_callback env
         | _ -> env
       in
 
@@ -895,27 +1146,20 @@ module Expression
       (* Now we know for sure this is an arrow function *)
       let env = without_error_callback env in
 
-      let end_loc, (body, strict) = with_loc
-        (Declaration.concise_function_body ~async ~generator:false)
-        env
-      in
+      let end_loc, (body, strict) = with_loc (concise_function_body ~async) env in
       let simple = Declaration.is_simple_function_params params in
       Declaration.strict_post_check env ~strict ~simple None params;
-      let expression = Function.(
-        match body with
-        | BodyBlock _ -> false
-        | BodyExpression _ -> true) in
       let loc = Loc.btwn start_loc end_loc in
-      loc, Expression.(ArrowFunction Function.({
+      Cover_expr (loc, Expression.(ArrowFunction { Function.
         id = None;
         params;
         body;
         async;
         generator = false; (* arrow functions cannot be generators *)
         predicate;
-        expression;
-        returnType;
-        typeParameters;
+        return;
+        tparams;
+        sig_loc;
       }))
 
   and sequence env acc =
@@ -932,82 +1176,10 @@ module Expression
         expressions;
       }))
 
-  (* You can do things like
-   * var x = { if : 4 }
-   * x.if
-   *)
-  and identifier_or_reserved_keyword env =
-    let lex_token = Peek.token env in
-    let lex_value = Peek.value env in
-    let lex_loc = Peek.loc env in
-    match lex_token with
-    (* Anything that is a special token in Flow but not in the ES6 spec
-       should be here. *)
-    | T_ASYNC
-    | T_DECLARE
-    | T_IDENTIFIER
-    | T_OF
-    | T_TYPE
-    | T_OPAQUE
-      -> Parse.identifier env, None
-    | _ ->
-      let err = match lex_token with
-      | T_FUNCTION
-      | T_IF
-      | T_IN
-      | T_INSTANCEOF
-      | T_RETURN
-      | T_SWITCH
-      | T_THIS
-      | T_THROW
-      | T_TRY
-      | T_VAR
-      | T_WHILE
-      | T_WITH
-      | T_CONST
-      | T_LET
-      | T_NULL
-      | T_FALSE
-      | T_TRUE
-      | T_BREAK
-      | T_CASE
-      | T_CATCH
-      | T_CONTINUE
-      | T_DEFAULT
-      | T_DO
-      | T_FINALLY
-      | T_FOR
-      | T_CLASS
-      | T_EXTENDS
-      | T_STATIC
-      | T_ELSE
-      | T_NEW
-      | T_DELETE
-      | T_TYPEOF
-      | T_VOID
-      | T_ENUM
-      | T_EXPORT
-      | T_IMPORT
-      | T_SUPER
-      | T_IMPLEMENTS
-      | T_INTERFACE
-      | T_PACKAGE
-      | T_PRIVATE
-      | T_PROTECTED
-      | T_PUBLIC
-      | T_YIELD
-      | T_ANY_TYPE
-      | T_BOOLEAN_TYPE
-      | T_NUMBER_TYPE
-      | T_STRING_TYPE
-      | T_VOID_TYPE
-      | T_AWAIT
-      | T_DEBUGGER ->
-          Some (lex_loc, get_unexpected_error (lex_token, lex_value))
-      | _ ->
-          error_unexpected env;
-          None
-      in
-      Eat.token env;
-      (lex_loc, lex_value), err
+  and property_name_include_private env =
+    let start_loc = Peek.loc env in
+    let is_private = Expect.maybe env T_POUND in
+    let (id_loc, _) as id = identifier_name env in
+    let loc = Loc.btwn start_loc id_loc in
+    loc, id, is_private
 end

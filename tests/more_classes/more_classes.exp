@@ -1,44 +1,128 @@
-Error: Bar.js:15
- 15:     new Qux().w = "?";
-         ^^^^^^^^^^^ assignment of property `w`
- 15:     new Qux().w = "?";
-                       ^^^ string. This type is incompatible with
- 15:     new Qux().w = "?";
-         ^^^^^^^^^^^ number
+Error ----------------------------------------------------------------------------------------------------- Bar.js:15:19
 
-Error: Foo.js:10
- 10:     this.x = x;
-              ^ property `x`. Property cannot be assigned on possibly undefined value
- 10:     this.x = x;
-         ^^^^ uninitialized this (expected super constructor call)
+Cannot assign `"?"` to `new Qux().w` because string [1] is incompatible with number [2].
 
-Error: Foo.js:13
- 13:   foo(y:string,z):number {
-                    ^ parameter `z`. Missing annotation
+   Bar.js:15:19
+   15|     new Qux().w = "?";
+                         ^^^ [1]
 
-Error: Foo.js:16
- 16:     var v = new Bar(y);
-                         ^ string. This type is incompatible with the expected param type of
-  9:   constructor(y:number) {
-                     ^^^^^^ number. See: Bar.js:9
+References:
+   Qux.js:5:5
+    5|   w:number;
+           ^^^^^^ [2]
 
-Error: Foo.js:18
- 18:     return v.bar(z,u);
-                ^^^^^^^^^^ string. This type is incompatible with the expected return type of
- 13:   foo(y:string,z):number {
-                       ^^^^^^ number
 
-Error: Foo.js:18
- 18:     return v.bar(z,u);
-                        ^ number. This type is incompatible with the expected param type of
- 14:   bar(z:string,u:string):string {
-                      ^^^^^^ string. See: Bar.js:14
+Error ------------------------------------------------------------------------------------------------------- Foo.js:7:1
 
-Error: Qux.js:9
-  9:   fooqux(x:number) { }
-                ^^^^^^ number. This type is incompatible with the expected param type of
- 21:   fooqux(x:string) {
-                ^^^^^^ string. See: Foo.js:21
+Cannot extend `Qux` [1] with `Foo` because string [2] is incompatible with number [3] in the first argument of property
+`fooqux`.
+
+   Foo.js:7:1
+       v----------------------
+    7| class Foo extends Qux {
+    8|   x:string;
+    9|   constructor(x:string) {
+   10|     this.x = x;
+   11|   }
+   12|
+   13|   foo(y:string,z):number {
+   14|     this.x = y;
+   15|     var u = new Foo("...").qux();
+   16|     var v = new Bar(y);
+   17|     v.self = v;
+   18|     return v.bar(z,u);
+   19|   }
+   20|
+   21|   fooqux(x:string) {
+   22|     this.x;
+   23|   }
+   24| }
+       ^
+
+References:
+   Foo.js:7:19
+    7| class Foo extends Qux {
+                         ^^^ [1]
+   Foo.js:21:12
+   21|   fooqux(x:string) {
+                  ^^^^^^ [2]
+   Qux.js:9:12
+    9|   fooqux(x:number) { }
+                  ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ Foo.js:10:5
+
+Must call `super` before accessing this [1] in a derived constructor.
+
+   Foo.js:10:5
+   10|     this.x = x;
+           ^^^^
+
+References:
+   Foo.js:7:7
+    7| class Foo extends Qux {
+             ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- Foo.js:13:16
+
+Missing type annotation for `z`.
+
+   13|   foo(y:string,z):number {
+                      ^
+
+
+Error ----------------------------------------------------------------------------------------------------- Foo.js:16:21
+
+Cannot call `Bar` with `y` bound to `y` because string [1] is incompatible with number [2].
+
+   Foo.js:16:21
+   16|     var v = new Bar(y);
+                           ^
+
+References:
+   Foo.js:13:9
+   13|   foo(y:string,z):number {
+               ^^^^^^ [1]
+   Bar.js:9:17
+    9|   constructor(y:number) {
+                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- Foo.js:18:12
+
+Cannot return `v.bar(...)` because string [1] is incompatible with number [2].
+
+   Foo.js:18:12
+   18|     return v.bar(z,u);
+                  ^^^^^^^^^^
+
+References:
+   Bar.js:14:26
+   14|   bar(z:string,u:string):string {
+                                ^^^^^^ [1]
+   Foo.js:13:19
+   13|   foo(y:string,z):number {
+                         ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- Foo.js:18:20
+
+Cannot call `v.bar` with `u` bound to `u` because number [1] is incompatible with string [2].
+
+   Foo.js:18:20
+   18|     return v.bar(z,u);
+                          ^
+
+References:
+   Qux.js:5:5
+    5|   w:number;
+           ^^^^^^ [1]
+   Bar.js:14:18
+   14|   bar(z:string,u:string):string {
+                        ^^^^^^ [2]
+
 
 
 Found 7 errors

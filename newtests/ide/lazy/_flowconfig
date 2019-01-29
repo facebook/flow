@@ -1,0 +1,12 @@
+[ignore]
+<PROJECT_ROOT>/ignored\.js
+
+[include]
+
+[libs]
+
+[lints]
+
+[options]
+all=true
+no_flowlib=true

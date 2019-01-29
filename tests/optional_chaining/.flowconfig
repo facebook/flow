@@ -1,0 +1,5 @@
+[options]
+esproposal.optional_chaining=enable
+
+[lints]
+unnecessary-optional-chain=error

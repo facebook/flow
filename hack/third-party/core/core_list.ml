@@ -191,7 +191,7 @@ let iter t ~f = List.iter t ~f
 (** For the container interface. *)
 let fold t ~init ~f = List.fold_left t ~f ~init
 let fold_left = fold
-let to_array = Caml.Array.of_list
+let to_array = Hack_caml.Array.of_list
 let to_list t = t
 
 (** Tail recursive versions of standard [List] module *)
@@ -315,7 +315,7 @@ let mapi l ~f = List.rev (rev_mapi l ~f)
 
 
 let iteri l ~f =
-  ignore (fold l ~init:0 ~f:(fun i x -> f i x; i + 1));
+  ignore (fold l ~init:0 ~f:(fun i x -> let () = f i x in i + 1))
 ;;
 
 let foldi t ~f ~init =
@@ -486,7 +486,8 @@ let rev_filter_map l ~f =
   loop l []
 ;;
 
-let filter_map l ~f = List.rev (rev_filter_map l ~f)
+let filter_map (l : 'a list) ~(f : 'a -> 'b option): 'b list =
+  List.rev (rev_filter_map l ~f)
 
 let rev_filter_mapi l ~f =
   let rec loop i l accum =

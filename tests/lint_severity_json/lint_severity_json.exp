@@ -1,28 +1,30 @@
 {
+  "jsonVersion":"1",
   "errors":[
     {
+      "kind":"lint",
+      "level":"error",
+      "suppressions":[],
       "extra":[
         {
           "message":[
             {
-              "context":"var x: ?number = 0;",
-              "descr":"Potentially null/undefined value.",
+              "context":null,
+              "descr":"References:",
               "type":"Blame",
-              "loc":{
-                "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":5,"column":8,"offset":183},
-                "end":{"line":5,"column":14,"offset":190}
-              },
-              "path":"test.js",
-              "line":5,
-              "endline":5,
-              "start":8,
-              "end":14
-            },
+              "path":"",
+              "line":0,
+              "endline":0,
+              "start":1,
+              "end":0
+            }
+          ]
+        },
+        {
+          "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"Potentially 0 value.",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -37,15 +39,32 @@
               "end":14
             }
           ]
+        },
+        {
+          "message":[
+            {
+              "context":"var x: ?number = 0;",
+              "descr":"[2]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":5,"column":8,"offset":183},
+                "end":{"line":5,"column":14,"offset":190}
+              },
+              "path":"test.js",
+              "line":5,
+              "endline":5,
+              "start":8,
+              "end":14
+            }
+          ]
         }
       ],
-      "kind":"lint",
-      "level":"error",
-      "suppressions":[],
       "message":[
         {
           "context":"if (x) {} //appears as an error",
-          "descr":"sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -62,28 +81,29 @@
       ]
     },
     {
+      "kind":"lint",
+      "level":"warning",
+      "suppressions":[],
       "extra":[
         {
           "message":[
             {
-              "context":"var x: ?number = 0;",
-              "descr":"Potentially null/undefined value.",
+              "context":null,
+              "descr":"References:",
               "type":"Blame",
-              "loc":{
-                "source":"test.js",
-                "type":"SourceFile",
-                "start":{"line":5,"column":8,"offset":183},
-                "end":{"line":5,"column":14,"offset":190}
-              },
-              "path":"test.js",
-              "line":5,
-              "endline":5,
-              "start":8,
-              "end":14
-            },
+              "path":"",
+              "line":0,
+              "endline":0,
+              "start":1,
+              "end":0
+            }
+          ]
+        },
+        {
+          "message":[
             {
               "context":"var x: ?number = 0;",
-              "descr":"Potentially 0 value.",
+              "descr":"[1]",
               "type":"Blame",
               "loc":{
                 "source":"test.js",
@@ -98,15 +118,32 @@
               "end":14
             }
           ]
+        },
+        {
+          "message":[
+            {
+              "context":"var x: ?number = 0;",
+              "descr":"[2]",
+              "type":"Blame",
+              "loc":{
+                "source":"test.js",
+                "type":"SourceFile",
+                "start":{"line":5,"column":8,"offset":183},
+                "end":{"line":5,"column":14,"offset":190}
+              },
+              "path":"test.js",
+              "line":5,
+              "endline":5,
+              "start":8,
+              "end":14
+            }
+          ]
         }
       ],
-      "kind":"lint",
-      "level":"warning",
-      "suppressions":[],
       "message":[
         {
           "context":"if (x) {} //appears as a warning",
-          "descr":"sketchy-null-number: Sketchy null check on number value. Perhaps you meant to check for null instead of for existence?",
+          "descr":"Sketchy null check on number [1] which is potentially 0. Perhaps you meant to check for null or undefined [2]? (`sketchy-null-number`)",
           "type":"Blame",
           "loc":{
             "source":"test.js",

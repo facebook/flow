@@ -1,4 +1,4 @@
-// flow-typed signature: 4b52bf1d4cb454637f1d7a9d40766b9f
+// flow-typed signature: d3a9153742c3864b61ec9b80d605a1e3
 // flow-typed version: <<STUB>>/jscodeshift_vcalebmer/jscodeshift#patch-1/flow_v0.50.0
 
 /**
@@ -62,7 +62,23 @@ declare module 'jscodeshift/sample/reverse-identifiers' {
   declare module.exports: any;
 }
 
+declare module 'jscodeshift/src/Collection' {
+  declare module.exports: any;
+}
+
+declare module 'jscodeshift/src/Runner' {
+  declare module.exports: any;
+}
+
+declare module 'jscodeshift/src/Worker' {
+  declare module.exports: any;
+}
+
 declare module 'jscodeshift/src/__tests__/Collection-test' {
+  declare module.exports: any;
+}
+
+declare module 'jscodeshift/src/__tests__/Worker-test' {
   declare module.exports: any;
 }
 
@@ -78,11 +94,15 @@ declare module 'jscodeshift/src/__tests__/template-test' {
   declare module.exports: any;
 }
 
-declare module 'jscodeshift/src/__tests__/Worker-test' {
+declare module 'jscodeshift/src/collections/JSXElement' {
   declare module.exports: any;
 }
 
-declare module 'jscodeshift/src/Collection' {
+declare module 'jscodeshift/src/collections/Node' {
+  declare module.exports: any;
+}
+
+declare module 'jscodeshift/src/collections/VariableDeclarator' {
   declare module.exports: any;
 }
 
@@ -102,18 +122,6 @@ declare module 'jscodeshift/src/collections/index' {
   declare module.exports: any;
 }
 
-declare module 'jscodeshift/src/collections/JSXElement' {
-  declare module.exports: any;
-}
-
-declare module 'jscodeshift/src/collections/Node' {
-  declare module.exports: any;
-}
-
-declare module 'jscodeshift/src/collections/VariableDeclarator' {
-  declare module.exports: any;
-}
-
 declare module 'jscodeshift/src/core' {
   declare module.exports: any;
 }
@@ -130,19 +138,11 @@ declare module 'jscodeshift/src/matchNode' {
   declare module.exports: any;
 }
 
-declare module 'jscodeshift/src/Runner' {
-  declare module.exports: any;
-}
-
 declare module 'jscodeshift/src/template' {
   declare module.exports: any;
 }
 
 declare module 'jscodeshift/src/testUtils' {
-  declare module.exports: any;
-}
-
-declare module 'jscodeshift/src/Worker' {
   declare module.exports: any;
 }
 
@@ -191,8 +191,20 @@ declare module 'jscodeshift/sample/__tests__/reverse-identifiers-test.js' {
 declare module 'jscodeshift/sample/reverse-identifiers.js' {
   declare module.exports: $Exports<'jscodeshift/sample/reverse-identifiers'>;
 }
+declare module 'jscodeshift/src/Collection.js' {
+  declare module.exports: $Exports<'jscodeshift/src/Collection'>;
+}
+declare module 'jscodeshift/src/Runner.js' {
+  declare module.exports: $Exports<'jscodeshift/src/Runner'>;
+}
+declare module 'jscodeshift/src/Worker.js' {
+  declare module.exports: $Exports<'jscodeshift/src/Worker'>;
+}
 declare module 'jscodeshift/src/__tests__/Collection-test.js' {
   declare module.exports: $Exports<'jscodeshift/src/__tests__/Collection-test'>;
+}
+declare module 'jscodeshift/src/__tests__/Worker-test.js' {
+  declare module.exports: $Exports<'jscodeshift/src/__tests__/Worker-test'>;
 }
 declare module 'jscodeshift/src/__tests__/core-test.js' {
   declare module.exports: $Exports<'jscodeshift/src/__tests__/core-test'>;
@@ -203,11 +215,14 @@ declare module 'jscodeshift/src/__tests__/matchNode-test.js' {
 declare module 'jscodeshift/src/__tests__/template-test.js' {
   declare module.exports: $Exports<'jscodeshift/src/__tests__/template-test'>;
 }
-declare module 'jscodeshift/src/__tests__/Worker-test.js' {
-  declare module.exports: $Exports<'jscodeshift/src/__tests__/Worker-test'>;
+declare module 'jscodeshift/src/collections/JSXElement.js' {
+  declare module.exports: $Exports<'jscodeshift/src/collections/JSXElement'>;
 }
-declare module 'jscodeshift/src/Collection.js' {
-  declare module.exports: $Exports<'jscodeshift/src/Collection'>;
+declare module 'jscodeshift/src/collections/Node.js' {
+  declare module.exports: $Exports<'jscodeshift/src/collections/Node'>;
+}
+declare module 'jscodeshift/src/collections/VariableDeclarator.js' {
+  declare module.exports: $Exports<'jscodeshift/src/collections/VariableDeclarator'>;
 }
 declare module 'jscodeshift/src/collections/__tests__/JSXElement-test.js' {
   declare module.exports: $Exports<'jscodeshift/src/collections/__tests__/JSXElement-test'>;
@@ -221,15 +236,6 @@ declare module 'jscodeshift/src/collections/__tests__/VariableDeclarator-test.js
 declare module 'jscodeshift/src/collections/index.js' {
   declare module.exports: $Exports<'jscodeshift/src/collections/index'>;
 }
-declare module 'jscodeshift/src/collections/JSXElement.js' {
-  declare module.exports: $Exports<'jscodeshift/src/collections/JSXElement'>;
-}
-declare module 'jscodeshift/src/collections/Node.js' {
-  declare module.exports: $Exports<'jscodeshift/src/collections/Node'>;
-}
-declare module 'jscodeshift/src/collections/VariableDeclarator.js' {
-  declare module.exports: $Exports<'jscodeshift/src/collections/VariableDeclarator'>;
-}
 declare module 'jscodeshift/src/core.js' {
   declare module.exports: $Exports<'jscodeshift/src/core'>;
 }
@@ -242,17 +248,11 @@ declare module 'jscodeshift/src/ignoreFiles.js' {
 declare module 'jscodeshift/src/matchNode.js' {
   declare module.exports: $Exports<'jscodeshift/src/matchNode'>;
 }
-declare module 'jscodeshift/src/Runner.js' {
-  declare module.exports: $Exports<'jscodeshift/src/Runner'>;
-}
 declare module 'jscodeshift/src/template.js' {
   declare module.exports: $Exports<'jscodeshift/src/template'>;
 }
 declare module 'jscodeshift/src/testUtils.js' {
   declare module.exports: $Exports<'jscodeshift/src/testUtils'>;
-}
-declare module 'jscodeshift/src/Worker.js' {
-  declare module.exports: $Exports<'jscodeshift/src/Worker'>;
 }
 declare module 'jscodeshift/utils/requirePackage.js' {
   declare module.exports: $Exports<'jscodeshift/utils/requirePackage'>;

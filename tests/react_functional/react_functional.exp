@@ -1,31 +1,47 @@
-Error: test.js:4
-  4: <F />; // error: missing `foo`
-     ^^^^^ React element `F`
-  3: function F(props: { foo: string }) {}
-                       ^^^^^^^^^^^^^^^ property `foo`. Property not found in
-  4: <F />; // error: missing `foo`
-     ^^^^^ props of React element `F`
+Error ------------------------------------------------------------------------------------------------------ test.js:6:1
 
-Error: test.js:5
-  5: <F foo={0} />; // error: number ~> string
-     ^^^^^^^^^^^^^ props of React element `F`. This type is incompatible with the expected param type of
-  3: function F(props: { foo: string }) {}
-                       ^^^^^^^^^^^^^^^ object type
-  Property `foo` is incompatible:
-      5: <F foo={0} />; // error: number ~> string
-                 ^ number. This type is incompatible with
-      3: function F(props: { foo: string }) {}
-                                  ^^^^^^ string
+Cannot create `F` element because property `foo` is missing in props [1] but exists in object type [2].
 
-Error: test.js:9
-  9: function G(props: { foo: string|numner }) {}
-                                     ^^^^^^ identifier `numner`. Could not resolve name
+   test.js:6:1
+   6| <F />; // error: missing `foo`
+      ^^^^^ [1]
 
-Error: test.js:13
- 13: <Z />; // error, expected React component
-     ^^^^^ React element `Z`. Expected React component instead of
- 12: var Z = 0;
-             ^ number
+References:
+   test.js:3:19
+   3| function F(props: { foo: string }) {
+                        ^^^^^^^^^^^^^^^ [2]
 
 
-Found 4 errors
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+
+Cannot create `F` element because number [1] is incompatible with string [2] in property `foo`.
+
+   test.js:7:1
+   7| <F foo={0} />; // error: number ~> string
+      ^^^^^^^^^^^^^
+
+References:
+   test.js:7:9
+   7| <F foo={0} />; // error: number ~> string
+              ^ [1]
+   test.js:3:26
+   3| function F(props: { foo: string }) {
+                               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:1
+
+Cannot create `Z` element because number [1] is not a React component.
+
+   test.js:17:1
+   17| <Z />; // error, expected React component
+       ^^^^^
+
+References:
+   test.js:16:9
+   16| var Z = 0;
+               ^ [1]
+
+
+
+Found 3 errors

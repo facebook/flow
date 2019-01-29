@@ -2,9 +2,8 @@
  * Copyright (c) 2014, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  */
 #define CAML_NAME_SPACE
@@ -17,8 +16,18 @@
 
 #include <time.h>
 
+#ifdef NO_HHVM
+#define HHVM_VERSION_MAJOR 0
+#define HHVM_VERSION_MINOR 0
+#else
+#include "hphp/runtime/version.h"
+#endif
+
 extern const char* const BuildInfo_kRevision;
 extern const uint64_t BuildInfo_kRevisionCommitTimeUnix;
+
+#define STRINGIFY_HELPER(x) #x
+#define STRINGIFY_VALUE(x) STRINGIFY_HELPER(x)
 
 /**
  * Export the constants provided by Facebook's build system to ocaml-land, since
@@ -33,10 +42,17 @@ value hh_get_build_revision(void) {
   CAMLparam0();
   CAMLlocal1(result);
 
-  size_t len = strlen(BuildInfo_kRevision);
+#ifdef HH_BUILD_ID
+  const char* const buf =
+    STRINGIFY_VALUE(HH_BUILD_ID) "-" HHVM_VERSION_C_STRING_LITERALS;
+#else
+  const char* const buf = BuildInfo_kRevision;
+#endif
+  const size_t len = strlen(buf);
   result = caml_alloc_string(len);
 
-  memcpy(String_val(result), BuildInfo_kRevision, len);
+  memcpy(String_val(result), buf, len);
+
   CAMLreturn(result);
 }
 
@@ -45,12 +61,27 @@ value hh_get_build_commit_time_string(void) {
   CAMLlocal1(result);
 
   char s[25];
+  unsigned long timestamp = BuildInfo_kRevisionCommitTimeUnix;
+#ifdef HH_BUILD_TIMESTAMP
+  if (timestamp == 0) {
+    timestamp = HH_BUILD_TIMESTAMP;
+  }
+#endif
+
   // A previous version used localtime_r, which is not available on Windows
-  struct tm *p = localtime((time_t*)&BuildInfo_kRevisionCommitTimeUnix);
+  struct tm *p = localtime((time_t*)&timestamp);
   strftime(s, sizeof(s), "%c", p);
 
   result = caml_copy_string(s);
   CAMLreturn(result);
+}
+
+value hh_get_build_major(void) {
+  return Val_long(HHVM_VERSION_MAJOR);
+}
+
+value hh_get_build_minor(void) {
+  return Val_long(HHVM_VERSION_MINOR);
 }
 
 value hh_get_build_commit_time(void) {

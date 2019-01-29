@@ -1,15 +1,12 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 exception Show_help
-exception Failed_to_parse of string
+exception Failed_to_parse of string * string
 
 module ArgSpec = struct
   type values_t = string list SMap.t
@@ -18,22 +15,24 @@ module ArgSpec = struct
   | No_Arg
   | Arg
   | Arg_List
-  | Arg_Rest
+  | Arg_Rest (* consumes a '--' and all remaining args *)
+  | Arg_Command (* consumes all the remaining args verbatim, to pass to a subcommand *)
 
   type 'a flag_t = {
-    parse : string list option -> 'a;
+    parse : name:string -> string list option -> 'a;
     arg : flag_arg_count;
   }
 
   type flag_metadata = {
     doc : string;
+    env : string option;
     arg_count : flag_arg_count;
   }
 
   type ('a, 'b) t = {
     f : (values_t * 'a) -> (values_t * 'b);
     flags : flag_metadata SMap.t;
-    anons : (string * string * flag_arg_count) list;
+    anons : (string * flag_arg_count) list;
   }
 
   (* Partially applies [fn] with the values from [values]. Uses [spec] to
@@ -48,7 +47,7 @@ module ArgSpec = struct
       try Some (SMap.find_unsafe name values : string list)
       with Not_found -> None
     in
-    (values, main (arg_type.parse value))
+    (values, main (arg_type.parse ~name value))
 
   let pop_anon spec =
     match spec.anons with
@@ -56,14 +55,14 @@ module ArgSpec = struct
     | hd::tl -> (Some hd, {spec with anons = tl})
 
   let string = {
-    parse = (function
+    parse = (fun ~name:_ -> function
     | Some [x] -> Some x
     | _ -> None
     );
     arg = Arg;
   }
   let bool = {
-    parse = (function
+    parse = (fun ~name:_ -> function
     | Some ["0"]
     | Some ["false"]
     | None -> Some false
@@ -72,39 +71,58 @@ module ArgSpec = struct
     arg = Arg;
   }
   let int = {
-    parse = (function
+    parse = (fun ~name:_ -> function
     | Some [x] -> Some (int_of_string x)
     | _ -> None
     );
     arg = Arg;
   }
   let enum values = {
-    parse = (function
+    parse = (fun ~name -> function
     | Some [x] ->
-        if List.mem x values
-        then Some x
-        else raise (Failed_to_parse (Utils_js.spf
-          "expected one of: %s"
-          (String.concat ", " values)
-        ))
+        begin match Core_list.find ~f:(fun (s, _) -> s = x) values with
+        | Some (_, v) -> Some v
+        | None ->
+          raise (Failed_to_parse (name, Utils_js.spf
+            "expected one of: %s"
+            (String.concat ", " (Core_list.map ~f:fst values))
+          ))
+        end
     | _ -> None
     );
     arg = Arg;
   }
 
+  let command cmds = {
+    parse = (fun ~name -> function
+      | Some (cmd_name::argv) ->
+        begin match (enum cmds).parse ~name (Some [cmd_name]) with
+        | Some cmd -> Some (cmd, argv)
+        | None -> None
+        end
+      | Some []
+      | None -> None
+    );
+    arg = Arg_Command;
+  }
+
   let no_arg = {
-    parse = (function
+    parse = (fun ~name:_ -> function
     | Some _ -> true
     | None -> false
     );
     arg = No_Arg;
   }
 
-  let required arg_type = {
-    parse = (function
-    | None -> raise (Failed_to_parse "missing required arguments")
-    | value -> match arg_type.parse value with
-      | None -> raise (Failed_to_parse (Utils_js.spf
+  let required ?default arg_type = {
+    parse = (fun ~name -> function
+    | None ->
+        begin match default with
+        | Some default -> default
+        | None -> raise (Failed_to_parse (name, "missing required arguments"))
+        end
+    | value -> match arg_type.parse ~name value with
+      | None -> raise (Failed_to_parse (name, Utils_js.spf
           "wrong type for required argument%s"
           (match value with Some [x] -> ": " ^ x | _ -> "")))
       | Some result -> result
@@ -113,28 +131,66 @@ module ArgSpec = struct
   }
 
   let optional arg_type = {
-    parse = (function
+    parse = (fun ~name -> function
     | None -> None
-    | value -> arg_type.parse value);
+    | value -> arg_type.parse ~name value);
     arg = arg_type.arg;
   }
 
   let list_of arg_type = {
-    parse = (function
+    parse = (fun ~name -> function
       | None -> Some []
       | Some values ->
-        Some (List.map (fun x ->
-          match arg_type.parse (Some [x]) with
+        Some (Core_list.map ~f:(fun x ->
+          match arg_type.parse ~name (Some [x]) with
           | Some result -> result
-          | None -> raise (Failed_to_parse (Utils_js.spf
+          | None -> raise (Failed_to_parse (name, Utils_js.spf
               "wrong type for argument list item: %s" x))
         ) values)
     );
     arg = Arg_List;
   }
 
+  let delimited delim arg_type = {
+    parse = (fun ~name -> function
+    | Some [x] ->
+      let args = Str.split (Str.regexp_string delim) x in
+      Some (Core_list.map ~f:(fun arg ->
+        match arg_type.parse ~name (Some [arg]) with
+        | None ->
+          raise (Failed_to_parse (name, Utils_js.spf "wrong type for value: %s" arg))
+        | Some result ->
+          result
+      ) args)
+    | _ -> None
+    );
+    arg = Arg;
+  }
+
+  let key_value delim (key_type, value_type) = {
+    parse = (fun ~name -> function
+    | Some [x] ->
+      let key, value = match Str.bounded_split (Str.regexp_string delim) x 2 with
+      | [key; value] -> key, Some [value]
+      | [key] -> key, None
+      | _ -> raise (Failed_to_parse (name, Utils_js.spf "unexpected value: %s" x))
+      in
+      let key = match key_type.parse ~name (Some [key]) with
+      | None ->
+        raise (Failed_to_parse (name, Utils_js.spf "wrong type for key: %s" key))
+      | Some result ->
+        result
+      in
+      let value = value_type.parse ~name value in
+      Some (key, value)
+    | _ -> None
+    );
+    arg = Arg;
+  }
+
   let help_flag = SMap.empty |> SMap.add "--help" {
     doc = "This list of options";
+    env = None;
     arg_count = No_Arg;
   }
 
@@ -152,26 +208,28 @@ module ArgSpec = struct
     anons = [];
   }
 
-  let flag name arg_type ~doc prev = {
+  let flag name arg_type ~doc ?env prev = {
     f = apply_arg name arg_type prev.f;
     flags = prev.flags |> SMap.add name {
       doc;
+      env;
       arg_count = arg_type.arg;
     };
     anons = prev.anons;
   }
 
-  let anon name arg_type ~doc prev = {
+  let anon name arg_type prev = {
     f = apply_arg name arg_type prev.f;
     flags = prev.flags;
-    anons = List.append prev.anons [(name, doc, arg_type.arg)];
+    anons = Core_list.append prev.anons [(name, arg_type.arg)];
   }
 
-  let rest ~doc prev = {
+  let rest prev = {
     f = apply_arg "--" (optional (list_of string)) prev.f;
     flags = prev.flags;
-    anons = List.append prev.anons [("--", doc, Arg_Rest)];
+    anons = Core_list.append prev.anons [("--", Arg_Rest)];
   }
+
 
   let dummy value prev = {
     f = (fun x -> let (values, main) = prev.f x in (values, main value));
@@ -211,8 +269,8 @@ let is_arg arg = String.length arg > 1 && arg <> "--" && arg.[0] = '-'
 
 let consume_args args =
   let is_done = ref false in
-  List.partition
-    (fun value ->
+  Core_list.partition_tf
+    ~f:(fun value ->
       (if not !is_done && is_arg value then is_done := true);
       not !is_done
     )
@@ -244,16 +302,10 @@ and parse_flag values spec arg args =
     | ArgSpec.Arg ->
       begin match args with
       | [] ->
-        raise (Failed_to_parse (Utils_js.spf
-          "option %s needs an argument."
-          arg
-        ))
+        raise (Failed_to_parse (arg, "option needs an argument."))
       | value::args ->
         if is_arg value then
-          raise (Failed_to_parse (Utils_js.spf
-            "option %s needs an argument."
-            arg
-          ));
+          raise (Failed_to_parse (arg, "option needs an argument."));
         let values = SMap.add arg [value] values in
         parse values spec args
       end
@@ -264,45 +316,59 @@ and parse_flag values spec arg args =
       parse values spec args
 
     | ArgSpec.Arg_Rest -> failwith "Not supported"
+    | ArgSpec.Arg_Command -> failwith "Not supported"
   with
   | Not_found ->
-    raise (Failed_to_parse (Utils_js.spf
-      "unknown option '%s'."
-      arg
-    ))
+    raise (Failed_to_parse (arg, "unknown option"))
 
 and parse_anon values spec arg args =
   let (anon, spec) = ArgSpec.pop_anon spec in
   match anon with
-  | Some (name, _, ArgSpec.Arg) ->
+  | Some (name, ArgSpec.Arg) ->
     let values = SMap.add name [arg] values in
     parse values spec args
-  | Some (name, _, ArgSpec.Arg_List) ->
+  | Some (name, ArgSpec.Arg_List) ->
     let (value_list, args) = consume_args (arg::args) in
     let values = SMap.add name value_list values in
     parse values spec args
-  | Some (name, _, ArgSpec.Arg_Rest) ->
+  | Some (name, ArgSpec.Arg_Rest) ->
+    let args = if arg = "--" then args else arg::args in
     let values = SMap.add name args values in
     parse values spec []
-  | Some (_, _, ArgSpec.No_Arg) ->
+  | Some (name, ArgSpec.Arg_Command) ->
+    let values = SMap.add name (arg::args) values in
+    parse values spec []
+  | Some (_, ArgSpec.No_Arg) ->
     assert false
   | None ->
-    raise (Failed_to_parse (Utils_js.spf
+    raise (Failed_to_parse ("anon", Utils_js.spf
       "unexpected argument '%s'."
       arg
     ))
+
+let init_from_env spec =
+  let flags = spec.ArgSpec.flags in
+  SMap.fold (fun arg flag acc ->
+    match flag.ArgSpec.env with
+    | Some env ->
+      begin
+        try SMap.add arg [Sys.getenv env] acc
+        with Not_found -> acc
+      end
+    | None -> acc
+  ) flags SMap.empty
 
 let usage_string spec =
   let usage = spec.usage in
   let flags = SMap.fold (fun k v a -> (k, v)::a) spec.args.ArgSpec.flags [] in
   let cmp (a, _) (b, _) = String.compare (no_dashes a) (no_dashes b) in
-  let flags = List.sort cmp flags in
-  let col_width = flags |> List.fold_left (fun acc (a, _) ->
+  let flags = Core_list.sort ~cmp flags in
+  let col_width = flags |> Core_list.fold_left ~f:(fun acc (a, _) ->
     max acc (String.length a)
-  ) 0 in
+  ) ~init:0 in
   let flag_usage = flags
-    |> List.filter (fun (_, meta) -> meta.ArgSpec.doc <> "")
-    |> List.map (fun (name, meta) ->
+    |> Core_list.filter ~f:(fun (_, meta) -> meta.ArgSpec.doc <> "")
+    |> Core_list.map ~f:(fun (name, meta) ->
           Utils_js.spf "  %-*s  %s" col_width name meta.ArgSpec.doc
        )
     |> String.concat "\n"
@@ -317,7 +383,7 @@ let command spec main = {
   cmddoc = spec.doc;
   flags = spec.args.ArgSpec.flags;
   string_of_usage = (fun () -> usage_string spec);
-  args_of_argv = parse SMap.empty spec.args;
+  args_of_argv = parse (init_from_env spec.args) spec.args;
   main = (fun args ->
     let main = ArgSpec.apply spec.args args main in
     main ());

@@ -2,9 +2,8 @@
  * Copyright (c) 2015, Facebook, Inc.
  * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "hack" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the "hack" directory of this source tree.
  *
  *)
 
@@ -19,7 +18,6 @@ type t =
   | Out_of_time
   | Out_of_retries
   | Server_already_exists
-  | Server_initializing
   | Type_error
   | Build_id_mismatch
   | Monitor_connection_failure
@@ -46,11 +44,11 @@ type t =
    * deleted and do an incremental check.
    *)
   | Watchman_fresh_instance
+  | Watchman_invalid_result
   | File_heap_stale
   | Hhconfig_deleted
   | Hhconfig_changed
   | Server_shutting_down
-  | Server_name_not_found
   | IDE_malformed_request
   | IDE_no_server
   | IDE_out_of_retries
@@ -72,19 +70,20 @@ type t =
   | Sql_corrupt
   | Sql_misuse
   | Uncaught_exception
+  | Decl_not_found
+  | Big_rebase_detected
 
 exception Exit_with of t
 
 let exit_code = function
   | Interrupted ->                 -6
   | No_error ->                     0
-  | Build_terminated ->             1
-  | Kill_error ->                   1
-  | Server_initializing ->          1
-  | Server_shutting_down ->         1
+  | Build_terminated ->             1 (* used in clientBuild *)
+  | Kill_error ->                   1 (* used in clientStop/Start/Restart *)
+  | Server_shutting_down ->         1 (* used in server *)
   | Build_error ->                  2 (* used in clientBuild *)
   | Type_error ->                   2 (* used in clientCheck *)
-  | Uncaught_exception ->           2 (* used in server *)
+  | Uncaught_exception ->           2 (* used in server and clientIde *)
   | Hhconfig_changed ->             4
   | Unused_server ->                5
   | No_server_running ->            6
@@ -113,11 +112,12 @@ let exit_code = function
   | CantRunAI ->                    102
   | Watchman_failed ->              103
   | Hhconfig_deleted ->             104
-  | Server_name_not_found ->        105
   | EventLogger_broken_pipe ->      106
   | Redecl_heap_overflow ->         107
   | EventLogger_restart_out_of_retries -> 108
   | Watchman_fresh_instance ->      109
+  | Watchman_invalid_result ->      110
+  | Big_rebase_detected ->          111
   | IDE_malformed_request ->        201
   | IDE_no_server ->                202
   | IDE_out_of_retries ->           203
@@ -134,7 +134,7 @@ let exit_code = function
   | Sql_cantopen ->                 214
   | Sql_corrupt ->                  215
   | Sql_misuse ->                   216
-
+  | Decl_not_found ->               217
 
 let exit t =
   let ec = exit_code t in
@@ -151,7 +151,6 @@ let to_string = function
   | Out_of_time -> "Out_of_time"
   | Out_of_retries -> "Out_of_retries"
   | Server_already_exists -> "Server_already_exists"
-  | Server_initializing -> "Server_initializing"
   | Server_shutting_down -> "Server_shutting_down"
   | Type_error -> "Type_error"
   | Build_id_mismatch -> "Build_id_mismatch"
@@ -174,9 +173,9 @@ let to_string = function
   | CantRunAI -> "CantRunAI"
   | Watchman_failed -> "Watchman_failed"
   | Watchman_fresh_instance -> "Watchman_fresh_instance"
+  | Watchman_invalid_result -> "Watchman_invalid_result"
   | Hhconfig_deleted -> "Hhconfig_deleted"
   | Hhconfig_changed -> "Hhconfig_changed"
-  | Server_name_not_found -> "Server_name_not_found"
   | IDE_malformed_request -> "IDE_malformed_request"
   | IDE_no_server -> "IDE_no_server"
   | IDE_out_of_retries -> "IDE_out_of_retries"
@@ -199,9 +198,18 @@ let to_string = function
   | Sql_corrupt -> "Sql_corrupt"
   | Sql_misuse -> "Sql_misuse"
   | Uncaught_exception -> "Uncaught_exception"
+  | Decl_not_found -> "Decl_not_found"
+  | Big_rebase_detected -> "Big_rebase_detected"
 
 
 let unpack = function
   | Unix.WEXITED n -> "exit", n
-  | Unix.WSIGNALED n -> "signaled", n
+  | Unix.WSIGNALED n ->
+    (**
+     * Ocaml signal numbers are mapped from System signal numbers.
+     * They are negative.
+     * See caml_convert_signal_number byterun/signals.c in Ocaml system source code
+     * to convert from Ocaml number to System number
+     *)
+    "signaled", n
   | Unix.WSTOPPED n -> "stopped", n

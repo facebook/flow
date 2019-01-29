@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 let run: 'node. ('node -> 'node) -> 'node -> unit =
@@ -17,8 +14,8 @@ let run_opt: 'node. ('node -> 'node) -> 'node option -> unit =
 let run_list: 'node. ('node -> 'node) -> 'node list -> unit =
   fun visit -> List.iter (run visit)
 
-class ['acc] visitor ~init = object(this)
-  inherit Flow_ast_mapper.mapper
+class ['acc, 'loc] visitor ~init = object(this)
+  inherit ['loc] Flow_ast_mapper.mapper
 
   val mutable acc: 'acc = init
   method acc = acc
