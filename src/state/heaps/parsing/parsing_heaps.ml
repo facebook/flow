@@ -96,20 +96,13 @@ end)
 (* Groups operations on the multiple heaps that need to stay in sync *)
 module ParsingHeaps = struct
   let add file info (ast, file_sig) sig_opt =
-    let sig_ast_opt, sig_file_sig_opt = match sig_opt with
-      | None -> None, None
-      | Some (sig_ast, sig_file_sig) -> Some sig_ast, Some sig_file_sig in
     ASTHeap.add file (remove_source ast);
-    begin match sig_ast_opt with
-      | None -> ()
-      | Some sig_ast -> SigASTHeap.add file (remove_source sig_ast)
-    end;
     DocblockHeap.add file info;
     FileSigHeap.add file file_sig;
-    begin match sig_file_sig_opt with
-      | None -> ()
-      | Some sig_file_sig -> SigFileSigHeap.add file sig_file_sig
-    end
+    Option.iter sig_opt ~f:(fun (sig_ast, sig_file_sig) ->
+      SigASTHeap.add file (remove_source sig_ast);
+      SigFileSigHeap.add file sig_file_sig
+    )
 
   let oldify_batch files =
     ASTHeap.oldify_batch files;
