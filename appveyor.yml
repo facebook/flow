@@ -41,4 +41,4 @@ deploy:
     secure: f1YgYz9csZ8QokY6+aXF10toZtXlFxicbm7uTcylqq+ILoRE6y5GUaf1TfoUalx5
   artifact: /.*\.zip/
   on:
-    appveyor_repo_tag: true
+    APPVEYOR_REPO_TAG: true
