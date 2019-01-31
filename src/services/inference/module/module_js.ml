@@ -495,16 +495,20 @@ module Haste: MODULE_SYSTEM = struct
     Files.expand_project_root_token_to_regexp ~root:(Options.root options) str
 
   let is_haste_file options file =
-    let matched_haste_paths_whitelist file = List.exists
-      (fun r -> Str.string_match (expand_project_root_token options r) (File_key.to_string file) 0)
+    (* Standardize \ to / in path for Windows *)
+    let name = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
+    let matched_haste_paths_whitelist name = List.exists
+      (fun r -> Str.string_match (expand_project_root_token options r) name 0)
       (Options.haste_paths_whitelist options) in
-    let matched_haste_paths_blacklist file = List.exists
-      (fun r -> Str.string_match (expand_project_root_token options r) (File_key.to_string file) 0)
+    let matched_haste_paths_blacklist name = List.exists
+      (fun r -> Str.string_match (expand_project_root_token options r) name 0)
       (Options.haste_paths_blacklist options) in
-    (matched_haste_paths_whitelist file) && not (matched_haste_paths_blacklist file)
+    (matched_haste_paths_whitelist name) && not (matched_haste_paths_blacklist name)
 
   let haste_name options file =
     let reduce_name name (regexp, template) =
+      (* Standardize \ to / in path for Windows *)
+      let name = Sys_utils.normalize_filename_dir_sep name in
       Str.global_replace regexp template name
     in
     List.fold_left
