@@ -1,3 +1,31 @@
+### 0.92.0
+
+Likely to cause new Flow errors:
+
+Some fixes to tagged template literals will surface a new set of pre-existing errors!
+
+New Features:
+
+This release culminates months of hard work on quality of life improvements for IDE support.
+Expect your requests to be faster, and your requests to take a bit less time.
+
+* Several Flow commands can run in parallel now, i.e. you can still get type definitions while rechecking.
+Big props to @glevi for this massive QoL improvement!
+* Alongside this change, @glevi also released a new lazy-check mode that leverages `watchman` to reduce the number of checked files.
+Learn about it [in the docs](https://flow.org/en/docs/lang/lazy-modes/#toc-using-watchman-lazy-mode).
+
+Notable bug fixes:
+
+Thank you to the opensource community for these fixes!
+
+* #7354 Fix MouseEvent type definitions
+* #7262 Update types for WeakMap
+* #7100 Add missing crypto.randomFillSync and crypto.randomFill methods
+* #7356 Add definitions for new debug hook useDebugValue
+* #7352 Rename React hook useImperativeMethods -> useImperativeHandle
+* #5665 Fix arity of clearInterval, clearTimeout
+* `React.memo` now accepts any kind of `Component`
+
 ### 0.91.0
 
 Likely to cause new Flow errors:
