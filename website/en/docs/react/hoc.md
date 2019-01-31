@@ -44,7 +44,7 @@ do anything at all. Let's take a look at some more complex examples.
 ### Injecting Props <a class="toc" id="toc-injecting-props" href="#toc-injecting-props"></a>
 
 A common use case for higher-order components is to inject a prop.
-The HOC automatically sets a prop and returns a component which no long requires
+The HOC automatically sets a prop and returns a component which no longer requires
 that prop. For example, consider a navigation prop, or in the case of
 [`react-redux` a `store` prop][]. How would one type this?
 
