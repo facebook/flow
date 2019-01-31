@@ -1039,7 +1039,7 @@ customfun.js = {
       "name":"exports",
       "type":"{||}",
       "func_details":null,
-      "path":"",
+      "path":"customfun.js",
       "line":0,
       "endline":0,
       "start":1,

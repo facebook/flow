@@ -405,7 +405,9 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
 
   let reason_exports_module =
     let desc = Reason.RModule module_ref in
-    Reason.locationless_reason desc
+    Loc.({ none with source = Some (Context.file cx) })
+    |> ALoc.of_loc
+    |> Reason.mk_reason desc
   in
 
   let local_exports_var = Tvar.mk cx reason_exports_module in

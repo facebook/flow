@@ -30,7 +30,7 @@ autocomplete without --wait-for-recheck runs immediately:
       "name":"exports",
       "type":"{||}",
       "func_details":null,
-      "path":"",
+      "path":"focused.js",
       "line":0,
       "endline":0,
       "start":1,
