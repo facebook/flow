@@ -7,14 +7,14 @@
 
 open Utils_js
 
-type 'a merge_job_results = (File_key.t * ('a, Flow_error.error_message) result) list
+type 'a merge_job_result = ('a, Flow_error.error_message) result
+type 'a merge_job_results = (File_key.t * 'a merge_job_result) list
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader: Mutator_state_reader.t ->
-  'a merge_job_results ->
   File_key.t Nel.t ->
-  'a merge_job_results
+  'a merge_job_result
 
 type 'a merge_results = 'a merge_job_results * int (* skipped count *)
 

@@ -8,14 +8,14 @@
 open Utils_js
 module Reqs = Merge_js.Reqs
 
-type 'a merge_job_results = (File_key.t * ('a, Flow_error.error_message) result) list
+type 'a merge_job_result = ('a, Flow_error.error_message) result
+type 'a merge_job_results = (File_key.t * 'a merge_job_result) list
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader: Mutator_state_reader.t ->
-  'a merge_job_results ->
   File_key.t Nel.t ->
-  'a merge_job_results
+  'a merge_job_result
 
 type 'a merge_results = 'a merge_job_results * int (* skipped count *)
 
@@ -186,7 +186,7 @@ let get_lint_settings severity_cover loc =
   ExactCover.find_opt loc file_cover
 
 (* Entry point for merging a component *)
-let merge_strict_component ~worker_mutator ~options ~reader merged_acc component =
+let merge_strict_component ~worker_mutator ~options ~reader component =
   let file = Nel.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -272,7 +272,7 @@ let merge_strict_component ~worker_mutator ~options ~reader merged_acc component
     Context_heaps.Merge_context_mutator.add_merge_on_diff
       ~audit:Expensive.ok worker_mutator cx component md5;
 
-    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
+    Ok (errors, suppressions, severity_cover)
   )
   else
     let errors = Errors.ErrorSet.empty in
@@ -282,7 +282,7 @@ let merge_strict_component ~worker_mutator ~options ~reader merged_acc component
         file
         (ExactCover.file_cover file (Options.lint_severities options))
     in
-    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
+    Ok (errors, suppressions, severity_cover)
 
 let check_file options ~reader file =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
@@ -357,7 +357,7 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
         ~f:(fun () ->
           let start_time = Unix.gettimeofday () in
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-          let ret = job ~worker_mutator ~options ~reader merged component in
+          let ret = job ~worker_mutator ~options ~reader component in
           let merge_time = Unix.gettimeofday () -. start_time in
           if Options.should_profile options then begin
             let length = Nel.length component in
@@ -366,7 +366,7 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
             if merge_time > 1.0
             then Hh_logger.info "[%d] perf: merged %s in %f" (Unix.getpid()) files merge_time
           end;
-          ret
+          (Nel.hd component, ret) :: merged
         )
       with
       | SharedMem_js.Out_of_shared_memory
