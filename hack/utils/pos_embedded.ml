@@ -376,6 +376,36 @@ let advance_one (p : 'a pos): 'a pos =
         File_pos_large.set_column (column + 1) pos_end
     }
 
+(* This function is used when we have captured a position that includes
+ * outside boundary characters like apostrophes.  If we need to remove these
+ * apostrophes, this function shrinks by one character in each direction. *)
+let shrink_by_one_char_both_sides (p : 'a pos): 'a pos =
+  match p with
+  | Pos_small { pos_file; pos_start; pos_end } ->
+    let new_pos_start =
+      (let column = File_pos_small.column pos_start in
+      File_pos_small.set_column (column + 1) pos_start) in
+    let new_pos_end =
+      (let column = File_pos_small.column pos_end in
+      File_pos_small.set_column (column - 1) pos_end) in
+    Pos_small {
+      pos_file;
+      pos_start = new_pos_start;
+      pos_end = new_pos_end;
+    }
+  | Pos_large { pos_file; pos_start; pos_end } ->
+    let new_pos_start =
+      (let column = File_pos_large.column pos_start in
+      File_pos_large.set_column (column + 1) pos_start) in
+    let new_pos_end =
+      (let column = File_pos_large.column pos_end in
+      File_pos_large.set_column (column - 1) pos_end) in
+    Pos_large {
+      pos_file;
+      pos_start = new_pos_start;
+      pos_end = new_pos_end;
+    }
+
 (* This returns a half-open interval. *)
 let multiline_string t =
   let line_start, char_start, line_end, char_end = destruct_range t in

@@ -105,7 +105,14 @@ val get_text_from_pos: content:string -> 'a pos -> string
 (* This returns a half-open interval. *)
 val destruct_range : 'a pos -> (int * int * int * int)
 
+(* Advance the ending position by one character *)
 val advance_one : 'a pos -> 'a pos
+
+(* Reduce the size of this position element by one character on the left and
+ * one character on the right.  For example, if you've captured a position
+ * that includes outside apostrophes, this will shrink it to only the contents
+ * within the apostrophes. *)
+val shrink_by_one_char_both_sides : 'a pos -> 'a pos
 
 (* Compare by filename, then tie-break by start position, and finally by the
  * end position *)
