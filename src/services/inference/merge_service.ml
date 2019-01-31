@@ -179,6 +179,12 @@ let merge_contents_context ~reader options file ast info file_sig =
 
   cx
 
+let get_lint_settings severity_cover loc =
+  let open Option.Monad_infix in
+  Loc.source loc >>= fun source ->
+  FilenameMap.get source severity_cover >>= fun file_cover ->
+  ExactCover.find_opt loc file_cover
+
 (* Entry point for merging a component *)
 let merge_strict_component ~worker_mutator ~options ~reader merged_acc component =
   let file = Nel.hd component in
@@ -208,6 +214,54 @@ let merge_strict_component ~worker_mutator ~options ~reader merged_acc component
     let errors = Context.errors cx in
     let suppressions = Context.error_suppressions cx in
     let severity_cover = Context.severity_cover cx in
+
+    (* Filter out lint errors which are definitely suppressed or were never
+     * enabled in the first place. *)
+    let errors = Errors.(ErrorSet.filter (fun error ->
+      let open Severity in
+      match kind_of_error error with
+      | LintError lint_kind ->
+        let loc = Errors.loc_of_error error |> ALoc.to_loc in
+        begin match get_lint_settings severity_cover loc with
+        | None ->
+          (* This shouldn't happen -- the primary location of a lint error
+           * should always be in the file where the error was found. Until we
+           * are more confident that this invariant holds, pass the lint error
+           * back to the master process, where it will be filtered in the
+           * context of the full severity cover set. *)
+          true
+        | Some lint_settings ->
+          (* Lint settings can only affect lint errors when located at the
+           * error's "primary" location. This is a nice property, since it means
+           * we can filter out some lint errors here instead of passing them
+           * back and filtering them later.
+           *
+           * We can do more, but for now this only filters out lint errors which
+           * were never enabled.
+           *
+           * Ideally, we would filter out all locally suppressed lints here, not
+           * just those which were never enabled. To do that, we would also need
+           * to collect the unused lint settings here and pass them back up.
+           *
+           * Note that a lint error might still be filtered out later, since a
+           * lint error can be suppressed by a "regular" suppression comment. *)
+          match LintSettings.get_value lint_kind lint_settings with
+          | Off ->
+            (* If the setting is explicit, that means a suppression comment is
+             * explicitly turning the lint off. Instead of filtering those
+             * errors here, we pass them back and filter them later.
+             *
+             * This logic only filters out the non-explicit/off settings, which
+             * means the lint rule was never enabled. *)
+            LintSettings.is_explicit lint_kind lint_settings
+          | Warn | Err -> true
+        end
+      (* Non-lint errors can be suppressed by any location present in the error.
+       * A dependency location might be part of the error, and the corresponding
+       * suppression is not available from this worker. We need to pass back all
+       * errors to be filtered in the master process. *)
+      | _ -> true
+    ) errors) in
 
     Context.remove_all_errors cx;
     Context.remove_all_error_suppressions cx;

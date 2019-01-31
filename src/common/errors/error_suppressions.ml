@@ -199,22 +199,12 @@ let check (err: Loc.t Errors.error) (suppressions: t) severity_cover (unused: t)
      * without a source. *)
     |> List.filter (fun loc -> Option.is_some (Loc.source loc))
   in
-  (* Ignore lint errors which were never enabled in the first place. *)
+  (* Ignore lint errors from node modules. *)
   let lint_kind, ignore =
     match Errors.kind_of_error err with
       | Errors.LintError kind ->
-        (* Ignore lints in node_modules folders (which we assume to be dependencies). *)
-        (* TODO: this should not show up with --include-suppressed *)
-        if in_node_modules (Errors.loc_of_error err) then Some kind, true else
-        let severity, is_explicit = List.fold_left (fun (s, e) loc ->
-          if in_node_modules loc then (s, e) else
-          let lint_settings = lint_settings_at_loc loc severity_cover in
-          let s' = LintSettings.get_value kind lint_settings in
-          let e' = LintSettings.is_explicit kind lint_settings in
-          (severity_min s s', e || e')
-        ) (Err, false) locs in
-        let ignore = severity = Off && not is_explicit in
-        Some kind, ignore
+        Some kind,
+        in_node_modules (Errors.loc_of_error err)
       | _ -> None, false
   in
   if ignore then None else

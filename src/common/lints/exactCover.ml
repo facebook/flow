@@ -166,6 +166,10 @@ let find loc cover =
   try SpanMap.find_unsafe first_char cover
   with Not_found -> raise (Uncovered (Loc.to_string ~include_source:true loc))
 
+let find_opt loc cover =
+  let first_char = Loc.first_char loc in
+  SpanMap.get first_char cover
+
 (* `severity LintSettings.t`-specific functions *)
 
 type lint_severity_cover = Severity.severity LintSettings.t t

@@ -21,6 +21,8 @@
 open Lints
 open Severity
 
+exception Uncovered of string
+
 (* Supports O(log(n)) queries to get the value associated with a loc. *)
 type 'a t
 
@@ -30,8 +32,7 @@ val file_cover: File_key.t -> 'a -> 'a t
  * ambiguity, this looks at the location of the first character in the provided
  * location. Errors if queried for a file not contained in this cover. *)
 val find: Loc.t -> 'a t -> 'a
-(* Combines two disjoint covers. Behavior is undefined if the provided covers
- * aren't disjoint. *)
+val find_opt: Loc.t -> 'a t -> 'a option
 
 (* Supports O(j*(j+k)) operations to modify a range of a cover being constructed,
  * where j is the number of ranges in the builder intersecting the range being
