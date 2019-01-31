@@ -2194,7 +2194,7 @@ let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Error
     ]
 
   | EInexactSpread (reason, reason_op) ->
-    mk_error ~kind:(LintError Lints.InexactSpread) (aloc_of_reason reason) [
+    mk_error ~kind:(LintError Lints.InexactSpread) (aloc_of_reason reason_op) [
       text "Cannot determine the type of "; ref reason_op; text " because ";
       text "it contains a spread of inexact "; ref reason; text ". ";
       text "Being inexact, "; ref reason;

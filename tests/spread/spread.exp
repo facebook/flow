@@ -1,17 +1,14 @@
-Error --------------------------------------------------------------------------------------------------- exact.js:15:50
+Error --------------------------------------------------------------------------------------------------- exact.js:15:36
 
 Cannot determine the type of object literal [1] because it contains a spread of inexact object type [2]. Being inexact,
 object type [2] might be missing the types of some properties that are being copied. Perhaps you could make it exact?
 (`inexact-spread`)
 
-   exact.js:15:50
-   15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
-                                                        ^^^^^^^^^^^
-
-References:
    exact.js:15:36
    15| const spread_inexact_second: Foo = {...other, ...foo_inexact}; // not OK
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
    exact.js:13:20
    13| const foo_inexact: { baz: number } = { bar: 42, baz: 123 };
                           ^^^^^^^^^^^^^^^ [2]
