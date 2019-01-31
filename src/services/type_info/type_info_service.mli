@@ -31,7 +31,7 @@ val coverage :
   profiling:Profiling_js.running ->
   force:bool ->
   File_key.t ->
-  string -> ((Loc.t * bool) list, string) Core_result.t Lwt.t
+  string -> ((Loc.t * Coverage.Kind.t) list, string) Core_result.t Lwt.t
 
 val suggest :
   options:Options.t ->

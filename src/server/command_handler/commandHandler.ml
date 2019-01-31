@@ -983,13 +983,24 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       Lwt.return (LspResponse (Ok ((), Some response, metadata)))
     | true, Ok (all_locs) ->
       (* Figure out the percentages *)
-      let accum_coverage (covered, total) (_loc, is_covered) =
-        (covered + if is_covered then 1 else 0), total + 1 in
+      let accum_coverage (covered, total) (_loc, kind) =
+        let covered =
+          match kind with
+          | Coverage.Kind.Checked -> covered + 1
+          | Coverage.Kind.Any
+          | Coverage.Kind.Empty -> covered
+        in
+        covered, total + 1
+      in
       let covered, total = Core_list.fold all_locs ~init:(0,0) ~f:accum_coverage in
       let coveredPercent = if total = 0 then 100 else 100 * covered / total in
       (* Figure out each individual uncovered span *)
-      let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, is_covered) ->
-        if is_covered then None else Some loc) in
+      let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, kind) ->
+        match kind with
+        | Coverage.Kind.Checked -> None
+        | Coverage.Kind.Any
+        | Coverage.Kind.Empty -> Some loc
+      ) in
       (* Imagine a tree of uncovered spans based on range inclusion. *)
       (* This sorted list is a pre-order flattening of that tree. *)
       let sorted = Core_list.sort uncovereds ~cmp:Loc.compare in

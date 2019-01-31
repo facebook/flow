@@ -107,7 +107,7 @@ let covered_types cx ~should_check =
   let compute_cov =
     if should_check
     then coverage#type_ cx
-    else fun _ -> false
+    else fun _ -> Coverage.Kind.Empty
   in
   let result_pairs =
     Hashtbl.fold (fun loc { Type.TypeScheme.type_; _ } acc ->

@@ -32,7 +32,8 @@ let spec = {
     |> from_flag
     |> wait_for_recheck_flag
     |> flag "--color" no_arg
-        ~doc:("Print the file with colors showing which parts have unknown types. " ^
+        ~doc:("Print the file with colors showing which parts have unknown types " ^
+              "(blue for 'empty' and red for 'any'). " ^
               "Cannot be used with --json or --pretty")
     |> flag "--debug" no_arg
         ~doc:("Print debugging info about each range in the file to stderr. " ^
@@ -55,10 +56,17 @@ let handle_error ~json ~pretty err =
     prerr_endline err;
   )
 
-let accum_coverage (covered, total) (_loc, is_covered) =
-  if is_covered
-  then (covered + 1, total + 1)
-  else (covered, total + 1)
+let accum_coverage (covered, empty, total) (_loc, kind) =
+  match kind with
+  | Coverage.Kind.Any -> (covered, empty, total + 1)
+  | Coverage.Kind.Empty -> (covered, empty + 1, total + 1)
+  | Coverage.Kind.Checked -> (covered + 1, empty, total + 1)
+
+let accum_coverage_locs (covered, empty, uncovered) (loc, kind) =
+  match kind with
+  | Coverage.Kind.Any -> (covered, empty, loc::uncovered)
+  | Coverage.Kind.Empty -> (covered, loc::empty, loc::uncovered)
+  | Coverage.Kind.Checked -> (loc::covered, empty, uncovered)
 
 let colorize content from_offset to_offset color accum =
   if to_offset > from_offset then
@@ -66,20 +74,23 @@ let colorize content from_offset to_offset color accum =
     (Tty.Normal color, substr)::accum, to_offset
   else accum, from_offset
 
-let debug_range (loc, is_covered) = Loc.(
-  prerr_endlinef "%d:%d,%d:%d: (%b)"
-    loc.start.line loc.start.column
-    loc._end.line loc._end.column
-    is_covered
-)
+let debug_range (loc, kind) = Loc.(
+    prerr_endlinef "%d:%d,%d:%d: (%b)"
+      loc.start.line loc.start.column
+      loc._end.line loc._end.column
+      (Coverage.Kind.to_bool kind)
+  )
 
 let rec colorize_file content last_offset accum = function
   | [] -> colorize content last_offset (String.length content) Tty.Default accum
-  | ((offset, end_offset), is_covered)::rest ->
+  | ((offset, end_offset), kind)::rest ->
     (* catch up to the start of this range *)
     let accum, offset = colorize content last_offset offset Tty.Default accum in
-
-    let color = if not (is_covered) then Tty.Red else Tty.Default in
+    let color = match kind with
+      | Coverage.Kind.Any -> Tty.Red
+      | Coverage.Kind.Empty -> Tty.Blue
+      | Coverage.Kind.Checked -> Tty.Default
+    in
     let accum, offset = colorize content offset end_offset color accum in
     colorize_file content offset accum rest
 
@@ -141,7 +152,7 @@ let rec split_overlapping_ranges accum = function
           let head_loc = (loc1_start, loc2_start - 1) in
           let overlap_loc = (loc2_start, loc1_end) in
           let tail_loc = (loc1_end + 1, loc2_end) in
-          (head_loc, is_covered1)::(overlap_loc, is_covered1 || is_covered2)::accum,
+          (head_loc, is_covered1)::(overlap_loc, Coverage.Kind.m_or (is_covered1, is_covered2))::accum,
           (tail_loc, is_covered2)::rest
 
         else
@@ -160,7 +171,7 @@ let rec split_overlapping_ranges accum = function
       in
       split_overlapping_ranges accum todo
 
-let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bool) list) content =
+let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * Coverage.Kind.t) list) content =
   if debug then List.iter debug_range types;
 
   let offset_table = lazy (Offset_utils.make content) in
@@ -173,29 +184,32 @@ let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * bo
       in
       List.map (fun (loc, covered) -> (loc_to_offset_pair loc, covered)) types
     in
-    let coverage_offsets = split_overlapping_ranges [] coverage_offsets |> List.rev in
+    let coverage_offsets = List.rev (split_overlapping_ranges [] coverage_offsets) in
     let colors, _ = colorize_file content 0 [] coverage_offsets in
     Tty.cprint ~color_mode:Tty.Color_Always (List.rev colors);
     print_endline ""
   end;
 
-  let covered, total = List.fold_left accum_coverage (0, 0) types in
+  let covered, empty, total = List.fold_left accum_coverage (0, 0, 0) types in
   let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
 
   if json then
     let offset_table = Some (Lazy.force offset_table) in
-    let covered_locs, uncovered_locs =
-      let covered, uncovered = List.partition (fun (_, is_covered) -> is_covered) types in
-      let locs_of = Core_list.map ~f:(fun (loc, _) -> loc) in
-      locs_of covered, locs_of uncovered
+    let covered_locs, empty_locs, uncovered_locs =
+      let covered, empty, uncovered =
+        List.fold_left accum_coverage_locs ([], [], []) types
+      in
+      List.rev covered, List.rev empty, List.rev uncovered
     in
     let open Hh_json in
     JSON_Object [
       "expressions", JSON_Object [
         "covered_count", int_ covered;
-        "covered_locs", JSON_Array (covered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table));
+        "covered_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs);
         "uncovered_count", int_ (total - covered);
-        "uncovered_locs", JSON_Array (uncovered_locs |> Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table));
+        "uncovered_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) uncovered_locs);
+        "empty_count", int_ empty;
+        "empty_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) empty_locs);
       ];
     ]
     |> print_json_endline ~pretty

@@ -138,7 +138,7 @@ module Response = struct
   ) result
 
   type coverage_response = (
-    (Loc.t * bool) list,
+    (Loc.t * Coverage.Kind.t) list,
     string
   ) result
 

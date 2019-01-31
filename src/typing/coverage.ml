@@ -34,9 +34,45 @@ let unit_of_op = function
   | OpAnd -> true (* mixed *)
   | OpOr -> false (* empty *)
 
+module Kind = struct
+  type t =
+    | Checked
+    | Any
+    | Empty
+
+  let to_string = function
+    | Checked -> "Checked"
+    | Any -> "Any"
+    | Empty -> "Empty"
+
+  let m_and = function
+    | Any, _ -> Any
+    | _, Any -> Any
+    | Empty, _ -> Empty
+    | _, Empty -> Empty
+    | Checked, Checked -> Checked
+
+  let m_or = function
+    | Any, _ -> Any
+    | _, Any -> Any
+    | Empty, m2 -> m2
+    | m1, Empty -> m1
+    | Checked, Checked -> Checked
+
+  let merge kind x =
+    match kind with
+    | OpAnd -> m_and x
+    | OpOr -> m_or x
+
+  let to_bool = function
+    | Any
+    | Empty -> false
+    | Checked -> true
+end
+
 type tvar_status =
   | Started
-  | Done of bool
+  | Done of Kind.t
 
 class visitor = object (self)
 
@@ -69,7 +105,7 @@ class visitor = object (self)
     then self#tvar cx root_id
     else begin
       match IMap.get root_id tvar_cache with
-      | Some Started -> false
+      | Some Started -> Kind.Any
       | Some Done cov -> cov
       | None ->
         tvar_cache <- IMap.add root_id Started tvar_cache;
@@ -150,16 +186,14 @@ class visitor = object (self)
     | DefT (_, StrT _)
     | DefT (_, VoidT)
       ->
-      true
+      Kind.Checked
 
     (* Concrete uncovered constructors *)
     | MatchingPropT _
     | TypeDestructorTriggerT _
 
-    | DefT (_, EmptyT)
-    | DefT (_, AnyT _)
-      ->
-      false
+    | DefT (_, EmptyT) -> Kind.Empty
+    | DefT (_, AnyT _) -> Kind.Any
 
   method private types_of_use acc = function
     | UseT (_, t) -> t::acc
@@ -182,19 +216,25 @@ class visitor = object (self)
     | [] -> acc
     | t::ts ->
       let cov = self#type_ cx t in
-      let acc = match op with
-        | OpAnd -> acc && cov
-        | OpOr -> acc || cov
-      in
-      self#types_ cx op acc ts
+      let acc = Kind.merge op (acc, cov) in
+      begin match acc with
+        | Kind.Any ->
+          (* Cannot recover from Any, so exit early *)
+          Kind.Any
+        | Kind.Checked
+        | Kind.Empty -> self#types_ cx op acc ts
+      end
 
   method private types_list cx op ts =
     match ts with
-    | [] -> unit_of_op op
+    | [] -> Kind.Empty
     | t::ts -> self#types_nel cx op (t, ts)
 
   method private types_nel cx op (t, ts) =
     let init = self#type_ cx t in
-    self#types_ cx op init ts
+    match init with
+    | Kind.Any -> Kind.Any
+    | Kind.Checked
+    | Kind.Empty -> self#types_ cx op init ts
 
 end
