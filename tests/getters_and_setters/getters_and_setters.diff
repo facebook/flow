@@ -1,0 +1,24 @@
+--- getters_and_setters.exp
++++ getters_and_setters.out
+@@ -465,8 +465,8 @@
+    react.js:17:13
+     17| (<Example a="bad" />); // error: number ~> string
+                     ^^^^^ [1]
+-   <BUILTINS>/react.js:425:36
+-   425|   number: React$PropType$Primitive<number>;
++   <BUILTINS>/react.js:438:36
++   438|   number: React$PropType$Primitive<number>;
+                                            ^^^^^^ [2]
+ 
+ 
+@@ -482,8 +482,8 @@
+    react.js:18:20
+     18| (<Example a={0} c={0} />); // error: number ~> string
+                            ^ [1]
+-   <BUILTINS>/react.js:427:36
+-   427|   string: React$PropType$Primitive<string>;
++   <BUILTINS>/react.js:440:36
++   440|   string: React$PropType$Primitive<string>;
+                                            ^^^^^^ [2]
+ 
+ 

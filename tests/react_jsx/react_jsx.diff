@@ -1,0 +1,79 @@
+--- react_jsx.exp
++++ react_jsx.out
+@@ -93,8 +93,8 @@
+    test.js:105:12
+    105|   string1={null}
+                    ^^^^ [1]
+-   <BUILTINS>/react.js:427:36
+-   427|   string: React$PropType$Primitive<string>;
++   <BUILTINS>/react.js:440:36
++   440|   string: React$PropType$Primitive<string>;
+                                            ^^^^^^ [2]
+    test.js:106:12
+    106|   string2={null}
+@@ -102,8 +102,8 @@
+    test.js:107:13
+    107|   boolean1={null}
+                     ^^^^ [4]
+-   <BUILTINS>/react.js:423:34
+-   423|   bool: React$PropType$Primitive<boolean>;
++   <BUILTINS>/react.js:436:34
++   436|   bool: React$PropType$Primitive<boolean>;
+                                          ^^^^^^^ [5]
+    test.js:108:13
+    108|   boolean2={null}
+@@ -111,8 +111,8 @@
+    test.js:109:11
+    109|   number={null}
+                   ^^^^ [7]
+-   <BUILTINS>/react.js:425:36
+-   425|   number: React$PropType$Primitive<number>;
++   <BUILTINS>/react.js:438:36
++   438|   number: React$PropType$Primitive<number>;
+                                            ^^^^^^ [8]
+ 
+ 
+@@ -161,8 +161,8 @@
+    test.js:135:54
+    135|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
+                                                              ^^^^^^^ [1]
+-   <BUILTINS>/react.js:425:36
+-   425|   number: React$PropType$Primitive<number>;
++   <BUILTINS>/react.js:438:36
++   438|   number: React$PropType$Primitive<number>;
+                                            ^^^^^^ [2]
+ 
+ 
+@@ -1654,8 +1654,8 @@
+    <BUILTINS>/core.js:13:24
+     13| declare var undefined: void;
+                                ^^^^ [1]
+-   <BUILTINS>/react.js:425:36
+-   425|   number: React$PropType$Primitive<number>;
++   <BUILTINS>/react.js:438:36
++   438|   number: React$PropType$Primitive<number>;
+                                            ^^^^^^ [2]
+ 
+ 
+@@ -1675,8 +1675,8 @@
+    test.js:788:7
+    788|   foo="nope"
+               ^^^^^^ [1]
+-   <BUILTINS>/react.js:425:36
+-   425|   number: React$PropType$Primitive<number>;
++   <BUILTINS>/react.js:438:36
++   438|   number: React$PropType$Primitive<number>;
+                                            ^^^^^^ [2]
+ 
+ 
+@@ -1696,8 +1696,8 @@
+    test.js:793:7
+    793|   bar="nope"
+               ^^^^^^ [1]
+-   <BUILTINS>/react.js:425:36
+-   425|   number: React$PropType$Primitive<number>;
++   <BUILTINS>/react.js:438:36
++   438|   number: React$PropType$Primitive<number>;
+                                            ^^^^^^ [2]
+ 
+ 
