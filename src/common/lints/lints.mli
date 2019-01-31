@@ -23,6 +23,7 @@ type lint_kind =
  | UnclearType
  | DeprecatedType
  | DeprecatedUtility
+ | DynamicExport
  | UnsafeGettersSetters
  | InexactSpread
  | UnnecessaryOptionalChain

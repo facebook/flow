@@ -153,6 +153,7 @@ type error_message =
   | EUnclearType of ALoc.t
   | EDeprecatedType of ALoc.t
   | EDeprecatedUtility of ALoc.t * string
+  | EDynamicExport of reason * reason
   | EUnsafeGettersSetters of ALoc.t
   | EUnusedSuppression of ALoc.t
   | ELintSetting of LintSettings.lint_parse_error
@@ -388,6 +389,7 @@ let util_use_op_of_msg nope util = function
 | EUnclearType (_)
 | EDeprecatedType _
 | EDeprecatedUtility _
+| EDynamicExport _
 | EUnsafeGettersSetters (_)
 | EUnusedSuppression (_)
 | ELintSetting (_)
@@ -2095,6 +2097,11 @@ let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Error
       text "Deprecated utility. Using "; code name; text " types is not recommended!"
     ]
 
+  | EDynamicExport (reason, reason_exp) ->
+      mk_error ~trace_infos ~kind:(LintError Lints.DynamicExport) (aloc_of_reason reason_exp)
+        [text "Dynamic "; ref reason; text " unsafely appears in exported ";
+        ref reason_exp; text ". This can cause importing modules to lose type coverage!"]
+
   | EUnsafeGettersSetters loc ->
     mk_error ~trace_infos ~kind:(LintError Lints.UnsafeGettersSetters) loc
       [text "Getters and setters can have side effects and are unsafe."]
@@ -2202,6 +2209,7 @@ let is_lint_error = function
   | EUnclearType _
   | EDeprecatedType _
   | EDeprecatedUtility _
+  | EDynamicExport _
   | EUnsafeGettersSetters _
   | ESketchyNullLint _
   | ESketchyNumberLint _
