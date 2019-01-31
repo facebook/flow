@@ -46,116 +46,260 @@ coverage.js
 
 {
   "expressions":{
-    "covered_count":10,
+    "covered_count":14,
     "covered_locs":[
       {
         "source":"coverage.js",
         "type":"SourceFile",
         "start":{"line":3,"column":7,"offset":16},
-        "end":{"line":3,"column":9,"offset":19}
+        "end":{"line":3,"column":8,"offset":18}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":3,"column":13,"offset":22},
-        "end":{"line":3,"column":13,"offset":23}
+        "start":{"line":3,"column":12,"offset":21},
+        "end":{"line":3,"column":12,"offset":22}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":3,"column":13,"offset":22},
-        "end":{"line":3,"column":17,"offset":27}
+        "start":{"line":4,"column":17,"offset":40},
+        "end":{"line":4,"column":18,"offset":42}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":3,"column":13,"offset":22},
-        "end":{"line":3,"column":21,"offset":31}
+        "start":{"line":4,"column":17,"offset":40},
+        "end":{"line":4,"column":22,"offset":46}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":3,"column":17,"offset":26},
-        "end":{"line":3,"column":17,"offset":27}
+        "start":{"line":4,"column":22,"offset":45},
+        "end":{"line":4,"column":22,"offset":46}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":3,"column":21,"offset":30},
-        "end":{"line":3,"column":21,"offset":31}
+        "start":{"line":5,"column":17,"offset":64},
+        "end":{"line":5,"column":17,"offset":65}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":5,"column":18,"offset":51},
-        "end":{"line":5,"column":20,"offset":54}
+        "start":{"line":9,"column":1,"offset":86},
+        "end":{"line":9,"column":23,"offset":109}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":5,"column":18,"offset":51},
-        "end":{"line":5,"column":24,"offset":58}
+        "start":{"line":10,"column":1,"offset":110},
+        "end":{"line":10,"column":23,"offset":133}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":5,"column":24,"offset":57},
-        "end":{"line":5,"column":24,"offset":58}
+        "start":{"line":11,"column":1,"offset":134},
+        "end":{"line":11,"column":25,"offset":159}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":19,"offset":79},
-        "end":{"line":7,"column":19,"offset":80}
+        "start":{"line":12,"column":1,"offset":160},
+        "end":{"line":12,"column":25,"offset":185}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":15,"column":1,"offset":232},
+        "end":{"line":15,"column":26,"offset":258}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":23,"column":1,"offset":406},
+        "end":{"line":23,"column":26,"offset":432}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":32,"column":1,"offset":555},
+        "end":{"line":32,"column":24,"offset":579}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":33,"column":1,"offset":580},
+        "end":{"line":33,"column":24,"offset":604}
       }
     ],
-    "uncovered_count":5,
+    "uncovered_count":27,
     "uncovered_locs":[
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":5,"column":7,"offset":40},
-        "end":{"line":5,"column":14,"offset":48}
+        "start":{"line":4,"column":7,"offset":30},
+        "end":{"line":4,"column":13,"offset":37}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":7,"offset":67},
-        "end":{"line":7,"column":9,"offset":70}
+        "start":{"line":5,"column":7,"offset":54},
+        "end":{"line":5,"column":8,"offset":56}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":13,"offset":73},
-        "end":{"line":7,"column":15,"offset":76}
+        "start":{"line":5,"column":12,"offset":59},
+        "end":{"line":5,"column":13,"offset":61}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":7,"column":13,"offset":73},
-        "end":{"line":7,"column":19,"offset":80}
+        "start":{"line":5,"column":12,"offset":59},
+        "end":{"line":5,"column":17,"offset":65}
       },
       {
         "source":"coverage.js",
         "type":"SourceFile",
-        "start":{"line":9,"column":1,"offset":83},
-        "end":{"line":9,"column":3,"offset":86}
+        "start":{"line":7,"column":1,"offset":68},
+        "end":{"line":7,"column":16,"offset":84}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":13,"column":1,"offset":186},
+        "end":{"line":13,"column":22,"offset":208}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":14,"column":1,"offset":209},
+        "end":{"line":14,"column":22,"offset":231}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":17,"column":1,"offset":260},
+        "end":{"line":17,"column":23,"offset":283}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":18,"column":1,"offset":284},
+        "end":{"line":18,"column":23,"offset":307}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":19,"column":1,"offset":308},
+        "end":{"line":19,"column":25,"offset":333}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":20,"column":1,"offset":334},
+        "end":{"line":20,"column":25,"offset":359}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":21,"column":1,"offset":360},
+        "end":{"line":21,"column":22,"offset":382}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":22,"column":1,"offset":383},
+        "end":{"line":22,"column":22,"offset":405}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":25,"column":1,"offset":434},
+        "end":{"line":25,"column":11,"offset":445}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":27,"column":1,"offset":447},
+        "end":{"line":27,"column":21,"offset":468}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":28,"column":1,"offset":469},
+        "end":{"line":28,"column":23,"offset":492}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":29,"column":1,"offset":493},
+        "end":{"line":29,"column":21,"offset":514}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":30,"column":1,"offset":515},
+        "end":{"line":30,"column":23,"offset":538}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":31,"column":1,"offset":539},
+        "end":{"line":31,"column":15,"offset":554}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":34,"column":1,"offset":605},
+        "end":{"line":34,"column":21,"offset":626}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":36,"column":1,"offset":628},
+        "end":{"line":36,"column":21,"offset":649}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":37,"column":1,"offset":650},
+        "end":{"line":37,"column":23,"offset":673}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":38,"column":1,"offset":674},
+        "end":{"line":38,"column":21,"offset":695}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":39,"column":1,"offset":696},
+        "end":{"line":39,"column":23,"offset":719}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":40,"column":1,"offset":720},
+        "end":{"line":40,"column":24,"offset":744}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":41,"column":1,"offset":745},
+        "end":{"line":41,"column":24,"offset":769}
+      },
+      {
+        "source":"coverage.js",
+        "type":"SourceFile",
+        "start":{"line":42,"column":1,"offset":770},
+        "end":{"line":42,"column":21,"offset":791}
       }
     ]
   }
 }
-[0m// @flow
-
-const [0m[0mfoo[0m[0m = [0m[0m5[0m[0m [0m[0m+[0m[0m [0m[0m3[0m[0m [0m[0m+[0m[0m [0m[0m2[0m[0m;
-
-const [0m[31mbar: any[0m[0m = [0m[0mfoo[0m[0m [0m[0m-[0m[0m [0m[0m2[0m[0m;
-
-const [0m[31mbaz[0m[0m = [0m[31mbar[0m[0m [0m[31m+[0m[0m [0m[0m1[0m[0m;
-
-[0m[31mbaz[0m[0m;
-[0m
-Covered: 66.67% (10 of 15 expressions)
-
 -----------------------------
 unicode.js
 -----------------------------

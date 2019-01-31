@@ -100,44 +100,19 @@ let dump_types cx file_sig ~printer =
   |> concretize_loc_pairs
   |> sort_loc_pairs
 
-let rec is_covered = function
-  | Ty.Any _
-  | Ty.Bot -> false
-  | Ty.Union (t1, t2, ts) ->
-    List.exists is_covered (t1::t2::ts)
-  | Ty.Inter (t1, t2, ts) ->
-    List.for_all is_covered (t1::t2::ts)
-  | _ -> true
-
-let covered_types cx file_sig ~should_check =
-  let options = {
-    Ty_normalizer_env.
-    fall_through_merged = true;
-    expand_internal_types = false;
-    expand_type_aliases = false;
-    flag_shadowed_type_params = false;
-    preserve_inferred_literal_types = false;
-    optimize_types = false;
-  } in
-  let file = Context.file cx in
+let covered_types cx ~should_check =
   let type_table = Context.type_table cx in
   let htbl = Type_table.coverage_hashtbl type_table in
+  let coverage = new Coverage.visitor in
+  let compute_cov =
+    if should_check
+    then coverage#type_ cx
+    else fun _ -> false
+  in
   let result_pairs =
-    if should_check then
-      let f acc (loc, result) =
-        let cov = match result with
-          | Ok t -> is_covered t
-          | Error _ -> false
-        in
-        (ALoc.to_loc loc, cov)::acc
-      in
-      let g x = x in
-      let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
-      Ty_normalizer.fold_hashtbl ~options ~genv ~f ~g ~htbl []
-    else
-      Hashtbl.fold (fun loc _ acc ->
-        (ALoc.to_loc loc, false)::acc
-      ) htbl []
+    Hashtbl.fold (fun loc { Type.TypeScheme.type_; _ } acc ->
+      (ALoc.to_loc loc, compute_cov type_)::acc
+    ) htbl []
   in
   sort_loc_pairs result_pairs
 

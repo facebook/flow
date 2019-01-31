@@ -58,7 +58,7 @@ let coverage ~options ~env ~profiling ~force file content =
       Docblock.is_flow docblock
   in
   Types_js.basic_check_contents ~options ~env ~profiling content file >|=
-  map ~f:(fun (cx, _, file_sig, _) -> Query_types.covered_types cx (File_sig.abstractify_locs file_sig) ~should_check)
+  map ~f:(fun (cx, _, _, _) -> Query_types.covered_types cx ~should_check)
 
 let suggest ~options ~env ~profiling file content =
   Types_js.typecheck_contents ~options ~env ~profiling content file >|=

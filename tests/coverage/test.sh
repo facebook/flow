@@ -26,7 +26,6 @@ echo "-----------------------------"
 echo
 # some more detailed tests:
 assert_ok "$FLOW" coverage --strip-root --pretty coverage.js
-assert_ok "$FLOW" coverage --color coverage.js
 
 echo "-----------------------------"
 echo "unicode.js"
