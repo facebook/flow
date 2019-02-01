@@ -1048,6 +1048,9 @@ let rec mk_expression_reason = Ast.Expression.(function
 | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 )
 
+let mk_pattern_reason ((loc, _) as patt) =
+  mk_reason (RCode (code_desc_of_pattern patt)) loc
+
 (* TODO: replace RCustom descriptions with proper descriptions *)
 let unknown_elem_empty_array_desc = RCustom "unknown element type of empty array"
 let inferred_union_elem_array_desc = RCustom

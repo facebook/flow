@@ -11,3 +11,10 @@ val get:
   ('loc, 'loc) Flow_ast.Expression.t ->
   ALoc.t ->
   Type.t option
+
+val key_of_pattern: ('loc, 'loc) Flow_ast.Pattern.t -> Key.t option
+val get_of_pattern:
+  Context.t ->
+  ('loc, 'loc) Flow_ast.Pattern.t ->
+  ALoc.t ->
+  Type.t option

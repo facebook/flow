@@ -4535,10 +4535,10 @@ and assignment cx loc = Ast.Expression.(function
             })
 
         (* super.name = e *)
-        | lhs_loc, Ast.Pattern.Expression ((pat_loc, Member {
+        | lhs_loc, Ast.Pattern.Expression (pat_loc, Member {
             Member._object = super_loc, Super;
             property = Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments= _ });
-          }) as rx) ->
+          }) ->
             let reason =
               mk_reason (RPropertyAssignment (Some name)) lhs_loc in
             let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
@@ -4550,7 +4550,7 @@ and assignment cx loc = Ast.Expression.(function
             Type_table.set_info prop_loc id_info (Context.type_table cx);
             let use_op = Op (SetProperty {
               lhs = reason;
-              prop = mk_reason (desc_of_reason (mk_expression_reason rx)) prop_loc;
+              prop = mk_reason (desc_of_reason (mk_pattern_reason r)) prop_loc;
               value = mk_expression_reason e;
             }) in
             Flow.flow cx (super, SetPropT (
@@ -4563,10 +4563,10 @@ and assignment cx loc = Ast.Expression.(function
             })
 
         (* _object.#name = e *)
-        | lhs_loc, Ast.Pattern.Expression ((pat_loc, Member {
+        | lhs_loc, Ast.Pattern.Expression (pat_loc, Member {
             Member._object;
             property = Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments= _ })) as property;
-          }) as expr) ->
+          }) ->
             let (_, o), _ as _object = expression cx _object in
             let prop_t =
             (* if we fire this hook, it means the assignment is a sham. *)
@@ -4583,13 +4583,13 @@ and assignment cx loc = Ast.Expression.(function
               Type_table.set_info prop_loc id_info (Context.type_table cx);
               let use_op = Op (SetProperty {
                 lhs = reason;
-                prop = mk_reason (desc_of_reason (mk_expression_reason expr)) prop_loc;
+                prop = mk_reason (desc_of_reason (mk_pattern_reason r)) prop_loc;
                 value = mk_expression_reason e;
               }) in
               Flow.flow cx (o, SetPrivatePropT (
                 use_op, reason, name, class_entries, false, t, Some prop_t
               ));
-              post_assignment_havoc ~private_:true name expr lhs_loc t;
+              post_assignment_havoc ~private_:true name r t;
               prop_t
             in
             (lhs_loc, prop_t), Ast.Pattern.Expression ((pat_loc, prop_t), Member { Member.
@@ -4598,10 +4598,10 @@ and assignment cx loc = Ast.Expression.(function
             })
 
         (* _object.name = e *)
-        | lhs_loc, Ast.Pattern.Expression ((pat_loc, Member {
+        | lhs_loc, Ast.Pattern.Expression (pat_loc, Member {
             Member._object;
             property = Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments= _ });
-          }) as expr) ->
+          }) ->
             let wr_ctx = match _object, Env.var_scope_kind () with
               | (_, This), Scope.Ctor -> ThisInCtor
               | _ -> Normal
@@ -4621,13 +4621,13 @@ and assignment cx loc = Ast.Expression.(function
               Type_table.set_info prop_loc id_info (Context.type_table cx);
               let use_op = Op (SetProperty {
                 lhs = reason;
-                prop = mk_reason (desc_of_reason (mk_expression_reason expr)) prop_loc;
+                prop = mk_reason (desc_of_reason (mk_pattern_reason r)) prop_loc;
                 value = mk_expression_reason e;
               }) in
               Flow.flow cx (o, SetPropT (
                 use_op, reason, Named (prop_reason, name), wr_ctx, t, Some prop_t
               ));
-              post_assignment_havoc ~private_:false name expr lhs_loc t;
+              post_assignment_havoc ~private_:false name r t;
               prop_t
             in
             let property = Member.PropertyIdentifier ((prop_loc, prop_t), mk_ident name) in
@@ -4637,16 +4637,16 @@ and assignment cx loc = Ast.Expression.(function
             })
 
         (* _object[index] = e *)
-        | lhs_loc, Ast.Pattern.Expression ((pat_loc, Member {
+        | lhs_loc, Ast.Pattern.Expression (pat_loc, Member {
             Member._object;
             property = Member.PropertyExpression ((iloc, _) as index);
-          }) as rx) ->
+          }) ->
             let reason = mk_reason (RPropertyAssignment None) lhs_loc in
             let (_, a), _ as _object = expression cx _object in
             let (_, i), _ as index = expression cx index in
             let use_op = Op (SetProperty {
               lhs = reason;
-              prop = mk_reason (desc_of_reason (mk_expression_reason rx)) iloc;
+              prop = mk_reason (desc_of_reason (mk_pattern_reason r)) iloc;
               value = mk_expression_reason e;
             }) in
             Flow.flow cx (a, SetElemT (use_op, reason, i, t, None));
@@ -4663,10 +4663,6 @@ and assignment cx loc = Ast.Expression.(function
         (* other r structures are handled as destructuring assignments *)
         | _ ->
             destructuring_assignment cx ~expr:expression t e r
-
-
-
-
       in
       t, lhs, rhs
 
@@ -4680,9 +4676,7 @@ and assignment cx loc = Ast.Expression.(function
       let () =
         let use_op = Op (Addition {
           op = reason;
-          left = (match lhs with
-          | (_, Ast.Pattern.Expression lhs) -> mk_expression_reason lhs
-          | _ -> reason_of_t lhs_t);
+          left = mk_pattern_reason lhs;
           right = mk_expression_reason rhs;
         }) in
         Flow.flow cx (lhs_t, AdderT (use_op, reason, false, rhs_t, result_t))
@@ -4691,9 +4685,7 @@ and assignment cx loc = Ast.Expression.(function
         let use_op = Op (Addition {
           op = reason;
           left = mk_expression_reason rhs;
-          right = (match lhs with
-          | (_, Ast.Pattern.Expression lhs) -> mk_expression_reason lhs
-          | _ -> reason_of_t lhs_t);
+          right = mk_pattern_reason lhs;
         }) in
         Flow.flow cx (rhs_t, AdderT (use_op, reason, false, lhs_t, result_t))
       in
@@ -6781,14 +6773,14 @@ and check_default_pattern cx left right =
       end
     | _ -> ()
 
-and post_assignment_havoc ~private_ name expr lhs_loc t =
+and post_assignment_havoc ~private_ name patt t =
   (* types involved in the assignment are computed
      in pre-havoc environment. it's the assignment itself
      which clears refis *)
   Env.havoc_heap_refinements_with_propname ~private_ name;
 
   (* add type refinement if LHS is a pattern we handle *)
-  match Refinement.key expr with
+  match Refinement.key_of_pattern patt with
   | Some key ->
     (* NOTE: currently, we allow property refinements to propagate
        even if they may turn out to be invalid w.r.t. the
@@ -6800,7 +6792,7 @@ and post_assignment_havoc ~private_ name expr lhs_loc t =
        object and refinement types - `o` and `t` here - are
        fully resolved.
      *)
-    ignore Env.(set_expr key lhs_loc t t)
+    ignore Env.(set_expr key (fst patt) t t)
   | None ->
     ()
 

@@ -243,6 +243,7 @@ val annot_reason: reason -> reason
 module ReasonMap : MyMap.S with type key = reason
 
 val mk_expression_reason: (ALoc.t, ALoc.t) Flow_ast.Expression.t -> reason
+val mk_pattern_reason: (ALoc.t, ALoc.t) Flow_ast.Pattern.t -> reason
 
 val unknown_elem_empty_array_desc: reason_desc
 val inferred_union_elem_array_desc: reason_desc
