@@ -1,0 +1,97 @@
+--- react.exp
++++ react.out
+@@ -3405,6 +3405,42 @@
+                      ^^^^^^^^^^^^^^^^^^^^^ [2]
+ 
+ 
++Error ------------------------------------------------------------------------------------------ useEffect_hook.js:24:19
++
++Cannot call `React.useEffect` with async function bound to `create` because a callable signature is missing in
++`Promise` [1] but exists in function type [2] in the return value.
++
++   useEffect_hook.js:24:19
++    24|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type 
++                          ^^^^^^^^^^^^^^
++
++References:
++   useEffect_hook.js:24:30
++    24|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type 
++                                     ^ [1]
++   <BUILTINS>/react.js:308:41
++   308|   declare type MaybeCleanUpFn = void | (() => void);
++                                                ^^^^^^^^^^ [2]
++
++
++Error ------------------------------------------------------------------------------------------ useEffect_hook.js:25:19
++
++Cannot call `React.useEffect` with function bound to `create` because number [1] is incompatible with undefined [2] in
++the return value of the return value.
++
++   useEffect_hook.js:25:19
++    25|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value 
++                          ^^^^^^^^^^^^^^^
++
++References:
++   useEffect_hook.js:25:31
++    25|   React.useEffect(() => () => 123) // Error: cleanup function should not return a value 
++                                      ^^^ [1]
++   <BUILTINS>/react.js:308:47
++   308|   declare type MaybeCleanUpFn = void | (() => void);
++                                                      ^^^^ [2]
++
++
+ Error ---------------------------------------------------------------------------------- useImperativeHandle_hook.js:6:3
+ 
+ Cannot call `React.useImperativeHandle` because function [1] requires another argument.
+@@ -3508,6 +3544,42 @@
+                      ^^^^^^^^^^^^^^^^^^^^^ [2]
+ 
+ 
++Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:24:25
++
++Cannot call `React.useLayoutEffect` with async function bound to `create` because a callable signature is missing in
++`Promise` [1] but exists in function type [2] in the return value.
++
++   useLayoutEffect_hook.js:24:25
++    24|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type 
++                                ^^^^^^^^^^^^^^
++
++References:
++   useLayoutEffect_hook.js:24:36
++    24|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type 
++                                           ^ [1]
++   <BUILTINS>/react.js:308:41
++   308|   declare type MaybeCleanUpFn = void | (() => void);
++                                                ^^^^^^^^^^ [2]
++
++
++Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:25:25
++
++Cannot call `React.useLayoutEffect` with function bound to `create` because number [1] is incompatible with
++undefined [2] in the return value of the return value.
++
++   useLayoutEffect_hook.js:25:25
++    25|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value 
++                                ^^^^^^^^^^^^^^^
++
++References:
++   useLayoutEffect_hook.js:25:37
++    25|   React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value 
++                                            ^^^ [1]
++   <BUILTINS>/react.js:308:47
++   308|   declare type MaybeCleanUpFn = void | (() => void);
++                                                      ^^^^ [2]
++
++
+ Error ---------------------------------------------------------------------------------------------- useMemo_hook.js:6:3
+ 
+ Cannot call `React.useMemo` because function [1] requires another argument.
+@@ -4107,7 +4179,7 @@
+ 
+ 
+ 
+-Found 241 errors
++Found 245 errors
+ 
+ Only showing the most relevant union/intersection branches.
+ To see all branches, re-run Flow with --show-all-branches

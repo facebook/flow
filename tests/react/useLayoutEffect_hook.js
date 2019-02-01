@@ -21,4 +21,6 @@ import React from 'react';
 {
   React.useLayoutEffect(1); // Error: number is incompatible with function type
   React.useLayoutEffect(() => {}, 1); // Error: number is incompatible with function react-only array
+  React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type 
+  React.useLayoutEffect(() => () => 123) // Error: cleanup function should not return a value 
 }
