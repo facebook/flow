@@ -22,7 +22,6 @@ type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
-  loc_file_sigs: File_sig.With_Loc.t FilenameMap.t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
   typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
 }

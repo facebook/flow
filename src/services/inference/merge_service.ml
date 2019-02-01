@@ -23,7 +23,6 @@ type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
-  loc_file_sigs: File_sig.With_Loc.t FilenameMap.t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
   typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
 }
@@ -88,20 +87,19 @@ let reqs_of_component ~reader component required =
   master_cx, dep_cxs, reqs
 
 let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe component =
-  let required, file_sigs, loc_file_sigs =
-    Nel.fold_left (fun (required, file_sigs, loc_file_sigs) file ->
+  let required, file_sigs =
+    Nel.fold_left (fun (required, file_sigs) file ->
       let loc_file_sig = get_file_sig_unsafe ~reader file in
       let file_sig = File_sig.abstractify_locs loc_file_sig in
       let file_sigs = FilenameMap.add file file_sig file_sigs in
-      let loc_file_sigs = FilenameMap.add file loc_file_sig loc_file_sigs in
       let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
       let required = SMap.fold (fun r locs acc ->
         let resolved_r = Module_js.find_resolved_module ~reader ~audit:Expensive.ok
           file r in
         (r, locs, resolved_r, file) :: acc
       ) require_loc_map required in
-      required, file_sigs, loc_file_sigs
-    ) ([], FilenameMap.empty, FilenameMap.empty) component in
+      required, file_sigs
+    ) ([], FilenameMap.empty) component in
 
   let master_cx, dep_cxs, file_reqs =
     reqs_of_component ~reader component required
@@ -126,7 +124,7 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
 
   let other_cxs = Core_list.map ~f:fst other_cxs in
 
-  { cx; other_cxs; master_cx; file_sigs; loc_file_sigs; typed_asts }
+  { cx; other_cxs; master_cx; file_sigs; typed_asts }
 
 let merge_strict_context ~options ~reader component =
   merge_strict_context_generic ~options ~reader
