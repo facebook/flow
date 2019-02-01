@@ -496,23 +496,26 @@ module Haste: MODULE_SYSTEM = struct
   let expand_project_root_token options str =
     Files.expand_project_root_token_to_regexp ~root:(Options.root options) str
 
-  let is_haste_file options name =
-    let matched_haste_paths_whitelist name = List.exists
+  let is_haste_file =
+    let matched_haste_paths_whitelist options name = List.exists
       (fun r -> Str.string_match (expand_project_root_token options r) name 0)
       (Options.haste_paths_whitelist options) in
-    let matched_haste_paths_blacklist name = List.exists
+    let matched_haste_paths_blacklist options name = List.exists
       (fun r -> Str.string_match (expand_project_root_token options r) name 0)
       (Options.haste_paths_blacklist options) in
-    (matched_haste_paths_whitelist name) && not (matched_haste_paths_blacklist name)
+    fun options name ->
+      (matched_haste_paths_whitelist options name) &&
+        not (matched_haste_paths_blacklist options name)
 
-  let haste_name options name =
+  let haste_name =
     let reduce_name name (regexp, template) =
       Str.global_replace regexp template name
     in
-    List.fold_left
-      reduce_name
-      name
-      (Options.haste_name_reducers options)
+    fun options name ->
+      List.fold_left
+        reduce_name
+        name
+        (Options.haste_name_reducers options)
 
   let rec exported_module ~reader options file info =
     match file with
