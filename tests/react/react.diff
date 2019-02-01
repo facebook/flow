@@ -1390,7 +1390,7 @@
 +          ------------------^ [3]
 +   <BUILTINS>/react.js:332:37
 +                                            v---------
-+   332|   declare export function useReducer<S, I, A>(
++   332|   declare export function useReducer<S, A, I>(
 +   333|     reducer: (S, A) => S,
 +   334|     initialArg: I,
 +   335|     init: (I) => S,
@@ -1408,9 +1408,9 @@
 -                    ^^^ [6]
 -   useReducer_hook.js:43:38
 -   43|   dispatch({ type: "reset", payload: 123 });
-+   useReducer_hook.js:41:81
-+   41|   const [state, dispatch] = React.useReducer(reducer, { type: "reset", payload: 123 }, init);
-+                                                                                       ^^^ [6]
++   useReducer_hook.js:41:66
++   41|   const [state, dispatch] = React.useReducer(reducer, { initial: 123 }, init);
++                                                                        ^^^ [6]
 +   useReducer_hook.js:44:38
 +   44|   dispatch({ type: "reset", payload: 123 });
                                              ^^^ [7]

@@ -32,13 +32,13 @@ const initialState = { count: 0 };
 }
 
 {
-  function init(arg){
+  function init(initialArg){
     return {
-      count: arg.payload
+      count: initialArg.initial
     }
-  }  
+  }
 
-  const [state, dispatch] = React.useReducer(reducer, { type: "reset", payload: 123 }, init);
+  const [state, dispatch] = React.useReducer(reducer, { initial: 123 }, init);
   (state.count: number); // Ok
 
   dispatch({ type: "reset", payload: 123 });
