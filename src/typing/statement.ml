@@ -4507,15 +4507,17 @@ and assignment_lhs cx = Ast.Pattern.(function
 )
 
 (* traverse assignment expressions *)
-and assignment cx loc = Ast.Expression.(function
-  (* r = e *)
-  | (r, Assignment.Assign, e) ->
+and assignment cx loc (lhs, op, rhs) =
+  let open Ast.Expression in
+  match op with
+  (* lhs = rhs *)
+  | Assignment.Assign ->
 
-      let (_, t), _ as rhs = expression cx e in
+      let (_, t), _ as typed_rhs = expression cx rhs in
 
       (* update env, add constraints arising from LHS structure,
          handle special cases, etc. *)
-      let lhs = match r with
+      let lhs = match lhs with
 
         (* module.exports = e *)
         | lhs_loc, Ast.Pattern.Expression (pat_loc, Member {
@@ -4550,8 +4552,8 @@ and assignment cx loc = Ast.Expression.(function
             Type_table.set_info prop_loc id_info (Context.type_table cx);
             let use_op = Op (SetProperty {
               lhs = reason;
-              prop = mk_reason (desc_of_reason (mk_pattern_reason r)) prop_loc;
-              value = mk_expression_reason e;
+              prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
+              value = mk_expression_reason rhs;
             }) in
             Flow.flow cx (super, SetPropT (
               use_op, reason, Named (prop_reason, name), Normal, t, Some prop_t
@@ -4583,13 +4585,13 @@ and assignment cx loc = Ast.Expression.(function
               Type_table.set_info prop_loc id_info (Context.type_table cx);
               let use_op = Op (SetProperty {
                 lhs = reason;
-                prop = mk_reason (desc_of_reason (mk_pattern_reason r)) prop_loc;
-                value = mk_expression_reason e;
+                prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
+                value = mk_expression_reason rhs;
               }) in
               Flow.flow cx (o, SetPrivatePropT (
                 use_op, reason, name, class_entries, false, t, Some prop_t
               ));
-              post_assignment_havoc ~private_:true name r t;
+              post_assignment_havoc ~private_:true name lhs t;
               prop_t
             in
             (lhs_loc, prop_t), Ast.Pattern.Expression ((pat_loc, prop_t), Member { Member.
@@ -4621,13 +4623,13 @@ and assignment cx loc = Ast.Expression.(function
               Type_table.set_info prop_loc id_info (Context.type_table cx);
               let use_op = Op (SetProperty {
                 lhs = reason;
-                prop = mk_reason (desc_of_reason (mk_pattern_reason r)) prop_loc;
-                value = mk_expression_reason e;
+                prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
+                value = mk_expression_reason rhs;
               }) in
               Flow.flow cx (o, SetPropT (
                 use_op, reason, Named (prop_reason, name), wr_ctx, t, Some prop_t
               ));
-              post_assignment_havoc ~private_:false name r t;
+              post_assignment_havoc ~private_:false name lhs t;
               prop_t
             in
             let property = Member.PropertyIdentifier ((prop_loc, prop_t), mk_ident name) in
@@ -4646,8 +4648,8 @@ and assignment cx loc = Ast.Expression.(function
             let (_, i), _ as index = expression cx index in
             let use_op = Op (SetProperty {
               lhs = reason;
-              prop = mk_reason (desc_of_reason (mk_pattern_reason r)) iloc;
-              value = mk_expression_reason e;
+              prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) iloc;
+              value = mk_expression_reason rhs;
             }) in
             Flow.flow cx (a, SetElemT (use_op, reason, i, t, None));
 
@@ -4662,11 +4664,11 @@ and assignment cx loc = Ast.Expression.(function
 
         (* other r structures are handled as destructuring assignments *)
         | _ ->
-            destructuring_assignment cx ~expr:expression t e r
+            destructuring_assignment cx ~expr:expression t rhs lhs
       in
-      t, lhs, rhs
+      t, lhs, typed_rhs
 
-  | (lhs, Assignment.PlusAssign, rhs) ->
+  | Assignment.PlusAssign ->
       (* lhs += rhs *)
       let reason = mk_reason (RCustom "+=") loc in
       let (_, lhs_t), _ as lhs_ast = assignment_lhs cx lhs in
@@ -4704,17 +4706,17 @@ and assignment cx loc = Ast.Expression.(function
       );
       lhs_t, lhs_ast, rhs_ast
 
-  | (lhs, Assignment.MinusAssign, rhs)
-  | (lhs, Assignment.MultAssign, rhs)
-  | (lhs, Assignment.ExpAssign, rhs)
-  | (lhs, Assignment.DivAssign, rhs)
-  | (lhs, Assignment.ModAssign, rhs)
-  | (lhs, Assignment.LShiftAssign, rhs)
-  | (lhs, Assignment.RShiftAssign, rhs)
-  | (lhs, Assignment.RShift3Assign, rhs)
-  | (lhs, Assignment.BitOrAssign, rhs)
-  | (lhs, Assignment.BitXorAssign, rhs)
-  | (lhs, Assignment.BitAndAssign, rhs)
+  | Assignment.MinusAssign
+  | Assignment.MultAssign
+  | Assignment.ExpAssign
+  | Assignment.DivAssign
+  | Assignment.ModAssign
+  | Assignment.LShiftAssign
+  | Assignment.RShiftAssign
+  | Assignment.RShift3Assign
+  | Assignment.BitOrAssign
+  | Assignment.BitXorAssign
+  | Assignment.BitAndAssign
     ->
       (* lhs (numop)= rhs *)
       let reason = mk_reason (RCustom "(numop)=") loc in
@@ -4738,7 +4740,6 @@ and assignment cx loc = Ast.Expression.(function
       | _ -> ()
       );
       lhs_t, lhs_ast, rhs_ast
-)
 
 and clone_object cx reason this that =
   Tvar.mk_where cx reason (fun tvar ->
