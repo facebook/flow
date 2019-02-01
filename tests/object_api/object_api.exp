@@ -422,8 +422,8 @@ Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatibl
                                 ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:398:5
-   398|     valueOf(): number;
+   <BUILTINS>/core.js:399:5
+   399|     valueOf(): number;
             ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
    122| var xValueOf : number = x.valueOf; // error
@@ -464,8 +464,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] 
                                        ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:394:5
-   394|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:395:5
+   395|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
    150| var xToLocaleString : number = x.toLocaleString; // error
@@ -482,8 +482,8 @@ value.
                                               ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:394:93
-   394|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:395:93
+   395|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                     ^^^^^^ [1]
    object_prototype.js:151:30
    151| var xToLocaleString2 : () => number = x.toLocaleString; // error

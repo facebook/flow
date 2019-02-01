@@ -118,8 +118,8 @@ Property `@@iterator` is missing in object literal [1] but exists in `$Iterable`
                                  ^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:495:11
-   495| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:496:11
+   496| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
