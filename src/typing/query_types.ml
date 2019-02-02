@@ -53,7 +53,7 @@ let types_in_file ~options ~full_cx ~file ~file_sig ~type_table typed_ast =
   let ty_list = Ty_normalizer.from_schemes ~options ~genv type_scheme_list in
   List.fold_left (fun map (loc, result) ->
     match result with
-    | Ok ty -> LocMap.add loc ty map
+    | Ok ty -> LocMap.add (ALoc.to_loc loc) ty map
     | Error _ -> map
   ) LocMap.empty ty_list
 

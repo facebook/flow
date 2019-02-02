@@ -6,7 +6,7 @@
  *)
 
 module Ast = Flow_ast
-module LocMap = Utils_js.LocMap
+module ALocMap = Utils_js.ALocMap
 
 (* TODO(nmote) come up with a consistent story for abstract/concrete locations in this module *)
 
@@ -138,23 +138,22 @@ class type_at_pos_searcher (target_loc: Loc.t) = object(self)
 
 end
 
-class type_at_loc_map_folder = object(_)
+class type_at_aloc_map_folder = object(_)
   inherit type_parameter_mapper
-  val mutable map = LocMap.empty
+  val mutable map = ALocMap.empty
   method! on_type_annot x =
     let loc, type_ = x in
     let scheme = Type.TypeScheme.{ type_; tparams = bound_tparams; } in
-    map <- LocMap.add (ALoc.to_loc loc) scheme map;
+    map <- ALocMap.add loc scheme map;
     x
   method to_map = map
 end
 
-class type_at_loc_list_folder = object(_)
+class type_at_aloc_list_folder = object(_)
   inherit type_parameter_mapper
   val mutable l = []
   method! on_type_annot x =
     let loc, type_ = x in
-    let loc = ALoc.to_loc loc in
     l <- (loc, Type.TypeScheme.{ type_; tparams = bound_tparams; }) :: l;
     x
   method to_list = l
@@ -169,13 +168,13 @@ let find_type_at_pos_annotation (typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.p
   | Found (loc, scheme) -> Some (ALoc.to_loc loc, scheme)
   | exc -> raise exc
 
-let typed_ast_to_map typed_ast =
-  let folder = new type_at_loc_map_folder in
+let typed_ast_to_map typed_ast : (Type.TypeScheme.t ALocMap.t) =
+  let folder = new type_at_aloc_map_folder in
   ignore (folder#program typed_ast);
   folder#to_map
 
-let typed_ast_to_list typed_ast: (Loc.t * Type.TypeScheme.t) list =
-  let folder = new type_at_loc_list_folder in
+let typed_ast_to_list typed_ast: (ALoc.t * Type.TypeScheme.t) list =
+  let folder = new type_at_aloc_list_folder in
   ignore (folder#program typed_ast);
   folder#to_list
 
