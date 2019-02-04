@@ -88,28 +88,28 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
         | Property (loc, prop) ->
             begin match prop with
             | { Property.
-                key = Property.Identifier (loc, { Ast.Identifier.name; comments= _ });
+                key = Property.Identifier (key_loc, { Ast.Identifier.name; comments= _ });
                 pattern = p;
                 default = d;
                 shorthand;
               }
             | { Property.key =
-                  Property.Literal (loc, { Ast.Literal.
+                  Property.Literal (key_loc, { Ast.Literal.
                     value = Ast.Literal.String name; _ });
                 pattern = p;
                 default = d;
                 shorthand;
               }
               ->
-                let reason = mk_reason (RProperty (Some name)) loc in
+                let reason = mk_reason (RProperty (Some name)) key_loc in
                 let init = Option.map init (fun init ->
-                  loc, Ast.Expression.(Member Member.({
+                  key_loc, Ast.Expression.(Member Member.({
                     _object = init;
-                    property = PropertyIdentifier (Flow_ast_utils.ident_of_source (loc, name));
+                    property = PropertyIdentifier (Flow_ast_utils.ident_of_source (key_loc, name));
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->
-                  Refinement.get cx init loc
+                  Refinement.get cx init key_loc
                 ) in
                 let parent_pattern_t, tvar = (match refinement with
                 | Some refined_t -> refined_t, refined_t
@@ -130,9 +130,9 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 Type_inference_hooks_js.dispatch_lval_hook
                   cx
                   name
-                  loc
+                  key_loc
                   (Type_inference_hooks_js.Parent parent_pattern_t);
-                let p, d = recurse_with_default_opt ~parent_pattern_t tvar init default loc p d in
+                let p, d = recurse_with_default_opt ~parent_pattern_t tvar init default key_loc p d in
                 let key = match prop.Property.key with
                   | Property.Literal _ as key -> key
                   | Property.Identifier (loc, { Ast.Identifier.name; comments= _ }) ->
@@ -144,16 +144,16 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                 Property (loc, { Property.key; pattern = p; default = d; shorthand; }) :: rev_props
             | { Property.key = Property.Computed key; pattern = p; default = d; shorthand; } ->
                 let (_, key_t), _ as key_ast = expr cx key in
-                let loc = fst key in
-                let reason = mk_reason (RProperty None) loc in
+                let key_loc, _ = key in
+                let reason = mk_reason (RProperty None) key_loc in
                 let init = Option.map init (fun init ->
-                  loc, Ast.Expression.(Member Member.({
+                  key_loc, Ast.Expression.(Member Member.({
                     _object = init;
                     property = PropertyExpression key;
                   }))
                 ) in
                 let refinement = Option.bind init (fun init ->
-                  Refinement.get cx init loc
+                  Refinement.get cx init key_loc
                 ) in
                 let parent_pattern_t, tvar = (match refinement with
                 | Some refined_t -> refined_t, refined_t
@@ -162,7 +162,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
                     EvalT (curr_t, DestructuringT (reason, Elem key_t), mk_id ())
                 ) in
                 let default = Option.map default (Default.elem key_t reason) in
-                let p, d = recurse_with_default_opt ~parent_pattern_t tvar init default loc p d in
+                let p, d = recurse_with_default_opt ~parent_pattern_t tvar init default key_loc p d in
                 xs, Property (loc, { Property.
                   key = Property.Computed key_ast;
                   pattern = p;
