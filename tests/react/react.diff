@@ -1,0 +1,32 @@
+--- react.exp
++++ react.out
+@@ -3098,6 +3098,20 @@
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+ 
+ 
++Error ----------------------------------------------------------------------------------------------- test-utils.js:57:1
++
++Cannot get `value.xyz` because property `xyz` is missing in object literal [1].
++
++   test-utils.js:57:1
++   57| value.xyz === 'abc' // errors
++       ^^^^^^^^^
++
++References:
++   test-utils.js:55:36
++   55| const value = TestUtils.act(() => ({count: 123}));
++                                          ^^^^^^^^^^^^ [1]
++
++
+ Error -------------------------------------------------------------------------------------------- undefined_prop.js:7:1
+ 
+ Cannot create `MyComponent` element because undefined [1] is incompatible with string [2] in property `title`.
+@@ -4107,7 +4121,7 @@
+ 
+ 
+ 
+-Found 241 errors
++Found 242 errors
+ 
+ Only showing the most relevant union/intersection branches.
+ To see all branches, re-run Flow with --show-all-branches

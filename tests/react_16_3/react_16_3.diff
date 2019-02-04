@@ -1,0 +1,24 @@
+--- react_16_3.exp
++++ react_16_3.out
+@@ -40,8 +40,8 @@
+    forwardRef.js:19:32
+     19| const badRef = React.createRef<HTMLDivElement>();
+                                        ^^^^^^^^^^^^^^ [1]
+-   <BUILTINS>/react-dom.js:284:22
+-   284|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
++   <BUILTINS>/react-dom.js:285:22
++   285|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
+                              ^^^^^^^^^^^^^^^^^ [2]
+    <BUILTINS>/react.js:240:6
+    240|   ): {current: null | T};
+@@ -71,8 +71,8 @@
+    forwardRef.js:23:50
+     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
+                                                          ^^^^^^^^^^^^^^ [3]
+-   <BUILTINS>/react-dom.js:284:22
+-   284|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
++   <BUILTINS>/react-dom.js:285:22
++   285|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
+                              ^^^^^^^^^^^^^^^^^ [4]
+ 
+ 
