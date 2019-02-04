@@ -3351,8 +3351,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
 
       let reason = annot_reason (mk_reason (RCustom "async import") loc) in
       let t = Flow.get_builtin_typeapp cx reason "Promise" [imported_module_t] in
-      let annot = (loc, t) in
-      annot, Import (annot, Ast.Expression.Literal { Ast.Literal.
+      (loc, t), Import ((source_loc, t), Ast.Expression.Literal { Ast.Literal.
         value = Ast.Literal.String module_name;
         raw;
       })
