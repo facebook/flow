@@ -2651,6 +2651,7 @@ end
 
 include TypeTerm
 include TypeUtil
+include Trust
 
 (*********************************************************)
 
