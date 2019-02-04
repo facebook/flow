@@ -26,6 +26,11 @@
     "Makefile",
     "SHASUM256.txt"
   ],
-  "os": ["darwin", "linux"],
-  "cpu": ["x64"]
+  "os": [
+    "darwin",
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ]
 }
