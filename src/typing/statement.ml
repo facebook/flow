@@ -3421,8 +3421,8 @@ and subscript =
         targs;
         arguments;
       } when not (Env.local_scope_entry_exists n) ->
-      let targs = Option.map targs (fun (_, args) ->
-        loc, snd (convert_tparam_instantiations cx SMap.empty args)
+      let targs = Option.map targs (fun (args_loc, args) ->
+        args_loc, snd (convert_tparam_instantiations cx SMap.empty args)
       ) in
       let lhs_t, arguments = (
         match targs, arguments with
