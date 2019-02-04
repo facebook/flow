@@ -4894,11 +4894,11 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
     let el = RReactElement (Some name) in
     let reason = mk_reason el loc_element in
     let m_expr = jsx_title_member_to_expression member in
-    let (_, t), m_expr' = expression cx m_expr in
+    let (m_loc, t), m_expr' = expression cx m_expr in
     let c = mod_reason_of_t (replace_reason_const (RIdentifier name)) t in
     let o, attributes' = jsx_mk_props cx reason c name attributes children in
     let t = jsx_desugar cx name c o attributes children locs in
-    let member' = match expression_to_jsx_title_member m_expr' with
+    let member' = match expression_to_jsx_title_member m_loc m_expr' with
     | Some member -> member
     | None -> Tast_utils.error_mapper#jsx_member_expression member
     in
@@ -5254,7 +5254,8 @@ and jsx_title_member_to_expression member =
   )
 
 (* reverses jsx_title_member_to_expression *)
-and expression_to_jsx_title_member = function
+and expression_to_jsx_title_member = fun loc member ->
+  match member with
   | Ast.Expression.Member.(
       Ast.Expression.Member {
         _object = (mloc, _), obj_expr;
@@ -5268,12 +5269,12 @@ and expression_to_jsx_title_member = function
         )
       )
     | _ ->
-      expression_to_jsx_title_member obj_expr
+      expression_to_jsx_title_member mloc obj_expr
       |> Option.map ~f:(fun e -> Ast.JSX.MemberExpression.MemberExpression e)
     in
     let property = pannot, { Ast.JSX.Identifier.name = name } in
     Option.map _object ~f:(fun _object ->
-      (mloc, Ast.JSX.MemberExpression.{ _object; property; }))
+      (loc, Ast.JSX.MemberExpression.{ _object; property; }))
   | _ ->
     None
 
