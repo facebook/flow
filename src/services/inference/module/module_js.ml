@@ -489,27 +489,29 @@ module Haste: MODULE_SYSTEM = struct
     | File_key.SourceFile file
     | File_key.JsonFile file
     | File_key.ResourceFile file ->
+        (* Standardize \ to / in path for Windows *)
+        let file = Sys_utils.normalize_filename_dir_sep file in
         Str.string_match mock_path file 0
 
   let expand_project_root_token options str =
     Files.expand_project_root_token_to_regexp ~root:(Options.root options) str
 
-  let is_haste_file options file =
-    let matched_haste_paths_whitelist file = List.exists
-      (fun r -> Str.string_match (expand_project_root_token options r) (File_key.to_string file) 0)
+  let is_haste_file options name =
+    let matched_haste_paths_whitelist name = List.exists
+      (fun r -> Str.string_match (expand_project_root_token options r) name 0)
       (Options.haste_paths_whitelist options) in
-    let matched_haste_paths_blacklist file = List.exists
-      (fun r -> Str.string_match (expand_project_root_token options r) (File_key.to_string file) 0)
+    let matched_haste_paths_blacklist name = List.exists
+      (fun r -> Str.string_match (expand_project_root_token options r) name 0)
       (Options.haste_paths_blacklist options) in
-    (matched_haste_paths_whitelist file) && not (matched_haste_paths_blacklist file)
+    (matched_haste_paths_whitelist name) && not (matched_haste_paths_blacklist name)
 
-  let haste_name options file =
+  let haste_name options name =
     let reduce_name name (regexp, template) =
       Str.global_replace regexp template name
     in
     List.fold_left
       reduce_name
-      (File_key.to_string file)
+      name
       (Options.haste_name_reducers options)
 
   let rec exported_module ~reader options file info =
@@ -519,8 +521,10 @@ module Haste: MODULE_SYSTEM = struct
       then Modulename.String (short_module_name_of file)
       else if Options.haste_use_name_reducers options
       then
-        if is_haste_file options file
-        then Modulename.String (haste_name options file)
+        (* Standardize \ to / in path for Windows *)
+        let normalized_file_name = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
+        if is_haste_file options normalized_file_name
+        then Modulename.String (haste_name options normalized_file_name)
         else exported_non_haste_module ~reader options file
       else begin match Docblock.providesModule info with
         | Some m -> Modulename.String m
