@@ -6643,6 +6643,11 @@ and any_propagated cx trace any u =
       rec_flow cx trace (any, BecomeT (reason, t));
       true
 
+  | ReactKitT (_, _, React.CreateClass (React.CreateClass.PropTypes _, _, _)) ->
+  (* Propagating through here causes exponential blowup. React PropTypes are deprecated
+      anyways, so it is not unreasonable to just not trust them *)
+     true
+
   | AdderT _
   | AndT _
   | ArrRestT _
