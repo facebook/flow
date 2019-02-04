@@ -45,27 +45,18 @@ module Parallelizable_workload_loop = LwtLoop.Make (struct
     Exception.reraise exn
 end)
 
-let with_parallelizable_workloads env f =
+let start_parallelizable_workloads env =
   (* The wait_for_cancel thread itself is NOT cancelable *)
   let wait_for_cancel, wakener = Lwt.wait () in
   let loop_thread = Parallelizable_workload_loop.run (wait_for_cancel, env) in
-  let finally () =
+  (* Allow this stop function to be called multiple times for the same loop *)
+  let already_woken = ref false in
+  fun () ->
     (* Tell the loop to cancel at its earliest convinience *)
-    Lwt.wakeup wakener ();
+    if not (!already_woken) then Lwt.wakeup wakener ();
+    already_woken := true;
     (* Wait for the loop to finish *)
     loop_thread
-  in
-  let%lwt ret =
-    try%lwt f ()
-    with exn ->
-      let exn = Exception.wrap exn in
-      let%lwt () = finally () in
-      Exception.reraise exn
-  in
-
-  let%lwt () = finally () in
-
-  Lwt.return ret
 
 let get_lazy_stats genv env =
   { ServerProt.Response.
@@ -119,8 +110,8 @@ let recheck
   Lwt.return (profiling, env)
 
 (* Runs a function which should be canceled if we are notified about any file changes. After the
- * thread is canceled, on_cancel is called and its result returned *)
-let run_but_cancel_on_file_changes genv env ~get_forced ~f ~on_cancel =
+ * thread is canceled, post_cancel is called and its result returned *)
+let run_but_cancel_on_file_changes genv env ~get_forced ~f ~pre_cancel ~post_cancel =
   let process_updates = process_updates genv env in
   (* We don't want to start running f until we're in the try block *)
   let waiter, wakener = Lwt.task () in
@@ -130,6 +121,7 @@ let run_but_cancel_on_file_changes genv env ~get_forced ~f ~on_cancel =
       ServerMonitorListenerState.wait_for_updates_for_recheck ~process_updates ~get_forced
     in
     Hh_logger.info "Canceling since a recheck is needed";
+    let%lwt () = pre_cancel () in
     Lwt.cancel run_thread;
     Lwt.return_unit
   in
@@ -140,7 +132,7 @@ let run_but_cancel_on_file_changes genv env ~get_forced ~f ~on_cancel =
     Lwt.return ret
   with Lwt.Canceled ->
     Lwt.cancel cancel_thread;
-    on_cancel ()
+    post_cancel ()
 
 (* Perform a single recheck. This will incorporate any pending changes from the file watcher.
  * If any file watcher notifications come in during the recheck, it will be canceled and restarted
@@ -174,24 +166,35 @@ let rec recheck_single
   then begin
     List.iter (fun callback -> callback None) workload.profiling_callbacks;
     Lwt.return (Error env) (* Nothing to do *)
-  end else
-    let on_cancel () =
+  end else begin
+    (* Start the parallelizable workloads loop and return a function which will stop the loop *)
+    let stop_parallelizable_workloads = start_parallelizable_workloads env in
+    let post_cancel () =
       Hh_logger.info
         "Recheck successfully canceled. Restarting the recheck to include new file changes";
       recheck_single ~files_to_recheck ~files_to_force ~file_watcher_metadata genv env
     in
     let f () =
-      let%lwt profiling, env = with_parallelizable_workloads env @@ fun () ->
-        recheck
-          genv env ~files_to_force ~file_watcher_metadata ~will_be_checked_files files_to_recheck
+      let%lwt profiling, env =
+        try%lwt
+          recheck
+            genv env ~files_to_force ~file_watcher_metadata ~will_be_checked_files files_to_recheck
+        with exn ->
+          let exn = Exception.wrap exn in
+          let%lwt () = stop_parallelizable_workloads () in
+          Exception.reraise exn
       in
+      let%lwt () = stop_parallelizable_workloads () in
+
       List.iter (fun callback -> callback (Some profiling)) workload.profiling_callbacks;
       (* Now that the recheck is done, it's safe to retry deferred parallelizable workloads *)
       ServerMonitorListenerState.requeue_deferred_parallelizable_workloads ();
       Lwt.return (Ok (profiling, env))
     in
 
-    run_but_cancel_on_file_changes genv env ~get_forced ~f ~on_cancel
+    run_but_cancel_on_file_changes genv env
+      ~get_forced ~f ~pre_cancel:stop_parallelizable_workloads ~post_cancel
+  end
 
 let recheck_loop =
   (* It's not obvious to Mr Gabe how we should merge together the profiling info from multiple
