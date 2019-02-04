@@ -426,6 +426,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
           Reason.replace_reason_const
             (Reason.RCustom "undefined exports")
             reason_exports_module,
+          Type.bogus_trust (),
           Type.EmptyT))
         (Type.Unsoundness.exports_any reason_exports_module))
       scope;

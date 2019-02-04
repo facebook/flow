@@ -555,56 +555,56 @@ end = struct
     | AnyWithLowerBoundT t ->
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Supertype t)
-    | DefT (_, MixedT _) -> return Ty.Top
-    | DefT (_, AnyT Annotated) -> Ty.explicit_any |> return
-    | DefT (_, AnyT _) -> Ty.implicit_any |> return
-    | DefT (_, VoidT) -> return Ty.Void
-    | DefT (_, NumT (Literal (_, (_, x))))
+    | DefT (_, _, MixedT _) -> return Ty.Top
+    | DefT (_, _, AnyT Annotated) -> Ty.explicit_any |> return
+    | DefT (_, _, AnyT _) -> Ty.implicit_any |> return
+    | DefT (_, _, VoidT) -> return Ty.Void
+    | DefT (_, _, NumT (Literal (_, (_, x))))
       when Env.preserve_inferred_literal_types env ->
       return (Ty.Num (Some x))
-    | DefT (_, NumT (Truthy | AnyLiteral | Literal _)) ->
+    | DefT (_, _, NumT (Truthy | AnyLiteral | Literal _)) ->
       return (Ty.Num None)
-    | DefT (_, StrT (Literal (_, x)))
+    | DefT (_, _, StrT (Literal (_, x)))
       when Env.preserve_inferred_literal_types env ->
       return (Ty.Str (Some x))
-    | DefT (_, StrT (Truthy | AnyLiteral | Literal _)) ->
+    | DefT (_, _, StrT (Truthy | AnyLiteral | Literal _)) ->
       return (Ty.Str None)
-    | DefT (_, BoolT (Some x))
+    | DefT (_, _, BoolT (Some x))
       when Env.preserve_inferred_literal_types env ->
       return (Ty.Bool (Some x))
-    | DefT (_, BoolT _) -> return (Ty.Bool None)
-    | DefT (_, EmptyT) -> return Ty.Bot
-    | DefT (_, NullT) -> return Ty.Null
-    | DefT (_, SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
-    | DefT (_, SingletonStrT lit) -> return (Ty.StrLit lit)
-    | DefT (_, SingletonBoolT lit) -> return (Ty.BoolLit lit)
-    | DefT (_, MaybeT t) ->
+    | DefT (_, _,BoolT _) -> return (Ty.Bool None)
+    | DefT (_, _,EmptyT) -> return Ty.Bot
+    | DefT (_, _,NullT) -> return Ty.Null
+    | DefT (_, _,SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
+    | DefT (_, _,SingletonStrT lit) -> return (Ty.StrLit lit)
+    | DefT (_, _,SingletonBoolT lit) -> return (Ty.BoolLit lit)
+    | DefT (_, _,MaybeT t) ->
       type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; Ty.Null; t]
-    | DefT (_, OptionalT t) ->
+    | DefT (_, _,OptionalT t) ->
       type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; t]
-    | DefT (_, FunT (_, _, f)) ->
+    | DefT (_, _,FunT (_, _, f)) ->
       fun_ty ~env f None >>| fun t -> Ty.Fun t
-    | DefT (r, ObjT o) -> obj_ty ~env r o
-    | DefT (r, ArrT a) -> arr_ty ~env r a
-    | DefT (_, UnionT rep) ->
+    | DefT (r, _, ObjT o) -> obj_ty ~env r o
+    | DefT (r, _, ArrT a) -> arr_ty ~env r a
+    | DefT (_, _, UnionT rep) ->
       let t0, (t1, ts) = UnionRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
       Ty.mk_union (t0::t1::ts)
-    | DefT (_, IntersectionT rep) ->
+    | DefT (_, _, IntersectionT rep) ->
       let t0, (t1, ts) = InterRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
       Ty.mk_inter (t0::t1::ts)
-    | DefT (_, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
-    | DefT (r, TypeT (kind, t)) -> type_t ~env r kind t None
-    | DefT (_, TypeAppT (_, t, ts)) -> type_app ~env t (Some ts)
-    | DefT (r, InstanceT (_, _, _, t)) -> instance_t ~env r t
-    | DefT (_, ClassT t) -> class_t ~env t None
-    | DefT (_, IdxWrapper t) -> type__ ~env t
-    | DefT (_, ReactAbstractComponentT {config; instance}) ->
+    | DefT (_, _, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
+    | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
+    | DefT (_, _ ,TypeAppT (_, t, ts)) -> type_app ~env t (Some ts)
+    | DefT (r, _, InstanceT (_, _, _, t)) -> instance_t ~env r t
+    | DefT (_, _, ClassT t) -> class_t ~env t None
+    | DefT (_, _, IdxWrapper t) -> type__ ~env t
+    | DefT (_, _, ReactAbstractComponentT {config; instance}) ->
         type__ ~env config >>= fun config ->
         type__ ~env instance >>= fun instance ->
         return @@ generic_talias (Ty_symbol.builtin_symbol "React$AbstractComponent")
@@ -666,7 +666,7 @@ end = struct
 
     | ModuleT (reason, _, _) -> module_t env reason t
 
-    | DefT (_, CharSetT _)
+    | DefT (_, _, CharSetT _)
     | NullProtoT _ ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
@@ -766,9 +766,9 @@ end = struct
   and method_ty ~env t =
     let open Type in
     match t with
-    | DefT (_, FunT (_, _, f)) ->
+    | DefT (_, _, FunT (_, _, f)) ->
       fun_ty ~env f None
-    | DefT (_, PolyT (_, ps, DefT (_, FunT (_, _, f)), _)) ->
+    | DefT (_, _, PolyT (_, ps, DefT (_, _, FunT (_, _, f)), _)) ->
       mapM (type_param ~env) (Nel.to_list ps) >>= fun ps ->
       fun_ty ~env f (Some ps)
     | _ ->
@@ -824,7 +824,7 @@ end = struct
 
   and call_prop ~env =
     let intersection = function
-    | T.DefT (_, T.IntersectionT rep) -> T.InterRep.members rep
+    | T.DefT (_, _, T.IntersectionT rep) -> T.InterRep.members rep
     | t -> [t]
     in
     let multi_call ts =
@@ -936,10 +936,10 @@ end = struct
     List.rev results |> all >>= fun ps ->
     let ps = match ps with [] -> None | _ -> Some ps in
     match t with
-    | T.DefT (_, T.ClassT t) -> class_t ~env t ps
+    | T.DefT (_, _, T.ClassT t) -> class_t ~env t ps
     | T.ThisClassT (_, t) -> this_class_t ~env t ps
-    | T.DefT (r, T.TypeT (kind, t)) -> type_t ~env r kind t ps
-    | T.DefT (_, T.FunT (_, _, f)) ->
+    | T.DefT (r, _, T.TypeT (kind, t)) -> type_t ~env r kind t ps
+    | T.DefT (_, _, T.FunT (_, _, f)) ->
       fun_ty ~env f ps >>| fun fun_t -> Ty.Fun fun_t
     | _ ->
       terr ~kind:BadPoly (Some t)
@@ -1295,10 +1295,10 @@ end = struct
     | ExtendsT _
     | ReposUpperT _ ->
       terr ~kind:BadInternalT (Some t)
-    | OptionalChainVoidT r -> type__ ~env (DefT (r, VoidT));
+    | OptionalChainVoidT r -> type__ ~env (DefT (r, bogus_trust (), VoidT));
 
   and param_bound ~env = function
-    | T.DefT (_, T.MixedT _) -> return None
+    | T.DefT (_, _, T.MixedT _) -> return None
     | bound -> type__ ~env bound >>= fun b -> return (Some b)
 
   and default_t ~env = function
@@ -1318,7 +1318,7 @@ end = struct
 
   and opt_t ~env t =
     let t, opt = match t with
-    | T.DefT (_, T.OptionalT t) -> (t, true)
+    | T.DefT (_, _, T.OptionalT t) -> (t, true)
     | t -> (t, false)
     in
     type__ ~env t >>| fun t -> (t, opt)

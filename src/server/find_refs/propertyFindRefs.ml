@@ -58,7 +58,7 @@ let set_get_refs_hook potential_refs potential_matching_literals target_name =
   let obj_to_obj_hook _ctxt obj1 obj2 =
     let open Type in
     match get_object_literal_loc obj1, obj2 with
-    | Some loc, DefT (_, ObjT _) ->
+    | Some loc, DefT (_, _, ObjT _) ->
       let entry = (loc, obj2) in
       potential_matching_literals := entry:: !potential_matching_literals
     | _ -> ()

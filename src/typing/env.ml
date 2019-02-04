@@ -544,11 +544,11 @@ let bind_declare_var = bind_var ~state:State.Initialized
 let bind_declare_fun =
 
   let update_type seen_t new_t = match seen_t with
-  | DefT (reason, IntersectionT rep) ->
-    DefT (reason, IntersectionT (InterRep.append [new_t] rep))
+  | DefT (reason, trust, IntersectionT rep) ->
+    DefT (reason, trust, IntersectionT (InterRep.append [new_t] rep))
   | _ ->
     let reason = replace_reason_const RIntersectionType (reason_of_t seen_t) in
-    DefT (reason, IntersectionT (InterRep.make seen_t new_t []))
+    DefT (reason, bogus_trust (), IntersectionT (InterRep.make seen_t new_t []))
   in
 
   fun cx name t loc ->
@@ -742,7 +742,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
       else (* State.MaybeInitialized *)
         let desc = (RCustom "possibly uninitialized variable") in
         let rep = UnionRep.make (uninit desc) specific [] in
-        DefT (mk_reason desc value_declare_loc, UnionT rep)
+        DefT (mk_reason desc value_declare_loc, bogus_trust (), UnionT rep)
     in
     specific, general
 
@@ -850,7 +850,7 @@ let unify_declared_type ?(lookup_mode=ForValue) cx name t =
    we also need to take overloading into account. See `bind_declare_fun` for similar logic. *)
 let unify_declared_fun_type =
   let find_type aloc = function
-    | DefT (_, IntersectionT rep) ->
+    | DefT (_, _, IntersectionT rep) ->
       let match_type t = aloc_of_reason (reason_of_t t) = aloc in
       begin match List.find_opt match_type (InterRep.members rep) with
         | Some t -> t
@@ -1367,16 +1367,16 @@ let refine_with_preds cx loc preds orig_types =
       begin match pred with
         | SingletonBoolP (loc, b) ->
             let reason = loc |> mk_reason (RBooleanLit b) in
-            Flow.flow cx (DefT (reason, BoolT (Some b)), UseT (Op (Internal Refinement), orig_type))
+            Flow.flow cx (DefT (reason, bogus_trust (), BoolT (Some b)), UseT (Op (Internal Refinement), orig_type))
         | SingletonStrP (loc, b, str) ->
             let reason = loc |> mk_reason (RStringLit str) in
-            Flow.flow cx (DefT (reason, StrT (Literal (Some b, str))),
+            Flow.flow cx (DefT (reason, bogus_trust (), StrT (Literal (Some b, str))),
               UseT (Op (Internal Refinement), orig_type))
         | SingletonNumP (loc, b, ((_, str) as num)) ->
             let reason = loc |> mk_reason (RNumberLit str) in
-            Flow.flow cx (DefT (reason, NumT (Literal (Some b, num))),
+            Flow.flow cx (DefT (reason, bogus_trust (), NumT (Literal (Some b, num))),
               UseT (Op (Internal Refinement), orig_type))
-        | LeftP (SentinelProp name, (DefT (reason, (BoolT _ | StrT _ | NumT _)) as t)) ->
+        | LeftP (SentinelProp name, (DefT (reason, _, (BoolT _ | StrT _ | NumT _)) as t)) ->
             Flow.flow cx (MatchingPropT (reason, name, t),
               UseT (Op (Internal Refinement), orig_type))
         | NotP p ->

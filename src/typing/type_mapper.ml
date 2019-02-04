@@ -33,10 +33,10 @@ let union_flatten =
       end
     | AnnotT (_, t, _) -> flatten cx seen t
     | ReposT (_, t) -> flatten cx seen t
-    | DefT (_, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
-    | DefT (r, MaybeT t) -> (DefT (r, NullT))::(DefT (r, VoidT))::(flatten cx seen t)
-    | DefT (r, OptionalT t) -> (DefT (r, VoidT))::(flatten cx seen t)
-    | DefT (_, EmptyT) -> []
+    | DefT (_, _, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
+    | DefT (r, trust, MaybeT t) -> (DefT (r, trust, NullT))::(DefT (r, trust, VoidT))::(flatten cx seen t)
+    | DefT (r, trust, OptionalT t) -> (DefT (r, trust, VoidT))::(flatten cx seen t)
+    | DefT (_, _, EmptyT) -> []
     | _ -> [t]
   in
   fun cx ts -> union_flatten cx (ref ISet.empty) ts
@@ -52,9 +52,9 @@ class virtual ['a] t = object(self)
       | OpenT (r, id) ->
           let id' = self#tvar cx map_cx r id in
           if id' == id then t else OpenT (r, id')
-      | DefT (r, t') ->
+      | DefT (r, trust, t') ->
           let t'' = self#def_type cx map_cx t' in
-          if t' == t'' then t else DefT (r, t'')
+          if t' == t'' then t else DefT (r, trust, t'')
       | EvalT (t', dt, id) ->
           let t'' = self#type_ cx map_cx t' in
           let dt' = self#defer_use_type cx map_cx dt in

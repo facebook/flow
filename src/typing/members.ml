@@ -23,30 +23,30 @@ type t = (
 
 let rec merge_type cx =
   let create_union rep =
-    DefT (locationless_reason (RCustom "union"), UnionT rep)
+    DefT (locationless_reason (RCustom "union"), bogus_trust(),  UnionT rep)
   in
 
   function
-  | DefT (_, NumT _), (DefT (_, NumT _) as t)
-  | DefT (_, StrT _), (DefT (_, StrT _) as t)
-  | DefT (_, BoolT _), (DefT (_, BoolT _) as t)
-  | DefT (_, NullT), (DefT (_, NullT) as t)
-  | DefT (_, VoidT), (DefT (_, VoidT) as t)
+  | DefT (_, _, NumT _), (DefT (_, _, NumT _) as t)
+  | DefT (_, _, StrT _), (DefT (_, _, StrT _) as t)
+  | DefT (_, _, BoolT _), (DefT (_, _, BoolT _) as t)
+  | DefT (_, _, NullT), (DefT (_, _, NullT) as t)
+  | DefT (_, _, VoidT), (DefT (_, _, VoidT) as t)
     -> t
 
   | (ObjProtoT _, (ObjProtoT _ as t))
      -> t
 
-  | DefT (_, AnyT _), t | t, DefT (_, AnyT _) -> t
+  | DefT (_, _, AnyT _), t | t, DefT (_, _, AnyT _) -> t
 
-  | DefT (_, EmptyT), t | t, DefT (_, EmptyT) -> t
-  | _, (DefT (_, MixedT _) as t) | (DefT (_, MixedT _) as t), _ -> t
+  | DefT (_, _, EmptyT), t | t, DefT (_, _, EmptyT) -> t
+  | _, (DefT (_, _, MixedT _) as t) | (DefT (_, _, MixedT _) as t), _ -> t
 
-  | DefT (_, NullT), (DefT (_, MaybeT _) as t) | (DefT (_, MaybeT _) as t), DefT (_, NullT)
-  | DefT (_, VoidT), (DefT (_, MaybeT _) as t) | (DefT (_, MaybeT _) as t), DefT (_, VoidT)
+  | DefT (_, _, NullT), (DefT (_, _, MaybeT _) as t) | (DefT (_, _, MaybeT _) as t), DefT (_, _, NullT)
+  | DefT (_, _, VoidT), (DefT (_, _, MaybeT _) as t) | (DefT (_, _, MaybeT _) as t), DefT (_, _, VoidT)
     -> t
 
-  | (DefT (_, FunT (_,_,ft1)) as fun1), (DefT (_, FunT (_,_,ft2)) as fun2) ->
+  | (DefT (_, _, FunT (_,_,ft1)) as fun1), (DefT (_, _, FunT (_,_,ft2)) as fun2) ->
       (* Functions with different number of parameters cannot be merged into a
        * single function type. Instead, we should turn them into a union *)
       let params =
@@ -82,7 +82,7 @@ let rec merge_type cx =
           in
           let tout = merge_type cx (ft1.return_t, ft2.return_t) in
           let reason = locationless_reason (RCustom "function") in
-          DefT (reason, FunT (
+          DefT (reason, bogus_trust (), FunT (
             dummy_static reason,
             dummy_prototype,
             mk_functiontype reason tins tout ~rest_param
@@ -90,7 +90,7 @@ let rec merge_type cx =
           ))
       end
 
-  | (DefT (_, ObjT o1) as t1), (DefT (_, ObjT o2) as t2) ->
+  | (DefT (_, _, ObjT o1) as t1), (DefT (_, _, ObjT o2) as t2) ->
     let map1 = Context.find_props cx o1.props_tmap in
     let map2 = Context.find_props cx o2.props_tmap in
 
@@ -174,43 +174,43 @@ let rec merge_type cx =
     | _ ->
       create_union (UnionRep.make t1 t2 []))
 
-  | DefT (_, ArrT (ArrayAT (t1, ts1))),
-    DefT (_, ArrT (ArrayAT (t2, ts2))) ->
+  | DefT (_, _, ArrT (ArrayAT (t1, ts1))),
+    DefT (_, _, ArrT (ArrayAT (t2, ts2))) ->
     let tuple_types = match ts1, ts2 with
       | None, _
       | _, None -> None
       | Some ts1, Some ts2 -> Some (Core_list.map2_exn ~f:(merge_type cx |> curry) ts1 ts2) in
 
-    DefT (locationless_reason (RCustom "array"),
+    DefT (locationless_reason (RCustom "array"), bogus_trust (),
       ArrT (ArrayAT( merge_type cx (t1, t2), tuple_types))
     )
 
-  | DefT (_, ArrT (TupleAT (t1, ts1))),
-    DefT (_, ArrT (TupleAT(t2, ts2))) when List.length ts1 = List.length ts2 ->
+  | DefT (_, _, ArrT (TupleAT (t1, ts1))),
+    DefT (_, _, ArrT (TupleAT(t2, ts2))) when List.length ts1 = List.length ts2 ->
 
-    DefT (locationless_reason (RCustom "tuple"),
+    DefT (locationless_reason (RCustom "tuple"), bogus_trust (),
       ArrT (TupleAT (merge_type cx (t1, t2),
         Core_list.map2_exn ~f:(merge_type cx |> curry) ts1 ts2)))
 
-  | DefT (_, ArrT (ROArrayAT elemt1)),
-    DefT (_, ArrT (ROArrayAT elemt2)) ->
+  | DefT (_, _, ArrT (ROArrayAT elemt1)),
+    DefT (_, _, ArrT (ROArrayAT elemt2)) ->
 
-    DefT (locationless_reason (RCustom "read only array"),
+    DefT (locationless_reason (RCustom "read only array"), bogus_trust (),
       ArrT (ROArrayAT (merge_type cx (elemt1, elemt2)))
     )
 
-  | (DefT (_, MaybeT t1), DefT (_, MaybeT t2))
-  | (DefT (_, MaybeT t1), t2)
-  | (t1, DefT (_, MaybeT t2)) ->
+  | (DefT (_, _, MaybeT t1), DefT (_, _, MaybeT t2))
+  | (DefT (_, _, MaybeT t1), t2)
+  | (t1, DefT (_, _, MaybeT t2)) ->
       let t = merge_type cx (t1, t2) in
       let reason = locationless_reason (RMaybe (desc_of_t t)) in
-      DefT (reason, MaybeT t)
+      DefT (reason, bogus_trust (), MaybeT t)
 
-  | DefT (_, UnionT rep1), DefT (_, UnionT rep2) ->
+  | DefT (_, _, UnionT rep1), DefT (_, _, UnionT rep2) ->
       create_union (UnionRep.rev_append rep1 rep2)
 
-  | (DefT (_, UnionT rep), t)
-  | (t, DefT (_, UnionT rep)) ->
+  | (DefT (_, _, UnionT rep), t)
+  | (t, DefT (_, _, UnionT rep)) ->
       create_union (UnionRep.cons t rep)
 
   (* TODO: do we need to do anything special for merging Null with Void,
@@ -222,7 +222,7 @@ let rec merge_type cx =
 let instantiate_poly_t cx t = function
   | None -> (* nothing to do *) t
   | Some types -> match t with
-      | DefT (_, PolyT (_, type_params, t_, _)) -> (
+      | DefT (_, _, PolyT (_, type_params, t_, _)) -> (
         try
           let subst_map = List.fold_left2 (fun acc {name; _} type_ ->
             SMap.add name type_ acc
@@ -232,10 +232,10 @@ let instantiate_poly_t cx t = function
           prerr_endline "Instantiating poly type failed";
           t
       )
-      | DefT (_, EmptyT)
-      | DefT (_, MixedT _)
-      | DefT (_, AnyT _)
-      | DefT (_, (TypeT (_, DefT (_, AnyT _)))) ->
+      | DefT (_, _, EmptyT)
+      | DefT (_, _, MixedT _)
+      | DefT (_, _, AnyT _)
+      | DefT (_, _, (TypeT (_, DefT (_, _, AnyT _)))) ->
           t
       | _ ->
         assert_false ("unexpected args passed to instantiate_poly_t: " ^ (string_of_ctor t))
@@ -260,8 +260,8 @@ let intersect_members cx members =
       ) (None, Locationless.EmptyT.t)) map
 
 and instantiate_type = function
-  | ThisClassT (_, t) | DefT (_, ClassT t)
-  | (DefT (_, AnyT _) as t) | DefT(_, TypeT (_, t)) | (DefT (_, EmptyT) as t) -> t
+  | ThisClassT (_, t) | DefT (_, _, ClassT t)
+  | (DefT (_, _, AnyT _) as t) | DefT(_, _, TypeT (_, t)) | (DefT (_, _, EmptyT) as t) -> t
   | t -> "cannot instantiate non-class type " ^ string_of_ctor t |> assert_false
 
 let possible_types_of_use cx = function
@@ -330,13 +330,13 @@ let rec resolve_type cx = function
   | t -> t
 
 let resolve_builtin_class cx ?trace = function
-  | DefT (reason, BoolT _) ->
+  | DefT (reason, _, BoolT _) ->
     get_builtin_type cx ?trace reason "Boolean" |> resolve_type cx
-  | DefT (reason, NumT _) ->
+  | DefT (reason, _, NumT _) ->
     get_builtin_type cx ?trace reason "Number"  |> resolve_type cx
-  | DefT (reason, StrT _) ->
+  | DefT (reason, _, StrT _) ->
     get_builtin_type cx ?trace reason "String"  |> resolve_type cx
-  | DefT (reason, ArrT arrtype) ->
+  | DefT (reason, _, ArrT arrtype) ->
     let builtin, elemt = match arrtype with
     | ArrayAT (elemt, _) -> get_builtin cx ?trace "Array" reason, elemt
     | TupleAT (elemt, _)
@@ -347,19 +347,19 @@ let resolve_builtin_class cx ?trace = function
   | t -> t
 
 let rec extract_type cx this_t = match this_t with
-  | DefT (_, MaybeT ty) ->
+  | DefT (_, _, MaybeT ty) ->
       extract_type cx ty
-  | DefT (_, (NullT | VoidT))
+  | DefT (_, _, (NullT | VoidT))
   | InternalT (OptionalChainVoidT _) ->
       FailureNullishType
-  | DefT (_, AnyT _) ->
+  | DefT (_, _, AnyT _) ->
       FailureAnyType
   | AnnotT (_, source_t, _) ->
     let source_t = resolve_type cx source_t in
     extract_type cx source_t
-  | DefT (_, InstanceT _ ) as t ->
+  | DefT (_, _, InstanceT _ ) as t ->
       Success t
-  | DefT (_, ObjT _) as t ->
+  | DefT (_, _, ObjT _) as t ->
       Success t
   | ExactT (_, t) ->
       let t = resolve_type cx t in
@@ -371,42 +371,42 @@ let rec extract_type cx this_t = match this_t with
       let inst_t = instantiate_poly_t cx c ts_opt in
       let inst_t = instantiate_type inst_t in
       extract_type cx inst_t
-  | DefT (_, TypeAppT (_, c, ts)) ->
+  | DefT (_, _, TypeAppT (_, c, ts)) ->
       let c = resolve_type cx c in
       let inst_t = instantiate_poly_t cx c (Some ts) in
       let inst_t = instantiate_type inst_t in
       extract_type cx inst_t
-  | DefT (_, PolyT (_, _, sub_type, _)) ->
+  | DefT (_, _, PolyT (_, _, sub_type, _)) ->
       (* TODO: replace type parameters with stable/proper names? *)
       extract_type cx sub_type
-  | ThisClassT (_, DefT (_, InstanceT (static, _, _, _)))
-  | DefT (_, ClassT (DefT (_, InstanceT (static, _, _, _)))) ->
+  | ThisClassT (_, DefT (_, _, InstanceT (static, _, _, _)))
+  | DefT (_, _, ClassT (DefT (_, _, InstanceT (static, _, _, _)))) ->
       let static_t = resolve_type cx static in
       extract_type cx static_t
-  | DefT (_, FunT _) as t ->
+  | DefT (_, _, FunT _) as t ->
       Success t
-  | DefT (_, IntersectionT _ ) as t ->
+  | DefT (_, _, IntersectionT _ ) as t ->
       Success  t
-  | DefT (_, UnionT _ ) as t ->
+  | DefT (_, _, UnionT _ ) as t ->
       Success t
-  | DefT (reason, SingletonStrT _)
-  | DefT (reason, StrT _) ->
+  | DefT (reason, _, SingletonStrT _)
+  | DefT (reason, _, StrT _) ->
       get_builtin_type cx reason "String"  |> extract_type cx
-  | DefT (reason, SingletonNumT _)
-  | DefT (reason, NumT _) ->
+  | DefT (reason, _, SingletonNumT _)
+  | DefT (reason, _, NumT _) ->
       get_builtin_type cx reason "Number"  |> extract_type cx
-  | DefT (reason, SingletonBoolT _)
-  | DefT (reason, BoolT _) ->
+  | DefT (reason, _, SingletonBoolT _)
+  | DefT (reason, _, BoolT _) ->
       get_builtin_type cx reason "Boolean" |> extract_type cx
 
-  | DefT (reason, CharSetT _) ->
+  | DefT (reason, _, CharSetT _) ->
       get_builtin_type cx reason "String"  |> extract_type cx
 
-  | DefT (_, IdxWrapper t) ->
+  | DefT (_, _, IdxWrapper t) ->
       let t = resolve_type cx t in
       extract_type cx t
 
-  | DefT (_, ReactAbstractComponentT _) as t ->
+  | DefT (_, _, ReactAbstractComponentT _) as t ->
       Success t
 
   | ReposT (_, t)
@@ -420,14 +420,14 @@ let rec extract_type cx this_t = match this_t with
   | AnyWithLowerBoundT _
   | AnyWithUpperBoundT _
   | MergedT _
-  | DefT (_, ArrT _)
+  | DefT (_, _, ArrT _)
   | BoundT _
   | InternalT (ChoiceKitT (_, _))
   | TypeDestructorTriggerT _
-  | DefT (_, ClassT _)
+  | DefT (_, _, ClassT _)
   | CustomFunT (_, _)
   | MatchingPropT (_, _, _)
-  | DefT (_, EmptyT)
+  | DefT (_, _, EmptyT)
   | EvalT (_, _, _)
   | ExistsT _
   | InternalT (ExtendsT _)
@@ -436,16 +436,16 @@ let rec extract_type cx this_t = match this_t with
   | FunProtoCallT _
   | FunProtoT _
   | KeysT (_, _)
-  | DefT (_, MixedT _)
+  | DefT (_, _, MixedT _)
   | NullProtoT _
   | ObjProtoT _
   | OpaqueT _
   | OpenPredT (_, _, _, _)
   | OpenT _
-  | DefT (_, OptionalT _)
+  | DefT (_, _, OptionalT _)
   | ShapeT _
   | ThisClassT _
-  | DefT (_, TypeT _)
+  | DefT (_, _, TypeT _)
     ->
       FailureUnhandledType this_t
 
@@ -453,7 +453,7 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
   | FailureNullishType -> FailureNullishType
   | FailureAnyType -> FailureAnyType
   | FailureUnhandledType t -> FailureUnhandledType t
-  | Success (DefT (_, InstanceT (_, super, _, {own_props; proto_props; _}))) ->
+  | Success (DefT (_, _, InstanceT (_, super, _, {own_props; proto_props; _}))) ->
       let members = SMap.fold (fun x p acc ->
         (* TODO: It isn't currently possible to return two types for a given
          * property in autocomplete, so for now we just return the getter
@@ -483,14 +483,14 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
         let super_t = resolve_type cx super in
         let super_flds = extract_members_as_map ~exclude_proto_members cx super_t in
         Success (AugmentableSMap.augment super_flds ~with_bindings:members)
-  | Success (DefT (_, ObjT {props_tmap = flds; proto_t = proto; _})) ->
+  | Success (DefT (_, _, ObjT {props_tmap = flds; proto_t = proto; _})) ->
       let proto_reason = reason_of_t proto in
       let rep = InterRep.make
         proto
         (get_builtin_type cx proto_reason "Object")
         []
       in
-      let proto_t = resolve_type cx (DefT (proto_reason, IntersectionT rep)) in
+      let proto_t = resolve_type cx (DefT (proto_reason, bogus_trust (), IntersectionT rep)) in
       let prot_members =
         if exclude_proto_members then SMap.empty
         else extract_members_as_map ~exclude_proto_members cx proto_t
@@ -511,13 +511,13 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
         | None -> None
       in
       SuccessModule (named_exports, cjs_export)
-  | Success (DefT (_, FunT (static, proto, _))) ->
+  | Success (DefT (_, _, FunT (static, proto, _))) ->
       let static_t = resolve_type cx static in
       let proto_t = resolve_type cx proto in
       let members = extract_members_as_map ~exclude_proto_members cx static_t in
       let prot_members = extract_members_as_map ~exclude_proto_members cx proto_t in
       Success (AugmentableSMap.augment prot_members ~with_bindings:members)
-  | Success (DefT (_, IntersectionT rep)) ->
+  | Success (DefT (_, _, IntersectionT rep)) ->
       (* Intersection type should autocomplete for every property of
          every type in the intersection *)
       let ts = InterRep.members rep in
@@ -526,14 +526,14 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
       Success (List.fold_left (fun acc members ->
         AugmentableSMap.augment acc ~with_bindings:members
       ) SMap.empty members)
-  | Success (DefT (_, UnionT rep)) ->
+  | Success (DefT (_, _, UnionT rep)) ->
       (* Union type should autocomplete for only the properties that are in
       * every type in the intersection *)
       let ts = Core_list.map ~f:(resolve_type cx) (UnionRep.members rep) in
       let members = ts
         (* Although we'll ignore the any-ish and nullish members of the union *)
         |> List.filter (function
-           | DefT (_, (AnyT _ | NullT | VoidT)) -> false
+           | DefT (_, _, (AnyT _ | NullT | VoidT)) -> false
            | _ -> true
            )
         |> Core_list.map ~f:(extract_members_as_map ~exclude_proto_members cx)

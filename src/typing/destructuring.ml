@@ -38,7 +38,7 @@ let destructuring cx ~expr ~f = Ast.Pattern.(
   | top_loc, Array { Array.elements; annot; } -> Array.(
       let elements = elements |> List.mapi (fun i -> function
         | Some (Element (loc, { Element.argument = p; default = d })) ->
-            let key = DefT (mk_reason RNumber loc, NumT (
+            let key = DefT (mk_reason RNumber loc, bogus_trust (), NumT (
               Literal (None, (float i, string_of_int i))
             )) in
             let reason = mk_reason (RCustom (spf "element %d" i)) loc in

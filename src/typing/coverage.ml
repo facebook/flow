@@ -130,9 +130,9 @@ class visitor = object (self)
     (* Non-concrete (fallthrough) constructors *)
     | AnnotT (_, t, _)
     | ExactT (_, t)
-    | DefT (_, PolyT (_, _, t, _))
-    | DefT (_, TypeAppT (_, t, _))
-    | DefT (_, TypeT (_, t))
+    | DefT (_, _, PolyT (_, _, t, _))
+    | DefT (_, _, TypeAppT (_, t, _))
+    | DefT (_, _, TypeT (_, t))
     | OpenPredT (_, t, _, _)
     | ReposT (_, t)
     | ShapeT t
@@ -141,11 +141,11 @@ class visitor = object (self)
       ->
       self#type_ cx t
 
-    | DefT (_, UnionT rep) ->
+    | DefT (_, _, UnionT rep) ->
       let t0, (t1, ts) = UnionRep.members_nel rep in
       self#types_nel cx OpOr (t0, t1::ts)
 
-    | DefT (_, IntersectionT rep) ->
+    | DefT (_, _, IntersectionT rep) ->
       let t0, (t1, ts) = InterRep.members_nel rep in
       self#types_nel cx OpAnd (t0, t1::ts)
 
@@ -166,25 +166,25 @@ class visitor = object (self)
     | OpaqueT _
     | ObjProtoT _
 
-    | DefT (_, ArrT _)
-    | DefT (_, BoolT _)
-    | DefT (_, CharSetT _)
-    | DefT (_, ClassT _)
-    | DefT (_, FunT _)
-    | DefT (_, InstanceT _)
-    | DefT (_, IdxWrapper _)
-    | DefT (_, MaybeT _)
-    | DefT (_, MixedT _)
-    | DefT (_, NumT _)
-    | DefT (_, NullT)
-    | DefT (_, ObjT _)
-    | DefT (_, OptionalT _)
-    | DefT (_, ReactAbstractComponentT _)
-    | DefT (_, SingletonNumT _)
-    | DefT (_, SingletonStrT _)
-    | DefT (_, SingletonBoolT _)
-    | DefT (_, StrT _)
-    | DefT (_, VoidT)
+    | DefT (_, _, ArrT _)
+    | DefT (_, _, BoolT _)
+    | DefT (_, _, CharSetT _)
+    | DefT (_, _, ClassT _)
+    | DefT (_, _, FunT _)
+    | DefT (_, _, InstanceT _)
+    | DefT (_, _, IdxWrapper _)
+    | DefT (_, _, MaybeT _)
+    | DefT (_, _, MixedT _)
+    | DefT (_, _, NumT _)
+    | DefT (_, _, NullT)
+    | DefT (_, _, ObjT _)
+    | DefT (_, _, OptionalT _)
+    | DefT (_, _, ReactAbstractComponentT _)
+    | DefT (_, _, SingletonNumT _)
+    | DefT (_, _, SingletonStrT _)
+    | DefT (_, _, SingletonBoolT _)
+    | DefT (_, _, StrT _)
+    | DefT (_, _, VoidT)
       ->
       Kind.Checked
 
@@ -192,8 +192,8 @@ class visitor = object (self)
     | MatchingPropT _
     | TypeDestructorTriggerT _
 
-    | DefT (_, EmptyT) -> Kind.Empty
-    | DefT (_, AnyT _) -> Kind.Any
+    | DefT (_, _, EmptyT) -> Kind.Empty
+    | DefT (_, _, AnyT _) -> Kind.Any
 
   method private types_of_use acc = function
     | UseT (_, t) -> t::acc

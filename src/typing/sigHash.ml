@@ -216,7 +216,7 @@ let hash_of_ctor = Type.(function
   | BoundT _ -> BoundH
   | TypeDestructorTriggerT _ -> TvarDestructorH
   | CustomFunT _ -> CustomFunH
-  | DefT (_, t) -> hash_of_def_ctor t
+  | DefT (_, _, t) -> hash_of_def_ctor t
   | EvalT _ -> EvalH
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH
@@ -351,19 +351,19 @@ let add_type state t =
   add_int state (hash_of_ctor t);
   let open Type in
   match t with
-  | DefT (_, BoolT b) ->
+  | DefT (_, _, BoolT b) ->
     add_option state add_bool b
-  | DefT (_, MixedT m) ->
+  | DefT (_, _, MixedT m) ->
     add_int state m
-  | DefT (_, NumT n) ->
+  | DefT (_, _, NumT n) ->
     add_literal state add_number_literal n
-  | DefT (_, SingletonBoolT b) ->
+  | DefT (_, _, SingletonBoolT b) ->
     add_bool state b
-  | DefT (_, SingletonNumT n) ->
+  | DefT (_, _, SingletonNumT n) ->
     add_number_literal state n
-  | DefT (_, SingletonStrT s) ->
+  | DefT (_, _, SingletonStrT s) ->
     add state s
-  | DefT (_, StrT s) ->
+  | DefT (_, _, StrT s) ->
     add_literal state add s
   | _ -> ()
 

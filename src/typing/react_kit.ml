@@ -26,7 +26,7 @@ let component_class
   ~(get_builtin_typeapp: Context.t -> ?trace:Trace.t -> reason -> string -> Type.t list -> Type.t)
   props
 =
-  DefT (reason, ClassT (get_builtin_typeapp cx reason "React$Component" [props; Tvar.mk cx reason]))
+  DefT (reason, bogus_trust (), ClassT (get_builtin_typeapp cx reason "React$Component" [props; Tvar.mk cx reason]))
 
 let get_intrinsic cx trace component ~reason_op artifact literal prop ~rec_flow
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
@@ -94,7 +94,7 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
    * stateful assumption that `defaultProps` was already written to
    * the component statics which may not always be true. *)
   let strict = NonstrictReturning (Some
-    (DefT (reason_missing, VoidT), upper), None) in
+    (DefT (reason_missing, bogus_trust (), VoidT), upper), None) in
   let propref = Named (reason_prop, name) in
   let action = LookupProp (unknown_use, Field (None, upper, pole)) in
   (* Lookup the `defaultProps` property. *)
@@ -106,12 +106,12 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
  * return None. *)
 let get_defaults cx trace component ~reason_op ~rec_flow =
   match component with
-  | DefT (_, ClassT _)
-  | DefT (_, FunT _) ->
+  | DefT (_, _, ClassT _)
+  | DefT (_, _, FunT _) ->
     let tvar = Tvar.mk cx reason_op in
     lookup_defaults cx trace component ~reason_op ~rec_flow tvar Positive;
     Some tvar
-  | DefT (_, ReactAbstractComponentT _) -> None
+  | DefT (_, _, ReactAbstractComponentT _) -> None
   (* Everything else will not have default props we should diff out. *)
   | _ -> None
 
@@ -130,19 +130,18 @@ let props_to_tout
 =
   match component with
   (* Class components or legacy components. *)
-  | DefT (_, ClassT _) ->
+  | DefT (_, _, ClassT _) ->
     let props = Tvar.mk cx reason_op in
     rec_flow_t cx trace (props, tout);
     rec_flow cx trace (component, ReactPropsToOut (reason_op, props))
 
   (* Stateless functional components. *)
-  | DefT (_, FunT _)
-  (* Stateless functional components, again. This time for callable `ObjT`s. *)
-  | DefT (_, ObjT { call_t = Some _; _ }) ->
+  | DefT (_, _, FunT _)
+  | DefT (_, _, ObjT { call_t = Some _; _ }) ->
     rec_flow cx trace (component, ReactPropsToOut (reason_op, tout))
 
   (* Special case for intrinsic components. *)
-  | DefT (_, StrT lit) -> get_intrinsic cx trace component
+  | DefT (_, _, StrT lit) -> get_intrinsic cx trace component
     ~reason_op
     ~rec_flow
     ~get_builtin_type
@@ -151,10 +150,10 @@ let props_to_tout
     (Field (None, tout, Positive))
 
   (* any and any specializations *)
-  | DefT (reason, AnyT src) ->
+  | DefT (reason, _, AnyT src) ->
     rec_flow_t cx trace (AnyT.why src reason, tout)
 
-  | DefT (reason, ReactAbstractComponentT _) ->
+  | DefT (reason, _, ReactAbstractComponentT _) ->
     rec_flow_t cx trace (MixedT.why reason, tout)
 
   (* ...otherwise, error. *)
@@ -195,7 +194,7 @@ let get_config
   tout
 =
   match component with
-  | DefT (_, ReactAbstractComponentT {config; _}) ->
+  | DefT (_, _, ReactAbstractComponentT {config; _}) ->
       let use_op = Frame (ReactGetConfig {polarity = pole}, use_op) in
       begin match pole with
       | Positive -> rec_flow_t ~use_op cx trace (config, tout)
@@ -248,9 +247,9 @@ module Kit (Flow: Flow_common.S): REACT = struct
        erroring. This is best-effort, after all. *)
 
     let coerce_object = function
-      | DefT (reason, ObjT { props_tmap; dict_t; flags; _ }) ->
+      | DefT (reason, _, ObjT { props_tmap; dict_t; flags; _ }) ->
         Ok (reason, Context.find_props cx props_tmap, dict_t, flags)
-      | DefT (reason, AnyT _) ->
+      | DefT (reason, _, AnyT _) ->
         Error reason
       | _ ->
         let reason = reason_of_t l in
@@ -262,11 +261,11 @@ module Kit (Flow: Flow_common.S): REACT = struct
       | CustomFunT (reason, ReactPropType (PropType.Primitive (required, t))) ->
         let loc = aloc_of_reason reason in
         Ok (required, reposition cx ~trace loc t)
-      | DefT (reason, FunT _) as t ->
+      | DefT (reason, _, FunT _) as t ->
         rec_flow_t cx trace (t,
           get_builtin_type cx reason_op "ReactPropsCheckType");
         Error reason
-      | DefT (reason, AnyT _) ->
+      | DefT (reason, _, AnyT _) ->
         Error reason
       | t ->
         let reason = reason_of_t t in
@@ -275,9 +274,9 @@ module Kit (Flow: Flow_common.S): REACT = struct
     in
 
     let coerce_array = function
-      | DefT (_, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) ->
+      | DefT (_, _, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) ->
         Ok ts
-      | DefT (reason, ArrT _) | DefT (reason, AnyT _) ->
+      | DefT (reason, _, ArrT _) | DefT (reason, _, AnyT _) ->
         Error reason
       | t ->
         let reason = reason_of_t t in
@@ -288,18 +287,18 @@ module Kit (Flow: Flow_common.S): REACT = struct
     (* Unlike other coercions, don't add a Flow error if the incoming type doesn't
        have a singleton type representation. *)
     let coerce_singleton = function
-      | DefT (reason, StrT (Literal (_, x))) ->
+      | DefT (reason, trust, StrT (Literal (_, x))) ->
         let reason = replace_reason_const (RStringLit x) reason in
-        Ok (DefT (reason, SingletonStrT x))
+        Ok (DefT (reason, trust, SingletonStrT x))
 
-      | DefT (reason, NumT (Literal (_, x))) ->
+      | DefT (reason, trust, NumT (Literal (_, x))) ->
         let reason = replace_reason_const (RNumberLit (snd x)) reason in
-        Ok (DefT (reason, SingletonNumT x))
+        Ok (DefT (reason, trust, SingletonNumT x))
 
-      | DefT (reason, BoolT (Some x)) ->
+      | DefT (reason, trust, BoolT (Some x)) ->
         let reason = replace_reason_const (RBooleanLit x) reason in
-        Ok (DefT (reason, SingletonBoolT x))
-      | DefT (_, NullT) | DefT (_, VoidT) as t ->
+        Ok (DefT (reason, trust, SingletonBoolT x))
+      | DefT (_, _, NullT) | DefT (_, _, VoidT) as t ->
         Ok t
       | t ->
         Error (reason_of_t t)
@@ -318,7 +317,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
       let component = l in
       match component with
       (* Class components or legacy components. *)
-      | DefT (_, ClassT _) ->
+      | DefT (_, _, ClassT _) ->
         (* The Props type parameter is invariant, but we only want to create a
          * constraint tin <: props. *)
         let props = Tvar.mk cx reason_op in
@@ -326,19 +325,19 @@ module Kit (Flow: Flow_common.S): REACT = struct
         rec_flow cx trace (component, ReactInToProps (reason_op, props))
 
       (* Stateless functional components. *)
-      | DefT (_, FunT _)
+      | DefT (_, _, FunT _)
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      | DefT (_, ObjT { call_t = Some _; _ }) ->
+      | DefT (_, _, ObjT { call_t = Some _; _ }) ->
         rec_flow cx trace (component, ReactInToProps (reason_op, tin))
 
       (* Abstract components. *)
-      | DefT (reason, ReactAbstractComponentT _) ->
+      | DefT (reason, _trust, ReactAbstractComponentT _) ->
         rec_flow_t cx trace (tin, MixedT.why reason);
 
       (* Intrinsic components. *)
-      | DefT (_, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
+      | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
 
-      | DefT (reason, AnyT source) ->
+      | DefT (reason, _trust, AnyT source) ->
         rec_flow_t cx trace (tin, AnyT.why source reason)
 
       (* ...otherwise, error. *)
@@ -368,7 +367,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         | Op (ReactCreateElementCall {children; _}) -> children
         | _ -> aloc_of_reason reason_op)
         in
-        Some (DefT (r, ArrT (ArrayAT (union_of_ts r (t::ts), Some (t::ts)))))
+        Some (DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (t::ts), Some (t::ts)))))
       (* If we only have a spread of unknown length then React may not pass in
        * children, React may pass in a single child, or React may pass in an array
        * of children. We need to model all of these possibilities. *)
@@ -377,10 +376,10 @@ module Kit (Flow: Flow_common.S): REACT = struct
           (fun desc -> RReactChildrenOrUndefinedOrType desc)
           (reason_of_t spread)
         in
-        Some (DefT (r, OptionalT (
+        Some (DefT (r, bogus_trust (), OptionalT (
           union_of_ts r [
             spread;
-            (DefT (r, ArrT (ArrayAT (spread, None))));
+            (DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None))));
           ]
         )))
       (* If we have one children argument and a spread of unknown length then
@@ -396,7 +395,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         in
         Some (union_of_ts r [
           t;
-          (DefT (r, ArrT (ArrayAT (union_of_ts r [spread; t], Some [t]))))
+          (DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r [spread; t], Some [t]))))
         ])
       (* If we have two or more arguments and a spread argument of unknown length
        * then we want to return an array type where the element type is the union
@@ -407,7 +406,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         | Op (ReactCreateElementCall {children; _}) -> children
         | _ -> aloc_of_reason reason_op)
         in
-        Some (DefT (r, ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
+        Some (DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
     in
 
     let create_element clone component config children_args tout =
@@ -432,7 +431,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
        * provide the entire props type. *)
       let props, defaults  =
         match l with
-        | DefT (_, ReactAbstractComponentT {config; _}) ->
+        | DefT (_, _, ReactAbstractComponentT {config; _}) ->
             (* This is a bit of a hack. We will be passing these props and
              * default props to react_config in flow_js.ml to calculate the
              * config and check the passed config against it. Since our config is
@@ -556,24 +555,24 @@ module Kit (Flow: Flow_common.S): REACT = struct
       let component = l in
       match component with
       (* Class components or legacy components. *)
-      | DefT (_, ClassT component) -> rec_flow_t cx trace (component, tout)
+      | DefT (_, _, ClassT component) -> rec_flow_t cx trace (component, tout)
 
       (* Stateless functional components. *)
-      | DefT (r, FunT _) ->
+      | DefT (r, _, FunT _) ->
         rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
       (* Stateless functional components, again. This time for callable `ObjT`s. *)
-      | DefT (r, ObjT { call_t = Some _; _ }) ->
+      | DefT (r, _, ObjT { call_t = Some _; _ }) ->
         rec_flow_t cx trace (VoidT.make (replace_reason_const RVoid r), tout)
 
       (* Abstract components. *)
-      | DefT (_, ReactAbstractComponentT {instance; _}) ->
+      | DefT (_, _, ReactAbstractComponentT {instance; _}) ->
         rec_flow_t cx trace (instance, tout);
 
       (* Intrinsic components. *)
-      | DefT (_, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
+      | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
 
-      | DefT (reason, AnyT source) ->
+      | DefT (reason, _, AnyT source) ->
         rec_flow_t cx trace (AnyT.why source reason, tout)
 
       (* ...otherwise, error. *)
@@ -592,11 +591,11 @@ module Kit (Flow: Flow_common.S): REACT = struct
       ) in
 
       let mk_union reason = function
-        | [] -> DefT (replace_reason_const REmpty reason, EmptyT)
+        | [] -> DefT (replace_reason_const REmpty reason, bogus_trust (), EmptyT)
         | [t] -> t
         | t0::t1::ts ->
           let reason = replace_reason_const RUnionType reason in
-          DefT (reason, UnionT (UnionRep.make t0 t1 ts))
+          DefT (reason, bogus_trust (), UnionT (UnionRep.make t0 t1 ts))
       in
 
       let open SimplifyPropType in
@@ -608,7 +607,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           | Error reason -> AnyT.make AnyError reason
         in
         let reason = replace_reason_const RArrayType reason_op in
-        let t = DefT (reason, ArrT (ArrayAT (elem_t, None))) in
+        let t = DefT (reason, bogus_trust (), ArrT (ArrayAT (elem_t, None))) in
         resolve t
 
       | InstanceOf ->
@@ -880,7 +879,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
             let reason = replace_reason_const RReactState reason_op in
             Obj_type.mk cx reason
           | Some (Unknown reason) -> AnyT.make Untyped reason
-          | Some (Known (Null reason)) -> DefT (reason, NullT)
+          | Some (Known (Null reason)) -> DefT (reason, bogus_trust (), NullT)
           | Some (Known (NotNull (reason, props, dict, { exact; sealed; _ }))) ->
             let sealed = not (exact && sealed_in_op reason_op sealed) in
             Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)
@@ -1059,7 +1058,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           static = SMap.empty;
         }));
 
-        let instance = DefT (reason_component, InstanceT (static, super, [], insttype)) in
+        let instance = DefT (reason_component, bogus_trust (), InstanceT (static, super, [], insttype)) in
         rec_flow_t cx trace (instance, knot.this);
         rec_flow_t cx trace (static, knot.static);
         rec_flow_t cx trace (class_type instance, tout)
@@ -1195,7 +1194,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
 
       | InitialState (todo, acc) ->
         let initial_state = Some (match l with
-        | DefT (reason, NullT) -> Known (Null reason)
+        | DefT (reason, _, NullT) -> Known (Null reason)
         | _ ->
           coerce_object l
           |> maybe_known_of_result

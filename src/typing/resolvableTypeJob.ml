@@ -110,7 +110,7 @@ and collect_of_type ?log_unresolved cx reason acc = function
       collect_of_types ?log_unresolved cx reason acc ts
     end
 
-  | DefT (_, TypeAppT (_, poly_t, targs))
+  | DefT (_, _, TypeAppT (_, poly_t, targs))
     ->
     begin match poly_t with
     | OpenT tvar ->
@@ -141,7 +141,7 @@ and collect_of_type ?log_unresolved cx reason acc = function
      examples of such bugs yet. Leaving further investigation of this point as
      future work. *)
 
-  | DefT (_, ObjT { props_tmap; dict_t; call_t; _ }) ->
+  | DefT (_, _, ObjT { props_tmap; dict_t; call_t; _ }) ->
     let props_tmap = Context.find_props cx props_tmap in
     let ts = SMap.fold (fun x p ts ->
       (* avoid resolving types of shadow properties *)
@@ -157,18 +157,18 @@ and collect_of_type ?log_unresolved cx reason acc = function
     | Some id -> (Context.find_call cx id)::ts
     in
     collect_of_types ?log_unresolved cx reason acc ts
-  | DefT (_, FunT (_, _, { params; return_t; _ })) ->
+  | DefT (_, _, FunT (_, _, { params; return_t; _ })) ->
     let ts = List.fold_left (fun acc (_, t) -> t::acc) [return_t] params in
     collect_of_types ?log_unresolved cx reason acc ts
-  | DefT (_, ArrT (ArrayAT (elemt, tuple_types))) ->
+  | DefT (_, _, ArrT (ArrayAT (elemt, tuple_types))) ->
     let ts = Option.value ~default:[] tuple_types in
     let ts = elemt::ts in
     collect_of_types ?log_unresolved cx reason acc ts
-  | DefT (_, ArrT (TupleAT (elemt, tuple_types))) ->
+  | DefT (_, _, ArrT (TupleAT (elemt, tuple_types))) ->
     collect_of_types ?log_unresolved cx reason acc (elemt::tuple_types)
-  | DefT (_, ArrT (ROArrayAT (elemt))) ->
+  | DefT (_, _, ArrT (ROArrayAT (elemt))) ->
     collect_of_type ?log_unresolved cx reason acc elemt
-  | DefT (_, InstanceT (static, super, _,
+  | DefT (_, _, InstanceT (static, super, _,
       { class_id; type_args; own_props; proto_props; inst_call_t; _ })) ->
     let ts = if class_id = ALoc.none then [] else [super; static] in
     let ts = List.fold_left (fun ts (_, _, t, _) -> t::ts) ts type_args in
@@ -184,7 +184,7 @@ and collect_of_type ?log_unresolved cx reason acc = function
     | Some id -> (Context.find_call cx id)::ts
     in
     collect_of_types ?log_unresolved cx reason acc ts
-  | DefT (_, PolyT (_, _, t, _)) ->
+  | DefT (_, _, PolyT (_, _, t, _)) ->
     collect_of_type ?log_unresolved cx reason acc t
   | BoundT _ ->
     acc
@@ -206,16 +206,16 @@ and collect_of_type ?log_unresolved cx reason acc = function
      virtualization of calls to this function doesn't lead to perf
      degradation: this function is expected to be quite hot). *)
 
-  | DefT (_, OptionalT t) | DefT (_, MaybeT t) ->
+  | DefT (_, _, OptionalT t) | DefT (_, _, MaybeT t) ->
     collect_of_type ?log_unresolved cx reason acc t
-  | DefT (_, UnionT rep) ->
+  | DefT (_, _, UnionT rep) ->
     let ts = UnionRep.members rep in
     collect_of_types ?log_unresolved cx reason acc ts
-  | DefT (_, IntersectionT rep) ->
+  | DefT (_, _, IntersectionT rep) ->
     let ts = InterRep.members rep in
     collect_of_types ?log_unresolved cx reason acc ts
 
-  | DefT (_, ReactAbstractComponentT {config; instance}) ->
+  | DefT (_, _, ReactAbstractComponentT {config; instance}) ->
     collect_of_types ?log_unresolved cx reason acc [config; instance]
 
   | OpaqueT (_, {underlying_t; super_t; _}) ->
@@ -226,8 +226,8 @@ and collect_of_type ?log_unresolved cx reason acc = function
   | AnyWithUpperBoundT t
   | AnyWithLowerBoundT t
   | ExactT (_, t)
-  | DefT (_, TypeT (_, t))
-  | DefT (_, ClassT t)
+  | DefT (_, _, TypeT (_, t))
+  | DefT (_, _, ClassT t)
   | ThisClassT (_, t)
     ->
     collect_of_type ?log_unresolved cx reason acc t
@@ -241,7 +241,7 @@ and collect_of_type ?log_unresolved cx reason acc = function
   | MatchingPropT (_, _, t) ->
     collect_of_type ?log_unresolved cx reason acc t
 
-  | DefT (_, IdxWrapper t) ->
+  | DefT (_, _, IdxWrapper t) ->
     collect_of_type ?log_unresolved cx reason acc t
 
   | ReposT (_, t)
@@ -250,18 +250,18 @@ and collect_of_type ?log_unresolved cx reason acc = function
 
   | InternalT (OptionalChainVoidT _) -> acc
 
-  | DefT (_, NumT _)
-  | DefT (_, StrT _)
-  | DefT (_, BoolT _)
-  | DefT (_, VoidT)
-  | DefT (_, NullT)
-  | DefT (_, EmptyT)
-  | DefT (_, MixedT _)
-  | DefT (_, SingletonBoolT _)
-  | DefT (_, SingletonNumT _)
-  | DefT (_, SingletonStrT _)
-  | DefT (_, AnyT _)
-  | DefT (_, CharSetT _)
+  | DefT (_, _, NumT _)
+  | DefT (_, _, StrT _)
+  | DefT (_, _, BoolT _)
+  | DefT (_, _, VoidT)
+  | DefT (_, _, NullT)
+  | DefT (_, _, EmptyT)
+  | DefT (_, _, MixedT _)
+  | DefT (_, _, SingletonBoolT _)
+  | DefT (_, _, SingletonNumT _)
+  | DefT (_, _, SingletonStrT _)
+  | DefT (_, _, AnyT _)
+  | DefT (_, _, CharSetT _)
     -> acc
 
   | MergedT (_, uses) ->

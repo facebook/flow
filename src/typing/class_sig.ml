@@ -313,7 +313,7 @@ let elements cx ?constructor s =
       | (loc, t, _), [] -> loc, t
       | (loc0, t0, _), (_, t1, _)::ts ->
           let ts = Core_list.map ~f:(fun (_loc, t, _) -> t) ts in
-          loc0, DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts))
+          loc0, DefT (reason_of_t t0, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts))
     ) s.methods
   in
 
@@ -393,7 +393,7 @@ let elements cx ?constructor s =
     | [t] -> Some t
     | t0::t1::ts ->
       let open Type in
-      let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
+      let t = DefT (reason_of_t t0, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts)) in
       Some t
   in
 
@@ -444,7 +444,7 @@ let statictype cx tparams_with_this x =
   in
   let open Type in
   match static with
-  | DefT (_, ObjT o) -> inited_fields, o
+  | DefT (_, _, ObjT o) -> inited_fields, o
   | _ -> failwith "statics must be an ObjT"
 
 let insttype cx ~initialized_static_fields s =
@@ -456,7 +456,7 @@ let insttype cx ~initialized_static_fields s =
     | (loc0, t0)::(_loc1, t1)::ts ->
       let ts = Core_list.map ~f:snd ts in
       let open Type in
-      let t = DefT (reason_of_t t0, IntersectionT (InterRep.make t0 t1 ts)) in
+      let t = DefT (reason_of_t t0, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts)) in
       Some (loc0, t)
   in
   let type_args = Core_list.map ~f:(fun {Type.name; reason; polarity; _} ->
@@ -561,7 +561,7 @@ let supertype cx tparams_with_this x =
     (match extends with
     | [] -> ObjProtoT super_reason
     | [t] -> t
-    | t0::t1::ts -> DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts)))
+    | t0::t1::ts -> DefT (super_reason, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts)))
   | Class {extends; mixins; _} ->
     let this = SMap.find_unsafe "this" tparams_with_this in
     let t = match extends with
@@ -581,7 +581,7 @@ let supertype cx tparams_with_this x =
     | [] -> failwith "impossible"
     | [t] -> t
     | t0::t1::ts ->
-      DefT (super_reason, IntersectionT (InterRep.make t0 t1 ts))
+      DefT (super_reason, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts))
 
 let thistype cx x =
   let tparams_with_this = x.tparams_map in
@@ -605,8 +605,8 @@ let thistype cx x =
   let initialized_static_fields, static_objtype = statictype cx tparams_with_this x in
   let insttype = insttype cx ~initialized_static_fields x in
   let open Type in
-  let static = DefT (sreason, ObjT static_objtype) in
-  DefT (reason, InstanceT (static, super, implements, insttype))
+  let static = DefT (sreason, bogus_trust (), ObjT static_objtype) in
+  DefT (reason, bogus_trust (), InstanceT (static, super, implements, insttype))
 
 let check_implements cx def_reason x =
   match x.super with
@@ -781,7 +781,7 @@ module This = struct
   let is_bound_to_empty x =
     let open Type in
     Flow.match_this_binding x.tparams_map
-      (function DefT (_, EmptyT) -> true | _ -> false)
+      (function DefT (_, _, EmptyT) -> true | _ -> false)
 
   exception FoundInClass
   class detector = object

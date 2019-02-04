@@ -55,7 +55,7 @@ module rec TypeTerm : sig
     (* def types *)
     (*************)
 
-    | DefT of reason * def_t
+    | DefT of reason * Trust.trust * def_t
 
     (* type expression whose evaluation is deferred *)
     (* Usually a type expression is evaluated by splitting it into a def type
@@ -1554,23 +1554,23 @@ end = struct
 
   (* canonicalize a type w.r.t. enum membership *)
   let canon = TypeTerm.(function
-    | DefT (_, SingletonStrT lit)
-    | DefT (_, StrT (Literal (_, lit))) -> Some (Enum.Str lit)
-    | DefT (_, SingletonNumT lit)
-    | DefT (_, NumT (Literal (_, lit))) -> Some (Enum.Num lit)
-    | DefT (_, SingletonBoolT lit)
-    | DefT (_, BoolT (Some lit)) -> Some (Enum.Bool lit)
-    | DefT (_, VoidT) -> Some (Enum.Void)
-    | DefT (_, NullT) -> Some (Enum.Null)
+    | DefT (_, _, SingletonStrT lit)
+    | DefT (_, _, StrT (Literal (_, lit))) -> Some (Enum.Str lit)
+    | DefT (_, _, SingletonNumT lit)
+    | DefT (_, _, NumT (Literal (_, lit))) -> Some (Enum.Num lit)
+    | DefT (_, _, SingletonBoolT lit)
+    | DefT (_, _, BoolT (Some lit)) -> Some (Enum.Bool lit)
+    | DefT (_, _, VoidT) -> Some (Enum.Void)
+    | DefT (_, _, NullT) -> Some (Enum.Null)
     | _ -> None
   )
 
   let is_base = TypeTerm.(function
-    | DefT (_, SingletonStrT _)
-    | DefT (_, SingletonNumT _)
-    | DefT (_, SingletonBoolT _)
-    | DefT (_, VoidT)
-    | DefT (_, NullT)
+    | DefT (_, _, SingletonStrT _)
+    | DefT (_, _, SingletonNumT _)
+    | DefT (_, _, SingletonBoolT _)
+    | DefT (_, _, VoidT)
+    | DefT (_, _, NullT)
       -> true
     | _ -> false
   )
@@ -1651,13 +1651,13 @@ end = struct
       | OpenT _
       (* some types may not be evaluated yet; TODO *)
       | EvalT _
-      | DefT (_, TypeAppT _)
+      | DefT (_, _, TypeAppT _)
       | KeysT _
-      | DefT (_, IntersectionT _)
+      | DefT (_, _, IntersectionT _)
       (* other types might wrap parts that are accessible directly *)
       | OpaqueT _
-      | DefT (_, InstanceT _)
-      | DefT (_, PolyT _)
+      | DefT (_, _, InstanceT _)
+      | DefT (_, _, PolyT _)
         -> false
       | _ -> true
     )
@@ -1693,7 +1693,7 @@ end = struct
   let props_of find_props t =
     let open TypeTerm in
     match t with
-      | DefT (_, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, ObjT { props_tmap; _ })) ->
+      | DefT (_, _, ObjT { props_tmap; _ }) | ExactT (_, DefT (_, _, ObjT { props_tmap; _ })) ->
         Some (find_props props_tmap)
       | _ -> None
 
@@ -2160,7 +2160,7 @@ end = struct
     | InternalT (ChoiceKitT (reason, _)) -> reason
     | TypeDestructorTriggerT (_, reason, _, _, _) -> reason
     | CustomFunT (reason, _) -> reason
-    | DefT (reason, _) -> reason
+    | DefT (reason, _, _) -> reason
     | EvalT (_, defer_use_t, _) -> reason_of_defer_use_t defer_use_t
     | ExactT (reason, _) -> reason
     | ExistsT reason -> reason
@@ -2309,7 +2309,7 @@ end = struct
     | TypeDestructorTriggerT (use_op, reason, repos, d, t) ->
         TypeDestructorTriggerT (use_op, f reason, repos, d, t)
     | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
-    | DefT (reason, t) -> DefT (f reason, t)
+    | DefT (reason, trust, t) -> DefT (f reason, trust, t)
     | EvalT (t, defer_use_t, id) ->
         EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
     | ExactT (reason, t) -> ExactT (f reason, t)
@@ -2594,8 +2594,8 @@ end = struct
       (* In reposition we also recurse and reposition some nested types. We need
        * to make sure we swap the types for these reasons as well. Otherwise our
        * optimized union ~> union check will not pass. *)
-      | DefT (_, MaybeT t2), DefT (r, MaybeT t1) -> DefT (r, MaybeT (swap_reason t2 t1))
-      | DefT (_, OptionalT t2), DefT (r, OptionalT t1) -> DefT (r, OptionalT (swap_reason t2 t1))
+      | DefT (_, _, MaybeT t2), DefT (r, _, MaybeT t1) -> DefT (r, Trust.bogus_trust (), MaybeT (swap_reason t2 t1))
+      | DefT (_, _, OptionalT t2), DefT (r, _, OptionalT t1) -> DefT (r, Trust.bogus_trust (), OptionalT (swap_reason t2 t1))
       | ExactT (_, t2), ExactT (r, t1) -> ExactT (r, swap_reason t2 t1)
 
       | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
@@ -2623,20 +2623,20 @@ end = struct
 
   let quick_subtype t1 t2 =
     match t1, t2 with
-    | DefT (_, NumT _), DefT (_, NumT _)
-    | DefT (_, SingletonNumT _), DefT (_, NumT _)
-    | DefT (_, StrT _), DefT (_, StrT _)
-    | DefT (_, SingletonStrT _), DefT (_, StrT _)
-    | DefT (_, BoolT _), DefT (_, BoolT _)
-    | DefT (_, SingletonBoolT _), DefT (_, BoolT _)
-    | DefT (_, NullT), DefT (_, NullT)
-    | DefT (_, VoidT), DefT (_, VoidT)
-    | DefT (_, EmptyT), _
-    | _, DefT (_, MixedT _)
+    | DefT (_, _, NumT _), DefT (_, _, NumT _)
+    | DefT (_, _, SingletonNumT _), DefT (_, _, NumT _)
+    | DefT (_, _, StrT _), DefT (_, _, StrT _)
+    | DefT (_, _, SingletonStrT _), DefT (_, _, StrT _)
+    | DefT (_, _, BoolT _), DefT (_, _, BoolT _)
+    | DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _)
+    | DefT (_, _, NullT), DefT (_, _, NullT)
+    | DefT (_, _, VoidT), DefT (_, _, VoidT)
+    | DefT (_, _, EmptyT), _
+    | _, DefT (_, _, MixedT _)
       -> true
-    | DefT (_, StrT actual), DefT (_, SingletonStrT expected) -> literal_eq expected actual
-    | DefT (_, NumT actual), DefT (_, SingletonNumT expected) -> number_literal_eq expected actual
-    | DefT (_, BoolT actual), DefT (_, SingletonBoolT expected) -> boolean_literal_eq expected actual
+    | DefT (_, _, StrT actual), DefT (_, _, SingletonStrT expected) -> literal_eq expected actual
+    | DefT (_, _, NumT actual), DefT (_, _, SingletonNumT expected) -> number_literal_eq expected actual
+    | DefT (_, _, BoolT actual), DefT (_, _, SingletonBoolT expected) -> boolean_literal_eq expected actual
     | _ -> reasonless_eq t1 t2
 end
 
@@ -2676,32 +2676,32 @@ end
 
 module NumT = Primitive (struct
   let desc = RNumber
-  let make r = DefT (r, NumT AnyLiteral)
+  let make r = DefT (r, bogus_trust (), NumT AnyLiteral)
 end)
 
 module StrT = Primitive (struct
   let desc = RString
-  let make r = DefT (r, StrT AnyLiteral)
+  let make r = DefT (r, bogus_trust (), StrT AnyLiteral)
 end)
 
 module BoolT = Primitive (struct
   let desc = RBoolean
-  let make r = DefT (r, BoolT None)
+  let make r = DefT (r, bogus_trust (), BoolT None)
 end)
 
 module MixedT = Primitive (struct
   let desc = RMixed
-  let make r = DefT (r, MixedT Mixed_everything)
+  let make r = DefT (r, bogus_trust (), MixedT Mixed_everything)
 end)
 
 module EmptyT = Primitive (struct
   let desc = REmpty
-  let make r = DefT (r, EmptyT)
+  let make r = DefT (r, bogus_trust (), EmptyT)
 end)
 
 module AnyT = struct
   let desc = function Annotated -> RAnyExplicit | _ -> RAnyImplicit
-  let make source r = DefT (r, AnyT source)
+  let make source r = DefT (r, bogus_trust (), AnyT source)
   let at   source   = mk_reason (desc source) %> annot_reason %> make source
   let why  source   = replace_reason_const ~keep_def_loc:true (desc source) %> make source
   let annot      = why Annotated
@@ -2711,10 +2711,10 @@ module AnyT = struct
   let locationless source = desc source |> locationless_reason |> make source
 
   let source = function
-  | DefT(_, AnyT Annotated)   -> Annotated
-  | DefT(_, AnyT AnyError)    -> AnyError
-  | DefT(_, AnyT (Unsound k)) -> Unsound k
-  | DefT(_, AnyT Untyped)     -> Untyped
+  | DefT(_, _, AnyT Annotated)   -> Annotated
+  | DefT(_, _, AnyT AnyError)    -> AnyError
+  | DefT(_, _, AnyT (Unsound k)) -> Unsound k
+  | DefT(_, _, AnyT Untyped)     -> Untyped
   | _ -> failwith "not an any type"
 end
 
@@ -2756,12 +2756,12 @@ end
 
 module VoidT = Primitive (struct
   let desc = RVoid
-  let make r = DefT (r, VoidT)
+  let make r = DefT (r, bogus_trust (), VoidT)
 end)
 
 module NullT = Primitive (struct
   let desc = RNull
-  let make r = DefT (r, NullT)
+  let make r = DefT (r, bogus_trust (), NullT)
 end)
 
 module ObjProtoT = Primitive (struct
@@ -2811,15 +2811,15 @@ let is_proper_def = function
 
 (* convenience *)
 let is_bot = function
-| DefT (_, EmptyT) -> true
+| DefT (_, _, EmptyT) -> true
 | _ -> false
 
 let is_top = function
-| DefT (_, MixedT _) -> true
+| DefT (_, _, MixedT _) -> true
 | _ -> false
 
 let is_any = function
-| DefT (_, AnyT _) -> true
+| DefT (_, _, AnyT _) -> true
 | _ -> false
 
 (* Primitives, like string, will be promoted to their wrapper object types for
@@ -2971,7 +2971,7 @@ let string_of_ctor = function
     end
   | TypeDestructorTriggerT _ -> "TypeDestructorTriggerT"
   | CustomFunT _ -> "CustomFunT"
-  | DefT (_, t) -> string_of_def_ctor t
+  | DefT (_, _, t) -> string_of_def_ctor t
   | EvalT _ -> "EvalT"
   | ExactT _ -> "ExactT"
   | ExistsT _ -> "ExistsT"
@@ -3213,11 +3213,11 @@ let reason_of_propref = function
   | Computed t -> reason_of_t t
 
 and extract_setter_type = function
-  | DefT (_, FunT (_, _, { params = [_, param_t]; _; })) -> param_t
+  | DefT (_, _, FunT (_, _, { params = [_, param_t]; _; })) -> param_t
   | _ ->  failwith "Setter property with unexpected type"
 
 and extract_getter_type = function
-  | DefT (_, FunT (_, _, { return_t; _; })) -> return_t
+  | DefT (_, _, FunT (_, _, { return_t; _; })) -> return_t
   | _ -> failwith "Getter property with unexpected type"
 
 and elemt_of_arrtype = function
@@ -3227,11 +3227,11 @@ and elemt_of_arrtype = function
 
 let optional t =
   let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
-  DefT (reason, OptionalT t)
+  DefT (reason, bogus_trust (), OptionalT t)
 
 let maybe t =
   let reason = replace_reason (fun desc -> RMaybe desc) (reason_of_t t) in
-  DefT (reason, MaybeT t)
+  DefT (reason, bogus_trust (), MaybeT t)
 
 let exact t =
   ExactT (reason_of_t t, t)
@@ -3241,7 +3241,7 @@ let class_type ?(structural=false) t =
     if structural then reason_of_t t
     else replace_reason (fun desc -> RClass desc) (reason_of_t t)
   in
-  DefT (reason, ClassT t)
+  DefT (reason, bogus_trust (), ClassT t)
 
 let this_class_type t =
   let reason = replace_reason (fun desc -> RClass desc) (reason_of_t t) in
@@ -3257,7 +3257,7 @@ let extends_use_type use_op l u =
 
 let poly_type id tparams_loc (tparams: typeparam Nel.t) t =
   let reason = replace_reason (fun desc -> RPolyType desc) (reason_of_t t) in
-  DefT (reason, PolyT (tparams_loc, tparams, t, id))
+  DefT (reason, bogus_trust (), PolyT (tparams_loc, tparams, t, id))
 
 let poly_type_of_tparam_list id tparams_loc tparams t =
   match tparams with
@@ -3278,7 +3278,7 @@ let typeapp ?annot_loc t targs =
   | None -> reason
   in
   let use_op = Op (TypeApplication { type' = reason }) in
-  DefT (reason, TypeAppT (use_op, t, targs))
+  DefT (reason, bogus_trust (), TypeAppT (use_op, t, targs))
 
 let this_typeapp ?annot_loc t this targs =
   let reason = match targs with
@@ -3395,7 +3395,7 @@ let mk_objecttype ?(flags=default_flags) ~dict ~call pmap proto = {
 
 let mk_object_def_type ~reason ?(flags=default_flags) ~dict ~call pmap proto =
   let reason = replace_reason invalidate_rtype_alias reason in
-  DefT (reason, ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
+  DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
 
 let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
   call_this_t = this;
@@ -3407,7 +3407,7 @@ let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
 }
 
 let create_intersection rep =
-  DefT (locationless_reason (RCustom "intersection"), IntersectionT rep)
+  DefT (locationless_reason (RCustom "intersection"), bogus_trust (), IntersectionT rep)
 
 let apply_opt_use opt_use t_out = match opt_use with
 | OptCallT (u, r, f) ->

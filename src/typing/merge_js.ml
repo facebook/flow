@@ -129,7 +129,7 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
   let m_name = Reason.internal_module_name m in
   let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
-    (Type.NonstrictReturning (Some (Type.DefT (reason,
+    (Type.NonstrictReturning (Some (Type.DefT (reason, Type.bogus_trust (),
        Type.AnyT Type.Untyped), from_t), None)) from_t;
 
   (* flow the declared module type to importing context *)
@@ -463,7 +463,7 @@ let merge_tvar =
       (* Ignore empty in existentials. This behavior is sketchy, but the error
          behavior without this filtering is worse. If an existential accumulates
          an empty, we error but it's very non-obvious how the empty arose. *)
-      | DefT (_, EmptyT) when filter_empty ->
+      | DefT (_, _, EmptyT) when filter_empty ->
         collect_lowers ~filter_empty cx seen acc ts
       (* Everything else becomes part of the merge typed *)
       | _ -> collect_lowers ~filter_empty cx seen (t::acc) ts
@@ -485,7 +485,7 @@ let merge_tvar =
     in
     match lowers with
       | [t] -> t
-      | t0::t1::ts -> DefT (r, UnionT (UnionRep.make t0 t1 ts))
+      | t0::t1::ts -> DefT (r, bogus_trust (), UnionT (UnionRep.make t0 t1 ts))
       | [] ->
         let uses = Flow_js.possible_uses cx id in
         if uses = [] || existential
@@ -654,7 +654,7 @@ module ContextOptimizer = struct
       match t with
       | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
       | OpenT _ -> super#type_ cx pole t
-      | DefT (_, InstanceT (_, _, _, { class_id; _ })) ->
+      | DefT (_, _, InstanceT (_, _, _, { class_id; _ })) ->
         let id = class_id in
         SigHash.add_aloc sig_hash id;
         super#type_ cx pole t
@@ -662,7 +662,7 @@ module ContextOptimizer = struct
         let id = opaque_id in
         SigHash.add_aloc sig_hash id;
         super#type_ cx pole t
-      | DefT (_, PolyT (_, _, _, poly_id)) ->
+      | DefT (_, _, PolyT (_, _, _, poly_id)) ->
         let id =
           if Context.mem_nominal_id cx poly_id
           then match IMap.get poly_id stable_poly_ids with

@@ -114,14 +114,14 @@ let rec convert cx tparams_map = Ast.Type.(function
 | loc, Nullable t ->
     let (_, t), _ as t_ast = convert cx tparams_map t in
     let reason = annot_reason (mk_reason (RMaybe (desc_of_t t)) loc) in
-    (loc, DefT (reason, MaybeT t)), Nullable t_ast
+    (loc, DefT (reason, bogus_trust (), MaybeT t)), Nullable t_ast
 
 | loc, Union (t0, t1, ts) ->
   let (_, t0), _ as t0_ast = convert cx tparams_map t0 in
   let (_, t1), _ as t1_ast = convert cx tparams_map t1 in
   let ts, ts_ast = convert_list cx tparams_map ts in
   let rep = UnionRep.make t0 t1 (ts) in
-  (loc, DefT (mk_reason RUnionType loc, UnionT rep)),
+  (loc, DefT (mk_reason RUnionType loc, bogus_trust (), UnionT rep)),
   Union (t0_ast, t1_ast, ts_ast)
 
 | loc, Intersection (t0, t1, ts) ->
@@ -129,7 +129,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let (_, t1), _ as t1_ast = convert cx tparams_map t1 in
   let ts, ts_ast = convert_list cx tparams_map ts in
   let rep = InterRep.make t0 t1 ts in
-  (loc, DefT (mk_reason RIntersectionType loc, IntersectionT rep)),
+  (loc, DefT (mk_reason RIntersectionType loc, bogus_trust (), IntersectionT rep)),
   Intersection (t0_ast, t1_ast, ts_ast)
 
 | loc, Typeof x as t_ast ->
@@ -172,14 +172,14 @@ let rec convert cx tparams_map = Ast.Type.(function
        that, we use the following closest approximation, that behaves like a
        union as a lower bound but `any` as an upper bound.
     *)
-    AnyWithLowerBoundT (DefT (element_reason, UnionT (UnionRep.make t0 t1 ts)))
+    AnyWithLowerBoundT (DefT (element_reason, bogus_trust (), UnionT (UnionRep.make t0 t1 ts)))
   in
-  (loc, DefT (reason, ArrT (TupleAT (elemt, tuple_types)))), Tuple ts_ast
+  (loc, DefT (reason, bogus_trust (), ArrT (TupleAT (elemt, tuple_types)))), Tuple ts_ast
 
 | loc, Array t ->
   let r = mk_reason RArrayType loc in
   let (_, elemt), _ as t_ast = convert cx tparams_map t in
-  (loc, DefT (r, ArrT (ArrayAT (elemt, None)))), Array t_ast
+  (loc, DefT (r, bogus_trust (), ArrT (ArrayAT (elemt, None)))), Array t_ast
 
 | loc, (StringLiteral { Ast.StringLiteral.value; _ } as t_ast) ->
   (loc, mk_singleton_string loc value), t_ast
@@ -251,9 +251,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let elemts, targs = convert_type_params () in
       match List.hd elemts with
-        | DefT (r, SingletonNumT num_lit) ->
+        | DefT (r, trust, SingletonNumT num_lit) ->
           reconstruct_ast
-            (DefT (replace_reason_const RNumber r, NumT (Literal (None, num_lit))))
+            (DefT (replace_reason_const RNumber r, trust, NumT (Literal (None, num_lit))))
             targs
         | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc) t_ast
     )
@@ -262,9 +262,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let elemts, targs = convert_type_params () in
       match List.hd elemts with
-        | DefT (r, SingletonStrT str_lit) ->
+        | DefT (r, trust, SingletonStrT str_lit) ->
           reconstruct_ast
-            (DefT (replace_reason_const RString r, StrT (Literal (None, str_lit))))
+            (DefT (replace_reason_const RString r, trust, StrT (Literal (None, str_lit))))
             targs
         | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc) t_ast
     )
@@ -273,9 +273,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let elemts, targs = convert_type_params () in
       match List.hd elemts with
-        | DefT (r, SingletonBoolT bool) ->
+        | DefT (r, trust, SingletonBoolT bool) ->
           reconstruct_ast
-            (DefT (replace_reason_const RBoolean r, BoolT (Some bool)))
+            (DefT (replace_reason_const RBoolean r, trust, BoolT (Some bool)))
             targs
         | _ -> error_type cx loc (FlowError.EUnexpectedTemporaryBaseType loc) t_ast
     )
@@ -297,9 +297,9 @@ let rec convert cx tparams_map = Ast.Type.(function
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
       let tout = match t with
-        | ExactT (_, DefT (r, ObjT o)) ->
+        | ExactT (_, DefT (r, trust, ObjT o)) ->
           let r = replace_reason_const RObjectLit r in
-          DefT (r, ObjT { o with flags = { o.flags with exact = true } })
+          DefT (r, trust, ObjT { o with flags = { o.flags with exact = true } })
         | _ -> t
       in
       reconstruct_ast tout targs
@@ -310,7 +310,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let elemts, targs = convert_type_params () in
       let elemt = List.hd elemts in
       reconstruct_ast
-        (DefT (mk_reason RArrayLit loc, ArrT (ArrayAT (elemt, None))))
+        (DefT (mk_reason RArrayLit loc, bogus_trust (), ArrT (ArrayAT (elemt, None))))
         targs
   )
 
@@ -320,7 +320,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let elemts, targs = convert_type_params () in
       let elemt = List.hd elemts in
       reconstruct_ast
-        (DefT (mk_reason RArrayType loc, ArrT (ArrayAT (elemt, None))))
+        (DefT (mk_reason RArrayType loc, bogus_trust (), ArrT (ArrayAT (elemt, None))))
         targs
     )
 
@@ -330,7 +330,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let elemts, targs = convert_type_params () in
       let elemt = List.hd elemts in
       reconstruct_ast
-        (DefT (annot_reason (mk_reason RROArrayType loc), ArrT (ROArrayAT (elemt))))
+        (DefT (annot_reason (mk_reason RROArrayType loc), bogus_trust (), ArrT (ROArrayAT (elemt))))
         targs
     )
 
@@ -357,7 +357,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$PropertyType" ->
     check_type_arg_arity cx loc t_ast targs 2 (fun () ->
       match convert_type_params () with
-      | ([t; DefT (_, SingletonStrT key)], targs) ->
+      | ([t; DefT (_, _, SingletonStrT key)], targs) ->
         let reason = mk_reason (RType "$PropertyType") loc in
         reconstruct_ast
           (EvalT (t, TypeDestructorT
@@ -552,7 +552,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         let char_str = String_utils.CharSet.to_string chars in (* sorts them *)
         let reason = mk_reason (RCustom (spf "character set `%s`" char_str)) loc in
         reconstruct_ast
-          (DefT (reason, CharSetT chars))
+          (DefT (reason, bogus_trust (), CharSetT chars))
           (Some (
             targs_loc,
             [ (str_loc, str_t), StringLiteral { Ast.StringLiteral.value; raw } ]
@@ -582,7 +582,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
       let reason = mk_reason (RStatics (desc_of_t t)) loc in
-      reconstruct_ast (DefT (reason, ClassT t)) targs
+      reconstruct_ast (DefT (reason, bogus_trust (), ClassT t)) targs
     )
 
   | "Function" | "function" ->
@@ -634,7 +634,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         let ts, targs = convert_type_params () in
         let config = List.nth ts 0 in
         let instance = List.nth ts 1 in
-        reconstruct_ast (DefT (mk_reason (RCustom "AbstractComponent") loc,
+        reconstruct_ast (DefT (mk_reason (RCustom "AbstractComponent") loc, bogus_trust (),
           ReactAbstractComponentT {config; instance})) targs
       )
   | "React$Config" ->
@@ -781,7 +781,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match convert_type_params () with
-      | [DefT (_, SingletonNumT (f, _))], targs ->
+      | [DefT (_, _, SingletonNumT (f, _))], targs ->
         let n = Pervasives.int_of_float f in
         let key_strs =
           ListUtils.range 0 n |>
@@ -790,7 +790,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         let tins = Unsoundness.at FunctionPrototype loc |> ListUtils.repeat n in
         let tout = OpenPredT (out_reason, MixedT.at loc, emp, emp) in
         reconstruct_ast
-          (DefT (fun_reason, FunT (
+          (DefT (fun_reason, bogus_trust (), FunT (
             dummy_static static_reason,
             mk_reason RPrototype loc |> Unsoundness.function_proto_any,
             mk_functiontype fun_reason tins tout
@@ -806,7 +806,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Refine" ->
     check_type_arg_arity cx loc t_ast targs 3 (fun () ->
       match convert_type_params () with
-      | [base_t; fun_pred_t; DefT (_, SingletonNumT (f, _))], targs ->
+      | [base_t; fun_pred_t; DefT (_, _, SingletonNumT (f, _))], targs ->
           let idx = Pervasives.int_of_float f in
           let reason = mk_reason (RCustom "refined type") loc in
           let pred = LatentP (fun_pred_t, idx) in
@@ -873,7 +873,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   let (_, return_t), _ as return_ast = convert cx tparams_map return in
   let ft =
-    DefT (reason, FunT (
+    DefT (reason, bogus_trust (), FunT (
       dummy_static reason,
       mk_reason RPrototype loc |> Unsoundness.function_proto_any,
       {
@@ -915,7 +915,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | t0::t1::ts ->
         let callable_reason = mk_reason (RCustom "callable object type") loc in
         let rep = InterRep.make t0 t1 ts in
-        let t = DefT (callable_reason, IntersectionT rep) in
+        let t = DefT (callable_reason, bogus_trust (), IntersectionT rep) in
         Some t
     in
     (* Previously, call properties were stored in the props map under the key
@@ -958,7 +958,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       exact;
       frozen = false
     } in
-    DefT (mk_reason reason_desc loc,
+    DefT (mk_reason reason_desc loc, bogus_trust (),
       ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
   in
   let property loc prop props proto call_deprecated =
@@ -1350,15 +1350,15 @@ and mk_type_available_annotation cx tparams_map (loc, annot) =
 
 and mk_singleton_string loc key =
   let reason = mk_reason (RStringLit key) loc in
-  DefT (reason, SingletonStrT key)
+  DefT (reason, bogus_trust (), SingletonStrT key)
 
 and mk_singleton_number loc num raw =
   let reason = mk_reason (RNumberLit raw) loc in
-  DefT (reason, SingletonNumT (num, raw))
+  DefT (reason, bogus_trust (), SingletonNumT (num, raw))
 
 and mk_singleton_boolean loc b =
   let reason = mk_reason (RBooleanLit b) loc in
-  DefT (reason, SingletonBoolT b)
+  DefT (reason, bogus_trust (), SingletonBoolT b)
 
 (* Given the type of expression C and type arguments T1...Tn, return the type of
    values described by C<T1,...,Tn>, or C when there are no type arguments. *)
@@ -1381,7 +1381,7 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let reason = mk_reason (RType name) name_loc in
     let bound, bound_ast = match bound with
     | Ast.Type.Missing loc ->
-        let t = DefT (reason, MixedT Mixed_everything) in
+        let t = DefT (reason, bogus_trust (), MixedT Mixed_everything) in
         t, Ast.Type.Missing (loc, t)
     | Ast.Type.Available (bound_loc, u) ->
         let bound, bound_ast = mk_type cx tparams_map reason (Some u) in

@@ -118,7 +118,7 @@ module Kit (Flow: Flow_common.S) = struct
       dummy_prototype,
       mk_functiontype reason_op [tin] ~rest_param:None ~def_reason:reason_op tvar
     ) in
-    rec_flow_t cx trace (DefT (reason_op, funt), tout)
+    rec_flow_t cx trace (DefT (reason_op, bogus_trust (), funt), tout)
 
   | ReactCreateElement ->
     (match args with

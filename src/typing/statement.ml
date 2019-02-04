@@ -769,13 +769,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           (fun desc -> RTypeAlias (name, true, desc)) in
         let rec loop = function
         | ExactT (r, t) -> ExactT (mod_reason r, loop t)
-        | DefT (r, MaybeT t) -> DefT (mod_reason r, MaybeT (loop t))
+        | DefT (r, trust, MaybeT t) -> DefT (mod_reason r, trust, MaybeT (loop t))
         | t -> mod_reason_of_t mod_reason t
         in
         loop t
       in
       let type_ = poly_type_of_tparams (Context.make_nominal cx) typeparams
-        (DefT (r, TypeT (TypeAliasKind, t))) in
+        (DefT (r, bogus_trust (), TypeT (TypeAliasKind, t))) in
       Flow.check_polarity cx Positive t;
       Type_table.set (Context.type_table cx) loc type_;
       let id_info = name, type_, Type_table.Other in
@@ -814,7 +814,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       let t = OpaqueT (mk_reason (ROpaqueType name) loc, opaquetype) in
       Flow.check_polarity cx Positive t;
       let type_ = poly_type_of_tparams (Context.make_nominal cx) typeparams
-        (DefT (r, TypeT (OpaqueKind, t))) in
+        (DefT (r, bogus_trust (), TypeT (OpaqueKind, t))) in
       let open Flow in
       let () = match underlying_t, super_t with
       | Some l, Some u ->
@@ -2596,7 +2596,7 @@ and object_ cx reason ?(allow_sealed=true) props =
     | SpreadProperty (prop_loc, { SpreadProperty.argument }) ->
         let (_, spread), _ as argument = expression cx argument in
         let not_empty_object_literal_argument = match spread with
-          | DefT (_, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.sealed
+          | DefT (_, _, ObjT { flags; _ }) -> Obj_type.sealed_in_op reason flags.sealed
           | _ -> true in
         let obj = eval_object (map, result) in
         let result = mk_spread spread obj
@@ -2906,7 +2906,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         let element_reason = mk_reason Reason.unknown_elem_empty_array_desc loc in
         let elemt = Tvar.mk cx element_reason in
         let reason = replace_reason_const REmptyArrayLit reason in
-        (loc, DefT (reason, ArrT (ArrayAT (elemt, Some [])))),
+        (loc, DefT (reason, bogus_trust (), ArrT (ArrayAT (elemt, Some [])))),
         Array { Array.elements = [] }
     | elems ->
         let elem_spread_list, elements = expression_or_spread_list cx loc elems in
@@ -2947,7 +2947,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         let proto = ObjProtoT reason in
         (
           loc,
-          DefT (reason, FunT (
+          DefT (reason, bogus_trust (), FunT (
             dummy_static reason,
             dummy_prototype,
             mk_functiontype reason
@@ -3000,7 +3000,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         let reason = mk_reason (RCustom "new Array(..)") loc in
         let length_reason =
           replace_reason_const (RCustom "array length") reason in
-        Flow.flow_t cx (arg_t, DefT (length_reason, NumT AnyLiteral));
+        Flow.flow_t cx (arg_t, DefT (length_reason, bogus_trust (), NumT AnyLiteral));
         let t, targs = match targ_t with
         | Some (loc, ast, ExplicitArg t) -> t, Some (loc, [ast])
         | Some (_, _, ImplicitArg _)
@@ -3011,7 +3011,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         in
         let id_t = identifier cx name callee_loc in
         (* TODO - tuple_types could be undefined x N if given a literal *)
-        (loc, DefT (reason, ArrT (ArrayAT (t, None)))),
+        (loc, DefT (reason, bogus_trust (), ArrT (ArrayAT (t, None)))),
         New { New.
           callee = (callee_loc, id_t), Identifier ((id_loc, id_t), map_ident name);
           targs;
@@ -3085,7 +3085,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       | None, None ->
         Env.merge_env cx loc (env, then_env, else_env)
         (Changeset.exclude_refines newset);
-        env, DefT (reason, UnionT (UnionRep.make t1 t2 []))
+        env, DefT (reason, bogus_trust (), UnionT (UnionRep.make t1 t2 []))
         (* NOTE: In general it is dangerous to express the least upper bound of
            some types as a union: it might pin down the least upper bound
            prematurely (before all the types have been inferred), and when the
@@ -3177,7 +3177,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (* tag`a${b}c${d}` -> tag(['a', 'c'], b, d) *)
       let call_t =
         let args =
-          let quasi_t = DefT (reason_array, ArrT (ArrayAT (StrT.why reason, None))) in
+          let quasi_t = DefT (reason_array, bogus_trust (), ArrT (ArrayAT (StrT.why reason, None))) in
           let exprs_t = Core_list.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           (Arg quasi_t)::exprs_t
         in
@@ -4239,17 +4239,17 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
         then Literal (None, s), RString
         else AnyLiteral, RLongStringLit (max_literal_length)
       in
-      DefT (annot_reason (mk_reason r_desc loc), StrT lit)
+      DefT (annot_reason (mk_reason r_desc loc), bogus_trust (), StrT lit)
   end
 
   | Boolean b ->
-      DefT (annot_reason (mk_reason RBoolean loc), BoolT (Some b))
+      DefT (annot_reason (mk_reason RBoolean loc), bogus_trust (), BoolT (Some b))
 
   | Null ->
       NullT.at loc
 
   | Number f ->
-      DefT (annot_reason (mk_reason RNumber loc), NumT (Literal (None, (f, lit.raw))))
+      DefT (annot_reason (mk_reason RNumber loc), bogus_trust (), NumT (Literal (None, (f, lit.raw))))
 
   | RegExp _ ->
       Flow.get_builtin_type cx (annot_reason (mk_reason RRegExp loc)) "RegExp"
@@ -4270,14 +4270,14 @@ and unary cx loc = Ast.Expression.Unary.(function
   | { operator = Minus; argument } ->
       let (_, argt), _ as argument = expression cx argument in
       begin match argt with
-      | DefT (reason, NumT (Literal (sense, (value, raw)))) ->
+      | DefT (reason, trust, NumT (Literal (sense, (value, raw)))) ->
         (* special case for negative number literals, to avoid creating an unnecessary tvar. not
            having a tvar allows other special cases that match concrete lower bounds to proceed
            (notably, Object.freeze upgrades literal props to singleton types, and a tvar would
            make a negative number not look like a literal.) *)
         let reason = repos_reason loc ~annot_loc:loc reason in
         let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
-        DefT (reason, NumT (Literal (sense, (value, raw))))
+        DefT (reason, trust, NumT (Literal (sense, (value, raw))))
       | arg ->
         let reason = mk_reason (desc_of_t arg) loc in
         Tvar.mk_derivable_where cx reason (fun t ->
@@ -4844,7 +4844,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
         if name = String.capitalize_ascii name then
           identifier cx (mk_ident name) loc
         else
-          DefT (mk_reason (RIdentifier name) loc, SingletonStrT name)
+          DefT (mk_reason (RIdentifier name) loc, bogus_trust (), SingletonStrT name)
       in
       let o, attributes' = jsx_mk_props cx reason c name attributes children in
       let t = jsx_desugar cx name c o attributes children locs in
@@ -4863,7 +4863,7 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
         if name = String.capitalize_ascii name then
           identifier cx (mk_ident name) loc
         else
-          DefT (mk_reason (RIdentifier name) loc, StrT (Literal (None, name)))
+          DefT (mk_reason (RIdentifier name) loc, bogus_trust (), StrT (Literal (None, name)))
       in
       let o, attributes' = jsx_mk_props cx reason c name attributes children in
       let t = jsx_desugar cx name c o attributes children locs in
@@ -5041,7 +5041,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
                 t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec)
             (* <element name /> *)
             | None ->
-                DefT (mk_reason RBoolean attr_loc, BoolT (Some true)), None
+                DefT (mk_reason RBoolean attr_loc, bogus_trust (), BoolT (Some true)), None
       in
       let p = Field (Some id_loc, atype, Neutral) in
       let att = Opening.Attribute (attr_loc, { Attribute.
@@ -5205,7 +5205,7 @@ and jsx_body cx (loc, child) = Ast.JSX.(
         UnresolvedArg t, Expression e
       | EmptyExpression loc ->
         let reason = mk_reason (RCustom "empty jsx body") loc in
-        let t = DefT (reason, EmptyT) in
+        let t = DefT (reason, bogus_trust (), EmptyT) in
         UnresolvedArg t, EmptyExpression loc
     in
     Some unresolved_param, (loc, ExpressionContainer { expression = ex })
@@ -5224,7 +5224,7 @@ and jsx_body cx (loc, child) = Ast.JSX.(
 and jsx_trim_text loc value =
   match (Utils_jsx.trim_jsx_text (ALoc.to_loc loc) value) with
   | Some (loc, trimmed) ->
-    Some (DefT (mk_reason RJSXText (loc |> ALoc.of_loc), StrT (Type.Literal (None, trimmed))))
+    Some (DefT (mk_reason RJSXText (loc |> ALoc.of_loc), bogus_trust (), StrT (Type.Literal (None, trimmed))))
   | None -> None
 
 and jsx_title_member_to_string (_, member) = Ast.JSX.MemberExpression.(
@@ -5404,7 +5404,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
        literal type to test against. It's not appropriate to call `void_test`
        with a `void_t` that you don't want to treat like an actual `void`! *)
     let void_t = match void_t with
-    | DefT (_, VoidT) -> void_t
+    | DefT (_, _, VoidT) -> void_t
     | _ -> VoidT.why (reason_of_t void_t)
     in
     let ((_, t), _ as e_ast), sentinel_refinement =
@@ -5997,7 +5997,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
   | ("getOwnPropertyNames" | "keys"), None, [Expression e] ->
     let arr_reason = mk_reason RArrayType loc in
     let (_, o), _ as e_ast = expression cx e in
-    DefT (arr_reason, ArrT (
+    DefT (arr_reason, bogus_trust (), ArrT (
       ArrayAT (
         Tvar.mk_where cx arr_reason (fun tvar ->
           let keys_reason = replace_reason (fun desc ->

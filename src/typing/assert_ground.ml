@@ -158,11 +158,11 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
         | KeysT _ ->
           (* Same idea as type destructors. *)
           seen
-        | DefT (_, TypeAppT (_, c, ts)) ->
+        | DefT (_, _, TypeAppT (_, c, ts)) ->
           self#typeapp ts cx pole seen c
-        | DefT (r, ArrT (ArrayAT (t, ts))) when is_literal_array_reason r ->
+        | DefT (r, _, ArrT (ArrayAT (t, ts))) when is_literal_array_reason r ->
           self#arrlit cx pole seen t ts
-        | DefT (r, ObjT o) when is_literal_object_reason r ->
+        | DefT (r, _, ObjT o) when is_literal_object_reason r ->
           let refcnt =
             try Properties.Map.find_unsafe o.props_tmap objlits
             with Not_found -> 0
@@ -175,9 +175,9 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
             else Properties.Map.add o.props_tmap refcnt objlits
           );
           seen
-        | DefT (_, InstanceT (static, _, _, i)) ->
+        | DefT (_, _, InstanceT (static, _, _, i)) ->
           let static_props_id = match static with
-          | DefT (_, ObjT o) -> Some o.props_tmap
+          | DefT (_, _, ObjT o) -> Some o.props_tmap
           | _ -> None
           in
           let own_refcnt =
@@ -216,14 +216,14 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
             )
           );
           seen
-        | DefT (r, FunT (static, prototype, ft)) ->
+        | DefT (r, _, FunT (static, prototype, ft)) ->
             (* This won't propagate to any other types because this happens post-merge *)
             let any = AnyT.locationless Untyped in
             unify_opt cx ~unify_any:true static any;
             unify_opt cx ~unify_any:true prototype any;
             unify_opt cx ~unify_any:true ft.this_t any;
             super#type_ cx pole seen
-              (DefT (r, FunT (any, any, {ft with this_t = any})))
+              (DefT (r, bogus_trust (), FunT (any, any, {ft with this_t = any})))
         | _ -> super#type_ cx pole seen t
       in
       seen)
@@ -281,14 +281,14 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
        * value is a BoundT, we can visit that parameter with a constant
        * positive polarity if it does not appear in the defer_use_t.
        *)
-      | DefT (_, PolyT (_, tparams, DefT (_, TypeT (_,
+      | DefT (_, _, PolyT (_, tparams, DefT (_, _, TypeT (_,
         EvalT (BoundT (_, s, _) as t, (TypeDestructorT (_, _, destructor)), _))), _)) ->
           if (new type_finder t)#destructor cx false destructor
           then loop cx pole seen ((Nel.to_list tparams), targs)
           else loop ~constant_polarity_param:(s, Positive) cx pole seen ((Nel.to_list tparams), targs)
-      | DefT (_, PolyT (_, tparams, _, _)) -> loop cx pole seen ((Nel.to_list tparams), targs)
-      | DefT (_, EmptyT) -> seen
-      | DefT (_, AnyT _) -> seen
+      | DefT (_, _, PolyT (_, tparams, _, _)) -> loop cx pole seen ((Nel.to_list tparams), targs)
+      | DefT (_, _, EmptyT) -> seen
+      | DefT (_, _, AnyT _) -> seen
       | _ ->
           (* We don't error here on an unexpected typeapp because we would have already
            * caught that this type is not polymorphic earlier *)

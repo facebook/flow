@@ -106,7 +106,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
     changeset = Env.retrieve_closure_changeset ();
     def_reason = reason;
   } in
-  let t = DefT (reason, FunT (static, prototype, funtype)) in
+  let t = DefT (reason, bogus_trust (), FunT (static, prototype, funtype)) in
   let t = poly_type_of_tparams (Context.make_nominal cx) tparams t in
   Flow.unify cx t knot;
   t
@@ -116,7 +116,7 @@ let methodtype cx {reason; tparams; fparams; return_t; _} =
   let params_names, params_tlist = List.split params in
   let rest_param = Func_params.rest fparams in
   let def_reason = reason in
-  let t = DefT (reason, FunT (
+  let t = DefT (reason, bogus_trust (), FunT (
     dummy_static reason,
     dummy_prototype,
     mk_boundfunctiontype
@@ -176,7 +176,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
   SMap.iter (fun name t ->
     let r = reason_of_t t in
     let loc = aloc_of_reason r in
-    Env.bind_type cx name (DefT (r, TypeT (TypeParamKind, t))) loc
+    Env.bind_type cx name (DefT (r, bogus_trust (), TypeT (TypeParamKind, t))) loc
       ~state:Scope.State.Initialized
   ) tparams_map;
 
@@ -213,8 +213,8 @@ let toplevels id cx this super ~decls ~stmts ~expr
       Tvar.mk cx (replace_reason_const (RCustom "yield") reason),
       Tvar.mk cx (replace_reason_const (RCustom "next") reason)
     else
-      DefT (replace_reason_const (RCustom "no yield") reason, MixedT Mixed_everything),
-      DefT (replace_reason_const (RCustom "no next") reason, MixedT Mixed_everything)
+      DefT (replace_reason_const (RCustom "no yield") reason, bogus_trust (), MixedT Mixed_everything),
+      DefT (replace_reason_const (RCustom "no next") reason, bogus_trust (), MixedT Mixed_everything)
   in
 
   let yield, next, return = Scope.(

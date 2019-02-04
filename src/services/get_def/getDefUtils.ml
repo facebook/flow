@@ -151,7 +151,7 @@ let set_def_loc_hook prop_access_info literal_key_info target_loc =
     | Some loc, Some (target_loc, _, name) when loc = target_loc ->
       let open Type in
       begin match obj2 with
-      | DefT (_, ObjT _) ->
+      | DefT (_, _, ObjT _) ->
         set_prop_access_info (Use_in_literal (Nel.one obj2, name))
       | _ -> ()
       end
@@ -252,7 +252,7 @@ let extract_instancet cx ty : (Type.t, string) result =
   let resolved = Members.resolve_type cx ty in
   match resolved with
     | ThisClassT (_, t)
-    | DefT (_, PolyT (_, _, ThisClassT (_, t), _)) -> Ok t
+    | DefT (_, _, PolyT (_, _, ThisClassT (_, t), _)) -> Ok t
     | _ ->
       let type_string = string_of_ctor resolved in
       Error ("Expected a class type to extract an instance type from, got " ^ type_string)
@@ -308,15 +308,15 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
   let open Members in
   let open Type in
   match extract_type cx ty with
-    | Success (DefT (_, InstanceT (_, super, _, _))) as extracted_type ->
+    | Success (DefT (_, _, InstanceT (_, super, _, _))) as extracted_type ->
         extract_def_loc_from_instancet cx extracted_type super name
-    | Success (DefT (_, ObjT _)) | SuccessModule _ as extracted_type ->
+    | Success (DefT (_, _, ObjT _)) | SuccessModule _ as extracted_type ->
         get_def_loc_from_extracted_type cx extracted_type name
         >>| begin function
           | None -> NoDefFound
           | Some loc -> FoundObject loc
         end
-    | Success (DefT (_, UnionT rep)) ->
+    | Success (DefT (_, _, UnionT rep)) ->
         let union_members =
           UnionRep.members rep
           |> Core_list.map ~f:(fun member -> extract_def_loc cx member name)
