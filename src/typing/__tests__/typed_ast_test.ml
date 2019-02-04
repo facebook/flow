@@ -140,11 +140,11 @@ class ['a, 'b] loc_none_mapper = object(_)
   method on_type_annot (_x: 'b) = Loc.none
 end
 
-let generate_stmts_layout (stmts: ('a, 'b) Flow_ast.Statement.t list) =
-  let none_mapper = new loc_none_mapper in
-  let prog = Loc.none, Core_list.map ~f:none_mapper#statement stmts, [] in
-  let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
-  layout |> Pretty_printer.print ~source_maps:None |> Source.contents
+class aloc_mapper = object(_)
+  inherit [ALoc.t, ALoc.t * Type.t, ALoc.t, ALoc.t] Flow_polymorphic_ast_mapper.mapper
+  method on_loc_annot x = x
+  method on_type_annot (x, _) = x
+end
 
 let diff_dir =
   let flowconfig_name = Server_files_js.default_flowconfig_name in
@@ -154,43 +154,87 @@ let diff_dir =
   let extension = Printf.sprintf "typed_ast_test_%d" (Random.int 0x3FFFFFFF) in
   Server_files_js.file_of_root extension ~flowconfig_name ~tmp_dir root
 
-let check_structural_equality relative_path file_name stmts1 stmts2 =
-  let diff_output : int option ref = ref None in
-  let err : exn option ref = ref None in
-  begin try
-    Disk.mkdir_p diff_dir;
-    let stmts1_file = Path.to_string (Path.concat (Path.make diff_dir) "A.js") in
-    let oc1 = open_out stmts1_file in
-    output_string oc1 (generate_stmts_layout stmts1);
-    close_out oc1;
-    let stmts2_file = Path.to_string (Path.concat (Path.make diff_dir) "B.js") in
-    let oc2 = open_out stmts2_file in
-    output_string oc2 (generate_stmts_layout stmts2);
-    close_out oc2;
-    diff_output := Some (Sys.command (Printf.sprintf "diff %s %s" stmts1_file stmts2_file))
-  with e ->
-    err := Some e;
-  end;
-  Disk.rm_dir_tree diff_dir;
-  Option.iter ~f:raise (!err);
-  begin match !diff_output with
-  | None -> assert_failure "diff wasn't able to run for some reason"
-  | Some 0 -> ()
-  | Some _ ->
-    let path = match Sys_utils.realpath file_name with
-      | Some path -> path
-      | None -> relative_path
+let system_diff ~f prefix =
+  let dump_stmts filename stmts =
+    let stmts = f stmts in
+    let stmts_file = Path.to_string (Path.concat (Path.make diff_dir) filename) in
+    let oc = open_out stmts_file in
+    output_string oc stmts;
+    close_out oc;
+    stmts_file
+  in
+  fun stmts1 stmts2 ->
+    let result =
+      try
+        Disk.mkdir_p diff_dir;
+        let stmts1_file = dump_stmts (prefix ^ "_A.js") stmts1 in
+        let stmts2_file = dump_stmts (prefix ^ "_B.js") stmts2 in
+        let out_file =
+          prefix ^ "_diff.txt"
+          |> Path.concat (Path.make diff_dir)
+          |> Path.to_string
+        in
+        let cmd = Utils_js.spf "diff -U7 %s %s > %s" stmts1_file stmts2_file out_file in
+        match Sys.command cmd with
+        | 0 | 1 ->
+          let chan = open_in out_file in
+          let s = Sys_utils.read_all chan in
+          Utils_js.print_endlinef "READ: %s" s;
+          close_in chan;
+          Ok s
+        | code ->
+          Utils_js.print_endlinef "diff read error code %d" code;
+          Error "diff wasn't able to run for some reason"
+      with e ->
+        let e = Exception.wrap e in
+        let msg = Exception.get_ctor_string e in
+        Error msg
     in
-    assert_failure (
-      path ^ ":\n" ^
-      "The structure of the produced Typed AST differs from that of the parsed AST.\n\n" ^
-      "To fix this do one of the following:\n" ^
-      " * restore the produced Typed AST, or\n" ^
-      " * include \"" ^ relative_path ^ "\" in the blacklist section\n" ^
-      "   in src/typing/__tests__/typed_ast_test.ml and file a task with the\n" ^
-      "   'flow-typed-ast' tag.\n"
+    Disk.rm_dir_tree diff_dir;
+    match result with
+    | Ok diff -> diff
+    | Error msg -> failwith msg
+
+let pp_diff =
+  let aloc_pp fmt x = Loc.pp fmt (ALoc.to_loc x) in
+  let string_of_ast stmts =
+      List.map (Flow_ast.Statement.show aloc_pp aloc_pp) stmts
+      |> String.concat "\n"
+  in
+  let string_of_src stmts =
+    let none_mapper = new loc_none_mapper in
+    let prog = Loc.none, Core_list.map ~f:none_mapper#statement stmts, [] in
+    let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
+    layout |> Pretty_printer.print ~source_maps:None |> Source.contents
+  in
+  fun fmt (stmts1, stmts2) ->
+    let ast_diff = system_diff ~f:string_of_ast "ast" stmts1 stmts2 in
+    let src_diff = system_diff ~f:string_of_src "src" stmts1 stmts2 in
+    Format.pp_print_string fmt (
+      "\n" ^
+      "AST tree diff:\n" ^
+      ast_diff ^ "\n\n" ^
+      "Source diff:\n" ^
+      src_diff
     )
-  end
+
+let check_structural_equality relative_path file_name stmts1 stmts2 =
+  let aloc_mapper = new aloc_mapper in
+  let stmts2 = aloc_mapper#toplevel_statement_list stmts2 in
+  let path = match Sys_utils.realpath file_name with
+    | Some path -> path
+    | None -> relative_path
+  in
+  let msg =
+    path ^ ":\n" ^
+    "The structure of the produced Typed AST differs from that of the parsed AST.\n\n" ^
+    "To fix this do one of the following:\n" ^
+    " * restore the produced Typed AST, or\n" ^
+    " * include \"" ^ relative_path ^ "\" in the blacklist section\n" ^
+    "   in src/typing/__tests__/typed_ast_test.ml and file a task with the\n" ^
+    "   'flow-typed-ast' tag.\n"
+  in
+  assert_equal ~pp_diff ~msg stmts1 stmts2
 
 let test_case relative_path file_name _ =
   match before_and_after_stmts file_name with
