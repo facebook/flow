@@ -1,3 +1,9 @@
+### 0.92.1
+
+Notable bug fixes:
+* Fixed a bug introduced in v0.92.0 which could cause the server to crash when using an IDE.
+* Fixed `module.system.haste.name_reducers` option for Windows (#7419 - thanks [jamesisaac](https://github.com/jamesisaac))
+
 ### 0.92.0
 
 Likely to cause new Flow errors:
