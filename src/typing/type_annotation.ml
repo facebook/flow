@@ -144,8 +144,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       let reason = mk_reason desc loc in
       (loc, Flow.mk_typeof_annotation cx reason valtype),
       Typeof ((q_loc, valtype), Generic { Generic.id = qualification_ast; targs = None })
-  | loc, _ ->
-    error_type cx loc (FlowError.EUnexpectedTypeof loc) t_ast
+  | q_loc, _ ->
+    error_type cx loc (FlowError.EUnexpectedTypeof q_loc) t_ast
   end
 
 | loc, Tuple ts ->
