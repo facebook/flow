@@ -6,6 +6,10 @@ import { name as three } from "testproj2/subfile";
 import { name as four } from "testproj3";
 import { name as five } from "testproj4";
 
+import { name as six } from "testproj5";
+
+import { name as seven } from "testproj6";
+
 (one: "custom_resolve_dir/testproj");
 
 (two: "subdir/custom_resolve_dir/testproj2");
@@ -31,3 +35,5 @@ import { name as five } from "testproj4";
 
 // should still resolve custom_node_modules
 (five: "custom_node_modules/testproj4");
+
+(seven: "root_resolve_dir/testproj6/");
