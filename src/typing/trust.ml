@@ -21,3 +21,9 @@ type trust = unit
 (* Currently, bogus_trust is the only way to create trust, since actual trust
    tracking is unimplemented. *)
 let bogus_trust () = ()
+
+
+(* Given a trust datum, add (if not already present) the requirement that it
+   be trusted or private. *)
+let make_trusted () = ()
+let make_private () = ()

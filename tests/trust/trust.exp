@@ -1,0 +1,18 @@
+Error --------------------------------------------------------------------------------------------------- syntax.js:5:16
+
+Not a valid type to mark as `$Trusted`.
+
+   5| declare var y: $Trusted<any>;
+                     ^^^^^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------------- syntax.js:7:16
+
+Not a valid type to mark as `$Trusted`.
+
+   7| declare var z: $Trusted<T>
+                     ^^^^^^^^^^^
+
+
+
+Found 2 errors

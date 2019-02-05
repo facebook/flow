@@ -816,7 +816,28 @@ let rec convert cx tparams_map = Ast.Type.(function
       | _ ->
         error_type cx loc (FlowError.ERefineAnnot loc) t_ast
     )
-
+  | "$Trusted" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      match convert_type_params () with
+      | [DefT (_, _, AnyT _)], _ ->
+          error_type cx loc (FlowError.ETrustedAnnot loc) t_ast
+      | [DefT (rs, trust, ty)], targs ->
+          reconstruct_ast
+            (DefT (rs, make_trusted trust, ty))
+            targs
+      | _ ->
+        error_type cx loc (FlowError.ETrustedAnnot loc) t_ast
+    )
+  | "$Private" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      match convert_type_params () with
+      | [DefT (rs, trust, ty)], targs ->
+          reconstruct_ast
+            (DefT (rs, make_private trust, ty))
+            targs
+      | _ ->
+        error_type cx loc (FlowError.EPrivateAnnot loc) t_ast
+    )
   (* other applications with id as head expr *)
   | _ ->
     let reason = mk_reason (RType name) loc in

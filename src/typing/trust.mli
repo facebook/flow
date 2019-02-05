@@ -8,3 +8,6 @@
 type trust
 
 val bogus_trust: unit -> trust
+
+val make_trusted: trust -> trust
+val make_private: trust -> trust

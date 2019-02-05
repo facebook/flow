@@ -2665,6 +2665,10 @@ let dump_flow_error =
         spf "EPredAnnot (%s)" (string_of_aloc loc)
     | ERefineAnnot loc ->
         spf "ERefineAnnot (%s)" (string_of_aloc loc)
+    | ETrustedAnnot loc ->
+        spf "ETrustedAnnot (%s)" (string_of_aloc loc)
+    | EPrivateAnnot loc ->
+        spf "EPrivateAnnot (%s)" (string_of_aloc loc)
     | EUnexpectedTypeof loc ->
         spf "EUnexpectedTypeof (%s)" (string_of_aloc loc)
     | EFunPredCustom ((reason1, reason2), msg) ->

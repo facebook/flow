@@ -106,6 +106,8 @@ type error_message =
   | EUnsupportedKeyInObjectType of ALoc.t
   | EPredAnnot of ALoc.t
   | ERefineAnnot of ALoc.t
+  | ETrustedAnnot of ALoc.t
+  | EPrivateAnnot of ALoc.t
   | EUnexpectedTypeof of ALoc.t
   | EFunPredCustom of (reason * reason) * string
   | EIncompatibleWithShape of reason * reason * use_op
@@ -352,6 +354,8 @@ let util_use_op_of_msg nope util = function
 | EUnsupportedKeyInObjectType (_)
 | EPredAnnot (_)
 | ERefineAnnot (_)
+| ETrustedAnnot (_)
+| EPrivateAnnot (_)
 | EUnexpectedTypeof (_)
 | EFunPredCustom (_, _)
 | EInternal (_, _)
@@ -1578,6 +1582,16 @@ let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Error
     mk_error ~trace_infos loc [
       text "Cannot use "; code "$Refine"; text " because the third ";
       text "type argument must be a number literal.";
+    ]
+
+  | ETrustedAnnot loc ->
+    mk_error ~trace_infos loc [
+      text "Not a valid type to mark as "; code "$Trusted"; text ".";
+    ]
+
+  | EPrivateAnnot loc ->
+    mk_error ~trace_infos loc [
+      text "Not a valid type to mark as "; code "$Private"; text ".";
     ]
 
   | EUnexpectedTypeof loc ->
