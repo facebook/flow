@@ -415,7 +415,7 @@ module Node = struct
             lazy (
               lazy_seq (Files.node_resolver_aliases file_options |> Core_list.map ~f:(fun dirname ->
                 lazy (resolve_relative
-                  ~options
+                  ~options ~reader
                   loc ?resolution_acc dir (spf "%s%s%s" dirname Filename.dir_sep r)
                 )
               ))
