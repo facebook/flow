@@ -1,36 +1,36 @@
-Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:10:2
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:12:2
 
 Cannot cast `two` to string literal `custom_resolve_dir/testproj2` because string literal
 `subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `custom_resolve_dir/testproj2` [2].
 
-   subdir/sublevel.js:10:2
-   10| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+   subdir/sublevel.js:12:2
+   12| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
         ^^^
 
 References:
    subdir/custom_resolve_dir/testproj2/index.js:3:18
     3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   subdir/sublevel.js:10:7
-   10| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+   subdir/sublevel.js:12:7
+   12| (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:11:2
+Error ------------------------------------------------------------------------------------------ subdir/sublevel.js:13:2
 
 Cannot cast `two` to string literal `node_modules/testproj2` because string literal
 `subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `node_modules/testproj2` [2].
 
-   subdir/sublevel.js:11:2
-   11| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+   subdir/sublevel.js:13:2
+   13| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
         ^^^
 
 References:
    subdir/custom_resolve_dir/testproj2/index.js:3:18
     3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   subdir/sublevel.js:11:7
-   11| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+   subdir/sublevel.js:13:7
+   13| (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
              ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
