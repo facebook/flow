@@ -65,6 +65,7 @@ type 'a merge_stream = {
 }
 
 let make
+  ~num_workers
   ~dependency_graph
   ~leader_map
   ~component_map
@@ -173,14 +174,14 @@ let make
   (* component_map is a map from leaders to components *)
   (* dependency_graph is a map from files to dependencies *)
   let next =
-    let procs = Sys_utils.nbr_procs in
     fun () ->
       let jobs = Stream.length !stream in
       if jobs = 0 && !blocked <> 0 then Bucket.Wait
       else
+        (* NB: num_workers can be zero *)
         let bucket_size =
-          if jobs < procs * max_bucket_size
-          then 1 + (jobs / procs)
+          if jobs < num_workers * max_bucket_size
+          then 1 + (jobs / num_workers)
           else max_bucket_size
         in
         let n = min bucket_size jobs in

@@ -401,6 +401,7 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
 let merge_runner
     ~job ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
     dependency_graph component_map recheck_map =
+  let num_workers = Options.max_workers options in
   (* make a map from files to their component leaders *)
   let leader_map =
     FilenameMap.fold (fun file component acc ->
@@ -415,7 +416,7 @@ let merge_runner
   ) component_map in
 
   let start_time = Unix.gettimeofday () in
-  let {Merge_stream.next; merge; stats} = Merge_stream.make
+  let {Merge_stream.next; merge; stats} = Merge_stream.make ~num_workers
     ~dependency_graph ~leader_map ~component_map ~recheck_leader_map ~intermediate_result_callback
   in
   (* returns parallel lists of filenames, error sets, and suppression sets *)
