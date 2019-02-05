@@ -1,8 +1,10 @@
 // @flow
 import { name as one } from "testproj";
 import { name as two } from "testproj2";
-import { name as three } from "testproj3";
-import { name as four } from "testproj4";
+import { name as three } from "testproj2/subfile";
+
+import { name as four } from "testproj3";
+import { name as five } from "testproj4";
 
 (one: "custom_resolve_dir/testproj");
 
@@ -10,8 +12,22 @@ import { name as four } from "testproj4";
 (two: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
 (two: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
 
+// if we fail to resolve in custom_resolve_dir
+// then we should still resolve node_modules if
+// possible.
+//
+// this tends to bring up the possibility of
+// confusing bugs but it is consistent with
+// the behavior of the webpack/babel features
+// they are based upon.
+//
+// personally can see a flow lint warning
+// as an option here if a conflict of folders
+// is detected between aliases and/or node_modules
+(three: "node_modules/testproj2/subfile");
+
 // should still resolve node_modules
-(three: "node_modules/testproj3");
+(four: "node_modules/testproj3");
 
 // should still resolve custom_node_modules
-(four: "custom_node_modules/testproj4");
+(five: "custom_node_modules/testproj4");
