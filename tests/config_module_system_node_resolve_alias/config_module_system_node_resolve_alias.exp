@@ -1,0 +1,56 @@
+Error ------------------------------------------------------------------------------------------- subdir/sublevel.js:6:2
+
+Cannot cast `name` to string literal `custom_resolve_dir/testproj2` because string literal
+`subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `custom_resolve_dir/testproj2` [2].
+
+   subdir/sublevel.js:6:2
+   6| (name: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+       ^^^^
+
+References:
+   subdir/custom_resolve_dir/testproj2/index.js:3:18
+   3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subdir/sublevel.js:6:8
+   6| (name: "custom_resolve_dir/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- subdir/sublevel.js:7:2
+
+Cannot cast `name` to string literal `node_modules/testproj2` because string literal
+`subdir/custom_resolve_dir/testproj2` [1] is incompatible with string literal `node_modules/testproj2` [2].
+
+   subdir/sublevel.js:7:2
+   7| (name: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+       ^^^^
+
+References:
+   subdir/custom_resolve_dir/testproj2/index.js:3:18
+   3| export var name: "subdir/custom_resolve_dir/testproj2" = "subdir/custom_resolve_dir/testproj2";
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subdir/sublevel.js:7:8
+   7| (name: "node_modules/testproj2"); // Error: Resolve from sibling 'custom_resolve_dir' first!
+             ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- toplevel.js:6:2
+
+Cannot cast `name` to string literal `node_modules/testproj` because string literal `custom_resolve_dir/testproj` [1] is
+incompatible with string literal `node_modules/testproj` [2].
+
+   toplevel.js:6:2
+   6| (name: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+       ^^^^
+
+References:
+   custom_resolve_dir/testproj/index.js:3:18
+   3| export var name: "custom_resolve_dir/testproj" = "custom_resolve_dir/testproj";
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   toplevel.js:6:8
+   6| (name: "node_modules/testproj"); // Error: Resolve from resolve_alias first!
+             ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 3 errors
