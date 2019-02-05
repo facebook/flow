@@ -1,3 +1,4 @@
 [options]
 module.system.node.resolve_dirname=node_modules
+module.system.node.resolve_dirname=custom_node_modules
 module.system.node.resolve_alias=custom_resolve_dir
