@@ -6,12 +6,11 @@
  *)
 
 module Ast = Flow_ast
-module File_sig = File_sig.With_Loc
 
 open Utils_js
 open Sys_utils
 
-type t = (Loc.t, Loc.t) Ast.program * File_sig.t
+type t = (Loc.t, Loc.t) Ast.program * File_sig.With_Loc.t
 type parse_ok =
   | Classic of t
   | TypesFirst of t * t (* sig *)
@@ -36,7 +35,7 @@ and parse_skip_reason =
 and parse_failure =
   | Docblock_errors of docblock_error list
   | Parse_error of (Loc.t * Parse_error.t)
-  | File_sig_error of File_sig.error
+  | File_sig_error of File_sig.With_Loc.error
 
 and docblock_error = Loc.t * docblock_error_kind
 and docblock_error_kind =
@@ -48,7 +47,7 @@ and docblock_error_kind =
 (* results of parse job, returned by parse and reparse *)
 type results = {
   (* successfully parsed files *)
-  parse_ok: (File_sig.tolerable_error list) FilenameMap.t;
+  parse_ok: (File_sig.With_Loc.tolerable_error list) FilenameMap.t;
 
   (* list of skipped files *)
   parse_skips: (File_key.t * Docblock.t) list;
@@ -345,7 +344,7 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false)
     match file with
     | File_key.JsonFile _ ->
       let ast = parse_json_file ~fail content file in
-      Parse_ok (Classic (ast, File_sig.init))
+      Parse_ok (Classic (ast, File_sig.With_Loc.init))
     | File_key.ResourceFile _ ->
       Parse_skip Skip_resource_file
     | _ ->
@@ -375,8 +374,8 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false)
           | Ok signature ->
             let errors, sig_ast = Signature_builder.Signature.verify_and_generate
               ?prevent_munge ~ignore_static_propTypes ~facebook_fbt signature ast in
-            let file_sig = File_sig.verified errors (snd signature) in
-            let sig_file_sig = match File_sig.program ~ast:sig_ast ~module_ref_prefix with
+            let file_sig = File_sig.With_Loc.verified errors (snd signature) in
+            let sig_file_sig = match File_sig.With_Loc.program ~ast:sig_ast ~module_ref_prefix with
               | Ok fs -> fs
               | Error _ -> assert false in
             begin match arch with
@@ -387,7 +386,7 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false)
             end
           | Error e -> Parse_fail (File_sig_error e)
         else
-          Parse_ok (Classic (ast, File_sig.init))
+          Parse_ok (Classic (ast, File_sig.With_Loc.init))
   ) with
   | Parse_error.Error (first_parse_error::_) ->
     Parse_fail (Parse_error first_parse_error)
@@ -477,7 +476,7 @@ let reducer
               let sig_opt = sig_opt parse_ok in
               worker_mutator.Parsing_heaps.add_file file info (ast, file_sig) sig_opt;
               let parse_ok =
-                FilenameMap.add file file_sig.File_sig.tolerable_errors parse_results.parse_ok
+                FilenameMap.add file file_sig.File_sig.With_Loc.tolerable_errors parse_results.parse_ok
               in
               { parse_results with parse_ok; }
           | Parse_fail converted ->

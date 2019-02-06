@@ -7,8 +7,6 @@
 
 open Utils_js
 
-module File_sig = File_sig.With_Loc
-
 (* sketch of baseline incremental alg:
 
    Note: this is for strict mode only, which is the easy case,
@@ -242,10 +240,10 @@ let implementation_file ~reader ~audit r =
 let file_dependencies ~audit ~reader file =
   let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
   let sig_file_sig_opt = Parsing_heaps.Mutator_reader.get_sig_file_sig reader file in
-  let require_loc = File_sig.(require_loc_map file_sig.module_sig) in
+  let require_loc = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
   let sig_require_loc = match sig_file_sig_opt with
     | None -> require_loc
-    | Some sig_file_sig -> File_sig.(require_loc_map sig_file_sig.module_sig) in
+    | Some sig_file_sig -> File_sig.With_Loc.(require_loc_map sig_file_sig.module_sig) in
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
   in
