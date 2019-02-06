@@ -88,8 +88,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:7:22
      7|     (this.props.foo: empty); // error: string ~> empty
@@ -105,8 +105,8 @@ Cannot cast `this.props.bar` to empty because number [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [1]
    create_class.js:8:22
      8|     (this.props.bar: empty); // error: number ~> empty
@@ -259,8 +259,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:117:22
    117|     (this.props.foo: empty); // string ~> empty
@@ -276,8 +276,8 @@ Cannot cast `this.state.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:118:22
    118|     (this.state.foo: empty); // string ~> empty
@@ -293,8 +293,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:133:22
    133|     (this.props.foo: empty); // string ~> empty
@@ -310,8 +310,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:137:22
    137|     (this.props.foo: empty); // string ~> empty
@@ -327,8 +327,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:141:22
    141|     (this.props.foo: empty); // string ~> empty
@@ -344,8 +344,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:142:21
    142|     (nextProps.foo: empty); // string ~> empty
@@ -361,8 +361,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:146:22
    146|     (this.props.foo: empty); // string ~> empty
@@ -395,8 +395,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:148:21
    148|     (nextProps.foo: empty); // string ~> empty
@@ -443,8 +443,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:153:22
    153|     (this.props.foo: empty); // string ~> empty
@@ -477,8 +477,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:155:21
    155|     (nextProps.foo: empty); // string ~> empty
@@ -511,8 +511,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:160:22
    160|     (this.props.foo: empty); // string ~> empty
@@ -545,8 +545,8 @@ Cannot cast `nextProps.foo` to empty because string [1] is incompatible with emp
              ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:162:21
    162|     (nextProps.foo: empty); // string ~> empty
@@ -579,8 +579,8 @@ Cannot cast `this.props.foo` to empty because string [1] is incompatible with em
              ^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    create_class.js:167:22
    167|     (this.props.foo: empty); // string ~> empty
@@ -1848,8 +1848,8 @@ References:
    jsx_spread.js:10:19
     10| var props = {bar: 42};
                           ^^ [1]
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
 
 
@@ -1962,8 +1962,8 @@ References:
    proptype_arrayOf.js:15:45
     15| var fail_mistyped_elems = <Example arr={[1, "foo"]} />
                                                     ^^^^^ [1]
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -1979,8 +1979,8 @@ References:
    proptype_arrayOf.js:20:36
     20| var todo_required = <Example arr={[null]} />
                                            ^^^^ [1]
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -1997,8 +1997,8 @@ References:
    proptype_arrayOf.js:30:25
     30| (<OptionalExample arr={[""]} />); // error: string ~> number
                                 ^^ [1]
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2036,8 +2036,8 @@ Cannot cast `propName` to empty because string [1] is incompatible with empty [2
                ^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:397:13
-   397|   propName: string,
+   <BUILTINS>/react.js:410:13
+   410|   propName: string,
                     ^^^^^^ [1]
    proptype_custom_validator.js:8:18
      8|       (propName: empty); // error: propName is a string
@@ -2053,8 +2053,8 @@ Cannot cast `componentName` to empty because string [1] is incompatible with emp
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:398:18
-   398|   componentName: string,
+   <BUILTINS>/react.js:411:18
+   411|   componentName: string,
                          ^^^^^^ [1]
    proptype_custom_validator.js:9:23
      9|       (componentName: empty); // error: componentName is a string
@@ -2072,8 +2072,8 @@ Cannot cast `href` to empty because:
                ^^^^
 
 References:
-   <BUILTINS>/react.js:399:10
-   399|   href?: string) => ?Error;
+   <BUILTINS>/react.js:412:10
+   412|   href?: string) => ?Error;
                  ^^^^^^ [1]
    proptype_custom_validator.js:10:14
     10|       (href: empty); // error: href is an optional string
@@ -2092,8 +2092,8 @@ References:
    proptype_custom_validator.js:11:18
     11|       return (0: mixed); // error: should return ?Error
                          ^^^^^ [1]
-   <BUILTINS>/react.js:399:22
-   399|   href?: string) => ?Error;
+   <BUILTINS>/react.js:412:22
+   412|   href?: string) => ?Error;
                              ^^^^^ [2]
 
 
@@ -2186,8 +2186,8 @@ References:
    proptype_objectOf.js:15:47
     15| var fail_mistyped_props = <Example obj={{foo: "foo"}} />
                                                       ^^^^^ [1]
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2203,8 +2203,8 @@ References:
    proptype_objectOf.js:20:38
     20| var todo_required = <Example obj={{p:null}} />
                                              ^^^^ [1]
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2220,8 +2220,8 @@ References:
    proptype_objectOf.js:30:27
     30| (<OptionalExample obj={{p:""}} />); // error: string ~> number
                                   ^^ [1]
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -2396,11 +2396,11 @@ References:
    proptype_oneOfType.js:24:32
     24| var fail_bool = <Example prop={true} />;
                                        ^^^^ [1]
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [3]
 
 
@@ -2418,11 +2418,11 @@ References:
    proptype_oneOfType.js:29:36
     29| var todo_required = <Example prop={null} />;
                                            ^^^^ [1]
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:425:36
-   425|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:438:36
+   438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [3]
 
 
@@ -2438,8 +2438,8 @@ References:
    proptype_oneOfType.js:41:22
     41| (<OptionalExample p={0} />); // error: number ~> string
                              ^ [1]
-   <BUILTINS>/react.js:427:36
-   427|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:440:36
+   440|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
 
 
@@ -2521,14 +2521,14 @@ Cannot cast `React.PropTypes.arrayOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:407:17
-   407|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:420:17
+   420|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:407:41
-   407|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:420:41
+   420|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2545,8 +2545,8 @@ empty [2] in the return value.
          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:409:27
-   409|   (expectedClass: any) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:422:27
+   422|   (expectedClass: any) => ReactPropsChainableTypeChecker;
                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2564,14 +2564,14 @@ Cannot cast `React.PropTypes.objectOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:411:17
-   411|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:424:17
+   424|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                         ^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:411:41
-   411|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:424:41
+   424|   (typeChecker: ReactPropsCheckType) => ReactPropsChainableTypeChecker;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2589,14 +2589,14 @@ Cannot cast `React.PropTypes.oneOf` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:413:20
-   413|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:426:20
+   426|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                            ^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:413:35
-   413|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:426:35
+   426|   (expectedValues: Array<any>) => ReactPropsChainableTypeChecker;
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2614,14 +2614,14 @@ Cannot cast `React.PropTypes.oneOfType` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:415:25
-   415|   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
+   <BUILTINS>/react.js:428:25
+   428|   (arrayOfTypeCheckers: Array<ReactPropsCheckType>) =>
                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:416:5
-   416|     ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:429:5
+   429|     ReactPropsChainableTypeChecker;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -2639,14 +2639,14 @@ Cannot cast `React.PropTypes.shape` to `NoFun` because:
          ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:418:16
-   418|   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
+   <BUILTINS>/react.js:431:16
+   431|   (shapeTypes: { [key: string]: ReactPropsCheckType }) =>
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    proptypes_builtins.js:3:14
      3| type NoFun = mixed => empty;
                      ^^^^^ [2]
-   <BUILTINS>/react.js:419:5
-   419|     ReactPropsChainableTypeChecker;
+   <BUILTINS>/react.js:432:5
+   432|     ReactPropsChainableTypeChecker;
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    proptypes_builtins.js:3:23
      3| type NoFun = mixed => empty;
@@ -3142,12 +3142,12 @@ Cannot call `React.useCallback` because function [1] requires another argument.
           ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:339:38
+   <BUILTINS>/react.js:352:38
                                              v----------------------------------------------
-   339|   declare export function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
-   340|     callback: T,
-   341|     inputs: ?$ReadOnlyArray<mixed>,
-   342|   ): T;
+   352|   declare export function useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+   353|     callback: T,
+   354|     inputs: ?$ReadOnlyArray<mixed>,
+   355|   ): T;
           ---^ [1]
 
 
@@ -3223,39 +3223,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3340,39 +3340,39 @@ Cannot call `React.useDebugValue` because property `useDebugValue` is missing in
                                ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3385,12 +3385,12 @@ Cannot call `React.useEffect` because function [1] requires another argument.
           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:329:36
+   <BUILTINS>/react.js:342:36
                                            v
-   329|   declare export function useEffect(
-   330|     create: () => MaybeCleanUpFn,
-   331|     inputs: ?$ReadOnlyArray<mixed>,
-   332|   ): void;
+   342|   declare export function useEffect(
+   343|     create: () => MaybeCleanUpFn,
+   344|     inputs: ?$ReadOnlyArray<mixed>,
+   345|   ): void;
           ------^ [1]
 
 
@@ -3403,8 +3403,8 @@ Cannot call `React.useEffect` with `1` bound to `create` because number [1] is i
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:330:13
-   330|     create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:343:13
+   343|     create: () => MaybeCleanUpFn,
                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3418,8 +3418,8 @@ type [2].
                                     ^ [1]
 
 References:
-   <BUILTINS>/react.js:331:14
-   331|     inputs: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:344:14
+   344|     inputs: ?$ReadOnlyArray<mixed>,
                      ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3468,13 +3468,13 @@ Cannot call `React.useImperativeHandle` because function [1] requires another ar
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:349:46
+   <BUILTINS>/react.js:362:46
                                                      v---
-   349|   declare export function useImperativeHandle<T>(
-   350|     ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
-   351|     create: () => T,
-   352|     inputs: ?$ReadOnlyArray<mixed>,
-   353|   ): void;
+   362|   declare export function useImperativeHandle<T>(
+   363|     ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+   364|     create: () => T,
+   365|     inputs: ?$ReadOnlyArray<mixed>,
+   366|   ): void;
           ------^ [1]
 
 
@@ -3523,12 +3523,12 @@ Cannot call `React.useLayoutEffect` because function [1] requires another argume
           ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:334:42
+   <BUILTINS>/react.js:347:42
                                                  v
-   334|   declare export function useLayoutEffect(
-   335|     create: () => MaybeCleanUpFn,
-   336|     inputs: ?$ReadOnlyArray<mixed>,
-   337|   ): void;
+   347|   declare export function useLayoutEffect(
+   348|     create: () => MaybeCleanUpFn,
+   349|     inputs: ?$ReadOnlyArray<mixed>,
+   350|   ): void;
           ------^ [1]
 
 
@@ -3542,8 +3542,8 @@ type [2].
                                 ^ [1]
 
 References:
-   <BUILTINS>/react.js:335:13
-   335|     create: () => MaybeCleanUpFn,
+   <BUILTINS>/react.js:348:13
+   348|     create: () => MaybeCleanUpFn,
                     ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3557,8 +3557,8 @@ type [2].
                                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:336:14
-   336|     inputs: ?$ReadOnlyArray<mixed>,
+   <BUILTINS>/react.js:349:14
+   349|     inputs: ?$ReadOnlyArray<mixed>,
                      ^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -3607,12 +3607,12 @@ Cannot call `React.useMemo` because function [1] requires another argument.
           ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:344:34
+   <BUILTINS>/react.js:357:34
                                          v---
-   344|   declare export function useMemo<T>(
-   345|     create: () => T,
-   346|     inputs: ?$ReadOnlyArray<mixed>,
-   347|   ): T;
+   357|   declare export function useMemo<T>(
+   358|     create: () => T,
+   359|     inputs: ?$ReadOnlyArray<mixed>,
+   360|   ): T;
           ---^ [1]
 
 
@@ -3642,39 +3642,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3687,39 +3687,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3732,39 +3732,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3777,39 +3777,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3822,39 +3822,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3867,39 +3867,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3912,39 +3912,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -3957,39 +3957,39 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
@@ -4002,59 +4002,77 @@ Cannot call `React.useMutationEffect` because property `useMutationEffect` is mi
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:355:26
+   <BUILTINS>/react.js:368:26
                                  v-
-   355|   declare export default {|
-   356|     +DOM: typeof DOM,
-   357|     +PropTypes: typeof PropTypes,
-   358|     +version: typeof version,
-   359|     +checkPropTypes: typeof checkPropTypes,
-   360|     +memo: typeof memo,
-   361|     +lazy: typeof lazy,
-   362|     +createClass: typeof createClass,
-   363|     +createContext: typeof createContext,
-   364|     +createElement: typeof createElement,
-   365|     +cloneElement: typeof cloneElement,
-   366|     +createFactory: typeof createFactory,
-   367|     +createRef: typeof createRef,
-   368|     +forwardRef: typeof forwardRef,
-   369|     +isValidElement: typeof isValidElement,
+   368|   declare export default {|
+   369|     +DOM: typeof DOM,
+   370|     +PropTypes: typeof PropTypes,
+   371|     +version: typeof version,
+   372|     +checkPropTypes: typeof checkPropTypes,
+   373|     +memo: typeof memo,
+   374|     +lazy: typeof lazy,
+   375|     +createClass: typeof createClass,
+   376|     +createContext: typeof createContext,
+   377|     +createElement: typeof createElement,
+   378|     +cloneElement: typeof cloneElement,
+   379|     +createFactory: typeof createFactory,
+   380|     +createRef: typeof createRef,
+   381|     +forwardRef: typeof forwardRef,
+   382|     +isValidElement: typeof isValidElement,
       :
-   372|     +Fragment: typeof Fragment,
-   373|     +Children: typeof Children,
-   374|     +ConcurrentMode: typeof ConcurrentMode,
-   375|     +StrictMode: typeof StrictMode,
-   376|     +Suspense: typeof Suspense,
-   377|     +useContext: typeof useContext,
-   378|     +useState: typeof useState,
-   379|     +useReducer: typeof useReducer,
-   380|     +useRef: typeof useRef,
-   381|     +useEffect: typeof useEffect,
-   382|     +useLayoutEffect: typeof useLayoutEffect,
-   383|     +useCallback: typeof useCallback,
-   384|     +useMemo: typeof useMemo,
-   385|     +useImperativeHandle: typeof useImperativeHandle,
-   386|   |};
+   385|     +Fragment: typeof Fragment,
+   386|     +Children: typeof Children,
+   387|     +ConcurrentMode: typeof ConcurrentMode,
+   388|     +StrictMode: typeof StrictMode,
+   389|     +Suspense: typeof Suspense,
+   390|     +useContext: typeof useContext,
+   391|     +useState: typeof useState,
+   392|     +useReducer: typeof useReducer,
+   393|     +useRef: typeof useRef,
+   394|     +useEffect: typeof useEffect,
+   395|     +useLayoutEffect: typeof useLayoutEffect,
+   396|     +useCallback: typeof useCallback,
+   397|     +useMemo: typeof useMemo,
+   398|     +useImperativeHandle: typeof useImperativeHandle,
+   399|   |};
           -^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- useReducer_hook.js:6:3
 
-Cannot call `React.useReducer` because function [1] requires another argument.
+Cannot call `React.useReducer` because:
+ - Either function type [1] requires another argument from call of method `useReducer` [2].
+ - Or function type [3] requires another argument from call of method `useReducer` [2].
+ - Or function type [4] requires another argument from call of method `useReducer` [2].
 
    useReducer_hook.js:6:3
      6|   React.useReducer(); // Error: function requires another argument.
-          ^^^^^^^^^^^^^^^^^^
+          ^^^^^^^^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/react.js:319:37
+   <BUILTINS>/react.js:321:37
                                             v------
-   319|   declare export function useReducer<S, A>(
-   320|     reducer: (S, A) => S,
-   321|     initialState: S,
-   322|     initialAction: ?A,
-   323|   ): [S, A => void];
-          ----------------^ [1]
+   321|   declare export function useReducer<S, A>(
+   322|     reducer: (S, A) => S,
+   323|     initialState: S,
+   324|   ): [S, Dispatch<A>];
+          ------------------^ [1]
+   <BUILTINS>/react.js:326:37
+                                            v------
+   326|   declare export function useReducer<S, A>(
+   327|     reducer: (S, A) => S,
+   328|     initialState: S,
+   329|     init: void,
+   330|   ): [S, Dispatch<A>];
+          ------------------^ [3]
+   <BUILTINS>/react.js:332:37
+                                            v---------
+   332|   declare export function useReducer<S, A, I>(
+   333|     reducer: (S, A) => S,
+   334|     initialArg: I,
+   335|     init: (I) => S,
+   336|   ): [S, Dispatch<A>];
+          ------------------^ [4]
 
 
 Error ------------------------------------------------------------------------------------------ useReducer_hook.js:27:4
@@ -4087,11 +4105,11 @@ References:
    useReducer_hook.js:29:38
    29|   dispatch({ type: "reset", payload: 123 });
                                             ^^^ [5]
-   useReducer_hook.js:37:14
-   37|     payload: 123
-                    ^^^ [6]
-   useReducer_hook.js:43:38
-   43|   dispatch({ type: "reset", payload: 123 });
+   useReducer_hook.js:41:66
+   41|   const [state, dispatch] = React.useReducer(reducer, { initial: 123 }, init);
+                                                                        ^^^ [6]
+   useReducer_hook.js:44:38
+   44|   dispatch({ type: "reset", payload: 123 });
                                             ^^^ [7]
 
 
