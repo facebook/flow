@@ -5,7 +5,7 @@ layout: guide
 React elements can have zero, one, or many children. Being able to type these
 children with Flow allows you to build expressive APIs with React children.
 
-Generally, the type you should try first when adding a type for the children of
+Generally, the type you should first try when adding a type for the children of
 your React component is [`React.Node`](../types/#toc-react-node).
 
 Like this:
