@@ -3093,9 +3093,27 @@ Cannot get `child.tagName` because property `tagName` is missing in `React.Compo
                   ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react-dom.js:90:19
-   90|     test: (child: React$Component<any, any>) => boolean,
+   <BUILTINS>/react-dom.js:94:19
+   94|     test: (child: React$Component<any, any>) => boolean,
                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- test-utils.js:57:15
+
+Cannot call `TestUtils.act` with function bound to `callback` because object literal [1] is incompatible with
+undefined [2] in the return value.
+
+   test-utils.js:57:15
+    57| TestUtils.act(() => ({count: 123})); // error
+                      ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   test-utils.js:57:22
+    57| TestUtils.act(() => ({count: 123})); // error
+                             ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:120:43
+   120|   declare function act<X>(callback: () => void): Thenable;
+                                                  ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- undefined_prop.js:7:1
@@ -4122,7 +4140,7 @@ References:
 
 
 
-Found 241 errors
+Found 242 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

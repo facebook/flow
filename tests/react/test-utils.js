@@ -51,3 +51,7 @@ if (buttonEl != null) {
   tree,
   MyTestingComponent,
 ): ?React.Component<any, any>);
+TestUtils.act(() => {
+  Math.random();
+});
+TestUtils.act(() => ({count: 123})); // error
