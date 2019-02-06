@@ -6,9 +6,9 @@ class Foo extends React.Component<{}, void> {}
 class Bar extends React.Component<{}, void> {}
 
 {
-  const stringValue: {current: string | null} = React.useRef("abc"); // Ok
-  const numberValue: {current: number | null} = React.useRef(123); // Ok
-  const booleanValue: {current: boolean | null} = React.useRef(true); // Ok
+  const stringValue: {current: string} = React.useRef("abc"); // Ok
+  const numberValue: {current: number} = React.useRef(123); // Ok
+  const booleanValue: {current: boolean} = React.useRef(true); // Ok
   const nullValue: {current: null} = React.useRef(null); // Ok
 }
 
@@ -19,7 +19,7 @@ class Bar extends React.Component<{}, void> {}
 }
 
 {
-  const stringValue: {current: string | null} = React.useRef();
+  const stringValue: {current: string | null} = React.useRef(null);
   stringValue.current = "foo"; // Ok
   stringValue.current = 123; // Error: number is incompatible with string in property current
 }
