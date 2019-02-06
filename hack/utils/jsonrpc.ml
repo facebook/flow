@@ -213,53 +213,78 @@ let get_read_fd (queue : queue) : Unix.file_descr =
   queue.daemon_in_fd
 
 (* Read a message into the queue, and return the just-read message. *)
-let read_single_message_into_queue_blocking (message_queue : queue) =
-  let message =
-    try Marshal_tools.from_fd_with_preamble message_queue.daemon_in_fd
+let read_single_message_into_queue_wait
+    (message_queue : queue)
+    : queue_message Lwt.t =
+  let%lwt message =
+    try%lwt
+      let%lwt message = Marshal_tools_lwt.from_fd_with_preamble
+        (Lwt_unix.of_unix_file_descr message_queue.daemon_in_fd) in
+      Lwt.return message
     with End_of_file as e ->
       (* This is different from when the client hangs up. It handles the case
          that the daemon process exited: for example, if it was killed. *)
       let message = Printexc.to_string e in
       let stack = Printexc.get_backtrace () in
-      Fatal_exception { Marshal_tools.message; stack; }
+      Lwt.return (Fatal_exception { Marshal_tools.message; stack; })
   in
 
   Queue.push message message_queue.messages;
-  message
+  Lwt.return message
 
-let rec read_messages_into_queue_nonblocking (message_queue : queue) : unit =
-  let readable_fds, _, _ = Unix.select [message_queue.daemon_in_fd] [] [] 0.0 in
-  if not (List.is_empty readable_fds) then begin
-    (* We're expecting this not to block because we just checked `Unix.select`
-       to make sure that there's something there. *)
-    let message = read_single_message_into_queue_blocking message_queue in
+let rec read_messages_into_queue_no_wait (message_queue : queue) : unit Lwt.t =
+  let is_readable = Lwt_unix.readable
+    (Lwt_unix.of_unix_file_descr message_queue.daemon_in_fd) in
+  let%lwt () =
+    if is_readable then begin
+      (* We're expecting this not to block because we just checked
+         to make sure that there's something there. *)
+      let%lwt message = read_single_message_into_queue_wait message_queue in
 
-    (* Now read any more messages that might be queued up. Only try to read more
-       messages if the daemon is still available to read from. Otherwise, we may
-       infinite loop as a result of `Unix.select` returning that a file
-       descriptor is available to read on. *)
-    match message with
-    | Fatal_exception _ -> ()
-    | _ -> read_messages_into_queue_nonblocking message_queue;
-  end
+      (* Now read any more messages that might be queued up. Only try to read more
+         messages if the daemon is still available to read from. Otherwise, we may
+         infinite loop as a result of `Unix.select` returning that a file
+         descriptor is available to read on. *)
+      match message with
+      | Fatal_exception _ ->
+        Lwt.return_unit
+      | _ ->
+        let%lwt () = read_messages_into_queue_no_wait message_queue in
+        Lwt.return_unit
+    end else
+      Lwt.return_unit
+  in
+  Lwt.return_unit
 
 let has_message (queue : queue) : bool =
-  read_messages_into_queue_nonblocking queue;
-  not (Queue.is_empty queue.messages)
+  let is_readable = Lwt_unix.readable
+    (Lwt_unix.of_unix_file_descr queue.daemon_in_fd) in
+  (is_readable || (not (Queue.is_empty queue.messages)))
 
 let get_message (queue : queue) =
   (* Read one in a blocking manner to ensure that we have one. *)
-  if Queue.is_empty queue.messages
-  then ignore (read_single_message_into_queue_blocking queue);
+  let%lwt () =
+    if Queue.is_empty queue.messages
+    then
+      let%lwt (_message: queue_message) =
+        read_single_message_into_queue_wait queue
+      in
+      Lwt.return_unit
+    else
+      Lwt.return_unit
+  in
   (* Then read any others that got queued up so that we can see the maximum
      number of messages at once for invalidation purposes. *)
-  read_messages_into_queue_nonblocking queue;
+  let%lwt () = read_messages_into_queue_no_wait queue in
 
   let item = Queue.pop queue.messages in
   match item with
-  | Timestamped_json {tj_json; tj_timestamp;} -> `Message (parse_message tj_json tj_timestamp)
-  | Fatal_exception data -> `Fatal_exception data
-  | Recoverable_exception data -> `Recoverable_exception data
+  | Timestamped_json {tj_json; tj_timestamp;} ->
+    Lwt.return (`Message (parse_message tj_json tj_timestamp))
+  | Fatal_exception data ->
+    Lwt.return (`Fatal_exception data)
+  | Recoverable_exception data ->
+    Lwt.return (`Recoverable_exception data)
 
 
 (************************************************)

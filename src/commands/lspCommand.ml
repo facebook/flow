@@ -263,18 +263,21 @@ let get_next_event_from_client
     (state: state)
     (client: Jsonrpc.queue)
     (parser: Jsonrpc.message -> Lsp.lsp_message)
-  : event =
-  let message = Jsonrpc.get_message client in
+  : event Lwt.t =
+  let%lwt message = Jsonrpc.get_message client in
   match message with
-  | `Message message -> Client_message (parser message, new_metadata state message)
-  | `Fatal_exception edata -> raise (Client_fatal_connection_exception edata)
-  | `Recoverable_exception edata -> raise (Client_recoverable_connection_exception edata)
+  | `Message message ->
+    Lwt.return (Client_message (parser message, new_metadata state message))
+  | `Fatal_exception edata ->
+    raise (Client_fatal_connection_exception edata)
+  | `Recoverable_exception edata ->
+    raise (Client_recoverable_connection_exception edata)
 
 let get_next_event
     (state: state)
     (client: Jsonrpc.queue)
     (parser: Jsonrpc.message -> Lsp.lsp_message)
-  : event =
+  : event Lwt.t =
   if Jsonrpc.has_message client then
     get_next_event_from_client state client parser
   else
@@ -283,13 +286,20 @@ let get_next_event
     | Connected { c_conn; _ } ->
       let server_fd = Timeout.descr_of_in_channel c_conn.ic in
       let fds, _, _ = Unix.select [server_fd; client_fd] [] [] 1.0 in
-      if fds = [] then Tick
-      else if List.mem fds server_fd then get_next_event_from_server server_fd
-      else get_next_event_from_client state client parser
+      if fds = [] then
+        Lwt.return Tick
+      else if List.mem fds server_fd then
+        Lwt.return (get_next_event_from_server server_fd)
+      else
+        let%lwt event = get_next_event_from_client state client parser in
+        Lwt.return event
     | _ ->
       let fds, _, _ = Unix.select [client_fd] [] [] 1.0 in
-      if fds = [] then Tick
-      else get_next_event_from_client state client parser
+      if fds = [] then
+        Lwt.return Tick
+      else
+        let%lwt event = get_next_event_from_client state client parser in
+        Lwt.return event
 
 let show_status
     ?(titles = [])
@@ -1371,14 +1381,17 @@ let rec main
   } in
   let client = Jsonrpc.make_queue () in
   let state = (Pre_init connect_params) in
-  main_loop base_flags.Base_flags.flowconfig_name client state
+  Lwt_main.run (main_loop base_flags.Base_flags.flowconfig_name client state)
 
-and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit =
-  let event = try Ok (get_next_event state client (parse_json state))
+and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit Lwt.t =
+  let%lwt event =
+    try%lwt
+      let%lwt event = get_next_event state client (parse_json state) in
+      Lwt.return_ok event
     with e ->
       let exn = Exception.wrap e in
       let stack = Exception.get_backtrace_string exn in
-      Error (state, e, Utils.Callstack stack) in
+      Lwt.return_error (state, e, Utils.Callstack stack) in
   let result = match event with
     | Error (state, e, stack) -> Error (state, e, stack, None)
     | Ok event ->
