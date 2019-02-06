@@ -57,7 +57,7 @@ function printSuitNumber(suit: Suit) {
   console.log(suitNumbers[suit]);
 }
 
-printSuitNumber('Diamonds'); // 2
+printSuitNumber('Diamonds'); // 1
 printSuitNumber('foo'); // 'foo' is not a Suit
 ```
 
