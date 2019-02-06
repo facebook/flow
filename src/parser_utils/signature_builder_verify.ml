@@ -341,8 +341,8 @@ module Eval(Env: EvalEnv) = struct
         let open Ast.Expression.Assignment in
         let { operator; left = _; right } = stuff in
         begin match operator with
-          | Assign -> literal_expr tps right
-          | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
+          | None -> literal_expr tps right
+          | Some _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.Assignment))
         end
       | _, Update stuff ->
         let open Ast.Expression.Update in

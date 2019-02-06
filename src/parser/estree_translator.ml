@@ -419,19 +419,8 @@ end with type t = Impl.t) = struct
           ]
       | loc, Assignment { Assignment.left; operator; right } ->
           let operator = match operator with
-          | Assignment.Assign -> "="
-          | Assignment.PlusAssign -> "+="
-          | Assignment.MinusAssign -> "-="
-          | Assignment.MultAssign -> "*="
-          | Assignment.ExpAssign -> "**="
-          | Assignment.DivAssign -> "/="
-          | Assignment.ModAssign -> "%="
-          | Assignment.LShiftAssign -> "<<="
-          | Assignment.RShiftAssign -> ">>="
-          | Assignment.RShift3Assign -> ">>>="
-          | Assignment.BitOrAssign -> "|="
-          | Assignment.BitXorAssign -> "^="
-          | Assignment.BitAndAssign -> "&="
+          | None -> "="
+          | Some op -> Flow_ast_utils.string_of_assignment_operator op
           in
           node "AssignmentExpression" loc [
             "operator", string operator;

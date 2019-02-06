@@ -282,7 +282,7 @@ module Expressions = struct
   let literal ?(loc=Loc.none) lit =
     loc, Literal lit
 
-  let assignment left ?(operator=Ast.Expression.Assignment.Assign) right =
+  let assignment left ?operator right =
     Loc.none, Assignment { Assignment.operator; left; right; }
 
   let binary ~op left right =

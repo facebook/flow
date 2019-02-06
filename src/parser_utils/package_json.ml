@@ -27,7 +27,7 @@ let object_of_statement statement =
   match statement with
   | _, Statement.Expression { Statement.Expression.
       expression = _, Expression.Assignment { Expression.Assignment.
-        operator = Expression.Assignment.Assign;
+        operator = None;
         left = _;
         right = obj;
       };

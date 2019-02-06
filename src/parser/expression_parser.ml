@@ -232,19 +232,19 @@ module Expression
 
   and assignment_op env =
     let op = Expression.Assignment.(match Peek.token env with
-    | T_RSHIFT3_ASSIGN -> Some RShift3Assign
-    | T_RSHIFT_ASSIGN -> Some RShiftAssign
-    | T_LSHIFT_ASSIGN -> Some LShiftAssign
-    | T_BIT_XOR_ASSIGN -> Some BitXorAssign
-    | T_BIT_OR_ASSIGN -> Some BitOrAssign
-    | T_BIT_AND_ASSIGN -> Some BitAndAssign
-    | T_MOD_ASSIGN -> Some ModAssign
-    | T_DIV_ASSIGN -> Some DivAssign
-    | T_MULT_ASSIGN -> Some MultAssign
-    | T_EXP_ASSIGN -> Some ExpAssign
-    | T_MINUS_ASSIGN -> Some MinusAssign
-    | T_PLUS_ASSIGN -> Some PlusAssign
-    | T_ASSIGN -> Some Assign
+    | T_RSHIFT3_ASSIGN -> Some (Some RShift3Assign)
+    | T_RSHIFT_ASSIGN -> Some (Some RShiftAssign)
+    | T_LSHIFT_ASSIGN -> Some (Some LShiftAssign)
+    | T_BIT_XOR_ASSIGN -> Some (Some BitXorAssign)
+    | T_BIT_OR_ASSIGN -> Some (Some BitOrAssign)
+    | T_BIT_AND_ASSIGN -> Some (Some BitAndAssign)
+    | T_MOD_ASSIGN -> Some (Some ModAssign)
+    | T_DIV_ASSIGN -> Some (Some DivAssign)
+    | T_MULT_ASSIGN -> Some (Some MultAssign)
+    | T_EXP_ASSIGN -> Some (Some ExpAssign)
+    | T_MINUS_ASSIGN -> Some (Some MinusAssign)
+    | T_PLUS_ASSIGN -> Some (Some PlusAssign)
+    | T_ASSIGN -> Some None
     | _ -> None) in
     if op <> None then Eat.token env;
     op

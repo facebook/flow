@@ -37,7 +37,7 @@ module Pattern
             | Property.Computed expr -> Pattern.Object.Property.Computed expr
             in
             let pattern, default = match value with
-            | (_loc, Assignment { Assignment.operator = Assignment.Assign; left; right }) ->
+            | (_loc, Assignment { Assignment.operator = None; left; right }) ->
               left, Some right
             | _ ->
               from_expr env value, None
@@ -104,7 +104,7 @@ module Pattern
           error_at env (loc, Parse_error.ElementAfterRestElement);
           elements env acc remaining
       | Some (Expression (loc, Assignment { Assignment.
-          operator = Assignment.Assign; left; right;
+          operator = None; left; right;
         }))::remaining ->
           (* AssignmentElement is a `DestructuringAssignmentTarget Initializer`, see
              #prod-AssignmentElement *)

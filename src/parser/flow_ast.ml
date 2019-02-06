@@ -809,7 +809,6 @@ and Expression : sig
   end
   module Assignment : sig
     type operator =
-      | Assign
       | PlusAssign
       | MinusAssign
       | MultAssign
@@ -824,7 +823,7 @@ and Expression : sig
       | BitAndAssign
 
     and ('M, 'T) t = {
-      operator: operator;
+      operator: operator option;
       left: ('M, 'T) Pattern.t;
       right: ('M, 'T) Expression.t;
     }

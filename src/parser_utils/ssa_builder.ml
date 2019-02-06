@@ -421,7 +421,7 @@ module Make
       let open Ast.Expression.Assignment in
       let { operator; left; right } = expr in
       begin match operator with
-        | Assign ->
+        | None ->
           let open Ast.Pattern in
           begin match left with
           | _, (Identifier _ | Object _ | Array _) ->
@@ -433,7 +433,7 @@ module Make
             ignore @@ this#assignment_pattern left;
             ignore @@ this#expression right
           end
-        | _ ->
+        | Some _ ->
           let open Ast.Pattern in
           begin match left with
             | _, Identifier { Identifier.name; _ } ->

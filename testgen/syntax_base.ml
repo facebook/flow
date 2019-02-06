@@ -212,7 +212,7 @@ let mk_prop_write
   let right = expr in
   let assign =
     let open E.Assignment in
-    E.Assignment {operator = Assign;
+    E.Assignment {operator = None;
                   left = (Loc.none, left);
                   right = (Loc.none, right)} in
   Stmt (mk_expr_stmt assign)

@@ -870,8 +870,8 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         let open Ast.Expression.Assignment in
         let { operator; left = _; right } = stuff in
         begin match operator with
-          | Assign -> literal_expr right
-          | _ -> T.FixMe.mk_expr_type loc
+          | None -> literal_expr right
+          | Some _ -> T.FixMe.mk_expr_type loc
         end
       | loc, Update stuff ->
         let open Ast.Expression.Update in

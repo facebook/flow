@@ -717,21 +717,10 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
       fuse [
         pattern ~ctxt left;
         pretty_space;
-        E.Assignment.(match operator with
-        | Assign -> Atom "="
-        | PlusAssign -> Atom "+="
-        | MinusAssign -> Atom "-="
-        | MultAssign -> Atom "*="
-        | ExpAssign -> Atom "**="
-        | DivAssign -> Atom "/="
-        | ModAssign -> Atom "%="
-        | LShiftAssign -> Atom "<<="
-        | RShiftAssign -> Atom ">>="
-        | RShift3Assign -> Atom ">>>="
-        | BitOrAssign -> Atom "|="
-        | BitXorAssign -> Atom "^="
-        | BitAndAssign -> Atom "&="
-        );
+        begin match operator with
+        | None -> Atom "="
+        | Some op -> Atom (Flow_ast_utils.string_of_assignment_operator op)
+        end;
         pretty_space;
         begin
           let ctxt = context_after_token ctxt in

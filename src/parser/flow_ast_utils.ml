@@ -80,6 +80,22 @@ let ident_of_source (loc, name) = (loc, { Identifier.name; comments= None })
 let mk_no_comments a =
   { Syntax.leading = []; trailing = []; internal = a }
 
+let string_of_assignment_operator op =
+  let open Flow_ast.Expression.Assignment in
+  match op with
+  | PlusAssign -> "+="
+  | MinusAssign -> "-="
+  | MultAssign -> "*="
+  | ExpAssign -> "**="
+  | DivAssign -> "/="
+  | ModAssign -> "%="
+  | LShiftAssign -> "<<="
+  | RShiftAssign -> ">>="
+  | RShift3Assign -> ">>>="
+  | BitOrAssign -> "|="
+  | BitXorAssign -> "^="
+  | BitAndAssign -> "&="
+
 let string_of_binary_operator op =
   let open Flow_ast.Expression.Binary in
   match op with

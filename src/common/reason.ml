@@ -811,21 +811,10 @@ Ast.Expression.(match x with
 | Assignment { Assignment.left; operator; right } ->
   let left = code_desc_of_pattern left in
   let right = code_desc_of_expression ~wrap:false right in
-  let operator = Assignment.(match operator with
-  | Assign -> "="
-  | PlusAssign -> "+="
-  | MinusAssign -> "-="
-  | MultAssign -> "*="
-  | ExpAssign -> "**="
-  | DivAssign -> "/="
-  | ModAssign -> "%="
-  | LShiftAssign -> "<<="
-  | RShiftAssign -> ">>="
-  | RShift3Assign -> ">>>="
-  | BitOrAssign -> "|="
-  | BitXorAssign -> "^="
-  | BitAndAssign -> "&="
-  ) in
+  let operator = match operator with
+  | None -> "="
+  | Some op -> Flow_ast_utils.string_of_assignment_operator op
+  in
   do_wrap (left ^ " " ^ operator ^ " " ^ right)
 | Binary { Binary.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Binary operator) right)

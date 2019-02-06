@@ -702,7 +702,7 @@ module Make
       (* Handle exports *)
       begin match operator, left with
       (* module.exports = ... *)
-      | Assign, (mod_exp_loc, Ast.Pattern.Expression (_, Member { Member.
+      | None, (mod_exp_loc, Ast.Pattern.Expression (_, Member { Member.
           _object = module_loc, Identifier (_, { Ast.Identifier.name= "module"; comments= _ });
           property = Member.PropertyIdentifier (_, { Ast.Identifier.name= "exports"; comments= _ }); _
         })) when not (Scope_api.is_local_use scope_info module_loc) ->
@@ -711,12 +711,12 @@ module Make
         if not is_toplevel then
           this#add_tolerable_error (BadExportPosition mod_exp_loc)
       (* exports.foo = ... *)
-      | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
+      | None, (_, Ast.Pattern.Expression (_, Member { Member.
           _object = mod_exp_loc as module_loc, Identifier (_, { Ast.Identifier.name= "exports"; comments= _ });
           property = Member.PropertyIdentifier id; _
         }))
       (* module.exports.foo = ... *)
-      | Assign, (_, Ast.Pattern.Expression (_, Member { Member.
+      | None, (_, Ast.Pattern.Expression (_, Member { Member.
           _object = mod_exp_loc, Member { Member.
             _object = module_loc, Identifier (_, { Ast.Identifier.name= "module"; comments= _ });
             property = Member.PropertyIdentifier (_, { Ast.Identifier.name= "exports"; comments= _ }); _
@@ -730,7 +730,7 @@ module Make
         if not is_toplevel then
           this#add_tolerable_error (BadExportPosition mod_exp_loc)
       (* module = ... *)
-      | Assign, (_, Ast.Pattern.Identifier {
+      | None, (_, Ast.Pattern.Identifier {
           Ast.Pattern.Identifier.name=(loc, { Ast.Identifier.name= ("exports" | "module") as id; comments= _ }); _
         }) when not (Scope_api.is_local_use scope_info loc) ->
         ignore (this#expression right);

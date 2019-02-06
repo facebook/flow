@@ -127,7 +127,7 @@ let parse_json_file ~fail content file =
   let statement =
     loc, Statement.Expression { Statement.Expression.
       expression = loc, Expression.Assignment { Expression.Assignment.
-        operator = Expression.Assignment.Assign;
+        operator = None;
         left = loc_none, Pattern.Expression module_exports;
         right = expr;
       };

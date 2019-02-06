@@ -221,11 +221,11 @@ module Object
             Expect.token env T_ASSIGN;
             let left = Parse.pattern_from_expr env (fst id, Ast.Expression.Identifier id) in
             let right = Parse.assignment env in
-            Ast.Expression.(Assignment Assignment.({
-              operator = Assign;
+            Ast.Expression.Assignment { Ast.Expression.Assignment.
+              operator = None;
               left;
               right;
-            }))
+            }
           ) env in
           let errs = {
             if_expr = [assignment_loc, Parse_error.UnexpectedToken "="];

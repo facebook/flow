@@ -91,12 +91,12 @@ and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
   let string_of_assign_op op =
     let open E.Assignment in
     match op with
-    | Assign -> "="
-    | PlusAssign -> "+="
-    | MinusAssign -> "-="
-    | MultAssign -> "*="
-    | ExpAssign -> "^="
-    | DivAssign -> "/="
+    | None -> "="
+    | Some PlusAssign -> "+="
+    | Some MinusAssign -> "-="
+    | Some MultAssign -> "*="
+    | Some ExpAssign -> "^="
+    | Some DivAssign -> "/="
     | _ -> failwith "unsupported assign" in
 
   match expr with
