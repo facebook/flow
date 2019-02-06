@@ -50,6 +50,8 @@ let substituter = object(self)
       | BoundT (tp_reason, name, _) ->
         begin match SMap.get name map with
         | None -> t
+        | Some (ReposT (_, param_t)) when name = "this" ->
+          ReposT (annot_reason tp_reason, param_t)
         | Some param_t when name = "this" ->
           ReposT (annot_reason tp_reason, param_t)
         | Some param_t ->
