@@ -8732,6 +8732,16 @@ and predicate cx trace t l p = match p with
   | NotP StrP ->
     rec_flow_t cx trace (Type_filter.not_string l, t)
 
+  (***********************)
+  (* typeof _ ~ "symbol" *)
+  (***********************)
+
+  | SymbolP ->
+    rec_flow_t cx trace (Type_filter.symbol l, t)
+
+  | NotP SymbolP ->
+    rec_flow_t cx trace (Type_filter.not_symbol l, t)
+
   (*********************)
   (* _ ~ "some string" *)
   (*********************)

@@ -522,6 +522,7 @@ class virtual ['a] t = object(self)
     | NumP
     | ObjP
     | StrP
+    | SymbolP
     | VoidP
     | ArrP
     | PropExistsP _ -> p

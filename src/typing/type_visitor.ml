@@ -223,6 +223,7 @@ class ['a] t = object(self)
   | NumP -> acc
   | ObjP -> acc
   | StrP -> acc
+  | SymbolP -> acc
   | VoidP -> acc
   | ArrP -> acc
   | PropExistsP _ -> acc

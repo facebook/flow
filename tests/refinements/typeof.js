@@ -77,3 +77,9 @@ function testInstanceIsObject() {
     (x: empty); // error
   }
 }
+
+function testSymbol(x: mixed) {
+  if (typeof x === "symbol") { // ok
+    (x: string); // error
+  }
+}

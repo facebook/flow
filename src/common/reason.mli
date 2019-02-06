@@ -9,7 +9,7 @@ val mk_id: unit -> int
 
 type reason_desc =
   | RAnyExplicit | RAnyImplicit
-  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull
+  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string

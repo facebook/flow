@@ -720,6 +720,7 @@ module rec TypeTerm : sig
     | NumP (* number *)
     | ObjP (* object *)
     | StrP (* string *)
+    | SymbolP (* symbol *)
     | VoidP (* undefined *)
 
     | ArrP (* Array.isArray *)
@@ -753,6 +754,7 @@ module rec TypeTerm : sig
     | Mixed_non_null
     | Mixed_non_void
     | Mixed_function
+    | Mixed_symbol
     | Empty_intersection
 
   and any_source =
@@ -3195,6 +3197,7 @@ let rec string_of_predicate = function
   | NumP -> "number"
   | FunP -> "function"
   | ObjP -> "object"
+  | SymbolP -> "symbol"
 
   (* Array.isArray *)
   | ArrP -> "array"

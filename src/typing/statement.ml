@@ -5458,6 +5458,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         | "number" -> Some NumP
         | "object" -> Some ObjP
         | "string" -> Some StrP
+        | "symbol" -> Some SymbolP
         | "undefined" -> Some VoidP
         | _ -> None
         in

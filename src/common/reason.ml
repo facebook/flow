@@ -60,7 +60,7 @@ end
 
 type reason_desc =
   | RAnyExplicit | RAnyImplicit
-  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull
+  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
@@ -398,6 +398,7 @@ let rec string_of_desc = function
   | RVoid -> "undefined"
   | RNull -> "null"
   | RNullOrVoid -> "null or undefined"
+  | RSymbol -> "symbol"
   | RStringLit "" -> "empty string"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
@@ -1074,6 +1075,7 @@ let inferred_union_elem_array_desc = RCustom
 let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RNumber
 | RString
+| RSymbol
 | RBoolean
 | RLongStringLit _
 | RStringLit _
