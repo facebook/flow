@@ -38,16 +38,14 @@ TestUtils.mockComponent(MyTestingComponent, 'span');
 >);
 
 const buttonEl = TestUtils.findRenderedDOMComponentWithClass(tree, 'my-button');
-if (buttonEl != null) {
-  TestUtils.Simulate.click(buttonEl);
-}
+TestUtils.Simulate.click(buttonEl);
 
 (TestUtils.scryRenderedDOMComponentsWithTag(tree, 'button'): Array<Element>);
-(TestUtils.findRenderedDOMComponentWithTag(tree, 'button'): ?Element);
+(TestUtils.findRenderedDOMComponentWithTag(tree, 'button'): Element);
 (TestUtils.scryRenderedComponentsWithType(tree, MyTestingComponent): Array<
   React.Component<any, any>,
 >);
 (TestUtils.findRenderedComponentWithType(
   tree,
   MyTestingComponent,
-): ?React.Component<any, any>);
+): React.Component<any, any>);
