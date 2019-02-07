@@ -302,6 +302,10 @@ module Make
     in
     acc
 
+  let require_set msig =
+    let map = require_loc_map msig in
+    SMap.fold (fun key _ acc -> SSet.add key acc) map SSet.empty
+
   let add_declare_module name m loc fsig = {
     fsig with
     declare_modules = SMap.add name (loc, m) fsig.declare_modules;

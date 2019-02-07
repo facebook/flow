@@ -231,6 +231,9 @@ module type S = sig
 
   val require_loc_map: module_sig -> L.t Nel.t SMap.t
 
+  (* Only the keys returned by `require_loc_map` *)
+  val require_set: module_sig -> SSet.t
+
   class mapper : object
     method error: error -> error
     method export: string * (L.t * export) -> string * (L.t * export)
