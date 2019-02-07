@@ -4479,15 +4479,15 @@ and logical cx loc { Ast.Expression.Logical.operator; left; right } =
       ),
       { operator = NullishCoalesce; left; right; }
 
-and assignment_lhs cx = Ast.Pattern.(function
-  | loc, Object _
-  | loc, Array _ as p ->
-      Flow.add_output cx (Flow_error.EInvalidLHSInAssignment loc);
-      Tast_utils.error_mapper#pattern p
-
-  | pat_loc, Identifier { Identifier.name = (loc, name); optional; annot; } ->
+and assignment_lhs cx patt =
+  match patt with
+  | pat_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+      name = (loc, name);
+      optional;
+      annot;
+    } ->
       let t = identifier cx name loc in
-      ((pat_loc, t), Identifier { Identifier.
+      ((pat_loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
         name = (loc, t), map_ident name;
         annot = (match annot with
         | Ast.Type.Available annot ->
@@ -4497,13 +4497,17 @@ and assignment_lhs cx = Ast.Pattern.(function
         optional;
       })
 
-  | loc, Expression ((_, Ast.Expression.Member _) as m) ->
+  | loc, Ast.Pattern.Expression ((_, Ast.Expression.Member _) as m) ->
       let (_, t), _ as m = expression cx m in
-      ((loc, t), Expression m)
+      ((loc, t), Ast.Pattern.Expression m)
 
-  (* parser will error before we get here *)
-  | _ -> assert false
-)
+  (* TODO: object, array and non-member expression patterns are invalid
+     (should be a parse error but isn't yet) *)
+  | lhs_loc, Ast.Pattern.Object _
+  | lhs_loc, Ast.Pattern.Array _
+  | lhs_loc, Ast.Pattern.Expression _ ->
+      Flow.add_output cx (Flow_error.EInvalidLHSInAssignment lhs_loc);
+      Tast_utils.error_mapper#pattern patt
 
 (* traverse simple assignment expressions (`lhs = rhs`) *)
 and simple_assignment cx _loc lhs rhs =
