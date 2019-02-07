@@ -24,6 +24,7 @@ type saved_state_data = {
   unparsed_heaps: unparsed_file_data Utils_js.FilenameMap.t;
   ordered_non_flowlib_libs: string list;
   local_errors: Errors.ErrorSet.t Utils_js.FilenameMap.t;
+  warnings: Errors.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t;
 }
 

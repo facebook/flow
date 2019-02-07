@@ -13,7 +13,6 @@ open Severity
 open Utils_js
 
 exception No_source of string
-exception Missing_lint_settings of string
 
 module FileSuppressions : sig
   type t
@@ -110,15 +109,6 @@ let add_lint_suppressions lint_suppressions map =
 
 let remove = FilenameMap.remove
 
-(* raises if `loc` has no filename or `severity_cover` contains no entry for `loc`'s filename *)
-let lint_settings_at_loc loc severity_cover =
-  let file = file_of_loc_unsafe loc in
-  let file_cover = match FilenameMap.get file severity_cover with
-  | Some x -> x
-  | None -> raise (Missing_lint_settings (Loc.to_string ~include_source:true loc))
-  in
-  ExactCover.find loc file_cover
-
 (* raises if `loc` has no filename *)
 let file_suppressions_of_loc loc suppressions_map =
   let file = file_of_loc_unsafe loc in
@@ -147,42 +137,27 @@ let remove_suppression_from_map loc (suppressions_map: t) =
 let remove_lint_suppression_from_map loc (suppressions_map: t) =
   update_file_suppressions (FileSuppressions.remove_lint_suppression loc) loc suppressions_map
 
-let check_loc lint_kind suppressions severity_cover
-  ((result, used, (unused: t), is_primary_loc) as acc) loc =
+let check_loc suppressions (result, used, (unused: t)) loc =
   (* We only want to check the starting position of the reason *)
   let loc = Loc.first_char loc in
   match suppression_at_loc loc suppressions with
   | Some locs ->
     let used = LocSet.union locs used in
     let unused = remove_suppression_from_map loc unused in
-    Off, used, unused, false
+    Off, used, unused
   | None ->
-    (* Only respect lint settings at the primary (first) location *)
-    if is_primary_loc
-    then Option.value_map lint_kind ~default:acc ~f:(fun some_lint_kind ->
-      let lint_settings = lint_settings_at_loc loc severity_cover in
-      let state = LintSettings.get_value some_lint_kind lint_settings in
-      let unused =
-        match LintSettings.get_loc some_lint_kind lint_settings with
-        | Some used_suppression when state = Off ->
-          (* TODO: consume this lint suppression by adding to used set *)
-          remove_lint_suppression_from_map used_suppression unused
-        | _ -> unused
-      in
-      state, used, unused, false
-    )
-    else result, used, unused, false
+    result, used, unused
 
 (* Checks if any of the given locations should be suppressed. *)
-let check_locs locs lint_kind (suppressions: t) severity_cover (unused: t) =
+let check_locs locs (suppressions: t) (unused: t) =
   (* We need to check every location in order to figure out which suppressions
      are really unused...that's why we don't shortcircuit as soon as we find a
      matching error suppression.
      If the "primary" location has severity = Off, the error should be
      suppressed even if it is not explicit. *)
   List.fold_left
-    (check_loc lint_kind suppressions severity_cover)
-    (Err, LocSet.empty, unused, true)
+    (check_loc suppressions)
+    (Err, LocSet.empty, unused)
     locs
 
 let in_node_modules loc =
@@ -191,7 +166,7 @@ let in_node_modules loc =
   | Some file ->
     String_utils.is_substring "/node_modules/" (File_key.to_string file)
 
-let check (err: Loc.t Errors.error) (suppressions: t) severity_cover (unused: t) =
+let check (err: Loc.t Errors.error) (suppressions: t) (unused: t) =
   let locs =
     Errors.locs_of_error err
     (* It is possible for errors to contain locations without a source, but suppressions always
@@ -200,16 +175,15 @@ let check (err: Loc.t Errors.error) (suppressions: t) severity_cover (unused: t)
     |> List.filter (fun loc -> Option.is_some (Loc.source loc))
   in
   (* Ignore lint errors from node modules. *)
-  let lint_kind, ignore =
+  let ignore =
     match Errors.kind_of_error err with
-      | Errors.LintError kind ->
-        Some kind,
+      | Errors.LintError _ ->
         in_node_modules (Errors.loc_of_error err)
-      | _ -> None, false
+      | _ -> false
   in
   if ignore then None else
-  let result, used, unused, _ =
-    check_locs locs lint_kind suppressions severity_cover unused
+  let result, used, unused =
+    check_locs locs suppressions unused
   in
   let result = match Errors.kind_of_error err with
     | Errors.RecursionLimitError ->
@@ -227,17 +201,16 @@ let all_locs map =
   |> List.fold_left LocSet.union LocSet.empty
   |> LocSet.elements
 
-let filter_suppressed_errors suppressions severity_cover errors ~unused =
+let filter_suppressed_errors suppressions errors ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
-  Errors.ConcreteLocErrorSet.fold (fun error ((errors, warnings, suppressed, unused) as acc) ->
-    match check error suppressions severity_cover unused with
+  Errors.ConcreteLocErrorSet.fold (fun error ((errors, suppressed, unused) as acc) ->
+    match check error suppressions unused with
     | None -> acc
     | Some (severity, used, unused) ->
       match severity with
-      | Off -> errors, warnings, (error, used)::suppressed, unused
-      | Warn -> errors, Errors.ConcreteLocErrorSet.add error warnings, suppressed, unused
-      | Err -> Errors.ConcreteLocErrorSet.add error errors, warnings, suppressed, unused
-  ) errors (Errors.ConcreteLocErrorSet.empty, Errors.ConcreteLocErrorSet.empty, [], unused)
+      | Off -> errors, (error, used)::suppressed, unused
+      | _ -> Errors.ConcreteLocErrorSet.add error errors, suppressed, unused
+  ) errors (Errors.ConcreteLocErrorSet.empty, [], unused)
 
 let update_suppressions current_suppressions new_suppressions =
   FilenameMap.fold begin fun file file_suppressions acc ->
@@ -245,3 +218,59 @@ let update_suppressions current_suppressions new_suppressions =
       then FilenameMap.remove file acc
       else FilenameMap.add file file_suppressions acc
   end new_suppressions current_suppressions
+
+let get_lint_settings severity_cover loc =
+  let open Option.Monad_infix in
+  Loc.source loc
+  >>= fun source -> Utils_js.FilenameMap.get source severity_cover
+  >>= ExactCover.find_opt loc
+
+(* Filter out lint errors which are definitely suppressed or were never
+ * enabled in the first place. *)
+let filter_lints suppressions errors ~include_suppressions severity_cover =
+  Errors.(ErrorSet.fold (fun error (errors, warnings, suppressions) ->
+    let open Severity in
+    match kind_of_error error with
+    | LintError lint_kind ->
+      let loc = Errors.loc_of_error error |> ALoc.to_loc in
+      begin match get_lint_settings severity_cover loc with
+      | None ->
+        (* This shouldn't happen -- the primary location of a lint error
+         * should always be in the file where the error was found. Until we
+         * are more confident that this invariant holds, pass the lint warning
+         * back to the master process, where it will be filtered in the
+         * context of the full severity cover set. *)
+         errors, ErrorSet.add error warnings, suppressions
+      | Some lint_settings ->
+        (* Lint settings can only affect lint errors when located at the
+         * error's "primary" location. This is a nice property, since it means
+         * we can filter out some lint errors here instead of passing them
+         * back and filtering them later.
+         *
+         * Note that a lint error might still be filtered out later, since a
+         * lint error can be suppressed by a "regular" suppression comment. *)
+        match LintSettings.get_value lint_kind lint_settings with
+        | Off when include_suppressions ->
+            (* When --include-suppressions is active we only want to remove lints that were
+               never enabled in the first place, as opposed to those that are enabled but
+               suppressed. We also add them as an error regardless of what they were in the
+               first place. *)
+            if LintSettings.is_explicit lint_kind lint_settings
+            then ErrorSet.add error errors, warnings, suppressions
+            else errors, warnings, suppressions
+        | Off ->
+          let suppressions =
+            match LintSettings.get_loc lint_kind lint_settings with
+            | Some used_suppression  ->
+              remove_lint_suppression_from_map used_suppression suppressions
+            | _ -> suppressions in
+          errors, warnings, suppressions
+        | Warn -> errors, ErrorSet.add error warnings, suppressions
+        | Err -> ErrorSet.add error errors, warnings, suppressions
+      end
+    (* Non-lint errors can be suppressed by any location present in the error.
+     * A dependency location might be part of the error, and the corresponding
+     * suppression is not available from this worker. We need to pass back all
+     * errors to be filtered in the master process. *)
+    | _ -> ErrorSet.add error errors, warnings, suppressions
+  ) errors (ErrorSet.empty, ErrorSet.empty, suppressions))

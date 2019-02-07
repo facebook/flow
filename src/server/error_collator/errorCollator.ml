@@ -53,27 +53,32 @@ let regenerate =
       )
       warnings
   in
-  let acc_fun suppressions severity_cover filename file_errs
-      (errors, warnings, suppressed, unused) =
-    let file_errs = Errors.concretize_errorset file_errs in
-    let file_errs, file_warns, file_suppressed, unused =
-      filter_suppressed_errors suppressions severity_cover file_errs ~unused in
-    let errors = ConcreteLocErrorSet.union file_errs errors in
-    let warnings = FilenameMap.add filename file_warns warnings in
+  let acc_fun (type a) suppressions (f : File_key.t -> ConcreteLocErrorSet.t -> a -> a)
+    filename file_errs (errors, suppressed, unused) =
+    let file_errs, file_suppressed, unused =
+      Errors.concretize_errorset file_errs
+      |> filter_suppressed_errors suppressions ~unused in
+    let errors = f filename file_errs errors in
     let suppressed = List.rev_append file_suppressed suppressed in
-    (errors, warnings, suppressed, unused)
+    (errors, suppressed, unused)
   in
   fun env ->
     MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
     let {
-      ServerEnv.local_errors; merge_errors; suppressions; severity_cover_set;
+      ServerEnv.local_errors; merge_errors; warnings; suppressions;
     } = env.ServerEnv.errors in
 
-    let acc_fun = acc_fun suppressions severity_cover_set in
-    let collated_errorset, warnings, collated_suppressed_errors, unused =
-      (ConcreteLocErrorSet.empty, FilenameMap.empty, [], suppressions)
-      |> FilenameMap.fold acc_fun local_errors
-      |> FilenameMap.fold acc_fun merge_errors
+    let acc_err_fun = acc_fun suppressions (fun _ -> ConcreteLocErrorSet.union) in
+    let collated_errorset, collated_suppressed_errors, unused =
+      (ConcreteLocErrorSet.empty, [], suppressions)
+      |> FilenameMap.fold acc_err_fun local_errors
+      |> FilenameMap.fold acc_err_fun merge_errors
+    in
+
+    let acc_warn_fun = acc_fun suppressions FilenameMap.add in
+    let warnings, collated_suppressed_errors, unused =
+      (FilenameMap.empty, collated_suppressed_errors, unused)
+      |> FilenameMap.fold acc_warn_fun warnings
     in
 
     let collated_warning_map =
