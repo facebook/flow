@@ -33,3 +33,5 @@ val filter_suppressed_errors :
 val filter_lints : t -> Errors.ErrorSet.t -> include_suppressions:bool ->
   ExactCover.lint_severity_cover Utils_js.FilenameMap.t ->
   (Errors.ErrorSet.t * Errors.ErrorSet.t * t)
+
+val get_lint_settings : 'a ExactCover.t Utils_js.FilenameMap.t -> Loc.t -> 'a option
