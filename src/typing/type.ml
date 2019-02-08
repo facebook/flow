@@ -2875,7 +2875,7 @@ let replace_speculation_root_use_op =
     | Ok use_op -> use_op
     | Error use_op -> use_op
 
-let loc_of_root_use_op = function
+let aloc_of_root_use_op = function
 | Addition {op; _}
 | AssignVar {init=op; _}
 | Cast {lower=op; _}
@@ -2892,13 +2892,13 @@ let loc_of_root_use_op = function
 | ReactCreateElementCall {op; _}
 | TypeApplication {type'=op}
 | SetProperty {value=op; _}
-  -> aloc_of_reason op |> ALoc.to_loc
+  -> aloc_of_reason op
 | ReactGetIntrinsic _
 | Speculation _
 | Internal _
 | UnknownUse
 | ClassOwnProtoCheck _
-  -> Loc.none
+  -> ALoc.none
 
 (* Printing some types in parseable form relies on particular formats in
    corresponding reason descriptions. The following module formalizes the
