@@ -4686,14 +4686,6 @@ and op_assignment cx loc lhs op rhs =
         }) in
         Flow.flow cx (lhs_t, AdderT (use_op, reason, false, rhs_t, result_t))
       in
-      let () =
-        let use_op = Op (Addition {
-          op = reason;
-          left = mk_expression_reason rhs;
-          right = mk_pattern_reason lhs;
-        }) in
-        Flow.flow cx (rhs_t, AdderT (use_op, reason, false, lhs_t, result_t))
-      in
       (* enforce state-based guards for binding update, e.g., const *)
       (match lhs with
       | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
