@@ -804,7 +804,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           let s1 = sealed_in_op reason_op s1 in
           let s2 = sealed_in_op reason_op s2 in
           if exact && not (s1 || s2)
-          then UnsealedInFile (Loc.source (aloc_of_reason reason_op |> ALoc.to_loc))
+          then UnsealedInFile (ALoc.source (aloc_of_reason reason_op))
           else Sealed
         in
         { frozen; exact; sealed }
