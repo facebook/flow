@@ -66,7 +66,6 @@ val find_module_sig: sig_t -> string -> Type.t
 
 (* accessors *)
 val all_unresolved: t -> ISet.t IMap.t
-val annot_table: t -> (Loc.t, Type.t) Hashtbl.t
 val metadata: t -> metadata
 val max_literal_length: t -> int
 val enable_const_params: t -> bool
@@ -106,7 +105,6 @@ val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
 val property_maps: t -> Type.Properties.map
 val call_props: t -> Type.t IMap.t
-val refs_table: t -> (Loc.t, Loc.t) Hashtbl.t
 val export_maps: t -> Type.Exports.map
 val root: t -> Path.t
 val facebook_fbs: t -> string option

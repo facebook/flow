@@ -1350,7 +1350,6 @@ and mk_type cx tparams_map reason = function
         then Unsoundness.why WeakContext reason
         else Tvar.mk cx reason
       in
-      Hashtbl.replace (Context.annot_table cx) (aloc_of_reason reason |> ALoc.to_loc) t;
       t, None
 
   | Some annot ->

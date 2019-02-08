@@ -138,8 +138,6 @@ type t = {
   mutable require_map: Type.t ALocMap.t;
 
   type_table: Type_table.t;
-  annot_table: (Loc.t, Type.t) Hashtbl.t;
-  refs_table: (Loc.t, Loc.t) Hashtbl.t;
 
   mutable declare_module_ref: string option;
 
@@ -222,8 +220,6 @@ let make sig_cx metadata file module_ref = {
   require_map = ALocMap.empty;
 
   type_table = Type_table.create ();
-  annot_table = Hashtbl.create 0;
-  refs_table = Hashtbl.create 0;
 
   declare_module_ref = None;
 
@@ -251,7 +247,6 @@ let in_declare_module cx =
 
 (* accessors *)
 let all_unresolved cx = cx.sig_cx.all_unresolved
-let annot_table cx = cx.annot_table
 let envs cx = cx.sig_cx.envs
 
 let metadata cx = cx.metadata
@@ -306,7 +301,6 @@ let module_ref cx =
   | None -> cx.module_ref
 let property_maps cx = cx.sig_cx.property_maps
 let call_props cx = cx.sig_cx.call_props
-let refs_table cx = cx.refs_table
 let export_maps cx = cx.sig_cx.export_maps
 let root cx = cx.metadata.root
 let facebook_fbs cx = cx.metadata.facebook_fbs
