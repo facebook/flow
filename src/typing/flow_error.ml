@@ -567,6 +567,27 @@ let score_of_msg msg =
   ) in
   score
 
+let kind_and_loc_of_lint_msg = Errors.(function
+  | EUntypedTypeImport (loc, _)        -> Some (LintError Lints.UntypedTypeImport, loc)
+  | EUntypedImport (loc, _)            -> Some (LintError Lints.UntypedImport, loc)
+  | ENonstrictImport loc               -> Some (LintError Lints.NonstrictImport, loc)
+  | EUnclearType loc                   -> Some (LintError Lints.UnclearType, loc)
+  | EDeprecatedType loc                -> Some (LintError Lints.DeprecatedType, loc)
+  | EDeprecatedUtility (loc, _)        -> Some (LintError Lints.DeprecatedUtility, loc)
+  | EDynamicExport (_, r)              -> Some (LintError Lints.DynamicExport, aloc_of_reason r)
+  | EUnsafeGettersSetters loc          -> Some (LintError Lints.UnsafeGettersSetters, loc)
+  | EDeprecatedCallSyntax loc          -> Some (LintError Lints.DeprecatedCallSyntax, loc)
+  | ESketchyNullLint { kind; loc; _ }  -> Some (LintError (Lints.SketchyNull kind), loc)
+  | ESketchyNumberLint (kind, reason)  ->
+      Some (LintError (Lints.SketchyNumber kind), aloc_of_reason reason)
+  | EUnnecessaryOptionalChain (loc, _) -> Some (LintError Lints.UnnecessaryOptionalChain, loc)
+  | EUnnecessaryInvariant (loc, _)     -> Some (LintError Lints.UnnecessaryInvariant, loc)
+  | EInexactSpread (_, r)              -> Some (LintError Lints.InexactSpread, aloc_of_reason r)
+  | _ -> None
+)
+
+let kind_and_loc_of_lint_msg_exn e = Option.value_exn (kind_and_loc_of_lint_msg e)
+
 (* Decide reason order based on UB's flavor and blamability.
    If the order is unchanged, maintain reference equality. *)
 let ordered_reasons ((rl, ru) as reasons) =
@@ -2074,54 +2095,63 @@ let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Error
     in
     mk_error ~kind:ParseError loc msg
 
-  | EUntypedTypeImport (loc, module_name) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UntypedTypeImport) loc [
+  | EUntypedTypeImport (_, module_name) as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "Importing a type from an untyped module makes it "; code "any"; text " ";
       text "and is not safe! Did you mean to add "; code "// @flow"; text " to ";
       text "the top of "; code module_name; text "?";
     ]
 
-  | EUntypedImport (loc, module_name) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UntypedImport) loc [
+  | EUntypedImport (_, module_name) as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "Importing from an untyped module makes it "; code "any"; text " ";
       text "and is not safe! Did you mean to add "; code "// @flow"; text " ";
       text "to the top of "; code module_name; text "?";
     ]
 
-  | ENonstrictImport loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.NonstrictImport) loc [
+  | ENonstrictImport _ as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "Dependencies of a "; code "@flow strict"; text " module must ";
       text "also be "; code "@flow strict"; text "!"
     ]
 
-  | EUnclearType loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UnclearType) loc [
+  | EUnclearType _ as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "Unclear type. Using "; code "any"; text ", ";
       code "Object"; text ", or "; code "Function";
       text " types is not safe!"
     ]
 
-  | EDeprecatedType loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedType) loc [
+  | EDeprecatedType _ as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "Deprecated type. Using "; code "*"; text " types is not recommended!"
     ]
 
-  | EDeprecatedUtility (loc, name) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedUtility) loc [
+  | EDeprecatedUtility (_, name) as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "Deprecated utility. Using "; code name; text " types is not recommended!"
     ]
 
-  | EDynamicExport (reason, reason_exp) ->
-      mk_error ~trace_infos ~kind:(LintError Lints.DynamicExport) (aloc_of_reason reason_exp)
-        [text "Dynamic "; ref reason; text " unsafely appears in exported ";
-        ref reason_exp; text ". This can cause importing modules to lose type coverage!"]
+  | EDynamicExport (reason, reason_exp) as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc
+      [text "Dynamic "; ref reason; text " unsafely appears in exported ";
+      ref reason_exp; text ". This can cause importing modules to lose type coverage!"]
 
-  | EUnsafeGettersSetters loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UnsafeGettersSetters) loc
+  | EUnsafeGettersSetters _ as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc
       [text "Getters and setters can have side effects and are unsafe."]
 
-  | EDeprecatedCallSyntax loc ->
-    mk_error ~trace_infos ~kind:(LintError Lints.DeprecatedCallSyntax) loc
+  | EDeprecatedCallSyntax _ as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc
       [text "Deprecated $call syntax. Use callable property syntax instead."]
 
   | EUnusedSuppression loc ->
@@ -2156,21 +2186,23 @@ let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Error
     let loc = ALoc.of_loc loc in
     mk_error ~trace_infos ~kind:ParseError loc msg
 
-  | ESketchyNullLint { kind; loc; falsy_loc; null_loc } ->
-    let type_str, value_str = match kind with
+  | ESketchyNullLint { kind=sketchy_kind; loc=_; falsy_loc; null_loc } as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    let type_str, value_str = match sketchy_kind with
     | Lints.SketchyNullBool -> "boolean", "false"
     | Lints.SketchyNullNumber -> "number", "0"
     | Lints.SketchyNullString -> "string", "an empty string"
     | Lints.SketchyNullMixed -> "mixed", "false"
     in
-    mk_error ~trace_infos ~kind:(LintError (Lints.SketchyNull kind)) loc [
+    mk_error ~trace_infos ~kind loc [
       text "Sketchy null check on "; ref (mk_reason (RCustom type_str) falsy_loc); text " ";
       text "which is potentially "; text value_str; text ". Perhaps you meant to ";
       text "check for "; ref (mk_reason RNullOrVoid null_loc); text "?";
     ]
 
-  | ESketchyNumberLint (Lints.SketchyNumberAnd, reason) ->
-    mk_error ~trace_infos ~kind:Lints.(LintError (SketchyNumber SketchyNumberAnd)) (aloc_of_reason reason) [
+  | ESketchyNumberLint (_, reason) as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "Avoid using "; code "&&"; text " to check the value of "; ref reason; text ". ";
       text "Consider handling falsy values (0 and NaN) by using a conditional to choose an ";
       text "explicit default instead.";
@@ -2194,21 +2226,24 @@ let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Error
       text "Flow does not yet support method or property calls in optional chains."
     ]
 
-  | EUnnecessaryOptionalChain (loc, lhs_reason) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryOptionalChain) loc [
+  | EUnnecessaryOptionalChain (_, lhs_reason) as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "This use of optional chaining ("; code "?."; text ") is unnecessary because ";
       ref lhs_reason; text " cannot be nullish or because an earlier "; code "?.";
       text " will short-circuit the nullish case.";
     ]
 
-  | EUnnecessaryInvariant (loc, reason) ->
-    mk_error ~trace_infos ~kind:(LintError Lints.UnnecessaryInvariant) loc [
+  | EUnnecessaryInvariant (_, reason) as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~trace_infos ~kind loc [
       text "This use of `invariant` is unnecessary because "; ref reason;
       text " is always truthy."
     ]
 
-  | EInexactSpread (reason, reason_op) ->
-    mk_error ~kind:(LintError Lints.InexactSpread) (aloc_of_reason reason_op) [
+  | EInexactSpread (reason, reason_op) as e ->
+    let (kind, loc) = kind_and_loc_of_lint_msg_exn e in
+    mk_error ~kind loc [
       text "Cannot determine the type of "; ref reason_op; text " because ";
       text "it contains a spread of inexact "; ref reason; text ". ";
       text "Being inexact, "; ref reason;
