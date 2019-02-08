@@ -240,22 +240,22 @@ let implementation_file ~reader ~audit r =
 let file_dependencies ~audit ~reader file =
   let file_sig = Parsing_heaps.Mutator_reader.get_file_sig_unsafe reader file in
   let sig_file_sig_opt = Parsing_heaps.Mutator_reader.get_sig_file_sig reader file in
-  let require_loc = File_sig.With_Loc.(require_loc_map file_sig.module_sig) in
-  let sig_require_loc = match sig_file_sig_opt with
-    | None -> require_loc
-    | Some sig_file_sig -> File_sig.With_Loc.(require_loc_map sig_file_sig.module_sig) in
+  let require_set = File_sig.With_Loc.(require_set file_sig.module_sig) in
+  let sig_require_set = match sig_file_sig_opt with
+    | None -> require_set
+    | Some sig_file_sig -> File_sig.With_Loc.(require_set sig_file_sig.module_sig) in
   let { Module_heaps.resolved_modules; _ } =
     Module_heaps.Mutator_reader.get_resolved_requires_unsafe ~reader ~audit file
   in
-  SMap.fold (fun mref _ (sig_files, all_files) ->
+  SSet.fold (fun mref (sig_files, all_files) ->
     let m = SMap.find_unsafe mref resolved_modules in
     match implementation_file ~reader m ~audit:Expensive.ok with
     | Some f ->
-      if SMap.mem mref sig_require_loc
+      if SSet.mem mref sig_require_set
       then FilenameSet.add f sig_files, FilenameSet.add f all_files
       else sig_files, FilenameSet.add f all_files
     | None -> sig_files, all_files
-  ) require_loc (FilenameSet.empty, FilenameSet.empty)
+  ) require_set (FilenameSet.empty, FilenameSet.empty)
 
 type dependency_graph = FilenameSet.t FilenameMap.t
 
