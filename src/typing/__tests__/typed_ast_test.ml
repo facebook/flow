@@ -41,6 +41,7 @@ let metadata = { Context.
   strip_root = true;
   suppress_comments = [];
   suppress_types = SSet.empty;
+  default_lib_dir = None;
 }
 
 (* somewhat copied from Flow_dot_js *)

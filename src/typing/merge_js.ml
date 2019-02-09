@@ -258,6 +258,15 @@ let force_annotations leader_cx other_cxs =
     |> Flow_js.enforce_strict leader_cx
   ) (leader_cx::other_cxs)
 
+let is_builtin_or_flowlib cx = File_key.(function
+  | Builtins -> true
+  | LibFile f | SourceFile f -> begin
+      match Context.default_lib_dir cx with
+      | Some path -> Files.is_prefix (Path.to_string path) f
+      | None -> false
+    end
+  | _ -> false)
+
 let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
   let open Context in
 
@@ -559,9 +568,38 @@ module ContextOptimizer = struct
     val mutable reduced_call_props = IMap.empty;
     val mutable reduced_export_maps = Exports.Map.empty;
     val mutable reduced_evaluated = IMap.empty;
+    val mutable export_reason = None;
+    val mutable export_file = None;
+
+    method private warn_dynamic_exports cx r reason_exp =
+      match Reason.aloc_of_reason reason_exp |> ALoc.source with
+      (* The second check here may seem unnecessary, but if the exports of a file are exactly what
+       * it imports from another file this can cause positioning issues. Consider
+       *
+       *     module.exports = require('lib');
+       *
+       * In this case the reason produced by the require statement is actually positioned in the
+       * 'lib' file where the exports were defined; this can break our invariant that all lints have
+       * their primary position in the file where the lint occurs. We don't want to change the
+       * positioning of the require, because this increases the verbosity of all error messages that
+       * reference types or values defined in other files. Instead, we just don't report any export
+       * warnings that arise when the reason isn't in the current file. Given that this warning is
+       * only reported when the type we are exporting contains an any, and we are exporting exactly
+       * what we import from another file, it must follow that the imported file itself exported an
+       * any and the warning was raised there.
+
+       * The alternative check that export_file is builtin allows this lint to appear in libdefs,
+       * since the source of the export of a libdef is set to `Builtins` even if the libdef is
+       * user-provided. Actual builtin files will be filtered out by the first check.
+       *)
+      | Some file when not @@ is_builtin_or_flowlib cx file &&
+          (export_file = Some file || export_file = Some File_key.Builtins) ->
+        Flow_error.EDynamicExport (r, reason_exp) |> Flow_js.add_output cx
+      | _ -> ()
 
     method reduce cx module_ref =
       let export = Context.find_module cx module_ref in
+      export_file <- reason_of_t export |> Reason.aloc_of_reason |> ALoc.source;
       let export' = self#type_ cx Neutral export in
       reduced_module_map <- SMap.add module_ref export' reduced_module_map
 
@@ -616,11 +654,25 @@ module ContextOptimizer = struct
         reduced_call_props <- IMap.add id t' reduced_call_props;
         id
 
+    method! export_types cx map_cx e =
+      let {exports_tmap; cjs_export; has_every_named_export} = e in
+      let exports_tmap' = self#exports cx map_cx exports_tmap in
+      let cjs_export' = OptionUtils.ident_map (fun exp ->
+        export_reason <- Some (reason_of_t exp);
+        self#type_ cx map_cx exp
+      ) cjs_export in
+      if exports_tmap == exports_tmap' && cjs_export == cjs_export' then e else
+      {exports_tmap = exports_tmap'; cjs_export = cjs_export'; has_every_named_export}
+
     method exports cx pole id =
       if (Exports.Map.mem id reduced_export_maps) then id
       else
         let tmap = Context.find_exports cx id in
-        let map_pair (loc, t) = (loc, self#type_ cx pole t) in
+        let map_pair p =
+          let (loc, t) = p in
+          export_reason <- Some (reason_of_t t);
+          let t' = self#type_ cx pole t in
+          if t == t' then p else (loc, t') in
         reduced_export_maps <- Exports.Map.add id tmap reduced_export_maps;
         let tmap' = SMap.ident_map map_pair tmap in
         reduced_export_maps <- Exports.Map.add id tmap' reduced_export_maps;
@@ -662,6 +714,12 @@ module ContextOptimizer = struct
         let id = opaque_id in
         SigHash.add_aloc sig_hash id;
         super#type_ cx pole t
+      | DefT (r, _, AnyT src) when
+          Unsoundness.banned_in_exports src && Option.is_some export_reason ->
+        self#warn_dynamic_exports cx r (Option.value_exn export_reason);
+        let t' = super#type_ cx pole t in
+        SigHash.add_type sig_hash t';
+        t'
       | DefT (_, _, PolyT (_, _, _, poly_id)) ->
         let id =
           if Context.mem_nominal_id cx poly_id
