@@ -17,5 +17,5 @@ val init :
   (File_key.t *
     bool *
     Errors.ErrorSet.t *
-    Error_suppressions.t *
-    ExactCover.lint_severity_cover Utils_js.FilenameMap.t) list Lwt.t
+    Errors.ErrorSet.t *
+    Error_suppressions.t) list Lwt.t

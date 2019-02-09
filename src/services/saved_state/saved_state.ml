@@ -45,7 +45,7 @@ type saved_state_data = {
    *    for the other members of env.errors which are filled in during typechecking
    *)
   local_errors: Errors.ErrorSet.t Utils_js.FilenameMap.t;
-
+  warnings: Errors.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t;
 
   (* TODO - Figure out what to do aboute module.resolver *)
@@ -225,6 +225,11 @@ end = struct
       let normalized_error_set = normalize_error_set ~root error_set in
       FilenameMap.add normalized_fn normalized_error_set acc
     ) env.ServerEnv.errors.ServerEnv.local_errors FilenameMap.empty in
+    let warnings = FilenameMap.fold (fun fn warning_set acc ->
+      let normalized_fn = normalize_file_key ~root fn in
+      let normalized_error_set = normalize_error_set ~root warning_set in
+      FilenameMap.add normalized_fn normalized_error_set acc
+    ) env.ServerEnv.errors.ServerEnv.warnings FilenameMap.empty in
     let node_modules_containers =
       SSet.map (Files.relative_path root) !Files.node_modules_containers
     in
@@ -238,6 +243,7 @@ end = struct
       unparsed_heaps;
       ordered_non_flowlib_libs;
       local_errors;
+      warnings;
       node_modules_containers;
     }
 
@@ -436,6 +442,7 @@ end = struct
       unparsed_heaps;
       ordered_non_flowlib_libs;
       local_errors;
+      warnings;
       node_modules_containers;
     } = data in
 
@@ -474,6 +481,12 @@ end = struct
       FilenameMap.add fn error_set acc
     ) local_errors FilenameMap.empty in
 
+    let warnings = FilenameMap.fold (fun normalized_fn normalized_warning_set acc ->
+      let fn = denormalize_file_key ~root normalized_fn in
+      let warning_set = denormalize_error_set ~root normalized_warning_set in
+      FilenameMap.add fn warning_set acc
+    ) warnings FilenameMap.empty in
+
     let node_modules_containers = SSet.map (Files.absolute_path root) node_modules_containers in
 
     Lwt.return {
@@ -482,6 +495,7 @@ end = struct
       unparsed_heaps;
       ordered_non_flowlib_libs;
       local_errors;
+      warnings;
       node_modules_containers;
     }
 

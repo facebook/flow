@@ -25,5 +25,11 @@ val update_suppressions: t -> t -> t
 val all_locs: t -> Loc.t list
 
 val filter_suppressed_errors :
-  t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t -> Errors.ConcreteLocErrorSet.t -> unused:t ->
-  (Errors.ConcreteLocErrorSet.t * Errors.ConcreteLocErrorSet.t * (Loc.t Errors.error * Utils_js.LocSet.t) list * t)
+  t -> Errors.ConcreteLocErrorSet.t -> unused:t ->
+  (Errors.ConcreteLocErrorSet.t * (Loc.t Errors.error * Utils_js.LocSet.t) list * t)
+
+(* We use an ErrorSet here (as opposed to a ConcreteErrorSet) because this operation happens
+   during merge rather than during collation as filter_suppressed_errors does *)
+val filter_lints : t -> Errors.ErrorSet.t -> include_suppressions:bool ->
+  ExactCover.lint_severity_cover Utils_js.FilenameMap.t ->
+  (Errors.ErrorSet.t * Errors.ErrorSet.t * t)

@@ -25,10 +25,11 @@ type errors = {
   (* errors encountered during merge have to be stored separately so
      dependencies can be cleared during merge. *)
   merge_errors: Errors.ErrorSet.t Utils_js.FilenameMap.t;
+  (* warnings are stored in a map from file path to error set, so that the warnings
+     from checking particular files can be cleared during recheck. *)
+  warnings: Errors.ErrorSet.t Utils_js.FilenameMap.t;
   (* error suppressions in the code *)
   suppressions: Error_suppressions.t;
-  (* lint severity settings in the code *)
-  severity_cover_set: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
 }
 
 type collated_errors = {

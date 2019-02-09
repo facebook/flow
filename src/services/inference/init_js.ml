@@ -114,6 +114,11 @@ let load_lib_files ~master_cx ~options ~reader files =
           in
           let suppressions = Context.error_suppressions cx in
           let severity_cover = Context.severity_cover cx in
+          let include_suppressions = Context.include_suppressions cx in
+
+          let errors, warnings, suppressions =
+            Error_suppressions.filter_lints ~include_suppressions suppressions errors
+            severity_cover in
 
           Context.remove_all_errors cx;
           Context.remove_all_error_suppressions cx;
@@ -126,7 +131,7 @@ let load_lib_files ~master_cx ~options ~reader files =
           (* symbols loaded from this file are suppressed
              if found in later ones *)
           let exclude_syms = SSet.union exclude_syms (SSet.of_list syms) in
-          let result = (lib_file, true, errors, suppressions, severity_cover) in
+          let result = (lib_file, true, errors, warnings, suppressions) in
           exclude_syms, (result :: results)
 
         | Parsing.Parse_fail fail ->
@@ -138,25 +143,16 @@ let load_lib_files ~master_cx ~options ~reader files =
           | Parsing.File_sig_error error ->
             Inference_utils.set_of_file_sig_error ~source_file:lib_file error
           in
-          let severity_cover =
-            Utils_js.FilenameMap.singleton
-              lib_file
-              (ExactCover.file_cover lib_file lint_severities)
-          in
-          let result = lib_file, false, errors, Error_suppressions.empty, severity_cover in
+          let result = lib_file, false, errors, Errors.ErrorSet.empty, Error_suppressions.empty in
           exclude_syms, (result :: results)
 
         | Parsing.Parse_skip
             (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
           (* should never happen *)
           let errs = Errors.ErrorSet.empty in
+          let warnings = Errors.ErrorSet.empty in
           let suppressions = Error_suppressions.empty in
-          let severity_cover =
-            Utils_js.FilenameMap.singleton
-              lib_file
-              (ExactCover.file_cover lib_file lint_severities)
-          in
-          let result = lib_file, false, errs, suppressions, severity_cover in
+          let result = lib_file, false, errs, warnings, suppressions in
           exclude_syms, (result :: results)
         )
       ) (SSet.empty, [])

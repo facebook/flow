@@ -225,9 +225,16 @@ let check_content ~filename ~content =
     let cx, _ = infer_and_merge ~root filename ast file_sig in
     let suppressions = Error_suppressions.empty in (* TODO: support suppressions *)
     let errors = Context.errors cx in
+    let severity_cover = Context.severity_cover cx in
+    let include_suppressions = Context.include_suppressions cx in
+    let errors, warnings, suppressions =
+      Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
     let errors = Errors.concretize_errorset errors in
-    let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      suppressions (Context.severity_cover cx) errors ~unused:suppressions
+    let warnings = Errors.concretize_errorset warnings in
+    let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
+      suppressions errors ~unused:suppressions in
+    let warnings, _, _ = Error_suppressions.filter_suppressed_errors
+      suppressions warnings ~unused:suppressions
     in errors, warnings
   | Error parse_errors ->
     let parse_errors = Errors.concretize_errorset parse_errors in

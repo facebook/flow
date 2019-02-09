@@ -616,10 +616,16 @@ let flow_check (code : string) : string option =
       let suppressions = Error_suppressions.empty in
       let severity_cover = Utils_js.FilenameMap.singleton filename (ExactCover.default_file_cover filename) in
       let errors = Context.errors final_cx in
+      let include_suppressions = Context.include_suppressions final_cx in
+      let errors, warnings, suppressions =
+        Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+
       let errors = Errors.concretize_errorset errors in
-      let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-          suppressions severity_cover errors
-          ~unused:suppressions
+      let warnings = Errors.concretize_errorset warnings in
+      let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
+          suppressions errors ~unused:suppressions in
+      let warnings, _, _ = Error_suppressions.filter_suppressed_errors
+        suppressions warnings ~unused:suppressions
       in
       let error_num = Errors.ConcreteLocErrorSet.cardinal errors in
       if error_num = 0 then
