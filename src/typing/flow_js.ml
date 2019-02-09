@@ -493,6 +493,36 @@ let iter_real_props cx id f =
 exception SpeculativeError of FlowError.error_message
 
 let add_output cx ?trace msg =
+
+  let trace_reasons = match trace with
+  | None -> []
+  | Some trace ->
+    (* format a trace into list of (reason, desc) pairs used
+     downstream for obscure reasons, and then to messages *)
+    let max_trace_depth = Context.max_trace_depth cx in
+    if max_trace_depth = 0 then [] else
+      Trace.reasons_of_trace ~level:max_trace_depth trace
+  in
+
+  let error = FlowError.error_of_msg ~trace_reasons ~source_file:(Context.file cx) msg in
+
+  let is_enabled = Errors.(match kind_of_error error with
+    | LintError lint_kind ->
+        Errors.loc_of_error error
+        (* Okay here because lints must have a concrete location *)
+        |> ALoc.to_loc
+        |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
+        |> Option.value_map ~default:true ~f:(fun lint_settings ->
+             (LintSettings.is_explicit lint_kind lint_settings) ||
+             (LintSettings.get_value lint_kind lint_settings <> Severity.Off)
+           )
+    | _ -> true
+  ) in
+
+  (* If the lint error isn't enabled at this location and isn't explicitly suppressed, just don't
+     even add it *)
+  if not is_enabled then () else
+
   if Speculation.speculating ()
   then
     if (FlowError.is_lint_error msg)
@@ -505,18 +535,6 @@ let add_output cx ?trace msg =
   else begin
     if Context.is_verbose cx then
       prerr_endlinef "\nadd_output: %s" (Debug_js.dump_flow_error cx msg);
-
-    let trace_reasons = match trace with
-    | None -> []
-    | Some trace ->
-      (* format a trace into list of (reason, desc) pairs used
-       downstream for obscure reasons, and then to messages *)
-      let max_trace_depth = Context.max_trace_depth cx in
-      if max_trace_depth = 0 then [] else
-        Trace.reasons_of_trace ~level:max_trace_depth trace
-    in
-
-    let error = FlowError.error_of_msg ~trace_reasons ~source_file:(Context.file cx) msg in
 
     (* catch no-loc errors early, before they get into error map *)
     if ALoc.source (Errors.loc_of_error error) = None then
