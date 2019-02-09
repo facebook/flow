@@ -48,6 +48,7 @@ type metadata = {
   suppress_comments: Str.regexp list;
   suppress_types: SSet.t;
   max_workers: int;
+  default_lib_dir: Path.t option;
 }
 
 type module_kind =
@@ -115,6 +116,7 @@ val should_munge_underscores: t -> bool
 val should_strip_root: t -> bool
 val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
+val default_lib_dir: t -> Path.t option
 val type_graph: t -> Graph_explorer.graph
 val type_table: t -> Type_table.t
 val type_asserts: t -> (type_assert_kind * ALoc.t) ALocMap.t

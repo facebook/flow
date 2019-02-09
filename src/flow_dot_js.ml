@@ -154,6 +154,7 @@ let stub_metadata ~root ~checked = { Context.
   strip_root = true;
   suppress_comments = [];
   suppress_types = SSet.empty;
+  default_lib_dir = None;
 }
 
 let get_master_cx =
