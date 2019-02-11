@@ -3224,7 +3224,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (loc, t), TemplateLiteral { TemplateLiteral.quasis; expressions }
 
   | JSXElement e ->
-      let t, e = jsx cx e in
+      let t, e = jsx cx loc e in
       (loc, t), JSXElement e
 
   | JSXFragment f ->
@@ -4774,7 +4774,7 @@ and collapse_children cx children:
   ) ([], [])
   |> map_pair List.rev List.rev)
 
-and jsx cx e: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element = Ast.JSX.(
+and jsx cx expr_loc e: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element = Ast.JSX.(
   let { openingElement; children; closingElement } = e in
   let locs =
     let open_, _ = openingElement in
@@ -4782,7 +4782,7 @@ and jsx cx e: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element = Ast.JSX.(
     | Some (close, _) ->
       let open_concrete = ALoc.to_loc open_ in
       let close_concrete = ALoc.to_loc close in
-      Loc.btwn open_concrete close_concrete |> ALoc.of_loc,
+      expr_loc,
       open_,
       Loc.btwn_exclusive open_concrete close_concrete |> ALoc.of_loc
     | _ -> open_, open_, open_
@@ -5191,7 +5191,7 @@ and jsx_pragma_expression cx raw_jsx_expr loc = Ast.Expression.(
 and jsx_body cx (loc, child) = Ast.JSX.(
   match child with
   | Element e ->
-    let t, e = jsx cx e in
+    let t, e = jsx cx loc e in
     Some (UnresolvedArg t), (loc, Element e)
   | Fragment f ->
     let t, f = jsx_fragment cx f in
