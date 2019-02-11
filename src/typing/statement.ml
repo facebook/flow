@@ -3228,7 +3228,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (loc, t), JSXElement e
 
   | JSXFragment f ->
-      let t, f = jsx_fragment cx f in
+      let t, f = jsx_fragment cx loc f in
       (loc, t), JSXFragment f
 
   | Class c ->
@@ -4793,7 +4793,7 @@ and jsx cx expr_loc e: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element = Ast.
   t, { openingElement; children; closingElement }
 )
 
-and jsx_fragment cx fragment: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
+and jsx_fragment cx expr_loc fragment: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
   let open Ast.JSX in
   let { frag_openingElement; frag_children; frag_closingElement } = fragment in
   let locs =
@@ -4801,7 +4801,7 @@ and jsx_fragment cx fragment: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragmen
     let close = frag_closingElement in
     let open_concrete = ALoc.to_loc open_ in
     let close_concrete = ALoc.to_loc close in
-    Loc.btwn open_concrete close_concrete |> ALoc.of_loc,
+    expr_loc,
     open_,
     Loc.btwn_exclusive open_concrete close_concrete |> ALoc.of_loc
   in
@@ -5194,7 +5194,7 @@ and jsx_body cx (loc, child) = Ast.JSX.(
     let t, e = jsx cx loc e in
     Some (UnresolvedArg t), (loc, Element e)
   | Fragment f ->
-    let t, f = jsx_fragment cx f in
+    let t, f = jsx_fragment cx loc f in
     Some (UnresolvedArg t), (loc, Fragment f)
   | ExpressionContainer ec ->
     let open ExpressionContainer in
