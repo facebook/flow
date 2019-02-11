@@ -17,22 +17,22 @@ module type S = sig
   module LSet: (Set.S with type elt = t)
 end
 
-module LocS = struct
+module LocS : (S with type t = Loc.t) = struct
   type t = Loc.t
   let compare = Loc.compare
   let equal = Loc.equal
   let debug_to_string = Loc.to_string
 
-  module LMap = Utils_js.LocMap
-  module LSet = Utils_js.LocSet
+  module LMap = MyMap.Make(Loc)
+  module LSet = Set.Make(Loc)
 end
 
-module ALocS = struct
+module ALocS : (S with type t = ALoc.t) = struct
   type t = ALoc.t
   let compare = ALoc.compare
   let equal = ALoc.equal
   let debug_to_string = ALoc.to_string
 
-  module LMap = Utils_js.ALocMap
-  module LSet = Utils_js.ALocSet
+  module LMap = MyMap.Make(ALoc)
+  module LSet = Set.Make(ALoc)
 end
