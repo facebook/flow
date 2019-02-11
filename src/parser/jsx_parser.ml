@@ -241,25 +241,28 @@ module JSX (Parse: Parser_common.PARSER) = struct
             | (loc, `Element e) -> ChildElement (loc, e)
             | (loc, `Fragment f) -> ChildFragment (loc, f))
 
-      in let rec children_and_closing env acc =
-        match Peek.token env with
-        | T_LESS_THAN -> (
-            match element_or_closing env with
-            | Closing closingElement ->
-                List.rev acc, `Element closingElement
-            | ClosingFragment closingFragment ->
-                List.rev acc, `Fragment closingFragment
-            | ChildElement element ->
-                let element = fst element, JSX.Element (snd element) in
-                children_and_closing env (element::acc)
-            | ChildFragment fragment ->
-                let fragment = fst fragment, JSX.Fragment (snd fragment) in
-                children_and_closing env (fragment::acc))
-        | T_EOF ->
-            error_unexpected env;
-            List.rev acc, `None
-        | _ ->
-            children_and_closing env ((child env)::acc)
+      in let children_and_closing =
+        let rec children_and_closing env acc =
+          match Peek.token env with
+          | T_LESS_THAN -> (
+              match element_or_closing env with
+              | Closing closingElement ->
+                  List.rev acc, `Element closingElement
+              | ClosingFragment closingFragment ->
+                  List.rev acc, `Fragment closingFragment
+              | ChildElement element ->
+                  let element = fst element, JSX.Element (snd element) in
+                  children_and_closing env (element::acc)
+              | ChildFragment fragment ->
+                  let fragment = fst fragment, JSX.Fragment (snd fragment) in
+                  children_and_closing env (fragment::acc))
+          | T_EOF ->
+              error_unexpected env;
+              List.rev acc, `None
+          | _ ->
+              children_and_closing env ((child env)::acc)
+        in
+        fun env -> children_and_closing env []
 
       in let rec normalize name = JSX.(match name with
         | Identifier (_, { Identifier.name }) -> name
@@ -283,7 +286,7 @@ module JSX (Parse: Parser_common.PARSER) = struct
           then [], `None
           else begin
             Eat.push_lex_mode env Lex_mode.JSX_CHILD;
-            let ret = children_and_closing env [] in
+            let ret = children_and_closing env in
             ret
           end in
         let end_loc = match closingElement with
