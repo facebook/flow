@@ -351,6 +351,9 @@ let with_eof parser =
     Expect.token env T_EOF;
     ast
 
+let parse_statement env fail =
+  do_parse env (with_eof Parse.statement_list_item) fail
+
 let parse_expression env fail =
   do_parse env (with_eof Parse.expression) fail
 
