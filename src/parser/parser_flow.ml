@@ -343,6 +343,17 @@ let do_parse env parser fail =
   then raise (Error.Error error_list);
   ast, error_list
 
+(* Makes the input parser expect EOF at the end. Use this to error on trailing
+ * junk when parsing non-Program nodes. *)
+let with_eof parser =
+  fun env ->
+    let ast = parser env in
+    Expect.token env T_EOF;
+    ast
+
+let parse_expression env fail =
+  do_parse env (with_eof Parse.expression) fail
+
 let parse_program fail ?(token_sink=None) ?(parse_options=None) filename content =
   let env = init_env ~token_sink ~parse_options filename content in
   do_parse env Parse.program fail
