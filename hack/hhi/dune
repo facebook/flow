@@ -5,4 +5,4 @@
     global_config
     relative_path
     sys_utils)
-  (preprocess (pps ppx_gen_hhi -- -hhi-dir ../../hhi)))
+  (preprocess (pps ppx_gen_hhi -- -hhi-dir ../../../hhi)))
