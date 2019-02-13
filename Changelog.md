@@ -1,3 +1,64 @@
+### 0.93.0
+
+Likely to cause new Flow errors:
+
+* Removed a constraint involving `any` types and React proptypes for efficiency. This may result in some errors no longer being reported.
+
+New Features:
+
+* A new lint (`dynamic-export`) which when enabled will warn when most dynamic types are exported from a file.
+* Flow now distinguishes between `any` and `empty` when computing line coverage. `empty` types are colored blue and `any` types red when using the `--color` option. Note that this may cause new expressions to be considered uncovered.
+
+Notable bug fixes:
+
+* Fixed a non-termination condition during `this`-substitution.
+* Fixed an issue where `inexact-spread` lint errors could appear in the wrong position.
+
+Many, many libdef fixes and improvements! Many thanks to the open source community for these, and to @nmote and @jbrown215 for reviewing and merging so many of these!
+
+* #4388 add missing `InputEvent(Listener|Handler|Types|)` (thanks @keithamus!)
+* #4664 Fix `IntersectionObserver` constructor definition (thanks @apostolos!)
+* #4858 Make `ServiceWorkerMessageEvent` extend `ExtendableEvent` (thanks @keyiiiii!)
+* #4772 add indexer property to string lib def (thanks @zacharygolba!)
+* #5529 Add `module.builtinModules` to core libdef (thanks @simenB!)
+* #5574 fix return parameter for `writable.setDefaultEncoding()` (thanks @dnalborczyk!)
+* #5578 add `util.callbackify` to node type def (thanks @dnalborczyk!)
+* #5628 Add lib declaration for `BroadcastChannel` (thanks @schmatz!)
+* #5866 Add definition for `timingSafeEqual()` (thanks @rolftimmermans!)
+* #5988 add `destroy` method to streams (thanks @hiikezoe!)
+* #6091 Fix static declarations for `XMLHttpRequest` (thanks @robin-pham!)
+* #6339 Fix parent of `AnimationEvent` (thanks @ngyikp!)
+* #6367 Add types for `Object.getOwnPropertyDescriptors` (thanks @disnet!)
+* #6471 Actualize node's `EventEmitter` API definition (thanks @antongolub!)
+* #6535 add `Element.prototype.toggleAttribute` (thanks @keithamus!)
+* #6614 Add `TransitionEvent` to dom libdef (thanks @koddsson!)
+* #6785 Allow specifying encoding as string in options field of `appendFile`, `appendFileSync` (thanks @cappslock!)
+* #6963 Add Audio declaration (thanks @vldvel!)
+* #7011 Use more specific type for `navigator.serviceWorker` (thanks @dhui!)
+* #7097 Add type definitions for message events (thanks @wachino!)
+* #7122 Support for `Uint8Array` (thanks @cakoose!)
+* #7144 Updated URL modules definitions for Node.js 10 (thanks @MrFranke!)
+* #7146 Fix type definition of Node.js `dns.lookup()` (thanks @shuhei!)
+* #7215 fix `https` interfaces (thanks @cakoose!)
+* #7225 make `createContextualFragment` return a `DocumentFragment` (thanks @wincent!)
+* #7342 add Document.queryCommandSupported (thanks @Eazymov!)
+* #7358 Add `oncontextmenu` to `HTMLElement` (thanks @jasonLaster!)
+* #7363 Add `MediaDeviceInfo` declaration (thanks @ea167!)
+* #7367 Add `userSelect` to CSS declaration (thanks @shubhodeep9!)
+* #7368 Fix `fs.promises.readFile` being incorreclty overloaded (thanks @Macil!)
+* #7381 add `EventSource` to dom libdef. Likely to cause new errors (thanks @SlIdE42!)
+* #7386 fix `XDomainRequest` in bom libdef. Likely to cause new errors (thanks @Mouvedia!)
+* #7387 Added optional `displayName` property to `React$Context` (thanks @bvaughn!)
+* #7405 Basic support for `typeof x === 'symbol'` (thanks @mroch!)
+* #7420, #7430 and #7440 Various React improvements (thanks @threepointone!)
+* #7423 make `useRef` type non-nullable (thanks @trysound!)
+* #7445 add `Stream` type to Node thanks (thanks @goodmind!)
+
+Misc:
+
+* Updated our website and GitHub issue template to make it easier for open source users to contribute to Flow!
+* Various improvements to the AST, including the differ, typed AST and the AST mapper
+
 ### 0.92.1
 
 Notable bug fixes:
