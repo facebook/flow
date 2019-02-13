@@ -123,6 +123,7 @@ MODULES=\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\
   src/typing\
+  src/typing/errors\
   hack/dfind\
   hack/find\
   hack/globals\
