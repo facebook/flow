@@ -53,6 +53,7 @@ and Literal : sig
     | Boolean of bool
     | Null
     | Number of float
+    | BigInt of float
     | RegExp of RegExp.t
   [@@deriving show]
 end = Literal
@@ -72,6 +73,14 @@ and NumberLiteral : sig
   }
   [@@deriving show]
 end = NumberLiteral
+
+and BigIntLiteral : sig
+  type t = {
+    value: float;
+    raw: string;
+  }
+  [@@deriving show]
+end = BigIntLiteral
 
 and Variance : sig
   type 'M t = 'M * t'
@@ -227,6 +236,7 @@ and Type : sig
     | Void
     | Null
     | Number
+    | BigInt
     | String
     | Boolean
     | Nullable of ('M, 'T) t
@@ -241,6 +251,7 @@ and Type : sig
     | Tuple of ('M, 'T) t list
     | StringLiteral of StringLiteral.t
     | NumberLiteral of NumberLiteral.t
+    | BigIntLiteral of BigIntLiteral.t
     | BooleanLiteral of bool
     | Exists
 

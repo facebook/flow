@@ -32,6 +32,7 @@ type t =
   | InexactInsideExact
   | InexactInsideNonObject
   | NewlineAfterThrow
+  | InvalidBigInt
   | InvalidRegExp
   | InvalidRegExpFlags of string
   | UnterminatedRegExp
@@ -159,6 +160,7 @@ module PP =
       | InexactInsideNonObject ->
           "Explicit inexact syntax can only appear inside an object type"
       | NewlineAfterThrow ->  "Illegal newline after throw"
+      | InvalidBigInt -> "Invalid bigint literal"
       | InvalidRegExp -> "Invalid regular expression"
       | InvalidRegExpFlags flags -> "Invalid flags supplied to RegExp constructor '"^flags^"'"
       | UnterminatedRegExp ->  "Invalid regular expression: missing /"

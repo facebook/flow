@@ -1773,6 +1773,8 @@ let type_token env lexbuf =
 
   | Opt neg, hexbigint ->
     let num = lexeme lexbuf in
+    let loc = loc_of_lexbuf env lexbuf in
+    let env = lex_error env loc Parse_error.InvalidBigInt in
     begin try Token (env, mk_bignum_singleton NORMAL num)
     with _ when Sys.win32 ->
       let loc = loc_of_lexbuf env lexbuf in

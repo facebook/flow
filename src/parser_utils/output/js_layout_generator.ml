@@ -2332,6 +2332,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
     | T.Void -> Atom "void"
     | T.Null -> Atom "null"
     | T.Number -> Atom "number"
+    | T.BigInt -> Atom "bigint"
     | T.String -> Atom "string"
     | T.Boolean -> Atom "boolean"
     | T.Nullable t ->
@@ -2356,6 +2357,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
       group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:type_ ts)]
     | T.StringLiteral { Ast.StringLiteral.raw; _ }
     | T.NumberLiteral { Ast.NumberLiteral.raw; _ } -> Atom raw
+    | T.BigIntLiteral { Ast.BigIntLiteral.raw; _ } -> Atom raw
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")
     | T.Exists -> Atom "*"
   )

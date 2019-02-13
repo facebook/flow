@@ -966,6 +966,7 @@ end with type t = Impl.t) = struct
       | Literal.Boolean b -> bool b
       | Literal.Null -> null
       | Literal.Number f -> number f
+      | Literal.BigInt f -> number f
       | Literal.RegExp { Literal.RegExp.pattern; flags; } -> regexp loc pattern flags
       in
       let props = match value with
@@ -1043,6 +1044,7 @@ end with type t = Impl.t) = struct
       | Void -> void_type loc
       | Null -> null_type loc
       | Number -> number_type loc
+      | BigInt -> bigint_type loc
       | String -> string_type loc
       | Boolean -> boolean_type loc
       | Nullable t -> nullable_type loc t
@@ -1057,6 +1059,7 @@ end with type t = Impl.t) = struct
       | Tuple t -> tuple_type (loc, t)
       | StringLiteral s -> string_literal_type (loc, s)
       | NumberLiteral n -> number_literal_type (loc, n)
+      | BigIntLiteral n -> bigint_literal_type (loc, n)
       | BooleanLiteral b -> boolean_literal_type (loc, b)
       | Exists -> exists_type loc
     )
@@ -1079,6 +1082,8 @@ end with type t = Impl.t) = struct
     and null_type loc = node "NullLiteralTypeAnnotation" loc []
 
     and number_type loc = node "NumberTypeAnnotation" loc []
+
+    and bigint_type loc = node "BigIntTypeAnnotation" loc []
 
     and string_type loc = node "StringTypeAnnotation" loc []
 
@@ -1274,6 +1279,12 @@ end with type t = Impl.t) = struct
 
     and number_literal_type (loc, { Ast.NumberLiteral.value; raw }) =
       node "NumberLiteralTypeAnnotation" loc [
+        "value", number value;
+        "raw", string raw;
+      ]
+
+    and bigint_literal_type (loc, { Ast.BigIntLiteral.value; raw }) =
+      node "BigIntLiteralTypeAnnotation" loc [
         "value", number value;
         "raw", string raw;
       ]
