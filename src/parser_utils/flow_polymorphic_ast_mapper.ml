@@ -942,7 +942,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { openingElement; closingElement; children } = expr in
     let openingElement' = this#jsx_opening_element openingElement in
     let closingElement' = Option.map ~f:this#jsx_closing_element closingElement in
-    let children' = Core_list.map ~f:this#jsx_child children in
+    let children' = this#jsx_children children in
     { openingElement = openingElement'; closingElement = closingElement'; children = children' }
 
   method jsx_fragment (expr: ('M, 'T) Ast.JSX.fragment) : ('N, 'U) Ast.JSX.fragment =
@@ -950,7 +950,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let { frag_openingElement; frag_closingElement; frag_children } = expr in
     let opening' = this#on_loc_annot frag_openingElement in
     let closing' = this#on_loc_annot frag_closingElement in
-    let children' = Core_list.map ~f:this#jsx_child frag_children in
+    let children' = this#jsx_children frag_children in
     { frag_openingElement = opening'; frag_closingElement = closing'; frag_children = children' }
 
   method jsx_opening_element (elem: ('M, 'T) Ast.JSX.Opening.t) : ('N, 'U) Ast.JSX.Opening.t =
@@ -998,6 +998,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | Literal (annot, lit) -> Literal (this#on_type_annot annot, lit)
     | ExpressionContainer (annot, expr) ->
       ExpressionContainer (this#on_type_annot annot, this#jsx_expression expr)
+
+  method jsx_children (children: 'M * ('M, 'T) Ast.JSX.child list) : 'N * ('N, 'U) Ast.JSX.child list =
+    let annot, children' = children in
+    this#on_loc_annot annot,
+    Core_list.map ~f:this#jsx_child children'
 
   method jsx_child (child: ('M, 'T) Ast.JSX.child) : ('N, 'U) Ast.JSX.child =
     let open Ast.JSX in

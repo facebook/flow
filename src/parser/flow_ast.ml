@@ -1111,13 +1111,13 @@ and JSX : sig
   and ('M, 'T) element = {
     openingElement: ('M, 'T) Opening.t;
     closingElement: ('M, 'T) Closing.t option;
-    children: ('M, 'T) child list
+    children: 'M * ('M, 'T) child list
   }
 
   and ('M, 'T) fragment = {
     frag_openingElement: 'M;
     frag_closingElement: 'M;
-    frag_children: ('M, 'T) child list;
+    frag_children: 'M * ('M, 'T) child list;
   }
 
   [@@deriving show]

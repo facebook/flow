@@ -395,7 +395,7 @@ and get_children_nodes_jsx_opening (_loc, {Ast.JSX.Opening.attributes; _}) =
          | Opening.SpreadAttribute _ -> [] )
   |> List.flatten
 
-and get_children_nodes_jsx_child_list children =
+and get_children_nodes_jsx_child_list (_children_loc, children) =
   let open Ast.JSX in
   children
   |> Core_list.map ~f:(fun (loc, child) ->

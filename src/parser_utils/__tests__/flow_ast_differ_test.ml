@@ -103,7 +103,7 @@ class useless_mapper = object(this)
       else if open_elem.Opening.selfClosing then
         Some (loc, {Closing.name = open_elem'.Opening.name})
       else Flow_ast_mapper.map_opt super#jsx_closing_element closingElement in
-    let children' = ListUtils.ident_map this#jsx_child children in
+    let children' = this#jsx_children children in
     if openingElement == openingElement' && closingElement == closingElement' &&
         children == children' then elem
     else

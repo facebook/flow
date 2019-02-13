@@ -216,6 +216,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Flow_ast.JSX.Attribute.t -> ('N, 'U) Ast.JSX.Attribute.t
     method jsx_attribute_value :
       ('M, 'T) Ast.JSX.Attribute.value -> ('N, 'U) Ast.JSX.Attribute.value
+    method jsx_children :
+      'M * ('M, 'T) Ast.JSX.child list -> 'N * ('N, 'U) Ast.JSX.child list
     method jsx_child : ('M, 'T) Ast.JSX.child -> ('N, 'U) Ast.JSX.child
     method jsx_closing_element :
       ('M, 'T) Ast.JSX.Closing.t -> ('N, 'U) Ast.JSX.Closing.t

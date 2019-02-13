@@ -1783,7 +1783,7 @@ and jsx_closing_fragment loc =
     Atom "</>";
   ])
 
-and jsx_children loc children =
+and jsx_children loc (_children_loc, children) =
   let open Loc in
   let processed_children = deoptionalize (Core_list.map ~f:jsx_child children) in
   (* Check for empty children *)

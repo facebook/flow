@@ -8,6 +8,7 @@
 module Ast = Flow_ast
 
 open Token
+open Parser_common
 open Parser_env
 open Flow_ast
 module Error = Parse_error
@@ -243,13 +244,14 @@ module JSX (Parse: Parser_common.PARSER) = struct
 
       in let children_and_closing =
         let rec children_and_closing env acc =
+          let previous_loc = last_loc env in
           match Peek.token env with
           | T_LESS_THAN -> (
               match element_or_closing env with
               | Closing closingElement ->
-                  List.rev acc, `Element closingElement
+                  List.rev acc, previous_loc, `Element closingElement
               | ClosingFragment closingFragment ->
-                  List.rev acc, `Fragment closingFragment
+                  List.rev acc, previous_loc, `Fragment closingFragment
               | ChildElement element ->
                   let element = fst element, JSX.Element (snd element) in
                   children_and_closing env (element::acc)
@@ -258,11 +260,19 @@ module JSX (Parse: Parser_common.PARSER) = struct
                   children_and_closing env (fragment::acc))
           | T_EOF ->
               error_unexpected env;
-              List.rev acc, `None
+              List.rev acc, previous_loc, `None
           | _ ->
               children_and_closing env ((child env)::acc)
         in
-        fun env -> children_and_closing env []
+        fun env ->
+          let start_loc = Peek.loc env in
+          let children, last_child_loc, closing = children_and_closing env [] in
+          let last_child_loc = match last_child_loc with Some x -> x | None -> start_loc in
+          (* It's a little bit tricky to untangle the parsing of the child elements from the parsing
+           * of the closing element, so we can't easily use `with_loc` here. Instead, we'll use the
+           * same logic that `with_loc` uses, but manipulate the locations explicitly. *)
+          let children_loc = Loc.btwn start_loc last_child_loc in
+          ((children_loc, children), closing)
 
       in let rec normalize name = JSX.(match name with
         | Identifier (_, { Identifier.name }) -> name
@@ -282,12 +292,11 @@ module JSX (Parse: Parser_common.PARSER) = struct
           let selfClosing = match snd openingElement with
             | `Element e -> e.JSX.Opening.selfClosing
             | `Fragment -> false in
-          if selfClosing
-          then [], `None
+          if selfClosing then
+            with_loc (fun _ -> []) env, `None
           else begin
             Eat.push_lex_mode env Lex_mode.JSX_CHILD;
-            let ret = children_and_closing env in
-            ret
+            children_and_closing env
           end in
         let end_loc = match closingElement with
           | `Element (loc, { JSX.Closing.name }) ->

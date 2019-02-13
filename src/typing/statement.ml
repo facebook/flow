@@ -4752,27 +4752,31 @@ and clone_object cx reason this that =
     )
   )
 
-and collapse_children cx children:
-  Type.unresolved_param list *
-  (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list = Ast.JSX.(
-  children
-  |> List.fold_left (fun (unres_params, children) -> function
-    | ExpressionContainer.(
-        loc,
-        ExpressionContainer { expression = EmptyExpression empty_loc }
-      ) ->
-      unres_params, (loc,
-        ExpressionContainer.(ExpressionContainer {
-          expression = EmptyExpression empty_loc
-        })
-      )::children
-    | child ->
-      let unres_param_opt, child = jsx_body cx child in
-      Option.value_map unres_param_opt
-        ~default:unres_params ~f:(fun x -> x::unres_params),
-      child::children
-  ) ([], [])
-  |> map_pair List.rev List.rev)
+and collapse_children cx (children_loc, children):
+    Type.unresolved_param list *
+    (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.child list) =
+  let open Ast.JSX in
+  let unresolved_params, children' =
+    children
+    |> List.fold_left (fun (unres_params, children) -> function
+      | ExpressionContainer.(
+          loc,
+          ExpressionContainer { expression = EmptyExpression empty_loc }
+        ) ->
+        unres_params, (loc,
+          ExpressionContainer.(ExpressionContainer {
+            expression = EmptyExpression empty_loc
+          })
+        )::children
+      | child ->
+        let unres_param_opt, child = jsx_body cx child in
+        Option.value_map unres_param_opt
+          ~default:unres_params ~f:(fun x -> x::unres_params),
+        child::children
+    ) ([], [])
+    |> map_pair List.rev List.rev
+  in
+  (unresolved_params, (children_loc, children'))
 
 and jsx cx expr_loc e: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element = Ast.JSX.(
   let { openingElement; children; closingElement } = e in

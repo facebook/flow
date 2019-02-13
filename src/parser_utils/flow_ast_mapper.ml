@@ -838,14 +838,14 @@ class ['loc] mapper = object(this)
     let { openingElement; closingElement; children } = expr in
     let openingElement' = this#jsx_opening_element openingElement in
     let closingElement' = map_opt this#jsx_closing_element closingElement in
-    let children' = ListUtils.ident_map this#jsx_child children in
+    let children' = this#jsx_children children in
     if openingElement == openingElement' && closingElement == closingElement' && children == children' then expr
     else { openingElement = openingElement'; closingElement = closingElement'; children = children' }
 
   method jsx_fragment _loc (expr: ('loc, 'loc) Flow_ast.JSX.fragment) =
     let open Flow_ast.JSX in
     let { frag_children; _ } = expr in
-    let children' = ListUtils.ident_map this#jsx_child frag_children in
+    let children' = this#jsx_children frag_children in
     if frag_children == children' then expr
     else { expr with frag_children = children' }
 
@@ -889,6 +889,11 @@ class ['loc] mapper = object(this)
     | Literal _ -> value
     | ExpressionContainer (loc, expr) ->
       id_loc this#jsx_expression loc expr value (fun expr -> ExpressionContainer (loc, expr))
+
+  method jsx_children ((loc, children) as orig: 'loc * ('loc, 'loc) Flow_ast.JSX.child list) =
+    let children' = ListUtils.ident_map this#jsx_child children in
+    if children == children' then orig
+    else (loc, children')
 
   method jsx_child (child: ('loc, 'loc) Flow_ast.JSX.child) =
     let open Flow_ast.JSX in

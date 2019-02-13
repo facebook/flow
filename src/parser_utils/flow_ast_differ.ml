@@ -905,10 +905,10 @@ let program (algo : diff_algorithm)
     let open Ast.JSX in
     let { openingElement = open_elem1;
           closingElement = close_elem1;
-          children = children1 } = jsx_elem1 in
+          children = (_, children1) } = jsx_elem1 in
     let { openingElement = open_elem2;
           closingElement = close_elem2;
-          children = children2 } = jsx_elem2 in
+          children = (_, children2) } = jsx_elem2 in
     let opening_diff =
       diff_if_changed_ret_opt jsx_opening_element open_elem1 open_elem2 in
     let children_diff =
@@ -925,10 +925,10 @@ let program (algo : diff_algorithm)
     (* Opening and closing elements contain no information besides loc, so we
      * ignore them for the diff *)
     let { frag_openingElement = _;
-          frag_children = children1;
+          frag_children = (_, children1);
           frag_closingElement = _} = frag1 in
     let { frag_openingElement = _;
-          frag_children = children2;
+          frag_children = (_, children2);
           frag_closingElement = _} = frag2 in
     diff_and_recurse_nonopt_no_trivial jsx_child children1 children2
 

@@ -1299,14 +1299,14 @@ end with type t = Impl.t) = struct
         "params", array_of_list explicit_or_implicit_targ targs;
       ]
 
-    and jsx_element (loc, { JSX.openingElement; closingElement; children }) =
+    and jsx_element (loc, { JSX.openingElement; closingElement; children=(_loc, children) }) =
       node "JSXElement" loc [
         "openingElement", jsx_opening openingElement;
         "closingElement", option jsx_closing closingElement;
         "children", array_of_list jsx_child children;
       ]
 
-    and jsx_fragment (loc, { JSX.frag_openingElement; frag_closingElement; frag_children }) =
+    and jsx_fragment (loc, { JSX.frag_openingElement; frag_closingElement; frag_children=(_loc, frag_children) }) =
       node "JSXFragment" loc [
         "openingFragment", jsx_opening_fragment frag_openingElement;
         "children", array_of_list jsx_child frag_children;
