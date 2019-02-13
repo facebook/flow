@@ -176,6 +176,7 @@ and 'loc t' =
   | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
   | EDeprecatedCallSyntax of 'loc
   | EUnexpectedTemporaryBaseType of 'loc
+  | EBigIntNotYetSupported of 'loc virtual_reason
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
 
@@ -473,6 +474,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
   | EDeprecatedCallSyntax loc -> EDeprecatedCallSyntax (f loc)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
+  | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification _ as e -> e
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
@@ -601,6 +603,7 @@ let util_use_op_of_msg nope util = function
 | EInexactSpread _
 | EDeprecatedCallSyntax _
 | EUnexpectedTemporaryBaseType _
+| EBigIntNotYetSupported _
 | ESignatureVerification _
   -> nope
 
@@ -618,6 +621,7 @@ let aloc_of_msg : t -> ALoc.t option = function
       Some (aloc_of_reason primary)
   | ESketchyNumberLint (_, reason)
   | EInvalidPrototype reason
+  | EBigIntNotYetSupported reason
   | EUnsupportedSetProto reason
   | EReactElementFunArity (reason, _, _)
   | EUnsupportedImplements reason
@@ -1776,7 +1780,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
 
     | EUnnecessaryOptionalChain (_, lhs_reason)  ->
-     Normal [
+      Normal [
         text "This use of optional chaining ("; code "?."; text ") is unnecessary because ";
         ref lhs_reason; text " cannot be nullish or because an earlier "; code "?.";
         text " will short-circuit the nullish case.";
@@ -1796,6 +1800,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " might be missing the types of some properties that are being copied. ";
         text "Perhaps you could make it exact?"
       ]
+    | EBigIntNotYetSupported reason ->
+      Normal [
+        text "BigInt "; ref reason; text " is not yet supported."
+      ]
 )
 
 let is_lint_error = function
@@ -1810,6 +1818,7 @@ let is_lint_error = function
   | ESketchyNullLint _
   | ESketchyNumberLint _
   | EInexactSpread _
+  | EBigIntNotYetSupported _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
       -> true

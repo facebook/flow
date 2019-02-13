@@ -219,11 +219,12 @@ and reason_desc = ALoc.t virtual_reason_desc
 
 let rec map_desc_locs f = function
   | RAnyExplicit | RAnyImplicit
-  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
   | RLongStringLit _
   | RStringLit _
   | RNumberLit _
+  | RBigIntLit _
   | RBooleanLit _
   | RObject
   | RObjectLit

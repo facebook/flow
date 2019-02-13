@@ -2853,3 +2853,5 @@ let dump_error_message =
       spf "EUnexpectedTemporaryBaseType (%s)" (string_of_aloc loc)
     | ESignatureVerification sve ->
       spf "ESignatureVerification (%s)" (Signature_builder_deps.With_ALoc.Error.debug_to_string sve)
+    | EBigIntNotYetSupported reason ->
+      spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)

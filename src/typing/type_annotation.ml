@@ -108,6 +108,11 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, (Number as t_ast) -> (loc, NumT.at loc), t_ast
 
+| loc, (BigInt as t_ast) -> 
+  let reason = annot_reason (mk_reason RBigInt loc) in
+  Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
+  (loc, AnyT.why AnyError reason), t_ast
+
 | loc, (String as t_ast) -> (loc, StrT.at loc), t_ast
 
 | loc, (Boolean as t_ast) -> (loc, BoolT.at loc), t_ast
@@ -187,6 +192,11 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, (NumberLiteral { Ast.NumberLiteral.value; raw } as t_ast) ->
   (loc, mk_singleton_number loc value raw), t_ast
+
+| loc, (BigIntLiteral { Ast.BigIntLiteral.raw; _ } as t_ast) ->
+  let reason = annot_reason (mk_reason (RBigIntLit raw) loc) in
+  Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
+  (loc, AnyT.why AnyError reason), t_ast
 
 | loc, (BooleanLiteral value as t_ast) ->
   (loc, mk_singleton_boolean loc value), t_ast

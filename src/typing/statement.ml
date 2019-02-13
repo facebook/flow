@@ -4261,6 +4261,12 @@ and literal cx loc lit = Ast.Literal.(match lit.Ast.Literal.value with
   | Number f ->
       DefT (annot_reason (mk_reason RNumber loc), bogus_trust (), NumT (Literal (None, (f, lit.raw))))
 
+  | BigInt _ ->
+      let reason = annot_reason (mk_reason (RBigIntLit lit.raw) loc) in
+      Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
+      AnyT.why AnyError reason
+      (* DefT (reason, bogus_trust (), NumT (Literal (None, (f, lit.raw)))) *)
+
   | RegExp _ ->
       Flow.get_builtin_type cx (annot_reason (mk_reason RRegExp loc)) "RegExp"
 )
