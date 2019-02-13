@@ -4780,15 +4780,14 @@ and collapse_children cx (children_loc, children):
 
 and jsx cx expr_loc e: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element = Ast.JSX.(
   let { openingElement; children; closingElement } = e in
+  let (children_loc, _) = children in
   let locs =
     let open_, _ = openingElement in
     match closingElement with
-    | Some (close, _) ->
-      let open_concrete = ALoc.to_loc open_ in
-      let close_concrete = ALoc.to_loc close in
+    | Some _ ->
       expr_loc,
       open_,
-      Loc.btwn_exclusive open_concrete close_concrete |> ALoc.of_loc
+      children_loc
     | _ -> open_, open_, open_
   in
   let unresolved_params, children = collapse_children cx children in
