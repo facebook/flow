@@ -4800,14 +4800,12 @@ and jsx cx expr_loc e: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.element = Ast.
 and jsx_fragment cx expr_loc fragment: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JSX.fragment =
   let open Ast.JSX in
   let { frag_openingElement; frag_children; frag_closingElement } = fragment in
+  let (children_loc, _) = frag_children in
   let locs =
     let open_ = frag_openingElement in
-    let close = frag_closingElement in
-    let open_concrete = ALoc.to_loc open_ in
-    let close_concrete = ALoc.to_loc close in
     expr_loc,
     open_,
-    Loc.btwn_exclusive open_concrete close_concrete |> ALoc.of_loc
+    children_loc
   in
   let _, loc_opening, _ = locs in
   let unresolved_params, frag_children = collapse_children cx frag_children in
