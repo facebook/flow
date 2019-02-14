@@ -768,7 +768,7 @@ module rec TypeTerm : sig
   and unsoundness_kind =
     | BoundFunctionThis
     | Chain
-    | ComputedLiteralKey
+    | ComputedNonLiteralKey
     | Constructor
     | Existential
     | Exports
@@ -2721,35 +2721,35 @@ module AnyT = struct
 end
 
 module Unsoundness = struct
-  let chain                = Unsound Chain
-  let constructor          = Unsound Constructor
-  let computed_lit_key     = Unsound ComputedLiteralKey
-  let function_proto       = Unsound FunctionPrototype
-  let merged               = Unsound Merged
-  let instance_of_refi     = Unsound InstanceOfRefinement
-  let unresolved           = Unsound UnresolvedType
-  let resolve_spread       = Unsound ResolveSpread
-  let unimplemented        = Unsound Unimplemented
-  let weak_context         = Unsound WeakContext
-  let inference_hooks      = Unsound InferenceHooks
-  let exports              = Unsound Exports
-  let existential          = Unsound Existential
-  let bound_fn_this        = Unsound BoundFunctionThis
+  let chain                   = Unsound Chain
+  let constructor             = Unsound Constructor
+  let computed_nonlit_key     = Unsound ComputedNonLiteralKey
+  let function_proto          = Unsound FunctionPrototype
+  let merged                  = Unsound Merged
+  let instance_of_refi        = Unsound InstanceOfRefinement
+  let unresolved              = Unsound UnresolvedType
+  let resolve_spread          = Unsound ResolveSpread
+  let unimplemented           = Unsound Unimplemented
+  let weak_context            = Unsound WeakContext
+  let inference_hooks         = Unsound InferenceHooks
+  let exports                 = Unsound Exports
+  let existential             = Unsound Existential
+  let bound_fn_this           = Unsound BoundFunctionThis
 
-  let merged_any           = AnyT.make merged
-  let instance_of_refi_any = AnyT.make instance_of_refi
-  let unresolved_any       = AnyT.make unresolved
-  let resolve_spread_any   = AnyT.make resolve_spread
-  let constructor_any      = AnyT.make constructor
-  let function_proto_any   = AnyT.make function_proto
-  let computed_lit_key_any = AnyT.make computed_lit_key
-  let unimplemented_any    = AnyT.make unimplemented
-  let weak_context_any     = AnyT.make weak_context
-  let inference_hooks_any  = AnyT.make inference_hooks
-  let chain_any            = AnyT.make chain
-  let exports_any          = AnyT.make exports
-  let existential_any      = AnyT.make existential
-  let bound_fn_this_any    = AnyT.make bound_fn_this
+  let merged_any              = AnyT.make merged
+  let instance_of_refi_any    = AnyT.make instance_of_refi
+  let unresolved_any          = AnyT.make unresolved
+  let resolve_spread_any      = AnyT.make resolve_spread
+  let constructor_any         = AnyT.make constructor
+  let function_proto_any      = AnyT.make function_proto
+  let computed_nonlit_key_any = AnyT.make computed_nonlit_key
+  let unimplemented_any       = AnyT.make unimplemented
+  let weak_context_any        = AnyT.make weak_context
+  let inference_hooks_any     = AnyT.make inference_hooks
+  let chain_any               = AnyT.make chain
+  let exports_any             = AnyT.make exports
+  let existential_any         = AnyT.make existential
+  let bound_fn_this_any       = AnyT.make bound_fn_this
 
   let why kind = Unsound kind |> AnyT.why
   let at  kind = Unsound kind |> AnyT.at

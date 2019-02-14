@@ -5781,7 +5781,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | DefT (_, _, StrT _) | DefT (_, _, NumT _) ->
         (* string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
-        let p = Field (None, Unsoundness.why ComputedLiteralKey reason_op, Neutral) in
+        let p = Field (None, Unsoundness.why ComputedNonLiteralKey reason_op, Neutral) in
         perform_lookup_action cx trace propref p reason reason_op action
       | _ ->
         let reason_prop = reason_of_t elem_t in
@@ -8513,7 +8513,7 @@ and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
       | DefT (_, _, StrT _) | DefT (_, _, NumT _) ->
         (* string, and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
-        rec_flow_t cx trace (Unsoundness.why ComputedLiteralKey reason_op, tout)
+        rec_flow_t cx trace (Unsoundness.why ComputedNonLiteralKey reason_op, tout)
       | _ ->
         let reason_prop = reason_of_t elem_t in
         add_output cx ~trace (FlowError.EObjectComputedPropertyAccess
@@ -8551,7 +8551,7 @@ and writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t ac
       | DefT (_, _, StrT _) | DefT (_, _, NumT _) ->
         (* string and number keys are allowed, but there's nothing else to
            flow without knowing their literal values. *)
-        rec_flow_t cx trace (prop_t, Unsoundness.why ComputedLiteralKey reason_op)
+        rec_flow_t cx trace (prop_t, Unsoundness.why ComputedNonLiteralKey reason_op)
       | _ ->
         let reason_prop = reason_of_t elem_t in
         add_output cx ~trace (FlowError.EObjectComputedPropertyAssign
