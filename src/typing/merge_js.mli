@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type get_ast_return = (Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program)
+
 module Reqs : sig
   type t
   val empty: t
@@ -21,7 +23,7 @@ val merge_component_strict:
   file_options: Files.options option ->
   strict_mode: StrictModeSettings.t ->
   file_sigs: File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
-  get_ast_unsafe: (File_key.t -> (Loc.t, Loc.t) Flow_ast.program) ->
+  get_ast_unsafe: (File_key.t -> get_ast_return) ->
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
   ?do_gc: bool ->
   (* component *)

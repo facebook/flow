@@ -384,14 +384,11 @@ let add_require_tvars =
 
 (* build module graph *)
 (* Lint suppressions are handled iff lint_severities is Some. *)
-let infer_ast ~lint_severities ~file_options ~file_sig cx filename ast =
+let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc_ast =
   assert (Context.is_checked cx);
 
   Flow_js.Cache.clear();
 
-  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
-
-  let _, _, comments = ast in
   let prog_aloc, aloc_statements, aloc_comments = aloc_ast in
 
   add_require_tvars cx file_sig;

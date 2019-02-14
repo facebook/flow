@@ -601,6 +601,8 @@ let flow_check (code : string) : string option =
                             jsx = None;
                           } in
       let input_ast, _ = Parser_flow.program code in
+      let (_, _, comments) = input_ast in
+      let aloc_ast = Ast_loc_utils.abstractify_mapper#program input_ast in
       let filename = File_key.SourceFile "/tmp/foo.js" in
       let file_sig = match File_sig.With_Loc.program ~ast:input_ast ~module_ref_prefix:None with
       | Ok file_sig -> file_sig
@@ -611,7 +613,7 @@ let flow_check (code : string) : string option =
       (* WARNING: This line might crash. That's why we put the entire block into a try catch *)
       let (final_cx, _), _other_cxs = Merge_js.merge_component_strict
           ~metadata:builtin_metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
-          ~get_ast_unsafe:(fun _ -> input_ast)
+          ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
           (Nel.one filename) reqs [] master_sig_cx in
       let suppressions = Error_suppressions.empty in

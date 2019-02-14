@@ -129,8 +129,15 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
 let merge_strict_context ~options ~reader component =
   merge_strict_context_generic ~options ~reader
     ~get_ast_unsafe:(match options.Options.opt_arch with
-      | Options.Classic -> Parsing_heaps.Reader_dispatcher.get_ast_unsafe
-      | Options.TypesFirst -> Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe)
+      | Options.Classic -> fun ~reader file ->
+        let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        (comments, aloc_ast)
+      | Options.TypesFirst -> fun ~reader file ->
+        let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
+        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        (comments, aloc_ast)
+    )
     ~get_file_sig_unsafe:(match options.Options.opt_arch with
       | Options.Classic -> Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe
       | Options.TypesFirst -> Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe)
@@ -139,6 +146,8 @@ let merge_strict_context ~options ~reader component =
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context ~reader options file ast info file_sig =
+  let (_, _, comments) = ast in
+  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
   let reader = Abstract_state_reader.State_reader reader in
   let file_sig = File_sig.abstractify_locs file_sig in
   let required =
@@ -170,7 +179,7 @@ let merge_contents_context ~reader options file ast info file_sig =
   let strict_mode = Options.strict_mode options in
   let cx, _ = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
-    ~get_ast_unsafe:(fun _ -> ast)
+    ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
     ~get_docblock_unsafe:(fun _ -> info)
     component file_reqs dep_cxs master_cx
   in
@@ -233,7 +242,11 @@ let check_file options ~reader file =
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
     let { cx; _ } = merge_strict_context_generic ~options ~reader
-      ~get_ast_unsafe:Parsing_heaps.Reader_dispatcher.get_ast_unsafe
+      ~get_ast_unsafe:(fun ~reader file ->
+        let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        (comments, aloc_ast)
+      )
       ~get_file_sig_unsafe:Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe
       (Nel.one file) in
     let errors = Context.errors cx in

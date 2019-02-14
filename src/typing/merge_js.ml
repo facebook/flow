@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type get_ast_return = (Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast.program)
+
 module RequireMap = MyMap.Make (struct
   (* If file A.js imports module 'Foo', this will be ('Foo' * A.js) *)
   type t = string * File_key.t
@@ -363,7 +365,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
     );
 
     (* local inference *)
-    let ast = get_ast_unsafe filename in
+    let comments, ast = get_ast_unsafe filename in
     let lint_severities =
       if metadata.Context.strict || metadata.Context.strict_local
       then StrictModeSettings.fold
@@ -373,7 +375,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
       else lint_severities in
     let file_sig = FilenameMap.find_unsafe filename file_sigs in
     let tast =
-      Type_inference_js.infer_ast cx filename ast
+      Type_inference_js.infer_ast cx filename comments ast
         ~lint_severities ~file_options ~file_sig
     in
 
