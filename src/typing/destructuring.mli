@@ -5,28 +5,42 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-val destructuring :
+type state
+
+type expr =
   Context.t ->
-  expr:(Context.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t) ->
-  f:(use_op:Type.use_op ->
-    ALoc.t ->
-    string ->
-    (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t option ->
-    Type.t -> unit) ->
-  Type.t ->
-  (ALoc.t, ALoc.t) Flow_ast.Expression.t option ->
+  (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
+
+type callback =
+  use_op:Type.use_op ->
+  ALoc.t ->
+  string ->
   (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t option ->
+  Type.t ->
+  unit
+
+val empty:
+  ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+  ?default:(ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t ->
+  Type.t ->
+  state
+
+val pattern:
+  Context.t ->
+  expr:expr ->
+  f:callback ->
+  state ->
   (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.t
-val type_of_pattern :
+
+val type_of_pattern:
   'a * (ALoc.t, ALoc.t) Flow_ast.Pattern.t' ->
   (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint
-val destructuring_assignment :
+
+val assignment :
   Context.t ->
-  expr:(
-    Context.t -> (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-    (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
-  ) ->
+  expr:expr ->
   Type.t ->
   (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
   (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->

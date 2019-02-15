@@ -18,7 +18,6 @@ module Flow = Flow_js
 
 open Reason
 open Type
-open Destructuring
 
 type param = string option * Type.t
 type rest = string option * ALoc.t * Type.t
@@ -58,16 +57,20 @@ let add_simple cx ~optional ?default loc id t x =
 let add_complex cx ~expr (loc, { Flow_ast.Function.Param.argument; default = def_expr }) t x =
   let default = Option.map def_expr Default.expr in
   let bindings_rev = ref x.bindings_rev in
-  let argument = destructuring cx ~expr t None default argument ~f:(fun ~use_op:_ loc name default t ->
-    let t = match type_of_pattern argument with
-    | Flow_ast.Type.Missing _ -> t
-    | Flow_ast.Type.Available _ ->
-      let reason = mk_reason (RIdentifier name) loc in
-      EvalT (t, DestructuringT (reason, Become), mk_id())
+  let argument =
+    let f ~use_op:_ loc name default t =
+      let t = match Destructuring.type_of_pattern argument with
+      | Flow_ast.Type.Missing _ -> t
+      | Flow_ast.Type.Available _ ->
+        let reason = mk_reason (RIdentifier name) loc in
+        EvalT (t, DestructuringT (reason, Become), mk_id())
+      in
+      Type_table.set (Context.type_table cx) loc t;
+      bindings_rev := (name, loc, t, default) :: !bindings_rev
     in
-    Type_table.set (Context.type_table cx) loc t;
-    bindings_rev := (name, loc, t, default) :: !bindings_rev
-  ) in
+    let init = Destructuring.empty ?default t in
+    Destructuring.pattern cx ~expr ~f init argument
+  in
   let t = if default <> None then Type.optional t else t in
   let params_rev = (None, t) :: x.params_rev in
   let bindings_rev = !bindings_rev in

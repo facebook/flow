@@ -135,7 +135,7 @@ and binding_pattern_decl cx ~kind ((loc, _) as p) =
   let expr _ e =
     (* don't eval computed property keys *)
     Tast_utils.error_mapper#expression e in
-  (destructuring cx ~expr t None None p ~f:(fun ~use_op:_ loc name _default t ->
+  let f ~use_op:_ loc name _default t =
     let t = match annot with
     | Ast.Type.Missing _ -> t
     | Ast.Type.Available _ ->
@@ -144,7 +144,10 @@ and binding_pattern_decl cx ~kind ((loc, _) as p) =
     in
     Type_table.set (Context.type_table cx) loc t;
     bind cx name t loc
-  ) : (ALoc.t, ALoc.t * T.t) Ast.Pattern.t) |> ignore
+  in
+  let init = Destructuring.empty t in
+  let p = Destructuring.pattern cx ~expr ~f init p in
+  ignore (p: (ALoc.t, ALoc.t * T.t) Ast.Pattern.t)
 
 and toplevel_decls cx =
   List.iter (statement_decl cx)
@@ -2780,7 +2783,7 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
         }) in
         init_var cx ~use_op pattern_name ~has_anno t loc;
         let id_ast =
-          destructuring cx ~expr:expression ~f:(fun ~use_op loc name default t ->
+          let f ~use_op loc name default t =
             let reason = mk_reason (RIdentifier name) loc in
             Option.iter default (fun d ->
               let default_t = Flow.mk_default cx reason d
@@ -2789,7 +2792,9 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
             );
             Flow.flow cx (t, AssertImportIsValueT(reason, name));
             init_var cx ~use_op name ~has_anno t loc
-          ) t init None id
+          in
+          let init = Destructuring.empty ?init t in
+          Destructuring.pattern cx ~expr:expression ~f init id
         in
         id_ast, init_ast
   in
@@ -4663,7 +4668,7 @@ and simple_assignment cx _loc lhs rhs =
 
     (* other r structures are handled as destructuring assignments *)
     | _ ->
-        destructuring_assignment cx ~expr:expression t rhs lhs
+        Destructuring.assignment cx ~expr:expression t rhs lhs
   in
   t, lhs, typed_rhs
 
