@@ -13,4 +13,3 @@ open Utils_js
 *)
 val topsort: roots:FilenameSet.t -> FilenameSet.t FilenameMap.t -> File_key.t Nel.t list
 val log: File_key.t Nel.t list -> unit
-val reverse: FilenameSet.t FilenameMap.t -> FilenameSet.t FilenameMap.t

@@ -47,6 +47,15 @@ type 'a merge_stream = {
   stats: merge_stats
 }
 
+type node = {
+  component: File_key.t Nel.t;
+  mutable dependents: node FilenameMap.t;
+  (* the number of leaders this node is currently blocking on *)
+  mutable blocking: int;
+  mutable recheck: bool;
+  size: int;
+}
+
 let make
   ~num_workers
   ~dependency_graph
@@ -82,11 +91,6 @@ let make
   *)
   let max_bucket_size = 500 in (* hard-coded, as in Bucket *)
 
-  (* For each leader, maps the number of leaders it is currently blocking on. *)
-  let blocking = Hashtbl.create 0 in
-  (* Counts the number of blocked leaders. *)
-  let blocked = ref 0 in
-
   let total_number_of_files = FilenameMap.fold (fun _ files acc ->
     Nel.length files + acc
   ) component_map 0 in
@@ -99,43 +103,41 @@ let make
     MergeStats.increment_skipped_files stats x
   in
 
-  (* stream of files available to schedule *)
-  let stream = Queue.create () in
+  let graph = FilenameMap.mapi (fun leader component -> {
+    component;
+    dependents = FilenameMap.empty; (* computed later *)
+    blocking = 0; (* computed later *)
+    recheck = FilenameMap.find_unsafe leader recheck_leader_map;
+    size = Nel.length component;
+  }) component_map in
 
-  (* For each leader, maps other leaders that are dependent on it. *)
-  let dependents =
+  (* calculate dependents, blocking for each node *)
+  let () =
     let leader f = FilenameMap.find_unsafe f leader_map in
-    let dependency_dag = FilenameMap.fold (fun f fs dependency_dag ->
+    FilenameMap.iter (fun f dep_fs ->
       let leader_f = leader f in
-      let dep_leader_fs = match FilenameMap.get leader_f dependency_dag with
-        | Some dep_leader_fs -> dep_leader_fs
-        | _ -> FilenameSet.empty
-      in
-      let dep_leader_fs = FilenameSet.fold (fun f dep_leader_fs ->
-        let f = leader f in
-        if f = leader_f then dep_leader_fs
-        else FilenameSet.add f dep_leader_fs
-      ) fs dep_leader_fs in
-      FilenameMap.add leader_f dep_leader_fs dependency_dag
-    ) dependency_graph FilenameMap.empty in
-
-    FilenameMap.iter (fun leader_f dep_leader_fs ->
-      let n = FilenameSet.cardinal dep_leader_fs in
-      (* n files block leader_f *)
-      Hashtbl.add blocking leader_f n;
-      if n = 0
-      then (* leader_f isn't blocked, add to stream *)
-        Queue.add leader_f stream
-      else (* one more blocked *)
-        incr blocked
-    ) dependency_dag;
-
-    (* TODO: remember reverse dependencies to quickly calculate remerge sets *)
-    Sort_js.reverse dependency_dag
+      let node = FilenameMap.find_unsafe leader_f graph in
+      FilenameSet.iter (fun dep_f ->
+        let dep_leader_f = leader dep_f in
+        if dep_leader_f = leader_f then () else
+        let dep_node = FilenameMap.find_unsafe dep_leader_f graph in
+        let dependents = FilenameMap.add leader_f node dep_node.dependents in
+        if dependents != dep_node.dependents then begin
+          dep_node.dependents <- dependents;
+          node.blocking <- node.blocking + 1;
+        end
+      ) dep_fs
+    ) dependency_graph
   in
 
-  (* For each leader, specifies whether to recheck its component *)
-  let to_recheck: bool FilenameMap.t ref = ref recheck_leader_map in
+  (* calculate the components available to schedule and number blocked *)
+  let stream = Queue.create () in
+  let blocked = ref 0 in
+  FilenameMap.iter (fun _ node ->
+    if node.blocking > 0
+    then incr blocked
+    else Queue.add node stream
+  ) graph;
 
   (* Take n files from stream. We take an entire component at once, which might
      cause us to take more than n files. *)
@@ -143,10 +145,8 @@ let make
     let rec loop acc len n =
       if n <= 0 then (acc, len)
       else begin
-        let f = Queue.pop stream in
-        let fs = FilenameMap.find_unsafe f component_map in
-        let fs_len = Nel.length fs in
-        loop ((Component fs)::acc) (fs_len+len) (n-fs_len)
+        let node = Queue.pop stream in
+        loop ((Component node.component)::acc) (node.size+len) (n-node.size)
       end
     in
     loop [] 0
@@ -184,50 +184,48 @@ let make
   let merge =
     (* Once a component is merged, unblock dependent components to make them
      * available to workers. Accumulate list of skipped components. *)
-    let rec push skipped leader_f diff =
-      FilenameSet.fold (fun dep_leader_f skipped ->
-        let n = (Hashtbl.find blocking dep_leader_f) - 1 in
-        (* dep_leader blocked on one less *)
-        Hashtbl.replace blocking dep_leader_f n;
-        (* dep_leader should be rechecked if diff *)
-        let recheck = diff || FilenameMap.find_unsafe dep_leader_f !to_recheck in
-        to_recheck := FilenameMap.add dep_leader_f recheck !to_recheck;
+    let rec push skipped node diff =
+      FilenameMap.fold (fun _ dep_node skipped ->
+        let n = dep_node.blocking - 1 in
+        (* dependent blocked on one less *)
+        dep_node.blocking <- n;
+        (* dependent should be rechecked if diff *)
+        let recheck = diff || dep_node.recheck in
+        dep_node.recheck <- recheck;
         (* no more waiting, yay! *)
         if n = 0 then (
-          (* one less blocked; add dep_leader_f to stream if we need to recheck,
+          (* one less blocked; add dep node to stream if we need to recheck,
              otherwise recursively unblock dependents *)
           decr blocked;
           if recheck
           then (
-            Queue.add dep_leader_f stream;
+            Queue.add dep_node stream;
             skipped
-          ) else push (dep_leader_f::skipped) dep_leader_f false
+          ) else push (dep_node::skipped) dep_node false
         ) else skipped
-      ) (FilenameMap.find_unsafe leader_f dependents) skipped
+      ) node.dependents skipped
     in
     fun ~master_mutator ~reader merged merged_acc ->
       let () = intermediate_result_callback (lazy merged) in
       let skipped = List.fold_left (fun skipped (leader_f, _) ->
+        let node = FilenameMap.find_unsafe leader_f graph in
         let diff = Context_heaps.Mutator_reader.sig_hash_changed ~reader leader_f in
         let () =
-          let fs =
+          if not diff
+          then
             FilenameMap.find_unsafe leader_f component_map
             |> Nel.to_list
             |> FilenameSet.of_list
-          in
-          if not diff
-          then Context_heaps.Merge_context_mutator.revive_files master_mutator fs
+            |> Context_heaps.Merge_context_mutator.revive_files master_mutator
         in
-        push skipped leader_f diff
+        push skipped node diff
       ) [] merged in
-      let skipped_length = List.fold_left (fun acc leader_f ->
-        let fs =
-          FilenameMap.find_unsafe leader_f component_map
-          |> Nel.to_list
-          |> FilenameSet.of_list
-        in
-        Context_heaps.Merge_context_mutator.revive_files master_mutator fs;
-        FilenameSet.cardinal fs + acc
+      let skipped_length = List.fold_left (fun acc node ->
+        node.component
+        |> Nel.to_list
+        |> FilenameSet.of_list
+        |> Context_heaps.Merge_context_mutator.revive_files master_mutator;
+        node.size + acc
       ) 0 skipped in
       if skipped_length > 0 then begin
         record_skipped skipped_length;

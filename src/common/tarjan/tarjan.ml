@@ -132,15 +132,4 @@ module Make
         Printf.ksprintf prerr_endline
           "cycle detected among the following nodes:\n\t%s" nodes
     )
-
-  let reverse nodes =
-    nodes
-    |> NMap.map (fun _ -> NSet.empty)
-    |> NMap.fold (fun from_f ->
-         NSet.fold (fun to_f rev_nodes ->
-           let from_fs = NMap.find_unsafe to_f rev_nodes in
-           NMap.add to_f (NSet.add from_f from_fs) rev_nodes
-         )
-        ) nodes
-
 end
