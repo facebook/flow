@@ -688,6 +688,13 @@ let print_types_if_verbose cx trace
 
 let subst = Subst.subst
 
+let check_canceled =
+  let count = ref 0 in
+  fun () ->
+    let n = (!count + 1) mod 128 in
+    count := n;
+    if n = 0 then WorkerCancel.check_should_exit ()
+
 (********************** start of slab **********************************)
 module M__flow
   (ReactJs: React_kit.REACT)
@@ -707,6 +714,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* limit recursion depth *)
     RecursionCheck.check trace;
+
+    (* Check if this worker has been told to cancel *)
+    check_canceled ();
 
     (* Expect that l is a def type. On the other hand, u may be a use type or a
        def type: the latter typically when we have annotations. *)
