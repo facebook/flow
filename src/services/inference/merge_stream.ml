@@ -7,23 +7,6 @@
 
 open Utils_js
 
-module Stream: sig
-  type 'a t
-  val empty: 'a t
-  val push: 'a -> 'a t -> 'a t
-  val pop_unsafe: 'a t -> ('a * 'a t)
-  val length: 'a t -> int
-end = struct
-  type 'a t = int * 'a list
-  let empty = (0, [])
-  let push x (n, xs) = (n+1, x::xs)
-  let pop_unsafe xs =
-    match xs with
-    | (_, []) -> assert_false "pop_unsafe"
-    | (n, x::xs) -> x, (n-1, xs)
-  let length (n, _) = n
-end
-
 module MergeStats : sig
   type t
   val make: unit -> t
@@ -117,7 +100,7 @@ let make
   in
 
   (* stream of files available to schedule *)
-  let stream = ref Stream.empty in
+  let stream = Queue.create () in
 
   (* For each leader, maps other leaders that are dependent on it. *)
   let dependents =
@@ -142,7 +125,7 @@ let make
       Hashtbl.add blocking leader_f n;
       if n = 0
       then (* leader_f isn't blocked, add to stream *)
-        stream := Stream.push leader_f !stream
+        Queue.add leader_f stream
       else (* one more blocked *)
         incr blocked
     ) dependency_dag;
@@ -160,8 +143,7 @@ let make
     let rec loop acc len n =
       if n <= 0 then (acc, len)
       else begin
-        let (f, stream') = Stream.pop_unsafe !stream in
-        stream := stream';
+        let f = Queue.pop stream in
         let fs = FilenameMap.find_unsafe f component_map in
         let fs_len = Nel.length fs in
         loop ((Component fs)::acc) (fs_len+len) (n-fs_len)
@@ -175,7 +157,7 @@ let make
   (* dependency_graph is a map from files to dependencies *)
   let next =
     fun () ->
-      let jobs = Stream.length !stream in
+      let jobs = Queue.length stream in
       if jobs = 0 && !blocked <> 0 then Bucket.Wait
       else
         (* NB: num_workers can be zero *)
@@ -217,7 +199,7 @@ let make
           decr blocked;
           if recheck
           then (
-            stream := Stream.push dep_leader_f !stream;
+            Queue.add dep_leader_f stream;
             skipped
           ) else push (dep_leader_f::skipped) dep_leader_f false
         ) else skipped
