@@ -82,11 +82,11 @@ let max_bucket_size = 500
 let bucket_size stream =
   (* NB: num_workers can be zero *)
   let max_bucket_size =
-    if stream.ready_components < stream.num_workers * max_bucket_size
-    then 1 + (stream.ready_components / stream.num_workers)
+    if stream.ready_files < stream.num_workers * max_bucket_size
+    then 1 + (stream.ready_files / stream.num_workers)
     else max_bucket_size
   in
-  min max_bucket_size stream.ready_components
+  min max_bucket_size stream.ready_files
 
 let is_done stream =
   stream.blocked_components = 0
