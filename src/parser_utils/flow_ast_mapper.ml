@@ -152,7 +152,7 @@ class ['loc] mapper = object(this)
   method comment (c: 'loc Flow_ast.Comment.t) = c
 
   method syntax_opt: 'internal. ('loc, 'internal) Flow_ast.Syntax.t option ->
-                               ('loc, 'internal) Flow_ast.Syntax.t option =
+                                ('loc, 'internal) Flow_ast.Syntax.t option =
     map_opt this#syntax
 
   method syntax: 'internal. ('loc, 'internal) Flow_ast.Syntax.t ->
@@ -772,7 +772,12 @@ class ['loc] mapper = object(this)
   (* TODO *)
   method generator _loc (expr: ('loc, 'loc) Flow_ast.Expression.Generator.t) = expr
 
-  method identifier (expr: 'loc Flow_ast.Identifier.t) = expr
+  method identifier (id: 'loc Flow_ast.Identifier.t) =
+    let open Flow_ast.Identifier in
+    let (loc, { name; comments }) = id in
+    let comments' = this#syntax_opt comments in
+    if comments == comments' then id
+    else loc, { name; comments= comments' }
 
   method interface _loc (interface: ('loc, 'loc) Flow_ast.Statement.Interface.t) =
     let open Flow_ast.Statement.Interface in
