@@ -80,6 +80,17 @@ let ident_of_source (loc, name) = (loc, { Identifier.name; comments= None })
 let mk_no_comments a =
   { Syntax.leading = []; trailing = []; internal = a }
 
+let map_comments ~f comments =
+  let { Syntax.leading; trailing; internal } = comments in
+  let map_fun (a, comment) = f a, comment in
+  { Syntax.leading= List.map map_fun leading;
+    trailing= List.map map_fun trailing;
+    internal= internal }
+
+let map_comments_opt ~f = function
+  | Some c -> Some (map_comments ~f c)
+  | None -> None
+
 let string_of_assignment_operator op =
   let open Flow_ast.Expression.Assignment in
   match op with

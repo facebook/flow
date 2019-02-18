@@ -31,7 +31,9 @@ let qualified_name =
 
 let ident_name (_, { Ast.Identifier.name; comments= _ }) = name
 
-let mk_ident name = { Ast.Identifier.name; comments= None }
+let mk_commented_ident t comments name =
+  { Ast.Identifier.name;
+    comments= Flow_ast_utils.map_comments_opt ~f:(fun loc -> loc, t) comments }
 
 let error_type cx loc msg t_in =
   Flow.add_output cx msg;
@@ -54,13 +56,13 @@ let check_type_arg_arity cx loc t_ast params n f =
     else
       error_type cx loc (FlowError.ETypeParamArity (loc, n)) t_ast
 
-let mk_custom_fun cx loc t_ast targs (id_loc, name) kind =
+let mk_custom_fun cx loc t_ast targs (id_loc, name, comments) kind =
   check_type_arg_arity cx loc t_ast targs 0 (fun () ->
     let reason = mk_reason RFunctionType loc in
     let t = CustomFunT (reason, kind) in
     (loc, t),
     Ast.Type.(Generic {
-      Generic.id = Generic.Identifier.Unqualified ((id_loc, t), name);
+      Generic.id = Generic.Identifier.Unqualified ((id_loc, t), mk_commented_ident t comments name);
       targs = None
     })
   )
@@ -195,7 +197,7 @@ let rec convert cx tparams_map = Ast.Type.(function
        { Generic.Identifier.qualification; id; }) as qid); targs } ->
   let m, qualification_ast =
     convert_qualification cx "type-annotation" qualification in
-  let id_loc, { Ast.Identifier.name; comments= _ } = id in
+  let id_loc, { Ast.Identifier.name; comments } = id in
   let reason = mk_reason (RType name) loc in
   let id_reason = mk_reason (RType name) id_loc in
   let qid_reason = mk_reason (RType (qualified_name qid)) qid_loc in
@@ -210,21 +212,20 @@ let rec convert cx tparams_map = Ast.Type.(function
   Generic {
     Generic.id = Generic.Identifier.Qualified (qid_loc, {
       Generic.Identifier.qualification = qualification_ast;
-      (* Stripping comments is legitimate for typing purposes *)
-      id = (id_loc, t_unapplied), mk_ident name;
+      id = (id_loc, t_unapplied), mk_commented_ident t comments name;
     });
     targs
   }
 
 (* type applications: name < params > *)
 | loc, Generic {
-    Generic.id = Generic.Identifier.Unqualified (name_loc, { Ast.Identifier.name; comments= _ });
+    Generic.id = Generic.Identifier.Unqualified (name_loc, { Ast.Identifier.name; comments });
     targs
   } as t_ast ->
 
   (* Comments are innecessary, so they can be stripped to meet the generic requirements *)
-  let ident: ALoc.t * (ALoc.t * Type.t) Flow_ast.Identifier.t' =
-    (name_loc, mk_ident name)
+  let ident =
+    (name_loc, name, comments)
   in
 
   let convert_type_params () =
@@ -237,7 +238,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
   let reconstruct_ast t ?id_t targs =
     (loc, t), Generic { Generic.
-      id = Generic.Identifier.Unqualified ((name_loc, Option.value id_t ~default:t), mk_ident name);
+      id = Generic.Identifier.Unqualified ((name_loc, Option.value id_t ~default:t), mk_commented_ident t comments name);
       targs;
   } in
 
@@ -863,10 +864,10 @@ let rec convert cx tparams_map = Ast.Type.(function
     let { Function.Param.name; annot; optional } = param in
     let (_, t), _ as annot_ast = convert cx tparams_map annot in
     let t = if optional then Type.optional t else t in
-    let name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) ->
+    let name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments }) ->
       let id_info = name, t, Type_table.Other in
       Type_table.set_info ~extra_tparams:tparams_list loc id_info (Context.type_table cx);
-      (loc, t), mk_ident name
+      (loc, t), mk_commented_ident t comments name
     ) name in
     (Option.map ~f:ident_name name, t) :: params_acc,
     (param_loc, {
@@ -885,7 +886,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     Some (Option.map ~f:ident_name name, loc_of_t rest, rest),
     Some (rest_loc, {
       Function.RestParam.argument = (param_loc, {
-        Function.Param.name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) -> (loc, rest), mk_ident name) name;
+        Function.Param.name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments }) -> (loc, rest), mk_commented_ident rest comments name) name;
         annot = annot_ast;
         optional
       });
@@ -996,11 +997,11 @@ let rec convert cx tparams_map = Ast.Type.(function
          Note that call properties using the call property syntax always override
          $call properties. Previously, if both were present, the $call property
          was ignored, but is now left as a named property. *)
-      | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name= "$call"; comments= _ }) ->
+      | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name= "$call"; comments }) ->
           Flow.add_output cx Flow_error.(EDeprecatedCallSyntax loc);
           let (_, t), _ as value_ast = convert cx tparams_map value in
           let t = if optional then Type.optional t else t in
-          let key = Ast.Expression.Object.Property.Identifier ((loc, t), mk_ident "$call") in
+          let key = Ast.Expression.Object.Property.Identifier ((loc, t), mk_commented_ident t comments "$call") in
           props, proto, Some t,
           { prop with Object.Property.key; value = Object.Property.Init value_ast }
       | Ast.Expression.Object.Property.Literal
@@ -1012,8 +1013,8 @@ let rec convert cx tparams_map = Ast.Type.(function
             key = begin match key with
               | Ast.Expression.Object.Property.Literal (_, lit) ->
                 Ast.Expression.Object.Property.Literal ((loc, t), lit)
-              | Ast.Expression.Object.Property.Identifier _ ->
-                Ast.Expression.Object.Property.Identifier ((loc, t), mk_ident name)
+              | Ast.Expression.Object.Property.Identifier (_loc, { Ast.Identifier.comments; _ }) ->
+                Ast.Expression.Object.Property.Identifier ((loc, t), mk_commented_ident t comments name)
               | _ -> assert_false "branch invariant"
             end;
             value = Object.Property.Init value_ast;
@@ -1045,7 +1046,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 
     (* unsafe getter property *)
     | { Object.Property.
-        key = Ast.Expression.Object.Property.Identifier (id_loc, { Ast.Identifier.name; comments= _ });
+        key = Ast.Expression.Object.Property.Identifier (id_loc, { Ast.Identifier.name; comments });
         value = Object.Property.Get (loc, f);
         _method; _ } ->
       Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
@@ -1060,12 +1061,12 @@ let rec convert cx tparams_map = Ast.Type.(function
       let props = Properties.add_getter name (Some id_loc) return_t props in
       props, proto, call_deprecated,
       { prop with Object.Property.
-        key = Ast.Expression.Object.Property.Identifier ((id_loc, return_t), mk_ident name);
+        key = Ast.Expression.Object.Property.Identifier ((id_loc, return_t), mk_commented_ident return_t comments name);
         value = Object.Property.Get (loc, f_ast);
       }
     (* unsafe setter property *)
     | { Object.Property.
-        key = Ast.Expression.Object.Property.Identifier (id_loc, { Ast.Identifier.name; comments= _ });
+        key = Ast.Expression.Object.Property.Identifier (id_loc, { Ast.Identifier.name; comments });
         value = Object.Property.Set (loc, f);
         _method; _ } ->
       Flow_js.add_output cx (FlowError.EUnsafeGettersSetters loc);
@@ -1080,7 +1081,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let props = Properties.add_setter name (Some id_loc) param_t props in
       props, proto, call_deprecated,
       { prop with Object.Property.
-        key = Ast.Expression.Object.Property.Identifier ((id_loc, param_t), mk_ident name);
+        key = Ast.Expression.Object.Property.Identifier ((id_loc, param_t), mk_commented_ident param_t comments name);
         value = Object.Property.Set (loc, f_ast);
       }
     | { Object.Property.
@@ -1266,7 +1267,7 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
   | Qualified (loc, { qualification; id; }) as qualified ->
     let m, qualification =
       convert_qualification ~lookup_mode cx reason_prefix qualification in
-    let id_loc, { Ast.Identifier.name; comments= _ } = id in
+    let id_loc, { Ast.Identifier.name; comments } = id in
     let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
     let reason = mk_reason desc loc in
     let id_reason = mk_reason desc id_loc in
@@ -1276,13 +1277,13 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
       let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
       Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
     ) in
-    t, Qualified (loc, { qualification; id = (id_loc, t), mk_ident name; })
+    t, Qualified (loc, { qualification; id = (id_loc, t), mk_commented_ident t comments name; })
 
-  | Unqualified (loc, { Ast.Identifier.name; comments= _ }) ->
+  | Unqualified (loc, { Ast.Identifier.name; comments }) ->
     let t = Env.get_var ~lookup_mode cx name loc in
     let id_info = name, t, Type_table.Other in
     Type_table.set_info loc id_info (Context.type_table cx);
-    t, Unqualified ((loc, t), mk_ident name)
+    t, Unqualified ((loc, t), mk_commented_ident t comments name)
 )
 
 and mk_func_sig =
@@ -1292,7 +1293,7 @@ and mk_func_sig =
     let (_, t), _ as annot = convert cx tparams_map annot in
     Func_params.add_simple cx ~optional loc (Option.map ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) -> (loc, name)) id) t x,
     (loc, { Param.
-      name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) -> (loc, t), mk_ident name) id;
+      name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments }) -> (loc, t), mk_commented_ident t comments name) id;
       annot;
       optional
     })::rev_param_asts
@@ -1302,7 +1303,7 @@ and mk_func_sig =
     let (_, t), _ as annot = convert cx tparams_map annot in
     Func_params.add_rest cx loc (Option.map ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) -> (loc, name)) id) t x,
     (loc, { Param.
-      name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) -> (loc, t), mk_ident name) id;
+      name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments }) -> (loc, t), mk_commented_ident t comments name) id;
       annot;
       optional
     })
@@ -1424,8 +1425,8 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let id_info = name, t, Type_table.Other in
 
     let name_ast =
-      let loc, { Ast.Identifier.name; comments= _ } = id in
-      (loc, t), mk_ident name
+      let loc, { Ast.Identifier.name; comments } = id in
+      (loc, t), mk_commented_ident t comments name
     in
 
     let ast = (loc, t), {
@@ -1517,18 +1518,18 @@ and add_interface_properties cx tparams_map properties s =
            Note that $call properties always override the call property syntax.
            As before, if both are present, the $call property is used and the call
            property is ignored. *)
-        | _, (Property.Identifier (id_loc, { Ast.Identifier.name= "$call"; comments= _ })),
+        | _, (Property.Identifier (id_loc, { Ast.Identifier.name= "$call"; comments })),
             Ast.Type.Object.Property.Init value when not proto ->
             Flow.add_output cx Flow_error.(EDeprecatedCallSyntax id_loc);
             let (_, t), _ as value_ast = convert cx tparams_map value in
             let t = if optional then Type.optional t else t in
             add_call_deprecated ~static t x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, t), mk_ident "$call");
+              key = Property.Identifier ((id_loc, t), mk_commented_ident t comments "$call");
               value = Object.Property.Init value_ast;
             })
 
-        | true, (Property.Identifier (id_loc, { Ast.Identifier.name; comments= _ })),
+        | true, (Property.Identifier (id_loc, { Ast.Identifier.name; comments })),
             Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func) ->
             let fsig, func_ast = mk_func_sig cx tparams_map loc func in
             let ft = Func_sig.methodtype cx fsig in
@@ -1538,7 +1539,7 @@ and add_interface_properties cx tparams_map properties s =
             in
             append_method fsig x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, ft), mk_ident name);
+              key = Property.Identifier ((id_loc, ft), mk_commented_ident ft comments name);
               value = Object.Property.Init ((func_loc, ft), Function func_ast);
             })
 
@@ -1547,31 +1548,31 @@ and add_interface_properties cx tparams_map properties s =
               Flow_error.(EInternal (loc, MethodNotAFunction));
             x, Tast_utils.error_mapper#object_property_type (loc, prop)
 
-        | false, (Property.Identifier (id_loc, { Ast.Identifier.name; comments= _ })),
+        | false, (Property.Identifier (id_loc, { Ast.Identifier.name; comments })),
             Ast.Type.Object.Property.Init value ->
             let (_, t), _ as value_ast = convert cx tparams_map value in
             let t = if optional then Type.optional t else t in
             let add = if proto then add_proto_field else add_field ~static in
             add name id_loc polarity (Annot t) x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, t), mk_ident name);
+              key = Property.Identifier ((id_loc, t), mk_commented_ident t comments name);
               value = Object.Property.Init value_ast;
             })
 
         (* unsafe getter property *)
-        | _, (Property.Identifier (id_loc, { Ast.Identifier.name; comments= _ })),
+        | _, (Property.Identifier (id_loc, { Ast.Identifier.name; comments })),
             Ast.Type.Object.Property.Get (get_loc, func) ->
             Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
             let fsig, func_ast = mk_func_sig cx tparams_map loc func in
             let prop_t = fsig.Func_sig.return_t in
             add_getter ~static name id_loc fsig x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, prop_t), mk_ident name);
+              key = Property.Identifier ((id_loc, prop_t), mk_commented_ident prop_t comments name);
               value = Object.Property.Get (get_loc, func_ast);
             })
 
         (* unsafe setter property *)
-        | _, (Property.Identifier (id_loc, { Ast.Identifier.name; comments= _ })),
+        | _, (Property.Identifier (id_loc, { Ast.Identifier.name; comments })),
             Ast.Type.Object.Property.Set (set_loc, func) ->
             Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
             let fsig, func_ast = mk_func_sig cx tparams_map loc func in
@@ -1583,7 +1584,7 @@ and add_interface_properties cx tparams_map properties s =
             | _ -> AnyT.at AnyError id_loc (* error case: report any ok *) in
             add_setter ~static name id_loc fsig x,
             Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, prop_t), mk_ident name);
+              key = Property.Identifier ((id_loc, prop_t), mk_commented_ident prop_t comments name);
               value = Object.Property.Set (set_loc, func_ast);
             })
         )
@@ -1629,7 +1630,7 @@ let mk_super cx tparams_map loc c targs =
 let mk_interface_sig cx reason decl =
   let open Class_sig in
   let { Ast.Statement.Interface.
-    id = id_loc, { Ast.Identifier.name= id_name; comments= _ };
+    id = id_loc, { Ast.Identifier.name= id_name; comments };
     tparams;
     body = (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact });
     extends;
@@ -1667,7 +1668,7 @@ let mk_interface_sig cx reason decl =
 
   iface_sig, self,
   { Ast.Statement.Interface.
-    id = (id_loc, self), mk_ident id_name;
+    id = (id_loc, self), mk_commented_ident self comments id_name;
     tparams = tparams_ast;
     extends = extends_ast;
     body = body_loc, { Ast.Type.Object.exact; properties; inexact = false };
@@ -1699,7 +1700,7 @@ let mk_declare_class_sig =
 
   fun cx reason decl ->
     let { Ast.Statement.DeclareClass.
-      id = (id_loc, { Ast.Identifier.name= id_name; comments= _ }) as ident;
+      id = (id_loc, { Ast.Identifier.name= id_name; comments }) as ident;
       tparams;
       body = body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact };
       extends;
@@ -1740,7 +1741,7 @@ let mk_declare_class_sig =
       let implements, implements_ast =
         implements
         |> Core_list.map ~f:(fun (loc, i) ->
-            let { Ast.Class.Implements.id = (id_loc, { Ast.Identifier.name; comments= _ }); targs } = i in
+            let { Ast.Class.Implements.id = (id_loc, { Ast.Identifier.name; comments }); targs } = i in
             let c = Env.get_var ~lookup_mode:Env.LookupMode.ForType cx name id_loc in
             let typeapp, targs = match targs with
             | None -> (loc, c, None), None
@@ -1748,7 +1749,7 @@ let mk_declare_class_sig =
               let ts, targs_ast = convert_list cx tparams_map targs in
               (loc, c, Some ts), Some (targs_loc, targs_ast)
             in
-            typeapp, (loc, { Ast.Class.Implements.id = (id_loc, c), mk_ident name; targs })
+            typeapp, (loc, { Ast.Class.Implements.id = (id_loc, c), mk_commented_ident c comments name; targs })
         )
         |> List.split in
       let super =
@@ -1778,7 +1779,7 @@ let mk_declare_class_sig =
     in
     iface_sig, self,
     { Ast.Statement.DeclareClass.
-      id = (id_loc, self), mk_ident id_name;
+      id = (id_loc, self), mk_commented_ident self comments id_name;
       tparams = tparam_asts;
       body = body_loc, { Ast.Type.Object.properties; exact; inexact = false };
       extends = extends_ast;

@@ -106,13 +106,13 @@ let array_rest_element _cx acc i loc =
   let default = Option.map default (Default.arr_rest i reason) in
   { acc with parent; current; default }
 
-let object_named_property cx acc loc x =
+let object_named_property cx acc loc x comments =
   let { current; init; default; _ } = acc in
   let reason = mk_reason (RProperty (Some x)) loc in
   let init = Option.map init (fun init ->
     loc, Ast.Expression.(Member Member.({
       _object = init;
-      property = PropertyIdentifier (Flow_ast_utils.ident_of_source (loc, x));
+      property = PropertyIdentifier (loc, { Ast.Identifier.name= x; comments });
     }))
   ) in
   let refinement = Option.bind init (fun init ->
@@ -177,15 +177,16 @@ let object_rest_property _cx acc xs loc =
 let object_property cx ~expr acc xs (key: (ALoc.t, ALoc.t) Ast.Pattern.Object.Property.key) =
   let open Ast.Pattern.Object in
   match key with
-  | Property.Identifier (loc, { Ast.Identifier.name = x; comments = _ }) ->
-    let acc = object_named_property cx acc loc x in
+  | Property.Identifier (loc, { Ast.Identifier.name = x; comments }) ->
+    let acc = object_named_property cx acc loc x comments in
+    let comments = Flow_ast_utils.map_comments_opt ~f:(fun loc -> loc, acc.current) comments in
     acc, x::xs,
     Property.Identifier ((loc, acc.current), {
       Ast.Identifier.name = x;
-      comments = None
+      comments
     })
   | Property.Literal (loc, ({ Ast.Literal.value = Ast.Literal.String x; _ } as lit)) ->
-    let acc = object_named_property cx acc loc x in
+    let acc = object_named_property cx acc loc x None in
     acc, x::xs,
     Property.Literal (loc, lit)
   | Property.Computed e ->
@@ -240,8 +241,9 @@ let rec pattern cx ~expr ~f acc (loc, p) =
     let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
     Object { Object.properties; annot }
   | Identifier { Identifier.name = id; optional; annot } ->
-    let id_loc, { Ast.Identifier.name; comments = _ } = id in
-    let id = (id_loc, acc.current), { Ast.Identifier.name; comments = None } in
+    let id_loc, { Ast.Identifier.name; comments } = id in
+    let comments = Flow_ast_utils.map_comments_opt ~f:(fun loc -> loc, acc.current) comments in
+    let id = (id_loc, acc.current), { Ast.Identifier.name; comments } in
     let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
     identifier cx ~f acc id_loc name;
     Identifier { Identifier.name = id; optional; annot }

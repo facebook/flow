@@ -54,6 +54,16 @@ val mk_no_comments:
   'a ->
   ('loc, 'a) Flow_ast.Syntax.t
 
+val map_comments:
+  f:('a -> 'b) ->
+  ('a, 'internal) Flow_ast.Syntax.t ->
+  ('b, 'internal) Flow_ast.Syntax.t
+
+val map_comments_opt:
+  f:('a -> 'b) ->
+  ('a, 'internal) Flow_ast.Syntax.t option ->
+  ('b, 'internal) Flow_ast.Syntax.t option
+
 module ExpressionSort: sig
   type t =
     | Array
