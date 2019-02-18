@@ -51,6 +51,7 @@ end
 let identifier_name env =
   let open Token in
   let loc = Peek.loc env in
+  let leading = Peek.comments env in
   let name = match Peek.token env with
   (* obviously, Identifier is a valid IdentifierName *)
   | T_IDENTIFIER { value; _ } -> value
@@ -123,7 +124,12 @@ let identifier_name env =
   | _ -> error_unexpected env; ""
   in
   Eat.token env;
-  Flow_ast_utils.ident_of_source (loc, name)
+  let trailing = Peek.comments env in
+  let comments = match leading, trailing with
+    | [], [] -> None
+    | _, _ -> Some (Flow_ast_utils.mk_comments ~leading ~trailing ())
+  in
+  (loc, { Identifier.name; comments })
 
 (**
  * The abstract operation IsLabelledFunction
