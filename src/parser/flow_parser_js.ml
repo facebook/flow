@@ -42,6 +42,7 @@ end = struct
 end
 
 module Translate = Estree_translator.Translate (JsTranslator) (struct
+  let include_interned_comments = false
   let include_comments = true
   let include_locs = true
 end)

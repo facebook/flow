@@ -30,6 +30,8 @@ end
 
 module Translate = Estree_translator.Translate (AbstractTranslator) (struct
   (* TODO: make these configurable via CLI flags *)
+
+  let include_interned_comments = false
   let include_comments = true
   let include_locs = true
 end)

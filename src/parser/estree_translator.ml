@@ -10,6 +10,8 @@ module Ast = Flow_ast
 module type Config = sig
   val include_locs: bool
   val include_comments: bool
+  (* FIXME(festevezga, T39098154) Temporary flag while we're migrating from one approach to another *)
+  val include_interned_comments: bool
 end
 
 module Translate (Impl : Translator_intf.S) (Config : Config) : (sig
@@ -83,8 +85,8 @@ end with type t = Impl.t) = struct
       ]
     ) in
 
-    let node _type location props =
-      let prefix =
+    let rec node _type location ?comments props =
+      let locs =
         if Config.include_locs then
           (* sorted backwards due to the rev_append below *)
           let range = match offset_table with
@@ -93,15 +95,35 @@ end with type t = Impl.t) = struct
           in
           range @ [
             "loc", loc location;
-            "type", string _type;
           ]
         else
-          [ "type", string _type; ]
+          []
       in
+      let comments =
+        let open Ast.Syntax in
+        match Config.include_interned_comments, comments with
+        | true, Some c ->
+          (match c with
+          | { leading= _::_ as l; trailing= _::_ as t; _ } ->
+            [
+              "leadingComments", comment_list l;
+              "trailingComments", comment_list t;
+            ]
+          | { leading= _::_ as l ; trailing= []; _ } ->
+            [
+              "leadingComments", comment_list l;
+            ]
+          | { leading= []; trailing= _::_ as t; _ } ->
+            [
+              "trailingComments", comment_list t;
+            ]
+          | _ -> [])
+        | _, _ -> []
+      in
+      let prefix = locs @ comments @ [ "type", string _type; ] in
       obj (List.rev_append prefix props)
-    in
 
-    let rec program (loc, statements, comments) =
+    and program (loc, statements, comments) =
       let body = statement_list statements in
       let props =
         if Config.include_comments then [ "body", body; "comments", comment_list comments; ]
@@ -554,8 +576,8 @@ end with type t = Impl.t) = struct
         "typeParameters", option type_parameter_declaration tparams;
       ]
 
-    and identifier (loc, { Identifier.name; comments= _ }) =
-      node "Identifier" loc [
+    and identifier (loc, { Identifier.name; comments }) =
+      node "Identifier" ?comments loc [
         "name", string name;
         "typeAnnotation", null;
         "optional", bool false;
