@@ -117,21 +117,23 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method t_comment ((annot, c): 'T Ast.Comment.t) : 'U Ast.Comment.t =
     this#on_type_annot annot, c
 
-  method syntax (attached: ('M, unit) Ast.Syntax.t)
-                         : ('N, unit) Ast.Syntax.t =
-    let open Ast.Syntax in
-    let { leading; trailing; internal } = attached in
-    let leading' = List.map this#comment leading in
-    let trailing' = List.map this#comment trailing in
-    { leading = leading'; trailing = trailing'; internal }
+  method syntax: 'internal. ('M, 'internal) Ast.Syntax.t ->
+                            ('N, 'internal) Ast.Syntax.t =
+    fun attached ->
+      let open Ast.Syntax in
+      let { leading; trailing; internal } = attached in
+      let leading' = List.map this#comment leading in
+      let trailing' = List.map this#comment trailing in
+      { leading = leading'; trailing = trailing'; internal }
 
-  method t_syntax (attached: ('T, unit) Ast.Syntax.t)
-                           : ('U, unit) Ast.Syntax.t =
-    let open Ast.Syntax in
-    let { leading; trailing; internal } = attached in
-    let leading' = List.map this#t_comment leading in
-    let trailing' = List.map this#t_comment trailing in
-    { leading = leading'; trailing = trailing'; internal }
+  method t_syntax: 'internal. ('T, 'internal) Ast.Syntax.t ->
+                             ('U, 'internal) Ast.Syntax.t =
+    fun attached ->
+      let open Ast.Syntax in
+      let { leading; trailing; internal } = attached in
+      let leading' = List.map this#t_comment leading in
+      let trailing' = List.map this#t_comment trailing in
+      { leading = leading'; trailing = trailing'; internal }
 
   method expression ((annot, expr'): ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
     let open Ast.Expression in

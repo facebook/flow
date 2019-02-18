@@ -151,6 +151,20 @@ class ['loc] mapper = object(this)
 
   method comment (c: 'loc Flow_ast.Comment.t) = c
 
+  method syntax_opt: 'internal. ('loc, 'internal) Flow_ast.Syntax.t option ->
+                               ('loc, 'internal) Flow_ast.Syntax.t option =
+    map_opt this#syntax
+
+  method syntax: 'internal. ('loc, 'internal) Flow_ast.Syntax.t ->
+                            ('loc, 'internal) Flow_ast.Syntax.t =
+    fun attached ->
+      let open Flow_ast.Syntax in
+      let { leading; trailing; internal } = attached in
+      let leading' = ListUtils.ident_map this#comment leading in
+      let trailing' = ListUtils.ident_map this#comment trailing in
+      if leading == leading' && trailing == trailing' then attached
+      else { leading= leading'; trailing= trailing'; internal }
+
   method expression (expr: ('loc, 'loc) Flow_ast.Expression.t) =
     let open Flow_ast.Expression in
     match expr with

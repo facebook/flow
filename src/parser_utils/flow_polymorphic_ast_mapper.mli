@@ -54,8 +54,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Class.Property.t' -> ('N, 'U) Ast.Class.Property.t'
     method comment : 'M Ast.Comment.t -> 'N Ast.Comment.t
     method t_comment : 'T Ast.Comment.t -> 'U Ast.Comment.t
-    method syntax : ('M, unit) Ast.Syntax.t -> ('N, unit) Ast.Syntax.t
-    method t_syntax : ('T, unit) Ast.Syntax.t -> ('U, unit) Ast.Syntax.t
+    method syntax : 'internal. ('M, 'internal) Ast.Syntax.t -> ('N, 'internal) Ast.Syntax.t
+    method t_syntax : 'internal. ('T, 'internal) Ast.Syntax.t -> ('U, 'internal) Ast.Syntax.t
     method comprehension :
       ('M, 'T) Ast.Expression.Comprehension.t ->
       ('N, 'U) Ast.Expression.Comprehension.t
