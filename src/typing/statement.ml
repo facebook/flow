@@ -471,10 +471,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
   let interface_helper cx loc (iface_sig, self) =
     let def_reason = mk_reason (desc_of_t self) loc in
-    iface_sig |> Class_sig.generate_tests cx (fun iface_sig ->
+    Class_sig.generate_tests cx (fun iface_sig ->
       Class_sig.check_super cx def_reason iface_sig;
       Class_sig.check_implements cx def_reason iface_sig
-    ) |> ignore (* TODO(vijayramamurthy) *);
+    ) iface_sig;
     let t = Class_sig.classtype ~check_polarity:false cx iface_sig in
     Flow.unify cx self t;
     Type_table.set (Context.type_table cx) loc t;
