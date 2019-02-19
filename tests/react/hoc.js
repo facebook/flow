@@ -6,6 +6,7 @@ function myHOC(
   Component: React$ComponentType<{foo: number, bar: number}>,
 ): React$ComponentType<{foo: number}> {
   return class extends React.Component<{foo: number}, {bar: number}> {
+    static propTypes = { ...Component.propTypes, bar: undefined };
     state = {bar: 2};
     render() {
       <Component />; // Error: `foo` is required.

@@ -253,11 +253,11 @@ References:
    create_element.js:5:94
      5| declare var C: React$AbstractComponent<{+foo?: number, +bar: number | string, +baz: number}, number>;
                                                                                                      ^^^^^^ [2]
-   <BUILTINS>/react.js:240:6
-   240|   ): {current: null | T};
+   <BUILTINS>/react.js:241:6
+   241|   ): {current: null | T};
              ^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:195:6
-   195|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:196:6
+   196|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -275,11 +275,11 @@ References:
    create_element.js:19:49
     19| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
                                                         ^^^^^^^^ [1]
-   <BUILTINS>/react.js:188:26
-   188| declare type React$Key = string | number;
+   <BUILTINS>/react.js:189:26
+   189| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:188:35
-   188| declare type React$Key = string | number;
+   <BUILTINS>/react.js:189:35
+   189| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -514,7 +514,8 @@ References:
    134|   // This is only on function components, but trying to access name when
    135|   // displayName is undefined is a common pattern.
    136|   name?: ?string,
-   137| };
+   137|   propTypes?: any,
+   138| };
         ^ [1]
 
 
@@ -548,7 +549,8 @@ References:
    134|   // This is only on function components, but trying to access name when
    135|   // displayName is undefined is a common pattern.
    136|   name?: ?string,
-   137| };
+   137|   propTypes?: any,
+   138| };
         ^ [1]
 
 
