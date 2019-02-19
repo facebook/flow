@@ -40,6 +40,9 @@ $ bundle install
 
 ### Instructions
 
+First, make sure to follow the instructions on building Flow in the root
+directory of this repository.
+
 Use Jekyll to serve the website locally (by default, at
 `http://localhost:8080`):
 
