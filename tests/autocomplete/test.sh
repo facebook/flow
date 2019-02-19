@@ -98,3 +98,7 @@ assert_ok \
 printf "idx.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty idx.js 12 28 < idx.js
+
+printf "generic_alias.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty generic_alias.js 7 5 < generic_alias.js
