@@ -23,15 +23,15 @@ flow_js:
 
 static/master/flow.js:
 	mkdir -p $(dir $@)
-	(cd $(dir $@); ln -sf "../../../bin/flow.js" "flow.js")
+	(cd $(dir $@); cp "../../../bin/flow.js" "flow.js")
 
 static/master/flowlib:
 	mkdir -p $(dir $@)
-	(cd $(dir $@); ln -sf "../../../lib" "flowlib")
+	(cd $(dir $@); cp -r "../../../lib" "flowlib")
 
 symlinks: static/master/flow.js static/master/flowlib
 
-serve: test-jekyll symlinks
+serve: test-jekyll flow_js symlinks
 	@bundle exec jekyll serve --host="::" --port=8080
 
 build: test-jekyll symlinks
