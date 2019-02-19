@@ -29,18 +29,18 @@ static/master/flowlib:
 	mkdir -p $(dir $@)
 	(cd $(dir $@); cp -r "../../../lib" "flowlib")
 
-symlinks: static/master/flow.js static/master/flowlib
+copies: static/master/flow.js static/master/flowlib
 
-serve: test-jekyll flow_js symlinks
+serve: test-jekyll flow_js copies
 	@bundle exec jekyll serve --host="::" --port=8080
 
-build: test-jekyll symlinks
+build: test-jekyll copies
 	bundle exec jekyll build $(BUILD_FLAGS)
 
-serve-production: test-jekyll flow_js symlinks
+serve-production: test-jekyll flow_js copies
 	@JEKYLL_ENV=production bundle exec jekyll serve --host="::" --port=8080
 
-build-production: test-jekyll flow_js symlinks
+build-production: test-jekyll flow_js copies
 	@JEKYLL_ENV=production bundle exec jekyll build $(BUILD_FLAGS)
 
 # crowdin-sync: test-crowdin
