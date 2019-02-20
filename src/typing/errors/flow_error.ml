@@ -10,6 +10,18 @@ open Utils_js
 open Reason
 open Error_message
 
+type 'loc t = {
+  loc: 'loc;
+  msg : Error_message.t;
+  source_file : File_key.t;
+  trace_reasons : Reason.reason list;
+}
+
+let loc_of_error { loc; _ } = loc
+let msg_of_error { msg; _ } = msg
+let source_file { source_file; _ } = source_file
+let trace_reasons { trace_reasons; _} = trace_reasons
+
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
