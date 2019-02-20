@@ -6248,13 +6248,10 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   (match ldict, udict with
     | Some {key = lk; value = lv; dict_polarity = lpolarity; _},
       Some {key = uk; value = uv; dict_polarity = upolarity; _} ->
-      (* Don't report polarity errors when checking the indexer key. We would
-       * report these errors again a second time when checking values. *)
-      rec_flow_p cx trace ~report_polarity:false ~use_op:(Frame (IndexerKeyCompatibility {
+      rec_flow_t cx trace ~use_op:(Frame (IndexerKeyCompatibility {
         lower = lreason;
         upper = ureason;
-      }, use_op)) lreason ureason (Computed uk)
-        (Field (None, lk, lpolarity), Field (None, uk, upolarity));
+      }, use_op)) (uk, lk);
       rec_flow_p cx trace ~use_op:(Frame (PropertyCompatibility {
         prop = None;
         lower = lreason;
@@ -7396,7 +7393,7 @@ and check_polarity cx ?trace polarity = function
     check_polarity_propmap cx ?trace polarity obj.props_tmap;
     (match obj.dict_t with
     | Some { key; value; dict_polarity; _ } ->
-      check_polarity cx ?trace Neutral key;
+      check_polarity cx ?trace (Polarity.inv polarity) key;
       check_polarity cx ?trace (Polarity.mult (polarity, dict_polarity)) value
     | None -> ())
 
@@ -10706,7 +10703,7 @@ and rec_flow cx trace (t1, t2) =
 and rec_flow_t cx trace ?(use_op=unknown_use) (t1, t2) =
   rec_flow cx trace (t1, UseT (use_op, t2))
 
-and flow_opt_p cx ?trace ~use_op ~report_polarity lreason ureason propref =
+and flow_opt_p cx ?trace ~use_op lreason ureason propref =
   function
   (* unification cases *)
   | Field (_, lt, Neutral),
@@ -10718,7 +10715,7 @@ and flow_opt_p cx ?trace ~use_op ~report_polarity lreason ureason propref =
     (match Property.read_t lp, Property.read_t up with
     | Some lt, Some ut ->
       flow_opt cx ?trace (lt, UseT (use_op, ut))
-    | None, Some _ when report_polarity ->
+    | None, Some _ ->
       add_output cx ?trace (Error_message.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up),
@@ -10727,15 +10724,15 @@ and flow_opt_p cx ?trace ~use_op ~report_polarity lreason ureason propref =
     (match Property.write_t lp, Property.write_t up with
     | Some lt, Some ut ->
       flow_opt cx ?trace (ut, UseT (use_op, lt))
-    | None, Some _ when report_polarity ->
+    | None, Some _ ->
       add_output cx ?trace (Error_message.EPropPolarityMismatch (
         (lreason, ureason), x,
         (Property.polarity lp, Property.polarity up),
         use_op))
     | _ -> ())
 
-and rec_flow_p cx trace ?(use_op=unknown_use) ?(report_polarity=true) =
-  flow_opt_p cx ~trace ~use_op ~report_polarity
+and rec_flow_p cx trace ?(use_op=unknown_use) =
+  flow_opt_p cx ~trace ~use_op
 
 (* Ideally this function would not be required: either we call `flow` from
    outside without a trace (see below), or we call one of the functions above
@@ -10777,7 +10774,7 @@ and flow_t cx (t1, t2) =
   flow cx (t1, UseT (unknown_use, t2))
 
 and flow_p cx ?(use_op=unknown_use) lreason ureason propref props =
-  flow_opt_p cx ~use_op ~report_polarity:true lreason ureason propref props
+  flow_opt_p cx ~use_op lreason ureason propref props
 
 and tvar_with_constraint cx ?trace ?(derivable=false) u =
   let reason = reason_of_use_t u in
@@ -11217,7 +11214,11 @@ and object_kit =
       let (r, props, dict, flags) = slice in
 
       let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
-      let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+      let dict = match dict with
+        | Some { dict_polarity = Negative; _ } -> None
+        | Some dict -> Some { dict with dict_polarity = polarity }
+        | None -> None
+      in
       let call = None in
       let id = Context.make_property_map cx props in
       let proto = ObjProtoT reason in
@@ -11478,8 +11479,7 @@ and object_kit =
     let id, dict =
       let props = Context.find_props cx id in
       match SMap.get "$key" props, SMap.get "$value" props with
-      | Some (Field (_, key, polarity)), Some (Field (_, value, polarity'))
-        when polarity = polarity' ->
+      | Some (Field (_, key, _)), Some (Field (_, value, polarity)) ->
         let props = props |> SMap.remove "$key" |> SMap.remove "$value" in
         let id = Context.make_property_map cx props in
         let dict = {dict_name = None; key; value; dict_polarity = polarity} in

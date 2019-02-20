@@ -134,7 +134,7 @@ let add_field ~static name loc polarity field x =
 let add_indexer ~static polarity ~key ~value x =
   let kloc, k = key in
   let vloc, v = value in
-  x |> add_field ~static "$key" kloc polarity (Annot k)
+  x |> add_field ~static "$key" kloc Type.Negative (Annot k)
     |> add_field ~static "$value" vloc polarity (Annot v)
 
 let add_name_field x =
