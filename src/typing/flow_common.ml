@@ -15,7 +15,7 @@ module type ASSERT_GROUND = sig
 end
 
 module type S = sig
-  val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
+  val add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit
   val check_polarity: Context.t -> ?trace:Trace.t -> polarity -> Type.t -> unit
   val eval_selector: Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.selector -> int ->
     Type.t

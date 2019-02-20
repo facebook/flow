@@ -41,7 +41,7 @@ let regenerate =
         if not (FilenameSet.mem source_file deps)
         then begin
           let err =
-            let msg = Flow_error.EUnusedSuppression (ALoc.of_loc loc) in
+            let msg = Error_message.EUnusedSuppression (ALoc.of_loc loc) in
             Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg in
           let err = Errors.concretize_printable_error err in
           let file_warnings = FilenameMap.get source_file warnings

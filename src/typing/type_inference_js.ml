@@ -9,7 +9,6 @@ module Ast = Flow_ast
 
 (* infer phase services *)
 
-module FlowError = Flow_error
 module ImpExp = Import_export
 module Utils = Utils_js
 
@@ -29,7 +28,7 @@ let infer_core cx statements =
   | Abnormal.Exn (Abnormal.Stmts stmts, _) ->
     (* should never happen *)
     let loc = Loc.({ none with source = Some (Context.file cx) }) |> ALoc.of_loc in
-    Flow_js.add_output cx FlowError.(EInternal (loc, AbnormalControlFlow));
+    Flow_js.add_output cx Error_message.(EInternal (loc, AbnormalControlFlow));
     stmts
   | Abnormal.Exn _ ->
     failwith "Flow bug: Statement.toplevels threw with non-stmts payload"
@@ -172,7 +171,7 @@ let scan_for_lint_suppressions =
   in
 
   let add_error cx (loc, kind) =
-    FlowError.ELintSetting (loc, kind) |> Flow_js.add_output cx
+    Error_message.ELintSetting (loc, kind) |> Flow_js.add_output cx
   in
 
   let parse_kind loc_str =

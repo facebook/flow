@@ -2391,8 +2391,8 @@ let string_of_default = Default.fold
   ~cons:(fun str default ->
     spf "Cons (%s) (%s)" str default)
 
-let dump_flow_error =
-  let open Flow_error in
+let dump_error_message =
+  let open Error_message in
   let string_of_use_op = string_of_use_op_rec in
   let dump_internal_error = function
   | PackageHeapNotFound _ -> "PackageHeapNotFound"
@@ -2414,7 +2414,7 @@ let dump_flow_error =
   | ShadowWriteComputed -> "ShadowWriteComputed"
   | RestParameterNotIdentifierPattern -> "RestParameterNotIdentifierPattern"
   | InterfaceTypeSpread -> "InterfaceTypeSpread"
-  | Flow_error.DebugThrow -> "DebugThrow"
+  | Error_message.DebugThrow -> "DebugThrow"
   | MergeTimeout _ -> "MergeTimeout"
   | MergeJobException _ -> "MergeJobException"
   | UnexpectedTypeapp _ -> "UnexpectedTypeapp"

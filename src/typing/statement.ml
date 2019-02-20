@@ -436,7 +436,7 @@ and toplevels =
       (* control flow exit out of a flat list:
          check for unreachable code and rethrow *)
       let warn_unreachable loc =
-        Flow.add_output cx (Flow_error.EUnreachable loc) in
+        Flow.add_output cx (Error_message.EUnreachable loc) in
       let rest = Core_list.map ~f:Ast.Statement.(fun stmt ->
         match stmt with
         | (_, Empty) as stmt -> stmt
@@ -540,12 +540,12 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
         | loc, Identifier _ ->
             Flow.add_output cx
-              Flow_error.(EUnsupportedSyntax (loc, CatchParameterAnnotation));
+              Error_message.(EUnsupportedSyntax (loc, CatchParameterAnnotation));
             Tast_utils.error_mapper#catch_clause catch_clause, None
 
         | loc, _ ->
             Flow.add_output cx
-              Flow_error.(EUnsupportedSyntax (loc, CatchParameterDeclaration));
+              Error_message.(EUnsupportedSyntax (loc, CatchParameterDeclaration));
             Tast_utils.error_mapper#catch_clause catch_clause, None
       )
       | None ->
@@ -966,7 +966,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         if breaks_to_end then begin match break_opt with
           | None ->
             Flow.add_output cx
-              Flow_error.(EInternal (loc, BreakEnvMissingForCase))
+              Error_message.(EInternal (loc, BreakEnvMissingForCase))
           | Some break_env ->
             update_switch_state (break_env, case_writes, test_refis, loc)
         end;
@@ -1547,7 +1547,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               })
 
           | _ ->
-              Flow.add_output cx Flow_error.(EInternal (loc, ForInLHS));
+              Flow.add_output cx Error_message.(EInternal (loc, ForInLHS));
               Tast_utils.error_mapper#for_in_statement_lhs left
         in
 
@@ -1650,7 +1650,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               )
 
           | _ ->
-              Flow.add_output cx Flow_error.(EInternal (loc, ForOfLHS));
+              Flow.add_output cx Error_message.(EInternal (loc, ForOfLHS));
               Tast_utils.error_mapper#for_of_statement_lhs left
         in
 
@@ -2467,7 +2467,7 @@ and object_prop cx map prop = Ast.Expression.Object.(
         })) as key;
       value = (vloc, func);
     }) ->
-    Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
+    Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
     let function_type, func = mk_function_expression None cx vloc func in
     let return_t = Type.extract_getter_type function_type in
     let id_info = name, return_t, Type_table.Other in
@@ -2488,7 +2488,7 @@ and object_prop cx map prop = Ast.Expression.Object.(
         })) as key;
       value = vloc, func;
     }) ->
-    Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc);
+    Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
     let function_type, func = mk_function_expression None cx vloc func in
     let param_t = Type.extract_setter_type function_type in
     let id_info = name, param_t, Type_table.Other in
@@ -2505,7 +2505,7 @@ and object_prop cx map prop = Ast.Expression.Object.(
   | Property (loc, Property.Get { key = Property.Literal _; _ })
   | Property (loc, Property.Set { key = Property.Literal _; _ }) ->
     Flow.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
+      Error_message.(EUnsupportedSyntax (loc, ObjectPropertyLiteralNonString));
     map, Tast_utils.error_mapper#object_property_or_spread_property prop
 
   (* computed getters and setters aren't supported yet regardless of the
@@ -2513,7 +2513,7 @@ and object_prop cx map prop = Ast.Expression.Object.(
   | Property (loc, Property.Get { key = Property.Computed _; _ })
   | Property (loc, Property.Set { key = Property.Computed _; _ }) ->
     Flow.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
+      Error_message.(EUnsupportedSyntax (loc, ObjectPropertyComputedGetSet));
     map, Tast_utils.error_mapper#object_property_or_spread_property prop
 
   (* computed LHS silently ignored for now *)
@@ -2971,7 +2971,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           arguments = arges
         }
       | Some (targts_loc, targts) ->
-        Flow.add_output cx Flow_error.(ECallTypeArity {
+        Flow.add_output cx Error_message.(ECallTypeArity {
           call_loc = loc;
           is_new = true;
           reason_arity = Reason.(locationless_reason (RType "Function"));
@@ -2997,9 +2997,9 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let result = match targts, args with
       | Some (loc, ([t], [elem_t])), [Arg argt, arg] -> Ok (Some (loc, elem_t, t), argt, arg)
       | None, [Arg argt, arg] -> Ok (None, argt, arg)
-      | None, _ -> Error (Flow_error.EUseArrayLiteral loc)
+      | None, _ -> Error (Error_message.EUseArrayLiteral loc)
       | Some _, _ ->
-        Error Flow_error.(ECallTypeArity {
+        Error Error_message.(ECallTypeArity {
           call_loc = loc;
           is_new = true;
           reason_arity = Reason.(locationless_reason (RType n));
@@ -3158,7 +3158,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
 
       (match predicate with
       | Some (_, Ast.Type.Predicate.Inferred) ->
-          Flow.add_output cx Flow_error.(
+          Flow.add_output cx Error_message.(
             EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)
           )
       | _ -> ());
@@ -3328,17 +3328,17 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   (* TODO *)
   | Comprehension _ ->
     Flow.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, ComprehensionExpression));
+      Error_message.(EUnsupportedSyntax (loc, ComprehensionExpression));
     Tast_utils.unimplemented_mapper#expression ex
 
   | Generator _ ->
     Flow.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, GeneratorExpression));
+      Error_message.(EUnsupportedSyntax (loc, GeneratorExpression));
     Tast_utils.unimplemented_mapper#expression ex
 
   | MetaProperty _->
     Flow.add_output cx
-      Flow_error.(EUnsupportedSyntax (loc, MetaPropertyExpression));
+      Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
     Tast_utils.unimplemented_mapper#expression ex
 
   | Import arg -> (
@@ -3372,7 +3372,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       if not ignore_non_literals
       then
         Flow.add_output cx
-          Flow_error.(EUnsupportedSyntax (loc, ImportDynamicArgument));
+          Error_message.(EUnsupportedSyntax (loc, ImportDynamicArgument));
       Tast_utils.unimplemented_mapper#expression ex
   )
 )
@@ -3403,7 +3403,7 @@ and subscript =
         begin match callee with
         | _, Member _
         | _, OptionalMember _ ->
-          Flow.add_output cx Flow_error.(EOptionalChainingMethods loc)
+          Flow.add_output cx Error_message.(EOptionalChainingMethods loc)
         | _ -> ()
         end;
         let opt_state = if optional then NewChain else ContinueChain in
@@ -3454,7 +3454,7 @@ and subscript =
           [ Expression (expression cx lit_exp) ]
         | Some _, _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
-          Flow.add_output cx Flow_error.(ECallTypeArity {
+          Flow.add_output cx Error_message.(ECallTypeArity {
             call_loc = loc;
             is_new = false;
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
@@ -3468,7 +3468,7 @@ and subscript =
           if not ignore_non_literals
           then
             Flow.add_output cx
-              Flow_error.(EUnsupportedSyntax (loc, RequireDynamicArgument));
+              Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
           AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
       ) in
       (* TODO(vijayramamurthy) type of require ? *)
@@ -3515,7 +3515,7 @@ and subscript =
                 let module_tvar = require cx (source_loc, module_name) loc in
                 module_tvar::tvars
             | _ ->
-                Flow.add_output cx Flow_error.(
+                Flow.add_output cx Error_message.(
                   EUnsupportedSyntax (loc, RequireLazyDynamicArgument)
                 );
                 tvars
@@ -3538,7 +3538,7 @@ and subscript =
 
         | Some _, _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
-          Flow.add_output cx Flow_error.(ECallTypeArity {
+          Flow.add_output cx Error_message.(ECallTypeArity {
             call_loc = loc;
             is_new = false;
             reason_arity = Reason.(locationless_reason (RFunction RNormal));
@@ -3549,7 +3549,7 @@ and subscript =
         | _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
           Flow.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
+            Error_message.(EUnsupportedSyntax (loc, RequireLazyDynamicArgument));
           AnyT.at AnyError loc,
           List.map Tast_utils.error_mapper#expression_or_spread arguments
       ) in
@@ -3800,11 +3800,11 @@ and subscript =
           | _, (Spread _)::_ ->
             ignore (Core_list.map ~f:(expression_or_spread cx) arguments);
             Flow.add_output cx
-              Flow_error.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
+              Error_message.(EUnsupportedSyntax (loc, InvariantSpreadArgument));
             List.map Tast_utils.error_mapper#expression_or_spread arguments
           | Some _, _ ->
             ignore (Core_list.map ~f:(expression_or_spread cx) arguments);
-            Flow.add_output cx Flow_error.(ECallTypeArity {
+            Flow.add_output cx Error_message.(ECallTypeArity {
               call_loc = loc;
               is_new = false;
               reason_arity = Reason.(locationless_reason (RFunction RNormal));
@@ -3818,7 +3818,7 @@ and subscript =
     | Call { Call.callee; targs; arguments } ->
         begin match callee with
         | _, OptionalMember _ ->
-          Flow.add_output cx Flow_error.(EOptionalChainingMethods loc)
+          Flow.add_output cx Error_message.(EOptionalChainingMethods loc)
         | _ -> ()
         end;
         let targts, targs = convert_targs cx targs in
@@ -4517,7 +4517,7 @@ and assignment_lhs cx patt =
   | lhs_loc, Ast.Pattern.Object _
   | lhs_loc, Ast.Pattern.Array _
   | lhs_loc, Ast.Pattern.Expression _ ->
-      Flow.add_output cx (Flow_error.EInvalidLHSInAssignment lhs_loc);
+      Flow.add_output cx (Error_message.EInvalidLHSInAssignment lhs_loc);
       Tast_utils.error_mapper#pattern patt
 
 (* traverse simple assignment expressions (`lhs = rhs`) *)
@@ -5111,7 +5111,7 @@ and jsx_desugar cx name component_t props attributes children locs =
       let children = Core_list.map ~f:(function
         | UnresolvedArg a -> a
         | UnresolvedSpreadArg a ->
-            Flow.add_output cx Flow_error.(EUnsupportedSyntax (loc_children, SpreadArgument));
+            Flow.add_output cx Error_message.(EUnsupportedSyntax (loc_children, SpreadArgument));
             reason_of_t a |> AnyT.error
       ) children in
       Tvar.mk_where cx reason (fun tvar ->
@@ -5479,7 +5479,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         begin match pred with
         | Some pred -> result ((loc, bool), reconstruct_ast arg) name t pred sense
         | None ->
-          Flow.add_output cx Flow_error.(EInvalidTypeof (str_loc, typename));
+          Flow.add_output cx Error_message.(EInvalidTypeof (str_loc, typename));
           empty_result ((loc, bool), reconstruct_ast arg)
         end
     | None, arg -> empty_result ((loc, bool), reconstruct_ast arg)
@@ -5782,7 +5782,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       arguments = [Expression arg];
     } -> (
       Option.iter targs ~f:(fun _ ->
-        Flow.add_output cx Flow_error.(ECallTypeArity {
+        Flow.add_output cx Error_message.(ECallTypeArity {
           call_loc = loc;
           is_new = false;
           reason_arity = Reason.(locationless_reason (RFunction RNormal));
@@ -5987,7 +5987,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       | None ->
         (* Since the properties object must be a literal, and literal objects
            can only ever contain neutral fields, this should not happen. *)
-        Flow.add_output cx Flow_error.(
+        Flow.add_output cx Error_message.(
           EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)
         );
         acc
@@ -6057,7 +6057,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       | None ->
         (* Since the properties object must be a literal, and literal objects
            can only ever contain neutral fields, this should not happen. *)
-        Flow.add_output cx Flow_error.(
+        Flow.add_output cx Error_message.(
           EInternal (prop_loc, PropertyDescriptorPropertyCannotBeRead)
         );
       | Some spec ->
@@ -6103,7 +6103,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     _ ->
     let targs = snd (convert_tparam_instantiations cx SMap.empty targs) in
     let args = Core_list.map ~f:(fun arg -> snd (expression_or_spread cx arg)) args in
-    Flow.add_output cx Flow_error.(ECallTypeArity {
+    Flow.add_output cx Error_message.(ECallTypeArity {
       call_loc = loc;
       is_new = false;
       reason_arity = Reason.(locationless_reason (RFunction RNormal));
@@ -6209,7 +6209,7 @@ and mk_class_sig =
     | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
     | Options.ESPROPOSAL_IGNORE -> ()
     | Options.ESPROPOSAL_WARN ->
-      decorators |> List.iter (fun (loc, _) -> Flow.add_output cx (Flow_error.EExperimentalDecorators loc))
+      decorators |> List.iter (fun (loc, _) -> Flow.add_output cx (Error_message.EExperimentalDecorators loc))
   in
 
   let warn_or_ignore_class_properties cx ~static loc =
@@ -6223,7 +6223,7 @@ and mk_class_sig =
     | Options.ESPROPOSAL_IGNORE -> ()
     | Options.ESPROPOSAL_WARN ->
       Flow.add_output cx
-        (Flow_error.EExperimentalClassProperties (loc, static))
+        (Error_message.EExperimentalClassProperties (loc, static))
   in
 
   fun cx name_loc reason self { Ast.Class.
@@ -6323,7 +6323,7 @@ and mk_class_sig =
       warn_or_ignore_decorators cx decorators;
 
       (match kind with
-      | Method.Get | Method.Set -> Flow_js.add_output cx (Flow_error.EUnsafeGettersSetters loc)
+      | Method.Get | Method.Set -> Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc)
       | _ -> ());
 
       let method_sig, reconstruct_func = mk_method cx tparams_map loc func in
@@ -6418,7 +6418,7 @@ and mk_class_sig =
         _
       }) as elem ->
         Flow.add_output cx
-          Flow_error.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
+          Error_message.(EUnsupportedSyntax (loc, ClassPropertyLiteral));
         c, (fun () -> Tast_utils.error_mapper#class_element elem)::rev_elements
 
     (* computed LHS *)
@@ -6431,7 +6431,7 @@ and mk_class_sig =
         _
       }) as elem ->
         Flow.add_output cx
-          Flow_error.(EUnsupportedSyntax (loc, ClassPropertyComputed));
+          Error_message.(EUnsupportedSyntax (loc, ClassPropertyComputed));
         c, (fun () -> Tast_utils.error_mapper#class_element elem)::rev_elements
   ) (class_sig, []) elements
   in
@@ -6508,7 +6508,7 @@ and mk_func_sig =
         })
       | loc, _ ->
         Flow_js.add_output cx
-          Flow_error.(EInternal (loc, RestParameterNotIdentifierPattern));
+          Error_message.(EInternal (loc, RestParameterNotIdentifierPattern));
         params, Tast_utils.error_mapper#pattern patt
     in
     let (params_loc, { Ast.Function.Params.params; rest }) = params in
@@ -6563,7 +6563,7 @@ and mk_func_sig =
           Flow.flow_t cx (fresh_t, return_t);
           fresh_t, Some (loc, Inferred)
       | Some ((loc, Declared _) as pred) ->
-          Flow_js.add_output cx Flow_error.(
+          Flow_js.add_output cx Error_message.(
             EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)
           );
           fst (Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)),
@@ -6649,7 +6649,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
   let { Ast.Statement.DeclareFunction.id; annot; predicate; } = func_decl in
   match predicate with
   | Some (loc, Ast.Type.Predicate.Inferred) ->
-      Flow.add_output cx Flow_error.(
+      Flow.add_output cx Error_message.(
         EUnsupportedSyntax (loc, PredicateDeclarationWithoutExpression)
       );
       None
@@ -6667,7 +6667,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
               | Some name -> name
               | None ->
                   let name_loc = fst annot in
-                  Flow.add_output cx Flow_error.(EUnsupportedSyntax
+                  Flow.add_output cx Error_message.(EUnsupportedSyntax
                     (loc, PredicateDeclarationAnonymousParameters));
                   (name_loc, mk_ident ~comments:None "_")
               in
@@ -6823,5 +6823,5 @@ and warn_or_ignore_optional_chaining optional cx loc =
   then match Context.esproposal_optional_chaining cx with
   | Options.ESPROPOSAL_ENABLE
   | Options.ESPROPOSAL_IGNORE -> ()
-  | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Flow_error.EExperimentalOptionalChaining loc)
+  | Options.ESPROPOSAL_WARN -> Flow.add_output cx (Error_message.EExperimentalOptionalChaining loc)
   else ()

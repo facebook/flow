@@ -113,7 +113,7 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
                else Core_list.map ~f:(fun reason ->
                    repos_reason (def_aloc_of_reason reason) reason)
                  (Nel.to_list !reason_stack) in
-            add_output cx (FlowError.EMissingAnnotation (r, trace_reasons));
+            add_output cx (Error_message.EMissingAnnotation (r, trace_reasons));
             seen
           | Positive ->
             match constraints with

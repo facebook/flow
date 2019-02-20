@@ -15,7 +15,6 @@ open Type
 open Reason
 open Scope
 
-module FlowError = Flow_error
 module Flow = Flow_js
 module Scope_api = Scope_api.With_ALoc
 
@@ -429,10 +428,10 @@ let find_refi_in_var_scope key =
 (* helpers *)
 
 let binding_error msg cx name entry loc =
-  Flow.add_output cx (FlowError.EBindingError (msg, loc, name, entry))
+  Flow.add_output cx (Error_message.EBindingError (msg, loc, name, entry))
 
 let already_bound_error =
-  binding_error FlowError.ENameAlreadyBound
+  binding_error Error_message.ENameAlreadyBound
 
 (* initialization of entries happens during a preliminary pass through a
    scoped region of the AST (dynamic for hoisted things, lexical for
@@ -753,7 +752,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
 (* emit tdz error for value entry *)
 let tdz_error cx name loc v = Entry.(
   (* second clause of error message is due to switch scopes *)
-  let msg = FlowError.EReferencedBeforeDeclaration in
+  let msg = Error_message.EReferencedBeforeDeclaration in
   binding_error msg cx name (Value v) loc
 )
 
@@ -772,7 +771,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
-    let msg = FlowError.ETypeInValuePosition in
+    let msg = Error_message.ETypeInValuePosition in
     binding_error msg cx name entry loc;
     AnyT.at AnyError (entry_loc entry)
 
@@ -917,20 +916,20 @@ let update_var ?(track_ref=false) op cx ~use_op name specific loc =
     Scope.add_entry name update scope;
     Some change
   | Value { Entry.kind = Const ConstVarBinding; _ } ->
-    let msg = FlowError.EConstReassigned in
+    let msg = Error_message.EConstReassigned in
     binding_error msg cx name entry loc;
     None
   | Value { Entry.kind = Const ConstImportBinding; _; } ->
-    let msg = FlowError.EImportReassigned in
+    let msg = Error_message.EImportReassigned in
     binding_error msg cx name entry loc;
     None
   | Value { Entry.kind = Const ConstParamBinding; _ } ->
     (* TODO: remove extra info when surface syntax is added *)
-    let msg = FlowError.EConstParamReassigned in
+    let msg = Error_message.EConstParamReassigned in
     binding_error msg cx name entry loc;
     None
   | Type _ ->
-    let msg = FlowError.ETypeAliasInValuePosition in
+    let msg = Error_message.ETypeAliasInValuePosition in
     binding_error msg cx name entry loc;
     None
   | Class _ -> assert_false "Internal error: update_var called on Class"
@@ -1412,7 +1411,7 @@ let refine_with_preds cx loc preds orig_types =
         | None -> acc
         end
       | _, _ ->
-        Flow.add_output cx (FlowError.ERefineAsValue (refi_reason, name));
+        Flow.add_output cx (Error_message.ERefineAsValue (refi_reason, name));
         acc
       )
     (* for heap refinements, we just add new entries *)

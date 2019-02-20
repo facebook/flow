@@ -76,7 +76,7 @@ val lookup_module: Context.t -> string -> Type.t
 
 (* contexts *)
 val mk_builtins: Context.t -> unit
-val add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit
+val add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit
 
 (* builtins *)
 

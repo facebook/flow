@@ -107,7 +107,7 @@ let package_incompatible ~reader filename ast =
 
 type resolution_acc = {
   mutable paths: SSet.t;
-  mutable errors: Flow_error.error_message list;
+  mutable errors: Error_message.t list;
 }
 
 (* Specification of a module system. Currently this signature is sufficient to
@@ -357,9 +357,9 @@ module Node = struct
               (Files.relative_path project_root_str package_filename)
           in
           if is_included || is_contained_in_root then (
-            Flow_error.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
+            Error_message.(EInternal (loc, PackageHeapNotFound package_relative_to_root))
           ) else (
-            Flow_error.EModuleOutsideRoot (loc, package_relative_to_root)
+            Error_message.EModuleOutsideRoot (loc, package_relative_to_root)
           )
         in
         begin match resolution_acc with

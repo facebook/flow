@@ -255,7 +255,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
         | _ ->
           let loc = aloc_of_reason reason in
           Flow_js.add_output cx
-            Flow_error.(EUnsupportedSyntax (loc, PredicateInvalidBody))
+            Error_message.(EUnsupportedSyntax (loc, PredicateInvalidBody))
       end
     | _ -> ()
   );
@@ -314,7 +314,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
     | Predicate ->
       let loc = aloc_of_reason reason in
       Flow_js.add_output cx
-        Flow_error.(EUnsupportedSyntax (loc, PredicateVoidReturn));
+        Error_message.(EUnsupportedSyntax (loc, PredicateVoidReturn));
       let t = VoidT.at loc in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       use_op, t, None
