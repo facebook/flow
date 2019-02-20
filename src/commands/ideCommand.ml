@@ -84,8 +84,8 @@ module HumanReadable: ClientProtocol = struct
 
   let handle_server_response ~strip_root:_ ~json_version:_ = function
     | Prot.Errors {errors; warnings} ->
-      let err_count = Errors.ConcreteLocErrorSet.cardinal errors in
-      let warn_count = Errors.ConcreteLocErrorSet.cardinal warnings in
+      let err_count = Errors.ConcreteLocPrintableErrorSet.cardinal errors in
+      let warn_count = Errors.ConcreteLocPrintableErrorSet.cardinal warnings in
       print_endline ("Received " ^ (string_of_int err_count) ^ " errors and "
         ^ (string_of_int warn_count) ^ " warnings")
     | Prot.ServerExit _code -> () (* ignored here; used in lspCommand *)

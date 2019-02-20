@@ -56,7 +56,7 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
       | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (L.debug_to_string loc)
 
   end
-  module ErrorSet = Set.Make (Error)
+  module PrintableErrorSet = Set.Make (Error)
 
   module Dep = struct
     type t =
@@ -129,18 +129,18 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
 
   module DepSet = Set.Make (Dep)
 
-  type t = DepSet.t * ErrorSet.t
+  type t = DepSet.t * PrintableErrorSet.t
 
   let join ((deps1, msgs1), (deps2, msgs2)) =
-    DepSet.union deps1 deps2, ErrorSet.union msgs1 msgs2
+    DepSet.union deps1 deps2, PrintableErrorSet.union msgs1 msgs2
 
-  let bot = DepSet.empty, ErrorSet.empty
-  let top msg = DepSet.empty, ErrorSet.singleton msg
+  let bot = DepSet.empty, PrintableErrorSet.empty
+  let top msg = DepSet.empty, PrintableErrorSet.singleton msg
 
   let unreachable = bot
   let todo loc msg = top (Error.TODO (msg, loc))
 
-  let unit dep = DepSet.singleton dep, ErrorSet.empty
+  let unit dep = DepSet.singleton dep, PrintableErrorSet.empty
 
   let type_ atom = unit Dep.(Local (Sort.Type, atom))
   let value atom = unit Dep.(Local (Sort.Value, atom))
@@ -157,7 +157,7 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
     join (deps, f x)
 
   let recurse f (deps, msgs) =
-    DepSet.fold (fun dep msgs -> ErrorSet.union (f dep) msgs) deps msgs
+    DepSet.fold (fun dep msgs -> PrintableErrorSet.union (f dep) msgs) deps msgs
 
   let replace_local_with_dynamic_class (loc, x) (deps, msgs) =
     let acc = DepSet.fold (fun dep acc -> match dep with

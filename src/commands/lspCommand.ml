@@ -855,7 +855,7 @@ let lsp_DocumentIdentifier_to_flow
 let error_to_lsp
     ~(severity: PublishDiagnostics.diagnosticSeverity option)
     ~(default_uri: string)
-    (error: Loc.t Errors.error)
+    (error: Loc.t Errors.printable_error)
   : string * PublishDiagnostics.diagnostic =
   let error = Errors.Lsp_output.lsp_of_error error in
   let location = Flow_lsp_conversions.loc_to_lsp_with_default
@@ -1625,8 +1625,8 @@ begin
       SMap.add ~combine:List.append uri [diagnostic] all in
     (* First construct an SMap from uri to diagnostic list, which gathers together *)
     (* all the errors and warnings per uri *)
-    let all = Errors.ConcreteLocErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
-    let all = Errors.ConcreteLocErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
+    let all = Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
+    let all = Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
     in
     if cenv.c_is_rechecking then
       Ok (do_additional_diagnostics cenv all, LogNotNeeded)

@@ -224,7 +224,7 @@ module type S = sig
     ast:(L.t, L.t) Flow_ast.program ->
     module_ref_prefix:string option ->
     (t, error) result
-  val verified: Signature_builder_deps.ErrorSet.t -> exports_info t' -> t
+  val verified: Signature_builder_deps.PrintableErrorSet.t -> exports_info t' -> t
 
   (* Use for debugging; not for exposing info the the end user *)
   val to_string: t -> string

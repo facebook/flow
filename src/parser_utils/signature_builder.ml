@@ -259,7 +259,7 @@ module Signature = struct
   let verify_and_generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) ~facebook_fbt (env, file_sig) program =
     let errors, _, pruned_env = verify ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (env, file_sig) in
     errors,
-    if Signature_builder_deps.ErrorSet.is_empty errors then
+    if Signature_builder_deps.PrintableErrorSet.is_empty errors then
       generate ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (pruned_env, file_sig) program
     else
       generate ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (env, file_sig) program

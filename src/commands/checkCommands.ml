@@ -17,7 +17,7 @@ let format_errors ~printer ~client_include_warnings options
   (errors, warnings, suppressed_errors) =
 
   let include_warnings = client_include_warnings || Options.should_include_warnings options in
-  let warnings = if include_warnings then warnings else Errors.ConcreteLocErrorSet.empty in
+  let warnings = if include_warnings then warnings else Errors.ConcreteLocPrintableErrorSet.empty in
   let suppressed_errors = if Options.include_suppressions options then suppressed_errors else [] in
 
   let strip_root =
@@ -46,7 +46,7 @@ let format_errors ~printer ~client_include_warnings options
       ()
   | Cli flags ->
     let errors = List.fold_left
-      (fun acc (error, _) -> Errors.ConcreteLocErrorSet.add error acc)
+      (fun acc (error, _) -> Errors.ConcreteLocPrintableErrorSet.add error acc)
       errors
       suppressed_errors
     in

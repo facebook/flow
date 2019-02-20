@@ -167,12 +167,12 @@ module Response = struct
 
   type suggest_result =
   | Suggest_Ok of {
-      tc_errors: Errors.ConcreteLocErrorSet.t;
-      tc_warnings: Errors.ConcreteLocErrorSet.t;
-      suggest_warnings: Errors.ConcreteLocErrorSet.t;
+      tc_errors: Errors.ConcreteLocPrintableErrorSet.t;
+      tc_warnings: Errors.ConcreteLocPrintableErrorSet.t;
+      suggest_warnings: Errors.ConcreteLocPrintableErrorSet.t;
       annotated_program: (Loc.t, Loc.t) Flow_ast.program;
     }
-  | Suggest_Error of Errors.ConcreteLocErrorSet.t
+  | Suggest_Error of Errors.ConcreteLocPrintableErrorSet.t
 
   type suggest_response = (
     suggest_result,
@@ -183,7 +183,7 @@ module Response = struct
   and graph_response_subgraph = (string * string list) list
 
   type gen_flow_files_error =
-    | GenFlowFiles_TypecheckError of {errors: Errors.ErrorSet.t; warnings: Errors.ErrorSet.t}
+    | GenFlowFiles_TypecheckError of {errors: Errors.PrintableErrorSet.t; warnings: Errors.PrintableErrorSet.t}
     | GenFlowFiles_UnexpectedError of string
   type gen_flow_files_result =
     | GenFlowFiles_FlowFile of string
@@ -198,7 +198,7 @@ module Response = struct
 
   type status_response =
   | DIRECTORY_MISMATCH of directory_mismatch
-  | ERRORS of {errors: Errors.ConcreteLocErrorSet.t; warnings: Errors.ConcreteLocErrorSet.t}
+  | ERRORS of {errors: Errors.ConcreteLocPrintableErrorSet.t; warnings: Errors.ConcreteLocPrintableErrorSet.t}
   | NO_ERRORS
   | NOT_COVERED
 

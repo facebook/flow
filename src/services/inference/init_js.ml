@@ -108,7 +108,7 @@ let load_lib_files ~master_cx ~options ~reader files =
             if Inference_utils.well_formed_exports_enabled options lib_file then
               file_sig.File_sig.With_ALoc.tolerable_errors
               |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:lib_file
-              |> Errors.ErrorSet.union errors
+              |> Errors.PrintableErrorSet.union errors
             else
               errors
           in
@@ -143,14 +143,14 @@ let load_lib_files ~master_cx ~options ~reader files =
           | Parsing.File_sig_error error ->
             Inference_utils.set_of_file_sig_error ~source_file:lib_file error
           in
-          let result = lib_file, false, errors, Errors.ErrorSet.empty, Error_suppressions.empty in
+          let result = lib_file, false, errors, Errors.PrintableErrorSet.empty, Error_suppressions.empty in
           exclude_syms, (result :: results)
 
         | Parsing.Parse_skip
             (Parsing.Skip_non_flow_file | Parsing.Skip_resource_file) ->
           (* should never happen *)
-          let errs = Errors.ErrorSet.empty in
-          let warnings = Errors.ErrorSet.empty in
+          let errs = Errors.PrintableErrorSet.empty in
+          let warnings = Errors.PrintableErrorSet.empty in
           let suppressions = Error_suppressions.empty in
           let result = lib_file, false, errs, warnings, suppressions in
           exclude_syms, (result :: results)

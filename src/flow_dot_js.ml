@@ -36,12 +36,12 @@ let parse_content file content =
   in
   if parse_errors <> [] then
     let converted = List.fold_left (fun acc parse_error ->
-      Errors.ErrorSet.add (error_of_parse_error file parse_error) acc
-    ) Errors.ErrorSet.empty parse_errors in
+      Errors.PrintableErrorSet.add (error_of_parse_error file parse_error) acc
+    ) Errors.PrintableErrorSet.empty parse_errors in
     Error converted
   else
     match File_sig.With_Loc.program ~ast ~module_ref_prefix:None with
-    | Error e -> Error (Errors.ErrorSet.singleton (error_of_file_sig_error file e))
+    | Error e -> Error (Errors.PrintableErrorSet.singleton (error_of_file_sig_error file e))
     | Ok fsig -> Ok (ast, fsig)
 
 let array_of_list f lst =
@@ -232,16 +232,16 @@ let check_content ~filename ~content =
     let include_suppressions = Context.include_suppressions cx in
     let errors, warnings, suppressions =
       Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
-    let errors = Errors.concretize_errorset errors in
-    let warnings = Errors.concretize_errorset warnings in
+    let errors = Errors.concretize_printable_errorset errors in
+    let warnings = Errors.concretize_printable_errorset warnings in
     let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
       suppressions errors ~unused:suppressions in
     let warnings, _, _ = Error_suppressions.filter_suppressed_errors
       suppressions warnings ~unused:suppressions
     in errors, warnings
   | Error parse_errors ->
-    let parse_errors = Errors.concretize_errorset parse_errors in
-    parse_errors, Errors.ConcreteLocErrorSet.empty
+    let parse_errors = Errors.concretize_printable_errorset parse_errors in
+    parse_errors, Errors.ConcreteLocPrintableErrorSet.empty
   in
   let strip_root = Some root in
   Errors.Json_output.json_of_errors_with_context

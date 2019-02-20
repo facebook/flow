@@ -65,7 +65,7 @@ let json_of_request = let open Hh_json in function
 | LspToServer (_, metadata) -> metadata.start_json_truncated
 
 type response =
-  | Errors of {errors: Errors.ConcreteLocErrorSet.t; warnings: Errors.ConcreteLocErrorSet.t}
+  | Errors of {errors: Errors.ConcreteLocPrintableErrorSet.t; warnings: Errors.ConcreteLocPrintableErrorSet.t}
   | StartRecheck
   | EndRecheck of ServerProt.Response.lazy_stats
   | AutocompleteResult of (ServerProt.Response.autocomplete_response * (* request id *) int)

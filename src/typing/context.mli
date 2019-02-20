@@ -72,7 +72,7 @@ val max_literal_length: t -> int
 val enable_const_params: t -> bool
 val enforce_strict_call_arity: t -> bool
 val envs: t -> env IMap.t
-val errors: t -> Errors.ErrorSet.t
+val errors: t -> Errors.PrintableErrorSet.t
 val error_suppressions: t -> Error_suppressions.t
 val esproposal_class_static_fields: t -> Options.esproposal_feature_mode
 val esproposal_class_instance_fields: t -> Options.esproposal_feature_mode
@@ -137,7 +137,7 @@ val in_declare_module: t -> bool
 
 (* mutators *)
 val add_env: t -> int -> env -> unit
-val add_error: t -> ALoc.t Errors.error -> unit
+val add_error: t -> ALoc.t Errors.printable_error -> unit
 val add_error_suppression: t -> Loc.t -> unit
 val add_severity_cover: t -> File_key.t -> ExactCover.lint_severity_cover -> unit
 val add_lint_suppressions: t -> LocSet.t -> unit

@@ -952,7 +952,7 @@ module Make
   let verified errors file_sig =
     let file_sig = map_unit_file_sig file_sig in
     { file_sig with
-      tolerable_errors = Signature_builder_deps.ErrorSet.fold (fun error acc ->
+      tolerable_errors = Signature_builder_deps.PrintableErrorSet.fold (fun error acc ->
         (SignatureVerificationError error):: acc
       ) errors file_sig.tolerable_errors
     }

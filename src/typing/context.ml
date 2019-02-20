@@ -92,7 +92,7 @@ type sig_t = {
   (* map from TypeAssert assertion locations to the type being asserted *)
   mutable type_asserts: (type_assert_kind * ALoc.t) ALocMap.t;
 
-  mutable errors: Errors.ErrorSet.t;
+  mutable errors: Errors.PrintableErrorSet.t;
 
   mutable error_suppressions: Error_suppressions.t;
   mutable severity_cover: ExactCover.lint_severity_cover Utils_js.FilenameMap.t;
@@ -192,7 +192,7 @@ let make_sig () = {
   envs = IMap.empty;
   module_map = SMap.empty;
   type_asserts = ALocMap.empty;
-  errors = Errors.ErrorSet.empty;
+  errors = Errors.PrintableErrorSet.empty;
   error_suppressions = Error_suppressions.empty;
   severity_cover = Utils_js.FilenameMap.empty;
   exists_checks = ALocMap.empty;
@@ -344,7 +344,7 @@ let copy_of_context cx = {
 let add_env cx frame env =
   cx.sig_cx.envs <- IMap.add frame env cx.sig_cx.envs
 let add_error cx error =
-  cx.sig_cx.errors <- Errors.ErrorSet.add error cx.sig_cx.errors
+  cx.sig_cx.errors <- Errors.PrintableErrorSet.add error cx.sig_cx.errors
 let add_error_suppression cx loc =
   cx.sig_cx.error_suppressions <-
     Error_suppressions.add loc cx.sig_cx.error_suppressions
@@ -373,7 +373,7 @@ let add_nominal_id cx id =
 let add_type_assert cx k v =
   cx.sig_cx.type_asserts <- ALocMap.add k v cx.sig_cx.type_asserts
 let remove_all_errors cx =
-  cx.sig_cx.errors <- Errors.ErrorSet.empty
+  cx.sig_cx.errors <- Errors.PrintableErrorSet.empty
 let remove_all_error_suppressions cx =
   cx.sig_cx.error_suppressions <- Error_suppressions.empty
 let remove_all_lint_severities cx =
@@ -531,7 +531,7 @@ let merge_into sig_cx sig_cx_other =
      these things from the lib cxs into the master sig_cx before we clear the
      indeterminates and calculate the sig sig_cx. *)
   sig_cx.envs <- IMap.union sig_cx_other.envs sig_cx.envs;
-  sig_cx.errors <- Errors.ErrorSet.union sig_cx_other.errors sig_cx.errors;
+  sig_cx.errors <- Errors.PrintableErrorSet.union sig_cx_other.errors sig_cx.errors;
   sig_cx.error_suppressions <- Error_suppressions.union sig_cx_other.error_suppressions sig_cx.error_suppressions;
   sig_cx.severity_cover <- Utils_js.FilenameMap.union sig_cx_other.severity_cover sig_cx.severity_cover;
   sig_cx.exists_checks <- ALocMap.union sig_cx_other.exists_checks sig_cx.exists_checks;

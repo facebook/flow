@@ -29,12 +29,12 @@ let warning_desc_to_string = function
 class visitor ~cxs = object(this)
   inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
 
-  val mutable _warnings = Errors.ConcreteLocErrorSet.empty
+  val mutable _warnings = Errors.ConcreteLocPrintableErrorSet.empty
 
   method private warn loc (w: warning) =
     let open Errors in
     let desc = warning_desc_to_string w in
-    _warnings <- ConcreteLocErrorSet.add (mk_error loc (Friendly.message_of_string desc)) _warnings;
+    _warnings <- ConcreteLocPrintableErrorSet.add (mk_error loc (Friendly.message_of_string desc)) _warnings;
     None
 
   method warnings () = _warnings

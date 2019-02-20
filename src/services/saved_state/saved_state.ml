@@ -44,8 +44,8 @@ type saved_state_data = {
    * 3. Local errors should be the same after a lazy init and after a full init. This isn't true
    *    for the other members of env.errors which are filled in during typechecking
    *)
-  local_errors: Errors.ErrorSet.t Utils_js.FilenameMap.t;
-  warnings: Errors.ErrorSet.t Utils_js.FilenameMap.t;
+  local_errors: Errors.PrintableErrorSet.t Utils_js.FilenameMap.t;
+  warnings: Errors.PrintableErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t;
 
   (* TODO - Figure out what to do aboute module.resolver *)
@@ -196,7 +196,7 @@ end = struct
 
   let normalize_error_set ~root error_set =
     let normalizer = new error_normalizer root in
-    Errors.ErrorSet.map normalizer#error error_set
+    Errors.PrintableErrorSet.map normalizer#error error_set
 
   (* Collect all the data for all the files *)
   let collect_data ~workers ~genv ~env =
@@ -430,7 +430,7 @@ end = struct
 
   let denormalize_error_set ~root normalized_error_set =
     let denormalizer = new error_denormalizer root in
-    Errors.ErrorSet.map denormalizer#error normalized_error_set
+    Errors.PrintableErrorSet.map denormalizer#error normalized_error_set
 
   (* Denormalize all the data *)
   let denormalize_data ~workers ~options ~data =

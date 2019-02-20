@@ -8,14 +8,14 @@
 val check_once :
   shared_mem_config:SharedMem_js.config ->
   format_errors: (
-    (Errors.ConcreteLocErrorSet.t * (* errors *)
-     Errors.ConcreteLocErrorSet.t * (* warnings *)
-     (Loc.t Errors.error * Utils_js.LocSet.t) list) (* suppressed errors *) ->
+    (Errors.ConcreteLocPrintableErrorSet.t * (* errors *)
+     Errors.ConcreteLocPrintableErrorSet.t * (* warnings *)
+     (Loc.t Errors.printable_error * Utils_js.LocSet.t) list) (* suppressed errors *) ->
     (Profiling_js.finished -> unit) (* print errors *)
   ) ->
   ?focus_targets:Utils_js.FilenameSet.t ->
   Options.t ->
-  (Errors.ConcreteLocErrorSet.t * (* errors *) Errors.ConcreteLocErrorSet.t (* warnings *))
+  (Errors.ConcreteLocPrintableErrorSet.t * (* errors *) Errors.ConcreteLocPrintableErrorSet.t (* warnings *))
 
 val daemonize :
   log_file:string ->

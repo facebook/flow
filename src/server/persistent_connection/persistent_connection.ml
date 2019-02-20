@@ -47,7 +47,7 @@ let send_errors =
    * so we have to try (almost) all of them. *)
   let get_warnings_for_file =
     let rec get_first_contained warn_map = function
-      | [] -> Errors.ConcreteLocErrorSet.empty
+      | [] -> Errors.ConcreteLocPrintableErrorSet.empty
       | filename::filenames ->
         match Utils_js.FilenameMap.get filename warn_map with
         | Some errs -> errs
@@ -67,8 +67,8 @@ let send_errors =
     let warnings = List.fold_right
       (fun filename warn_acc ->
         let file_warns = get_warnings_for_file filename warnings in
-        Errors.ConcreteLocErrorSet.union file_warns warn_acc)
-      opened_filenames Errors.ConcreteLocErrorSet.empty
+        Errors.ConcreteLocPrintableErrorSet.union file_warns warn_acc)
+      opened_filenames Errors.ConcreteLocPrintableErrorSet.empty
     in
     send_message (Prot.Errors {errors; warnings}) client
 
@@ -127,7 +127,7 @@ let update_clients ~clients ~calc_errors_and_warnings =
   if subscribed_clients <> []
   then begin
     let errors, warnings = calc_errors_and_warnings () in
-    let error_count = Errors.ConcreteLocErrorSet.cardinal errors in
+    let error_count = Errors.ConcreteLocPrintableErrorSet.cardinal errors in
     let warning_file_count = Utils_js.FilenameMap.cardinal warnings in
     Hh_logger.info
       "sending (%d errors) and (warnings from %d files) to %d subscribed clients (of %d total)"

@@ -597,7 +597,7 @@ let ordered_reasons ((rl, ru) as reasons) =
   then ru, rl
   else reasons
 
-let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Errors.error =
+let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Errors.printable_error =
   let open Errors in
 
   let mk_info reason extras =
@@ -647,7 +647,7 @@ let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Error
    * string ~> number. Showing both errors to our user is often redundant.
    * So we use this utility to flip the string ~> number case and produce an
    * error identical to one we've produced before. These two errors will be
-   * deduped in our ErrorSet. *)
+   * deduped in our PrintableErrorSet. *)
   let dedupe_by_flip =
     (* Loop over through the use_op chain. *)
     let rec loop = function

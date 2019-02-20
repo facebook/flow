@@ -236,9 +236,9 @@ let merge_strict_component ~worker_mutator ~options ~reader component =
     Ok (errors, warnings, suppressions)
   )
   else
-    let errors = Errors.ErrorSet.empty in
+    let errors = Errors.PrintableErrorSet.empty in
     let suppressions = Error_suppressions.empty in
-    let warnings = Errors.ErrorSet.empty in
+    let warnings = Errors.PrintableErrorSet.empty in
     Ok (errors, warnings, suppressions)
 
 let check_file options ~reader file =
@@ -263,9 +263,9 @@ let check_file options ~reader file =
     Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover
   )
   else
-    let errors = Errors.ErrorSet.empty in
+    let errors = Errors.PrintableErrorSet.empty in
     let suppressions = Error_suppressions.empty in
-    let warnings = Errors.ErrorSet.empty in
+    let warnings = Errors.PrintableErrorSet.empty in
     (errors, warnings, suppressions)
 
 

@@ -115,12 +115,12 @@ let main base_flags option_values json pretty json_version root error_flags stri
       )
   | ServerProt.Response.NO_ERRORS ->
       if json then
-        print_json ~errors:Errors.ConcreteLocErrorSet.empty ~warnings:Errors.ConcreteLocErrorSet.empty ()
+        print_json ~errors:Errors.ConcreteLocPrintableErrorSet.empty ~warnings:Errors.ConcreteLocPrintableErrorSet.empty ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
   | ServerProt.Response.NOT_COVERED ->
       if json then
-        print_json ~errors:Errors.ConcreteLocErrorSet.empty ~warnings:Errors.ConcreteLocErrorSet.empty ()
+        print_json ~errors:Errors.ConcreteLocPrintableErrorSet.empty ~warnings:Errors.ConcreteLocPrintableErrorSet.empty ()
       else Printf.printf "File is not @flow!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->

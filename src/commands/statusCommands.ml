@@ -163,7 +163,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
     | ServerProt.Response.NO_ERRORS ->
       if args.output_json then
-        print_json ~errors:Errors.ConcreteLocErrorSet.empty ~warnings:Errors.ConcreteLocErrorSet.empty ()
+        print_json ~errors:Errors.ConcreteLocPrintableErrorSet.empty ~warnings:Errors.ConcreteLocPrintableErrorSet.empty ()
       else begin
         Printf.printf "No errors!\n%!";
         Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")

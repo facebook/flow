@@ -29,7 +29,7 @@ module type S = sig
 
     val debug_to_string: t -> string
   end
-  module ErrorSet: Set.S with type elt = Error.t
+  module PrintableErrorSet: Set.S with type elt = Error.t
 
   module Dep : sig
     type t =
@@ -73,7 +73,7 @@ module type S = sig
 
   module DepSet : Set.S with type elt = Dep.t
 
-  type t = DepSet.t * ErrorSet.t
+  type t = DepSet.t * PrintableErrorSet.t
 
   val join: t * t -> t
 
@@ -98,7 +98,7 @@ module type S = sig
 
   val reduce_join: ('a -> t) -> t -> 'a -> t
 
-  val recurse: (Dep.t -> ErrorSet.t) -> t -> ErrorSet.t
+  val recurse: (Dep.t -> PrintableErrorSet.t) -> t -> PrintableErrorSet.t
 
   val replace_local_with_dynamic_class: L.t Flow_ast_utils.ident -> t -> t
 end

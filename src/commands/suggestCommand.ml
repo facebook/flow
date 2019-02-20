@@ -70,9 +70,9 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
         (get_check_or_status_exit_code errors warnings max_warnings)
     in
     if not do_step then next ()
-    else if Errors.ConcreteLocErrorSet.is_empty errors then begin
+    else if Errors.ConcreteLocPrintableErrorSet.is_empty errors then begin
       match max_warnings with
-      | Some x when Errors.ConcreteLocErrorSet.cardinal warnings > x -> err ()
+      | Some x when Errors.ConcreteLocPrintableErrorSet.cardinal warnings > x -> err ()
       | None | Some _ -> next ()
     end
     else err ()
@@ -89,7 +89,7 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
     (* Then, check the case where we should fail on suggest-related warnings.
      * Use suggest_errors as warnings for `with_errors_and_warnings` and an
      * empty warning set. *)
-    with_errors_and_warnings fail_on_suggest_warnings Errors.ConcreteLocErrorSet.empty
+    with_errors_and_warnings fail_on_suggest_warnings Errors.ConcreteLocPrintableErrorSet.empty
       suggest_warnings (Some 0) @@ fun () ->
     (* Finally, print the AST if no error has been flagged. *)
     print_annotated_program annotated_program
@@ -97,7 +97,7 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
     (* This is the case of a parse fail (no context is created). The `errors`
      * set ought to be non-empty. Otherwise, we throw an exception. If this
      * happens, see types_js.ml `typecheck_contents`. *)
-    with_errors_and_warnings true errors Errors.ConcreteLocErrorSet.empty None @@ fun () ->
+    with_errors_and_warnings true errors Errors.ConcreteLocPrintableErrorSet.empty None @@ fun () ->
     failwith "SuggestCommand: Parsing failed with no errors"
 
 let main base_flags option_values root error_flags strip_root path wait_for_recheck

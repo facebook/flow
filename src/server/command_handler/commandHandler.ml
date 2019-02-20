@@ -11,13 +11,13 @@ open Utils_js
 open Lsp
 
 let status_log errors =
-  if Errors.ConcreteLocErrorSet.is_empty errors
+  if Errors.ConcreteLocPrintableErrorSet.is_empty errors
     then Hh_logger.info "Status: OK"
     else Hh_logger.info "Status: Error";
   flush stdout
 
 let convert_errors ~errors ~warnings =
-  if Errors.ConcreteLocErrorSet.is_empty errors && Errors.ConcreteLocErrorSet.is_empty warnings then
+  if Errors.ConcreteLocPrintableErrorSet.is_empty errors && Errors.ConcreteLocPrintableErrorSet.is_empty warnings then
     ServerProt.Response.NO_ERRORS
   else
     ServerProt.Response.ERRORS {errors; warnings}
@@ -36,13 +36,13 @@ let get_status genv env client_root =
       let errors, warnings, _ = ErrorCollator.get env in
       let warnings = if Options.should_include_warnings genv.options
         then warnings
-        else Errors.ConcreteLocErrorSet.empty
+        else Errors.ConcreteLocPrintableErrorSet.empty
       in
 
       (* TODO: check status.directory *)
       status_log errors;
       FlowEventLogger.status_response
-        ~num_errors:(Errors.ConcreteLocErrorSet.cardinal errors);
+        ~num_errors:(Errors.ConcreteLocPrintableErrorSet.cardinal errors);
       convert_errors errors warnings
     end
   in

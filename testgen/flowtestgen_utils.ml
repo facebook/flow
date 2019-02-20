@@ -623,14 +623,14 @@ let flow_check (code : string) : string option =
       let errors, warnings, suppressions =
         Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
 
-      let errors = Errors.concretize_errorset errors in
-      let warnings = Errors.concretize_errorset warnings in
+      let errors = Errors.concretize_printable_errorset errors in
+      let warnings = Errors.concretize_printable_errorset warnings in
       let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
           suppressions errors ~unused:suppressions in
       let warnings, _, _ = Error_suppressions.filter_suppressed_errors
         suppressions warnings ~unused:suppressions
       in
-      let error_num = Errors.ConcreteLocErrorSet.cardinal errors in
+      let error_num = Errors.ConcreteLocPrintableErrorSet.cardinal errors in
       if error_num = 0 then
         None
       else begin

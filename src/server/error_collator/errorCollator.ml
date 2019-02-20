@@ -43,20 +43,20 @@ let regenerate =
           let err =
             let msg = Flow_error.EUnusedSuppression (ALoc.of_loc loc) in
             Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg in
-          let err = Errors.concretize_error err in
+          let err = Errors.concretize_printable_error err in
           let file_warnings = FilenameMap.get source_file warnings
-            |> Option.value ~default:ConcreteLocErrorSet.empty
-            |> ConcreteLocErrorSet.add err in
+            |> Option.value ~default:ConcreteLocPrintableErrorSet.empty
+            |> ConcreteLocPrintableErrorSet.add err in
           FilenameMap.add source_file file_warnings warnings
         end else
           warnings
       )
       warnings
   in
-  let acc_fun (type a) suppressions (f : File_key.t -> ConcreteLocErrorSet.t -> a -> a)
+  let acc_fun (type a) suppressions (f : File_key.t -> ConcreteLocPrintableErrorSet.t -> a -> a)
     filename file_errs (errors, suppressed, unused) =
     let file_errs, file_suppressed, unused =
-      Errors.concretize_errorset file_errs
+      Errors.concretize_printable_errorset file_errs
       |> filter_suppressed_errors suppressions ~unused in
     let errors = f filename file_errs errors in
     let suppressed = List.rev_append file_suppressed suppressed in
@@ -68,9 +68,9 @@ let regenerate =
       ServerEnv.local_errors; merge_errors; warnings; suppressions;
     } = env.ServerEnv.errors in
 
-    let acc_err_fun = acc_fun suppressions (fun _ -> ConcreteLocErrorSet.union) in
+    let acc_err_fun = acc_fun suppressions (fun _ -> ConcreteLocPrintableErrorSet.union) in
     let collated_errorset, collated_suppressed_errors, unused =
-      (ConcreteLocErrorSet.empty, [], suppressions)
+      (ConcreteLocPrintableErrorSet.empty, [], suppressions)
       |> FilenameMap.fold acc_err_fun local_errors
       |> FilenameMap.fold acc_err_fun merge_errors
     in
@@ -102,5 +102,5 @@ let get_with_separate_warnings env =
 let get env =
   let open Errors in
   let errors, warning_map, suppressed_errors = get_with_separate_warnings env in
-  let warnings = FilenameMap.fold (fun _key -> ConcreteLocErrorSet.union) warning_map ConcreteLocErrorSet.empty in
+  let warnings = FilenameMap.fold (fun _key -> ConcreteLocPrintableErrorSet.union) warning_map ConcreteLocPrintableErrorSet.empty in
   (errors, warnings, suppressed_errors)

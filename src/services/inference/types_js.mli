@@ -63,8 +63,8 @@ val typecheck_contents:
     (Loc.t, Loc.t) Flow_ast.program *
     File_sig.With_Loc.t *
     (ALoc.t, ALoc.t * Type.t) Flow_ast.program) option *
-   Errors.ConcreteLocErrorSet.t *                      (* errors *)
-   Errors.ConcreteLocErrorSet.t) Lwt.t                 (* warnings *)
+   Errors.ConcreteLocPrintableErrorSet.t *                      (* errors *)
+   Errors.ConcreteLocPrintableErrorSet.t) Lwt.t                 (* warnings *)
 
 val ensure_checked_dependencies:
   options: Options.t ->

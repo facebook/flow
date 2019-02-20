@@ -523,7 +523,7 @@ let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents 
         ~facebook_fbt:(Some "FbtElement") signature
     in
     let error_msgs = Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
-      Signature_builder_deps.ErrorSet.elements errors in
+      Signature_builder_deps.PrintableErrorSet.elements errors in
     let remote_dependency_msgs = Core_list.map ~f:Signature_builder_deps.Dep.to_string @@
       Signature_builder_deps.DepSet.elements remote_dependencies in
     let reachable_msg_opt =

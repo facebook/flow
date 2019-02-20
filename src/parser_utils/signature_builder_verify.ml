@@ -812,7 +812,7 @@ module Verifier(Env: EvalEnv) = struct
     Deps.recurse (check_dep cache env dynamic_sources) deps
 
   and check_dep cache env dynamic_sources dep =
-    if Deps.DepSet.mem dep !cache then Deps.ErrorSet.empty
+    if Deps.DepSet.mem dep !cache then Deps.PrintableErrorSet.empty
     else begin
       cache := Deps.DepSet.add dep !cache;
       check cache env dynamic_sources (validate_and_eval env dynamic_sources dep)

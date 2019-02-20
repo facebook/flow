@@ -25,7 +25,7 @@ val remove_client_from_clients: t -> Prot.client_id -> t
 (* Send updates to all clients that are subscribed *)
 val update_clients:
   clients:t ->
-  calc_errors_and_warnings:(unit -> Errors.ConcreteLocErrorSet.t * Errors.ConcreteLocErrorSet.t Utils_js.FilenameMap.t) ->
+  calc_errors_and_warnings:(unit -> Errors.ConcreteLocPrintableErrorSet.t * Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t) ->
   unit
 val send_lsp:
   t -> Lsp.lsp_message option * Prot.metadata -> unit
@@ -38,14 +38,14 @@ val send_end_recheck:
 val send_message: Prot.response -> single_client -> unit
 val send_errors_if_subscribed:
   client:single_client ->
-  errors:Errors.ConcreteLocErrorSet.t ->
-  warnings:Errors.ConcreteLocErrorSet.t Utils_js.FilenameMap.t -> unit
+  errors:Errors.ConcreteLocPrintableErrorSet.t ->
+  warnings:Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t -> unit
 
 (* getters/setters on single_client *)
 val subscribe_client:
   client:single_client ->
-  current_errors:Errors.ConcreteLocErrorSet.t ->
-  current_warnings:Errors.ConcreteLocErrorSet.t Utils_js.FilenameMap.t ->
+  current_errors:Errors.ConcreteLocPrintableErrorSet.t ->
+  current_warnings:Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t ->
   unit
 
 val client_did_open:
