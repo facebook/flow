@@ -6,7 +6,10 @@
  *)
 
 type t
+type 'a t_or_error = (t, 'a * string) result
+
 val empty: t
 val name: t -> string option
 val main: t -> string option
-val parse: (Loc.t, Loc.t) Flow_ast.program -> (t, string) result
+
+val parse: (Loc.t, Loc.t) Flow_ast.program -> Loc.t t_or_error

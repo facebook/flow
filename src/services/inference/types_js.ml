@@ -749,14 +749,23 @@ let basic_check_contents ~options ~env ~profiling contents filename =
 
 let init_package_heap ~options ~profiling ~reader parsed =
   with_timer_lwt ~options "PackageHeap" profiling (fun () ->
-    FilenameSet.iter (fun filename ->
+    let errors = FilenameSet.fold (fun filename errors ->
       match filename with
       | File_key.JsonFile str when Filename.basename str = "package.json" ->
         let ast = Parsing_heaps.Mutator_reader.get_ast_unsafe ~reader filename in
-        Module_js.add_package str ast
-      | _ -> ()
-    ) parsed;
-    Lwt.return_unit
+        let package = Package_json.parse ast in
+        Module_js.add_package str package;
+        begin match package with
+        | Ok _ ->
+          errors
+        | Error parse_err ->
+          let errset = Inference_utils.set_of_package_json_error ~source_file:filename parse_err in
+          update_errset errors filename errset
+        end
+      | _ ->
+        errors
+    ) parsed FilenameMap.empty in
+    Lwt.return errors
   )
 
 let init_libs
@@ -1674,7 +1683,8 @@ let init ~profiling ~workers options =
   assert (FilenameSet.is_empty unchanged);
 
   Hh_logger.info "Building package heap";
-  let%lwt () = init_package_heap ~options ~profiling ~reader parsed in
+  let%lwt package_errors = init_package_heap ~options ~profiling ~reader parsed in
+  let local_errors = merge_error_maps package_errors local_errors in
 
   Hh_logger.info "Loading libraries";
   let%lwt libs_ok, local_errors, warnings, suppressions =

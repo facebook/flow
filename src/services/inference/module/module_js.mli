@@ -98,7 +98,7 @@ val add_parsed_resolved_requires:
   File_key.t ->
   Errors.ErrorSet.t
 
-val add_package: string -> (Loc.t, Loc.t) Flow_ast.program -> unit
+val add_package: string -> Loc.t Package_json.t_or_error -> unit
 
 val package_incompatible: reader:State_reader.t -> string -> (Loc.t, Loc.t) Flow_ast.program -> bool
 

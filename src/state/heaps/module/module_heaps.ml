@@ -70,7 +70,7 @@ end)
 
 (* shared heap for package.json tokens by filename *)
 module PackageHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (StringKey) (struct
-    type t = Package_json.t
+    type t = (Package_json.t, unit) result
     let prefix = Prefix.make()
     let description = "Package"
     let use_sqlite_fallback () = false
@@ -234,14 +234,18 @@ end
  * a transaction *)
 module Package_heap_mutator: sig
  val add_package_json: string -> Package_json.t -> unit
+ val add_error: string -> unit
 end = struct
   let add_package_json filename package_json =
-    PackageHeap.add filename package_json;
+    PackageHeap.add filename (Ok package_json);
     begin match Package_json.name package_json with
     | Some name ->
       ReversePackageHeap.add name (Filename.dirname filename)
     | None -> ()
     end
+
+  let add_error filename =
+    PackageHeap.add filename (Error ())
 end
 
 (*********************************** Readers **********************************)
@@ -260,7 +264,7 @@ module type READER = sig
   val get_info: reader:reader -> (File_key.t -> info option) Expensive.t
   val is_tracked_file: reader:reader -> File_key.t -> bool
 
-  val get_package: reader:reader -> string -> Package_json.t option
+  val get_package: reader:reader -> string -> (Package_json.t, unit) result option
   val get_package_directory: reader:reader -> string -> string option
 end
 
@@ -420,7 +424,10 @@ end
 
 module For_saved_state = struct
   exception Package_not_found of string
+  exception Package_not_valid of string
   let get_package_json_unsafe file =
-    try PackageHeap.find_unsafe file
-    with Not_found -> raise (Package_not_found file)
+    match PackageHeap.find_unsafe file with
+    | Ok package -> package
+    | Error () -> raise (Package_not_valid file)
+    | exception Not_found -> raise (Package_not_found file)
 end

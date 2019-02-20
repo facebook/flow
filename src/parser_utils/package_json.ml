@@ -12,6 +12,8 @@ type t = {
   main: string option;
 }
 
+type 'a t_or_error = (t, 'a * string) result
+
 let (>>=) = Core_result.(>>=)
 
 let empty = { name = None; main = None; }
@@ -20,7 +22,7 @@ let main package = package.main
 
 let statement_of_program = function
   | (_, [statement], _) -> Ok statement
-  | _ -> Error "Expected a single statement."
+  | (loc, _, _) -> Error (loc, "Expected a single statement.")
 
 let object_of_statement statement =
   let open Ast in
@@ -33,13 +35,13 @@ let object_of_statement statement =
       };
       directive = _;
     } -> Ok obj
-  | _ -> Error "Expected an assignment"
+  | (loc, _) -> Error (loc, "Expected an assignment")
 
 let properties_of_object = function
   | (_, Ast.Expression.Object {Ast.Expression.Object.properties}) -> Ok properties
-  | _ -> Error "Expected an object literal"
+  | (loc, _) -> Error (loc, "Expected an object literal")
 
-let parse ast =
+let parse ast : 'a t_or_error =
   statement_of_program ast
   >>= object_of_statement
   >>= properties_of_object

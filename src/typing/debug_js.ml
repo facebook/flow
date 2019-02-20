@@ -2703,6 +2703,8 @@ let dump_flow_error =
           (dump_reason cx reason2)
     | EModuleOutsideRoot (loc, name) ->
         spf "EModuleOutsideRoot (%s, %S)" (string_of_aloc loc) name
+    | EMalformedPackageJson (loc, error) ->
+        spf "EMalformedPackageJson (%s, %S)" (string_of_aloc loc) error
     | EExperimentalDecorators loc ->
         spf "EExperimentalDecorators (%s)" (string_of_aloc loc)
     | EExperimentalClassProperties (loc, static) ->

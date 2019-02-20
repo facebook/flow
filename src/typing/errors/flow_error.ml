@@ -118,6 +118,7 @@ type error_message =
   | EBindingError of binding_error * ALoc.t * string * Scope.Entry.t
   | ERecursionLimit of (reason * reason)
   | EModuleOutsideRoot of ALoc.t * string
+  | EMalformedPackageJson of ALoc.t * string
   | EExperimentalDecorators of ALoc.t
   | EExperimentalClassProperties of ALoc.t * bool
   | EUnsafeGetSet of ALoc.t
@@ -365,6 +366,7 @@ let util_use_op_of_msg nope util = function
 | EBindingError (_, _, _, _)
 | ERecursionLimit (_, _)
 | EModuleOutsideRoot (_, _)
+| EMalformedPackageJson (_, _)
 | EExperimentalDecorators (_)
 | EExperimentalClassProperties (_, _)
 | EUnsafeGetSet (_)
@@ -1812,6 +1814,11 @@ let rec error_of_msg ~trace_reasons ~source_file : error_message -> ALoc.t Error
       text "section of your "; code ".flowconfig"; text ", move your ";
       code ".flowconfig"; text " file higher in the project directory tree, or ";
       text "move this package under your Flow root directory.";
+    ]
+
+  | EMalformedPackageJson (loc, error) ->
+    mk_error ~trace_infos loc [
+      text error;
     ]
 
   | EExperimentalDecorators loc ->
