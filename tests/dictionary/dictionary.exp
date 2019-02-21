@@ -264,36 +264,19 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:167:24
 
-Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in the indexer property's key.
+Cannot assign `x` to `a` because `A` [1] is incompatible with `B` [2] in the indexer property's key.
 
    dictionary.js:167:24
    167|   let a: {[k:A]:any} = x; // error
                                ^
 
 References:
-   dictionary.js:165:10
-   165|   x: {[k:B]:any},
-                 ^ [1]
    dictionary.js:167:14
    167|   let a: {[k:A]:any} = x; // error
-                     ^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- dictionary.js:169:24
-
-Cannot assign `x` to `c` because `B` [1] is incompatible with `C` [2] in the indexer property's key.
-
-   dictionary.js:169:24
-   169|   let c: {[k:C]:any} = x; // error
-                               ^
-
-References:
+                     ^ [1]
    dictionary.js:165:10
    165|   x: {[k:B]:any},
-                 ^ [1]
-   dictionary.js:169:14
-   169|   let c: {[k:C]:any} = x; // error
-                     ^ [2]
+                 ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:175:39
@@ -827,18 +810,18 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:5:35
 
-Cannot assign `x` to `z` because string [1] is incompatible with number [2] in the indexer property's key.
+Cannot assign `x` to `z` because number [1] is incompatible with string [2] in the indexer property's key.
 
    incompatible.js:5:35
    5| var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
                                         ^
 
 References:
-   incompatible.js:3:16
-   3| var x : {[key: string]: string} = {};
-                     ^^^^^^ [1]
    incompatible.js:5:16
    5| var z : {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
+                     ^^^^^^ [1]
+   incompatible.js:3:16
+   3| var x : {[key: string]: string} = {};
                      ^^^^^^ [2]
 
 
@@ -1041,4 +1024,4 @@ References:
 
 
 
-Found 61 errors
+Found 60 errors

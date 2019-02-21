@@ -161,12 +161,12 @@ function unification_dict_keys_invariant(
   let c: Array<{[k:C]:any}> = x; // error
 }
 
-function subtype_dict_keys_invariant(
+function subtype_dict_keys_contravariant(
   x: {[k:B]:any},
 ) {
   let a: {[k:A]:any} = x; // error
   let b: {[k:B]:any} = x; // ok
-  let c: {[k:C]:any} = x; // error
+  let c: {[k:C]:any} = x; // ok
 }
 
 function unification_mix_with_declared_props_invariant_l(

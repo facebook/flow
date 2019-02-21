@@ -420,19 +420,19 @@ References:
 
 Error --------------------------------------------------------------------------------- indexer-key-compatibility.js:7:2
 
-Cannot cast `o` to object type because number [1] is incompatible with string [2] in the indexer property's key.
+Cannot cast `o` to object type because string [1] is incompatible with number [2] in the indexer property's key.
 
    indexer-key-compatibility.js:7:2
    7| (o: {[k: string]: any});
        ^
 
 References:
-   indexer-key-compatibility.js:6:21
-   6| declare var o: {[k: number]: any};
-                          ^^^^^^ [1]
    indexer-key-compatibility.js:7:10
    7| (o: {[k: string]: any});
-               ^^^^^^ [2]
+               ^^^^^^ [1]
+   indexer-key-compatibility.js:6:21
+   6| declare var o: {[k: number]: any};
+                          ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------- loc-primary-for-covariant-ops.js:8:3
