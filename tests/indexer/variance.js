@@ -30,3 +30,25 @@ const a: { +[number | string]: number } = {};
 
 const b: { +[number]: number } = {};
 (b: { +[number | string]: number }); //ng
+
+type U_W = {
+  -[number | string | null]: number
+};
+type U_R = {
+  +[number | string | null]: number
+};
+type U_RW = {
+  [number | string | null]: number
+};
+(w: U_W);
+(r: U_R);
+(rw: U_W);
+(rw: U_R);
+(rw: U_RW);
+
+/* TODO: Fix false positives
+(w: U_R);
+(w: U_RW);
+(r: U_W);
+(r: U_RW);
+*/
