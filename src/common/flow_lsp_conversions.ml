@@ -18,23 +18,21 @@ let flow_completion_to_lsp
     let params = Core_list.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
     "(" ^ (String.concat ", " params) ^ ")"
   in
-  let kind, itemType, inlineDetail, detail = match item.func_details with
+  let itemType, inlineDetail, detail = match item.func_details with
     | Some func_details ->
-      let kind = Some Function in
       let itemType = Some (trunc 30 func_details.return_ty) in
       let inlineDetail = Some (trunc 40 (flow_params_to_string func_details.param_tys)) in
       let detail = Some (trunc80 item.res_ty) in
-      kind, itemType, inlineDetail, detail
+      itemType, inlineDetail, detail
     | None ->
-      let kind = None in
       let itemType = None in
       let inlineDetail = Some (trunc80 item.res_ty) in
       let detail = Some (trunc80 item.res_ty) in
-      kind, itemType, inlineDetail, detail
+      itemType, inlineDetail, detail
   in
   {
     label = item.res_name;
-    kind;
+    kind = item.res_kind;
     detail = detail;
     inlineDetail;
     itemType;

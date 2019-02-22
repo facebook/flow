@@ -128,6 +128,7 @@ module Response = struct
   type complete_autocomplete_result = {
       res_loc      : Loc.t;
       res_ty       : string;
+      res_kind     : Lsp.Completion.completionItemKind option;
       res_name     : string;
       func_details : func_details_result option;
     }
