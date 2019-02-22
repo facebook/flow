@@ -393,8 +393,8 @@ export default suite(({addFile, flowCmd}) => [
                "type": "number",
                "func_details": null,
                "path": "[LIB] core.js",
-               "line": 327,
-               "endline": 327,
+               "line": 329,
+               "endline": 329,
                "start": 13,
                "end": 18
              },
@@ -747,8 +747,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 326,
-               "endline": 326,
+               "line": 328,
+               "endline": 328,
                "start": 5,
                "end": 22
              },
@@ -779,7 +779,7 @@ export default suite(({addFile, flowCmd}) => [
                "end": 18
              },
              {
-               "name": "trimLeft",
+               "name": "trimEnd",
                "type": "() => string",
                "func_details": {
                  "return_type": "string",
@@ -788,6 +788,19 @@ export default suite(({addFile, flowCmd}) => [
                "path": "[LIB] core.js",
                "line": 323,
                "endline": 323,
+               "start": 5,
+               "end": 21
+             },
+             {
+               "name": "trimLeft",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 324,
+               "endline": 324,
                "start": 5,
                "end": 22
              },
@@ -799,8 +812,21 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 324,
-               "endline": 324,
+               "line": 325,
+               "endline": 325,
+               "start": 5,
+               "end": 23
+             },
+             {
+               "name": "trimStart",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 326,
+               "endline": 326,
                "start": 5,
                "end": 23
              },
@@ -812,8 +838,8 @@ export default suite(({addFile, flowCmd}) => [
                  "params": []
                },
                "path": "[LIB] core.js",
-               "line": 325,
-               "endline": 325,
+               "line": 327,
+               "endline": 327,
                "start": 5,
                "end": 21
              }
