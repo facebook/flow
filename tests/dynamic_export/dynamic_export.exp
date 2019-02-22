@@ -150,21 +150,6 @@ References:
              ^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- esmodule.js:3:17
-
-Dynamic implicit 'any' unsafely appears in exported function [1]. This can cause importing modules to lose type
-coverage! (`dynamic-export`)
-
-   esmodule.js:3:17
-   3| export function foo (x : any) {}
-                      ^^^
-
-References:
-   esmodule.js:3:8
-   3| export function foo (x : any) {}
-             ^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-
 Error -------------------------------------------------------------------------------------------------- esmodule.js:5:9
 
 Dynamic explicit 'any' [1] unsafely appears in exported `x` [2]. This can cause importing modules to lose type coverage!
@@ -325,4 +310,4 @@ References:
 
 
 
-Found 21 errors
+Found 20 errors

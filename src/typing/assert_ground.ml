@@ -218,12 +218,13 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
           seen
         | DefT (r, _, FunT (static, prototype, ft)) ->
             (* This won't propagate to any other types because this happens post-merge *)
-            let any = AnyT.locationless Untyped in
-            unify_opt cx ~unify_any:true static any;
-            unify_opt cx ~unify_any:true prototype any;
-            unify_opt cx ~unify_any:true ft.this_t any;
+            let any kind = AnyT.locationless (Unsound kind) in
+            any DummyStatic |> unify_opt cx ~unify_any:true static;
+            any FunctionPrototype |> unify_opt cx ~unify_any:true prototype;
+            any BoundFunctionThis |>unify_opt cx ~unify_any:true ft.this_t;
             super#type_ cx pole seen
-              (DefT (r, bogus_trust (), FunT (any, any, {ft with this_t = any})))
+              (DefT (r, bogus_trust (), FunT (any DummyStatic,
+                any FunctionPrototype, {ft with this_t = any BoundFunctionThis})))
         | _ -> super#type_ cx pole seen t
       in
       seen)
