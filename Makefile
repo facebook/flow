@@ -76,6 +76,7 @@ MODULES=\
   src/common/modulename\
   src/common/monad\
   src/common/profiling\
+	src/common/semver\
   src/common/span\
   src/common/tarjan\
   src/common/transaction\
