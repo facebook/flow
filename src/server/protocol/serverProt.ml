@@ -182,15 +182,6 @@ module Response = struct
   type graph_response = (graph_response_subgraph, string) result
   and graph_response_subgraph = (string * string list) list
 
-  type gen_flow_files_error =
-    | GenFlowFiles_TypecheckError of {errors: Errors.PrintableErrorSet.t; warnings: Errors.PrintableErrorSet.t}
-    | GenFlowFiles_UnexpectedError of string
-  type gen_flow_files_result =
-    | GenFlowFiles_FlowFile of string
-    | GenFlowFiles_NonFlowFile
-  type gen_flow_files_response =
-    ((string * gen_flow_files_result) list, gen_flow_files_error) result
-
   type directory_mismatch = {
     server: Path.t;
     client: Path.t;
