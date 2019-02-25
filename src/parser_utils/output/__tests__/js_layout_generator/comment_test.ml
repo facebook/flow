@@ -20,14 +20,12 @@ let tests = [
       assert_layout ~ctxt
         L.(loc (fused [
           atom "/*";
-          pretty_hardline;
           atom "test";
-          pretty_hardline;
           atom "*/";
         ]))
         layout;
       assert_output ~ctxt "/*test*/" layout;
-      assert_output ~ctxt ~pretty:true "/*\ntest\n*/" layout;
+      assert_output ~ctxt ~pretty:true "/*test*/" layout;
     end;
 
   "line" >::

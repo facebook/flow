@@ -497,6 +497,15 @@ class insert_type_param_instantiation = object
     (loc, (Explicit (loc, Ast.Type.Any))::targs)
 end
 
+class add_comment_mapper = object
+  inherit [Loc.t] Flow_ast_mapper.mapper
+  method! identifier (loc, i) =
+    let open Flow_ast.Syntax in
+    loc, { i with Flow_ast.Identifier.comments =
+      Some {leading= [(Loc.none, Flow_ast.Comment.Block "hello" )]; trailing= [(Loc.none, Flow_ast.Comment.Block "bye" )]; internal= () }
+    }
+end
+
 class true_to_false_mapper = object
   inherit [Loc.t] Flow_ast_mapper.mapper
 
@@ -1949,5 +1958,15 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
     let source = "const x: true = 'garbage';" in
     assert_edits_equal ctxt ~edits:[((7, 13), ": false")]
     ~source ~expected:"const x: false = 'garbage';" ~mapper:(new true_to_false_mapper)
+  end;
+  "comment_add" >:: begin fun ctxt ->
+    let source = "bla" in
+    assert_edits_equal ctxt ~edits:[((0, 0), "/*hello*/"); ((3, 3), "/*bye*/")]
+    ~source ~expected:"/*hello*/bla/*bye*/" ~mapper:(new add_comment_mapper)
+  end;
+  "comment_modify" >:: begin fun ctxt ->
+    let source = "/*MAL*/bla/*WRONG*/" in
+    assert_edits_equal ctxt ~edits:[((0, 7), "/*hello*/"); ((10, 19), "/*bye*/")]
+    ~source ~expected:"/*hello*/bla/*bye*/" ~mapper:(new add_comment_mapper)
   end;
 ]

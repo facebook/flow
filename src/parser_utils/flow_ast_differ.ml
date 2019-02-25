@@ -162,6 +162,7 @@ let list_diff = function
  * have here, the more granularly we can diff. *)
 type node =
   | Raw of string
+  | Comment of Loc.t Flow_ast.Comment.t
   | Literal of Ast.Literal.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
@@ -195,6 +196,17 @@ let diff_if_changed_opt f opt1 opt2: node change list option =
     if x1 == x2 then Some [] else f x1 x2
   | None, None ->
     Some []
+  | _ ->
+    None
+
+let diff_or_add_opt f add opt1 opt2: node change list option =
+  match opt1, opt2 with
+  | Some x1, Some x2 ->
+    if x1 == x2 then Some [] else f x1 x2
+  | None, None ->
+    Some []
+  | None, Some x2 ->
+    Some (add x2)
   | _ ->
     None
 
@@ -353,7 +365,51 @@ let program (algo : diff_algorithm)
 
   let join_diff_list = Some [] |> List.fold_left (Option.map2 ~f:List.append) in
 
-  let rec program' (program1: (Loc.t, Loc.t) Ast.program) (program2: (Loc.t, Loc.t) Ast.program) : node change list =
+  let rec syntax_opt (loc: Loc.t) (s1: (Loc.t, unit) Ast.Syntax.t option) (s2: (Loc.t, unit) Ast.Syntax.t option) =
+    let add_comments { Ast.Syntax.leading; trailing; internal= _} =
+      let open Loc in
+      let fold_comment acc cmt = Comment cmt :: acc in
+      let leading = List.fold_left fold_comment [] leading in
+      let leading_inserts = match leading with
+      | [] -> []
+      | leading ->  [{ loc with _end= loc.start}, Insert (None, List.rev leading)]
+      in
+      let trailing = List.fold_left fold_comment [] trailing in
+      let trailing_inserts = match trailing with
+      | [] -> []
+      | trailing ->  [{ loc with start= loc._end}, Insert (None, List.rev trailing)]
+      in
+      leading_inserts @ trailing_inserts
+    in
+    diff_or_add_opt syntax add_comments s1 s2
+
+  and syntax (s1: (Loc.t, unit) Ast.Syntax.t) (s2: (Loc.t, unit) Ast.Syntax.t) =
+    let { Ast.Syntax.leading= leading1; trailing= trailing1; internal= _} = s1 in
+    let { Ast.Syntax.leading= leading2; trailing= trailing2; internal= _} = s2 in
+    let add_comment = (fun ((loc, _) as cmt) -> Some (loc, Comment cmt)) in
+    let leading = diff_and_recurse comment add_comment leading1 leading2 in
+    let trailing = diff_and_recurse comment add_comment trailing1 trailing2 in
+    match leading, trailing with
+    | Some l, Some t -> Some (l @ t)
+    | Some l, None -> Some l
+    | None, Some t -> Some t
+    | None, None -> None
+
+  and comment ((loc1, comment1) as cmt1: (Loc.t Ast.Comment.t)) ((_loc2, comment2) as cmt2: (Loc.t Ast.Comment.t)) =
+    let open Ast.Comment in
+    match comment1, comment2 with
+    | Line _, Block _ ->
+      Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
+    | Block _, Line _ ->
+      Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
+    | Line c1, Line c2
+    | Block c1, Block c2 when not (String.equal c1 c2) ->
+      Some [(loc1, Replace (Comment cmt1, Comment cmt2))]
+    | _ ->
+      None
+
+
+  and program' (program1: (Loc.t, Loc.t) Ast.program) (program2: (Loc.t, Loc.t) Ast.program) : node change list =
     let (program_loc, statements1, _) = program1 in
     let (_, statements2, _) = program2 in
     toplevel_statement_list statements1 statements2
@@ -1172,8 +1228,16 @@ let program (algo : diff_algorithm)
       Some (expression arg1 arg2)
 
   and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node change list =
-    let (old_loc, _) = id1 in
-    [(old_loc, Replace (Identifier id1, Identifier id2))]
+    let (old_loc, { Ast.Identifier.name= name1; comments= comments1 }) = id1 in
+    let (_new_loc, { Ast.Identifier.name= name2; comments= comments2 }) = id2 in
+    let name =
+      if String.equal name1 name2 then []
+      else [(old_loc, Replace (Raw name1, Raw name2))]
+    in
+    let comments = syntax_opt old_loc comments1 comments2
+      |> Option.value ~default:[]
+    in
+    comments @ name
 
   and conditional (c1: (Loc.t, Loc.t) Ast.Expression.Conditional.t)
                              (c2: (Loc.t, Loc.t) Ast.Expression.Conditional.t)

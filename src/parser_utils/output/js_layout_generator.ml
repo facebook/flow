@@ -397,8 +397,8 @@ and comment (loc, comment) =
   let module C = Ast.Comment in
   source_location_with_comments (loc, match comment with
   | C.Block txt -> fuse [
-      Atom "/*"; pretty_hardline;
-      Atom txt; pretty_hardline;
+      Atom "/*";
+      Atom txt;
       Atom "*/";
     ]
   | C.Line txt -> fuse [
