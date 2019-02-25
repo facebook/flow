@@ -299,23 +299,23 @@ let utf8_escape =
     |> Wtf8.fold_wtf_8 (f ~quote) (Buffer.create (String.length str))
     |> Buffer.contents
 
+let layout_from_comment anchor loc_node (loc_cm, comment) =
+  let open Ast.Comment in
+  let comment_text = match comment with
+    | Line txt -> Printf.sprintf "//%s\n" txt
+    | Block txt ->
+      match Loc.lines_intersect loc_node loc_cm, anchor with
+      | false, Preceding -> Printf.sprintf "\n/*%s*/" txt
+      | false, Following -> Printf.sprintf "/*%s*/\n" txt
+      | false, Enclosing -> Printf.sprintf "/*%s*/\n" txt
+      | _ -> Printf.sprintf "/*%s*/" txt
+  in
+  SourceLocation (loc_cm, Atom comment_text)
+
 let with_attached_comments: comment_map option ref = ref None
 
 let layout_node_with_comments current_loc layout_node =
   let open Layout in
-  let open Ast.Comment in
-  let layout_from_comment anchor (loc_st, _) (loc_cm, comment) =
-    let comment_text = match comment with
-      | Line txt -> Printf.sprintf "//%s\n" txt
-      | Block txt ->
-        match Loc.lines_intersect loc_st loc_cm, anchor with
-        | false, Preceding -> Printf.sprintf "\n/*%s*/" txt
-        | false, Following -> Printf.sprintf "/*%s*/\n" txt
-        | false, Enclosing -> Printf.sprintf "/*%s*/\n" txt
-        | _ -> Printf.sprintf "/*%s*/" txt
-    in
-    SourceLocation (loc_cm, Atom comment_text)
-  in
   match !with_attached_comments with
     | None -> layout_node
     | Some attached when LocMap.is_empty attached -> layout_node
@@ -325,23 +325,33 @@ let layout_node_with_comments current_loc layout_node =
         | Some comments ->
           with_attached_comments := Some (LocMap.remove current_loc attached);
           let matched = List.fold_left (fun nodes comment ->
-            let (anchor, statement_attached, comment) = comment in
+            let (anchor, (loc_st, _), comment) = comment in
             match anchor with
               | Preceding ->
-                nodes @ [layout_from_comment anchor statement_attached comment]
+                nodes @ [layout_from_comment anchor loc_st comment]
               | Following ->
-                [layout_from_comment anchor statement_attached comment] @ nodes
+                [layout_from_comment anchor loc_st comment] @ nodes
               | Enclosing ->
-                (* TODO(festevezga)(T29896911) print enclosing comments using statement_attached *)
-                [layout_from_comment anchor statement_attached comment] @ nodes
+                (* TODO(festevezga)(T29896911) print enclosing comments using full statement *)
+                [layout_from_comment anchor loc_st comment] @ nodes
           ) [layout_node] comments in
           Concat matched
+
+let layout_node_with_simple_comments current_loc ?(leading= []) ?(trailing= []) layout_node =
+  let preceding = List.map (layout_from_comment Preceding current_loc) leading in
+  let following = List.map (layout_from_comment Following current_loc) trailing in
+  Concat (preceding @ [layout_node] @ following)
 
 let source_location_with_comments (current_loc, layout_node) =
   layout_node_with_comments current_loc (SourceLocation (current_loc, layout_node))
 
-let identifier_with_comments (current_loc, { Ast.Identifier.name; comments= _ }) =
-  layout_node_with_comments current_loc (Identifier (current_loc, name))
+let identifier_with_comments (current_loc, { Ast.Identifier.name; comments }) =
+  let node = Identifier (current_loc, name) in
+  match comments with
+  | Some { Ast.Syntax.leading; trailing; _} ->
+    layout_node_with_simple_comments current_loc ~leading ~trailing node
+  | None ->
+    layout_node_with_comments current_loc node
 
 (* Generate JS layouts *)
 let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
