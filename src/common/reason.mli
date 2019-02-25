@@ -7,7 +7,7 @@
 
 val mk_id: unit -> int
 
-type reason_desc =
+type 'loc virtual_reason_desc =
   | RAnyExplicit | RAnyImplicit
   | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
@@ -15,7 +15,7 @@ type reason_desc =
   | RStringLit of string
   | RNumberLit of string
   | RBooleanLit of bool
-  | RMatchingProp of string * reason_desc
+  | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
   | RObjectType
@@ -32,7 +32,7 @@ type reason_desc =
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
-  | RFunctionCall of reason_desc
+  | RFunctionCall of 'loc virtual_reason_desc
   | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXFunctionCall of string
@@ -41,9 +41,9 @@ type reason_desc =
   | RJSXElement of string option
   | RJSXText
   | RFbt
-  | RUnaryOperator of string * reason_desc
-  | RBinaryOperator of string * reason_desc * reason_desc
-  | RLogical of string * reason_desc * reason_desc
+  | RUnaryOperator of string * 'loc virtual_reason_desc
+  | RBinaryOperator of string * 'loc virtual_reason_desc * 'loc virtual_reason_desc
+  | RLogical of string * 'loc virtual_reason_desc * 'loc virtual_reason_desc
   | RTemplateString
   | RUnknownString
   | REnum
@@ -70,9 +70,9 @@ type reason_desc =
   | RDefaultValue
   | RConstructor
   | RDefaultConstructor
-  | RConstructorCall of reason_desc
+  | RConstructorCall of 'loc virtual_reason_desc
   | RReturn
-  | RImplicitReturn of reason_desc
+  | RImplicitReturn of 'loc virtual_reason_desc
   | RRegExp
   | RSuper
   | RNoSuper
@@ -82,9 +82,9 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * bool * reason_desc
+  | RTypeAlias of string * bool * 'loc virtual_reason_desc
   | ROpaqueType of string
-  | RTypeParam of string * (reason_desc * ALoc.t) * (reason_desc * ALoc.t)
+  | RTypeParam of string * ('loc virtual_reason_desc * 'loc) * ('loc virtual_reason_desc * 'loc)
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option
@@ -96,14 +96,14 @@ type reason_desc =
   | RProperty of string option
   | RPrivateProperty of string
   | RShadowProperty of string
-  | RPropertyOf of string * reason_desc
+  | RPropertyOf of string * 'loc virtual_reason_desc
   | RPropertyIsAString of string
   | RMissingProperty of string option
   | RUnknownProperty of string option
   | RUndefinedProperty of string
   | RSomeProperty
-  | RNameProperty of reason_desc
-  | RMissingAbstract of reason_desc
+  | RNameProperty of 'loc virtual_reason_desc
+  | RMissingAbstract of 'loc virtual_reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
   | RNamedImportedType of string * string
@@ -113,28 +113,28 @@ type reason_desc =
   | RDefaultImportedType of string * string
   | RCode of string
   | RCustom of string
-  | RPolyType of reason_desc
-  | RPolyTest of string * reason_desc
-  | RExactType of reason_desc
-  | ROptional of reason_desc
-  | RMaybe of reason_desc
-  | RRestArray of reason_desc
-  | RAbstract of reason_desc
-  | RTypeApp of reason_desc
-  | RThisTypeApp of reason_desc
-  | RExtends of reason_desc
-  | RClass of reason_desc
-  | RStatics of reason_desc
-  | RSuperOf of reason_desc
-  | RFrozen of reason_desc
-  | RBound of reason_desc
-  | RVarianceCheck of reason_desc
-  | RPredicateOf of reason_desc
-  | RPredicateCall of reason_desc
-  | RPredicateCallNeg of reason_desc
-  | RRefined of reason_desc
+  | RPolyType of 'loc virtual_reason_desc
+  | RPolyTest of string * 'loc virtual_reason_desc
+  | RExactType of 'loc virtual_reason_desc
+  | ROptional of 'loc virtual_reason_desc
+  | RMaybe of 'loc virtual_reason_desc
+  | RRestArray of 'loc virtual_reason_desc
+  | RAbstract of 'loc virtual_reason_desc
+  | RTypeApp of 'loc virtual_reason_desc
+  | RThisTypeApp of 'loc virtual_reason_desc
+  | RExtends of 'loc virtual_reason_desc
+  | RClass of 'loc virtual_reason_desc
+  | RStatics of 'loc virtual_reason_desc
+  | RSuperOf of 'loc virtual_reason_desc
+  | RFrozen of 'loc virtual_reason_desc
+  | RBound of 'loc virtual_reason_desc
+  | RVarianceCheck of 'loc virtual_reason_desc
+  | RPredicateOf of 'loc virtual_reason_desc
+  | RPredicateCall of 'loc virtual_reason_desc
+  | RPredicateCallNeg of 'loc virtual_reason_desc
+  | RRefined of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of string
-  | RSpreadOf of reason_desc
+  | RSpreadOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
@@ -149,8 +149,8 @@ type reason_desc =
   | RReactState
   | RReactPropTypes
   | RReactChildren
-  | RReactChildrenOrType of reason_desc
-  | RReactChildrenOrUndefinedOrType of reason_desc
+  | RReactChildrenOrType of 'loc virtual_reason_desc
+  | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
   | RReactConfig
 
@@ -161,7 +161,11 @@ and reason_desc_function =
   | RNormal
   | RUnknown
 
-type reason
+and reason_desc = ALoc.t virtual_reason_desc
+
+type 'loc virtual_reason
+type reason = ALoc.t virtual_reason
+type concrete_reason = Loc.t virtual_reason
 type t = reason (* convenience *)
 
 module TestID: sig
@@ -169,13 +173,15 @@ module TestID: sig
 end
 
 (* reason constructor *)
-val mk_reason: reason_desc -> ALoc.t -> reason
+val mk_reason: 'loc virtual_reason_desc -> 'loc -> 'loc virtual_reason
 
 (* ranges *)
 val in_range: Loc.t -> Loc.t -> bool
 
-val string_of_desc: reason_desc -> string
+val string_of_desc: 'loc virtual_reason_desc -> string
 
+val map_reason_locs : ('a -> 'b) -> 'a virtual_reason -> 'b virtual_reason
+val map_desc_locs : ('a -> 'b) -> 'a virtual_reason_desc -> 'b virtual_reason_desc
 val string_of_loc_pos: Loc.t -> string
 val string_of_loc: ?strip_root:Path.t option -> Loc.t -> string
 val string_of_aloc: ?strip_root:Path.t option -> ALoc.t -> string
@@ -196,22 +202,22 @@ val uninternal_module_name: string -> string
 
 val internal_pattern_name: ALoc.t -> string
 
-val is_instantiable_reason: reason -> bool
+val is_instantiable_reason: 'loc virtual_reason -> bool
 
-val is_constant_reason: reason -> bool
+val is_constant_reason: 'loc virtual_reason -> bool
 
-val is_typemap_reason: reason -> bool
-val is_calltype_reason: reason -> bool
+val is_typemap_reason: 'loc virtual_reason -> bool
+val is_calltype_reason: 'loc virtual_reason -> bool
 
-val is_nullish_reason: reason -> bool
-val is_scalar_reason: reason -> bool
-val is_array_reason: reason -> bool
+val is_nullish_reason: 'loc virtual_reason -> bool
+val is_scalar_reason: 'loc virtual_reason -> bool
+val is_array_reason: 'loc virtual_reason -> bool
 
-val is_literal_object_reason: reason -> bool
-val is_literal_array_reason: reason -> bool
+val is_literal_object_reason: 'loc virtual_reason -> bool
+val is_literal_array_reason: 'loc virtual_reason -> bool
 
-val derivable_reason: reason -> reason
-val is_derivable_reason: reason -> bool
+val derivable_reason: 'loc virtual_reason -> 'loc virtual_reason
+val is_derivable_reason: 'loc virtual_reason -> bool
 
 val builtin_reason: reason_desc -> reason
 
@@ -230,15 +236,18 @@ val dump_reason: ?strip_root:Path.t option -> reason -> string
 val aloc_of_reason: reason -> ALoc.t
 val def_aloc_of_reason: reason -> ALoc.t
 val annot_aloc_of_reason: reason -> ALoc.t option
-val desc_of_reason: ?unwrap:bool -> reason -> reason_desc
+val desc_of_reason: ?unwrap:bool -> 'loc virtual_reason -> 'loc virtual_reason_desc
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)
-val replace_reason: ?keep_def_loc:bool -> (reason_desc -> reason_desc) -> reason -> reason
-val replace_reason_const: ?keep_def_loc:bool -> reason_desc -> reason -> reason
+val replace_reason: ?keep_def_loc:bool ->
+  ('loc virtual_reason_desc  -> 'loc virtual_reason_desc )
+  -> 'loc virtual_reason -> 'loc virtual_reason
+val replace_reason_const: ?keep_def_loc:bool ->
+  'loc virtual_reason_desc  -> 'loc virtual_reason -> 'loc virtual_reason
 
-val repos_reason: ALoc.t -> ?annot_loc:ALoc.t -> reason -> reason
-val annot_reason: reason -> reason
+val repos_reason: 'loc -> ?annot_loc:'loc -> 'loc virtual_reason -> 'loc virtual_reason
+val annot_reason: 'loc virtual_reason -> 'loc virtual_reason
 
 module ReasonMap : MyMap.S with type key = reason
 
@@ -248,4 +257,4 @@ val mk_pattern_reason: (ALoc.t, ALoc.t) Flow_ast.Pattern.t -> reason
 val unknown_elem_empty_array_desc: reason_desc
 val inferred_union_elem_array_desc: reason_desc
 
-val invalidate_rtype_alias: reason_desc -> reason_desc
+val invalidate_rtype_alias: 'loc virtual_reason_desc  -> 'loc virtual_reason_desc
