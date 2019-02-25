@@ -888,14 +888,12 @@ let builtin_reason desc =
 
 let is_builtin_reason r =
   r.loc
-  |> ALoc.to_loc
-  |> Loc.source
+  |> ALoc.source
   |> (=) (Some File_key.Builtins)
 
 let is_lib_reason r =
   r.loc
-  |> ALoc.to_loc
-  |> Loc.source
+  |> ALoc.source
   |> Option.value_map ~default:false ~f:File_key.is_lib_file
 
 let is_blamable_reason r =
