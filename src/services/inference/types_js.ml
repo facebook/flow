@@ -24,23 +24,23 @@ let clear_errors (files: FilenameSet.t) errors =
     ) files errors
 
 let update_errset map file errset =
-  if Errors.PrintableErrorSet.is_empty errset then map
+  if Flow_error.ErrorSet.is_empty errset then map
   else
     let errset = match FilenameMap.get file map with
     | Some prev_errset ->
-      Errors.PrintableErrorSet.union prev_errset errset
+      Flow_error.ErrorSet.union prev_errset errset
     | None -> errset
     in
     FilenameMap.add file errset map
 
-let merge_error_maps = FilenameMap.union ~combine:(fun _ x y -> Some (Errors.PrintableErrorSet.union x y))
+let merge_error_maps = FilenameMap.union ~combine:(fun _ x y -> Some (Flow_error.ErrorSet.union x y))
 
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
   match FilenameMap.get file map with
   | Some prev_errset ->
-    let new_errset = Errors.PrintableErrorSet.filter (fun err ->
-      not (Errors.is_duplicate_provider_error err)
+    let new_errset = Flow_error.ErrorSet.filter (fun err ->
+      not (Flow_error.kind_of_error err = Errors.DuplicateProviderError)
     ) prev_errset in
     FilenameMap.add file new_errset map
   | None -> map
@@ -158,11 +158,10 @@ let commit_modules, commit_modules_from_saved_state =
             let errset = List.fold_left (fun acc err ->
               match err with
               | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict; } ->
-                let msg = Error_message.(EDuplicateModuleProvider { module_name; provider; conflict }) in
-                let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg
-                |> Flow_error.make_error_printable in
-                Errors.PrintableErrorSet.add error acc
-            ) Errors.PrintableErrorSet.empty errors in
+                let error = Error_message.(EDuplicateModuleProvider { module_name; provider; conflict })
+                |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file in
+                Flow_error.ErrorSet.add error acc
+            ) Flow_error.ErrorSet.empty errors in
             update_errset acc file errset
           ) errmap errors
       )
@@ -185,7 +184,7 @@ let resolve_requires ~transaction ~reader ~options ~profiling ~workers ~parsed ~
       ~job: (List.fold_left (fun errors_acc filename ->
         let errors = Module_js.add_parsed_resolved_requires filename
           ~mutator ~reader ~options ~node_modules_containers in
-        if Errors.PrintableErrorSet.is_empty errors
+        if Flow_error.ErrorSet.is_empty errors
         then errors_acc
         else FilenameMap.add filename errors errors_acc
       )
@@ -233,8 +232,7 @@ let commit_modules_and_resolve_requires
 
 let error_set_of_merge_error file =
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
-  %> Flow_error.make_error_printable
-  %> Errors.PrintableErrorSet.singleton
+  %> Flow_error.ErrorSet.singleton
 
 
 let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
@@ -462,12 +460,15 @@ let merge
         Core_list.map ~f:(fun (file, result) ->
           match result with
           | Ok (errors, warnings, suppressions) ->
-            let errors = Errors.concretize_printable_errorset errors in
-            let warnings = Errors.concretize_printable_errorset warnings in
+            let errors = Flow_error.make_errors_printable errors
+            |> Errors.concretize_printable_errorset in
+            let warnings = Flow_error.make_errors_printable warnings
+            |> Errors.concretize_printable_errorset in
             file, errors, warnings, suppressions
           | Error msg ->
             let errors = error_set_of_merge_error file msg in
-            let errors = Errors.concretize_printable_errorset errors in
+            let errors = Flow_error.make_errors_printable errors
+            |> Errors.concretize_printable_errorset in
             let suppressions = Error_suppressions.empty in
             let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
             file, errors, warnings, suppressions
@@ -663,7 +664,7 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
           File_sig.With_Loc.(file_sig.tolerable_errors)
           |> File_sig.abstractify_tolerable_errors
           |> Inference_utils.set_of_file_sig_tolerable_errors ~source_file:filename
-          |> Errors.PrintableErrorSet.union errors
+          |> Flow_error.ErrorSet.union errors
         else
           errors
       in
@@ -682,8 +683,10 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       let errors, warnings, suppressions =
         Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
 
-      let errors = Errors.concretize_printable_errorset errors in
-      let warnings = Errors.concretize_printable_errorset warnings in
+      let errors = Flow_error.make_errors_printable errors
+      |> Errors.concretize_printable_errorset in
+      let warnings = Flow_error.make_errors_printable warnings
+      |> Errors.concretize_printable_errorset in
 
       (* Filter out suppressed errors *)
       let errors, _, _ =
@@ -708,24 +711,24 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       let errors = match fails with
       | Parsing_service_js.Parse_error err ->
           let err = Inference_utils.error_of_parse_error ~source_file:filename err in
-          Errors.PrintableErrorSet.add err errors
+          Flow_error.ErrorSet.add err errors
       | Parsing_service_js.Docblock_errors errs ->
           List.fold_left (fun errors err ->
             let err = Inference_utils.error_of_docblock_error ~source_file:filename err in
-            Errors.PrintableErrorSet.add err errors
+            Flow_error.ErrorSet.add err errors
           ) errors errs
       | Parsing_service_js.File_sig_error err ->
           let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
-          Errors.PrintableErrorSet.add err errors
+          Flow_error.ErrorSet.add err errors
       in
-      let errors = Errors.concretize_printable_errorset errors in
+      let errors = Flow_error.make_errors_printable errors |> Errors.concretize_printable_errorset in
       Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
     | Parsing_service_js.Skip_resource_file) ->
       (* should never happen *)
-      let errors = Errors.concretize_printable_errorset errors in
+      let errors = Flow_error.make_errors_printable errors |> Errors.concretize_printable_errorset in
       Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
 let typecheck_contents ~options ~env ~profiling contents filename =
@@ -1028,10 +1031,11 @@ let recheck_with_profiling
   (* record reparse errors *)
   let errors =
     let () =
-      let error_set: Errors.PrintableErrorSet.t =
-        FilenameMap.fold (fun _ -> Errors.PrintableErrorSet.union) new_local_errors Errors.PrintableErrorSet.empty
+      let error_set: Flow_error.ErrorSet.t =
+        FilenameMap.fold (fun _ -> Flow_error.ErrorSet.union) new_local_errors Flow_error.ErrorSet.empty
       in
-      let error_set = Errors.concretize_printable_errorset error_set in
+      let error_set = Flow_error.make_errors_printable error_set
+      |> Errors.concretize_printable_errorset in
       if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0
       then Persistent_connection.update_clients
         ~clients:env.ServerEnv.connections

@@ -656,8 +656,6 @@ let loc_concretizer = object
   method loc = ALoc.to_loc
 end
 
-let is_duplicate_provider_error (kind, _, _) = kind = DuplicateProviderError
-
 let info_to_messages = function
 | loc, [] -> [BlameM (loc, "")]
 | loc, msg :: msgs ->
@@ -3165,9 +3163,4 @@ module Lsp_output = struct
       code = string_of_kind kind;
       relatedLocations = List.rev relatedLocations;
     }
-end
-
-class mapper = object
-  inherit [ALoc.t, ALoc.t] mapper'
-  method loc x = x
 end

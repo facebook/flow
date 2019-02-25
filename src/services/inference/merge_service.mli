@@ -45,7 +45,7 @@ val check_file:
   Options.t ->
   reader:Module_heaps.Mutator_reader.reader ->
   File_key.t ->
-  (Errors.PrintableErrorSet.t * Errors.PrintableErrorSet.t * Error_suppressions.t)
+  (Flow_error.ErrorSet.t * Flow_error.ErrorSet.t * Error_suppressions.t)
 
 val merge_runner:
   job: 'a merge_job ->
@@ -65,11 +65,11 @@ val merge_strict:
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   reader: Mutator_state_reader.t ->
   intermediate_result_callback:
-    ((Errors.PrintableErrorSet.t * Errors.PrintableErrorSet.t *
+    ((Flow_error.ErrorSet.t * Flow_error.ErrorSet.t *
       Error_suppressions.t) merge_job_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: MultiWorkerLwt.worker list option ->
   FilenameSet.t FilenameMap.t ->
   (File_key.t Nel.t) FilenameMap.t ->
   bool FilenameMap.t ->
-  (Errors.PrintableErrorSet.t * Errors.PrintableErrorSet.t  * Error_suppressions.t) merge_results Lwt.t
+  (Flow_error.ErrorSet.t * Flow_error.ErrorSet.t  * Error_suppressions.t) merge_results Lwt.t

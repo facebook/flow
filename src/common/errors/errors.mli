@@ -71,8 +71,6 @@ val mk_speculation_error:
   speculation_errors:((int * ALoc.t printable_error) list) ->
   ALoc.t printable_error
 
-val is_duplicate_provider_error: ALoc.t printable_error -> bool
-
 val loc_of_printable_error: 'loc printable_error -> 'loc
 val locs_of_printable_error: 'loc printable_error -> 'loc list
 val kind_of_printable_error: 'loc printable_error -> error_kind
@@ -201,14 +199,4 @@ module Lsp_output : sig
     relatedLocations: (Loc.t * string) list;
   }
   val lsp_of_error: Loc.t printable_error -> t
-end
-
-class mapper : object
-  method error: ALoc.t printable_error -> ALoc.t printable_error
-  method friendly_error: Friendly.t -> Friendly.t
-  method error_kind: error_kind -> error_kind
-  method friendly_message: ALoc.t Friendly.message -> ALoc.t Friendly.message
-  method loc: ALoc.t -> ALoc.t
-  method message_feature: ALoc.t Friendly.message_feature -> ALoc.t Friendly.message_feature
-  method message_inline: Friendly.message_inline -> Friendly.message_inline
 end

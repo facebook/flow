@@ -8,9 +8,10 @@
 type 'loc t
 
 val loc_of_error : 'loc t -> 'loc option
-val msg_of_error : 'loc t -> Error_message.t
+val msg_of_error : 'loc t -> 'loc Error_message.t'
 val source_file : 'loc t -> File_key.t
-val trace_reasons : 'loc t -> Reason.t list
+val trace_reasons : 'loc t -> 'loc Reason.virtual_reason list
+val kind_of_error : 'loc t -> Errors.error_kind
 
 val error_of_msg :
    trace_reasons:Reason.t list ->
@@ -20,3 +21,10 @@ val error_of_msg :
 val make_error_printable : ALoc.t t -> ALoc.t Errors.printable_error
 
 val ordered_reasons : Reason.t * Reason.t -> Reason.t * Reason.t
+
+module ErrorSet : Set.S with type elt = ALoc.t t
+module ConcreteErrorSet : Set.S with type elt = Loc.t t
+
+val make_errors_printable : ErrorSet.t -> Errors.PrintableErrorSet.t
+
+val map_loc_of_error : ('a -> 'b) -> 'a t -> 'b t
