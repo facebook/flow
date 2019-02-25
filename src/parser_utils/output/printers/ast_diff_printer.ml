@@ -26,7 +26,6 @@ let layout_of_node comments node =
       Js_layout_generator.expression expr;
       Layout.Atom ")";
     ]
-  | Identifier id -> Js_layout_generator.identifier id
   | Pattern pat -> Js_layout_generator.pattern pat
   | Params params -> Js_layout_generator.arrow_function_params params
   | Variance var -> Js_layout_generator.variance var

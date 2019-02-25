@@ -167,7 +167,6 @@ type node =
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
-  | Identifier of Loc.t Ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Ast.Pattern.t
   | Params of (Loc.t, Loc.t) Ast.Function.Params.t
   | Variance of (Loc.t) Ast.Variance.t

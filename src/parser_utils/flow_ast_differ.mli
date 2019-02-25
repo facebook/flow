@@ -24,7 +24,6 @@ type node =
   | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
   | Program of (Loc.t, Loc.t) Flow_ast.program
   | Expression of (Loc.t, Loc.t) Flow_ast.Expression.t
-  | Identifier of Loc.t Flow_ast.Identifier.t
   | Pattern of (Loc.t, Loc.t) Flow_ast.Pattern.t
   | Params of (Loc.t, Loc.t) Flow_ast.Function.Params.t
   | Variance of (Loc.t) Flow_ast.Variance.t
