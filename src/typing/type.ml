@@ -281,71 +281,75 @@ module rec TypeTerm : sig
     | Refinement
     | WidenEnv
 
-  and root_use_op =
-    | Addition of { op: reason; left: reason; right: reason }
-    | AssignVar of { var: reason option; init: reason }
-    | Cast of { lower: reason; upper: reason }
-    | ClassExtendsCheck of { def: reason; name: reason; extends: reason }
-    | ClassImplementsCheck of { def: reason; name: reason; implements: reason }
-    | ClassOwnProtoCheck of { prop: string; own_loc: ALoc.t option; proto_loc: ALoc.t option }
-    | Coercion of { from: reason; target: reason }
+  and 'loc virtual_root_use_op =
+    | Addition of { op: 'loc virtual_reason; left: 'loc virtual_reason; right: 'loc virtual_reason }
+    | AssignVar of { var: 'loc virtual_reason option; init: 'loc virtual_reason }
+    | Cast of { lower: 'loc virtual_reason; upper: 'loc virtual_reason }
+    | ClassExtendsCheck of { def: 'loc virtual_reason; name: 'loc virtual_reason; extends: 'loc virtual_reason }
+    | ClassImplementsCheck of { def: 'loc virtual_reason; name: 'loc virtual_reason; implements: 'loc virtual_reason }
+    | ClassOwnProtoCheck of { prop: string; own_loc: 'loc option; proto_loc: 'loc option }
+    | Coercion of { from: 'loc virtual_reason; target: 'loc virtual_reason }
     | FunCall of {
-        op: reason;
-        fn: reason;
-        args: reason list;
+        op: 'loc virtual_reason;
+        fn: 'loc virtual_reason;
+        args: 'loc virtual_reason list;
         local: bool; (* Whether we can blame back to the function def *)
       }
     | FunCallMethod of {
-        op: reason;
-        fn: reason;
-        prop: reason;
-        args: reason list;
+        op: 'loc virtual_reason;
+        fn: 'loc virtual_reason;
+        prop: 'loc virtual_reason;
+        args: 'loc virtual_reason list;
         local: bool; (* Whether we can blame back to the function def *)
       }
-    | FunReturnStatement of { value: reason }
-    | FunImplicitReturn of { fn: reason; upper: reason }
-    | GeneratorYield of { value: reason }
-    | GetProperty of reason
+    | FunReturnStatement of { value: 'loc virtual_reason }
+    | FunImplicitReturn of { fn: 'loc virtual_reason; upper: 'loc virtual_reason }
+    | GeneratorYield of { value: 'loc virtual_reason }
+    | GetProperty of 'loc virtual_reason
     | Internal of internal_use_op
-    | JSXCreateElement of { op: reason; component: reason }
-    | ReactCreateElementCall of { op: reason; component: reason; children: ALoc.t }
-    | ReactGetIntrinsic of { literal: reason }
-    | Speculation of use_op
-    | TypeApplication of { type': reason }
-    | SetProperty of { lhs: reason; prop: reason; value: reason }
+    | JSXCreateElement of { op: 'loc virtual_reason; component: 'loc virtual_reason }
+    | ReactCreateElementCall of { op: 'loc virtual_reason; component: 'loc virtual_reason; children: 'loc }
+    | ReactGetIntrinsic of { literal: 'loc virtual_reason }
+    | Speculation of 'loc virtual_use_op
+    | TypeApplication of { type': 'loc virtual_reason }
+    | SetProperty of { lhs: 'loc virtual_reason; prop: 'loc virtual_reason; value: 'loc virtual_reason }
     | UnknownUse
 
-  and frame_use_op =
-    | ArrayElementCompatibility of { lower: reason; upper: reason }
-    | FunCompatibility of { lower: reason; upper: reason }
-    | FunMissingArg of { n: int; op: reason; def: reason }
-    | FunParam of { n: int; name: string option; lower: reason; upper: reason }
-    | FunRestParam of { lower: reason; upper: reason }
-    | FunReturn of { lower: reason; upper: reason }
+  and 'loc virtual_frame_use_op =
+    | ArrayElementCompatibility of { lower: 'loc virtual_reason; upper: 'loc virtual_reason }
+    | FunCompatibility of { lower: 'loc virtual_reason; upper: 'loc virtual_reason }
+    | FunMissingArg of { n: int; op: 'loc virtual_reason; def: 'loc virtual_reason }
+    | FunParam of { n: int; name: string option; lower: 'loc virtual_reason; upper: 'loc virtual_reason }
+    | FunRestParam of { lower: 'loc virtual_reason; upper: 'loc virtual_reason }
+    | FunReturn of { lower: 'loc virtual_reason; upper: 'loc virtual_reason }
     | ImplicitTypeParam
-    | IndexerKeyCompatibility of { lower: reason; upper: reason }
+    | IndexerKeyCompatibility of { lower: 'loc virtual_reason; upper: 'loc virtual_reason }
     | PropertyCompatibility of {
         prop: string option;
-        lower: reason;
-        upper: reason;
+        lower: 'loc virtual_reason;
+        upper: 'loc virtual_reason;
         is_sentinel: bool;
       }
     | ReactConfigCheck
     | ReactGetConfig of { polarity: Polarity.t }
-    | TupleElementCompatibility of { n: int; lower: reason; upper: reason }
+    | TupleElementCompatibility of { n: int; lower: 'loc virtual_reason; upper: 'loc virtual_reason }
     | TypeArgCompatibility of {
         name: string;
-        targ: reason;
-        lower: reason;
-        upper: reason;
+        targ: 'loc virtual_reason;
+        lower: 'loc virtual_reason;
+        upper: 'loc virtual_reason;
         polarity: polarity;
       }
     | TypeParamBound of { name: string }
     | UnifyFlip
 
-  and use_op =
-    | Op of root_use_op
-    | Frame of frame_use_op * use_op
+  and 'loc virtual_use_op =
+    | Op of 'loc virtual_root_use_op
+    | Frame of 'loc virtual_frame_use_op * 'loc virtual_use_op
+
+  and use_op = ALoc.t virtual_use_op
+  and root_use_op = ALoc.t virtual_root_use_op
+  and frame_use_op = ALoc.t virtual_frame_use_op
 
   and use_t =
     (* def types can be used as upper bounds *)
@@ -2136,6 +2140,8 @@ and TypeUtil : sig
   val mod_use_op_of_use_t: (TypeTerm.use_op -> TypeTerm.use_op) -> TypeTerm.use_t -> TypeTerm.use_t
   val mod_root_of_use_op: (TypeTerm.root_use_op -> TypeTerm.root_use_op)
     -> TypeTerm.use_op -> TypeTerm.use_op
+  val mod_loc_of_virtual_use_op: ('a -> 'b) ->
+    'a TypeTerm.virtual_use_op -> 'b TypeTerm.virtual_use_op
 
   val reasonless_compare: TypeTerm.t -> TypeTerm.t -> int
   val reasonless_eq: TypeTerm.t -> TypeTerm.t -> bool
@@ -2464,6 +2470,7 @@ end = struct
     OptGetPrivatePropT (use_op, f reason, name, bindings, static)
   | OptTestPropT (reason, id, n) -> OptTestPropT (f reason, id, n)
   | OptGetElemT (use_op, reason, it) -> OptGetElemT (use_op, f reason, it)
+
   let rec util_use_op_of_use_t: 'a. (use_t -> 'a) -> (use_t -> use_op -> (use_op -> use_t) -> 'a) -> use_t -> 'a =
   fun nope util u ->
   let util = util u in
@@ -2587,8 +2594,122 @@ end = struct
         if op' == op then u else make op')
 
   let rec mod_root_of_use_op f = function
-      | Op op -> Op (f op)
-      | Frame (fr, o) -> Frame (fr, mod_root_of_use_op f o)
+    | Op op -> Op (f op)
+    | Frame (fr, o) -> Frame (fr, mod_root_of_use_op f o)
+
+  let rec mod_loc_of_virtual_use_op f =
+    let mod_reason = Reason.map_reason_locs f in
+    let mod_loc_of_root_use_op f = function
+    | Addition { op; left; right } ->
+        Addition {op = mod_reason op; left = mod_reason left; right = mod_reason right}
+    | AssignVar { var; init} ->
+        AssignVar { var = Option.map ~f:mod_reason var; init = mod_reason init }
+    | Cast { lower; upper } ->
+        Cast { lower = mod_reason lower; upper = mod_reason upper; }
+    | ClassExtendsCheck { def; name; extends } ->
+        ClassExtendsCheck {
+          def = mod_reason def;
+          name = mod_reason name;
+          extends = mod_reason extends
+        }
+    | ClassImplementsCheck { def; name; implements }->
+        ClassImplementsCheck {
+          def = mod_reason def;
+          name = mod_reason name;
+          implements = mod_reason implements
+        }
+    | ClassOwnProtoCheck { own_loc; proto_loc; prop } ->
+        ClassOwnProtoCheck {
+          prop;
+          own_loc = Option.map ~f own_loc;
+          proto_loc = Option.map ~f proto_loc
+        }
+    | Coercion { from; target } ->
+        Coercion { from = mod_reason from; target = mod_reason target }
+    | FunCall {op; fn; args; local } ->
+        FunCall {
+          local;
+          op = mod_reason op;
+          fn = mod_reason fn;
+          args = Core_list.map ~f:mod_reason args
+        }
+    | FunCallMethod {op; fn; args; prop; local } ->
+        FunCallMethod {
+          local;
+          op = mod_reason op;
+          fn = mod_reason fn;
+          prop = mod_reason prop;
+          args = Core_list.map ~f:mod_reason args
+        }
+    | FunReturnStatement { value } ->
+        FunReturnStatement { value = mod_reason value }
+    | FunImplicitReturn { fn; upper } ->
+        FunImplicitReturn { fn = mod_reason fn; upper = mod_reason upper; }
+    | GeneratorYield { value } ->
+        GeneratorYield { value = mod_reason value }
+    | GetProperty reason ->
+        GetProperty (mod_reason reason)
+    | Internal o -> Internal o
+    | JSXCreateElement { op; component } ->
+        JSXCreateElement { op = mod_reason op; component = mod_reason component }
+    | ReactCreateElementCall { op; component; children } ->
+        ReactCreateElementCall {
+          op = mod_reason op;
+          component = mod_reason component;
+          children = f children
+        }
+    | ReactGetIntrinsic { literal } ->
+        ReactGetIntrinsic { literal = mod_reason literal }
+    | Speculation op -> Speculation (mod_loc_of_virtual_use_op f op)
+    | TypeApplication { type' } ->
+        TypeApplication { type' = mod_reason type' }
+    | SetProperty { lhs; prop; value } ->
+        SetProperty {
+          lhs = mod_reason lhs;
+          prop = mod_reason prop;
+          value = mod_reason value
+        }
+    | UnknownUse -> UnknownUse in
+    let mod_loc_of_frame_use_op = function
+    | ArrayElementCompatibility { lower; upper } ->
+        ArrayElementCompatibility { lower = mod_reason lower; upper = mod_reason upper }
+    | FunCompatibility { lower; upper } ->
+        FunCompatibility { lower = mod_reason lower; upper = mod_reason upper }
+    | FunMissingArg { n; op; def } ->
+        FunMissingArg { n ; op = mod_reason op; def = mod_reason def }
+    | FunParam { n; name; lower; upper } ->
+        FunParam { n; name; lower = mod_reason lower; upper = mod_reason upper }
+    | FunRestParam { lower; upper } ->
+        FunRestParam { lower = mod_reason lower; upper = mod_reason upper }
+    | FunReturn { lower; upper } ->
+        FunReturn { lower = mod_reason lower; upper = mod_reason upper }
+    | ImplicitTypeParam -> ImplicitTypeParam
+    | IndexerKeyCompatibility { lower; upper } ->
+        IndexerKeyCompatibility { lower = mod_reason lower; upper = mod_reason upper }
+    | PropertyCompatibility { prop; lower; upper; is_sentinel } ->
+        PropertyCompatibility {
+          prop;
+          is_sentinel;
+          lower = mod_reason lower;
+          upper = mod_reason upper;
+        }
+    | ReactConfigCheck -> ReactConfigCheck
+    | ReactGetConfig o -> ReactGetConfig o
+    | TupleElementCompatibility { n; lower; upper } ->
+        TupleElementCompatibility { n; lower = mod_reason lower; upper = mod_reason upper }
+    | TypeArgCompatibility { name; targ; lower; upper; polarity } ->
+        TypeArgCompatibility {
+          name;
+          polarity;
+          targ = mod_reason targ;
+          lower = mod_reason lower;
+          upper = mod_reason upper;
+        }
+    | TypeParamBound o -> TypeParamBound o
+    | UnifyFlip -> UnifyFlip in
+    function
+    | Op op -> Op (mod_loc_of_root_use_op f op)
+    | Frame (fr, o) -> Frame (mod_loc_of_frame_use_op fr, mod_loc_of_virtual_use_op f o)
 
   (* type comparison mod reason *)
   let reasonless_compare =
@@ -2884,7 +3005,7 @@ let replace_speculation_root_use_op =
     | Ok use_op -> use_op
     | Error use_op -> use_op
 
-let aloc_of_root_use_op = function
+let aloc_of_root_use_op : root_use_op -> ALoc.t = function
 | Addition {op; _}
 | AssignVar {init=op; _}
 | Cast {lower=op; _}
@@ -3011,7 +3132,7 @@ let string_of_internal_use_op = function
   | Refinement -> "Refinement"
   | WidenEnv -> "WidenEnv"
 
-let string_of_root_use_op = function
+let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
 | Addition _ -> "Addition"
 | AssignVar _ -> "AssignVar"
 | Cast _ -> "Cast"
@@ -3034,7 +3155,7 @@ let string_of_root_use_op = function
 | SetProperty _ -> "SetProperty"
 | UnknownUse -> "UnknownUse"
 
-let string_of_frame_use_op = function
+let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string  = function
 | ArrayElementCompatibility _ -> "ArrayElementCompatibility"
 | FunCompatibility _ -> "FunCompatibility"
 | FunMissingArg _ -> "FunMissingArg"
@@ -3051,11 +3172,11 @@ let string_of_frame_use_op = function
 | TypeParamBound _ -> "TypeParamBound"
 | UnifyFlip -> "UnifyFlip"
 
-let string_of_use_op = function
+let string_of_use_op (type a) : a virtual_use_op -> string  = function
 | Op root -> string_of_root_use_op root
 | Frame (frame, _) -> string_of_frame_use_op frame
 
-let string_of_use_op_rec =
+let string_of_use_op_rec : use_op -> string =
   fold_use_op
     (string_of_root_use_op)
     (fun acc use_op -> spf "%s(%s)" (string_of_frame_use_op use_op) acc)
