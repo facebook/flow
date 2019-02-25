@@ -50,10 +50,6 @@ val source_of_ident:
 val ident_of_source:
   'a source -> ('a) Flow_ast.Identifier.t
 
-val mk_no_comments:
-  'a ->
-  ('loc, 'a) Flow_ast.Syntax.t
-
 val mk_comments:
   ?leading: 'loc Flow_ast.Comment.t list ->
   ?trailing: 'loc Flow_ast.Comment.t list ->

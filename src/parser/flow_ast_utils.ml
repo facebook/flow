@@ -77,9 +77,6 @@ let source_of_ident (loc, { Identifier.name; comments= _ }) = (loc, name)
 
 let ident_of_source (loc, name) = (loc, { Identifier.name; comments= None })
 
-let mk_no_comments a =
-  { Syntax.leading = []; trailing = []; internal = a }
-
 let mk_comments ?(leading= []) ?(trailing= []) a =
   { Syntax.leading; trailing; internal = a }
 
