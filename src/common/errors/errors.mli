@@ -43,7 +43,7 @@ module Friendly : sig
   val message_of_string: string -> 'a message
   val text: string -> 'a message_feature
   val code: string -> 'a message_feature
-  val ref: ?loc:bool -> Reason.reason -> ALoc.t message_feature
+  val ref: ?loc:bool -> Reason.concrete_reason -> Loc.t message_feature
   val intersperse: 'a -> 'a list -> 'a list
   val conjunction_concat: ?conjunction:string -> 'a message list -> 'a message
   val capitalize: 'a message -> 'a message
@@ -55,34 +55,27 @@ type 'loc printable_error
 
 val mk_error:
   ?kind:error_kind ->
-  ?trace_infos: 'loc info list ->
-  ?root:('loc * 'loc Friendly.message) ->
-  ?frames:('loc Friendly.message list) ->
-  'loc ->
-  'loc Friendly.message ->
-  'loc printable_error
+  ?trace_infos: Loc.t info list ->
+  ?root:(Loc.t * Loc.t Friendly.message) ->
+  ?frames:(Loc.t Friendly.message list) ->
+  Loc.t ->
+  Loc.t Friendly.message ->
+  Loc.t printable_error
 
 val mk_speculation_error:
   ?kind:error_kind ->
-  ?trace_infos:ALoc.t info list ->
-  loc:ALoc.t ->
-  root:(ALoc.t * ALoc.t Friendly.message) option ->
-  frames:(ALoc.t Friendly.message list) ->
-  speculation_errors:((int * ALoc.t printable_error) list) ->
-  ALoc.t printable_error
+  ?trace_infos:Loc.t info list ->
+  loc:Loc.t ->
+  root:(Loc.t * Loc.t Friendly.message) option ->
+  frames:(Loc.t Friendly.message list) ->
+  speculation_errors:((int * Loc.t printable_error) list) ->
+  Loc.t printable_error
 
 val loc_of_printable_error: 'loc printable_error -> 'loc
 val locs_of_printable_error: 'loc printable_error -> 'loc list
 val kind_of_printable_error: 'loc printable_error -> error_kind
 
-(* we store errors in sets, currently, because distinct
-   traces may share endpoints, and produce the same error *)
-module PrintableErrorSet : Set.S with type elt = ALoc.t printable_error
-
 module ConcreteLocPrintableErrorSet : Set.S with type elt = Loc.t printable_error
-
-val concretize_printable_errorset: PrintableErrorSet.t -> ConcreteLocPrintableErrorSet.t
-val concretize_printable_error: ALoc.t printable_error -> Loc.t printable_error
 
 (* formatters/printers *)
 

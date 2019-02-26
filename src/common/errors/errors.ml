@@ -166,11 +166,11 @@ module Friendly = struct
     | _ -> message_inlines_of_string (string_of_desc desc)
     in
     if loc then (
-      let loc = match annot_aloc_of_reason r with
+      let loc = match annot_loc_of_reason r with
       | Some loc -> loc
-      | None -> def_aloc_of_reason r
+      | None -> def_loc_of_reason r
       in
-      if (ALoc.to_loc loc) = Loc.none then
+      if loc = Loc.none then
         Inline desc
       else
         Reference (desc, loc)
@@ -587,83 +587,13 @@ end
 
 type 'loc printable_error = error_kind * 'loc message list * 'loc Friendly.t'
 
-class virtual ['a, 'b] mapper' = object(this)
-  method virtual loc: 'a -> 'b
-
-  method error (error: 'a printable_error) : 'b printable_error =
-    let (error_kind, messages, friendly_error) = error in
-    let error_kind' = this#error_kind error_kind in
-    let messages' = Core_list.map ~f:this#message messages in
-    let friendly_error' = this#friendly_error friendly_error in
-    (error_kind', messages', friendly_error')
-
-  method error_kind (error_kind: error_kind) = error_kind
-
-  method private message (message: 'a message) : 'b message =
-    match message with
-    | BlameM (loc, str) ->
-      let loc' = this#loc loc in
-      BlameM (loc', str)
-    | CommentM str -> CommentM str
-
-  method friendly_error (friendly_error: 'a Friendly.t') : 'b Friendly.t' =
-    let { Friendly.loc; root; message; } = friendly_error in
-    let loc' = this#loc loc in
-    let root' = Option.map ~f:this#error_root root in
-    let message' = this#error_message message in
-    { Friendly.loc = loc'; root = root'; message = message'; }
-
-  method private error_root (error_root: 'a Friendly.error_root) : 'b Friendly.error_root =
-    let { Friendly.root_loc; root_message; } = error_root in
-    let root_loc' = this#loc root_loc in
-    let root_message' = this#friendly_message root_message in
-    { Friendly.root_loc = root_loc'; root_message = root_message'; }
-
-  method private error_message (error_message: 'a Friendly.error_message) : 'b Friendly.error_message =
-    match error_message with
-    | Friendly.Normal { message; frames; } ->
-      let message' = this#friendly_message message in
-      let frames' = Option.map ~f:(Core_list.map ~f:this#friendly_message) frames in
-      Friendly.Normal { message = message'; frames = frames' }
-    | Friendly.Speculation { frames; branches; } ->
-      let frames' = Core_list.map ~f:this#friendly_message frames in
-      let branches' = Core_list.map ~f:(fun branch ->
-        let (score, friendly_error) = branch in
-        let friendly_error' = this#friendly_error friendly_error in
-        (score, friendly_error')
-      ) branches in
-      Friendly.Speculation { frames = frames'; branches = branches'; }
-
-  method friendly_message (friendly_message: 'a Friendly.message) : 'b Friendly.message =
-    Core_list.map ~f:this#message_feature friendly_message
-
-  method message_feature (message_feature: 'a Friendly.message_feature) : 'b Friendly.message_feature =
-    match message_feature with
-    | Friendly.Inline inlines ->
-      let inlines' = Core_list.map ~f:this#message_inline inlines in
-      Friendly.Inline inlines'
-    | Friendly.Reference (inlines, loc) ->
-      let inlines' = Core_list.map ~f:this#message_inline inlines in
-      let loc' = this#loc loc in
-      Friendly.Reference (inlines', loc')
-
-  method message_inline (message_inline: Friendly.message_inline) = message_inline
-
-end
-
-let loc_concretizer = object
-  inherit [ALoc.t, Loc.t] mapper'
-  method loc = ALoc.to_loc
-end
-
 let info_to_messages = function
 | loc, [] -> [BlameM (loc, "")]
 | loc, msg :: msgs ->
   BlameM (loc, msg) ::
   (msgs |> Core_list.map ~f:(fun msg -> CommentM msg))
 
-let infos_to_messages infos =
-  Core_list.concat (Core_list.map ~f:info_to_messages infos)
+let infos_to_messages infos = Core_list.(infos >>= info_to_messages)
 
 let mk_error
   ?(kind=InferError)
@@ -1011,26 +941,10 @@ let rec compare compare_loc =
       else k
     else k
 
-module PrintableError = struct
-  type t = ALoc.t printable_error
-  let compare = compare ALoc.compare
-end
-
-(* we store errors in sets, currently, because distinct
-   traces may share endpoints, and produce the same error *)
-module PrintableErrorSet = Set.Make(PrintableError)
-
 module ConcreteLocPrintableErrorSet = Set.Make (struct
   type t = Loc.t printable_error
   let compare = compare Loc.compare
 end)
-
-let concretize_printable_errorset errors =
-  PrintableErrorSet.fold begin fun err acc ->
-    ConcreteLocPrintableErrorSet.add (loc_concretizer#error err) acc
-  end errors ConcreteLocPrintableErrorSet.empty
-
-let concretize_printable_error = loc_concretizer#error
 
 type 'a error_group =
   (* Friendly errors without a root are never grouped. When traces are enabled

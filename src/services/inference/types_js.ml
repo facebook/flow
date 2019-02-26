@@ -460,15 +460,12 @@ let merge
         Core_list.map ~f:(fun (file, result) ->
           match result with
           | Ok (errors, warnings, suppressions) ->
-            let errors = Flow_error.make_errors_printable errors
-            |> Errors.concretize_printable_errorset in
-            let warnings = Flow_error.make_errors_printable warnings
-            |> Errors.concretize_printable_errorset in
+            let errors = Flow_error.make_errors_printable errors in
+            let warnings = Flow_error.make_errors_printable warnings in
             file, errors, warnings, suppressions
           | Error msg ->
             let errors = error_set_of_merge_error file msg in
-            let errors = Flow_error.make_errors_printable errors
-            |> Errors.concretize_printable_errorset in
+            let errors = Flow_error.make_errors_printable errors in
             let suppressions = Error_suppressions.empty in
             let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
             file, errors, warnings, suppressions
@@ -683,10 +680,8 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       let errors, warnings, suppressions =
         Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
 
-      let errors = Flow_error.make_errors_printable errors
-      |> Errors.concretize_printable_errorset in
-      let warnings = Flow_error.make_errors_printable warnings
-      |> Errors.concretize_printable_errorset in
+      let errors = Flow_error.make_errors_printable errors in
+      let warnings = Flow_error.make_errors_printable warnings in
 
       (* Filter out suppressed errors *)
       let errors, _, _ =
@@ -721,14 +716,14 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
           let err = Inference_utils.error_of_file_sig_error ~source_file:filename err in
           Flow_error.ErrorSet.add err errors
       in
-      let errors = Flow_error.make_errors_printable errors |> Errors.concretize_printable_errorset in
+      let errors = Flow_error.make_errors_printable errors in
       Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
   | Parsing_service_js.Parse_skip
      (Parsing_service_js.Skip_non_flow_file
     | Parsing_service_js.Skip_resource_file) ->
       (* should never happen *)
-      let errors = Flow_error.make_errors_printable errors |> Errors.concretize_printable_errorset in
+      let errors = Flow_error.make_errors_printable errors in
       Lwt.return (None, errors, Errors.ConcreteLocPrintableErrorSet.empty, info)
 
 let typecheck_contents ~options ~env ~profiling contents filename =
@@ -1034,8 +1029,7 @@ let recheck_with_profiling
       let error_set: Flow_error.ErrorSet.t =
         FilenameMap.fold (fun _ -> Flow_error.ErrorSet.union) new_local_errors Flow_error.ErrorSet.empty
       in
-      let error_set = Flow_error.make_errors_printable error_set
-      |> Errors.concretize_printable_errorset in
+      let error_set = Flow_error.make_errors_printable error_set in
       if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0
       then Persistent_connection.update_clients
         ~clients:env.ServerEnv.connections

@@ -18,13 +18,14 @@ val error_of_msg :
    source_file:File_key.t ->
    Error_message.t -> ALoc.t t
 
-val make_error_printable : ALoc.t t -> ALoc.t Errors.printable_error
+val make_error_printable : Loc.t t -> Loc.t Errors.printable_error
 
 val ordered_reasons : Reason.t * Reason.t -> Reason.t * Reason.t
 
 module ErrorSet : Set.S with type elt = ALoc.t t
 module ConcreteErrorSet : Set.S with type elt = Loc.t t
 
-val make_errors_printable : ErrorSet.t -> Errors.PrintableErrorSet.t
+val make_errors_printable : ErrorSet.t -> Errors.ConcreteLocPrintableErrorSet.t
 
 val map_loc_of_error : ('a -> 'b) -> 'a t -> 'b t
+val concretize_error : ALoc.t t -> Loc.t t

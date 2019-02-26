@@ -526,6 +526,7 @@ let func_reason ~async ~generator =
 
 let poly_loc_of_reason r = r.loc
 let aloc_of_reason = poly_loc_of_reason
+let loc_of_reason = poly_loc_of_reason
 
 (* TODO return ALoc *)
 let def_poly_loc_of_reason r =
@@ -534,11 +535,13 @@ let def_poly_loc_of_reason r =
   | None -> aloc_of_reason r
 
 let def_aloc_of_reason = def_poly_loc_of_reason
+let def_loc_of_reason = def_poly_loc_of_reason
 
 let annot_poly_loc_of_reason r =
   r.annot_loc_opt
 
 let annot_aloc_of_reason = annot_poly_loc_of_reason
+let annot_loc_of_reason = annot_poly_loc_of_reason
 let function_desc_prefix = function
   | RAsync -> "async "
   | RGenerator -> "generator "
@@ -886,9 +889,9 @@ let builtin_reason desc =
   |> mk_reason desc
   |> derivable_reason
 
-let is_builtin_reason r =
+let is_builtin_reason f r =
   r.loc
-  |> ALoc.source
+  |> f
   |> (=) (Some File_key.Builtins)
 
 let is_lib_reason r =

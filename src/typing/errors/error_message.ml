@@ -717,7 +717,7 @@ let aloc_of_msg : t -> ALoc.t option = function
       Some (ALoc.of_loc loc1)
   | EBindingError (_, loc, _, _) -> Some loc
   | ESpeculationAmbiguous ((union_r, _), _, _, _) -> Some (aloc_of_reason union_r)
-  | EStrictLookupFailed ((reason, _), lreason, _, _) when is_builtin_reason lreason ->
+  | EStrictLookupFailed ((reason, _), lreason, _, _) when is_builtin_reason ALoc.source lreason ->
       Some (aloc_of_reason reason)
   | EFunctionCallExtraArg _
   | EReactKit _
@@ -801,7 +801,7 @@ type 'loc friendly_message_recipe =
   | PropPolarityMismatch of string option * ('loc Reason.virtual_reason * Type.polarity)
       * ('loc Reason.virtual_reason * Type.polarity) * 'loc Type.virtual_use_op
 
-let friendly_message_of_msg =
+let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   let text = Errors.Friendly.text in
   let code = Errors.Friendly.code in
   let ref = Errors.Friendly.ref in
@@ -823,19 +823,19 @@ let friendly_message_of_msg =
       } ->
       if branches = [] then
         IncompatibleUse
-          (aloc_of_reason reason_upper, upper_kind, reason_lower, Option.value ~default:unknown_use use_op)
+          (loc_of_reason reason_upper, upper_kind, reason_lower, Option.value ~default:unknown_use use_op)
       else
-        Speculation (aloc_of_reason reason_upper, Option.value ~default:unknown_use use_op, branches)
+        Speculation (loc_of_reason reason_upper, Option.value ~default:unknown_use use_op, branches)
 
     | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
       if branches = [] then
         Incompatible (reason_lower, reason_upper, use_op)
       else
-        Speculation (aloc_of_reason reason_upper, use_op, branches)
+        Speculation (loc_of_reason reason_upper, use_op, branches)
 
     | EIncompatibleProp { prop; reason_prop; reason_obj; special=_; use_op } ->
       PropMissing
-        (aloc_of_reason reason_prop, prop, reason_obj, Option.value ~default:unknown_use use_op)
+        (loc_of_reason reason_prop, prop, reason_obj, Option.value ~default:unknown_use use_op)
 
     | EDebugPrint (_, str) ->
       Normal [text str]
@@ -985,7 +985,7 @@ let friendly_message_of_msg =
     | EPropNotFound (prop, reasons, use_op) ->
       let (reason_prop, reason_obj) = reasons in
       PropMissing
-        (aloc_of_reason reason_prop, prop, reason_obj, use_op)
+        (loc_of_reason reason_prop, prop, reason_obj, use_op)
 
     | EPropAccess (reasons, x, _, rw, use_op) ->
       let (reason_prop, _) = reasons in
@@ -993,7 +993,7 @@ let friendly_message_of_msg =
       | Read -> "readable"
       | Write _ -> "writable"
       in
-      UseOp (aloc_of_reason reason_prop, mk_prop_message x @ [text (spf " is not %s" rw)], use_op)
+      UseOp (loc_of_reason reason_prop, mk_prop_message x @ [text (spf " is not %s" rw)], use_op)
 
     | EPropPolarityMismatch (reasons, x, (p1, p2), use_op) ->
       let (lreason, ureason) = reasons in
@@ -1008,7 +1008,7 @@ let friendly_message_of_msg =
       in
       let expected_polarity = polarity_string expected_polarity in
       let actual_polarity = polarity_string actual_polarity in
-      let reason_targ = mk_reason (RIdentifier name) (def_aloc_of_reason reason) in
+      let reason_targ = mk_reason (RIdentifier name) (def_loc_of_reason reason) in
       Normal [
         text "Cannot use "; ref reason_targ; text (" in an " ^ actual_polarity ^ " ");
         text "position because "; ref reason_targ; text " is expected to occur only in ";
@@ -1019,8 +1019,8 @@ let friendly_message_of_msg =
       (* if we're looking something up on the global/builtin object, then tweak
          the error to say that `x` doesn't exist. We can tell this is the
          global object because that should be the only object created with
-         `builtin_reason` instead of an actual location (see `Init_js.init`). *)
-      if is_builtin_reason lreason then
+         `builtin_reason` instead of an actual location (isee `Init_js.init`). *)
+      if is_builtin_reason Loc.source lreason then
         let (reason, _) = reasons in
         let msg = match x with
         | Some x when is_internal_module_name x ->
@@ -1033,14 +1033,14 @@ let friendly_message_of_msg =
       else
         let (reason_prop, reason_obj) = reasons in
         PropMissing
-          (aloc_of_reason reason_prop, x, reason_obj, Option.value ~default:unknown_use use_op)
+          (loc_of_reason reason_prop, x, reason_obj, Option.value ~default:unknown_use use_op)
 
     | EPrivateLookupFailed (reasons, x, use_op) ->
       PropMissing
-        (aloc_of_reason (fst reasons), Some ("#" ^ x), snd reasons, use_op)
+        (loc_of_reason (fst reasons), Some ("#" ^ x), snd reasons, use_op)
 
     | EAdditionMixed (reason, use_op) ->
-      UseOp (aloc_of_reason reason,
+      UseOp (loc_of_reason reason,
         [ref reason; text " could either behave like a string or like a number"],
         use_op)
 
@@ -1050,21 +1050,21 @@ let friendly_message_of_msg =
 
     | ETupleArityMismatch (reasons, l1, l2, use_op) ->
       let (lower, upper) = reasons in
-      UseOp (aloc_of_reason lower, [
+      UseOp (loc_of_reason lower, [
         ref lower; text (spf " has an arity of %d but " l1); ref upper;
         text (spf " has an arity of %d" l2);
       ], use_op)
 
     | ENonLitArrayToTuple (reasons, use_op) ->
       let (lower, upper) = reasons in
-      UseOp (aloc_of_reason lower, [
+      UseOp (loc_of_reason lower, [
         ref lower; text " has an unknown number of elements, so is ";
         text "incompatible with "; ref upper;
       ], use_op)
 
     | ETupleOutOfBounds (reasons, length, index, use_op) ->
       let (lower, upper) = reasons in
-      UseOp (aloc_of_reason lower, [
+      UseOp (loc_of_reason lower, [
         ref upper;
         text (spf " only has %d element%s, so index %d is out of bounds"
           length (if length == 1 then "" else "s") index);
@@ -1072,22 +1072,22 @@ let friendly_message_of_msg =
 
     | ETupleUnsafeWrite (reasons, use_op) ->
       let (lower, _) = reasons in
-      UseOp (aloc_of_reason lower,
+      UseOp (loc_of_reason lower,
         [text "the index must be statically known to write a tuple element"],
         use_op)
 
     | EUnionSpeculationFailed { use_op; reason; reason_op=_; branches } ->
-      Speculation (aloc_of_reason reason, use_op, branches)
+      Speculation (loc_of_reason reason, use_op, branches)
 
     | ESpeculationAmbiguous (_, (prev_i, prev_case), (i, case), case_rs) ->
       let open Friendly in
       let prev_case_r =
         mk_reason (RCustom
-          ("case " ^ string_of_int (prev_i + 1))) (aloc_of_reason prev_case)
+          ("case " ^ string_of_int (prev_i + 1))) (loc_of_reason prev_case)
       in
       let case_r =
         mk_reason (RCustom
-          ("case " ^ string_of_int (i + 1))) (aloc_of_reason case)
+          ("case " ^ string_of_int (i + 1))) (loc_of_reason case)
       in
       Normal (
         [
@@ -1097,14 +1097,14 @@ let friendly_message_of_msg =
         ] @
         (conjunction_concat ~conjunction:"or" (Core_list.map ~f:(fun case_r ->
           let text = "to " ^ (string_of_desc (desc_of_reason case_r)) in
-          [ref (mk_reason (RCustom text) (aloc_of_reason case_r))]
+          [ref (mk_reason (RCustom text) (loc_of_reason case_r))]
         ) case_rs)) @
         [text "."]
       )
 
     | EIncompatibleWithExact (reasons, use_op) ->
       let (lower, upper) = reasons in
-      UseOp (aloc_of_reason lower,
+      UseOp (loc_of_reason lower,
         [text "inexact "; ref lower; text " is incompatible with exact "; ref upper],
         use_op
       )
@@ -1158,7 +1158,7 @@ let friendly_message_of_msg =
         valid = valid_reason;
         use_op;
       } ->
-      let valid_reason = mk_reason (desc_of_reason valid_reason) (def_aloc_of_reason valid_reason) in
+      let valid_reason = mk_reason (desc_of_reason valid_reason) (def_loc_of_reason valid_reason) in
       let invalids =
         InvalidCharSetSet.fold (fun c acc ->
           match c with
@@ -1170,7 +1170,7 @@ let friendly_message_of_msg =
         |> List.rev
       in
       UseOp (
-        aloc_of_reason invalid_reason,
+        loc_of_reason invalid_reason,
         [ref invalid_reason; text " is incompatible with "; ref valid_reason; text " since "] @
         Friendly.conjunction_concat ~conjunction:"and" invalids,
         use_op
@@ -1211,7 +1211,7 @@ let friendly_message_of_msg =
         [ref a; text ". "; text msg; text " "; ref b; text "."]
 
     | EIncompatibleWithShape (lower, upper, use_op) ->
-      UseOp (aloc_of_reason lower, [
+      UseOp (loc_of_reason lower, [
         ref lower; text " is incompatible with "; code "$Shape"; text " of ";
         ref upper;
       ], use_op)
@@ -1361,7 +1361,9 @@ let friendly_message_of_msg =
         else if x = internal_name "super" then RSuper
         else RIdentifier x
       in
-      let x = mk_reason desc (Scope.Entry.entry_loc entry) in
+      (* We can call to_loc here because reaching this point requires that everything else
+        in the error message is concretized already; making Scopes polymorphic is not a good idea *)
+      let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.to_loc) in
       let msg = match binding_error with
       | ENameAlreadyBound ->
         [text "Cannot declare "; ref x; text " because the name is already bound."]
@@ -1504,7 +1506,7 @@ let friendly_message_of_msg =
       Normal [text "Unreachable code."]
 
     | EInvalidObjectKit { tool=_; reason; reason_op=_; use_op } ->
-      UseOp (aloc_of_reason reason, [ref reason; text " is not an object"], use_op)
+      UseOp (loc_of_reason reason, [ref reason; text " is not an object"], use_op)
 
     | EInvalidTypeof (_, typename) ->
       Normal [
@@ -1594,7 +1596,7 @@ let friendly_message_of_msg =
         | InitialState _ -> "is not an object or null"
         )
       in
-      UseOp (aloc_of_reason reason, [ref reason; text (" " ^ msg)], use_op)
+      UseOp (loc_of_reason reason, [ref reason; text (" " ^ msg)], use_op)
 
     | EReactElementFunArity (_, fn, n) ->
       Normal [
@@ -1608,7 +1610,7 @@ let friendly_message_of_msg =
       | 1 -> "no more than 1 argument is expected by"
       | n -> spf "no more than %d arguments are expected by" n
       in
-      UseOp (aloc_of_reason unused_reason, [text msg; text " "; ref def_reason], use_op)
+      UseOp (loc_of_reason unused_reason, [text msg; text " "; ref def_reason], use_op)
 
     | EUnsupportedSetProto _ ->
       Normal
@@ -1618,7 +1620,7 @@ let friendly_message_of_msg =
       let loc = Loc.(
         let pos = { line = 1; column = 0; } in
         { source = Some provider; start = pos; _end = pos }
-      ) |> ALoc.of_loc in
+      ) in
       Normal [
         text "Duplicate module provider for "; code module_name; text ". Change ";
         text "either this module provider or the ";

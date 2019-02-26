@@ -10,7 +10,7 @@ open Utils_js
 open Reason
 open Error_message
 
-exception ImproperlyFormattedError of Error_message.t
+exception ImproperlyFormattedError of Loc.t Error_message.t'
 
 type 'loc t = {
   loc: 'loc option;
@@ -30,6 +30,8 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } = {
   source_file;
   trace_reasons = Core_list.map ~f:(Reason.map_reason_locs f) trace_reasons;
 }
+
+let concretize_error = map_loc_of_error ALoc.to_loc
 
 let kind_of_error err = msg_of_error err |> kind_of_msg
 
@@ -208,21 +210,21 @@ let ordered_reasons ((rl, ru) as reasons) =
   then ru, rl
   else reasons
 
-let error_of_msg ~trace_reasons ~source_file msg : ALoc.t t =
+let error_of_msg ~trace_reasons ~source_file (msg : ALoc.t Error_message.t') : ALoc.t t =
   {
     loc = aloc_of_msg msg;
     msg;
     source_file;
     trace_reasons
   }
-
-let rec make_error_printable error : ALoc.t Errors.printable_error =
+let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
   let open Errors in
 
-  let { loc; msg; source_file; trace_reasons } = error in
+  let { loc : Loc.t option; msg : Loc.t Error_message.t';
+        source_file; trace_reasons : Loc.t virtual_reason list} = error in
   let kind = kind_of_msg msg in
 
-  let mk_info reason extras =
+  let mk_info (reason : concrete_reason) extras =
     let desc = string_of_desc (desc_of_reason reason) in
     (* For descriptions that are an identifier wrapped in primes, e.g. `A`, then
      * we want to unwrap the primes and just show A. This looks better in infos.
@@ -236,10 +238,10 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
     ) then (
       String.sub desc 1 ((String.length desc) - 2)
     ) else desc in
-    aloc_of_reason reason, desc :: extras
+    loc_of_reason reason, desc :: extras
   in
 
-  let info_of_reason r = mk_info r [] in
+  let info_of_reason (r : concrete_reason) = mk_info r [] in
 
   let trace_infos = Core_list.map ~f:info_of_reason trace_reasons in
 
@@ -345,7 +347,7 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
    * where we found the error and a use_op which we will unwrap. *)
   let unwrap_use_ops =
     let open Friendly in
-    let rec loop loc frames use_op =
+    let rec loop (loc : Loc.t) frames (use_op : Loc.t virtual_use_op) =
       let action = match use_op with
       | Op UnknownUse
       | Op (Internal _)
@@ -447,7 +449,9 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
           [text "Cannot instantiate "; desc type'])
 
       | Op (SetProperty {prop; value; lhs; _}) ->
-        let loc_reason = if Loc.contains (aloc_of_reason lhs |> ALoc.to_loc) (ALoc.to_loc loc) then lhs else value in
+        let loc_reason =
+          if Loc.contains (loc_of_reason lhs) loc then lhs
+          else value in
         `Root (loc_reason, None,
           [text "Cannot assign "; desc value; text " to "; desc prop])
 
@@ -493,13 +497,13 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
          * meaning. As defined above. *)
         | Frame (PropertyCompatibility {prop=Some prop; lower=lower'; _}, use_op)
             when prop <> "$key" && prop <> "$value" && prop <> "$call" ->
-          let lower' = repos_small_reason (aloc_of_reason lower) lower' use_op in
+          let lower' = repos_small_reason (loc_of_reason lower) lower' use_op in
           (* Perform the same frame location unwrapping as we do in our
            * general code. *)
           let lower = if
             Loc.contains
-              (aloc_of_reason lower' |> ALoc.to_loc)
-              (aloc_of_reason lower |> ALoc.to_loc)
+              (loc_of_reason lower')
+              (loc_of_reason lower)
             then lower else lower' in
           let (lower, props, use_op) = loop lower use_op in
           (lower, prop::props, use_op)
@@ -543,15 +547,15 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
       | `NextWithLoc (frame_reason, use_op) ->
         (* If our current loc is inside our frame_loc then use our current loc
          * since it is the smallest possible loc in our frame_loc. *)
-        let frame_loc = aloc_of_reason frame_reason in
-        let loc = if Loc.contains (ALoc.to_loc frame_loc) (ALoc.to_loc loc) then loc else frame_loc in
+        let frame_loc = loc_of_reason frame_reason in
+        let loc = if Loc.contains frame_loc loc then loc else frame_loc in
         loop loc frames use_op
       (* Add our frame message and reposition the location if appropriate. *)
       | `Frame (frame_reason, use_op, frame) ->
         (* If our current loc is inside our frame_loc then use our current loc
          * since it is the smallest possible loc in our frame_loc. *)
-        let frame_loc = aloc_of_reason frame_reason in
-        let frame_contains_loc = Loc.contains (ALoc.to_loc frame_loc) (ALoc.to_loc loc) in
+        let frame_loc = loc_of_reason frame_reason in
+        let frame_contains_loc = Loc.contains frame_loc loc in
         let loc = if frame_contains_loc then loc else frame_loc in
         (* Add our frame and recurse with the next use_op. *)
         let (all_frames, local_frames) = frames in
@@ -572,9 +576,9 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
       | `Root (root_reason, root_specific_reason, root_message) ->
         (* If our current loc is inside our root_loc then use our current loc
          * since it is the smallest possible loc in our root_loc. *)
-        let root_loc = aloc_of_reason root_reason in
-        let root_specific_loc = Option.map root_specific_reason aloc_of_reason in
-        let loc = if Loc.contains (ALoc.to_loc root_loc) (ALoc.to_loc loc) && ALoc.compare root_loc loc <> 0
+        let root_loc = loc_of_reason root_reason in
+        let root_specific_loc = Option.map root_specific_reason loc_of_reason in
+        let loc = if Loc.contains root_loc loc && Loc.compare root_loc loc <> 0
           then loc
           else Option.value root_specific_loc ~default:root_loc
         in
@@ -583,7 +587,7 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
         let (all_frames, _) = frames in
         (Some (root_loc, root_message), loc, all_frames)
     in
-    fun loc use_op ->
+    fun (loc : Loc.t) (use_op : Loc.t virtual_use_op) ->
       let (root, loc, frames) = loop loc ([], []) use_op in
       let root = Option.map root (fun (root_loc, root_message) ->
         (root_loc, root_message @ [text " because"])) in
@@ -593,7 +597,7 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
   (* Make a friendly error based on a use_op. The message we are provided should
    * not have any punctuation. Punctuation will be provided after the frames of
    * an error message. *)
-  let mk_use_op_error loc use_op message =
+  let mk_use_op_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) message =
     let (root, loc, frames) = unwrap_use_ops loc use_op in
     mk_error
       ~trace_infos
@@ -604,11 +608,14 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
   in
 
   (* Make a friendly error based on failed speculation. *)
-  let mk_use_op_speculation_error loc use_op branches =
+  let mk_use_op_speculation_error (loc : Loc.t) (use_op : Loc.t virtual_use_op) branches =
     let (root, loc, frames) = unwrap_use_ops loc use_op in
-    let speculation_errors = Core_list.map ~f:(fun (_, msg) ->
+    let speculation_errors = Core_list.map ~f:(fun (_, (msg : Error_message.t)) ->
       let score = score_of_msg msg in
-      let error = error_of_msg ~trace_reasons:[] ~source_file msg |> make_error_printable in
+      let error =
+        error_of_msg ~trace_reasons:[] ~source_file msg
+        |> concretize_error
+        |> make_error_printable in
       (score, error)
     ) branches in
     mk_speculation_error
@@ -632,7 +639,7 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
     (* Add a custom message for Coercion root_use_ops that does not include the
      * upper bound. *)
     | Op (Coercion {from; _}) ->
-      mk_use_op_error (aloc_of_reason from) use_op
+      mk_use_op_error (loc_of_reason from) use_op
         [ref lower; text " should not be coerced"]
     (* Ending with FunMissingArg gives us a different error message. Even though
      * this error was generated by an incompatibility, we want to show a more
@@ -648,7 +655,7 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
       | _ ->
         [ref def; text " requires another argument from "; ref op]
       in
-      mk_use_op_error (aloc_of_reason op) use_op message
+      mk_use_op_error (loc_of_reason op) use_op message
     | _ ->
       let root_use_op = root_of_use_op use_op in
       (match root_use_op with
@@ -659,10 +666,10 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
        * In flip_contravariant we flip upper/lower for all FunImplicitReturn. So
        * reverse those back as well. *)
       | FunImplicitReturn {upper=return; _} ->
-        mk_use_op_error (aloc_of_reason lower) use_op (
+        mk_use_op_error (loc_of_reason lower) use_op (
           [ref lower; text " is incompatible with "] @
           if
-            Loc.compare (aloc_of_reason return |> ALoc.to_loc) (aloc_of_reason upper |> ALoc.to_loc)
+            Loc.compare (loc_of_reason return) (loc_of_reason upper)
               = 0
           then
             [text "implicitly-returned "; desc upper]
@@ -672,18 +679,18 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
       (* Default incompatibility. *)
       | _ ->
         begin match desc_of_reason lower, desc_of_reason upper with
-          | RPolyTest _, RPolyTest _ when aloc_of_reason lower = aloc_of_reason upper ->
-            mk_use_op_error (aloc_of_reason lower) use_op
+          | RPolyTest _, RPolyTest _ when loc_of_reason lower = loc_of_reason upper ->
+            mk_use_op_error (loc_of_reason lower) use_op
               [text "the expected type is not parametric in "; ref upper;
                text ", perhaps due to the use of "; code "*";
                text " or the lack of a type annotation";]
           | RLongStringLit n , RStringLit _ ->
-            mk_use_op_error (aloc_of_reason lower) use_op
+            mk_use_op_error (loc_of_reason lower) use_op
               [ref lower; text " is incompatible with "; ref upper;
               text " because strings longer than "; code (string_of_int n);
               text " characters are not treated as literals"]
           | _ ->
-            mk_use_op_error (aloc_of_reason lower) use_op
+            mk_use_op_error (loc_of_reason lower) use_op
               [ref lower; text " is incompatible with "; ref upper]
         end
       )
@@ -702,7 +709,7 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
      * then we are subtyping. Record the upper reason. *)
     | Frame (PropertyCompatibility {prop=compat_prop; lower; upper; _}, use_op)
         when prop = compat_prop ->
-      (aloc_of_reason lower, lower, Some upper, use_op)
+      (loc_of_reason lower, lower, Some upper, use_op)
     (* Otherwise this is a general property missing error. *)
     | _ -> (prop_loc, lower, None, use_op)
     in
@@ -816,7 +823,7 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
       | Positive -> "writable"
       | Neutral -> failwith "unreachable")
     in
-    mk_use_op_error (aloc_of_reason lower) use_op (
+    mk_use_op_error (loc_of_reason lower) use_op (
       mk_prop_message prop @
       [text (" is " ^ expected ^ " in "); ref lower; text " but "] @
       [text (actual ^ " in "); ref upper]
@@ -841,4 +848,7 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
   | None, Error_message.Normal _ | Some _, _ -> raise (ImproperlyFormattedError msg)
 
 let make_errors_printable set =
-  Errors.(ErrorSet.fold (make_error_printable %> PrintableErrorSet.add) set PrintableErrorSet.empty)
+  Errors.(ErrorSet.fold
+    (concretize_error %> make_error_printable %> ConcreteLocPrintableErrorSet.add)
+    set
+    ConcreteLocPrintableErrorSet.empty)

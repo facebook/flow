@@ -222,7 +222,7 @@ val is_derivable_reason: 'loc virtual_reason -> bool
 val builtin_reason: reason_desc -> reason
 
 (* reason location preds *)
-val is_builtin_reason: reason -> bool
+val is_builtin_reason: ('loc -> File_key.t option) -> 'loc virtual_reason -> bool
 val is_lib_reason: reason -> bool
 val is_blamable_reason: reason -> bool
 val reasons_overlap: reason -> reason -> bool
@@ -233,10 +233,13 @@ val json_of_reason: ?strip_root:Path.t option -> offset_table:Offset_utils.t opt
 val dump_reason: ?strip_root:Path.t option -> reason -> string
 
 (* accessors *)
+val loc_of_reason : concrete_reason -> Loc.t
 val aloc_of_reason: reason -> ALoc.t
 val def_aloc_of_reason: reason -> ALoc.t
+val def_loc_of_reason: concrete_reason -> Loc.t
 val annot_aloc_of_reason: reason -> ALoc.t option
 val desc_of_reason: ?unwrap:bool -> 'loc virtual_reason -> 'loc virtual_reason_desc
+val annot_loc_of_reason: concrete_reason -> Loc.t option
 
 (* simple way to get derived reasons whose descriptions are
    simple replacements of the original *)

@@ -43,8 +43,8 @@ let regenerate =
           let err =
             let msg = Error_message.EUnusedSuppression (ALoc.of_loc loc) in
             Flow_error.error_of_msg ~trace_reasons:[] ~source_file msg
+            |> Flow_error.concretize_error
             |> Flow_error.make_error_printable in
-          let err = Errors.concretize_printable_error err in
           let file_warnings = FilenameMap.get source_file warnings
             |> Option.value ~default:ConcreteLocPrintableErrorSet.empty
             |> ConcreteLocPrintableErrorSet.add err in
@@ -58,7 +58,6 @@ let regenerate =
     filename file_errs (errors, suppressed, unused) =
     let file_errs, file_suppressed, unused =
       Flow_error.make_errors_printable file_errs
-      |> Errors.concretize_printable_errorset
       |> filter_suppressed_errors suppressions ~unused in
     let errors = f filename file_errs errors in
     let suppressed = List.rev_append file_suppressed suppressed in

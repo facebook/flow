@@ -6,15 +6,17 @@
  *)
 
 let error_of_parse_error source_file (loc, err) =
-  let flow_err = Error_message.EParseError (ALoc.of_loc loc, err) in
-  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+  Error_message.EParseError (ALoc.of_loc loc, err)
+  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
+  |> Flow_error.concretize_error
   |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
-  let flow_err = File_sig.With_Loc.(match e with
-  | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
-  ) in
-  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+  File_sig.With_Loc.(match e with
+    | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
+  )
+  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
+  |> Flow_error.concretize_error
   |> Flow_error.make_error_printable
 
 let parse_content file content =
@@ -38,12 +40,12 @@ let parse_content file content =
   in
   if parse_errors <> [] then
     let converted = List.fold_left (fun acc parse_error ->
-      Errors.PrintableErrorSet.add (error_of_parse_error file parse_error) acc
-    ) Errors.PrintableErrorSet.empty parse_errors in
+      Errors.ConcreteLocPrintableErrorSet.add (error_of_parse_error file parse_error) acc
+    ) Errors.ConcreteLocPrintableErrorSet.empty parse_errors in
     Error converted
   else
     match File_sig.With_Loc.program ~ast ~module_ref_prefix:None with
-    | Error e -> Error (Errors.PrintableErrorSet.singleton (error_of_file_sig_error file e))
+    | Error e -> Error (Errors.ConcreteLocPrintableErrorSet.singleton (error_of_file_sig_error file e))
     | Ok fsig -> Ok (ast, fsig)
 
 let array_of_list f lst =
@@ -234,15 +236,14 @@ let check_content ~filename ~content =
     let include_suppressions = Context.include_suppressions cx in
     let errors, warnings, suppressions =
       Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
-    let errors = Flow_error.make_errors_printable errors |> Errors.concretize_printable_errorset in
-    let warnings = Flow_error.make_errors_printable warnings |> Errors.concretize_printable_errorset in
+    let errors = Flow_error.make_errors_printable errors in
+    let warnings = Flow_error.make_errors_printable warnings in
     let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
       suppressions errors ~unused:suppressions in
     let warnings, _, _ = Error_suppressions.filter_suppressed_errors
       suppressions warnings ~unused:suppressions
     in errors, warnings
   | Error parse_errors ->
-    let parse_errors = Errors.concretize_printable_errorset parse_errors in
     parse_errors, Errors.ConcreteLocPrintableErrorSet.empty
   in
   let strip_root = Some root in
