@@ -35,7 +35,9 @@ let tests = "parser" >::: [
       "0.1", { zero with minor = 1 };
       "1", { zero with major = 1 };
       "1.2", { zero with major = 1; minor = 2 };
-      "1.2.3", { major = 1; minor = 2; patch = 3 };
+      "1.2.3", { zero with major = 1; minor = 2; patch = 3 };
+      "1.2.3-alpha", { zero with major = 1; minor = 2; patch = 3; prerelease = [Str "alpha"] };
+      "1.2.3-alpha.2", { zero with major = 1; minor = 2; patch = 3; prerelease = [Str "alpha"; Int 2] };
     ] in
     List.iter (fun (str, version) ->
       try

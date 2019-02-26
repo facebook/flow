@@ -6,9 +6,10 @@
  */
 
 %token EOF
-%token DOT
+%token DOT HYPHEN PLUS
 %token LT LTE GT GTE EQ
 %token CARET
+%token <string> ID
 %token <string> NR
 
 %start version comparator range
@@ -17,11 +18,13 @@
 %type <Semver_range.t> range
 %%
 version:
-  number part part {
+  number part part prerelease build {
     Semver_version.({
       major = $1;
       minor = $2;
       patch = $3;
+      prerelease = $4;
+      build = $5;
     })
   }
 ;
@@ -42,6 +45,25 @@ part:
 /* empty */ { 0 }
 | DOT number { $2 }
 ;
+
+prerelease:
+/* empty */ { [] }
+| HYPHEN identifier_list { $2 }
+;
+
+build:
+/* empty */ { [] }
+| PLUS identifier_list { $2 }
+;
+
+identifier_list:
+  identifier_part { [$1] }
+| identifier_part DOT identifier_list { $1::$3 }
+;
+
+identifier_part:
+  ID { Semver_version.Str $1 }
+| NR { Semver_version.Int (int_of_string $1) }
 
 op:
 /* empty */ { None }

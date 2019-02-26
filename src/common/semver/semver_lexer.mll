@@ -10,6 +10,8 @@ open Semver_parser
 }
 
 let number = '0'|['1'-'9'](['0'-'9'])*
+let identifier_start = ['0'-'9' 'A'-'Z' 'a'-'z']
+let identifier = identifier_start (identifier_start | '_')*
 
 rule token = parse
   [' ' '\t'] {
@@ -19,6 +21,11 @@ rule token = parse
 | number as nr {
     NR nr
   }
+| identifier as id {
+    ID id
+  }
+| '-' { HYPHEN }
+| '+' { PLUS }
 | '.' { DOT }
 | '<' { LT }
 | '<''=' { LTE }

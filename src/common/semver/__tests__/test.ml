@@ -26,6 +26,7 @@ let tests = "semver" >::: [
 
   Semver_parser_test.tests;
   Semver_range_test.tests;
+  Semver_version_test.tests;
 ]
 
 let () = run_test_tt_main tests
