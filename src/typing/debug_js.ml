@@ -2240,7 +2240,7 @@ and dump_tvar_ (depth, tvars) cx id =
     string_of_int id
 
 and dump_prop_ (depth, tvars) cx p =
-  let kid t = dump_t_ (depth-1, tvars) cx t in
+  let kid t = dump_t_ (depth, tvars) cx t in
   match p with
   | Field (_loc, t, polarity) ->
     spf "Field (%s) %s" (string_of_polarity polarity) (kid t)
