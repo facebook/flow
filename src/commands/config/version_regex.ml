@@ -60,19 +60,26 @@ let less_than_or_equal_to_version =
       end else [x]
     end
   in
-  let rec helper = function
+  let rec helper : int list -> string = function
   | [] -> ""
-  | part::[] -> union (range part)
+  | part::[] -> union (range (string_of_int part))
   | part::rest ->
-      let x = part ^ "\\(\\." ^ (helper rest) ^ "\\)?" in
-      if part = "0" then
+      let str = string_of_int part in
+      let x = str ^ "\\(\\." ^ (helper rest) ^ "\\)?" in
+      if part = 0 then
         x
       else
-        let prev = part |> int_of_string |> pred |> string_of_int in
+        let prev = pred part |> string_of_int in
         let rest = Core_list.map ~f:(fun _ -> "\\(\\.[0-9]+\\)?") rest in
         union [x; (union (range prev)) ^ (String.concat "" rest)]
   in
   fun version ->
-    version
-    |> Str.split (Str.regexp_string ".")
-    |> helper
+    let parts =
+      try Scanf.sscanf version "%u.%u.%u" (fun major minor patch -> [major; minor; patch]) with
+      | End_of_file ->
+        raise (Failure ("Unable to parse version "^version^": does not match \"%u.%u.%u\""))
+      | Scanf.Scan_failure err
+      | Failure err ->
+          raise (Failure ("Unable to parse version "^version^": "^err))
+    in
+    helper parts
