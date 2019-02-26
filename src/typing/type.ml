@@ -770,6 +770,7 @@ module rec TypeTerm : sig
     | Chain
     | ComputedNonLiteralKey
     | Constructor
+    | DummyStatic
     | Existential
     | Exports
     | FunctionPrototype
@@ -2735,6 +2736,7 @@ module Unsoundness = struct
   let exports                 = Unsound Exports
   let existential             = Unsound Existential
   let bound_fn_this           = Unsound BoundFunctionThis
+  let dummy_static            = Unsound DummyStatic
 
   let merged_any              = AnyT.make merged
   let instance_of_refi_any    = AnyT.make instance_of_refi
@@ -2750,6 +2752,7 @@ module Unsoundness = struct
   let exports_any             = AnyT.make exports
   let existential_any         = AnyT.make existential
   let bound_fn_this_any       = AnyT.make bound_fn_this
+  let dummy_static_any        = AnyT.make dummy_static
 
   let why kind = Unsound kind |> AnyT.why
   let at  kind = Unsound kind |> AnyT.at
@@ -3315,7 +3318,7 @@ let unknown_use = Op UnknownUse
    want to encourage this pattern, but we also don't want to block uses of this
    pattern. Thus, we compromise by not tracking the property types. *)
 let dummy_static =
-  replace_reason (fun desc -> RStatics desc) %> AnyT.untyped
+  replace_reason (fun desc -> RStatics desc) %> Unsoundness.dummy_static_any
 
 let dummy_prototype =
   ObjProtoT (locationless_reason RDummyPrototype)
