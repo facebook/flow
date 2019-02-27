@@ -17,7 +17,7 @@ Table of contents:
 - [`$NonMaybeType<T>`](#toc-nonmaybe)
 - [`$ObjMap<T, F>`](#toc-objmap)
 - [`$TupleMap<T, F>`](#toc-tuplemap)
-- [`$Call<F>`](#toc-call)
+- [`$Call<F, T>`](#toc-call)
 - [`Class<T>`](#toc-class)
 - [`$Shape<T>`](#toc-shape)
 - [`$Supertype<T>`](#toc-supertype)
@@ -455,9 +455,9 @@ const arr = [() => 'foo', () => 'bar'];
 (run(arr)[1]: boolean); // Error
 ```
 
-## `$Call<F>` <a class="toc" id="toc-call" href="#toc-call"></a>
+## `$Call<F, T>` <a class="toc" id="toc-call" href="#toc-call"></a>
 
-`$Call<F>` is a type that represents the result of calling the given [function type](../functions) `F`. This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
+`$Call<F, T>` is a type that represents the result of calling the given [function type](../functions) `F` on type `T`. This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
 
 Let's see a couple of examples:
 ```js
