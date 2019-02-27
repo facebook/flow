@@ -7,7 +7,7 @@
 let aNumber: number = 10;
 class aClass { };
 interface anInterface {};
-let aUnion = 'a' | 'b';
+type aUnion = 'a' | 'b';
 let aFunction = () => null;
 
 function foo() {
