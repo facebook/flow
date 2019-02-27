@@ -514,7 +514,7 @@ References:
    134|   // This is only on function components, but trying to access name when
    135|   // displayName is undefined is a common pattern.
    136|   name?: ?string,
-   137|   propTypes?: any,
+   137|   propTypes?: {},
    138| };
         ^ [1]
 
@@ -549,7 +549,7 @@ References:
    134|   // This is only on function components, but trying to access name when
    135|   // displayName is undefined is a common pattern.
    136|   name?: ?string,
-   137|   propTypes?: any,
+   137|   propTypes?: {},
    138| };
         ^ [1]
 
