@@ -504,17 +504,21 @@ let add_output cx ?trace msg =
       Trace.reasons_of_trace ~level:max_trace_depth trace
   in
 
-  let is_enabled = FlowError.(match kind_and_loc_of_lint_msg msg with
-    | Some (Errors.LintError lint_kind, loc) ->
-        (* Okay here because lints must have a concrete location *)
-        ALoc.to_loc loc
-        |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
-        |> Option.value_map ~default:true ~f:(fun lint_settings ->
-             (LintSettings.is_explicit lint_kind lint_settings) ||
-             (LintSettings.get_value lint_kind lint_settings <> Severity.Off)
-           )
+  let is_enabled = match Error_message.kind_of_msg msg with
+    | Errors.LintError lint_kind ->
+      begin match Error_message.aloc_of_msg msg with
+        | Some loc ->
+            (* Okay here because lints must have a concrete location *)
+            ALoc.to_loc loc
+            |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
+            |> Option.value_map ~default:true ~f:(fun lint_settings ->
+                 (LintSettings.is_explicit lint_kind lint_settings) ||
+                 (LintSettings.get_value lint_kind lint_settings <> Severity.Off)
+               )
+        | _ -> true
+      end
     | _ -> true
-  ) in
+  in
 
   (* If the lint error isn't enabled at this location and isn't explicitly suppressed, just don't
      even add it *)
@@ -533,7 +537,9 @@ let add_output cx ?trace msg =
     if Context.is_verbose cx then
       prerr_endlinef "\nadd_output: %s" (Debug_js.dump_error_message cx msg);
 
-    let error = FlowError.error_of_msg ~trace_reasons ~source_file:(Context.file cx) msg in
+    let error =
+      FlowError.error_of_msg ~trace_reasons ~source_file:(Context.file cx) msg
+      |> FlowError.make_error_printable in
     (* catch no-loc errors early, before they get into error map *)
     if ALoc.source (Errors.loc_of_printable_error error) = None then
       assert_false (

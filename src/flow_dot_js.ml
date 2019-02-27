@@ -8,12 +8,14 @@
 let error_of_parse_error source_file (loc, err) =
   let flow_err = Error_message.EParseError (ALoc.of_loc loc, err) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+  |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
   let flow_err = File_sig.With_Loc.(match e with
   | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
   ) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+  |> Flow_error.make_error_printable
 
 let parse_content file content =
   let parse_options = Some Parser_env.({

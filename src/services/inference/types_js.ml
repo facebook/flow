@@ -159,7 +159,8 @@ let commit_modules, commit_modules_from_saved_state =
               match err with
               | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict; } ->
                 let msg = Error_message.(EDuplicateModuleProvider { module_name; provider; conflict }) in
-                let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
+                let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg
+                |> Flow_error.make_error_printable in
                 Errors.PrintableErrorSet.add error acc
             ) Errors.PrintableErrorSet.empty errors in
             update_errset acc file errset
@@ -230,9 +231,11 @@ let commit_modules_and_resolve_requires
     changed_modules, { ServerEnv.local_errors; merge_errors; warnings; suppressions }
   )
 
-let error_set_of_merge_error file msg =
-  let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
-  Errors.PrintableErrorSet.singleton error
+let error_set_of_merge_error file =
+  Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file
+  %> Flow_error.make_error_printable
+  %> Errors.PrintableErrorSet.singleton
+
 
 let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
   with_timer_lwt ~options "CalcDeps" profiling (fun () ->
