@@ -6,12 +6,12 @@
  *)
 
 let error_of_parse_error source_file (loc, err) =
-  let flow_err = Flow_error.EParseError (ALoc.of_loc loc, err) in
+  let flow_err = Error_message.EParseError (ALoc.of_loc loc, err) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let error_of_file_sig_error source_file e =
   let flow_err = File_sig.With_Loc.(match e with
-  | IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType (ALoc.of_loc loc)
+  | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
   ) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 

@@ -6,11 +6,11 @@
  *)
 
 let error_of_docblock_error ~source_file (loc, err) =
-  let flow_err = Flow_error.EDocblockError (ALoc.of_loc loc, match err with
-    | Parsing_service_js.MultipleFlowAttributes -> Flow_error.MultipleFlowAttributes
-    | Parsing_service_js.MultipleProvidesModuleAttributes -> Flow_error.MultipleProvidesModuleAttributes
-    | Parsing_service_js.MultipleJSXAttributes -> Flow_error.MultipleJSXAttributes
-    | Parsing_service_js.InvalidJSXAttribute first_error -> Flow_error.InvalidJSXAttribute first_error
+  let flow_err = Error_message.EDocblockError (ALoc.of_loc loc, match err with
+    | Parsing_service_js.MultipleFlowAttributes -> Error_message.MultipleFlowAttributes
+    | Parsing_service_js.MultipleProvidesModuleAttributes -> Error_message.MultipleProvidesModuleAttributes
+    | Parsing_service_js.MultipleJSXAttributes -> Error_message.MultipleJSXAttributes
+    | Parsing_service_js.InvalidJSXAttribute first_error -> Error_message.InvalidJSXAttribute first_error
   ) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
@@ -20,14 +20,14 @@ let set_of_docblock_errors ~source_file errors =
   ) Errors.PrintableErrorSet.empty errors
 
 let error_of_parse_error ~source_file (loc, err) =
-  let flow_err = Flow_error.EParseError (ALoc.of_loc loc, err) in
+  let flow_err = Error_message.EParseError (ALoc.of_loc loc, err) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let set_of_parse_error ~source_file error =
   Errors.PrintableErrorSet.singleton (error_of_parse_error ~source_file error)
 
 let error_of_package_json_error ~source_file (loc, err) =
-  let flow_err = Flow_error.EMalformedPackageJson (ALoc.of_loc loc, err) in
+  let flow_err = Error_message.EMalformedPackageJson (ALoc.of_loc loc, err) in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
 let set_of_package_json_error ~source_file error =
@@ -36,7 +36,7 @@ let set_of_package_json_error ~source_file error =
 let error_of_file_sig_error ~source_file err =
   let open File_sig.With_Loc in
   let flow_err = match err with
-  | IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType (ALoc.of_loc loc)
+  | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 
@@ -46,9 +46,9 @@ let set_of_file_sig_error ~source_file error =
 let error_of_file_sig_tolerable_error ~source_file err =
   let open File_sig.With_ALoc in
   let flow_err = match err with
-  | BadExportPosition loc -> Flow_error.EBadExportPosition loc
-  | BadExportContext (name, loc) -> Flow_error.EBadExportContext (name, loc)
-  | SignatureVerificationError sve -> Flow_error.ESignatureVerification sve
+  | BadExportPosition loc -> Error_message.EBadExportPosition loc
+  | BadExportContext (name, loc) -> Error_message.EBadExportContext (name, loc)
+  | SignatureVerificationError sve -> Error_message.ESignatureVerification sve
   in
   Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
 

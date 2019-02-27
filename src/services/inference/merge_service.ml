@@ -8,7 +8,7 @@
 open Utils_js
 module Reqs = Merge_js.Reqs
 
-type 'a merge_job_result = ('a, Flow_error.error_message) result
+type 'a merge_job_result = ('a, Error_message.t) result
 type 'a merge_job_results = (File_key.t * 'a merge_job_result) list
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
@@ -312,7 +312,7 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
         ~on_timer:(fun run_time ->
           Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files;
           Option.iter merge_timeout ~f:(fun merge_timeout ->
-            if run_time >= merge_timeout then raise (Flow_error.EMergeTimeout run_time)
+            if run_time >= merge_timeout then raise (Error_message.EMergeTimeout run_time)
           )
         )
         ~f:(fun () ->
@@ -352,7 +352,7 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
         (* We can't pattern match on the exception type once it's marshalled
            back to the master process, so we pattern match on it here to create
            an error result. *)
-        let result = Error Flow_error.(match unwrapped_exc with
+        let result = Error Error_message.(match unwrapped_exc with
         | EDebugThrow loc -> EInternal (loc, DebugThrow)
         | EMergeTimeout s -> EInternal (file_loc, MergeTimeout s)
         | _ -> EInternal (file_loc, MergeJobException exc)

@@ -193,7 +193,7 @@ let object_property cx ~expr acc xs (key: (ALoc.t, ALoc.t) Ast.Pattern.Object.Pr
     let acc, e = object_computed_property cx ~expr acc e in
     acc, xs, Property.Computed e
   | Property.Literal (loc, _) ->
-    Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+    Flow_js.add_output cx Error_message.(EUnsupportedSyntax
       (loc, DestructuringObjectPropertyLiteralNonString));
     acc, xs, Tast_utils.error_mapper#pattern_object_property_key key
 
@@ -248,7 +248,7 @@ let rec pattern cx ~expr ~f acc (loc, p) =
     identifier cx ~f acc id_loc name;
     Identifier { Identifier.name = id; optional; annot }
   | Expression e ->
-    Flow_js.add_output cx Flow_error.(EUnsupportedSyntax
+    Flow_js.add_output cx Error_message.(EUnsupportedSyntax
       (loc, DestructuringExpressionPattern));
     Expression (Tast_utils.error_mapper#expression e)
 

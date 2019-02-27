@@ -7,7 +7,7 @@
 
 open Utils_js
 
-type 'a merge_job_result = ('a, Flow_error.error_message) result
+type 'a merge_job_result = ('a, Error_message.t) result
 type 'a merge_job_results = (File_key.t * 'a merge_job_result) list
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->

@@ -37,5 +37,5 @@ val dump_use_t: ?depth:int -> Context.t -> Type.use_t -> string
 val dump_tvar: ?depth:int -> Context.t -> Constraint.ident -> string
 val dump_prop: ?depth:int -> Context.t -> Type.Property.t -> string
 val dump_reason: Context.t -> Reason.t -> string
-val dump_flow_error: Context.t -> Flow_error.error_message -> string
+val dump_error_message: Context.t -> Error_message.t -> string
 val dump_flow: ?depth:int -> Context.t -> Type.t * Type.use_t -> string

@@ -140,7 +140,7 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
 
 let detect_sketchy_null_checks cx =
   let add_error ~loc ~null_loc kind falsy_loc =
-    Flow_error.ESketchyNullLint { kind; loc; null_loc; falsy_loc }
+    Error_message.ESketchyNullLint { kind; loc; null_loc; falsy_loc }
     |> Flow_js.add_output cx
   in
 
@@ -171,17 +171,17 @@ let detect_sketchy_null_checks cx =
 let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
   Core_list.iter ~f:(fun (name, reasons, use_op) ->
-    Flow_js.add_output cx (Flow_error.EPropNotFound (name, reasons, use_op))
+    Flow_js.add_output cx (Error_message.EPropNotFound (name, reasons, use_op))
   ) misses
 
 let detect_unnecessary_optional_chains cx =
   Core_list.iter ~f:(fun (loc, lhs_reason) ->
-    Flow_js.add_output cx (Flow_error.EUnnecessaryOptionalChain (loc, lhs_reason))
+    Flow_js.add_output cx (Error_message.EUnnecessaryOptionalChain (loc, lhs_reason))
   ) (Context.unnecessary_optional_chains cx)
 
 let detect_unnecessary_invariants cx =
   Core_list.iter ~f:(fun (loc, reason) ->
-    Flow_js.add_output cx (Flow_error.EUnnecessaryInvariant (loc, reason))
+    Flow_js.add_output cx (Error_message.EUnnecessaryInvariant (loc, reason))
   ) (Context.unnecessary_invariants cx)
 
 let check_type_visitor wrap =
@@ -233,7 +233,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
       let desc = Reason.RCustom "TypeAssert library function" in
       let reason_main = Reason.mk_reason desc call_loc in
-      let wrap reason = Flow_js.add_output full_cx (Flow_error.EInvalidTypeArgs (
+      let wrap reason = Flow_js.add_output full_cx (Error_message.EInvalidTypeArgs (
         reason_main, Reason.mk_reason reason call_loc
       )) in
       match Ty_normalizer.from_scheme ~options ~genv scheme with
@@ -596,7 +596,7 @@ module ContextOptimizer = struct
        *)
       | Some file when not @@ is_builtin_or_flowlib cx file &&
           (export_file = Some file || export_file = Some File_key.Builtins) ->
-        Flow_error.EDynamicExport (r, reason_exp) |> Flow_js.add_output cx
+        Error_message.EDynamicExport (r, reason_exp) |> Flow_js.add_output cx
       | _ -> ()
 
     method reduce cx module_ref =

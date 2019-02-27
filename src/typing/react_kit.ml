@@ -14,11 +14,11 @@ let err_incompatible
   trace
   ~use_op
   ~reason_op
-  ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
+  ~(add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
   reason
   u
 =
-  add_output cx ~trace (Flow_error.EReactKit
+  add_output cx ~trace (Error_message.EReactKit
     ((reason_op, reason), u, use_op))
 let component_class
   cx
@@ -124,7 +124,7 @@ let props_to_tout
   ~(rec_flow_t: Context.t -> Trace.t -> ?use_op:Type.use_op -> (Type.t * Type.t) -> unit)
   ~rec_flow
   ~(get_builtin_type: Context.t -> ?trace:Trace.t -> reason -> ?use_desc:bool -> string -> Type.t)
-  ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
+  ~(add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
   u
   tout
 =
@@ -188,7 +188,7 @@ let get_config
   ~rec_flow
   ~(rec_unify: Context.t -> Trace.t -> use_op:Type.use_op -> ?unify_any:bool -> Type.t -> Type.t -> unit)
   ~get_builtin_type
-  ~(add_output: Context.t -> ?trace:Trace.t -> Flow_error.error_message -> unit)
+  ~(add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit)
   u
   pole
   tout

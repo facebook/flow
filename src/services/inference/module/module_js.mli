@@ -29,7 +29,7 @@ val exported_module:
 
 type resolution_acc = {
   mutable paths: SSet.t;
-  mutable errors: Flow_error.error_message list;
+  mutable errors: Error_message.t list;
 }
 val imported_module:
   options: Options.t ->

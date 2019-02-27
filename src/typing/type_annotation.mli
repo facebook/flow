@@ -81,6 +81,6 @@ val qualified_name: (ALoc.t, ALoc.t) Flow_ast.Type.Generic.Identifier.t -> strin
 
 val error_type:
   Context.t ->
-  ALoc.t -> Flow_error.error_message ->
+  ALoc.t -> Error_message.t ->
   (ALoc.t, ALoc.t) Flow_ast.Type.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.t

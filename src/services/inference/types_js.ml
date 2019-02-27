@@ -158,7 +158,7 @@ let commit_modules, commit_modules_from_saved_state =
             let errset = List.fold_left (fun acc err ->
               match err with
               | Module_js.ModuleDuplicateProviderError { module_name; provider; conflict; } ->
-                let msg = Flow_error.(EDuplicateModuleProvider { module_name; provider; conflict }) in
+                let msg = Error_message.(EDuplicateModuleProvider { module_name; provider; conflict }) in
                 let error = Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg in
                 Errors.PrintableErrorSet.add error acc
             ) Errors.PrintableErrorSet.empty errors in

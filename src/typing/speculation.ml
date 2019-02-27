@@ -15,7 +15,7 @@ module Action = struct
   type t =
   | Flow of Type.t * Type.use_t
   | Unify of Type.use_op * Type.t * Type.t
-  | Error of Flow_error.error_message
+  | Error of Error_message.t
 
   (* Extract tvars involved in an action. *)
   let tvars =
@@ -143,7 +143,7 @@ type branch = {
 (* The state maintained by speculative_matches when trying each case of a
    union/intersection in turn. *)
 type match_state =
-| NoMatch of Flow_error.error_message list
+| NoMatch of Error_message.t list
 | ConditionalMatch of Case.t
 
 module State : sig
