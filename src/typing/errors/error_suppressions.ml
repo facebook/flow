@@ -228,11 +228,11 @@ let get_lint_settings severity_cover loc =
 (* Filter out lint errors which are definitely suppressed or were never
  * enabled in the first place. *)
 let filter_lints suppressions errors ~include_suppressions severity_cover =
-  Errors.(PrintableErrorSet.fold (fun error (errors, warnings, suppressions) ->
+  Flow_error.(ErrorSet.fold (fun error (errors, warnings, suppressions) ->
     let open Severity in
-    match kind_of_printable_error error with
-    | LintError lint_kind ->
-      let loc = Errors.loc_of_printable_error error |> ALoc.to_loc in
+    match msg_of_error error |> Error_message.kind_of_msg, loc_of_error error with
+    | Errors.LintError lint_kind, Some loc ->
+      let loc = ALoc.to_loc loc in
       begin match get_lint_settings severity_cover loc with
       | None ->
         (* This shouldn't happen -- the primary location of a lint error
@@ -240,7 +240,7 @@ let filter_lints suppressions errors ~include_suppressions severity_cover =
          * are more confident that this invariant holds, pass the lint warning
          * back to the master process, where it will be filtered in the
          * context of the full severity cover set. *)
-         errors, PrintableErrorSet.add error warnings, suppressions
+         errors, ErrorSet.add error warnings, suppressions
       | Some lint_settings ->
         (* Lint settings can only affect lint errors when located at the
          * error's "primary" location. This is a nice property, since it means
@@ -256,7 +256,7 @@ let filter_lints suppressions errors ~include_suppressions severity_cover =
                suppressed. We also add them as an error regardless of what they were in the
                first place. *)
             if LintSettings.is_explicit lint_kind lint_settings
-            then PrintableErrorSet.add error errors, warnings, suppressions
+            then ErrorSet.add error errors, warnings, suppressions
             else errors, warnings, suppressions
         | Off ->
           let suppressions =
@@ -265,12 +265,12 @@ let filter_lints suppressions errors ~include_suppressions severity_cover =
               remove_lint_suppression_from_map used_suppression suppressions
             | _ -> suppressions in
           errors, warnings, suppressions
-        | Warn -> errors, PrintableErrorSet.add error warnings, suppressions
-        | Err -> PrintableErrorSet.add error errors, warnings, suppressions
+        | Warn -> errors, ErrorSet.add error warnings, suppressions
+        | Err -> ErrorSet.add error errors, warnings, suppressions
       end
     (* Non-lint errors can be suppressed by any location present in the error.
      * A dependency location might be part of the error, and the corresponding
      * suppression is not available from this worker. We need to pass back all
      * errors to be filtered in the master process. *)
-    | _ -> PrintableErrorSet.add error errors, warnings, suppressions
-  ) errors (PrintableErrorSet.empty, PrintableErrorSet.empty, suppressions))
+    | _ -> ErrorSet.add error errors, warnings, suppressions
+  ) errors (ErrorSet.empty, ErrorSet.empty, suppressions))

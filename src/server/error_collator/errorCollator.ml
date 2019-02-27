@@ -57,7 +57,8 @@ let regenerate =
   let acc_fun (type a) suppressions (f : File_key.t -> ConcreteLocPrintableErrorSet.t -> a -> a)
     filename file_errs (errors, suppressed, unused) =
     let file_errs, file_suppressed, unused =
-      Errors.concretize_printable_errorset file_errs
+      Flow_error.make_errors_printable file_errs
+      |> Errors.concretize_printable_errorset
       |> filter_suppressed_errors suppressions ~unused in
     let errors = f filename file_errs errors in
     let suppressed = List.rev_append file_suppressed suppressed in

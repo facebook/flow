@@ -234,8 +234,8 @@ let check_content ~filename ~content =
     let include_suppressions = Context.include_suppressions cx in
     let errors, warnings, suppressions =
       Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
-    let errors = Errors.concretize_printable_errorset errors in
-    let warnings = Errors.concretize_printable_errorset warnings in
+    let errors = Flow_error.make_errors_printable errors |> Errors.concretize_printable_errorset in
+    let warnings = Flow_error.make_errors_printable warnings |> Errors.concretize_printable_errorset in
     let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
       suppressions errors ~unused:suppressions in
     let warnings, _, _ = Error_suppressions.filter_suppressed_errors

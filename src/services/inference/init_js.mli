@@ -16,6 +16,6 @@ val init :
   string list ->
   (File_key.t *
     bool *
-    Errors.PrintableErrorSet.t *
-    Errors.PrintableErrorSet.t *
+    Flow_error.ErrorSet.t *
+    Flow_error.ErrorSet.t *
     Error_suppressions.t) list Lwt.t

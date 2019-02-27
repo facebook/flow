@@ -21,13 +21,13 @@ type genv = {
 type errors = {
   (* errors are stored in a map from file path to error set, so that the errors
      from checking particular files can be cleared during recheck. *)
-  local_errors: Errors.PrintableErrorSet.t Utils_js.FilenameMap.t;
+  local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   (* errors encountered during merge have to be stored separately so
      dependencies can be cleared during merge. *)
-  merge_errors: Errors.PrintableErrorSet.t Utils_js.FilenameMap.t;
+  merge_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   (* warnings are stored in a map from file path to error set, so that the warnings
      from checking particular files can be cleared during recheck. *)
-  warnings: Errors.PrintableErrorSet.t Utils_js.FilenameMap.t;
+  warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   (* error suppressions in the code *)
   suppressions: Error_suppressions.t;
 }

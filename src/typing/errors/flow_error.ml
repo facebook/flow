@@ -14,15 +14,35 @@ exception ImproperlyFormattedError of Error_message.t
 
 type 'loc t = {
   loc: 'loc option;
-  msg : Error_message.t;
+  msg : 'loc Error_message.t';
   source_file : File_key.t;
-  trace_reasons : Reason.reason list;
+  trace_reasons : 'loc Reason.virtual_reason list;
 }
 
 let loc_of_error { loc; _ } = loc
 let msg_of_error { msg; _ } = msg
 let source_file { source_file; _ } = source_file
 let trace_reasons { trace_reasons; _} = trace_reasons
+
+let map_loc_of_error f { loc; msg; source_file; trace_reasons } = {
+  loc = Option.map ~f loc;
+  msg = map_loc_of_error_message f msg;
+  source_file;
+  trace_reasons = Core_list.map ~f:(Reason.map_reason_locs f) trace_reasons;
+}
+
+let kind_of_error err = msg_of_error err |> kind_of_msg
+
+(* I wish OCaml's scoping for types was better *)
+type 'loc err = 'loc t
+
+module Error (M : Set.OrderedType) : Set.OrderedType with type t = M.t err = struct
+  type t = M.t err
+  let compare = compare
+end
+
+module ErrorSet = Set.Make(Error(ALoc))
+module ConcreteErrorSet = Set.Make(Error(Loc))
 
 (* Rank scores for signals of different strength on an x^2 scale so that greater
  * signals dominate lesser signals. *)
@@ -819,3 +839,6 @@ let rec make_error_printable error : ALoc.t Errors.printable_error =
   | None, Error_message.Speculation (loc, use_op, branches) ->
       mk_use_op_speculation_error loc use_op branches
   | None, Error_message.Normal _ | Some _, _ -> raise (ImproperlyFormattedError msg)
+
+let make_errors_printable set =
+  Errors.(ErrorSet.fold (make_error_printable %> PrintableErrorSet.add) set PrintableErrorSet.empty)

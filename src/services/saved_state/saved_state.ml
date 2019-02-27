@@ -44,8 +44,8 @@ type saved_state_data = {
    * 3. Local errors should be the same after a lazy init and after a full init. This isn't true
    *    for the other members of env.errors which are filled in during typechecking
    *)
-  local_errors: Errors.PrintableErrorSet.t Utils_js.FilenameMap.t;
-  warnings: Errors.PrintableErrorSet.t Utils_js.FilenameMap.t;
+  local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
+  warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t;
 
   (* TODO - Figure out what to do aboute module.resolver *)
@@ -86,20 +86,15 @@ end = struct
       }
   end
 
-  (* A Error.error is a complicated data structure with Loc.t's hidden everywhere. The easiest way
-   * to make sure we get them all is with a mapper *)
-  class error_normalizer (root) = object
-    inherit Errors.mapper
-
-    method! loc (loc: ALoc.t) =
-      (* TODO(nmote) path normalization (and denormalization) should be done on ALocs directly. This
-      * will be feasible since we will store paths concretely even for truly abstract locations. *)
+  (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
+  let normalize_error ~root =
+    let f loc =
       let loc = ALoc.to_loc loc in
       { loc with
         Loc.source = Option.map ~f:(normalize_file_key ~root) loc.Loc.source;
       }
-      |> ALoc.of_loc
-  end
+      |> ALoc.of_loc in
+    Flow_error.map_loc_of_error f
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
@@ -194,9 +189,8 @@ end = struct
       let root_str = Path.to_string root in
       fun f -> not (Files.is_prefix root_str f)
 
-  let normalize_error_set ~root error_set =
-    let normalizer = new error_normalizer root in
-    Errors.PrintableErrorSet.map normalizer#error error_set
+  let normalize_error_set ~root =
+    Flow_error.ErrorSet.map (normalize_error ~root)
 
   (* Collect all the data for all the files *)
   let collect_data ~workers ~genv ~env =
@@ -320,16 +314,14 @@ end = struct
       }
   end
 
-  class error_denormalizer (root) = object
-    inherit Errors.mapper
-
-    method! loc (loc: ALoc.t) =
+  let denormalize_error ~root =
+    let f loc =
       let loc = ALoc.to_loc loc in
       { loc with
         Loc.source = Option.map ~f:(denormalize_file_key ~root) loc.Loc.source;
       }
-      |> ALoc.of_loc
-  end
+      |> ALoc.of_loc in
+    Flow_error.map_loc_of_error f
 
   let verify_version =
     let version_length = 16 in (* Flow_build_id should always be 16 bytes *)
@@ -428,9 +420,8 @@ end = struct
       ~merge:FilenameMap.union
       ~next
 
-  let denormalize_error_set ~root normalized_error_set =
-    let denormalizer = new error_denormalizer root in
-    Errors.PrintableErrorSet.map denormalizer#error normalized_error_set
+  let denormalize_error_set ~root =
+    Flow_error.ErrorSet.map (denormalize_error ~root)
 
   (* Denormalize all the data *)
   let denormalize_data ~workers ~options ~data =

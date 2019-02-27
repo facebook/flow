@@ -705,10 +705,9 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
   in
   Module_heaps.Resolved_requires_mutator.add_resolved_requires mutator file resolved_requires;
   List.fold_left (fun acc msg ->
-    Errors.PrintableErrorSet.add (
+    Flow_error.ErrorSet.add (
       Flow_error.error_of_msg ~trace_reasons:[] ~source_file:file msg
-      |> Flow_error.make_error_printable
-    ) acc) Errors.PrintableErrorSet.empty errors
+    ) acc) Flow_error.ErrorSet.empty errors
 
 (* Repick providers for modules that are exported by new and changed files, or
    were provided by changed and deleted files.
