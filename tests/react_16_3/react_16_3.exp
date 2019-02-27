@@ -66,8 +66,8 @@ References:
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:194:5
-   194|   | {current: React$ElementRef<ElementType> | null}
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   194|   | {-current: React$ElementRef<ElementType> | null}
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                                          ^^^^^^^^^^^^^^ [3]
@@ -76,8 +76,37 @@ References:
                              ^^^^^^^^^^^^^^^^^ [4]
 
 
+Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:12
 
-Found 4 errors
+Cannot create `UnionRef` element because in property `ref`:
+ - Either `HTMLAnchorElement` [1] is incompatible with `HTMLButtonElement` [2] in property `current`.
+ - Or `HTMLAnchorElement` [1] is incompatible with `HTMLDivElement` [3] in property `current`.
+ - Or a callable signature is missing in object type [4] but exists in function type [5].
+
+   forwardRef.js:42:12
+    42| const _j = <UnionRef foo={3} ref={badUnionRef} />; // Error bad ref
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   forwardRef.js:27:65
+    27| const UnionRef = React.forwardRef<FooProps, HTMLButtonElement | HTMLAnchorElement>(
+                                                                        ^^^^^^^^^^^^^^^^^ [1]
+   forwardRef.js:41:37
+    41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
+                                            ^^^^^^^^^^^^^^^^^ [2]
+   forwardRef.js:41:57
+    41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
+                                                                ^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:240:6
+   240|   ): {current: null | T};
+             ^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:195:6
+   195|   | ((React$ElementRef<ElementType> | null) => mixed)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+
+Found 5 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
