@@ -21,160 +21,162 @@ module InvalidCharSetSet = Set.Make(struct
   let compare = Pervasives.compare
 end)
 
-type t =
+type t = ALoc.t t'
+and 'loc t' =
   | EIncompatible of {
-      lower: reason * lower_kind option;
-      upper: reason * upper_kind;
-      use_op: use_op option;
-      branches: (Reason.t * t) list;
+      lower: 'loc virtual_reason * lower_kind option;
+      upper: 'loc virtual_reason * 'loc upper_kind;
+      use_op: 'loc virtual_use_op option;
+      branches: ('loc Reason.virtual_reason * t) list;
     }
   | EIncompatibleDefs of {
-      use_op: use_op;
-      reason_lower: reason;
-      reason_upper: reason;
-      branches: (Reason.t * t) list;
+      use_op: 'loc virtual_use_op;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      branches: ('loc Reason.virtual_reason * t) list;
     }
   | EIncompatibleProp of {
       prop: string option;
-      reason_prop: reason;
-      reason_obj: reason;
+      reason_prop: 'loc virtual_reason;
+      reason_obj: 'loc virtual_reason;
       special: lower_kind option;
-      use_op: use_op option;
+      use_op: 'loc virtual_use_op option;
     }
-  | EDebugPrint of reason * string
-  | EImportValueAsType of reason * string
-  | EImportTypeAsTypeof of reason * string
-  | EImportTypeAsValue of reason * string
-  | ERefineAsValue of reason * string
-  | ENoDefaultExport of reason * string * string option
-  | EOnlyDefaultExport of reason * string * string
-  | ENoNamedExport of reason * string * string * string option
-  | EMissingTypeArgs of { reason_tapp: reason; reason_arity: reason; min_arity: int; max_arity: int }
-  | EValueUsedAsType of (reason * reason)
-  | EExpectedStringLit of (reason * reason) * string * string Type.literal * use_op
+  | EDebugPrint of 'loc virtual_reason * string
+  | EImportValueAsType of 'loc virtual_reason * string
+  | EImportTypeAsTypeof of 'loc virtual_reason * string
+  | EImportTypeAsValue of 'loc virtual_reason * string
+  | ERefineAsValue of 'loc virtual_reason * string
+  | ENoDefaultExport of 'loc virtual_reason * string * string option
+  | EOnlyDefaultExport of 'loc virtual_reason * string * string
+  | ENoNamedExport of 'loc virtual_reason * string * string * string option
+  | EMissingTypeArgs of { reason_tapp: 'loc virtual_reason; reason_arity: 'loc virtual_reason; min_arity: int; max_arity: int }
+  | EValueUsedAsType of ('loc virtual_reason * 'loc virtual_reason)
+  | EExpectedStringLit of ('loc virtual_reason * 'loc virtual_reason) * string * string Type.literal * 'loc virtual_use_op
   | EExpectedNumberLit of
-      (reason * reason) *
+      ('loc virtual_reason * 'loc virtual_reason) *
       Type.number_literal *
       Type.number_literal Type.literal *
-      use_op
-  | EExpectedBooleanLit of (reason * reason) * bool * bool option * use_op
-  | EPropNotFound of string option * (reason * reason) * use_op
-  | EPropAccess of (reason * reason) * string option * Type.polarity * Type.rw * use_op
-  | EPropPolarityMismatch of (reason * reason) * string option * (Type.polarity * Type.polarity) * use_op
+      'loc virtual_use_op
+  | EExpectedBooleanLit of ('loc virtual_reason * 'loc virtual_reason) * bool * bool option * 'loc virtual_use_op
+  | EPropNotFound of string option * ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
+  | EPropAccess of ('loc virtual_reason * 'loc virtual_reason) * string option * Type.polarity * Type.rw * 'loc virtual_use_op
+  | EPropPolarityMismatch of ('loc virtual_reason * 'loc virtual_reason) * string option * (Type.polarity * Type.polarity) * 'loc virtual_use_op
   | EPolarityMismatch of {
-      reason: reason;
+      reason: 'loc virtual_reason;
       name: string;
       expected_polarity: Type.polarity;
       actual_polarity: Type.polarity;
     }
-  | EStrictLookupFailed of (reason * reason) * reason * string option * use_op option
-  | EPrivateLookupFailed of (reason * reason) * string * use_op
-  | EAdditionMixed of reason * use_op
-  | EComparison of (reason * reason)
-  | ETupleArityMismatch of (reason * reason) * int * int * use_op
-  | ENonLitArrayToTuple of (reason * reason) * use_op
-  | ETupleOutOfBounds of (reason * reason) * int * int * use_op
-  | ETupleUnsafeWrite of (reason * reason) * use_op
+  | EStrictLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_reason * string option * 'loc virtual_use_op option
+  | EPrivateLookupFailed of ('loc virtual_reason * 'loc virtual_reason) * string * 'loc virtual_use_op
+  | EAdditionMixed of 'loc virtual_reason * 'loc virtual_use_op
+  | EComparison of ('loc virtual_reason * 'loc virtual_reason)
+  | ETupleArityMismatch of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
+  | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
+  | ETupleOutOfBounds of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
+  | ETupleUnsafeWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
-      use_op: use_op;
-      reason: reason;
-      reason_op: reason;
-      branches: (reason * t) list;
+      use_op: 'loc virtual_use_op;
+      reason: 'loc virtual_reason;
+      reason_op: 'loc virtual_reason;
+      branches: ('loc virtual_reason * t) list;
     }
-  | ESpeculationAmbiguous of (reason * reason) * (int * reason) * (int * reason) * reason list
-  | EIncompatibleWithExact of (reason * reason) * use_op
-  | EUnsupportedExact of (reason * reason)
-  | EIdxArity of reason
-  | EIdxUse1 of reason
-  | EIdxUse2 of reason
-  | EUnexpectedThisType of ALoc.t
-  | ETypeParamArity of ALoc.t * int
+  | ESpeculationAmbiguous of ('loc virtual_reason * 'loc virtual_reason) * (int * 'loc virtual_reason) * (int * 'loc virtual_reason) * 'loc virtual_reason list
+  | EIncompatibleWithExact of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
+  | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
+  | EIdxArity of 'loc virtual_reason
+  | EIdxUse1 of 'loc virtual_reason
+  | EIdxUse2 of 'loc virtual_reason
+  | EUnexpectedThisType of 'loc
+  | ETypeParamArity of 'loc * int
   | ECallTypeArity of {
-      call_loc: ALoc.t;
+      call_loc: 'loc;
       is_new: bool;
-      reason_arity: reason;
+      reason_arity: 'loc virtual_reason;
       expected_arity: int;
     }
-  | ETypeParamMinArity of ALoc.t * int
-  | ETooManyTypeArgs of reason * reason * int
-  | ETooFewTypeArgs of reason * reason * int
-  | EInvalidTypeArgs of reason * reason
-  | EPropertyTypeAnnot of ALoc.t
-  | EExportsAnnot of ALoc.t
-  | ECharSetAnnot of ALoc.t
-  | EInvalidCharSet of { invalid: reason * InvalidCharSetSet.t; valid: reason; use_op: use_op }
-  | EUnsupportedKeyInObjectType of ALoc.t
-  | EPredAnnot of ALoc.t
-  | ERefineAnnot of ALoc.t
-  | ETrustedAnnot of ALoc.t
-  | EPrivateAnnot of ALoc.t
-  | EUnexpectedTypeof of ALoc.t
-  | EFunPredCustom of (reason * reason) * string
-  | EIncompatibleWithShape of reason * reason * use_op
-  | EInternal of ALoc.t * internal_error
-  | EUnsupportedSyntax of ALoc.t * unsupported_syntax
-  | EUseArrayLiteral of ALoc.t
-  | EMissingAnnotation of reason * reason list
-  | EBindingError of binding_error * ALoc.t * string * Scope.Entry.t
-  | ERecursionLimit of (reason * reason)
-  | EModuleOutsideRoot of ALoc.t * string
-  | EMalformedPackageJson of ALoc.t * string
-  | EExperimentalDecorators of ALoc.t
-  | EExperimentalClassProperties of ALoc.t * bool
-  | EUnsafeGetSet of ALoc.t
-  | EExperimentalExportStarAs of ALoc.t
-  | EIndeterminateModuleType of ALoc.t
-  | EBadExportPosition of ALoc.t
-  | EBadExportContext of string * ALoc.t
-  | EUnreachable of ALoc.t
-  | EInvalidObjectKit of { tool: Object.tool; reason: reason; reason_op: reason; use_op: use_op }
-  | EInvalidTypeof of ALoc.t * string
-  | EBinaryInLHS of reason
-  | EBinaryInRHS of reason
-  | EArithmeticOperand of reason
-  | EForInRHS of reason
-  | EObjectComputedPropertyAccess of (reason * reason)
-  | EObjectComputedPropertyAssign of (reason * reason)
-  | EInvalidLHSInAssignment of ALoc.t
-  | EIncompatibleWithUseOp of reason * reason * use_op
-  | EUnsupportedImplements of reason
-  | EReactKit of (reason * reason) * React.tool * use_op
-  | EReactElementFunArity of reason * string * int
-  | EFunctionCallExtraArg of reason * reason * int * use_op
-  | EUnsupportedSetProto of reason
+  | ETypeParamMinArity of 'loc * int
+  | ETooManyTypeArgs of 'loc virtual_reason * 'loc virtual_reason * int
+  | ETooFewTypeArgs of 'loc virtual_reason * 'loc virtual_reason * int
+  | EInvalidTypeArgs of 'loc virtual_reason * 'loc virtual_reason
+  | EPropertyTypeAnnot of 'loc
+  | EExportsAnnot of 'loc
+  | ECharSetAnnot of 'loc
+  | EInvalidCharSet of { invalid: 'loc virtual_reason * InvalidCharSetSet.t; valid: 'loc virtual_reason; use_op: 'loc virtual_use_op }
+  | EUnsupportedKeyInObjectType of 'loc
+  | EPredAnnot of 'loc
+  | ERefineAnnot of 'loc
+  | ETrustedAnnot of 'loc
+  | EPrivateAnnot of 'loc
+  | EUnexpectedTypeof of 'loc
+  | EFunPredCustom of ('loc virtual_reason * 'loc virtual_reason) * string
+  | EIncompatibleWithShape of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
+  | EInternal of 'loc * internal_error
+  | EUnsupportedSyntax of 'loc * unsupported_syntax
+  | EUseArrayLiteral of 'loc
+  | EMissingAnnotation of 'loc virtual_reason * 'loc virtual_reason list
+  | EBindingError of binding_error * 'loc * string * Scope.Entry.t
+  | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
+  | EModuleOutsideRoot of 'loc * string
+  | EMalformedPackageJson of 'loc * string
+  | EExperimentalDecorators of 'loc
+  | EExperimentalClassProperties of 'loc * bool
+  | EUnsafeGetSet of 'loc
+  | EExperimentalExportStarAs of 'loc
+  | EIndeterminateModuleType of 'loc
+  | EBadExportPosition of 'loc
+  | EBadExportContext of string * 'loc
+  | EUnreachable of 'loc
+  | EInvalidObjectKit of { tool: Object.tool; reason: 'loc virtual_reason; reason_op: 'loc virtual_reason; use_op: 'loc virtual_use_op }
+  | EInvalidTypeof of 'loc * string
+  | EBinaryInLHS of 'loc virtual_reason
+  | EBinaryInRHS of 'loc virtual_reason
+  | EArithmeticOperand of 'loc virtual_reason
+  | EForInRHS of 'loc virtual_reason
+  | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason)
+  | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
+  | EInvalidLHSInAssignment of 'loc
+  | EIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
+  | EUnsupportedImplements of 'loc virtual_reason
+  | EReactKit of ('loc virtual_reason * 'loc virtual_reason) * React.tool * 'loc virtual_use_op
+  | EReactElementFunArity of 'loc virtual_reason * string * int
+  | EFunctionCallExtraArg of 'loc virtual_reason * 'loc virtual_reason * int * 'loc virtual_use_op
+  | EUnsupportedSetProto of 'loc virtual_reason
   | EDuplicateModuleProvider of {
       module_name: string;
       provider: File_key.t;
       conflict: File_key.t
     }
-  | EParseError of ALoc.t * Parse_error.t
-  | EDocblockError of ALoc.t * docblock_error
+  | EParseError of 'loc * Parse_error.t
+  | EDocblockError of 'loc * docblock_error
   (* The string is either the name of a module or "the module that exports `_`". *)
-  | EUntypedTypeImport of ALoc.t * string
-  | EUntypedImport of ALoc.t * string
-  | ENonstrictImport of ALoc.t
-  | EUnclearType of ALoc.t
-  | EDeprecatedType of ALoc.t
-  | EDeprecatedUtility of ALoc.t * string
-  | EDynamicExport of reason * reason
-  | EUnsafeGettersSetters of ALoc.t
-  | EUnusedSuppression of ALoc.t
+  | EUntypedTypeImport of 'loc * string
+  | EUntypedImport of 'loc * string
+  | ENonstrictImport of 'loc
+  | EUnclearType of 'loc
+  | EDeprecatedType of 'loc
+  | EDeprecatedUtility of 'loc * string
+  | EDynamicExport of 'loc virtual_reason * 'loc virtual_reason
+  | EUnsafeGettersSetters of 'loc
+  | EUnusedSuppression of 'loc
   | ELintSetting of LintSettings.lint_parse_error
   | ESketchyNullLint of {
       kind: Lints.sketchy_null_kind;
-      loc: ALoc.t;
-      null_loc: ALoc.t;
-      falsy_loc: ALoc.t;
+      loc: 'loc;
+      null_loc: 'loc;
+      falsy_loc: 'loc;
     }
-  | ESketchyNumberLint of Lints.sketchy_number_kind * reason
-  | EInvalidPrototype of reason
-  | EExperimentalOptionalChaining of ALoc.t
-  | EOptionalChainingMethods of ALoc.t
-  | EUnnecessaryOptionalChain of ALoc.t * reason
-  | EUnnecessaryInvariant of ALoc.t * reason
-  | EInexactSpread of reason * reason
-  | EDeprecatedCallSyntax of ALoc.t
-  | EUnexpectedTemporaryBaseType of ALoc.t
+  | ESketchyNumberLint of Lints.sketchy_number_kind * 'loc virtual_reason
+  | EInvalidPrototype of 'loc virtual_reason
+  | EExperimentalOptionalChaining of 'loc
+  | EOptionalChainingMethods of 'loc
+  | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
+  | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
+  | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
+  | EDeprecatedCallSyntax of 'loc
+  | EUnexpectedTemporaryBaseType of 'loc
+  (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
 
 and binding_error =
@@ -250,19 +252,19 @@ and lower_kind =
   | Possibly_null_or_void
   | Incompatible_intersection
 
-and upper_kind =
-  | IncompatibleGetPropT of ALoc.t * string option
-  | IncompatibleSetPropT of ALoc.t * string option
-  | IncompatibleMatchPropT of ALoc.t * string option
+and 'loc upper_kind =
+  | IncompatibleGetPropT of 'loc * string option
+  | IncompatibleSetPropT of 'loc * string option
+  | IncompatibleMatchPropT of 'loc * string option
   | IncompatibleGetPrivatePropT
   | IncompatibleSetPrivatePropT
-  | IncompatibleMethodT of ALoc.t * string option
+  | IncompatibleMethodT of 'loc * string option
   | IncompatibleCallT
   | IncompatibleMixedCallT
   | IncompatibleConstructorT
-  | IncompatibleGetElemT of ALoc.t
-  | IncompatibleSetElemT of ALoc.t
-  | IncompatibleCallElemT of ALoc.t
+  | IncompatibleGetElemT of 'loc
+  | IncompatibleSetElemT of 'loc
+  | IncompatibleCallElemT of 'loc
   | IncompatibleElemTOfArrT
   | IncompatibleObjAssignFromTSpread
   | IncompatibleObjAssignFromT
@@ -275,13 +277,203 @@ and upper_kind =
   | IncompatibleThisSpecializeT
   | IncompatibleVarianceCheckT
   | IncompatibleGetKeysT
-  | IncompatibleHasOwnPropT of ALoc.t * string option
+  | IncompatibleHasOwnPropT of 'loc * string option
   | IncompatibleGetValuesT
   | IncompatibleUnaryMinusT
   | IncompatibleMapTypeTObject
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
   | IncompatibleUnclassified of string
+
+let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
+  let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in
+  let map_reason = Reason.map_reason_locs f in
+  let map_branch (r, e) = map_reason r, e in
+  let map_upper_kind = function
+    | IncompatibleGetPropT (loc, s) -> IncompatibleGetPropT (f loc, s)
+    | IncompatibleSetPropT (loc, s) -> IncompatibleSetPropT (f loc, s)
+    | IncompatibleMatchPropT (loc, s) -> IncompatibleMatchPropT (f loc, s)
+    | IncompatibleMethodT (loc, s) -> IncompatibleMethodT (f loc, s)
+    | IncompatibleHasOwnPropT (loc, s) -> IncompatibleHasOwnPropT (f loc, s)
+    | IncompatibleGetElemT loc -> IncompatibleGetElemT (f loc)
+    | IncompatibleSetElemT loc -> IncompatibleSetElemT (f loc)
+    | IncompatibleCallElemT loc -> IncompatibleCallElemT (f loc)
+    | IncompatibleGetPrivatePropT
+    | IncompatibleSetPrivatePropT
+    | IncompatibleCallT
+    | IncompatibleMixedCallT
+    | IncompatibleConstructorT
+    | IncompatibleElemTOfArrT
+    | IncompatibleObjAssignFromTSpread
+    | IncompatibleObjAssignFromT
+    | IncompatibleObjRestT
+    | IncompatibleObjSealT
+    | IncompatibleArrRestT
+    | IncompatibleSuperT
+    | IncompatibleMixinT
+    | IncompatibleSpecializeT
+    | IncompatibleThisSpecializeT
+    | IncompatibleVarianceCheckT
+    | IncompatibleGetKeysT
+    | IncompatibleGetValuesT
+    | IncompatibleUnaryMinusT
+    | IncompatibleMapTypeTObject
+    | IncompatibleTypeAppVarianceCheckT
+    | IncompatibleGetStaticsT
+    | IncompatibleUnclassified _ as u -> u in
+  function
+  | EIncompatible {use_op; lower=(lreason, lkind); upper=(ureason, ukind); branches} ->
+      EIncompatible {use_op = Option.map ~f:map_use_op use_op;
+        lower = (map_reason lreason, lkind); upper = (map_reason ureason, map_upper_kind ukind);
+        branches = Core_list.map ~f:map_branch branches }
+  | EIncompatibleDefs {use_op; reason_lower; reason_upper; branches} ->
+      EIncompatibleDefs {use_op = map_use_op use_op;
+        reason_lower = map_reason reason_lower; reason_upper = map_reason reason_upper;
+        branches = Core_list.map ~f:map_branch branches }
+  | EIncompatibleProp {use_op; prop; reason_prop; reason_obj; special} ->
+      EIncompatibleProp {use_op = Option.map ~f:map_use_op use_op;
+        prop; reason_prop = map_reason reason_prop; reason_obj = map_reason reason_obj; special}
+  | EExpectedStringLit ((r1, r2), u, l, op) ->
+      EExpectedStringLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
+  | EExpectedNumberLit ((r1, r2), u, l, op) ->
+      EExpectedNumberLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
+  | EExpectedBooleanLit ((r1, r2), u, l, op) ->
+      EExpectedBooleanLit ((map_reason r1, map_reason r2), u, l, map_use_op op)
+  | EPropNotFound (prop, (r1, r2), op) ->
+      EPropNotFound (prop, (map_reason r1, map_reason r2), map_use_op op)
+  | EPropAccess ((r1, r2), prop, p, rw, op) ->
+      EPropAccess ((map_reason r1, map_reason r2), prop, p, rw, map_use_op op)
+  | EPropPolarityMismatch ((r1, r2), p, ps, op) ->
+       EPropPolarityMismatch ((map_reason r1, map_reason r2), p, ps, map_use_op op)
+  | EStrictLookupFailed ((r1, r2), r, p, op) ->
+      EStrictLookupFailed ((map_reason r1, map_reason r2), map_reason r, p,
+        Option.map ~f:map_use_op op)
+  | EPrivateLookupFailed ((r1, r2), x, op) ->
+      EPrivateLookupFailed ((map_reason r1, map_reason r2), x, map_use_op op)
+  | EAdditionMixed (r, op) -> EAdditionMixed (map_reason r, map_use_op op)
+  | ETupleArityMismatch ((r1, r2), l, i, op) ->
+      ETupleArityMismatch ((map_reason r1, map_reason r2), l, i, map_use_op op)
+  | ENonLitArrayToTuple  ((r1, r2), op) ->
+      ENonLitArrayToTuple ((map_reason r1, map_reason r2), map_use_op op)
+  | ETupleOutOfBounds ((r1, r2), l, i, op) ->
+      ETupleOutOfBounds ((map_reason r1, map_reason r2), l, i, map_use_op op)
+  | ETupleUnsafeWrite ((r1, r2), op) ->
+      ETupleUnsafeWrite ((map_reason r1, map_reason r2), map_use_op op)
+  | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
+      EUnionSpeculationFailed {use_op = map_use_op use_op; reason = map_reason reason;
+        reason_op = map_reason reason_op;
+        branches = Core_list.map ~f:map_branch branches}
+  | EIncompatibleWithExact ((r1, r2), op) ->
+      EIncompatibleWithExact ((map_reason r1, map_reason r2), map_use_op op)
+  | EInvalidCharSet {invalid=(ir, set); valid; use_op} ->
+      EInvalidCharSet {invalid = (map_reason ir, set); valid = map_reason valid;
+        use_op = map_use_op use_op}
+  | EIncompatibleWithShape (l, u, use_op) ->
+      EIncompatibleWithShape (map_reason l, map_reason u, map_use_op use_op)
+  | EInvalidObjectKit {tool; reason; reason_op; use_op} ->
+      EInvalidObjectKit {tool; reason = map_reason reason;
+        reason_op = map_reason reason_op; use_op = map_use_op use_op}
+  | EIncompatibleWithUseOp (rl, ru, op) ->
+      EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
+  | EReactKit ((r1, r2), t, op) -> EReactKit ((map_reason r1, map_reason r2), t, map_use_op op)
+  | EFunctionCallExtraArg (rl, ru, n, op) ->
+      EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
+  | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
+  | EImportValueAsType (r, s) -> EImportValueAsType (map_reason r, s)
+  | EImportTypeAsTypeof (r, s) -> EImportTypeAsTypeof (map_reason r, s)
+  | EImportTypeAsValue (r, s) -> EImportTypeAsValue (map_reason r, s)
+  | ERefineAsValue (r, s) -> ERefineAsValue (map_reason r, s)
+  | ENoDefaultExport (r, s1, s2) -> ENoDefaultExport (map_reason r, s1, s2)
+  | EOnlyDefaultExport (r, s1, s2) -> EOnlyDefaultExport (map_reason r, s1, s2)
+  | ENoNamedExport (r, s1, s2, s3) -> ENoNamedExport (map_reason r, s1, s2, s3)
+  | EMissingTypeArgs {reason_tapp; reason_arity; min_arity; max_arity} ->
+      EMissingTypeArgs {reason_tapp=map_reason reason_tapp; reason_arity=map_reason reason_arity;
+        min_arity; max_arity}
+  | EValueUsedAsType (r1, r2) -> EValueUsedAsType (map_reason r1, map_reason r2)
+  | EPolarityMismatch {reason; name; expected_polarity; actual_polarity} ->
+      EPolarityMismatch {reason = map_reason reason; name; expected_polarity; actual_polarity}
+  | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
+  | ESpeculationAmbiguous ((r1, r2), (i1, r3), (i2, r4), rs) ->
+      ESpeculationAmbiguous ((map_reason r1, map_reason r2), (i1, map_reason r3),
+        (i2, map_reason r4), Core_list.map ~f:map_reason rs)
+  | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
+  | EIdxArity r -> EIdxArity (map_reason r)
+  | EIdxUse1 r -> EIdxUse1 (map_reason r)
+  | EIdxUse2 r -> EIdxUse2 (map_reason r)
+  | EUnexpectedThisType loc -> EUnexpectedThisType (f loc)
+  | ETypeParamArity (loc, i) -> ETypeParamArity (f loc, i)
+  | ECallTypeArity { call_loc; is_new; reason_arity; expected_arity; } ->
+      ECallTypeArity { call_loc = f call_loc; is_new; expected_arity;
+        reason_arity = map_reason reason_arity }
+  | ETypeParamMinArity (loc, i) -> ETypeParamMinArity (f loc, i)
+  | ETooManyTypeArgs (r1, r2, i) ->  ETooManyTypeArgs (map_reason r1, map_reason r2, i)
+  | ETooFewTypeArgs (r1, r2, i) ->  ETooFewTypeArgs (map_reason r1, map_reason r2, i)
+  | EInvalidTypeArgs (r1, r2) -> EInvalidTypeArgs (map_reason r1, map_reason r2)
+  | EPropertyTypeAnnot loc -> EPropertyTypeAnnot (f loc)
+  | EExportsAnnot loc -> EExportsAnnot (f loc)
+  | ECharSetAnnot loc -> ECharSetAnnot (f loc)
+  | EUnsupportedKeyInObjectType loc -> EUnsupportedKeyInObjectType (f loc)
+  | EPredAnnot loc -> EPredAnnot (f loc)
+  | ERefineAnnot loc -> ERefineAnnot (f loc)
+  | ETrustedAnnot loc -> ETrustedAnnot (f loc)
+  | EPrivateAnnot loc -> EPrivateAnnot (f loc)
+  | EUnexpectedTypeof loc -> EUnexpectedTypeof (f loc)
+  | EFunPredCustom ((r1, r2), s) -> EFunPredCustom ((map_reason r1, map_reason r2), s)
+  | EInternal (loc, i) -> EInternal (f loc, i)
+  | EUnsupportedSyntax (loc, u) -> EUnsupportedSyntax (f loc, u)
+  | EUseArrayLiteral loc -> EUseArrayLiteral (f loc)
+  | EMissingAnnotation (r, rs) ->
+      EMissingAnnotation (map_reason r, Core_list.map ~f:map_reason rs)
+  | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
+  | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
+  | EModuleOutsideRoot (loc, s) -> EModuleOutsideRoot (f loc, s)
+  | EMalformedPackageJson (loc, s) -> EMalformedPackageJson (f loc, s)
+  | EExperimentalDecorators loc -> EExperimentalDecorators (f loc)
+  | EExperimentalClassProperties (loc, b) -> EExperimentalClassProperties (f loc, b)
+  | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
+  | EExperimentalExportStarAs loc -> EExperimentalExportStarAs (f loc)
+  | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
+  | EBadExportPosition loc -> EBadExportPosition (f loc)
+  | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
+  | EUnreachable loc -> EUnreachable (f loc)
+  | EInvalidTypeof (loc, s) -> EInvalidTypeof (f loc, s)
+  | EBinaryInLHS r -> EBinaryInLHS (map_reason r)
+  | EBinaryInRHS r -> EBinaryInRHS (map_reason r)
+  | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
+  | EForInRHS r -> EForInRHS (map_reason r)
+  | EObjectComputedPropertyAccess (r1, r2) ->
+      EObjectComputedPropertyAccess (map_reason r1, map_reason r2)
+  | EObjectComputedPropertyAssign (r1, r2) ->
+      EObjectComputedPropertyAssign (map_reason r1, map_reason r2)
+  | EInvalidLHSInAssignment l -> EInvalidLHSInAssignment (f l)
+  | EUnsupportedImplements r -> EUnsupportedImplements (map_reason r)
+  | EReactElementFunArity (r, s, i) -> EReactElementFunArity (map_reason r, s, i)
+  | EUnsupportedSetProto r -> EUnsupportedSetProto (map_reason r)
+  | EDuplicateModuleProvider {module_name=_; provider=_; conflict=_} as e -> e
+  | EParseError (loc, p) -> EParseError (f loc, p)
+  | EDocblockError (loc, e) -> EDocblockError (f loc, e)
+  | EUntypedTypeImport (loc, s) -> EUntypedTypeImport (f loc, s)
+  | EUntypedImport (loc, s) -> EUntypedImport (f loc, s)
+  | ENonstrictImport loc -> ENonstrictImport (f loc)
+  | EUnclearType loc -> EUnclearType (f loc)
+  | EDeprecatedType loc -> EDeprecatedType (f loc)
+  | EDeprecatedUtility (loc, s) -> EDeprecatedUtility (f loc, s)
+  | EDynamicExport (r1, r2) -> EDynamicExport (map_reason r1, map_reason r2)
+  | EUnsafeGettersSetters loc -> EUnsafeGettersSetters (f loc)
+  | EUnusedSuppression loc -> EUnusedSuppression (f loc)
+  | ELintSetting _ as e -> e
+  | ESketchyNullLint { kind; loc; null_loc; falsy_loc } ->
+      ESketchyNullLint { kind; loc = f loc; null_loc = f null_loc; falsy_loc = f falsy_loc; }
+  | ESketchyNumberLint (kind, r) -> ESketchyNumberLint (kind, map_reason r)
+  | EInvalidPrototype r -> EInvalidPrototype (map_reason r)
+  | EExperimentalOptionalChaining loc -> EExperimentalOptionalChaining (f loc)
+  | EOptionalChainingMethods loc -> EOptionalChainingMethods (f loc)
+  | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
+  | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
+  | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
+  | EDeprecatedCallSyntax loc -> EDeprecatedCallSyntax (f loc)
+  | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
+  | ESignatureVerification _ as e -> e
 
 let desc_of_reason r = Reason.desc_of_reason ~unwrap:(is_scalar_reason r) r
 
@@ -597,17 +789,19 @@ let mk_prop_message = Errors.Friendly.(function
 
 (* Friendly messages are created differently based on the specific error they come from, so
    we collect the ingredients here and pass them to make_error_printable *)
-type friendly_message_recipe =
-  | IncompatibleUse of ALoc.t * upper_kind * Reason.reason * Type.use_op
-  | Speculation of ALoc.t * Type.use_op * (Reason.t * t) list
-  | Incompatible of Reason.reason * Reason.reason * Type.use_op
-  | PropMissing of ALoc.t * string option * Reason.reason * Type.use_op
-  | Normal of ALoc.t Errors.Friendly.message_feature list
-  | UseOp of ALoc.t * ALoc.t Errors.Friendly.message_feature list * Type.use_op
-  | PropPolarityMismatch of string option *
-      (Reason.reason * Type.polarity) * (Reason.reason * Type.polarity) * Type.use_op
+type 'loc friendly_message_recipe =
+  | IncompatibleUse of 'loc * 'loc upper_kind * 'loc Reason.virtual_reason *
+      'loc Type.virtual_use_op
+  | Speculation of 'loc * 'loc Type.virtual_use_op * ('loc Reason.virtual_reason * t) list
+  | Incompatible of 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
+      * 'loc Type.virtual_use_op
+  | PropMissing of 'loc * string option * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op
+  | Normal of 'loc Errors.Friendly.message_feature list
+  | UseOp of 'loc * 'loc Errors.Friendly.message_feature list * 'loc Type.virtual_use_op
+  | PropPolarityMismatch of string option * ('loc Reason.virtual_reason * Type.polarity)
+      * ('loc Reason.virtual_reason * Type.polarity) * 'loc Type.virtual_use_op
 
-let friendly_message_of_msg : t -> friendly_message_recipe =
+let friendly_message_of_msg =
   let text = Errors.Friendly.text in
   let code = Errors.Friendly.code in
   let ref = Errors.Friendly.ref in
