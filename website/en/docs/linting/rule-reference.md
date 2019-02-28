@@ -20,6 +20,7 @@ layout: guide
 * [`unnecessary-optional-chain`](#toc-unnecessary-optional-chain)
 * [`unnecessary-invariant`](#toc-unnecessary-invariant)
 * [`deprecated-utility`](#toc-deprecated-utility)
+* [`dynamic-export`](#toc-dynamic-export)
 
 #### `all` <a class="toc" id="toc-all" href="#toc-all"></a>
 
@@ -214,3 +215,8 @@ Note that this lint does not trigger when we know a condition is always `false`.
 Triggers when you use the `$Supertype` or `$Subtype` utility types, as these types are
 unsafe and usually just equivalent to `any`. If the utilities were being used in a sound manner, the
 desired behavior can usually be recovered through the [`$Shape`](../../types/utilities/#toc-shape) utility or [bounded generics](../../types/generics/#toc-generic-types-act-as-bounds).
+
+#### `dynamic-export` <a class="toc" id="toc-dynamic-export" href="#toc-dynamic-export"></a>
+Triggers when a dynamic type (usually `any`) appears in a position exported from a file. Note that this is a very noisy lint, and can be triggered even
+when exporting types that are defined in our library definitions to include `any` types. For this reason we recommend turning it on on a per-file or even
+per-line basis using [flowlint comments](../flowlint-comments/#toc-flowlint) rather than for your whole repository in the `flowconfig`.
