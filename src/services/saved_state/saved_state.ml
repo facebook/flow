@@ -46,6 +46,7 @@ type saved_state_data = {
    *)
   local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
   warnings: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
+  coverage : Coverage.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t;
 
   (* TODO - Figure out what to do aboute module.resolver *)
@@ -238,6 +239,7 @@ end = struct
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
+      coverage = env.ServerEnv.coverage;
       node_modules_containers;
     }
 
@@ -434,6 +436,7 @@ end = struct
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
+      coverage;
       node_modules_containers;
     } = data in
 
@@ -487,6 +490,7 @@ end = struct
       ordered_non_flowlib_libs;
       local_errors;
       warnings;
+      coverage;
       node_modules_containers;
     }
 

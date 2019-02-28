@@ -347,8 +347,8 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
 
   let init_gc_state = if do_gc then Some (Gc_js.init ~master_cx) else None in
 
-  let rev_cxs, rev_tasts, impl_cxs, _ =
-    Nel.fold_left (fun (cxs, tasts, impl_cxs, gc_state) filename ->
+  let rev_cxs, rev_tasts, impl_cxs =
+    Nel.fold_left (fun (cxs, tasts, impl_cxs) filename ->
 
     (* create cx *)
     let info = get_docblock_unsafe filename in
@@ -379,14 +379,8 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
         ~lint_severities ~file_options ~file_sig
     in
 
-    let gc_state = Option.map gc_state Gc_js.(fun gc_state ->
-      let gc_state = mark cx gc_state in
-      sweep ~master_cx cx gc_state;
-      gc_state
-    ) in
-
-    cx::cxs, tast::tasts, FilenameMap.add filename cx impl_cxs, gc_state
-  ) ([], [], FilenameMap.empty, init_gc_state) component in
+    cx::cxs, tast::tasts, FilenameMap.add filename cx impl_cxs
+  ) ([], [], FilenameMap.empty) component in
   let cxs = Core_list.rev rev_cxs in
   let tasts = Core_list.rev rev_tasts in
 
@@ -438,6 +432,18 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
     ) locs
   );
 
+  (* We need to compute coverage before running the garbage collector, because it will remove
+     type variables that aren't getting exported from the file, but these still appear in the
+     coverage table *)
+  let coverages = cx :: other_cxs |> Query_types.component_coverage ~full_cx:cx in
+
+  let _ = Nel.fold_left (fun gc_state cx ->
+    Option.map gc_state Gc_js.(fun gc_state ->
+      let gc_state = mark cx gc_state in
+      sweep ~master_cx cx gc_state;
+      gc_state)
+  ) init_gc_state (cx, other_cxs) in
+
   (* Post-merge errors.
    *
    * At this point, all dependencies have been merged and the component has been
@@ -453,9 +459,9 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
 
   force_annotations cx other_cxs;
 
-  match Core_list.zip_exn cxs tasts with
+  match ListUtils.combine3 (cxs, tasts, coverages) with
   | [] -> failwith "there is at least one cx"
-  | x::xs -> x, xs
+  | x::xs -> (x, xs)
 
 let merge_tvar =
   let open Type in

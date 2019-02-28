@@ -611,7 +611,7 @@ let flow_check (code : string) : string option =
       let file_sigs = Utils_js.FilenameMap.singleton filename (File_sig.abstractify_locs file_sig) in
       let reqs = Merge_js.Reqs.empty in
       (* WARNING: This line might crash. That's why we put the entire block into a try catch *)
-      let (final_cx, _), _other_cxs = Merge_js.merge_component_strict
+      let ((final_cx, _, _), _other_cxs) = Merge_js.merge_component_strict
           ~metadata:builtin_metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
           ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
           ~get_docblock_unsafe:(fun _ -> stub_docblock)

@@ -2237,7 +2237,7 @@ and dump_tvar_ (depth, tvars) cx id =
             dump_use_t_ (depth-1, stack) cx use_t :: acc
           ) upper [])))
   with Context.Tvar_not_found _ ->
-    string_of_int id
+    spf "Not Found: %d" id
 
 and dump_prop_ (depth, tvars) cx p =
   let kid t = dump_t_ (depth, tvars) cx t in

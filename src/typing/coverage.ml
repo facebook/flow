@@ -238,3 +238,15 @@ class visitor = object (self)
     | Kind.Empty -> self#types_ cx op init ts
 
 end
+
+type file_coverage = {
+  covered: int;
+  any: int;
+  empty: int;
+}
+
+let initial_coverage = {
+  covered = 0;
+  any = 0;
+  empty = 0;
+}

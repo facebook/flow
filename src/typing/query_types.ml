@@ -104,6 +104,19 @@ let covered_types cx ~should_check =
   in
   sort_loc_pairs result_pairs
 
+let component_coverage ~full_cx =
+  let open Coverage in
+  let coverage_computer = new visitor in
+  Core_list.map ~f:(fun cx ->
+    let type_table = Context.type_table cx in
+    Type_table.fold_coverage (fun _ { Type.TypeScheme.type_; _ } coverage ->
+      match coverage_computer#type_ full_cx type_ with
+      | Kind.Any -> { coverage with any = coverage.any + 1 }
+      | Kind.Checked -> { coverage with covered = coverage.covered + 1 }
+      | Kind.Empty -> { coverage with empty = coverage.empty + 1 }
+    ) type_table initial_coverage
+  )
+
 (* 'suggest' can use as many types in the type tables as possible, which is why
    we are querying the tables from both "coverage" and "type_info". Coverage
    should be enough on its own, but "type_info" stores method types more

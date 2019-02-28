@@ -34,8 +34,8 @@ val merge_component_strict:
   Context.sig_t list ->
   (* master cx *)
   Context.sig_t ->
-  (* cxs in component order, hd is merged leader *)
-  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program) Nel.t
+  (* cxs in component order, hd is merged leader, along with a coverage summary for each file *)
+  (Context.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.program * Coverage.file_coverage) Nel.t
 
 val merge_tvar: Context.t -> Reason.t -> Constraint.ident -> Type.t
 

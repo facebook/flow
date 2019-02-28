@@ -35,6 +35,9 @@ let update_errset map file errset =
 
 let merge_error_maps = FilenameMap.union ~combine:(fun _ x y -> Some (Flow_error.ErrorSet.union x y))
 
+(* We just want to replace the old coverage with the new one *)
+let update_coverage = FilenameMap.union ~combine:(fun _ _ -> Option.return)
+
 (* Filter out duplicate provider error, if any, for the given file. *)
 let filter_duplicate_provider map file =
   match FilenameMap.get file map with
@@ -326,27 +329,29 @@ let run_merge_service
       ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
       dependency_graph component_map recheck_map
     in
-    let errs, warnings, suppressions = List.fold_left (fun acc (file, result) ->
+    let errs, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
       let component = FilenameMap.find_unsafe file component_map in
       (* remove all errors, suppressions for rechecked component *)
-      let errors, warnings, suppressions =
-        Nel.fold_left (fun (errors, warnings, suppressions) file ->
+      let errors, warnings, suppressions, coverage =
+        Nel.fold_left (fun (errors, warnings, suppressions, coverage) file ->
           FilenameMap.remove file errors,
           FilenameMap.remove file warnings,
-          Error_suppressions.remove file suppressions
+          Error_suppressions.remove file suppressions,
+          FilenameMap.remove file coverage
         ) acc component
       in
       match result with
-      | Ok (new_errors, new_warnings, new_suppressions) ->
+      | Ok (new_errors, new_warnings, new_suppressions, new_coverage) ->
         update_errset errors file new_errors,
         update_errset warnings file new_warnings,
-        Error_suppressions.update_suppressions suppressions new_suppressions
+        Error_suppressions.update_suppressions suppressions new_suppressions,
+        update_coverage coverage new_coverage
       | Error msg ->
         let new_errors = error_set_of_merge_error file msg in
-        update_errset errors file new_errors, warnings, suppressions
+        update_errset errors file new_errors, warnings, suppressions, coverage
     ) acc merged
     in
-    Lwt.return (errs, warnings, suppressions, skipped_count)
+    Lwt.return (errs, warnings, suppressions, coverage, skipped_count)
   )
 
 (* This function does some last minute preparation and then calls into the merge service, which
@@ -368,7 +373,6 @@ let merge
   ~persistent_connections
   ~prep_merge =
   let { ServerEnv.local_errors; merge_errors; warnings; suppressions; } = errors in
-
 
   let%lwt send_errors_over_connection =
     match persistent_connections with
@@ -447,6 +451,7 @@ let merge
      initially.
   *)
   Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
+  Hh_logger.info "unchanged_checked: %s" (CheckedSet.debug_counts_to_string unchanged_checked);
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
   let files_to_merge = CheckedSet.all to_merge in
@@ -454,12 +459,12 @@ let merge
     calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge in
 
   Hh_logger.info "Merging";
-  let%lwt merge_errors, warnings, suppressions, skipped_count =
+  let%lwt merge_errors, warnings, suppressions, coverage, skipped_count =
     let intermediate_result_callback results =
       let errors = lazy (
         Core_list.map ~f:(fun (file, result) ->
           match result with
-          | Ok (errors, warnings, suppressions) ->
+          | Ok (errors, warnings, suppressions, _) ->
             let errors = Flow_error.make_errors_printable errors in
             let warnings = Flow_error.make_errors_printable warnings in
             file, errors, warnings, suppressions
@@ -481,7 +486,7 @@ let merge
 
     let merge_start_time = Unix.gettimeofday () in
 
-    let%lwt merge_errors, warnings, suppressions, skipped_count =
+    let%lwt merge_errors, warnings, suppressions, coverage, skipped_count =
       run_merge_service
         ~master_mutator
         ~worker_mutator
@@ -493,7 +498,7 @@ let merge
         dependency_graph
         component_map
         recheck_map
-        (merge_errors, warnings, suppressions)
+        (merge_errors, warnings, suppressions, FilenameMap.empty)
     in
     let%lwt () =
       if Options.should_profile options
@@ -510,7 +515,7 @@ let merge
     in
 
     Hh_logger.info "Done";
-    Lwt.return (merge_errors, warnings, suppressions, skipped_count)
+    Lwt.return (merge_errors, warnings, suppressions, coverage, skipped_count)
   in
 
   let checked = CheckedSet.union unchanged_checked to_merge in
@@ -521,30 +526,33 @@ let merge
     |> Utils_js.FilenameMap.elements
     |> Core_list.map ~f:(fun (leader, members) -> (leader, Nel.length members))
     |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
-  Lwt.return (checked, cycle_leaders, errors, skipped_count)
+  Lwt.return (checked, cycle_leaders, errors, coverage, skipped_count)
 
-let check_files ~options ~reader ~workers errors checked_files =
+let check_files ~options ~reader ~workers errors coverage checked_files =
   let files = FilenameSet.union (CheckedSet.focused checked_files) (CheckedSet.dependents checked_files) in
   match options.Options.opt_arch with
-  | Options.Classic -> Lwt.return errors
+  | Options.Classic -> Lwt.return (errors, coverage)
   | Options.TypesFirst ->
-    let job = List.fold_left (fun (errors, warnings, suppressions) file ->
-      let new_errors, new_warnings, new_suppressions =
+    let job = List.fold_left (fun (errors, warnings, suppressions, coverage) file ->
+      let new_errors, new_warnings, new_suppressions, new_coverage =
         Merge_service.check_file options ~reader file in
       update_errset errors file new_errors,
       update_errset warnings file new_warnings,
-      Error_suppressions.update_suppressions suppressions new_suppressions
+      Error_suppressions.update_suppressions suppressions new_suppressions,
+      update_coverage coverage new_coverage
     ) in
     let neutral =
       FilenameMap.empty,
       FilenameMap.empty,
-      Error_suppressions.empty in
+      Error_suppressions.empty,
+      FilenameMap.empty in
     let merge
-        (errors, warnings, suppressions)
-        (new_errors, new_warnings, new_suppressions) =
+        (errors, warnings, suppressions, coverage)
+        (new_errors, new_warnings, new_suppressions, new_coverage) =
       FilenameMap.union errors new_errors,
       FilenameMap.union warnings new_warnings,
-      Error_suppressions.update_suppressions suppressions new_suppressions
+      Error_suppressions.update_suppressions suppressions new_suppressions,
+      FilenameMap.union coverage new_coverage
       in
 
     Hh_logger.info "Checking files";
@@ -552,7 +560,7 @@ let check_files ~options ~reader ~workers errors checked_files =
       MonitorRPC.status_update
         ServerStatus.(Checking_progress { total = Some total; finished = start })
     in
-    let%lwt merge_errors, warnings, suppressions = MultiWorkerLwt.call
+    let%lwt merge_errors, warnings, suppressions, coverage = MultiWorkerLwt.call
         workers
         ~job
         ~neutral
@@ -561,11 +569,12 @@ let check_files ~options ~reader ~workers errors checked_files =
                  (FilenameSet.elements files))
     in
     Hh_logger.info "Done";
-    Lwt.return { errors with
+    let errors = { errors with
       ServerEnv.merge_errors;
       warnings;
       suppressions;
-    }
+    } in
+    Lwt.return (errors, coverage)
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
@@ -1361,7 +1370,7 @@ let recheck_with_profiling
 
   let dependency_graph = Dependency_info.dependency_graph dependency_info in
   (* recheck *)
-  let%lwt checked_files, cycle_leaders, errors, skipped_count = merge
+  let%lwt checked_files, cycle_leaders, errors, coverage, skipped_count = merge
     ~transaction
     ~reader
     ~options
@@ -1399,7 +1408,7 @@ let recheck_with_profiling
     ))
   in
 
-  let%lwt errors = check_files ~options ~reader ~workers errors checked_files in
+  let%lwt errors, coverage = check_files ~options ~reader ~workers errors coverage checked_files in
 
   (* Here's how to update unparsed:
    * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
@@ -1420,6 +1429,7 @@ let recheck_with_profiling
       dependency_info;
       checked_files;
       errors;
+      coverage;
     },
     (new_or_changed, deleted, all_dependent_files, cycle_leaders, skipped_count, estimates))
   )
@@ -1533,6 +1543,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
     ordered_non_flowlib_libs;
     local_errors;
     warnings;
+    coverage;
     node_modules_containers;
   } = saved_state in
 
@@ -1651,7 +1662,8 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
     Dep_service.calc_dependency_info ~options ~reader workers ~parsed:parsed_set
   ) in
 
-  Lwt.return (parsed_set, unparsed_set, dependency_info, ordered_libs, libs, libs_ok, errors)
+  Lwt.return
+    (parsed_set, unparsed_set, dependency_info, ordered_libs, libs, libs_ok, errors, coverage)
 
 let init ~profiling ~workers options =
   let file_options = Options.file_options options in
@@ -1680,6 +1692,9 @@ let init ~profiling ~workers options =
 
   (* Parsing won't raise warnings *)
   let warnings = FilenameMap.empty in
+
+  (* Libdefs have no coverage *)
+  let coverage = FilenameMap.empty in
 
   assert (FilenameSet.is_empty unchanged);
 
@@ -1729,7 +1744,7 @@ let init ~profiling ~workers options =
   let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
     Dep_service.calc_dependency_info ~options ~reader workers ~parsed
   ) in
-  Lwt.return (parsed, unparsed_set, dependency_info, ordered_libs, libs, libs_ok, errors)
+  Lwt.return (parsed, unparsed_set, dependency_info, ordered_libs, libs, libs_ok, errors, coverage)
 
 (* Does a best-effort job to load a saved state. If it fails, returns None *)
 let load_saved_state ~profiling ~workers options =
@@ -1837,7 +1852,7 @@ let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
 
   let%lwt get_watchman_updates = query_watchman_for_changed_files ~options
-  and updates, (parsed, unparsed, dependency_info, ordered_libs, libs, libs_ok, errors) =
+  and updates, (parsed, unparsed, dependency_info, ordered_libs, libs, libs_ok, errors, coverage) =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
@@ -1881,6 +1896,7 @@ let init ~profiling ~workers options =
     ordered_libs;
     libs;
     errors;
+    coverage;
     collated_errors = ref None;
     connections = Persistent_connection.empty;
   } in
@@ -1928,7 +1944,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
-    let%lwt (checked_files, _, errors, _) = merge
+    let%lwt (checked_files, _, errors, coverage, _) = merge
       ~transaction
       ~reader
       ~options
@@ -1943,6 +1959,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~deleted:FilenameSet.empty
       ~persistent_connections:None
       ~prep_merge:None in
-    let%lwt errors = check_files ~options ~reader ~workers errors checked_files in
-    Lwt.return { env with ServerEnv.checked_files; errors }
+    let%lwt errors, coverage = check_files ~options ~reader ~workers errors coverage checked_files in
+    Lwt.return { env with ServerEnv.checked_files; errors; coverage }
   )

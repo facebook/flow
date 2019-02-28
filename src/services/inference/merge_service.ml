@@ -25,6 +25,7 @@ type merge_strict_context_result = {
   master_cx: Context.sig_t;
   file_sigs: File_sig.With_ALoc.t FilenameMap.t;
   typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
+  coverage_map: Coverage.file_coverage FilenameMap.t;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -108,7 +109,7 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
   let lint_severities = Options.lint_severities options in
   let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
-  let ((cx, _), other_cxs) as cx_nel = Merge_js.merge_component_strict
+  let (((cx, _, _), other_cxs) as cx_nel) = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:(get_ast_unsafe ~reader)
     ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
@@ -116,14 +117,14 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
     component file_reqs dep_cxs master_cx
   in
 
-  let typed_asts = Nel.fold_left (fun typed_asts (ctx, typed_ast) ->
+  let typed_asts, coverage_map = Nel.fold_left (fun (typed_asts, cov_map) (ctx, typed_ast, cov) ->
     let file = Context.file ctx in
-    FilenameMap.add file typed_ast typed_asts
-  ) FilenameMap.empty cx_nel in
+    FilenameMap.add file typed_ast typed_asts, FilenameMap.add file cov cov_map
+  ) (FilenameMap.empty, FilenameMap.empty) cx_nel in
 
-  let other_cxs = Core_list.map ~f:fst other_cxs in
+  let other_cxs = Core_list.map ~f:(fun (cx, _, _) -> cx) other_cxs in
 
-  { cx; other_cxs; master_cx; file_sigs; typed_asts }
+  { cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
 
 let merge_strict_context ~options ~reader component =
   merge_strict_context_generic ~options ~reader
@@ -181,14 +182,14 @@ let merge_contents_context ~reader options file ast info file_sig =
   let lint_severities = Options.lint_severities options in
   let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
-  let cx, _ = Merge_js.merge_component_strict
+  let ((cx, tast, _), _) = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
     ~get_docblock_unsafe:(fun _ -> info)
     component file_reqs dep_cxs master_cx
   in
 
-  cx
+  (cx, tast)
 
 (* Entry point for merging a component *)
 let merge_strict_component ~worker_mutator ~options ~reader component =
@@ -209,7 +210,8 @@ let merge_strict_component ~worker_mutator ~options ~reader component =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let { cx; other_cxs = _; master_cx; _ } = merge_strict_context ~options ~reader component in
+    let { cx; other_cxs = _; master_cx; coverage_map; _ } =
+      merge_strict_context ~options ~reader component in
 
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
@@ -233,19 +235,20 @@ let merge_strict_component ~worker_mutator ~options ~reader component =
     Context_heaps.Merge_context_mutator.add_merge_on_diff
       ~audit:Expensive.ok worker_mutator cx component md5;
 
-    Ok (errors, warnings, suppressions)
+    Ok (errors, warnings, suppressions, coverage_map)
   )
   else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
-    Ok (errors, warnings, suppressions)
+    let coverage = FilenameMap.empty in
+    Ok (errors, warnings, suppressions, coverage)
 
 let check_file options ~reader file =
   let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
   if info.Module_heaps.checked then (
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let { cx; _ } = merge_strict_context_generic ~options ~reader
+    let { cx; coverage_map; _; } = merge_strict_context_generic ~options ~reader
       ~get_ast_unsafe:(fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
         let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
@@ -260,14 +263,16 @@ let check_file options ~reader file =
     let suppressions = Context.error_suppressions cx in
     let severity_cover = Context.severity_cover cx in
     let include_suppressions = Context.include_suppressions cx in
-    Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover
+    let errors, warnings, suppressions =
+      Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+    errors, warnings, suppressions, coverage_map
   )
   else
     let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
     let warnings = Flow_error.ErrorSet.empty in
-    (errors, warnings, suppressions)
-
+    let coverage = FilenameMap.empty in
+    (errors, warnings, suppressions, coverage)
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
