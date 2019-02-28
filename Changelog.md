@@ -1,3 +1,26 @@
+### 0.94.0
+
+Bug fixes:
+* Fixed `dynamic-exports` lint's spurious errors on exported classes and functions
+* Handle package.json files that are valid JSON but invalid packages
+
+Performance:
+* Reduce memory usage by filtering suppressed lint errors before formatting the errors for printing
+* Quicker responses to cancellation requests
+
+Many libdef fixes and other improvements from the open source community:
+* #3209 Fix autocomplete for generic type aliases (thanks @vkurchatkin!)
+* #6750 Remove shadowed generics in `Proxy$traps` (thanks @talbenari1!)
+* #6000 Document async function return type (thanks @callumlocke!)
+* #7448 Tweaks to built-in http module (thanks @STRML!)
+* #4570 Update types for Web Audio API (thanks @fand!)
+* #5836 Fix examples in libdefs/creation page (thanks @tomasz-sodzawiczny!)
+
+Additional lib def improvements:
+* Make `current` write-only in `React.Ref` - allowing union types for ref
+* Add `setMediaKeys` API to definition of `HTMLMediaElement`
+* Make type parameter to `http$Agent` covariant
+
 ### 0.93.0
 
 Likely to cause new Flow errors:
