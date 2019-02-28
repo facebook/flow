@@ -972,17 +972,15 @@ and identifier (loc, name) = identifier_with_comments (loc, name)
 
 and number_literal ~in_member_object raw num =
   let str = Dtoa.shortest_string_of_float num in
-  let if_pretty, if_ugly =
-    if in_member_object then
-      (* `1.foo` is a syntax error, but `1.0.foo`, `1e0.foo` and even `1..foo` are all ok. *)
-      let is_int x = not (String.contains x '.' || String.contains x 'e') in
-      let if_pretty = if is_int raw then wrap_in_parens (Atom raw) else Atom raw in
-      let if_ugly = if is_int str then fuse [Atom str; Atom "."] else Atom str in
-      if_pretty, if_ugly
-    else
-      Atom raw, Atom str
-  in
-  if if_pretty = if_ugly then if_pretty else IfPretty (if_pretty, if_ugly)
+  if in_member_object then begin
+    (* `1.foo` is a syntax error, but `1.0.foo`, `1e0.foo` and even `1..foo` are all ok. *)
+    let is_int x = not (String.contains x '.' || String.contains x 'e') in
+    let if_pretty = if is_int raw then wrap_in_parens (Atom raw) else Atom raw in
+    let if_ugly = if is_int str then fuse [Atom str; Atom "."] else Atom str in
+    if if_pretty = if_ugly then if_pretty else IfPretty (if_pretty, if_ugly)
+  end else begin
+    if String.equal raw str then Atom raw else IfPretty (Atom raw, Atom str)
+  end
 
 and literal { Ast.Literal.raw; value; } =
   let open Ast.Literal in
