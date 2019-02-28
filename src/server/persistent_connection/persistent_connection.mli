@@ -77,3 +77,6 @@ val get_file: single_client -> string -> File_input.t
 
 val get_client: Prot.client_id -> single_client option
 val get_id: single_client -> Prot.client_id
+
+val client_snippet_support: single_client -> bool
+

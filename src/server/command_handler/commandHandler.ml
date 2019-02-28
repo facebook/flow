@@ -900,6 +900,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
   end
 
 let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
+  let is_snippet_supported = Persistent_connection.client_snippet_support client in
   let open Completion in
   let (file, line, char) = match loc with
   | Some loc -> loc
@@ -930,7 +931,7 @@ let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~clie
       let metadata = with_data ~extra_data metadata in
       begin match result with
         | Ok items ->
-          let items = Core_list.map ~f:Flow_lsp_conversions.flow_completion_to_lsp items in
+          let items = Core_list.map ~f: (Flow_lsp_conversions.flow_completion_to_lsp line char is_snippet_supported) items in
           let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
           let response = ResponseMessage (id, r) in
           Lwt.return (LspResponse (Ok ((), Some response, metadata)))

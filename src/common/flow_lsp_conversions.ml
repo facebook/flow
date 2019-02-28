@@ -7,7 +7,24 @@
 
 module Ast = Flow_ast
 
+let flow_position_to_lsp (line: int) (char: int): Lsp.position =
+  let open Lsp in
+  {
+    line = line - 1;
+    character = char;
+  }
+
+let lsp_position_to_flow (position: Lsp.position): int * int =
+  let open Lsp in
+  let line = position.line + 1 in
+  let char = position.character
+  in
+  (line, char)
+
 let flow_completion_to_lsp
+    (line: int)
+    (character: int)
+    (is_snippet_supported: bool)
     (item: ServerProt.Response.complete_autocomplete_result)
   : Lsp.Completion.completionItem =
   let open Lsp.Completion in
@@ -18,17 +35,38 @@ let flow_completion_to_lsp
     let params = Core_list.map ~f:(fun p -> p.param_name ^ ": " ^ p.param_ty) params in
     "(" ^ (String.concat ", " params) ^ ")"
   in
-  let itemType, inlineDetail, detail = match item.func_details with
+  let flow_params_to_lsp_snippet name params =
+    let params = Core_list.mapi ~f:(fun i p -> "${" ^ string_of_int (i +1 ) ^ ":" ^ p.param_name ^ "}") params in
+    name ^ "(" ^ (String.concat ", " params) ^ ")"
+  in
+  let func_snippet item func_details =
+    let newText = flow_params_to_lsp_snippet item.res_name func_details.param_tys in
+    let open Lsp in
+    let start = (flow_position_to_lsp line (character - 1)) in
+    let end_ = (flow_position_to_lsp line (character + 1)) in
+    let textEdit: TextEdit.t = {
+      Lsp.TextEdit.range = {
+        start;
+        end_;
+      };
+      Lsp.TextEdit.newText = newText;
+    } in
+    [textEdit]
+  in
+  let itemType, inlineDetail, detail, insertTextFormat, textEdits = match item.func_details with
     | Some func_details ->
       let itemType = Some (trunc 30 func_details.return_ty) in
       let inlineDetail = Some (trunc 40 (flow_params_to_string func_details.param_tys)) in
       let detail = Some (trunc80 item.res_ty) in
-      itemType, inlineDetail, detail
+      let (insertTextFormat, textEdits) = match is_snippet_supported with
+        | true -> (Some SnippetFormat, (func_snippet item func_details))
+        | false -> (Some PlainText, [])  in
+      itemType, inlineDetail, detail, insertTextFormat, textEdits
     | None ->
       let itemType = None in
       let inlineDetail = Some (trunc80 item.res_ty) in
       let detail = Some (trunc80 item.res_ty) in
-      itemType, inlineDetail, detail
+      itemType, inlineDetail, detail, Some PlainText, []
   in
   {
     label = item.res_name;
@@ -39,9 +77,10 @@ let flow_completion_to_lsp
     documentation = None; (* This will be filled in by completionItem/resolve. *)
     sortText = None;
     filterText = None;
+    (* deprecated and should not be used *)
     insertText = None;
-    insertTextFormat = Some PlainText;
-    textEdits = [];
+    insertTextFormat;
+    textEdits;
     command = None;
     data = None;
   }
@@ -69,13 +108,6 @@ let loc_to_lsp_with_default (loc: Loc.t) ~(default_uri: string): Lsp.Location.t 
     | Error _ -> default_uri
   in
   { Lsp.Location.uri; range = loc_to_lsp_range loc; }
-
-let lsp_position_to_flow (position: Lsp.position): int * int =
-  let open Lsp in
-  let line = position.line + 1 in
-  let char = position.character
-  in
-  (line, char)
 
 let flow_edit_to_textedit (edit: Loc.t * string): Lsp.TextEdit.t =
   let loc, text = edit in
