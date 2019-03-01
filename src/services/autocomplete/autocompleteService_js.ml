@@ -64,7 +64,24 @@ let parameter_name is_opt name =
   let opt = if is_opt then "?" else "" in
   (Option.value name ~default:"_") ^ opt
 
+let lsp_completion_of_type (ty: Ty.t) =
+  let open Lsp.Completion in
+  match ty with
+  | Ty.InterfaceDecl _ -> Some Interface
+  | Ty.ClassDecl _ -> Some Class
+  | Ty.(StrLit _ | NumLit _ | BoolLit _) -> Some Value
+  | Ty.Fun _ -> Some Function
+  | Ty.TypeAlias _
+  | Ty.Union _ -> Some Enum
+  | Ty.Module _ -> Some Module
+  | Ty.(Tup _ | Bot | Null | Obj _ | Inter _ | TVar _ | Bound _ | Generic _ |
+      Any _ | Top | Void | Num _ | Str _ | Bool _ | Arr _ | TypeOf _ |
+      Utility _ | Mu _
+    ) ->  Some Variable
+
 let autocomplete_create_result ((name, loc), ty) =
+  let res_ty = Ty_printer.string_of_t ~with_comments:false ty in
+  let res_kind = lsp_completion_of_type ty in
   Ty.(match ty with
   | Fun {fun_params; fun_rest_param; fun_return; _} ->
       let param_tys = Core_list.map ~f:(fun (n, t, fp) ->
@@ -81,13 +98,14 @@ let autocomplete_create_result ((name, loc), ty) =
       in
       let return = Ty_printer.string_of_t ~with_comments:false fun_return in
       { res_loc = loc;
+        res_kind;
         res_name = name;
-        res_ty = Ty_printer.string_of_t ~with_comments:false ty;
+        res_ty;
         func_details = Some { param_tys; return_ty = return } }
-  | _ ->
-      { res_loc = loc;
+  | _ -> { res_loc = loc;
+        res_kind;
         res_name = name;
-        res_ty = Ty_printer.string_of_t ~with_comments:false ty;
+        res_ty;
         func_details = None }
   )
 

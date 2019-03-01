@@ -114,20 +114,6 @@ export default suite(
       ),
     ]),
 
-    test('textDocument/completion', [
-      addFile('completion.js'),
-      ideStartAndConnect(),
-      ideRequestAndWaitUntilResponse('textDocument/completion', {
-        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>completion.js'},
-        position: {line: 10, character: 15}, // statement position
-      }).verifyAllIDEMessagesInStep(
-        [
-          'textDocument/completion{"label":"x","label":"fred","detail":"(a: number, b: string) => number","inlineDetail":"(a: number, b: string)"}',
-        ],
-        [...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
-
     test('textDocument/documentHighlight', [
       addFiles('references.js', 'references2.js'),
       ideStartAndConnect(),
