@@ -133,6 +133,17 @@ let coverage ~options ~env ~profiling ~force file_input =
       Type_info_service.coverage ~options ~env ~profiling ~force file content
     end
 
+let batch_coverage ~genv ~env ~batch =
+  let is_checked key = CheckedSet.mem key env.checked_files in
+  let filter key = Core_list.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
+  let coverage_map = FilenameMap.filter
+    (fun key _ -> is_checked key && File_key.to_string key |> filter )
+    env.coverage in
+  let response =
+    FilenameMap.fold (fun key coverage -> List.cons (key, coverage)) coverage_map [] in
+  (Ok response, Rechecker.get_lazy_stats genv env)
+  |> Lwt.return
+
 let serialize_graph graph =
   (* Convert from map/set to lists for serialization to client. *)
   FilenameMap.fold (fun f dep_fs acc ->
@@ -287,6 +298,10 @@ let handle_coverage ~options ~force ~input ~profiling ~env =
   let%lwt response = coverage ~options ~env ~profiling ~force input in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
+let handle_batch_coverage ~genv ~options:_ ~profiling:_ ~env ~batch =
+  let%lwt response, lazy_stats = batch_coverage ~genv ~env ~batch in
+  Lwt.return (ServerProt.Response.BATCH_COVERAGE {response; lazy_stats}, None)
+
 let handle_cycle ~fn ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn in
   Lwt.return (env, ServerProt.Response.CYCLE response, None)
@@ -440,6 +455,8 @@ let get_ephemeral_handler genv command =
     mk_parallelizable ~wait_for_recheck ~options (handle_check_file ~options ~force ~input)
   | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~input)
+  | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_batch_coverage ~genv ~options ~batch)
   | ServerProt.Request.CYCLE { filename; } ->
     (* The user preference is to make this wait for up-to-date data *)
     let file_options = Options.file_options options in

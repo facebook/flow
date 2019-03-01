@@ -19,6 +19,7 @@ module Request = struct
       wait_for_recheck: bool option;
     }
   | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; }
+  | BATCH_COVERAGE of { batch : string list; wait_for_recheck: bool option; }
   | CYCLE of { filename: string; }
   | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
   | FIND_MODULE of { moduleref: string; filename: string; wait_for_recheck: bool option; }
@@ -68,6 +69,8 @@ module Request = struct
     Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
   | CHECK_FILE { input; verbose=_; force=_; include_warnings=_; wait_for_recheck=_; } ->
     Printf.sprintf "check %s" (File_input.filename_of_file_input input)
+  | BATCH_COVERAGE { batch=_; wait_for_recheck=_; } ->
+      Printf.sprintf "%s" "batch-coverage"
   | COVERAGE { input; force=_; wait_for_recheck=_; } ->
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)
   | CYCLE { filename; } ->
@@ -113,6 +116,11 @@ end
 
 module Response = struct
 
+  type lazy_stats = {
+    lazy_mode: Options.lazy_mode option;
+    checked_files: int;
+    total_files: int;
+  }
   (* Details about functions to be added in json output *)
   type func_param_result = {
       param_name     : string;
@@ -139,6 +147,11 @@ module Response = struct
 
   type coverage_response = (
     (Loc.t * Coverage.Kind.t) list,
+    string
+  ) result
+
+  type batch_coverage_response = (
+    (File_key.t * Coverage.file_coverage) list,
     string
   ) result
 
@@ -193,12 +206,6 @@ module Response = struct
   | NO_ERRORS
   | NOT_COVERED
 
-  type lazy_stats = {
-    lazy_mode: Options.lazy_mode option;
-    checked_files: int;
-    total_files: int;
-  }
-
   type check_file_response = status_response
 
   type find_module_response = File_key.t option
@@ -207,6 +214,7 @@ module Response = struct
   | AUTOCOMPLETE of autocomplete_response
   | CHECK_FILE of check_file_response
   | COVERAGE of coverage_response
+  | BATCH_COVERAGE of {response: batch_coverage_response; lazy_stats: lazy_stats }
   | CYCLE of graph_response
   | GRAPH_DEP_GRAPH of (unit, string) result
   | DUMP_TYPES of dump_types_response
@@ -225,6 +233,7 @@ module Response = struct
   | AUTOCOMPLETE _ -> "autocomplete response"
   | CHECK_FILE _ -> "check_file response"
   | COVERAGE _ -> "coverage response"
+  | BATCH_COVERAGE _ -> "batch-coverage response"
   | CYCLE _ -> "cycle response"
   | GRAPH_DEP_GRAPH _ -> "dep-graph response"
   | DUMP_TYPES _ -> "dump_types response"
