@@ -1624,6 +1624,7 @@ let program (algo : diff_algorithm)
     let type_diff =
       match type1, type2 with
       | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
+      | Nullable (t1_loc, t1), Nullable (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | Object obj1, Object obj2 -> diff_if_changed_ret_opt object_type obj1 obj2
       | _ -> None in
     Option.value type_diff

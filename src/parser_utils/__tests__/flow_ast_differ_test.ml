@@ -1594,6 +1594,12 @@ let tests = "ast_differ" >::: [
     ~source ~expected:"type GotRenamed = string"
     ~mapper:(new useless_mapper)
   end;
+  "type_alias_nullable" >:: begin fun ctxt ->
+    let source = "type foo = ?number" in
+    assert_edits_equal ctxt ~edits:[((12, 18), "string")] ~source
+      ~expected:"type foo = ?string"
+      ~mapper:(new useless_mapper)
+  end;
   "type_alias_param_name" >:: begin fun ctxt ->
     let source = "type alias<RENAME> = string" in
     assert_edits_equal ctxt ~edits:[(11, 17), "GOT_RENAMED"]
