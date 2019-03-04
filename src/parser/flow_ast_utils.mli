@@ -56,6 +56,12 @@ val mk_comments:
   'a ->
   ('loc, 'a) Flow_ast.Syntax.t
 
+val mk_comments_opt:
+  ?leading: 'loc Flow_ast.Comment.t list ->
+  ?trailing: 'loc Flow_ast.Comment.t list ->
+  unit ->
+  ('loc, unit) Flow_ast.Syntax.t option
+
 val map_comments:
   f:('a -> 'b) ->
   ('a, 'internal) Flow_ast.Syntax.t ->

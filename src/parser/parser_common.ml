@@ -125,10 +125,7 @@ let identifier_name env =
   in
   Eat.token env;
   let trailing = Peek.comments env in
-  let comments = match leading, trailing with
-    | [], [] -> None
-    | _, _ -> Some (Flow_ast_utils.mk_comments ~leading ~trailing ())
-  in
+  let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
   (loc, { Identifier.name; comments })
 
 (**

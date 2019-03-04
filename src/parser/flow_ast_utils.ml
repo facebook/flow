@@ -80,6 +80,11 @@ let ident_of_source (loc, name) = (loc, { Identifier.name; comments= None })
 let mk_comments ?(leading= []) ?(trailing= []) a =
   { Syntax.leading; trailing; internal = a }
 
+let mk_comments_opt ?(leading= []) ?(trailing= []) () =
+  match leading, trailing with
+    | [], [] -> None
+    | _, _ -> Some (mk_comments ~leading ~trailing ())
+
 let map_comments ~f comments =
   let { Syntax.leading; trailing; internal } = comments in
   let map_fun (a, comment) = f a, comment in
