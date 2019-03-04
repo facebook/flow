@@ -66,3 +66,114 @@ let select
       failwith "Timeout <= 0 not implemented"
   in
   Lwt.pick tasks
+
+module Process_success = struct
+  type t = {
+    command_line: string;
+    stdout: string;
+    stderr: string;
+  }
+end
+
+module Process_failure = struct
+  type t = {
+    command_line: string;
+    process_status: Unix.process_status;
+    stdout: string;
+    stderr: string;
+    exn: exn option;
+  }
+
+  let to_string (process_failure: t): string =
+    let exn_message = match process_failure.exn with
+      | Some exn -> (Exn.to_string exn)
+      | None -> "<none>"
+    in
+    let exit_code =
+      let open Unix in
+      match process_failure.process_status with
+      | WEXITED exit_code -> "WEXITED " ^ (string_of_int exit_code)
+      | WSIGNALED exit_code -> "WSIGNALED " ^ (string_of_int exit_code)
+      | WSTOPPED exit_code -> "WSTOPPED " ^ (string_of_int exit_code)
+    in
+    let stderr = match process_failure.stderr with
+      | "" -> "<none>"
+      | stderr -> stderr
+    in
+    Printf.sprintf
+      ("Process '%s' failed with\n" ^^
+      "Exception: %s\n" ^^
+      "Exit code: %s\n" ^^
+      "Stderr: %s")
+      process_failure.command_line
+      exn_message
+      exit_code
+      stderr
+end
+
+let exec_checked
+    ?(input: string option)
+    ?(env: string array option)
+    (program: string)
+    (args: string array)
+    : (Process_success.t, Process_failure.t) Lwt_result.t =
+  let command_line =
+    let args = args
+      |> Array.map ~f:(fun x -> " " ^ x)
+      |> String.concat_array ~sep:""
+    in
+    program ^ args
+  in
+  let process =
+    let command = (program, Array.append [| program |] args) in
+    Lwt_process.open_process_full command ?env in
+  begin
+    let%lwt (exn, stdout, stderr) =
+      let exn = ref None in
+      let stdout = ref "" in
+      let stderr = ref "" in
+      let%lwt () = try%lwt
+        let%lwt () = match input with
+          | Some input ->
+            let%lwt () = Lwt_io.write process#stdin input in
+            let%lwt () = Lwt_io.close process#stdin in
+            Lwt.return_unit
+          | None ->
+            Lwt.return_unit
+        and () =
+          let%lwt result = Lwt_io.read process#stdout in
+          stdout := result;
+          Lwt.return_unit
+        and () =
+          let%lwt result = Lwt_io.read process#stderr in
+          stderr := result;
+          Lwt.return_unit
+        in
+        Lwt.return_unit
+      with e ->
+        exn := Some e;
+        Lwt.return_unit
+      in
+      Lwt.return (!exn, !stdout, !stderr)
+    in
+
+    let%lwt state = process#close in
+    match state with
+    | Unix.WEXITED 0 ->
+      Lwt.return_ok { Process_success.
+        command_line;
+        stdout;
+        stderr;
+      }
+    | process_status ->
+      Lwt.return_error { Process_failure.
+        command_line;
+        process_status;
+        stdout;
+        stderr;
+        exn;
+      }
+  end [%finally (
+    let%lwt _: Unix.process_status = process#close in
+    Lwt.return_unit
+  )]

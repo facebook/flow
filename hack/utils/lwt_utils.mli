@@ -13,3 +13,38 @@ The Lwt main loop is an event loop pumped by [Unix.select], and so regular
 function does not use [Unix.select] at all, but Lwt primitives that accomplish
 the same thing.
 *)
+
+module Process_success: sig
+  type t = {
+    command_line: string;
+    stdout: string;
+    stderr: string;
+  }
+end
+
+module Process_failure: sig
+  type t = {
+    command_line: string;
+    process_status: Unix.process_status;
+    stdout: string;
+    stderr: string;
+    exn: exn option;
+  }
+
+  val to_string: t -> string
+end
+
+val exec_checked:
+    ?input:string ->
+    ?env:string array ->
+    string ->
+    string array ->
+    (Process_success.t, Process_failure.t) Lwt_result.t
+(** Run a command with a given input and return the output. If the command exits
+with an exit status other than zero, raises [Process_failure] instead.
+
+NOTE: on cancellation, this function will not kill the underlying process. (I
+tried to implement it, but after killing the process, both [Lwt_io.close] and
+[Lwt_io.abort] would hang when trying to close the process's
+stdin/stdout/stderr.)
+*)
