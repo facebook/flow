@@ -747,6 +747,43 @@ let error_message_kind_of_upper = function
   | GetStaticsT _ -> Error_message.IncompatibleGetStaticsT
   | use_t -> Error_message.IncompatibleUnclassified (string_of_use_ctor use_t)
 
+let use_op_of_lookup_action = function
+  | RWProp (use_op, _, _, _) -> Some use_op
+  | LookupProp (use_op, _) -> Some use_op
+  | SuperProp (use_op, _) -> Some use_op
+  | MatchProp (use_op, _) -> Some use_op
+
+(* some types need to be resolved before proceeding further *)
+let needs_resolution = function
+  | OpenT _ | DefT (_, _, UnionT _) | DefT (_, _, OptionalT _) | DefT (_, _, MaybeT _) | AnnotT _ -> true
+  | _ -> false
+
+let is_object_prototype_method = function
+  | "isPrototypeOf"
+  | "hasOwnProperty"
+  | "propertyIsEnumerable"
+  | "toLocaleString"
+  | "toString"
+  | "valueOf" -> true
+  | _ -> false
+
+(* This must list all of the properties on Function.prototype. *)
+let is_function_prototype = function
+  | "apply"
+  | "bind"
+  | "call"
+  | "arguments"
+  | "caller"
+  | "length"
+  | "name" -> true
+  | x -> is_object_prototype_method x
+
+(* neither object prototype methods nor callable signatures should be
+ * implied by an object indexer type *)
+let is_dictionary_exempt = function
+  | x when is_object_prototype_method x -> true
+  | _ -> false
+
 (********************** start of slab **********************************)
 module M__flow
   (ReactJs: React_kit.REACT)
@@ -6107,17 +6144,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       })
   )
 
-and use_op_of_lookup_action = function
-  | RWProp (use_op, _, _, _) -> Some use_op
-  | LookupProp (use_op, _) -> Some use_op
-  | SuperProp (use_op, _) -> Some use_op
-  | MatchProp (use_op, _) -> Some use_op
-
-(* some types need to be resolved before proceeding further *)
-and needs_resolution = function
-  | OpenT _ | DefT (_, _, UnionT _) | DefT (_, _, OptionalT _) | DefT (_, _, MaybeT _) | AnnotT _ -> true
-  | _ -> false
-
 (**
  * Addition
  *
@@ -6483,32 +6509,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
 
   rec_flow cx trace (uproto,
     ReposUseT (ureason, false, use_op, DefT (lreason, bogus_trust (), ObjT l_obj)))
-
-and is_object_prototype_method = function
-  | "isPrototypeOf"
-  | "hasOwnProperty"
-  | "propertyIsEnumerable"
-  | "toLocaleString"
-  | "toString"
-  | "valueOf" -> true
-  | _ -> false
-
-(* This must list all of the properties on Function.prototype. *)
-and is_function_prototype = function
-  | "apply"
-  | "bind"
-  | "call"
-  | "arguments"
-  | "caller"
-  | "length"
-  | "name" -> true
-  | x -> is_object_prototype_method x
-
-(* neither object prototype methods nor callable signatures should be
- * implied by an object indexer type *)
-and is_dictionary_exempt = function
-  | x when is_object_prototype_method x -> true
-  | _ -> false
 
 (* common case checking a function as an object *)
 and quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
