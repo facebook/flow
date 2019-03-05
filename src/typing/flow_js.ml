@@ -701,6 +701,52 @@ let check_canceled =
     count := n;
     if n = 0 then WorkerCancel.check_should_exit ()
 
+let error_message_kind_of_lower = function
+  | DefT (_, _, NullT) -> Some Error_message.Possibly_null
+  | DefT (_, _, VoidT) -> Some Error_message.Possibly_void
+  | DefT (_, _, MaybeT _) -> Some Error_message.Possibly_null_or_void
+  | DefT (_, _, IntersectionT _)
+  | DefT (_, _, MixedT Empty_intersection) -> Some Error_message.Incompatible_intersection
+  | _ -> None
+
+let error_message_kind_of_upper = function
+  | GetPropT (_, _, Named (r, name), _) -> Error_message.IncompatibleGetPropT (aloc_of_reason r, Some name)
+  | GetPropT (_, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
+  | GetPrivatePropT (_, _, _, _, _, _) -> Error_message.IncompatibleGetPrivatePropT
+  | SetPropT (_, _, Named (r, name), _, _, _) -> Error_message.IncompatibleSetPropT (aloc_of_reason r, Some name)
+  | SetPropT (_, _, Computed t, _, _, _) -> Error_message.IncompatibleSetPropT (loc_of_t t, None)
+  | MatchPropT (_, _, Named (r, name), _) -> Error_message.IncompatibleMatchPropT (aloc_of_reason r, Some name)
+  | MatchPropT (_, _, Computed t, _) -> Error_message.IncompatibleMatchPropT (loc_of_t t, None)
+  | SetPrivatePropT (_, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
+  | MethodT (_, _, _, Named (r, name), _, _) -> Error_message.IncompatibleMethodT (aloc_of_reason r, Some name)
+  | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
+  | CallT _ -> Error_message.IncompatibleCallT
+  | ConstructorT _ -> Error_message.IncompatibleConstructorT
+  | GetElemT (_, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
+  | SetElemT (_, _, t, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
+  | CallElemT (_, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
+  | ElemT (_, _, DefT (_, _, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT
+  | ObjAssignFromT (_, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
+  | ObjAssignFromT _ -> Error_message.IncompatibleObjAssignFromT
+  | ObjRestT _ -> Error_message.IncompatibleObjRestT
+  | ObjSealT _ -> Error_message.IncompatibleObjSealT
+  | ArrRestT _ -> Error_message.IncompatibleArrRestT
+  | SuperT _ -> Error_message.IncompatibleSuperT
+  | MixinT _ -> Error_message.IncompatibleMixinT
+  | SpecializeT _ -> Error_message.IncompatibleSpecializeT
+  | ConcretizeTypeAppsT _ -> Error_message.IncompatibleSpecializeT
+  | ThisSpecializeT _ -> Error_message.IncompatibleThisSpecializeT
+  | VarianceCheckT _ -> Error_message.IncompatibleVarianceCheckT
+  | GetKeysT _ -> Error_message.IncompatibleGetKeysT
+  | HasOwnPropT (_, r, Literal (_, name)) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
+  | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
+  | GetValuesT _ -> Error_message.IncompatibleGetValuesT
+  | UnaryMinusT _ -> Error_message.IncompatibleUnaryMinusT
+  | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> Error_message.IncompatibleMapTypeTObject
+  | TypeAppVarianceCheckT _ -> Error_message.IncompatibleTypeAppVarianceCheckT
+  | GetStaticsT _ -> Error_message.IncompatibleGetStaticsT
+  | use_t -> Error_message.IncompatibleUnclassified (string_of_use_ctor use_t)
+
 (********************** start of slab **********************************)
 module M__flow
   (ReactJs: React_kit.REACT)
@@ -6060,52 +6106,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         branches = [];
       })
   )
-
-and error_message_kind_of_lower = function
-  | DefT (_, _, NullT) -> Some Error_message.Possibly_null
-  | DefT (_, _, VoidT) -> Some Error_message.Possibly_void
-  | DefT (_, _, MaybeT _) -> Some Error_message.Possibly_null_or_void
-  | DefT (_, _, IntersectionT _)
-  | DefT (_, _, MixedT Empty_intersection) -> Some Error_message.Incompatible_intersection
-  | _ -> None
-
-and error_message_kind_of_upper = function
-  | GetPropT (_, _, Named (r, name), _) -> Error_message.IncompatibleGetPropT (aloc_of_reason r, Some name)
-  | GetPropT (_, _, Computed t, _) -> Error_message.IncompatibleGetPropT (loc_of_t t, None)
-  | GetPrivatePropT (_, _, _, _, _, _) -> Error_message.IncompatibleGetPrivatePropT
-  | SetPropT (_, _, Named (r, name), _, _, _) -> Error_message.IncompatibleSetPropT (aloc_of_reason r, Some name)
-  | SetPropT (_, _, Computed t, _, _, _) -> Error_message.IncompatibleSetPropT (loc_of_t t, None)
-  | MatchPropT (_, _, Named (r, name), _) -> Error_message.IncompatibleMatchPropT (aloc_of_reason r, Some name)
-  | MatchPropT (_, _, Computed t, _) -> Error_message.IncompatibleMatchPropT (loc_of_t t, None)
-  | SetPrivatePropT (_, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
-  | MethodT (_, _, _, Named (r, name), _, _) -> Error_message.IncompatibleMethodT (aloc_of_reason r, Some name)
-  | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
-  | CallT _ -> Error_message.IncompatibleCallT
-  | ConstructorT _ -> Error_message.IncompatibleConstructorT
-  | GetElemT (_, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
-  | SetElemT (_, _, t, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
-  | CallElemT (_, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
-  | ElemT (_, _, DefT (_, _, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT
-  | ObjAssignFromT (_, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
-  | ObjAssignFromT _ -> Error_message.IncompatibleObjAssignFromT
-  | ObjRestT _ -> Error_message.IncompatibleObjRestT
-  | ObjSealT _ -> Error_message.IncompatibleObjSealT
-  | ArrRestT _ -> Error_message.IncompatibleArrRestT
-  | SuperT _ -> Error_message.IncompatibleSuperT
-  | MixinT _ -> Error_message.IncompatibleMixinT
-  | SpecializeT _ -> Error_message.IncompatibleSpecializeT
-  | ConcretizeTypeAppsT _ -> Error_message.IncompatibleSpecializeT
-  | ThisSpecializeT _ -> Error_message.IncompatibleThisSpecializeT
-  | VarianceCheckT _ -> Error_message.IncompatibleVarianceCheckT
-  | GetKeysT _ -> Error_message.IncompatibleGetKeysT
-  | HasOwnPropT (_, r, Literal (_, name)) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, Some name)
-  | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
-  | GetValuesT _ -> Error_message.IncompatibleGetValuesT
-  | UnaryMinusT _ -> Error_message.IncompatibleUnaryMinusT
-  | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> Error_message.IncompatibleMapTypeTObject
-  | TypeAppVarianceCheckT _ -> Error_message.IncompatibleTypeAppVarianceCheckT
-  | GetStaticsT _ -> Error_message.IncompatibleGetStaticsT
-  | use_t -> Error_message.IncompatibleUnclassified (string_of_use_ctor use_t)
 
 and use_op_of_lookup_action = function
   | RWProp (use_op, _, _, _) -> Some use_op
