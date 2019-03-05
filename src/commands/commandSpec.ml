@@ -71,8 +71,13 @@ module ArgSpec = struct
     arg = Arg;
   }
   let int = {
-    parse = (fun ~name:_ -> function
-    | Some [x] -> Some (int_of_string x)
+    parse = (fun ~name -> function
+    | Some [x] ->
+      Some (
+        try int_of_string x
+        with Failure _ -> raise (Failed_to_parse (name, Utils_js.spf
+          "expected an integer, got %S" x))
+      )
     | _ -> None
     );
     arg = Arg;
@@ -351,9 +356,10 @@ let init_from_env spec =
   SMap.fold (fun arg flag acc ->
     match flag.ArgSpec.env with
     | Some env ->
-      begin
-        try SMap.add arg [Sys.getenv env] acc
-        with Not_found -> acc
+      begin match Sys.getenv env with
+      | "" -> acc
+      | env -> SMap.add arg [env] acc
+      | exception Not_found -> acc
       end
     | None -> acc
   ) flags SMap.empty

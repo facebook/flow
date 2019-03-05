@@ -208,6 +208,7 @@ let lazy_flags prev = CommandSpec.ArgSpec.(
       ])
       ~doc:("Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to " ^
             "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)")
+      ~env:"FLOW_LAZY_MODE"
 )
 
 let input_file_flag verb prev = CommandSpec.ArgSpec.(
