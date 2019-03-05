@@ -194,7 +194,7 @@ let tests = "offset_utils" >::: [
     run_expect_failure
       "foo\n"
       (1, 10)
-      "Failure while looking up column. Index: 10. Length: 5."
+      "Failure while looking up column. Index: 10. Length: 4."
   end;
   "full_test" >:: begin fun _ctxt ->
     (* Note that there is no newline at the end of the string -- I found a bug in an initial version

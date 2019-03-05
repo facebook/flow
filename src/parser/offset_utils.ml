@@ -8,99 +8,74 @@
 (* table from 0-based line number and 0-based column number to the offset at that point *)
 type t = int array array
 
-(* https://www.ecma-international.org/ecma-262/5.1/#sec-7.3 *)
-let is_newline codepoint =
-  codepoint = Char.code '\n' ||
-  codepoint = Char.code '\r' ||
-  (* Unicode line separator *)
-  codepoint = 0x2028 ||
-  (* Unicode line separator *)
-  codepoint = 0x2029
+(* Classify each codepoint. We care about how many bytes each codepoint takes, in order to
+   compute offsets in terms of bytes instead of codepoints. We also care about various kinds of
+   newlines. To reduce memory, it is important that this is a basic variant with no parameters
+   (so, don't make it `Chars of int`). *)
+type kind =
+  | Chars_1
+  | Chars_2
+  | Chars_3
+  | Chars_4
+  | Cr
+  | Nl
+  | Ls
 
-(* The spec (linked above) says that "\r\n" should be treated like a single line terminator, even
- * though both '\r' and '\n' are line terminators in their own right. So, if we just saw '\r', and
- * now we see '\n', we just skip. *)
-let should_skip last_codepoint codepoint =
-  last_codepoint = Some (Char.code '\r') &&
-  codepoint = Char.code '\n'
+let size_of_kind = function
+| Chars_1 -> 1
+| Chars_2 -> 2
+| Chars_3 -> 3
+| Chars_4 -> 4
+| Cr -> 1
+| Nl -> 1
+| Ls -> 3
 
-let make text =
-  let line = ref 0 in
-  let column = ref 0 in
-  let folder =
-    (* Used to properly handle Windows line endings ("\r\n") -- see `should_skip` function. *)
-    let last_codepoint = ref None in
-    fun acc offset chr ->
-      let open Wtf8 in
-      (* Because we update acc before checking the current character, we will add an entry for a
-       * phantom column at the end of each line. This is good, because end positions produced by the
-       * parser are exclusive so they can refer to the column after the last actual column. *)
-      let acc = (!line, !column, offset)::acc in
-      begin match chr with
-      | Point codepoint ->
-        if should_skip !last_codepoint codepoint then begin
-          ()
-        end else if is_newline codepoint then begin
-          line := (!line + 1);
-          column := 0;
-        end else begin
-          column := !column + 1
-        end;
-        last_codepoint := Some codepoint
-      | Malformed ->
-        column := !column + 1;
-        last_codepoint := None
-      end;
-      acc
-  in
+let make =
   (* Using Wtf8 allows us to properly track multi-byte characters, so that we increment the column
    * by 1 for a multi-byte character, but increment the offset by the number of bytes in the
    * character. It also keeps us from incrementing the line number if a multi-byte character happens
    * to include e.g. the codepoint for '\n' as a second-fourth byte. *)
-  let tuples, num_lines =
-    (* The tuples are built up in reverse order *)
-    let rev = Wtf8.fold_wtf_8 folder [] text in
-    (* As described in the `folder` function, we need to make sure we have an entry after the last
-     * column. If the final line did not have a terminating newline character, we won't end up with
-     * one, so let's add one here. If it did, one more entry won't hurt. *)
-    let (last_actual_line, _, last_offset) as extra_column_entry = match rev with
-    | [] -> (0, 0, 0)
-    | (line, col, offset)::_ -> (line, col + 1, offset + 1)
+  let fold_codepoints acc _offset chr =
+    let kind = match chr with
+    | Wtf8.Point code ->
+      if code >= 0x10000 then Chars_4
+      else if code == 0x2028 || code == 0x2029 then Ls
+      else if code >= 0x800 then Chars_3
+      else if code >= 0x80 then Chars_2
+      else if code == 0xA then Nl
+      else if code == 0xD then Cr
+      else Chars_1
+    | Wtf8.Malformed -> Chars_1
     in
-    let last_line = last_actual_line + 1 in
-    let num_lines = last_line + 1 in
-    (* For a similar reason that we add a phantom column at the end of each line, we also want to
-     * add a phantom line at the end of the file. Since end positions are reported exclusively, it
+    kind::acc
+  in
+  (* Traverses a `kind list`, breaking it up into an `int array array`, where each `int array`
+     contains the offsets at each character (aka codepoint) of a line. *)
+  let rec build_table (offset, rev_line, acc) = function
+  | [] -> Array.of_list (List.rev acc)
+  | Cr::Nl::rest ->
+    (* https://www.ecma-international.org/ecma-262/5.1/#sec-7.3 says that "\r\n" should be treated
+       like a single line terminator, even though both '\r' and '\n' are line terminators in their
+       own right. *)
+    let line = Array.of_list (List.rev (offset::rev_line)) in
+    build_table (offset + 2, [], line::acc) rest
+  | (Cr | Nl | Ls as kind)::rest ->
+    let line = Array.of_list (List.rev (offset::rev_line)) in
+    build_table (offset + (size_of_kind kind), [], line::acc) rest
+  | (Chars_1 | Chars_2 | Chars_3 | Chars_4 as kind)::rest ->
+    build_table (offset + (size_of_kind kind), offset::rev_line, acc) rest
+  in
+  fun text ->
+    let rev_kinds = Wtf8.fold_wtf_8 fold_codepoints [] text in
+
+    (* Add a phantom line at the end of the file. Since end positions are reported exclusively, it
      * is possible for the lexer to output an end position with a line number one higher than the
      * last line, to indicate something such as "the entire last line." For this purpose, we can
      * return the offset that is one higher than the last legitimate offset, since it could only be
      * correctly used as an exclusive index. *)
-    let extra_line_entry = (last_line, 0, last_offset) in
-    (List.rev (extra_line_entry::extra_column_entry::rev), num_lines)
-  in
-  (* Build up the table, a 2D array indexed by line, then column. The top level array needs to have
-   * the same number of entries as the number of lines, and the second-level arrays need to have one
-   * entry for each column in that line. Here we do the work to build the array. Next we populate
-   * it. *)
-  let table =
-    let columns_per_line = Array.make num_lines 0 in
-    let rec find_cols_per_line = function
-    (* If the next entry is for a different line, this is the last column on the current line, so we
-     * know the length. *)
-    | (line1, col1, _)::(((line2, _, _)::_) as rst) when line1 <> line2 ->
-      columns_per_line.(line1) <- col1 + 1;
-      find_cols_per_line rst
-    (* If this is the last entry, we know the length of the last line. *)
-    | [(line, col, _)] -> columns_per_line.(line) <- col + 1
-    (* Something else, so recurse *)
-    | _::rst -> find_cols_per_line rst
-    | [] -> ()
-    in
-    find_cols_per_line tuples;
-    Array.init num_lines (fun i -> Array.make columns_per_line.(i) 0)
-  in
-  List.iter (fun (line, col, offset) -> table.(line).(col) <- offset) tuples;
-  table
+    let rev_kinds = Nl::rev_kinds in
+
+    build_table (0, [], []) (List.rev rev_kinds)
 
 exception Offset_lookup_failed of Loc.position * string
 
