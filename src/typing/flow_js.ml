@@ -784,6 +784,275 @@ let is_dictionary_exempt = function
   | x when is_object_prototype_method x -> true
   | _ -> false
 
+(* common case checking a function as an object *)
+let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
+  let statics_own_props = match statics with
+    | DefT (_, _, ObjT { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
+    | DefT (_, _, AnyT _)
+    | DefT (_, _, MixedT _) -> Some SMap.empty
+    | _ -> None
+  in
+  match statics_own_props with
+  | Some statics_own_props ->
+    let props_not_found = SMap.filter (fun x p ->
+      let optional = match p with
+      | Field (_, DefT (_, _, OptionalT _), _) -> true
+      |_ -> false
+      in
+      not (
+        optional ||
+        is_function_prototype x ||
+        SMap.mem x statics_own_props
+      )
+    ) props in
+    SMap.iter (fun x _ ->
+      let use_op = Frame (PropertyCompatibility {
+        prop = Some x;
+        lower = reason;
+        upper = reason_o;
+        is_sentinel = false;
+      }, use_op) in
+      let reason_prop =
+        replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
+      let err = Error_message.EPropNotFound (Some x, (reason_prop, reason), use_op) in
+      add_output cx ~trace err
+    ) props_not_found;
+    not (SMap.is_empty props_not_found)
+  | None -> false
+
+(* NOTE: The following function looks similar to TypeUtil.quick_subtype, but is in fact more
+   complicated: it avoids deep structural checks, admits `any`, etc. It might be worth it to
+   simplify this function later. *)
+let ground_subtype = function
+  (* tvars are not considered ground, so they're not part of this relation *)
+  | (OpenT _, _) | (_, UseT (_, OpenT _)) -> false
+
+  (* Allow any lower bound to be repositioned *)
+  | (_, ReposLowerT _) -> false
+  | (_, ReposUseT _) -> false
+
+  | (_, ObjKitT _) -> false
+
+  | (_, ChoiceKitUseT _) -> false
+
+  (* eval *)
+  | _, UseT (_, TypeDestructorTriggerT _) -> false
+
+  (* Allow deferred unification with `any` *)
+  | (_, UnifyT _) -> false
+
+  | DefT (_, _, UnionT _), _ -> false
+
+  (* Allow EmptyT ~> CondT *)
+  | (_, CondT _) -> false
+
+  | _, MakeExactT _ -> false
+
+  | DefT (_, _, NumT _), UseT (_, DefT (_, _, NumT _))
+  | DefT (_, _, StrT _), UseT (_, DefT (_, _, StrT _))
+  | DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _))
+  | DefT (_, _, NullT), UseT (_, DefT (_, _, NullT))
+  | DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT))
+  | DefT (_, _, EmptyT), _
+  | _, UseT (_, DefT (_, _, MixedT _))
+    -> true
+
+  (* we handle the any propagation check later *)
+  | DefT (_, _, AnyT _), _ -> false
+  | _, UseT (_, DefT (_, _, AnyT _)) -> false
+
+  (* opt: avoid builtin lookups *)
+  | ObjProtoT _, UseT (_, ObjProtoT _)
+  | FunProtoT _, UseT (_, FunProtoT _)
+  | FunProtoT _, UseT (_, ObjProtoT _)
+  | DefT (_, _, ObjT {proto_t = ObjProtoT _; _}), UseT (_, ObjProtoT _)
+  | DefT (_, _, ObjT {proto_t = FunProtoT _; _}), UseT (_, FunProtoT _)
+  | DefT (_, _, ObjT {proto_t = FunProtoT _; _}), UseT (_, ObjProtoT _)
+    -> true
+
+  | _ ->
+    false
+
+let numeric = function
+  | DefT (_, _, NumT _) -> true
+  | DefT (_, _, SingletonNumT _) -> true
+  | _ -> false
+
+let dateiform = function
+  | DefT (reason, _, InstanceT _) ->
+    DescFormat.name_of_instance_reason reason = "Date"
+  | _ -> false
+
+let numberesque = function x -> numeric x || dateiform x
+
+let function_like = function
+  | DefT (_, _, ClassT _)
+  | DefT (_, _, FunT _)
+  | CustomFunT _
+  | FunProtoApplyT _
+  | FunProtoBindT _
+  | FunProtoCallT _
+    -> true
+  | _ -> false
+
+let function_use = function
+  | UseT (_, DefT (_, _, FunT _)) -> true
+  | _ -> false
+
+let object_like = function
+  | DefT (_, _, (AnyT _ | ObjT _ | InstanceT _)) -> true
+  | t -> function_like t
+
+let object_use = function
+  | UseT (_, DefT (_, _, ObjT _)) -> true
+  | _ -> false
+
+let object_like_op = function
+  | SetPropT _ | GetPropT _ | TestPropT _ | MethodT _ | LookupT _ | MatchPropT _
+  | GetProtoT _ | SetProtoT _
+  | SuperT _
+  | GetKeysT _ | HasOwnPropT _ | GetValuesT _
+  | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
+  | SetElemT _ | GetElemT _
+  | UseT (_, DefT (_, _, AnyT _)) -> true
+  | _ -> false
+
+let function_like_op = function
+  | CallT _
+  | ConstructorT _
+  | UseT (_, DefT (_, _, AnyT _)) -> true
+  | t -> object_like_op t
+
+let equatable = function
+  | DefT (_, _, NumT _), DefT (_, _, NumT _)
+  | DefT (_, _, StrT _), DefT (_, _, StrT _)
+  | DefT (_, _, BoolT _), DefT (_, _, BoolT _)
+  | DefT (_, _, EmptyT), _ | _, DefT (_, _, EmptyT)
+  | _, DefT (_, _, MixedT _) | DefT (_, _, MixedT _), _
+  | DefT (_, _, AnyT _), _ | _, DefT (_, _, AnyT _)
+  | DefT (_, _, VoidT), _ | _, DefT (_, _, VoidT)
+  | DefT (_, _, NullT), _ | _, DefT (_, _, NullT)
+    -> true
+
+  | DefT (_, _, (NumT _ | StrT _ | BoolT _)), _
+  | _, DefT (_, _, (NumT _ | StrT _ | BoolT _))
+    -> false
+
+  | _ -> true
+
+(* Creates a union from a list of types. Since unions require a minimum of two
+   types this function will return an empty type when there are no types in the
+   list, or the list head when there is one type in the list. *)
+let union_of_ts reason ts =
+  match ts with
+  (* If we have no types then this is an error. *)
+  | [] -> DefT (reason, bogus_trust (), EmptyT)
+  (* If we only have one type then only that should be used. *)
+  | t0::[] -> t0
+  (* If we have more than one type then we make a union type. *)
+  | t0::t1::ts ->
+      let union = UnionT (UnionRep.make t0 t1 ts) in
+      DefT (reason, bogus_trust (), union)
+
+(* generics *)
+
+(** Harness for testing parameterized types. Given a test function and a list
+    of type params, generate a bunch of argument maps and invoke the test
+    function on each, using Reason.TestID to keep the reasons generated by
+    each test disjoint from the others.
+
+    In the general case we simply test every combination of p = bot, p = bound
+    for each param p. For many parameter lists this will be more than strictly
+    necessary, but determining the minimal set of tests for interrelated params
+    is subtle. For now, our only refinement is to isolate all params with an
+    upper bound of MixedT (making them trivially unrelated to each other) and
+    generate a smaller set of argument maps for these which only cover a) bot,
+    bound for each param, and b) every pairwise bot/bound combination. These
+    maps are then used as seeds for powersets over the remaining params.
+
+    NOTE: Since the same AST is traversed by each generated test, the order
+    of generated tests is important for the proper functioning of hooks that
+    record information on the side as ASTs are traversed. Adopting the
+    convention that the last traversal "wins" (which would happen, e.g, when
+    the recorded information at a location is replaced every time that
+    location is encountered), we want the last generated test to always be
+    the one where all type parameters are substituted by their bounds
+    (instead of Bottom), so that the recorded information is the same as if
+    all type parameters were indeed erased and replaced by their bounds.
+  *)
+and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
+  (* make bot type for given param *)
+  let mk_bot _ { name; reason; _ } =
+    let desc = RPolyTest (name, RIncompatibleInstantiation name) in
+    DefT (replace_reason_const desc reason, bogus_trust (), EmptyT)
+  in
+  (* make bound type for given param and argument map *)
+  let mk_bound cx prev_args { bound; name; reason = param_reason; _ } =
+    (* For the top bound, we match the reason locations that appear in the
+     * respective bot bound:
+     * - 'loc' is the location of the type parameter (may be repositioned later)
+     * - 'def_loc' is the location of the type parameter, and
+     * - 'annot_loc_opt' is the location of the bound (if present).
+     *)
+    mod_reason_of_t (fun bound_reason ->
+      let param_loc = Reason.aloc_of_reason param_reason in
+      let annot_loc = annot_aloc_of_reason bound_reason in
+      let desc = desc_of_reason ~unwrap:false bound_reason in
+      repos_reason param_loc ?annot_loc (mk_reason (RPolyTest (name, desc)) param_loc)
+    ) (subst cx prev_args bound)
+  in
+  (* make argument map by folding mk_arg over param list *)
+  let mk_argmap mk_arg =
+    List.fold_left (fun acc ({ name; _ } as p) ->
+      SMap.add name (mk_arg acc p) acc
+    ) SMap.empty
+  in
+  (* for each p, a map with p bot and others bound + map with all bound *)
+  let linear cx = function
+  | [] -> [SMap.empty]
+  | params ->
+    let all = mk_argmap (mk_bound cx) params in
+    let each = Core_list.map ~f:(fun ({ name; _ } as p) ->
+      SMap.add name (mk_bot SMap.empty p) all
+    ) params in
+    List.rev (all :: each)
+  in
+  (* a map for every combo of bot/bound params *)
+  let powerset cx params arg_map =
+    let none = mk_argmap mk_bot params in
+    List.fold_left (fun maps ({ name; _ } as p) ->
+      let bots = Core_list.map ~f:(SMap.add name (SMap.find_unsafe name none)) maps in
+      let bounds = Core_list.map ~f:(fun m -> SMap.add name (mk_bound cx m p) m) maps in
+      bots @ bounds
+    ) [arg_map] params
+  in
+  (* main - run f over a collection of arg maps generated for params *)
+  fun cx params f ->
+    if params = [] then f SMap.empty else
+    let is_free = function { bound = DefT (_, _, MixedT _); _ } -> true | _ -> false in
+    let free_params, dep_params = List.partition is_free params in
+    let free_sets = linear cx free_params in
+    let powersets = Core_list.map ~f:(powerset cx dep_params) free_sets in
+    let hd_map, tl_maps =
+      match List.flatten powersets with
+      | x::xs -> x, xs
+      | [] -> assert false
+    in
+    List.fold_left (Fn.const (TestID.run f)) (f hd_map) tl_maps
+
+let inherited_method x = x <> "constructor"
+
+let match_this_binding map f =
+  match SMap.find_unsafe "this" map with
+  | ReposT (_, t) -> f t
+  | _ -> failwith "not a this binding"
+
+let poly_minimum_arity =
+  let f = fun n typeparam ->
+    if typeparam.default = None then n + 1 else n
+  in
+  Nel.fold_left f 0
+
 (********************** start of slab **********************************)
 module M__flow
   (ReactJs: React_kit.REACT)
@@ -6510,95 +6779,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   rec_flow cx trace (uproto,
     ReposUseT (ureason, false, use_op, DefT (lreason, bogus_trust (), ObjT l_obj)))
 
-(* common case checking a function as an object *)
-and quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
-  let statics_own_props = match statics with
-    | DefT (_, _, ObjT { props_tmap; _ }) -> Some (Context.find_props cx props_tmap)
-    | DefT (_, _, AnyT _)
-    | DefT (_, _, MixedT _) -> Some SMap.empty
-    | _ -> None
-  in
-  match statics_own_props with
-  | Some statics_own_props ->
-    let props_not_found = SMap.filter (fun x p ->
-      let optional = match p with
-      | Field (_, DefT (_, _, OptionalT _), _) -> true
-      |_ -> false
-      in
-      not (
-        optional ||
-        is_function_prototype x ||
-        SMap.mem x statics_own_props
-      )
-    ) props in
-    SMap.iter (fun x _ ->
-      let use_op = Frame (PropertyCompatibility {
-        prop = Some x;
-        lower = reason;
-        upper = reason_o;
-        is_sentinel = false;
-      }, use_op) in
-      let reason_prop =
-        replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
-      let err = Error_message.EPropNotFound (Some x, (reason_prop, reason), use_op) in
-      add_output cx ~trace err
-    ) props_not_found;
-    not (SMap.is_empty props_not_found)
-  | None -> false
-
-(* NOTE: The following function looks similar to TypeUtil.quick_subtype, but is in fact more
-   complicated: it avoids deep structural checks, admits `any`, etc. It might be worth it to
-   simplify this function later. *)
-and ground_subtype = function
-  (* tvars are not considered ground, so they're not part of this relation *)
-  | (OpenT _, _) | (_, UseT (_, OpenT _)) -> false
-
-  (* Allow any lower bound to be repositioned *)
-  | (_, ReposLowerT _) -> false
-  | (_, ReposUseT _) -> false
-
-  | (_, ObjKitT _) -> false
-
-  | (_, ChoiceKitUseT _) -> false
-
-  (* eval *)
-  | _, UseT (_, TypeDestructorTriggerT _) -> false
-
-  (* Allow deferred unification with `any` *)
-  | (_, UnifyT _) -> false
-
-  | DefT (_, _, UnionT _), _ -> false
-
-  (* Allow EmptyT ~> CondT *)
-  | (_, CondT _) -> false
-
-  | _, MakeExactT _ -> false
-
-  | DefT (_, _, NumT _), UseT (_, DefT (_, _, NumT _))
-  | DefT (_, _, StrT _), UseT (_, DefT (_, _, StrT _))
-  | DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _))
-  | DefT (_, _, NullT), UseT (_, DefT (_, _, NullT))
-  | DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT))
-  | DefT (_, _, EmptyT), _
-  | _, UseT (_, DefT (_, _, MixedT _))
-    -> true
-
-  (* we handle the any propagation check later *)
-  | DefT (_, _, AnyT _), _ -> false
-  | _, UseT (_, DefT (_, _, AnyT _)) -> false
-
-  (* opt: avoid builtin lookups *)
-  | ObjProtoT _, UseT (_, ObjProtoT _)
-  | FunProtoT _, UseT (_, FunProtoT _)
-  | FunProtoT _, UseT (_, ObjProtoT _)
-  | DefT (_, _, ObjT {proto_t = ObjProtoT _; _}), UseT (_, ObjProtoT _)
-  | DefT (_, _, ObjT {proto_t = FunProtoT _; _}), UseT (_, FunProtoT _)
-  | DefT (_, _, ObjT {proto_t = FunProtoT _; _}), UseT (_, ObjProtoT _)
-    -> true
-
-  | _ ->
-    false
-
 (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
    cases. Note that it is not always safe to do this (ie in the case of unions).
    Note: we can get away with a shallow (i.e. non-recursive) expansion here because the flow between
@@ -6914,172 +7094,6 @@ and any_propagated_use cx trace use_op any l =
   | TypeDestructorTriggerT _ ->
       true
 
-and numeric = function
-  | DefT (_, _, NumT _) -> true
-  | DefT (_, _, SingletonNumT _) -> true
-  | _ -> false
-
-and dateiform = function
-  | DefT (reason, _, InstanceT _) ->
-    DescFormat.name_of_instance_reason reason = "Date"
-  | _ -> false
-
-and numberesque = function x -> numeric x || dateiform x
-
-and object_like = function
-  | DefT (_, _, (AnyT _ | ObjT _ | InstanceT _)) -> true
-  | t -> function_like t
-
-and object_use = function
-  | UseT (_, DefT (_, _, ObjT _)) -> true
-  | _ -> false
-
-and object_like_op = function
-  | SetPropT _ | GetPropT _ | TestPropT _ | MethodT _ | LookupT _ | MatchPropT _
-  | GetProtoT _ | SetProtoT _
-  | SuperT _
-  | GetKeysT _ | HasOwnPropT _ | GetValuesT _
-  | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
-  | SetElemT _ | GetElemT _
-  | UseT (_, DefT (_, _, AnyT _)) -> true
-  | _ -> false
-
-and function_use = function
-  | UseT (_, DefT (_, _, FunT _)) -> true
-  | _ -> false
-and function_like = function
-  | DefT (_, _, ClassT _)
-  | DefT (_, _, FunT _)
-  | CustomFunT _
-  | FunProtoApplyT _
-  | FunProtoBindT _
-  | FunProtoCallT _
-    -> true
-  | _ -> false
-
-and function_like_op = function
-  | CallT _
-  | ConstructorT _
-  | UseT (_, DefT (_, _, AnyT _)) -> true
-  | t -> object_like_op t
-
-and equatable = function
-  | DefT (_, _, NumT _), DefT (_, _, NumT _)
-  | DefT (_, _, StrT _), DefT (_, _, StrT _)
-  | DefT (_, _, BoolT _), DefT (_, _, BoolT _)
-  | DefT (_, _, EmptyT), _ | _, DefT (_, _, EmptyT)
-  | _, DefT (_, _, MixedT _) | DefT (_, _, MixedT _), _
-  | DefT (_, _, AnyT _), _ | _, DefT (_, _, AnyT _)
-  | DefT (_, _, VoidT), _ | _, DefT (_, _, VoidT)
-  | DefT (_, _, NullT), _ | _, DefT (_, _, NullT)
-    -> true
-
-  | DefT (_, _, (NumT _ | StrT _ | BoolT _)), _
-  | _, DefT (_, _, (NumT _ | StrT _ | BoolT _))
-    -> false
-
-  | _ -> true
-
-(* Creates a union from a list of types. Since unions require a minimum of two
-   types this function will return an empty type when there are no types in the
-   list, or the list head when there is one type in the list. *)
-and union_of_ts reason ts =
-  match ts with
-  (* If we have no types then this is an error. *)
-  | [] -> DefT (reason, bogus_trust (), EmptyT)
-  (* If we only have one type then only that should be used. *)
-  | t0::[] -> t0
-  (* If we have more than one type then we make a union type. *)
-  | t0::t1::ts ->
-      let union = UnionT (UnionRep.make t0 t1 ts) in
-      DefT (reason, bogus_trust (), union)
-
-(* generics *)
-
-(** Harness for testing parameterized types. Given a test function and a list
-    of type params, generate a bunch of argument maps and invoke the test
-    function on each, using Reason.TestID to keep the reasons generated by
-    each test disjoint from the others.
-
-    In the general case we simply test every combination of p = bot, p = bound
-    for each param p. For many parameter lists this will be more than strictly
-    necessary, but determining the minimal set of tests for interrelated params
-    is subtle. For now, our only refinement is to isolate all params with an
-    upper bound of MixedT (making them trivially unrelated to each other) and
-    generate a smaller set of argument maps for these which only cover a) bot,
-    bound for each param, and b) every pairwise bot/bound combination. These
-    maps are then used as seeds for powersets over the remaining params.
-
-    NOTE: Since the same AST is traversed by each generated test, the order
-    of generated tests is important for the proper functioning of hooks that
-    record information on the side as ASTs are traversed. Adopting the
-    convention that the last traversal "wins" (which would happen, e.g, when
-    the recorded information at a location is replaced every time that
-    location is encountered), we want the last generated test to always be
-    the one where all type parameters are substituted by their bounds
-    (instead of Bottom), so that the recorded information is the same as if
-    all type parameters were indeed erased and replaced by their bounds.
-  *)
-and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 'a) -> 'a =
-  (* make bot type for given param *)
-  let mk_bot _ { name; reason; _ } =
-    let desc = RPolyTest (name, RIncompatibleInstantiation name) in
-    DefT (replace_reason_const desc reason, bogus_trust (), EmptyT)
-  in
-  (* make bound type for given param and argument map *)
-  let mk_bound cx prev_args { bound; name; reason = param_reason; _ } =
-    (* For the top bound, we match the reason locations that appear in the
-     * respective bot bound:
-     * - 'loc' is the location of the type parameter (may be repositioned later)
-     * - 'def_loc' is the location of the type parameter, and
-     * - 'annot_loc_opt' is the location of the bound (if present).
-     *)
-    mod_reason_of_t (fun bound_reason ->
-      let param_loc = Reason.aloc_of_reason param_reason in
-      let annot_loc = annot_aloc_of_reason bound_reason in
-      let desc = desc_of_reason ~unwrap:false bound_reason in
-      repos_reason param_loc ?annot_loc (mk_reason (RPolyTest (name, desc)) param_loc)
-    ) (subst cx prev_args bound)
-  in
-  (* make argument map by folding mk_arg over param list *)
-  let mk_argmap mk_arg =
-    List.fold_left (fun acc ({ name; _ } as p) ->
-      SMap.add name (mk_arg acc p) acc
-    ) SMap.empty
-  in
-  (* for each p, a map with p bot and others bound + map with all bound *)
-  let linear cx = function
-  | [] -> [SMap.empty]
-  | params ->
-    let all = mk_argmap (mk_bound cx) params in
-    let each = Core_list.map ~f:(fun ({ name; _ } as p) ->
-      SMap.add name (mk_bot SMap.empty p) all
-    ) params in
-    List.rev (all :: each)
-  in
-  (* a map for every combo of bot/bound params *)
-  let powerset cx params arg_map =
-    let none = mk_argmap mk_bot params in
-    List.fold_left (fun maps ({ name; _ } as p) ->
-      let bots = Core_list.map ~f:(SMap.add name (SMap.find_unsafe name none)) maps in
-      let bounds = Core_list.map ~f:(fun m -> SMap.add name (mk_bound cx m p) m) maps in
-      bots @ bounds
-    ) [arg_map] params
-  in
-  (* main - run f over a collection of arg maps generated for params *)
-  fun cx params f ->
-    if params = [] then f SMap.empty else
-    let is_free = function { bound = DefT (_, _, MixedT _); _ } -> true | _ -> false in
-    let free_params, dep_params = List.partition is_free params in
-    let free_sets = linear cx free_params in
-    let powersets = Core_list.map ~f:(powerset cx dep_params) free_sets in
-    let hd_map, tl_maps =
-      match List.flatten powersets with
-      | x::xs -> x, xs
-      | [] -> assert false
-    in
-    List.fold_left (Fn.const (TestID.run f)) (f hd_map) tl_maps
-
 (*********************)
 (* inheritance utils *)
 (*********************)
@@ -7098,8 +7112,6 @@ and flow_type_args cx trace ~use_op lreason ureason targs1 targs2 =
     | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
     | Neutral -> rec_unify cx trace ~use_op t1 t2
   ) targs1 targs2;
-
-and inherited_method x = x <> "constructor"
 
 (* dispatch checks to verify that lower satisfies the structural
    requirements given in the tuple. *)
@@ -7325,11 +7337,6 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
       ReactKitT (use_op, reason, React.GetConfigType (default_props, tout))
   )
 
-and match_this_binding map f =
-  match SMap.find_unsafe "this" map with
-  | ReposT (_, t) -> f t
-  | _ -> failwith "not a this binding"
-
 (* TODO: flesh this out *)
 and check_polarity cx ?trace polarity = function
   (* base case *)
@@ -7495,12 +7502,6 @@ and variance_check cx ?trace polarity = function
   | tp::tps, t::ts ->
     check_polarity cx ?trace (Polarity.mult (polarity, tp.polarity)) t;
     variance_check cx ?trace polarity (tps, ts)
-
-and poly_minimum_arity =
-  let f = fun n typeparam ->
-    if typeparam.default = None then n + 1 else n
-  in
-  Nel.fold_left f 0
 
 (* Instantiate a polymorphic definition given tparam instantiations in a Call or
  * New expression. *)
@@ -11587,6 +11588,9 @@ module rec FlowJs: Flow_common.S = struct
   module CustomFun = Custom_fun_kit.Kit (FlowJs)
   include M__flow (React) (AssertGround) (CustomFun)
   let add_output = add_output
+  let union_of_ts = union_of_ts
+  let generate_tests = generate_tests
+  let match_this_binding = match_this_binding
 end
 include FlowJs
 (************* end of slab **************************************************)
