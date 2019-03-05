@@ -30,7 +30,7 @@
     value)
   (libraries
     heap_libc
-    logging_event
+    logging_common
     utils_core
     worker_cancel))
 

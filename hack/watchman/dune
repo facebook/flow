@@ -8,7 +8,7 @@
     buffered_line_reader
     core_kernel
     hh_json
-    logging_event
+    logging_common
     sys_utils
     utils_core))
 

@@ -8,6 +8,6 @@
     avl
     collections
     fsnotify
-    logging_event
+    logging_common
     marshal_tools
     sys_utils))
