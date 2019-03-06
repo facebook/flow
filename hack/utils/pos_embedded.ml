@@ -195,10 +195,11 @@ let contains pos_container pos =
     pend <= cend
 
 let overlaps pos1 pos2 =
-  let _start1, end1 = info_raw pos1 in
-  let start2, _end2 = info_raw pos2 in
+  let start1, end1 = info_raw pos1 in
+  let start2, end2 = info_raw pos2 in
   filename pos1 = filename pos2 &&
-  end1 > start2
+  end1 > start2 &&
+  start1 < end2
 
 let make_from_lexing_pos pos_file pos_start pos_end =
   match File_pos_small.of_lexing_pos pos_start, File_pos_small.of_lexing_pos pos_end with
