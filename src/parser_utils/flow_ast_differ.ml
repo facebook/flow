@@ -1846,7 +1846,7 @@ let program (algo : diff_algorithm)
         (return2: (Loc.t, Loc.t) Ast.Type.annotation_or_hint): node change list =
     let open Ast.Type in
     let annot_change typ = match return2 with
-    | Ast.Type.Available (_, (_, Ast.Type.Function _)) ->
+    | Available (_, (_, Function _)) ->
       FunctionTypeAnnotation typ
     | _ ->
       TypeAnnotation typ
@@ -1857,20 +1857,43 @@ let program (algo : diff_algorithm)
       [loc1, Delete (TypeAnnotation (loc1, typ))]
     | Missing loc1, Available annot ->
       [loc1, Insert (None, [annot_change annot])]
-    | Available (loc1, typ1), Available annot2 ->
-      [loc1, Replace (TypeAnnotation (loc1, typ1), annot_change annot2)]
+    | Available annot1, Available annot2 ->
+      type_annotation annot1 annot2
 
   and type_annotation
         ((loc1, typ1): (Loc.t, Loc.t) Ast.Type.annotation)
         ((loc2, typ2): (Loc.t, Loc.t) Ast.Type.annotation)
         : node change list =
-    let is_function = match typ2 with
-    | _, Ast.Type.Function _ -> true
-    | _ -> false
+    let open Ast.Type in
+    let t_args id1 id2 t1 t2 = (match t1, t2 with
+      | Some (_, t1), Some (_, t2) ->
+        identifier id1 id2 @ (diff_and_recurse_nonopt_no_trivial type_ t1 t2 |> Option.value ~default:[])
+      | None, Some _ ->
+        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+      | Some _, None ->
+        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+      | None, None -> identifier id1 id2)
     in
-    if is_function then
+    match typ1, typ2 with
+    | _, (_, Function _) ->
       [loc1, Replace (TypeAnnotation (loc1, typ1), FunctionTypeAnnotation (loc2, typ2))]
-    else
+    | (_, Generic { Generic.id= (Generic.Identifier.Unqualified id1); targs= t1 }),
+      (_, Generic { Generic.id= (Generic.Identifier.Unqualified id2); targs= t2 }) ->
+      if typ1 == typ2 then []
+      else if id1 == id2 then [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+      else if t1 == t2 then identifier id1 id2
+      else t_args id1 id2 t1 t2
+    | (_, Generic { Generic.id= (Generic.Identifier.Qualified (_, { Generic.Identifier.id= id1; qualification= q1 })); targs= t1}),
+      (_, Generic { Generic.id= (Generic.Identifier.Qualified (_, { Generic.Identifier.id= id2; qualification= q2 })); targs= t2}) ->
+      if typ1 == typ2 then [] else
+      (match q1 == q2, t1 == t2, id1 == id2 with
+      | true, true, false ->
+        identifier id1 id2
+      | true, false, false ->
+        t_args id1 id2 t1 t2
+      | _ ->
+        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))])
+    | _, _ ->
       [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
 
   and type_cast

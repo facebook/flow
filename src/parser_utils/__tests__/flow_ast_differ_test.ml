@@ -870,7 +870,7 @@ let tests = "ast_differ" >::: [
     let source = "(function rename<RENAME>(rename): Rename { return 4; })" in
     assert_edits_equal ctxt ~source
     ~edits:[((10, 16), "gotRenamed"); ((17, 23), "GOT_RENAMED"); ((25, 31), "gotRenamed");
-      ((32, 40), ": GotRenamed"); ((50, 51), "5")]
+      ((34, 40), "GotRenamed"); ((50, 51), "5")]
     ~expected:"(function gotRenamed<GOT_RENAMED>(gotRenamed): GotRenamed { return 5; })"
     ~mapper:(new useless_mapper)
   end;
@@ -1238,9 +1238,9 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(12,18), "gotRenamed"] ~source
         ~expected:"let [a,b,...gotRenamed] = 0" ~mapper:(new useless_mapper)
   end;
-  "pattern_array" >:: begin fun ctxt ->
+  "pattern_array_annot" >:: begin fun ctxt ->
     let source = "let [foo,bar]: rename = [0]" in
-    assert_edits_equal ctxt ~edits:[(13, 21), ": gotRenamed"] ~source
+    assert_edits_equal ctxt ~edits:[(15, 21), "gotRenamed"] ~source
       ~expected:"let [foo,bar]: gotRenamed = [0]" ~mapper:(new useless_mapper)
   end;
   "pattern_object_longhand" >:: begin fun ctxt ->
@@ -1255,7 +1255,7 @@ let tests = "ast_differ" >::: [
   end;
   "pattern_object_annot" >:: begin fun ctxt ->
     let source = "let {foo: bar}: rename = 0" in
-    assert_edits_equal ctxt ~edits:[(14, 22), ": gotRenamed"] ~source
+    assert_edits_equal ctxt ~edits:[(16, 22), "gotRenamed"] ~source
       ~expected:"let {foo: bar}: gotRenamed = 0" ~mapper:(new useless_mapper)
   end;
   "pattern_assignment" >:: begin fun ctxt ->
@@ -1286,7 +1286,7 @@ let tests = "ast_differ" >::: [
   end;
   "class_type_param_instantiation" >:: begin fun ctxt ->
     let source = "class A extends B<{}> { m(): rename {} }" in
-    assert_edits_equal ctxt ~edits:[((27, 35), ": gotRenamed")] ~source
+    assert_edits_equal ctxt ~edits:[((29, 35), "gotRenamed")] ~source
     ~expected:"class A extends B<{}> { m(): gotRenamed {} }"
     ~mapper:(new useless_mapper)
   end;
@@ -1974,5 +1974,12 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
     let source = "/*MAL*/bla/*WRONG*/" in
     assert_edits_equal ctxt ~edits:[((0, 7), "/*hello*/"); ((10, 19), "/*bye*/")]
     ~source ~expected:"/*hello*/bla/*bye*/" ~mapper:(new add_comment_mapper)
+  end;
+  "comment_annot_generic_deep" >:: begin fun ctxt ->
+    let source = "const a: Box<Bla> = {}" in
+    assert_edits_equal ctxt ~source ~mapper:(new add_comment_mapper)
+    ~edits:[((6, 6), "/*hello*/"); ((7, 7), "/*bye*/"); ((9, 9), "/*hello*/"); ((12, 12), "/*bye*/");
+      ((13, 16), "\n/*hello*/Bla/*bye*/\n")]
+    ~expected:"const /*hello*/a/*bye*/: /*hello*/Box/*bye*/<\n/*hello*/Bla/*bye*/\n> = {}"
   end;
 ]
