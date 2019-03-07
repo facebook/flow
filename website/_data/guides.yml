@@ -6,6 +6,9 @@
       additional_reading:
         - guide: types
         - guide: lang
+- id: faq
+  pages:
+    - path: "/docs/faq/"
 
 - id: types
   pages:

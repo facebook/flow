@@ -86,6 +86,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/getting-started/":
   title: "Getting Started"
   description: "Introduction to type checking with Flow"
+"/docs/faq/":
+  title: "FAQ"
+  description: "Frequently asked questions about using Flow"
 "/docs/install/":
   title: "Installation"
   description: "Installing and setting up Flow for a project"
@@ -394,6 +397,10 @@ guides:
     description: >
       Never used a type system before or just new to Flow? Let's get you up and
       running in a few minutes.
+  faq:
+    title: "FAQ"
+    description: >
+      Have a question about using Flow? Check here first!
   types:
     title: "Type Annotations"
     description: >
