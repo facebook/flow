@@ -1563,18 +1563,18 @@ References:
    2237|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
    <BUILTINS>/node.js:2238:3
-   2238|   emitWarning(warning: string, typeOrCtor: string | Function): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   2238|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/node.js:2239:3
-   2239|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   2239|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
    <BUILTINS>/node.js:2240:3
            v-----------
    2240|   emitWarning(
    2241|     warning: string,
    2242|     type: string,
    2243|     code: string,
-   2244|     ctor?: Function
+   2244|     ctor?: (...empty) => mixed
    2245|   ): void;
            ------^ [6]
 
@@ -1595,14 +1595,53 @@ References:
      11| process.emitWarning(42); // error
                              ^^ [1]
    <BUILTINS>/node.js:2238:24
-   2238|   emitWarning(warning: string, typeOrCtor: string | Function): void;
+   2238|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
    <BUILTINS>/node.js:2239:24
-   2239|   emitWarning(warning: string, type: string, codeOrCtor: string | Function): void;
+   2239|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
    <BUILTINS>/node.js:2241:14
    2241|     warning: string,
                       ^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------------ process/process.js:12:1
+
+Cannot call `process.emitWarning` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
+
+   process/process.js:12:1
+     12| process.emitWarning("blah", 42); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   process/process.js:12:29
+     12| process.emitWarning("blah", 42); // error
+                                     ^^ [1]
+   <BUILTINS>/node.js:2239:38
+   2239|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+                                              ^^^^^^ [2]
+   <BUILTINS>/node.js:2242:11
+   2242|     type: string,
+                   ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ process/process.js:13:1
+
+Cannot call `process.emitWarning` because number [1] is incompatible with string [2].
+
+   process/process.js:13:1
+     13| process.emitWarning("blah", "blah", 42); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   process/process.js:13:37
+     13| process.emitWarning("blah", "blah", 42); // error
+                                             ^^ [1]
+   <BUILTINS>/node.js:2243:11
+   2243|     code: string,
+                   ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ process/process.js:14:2
@@ -1623,7 +1662,7 @@ References:
 
 
 
-Found 89 errors
+Found 91 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
