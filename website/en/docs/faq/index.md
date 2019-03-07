@@ -143,6 +143,76 @@ const isNumber = (valueToRefine: ?number): %checks => typeof valueToRefine === '
 if (isNumber(val)) add(val, 2);
 ```
 
+### Why can't I pass Array<string> to function that takes Array<string | number>
+
+The function allows string values in an array, but in this case Flow protects the original array. In the function you would be able to push number to it which means that the type of original array would not be true. You can get rid of this by changing the argument to `$ReadOnlyArray<string | number>`. This prevents following code to push anything which makes it safe to pass stricter types to it.
+
+This would not work:
+
+```js
+// @flow
+
+const fn = (arr: Array<string | number>) => {
+	// arr.push(123) // NOTE! Array<string> passed in and after this it would also include numbers if allowed
+	return arr;
+};
+
+const arr: Array<string> = ['abc'];
+
+fn(arr); // Error!
+```
+
+but with $ReadOnlyArray you can achieve what you were looking for:
+
+```js
+// @flow
+const fn = (arr: $ReadOnlyArray<string | number>) => {
+    // arr.push(321) // NOTE! Since you are using $ReadOnlyArray<...> you cannot push anything to it
+	return arr;
+};
+
+const arr: Array<string> = ['abc'];
+
+fn(arr);
+```
+
+Example ([https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQiSgOoEsAuALWBXLUAJwFMBDAE1gDtoBPALmQGNaBnIyGgRlAF5QACnLFijUAEEx5egB5OxDDQDmoAD4ACmvgC2AI1LEAfAEoBx0AG9EASFSjiAOgAO+djiE8ATAGZzqAByAPIAKgCiAIRSMvKKyiqWLuTs7KSUoMqg5DQZ5JBYRqC4GOyZRPAE0HnQ7LCZNCzQ+JSkoDoGRmUYkNnQcPDpdmRY+MQ02WIA3IgAvqwcRI48EtLEsgpYSqqWggDaAOTk+iwHALozKGDcPCJiplOgqHIAtG+g+I2wurqkNFywYigIzEQHsSKRZCoN4w2Fw+EIxFIqFgABKFGodHoLwAbl0MLRmIg2DROKBuN4BMJHBIACToqjBLFrDbxVQabR6Qwmcz8Sw2UCCp5gRyudyeXzeHgBMAhCLRADKyhYbXoBEmbXcCVA9IxTIYLPkTmNljV+FALByNFgRDcHmyNHoJXZWHq2GGpFG40mxDmC1JSzE3lWsU220SVMOx1OF2QFLuxG8DyAA))
+
+### Why can't I pass { a: string } to function that takes { a: string | number }
+
+The function allows string values in an object, but in this case Flow protects the original object: In the function you would be able to mutate the object so that the property `a` would have number in it which means that the type of original object would not be true anymore. You can get rid of this by making the property covariant (read-only) `{ +a: string | number }`. This prevents following code to change the property which makes it safe to pass stricter types to the function.
+
+This would not work:
+
+```js
+// @flow
+
+const fn = (obj: {| a: string | number |}) => {
+	// obj.a = 123 // NOTE! {| a: string |} passed in and after this a would be number if allowed
+	return obj;
+};
+
+const object: {| a: string |} = {a: 'str' };
+
+fn(object); // Error!
+```
+
+but with covariant property you can achieve what you were looking for:
+
+```js
+// @flow
+const fn = (obj: {| +a: string | number |}) => {
+  	// obj.a = 123 // NOTE! Since you are using covariant {| +a: string | number |}, you can't mutate it
+	return obj;
+};
+
+const object: {| a: string |} = { a: 'str' };
+
+fn(object);
+```
+
+Example ([https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQiSgOoEsAuALWBXLUAJwFMBDAE1gDtoBPALmQGNaBnIyGgRlAF5QAClgAjAFaNQAbwA+oclM7EMNAOahZAApr4AtqNLEtsgL4BKAQD4ZiAJCox4gHTkBoHgCYAzKBAA5AHkAFQBRAEIZbUVQZVUNM1AAB3J2dlJKUFUFGkzySCwjUFwMdiyieAJoTMNQXQMijEgFaDh4DPsyLHxiGlAnAG5EU1YOIidSFiweKTktGLj1TVN3aRiAcmV10FMhlDBuHhEJSenzAb8wAB4AWjvQfBo2PT1SGiJsyFhiUCNib-Y4XCyFQdzB4IhkKh0JhILAACUKNQ6PQbgA3IzsDC0ZiINg0TigbiedzHSRRUAAagWWBUS209UMPzMln4NmkiFAoAcYCcrncXl8ARCEVAAGVVCxSKB6AQFGQHlilmw0eQVOR3lEtNSlLT4podPomcsADQyuUsDXrIh6QjkQrlTqkbq9foSIYjPFjN3iU6eWbyGl0hIrQTSBRSTa07a7ZDEsl+85AA))
+
 ### I got a "Missing type annotation" error. Where does it come from? <a class="toc" id="toc-i-got-a-missing-type-annotation-error-where-does-it-come-from" href="#toc-i-got-a-missing-type-annotation-error-where-does-it-come-from"></a>
 
 Flow requires type annotations at module boundaries to make sure it can scale. To read more about that, check out our [blog post](https://medium.com/flow-type/asking-for-required-annotations-64d4f9c1edf8) about that.
