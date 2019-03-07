@@ -437,8 +437,9 @@ let mk_bignum_singleton number_type raw =
   (* convert singleton number type into a float *)
   let value = match number_type with
   | LEGACY_OCTAL ->
-    begin 
-      failwith ("Invalid (lexer) bigint legacy octal "^num)
+    let postraw = bigint_strip_n num in
+    begin try Int64.to_float (Int64.of_string ("0o"^postraw))
+    with Failure _ -> failwith ("Invalid (lexer) bigint legacy octal "^postraw)
     end
   | BINARY
   | OCTAL ->
