@@ -9,5 +9,5 @@ import React from 'react';
 }
 
 {
-  const ref: {current: null | number} = React.createRef(); // Ok
+  const ref: {|current: null | number|} = React.createRef(); // Ok
 }
