@@ -991,7 +991,6 @@ end = struct
         return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:ty)
     in
     let import_typeof env r t ps = import env r t ps in
-    let import_fun env r t ps = import env r t ps in
     let opaque env t ps =
       match t with
       | OpaqueT (r, o) -> opaque_type_t ~env r o ps
@@ -1002,7 +1001,6 @@ end = struct
       | TypeAliasKind -> local env t ps
       | ImportClassKind -> class_t ~env t ps
       | ImportTypeofKind -> import_typeof env r t ps
-      | ImportFunKind -> import_fun env r t ps
       | OpaqueKind -> opaque env t ps
       (* The following cases are not common *)
       | TypeParamKind -> terr ~kind:BadTypeAlias ~msg:"typeparam" (Some t)

@@ -1164,7 +1164,6 @@ module rec TypeTerm : sig
   | OpaqueKind            (* opaque type O [: T] = T' *)
   | ImportTypeofKind      (* import typeof *)
   | ImportClassKind       (* import type { SomeClass } from ... *)
-  | ImportFunKind         (* import type { SomeFunction } from ... *)
   | InstanceKind
 
 end = TypeTerm
