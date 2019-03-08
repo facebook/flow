@@ -1,5 +1,5 @@
 // @flow
 
-import type MyFileOneType from './export-default';
+import typeof MyFileOneType from './export-default';
 
 const fileOneFunc = require('./export-default');

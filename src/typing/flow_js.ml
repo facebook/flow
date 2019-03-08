@@ -7641,14 +7641,8 @@ and canonicalize_imported_type cx trace reason t =
   | DefT (_, trust, ClassT inst) ->
     Some (DefT (reason, trust, TypeT (ImportClassKind, inst)))
 
-  | DefT (_, trust, FunT (_, prototype, _)) ->
-    Some (DefT (reason, trust, TypeT (ImportFunKind, prototype)))
-
   | DefT (_, _, PolyT (tparams_loc, typeparams, DefT (_, trust, ClassT inst), id)) ->
     Some (poly_type id tparams_loc typeparams (DefT (reason, trust, TypeT (ImportClassKind, inst))))
-
-  | DefT (_, _, PolyT (tparams_loc, typeparams, DefT (_, trust, FunT (_, prototype, _)), id)) ->
-    Some (poly_type id tparams_loc typeparams (DefT (reason, trust, TypeT (ImportFunKind, prototype))))
 
   (* delay fixing a polymorphic this-abstracted class until it is specialized,
      by transforming the instance type to a type application *)

@@ -128,19 +128,19 @@ import-class-as-type.js:6:13 = {
   "end":14
 }
 import-default.js:3:16 = {
-  "type":"type MyFileOneType = {||}",
+  "type":"type MyFileOneType = (a: FileOneType) => void",
   "reasons":[],
   "loc":{
     "source":"import-default.js",
     "type":"SourceFile",
-    "start":{"line":3,"column":13,"offset":22},
-    "end":{"line":3,"column":25,"offset":35}
+    "start":{"line":3,"column":15,"offset":24},
+    "end":{"line":3,"column":27,"offset":37}
   },
   "path":"import-default.js",
   "line":3,
   "endline":3,
-  "start":13,
-  "end":25
+  "start":15,
+  "end":27
 }
 import-typeof-class.js:6:16 {
   "expanded_type":{
