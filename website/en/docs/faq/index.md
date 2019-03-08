@@ -213,6 +213,54 @@ fn(object);
 
 Example ([https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQiSgOoEsAuALWBXLUAJwFMBDAE1gDtoBPALmQGNaBnIyGgRlAF5QAClgAjAFaNQAbwA+oclM7EMNAOahZAApr4AtqNLEtsgL4BKAQD4ZiAJCox4gHTkBoHgCYAzKBAA5AHkAFQBRAEIZbUVQZVUNM1AAB3J2dlJKUFUFGkzySCwjUFwMdiyieAJoTMNQXQMijEgFaDh4DPsyLHxiGlAnAG5EU1YOIidSFiweKTktGLj1TVN3aRiAcmV10FMhlDBuHhEJSenzAb8wAB4AWjvQfBo2PT1SGiJsyFhiUCNib-Y4XCyFQdzB4IhkKh0JhILAACUKNQ6PQbgA3IzsDC0ZiINg0TigbiedzHSRRUAAagWWBUS209UMPzMln4NmkiFAoAcYCcrncXl8ARCEVAAGVVCxSKB6AQFGQHlilmw0eQVOR3lEtNSlLT4podPomcsADQyuUsDXrIh6QjkQrlTqkbq9foSIYjPFjN3iU6eWbyGl0hIrQTSBRSTa07a7ZDEsl+85AA))
 
+### Why can't I refine union of objects?
+
+There are two potential reasons:
+1. You don't use exact objects
+2. You destructure the object. By destructuring Flow looses track of object properties
+
+Broken example:
+
+```js
+/* @flow */
+
+type Action = 
+  | {type: 'A', payload: string}  
+  | {type: 'B', payload: number};
+
+// Not OK
+const fn = ({type, payload}: Action) => {
+  switch (type) {
+    case 'A': return payload.length;
+    case 'B': return payload + 10;
+  }
+}
+```
+
+Fixed example:
+
+```js
+/* @flow */
+
+type Action = 
+  | {type: 'A', payload: string}  
+  | {type: 'B', payload: number};
+
+// OK
+const fn = (action: Action) => {
+  switch (action.type) {
+    case 'A': return action.payload.length;
+    case 'B': return action.payload + 10;
+  }
+}
+```
+
+([https://flow.org/try](https://flow.org/try/#0PQKgBAAgZgNg9gdzCYAoVAXAngBwKZgCCAxhgJZwB2YAvGKmGAD5gDe2+AXGAOSE8AaMDgCGWeCIAm3AM4YATmUoBzAL6MGzNhzzceAIUHCxE6WEoBXALYAjPPNUBudMGBgA8gGlUxKnLBQAIy0YAAUIqQUlNwk5FQAlLQAfGyaMghkGMQAFmERcZQAdDqJrJqMxCIyBHw83PJ4GBby1PlRhaLicFKFMHgqGNnOjBVVNYb1jc2tkVQdJt2SYADUYIEADMNgqqg7Lm4AcnAYHp5gFpS+Vlb9J1Bw8mD28g8yAISorr6U-lAATCFQuxcHghJ1TKoYrNKIkaCkyq5GOlMjkwiVUoiRpVqrx+JMmi1jF0en0BkNPm4sWNeBMwA0CdRwYsVmtNhTGDtEaogA))
+
+Second example:
+- broken: [https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQBLAtgB1gJwC6gFSgCGAzqAEoCmRAxnpFrKqAORbV0uKI4Ce6lUAGUArgCMAjAAVG6MgF5QAb2IAuUADsRqMZSwAaUGPVade0AF8A3D36DRYgEwzYc0IpVF1JHFmQaAc0Mab19-AMsbRBpYDR9hcQl3UAAKdFkSdQdpDIBKdwA+UAAeABNkADdQYAKbGLi8B0dktIys8Wc8wpLyqpqo+viAYSYWpURQUBJKaEo6bH0J0AA6VfTXEkQLdRVp2fmsdV8RSkNV5eyXNwtQAB9lKZm5nGx1SCJoabPVpquyC3y8gKSz2z2woAA-CVsspzus5DcaqB1MUmrC1hlEbUgA)
+- fixed: [https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQBLAtgB1gJwC6gFSgCGAzqAEoCmRAxnpFrKqAORbV0uKI4Ce6lUAGUArgCMAjAAVG6MgF5QAbwA+xAFygAdiNRjKWADSgxmnXoOgVAXwDcPfoNFiATDNhzQi1RtAkcWMhaAObGNJr+gSFWdtw0sFr+wuISXqAAFOiyJJrO0tkAlF4AfKAAPAAmyABuoMDF9vGJeM4uaZnZueJuhSXlVbX19ohNSQDCTO1ZHjnKaiSU0JR02JoBIpTGAHQ7ee6eNlZzfovLOKugkETQC9u73ftkNkXypUqIoKDIkBnTclsLJYrLBFd6fT5LPBKQFnbB3LbsfzWNJ-Ej2cGgdg4ERYLTlPLKHYIyhIuoND6gZGLBbKCkQyhQmHA+GInDIxSo9HgrE4vFlVqEnas5FDCnWRDWIA)
+
 ### I got a "Missing type annotation" error. Where does it come from? <a class="toc" id="toc-i-got-a-missing-type-annotation-error-where-does-it-come-from" href="#toc-i-got-a-missing-type-annotation-error-where-does-it-come-from"></a>
 
 Flow requires type annotations at module boundaries to make sure it can scale. To read more about that, check out our [blog post](https://medium.com/flow-type/asking-for-required-annotations-64d4f9c1edf8) about that.
