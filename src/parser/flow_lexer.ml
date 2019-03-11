@@ -58,10 +58,10 @@ let scinumber = [%sedlex.regexp?
 let wholenumber = [%sedlex.regexp? underscored_digit, Opt '.']
 let floatnumber = [%sedlex.regexp? Opt underscored_digit, '.', underscored_decimal]
 
-let binbigint = [%sedlex.regexp? '0', ('B' | 'b'), underscored_bin, 'n']
-let octbigint = [%sedlex.regexp? '0', ('O' | 'o'), underscored_oct, 'n']
-let legacyoctbigint = [%sedlex.regexp? '0', underscored_oct, 'n']
-let hexbigint = [%sedlex.regexp? '0', ('X' | 'x'), underscored_hex, 'n']
+let binbigint = [%sedlex.regexp? binnumber, 'n']
+let octbigint = [%sedlex.regexp? octnumber, 'n']
+let legacyoctbigint = [%sedlex.regexp? legacyoctnumber, 'n']
+let hexbigint = [%sedlex.regexp? hexnumber, 'n']
 let scibigint = [%sedlex.regexp? decintlit, ('e' | 'E'), Opt ('-' | '+'), underscored_digit, 'n']
 let wholebigint = [%sedlex.regexp? underscored_digit, 'n']
 let floatbigint = [%sedlex.regexp? Opt underscored_digit, '.', underscored_decimal, 'n']
@@ -774,6 +774,8 @@ let token (env: Lex_env.t) lexbuf : result =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | binnumber ->
       Token (env, T_NUMBER { kind = BINARY; raw = lexeme lexbuf })
+    | binbigint ->
+      Token (env, T_BIGINT { kind = BINARY; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | binnumber ->
@@ -785,6 +787,8 @@ let token (env: Lex_env.t) lexbuf : result =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | octnumber -> Token (env, T_NUMBER { kind = OCTAL; raw = lexeme lexbuf })
+    | octbigint ->
+      Token (env, T_BIGINT { kind = OCTAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | octnumber ->
@@ -796,6 +800,7 @@ let token (env: Lex_env.t) lexbuf : result =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | legacyoctnumber -> Token (env, T_NUMBER { kind = LEGACY_OCTAL; raw = lexeme lexbuf })
+    | legacyoctbigint -> Token (env, T_BIGINT { kind = LEGACY_OCTAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | legacyoctnumber ->
@@ -807,6 +812,7 @@ let token (env: Lex_env.t) lexbuf : result =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | hexnumber -> Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
+    | hexbigint -> Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | hexnumber ->
@@ -820,6 +826,7 @@ let token (env: Lex_env.t) lexbuf : result =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | scinumber -> Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
+    | scibigint -> Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | scinumber ->
@@ -836,6 +843,8 @@ let token (env: Lex_env.t) lexbuf : result =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | wholenumber | floatnumber ->
       Token (env, T_NUMBER { kind = NORMAL; raw = lexeme lexbuf })
+    | wholebigint ->
+      Token (env, T_BIGINT { kind = NORMAL; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | wholenumber | floatnumber ->
@@ -1643,6 +1652,9 @@ let type_token env lexbuf =
     | Opt neg, binnumber ->
       let num = lexeme lexbuf in
       Token (env, mk_num_singleton BINARY num)
+    | Opt neg, binbigint ->
+      let num = lexeme lexbuf in
+      Token (env, mk_bignum_singleton BINARY num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, binnumber ->
@@ -1658,6 +1670,9 @@ let type_token env lexbuf =
     | Opt neg, octnumber ->
       let num = lexeme lexbuf in
       Token (env, mk_num_singleton OCTAL num)
+    | Opt neg, octbigint ->
+      let num = lexeme lexbuf in
+      Token (env, mk_bignum_singleton OCTAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, octnumber ->
@@ -1673,6 +1688,9 @@ let type_token env lexbuf =
     | Opt neg, legacyoctnumber ->
       let num = lexeme lexbuf in
       Token (env, mk_num_singleton LEGACY_OCTAL num)
+    | Opt neg, legacyoctbigint ->
+      let num = lexeme lexbuf in
+      Token (env, mk_bignum_singleton LEGACY_OCTAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, legacyoctnumber ->
@@ -1681,8 +1699,6 @@ let type_token env lexbuf =
 
   | Opt neg, hexbigint ->
     let num = lexeme lexbuf in
-    let loc = loc_of_lexbuf env lexbuf in
-    let env = lex_error env loc Parse_error.InvalidBigInt in
     begin try Token (env, mk_bignum_singleton NORMAL num)
     with _ when Sys.win32 ->
       let loc = loc_of_lexbuf env lexbuf in
@@ -1699,6 +1715,14 @@ let type_token env lexbuf =
         let loc = loc_of_lexbuf env lexbuf in
         let env = lex_error env loc Parse_error.WindowsFloatOfString in
         Token (env, T_NUMBER_SINGLETON_TYPE { kind = NORMAL; value = 789.0; raw = "789" })
+      end
+    | Opt neg, hexbigint ->
+      let num = lexeme lexbuf in
+      begin try Token (env, mk_bignum_singleton NORMAL num)
+      with _ when Sys.win32 ->
+        let loc = loc_of_lexbuf env lexbuf in
+        let env = lex_error env loc Parse_error.WindowsFloatOfString in
+        Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; value = 789.0; raw = "789" })
       end
     | _ -> failwith "unreachable"
     )
@@ -1722,6 +1746,9 @@ let type_token env lexbuf =
     | Opt neg, scinumber ->
       let num = lexeme lexbuf in
       Token (env, mk_num_singleton NORMAL num)
+    | Opt neg, scibigint ->
+      let num = lexeme lexbuf in
+      Token (env, mk_bignum_singleton NORMAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, scinumber ->
@@ -1742,6 +1769,9 @@ let type_token env lexbuf =
     | Opt neg, wholenumber | floatnumber ->
       let num = lexeme lexbuf in
       Token (env, mk_num_singleton NORMAL num)
+    | Opt neg, wholebigint ->
+      let num = lexeme lexbuf in
+      Token (env, mk_bignum_singleton NORMAL num)
     | _ -> failwith "unreachable"
     )
   | Opt neg, (wholenumber | floatnumber) ->
