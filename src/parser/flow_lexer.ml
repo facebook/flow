@@ -292,99 +292,6 @@ end = struct
       with No_good -> raise e
 end
 
-module IntOfString : sig
-  val int_of_string: string -> float
-end = struct
-  type t = {
-    negative: bool;
-    mantissa: int;
-    exponent: int;
-    todo: char list;
-  }
-
-  exception No_good
-
-  let eat f =
-    match f.todo with
-    | _::todo -> { f with todo; }
-    | _ -> raise No_good
-
-  let start str =
-    let todo = ref [] in
-    String.iter (fun c -> todo := c::(!todo)) str;
-    {
-      negative = false;
-      mantissa = 0;
-      exponent = 0;
-      todo = List.rev (!todo);
-    }
-
-  let parse_sign f =
-    match f.todo with
-    | '+'::_ -> eat f
-    | '-'::_ -> { (eat f) with negative = true; }
-    | _ -> f
-
-  let parse_hex_symbol f =
-    match f.todo with
-    | '0'::('x' | 'X')::_ -> f |> eat |> eat
-    | _ -> raise No_good
-
-  let parse_exponent f =
-    let todo_str = f.todo
-      |> List.map Char.escaped
-      |> String.concat "" in
-    let exponent =
-      try int_of_string todo_str
-      with Failure _ -> raise No_good in
-    { f with exponent; todo = [] }
-
-  let rec parse_body f =
-    match f.todo with
-    | [] -> f
-    (* _ is just ignored *)
-    | '_'::_ -> parse_body (eat f)
-    (* n is just ignored *)
-    | 'n'::_ -> parse_body (eat f)
-    | ('p' | 'P')::_ ->
-        parse_exponent (eat f)
-    | c::_ ->
-        let ref_char_code =
-          if c >= '0' && c <= '9'
-          then Char.code '0'
-          else if c >= 'A' && c <= 'F'
-          then Char.code 'A' - 10
-          else if c >= 'a' && c <= 'f'
-          then Char.code 'a' - 10
-          else raise No_good in
-        let value = (Char.code c) - ref_char_code in
-        let mantissa = (f.mantissa lsl 4) + value in
-        parse_body { (eat f) with mantissa; }
-
-  let float_of_t f =
-    assert (f.todo = []);
-    let ret = float_of_int f.mantissa in
-    let exponent = f.exponent in
-    let ret =
-      if exponent = 0
-      then ret
-      else ret ** (float_of_int exponent) in
-    if f.negative
-    then -.ret
-    else ret
-
-  let int_of_string str =
-    try Pervasives.float_of_string str
-    with e when Sys.win32 ->
-      try
-        start str
-          |> parse_sign
-          |> parse_hex_symbol
-          |> parse_body
-          |> float_of_t
-      with No_good -> raise e
-end
-
 let bigint_strip_n raw =
   let size = String.length raw in
   let str =
@@ -449,7 +356,7 @@ let mk_bignum_singleton number_type raw =
     end
   | NORMAL ->
     let postraw = bigint_strip_n num in
-    begin try IntOfString.int_of_string postraw
+    begin try FloatOfString.float_of_string postraw
     with Failure _ -> failwith ("Invalid (lexer) bigint "^postraw)
     end
   in
