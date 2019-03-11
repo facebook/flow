@@ -884,7 +884,7 @@ module Expression
       end
     | NORMAL ->
       let postraw = bigint_strip_n raw in
-      begin try Flow_lexer.IntOfString.int_of_string postraw
+      begin try Flow_lexer.FloatOfString.float_of_string postraw
       with
       | _ when Sys.win32 ->
         error env Parse_error.WindowsFloatOfString;
