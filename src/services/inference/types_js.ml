@@ -953,486 +953,586 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
     end else
       Lwt.return_none
 
-(* We maintain the following invariant across rechecks: The set of
-   `files` contains files that parsed successfully in the previous
-   phase (which could be the init phase or a previous recheck phase)
-*)
-let recheck_with_profiling
-    ~profiling ~transaction ~reader ~options ~workers ~updates env
-    ~files_to_force ~file_watcher_metadata ~will_be_checked_files =
-  let errors = env.ServerEnv.errors in
+module Recheck: sig
+  type recheck_result = {
+    new_or_changed: Utils_js.FilenameSet.t;
+    deleted: Utils_js.FilenameSet.t;
+    all_dependent_files: Utils_js.FilenameSet.t;
+    cycle_leaders: (Utils_js.FilenameMap.key * int) list;
+    skipped_count: int;
+    estimates: Recheck_stats.estimates option;
+  }
+  val full:
+    profiling:Profiling_js.running ->
+    transaction:Transaction.t ->
+    reader:Parsing_heaps.Mutator_reader.reader ->
+    options:Options.t ->
+    workers:MultiWorkerLwt.worker list option ->
+    updates:Utils_js.FilenameSet.t ->
+    files_to_force:CheckedSet.t ->
+    file_watcher_metadata:MonitorProt.file_watcher_metadata ->
+    will_be_checked_files:CheckedSet.t ref ->
+    env:ServerEnv.env ->
+    (ServerEnv.env * recheck_result) Lwt.t
+end = struct
+  type recheck_result = {
+    new_or_changed: Utils_js.FilenameSet.t;
+    deleted: Utils_js.FilenameSet.t;
+    all_dependent_files: Utils_js.FilenameSet.t;
+    cycle_leaders: (Utils_js.FilenameMap.key * int) list;
+    skipped_count: int;
+    estimates: Recheck_stats.estimates option;
+  }
 
-  (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
-   * or focused file. We can ignore a request if the file is already checked at the desired level
-   * or at a more important level *)
-  let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
-
-  (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
-   * updated too. This is because sometimes we decide what foo.js.flow
-   * provides based on the existence of foo.js *)
-  let updates = FilenameSet.fold (fun file updates ->
-    if not (File_key.check_suffix file Files.flow_ext) &&
-      Parsing_heaps.Mutator_reader.has_ast ~reader (File_key.with_suffix file Files.flow_ext)
-    then FilenameSet.add (File_key.with_suffix file Files.flow_ext) updates
-    else updates
-  ) updates updates in
-
-  (* split updates into deleted files and modified files *)
-  (** NOTE: We use the term "modified" in the same sense as the underlying file
-      system: a modified file exists, and in relation to an old file system
-      state, a modified file could be any of "new," "changed," or "unchanged."
-  **)
-  let modified, deleted = FilenameSet.partition (fun f ->
-    Sys.file_exists (File_key.to_string f)
-  ) updates in
-  let deleted_count = FilenameSet.cardinal deleted in
-  let modified_count = FilenameSet.cardinal modified in
-
-  (* log modified and deleted files *)
-  if deleted_count + modified_count > 0 then (
-    Hh_logger.info "recheck %d modified, %d deleted files"
-      modified_count deleted_count;
-    let log_files files msg n =
-      Hh_logger.info "%s files:" msg;
-      let _ = FilenameSet.fold (fun f i ->
-        Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
-        i + 1
-      ) files 1
-      in ()
-    in
-    if modified_count > 0 then log_files modified "modified" modified_count;
-    if deleted_count > 0 then log_files deleted "deleted" deleted_count
-  );
-
-  (* We don't need to delete things from the parsing heaps - they will be automatically oldified.
-   * Oldifying something removes it from the heap (but keeps it around in case we need it back) *)
-
-  Hh_logger.info "Parsing";
-  (* reparse modified files, updating modified to new_or_changed to reflect
-   * removal of unchanged files
+  (* This is the first part of the recheck. It parses the files and updates the dependency graph. It
+   * does NOT figure out which files to merge or merge them.
    *
-   * new_or_changed - Set of files which are not unchanged. This includes freshparsed, fails & skips
-   * freshparsed - Set of files which parsed successfully
-   * unparsed - Set of files which were skipped (e.g. no @flow) or which we failed to parse
-   * unchanged_parse - Set of files who's file hash didn't changes
-   * new_local_errors - Parse errors, docblock errors, etc
-  *)
-  let%lwt new_or_changed, freshparsed, unparsed, _unchanged_parse, new_local_errors =
-     reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
-   in
+   * It returns an updated env and a bunch of intermediate values which `recheck_merge` can use to
+   * calculate the to_merge and perform the merge *)
+  let recheck_parse_and_update_dependency_info
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env =
+    let errors = env.ServerEnv.errors in
 
-  let unparsed_set =
-    List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
-  in
+    (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
+     * or focused file. We can ignore a request if the file is already checked at the desired level
+     * or at a more important level *)
+    let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
 
-  (* clear errors for new, changed and deleted files *)
-  let errors =
-    errors
-    |> clear_errors new_or_changed
-    |> clear_errors deleted
-  in
+    (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
+     * updated too. This is because sometimes we decide what foo.js.flow
+     * provides based on the existence of foo.js *)
+    let updates = FilenameSet.fold (fun file updates ->
+      if not (File_key.check_suffix file Files.flow_ext) &&
+        Parsing_heaps.Mutator_reader.has_ast ~reader (File_key.with_suffix file Files.flow_ext)
+      then FilenameSet.add (File_key.with_suffix file Files.flow_ext) updates
+      else updates
+    ) updates updates in
 
-  (* record reparse errors *)
-  let errors =
-    let () =
-      let error_set: Flow_error.ErrorSet.t =
-        FilenameMap.fold (fun _ -> Flow_error.ErrorSet.union) new_local_errors Flow_error.ErrorSet.empty
+    (* split updates into deleted files and modified files *)
+    (** NOTE: We use the term "modified" in the same sense as the underlying file
+        system: a modified file exists, and in relation to an old file system
+        state, a modified file could be any of "new," "changed," or "unchanged."
+    **)
+    let modified, deleted = FilenameSet.partition (fun f ->
+      Sys.file_exists (File_key.to_string f)
+    ) updates in
+    let deleted_count = FilenameSet.cardinal deleted in
+    let modified_count = FilenameSet.cardinal modified in
+
+    (* log modified and deleted files *)
+    if deleted_count + modified_count > 0 then (
+      Hh_logger.info "recheck %d modified, %d deleted files"
+        modified_count deleted_count;
+      let log_files files msg n =
+        Hh_logger.info "%s files:" msg;
+        let _ = FilenameSet.fold (fun f i ->
+          Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
+          i + 1
+        ) files 1
+        in ()
       in
-      let error_set = Flow_error.make_errors_printable error_set in
-      if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0
-      then Persistent_connection.update_clients
-        ~clients:env.ServerEnv.connections
-        ~calc_errors_and_warnings:(fun () -> error_set, FilenameMap.empty)
+      if modified_count > 0 then log_files modified "modified" modified_count;
+      if deleted_count > 0 then log_files deleted "deleted" deleted_count
+    );
+
+    (* We don't need to delete things from the parsing heaps - they will be automatically oldified.
+     * Oldifying something removes it from the heap (but keeps it around in case we need it back) *)
+
+    Hh_logger.info "Parsing";
+    (* reparse modified files, updating modified to new_or_changed to reflect
+     * removal of unchanged files
+     *
+     * new_or_changed - Set of files which are not unchanged. This includes freshparsed, fails & skips
+     * freshparsed - Set of files which parsed successfully
+     * unparsed - Set of files which were skipped (e.g. no @flow) or which we failed to parse
+     * unchanged_parse - Set of files who's file hash didn't changes
+     * new_local_errors - Parse errors, docblock errors, etc
+    *)
+    let%lwt new_or_changed, freshparsed, unparsed, _unchanged_parse, new_local_errors =
+       reparse ~options ~profiling ~transaction ~reader ~workers ~modified ~deleted
+     in
+
+    let unparsed_set =
+      List.fold_left (fun set (fn, _) -> FilenameSet.add fn set) FilenameSet.empty unparsed
     in
-    let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
-    { errors with ServerEnv.local_errors }
-  in
 
-  (* get old (unchanged, undeleted) files that were parsed successfully *)
-  let old_parsed = env.ServerEnv.files in
-  let new_or_changed_or_deleted = FilenameSet.union new_or_changed deleted in
-  let unchanged = FilenameSet.diff old_parsed new_or_changed_or_deleted in
+    (* clear errors for new, changed and deleted files *)
+    let errors =
+      errors
+      |> clear_errors new_or_changed
+      |> clear_errors deleted
+    in
 
-  Hh_logger.debug
-    "recheck: old = %d, del = %d, fresh = %d, unmod = %d"
-    (FilenameSet.cardinal old_parsed)
-    (FilenameSet.cardinal deleted)
-    (FilenameSet.cardinal freshparsed)
-    (FilenameSet.cardinal unchanged);
+    (* record reparse errors *)
+    let errors =
+      let () =
+        let error_set: Flow_error.ErrorSet.t =
+          FilenameMap.fold (fun _ -> Flow_error.ErrorSet.union) new_local_errors Flow_error.ErrorSet.empty
+        in
+        let error_set = Flow_error.make_errors_printable error_set in
+        if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0
+        then Persistent_connection.update_clients
+          ~clients:env.ServerEnv.connections
+          ~calc_errors_and_warnings:(fun () -> error_set, FilenameMap.empty)
+      in
+      let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
+      { errors with ServerEnv.local_errors }
+    in
 
-  (** Here's where the interesting part of rechecking begins. Before diving into
-      code, let's think through the problem independently.
+    (* get old (unchanged, undeleted) files that were parsed successfully *)
+    let old_parsed = env.ServerEnv.files in
+    let new_or_changed_or_deleted = FilenameSet.union new_or_changed deleted in
+    let unchanged = FilenameSet.diff old_parsed new_or_changed_or_deleted in
 
-      Note that changing a file can be conceptually thought of as deleting the
-      file and then adding it back as a new file. While such a reduction might
-      miss optimization opportunities (so we don't actually implement it), it
-      simplifies thinking about correctness.
+    Hh_logger.debug
+      "recheck: old = %d, del = %d, fresh = %d, unmod = %d"
+      (FilenameSet.cardinal old_parsed)
+      (FilenameSet.cardinal deleted)
+      (FilenameSet.cardinal freshparsed)
+      (FilenameSet.cardinal unchanged);
 
-      We focus on dependency management. Specifically, we discuss how to
-      correctly update InfoHeap and NameHeap, and calculate the set of unchanged
-      files whose imports might resolve to different files. (With these results,
-      the remaining part of rechecking is relatively simple.)
+    (** Here's where the interesting part of rechecking begins. Before diving into
+        code, let's think through the problem independently.
 
-      Recall that InfoHeap maps file names in FS to module names in MS, where
-      each file name in FS must exist, different file names may map to the same
-      module name, and every module name in MS is mapped to by at least one file
-      name; and NameHeap maps module names in MS to file names in FS, where the
-      file name mapped to by a module name must map back to the same module name
-      in InfoHeap. A file's imports might resolve to different files if the
-      corresponding modules map to different files in NameHeap.
+        Note that changing a file can be conceptually thought of as deleting the
+        file and then adding it back as a new file. While such a reduction might
+        miss optimization opportunities (so we don't actually implement it), it
+        simplifies thinking about correctness.
 
-      Deleting a file
-      ===============
+        We focus on dependency management. Specifically, we discuss how to
+        correctly update InfoHeap and NameHeap, and calculate the set of unchanged
+        files whose imports might resolve to different files. (With these results,
+        the remaining part of rechecking is relatively simple.)
 
-      Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
-      NameHeap.
+        Recall that InfoHeap maps file names in FS to module names in MS, where
+        each file name in FS must exist, different file names may map to the same
+        module name, and every module name in MS is mapped to by at least one file
+        name; and NameHeap maps module names in MS to file names in FS, where the
+        file name mapped to by a module name must map back to the same module name
+        in InfoHeap. A file's imports might resolve to different files if the
+        corresponding modules map to different files in NameHeap.
 
-      Remove D |-> m from InfoHeap.
+        Deleting a file
+        ===============
 
-      If F = D, then remove m |-> F from NameHeap and mark m "dirty": any file
-      importing m will be affected. If other files map to m in InfoHeap, map m
-      to one of those files in NameHeap.
+        Suppose that a file D is deleted. Let D |-> m in InfoHeap, and m |-> F in
+        NameHeap.
 
-      Adding a file
-      =============
+        Remove D |-> m from InfoHeap.
 
-      Suppose that a new file N is added.
+        If F = D, then remove m |-> F from NameHeap and mark m "dirty": any file
+        importing m will be affected. If other files map to m in InfoHeap, map m
+        to one of those files in NameHeap.
 
-      Map N to some module name, say m, in InfoHeap. If m is not mapped to any
-      file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
-      decide whether to replace the existing mapping to m |-> N in NameHeap, and
-      pessimistically assuming it might be, mark m "dirty."
+        Adding a file
+        =============
 
-      Changing a file
-      =============
+        Suppose that a new file N is added.
 
-      What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
-      and m |-> F in NameHeap.
+        Map N to some module name, say m, in InfoHeap. If m is not mapped to any
+        file in NameHeap, add m |-> N to NameHeap and mark m "dirty." Otherwise,
+        decide whether to replace the existing mapping to m |-> N in NameHeap, and
+        pessimistically assuming it might be, mark m "dirty."
 
-      Optimistically, C continues to map to m in InfoHeap and we do nothing.
+        Changing a file
+        =============
 
-      However, let's pessimistically assume that C maps to a different m' in
-      InfoHeap. Considering C deleted and added back as new, we must remove C
-      |-> m from InfoHeap and add C |-> m' to InfoHeap. If F = C, then remove m
-      |-> F from NameHeap and mark m "dirty." If other files map to m in
-      InfoHeap, map m to one of those files in NameHeap. If m' is not mapped to
-      any file in NameHeap, add m' |-> C to NameHeap and mark m' "dirty."
-      Otherwise, decide whether to replace the existing mapping to m' |-> C in
-      NameHeap, and mark m' "dirty."
+        What happens when a file C is changed? Suppose that C |-> m in InfoHeap,
+        and m |-> F in NameHeap.
 
-      Summary
-      =======
+        Optimistically, C continues to map to m in InfoHeap and we do nothing.
 
-      Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
-      InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
-      a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
+        However, let's pessimistically assume that C maps to a different m' in
+        InfoHeap. Considering C deleted and added back as new, we must remove C
+        |-> m from InfoHeap and add C |-> m' to InfoHeap. If F = C, then remove m
+        |-> F from NameHeap and mark m "dirty." If other files map to m in
+        InfoHeap, map m to one of those files in NameHeap. If m' is not mapped to
+        any file in NameHeap, add m' |-> C to NameHeap and mark m' "dirty."
+        Otherwise, decide whether to replace the existing mapping to m' |-> C in
+        NameHeap, and mark m' "dirty."
 
-      Ideally, any module name that does not map to a different file in NameHeap
-      should not be considered "dirty."
+        Summary
+        =======
 
-      In terms of implementation:
+        Summarizing, if an existing file F1 is changed or deleted, and F1 |-> m in
+        InfoHeap and m |-> F in NameHeap, and F1 = F, then mark m "dirty." And if
+        a new file or a changed file F2 now maps to m' in InfoHeap, mark m' "dirty."
 
-      Deleted file
-      ============
+        Ideally, any module name that does not map to a different file in NameHeap
+        should not be considered "dirty."
 
-      Say it pointed to module OLD_M
+        In terms of implementation:
 
-      1. need to repick a provider for OLD_M *if OLD_M's current provider is this
-      file*
-      2. files that depend on OLD_M need to be rechecked if:
-        a. the provider for OLD_M is **replaced** or **removed**; or
-        b. the provider for OLD_M is **unchanged**, but is a _changed file_
+        Deleted file
+        ============
 
-      New file
-      ========
+        Say it pointed to module OLD_M
 
-      Say it points to module NEW_M
+        1. need to repick a provider for OLD_M *if OLD_M's current provider is this
+        file*
+        2. files that depend on OLD_M need to be rechecked if:
+          a. the provider for OLD_M is **replaced** or **removed**; or
+          b. the provider for OLD_M is **unchanged**, but is a _changed file_
 
-      1. need to repick a provider for NEW_M
-      2. files that depend on NEW_M need to be rechecked if:
-        a. the provider for NEW_M is **added** or **replaced**; or
-        b. the provider for NEW_M is **unchanged**, but is a _changed file_
+        New file
+        ========
 
-      Changed file
-      ============
+        Say it points to module NEW_M
 
-      Say it pointed to module OLD_M, now points to module NEW_M
+        1. need to repick a provider for NEW_M
+        2. files that depend on NEW_M need to be rechecked if:
+          a. the provider for NEW_M is **added** or **replaced**; or
+          b. the provider for NEW_M is **unchanged**, but is a _changed file_
 
-      * Is OLD_M different from NEW_M? *(= delete the file, then add it back)*
+        Changed file
+        ============
 
-      1. need to repick providers for OLD_M *if OLD_M's current provider is this
-      file*.
-      2. files that depend on OLD_M need to be rechecked if:
-        a. the provider for OLD_M is **replaced** or **removed**; or
-        b. the provider for OLD_M is **unchanged**, but is a _changed file_
-      3. need to repick a provider for NEW_M
-      4. files that depend on NEW_M need to be rechecked if:
-        a. the provider for NEW_M is **added** or **replaced**; or
-        b. the provider for NEW_M is **unchanged**, but is a _changed file_
+        Say it pointed to module OLD_M, now points to module NEW_M
 
-      * TODO: Is OLD_M the same as NEW_M?
+        * Is OLD_M different from NEW_M? *(= delete the file, then add it back)*
 
-      1. *don't repick a provider!*
-      2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
-      is a _changed file_
+        1. need to repick providers for OLD_M *if OLD_M's current provider is this
+        file*.
+        2. files that depend on OLD_M need to be rechecked if:
+          a. the provider for OLD_M is **replaced** or **removed**; or
+          b. the provider for OLD_M is **unchanged**, but is a _changed file_
+        3. need to repick a provider for NEW_M
+        4. files that depend on NEW_M need to be rechecked if:
+          a. the provider for NEW_M is **added** or **replaced**; or
+          b. the provider for NEW_M is **unchanged**, but is a _changed file_
 
-  **)
+        * TODO: Is OLD_M the same as NEW_M?
 
-  (* remember old modules *)
-  let unchanged_checked = CheckedSet.remove new_or_changed_or_deleted env.ServerEnv.checked_files in
+        1. *don't repick a provider!*
+        2. files that depend on OLD_M need to be rechecked if: OLD_M's current provider
+        is a _changed file_
 
-  let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
+    **)
 
-  (* clear out records of files, and names of modules provided by those files *)
-  let%lwt old_modules = with_timer_lwt ~options "ModuleClearFiles" profiling (fun () ->
-    Module_js.calc_old_modules
-      ~reader workers ~all_providers_mutator ~options new_or_changed_or_deleted
-  ) in
+    (* remember old modules *)
+    let unchanged_checked = CheckedSet.remove new_or_changed_or_deleted env.ServerEnv.checked_files in
 
-  (* We may be forcing a recheck on some unchanged files *)
-  let unchanged_files_to_force = CheckedSet.filter files_to_force ~f:(fun fn ->
-    not (FilenameSet.mem fn new_or_changed) && FilenameSet.mem fn old_parsed
-  ) in
+    let all_providers_mutator = Module_hashtables.All_providers_mutator.create transaction in
 
-  MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
-  let%lwt changed_modules, errors =
-    commit_modules_and_resolve_requires
-      ~transaction
-      ~reader
-      ~all_providers_mutator
-      ~options
-      ~profiling
-      ~workers
-      ~old_modules
-      ~parsed_set:freshparsed
-      ~unparsed
-      ~unparsed_set
-      ~new_or_changed
-      ~deleted
-      ~errors
-      ~is_init:false in
-
-
-  (* We can ignore unchanged files which were forced as dependencies. We don't care about their
-   * dependents *)
-  let unchanged_files_with_dependents = FilenameSet.union
-    (CheckedSet.focused unchanged_files_to_force)
-    (CheckedSet.dependents unchanged_files_to_force)
-  in
-
-  (* Figure out which modules the unchanged forced files provide. We need these to figure out
-   * which dependents need to be added to the checked set *)
-  let%lwt unchanged_modules = with_timer_lwt ~options "CalcUnchangedModules" profiling (fun () ->
-    Module_js.calc_unchanged_modules ~reader workers unchanged_files_with_dependents
-  ) in
-
-  let parsed = FilenameSet.union freshparsed unchanged in
-
-
-  (* direct_dependent_files are unchanged files which directly depend on changed modules,
-     or are new / changed files that are phantom dependents. dependent_files are
-     direct_dependent_files plus their dependents (transitive closure) *)
-  let%lwt all_dependent_files, direct_dependent_files =
-    with_timer_lwt ~options "DependentFiles" profiling (fun () ->
-      Dep_service.dependent_files
-        ~reader:(Abstract_state_reader.Mutator_state_reader reader)
-        workers
-        ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
-        ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
-        ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
+    (* clear out records of files, and names of modules provided by those files *)
+    let%lwt old_modules = with_timer_lwt ~options "ModuleClearFiles" profiling (fun () ->
+      Module_js.calc_old_modules
+        ~reader workers ~all_providers_mutator ~options new_or_changed_or_deleted
     ) in
 
-  Hh_logger.info "Re-resolving directly dependent files";
+    (* We may be forcing a recheck on some unchanged files *)
+    let unchanged_files_to_force = CheckedSet.filter files_to_force ~f:(fun fn ->
+      not (FilenameSet.mem fn new_or_changed) && FilenameSet.mem fn old_parsed
+    ) in
 
-  let node_modules_containers = !Files.node_modules_containers in
-  (* requires in direct_dependent_files must be re-resolved before merging. *)
-  let mutator = Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files in
-  let%lwt () = with_timer_lwt ~options "ReresolveDirectDependents" profiling (fun () ->
-    MultiWorkerLwt.call workers
-      ~job: (fun () files ->
-        List.iter (fun filename ->
-          let errors = Module_js.add_parsed_resolved_requires filename
-            ~mutator ~reader ~options ~node_modules_containers in
-          ignore errors (* TODO: why, FFS, why? *)
-        ) files
-      )
-      ~neutral: ()
-      ~merge: (fun () () -> ())
-      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
-  ) in
+    MonitorRPC.status_update ServerStatus.Resolving_dependencies_progress;
+    let%lwt changed_modules, errors =
+      commit_modules_and_resolve_requires
+        ~transaction
+        ~reader
+        ~all_providers_mutator
+        ~options
+        ~profiling
+        ~workers
+        ~old_modules
+        ~parsed_set:freshparsed
+        ~unparsed
+        ~unparsed_set
+        ~new_or_changed
+        ~deleted
+        ~errors
+        ~is_init:false in
 
-  let acceptable_files_to_focus =
-    FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
-  in
 
-  Hh_logger.info "Recalculating dependency graph";
-  let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-    let files_to_include_in_dependency_info =
-      freshparsed
-      |> FilenameSet.union direct_dependent_files
+    (* We can ignore unchanged files which were forced as dependencies. We don't care about their
+     * dependents *)
+    let unchanged_files_with_dependents = FilenameSet.union
+      (CheckedSet.focused unchanged_files_to_force)
+      (CheckedSet.dependents unchanged_files_to_force)
     in
-    let%lwt updated_dependency_info = Dep_service.calc_partial_dependency_info ~options ~reader workers
-      files_to_include_in_dependency_info ~parsed in
-    let old_dependency_info = env.ServerEnv.dependency_info in
-    match old_dependency_info, updated_dependency_info with
-      | Dependency_info.Classic old_map, Dependency_info.Classic updated_map ->
-        Lwt.return (Dependency_info.Classic (
-          old_map
-          |> FilenameSet.fold FilenameMap.remove deleted
-          |> FilenameMap.union updated_map
-        ))
-      | Dependency_info.TypesFirst old_map, Dependency_info.TypesFirst updated_map ->
-        Lwt.return (Dependency_info.TypesFirst (
-          old_map
-          |> FilenameSet.fold FilenameMap.remove deleted
-          |> FilenameMap.union updated_map
-        ))
-      | _ -> assert false
-  ) in
-  let%lwt updated_checked_files, all_dependent_files =
-    with_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
-      match Options.lazy_mode options with
-      | None (* Non lazy mode treats every file as focused. *)
-      | Some Options.LAZY_MODE_WATCHMAN (* Watchman mode treats every modified file as focused *)
-      | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
-        let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
-        let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
-        let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
-        let focused = FilenameSet.union old_focus_targets freshparsed in
-        let%lwt updated_checked_files = unfocused_files_to_infer ~options
-            ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
-            ~input_dependencies:(Some (CheckedSet.dependencies files_to_force)) in
-        Lwt.return (updated_checked_files, all_dependent_files)
-      | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
-        (* Unfortunately, our checked_files set might be out of date. This update could have added
-         * some new dependents or dependencies. So we need to recalculate those.
-         *
-         * To calculate dependents and dependencies, we need to know what are the focused files. We
-         * define the focused files to be the union of
-         *
-         *   1. The files that were previously focused
-         *   2. Modified files that are currently open in the IDE
-         *   3. If this is a `flow force-recheck --focus A.js B.js C.js`, then A.js, B.js and C.js
-         *
-         * Remember that the IDE might open a new file or keep open a deleted file, so the focused
-         * set might be missing that file. If that file reappears, we must remember to refocus on
-         * it.
-         **)
-        let open_in_ide =
-          let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
-          FilenameSet.filter (function
-            | File_key.SourceFile fn
-            | File_key.LibFile fn
-            | File_key.JsonFile fn
-            | File_key.ResourceFile fn -> SSet.mem fn opened_files
-            | File_key.Builtins -> false
-          ) freshparsed
-        in
-        let input_focused = CheckedSet.focused files_to_force (* Files to force to be focused *)
-            |> filter_out_node_modules ~options (* Never focus node modules *)
-            |> FilenameSet.union (CheckedSet.focused env.ServerEnv.checked_files) (* old focused *)
-            |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
-        in
-        let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
-        let%lwt updated_checked_files = focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependency_info in
 
-        (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
-         * dependency. That's fine if foo.js is in the checked set. But if it's just some random
-         * other dependent then we need to filter it out.
-         *)
-        let all_dependent_files =
-          FilenameSet.inter all_dependent_files (CheckedSet.all updated_checked_files) in
-        Lwt.return (updated_checked_files, all_dependent_files)
-    )
-  in
+    (* Figure out which modules the unchanged forced files provide. We need these to figure out
+     * which dependents need to be added to the checked set *)
+    let%lwt unchanged_modules = with_timer_lwt ~options "CalcUnchangedModules" profiling (fun () ->
+      Module_js.calc_unchanged_modules ~reader workers unchanged_files_with_dependents
+    ) in
 
-  (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
-   * will be focused *)
-  let infer_input = CheckedSet.filter updated_checked_files ~f:(fun fn ->
-    FilenameSet.mem fn acceptable_files_to_focus
-  ) in
+    let parsed = FilenameSet.union freshparsed unchanged in
 
-  let%lwt to_merge, components, recheck_map =
-    include_dependencies_and_dependents
-      ~options ~profiling ~unchanged_checked ~infer_input ~dependency_info ~all_dependent_files
-      ~direct_dependent_files
-  in
 
-  (* This is a much better estimate of what checked_files will be after the merge finishes. We now
-   * include the dependencies and dependents that are being implicitly included in the recheck. *)
-  will_be_checked_files := CheckedSet.union env.ServerEnv.checked_files to_merge;
+    (* direct_dependent_files are unchanged files which directly depend on changed modules,
+       or are new / changed files that are phantom dependents. dependent_files are
+       direct_dependent_files plus their dependents (transitive closure) *)
+    let%lwt all_dependent_files, direct_dependent_files =
+      with_timer_lwt ~options "DependentFiles" profiling (fun () ->
+        Dep_service.dependent_files
+          ~reader:(Abstract_state_reader.Mutator_state_reader reader)
+          workers
+          ~candidates:(FilenameSet.diff unchanged unchanged_files_with_dependents)
+          ~root_files:(FilenameSet.union new_or_changed unchanged_files_with_dependents)
+          ~root_modules:(Modulename.Set.union unchanged_modules changed_modules)
+      ) in
 
-  let%lwt estimates =
-    restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata
-  in
+    Hh_logger.info "Re-resolving directly dependent files";
 
-  let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
+    let node_modules_containers = !Files.node_modules_containers in
+    (* requires in direct_dependent_files must be re-resolved before merging. *)
+    let mutator = Module_heaps.Resolved_requires_mutator.create transaction direct_dependent_files in
+    let%lwt () = with_timer_lwt ~options "ReresolveDirectDependents" profiling (fun () ->
+      MultiWorkerLwt.call workers
+        ~job: (fun () files ->
+          List.iter (fun filename ->
+            let errors = Module_js.add_parsed_resolved_requires filename
+              ~mutator ~reader ~options ~node_modules_containers in
+            ignore errors (* TODO: why, FFS, why? *)
+          ) files
+        )
+        ~neutral: ()
+        ~merge: (fun () () -> ())
+        ~next:(MultiWorkerLwt.next workers (FilenameSet.elements direct_dependent_files))
+    ) in
 
-  let dependency_graph = Dependency_info.dependency_graph dependency_info in
-  (* recheck *)
-  let%lwt checked_files, cycle_leaders, errors, coverage, skipped_count = merge
-    ~transaction
-    ~reader
-    ~options
-    ~profiling
-    ~workers
-    ~errors
-    ~unchanged_checked
-    ~to_merge
-    ~components
-    ~recheck_map
-    ~dependency_graph
-    ~deleted
-    ~persistent_connections:(Some env.ServerEnv.connections)
-    ~prep_merge:(Some (fun _to_merge ->
-      (* need to merge the closure of inferred files and their deps *)
+    Hh_logger.info "Recalculating dependency graph";
+    let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
+      let files_to_include_in_dependency_info =
+        freshparsed
+        |> FilenameSet.union direct_dependent_files
+      in
+      let%lwt updated_dependency_info = Dep_service.calc_partial_dependency_info ~options ~reader workers
+        files_to_include_in_dependency_info ~parsed in
+      let old_dependency_info = env.ServerEnv.dependency_info in
+      match old_dependency_info, updated_dependency_info with
+        | Dependency_info.Classic old_map, Dependency_info.Classic updated_map ->
+          Lwt.return (Dependency_info.Classic (
+            old_map
+            |> FilenameSet.fold FilenameMap.remove deleted
+            |> FilenameMap.union updated_map
+          ))
+        | Dependency_info.TypesFirst old_map, Dependency_info.TypesFirst updated_map ->
+          Lwt.return (Dependency_info.TypesFirst (
+            old_map
+            |> FilenameSet.fold FilenameMap.remove deleted
+            |> FilenameMap.union updated_map
+          ))
+        | _ -> assert false
+    ) in
 
-      let n = FilenameSet.cardinal all_dependent_files in
-      if n > 0
-      then Hh_logger.info "remerge %d dependent files:" n;
+    (* Here's how to update unparsed:
+     * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
+     * 2. Remove the deleted files. This removes any previously unparsed file which was deleted
+     * 3. Add the newly unparsed files. This adds new unparsed files or files which became unparsed *)
+    let unparsed =
+      let to_remove = FilenameSet.union parsed deleted in
+      FilenameSet.diff env.ServerEnv.unparsed to_remove
+      |> FilenameSet.union unparsed_set
+    in
 
-      let _ = FilenameSet.fold (fun f i ->
-        Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
-        i + 1
-      ) all_dependent_files 1 in
-      Hh_logger.info "Merge prep";
-
-      (* merge errors for unchanged dependents will be cleared lazily *)
-
-      (* to_merge is inferred files plus all dependents. prep for re-merge *)
-      (* NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
-         don't add then to the set of files to merge! Only inferred files (along
-         with dependents) should be merged: see below. *)
-      (* let _to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in *)
-      ()
-    ))
-  in
-
-  let%lwt errors, coverage = check_files ~options ~reader ~workers errors coverage checked_files in
-
-  (* Here's how to update unparsed:
-   * 1. Remove the parsed files. This removes any file which used to be unparsed but is now parsed
-   * 2. Remove the deleted files. This removes any previously unparsed file which was deleted
-   * 3. Add the newly unparsed files. This adds new unparsed files or files which became unparsed *)
-  let unparsed =
-    let to_remove = FilenameSet.union parsed deleted in
-    FilenameSet.diff env.ServerEnv.unparsed to_remove
-    |> FilenameSet.union unparsed_set
-  in
-
-  (* NOTE: unused fields are left in their initial empty state *)
-  env.ServerEnv.collated_errors := None;
-  Lwt.return (
-    ({ env with ServerEnv.
+    let env = { env with ServerEnv.
       files = parsed;
       unparsed;
       dependency_info;
-      checked_files;
-      errors;
-      coverage;
-    },
-    (new_or_changed, deleted, all_dependent_files, cycle_leaders, skipped_count, estimates))
-  )
+    } in
+
+    let intermediate_values = (
+      all_dependent_files,
+      deleted,
+      direct_dependent_files,
+      errors,
+      files_to_force,
+      freshparsed,
+      new_or_changed,
+      unchanged_checked,
+      unchanged_files_to_force,
+      unparsed_set
+    ) in
+
+    Lwt.return (env, intermediate_values)
+
+  (* This function assumes it is called after recheck_parse_and_update_dependency_info. It uses some
+   * of the info computed by recheck_parse_and_update_dependency_info to figure out which files to
+   * merge. Then it merges them. *)
+  let recheck_merge
+      ~profiling ~transaction ~reader ~options ~workers
+      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~env =
+
+    let (
+      all_dependent_files,
+      deleted,
+      direct_dependent_files,
+      errors,
+      files_to_force,
+      freshparsed,
+      new_or_changed,
+      unchanged_checked,
+      unchanged_files_to_force,
+      unparsed_set
+    ) = intermediate_values in
+
+    let dependency_info = env.ServerEnv.dependency_info in
+
+    let acceptable_files_to_focus =
+      FilenameSet.union freshparsed (CheckedSet.all unchanged_files_to_force)
+    in
+
+    let%lwt updated_checked_files, all_dependent_files =
+      with_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
+        match Options.lazy_mode options with
+        | None (* Non lazy mode treats every file as focused. *)
+        | Some Options.LAZY_MODE_WATCHMAN (* Watchman mode treats every modified file as focused *)
+        | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
+          let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
+          let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
+          let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
+          let focused = FilenameSet.union old_focus_targets freshparsed in
+          let%lwt updated_checked_files = unfocused_files_to_infer ~options
+              ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
+              ~input_dependencies:(Some (CheckedSet.dependencies files_to_force)) in
+          Lwt.return (updated_checked_files, all_dependent_files)
+        | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
+          (* Unfortunately, our checked_files set might be out of date. This update could have added
+           * some new dependents or dependencies. So we need to recalculate those.
+           *
+           * To calculate dependents and dependencies, we need to know what are the focused files. We
+           * define the focused files to be the union of
+           *
+           *   1. The files that were previously focused
+           *   2. Modified files that are currently open in the IDE
+           *   3. If this is a `flow force-recheck --focus A.js B.js C.js`, then A.js, B.js and C.js
+           *
+           * Remember that the IDE might open a new file or keep open a deleted file, so the focused
+           * set might be missing that file. If that file reappears, we must remember to refocus on
+           * it.
+           **)
+          let open_in_ide =
+            let opened_files = Persistent_connection.get_opened_files env.ServerEnv.connections in
+            FilenameSet.filter (function
+              | File_key.SourceFile fn
+              | File_key.LibFile fn
+              | File_key.JsonFile fn
+              | File_key.ResourceFile fn -> SSet.mem fn opened_files
+              | File_key.Builtins -> false
+            ) freshparsed
+          in
+          let input_focused = CheckedSet.focused files_to_force (* Files to force to be focused *)
+              |> filter_out_node_modules ~options (* Never focus node modules *)
+              |> FilenameSet.union (CheckedSet.focused env.ServerEnv.checked_files) (* old focused *)
+              |> FilenameSet.union open_in_ide (* Files which are open in the IDE *)
+          in
+          let input_dependencies = Some (CheckedSet.dependencies files_to_force) in
+          let%lwt updated_checked_files =
+            focused_files_to_infer ~reader ~input_focused ~input_dependencies ~dependency_info
+          in
+
+          (* It's possible that all_dependent_files contains foo.js, which is a dependent of a
+           * dependency. That's fine if foo.js is in the checked set. But if it's just some random
+           * other dependent then we need to filter it out.
+           *)
+          let all_dependent_files =
+            FilenameSet.inter all_dependent_files (CheckedSet.all updated_checked_files) in
+          Lwt.return (updated_checked_files, all_dependent_files)
+      )
+    in
+
+    (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
+     * will be focused *)
+    let infer_input = CheckedSet.filter updated_checked_files ~f:(fun fn ->
+      FilenameSet.mem fn acceptable_files_to_focus
+    ) in
+
+    let%lwt to_merge, components, recheck_map =
+      include_dependencies_and_dependents
+        ~options ~profiling ~unchanged_checked ~infer_input ~dependency_info ~all_dependent_files
+        ~direct_dependent_files
+    in
+
+    (* This is a much better estimate of what checked_files will be after the merge finishes. We now
+     * include the dependencies and dependents that are being implicitly included in the recheck. *)
+    will_be_checked_files := CheckedSet.union env.ServerEnv.checked_files to_merge;
+
+    let%lwt estimates =
+      restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata
+    in
+
+    let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
+
+    let dependency_graph = Dependency_info.dependency_graph dependency_info in
+    (* recheck *)
+    let%lwt checked_files, cycle_leaders, errors, coverage, skipped_count = merge
+      ~transaction
+      ~reader
+      ~options
+      ~profiling
+      ~workers
+      ~errors
+      ~unchanged_checked
+      ~to_merge
+      ~components
+      ~recheck_map
+      ~dependency_graph
+      ~deleted
+      ~persistent_connections:(Some env.ServerEnv.connections)
+      ~prep_merge:(Some (fun _to_merge ->
+        (* need to merge the closure of inferred files and their deps *)
+
+        let n = FilenameSet.cardinal all_dependent_files in
+        if n > 0
+        then Hh_logger.info "remerge %d dependent files:" n;
+
+        let _ = FilenameSet.fold (fun f i ->
+          Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
+          i + 1
+        ) all_dependent_files 1 in
+        Hh_logger.info "Merge prep";
+
+        (* merge errors for unchanged dependents will be cleared lazily *)
+
+        (* to_merge is inferred files plus all dependents. prep for re-merge *)
+        (* NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
+           don't add then to the set of files to merge! Only inferred files (along
+           with dependents) should be merged: see below. *)
+        (* let _to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in *)
+        ()
+      ))
+    in
+
+    let%lwt errors, coverage = check_files ~options ~reader ~workers errors coverage checked_files in
+
+    (* NOTE: unused fields are left in their initial empty state *)
+    env.ServerEnv.collated_errors := None;
+    Lwt.return (
+      { env with ServerEnv.
+        checked_files;
+        errors;
+        coverage;
+      },
+      {
+        new_or_changed;
+        deleted;
+        all_dependent_files;
+        cycle_leaders;
+        skipped_count;
+        estimates;
+      }
+    )
+
+  (* We maintain the following invariant across rechecks: The set of `files` contains files that
+   * parsed successfully in the previous phase (which could be the init phase or a previous recheck
+   * phase).
+   *
+   * This function has been split into two parts. This is because lazy saved state init needs to
+   * update the dependency graph for files which have changed since the saved state was generated, but
+   * doesn't want to merge those files yet.
+   *)
+  let full
+      ~profiling ~transaction ~reader ~options ~workers ~updates
+      ~files_to_force ~file_watcher_metadata ~will_be_checked_files ~env =
+    let%lwt env, intermediate_values = recheck_parse_and_update_dependency_info
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env
+    in
+    recheck_merge
+      ~profiling ~transaction ~reader ~options ~workers
+      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~env
+end
 
 let with_transaction f =
   Transaction.with_transaction @@ fun transaction ->
@@ -1446,14 +1546,21 @@ let recheck
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
       SharedMem_js.with_memory_profiling_lwt ~profiling ~collect_at_end:true (fun () ->
         with_transaction (fun transaction reader ->
-          recheck_with_profiling
-            ~profiling ~transaction ~reader ~options ~workers ~updates env
+          Recheck.full
+            ~profiling ~transaction ~reader ~options ~workers ~updates ~env
             ~files_to_force ~file_watcher_metadata ~will_be_checked_files
         )
       )
     )
   in
-  let modified, deleted, dependent_files, cycle_leaders, skipped_count, estimates = stats in
+  let { Recheck.
+    new_or_changed = modified;
+    deleted;
+    all_dependent_files = dependent_files;
+    cycle_leaders;
+    skipped_count;
+    estimates;
+  } = stats in
   let (
     estimated_time_to_recheck,
     estimated_time_to_restart,
