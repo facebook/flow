@@ -48,3 +48,11 @@ tried to implement it, but after killing the process, both [Lwt_io.close] and
 [Lwt_io.abort] would hang when trying to close the process's
 stdin/stdout/stderr.)
 *)
+
+val try_finally:
+  f:(unit -> 'a Lwt.t) ->
+  finally:(unit -> unit Lwt.t) ->
+  'a Lwt.t
+(** Asynchronous version of [Utils.try_finally]. Run and wait for [f] to
+complete, and be sure to invoke [finally] asynchronously afterward, even if [f]
+raises an exception. *)

@@ -177,3 +177,18 @@ let exec_checked
     let%lwt _: Unix.process_status = process#close in
     Lwt.return_unit
   )]
+
+let try_finally
+    ~(f: unit -> 'a Lwt.t)
+    ~(finally: unit -> unit Lwt.t)
+    : 'a Lwt.t =
+  let%lwt res =
+    try%lwt
+      let%lwt result = f () in
+      Lwt.return result
+    with e ->
+      let%lwt () = finally () in
+      raise e
+  in
+  let%lwt () = finally () in
+  Lwt.return res
