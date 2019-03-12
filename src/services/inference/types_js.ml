@@ -974,6 +974,17 @@ module Recheck: sig
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
     (ServerEnv.env * recheck_result) Lwt.t
+
+  val parse_and_update_dependency_info:
+    profiling:Profiling_js.running ->
+    transaction:Transaction.t ->
+    reader:Parsing_heaps.Mutator_reader.reader ->
+    options:Options.t ->
+    workers:MultiWorkerLwt.worker list option ->
+    updates:Utils_js.FilenameSet.t ->
+    files_to_force:CheckedSet.t ->
+    env:ServerEnv.env ->
+    ServerEnv.env Lwt.t
 end = struct
   type recheck_result = {
     new_or_changed: Utils_js.FilenameSet.t;
@@ -1532,6 +1543,13 @@ end = struct
     recheck_merge
       ~profiling ~transaction ~reader ~options ~workers
       ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~env
+
+  let parse_and_update_dependency_info
+    ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env=
+    let%lwt env, _intermediate_values = recheck_parse_and_update_dependency_info
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env
+    in
+    Lwt.return env
 end
 
 let with_transaction f =
@@ -1634,6 +1652,20 @@ let make_next_files ~libs ~file_options root =
     files
     |> Core_list.map ~f:(Files.filename_from_string ~options:file_options)
     |> Bucket.of_list
+
+let mk_init_env ~files ~unparsed ~dependency_info ~ordered_libs ~libs ~errors ~coverage =
+  { ServerEnv.
+    files;
+    unparsed;
+    dependency_info;
+    checked_files = CheckedSet.empty;
+    ordered_libs;
+    libs;
+    errors;
+    coverage;
+    collated_errors = ref None;
+    connections = Persistent_connection.empty;
+  }
 
 let init_from_saved_state ~profiling ~workers ~saved_state options =
   with_transaction @@ fun transaction reader ->
@@ -1769,8 +1801,11 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
     Dep_service.calc_dependency_info ~options ~reader workers ~parsed:parsed_set
   ) in
 
-  Lwt.return
-    (parsed_set, unparsed_set, dependency_info, ordered_libs, libs, libs_ok, errors, coverage)
+  let env = mk_init_env
+    ~files:parsed_set ~unparsed:unparsed_set ~dependency_info ~ordered_libs ~libs ~errors ~coverage
+  in
+
+  Lwt.return (env, libs_ok)
 
 let init ~profiling ~workers options =
   let file_options = Options.file_options options in
@@ -1851,7 +1886,11 @@ let init ~profiling ~workers options =
   let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
     Dep_service.calc_dependency_info ~options ~reader workers ~parsed
   ) in
-  Lwt.return (parsed, unparsed_set, dependency_info, ordered_libs, libs, libs_ok, errors, coverage)
+  let env =
+    mk_init_env
+      ~files:parsed ~unparsed:unparsed_set ~dependency_info ~ordered_libs ~libs ~errors ~coverage
+  in
+  Lwt.return (FilenameSet.empty, env, libs_ok)
 
 (* Does a best-effort job to load a saved state. If it fails, returns None *)
 let load_saved_state ~profiling ~workers options =
@@ -1959,16 +1998,32 @@ let init ~profiling ~workers options =
   let start_time = Unix.gettimeofday () in
 
   let%lwt get_watchman_updates = query_watchman_for_changed_files ~options
-  and updates, (parsed, unparsed, dependency_info, ordered_libs, libs, libs_ok, errors, coverage) =
+  and updates, env, libs_ok =
     match%lwt load_saved_state ~profiling ~workers options with
     | None ->
       (* Either there is no saved state or we failed to load it for some reason *)
-      let%lwt init_ret = init ~profiling ~workers options in
-      Lwt.return (FilenameSet.empty, init_ret)
+      init ~profiling ~workers options
     | Some (saved_state, updates) ->
       (* We loaded a saved state successfully! We are awesome! *)
-      let%lwt init_ret = init_from_saved_state ~profiling ~workers ~saved_state options in
-      Lwt.return (updates, init_ret)
+      let%lwt env, libs_ok = init_from_saved_state ~profiling ~workers ~saved_state options in
+      (* We know that all the files in updates have changed since the saved state was generated. We
+       * have two ways to deal with them: *)
+      if Options.lazy_mode options = None
+      then
+        (* In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
+         * fanout, this can be a huge recheck, but it's sound. *)
+        Lwt.return (updates, env, libs_ok)
+      else begin
+        (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
+         * is to update the dependency graph and stuff like that. We don't actually want to merge
+         * anything yet. *)
+        with_transaction @@ fun transaction reader ->
+          let%lwt env = Recheck.parse_and_update_dependency_info
+            ~profiling ~transaction ~reader ~options ~workers ~updates
+            ~files_to_force:CheckedSet.empty ~env
+          in
+          Lwt.return (FilenameSet.empty, env, libs_ok)
+      end
   in
 
   let%lwt updates, files_to_focus =
@@ -1979,7 +2034,7 @@ let init ~profiling ~workers options =
     MonitorRPC.status_update ~event:(ServerStatus.Watchman_wait_start deadline);
     let%lwt watchman_updates, files_to_focus =
       try%lwt
-        Lwt_unix.with_timeout timeout @@ fun () -> get_watchman_updates ~libs
+        Lwt_unix.with_timeout timeout @@ fun () -> get_watchman_updates ~libs:env.ServerEnv.libs
       with Lwt_unix.Timeout ->
         let msg = Printf.sprintf "Timed out after %ds waiting for Watchman."
           (Unix.gettimeofday () -. start_time |> int_of_float)
@@ -1992,21 +2047,8 @@ let init ~profiling ~workers options =
   let init_time = Unix.gettimeofday () -. start_time in
 
   let%lwt last_estimates =
-    Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal parsed)
+    Recheck_stats.init ~options ~init_time ~parsed_count:(FilenameSet.cardinal env.ServerEnv.files)
   in
-
-  let env = { ServerEnv.
-    files = parsed;
-    unparsed;
-    dependency_info;
-    checked_files = CheckedSet.empty;
-    ordered_libs;
-    libs;
-    errors;
-    coverage;
-    collated_errors = ref None;
-    connections = Persistent_connection.empty;
-  } in
 
   (* Don't recheck if the libs are not ok *)
   if (FilenameSet.is_empty updates && FilenameSet.is_empty files_to_focus) || not libs_ok

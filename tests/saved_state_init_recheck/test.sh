@@ -17,8 +17,12 @@ assert_errors "$FLOW" status
 
 assert_ok "$FLOW" stop
 
-printf "\\nLazy init with saved state does recheck & sees new error\\n"
+printf "\\nLazy init with saved state does NOT recheck & sees 0 errors...\\n"
 start_flow . --lazy --saved-state-fetcher "local" --saved-state-no-fallback
+assert_ok "$FLOW" status
+
+printf "\\n...but focusing the file exposes the error\\n"
+assert_ok "$FLOW" force-recheck --focus --no-auto-start bar.js
 assert_errors "$FLOW" status
 
 assert_ok "$FLOW" stop
