@@ -178,12 +178,6 @@ module Friendly = struct
       Inline desc
     )
 
-  (* Intersperses a given separator in between each element of a list. *)
-  let rec intersperse sep = function
-  | [] -> []
-  | x :: [] -> x :: []
-  | x1 :: x2 :: xs -> x1 :: sep :: intersperse sep (x2 :: xs)
-
   (* Concatenates a list of messages with a conjunction according to the "rules"
    * of the English language. *)
   let conjunction_concat ?(conjunction="and") = function
@@ -270,7 +264,7 @@ module Friendly = struct
   let message_group_of_error =
     let message_of_frames frames acc_frames =
       let frames = Core_list.concat (List.rev (frames :: acc_frames)) in
-      Core_list.concat (intersperse [text " of "] (List.rev frames))
+      Core_list.concat (Core_list.intersperse (List.rev frames) [text " of "])
     in
     let rec flatten_speculation_branches
       ~show_all_branches
@@ -551,7 +545,7 @@ module Friendly = struct
     in
     fun message_group ->
       let acc = loop [] message_group in
-      Core_list.concat (intersperse [text " "] (List.rev acc))
+      Core_list.concat (Core_list.intersperse (List.rev acc) [text " "])
 
   (* Converts our friendly error to a classic error message. *)
   let to_classic error =
