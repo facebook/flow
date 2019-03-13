@@ -1,12 +1,3 @@
-Error ------------------------------------------------------------------------------------------------- libA/lib.js:5:16
-
-Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
-(`signature-verification-failure`)
-
-   5| export default foo();
-                     ^^^^^
-
-
 Error -------------------------------------------------------------------------------------------------------- a.js:4:18
 
 Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
@@ -43,4 +34,4 @@ Unexpected end of input
 
 
 
-Found 5 errors
+Found 4 errors
