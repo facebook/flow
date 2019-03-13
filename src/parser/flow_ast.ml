@@ -77,7 +77,7 @@ end = NumberLiteral
 and BigIntLiteral : sig
   type t = {
     value: float;
-    raw: string;
+    bigint: string;
   }
   [@@deriving show]
 end = BigIntLiteral
@@ -981,6 +981,7 @@ and Expression : sig
     | JSXElement of ('M, 'T) JSX.element
     | JSXFragment of ('M, 'T) JSX.fragment
     | Literal of Literal.t
+    | BigIntLiteral of BigIntLiteral.t
     | Logical of ('M, 'T) Logical.t
     | Member of ('M, 'T) Member.t
     | MetaProperty of 'M MetaProperty.t
