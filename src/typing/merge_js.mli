@@ -25,7 +25,6 @@ val merge_component_strict:
   file_sigs: File_sig.With_ALoc.t Utils_js.FilenameMap.t ->
   get_ast_unsafe: (File_key.t -> get_ast_return) ->
   get_docblock_unsafe: (File_key.t -> Docblock.t) ->
-  ?do_gc: bool ->
   (* component *)
   File_key.t Nel.t ->
   (* requires *)

@@ -113,7 +113,6 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
     ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
     ~get_ast_unsafe:(get_ast_unsafe ~reader)
     ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
-    ~do_gc:(Options.is_debug_mode options)
     component file_reqs dep_cxs master_cx
   in
 
