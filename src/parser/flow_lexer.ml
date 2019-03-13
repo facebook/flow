@@ -295,7 +295,7 @@ end
 let bigint_strip_n raw =
   let size = String.length raw in
   let str =
-    if (raw.[size - 1]) == 'n'
+    if size != 0 && (raw.[size - 1]) == 'n'
     then String.sub raw 0 (size - 1)
     else raw in
   str
