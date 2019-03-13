@@ -11,7 +11,7 @@
         "type":"Literal",
         "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":12}},
         "range":[0,12],
-        "value":349,
+        "value":null,
         "raw":"0b101011101n"
       },
       "directive":null

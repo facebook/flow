@@ -2,10 +2,6 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":4}},
-      "message":"Unexpected token ILLEGAL"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":4}},
       "message":"Invalid bigint literal"
     }
   ],
@@ -22,7 +18,7 @@
         "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":4}},
         "range":[0,4],
         "value":null,
-        "raw":"0e0n"
+        "raw":"1.0n"
       },
       "directive":null
     }

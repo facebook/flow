@@ -25,7 +25,7 @@
                 "type":"BigIntLiteralTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":22}},
                 "range":[7,22],
-                "value":25257156155,
+                "value":null,
                 "raw":"0o274134317073n"
               }
             },
