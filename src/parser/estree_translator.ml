@@ -511,6 +511,7 @@ end with type t = Impl.t) = struct
           ]
       | _loc, Identifier id -> identifier id
       | loc, Literal lit -> literal (loc, lit)
+      | loc, BigIntLiteral lit -> bigint_literal (loc, lit)
       | loc, TemplateLiteral lit -> template_literal (loc, lit)
       | loc, TaggedTemplate tagged -> tagged_template (loc, tagged)
       | loc, Class c -> class_expression (loc, c)
@@ -981,6 +982,12 @@ end with type t = Impl.t) = struct
       in
       node "Literal" loc props
 
+    and bigint_literal (loc, { BigIntLiteral.bigint; _ }) =
+      node "BigIntLiteral" loc [
+        "value", null;
+        "bigint", string bigint;
+      ]
+
     and string_literal (loc, { StringLiteral.value; raw }) =
       node "Literal" loc [
         "value", string value;
@@ -1283,7 +1290,8 @@ end with type t = Impl.t) = struct
         "raw", string raw;
       ]
 
-    and bigint_literal_type (loc, { Ast.BigIntLiteral.raw; _ }) =
+    and bigint_literal_type (loc, { Ast.BigIntLiteral.bigint; _ }) =
+      let raw = bigint in
       node "BigIntLiteralTypeAnnotation" loc [
         "value", null;
         "raw", string raw;
