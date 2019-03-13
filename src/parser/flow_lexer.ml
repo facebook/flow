@@ -64,7 +64,7 @@ let legacyoctbigint = [%sedlex.regexp? legacyoctnumber, 'n']
 let hexbigint = [%sedlex.regexp? hexnumber, 'n']
 let scibigint = [%sedlex.regexp? scinumber, 'n']
 let wholebigint = [%sedlex.regexp? underscored_digit, 'n']
-let floatbigint = [%sedlex.regexp? Opt underscored_digit, '.', underscored_decimal, 'n']
+let floatbigint = [%sedlex.regexp? (floatnumber | (underscored_digit, '.')), 'n']
 
 (* 2-8 alphanumeric characters. I could match them directly, but this leads to
  * ~5k more lines of generated lexer
