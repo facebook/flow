@@ -8,7 +8,7 @@
 open Core_result
 let (>|=) = Lwt.(>|=)
 
-let type_at_pos ~options ~env ~profiling ~expand_aliases file content line col =
+let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults file content line col =
   Types_js.basic_check_contents ~options ~env ~profiling content file >|=
   function
   | Error str -> Error (str, None)
@@ -24,8 +24,16 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases file content line col =
         let type_table = Context.type_table cx in
         let file = Context.file cx in
         (* passing in type_table only because it seems necessary for constructing genv *)
-        let result = type_at_pos_type ~full_cx:cx ~file ~file_sig:(File_sig.abstractify_locs file_sig) ~expand_aliases
-          ~type_table ~typed_ast loc in
+        let result = type_at_pos_type
+          ~full_cx:cx
+          ~file
+          ~file_sig:(File_sig.abstractify_locs file_sig)
+          ~expand_aliases
+          ~omit_targ_defaults
+          ~type_table
+          ~typed_ast
+          loc
+        in
         match result with
         | FailureNoMatch ->
           Hh_json.JSON_Object [

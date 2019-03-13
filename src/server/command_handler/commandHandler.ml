@@ -100,8 +100,8 @@ let infer_type
     ~(options: Options.t)
     ~(env: ServerEnv.env)
     ~(profiling: Profiling_js.running)
-    ((file_input, line, col, verbose, expand_aliases):
-      (File_input.t * int * int * Verbose.t option * bool))
+    ((file_input, line, col, verbose, expand_aliases, omit_targ_defaults):
+      (File_input.t * int * int * Verbose.t option * bool * bool))
   : ((Loc.t * Ty.t option, string) Core_result.t * Hh_json.json option) Lwt.t =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
@@ -110,7 +110,7 @@ let infer_type
   | Error e -> Lwt.return (Error e, None)
   | Ok content ->
     let%lwt result = try_with_json (fun () ->
-      Type_info_service.type_at_pos ~options ~env ~profiling ~expand_aliases
+      Type_info_service.type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults
         file content line col
     ) in
     Lwt.return (split_result result)
@@ -358,9 +358,9 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
   let%lwt response = output_dependencies ~env root strip_root outfile in
   Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
-let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~profiling ~env =
+let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit_targ_defaults ~profiling ~env =
   let%lwt result, json_data =
-    infer_type ~options ~env ~profiling (input, line, char, verbose, expand_aliases)
+    infer_type ~options ~env ~profiling (input, line, char, verbose, expand_aliases, omit_targ_defaults)
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
@@ -486,10 +486,10 @@ let get_ephemeral_handler genv command =
     (* The user preference is to make this wait for up-to-date data *)
     Handle_nonparallelizable (handle_graph_dep_graph ~root ~strip_root ~outfile)
   | ServerProt.Request.INFER_TYPE {
-      input; line; char; verbose; expand_aliases; wait_for_recheck;
+      input; line; char; verbose; expand_aliases; omit_targ_defaults; wait_for_recheck;
     } ->
     mk_parallelizable ~wait_for_recheck ~options (
-      handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
+      handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit_targ_defaults
     )
   | ServerProt.Request.REFACTOR { input; line; char; refactor_variant; } ->
    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
@@ -876,7 +876,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
   in
   let verbose = None in (* if Some, would write to server logs *)
   let%lwt result, extra_data =
-    infer_type ~options ~env ~profiling (file, line, char, verbose, false)
+    infer_type ~options ~env ~profiling (file, line, char, verbose, false, false)
   in
   let metadata = with_data ~extra_data metadata in
   begin match result with

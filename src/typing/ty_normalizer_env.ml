@@ -51,6 +51,14 @@ type options = {
   (* Run an optimization pass that removes duplicates from unions and intersections.
      WARNING May be slow for large types *)
   optimize_types: bool;
+
+  (* Omits type params if they match the defaults, e.g:
+   *
+   * Given `type Foo<A, B = Baz>`, `Foo<Bar, Baz>` is reduced to `Foo<Bar>`
+   *
+   * WARNING: May be slow due to the structural equality checks that this necessitates.
+   *)
+  omit_targ_defaults: bool;
 }
 
 (* This is a global environment that should not change during normalization *)
@@ -156,6 +164,7 @@ let expand_internal_types e = e.options.expand_internal_types
 let expand_type_aliases e = e.options.expand_type_aliases
 let flag_shadowed_type_params e = e.options.flag_shadowed_type_params
 let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_types
+let omit_targ_defaults e = e.options.omit_targ_defaults
 
 let current_file e = e.genv.file
 

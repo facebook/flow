@@ -37,6 +37,8 @@ let spec = {
         ~doc:"Includes an expanded version of the returned JSON type (implies --json)"
     |> flag "--expand-type-aliases" no_arg
         ~doc:"Replace type aliases with their bodies"
+    |> flag "--omit-typearg-defaults" no_arg
+        ~doc:"Omit type arguments when defaults exist and match the provided type argument"
     |> anon "args" (required (list_of string))
   )
 }
@@ -109,7 +111,7 @@ let handle_error err ~json ~pretty =
   )
 
 let main base_flags option_values json pretty root strip_root verbose path wait_for_recheck expanded
-    expand_aliases args () =
+    expand_aliases omit_targ_defaults args () =
   let json = json || pretty || expanded in
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
@@ -129,6 +131,7 @@ let main base_flags option_values json pretty root strip_root verbose path wait_
     char = column;
     verbose;
     expand_aliases;
+    omit_targ_defaults;
     wait_for_recheck;
   } in
   let file_contents = File_input.content_of_file_input file |> Core_result.ok in

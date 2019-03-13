@@ -390,3 +390,31 @@ printf "unions.js:57:5 = "
 assert_ok "$FLOW" type-at-pos unions.js 57 5 --strip-root --pretty
 printf "unions.js:59:18 = "
 assert_ok "$FLOW" type-at-pos unions.js 59 18 --strip-root --pretty
+
+# tparam_defaults.js
+printf "tparam_defaults.js:11:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 11 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:12:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 12 8 --strip-root --omit-typearg-defaults
+
+printf "tparam_defaults.js:14:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 14 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:15:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 15 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:16:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 16 8 --strip-root --omit-typearg-defaults
+
+printf "tparam_defaults.js:18:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 18 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:19:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 19 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:20:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 20 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:21:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 21 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:22:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 22 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:24:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 24 8 --strip-root --omit-typearg-defaults
+printf "tparam_defaults.js:25:8:\n"
+assert_ok "$FLOW" type-at-pos tparam_defaults.js 25 8 --strip-root --omit-typearg-defaults

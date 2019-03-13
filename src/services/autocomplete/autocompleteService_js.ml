@@ -161,6 +161,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
       flag_shadowed_type_params = true;
       preserve_inferred_literal_types = false;
       optimize_types = true;
+      omit_targ_defaults = false;
     } in
     let file = Context.file cx in
     let type_table = Context.type_table cx in
@@ -205,6 +206,7 @@ let autocomplete_id cx file_sig env =
         flag_shadowed_type_params = true;
         preserve_inferred_literal_types = false;
         optimize_types = true;
+        omit_targ_defaults = false;
       } in
       let file = Context.file cx in
       let type_table = Context.type_table cx in

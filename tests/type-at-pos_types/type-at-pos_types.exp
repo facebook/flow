@@ -2591,3 +2591,39 @@ unions.js:59:18 = {
   "start":13,
   "end":23
 }
+tparam_defaults.js:11:8:
+One<string>
+tparam_defaults.js:11:7,11:10
+tparam_defaults.js:12:8:
+One<>
+tparam_defaults.js:12:7,12:10
+tparam_defaults.js:14:8:
+Two<string>
+tparam_defaults.js:14:7,14:10
+tparam_defaults.js:15:8:
+Two<>
+tparam_defaults.js:15:7,15:10
+tparam_defaults.js:16:8:
+Two<Bar, string>
+tparam_defaults.js:16:7,16:10
+tparam_defaults.js:18:8:
+Three<>
+tparam_defaults.js:18:7,18:12
+tparam_defaults.js:19:8:
+Three<Bar, string>
+tparam_defaults.js:19:7,19:12
+tparam_defaults.js:20:8:
+Three<string>
+tparam_defaults.js:20:7,20:12
+tparam_defaults.js:21:8:
+Three<Bar, number, string>
+tparam_defaults.js:21:7,21:12
+tparam_defaults.js:22:8:
+Three<>
+tparam_defaults.js:22:7,22:12
+tparam_defaults.js:24:8:
+Three<Bar, number, Bar, Bar>
+tparam_defaults.js:24:7,24:12
+tparam_defaults.js:25:8:
+Three<>
+tparam_defaults.js:25:7,25:12

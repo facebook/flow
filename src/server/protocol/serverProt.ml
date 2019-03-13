@@ -49,6 +49,7 @@ module Request = struct
       char: int;
       verbose: Verbose.t option;
       expand_aliases: bool;
+      omit_targ_defaults: bool;
       wait_for_recheck: bool option;
     }
   | REFACTOR of {
@@ -92,7 +93,7 @@ module Request = struct
         (File_input.filename_of_file_input filename) line char
   | GET_IMPORTS { module_names; wait_for_recheck=_; } ->
       Printf.sprintf "get-imports %s" (String.concat " " module_names)
-  | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; wait_for_recheck=_; } ->
+  | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; omit_targ_defaults=_; wait_for_recheck=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input input) line char
   | REFACTOR { input; line; char; refactor_variant; } ->

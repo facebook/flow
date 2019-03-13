@@ -470,6 +470,31 @@ end = struct
     let def_loc = Reason.def_aloc_of_reason reason in
     symbol_from_loc env def_loc name
 
+  let remove_targs_matching_defaults targs tparams =
+    let matches_default targ tparam =
+      Some targ = Ty.(tparam.tp_default)
+    in
+    let rec remove_if_able targ_lst tparam_lst =
+      match targ_lst, tparam_lst with
+      (* Recursive case. Recurse, then if this is now the last targ (if later ones were eliminated),
+       * remove it if it matches the tparam default. *)
+      | targ::targ_rst, tparam::tparam_rst ->
+        let targ_rst = remove_if_able targ_rst tparam_rst in
+        if ListUtils.is_empty targ_rst && matches_default targ tparam then
+          []
+        else
+          targ::targ_rst
+      (* Base case *)
+      | [], []
+      (* This could happen when there are fewer targs than tparams to begin with *)
+      | [], _::_
+      (* This means there are more targs than tparams. This shouldn't happen. *)
+      | _::_, [] -> targ_lst
+    in
+    match targs, tparams with
+    | Some targ_lst, Some tparam_lst ->
+      Some (remove_if_able targ_lst tparam_lst)
+    | _ -> targs
 
   (*************************)
   (* Main transformation   *)
@@ -1023,6 +1048,11 @@ end = struct
               | None -> return ta_type
             end
           | _ ->
+            let targs = if Env.omit_targ_defaults env then
+              remove_targs_matching_defaults targs ta_tparams
+            else
+              targs
+            in
             return (generic_talias ta_name targs)
         end
       | Ty.(Any _ | Bot | Top) as ty -> return ty

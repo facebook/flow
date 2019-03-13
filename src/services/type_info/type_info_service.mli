@@ -10,6 +10,7 @@ val type_at_pos :
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   expand_aliases:bool ->
+  omit_targ_defaults:bool ->
   File_key.t ->
   string ->
   int ->
