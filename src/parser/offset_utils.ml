@@ -101,3 +101,14 @@ let offset table pos =
     (* lines are 1-indexed, columns are zero-indexed *)
     let line_table = lookup table (pos.line - 1) pos "line" in
     lookup line_table pos.column pos "column"
+
+let debug_string table =
+  let buf = Buffer.create 4096 in
+  Array.iteri (fun line_num line ->
+    Printf.bprintf buf "%6d: " line_num;
+    Array.iter (fun offset ->
+      Printf.bprintf buf "%8d " offset;
+    ) line;
+    Buffer.add_char buf '\n'
+  ) table;
+  Buffer.contents buf

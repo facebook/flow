@@ -19,10 +19,19 @@ let smiley = "\xf0\x9f\x98\x83"
 
 let str_with_smiley = Printf.sprintf "foo %s bar\nbaz\n" smiley
 
+let get_offset table pos =
+  try Offset_utils.offset table pos
+  with Offset_utils.Offset_lookup_failed (_pos, msg) ->
+    assert_failure (
+      Printf.sprintf "Lookup failed: %s\nTable:\n%s"
+        msg
+        (Offset_utils.debug_string table)
+    )
+
 let run ctxt text (line, col) expected_offset =
   let table = Offset_utils.make text in
-  let offset = Offset_utils.offset table (pos line col) in
-  assert_equal ~ctxt expected_offset offset
+  let offset = get_offset table (pos line col) in
+  assert_equal ~ctxt ~printer:string_of_int expected_offset offset
 
 let run_expect_failure text (line, col) expected_msg =
   let table = Offset_utils.make text in
@@ -62,7 +71,7 @@ let run_full_test source =
   let offset_table = Offset_utils.make source in
   (* Just make sure it doesn't crash *)
   List.iter begin fun loc ->
-    let _: int = Offset_utils.offset offset_table loc in
+    let _: int = get_offset offset_table loc in
     ()
   end all_positions
 
