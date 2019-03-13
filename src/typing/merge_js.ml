@@ -339,13 +339,11 @@ let apply_docblock_overrides (mtdt: Context.metadata) docblock_info =
    5. Link the local references to libraries in master_cx and component_cxs.
 *)
 let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
-  ~get_ast_unsafe ~get_docblock_unsafe ?(do_gc=false)
+  ~get_ast_unsafe ~get_docblock_unsafe
   component reqs dep_cxs (master_cx: Context.sig_t) =
 
   let sig_cx = Context.make_sig () in
   let need_merge_master_cx = ref true in
-
-  let init_gc_state = if do_gc then Some (Gc_js.init ~master_cx) else None in
 
   let rev_cxs, rev_tasts, impl_cxs =
     Nel.fold_left (fun (cxs, tasts, impl_cxs) filename ->
@@ -432,17 +430,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
     ) locs
   );
 
-  (* We need to compute coverage before running the garbage collector, because it will remove
-     type variables that aren't getting exported from the file, but these still appear in the
-     coverage table *)
   let coverages = cx :: other_cxs |> Query_types.component_coverage ~full_cx:cx in
-
-  let _ = Nel.fold_left (fun gc_state cx ->
-    Option.map gc_state Gc_js.(fun gc_state ->
-      let gc_state = mark cx gc_state in
-      sweep ~master_cx cx gc_state;
-      gc_state)
-  ) init_gc_state (cx, other_cxs) in
 
   (* Post-merge errors.
    *
