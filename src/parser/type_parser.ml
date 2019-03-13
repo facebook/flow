@@ -182,12 +182,13 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           raw;
         }
     | T_BIGINT_SINGLETON_TYPE { kind; value; raw } ->
+        let bigint = raw in
         Expect.token env (T_BIGINT_SINGLETON_TYPE { kind; value; raw });
         if kind = LEGACY_OCTAL
         then error env Error.StrictOctalLiteral;
         loc, Type.BigIntLiteral {
           Ast.BigIntLiteral.value;
-          raw;
+          bigint;
         }
     | (T_TRUE | T_FALSE) as token ->
         Expect.token env token;
