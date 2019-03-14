@@ -1,3 +1,20 @@
+Error -------------------------------------------------------------------------------------------- json_stringify.js:9:2
+
+Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatible with string [2].
+
+   json_stringify.js:9:2
+     9| (JSON.stringify(bad1): string);
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:489:17
+   489|     ): string | void;
+                        ^^^^ [1]
+   json_stringify.js:9:24
+     9| (JSON.stringify(bad1): string);
+                               ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------------------- map.js:23:21
 
 Cannot call `Map` with array literal bound to `iterable` because:
@@ -14,11 +31,11 @@ References:
    map.js:23:22
     23|     let x = new Map(['foo', 123]); // error
                              ^^^^^ [1]
-   <BUILTINS>/core.js:550:37
-   550|     constructor(iterable: ?Iterable<[K, V]>): void;
+   <BUILTINS>/core.js:555:37
+   555|     constructor(iterable: ?Iterable<[K, V]>): void;
                                             ^^^^^^ [2]
-   <BUILTINS>/core.js:493:22
-   493| interface $Iterator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:498:22
+   498| interface $Iterator<+Yield,+Return,-Next> {
                              ^^^^^ [3]
    map.js:23:29
     23|     let x = new Map(['foo', 123]); // error
@@ -42,8 +59,8 @@ References:
    map.js:24:16
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                        ^^^^^^ [2]
-   <BUILTINS>/core.js:548:19
-   548| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
+   <BUILTINS>/core.js:553:19
+   553| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
                           ^ [3]
    map.js:24:51
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
@@ -51,8 +68,8 @@ References:
    map.js:24:24
     24|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                ^^^^^^ [5]
-   <BUILTINS>/core.js:548:22
-   548| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
+   <BUILTINS>/core.js:553:22
+   553| declare class Map<K, V> extends $ReadOnlyMap<K, V> {
                              ^ [6]
 
 
@@ -67,8 +84,8 @@ Cannot cast `x.get(...)` to boolean because:
              ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:555:22
-   555|     get(key: K): V | void;
+   <BUILTINS>/core.js:560:22
+   560|     get(key: K): V | void;
                              ^^^^ [1]
    map.js:29:20
     29|     (x.get('foo'): boolean); // error, string | void
@@ -123,4 +140,4 @@ References:
 
 
 
-Found 9 errors
+Found 10 errors
