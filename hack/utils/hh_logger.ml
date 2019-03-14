@@ -33,7 +33,8 @@ let print_with_newline ?exn fmt =
     let time = timestamp_string () in
     begin match !dupe_log with
     | None -> ()
-    | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%s\n%!" time s exn_str end;
+    | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%s\n%!" time s exn_str
+    end;
     Printf.eprintf "%s %s%s\n%!" time s exn_str
   in
   Printf.ksprintf (print_raw ?exn) fmt
