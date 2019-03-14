@@ -36,8 +36,8 @@ module.exports = async function runCodemods(
  */
 module.exports = require(${JSON.stringify(AGGREGATE_CODEMOD_UTIL)})([
 ${transformPaths
-    .map(transformPath => `  ${JSON.stringify(transformPath)},`)
-    .join('\n')}
+  .map(transformPath => `  ${JSON.stringify(transformPath)},`)
+  .join('\n')}
 ]);
 `.slice(1);
   // Write the codemod to the folder we created for it.

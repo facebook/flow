@@ -374,7 +374,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         isConnected
           ? 'connected'
           : 'disconnected' +
-            JSON.stringify(env.getIDEMessagesSinceStartOfStep()),
+              JSON.stringify(env.getIDEMessagesSinceStartOfStep()),
         assertLoc,
         reason,
         "'is connected to flow server?'",

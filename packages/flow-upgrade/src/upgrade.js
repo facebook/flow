@@ -34,9 +34,7 @@ const VERSION_UPGRADES: Array<{|
   },
   {
     version: '0.84.0',
-    upgrades: [
-      require('./upgrades/0.84.0/ExplicitInexactObjectSyntax'),
-    ],
+    upgrades: [require('./upgrades/0.84.0/ExplicitInexactObjectSyntax')],
   },
 ];
 
@@ -48,7 +46,7 @@ module.exports = async function upgrade(
   directory: string,
   currentVersion: string,
   nextVersion: string,
-  options: { +all: boolean },
+  options: {+all: boolean},
 ): Promise<void> {
   const allUpgrades = [];
   // Collect all of the upgrades we will need to run.

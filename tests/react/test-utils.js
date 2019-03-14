@@ -33,9 +33,10 @@ TestUtils.mockComponent(MyTestingComponent, 'span');
   tree,
   child => child.tagName === 'BUTTON',
 ): Array<React.Component<any, any>>);
-(TestUtils.scryRenderedDOMComponentsWithClass(tree, 'my-button'): Array<
-  Element,
->);
+(TestUtils.scryRenderedDOMComponentsWithClass(
+  tree,
+  'my-button',
+): Array<Element>);
 
 const buttonEl = TestUtils.findRenderedDOMComponentWithClass(tree, 'my-button');
 if (buttonEl != null) {

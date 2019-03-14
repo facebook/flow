@@ -38,12 +38,8 @@ module.exports = (j, root) => {
   const componentPattern = ReactUtils.getImportedComponentClassPattern(root);
   const hasElement = ReactUtils.hasDestructuredElement(root, reactName);
 
-  root
-    .find(j.GenericTypeAnnotation)
-    .forEach(visitGenericTypeAnnotation);
-  root
-    .find(j.ImportDeclaration)
-    .forEach(visitImportDeclaration);
+  root.find(j.GenericTypeAnnotation).forEach(visitGenericTypeAnnotation);
+  root.find(j.ImportDeclaration).forEach(visitImportDeclaration);
 
   function visitImportDeclaration(path) {
     const node = path.node;
@@ -165,9 +161,9 @@ module.exports = (j, root) => {
       // React import or using the global.
       node.id = reactName
         ? j.qualifiedTypeIdentifier(
-          j.identifier(reactName),
-          j.identifier('ComponentType'),
-        )
+            j.identifier(reactName),
+            j.identifier('ComponentType'),
+          )
         : j.identifier('React$ComponentType');
     }
 
@@ -186,15 +182,17 @@ module.exports = (j, root) => {
       }
       // If the user has destructured React and used Component or PureComponent
       // directly then we should not update the identifier of this node.
-      if (!(
-        node.id.type === 'Identifier' &&
-        (node.id.name === 'Component' || node.id.name === 'PureComponent')
-      )) {
+      if (
+        !(
+          node.id.type === 'Identifier' &&
+          (node.id.name === 'Component' || node.id.name === 'PureComponent')
+        )
+      ) {
         node.id = reactName
           ? j.qualifiedTypeIdentifier(
-            j.identifier(reactName),
-            j.identifier('Component'),
-          )
+              j.identifier(reactName),
+              j.identifier('Component'),
+            )
           : j.identifier('React$Component');
       }
     }

@@ -1614,12 +1614,12 @@ References:
             ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:22:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:26:1
 
 Cannot create `MyComponent1` element because property `bar` is missing in props [1] but exists in object type [2].
 
-   hoc5.js:22:1
-   22| <MyComponent1 />; // Error
+   hoc5.js:26:1
+   26| <MyComponent1 />; // Error
        ^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1628,95 +1628,95 @@ References:
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:24:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:28:1
 
 Cannot create `MyComponent1` element because string [1] is incompatible with number [2] in property `bar`.
 
-   hoc5.js:24:1
-   24| <MyComponent1 bar="nope" />; // Error
+   hoc5.js:28:1
+   28| <MyComponent1 bar="nope" />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc5.js:24:19
-   24| <MyComponent1 bar="nope" />; // Error
+   hoc5.js:28:19
+   28| <MyComponent1 bar="nope" />; // Error
                          ^^^^^^ [1]
    hoc5.js:14:63
    14| class MyComponent1 extends React.Component<{foo: string, bar: number}> {
                                                                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:26:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:30:1
 
 Cannot create `MyComponent1` element because number [1] is incompatible with string [2] in property `foo`.
 
-   hoc5.js:26:1
-   26| <MyComponent1 bar={42} foo={100} />; // Error
+   hoc5.js:30:1
+   30| <MyComponent1 bar={42} foo={100} />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc5.js:26:29
-   26| <MyComponent1 bar={42} foo={100} />; // Error
+   hoc5.js:30:29
+   30| <MyComponent1 bar={42} foo={100} />; // Error
                                    ^^^ [1]
    hoc5.js:14:50
    14| class MyComponent1 extends React.Component<{foo: string, bar: number}> {
                                                         ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:29:1
-
-Cannot create `MyComponent2` element because property `bar` is missing in props [1] but exists in object type [2].
-
-   hoc5.js:29:1
-   29| <MyComponent2 />; // Error
-       ^^^^^^^^^^^^^^^^ [1]
-
-References:
-   hoc5.js:19:30
-   19| function MyComponent2(props: {foo: string, bar: number}) { return null }
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:31:1
-
-Cannot create `MyComponent2` element because string [1] is incompatible with number [2] in property `bar`.
-
-   hoc5.js:31:1
-   31| <MyComponent2 bar="nope" />; // Error
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   hoc5.js:31:19
-   31| <MyComponent2 bar="nope" />; // Error
-                         ^^^^^^ [1]
-   hoc5.js:19:49
-   19| function MyComponent2(props: {foo: string, bar: number}) { return null }
-                                                       ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc5.js:33:1
 
-Cannot create `MyComponent2` element because number [1] is incompatible with string [2] in property `foo`.
+Cannot create `MyComponent2` element because property `bar` is missing in props [1] but exists in object type [2].
 
    hoc5.js:33:1
-   33| <MyComponent2 bar={42} foo={100} />; // Error
+   33| <MyComponent2 />; // Error
+       ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   hoc5.js:21:30
+   21| function MyComponent2(props: {foo: string, bar: number}) {
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:35:1
+
+Cannot create `MyComponent2` element because string [1] is incompatible with number [2] in property `bar`.
+
+   hoc5.js:35:1
+   35| <MyComponent2 bar="nope" />; // Error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   hoc5.js:35:19
+   35| <MyComponent2 bar="nope" />; // Error
+                         ^^^^^^ [1]
+   hoc5.js:21:49
+   21| function MyComponent2(props: {foo: string, bar: number}) {
+                                                       ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:37:1
+
+Cannot create `MyComponent2` element because number [1] is incompatible with string [2] in property `foo`.
+
+   hoc5.js:37:1
+   37| <MyComponent2 bar={42} foo={100} />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc5.js:33:29
-   33| <MyComponent2 bar={42} foo={100} />; // Error
+   hoc5.js:37:29
+   37| <MyComponent2 bar={42} foo={100} />; // Error
                                    ^^^ [1]
-   hoc5.js:19:36
-   19| function MyComponent2(props: {foo: string, bar: number}) { return null }
+   hoc5.js:21:36
+   21| function MyComponent2(props: {foo: string, bar: number}) {
                                           ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:39:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:43:1
 
 Cannot create `MyEnhancedComponent1` element because property `bar` is missing in props [1] but exists in object
 type [2].
 
-   hoc5.js:39:1
-   39| <MyEnhancedComponent1 />; // Error
+   hoc5.js:43:1
+   43| <MyEnhancedComponent1 />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1725,47 +1725,47 @@ References:
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:41:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:45:1
 
 Cannot create `MyEnhancedComponent1` element because string [1] is incompatible with number [2] in property `bar`.
 
-   hoc5.js:41:1
-   41| <MyEnhancedComponent1 bar="nope" />; // Error
+   hoc5.js:45:1
+   45| <MyEnhancedComponent1 bar="nope" />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc5.js:41:27
-   41| <MyEnhancedComponent1 bar="nope" />; // Error
+   hoc5.js:45:27
+   45| <MyEnhancedComponent1 bar="nope" />; // Error
                                  ^^^^^^ [1]
    hoc5.js:14:63
    14| class MyComponent1 extends React.Component<{foo: string, bar: number}> {
                                                                      ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:43:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:47:1
 
 Cannot create `MyEnhancedComponent1` element because number [1] is incompatible with string [2] in property `foo`.
 
-   hoc5.js:43:1
-   43| <MyEnhancedComponent1 bar={42} foo={100} />; // Error
+   hoc5.js:47:1
+   47| <MyEnhancedComponent1 bar={42} foo={100} />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc5.js:43:37
-   43| <MyEnhancedComponent1 bar={42} foo={100} />; // Error
+   hoc5.js:47:37
+   47| <MyEnhancedComponent1 bar={42} foo={100} />; // Error
                                            ^^^ [1]
    hoc5.js:14:50
    14| class MyComponent1 extends React.Component<{foo: string, bar: number}> {
                                                         ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:46:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:50:1
 
 Cannot create `MyEnhancedComponent2` element because property `bar` is missing in props [1] but exists in object
 type [2].
 
-   hoc5.js:46:1
-   46| <MyEnhancedComponent2 />; // Error
+   hoc5.js:50:1
+   50| <MyEnhancedComponent2 />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
@@ -1774,37 +1774,37 @@ References:
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:48:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:52:1
 
 Cannot create `MyEnhancedComponent2` element because string [1] is incompatible with number [2] in property `bar`.
 
-   hoc5.js:48:1
-   48| <MyEnhancedComponent2 bar="nope" />; // Error
+   hoc5.js:52:1
+   52| <MyEnhancedComponent2 bar="nope" />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc5.js:48:27
-   48| <MyEnhancedComponent2 bar="nope" />; // Error
+   hoc5.js:52:27
+   52| <MyEnhancedComponent2 bar="nope" />; // Error
                                  ^^^^^^ [1]
-   hoc5.js:19:49
-   19| function MyComponent2(props: {foo: string, bar: number}) { return null }
+   hoc5.js:21:49
+   21| function MyComponent2(props: {foo: string, bar: number}) {
                                                        ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- hoc5.js:50:1
+Error ----------------------------------------------------------------------------------------------------- hoc5.js:54:1
 
 Cannot create `MyEnhancedComponent2` element because number [1] is incompatible with string [2] in property `foo`.
 
-   hoc5.js:50:1
-   50| <MyEnhancedComponent2 bar={42} foo={100} />; // Error
+   hoc5.js:54:1
+   54| <MyEnhancedComponent2 bar={42} foo={100} />; // Error
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc5.js:50:37
-   50| <MyEnhancedComponent2 bar={42} foo={100} />; // Error
+   hoc5.js:54:37
+   54| <MyEnhancedComponent2 bar={42} foo={100} />; // Error
                                            ^^^ [1]
-   hoc5.js:19:36
-   19| function MyComponent2(props: {foo: string, bar: number}) { return null }
+   hoc5.js:21:36
+   21| function MyComponent2(props: {foo: string, bar: number}) {
                                           ^^^^^^ [2]
 
 
@@ -3098,18 +3098,18 @@ References:
                          ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------- test-utils.js:57:15
+Error ---------------------------------------------------------------------------------------------- test-utils.js:58:15
 
 Cannot call `TestUtils.act` with function bound to `callback` because object literal [1] is incompatible with
 undefined [2] in the return value.
 
-   test-utils.js:57:15
-    57| TestUtils.act(() => ({count: 123})); // error
+   test-utils.js:58:15
+    58| TestUtils.act(() => ({count: 123})); // error
                       ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test-utils.js:57:22
-    57| TestUtils.act(() => ({count: 123})); // error
+   test-utils.js:58:22
+    58| TestUtils.act(() => ({count: 123})); // error
                              ^^^^^^^^^^^^ [1]
    <BUILTINS>/react-dom.js:120:43
    120|   declare function act<X>(callback: () => void): Thenable;

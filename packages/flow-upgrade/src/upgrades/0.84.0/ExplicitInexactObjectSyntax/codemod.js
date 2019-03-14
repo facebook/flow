@@ -17,4 +17,4 @@ module.exports = (j: any, root: any) => {
       path.node.inexact = true;
     });
   return root.toSource({tabWidth: 2});
-}
+};
