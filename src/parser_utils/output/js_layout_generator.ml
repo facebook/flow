@@ -2357,7 +2357,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
       group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:type_ ts)]
     | T.StringLiteral { Ast.StringLiteral.raw; _ }
     | T.NumberLiteral { Ast.NumberLiteral.raw; _ } -> Atom raw
-    | T.BigIntLiteral { Ast.BigIntLiteral.raw; _ } -> Atom raw
+    | T.BigIntLiteral { Ast.BigIntLiteral.bigint; _ } -> Atom bigint
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")
     | T.Exists -> Atom "*"
   )
