@@ -807,11 +807,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
   let ref = Errors.Friendly.ref in
   let desc = Errors.Friendly.ref ~loc:false in
 
-  let msg_export export_name =
+  let msg_export prefix export_name =
     if export_name = "default" then
-      text "the default export"
+      text "", text "the default export"
     else
-      code export_name
+      text prefix, code export_name
   in
 
   Errors.(function
@@ -841,30 +841,34 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       Normal [text str]
 
     | EImportValueAsType (_, export_name) ->
+      let prefix, export = msg_export "the value " export_name in
       Normal [
-        text "Cannot import the value "; msg_export export_name; text " as a type. ";
-        code "import type"; text " only works on type exports. Like type aliases, ";
+        text "Cannot import "; prefix; export; text " as a type. ";
+        code "import type"; text " only works on type exports like type aliases, ";
         text "interfaces, and classes. If you intended to import the type of a ";
         text "value use "; code "import typeof"; text " instead.";
       ]
 
     | EImportTypeAsTypeof (_, export_name) ->
+      let prefix, export = msg_export "the type " export_name in
       Normal [
-        text "Cannot import the type "; msg_export export_name; text " as a type. ";
-        code "import typeof"; text " only works on value exports. Like variables, ";
+        text "Cannot import "; prefix; export; text " as a type. ";
+        code "import typeof"; text " only works on value exports like variables, ";
         text "functions, and classes. If you intended to import a type use ";
         code "import type"; text " instead.";
       ]
 
     | EImportTypeAsValue (_, export_name) ->
+      let prefix, export = msg_export "the type " export_name in
       Normal [
-        text "Cannot import the type "; msg_export export_name; text " as a value. ";
+        text "Cannot import "; prefix; export; text " as a value. ";
         text "Use "; code "import type"; text " instead.";
       ]
 
     | ERefineAsValue (_, name) ->
+      let _, export = msg_export "" name in
       Normal [
-        text "Cannot refine "; msg_export name; text " as a value. ";
+        text "Cannot refine "; export; text " as a value. ";
         (* text "Use "; code "import type"; text " instead."; *)
       ]
 

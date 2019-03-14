@@ -152,8 +152,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import_typeof.js:87:16
 
-Cannot import the type `AliasFoo3` as a type. `import typeof` only works on value exports. Like variables, functions,
-and classes. If you intended to import a type use `import type` instead.
+Cannot import the type `AliasFoo3` as a type. `import typeof` only works on value exports like variables, functions, and
+classes. If you intended to import a type use `import type` instead.
 
    87| import typeof {AliasFoo3} from "./ExportNamed_Alias"; // Error: Can't `import typeof` type aliases!
                       ^^^^^^^^^
