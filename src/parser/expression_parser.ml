@@ -60,7 +60,6 @@ module Expression
     | _, JSXElement _
     | _, JSXFragment _
     | _, Literal _
-    | _, BigIntLiteral _
     | _, Logical _
     | _, New _
     | _, OptionalCall _
@@ -214,7 +213,6 @@ module Expression
     | _, JSXElement _
     | _, JSXFragment _
     | _, Literal _
-    | _, BigIntLiteral _
     | _, Logical _
     | _, New _
     | _, Object _
@@ -909,9 +907,8 @@ module Expression
         let value = Literal.Number (number env kind raw) in
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_BIGINT { kind; raw } ->
-        let value = bigint env kind raw in
-        let bigint = raw in
-        Cover_expr (loc, Expression.(BigIntLiteral { BigIntLiteral.value; bigint; }))
+        let value = Literal.BigInt (bigint env kind raw) in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));

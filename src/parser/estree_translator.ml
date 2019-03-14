@@ -510,8 +510,8 @@ end with type t = Impl.t) = struct
             "filter", option expression filter;
           ]
       | _loc, Identifier id -> identifier id
+      | loc, Literal ({ Literal.value = Ast.Literal.BigInt _; _ } as lit) -> bigint_literal (loc, lit)
       | loc, Literal lit -> literal (loc, lit)
-      | loc, BigIntLiteral lit -> bigint_literal (loc, lit)
       | loc, TemplateLiteral lit -> template_literal (loc, lit)
       | loc, TaggedTemplate tagged -> tagged_template (loc, tagged)
       | loc, Class c -> class_expression (loc, c)
@@ -982,10 +982,10 @@ end with type t = Impl.t) = struct
       in
       node "Literal" loc props
 
-    and bigint_literal (loc, { BigIntLiteral.bigint; _ }) =
+    and bigint_literal (loc, { Literal.raw; _ }) =
       node "BigIntLiteral" loc [
         "value", null;
-        "bigint", string bigint;
+        "bigint", string raw;
       ]
 
     and string_literal (loc, { StringLiteral.value; raw }) =
