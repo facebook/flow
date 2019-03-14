@@ -1,3 +1,19 @@
+### 0.95.0
+
+Likely to cause new Flow errors:
+* Disallow `undefined` and functions in `JSON.stringify`: `JSON.stringify(undefined)` returns `undefined` instead of `string`. Rather than make it always return `string | void`, or use overloads to return `void` on those inputs, we instead disallow those inputs since they are rarely the intended behavior. (#7447)
+
+New features:
+* `flow batch-coverage`: A new command to compute aggregate coverage for directories and file lists. Instead of producing the coverage at each location, it sums them and reports the per-file percentage and the aggregate percentage.
+
+Bug fixes:
+* Fixed incorrect reporting of signature verification lint errors in unchecked files
+
+Other improvements:
+* #7459 Add type for Symbol.prototype.description (thanks @dnalborczyk)
+* #7452 Add types for String.prototype.trimStart/trimEnd (thanks @dnalborczyk)
+* #7500 The "kind" of an autocomplete result is now reported over the Language Server Protocol, improving the autocomplete UI (thanks @vicapow)
+
 ### 0.94.0
 
 Bug fixes:
