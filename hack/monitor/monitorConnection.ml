@@ -102,11 +102,16 @@ let verify_cstate ic cstate =
       failwith "Ancient version of server sent old Build_id_mismatch"
 
 (** Consume sequence of Prehandoff messages. *)
-let rec consume_prehandoff_messages ~timeout ic oc =
+let rec consume_prehandoff_messages
+    ~(timeout: Timeout.t)
+    (ic: Timeout.in_channel)
+    (oc: Pervasives.out_channel)
+  : (Timeout.in_channel * Pervasives.out_channel * string,
+    ServerMonitorUtils.connection_error) result =
   let module PH = Prehandoff in
   let m: PH.msg = from_channel_without_buffering ~timeout ic in
   match m with
-  | PH.Sentinel -> Ok (ic, oc)
+  | PH.Sentinel finale_file -> Ok (ic, oc, finale_file)
   | PH.Server_dormant_connections_limit_reached ->
     Printf.eprintf @@ "Connections limit on dormant server reached."^^
       " Be patient waiting for a server to be started.";
@@ -134,7 +139,12 @@ let rec consume_prehandoff_messages ~timeout ic oc =
     wait_on_server_restart ic;
     Error Server_died
 
-let consume_prehandoff_messages ~timeout ic oc =
+let consume_prehandoff_messages
+    ~(timeout: int)
+    (ic: Timeout.in_channel)
+    (oc: Pervasives.out_channel)
+  : (Timeout.in_channel * Pervasives.out_channel * string,
+    ServerMonitorUtils.connection_error) result =
   Timeout.with_timeout
     ~timeout
     ~do_:(fun timeout -> consume_prehandoff_messages ~timeout ic oc)

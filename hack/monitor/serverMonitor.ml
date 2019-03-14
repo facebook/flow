@@ -351,7 +351,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       (** TODO: Send this to client so it is visible. *)
       Hh_logger.log "Got %s request for typechecker. Prior request %.1f seconds ago"
         handoff_options.MonitorRpc.pipe_name since_last_request;
-      msg_to_channel client_fd PH.Sentinel;
+      msg_to_channel client_fd (PH.Sentinel server.finale_file);
       hand_off_client_connection_with_retries server_fd 8 client_fd;
       HackEventLogger.client_connection_sent ();
       server.last_request_handoff := Unix.time ();
