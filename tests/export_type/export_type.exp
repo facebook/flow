@@ -158,5 +158,21 @@ References:
             ^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------- values_as_type_exports.js:4:14
 
-Found 11 errors
+Cannot export the value `num` as a type.
+
+   4| export type {num};
+                   ^^^
+
+
+Error ----------------------------------------------------------------------------------- values_as_type_exports.js:7:14
+
+Cannot export the value `fun` as a type.
+
+   7| export type {fun}
+                   ^^^
+
+
+
+Found 13 errors

@@ -468,7 +468,11 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
-  | ExportNamedT (_, _, ts, tout) ->
+  | AssertExportIsTypeT (_, _, tout) ->
+    let acc = self#type_ cx pole_TODO acc tout in
+    acc
+
+  | ExportNamedT (_, _, ts, _, tout) ->
     let visit_pair acc (_loc, t) = self#type_ cx pole_TODO acc t in
     let acc = self#smap visit_pair acc ts in
     let acc = self#type_ cx pole_TODO acc tout in

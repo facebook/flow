@@ -1606,13 +1606,33 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        that are not @flow, so the rules have to deal with `any`. *)
 
     (* util that grows a module by adding named exports from a given map *)
-    | (ModuleT(_, exports, _), ExportNamedT(_, skip_dupes, tmap, t_out)) ->
+    | (ModuleT(_, exports, _), ExportNamedT(reason, skip_dupes, tmap, export_kind, t_out)) ->
       tmap |> SMap.iter (fun name (loc, t) ->
         if skip_dupes && Context.has_export cx exports.exports_tmap name
         then ()
-        else Context.set_export cx exports.exports_tmap name (loc, t)
+        else
+          let t' = match export_kind with
+            | ExportValue
+            (* If it's a re-export, we can assume that the appropriate export checks have been
+             * applied in the original module. *)
+            | ReExport -> t
+            (* If it's of the form `export type` then check to make sure it's actually a type. *)
+            | ExportType ->
+              let t' = Tvar.mk cx (reason_of_t t) in
+              rec_flow cx trace (t, AssertExportIsTypeT (reason, name, t'));
+              t'
+          in
+          Context.set_export cx exports.exports_tmap name (loc, t')
       );
       rec_flow_t cx trace (l, t_out)
+
+    | _, AssertExportIsTypeT (reason, name, t_out) ->
+      if is_type l then
+        rec_flow_t cx trace (l, t_out)
+      else begin
+        add_output cx ~trace Error_message.(EExportValueAsType (reason, name));
+        rec_flow_t cx trace (AnyT.error reason, t_out)
+      end
 
     (** Copy the named exports from a source module into a target module. Used
         to implement `export * from 'SomeModule'`, with the current module as
@@ -1622,7 +1642,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let source_tmap = Context.find_exports cx source_exports.exports_tmap in
       rec_flow cx trace (
         target_module_t,
-        ExportNamedT(reason, (*skip_dupes*)true, source_tmap, t_out)
+        ExportNamedT(reason, (*skip_dupes*)true, source_tmap, ReExport, t_out)
       )
 
     (**
@@ -1665,6 +1685,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           skip_dupes,
           (* TODO we may want to add location information here *)
           SMap.singleton export_name (None, l),
+          ReExport,
           t_out
         ))
       else
@@ -1696,6 +1717,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         reason,
         false, (* skip_dupes *)
         Properties.extract_named_exports (Context.find_props cx props_tmap),
+        ExportValue,
         t_out
       ))
 
@@ -1722,6 +1744,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           reason,
           false, (* skip_dupes *)
           extract_named_exports own_props,
+          ExportValue,
           t
         ))
       ) in
@@ -1732,6 +1755,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         reason,
         false, (* skip_dupes *)
         extract_named_exports proto_props,
+        ExportValue,
         t_out
       ))
 
@@ -6879,6 +6903,7 @@ and any_propagated cx trace any u =
   | ElemT _
   | ExportNamedT _
   | ExportTypeT _
+  | AssertExportIsTypeT _
   | GetElemT _
   | GetKeysT _
   | GetPrivatePropT _
@@ -7635,6 +7660,14 @@ and fix_this_class cx trace reason (r, i) =
       i'
   in
   DefT (r, bogus_trust (), ClassT i')
+
+and is_type = function
+  | DefT (_, _, ClassT _)
+  | ThisClassT (_, _)
+  | DefT (_, _, TypeT _)
+  | DefT (_, _, AnyT _) -> true
+  | DefT (_, _, PolyT (_, _, t', _)) -> is_type t'
+  | _ -> false
 
 and canonicalize_imported_type cx trace reason t =
   match t with

@@ -547,6 +547,7 @@ module rec TypeTerm : sig
         reason
         * bool (* skip_duplicates *)
         * (ALoc.t option * t) SMap.t (* exports_tmap *)
+        * export_kind
         * t_out
     | ExportTypeT of
         reason
@@ -554,6 +555,8 @@ module rec TypeTerm : sig
         * string (* export_name *)
         * t (* target_module_t *)
         * t_out
+
+    | AssertExportIsTypeT of reason * string (* export name *) * t_out
 
     (* Map a FunT over a structure *)
     | MapTypeT of reason * type_map * t_out
@@ -1010,6 +1013,11 @@ module rec TypeTerm : sig
     | ImportType
     | ImportTypeof
     | ImportValue
+
+  and export_kind =
+    | ExportType
+    | ExportValue
+    | ReExport
 
   and typeparam = {
     reason: reason;
@@ -2223,8 +2231,9 @@ end = struct
     | DebugSleepT reason -> reason
     | ElemT (_, reason, _, _) -> reason
     | EqT (reason, _, _) -> reason
-    | ExportNamedT (reason, _, _, _) -> reason
+    | ExportNamedT (reason, _, _, _, _) -> reason
     | ExportTypeT (reason, _, _, _, _) -> reason
+    | AssertExportIsTypeT (reason, _, _) -> reason
     | ExtendsUseT (_, reason, _, _, _) -> reason
     | GetElemT (_,reason,_,_) -> reason
     | GetKeysT (reason, _) -> reason
@@ -2379,10 +2388,11 @@ end = struct
     | DebugSleepT reason -> DebugSleepT (f reason)
     | ElemT (use_op, reason, t, action) -> ElemT (use_op, f reason, t, action)
     | EqT (reason, flip, t) -> EqT (f reason, flip, t)
-    | ExportNamedT (reason, skip_dupes, tmap, t_out) ->
-        ExportNamedT(f reason, skip_dupes, tmap, t_out)
+    | ExportNamedT (reason, skip_dupes, tmap, export_kind, t_out) ->
+        ExportNamedT(f reason, skip_dupes, tmap, export_kind, t_out)
     | ExportTypeT (reason, skip_dupes, name, t, t_out) ->
         ExportTypeT(f reason, skip_dupes, name, t, t_out)
+    | AssertExportIsTypeT (reason, export_name, t_out) -> AssertExportIsTypeT (f reason, export_name, t_out)
     | ExtendsUseT (use_op, reason, ts, t1, t2) ->
       ExtendsUseT(use_op, f reason, ts, t1, t2)
     | GetElemT (use_op, reason, it, et) -> GetElemT (use_op, f reason, it, et)
@@ -2559,8 +2569,9 @@ end = struct
   | CJSExtractNamedExportsT (_, _, _)
   | CopyNamedExportsT (_, _, _)
   | CopyTypeExportsT (_, _, _)
-  | ExportNamedT (_, _, _, _)
+  | ExportNamedT (_, _, _, _, _)
   | ExportTypeT (_, _, _, _, _)
+  | AssertExportIsTypeT (_, _, _)
   | MapTypeT (_, _, _)
   | ChoiceKitUseT (_, _)
   | IntersectionPreprocessKitT (_, _)
@@ -3214,6 +3225,7 @@ let string_of_use_ctor = function
   | EqT _ -> "EqT"
   | ExportNamedT _ -> "ExportNamedT"
   | ExportTypeT _ -> "ExportTypeT"
+  | AssertExportIsTypeT _ -> "AssertExportIsTypeT"
   | ExtendsUseT _ -> "ExtendsUseT"
   | GetElemT _ -> "GetElemT"
   | GetKeysT _ -> "GetKeysT"

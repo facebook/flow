@@ -150,6 +150,7 @@ type hash =
   | CopyTypeExportsH
   | ExportNamedH
   | ExportTypeH
+  | TypeExportifyH
   | MapTypeH
   | ReactKitH
   | ObjKitH
@@ -307,6 +308,7 @@ let hash_of_use_ctor = Type.(function
   | CopyTypeExportsT _ -> CopyTypeExportsH
   | ExportNamedT _ -> ExportNamedH
   | ExportTypeT _ -> ExportTypeH
+  | AssertExportIsTypeT _ -> TypeExportifyH
   | MapTypeT _ -> MapTypeH
   | ReactKitT _ -> ReactKitH
   | ObjKitT _ -> ObjKitH

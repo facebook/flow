@@ -721,7 +721,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "target_module_t", _json_of_t json_cx target_module_t;
       "t_out", _json_of_t json_cx t_out;
     ]
-  | ExportNamedT (_, skip_dupes, tmap, t_out) -> [
+  | ExportNamedT (_, skip_dupes, tmap, _export_kind, t_out) -> [
       "skip_duplicates", JSON_Bool skip_dupes;
       "tmap", json_of_loc_tmap json_cx tmap;
       "t_out", _json_of_t json_cx t_out;
@@ -730,6 +730,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "skip_duplicates", JSON_Bool skip_dupes;
       "name", JSON_String name;
       "tmap", _json_of_t json_cx t;
+      "t_out", _json_of_t json_cx t_out;
+    ]
+
+  | AssertExportIsTypeT (_, name, t_out) -> [
+      "name", JSON_String name;
       "t_out", _json_of_t json_cx t_out;
     ]
 
@@ -2086,13 +2091,14 @@ and dump_use_t_ (depth, tvars) cx t =
   | DebugSleepT _ -> p t
   | ElemT _ -> p t
   | EqT (_, _, arg) -> p ~extra:(kid arg) t
-  | ExportNamedT (_, _, tmap, arg) -> p t
+  | ExportNamedT (_, _, tmap, _export_kind, arg) -> p t
       ~extra:(spf "%s, {%s}"
         (kid arg)
         (String.concat "; "
           (Core_list.map ~f:(fun (x,_) -> x)
             (SMap.bindings tmap))))
   | ExportTypeT _ -> p t
+  | AssertExportIsTypeT _ -> p t
   | GetElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetKeysT _ -> p t
   | GetValuesT _ -> p t
@@ -2478,6 +2484,8 @@ let dump_error_message =
           (dump_reason cx reason_obj)
     | EDebugPrint (reason, _) ->
         spf "EDebugPrint (%s, _)" (dump_reason cx reason)
+    | EExportValueAsType (reason, str) ->
+        spf "EExportValueAsType (%s, %s)" (dump_reason cx reason) str
     | EImportValueAsType (reason, str) ->
         spf "EImportValueAsType (%s, %s)" (dump_reason cx reason) str
     | EImportTypeAsTypeof (reason, str) ->

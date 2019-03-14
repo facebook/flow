@@ -1798,7 +1798,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
     if not (SMap.is_empty local_exports) then begin
       let reason = mk_reason (RCustom (spf "export * from %S" name)) loc in
       set_module_t cx reason (fun t ->
-        Flow.flow cx (module_t_of_cx cx, ExportNamedT (reason, false, local_exports, t))
+        (* TODO: I suspect that ReExport is the wrong export kind to use here. It looks like this is
+         * actually how ordinary exports are handled in `declare module`, despite what the reason
+         * above seems to indicate. However, I'm not sure about this so for now I'm setting this to
+         * ReExport because it it won't change the existing behavior. *)
+        Flow.flow cx (module_t_of_cx cx, ExportNamedT (reason, false, local_exports, ReExport, t))
       );
     end;
 
@@ -1830,7 +1834,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       set_module_t cx reason (fun t ->
         Flow.flow cx (
           module_t_of_cx cx,
-          ExportNamedT (reason, false, type_exports, t)
+          ExportNamedT (reason, false, type_exports, Type.ExportType, t)
         )
       );
       mk_commonjs_module_t cx reason reason cjs_exports
@@ -1880,7 +1884,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               | _, DeclareVariable v_ast -> Some (Variable (loc, v_ast))
               | _ -> assert_false "DeclareVariable typed AST doesn't preserve structure"
             in
-            [(spf "var %s" name, loc, name, None)], ExportValue, ast
+            [(spf "var %s" name, loc, name, None)], Ast.Statement.ExportValue, ast
         | Some (Function (loc, f)) ->
             let { DeclareFunction.id = (_, { Ast.Identifier.name; comments= _ }); _ } = f in
             let dec_fun = statement cx (loc, DeclareFunction f) in
@@ -1888,7 +1892,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               | _, DeclareFunction f_ast -> Some (Function (loc, f_ast))
               | _ -> assert_false "DeclareFunction typed AST doesn't preserve structure"
             in
-            [(spf "function %s() {}" name, loc, name, None)], ExportValue, ast
+            [(spf "function %s() {}" name, loc, name, None)], Ast.Statement.ExportValue, ast
         | Some (Class (loc, c)) ->
             let { DeclareClass.id = (name_loc, { Ast.Identifier.name; comments= _ }); _; } = c in
             let dec_class = statement cx (loc, DeclareClass c) in
@@ -1896,11 +1900,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               | _, DeclareClass c_ast -> Some (Class (loc, c_ast))
               | _ -> assert_false "DeclareClass typed AST doesn't preserve structure"
             in
-            [(spf "class %s {}" name, name_loc, name, None)], ExportValue, ast
+            [(spf "class %s {}" name, name_loc, name, None)], Ast.Statement.ExportValue, ast
         | Some (DefaultType (loc, t)) ->
             let (_, _type), _ as t_ast = Anno.convert cx SMap.empty (loc, t) in
             let ast = Some (DefaultType t_ast) in
-            [( "<<type>>", loc, "default", Some _type)], ExportValue, ast
+            [( "<<type>>", loc, "default", Some _type)], Ast.Statement.ExportValue, ast
         | Some (NamedType (talias_loc, ({
             TypeAlias.
             id = (name_loc, { Ast.Identifier.name; comments= _ });
@@ -1911,7 +1915,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               | _, TypeAlias talias -> Some (NamedType (talias_loc, talias))
               | _ -> assert_false "TypeAlias typed AST doesn't preserve structure"
             in
-            [(spf "type %s = ..." name, name_loc, name, None)], ExportType, ast
+            [(spf "type %s = ..." name, name_loc, name, None)], Ast.Statement.ExportType, ast
         | Some (NamedOpaqueType (opaque_loc, ({
             OpaqueType.
             id = (name_loc, { Ast.Identifier.name; comments= _ });
@@ -1922,7 +1926,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               | _, OpaqueType opaque_t -> Some (NamedOpaqueType (opaque_loc, opaque_t))
               | _ -> assert_false "OpaqueType typed AST doesn't preserve structure"
             in
-            [(spf "opaque type %s = ..." name, name_loc, name, None)], ExportType, ast
+            [(spf "opaque type %s = ..." name, name_loc, name, None)], Ast.Statement.ExportType, ast
         | Some (Interface (loc, i)) ->
             let {Interface.id = (name_loc, { Ast.Identifier.name; comments= _ }); _;} = i in
             let int_dec = statement cx (loc, InterfaceDeclaration i) in
@@ -1930,9 +1934,9 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               | _, InterfaceDeclaration i_ast -> Some (Interface (loc, i_ast))
               | _ -> assert_false "InterfaceDeclaration typed AST doesn't preserve structure"
             in
-            [(spf "interface %s {}" name, name_loc, name, None)], ExportType, ast
+            [(spf "interface %s {}" name, name_loc, name, None)], Ast.Statement.ExportType, ast
         | None ->
-            [], ExportValue, None
+            [], Ast.Statement.ExportValue, None
       in
 
       export_statement cx loc ~default export_info specifiers source export_kind;
@@ -2200,9 +2204,15 @@ and export_statement cx loc
   let open Ast.Statement in
   let (lookup_mode, export_kind_start) = (
     match exportKind with
-    | ExportValue -> (ForValue, "export")
-    | ExportType -> (ForType, "export type")
+    | Ast.Statement.ExportValue -> (ForValue, "export")
+    | Ast.Statement.ExportType -> (ForType, "export type")
   ) in
+
+  (* type.ml has a different representation for export kind. Convert it over *)
+  let type_ml_export_kind = match exportKind with
+  | Ast.Statement.ExportType -> Type.ExportType
+  | Ast.Statement.ExportValue -> Type.ExportValue
+  in
 
   let export_reason_start = spf "%s%s" export_kind_start (
     if (Option.is_some default) then " default" else ""
@@ -2251,7 +2261,13 @@ and export_statement cx loc
           (* Use the location of the "default" keyword if this is a default export. For named exports,
            * use the location of the identifier. *)
           let loc = Option.value ~default:loc default in
-          ExportNamedT(reason, false, SMap.singleton local_name (Some loc, local_tvar), t)
+          ExportNamedT (
+            reason,
+            false,
+            SMap.singleton local_name (Some loc, local_tvar),
+            type_ml_export_kind,
+            t
+          )
         )
       )
   ) in
@@ -2293,6 +2309,13 @@ and export_statement cx loc
           | None -> None
         ) in
 
+        (* If we are re-exporting from another module (e.g. `export {...} from '...'`) then we need
+         * to update the export kind to reflect that. *)
+        let type_ml_export_kind = match source with
+        | Some _ -> Type.ReExport
+        | None -> type_ml_export_kind
+        in
+
         let local_tvar = (
           match source_module_tvar with
           | Some(tvar) ->
@@ -2319,8 +2342,14 @@ and export_statement cx loc
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             module_t_of_cx cx,
-            (* TODO we may need a more precise loc here *)
-            ExportNamedT(reason, false, SMap.singleton remote_name (Some loc, local_tvar), t)
+            ExportNamedT(
+              reason,
+              false,
+              (* TODO we may need a more precise loc here *)
+              SMap.singleton remote_name (Some loc, local_tvar),
+              type_ml_export_kind,
+              t
+            )
           )
         )
       ) in
@@ -2370,8 +2399,14 @@ and export_statement cx loc
         set_module_t cx reason (fun t ->
           Flow.flow cx (
             module_t_of_cx cx,
-            (* TODO we may need a more precise loc here *)
-            ExportNamedT(reason, false, SMap.singleton name (Some loc, remote_namespace_t), t)
+            ExportNamedT (
+              reason,
+              false,
+              (* TODO we may need a more precise loc here *)
+              SMap.singleton name (Some loc, remote_namespace_t),
+              ReExport,
+              t
+            )
           )
         )
       | None ->
@@ -2382,15 +2417,15 @@ and export_statement cx loc
         in
 
         (* It's legal to export types from a CommonJS module. *)
-        if exportKind != ExportType
+        if exportKind != Ast.Statement.ExportType
         then set_module_kind cx loc Context.ESModule;
 
         set_module_t cx reason (fun t -> Flow.flow cx (
           import cx (source_loc, source_module_name) loc,
           let module_t = module_t_of_cx cx in
           match exportKind with
-          | ExportValue -> CopyNamedExportsT(reason, module_t, t)
-          | ExportType -> CopyTypeExportsT(reason, module_t, t)
+          | Ast.Statement.ExportValue -> CopyNamedExportsT(reason, module_t, t)
+          | Ast.Statement.ExportType -> CopyTypeExportsT(reason, module_t, t)
         ))
       )
 

@@ -43,6 +43,7 @@ and 'loc t' =
       use_op: 'loc virtual_use_op option;
     }
   | EDebugPrint of 'loc virtual_reason * string
+  | EExportValueAsType of 'loc virtual_reason * string
   | EImportValueAsType of 'loc virtual_reason * string
   | EImportTypeAsTypeof of 'loc virtual_reason * string
   | EImportTypeAsValue of 'loc virtual_reason * string
@@ -379,6 +380,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EFunctionCallExtraArg (rl, ru, n, op) ->
       EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
   | EDebugPrint (r, s) -> EDebugPrint (map_reason r, s)
+  | EExportValueAsType (r, s) -> EExportValueAsType (map_reason r, s)
   | EImportValueAsType (r, s) -> EImportValueAsType (map_reason r, s)
   | EImportTypeAsTypeof (r, s) -> EImportTypeAsTypeof (map_reason r, s)
   | EImportTypeAsValue (r, s) -> EImportTypeAsValue (map_reason r, s)
@@ -517,6 +519,7 @@ let util_use_op_of_msg nope util = function
 | EReactKit (rs, t, op) -> util op (fun op -> EReactKit (rs, t, op))
 | EFunctionCallExtraArg (rl, ru, n, op) -> util op (fun op -> EFunctionCallExtraArg (rl, ru, n, op))
 | EDebugPrint (_, _)
+| EExportValueAsType (_, _)
 | EImportValueAsType (_, _)
 | EImportTypeAsTypeof (_, _)
 | EImportTypeAsValue (_, _)
@@ -640,6 +643,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | ERefineAsValue (reason, _)
   | EImportTypeAsValue (reason, _)
   | EImportTypeAsTypeof (reason, _)
+  | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | EDebugPrint (reason, _) ->
         Some (aloc_of_reason reason)
@@ -840,6 +844,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EDebugPrint (_, str) ->
       Normal [text str]
 
+    | EExportValueAsType (_, export_name) ->
+      Normal [
+        text "Cannot export the value "; code export_name; text " as a type.";
+      ]
     | EImportValueAsType (_, export_name) ->
       let prefix, export = msg_export "the value " export_name in
       Normal [
