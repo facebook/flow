@@ -85,7 +85,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidNegDecimalE = 2.0e9n;
-                                               ^^^^^^ Unexpected token ILLEGAL
+                                               ^^^^^^ Invalid bigint literal
         `,
       )
   ]),
@@ -97,7 +97,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidNegDecimalE = -2.0e9n;
-                                               ^^^^^^^ Unexpected token ILLEGAL
+                                               ^^^^^^^ Invalid bigint literal
         `,
       )
   ]),
