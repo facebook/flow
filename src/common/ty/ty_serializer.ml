@@ -171,7 +171,7 @@ and obj_named_prop =
     if Ty_printer.property_key_quotes_needed x then
       let raw = x in
       let value = Ast.Literal.String raw in
-      Ast.Expression.Object.Property.Literal (Loc.none, { Ast.Literal.value; raw })
+      Ast.Expression.Object.Property.Literal (Loc.none, { Ast.Literal.value; raw; comments = Flow_ast_utils.mk_comments_opt () })
     else
       Ast.Expression.Object.Property.Identifier (id_from_string x)
   in

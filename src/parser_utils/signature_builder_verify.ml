@@ -261,7 +261,7 @@ module Eval(Env: EvalEnv) = struct
   and literal_expr tps =
     let open Ast.Expression in
     function
-      | loc, Literal { Ast.Literal.value; raw = _ } ->
+      | loc, Literal { Ast.Literal.value; raw = _; comments = _ } ->
         begin match value with
           | Ast.Literal.String _
           | Ast.Literal.Number _

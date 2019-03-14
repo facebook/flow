@@ -997,7 +997,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                                    : ('N, 'U) Ast.JSX.Attribute.value =
     let open Ast.JSX.Attribute in
     match value with
-    | Literal (annot, lit) -> Literal (this#on_type_annot annot, lit)
+    | Literal (annot, lit) -> Literal (this#on_type_annot annot, this#literal lit)
     | ExpressionContainer (annot, expr) ->
       ExpressionContainer (this#on_type_annot annot, this#jsx_expression expr)
 
@@ -1079,7 +1079,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     let body' = this#statement body in
     { label = label'; body = body' }
 
-  method literal (expr: Ast.Literal.t) : Ast.Literal.t = expr
+  method literal (expr: 'M Ast.Literal.t) : 'N Ast.Literal.t =
+    let open Ast.Literal in
+    let { comments; _ } = expr in
+    { expr with comments = Option.map ~f:this#syntax comments }
 
   method logical (expr: ('M, 'T) Ast.Expression.Logical.t) : ('N, 'U) Ast.Expression.Logical.t =
     let open Ast.Expression.Logical in
@@ -1175,7 +1178,8 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
       let fn' = this#function_expression fn in
       Set { key = key'; value = this#on_loc_annot fn_annot, fn' }
 
-  method object_key (key: ('M, 'T) Ast.Expression.Object.Property.key) =
+  method object_key (key: ('M, 'T) Ast.Expression.Object.Property.key)
+                        : ('N, 'U) Ast.Expression.Object.Property.key =
     let open Ast.Expression.Object.Property in
     match key with
     | Literal (annot, lit) ->
@@ -1266,7 +1270,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     ignore kind;
     this#t_identifier ident
 
-  method pattern_literal ?kind (expr: Ast.Literal.t) : Ast.Literal.t =
+  method pattern_literal ?kind (expr: 'M Ast.Literal.t) : 'N Ast.Literal.t =
     ignore kind;
     this#literal expr
 
@@ -1297,7 +1301,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | Computed expr ->
       Computed (this#pattern_object_property_computed_key ?kind expr)
 
-  method pattern_object_property_literal_key ?kind (key: Ast.Literal.t) : Ast.Literal.t =
+  method pattern_object_property_literal_key ?kind (key: 'M Ast.Literal.t) : 'N Ast.Literal.t =
     this#pattern_literal ?kind key
 
   method pattern_object_property_identifier_key ?kind (key: 'T Ast.Identifier.t)

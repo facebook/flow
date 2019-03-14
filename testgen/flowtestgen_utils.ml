@@ -435,9 +435,9 @@ module Config = struct
 
     let expr_of_value (v : value) : (Loc.t, Loc.t) E.t' = let open Ast.Literal in
       match v with
-      | Int i -> E.Literal {value = Number (float_of_int i); raw = string_of_int i}
-      | Str s -> E.Literal {value = String s; raw = "\"" ^ s ^ "\""}
-      | Bool b -> E.Literal {value = Boolean b; raw = string_of_bool b}
+      | Int i -> E.Literal {value = Number (float_of_int i); raw = string_of_int i; comments = Flow_ast_utils.mk_comments_opt ()}
+      | Str s -> E.Literal {value = String s; raw = "\"" ^ s ^ "\""; comments = Flow_ast_utils.mk_comments_opt ()}
+      | Bool b -> E.Literal {value = Boolean b; raw = string_of_bool b; comments = Flow_ast_utils.mk_comments_opt ()}
       | Obj o -> E.Object (ast_of_config o) in
 
     (* Convert all properties into object properties *)

@@ -163,7 +163,7 @@ let list_diff = function
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
-  | Literal of Ast.Literal.t
+  | Literal of Loc.t Ast.Literal.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
@@ -912,8 +912,8 @@ let program (algo : diff_algorithm)
     Option.value changes ~default:[(old_loc, Replace (Expression expr1, Expression expr2))]
 
   and literal (loc: Loc.t)
-      (lit1: Ast.Literal.t)
-      (lit2: Ast.Literal.t)
+      (lit1: Loc.t Ast.Literal.t)
+      (lit2: Loc.t Ast.Literal.t)
       : node change list =
     [(loc, Replace (Literal lit1, Literal lit2))]
 

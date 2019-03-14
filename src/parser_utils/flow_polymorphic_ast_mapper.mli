@@ -250,7 +250,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method label_identifier : 'M Flow_ast.Identifier.t -> 'N Ast.Identifier.t
     method labeled_statement :
       ('M, 'T) Ast.Statement.Labeled.t -> ('N, 'U) Ast.Statement.Labeled.t
-    method literal : Ast.Literal.t -> Ast.Literal.t
+    method literal : 'M Ast.Literal.t -> 'N Ast.Literal.t
     method logical :
       ('M, 'T) Ast.Expression.Logical.t -> ('N, 'U) Ast.Expression.Logical.t
     method member :
@@ -340,7 +340,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       'M Ast.Identifier.t -> 'N Ast.Identifier.t
     method pattern_literal :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
-      Ast.Literal.t -> Ast.Literal.t
+      'M Ast.Literal.t -> 'N Ast.Literal.t
     method pattern_object_p :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
       ('M, 'T) Ast.Pattern.Object.property ->
@@ -361,7 +361,7 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('N, 'U) Ast.Pattern.Object.Property.key
     method pattern_object_property_literal_key :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
-      Ast.Literal.t -> Ast.Literal.t
+      'M Ast.Literal.t -> 'N Ast.Literal.t
     method pattern_object_property_pattern :
       ?kind:Ast.Statement.VariableDeclaration.kind ->
       ('M, 'T) Flow_ast.Pattern.t -> ('N, 'U) Ast.Pattern.t

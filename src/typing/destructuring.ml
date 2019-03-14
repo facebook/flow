@@ -80,6 +80,7 @@ let array_element cx acc i loc =
         Ast.Expression.Literal { Ast.Literal.
           value = Ast.Literal.Number (float i);
           raw = string_of_int i;
+          comments = Flow_ast_utils.mk_comments_opt ()
         }
       );
     }))

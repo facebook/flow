@@ -337,21 +337,26 @@ let layout_node_with_comments current_loc layout_node =
           ) [layout_node] comments in
           Concat matched
 
-let layout_node_with_simple_comments current_loc ?(leading= []) ?(trailing= []) layout_node =
+let layout_node_with_simple_comments current_loc comments layout_node =
+  let { Ast.Syntax.leading; trailing; _} = comments in
   let preceding = List.map (layout_from_comment Preceding current_loc) leading in
   let following = List.map (layout_from_comment Following current_loc) trailing in
   Concat (preceding @ [layout_node] @ following)
 
-let source_location_with_comments (current_loc, layout_node) =
-  layout_node_with_comments current_loc (SourceLocation (current_loc, layout_node))
+let source_location_with_comments ?comments (current_loc, layout_node) =
+  match comments with
+  | Some comments ->
+    layout_node_with_simple_comments current_loc comments (SourceLocation (current_loc, layout_node))
+  | None ->
+    layout_node_with_comments current_loc (SourceLocation (current_loc, layout_node))
 
 let identifier_with_comments (current_loc, { Ast.Identifier.name; comments }) =
   let node = Identifier (current_loc, name) in
   match comments with
-  | Some { Ast.Syntax.leading; trailing; _} ->
-    layout_node_with_simple_comments current_loc ~leading ~trailing node
+  | Some comments ->
+    layout_node_with_simple_comments current_loc comments node
   | None ->
-    layout_node_with_comments current_loc node
+    node
 
 (* Generate JS layouts *)
 let rec program ~preserve_docblock ~checksum (loc, statements, comments) =
@@ -982,7 +987,7 @@ and number_literal ~in_member_object raw num =
     if String.equal raw str then Atom raw else IfPretty (Atom raw, Atom str)
   end
 
-and literal { Ast.Literal.raw; value; } =
+and literal { Ast.Literal.raw; value; comments= _ (* handled by caller *) } =
   let open Ast.Literal in
   match value with
   | Number num ->
@@ -1011,10 +1016,10 @@ and member ?(optional=false) ~precedence ~ctxt member_node =
   fuse [
     begin match _object with
     | (_, Ast.Expression.Call _) -> expression ~ctxt _object
-    | (_, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw })
+    | (loc, Ast.Expression.Literal { Ast.Literal.value = Ast.Literal.Number num; raw; comments })
       when not computed ->
       (* 1.foo would be confused with a decimal point, so it needs parens *)
-      number_literal ~in_member_object:true raw num
+      source_location_with_comments ?comments (loc, number_literal ~in_member_object:true raw num)
     | _ -> expression_with_parens ~precedence ~ctxt _object
     end;
     ldelim;

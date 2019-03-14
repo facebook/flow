@@ -130,7 +130,10 @@ module JSX (Parse: Parser_common.PARSER) = struct
       if Peek.token env = T_ASSIGN
       then begin
         Expect.token env T_ASSIGN;
-        match Peek.token env with
+        let leading = Peek.comments env in
+        let tkn = Peek.token env in
+        let trailing = Peek.comments env in
+        match tkn with
         | T_LCURLY ->
             let loc, expression_container = expression_container env in
             begin
@@ -144,13 +147,13 @@ module JSX (Parse: Parser_common.PARSER) = struct
         | T_JSX_TEXT (loc, value, raw) as token ->
             Expect.token env token;
             let value = Ast.Literal.String value in
-            loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw;}))
+            loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());}))
         | _ ->
             error env Error.InvalidJSXAttributeValue;
             let loc = Peek.loc env in
             let raw = "" in
             let value = Ast.Literal.String "" in
-            loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw;}))
+            loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw;comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());}))
       end else end_loc, None in
     Loc.btwn start_loc end_loc, JSX.Attribute.({
       name;

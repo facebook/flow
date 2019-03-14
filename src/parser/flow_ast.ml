@@ -44,9 +44,10 @@ and Literal : sig
   end
 
   (* Literals also carry along their raw value *)
-  type t = {
+  type 'M t = {
     value: value;
     raw: string;
+    comments: ('M, unit) Syntax.t option;
   }
   and value =
     | String of string
@@ -706,7 +707,7 @@ and Expression : sig
   module Object : sig
     module Property : sig
       type ('M, 'T) key =
-        | Literal of ('T * Literal.t)
+        | Literal of ('T * 'M Literal.t)
         | Identifier of 'T Identifier.t
         | PrivateName of 'M PrivateName.t
         | Computed of ('M, 'T) Expression.t
@@ -969,7 +970,7 @@ and Expression : sig
     | Import of ('M, 'T) t
     | JSXElement of ('M, 'T) JSX.element
     | JSXFragment of ('M, 'T) JSX.fragment
-    | Literal of Literal.t
+    | Literal of 'M Literal.t
     | Logical of ('M, 'T) Logical.t
     | Member of ('M, 'T) Member.t
     | MetaProperty of 'M MetaProperty.t
@@ -1036,7 +1037,7 @@ and JSX : sig
       | NamespacedName of ('M, 'T) NamespacedName.t
 
     and ('M, 'T) value =
-      | Literal of 'T * Literal.t
+      | Literal of 'T * 'M Literal.t
       | ExpressionContainer of 'T * ('M, 'T) ExpressionContainer.t
 
     and ('M, 'T) t' = {
@@ -1127,7 +1128,7 @@ and Pattern : sig
   module Object : sig
     module Property : sig
       type ('M, 'T) key =
-        | Literal of ('M * Literal.t)
+        | Literal of ('M * 'M Literal.t)
         | Identifier of 'T Identifier.t
         | Computed of ('M, 'T) Expression.t
       and ('M, 'T) t = 'M * ('M, 'T) t'

@@ -989,7 +989,7 @@ class ['loc] mapper = object(this)
     if label == label' && body == body' then stmt
     else { label = label'; body = body' }
 
-  method literal _loc (expr: Flow_ast.Literal.t) = expr
+  method literal _loc (expr: 'loc Flow_ast.Literal.t) = expr
 
   method logical _loc (expr: ('loc, 'loc) Flow_ast.Expression.Logical.t) =
     let open Flow_ast.Expression.Logical in
@@ -1177,7 +1177,7 @@ class ['loc] mapper = object(this)
     ignore kind;
     this#identifier ident
 
-  method pattern_literal ?kind loc (expr: Flow_ast.Literal.t) =
+  method pattern_literal ?kind loc (expr: 'loc Flow_ast.Literal.t) =
     ignore kind;
     this#literal loc expr
 
@@ -1208,7 +1208,7 @@ class ['loc] mapper = object(this)
     | Computed expr ->
       id (this#pattern_object_property_computed_key ?kind) expr key (fun expr' -> Computed expr')
 
-  method pattern_object_property_literal_key ?kind loc (key: Flow_ast.Literal.t) =
+  method pattern_object_property_literal_key ?kind loc (key: 'loc Flow_ast.Literal.t) =
     this#pattern_literal ?kind loc key
 
   method pattern_object_property_identifier_key ?kind (key: 'loc Flow_ast.Identifier.t) =

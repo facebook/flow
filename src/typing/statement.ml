@@ -3218,7 +3218,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           let elem_loc, { TemplateLiteral.Element.
             value = { TemplateLiteral.Element.raw; cooked; }; _
           } = head in
-          let lit = { Ast.Literal.value = Ast.Literal.String cooked; raw; } in
+          let lit = { Ast.Literal.value = Ast.Literal.String cooked; raw; comments = Flow_ast_utils.mk_comments_opt () } in
           literal cx elem_loc lit, []
       | _ ->
           let t_out = StrT.at loc in
@@ -3344,7 +3344,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | Import arg -> (
     match arg with
     | source_loc, Ast.Expression.Literal {
-        Ast.Literal.value = Ast.Literal.String module_name; raw;
+        Ast.Literal.value = Ast.Literal.String module_name; raw; comments = _;
       }
     | source_loc, TemplateLiteral {
         TemplateLiteral.quasis = [_, {
@@ -3354,6 +3354,11 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         }];
         expressions = [];
       } ->
+
+      let comments = match arg with
+      | _, Ast.Expression.Literal { Ast.Literal.comments ; _} -> comments
+      | _ -> None
+      in
 
       let imported_module_t =
         let import_reason = mk_reason (RModule module_name) loc in
@@ -3365,6 +3370,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (loc, t), Import ((source_loc, t), Ast.Expression.Literal { Ast.Literal.
         value = Ast.Literal.String module_name;
         raw;
+        comments;
       })
     | _ ->
       let ignore_non_literals =
@@ -5587,13 +5593,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
         (fun expr -> reconstruct_ast expr val_ast)
 
     (* special case equality relations involving numbers *)
-    | ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw }) as value),
+    | ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw; comments= _ }) as value),
       expr ->
       let (_, val_t), _ as val_ast = expression cx value in
       literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit_loc, sense, (lit, raw)))
         (fun expr -> reconstruct_ast val_ast expr)
     | expr,
-      ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw }) as value) ->
+      ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw; comments= _ }) as value) ->
       let (_, val_t), _ as val_ast = expression cx value in
       literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit_loc, sense, (lit, raw)))
         (fun expr -> reconstruct_ast expr val_ast)

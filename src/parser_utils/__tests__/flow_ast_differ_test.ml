@@ -26,11 +26,11 @@ let parse_options = Some Parser_env.({
 class useless_mapper = object(this)
   inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-  method! literal _loc (expr: Ast.Literal.t) =
+  method! literal _loc (expr: Loc.t Ast.Literal.t) =
     let open Ast.Literal in
     match expr.value with
     | Number 4.0 ->
-      { value = Number 5.0; raw = "5" }
+      { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
     | _ -> expr
 
   method! logical loc (expr: (Loc.t, Loc.t) Ast.Expression.Logical.t) =
@@ -198,17 +198,17 @@ end
 
 class literal_mapper = object
   inherit [Loc.t] Flow_ast_mapper.mapper
-  method! literal _loc (expr: Ast.Literal.t) =
+  method! literal _loc (expr: Loc.t Ast.Literal.t) =
     let open Ast.Literal in
     match expr.value with
     | String "rename" ->
-      { value = String "gotRenamed"; raw = "gotRenamed" }
+      { value = String "gotRenamed"; raw = "gotRenamed"; comments = Flow_ast_utils.mk_comments_opt () }
     | Boolean false ->
-      { value = Boolean true; raw = "true" }
+      { value = Boolean true; raw = "true"; comments = Flow_ast_utils.mk_comments_opt () }
     | Null ->
-      { value = String "wasNull"; raw = "wasNull" }
+      { value = String "wasNull"; raw = "wasNull"; comments = Flow_ast_utils.mk_comments_opt () }
     | Number 4.0 ->
-      { value = Number 5.0; raw = "5" }
+      { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
     (* TODO: add test for RegExp case? *)
     | _ -> expr
 end
@@ -332,7 +332,7 @@ class insert_second_cjsimport_mapper = object
             callee = (loc, Ast.Expression.Identifier (Flow_ast_utils.ident_of_source (loc, "require")));
             targs = None; arguments = [
               Ast.Expression.Expression (loc, Ast.Expression.Literal
-                { value = Ast.Literal.String "baz"; raw = "\"baz\""})
+                { value = Ast.Literal.String "baz"; raw = "\"baz\""; comments = Flow_ast_utils.mk_comments_opt ()})
             ]
           }); directive = None })) in
       (List.hd stmts)::imp::(List.tl stmts)
@@ -354,7 +354,7 @@ class add_body_mapper = object
             callee = (loc, Ast.Expression.Identifier (Flow_ast_utils.ident_of_source (loc, "foo")));
             targs = None; arguments = [
               Ast.Expression.Expression (loc, Ast.Expression.Literal
-                { value = Ast.Literal.String "baz"; raw = "\"baz\""})
+                { value = Ast.Literal.String "baz"; raw = "\"baz\""; comments = Flow_ast_utils.mk_comments_opt ()})
             ]
           }); directive = None })) in
       stmts@[imp]
@@ -509,11 +509,11 @@ end
 class true_to_false_mapper = object
   inherit [Loc.t] Flow_ast_mapper.mapper
 
-  method! literal _loc (expr: Ast.Literal.t) =
+  method! literal _loc (expr: Loc.t Ast.Literal.t) =
     let open Ast.Literal in
     match expr.value with
     | Boolean true ->
-      { value = Boolean false; raw = "false" }
+      { value = Boolean false; raw = "false"; comments = Flow_ast_utils.mk_comments_opt () }
     | _ -> expr
 
   method! type_annotation (annot: (Loc.t, Loc.t) Ast.Type.annotation) =

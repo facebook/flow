@@ -48,6 +48,7 @@ and key_of_member { Ast.Expression.Member._object; property; _ } =
       | PropertyExpression (_, Ast.Expression.Literal {
           Ast.Literal.value = Ast.Literal.Number _;
           raw = name;
+          comments= _;
         })
      ) -> (
     match key _object with

@@ -862,29 +862,35 @@ module Expression
 
   and primary_cover env =
     let loc = Peek.loc env in
-    match Peek.token env with
+    let leading = Peek.comments env in
+    let tkn = Peek.token env in
+    match tkn with
     | T_THIS ->
         Expect.token env T_THIS;
         Cover_expr (loc, Expression.This)
     | T_NUMBER { kind; raw } ->
         let value = Literal.Number (number env kind raw) in
-        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
+        let trailing = Peek.comments env in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }))
     | T_STRING (loc, value, raw, octal) ->
         if octal then strict_error env Error.StrictOctalLiteral;
         Expect.token env (T_STRING (loc, value, raw, octal));
         let value = Literal.String value in
-        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
+        let trailing = Peek.comments env in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }))
     | (T_TRUE | T_FALSE) as token ->
         Expect.token env token;
         let truthy = token = T_TRUE in
         let raw = if truthy then "true" else "false" in
         let value = Literal.Boolean truthy in
-        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
+        let trailing = Peek.comments env in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }))
     | T_NULL ->
         Expect.token env T_NULL;
         let raw = "null" in
         let value = Literal.Null in
-        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
+        let trailing = Peek.comments env in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }))
     | T_LPAREN -> Cover_expr (group env)
     | T_LCURLY ->
         let loc, obj, errs = Parse.object_initializer env in
@@ -914,7 +920,8 @@ module Expression
          * expression is as good as anything *)
         let value = Literal.Null in
         let raw = "null" in
-        Cover_expr (loc, Expression.(Literal { Literal.value; raw; }))
+        let trailing = [] in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }))
 
   and primary env = as_expression env (primary_cover env)
 
@@ -1044,7 +1051,10 @@ module Expression
   and regexp env =
     Eat.push_lex_mode env Lex_mode.REGEXP;
     let loc = Peek.loc env in
-    let raw, pattern, raw_flags = match Peek.token env with
+    let leading = Peek.comments env in
+    let tkn = Peek.token env in
+    let trailing = Peek.comments env in
+    let raw, pattern, raw_flags = match tkn with
       | T_REGEXP (_, pattern, flags) ->
           Eat.token env;
           let raw = "/" ^ pattern ^ "/" ^ flags in
@@ -1059,7 +1069,7 @@ module Expression
     if flags <> raw_flags
     then error env (Error.InvalidRegExpFlags raw_flags);
     let value = Literal.(RegExp { RegExp.pattern; flags; }) in
-    loc, Expression.(Literal { Literal.value; raw; })
+    loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); })
 
   and try_arrow_function =
     (* Certain errors (almost all errors) cause a rollback *)

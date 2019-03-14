@@ -502,7 +502,7 @@ module Make
       this#handle_call call_loc callee arguments None;
       super#call call_loc expr
 
-    method! literal loc (expr: Ast.Literal.t) =
+    method! literal loc (expr: L.t Ast.Literal.t) =
       let open Ast.Literal in
       this#handle_literal loc expr.value;
       super#literal loc expr

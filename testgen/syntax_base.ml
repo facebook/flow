@@ -29,11 +29,11 @@ let str_of_syntax (s : t) : string =
 let rec mk_literal_expr (t : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) E.t' =
   match t with
   | T.Number ->
-    E.Literal (Ast.Literal.({value = Number 1.1; raw = "1.1"}))
+    E.Literal (Ast.Literal.({value = Number 1.1; raw = "1.1"; comments = Flow_ast_utils.mk_comments_opt ()}))
   | T.String ->
-    E.Literal (Ast.Literal.({value = String "foo"; raw = "\"foo\""}))
+    E.Literal (Ast.Literal.({value = String "foo"; raw = "\"foo\""; comments = Flow_ast_utils.mk_comments_opt ()}))
   | T.Boolean ->
-    E.Literal (Ast.Literal.({value = Boolean false; raw = "false"}))
+    E.Literal (Ast.Literal.({value = Boolean false; raw = "false"; comments = Flow_ast_utils.mk_comments_opt ()}))
   | T.Union (t1, t2, rest) ->
     let elements = (t1 :: t2 :: rest)
                    |> Core_list.map ~f:snd
@@ -44,14 +44,14 @@ let rec mk_literal_expr (t : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) E.t' =
   | T.StringLiteral lit ->
     let value = Ast.StringLiteral.(lit.value) in
     let raw = Ast.StringLiteral.(lit.raw) in
-    E.Literal (Ast.Literal.({value = String value; raw}))
+    E.Literal (Ast.Literal.({value = String value; raw; comments = Flow_ast_utils.mk_comments_opt ()}))
   | T.NumberLiteral lit ->
     let value = Ast.NumberLiteral.(lit.value) in
     let raw = Ast.NumberLiteral.(lit.raw) in
-    E.Literal (Ast.Literal.({value = Number value; raw}))
+    E.Literal (Ast.Literal.({value = Number value; raw; comments = Flow_ast_utils.mk_comments_opt ()}))
   | T.BooleanLiteral value ->
     let raw = if value then "true" else "false" in
-    E.Literal (Ast.Literal.({value = Boolean value; raw}))
+    E.Literal (Ast.Literal.({value = Boolean value; raw; comments = Flow_ast_utils.mk_comments_opt ()}))
   | T.Tuple tlist ->
     let elements = Core_list.map ~f:(fun (_, tt) ->
         let e = mk_literal_expr tt in
@@ -59,7 +59,7 @@ let rec mk_literal_expr (t : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) E.t' =
     E.Array.(E.Array {elements})
   | T.Array t -> mk_literal_expr (T.Tuple [t; t; t; t; t;])
   | _ ->
-    E.Literal (Ast.Literal.({value = Null; raw = "null"}))
+    E.Literal (Ast.Literal.({value = Null; raw = "null"; comments = Flow_ast_utils.mk_comments_opt ()}))
 
 (* Make an object literal based on its type *)
 and mk_obj_literal_expr (t : (Loc.t, Loc.t) T.Object.t) : (Loc.t, Loc.t) E.t' =
@@ -184,13 +184,13 @@ let mk_func_call (fid : (Loc.t, Loc.t) E.t') (param : (Loc.t, Loc.t) E.t') : t =
 
 let mk_literal (t : (Loc.t, Loc.t) T.t') : t = match t with
   | T.Number ->
-    let lit = Ast.Literal.({value = Number 1.1; raw = "1.1"}) in
+    let lit = Ast.Literal.({value = Number 1.1; raw = "1.1"; comments = Flow_ast_utils.mk_comments_opt ()}) in
     Expr (E.Literal lit)
   | T.String ->
-    let lit = Ast.Literal.({value = String "foo"; raw = "\"foo\""}) in
+    let lit = Ast.Literal.({value = String "foo"; raw = "\"foo\""; comments = Flow_ast_utils.mk_comments_opt ()}) in
     Expr (E.Literal lit)
   | T.Boolean ->
-    let lit = Ast.Literal.({value = Boolean false; raw = "false"}) in
+    let lit = Ast.Literal.({value = Boolean false; raw = "false"; comments = Flow_ast_utils.mk_comments_opt ()}) in
     Expr (E.Literal lit)
   | _ -> failwith "Unsupported"
 
