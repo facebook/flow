@@ -72,6 +72,8 @@ type t =
   | Uncaught_exception
   | Decl_not_found
   | Big_rebase_detected
+  | Failed_to_load_should_retry
+  | Failed_to_load_should_abort
 
 exception Exit_with of t
 
@@ -135,6 +137,9 @@ let exit_code = function
   | Sql_corrupt ->                  215
   | Sql_misuse ->                   216
   | Decl_not_found ->               217
+  | Failed_to_load_should_retry ->  218
+  | Failed_to_load_should_abort ->  219
+
 
 let exit t =
   let ec = exit_code t in
@@ -200,6 +205,9 @@ let to_string = function
   | Uncaught_exception -> "Uncaught_exception"
   | Decl_not_found -> "Decl_not_found"
   | Big_rebase_detected -> "Big_rebase_detected"
+  | Failed_to_load_should_retry -> "Failed_to_load_should_retry"
+  | Failed_to_load_should_abort -> "Failed_to_load_should_abort"
+
 
 
 let unpack = function
