@@ -30,7 +30,7 @@ type monitor_config =
  *)
 type watchman_mergebase = {
   (** Watchman says current repo mergebase is this. *)
-  mergebase_svn_rev : int;
+  mergebase_global_rev : int;
   (** ... plus these files changed to represent its current state *)
   files_changed : SSet.t;
   (** ...as of this clock *)
@@ -41,15 +41,15 @@ type watchman_mergebase = {
  * we should load from. *)
 type target_saved_state = {
   saved_state_everstore_handle : string;
-  (** The SVN revision to which the above handle corresponds to. *)
-  target_svn_rev : int;
+  (** The global revision to which the above handle corresponds to. *)
+  target_global_rev : int;
   watchman_mergebase : watchman_mergebase option;
 }
 
-let watchman_mergebase_to_string { mergebase_svn_rev; files_changed; watchman_clock; } =
+let watchman_mergebase_to_string { mergebase_global_rev; files_changed; watchman_clock; } =
   Printf.sprintf
-    "watchman_mergebase (mergebase_svn_rev: %d; files_changed count: %d; watchman_clock: %s)"
-    mergebase_svn_rev
+    "watchman_mergebase (mergebase_global_rev: %d; files_changed count: %d; watchman_clock: %s)"
+    mergebase_global_rev
     (SSet.cardinal files_changed)
     watchman_clock
 
