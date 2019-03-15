@@ -1594,6 +1594,43 @@ let tests = "ast_differ" >::: [
     ~source ~expected:"type GotRenamed = string"
     ~mapper:(new useless_mapper)
   end;
+  "type_alias_intersection_left" >:: begin fun ctxt ->
+    let source = "type foo = number & bar" in
+    assert_edits_equal ctxt ~edits:[((11, 17), "string")]
+      ~source ~expected:"type foo = string & bar"
+      ~mapper:(new useless_mapper)
+  end;
+  "type_alias_intersection_right" >:: begin fun ctxt ->
+    let source = "type foo = bar & number" in
+    assert_edits_equal ctxt ~edits:[((17, 23), "string")]
+      ~source ~expected:"type foo = bar & string"
+      ~mapper:(new useless_mapper)
+  end;
+  "type_alias_intersection_rest" >:: begin fun ctxt ->
+    let source = "type foo = bar & baz & number & number" in
+    assert_edits_equal ctxt ~edits:[((23, 29), "string"); ((32, 38), "string")]
+      ~source ~expected:"type foo = bar & baz & string & string"
+      ~mapper:(new useless_mapper)
+  end;
+  "type_alias_intersection_argument_mismatch" >:: begin fun ctxt ->
+    let module M =
+      struct
+        class mapper = object
+          inherit [Loc.t] Flow_ast_mapper.mapper as super
+          method! type_ (annot: (Loc.t, Loc.t) Type.t) =
+            let annot = super#type_ annot in
+            let (loc, typ) = annot in
+            match typ with
+            | Type.Intersection (t, ((_, Type.BooleanLiteral true) as t'), [(_, Type.Boolean)]) ->
+              (loc, Type.Intersection (t, t', []))
+            | _ -> annot
+          end
+      end in
+    let source = "type foo = bar & true & boolean" in
+    assert_edits_equal ctxt ~edits:[((11, 31), "bar & true")]
+      ~source ~expected:"type foo = bar & true"
+      ~mapper:(new M.mapper)
+  end;
   "type_alias_nullable" >:: begin fun ctxt ->
     let source = "type foo = ?number" in
     assert_edits_equal ctxt ~edits:[((12, 18), "string")] ~source
