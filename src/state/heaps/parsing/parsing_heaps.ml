@@ -14,14 +14,12 @@ module ASTHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (str
     type t = (Loc.t, Loc.t) Flow_ast.program
     let prefix = Prefix.make()
     let description = "AST"
-    let use_sqlite_fallback () = false
 end)
 
 module SigASTHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
     type t = (Loc.t, Loc.t) Flow_ast.program
     let prefix = Prefix.make()
     let description = "AST"
-    let use_sqlite_fallback () = false
 end)
 
 let source_remover = object(this)
@@ -50,21 +48,18 @@ module DocblockHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key)
     type t = Docblock.t
     let prefix = Prefix.make()
     let description = "Docblock"
-    let use_sqlite_fallback () = false
 end)
 
 module FileSigHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
     type t = File_sig.t
     let prefix = Prefix.make()
     let description = "Requires"
-    let use_sqlite_fallback () = false
 end)
 
 module SigFileSigHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
     type t = File_sig.t
     let prefix = Prefix.make()
     let description = "Requires"
-    let use_sqlite_fallback () = false
 end)
 
 (* Contains the hash for every file we even consider parsing *)
@@ -90,7 +85,6 @@ module FileHashHeap = SharedMem_js.WithCache (SharedMem_js.Immediate)
     type t = Xx.hash
     let prefix = Prefix.make()
     let description = "FileHash"
-    let use_sqlite_fallback () = false
 end)
 
 (* Groups operations on the multiple heaps that need to stay in sync *)

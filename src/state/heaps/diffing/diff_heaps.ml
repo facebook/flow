@@ -23,8 +23,6 @@ module DiffPatchHeap =
       let prefix = Prefix.make ()
 
       let description = "DiffPatch"
-
-      let use_sqlite_fallback () = false
     end)
 
 let set_diff = Expensive.wrap DiffPatchHeap.add

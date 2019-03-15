@@ -12,7 +12,6 @@ module NameHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (Modulename.Ke
   type t = File_key.t
   let prefix = Prefix.make()
   let description = "Name"
-  let use_sqlite_fallback () = false
 end)
 
 (*************************** Resolved Requires Heap ***************************)
@@ -40,7 +39,6 @@ module ResolvedRequiresHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (F
   type t = resolved_requires
   let prefix = Prefix.make()
   let description = "ResolvedRequires"
-  let use_sqlite_fallback () = false
 end)
 
 (********************************** Info Heap *********************************)
@@ -59,7 +57,6 @@ module InfoHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (st
   type t = info
   let prefix = Prefix.make()
   let description = "Info"
-  let use_sqlite_fallback () = false
 end)
 
 (******************************** Package Heaps *******************************)
@@ -73,7 +70,6 @@ module PackageHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (StringKey)
     type t = (Package_json.t, unit) result
     let prefix = Prefix.make()
     let description = "Package"
-    let use_sqlite_fallback () = false
   end)
 
 (* shared heap for package.json directories by package name *)
@@ -81,7 +77,6 @@ module ReversePackageHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (Str
     type t = string
     let prefix = Prefix.make()
     let description = "ReversePackage"
-    let use_sqlite_fallback () = false
   end)
 
 (*********************************** Mutators *********************************)

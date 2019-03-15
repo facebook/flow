@@ -552,7 +552,6 @@ end = functor (Key : Key) -> functor (Value : Value.Type) -> struct
       | Profiled of { entry: Value.t; write_time: float; }
     let prefix = Value.prefix
     let description = Value.description
-    let use_sqlite_fallback = Value.use_sqlite_fallback
   end
 
   module Immediate = Immediate (Key) (ProfiledValue)
