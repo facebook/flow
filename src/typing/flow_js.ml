@@ -6855,6 +6855,7 @@ and any_propagated cx trace any u =
   | UseT (use_op, DefT (_, _, ArrT (ROArrayAT t))) (* read-only arrays are covariant *)
   | UseT (use_op, DefT (_, _, ClassT t)) (* mk_instance ~for_type:false *)
   | UseT (use_op, ExactT (_, t))
+  | UseT (use_op, OpenPredT (_, t, _, _))
   | UseT (use_op, ShapeT t) ->
       covariant_flow ~use_op t;
       true
@@ -6962,7 +6963,6 @@ and any_propagated cx trace any u =
   | UseT (_, ThisTypeAppT _)
 
   (* Should never occur, so we just defer to __flow to handle errors *)
-  | UseT (_, OpenPredT _)
   | UseT (_, InternalT _)
   | UseT (_, MatchingPropT _)
   | UseT (_, DefT (_, _, IdxWrapper _))
