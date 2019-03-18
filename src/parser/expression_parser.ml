@@ -860,7 +860,6 @@ module Expression
     Expect.token env (T_NUMBER { kind; raw });
     value
 
-  (* TODO: don't know if this function should be here *)
   and bigint_strip_n raw =
     let size = String.length raw in
     let str =
