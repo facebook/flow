@@ -2002,23 +2002,6 @@ References:
                                            ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------- proptype_arrayOf.js:38:2
-
-Cannot create `AnyExample` element because number [1] is incompatible with array type [2] in property `arr`.
-
-   proptype_arrayOf.js:38:2
-   38| (<AnyExample arr={0} />); // error: still needs to be an array
-        ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   proptype_arrayOf.js:38:19
-   38| (<AnyExample arr={0} />); // error: still needs to be an array
-                         ^ [1]
-   proptype_arrayOf.js:34:10
-   34|     arr: React.PropTypes.arrayOf((0:any)), // OK
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------- proptype_arrayOf.js:43:34
 
 number [1] is not a React propType.
@@ -2223,23 +2206,6 @@ References:
    <BUILTINS>/react.js:438:36
    438|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
-
-
-Error ---------------------------------------------------------------------------------------- proptype_objectOf.js:38:2
-
-Cannot create `AnyExample` element because number [1] is incompatible with object type [2] in property `obj`.
-
-   proptype_objectOf.js:38:2
-   38| (<AnyExample obj={0} />); // error: still needs to be an object
-        ^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   proptype_objectOf.js:38:19
-   38| (<AnyExample obj={0} />); // error: still needs to be an object
-                         ^ [1]
-   proptype_objectOf.js:34:10
-   34|     obj: React.PropTypes.objectOf((0:any)), // OK
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------- proptype_objectOf.js:43:35
@@ -4230,7 +4196,7 @@ References:
 
 
 
-Found 246 errors
+Found 244 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
