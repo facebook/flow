@@ -1464,9 +1464,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:44:2
 
-Cannot cast object literal to `O7` because:
- - Either property `x` is missing in object type [1] but exists in object literal [2].
- - Or property `x` is missing in object type [1] but exists in object literal [2].
+Cannot cast object literal to `O7` because property `x` is missing in object type [1] but exists in object literal [2].
 
    type_union.js:44:2
    44| ({x}: O7); // Error: x is not allowed
@@ -1480,9 +1478,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_union.js:46:2
 
-Cannot cast object literal to `O7` because:
- - Either property `x` is missing in object type [1] but exists in object literal [2].
- - Or property `x` is missing in object type [1] but exists in object literal [2].
+Cannot cast object literal to `O7` because property `x` is missing in object type [1] but exists in object literal [2].
 
    type_union.js:46:2
    46| ({x, y}: O7); // Error: x is not allowed
@@ -1524,7 +1520,6 @@ Error --------------------------------------------------------------------------
 Cannot cast object literal to `O9` because:
  - Either property `y` is missing in object type [1] but exists in object literal [2].
  - Or property `x` is missing in object type [1] but exists in object literal [2].
- - Or property `x` is missing in object type [3] but exists in object literal [2].
  - Or property `x` is missing in object type [3] but exists in object literal [2].
 
    type_union.js:55:2

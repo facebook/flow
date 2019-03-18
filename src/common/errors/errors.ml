@@ -622,7 +622,7 @@ let mk_speculation_error
   let trace = Option.value_map trace_infos ~default:[] ~f:infos_to_messages in
   let branches = Core_list.map ~f:(fun (score, (_, _, error)) ->
     (score, error)
-  ) speculation_errors in
+  ) speculation_errors |> ListUtils.dedup in
   (kind, trace, {
     loc;
     root = Option.map root (fun (root_loc, root_message) -> { root_loc; root_message });

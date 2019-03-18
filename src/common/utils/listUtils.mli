@@ -36,6 +36,7 @@ val fold_map : ('a -> 'b -> 'a * 'c) -> 'a -> 'b list -> 'a * 'c list
 val concat_fold : ('a -> 'b -> 'a * 'c list) -> 'a -> 'b list -> 'a * 'c list
 val last_opt : 'a list -> 'a option
 val is_empty : 'a list -> bool
+val dedup : 'a list -> 'a list
 
 val to_string: string -> ('a -> string) -> ('a list -> string)
 val assoc_to_string: string -> ('a -> string) -> string -> ('b -> string) ->

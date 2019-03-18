@@ -242,3 +242,10 @@ let assoc_to_string separator key_printer key_value_separator value_printer list
   to_string separator (fun (k, v) ->
     Printf.sprintf "%s%s%s" (key_printer k) key_value_separator (value_printer v)
   ) list
+
+(* Dedups a list in O(n) time and space. Unlike Core_list.dedup, this
+   preserves order. Core's implementation is also O(n log n) *)
+let dedup l =
+  let tbl = Core_list.length l |> Hashtbl.create  in
+  let f l e = if Hashtbl.mem tbl e then l else begin Hashtbl.add tbl e (); e :: l end in
+  Core_list.fold_left ~f ~init:[] l |> Core_list.rev
