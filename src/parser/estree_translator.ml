@@ -967,7 +967,7 @@ end with type t = Impl.t) = struct
       | Literal.Boolean b -> bool b
       | Literal.Null -> null
       | Literal.Number f -> number f
-      | Literal.BigInt _ -> null
+      | Literal.BigInt _ -> failwith "We should not create Literal nodes for bigints"
       | Literal.RegExp { Literal.RegExp.pattern; flags; } -> regexp loc pattern flags
       in
       let props = match value with
