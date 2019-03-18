@@ -5,8 +5,7 @@
   (c_names
     hh_assert
     hh_shared
-    hh_shared_sqlite
-    lib_dumbsqlite)
+    hh_shared_sqlite)
   (c_flags (:standard
     (:include config/c_flags.sexp)))
   (c_library_flags (:standard
