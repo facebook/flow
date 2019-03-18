@@ -41,9 +41,9 @@ References:
    forwardRef.js:19:32
     19| const badRef = React.createRef<HTMLDivElement>();
                                        ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:290:22
-   290|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
-                             ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:290:44
+   290|   button: ReactDOM$HTMLElementJSXIntrinsic<HTMLButtonElement, ReactDOM$HTMLElementProps>,
+                                                   ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:240:6
    240|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
@@ -72,9 +72,9 @@ References:
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                                          ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:290:22
-   290|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
-                             ^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react-dom.js:290:44
+   290|   button: ReactDOM$HTMLElementJSXIntrinsic<HTMLButtonElement, ReactDOM$HTMLElementProps>,
+                                                   ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:12
