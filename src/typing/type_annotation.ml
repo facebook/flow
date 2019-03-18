@@ -819,7 +819,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Trusted" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match convert_type_params () with
-      | [DefT (_, _, AnyT _)], _ ->
+      | [AnyT _], _ ->
           error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
       | [DefT (rs, trust, ty)], targs ->
           reconstruct_ast

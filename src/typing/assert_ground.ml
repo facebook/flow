@@ -289,7 +289,7 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
           else loop ~constant_polarity_param:(s, Positive) cx pole seen ((Nel.to_list tparams), targs)
       | DefT (_, _, PolyT (_, tparams, _, _)) -> loop cx pole seen ((Nel.to_list tparams), targs)
       | DefT (_, _, EmptyT) -> seen
-      | DefT (_, _, AnyT _) -> seen
+      | AnyT _ -> seen
       | _ ->
           (* We don't error here on an unexpected typeapp because we would have already
            * caught that this type is not polymorphic earlier *)

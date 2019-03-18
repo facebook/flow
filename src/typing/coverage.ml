@@ -193,7 +193,7 @@ class visitor = object (self)
     | TypeDestructorTriggerT _
 
     | DefT (_, _, EmptyT) -> Kind.Empty
-    | DefT (_, _, AnyT _) -> Kind.Any
+    | AnyT _ -> Kind.Any
 
   method private types_of_use acc = function
     | UseT (_, t) -> t::acc

@@ -37,7 +37,7 @@ let rec merge_type cx =
   | (ObjProtoT _, (ObjProtoT _ as t))
      -> t
 
-  | DefT (_, _, AnyT _), t | t, DefT (_, _, AnyT _) -> t
+  | AnyT _, t | t, AnyT _ -> t
 
   | DefT (_, _, EmptyT), t | t, DefT (_, _, EmptyT) -> t
   | _, (DefT (_, _, MixedT _) as t) | (DefT (_, _, MixedT _) as t), _ -> t
@@ -234,8 +234,8 @@ let instantiate_poly_t cx t = function
       )
       | DefT (_, _, EmptyT)
       | DefT (_, _, MixedT _)
-      | DefT (_, _, AnyT _)
-      | DefT (_, _, (TypeT (_, DefT (_, _, AnyT _)))) ->
+      | AnyT _
+      | DefT (_, _, (TypeT (_, AnyT _))) ->
           t
       | _ ->
         assert_false ("unexpected args passed to instantiate_poly_t: " ^ (string_of_ctor t))
@@ -261,7 +261,7 @@ let intersect_members cx members =
 
 and instantiate_type = function
   | ThisClassT (_, t) | DefT (_, _, ClassT t)
-  | (DefT (_, _, AnyT _) as t) | DefT(_, _, TypeT (_, t)) | (DefT (_, _, EmptyT) as t) -> t
+  | (AnyT _ as t) | DefT(_, _, TypeT (_, t)) | (DefT (_, _, EmptyT) as t) -> t
   | t -> "cannot instantiate non-class type " ^ string_of_ctor t |> assert_false
 
 let possible_types_of_use cx = function
@@ -352,7 +352,7 @@ let rec extract_type cx this_t = match this_t with
   | DefT (_, _, (NullT | VoidT))
   | InternalT (OptionalChainVoidT _) ->
       FailureNullishType
-  | DefT (_, _, AnyT _) ->
+  | AnyT _ ->
       FailureAnyType
   | AnnotT (_, source_t, _) ->
     let source_t = resolve_type cx source_t in
@@ -533,7 +533,7 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
       let members = ts
         (* Although we'll ignore the any-ish and nullish members of the union *)
         |> List.filter (function
-           | DefT (_, _, (AnyT _ | NullT | VoidT)) -> false
+           | DefT (_, _, (NullT | VoidT)) | AnyT _ -> false
            | _ -> true
            )
         |> Core_list.map ~f:(extract_members_as_map ~exclude_proto_members cx)

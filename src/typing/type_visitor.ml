@@ -118,10 +118,10 @@ class ['a] t = object(self)
   | InternalT (ReposUpperT (_, t)) ->
     self#type_ cx pole acc t
 
+  | AnyT _
   | InternalT (OptionalChainVoidT _) -> acc
 
   method def_type cx pole acc = function
-  | AnyT _
   | NumT _
   | StrT _
   | BoolT _

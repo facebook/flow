@@ -180,7 +180,6 @@ let hash_of_def_ctor = Type.(function
   | PolyT _ -> failwith "undefined hash of PolyT"
   | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
 
-  | AnyT _ -> AnyH
   | ArrT _ -> ArrH
   | BoolT _ -> BoolH
   | CharSetT _ -> CharSetH
@@ -210,6 +209,7 @@ let hash_of_ctor = Type.(function
   | InternalT _ -> failwith "undefined hash of InternalT"
   | OpaqueT _ -> failwith "undefined hash of OpaqueT"
 
+  | AnyT _ -> AnyH
   | AnnotT _ -> AnnotH
   | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH

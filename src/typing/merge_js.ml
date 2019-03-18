@@ -131,8 +131,7 @@ let explicit_unchecked_require_strict cx (m, loc, cx_to) =
   let m_name = Reason.internal_module_name m in
   let from_t = Tvar.mk cx reason in
   Flow_js.lookup_builtin cx m_name reason
-    (Type.NonstrictReturning (Some (Type.DefT (reason, Type.bogus_trust (),
-       Type.AnyT Type.Untyped), from_t), None)) from_t;
+    (Type.NonstrictReturning (Some (Type.AnyT (reason, Type.Untyped), from_t), None)) from_t;
 
   (* flow the declared module type to importing context *)
   let to_t = Context.find_require cx_to loc in
@@ -711,7 +710,7 @@ module ContextOptimizer = struct
         let id = opaque_id in
         SigHash.add_aloc sig_hash id;
         super#type_ cx pole t
-      | DefT (r, _, AnyT src) when
+      | AnyT (r, src) when
           Unsoundness.banned_in_exports src && Option.is_some export_reason ->
         self#warn_dynamic_exports cx r (Option.value_exn export_reason);
         let t' = super#type_ cx pole t in

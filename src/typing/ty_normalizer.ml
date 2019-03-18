@@ -581,8 +581,8 @@ end = struct
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Supertype t)
     | DefT (_, _, MixedT _) -> return Ty.Top
-    | DefT (_, _, AnyT Annotated) -> Ty.explicit_any |> return
-    | DefT (_, _, AnyT _) -> Ty.implicit_any |> return
+    | AnyT (_, Annotated) -> Ty.explicit_any |> return
+    | AnyT _ -> Ty.implicit_any |> return
     | DefT (_, _, VoidT) -> return Ty.Void
     | DefT (_, _, NumT (Literal (_, (_, x))))
       when Env.preserve_inferred_literal_types env ->

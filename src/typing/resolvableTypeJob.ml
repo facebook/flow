@@ -260,8 +260,8 @@ and collect_of_type ?log_unresolved cx reason acc = function
   | DefT (_, _, SingletonBoolT _)
   | DefT (_, _, SingletonNumT _)
   | DefT (_, _, SingletonStrT _)
-  | DefT (_, _, AnyT _)
   | DefT (_, _, CharSetT _)
+  | AnyT _
     -> acc
 
   | MergedT (_, uses) ->

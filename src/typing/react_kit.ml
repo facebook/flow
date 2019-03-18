@@ -150,7 +150,7 @@ let props_to_tout
     (Field (None, tout, Positive))
 
   (* any and any specializations *)
-  | DefT (reason, _, AnyT src) ->
+  | AnyT (reason, src) ->
     rec_flow_t cx trace (AnyT.why src reason, tout)
 
   | DefT (reason, _, ReactAbstractComponentT _) ->
@@ -249,7 +249,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
     let coerce_object = function
       | DefT (reason, _, ObjT { props_tmap; dict_t; flags; _ }) ->
         Ok (reason, Context.find_props cx props_tmap, dict_t, flags)
-      | DefT (reason, _, AnyT _) ->
+      | AnyT (reason, _) ->
         Error reason
       | _ ->
         let reason = reason_of_t l in
@@ -265,7 +265,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         rec_flow_t cx trace (t,
           get_builtin_type cx reason_op "ReactPropsCheckType");
         Error reason
-      | DefT (reason, _, AnyT _) ->
+      | AnyT (reason, _) ->
         Error reason
       | t ->
         let reason = reason_of_t t in
@@ -276,7 +276,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
     let coerce_array = function
       | DefT (_, _, ArrT (ArrayAT (_, Some ts) | TupleAT (_, ts))) ->
         Ok ts
-      | DefT (reason, _, ArrT _) | DefT (reason, _, AnyT _) ->
+      | DefT (reason, _, ArrT _) | AnyT (reason, _) ->
         Error reason
       | t ->
         let reason = reason_of_t t in
@@ -337,7 +337,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
       (* Intrinsic components. *)
       | DefT (_, _, StrT lit) -> get_intrinsic `Props lit (Field (None, tin, Negative))
 
-      | DefT (reason, _trust, AnyT source) ->
+      | AnyT (reason, source) ->
         rec_flow_t cx trace (tin, AnyT.why source reason)
 
       (* ...otherwise, error. *)
@@ -572,7 +572,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
       (* Intrinsic components. *)
       | DefT (_, _, StrT lit) -> get_intrinsic `Instance lit (Field (None, tout, Positive))
 
-      | DefT (reason, _, AnyT source) ->
+      | AnyT (reason, source) ->
         rec_flow_t cx trace (AnyT.why source reason, tout)
 
       (* ...otherwise, error. *)

@@ -190,6 +190,8 @@ module rec TypeTerm : sig
 
     | ReposT of reason * t
 
+    | AnyT of reason * any_source
+
   and def_t =
     | NumT of number_literal literal
     | StrT of string literal
@@ -217,8 +219,6 @@ module rec TypeTerm : sig
     | CharSetT of String_utils.CharSet.t
     (* type aliases *)
     | TypeT of type_t_kind * t
-
-    | AnyT of any_source
 
     (* type of an optional parameter *)
     | OptionalT of t
@@ -2198,6 +2198,7 @@ end = struct
     | ShapeT (t) -> reason_of_t t
     | ThisClassT (reason, _) -> reason
     | ThisTypeAppT (reason, _, _, _) -> reason
+    | AnyT (reason, _) -> reason
 
   and reason_of_defer_use_t = function
     | DestructuringT (reason, _)
@@ -2327,6 +2328,7 @@ end = struct
         TypeDestructorTriggerT (use_op, f reason, repos, d, t)
     | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
     | DefT (reason, trust, t) -> DefT (f reason, trust, t)
+    | AnyT (reason, src) -> AnyT (f reason, src)
     | EvalT (t, defer_use_t, id) ->
         EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
     | ExactT (reason, t) -> ExactT (f reason, t)
@@ -2737,7 +2739,6 @@ end = struct
     fun t1 t2 ->
       if t1 == t2 then 0 else
       compare t1 (swap_reason t2 t1)
-
   let reasonless_eq t1 t2 =
     reasonless_compare t1 t2 = 0
 
@@ -2835,7 +2836,7 @@ end)
 
 module AnyT = struct
   let desc = function Annotated -> RAnyExplicit | _ -> RAnyImplicit
-  let make source r = DefT (r, bogus_trust (), AnyT source)
+  let make source r = AnyT (r, source)
   let at   source   = mk_reason (desc source) %> annot_reason %> make source
   let why  source   = replace_reason_const ~keep_def_loc:true (desc source) %> make source
   let annot      = why Annotated
@@ -2845,10 +2846,7 @@ module AnyT = struct
   let locationless source = desc source |> locationless_reason |> make source
 
   let source = function
-  | DefT(_, _, AnyT Annotated)   -> Annotated
-  | DefT(_, _, AnyT AnyError)    -> AnyError
-  | DefT(_, _, AnyT (Unsound k)) -> Unsound k
-  | DefT(_, _, AnyT Untyped)     -> Untyped
+  | AnyT (_, s)   -> s
   | _ -> failwith "not an any type"
 end
 
@@ -2961,7 +2959,7 @@ let is_top = function
 | _ -> false
 
 let is_any = function
-| DefT (_, _, AnyT _) -> true
+| AnyT _ -> true
 | _ -> false
 
 (* Primitives, like string, will be promoted to their wrapper object types for
@@ -3074,7 +3072,6 @@ let string_of_defer_use_ctor = function
 
 let string_of_def_ctor = function
   | ArrT _ -> "ArrT"
-  | AnyT _ -> "AnyT"
   | BoolT _ -> "BoolT"
   | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
@@ -3102,6 +3099,7 @@ let string_of_def_ctor = function
 
 let string_of_ctor = function
   | OpenT _ -> "OpenT"
+  | AnyT _ -> "AnyT"
   | AnnotT _ -> "AnnotT"
   | AnyWithLowerBoundT _ -> "AnyWithLowerBoundT"
   | AnyWithUpperBoundT _ -> "AnyWithUpperBoundT"

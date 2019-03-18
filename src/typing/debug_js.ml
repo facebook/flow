@@ -120,7 +120,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
 
   | DefT (_, _, EmptyT)
   | DefT (_, _, MixedT _)
-  | DefT (_, _, AnyT _)
+  | AnyT _
   | DefT (_, _, NullT)
   | DefT (_, _, VoidT)
     -> []
@@ -1750,7 +1750,7 @@ let rec dump_t_ (depth, tvars) cx t =
         (kid this_t)
         (String.concat "; " (Core_list.map ~f:(fun (_, t) -> kid t) params))
         (kid return_t)) t
-  | DefT (_, _, AnyT src) -> p ~extra:(string_of_any_source src) t
+  | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
   | DefT (_, _, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
   | DefT (_, _, EmptyT)
   | DefT (_, _, NullT)

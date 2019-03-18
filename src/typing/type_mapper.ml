@@ -157,6 +157,7 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else InternalT (ReposUpperT (r, t''))
+      | AnyT _ -> t
       | InternalT (OptionalChainVoidT _) -> t
 
   method virtual tvar: Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
@@ -211,7 +212,6 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else TypeT (s, t'')
-      | AnyT _ -> t
       | OptionalT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

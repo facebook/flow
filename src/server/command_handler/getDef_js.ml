@@ -167,7 +167,7 @@ let getdef_get_result_from_hooks ~options ~reader cx state =
             get_imported_file ()
           else
             loc
-      | DefT (_, _, AnyT _) ->
+      | AnyT _ ->
           get_imported_file ()
       | _ -> failwith (
         spf "Internal Flow Error: Expected ModuleT for %S, but got %S!"
