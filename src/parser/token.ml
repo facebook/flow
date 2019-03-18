@@ -139,7 +139,11 @@ type t =
   | T_NUMBER_TYPE
   | T_BIGINT_TYPE
   | T_NUMBER_SINGLETON_TYPE of { kind: number_type; value: float; raw: string }
-  | T_BIGINT_SINGLETON_TYPE of { kind: number_type; value: float; raw: string }
+  | T_BIGINT_SINGLETON_TYPE of { 
+    kind: number_type;
+    approx_value: float; (* Warning! Might lose precision! *)
+    raw: string
+  }
   | T_STRING_TYPE
   | T_VOID_TYPE
 

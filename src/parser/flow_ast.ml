@@ -76,7 +76,7 @@ end = NumberLiteral
 
 and BigIntLiteral : sig
   type t = {
-    value: float;
+    approx_value: float; (* Warning! Might lose precision! *)
     bigint: string;
   }
   [@@deriving show]

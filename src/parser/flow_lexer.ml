@@ -360,8 +360,8 @@ let mk_bignum_singleton number_type raw =
     with Failure _ -> failwith ("Invalid (lexer) bigint "^postraw)
     end
   in
-  let value = if neg then ~-.value else value in
-  T_BIGINT_SINGLETON_TYPE { kind = number_type; value; raw }
+  let approx_value = if neg then ~-.value else value in
+  T_BIGINT_SINGLETON_TYPE { kind = number_type; approx_value; raw }
 
 let decode_identifier =
   let assert_valid_unicode_in_identifier env loc code =
@@ -781,7 +781,7 @@ let token (env: Lex_env.t) lexbuf : result =
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun _ _ -> match%sedlex lexbuf with
     | binnumber ->
-      Token (env, T_BIGINT { kind = BINARY; raw = lexeme lexbuf })
+      Token (env, T_NUMBER { kind = BINARY; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
     )
   | binnumber ->
@@ -1760,27 +1760,30 @@ let type_token env lexbuf =
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, hexbigint ->
       let num = lexeme lexbuf in
+      (* Reconsider Windows support of FloatOfString *)
       begin try Token (env, mk_bignum_singleton NORMAL num)
       with _ when Sys.win32 ->
         let loc = loc_of_lexbuf env lexbuf in
         let env = lex_error env loc Parse_error.WindowsFloatOfString in
-        Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; value = 789.0; raw = "789" })
+        Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; approx_value = 789.0; raw = "789" })
       end
     | _ -> failwith "unreachable"
     )
   | Opt neg, hexbigint ->
     let num = lexeme lexbuf in
+    (* Reconsider Windows support of FloatOfString *)
     begin try Token (env, mk_bignum_singleton NORMAL num)
     with _ when Sys.win32 ->
       let loc = loc_of_lexbuf env lexbuf in
       let env = lex_error env loc Parse_error.WindowsFloatOfString in
-      Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; value = 789.0; raw = "789" })
+      Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; approx_value = 789.0; raw = "789" })
     end
   | Opt neg, hexnumber, non_hex_letter, Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
     recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | Opt neg, hexnumber ->
       let num = lexeme lexbuf in
+      (* Reconsider Windows support of FloatOfString *)
       begin try Token (env, mk_num_singleton NORMAL num)
       with _ when Sys.win32 ->
         let loc = loc_of_lexbuf env lexbuf in
@@ -1791,6 +1794,7 @@ let type_token env lexbuf =
     )
   | Opt neg, hexnumber ->
     let num = lexeme lexbuf in
+    (* Reconsider Windows support of FloatOfString *)
     begin try Token (env, mk_num_singleton NORMAL num)
     with _ when Sys.win32 ->
       let loc = loc_of_lexbuf env lexbuf in
