@@ -26,3 +26,7 @@ if (el) el.className // valid
 for (var field of collection) {
   field.className // valid
 }
+
+// covariance
+declare var Anchors: HTMLCollection<HTMLAnchorElement>;
+(Anchors: HTMLCollection<HTMLElement>);
