@@ -20,6 +20,7 @@ Table of contents:
 - [`$Call<F, T...>`](#toc-call)
 - [`Class<T>`](#toc-class)
 - [`$Shape<T>`](#toc-shape)
+- [`$Required<T>`](#toc-required)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
 - [`Existential Type (*)`](#toc-existential-type)
@@ -600,6 +601,23 @@ const person2: Person = {name: 'a'};  // Error: missing `age`
 const person3: PersonDetails = {age: 28};  // OK
 const person4: PersonDetails = {name: 'a'};  // OK
 const person5: PersonDetails = {age: 28, name: 'a'};  // OK
+```
+
+## `$Required<T>` <a class="toc" id="toc-required" href="#toc-required"></a>
+
+Copies the shape of the type supplied, but marks every field required.
+
+```js
+// @flow
+type Person = {
+  firstName: string,
+  lastName?: string,
+}
+type PersonWithLastName = $Required<Person>;
+
+const person1: Person = {firstName: 'Andrew'}; // OK
+const person2: PersonWithLastName = {firstName: 'Andrew'};  // Error: missing `lastName`
+const person3: PersonWithLastName = {firstName: 'Andrew', lastName: 'Scott'};  // OK
 ```
 
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
