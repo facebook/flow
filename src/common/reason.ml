@@ -173,6 +173,7 @@ type 'loc virtual_reason_desc =
   | RRestArray of 'loc virtual_reason_desc
   | RAbstract of 'loc virtual_reason_desc
   | RTypeApp of 'loc virtual_reason_desc
+  | RTypeAppImplicit of 'loc virtual_reason_desc
   | RThisTypeApp of 'loc virtual_reason_desc
   | RExtends of 'loc virtual_reason_desc
   | RClass of 'loc virtual_reason_desc
@@ -331,6 +332,7 @@ let rec map_desc_locs f = function
   | RRestArray desc -> RRestArray (map_desc_locs f desc)
   | RAbstract desc -> RAbstract (map_desc_locs f desc)
   | RTypeApp desc -> RTypeApp (map_desc_locs f desc)
+  | RTypeAppImplicit desc -> RTypeAppImplicit (map_desc_locs f desc)
   | RThisTypeApp desc -> RThisTypeApp (map_desc_locs f desc)
   | RExtends desc -> RExtends (map_desc_locs f desc)
   | RClass desc -> RClass (map_desc_locs f desc)
@@ -704,6 +706,7 @@ let rec string_of_desc = function
   | RRestArray _ -> "rest array"
   | RAbstract d -> spf "abstract %s" (string_of_desc d)
   | RTypeApp d -> string_of_desc d
+  | RTypeAppImplicit d -> string_of_desc d
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
   | RExtends d -> spf "extends %s" (string_of_desc d)
   | RClass d -> spf "class %s" (string_of_desc d)
@@ -1354,6 +1357,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RMaybe _
 | RAbstract _
 | RTypeApp _
+| RTypeAppImplicit _
 | RThisTypeApp _
 | RExtends _
 | RClass _

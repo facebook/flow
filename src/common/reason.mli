@@ -121,6 +121,7 @@ type 'loc virtual_reason_desc =
   | RRestArray of 'loc virtual_reason_desc
   | RAbstract of 'loc virtual_reason_desc
   | RTypeApp of 'loc virtual_reason_desc
+  | RTypeAppImplicit of 'loc virtual_reason_desc
   | RThisTypeApp of 'loc virtual_reason_desc
   | RExtends of 'loc virtual_reason_desc
   | RClass of 'loc virtual_reason_desc
