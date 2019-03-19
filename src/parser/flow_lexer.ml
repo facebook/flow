@@ -770,7 +770,7 @@ let token (env: Lex_env.t) lexbuf : result =
 
   | binbigint, word ->
     (* Numbers cannot be immediately followed by words *)
-    recover env lexbuf ~f:(fun _ _ -> match%sedlex lexbuf with
+    recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | binbigint -> 
       Token (env, T_BIGINT { kind = BINARY; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
@@ -779,7 +779,7 @@ let token (env: Lex_env.t) lexbuf : result =
     Token (env, T_BIGINT { kind = BINARY; raw = lexeme lexbuf })
   | binnumber, (letter | '2'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
-    recover env lexbuf ~f:(fun _ _ -> match%sedlex lexbuf with
+    recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
     | binnumber ->
       Token (env, T_NUMBER { kind = BINARY; raw = lexeme lexbuf })
     | _ -> failwith "unreachable"
@@ -1765,7 +1765,7 @@ let type_token env lexbuf =
       with _ when Sys.win32 ->
         let loc = loc_of_lexbuf env lexbuf in
         let env = lex_error env loc Parse_error.WindowsFloatOfString in
-        Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; approx_value = 789.0; raw = "789" })
+        Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; approx_value = 291.0; raw = "0x123n" })
       end
     | _ -> failwith "unreachable"
     )
@@ -1776,7 +1776,7 @@ let type_token env lexbuf =
     with _ when Sys.win32 ->
       let loc = loc_of_lexbuf env lexbuf in
       let env = lex_error env loc Parse_error.WindowsFloatOfString in
-      Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; approx_value = 789.0; raw = "789" })
+      Token (env, T_BIGINT_SINGLETON_TYPE { kind = NORMAL; approx_value = 291.0; raw = "0x123n" })
     end
   | Opt neg, hexnumber, non_hex_letter, Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)
