@@ -1352,6 +1352,21 @@ let with_timer (f: unit -> 'a) : (float * 'a) =
   let duration = Unix.gettimeofday () -. start in
   duration, ret
 
+(* The EventLogger needs to be periodically flushed. LspCommand was originally written to flush
+ * when idle, but the idle detection didn't quite work so we never really flushed until exiting. So
+ * instead lets periodically flush. Flushing should be fast and this is basically what the monitor
+ * does too. *)
+module LogFlusher = LwtLoop.Make (struct
+  type acc = unit
+
+  let main () =
+    let%lwt () = Lwt_unix.sleep 5.0 in
+    EventLoggerLwt.flush ()
+
+  let catch () exn =
+    Exception.(reraise (wrap exn))
+end)
+
 
 (************************************************************************)
 (** Main loop                                                          **)
@@ -1381,7 +1396,20 @@ let rec main
   } in
   let client = Jsonrpc.make_queue () in
   let state = (Pre_init connect_params) in
-  Lwt_main.run (main_loop base_flags.Base_flags.flowconfig_name client state)
+  LwtInit.run_lwt (initial_lwt_thread base_flags.Base_flags.flowconfig_name client state)
+
+and initial_lwt_thread flowconfig_name client state () =
+  (* If `prom`  in `Lwt.async (fun () -> prom)` resolves to an exception, this function will be
+   * called *)
+  Lwt.async_exception_hook := (fun exn ->
+    let exn = Exception.wrap exn in
+    let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
+    FlowExitStatus.(exit ~msg Unknown_error)
+  );
+
+  Lwt.async LogFlusher.run;
+
+  main_loop flowconfig_name client state
 
 and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit Lwt.t =
   let%lwt event =
@@ -1670,7 +1698,6 @@ begin
     Ok (state, LogNotNeeded)
 
   | _, Tick ->
-    Lwt.async EventLoggerLwt.flush;
     Ok (state, LogNotNeeded)
 end
 
