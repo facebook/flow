@@ -861,7 +861,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
           let t = match acc with
           | None ->
             let reason = replace_reason_const RReactDefaultProps reason_op in
-            Obj_type.mk cx reason
+            VoidT.make reason
           | Some (Unknown reason) -> AnyT.make Untyped reason
           | Some (Known (reason, props, dict, _)) ->
             Obj_type.mk_with_proto cx reason ~props (ObjProtoT reason)

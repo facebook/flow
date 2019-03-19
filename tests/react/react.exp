@@ -632,6 +632,25 @@ References:
                                ^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------- create_class.js:181:1
+
+Cannot assign `1` to `M.defaultProps.bar` because property `bar` is missing in default props of React component [1].
+
+   create_class.js:181:1
+   181| M.defaultProps.bar = 1; // error cannot update void property
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   create_class.js:176:11
+                  v------------------
+   176| const M = React.createClass({
+   177|   propTypes: {
+   178|     foo: React.PropTypes.string,
+   179|   },
+   180| });
+        -^ [1]
+
+
 Error ------------------------------------------------------------------------- create_class_initial_state_sealed.js:9:6
 
 Cannot cast `this.state.q` to empty because number [1] is incompatible with empty [2].
@@ -4196,7 +4215,7 @@ References:
 
 
 
-Found 244 errors
+Found 245 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
