@@ -7582,9 +7582,13 @@ and cache_instantiate cx trace ?cache typeparam reason_op reason_tapp t =
   match cache with
   | None -> t
   | Some rs ->
-    let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
-    rec_unify cx trace ~use_op:unknown_use ~unify_any:true t t_;
-    t_
+    match desc_of_reason reason_tapp with
+    (* This reason description cannot be trusted for caching purposes. *)
+    | RTypeAppImplicit _ -> t
+    | _ ->
+      let t_ = Cache.PolyInstantiation.find cx reason_tapp typeparam (reason_op, rs) in
+      rec_unify cx trace ~use_op:unknown_use ~unify_any:true t t_;
+      t_
 
 (* Instantiate a polymorphic definition with stated bound or 'any' for args *)
 (* Needed only for `instanceof` refis and React.PropTypes.instanceOf types *)
@@ -7658,7 +7662,8 @@ and canonicalize_imported_type cx trace reason t =
       |> Nel.map (fun tp -> BoundT (tp.reason, tp.name, tp.polarity))
       |> Nel.to_list
     in
-    Some (poly_type (mk_id ()) tparams_loc typeparams (class_type (typeapp t targs)))
+    let tapp = typeapp ~implicit:true t targs in
+    Some (poly_type (mk_id ()) tparams_loc typeparams (class_type tapp))
 
   | DefT (_, _, PolyT (_, _, DefT (_, _, TypeT _), _)) ->
     Some t

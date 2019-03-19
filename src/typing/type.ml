@@ -3404,8 +3404,12 @@ let poly_type_of_tparams id (tparams: typeparams) t =
   | None -> t
   | Some (tparams_loc, tparams_nel) -> poly_type id tparams_loc tparams_nel t
 
-let typeapp ?annot_loc t targs =
-  let reason = replace_reason (fun desc -> RTypeApp desc) (reason_of_t t) in
+(* The implicit parameter specifies that the application is not a product of some
+ * source level type application, but merely a tool for some other functionality,
+ * e.g. canonicalize_imported_type in flow_js.ml. *)
+let typeapp ?(implicit=false) ?annot_loc t targs =
+  let reason = replace_reason (fun desc ->
+    if implicit then RTypeAppImplicit desc else RTypeApp desc) (reason_of_t t) in
   let reason = match annot_loc with
   | Some loc -> annot_reason (repos_reason loc reason)
   | None -> reason
