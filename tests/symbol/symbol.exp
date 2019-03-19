@@ -7,8 +7,8 @@ Cannot call `Symbol` because no more than 1 argument is expected by function typ
                  ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:86:3
-   86|   static (value?:any): Symbol;
+   <BUILTINS>/core.js:88:3
+   88|   static (value?:any): Symbol;
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 

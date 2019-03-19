@@ -25,8 +25,8 @@ References:
    Bad.js:8:8
      8|   bar: number,
                ^^^^^^ [3]
-   <BUILTINS>/core.js:146:31
-   146|     toString(radix?: number): string;
+   <BUILTINS>/core.js:148:31
+   148|     toString(radix?: number): string;
                                       ^^^^^^ [4]
 
 
