@@ -286,6 +286,7 @@ and collect_of_destructor ?log_unresolved cx reason acc = function
   | ElementType t -> collect_of_type ?log_unresolved cx reason acc t
   | Bind t -> collect_of_type ?log_unresolved cx reason acc t
   | ReadOnlyType -> acc
+  | RequiredType -> acc
   | SpreadType (_, ts) -> collect_of_types ?log_unresolved cx reason acc ts
   | RestType (_, t) -> collect_of_type ?log_unresolved cx reason acc t
   | ValuesType -> acc

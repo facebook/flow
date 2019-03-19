@@ -234,6 +234,7 @@ class ['a] t = object(self)
   | PropertyType _
   | ValuesType
   | ReadOnlyType
+  | RequiredType
   | ReactElementPropsType
   | ReactElementConfigType
   | ReactElementRefType
@@ -522,6 +523,8 @@ class ['a] t = object(self)
       let acc = self#react_create_class_knot cx acc knot in
       let acc = self#type_ cx pole_TODO acc tout in
       acc)
+  
+  | RequiredT (_, t) -> self#type_ cx pole_TODO acc t
 
   | ObjKitT (_, _, resolve_tool, tool, tout) ->
     let open Object in

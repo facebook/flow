@@ -433,6 +433,25 @@ let rec convert cx tparams_map = Ast.Type.(function
         targs
     )
 
+  (* $Required<T> *)
+  | "$Required" ->
+    check_type_arg_arity cx loc t_ast targs 1 (fun () ->
+      let ts, targs = convert_type_params () in
+      let t = List.hd ts in
+      let reason = mk_reason (RType "$Required") loc in
+      reconstruct_ast
+        (EvalT (
+          t,
+          TypeDestructorT (
+            use_op reason,
+            reason,
+            RequiredType
+          ),
+          mk_id ()
+        ))
+        targs
+    )
+
   (* $Keys<T> is the set of keys of T *)
   (** TODO: remove $Enum **)
   | "$Keys" | "$Enum" ->

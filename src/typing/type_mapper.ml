@@ -375,6 +375,7 @@ class virtual ['a] t = object(self)
           if t'' == t' then t
           else Bind t''
       | ReadOnlyType -> t
+      | RequiredType -> t
       | SpreadType (options, tlist) ->
           let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
           if tlist' == tlist then t
@@ -989,11 +990,15 @@ class virtual ['a] t_with_uses = object(self)
           if then_t' == then_t && else_t' == else_t && tout' == tout then t
           else CondT (r, then_t', else_t', tout')
       | ExtendsUseT (use_op, r, tlist, t1, t2) ->
-        let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
-        let t1' = self#type_ cx map_cx t1 in
-        let t2' = self#type_ cx map_cx t2 in
-        if tlist' == tlist && t1' == t1 && t2' == t2 then t
-        else ExtendsUseT (use_op, r, tlist', t1', t2')
+          let tlist' = ListUtils.ident_map (self#type_ cx map_cx) tlist in
+          let t1' = self#type_ cx map_cx t1 in
+          let t2' = self#type_ cx map_cx t2 in
+          if tlist' == tlist && t1' == t1 && t2' == t2 then t
+          else ExtendsUseT (use_op, r, tlist', t1', t2')
+      | RequiredT (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else RequiredT (r, t'')
 
     method private opt_use_type cx map_cx t = match t with
     | OptCallT (op, r, funcall) ->

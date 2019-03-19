@@ -760,6 +760,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
     | IncompatibleGetKeysT
     | IncompatibleGetValuesT
     | IncompatibleMapTypeTObject
+    | IncompatibleRequiredT
       -> nope "is not an object"
     | IncompatibleMixinT
     | IncompatibleThisSpecializeT

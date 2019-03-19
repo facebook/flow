@@ -515,6 +515,9 @@ module rec TypeTerm : sig
     (* Values *)
     | GetValuesT of reason * t
 
+    (* Required *)
+    | RequiredT of reason * t
+
     (* Element access *)
     | ElemT of use_op * reason * t * elem_action
 
@@ -1045,6 +1048,7 @@ module rec TypeTerm : sig
   | ElementType of t
   | Bind of t
   | ReadOnlyType
+  | RequiredType
   | SpreadType of Object.Spread.target * t list
   | RestType of Object.Rest.merge_mode * t
   | ValuesType
@@ -2277,6 +2281,7 @@ end = struct
     | ReposLowerT (reason, _, _) -> reason
     | ReposUseT (reason, _, _, _) -> reason
     | ResolveSpreadT (_, reason, _) -> reason
+    | RequiredT (reason, _) -> reason
     | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
     | SetElemT (_,reason,_,_,_) -> reason
     | SetPropT (_,reason,_,_,_,_) -> reason
@@ -2445,6 +2450,7 @@ end = struct
     | ReposLowerT (reason, use_desc, t) -> ReposLowerT (f reason, use_desc, t)
     | ReposUseT (reason, use_desc, use_op, t) -> ReposUseT (f reason, use_desc, use_op, t)
     | ResolveSpreadT (use_op, reason_op, resolve) -> ResolveSpreadT (use_op, f reason_op, resolve)
+    | RequiredT (reason, t) -> RequiredT (f reason, t)
     | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
       SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
     | SetElemT (use_op, reason, it, et, t) -> SetElemT (use_op, f reason, it, et, t)
@@ -2560,6 +2566,7 @@ end = struct
   | UnifyT (_, _)
   | BecomeT (_, _)
   | GetValuesT (_, _)
+  | RequiredT (_, _)
   | MakeExactT (_, _)
   | CJSRequireT (_, _, _)
   | ImportModuleNsT (_, _, _)
@@ -3282,6 +3289,7 @@ let string_of_use_ctor = function
     | ResolveSpreadsToMultiflowPartial _ -> "ResolveSpreadsToMultiflowPartial"
     | ResolveSpreadsToCallT _ -> "ResolveSpreadsToCallT"
     end
+  | RequiredT _ -> "RequiredT"
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"

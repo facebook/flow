@@ -773,6 +773,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | ReactKitT _ -> [] (* TODO *)
 
+  | RequiredT (_, t) -> [
+      "type", _json_of_t json_cx t
+    ]
+
   | ChoiceKitUseT (_, tool) -> [
       "tool", JSON_String (match tool with
       | FullyResolveType _ -> "fullyResolveType"
@@ -1170,6 +1174,9 @@ and json_of_destructor_impl json_cx = Hh_json.(function
     ]
   | ReadOnlyType -> JSON_Object [
       "readOnly", JSON_Bool true
+    ]
+  | RequiredType -> JSON_Object [
+      "required", JSON_Bool true
     ]
   | SpreadType (target, ts) ->
     let open Object.Spread in
@@ -1644,6 +1651,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | ElementType _ -> "element type"
   | Bind _ -> "bind"
   | ReadOnlyType -> "read only"
+  | RequiredType -> "required"
   | SpreadType _ -> "spread"
   | RestType _ -> "rest"
   | ValuesType -> "values"
@@ -2173,6 +2181,7 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToMultiflowSubtypeFull _
       | ResolveSpreadsToCustomFunCall _
         -> p ~extra:(string_of_use_op use_op) t)
+  | RequiredT _ -> p t
   | SentinelPropTestT (_, l, _key, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
@@ -2377,6 +2386,7 @@ let string_of_destructor = function
   | ElementType _ -> "ElementType"
   | Bind _ -> "Bind"
   | ReadOnlyType -> "ReadOnly"
+  | RequiredType -> "Required"
   | SpreadType _ -> "Spread"
   | RestType _ -> "Rest"
   | ValuesType -> "Values"
@@ -2456,6 +2466,7 @@ let dump_error_message =
   | IncompatibleMapTypeTObject -> "IncompatibleMapTypeTObject"
   | IncompatibleTypeAppVarianceCheckT -> "IncompatibleTypeAppVarianceCheckT"
   | IncompatibleGetStaticsT -> "IncompatibleGetStaticsT"
+  | IncompatibleRequiredT -> "IncompatibleRequiredT"
   | IncompatibleUnclassified ctor -> spf "IncompatibleUnclassified %S" ctor
   in
   fun cx err ->

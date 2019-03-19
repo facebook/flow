@@ -284,6 +284,7 @@ and 'loc upper_kind =
   | IncompatibleMapTypeTObject
   | IncompatibleTypeAppVarianceCheckT
   | IncompatibleGetStaticsT
+  | IncompatibleRequiredT
   | IncompatibleUnclassified of string
 
 let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
@@ -321,6 +322,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | IncompatibleMapTypeTObject
     | IncompatibleTypeAppVarianceCheckT
     | IncompatibleGetStaticsT
+    | IncompatibleRequiredT
     | IncompatibleUnclassified _ as u -> u in
   function
   | EIncompatible {use_op; lower=(lreason, lkind); upper=(ureason, ukind); branches} ->
