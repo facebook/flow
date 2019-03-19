@@ -2913,7 +2913,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (o, values)
 
     (* Any will always be ok *)
-    | DefT (_, _, AnyT src), RequiredT (reason, values) ->
+    | AnyT (_, src), RequiredT (reason, values) ->
       rec_flow_t cx trace (AnyT.why src reason, values)
 
     (********************************)
