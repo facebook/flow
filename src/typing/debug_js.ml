@@ -773,10 +773,6 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
 
   | ReactKitT _ -> [] (* TODO *)
 
-  | RequiredT (_, t) -> [
-      "type", _json_of_t json_cx t
-    ]
-
   | ChoiceKitUseT (_, tool) -> [
       "tool", JSON_String (match tool with
       | FullyResolveType _ -> "fullyResolveType"
@@ -1976,7 +1972,7 @@ and dump_use_t_ (depth, tvars) cx t =
       spf "CreateClass (%s, %s)" (create_class tool knot) (kid tout)
   in
 
-  let slice (_, props, dict, {exact; _}) =
+  let slice (_, props, dict, {exact; _}, _) =
     let xs = match dict with
     | Some {dict_polarity=p; _} -> [(Polarity.sigil p)^"[]"]
     | None -> []
@@ -2048,6 +2044,7 @@ and dump_use_t_ (depth, tvars) cx t =
     in
     let tool = function
       | ReadOnly -> "ReadOnly"
+      | Required -> "Required"
       | Spread (options, state) -> spread options state
       | Rest (options, state) -> rest options state
       | ReactConfig state -> react_props state
@@ -2181,7 +2178,6 @@ and dump_use_t_ (depth, tvars) cx t =
       | ResolveSpreadsToMultiflowSubtypeFull _
       | ResolveSpreadsToCustomFunCall _
         -> p ~extra:(string_of_use_op use_op) t)
-  | RequiredT _ -> p t
   | SentinelPropTestT (_, l, _key, sense, sentinel, result) -> p ~reason:false
       ~extra:(spf "%s, %b, %s, %s"
         (kid l)
