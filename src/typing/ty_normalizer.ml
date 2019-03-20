@@ -888,11 +888,63 @@ end = struct
     match desc_of_reason ~unwrap:false r  with
     | RType name
     | RIdentifier name -> return name
-    | RReactComponent -> return "React$Component"
     | r ->
       let msg = spf "could not extract name from reason: %s"
         (Reason.string_of_desc r) in
       terr ~kind:BadInstanceT ~msg None
+
+  (* Used for instances of React.createClass(..) *)
+  and react_component =
+    let react_props ~env ~default props name =
+      match SMap.find name props with
+      | exception Not_found -> return default
+      | Type.Field (_, t, _) -> type__ ~env t
+      | _ -> return default
+    in
+    let react_static_props ~env static =
+      let cx = Env.(env.genv.cx) in
+      match static with
+      | T.DefT (_, _, T.ObjT { T.props_tmap; _ }) ->
+        Context.find_props cx props_tmap |>
+        SMap.bindings |>
+        mapM (fun (name, p) -> obj_prop ~env name p) >>|
+        List.concat
+      | _ -> return []
+    in
+    let inexactify = function
+      | Ty.Obj ({ Ty.obj_exact = true; _ } as obj) ->
+        Ty.Obj { obj with Ty.obj_exact = false }
+      | ty -> ty
+    in
+    fun ~env static own_props ->
+      let cx = Env.(env.genv.cx) in
+      let own_props = Context.find_props cx own_props in
+      react_props ~env ~default:Ty.implicit_any own_props "props" >>= fun props_ty ->
+      react_props ~env ~default:Ty.implicit_any own_props "state" >>= fun state_ty ->
+      react_static_props ~env static >>| fun static_flds ->
+
+      (* The inferred type for state is unsealed, which has its exact bit set.
+       * However, Ty.t does not account for unsealed and exact sealed objects are
+       * incompatible with exact and unsealed, so making state inexact here. *)
+      let state_ty = inexactify state_ty in
+      let parent_instance = generic_builtin_t "React$Component" [props_ty; state_ty] in
+      let parent_class = Ty.Utility (Ty.Class parent_instance) in
+      (*
+       * {
+       *   +propTypes: {
+       *     foo: React$PropType$Primitive$Required<string>,
+       *     bar: React$PropType$Primitive<number>,
+       *   },
+       *   defaultProps: { ... },
+       * }
+       *)
+      let props_obj = Ty.Obj {
+        Ty.obj_exact = false;
+        obj_frozen = false;
+        obj_literal = false;
+        obj_props = static_flds;
+      } in
+      Ty.mk_inter [parent_class; props_obj]
 
   and instance_t ~env r inst =
     let open Type in
@@ -943,7 +995,13 @@ end = struct
         terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) None
     in
     fun ~env t ps ->
-      type__ ~env t >>= go ~env ps
+      match t with
+      | T.DefT (r, _, T.InstanceT (static, _, _, inst))
+        when desc_of_reason ~unwrap:false r = RReactComponent ->
+        let { Type.own_props; _ } = inst in
+        react_component ~env static own_props
+      | _ ->
+        type__ ~env t >>= go ~env ps
 
   and this_class_t ~env t ps =
     type__ ~env t >>= fun ty ->
