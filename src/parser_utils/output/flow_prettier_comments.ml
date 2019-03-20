@@ -257,7 +257,7 @@ and get_children_nodes_expr expression =
       @ List.fold_left
           (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
           [] arguments
-  | Object {Object.properties} ->
+  | Object {Object.properties; comments= _} ->
       List.fold_left
         (fun nodes property ->
           nodes

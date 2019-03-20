@@ -1049,7 +1049,7 @@ class ['loc] mapper = object(this)
 
   method object_ _loc (expr: ('loc, 'loc) Flow_ast.Expression.Object.t) =
     let open Flow_ast.Expression.Object in
-    let { properties } = expr in
+    let { properties; comments } = expr in
     let properties' = ListUtils.ident_map (fun prop ->
       match prop with
       | Property p ->
@@ -1059,8 +1059,9 @@ class ['loc] mapper = object(this)
         let s' = this#spread_property s in
         if s == s' then prop else SpreadProperty s'
     ) properties in
-    if properties == properties' then expr
-    else { properties = properties' }
+    let comments' = this#syntax_opt comments in
+    if properties == properties' && comments == comments' then expr
+    else { properties = properties'; comments = comments' }
 
   method object_property (prop: ('loc, 'loc) Flow_ast.Expression.Object.Property.t) =
     let open Flow_ast.Expression.Object.Property in

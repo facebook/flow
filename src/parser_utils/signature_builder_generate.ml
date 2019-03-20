@@ -805,7 +805,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         loc, T.Function (function_ false tparams params return body)
       | loc, Object stuff ->
         let open Ast.Expression.Object in
-        let { properties } = stuff in
+        let { properties; comments= _ } = stuff in
         begin match object_ properties with
           | Some o -> loc, T.ObjectLiteral { frozen = false; properties = o }
           | None -> T.FixMe.mk_expr_type loc
@@ -847,7 +847,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           arguments = [Expression (loc, Object stuff)]
         } ->
         let open Ast.Expression.Object in
-        let { properties } = stuff in
+        let { properties; comments= _ } = stuff in
         begin match object_ properties with
           | Some o -> loc, T.ObjectLiteral { frozen = true; properties = o }
           | None -> T.FixMe.mk_expr_type loc

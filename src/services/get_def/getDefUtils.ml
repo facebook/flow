@@ -34,7 +34,7 @@ class ['acc] object_key_visitor ~init = object(this)
       let open Property in
       function Init { key; _ } | Method { key; _ } | Get { key; _ } | Set { key; _ } -> key
     in
-    let { properties } = obj in
+    let { properties; comments= _ } = obj in
     properties
     |> List.iter begin function
       | SpreadProperty _ -> ()

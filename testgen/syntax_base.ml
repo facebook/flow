@@ -86,7 +86,7 @@ and mk_obj_literal_expr (t : (Loc.t, Loc.t) T.Object.t) : (Loc.t, Loc.t) E.t' =
         })
        )
   in
-  E.Object.(E.Object {properties = prop_init_list})
+  E.Object.(E.Object {properties = prop_init_list; comments = Flow_ast_utils.mk_comments_opt ()})
 
 (* Check the expression is of the given type *)
 let mk_runtime_check (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t') : t =
@@ -252,7 +252,7 @@ let mk_obj_lit (plist : (string * ((Loc.t, Loc.t) E.t' * (Loc.t, Loc.t) T.t')) l
       })
   ) plist in
   let open E.Object in
-  Expr (E.Object {properties = props})
+  Expr (E.Object {properties = props; comments = Flow_ast_utils.mk_comments_opt ()})
 
 let combine_syntax (prog : t list) : string =
   String.concat

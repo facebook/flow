@@ -343,6 +343,11 @@ let layout_node_with_simple_comments current_loc comments layout_node =
   let following = List.map (layout_from_comment Following current_loc) trailing in
   Concat (preceding @ [layout_node] @ following)
 
+let layout_node_with_simple_comments_opt current_loc comments layout_node =
+  match comments with
+  | Some c -> layout_node_with_simple_comments current_loc c layout_node
+  | None -> layout_node
+
 let source_location_with_comments ?comments (current_loc, layout_node) =
   match comments with
   | Some comments ->
@@ -709,8 +714,8 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           ~trailing_sep
           (List.rev rev_elements);
       ]
-    | E.Object { E.Object.properties } ->
-      group [
+    | E.Object { E.Object.properties; comments } ->
+      layout_node_with_simple_comments_opt loc comments @@ group [
         new_list
           ~wrap:(Atom "{", Atom "}")
           ~sep:(Atom ",")
@@ -1534,7 +1539,7 @@ and object_properties_with_newlines properties =
         begin match v with
         | (_, E.Function _)
         | (_, E.ArrowFunction _) -> true
-        | (_, E.Object { O.properties }) ->
+        | (_, E.Object { O.properties; comments= _ }) ->
           List.exists has_function_decl properties
         | _ -> false
         end

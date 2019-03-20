@@ -1141,9 +1141,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method object_ (expr: ('M, 'T) Ast.Expression.Object.t) : ('N, 'U) Ast.Expression.Object.t =
     let open Ast.Expression.Object in
-    let { properties } = expr in
+    let { properties; comments } = expr in
+    let comments' = Option.map ~f:this#syntax comments in
     let properties' = List.map this#object_property_or_spread_property properties in
-    { properties = properties' }
+    { properties = properties'; comments = comments' }
 
   method object_property_or_spread_property (prop: ('M, 'T) Ast.Expression.Object.property)
                                                  : ('N, 'U) Ast.Expression.Object.property =

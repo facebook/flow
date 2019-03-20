@@ -747,6 +747,7 @@ and Expression : sig
 
     and ('M, 'T) t = {
       properties: ('M, 'T) property list;
+      comments: ('M, unit) Syntax.t option;
     }
 
     [@@deriving show]

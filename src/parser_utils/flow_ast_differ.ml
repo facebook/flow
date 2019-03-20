@@ -885,8 +885,8 @@ let program (algo : diff_algorithm)
         class_ class1 class2
       | (_, Assignment assn1), (_, Assignment assn2) ->
         assignment assn1 assn2
-      | (_, Object obj1), (_, Object obj2) ->
-        object_ obj1 obj2
+      | (loc, Object obj1), (_, Object obj2) ->
+        object_ loc obj1 obj2
       | (_, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2) ->
         Some (tagged_template t_tmpl1 t_tmpl2)
       | (loc, Ast.Expression.TemplateLiteral t_lit1), (_, Ast.Expression.TemplateLiteral t_lit2) ->
@@ -1202,11 +1202,12 @@ let program (algo : diff_algorithm)
         object_spread_property p1 p2 |> Option.return
     | _ -> None
 
-  and object_ obj1 obj2 =
+  and object_ loc obj1 obj2 =
     let open Ast.Expression.Object in
-    let { properties = properties1 } = obj1 in
-    let { properties = properties2 } = obj2 in
-    diff_and_recurse_no_trivial object_property properties1 properties2
+    let { properties = properties1; comments= comments1 } = obj1 in
+    let { properties = properties2; comments= comments2 } = obj2 in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [comments; diff_and_recurse_no_trivial object_property properties1 properties2]
 
   and binary (b1: (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2: (Loc.t, Loc.t) Ast.Expression.Binary.t): node change list option =
     let open Ast.Expression.Binary in

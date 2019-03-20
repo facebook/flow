@@ -291,7 +291,7 @@ module Eval(Env: EvalEnv) = struct
         function_ tps generator tparams params return body
       | loc, Object stuff ->
         let open Ast.Expression.Object in
-        let { properties } = stuff in
+        let { properties; comments= _ } = stuff in
         if properties = [] then Deps.top (Error.EmptyObject loc)
         else object_ tps loc properties
       | loc, Array stuff ->

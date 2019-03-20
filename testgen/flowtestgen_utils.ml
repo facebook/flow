@@ -450,7 +450,7 @@ module Config = struct
           Property (Loc.none, Init {key;
                                value;
                                shorthand = false})) c in
-    {properties = prop_list};;
+    {properties = prop_list; comments = Flow_ast_utils.mk_comments_opt ()};;
 
   (* Convert a config into string for printing *)
   let string_of_config (c : t) : string =
@@ -460,7 +460,7 @@ module Config = struct
   (* Return an empty config *)
   let empty () : t =
     let open E.Object in
-    to_config {properties = []};;
+    to_config {properties = []; comments = Flow_ast_utils.mk_comments_opt ()};;
 
   (* Get a value from the config given a string.*)
   let get (conf : t) (prop_name : string) : value =

@@ -298,7 +298,7 @@ end = struct
     let open Ast.Expression in
     match actual, expected with
     | JSON_Object aprops,
-      (_, Object { Object.properties = eprops }) ->
+      (_, Object { Object.properties = eprops; comments= _ }) ->
       let amap = map_of_pairs aprops in
       let emap = map_of_properties eprops in
       errors
@@ -431,7 +431,7 @@ end = struct
     match diff with
     | (_, Object { Object.properties = diff_props; _ }) ->
       begin match expected with
-      | (loc, Object { Object.properties = expected_props; }) ->
+      | (loc, Object { Object.properties = expected_props; comments }) ->
         let properties = List.fold_left (fun props diff_prop ->
           match diff_prop with
           | Object.Property (diff_loc, diff_prop) ->
@@ -464,7 +464,7 @@ end = struct
             ) [] props
           | _ -> failwith "Invalid JSON"
         ) expected_props diff_props in
-        Some (loc, Object { Object.properties })
+        Some (loc, Object { Object.properties; comments })
       | (loc, Array { Array.elements = expected_elems; }) ->
         let expected_length = List.length expected_elems in
         let elements = List.fold_left (fun elems diff_prop ->

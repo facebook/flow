@@ -349,8 +349,8 @@ module Expressions = struct
   let object_property_with_literal ?(shorthand=false) ?(loc=Loc.none) k v =
     object_property ~shorthand ~loc (object_property_key_literal ~loc k) v
 
-  let object_ ?(loc=Loc.none) properties =
-    loc, Object { Object.properties }
+  let object_ ?comments ?(loc=Loc.none) properties =
+    loc, Object { Object.properties; comments }
 
   (* _object.property *)
   let member ~property _object =

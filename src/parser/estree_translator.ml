@@ -357,8 +357,8 @@ end with type t = Impl.t) = struct
           node "ArrayExpression" loc [
             "elements", array_of_list (option expression_or_spread) elements;
           ]
-      | loc, Object { Object.properties } ->
-          node "ObjectExpression" loc [
+      | loc, Object { Object.properties; comments } ->
+          node ?comments "ObjectExpression" loc [
             "properties", array_of_list object_property properties;
           ]
       | loc, Function _function -> function_expression (loc, _function)

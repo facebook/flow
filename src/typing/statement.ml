@@ -2939,10 +2939,10 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
 
   | OptionalMember _ -> subscript ~is_cond cx ex
 
-  | Object { Object.properties } ->
+  | Object { Object.properties; comments } ->
     let reason = mk_reason RObjectLit loc in
     let t, properties = object_ cx reason properties in
-    (loc, t), Object { Object.properties }
+    (loc, t), Object { Object.properties; comments }
 
   | Array { Array.elements } -> (
     let reason = mk_reason RArrayLit loc in
@@ -6013,7 +6013,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     None,
     [Expression e_ast]
 
-  | "create", None, [Expression e; Expression (obj_loc, Object { Object.properties })] ->
+  | "create", None, [Expression e; Expression (obj_loc, Object { Object.properties; comments })] ->
     let (_, e_t), _ as e_ast = expression cx e in
     let proto =
       let reason = mk_reason RPrototype (fst e) in
@@ -6047,7 +6047,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     [
       Expression e_ast;
       (* TODO(vijayramamurthy) construct object type *)
-      Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties })
+      Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments })
     ]
 
   | ("getOwnPropertyNames" | "keys"), None, [Expression e] ->
@@ -6090,7 +6090,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     None,
     [Expression e_ast; Expression key_ast; Expression config_ast]
 
-  | "defineProperties", None, [Expression e; Expression (obj_loc, Object { Object.properties })] ->
+  | "defineProperties", None, [Expression e; Expression (obj_loc, Object { Object.properties; comments })] ->
     let (_, o), _ as e_ast = expression cx e in
     let pmap, properties = prop_map_of_object cx properties in
     pmap |> SMap.iter (fun x p ->
@@ -6116,7 +6116,7 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     [
       Expression e_ast;
       (* TODO(vijayramamurthy) construct object type *)
-      Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties })
+      Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments })
     ]
 
   (* Freezing an object literal is supported since there's no way it could
