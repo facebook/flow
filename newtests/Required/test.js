@@ -7,8 +7,30 @@ import { suite, test } from "flow-dev-tools/src/test/Tester";
 
 export default suite(({ addFile, addFiles, addCode }) => [
   test("$Required<T>", [
+    addFile("getters_setters.js").newErrors(
+                                   `
+                                     getters_setters.js:8
+                                       8: m.a = 1; // error
+                                            ^ Cannot assign \`1\` to \`m.a\` because property \`a\` is not writable.
+
+                                     getters_setters.js:11
+                                      11: m.b = 1; // error
+                                            ^ Cannot assign \`1\` to \`m.b\` because property \`b\` is not writable.
+
+                                     getters_setters.js:13
+                                      13: m.c; // error
+                                            ^ Cannot get \`m.c\` because property \`c\` is not readable.
+
+                                     getters_setters.js:22
+                                      22: (bar.a: number); // no error
+                                               ^ Cannot get \`bar.a\` because property \`a\` is missing in \`B\` [1].
+                                       References:
+                                        20: declare var bar: $Required<B>;
+                                                                       ^ [1]
+                                   `,
+                                 ),
     addFile("polymorphic.js").newErrors(
-                               `
+      `
                                  polymorphic.js:3
                                    3: foo({ a: undefined }); // error
                                                ^^^^^^^^^ Cannot call \`foo\` with object literal bound to \`val\` because undefined [1] is incompatible with number [2] in property \`a\`.
@@ -26,8 +48,8 @@ export default suite(({ addFile, addFiles, addCode }) => [
                                                                ^^^^ [1]. See lib: [LIB] core.js:13
                                      6: declare function bar<T: { a?: number }>(val: $Required<T>): void;
                                                                       ^^^^^^ [2]
-                               `,
-                             ),
+                               `
+    ),
     addFile("variance.js").newErrors(
       `
                               variance.js:9
@@ -76,44 +98,44 @@ export default suite(({ addFile, addFiles, addCode }) => [
     function baz(n: null, m: void) {}
     baz(y, y); // error
     `).newErrors(
-      `
+        `
           test.js:14
            14:     var a: $Required<Foo> = f(); // error
-                                           ^^^ Cannot assign \`f()\` to \`a\` because undefined [1] is incompatible with \`$Required\` [2].
+                                           ^^^ Cannot assign \`f()\` to \`a\` because undefined [1] is incompatible with \`Foo\` [2].
             References:
              12:     function f() {}
                                  ^ [1]
              14:     var a: $Required<Foo> = f(); // error
-                            ^^^^^^^^^^^^^^ [2]
+                                      ^^^ [2]
 
           test.js:15
            15:     var b: $Required<Foo> = null; // error
-                                           ^^^^ Cannot assign \`null\` to \`b\` because null [1] is incompatible with \`$Required\` [2].
+                                           ^^^^ Cannot assign \`null\` to \`b\` because null [1] is incompatible with \`Foo\` [2].
             References:
              15:     var b: $Required<Foo> = null; // error
                                              ^^^^ [1]
              15:     var b: $Required<Foo> = null; // error
-                            ^^^^^^^^^^^^^^ [2]
+                                      ^^^ [2]
 
           test.js:18
            18:     baz(y, y); // error
-                       ^ Cannot call \`baz\` with \`y\` bound to \`n\` because \`$Required\` [1] is incompatible with null [2].
+                       ^ Cannot call \`baz\` with \`y\` bound to \`n\` because \`Foo\` [1] is incompatible with null [2].
             References:
               9:     var y: $Required<Foo> = x;
-                            ^^^^^^^^^^^^^^ [1]
+                                      ^^^ [1]
              17:     function baz(n: null, m: void) {}
                                      ^^^^ [2]
 
           test.js:18
            18:     baz(y, y); // error
-                          ^ Cannot call \`baz\` with \`y\` bound to \`m\` because \`$Required\` [1] is incompatible with undefined [2].
+                          ^ Cannot call \`baz\` with \`y\` bound to \`m\` because \`Foo\` [1] is incompatible with undefined [2].
             References:
               9:     var y: $Required<Foo> = x;
-                            ^^^^^^^^^^^^^^ [1]
+                                      ^^^ [1]
              17:     function baz(n: null, m: void) {}
                                               ^^^^ [2]
-        `
-    ),
+        `,
+      ),
     addCode(`
     declare class PointB {
       x?: number;
@@ -150,7 +172,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
     (ps: { x: number });
     (ps: $Required<{ x?: number }>); // error
     `).newErrors(
-      `
+        `
           test.js:42
            42:     (pc: $Required<IPoint>); // error
                     ^^ Cannot cast \`pc\` to \`$Required\` because undefined [1] is incompatible with number [2] in property \`x\`.
@@ -167,6 +189,24 @@ export default suite(({ addFile, addFiles, addCode }) => [
              29:       y?: number;
                            ^^^^^^ [1]
              34:       y?: number
+                           ^^^^^^ [2]
+
+          test.js:43
+           43:     (pc: $Required<PointB>); // error
+                    ^^ Cannot cast \`pc\` to \`$Required\` because undefined [1] is incompatible with number [2] in property \`x\`.
+            References:
+             28:       x?: number;
+                           ^^^^^^ [1]
+             23:       x?: number;
+                           ^^^^^^ [2]
+
+          test.js:43
+           43:     (pc: $Required<PointB>); // error
+                    ^^ Cannot cast \`pc\` to \`$Required\` because undefined [1] is incompatible with number [2] in property \`y\`.
+            References:
+             29:       y?: number;
+                           ^^^^^^ [1]
+             24:       y?: number;
                            ^^^^^^ [2]
 
           test.js:45
@@ -187,6 +227,24 @@ export default suite(({ addFile, addFiles, addCode }) => [
              47:     (pi: PointC); // error
                           ^^^^^^ [2]
 
+          test.js:48
+           48:     (pi: $Required<PointC>); // error
+                    ^^ Cannot cast \`pi\` to \`$Required\` because undefined [1] is incompatible with number [2] in property \`x\`.
+            References:
+             33:       x?: number,
+                           ^^^^^^ [1]
+             28:       x?: number;
+                           ^^^^^^ [2]
+
+          test.js:48
+           48:     (pi: $Required<PointC>); // error
+                    ^^ Cannot cast \`pi\` to \`$Required\` because undefined [1] is incompatible with number [2] in property \`y\`.
+            References:
+             34:       y?: number
+                           ^^^^^^ [1]
+             29:       y?: number;
+                           ^^^^^^ [2]
+
           test.js:50
            50:     (pi: $Required<{ x?: number }>); // error
                     ^^ Cannot cast \`pi\` to \`$Required\` because undefined [1] is incompatible with number [2] in property \`x\`.
@@ -198,14 +256,14 @@ export default suite(({ addFile, addFiles, addCode }) => [
 
           test.js:52
            52:     (ps: PointC); // error
-                    ^^ Cannot cast \`ps\` to \`PointC\` because \`$Required\` [1] is incompatible with \`PointC\` [2].
+                    ^^ Cannot cast \`ps\` to \`PointC\` because \`IPoint\` [1] is incompatible with \`PointC\` [2].
             References:
              39:     declare var ps: $Required<IPoint>;
-                                     ^^^^^^^^^^^^^^^^^ [1]
+                                               ^^^^^^ [1]
              52:     (ps: PointC); // error
                           ^^^^^^ [2]
-        `
-    ),
+        `,
+      ),
     addCode(`
     declare class C {
       x?: number;
@@ -235,7 +293,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
     (c_: $Required<B>);
     (c_: $Required<C>);
     `).newErrors(
-      `
+        `
           test.js:75
            75:     (a_: $Required<A>);
                     ^^ Cannot cast \`a_\` to \`$Required\` because undefined [1] is incompatible with number [1] in property \`x\`.
@@ -245,12 +303,12 @@ export default suite(({ addFile, addFiles, addCode }) => [
 
           test.js:76
            76:     (a_: $Required<B>);
-                    ^^ Cannot cast \`a_\` to \`$Required\` because property \`x\` is read-only in \`A\` [1] but writable in \`$Required\` [2].
+                    ^^ Cannot cast \`a_\` to \`$Required\` because property \`x\` is read-only in \`A\` [1] but writable in \`B\` [2].
             References:
              71:     declare var a_: A;
                                      ^ [1]
              76:     (a_: $Required<B>);
-                          ^^^^^^^^^^^^ [2]
+                                    ^ [2]
 
           test.js:76
            76:     (a_: $Required<B>);
@@ -263,12 +321,21 @@ export default suite(({ addFile, addFiles, addCode }) => [
 
           test.js:77
            77:     (a_: $Required<C>);
-                    ^^ Cannot cast \`a_\` to \`$Required\` because property \`x\` is read-only in \`A\` [1] but writable in \`$Required\` [2].
+                    ^^ Cannot cast \`a_\` to \`$Required\` because property \`x\` is read-only in \`A\` [1] but writable in \`C\` [2].
             References:
              71:     declare var a_: A;
                                      ^ [1]
              77:     (a_: $Required<C>);
-                          ^^^^^^^^^^^^ [2]
+                                    ^ [2]
+
+          test.js:77
+           77:     (a_: $Required<C>);
+                    ^^ Cannot cast \`a_\` to \`$Required\` because undefined [1] is incompatible with number [2] in property \`x\`.
+            References:
+             64:       +x?: number
+                            ^^^^^^ [1]
+             60:       x?: number;
+                           ^^^^^^ [2]
 
           test.js:79
            79:     (b_: $Required<A>);
@@ -285,6 +352,15 @@ export default suite(({ addFile, addFiles, addCode }) => [
             References:
              68:       x?: number
                            ^^^^^^ [1]
+
+          test.js:81
+           81:     (b_: $Required<C>);
+                    ^^ Cannot cast \`b_\` to \`$Required\` because undefined [1] is incompatible with number [2] in property \`x\`.
+            References:
+             68:       x?: number
+                           ^^^^^^ [1]
+             60:       x?: number;
+                           ^^^^^^ [2]
 
           test.js:83
            83:     (c_: $Required<A>);
@@ -303,8 +379,15 @@ export default suite(({ addFile, addFiles, addCode }) => [
                            ^^^^^^ [1]
              68:       x?: number
                            ^^^^^^ [2]
-        `
-    ),
+
+          test.js:85
+           85:     (c_: $Required<C>);
+                    ^^ Cannot cast \`c_\` to \`$Required\` because undefined [1] is incompatible with number [1] in property \`x\`.
+            References:
+             60:       x?: number;
+                           ^^^^^^ [1]
+        `,
+      ),
     addCode(`
     declare class One {
       foo: number;
