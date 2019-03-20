@@ -2861,60 +2861,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT (_, src), GetValuesT (reason, values) ->
       rec_flow_t cx trace (AnyT.why src reason, values)
 
-    (************)
-    (* required *)
-    (************)
-
-    (* | DefT (_, _, ObjT o), RequiredT (reason, values) ->
-      let {
-        flags;
-        proto_t = _;
-        props_tmap = tmap;
-        dict_t = dict;
-        call_t = call;
-      } = o in
-      (* Find all of the props. *)
-      let source_props = Context.find_props cx tmap in
-      let props = SMap.map (fun prop -> 
-        match prop with
-          | Field (loc, DefT (_, _, OptionalT t), polarity) -> Field (loc, t, polarity)
-          | t -> t
-      ) source_props in
-      let proto = ObjProtoT reason in
-      let pmap = Context.make_property_map cx props in
-      let o = DefT (reason, bogus_trust (), ObjT (mk_objecttype ~flags ~dict ~call pmap proto)) in
-      rec_flow_t cx trace (o, values)
-
-    | DefT (_, _, InstanceT (_, super, _, insttype)), RequiredT (reason, values) ->
-      (* Spread fields from super into an object *)
-      let obj_super = Tvar.mk_where cx reason (fun tvar ->
-        let u = ObjRestT (reason, [], tvar) in
-        rec_flow cx trace (super, ReposLowerT (reason, false, u))
-      ) in
-
-      (* Spread own props from the instance into another object *)
-      let props = Context.find_props cx insttype.own_props in
-      let proto = ObjProtoT reason in
-      let props = SMap.map (fun prop -> 
-        match prop with
-          | Field (loc, DefT (_, _, OptionalT t), polarity) -> Field (loc, t, polarity)
-          | t -> t
-      ) props in
-      let obj_inst = Obj_type.mk_with_proto cx reason ~sealed:true ~props proto in
-
-      (* ObjAssign the inst-generated obj into the super-generated obj *)
-      let o = Tvar.mk_where cx reason (fun tvar ->
-        rec_flow cx trace (
-          obj_inst,
-          ObjAssignFromT (reason, obj_super, tvar, default_obj_assign_kind)
-        )
-      ) in
-      rec_flow_t cx trace (o, values)
-
-    (* Any will always be ok *)
-    | AnyT (_, src), RequiredT (reason, values) ->
-      rec_flow_t cx trace (AnyT.why src reason, values) *)
-
     (********************************)
     (* union and intersection types *)
     (********************************)
