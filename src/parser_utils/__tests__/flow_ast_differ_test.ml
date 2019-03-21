@@ -85,10 +85,12 @@ class useless_mapper = object(this)
     else elem
 
   method! type_ (annot: (Loc.t, Loc.t) Type.t) =
+    let open Ast.NumberLiteral in
     let annot = super#type_ annot in
     let (loc, typ) = annot in
     match typ with
     | Type.Number -> (loc, Type.String)
+    | Type.NumberLiteral _ -> (loc, Type.NumberLiteral { value = 4.0; raw = "4.0"})
     | _ -> annot
 
   method! jsx_element _loc (elem: (Loc.t, Loc.t) Ast.JSX.element) =
@@ -590,6 +592,11 @@ let assert_edits_equal_standard_only ctxt ~edits ~source ~expected ~mapper =
   assert_equal ~ctxt expected (apply_edits source edits_standard)
 
 let tests = "ast_differ" >::: [
+  "literal_number" >:: begin fun ctxt ->
+    let source = "4" in
+    assert_edits_equal ctxt ~edits:[((0, 1), "5")]
+      ~source ~expected:"5" ~mapper:(new literal_mapper)
+  end;
   "literal_string" >:: begin fun ctxt ->
     let source = "\"rename\"" in
     assert_edits_equal ctxt ~edits:[((0, 8), "\"gotRenamed\"")]
@@ -1635,6 +1642,12 @@ let tests = "ast_differ" >::: [
     let source = "type foo = ?number" in
     assert_edits_equal ctxt ~edits:[((12, 18), "string")] ~source
       ~expected:"type foo = ?string"
+      ~mapper:(new useless_mapper)
+  end;
+  "type_alias_number_literal" >:: begin fun ctxt ->
+    let source = "type foo = 5.0" in
+    assert_edits_equal ctxt ~edits:[((11, 14), "4.0")] ~source
+      ~expected:"type foo = 4.0"
       ~mapper:(new useless_mapper)
   end;
   "type_alias_param_name" >:: begin fun ctxt ->

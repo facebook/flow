@@ -20,6 +20,7 @@ type diff_algorithm = Trivial | Standard
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
+  | NumberLiteralNode of Flow_ast.NumberLiteral.t
   | Literal of Loc.t Flow_ast.Literal.t
   | Statement of (Loc.t, Loc.t) Flow_ast.Statement.t
   | Program of (Loc.t, Loc.t) Flow_ast.program

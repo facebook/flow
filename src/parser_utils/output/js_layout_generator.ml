@@ -980,6 +980,9 @@ and expression_or_spread ?(ctxt=normal_context) expr_or_spread =
 
 and identifier (loc, name) = identifier_with_comments (loc, name)
 
+and number_literal_type { Ast.NumberLiteral.raw; _ } =
+    Atom raw
+
 and number_literal ~in_member_object raw num =
   let str = Dtoa.shortest_string_of_float num in
   if in_member_object then begin
@@ -2364,8 +2367,8 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
     | T.Typeof t -> fuse [Atom "typeof"; space; type_ t]
     | T.Tuple ts ->
       group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:type_ ts)]
-    | T.StringLiteral { Ast.StringLiteral.raw; _ }
-    | T.NumberLiteral { Ast.NumberLiteral.raw; _ } -> Atom raw
+    | T.StringLiteral { Ast.StringLiteral.raw; _ } -> Atom raw
+    | T.NumberLiteral t -> number_literal_type t
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")
     | T.Exists -> Atom "*"
   )

@@ -163,6 +163,7 @@ let list_diff = function
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
+  | NumberLiteralNode of Ast.NumberLiteral.t
   | Literal of Loc.t Ast.Literal.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
@@ -917,6 +918,12 @@ let program (algo : diff_algorithm)
       : node change list =
     [(loc, Replace (Literal lit1, Literal lit2))]
 
+  and number_literal_type (loc: Loc.t)
+      (nlit1: Ast.NumberLiteral.t)
+      (nlit2: Ast.NumberLiteral.t)
+      : node change list =
+    [(loc, Replace (NumberLiteralNode nlit1, NumberLiteralNode nlit2))]
+
   and tagged_template
       (t_tmpl1: (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
       (t_tmpl2: (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
@@ -1624,6 +1631,7 @@ let program (algo : diff_algorithm)
     let open Ast.Type in
     let type_diff =
       match type1, type2 with
+      | NumberLiteral n1, NumberLiteral n2 -> Some (diff_if_changed (number_literal_type loc1) n1 n2)
       | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
       | Intersection (t0, t1, ts), Intersection (t0', t1', ts') ->
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
