@@ -97,7 +97,7 @@ let rec not_exists t = match t with
 
   (* unknown boolies become falsy *)
   | DefT (r, trust, MaybeT _) ->
-    DefT (r, trust, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
+    DefT (r, trust, UnionT (UnionRep.make (NullT.why r trust) (VoidT.why r trust) []))
   | DefT (r, trust, BoolT None) -> DefT (r, trust, BoolT (Some false))
   | DefT (r, trust, StrT AnyLiteral) -> DefT (r, trust, StrT (Literal (None, "")))
   | DefT (r, trust, NumT AnyLiteral) -> DefT (r, trust, NumT (Literal (None, (0., "0"))))
@@ -111,20 +111,21 @@ let rec not_exists t = match t with
 
 let maybe = function
   | DefT (r, trust, MaybeT _) ->
-    DefT (r, trust, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
+    DefT (r, trust, UnionT (UnionRep.make (NullT.why r trust) (VoidT.why r trust) []))
   | DefT (r, trust, MixedT Mixed_everything) ->
-    DefT (r, trust, UnionT (UnionRep.make (NullT.why r) (VoidT.why r) []))
-  | DefT (r, _, MixedT Mixed_truthy) -> EmptyT.why r
-  | DefT (r, _, MixedT Mixed_non_maybe) -> EmptyT.why r
+    DefT (r, trust, UnionT (UnionRep.make (NullT.why r trust) (VoidT.why r trust) []))
+  | DefT (r, trust, MixedT Mixed_truthy) -> EmptyT.why r trust
+  | DefT (r, trust, MixedT Mixed_non_maybe) -> EmptyT.why r trust
   | DefT (r, trust, MixedT Mixed_non_void) -> DefT (r, trust, NullT)
   | DefT (r, trust, MixedT Mixed_non_null) -> DefT (r, trust, VoidT)
   | DefT (_, _, NullT) as t -> t
   | DefT (_, _, VoidT) as t -> t
-  | DefT (r, _, OptionalT _) -> VoidT.why r
+  | DefT (r, trust, OptionalT _) -> VoidT.why r trust
   | AnyT _ as t -> t
+  | DefT (r, trust, _) -> EmptyT.why r trust
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason |> with_trust bogus_trust
 
 let rec not_maybe = function
   | DefT (_, _, MaybeT t) -> t
@@ -139,19 +140,20 @@ let rec not_maybe = function
   | t -> t
 
 let null = function
-  | DefT (_, _, OptionalT (DefT (r, _, MaybeT _)))
-  | DefT (r, _, MaybeT _) -> NullT.why r
+  | DefT (_, _, OptionalT (DefT (r, trust, MaybeT _)))
+  | DefT (r, trust, MaybeT _) -> NullT.why r trust
   | DefT (_, _, NullT) as t -> t
-  | DefT (r, _, MixedT Mixed_everything)
-  | DefT (r, _, MixedT Mixed_non_void) -> NullT.why r
+  | DefT (r, trust, MixedT Mixed_everything)
+  | DefT (r, trust, MixedT Mixed_non_void) -> NullT.why r trust
   | AnyT _ as t -> t
+  | DefT (r, trust, _) -> EmptyT.why r trust
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason |> with_trust bogus_trust
 
 let rec not_null = function
   | DefT (r, trust, MaybeT t) ->
-    DefT (r, trust, UnionT (UnionRep.make (VoidT.why r) t []))
+    DefT (r, trust, UnionT (UnionRep.make (VoidT.why r trust) t []))
   | DefT (r, trust, OptionalT t) ->
     DefT (r, trust, OptionalT (not_null t))
   | DefT (r, _, UnionT rep) ->
@@ -162,19 +164,20 @@ let rec not_null = function
   | t -> t
 
 let undefined = function
-  | DefT (r, _, MaybeT _) -> VoidT.why r
+  | DefT (r, trust, MaybeT _) -> VoidT.why r trust
   | DefT (_, _, VoidT) as t -> t
-  | DefT (r, _, OptionalT _) -> VoidT.why r
-  | DefT (r, _, MixedT Mixed_everything)
-  | DefT (r, _, MixedT Mixed_non_null) -> VoidT.why r
+  | DefT (r, trust, OptionalT _) -> VoidT.why r trust
+  | DefT (r, trust, MixedT Mixed_everything)
+  | DefT (r, trust, MixedT Mixed_non_null) -> VoidT.why r trust
   | AnyT _ as t -> t
+  | DefT (r, trust, _) -> EmptyT.why r trust
   | t ->
     let reason = reason_of_t t in
-    EmptyT.why reason
+    EmptyT.why reason |> with_trust bogus_trust
 
 let rec not_undefined = function
   | DefT (r, trust, MaybeT t) ->
-    DefT (r, trust, UnionT (UnionRep.make (NullT.why r) t []))
+    DefT (r, trust, UnionT (UnionRep.make (NullT.why r trust) t []))
   | DefT (_, _, OptionalT t) -> not_undefined t
   | DefT (r, _, UnionT rep) ->
     recurse_into_union not_undefined (r, UnionRep.members rep)
@@ -197,6 +200,7 @@ let string_literal expected_loc sense expected t =
   | DefT (r, trust, MixedT _) ->
     DefT (lit_reason r, trust, StrT (Literal (None, expected)))
   | AnyT _ as t -> t
+  | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
 let not_string_literal expected = function
@@ -259,9 +263,10 @@ let not_false t =
 let boolean t =
   match t with
   | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const BoolT.desc r, trust, BoolT (Some true))
-  | DefT (r, _, MixedT _) -> BoolT.why r
+  | DefT (r, trust, MixedT _) -> BoolT.why r trust
   | DefT (_, _, (BoolT _))
   | AnyT _ -> t
+  | DefT (r, trust, _) -> DefT(r, trust, EmptyT)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
 let not_boolean t =
@@ -274,9 +279,10 @@ let not_boolean t =
 let string t =
   match t with
   | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const StrT.desc r, trust, StrT Truthy)
-  | DefT (r, _, MixedT _) -> StrT.why r
+  | DefT (r, trust, MixedT _) -> StrT.why r trust
   | DefT (_, _, (StrT _))
   | AnyT _ -> t
+  | DefT (r, trust, _) -> DefT(r, trust, EmptyT)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
 let not_string t =
@@ -302,8 +308,9 @@ let not_symbol t =
 let number t =
   match t with
   | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const NumT.desc r, trust, NumT Truthy)
-  | DefT (r, _, MixedT _) -> NumT.why r
+  | DefT (r, trust, MixedT _) -> NumT.why r trust
   | DefT (_, _, (NumT _)) | AnyT _ -> t
+  | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
 let not_number t =
@@ -318,7 +325,7 @@ let object_ cx t =
   | DefT (r, trust, MixedT flavor) ->
     let reason = replace_reason_const RObject r in
     let dict = Some {
-      key = StrT.why r;
+      key = StrT.why r |> with_trust bogus_trust;
       value = DefT (replace_reason_const MixedT.desc r, bogus_trust (), MixedT Mixed_everything);
       dict_name = None;
       dict_polarity = Neutral;
@@ -334,10 +341,11 @@ let object_ cx t =
     | Mixed_everything
     | Mixed_non_void ->
       let reason = replace_reason_const RUnion (reason_of_t t) in
-      DefT (reason, trust, UnionT (UnionRep.make (NullT.why r) obj []))
+      DefT (reason, trust, UnionT (UnionRep.make (NullT.why r trust) obj []))
     | Empty_intersection -> DefT (r, trust, EmptyT)
     end
   | DefT (_, _, (ObjT _ | ArrT _ | NullT | InstanceT _)) | AnyT _ -> t
+  | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
   | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
 let not_object t =
@@ -351,6 +359,7 @@ let function_ = function
   | DefT (r, trust, MixedT _) ->
       DefT (replace_reason_const (RFunction RUnknown) r, trust, MixedT Mixed_function)
   | DefT (_, _, (FunT _ | ClassT _)) | AnyT _ as t -> t
+  | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
   | t -> DefT (reason_of_t t, bogus_trust (), EmptyT)
 
 let not_function t =

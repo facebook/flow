@@ -47,7 +47,7 @@ let default_constructor reason = {
   tparams_map = SMap.empty;
   fparams = Func_params.empty;
   body = None;
-  return_t = VoidT.why reason;
+  return_t = VoidT.why reason |> with_trust bogus_trust;
 }
 
 let field_initializer tparams_map reason expr return_t = {
@@ -204,7 +204,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* early-add our own name binding for recursive calls. *)
   Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) ->
-    let entry = EmptyT.at loc |> Scope.Entry.new_var ~loc in
+    let entry = EmptyT.at loc |> with_trust bogus_trust |> Scope.Entry.new_var ~loc in
     Scope.add_entry name entry function_scope
   );
 
@@ -284,26 +284,26 @@ let toplevels id cx this super ~decls ~stmts ~expr
     let use_op, void_t, init_ast = match kind with
     | Ordinary
     | Ctor ->
-      let t = VoidT.at loc in
+      let t = VoidT.at loc |> with_trust bogus_trust in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       use_op, t, None
     | Async ->
       let reason = annot_reason (mk_reason (RType "Promise") loc) in
-      let void_t = VoidT.at loc in
+      let void_t = VoidT.at loc |> with_trust bogus_trust in
       let t = Flow.get_builtin_typeapp cx reason "Promise" [void_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       let use_op = Frame (ImplicitTypeParam, use_op) in
       use_op, t, None
     | Generator ->
       let reason = annot_reason (mk_reason (RType "Generator") loc) in
-      let void_t = VoidT.at loc in
+      let void_t = VoidT.at loc |> with_trust bogus_trust in
       let t = Flow.get_builtin_typeapp cx reason "Generator" [yield_t; void_t; next_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       let use_op = Frame (ImplicitTypeParam, use_op) in
       use_op, t, None
     | AsyncGenerator ->
       let reason = annot_reason (mk_reason (RType "AsyncGenerator") loc) in
-      let void_t = VoidT.at loc in
+      let void_t = VoidT.at loc |> with_trust bogus_trust in
       let t = Flow.get_builtin_typeapp cx reason "AsyncGenerator" [yield_t; void_t; next_t] in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       let use_op = Frame (ImplicitTypeParam, use_op) in
@@ -315,7 +315,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
       let loc = aloc_of_reason reason in
       Flow_js.add_output cx
         Error_message.(EUnsupportedSyntax (loc, PredicateVoidReturn));
-      let t = VoidT.at loc in
+      let t = VoidT.at loc |> with_trust bogus_trust in
       let use_op = Op (FunImplicitReturn {fn = reason_fn; upper = reason_of_t return_t}) in
       use_op, t, None
     in

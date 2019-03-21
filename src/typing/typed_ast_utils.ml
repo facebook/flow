@@ -34,7 +34,7 @@ class type_parameter_mapper = object(_)
       let _, { TypeParam.name = (_, t), { Ast.Identifier.name; comments= _ }; bound; variance; default; } = tparam in
       let reason = Type.reason_of_t t in
       let bound = match bound with
-      | Ast.Type.Missing _ -> Type.MixedT.make reason
+      | Ast.Type.Missing _ -> Type.MixedT.make reason |> Type.with_trust Trust.annot_trust
       | Ast.Type.Available (_, ((_, t), _)) -> t
       in
       let polarity = Ast.Variance.(
@@ -208,5 +208,5 @@ end
 let unreachable_mapper = object(_)
   inherit [ALoc.t, ALoc.t, ALoc.t, ALoc.t * Type.t] Flow_polymorphic_ast_mapper.mapper
   method on_loc_annot loc = loc
-  method on_type_annot loc = loc, Type.(EmptyT.at) loc
+  method on_type_annot loc = loc, Type.(EmptyT.at loc |> with_trust annot_trust)
 end

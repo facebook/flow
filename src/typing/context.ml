@@ -139,6 +139,7 @@ type t = {
   mutable require_map: Type.t ALocMap.t;
 
   type_table: Type_table.t;
+  trust_constructor: unit -> Trust.trust;
 
   mutable declare_module_ref: string option;
 
@@ -223,6 +224,8 @@ let make sig_cx metadata file module_ref = {
 
   type_table = Type_table.create ();
 
+  trust_constructor = Trust.literal_trust;
+
   declare_module_ref = None;
 
   use_def = empty_use_def;
@@ -250,6 +253,9 @@ let in_declare_module cx =
 (* accessors *)
 let all_unresolved cx = cx.sig_cx.all_unresolved
 let envs cx = cx.sig_cx.envs
+let trust_constructor cx = cx.trust_constructor
+
+let cx_with_trust cx trust = { cx with trust_constructor = trust }
 
 let metadata cx = cx.metadata
 let max_literal_length cx = cx.metadata.max_literal_length

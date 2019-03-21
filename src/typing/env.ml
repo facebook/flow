@@ -735,7 +735,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
     value_declare_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
     ->
-    let uninit desc = VoidT.make (mk_reason desc value_declare_loc) in
+    let uninit desc = VoidT.make (mk_reason desc value_declare_loc) |> with_trust bogus_trust in
     let specific = if state = State.Declared
       then uninit (RCustom "uninitialized variable")
       else (* State.MaybeInitialized *)

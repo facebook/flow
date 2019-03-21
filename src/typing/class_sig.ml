@@ -139,7 +139,7 @@ let add_indexer ~static polarity ~key ~value x =
 
 let add_name_field x =
   let r = replace_reason (fun desc -> RNameProperty desc) x.instance.reason in
-  let t = Type.StrT.why r in
+  let t = Type.StrT.why r |> Type.with_trust Trust.bogus_trust in
   add_field' ~static:true "name" (None, Type.Neutral, Annot t) x
 
 let add_proto_field name loc polarity field x =

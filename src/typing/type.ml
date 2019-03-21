@@ -2788,6 +2788,13 @@ include TypeTerm
 include TypeUtil
 include Trust
 
+(**** Trust utilities ****)
+
+let with_trust
+    (trust_constructor: unit -> trust)
+    (type_constructor: trust -> t) : t =
+  trust_constructor () |> type_constructor
+
 (*********************************************************)
 
 let compare = Pervasives.compare
@@ -2799,7 +2806,7 @@ let open_tvar tvar =
 
 module type PrimitiveType = sig
   val desc: reason_desc
-  val make: reason -> t
+  val make: reason -> trust -> t
 end
 
 module Primitive (P: PrimitiveType) = struct
@@ -2811,27 +2818,27 @@ end
 
 module NumT = Primitive (struct
   let desc = RNumber
-  let make r = DefT (r, bogus_trust (), NumT AnyLiteral)
+  let make r trust = DefT (r, trust, NumT AnyLiteral)
 end)
 
 module StrT = Primitive (struct
   let desc = RString
-  let make r = DefT (r, bogus_trust (), StrT AnyLiteral)
+  let make r trust = DefT (r, trust, StrT AnyLiteral)
 end)
 
 module BoolT = Primitive (struct
   let desc = RBoolean
-  let make r = DefT (r, bogus_trust (), BoolT None)
+  let make r trust = DefT (r, trust, BoolT None)
 end)
 
 module MixedT = Primitive (struct
   let desc = RMixed
-  let make r = DefT (r, bogus_trust (), MixedT Mixed_everything)
+  let make r trust = DefT (r, trust, MixedT Mixed_everything)
 end)
 
 module EmptyT = Primitive (struct
   let desc = REmpty
-  let make r = DefT (r, bogus_trust (), EmptyT)
+  let make r trust = DefT (r, trust, EmptyT)
 end)
 
 module AnyT = struct
@@ -2896,22 +2903,22 @@ end
 
 module VoidT = Primitive (struct
   let desc = RVoid
-  let make r = DefT (r, bogus_trust (), VoidT)
+  let make r trust = DefT (r, trust, VoidT)
 end)
 
 module NullT = Primitive (struct
   let desc = RNull
-  let make r = DefT (r, bogus_trust (), NullT)
+  let make r trust = DefT (r, trust, NullT)
 end)
 
 module ObjProtoT = Primitive (struct
   let desc = RDummyPrototype
-  let make r = ObjProtoT r
+  let make r _ = ObjProtoT r
 end)
 
 module NullProtoT = Primitive (struct
   let desc = RNull
-  let make r = NullProtoT r
+  let make r _ = NullProtoT r
 end)
 
 (* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
@@ -3461,7 +3468,7 @@ let bound_function_dummy_this =
   locationless_reason RDummyThis |> Unsoundness.bound_fn_this_any
 
 let dummy_this =
-  locationless_reason RDummyThis |> MixedT.make
+  locationless_reason RDummyThis |> MixedT.make |> with_trust bogus_trust
 
 let global_this reason =
   let reason = replace_reason_const (RCustom "global object") reason in

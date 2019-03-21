@@ -257,7 +257,7 @@ let intersect_members cx members =
       SMap.map (List.fold_left (fun (_, acc) (loc, t) ->
           (* Arbitrarily use the last location encountered *)
           loc, merge_type cx (acc, t)
-      ) (None, Locationless.EmptyT.t)) map
+      ) (None, Locationless.EmptyT.t |> with_trust bogus_trust)) map
 
 and instantiate_type = function
   | ThisClassT (_, t) | DefT (_, _, ClassT t)
@@ -323,7 +323,7 @@ let rec resolve_type cx = function
       begin match Core_list.(uses >>= possible_types_of_use cx) with
       (* The unit of intersection is normally mixed, but MergedT is hacky and empty
       fits better here *)
-      | [] -> locationless_reason REmpty |> EmptyT.make
+      | [] -> locationless_reason REmpty |> EmptyT.make |> with_trust bogus_trust
       | [x] -> x
       | x::y::ts -> InterRep.make x y ts |> create_intersection
       end
