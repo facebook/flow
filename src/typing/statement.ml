@@ -3230,7 +3230,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (* tag`a${b}c${d}` -> tag(['a', 'c'], b, d) *)
       let call_t =
         let args =
-          let quasi_t = DefT (reason_array, bogus_trust (), ArrT (ArrayAT (StrT.why reason |> with_trust bogus_trust, None))) in
+          let quasi_t = Flow.get_builtin_type cx reason_array "TemplateStringsArray" in
           let exprs_t = Core_list.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           (Arg quasi_t)::exprs_t
         in
