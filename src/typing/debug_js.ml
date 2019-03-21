@@ -1627,9 +1627,11 @@ let dump_reason cx reason =
 
 let rec dump_t_ (depth, tvars) cx t =
 
-  let p ?(reason=true) ?(extra="") t =
-    spf "%s (%s%s%s)"
+  let p ?(reason=true) ?(extra="") ?(trust=None) t =
+    spf "%s %s(%s%s%s)"
       (string_of_ctor t)
+      (if Context.trust_mode cx = Options.NoTrust then "" else
+        (Option.value_map ~default:"" ~f:string_of_trust trust))
       (if reason then spf "%S" (dump_reason cx (reason_of_t t)) else "")
       (if reason && extra <> "" then ", " else "")
       extra
@@ -1734,63 +1736,64 @@ let rec dump_t_ (depth, tvars) cx t =
   if depth = 0 then string_of_ctor t
   else match t with
   | OpenT (_, id) -> p ~extra:(tvar id) t
-  | DefT (_, _, NumT lit) -> p ~extra:(match lit with
+  | DefT (_, trust, NumT lit) -> p ~trust:(Some trust) ~extra:(match lit with
     | Literal (_, (_, raw)) -> raw
     | Truthy -> "truthy"
     | AnyLiteral -> "") t
-  | DefT (_, _, StrT c) -> p ~extra:(match c with
+  | DefT (_, trust, StrT c) -> p ~trust:(Some trust) ~extra:(match c with
     | Literal (_, s) -> spf "%S" s
     | Truthy -> "truthy"
     | AnyLiteral -> "") t
-  | DefT (_, _, BoolT c) -> p ~extra:(match c with
+  | DefT (_, trust, BoolT c) -> p ~trust:(Some trust) ~extra:(match c with
     | Some b -> spf "%B" b
     | None -> "") t
-  | DefT (_, _, FunT (_, _, {params; return_t; this_t; _})) -> p
+  | DefT (_, trust, FunT (_, _, {params; return_t; this_t; _})) -> p
+      ~trust:(Some trust)
       ~extra:(spf "<this: %s>(%s) => %s"
         (kid this_t)
         (String.concat "; " (Core_list.map ~f:(fun (_, t) -> kid t) params))
         (kid return_t)) t
   | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
-  | DefT (_, _, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
-  | DefT (_, _, EmptyT)
-  | DefT (_, _, NullT)
-  | DefT (_, _, VoidT)
-      -> p t
+  | DefT (_, trust, MixedT flavor) -> p ~trust:(Some trust) ~extra:(string_of_mixed_flavor flavor) t
+  | DefT (_, trust, EmptyT)
+  | DefT (_, trust, NullT)
+  | DefT (_, trust, VoidT)
+      -> p ~trust:(Some trust) t
   | NullProtoT _
   | ObjProtoT _
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _ -> p t
-  | DefT (_, _, PolyT (_, tps, c, id)) -> p ~extra:(spf "%s [%s] #%d"
+  | DefT (_, trust, PolyT (_, tps, c, id)) -> p ~trust:(Some trust) ~extra:(spf "%s [%s] #%d"
       (kid c)
       (String.concat "; " (Core_list.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
       id) t
   | ThisClassT (_, inst) -> p ~extra:(kid inst) t
   | BoundT (_, name, _) -> p ~extra:name t
   | ExistsT _ -> p t
-  | DefT (_, _, ObjT { props_tmap; _ }) -> p t
+  | DefT (_, trust, ObjT { props_tmap; _ }) -> p ~trust:(Some trust) t
       ~extra:(Properties.string_of_id props_tmap)
-  | DefT (_, _, ArrT (ArrayAT (elemt, None))) -> p ~extra:(spf "Array %s" (kid elemt)) t
-  | DefT (_, _, ArrT (ArrayAT (elemt, Some tup))) -> p
+  | DefT (_, trust, ArrT (ArrayAT (elemt, None))) -> p ~trust:(Some trust) ~extra:(spf "Array %s" (kid elemt)) t
+  | DefT (_, trust, ArrT (ArrayAT (elemt, Some tup))) -> p ~trust:(Some trust)
       ~extra:(spf "Array %s, %s" (kid elemt)
         (spf "[%s]" (String.concat "; " (Core_list.map ~f:kid tup)))) t
-  | DefT (_, _, ArrT (TupleAT (_, tup))) -> p
+  | DefT (_, trust, ArrT (TupleAT (_, tup))) -> p ~trust:(Some trust)
       ~extra:(spf "Tuple [%s]" (String.concat ", " (Core_list.map ~f:kid tup))) t
-  | DefT (_, _, ArrT (ROArrayAT (elemt))) -> p
+  | DefT (_, trust, ArrT (ROArrayAT (elemt))) -> p ~trust:(Some trust)
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
-  | DefT (_, _, CharSetT chars) -> p ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
-  | DefT (_, _, ClassT inst) -> p ~extra:(kid inst) t
-  | DefT (_, _, InstanceT (_, _, _, { class_id; _ })) -> p ~extra:(spf "#%s" (ALoc.to_string class_id)) t
-  | DefT (_, _, TypeT (_, arg)) -> p ~extra:(kid arg) t
+  | DefT (_, trust, CharSetT chars) -> p ~trust:(Some trust) ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
+  | DefT (_, trust, ClassT inst) -> p ~trust:(Some trust) ~extra:(kid inst) t
+  | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) -> p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.to_string class_id)) t
+  | DefT (_, trust, TypeT (_, arg)) -> p ~trust:(Some trust) ~extra:(kid arg) t
   | AnnotT (_, arg, use_desc) ->
     p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
-  | DefT (_, _, OptionalT arg) -> p ~extra:(kid arg) t
+  | DefT (_, trust, OptionalT arg) -> p ~trust:(Some trust) ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
-  | DefT (_, _, TypeAppT (_, base, args)) -> p ~extra:(spf "%s, [%s]"
+  | DefT (_, trust, TypeAppT (_, base, args)) -> p ~trust:(Some trust) ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (Core_list.map ~f:kid args))) t
   | ThisTypeAppT (_, base, this, args_opt) -> p ~reason:false
       ~extra:begin match args_opt with
@@ -1799,24 +1802,24 @@ let rec dump_t_ (depth, tvars) cx t =
         | None -> spf "%s, %s" (kid base) (kid this)
       end t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
-  | DefT (_, _, MaybeT arg) -> p ~extra:(kid arg) t
-  | DefT (_, _, IntersectionT rep) -> p ~extra:(spf "[%s]"
+  | DefT (_, trust, MaybeT arg) -> p ~trust:(Some trust) ~extra:(kid arg) t
+  | DefT (_, trust, IntersectionT rep) -> p ~trust:(Some trust) ~extra:(spf "[%s]"
       (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
-  | DefT (_, _, UnionT rep) -> p ~extra:(spf "[%s]"
+  | DefT (_, trust, UnionT rep) -> p ~trust:(Some trust) ~extra:(spf "[%s]"
       (String.concat "; " (Core_list.map ~f:kid (UnionRep.members rep)))) t
   | AnyWithLowerBoundT arg
   | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
   | MergedT (_, uses) -> p ~extra:("[" ^
       (String.concat ", " (Core_list.map ~f:(dump_use_t_ (depth - 1, tvars) cx) uses))
     ^ "]") t
-  | DefT (_, _, IdxWrapper inner_obj) -> p ~extra:(kid inner_obj) t
-  | DefT (_, _, ReactAbstractComponentT _) -> p t
+  | DefT (_, trust, IdxWrapper inner_obj) -> p ~trust:(Some trust) ~extra:(kid inner_obj) t
+  | DefT (_, trust, ReactAbstractComponentT _) -> p ~trust:(Some trust) t
   | ShapeT arg -> p ~reason:false ~extra:(kid arg) t
   | MatchingPropT (_, _, arg) -> p ~extra:(kid arg) t
   | KeysT (_, arg) -> p ~extra:(kid arg) t
-  | DefT (_, _, SingletonStrT s) -> p ~extra:(spf "%S" s) t
-  | DefT (_, _, SingletonNumT (_, s)) -> p ~extra:s t
-  | DefT (_, _, SingletonBoolT b) -> p ~extra:(spf "%B" b) t
+  | DefT (_, trust, SingletonStrT s) -> p ~trust:(Some trust) ~extra:(spf "%S" s) t
+  | DefT (_, trust, SingletonNumT (_, s)) -> p ~trust:(Some trust) ~extra:s t
+  | DefT (_, trust, SingletonBoolT b) -> p ~trust:(Some trust) ~extra:(spf "%B" b) t
   | ModuleT _ -> p t
   | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t
   | CustomFunT (_, kind) -> p ~extra:(custom_fun kind) t
@@ -2055,6 +2058,10 @@ and dump_use_t_ (depth, tvars) cx t =
       (string_of_use_op use_op)
       (dump_reason cx r)
       id
+  | UseT (use_op, (DefT (_, trust, _) as t)) ->
+    spf "UseT (%s, %s%s)" (string_of_use_op use_op)
+      (if Context.trust_mode cx <> Options.NoTrust then string_of_trust trust else "")
+      (kid t)
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
   | AdderT (use_op, _, _, x, y) -> p ~extra:(spf "%s, %s, %s"
       (string_of_use_op use_op)
