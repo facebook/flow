@@ -16,6 +16,10 @@ declare class $ReadOnlyArray<+T> {
   @@iterator(): Iterator<T>;
 }
 
+declare class TemplateStringsArray extends $ReadOnlyArray<string> {
+  +raw: $ReadOnlyArray<string>;
+}
+
 declare class Array<T> extends $ReadOnlyArray<T> {}
 
 // Promise
