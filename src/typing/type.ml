@@ -1554,12 +1554,13 @@ and UnionRep : sig
   val join_quick_mem_results: quick_mem_result * quick_mem_result -> quick_mem_result
 
   val quick_mem_enum:
-    TypeTerm.t ->
+    bool -> TypeTerm.t ->
     t -> quick_mem_result
 
   val quick_mem_disjoint_union:
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
     find_props:(Properties.id -> TypeTerm.property SMap.t) ->
+    bool ->
     TypeTerm.t ->
     t -> quick_mem_result
 
@@ -1798,7 +1799,7 @@ end = struct
     | No, No -> No
 
   (* assume we know that l is a canonizable type *)
-  let quick_mem_enum l (_t0, _t1, _ts, specialization) =
+  let quick_mem_enum trust_checked l (_t0, _t1, _ts, specialization) =
     match canon l with
     | Some tcanon ->
       begin match !specialization with
@@ -1806,11 +1807,11 @@ end = struct
         | Some Unoptimized -> Unknown
         | Some Empty -> No
         | Some (Singleton t) ->
-          if TypeUtil.quick_subtype l t then Yes
+          if TypeUtil.quick_subtype trust_checked l t then Yes
           else Conditional t
         | Some (DisjointUnion _) -> No
         | Some (PartiallyOptimizedDisjointUnion (_, others)) ->
-          if Nel.exists (TypeUtil.quick_subtype l) others
+          if Nel.exists (TypeUtil.quick_subtype trust_checked l) others
           then Yes
           else Unknown
         | Some (Enum tset) ->
@@ -1820,7 +1821,7 @@ end = struct
         | Some (PartiallyOptimizedEnum (tset, others)) ->
           if EnumSet.mem tcanon tset
           then Yes
-          else if Nel.exists (TypeUtil.quick_subtype l) others
+          else if Nel.exists (TypeUtil.quick_subtype trust_checked l) others
           then Yes
           else Unknown
       end
@@ -1843,7 +1844,7 @@ end = struct
     ) map Unknown
 
   (* we know that l is an object type or exact object type *)
-  let quick_mem_disjoint_union ~find_resolved ~find_props l (_t0, _t1, _ts, specialization) =
+  let quick_mem_disjoint_union ~find_resolved ~find_props trust_checked l (_t0, _t1, _ts, specialization) =
     match props_of find_props l with
       | Some prop_map ->
         begin match !specialization with
@@ -1851,18 +1852,18 @@ end = struct
           | Some Unoptimized -> Unknown
           | Some Empty -> No
           | Some (Singleton t) ->
-            if TypeUtil.quick_subtype l t then Yes
+            if TypeUtil.quick_subtype trust_checked l t then Yes
             else Conditional t
           | Some (DisjointUnion map) ->
             lookup_disjoint_union find_resolved prop_map ~partial:false map
           | Some (PartiallyOptimizedDisjointUnion (map, others)) ->
             let result = lookup_disjoint_union find_resolved prop_map ~partial:true map in
             if result <> Unknown then result
-            else if Nel.exists (TypeUtil.quick_subtype l) others then Yes
+            else if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then Yes
             else Unknown
           | Some (Enum _) -> No
           | Some (PartiallyOptimizedEnum (_, others)) ->
-            if Nel.exists (TypeUtil.quick_subtype l) others then Yes
+            if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then Yes
             else Unknown
         end
       | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
@@ -2157,7 +2158,7 @@ and TypeUtil : sig
   val number_literal_eq: TypeTerm.number_literal -> TypeTerm.number_literal TypeTerm.literal -> bool
   val boolean_literal_eq: bool -> bool option -> bool
 
-  val quick_subtype: TypeTerm.t -> TypeTerm.t -> bool
+  val quick_subtype: bool -> TypeTerm.t -> TypeTerm.t -> bool
 end = struct
   open TypeTerm
 
@@ -2730,8 +2731,8 @@ end = struct
       (* In reposition we also recurse and reposition some nested types. We need
        * to make sure we swap the types for these reasons as well. Otherwise our
        * optimized union ~> union check will not pass. *)
-      | DefT (_, _, MaybeT t2), DefT (r, _, MaybeT t1) -> DefT (r, Trust.bogus_trust (), MaybeT (swap_reason t2 t1))
-      | DefT (_, _, OptionalT t2), DefT (r, _, OptionalT t1) -> DefT (r, Trust.bogus_trust (), OptionalT (swap_reason t2 t1))
+      | DefT (_, trust, MaybeT t2), DefT (r, _, MaybeT t1) -> DefT (r, trust, MaybeT (swap_reason t2 t1))
+      | DefT (_, trust, OptionalT t2), DefT (r, _, OptionalT t1) -> DefT (r, trust, OptionalT (swap_reason t2 t1))
       | ExactT (_, t2), ExactT (r, t1) -> ExactT (r, swap_reason t2 t1)
 
       | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
@@ -2756,22 +2757,24 @@ end = struct
     | Some y -> x = y
     | None -> false
 
-  let quick_subtype t1 t2 =
+  let quick_subtype trust_checked t1 t2 =
     match t1, t2 with
-    | DefT (_, _, NumT _), DefT (_, _, NumT _)
-    | DefT (_, _, SingletonNumT _), DefT (_, _, NumT _)
-    | DefT (_, _, StrT _), DefT (_, _, StrT _)
-    | DefT (_, _, SingletonStrT _), DefT (_, _, StrT _)
-    | DefT (_, _, BoolT _), DefT (_, _, BoolT _)
-    | DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _)
-    | DefT (_, _, NullT), DefT (_, _, NullT)
-    | DefT (_, _, VoidT), DefT (_, _, VoidT)
-    | DefT (_, _, EmptyT), _
-    | _, DefT (_, _, MixedT _)
-      -> true
-    | DefT (_, _, StrT actual), DefT (_, _, SingletonStrT expected) -> literal_eq expected actual
-    | DefT (_, _, NumT actual), DefT (_, _, SingletonNumT expected) -> number_literal_eq expected actual
-    | DefT (_, _, BoolT actual), DefT (_, _, SingletonBoolT expected) -> boolean_literal_eq expected actual
+    | DefT (_, ltrust, NumT _), DefT (_, rtrust, NumT _)
+    | DefT (_, ltrust, SingletonNumT _), DefT (_, rtrust, NumT _)
+    | DefT (_, ltrust, StrT _), DefT (_, rtrust, StrT _)
+    | DefT (_, ltrust, SingletonStrT _), DefT (_, rtrust, StrT _)
+    | DefT (_, ltrust, BoolT _), DefT (_, rtrust, BoolT _)
+    | DefT (_, ltrust, SingletonBoolT _), DefT (_, rtrust, BoolT _)
+    | DefT (_, ltrust, NullT), DefT (_, rtrust, NullT)
+    | DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT)
+    | DefT (_, ltrust, EmptyT), DefT(_, rtrust, _)
+    | DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)
+      -> not trust_checked || Trust.subtype_trust ltrust rtrust
+    | DefT (_, ltrust, EmptyT), _ -> not trust_checked || Trust.is_public ltrust
+    | _, DefT (_, rtrust, MixedT _) -> not trust_checked || Trust.is_tainted rtrust
+    | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) -> Trust.subtype_trust ltrust rtrust && literal_eq expected actual
+    | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) -> Trust.subtype_trust ltrust rtrust && number_literal_eq expected actual
+    | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) -> Trust.subtype_trust ltrust rtrust && boolean_literal_eq expected actual
     | _ -> reasonless_eq t1 t2
 end
 

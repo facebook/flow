@@ -19,3 +19,5 @@ val make_private: trust -> trust
 
 val is_public: trust -> bool
 val is_tainted: trust -> bool
+
+val subtype_trust: trust -> trust -> bool
