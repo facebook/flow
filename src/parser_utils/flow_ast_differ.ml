@@ -1876,13 +1876,13 @@ let program (algo : diff_algorithm)
         ((loc2, typ2): (Loc.t, Loc.t) Ast.Type.annotation)
         : node change list =
     let open Ast.Type in
+    let recurse () = type_ typ1 typ2 in
     let t_args id1 id2 t1 t2 = (match t1, t2 with
       | Some (_, t1), Some (_, t2) ->
         identifier id1 id2 @ (diff_and_recurse_nonopt_no_trivial type_ t1 t2 |> Option.value ~default:[])
-      | None, Some _ ->
-        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+      | None, Some _
       | Some _, None ->
-        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+        recurse ()
       | None, None -> identifier id1 id2)
     in
     match typ1, typ2 with
@@ -1891,7 +1891,7 @@ let program (algo : diff_algorithm)
     | (_, Generic { Generic.id= (Generic.Identifier.Unqualified id1); targs= t1 }),
       (_, Generic { Generic.id= (Generic.Identifier.Unqualified id2); targs= t2 }) ->
       if typ1 == typ2 then []
-      else if id1 == id2 then [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+      else if id1 == id2 then recurse ()
       else if t1 == t2 then identifier id1 id2
       else t_args id1 id2 t1 t2
     | (_, Generic { Generic.id= (Generic.Identifier.Qualified (_, { Generic.Identifier.id= id1; qualification= q1 })); targs= t1}),
@@ -1903,9 +1903,9 @@ let program (algo : diff_algorithm)
       | true, false, false ->
         t_args id1 id2 t1 t2
       | _ ->
-        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))])
+        recurse ())
     | _, _ ->
-      [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+      recurse ()
 
   and type_cast
       (type_cast1: (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)
