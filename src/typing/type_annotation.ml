@@ -823,7 +823,8 @@ let rec convert cx tparams_map = Ast.Type.(function
           error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
       | [DefT (rs, trust, ty)], targs ->
           reconstruct_ast
-            (DefT (rs, make_trusted trust, ty))
+            (DefT (annot_reason
+              (mk_reason (RTrusted (desc_of_reason rs)) loc), make_trusted trust, ty))
             targs
       | _ ->
         error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
@@ -833,7 +834,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       match convert_type_params () with
       | [DefT (rs, trust, ty)], targs ->
           reconstruct_ast
-            (DefT (rs, make_private trust, ty))
+            (DefT (annot_reason
+              (mk_reason (RPrivate (desc_of_reason rs)) loc), make_private trust, ty))
             targs
       | _ ->
         error_type cx loc (Error_message.EPrivateAnnot loc) t_ast

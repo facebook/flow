@@ -6454,7 +6454,7 @@ and trust_flow cx trace use_op l u =
   let check (lr, ltrust) (ur, utrust) =
     if Context.trust_mode cx <> Options.SilentTrust
         && not (subtype_trust ltrust utrust) then
-      add_output cx ~trace (Error_message.EIncompatibleWithUseOp (
+      add_output cx ~trace (Error_message.ETrustIncompatibleWithUseOp (
         lr, ur, use_op
       ))
   in

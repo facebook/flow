@@ -2766,6 +2766,11 @@ let dump_error_message =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (string_of_use_op use_op)
+    | ETrustIncompatibleWithUseOp (reason1, reason2, use_op) ->
+        spf "ETrustIncompatibleWithUseOp (%s, %s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EUnsupportedImplements reason ->
         spf "EUnsupportedImplements (%s)" (dump_reason cx reason)
     | EReactKit ((reason1, reason2), _, use_op) ->

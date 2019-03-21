@@ -8,6 +8,7 @@
 val mk_id: unit -> int
 
 type 'loc virtual_reason_desc =
+  | RTrusted of 'loc virtual_reason_desc | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
   | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid

@@ -139,6 +139,7 @@ and 'loc t' =
   | EObjectComputedPropertyAssign of ('loc virtual_reason * 'loc virtual_reason)
   | EInvalidLHSInAssignment of 'loc
   | EIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
+  | ETrustIncompatibleWithUseOp of 'loc virtual_reason * 'loc virtual_reason * 'loc virtual_use_op
   | EUnsupportedImplements of 'loc virtual_reason
   | EReactKit of ('loc virtual_reason * 'loc virtual_reason) * React.tool * 'loc virtual_use_op
   | EReactElementFunArity of 'loc virtual_reason * string * int
@@ -376,6 +377,8 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         reason_op = map_reason reason_op; use_op = map_use_op use_op}
   | EIncompatibleWithUseOp (rl, ru, op) ->
       EIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
+  | ETrustIncompatibleWithUseOp (rl, ru, op) ->
+      ETrustIncompatibleWithUseOp (map_reason rl, map_reason ru, map_use_op op)
   | EReactKit ((r1, r2), t, op) -> EReactKit ((map_reason r1, map_reason r2), t, map_use_op op)
   | EFunctionCallExtraArg (rl, ru, n, op) ->
       EFunctionCallExtraArg (map_reason rl, map_reason ru, n, map_use_op op)
@@ -492,6 +495,7 @@ let util_use_op_of_msg nope util = function
   Option.value_map use_op ~default:nope ~f:(fun use_op ->
     util use_op (fun use_op ->
       EIncompatibleProp {use_op=Some use_op; prop; reason_prop; reason_obj; special}))
+| ETrustIncompatibleWithUseOp (rl, ru, op) -> util op (fun op -> ETrustIncompatibleWithUseOp (rl, ru, op))
 | EExpectedStringLit (rs, u, l, op) -> util op (fun op -> EExpectedStringLit (rs, u, l, op))
 | EExpectedNumberLit (rs, u, l, op) -> util op (fun op -> EExpectedNumberLit (rs, u, l, op))
 | EExpectedBooleanLit (rs, u, l, op) -> util op (fun op -> EExpectedBooleanLit (rs, u, l, op))
@@ -726,6 +730,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EFunctionCallExtraArg _
   | EReactKit _
   | EIncompatibleWithUseOp _
+  | ETrustIncompatibleWithUseOp _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
   | EIncompatibleWithShape _
@@ -798,6 +803,8 @@ type 'loc friendly_message_recipe =
       'loc Type.virtual_use_op
   | Speculation of 'loc * 'loc Type.virtual_use_op * ('loc Reason.virtual_reason * t) list
   | Incompatible of 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
+      * 'loc Type.virtual_use_op
+  | IncompatibleTrust of 'loc Reason.virtual_reason * 'loc Reason.virtual_reason
       * 'loc Type.virtual_use_op
   | PropMissing of 'loc * string option * 'loc Reason.virtual_reason * 'loc Type.virtual_use_op
   | Normal of 'loc Errors.Friendly.message_feature list
@@ -1566,6 +1573,9 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
 
     | EIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
       Incompatible (l_reason, u_reason, use_op)
+
+    | ETrustIncompatibleWithUseOp (l_reason, u_reason, use_op) ->
+      IncompatibleTrust (l_reason, u_reason, use_op)
 
     | EUnsupportedImplements reason ->
       Normal [text "Cannot implement "; desc reason; text " because it is not an interface."]

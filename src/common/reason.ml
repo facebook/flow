@@ -59,6 +59,8 @@ module TestID = struct
 end
 
 type 'loc virtual_reason_desc =
+  | RTrusted of 'loc virtual_reason_desc
+  | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
   | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
@@ -347,6 +349,8 @@ let rec map_desc_locs f = function
   | RRefined desc -> RRefined (map_desc_locs f desc)
   | RSpreadOf desc -> RSpreadOf (map_desc_locs f desc)
   | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
+  | RTrusted desc -> RTrusted (map_desc_locs f desc)
+  | RPrivate desc -> RPrivate (map_desc_locs f desc)
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports _
@@ -558,6 +562,8 @@ let prettify_react_util s =
   else s
 
 let rec string_of_desc = function
+  | RTrusted r -> spf "trusted %s" (string_of_desc r)
+  | RPrivate r -> spf "private %s" (string_of_desc r)
   | RNumber -> "number"
   | RString
   | RLongStringLit _ -> "string"
@@ -1389,6 +1395,8 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RReactChildrenOrUndefinedOrType _
 | RReactSFC
 | RReactConfig
+| RTrusted _
+| RPrivate _
   -> `Unclassified
 
 let is_nullish_reason r =
