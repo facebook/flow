@@ -1099,6 +1099,36 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[(6, 14),": string"] ~source
       ~expected:"let x : string = 3;" ~mapper:(new useless_mapper)
   end;
+  "type_annotation_rename_type_arg" >:: begin fun ctxt ->
+    let source = "(foo: bar<rename>);" in
+    assert_edits_equal ctxt ~edits:[(4, 17), ": bar<gotRenamed>"] ~source
+      ~expected:"(foo: bar<gotRenamed>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_type" >:: begin fun ctxt ->
+    let source = "(foo: rename<bar>);" in
+    assert_edits_equal ctxt ~edits:[(6, 12), "gotRenamed"] ~source
+      ~expected:"(foo: gotRenamed<bar>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_type_and_typearg" >:: begin fun ctxt ->
+    let source = "(foo: rename<rename>);" in
+    assert_edits_equal ctxt ~edits:[((6, 12), "gotRenamed"); ((13, 19), "gotRenamed")] ~source
+      ~expected:"(foo: gotRenamed<gotRenamed>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_qualified_type" >:: begin fun ctxt ->
+    let source = "(foo: Foo.rename<Bar>);" in
+    assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed")] ~source
+      ~expected:"(foo: Foo.gotRenamed<Bar>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_qualified_typearg" >:: begin fun ctxt ->
+    let source = "(foo: Foo.Bar<rename>);" in
+    assert_edits_equal ctxt ~edits:[((4, 21), ": Foo.Bar<gotRenamed>")] ~source
+      ~expected:"(foo: Foo.Bar<gotRenamed>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_qualified_type_and_typearg" >:: begin fun ctxt ->
+    let source = "(foo: Foo.rename<rename>);" in
+    assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed"); ((17, 23), "gotRenamed")] ~source
+      ~expected:"(foo: Foo.gotRenamed<gotRenamed>);" ~mapper:(new useless_mapper)
+  end;
   "return_type_replace" >:: begin fun ctxt ->
     let source = "function foo() : number { return 1; }" in
     assert_edits_equal ctxt ~edits:[(15, 23),": string"] ~source
