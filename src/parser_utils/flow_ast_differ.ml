@@ -1661,7 +1661,11 @@ let program (algo : diff_algorithm)
     match git1, git2 with
     | Unqualified id1, Unqualified id2 ->
       diff_if_changed identifier id1 id2 |> Option.return
-    | Qualified _, Qualified _ -> None (* TODO *)
+    | Qualified (_loc1, {qualification = q1; id = id1}),
+      Qualified (_loc2, {qualification = q2; id = id2}) ->
+      let qualification_diff = diff_if_changed_ret_opt generic_identifier_type q1 q2 in
+      let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+      join_diff_list [qualification_diff; id_diff]
     | _ -> None
 
   and object_type
