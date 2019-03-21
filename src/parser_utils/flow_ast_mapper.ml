@@ -610,7 +610,11 @@ class ['loc] mapper = object(this)
     let open Flow_ast.Type.Generic.Identifier in
     match git with
     | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
-    | _ -> git (* TODO *)
+    | Qualified (loc, {qualification; id}) ->
+      let qualification' = this#generic_identifier_type qualification in
+      let id' = this#identifier id in
+      if qualification' == qualification && id' == id then git
+      else Qualified (loc, {qualification = qualification'; id = id'})
 
   method variance (variance: ('loc) Flow_ast.Variance.t option) = variance
 
