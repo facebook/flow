@@ -82,6 +82,7 @@ module Opts = struct
     suppress_types: SSet.t;
     temp_dir: string;
     traces: int;
+    trust_mode: Options.trust_mode;
     version: string option;
     wait_for_recheck: bool;
     weak: bool;
@@ -168,6 +169,7 @@ module Opts = struct
     suppress_types = SSet.empty |> SSet.add "$FlowFixMe";
     temp_dir = default_temp_dir;
     traces = 0;
+    trust_mode = Options.NoTrust;
     version = None;
     wait_for_recheck = false;
     weak = false;
@@ -593,6 +595,15 @@ module Opts = struct
 
     "no_flowlib",
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
+
+    "trust_mode",
+      enum
+        [
+          ("check", Options.CheckTrust);
+          ("silent", Options.SilentTrust);
+          ("none", Options.NoTrust);
+        ]
+        (fun opts trust_mode -> Ok { opts with trust_mode });
   ]
 
   let parse =
@@ -1004,6 +1015,7 @@ let suppress_comments c = c.options.Opts.suppress_comments
 let suppress_types c = c.options.Opts.suppress_types
 let temp_dir c = c.options.Opts.temp_dir
 let traces c = c.options.Opts.traces
+let trust_mode c = c.options.Opts.trust_mode
 let required_version c = c.options.Opts.version
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 let weak c = c.options.Opts.weak

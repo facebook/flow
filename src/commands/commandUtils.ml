@@ -724,6 +724,7 @@ module Options_flags = struct
     strip_root: bool;
     temp_dir: string option;
     traces: int option;
+    trust_mode: Options.trust_mode option;
     types_first: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
@@ -759,7 +760,7 @@ let options_flags =
     debug profile all wait_for_recheck weak traces no_flowlib munge_underscore_members max_workers
     include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
     merge_timeout saved_state_fetcher saved_state_no_fallback no_saved_state types_first
-    include_suppressions =
+    include_suppressions trust_mode =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -786,6 +787,7 @@ let options_flags =
       saved_state_fetcher;
       saved_state_no_fallback;
       no_saved_state;
+      trust_mode;
       types_first;
       include_suppressions;
    }
@@ -837,6 +839,13 @@ let options_flags =
         ~doc:"[EXPERIMENTAL] types-first architecture"
     |> flag "--include-suppressed" no_arg
         ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
+    |> flag "--trust-mode"
+      (optional (enum [
+        "check", Options.CheckTrust;
+        "silent", Options.SilentTrust;
+        "none", Options.NoTrust;
+      ]))
+      ~doc:""
 
 
 let flowconfig_name_flag prev =
@@ -1016,6 +1025,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_no_saved_state = options_flags.no_saved_state;
     opt_arch;
     opt_include_suppressions = options_flags.include_suppressions;
+    opt_trust_mode = Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
   }
 
 let make_env flowconfig_name connect_flags root =

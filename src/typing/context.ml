@@ -49,6 +49,7 @@ type metadata = {
   suppress_types: SSet.t;
   max_workers: int;
   default_lib_dir : Path.t option;
+  trust_mode: Options.trust_mode
 }
 
 type module_kind =
@@ -178,6 +179,7 @@ let metadata_of_options options = {
   suppress_comments = Options.suppress_comments options;
   suppress_types = Options.suppress_types options;
   default_lib_dir = (Options.file_options options).Files.default_lib_dir;
+  trust_mode = Options.trust_mode options;
 }
 
 let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty
@@ -324,6 +326,7 @@ let default_lib_dir cx = cx.metadata.default_lib_dir
 let type_asserts cx = cx.sig_cx.type_asserts
 let type_graph cx = cx.sig_cx.type_graph
 let type_table cx = cx.type_table
+let trust_mode cx = cx.metadata.trust_mode
 let verbose cx = cx.metadata.verbose
 let max_workers cx = cx.metadata.max_workers
 let jsx cx = cx.metadata.jsx

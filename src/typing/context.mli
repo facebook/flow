@@ -49,6 +49,7 @@ type metadata = {
   suppress_types: SSet.t;
   max_workers: int;
   default_lib_dir: Path.t option;
+  trust_mode: Options.trust_mode;
 }
 
 type module_kind =
@@ -120,6 +121,7 @@ val should_strip_root: t -> bool
 val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
 val default_lib_dir: t -> Path.t option
+val trust_mode: t -> Options.trust_mode
 val type_graph: t -> Graph_explorer.graph
 val type_table: t -> Type_table.t
 val type_asserts: t -> (type_assert_kind * ALoc.t) ALocMap.t

@@ -159,6 +159,7 @@ let stub_metadata ~root ~checked = { Context.
   suppress_comments = [];
   suppress_types = SSet.empty;
   default_lib_dir = None;
+  trust_mode = Options.NoTrust;
 }
 
 let get_master_cx =

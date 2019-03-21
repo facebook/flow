@@ -42,6 +42,7 @@ let metadata = { Context.
   suppress_comments = [];
   suppress_types = SSet.empty;
   default_lib_dir = None;
+  trust_mode = Options.NoTrust;
 }
 
 (* somewhat copied from Flow_dot_js *)
