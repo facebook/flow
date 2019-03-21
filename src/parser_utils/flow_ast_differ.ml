@@ -787,7 +787,7 @@ let program (algo : diff_algorithm)
     let { id = id2; tparams = tparams2; extends = extends2; body = (_loc2, body2) } = intf2 in
     let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
     let tparams_diff = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
-    let extends_diff = diff_and_recurse_no_trivial generic_type extends1 extends2 in
+    let extends_diff = diff_and_recurse_no_trivial generic_type_with_loc extends1 extends2 in
     let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
     join_diff_list [id_diff; tparams_diff; extends_diff; body_diff]
 
@@ -1633,6 +1633,7 @@ let program (algo : diff_algorithm)
       match type1, type2 with
       | NumberLiteral n1, NumberLiteral n2 -> Some (diff_if_changed (number_literal_type loc1) n1 n2)
       | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
+      | Generic g1, Generic g2 -> generic_type g1 g2
       | Intersection (t0, t1, ts), Intersection (t0', t1', ts') ->
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
       | Nullable (t1_loc, t1), Nullable (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
@@ -1642,8 +1643,8 @@ let program (algo : diff_algorithm)
       ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
 
   and generic_type
-      ((_loc1, gt1): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
-      ((_loc2, gt2): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      (gt1: (Loc.t, Loc.t) Ast.Type.Generic.t)
+      (gt2: (Loc.t, Loc.t) Ast.Type.Generic.t)
       : node change list option =
     let open Ast.Type.Generic in
     let { id = id1; targs = targs1 } = gt1 in
@@ -1652,6 +1653,12 @@ let program (algo : diff_algorithm)
     let targs_diff =
       diff_if_changed_opt type_parameter_instantiation targs1 targs2 in
     join_diff_list [id_diff; targs_diff]
+
+  and generic_type_with_loc
+      ((_loc1, gt1): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      ((_loc2, gt2): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      : node change list option =
+    generic_type gt1 gt2
 
   and generic_identifier_type
       (git1: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t)

@@ -1101,7 +1101,7 @@ let tests = "ast_differ" >::: [
   end;
   "type_annotation_rename_type_arg" >:: begin fun ctxt ->
     let source = "(foo: bar<rename>);" in
-    assert_edits_equal ctxt ~edits:[(6, 17), "bar<gotRenamed>"] ~source
+    assert_edits_equal ctxt ~edits:[(10, 16), "gotRenamed"] ~source
       ~expected:"(foo: bar<gotRenamed>);" ~mapper:(new useless_mapper)
   end;
   "type_annotation_rename_type" >:: begin fun ctxt ->
@@ -1121,7 +1121,7 @@ let tests = "ast_differ" >::: [
   end;
   "type_annotation_rename_qualified_typearg" >:: begin fun ctxt ->
     let source = "(foo: Foo.Bar<rename>);" in
-    assert_edits_equal ctxt ~edits:[((6, 21), "Foo.Bar<gotRenamed>")] ~source
+    assert_edits_equal ctxt ~edits:[((14, 20), "gotRenamed")] ~source
       ~expected:"(foo: Foo.Bar<gotRenamed>);" ~mapper:(new useless_mapper)
   end;
   "type_annotation_rename_qualified_type_and_typearg" >:: begin fun ctxt ->
@@ -2059,7 +2059,7 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
     let source = "const a: Box<Bla> = {}" in
     assert_edits_equal ctxt ~source ~mapper:(new add_comment_mapper)
     ~edits:[((6, 6), "/*hello*/"); ((7, 7), "/*bye*/"); ((9, 9), "/*hello*/"); ((12, 12), "/*bye*/");
-      ((13, 16), "\n/*hello*/Bla/*bye*/\n")]
-    ~expected:"const /*hello*/a/*bye*/: /*hello*/Box/*bye*/<\n/*hello*/Bla/*bye*/\n> = {}"
+      ((13, 13), "/*hello*/"); ((16, 16), "/*bye*/")]
+    ~expected:"const /*hello*/a/*bye*/: /*hello*/Box/*bye*/</*hello*/Bla/*bye*/> = {}"
   end;
 ]
