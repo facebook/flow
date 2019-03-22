@@ -656,6 +656,8 @@ class ['loc] mapper = object(this)
     if id' == id && targs' == targs then gt
     else { id = id'; targs = targs' }
 
+  method string_literal_type _loc (lit: Flow_ast.StringLiteral.t) = lit
+
   method type_ (t: ('loc, 'loc) Flow_ast.Type.t) =
     let open Flow_ast.Type in
     match t with
@@ -667,7 +669,6 @@ class ['loc] mapper = object(this)
     | _, Number
     | _, String
     | _, Boolean
-    | _, StringLiteral _
     | _, NumberLiteral _
     | _, BooleanLiteral _
     | _, Exists
@@ -679,6 +680,8 @@ class ['loc] mapper = object(this)
     | loc, Object ot -> id_loc this#object_type loc ot t (fun ot -> loc, Object ot)
     | loc, Interface i -> id_loc this#interface_type loc i t (fun i -> loc, Interface i)
     | loc, Generic gt -> id_loc this#generic_type loc gt t (fun gt -> loc, Generic gt)
+    | loc, StringLiteral lit ->
+      id_loc this#string_literal_type loc lit t (fun lit -> loc, StringLiteral lit)
     | loc, Union (t0, t1, ts) ->
       let t0' = this#type_ t0 in
       let t1' = this#type_ t1 in

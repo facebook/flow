@@ -33,6 +33,13 @@ class useless_mapper = object(this)
       { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
     | _ -> expr
 
+  method! string_literal_type _loc (lit: Ast.StringLiteral.t) =
+    let open Ast.StringLiteral in
+    let { value; _ } = lit in
+    if String.equal "RenameSL" value
+    then { value = "\"GotRenamedSL\""; raw = "\"GotRenamedSL\"" }
+    else lit
+
   method! logical loc (expr: (Loc.t, Loc.t) Ast.Expression.Logical.t) =
     let open Ast.Expression.Logical in
     let expr = super#logical loc expr in
@@ -611,6 +618,11 @@ let tests = "ast_differ" >::: [
     let source = "null" in
     assert_edits_equal ctxt ~edits:[((0, 4), "\"wasNull\"")]
       ~source ~expected:"\"wasNull\"" ~mapper:(new literal_mapper)
+  end;
+  "string_literal_type" >:: begin fun ctxt ->
+    let source = "(foo: \"RenameSL\")" in
+    assert_edits_equal ctxt ~edits:[((6, 16), "\"GotRenamedSL\"")]
+      ~source ~expected:"(foo: \"GotRenamedSL\")" ~mapper:(new useless_mapper)
   end;
   "simple" >:: begin fun ctxt ->
     let source = "function foo() { (5 - 3); 4; (6 + 4); }" in

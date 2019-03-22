@@ -1008,6 +1008,8 @@ and literal { Ast.Literal.raw; value; comments= _ (* handled by caller *) } =
     fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
   | _ -> Atom raw
 
+and string_literal_type { Ast.StringLiteral.raw; _ } = Atom raw
+
 and member ?(optional=false) ~precedence ~ctxt member_node =
   let { Ast.Expression.Member._object; property } = member_node in
   let computed = match property with
@@ -2367,7 +2369,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
     | T.Typeof t -> fuse [Atom "typeof"; space; type_ t]
     | T.Tuple ts ->
       group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:type_ ts)]
-    | T.StringLiteral { Ast.StringLiteral.raw; _ } -> Atom raw
+    | T.StringLiteral lit -> string_literal_type lit
     | T.NumberLiteral t -> number_literal_type t
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")
     | T.Exists -> Atom "*"

@@ -165,6 +165,7 @@ type node =
   | Comment of Loc.t Flow_ast.Comment.t
   | NumberLiteralNode of Ast.NumberLiteral.t
   | Literal of Loc.t Ast.Literal.t
+  | StringLiteral of Ast.StringLiteral.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
@@ -924,6 +925,15 @@ let program (algo : diff_algorithm)
       : node change list =
     [(loc, Replace (NumberLiteralNode nlit1, NumberLiteralNode nlit2))]
 
+  and string_literal (loc: Loc.t)
+      (lit1: Ast.StringLiteral.t)
+      (lit2: Ast.StringLiteral.t)
+      : node change list option =
+        let {Ast.StringLiteral.value = val1; raw = raw1} = lit1 in
+        let {Ast.StringLiteral.value = val2; raw = raw2} = lit2 in
+        if String.equal val1 val2 && String.equal raw1 raw2 then Some []
+        else Some [(loc, Replace (StringLiteral lit1, StringLiteral lit2))]
+
   and tagged_template
       (t_tmpl1: (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
       (t_tmpl2: (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
@@ -1638,6 +1648,7 @@ let program (algo : diff_algorithm)
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
       | Nullable (t1_loc, t1), Nullable (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | Object obj1, Object obj2 -> diff_if_changed_ret_opt object_type obj1 obj2
+      | Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2 -> (string_literal loc1) s1 s2
       | _ -> None in
     Option.value type_diff
       ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
