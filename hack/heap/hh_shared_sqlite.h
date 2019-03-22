@@ -18,9 +18,10 @@
 
 typedef sqlite3 *sqlite3_ptr;
 
-#define assert_sql(x, y) (assert_sql_with_line((x), (y), __LINE__))
+#define assert_sql(db, x, y) (assert_sql_with_line((db), (x), (y), __LINE__))
 
 void assert_sql_with_line(
+  sqlite3_ptr db,
   int result,
   int correct_result,
   int line_number);
