@@ -9,12 +9,8 @@ type env_update = ServerEnv.env -> ServerEnv.env
 
 (* APIs to add to the state *)
 val push_new_workload: WorkloadStream.workload -> unit
-val push_new_parallelizable_workload:
-  (is_serial:bool -> WorkloadStream.parallelizable_workload) ->
-  unit
-val defer_parallelizable_workload:
-  (is_serial:bool -> WorkloadStream.parallelizable_workload) ->
-  unit
+val push_new_parallelizable_workload: WorkloadStream.parallelizable_workload -> unit
+val defer_parallelizable_workload: WorkloadStream.parallelizable_workload -> unit
 val requeue_deferred_parallelizable_workloads: unit -> unit
 val push_new_env_update: env_update -> unit
 val push_files_to_recheck:

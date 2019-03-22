@@ -570,6 +570,8 @@ let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immed
  *
  * While parallelizable commands can be run out of order (some might get deferred),
  * nonparallelizable commands always run in order. So that's why we don't defer commands here.
+ *
+ * Since this might run a recheck, `workload ~profiling ~env` MUST return the new env.
  *)
 let rec run_command_in_serial ~genv ~env ~profiling ~workload =
   try%lwt workload ~profiling ~env
@@ -593,18 +595,15 @@ let run_command_in_parallel ~env ~profiling ~workload ~mk_workload =
     Exception.reraise exn
 
 let rec handle_parallelizable_ephemeral_unsafe
-    ~client_context ~cmd_str ~genv ~request_id ~workload ~is_serial env =
+    ~client_context ~cmd_str ~genv ~request_id ~workload env =
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
       let%lwt response, json_data =
-        if is_serial
-        then run_command_in_serial ~genv ~env ~profiling ~workload
-        else
-          let mk_workload () =
-            handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
-          in
-          run_command_in_parallel ~env ~profiling ~workload ~mk_workload
+        let mk_workload () =
+          handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
+        in
+        run_command_in_parallel ~env ~profiling ~workload ~mk_workload
       in
 
       MonitorRPC.respond_to_request ~request_id ~response;
@@ -627,16 +626,16 @@ let rec handle_parallelizable_ephemeral_unsafe
   Lwt.return ((), profiling, json_data)
 
 and handle_parallelizable_ephemeral
-    ~genv ~request_id ~client_context ~workload ~cmd_str ~is_serial env =
+    ~genv ~request_id ~client_context ~workload ~cmd_str env =
   try%lwt
-    let handler = handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str ~is_serial in
+    let handler = handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str in
     let%lwt result =
       wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str env
     in
     match result with
     | Ok ()
     | Error () -> Lwt.return_unit
-  with Lwt.Canceled when not is_serial ->
+  with Lwt.Canceled ->
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 
@@ -1539,26 +1538,21 @@ let handle_persistent_immediately ~genv ~client_id ~request ~workload =
     ~genv ~client_id ~request ~workload ~default_ret:() ()
 
 let rec handle_parallelizable_persistent_unsafe
-    ~request ~is_serial ~genv ~workload ~client ~profiling env
+    ~request ~genv ~workload ~client ~profiling env
     : unit persistent_handling_result Lwt.t =
-  if is_serial
-  then
-    let workload = workload ~client in
-    run_command_in_serial ~genv ~env ~profiling ~workload
-  else
-    let mk_workload () =
-      let client_id = Persistent_connection.get_id client in
-      handle_parallelizable_persistent ~genv ~client_id ~request ~workload
-    in
-    let workload = workload ~client in
-    run_command_in_parallel ~env ~profiling ~workload ~mk_workload
+  let mk_workload () =
+    let client_id = Persistent_connection.get_id client in
+    handle_parallelizable_persistent ~genv ~client_id ~request ~workload
+  in
+  let workload = workload ~client in
+  run_command_in_parallel ~env ~profiling ~workload ~mk_workload
 
 and handle_parallelizable_persistent
-    ~genv ~client_id ~request ~workload ~is_serial env: unit Lwt.t =
+    ~genv ~client_id ~request ~workload env: unit Lwt.t =
   try%lwt
-    wrap_persistent_handler (handle_parallelizable_persistent_unsafe ~request ~is_serial)
+    wrap_persistent_handler (handle_parallelizable_persistent_unsafe ~request)
       ~genv ~client_id ~request ~workload ~default_ret:() env
-  with Lwt.Canceled when not is_serial->
+  with Lwt.Canceled ->
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 
