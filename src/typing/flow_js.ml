@@ -1065,14 +1065,14 @@ module M__flow
 let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
   if ground_subtype (l, u) then begin
-    if Context.trust_mode cx <> Options.NoTrust then
+    if Context.trust_tracking cx then
       trust_flow_to_use_t cx trace l u;
     print_types_if_verbose cx trace (l, u)
   end else if Cache.FlowConstraint.get cx (l, u) then
     print_types_if_verbose cx trace ~note:"(cached)" (l, u)
   else (
     print_types_if_verbose cx trace (l, u);
-    if Context.trust_mode cx <> Options.NoTrust then
+    if Context.trust_tracking cx then
       trust_flow_to_use_t cx trace l u;
 
     (* limit recursion depth *)
@@ -2894,14 +2894,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
               Type_mapper.union_flatten cx @@ UnionRep.members rep1
               |> List.for_all (fun t1 -> List.exists
-                  (TypeUtil.quick_subtype (Context.trust_mode cx = Options.CheckTrust) t1) ts2)
+                  (TypeUtil.quick_subtype (Context.trust_errors cx) t1) ts2)
         end ->
       ()
 
     (* Optimization to treat maybe and optional types as special unions for subset comparision *)
 
     | DefT (reason, _, UnionT rep), UseT (use_op, DefT (r, _, MaybeT maybe)) ->
-      let checked_trust = Context.trust_mode cx = Options.CheckTrust in
+      let checked_trust = Context.trust_errors cx in
       let void = (VoidT.why r |> with_trust bogus_trust) in
       let null = (NullT.why r |> with_trust bogus_trust) in
       let filter_void t = TypeUtil.quick_subtype checked_trust t void in
@@ -2926,7 +2926,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       end
 
     | DefT (reason, _, UnionT rep), UseT (use_op, DefT (r, _, OptionalT opt)) ->
-      let checked_trust = Context.trust_mode cx = Options.CheckTrust in
+      let checked_trust = Context.trust_errors cx in
       let void = (VoidT.why r |> with_trust bogus_trust) in
       let remove_void =
         UnionRep.members
@@ -2952,7 +2952,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               | Enum.Bool v -> SingletonBoolT v
               | Enum.Void -> VoidT
               | Enum.Null -> NullT in
-            match UnionRep.quick_mem_enum (Context.trust_mode cx = Options.CheckTrust) (DefT (r, trust, def)) rep with
+            match UnionRep.quick_mem_enum (Context.trust_errors cx) (DefT (r, trust, def)) rep with
             | UnionRep.No -> ()  (* provably unreachable, so prune *)
             | UnionRep.Yes -> rec_flow_t cx trace (l, result)
             | UnionRep.Conditional _ | UnionRep.Unknown -> (* inconclusive: the union is not concretized *)
@@ -2966,7 +2966,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               | Enum.Bool v -> SingletonBoolT v
               | Enum.Void -> VoidT
               | Enum.Null -> NullT in
-            UnionRep.join_quick_mem_results (acc, UnionRep.quick_mem_enum (Context.trust_mode cx = Options.CheckTrust) (DefT (r, trust, def)) rep)
+            UnionRep.join_quick_mem_results (acc, UnionRep.quick_mem_enum (Context.trust_errors cx) (DefT (r, trust, def)) rep)
           ) enums UnionRep.No in
           begin match acc with
             | UnionRep.No -> ()  (* provably unreachable, so prune *)
@@ -3031,7 +3031,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (_, DefT (_, _, UnionT rep)) when
         let ts = Type_mapper.union_flatten cx @@ UnionRep.members rep in
-        List.exists (TypeUtil.quick_subtype (Context.trust_mode cx = Options.CheckTrust) l) ts ->
+        List.exists (TypeUtil.quick_subtype (Context.trust_errors cx) l) ts ->
       ()
 
     | _, UseT (use_op, DefT (r, _, UnionT rep)) ->
@@ -6452,7 +6452,7 @@ and trust_flow_to_use_t cx trace l u =
 
 and trust_flow cx trace use_op l u =
   let check (lr, ltrust) (ur, utrust) =
-    if Context.trust_mode cx <> Options.SilentTrust
+    if Context.trust_errors cx
         && not (subtype_trust ltrust utrust) then
       add_output cx ~trace (Error_message.ETrustIncompatibleWithUseOp (
         lr, ur, use_op
@@ -8432,11 +8432,11 @@ and optimize_spec_try_shortcut cx trace reason_op = function
 
 and shortcut_enum cx trace reason_op use_op l rep =
   quick_mem_result cx trace reason_op use_op l rep @@
-  UnionRep.quick_mem_enum (Context.trust_mode cx = Options.CheckTrust) l rep
+  UnionRep.quick_mem_enum (Context.trust_errors cx) l rep
 
 and shortcut_disjoint_union cx trace reason_op use_op l rep =
   quick_mem_result cx trace reason_op use_op l rep @@
-  UnionRep.quick_mem_disjoint_union (Context.trust_mode cx = Options.CheckTrust) l rep
+  UnionRep.quick_mem_disjoint_union (Context.trust_errors cx) l rep
     ~find_resolved:(Context.find_resolved cx)
     ~find_props:(Context.find_props cx)
 

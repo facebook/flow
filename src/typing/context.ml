@@ -333,7 +333,14 @@ let jsx cx = cx.metadata.jsx
 let exists_checks cx = cx.sig_cx.exists_checks
 let exists_excuses cx = cx.sig_cx.exists_excuses
 let use_def cx = cx.use_def
-
+let trust_tracking cx =
+  match cx.metadata.trust_mode with
+  | Options.CheckTrust | Options.SilentTrust -> true
+  | Options.NoTrust -> false
+let trust_errors cx =
+  match cx.metadata.trust_mode with
+  | Options.CheckTrust -> true
+  | Options.SilentTrust | Options.NoTrust -> false
 let pid_prefix (cx: t) =
   if max_workers cx > 0
   then Printf.sprintf "[%d] " (Unix.getpid ())

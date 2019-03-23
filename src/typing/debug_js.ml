@@ -1630,7 +1630,7 @@ let rec dump_t_ (depth, tvars) cx t =
   let p ?(reason=true) ?(extra="") ?(trust=None) t =
     spf "%s %s(%s%s%s)"
       (string_of_ctor t)
-      (if Context.trust_mode cx = Options.NoTrust then "" else
+      (if not (Context.trust_tracking cx) then "" else
         (Option.value_map ~default:"" ~f:string_of_trust trust))
       (if reason then spf "%S" (dump_reason cx (reason_of_t t)) else "")
       (if reason && extra <> "" then ", " else "")
@@ -2060,7 +2060,7 @@ and dump_use_t_ (depth, tvars) cx t =
       id
   | UseT (use_op, (DefT (_, trust, _) as t)) ->
     spf "UseT (%s, %s%s)" (string_of_use_op use_op)
-      (if Context.trust_mode cx <> Options.NoTrust then string_of_trust trust else "")
+      (if Context.trust_tracking cx then string_of_trust trust else "")
       (kid t)
   | UseT (use_op, t) -> spf "UseT (%s, %s)" (string_of_use_op use_op) (kid t)
   | AdderT (use_op, _, _, x, y) -> p ~extra:(spf "%s, %s, %s"

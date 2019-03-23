@@ -122,6 +122,8 @@ val suppress_comments: t -> Str.regexp list
 val suppress_types: t -> SSet.t
 val default_lib_dir: t -> Path.t option
 val trust_mode: t -> Options.trust_mode
+val trust_tracking: t -> bool
+val trust_errors: t -> bool
 val type_graph: t -> Graph_explorer.graph
 val type_table: t -> Type_table.t
 val type_asserts: t -> (type_assert_kind * ALoc.t) ALocMap.t
