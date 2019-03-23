@@ -1,6 +1,11 @@
 // @flow
 
 let tests = [
+  // disallow calling TemplateStringsArray interface
+  function() {
+    new TemplateStringsArray();
+  },
+
   // list of args
   function() {
     function tag(quasis: TemplateStringsArray, x: number, y: number) {
