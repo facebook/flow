@@ -5427,30 +5427,41 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT _, MapTypeT (_, reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.untyped reason_op, tout)
 
-    | DefT (_, _, ArrT arrtype), MapTypeT (use_op, reason_op, Reduce funt, tout) ->
-      let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
+    | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, Reduce funt, tout) ->
       let props = match arrtype with
       | ArrayAT (_, opt) ->
         (match opt with
           | Some ts ->
             Core_list.fold_left ts ~f:(fun acc value ->
               match value with
-                | DefT (_, _, SingletonStrT str) -> SMap.add str (Field (None, (f value), Neutral)) acc
+                | DefT (_, _, SingletonStrT str) ->
+                  let t = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [value]), mk_id ()) in
+                  SMap.add str (Field (None, t, Positive)) acc
                 | _ -> acc
             ) ~init:SMap.empty
           | None -> SMap.empty)
       | TupleAT (_, ts) ->
         Core_list.fold_left ts ~f:(fun acc value ->
           match value with
-            | DefT (_, _, SingletonStrT str) -> SMap.add str (Field (None, (f value), Neutral)) acc
+            | DefT (_, _, SingletonStrT str) ->
+              let t = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [value]), mk_id ()) in
+              SMap.add str (Field (None, t, Positive)) acc
             | _ -> acc
         ) ~init:SMap.empty
       | ROArrayAT (_) -> SMap.empty in
-      let reason = replace_reason_const RObjectType reason_op in
-      let proto = ObjProtoT reason in
+      let props_tmap = Context.make_property_map cx props in
       let t =
-        (* DefT (reason, trust, ObjT {props_tmap;}) *)
-        Obj_type.mk_with_proto cx reason ~sealed:true ~exact:true ~props proto
+        let reason = replace_reason_const RObjectType reason_op in
+        let proto_t = ObjProtoT reason in
+        let call_t = None in
+        let dict_t = None in
+        let flags = {
+          exact = true;
+          sealed = Sealed;
+          frozen = false;
+        } in
+        DefT (reason, trust, ObjT {flags; dict_t; proto_t; props_tmap; call_t;})
+        (* Obj_type.mk_with_proto cx reason ~frozen:true ~sealed:true ~exact:true ~props proto *)
       in
       rec_flow_t cx trace (t, tout)
 
