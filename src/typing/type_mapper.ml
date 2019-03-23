@@ -556,6 +556,10 @@ class virtual ['a] t = object(self)
 
   method type_map cx map_cx t =
     match t with
+    | Reduce t' ->
+      let t'' = self#type_ cx map_cx t' in
+      if t'' == t' then t
+      else Reduce t''
     | TupleMap t' ->
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t
