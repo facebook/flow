@@ -731,6 +731,11 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source ~expected:"new gotRenamed()"
       ~mapper:(new useless_mapper)
   end;
+  "typeof_type" >:: begin fun ctxt ->
+    let source = "type Foo = typeof number" in
+    assert_edits_equal ctxt ~edits:[((18, 24), "string")] ~source
+      ~expected:"type Foo = typeof string" ~mapper:(new useless_mapper)
+  end;
   "new_type_param" >:: begin fun ctxt ->
     let source = "new foo<RENAME>()" in
     assert_edits_equal ctxt ~edits:[((8, 14), "GOT_RENAMED")] ~source

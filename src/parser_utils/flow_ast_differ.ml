@@ -1649,6 +1649,7 @@ let program (algo : diff_algorithm)
       | Nullable (t1_loc, t1), Nullable (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | Object obj1, Object obj2 -> diff_if_changed_ret_opt object_type obj1 obj2
       | Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2 -> (string_literal loc1) s1 s2
+      | Typeof (t1_loc, t1), Typeof (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | _ -> None in
     Option.value type_diff
       ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
