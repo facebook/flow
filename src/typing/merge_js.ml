@@ -490,7 +490,7 @@ let merge_tvar =
     in
     match lowers with
       | [t] -> t
-      | t0::t1::ts -> DefT (r, bogus_trust (), UnionT (UnionRep.make t0 t1 ts))
+      | t0::t1::ts -> UnionT (r, UnionRep.make t0 t1 ts)
       | [] ->
         let uses = Flow_js.possible_uses cx id in
         if uses = [] || existential

@@ -603,21 +603,21 @@ end = struct
     | DefT (_, _,SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
     | DefT (_, _,SingletonStrT lit) -> return (Ty.StrLit lit)
     | DefT (_, _,SingletonBoolT lit) -> return (Ty.BoolLit lit)
-    | DefT (_, _,MaybeT t) ->
+    | MaybeT (_, t) ->
       type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; Ty.Null; t]
-    | DefT (_, _,OptionalT t) ->
+    | OptionalT (_, t) ->
       type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; t]
     | DefT (_, _,FunT (_, _, f)) ->
       fun_ty ~env f None >>| fun t -> Ty.Fun t
     | DefT (r, _, ObjT o) -> obj_ty ~env r o
     | DefT (r, _, ArrT a) -> arr_ty ~env r a
-    | DefT (_, _, UnionT rep) ->
+    | UnionT (_, rep) ->
       let t0, (t1, ts) = UnionRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
       Ty.mk_union (t0::t1::ts)
-    | DefT (_, _, IntersectionT rep) ->
+    | IntersectionT (_, rep) ->
       let t0, (t1, ts) = InterRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
@@ -849,7 +849,7 @@ end = struct
 
   and call_prop ~env =
     let intersection = function
-    | T.DefT (_, _, T.IntersectionT rep) -> T.InterRep.members rep
+    | T.IntersectionT (_, rep) -> T.InterRep.members rep
     | t -> [t]
     in
     let multi_call ts =
@@ -1404,7 +1404,7 @@ end = struct
 
   and opt_t ~env t =
     let t, opt = match t with
-    | T.DefT (_, _, T.OptionalT t) -> (t, true)
+    | T.OptionalT (_, t) -> (t, true)
     | t -> (t, false)
     in
     type__ ~env t >>| fun t -> (t, opt)

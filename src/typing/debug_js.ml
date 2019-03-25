@@ -177,7 +177,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "instance", json_of_insttype json_cx instance
     ]
 
-  | DefT (_, _, OptionalT t) -> [
+  | OptionalT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
 
@@ -227,16 +227,16 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DefT (_, _, MaybeT t) -> [
+  | MaybeT (_, t) -> [
       "type", _json_of_t json_cx t
     ]
 
-  | DefT (_, _, IntersectionT rep) -> [
+  | IntersectionT (_, rep) -> [
       let ts = InterRep.members rep in
       "types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)
     ]
 
-  | DefT (_, _, UnionT rep) -> [
+  | UnionT (_, rep) -> [
       let ts = UnionRep.members rep in
       "types", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) ts)
     ]
@@ -1790,7 +1790,7 @@ let rec dump_t_ (depth, tvars) cx t =
     p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
   | OpaqueT (_, {underlying_t = Some arg; _}) -> p ~extra:(spf "%s" (kid arg)) t
   | OpaqueT _ -> p t
-  | DefT (_, trust, OptionalT arg) -> p ~trust:(Some trust) ~extra:(kid arg) t
+  | OptionalT (_, arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
   | DefT (_, trust, TypeAppT (_, base, args)) -> p ~trust:(Some trust) ~extra:(spf "%s, [%s]"
@@ -1802,10 +1802,10 @@ let rec dump_t_ (depth, tvars) cx t =
         | None -> spf "%s, %s" (kid base) (kid this)
       end t
   | ExactT (_, arg) -> p ~extra:(kid arg) t
-  | DefT (_, trust, MaybeT arg) -> p ~trust:(Some trust) ~extra:(kid arg) t
-  | DefT (_, trust, IntersectionT rep) -> p ~trust:(Some trust) ~extra:(spf "[%s]"
+  | MaybeT (_, arg) -> p ~extra:(kid arg) t
+  | IntersectionT (_, rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (Core_list.map ~f:kid (InterRep.members rep)))) t
-  | DefT (_, trust, UnionT rep) -> p ~trust:(Some trust) ~extra:(spf "[%s]"
+  | UnionT (_, rep) -> p ~extra:(spf "[%s]"
       (String.concat "; " (Core_list.map ~f:kid (UnionRep.members rep)))) t
   | AnyWithLowerBoundT arg
   | AnyWithUpperBoundT arg -> p ~reason:false ~extra:(kid arg) t
@@ -1977,7 +1977,7 @@ and dump_use_t_ (depth, tvars) cx t =
     | None -> []
     in
     let xs = SMap.fold (fun k (t,_) xs ->
-      let opt = match t with DefT (_, _, OptionalT _) -> "?" | _ -> "" in
+      let opt = match t with OptionalT _ -> "?" | _ -> "" in
       (k^opt)::xs
     ) props xs in
     let xs = String.concat "; " xs in

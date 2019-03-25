@@ -316,7 +316,7 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
           | None -> NoDefFound
           | Some loc -> FoundObject loc
         end
-    | Success (DefT (_, _, UnionT rep)) ->
+    | Success (UnionT (_, rep)) ->
         let union_members =
           UnionRep.members rep
           |> Core_list.map ~f:(fun member -> extract_def_loc cx member name)

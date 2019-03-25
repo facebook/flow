@@ -778,7 +778,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           (fun desc -> RTypeAlias (name, true, desc)) in
         let rec loop = function
         | ExactT (r, t) -> ExactT (mod_reason r, loop t)
-        | DefT (r, trust, MaybeT t) -> DefT (mod_reason r, trust, MaybeT (loop t))
+        | MaybeT (r, t) -> MaybeT (mod_reason r, loop t)
         | t -> mod_reason_of_t mod_reason t
         in
         loop t
@@ -3138,7 +3138,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       | None, None ->
         Env.merge_env cx loc (env, then_env, else_env)
         (Changeset.exclude_refines newset);
-        env, DefT (reason, bogus_trust (), UnionT (UnionRep.make t1 t2 []))
+        env, UnionT (reason, UnionRep.make t1 t2 [])
         (* NOTE: In general it is dangerous to express the least upper bound of
            some types as a union: it might pin down the least upper bound
            prematurely (before all the types have been inferred), and when the

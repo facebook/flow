@@ -543,11 +543,11 @@ let bind_declare_var = bind_var ~state:State.Initialized
 let bind_declare_fun =
 
   let update_type seen_t new_t = match seen_t with
-  | DefT (reason, trust, IntersectionT rep) ->
-    DefT (reason, trust, IntersectionT (InterRep.append [new_t] rep))
+  | IntersectionT (reason, rep) ->
+    IntersectionT (reason, InterRep.append [new_t] rep)
   | _ ->
     let reason = replace_reason_const RIntersectionType (reason_of_t seen_t) in
-    DefT (reason, bogus_trust (), IntersectionT (InterRep.make seen_t new_t []))
+    IntersectionT (reason, InterRep.make seen_t new_t [])
   in
 
   fun cx name t loc ->
@@ -741,7 +741,7 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
       else (* State.MaybeInitialized *)
         let desc = (RCustom "possibly uninitialized variable") in
         let rep = UnionRep.make (uninit desc) specific [] in
-        DefT (mk_reason desc value_declare_loc, bogus_trust (), UnionT rep)
+        UnionT (mk_reason desc value_declare_loc, rep)
     in
     specific, general
 
@@ -849,7 +849,7 @@ let unify_declared_type ?(lookup_mode=ForValue) cx name t =
    we also need to take overloading into account. See `bind_declare_fun` for similar logic. *)
 let unify_declared_fun_type =
   let find_type aloc = function
-    | DefT (_, _, IntersectionT rep) ->
+    | IntersectionT (_, rep) ->
       let match_type t = aloc_of_reason (reason_of_t t) = aloc in
       begin match List.find_opt match_type (InterRep.members rep) with
         | Some t -> t

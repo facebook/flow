@@ -186,13 +186,10 @@ let hash_of_def_ctor = Type.(function
   | ClassT _ -> ClassH
   | EmptyT -> EmptyH
   | FunT _ -> FunH
-  | IntersectionT _ -> IntersectionH
-  | MaybeT _ -> MaybeH
   | MixedT _ -> MixedH
   | NullT -> NullH
   | NumT _ -> NumH
   | ObjT _ -> ObjH
-  | OptionalT _ -> OptionalH
   | ReactAbstractComponentT _ -> ReactAbstractComponentH
   | SingletonBoolT _ -> SingletonBoolH
   | SingletonNumT _ -> SingletonNumH
@@ -201,7 +198,6 @@ let hash_of_def_ctor = Type.(function
   | TypeT _ -> TypeH
   | TypeAppT _ -> TypeAppH
   | VoidT -> VoidH
-  | UnionT _ -> UnionH
 )
 
 let hash_of_ctor = Type.(function
@@ -225,16 +221,20 @@ let hash_of_ctor = Type.(function
   | FunProtoApplyT _ -> FunProtoApplyH
   | FunProtoBindT _ -> FunProtoBindH
   | FunProtoCallT _ -> FunProtoCallH
+  | IntersectionT _ -> IntersectionH
   | KeysT _ -> KeysH
+  | MaybeT _ -> MaybeH
   | ModuleT _ -> ModuleH
   | NullProtoT _ -> NullProtoH
   | ObjProtoT _ -> ObjProtoH
+  | OptionalT _ -> OptionalH
   | MatchingPropT _ -> MatchingPropH
   | OpenPredT _ -> OpenPredH
   | ReposT _ -> ReposH
   | ShapeT _ -> ShapeH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
+  | UnionT _ -> UnionH
 )
 
 let hash_of_use_ctor = Type.(function

@@ -376,12 +376,12 @@ module Kit (Flow: Flow_common.S): REACT = struct
           (fun desc -> RReactChildrenOrUndefinedOrType desc)
           (reason_of_t spread)
         in
-        Some (DefT (r, bogus_trust (), OptionalT (
+        Some (OptionalT (r,
           union_of_ts r [
             spread;
             (DefT (r, bogus_trust (), ArrT (ArrayAT (spread, None))));
           ]
-        )))
+        ))
       (* If we have one children argument and a spread of unknown length then
        * React may either pass in the unwrapped argument, or an array where the
        * element type is the union of the known argument and the spread type. *)
@@ -595,7 +595,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         | [t] -> t
         | t0::t1::ts ->
           let reason = replace_reason_const RUnionType reason in
-          DefT (reason, bogus_trust (), UnionT (UnionRep.make t0 t1 ts))
+          UnionT (reason, UnionRep.make t0 t1 ts)
       in
 
       let open SimplifyPropType in

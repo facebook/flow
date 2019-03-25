@@ -23,7 +23,7 @@ type t = (
 
 let rec merge_type cx =
   let create_union rep =
-    DefT (locationless_reason (RCustom "union"), bogus_trust(),  UnionT rep)
+    UnionT (locationless_reason (RCustom "union"), rep)
   in
 
   function
@@ -42,8 +42,8 @@ let rec merge_type cx =
   | DefT (_, _, EmptyT), t | t, DefT (_, _, EmptyT) -> t
   | _, (DefT (_, _, MixedT _) as t) | (DefT (_, _, MixedT _) as t), _ -> t
 
-  | DefT (_, _, NullT), (DefT (_, _, MaybeT _) as t) | (DefT (_, _, MaybeT _) as t), DefT (_, _, NullT)
-  | DefT (_, _, VoidT), (DefT (_, _, MaybeT _) as t) | (DefT (_, _, MaybeT _) as t), DefT (_, _, VoidT)
+  | DefT (_, _, NullT), (MaybeT _ as t) | (MaybeT _ as t), DefT (_, _, NullT)
+  | DefT (_, _, VoidT), (MaybeT _ as t) | (MaybeT _ as t), DefT (_, _, VoidT)
     -> t
 
   | (DefT (_, _, FunT (_,_,ft1)) as fun1), (DefT (_, _, FunT (_,_,ft2)) as fun2) ->
@@ -199,18 +199,18 @@ let rec merge_type cx =
       ArrT (ROArrayAT (merge_type cx (elemt1, elemt2)))
     )
 
-  | (DefT (_, _, MaybeT t1), DefT (_, _, MaybeT t2))
-  | (DefT (_, _, MaybeT t1), t2)
-  | (t1, DefT (_, _, MaybeT t2)) ->
+  | (MaybeT (_, t1), MaybeT (_, t2))
+  | (MaybeT (_, t1), t2)
+  | (t1, MaybeT (_, t2)) ->
       let t = merge_type cx (t1, t2) in
       let reason = locationless_reason (RMaybe (desc_of_t t)) in
-      DefT (reason, bogus_trust (), MaybeT t)
+      MaybeT (reason, t)
 
-  | DefT (_, _, UnionT rep1), DefT (_, _, UnionT rep2) ->
+  | UnionT (_, rep1), UnionT (_, rep2) ->
       create_union (UnionRep.rev_append rep1 rep2)
 
-  | (DefT (_, _, UnionT rep), t)
-  | (t, DefT (_, _, UnionT rep)) ->
+  | (UnionT (_, rep), t)
+  | (t, UnionT (_, rep)) ->
       create_union (UnionRep.cons t rep)
 
   (* TODO: do we need to do anything special for merging Null with Void,
@@ -347,7 +347,7 @@ let resolve_builtin_class cx ?trace = function
   | t -> t
 
 let rec extract_type cx this_t = match this_t with
-  | DefT (_, _, MaybeT ty) ->
+  | MaybeT (_, ty) ->
       extract_type cx ty
   | DefT (_, _, (NullT | VoidT))
   | InternalT (OptionalChainVoidT _) ->
@@ -385,9 +385,9 @@ let rec extract_type cx this_t = match this_t with
       extract_type cx static_t
   | DefT (_, _, FunT _) as t ->
       Success t
-  | DefT (_, _, IntersectionT _ ) as t ->
+  | IntersectionT _ as t ->
       Success  t
-  | DefT (_, _, UnionT _ ) as t ->
+  | UnionT _ as t ->
       Success t
   | DefT (reason, _, SingletonStrT _)
   | DefT (reason, _, StrT _) ->
@@ -442,7 +442,7 @@ let rec extract_type cx this_t = match this_t with
   | OpaqueT _
   | OpenPredT (_, _, _, _)
   | OpenT _
-  | DefT (_, _, OptionalT _)
+  | OptionalT _
   | ShapeT _
   | ThisClassT _
   | DefT (_, _, TypeT _)
@@ -490,7 +490,7 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
         (get_builtin_type cx proto_reason "Object")
         []
       in
-      let proto_t = resolve_type cx (DefT (proto_reason, bogus_trust (), IntersectionT rep)) in
+      let proto_t = resolve_type cx (IntersectionT (proto_reason, rep)) in
       let prot_members =
         if exclude_proto_members then SMap.empty
         else extract_members_as_map ~exclude_proto_members cx proto_t
@@ -517,7 +517,7 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
       let members = extract_members_as_map ~exclude_proto_members cx static_t in
       let prot_members = extract_members_as_map ~exclude_proto_members cx proto_t in
       Success (AugmentableSMap.augment prot_members ~with_bindings:members)
-  | Success (DefT (_, _, IntersectionT rep)) ->
+  | Success (IntersectionT (_, rep)) ->
       (* Intersection type should autocomplete for every property of
          every type in the intersection *)
       let ts = InterRep.members rep in
@@ -526,7 +526,7 @@ let rec extract_members ?(exclude_proto_members=false) cx = function
       Success (List.fold_left (fun acc members ->
         AugmentableSMap.augment acc ~with_bindings:members
       ) SMap.empty members)
-  | Success (DefT (_, _, UnionT rep)) ->
+  | Success (UnionT (_, rep)) ->
       (* Union type should autocomplete for only the properties that are in
       * every type in the intersection *)
       let ts = Core_list.map ~f:(resolve_type cx) (UnionRep.members rep) in

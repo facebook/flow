@@ -115,14 +115,14 @@ let rec convert cx tparams_map = Ast.Type.(function
 | loc, Nullable t ->
     let (_, t), _ as t_ast = convert cx tparams_map t in
     let reason = annot_reason (mk_reason (RMaybe (desc_of_t t)) loc) in
-    (loc, DefT (reason, annot_trust (), MaybeT t)), Nullable t_ast
+    (loc, MaybeT (reason, t)), Nullable t_ast
 
 | loc, Union (t0, t1, ts) ->
   let (_, t0), _ as t0_ast = convert cx tparams_map t0 in
   let (_, t1), _ as t1_ast = convert cx tparams_map t1 in
   let ts, ts_ast = convert_list cx tparams_map ts in
   let rep = UnionRep.make t0 t1 (ts) in
-  (loc, DefT (mk_reason RUnionType loc, annot_trust (), UnionT rep)),
+  (loc, UnionT (mk_reason RUnionType loc, rep)),
   Union (t0_ast, t1_ast, ts_ast)
 
 | loc, Intersection (t0, t1, ts) ->
@@ -130,7 +130,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   let (_, t1), _ as t1_ast = convert cx tparams_map t1 in
   let ts, ts_ast = convert_list cx tparams_map ts in
   let rep = InterRep.make t0 t1 ts in
-  (loc, DefT (mk_reason RIntersectionType loc, annot_trust (), IntersectionT rep)),
+  (loc, IntersectionT (mk_reason RIntersectionType loc, rep)),
   Intersection (t0_ast, t1_ast, ts_ast)
 
 | loc, Typeof x as t_ast ->
@@ -173,7 +173,7 @@ let rec convert cx tparams_map = Ast.Type.(function
        that, we use the following closest approximation, that behaves like a
        union as a lower bound but `any` as an upper bound.
     *)
-    AnyWithLowerBoundT (DefT (element_reason, bogus_trust (), UnionT (UnionRep.make t0 t1 ts)))
+    AnyWithLowerBoundT (UnionT (element_reason, UnionRep.make t0 t1 ts))
   in
   (loc, DefT (reason, annot_trust (), ArrT (TupleAT (elemt, tuple_types)))), Tuple ts_ast
 
@@ -938,7 +938,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       | t0::t1::ts ->
         let callable_reason = mk_reason (RCustom "callable object type") loc in
         let rep = InterRep.make t0 t1 ts in
-        let t = DefT (callable_reason, bogus_trust (), IntersectionT rep) in
+        let t = IntersectionT (callable_reason, rep) in
         Some t
     in
     (* Previously, call properties were stored in the props map under the key

@@ -105,6 +105,18 @@ module rec TypeTerm : sig
     | ShapeT of t
     | MatchingPropT of reason * string * t
 
+    (* & types *)
+    | IntersectionT of reason * InterRep.t
+
+    (* | types *)
+    | UnionT of reason * UnionRep.t
+
+    (* ? types *)
+    | MaybeT of reason * t
+
+    (* type of an optional parameter *)
+    | OptionalT of reason * t
+
     (* collects the keys of an object *)
     | KeysT of reason * t
 
@@ -220,9 +232,6 @@ module rec TypeTerm : sig
     (* type aliases *)
     | TypeT of type_t_kind * t
 
-    (* type of an optional parameter *)
-    | OptionalT of t
-
     (* A polymorphic type is like a type-level "function" that, when applied to
        lists of type arguments, generates types. Just like a function, a
        polymorphic type has a list of type parameters, represented as bound
@@ -240,15 +249,6 @@ module rec TypeTerm : sig
     | PolyT of ALoc.t * typeparam Nel.t * t * int
     (* type application *)
     | TypeAppT of use_op * t * t list
-
-    (* ? types *)
-    | MaybeT of t
-
-    (* & types *)
-    | IntersectionT of InterRep.t
-
-    (* | types *)
-    | UnionT of UnionRep.t
 
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
@@ -1668,7 +1668,7 @@ end = struct
       | EvalT _
       | DefT (_, _, TypeAppT _)
       | KeysT _
-      | DefT (_, _, IntersectionT _)
+      | IntersectionT _
       (* other types might wrap parts that are accessible directly *)
       | OpaqueT _
       | DefT (_, _, InstanceT _)
@@ -2200,6 +2200,10 @@ end = struct
     | ThisClassT (reason, _) -> reason
     | ThisTypeAppT (reason, _, _, _) -> reason
     | AnyT (reason, _) -> reason
+    | UnionT (reason, _) -> reason
+    | IntersectionT (reason, _) -> reason
+    | MaybeT (reason, _) -> reason
+    | OptionalT (reason, _) -> reason
 
   and reason_of_defer_use_t = function
     | DestructuringT (reason, _)
@@ -2330,6 +2334,10 @@ end = struct
     | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
     | DefT (reason, trust, t) -> DefT (f reason, trust, t)
     | AnyT (reason, src) -> AnyT (f reason, src)
+    | UnionT (reason, src) -> UnionT (f reason, src)
+    | IntersectionT (reason, src) -> IntersectionT (f reason, src)
+    | MaybeT (reason, src) -> MaybeT (f reason, src)
+    | OptionalT (reason, src) -> OptionalT (f reason, src)
     | EvalT (t, defer_use_t, id) ->
         EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
     | ExactT (reason, t) -> ExactT (f reason, t)
@@ -2731,8 +2739,8 @@ end = struct
       (* In reposition we also recurse and reposition some nested types. We need
        * to make sure we swap the types for these reasons as well. Otherwise our
        * optimized union ~> union check will not pass. *)
-      | DefT (_, trust, MaybeT t2), DefT (r, _, MaybeT t1) -> DefT (r, trust, MaybeT (swap_reason t2 t1))
-      | DefT (_, trust, OptionalT t2), DefT (r, _, OptionalT t1) -> DefT (r, trust, OptionalT (swap_reason t2 t1))
+      | MaybeT (_, t2), MaybeT (r, t1) -> MaybeT (r, swap_reason t2 t1)
+      | OptionalT (_, t2), OptionalT (r, t1) -> OptionalT (r, swap_reason t2 t1)
       | ExactT (_, t2), ExactT (r, t1) -> ExactT (r, swap_reason t2 t1)
 
       | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
@@ -3089,13 +3097,10 @@ let string_of_def_ctor = function
   | FunT _ -> "FunT"
   | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"
-  | IntersectionT _ -> "IntersectionT"
-  | MaybeT _ -> "MaybeT"
   | MixedT _ -> "MixedT"
   | NullT -> "NullT"
   | NumT _ -> "NumT"
   | ObjT _ -> "ObjT"
-  | OptionalT _ -> "OptionalT"
   | PolyT _ -> "PolyT"
   | ReactAbstractComponentT _ -> "ReactAbstractComponentT"
   | SingletonBoolT _ -> "SingletonBoolT"
@@ -3104,7 +3109,6 @@ let string_of_def_ctor = function
   | StrT _ -> "StrT"
   | TypeT _ -> "TypeT"
   | TypeAppT _ -> "TypeAppT"
-  | UnionT _ -> "UnionT"
   | VoidT -> "VoidT"
 
 let string_of_ctor = function
@@ -3143,6 +3147,10 @@ let string_of_ctor = function
   | ShapeT _ -> "ShapeT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
+  | UnionT _ -> "UnionT"
+  | IntersectionT _ -> "IntersectionT"
+  | OptionalT _ -> "OptionalT"
+  | MaybeT _ -> "MaybeT"
 
 let string_of_internal_use_op = function
   | CopyEnv -> "CopyEnv"
@@ -3379,11 +3387,11 @@ and elemt_of_arrtype = function
 
 let optional t =
   let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
-  DefT (reason, bogus_trust (), OptionalT t)
+  OptionalT (reason, t)
 
 let maybe t =
   let reason = replace_reason (fun desc -> RMaybe desc) (reason_of_t t) in
-  DefT (reason, bogus_trust (), MaybeT t)
+  MaybeT (reason, t)
 
 let exact t =
   ExactT (reason_of_t t, t)
@@ -3563,7 +3571,7 @@ let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
 }
 
 let create_intersection rep =
-  DefT (locationless_reason (RCustom "intersection"), bogus_trust (), IntersectionT rep)
+  IntersectionT (locationless_reason (RCustom "intersection"), rep)
 
 let apply_opt_use opt_use t_out = match opt_use with
 | OptCallT (u, r, f) ->
