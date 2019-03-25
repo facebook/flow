@@ -25,7 +25,7 @@ let bool : boolean = tuple[1]; // Works!
 let str  : string  = tuple[2]; // Works!
 ```
 
-If you try getting from an index that does not exist it will not type-check hence will result in a static error.
+If you try getting from an index that does not exist, it will not type-check hence will result in a static error.
 
 ```js
 // @flow
