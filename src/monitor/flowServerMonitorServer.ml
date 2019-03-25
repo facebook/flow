@@ -297,30 +297,10 @@ end = struct
       ServerConnection.close_immediately t.connection;
     ]
 
-  let handle_file_watcher_exit watcher status =
+  let handle_file_watcher_exit watcher =
     (* TODO (glevi) - We probably don't need to make the monitor exit when the file watcher dies.
      * We could probably just restart it. For dfind, we'd also need to start a new server, but for
      * watchman we probably could just start a new watchman daemon and use the clockspec *)
-    begin match status with
-    | Unix.WEXITED exit_status ->
-      let exit_type =
-        try Some (FlowExitStatus.error_type exit_status)
-        with Not_found -> None in
-      let exit_status_string =
-        Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type in
-      Logger.error "File watcher (%s) exited with code %s (%d)"
-        watcher#name
-        exit_status_string
-        exit_status
-    | Unix.WSIGNALED signal ->
-      Logger.error "File watcher (%s) was killed with %s signal"
-        watcher#name
-        (PrintSignal.string_of_signal signal)
-    | Unix.WSTOPPED signal ->
-      Logger.error "File watcher (%s) was stopped with %s signal"
-        watcher#name
-        (PrintSignal.string_of_signal signal)
-    end;
     exit ~msg:(spf "File watcher (%s) died" watcher#name) FlowExitStatus.Dfind_died
   let server_num = ref 0
 
@@ -414,7 +394,17 @@ end = struct
     let%lwt () = watcher#wait_for_init in
     Logger.debug "File watcher (%s) ready!" watcher#name;
     let file_watcher_exit_thread =
-      let%lwt status = watcher#waitpid in handle_file_watcher_exit watcher status
+      let%lwt () =
+        try%lwt watcher#waitpid
+        with
+        | Lwt.Canceled as exn ->
+          let exn = Exception.wrap exn in
+          Exception.reraise exn
+        | exn ->
+          Logger.error ~exn "Uncaught exception in watcher#waitpid";
+          Lwt.return_unit
+      in
+      handle_file_watcher_exit watcher
     in
     StatusStream.file_watcher_ready ();
 
