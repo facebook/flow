@@ -134,6 +134,9 @@ let coverage ~options ~env ~profiling ~force file_input =
     end
 
 let batch_coverage ~genv ~env ~batch =
+  if ServerProt.Response.((Rechecker.get_lazy_stats genv env).lazy_mode) |> Option.is_some then
+    Error "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with \
+      '--lazy-mode none' to enable this command." |> Lwt.return else
   let is_checked key = CheckedSet.mem key env.checked_files in
   let filter key = Core_list.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
   let coverage_map = FilenameMap.filter
@@ -141,8 +144,7 @@ let batch_coverage ~genv ~env ~batch =
     env.coverage in
   let response =
     FilenameMap.fold (fun key coverage -> List.cons (key, coverage)) coverage_map [] in
-  (Ok response, Rechecker.get_lazy_stats genv env)
-  |> Lwt.return
+  Ok response |> Lwt.return
 
 let serialize_graph graph =
   (* Convert from map/set to lists for serialization to client. *)
@@ -299,8 +301,8 @@ let handle_coverage ~options ~force ~input ~profiling ~env =
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
 let handle_batch_coverage ~genv ~options:_ ~profiling:_ ~env ~batch =
-  let%lwt response, lazy_stats = batch_coverage ~genv ~env ~batch in
-  Lwt.return (ServerProt.Response.BATCH_COVERAGE {response; lazy_stats}, None)
+  let%lwt response = batch_coverage ~genv ~env ~batch in
+  Lwt.return (ServerProt.Response.BATCH_COVERAGE response, None)
 
 let handle_cycle ~fn ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn in

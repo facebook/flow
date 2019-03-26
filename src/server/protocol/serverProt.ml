@@ -216,7 +216,7 @@ module Response = struct
   | AUTOCOMPLETE of autocomplete_response
   | CHECK_FILE of check_file_response
   | COVERAGE of coverage_response
-  | BATCH_COVERAGE of {response: batch_coverage_response; lazy_stats: lazy_stats }
+  | BATCH_COVERAGE of batch_coverage_response
   | CYCLE of graph_response
   | GRAPH_DEP_GRAPH of (unit, string) result
   | DUMP_TYPES of dump_types_response

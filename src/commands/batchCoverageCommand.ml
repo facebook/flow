@@ -22,7 +22,8 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> base_flags
-    |> connect_and_json_flags
+    |> connect_flags_no_lazy
+    |> json_flags
     |> root_flag
     |> strip_root_flag
     |> wait_for_recheck_flag
@@ -34,7 +35,8 @@ let spec = {
     |> anon "FILE..." (list_of string)
   )
 }
-let output_results ~root ~strip_root ~json ~pretty ~show_all ~lazy_stats stats =
+
+let output_results ~root ~strip_root ~json ~pretty ~show_all stats =
   let strip_root = if strip_root then Some root else None in
   let percent top bottom =
     if bottom = 0 then 0. else (float_of_int top /. float_of_int bottom) *. 100. in
@@ -52,23 +54,6 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~lazy_stats stats =
     let percent = percent covered total in
     let file = Reason.string_of_source ~strip_root file_key in
     file, covered, total, percent in
-
-  let lazy_msg = match lazy_stats.ServerProt.Response.lazy_mode with
-  | Some mode -> Some (
-      Printf.sprintf
-        ("The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n" ^^
-        "To learn more, visit flow.org/en/docs/lang/lazy-modes")
-      Options.(match mode with
-        | LAZY_MODE_FILESYSTEM -> "filesystem"
-        | LAZY_MODE_IDE -> "IDE"
-        | LAZY_MODE_WATCHMAN -> "Watchman"
-      )
-      lazy_stats.ServerProt.Response.checked_files
-      lazy_stats.ServerProt.Response.total_files
-    )
-  | None -> None in
-
-  Option.iter lazy_msg ~f:(print_endline);
 
   if json then begin
     let open Hh_json in
@@ -145,10 +130,10 @@ let main base_flags option_values json pretty root strip_root
 
   let request = ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; } in
   match connect_and_make_request flowconfig_name option_values root request with
-  | ServerProt.Response.BATCH_COVERAGE {response = Error msg; lazy_stats = _} ->
+  | ServerProt.Response.BATCH_COVERAGE (Error msg) ->
       FlowExitStatus.(exit ~msg Unknown_error)
-  | ServerProt.Response.BATCH_COVERAGE {response = Ok resp; lazy_stats} ->
-      output_results ~root ~strip_root ~json ~pretty ~show_all ~lazy_stats resp
+  | ServerProt.Response.BATCH_COVERAGE (Ok resp) ->
+      output_results ~root ~strip_root ~json ~pretty ~show_all resp
   | response ->
       failwith_bad_response ~request ~response
 

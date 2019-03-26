@@ -635,11 +635,11 @@ type connect_params = {
 
 let collect_connect_flags
     main
+    lazy_mode
     timeout
     retries
     retry_if_init
     no_auto_start
-    lazy_mode
     temp_dir
     shm_flags
     ignore_version
@@ -665,9 +665,10 @@ let collect_connect_flags
     quiet;
   }
 
-let connect_flags prev = CommandSpec.ArgSpec.(
-  prev
-  |> collect collect_connect_flags
+let collect_connect_flags_without_lazy main = collect_connect_flags main None
+
+let connect_flags_with_lazy_collector collector = CommandSpec.ArgSpec.(
+  collector
   |> flag "--timeout" (optional int)
       ~doc:"Maximum time to wait, in seconds"
   |> flag "--retries" (optional int)
@@ -676,12 +677,24 @@ let connect_flags prev = CommandSpec.ArgSpec.(
       ~doc:"retry if the server is initializing (default: true)"
   |> flag "--no-auto-start" no_arg
       ~doc:"If the server is not running, do not start it; just exit"
-  |> lazy_flags
   |> temp_dir_flag
   |> shm_flags
   |> from_flag
   |> ignore_version_flag
   |> quiet_flag
+)
+
+let connect_flags_no_lazy prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_connect_flags_without_lazy
+  |> connect_flags_with_lazy_collector
+)
+
+let connect_flags prev = CommandSpec.ArgSpec.(
+  prev
+  |> collect collect_connect_flags
+  |> lazy_flags
+  |> connect_flags_with_lazy_collector
 )
 
 (* For commands that take both --quiet and --json or --pretty, make the latter two imply --quiet *)
