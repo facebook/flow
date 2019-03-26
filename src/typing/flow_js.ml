@@ -5427,24 +5427,32 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT _, MapTypeT (_, reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.untyped reason_op, tout)
 
-    | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, Reduce funt, tout) ->
+    | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, ObjectReduce funt, tout) ->
+      let mk_index index =
+        let raw = Pervasives.string_of_int index in
+        let index = Pervasives.float_of_int index in
+        let t_reason = replace_reason_const (RNumberLit raw) reason_op in
+        DefT (t_reason, trust, SingletonNumT (index, raw))
+      in
       let props = match arrtype with
       | ArrayAT (_, opt) ->
         (match opt with
           | Some ts ->
-            Core_list.fold_left ts ~f:(fun acc value ->
+            Core_list.foldi ts ~f:(fun key acc value ->
               match value with
                 | DefT (_, _, SingletonStrT str) ->
-                  let t = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [value]), mk_id ()) in
+                  let index = mk_index key in
+                  let t = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [index; value]), mk_id ()) in
                   SMap.add str (Field (None, t, Positive)) acc
                 | _ -> acc
             ) ~init:SMap.empty
           | None -> SMap.empty)
       | TupleAT (_, ts) ->
-        Core_list.fold_left ts ~f:(fun acc value ->
+        Core_list.foldi ts ~f:(fun key acc value ->
           match value with
             | DefT (_, _, SingletonStrT str) ->
-              let t = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [value]), mk_id ()) in
+              let index = mk_index key in
+              let t = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [index; value]), mk_id ()) in
               SMap.add str (Field (None, t, Positive)) acc
             | _ -> acc
         ) ~init:SMap.empty
@@ -5464,6 +5472,37 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* Obj_type.mk_with_proto cx reason ~frozen:true ~sealed:true ~exact:true ~props proto *)
       in
       rec_flow_t cx trace (t, tout)
+
+    | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, Reduce (funt, init), tout) ->
+      let mk_index index =
+        let raw = Pervasives.string_of_int index in
+        let index = Pervasives.float_of_int index in
+        let t_reason = replace_reason_const (RNumberLit raw) reason_op in
+        DefT (t_reason, trust, SingletonNumT (index, raw))
+      in
+      let f key acc value =
+        let index = mk_index key in
+        EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [acc; value; index]), mk_id ())
+      in
+      let reducei l ~f = match l with
+        | [] -> None
+        | hd :: tl -> Some (snd (Core_list.fold ~init:(0, hd) ~f:(fun (i, acc) v -> (i + 1, f i acc v)) tl))
+      in
+      let mk_fold ts init = match init with
+        | Some init -> Some (Core_list.foldi ts ~f:f ~init:init)
+        | None -> reducei ts ~f:f
+      in
+      let t = match arrtype with
+      | ArrayAT (_, opt) ->
+        (match opt with
+          | Some ts -> mk_fold ts init
+          | None -> None)
+      | TupleAT (_, ts) -> mk_fold ts init
+      | ROArrayAT (_) -> None in
+      let t_type = match t with
+        | Some t -> t
+        | None -> DefT (reason_op, trust, EmptyT) in
+      rec_flow_t cx trace (t_type, tout)
 
     | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout) ->
       let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
@@ -7592,6 +7631,7 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     let reason_op = replace_reason_const (RProperty (Some x)) reason in
     GetPropT (use_op, reason, Named (reason_op, x), tout)
   | ElementType t -> GetElemT (use_op, reason, t, tout)
+  | ElementWrite (t, t2) -> SetElemT (use_op, reason, t, t2, Some tout)
   | Bind t -> BindT (use_op, reason, mk_methodcalltype t None [] tout, true)
   | SpreadType (options, todo_rev) ->
     let open Object in

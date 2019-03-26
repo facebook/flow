@@ -1490,6 +1490,8 @@ end = struct
     | T.ValuesType -> return (Ty.Utility (Ty.Values ty))
     | T.ElementType t' ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ElementType (ty, ty'))
+    | T.ElementWrite (t', _) ->
+       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ElementWrite (ty, ty', ty'))
     | T.CallType ts ->
       mapM (type__ ~env) ts >>| fun tys -> Ty.Utility (Ty.Call (ty, tys))
     | T.TypeMap (T.ObjectMap t') ->
@@ -1498,8 +1500,12 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMapi (ty, ty'))
     | T.PropertyType k ->
       return (Ty.Utility (Ty.PropertyType (ty, Ty.StrLit k)))
-    | T.TypeMap (T.Reduce t') ->
-      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Reduce (ty, ty'))
+    | T.TypeMap (T.Reduce (t', Some t2')) ->
+      mapM (type__ ~env) [t'; t2'] >>| fun tys -> Ty.Utility (Ty.Reduce (ty, Core_list.nth_exn tys 0, Core_list.nth tys 1))
+    | T.TypeMap (T.Reduce (t', None)) ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Reduce (ty, ty', None))
+    | T.TypeMap (T.ObjectReduce t') ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjReduce (ty, ty'))
     | T.TypeMap (T.TupleMap t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.TupleMap (ty, ty'))
     | T.RestType (T.Object.Rest.Sound, t') ->

@@ -38,6 +38,7 @@ let string_of_binary_test_ctor = function
 
 let string_of_type_map = function
   | Reduce _ -> "Reduce"
+  | ObjectReduce _ -> "ObjectReduce"
   | TupleMap _ -> "TupleMap"
   | ObjectMap _ -> "ObjectMap"
   | ObjectMapi _ -> "ObjectMapi"
@@ -1202,6 +1203,10 @@ and json_of_destructor_impl json_cx = Hh_json.(function
   | ElementType t -> JSON_Object [
       "elementType", _json_of_t json_cx t
     ]
+  | ElementWrite (t1, t2) -> JSON_Object [
+      "elementWrite", _json_of_t json_cx t1;
+      "elementWriteType", _json_of_t json_cx t2
+    ]
   | Bind t -> JSON_Object [
       "thisType", _json_of_t json_cx t
     ]
@@ -1256,8 +1261,15 @@ and json_of_destructor_impl json_cx = Hh_json.(function
 
 and json_of_type_map json_cx = check_depth json_of_type_map_impl json_cx
 and json_of_type_map_impl json_cx = Hh_json.(function
-  | Reduce t -> JSON_Object [
+  | Reduce (t, Some t2) -> JSON_Object [
       "reduce", _json_of_t json_cx t;
+      "reduceInit", _json_of_t json_cx t2;
+    ]
+  | Reduce (t, None) -> JSON_Object [
+      "reduce", _json_of_t json_cx t;
+    ]
+  | ObjectReduce t -> JSON_Object [
+      "objectReduce", _json_of_t json_cx t;
     ]
   | TupleMap t -> JSON_Object [
       "tupleMap", _json_of_t json_cx t;

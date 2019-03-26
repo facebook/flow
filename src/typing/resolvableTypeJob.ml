@@ -262,6 +262,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
   | NonMaybeType -> acc
   | PropertyType _ -> acc
   | ElementType t -> collect_of_type ?log_unresolved cx acc t
+  | ElementWrite (_, t) -> collect_of_type ?log_unresolved cx acc t
   | Bind t -> collect_of_type ?log_unresolved cx acc t
   | ReadOnlyType -> acc
   | SpreadType (_, ts) -> collect_of_types ?log_unresolved cx acc ts
@@ -276,7 +277,7 @@ and collect_of_destructor ?log_unresolved cx acc = function
     -> acc
 
 and collect_of_type_map ?log_unresolved cx acc = function
-  | Reduce t | TupleMap t | ObjectMap t | ObjectMapi t ->
+  | Reduce (t, _) | ObjectReduce t | TupleMap t | ObjectMap t | ObjectMapi t ->
     collect_of_type ?log_unresolved cx acc t
 
 (* In some positions, like annots, we trust that tvars are 0->1. *)

@@ -238,6 +238,7 @@ class ['a] t = object(self)
     -> acc
   | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
   | ElementType t -> self#type_ cx pole_TODO acc t
+  | ElementWrite (_,t) -> self#type_ cx pole_TODO acc t
   | Bind t -> self#type_ cx pole_TODO acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx pole_TODO) acc ts
   | RestType (_,t) -> self#type_ cx pole_TODO acc t
@@ -876,7 +877,8 @@ class ['a] t = object(self)
   | Upper u -> self#use_type_ cx acc u
 
   method private type_map cx acc = function
-  | Reduce t
+  | Reduce (t, _)
+  | ObjectReduce t
   | TupleMap t
   | ObjectMap t
   | ObjectMapi t -> self#type_ cx pole_TODO acc t
