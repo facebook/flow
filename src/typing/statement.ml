@@ -2521,6 +2521,25 @@ and object_prop cx map prop = Ast.Expression.Object.(
       shorthand
     })
 
+  (* named number literal prop *)
+  | Property (prop_loc, Property.Init {
+      key =
+        Property.Literal (loc, {
+          Ast.Literal.value = Ast.Literal.Number name;
+          _;
+        }) as key;
+      value = v; shorthand; }) ->
+    let name = Dtoa.ecma_string_of_float name in
+    let (_, t), _ as v = expression cx v in
+    let id_info = name, t, Type_table.Other in
+    Type_table.set_info loc id_info (Context.type_table cx);
+    Properties.add_field name Neutral (Some loc) t map,
+    Property (prop_loc, Property.Init {
+      key = translate_identifier_or_literal_key t key;
+      value = v;
+      shorthand
+    })
+
   (* named method *)
   | Property (prop_loc, Property.Method {
       key =

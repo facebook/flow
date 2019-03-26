@@ -1403,6 +1403,27 @@ and convert_object =
             let polarity = if _method then Polarity.Positive else polarity variance in
             Acc.add_prop (Properties.add_field name polarity (Some loc) t) acc,
             prop_ast t
+      | Ast.Expression.Object.Property.Literal
+          (loc, { Ast.Literal.value = Ast.Literal.Number name; _ }) ->
+          let name = Dtoa.ecma_string_of_float name in
+          Type_inference_hooks_js.dispatch_obj_prop_decl_hook cx name loc;
+          let (_, t), _ as value_ast = convert cx tparams_map value in
+          let prop_ast t = { prop with Object.Property.
+            key = begin match key with
+              | Ast.Expression.Object.Property.Literal (_, lit) ->
+                Ast.Expression.Object.Property.Literal ((loc, t), lit)
+              | Ast.Expression.Object.Property.Identifier (_loc, { Ast.Identifier.comments; _ }) ->
+                Ast.Expression.Object.Property.Identifier ((loc, t), mk_commented_ident t comments name)
+              | _ -> assert_false "branch invariant"
+            end;
+            value = Object.Property.Init value_ast;
+          } in
+          let t = if optional then Type.optional t else t in
+          let id_info = name, t, Type_table.Other in
+          Type_table.set_info loc id_info (Context.type_table cx);
+          let polarity = if _method then Positive else polarity variance in
+          Acc.add_prop (Properties.add_field name polarity (Some loc) t) acc,
+          prop_ast t
       | Ast.Expression.Object.Property.Literal (loc, _)
       | Ast.Expression.Object.Property.PrivateName (loc, _)
       | Ast.Expression.Object.Property.Computed (loc, _)

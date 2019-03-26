@@ -5355,8 +5355,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action) ->
       let propref = match l with
       | DefT (reason_x, _, StrT (Literal (_, x))) ->
-          let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
-          Named (reason_prop, x)
+        let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
+        Named (reason_prop, x)
+      | DefT (reason_x, _, NumT (Literal (_, (x, _)))) ->
+        let x = Dtoa.ecma_string_of_float x in
+        let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
+        (* Probably should be different type constructor *)
+        Named (reason_prop, x)
       | _ -> Computed l
       in
       (match action with
