@@ -178,6 +178,23 @@ References:
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- objects.js:6:2
+
+Cannot cast `x[123]` to boolean because string [1] is incompatible with boolean [2].
+
+   objects.js:6:2
+   6| (x[123] : boolean);   // error, string !~> boolean
+       ^^^^^^
+
+References:
+   objects.js:3:17
+   3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                      ^^^^^^ [1]
+   objects.js:6:11
+   6| (x[123] : boolean);   // error, string !~> boolean
+                ^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- objects.js:7:2
 
 Cannot cast `x.bar` to boolean because string [1] is incompatible with boolean [2].
@@ -224,6 +241,20 @@ References:
    objects.js:3:17
    3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- objects.js:10:10
+
+Cannot assign `false` to `x[123]` because boolean [1] is incompatible with string [2].
+
+   objects.js:10:10
+   10| x[123] = false;       // error, boolean !~> string
+                ^^^^^ [1]
+
+References:
+   objects.js:3:17
+    3| var x : {'123': string, bar: string} = {'123': 'val', bar: 'bar'};
+                       ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- objects.js:12:2
@@ -303,4 +334,4 @@ References:
 
 
 
-Found 20 errors
+Found 22 errors
