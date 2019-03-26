@@ -133,6 +133,7 @@ type 'loc virtual_reason_desc =
   | RDummyPrototype
   | RDummyThis
   | RReduce
+  | RObjectReduce
   | RTupleMap
   | RObjectMap
   | RObjectMapi
@@ -292,6 +293,7 @@ let rec map_desc_locs f = function
   | RDummyPrototype
   | RDummyThis
   | RReduce
+  | RObjectReduce
   | RTupleMap
   | RObjectMap
   | RType _
@@ -653,6 +655,7 @@ let rec string_of_desc = function
   | RDummyPrototype -> "empty prototype object"
   | RDummyThis -> "bound `this` in method"
   | RReduce -> "`$Reduce`"
+  | RObjectReduce -> "`$ObjReduce`"
   | RTupleMap -> "`$TupleMap`"
   | RObjectMap -> "`$ObjMap`"
   | RObjectMapi -> "`$ObjMapi`"
@@ -1330,6 +1333,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RDummyPrototype
 | RDummyThis
 | RReduce
+| RObjectReduce
 | RTupleMap
 | RObjectMap
 | RObjectMapi

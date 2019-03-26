@@ -149,10 +149,12 @@ and utility =
   | Rest of t * t
   | PropertyType of t * t
   | ElementType of t * t
+  | ElementWrite of t * t * t
   | NonMaybeType of t
   | ObjMap of t * t
   | ObjMapi of t * t
-  | Reduce of t * t
+  | Reduce of t * t * t option
+  | ObjReduce of t * t
   | TupleMap of t * t
   | Call of t * t list
   | Class of t
@@ -299,10 +301,12 @@ let string_of_utility_ctor = function
   | Rest _ -> "$Rest"
   | PropertyType _ -> "$PropertyType"
   | ElementType _ -> "$ElementType"
+  | ElementWrite _ -> "$ElementWrite"
   | NonMaybeType _ -> "$NonMaybeType"
   | ObjMap _ -> "$ObjMap"
   | ObjMapi _ -> "$ObjMapi"
   | Reduce _ -> "$Reduce"
+  | ObjReduce _ -> "$ObjReduce"
   | TupleMap _ -> "$TupleMap"
   | Call _ -> "$Call"
   | Class _ -> "Class"
@@ -324,10 +328,13 @@ let types_of_utility = function
   | Rest (t1, t2) -> Some [t1; t2]
   | PropertyType (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
+  | ElementWrite (t1, t2, t3) -> Some [t1; t2; t3]
   | NonMaybeType t -> Some [t]
   | ObjMap (t1, t2) -> Some [t1; t2]
   | ObjMapi (t1, t2) -> Some [t1; t2]
-  | Reduce (t1, t2) -> Some [t1; t2]
+  | Reduce (t1, t2, Some t3) -> Some [t1; t2; t3]
+  | Reduce (t1, t2, None) -> Some [t1; t2]
+  | ObjReduce (t1, t2) -> Some [t1; t2]
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t::ts)
   | Class t -> Some [t]
