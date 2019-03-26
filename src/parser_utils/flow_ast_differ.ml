@@ -358,7 +358,7 @@ let program (algo : diff_algorithm)
       (f: a -> a -> b change list) =
     diff_and_recurse (fun x y -> f x y |> Option.return) in
 
-  (* diff_and_recurse for when there is no way to get a trivial transfomation from a to b*)
+  (* diff_and_recurse for when there is no way to get a trivial transformation from a to b*)
   let diff_and_recurse_no_trivial f = diff_and_recurse f (fun _ -> None) in
 
   let diff_and_recurse_nonopt_no_trivial f =
@@ -1650,6 +1650,7 @@ let program (algo : diff_algorithm)
       | Object obj1, Object obj2 -> diff_if_changed_ret_opt object_type obj1 obj2
       | Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2 -> (string_literal loc1) s1 s2
       | Typeof (t1_loc, t1), Typeof (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
+      | Tuple t1, Tuple t2 -> diff_if_changed_ret_opt tuple_type t1 t2
       | _ -> None in
     Option.value type_diff
       ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
@@ -1746,6 +1747,12 @@ let program (algo : diff_algorithm)
     | Set (_loc1, ft1), Set (_loc2, ft2) ->
       diff_if_changed_ret_opt function_type ft1 ft2
     | _ -> None
+
+  and tuple_type
+      (tp1: (Loc.t, Loc.t) Ast.Type.t list)
+      (tp2: (Loc.t, Loc.t) Ast.Type.t list)
+      : node change list option =
+    diff_and_recurse_nonopt_no_trivial type_ tp1 tp2
 
   and type_or_implicit
       (t1: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)

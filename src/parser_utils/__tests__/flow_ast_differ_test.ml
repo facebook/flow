@@ -721,6 +721,11 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((4, 9), "(3 + 3)")] ~source
       ~expected:"5 - (3 + 3)" ~mapper:(new useless_mapper)
   end;
+  "tuple" >:: begin fun ctxt ->
+    let source = "type Foo = [number, number];" in
+    assert_edits_equal ctxt ~edits:[((12, 18), "string"); ((20, 26), "string")] ~source
+      ~expected:"type Foo = [string, string];" ~mapper:(new useless_mapper)
+  end;
   "identifier" >:: begin fun ctxt ->
     let source = "5 - rename" in
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source
