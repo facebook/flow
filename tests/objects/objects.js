@@ -19,3 +19,9 @@ y['bar'] = 'abc'; // error, property not found
 
 // ok because properties named 'constructor' are only banned on classes
 var has_constructor_field : {constructor: string} = {constructor: 'foo'}
+
+var z = {123: 'A', '123': 3};
+(z[123] : number);
+(z['123'] : number);
+(z[123] : string); // error, number !~> string
+(z['123'] : string); // error, number !~> string
