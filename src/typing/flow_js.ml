@@ -5492,17 +5492,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some init -> Some (Core_list.foldi ts ~f:f ~init:init)
         | None -> reducei ts ~f:f
       in
-      let t = match arrtype with
-      | ArrayAT (_, opt) ->
-        (match opt with
-          | Some ts -> mk_fold ts init
-          | None -> None)
-      | TupleAT (_, ts) -> mk_fold ts init
-      | ROArrayAT (_) -> None in
-      let t_type = match t with
-        | Some t -> t
-        | None -> DefT (reason_op, trust, EmptyT) in
-      rec_flow_t cx trace (t_type, tout)
+
+      let call_t =
+        let ret = Tvar.mk cx reason_op in
+        let t = match arrtype with
+        | ArrayAT (_, opt) ->
+          (match opt with
+            | Some ts -> mk_fold ts init
+            | None -> None)
+        | TupleAT (_, ts) -> mk_fold ts init
+        | ROArrayAT (_) -> None in
+        let t_type = match t with
+          | Some t -> t
+          | None -> DefT (reason_op, trust, EmptyT) in
+        let returnt = mk_functioncalltype reason_op None [Arg t_type;] ret in
+        EvalT (returnt, TypeDestructorT (use_op, reason_op, CallT (use_op, reason_op, returnt)), mk_id ())
+      in
+      rec_flow_t cx trace (call_t, tout)
 
     | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout) ->
       let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
