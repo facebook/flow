@@ -23,7 +23,8 @@ let convert_errors ~errors ~warnings =
     ServerProt.Response.ERRORS {errors; warnings}
 
 let get_status genv env client_root =
-  let server_root = Options.root genv.options in
+  let options = genv.ServerEnv.options in
+  let server_root = Options.root options in
   let lazy_stats = Rechecker.get_lazy_stats genv env in
   let status_response =
     if server_root <> client_root then begin
@@ -33,8 +34,8 @@ let get_status genv env client_root =
       }
     end else begin
       (* collate errors by origin *)
-      let errors, warnings, _ = ErrorCollator.get env in
-      let warnings = if Options.should_include_warnings genv.options
+      let errors, warnings, _ = ErrorCollator.get ~options env in
+      let warnings = if Options.should_include_warnings options
         then warnings
         else Errors.ConcreteLocPrintableErrorSet.empty
       in
@@ -501,8 +502,8 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.STATUS { client_root; include_warnings; } ->
     let genv = {genv with
-      options = let open Options in {genv.options with
-        opt_include_warnings = genv.options.opt_include_warnings || include_warnings
+      options = let open Options in {options with
+        opt_include_warnings = options.opt_include_warnings || include_warnings
       }
     } in
     (* `flow status` is often used by users to get all the current errors. After talking to some
@@ -708,7 +709,7 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
     let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
     if not triggered_recheck then begin
       (* This open doesn't trigger a recheck, but we'll still send down the errors *)
-      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
       Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
     end;
     Lwt.return env
@@ -717,12 +718,13 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
   | None ->
     (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
      * a new file is opened is to send the errors to the client *)
-    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
     Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
     Lwt.return env
 
-let did_close _genv env client : ServerEnv.env Lwt.t =
-  let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+let did_close genv env client : ServerEnv.env Lwt.t =
+  let options = genv.options in
+  let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
   Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
   Lwt.return env
 
@@ -772,8 +774,8 @@ let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let response = ResponseMessage (id, ErrorResult (e, "")) in
   Lwt.return (LspResponse (Ok (ret, Some response, metadata)))
 
-let handle_persistent_subscribe ~client ~profiling:_ ~env =
-  let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings env in
+let handle_persistent_subscribe ~options ~client ~profiling:_ ~env =
+  let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
   Lwt.return (IdeResponse (Ok (env, None)))
 
@@ -1129,10 +1131,11 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
   end
 
 let handle_persistent_rage ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
-  let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
+  let options = genv.options in
+  let root = Path.to_string options.Options.opt_root in
   let items = [] in
   (* genv: lazy-mode options *)
-  let lazy_mode = genv.options.Options.opt_lazy_mode in
+  let lazy_mode = options.Options.opt_lazy_mode in
   let data = Printf.sprintf "lazy_mode=%s\n"
     (Option.value_map lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string) in
   let items = { Lsp.Rage.title = None; data; } :: items in
@@ -1157,7 +1160,7 @@ let handle_persistent_rage ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
   let data = "DEPENDENCIES:\n" ^ dependencies in
   let items = { Lsp.Rage.title = Some (root ^ ":env.dependencies"); data; } :: items in
   (* env: errors *)
-  let errors, warnings, _ = ErrorCollator.get env in
+  let errors, warnings, _ = ErrorCollator.get ~options env in
   let json = Errors.Json_output.json_of_errors_with_context ~strip_root:None ~stdin_file:None
     ~suppressed_errors:[] ~errors ~warnings () in
   let data = "ERRORS:\n" ^ (Hh_json.json_to_multiline json) in
@@ -1239,7 +1242,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
 
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent handle_persistent_subscribe
+    Handle_nonparallelizable_persistent (handle_persistent_subscribe ~options)
 
   | Autocomplete (file_input, id) ->
     mk_parallelizable_persistent ~options (

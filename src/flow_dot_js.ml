@@ -239,10 +239,10 @@ let check_content ~filename ~content =
     let errors = Flow_error.make_errors_printable errors in
     let warnings = Flow_error.make_errors_printable warnings in
     let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
-      suppressions errors ~unused:suppressions in
+      ~root ~file_options:None suppressions errors ~unused:suppressions in
     let warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      suppressions warnings ~unused:suppressions
-    in errors, warnings
+      ~root ~file_options:None suppressions warnings ~unused:suppressions in
+    errors, warnings
   | Error parse_errors ->
     parse_errors, Errors.ConcreteLocPrintableErrorSet.empty
   in

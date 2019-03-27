@@ -25,6 +25,7 @@ val update_suppressions: t -> t -> t
 val all_locs: t -> Loc.t list
 
 val filter_suppressed_errors :
+  root:Path.t -> file_options:Files.options option ->
   t -> Errors.ConcreteLocPrintableErrorSet.t -> unused:t ->
   (Errors.ConcreteLocPrintableErrorSet.t * (Loc.t Errors.printable_error * Utils_js.LocSet.t) list * t)
 
