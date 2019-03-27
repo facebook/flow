@@ -9,6 +9,7 @@ open OUnit2
 
 let tests = "utils" >::: [
   Nel_test.tests;
+  ResizableArray_test.tests;
   UnionFind_test.tests;
 ]
 
