@@ -54,16 +54,18 @@ let regenerate =
       )
       warnings
   in
-  let acc_fun (type a) suppressions (f : File_key.t -> ConcreteLocPrintableErrorSet.t -> a -> a)
+  let acc_fun (type a) ~options suppressions (f : File_key.t -> ConcreteLocPrintableErrorSet.t -> a -> a)
     filename file_errs (errors, suppressed, unused) =
+    let root = Options.root options in
+    let file_options = Some (Options.file_options options) in
     let file_errs, file_suppressed, unused =
       Flow_error.make_errors_printable file_errs
-      |> filter_suppressed_errors suppressions ~unused in
+      |> filter_suppressed_errors ~root ~file_options suppressions ~unused in
     let errors = f filename file_errs errors in
     let suppressed = List.rev_append file_suppressed suppressed in
     (errors, suppressed, unused)
   in
-  fun env ->
+  fun ~options env ->
     MonitorRPC.status_update ~event:ServerStatus.Collating_errors_start;
     let {
       ServerEnv.local_errors; merge_errors; warnings; suppressions;
@@ -83,14 +85,14 @@ let regenerate =
       ) errorset
     ) local_errors in
 
-    let acc_err_fun = acc_fun suppressions (fun _ -> ConcreteLocPrintableErrorSet.union) in
+    let acc_err_fun = acc_fun ~options suppressions (fun _ -> ConcreteLocPrintableErrorSet.union) in
     let collated_errorset, collated_suppressed_errors, unused =
       (ConcreteLocPrintableErrorSet.empty, [], suppressions)
       |> FilenameMap.fold acc_err_fun local_errors
       |> FilenameMap.fold acc_err_fun merge_errors
     in
 
-    let acc_warn_fun = acc_fun suppressions FilenameMap.add in
+    let acc_warn_fun = acc_fun ~options suppressions FilenameMap.add in
     let warnings, collated_suppressed_errors, unused =
       (FilenameMap.empty, collated_suppressed_errors, unused)
       |> FilenameMap.fold acc_warn_fun warnings
@@ -100,11 +102,11 @@ let regenerate =
       add_unused_suppression_warnings env.ServerEnv.checked_files unused warnings in
     { collated_errorset; collated_warning_map; collated_suppressed_errors }
 
-let get_with_separate_warnings env =
+let get_with_separate_warnings ~options env =
   let open ServerEnv in
   let collated_errors = match !(env.collated_errors) with
   | None ->
-    let collated_errors = regenerate env in
+    let collated_errors = regenerate ~options env in
     env.collated_errors := Some collated_errors;
     collated_errors
   | Some collated_errors ->
@@ -114,8 +116,8 @@ let get_with_separate_warnings env =
   (collated_errorset, collated_warning_map, collated_suppressed_errors)
 
 (* combine error maps into a single error set and a single warning set *)
-let get env =
+let get ~options env =
   let open Errors in
-  let errors, warning_map, suppressed_errors = get_with_separate_warnings env in
+  let errors, warning_map, suppressed_errors = get_with_separate_warnings ~options env in
   let warnings = FilenameMap.fold (fun _key -> ConcreteLocPrintableErrorSet.union) warning_map ConcreteLocPrintableErrorSet.empty in
   (errors, warnings, suppressed_errors)

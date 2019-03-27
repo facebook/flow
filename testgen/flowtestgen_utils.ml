@@ -627,10 +627,9 @@ let flow_check (code : string) : string option =
       let errors = Flow_error.make_errors_printable errors in
       let warnings = Flow_error.make_errors_printable warnings in
       let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
-          suppressions errors ~unused:suppressions in
+          ~root ~file_options:None suppressions errors ~unused:suppressions in
       let warnings, _, _ = Error_suppressions.filter_suppressed_errors
-        suppressions warnings ~unused:suppressions
-      in
+          ~root ~file_options:None suppressions warnings ~unused:suppressions in
       let error_num = Errors.ConcreteLocPrintableErrorSet.cardinal errors in
       if error_num = 0 then
         None
