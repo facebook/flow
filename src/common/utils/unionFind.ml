@@ -50,18 +50,9 @@ let set_parent t i parent = (get_entry t i).parent <- parent
 let set_next t i next = (get_entry t i).next <- next
 let set_rank t i rank = (get_entry t i).rank <- rank
 
-let get_next_power_of_two x =
-  let rec f y =
-    if y >= x then
-      y
-    else
-      f (y * 2)
-  in
-  f 1
-
 let of_list lst =
   let len = List.length lst in
-  let t = make_with_size (get_next_power_of_two len) in
+  let t = make_with_size (Utils_js.get_next_power_of_two len) in
   List.iteri (fun i x -> add_unsafe t x i) lst;
   t
 

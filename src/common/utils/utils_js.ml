@@ -301,3 +301,12 @@ let id_print context f x =
 let debug_string_of_result string_of_val = function
   | Ok x -> Printf.sprintf "Ok (%s)" (string_of_val x)
   | Error err -> Printf.sprintf "Error (%s)" err
+
+let get_next_power_of_two x =
+  let rec f y =
+    if y >= x then
+      y
+    else
+      f (y * 2)
+  in
+  f 1
