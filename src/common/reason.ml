@@ -754,7 +754,7 @@ let rec string_of_desc = function
   | RReactConfig -> "config of React component"
 
 let string_of_reason ?(strip_root=None) r =
-  let spos = string_of_loc ~strip_root (aloc_of_reason r |> ALoc.to_loc) in
+  let spos = string_of_aloc ~strip_root (aloc_of_reason r) in
   let desc = string_of_desc r.desc in
   if spos = ""
   then desc
@@ -773,7 +773,7 @@ let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
 
 let dump_reason ?(strip_root=None) r =
   spf "%s: %S%s"
-    (string_of_loc ~strip_root (aloc_of_reason r |> ALoc.to_loc))
+    (string_of_aloc ~strip_root (aloc_of_reason r))
     (string_of_desc r.desc)
     begin match r.test_id with
     | Some n -> spf " (test %d)" n
