@@ -5351,8 +5351,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
 
-
-    | _, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action) ->
+    | _, ElemT (use_op, reason_op, (DefT (_, _, ObjT { props_tmap = mapr; _ }) as obj), action) ->
       let propref = match l with
       | DefT (reason_x, _, StrT (Literal (_, x))) ->
         let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
@@ -5361,7 +5360,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         let x = Dtoa.ecma_string_of_float x in
         let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
         (* Probably should be different type constructor *)
-        Named (reason_prop, x)
+        if Context.has_prop cx mapr x then Named (reason_prop, x) else Computed l
       | _ -> Computed l
       in
       (match action with
