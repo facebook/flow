@@ -42,6 +42,18 @@ let map_ident ~f { Ast.Identifier.name; comments } =
 let map_ident_new_type t name =
   map_ident ~f:(fun loc -> loc, t) name
 
+class loc_mapper (typ: Type.t) = object(_)
+  inherit [
+    ALoc.t,
+    ALoc.t, 
+    ALoc.t,
+    ALoc.t * Type.t
+  ] Flow_polymorphic_ast_mapper.mapper
+
+  method on_loc_annot (x: ALoc.t) = x
+  method on_type_annot (x: ALoc.t) = x, typ
+end
+
 let snd_fst ((_, x), _) = x
 
 let translate_identifier_or_literal_key t = Ast.Expression.Object.(function
@@ -3911,55 +3923,6 @@ and subscript =
         end
 
     | Member {
-        Member._object;
-        property = Member.PropertyExpression index;
-      } ->
-        let reason = mk_reason (RProperty None) loc in
-        let (_, tind), _ as index = expression cx index in
-        let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let opt_use = OptGetElemT (use_op, reason, tind) in
-        begin match opt_state with
-        | NonOptional ->
-          let (_, tobj), _ as _object_ast = expression cx _object in
-          let lhs_t = (match Refinement.get cx (loc, e) loc with
-          | Some t -> t
-          | None ->
-            Tvar.mk_where cx reason (fun t ->
-              let use = apply_opt_use opt_use t in
-              Flow.flow cx (tobj, use)
-            )
-          ) in
-          ex, lhs_t, acc, (
-            (loc, lhs_t),
-            member_ast { Member.
-              _object = _object_ast;
-              property = Member.PropertyExpression index;
-            }
-          )
-        | NewChain ->
-          let tout = Tvar.mk cx reason in
-          let (_, lhs_t), _ as _object_ast = expression cx _object in
-          _object, lhs_t, ref (loc, opt_use, tout) :: acc, (
-            (loc, tout),
-            member_ast { Member.
-              _object = _object_ast;
-              property = Member.PropertyExpression index;
-            }
-          )
-        | ContinueChain ->
-          let tout = Tvar.mk cx reason in
-          let lhs, lhs_t, chain, _object_ast =
-            build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
-          lhs, lhs_t, chain, (
-            (loc, tout),
-            member_ast { Member.
-              _object = _object_ast;
-              property = Member.PropertyExpression index;
-            }
-          )
-        end
-
-    | Member {
         Member._object = _, Identifier (_, { Ast.Identifier.name= "module"; comments= _ }) as _object;
         property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name= "exports"; comments= _ } as exports_name));
       } -> let lhs_t = get_module_exports cx loc in
@@ -4026,7 +3989,7 @@ and subscript =
 
     | Member {
         Member._object;
-        property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments= _ } as id));
+        property = Member.PropertyIdentifier (ploc, { Ast.Identifier.name; comments= _ }) as property;
       } ->
         let expr_reason = mk_reason (RProperty (Some name)) loc in
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
@@ -4041,7 +4004,8 @@ and subscript =
           | None ->
             get_prop ~is_cond cx expr_reason ~use_op tobj (prop_reason, name)
           end in
-          let property = Member.PropertyIdentifier ((ploc, lhs_t), map_ident_new_type lhs_t id) in
+          let m = new loc_mapper lhs_t in
+          let property = m#member_property property in
           ex, lhs_t, acc, tobj, (
             (loc, lhs_t),
             member_ast { Member._object = _object_ast; property; }
@@ -4051,7 +4015,8 @@ and subscript =
           let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
             then Unsoundness.at InferenceHooks ploc else Tvar.mk cx expr_reason in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
-          let property = Member.PropertyIdentifier ((ploc, tout), map_ident_new_type tout id) in
+          let m = new loc_mapper tout in
+          let property = m#member_property property in
           _object, lhs_t, ref (loc, opt_use, tout) :: acc, lhs_t, (
             (loc, tout),
             member_ast { Member._object = _object_ast; property; }
@@ -4066,7 +4031,8 @@ and subscript =
             then tout
             else let tout = Tvar.mk cx expr_reason in step := (loc, opt_use, tout); tout
           in
-          let property = Member.PropertyIdentifier ((ploc, tout), map_ident_new_type tout id) in
+          let m = new loc_mapper tout in
+          let property = m#member_property property in
           lhs, lhs_t, chain, tobj, (
             (loc, tout),
             member_ast { Member._object = _object_ast; property; }
@@ -4076,6 +4042,55 @@ and subscript =
           let id_info = name, tout, Type_table.PropertyAccess tobj in
           Type_table.set_info ploc id_info (Context.type_table cx);
           lhs, lhs_t, chain, ast
+        end
+
+    | Member {
+        Member._object;
+        property = Member.PropertyExpression index;
+      } ->
+        let reason = mk_reason (RProperty None) loc in
+        let (_, tind), _ as index = expression cx index in
+        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        let opt_use = OptGetElemT (use_op, reason, tind) in
+        begin match opt_state with
+        | NonOptional ->
+          let (_, tobj), _ as _object_ast = expression cx _object in
+          let lhs_t = (match Refinement.get cx (loc, e) loc with
+          | Some t -> t
+          | None ->
+            Tvar.mk_where cx reason (fun t ->
+              let use = apply_opt_use opt_use t in
+              Flow.flow cx (tobj, use)
+            )
+          ) in
+          ex, lhs_t, acc, (
+            (loc, lhs_t),
+            member_ast { Member.
+              _object = _object_ast;
+              property = Member.PropertyExpression index;
+            }
+          )
+        | NewChain ->
+          let tout = Tvar.mk cx reason in
+          let (_, lhs_t), _ as _object_ast = expression cx _object in
+          _object, lhs_t, ref (loc, opt_use, tout) :: acc, (
+            (loc, tout),
+            member_ast { Member.
+              _object = _object_ast;
+              property = Member.PropertyExpression index;
+            }
+          )
+        | ContinueChain ->
+          let tout = Tvar.mk cx reason in
+          let lhs, lhs_t, chain, _object_ast =
+            build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
+          lhs, lhs_t, chain, (
+            (loc, tout),
+            member_ast { Member.
+              _object = _object_ast;
+              property = Member.PropertyExpression index;
+            }
+          )
         end
 
     | Member {
@@ -5404,7 +5419,18 @@ and predicates_of_condition cx e = Ast.(Expression.(
     | true,
       (expr_loc, Member {
         Member._object;
-        property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name= prop_name; comments= _ } as id));
+        property = (
+          Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name= prop_name; comments= _ }))
+          | Member.PropertyExpression (prop_loc, Ast.Expression.Literal {
+            Ast.Literal.value = Ast.Literal.String prop_name;
+            _;
+          })
+          | Member.PropertyExpression (prop_loc, Ast.Expression.Literal {
+            Ast.Literal.value = Ast.Literal.Number _;
+            raw = prop_name;
+            comments= _;
+          })
+        ) as property;
       }) ->
       (* use `expression` instead of `condition` because `_object` is the object
          in a member expression; if it itself is a member expression, it must
@@ -5439,7 +5465,8 @@ and predicates_of_condition cx e = Ast.(Expression.(
       (* since we never called `expression cx expr`, we have to add to the
          type table ourselves *)
       Type_table.set (Context.type_table cx) expr_loc prop_t;
-      let property = Member.PropertyIdentifier ((prop_loc, prop_t), map_ident_new_type prop_t id) in
+      let m = new loc_mapper prop_t in
+      let property = m#member_property property in
 
       ( (expr_loc, prop_t),
         Member { Member.
