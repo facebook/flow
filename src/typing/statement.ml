@@ -3989,7 +3989,7 @@ and subscript =
 
     | Member {
         Member._object;
-        property = Member.PropertyIdentifier (ploc, { Ast.Identifier.name; comments= _ }) as property;
+        property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments= _ } as id));
       } ->
         let expr_reason = mk_reason (RProperty (Some name)) loc in
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
@@ -4004,8 +4004,7 @@ and subscript =
           | None ->
             get_prop ~is_cond cx expr_reason ~use_op tobj (prop_reason, name)
           end in
-          let m = new loc_mapper lhs_t in
-          let property = m#member_property property in
+          let property = Member.PropertyIdentifier ((ploc, lhs_t), map_ident_new_type lhs_t id) in
           ex, lhs_t, acc, tobj, (
             (loc, lhs_t),
             member_ast { Member._object = _object_ast; property; }
@@ -4015,8 +4014,7 @@ and subscript =
           let tout = if Type_inference_hooks_js.dispatch_member_hook cx name ploc lhs_t
             then Unsoundness.at InferenceHooks ploc else Tvar.mk cx expr_reason in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
-          let m = new loc_mapper tout in
-          let property = m#member_property property in
+          let property = Member.PropertyIdentifier ((ploc, tout), map_ident_new_type tout id) in
           _object, lhs_t, ref (loc, opt_use, tout) :: acc, lhs_t, (
             (loc, tout),
             member_ast { Member._object = _object_ast; property; }
@@ -4031,8 +4029,7 @@ and subscript =
             then tout
             else let tout = Tvar.mk cx expr_reason in step := (loc, opt_use, tout); tout
           in
-          let m = new loc_mapper tout in
-          let property = m#member_property property in
+          let property = Member.PropertyIdentifier ((ploc, tout), map_ident_new_type tout id) in
           lhs, lhs_t, chain, tobj, (
             (loc, tout),
             member_ast { Member._object = _object_ast; property; }
