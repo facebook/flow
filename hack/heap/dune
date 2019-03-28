@@ -9,7 +9,9 @@
   (c_flags (:standard
     (:include config/c_flags.sexp)))
   (c_library_flags (:standard
-    (:include config/c_library_flags.sexp))))
+    (:include config/c_library_flags.sexp)))
+  (libraries
+    utils_core))
 
 (library
   (name heap_ident)
