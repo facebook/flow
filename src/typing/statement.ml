@@ -1732,7 +1732,6 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       loc, VariableDeclaration (variables cx decl)
 
   | (class_loc, ClassDeclaration c) ->
-      let cx = Context.cx_with_trust cx annot_trust in
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = DescFormat.instance_reason name name_loc in
       Env.declare_implicit_let Scope.Entry.ClassNameBinding cx name name_loc;
@@ -1759,10 +1758,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
     loc, DeclareClass (declare_class cx loc decl)
 
   | (loc, DeclareInterface decl) ->
-    let cx = Context.cx_with_trust cx annot_trust in
     loc, DeclareInterface (interface cx loc decl)
   | (loc, InterfaceDeclaration decl) ->
-    let cx = Context.cx_with_trust cx annot_trust in
     loc, InterfaceDeclaration (interface cx loc decl)
 
   | (loc, DeclareModule { DeclareModule.id; body; kind; }) ->
@@ -2945,13 +2942,11 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | OptionalMember _ -> subscript ~is_cond cx ex
 
   | Object { Object.properties; comments } ->
-    let cx = Context.cx_with_trust cx annot_trust in
     let reason = mk_reason RObjectLit loc in
     let t, properties = object_ cx reason properties in
     (loc, t), Object { Object.properties; comments }
 
   | Array { Array.elements } -> (
-    let cx = Context.cx_with_trust cx annot_trust in
     let reason = mk_reason RArrayLit loc in
     match elements with
     | [] ->
@@ -3277,17 +3272,14 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (loc, t), TemplateLiteral { TemplateLiteral.quasis; expressions }
 
   | JSXElement e ->
-      let cx = Context.cx_with_trust cx annot_trust in
       let t, e = jsx cx loc e in
       (loc, t), JSXElement e
 
   | JSXFragment f ->
-      let cx = Context.cx_with_trust cx annot_trust in
       let t, f = jsx_fragment cx loc f in
       (loc, t), JSXFragment f
 
   | Class c ->
-      let cx = Context.cx_with_trust cx annot_trust in
       let class_loc = loc in
       let (name_loc, name) = extract_class_name class_loc c in
       let reason = mk_reason (RIdentifier name) class_loc in

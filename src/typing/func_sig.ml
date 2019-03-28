@@ -87,6 +87,7 @@ let generate_tests cx f x =
   })
 
 let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
+  let make_trust = Context.trust_constructor cx in
   let knot = Tvar.mk cx reason in
   let static =
     let proto = FunProtoT reason in
@@ -106,7 +107,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
     changeset = Env.retrieve_closure_changeset ();
     def_reason = reason;
   } in
-  let t = DefT (reason, bogus_trust (), FunT (static, prototype, funtype)) in
+  let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
   let t = poly_type_of_tparams (Context.make_nominal cx) tparams t in
   Flow.unify cx t knot;
   t
