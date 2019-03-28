@@ -42,6 +42,7 @@ let spec = {
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg
         ~doc:"Ignore absence of @flow pragma"
+    |> flag "--trust" no_arg ~doc:"EXPERIMENTAL: Include trust information in output"
     |> anon "file" (optional string)
   )
 }
@@ -56,17 +57,19 @@ let handle_error ~json ~pretty err =
     prerr_endline err;
   )
 
-let accum_coverage (covered, empty, total) (_loc, kind) =
-  match kind with
-  | Coverage.Kind.Any -> (covered, empty, total + 1)
-  | Coverage.Kind.Empty -> (covered, empty + 1, total + 1)
-  | Coverage.Kind.Checked -> (covered + 1, empty, total + 1)
+let accum_coverage (untainted, tainted, empty, total) (_loc, cov) =
+  match cov with
+  | Coverage.Uncovered -> (untainted, tainted, empty, total + 1)
+  | Coverage.Empty     -> (untainted, tainted, empty + 1, total + 1)
+  | Coverage.Untainted -> (untainted + 1, tainted, empty, total + 1)
+  | Coverage.Tainted   -> (untainted, tainted + 1, empty, total + 1)
 
-let accum_coverage_locs (covered, empty, uncovered) (loc, kind) =
-  match kind with
-  | Coverage.Kind.Any -> (covered, empty, loc::uncovered)
-  | Coverage.Kind.Empty -> (covered, loc::empty, loc::uncovered)
-  | Coverage.Kind.Checked -> (loc::covered, empty, uncovered)
+let accum_coverage_locs (untainted, tainted, empty, uncovered) (loc, cov) =
+  match cov with
+  | Coverage.Uncovered -> (untainted, tainted, empty, loc::uncovered)
+  | Coverage.Empty     -> (untainted, tainted, loc::empty, loc::uncovered)
+  | Coverage.Untainted -> (loc::untainted, tainted, empty, uncovered)
+  | Coverage.Tainted   -> (untainted, loc::tainted, empty, uncovered)
 
 let colorize content from_offset to_offset color accum =
   if to_offset > from_offset then
@@ -74,11 +77,11 @@ let colorize content from_offset to_offset color accum =
     (Tty.Normal color, substr)::accum, to_offset
   else accum, from_offset
 
-let debug_range (loc, kind) = Loc.(
-    prerr_endlinef "%d:%d,%d:%d: (%b)"
+let debug_range (loc, cov) = Loc.(
+    prerr_endlinef "%d:%d,%d:%d: %b"
       loc.start.line loc.start.column
       loc._end.line loc._end.column
-      (Coverage.Kind.to_bool kind)
+      (Coverage.to_bool cov)
   )
 
 let rec colorize_file content last_offset accum = function
@@ -87,9 +90,10 @@ let rec colorize_file content last_offset accum = function
     (* catch up to the start of this range *)
     let accum, offset = colorize content last_offset offset Tty.Default accum in
     let color = match kind with
-      | Coverage.Kind.Any -> Tty.Red
-      | Coverage.Kind.Empty -> Tty.Blue
-      | Coverage.Kind.Checked -> Tty.Default
+      | Coverage.Uncovered -> Tty.Red
+      | Coverage.Empty     -> Tty.Blue
+      | Coverage.Tainted   -> Tty.Yellow
+      | Coverage.Untainted -> Tty.Default
     in
     let accum, offset = colorize content offset end_offset color accum in
     colorize_file content offset accum rest
@@ -152,7 +156,8 @@ let rec split_overlapping_ranges accum = function
           let head_loc = (loc1_start, loc2_start - 1) in
           let overlap_loc = (loc2_start, loc1_end) in
           let tail_loc = (loc1_end + 1, loc2_end) in
-          (head_loc, is_covered1)::(overlap_loc, Coverage.Kind.m_or (is_covered1, is_covered2))::accum,
+          (head_loc, is_covered1)::
+            (overlap_loc, Coverage.m_or (is_covered1, is_covered2))::accum,
           (tail_loc, is_covered2)::rest
 
         else
@@ -167,12 +172,13 @@ let rec split_overlapping_ranges accum = function
             rest
           in
           (head_loc, is_covered1)::accum,
-          List.sort sort_ranges todo
+          Core_list.sort ~cmp:sort_ranges todo
       in
       split_overlapping_ranges accum todo
 
-let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * Coverage.Kind.t) list) content =
-  if debug then List.iter debug_range types;
+let handle_response ~json ~pretty ~strip_root ~color ~debug ~trust
+    (types : (Loc.t * Coverage.expression_coverage) list) content =
+  if debug then Core_list.iter ~f:debug_range types;
 
   let offset_table = lazy (Offset_utils.make content) in
   begin if color then
@@ -182,35 +188,50 @@ let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * Co
         let open Loc in
         (Offset_utils.offset offset_table loc.start, Offset_utils.offset offset_table loc._end)
       in
-      List.map (fun (loc, covered) -> (loc_to_offset_pair loc, covered)) types
+      Core_list.map ~f:(fun (loc, covered) -> (loc_to_offset_pair loc, covered)) types
     in
-    let coverage_offsets = List.rev (split_overlapping_ranges [] coverage_offsets) in
+    let coverage_offsets = Core_list.rev (split_overlapping_ranges [] coverage_offsets) in
     let colors, _ = colorize_file content 0 [] coverage_offsets in
-    Tty.cprint ~color_mode:Tty.Color_Always (List.rev colors);
+    Tty.cprint ~color_mode:Tty.Color_Always (Core_list.rev colors);
     print_endline ""
   end;
 
-  let covered, empty, total = List.fold_left accum_coverage (0, 0, 0) types in
+  let untainted, tainted, empty, total =
+    Core_list.fold_left ~f:accum_coverage ~init:(0, 0, 0, 0) types in
+  (* In trust mode, we only consider untainted locations covered. In normal mode we consider both *)
+  let covered = if trust then untainted else untainted + tainted in
   let percent = if total = 0 then 100. else (float_of_int covered /. float_of_int total) *. 100. in
 
   if json then
     let offset_table = Some (Lazy.force offset_table) in
-    let covered_locs, empty_locs, uncovered_locs =
-      let covered, empty, uncovered =
-        List.fold_left accum_coverage_locs ([], [], []) types
+    let untainted_locs, tainted_locs, empty_locs, uncovered_locs =
+      let untainted, tainted, empty, uncovered =
+        Core_list.fold_left ~f:accum_coverage_locs ~init:([], [], [], []) types
       in
-      List.rev covered, List.rev empty, List.rev uncovered
+      Core_list.rev untainted, Core_list.rev tainted, Core_list.rev empty, Core_list.rev uncovered
     in
     let open Hh_json in
+    let covered_data = if trust then
+      [
+      "untainted_count", int_ untainted;
+      "untainted_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) untainted_locs);
+      "tainted_count", int_ tainted;
+      "tainted_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) tainted_locs);
+      ]
+    else
+      let covered_locs = untainted_locs @ tainted_locs |> Core_list.sort ~cmp:compare in
+      [
+      "covered_count", int_ covered;
+      "covered_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs);
+      ]
+    in
     JSON_Object [
-      "expressions", JSON_Object [
-        "covered_count", int_ covered;
-        "covered_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) covered_locs);
+      "expressions", JSON_Object (covered_data @ [
         "uncovered_count", int_ (total - covered);
         "uncovered_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) uncovered_locs);
         "empty_count", int_ empty;
         "empty_locs", JSON_Array (Core_list.map ~f:(Reason.json_of_loc ~strip_root ~offset_table) empty_locs);
-      ];
+      ]);
     ]
     |> print_json_endline ~pretty
   else
@@ -219,7 +240,7 @@ let handle_response ~json ~pretty ~strip_root ~color ~debug (types : (Loc.t * Co
 
 let main
     base_flags option_values json pretty root strip_root wait_for_recheck color debug path
-    respect_pragma all filename () =
+    respect_pragma all trust filename () =
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
     path filename in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
@@ -248,14 +269,15 @@ let main
   if debug && json
   then raise (CommandSpec.Failed_to_parse ("--debug", "Can't be used with json flags"));
 
-  let request = ServerProt.Request.COVERAGE { input = file; force = all; wait_for_recheck; } in
+  let request =
+    ServerProt.Request.COVERAGE { input = file; force = all; wait_for_recheck; trust } in
 
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.COVERAGE (Error err) ->
     handle_error ~json ~pretty err
   | ServerProt.Response.COVERAGE (Ok resp) ->
     let content = File_input.content_of_file_input_unsafe file in
-    handle_response ~json ~pretty ~strip_root ~color ~debug resp content
+    handle_response ~json ~pretty ~strip_root ~color ~debug ~trust resp content
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

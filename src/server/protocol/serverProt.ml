@@ -18,7 +18,7 @@ module Request = struct
       include_warnings: bool;
       wait_for_recheck: bool option;
     }
-  | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; }
+  | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; trust : bool }
   | BATCH_COVERAGE of { batch : string list; wait_for_recheck: bool option; }
   | CYCLE of { filename: string; }
   | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
@@ -72,7 +72,7 @@ module Request = struct
     Printf.sprintf "check %s" (File_input.filename_of_file_input input)
   | BATCH_COVERAGE { batch=_; wait_for_recheck=_; } ->
       Printf.sprintf "%s" "batch-coverage"
-  | COVERAGE { input; force=_; wait_for_recheck=_; } ->
+  | COVERAGE { input; force=_; wait_for_recheck=_; trust=_ } ->
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)
   | CYCLE { filename; } ->
       Printf.sprintf "cycle %s" filename
@@ -148,7 +148,7 @@ module Response = struct
   ) result
 
   type coverage_response = (
-    (Loc.t * Coverage.Kind.t) list,
+    (Loc.t * Coverage.expression_coverage) list,
     string
   ) result
 

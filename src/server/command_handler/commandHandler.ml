@@ -125,13 +125,17 @@ let dump_types ~options ~env ~profiling file_input =
       Type_info_service.dump_types ~options ~env ~profiling file content
     end
 
-let coverage ~options ~env ~profiling ~force file_input =
+let coverage ~options ~env ~profiling ~force ~trust file_input =
+  if Options.trust_mode options = Options.NoTrust && trust then
+    Error "Coverage cannot be run in trust mode if the server is not in trust mode. \
+      \n\nRestart the Flow server with --trust-mode=check' to enable this command." |> Lwt.return
+  else
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input
   %>>= fun content ->
     try_with begin fun () ->
-      Type_info_service.coverage ~options ~env ~profiling ~force file content
+      Type_info_service.coverage ~options ~env ~profiling ~force ~trust file content
     end
 
 let batch_coverage ~genv ~env ~batch =
@@ -297,8 +301,8 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
   let%lwt response = check_file ~options ~env ~force ~profiling input in
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
 
-let handle_coverage ~options ~force ~input ~profiling ~env =
-  let%lwt response = coverage ~options ~env ~profiling ~force input in
+let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
+  let%lwt response = coverage ~options ~env ~profiling ~force ~trust input in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
 let handle_batch_coverage ~genv ~options:_ ~profiling:_ ~env ~batch =
@@ -456,8 +460,8 @@ let get_ephemeral_handler genv command =
       opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
     } in
     mk_parallelizable ~wait_for_recheck ~options (handle_check_file ~options ~force ~input)
-  | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~input)
+  | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; trust } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~trust ~input)
   | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_batch_coverage ~genv ~options ~batch)
   | ServerProt.Request.CYCLE { filename; } ->
@@ -987,7 +991,7 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
     | Error _ -> false in
   let%lwt result = if is_flow then
     let force = false in (* 'true' makes it report "unknown" for all exprs in non-flow files *)
-    coverage ~options ~env ~profiling ~force file
+    coverage ~options ~env ~profiling ~force ~trust:false file
   else
     Lwt.return (Ok [])
   in
@@ -1003,23 +1007,23 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       Lwt.return (LspResponse (Ok ((), Some response, metadata)))
     | true, Ok (all_locs) ->
       (* Figure out the percentages *)
-      let accum_coverage (covered, total) (_loc, kind) =
+      let accum_coverage (covered, total) (_loc, cov) =
         let covered =
-          match kind with
-          | Coverage.Kind.Checked -> covered + 1
-          | Coverage.Kind.Any
-          | Coverage.Kind.Empty -> covered
+          match cov with
+          | Coverage.Tainted | Coverage.Untainted -> covered + 1
+          | Coverage.Uncovered
+          | Coverage.Empty -> covered
         in
         covered, total + 1
       in
       let covered, total = Core_list.fold all_locs ~init:(0,0) ~f:accum_coverage in
       let coveredPercent = if total = 0 then 100 else 100 * covered / total in
       (* Figure out each individual uncovered span *)
-      let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, kind) ->
-        match kind with
-        | Coverage.Kind.Checked -> None
-        | Coverage.Kind.Any
-        | Coverage.Kind.Empty -> Some loc
+      let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, cov) ->
+        match cov with
+        | Coverage.Tainted | Coverage.Untainted
+        | Coverage.Uncovered
+        | Coverage.Empty -> Some loc
       ) in
       (* Imagine a tree of uncovered spans based on range inclusion. *)
       (* This sorted list is a pre-order flattening of that tree. *)

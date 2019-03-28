@@ -7,6 +7,7 @@
 
 module Ast = Flow_ast
 open Typed_ast_utils
+open Utils_js
 
 (*****************)
 (* Query/Suggest *)
@@ -90,14 +91,22 @@ let dump_types cx file_sig ~printer =
   |> concretize_loc_pairs
   |> sort_loc_pairs
 
-let covered_types cx ~should_check =
+let covered_types cx ~should_check ~check_trust =
   let type_table = Context.type_table cx in
   let htbl = Type_table.coverage_hashtbl type_table in
+  let check_trust =
+    if check_trust then
+      fun x -> x
+    else
+      function
+      | Coverage.Tainted -> Coverage.Untainted
+      | x -> x
+  in
   let coverage = new Coverage.visitor in
   let compute_cov =
     if should_check
-    then coverage#type_ cx
-    else fun _ -> Coverage.Kind.Empty
+    then coverage#type_ cx %> Coverage.result_of_coverage %> check_trust
+    else fun _ -> Coverage.Empty
   in
   let result_pairs =
     Hashtbl.fold (fun loc { Type.TypeScheme.type_; _ } acc ->
@@ -113,9 +122,9 @@ let component_coverage ~full_cx =
     let type_table = Context.type_table cx in
     Type_table.fold_coverage (fun _ { Type.TypeScheme.type_; _ } coverage ->
       match coverage_computer#type_ full_cx type_ with
-      | Kind.Any -> { coverage with any = coverage.any + 1 }
-      | Kind.Checked -> { coverage with covered = coverage.covered + 1 }
-      | Kind.Empty -> { coverage with empty = coverage.empty + 1 }
+      | Kind.Any, _ -> { coverage with any = coverage.any + 1 }
+      | Kind.Checked, _ -> { coverage with covered = coverage.covered + 1 }
+      | Kind.Empty, _ -> { coverage with empty = coverage.empty + 1 }
     ) type_table initial_coverage
   )
 

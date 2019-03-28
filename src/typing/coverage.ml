@@ -25,6 +25,7 @@
  *)
 
 open Type
+open Utils_js
 
 type op_mode =
   | OpAnd
@@ -33,6 +34,32 @@ type op_mode =
 let unit_of_op = function
   | OpAnd -> true (* mixed *)
   | OpOr -> false (* empty *)
+
+module Taint = struct
+  type t = Untainted | Tainted
+
+  let of_trust tr = if Trust.is_tainted tr then Tainted else Untainted
+
+  let to_string = function
+    | Untainted -> "Untainted"
+    | Tainted -> "Tainted"
+
+  let m_and = function
+    | Tainted, t | t, Tainted -> t
+    | Untainted, Untainted -> Untainted
+
+  let m_or = function
+    | Tainted, _ | _, Tainted -> Tainted
+    | Untainted, Untainted -> Untainted
+
+  let to_bool = function
+    | Untainted -> true
+    | Tainted -> false
+
+  let merge = function
+    | OpAnd -> m_and
+    | OpOr -> m_or
+end
 
 module Kind = struct
   type t =
@@ -70,9 +97,11 @@ module Kind = struct
     | Checked -> true
 end
 
+let merge op ((k1, t1), (k2, t2)) = Kind.merge op (k1, k2), Taint.merge op (t1, t2)
+
 type tvar_status =
   | Started
-  | Done of Kind.t
+  | Done of (Kind.t * Taint.t)
 
 class visitor = object (self)
 
@@ -105,8 +134,8 @@ class visitor = object (self)
     then self#tvar cx root_id
     else begin
       match IMap.get root_id tvar_cache with
-      | Some Started -> Kind.Any
-      | Some Done cov -> cov
+      | Some Started -> Kind.Any, Taint.Tainted
+      | Some (Done cov) -> cov
       | None ->
         tvar_cache <- IMap.add root_id Started tvar_cache;
         let open Constraint in
@@ -167,33 +196,35 @@ class visitor = object (self)
     | OpaqueT _
     | ObjProtoT _
     | OptionalT _
+        -> Kind.Checked, Taint.Untainted
 
-    | DefT (_, _, ArrT _)
-    | DefT (_, _, BoolT _)
-    | DefT (_, _, CharSetT _)
-    | DefT (_, _, ClassT _)
-    | DefT (_, _, FunT _)
-    | DefT (_, _, InstanceT _)
-    | DefT (_, _, IdxWrapper _)
-    | DefT (_, _, MixedT _)
-    | DefT (_, _, NumT _)
-    | DefT (_, _, NullT)
-    | DefT (_, _, ObjT _)
-    | DefT (_, _, ReactAbstractComponentT _)
-    | DefT (_, _, SingletonNumT _)
-    | DefT (_, _, SingletonStrT _)
-    | DefT (_, _, SingletonBoolT _)
-    | DefT (_, _, StrT _)
-    | DefT (_, _, VoidT)
+    | DefT (_, t, ArrT _)
+    | DefT (_, t, BoolT _)
+    | DefT (_, t, CharSetT _)
+    | DefT (_, t, ClassT _)
+    | DefT (_, t, FunT _)
+    | DefT (_, t, InstanceT _)
+    | DefT (_, t, IdxWrapper _)
+    | DefT (_, t, MixedT _)
+    | DefT (_, t, NumT _)
+    | DefT (_, t, NullT)
+    | DefT (_, t, ObjT _)
+    | DefT (_, t, ReactAbstractComponentT _)
+    | DefT (_, t, SingletonNumT _)
+    | DefT (_, t, SingletonStrT _)
+    | DefT (_, t, SingletonBoolT _)
+    | DefT (_, t, StrT _)
+    | DefT (_, t, VoidT)
       ->
-      Kind.Checked
+      Kind.Checked, Taint.of_trust t
 
     (* Concrete uncovered constructors *)
+    (* TODO: Rethink coverage and trust for these types *)
     | MatchingPropT _
-    | TypeDestructorTriggerT _
+    | TypeDestructorTriggerT _ -> Kind.Empty, Taint.Untainted
 
-    | DefT (_, _, EmptyT) -> Kind.Empty
-    | AnyT _ -> Kind.Any
+    | DefT (_, t, EmptyT) -> Kind.Empty, Taint.of_trust t
+    | AnyT _ -> Kind.Any, Taint.Tainted
 
   method private types_of_use acc = function
     | UseT (_, t) -> t::acc
@@ -216,28 +247,57 @@ class visitor = object (self)
     | [] -> acc
     | t::ts ->
       let cov = self#type_ cx t in
-      let acc = Kind.merge op (acc, cov) in
-      begin match acc with
+      let (merged_kind, _) as merged = merge op (cov, acc) in
+      begin match merged_kind with
         | Kind.Any ->
           (* Cannot recover from Any, so exit early *)
-          Kind.Any
+          Kind.Any, Taint.Tainted
         | Kind.Checked
-        | Kind.Empty -> self#types_ cx op acc ts
+        | Kind.Empty -> self#types_ cx op merged ts
       end
 
   method private types_list cx op ts =
     match ts with
-    | [] -> Kind.Empty
+    | [] -> Kind.Empty, Taint.Tainted
     | t::ts -> self#types_nel cx op (t, ts)
 
   method private types_nel cx op (t, ts) =
-    let init = self#type_ cx t in
-    match init with
-    | Kind.Any -> Kind.Any
+    let init_kind, init_trust = self#type_ cx t in
+    match init_kind with
+    | Kind.Any -> Kind.Any, Taint.Tainted
     | Kind.Checked
-    | Kind.Empty -> self#types_ cx op init ts
-
+    | Kind.Empty -> self#types_ cx op (init_kind, init_trust) ts
 end
+
+(* Expressions can be in one of four states:
+    - Uncovered: This is an any or any-like type and is not covered by Flow.
+    - Empty: This is an empty type, representing unreachable code, and is not covered by Flow.
+    - Tainted: This is covered in that it has a static type, but trust analysis has indicated
+               that this type may not accurately represent its type at runtime.
+    - Untainted: This is covered, and its static type can be shown to accurately reflect
+               its runtime type.
+ *)
+type expression_coverage = Uncovered | Empty | Tainted | Untainted
+
+let result_of_coverage = function
+  | Kind.Any, Taint.Untainted     ->
+      assert_false ("Any coverage kind cannot be associated with untainted")
+  | Kind.Any,   _                 -> Uncovered
+  | Kind.Empty, _                 -> Empty
+  | Kind.Checked, Taint.Tainted   -> Tainted
+  | Kind.Checked, Taint.Untainted -> Untainted
+
+let to_bool = function
+  | Empty
+  | Uncovered -> false
+  | Tainted
+  | Untainted -> true
+
+let m_or = function
+  | Uncovered, _ | _, Uncovered -> Uncovered
+  | Empty, m2 | Untainted, m2 -> m2
+  | m1, Empty | m1, Untainted -> m1
+  | Tainted, Tainted -> Tainted
 
 type file_coverage = {
   covered: int;
