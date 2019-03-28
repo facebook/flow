@@ -95,13 +95,13 @@ function object_prototype(
   return o; // ok
 }
 
-// **UNSOUND**
-// Because we support non-string props w/ bracket notation, it's possible to
-// write into a declared prop unsoundly.
-function unsound_string_conversion_alias_declared_prop(
+//
+//
+//
+function string_conversion_alias_declared_prop(
   o: {[k:number]:any, "0":X},
 ) {
-  o[0] = "not-x"; // a["0"] no longer X
+  o[0] = "not-x"; // error: string ~> X
 }
 
 function unification_dict_values_invariant(

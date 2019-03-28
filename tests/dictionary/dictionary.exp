@@ -77,6 +77,20 @@ References:
                         ^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- dictionary.js:104:10
+
+Cannot assign `"not-x"` to `o[0]` because string [1] is incompatible with `X` [2].
+
+   dictionary.js:104:10
+   104|   o[0] = "not-x"; // error: string ~> X
+                 ^^^^^^^ [1]
+
+References:
+   dictionary.js:102:27
+   102|   o: {[k:number]:any, "0":X},
+                                  ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- dictionary.js:110:34
 
 Cannot assign `x` to `a` because `B` [1] is incompatible with `A` [2] in the indexer property of array element.
@@ -1041,4 +1055,4 @@ References:
 
 
 
-Found 61 errors
+Found 62 errors
