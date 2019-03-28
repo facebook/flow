@@ -138,8 +138,11 @@ let coverage ~options ~env ~profiling ~force ~trust file_input =
       Type_info_service.coverage ~options ~env ~profiling ~force ~trust file content
     end
 
-let batch_coverage ~genv ~env ~batch =
-  if ServerProt.Response.((Rechecker.get_lazy_stats genv env).lazy_mode) |> Option.is_some then
+let batch_coverage ~options ~genv ~env ~trust ~batch =
+  if Options.trust_mode options = Options.NoTrust && trust then
+    Error "Batch Coverage cannot be run in trust mode if the server is not in trust mode. \
+      \n\nRestart the Flow server with --trust-mode=check' to enable this command." |> Lwt.return
+  else if ServerProt.Response.((Rechecker.get_lazy_stats genv env).lazy_mode) |> Option.is_some then
     Error "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with \
       '--lazy-mode none' to enable this command." |> Lwt.return else
   let is_checked key = CheckedSet.mem key env.checked_files in
@@ -305,8 +308,8 @@ let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
   let%lwt response = coverage ~options ~env ~profiling ~force ~trust input in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
-let handle_batch_coverage ~genv ~options:_ ~profiling:_ ~env ~batch =
-  let%lwt response = batch_coverage ~genv ~env ~batch in
+let handle_batch_coverage ~genv ~options ~profiling:_ ~env ~batch ~trust =
+  let%lwt response = batch_coverage ~options ~genv ~env ~batch ~trust in
   Lwt.return (ServerProt.Response.BATCH_COVERAGE response, None)
 
 let handle_cycle ~fn ~profiling:_ ~env =
@@ -462,8 +465,9 @@ let get_ephemeral_handler genv command =
     mk_parallelizable ~wait_for_recheck ~options (handle_check_file ~options ~force ~input)
   | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; trust } ->
     mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~trust ~input)
-  | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_batch_coverage ~genv ~options ~batch)
+  | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; trust } ->
+    mk_parallelizable ~wait_for_recheck ~options
+      (handle_batch_coverage ~genv ~options ~trust ~batch)
   | ServerProt.Request.CYCLE { filename; } ->
     (* The user preference is to make this wait for up-to-date data *)
     let file_options = Options.file_options options in

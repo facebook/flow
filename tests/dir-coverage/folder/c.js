@@ -1,4 +1,4 @@
 // @flow
 
-let x : string = "hello";
+let x : $Trusted<string> = "hello";
 module.exports = x;

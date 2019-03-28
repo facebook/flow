@@ -121,10 +121,11 @@ let component_coverage ~full_cx =
   Core_list.map ~f:(fun cx ->
     let type_table = Context.type_table cx in
     Type_table.fold_coverage (fun _ { Type.TypeScheme.type_; _ } coverage ->
-      match coverage_computer#type_ full_cx type_ with
-      | Kind.Any, _ -> { coverage with any = coverage.any + 1 }
-      | Kind.Checked, _ -> { coverage with covered = coverage.covered + 1 }
-      | Kind.Empty, _ -> { coverage with empty = coverage.empty + 1 }
+      match coverage_computer#type_ full_cx type_ |> Coverage.result_of_coverage with
+      | Uncovered -> { coverage with uncovered = coverage.uncovered + 1 }
+      | Untainted -> { coverage with untainted = coverage.untainted + 1 }
+      | Tainted   -> { coverage with tainted   = coverage.tainted   + 1 }
+      | Empty     -> { coverage with empty     = coverage.empty     + 1 }
     ) type_table initial_coverage
   )
 

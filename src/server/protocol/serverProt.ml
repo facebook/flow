@@ -19,7 +19,7 @@ module Request = struct
       wait_for_recheck: bool option;
     }
   | COVERAGE of { input: File_input.t; force: bool; wait_for_recheck: bool option; trust : bool }
-  | BATCH_COVERAGE of { batch : string list; wait_for_recheck: bool option; }
+  | BATCH_COVERAGE of { batch : string list; wait_for_recheck: bool option; trust : bool }
   | CYCLE of { filename: string; }
   | DUMP_TYPES of { input: File_input.t; wait_for_recheck: bool option; }
   | FIND_MODULE of { moduleref: string; filename: string; wait_for_recheck: bool option; }
@@ -70,7 +70,7 @@ module Request = struct
     Printf.sprintf "autocomplete %s" (File_input.filename_of_file_input input)
   | CHECK_FILE { input; verbose=_; force=_; include_warnings=_; wait_for_recheck=_; } ->
     Printf.sprintf "check %s" (File_input.filename_of_file_input input)
-  | BATCH_COVERAGE { batch=_; wait_for_recheck=_; } ->
+  | BATCH_COVERAGE { batch=_; wait_for_recheck=_; trust=_ } ->
       Printf.sprintf "%s" "batch-coverage"
   | COVERAGE { input; force=_; wait_for_recheck=_; trust=_ } ->
       Printf.sprintf "coverage %s" (File_input.filename_of_file_input input)

@@ -300,13 +300,15 @@ let m_or = function
   | Tainted, Tainted -> Tainted
 
 type file_coverage = {
-  covered: int;
-  any: int;
+  untainted: int;
+  tainted: int;
+  uncovered: int;
   empty: int;
 }
 
 let initial_coverage = {
-  covered = 0;
-  any = 0;
+  untainted = 0;
+  tainted = 0;
+  uncovered = 0;
   empty = 0;
 }
