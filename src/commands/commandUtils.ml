@@ -1140,7 +1140,13 @@ let get_path_of_file file =
 
 let get_file_from_filename_or_stdin ~cmd path = function
   | Some filename ->
-      if Sys.is_directory filename then
+      if not (Sys.file_exists filename) then
+        let msg = spf
+          "Could not find file %s; canceling.\
+          \nSee \"flow %s --help\" for more info"
+          filename cmd in
+        FlowExitStatus.(exit ~msg No_input)
+      else if Sys.is_directory filename then
         let msg = spf
           "Provided argument %s is not a file; canceling.\
           \nSee \"flow %s --help\" for more info"
