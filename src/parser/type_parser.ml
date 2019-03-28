@@ -617,36 +617,43 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           end
       | _ ->
         let prop = property env start_loc ~is_class ~allow_static:is_class
-          ~allow_proto:is_class ~variance:None ~static:None ~proto:None in
+          ~allow_proto:is_class ~variance:None ~static:None ~proto:None ~neg_num:None in
         semicolon exact env;
         properties ~is_class ~allow_inexact ~allow_spread ~exact env (prop::props, inexact)
 
-    and property env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto start_loc =
+    and property env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto ~neg_num start_loc =
       match Peek.token env with
       | T_PLUS when variance = None ->
         let loc = Peek.loc env in
         Eat.token env;
         let variance = Some (loc, Variance.Plus) in
         property
-          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto ~neg_num start_loc
       | T_MINUS when variance = None ->
         let loc = Peek.loc env in
         Eat.token env;
         let variance = Some (loc, Variance.Minus) in
         property
-          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto ~neg_num start_loc
       | T_STATIC when allow_static ->
         assert (variance = None); (* if we parsed variance, allow_static = false *)
         let static = Some (Peek.loc env) in
         Eat.token env;
         property
-          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto ~neg_num start_loc
       | T_IDENTIFIER { raw = "proto"; _ } when allow_proto ->
         assert (variance = None); (* if we parsed variance, allow_proto = false *)
         let proto = Some (Peek.loc env) in
         Eat.token env;
         property
-          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto start_loc
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto ~neg_num start_loc
+      | T_NUMBER_SINGLETON_TYPE { value; raw; _ } when variance = None && Flow_ast_utils.is_negative_number_literal raw ->
+        let loc = Peek.loc env in
+        let neg_num = Some (loc, value, raw) in
+        Eat.token env;
+        let variance = Some (loc, Variance.Minus) in
+        property
+          env ~is_class ~allow_static:false ~allow_proto:false ~variance ~static ~proto ~neg_num start_loc
       | T_LBRACKET ->
         error_unexpected_proto env proto;
         Expect.token env T_LBRACKET;
@@ -664,9 +671,9 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         error_unexpected_variance env variance;
         call_property env start_loc static
       | token ->
-        match static, proto, token with
-        | Some _, Some _, _ -> failwith "Can not have both `static` and `proto`"
-        | Some static_loc, None, (T_PLING | T_COLON) ->
+        match neg_num, static, proto, token with
+        | _, Some _, Some _, _ -> failwith "Can not have both `static` and `proto`"
+        | _, Some static_loc, None, (T_PLING | T_COLON) ->
           (* We speculatively parsed `static` as a static modifier, but now
              that we've parsed the next token, we changed our minds and want
              to parse `static` as the key of a named property. *)
@@ -676,7 +683,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
           )) in
           let static = None in
           init_property env start_loc ~variance ~static ~proto key
-        | None, Some proto_loc, (T_PLING | T_COLON) ->
+        | _, None, Some proto_loc, (T_PLING | T_COLON) ->
           (* We speculatively parsed `proto` as a proto modifier, but now
              that we've parsed the next token, we changed our minds and want
              to parse `proto` as the key of a named property. *)
@@ -685,6 +692,18 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
             "proto"
           )) in
           let proto = None in
+          init_property env start_loc ~variance ~static ~proto key
+        | Some (neg_num_loc, value, raw), None, None, (T_PLING | T_COLON) ->
+          (* We speculatively parsed `-1` as a negative number, but now
+             that we've parsed the next token, we changed our minds and want
+             to parse `-1` as variance annotation of a named property. *)
+          let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
+          let value = Flow_ast.Literal.Number value in
+          let key = Expression.Object.Property.Literal (neg_num_loc, {
+            Flow_ast.Literal.value;
+            raw;
+            comments = None
+          }) in
           init_property env start_loc ~variance ~static ~proto key
         | _ ->
           let object_key env =
