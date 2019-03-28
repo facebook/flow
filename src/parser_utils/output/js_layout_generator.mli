@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module LocMap = Utils_js.LocMap
-
 type expression_context = {
   left: expression_context_left;
   group: expression_context_group;
@@ -29,7 +27,7 @@ type comment_attach =
 
 type comment_map =
   (comment_attach * (Loc.t, Loc.t) Flow_ast.Statement.t * Loc.t Flow_ast.Comment.t)
-  list LocMap.t
+  list Utils_js.LocMap.t
 
 val normal_context: expression_context
 
@@ -53,16 +51,16 @@ val class_method: (Loc.t, Loc.t) Flow_ast.Class.Method.t -> Layout.layout_node
 val class_property: (Loc.t, Loc.t) Flow_ast.Class.Property.t -> Layout.layout_node
 val class_private_field: (Loc.t, Loc.t) Flow_ast.Class.PrivateField.t -> Layout.layout_node
 val type_: (Loc.t, Loc.t) Flow_ast.Type.t -> Layout.layout_node
-val variance: LocMap.key Flow_ast.Variance.t -> Layout.layout_node
-val type_param: (LocMap.key, LocMap.key) Flow_ast.Type.ParameterDeclaration.TypeParam.t -> Layout.layout_node
+val variance: Loc.t Flow_ast.Variance.t -> Layout.layout_node
+val type_param: (Loc.t, Loc.t) Flow_ast.Type.ParameterDeclaration.TypeParam.t -> Layout.layout_node
 val type_annotation: ?parens:bool -> (Loc.t, Loc.t) Flow_ast.Type.annotation -> Layout.layout_node
 val identifier: Loc.t Flow_ast.Identifier.t -> Layout.layout_node
 val pattern: ?ctxt:expression_context -> (Loc.t, Loc.t) Flow_ast.Pattern.t -> Layout.layout_node
 val comment: Loc.t Flow_ast.Comment.t -> Layout.layout_node
 val template_literal: (Loc.t, Loc.t) Flow_ast.Expression.TemplateLiteral.t -> Layout.layout_node
-val jsx_identifier: LocMap.key Flow_ast.JSX.Identifier.t -> Layout.layout_node
-val jsx_child: (LocMap.key, LocMap.key) Flow_ast.JSX.child -> (LocMap.key * Layout.layout_node) option
-val arrow_function_params: (LocMap.key, LocMap.key) Flow_ast.Function.Params.t -> Layout.layout_node
+val jsx_identifier: Loc.t Flow_ast.JSX.Identifier.t -> Layout.layout_node
+val jsx_child: (Loc.t, Loc.t) Flow_ast.JSX.child -> (Loc.t * Layout.layout_node) option
+val arrow_function_params: (Loc.t, Loc.t) Flow_ast.Function.Params.t -> Layout.layout_node
 
 val better_quote: string -> string
 val utf8_escape: quote:string -> string -> string
