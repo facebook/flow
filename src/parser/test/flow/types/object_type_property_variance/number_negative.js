@@ -1,1 +1,1 @@
-type X = {-1: T}
+type X = {-1:T}
