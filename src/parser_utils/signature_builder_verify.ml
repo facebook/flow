@@ -18,6 +18,7 @@ module Deps = Signature_builder_deps.With_Loc
 module File_sig = File_sig.With_Loc
 module Error = Deps.Error
 module Dep = Deps.Dep
+module EASort = Signature_builder_deps.ExpectedAnnotationSort
 
 module type EvalEnv = sig
   val prevent_munge: bool
@@ -236,17 +237,17 @@ module Eval(Env: EvalEnv) = struct
     | Kind.Init_path.Init expr -> literal_expr tps expr
     | Kind.Init_path.Object (_, (path, _)) -> init_path tps path
 
-  and annotation ?init tps (loc, annot) =
+  and annotation ~sort ?init tps (loc, annot) =
     match annot with
       | Some path -> annot_path tps path
       | None ->
         begin match init with
           | Some path -> init_path tps path
-          | None -> Deps.top (Error.ExpectedAnnotation loc)
+          | None -> Deps.top (Error.ExpectedAnnotation (loc, sort))
         end
 
-  and annotated_type tps loc = function
-    | Ast.Type.Missing _ -> Deps.top (Error.ExpectedAnnotation loc)
+  and annotated_type ~sort tps loc = function
+    | Ast.Type.Missing _ -> Deps.top (Error.ExpectedAnnotation (loc, sort))
     | Ast.Type.Available (_, t) -> type_ tps t
 
   and pattern tps patt =
@@ -255,7 +256,7 @@ module Eval(Env: EvalEnv) = struct
       | loc, Identifier { Identifier.annot; _ }
       | loc, Object { Object.annot; _ }
       | loc, Array { Array.annot; _ }
-        -> annotated_type tps loc annot
+        -> annotated_type ~sort:EASort.ArrayPattern tps loc annot
       | loc, Expression _ -> Deps.todo loc "Expression"
 
   and literal_expr tps =
@@ -471,7 +472,7 @@ module Eval(Env: EvalEnv) = struct
     match return with
     | Ast.Type.Missing loc ->
       if is_missing_ok () then Deps.bot
-      else Deps.top (Error.ExpectedAnnotation loc)
+      else Deps.top (Error.ExpectedAnnotation (loc, EASort.FunctionReturn))
     | Ast.Type.Available (_, t) -> type_ tps t
 
   and function_ tps generator tparams params return body =
@@ -502,9 +503,10 @@ module Eval(Env: EvalEnv) = struct
         | Body.Method (_, { Method.value; _ }) ->
           let _, { Ast.Function.generator; tparams; params; return; body; _ } = value in
           function_ tps generator tparams params return body
-        | Body.Property (loc, { Property.annot; _ })
-        | Body.PrivateField (loc, { PrivateField.annot; _ }) ->
-          annotated_type tps loc annot
+        | Body.Property (loc, { Property.annot; key; _ }) ->
+          annotated_type ~sort:(EASort.Property key) tps loc annot
+        | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->
+          annotated_type ~sort:(EASort.PrivateField key) tps loc annot
 
     in fun tparams body super super_targs implements ->
       let open Ast.Class in
@@ -572,8 +574,9 @@ module Verifier(Env: EvalEnv) = struct
 
   let eval id_loc (loc, kind) =
     match kind with
-      | Kind.VariableDef { annot; init } ->
-        Eval.annotation ?init SSet.empty (id_loc, annot)
+      | Kind.VariableDef { id; annot; init } ->
+        Eval.annotation ~sort:(EASort.VariableDefinition id) ?init
+          SSet.empty (id_loc, annot)
       | Kind.FunctionDef { generator; tparams; params; return; body; } ->
         Eval.function_ SSet.empty generator tparams params return body
       | Kind.DeclareFunctionDef { annot = (_, t) } ->

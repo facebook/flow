@@ -705,7 +705,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | ESignatureVerification sve ->
       Signature_builder_deps.With_ALoc.Error.(match sve with
         | ExpectedSort (_, _, loc)
-        | ExpectedAnnotation loc
+        | ExpectedAnnotation (loc, _)
         | InvalidTypeParamUse loc
         | UnexpectedObjectKey (loc, _)
         | UnexpectedObjectSpread (loc, _)
@@ -715,7 +715,7 @@ let aloc_of_msg : t -> ALoc.t option = function
         | EmptyObject loc
         | UnexpectedExpression (loc, _)
         | SketchyToplevelDef loc
-        | TODO (_, loc) ->               Some loc
+        | TODO (_, loc) -> Some loc
       )
   | EDuplicateModuleProvider {conflict; _ } ->
       let loc1 = Loc.(
@@ -1493,8 +1493,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       let msg = begin match sve with
         | ExpectedSort (sort, x, _) ->
           [code x; text (spf " is not a %s." (Signature_builder_kind.Sort.to_string sort))]
-        | ExpectedAnnotation _ ->
-          [text "Missing type annotation:"]
+        | ExpectedAnnotation (_, sort) ->
+          [text (
+            spf "Missing type annotation at %s:"
+              (Signature_builder_deps.With_ALoc.ExpectedAnnotationSort.to_string sort)
+          )]
         | InvalidTypeParamUse _ ->
           [text "Invalid use of type parameter:"]
         | UnexpectedObjectKey _->

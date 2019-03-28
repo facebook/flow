@@ -1139,7 +1139,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
 
   let eval (loc, kind) =
     match kind with
-      | Kind.VariableDef { annot; init } ->
+      | Kind.VariableDef { id = _; annot; init } ->
         T.VariableDecl (Eval.annotation loc ?init annot)
       | Kind.FunctionDef { generator; tparams; params; return; body; } ->
         T.FunctionDecl (T.EXPR
