@@ -115,6 +115,7 @@ let identifier_name env =
   | T_BOOLEAN_TYPE BOOL -> "bool"
   | T_BOOLEAN_TYPE BOOLEAN -> "boolean"
   | T_NUMBER_TYPE -> "number"
+  | T_BIGINT_TYPE -> "bigint"
   | T_STRING_TYPE -> "string"
   | T_VOID_TYPE -> "void"
   (* Contextual stuff *)

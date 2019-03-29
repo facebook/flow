@@ -10,11 +10,12 @@ val mk_id: unit -> int
 type 'loc virtual_reason_desc =
   | RTrusted of 'loc virtual_reason_desc | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
-  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
   | RNumberLit of string
+  | RBigIntLit of string
   | RBooleanLit of bool
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject

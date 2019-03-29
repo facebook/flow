@@ -860,6 +860,42 @@ module Expression
     Expect.token env (T_NUMBER { kind; raw });
     value
 
+  and bigint_strip_n raw =
+    let size = String.length raw in
+    let str =
+      if size != 0 && (raw.[size - 1]) == 'n'
+      then String.sub raw 0 (size - 1)
+      else raw in
+    str
+
+  and bigint env kind raw =
+    let value = match kind with
+    | LEGACY_OCTAL ->
+      error env Error.StrictOctalLiteral;
+      let postraw = bigint_strip_n raw in
+      begin try Int64.to_float (Int64.of_string ("0o"^postraw))
+      with Failure _ -> failwith ("Invalid bigint legacy octal "^postraw)
+      end
+    | BINARY
+    | OCTAL ->
+      let postraw = bigint_strip_n raw in
+      begin try Int64.to_float (Int64.of_string postraw)
+      with Failure _ -> failwith ("Invalid bigint binary/octal "^postraw)
+      end
+    | NORMAL ->
+      let postraw = bigint_strip_n raw in
+      begin try Flow_lexer.FloatOfString.float_of_string postraw
+      with
+      | _ when Sys.win32 ->
+        error env Parse_error.WindowsFloatOfString;
+        789.0
+      | Failure _ ->
+        failwith ("Invalid bigint "^postraw)
+      end
+    in
+    Expect.token env (T_BIGINT { kind; raw });
+    value
+
   and primary_cover env =
     let loc = Peek.loc env in
     let leading = Peek.comments env in
@@ -870,6 +906,10 @@ module Expression
         Cover_expr (loc, Expression.This)
     | T_NUMBER { kind; raw } ->
         let value = Literal.Number (number env kind raw) in
+        let trailing = Peek.comments env in
+        Cover_expr (loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }))
+    | T_BIGINT { kind; raw } ->
+        let value = Literal.BigInt (bigint env kind raw) in
         let trailing = Peek.comments env in
         Cover_expr (loc, Expression.(Literal { Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }))
     | T_STRING (loc, value, raw, octal) ->

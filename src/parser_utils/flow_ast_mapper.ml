@@ -667,9 +667,11 @@ class ['loc] mapper = object(this)
     | _, Void
     | _, Null
     | _, Number
+    | _, BigInt
     | _, String
     | _, Boolean
     | _, NumberLiteral _
+    | _, BigIntLiteral _
     | _, BooleanLiteral _
     | _, Exists
       -> t

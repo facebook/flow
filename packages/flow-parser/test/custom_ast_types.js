@@ -268,3 +268,15 @@ def("CatchClause")
     .field("param", or(def("Pattern"), null), defaults["null"])
     .field("guard", or(def("Expression"), null), defaults["null"])
     .field("body", def("BlockStatement"));
+
+def("BigIntLiteral")
+  .bases("Literal")
+  .build("value", "bigint")
+  .field("value", or(def("BigInt"), null))
+  .field("bigint", String);
+
+def("BigIntLiteralTypeAnnotation")
+  .bases("Type")
+  .build("value", "raw")
+  .field("value", or(def("BigInt"), null))
+  .field("raw", String);

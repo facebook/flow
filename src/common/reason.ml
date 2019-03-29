@@ -62,11 +62,12 @@ type 'loc virtual_reason_desc =
   | RTrusted of 'loc virtual_reason_desc
   | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
-  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
   | RNumberLit of string
+  | RBigIntLit of string
   | RBooleanLit of bool
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
@@ -221,11 +222,12 @@ and reason_desc = ALoc.t virtual_reason_desc
 
 let rec map_desc_locs f = function
   | RAnyExplicit | RAnyImplicit
-  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
   | RLongStringLit _
   | RStringLit _
   | RNumberLit _
+  | RBigIntLit _
   | RBooleanLit _
   | RObject
   | RObjectLit
@@ -565,6 +567,7 @@ let rec string_of_desc = function
   | RTrusted r -> spf "trusted %s" (string_of_desc r)
   | RPrivate r -> spf "private %s" (string_of_desc r)
   | RNumber -> "number"
+  | RBigInt -> "bigint"
   | RString
   | RLongStringLit _ -> "string"
   | RBoolean -> "boolean"
@@ -579,6 +582,7 @@ let rec string_of_desc = function
   | RStringLit "" -> "empty string"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
+  | RBigIntLit x -> spf "bigint literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
   | RMatchingProp (k, v) ->
     spf "object with property `%s` that matches %s" k (string_of_desc v)
@@ -1239,12 +1243,14 @@ let inferred_union_elem_array_desc = RCustom
  *)
 let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RNumber
+| RBigInt
 | RString
 | RSymbol
 | RBoolean
 | RLongStringLit _
 | RStringLit _
 | RNumberLit _
+| RBigIntLit _
 | RBooleanLit _
 | RJSXText
 | RFbt

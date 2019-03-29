@@ -742,10 +742,12 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
     | Void
     | Null
     | Number
+    | BigInt
     | String
     | Boolean
     | StringLiteral _
     | NumberLiteral _
+    | BigIntLiteral _
     | BooleanLiteral _
     | Exists
     ) as t -> t

@@ -81,10 +81,12 @@ module Eval(Env: EvalEnv) = struct
       | _, Void
       | _, Null
       | _, Number
+      | _, BigInt
       | _, String
       | _, Boolean
       | _, StringLiteral _
       | _, NumberLiteral _
+      | _, BigIntLiteral _
       | _, BooleanLiteral _ -> Deps.bot
       | _, Nullable t -> type_ tps t
       | _, Function ft -> function_type tps ft
@@ -266,6 +268,7 @@ module Eval(Env: EvalEnv) = struct
         begin match value with
           | Ast.Literal.String _
           | Ast.Literal.Number _
+          | Ast.Literal.BigInt _
           | Ast.Literal.Boolean _
           | Ast.Literal.Null
             -> Deps.bot
