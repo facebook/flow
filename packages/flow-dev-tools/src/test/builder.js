@@ -121,7 +121,7 @@ export class TestBuilder {
         format(fmt, ...args),
       );
       return new Promise((resolve, reject) => {
-        logStream.write(msg, 'utf8', resolve);
+        logStream.write(msg, 'utf8', err => (err ? reject(err) : resolve()));
       });
     }
   }

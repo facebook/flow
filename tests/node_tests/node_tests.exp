@@ -44,32 +44,40 @@ Cannot cast `hmac.read()` to number because:
                 ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1688:24
-   1688|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1694:24
+   1694|   read(size?: number): ?(string | Buffer);
                                 ^^^^^^^^^^^^^^^^^^ [1]
    crypto/crypto.js:12:21
      12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1688:26
-   1688|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1694:26
+   1694|   read(size?: number): ?(string | Buffer);
                                   ^^^^^^ [3]
-   <BUILTINS>/node.js:1688:35
-   1688|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1694:35
+   1694|   read(size?: number): ?(string | Buffer);
                                            ^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------- crypto/crypto.js:16:16
+Error -------------------------------------------------------------------------------------------- crypto/crypto.js:16:5
 
-Cannot call `hmac.write` with `123` bound to `chunk` because number [1] is incompatible with string [2].
+Cannot call `hmac.write` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
 
+   crypto/crypto.js:16:5
+     16|     hmac.write(123); // 2 errors: not a string or a Buffer
+             ^^^^^^^^^^^^^^^
+
+References:
    crypto/crypto.js:16:16
      16|     hmac.write(123); // 2 errors: not a string or a Buffer
                         ^^^ [1]
-
-References:
-   <BUILTINS>/node.js:1741:34
-   1741|     chunk: Buffer | Uint8Array | string,
-                                          ^^^^^^ [2]
+   <BUILTINS>/node.js:1732:16
+   1732|   write(chunk: string | Buffer | Uint8Array, callback?: (error?: Error) => void): boolean;
+                        ^^^^^^ [2]
+   <BUILTINS>/node.js:1733:16
+   1733|   write(chunk: string | Buffer | Uint8Array, encoding?: string,  callback?: (error?: Error) => void): boolean;
+                        ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- crypto/crypto.js:26:24
@@ -1537,8 +1545,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2285:21
-   2285|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:2353:21
+   2353|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -1556,26 +1564,26 @@ Cannot call `process.emitWarning` because:
          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:2257:24
-   2257|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2325:24
+   2325|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2257:33
-   2257|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2325:33
+   2325|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:2258:3
-   2258|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2326:3
+   2326|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2259:3
-   2259|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2327:3
+   2327|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:2260:3
+   <BUILTINS>/node.js:2328:3
            v-----------
-   2260|   emitWarning(
-   2261|     warning: string,
-   2262|     type: string,
-   2263|     code: string,
-   2264|     ctor?: (...empty) => mixed
-   2265|   ): void;
+   2328|   emitWarning(
+   2329|     warning: string,
+   2330|     type: string,
+   2331|     code: string,
+   2332|     ctor?: (...empty) => mixed
+   2333|   ): void;
            ------^ [6]
 
 
@@ -1594,14 +1602,14 @@ References:
    process/process.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:2258:24
-   2258|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2326:24
+   2326|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2259:24
-   2259|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2327:24
+   2327|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:2261:14
-   2261|     warning: string,
+   <BUILTINS>/node.js:2329:14
+   2329|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1619,11 +1627,11 @@ References:
    process/process.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:2259:38
-   2259|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2327:38
+   2327|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:2262:11
-   2262|     type: string,
+   <BUILTINS>/node.js:2330:11
+   2330|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1639,8 +1647,8 @@ References:
    process/process.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:2263:11
-   2263|     code: string,
+   <BUILTINS>/node.js:2331:11
+   2331|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1653,16 +1661,188 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2257:41
-   2257|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2325:41
+   2325|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/process.js:14:31
      14| (process.emitWarning("blah"): string); // error
                                        ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- stream/stream.js:36:2
 
-Found 91 errors
+Cannot cast `pipe` to `MyDuplex` because `MyWriteStream` [1] is incompatible with `MyDuplex` [2].
+
+   stream/stream.js:36:2
+   36| (pipe: MyDuplex); // error
+        ^^^^
+
+References:
+   stream/stream.js:32:9
+   32|   .pipe(new MyWriteStream());
+               ^^^^^^^^^^^^^^^^^^^ [1]
+   stream/stream.js:36:8
+   36| (pipe: MyDuplex); // error
+              ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- stream/stream.js:45:6
+
+Cannot cast `error` to null because:
+ - `Error` [1] is incompatible with null [2].
+ - undefined [1] is incompatible with null [2].
+
+   stream/stream.js:45:6
+     45|     (error: null); // error
+              ^^^^^
+
+References:
+   <BUILTINS>/node.js:1805:18
+   1805|     cb: (error?: Error) => void,
+                          ^^^^^ [1]
+   stream/stream.js:45:13
+     45|     (error: null); // error
+                     ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- stream/stream.js:50:2
+
+Cannot cast `pipeline` to `MyDuplex` because `MyWriteStream` [1] is incompatible with `MyDuplex` [2].
+
+   stream/stream.js:50:2
+   50| (pipeline: MyDuplex); // error
+        ^^^^^^^^
+
+References:
+   stream/stream.js:42:3
+   42|   new MyWriteStream(),
+         ^^^^^^^^^^^^^^^^^^^ [1]
+   stream/stream.js:50:12
+   50| (pipeline: MyDuplex); // error
+                  ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- stream/stream.js:52:1
+
+Cannot call `stream.pipeline` because:
+ - Either `MyWriteStream` [1] is incompatible with `stream$Readable` [2].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [3].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [4].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [5].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [6].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Readable` [7].
+
+   stream/stream.js:52:1
+         v---------------
+     52| stream.pipeline(
+     53|   new MyWriteStream(), // error - first stream must be Readable
+     54|   new MyDuplex(),
+     55|   () => {},
+     56| );
+         ^
+
+References:
+   stream/stream.js:53:3
+     53|   new MyWriteStream(), // error - first stream must be Readable
+           ^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1790:9
+   1790|     s1: stream$Readable,
+                 ^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:1795:9
+   1795|     s1: stream$Readable,
+                 ^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/node.js:1801:9
+   1801|     s1: stream$Readable,
+                 ^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/node.js:1808:9
+   1808|     s1: stream$Readable,
+                 ^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/node.js:1816:9
+   1816|     s1: stream$Readable,
+                 ^^^^^^^^^^^^^^^ [6]
+   <BUILTINS>/node.js:1825:9
+   1825|     s1: stream$Readable,
+                 ^^^^^^^^^^^^^^^ [7]
+
+
+Error -------------------------------------------------------------------------------------------- stream/stream.js:58:1
+
+Cannot call `stream.pipeline` because:
+ - Either `MyWriteStream` [1] is incompatible with `stream$Duplex` [2].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Duplex` [3].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Duplex` [4].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Duplex` [5].
+ - Or `MyWriteStream` [1] is incompatible with `stream$Duplex` [6].
+
+   stream/stream.js:58:1
+         v---------------
+     58| stream.pipeline(
+     59|   new MyDuplex(),
+     60|   new MyWriteStream(), // error - middle stream must be Duplex
+     61|   new MyDuplex(),
+     62|   () => {},
+     63| );
+         ^
+
+References:
+   stream/stream.js:60:3
+     60|   new MyWriteStream(), // error - middle stream must be Duplex
+           ^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1796:9
+   1796|     s2: stream$Duplex,
+                 ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:1802:9
+   1802|     s2: stream$Duplex,
+                 ^^^^^^^^^^^^^ [3]
+   <BUILTINS>/node.js:1809:9
+   1809|     s2: stream$Duplex,
+                 ^^^^^^^^^^^^^ [4]
+   <BUILTINS>/node.js:1817:9
+   1817|     s2: stream$Duplex,
+                 ^^^^^^^^^^^^^ [5]
+   <BUILTINS>/node.js:1826:9
+   1826|     s2: stream$Duplex,
+                 ^^^^^^^^^^^^^ [6]
+
+
+Error -------------------------------------------------------------------------------------------- stream/stream.js:65:1
+
+Cannot call `stream.pipeline` because:
+ - Either `MyReadStream` [1] is incompatible with `stream$Duplex` [2].
+ - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [3].
+ - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [4].
+ - Or `MyReadStream` [1] is incompatible with `stream$Duplex` [5].
+
+   stream/stream.js:65:1
+         v---------------
+     65| stream.pipeline(
+     66|   new MyDuplex(),
+     67|   new MyDuplex(),
+     68|   new MyReadStream(), // error - last stream must be Writable
+     69|   () => {},
+     70| );
+         ^
+
+References:
+   stream/stream.js:68:3
+     68|   new MyReadStream(), // error - last stream must be Writable
+           ^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/node.js:1803:9
+   1803|     s3: stream$Duplex,
+                 ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/node.js:1810:9
+   1810|     s3: stream$Duplex,
+                 ^^^^^^^^^^^^^ [3]
+   <BUILTINS>/node.js:1818:9
+   1818|     s3: stream$Duplex,
+                 ^^^^^^^^^^^^^ [4]
+   <BUILTINS>/node.js:1827:9
+   1827|     s3: stream$Duplex,
+                 ^^^^^^^^^^^^^ [5]
+
+
+
+Found 98 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
