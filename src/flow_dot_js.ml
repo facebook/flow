@@ -207,7 +207,7 @@ let infer_and_merge ~root filename ast file_sig =
   let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let reqs = SMap.fold (fun module_name locs reqs ->
     let m = Modulename.String module_name in
-    let locs = locs |> Nel.to_list |> Utils_js.ALocSet.of_list in
+    let locs = locs |> Nel.to_list |> Loc_collections.ALocSet.of_list in
     Merge_js.Reqs.add_decl module_name filename (locs, m) reqs
   ) require_loc_map Merge_js.Reqs.empty in
   let lint_severities = LintSettings.empty_severities in

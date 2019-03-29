@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open Loc_collections
 module Reqs = Merge_js.Reqs
 
 type 'a merge_job_result = ('a, Error_message.t) result

@@ -11,6 +11,7 @@
    associated type information. *)
 
 open Utils_js
+open Loc_collections
 open Type
 open Reason
 open Scope

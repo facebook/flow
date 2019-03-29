@@ -9,6 +9,7 @@ module Ast = Flow_ast
 module File_sig = File_sig.With_Loc
 
 open Utils_js
+open Loc_collections
 open ServerEnv
 
 open FindRefsUtils

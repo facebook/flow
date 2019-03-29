@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 type t = (Loc.t * Signature_builder_kind.t) LocMap.t SMap.t
 
 let empty = SMap.empty

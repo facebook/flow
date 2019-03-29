@@ -11,6 +11,7 @@
 
 open Severity
 open Utils_js
+open Loc_collections
 
 exception No_source of string
 

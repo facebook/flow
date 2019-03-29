@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module ALocMap = Utils_js.ALocMap
+module ALocMap = Loc_collections.ALocMap
 module Scope_api = Scope_api.With_ALoc
 
 exception Props_not_found of Type.Properties.id

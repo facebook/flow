@@ -11,7 +11,7 @@ val empty: t
 
 (* Raises if the given loc has `source` set to `None` *)
 val add: Loc.t -> t -> t
-val add_lint_suppressions: Utils_js.LocSet.t -> t -> t
+val add_lint_suppressions: Loc_collections.LocSet.t -> t -> t
 
 val remove: File_key.t -> t -> t
 
@@ -27,7 +27,7 @@ val all_locs: t -> Loc.t list
 val filter_suppressed_errors :
   root:Path.t -> file_options:Files.options option ->
   t -> Errors.ConcreteLocPrintableErrorSet.t -> unused:t ->
-  (Errors.ConcreteLocPrintableErrorSet.t * (Loc.t Errors.printable_error * Utils_js.LocSet.t) list * t)
+  (Errors.ConcreteLocPrintableErrorSet.t * (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list * t)
 
 (* We use an PrintableErrorSet here (as opposed to a ConcretePrintableErrorSet) because this operation happens
    during merge rather than during collation as filter_suppressed_errors does *)

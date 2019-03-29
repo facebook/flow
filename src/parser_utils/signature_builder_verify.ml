@@ -9,7 +9,7 @@ module Ast_utils = Flow_ast_utils
 
 module Ast = Flow_ast
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
@@ -799,7 +799,7 @@ module Verifier(Env: EvalEnv) = struct
         begin match SMap.get x env with
           | Some entries ->
             let validate = Kind.validator sort in
-            Utils_js.LocMap.fold (fun loc kind deps ->
+            Loc_collections.LocMap.fold (fun loc kind deps ->
               Deps.join (
                 deps,
                 if validate (snd kind) then eval loc kind

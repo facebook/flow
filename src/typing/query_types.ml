@@ -149,15 +149,15 @@ let suggest_types cx file_sig =
   let type_table = Context.type_table cx in
   let file = Context.file cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
-  let result = Utils_js.ALocMap.empty in
+  let result = Loc_collections.ALocMap.empty in
   let result = Ty_normalizer.fold_hashtbl
     ~options ~genv
-    ~f:(fun acc (loc, t) -> Utils_js.ALocMap.add loc t acc)
+    ~f:(fun acc (loc, t) -> Loc_collections.ALocMap.add loc t acc)
     ~g:(fun t -> t)
     ~htbl:(Type_table.coverage_hashtbl type_table) result in
   let result = Ty_normalizer.fold_hashtbl
     ~options ~genv
-    ~f:(fun acc (loc, t) -> Utils_js.ALocMap.add loc t acc)
+    ~f:(fun acc (loc, t) -> Loc_collections.ALocMap.add loc t acc)
     ~g:(fun (_, t, _) -> t)
     ~htbl:(Type_table.type_info_hashtbl type_table) result in
   result

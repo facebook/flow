@@ -18,7 +18,7 @@ module RequireMap = MyMap.Make (struct
 end)
 
 module FilenameMap = Utils_js.FilenameMap
-module ALocSet = Utils_js.ALocSet
+module ALocSet = Loc_collections.ALocSet
 
 module Reqs = struct
   type impl = ALocSet.t
@@ -146,7 +146,7 @@ let detect_sketchy_null_checks cx =
   let detect_function exists_excuses loc exists_check =
     let open ExistsCheck in
 
-    let exists_excuse = Utils_js.ALocMap.get loc exists_excuses
+    let exists_excuse = Loc_collections.ALocMap.get loc exists_excuses
       |> Option.value ~default:empty in
 
     begin match exists_check.null_loc with
@@ -165,7 +165,7 @@ let detect_sketchy_null_checks cx =
     end
   in
 
-  Utils_js.ALocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
+  Loc_collections.ALocMap.iter (detect_function (Context.exists_excuses cx)) (Context.exists_checks cx)
 
 let detect_test_prop_misses cx =
   let misses = Context.test_prop_get_never_hit cx in
@@ -250,7 +250,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     let targs_map = Type_table.targs_hashtbl type_table in
     let file_sig = FilenameMap.find_unsafe file file_sigs in
     let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
-    Utils_js.ALocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
+    Loc_collections.ALocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
   ) cxs
 
 let force_annotations leader_cx other_cxs =

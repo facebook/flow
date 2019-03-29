@@ -6,7 +6,7 @@
  *)
 
 module Ast = Flow_ast
-module ALocMap = Utils_js.ALocMap
+module ALocMap = Loc_collections.ALocMap
 
 (* TODO(nmote) come up with a consistent story for abstract/concrete locations in this module *)
 

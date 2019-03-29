@@ -13,14 +13,6 @@ let prerr_endlinef fmt = Printf.ksprintf prerr_endline fmt
 
 let exe_name = Filename.basename Sys.executable_name
 
-module LocSet = Loc_sig.LocS.LSet
-
-module LocMap = Loc_sig.LocS.LMap
-
-module ALocSet = Loc_sig.ALocS.LSet
-
-module ALocMap = Loc_sig.ALocS.LMap
-
 module FilenameSet = Set.Make(File_key)
 
 module FilenameMap = MyMap.Make (File_key)

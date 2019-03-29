@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Utils_js
+open Loc_collections
 
 exception Props_not_found of Type.Properties.id
 exception Exports_not_found of Type.Exports.id

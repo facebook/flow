@@ -9,7 +9,7 @@ module Ast_utils = Flow_ast_utils
 
 module Ast = Flow_ast
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
@@ -1200,7 +1200,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
 
   let make_env outlined env =
     SMap.fold (fun n entries acc ->
-      Utils_js.LocMap.fold (fun loc kind acc ->
+      Loc_collections.LocMap.fold (fun loc kind acc ->
         let id = loc, n in
         let dt = eval kind in
         let decl_loc = fst kind in

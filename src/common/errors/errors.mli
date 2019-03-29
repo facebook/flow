@@ -131,7 +131,7 @@ module Json_output : sig
   val json_of_errors_with_context :
     strip_root: Path.t option ->
     stdin_file: stdin_file ->
-    suppressed_errors: (Loc.t printable_error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
     errors: ConcreteLocPrintableErrorSet.t ->
     warnings: ConcreteLocPrintableErrorSet.t ->
@@ -140,7 +140,7 @@ module Json_output : sig
 
   val full_status_json_of_errors :
     strip_root: Path.t option ->
-    suppressed_errors: (Loc.t printable_error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (Loc.t printable_error * Loc_collections.LocSet.t) list ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
     errors: ConcreteLocPrintableErrorSet.t ->
@@ -150,7 +150,7 @@ module Json_output : sig
   val print_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    suppressed_errors: (Loc.t printable_error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (Loc.t printable_error * Loc_collections.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->
@@ -161,7 +161,7 @@ module Json_output : sig
   val format_errors:
     out_channel:out_channel ->
     strip_root: Path.t option ->
-    suppressed_errors: (Loc.t printable_error * Utils_js.LocSet.t) list ->
+    suppressed_errors: (Loc.t printable_error * Loc_collections.LocSet.t) list ->
     pretty:bool ->
     ?version:json_version ->
     ?stdin_file:stdin_file ->

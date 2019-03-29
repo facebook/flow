@@ -10,11 +10,11 @@ type get_ast_return = (Loc.t Flow_ast.Comment.t list * (ALoc.t, ALoc.t) Flow_ast
 module Reqs : sig
   type t
   val empty: t
-  val add_impl: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
-  val add_dep_impl: string -> File_key.t -> (Context.sig_t * Utils_js.ALocSet.t) -> t -> t
-  val add_unchecked: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
-  val add_res: string -> File_key.t -> Utils_js.ALocSet.t -> t -> t
-  val add_decl:string -> File_key.t -> (Utils_js.ALocSet.t * Modulename.t) -> t -> t
+  val add_impl: string -> File_key.t -> Loc_collections.ALocSet.t -> t -> t
+  val add_dep_impl: string -> File_key.t -> (Context.sig_t * Loc_collections.ALocSet.t) -> t -> t
+  val add_unchecked: string -> File_key.t -> Loc_collections.ALocSet.t -> t -> t
+  val add_res: string -> File_key.t -> Loc_collections.ALocSet.t -> t -> t
+  val add_decl:string -> File_key.t -> (Loc_collections.ALocSet.t * Modulename.t) -> t -> t
 end
 
 val merge_component_strict:

@@ -9,7 +9,7 @@ module Ast = Flow_ast
 
 open Layout
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 (* There are some cases where expressions must be wrapped in parens to eliminate
    ambiguity. We pass whether we're in one of these special cases down through

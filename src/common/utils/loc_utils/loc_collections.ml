@@ -5,13 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module LocMap = Loc_collections.LocMap
+module LocSet = Loc_sig.LocS.LSet
 
-type names = string LocMap.t
-type t = {
-  names: names
-}
+module LocMap = Loc_sig.LocS.LMap
 
-let default = {
-  names = LocMap.empty
-}
+module ALocSet = Loc_sig.ALocS.LSet
+
+module ALocMap = Loc_sig.ALocS.LMap

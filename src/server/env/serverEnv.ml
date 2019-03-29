@@ -35,7 +35,7 @@ type errors = {
 type collated_errors = {
   collated_errorset: Errors.ConcreteLocPrintableErrorSet.t;
   collated_warning_map: Errors.ConcreteLocPrintableErrorSet.t Utils_js.FilenameMap.t;
-  collated_suppressed_errors: (Loc.t Errors.printable_error * Utils_js.LocSet.t) list;
+  collated_suppressed_errors: (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list;
 }
 
 type env = {

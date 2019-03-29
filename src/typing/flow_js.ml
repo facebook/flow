@@ -19,6 +19,7 @@
    is guaranteed to exist, and is usually reached in very few steps. *)
 
 open Utils_js
+open Loc_collections
 open Reason
 open Constraint
 open Type

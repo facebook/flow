@@ -27,7 +27,7 @@ type comment_attach =
 
 type comment_map =
   (comment_attach * (Loc.t, Loc.t) Flow_ast.Statement.t * Loc.t Flow_ast.Comment.t)
-  list Utils_js.LocMap.t
+  list Loc_collections.LocMap.t
 
 val normal_context: expression_context
 
