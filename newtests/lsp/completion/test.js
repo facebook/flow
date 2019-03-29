@@ -9,6 +9,9 @@ import {suite, test} from 'flow-dev-tools/src/test/Tester';
 export default suite(
   ({
     ideStartAndConnect,
+    ideStart,
+    ideRequest,
+    lspInitializeParams,
     ideRequestAndWaitUntilResponse,
     addFile,
     lspIgnoreStatusAndCancellation,
@@ -176,5 +179,99 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),
-  ],
+    test('textDocument/completion', [
+      addFile('params.js'),
+      ideStart({mode: 'lsp', needsFlowServer: true}),
+      ideRequest('initialize', {
+        ...lspInitializeParams,
+        capabilities: {
+          ...lspInitializeParams.capabilities,
+          textDocument: {
+            ...lspInitializeParams.capabilities.textDocument,
+            completion: {
+              completionItem: {
+                // snippet support needs to be enabled.
+                snippetSupport: true
+              }
+            }
+          }
+        }
+      }).waitUntilIDEMessage(30000, 'initialize'),
+      ideRequestAndWaitUntilResponse('textDocument/completion', {
+        textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>params.js'},
+        position: {line: 9, character: 15},
+        context: { triggerKind: 1 }
+      }).verifyAllIDEMessagesInStep(
+        [
+          (() => {
+            const expectedResponse = {
+              isIncomplete: false,
+              items: [
+                {
+                  label: 'x',
+                  kind: 6,
+                  detail: 'number',
+                  inlineDetail: 'number',
+                  insertTextFormat: 1
+                },
+                {
+                  label: 'foo',
+                  kind: 3,
+                  detail: '() => void',
+                  inlineDetail: '()',
+                  itemType: 'void',
+                  insertTextFormat: 2,
+                  textEdit: {
+                    range: {
+                      start: { line: 9, character: 14 },
+                      end: { line: 9, character: 16 }
+                    },
+                    newText: 'foo()'
+                  }
+                },
+                {
+                  label: 'exports',
+                  kind: 6,
+                  detail: '{||}',
+                  inlineDetail: '{||}',
+                  insertTextFormat: 1
+                },
+                {
+                  label: 'aFunction',
+                  kind: 3,
+                  detail: '(arg1: number, arg2: string) => null',
+                  inlineDetail: '(arg1: number, arg2: string)',
+                  itemType: 'null',
+                  insertTextFormat: 2,
+                  textEdit: {
+                    range: {
+                      start: { line: 9, character: 14 },
+                      end: { line: 9, character: 16 }
+                    },
+                    newText: 'aFunction(${1:arg1}, ${2:arg2})'
+                  }
+                },
+                {
+                  label: 'this',
+                  kind: 6,
+                  detail: 'empty',
+                  inlineDetail: 'empty',
+                  insertTextFormat: 1
+                },
+                {
+                  label: 'super',
+                  kind: 6,
+                  detail: 'typeof Object.prototype',
+                  inlineDetail: 'typeof Object.prototype',
+                  insertTextFormat: 1
+                }
+              ]
+            };
+            return `textDocument/completion${JSON.stringify(expectedResponse)}`
+          })()
+        ],
+        [...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+  ]
 );

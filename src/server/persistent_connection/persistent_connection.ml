@@ -232,3 +232,9 @@ let get_opened_files (clients: t) : SSet.t =
   List.fold_left per_client SSet.empty clients
 
 let get_id client = client.client_id
+
+let client_snippet_support (client: single_client) =
+  let open Lsp.Initialize in
+  match client.lsp_initialize_params with
+  | None -> false
+  | Some params -> params.client_capabilities.textDocument.completion.completionItem.snippetSupport
