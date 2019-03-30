@@ -42,7 +42,7 @@ let spec = {
     |> flag "--respect-pragma" no_arg ~doc:"" (* deprecated *)
     |> flag "--all" no_arg
         ~doc:"Ignore absence of @flow pragma"
-    |> flag "--trust" no_arg ~doc:"EXPERIMENTAL: Include trust information in output"
+    |> flag "--show-trust" no_arg ~doc:"EXPERIMENTAL: Include trust information in output"
     |> anon "file" (optional string)
   )
 }

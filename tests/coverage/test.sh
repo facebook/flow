@@ -41,5 +41,5 @@ echo "-----------------------------"
 echo "trust.js"
 echo "-----------------------------"
 echo
-assert_ok "$FLOW" coverage --trust --strip-root --pretty trust.js
-assert_ok "$FLOW" coverage --trust trust.js
+assert_ok "$FLOW" coverage --show-trust --strip-root --pretty trust.js
+assert_ok "$FLOW" coverage --show-trust trust.js
