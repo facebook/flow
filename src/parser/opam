@@ -15,7 +15,7 @@ depends: [
   "ocamlbuild" {build}
   "ppx_deriving" {build}
   "ppx_gen_rec" {build}
-  "sedlex"
+  "sedlex" {= "1.99.4"}
   "wtf8"
 ]
 available: [ocaml-version >= "4.03.0"]
