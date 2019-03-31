@@ -79,6 +79,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
     | Void -> Atom "void"
     | Null -> Atom "null"
     | Num _ -> Atom "number"
+    | BigNum _ -> Atom "bigint"
     | Str _ -> Atom "string"
     | Bool _ -> Atom "boolean"
     | Fun func ->
@@ -103,6 +104,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
         (counted_map (type_ ~depth) ts)
     | StrLit raw -> fuse (in_quotes raw)
     | NumLit raw -> Atom raw
+    | BigNumLit raw -> Atom raw
     | BoolLit value -> Atom (if value then "true" else "false")
     | TypeAlias ta -> type_alias ta
     | TypeOf (path, name) ->

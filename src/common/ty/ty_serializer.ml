@@ -59,6 +59,10 @@ let rec type_ t =
     return (builtin_from_string "$TEMPORARY$number"
       ~targs:(Loc.none, [Loc.none, T.NumberLiteral (num_lit lit)]))
   | Num None -> just T.Number
+  | BigNum (Some lit) ->
+    return (builtin_from_string "$TEMPORARY$bigint"
+      ~targs:(Loc.none, [Loc.none, T.BigIntLiteral (bignum_lit lit)]))
+  | BigNum None -> just T.BigInt
   | Str (Some lit) ->
     return (builtin_from_string "$TEMPORARY$string"
       ~targs:(Loc.none, [Loc.none, T.StringLiteral (str_lit lit)]))
@@ -68,6 +72,7 @@ let rec type_ t =
       ~targs:(Loc.none, [Loc.none, (T.BooleanLiteral lit)]))
   | Bool None -> just T.Boolean
   | NumLit lit -> just (T.NumberLiteral (num_lit lit))
+  | BigNumLit lit -> just (T.BigIntLiteral (bignum_lit lit))
   | StrLit lit -> just (T.StringLiteral (str_lit lit))
   | BoolLit lit -> just (T.BooleanLiteral lit)
   | Fun f -> function_ f >>| fun f -> (Loc.none, T.Function f)
@@ -277,6 +282,12 @@ and num_lit lit = {
   Ast.NumberLiteral.
   value = (try Pervasives.float_of_string lit with Failure _ -> 0.);
   raw = lit;
+}
+
+and bignum_lit lit = {
+  Ast.BigIntLiteral.
+  approx_value = (try Pervasives.float_of_string lit with Failure _ -> 0.);
+  bigint = lit;
 }
 
 and getter t = function_ {
