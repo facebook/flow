@@ -46,6 +46,8 @@ let rec exists = function
     | StrT (Literal (_, ""))
     | SingletonNumT (0., _)
     | NumT (Literal (_, (0., _)))
+    | SingletonBigNumT (0., _)
+    | BigNumT (Literal (_, (0., _)))
     )) -> DefT (r, trust, EmptyT Bottom)
 
   (* unknown things become truthy *)
@@ -74,6 +76,8 @@ let rec not_exists t = match t with
     | StrT (Literal (_, ""))
     | SingletonNumT (0., _)
     | NumT (Literal (_, (0., _)))
+    | SingletonBigNumT (0., _)
+    | BigNumT (Literal (_, (0., _)))
     )) -> t
 
   | AnyT (r, _) -> DefT (r, Trust.bogus_trust (), EmptyT Bottom)
@@ -90,6 +94,8 @@ let rec not_exists t = match t with
     | FunT _
     | SingletonNumT _
     | NumT (Literal _ | Truthy)
+    | SingletonBigNumT _
+    | BigNumT (Literal _ | Truthy)
     | MixedT Mixed_truthy
     )) -> DefT (r, trust, EmptyT Bottom)
 
@@ -231,6 +237,27 @@ let not_number_literal expected = function
   | DefT (r, trust, NumT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, trust, EmptyT Bottom)
   | t -> t
 
+let bigint_literal expected_loc sense expected t =
+  let _, expected_raw = expected in
+  let expected_desc = RBigIntLit expected_raw in
+  let lit_reason = replace_reason_const expected_desc in
+  match t with
+  | DefT (_, trust, BigNumT (Literal (_, (_, actual_raw)))) ->
+    if actual_raw = expected_raw then t
+    else DefT (mk_reason expected_desc expected_loc, trust, BigNumT (Literal (Some sense, expected)))
+  | DefT (r, trust, BigNumT Truthy) when snd expected <> "0" ->
+    DefT (lit_reason r, trust, BigNumT (Literal (None, expected)))
+  | DefT (r, trust, BigNumT AnyLiteral) ->
+    DefT (lit_reason r, trust, BigNumT (Literal (None, expected)))
+  | DefT (r, trust, MixedT _) ->
+    DefT (lit_reason r, trust, BigNumT (Literal (None, expected)))
+  | AnyT _ as t -> t
+  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
+
+let not_bigint_literal expected = function
+  | DefT (r, trust, BigNumT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, trust, EmptyT)
+  | t -> t
+
 let true_ t =
   let lit_reason = replace_reason_const (RBooleanLit true) in
   match t with
@@ -321,6 +348,21 @@ let not_number t =
   (* TODO: this is wrong, AnyT can be a number *)
   | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
   | DefT (_, trust, (NumT _)) -> DefT (reason_of_t t, trust, EmptyT Bottom)
+  | _ -> t
+
+let bigint t =
+  match t with
+  | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const BigNumT.desc r, trust, BigNumT Truthy)
+  | DefT (r, trust, MixedT _) -> BigNumT.why r trust
+  | DefT (_, _, (BigNumT _)) | AnyT _ -> t
+  | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
+  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
+
+let not_bigint t =
+  match t with
+  (* TODO: this is wrong, AnyT can be a number *)
+  | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT)
+  | DefT (_, trust, (BigNumT _)) -> DefT (reason_of_t t, trust, EmptyT)
   | _ -> t
 
 let object_ cx t =
