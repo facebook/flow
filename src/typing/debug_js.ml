@@ -2771,6 +2771,8 @@ let dump_error_message =
         spf "EBinaryInRHS (%s)" (dump_reason cx reason)
     | EArithmeticOperand reason ->
         spf "EArithmeticOperand (%s)" (dump_reason cx reason)
+    | EBigIntArithmeticOperand reason ->
+        spf "EBigIntArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason ->
         spf "EForInRHS (%s)" (dump_reason cx reason)
     | EObjectComputedPropertyAccess (reason1, reason2) ->
@@ -2866,6 +2868,7 @@ let dump_error_message =
       | SketchyNullBool -> "SketchyNullBool"
       | SketchyNullString -> "SketchyNullString"
       | SketchyNullNumber -> "SketchyNullNumber"
+      | SketchyNullBigInt -> "SketchyNullBigInt"
       | SketchyNullMixed -> "SketchyNullMixed"
       in
       spf "ESketchyNullLint {kind=%s; loc=%s; null_loc=%s; falsy_loc=%s}"
@@ -2879,6 +2882,12 @@ let dump_error_message =
       | SketchyNumberAnd -> "SketchyNumberAnd"
       in
       spf "ESketchyNumberLint (%s) (%s)" kind_str (dump_reason cx reason)
+    | ESketchyBigIntLint (kind, reason) ->
+      let open Lints in
+      let kind_str = match kind with
+      | SketchyNumberAnd -> "SketchyNumberAnd"
+      in
+      spf "ESketchyBigIntLint (%s) (%s)" kind_str (dump_reason cx reason)
     | EInvalidPrototype reason ->
         spf "EInvalidPrototype (%s)" (dump_reason cx reason)
     | EExperimentalOptionalChaining loc ->

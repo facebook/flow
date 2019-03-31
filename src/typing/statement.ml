@@ -4314,10 +4314,8 @@ and literal cx loc lit =
   | Number f ->
       DefT (annot_reason (mk_reason RNumber loc), make_trust (), NumT (Literal (None, (f, lit.raw))))
 
-  | BigInt _ ->
-      let reason = annot_reason (mk_reason (RBigIntLit lit.raw) loc) in
-      Flow.add_output cx (Error_message.EBigIntNotYetSupported reason);
-      AnyT.why AnyError reason
+  | BigInt f ->
+      DefT (annot_reason (mk_reason RBigInt loc), make_trust (), BigNumT (Literal (None, (f, lit.raw))))
 
   | RegExp _ ->
       Flow.get_builtin_type cx (annot_reason (mk_reason RRegExp loc)) "RegExp"
@@ -4332,8 +4330,16 @@ and unary cx loc = Ast.Expression.Unary.(function
       { operator = Not; argument; comments }
 
   | { operator = Plus; argument; comments } ->
-      let argument = expression cx argument in
-      NumT.at loc |> with_trust literal_trust, { operator = Plus; argument; comments }
+      let (_, argt), _ as argument = expression cx argument in
+      let reason = mk_reason (RCustom "arithmetic operation") loc in
+      begin match argt with
+      | DefT (_, _, BigNumT _) ->
+        Flow.flow cx (argt, AssertArithmeticOperandT reason);
+        (* TODO: should be empty? *)
+        AnyT.untyped reason
+      | _ -> NumT.at loc |> with_trust literal_trust
+      end,
+      { operator = Plus; argument; comments }
 
   | { operator = Minus; argument; comments } ->
       let (_, argt), _ as argument = expression cx argument in
@@ -4346,6 +4352,10 @@ and unary cx loc = Ast.Expression.Unary.(function
         let reason = repos_reason loc ~annot_loc:loc reason in
         let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
         DefT (reason, trust, NumT (Literal (sense, (value, raw))))
+      | DefT (reason, trust, BigNumT (Literal (sense, (value, raw)))) ->
+        let reason = repos_reason loc ~annot_loc:loc reason in
+        let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
+        DefT (reason, trust, BigNumT (Literal (sense, (value, raw))))
       | arg ->
         let reason = mk_reason (desc_of_t arg) loc in
         Tvar.mk_derivable_where cx reason (fun t ->
@@ -4355,10 +4365,19 @@ and unary cx loc = Ast.Expression.Unary.(function
       { operator = Minus; argument; comments }
 
   | { operator = BitNot; argument; comments } ->
-      let t = NumT.at loc |> with_trust literal_trust in
+      let t1 = NumT.at loc |> with_trust literal_trust in
+      let t2 = BigNumT.at loc |> with_trust literal_trust in
       let (_, argt), _ as argument = expression cx argument in
-      Flow.flow_t cx (argt, t);
-      t, { operator = BitNot; argument; comments}
+      let t = match argt with
+        | DefT (_, _, BigNumT _) ->
+          (* TODO: this can be simplified *)
+          Flow.flow_t cx (argt, t2);
+          t2
+        | _ ->
+          Flow.flow_t cx (argt, t1);
+          t1
+      in
+      t, { operator = BitNot; argument; comments }
 
   | { operator = Typeof; argument; comments } ->
       let argument = expression cx argument in
@@ -4479,7 +4498,6 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
 
   | LShift
   | RShift
-  | RShift3
   | Minus
   | Mult
   | Exp
@@ -4491,9 +4509,43 @@ and binary cx loc { Ast.Expression.Binary.operator; left; right } =
       let reason = mk_reason (RCustom "arithmetic operation") loc in
       let (_, t1), _ as left = expression cx left in
       let (_, t2), _ as right = expression cx right in
-      Flow.flow cx (t1, AssertArithmeticOperandT reason);
-      Flow.flow cx (t2, AssertArithmeticOperandT reason);
-      NumT.at loc |> with_trust literal_trust, { operator; left; right; }
+      let tout = match (t1, t2) with
+        | (DefT (_, _, BigNumT _), DefT (_, _, BigNumT _)) ->
+          Flow.flow cx (t1, AssertBigIntArithmeticOperandT reason);
+          Flow.flow cx (t2, AssertBigIntArithmeticOperandT reason);
+          BigNumT.at loc |> with_trust literal_trust
+        | (DefT (_, _, BigNumT _), _) ->
+          Flow.flow cx (t1, AssertBigIntArithmeticOperandT reason);
+          Flow.flow cx (t2, AssertBigIntArithmeticOperandT reason);
+          BigNumT.at loc |> with_trust literal_trust
+        | (_, DefT (_, _, BigNumT _)) ->
+          Flow.flow cx (t1, AssertBigIntArithmeticOperandT reason);
+          Flow.flow cx (t2, AssertBigIntArithmeticOperandT reason);
+          BigNumT.at loc |> with_trust literal_trust
+        | (_, _) ->
+          Flow.flow cx (t1, AssertArithmeticOperandT reason);
+          Flow.flow cx (t2, AssertArithmeticOperandT reason);
+          NumT.at loc |> with_trust literal_trust
+      in
+      tout, { operator; left; right; }
+
+  | RShift3 ->
+      let reason = mk_reason (RCustom "arithmetic operation") loc in
+      let (_, t1), _ as left = expression cx left in
+      let (_, t2), _ as right = expression cx right in
+      let tout = match (t1, t2) with
+        | (DefT (_, _, BigNumT _), DefT (_, _, BigNumT _)) ->
+          Flow.flow cx (t1, AssertBigIntArithmeticOperandT reason);
+          Flow.flow cx (t2, AssertBigIntArithmeticOperandT reason);
+          Flow.add_output cx (Error_message.EBigIntNoUnsignedRightShift reason);
+          (* TODO: not sure what should be here *)
+          EmptyT.why reason |> with_trust bogus_trust
+        | (_, _) ->
+          Flow.flow cx (t1, AssertArithmeticOperandT reason);
+          Flow.flow cx (t2, AssertArithmeticOperandT reason);
+          NumT.at loc |> with_trust literal_trust
+      in
+      tout, { operator; left; right; }
 
   | Plus ->
       let (_, t1), _ as left_ast = expression cx left in
@@ -5537,6 +5589,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
         | "boolean" -> Some BoolP
         | "function" -> Some FunP
         | "number" -> Some NumP
+        | "bigint" -> Some BigNumP
         | "object" -> Some ObjP
         | "string" -> Some StrP
         | "symbol" -> Some SymbolP
@@ -5701,6 +5754,18 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let lit, raw = extract_number_literal number_literal in
       let (_, val_t), _ as val_ast = expression cx value in
       literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit_loc, sense, (lit, raw)))
+        (fun expr -> reconstruct_ast expr val_ast)
+
+    (* special case equality relations involving bigints *)
+    | ((lit_loc, Expression.Literal { Literal.value = Literal.BigInt lit; raw; comments= _ }) as value),
+      expr ->
+      let (_, val_t), _ as val_ast = expression cx value in
+      literal_test loc ~sense ~strict expr val_t (SingletonBigNumP (lit_loc, sense, (lit, raw)))
+        (fun expr -> reconstruct_ast val_ast expr)
+    | expr,
+      ((lit_loc, Expression.Literal { Literal.value = Literal.BigInt lit; raw; comments= _ }) as value) ->
+      let (_, val_t), _ as val_ast = expression cx value in
+      literal_test loc ~sense ~strict expr val_t (SingletonBigNumP (lit_loc, sense, (lit, raw)))
         (fun expr -> reconstruct_ast expr val_ast)
 
     (* TODO: add Type.predicate variant that tests number equality *)
@@ -6922,6 +6987,8 @@ and check_default_pattern cx left right =
           update_excuses (fun excuse -> {excuse with bool_loc = Some right_loc})
         | Ast.Literal.Number 0. ->
           update_excuses (fun excuse -> {excuse with number_loc = Some right_loc})
+        | Ast.Literal.BigInt 0. ->
+          update_excuses (fun excuse -> {excuse with bigint_loc = Some right_loc})
         (* There's no valid default value for mixed to create an excuse. *)
         | _ -> ()
       end

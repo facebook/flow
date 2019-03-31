@@ -785,6 +785,7 @@ let ground_subtype = function
   | UnionT _, _ -> false
 
   | DefT (_, _, NumT _), UseT (_, DefT (_, _, NumT _))
+  | DefT (_, _, BigNumT _), UseT (_, DefT (_, _, BigNumT _))
   | DefT (_, _, StrT _), UseT (_, DefT (_, _, StrT _))
   | DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _))
   | DefT (_, _, NullT), UseT (_, DefT (_, _, NullT))
@@ -819,6 +820,11 @@ let dateiform = function
   | _ -> false
 
 let numberesque = function x -> numeric x || dateiform x
+
+let bignumeric = function
+  | DefT (_, _, BigNumT _) -> true
+  | DefT (_, _, SingletonBigNumT _) -> true
+  | _ -> false
 
 let function_like = function
   | DefT (_, _, ClassT _)
@@ -859,17 +865,38 @@ let function_like_op = function
   | t -> object_like_op t
 
 let equatable = function
+  (* number *)
   | DefT (_, _, NumT _), DefT (_, _, NumT _)
   | DefT (_, _, SingletonNumT _), DefT (_, _, SingletonNumT _)
   | DefT (_, _, SingletonNumT _), DefT (_, _, NumT _)
   | DefT (_, _, NumT _), DefT (_, _, SingletonNumT _)
 
+  (* bigint *)
+  | DefT (_, _, BigNumT _), DefT (_, _, BigNumT _)
+  | DefT (_, _, SingletonBigNumT _), DefT (_, _, SingletonBigNumT _)
+  | DefT (_, _, SingletonBigNumT _), DefT (_, _, BigNumT _)
+  | DefT (_, _, BigNumT _), DefT (_, _, SingletonBigNumT _)
+
+  (* bigint and number *)
+  | DefT (_, _, NumT _), DefT (_, _, BigNumT _)
+  | DefT (_, _, BigNumT _), DefT (_, _, NumT _)
+
+  | DefT (_, _, SingletonBigNumT _), DefT (_, _, SingletonNumT _)
+  | DefT (_, _, SingletonNumT _), DefT (_, _, SingletonBigNumT _)
+
+  | DefT (_, _, NumT _), DefT (_, _, SingletonBigNumT _)
+  | DefT (_, _, SingletonBigNumT _), DefT (_, _, NumT _)
+
+  | DefT (_, _, SingletonNumT _), DefT (_, _, BigNumT _)
+  | DefT (_, _, BigNumT _), DefT (_, _, SingletonNumT _)
+
+  (* string *)
   | DefT (_, _, StrT _), DefT (_, _, StrT _)
   | DefT (_, _, StrT _), DefT (_, _, SingletonStrT _)
   | DefT (_, _, SingletonStrT _), DefT (_, _, StrT _)
   | DefT (_, _, SingletonStrT _), DefT (_, _, SingletonStrT _)
 
-
+  (* boolean *)
   | DefT (_, _, BoolT _), DefT (_, _, BoolT _)
   | DefT (_, _, BoolT _), DefT (_, _, SingletonBoolT _)
   | DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _)
@@ -882,8 +909,8 @@ let equatable = function
   | DefT (_, _, NullT), _ | _, DefT (_, _, NullT)
     -> true
 
-  | DefT (_, _, (NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _)), _
-  | _, DefT (_, _, (NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _))
+  | DefT (_, _, (NumT _ | BigNumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonBigNumT _ | SingletonStrT _ | SingletonBoolT _)), _
+  | _, DefT (_, _, (NumT _ | BigNumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonBigNumT _ | SingletonStrT _ | SingletonBoolT _))
     -> false
 
   | _ -> true
@@ -2340,7 +2367,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* !x when x is of unknown truthiness *)
     | DefT (_, trust, BoolT None), NotT (reason, tout)
     | DefT (_, trust, StrT AnyLiteral), NotT (reason, tout)
-    | DefT (_, trust, NumT AnyLiteral), NotT (reason, tout) ->
+    | DefT (_, trust, NumT AnyLiteral), NotT (reason, tout)
+    | DefT (_, trust, BigNumT AnyLiteral), NotT (reason, tout) ->
       rec_flow_t cx trace (BoolT.at (aloc_of_reason reason) trust, tout)
 
     (* !x when x is falsy *)
@@ -2350,6 +2378,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, trust, SingletonStrT ""), NotT (reason, tout)
     | DefT (_, trust, NumT (Literal (_, (0., _)))), NotT (reason, tout)
     | DefT (_, trust, SingletonNumT (0., _)), NotT (reason, tout)
+    | DefT (_, trust, BigNumT (Literal (_, (0., _)))), NotT (reason, tout)
+    | DefT (_, trust, SingletonBigNumT (0., _)), NotT (reason, tout)
     | DefT (_, trust, NullT), NotT (reason, tout)
     | DefT (_, trust, VoidT), NotT (reason, tout) ->
       let reason = replace_reason_const (RBooleanLit true) reason in
@@ -2364,6 +2394,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       begin match left with
       | DefT (reason, _, NumT _) ->
         add_output cx ~trace (Error_message.ESketchyNumberLint (Lints.SketchyNumberAnd, reason))
+      | DefT (reason, _, BigNumT _) ->
+        add_output cx ~trace (Error_message.ESketchyBigIntLint (Lints.SketchyNumberAnd, reason))
       | _ -> ()
       end;
       (* a falsy && b ~> a
@@ -2659,7 +2691,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           use_op;
         })
 
-    | DefT (rl, _, NumT actual), UseT (use_op, DefT (ru, _, SingletonNumT expected)) ->
+    | DefT (rl, _, NumT actual), UseT (use_op, DefT (ru, _, SingletonNumT expected))
+    | DefT (rl, _, BigNumT actual), UseT (use_op, DefT (ru, _, SingletonBigNumT expected)) ->
       if TypeUtil.number_literal_eq expected actual
       then ()
       else
@@ -2917,6 +2950,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let def = match enum with
               | Enum.Str v -> SingletonStrT v
               | Enum.Num v -> SingletonNumT v
+              | Enum.BigNum v -> SingletonBigNumT v
               | Enum.Bool v -> SingletonBoolT v
               | Enum.Void -> VoidT
               | Enum.Null -> NullT in
@@ -2931,6 +2965,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             let def = match enum with
               | Enum.Str v -> SingletonStrT v
               | Enum.Num v -> SingletonNumT v
+              | Enum.BigNum v -> SingletonBigNumT v
               | Enum.Bool v -> SingletonBoolT v
               | Enum.Void -> VoidT
               | Enum.Null -> NullT in
@@ -3333,7 +3368,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        it would be in practice.
      *)
 
-    | DefT (_, _, (SingletonStrT _ | SingletonNumT _ | SingletonBoolT _)),
+    | DefT (_, _, (SingletonStrT _ | SingletonNumT _ | SingletonBigNumT _ | SingletonBoolT _)),
       ReposLowerT (reason, use_desc, u) ->
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
 
@@ -3342,6 +3377,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason, trust, SingletonNumT lit), _ ->
       rec_flow cx trace (DefT (reason, trust, NumT (Literal (None, lit))), u)
+
+    | DefT (reason, trust, SingletonBigNumT lit), _ ->
+      rec_flow cx trace (DefT (reason, trust, BigNumT (Literal (None, lit))), u)
 
     | DefT (reason, trust, SingletonBoolT b), _ ->
       rec_flow cx trace (DefT (reason, trust, BoolT (Some b)), u)
@@ -5885,6 +5923,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, AssertArithmeticOperandT _ ->
       add_output cx ~trace (Error_message.EArithmeticOperand (reason_of_t l))
 
+    | _, AssertBigIntArithmeticOperandT _ when bignumeric l -> ()
+    | _, AssertBigIntArithmeticOperandT _ ->
+      add_output cx ~trace (Error_message.EBigIntArithmeticOperand (reason_of_t l))
+
     (***********************************************************)
     (* coercion                                                *)
     (***********************************************************)
@@ -5911,6 +5953,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | Literal (_, (value, raw)) ->
         let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
         DefT (replace_reason_const RNumber reason_op, trust, NumT (Literal (None, (value, raw))))
+      | AnyLiteral
+      | Truthy ->
+        l
+      in
+      rec_flow_t cx trace (num, t_out)
+
+    | DefT (_, trust, BigNumT lit), UnaryMinusT (reason_op, t_out) ->
+      let num = match lit with
+      | Literal (_, (value, raw)) ->
+        let (value, raw) = Flow_ast_utils.negate_number_literal (value, raw) in
+        DefT (replace_reason_const RBigInt reason_op, trust, BigNumT (Literal (None, (value, raw))))
       | AnyLiteral
       | Truthy ->
         l
@@ -6493,6 +6546,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (get_builtin_type cx ~trace reason "Number",u)
 
     (***********************)
+    (* BigInt library call *)
+    (***********************)
+
+    | DefT (reason, _, BigNumT _), u when primitive_promoting_use_t u ->
+      rec_flow cx trace (get_builtin_type cx ~trace reason "BigInt",u)
+
+    (***********************)
     (* Boolean library call *)
     (***********************)
 
@@ -6581,7 +6641,9 @@ and flow_addition cx trace use_op reason flip l r u =
   begin match l, r with
   | DefT (_, _, StrT _), DefT (_, _, StrT _)
   | DefT (_, _, StrT _), DefT (_, _, NumT _)
-  | DefT (_, _, NumT _), DefT (_, _, StrT _) ->
+  | DefT (_, _, NumT _), DefT (_, _, StrT _)
+  | DefT (_, _, StrT _), DefT (_, _, BigNumT _)
+  | DefT (_, _, BigNumT _), DefT (_, _, StrT _) ->
     rec_flow_t cx trace (StrT.at loc |> with_trust bogus_trust, u)
 
   (* unreachable additions are unreachable *)
@@ -6612,6 +6674,14 @@ and flow_addition cx trace use_op reason flip l r u =
   | AnyT (_, src), _
   | _, AnyT (_, src) ->
     rec_flow_t cx trace (AnyT.at src loc, u)
+
+  | DefT (_, _, BigNumT _), _ ->
+    rec_flow cx trace (r, UseT (use_op, l));
+    rec_flow_t cx trace (BigNumT.at loc |> with_trust bogus_trust, u);
+
+  | _, DefT (_, _, BigNumT _) ->
+    rec_flow cx trace (l, UseT (use_op, r));
+    rec_flow_t cx trace (BigNumT.at loc |> with_trust bogus_trust, u);
 
   | DefT (_, _, NumT _), _ ->
     rec_flow cx trace (r, UseT (use_op, l));
@@ -7227,6 +7297,7 @@ and any_propagated cx trace any u =
   (* These types have no t_out, so can't propagate anything. Thus we short-circuit by returning
      true *)
   | AssertArithmeticOperandT _
+  | AssertBigIntArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
   | AssertForInRHST _
@@ -7623,6 +7694,7 @@ and check_polarity cx ?trace polarity = function
   | OpenT _
 
   | DefT (_, _, NumT _)
+  | DefT (_, _, BigNumT _)
   | DefT (_, _, StrT _)
   | DefT (_, _, BoolT _)
   | DefT (_, _, EmptyT _)
@@ -7632,6 +7704,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, _, VoidT)
   | DefT (_, _, SingletonStrT _)
   | DefT (_, _, SingletonNumT _)
+  | DefT (_, _, SingletonBigNumT _)
   | DefT (_, _, SingletonBoolT _)
   | DefT (_, _, CharSetT _)
     -> ()
@@ -8995,6 +9068,7 @@ and update_sketchy_null cx opt_loc t =
         | DefT (_, _, BoolT _) -> {exists_check with bool_loc = t_loc}
         | DefT (_, _, StrT _) -> {exists_check with string_loc = t_loc}
         | DefT (_, _, NumT _) -> {exists_check with number_loc = t_loc}
+        | DefT (_, _, BigNumT _) -> {exists_check with bigint_loc = t_loc}
         | DefT (_, _, MixedT _) -> {exists_check with mixed_loc = t_loc}
         | _ -> exists_check
       in
@@ -9132,6 +9206,18 @@ and predicate cx trace t l p = match p with
     let filtered_num = Type_filter.not_number_literal lit l in
     rec_flow_t cx trace (filtered_num, t)
 
+  (*********************)
+  (* _ ~ some bigint n *)
+  (*********************)
+
+  | SingletonBigNumP (expected_loc, sense, lit) ->
+    let filtered_num = Type_filter.bigint_literal expected_loc sense lit l in
+    rec_flow_t cx trace (filtered_num, t)
+
+  | NotP SingletonBigNumP (_, _, lit) ->
+    let filtered_num = Type_filter.not_bigint_literal lit l in
+    rec_flow_t cx trace (filtered_num, t)
+
   (***********************)
   (* typeof _ ~ "number" *)
   (***********************)
@@ -9141,6 +9227,16 @@ and predicate cx trace t l p = match p with
 
   | NotP NumP ->
     rec_flow_t cx trace (Type_filter.not_number l, t)
+
+  (***********************)
+  (* typeof _ ~ "bigint" *)
+  (***********************)
+
+  | BigNumP ->
+    rec_flow_t cx trace (Type_filter.bigint l, t)
+
+  | NotP BigNumP ->
+    rec_flow_t cx trace (Type_filter.not_bigint l, t)
 
   (***********************)
   (* typeof _ ~ "function" *)
@@ -9521,6 +9617,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
         let desc = RMatchingProp (key, match sentinel with
           | Enum.(One Str s) -> RStringLit s
           | Enum.(One Num (_, n)) -> RNumberLit n
+          | Enum.(One BigNum (_, n)) -> RBigIntLit n
           | Enum.(One Bool b) -> RBooleanLit b
           | Enum.(One Null) -> RNull
           | Enum.(One Void) -> RVoid
