@@ -598,6 +598,11 @@ end = struct
       return (Ty.Num (Some x))
     | DefT (_, _, NumT (Truthy | AnyLiteral | Literal _)) ->
       return (Ty.Num None)
+    | DefT (_, _, BigNumT (Literal (_, (_, x))))
+      when Env.preserve_inferred_literal_types env ->
+      return (Ty.BigNum (Some x))
+    | DefT (_, _, BigNumT (Truthy | AnyLiteral | Literal _)) ->
+      return (Ty.BigNum None)
     | DefT (_, _, StrT (Literal (_, x)))
       when Env.preserve_inferred_literal_types env ->
       return (Ty.Str (Some x))
@@ -610,6 +615,7 @@ end = struct
     | DefT (_, _, EmptyT _) -> return (mk_empty Ty.EmptyType)
     | DefT (_, _,NullT) -> return Ty.Null
     | DefT (_, _,SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
+    | DefT (_, _,SingletonBigNumT (_, lit)) -> return (Ty.BigNumLit lit)
     | DefT (_, _,SingletonStrT lit) -> return (Ty.StrLit lit)
     | DefT (_, _,SingletonBoolT lit) -> return (Ty.BoolLit lit)
     | MaybeT (_, t) ->

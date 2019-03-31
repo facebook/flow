@@ -330,6 +330,8 @@ let resolve_builtin_class cx ?trace = function
     get_builtin_type cx ?trace reason "Boolean" |> resolve_type cx
   | DefT (reason, _, NumT _) ->
     get_builtin_type cx ?trace reason "Number"  |> resolve_type cx
+  | DefT (reason, _, BigNumT _) ->
+    get_builtin_type cx ?trace reason "BigInt"  |> resolve_type cx
   | DefT (reason, _, StrT _) ->
     get_builtin_type cx ?trace reason "String"  |> resolve_type cx
   | DefT (reason, _, ArrT arrtype) ->
@@ -391,6 +393,9 @@ let rec extract_type cx this_t = match this_t with
   | DefT (reason, _, SingletonNumT _)
   | DefT (reason, _, NumT _) ->
       get_builtin_type cx reason "Number"  |> extract_type cx
+  | DefT (reason, _, SingletonBigNumT _)
+  | DefT (reason, _, BigNumT _) ->
+      get_builtin_type cx reason "BigInt"  |> extract_type cx
   | DefT (reason, _, SingletonBoolT _)
   | DefT (reason, _, BoolT _) ->
       get_builtin_type cx reason "Boolean" |> extract_type cx

@@ -36,6 +36,7 @@
 type hash =
   (* def types *)
   | NumH
+  | BigNumH
   | StrH
   | BoolH
   | EmptyH
@@ -72,6 +73,7 @@ type hash =
   | KeysH
   | SingletonStrH
   | SingletonNumH
+  | SingletonBigNumH
   | SingletonBoolH
   | TypeH
   | AnnotH
@@ -107,6 +109,7 @@ type hash =
   | ComparatorH
   | UnaryMinusH
   | AssertArithmeticOperandH
+  | AssertBigIntArithmeticOperandH
   | AssertBinaryInLHSH
   | AssertBinaryInRHSH
   | AssertForInRHSH
@@ -191,10 +194,12 @@ let hash_of_def_ctor = Type.(function
   | MixedT _ -> MixedH
   | NullT -> NullH
   | NumT _ -> NumH
+  | BigNumT _ -> BigNumH
   | ObjT _ -> ObjH
   | ReactAbstractComponentT _ -> ReactAbstractComponentH
   | SingletonBoolT _ -> SingletonBoolH
   | SingletonNumT _ -> SingletonNumH
+  | SingletonBigNumT _ -> SingletonBigNumH
   | SingletonStrT _ -> SingletonStrH
   | StrT _ -> StrH
   | TypeT _ -> TypeH
@@ -267,6 +272,7 @@ let hash_of_use_ctor = Type.(function
   | ComparatorT _ -> ComparatorH
   | UnaryMinusT _ -> UnaryMinusH
   | AssertArithmeticOperandT _ -> AssertArithmeticOperandH
+  | AssertBigIntArithmeticOperandT _ -> AssertBigIntArithmeticOperandH
   | AssertBinaryInLHST _ -> AssertBinaryInLHSH
   | AssertBinaryInRHST _ -> AssertBinaryInRHSH
   | AssertForInRHST _ -> AssertForInRHSH
