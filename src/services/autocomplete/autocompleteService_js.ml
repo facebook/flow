@@ -95,13 +95,13 @@ let lsp_completion_of_type (ty: Ty.t) =
   match ty with
   | Ty.InterfaceDecl _ -> Some Interface
   | Ty.ClassDecl _ -> Some Class
-  | Ty.(StrLit _ | NumLit _ | BoolLit _) -> Some Value
+  | Ty.(StrLit _ | NumLit _ | BigNumLit _ | BoolLit _) -> Some Value
   | Ty.Fun _ -> Some Function
   | Ty.TypeAlias _
   | Ty.Union _ -> Some Enum
   | Ty.Module _ -> Some Module
   | Ty.(Tup _ | Bot _ | Null | Obj _ | Inter _ | TVar _ | Bound _ | Generic _ |
-      Any _ | Top | Void | Num _ | Str _ | Bool _ | Arr _ | TypeOf _ |
+      Any _ | Top | Void | Num _ | BigNum _ | Str _ | Bool _ | Arr _ | TypeOf _ |
       Utility _ | Mu _
     ) ->  Some Variable
 
