@@ -15,7 +15,7 @@ depends: [
   "ocamlbuild" {build}
   "ocamlfind" {build}
   "core_kernel" { = "v0.11.1" }
-  "sedlex" { >= "1.99.4" }
+  "sedlex" { = "1.99.4" }
   "lwt" { >= "3.3.0" }
   "lwt_log" { = "1.0.0" }
   "lwt_ppx" { >= "1.1.0" }
