@@ -6701,7 +6701,8 @@ and flow_addition cx trace use_op reason flip l r u =
 (**
  * relational comparisons like <, >, <=, >=
  *
- * typecheck iff either of the following hold:
+ * typecheck if either of the following hold:
+ *   bigint <> bigint = bigint
  *   number <> number = number
  *   string <> string = string
  **)
@@ -6710,6 +6711,9 @@ and flow_comparator cx trace reason flip l r =
   let (l, r) = if flip then (r, l) else (l, r) in
   match l, r with
   | DefT (_, _, StrT _), DefT (_, _, StrT _) -> ()
+  | (_, _) when bignumeric l && bignumeric r -> ()
+  | (_, _) when bignumeric l && numberesque r -> ()
+  | (_, _) when numberesque l && bignumeric r -> ()
   | (_, _) when numberesque l && numberesque r -> ()
   | _ ->
     let reasons = FlowError.ordered_reasons (reason_of_t l, reason_of_t r) in
