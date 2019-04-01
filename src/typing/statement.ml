@@ -3514,8 +3514,7 @@ and subscript =
               Error_message.(EUnsupportedSyntax (loc, RequireDynamicArgument));
           AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
       ) in
-      (* TODO(vijayramamurthy) type of require ? *)
-      let id_t = Unsoundness.at Chain callee_loc in
+      let id_t = bogus_trust () |> MixedT.at callee_loc in
       ex, lhs_t, acc, (
         (loc, lhs_t),
         call_ast { Call.
@@ -3596,8 +3595,7 @@ and subscript =
           AnyT.at AnyError loc,
           List.map Tast_utils.error_mapper#expression_or_spread arguments
       ) in
-      (* TODO(vijayramamurthy) does "requireLazy" have a type? *)
-      let id_t = Unsoundness.at Chain callee_loc in
+      let id_t = bogus_trust () |> MixedT.at callee_loc in
       ex, lhs_t, acc, (
         (loc, lhs_t),
         call_ast { Call.
@@ -3621,7 +3619,7 @@ and subscript =
         in
         ex, lhs_t, acc, (
           (loc, lhs_t),
-          let t = Unsoundness.at Chain callee_loc in
+          let t = bogus_trust () |> MixedT.at callee_loc in
           call_ast { Call.
             (* TODO(vijayramamurthy): what is the type of `Object.name` ? *)
             callee = (callee_loc, t), Member { Member.
@@ -3724,8 +3722,7 @@ and subscript =
           let reason_call = mk_reason (RMethodCall None) loc in
           let reason_lookup = mk_reason (RProperty None) lookup_loc in
           let (_, elem_t), _ as expr = expression cx expr in
-          (* TODO: (pvekris) T33113417 make type more precise *)
-          (Unsoundness.at Chain lookup_loc,
+          (bogus_trust () |> MixedT.at lookup_loc,
           Tvar.mk_where cx reason_call (fun t ->
             let frame = Env.peek_frame () in
             let funtype = mk_methodcalltype ot targts argts t ~frame in
@@ -4049,7 +4046,7 @@ and subscript =
             member_ast { Member._object = _object_ast; property; }
           )
         | ContinueChain ->
-          let tout = Unsoundness.at Chain ploc in
+          let tout = bogus_trust () |> MixedT.at ploc in
           let opt_use = get_prop_opt_use ~is_cond expr_reason ~use_op (prop_reason, name) in
           let step = ref (loc, opt_use, tout) in
           let lhs, lhs_t, chain, ((_, tobj), _ as _object_ast) =
@@ -4101,7 +4098,7 @@ and subscript =
             member_ast { Member._object = _object_ast; property; }
           )
         | ContinueChain ->
-          let tout = Unsoundness.at Chain ploc in
+          let tout = bogus_trust () |> MixedT.at ploc in
           let opt_use = get_private_field_opt_use expr_reason ~use_op name in
           let step = ref (loc, opt_use, tout) in
           let lhs, lhs_t, chain, ((_, tobj), _ as _object_ast) =
