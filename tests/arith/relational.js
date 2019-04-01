@@ -1,6 +1,8 @@
 /* @flow */
 
 (1 < 2);
+(1n < 2);
+(1 < 2n);
 (1 < "foo"); // error
 ("foo" < 1); // error
 ("foo" < "bar");
