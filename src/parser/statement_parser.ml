@@ -1515,7 +1515,8 @@ module Statement
         begin match Peek.ith_token ~i:1 env with
         (* `import type, { other, names } from "ModuleName";` *)
         | T_COMMA
-        (* `import type from "ModuleName";` *)
+        (* Importing the exported value named "type." This is not a type-import.
+         * `import type from "ModuleName";` *)
         | T_IDENTIFIER { raw = "from"; _ } ->
           with_default ImportValue env
         | T_MULT ->
