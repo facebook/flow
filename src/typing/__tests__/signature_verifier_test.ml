@@ -412,7 +412,7 @@ let tests_data = [
 
   name "object_spread",
   ["module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' }"],
-  ["Unexpected object spread @ (1, 27) to (1, 40)"],
+  [],
   [];
 
   name "reference_expression1",

@@ -194,6 +194,14 @@ let tests = "signature_generator" >::: ([
     ["module.exports = { x: 'hello' }"]
     ["declare module.exports: $TEMPORARY$object<{|x: $TEMPORARY$string<'hello'>|}>;"];
 
+  "module_exports_object_with_spread" >:: mk_signature_generator_test
+    ["const y = { y: 'world'};";
+     "module.exports = { x: 'hello', ...y }"]
+    ["declare var y: $TEMPORARY$object<{|y: $TEMPORARY$string<'world'>|}>;";
+     "declare module.exports: $TEMPORARY$object<";
+     "  {|x: $TEMPORARY$string<'hello'>, ...typeof y|},";
+     ">;"];
+
   "module_exports_array_one" >:: mk_signature_generator_test
     ["module.exports = ['hello']"]
     ["declare module.exports: $TEMPORARY$array<$TEMPORARY$string<'hello'>>;"];

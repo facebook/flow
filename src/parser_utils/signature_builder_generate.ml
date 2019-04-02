@@ -149,6 +149,7 @@ module T = struct
     | OMethod of object_key * (Loc.t * function_t)
     | OGet of object_key * (Loc.t * function_t)
     | OSet of object_key * (Loc.t * function_t)
+    | OSpread of (Loc.t * expr_type)
 
   and array_element_t =
     | AInit of (Loc.t * expr_type)
@@ -249,6 +250,7 @@ module T = struct
         | _, OGet (object_key, _)
         | _, OSet (object_key, _)
           -> abs_object_key object_key
+        | _, OSpread _ -> assert false
       in
       fun op1 op2 ->
         Pervasives.compare (abs_object_key op1) (abs_object_key op2) in
@@ -471,6 +473,9 @@ module T = struct
         proto = false;
         _method = false;
         variance = None;
+      })
+    | loc, OSpread expr_type -> Ast.Type.Object.SpreadProperty (loc, {
+        Ast.Type.Object.SpreadProperty.argument = type_of_expr_type outlined expr_type;
       })
 
   and type_of_function_t outlined = function
@@ -1121,13 +1126,17 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           } = fn in
           loc, T.OSet (x, (fn_loc, function_ generator tparams params return body))
     in
+    let object_spread_property =
+      let open Ast.Expression.Object.SpreadProperty in
+      fun (loc, { argument; }) -> loc, T.OSpread (literal_expr argument)
+    in
     function
       | [] -> None
       | property::properties ->
         let open Ast.Expression.Object in
         try Some (Nel.map (function
           | Property p -> object_property p
-          | SpreadProperty _p -> assert false
+          | SpreadProperty p -> object_spread_property p
         ) (property, properties))
         with _ -> None
 
