@@ -149,10 +149,10 @@ The function's argument allows `string` values in its array, but in this case Fl
 
 As an example, this would not work:
 
-```
+```js
 // @flow
 
-const fn = (arr: Array<string | number>) => {
+const fn = (arr: Array<string | number>) => {
   // arr.push(123) NOTE! Array<string> passed in and after this it would also include numbers if allowed
   return arr;
 };
@@ -164,9 +164,9 @@ fn(arr); // Error!
 
 but with `$ReadOnlyArray` you can achieve what you were looking for:
 
-```
+```js
 // @flow
-const fn = (arr: $ReadOnlyArray<string | number>) => {
+const fn = (arr: $ReadOnlyArray<string | number>) => {
   // arr.push(321) NOTE! Since you are using $ReadOnlyArray<...> you cannot push anything to it
   return arr;
 };
@@ -184,25 +184,25 @@ The function argument allows `string` values in its field, but in this case Flow
 
 As an example, this would not work:
 
-```
+```js
 // @flow
 
-const fn = (obj: {| a: string | number |}) => {
+const fn = (obj: {| a: string | number |}) => {
   // obj.a = 123;
   return obj;
 };
 
-const object: {| a: string |} = {a: 'str' };
+const object: {| a: string |} = {a: 'str' };
 
 fn(object); // Error!
 ```
 
 but with a covariant property you can achieve what you were looking for:
 
-```
+```js
 // @flow
-const fn = (obj: {| +a: string | number |}) => {
-  // obj.a = 123 NOTE! Since you are using covariant {| +a: string | number |}, you can't mutate it
+const fn = (obj: {| +a: string | number |}) => {
+  // obj.a = 123 NOTE! Since you are using covariant {| +a: string | number |}, you can't mutate it
   return obj;
 };
 
@@ -221,7 +221,7 @@ There are two potential reasons:
 
 Broken example:
 
-```
+```js
 /* @flow */
 
 type Action =
@@ -239,7 +239,7 @@ const fn = ({type, payload}: Action) => {
 
 Fixed example:
 
-```
+```js
 /* @flow */
 
 type Action =
