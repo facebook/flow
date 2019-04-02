@@ -4551,6 +4551,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       }, use_op) in
       rec_flow cx trace (t1, UseT (use_op, t2))
 
+    | DefT (_, _, InstanceT _), UseT (use_op, DefT (r2, _, ArrT (ArrayAT (elemt, _)))) ->
+      let arrt = get_builtin_typeapp cx ~trace r2 "Array" [elemt] in
+      rec_flow cx trace (l, UseT (use_op, arrt))
+
+    | DefT (_, _, InstanceT _), UseT (use_op, DefT (r2, _, ArrT (ROArrayAT elemt))) ->
+      let arrt = get_builtin_typeapp cx ~trace r2 "$ReadOnlyArray" [elemt] in
+      rec_flow cx trace (l, UseT (use_op, arrt))
+
     (**************************************************)
     (* instances of classes follow declared hierarchy *)
     (**************************************************)
@@ -9148,6 +9156,14 @@ and instanceof_test cx trace result = function
   (** We hit the root class, so C is not a subclass of A **)
   | true, DefT (_, _, NullT), InternalT (ExtendsT (r, _, a)) ->
     rec_flow_t cx trace (reposition cx ~trace (aloc_of_reason r) a, result)
+
+  (** If we're refining mixed with instanceof A, then flow A to the result *)
+  | true,
+    DefT (_, _, MixedT _),
+    DefT (class_reason, _, ClassT (DefT (instance_reason, _, (InstanceT _)) as a)) ->
+    let desc = desc_of_reason instance_reason in
+    let loc = aloc_of_reason class_reason in
+    rec_flow_t cx trace (reposition cx ~trace ~desc loc a, result)
 
   (** Prune the type when any other `instanceof` check succeeds (since this is
       impossible). *)

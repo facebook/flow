@@ -68,6 +68,51 @@ References:
                                         ^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- mixed.js:6:6
+
+Cannot cast `x` to number because `C` [1] is incompatible with number [2].
+
+   mixed.js:6:6
+   6|     (x: number);
+           ^
+
+References:
+   mixed.js:5:20
+   5|   if (x instanceof C) {
+                         ^ [1]
+   mixed.js:6:9
+   6|     (x: number);
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- mixed.js:40:5
+
+Cannot get `x.p` because property `p` is missing in `Object` [1].
+
+   mixed.js:40:5
+   40|     x.p;
+           ^^^
+
+References:
+   mixed.js:39:20
+   39|   if (x instanceof Object) {
+                          ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- mixed.js:46:5
+
+Cannot call `x` because a callable signature is missing in `Function` [1].
+
+   mixed.js:46:5
+   46|     x();
+           ^^^
+
+References:
+   mixed.js:45:20
+   45|   if (x instanceof Function) {
+                          ^^^^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- objproto.js:4:4
 
 Cannot cast `c.p` to empty because string [1] is incompatible with empty [2].
@@ -86,4 +131,4 @@ References:
 
 
 
-Found 6 errors
+Found 9 errors
