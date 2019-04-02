@@ -143,7 +143,7 @@ const isNumber = (valueToRefine: ?number): %checks => typeof valueToRefine === '
 if (isNumber(val)) add(val, 2);
 ```
 
-### Why can't I pass an `Array<string>` to a function that takes an `Array<string | number>` <a class="toc" id="fun"></a>
+### Why can't I pass an `Array<string>` to a function that takes an `Array<string | number>` <a class="toc" id="toc-why-can-t-i-pass-an-array-to-a-function-that-takes-an-array" href="#toc-why-can-t-i-pass-an-array-to-a-function-that-takes-an-array"></a>
 
 The function's argument allows `string` values in its array, but in this case Flow prevents the original array from receiving a `number`. Inside the function, you would be able to push a `number` to the argument array, causing the type of the original array to no longer be accurate. You can fix this error by changing the type of the argument to `$ReadOnlyArray<string | number>`. This prevents the function body from pushing anything to the array, allowing it to accept narrower types.
 
@@ -178,7 +178,7 @@ fn(arr);
 
 Example ([https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQiSgOoEsAuALWBXLUAJwFMBDAE1gDtoBPALmQGNaBnIyGgRlAF5QACnLFijUAEEx5egB5OxDDQDmoAD4ACmvgC2AI1LEAfAEoBx0AG9EASFSjiAOgAO+djiE8ATAGZzqAByAPIAKgCiAIRSMvKKyiqWLuTs7KSUoMqg5DQZ5JBYRqC4GOyZRPAE0HnQ7LCZNCzQ+JSkoDoGRmUYkNnQcPDpdmRY+MQ02WIA3IgAvqwcRI48EtLEsgpYSqqWggDaAOTk+iwHALozKGDcPCJiplOgqHIAtG+g+I2wurqkNFywYigIzEQHsSKRZCoN4w2Fw+EIxFIqFgABKFGodHoLwAbl0MLRmIg2DROKBuN4BMJHBIACToqjBLFrDbxVQabR6Qwmcz8Sw2UCCp5gRyudyeXzeHgBMAhCLRADKyhYbXoBEmbXcCVA9IxTIYLPkTmNljV+FALByNFgRDcHmyNHoJXZWHq2GGpFG40mxDmC1JSzE3lWsU220SVMOx1OF2QFLuxG8DyAA))
 
-### Why can't I pass `{ a: string }` to a function that takes `{ a: string | number }` <a class="toc"></a>
+### Why can't I pass `{ a: string }` to a function that takes `{ a: string | number }` <a class="toc" id="toc-why-can-t-i-pass-a-string-to-a-function-that-takes-a-string-number" href="#toc-why-can-t-i-pass-a-string-to-a-function-that-takes-a-string-number"></a>
 
 The function argument allows `string` values in its field, but in this case Flow prevents the original object from having a `number` written to it. Within the body of the function you would be able to mutate the object so that the property `a` would receive a `number`, causing the type of the original object to no longer be accurate. You can fix this error by making the property covariant (read-only): `{ +a: string | number }`. This prevents the function body from writing to the property, making it safe to pass more restricted types to the function.
 
@@ -213,7 +213,7 @@ fn(object);
 
 Example ([https://flow.org/try](https://flow.org/try/#0PTAEAEDMBsHsHcBQiSgOoEsAuALWBXLUAJwFMBDAE1gDtoBPALmQGNaBnIyGgRlAF5QAClgAjAFaNQAbwA+oclM7EMNAOahZAApr4AtqNLEtsgL4BKAQD4ZiAJCox4gHTkBoHgCYAzKBAA5AHkAFQBRAEIZbUVQZVUNM1AAB3J2dlJKUFUFGkzySCwjUFwMdiyieAJoTMNQXQMijEgFaDh4DPsyLHxiGlAnAG5EU1YOIidSFiweKTktGLj1TVN3aRiAcmV10FMhlDBuHhEJSenzAb8wAB4AWjvQfBo2PT1SGiJsyFhiUCNib-Y4XCyFQdzB4IhkKh0JhILAACUKNQ6PQbgA3IzsDC0ZiINg0TigbiedzHSRRUAAagWWBUS209UMPzMln4NmkiFAoAcYCcrncXl8ARCEVAAGVVCxSKB6AQFGQHlilmw0eQVOR3lEtNSlLT4podPomcsADQyuUsDXrIh6QjkQrlTqkbq9foSIYjPFjN3iU6eWbyGl0hIrQTSBRSTa07a7ZDEsl+85AA))
 
-### Why can't I refine a union of objects? <a class="toc"></a>
+### Why can't I refine a union of objects? <a class="toc" id="toc-why-can-t-i-refine-a-union-of-objects" href="#toc-why-can-t-i-refine-a-union-of-objects"></a>
 
 There are two potential reasons:
 1. You are using inexact objects.
