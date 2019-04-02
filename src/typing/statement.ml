@@ -1829,7 +1829,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       let type_exports = SMap.fold (fun x entry acc ->
         match entry with
         (* TODO we may want to provide a location here *)
-        | Type {_type; _} -> SMap.add x (None, _type) acc
+        | Type {type_; _} -> SMap.add x (None, type_) acc
         | Value _ | Class _ -> acc
       ) module_scope.entries SMap.empty in
       set_module_t cx reason (fun t ->

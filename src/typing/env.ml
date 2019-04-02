@@ -670,14 +670,14 @@ let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
 let init_const = init_value_entry Entry.(Const ConstVarBinding)
 
 (* update type alias to reflect initialization in code *)
-let init_type cx name _type loc =
+let init_type cx name type_ loc =
   if not (is_excluded name)
   then Entry.(
     let scope, entry = find_entry cx name loc in
     match entry with
     | Type ({ type_state = State.Declared; _ } as t)->
-      Flow.flow_t cx (_type, t._type);
-      let new_entry = Type { t with type_state = State.Initialized; _type } in
+      Flow.flow_t cx (type_, t.type_);
+      let new_entry = Type { t with type_state = State.Initialized; type_ } in
       Scope.add_entry name new_entry scope
     | _ ->
       (* Incompatible or non-redeclarable new and previous entries.
@@ -777,7 +777,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
     AnyT.at AnyError (entry_loc entry)
 
   | Type t ->
-    t._type
+    t.type_
 
   | Class _ -> assert_false "Internal Error: Classes should only be read using get_class_entries"
 

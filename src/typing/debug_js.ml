@@ -1543,13 +1543,13 @@ let json_of_scope = Scope.(
   in
   let json_of_value json_cx = check_depth json_of_value_impl json_cx in
 
-  let json_of_type_impl json_cx { Entry.type_state; type_loc; _type;
+  let json_of_type_impl json_cx { Entry.type_state; type_loc; type_;
                                   type_binding_kind = _ } =
     JSON_Object [
       "entry_type", JSON_String "Type";
       "type_state", JSON_String (State.to_string type_state);
       "type_loc", json_of_aloc ~strip_root:json_cx.strip_root ~offset_table:None type_loc;
-      "_type", _json_of_t json_cx _type;
+      "type_", _json_of_t json_cx type_;
     ]
   in
   let json_of_type json_cx = check_depth json_of_type_impl json_cx in
@@ -2306,12 +2306,12 @@ let string_of_scope_entry = Scope.(
       (dump_t cx general)
   in
 
-  let string_of_type_binding cx { Entry.type_state; type_loc; _type;
+  let string_of_type_binding cx { Entry.type_state; type_loc; type_;
                                   type_binding_kind = _ } =
-    spf "{ type_state: %s; type_loc: %S; _type: %s }"
+    spf "{ type_state: %s; type_loc: %S; type_: %s }"
       (State.to_string type_state)
       (string_of_aloc type_loc)
-      (dump_t cx _type)
+      (dump_t cx type_)
   in
 
   fun cx -> Entry.(function

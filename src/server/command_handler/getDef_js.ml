@@ -33,7 +33,7 @@ let id state name =
        resolve to (rather than to the import bindings, which would themselves in
        turn point to the exports they resolve to) *)
     state.getdef_type <- Some (Gdval v)
-  | Some (Type { type_binding_kind = ImportTypeBinding; _type = v; _ }) ->
+  | Some (Type { type_binding_kind = ImportTypeBinding; type_ = v; _ }) ->
     (* similarly for import type bindings *)
     state.getdef_type <- Some (Gdval v)
   | Some entry ->
