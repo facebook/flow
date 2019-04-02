@@ -1,0 +1,20 @@
+--- type-at-pos_expression.exp
++++ type-at-pos_expression.out
+@@ -269,7 +269,7 @@
+   "end":24
+ }
+ literals.js:6:7 = {
+-  "type":"string",
++  "type":"\"A\"",
+   "reasons":[],
+   "loc":{
+     "source":"literals.js",
+@@ -329,7 +329,7 @@
+   "end":7
+ }
+ literals.js:10:7 = {
+-  "type":"number | string | boolean",
++  "type":"number | boolean | \"A\"",
+   "reasons":[],
+   "loc":{
+     "source":"literals.js",
