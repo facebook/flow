@@ -731,6 +731,12 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source
       ~expected:"5 - gotRenamed" ~mapper:(new useless_mapper)
   end;
+  "interface_type" >:: begin fun ctxt ->
+      let source = "type Foo = interface { rename() : string }" in
+      assert_edits_equal ctxt ~edits:[((23, 29), "gotRenamed")]
+        ~source ~expected:"type Foo = interface { gotRenamed() : string }"
+      ~mapper:(new useless_mapper)
+  end;
   "new" >:: begin fun ctxt ->
     let source = "new rename()" in
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source ~expected:"new gotRenamed()"

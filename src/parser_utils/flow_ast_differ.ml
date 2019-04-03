@@ -1643,6 +1643,7 @@ let program (algo : diff_algorithm)
       match type1, type2 with
       | NumberLiteral n1, NumberLiteral n2 -> Some (diff_if_changed (number_literal_type loc1) n1 n2)
       | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
+      | Interface i1, Interface i2 -> interface_type i1 i2
       | Generic g1, Generic g2 -> generic_type g1 g2
       | Intersection (t0, t1, ts), Intersection (t0', t1', ts') ->
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
@@ -1654,6 +1655,17 @@ let program (algo : diff_algorithm)
       | _ -> None in
     Option.value type_diff
       ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
+
+  and interface_type
+      (it1: (Loc.t, Loc.t) Ast.Type.Interface.t)
+      (it2: (Loc.t, Loc.t) Ast.Type.Interface.t)
+      : node change list option =
+    let open Ast.Type.Interface in
+    let { extends = extends1; body = (_loc1, body1) } = it1 in
+    let { extends = extends2; body = (_loc2, body2) } = it2 in
+    let extends_diff = diff_and_recurse_no_trivial generic_type_with_loc extends1 extends2 in
+    let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
+    join_diff_list [extends_diff; body_diff]
 
   and generic_type
       (gt1: (Loc.t, Loc.t) Ast.Type.Generic.t)
