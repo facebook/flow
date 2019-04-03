@@ -447,7 +447,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ new_react.js:21:9
 
-Cannot get `this.props.y[0]` because an indexer property is missing in undefined [1].
+Cannot get `this.props.y[0]` because an index signature declaring the expected key / value type is missing in
+undefined [1].
 
    new_react.js:21:9
    21|         this.props.y[0];

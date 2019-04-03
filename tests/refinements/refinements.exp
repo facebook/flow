@@ -48,7 +48,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:12:3
 
-Cannot get `x[0]` because an indexer property is missing in null or undefined [1].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    bool.js:12:3
    12|   x[0]; // error on null and undefined
@@ -62,7 +63,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:18:7
 
-Cannot get `x[0]` because an indexer property is missing in null or undefined [1].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in null or
+undefined [1].
 
    bool.js:18:7
    18|       x[0]; // error on null and undefined
@@ -1234,8 +1236,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ not.js:11:5
 
 Cannot get `x[0]` because:
- - an indexer property is missing in `Number` [1].
- - an indexer property is missing in null or undefined [2].
+ - an index signature declaring the expected key / value type is missing in `Number` [1].
+ - an index signature declaring the expected key / value type is missing in null or undefined [2].
 
    not.js:11:5
    11|     x[0]; // should error for null, void and number (0)
@@ -1252,7 +1254,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:21:5
 
-Cannot get `x[0]` because an indexer property is missing in `Number` [1].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
 
    not.js:21:5
    21|     x[0]; // should error for number (0)
@@ -2010,7 +2012,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:27:14
 
-Cannot get `text[0]` because an indexer property is missing in `Number` [1].
+Cannot get `text[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
 
    switch.js:27:14
    27|       return text[0]; // error, [0] on number
@@ -2024,7 +2026,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:37:14
 
-Cannot get `text[0]` because an indexer property is missing in `Number` [1].
+Cannot get `text[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
 
    switch.js:37:14
    37|       return text[0]; // error, [0] on number
@@ -2955,7 +2957,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- typeof.js:5:5
 
-Cannot get `x[0]` because an indexer property is missing in `Boolean` [1].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Boolean` [1].
 
    typeof.js:5:5
    5|     x[0]; // error for boolean, not number
@@ -3198,7 +3200,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:7:5
 
-Cannot get `x[0]` because an indexer property is missing in `Boolean` [1].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Boolean` [1].
 
    union.js:7:5
      7|     x[0]; // error on boolean
@@ -3212,7 +3214,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:13:5
 
-Cannot get `x[0]` because an indexer property is missing in `Number` [1].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
 
    union.js:13:5
    13|     x[0]; // error on number
@@ -3226,7 +3228,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:19:5
 
-Cannot get `x[0]` because an indexer property is missing in `Number` [1].
+Cannot get `x[0]` because an index signature declaring the expected key / value type is missing in `Number` [1].
 
    union.js:19:5
    19|     x[0]; // error on number

@@ -349,7 +349,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ defaults.js:63:24
 
-An indexer property is missing in null [1].
+An index signature declaring the expected key / value type is missing in null [1].
 
    defaults.js:63:24
    63| function arr_elem_err([x]=null) {} // error: element 0 cannot be accessed on null

@@ -240,7 +240,8 @@ Error --------------------------------------------------------------------------
 
 Cannot create `C` element because in property `ref`:
  - Either number [1] is incompatible with string [2] in property `current`.
- - Or a callable signature is missing in object type [3] but exists in function type [4].
+ - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
+   function type [4].
 
    create_element.js:16:12
     16| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref

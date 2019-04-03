@@ -494,7 +494,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `Intl.PluralRules` because:
  - null or undefined [1] is not a function.
- - a callable signature is missing in statics of `Intl$PluralRules` [2].
+ - a call signature declaring the expected parameter / return type is missing in statics of `Intl$PluralRules` [2].
 
    plural_rules.js:3:11
      3| const a = Intl.PluralRules(); // incorrect
@@ -511,7 +511,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- plural_rules.js:6:13
 
-Cannot call `PluralRules` because a callable signature is missing in statics of `Intl$PluralRules` [1].
+Cannot call `PluralRules` because a call signature declaring the expected parameter / return type is missing in statics
+of `Intl$PluralRules` [1].
 
    plural_rules.js:6:13
      6|   const b = PluralRules(); // incorrect

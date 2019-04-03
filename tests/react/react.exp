@@ -2991,8 +2991,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- render_callback.js:23:62
 
-Cannot call `ReactDOM.render` with object literal bound to `callback` because a callable signature is missing in object
-literal [1] but exists in function type [2].
+Cannot call `ReactDOM.render` with object literal bound to `callback` because a call signature declaring the expected
+parameter / return type is missing in object literal [1] but exists in function type [2].
 
    render_callback.js:23:62
    23| ReactDOM.render(<Example/>, document.querySelector('#site'), {});
@@ -3410,8 +3410,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:24:19
 
-Cannot call `React.useEffect` with async function bound to `create` because a callable signature is missing in
-`Promise` [1] but exists in function type [2] in the return value.
+Cannot call `React.useEffect` with async function bound to `create` because a call signature declaring the expected
+parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
 
    useEffect_hook.js:24:19
     24|   React.useEffect(async () => {}) // Error: promise is incompatible with function return type
@@ -3549,8 +3549,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:24:25
 
-Cannot call `React.useLayoutEffect` with async function bound to `create` because a callable signature is missing in
-`Promise` [1] but exists in function type [2] in the return value.
+Cannot call `React.useLayoutEffect` with async function bound to `create` because a call signature declaring the
+expected parameter / return type is missing in `Promise` [1] but exists in function type [2] in the return value.
 
    useLayoutEffect_hook.js:24:25
     24|   React.useLayoutEffect(async () => {}) // Error: promise is incompatible with function return type

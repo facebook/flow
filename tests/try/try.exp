@@ -214,7 +214,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
 
-Cannot call `y` because a callable signature is missing in object literal [1].
+Cannot call `y` because a call signature declaring the expected parameter / return type is missing in object
+literal [1].
 
    test.js:19:5
    19|     y(); // object ~/> function call (no uninitialized error)

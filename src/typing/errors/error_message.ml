@@ -795,8 +795,8 @@ let kind_of_msg = Errors.(function
 )
 
 let mk_prop_message = Errors.Friendly.(function
-  | None | Some "$key" | Some "$value" -> [text "an indexer property"]
-  | Some "$call" -> [text "a callable signature"]
+  | None | Some "$key" | Some "$value" -> [text "an index signature declaring the expected key / value type"]
+  | Some "$call" -> [text "a call signature declaring the expected parameter / return type"]
   | Some prop -> [text "property "; code prop]
 )
 

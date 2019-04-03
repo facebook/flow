@@ -30,7 +30,8 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FancyButton` element because in property `ref`:
  - Either `HTMLDivElement` [1] is incompatible with `HTMLButtonElement` [2] in property `current`.
- - Or a callable signature is missing in object type [3] but exists in function type [4].
+ - Or a call signature declaring the expected parameter / return type is missing in object type [3] but exists in
+   function type [4].
 
    forwardRef.js:20:12
     20| const _e = <FancyButton foo={3} ref={badRef} />; // Incorrect ref type
@@ -81,7 +82,8 @@ Error --------------------------------------------------------------------------
 Cannot create `UnionRef` element because in property `ref`:
  - Either `HTMLAnchorElement` [1] is incompatible with `HTMLButtonElement` [2] in property `current`.
  - Or `HTMLAnchorElement` [1] is incompatible with `HTMLDivElement` [3] in property `current`.
- - Or a callable signature is missing in object type [4] but exists in function type [5].
+ - Or a call signature declaring the expected parameter / return type is missing in object type [4] but exists in
+   function type [5].
 
    forwardRef.js:42:12
     42| const _j = <UnionRef foo={3} ref={badUnionRef} />; // Error bad ref

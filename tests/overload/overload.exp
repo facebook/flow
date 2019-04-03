@@ -39,7 +39,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:7:18
 
-Cannot get `"".match(...)[0]` because an indexer property is missing in null [1].
+Cannot get `"".match(...)[0]` because an index signature declaring the expected key / value type is missing in null [1].
 
    overload.js:7:18
      7| var x1: number = "".match(0)[0];
@@ -84,7 +84,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- overload.js:8:18
 
-Cannot get `"".match(...)[0]` because an indexer property is missing in null [1].
+Cannot get `"".match(...)[0]` because an index signature declaring the expected key / value type is missing in null [1].
 
    overload.js:8:18
      8| var x2: number = "".match(/pattern/)[0];

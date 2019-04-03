@@ -157,8 +157,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test9.js:5:2
 
-Cannot cast object literal to object type because a callable signature is missing in object literal [1] but exists in
-object type [2].
+Cannot cast object literal to object type because a call signature declaring the expected parameter / return type is
+missing in object literal [1] but exists in object type [2].
 
    test9.js:5:2
    5| ({ ...o_call }: { "$call": any }); // error: callable should not be copied
@@ -172,8 +172,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:11:2
 
-Cannot cast object literal to object type because an indexer property is missing in object literal [1] but exists in
-object type [2].
+Cannot cast object literal to object type because an index signature declaring the expected key / value type is missing
+in object literal [1] but exists in object type [2].
 
    test9.js:11:2
    11| ({ ...o_index }: { "$key": any }); // error: indexer key should not be copied
@@ -187,8 +187,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test9.js:12:2
 
-Cannot cast object literal to object type because an indexer property is missing in object literal [1] but exists in
-object type [2].
+Cannot cast object literal to object type because an index signature declaring the expected key / value type is missing
+in object literal [1] but exists in object type [2].
 
    test9.js:12:2
    12| ({ ...o_index }: { "$value": any }); // error: indexer value should not be copied

@@ -56,7 +56,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- instanceof.js:85:5
 
-Cannot assign `123` to `x[0]` because an indexer property is missing in number [1].
+Cannot assign `123` to `x[0]` because an index signature declaring the expected key / value type is missing in
+number [1].
 
    instanceof.js:85:5
    85|     x[0] = 123; // error
@@ -101,7 +102,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:46:5
 
-Cannot call `x` because a callable signature is missing in `Function` [1].
+Cannot call `x` because a call signature declaring the expected parameter / return type is missing in `Function` [1].
 
    mixed.js:46:5
    46|     x();

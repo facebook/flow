@@ -504,8 +504,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:54:1
 
-Cannot create `Fun` element because a callable signature is missing in `React.Element` [1] but exists in `Fn` [2] in
-property `children`.
+Cannot create `Fun` element because a call signature declaring the expected parameter / return type is missing in
+`React.Element` [1] but exists in `Fn` [2] in property `children`.
 
    fun.js:54:1
    54| <Fun><intrinsic/></Fun>; // Error: elements are not allowed.
@@ -889,8 +889,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:142:1
 
-Cannot create `FunArray` element because a callable signature is missing in `React.Element` [1] but exists in `Fn` [2]
-in property `children`.
+Cannot create `FunArray` element because a call signature declaring the expected parameter / return type is missing in
+`React.Element` [1] but exists in `Fn` [2] in property `children`.
 
    fun.js:142:1
    142| <FunArray><intrinsic/></FunArray>; // Error: elements are not allowed.

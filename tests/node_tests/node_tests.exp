@@ -220,7 +220,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- dns/dns.js:29:1
 
-Cannot call `dns.lookup` because a callable signature is missing in object literal [1] but exists in function type [2].
+Cannot call `dns.lookup` because a call signature declaring the expected parameter / return type is missing in object
+literal [1] but exists in function type [2].
 
    dns/dns.js:29:1
     29| dns.lookup("test.com", { family: 6 }); // error
