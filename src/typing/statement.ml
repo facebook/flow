@@ -4328,13 +4328,21 @@ and literal ?(is_const=false) cx loc lit =
   end
 
   | Boolean b ->
-      DefT (annot_reason (mk_reason RBoolean loc), make_trust (), BoolT (Some b))
+      let lit_type = if is_const
+        then SingletonBoolT b
+        else BoolT (Some b)
+      in
+      DefT (annot_reason (mk_reason RBoolean loc), make_trust (), lit_type)
 
   | Null ->
       NullT.at loc |> with_trust make_trust
 
   | Number f ->
-      DefT (annot_reason (mk_reason RNumber loc), make_trust (), NumT (Literal (None, (f, lit.raw))))
+      let lit_type = if is_const
+        then SingletonNumT (f, lit.raw)
+        else NumT (Literal (None, (f, lit.raw)))
+      in
+      DefT (annot_reason (mk_reason RNumber loc), make_trust (), lit_type)
 
   | BigInt _ ->
       let reason = annot_reason (mk_reason (RBigIntLit lit.raw) loc) in
