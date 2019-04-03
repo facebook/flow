@@ -84,3 +84,9 @@ let is_tainted = function
 let is_public = function
   | Dynamic | Initial -> true
   | _ -> false
+
+let subtype_trust l u =
+  match l, u with
+  | Initial, _
+  | _, Terminal -> true
+  | _ -> l = u

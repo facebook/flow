@@ -34,3 +34,12 @@ echo
 # tests for
 assert_ok "$FLOW" coverage --strip-root --pretty unicode.js
 assert_ok "$FLOW" coverage --color unicode.js
+
+"$FLOW" stop
+"$FLOW" start --trust-mode=check
+echo "-----------------------------"
+echo "trust.js"
+echo "-----------------------------"
+echo
+assert_ok "$FLOW" coverage --show-trust --strip-root --pretty trust.js
+assert_ok "$FLOW" coverage --show-trust trust.js

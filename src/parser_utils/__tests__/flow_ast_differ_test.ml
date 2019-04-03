@@ -33,6 +33,13 @@ class useless_mapper = object(this)
       { value = Number 5.0; raw = "5"; comments = Flow_ast_utils.mk_comments_opt () }
     | _ -> expr
 
+  method! string_literal_type _loc (lit: Ast.StringLiteral.t) =
+    let open Ast.StringLiteral in
+    let { value; _ } = lit in
+    if String.equal "RenameSL" value
+    then { value = "\"GotRenamedSL\""; raw = "\"GotRenamedSL\"" }
+    else lit
+
   method! logical loc (expr: (Loc.t, Loc.t) Ast.Expression.Logical.t) =
     let open Ast.Expression.Logical in
     let expr = super#logical loc expr in
@@ -85,10 +92,12 @@ class useless_mapper = object(this)
     else elem
 
   method! type_ (annot: (Loc.t, Loc.t) Type.t) =
+    let open Ast.NumberLiteral in
     let annot = super#type_ annot in
     let (loc, typ) = annot in
     match typ with
     | Type.Number -> (loc, Type.String)
+    | Type.NumberLiteral _ -> (loc, Type.NumberLiteral { value = 4.0; raw = "4.0"})
     | _ -> annot
 
   method! jsx_element _loc (elem: (Loc.t, Loc.t) Ast.JSX.element) =
@@ -590,6 +599,11 @@ let assert_edits_equal_standard_only ctxt ~edits ~source ~expected ~mapper =
   assert_equal ~ctxt expected (apply_edits source edits_standard)
 
 let tests = "ast_differ" >::: [
+  "literal_number" >:: begin fun ctxt ->
+    let source = "4" in
+    assert_edits_equal ctxt ~edits:[((0, 1), "5")]
+      ~source ~expected:"5" ~mapper:(new literal_mapper)
+  end;
   "literal_string" >:: begin fun ctxt ->
     let source = "\"rename\"" in
     assert_edits_equal ctxt ~edits:[((0, 8), "\"gotRenamed\"")]
@@ -604,6 +618,11 @@ let tests = "ast_differ" >::: [
     let source = "null" in
     assert_edits_equal ctxt ~edits:[((0, 4), "\"wasNull\"")]
       ~source ~expected:"\"wasNull\"" ~mapper:(new literal_mapper)
+  end;
+  "string_literal_type" >:: begin fun ctxt ->
+    let source = "(foo: \"RenameSL\")" in
+    assert_edits_equal ctxt ~edits:[((6, 16), "\"GotRenamedSL\"")]
+      ~source ~expected:"(foo: \"GotRenamedSL\")" ~mapper:(new useless_mapper)
   end;
   "simple" >:: begin fun ctxt ->
     let source = "function foo() { (5 - 3); 4; (6 + 4); }" in
@@ -702,6 +721,11 @@ let tests = "ast_differ" >::: [
     assert_edits_equal ctxt ~edits:[((4, 9), "(3 + 3)")] ~source
       ~expected:"5 - (3 + 3)" ~mapper:(new useless_mapper)
   end;
+  "tuple" >:: begin fun ctxt ->
+    let source = "type Foo = [number, number];" in
+    assert_edits_equal ctxt ~edits:[((12, 18), "string"); ((20, 26), "string")] ~source
+      ~expected:"type Foo = [string, string];" ~mapper:(new useless_mapper)
+  end;
   "identifier" >:: begin fun ctxt ->
     let source = "5 - rename" in
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source
@@ -711,6 +735,11 @@ let tests = "ast_differ" >::: [
     let source = "new rename()" in
     assert_edits_equal ctxt ~edits:[((4, 10), "gotRenamed")] ~source ~expected:"new gotRenamed()"
       ~mapper:(new useless_mapper)
+  end;
+  "typeof_type" >:: begin fun ctxt ->
+    let source = "type Foo = typeof number" in
+    assert_edits_equal ctxt ~edits:[((18, 24), "string")] ~source
+      ~expected:"type Foo = typeof string" ~mapper:(new useless_mapper)
   end;
   "new_type_param" >:: begin fun ctxt ->
     let source = "new foo<RENAME>()" in
@@ -1089,12 +1118,42 @@ let tests = "ast_differ" >::: [
   end;
   "type_annotation_replace" >:: begin fun ctxt ->
     let source = "let x : number = 3;" in
-    assert_edits_equal ctxt ~edits:[(6, 14),": string"] ~source
+    assert_edits_equal ctxt ~edits:[(8, 14),"string"] ~source
       ~expected:"let x : string = 3;" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_type_arg" >:: begin fun ctxt ->
+    let source = "(foo: bar<rename>);" in
+    assert_edits_equal ctxt ~edits:[(10, 16), "gotRenamed"] ~source
+      ~expected:"(foo: bar<gotRenamed>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_type" >:: begin fun ctxt ->
+    let source = "(foo: rename<bar>);" in
+    assert_edits_equal ctxt ~edits:[(6, 12), "gotRenamed"] ~source
+      ~expected:"(foo: gotRenamed<bar>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_type_and_typearg" >:: begin fun ctxt ->
+    let source = "(foo: rename<rename>);" in
+    assert_edits_equal ctxt ~edits:[((6, 12), "gotRenamed"); ((13, 19), "gotRenamed")] ~source
+      ~expected:"(foo: gotRenamed<gotRenamed>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_qualified_type" >:: begin fun ctxt ->
+    let source = "(foo: Foo.rename<Bar>);" in
+    assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed")] ~source
+      ~expected:"(foo: Foo.gotRenamed<Bar>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_qualified_typearg" >:: begin fun ctxt ->
+    let source = "(foo: Foo.Bar<rename>);" in
+    assert_edits_equal ctxt ~edits:[((14, 20), "gotRenamed")] ~source
+      ~expected:"(foo: Foo.Bar<gotRenamed>);" ~mapper:(new useless_mapper)
+  end;
+  "type_annotation_rename_qualified_type_and_typearg" >:: begin fun ctxt ->
+    let source = "(foo: Foo.rename<rename>);" in
+    assert_edits_equal ctxt ~edits:[((10, 16), "gotRenamed"); ((17, 23), "gotRenamed")] ~source
+      ~expected:"(foo: Foo.gotRenamed<gotRenamed>);" ~mapper:(new useless_mapper)
   end;
   "return_type_replace" >:: begin fun ctxt ->
     let source = "function foo() : number { return 1; }" in
-    assert_edits_equal ctxt ~edits:[(15, 23),": string"] ~source
+    assert_edits_equal ctxt ~edits:[(17, 23),"string"] ~source
       ~expected:"function foo() : string { return 1; }" ~mapper:(new useless_mapper)
   end;
   "return_type_delete" >:: begin fun ctxt ->
@@ -1270,12 +1329,12 @@ let tests = "ast_differ" >::: [
   end;
   "type_cast_type" >:: begin fun ctxt ->
     let source = "(dontrename: number)" in
-    assert_edits_equal ctxt ~edits:[(11,19), ": string"] ~source
+    assert_edits_equal ctxt ~edits:[(13,19), "string"] ~source
       ~expected:"(dontrename: string)" ~mapper:(new useless_mapper)
   end;
   "type_cast_assign" >:: begin fun ctxt ->
     let source = "const x : number = (dontrename: number)" in
-    assert_edits_equal ctxt ~edits:[(8,16), ": string"; (30, 38),": string"] ~source
+    assert_edits_equal ctxt ~edits:[(10, 16), "string"; (32, 38), "string"] ~source
       ~expected:"const x : string = (dontrename: string)" ~mapper:(new useless_mapper)
   end;
   "type_cast_add" >:: begin fun ctxt ->
@@ -1637,6 +1696,12 @@ let tests = "ast_differ" >::: [
       ~expected:"type foo = ?string"
       ~mapper:(new useless_mapper)
   end;
+  "type_alias_number_literal" >:: begin fun ctxt ->
+    let source = "type foo = 5.0" in
+    assert_edits_equal ctxt ~edits:[((11, 14), "4.0")] ~source
+      ~expected:"type foo = 4.0"
+      ~mapper:(new useless_mapper)
+  end;
   "type_alias_param_name" >:: begin fun ctxt ->
     let source = "type alias<RENAME> = string" in
     assert_edits_equal ctxt ~edits:[(11, 17), "GOT_RENAMED"]
@@ -1645,7 +1710,7 @@ let tests = "ast_differ" >::: [
   end;
   "type_alias_param_bound" >:: begin fun ctxt ->
     let source = "type alias<A: number> = string" in
-    assert_edits_equal ctxt ~edits:[(12, 20), ": string"]
+    assert_edits_equal ctxt ~edits:[(14, 20), "string"]
     ~source ~expected:"type alias<A: string> = string"
     ~mapper:(new useless_mapper)
   end;
@@ -1683,7 +1748,7 @@ let tests = "ast_differ" >::: [
     let source = "type alias<-RENAME: number = number> = string" in
     assert_edits_equal ctxt
     ~edits:[((11, 12), "+"); ((12, 18), "GOT_RENAMED");
-        ((18, 26), ": string"); ((29, 35), "string")]
+        ((20, 26), "string"); ((29, 35), "string")]
     ~source ~expected:"type alias<+GOT_RENAMED: string = string> = string"
     ~mapper:(new useless_mapper)
   end;
@@ -1691,7 +1756,7 @@ let tests = "ast_differ" >::: [
     let source = "type alias<-RENAME, RENAME: number> = string" in
     assert_edits_equal ctxt
     ~edits:[((11, 12), "+"); ((12, 18), "GOT_RENAMED");
-        ((20, 26), "GOT_RENAMED"); ((26, 34), ": string")]
+        ((20, 26), "GOT_RENAMED"); ((28, 34), "string")]
     ~source ~expected:"type alias<+GOT_RENAMED, GOT_RENAMED: string> = string"
     ~mapper:(new useless_mapper)
   end;
@@ -1999,7 +2064,7 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
   end;
   "bool_type_change" >:: begin fun ctxt ->
     let source = "const x: true = 'garbage';" in
-    assert_edits_equal ctxt ~edits:[((7, 13), ": false")]
+    assert_edits_equal ctxt ~edits:[((9, 13), "false")]
     ~source ~expected:"const x: false = 'garbage';" ~mapper:(new true_to_false_mapper)
   end;
   "comment_add" >:: begin fun ctxt ->
@@ -2016,7 +2081,7 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
     let source = "const a: Box<Bla> = {}" in
     assert_edits_equal ctxt ~source ~mapper:(new add_comment_mapper)
     ~edits:[((6, 6), "/*hello*/"); ((7, 7), "/*bye*/"); ((9, 9), "/*hello*/"); ((12, 12), "/*bye*/");
-      ((13, 16), "\n/*hello*/Bla/*bye*/\n")]
-    ~expected:"const /*hello*/a/*bye*/: /*hello*/Box/*bye*/<\n/*hello*/Bla/*bye*/\n> = {}"
+      ((13, 13), "/*hello*/"); ((16, 16), "/*bye*/")]
+    ~expected:"const /*hello*/a/*bye*/: /*hello*/Box/*bye*/</*hello*/Bla/*bye*/> = {}"
   end;
 ]

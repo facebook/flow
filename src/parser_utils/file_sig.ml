@@ -1171,11 +1171,11 @@ module Make
             if loc == loc'
             then tolerable_error
             else SignatureVerificationError (ExpectedSort (sort, x, loc'))
-          | ExpectedAnnotation loc ->
+          | ExpectedAnnotation (loc, sort) ->
             let loc' = this#loc loc in
             if loc == loc'
             then tolerable_error
-            else SignatureVerificationError (ExpectedAnnotation loc')
+            else SignatureVerificationError (ExpectedAnnotation (loc', sort))
           | InvalidTypeParamUse loc ->
             let loc' = this#loc loc in
             if loc == loc'

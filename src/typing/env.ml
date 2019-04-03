@@ -11,6 +11,7 @@
    associated type information. *)
 
 open Utils_js
+open Loc_collections
 open Type
 open Reason
 open Scope
@@ -543,11 +544,11 @@ let bind_declare_var = bind_var ~state:State.Initialized
 let bind_declare_fun =
 
   let update_type seen_t new_t = match seen_t with
-  | DefT (reason, trust, IntersectionT rep) ->
-    DefT (reason, trust, IntersectionT (InterRep.append [new_t] rep))
+  | IntersectionT (reason, rep) ->
+    IntersectionT (reason, InterRep.append [new_t] rep)
   | _ ->
     let reason = replace_reason_const RIntersectionType (reason_of_t seen_t) in
-    DefT (reason, bogus_trust (), IntersectionT (InterRep.make seen_t new_t []))
+    IntersectionT (reason, InterRep.make seen_t new_t [])
   in
 
   fun cx name t loc ->
@@ -669,14 +670,14 @@ let init_fun = init_implicit_let ~has_anno:false Entry.FunctionBinding
 let init_const = init_value_entry Entry.(Const ConstVarBinding)
 
 (* update type alias to reflect initialization in code *)
-let init_type cx name _type loc =
+let init_type cx name type_ loc =
   if not (is_excluded name)
   then Entry.(
     let scope, entry = find_entry cx name loc in
     match entry with
     | Type ({ type_state = State.Declared; _ } as t)->
-      Flow.flow_t cx (_type, t._type);
-      let new_entry = Type { t with type_state = State.Initialized; _type } in
+      Flow.flow_t cx (type_, t.type_);
+      let new_entry = Type { t with type_state = State.Initialized; type_ } in
       Scope.add_entry name new_entry scope
     | _ ->
       (* Incompatible or non-redeclarable new and previous entries.
@@ -735,13 +736,13 @@ let value_entry_types ?(lookup_mode=ForValue) scope = Entry.(function
     value_declare_loc; specific; general; _ }
     when lookup_mode = ForValue && same_activation scope
     ->
-    let uninit desc = VoidT.make (mk_reason desc value_declare_loc) in
+    let uninit desc = VoidT.make (mk_reason desc value_declare_loc) |> with_trust bogus_trust in
     let specific = if state = State.Declared
       then uninit (RCustom "uninitialized variable")
       else (* State.MaybeInitialized *)
         let desc = (RCustom "possibly uninitialized variable") in
         let rep = UnionRep.make (uninit desc) specific [] in
-        DefT (mk_reason desc value_declare_loc, bogus_trust (), UnionT rep)
+        UnionT (mk_reason desc value_declare_loc, rep)
     in
     specific, general
 
@@ -776,7 +777,7 @@ let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
     AnyT.at AnyError (entry_loc entry)
 
   | Type t ->
-    t._type
+    t.type_
 
   | Class _ -> assert_false "Internal Error: Classes should only be read using get_class_entries"
 
@@ -849,7 +850,7 @@ let unify_declared_type ?(lookup_mode=ForValue) cx name t =
    we also need to take overloading into account. See `bind_declare_fun` for similar logic. *)
 let unify_declared_fun_type =
   let find_type aloc = function
-    | DefT (_, _, IntersectionT rep) ->
+    | IntersectionT (_, rep) ->
       let match_type t = aloc_of_reason (reason_of_t t) = aloc in
       begin match List.find_opt match_type (InterRep.members rep) with
         | Some t -> t

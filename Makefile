@@ -84,6 +84,7 @@ MODULES=\
   src/common/transaction\
   src/common/ty\
   src/common/utils\
+  src/common/utils/loc_utils\
   src/common/xx\
   src/flowlib\
   src/monitor\

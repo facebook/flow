@@ -14,9 +14,9 @@ val create: unit -> t
 
 val push: workload -> t -> unit
 
-val push_parallelizable: (is_serial:bool -> parallelizable_workload) -> t -> unit
+val push_parallelizable: parallelizable_workload -> t -> unit
 
-val requeue_parallelizable: (is_serial:bool -> parallelizable_workload) -> t -> unit
+val requeue_parallelizable: parallelizable_workload -> t -> unit
 
 val pop: t -> workload option
 

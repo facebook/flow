@@ -22,7 +22,8 @@ let spec = {
   args = CommandSpec.ArgSpec.(
     empty
     |> base_flags
-    |> connect_and_json_flags
+    |> connect_flags_no_lazy
+    |> json_flags
     |> root_flag
     |> strip_root_flag
     |> wait_for_recheck_flag
@@ -31,67 +32,78 @@ let spec = {
         If -, the list is read from standard input.")
     |> flag "--show-all" no_arg ~doc:("Whether to output the coverage for all files. If not \
         specified, this command will only print coverage for 50 files. ")
+    |> flag "--show-trust" no_arg ~doc:"EXPERIMENTAL: Whether to include trust information in output"
     |> anon "FILE..." (list_of string)
   )
 }
-let output_results ~root ~strip_root ~json ~pretty ~show_all ~lazy_stats stats =
+
+let output_results ~root ~strip_root ~json ~pretty ~show_all ~trust stats =
   let strip_root = if strip_root then Some root else None in
   let percent top bottom =
     if bottom = 0 then 0. else (float_of_int top /. float_of_int bottom) *. 100. in
   (* Compute aggregate stats *)
-  let covered, any, empty = Core_list.fold_left
-    ~f:(fun (acc_cov, acc_any, acc_empty) (_, { Coverage.covered; empty; any }) ->
-      (acc_cov + covered, acc_any + any, acc_empty + empty)
-  ) stats ~init:(0, 0, 0) in
+  let trusted, untrusted, any, empty = Core_list.fold_left
+    ~f:(fun (acc_trust, acc_untrust, acc_any, acc_empty)
+            (_, { Coverage.untainted; tainted; empty; uncovered }) ->
+      (acc_trust + untainted, acc_untrust + tainted, acc_any + uncovered, acc_empty + empty)
+  ) stats ~init:(0, 0, 0, 0) in
+
   let num_files_in_dir = Core_list.length stats in
+  let covered = trusted + untrusted in
   let total = covered + any + empty in
+  let trusted_percentage = percent trusted total in
   let percentage = percent covered total in
 
-  let file_stats (file_key, { Coverage.covered; empty; any }) =
-    let total = covered + any + empty in
-    let percent = percent covered total in
+  let file_stats (file_key, { Coverage.untainted; tainted; empty; uncovered }) =
+    let covered = untainted + tainted in
+    let total = covered + uncovered + empty in
+    let percentage = percent covered total in
+    let trusted_percentage = if trust then Some (percent untainted total) else None in
     let file = Reason.string_of_source ~strip_root file_key in
-    file, covered, total, percent in
-
-  let lazy_msg = match lazy_stats.ServerProt.Response.lazy_mode with
-  | Some mode -> Some (
-      Printf.sprintf
-        ("The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n" ^^
-        "To learn more, visit flow.org/en/docs/lang/lazy-modes")
-      Options.(match mode with
-        | LAZY_MODE_FILESYSTEM -> "filesystem"
-        | LAZY_MODE_IDE -> "IDE"
-        | LAZY_MODE_WATCHMAN -> "Watchman"
-      )
-      lazy_stats.ServerProt.Response.checked_files
-      lazy_stats.ServerProt.Response.total_files
-    )
-  | None -> None in
-
-  Option.iter lazy_msg ~f:(print_endline);
+    let untainted = if trust then Some untainted else None in
+    file, untainted, covered, total, trusted_percentage, percentage
+  in
 
   if json then begin
+
     let open Hh_json in
     let file_to_json stats =
-      let file, covered, total, percentage = file_stats stats in
-      JSON_Object [
-        "file", string_ file;
-        "percentage", JSON_Number (spf "%0.2f" percentage);
-        "covered", int_ covered;
-        "total", int_ total;
-      ] in
+      let file, trusted, covered, total, trusted_percentage, percentage = file_stats stats in
+      let percentage = ["percentage", JSON_Number (spf "%0.2f" percentage)] in
+      let percentage = match trusted_percentage with
+        | Some p -> ("trusted_percentage", JSON_Number (spf "%0.2f" p))::percentage
+        | None -> percentage in
+      let covered = ["covered", int_ covered] in
+      let covered = match trusted with
+        | Some t -> ("trusted", int_ t)::covered
+        | None -> covered in
+      JSON_Object ( ["file", string_ file] @ percentage @ covered @ ["total", int_ total] ) in
+
     let array_ elts = JSON_Array elts in
     let file_list =
       Core_list.sort ~cmp:(fun (a, _) (b, _) -> Pervasives.compare a b) stats
       |> Core_list.map ~f:file_to_json in
+
+    let covered_expressions = ["covered_expressions", int_ covered] in
+    let covered_expressions =
+      if trust then
+        ("trusted_expressions", int_ trusted)::covered_expressions
+      else
+        covered_expressions in
+    let percentage = ["percentage", JSON_Number (spf "%0.2f" percentage)] in
+    let percentage =
+      if trust then
+        ("trusted_percentage", JSON_Number (spf "%0.2f" trusted_percentage))::percentage
+      else
+        percentage in
     let json_output = JSON_Object [
       "files", array_ file_list;
-      "statistics", JSON_Object [
-        "files_in_directory", int_ num_files_in_dir;
-        "covered_expressions", int_ covered;
-        "total_expressions", int_ total;
-        "percentage", JSON_Number (spf "%0.2f" percentage);
-      ]
+      "statistics", JSON_Object (
+        ["files_in_directory", int_ num_files_in_dir] @
+        covered_expressions @
+        ["total_expressions", int_ total] @
+        percentage
+      )
     ] in
     print_json_endline ~pretty json_output
   end
@@ -105,24 +117,33 @@ let output_results ~root ~strip_root ~json ~pretty ~show_all ~lazy_stats stats =
     if num_files_in_dir > 0 then begin
       print_endlinef "\nCoverage results from %d file(s):\n" num_files_in_dir;
       Core_list.iter ~f:(fun fstats ->
-        let file, covered, total, percent = file_stats fstats in
-        print_endlinef "%s: %0.2f%% (%d of %d expressions)" file percent covered total;
+        let file, trusted, covered, total, trusted_percentage, percentage = file_stats fstats in
+        match trusted_percentage, trusted with
+        | Some p, Some t ->
+          print_endlinef
+            "%s: %0.2f%% trusted (%d of %d expressions), %0.2f%% covered (%d of %d expressions)"
+            file p t total percentage covered total
+        | _ ->
+          print_endlinef "%s: %0.2f%% (%d of %d expressions)" file percentage covered total
       ) truncated_stats;
       print_endline truncation_text;
     end;
 
-    print_endlinef "-----------------------------------";
-    print_endlinef "Aggregate coverage statistics";
-    print_endlinef "-----------------------------------";
-    print_endlinef "Files        : %d" num_files_in_dir;
-    print_endlinef "Expressions  :";
-    print_endlinef "  Covered    : %d" covered;
-    print_endlinef "  Total      : %d" total;
-    print_endlinef "  Percentage : %0.2f%%" percentage;
-    print_endlinef ""
+                  print_endlinef "-----------------------------------";
+                  print_endlinef "Aggregate coverage statistics";
+                  print_endlinef "-----------------------------------";
+                  print_endlinef "Files                : %d" num_files_in_dir;
+                  print_endlinef "Expressions          :";
+    if trust then print_endlinef "  Trusted            : %d" trusted;
+                  print_endlinef "  Covered            : %d" covered;
+                  print_endlinef "  Total              : %d" total;
+    if trust then print_endlinef "  Trust Percentage   : %0.2f%%" trusted_percentage;
+                  print_endlinef "  Covered Percentage : %0.2f%%" percentage;
+                  print_endlinef "";
   end
+
 let main base_flags option_values json pretty root strip_root
-  wait_for_recheck input show_all files () =
+  wait_for_recheck input show_all trust files () =
 
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
 
@@ -143,12 +164,12 @@ let main base_flags option_values json pretty root strip_root
   (* pretty implies json *)
   let json = json || pretty in
 
-  let request = ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; } in
+  let request = ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; trust } in
   match connect_and_make_request flowconfig_name option_values root request with
-  | ServerProt.Response.BATCH_COVERAGE {response = Error msg; lazy_stats = _} ->
+  | ServerProt.Response.BATCH_COVERAGE (Error msg) ->
       FlowExitStatus.(exit ~msg Unknown_error)
-  | ServerProt.Response.BATCH_COVERAGE {response = Ok resp; lazy_stats} ->
-      output_results ~root ~strip_root ~json ~pretty ~show_all ~lazy_stats resp
+  | ServerProt.Response.BATCH_COVERAGE (Ok resp) ->
+      output_results ~root ~strip_root ~json ~pretty ~show_all ~trust resp
   | response ->
       failwith_bad_response ~request ~response
 

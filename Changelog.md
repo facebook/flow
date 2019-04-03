@@ -1,3 +1,41 @@
+### 0.96.0
+
+Likely to cause new Flow errors:
+
+* Recently the `Object` and `Function` types changed their meaning from "any function type" to "any
+  type."  Accordingly, various `Object` and `Function` annotations that made sense before this
+  change have been updated in various library definitions.
+
+* Various other PRs making improvements in library definitions have been merged in this
+  release. These include core definitions like `Date` and `Object` as well as other DOM and Node
+  definitions.
+
+* We now issue a error when a value that is clearly not a type could be exported as such.
+
+* We now issue an error when a function is imported as a type.
+
+Notable bug fixes:
+
+* Some commands are not expected to update server state. But if such a command is cancelled and we
+  run a recheck before rerunning the command, not updating the server state would make it seem like
+  that recheck never happened (and lead to spurious future rechecks). This has now been fixed.
+
+* Fixed node_modules filter for lint warnings, which didn't work on Windows, and didn't respect the
+  node_resolver_dirnames config option.
+
+Misc:
+
+* Results of `batch-coverage` in lazy mode can be misleading, as it does not account for the fact
+  that the currently checked files might not be the ones the user is querying for. Running
+  `batch-coverage` in lazy mode is now disallowed.
+
+* Fixed an issue with `flow lsp` where logs would not be flushed.
+
+### 0.95.2
+
+* The inferred statics object type of `React.createClass({})` will contain `defaultProps: void`, instead of `defaultProps: {||}` (unsealed empty object).
+* Bug fix in internal cache mechanism
+
 ### 0.95.1
 
 * Added an overload for `JSON.stringify` allowing `mixed` input, which returns `string | void`. Without this, you can't call `JSON.stringify` on a `mixed` value at all, because while Flow does allow refining `mixed` to "not void" (e.g. `x === undefined ? undefined : JSON.stringify(x)`), it does not support refining `mixed` to "not a function" (e.g. imagine you could do `x === undefined || typeof x == 'function' ? undefined : JSON.stringify(x)`). This rolls back some of the more restrictive behavior introduced in v0.95.0, but is still more restrictive and more accurate than in <= v0.94.0.

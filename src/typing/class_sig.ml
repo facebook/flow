@@ -139,7 +139,7 @@ let add_indexer ~static polarity ~key ~value x =
 
 let add_name_field x =
   let r = replace_reason (fun desc -> RNameProperty desc) x.instance.reason in
-  let t = Type.StrT.why r in
+  let t = Type.StrT.why r |> Type.with_trust Trust.bogus_trust in
   add_field' ~static:true "name" (None, Type.Neutral, Annot t) x
 
 let add_proto_field name loc polarity field x =
@@ -313,7 +313,7 @@ let elements cx ?constructor s =
       | (loc, t, _), [] -> loc, t
       | (loc0, t0, _), (_, t1, _)::ts ->
           let ts = Core_list.map ~f:(fun (_loc, t, _) -> t) ts in
-          loc0, DefT (reason_of_t t0, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts))
+          loc0, IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts)
     ) s.methods
   in
 
@@ -393,7 +393,7 @@ let elements cx ?constructor s =
     | [t] -> Some t
     | t0::t1::ts ->
       let open Type in
-      let t = DefT (reason_of_t t0, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts)) in
+      let t = IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts) in
       Some t
   in
 
@@ -456,7 +456,7 @@ let insttype cx ~initialized_static_fields s =
     | (loc0, t0)::(_loc1, t1)::ts ->
       let ts = Core_list.map ~f:snd ts in
       let open Type in
-      let t = DefT (reason_of_t t0, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts)) in
+      let t = IntersectionT (reason_of_t t0, InterRep.make t0 t1 ts) in
       Some (loc0, t)
   in
   let type_args = Core_list.map ~f:(fun {Type.name; reason; polarity; _} ->
@@ -561,7 +561,7 @@ let supertype cx tparams_with_this x =
     (match extends with
     | [] -> ObjProtoT super_reason
     | [t] -> t
-    | t0::t1::ts -> DefT (super_reason, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts)))
+    | t0::t1::ts -> IntersectionT (super_reason, InterRep.make t0 t1 ts))
   | Class {extends; mixins; _} ->
     let this = SMap.find_unsafe "this" tparams_with_this in
     let t = match extends with
@@ -580,8 +580,7 @@ let supertype cx tparams_with_this x =
     match List.rev_append mixins_rev [t] with
     | [] -> failwith "impossible"
     | [t] -> t
-    | t0::t1::ts ->
-      DefT (super_reason, bogus_trust (), IntersectionT (InterRep.make t0 t1 ts))
+    | t0::t1::ts -> IntersectionT (super_reason, InterRep.make t0 t1 ts)
 
 let thistype cx x =
   let tparams_with_this = x.tparams_map in

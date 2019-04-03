@@ -9,7 +9,7 @@ module Ast = Flow_ast
 
 open Layout
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 (* There are some cases where expressions must be wrapped in parens to eliminate
    ambiguity. We pass whether we're in one of these special cases down through
@@ -342,6 +342,11 @@ let layout_node_with_simple_comments current_loc comments layout_node =
   let preceding = List.map (layout_from_comment Preceding current_loc) leading in
   let following = List.map (layout_from_comment Following current_loc) trailing in
   Concat (preceding @ [layout_node] @ following)
+
+let layout_node_with_simple_comments_opt current_loc comments layout_node =
+  match comments with
+  | Some c -> layout_node_with_simple_comments current_loc c layout_node
+  | None -> layout_node
 
 let source_location_with_comments ?comments (current_loc, layout_node) =
   match comments with
@@ -709,8 +714,8 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           ~trailing_sep
           (List.rev rev_elements);
       ]
-    | E.Object { E.Object.properties } ->
-      group [
+    | E.Object { E.Object.properties; comments } ->
+      layout_node_with_simple_comments_opt loc comments @@ group [
         new_list
           ~wrap:(Atom "{", Atom "}")
           ~sep:(Atom ",")
@@ -975,6 +980,9 @@ and expression_or_spread ?(ctxt=normal_context) expr_or_spread =
 
 and identifier (loc, name) = identifier_with_comments (loc, name)
 
+and number_literal_type { Ast.NumberLiteral.raw; _ } =
+    Atom raw
+
 and number_literal ~in_member_object raw num =
   let str = Dtoa.shortest_string_of_float num in
   if in_member_object then begin
@@ -999,6 +1007,8 @@ and literal { Ast.Literal.raw; value; comments= _ (* handled by caller *) } =
     let flags = flags |> String_utils.to_list |> List.sort Char.compare |> String_utils.of_list in
     fuse [Atom "/"; Atom pattern; Atom "/"; Atom flags]
   | _ -> Atom raw
+
+and string_literal_type { Ast.StringLiteral.raw; _ } = Atom raw
 
 and member ?(optional=false) ~precedence ~ctxt member_node =
   let { Ast.Expression.Member._object; property } = member_node in
@@ -1534,7 +1544,7 @@ and object_properties_with_newlines properties =
         begin match v with
         | (_, E.Function _)
         | (_, E.ArrowFunction _) -> true
-        | (_, E.Object { O.properties }) ->
+        | (_, E.Object { O.properties; comments= _ }) ->
           List.exists has_function_decl properties
         | _ -> false
         end
@@ -2337,6 +2347,7 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
     | T.Void -> Atom "void"
     | T.Null -> Atom "null"
     | T.Number -> Atom "number"
+    | T.BigInt -> Atom "bigint"
     | T.String -> Atom "string"
     | T.Boolean -> Atom "boolean"
     | T.Nullable t ->
@@ -2359,8 +2370,9 @@ and type_ ((loc, t): (Loc.t, Loc.t) Ast.Type.t) =
     | T.Typeof t -> fuse [Atom "typeof"; space; type_ t]
     | T.Tuple ts ->
       group [new_list ~wrap:(Atom "[", Atom "]") ~sep:(Atom ",") (Core_list.map ~f:type_ ts)]
-    | T.StringLiteral { Ast.StringLiteral.raw; _ }
-    | T.NumberLiteral { Ast.NumberLiteral.raw; _ } -> Atom raw
+    | T.StringLiteral lit -> string_literal_type lit
+    | T.NumberLiteral t -> number_literal_type t
+    | T.BigIntLiteral { Ast.BigIntLiteral.bigint; _ } -> Atom bigint
     | T.BooleanLiteral value -> Atom (if value then "true" else "false")
     | T.Exists -> Atom "*"
   )

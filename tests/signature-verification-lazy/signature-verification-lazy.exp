@@ -41,7 +41,8 @@ Unexpected token ;
 
 Error ----------------------------------------------------------------------------- signature_verification_error.js:3:31
 
-Could not build a typed interface for this module. Missing type annotation: (`signature-verification-failure`)
+Could not build a typed interface for this module. Missing type annotation at function return:
+(`signature-verification-failure`)
 
    3| export function foo(x: number) { return x; }
                                     
@@ -57,7 +58,8 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 ===== unsuppressed signature-verification error in file which is part of a cycle should be reported when focusing on another part of the cycle =====
 Error --------------------------------------------------------------------------------------------------- cycleC.js:5:31
 
-Could not build a typed interface for this module. Missing type annotation: (`signature-verification-failure`)
+Could not build a typed interface for this module. Missing type annotation at function return:
+(`signature-verification-failure`)
 
    5| export function foo(x: number) { return x; } // error when force-checking cycleA.js
                                     
@@ -73,7 +75,8 @@ Unexpected token ;
 
 Error ----------------------------------------------------------------------------- signature_verification_error.js:3:31
 
-Could not build a typed interface for this module. Missing type annotation: (`signature-verification-failure`)
+Could not build a typed interface for this module. Missing type annotation at function return:
+(`signature-verification-failure`)
 
    3| export function foo(x: number) { return x; }
                                     

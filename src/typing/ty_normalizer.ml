@@ -603,21 +603,21 @@ end = struct
     | DefT (_, _,SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
     | DefT (_, _,SingletonStrT lit) -> return (Ty.StrLit lit)
     | DefT (_, _,SingletonBoolT lit) -> return (Ty.BoolLit lit)
-    | DefT (_, _,MaybeT t) ->
+    | MaybeT (_, t) ->
       type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; Ty.Null; t]
-    | DefT (_, _,OptionalT t) ->
+    | OptionalT (_, t) ->
       type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; t]
     | DefT (_, _,FunT (_, _, f)) ->
       fun_ty ~env f None >>| fun t -> Ty.Fun t
     | DefT (r, _, ObjT o) -> obj_ty ~env r o
     | DefT (r, _, ArrT a) -> arr_ty ~env r a
-    | DefT (_, _, UnionT rep) ->
+    | UnionT (_, rep) ->
       let t0, (t1, ts) = UnionRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
       Ty.mk_union (t0::t1::ts)
-    | DefT (_, _, IntersectionT rep) ->
+    | IntersectionT (_, rep) ->
       let t0, (t1, ts) = InterRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
@@ -849,7 +849,7 @@ end = struct
 
   and call_prop ~env =
     let intersection = function
-    | T.DefT (_, _, T.IntersectionT rep) -> T.InterRep.members rep
+    | T.IntersectionT (_, rep) -> T.InterRep.members rep
     | t -> [t]
     in
     let multi_call ts =
@@ -888,11 +888,63 @@ end = struct
     match desc_of_reason ~unwrap:false r  with
     | RType name
     | RIdentifier name -> return name
-    | RReactComponent -> return "React$Component"
     | r ->
       let msg = spf "could not extract name from reason: %s"
         (Reason.string_of_desc r) in
       terr ~kind:BadInstanceT ~msg None
+
+  (* Used for instances of React.createClass(..) *)
+  and react_component =
+    let react_props ~env ~default props name =
+      match SMap.find name props with
+      | exception Not_found -> return default
+      | Type.Field (_, t, _) -> type__ ~env t
+      | _ -> return default
+    in
+    let react_static_props ~env static =
+      let cx = Env.(env.genv.cx) in
+      match static with
+      | T.DefT (_, _, T.ObjT { T.props_tmap; _ }) ->
+        Context.find_props cx props_tmap |>
+        SMap.bindings |>
+        mapM (fun (name, p) -> obj_prop ~env name p) >>|
+        List.concat
+      | _ -> return []
+    in
+    let inexactify = function
+      | Ty.Obj ({ Ty.obj_exact = true; _ } as obj) ->
+        Ty.Obj { obj with Ty.obj_exact = false }
+      | ty -> ty
+    in
+    fun ~env static own_props ->
+      let cx = Env.(env.genv.cx) in
+      let own_props = Context.find_props cx own_props in
+      react_props ~env ~default:Ty.implicit_any own_props "props" >>= fun props_ty ->
+      react_props ~env ~default:Ty.implicit_any own_props "state" >>= fun state_ty ->
+      react_static_props ~env static >>| fun static_flds ->
+
+      (* The inferred type for state is unsealed, which has its exact bit set.
+       * However, Ty.t does not account for unsealed and exact sealed objects are
+       * incompatible with exact and unsealed, so making state inexact here. *)
+      let state_ty = inexactify state_ty in
+      let parent_instance = generic_builtin_t "React$Component" [props_ty; state_ty] in
+      let parent_class = Ty.Utility (Ty.Class parent_instance) in
+      (*
+       * {
+       *   +propTypes: {
+       *     foo: React$PropType$Primitive$Required<string>,
+       *     bar: React$PropType$Primitive<number>,
+       *   },
+       *   defaultProps: { ... },
+       * }
+       *)
+      let props_obj = Ty.Obj {
+        Ty.obj_exact = false;
+        obj_frozen = false;
+        obj_literal = false;
+        obj_props = static_flds;
+      } in
+      Ty.mk_inter [parent_class; props_obj]
 
   and instance_t ~env r inst =
     let open Type in
@@ -943,7 +995,13 @@ end = struct
         terr ~kind:BadClassT ~msg:(Ty_debug.string_of_ctor ty) None
     in
     fun ~env t ps ->
-      type__ ~env t >>= go ~env ps
+      match t with
+      | T.DefT (r, _, T.InstanceT (static, _, _, inst))
+        when desc_of_reason ~unwrap:false r = RReactComponent ->
+        let { Type.own_props; _ } = inst in
+        react_component ~env static own_props
+      | _ ->
+        type__ ~env t >>= go ~env ps
 
   and this_class_t ~env t ps =
     type__ ~env t >>= fun ty ->
@@ -1346,7 +1404,7 @@ end = struct
 
   and opt_t ~env t =
     let t, opt = match t with
-    | T.DefT (_, _, T.OptionalT t) -> (t, true)
+    | T.OptionalT (_, t) -> (t, true)
     | t -> (t, false)
     in
     type__ ~env t >>| fun t -> (t, opt)

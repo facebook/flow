@@ -121,6 +121,15 @@ class ['a] t = object(self)
   | AnyT _
   | InternalT (OptionalChainVoidT _) -> acc
 
+  | OptionalT (_, t)
+  | MaybeT (_, t) -> self#type_ cx pole acc t
+
+  | IntersectionT (_, rep) ->
+    self#list (self#type_ cx pole) acc (InterRep.members rep)
+
+  | UnionT (_, rep) ->
+    self#list (self#type_ cx pole) acc (UnionRep.members rep)
+
   method def_type cx pole acc = function
   | NumT _
   | StrT _
@@ -158,7 +167,6 @@ class ['a] t = object(self)
 
   | TypeT (_, t) -> self#type_ cx pole acc t
 
-  | OptionalT t -> self#type_ cx pole acc t
 
   | PolyT (_, xs, t, _) ->
     let acc = self#nel (self#type_param cx pole) acc xs in
@@ -172,14 +180,6 @@ class ['a] t = object(self)
        information should override this to be more specific. *)
     let acc = self#list (self#type_ cx pole_TODO) acc ts in
     acc
-
-  | MaybeT t -> self#type_ cx pole acc t
-
-  | IntersectionT rep ->
-    self#list (self#type_ cx pole) acc (InterRep.members rep)
-
-  | UnionT rep ->
-    self#list (self#type_ cx pole) acc (UnionRep.members rep)
 
   | IdxWrapper t ->
     self#type_ cx pole acc t

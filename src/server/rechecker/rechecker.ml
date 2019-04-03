@@ -101,7 +101,7 @@ let recheck
   (* We must send "end_recheck" prior to sending errors+warnings so the client *)
   (* knows that this set of errors+warnings are final ones, not incremental.   *)
   let calc_errors_and_warnings () =
-    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
     errors, warnings
   in
   Persistent_connection.update_clients ~clients:env.connections ~calc_errors_and_warnings;

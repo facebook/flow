@@ -8,6 +8,7 @@
 let (>>|) = Core_result.(>>|)
 
 open Utils_js
+open Loc_collections
 
 let locmap_of_bindings =
   List.fold_left begin fun map (loc, x) ->

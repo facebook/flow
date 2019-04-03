@@ -41,7 +41,7 @@ class visitor ~cxs = object(this)
 
   method private inferred_type ~search ~index loc =
     let search_loc = search loc |> ALoc.of_loc in
-    match Utils_js.ALocMap.get search_loc cxs with
+    match Loc_collections.ALocMap.get search_loc cxs with
     | Some (Ok ty) -> (
         match index ty with
         | Ok Ty.Bot ->

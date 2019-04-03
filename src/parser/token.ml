@@ -7,6 +7,7 @@
 
 type t =
   | T_NUMBER of { kind: number_type; raw: string }
+  | T_BIGINT of { kind: number_type; raw: string }
   | T_STRING of (Loc.t * string * string * bool) (* loc, value, raw, octal *)
   | T_TEMPLATE_PART of (Loc.t * template_part * bool) (* loc, value, is_tail *)
   | T_IDENTIFIER of { loc: Loc.t; value: string; raw: string }
@@ -136,7 +137,13 @@ type t =
   | T_EMPTY_TYPE
   | T_BOOLEAN_TYPE of bool_or_boolean
   | T_NUMBER_TYPE
+  | T_BIGINT_TYPE
   | T_NUMBER_SINGLETON_TYPE of { kind: number_type; value: float; raw: string }
+  | T_BIGINT_SINGLETON_TYPE of { 
+    kind: number_type;
+    approx_value: float; (* Warning! Might lose precision! *)
+    raw: string
+  }
   | T_STRING_TYPE
   | T_VOID_TYPE
 
@@ -165,6 +172,7 @@ and template_part = {
 (*****************************************************************************)
 let token_to_string = function
   | T_NUMBER _ -> "T_NUMBER"
+  | T_BIGINT _ -> "T_BIGINT"
   | T_STRING _ -> "T_STRING"
   | T_TEMPLATE_PART _ -> "T_TEMPLATE_PART"
   | T_IDENTIFIER _ -> "T_IDENTIFIER"
@@ -290,12 +298,15 @@ let token_to_string = function
   | T_EMPTY_TYPE -> "T_EMPTY_TYPE"
   | T_BOOLEAN_TYPE _ -> "T_BOOLEAN_TYPE"
   | T_NUMBER_TYPE -> "T_NUMBER_TYPE"
+  | T_BIGINT_TYPE -> "T_BIGINT_TYPE"
   | T_NUMBER_SINGLETON_TYPE _ -> "T_NUMBER_SINGLETON_TYPE"
+  | T_BIGINT_SINGLETON_TYPE _ -> "T_BIGINT_SINGLETON_TYPE"
   | T_STRING_TYPE -> "T_STRING_TYPE"
   | T_VOID_TYPE -> "T_VOID_TYPE"
 
 let value_of_token = function
   | T_NUMBER { raw; _ } -> raw
+  | T_BIGINT { raw; _ } -> raw
   | T_STRING (_, _, raw, _) -> raw
   | T_TEMPLATE_PART (_, { literal; _ }, _) -> literal
   | T_IDENTIFIER { raw; _ } -> raw
@@ -410,15 +421,19 @@ let value_of_token = function
   | T_BIT_NOT -> "~"
   | T_INCR -> "++"
   | T_DECR -> "--"
+  (* Extra tokens *)
   | T_ERROR raw -> raw
   | T_EOF -> ""
   | T_JSX_IDENTIFIER { raw } -> raw
   | T_JSX_TEXT (_, _, raw) -> raw
+  (* Type primitives *)
   | T_ANY_TYPE -> "any"
   | T_MIXED_TYPE -> "mixed"
   | T_EMPTY_TYPE -> "empty"
   | T_BOOLEAN_TYPE kind -> begin match kind with BOOL -> "bool" | BOOLEAN -> "boolean" end
   | T_NUMBER_TYPE -> "number"
+  | T_BIGINT_TYPE -> "bigint"
   | T_NUMBER_SINGLETON_TYPE { raw; _ } -> raw
+  | T_BIGINT_SINGLETON_TYPE { raw; _ } -> raw
   | T_STRING_TYPE -> "string"
   | T_VOID_TYPE -> "void"

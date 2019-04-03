@@ -23,7 +23,7 @@ class type watcher =
     method get_and_clear_changed_files: (SSet.t * MonitorProt.file_watcher_metadata option) Lwt.t
     method wait_for_changed_files: unit Lwt.t
     method stop: unit Lwt.t
-    method waitpid: Unix.process_status Lwt.t
+    method waitpid: unit Lwt.t
     method getpid: int option
   end
 
@@ -106,7 +106,27 @@ class dfind (monitor_options: FlowServerMonitorOptions.t) : watcher =
       let dfind = self#get_dfind in
       let pid = DfindLibLwt.pid dfind in
       let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
-      Lwt.return status
+      begin match status with
+      | Unix.WEXITED exit_status ->
+        let exit_type =
+          try Some (FlowExitStatus.error_type exit_status)
+          with Not_found -> None in
+        let exit_status_string =
+          Option.value_map ~default:"Invalid_exit_code" ~f:FlowExitStatus.to_string exit_type in
+        Logger.error "File watcher (%s) exited with code %s (%d)"
+          self#name
+          exit_status_string
+          exit_status
+      | Unix.WSIGNALED signal ->
+        Logger.error "File watcher (%s) was killed with %s signal"
+          self#name
+          (PrintSignal.string_of_signal signal)
+      | Unix.WSTOPPED signal ->
+        Logger.error "File watcher (%s) was stopped with %s signal"
+          self#name
+          (PrintSignal.string_of_signal signal)
+      end;
+      Lwt.return_unit
 
     method getpid =
       let dfind = self#get_dfind in
@@ -277,9 +297,9 @@ end = struct
       end
 
     let catch _ exn =
-      let e = Exception.wrap exn in
       Logger.error ~exn "Uncaught exception in Watchman listening loop";
-      Exception.reraise e
+      (* By exiting this loop we'll let the server know that something went wrong with Watchman *)
+      Lwt.return_unit
   end)
 
   class watchman (monitor_options: FlowServerMonitorOptions.t) : watcher =
@@ -377,9 +397,13 @@ end = struct
       method waitpid =
         (* If watchman dies, we can start it back up again and use clockspec to make sure we didn't
          * miss anything. So from the point of view of the FileWatcher abstraction, watchman never
-         * dies and this method can just wait forever *)
-        let waiter, _ = Lwt.task () in
-        waiter
+         * dies and this method can just wait forever.
+         *
+         * However it's possible that something Really Really Bad might happen to watchman. If
+         * the watchman listening thread itself dies, then we need to tell the monitor that this
+         * file watcher is dead. *)
+        let env = self#get_env in
+        env.listening_thread
 
       method getpid = None
     end

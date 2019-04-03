@@ -60,7 +60,7 @@ class ruleset_depth = object(self)
           shorthand = false
         }) in
       let properties = [prop] in
-      E.Object.(E.Object {properties}) in
+      E.Object.(E.Object {properties; comments = Flow_ast_utils.mk_comments_opt ()}) in
     let obj_type =
       let open T.Object.Property in
       let prop_type =

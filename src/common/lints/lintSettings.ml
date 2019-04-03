@@ -161,15 +161,15 @@ let of_lines base_settings =
     settings >>= (fun settings ->
         let used_locs = fold
           (fun _kind (_enabled, loc) acc ->
-            Option.value_map loc ~f:(fun loc -> Utils_js.LocSet.add loc acc) ~default:acc)
-          settings Utils_js.LocSet.empty
+            Option.value_map loc ~f:(fun loc -> Loc_collections.LocSet.add loc acc) ~default:acc)
+          settings Loc_collections.LocSet.empty
         in
         let first_unused = List.fold_left
           (fun acc (art_loc, (label, line)) ->
             match acc with
               | Some _ -> acc
               | None ->
-                if Utils_js.LocSet.mem art_loc used_locs
+                if Loc_collections.LocSet.mem art_loc used_locs
                   || Str.string_match all_regex (String.trim line) 0
                 then None else Some label
           ) None located_lines

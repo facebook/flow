@@ -38,7 +38,7 @@ let object_of_statement statement =
   | (loc, _) -> Error (loc, "Expected an assignment")
 
 let properties_of_object = function
-  | (_, Ast.Expression.Object {Ast.Expression.Object.properties}) -> Ok properties
+  | (_, Ast.Expression.Object {Ast.Expression.Object.properties; comments=_}) -> Ok properties
   | (loc, _) -> Error (loc, "Expected an object literal")
 
 let parse ast : 'a t_or_error =

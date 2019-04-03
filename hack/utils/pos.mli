@@ -33,7 +33,11 @@ val end_cnum : 'a pos -> int
 
 val line : 'a pos -> int
 
+val line_column : 'a pos -> int * int
+
 val end_line : 'a pos -> int
+
+val end_line_column : 'a pos -> int * int
 
 (* This returns a closed interval that's incorrect for multi-line spans. *)
 val info_pos : 'a pos -> int * int * int

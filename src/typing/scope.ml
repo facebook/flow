@@ -102,7 +102,7 @@ module Entry = struct
     type_binding_kind: type_binding_kind;
     type_state: State.t;
     type_loc: ALoc.t;
-    _type: Type.t;
+    type_: Type.t;
   }
 
   type t =
@@ -137,19 +137,19 @@ module Entry = struct
     let specific = match specific with Some t -> t | None -> general in
     new_value (Var kind) state specific general loc
 
-  let new_type_ type_binding_kind state loc _type =
+  let new_type_ type_binding_kind state loc type_ =
     Type {
       type_binding_kind;
       type_state = state;
       type_loc = loc;
-      _type
+      type_
     }
 
-  let new_type ~loc ?(state=State.Undeclared) _type =
-    new_type_ TypeBinding state loc _type
+  let new_type ~loc ?(state=State.Undeclared) type_ =
+    new_type_ TypeBinding state loc type_
 
-  let new_import_type ~loc _type =
-    new_type_ ImportTypeBinding State.Initialized loc _type
+  let new_import_type ~loc type_ =
+    new_type_ ImportTypeBinding State.Initialized loc type_
 
   (* accessors *)
   let entry_loc = function
@@ -164,12 +164,12 @@ module Entry = struct
 
   let declared_type = function
   | Value v -> v.general
-  | Type t -> t._type
+  | Type t -> t.type_
   | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let actual_type = function
   | Value v -> v.specific
-  | Type t -> t._type
+  | Type t -> t.type_
   | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let string_of_kind = function
@@ -217,7 +217,7 @@ module Entry = struct
     | Value v ->
       if Reason.is_internal_name name
       then entry
-      else Value { v with specific = Type.EmptyT.at loc }
+      else Value { v with specific = Type.EmptyT.at loc |> Type.with_trust Trust.bogus_trust}
 
   let is_lex = function
     | Type _ -> false

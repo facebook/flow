@@ -389,7 +389,9 @@ let merge
       let curr_errors = ref ConcreteLocPrintableErrorSet.empty in
       let curr_warnings = ref ConcreteLocPrintableErrorSet.empty in
       let curr_suppressions = ref suppressions in
-      let filter = Error_suppressions.filter_suppressed_errors in
+      let root = Options.root options in
+      let file_options = Some (Options.file_options options) in
+      let filter = Error_suppressions.filter_suppressed_errors ~root ~file_options in
       Lwt.return (function lazy results ->
         let new_errors, new_warnings, suppressions =
           List.fold_left (fun (errs_acc, warns_acc, supps_acc) result ->
@@ -692,15 +694,18 @@ let typecheck_contents_ ~options ~env ~check_syntax ~profiling contents filename
       let errors = Flow_error.make_errors_printable errors in
       let warnings = Flow_error.make_errors_printable warnings in
 
+      let root = Options.root options in
+      let file_options = Some (Options.file_options options) in
+
       (* Filter out suppressed errors *)
       let errors, _, _ =
-        Error_suppressions.filter_suppressed_errors suppressions errors
+        Error_suppressions.filter_suppressed_errors ~root ~file_options suppressions errors
           ~unused:Error_suppressions.empty (* TODO: track unused suppressions *)
       in
 
       (* Filter out suppressed warnings *)
       let warnings, _, _ =
-        Error_suppressions.filter_suppressed_errors suppressions warnings
+        Error_suppressions.filter_suppressed_errors ~root ~file_options suppressions warnings
           ~unused:Error_suppressions.empty (* TODO: track unused suppressions *)
       in
 

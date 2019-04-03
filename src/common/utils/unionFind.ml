@@ -13,31 +13,29 @@ type 'a entry = {
 }
 type 'a t = {
   indices: ('a, int) Hashtbl.t;
-  mutable entries: 'a entry option array;
+  entries: 'a entry ResizableArray.t;
 }
 
 let default_size = 32
 
 let make_with_size n = {
   indices = Hashtbl.create n;
-  entries = Array.make n None;
+  entries = ResizableArray.make n;
 }
 
 let make () = make_with_size default_size
 
-(* Number of entries *)
-let entry_count t = Hashtbl.length t.indices
-
-let add_unsafe t x i =
-  Hashtbl.add t.indices x i;
-  t.entries.(i) <- Some {
+let push t x =
+  let next_index = ResizableArray.size t.entries in
+  Hashtbl.add t.indices x next_index;
+  ResizableArray.push t.entries {
     value = x;
-    parent = i;
-    next = i;
+    parent = next_index;
+    next = next_index;
     rank = 0;
   }
 
-let get_entry t i = match t.entries.(i) with
+let get_entry t i = match ResizableArray.get t.entries i with
   | Some x -> x
   | None -> raise Not_found
 
@@ -50,35 +48,16 @@ let set_parent t i parent = (get_entry t i).parent <- parent
 let set_next t i next = (get_entry t i).next <- next
 let set_rank t i rank = (get_entry t i).rank <- rank
 
-let get_next_power_of_two x =
-  let rec f y =
-    if y >= x then
-      y
-    else
-      f (y * 2)
-  in
-  f 1
-
 let of_list lst =
   let len = List.length lst in
-  let t = make_with_size (get_next_power_of_two len) in
-  List.iteri (fun i x -> add_unsafe t x i) lst;
+  let t = make_with_size (Utils_js.get_next_power_of_two len) in
+  List.iter (fun x -> push t x) lst;
   t
-
-let grow t =
-  let old_arr_size = Array.length t.entries in
-  let new_arr_size = old_arr_size * 2 in
-  let new_entries = Array.make new_arr_size None in
-  Array.blit t.entries 0 new_entries 0 old_arr_size;
-  t.entries <- new_entries
 
 (* Add the given value, and return its index *)
 let add_ t x =
-  let next_index = entry_count t in
-  if Array.length t.entries = next_index then
-    grow t;
-  add_unsafe t x next_index;
-  next_index
+  push t x;
+  ResizableArray.size t.entries - 1
 
 let add t x = ignore (add_ t x)
 

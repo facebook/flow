@@ -430,7 +430,14 @@ struct
   let with_crash_record_opt source f =
     Watchman_process.catch
       ~f:(fun () -> with_crash_record_exn source f >|= fun v -> Some v)
-      ~catch:(fun ~stack:_ _exn -> Watchman_process.return None)
+      ~catch:(fun ~stack:_ e ->
+        let exn = Exception.wrap e in
+        match e with
+        (* Avoid swallowing these *)
+        | Exit_status.Exit_with _
+        | Watchman_restarted -> Exception.reraise exn
+        | _ -> Watchman_process.return None
+      )
 
   let has_capability name capabilities =
     (** Projects down from the boolean error monad into booleans.
@@ -446,6 +453,41 @@ struct
       >>= get_obj "capabilities"
       >>= get_bool name
       |> project_bool
+
+  (* When we re-init our connection to Watchman, we use the old clockspec to get all the changes
+   * since our last response. However, if Watchman has restarted and the old clockspec pre-dates
+   * the new Watchman, then we may miss updates. It is important for Flow and Hack to restart
+   * in that case.
+   *
+   * Unfortunately, the response to "subscribe" doesn't have the "is_fresh_instance" field. So
+   * we'll instead send a small "query" request. It should always return 0 files, but it should
+   * tell us whether the Watchman service has restarted since clockspec.
+   *)
+  let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
+    let hard_to_match_name = "irrelevant.potato" in
+    let query = Hh_json.(JSON_Array [
+      JSON_String "query";
+      JSON_String watch_root;
+      JSON_Object [
+        "since", JSON_String clockspec;
+        "empty_on_fresh_instance", JSON_Bool true;
+        "expression", JSON_Array [ JSON_String "name"; JSON_String hard_to_match_name ]
+      ]
+    ]) in
+    Watchman_process.request ~debug_logging ~conn query
+    >>= fun response ->
+      match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
+      | Some false -> Watchman_process.return ()
+      | Some true ->
+        Hh_logger.error "Watchman server restarted so we may have missed some updates";
+        raise Watchman_restarted
+      | None ->
+        (* The response to this query **always** should include the `is_fresh_instance` boolean
+         * property. If it is missing then something has gone wrong with Watchman. Since we can't
+         * prove that Watchman has not restarted, we must treat this as an error. *)
+         Hh_logger.error "Invalid Watchman response to `empty_on_fresh_instance` query:\n%s"
+          (Hh_json.json_to_string ~pretty:true response);
+         raise Exit_status.(Exit_with Watchman_failed)
 
   let re_init ?prior_clockspec
     { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
@@ -500,7 +542,9 @@ struct
 
     (* If we don't have a prior clockspec, grab the current clock *)
     (match prior_clockspec with
-      | Some s -> Watchman_process.return s
+      | Some clockspec ->
+        assert_watchman_has_not_restarted_since ~debug_logging ~conn ~watch_root ~clockspec
+        >>= fun () -> Watchman_process.return clockspec
       | None ->
         Watchman_process.request ~debug_logging ~conn (clock watch_root)
         >|= J.get_string_val "clock"

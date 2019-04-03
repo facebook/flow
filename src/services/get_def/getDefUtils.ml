@@ -34,7 +34,7 @@ class ['acc] object_key_visitor ~init = object(this)
       let open Property in
       function Init { key; _ } | Method { key; _ } | Get { key; _ } | Set { key; _ } -> key
     in
-    let { properties } = obj in
+    let { properties; comments= _ } = obj in
     properties
     |> List.iter begin function
       | SpreadProperty _ -> ()
@@ -316,7 +316,7 @@ and extract_def_loc_resolved cx ty name : (def_loc, string) result =
           | None -> NoDefFound
           | Some loc -> FoundObject loc
         end
-    | Success (DefT (_, _, UnionT rep)) ->
+    | Success (UnionT (_, rep)) ->
         let union_members =
           UnionRep.members rep
           |> Core_list.map ~f:(fun member -> extract_def_loc cx member name)

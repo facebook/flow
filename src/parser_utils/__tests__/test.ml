@@ -9,7 +9,6 @@ open OUnit2
 
 let tests = "parser_utils" >::: [
   Scope_builder_test.tests;
-  Comment_attacher_test.tests;
   Ssa_builder_test.tests;
   File_sig_test.tests;
   Flow_ast_differ_test.tests;

@@ -58,7 +58,7 @@ let dump_types ~options ~env ~profiling file content =
   map ~f:(fun (cx, _info, file_sig, _) -> Query_types.dump_types cx (File_sig.abstractify_locs file_sig) ~printer)
 
 
-let coverage ~options ~env ~profiling ~force file content =
+let coverage ~options ~env ~profiling ~force ~trust file content =
   let should_check =
     if force then true else
       let (_, docblock) =
@@ -66,7 +66,7 @@ let coverage ~options ~env ~profiling ~force file content =
       Docblock.is_flow docblock
   in
   Types_js.basic_check_contents ~options ~env ~profiling content file >|=
-  map ~f:(fun (cx, _, _, _) -> Query_types.covered_types cx ~should_check)
+  map ~f:(fun (cx, _, _, _) -> Query_types.covered_types cx ~should_check ~check_trust:trust)
 
 let suggest ~options ~env ~profiling file content =
   Types_js.typecheck_contents ~options ~env ~profiling content file >|=

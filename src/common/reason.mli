@@ -8,12 +8,14 @@
 val mk_id: unit -> int
 
 type 'loc virtual_reason_desc =
+  | RTrusted of 'loc virtual_reason_desc | RPrivate of 'loc virtual_reason_desc
   | RAnyExplicit | RAnyImplicit
-  | RNumber | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
   | RLongStringLit of int (* Max length *)
   | RStringLit of string
   | RNumberLit of string
+  | RBigIntLit of string
   | RBooleanLit of bool
   | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
@@ -262,3 +264,6 @@ val unknown_elem_empty_array_desc: reason_desc
 val inferred_union_elem_array_desc: reason_desc
 
 val invalidate_rtype_alias: 'loc virtual_reason_desc  -> 'loc virtual_reason_desc
+
+val code_desc_of_literal: 'loc Flow_ast.Literal.t -> string
+val code_desc_of_expression: wrap:bool -> ('a, 'b) Flow_ast.Expression.t -> string

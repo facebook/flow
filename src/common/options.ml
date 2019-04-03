@@ -51,6 +51,11 @@ type arch =
   | Classic
   | TypesFirst
 
+type trust_mode =
+  | NoTrust
+  | CheckTrust
+  | SilentTrust
+
 type t = {
   opt_all : bool;
   opt_debug : bool;
@@ -104,6 +109,7 @@ type t = {
   opt_strict_mode: StrictModeSettings.t;
   opt_arch: arch;
   opt_include_suppressions : bool;
+  opt_trust_mode: trust_mode
 }
 
 let all opts = opts.opt_all
@@ -162,6 +168,8 @@ let weak_by_default opts = opts.opt_weak
 let include_suppressions opts = opts.opt_include_suppressions
 let lint_severities opts = opts.opt_lint_severities
 let strict_mode opts = opts.opt_strict_mode
+
+let trust_mode opts = opts.opt_trust_mode
 
 
 let lazy_mode_to_string lazy_mode =

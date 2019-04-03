@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------ primitives.js:6:1
 
-Cannot call `dict` because a callable signature is missing in object type [1].
+Cannot call `dict` because a call signature declaring the expected parameter / return type is missing in object
+type [1].
 
    primitives.js:6:1
    6| dict(); // error, callable signature not found

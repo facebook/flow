@@ -12,5 +12,6 @@
     socket
     sys_utils
     utils_config_file
-    utils_scheduler)
+    utils_scheduler
+    watchman)
   (flags (:standard -unsafe-string)))

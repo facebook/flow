@@ -68,8 +68,18 @@ jobs:
           at: ~/flow
       - run:
           # TODO: move this to a custom docker image
+          # installs `zip` but also has to fix some apt issues:
+          # https://discuss.circleci.com/t/failed-to-fetch-jessie-updates/29246
           name: Install deps
-          command: sudo apt-get update && sudo apt-get install zip
+          command: |
+            sudo rm /etc/apt/sources.list
+            echo "deb http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
+            echo "deb http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
+            echo "deb-src http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
+            echo "deb-src http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
+            echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
+            echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
+            sudo apt-get update && sudo apt-get install zip
       - run: *opam_version
       - restore_cache: *restore_opam_cache
       - run:

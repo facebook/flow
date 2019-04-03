@@ -439,7 +439,7 @@ let is_reserved str_val =
 
 let is_reserved_type str_val =
   match str_val with
-  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number"
+  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number" | "bigint"
   | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends" | "_"
     -> true
   | _ -> false
@@ -517,10 +517,12 @@ module Peek = struct
       | T_MIXED_TYPE
       | T_EMPTY_TYPE
       | T_NUMBER_TYPE
+      | T_BIGINT_TYPE
       | T_STRING_TYPE
       | T_VOID_TYPE
       | T_BOOLEAN_TYPE _
       | T_NUMBER_SINGLETON_TYPE _
+      | T_BIGINT_SINGLETON_TYPE _
 
       (* identifier-ish *)
       | T_ASYNC
@@ -644,6 +646,7 @@ module Peek = struct
 
       (* literals *)
       | T_NUMBER _
+      | T_BIGINT _
       | T_STRING _
       | T_TEMPLATE_PART _
       | T_REGEXP _

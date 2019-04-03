@@ -33,9 +33,12 @@ let union_flatten =
       end
     | AnnotT (_, t, _) -> flatten cx seen t
     | ReposT (_, t) -> flatten cx seen t
-    | DefT (_, _, UnionT rep) -> union_flatten cx seen @@ UnionRep.members rep
-    | DefT (r, trust, MaybeT t) -> (DefT (r, trust, NullT))::(DefT (r, trust, VoidT))::(flatten cx seen t)
-    | DefT (r, trust, OptionalT t) -> (DefT (r, trust, VoidT))::(flatten cx seen t)
+    | UnionT (_, rep) -> union_flatten cx seen @@ UnionRep.members rep
+    | MaybeT (r, t) ->
+      (DefT (r, Trust.bogus_trust (), NullT))::(DefT (r,  Trust.bogus_trust (), VoidT))::
+        (flatten cx seen t)
+    | OptionalT (r, t) ->
+      (DefT (r,  Trust.bogus_trust (), VoidT))::(flatten cx seen t)
     | DefT (_, _, EmptyT) -> []
     | _ -> [t]
   in
@@ -159,6 +162,22 @@ class virtual ['a] t = object(self)
           else InternalT (ReposUpperT (r, t''))
       | AnyT _ -> t
       | InternalT (OptionalChainVoidT _) -> t
+      | OptionalT (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else OptionalT (r, t'')
+      | MaybeT (r, t') ->
+          let t'' = self#type_ cx map_cx t' in
+          if t'' == t' then t
+          else MaybeT (r, t'')
+      | IntersectionT (r, irep) ->
+          let irep' = InterRep.ident_map (self#type_ cx map_cx) irep in
+          if irep == irep' then t
+          else IntersectionT (r, irep')
+      | UnionT (r, urep) ->
+          let urep' = UnionRep.ident_map (self#type_ cx map_cx) urep in
+          if urep' == urep then t
+          else UnionT (r, urep')
 
   method virtual tvar: Context.t -> 'a -> Reason.t -> Constraint.ident -> Constraint.ident
 
@@ -212,10 +231,6 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
           else TypeT (s, t'')
-      | OptionalT t' ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else OptionalT t''
       | PolyT (tparams_loc, tparamlist, t', _) ->
           let tparamlist' = Nel.ident_map (self#type_param cx map_cx) tparamlist in
           let t'' = self#type_ cx map_cx t' in
@@ -226,18 +241,6 @@ class virtual ['a] t = object(self)
           let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
           if t' == t'' && ts == ts' then t
           else TypeAppT (op, t'', ts')
-      | MaybeT t' ->
-          let t'' = self#type_ cx map_cx t' in
-          if t'' == t' then t
-          else MaybeT t''
-      | IntersectionT irep ->
-          let irep' = InterRep.ident_map (self#type_ cx map_cx) irep in
-          if irep == irep' then t
-          else IntersectionT irep'
-      | UnionT urep ->
-          let urep' = UnionRep.ident_map (self#type_ cx map_cx) urep in
-          if urep' == urep then t
-          else UnionT urep'
       | IdxWrapper t' ->
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t

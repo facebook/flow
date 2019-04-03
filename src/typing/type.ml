@@ -105,6 +105,18 @@ module rec TypeTerm : sig
     | ShapeT of t
     | MatchingPropT of reason * string * t
 
+    (* & types *)
+    | IntersectionT of reason * InterRep.t
+
+    (* | types *)
+    | UnionT of reason * UnionRep.t
+
+    (* ? types *)
+    | MaybeT of reason * t
+
+    (* type of an optional parameter *)
+    | OptionalT of reason * t
+
     (* collects the keys of an object *)
     | KeysT of reason * t
 
@@ -220,9 +232,6 @@ module rec TypeTerm : sig
     (* type aliases *)
     | TypeT of type_t_kind * t
 
-    (* type of an optional parameter *)
-    | OptionalT of t
-
     (* A polymorphic type is like a type-level "function" that, when applied to
        lists of type arguments, generates types. Just like a function, a
        polymorphic type has a list of type parameters, represented as bound
@@ -240,15 +249,6 @@ module rec TypeTerm : sig
     | PolyT of ALoc.t * typeparam Nel.t * t * int
     (* type application *)
     | TypeAppT of use_op * t * t list
-
-    (* ? types *)
-    | MaybeT of t
-
-    (* & types *)
-    | IntersectionT of InterRep.t
-
-    (* | types *)
-    | UnionT of UnionRep.t
 
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
@@ -774,7 +774,6 @@ module rec TypeTerm : sig
      your use case, make one *)
   and unsoundness_kind =
     | BoundFunctionThis
-    | Chain
     | ComputedNonLiteralKey
     | Constructor
     | DummyStatic
@@ -1555,12 +1554,13 @@ and UnionRep : sig
   val join_quick_mem_results: quick_mem_result * quick_mem_result -> quick_mem_result
 
   val quick_mem_enum:
-    TypeTerm.t ->
+    bool -> TypeTerm.t ->
     t -> quick_mem_result
 
   val quick_mem_disjoint_union:
     find_resolved:(TypeTerm.t -> TypeTerm.t option) ->
     find_props:(Properties.id -> TypeTerm.property SMap.t) ->
+    bool ->
     TypeTerm.t ->
     t -> quick_mem_result
 
@@ -1668,7 +1668,7 @@ end = struct
       | EvalT _
       | DefT (_, _, TypeAppT _)
       | KeysT _
-      | DefT (_, _, IntersectionT _)
+      | IntersectionT _
       (* other types might wrap parts that are accessible directly *)
       | OpaqueT _
       | DefT (_, _, InstanceT _)
@@ -1799,7 +1799,7 @@ end = struct
     | No, No -> No
 
   (* assume we know that l is a canonizable type *)
-  let quick_mem_enum l (_t0, _t1, _ts, specialization) =
+  let quick_mem_enum trust_checked l (_t0, _t1, _ts, specialization) =
     match canon l with
     | Some tcanon ->
       begin match !specialization with
@@ -1807,11 +1807,11 @@ end = struct
         | Some Unoptimized -> Unknown
         | Some Empty -> No
         | Some (Singleton t) ->
-          if TypeUtil.quick_subtype l t then Yes
+          if TypeUtil.quick_subtype trust_checked l t then Yes
           else Conditional t
         | Some (DisjointUnion _) -> No
         | Some (PartiallyOptimizedDisjointUnion (_, others)) ->
-          if Nel.exists (TypeUtil.quick_subtype l) others
+          if Nel.exists (TypeUtil.quick_subtype trust_checked l) others
           then Yes
           else Unknown
         | Some (Enum tset) ->
@@ -1821,7 +1821,7 @@ end = struct
         | Some (PartiallyOptimizedEnum (tset, others)) ->
           if EnumSet.mem tcanon tset
           then Yes
-          else if Nel.exists (TypeUtil.quick_subtype l) others
+          else if Nel.exists (TypeUtil.quick_subtype trust_checked l) others
           then Yes
           else Unknown
       end
@@ -1844,7 +1844,7 @@ end = struct
     ) map Unknown
 
   (* we know that l is an object type or exact object type *)
-  let quick_mem_disjoint_union ~find_resolved ~find_props l (_t0, _t1, _ts, specialization) =
+  let quick_mem_disjoint_union ~find_resolved ~find_props trust_checked l (_t0, _t1, _ts, specialization) =
     match props_of find_props l with
       | Some prop_map ->
         begin match !specialization with
@@ -1852,18 +1852,18 @@ end = struct
           | Some Unoptimized -> Unknown
           | Some Empty -> No
           | Some (Singleton t) ->
-            if TypeUtil.quick_subtype l t then Yes
+            if TypeUtil.quick_subtype trust_checked l t then Yes
             else Conditional t
           | Some (DisjointUnion map) ->
             lookup_disjoint_union find_resolved prop_map ~partial:false map
           | Some (PartiallyOptimizedDisjointUnion (map, others)) ->
             let result = lookup_disjoint_union find_resolved prop_map ~partial:true map in
             if result <> Unknown then result
-            else if Nel.exists (TypeUtil.quick_subtype l) others then Yes
+            else if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then Yes
             else Unknown
           | Some (Enum _) -> No
           | Some (PartiallyOptimizedEnum (_, others)) ->
-            if Nel.exists (TypeUtil.quick_subtype l) others then Yes
+            if Nel.exists (TypeUtil.quick_subtype trust_checked l) others then Yes
             else Unknown
         end
       | _ -> failwith "quick_mem_disjoint_union is defined only on object / exact object types"
@@ -2159,7 +2159,7 @@ and TypeUtil : sig
   val number_literal_eq: TypeTerm.number_literal -> TypeTerm.number_literal TypeTerm.literal -> bool
   val boolean_literal_eq: bool -> bool option -> bool
 
-  val quick_subtype: TypeTerm.t -> TypeTerm.t -> bool
+  val quick_subtype: bool -> TypeTerm.t -> TypeTerm.t -> bool
 end = struct
   open TypeTerm
 
@@ -2201,6 +2201,10 @@ end = struct
     | ThisClassT (reason, _) -> reason
     | ThisTypeAppT (reason, _, _, _) -> reason
     | AnyT (reason, _) -> reason
+    | UnionT (reason, _) -> reason
+    | IntersectionT (reason, _) -> reason
+    | MaybeT (reason, _) -> reason
+    | OptionalT (reason, _) -> reason
 
   and reason_of_defer_use_t = function
     | DestructuringT (reason, _)
@@ -2331,6 +2335,10 @@ end = struct
     | CustomFunT (reason, kind) -> CustomFunT (f reason, kind)
     | DefT (reason, trust, t) -> DefT (f reason, trust, t)
     | AnyT (reason, src) -> AnyT (f reason, src)
+    | UnionT (reason, src) -> UnionT (f reason, src)
+    | IntersectionT (reason, src) -> IntersectionT (f reason, src)
+    | MaybeT (reason, src) -> MaybeT (f reason, src)
+    | OptionalT (reason, src) -> OptionalT (f reason, src)
     | EvalT (t, defer_use_t, id) ->
         EvalT (t, mod_reason_of_defer_use_t f defer_use_t, id)
     | ExactT (reason, t) -> ExactT (f reason, t)
@@ -2732,8 +2740,8 @@ end = struct
       (* In reposition we also recurse and reposition some nested types. We need
        * to make sure we swap the types for these reasons as well. Otherwise our
        * optimized union ~> union check will not pass. *)
-      | DefT (_, _, MaybeT t2), DefT (r, _, MaybeT t1) -> DefT (r, Trust.bogus_trust (), MaybeT (swap_reason t2 t1))
-      | DefT (_, _, OptionalT t2), DefT (r, _, OptionalT t1) -> DefT (r, Trust.bogus_trust (), OptionalT (swap_reason t2 t1))
+      | MaybeT (_, t2), MaybeT (r, t1) -> MaybeT (r, swap_reason t2 t1)
+      | OptionalT (_, t2), OptionalT (r, t1) -> OptionalT (r, swap_reason t2 t1)
       | ExactT (_, t2), ExactT (r, t1) -> ExactT (r, swap_reason t2 t1)
 
       | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
@@ -2758,22 +2766,24 @@ end = struct
     | Some y -> x = y
     | None -> false
 
-  let quick_subtype t1 t2 =
+  let quick_subtype trust_checked t1 t2 =
     match t1, t2 with
-    | DefT (_, _, NumT _), DefT (_, _, NumT _)
-    | DefT (_, _, SingletonNumT _), DefT (_, _, NumT _)
-    | DefT (_, _, StrT _), DefT (_, _, StrT _)
-    | DefT (_, _, SingletonStrT _), DefT (_, _, StrT _)
-    | DefT (_, _, BoolT _), DefT (_, _, BoolT _)
-    | DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _)
-    | DefT (_, _, NullT), DefT (_, _, NullT)
-    | DefT (_, _, VoidT), DefT (_, _, VoidT)
-    | DefT (_, _, EmptyT), _
-    | _, DefT (_, _, MixedT _)
-      -> true
-    | DefT (_, _, StrT actual), DefT (_, _, SingletonStrT expected) -> literal_eq expected actual
-    | DefT (_, _, NumT actual), DefT (_, _, SingletonNumT expected) -> number_literal_eq expected actual
-    | DefT (_, _, BoolT actual), DefT (_, _, SingletonBoolT expected) -> boolean_literal_eq expected actual
+    | DefT (_, ltrust, NumT _), DefT (_, rtrust, NumT _)
+    | DefT (_, ltrust, SingletonNumT _), DefT (_, rtrust, NumT _)
+    | DefT (_, ltrust, StrT _), DefT (_, rtrust, StrT _)
+    | DefT (_, ltrust, SingletonStrT _), DefT (_, rtrust, StrT _)
+    | DefT (_, ltrust, BoolT _), DefT (_, rtrust, BoolT _)
+    | DefT (_, ltrust, SingletonBoolT _), DefT (_, rtrust, BoolT _)
+    | DefT (_, ltrust, NullT), DefT (_, rtrust, NullT)
+    | DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT)
+    | DefT (_, ltrust, EmptyT), DefT(_, rtrust, _)
+    | DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)
+      -> not trust_checked || Trust.subtype_trust ltrust rtrust
+    | DefT (_, ltrust, EmptyT), _ -> not trust_checked || Trust.is_public ltrust
+    | _, DefT (_, rtrust, MixedT _) -> not trust_checked || Trust.is_tainted rtrust
+    | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) -> Trust.subtype_trust ltrust rtrust && literal_eq expected actual
+    | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) -> Trust.subtype_trust ltrust rtrust && number_literal_eq expected actual
+    | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) -> Trust.subtype_trust ltrust rtrust && boolean_literal_eq expected actual
     | _ -> reasonless_eq t1 t2
 end
 
@@ -2790,6 +2800,13 @@ include TypeTerm
 include TypeUtil
 include Trust
 
+(**** Trust utilities ****)
+
+let with_trust
+    (trust_constructor: unit -> trust)
+    (type_constructor: trust -> t) : t =
+  trust_constructor () |> type_constructor
+
 (*********************************************************)
 
 let compare = Pervasives.compare
@@ -2801,7 +2818,7 @@ let open_tvar tvar =
 
 module type PrimitiveType = sig
   val desc: reason_desc
-  val make: reason -> t
+  val make: reason -> trust -> t
 end
 
 module Primitive (P: PrimitiveType) = struct
@@ -2813,27 +2830,27 @@ end
 
 module NumT = Primitive (struct
   let desc = RNumber
-  let make r = DefT (r, bogus_trust (), NumT AnyLiteral)
+  let make r trust = DefT (r, trust, NumT AnyLiteral)
 end)
 
 module StrT = Primitive (struct
   let desc = RString
-  let make r = DefT (r, bogus_trust (), StrT AnyLiteral)
+  let make r trust = DefT (r, trust, StrT AnyLiteral)
 end)
 
 module BoolT = Primitive (struct
   let desc = RBoolean
-  let make r = DefT (r, bogus_trust (), BoolT None)
+  let make r trust = DefT (r, trust, BoolT None)
 end)
 
 module MixedT = Primitive (struct
   let desc = RMixed
-  let make r = DefT (r, bogus_trust (), MixedT Mixed_everything)
+  let make r trust = DefT (r, trust, MixedT Mixed_everything)
 end)
 
 module EmptyT = Primitive (struct
   let desc = REmpty
-  let make r = DefT (r, bogus_trust (), EmptyT)
+  let make r trust = DefT (r, trust, EmptyT)
 end)
 
 module AnyT = struct
@@ -2853,7 +2870,6 @@ module AnyT = struct
 end
 
 module Unsoundness = struct
-  let chain                   = Unsound Chain
   let constructor             = Unsound Constructor
   let computed_nonlit_key     = Unsound ComputedNonLiteralKey
   let function_proto          = Unsound FunctionPrototype
@@ -2879,7 +2895,6 @@ module Unsoundness = struct
   let unimplemented_any       = AnyT.make unimplemented
   let weak_context_any        = AnyT.make weak_context
   let inference_hooks_any     = AnyT.make inference_hooks
-  let chain_any               = AnyT.make chain
   let exports_any             = AnyT.make exports
   let existential_any         = AnyT.make existential
   let bound_fn_this_any       = AnyT.make bound_fn_this
@@ -2898,22 +2913,22 @@ end
 
 module VoidT = Primitive (struct
   let desc = RVoid
-  let make r = DefT (r, bogus_trust (), VoidT)
+  let make r trust = DefT (r, trust, VoidT)
 end)
 
 module NullT = Primitive (struct
   let desc = RNull
-  let make r = DefT (r, bogus_trust (), NullT)
+  let make r trust = DefT (r, trust, NullT)
 end)
 
 module ObjProtoT = Primitive (struct
   let desc = RDummyPrototype
-  let make r = ObjProtoT r
+  let make r _ = ObjProtoT r
 end)
 
 module NullProtoT = Primitive (struct
   let desc = RNull
-  let make r = NullProtoT r
+  let make r _ = NullProtoT r
 end)
 
 (* USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
@@ -3081,13 +3096,10 @@ let string_of_def_ctor = function
   | FunT _ -> "FunT"
   | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"
-  | IntersectionT _ -> "IntersectionT"
-  | MaybeT _ -> "MaybeT"
   | MixedT _ -> "MixedT"
   | NullT -> "NullT"
   | NumT _ -> "NumT"
   | ObjT _ -> "ObjT"
-  | OptionalT _ -> "OptionalT"
   | PolyT _ -> "PolyT"
   | ReactAbstractComponentT _ -> "ReactAbstractComponentT"
   | SingletonBoolT _ -> "SingletonBoolT"
@@ -3096,7 +3108,6 @@ let string_of_def_ctor = function
   | StrT _ -> "StrT"
   | TypeT _ -> "TypeT"
   | TypeAppT _ -> "TypeAppT"
-  | UnionT _ -> "UnionT"
   | VoidT -> "VoidT"
 
 let string_of_ctor = function
@@ -3135,6 +3146,10 @@ let string_of_ctor = function
   | ShapeT _ -> "ShapeT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
+  | UnionT _ -> "UnionT"
+  | IntersectionT _ -> "IntersectionT"
+  | OptionalT _ -> "OptionalT"
+  | MaybeT _ -> "MaybeT"
 
 let string_of_internal_use_op = function
   | CopyEnv -> "CopyEnv"
@@ -3371,11 +3386,11 @@ and elemt_of_arrtype = function
 
 let optional t =
   let reason = replace_reason (fun desc -> ROptional desc) (reason_of_t t) in
-  DefT (reason, bogus_trust (), OptionalT t)
+  OptionalT (reason, t)
 
 let maybe t =
   let reason = replace_reason (fun desc -> RMaybe desc) (reason_of_t t) in
-  DefT (reason, bogus_trust (), MaybeT t)
+  MaybeT (reason, t)
 
 let exact t =
   ExactT (reason_of_t t, t)
@@ -3463,7 +3478,7 @@ let bound_function_dummy_this =
   locationless_reason RDummyThis |> Unsoundness.bound_fn_this_any
 
 let dummy_this =
-  locationless_reason RDummyThis |> MixedT.make
+  locationless_reason RDummyThis |> MixedT.make |> with_trust bogus_trust
 
 let global_this reason =
   let reason = replace_reason_const (RCustom "global object") reason in
@@ -3555,7 +3570,7 @@ let apply_opt_funcalltype (this, targs, args, clos, strict) t_out = {
 }
 
 let create_intersection rep =
-  DefT (locationless_reason (RCustom "intersection"), bogus_trust (), IntersectionT rep)
+  IntersectionT (locationless_reason (RCustom "intersection"), rep)
 
 let apply_opt_use opt_use t_out = match opt_use with
 | OptCallT (u, r, f) ->

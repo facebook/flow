@@ -66,6 +66,7 @@ end
 
 type t =
   | VariableDef of {
+      id: Loc.t Ast.Identifier.t;
       annot: Annot_path.t option;
       init: Init_path.t option;
     }

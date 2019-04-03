@@ -55,3 +55,12 @@ echo "json"
 echo "-----------------------------"
 echo
 assert_ok "$FLOW" batch-coverage --strip-root --json --pretty --input-file files.txt
+
+"$FLOW" stop
+"$FLOW" start --trust-mode=check
+echo "-----------------------------"
+echo "trust"
+echo "-----------------------------"
+echo
+assert_ok "$FLOW" batch-coverage --strip-root --show-trust .
+assert_ok "$FLOW" batch-coverage --strip-root --json --pretty --show-trust .

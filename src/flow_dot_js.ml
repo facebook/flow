@@ -159,6 +159,7 @@ let stub_metadata ~root ~checked = { Context.
   suppress_comments = [];
   suppress_types = SSet.empty;
   default_lib_dir = None;
+  trust_mode = Options.NoTrust;
 }
 
 let get_master_cx =
@@ -206,7 +207,7 @@ let infer_and_merge ~root filename ast file_sig =
   let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let reqs = SMap.fold (fun module_name locs reqs ->
     let m = Modulename.String module_name in
-    let locs = locs |> Nel.to_list |> Utils_js.ALocSet.of_list in
+    let locs = locs |> Nel.to_list |> Loc_collections.ALocSet.of_list in
     Merge_js.Reqs.add_decl module_name filename (locs, m) reqs
   ) require_loc_map Merge_js.Reqs.empty in
   let lint_severities = LintSettings.empty_severities in
@@ -239,10 +240,10 @@ let check_content ~filename ~content =
     let errors = Flow_error.make_errors_printable errors in
     let warnings = Flow_error.make_errors_printable warnings in
     let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
-      suppressions errors ~unused:suppressions in
+      ~root ~file_options:None suppressions errors ~unused:suppressions in
     let warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      suppressions warnings ~unused:suppressions
-    in errors, warnings
+      ~root ~file_options:None suppressions warnings ~unused:suppressions in
+    errors, warnings
   | Error parse_errors ->
     parse_errors, Errors.ConcreteLocPrintableErrorSet.empty
   in

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-module ALocMap = Utils_js.ALocMap
+module ALocMap = Loc_collections.ALocMap
 module Scope_api = Scope_api.With_ALoc
 
 exception Props_not_found of Type.Properties.id
@@ -49,6 +49,7 @@ type metadata = {
   suppress_types: SSet.t;
   max_workers: int;
   default_lib_dir : Path.t option;
+  trust_mode: Options.trust_mode
 }
 
 type module_kind =
@@ -139,6 +140,7 @@ type t = {
   mutable require_map: Type.t ALocMap.t;
 
   type_table: Type_table.t;
+  trust_constructor: unit -> Trust.trust;
 
   mutable declare_module_ref: string option;
 
@@ -177,6 +179,7 @@ let metadata_of_options options = {
   suppress_comments = Options.suppress_comments options;
   suppress_types = Options.suppress_types options;
   default_lib_dir = (Options.file_options options).Files.default_lib_dir;
+  trust_mode = Options.trust_mode options;
 }
 
 let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap.empty
@@ -223,6 +226,8 @@ let make sig_cx metadata file module_ref = {
 
   type_table = Type_table.create ();
 
+  trust_constructor = Trust.literal_trust;
+
   declare_module_ref = None;
 
   use_def = empty_use_def;
@@ -250,6 +255,9 @@ let in_declare_module cx =
 (* accessors *)
 let all_unresolved cx = cx.sig_cx.all_unresolved
 let envs cx = cx.sig_cx.envs
+let trust_constructor cx = cx.trust_constructor
+
+let cx_with_trust cx trust = { cx with trust_constructor = trust }
 
 let metadata cx = cx.metadata
 let max_literal_length cx = cx.metadata.max_literal_length
@@ -318,13 +326,21 @@ let default_lib_dir cx = cx.metadata.default_lib_dir
 let type_asserts cx = cx.sig_cx.type_asserts
 let type_graph cx = cx.sig_cx.type_graph
 let type_table cx = cx.type_table
+let trust_mode cx = cx.metadata.trust_mode
 let verbose cx = cx.metadata.verbose
 let max_workers cx = cx.metadata.max_workers
 let jsx cx = cx.metadata.jsx
 let exists_checks cx = cx.sig_cx.exists_checks
 let exists_excuses cx = cx.sig_cx.exists_excuses
 let use_def cx = cx.use_def
-
+let trust_tracking cx =
+  match cx.metadata.trust_mode with
+  | Options.CheckTrust | Options.SilentTrust -> true
+  | Options.NoTrust -> false
+let trust_errors cx =
+  match cx.metadata.trust_mode with
+  | Options.CheckTrust -> true
+  | Options.SilentTrust | Options.NoTrust -> false
 let pid_prefix (cx: t) =
   if max_workers cx > 0
   then Printf.sprintf "[%d] " (Unix.getpid ())

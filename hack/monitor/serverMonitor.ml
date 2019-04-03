@@ -594,6 +594,8 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
         ignore (Hh_logger.log
           "check_and_run_loop_ threw with Unix.ECHILD. Exiting. - %s" stack);
         Exit_status.exit Exit_status.No_server_running_should_retry
+      | Watchman.Watchman_restarted ->
+        Exit_status.exit Exit_status.Watchman_fresh_instance
       | Exit_status.Exit_with _ as e -> raise e
       | e ->
         let stack = Printexc.get_backtrace () in

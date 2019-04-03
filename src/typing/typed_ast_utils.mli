@@ -15,7 +15,7 @@ val find_type_at_pos_annotation :
 
 val typed_ast_to_map :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->
-  Type.TypeScheme.t Utils_js.ALocMap.t
+  Type.TypeScheme.t Loc_collections.ALocMap.t
 
 val typed_ast_to_list :
   (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program ->

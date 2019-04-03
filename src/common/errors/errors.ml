@@ -44,8 +44,8 @@ type 'a classic_error = {
   extra: 'a info_tree list
 }
 
-module LocSet = Utils_js.LocSet
-module LocMap = Utils_js.LocMap
+module LocSet = Loc_collections.LocSet
+module LocMap = Loc_collections.LocMap
 
 (* Types and utilities for friendly errors. *)
 module Friendly = struct
@@ -2855,7 +2855,7 @@ module Json_output = struct
 
   let json_of_error_props
     ~strip_root ~stdin_file ~version ~json_of_message ~severity
-    ?(suppression_locs=Utils_js.LocSet.empty) (kind, trace, error) =
+    ?(suppression_locs=Loc_collections.LocSet.empty) (kind, trace, error) =
     let open Hh_json in
     let kind_str = match kind with
       | ParseError -> "parse"
@@ -2869,7 +2869,7 @@ module Json_output = struct
     in
     let severity_str = output_string_of_severity severity in
     let suppressions = suppression_locs
-    |> Utils_js.LocSet.elements
+    |> Loc_collections.LocSet.elements
     |> Core_list.map ~f:(fun loc ->
         let offset_table = get_offset_table_expensive ~stdin_file loc in
         JSON_Object [ "loc", Reason.json_of_loc ~strip_root ~offset_table ~catch_offset_errors:true loc]
@@ -2903,9 +2903,9 @@ module Json_output = struct
     let obj_props_rev =
       []
       |> ConcreteLocPrintableErrorSet.fold (fun error acc ->
-        f ~severity:Err (error, Utils_js.LocSet.empty) :: acc) errors
+        f ~severity:Err (error, Loc_collections.LocSet.empty) :: acc) errors
       |> ConcreteLocPrintableErrorSet.fold (fun warn acc ->
-        f ~severity:Warn (warn, Utils_js.LocSet.empty) :: acc) warnings
+        f ~severity:Warn (warn, Loc_collections.LocSet.empty) :: acc) warnings
     in
     (* We want these to show up as "suppressed error"s, not "suppressed off"s *)
     let obj_props_rev = List.fold_left (fun acc suppressed_error ->

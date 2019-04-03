@@ -31,8 +31,9 @@ val coverage :
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   force:bool ->
+  trust:bool ->
   File_key.t ->
-  string -> ((Loc.t * Coverage.Kind.t) list, string) Core_result.t Lwt.t
+  string -> ((Loc.t * Coverage.expression_coverage) list, string) Core_result.t Lwt.t
 
 val suggest :
   options:Options.t ->

@@ -1352,6 +1352,21 @@ let with_timer (f: unit -> 'a) : (float * 'a) =
   let duration = Unix.gettimeofday () -. start in
   duration, ret
 
+(* The EventLogger needs to be periodically flushed. LspCommand was originally written to flush
+ * when idle, but the idle detection didn't quite work so we never really flushed until exiting. So
+ * instead lets periodically flush. Flushing should be fast and this is basically what the monitor
+ * does too. *)
+module LogFlusher = LwtLoop.Make (struct
+  type acc = unit
+
+  let main () =
+    let%lwt () = Lwt_unix.sleep 5.0 in
+    EventLoggerLwt.flush ()
+
+  let catch () exn =
+    Exception.(reraise (wrap exn))
+end)
+
 
 (************************************************************************)
 (** Main loop                                                          **)
@@ -1381,7 +1396,20 @@ let rec main
   } in
   let client = Jsonrpc.make_queue () in
   let state = (Pre_init connect_params) in
-  Lwt_main.run (main_loop base_flags.Base_flags.flowconfig_name client state)
+  LwtInit.run_lwt (initial_lwt_thread base_flags.Base_flags.flowconfig_name client state)
+
+and initial_lwt_thread flowconfig_name client state () =
+  (* If `prom`  in `Lwt.async (fun () -> prom)` resolves to an exception, this function will be
+   * called *)
+  Lwt.async_exception_hook := (fun exn ->
+    let exn = Exception.wrap exn in
+    let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
+    FlowExitStatus.(exit ~msg Unknown_error)
+  );
+
+  Lwt.async LogFlusher.run;
+
+  main_loop flowconfig_name client state
 
 and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit Lwt.t =
   let%lwt event =
@@ -1670,7 +1698,6 @@ begin
     Ok (state, LogNotNeeded)
 
   | _, Tick ->
-    Lwt.async EventLoggerLwt.flush;
     Ok (state, LogNotNeeded)
 end
 
@@ -1718,12 +1745,19 @@ and main_log_command
       ~client_context ~persistent_context ~persistent_delay
       ~server_profiling ~client_duration ~wall_start ~error:(msg, stack)
 
-and main_log_error ~(expected: bool) (msg: string) (stack: string) : unit =
+and main_log_error ~(expected: bool) (msg: string) (stack: string) (event: event option) : unit =
   let error = (msg, Utils.Callstack stack) in
   let client_context = FlowEventLogger.get_context () in
+  let request = match event with
+  | Some (Client_message (_, metadata)) ->
+    Some (metadata.Persistent_connection_prot.start_json_truncated |> Hh_json.json_to_string)
+  | Some (Server_message _)
+  | Some Tick
+  | None -> None
+  in
   match expected with
-  | true -> FlowEventLogger.persistent_expected_error ~client_context ~error
-  | false -> FlowEventLogger.persistent_unexpected_error ~client_context ~error
+  | true -> FlowEventLogger.persistent_expected_error ~request ~client_context ~error
+  | false -> FlowEventLogger.persistent_unexpected_error ~request ~client_context ~error
 
 and main_handle_error
     (e: exn)
@@ -1739,7 +1773,7 @@ and main_handle_error
   | Server_fatal_connection_exception edata -> begin
     (* log the error *)
     let stack = edata.stack ^ "---\n" ^ stack in
-    main_log_error ~expected:true ("[Server fatal] " ^ edata.message) stack;
+    main_log_error ~expected:true ("[Server fatal] " ^ edata.message) stack event;
     (* report that we're disconnected to telemetry/connectionStatus *)
     let state = begin match state with
       | Connected env ->
@@ -1786,21 +1820,21 @@ and main_handle_error
 
   | Client_recoverable_connection_exception edata ->
     let stack = edata.stack ^ "---\n" ^ stack in
-    main_log_error ~expected:true ("[Client recoverable] " ^ edata.message) stack;
+    main_log_error ~expected:true ("[Client recoverable] " ^ edata.message) stack event;
     let report = Printf.sprintf "Client exception: %s\n%s" edata.message stack in
     Lsp_helpers.telemetry_error to_stdout report;
     state
 
   | Client_fatal_connection_exception edata ->
     let stack = edata.stack ^ "---\n" ^ stack in
-    main_log_error ~expected:true ("[Client fatal] " ^ edata.message) stack;
+    main_log_error ~expected:true ("[Client fatal] " ^ edata.message) stack event;
     let report = Printf.sprintf "Client fatal exception: %s\n%s" edata.message stack in
     Printf.eprintf "%s" report;
     lsp_exit_bad ()
 
   | e ->
     let e = Lsp_fmt.error_of_exn e in
-    main_log_error ~expected:true ("[FlowLSP] " ^ e.Error.message) stack;
+    main_log_error ~expected:true ("[FlowLSP] " ^ e.Error.message) stack event;
     let text = Printf.sprintf "FlowLSP exception %s [%i]\n%s" e.Error.message e.Error.code stack in
     let () = match event with
       | Some (Client_message (RequestMessage (id, _request), _metadata)) ->

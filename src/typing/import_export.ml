@@ -55,7 +55,7 @@ let mk_resource_module_t cx loc f =
     reason, Type.AnyT.make Type.Untyped reason
   | Some _ ->
     let reason = Reason.mk_reason RString loc in
-    reason, Type.StrT.why reason
+    reason, Type.StrT.why reason |> with_trust bogus_trust
   | _ -> failwith "How did we find a resource file without an extension?!"
   in
 

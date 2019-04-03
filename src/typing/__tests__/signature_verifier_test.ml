@@ -36,12 +36,12 @@ let tests_data = [
 
   name "export_function_literal_check1",
   ["export default function(x): number { return x };"],
-  ["Expected annotation @ (1, 24) to (1, 25)"],
+  ["Expected annotation at array pattern @ (1, 24) to (1, 25)"],
   [];
 
   name "export_function_literal_check2",
   ["export default function(x: number) { return x };"],
-  ["Expected annotation @ (1, 34) to (1, 34)"],
+  ["Expected annotation at function return @ (1, 34) to (1, 34)"],
   [];
 
   name "export_function_reference",
@@ -53,13 +53,13 @@ let tests_data = [
   name "export_function_reference_check1",
   ["function foo(x): number { return x }";
    "export default foo;"],
-  ["Expected annotation @ (1, 13) to (1, 14)"],
+  ["Expected annotation at array pattern @ (1, 13) to (1, 14)"],
   ["Reachable: foo"];
 
   name "export_function_reference_check2",
   ["function foo(x: number) { return x }";
    "export default foo;"],
-  ["Expected annotation @ (1, 23) to (1, 23)"],
+  ["Expected annotation at function return @ (1, 23) to (1, 23)"],
   ["Reachable: foo"];
 
   name "export_object_literal_property_literal",
@@ -76,7 +76,7 @@ let tests_data = [
   name "export_object_literal_property_reference_check",
   ["var x = 0;";
    "export default { p: x };"],
-  ["Expected annotation @ (1, 4) to (1, 5)"],
+  ["Expected annotation at declaration of variable `x` @ (1, 4) to (1, 5)"],
   ["Reachable: x"];
 
   name "empty_object_literal",
@@ -99,7 +99,7 @@ let tests_data = [
    "  m(x: number): number { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 2) to (2, 8)"],
+  ["Expected annotation at property `f` @ (2, 2) to (2, 8)"],
   ["Reachable: C"];
 
   name "export_class_reference_check2",
@@ -108,7 +108,7 @@ let tests_data = [
    "  m(x): number { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (3, 4) to (3, 5)"],
+  ["Expected annotation at array pattern @ (3, 4) to (3, 5)"],
   ["Reachable: C"];
 
   name "export_class_reference_check3",
@@ -117,7 +117,7 @@ let tests_data = [
    "  m(x: number) { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (3, 14) to (3, 14)"],
+  ["Expected annotation at function return @ (3, 14) to (3, 14)"],
   ["Reachable: C"];
 
   name "type_alias_dependencies",
@@ -149,7 +149,7 @@ let tests_data = [
    "  m(x: D): D { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (1, 10) to (1, 16)"],
+  ["Expected annotation at property `f` @ (1, 10) to (1, 16)"],
   ["Reachable: C, D"];
 
   name "export_new_typecast",
@@ -169,7 +169,7 @@ let tests_data = [
    "  m(x: D): D { return x; }";
    "}";
    "export default (new C: C);"],
-  ["Expected annotation @ (1, 10) to (1, 16)"],
+  ["Expected annotation at property `f` @ (1, 10) to (1, 16)"],
   ["Reachable: C, D"];
 
   name "recursive_dependencies",
@@ -187,7 +187,7 @@ let tests_data = [
    "  m(x: C): C { return x; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 2) to (2, 12)"],
+  ["Expected annotation at property `f` @ (2, 2) to (2, 12)"],
   ["Reachable: C"];
 
   name "typeof_dependencies",
@@ -205,7 +205,7 @@ let tests_data = [
    "  p: typeof x = 0";
    "}";
    "export default (new C: C);"],
-  ["Expected annotation @ (1, 4) to (1, 5)"],
+  ["Expected annotation at declaration of variable `x` @ (1, 4) to (1, 5)"],
   ["Reachable: C, x"];
 
   name "const_initializer",
@@ -223,7 +223,7 @@ let tests_data = [
   ["const x = 0";
    "var y = false";
    "export default [ x, y ];"],
-  ["Expected annotation @ (2, 4) to (2, 5)"],
+  ["Expected annotation at declaration of variable `y` @ (2, 4) to (2, 5)"],
   ["Reachable: x, y"];
 
   name "void_function",
@@ -235,7 +235,7 @@ let tests_data = [
   name "void_generator",
   ["function* foo() { yield 0; }";
    "export default foo;"],
-  ["Expected annotation @ (1, 15) to (1, 15)"],
+  ["Expected annotation at function return @ (1, 15) to (1, 15)"],
   ["Reachable: foo"];
 
   name "import_default_dependencies",
@@ -285,7 +285,7 @@ let tests_data = [
    "  f: D = 0;";
    "}";
    "module.exports = C;"],
-  ["Expected annotation @ (7, 4) to (7, 5)"],
+  ["Expected annotation at declaration of variable `D` @ (7, 4) to (7, 5)"],
   ["require('./hoisted_requires_helper')";
    "require('./hoisted_requires_helper').D";
    "require('./hoisted_requires_helper').D";
@@ -348,8 +348,8 @@ let tests_data = [
    "  a: A,                     // A";
    "  b: (x: string) => x,      // B";
    "};"],
-  ["Expected annotation @ (2, 2) to (2, 23)";
-   "Expected annotation @ (6, 16) to (6, 16)"],
+  ["Expected annotation at property `f` @ (2, 2) to (2, 23)";
+   "Expected annotation at function return @ (6, 16) to (6, 16)"],
   ["Reachable: A"];
 
   name "munged_methods_ignored",
@@ -365,7 +365,7 @@ let tests_data = [
    "  _method() { return 1; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 11) to (2, 11)"],
+  ["Expected annotation at function return @ (2, 11) to (2, 11)"],
   ["Reachable: C"];
 
   name "munged_fields_ignored",
@@ -381,7 +381,7 @@ let tests_data = [
    "  _method = () => { return 1; }";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 2) to (2, 31)"],
+  ["Expected annotation at property `_method` @ (2, 2) to (2, 31)"],
   ["Reachable: C"];
 
   name "propTypes_static_ignored" ~ignore_static_propTypes:true,
@@ -397,7 +397,7 @@ let tests_data = [
    "  propTypes = {}";
    "}";
    "export default C;"],
-  ["Expected annotation @ (2, 2) to (2, 16)"],
+  ["Expected annotation at property `propTypes` @ (2, 2) to (2, 16)"],
   ["Reachable: C"];
 
   name "array_spread",
@@ -412,7 +412,7 @@ let tests_data = [
 
   name "object_spread",
   ["module.exports = { x: 'x', ...{ y: 'y' }, z: 'z' }"],
-  ["Unexpected object spread @ (1, 27) to (1, 40)"],
+  [],
   [];
 
   name "reference_expression1",
@@ -499,15 +499,15 @@ let tests_data = [
   name "function_return",
   ["var n = false;";
    "export function foo<X: typeof n>(x: X) { return 1; };"],
-  ["Expected annotation @ (1, 4) to (1, 5)";
-   "Expected annotation @ (2, 38) to (2, 38)"],
+  ["Expected annotation at declaration of variable `n` @ (1, 4) to (1, 5)";
+   "Expected annotation at function return @ (2, 38) to (2, 38)"],
   ["Reachable: foo, n"];
 
   name "function_return_2",
   ["var n = false;";
    "export function bar(x: (typeof n) => void) { return 1; };"],
-  ["Expected annotation @ (1, 4) to (1, 5)";
-   "Expected annotation @ (2, 42) to (2, 42)"],
+  ["Expected annotation at declaration of variable `n` @ (1, 4) to (1, 5)";
+   "Expected annotation at function return @ (2, 42) to (2, 42)"],
   ["Reachable: bar, n"];
 
 ]

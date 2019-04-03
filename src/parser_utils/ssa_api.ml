@@ -51,7 +51,7 @@ let print_values =
       | Write loc -> Loc.to_string loc
   in
   fun values ->
-    let kvlist = Utils_js.LocMap.bindings values in
+    let kvlist = Loc_collections.LocMap.bindings values in
     let strlist = Core_list.map ~f:(fun (read_loc, write_locs) ->
       Printf.sprintf "%s => { %s }"
         (Loc.to_string read_loc)

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
-open Utils_js
+open Loc_collections
 module Scope_api = Scope_api.With_Loc
 
 let local_find_refs ast loc =

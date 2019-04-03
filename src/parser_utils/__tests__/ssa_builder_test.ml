@@ -9,7 +9,7 @@
 open OUnit2
 open Test_utils
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 let mk_ssa_builder_test contents expected_values =
   begin fun ctxt ->

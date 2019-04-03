@@ -16,6 +16,7 @@ let rec pattern loc ?annot_path ?init_path (p: (Loc.t, Loc.t) Ast.Pattern.t) =
   begin match p with
     | _, Identifier { Identifier.name; annot; _ } ->
       [name, (loc, Kind.VariableDef {
+        id = name;
         annot = Kind.Annot_path.mk_annot ?annot_path annot;
         init = init_path;
       })]
@@ -85,7 +86,11 @@ let class_ loc class_ =
 let declare_variable loc declare_variable =
   let open Ast.Statement.DeclareVariable in
   let { id; annot } = declare_variable in
-  id, (loc, Kind.VariableDef { annot = Kind.Annot_path.mk_annot annot; init = None })
+  id, (loc, Kind.VariableDef {
+    id;
+    annot = Kind.Annot_path.mk_annot annot;
+    init = None
+  })
 
 let declare_function loc declare_function =
   let open Ast.Statement.DeclareFunction in

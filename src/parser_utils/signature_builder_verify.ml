@@ -9,7 +9,7 @@ module Ast_utils = Flow_ast_utils
 
 module Ast = Flow_ast
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
@@ -18,6 +18,7 @@ module Deps = Signature_builder_deps.With_Loc
 module File_sig = File_sig.With_Loc
 module Error = Deps.Error
 module Dep = Deps.Dep
+module EASort = Signature_builder_deps.ExpectedAnnotationSort
 
 module type EvalEnv = sig
   val prevent_munge: bool
@@ -80,10 +81,12 @@ module Eval(Env: EvalEnv) = struct
       | _, Void
       | _, Null
       | _, Number
+      | _, BigInt
       | _, String
       | _, Boolean
       | _, StringLiteral _
       | _, NumberLiteral _
+      | _, BigIntLiteral _
       | _, BooleanLiteral _ -> Deps.bot
       | _, Nullable t -> type_ tps t
       | _, Function ft -> function_type tps ft
@@ -236,17 +239,17 @@ module Eval(Env: EvalEnv) = struct
     | Kind.Init_path.Init expr -> literal_expr tps expr
     | Kind.Init_path.Object (_, (path, _)) -> init_path tps path
 
-  and annotation ?init tps (loc, annot) =
+  and annotation ~sort ?init tps (loc, annot) =
     match annot with
       | Some path -> annot_path tps path
       | None ->
         begin match init with
           | Some path -> init_path tps path
-          | None -> Deps.top (Error.ExpectedAnnotation loc)
+          | None -> Deps.top (Error.ExpectedAnnotation (loc, sort))
         end
 
-  and annotated_type tps loc = function
-    | Ast.Type.Missing _ -> Deps.top (Error.ExpectedAnnotation loc)
+  and annotated_type ~sort tps loc = function
+    | Ast.Type.Missing _ -> Deps.top (Error.ExpectedAnnotation (loc, sort))
     | Ast.Type.Available (_, t) -> type_ tps t
 
   and pattern tps patt =
@@ -255,7 +258,7 @@ module Eval(Env: EvalEnv) = struct
       | loc, Identifier { Identifier.annot; _ }
       | loc, Object { Object.annot; _ }
       | loc, Array { Array.annot; _ }
-        -> annotated_type tps loc annot
+        -> annotated_type ~sort:EASort.ArrayPattern tps loc annot
       | loc, Expression _ -> Deps.todo loc "Expression"
 
   and literal_expr tps =
@@ -265,6 +268,7 @@ module Eval(Env: EvalEnv) = struct
         begin match value with
           | Ast.Literal.String _
           | Ast.Literal.Number _
+          | Ast.Literal.BigInt _
           | Ast.Literal.Boolean _
           | Ast.Literal.Null
             -> Deps.bot
@@ -291,7 +295,7 @@ module Eval(Env: EvalEnv) = struct
         function_ tps generator tparams params return body
       | loc, Object stuff ->
         let open Ast.Expression.Object in
-        let { properties } = stuff in
+        let { properties; comments= _ } = stuff in
         if properties = [] then Deps.top (Error.EmptyObject loc)
         else object_ tps loc properties
       | loc, Array stuff ->
@@ -471,7 +475,7 @@ module Eval(Env: EvalEnv) = struct
     match return with
     | Ast.Type.Missing loc ->
       if is_missing_ok () then Deps.bot
-      else Deps.top (Error.ExpectedAnnotation loc)
+      else Deps.top (Error.ExpectedAnnotation (loc, EASort.FunctionReturn))
     | Ast.Type.Available (_, t) -> type_ tps t
 
   and function_ tps generator tparams params return body =
@@ -502,9 +506,10 @@ module Eval(Env: EvalEnv) = struct
         | Body.Method (_, { Method.value; _ }) ->
           let _, { Ast.Function.generator; tparams; params; return; body; _ } = value in
           function_ tps generator tparams params return body
-        | Body.Property (loc, { Property.annot; _ })
-        | Body.PrivateField (loc, { PrivateField.annot; _ }) ->
-          annotated_type tps loc annot
+        | Body.Property (loc, { Property.annot; key; _ }) ->
+          annotated_type ~sort:(EASort.Property key) tps loc annot
+        | Body.PrivateField (loc, { PrivateField.key; annot; _ }) ->
+          annotated_type ~sort:(EASort.PrivateField key) tps loc annot
 
     in fun tparams body super super_targs implements ->
       let open Ast.Class in
@@ -556,12 +561,17 @@ module Eval(Env: EvalEnv) = struct
           let { Ast.Function.generator; tparams; params; return; body; _ } = fn in
           Deps.join (deps, function_ tps generator tparams params return body)
     in
+    let object_spread_property tps prop =
+      let open Ast.Expression.Object.SpreadProperty in
+      let _, { argument } = prop in
+      literal_expr tps argument
+    in
     fun tps loc properties ->
       let open Ast.Expression.Object in
       List.fold_left (fun deps prop ->
         match prop with
           | Property p -> Deps.join (deps, object_property tps loc p)
-          | SpreadProperty (spread_loc, _p) -> Deps.top (Error.UnexpectedObjectSpread (loc, spread_loc))
+          | SpreadProperty p -> Deps.join (deps, object_spread_property tps p)
       ) Deps.bot properties
 
 end
@@ -572,8 +582,9 @@ module Verifier(Env: EvalEnv) = struct
 
   let eval id_loc (loc, kind) =
     match kind with
-      | Kind.VariableDef { annot; init } ->
-        Eval.annotation ?init SSet.empty (id_loc, annot)
+      | Kind.VariableDef { id; annot; init } ->
+        Eval.annotation ~sort:(EASort.VariableDefinition id) ?init
+          SSet.empty (id_loc, annot)
       | Kind.FunctionDef { generator; tparams; params; return; body; } ->
         Eval.function_ SSet.empty generator tparams params return body
       | Kind.DeclareFunctionDef { annot = (_, t) } ->
@@ -796,7 +807,7 @@ module Verifier(Env: EvalEnv) = struct
         begin match SMap.get x env with
           | Some entries ->
             let validate = Kind.validator sort in
-            Utils_js.LocMap.fold (fun loc kind deps ->
+            Loc_collections.LocMap.fold (fun loc kind deps ->
               Deps.join (
                 deps,
                 if validate (snd kind) then eval loc kind

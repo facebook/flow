@@ -7,11 +7,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:560:22
-   560|     get(key: K): V | void;
+   <BUILTINS>/core.js:562:22
+   562|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:504:11
-   504| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -24,11 +24,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:560:22
-   560|     get(key: K): V | void;
+   <BUILTINS>/core.js:562:22
+   562|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:504:11
-   504| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -41,11 +41,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:560:22
-   560|     get(key: K): V | void;
+   <BUILTINS>/core.js:562:22
+   562|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:504:11
-   504| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -58,11 +58,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:560:22
-   560|     get(key: K): V | void;
+   <BUILTINS>/core.js:562:22
+   562|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:504:11
-   504| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -214,7 +214,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test3.js:13:10
 
-Cannot return `x` because a callable signature is missing in `Q` [1] but exists in `P` [2] in the return value.
+Cannot return `x` because a call signature declaring the expected parameter / return type is missing in `Q` [1] but
+exists in `P` [2] in the return value.
 
    test3.js:13:10
    13|   return x; // terminate despite expanding types, error

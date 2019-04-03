@@ -349,11 +349,15 @@ module Object
 
     in fun env ->
       let loc, (expr, errs) = with_loc (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_LCURLY;
         let props, errs =
           properties env ~rest_trailing_comma:None ([], Pattern_cover.empty_errors) in
         Expect.token env T_RCURLY;
-        { Ast.Expression.Object.properties = props; }, errs
+        let trailing = Peek.comments env in
+        { Ast.Expression.Object.properties = props;
+          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+        }, errs
       ) env in
       loc, expr, errs
 

@@ -105,10 +105,13 @@ let emoji_spinner =
 (* See https://github.com/yarnpkg/yarn/issues/405. *)
 let supports_emoji () = Sys.os_type <> "Win32" && supports_color ()
 
-let print_one ?(color_mode=Color_Auto) ?(out_channel=stdout) c s =
+let apply_color ?(color_mode=Color_Auto) c s: string =
   if should_color color_mode
-  then Printf.fprintf out_channel "\x1b[%sm%s\x1b[0m" (style_num c) (s)
-  else Printf.fprintf out_channel "%s" s
+  then Printf.sprintf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
+  else Printf.sprintf "%s" s
+
+let print_one ?(color_mode=Color_Auto) ?(out_channel=stdout) c s =
+  Printf.fprintf out_channel "%s" (apply_color ~color_mode c s)
 
 let cprint ?(color_mode=Color_Auto) ?(out_channel=stdout) strs =
   List.iter strs (fun (c, s) -> print_one ~color_mode ~out_channel c s)

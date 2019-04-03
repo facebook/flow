@@ -1,7 +1,7 @@
 ---
 name: "Bug report"
 about: You want to report a reproducible bug or regression in Flow.
-labels: bug
+labels: bug, needs triage
 ---
 
 <!--

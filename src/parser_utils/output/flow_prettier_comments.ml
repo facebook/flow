@@ -14,7 +14,7 @@ module Ast = Flow_ast
  * It assumes that the comments are in the same file as the statements
  *)
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 module CommentAttachCandidate = struct
   type 'M t =
@@ -257,7 +257,7 @@ and get_children_nodes_expr expression =
       @ List.fold_left
           (fun nodes eos -> nodes @ get_children_nodes_expression_or_spread eos)
           [] arguments
-  | Object {Object.properties} ->
+  | Object {Object.properties; comments= _} ->
       List.fold_left
         (fun nodes property ->
           nodes

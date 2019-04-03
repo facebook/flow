@@ -163,7 +163,9 @@ let list_diff = function
 type node =
   | Raw of string
   | Comment of Loc.t Flow_ast.Comment.t
+  | NumberLiteralNode of Ast.NumberLiteral.t
   | Literal of Loc.t Ast.Literal.t
+  | StringLiteral of Ast.StringLiteral.t
   | Statement of (Loc.t, Loc.t) Ast.Statement.t
   | Program of (Loc.t, Loc.t) Ast.program
   | Expression of (Loc.t, Loc.t) Ast.Expression.t
@@ -356,7 +358,7 @@ let program (algo : diff_algorithm)
       (f: a -> a -> b change list) =
     diff_and_recurse (fun x y -> f x y |> Option.return) in
 
-  (* diff_and_recurse for when there is no way to get a trivial transfomation from a to b*)
+  (* diff_and_recurse for when there is no way to get a trivial transformation from a to b*)
   let diff_and_recurse_no_trivial f = diff_and_recurse f (fun _ -> None) in
 
   let diff_and_recurse_nonopt_no_trivial f =
@@ -786,7 +788,7 @@ let program (algo : diff_algorithm)
     let { id = id2; tparams = tparams2; extends = extends2; body = (_loc2, body2) } = intf2 in
     let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
     let tparams_diff = diff_if_changed_opt type_parameter_declaration tparams1 tparams2 in
-    let extends_diff = diff_and_recurse_no_trivial generic_type extends1 extends2 in
+    let extends_diff = diff_and_recurse_no_trivial generic_type_with_loc extends1 extends2 in
     let body_diff = diff_if_changed_ret_opt object_type body1 body2 in
     join_diff_list [id_diff; tparams_diff; extends_diff; body_diff]
 
@@ -885,8 +887,8 @@ let program (algo : diff_algorithm)
         class_ class1 class2
       | (_, Assignment assn1), (_, Assignment assn2) ->
         assignment assn1 assn2
-      | (_, Object obj1), (_, Object obj2) ->
-        object_ obj1 obj2
+      | (loc, Object obj1), (_, Object obj2) ->
+        object_ loc obj1 obj2
       | (_, TaggedTemplate t_tmpl1), (_, TaggedTemplate t_tmpl2) ->
         Some (tagged_template t_tmpl1 t_tmpl2)
       | (loc, Ast.Expression.TemplateLiteral t_lit1), (_, Ast.Expression.TemplateLiteral t_lit2) ->
@@ -916,6 +918,21 @@ let program (algo : diff_algorithm)
       (lit2: Loc.t Ast.Literal.t)
       : node change list =
     [(loc, Replace (Literal lit1, Literal lit2))]
+
+  and number_literal_type (loc: Loc.t)
+      (nlit1: Ast.NumberLiteral.t)
+      (nlit2: Ast.NumberLiteral.t)
+      : node change list =
+    [(loc, Replace (NumberLiteralNode nlit1, NumberLiteralNode nlit2))]
+
+  and string_literal (loc: Loc.t)
+      (lit1: Ast.StringLiteral.t)
+      (lit2: Ast.StringLiteral.t)
+      : node change list option =
+        let {Ast.StringLiteral.value = val1; raw = raw1} = lit1 in
+        let {Ast.StringLiteral.value = val2; raw = raw2} = lit2 in
+        if String.equal val1 val2 && String.equal raw1 raw2 then Some []
+        else Some [(loc, Replace (StringLiteral lit1, StringLiteral lit2))]
 
   and tagged_template
       (t_tmpl1: (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
@@ -1202,11 +1219,12 @@ let program (algo : diff_algorithm)
         object_spread_property p1 p2 |> Option.return
     | _ -> None
 
-  and object_ obj1 obj2 =
+  and object_ loc obj1 obj2 =
     let open Ast.Expression.Object in
-    let { properties = properties1 } = obj1 in
-    let { properties = properties2 } = obj2 in
-    diff_and_recurse_no_trivial object_property properties1 properties2
+    let { properties = properties1; comments= comments1 } = obj1 in
+    let { properties = properties2; comments= comments2 } = obj2 in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list [comments; diff_and_recurse_no_trivial object_property properties1 properties2]
 
   and binary (b1: (Loc.t, Loc.t) Ast.Expression.Binary.t) (b2: (Loc.t, Loc.t) Ast.Expression.Binary.t): node change list option =
     let open Ast.Expression.Binary in
@@ -1623,18 +1641,23 @@ let program (algo : diff_algorithm)
     let open Ast.Type in
     let type_diff =
       match type1, type2 with
+      | NumberLiteral n1, NumberLiteral n2 -> Some (diff_if_changed (number_literal_type loc1) n1 n2)
       | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
+      | Generic g1, Generic g2 -> generic_type g1 g2
       | Intersection (t0, t1, ts), Intersection (t0', t1', ts') ->
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
       | Nullable (t1_loc, t1), Nullable (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | Object obj1, Object obj2 -> diff_if_changed_ret_opt object_type obj1 obj2
+      | Ast.Type.StringLiteral s1, Ast.Type.StringLiteral s2 -> (string_literal loc1) s1 s2
+      | Typeof (t1_loc, t1), Typeof (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
+      | Tuple t1, Tuple t2 -> diff_if_changed_ret_opt tuple_type t1 t2
       | _ -> None in
     Option.value type_diff
       ~default:[loc1, Replace (Type (loc1, type1), Type (loc1, type2))]
 
   and generic_type
-      ((_loc1, gt1): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
-      ((_loc2, gt2): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      (gt1: (Loc.t, Loc.t) Ast.Type.Generic.t)
+      (gt2: (Loc.t, Loc.t) Ast.Type.Generic.t)
       : node change list option =
     let open Ast.Type.Generic in
     let { id = id1; targs = targs1 } = gt1 in
@@ -1644,6 +1667,12 @@ let program (algo : diff_algorithm)
       diff_if_changed_opt type_parameter_instantiation targs1 targs2 in
     join_diff_list [id_diff; targs_diff]
 
+  and generic_type_with_loc
+      ((_loc1, gt1): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      ((_loc2, gt2): Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t)
+      : node change list option =
+    generic_type gt1 gt2
+
   and generic_identifier_type
       (git1: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t)
       (git2: (Loc.t, Loc.t) Ast.Type.Generic.Identifier.t)
@@ -1652,7 +1681,11 @@ let program (algo : diff_algorithm)
     match git1, git2 with
     | Unqualified id1, Unqualified id2 ->
       diff_if_changed identifier id1 id2 |> Option.return
-    | Qualified _, Qualified _ -> None (* TODO *)
+    | Qualified (_loc1, {qualification = q1; id = id1}),
+      Qualified (_loc2, {qualification = q2; id = id2}) ->
+      let qualification_diff = diff_if_changed_ret_opt generic_identifier_type q1 q2 in
+      let id_diff = diff_if_changed identifier id1 id2 |> Option.return in
+      join_diff_list [qualification_diff; id_diff]
     | _ -> None
 
   and object_type
@@ -1714,6 +1747,12 @@ let program (algo : diff_algorithm)
     | Set (_loc1, ft1), Set (_loc2, ft2) ->
       diff_if_changed_ret_opt function_type ft1 ft2
     | _ -> None
+
+  and tuple_type
+      (tp1: (Loc.t, Loc.t) Ast.Type.t list)
+      (tp2: (Loc.t, Loc.t) Ast.Type.t list)
+      : node change list option =
+    diff_and_recurse_nonopt_no_trivial type_ tp1 tp2
 
   and type_or_implicit
       (t1: (Loc.t, Loc.t) Ast.Expression.TypeParameterInstantiation.type_parameter_instantiation)
@@ -1867,36 +1906,11 @@ let program (algo : diff_algorithm)
         ((loc2, typ2): (Loc.t, Loc.t) Ast.Type.annotation)
         : node change list =
     let open Ast.Type in
-    let t_args id1 id2 t1 t2 = (match t1, t2 with
-      | Some (_, t1), Some (_, t2) ->
-        identifier id1 id2 @ (diff_and_recurse_nonopt_no_trivial type_ t1 t2 |> Option.value ~default:[])
-      | None, Some _ ->
-        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
-      | Some _, None ->
-        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
-      | None, None -> identifier id1 id2)
-    in
     match typ1, typ2 with
     | _, (_, Function _) ->
       [loc1, Replace (TypeAnnotation (loc1, typ1), FunctionTypeAnnotation (loc2, typ2))]
-    | (_, Generic { Generic.id= (Generic.Identifier.Unqualified id1); targs= t1 }),
-      (_, Generic { Generic.id= (Generic.Identifier.Unqualified id2); targs= t2 }) ->
-      if typ1 == typ2 then []
-      else if id1 == id2 then [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
-      else if t1 == t2 then identifier id1 id2
-      else t_args id1 id2 t1 t2
-    | (_, Generic { Generic.id= (Generic.Identifier.Qualified (_, { Generic.Identifier.id= id1; qualification= q1 })); targs= t1}),
-      (_, Generic { Generic.id= (Generic.Identifier.Qualified (_, { Generic.Identifier.id= id2; qualification= q2 })); targs= t2}) ->
-      if typ1 == typ2 then [] else
-      (match q1 == q2, t1 == t2, id1 == id2 with
-      | true, true, false ->
-        identifier id1 id2
-      | true, false, false ->
-        t_args id1 id2 t1 t2
-      | _ ->
-        [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))])
     | _, _ ->
-      [loc1, Replace (TypeAnnotation (loc1, typ1), TypeAnnotation (loc2, typ2))]
+      type_ typ1 typ2
 
   and type_cast
       (type_cast1: (Loc.t, Loc.t) Flow_ast.Expression.TypeCast.t)

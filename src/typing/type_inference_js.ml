@@ -10,7 +10,6 @@ module Ast = Flow_ast
 (* infer phase services *)
 
 module ImpExp = Import_export
-module Utils = Utils_js
 
 (**********)
 (* Driver *)
@@ -281,9 +280,9 @@ let scan_for_lint_suppressions =
           (* Check for overwritten arguments *)
           let used_locs = LintSettings.fold
             (fun _ (_, loc) loc_set -> match loc with
-              | Some loc -> Utils.LocSet.add loc loc_set
+              | Some loc -> Loc_collections.LocSet.add loc loc_set
               | None -> loc_set)
-            new_running_settings Utils.LocSet.empty
+            new_running_settings Loc_collections.LocSet.empty
           in
           let arg_locs = List.map
             (function
@@ -293,7 +292,7 @@ let scan_for_lint_suppressions =
           in
           List.iter (function
             | Some arg_loc ->
-              if not (Utils.LocSet.mem arg_loc used_locs) then begin
+              if not (Loc_collections.LocSet.mem arg_loc used_locs) then begin
                 error_encountered := true;
                 add_error cx (arg_loc, LintSettings.Overwritten_argument)
               end
@@ -307,7 +306,7 @@ let scan_for_lint_suppressions =
           if not !error_encountered then
             List.fold_left (
               fun suppression_locs -> function
-                | (_, (Severity.Off, loc))::_ -> Utils.LocSet.add loc suppression_locs
+                | (_, (Severity.Off, loc))::_ -> Loc_collections.LocSet.add loc suppression_locs
                 | _ -> suppression_locs
               ) suppression_locs settings_list
           else suppression_locs
@@ -329,7 +328,7 @@ let scan_for_lint_suppressions =
   fun cx base_settings comments ->
     let severity_cover_builder = ExactCover.new_builder (Context.file cx) base_settings in
     let severity_cover_builder, _, suppression_locs = List.fold_left
-      (process_comment cx) (severity_cover_builder, base_settings, Utils.LocSet.empty) comments
+      (process_comment cx) (severity_cover_builder, base_settings, Loc_collections.LocSet.empty) comments
     in
     let severity_cover = ExactCover.bake severity_cover_builder in
     Context.add_severity_cover cx (Context.file cx) severity_cover;

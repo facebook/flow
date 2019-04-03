@@ -68,7 +68,7 @@ module Pattern
           properties env acc remaining
     ) in
 
-    fun env (loc, { Ast.Expression.Object.properties = props }) ->
+    fun env (loc, { Ast.Expression.Object.properties = props; comments = _(* TODO *) }) ->
       loc, Pattern.(Object { Object.
         properties = properties env [] props;
         annot = missing_annot env;

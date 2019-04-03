@@ -450,7 +450,7 @@ module Config = struct
           Property (Loc.none, Init {key;
                                value;
                                shorthand = false})) c in
-    {properties = prop_list};;
+    {properties = prop_list; comments = Flow_ast_utils.mk_comments_opt ()};;
 
   (* Convert a config into string for printing *)
   let string_of_config (c : t) : string =
@@ -460,7 +460,7 @@ module Config = struct
   (* Return an empty config *)
   let empty () : t =
     let open E.Object in
-    to_config {properties = []};;
+    to_config {properties = []; comments = Flow_ast_utils.mk_comments_opt ()};;
 
   (* Get a value from the config given a string.*)
   let get (conf : t) (prop_name : string) : value =
@@ -551,6 +551,7 @@ let stub_metadata ~root ~checked = { Context.
   suppress_comments = [];
   suppress_types = SSet.empty;
   default_lib_dir = None;
+  trust_mode = Options.NoTrust;
 }
 
 (* Invoke flow for type checking *)
@@ -626,10 +627,9 @@ let flow_check (code : string) : string option =
       let errors = Flow_error.make_errors_printable errors in
       let warnings = Flow_error.make_errors_printable warnings in
       let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
-          suppressions errors ~unused:suppressions in
+          ~root ~file_options:None suppressions errors ~unused:suppressions in
       let warnings, _, _ = Error_suppressions.filter_suppressed_errors
-        suppressions warnings ~unused:suppressions
-      in
+          ~root ~file_options:None suppressions warnings ~unused:suppressions in
       let error_num = Errors.ConcreteLocPrintableErrorSet.cardinal errors in
       if error_num = 0 then
         None

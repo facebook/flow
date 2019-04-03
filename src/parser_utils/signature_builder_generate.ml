@@ -9,7 +9,7 @@ module Ast_utils = Flow_ast_utils
 
 module Ast = Flow_ast
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 module Kind = Signature_builder_kind
 module Entry = Signature_builder_entry
@@ -149,6 +149,7 @@ module T = struct
     | OMethod of object_key * (Loc.t * function_t)
     | OGet of object_key * (Loc.t * function_t)
     | OSet of object_key * (Loc.t * function_t)
+    | OSpread of (Loc.t * expr_type)
 
   and array_element_t =
     | AInit of (Loc.t * expr_type)
@@ -249,6 +250,7 @@ module T = struct
         | _, OGet (object_key, _)
         | _, OSet (object_key, _)
           -> abs_object_key object_key
+        | _, OSpread _ -> assert false
       in
       fun op1 op2 ->
         Pervasives.compare (abs_object_key op1) (abs_object_key op2) in
@@ -471,6 +473,9 @@ module T = struct
         proto = false;
         _method = false;
         variance = None;
+      })
+    | loc, OSpread expr_type -> Ast.Type.Object.SpreadProperty (loc, {
+        Ast.Type.Object.SpreadProperty.argument = type_of_expr_type outlined expr_type;
       })
 
   and type_of_function_t outlined = function
@@ -805,7 +810,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         loc, T.Function (function_ false tparams params return body)
       | loc, Object stuff ->
         let open Ast.Expression.Object in
-        let { properties } = stuff in
+        let { properties; comments= _ } = stuff in
         begin match object_ properties with
           | Some o -> loc, T.ObjectLiteral { frozen = false; properties = o }
           | None -> T.FixMe.mk_expr_type loc
@@ -847,7 +852,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           arguments = [Expression (loc, Object stuff)]
         } ->
         let open Ast.Expression.Object in
-        let { properties } = stuff in
+        let { properties; comments= _ } = stuff in
         begin match object_ properties with
           | Some o -> loc, T.ObjectLiteral { frozen = true; properties = o }
           | None -> T.FixMe.mk_expr_type loc
@@ -1121,13 +1126,17 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           } = fn in
           loc, T.OSet (x, (fn_loc, function_ generator tparams params return body))
     in
+    let object_spread_property =
+      let open Ast.Expression.Object.SpreadProperty in
+      fun (loc, { argument; }) -> loc, T.OSpread (literal_expr argument)
+    in
     function
       | [] -> None
       | property::properties ->
         let open Ast.Expression.Object in
         try Some (Nel.map (function
           | Property p -> object_property p
-          | SpreadProperty _p -> assert false
+          | SpreadProperty p -> object_spread_property p
         ) (property, properties))
         with _ -> None
 
@@ -1139,7 +1148,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
 
   let eval (loc, kind) =
     match kind with
-      | Kind.VariableDef { annot; init } ->
+      | Kind.VariableDef { id = _; annot; init } ->
         T.VariableDecl (Eval.annotation loc ?init annot)
       | Kind.FunctionDef { generator; tparams; params; return; body; } ->
         T.FunctionDecl (T.EXPR
@@ -1200,7 +1209,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
 
   let make_env outlined env =
     SMap.fold (fun n entries acc ->
-      Utils_js.LocMap.fold (fun loc kind acc ->
+      Loc_collections.LocMap.fold (fun loc kind acc ->
         let id = loc, n in
         let dt = eval kind in
         let decl_loc = fst kind in

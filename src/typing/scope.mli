@@ -48,7 +48,7 @@ module Entry :
       type_binding_kind: type_binding_kind;
       type_state : State.t;
       type_loc : ALoc.t;
-      _type : Type.t;
+      type_ : Type.t;
     }
     type t = Value of value_binding | Type of type_binding | Class of Type.class_binding
     val new_class : ALoc.t -> Type.Properties.id -> Type.Properties.id -> t

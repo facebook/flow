@@ -23,7 +23,8 @@ let convert_errors ~errors ~warnings =
     ServerProt.Response.ERRORS {errors; warnings}
 
 let get_status genv env client_root =
-  let server_root = Options.root genv.options in
+  let options = genv.ServerEnv.options in
+  let server_root = Options.root options in
   let lazy_stats = Rechecker.get_lazy_stats genv env in
   let status_response =
     if server_root <> client_root then begin
@@ -33,8 +34,8 @@ let get_status genv env client_root =
       }
     end else begin
       (* collate errors by origin *)
-      let errors, warnings, _ = ErrorCollator.get env in
-      let warnings = if Options.should_include_warnings genv.options
+      let errors, warnings, _ = ErrorCollator.get ~options env in
+      let warnings = if Options.should_include_warnings options
         then warnings
         else Errors.ConcreteLocPrintableErrorSet.empty
       in
@@ -124,16 +125,26 @@ let dump_types ~options ~env ~profiling file_input =
       Type_info_service.dump_types ~options ~env ~profiling file content
     end
 
-let coverage ~options ~env ~profiling ~force file_input =
+let coverage ~options ~env ~profiling ~force ~trust file_input =
+  if Options.trust_mode options = Options.NoTrust && trust then
+    Error "Coverage cannot be run in trust mode if the server is not in trust mode. \
+      \n\nRestart the Flow server with --trust-mode=check' to enable this command." |> Lwt.return
+  else
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
   File_input.content_of_file_input file_input
   %>>= fun content ->
     try_with begin fun () ->
-      Type_info_service.coverage ~options ~env ~profiling ~force file content
+      Type_info_service.coverage ~options ~env ~profiling ~force ~trust file content
     end
 
-let batch_coverage ~genv ~env ~batch =
+let batch_coverage ~options ~genv ~env ~trust ~batch =
+  if Options.trust_mode options = Options.NoTrust && trust then
+    Error "Batch Coverage cannot be run in trust mode if the server is not in trust mode. \
+      \n\nRestart the Flow server with --trust-mode=check' to enable this command." |> Lwt.return
+  else if ServerProt.Response.((Rechecker.get_lazy_stats genv env).lazy_mode) |> Option.is_some then
+    Error "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with \
+      '--lazy-mode none' to enable this command." |> Lwt.return else
   let is_checked key = CheckedSet.mem key env.checked_files in
   let filter key = Core_list.exists ~f:(fun elt -> Files.is_prefix elt key) batch in
   let coverage_map = FilenameMap.filter
@@ -141,8 +152,7 @@ let batch_coverage ~genv ~env ~batch =
     env.coverage in
   let response =
     FilenameMap.fold (fun key coverage -> List.cons (key, coverage)) coverage_map [] in
-  (Ok response, Rechecker.get_lazy_stats genv env)
-  |> Lwt.return
+  Ok response |> Lwt.return
 
 let serialize_graph graph =
   (* Convert from map/set to lists for serialization to client. *)
@@ -294,13 +304,13 @@ let handle_check_file ~options ~force ~input ~profiling ~env =
   let%lwt response = check_file ~options ~env ~force ~profiling input in
   Lwt.return (ServerProt.Response.CHECK_FILE response, None)
 
-let handle_coverage ~options ~force ~input ~profiling ~env =
-  let%lwt response = coverage ~options ~env ~profiling ~force input in
+let handle_coverage ~options ~force ~input ~trust ~profiling ~env =
+  let%lwt response = coverage ~options ~env ~profiling ~force ~trust input in
   Lwt.return (ServerProt.Response.COVERAGE response, None)
 
-let handle_batch_coverage ~genv ~options:_ ~profiling:_ ~env ~batch =
-  let%lwt response, lazy_stats = batch_coverage ~genv ~env ~batch in
-  Lwt.return (ServerProt.Response.BATCH_COVERAGE {response; lazy_stats}, None)
+let handle_batch_coverage ~genv ~options ~profiling:_ ~env ~batch ~trust =
+  let%lwt response = batch_coverage ~options ~genv ~env ~batch ~trust in
+  Lwt.return (ServerProt.Response.BATCH_COVERAGE response, None)
 
 let handle_cycle ~fn ~profiling:_ ~env =
   let%lwt response = get_cycle ~env fn in
@@ -453,10 +463,11 @@ let get_ephemeral_handler genv command =
       opt_include_warnings = options.Options.opt_include_warnings || include_warnings;
     } in
     mk_parallelizable ~wait_for_recheck ~options (handle_check_file ~options ~force ~input)
-  | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~input)
-  | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_batch_coverage ~genv ~options ~batch)
+  | ServerProt.Request.COVERAGE { input; force; wait_for_recheck; trust } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_coverage ~options ~force ~trust ~input)
+  | ServerProt.Request.BATCH_COVERAGE { batch; wait_for_recheck; trust } ->
+    mk_parallelizable ~wait_for_recheck ~options
+      (handle_batch_coverage ~genv ~options ~trust ~batch)
   | ServerProt.Request.CYCLE { filename; } ->
     (* The user preference is to make this wait for up-to-date data *)
     let file_options = Options.file_options options in
@@ -499,8 +510,8 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.STATUS { client_root; include_warnings; } ->
     let genv = {genv with
-      options = let open Options in {genv.options with
-        opt_include_warnings = genv.options.opt_include_warnings || include_warnings
+      options = let open Options in {options with
+        opt_include_warnings = options.opt_include_warnings || include_warnings
       }
     } in
     (* `flow status` is often used by users to get all the current errors. After talking to some
@@ -570,6 +581,8 @@ let handle_ephemeral_immediately = wrap_ephemeral_handler handle_ephemeral_immed
  *
  * While parallelizable commands can be run out of order (some might get deferred),
  * nonparallelizable commands always run in order. So that's why we don't defer commands here.
+ *
+ * Since this might run a recheck, `workload ~profiling ~env` MUST return the new env.
  *)
 let rec run_command_in_serial ~genv ~env ~profiling ~workload =
   try%lwt workload ~profiling ~env
@@ -593,18 +606,15 @@ let run_command_in_parallel ~env ~profiling ~workload ~mk_workload =
     Exception.reraise exn
 
 let rec handle_parallelizable_ephemeral_unsafe
-    ~client_context ~cmd_str ~genv ~request_id ~workload ~is_serial env =
+    ~client_context ~cmd_str ~genv ~request_id ~workload env =
   let should_print_summary = Options.should_profile genv.options in
   let%lwt profiling, json_data =
     Profiling_js.with_profiling_lwt ~label:"Command" ~should_print_summary (fun profiling ->
       let%lwt response, json_data =
-        if is_serial
-        then run_command_in_serial ~genv ~env ~profiling ~workload
-        else
-          let mk_workload () =
-            handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
-          in
-          run_command_in_parallel ~env ~profiling ~workload ~mk_workload
+        let mk_workload () =
+          handle_parallelizable_ephemeral ~genv ~request_id ~client_context ~workload ~cmd_str
+        in
+        run_command_in_parallel ~env ~profiling ~workload ~mk_workload
       in
 
       MonitorRPC.respond_to_request ~request_id ~response;
@@ -627,16 +637,16 @@ let rec handle_parallelizable_ephemeral_unsafe
   Lwt.return ((), profiling, json_data)
 
 and handle_parallelizable_ephemeral
-    ~genv ~request_id ~client_context ~workload ~cmd_str ~is_serial env =
+    ~genv ~request_id ~client_context ~workload ~cmd_str env =
   try%lwt
-    let handler = handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str ~is_serial in
+    let handler = handle_parallelizable_ephemeral_unsafe ~client_context ~cmd_str in
     let%lwt result =
       wrap_ephemeral_handler handler ~genv ~request_id ~client_context ~workload ~cmd_str env
     in
     match result with
     | Ok ()
     | Error () -> Lwt.return_unit
-  with Lwt.Canceled when not is_serial ->
+  with Lwt.Canceled ->
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 
@@ -707,7 +717,7 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
     let%lwt env, triggered_recheck = Lazy_mode_utils.focus_and_check genv env filenames in
     if not triggered_recheck then begin
       (* This open doesn't trigger a recheck, but we'll still send down the errors *)
-      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+      let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
       Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
     end;
     Lwt.return env
@@ -716,12 +726,13 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
   | None ->
     (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
      * a new file is opened is to send the errors to the client *)
-    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+    let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
     Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
     Lwt.return env
 
-let did_close _genv env client : ServerEnv.env Lwt.t =
-  let errors, warnings, _ = ErrorCollator.get_with_separate_warnings env in
+let did_close genv env client : ServerEnv.env Lwt.t =
+  let options = genv.options in
+  let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
   Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
   Lwt.return env
 
@@ -771,8 +782,8 @@ let handle_persistent_canceled ~ret ~id ~metadata ~client:_ ~profiling:_ =
   let response = ResponseMessage (id, ErrorResult (e, "")) in
   Lwt.return (LspResponse (Ok (ret, Some response, metadata)))
 
-let handle_persistent_subscribe ~client ~profiling:_ ~env =
-  let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings env in
+let handle_persistent_subscribe ~options ~client ~profiling:_ ~env =
+  let current_errors, current_warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
   Persistent_connection.subscribe_client ~client ~current_errors ~current_warnings;
   Lwt.return (IdeResponse (Ok (env, None)))
 
@@ -899,6 +910,7 @@ let handle_persistent_infer_type ~options ~id ~params ~loc ~metadata ~client ~pr
   end
 
 let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~client ~profiling ~env =
+  let is_snippet_supported = Persistent_connection.client_snippet_support client in
   let open Completion in
   let (file, line, char) = match loc with
   | Some loc -> loc
@@ -929,7 +941,7 @@ let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~clie
       let metadata = with_data ~extra_data metadata in
       begin match result with
         | Ok items ->
-          let items = Core_list.map ~f:Flow_lsp_conversions.flow_completion_to_lsp items in
+          let items = Core_list.map ~f: (Flow_lsp_conversions.flow_completion_to_lsp line char is_snippet_supported) items in
           let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
           let response = ResponseMessage (id, r) in
           Lwt.return (LspResponse (Ok ((), Some response, metadata)))
@@ -984,7 +996,7 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
     | Error _ -> false in
   let%lwt result = if is_flow then
     let force = false in (* 'true' makes it report "unknown" for all exprs in non-flow files *)
-    coverage ~options ~env ~profiling ~force file
+    coverage ~options ~env ~profiling ~force ~trust:false file
   else
     Lwt.return (Ok [])
   in
@@ -1000,23 +1012,23 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       Lwt.return (LspResponse (Ok ((), Some response, metadata)))
     | true, Ok (all_locs) ->
       (* Figure out the percentages *)
-      let accum_coverage (covered, total) (_loc, kind) =
+      let accum_coverage (covered, total) (_loc, cov) =
         let covered =
-          match kind with
-          | Coverage.Kind.Checked -> covered + 1
-          | Coverage.Kind.Any
-          | Coverage.Kind.Empty -> covered
+          match cov with
+          | Coverage.Tainted | Coverage.Untainted -> covered + 1
+          | Coverage.Uncovered
+          | Coverage.Empty -> covered
         in
         covered, total + 1
       in
       let covered, total = Core_list.fold all_locs ~init:(0,0) ~f:accum_coverage in
       let coveredPercent = if total = 0 then 100 else 100 * covered / total in
       (* Figure out each individual uncovered span *)
-      let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, kind) ->
-        match kind with
-        | Coverage.Kind.Checked -> None
-        | Coverage.Kind.Any
-        | Coverage.Kind.Empty -> Some loc
+      let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, cov) ->
+        match cov with
+        | Coverage.Tainted | Coverage.Untainted
+        | Coverage.Uncovered
+        | Coverage.Empty -> Some loc
       ) in
       (* Imagine a tree of uncovered spans based on range inclusion. *)
       (* This sorted list is a pre-order flattening of that tree. *)
@@ -1128,10 +1140,11 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
   end
 
 let handle_persistent_rage ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
-  let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
+  let options = genv.options in
+  let root = Path.to_string options.Options.opt_root in
   let items = [] in
   (* genv: lazy-mode options *)
-  let lazy_mode = genv.options.Options.opt_lazy_mode in
+  let lazy_mode = options.Options.opt_lazy_mode in
   let data = Printf.sprintf "lazy_mode=%s\n"
     (Option.value_map lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string) in
   let items = { Lsp.Rage.title = None; data; } :: items in
@@ -1156,7 +1169,7 @@ let handle_persistent_rage ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
   let data = "DEPENDENCIES:\n" ^ dependencies in
   let items = { Lsp.Rage.title = Some (root ^ ":env.dependencies"); data; } :: items in
   (* env: errors *)
-  let errors, warnings, _ = ErrorCollator.get env in
+  let errors, warnings, _ = ErrorCollator.get ~options env in
   let json = Errors.Json_output.json_of_errors_with_context ~strip_root:None ~stdin_file:None
     ~suppressed_errors:[] ~errors ~warnings () in
   let data = "ERRORS:\n" ^ (Hh_json.json_to_multiline json) in
@@ -1238,7 +1251,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
 
   | Subscribe ->
     (* This mutates env, so it can't run in parallel *)
-    Handle_nonparallelizable_persistent handle_persistent_subscribe
+    Handle_nonparallelizable_persistent (handle_persistent_subscribe ~options)
 
   | Autocomplete (file_input, id) ->
     mk_parallelizable_persistent ~options (
@@ -1539,26 +1552,21 @@ let handle_persistent_immediately ~genv ~client_id ~request ~workload =
     ~genv ~client_id ~request ~workload ~default_ret:() ()
 
 let rec handle_parallelizable_persistent_unsafe
-    ~request ~is_serial ~genv ~workload ~client ~profiling env
+    ~request ~genv ~workload ~client ~profiling env
     : unit persistent_handling_result Lwt.t =
-  if is_serial
-  then
-    let workload = workload ~client in
-    run_command_in_serial ~genv ~env ~profiling ~workload
-  else
-    let mk_workload () =
-      let client_id = Persistent_connection.get_id client in
-      handle_parallelizable_persistent ~genv ~client_id ~request ~workload
-    in
-    let workload = workload ~client in
-    run_command_in_parallel ~env ~profiling ~workload ~mk_workload
+  let mk_workload () =
+    let client_id = Persistent_connection.get_id client in
+    handle_parallelizable_persistent ~genv ~client_id ~request ~workload
+  in
+  let workload = workload ~client in
+  run_command_in_parallel ~env ~profiling ~workload ~mk_workload
 
 and handle_parallelizable_persistent
-    ~genv ~client_id ~request ~workload ~is_serial env: unit Lwt.t =
+    ~genv ~client_id ~request ~workload env: unit Lwt.t =
   try%lwt
-    wrap_persistent_handler (handle_parallelizable_persistent_unsafe ~request ~is_serial)
+    wrap_persistent_handler (handle_parallelizable_persistent_unsafe ~request)
       ~genv ~client_id ~request ~workload ~default_ret:() env
-  with Lwt.Canceled when not is_serial->
+  with Lwt.Canceled ->
     (* It's fine for parallelizable commands to be canceled - they'll be run again later *)
     Lwt.return_unit
 
