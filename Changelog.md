@@ -1,3 +1,7 @@
+### 0.96.1
+
+* Object literals with spreads can be described by object types with spreads in the signature verifier/builder.
+
 ### 0.96.0
 
 Likely to cause new Flow errors:
