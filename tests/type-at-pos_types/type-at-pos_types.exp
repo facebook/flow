@@ -526,6 +526,81 @@ mixed.js:18:17 = {
   "start":17,
   "end":18
 }
+callable-object.js:8:6 = {
+  "type":"type Obj1 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T}",
+  "reasons":[],
+  "loc":{
+    "source":"callable-object.js",
+    "type":"SourceFile",
+    "start":{"line":8,"column":6,"offset":112},
+    "end":{"line":8,"column":9,"offset":116}
+  },
+  "path":"callable-object.js",
+  "line":8,
+  "endline":8,
+  "start":6,
+  "end":9
+}
+callable-object.js:13:6 = {
+  "type":"type Obj2 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T}",
+  "reasons":[],
+  "loc":{
+    "source":"callable-object.js",
+    "type":"SourceFile",
+    "start":{"line":13,"column":6,"offset":192},
+    "end":{"line":13,"column":9,"offset":196}
+  },
+  "path":"callable-object.js",
+  "line":13,
+  "endline":13,
+  "start":6,
+  "end":9
+}
+callable-object.js:18:6 = {
+  "type":"type Obj3 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T}",
+  "reasons":[],
+  "loc":{
+    "source":"callable-object.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":6,"offset":281},
+    "end":{"line":18,"column":9,"offset":285}
+  },
+  "path":"callable-object.js",
+  "line":18,
+  "endline":18,
+  "start":6,
+  "end":9
+}
+callable-object.js:23:6 = {
+  "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, (...args: $ReadOnlyArray<mixed>): O2, (...args: $ReadOnlyArray<mixed>): O4, f: <T>(x: T) => T}",
+  "reasons":[],
+  "loc":{
+    "source":"callable-object.js",
+    "type":"SourceFile",
+    "start":{"line":23,"column":6,"offset":373},
+    "end":{"line":23,"column":9,"offset":377}
+  },
+  "path":"callable-object.js",
+  "line":23,
+  "endline":23,
+  "start":6,
+  "end":9
+}
+callable-object.js:31:6 = {
+  "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, (...args: $ReadOnlyArray<mixed>): O1, (...args: $ReadOnlyArray<mixed>): O2, f: <T>(x: T) => T}",
+  "reasons":[],
+  "loc":{
+    "source":"callable-object.js",
+    "type":"SourceFile",
+    "start":{"line":31,"column":6,"offset":606},
+    "end":{"line":31,"column":9,"offset":610}
+  },
+  "path":"callable-object.js",
+  "line":31,
+  "endline":31,
+  "start":6,
+  "end":9
+}
 opaque.js:3:20 = {
   "type":"type Foo = number",
   "reasons":[],
