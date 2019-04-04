@@ -578,8 +578,8 @@ Cannot assign `headers.get(...)` to `b` because null [1] is incompatible with st
                           ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:980:24
-   980|     get(name: string): null | string;
+   <BUILTINS>/bom.js:993:24
+   993|     get(name: string): null | string;
                                ^^^^ [1]
    Headers.js:8:10
      8| const b: string = headers.get('foo'); // incorrect
@@ -799,16 +799,16 @@ Error --------------------------------------------------------------------------
 Cannot assign `params.get(...)` to `b` because null [1] is incompatible with string [2].
 
    URLSearchParams.js:8:19
-     8| const b: string = params.get('foo'); // incorrect
-                          ^^^^^^^^^^^^^^^^^
+      8| const b: string = params.get('foo'); // incorrect
+                           ^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/bom.js:994:24
-   994|     get(name: string): null | string;
-                               ^^^^ [1]
+   <BUILTINS>/bom.js:1007:24
+   1007|     get(name: string): null | string;
+                                ^^^^ [1]
    URLSearchParams.js:8:10
-     8| const b: string = params.get('foo'); // incorrect
-                 ^^^^^^ [2]
+      8| const b: string = params.get('foo'); // incorrect
+                  ^^^^^^ [2]
 
 
 
