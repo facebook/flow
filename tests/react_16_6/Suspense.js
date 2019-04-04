@@ -9,10 +9,6 @@ function Loading() {
 }
 
 {
-  <Suspense fallback={<Loading />} maxDuration="abc" /> // Error: string is incompatible with number
-}
-
-{
   <Suspense fallback={Loading} /> // Error: function is incompatible with exact React.Element
 }
 
@@ -21,11 +17,7 @@ function Loading() {
 }
 
 {
-  <Suspense fallback={<Loading/>} maxDuration={1000} />
-}
-
-{
-  <Suspense fallback={<Loading/>} maxDuration={1000}>
+  <Suspense fallback={<Loading/>}>
     <div>Hello</div>
   </Suspense>
 }
