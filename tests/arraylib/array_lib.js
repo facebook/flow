@@ -62,3 +62,13 @@ function of_test() {
   var upcastOkay: Array<string | number> = Array.of("hello", "world");
   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
 }
+
+function undefined_test() {
+  var emptyArray: Array<number> = []
+
+  var pop: number = emptyArray.pop() // error, undefined ~> number
+  if (pop) pop.toFixed() // ok
+
+  var shift: number = emptyArray.shift() // error, undefined ~> number
+  if (shift) shift.toFixed() // ok
+}
