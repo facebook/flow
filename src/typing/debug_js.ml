@@ -2619,6 +2619,11 @@ let dump_error_message =
           (dump_reason cx reason1)
           (dump_reason cx reason2)
           (string_of_use_op use_op)
+    | EROArrayWrite ((reason1, reason2), use_op) ->
+        spf "EROArrayWrite (%s, %s, %s)"
+          (dump_reason cx reason1)
+          (dump_reason cx reason2)
+          (string_of_use_op use_op)
     | EUnionSpeculationFailed { use_op; reason; reason_op; branches = _ } ->
         spf "EUnionSpeculationFailed { use_op = %s; reason = %s; reason_op = %s; branches = _ }"
           (string_of_use_op use_op)

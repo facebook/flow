@@ -5327,7 +5327,16 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * a source of unsoundness, so that's ok. `tup[(0: any)] = 123` should not
      * error when `tup[0] = 123` does not. *)
     | AnyT _,
-      ElemT (use_op, reason_op, (DefT (_, _, ArrT arrtype) as arr), action) ->
+      ElemT (use_op, reason_op, (DefT (reason_tup, _, ArrT arrtype) as arr), action) ->
+        begin match action, arrtype with
+        | WriteElem _, ROArrayAT _ ->
+          let reasons = (reason_op, reason_tup) in
+            add_output
+              cx
+              ~trace
+              (Error_message.EROArrayWrite (reasons, use_op))
+        | _ -> ()
+      end;
       let value = elemt_of_arrtype arrtype in
       perform_elem_action cx trace ~use_op reason_op arr value action
 
@@ -5337,7 +5346,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | TupleAT(value, ts) -> value, Some ts, true
       | ROArrayAT (value) -> value, None, true
       end in
-      let exact_index, value = match l with
+      let can_write_tuple, value = match l with
       | DefT (_, _, NumT (Literal (_, (float_value, _)))) ->
           begin match ts with
           | None -> false, value
@@ -5358,17 +5367,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           end
       | _ -> false, value
       in
-      if is_tuple && not exact_index then begin
+      if is_tuple && not can_write_tuple then begin
         match action with
         (* These are safe to do with tuples and unknown indexes *)
         | ReadElem _ | CallElem _ -> ()
         (* This isn't *)
         | WriteElem _ ->
           let reasons = (reason, reason_tup) in
-            add_output
-              cx
-              ~trace
-              (Error_message.ETupleUnsafeWrite (reasons, use_op))
+          let error =
+            match ts with
+            | Some _ -> Error_message.ETupleUnsafeWrite (reasons, use_op)
+            | None -> Error_message.EROArrayWrite (reasons, use_op)
+          in
+          add_output
+            cx
+            ~trace
+            error
+
       end;
 
       perform_elem_action cx trace ~use_op reason arr value action

@@ -77,6 +77,7 @@ and 'loc t' =
   | ENonLitArrayToTuple of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | ETupleOutOfBounds of ('loc virtual_reason * 'loc virtual_reason) * int * int * 'loc virtual_use_op
   | ETupleUnsafeWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
+  | EROArrayWrite of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnionSpeculationFailed of {
       use_op: 'loc virtual_use_op;
       reason: 'loc virtual_reason;
@@ -362,6 +363,8 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       ETupleOutOfBounds ((map_reason r1, map_reason r2), l, i, map_use_op op)
   | ETupleUnsafeWrite ((r1, r2), op) ->
       ETupleUnsafeWrite ((map_reason r1, map_reason r2), map_use_op op)
+  | EROArrayWrite ((r1, r2), op) ->
+      EROArrayWrite ((map_reason r1, map_reason r2), map_use_op op)
   | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
       EUnionSpeculationFailed {use_op = map_use_op use_op; reason = map_reason reason;
         reason_op = map_reason reason_op;
@@ -512,6 +515,7 @@ let util_use_op_of_msg nope util = function
 | ENonLitArrayToTuple (rs, op) -> util op (fun op -> ENonLitArrayToTuple (rs, op))
 | ETupleOutOfBounds (rs, l, i, op) -> util op (fun op -> ETupleOutOfBounds (rs, l, i, op))
 | ETupleUnsafeWrite (rs, op) -> util op (fun op -> ETupleUnsafeWrite (rs, op))
+| EROArrayWrite (rs, op) -> util op (fun op -> EROArrayWrite (rs, op))
 | EUnionSpeculationFailed {use_op; reason; reason_op; branches} ->
   util use_op (fun use_op -> EUnionSpeculationFailed {use_op; reason; reason_op; branches})
 | EIncompatibleWithExact (rs, op) -> util op (fun op -> EIncompatibleWithExact (rs, op))
@@ -742,6 +746,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EIncompatibleWithExact _
   | EUnionSpeculationFailed _
   | ETupleUnsafeWrite _
+  | EROArrayWrite _
   | ETupleOutOfBounds _
   | ENonLitArrayToTuple _
   | ETupleArityMismatch _
@@ -1097,6 +1102,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       let (lower, _) = reasons in
       UseOp (loc_of_reason lower,
         [text "the index must be statically known to write a tuple element"],
+        use_op)
+
+    | EROArrayWrite (reasons, use_op) ->
+      let (lower, _) = reasons in
+      UseOp (loc_of_reason lower,
+        [text "read-only arrays cannot be written to"],
         use_op)
 
     | EUnionSpeculationFailed { use_op; reason; reason_op=_; branches } ->
