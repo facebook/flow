@@ -358,7 +358,10 @@ function createEditor(
       showCursorWhenSelecting: true,
       mode: "jsx",
       flow: defaultFlow,
-      lint: getAnnotations
+      lint: {
+        getAnnotations: getAnnotations,
+        lintOnChange: true,
+      }
     });
 
     editor.on('changes', () => {
