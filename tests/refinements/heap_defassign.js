@@ -50,10 +50,10 @@ function def_assign_within_try(b: boolean, obj: Obj) {
     obj.p = 10;                 // (obj.p : number)
     try {
         f();                    // clears refi and might throw
-        obj.p = 'hey';
+        obj.p = 'hey';          // error, number ~/~ string
     } catch (e) {
         f();                    // clears refi and might throw
-        obj.p = 'hey';
+        obj.p = 'hey';          // error, number ~/~ string
     } finally {
         // NOTE: the values understood to flow to obj.p at this point
         // include the number 42 written downstream;
@@ -63,6 +63,18 @@ function def_assign_within_try(b: boolean, obj: Obj) {
         obj.p = 42;
     }
     var z:string = obj.p;       // error, number ~/~ string
+}
+
+function def_assign_within_if_both_branches(b: boolean, obj: Obj) {
+    obj.p = "a";
+    if (b) {
+        f();
+        obj.p = 10;             // (obj.p : number)
+    } else {
+        f();
+        obj.p = 10;
+    }
+    var y: number = obj.p;      // error, obj.p : number | string
 }
 
 function def_assign_within_for(b: boolean, obj: Obj) {

@@ -1217,8 +1217,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       | None ->
         (* if catch ends normally, then non-throwing finally can be
            reached via it or a non-throwing try. merge terminal states *)
-        let e = clone_env try_env in
-        merge_env cx loc (e, e, catch_env) (Changeset.Global.peek ());
+        let e = clone_env start_env in
+        merge_env cx loc (e, try_env, catch_env) (Changeset.Global.peek ());
         e
       | Some _ ->
         (* if catch throws, then the only way into non-throwing finally
