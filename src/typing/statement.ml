@@ -4320,29 +4320,29 @@ and literal ?(is_const=false) cx loc lit =
         then Literal (None, s), RString
         else AnyLiteral, RLongStringLit (max_literal_length)
       in
-      let lit_type = match lit with
-        | Literal (_, s) when is_const -> SingletonStrT s
-        | _ -> StrT lit
+      let lit_type, r_desc = match (lit, r_desc) with
+        | (Literal (_, s), _) when is_const -> SingletonStrT s, RStringLit s
+        | (_, r_desc) -> StrT lit, r_desc
       in
       DefT (annot_reason (mk_reason r_desc loc), make_trust (), lit_type)
   end
 
   | Boolean b ->
-      let lit_type = if is_const
-        then SingletonBoolT b
-        else BoolT (Some b)
+      let lit_type, r_desc = if is_const
+        then SingletonBoolT b, RBooleanLit b
+        else BoolT (Some b), RBoolean
       in
-      DefT (annot_reason (mk_reason RBoolean loc), make_trust (), lit_type)
+      DefT (annot_reason (mk_reason r_desc loc), make_trust (), lit_type)
 
   | Null ->
       NullT.at loc |> with_trust make_trust
 
   | Number f ->
-      let lit_type = if is_const
-        then SingletonNumT (f, lit.raw)
-        else NumT (Literal (None, (f, lit.raw)))
+      let lit_type, r_desc = if is_const
+        then SingletonNumT (f, lit.raw), RNumberLit lit.raw
+        else NumT (Literal (None, (f, lit.raw))), RNumber
       in
-      DefT (annot_reason (mk_reason RNumber loc), make_trust (), lit_type)
+      DefT (annot_reason (mk_reason r_desc loc), make_trust (), lit_type)
 
   | BigInt _ ->
       let reason = annot_reason (mk_reason (RBigIntLit lit.raw) loc) in
