@@ -591,7 +591,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
       ) in
 
       let mk_union reason = function
-        | [] -> DefT (replace_reason_const REmpty reason, bogus_trust (), EmptyT)
+        | [] -> DefT (replace_reason_const REmpty reason, bogus_trust (), EmptyT Bottom)
         | [t] -> t
         | t0::t1::ts ->
           let reason = replace_reason_const RUnionType reason in

@@ -598,7 +598,7 @@ end = struct
       when Env.preserve_inferred_literal_types env ->
       return (Ty.Bool (Some x))
     | DefT (_, _,BoolT _) -> return (Ty.Bool None)
-    | DefT (_, _,EmptyT) -> return Ty.Bot
+    | DefT (_, _,EmptyT _) -> return Ty.Bot
     | DefT (_, _,NullT) -> return Ty.Null
     | DefT (_, _,SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
     | DefT (_, _,SingletonStrT lit) -> return (Ty.StrLit lit)

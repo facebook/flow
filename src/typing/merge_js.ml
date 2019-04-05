@@ -468,7 +468,7 @@ let merge_tvar =
       (* Ignore empty in existentials. This behavior is sketchy, but the error
          behavior without this filtering is worse. If an existential accumulates
          an empty, we error but it's very non-obvious how the empty arose. *)
-      | DefT (_, _, EmptyT) when filter_empty ->
+      | DefT (_, _, EmptyT _) when filter_empty ->
         collect_lowers ~filter_empty cx seen acc ts
       (* Everything else becomes part of the merge typed *)
       | _ -> collect_lowers ~filter_empty cx seen (t::acc) ts

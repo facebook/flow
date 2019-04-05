@@ -422,7 +422,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
             (Reason.RCustom "undefined exports")
             reason_exports_module,
           Type.bogus_trust (),
-          Type.EmptyT))
+          Type.EmptyT Type.Bottom))
         (Type.Unsoundness.exports_any reason_exports_module))
       scope;
 

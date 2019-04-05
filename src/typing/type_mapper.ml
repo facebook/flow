@@ -39,7 +39,7 @@ let union_flatten =
         (flatten cx seen t)
     | OptionalT (r, t) ->
       (DefT (r,  Trust.bogus_trust (), VoidT))::(flatten cx seen t)
-    | DefT (_, _, EmptyT) -> []
+    | DefT (_, _, EmptyT _) -> []
     | _ -> [t]
   in
   fun cx ts -> union_flatten cx (ref ISet.empty) ts
@@ -194,7 +194,7 @@ class virtual ['a] t = object(self)
       | NumT _
       | StrT _
       | BoolT _
-      | EmptyT
+      | EmptyT _
       | MixedT _
       | NullT
       | VoidT -> t

@@ -255,7 +255,7 @@ and collect_of_type ?log_unresolved cx reason acc = function
   | DefT (_, _, BoolT _)
   | DefT (_, _, VoidT)
   | DefT (_, _, NullT)
-  | DefT (_, _, EmptyT)
+  | DefT (_, _, EmptyT _)
   | DefT (_, _, MixedT _)
   | DefT (_, _, SingletonBoolT _)
   | DefT (_, _, SingletonNumT _)

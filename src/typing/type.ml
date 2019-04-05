@@ -208,7 +208,7 @@ module rec TypeTerm : sig
     | NumT of number_literal literal
     | StrT of string literal
     | BoolT of bool option
-    | EmptyT
+    | EmptyT of empty_flavor
     | MixedT of mixed_flavor
     | NullT
     | VoidT
@@ -763,6 +763,10 @@ module rec TypeTerm : sig
     | Mixed_function
     | Mixed_symbol
     | Empty_intersection
+
+  and empty_flavor =
+    | Bottom
+    | Zeroed
 
   and any_source =
     | Annotated
@@ -2774,10 +2778,10 @@ end = struct
     | DefT (_, ltrust, SingletonBoolT _), DefT (_, rtrust, BoolT _)
     | DefT (_, ltrust, NullT), DefT (_, rtrust, NullT)
     | DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT)
-    | DefT (_, ltrust, EmptyT), DefT(_, rtrust, _)
+    | DefT (_, ltrust, EmptyT _), DefT(_, rtrust, _)
     | DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)
       -> not trust_checked || Trust.subtype_trust ltrust rtrust
-    | DefT (_, ltrust, EmptyT), _ -> not trust_checked || Trust.is_public ltrust
+    | DefT (_, ltrust, EmptyT _), _ -> not trust_checked || Trust.is_public ltrust
     | _, DefT (_, rtrust, MixedT _) -> not trust_checked || Trust.is_tainted rtrust
     | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) -> Trust.subtype_trust ltrust rtrust && literal_eq expected actual
     | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) -> Trust.subtype_trust ltrust rtrust && number_literal_eq expected actual
@@ -2848,7 +2852,7 @@ end)
 
 module EmptyT = Primitive (struct
   let desc = REmpty
-  let make r trust = DefT (r, trust, EmptyT)
+  let make r trust = DefT (r, trust, EmptyT Bottom)
 end)
 
 module AnyT = struct
@@ -2966,7 +2970,7 @@ let is_proper_def = function
 
 (* convenience *)
 let is_bot = function
-| DefT (_, _, EmptyT) -> true
+| DefT (_, _, EmptyT _) -> true
 | _ -> false
 
 let is_top = function
@@ -3090,7 +3094,7 @@ let string_of_def_ctor = function
   | BoolT _ -> "BoolT"
   | CharSetT _ -> "CharSetT"
   | ClassT _ -> "ClassT"
-  | EmptyT -> "EmptyT"
+  | EmptyT _ -> "EmptyT"
   | FunT _ -> "FunT"
   | IdxWrapper _ -> "IdxWrapper"
   | InstanceT _ -> "InstanceT"

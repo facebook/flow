@@ -39,7 +39,7 @@ let rec merge_type cx =
 
   | AnyT _, t | t, AnyT _ -> t
 
-  | DefT (_, _, EmptyT), t | t, DefT (_, _, EmptyT) -> t
+  | DefT (_, _, EmptyT _), t | t, DefT (_, _, EmptyT _) -> t
   | _, (DefT (_, _, MixedT _) as t) | (DefT (_, _, MixedT _) as t), _ -> t
 
   | DefT (_, _, NullT), (MaybeT _ as t) | (MaybeT _ as t), DefT (_, _, NullT)
@@ -232,7 +232,7 @@ let instantiate_poly_t cx t = function
           prerr_endline "Instantiating poly type failed";
           t
       )
-      | DefT (_, _, EmptyT)
+      | DefT (_, _, EmptyT _)
       | DefT (_, _, MixedT _)
       | AnyT _
       | DefT (_, _, (TypeT (_, AnyT _))) ->
@@ -261,7 +261,7 @@ let intersect_members cx members =
 
 and instantiate_type = function
   | ThisClassT (_, t) | DefT (_, _, ClassT t)
-  | (AnyT _ as t) | DefT(_, _, TypeT (_, t)) | (DefT (_, _, EmptyT) as t) -> t
+  | (AnyT _ as t) | DefT(_, _, TypeT (_, t)) | (DefT (_, _, EmptyT _) as t) -> t
   | t -> "cannot instantiate non-class type " ^ string_of_ctor t |> assert_false
 
 let possible_types_of_use cx = function
@@ -427,7 +427,7 @@ let rec extract_type cx this_t = match this_t with
   | DefT (_, _, ClassT _)
   | CustomFunT (_, _)
   | MatchingPropT (_, _, _)
-  | DefT (_, _, EmptyT)
+  | DefT (_, _, EmptyT _)
   | EvalT (_, _, _)
   | ExistsT _
   | InternalT (ExtendsT _)

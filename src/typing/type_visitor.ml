@@ -134,7 +134,7 @@ class ['a] t = object(self)
   | NumT _
   | StrT _
   | BoolT _
-  | EmptyT
+  | EmptyT _
   | MixedT _
   | NullT
   | VoidT

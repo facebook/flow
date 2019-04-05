@@ -828,33 +828,13 @@ let ground_subtype = function
   (* tvars are not considered ground, so they're not part of this relation *)
   | (OpenT _, _) | (_, UseT (_, OpenT _)) -> false
 
-  (* Allow any lower bound to be repositioned *)
-  | (_, ReposLowerT _) -> false
-  | (_, ReposUseT _) -> false
-
-  | (_, ObjKitT _) -> false
-
-  | (_, ChoiceKitUseT _) -> false
-
-  (* eval *)
-  | _, UseT (_, TypeDestructorTriggerT _) -> false
-
-  (* Allow deferred unification with `any` *)
-  | (_, UnifyT _) -> false
-
   | UnionT _, _ -> false
-
-  (* Allow EmptyT ~> CondT *)
-  | (_, CondT _) -> false
-
-  | _, MakeExactT _ -> false
 
   | DefT (_, _, NumT _), UseT (_, DefT (_, _, NumT _))
   | DefT (_, _, StrT _), UseT (_, DefT (_, _, StrT _))
   | DefT (_, _, BoolT _), UseT (_, DefT (_, _, BoolT _))
   | DefT (_, _, NullT), UseT (_, DefT (_, _, NullT))
   | DefT (_, _, VoidT), UseT (_, DefT (_, _, VoidT))
-  | DefT (_, _, EmptyT), _
   | _, UseT (_, DefT (_, _, MixedT _))
     -> true
 
@@ -928,7 +908,7 @@ let equatable = function
   | DefT (_, _, NumT _), DefT (_, _, NumT _)
   | DefT (_, _, StrT _), DefT (_, _, StrT _)
   | DefT (_, _, BoolT _), DefT (_, _, BoolT _)
-  | DefT (_, _, EmptyT), _ | _, DefT (_, _, EmptyT)
+  | DefT (_, _, EmptyT _), _ | _, DefT (_, _, EmptyT _)
   | _, DefT (_, _, MixedT _) | DefT (_, _, MixedT _), _
   | AnyT _, _ | _, AnyT _
   | DefT (_, _, VoidT), _ | _, DefT (_, _, VoidT)
@@ -947,7 +927,7 @@ let equatable = function
 let union_of_ts reason ts =
   match ts with
   (* If we have no types then this is an error. *)
-  | [] -> DefT (reason, bogus_trust (), EmptyT)
+  | [] -> DefT (reason, bogus_trust (), EmptyT Bottom)
   (* If we only have one type then only that should be used. *)
   | t0::[] -> t0
   (* If we have more than one type then we make a union type. *)
@@ -983,7 +963,7 @@ and generate_tests : 'a . Context.t -> Type.typeparam list -> (Type.t SMap.t -> 
   (* make bot type for given param *)
   let mk_bot _ { name; reason; _ } =
     let desc = RPolyTest (name, RIncompatibleInstantiation name) in
-    DefT (replace_reason_const desc reason, bogus_trust (), EmptyT)
+    DefT (replace_reason_const desc reason, bogus_trust (), EmptyT Zeroed)
   in
   (* make bound type for given param and argument map *)
   let mk_bound cx prev_args { bound; name; reason = param_reason; _ } =
@@ -1111,6 +1091,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | UseT (use_op, (AnyT _ as any)) -> any_propagated_use cx trace use_op any l
       | _ -> false
 
+    then () else if
+      match l with
+      | DefT (_, _, EmptyT flavor) -> empty_success flavor u
+      | _ -> false
     then () else match (l,u) with
 
     (********)
@@ -2307,7 +2291,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, InvariantT r' -> Context.mark_invariant cx (aloc_of_reason r') (reason_of_t l) ~useful:(
         match Type_filter.not_exists l with
-        | DefT (_, _, EmptyT) -> false
+        | DefT (_, _, EmptyT Bottom) -> false
         | _ -> true
       )
 
@@ -2409,11 +2393,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          a truthy && b ~> b
          a && b ~> a falsy | b *)
       (match Type_filter.exists left with
-      | DefT (_, _, EmptyT) -> (* falsy *)
+      | DefT (_, _, EmptyT Bottom) -> (* falsy *)
         rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u))
       | _ ->
         (match Type_filter.not_exists left with
-        | DefT (_, _, EmptyT) -> (* truthy *)
+        | DefT (_, _, EmptyT Bottom) -> (* truthy *)
           rec_flow cx trace (right, UseT (unknown_use, u))
         | _ ->
           rec_flow cx trace (left, PredicateT (NotP (ExistsP None), u));
@@ -2426,11 +2410,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          a falsy || b ~> b
          a || b ~> a truthy | b *)
       (match Type_filter.not_exists left with
-      | DefT (_, _, EmptyT) -> (* truthy *)
+      | DefT (_, _, EmptyT Bottom) -> (* truthy *)
         rec_flow cx trace (left, PredicateT (ExistsP None, u))
       | _ ->
         (match Type_filter.exists left with
-        | DefT (_, _, EmptyT) -> (* falsy *)
+        | DefT (_, _, EmptyT Bottom) -> (* falsy *)
           rec_flow cx trace (right, UseT (unknown_use, u))
         | _ ->
           rec_flow cx trace (left, PredicateT (ExistsP None, u));
@@ -3404,6 +3388,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* any ~> $Exact<UB>. unwrap exact *)
     | AnyT _, UseT (use_op, ExactT (_, t)) ->
       rec_flow cx trace (l, UseT (use_op, t))
+    | DefT (_, _, EmptyT _), UseT (use_op, ExactT (_, t)) ->
+      rec_flow cx trace (l, UseT (use_op, t))
 
     (* inexact LB ~> $Exact<UB>. error *)
     | _, UseT (use_op, ExactT (ru, _)) ->
@@ -3430,7 +3416,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (_, trust, VoidT), MakeExactT (reason_op, k) ->
       continue cx trace (VoidT.why reason_op trust) k
 
-    | DefT (_, trust, EmptyT), MakeExactT (reason_op, k) ->
+    | DefT (_, trust, EmptyT _), MakeExactT (reason_op, k) ->
       continue cx trace (EmptyT.why reason_op trust) k
 
     (* unsupported kind *)
@@ -5303,6 +5289,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
 
+
     | _, ElemT (use_op, reason_op, (DefT (_, _, ObjT _) as obj), action) ->
       let propref = match l with
       | DefT (reason_x, _, StrT (Literal (_, x))) ->
@@ -5853,12 +5840,15 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* the left-hand side of a `(x in y)` expression is a string or number
        TODO: also, symbols *)
-    | DefT (_, _, StrT _), AssertBinaryInLHST _ -> ()
-    | DefT (_, _, NumT _), AssertBinaryInLHST _ -> ()
+
+   | DefT (_, _, StrT _), AssertBinaryInLHST _ -> ()
+   | DefT (_, _, NumT _), AssertBinaryInLHST _ -> ()
     | _, AssertBinaryInLHST _ ->
       add_output cx ~trace (Error_message.EBinaryInLHS (reason_of_t l))
 
     (* the right-hand side of a `(x in y)` expression must be object-like *)
+
+
     | DefT (_, _, ArrT _), AssertBinaryInRHST _ -> ()
     | _, AssertBinaryInRHST _ when object_like l -> ()
     | _, AssertBinaryInRHST _ ->
@@ -6111,7 +6101,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (***************************)
 
     (* Use our alternate if our lower bound is empty. *)
-    | DefT (_, _, EmptyT), CondT (_, _, else_t, tout) ->
+    | DefT (_, _, EmptyT Bottom), CondT (_, _, else_t, tout) ->
       rec_flow_t cx trace (else_t, tout)
 
     (* Otherwise continue by Flowing out lower bound to tout. *)
@@ -6525,13 +6515,17 @@ and flow_addition cx trace use_op reason flip l r u =
     rec_flow_t cx trace (StrT.at loc |> with_trust bogus_trust, u)
 
   (* unreachable additions are unreachable *)
-  | DefT (_, _, EmptyT), _
-  | _, DefT (_, _, EmptyT) ->
+  | DefT (_, _, EmptyT Bottom), _
+  | _, DefT (_, _, EmptyT Bottom) ->
     rec_flow_t cx trace (EmptyT.at loc |> with_trust bogus_trust, u)
 
   | DefT (reason, _, MixedT _), _
   | _, DefT (reason, _, MixedT _) ->
     add_output cx ~trace (Error_message.EAdditionMixed (reason, use_op))
+
+  | DefT (_, _, EmptyT Zeroed), t
+  | t, DefT (_, _, EmptyT Zeroed) ->
+    rec_flow_t cx trace (t, u)
 
   | DefT (_, _, (NumT _ | BoolT _ | NullT | VoidT)),
     DefT (_, _, (NumT _ | BoolT _ | NullT | VoidT)) ->
@@ -6851,6 +6845,143 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
 
   rec_flow cx trace (uproto,
     ReposUseT (ureason, false, use_op, DefT (lreason, bogus_trust (), ObjT l_obj)))
+
+(* Returns true when __flow should succeed immediately if EmptyT of a given
+   flavor flows into u. *)
+and empty_success flavor u =
+  match flavor, u with
+  (* Work has to happen when Empty flows to these types whether the EmptyT
+     originates from generic testing or elsewhere. This logic was previously
+     captured in ground_subtype. *)
+  | _, UseT (_, OpenT _)
+  | _, UseT (_, TypeDestructorTriggerT _)
+  | _, ChoiceKitUseT _
+  | _, CondT _
+  | _, MakeExactT _
+  | _, ObjKitT _
+  | _, ReposLowerT _
+  | _, ReposUseT _
+  | _, UnifyT _ -> false
+  | Bottom, _ -> true
+  (* After this line, flavor is always Zeroed. *)
+  (* Special cases: these cases actually utilize the fact that the LHS is Empty,
+     either by specially propagating it or selecting cases, etc. *)
+  | _, UseT (_, ExactT _)
+  | _, AdderT _
+  | _, AndT _
+  | _, OrT _
+  (* Propagation cases: these cases don't use the fact that the LHS is
+     empty, but they propagate the LHS to other types and trigger additional
+     flows that may need to occur. *)
+  | _, UseT (_, DefT (_, _, PolyT _))
+  | _, UseT (_, DefT (_, _, TypeAppT _))
+  | _, UseT (_, AnyWithLowerBoundT _)
+  | _, UseT (_, AnyWithUpperBoundT _)
+  | _, UseT (_, MaybeT _)
+  | _, UseT (_, MergedT _)
+  | _, UseT (_, OpaqueT _)
+  | _, UseT (_, OptionalT _)
+  | _, UseT (_, ReposT _)
+  | _, UseT (_, ThisClassT _)
+  | _, UseT (_, ThisTypeAppT _)
+  | _, UseT (_, UnionT _)
+  | _, AssertExportIsTypeT _
+  | _, AssertImportIsValueT _
+  | _, BecomeT _
+  | _, BindT _
+  | _, CallLatentPredT _
+  | _, CallOpenPredT _
+  | _, CJSExtractNamedExportsT _
+  | _, ComparatorT _
+  | _, DebugPrintT _
+  | _, EqT _
+  | _, ExportTypeT _
+  | _, IdxUnwrap _
+  | _, ImportTypeT _
+  | _, ImportTypeofT _
+  | _, IntersectionPreprocessKitT _
+  | _, InvariantT _
+  | _, MapTypeT (_, TupleMap _, _)
+  | _, NotT _
+  | _, NullishCoalesceT _
+  | _, ObjAssignToT _
+  | _, ObjTestT _
+  | _, ObjTestProtoT _
+  | _, OptionalChainT _
+  | _, SentinelPropTestT _
+  | _, TestPropT _
+    -> false
+  (* Error prevention: we should succeed because otherwise we'll hit
+     a case with a wildcard on the LHS that raises an error, which in
+     this situation would be spurious *)
+  | _, UseT (_, AnnotT _)
+  | _, UseT (_, EvalT _)
+  | _, UseT (_, DefT (_, _, TypeT _))
+  | _, UseT (_, ShapeT _)
+  | _, AssertArithmeticOperandT _
+  | _, AssertBinaryInLHST _
+  | _, AssertBinaryInRHST _
+  | _, AssertForInRHST _
+  | _, LookupT _
+  | _, ImplementsT _
+  | _, SetProtoT _
+  (* No more work: we can succeed without flowing EmptyT any further
+     because the relevant cases don't propagate the LHS to any other
+     types; either the flow would succeed anyways or it would fall
+     through to the final catch-all error case and cause a spurious
+     error. *)
+  | _, UseT _
+  | _, ArrRestT _
+  | _, CallElemT _
+  | _, CallT _
+  | _, CJSRequireT _
+  | _, ConcretizeTypeAppsT _
+  | _, ConstructorT _
+  | _, CopyNamedExportsT _
+  | _, CopyTypeExportsT _
+  | _, DebugSleepT _
+  | _, ElemT _
+  | _, ExportNamedT _
+  | _, ExtendsUseT _
+  | _, GetElemT _
+  | _, GetKeysT _
+  | _, GetPrivatePropT _
+  | _, GetPropT _
+  | _, GetProtoT _
+  | _, GetStaticsT _
+  | _, GetValuesT _
+  | _, GuardT _
+  | _, HasOwnPropT _
+  | _, IdxUnMaybeifyT _
+  | _, ImportDefaultT _
+  | _, ImportModuleNsT _
+  | _, ImportNamedT _
+  | _, MatchPropT _
+  | _, MapTypeT _ (* Note the TupleMap case above *)
+  | _, MethodT _
+  | _, MixinT _
+  | _, ObjAssignFromT _
+  | _, ObjFreezeT _
+  | _, ObjRestT _
+  | _, ObjSealT _
+  | _, PredicateT _
+  | _, ReactInToProps _
+  | _, ReactKitT _
+  | _, ReactPropsToOut _
+  | _, RefineT _
+  | _, ResolveSpreadT _
+  | _, SetElemT _
+  | _, SetPrivatePropT _
+  | _, SetPropT _
+  | _, SpecializeT _
+  | _, SubstOnPredT _
+  | _, SuperT _
+  | _, ThisSpecializeT _
+  | _, ToStringT _
+  | _, TypeAppVarianceCheckT _
+  | _, UnaryMinusT _
+  | _, VarianceCheckT _
+    -> true
 
 (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
    cases. Note that it is not always safe to do this (ie in the case of unions).
@@ -7430,7 +7561,7 @@ and check_polarity cx ?trace polarity = function
   | DefT (_, _, NumT _)
   | DefT (_, _, StrT _)
   | DefT (_, _, BoolT _)
-  | DefT (_, _, EmptyT)
+  | DefT (_, _, EmptyT _)
   | DefT (_, _, MixedT _)
   | AnyT _
   | DefT (_, _, NullT)
@@ -8463,7 +8594,7 @@ and quick_mem_result cx trace reason_op use_op l rep = function
     true (* Our work here is done, so no need to continue. *)
   | UnionRep.No -> (* membership check failed *)
     let r = UnionRep.specialized_reason reason_op rep in
-    rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), EmptyT)));
+    rec_flow cx trace (l, UseT (use_op, DefT (r, bogus_trust (), EmptyT Bottom)));
     true (* Our work here is done, so no need to continue. *)
   | UnionRep.Conditional t -> (* conditional match *)
     rec_flow cx trace (l, UseT (use_op, t));
@@ -8737,7 +8868,7 @@ and update_sketchy_null cx opt_loc t =
       let exists_checks = Context.exists_checks cx in
       let exists_check = ALocMap.get loc exists_checks |> Option.value ~default:ExistsCheck.empty in
       let exists_check = match Type_filter.maybe t with
-        | DefT (_, _, EmptyT) -> exists_check
+        | DefT (_, _, EmptyT _) -> exists_check
         | _ -> {exists_check with null_loc = t_loc}
       in
       let exists_check =
@@ -8763,14 +8894,14 @@ and guard cx trace source pred result sink = match pred with
 | ExistsP loc ->
   update_sketchy_null cx loc source;
   begin match Type_filter.exists source with
-  | DefT (_, _, EmptyT) -> ()
+  | DefT (_, _, EmptyT _) -> ()
   | _ -> rec_flow_t cx trace (result, sink)
   end
 
 | NotP (ExistsP loc) ->
   update_sketchy_null cx loc source;
   begin match Type_filter.not_exists source with
-  | DefT (_, _, EmptyT) -> ()
+  | DefT (_, _, EmptyT _) -> ()
   | _ -> rec_flow_t cx trace (result, sink)
   end
 
@@ -11635,7 +11766,7 @@ and object_kit =
       }), flags) in
       resolved cx trace use_op reason resolve_tool tool tout x
     (* If we see an empty then propagate empty to tout. *)
-    | DefT (r, trust, EmptyT) ->
+    | DefT (r, trust, EmptyT _) ->
       rec_flow cx trace (EmptyT.make r trust, UseT (use_op, tout))
     (* Propagate any. *)
     | AnyT (_, src) ->

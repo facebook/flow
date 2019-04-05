@@ -5268,7 +5268,7 @@ and jsx_body cx (loc, child) = Ast.JSX.(
         UnresolvedArg t, Expression e
       | EmptyExpression loc ->
         let reason = mk_reason (RCustom "empty jsx body") loc in
-        let t = DefT (reason, make_trust (), EmptyT) in
+        let t = DefT (reason, make_trust (), EmptyT Bottom) in
         UnresolvedArg t, EmptyExpression loc
     in
     Some unresolved_param, (loc, ExpressionContainer { expression = ex })

@@ -118,7 +118,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       | Some b -> ["literal", JSON_Bool b]
       | None -> [])
 
-  | DefT (_, _, EmptyT)
+  | DefT (_, _, EmptyT _)
   | DefT (_, _, MixedT _)
   | AnyT _
   | DefT (_, _, NullT)
@@ -1755,7 +1755,7 @@ let rec dump_t_ (depth, tvars) cx t =
         (kid return_t)) t
   | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
   | DefT (_, trust, MixedT flavor) -> p ~trust:(Some trust) ~extra:(string_of_mixed_flavor flavor) t
-  | DefT (_, trust, EmptyT)
+  | DefT (_, trust, EmptyT _)
   | DefT (_, trust, NullT)
   | DefT (_, trust, VoidT)
       -> p ~trust:(Some trust) t

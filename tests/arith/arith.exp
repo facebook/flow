@@ -411,7 +411,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:40
 
-Cannot add `a` and `b` because `A` [1] could either behave like a string or like a number.
+Cannot add `a` and `b` because:
+ - `A` [1] could either behave like a string or like a number.
+ - `B` [2] could either behave like a string or like a number.
 
    generic.js:4:40
    4| function f<A,B>(a: A, b: B): A {return a + b; } // error
@@ -421,11 +423,16 @@ References:
    generic.js:4:20
    4| function f<A,B>(a: A, b: B): A {return a + b; } // error
                          ^ [1]
+   generic.js:4:26
+   4| function f<A,B>(a: A, b: B): A {return a + b; } // error
+                               ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:5:40
 
-Cannot add `b` and `a` because `B` [1] could either behave like a string or like a number.
+Cannot add `b` and `a` because:
+ - `B` [1] could either behave like a string or like a number.
+ - `A` [2] could either behave like a string or like a number.
 
    generic.js:5:40
    5| function f<A,B>(a: A, b: B): A {return b + a; } // error
@@ -435,11 +442,16 @@ References:
    generic.js:5:26
    5| function f<A,B>(a: A, b: B): A {return b + a; } // error
                                ^ [1]
+   generic.js:5:20
+   5| function f<A,B>(a: A, b: B): A {return b + a; } // error
+                         ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:6:40
 
-Cannot add `a` and `b` because `A` [1] could either behave like a string or like a number.
+Cannot add `a` and `b` because:
+ - `A` [1] could either behave like a string or like a number.
+ - `B` [2] could either behave like a string or like a number.
 
    generic.js:6:40
    6| function f<A,B>(a: A, b: B): B {return a + b; } // error
@@ -449,11 +461,16 @@ References:
    generic.js:6:20
    6| function f<A,B>(a: A, b: B): B {return a + b; } // error
                          ^ [1]
+   generic.js:6:26
+   6| function f<A,B>(a: A, b: B): B {return a + b; } // error
+                               ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:7:40
 
-Cannot add `b` and `a` because `B` [1] could either behave like a string or like a number.
+Cannot add `b` and `a` because:
+ - `B` [1] could either behave like a string or like a number.
+ - `A` [2] could either behave like a string or like a number.
 
    generic.js:7:40
    7| function f<A,B>(a: A, b: B): B {return b + a; } // error
@@ -463,6 +480,9 @@ References:
    generic.js:7:26
    7| function f<A,B>(a: A, b: B): B {return b + a; } // error
                                ^ [1]
+   generic.js:7:20
+   7| function f<A,B>(a: A, b: B): B {return b + a; } // error
+                         ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ mult.js:5:5
@@ -698,4 +718,4 @@ References:
 
 
 
-Found 48 errors
+Found 52 errors

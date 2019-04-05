@@ -780,7 +780,7 @@ module This = struct
   let is_bound_to_empty x =
     let open Type in
     Flow.match_this_binding x.tparams_map
-      (function DefT (_, _, EmptyT) -> true | _ -> false)
+      (function DefT (_, _, EmptyT _) -> true | _ -> false)
 
   exception FoundInClass
   class detector = object

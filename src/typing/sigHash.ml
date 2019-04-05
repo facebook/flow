@@ -184,7 +184,7 @@ let hash_of_def_ctor = Type.(function
   | BoolT _ -> BoolH
   | CharSetT _ -> CharSetH
   | ClassT _ -> ClassH
-  | EmptyT -> EmptyH
+  | EmptyT _ -> EmptyH
   | FunT _ -> FunH
   | MixedT _ -> MixedH
   | NullT -> NullH
