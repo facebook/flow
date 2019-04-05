@@ -1238,6 +1238,14 @@ References:
                                 ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- mixed_object.js:4:5
+
+Cannot assign `3` to `x.a` because property `a` is not writable.
+
+   4|     x.a = 3;
+          ^^^
+
+
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
 Cannot perform arithmetic operation because null or undefined [1] is not a number.
@@ -3430,4 +3438,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 248 errors
+Found 249 errors
