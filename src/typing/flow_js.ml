@@ -11327,7 +11327,7 @@ and object_kit =
 
       let props = SMap.map (fun p -> 
         match p with
-          | Field (_, DefT (_, _, OptionalT t), polarity) -> Field (None, t, polarity)
+          | Field (_, OptionalT (_, t), polarity) -> Field (None, t, polarity)
           | Field (_, t, polarity) -> Field (None, t, polarity)
           | Get (_, t) -> Get (None, t)
           | Set (_, t) -> Set (None, t)
@@ -11345,7 +11345,7 @@ and object_kit =
     fun cx trace _ reason tout x ->
       let t = match Nel.map (mk_required_object cx reason) x with
         | (t, []) -> t
-        | (t0, t1::ts) -> DefT (reason, bogus_trust (), UnionT (UnionRep.make t0 t1 ts))
+        | (t0, t1::ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
       in
       (* Intentional UnknownUse here. *)
       rec_flow_t cx trace (t, tout)
