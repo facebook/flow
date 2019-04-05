@@ -374,8 +374,8 @@ let not_function t =
 let array t =
   match t with
   | DefT (r, trust, MixedT _) ->
-    DefT (replace_reason_const RArray r, trust,
-      ArrT (ArrayAT (DefT (r, trust, MixedT Mixed_everything), None))
+    DefT (replace_reason_const RROArrayType r, trust,
+      ArrT (ROArrayAT (DefT (r, trust, MixedT Mixed_everything)))
     )
   | DefT (_, _, (ArrT _)) | AnyT _ ->
     t

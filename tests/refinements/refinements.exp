@@ -1041,7 +1041,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:59:17
 
-Cannot call `takesString` with `x` bound to `x` because array [1] is incompatible with string [2].
+Cannot call `takesString` with `x` bound to `x` because read-only array type [1] is incompatible with string [2].
 
    mixed.js:59:17
    59|     takesString(x); // error
