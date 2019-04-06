@@ -5152,6 +5152,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let new_obj = DefT (reason, trust, ObjT {objtype with flags}) in
       rec_flow_t cx trace (new_obj, t)
 
+    (*************************)
+    (* arrays can be frozen *)
+    (*************************)
+
+    | DefT (reason_o, trust, ArrT arrtype), ObjFreezeT (reason_op, t) ->
+      (* make the reason describe the result (e.g. a frozen array literal),
+         but point at the entire Object.freeze call. *)
+      let desc = RFrozen (desc_of_reason reason_o) in
+      let reason = replace_reason_const desc reason_op in
+
+      let new_arrtype = match arrtype with
+        | ArrayAT (value, _) -> ROArrayAT value
+        (* TODO: Tuples aren't covariant, so Object.freeze actually doesn't do anything to them
+          https://github.com/facebook/flow/issues/4509  *)
+        | TupleAT (_, _) -> arrtype
+        | ROArrayAT _ -> arrtype
+      in
+      let new_arr = DefT (reason, trust, ArrT new_arrtype) in
+      rec_flow_t cx trace (new_arr, t)
+
     | AnyT (_, src), ObjFreezeT (reason_op, t) ->
       rec_flow_t cx trace (AnyT.why src reason_op, t)
 

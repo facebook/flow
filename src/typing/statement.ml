@@ -6143,6 +6143,21 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
     None,
     [Expression e_ast]
 
+  (* Freezing an array literal is supported since there's no way it could
+     have been mutated elsewhere *)
+  | "freeze", None, [Expression ((arg_loc, Array _) as e)] ->
+    let (_, arg_t), _ as e_ast = expression cx e in
+
+    let reason_arg = mk_reason (RFrozen RArrayLit) arg_loc in
+    let arg_t = Tvar.mk_where cx reason_arg (fun tvar ->
+      Flow.flow cx (arg_t, ObjFreezeT (reason_arg, tvar));
+    ) in
+
+    let reason = mk_reason (RMethodCall (Some m)) loc in
+    snd (method_call cx reason prop_loc ~use_op:unknown_use (expr, obj_t, m) None [Arg arg_t]),
+    None,
+    [Expression e_ast]
+
   | ( "create"
     | "getOwnPropertyNames"
     | "keys"
