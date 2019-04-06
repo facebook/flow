@@ -2824,6 +2824,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let values_l = union_of_ts reason ts in
       rec_flow_t cx trace (values_l, values)
 
+    | DefT (_, _, ArrT arrtype), GetValuesT (reason, values) ->
+      (* Find all of the props. *)
+      let ts = match arrtype with
+        | ArrayAT (_, Some ts) -> ts
+        | ArrayAT (t, None) -> [t]
+        | ROArrayAT t -> [t]
+        | TupleAT (_, ts) -> ts
+      in
+      (* Create a union type from all our selected types. *)
+      let values_l = union_of_ts reason ts in
+      rec_flow_t cx trace (values_l, values)
+
     | DefT (_, _, InstanceT (_, _, _, { own_props; _ })), GetValuesT (reason, values) ->
       (* Find all of the props. *)
       let props = Context.find_props cx own_props in
