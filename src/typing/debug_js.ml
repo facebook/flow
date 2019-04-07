@@ -1290,6 +1290,10 @@ and json_of_propref_impl json_cx = Hh_json.(function
       "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None r;
       "name", JSON_String x;
     ]
+  | NamedNum (r, x, _) -> JSON_Object [
+      "reason", json_of_reason ~strip_root:json_cx.strip_root ~offset_table:None r;
+      "name", JSON_String x;
+    ]
   | Computed t -> JSON_Object [
       "elem", _json_of_t json_cx t
     ]
@@ -1910,6 +1914,7 @@ and dump_use_t_ (depth, tvars) cx t =
 
   let propref = function
     | Named (r, x) -> spf "%S %s" (dump_reason cx r) x
+    | NamedNum (r, x, _) -> spf "%S %s" (dump_reason cx r) x
     | Computed t -> kid t
   in
 

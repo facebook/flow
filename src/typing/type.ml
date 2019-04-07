@@ -960,6 +960,7 @@ module rec TypeTerm : sig
 
   and propref =
     | Named of reason * name
+    | NamedNum of reason * name * index
     | Computed of t
 
   and sealtype =
@@ -3372,10 +3373,12 @@ let rec string_of_predicate = function
 
 let name_of_propref = function
   | Named (_, x) -> Some x
+  | NamedNum (_, x, _) -> Some x
   | Computed _ -> None
 
 let reason_of_propref = function
   | Named (r, _) -> r
+  | NamedNum (r, _, _) -> r
   | Computed t -> reason_of_t t
 
 and extract_setter_type = function

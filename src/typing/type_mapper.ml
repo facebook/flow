@@ -1045,6 +1045,7 @@ class virtual ['a] t_with_uses = object(self)
   method prop_ref cx map_cx t =
     match t with
     | Named _ -> t
+    | NamedNum _ -> t
     | Computed t' ->
         let t'' = self#type_ cx map_cx t' in
         if t'' == t' then t

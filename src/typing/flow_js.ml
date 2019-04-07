@@ -5271,6 +5271,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       when flags.frozen ->
       let reason_prop, prop = match prop with
       | Named (r, prop) -> r, Some prop
+      | NamedNum (r, prop, _) -> r, Some prop
       | Computed t -> reason_of_t t, None
       in
       add_output cx ~trace (Error_message.EPropNotWritable {
@@ -5351,16 +5352,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
 
-    | _, ElemT (use_op, reason_op, (DefT (_, _, ObjT { props_tmap = mapr; _ }) as obj), action) ->
+    | _, ElemT (use_op, reason_op, (DefT (_, _, ObjT { props_tmap = _; _ }) as obj), action) ->
       let propref = match l with
       | DefT (reason_x, _, StrT (Literal (_, x))) ->
         let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
         Named (reason_prop, x)
-      | DefT (reason_x, _, NumT (Literal (_, (x, _)))) ->
-        let x = Dtoa.ecma_string_of_float x in
-        let reason_prop = replace_reason_const (RProperty (Some x)) reason_x in
+      | DefT (reason_x, _, NumT (Literal (_, (index, _)))) ->
+        let name = Dtoa.ecma_string_of_float index in
+        let reason_prop = replace_reason_const (RProperty (Some name)) reason_x in
         (* Probably should be different type constructor *)
-        if Context.has_prop cx mapr x then Named (reason_prop, x) else Computed l
+        (* if Context.has_prop cx mapr x then Named (reason_prop, x) else Computed l *)
+        NamedNum (reason_prop, name, int_of_float index)
       | _ -> Computed l
       in
       (match action with
@@ -6601,7 +6603,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | _, LookupT (_, _, _, propref, lookup_action) ->
       let use_op = use_op_of_lookup_action lookup_action in
       add_output cx ~trace (Error_message.EIncompatibleProp {
-        prop = (match propref with Named (_, name) -> Some name | Computed _ -> None);
+        prop = (match propref with 
+          | Named (_, name) -> Some name 
+          | NamedNum (_, name, _) -> Some name 
+          | Computed _ -> None
+        );
         reason_prop = reason_of_propref propref;
         reason_obj = reason_of_t l;
         special = error_message_kind_of_lower l;
@@ -8865,6 +8871,7 @@ and set_prop cx ?(wr_ctx=Normal) trace ~use_op
 and get_obj_prop cx trace o propref reason_op =
   let named_prop = match propref with
   | Named (_, x) -> Context.get_prop cx o.props_tmap x
+  | NamedNum (_, x, _) -> Context.get_prop cx o.props_tmap x
   | Computed _ -> None
   in
   match propref, named_prop, o.dict_t with
@@ -8875,6 +8882,11 @@ and get_obj_prop cx trace o propref reason_op =
     when not (is_dictionary_exempt x) ->
     (* Dictionaries match all property reads *)
     rec_flow_t cx trace (string_key x reason_op, key);
+    Some (Field (None, value, dict_polarity))
+  | NamedNum (_, x, index), None, Some { key; value; dict_polarity; _ }
+    when not (is_dictionary_exempt x) ->
+    (* Dictionaries match all property reads *)
+    rec_flow_t cx trace (number_key index x reason_op, key);
     Some (Field (None, value, dict_polarity))
   | Computed k, None, Some { key; value; dict_polarity; _ } ->
     rec_flow_t cx trace (k, key);
@@ -8889,7 +8901,8 @@ and read_obj_prop cx trace ~use_op o propref reason_obj reason_op tout =
     perform_lookup_action cx trace propref p reason_obj reason_op action
   | None ->
     match propref with
-    | Named _ ->
+    | Named _
+    | NamedNum _ ->
       let strict =
         if Obj_type.sealed_in_op reason_op o.flags.sealed
         then Strict reason_obj
@@ -8925,7 +8938,8 @@ and writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t ac
     perform_lookup_action cx trace propref p reason_obj reason_op action
   | None ->
     match propref with
-    | Named (reason_prop, prop) ->
+    | Named (reason_prop, prop)
+    | NamedNum (reason_prop, prop, _) ->
       let sealed = Obj_type.sealed_in_op reason_op o.flags.sealed in
       if sealed && o.flags.exact
       then
@@ -10875,6 +10889,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
     | None ->
       let reason_prop, prop_name = match propref with
       | Named (r, x) -> r, Some x
+      | NamedNum (r, x, _) -> r, Some x
       | Computed t -> reason_of_t t, None
       in
       let msg = Error_message.EPropNotReadable { reason_prop; prop_name; use_op } in
@@ -10900,6 +10915,7 @@ and perform_lookup_action cx trace propref p lreason ureason = function
       | None ->
         let reason_prop, prop_name = match propref with
         | Named (r, x) -> r, Some x
+        | NamedNum (r, x, _) -> r, Some x
         | Computed t -> reason_of_t t, None
         in
         add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
@@ -10918,6 +10934,10 @@ and perform_elem_action cx trace ~use_op reason_op l value = function
 and string_key s reason =
   let key_reason = replace_reason_const (RPropertyIsAString s) reason in
   DefT (key_reason, bogus_trust (), StrT (Literal (None, s)))
+
+and number_key x raw reason =
+  let key_reason = replace_reason_const (RPropertyIsAString raw) reason in
+  DefT (key_reason, bogus_trust (), NumT (Literal (None, (float_of_int x, raw))))
 
 (* builtins, contd. *)
 
@@ -11223,7 +11243,11 @@ and flow_opt_p cx ?trace ~use_op ~report_polarity lreason ureason propref =
     unify_opt cx ?trace ~use_op lt ut
   (* directional cases *)
   | lp, up ->
-    let x = match propref with Named (_, x) -> Some x | Computed _ -> None in
+    let x = match propref with 
+      | Named (_, x) -> Some x
+      | NamedNum (_, x, _) -> Some x
+      | Computed _ -> None
+    in
     (match Property.read_t lp, Property.read_t up with
     | Some lt, Some ut ->
       flow_opt cx ?trace (lt, UseT (use_op, ut))

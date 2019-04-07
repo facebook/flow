@@ -823,6 +823,7 @@ class ['a] t = object(self)
 
   method private propref cx acc = function
   | Named _ -> acc
+  | NamedNum _ -> acc
   | Computed t -> self#type_ cx pole_TODO acc t
 
   method private class_binding cx acc { class_private_fields; class_private_static_fields; _ } =
