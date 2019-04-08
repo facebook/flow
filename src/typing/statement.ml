@@ -86,6 +86,43 @@ let convert_targs cx = function
     ) targts;
     Some targts, Some (loc, targs_ast)
 
+class return_finder = object(this)
+  inherit [bool, ALoc.t] Flow_ast_visitor.visitor ~init:false as super
+
+  method! return _ node =
+    (* TODO we could pass over `return;` since it's definitely returning `undefined`. It will likely
+     * reposition existing errors from the `return;` to the location of the type annotation. *)
+    this#set_acc true;
+    node
+
+  method! call _loc expr =
+    begin if is_call_to_invariant Ast.Expression.Call.(expr.callee) then
+      this#set_acc true
+    end;
+    expr
+
+  method! throw _loc stmt =
+    this#set_acc true;
+    stmt
+
+  method! function_body_any body =
+    begin match body with
+      (* If it's a body expression, some value is implicitly returned *)
+      | Flow_ast.Function.BodyExpression _ -> this#set_acc true
+      | _ -> ()
+    end;
+    super#function_body_any body
+
+  (* Any returns in these constructs would be for nested function definitions, so we short-circuit
+  *)
+  method! class_ _ x = x
+  method! function_declaration _ x = x
+end
+
+let might_have_nonvoid_return loc function_ast =
+  let finder = new return_finder in
+  finder#eval (finder#function_ loc) function_ast
+
 (************)
 (* Visitors *)
 (************)
@@ -6608,7 +6645,14 @@ and mk_func_sig =
     let fparams, params = mk_params cx tparams_map params in
     let body = Some body in
     let ret_reason = mk_reason RReturn (return_loc func) in
-    let return_t, return = Anno.mk_type_annotation cx tparams_map ret_reason return in
+    let return_t, return =
+      let has_nonvoid_return = might_have_nonvoid_return loc func in
+      let definitely_returns_void =
+        kind = Ordinary &&
+        not has_nonvoid_return
+      in
+      Anno.mk_return_type_annotation cx tparams_map ret_reason ~definitely_returns_void return
+    in
     let return_t, predicate = Ast.Type.Predicate.(match predicate with
       | None ->
           return_t, None

@@ -1376,6 +1376,16 @@ and mk_type_annotation cx tparams_map reason = function
   let t, ast_annot = mk_type_available_annotation cx tparams_map annot in
   t, T.Available ast_annot
 
+and mk_return_type_annotation cx tparams_map reason ~definitely_returns_void annot =
+  match annot with
+  | T.Missing loc when definitely_returns_void ->
+    let t = VoidT.why reason |> with_trust literal_trust in
+    t, T.Missing (loc, t)
+  (* TODO we could probably take the same shortcut for functions with an explicit `void` annotation
+  and no explicit returns *)
+  | _ ->
+    mk_type_annotation cx tparams_map reason annot
+
 and mk_type_available_annotation cx tparams_map (loc, annot) =
   let (_, t), _ as annot_ast = convert cx tparams_map annot in
   t, (loc, annot_ast)

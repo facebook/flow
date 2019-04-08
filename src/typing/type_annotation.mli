@@ -46,6 +46,14 @@ val mk_type_annotation: Context.t ->
   (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint ->
   Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation_or_hint
 
+val mk_return_type_annotation:
+  Context.t ->
+  Type.t SMap.t ->
+  Reason.t ->
+  definitely_returns_void:bool ->
+  (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint ->
+  Type.t * (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation_or_hint
+
 val mk_type_available_annotation: Context.t ->
   Type.t SMap.t ->
   (ALoc.t, ALoc.t) Flow_ast.Type.annotation ->
