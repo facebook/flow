@@ -18,6 +18,12 @@ let rec dump_opt (f: 'a -> string) (o: 'a option) = match o with
   | Some t -> f t
   | None -> ""
 
+and dump_bot_kind = function
+  | EmptyType -> "EmptyType"
+  | EmptyMatchingPropT -> "EmptyMatchingPropT"
+  | EmptyTypeDestructorTriggerT -> "EmptyTypeDestructorTriggerT"
+  | NoLowerWithUpper _ -> "NoLowerWithUpper"
+
 and dump_list : 'a . ('a -> string) -> ?sep:string -> 'a list -> string =
   fun f ?(sep=", ") ls ->
     Core_list.map ~f:f ls |> String.concat sep
@@ -136,7 +142,7 @@ and dump_t ?(depth = 10) t =
   | Any Implicit -> "Implicit Any"
   | Any Explicit -> "Explicit Any"
   | Top -> "Top"
-  | Bot -> "Bot"
+  | Bot k -> spf "Bot (%s)" (dump_bot_kind k)
   | Void -> "Void"
   | Null -> "Null"
   | Num (Some x) -> spf "Num (%s)" x
@@ -190,7 +196,7 @@ let string_of_ctor = function
   | Any Implicit -> "Implicit Any"
   | Any Explicit -> "Explicit Any"
   | Top -> "Top"
-  | Bot -> "Bot"
+  | Bot _ -> "Bot"
   | Void -> "Void"
   | Null -> "Null"
   | Num _ -> "Num"
@@ -245,7 +251,7 @@ let json_of_t ~strip_root =
       ]
     | Any Implicit -> [ "any", JSON_String "implicit" ]
     | Any Explicit -> [ "any", JSON_String "explicit" ]
-    | Top | Bot
+    | Top | Bot _
     | Void | Null
     | Num _ | Str _ | Bool _ -> []
     | NumLit s

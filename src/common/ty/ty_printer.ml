@@ -75,7 +75,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
     | Bound (_, name) -> Atom name
     | Any k -> any ~depth k
     | Top -> Atom "mixed"
-    | Bot -> Atom "empty"
+    | Bot _ -> Atom "empty"
     | Void -> Atom "void"
     | Null -> Atom "null"
     | Num _ -> Atom "number"
@@ -277,7 +277,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
       if List.mem Null ts && List.mem Void ts then
         let ts = List.filter (fun t -> t <> Null && t <> Void) ts in
         let ts = match ts with
-          | [] -> [Bot]
+          | [] -> [Bot EmptyType]
           | _ -> ts in
         (Atom "?", ts)
       else

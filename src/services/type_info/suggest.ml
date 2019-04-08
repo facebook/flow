@@ -44,7 +44,7 @@ class visitor ~cxs = object(this)
     match Loc_collections.ALocMap.get search_loc cxs with
     | Some (Ok ty) -> (
         match index ty with
-        | Ok Ty.Bot ->
+        | Ok Ty.Bot _ ->
           this#warn loc SkipEmpty
         | Ok ty -> (
             match Ty_serializer.type_ ty with
