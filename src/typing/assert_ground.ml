@@ -143,7 +143,6 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
       let seen =
         match t with
         | BoundT _ -> seen
-        | AnnotT _ -> seen
         | MergedT _ ->
           (* The base class implementation will walk uses here, but there's no
              reasonable way to complain about missing annotations for MergedT,
