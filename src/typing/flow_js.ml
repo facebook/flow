@@ -4289,7 +4289,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       if lflds = uflds then ()
       else flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj)
 
-
     | DefT (_, _, ObjT _), UseT (_, NullProtoT _) -> ()
 
     (* InstanceT -> ObjT *)
@@ -7502,6 +7501,9 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     [EvalT (t, destructor, Cache.Eval.id t destructor)]
   in
   rec_flow_t cx trace (UnionT (r, rep), tout)
+| AnnotT (_, t, _) ->
+  let destructor = TypeDestructorT (use_op, reason, d) in
+  rec_flow_t cx trace (EvalT (t, destructor, Cache.Eval.id t destructor), tout)
 | _ ->
   rec_flow cx trace (t, match d with
   | NonMaybeType ->
