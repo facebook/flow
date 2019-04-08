@@ -49,6 +49,11 @@ let translate_identifier_or_literal_key t = Ast.Expression.Object.(function
   | Property.Literal (loc, lit) -> Property.Literal ((loc, t), lit)
   | Property.PrivateName _ | Property.Computed _ -> assert_false "precondition not met")
 
+let is_call_to_invariant callee =
+  match callee with
+  | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "invariant"; _ })) -> true
+  | _ -> false
+
 let convert_tparam_instantiations cx tparams_map instantiations =
   let open Ast.Expression.TypeParameterInstantiation in
   let rec loop ts tasts cx tparams_map = function
@@ -3788,10 +3793,10 @@ and subscript =
     (* See ~/www/static_upstream/core/ *)
 
     | Call {
-        Call.callee = (_, Identifier (_, { Ast.Identifier.name= "invariant"; comments= _ })) as callee;
+        Call.callee;
         targs;
         arguments;
-      } ->
+      } when is_call_to_invariant callee ->
         (* TODO: require *)
         let (_, callee_t), _ as callee = expression cx callee in
         let targs = Option.map targs (fun (loc, args) ->
