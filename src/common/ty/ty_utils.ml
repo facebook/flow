@@ -110,44 +110,43 @@ let symbols_of_t : Ty.t -> Ty_symbol.symbol list =
   end in
   fun t -> o#on_t () t
 
-(* Simplify union/intersection types
 
-   This visitor:
-   - removes identical nodes from union and intersection types. (At the moment
-     the comparison used is `Pervasives.compare`, but perhaps something more
-     clever can replace this.)
-   - removes the neutral element for union (resp. intersection) types, which
-     is the bottom (resp. top) type.
+module type TopAndBotQueries = sig
+  val is_bot: Ty.t -> bool
+  val is_top: Ty.t -> bool
+end
 
-   The Any state of this visitor is used to capture any change to the type
-   structure.
+module Simplifier(Q: TopAndBotQueries) = struct
 
-   WARNING: This visitor will do a deep type traversal
-*)
-let simplify_unions_inters =
-  let open Ty in
-  let is_top = function
-    | Ty.Top -> true
-    | _ -> false
-  in
-  let is_bot = function
-    | Ty.Bot _ -> true
-    | _ -> false
-  in
+  (* Simplify union/intersection types
+
+     This visitor:
+     - removes identical nodes from union and intersection types. (At the moment
+       the comparison used is `Pervasives.compare`, but perhaps something more
+       clever can replace this.)
+     - removes the neutral element for union (resp. intersection) types, which
+       is the bottom (resp. top) type.
+
+     The Any state of this visitor is used to capture any change to the type
+     structure.
+
+     WARNING: This visitor will do a deep type traversal
+  *)
+
   let rec simplify_list ~is_zero ~is_one acc = function
     | [] -> acc
     | t::ts ->
       if is_zero t then [t]
       else if is_one t then simplify_list ~is_zero ~is_one acc ts
       else simplify_list ~is_zero ~is_one (t::acc) ts
-  in
+
   let simplify_nel ~is_zero ~is_one (t, ts) =
     match simplify_list [] ~is_zero ~is_one (t::ts) with
     | [] -> (t, [])
     | t::ts -> (t, ts)
-  in
-  let o = object (self)
-    inherit [_] endo_ty as super
+
+  let mapper = object (self)
+    inherit [_] Ty.endo_ty as super
 
     method private on_nel f env nel =
       let (hd, tl) = nel in
@@ -165,21 +164,60 @@ let simplify_unions_inters =
 
     method! on_t env t =
       match t with
-      | Union (t0,t1,ts) ->
+      | Ty.Union (t0,t1,ts) ->
         self#simplify
           ~break:Ty.bk_union ~make:Ty.mk_union
-          ~is_zero:is_top ~is_one:is_bot
+          ~is_zero:Q.is_top ~is_one:Q.is_bot
           ~default:t env (t0, t1::ts)
-      | Inter (t0,t1,ts) ->
+      | Ty.Inter (t0,t1,ts) ->
         self#simplify
           ~break:Ty.bk_inter ~make:Ty.mk_inter
-          ~is_zero:is_bot ~is_one:is_top
+          ~is_zero:Q.is_bot ~is_one:Q.is_top
           ~default:t env (t0, t1::ts)
       | _ ->
         super#on_t env t
-  end in
-  let rec go t =
-    let t' = o#on_t () t in
-    if t == t' then t else go t'
-  in
-  fun t -> go t
+  end
+
+  let rec run t =
+    let t' = mapper#on_t () t in
+    if t == t' then t else run t'
+end
+
+module BotSensitiveQueries: TopAndBotQueries = struct
+  let is_top = function
+    | Ty.Top -> true
+    | _ -> false
+
+  let is_bot_upper_kind = function
+    | Ty.NoUpper -> true
+    | Ty.SomeKnownUpper _
+    | Ty.SomeUnknownUpper -> false
+
+  let is_bot_kind = function
+    | Ty.EmptyType -> true
+    | Ty.EmptyTypeDestructorTriggerT -> false
+    | Ty.EmptyMatchingPropT -> false
+    | Ty.NoLowerWithUpper kind -> is_bot_upper_kind kind
+
+  let is_bot = function
+    | Ty.Bot kind -> is_bot_kind kind
+    | _ -> false
+end
+
+module BotInsensitiveQueries: TopAndBotQueries = struct
+  let is_top = function
+    | Ty.Top -> true
+    | _ -> false
+
+  let is_bot = function
+    | Ty.Bot _ -> true
+    | _ -> false
+end
+
+let simplify_type =
+  let module BotInsensitiveSimplifier = Simplifier(BotInsensitiveQueries) in
+  let module BotSensitiveSimplifier = Simplifier(BotSensitiveQueries) in
+  fun ~simplify_empty t ->
+    if simplify_empty
+    then BotInsensitiveSimplifier.run t
+    else BotSensitiveSimplifier.run t

@@ -56,6 +56,7 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_default
     preserve_inferred_literal_types = false;
     optimize_types = true;
     omit_targ_defaults;
+    simplify_empty = true;
   } in
   match find_type_at_pos_annotation typed_ast loc with
   | None -> FailureNoMatch
@@ -77,6 +78,7 @@ let dump_types cx file_sig ~printer =
     preserve_inferred_literal_types = false;
     optimize_types = true;
     omit_targ_defaults = false;
+    simplify_empty = true;
   } in
   let file = Context.file cx in
   let type_table = Context.type_table cx in
@@ -145,6 +147,7 @@ let suggest_types cx file_sig =
     preserve_inferred_literal_types = false;
     optimize_types = true;
     omit_targ_defaults = false;
+    simplify_empty = true;
   } in
   let type_table = Context.type_table cx in
   let file = Context.file cx in
