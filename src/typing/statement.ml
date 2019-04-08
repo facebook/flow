@@ -4691,7 +4691,7 @@ and simple_assignment cx _loc lhs rhs =
           Flow.flow cx (o, SetPrivatePropT (
             use_op, reason, name, class_entries, false, t, Some prop_t
           ));
-          post_assignment_havoc ~private_:true name lhs t;
+          post_assignment_havoc ~private_:true name lhs prop_t t;
           prop_t
         in
         (lhs_loc, prop_t), Ast.Pattern.Expression ((pat_loc, prop_t), Member { Member.
@@ -4729,7 +4729,7 @@ and simple_assignment cx _loc lhs rhs =
           Flow.flow cx (o, SetPropT (
             use_op, reason, Named (prop_reason, name), wr_ctx, t, Some prop_t
           ));
-          post_assignment_havoc ~private_:false name lhs t;
+          post_assignment_havoc ~private_:false name lhs prop_t t;
           prop_t
         in
         let property = Member.PropertyIdentifier ((prop_loc, prop_t), map_ident_new_type prop_t id) in
@@ -6888,7 +6888,7 @@ and check_default_pattern cx left right =
       end
     | _ -> ()
 
-and post_assignment_havoc ~private_ name patt t =
+and post_assignment_havoc ~private_ name patt orig_t t =
   (* types involved in the assignment are computed
      in pre-havoc environment. it's the assignment itself
      which clears refis *)
@@ -6907,7 +6907,7 @@ and post_assignment_havoc ~private_ name patt t =
        object and refinement types - `o` and `t` here - are
        fully resolved.
      *)
-    ignore Env.(set_expr key (fst patt) t t)
+    ignore Env.(set_expr key (fst patt) t orig_t)
   | None ->
     ()
 

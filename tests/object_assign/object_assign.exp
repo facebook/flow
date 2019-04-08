@@ -230,6 +230,23 @@ References:
                                 ^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- scope.js:33:4
+
+Cannot cast `obj.attr` to number because string [1] is incompatible with number [2].
+
+   scope.js:33:4
+   33|   (obj.attr: number);
+          ^^^^^^^^
+
+References:
+   scope.js:31:16
+   31|     obj.attr = "hello";
+                      ^^^^^^^ [1]
+   scope.js:33:14
+   33|   (obj.attr: number);
+                    ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- spread.js:7:2
 
 Cannot cast `Object.assign(...)` to object type because string [1] is incompatible with number [2] in property `foo`.
@@ -305,4 +322,4 @@ References:
 
 
 
-Found 19 errors
+Found 20 errors

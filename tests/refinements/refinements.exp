@@ -730,34 +730,6 @@ References:
                   ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ heap_defassign.js:53:17
-
-string [1] is incompatible with number [2].
-
-   heap_defassign.js:53:17
-   53|         obj.p = 'hey';          // error, number ~/~ string
-                       ^^^^^ [1]
-
-References:
-   heap_defassign.js:50:13
-   50|     obj.p = 10;                 // (obj.p : number)
-                   ^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ heap_defassign.js:56:17
-
-string [1] is incompatible with number [2].
-
-   heap_defassign.js:56:17
-   56|         obj.p = 'hey';          // error, number ~/~ string
-                       ^^^^^ [1]
-
-References:
-   heap_defassign.js:50:13
-   50|     obj.p = 10;                 // (obj.p : number)
-                   ^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:62:25
 
 Cannot assign `obj.p` to `y` because:
@@ -770,13 +742,13 @@ Cannot assign `obj.p` to `y` because:
 
 References:
    heap_defassign.js:53:17
-   53|         obj.p = 'hey';          // error, number ~/~ string
+   53|         obj.p = 'hey';
                        ^^^^^ [1]
    heap_defassign.js:62:16
    62|         var y: number = obj.p;  // error, string ~/~ number
                       ^^^^^^ [2]
    heap_defassign.js:56:17
-   56|         obj.p = 'hey';          // error, number ~/~ string
+   56|         obj.p = 'hey';
                        ^^^^^ [3]
 
 
@@ -795,34 +767,6 @@ References:
    heap_defassign.js:65:11
    65|     var z:string = obj.p;       // error, number ~/~ string
                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ heap_defassign.js:72:17
-
-number [1] is incompatible with string [2].
-
-   heap_defassign.js:72:17
-   72|         obj.p = 10;             // (obj.p : number)
-                       ^^ [1]
-
-References:
-   heap_defassign.js:69:13
-   69|     obj.p = "a";
-                   ^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ heap_defassign.js:75:17
-
-number [1] is incompatible with string [2].
-
-   heap_defassign.js:75:17
-   75|         obj.p = 10;
-                       ^^ [1]
-
-References:
-   heap_defassign.js:69:13
-   69|     obj.p = "a";
-                   ^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:85:21
@@ -3438,4 +3382,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 249 errors
+Found 245 errors

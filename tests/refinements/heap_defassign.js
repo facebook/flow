@@ -50,10 +50,10 @@ function def_assign_within_try(b: boolean, obj: Obj) {
     obj.p = 10;                 // (obj.p : number)
     try {
         f();                    // clears refi and might throw
-        obj.p = 'hey';          // error, number ~/~ string
+        obj.p = 'hey';
     } catch (e) {
         f();                    // clears refi and might throw
-        obj.p = 'hey';          // error, number ~/~ string
+        obj.p = 'hey';
     } finally {
         // NOTE: the values understood to flow to obj.p at this point
         // include the number 42 written downstream;
