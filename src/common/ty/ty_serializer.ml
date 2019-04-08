@@ -94,11 +94,14 @@ and generic x targs =
   mk_generic id targs
 
 and union t (t0, t1, rest) =
-  let ts = bk_union t in
+  let ts = bk_union t |> Nel.to_list in
   if List.mem Null ts && List.mem Void ts then
-    let ts = List.filter (fun t -> not (t = Null || t = Void)) ts in
-    type_ (mk_union ts) >>| fun ts ->
-    (Loc.none, T.Nullable ts)
+    match List.filter (fun t -> not (t = Null || t = Void)) ts with
+    | [] ->
+      return (Loc.none, T.Union ((Loc.none, T.Null), (Loc.none, T.Void), []))
+    | hd::tl ->
+      type_ (mk_union (hd, tl)) >>| fun ts ->
+      (Loc.none, T.Nullable ts)
   else
     type_ t0 >>= fun t0 ->
     type_ t1 >>= fun t1 ->

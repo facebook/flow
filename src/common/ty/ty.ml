@@ -168,35 +168,35 @@ and polarity = Positive | Negative | Neutral
 (* Type destructors *)
 
 let rec bk_union ?(flattened=false) = function
-  | Union (t1,t2,ts) when flattened -> t1::t2::ts
-  | Union (t1,t2,ts) -> Core_list.concat_map ~f:bk_union (t1::t2::ts)
-  | t -> [t]
+  | Union (t1,t2,ts) when flattened -> (t1, t2::ts)
+  | Union (t1,t2,ts) -> Nel.map_concat bk_union (t1, t2::ts)
+  | t -> (t, [])
 
 let rec bk_inter ?(flattened=false) = function
-  | Inter (t1,t2,ts) when flattened -> t1::t2::ts
-  | Inter (t1,t2,ts) -> Core_list.concat_map ~f:bk_inter (t1::t2::ts)
-  | t -> [t]
+  | Inter (t1,t2,ts) when flattened -> (t1, t2::ts)
+  | Inter (t1,t2,ts) -> Nel.map_concat bk_inter (t1, t2::ts)
+  | t -> (t, [])
 
 
 (* Type constructors *)
 
-let mk_union ?(flattened=false) ts =
-  match Core_list.(ts >>= bk_union ~flattened) with
-  | [] -> Bot
-  | [t] -> t
-  | t1::t2::ts -> Union (t1, t2, ts)
+let mk_union ?(flattened=false) nel_ts =
+  let (t, ts) = Nel.map_concat (bk_union ~flattened) nel_ts in
+  match ts with
+  | [] -> t
+  | hd::tl -> Union (t, hd, tl)
 
-let mk_inter ?(flattened=false) ts =
-  match Core_list.(ts >>= bk_inter ~flattened) with
-  | [] -> Top
-  | [t] -> t
-  | t1::t2::ts -> Inter (t1, t2, ts)
+let mk_inter ?(flattened=false) nel_ts =
+  let (t, ts) = Nel.map_concat (bk_inter ~flattened) nel_ts in
+  match ts with
+  | [] -> t
+  | hd::tl -> Inter (t, hd, tl)
 
 let explicit_any = Any Explicit
 let implicit_any = Any Implicit
 let is_dynamic = function Any _ -> true | _ -> false
 let mk_maybe t =
-  mk_union [Null; Void; t]
+  mk_union (Null, [Void; t])
 
 let mk_field_props prop_list =
   Core_list.map ~f:(fun (id, t, opt) -> NamedProp (id,

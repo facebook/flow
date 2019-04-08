@@ -88,6 +88,15 @@ let tl (_, xs) = xs
 
 let nth nel n = Core_list.nth_exn (to_list nel) n
 
+(* Does not guarantee sortedness *)
+let dedup ?(compare=Pervasives.compare) (x, xs) =
+  let xs = Core_list.dedup ~compare xs in
+  let xs = List.fold_left (fun acc x' ->
+    if compare x x' = 0 then acc else x'::acc
+  ) [] xs in
+  let xs = List.rev xs in
+  (x, xs)
+
 let result_all = function
   | Ok x, rest ->
     begin match Core_result.all rest with

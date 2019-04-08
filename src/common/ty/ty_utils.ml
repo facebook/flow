@@ -126,34 +126,43 @@ let symbols_of_t : Ty.t -> Ty_symbol.symbol list =
 *)
 let simplify_unions_inters =
   let open Ty in
-  let simplify_zero_one ~zero ~one =
-    let rec simplify_aux acc = function
+  let rec simplify_list ~zero ~one acc = function
     | [] -> acc
     | t::ts ->
       if t = zero then [t]
-      else if t = one then simplify_aux acc ts
-      else simplify_aux (t::acc) ts
-    in
-    simplify_aux []
+      else if t = one then simplify_list ~zero ~one acc ts
+      else simplify_list ~zero ~one (t::acc) ts
+  in
+  let simplify_nel ~zero ~one (t, ts) =
+    match simplify_list [] ~zero ~one (t::ts) with
+    | [] -> (t, [])
+    | t::ts -> (t, ts)
   in
   let o = object (self)
     inherit [_] endo_ty as super
+
+    method private on_nel f env nel =
+      let (hd, tl) = nel in
+      let hd' = f env hd in
+      let tl' = self#on_list f env tl in
+      if hd == hd' && tl == tl' then nel else (hd', tl')
+
     method private simplify env ~break ~zero ~one ~make ~default ts0 =
-      let ts1 = self#on_list self#on_t env ts0 in
-      let ts2 = ts1 |> Core_list.map ~f:break |> Core_list.concat in
-      let ts2 = if List.length ts1 <> List.length ts2 then ts2 else ts1 in
-      let ts3 = ts2 |> simplify_zero_one ~zero ~one |> Core_list.dedup in
-      let ts3 = if List.length ts2 <> List.length ts3 then ts3 else ts2 in
+      let ts1 = self#on_nel self#on_t env ts0 in
+      let ts2 = Nel.map_concat break ts1 in
+      let ts2 = if Nel.length ts1 <> Nel.length ts2 then ts2 else ts1 in
+      let ts3 = ts2 |> simplify_nel ~zero ~one |> Nel.dedup in
+      let ts3 = if Nel.length ts2 <> Nel.length ts3 then ts3 else ts2 in
       if ts0 == ts3 then default else make ts3
 
     method! on_t env t =
       match t with
       | Union (t0,t1,ts) ->
         self#simplify ~break:Ty.bk_union ~zero:Ty.Top
-          ~one:Ty.Bot ~make:Ty.mk_union ~default:t env (t0::t1::ts)
+          ~one:Ty.Bot ~make:Ty.mk_union ~default:t env (t0, t1::ts)
       | Inter (t0,t1,ts) ->
         self#simplify ~break:Ty.bk_inter ~zero:Ty.Bot
-          ~one:Ty.Top ~make:Ty.mk_inter ~default:t env (t0::t1::ts)
+          ~make:Ty.mk_inter ~one:Ty.Top ~default:t env (t0, t1::ts)
       | _ ->
         super#on_t env t
   end in
