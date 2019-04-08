@@ -225,6 +225,7 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
     expand_internal_types = false;
     expand_type_aliases = true;
     flag_shadowed_type_params = false;
+    evaluate_type_destructors = true;
     preserve_inferred_literal_types = false;
     optimize_types = true;
     omit_targ_defaults = false;
