@@ -469,6 +469,11 @@ let collect_flowconfig_flags main ignores_str untyped_str declarations_str inclu
   let raw_lint_severities = list_of_string_arg lints_str in
   main { ignores; includes; libs; raw_lint_severities; untyped; declarations; }
 
+let remove_exclusion pattern =
+  if String_utils.string_starts_with pattern "!" then (
+    String.sub pattern 1 ((String.length pattern) - 1)
+  ) else pattern
+
 let file_options =
   let default_lib_dir ~no_flowlib tmp_dir =
     let root = Path.make (Tmp.temp_dir tmp_dir "flowlib") in
@@ -485,6 +490,7 @@ let file_options =
      let root = Path.to_string root
        |> Sys_utils.normalize_filename_dir_sep in
      let reg = s
+       |> remove_exclusion
        |> Str.split_delim Files.project_root_token
        |> String.concat root
        |> Str.regexp in

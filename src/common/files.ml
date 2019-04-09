@@ -316,32 +316,39 @@ let absolute_path_regexp = Str.regexp "^\\(/\\|[A-Za-z]:[/\\\\]\\)"
 
 let project_root_token = Str.regexp_string "<PROJECT_ROOT>"
 
+let is_matching path pattern_list =
+  List.fold_left (
+    fun current (pattern, rx) ->
+      if String_utils.string_starts_with pattern "!" then (
+        current && not (Str.string_match rx path 0)
+      ) else (
+        current || (Str.string_match rx path 0)
+      )
+    ) false pattern_list
+
 (* true if a file path matches an [ignore] entry in config *)
 let is_ignored (options: options) =
-  let list = Core_list.map ~f:snd options.ignores in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
     let path = Sys_utils.normalize_filename_dir_sep path in
-    List.exists (fun rx -> Str.string_match rx path 0) list
+    is_matching path options.ignores
 
 (* true if a file path matches an [untyped] entry in config *)
 let is_untyped (options: options) =
-  let list = Core_list.map ~f:snd options.untyped in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
     let path = Sys_utils.normalize_filename_dir_sep path in
-    List.exists (fun rx -> Str.string_match rx path 0) list
+    is_matching path options.untyped
 
 (* true if a file path matches a [declarations] entry in config *)
 let is_declaration (options: options) =
-  let list = Core_list.map ~f:snd options.declarations in
   fun path ->
     (* On Windows, the path may use \ instead of /, but let's standardize the
      * ignore regex to use / *)
     let path = Sys_utils.normalize_filename_dir_sep path in
-    List.exists (fun rx -> Str.string_match rx path 0) list
+    is_matching path options.declarations
 
 (* true if a file path matches an [include] path in config *)
 let is_included options f =
