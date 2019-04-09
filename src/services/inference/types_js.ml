@@ -442,7 +442,7 @@ let merge
     | Some callback ->
       (* call supplied function to calculate closure of modules to merge *)
       with_timer_lwt ~options "MakeMergeInput" profiling (fun () ->
-        Lwt.return (callback to_merge)
+        Lwt.return (callback ())
       )
   in
 
@@ -1487,9 +1487,7 @@ end = struct
       ~dependency_graph
       ~deleted
       ~persistent_connections:(Some env.ServerEnv.connections)
-      ~prep_merge:(Some (fun _to_merge ->
-        (* need to merge the closure of inferred files and their deps *)
-
+      ~prep_merge:(Some (fun () ->
         let n = FilenameSet.cardinal all_dependent_files in
         if n > 0
         then Hh_logger.info "remerge %d dependent files:" n;
@@ -1498,16 +1496,7 @@ end = struct
           Hh_logger.info "%d/%d: %s" i n (File_key.to_string f);
           i + 1
         ) all_dependent_files 1 in
-        Hh_logger.info "Merge prep";
-
-        (* merge errors for unchanged dependents will be cleared lazily *)
-
-        (* to_merge is inferred files plus all dependents. prep for re-merge *)
-        (* NOTE: Non-@flow files don't have entries in ResolvedRequiresHeap, so
-           don't add then to the set of files to merge! Only inferred files (along
-           with dependents) should be merged: see below. *)
-        (* let _to_merge = CheckedSet.add ~dependents:all_dependent_files inferred in *)
-        ()
+        Hh_logger.info "Merge prep"
       ))
     in
 
