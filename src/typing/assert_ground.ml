@@ -148,6 +148,14 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
              reasonable way to complain about missing annotations for MergedT,
              which was added to avoid missing annotations. *)
           seen
+        | ReposT (r, _) ->
+          (* It's possible that we might encounter a substituted this type in a
+           * negative position. This is normally an error, but might be
+           * suppresesed or otherwise still present in the exports. If we
+           * encounter this, we should just ignore it. *)
+          if desc_of_reason r = RThisType
+          then seen
+          else super#type_ cx pole seen t
         | EvalT (_, TypeDestructorT _, _) ->
           (* Type destructors are annotations, so we should never complain about
              missing annotations due them. The default visitor _should_ never
