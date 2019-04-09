@@ -438,7 +438,7 @@ runtest() {
         fi
 
         # if .flowconfig sets no_flowlib, don't pass the cli flag
-        if grep -q "no_flowlib" .flowconfig; then
+        if [ -f .flowconfig ] && grep -q "no_flowlib" .flowconfig; then
             flowlib=""
         fi
 

@@ -1,0 +1,36 @@
+
+Flow check:
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:17
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   foo.js:3:17
+   3| let x: string = 123
+                      ^^^ [1]
+
+References:
+   foo.js:3:8
+   3| let x: string = 123
+             ^^^^^^ [2]
+
+
+
+Found 1 error
+
+Flow status:
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:17
+
+Cannot assign `123` to `x` because number [1] is incompatible with string [2].
+
+   foo.js:3:17
+   3| let x: string = 123
+                      ^^^ [1]
+
+References:
+   foo.js:3:8
+   3| let x: string = 123
+             ^^^^^^ [2]
+
+
+
+Found 1 error

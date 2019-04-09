@@ -1280,7 +1280,7 @@ let do_rage flowconfig_name (state: state) : Rage.result =
   (* values in environment variables FLOW_LOG_FILE and FLOW_MONITOR_LOG_FILE  *)
   (* upon launch. Failing that, CommandUtils.server_log_file will look in the *)
   (* flowconfig for a "log.file" option. Failing that it will synthesize one  *)
-  (* from `Server_files_js.file_of_root "log"` in the tmp-directory. And      *)
+  (* from `Server_files_js.log_file` in the tmp-directory. And                *)
   (* CommandUtils.monitor_log_file is similar except it bypasses flowconfig.  *)
   (* As for tmp dir, that's --temp_dir, failing that FLOW_TEMP_DIR, failing   *)
   (* that temp_dir in flowconfig, failing that Sys_utils.temp_dir_name /flow. *)

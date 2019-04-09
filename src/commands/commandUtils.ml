@@ -719,10 +719,10 @@ let connect_and_json_flags =
 let server_log_file ~flowconfig_name ~tmp_dir root flowconfig =
   match FlowConfig.log_file flowconfig with
   | Some x -> x
-  | None -> Path.make (Server_files_js.file_of_root ~flowconfig_name "log" ~tmp_dir root)
+  | None -> Path.make (Server_files_js.log_file ~flowconfig_name ~tmp_dir root)
 
 let monitor_log_file ~flowconfig_name ~tmp_dir root =
-  Path.make (Server_files_js.file_of_root ~flowconfig_name "monitor_log" ~tmp_dir root)
+  Path.make (Server_files_js.monitor_log_file ~flowconfig_name ~tmp_dir root)
 
 module Options_flags = struct
   type t = {
