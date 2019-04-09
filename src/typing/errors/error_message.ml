@@ -1524,20 +1524,24 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         | UnexpectedArrayHole _ ->
           [text "Unexpected array hole:"]
         | EmptyArray _ ->
-          [text "Cannot determine element type of empty array, try using a type cast."]
+           [text "Cannot determine the element type of an empty array. ";
+            text "Please provide an annotation, e.g., by adding a type cast around this expression."]
         | EmptyObject _ ->
-          [text "Cannot determine types of initialized properties of empty object, try using a type cast."]
+           [text "Cannot determine types of initialized properties of an empty object. ";
+            text "Please provide an annotation, e.g., by adding a type cast around this expression."]
         | UnexpectedExpression (_, esort) ->
-          [text (
-              spf "Expected literal expression instead of %s, try using a type cast."
-                (Flow_ast_utils.ExpressionSort.to_string esort)
-          )]
+          [text (spf "Cannot determine the type of this %s. "
+                   (Flow_ast_utils.ExpressionSort.to_string esort));
+           text "Please provide an annotation, e.g., by adding a type cast around this expression."]
         | SketchyToplevelDef _ ->
           [text "Unexpected toplevel definition that needs hoisting:"]
         | TODO (msg, _) ->
           [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
       end in
-      Normal ((text "Could not build a typed interface for this module. ")::msg)
+      Normal
+        ((text "Failed to build a typed interface for this module. ")::
+         (text "The exports of this module must be annotated with types. ")::
+         msg)
 
     | EUnreachable _ ->
       Normal [text "Unreachable code."]

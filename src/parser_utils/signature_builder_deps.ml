@@ -79,12 +79,12 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
         spf "Unexpected array spread @ %s" (L.debug_to_string spread_loc)
       | UnexpectedArrayHole loc -> spf "Unexpected array hole @ %s" (L.debug_to_string loc)
       | EmptyArray loc ->
-        spf "Cannot determine element type of empty array @ %s" (L.debug_to_string loc)
+        spf "Cannot determine the element type of an empty array @ %s" (L.debug_to_string loc)
       | EmptyObject loc ->
-        spf "Cannot determine types of initialized properties of empty object @ %s"
+        spf "Cannot determine types of initialized properties of an empty object @ %s"
           (L.debug_to_string loc)
       | UnexpectedExpression (loc, esort) ->
-        spf "Expected literal expression instead of %s @ %s"
+        spf "Cannot determine the type of this %s @ %s"
           (Ast_utils.ExpressionSort.to_string esort) (L.debug_to_string loc)
       | SketchyToplevelDef loc ->
         spf "Unexpected toplevel definition that needs hoisting @ %s" (L.debug_to_string loc)
