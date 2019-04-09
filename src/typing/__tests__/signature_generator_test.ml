@@ -22,19 +22,27 @@ let pretty_print program =
 let print_ast program =
   Hh_json.json_to_string ~pretty:true @@ Translate.program None program
 
-let verify_and_generate ?prevent_munge ?ignore_static_propTypes contents =
+let verify_and_generate ?prevent_munge ?facebook_fbt
+      ?ignore_static_propTypes ?facebook_keyMirror
+      contents =
   let contents = String.concat "\n" contents in
   let program = Signature_verifier_test.parse contents in
   let signature = match Signature_builder.program ~module_ref_prefix:None program with
     | Ok signature -> signature
     | Error _ -> failwith "Signature builder failure!" in
-  Signature_builder.Signature.verify_and_generate ?prevent_munge ?ignore_static_propTypes
+  Signature_builder.Signature.verify_and_generate ?prevent_munge ?facebook_fbt
+    ?ignore_static_propTypes ?facebook_keyMirror
     signature program
 
-let mk_signature_generator_test contents expected_msgs =
+let mk_signature_generator_test ?prevent_munge ?facebook_fbt
+      ?ignore_static_propTypes ?facebook_keyMirror
+      contents expected_msgs =
   begin fun ctxt ->
     let msgs =
-      let _errors, program = verify_and_generate ~facebook_fbt:(Some "FbtElement") contents in
+      let _errors, program =
+        verify_and_generate ?prevent_munge ?facebook_fbt
+          ?ignore_static_propTypes ?facebook_keyMirror
+          contents in
       String.split_on_char '\n' @@ pretty_print program
     in
     let printer v = "\n" ^ (String.concat "\n" v) in
@@ -45,10 +53,15 @@ let mk_signature_generator_test contents expected_msgs =
       expected_msgs msgs
   end
 
-let mk_generated_signature_file_sig_test contents expected_msgs =
+let mk_generated_signature_file_sig_test ?prevent_munge ?facebook_fbt
+      ?ignore_static_propTypes ?facebook_keyMirror
+      contents expected_msgs =
   begin fun ctxt ->
     let msgs =
-      let _errors, program = verify_and_generate ~facebook_fbt:(Some "FbtElement") contents in
+      let _errors, program =
+        verify_and_generate ?prevent_munge ?facebook_fbt
+          ?ignore_static_propTypes ?facebook_keyMirror
+          contents in
       begin match File_sig.With_Loc.program ~ast:program ~module_ref_prefix:None with
         | Ok fs -> File_sig.With_Loc.to_string fs |> String.split_on_char '\n'
         | Error _ -> []
@@ -62,11 +75,15 @@ let mk_generated_signature_file_sig_test contents expected_msgs =
       expected_msgs msgs
   end
 
-let mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes contents =
+let mk_verified_signature_generator_test ?prevent_munge ?facebook_fbt
+      ?ignore_static_propTypes ?facebook_keyMirror
+      contents =
   begin fun ctxt ->
     let msgs =
-      let _errors, _program = verify_and_generate ?prevent_munge ?ignore_static_propTypes
-        ~facebook_fbt:(Some "FbtElement") contents in
+      let _errors, _program =
+        verify_and_generate ?prevent_munge ?facebook_fbt
+          ?ignore_static_propTypes ?facebook_keyMirror
+          contents in
       []
     in
     let printer v = String.concat "\n" v in
@@ -79,14 +96,15 @@ let mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes
 
 let verified_signature_generator_tests =
   List.fold_left (fun acc -> fun (
-    (prevent_munge, ignore_static_propTypes, name),
+    (prevent_munge, facebook_fbt, ignore_static_propTypes, facebook_keyMirror, name),
     contents,
     error_msgs,
     _other_msgs) ->
     if error_msgs = [] then
       let name = "verified_" ^ name in
-      (name >:: mk_verified_signature_generator_test ?prevent_munge ?ignore_static_propTypes
-         contents) :: acc
+      (name >:: mk_verified_signature_generator_test ?prevent_munge ?facebook_fbt
+                  ?ignore_static_propTypes ?facebook_keyMirror
+                  contents) :: acc
     else acc
   ) [] Signature_verifier_test.tests_data
 
@@ -597,17 +615,26 @@ let tests = "signature_generator" >::: ([
      "  {|foo: $TEMPORARY$number<42>, bar: $TEMPORARY$string<'hello'>|},";
      ">;"];
 
-  "fbt_empty_open_close" >:: mk_signature_generator_test
+  "fbt_empty_open_close" >:: mk_signature_generator_test ~facebook_fbt:(Some "FbtElement")
     ["module.exports = <fbt></fbt>"]
     ["declare module.exports: FbtElement;"];
 
-  "fbt_empty_open" >:: mk_signature_generator_test
+  "fbt_empty_open" >:: mk_signature_generator_test ~facebook_fbt:(Some "FbtElement")
     ["module.exports = <fbt/>"]
     ["declare module.exports: FbtElement;"];
 
-  "fbt_with_child" >:: mk_signature_generator_test
+  "fbt_with_child" >:: mk_signature_generator_test ~facebook_fbt:(Some "FbtElement")
     ["function foo(){}";
      "module.exports = <fbt desc={foo()}></fbt>"]
     ["declare module.exports: FbtElement;"];
+
+  "keyMirror" >:: mk_signature_generator_test ~facebook_keyMirror:true
+    ["module.exports = keyMirror({";
+     "  a: null,";
+     "  b: null,";
+     "})"]
+    ["declare module.exports: $TEMPORARY$Object$freeze<";
+     "  {|a: $TEMPORARY$string<'a'>, b: $TEMPORARY$string<'b'>|},";
+     ">;"];
 
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)

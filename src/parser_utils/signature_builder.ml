@@ -240,29 +240,44 @@ module Signature = struct
     ) env imports_info in
     env, file_sig
 
-  let verify ?(prevent_munge=false) ?(ignore_static_propTypes=false) ~facebook_fbt (env, file_sig) =
+  let verify ?(prevent_munge=false) ?(facebook_fbt=None)
+        ?(ignore_static_propTypes=false) ?(facebook_keyMirror=false)
+        (env, file_sig) =
     let module Verify = V(struct
       let prevent_munge = prevent_munge
-      let ignore_static_propTypes = ignore_static_propTypes
       let facebook_fbt = facebook_fbt
+      let ignore_static_propTypes = ignore_static_propTypes
+      let facebook_keyMirror = facebook_keyMirror
     end) in
     Verify.check env file_sig @@ Verify.exports file_sig
 
-  let generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) ~facebook_fbt (env, file_sig) program =
+  let generate ?(prevent_munge=false) ?(facebook_fbt=None)
+        ?(ignore_static_propTypes=false) ?(facebook_keyMirror=false)
+        (env, file_sig) program =
     let module Generate = G(struct
       let prevent_munge = prevent_munge
-      let ignore_static_propTypes = ignore_static_propTypes
       let facebook_fbt = facebook_fbt
+      let ignore_static_propTypes = ignore_static_propTypes
+      let facebook_keyMirror = facebook_keyMirror
     end) in
     Generate.make env file_sig program
 
-  let verify_and_generate ?(prevent_munge=false) ?(ignore_static_propTypes=false) ~facebook_fbt (env, file_sig) program =
-    let errors, _, pruned_env = verify ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (env, file_sig) in
+  let verify_and_generate ?(prevent_munge=false) ?(facebook_fbt=None)
+        ?(ignore_static_propTypes=false) ?(facebook_keyMirror=false)
+        (env, file_sig) program =
+    let errors, _, pruned_env =
+      verify ~prevent_munge ~facebook_fbt
+        ~ignore_static_propTypes ~facebook_keyMirror
+        (env, file_sig) in
     errors,
     if Signature_builder_deps.PrintableErrorSet.is_empty errors then
-      generate ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (pruned_env, file_sig) program
+      generate ~prevent_munge ~facebook_fbt
+        ~ignore_static_propTypes ~facebook_keyMirror
+        (pruned_env, file_sig) program
     else
-      generate ~prevent_munge ~ignore_static_propTypes ~facebook_fbt (env, file_sig) program
+      generate ~prevent_munge ~facebook_fbt
+        ~ignore_static_propTypes ~facebook_keyMirror
+        (env, file_sig) program
 end
 
 class type_hoister = object(this)

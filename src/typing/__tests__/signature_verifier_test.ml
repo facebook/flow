@@ -20,8 +20,8 @@ let parse contents =
 let eq printer v1 v2 =
   printer v1 = printer v2
 
-let name ?prevent_munge ?ignore_static_propTypes x =
-  prevent_munge, ignore_static_propTypes, x
+let name ?prevent_munge ?facebook_fbt ?ignore_static_propTypes ?facebook_keyMirror x =
+  prevent_munge, facebook_fbt, ignore_static_propTypes, facebook_keyMirror, x
 
 let tests_data = [
   name "export_number_literal",
@@ -475,19 +475,27 @@ let tests_data = [
   [],
   [];
 
-  name "fbt_empty_open_close",
+  name "fbt_empty_open_close" ~facebook_fbt:(Some "FbtElement"),
   ["module.exports = <fbt></fbt>"],
   [],
   [];
 
-  name "fbt_empty_open",
+  name "fbt_empty_open" ~facebook_fbt:(Some "FbtElement"),
   ["module.exports = <fbt/>"],
   [],
   [];
 
-  name "fbt_with_child",
+  name "fbt_with_child" ~facebook_fbt:(Some "FbtElement"),
   ["function foo(){}";
    "module.exports = <fbt desc={foo()}></fbt>"],
+  [],
+  [];
+
+  name "keymirror" ~facebook_keyMirror:true,
+  ["module.exports = keyMirror({";
+   "  a: null,";
+   "  b: null,";
+   "})"],
   [],
   [];
 
@@ -512,15 +520,17 @@ let tests_data = [
 
 ]
 
-let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents expected_msgs =
+let mk_signature_verifier_test ?prevent_munge ?facebook_fbt
+      ?ignore_static_propTypes ?facebook_keyMirror
+      contents expected_msgs =
   begin fun ctxt ->
     let contents = String.concat "\n" contents in
     let signature = match Signature_builder.program ~module_ref_prefix:None (parse contents) with
       | Ok signature -> signature
       | Error _ -> failwith "Signature builder failure!" in
     let errors, remote_dependencies, env =
-      Signature_builder.Signature.verify ?prevent_munge ?ignore_static_propTypes
-        ~facebook_fbt:(Some "FbtElement") signature
+      Signature_builder.Signature.verify ?prevent_munge ?facebook_fbt
+        ?ignore_static_propTypes ?facebook_keyMirror signature
     in
     let error_msgs = Core_list.map ~f:Signature_builder_deps.Error.debug_to_string @@
       Signature_builder_deps.PrintableErrorSet.elements errors in
@@ -540,10 +550,11 @@ let mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes contents 
 
 let tests = "signature_verifier" >:::
   (Core_list.map ~f:(fun (
-    (prevent_munge, ignore_static_propTypes, name),
+    (prevent_munge, facebook_fbt, ignore_static_propTypes, facebook_keyMirror, name),
     contents,
     error_msgs,
     other_msgs) ->
-    name >:: mk_signature_verifier_test ?prevent_munge ?ignore_static_propTypes
-      contents (error_msgs @ other_msgs)
+      name >:: mk_signature_verifier_test ?prevent_munge ?facebook_fbt
+                 ?ignore_static_propTypes ?facebook_keyMirror
+                 contents (error_msgs @ other_msgs)
    ) tests_data)

@@ -22,8 +22,10 @@ module EASort = Signature_builder_deps.ExpectedAnnotationSort
 
 module type EvalEnv = sig
   val prevent_munge: bool
-  val ignore_static_propTypes: bool
   val facebook_fbt: string option
+  (* hacks *)
+  val ignore_static_propTypes: bool
+  val facebook_keyMirror: bool
 end
 
 (* A signature of a module is described by exported expressions / definitions, but what we're really
@@ -326,6 +328,12 @@ module Eval(Env: EvalEnv) = struct
           targs = None;
           arguments = [Expression ((_, Object _) as expr)]
         } -> literal_expr tps expr
+      | _, Call {
+          Ast.Expression.Call.
+          callee = (_, Identifier (_, { Ast.Identifier.name= "keyMirror"; comments= _ }));
+          targs = None;
+          arguments = [Expression ((_, Object _) as expr)]
+        } when Env.facebook_keyMirror -> literal_expr tps expr
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
         let { operator; argument; _ } = stuff in

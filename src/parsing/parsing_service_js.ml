@@ -370,10 +370,17 @@ let do_parse ?(fail=true) ~types_mode ~use_strict ~info ?(prevent_munge=false)
              something that only works for React classes, in which case we must make a corresponding
              change in the type system that enforces that any such property is private. *)
           let ignore_static_propTypes = true in
+          (* NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
+             recognize and process a custom `keyMirror` function that makes an enum out of the keys
+             of an object. *)
+          let facebook_keyMirror = true in
           match Signature_builder.program ast ~module_ref_prefix with
           | Ok signature ->
-            let errors, sig_ast = Signature_builder.Signature.verify_and_generate
-              ?prevent_munge ~ignore_static_propTypes ~facebook_fbt signature ast in
+            let errors, sig_ast =
+              Signature_builder.Signature.verify_and_generate
+                ?prevent_munge ~facebook_fbt
+                ~ignore_static_propTypes ~facebook_keyMirror
+                signature ast in
             let file_sig = File_sig.With_Loc.verified errors (snd signature) in
             let sig_file_sig = match File_sig.With_Loc.program ~ast:sig_ast ~module_ref_prefix with
               | Ok fs -> fs
