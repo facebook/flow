@@ -52,6 +52,7 @@ module Request = struct
       omit_targ_defaults: bool;
       wait_for_recheck: bool option;
     }
+  | RAGE of { files: string list }
   | REFACTOR of {
       input: File_input.t;
       line: int;
@@ -96,6 +97,7 @@ module Request = struct
   | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; omit_targ_defaults=_; wait_for_recheck=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input input) line char
+  | RAGE { files; } -> Printf.sprintf "rage %s" (String.concat " " files)
   | REFACTOR { input; line; char; refactor_variant; } ->
       Printf.sprintf "refactor %s:%d:%d:%s"
         (File_input.filename_of_file_input input)
@@ -178,6 +180,8 @@ module Response = struct
     refactor_edits: textedit list;
   }
 
+  type rage_response = (string * string) list
+
   type refactor_response = (refactor_ok option, string) result
 
   type suggest_result =
@@ -222,12 +226,13 @@ module Response = struct
   | DUMP_TYPES of dump_types_response
   | FIND_MODULE of find_module_response
   | FIND_REFS of find_refs_response
+  | FORCE_RECHECK of Profiling_js.finished option
   | GET_DEF of get_def_response
   | GET_IMPORTS of get_imports_response
   | INFER_TYPE of infer_type_response
+  | RAGE of rage_response
   | REFACTOR of refactor_response
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
-  | FORCE_RECHECK of Profiling_js.finished option
   | SUGGEST of suggest_response
   | SAVE_STATE of (unit, string) result
 
@@ -241,12 +246,13 @@ module Response = struct
   | DUMP_TYPES _ -> "dump_types response"
   | FIND_MODULE _ -> "find_module response"
   | FIND_REFS _ -> "find_refs response"
+  | FORCE_RECHECK _ -> "force_recheck response"
   | GET_DEF _ -> "get_def response"
   | GET_IMPORTS _ -> "get_imports response"
   | INFER_TYPE _ -> "infer_type response"
+  | RAGE _ -> "rage response"
   | REFACTOR _ -> "refactor response"
   | STATUS _ -> "status response"
-  | FORCE_RECHECK _ -> "force_recheck response"
   | SUGGEST _ -> "suggest response"
   | SAVE_STATE _ -> "save_state response"
 end

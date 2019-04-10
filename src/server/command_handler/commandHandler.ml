@@ -116,6 +116,70 @@ let infer_type
     ) in
     Lwt.return (split_result result)
 
+let collect_rage ~options ~reader ~env ~files =
+  let items = [] in
+
+  (* options *)
+  let lazy_mode = options.Options.opt_lazy_mode in
+  let data = Printf.sprintf "lazy_mode=%s\n"
+    (Option.value_map lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string) in
+  let items =  ("options", data) :: items in
+
+  (* env: checked files *)
+  let data = Printf.sprintf "%s\n\n%s\n"
+    (CheckedSet.debug_counts_to_string env.checked_files)
+    (CheckedSet.debug_to_string ~limit:200 env.checked_files) in
+  let items = ("env.checked_files", data) :: items in
+
+  (* env: dependency graph *)
+  let dependency_to_string (file, deps) =
+    let file = File_key.to_string file in
+    let deps = Utils_js.FilenameSet.elements deps
+      |> Core_list.map ~f:File_key.to_string
+      |> ListUtils.first_upto_n 20 (fun t -> Some (Printf.sprintf " ...%d more" t))
+      |> String.concat "," in
+    file ^ ":" ^ deps ^ "\n" in
+  let dependencies = Dependency_info.all_dependency_graph env.ServerEnv.dependency_info
+    |> Utils_js.FilenameMap.bindings
+    |> Core_list.map ~f:dependency_to_string
+    |> ListUtils.first_upto_n 200 (fun t -> Some (Printf.sprintf "[shown 200/%d]\n" t))
+    |> String.concat "" in
+  let data = "DEPENDENCIES:\n" ^ dependencies in
+  let items = ("env.dependencies", data) :: items in
+
+  (* env: errors *)
+  let errors, warnings, _ = ErrorCollator.get ~options env in
+  let json = Errors.Json_output.json_of_errors_with_context ~strip_root:None ~stdin_file:None
+    ~suppressed_errors:[] ~errors ~warnings () in
+  let data = "ERRORS:\n" ^ (Hh_json.json_to_multiline json) in
+  let items = ("env.errors", data) :: items in
+
+  (* Checking if file hashes are up to date *)
+  let items = Option.value_map files ~default:items ~f:(fun files ->
+    let buf = Buffer.create 1024 in
+    Printf.bprintf
+      buf "Does the content on the disk match the most recent version of the file?\n\n";
+    List.iter (fun file ->
+      (* TODO - this isn't exactly right. It could be something else, right? *)
+      let file_key = File_key.SourceFile file in
+      let file_state =
+        if not (FilenameSet.mem file_key env.ServerEnv.files)
+        then "FILE NOT PARSED BY FLOW (likely ignored implicitly or explicitly)"
+        else
+          match Sys_utils.cat_or_failed file with
+          | None -> "ERROR! FAILED TO READ"
+          | Some content ->
+            if Parsing_service_js.does_content_match_file_hash ~reader file_key content
+            then "OK"
+            else "HASH OUT OF DATE"
+      in
+      Printf.bprintf buf "%s: %s\n" file file_state
+    ) files;
+    ("file hash check", Buffer.contents buf)::items
+  ) in
+
+  items
+
 let dump_types ~options ~env ~profiling file_input =
   let file = File_input.filename_of_file_input file_input in
   let file = File_key.SourceFile file in
@@ -374,6 +438,10 @@ let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
+let handle_rage ~reader ~options ~files ~profiling:_ ~env =
+  let items = collect_rage ~options ~reader ~env ~files:(Some files) in
+  Lwt.return (ServerProt.Response.RAGE items, None)
+
 let handle_refactor
     ~reader ~genv ~input:file_input ~line ~char:col ~refactor_variant ~profiling ~env =
   (* Refactor is another weird command that may mutate the env by doing a bunch of rechecking,
@@ -502,6 +570,8 @@ let get_ephemeral_handler genv command =
     mk_parallelizable ~wait_for_recheck ~options (
       handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit_targ_defaults
     )
+  | ServerProt.Request.RAGE { files; } ->
+    mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
   | ServerProt.Request.REFACTOR { input; line; char; refactor_variant; } ->
    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
     * parallelizable *)
@@ -1139,42 +1209,12 @@ let handle_persistent_rename ~reader ~genv ~id ~params ~metadata ~client ~profil
       LspResponse (Error (env, with_error metadata ~reason))
   end
 
-let handle_persistent_rage ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
-  let options = genv.options in
-  let root = Path.to_string options.Options.opt_root in
-  let items = [] in
-  (* genv: lazy-mode options *)
-  let lazy_mode = options.Options.opt_lazy_mode in
-  let data = Printf.sprintf "lazy_mode=%s\n"
-    (Option.value_map lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string) in
-  let items = { Lsp.Rage.title = None; data; } :: items in
-  (* env: checked files *)
-  let data = Printf.sprintf "%s\n\n%s\n"
-    (CheckedSet.debug_counts_to_string env.checked_files)
-    (CheckedSet.debug_to_string ~limit:200 env.checked_files) in
-  let items = { Lsp.Rage.title = Some (root ^ ":env.checked_files"); data; } :: items in
-  (* env: dependency graph *)
-  let dependency_to_string (file, deps) =
-    let file = File_key.to_string file in
-    let deps = Utils_js.FilenameSet.elements deps
-      |> Core_list.map ~f:File_key.to_string
-      |> ListUtils.first_upto_n 20 (fun t -> Some (Printf.sprintf " ...%d more" t))
-      |> String.concat "," in
-    file ^ ":" ^ deps ^ "\n" in
-  let dependencies = Dependency_info.all_dependency_graph env.ServerEnv.dependency_info
-    |> Utils_js.FilenameMap.bindings
-    |> Core_list.map ~f:dependency_to_string
-    |> ListUtils.first_upto_n 200 (fun t -> Some (Printf.sprintf "[shown 200/%d]\n" t))
-    |> String.concat "" in
-  let data = "DEPENDENCIES:\n" ^ dependencies in
-  let items = { Lsp.Rage.title = Some (root ^ ":env.dependencies"); data; } :: items in
-  (* env: errors *)
-  let errors, warnings, _ = ErrorCollator.get ~options env in
-  let json = Errors.Json_output.json_of_errors_with_context ~strip_root:None ~stdin_file:None
-    ~suppressed_errors:[] ~errors ~warnings () in
-  let data = "ERRORS:\n" ^ (Hh_json.json_to_multiline json) in
-  let items = { Lsp.Rage.title = Some (root ^ ":env.errors"); data; } :: items in
-  (* done! *)
+let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
+  let root = Path.to_string genv.ServerEnv.options.Options.opt_root in
+  let items =
+    collect_rage ~options:genv.ServerEnv.options ~reader ~env ~files:None
+    |> List.map (fun (title, data) -> { Lsp.Rage.title = Some (root ^ ":" ^ title); data; })
+  in
   let response = ResponseMessage (id, RageResult items) in
   Lwt.return (LspResponse (Ok ((), Some response, metadata)))
 
@@ -1398,7 +1438,7 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
   | LspToServer (RequestMessage (id, RageRequest), metadata) ->
     (* Whoever is waiting for the rage results probably doesn't want to wait for a recheck *)
     mk_parallelizable_persistent ~options (
-      handle_persistent_rage ~genv ~id ~metadata
+      handle_persistent_rage ~reader ~genv ~id ~metadata
     )
 
   | LspToServer (unhandled, metadata) ->
