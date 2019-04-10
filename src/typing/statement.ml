@@ -5422,11 +5422,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
             Ast.Literal.value = Ast.Literal.String prop_name;
             _;
           })
-          | Member.PropertyExpression (prop_loc, Ast.Expression.Literal {
-            Ast.Literal.value = Ast.Literal.Number _;
-            raw = prop_name;
-            comments= _;
-          })
         ) as property;
       }) ->
       (* use `expression` instead of `condition` because `_object` is the object
