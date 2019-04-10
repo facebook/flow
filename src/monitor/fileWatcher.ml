@@ -344,7 +344,7 @@ end = struct
 
         let should_track_mergebase =
           let server_options = monitor_options.FlowServerMonitorOptions.server_options in
-          Options.lazy_mode server_options = Some Options.LAZY_MODE_WATCHMAN
+          Options.lazy_mode server_options = Options.LAZY_MODE_WATCHMAN
         in
 
         match watchman with

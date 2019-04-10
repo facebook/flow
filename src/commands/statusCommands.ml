@@ -119,7 +119,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       ~suppressed_errors:([])
     in
     let lazy_msg = match lazy_stats.ServerProt.Response.lazy_mode with
-    | Some mode -> Some (
+    | Options.NON_LAZY_MODE -> None
+    | mode -> Some (
         Printf.sprintf
           ("The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n" ^^
           "To learn more, visit flow.org/en/docs/lang/lazy-modes")
@@ -127,11 +128,12 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           | LAZY_MODE_FILESYSTEM -> "filesystem"
           | LAZY_MODE_IDE -> "IDE"
           | LAZY_MODE_WATCHMAN -> "Watchman"
+          | NON_LAZY_MODE -> assert false
         )
         lazy_stats.ServerProt.Response.checked_files
         lazy_stats.ServerProt.Response.total_files
       )
-    | None -> None in
+    in
     match response with
     | ServerProt.Response.DIRECTORY_MISMATCH d ->
       let msg = Printf.sprintf

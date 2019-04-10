@@ -23,6 +23,7 @@ type lazy_mode =
 | LAZY_MODE_FILESYSTEM
 | LAZY_MODE_IDE
 | LAZY_MODE_WATCHMAN
+| NON_LAZY_MODE
 
 type jsx_mode =
   (* JSX desugars into a `React.createElement(name, props, ...children)` call *)
@@ -90,7 +91,7 @@ type t = {
   opt_munge_underscores: bool;
   opt_no_saved_state: bool;
   opt_profile : bool;
-  opt_lazy_mode: lazy_mode option;
+  opt_lazy_mode: lazy_mode;
   opt_quiet : bool;
   opt_root : Path.t;
   opt_root_name : string option;
@@ -133,7 +134,7 @@ let haste_use_name_reducers opts = opts.opt_haste_use_name_reducers
 let flowconfig_name opts = opts.opt_flowconfig_name
 let file_options opts = opts.opt_file_options
 let is_debug_mode opts = opts.opt_debug
-let is_lazy_mode opts = opts.opt_lazy_mode <> None
+let is_lazy_mode opts = opts.opt_lazy_mode <> NON_LAZY_MODE
 let lazy_mode opts = opts.opt_lazy_mode
 let is_quiet opts = opts.opt_quiet
 let max_header_tokens opts = opts.opt_max_header_tokens
@@ -177,3 +178,4 @@ let lazy_mode_to_string lazy_mode =
   | LAZY_MODE_FILESYSTEM -> "fs"
   | LAZY_MODE_IDE -> "ide"
   | LAZY_MODE_WATCHMAN -> "watchman"
+  | NON_LAZY_MODE -> "none"

@@ -54,7 +54,7 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
-    lazy_mode: Options.lazy_mode option;
+    lazy_mode: Options.lazy_mode;
     log_file: Path.t option;
     max_header_tokens: int;
     max_literal_length: int;
@@ -141,7 +141,7 @@ module Opts = struct
     haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
     include_warnings = false;
-    lazy_mode = None;
+    lazy_mode = Options.NON_LAZY_MODE;
     log_file = None;
     max_header_tokens = 10;
     max_literal_length = 100;
@@ -375,10 +375,10 @@ module Opts = struct
     "lazy_mode",
       enum
         [
-          "fs", Some Options.LAZY_MODE_FILESYSTEM;
-          "ide", Some Options.LAZY_MODE_IDE;
-          "watchman", Some Options.LAZY_MODE_WATCHMAN;
-          "none", None;
+          "fs", Options.LAZY_MODE_FILESYSTEM;
+          "ide", Options.LAZY_MODE_IDE;
+          "watchman", Options.LAZY_MODE_WATCHMAN;
+          "none", Options.NON_LAZY_MODE;
         ]
         (fun opts v -> Ok { opts with lazy_mode = v });
 

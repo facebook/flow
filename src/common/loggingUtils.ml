@@ -32,8 +32,11 @@ let init_loggers ~options ?min_level () =
   set_hh_logger_min_level ?min_level options
 
 let set_server_options ~server_options =
-  let lazy_mode = Option.value_map
-    (Options.lazy_mode server_options) ~default:"off" ~f:Options.lazy_mode_to_string
+  let lazy_mode = match Options.lazy_mode server_options with
+  | Options.LAZY_MODE_FILESYSTEM -> "fs"
+  | Options.LAZY_MODE_IDE -> "ide"
+  | Options.LAZY_MODE_WATCHMAN -> "watchman"
+  | Options.NON_LAZY_MODE -> "off"
   in
 
   FlowEventLogger.set_server_options ~lazy_mode

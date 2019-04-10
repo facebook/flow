@@ -120,9 +120,7 @@ let collect_rage ~options ~reader ~env ~files =
   let items = [] in
 
   (* options *)
-  let lazy_mode = options.Options.opt_lazy_mode in
-  let data = Printf.sprintf "lazy_mode=%s\n"
-    (Option.value_map lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string) in
+  let data = Printf.sprintf "lazy_mode=%s\n" Options.(lazy_mode options |> lazy_mode_to_string) in
   let items =  ("options", data) :: items in
 
   (* env: checked files *)
@@ -206,7 +204,9 @@ let batch_coverage ~options ~genv ~env ~trust ~batch =
   if Options.trust_mode options = Options.NoTrust && trust then
     Error "Batch Coverage cannot be run in trust mode if the server is not in trust mode. \
       \n\nRestart the Flow server with --trust-mode=check' to enable this command." |> Lwt.return
-  else if ServerProt.Response.((Rechecker.get_lazy_stats genv env).lazy_mode) |> Option.is_some then
+  else if
+    ServerProt.Response.((Rechecker.get_lazy_stats genv env).lazy_mode) <> Options.NON_LAZY_MODE
+  then
     Error "Batch coverage cannot be run in lazy mode.\n\nRestart the Flow server with \
       '--lazy-mode none' to enable this command." |> Lwt.return else
   let is_checked key = CheckedSet.mem key env.checked_files in
@@ -773,7 +773,7 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
 let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.t =
   let options = genv.ServerEnv.options in
   match Options.lazy_mode options with
-  | Some Options.LAZY_MODE_IDE ->
+  | Options.LAZY_MODE_IDE ->
     (* LAZY_MODE_IDE is a lazy mode which infers the focused files based on what the IDE
      * opens. So when an IDE opens a new file, that file is now focused.
      *
@@ -791,9 +791,9 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
       Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
     end;
     Lwt.return env
-  | Some Options.LAZY_MODE_FILESYSTEM
-  | Some Options.LAZY_MODE_WATCHMAN
-  | None ->
+  | Options.LAZY_MODE_FILESYSTEM
+  | Options.LAZY_MODE_WATCHMAN
+  | Options.NON_LAZY_MODE ->
     (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
      * a new file is opened is to send the errors to the client *)
     let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in

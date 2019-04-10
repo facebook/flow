@@ -889,12 +889,12 @@ let files_to_infer ~options ~reader ?focus_targets ~profiling ~parsed ~dependenc
 
 let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadata =
   match Options.lazy_mode options with
-  | None
-  | Some Options.LAZY_MODE_FILESYSTEM
-  | Some Options.LAZY_MODE_IDE ->
+  | Options.NON_LAZY_MODE
+  | Options.LAZY_MODE_FILESYSTEM
+  | Options.LAZY_MODE_IDE ->
     (* Only watchman mode might restart *)
     Lwt.return_none
-  | Some Options.LAZY_MODE_WATCHMAN ->
+  | Options.LAZY_MODE_WATCHMAN ->
     let { MonitorProt.total_update_distance; changed_mergebase; } = file_watcher_metadata in
     Hh_logger.info "File watcher moved %d revisions and %s mergebase"
       total_update_distance
@@ -1393,9 +1393,9 @@ end = struct
     let%lwt updated_checked_files, all_dependent_files =
       with_timer_lwt ~options "RecalcDepGraph" profiling (fun () ->
         match Options.lazy_mode options with
-        | None (* Non lazy mode treats every file as focused. *)
-        | Some Options.LAZY_MODE_WATCHMAN (* Watchman mode treats every modified file as focused *)
-        | Some Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
+        | Options.NON_LAZY_MODE (* Non lazy mode treats every file as focused. *)
+        | Options.LAZY_MODE_WATCHMAN (* Watchman mode treats every modified file as focused *)
+        | Options.LAZY_MODE_FILESYSTEM -> (* FS mode treats every modified file as focused *)
           let old_focus_targets = CheckedSet.focused env.ServerEnv.checked_files in
           let old_focus_targets = FilenameSet.diff old_focus_targets deleted in
           let old_focus_targets = FilenameSet.diff old_focus_targets unparsed_set in
@@ -1404,7 +1404,7 @@ end = struct
               ~input_focused:(FilenameSet.union focused (CheckedSet.focused files_to_force))
               ~input_dependencies:(Some (CheckedSet.dependencies files_to_force)) in
           Lwt.return (updated_checked_files, all_dependent_files)
-        | Some Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
+        | Options.LAZY_MODE_IDE -> (* IDE mode only treats opened files as focused *)
           (* Unfortunately, our checked_files set might be out of date. This update could have added
            * some new dependents or dependencies. So we need to recalculate those.
            *
@@ -1936,10 +1936,10 @@ let load_saved_state ~profiling ~workers options =
 
 let query_watchman_for_changed_files ~options =
   match Options.lazy_mode options with
-  | None
-  | Some Options.LAZY_MODE_FILESYSTEM
-  | Some Options.LAZY_MODE_IDE -> Lwt.return (fun ~libs:_ -> Lwt.return FilenameSet.(empty, empty))
-  | Some Options.LAZY_MODE_WATCHMAN -> begin
+  | Options.NON_LAZY_MODE
+  | Options.LAZY_MODE_FILESYSTEM
+  | Options.LAZY_MODE_IDE -> Lwt.return (fun ~libs:_ -> Lwt.return FilenameSet.(empty, empty))
+  | Options.LAZY_MODE_WATCHMAN -> begin
     let init_settings = {
       (* We're not setting up a subscription, we're just sending a single query *)
       Watchman_lwt.subscribe_mode = None;
@@ -2002,7 +2002,7 @@ let init ~profiling ~workers options =
       let%lwt env, libs_ok = init_from_saved_state ~profiling ~workers ~saved_state options in
       (* We know that all the files in updates have changed since the saved state was generated. We
        * have two ways to deal with them: *)
-      if Options.lazy_mode options = None
+      if Options.lazy_mode options = Options.NON_LAZY_MODE
       then
         (* In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
          * fanout, this can be a huge recheck, but it's sound. *)

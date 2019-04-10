@@ -189,7 +189,7 @@ let temp_dir_flag prev = CommandSpec.ArgSpec.(
 let collect_lazy_flags main lazy_ lazy_mode =
   let lazy_mode =
     if lazy_ && lazy_mode = None
-    then Some (Some Options.LAZY_MODE_FILESYSTEM) (* --lazy === --lazy-mode fs *)
+    then Some (Options.LAZY_MODE_FILESYSTEM) (* --lazy === --lazy-mode fs *)
     else lazy_mode
   in
   main lazy_mode
@@ -201,10 +201,10 @@ let lazy_flags prev = CommandSpec.ArgSpec.(
       ~doc:"Don't run a full check. Shorthand for `--lazy-mode fs`"
   |> flag "--lazy-mode"
       (enum [
-        "fs", Some Options.LAZY_MODE_FILESYSTEM;
-        "ide", Some Options.LAZY_MODE_IDE;
-        "watchman", Some Options.LAZY_MODE_WATCHMAN;
-        "none", None;
+        "fs", Options.LAZY_MODE_FILESYSTEM;
+        "ide", Options.LAZY_MODE_IDE;
+        "watchman", Options.LAZY_MODE_WATCHMAN;
+        "none", Options.NON_LAZY_MODE;
       ])
       ~doc:("Which lazy mode to use: 'fs', 'watchman', 'ide' or 'none'. Use this flag to " ^
             "override the lazy mode set in the .flowconfig (which defaults to 'none' if not set)")
@@ -632,7 +632,7 @@ type connect_params = {
   timeout            : int option;
   no_auto_start      : bool;
   autostop           : bool;
-  lazy_mode          : Options.lazy_mode option option;
+  lazy_mode          : Options.lazy_mode option;
   temp_dir           : string option;
   shm_flags          : shared_mem_params;
   ignore_version     : bool;
@@ -968,6 +968,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     options_flags.saved_state_fetcher
     ~default:(FlowConfig.saved_state_fetcher flowconfig)
   in
+
 
   let opt_lazy_mode = Option.value lazy_mode ~default:(FlowConfig.lazy_mode flowconfig) in
 
@@ -1314,10 +1315,10 @@ let get_check_or_status_exit_code errors warnings max_warnings =
 
 let choose_file_watcher ~options ~file_watcher ~flowconfig =
   match Options.lazy_mode options, file_watcher with
-  | Some Options.LAZY_MODE_WATCHMAN, (None | Some Options.Watchman) ->
+  | Options.LAZY_MODE_WATCHMAN, (None | Some Options.Watchman) ->
     (* --lazy-mode watchman implies --file-watcher watchman *)
     Options.Watchman
-  | Some Options.LAZY_MODE_WATCHMAN, Some _ ->
+  | Options.LAZY_MODE_WATCHMAN, Some _ ->
     (* Error on something like --lazy-mode watchman --file-watcher dfind *)
     let msg =
       "Using Watchman lazy mode implicitly uses the Watchman file watcher, "
