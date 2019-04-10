@@ -214,13 +214,13 @@ type def_loc =
   | AnyType
 
 let debug_string_of_locs locs =
-  locs |> Nel.to_list |> Core_list.map ~f:Loc.to_string |> String.concat ", "
+  locs |> Nel.to_list |> Core_list.map ~f:Loc.debug_to_string |> String.concat ", "
 
 (* Disable the unused value warning -- we want to keep this around for debugging *)
 [@@@warning "-32"]
 let debug_string_of_single_def_info = function
-  | Class loc -> spf "Class (%s)" (Loc.to_string loc)
-  | Object loc -> spf "Object (%s)" (Loc.to_string loc)
+  | Class loc -> spf "Class (%s)" (Loc.debug_to_string loc)
+  | Object loc -> spf "Object (%s)" (Loc.debug_to_string loc)
 
 let debug_string_of_property_def_info def_info =
   def_info
@@ -233,11 +233,11 @@ let debug_string_of_def_info = function
   | Property (def_info, name) ->
     spf "Property (%s, %s)" (debug_string_of_property_def_info def_info) name
   | CJSExport loc ->
-    spf "CJSExport (%s)" (Loc.to_string loc)
+    spf "CJSExport (%s)" (Loc.debug_to_string loc)
 
 let rec debug_string_of_def_loc = function
   | FoundClass locs -> spf "FoundClass (%s)" (debug_string_of_locs locs)
-  | FoundObject loc -> spf "FoundObject (%s)" (Loc.to_string loc)
+  | FoundObject loc -> spf "FoundObject (%s)" (Loc.debug_to_string loc)
   | FoundUnion def_locs ->
     Nel.to_list def_locs |> Core_list.map ~f:debug_string_of_def_loc |> String.concat ", "
     |> spf "FoundUnion (%s)"

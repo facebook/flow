@@ -18,4 +18,4 @@ let source = Loc.source
 let compare = Loc.compare
 let equal = Loc.equal
 
-let to_string = Loc.to_string
+let to_string = Loc.debug_to_string

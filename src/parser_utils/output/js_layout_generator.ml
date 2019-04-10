@@ -49,7 +49,7 @@ let normal_context = { left = Normal_left; group = Normal_group; }
 let context_after_token ctxt = { ctxt with left = Normal_left }
 
 (* JS layout helpers *)
-let not_supported loc message = failwith (message ^ " at " ^ Loc.to_string loc)
+let not_supported loc message = failwith (message ^ " at " ^ Loc.debug_to_string loc)
 let with_semicolon node = fuse [node; Atom ";"]
 let with_pretty_semicolon node = fuse [node; IfPretty (Atom ";", Empty)]
 

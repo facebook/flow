@@ -164,7 +164,7 @@ let file_cover source value = new_builder source value |> bake
 let find loc cover =
   let first_char = Loc.first_char loc in
   try SpanMap.find_unsafe first_char cover
-  with Not_found -> raise (Uncovered (Loc.to_string ~include_source:true loc))
+  with Not_found -> raise (Uncovered (Loc.debug_to_string ~include_source:true loc))
 
 let find_opt loc cover =
   let first_char = Loc.first_char loc in
@@ -186,7 +186,7 @@ let is_explicit lint_kind loc severity_cover =
 find loc severity_cover |> LintSettings.is_explicit lint_kind
 
 let to_string settings =
-  let loc_to_str = Loc.to_string ~include_source:true in
+  let loc_to_str = Loc.debug_to_string ~include_source:true in
   let acc = Buffer.create 100 in
   let () = SpanMap.iter (fun loc settings ->
       Buffer.add_string acc (Printf.sprintf "%s: %s\n"

@@ -21,7 +21,7 @@ module LocS : (S with type t = Loc.t) = struct
   type t = Loc.t
   let compare = Loc.compare
   let equal = Loc.equal
-  let debug_to_string = Loc.to_string
+  let debug_to_string = Loc.debug_to_string
 
   module LMap = MyMap.Make(Loc)
   module LSet = Set.Make(Loc)

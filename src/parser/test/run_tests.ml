@@ -541,7 +541,7 @@ end = struct
           if json_errors <> [] then begin
             let (loc, err) = List.hd json_errors in
             let str = Printf.sprintf "Unable to parse .tree.json: %s: %s"
-              (Loc.to_string loc) (Parse_error.PP.error err) in
+              (Loc.debug_to_string loc) (Parse_error.PP.error err) in
             Case_error [str]
           end else
           let expected = match diff with

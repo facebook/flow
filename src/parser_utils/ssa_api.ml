@@ -48,13 +48,13 @@ let print_values =
   let print_write_loc write_loc =
     match write_loc with
       | Uninitialized -> "(uninitialized)"
-      | Write loc -> Loc.to_string loc
+      | Write loc -> Loc.debug_to_string loc
   in
   fun values ->
     let kvlist = Loc_collections.LocMap.bindings values in
     let strlist = Core_list.map ~f:(fun (read_loc, write_locs) ->
       Printf.sprintf "%s => { %s }"
-        (Loc.to_string read_loc)
+        (Loc.debug_to_string read_loc)
         (String.concat ", " @@ Core_list.map ~f:print_write_loc write_locs)
     ) kvlist in
     Printf.sprintf "[ %s ]" (String.concat "; " strlist)

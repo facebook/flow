@@ -113,7 +113,7 @@ let print_error err =
   | Missing_parse_error ->
     Printf.printf "  Missing parse error\n%!"
   | Unexpected_parse_error (loc, err) ->
-    Printf.printf "  %s at %s\n%!" (Parse_error.PP.error err) (Loc.to_string loc)
+    Printf.printf "  %s at %s\n%!" (Parse_error.PP.error err) (Loc.debug_to_string loc)
 
 module Frontmatter = struct
   type t = {
