@@ -873,10 +873,34 @@ let handle_persistent_did_open ~genv ~filenames ~client ~profiling:_ ~env =
   in
   Lwt.return (IdeResponse (Ok (env, None)))
 
-let handle_persistent_did_open_notification
-    ~genv ~files ~metadata ~client ~profiling:_ ~env =
-  let%lwt env = did_open genv env client files in
-  Lwt.return (LspResponse (Ok (env, None, metadata)))
+(* A did_open notification can come in about N files, which is great. But sometimes we'll get
+ * N did_open notifications in quick succession. Let's batch them up and run them all at once!
+ *)
+let enqueue_did_open_files, handle_persistent_did_open_notification =
+  let pending = ref SMap.empty in
+
+  let enqueue_did_open_files (files: (string * string) Nel.t) =
+    (* Overwrite the older content with the newer content *)
+    pending := Nel.fold_left (fun acc (fn, content) -> SMap.add fn content acc) !pending files
+  in
+
+  let get_and_clear_did_open_files () : (string * string) list =
+    let ret = SMap.elements !pending in
+    pending := SMap.empty;
+    ret
+  in
+
+  let handle_persistent_did_open_notification
+      ~genv ~metadata ~client ~profiling:_ ~env =
+    let%lwt env =
+      match get_and_clear_did_open_files () with
+      | [] -> Lwt.return env
+      | first::rest -> did_open genv env client (first, rest)
+    in
+    Lwt.return (LspResponse (Ok (env, None, metadata)))
+  in
+
+  enqueue_did_open_files, handle_persistent_did_open_notification
 
 let handle_persistent_did_open_notification_no_op ~metadata ~client:_ ~profiling:_ =
   Lwt.return (LspResponse (Ok ((), None, metadata)))
@@ -1317,12 +1341,13 @@ let get_persistent_handler ~genv ~client_id ~request : persistent_command_handle
         Persistent_connection.client_did_open client ~files
     in
     if did_anything_change
-    then
+    then begin
+      enqueue_did_open_files files;
       (* This mutates env, so it can't run in parallel *)
       Handle_nonparallelizable_persistent (
-        handle_persistent_did_open_notification ~genv ~files ~metadata
+        handle_persistent_did_open_notification ~genv ~metadata
       )
-    else
+    end else
       (* It's a no-op, so we can respond immediately *)
       Handle_persistent_immediately (handle_persistent_did_open_notification_no_op ~metadata)
 

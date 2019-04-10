@@ -164,7 +164,9 @@ let client_did_open
     (client: single_client)
     ~(files: (string * string) Nel.t)
   : bool =
-  Hh_logger.info "Client #%d opened %d file(s)" client.client_id (Nel.length files);
+  (match Nel.length files with
+  | 1 -> Hh_logger.info "Client #%d opened %s" client.client_id (files |> Nel.hd |> fst)
+  | len -> Hh_logger.info "Client #%d opened %d files" client.client_id len);
   let add_file acc (filename, content) = SMap.add filename content acc in
   let new_opened_files = Nel.fold_left add_file client.opened_files files in
   (* SMap.add ensures physical equality if the map is unchanged, since 4.0.3,
@@ -201,7 +203,9 @@ let client_did_close
     (client: single_client)
     ~(filenames: string Nel.t)
   : bool =
-  Hh_logger.info "Client #%d closed %d file(s)" client.client_id (Nel.length filenames);
+  (match Nel.length filenames with
+  | 1 -> Hh_logger.info "Client #%d closed %s" client.client_id (filenames |> Nel.hd)
+  | len -> Hh_logger.info "Client #%d closed %d files" client.client_id len);
   let remove_file acc filename = SMap.remove filename acc in
   let new_opened_files = Nel.fold_left remove_file client.opened_files filenames in
   (* SMap.remove ensures physical equality if the set is unchanged,
