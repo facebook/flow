@@ -19,6 +19,8 @@ val span_compare : t -> t -> int
 val compare : t -> t -> int
 val equal : t -> t -> bool
 val debug_to_string : ?include_source:bool -> t -> string
+(* Relatively compact; suitable for use as a unique string identifier *)
+val to_string_no_source : t -> string
 val source : t -> File_key.t option
 (* filename, line, column. produces a Loc.t at the given location *)
 val make: File_key.t -> int -> int -> t

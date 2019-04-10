@@ -416,26 +416,12 @@ let string_of_source ?(strip_root=None) = File_key.(function
     end
 )
 
-let string_of_loc_pos loc = Loc.(
-  let line = loc.start.line in
-  let start = loc.start.column + 1 in
-  let end_ = loc._end.column in
-  if line <= 0 then
-    "0:0"
-  else if line = loc._end.line && start = end_ then
-    spf "%d:%d" line start
-  else if line != loc._end.line then
-    spf "%d:%d,%d:%d" line start loc._end.line end_
-  else
-    spf "%d:%d-%d" line start end_
-)
-
 let string_of_loc ?(strip_root=None) loc = Loc.(
   match loc.source with
   | None
   | Some File_key.Builtins -> ""
   | Some file ->
-    spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
+    spf "%s:%s" (string_of_source ~strip_root file) (Loc.to_string_no_source loc)
 )
 
 let string_of_aloc ?strip_root aloc = string_of_loc ?strip_root (ALoc.to_loc aloc)

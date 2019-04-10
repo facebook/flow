@@ -114,6 +114,19 @@ let debug_to_string ?(include_source=false) loc =
   in
   source ^ pos
 
+let to_string_no_source loc =
+  let line = loc.start.line in
+  let start = loc.start.column + 1 in
+  let end_ = loc._end.column in
+  if line <= 0 then
+    "0:0"
+  else if line = loc._end.line && start = end_ then
+    Printf.sprintf "%d:%d" line start
+  else if line != loc._end.line then
+    Printf.sprintf "%d:%d,%d:%d" line start loc._end.line end_
+  else
+    Printf.sprintf "%d:%d-%d" line start end_
+
 let source loc = loc.source
 
 let make file line col =
