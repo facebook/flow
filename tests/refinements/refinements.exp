@@ -1561,6 +1561,119 @@ References:
                                ^ [2]
 
 
+Error -------------------------------------------------------------------------------------------------- number.js:126:8
+
+Cannot cast `x` to undefined because number literal `-1` [1] is incompatible with undefined [2].
+
+   number.js:126:8
+   126|       (x: void); // error
+               ^
+
+References:
+   number.js:124:15
+   124|   function(x: number) {
+                      ^^^^^^ [1]
+   number.js:126:11
+   126|       (x: void); // error
+                  ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- number.js:128:6
+
+Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
+
+   number.js:128:6
+   128|     (x: -1); // error
+             ^
+
+References:
+   number.js:124:15
+   124|   function(x: number) {
+                      ^^^^^^ [1]
+   number.js:128:9
+   128|     (x: -1); // error
+                ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- number.js:133:8
+
+Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
+
+   number.js:133:8
+   133|       (x: -1); // error
+               ^
+
+References:
+   number.js:131:15
+   131|   function(x: number) {
+                      ^^^^^^ [1]
+   number.js:133:11
+   133|       (x: -1); // error
+                  ^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- number.js:135:6
+
+Cannot cast `x` to number literal `-1` because number [1] is incompatible with number literal `-1` [2].
+
+   number.js:135:6
+   135|     (x: -1); // error
+             ^
+
+References:
+   number.js:131:15
+   131|   function(x: number) {
+                      ^^^^^^ [1]
+   number.js:135:9
+   135|     (x: -1); // error
+                ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- number.js:146:15
+
+number literal `-1` [1] is incompatible with number literal `0` [2].
+
+   number.js:146:15
+   146|     if (x === -1) { // error
+                      ^^ [1]
+
+References:
+   number.js:145:15
+   145|   function(x: 0): number {
+                      ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- number.js:153:15
+
+number literal `0` [1] is incompatible with number literal `-1` [2].
+
+   number.js:153:15
+   153|     if (x === 0) { //error
+                      ^ [1]
+
+References:
+   number.js:152:15
+   152|   function(x: -1) {
+                      ^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- number.js:170:12
+
+Cannot return `x` because number literal `0` [1] is incompatible with number literal `-1` [2].
+
+   number.js:170:12
+   170|     return x;
+                   ^
+
+References:
+   number.js:166:20
+   166|   function(x: -1 | 0): -1 {
+                           ^ [1]
+   number.js:166:24
+   166|   function(x: -1 | 0): -1 {
+                               ^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ property.js:71:12
 
 Cannot return `x[y.z]` because null or undefined [1] is incompatible with string [2].
@@ -3382,4 +3495,4 @@ Cannot perform arithmetic operation because undefined [1] is not a number.
 
 
 
-Found 245 errors
+Found 252 errors

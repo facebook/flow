@@ -5589,6 +5589,23 @@ and predicates_of_condition cx e = Ast.(Expression.(
   in
 
   let eq_test loc ~sense ~strict left right reconstruct_ast =
+    let is_number_literal node =
+      match node with
+      | Expression.Literal { Literal.value = Literal.Number _; _ }
+      | Expression.Unary { Unary.operator = Unary.Minus; argument = _, Expression.Literal { Literal.value = Literal.Number _; _ } }
+        -> true
+      | _ -> false
+    in
+    let extract_number_literal node =
+      match node with
+      | Expression.Literal { Literal.value = Literal.Number lit; raw; comments= _ } ->
+        lit, raw
+      | Expression.Unary { Unary.operator = Unary.Minus;
+          argument = _, Expression.Literal { Literal.value = Literal.Number lit; raw; _ } } ->
+        -.lit, ("-" ^ raw)
+      | _ -> Utils_js.assert_false "not a number literal"
+    in
+
     match left, right with
     (* typeof expr ==/=== string *)
     (* this must happen before the case below involving Literal.String in order
@@ -5679,13 +5696,15 @@ and predicates_of_condition cx e = Ast.(Expression.(
         (fun expr -> reconstruct_ast expr val_ast)
 
     (* special case equality relations involving numbers *)
-    | ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw; comments= _ }) as value),
-      expr ->
+    | ((lit_loc, number_literal) as value),
+      expr when is_number_literal number_literal ->
+      let lit, raw = extract_number_literal number_literal in
       let (_, val_t), _ as val_ast = expression cx value in
       literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit_loc, sense, (lit, raw)))
         (fun expr -> reconstruct_ast val_ast expr)
     | expr,
-      ((lit_loc, Expression.Literal { Literal.value = Literal.Number lit; raw; comments= _ }) as value) ->
+      ((lit_loc, number_literal) as value) when is_number_literal number_literal ->
+      let lit, raw = extract_number_literal number_literal in
       let (_, val_t), _ as val_ast = expression cx value in
       literal_test loc ~sense ~strict expr val_t (SingletonNumP (lit_loc, sense, (lit, raw)))
         (fun expr -> reconstruct_ast expr val_ast)
