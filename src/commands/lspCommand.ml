@@ -185,6 +185,14 @@ let get_current_version flowconfig_name (root: Path.t) : string option =
     |> read_config_or_exit ~allow_cache:false
     |> FlowConfig.required_version
 
+let is_lazy_mode_set_in_flowconfig flowconfig_name (root: Path.t) : bool =
+  let lazy_mode =
+    Server_files_js.config_file flowconfig_name root
+    |> read_config_or_exit ~allow_cache:false
+    |> FlowConfig.lazy_mode
+  in
+  lazy_mode <> None
+
 let get_root (state: state) : Path.t option =
   match state with
   | Connected cenv -> Some cenv.c_ienv.i_root
@@ -516,8 +524,16 @@ let try_connect flowconfig_name (env: disconnected_env) : state =
     Lsp_helpers.telemetry_log to_stdout message;
     lsp_exit_bad ()
   end;
-  let start_env = CommandUtils.make_env flowconfig_name env.d_ienv.i_connect_params
-    env.d_ienv.i_root in
+  let start_env =
+    let connect_params =
+      (* If the .flowconfig has explicitly set lazy_mode, then we don't want to override that if we
+       * start a new server *)
+      if is_lazy_mode_set_in_flowconfig flowconfig_name env.d_ienv.i_root
+      then { env.d_ienv.i_connect_params with lazy_mode = None; }
+      else env.d_ienv.i_connect_params
+    in
+    CommandUtils.make_env flowconfig_name connect_params env.d_ienv.i_root
+  in
 
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
