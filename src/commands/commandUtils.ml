@@ -970,7 +970,10 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
   in
 
 
-  let opt_lazy_mode = Option.value lazy_mode ~default:(FlowConfig.lazy_mode flowconfig) in
+  let opt_lazy_mode =
+    let default = Option.value (FlowConfig.lazy_mode flowconfig) ~default:(Options.NON_LAZY_MODE) in
+    Option.value lazy_mode ~default
+  in
 
   let opt_arch =
     if options_flags.types_first

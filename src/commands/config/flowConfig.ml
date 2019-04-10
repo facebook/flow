@@ -54,7 +54,7 @@ module Opts = struct
     haste_use_name_reducers: bool;
     ignore_non_literal_requires: bool;
     include_warnings: bool;
-    lazy_mode: Options.lazy_mode;
+    lazy_mode: Options.lazy_mode option;
     log_file: Path.t option;
     max_header_tokens: int;
     max_literal_length: int;
@@ -141,7 +141,7 @@ module Opts = struct
     haste_use_name_reducers = false;
     ignore_non_literal_requires = false;
     include_warnings = false;
-    lazy_mode = Options.NON_LAZY_MODE;
+    lazy_mode = None;
     log_file = None;
     max_header_tokens = 10;
     max_literal_length = 100;
@@ -380,7 +380,7 @@ module Opts = struct
           "watchman", Options.LAZY_MODE_WATCHMAN;
           "none", Options.NON_LAZY_MODE;
         ]
-        (fun opts v -> Ok { opts with lazy_mode = v });
+        (fun opts v -> Ok { opts with lazy_mode = Some v });
 
     "merge_timeout",
       uint
