@@ -3923,6 +3923,55 @@ and subscript =
         end
 
     | Member {
+        Member._object;
+        property = Member.PropertyExpression index;
+      } ->
+        let reason = mk_reason (RProperty None) loc in
+        let (_, tind), _ as index = expression cx index in
+        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        let opt_use = OptGetElemT (use_op, reason, tind) in
+        begin match opt_state with
+        | NonOptional ->
+          let (_, tobj), _ as _object_ast = expression cx _object in
+          let lhs_t = (match Refinement.get cx (loc, e) loc with
+          | Some t -> t
+          | None ->
+            Tvar.mk_where cx reason (fun t ->
+              let use = apply_opt_use opt_use t in
+              Flow.flow cx (tobj, use)
+            )
+          ) in
+          ex, lhs_t, acc, (
+            (loc, lhs_t),
+            member_ast { Member.
+              _object = _object_ast;
+              property = Member.PropertyExpression index;
+            }
+          )
+        | NewChain ->
+          let tout = Tvar.mk cx reason in
+          let (_, lhs_t), _ as _object_ast = expression cx _object in
+          _object, lhs_t, ref (loc, opt_use, tout) :: acc, (
+            (loc, tout),
+            member_ast { Member.
+              _object = _object_ast;
+              property = Member.PropertyExpression index;
+            }
+          )
+        | ContinueChain ->
+          let tout = Tvar.mk cx reason in
+          let lhs, lhs_t, chain, _object_ast =
+            build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
+          lhs, lhs_t, chain, (
+            (loc, tout),
+            member_ast { Member.
+              _object = _object_ast;
+              property = Member.PropertyExpression index;
+            }
+          )
+        end
+
+    | Member {
         Member._object = _, Identifier (_, { Ast.Identifier.name= "module"; comments= _ }) as _object;
         property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name= "exports"; comments= _ } as exports_name));
       } -> let lhs_t = get_module_exports cx loc in
@@ -4039,55 +4088,6 @@ and subscript =
           let id_info = name, tout, Type_table.PropertyAccess tobj in
           Type_table.set_info ploc id_info (Context.type_table cx);
           lhs, lhs_t, chain, ast
-        end
-
-    | Member {
-        Member._object;
-        property = Member.PropertyExpression index;
-      } ->
-        let reason = mk_reason (RProperty None) loc in
-        let (_, tind), _ as index = expression cx index in
-        let use_op = Op (GetProperty (mk_expression_reason ex)) in
-        let opt_use = OptGetElemT (use_op, reason, tind) in
-        begin match opt_state with
-        | NonOptional ->
-          let (_, tobj), _ as _object_ast = expression cx _object in
-          let lhs_t = (match Refinement.get cx (loc, e) loc with
-          | Some t -> t
-          | None ->
-            Tvar.mk_where cx reason (fun t ->
-              let use = apply_opt_use opt_use t in
-              Flow.flow cx (tobj, use)
-            )
-          ) in
-          ex, lhs_t, acc, (
-            (loc, lhs_t),
-            member_ast { Member.
-              _object = _object_ast;
-              property = Member.PropertyExpression index;
-            }
-          )
-        | NewChain ->
-          let tout = Tvar.mk cx reason in
-          let (_, lhs_t), _ as _object_ast = expression cx _object in
-          _object, lhs_t, ref (loc, opt_use, tout) :: acc, (
-            (loc, tout),
-            member_ast { Member.
-              _object = _object_ast;
-              property = Member.PropertyExpression index;
-            }
-          )
-        | ContinueChain ->
-          let tout = Tvar.mk cx reason in
-          let lhs, lhs_t, chain, _object_ast =
-            build_chain ~is_cond cx _object (ref (loc, opt_use, tout) :: acc) in
-          lhs, lhs_t, chain, (
-            (loc, tout),
-            member_ast { Member.
-              _object = _object_ast;
-              property = Member.PropertyExpression index;
-            }
-          )
         end
 
     | Member {
