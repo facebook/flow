@@ -10,39 +10,40 @@ module File_sig = File_sig.With_ALoc
 type options = {
 
   (* MergedT is somewhat unconventional. It introduces UseT's that the
-     normalizer is not intended to handle. If this flag is set to true, all
-     instances of MergedT will fall through and return Top. Otherwise, we
-     attempt to convert the use_t's under the MergedT. This operation only
-     succeeds if the use is a UseT and the underlying type is successfully
-     normalized.
-
-     Pick `true` if the result does not need to be "parseable", e.g. coverage.
-  *)
+   * normalizer is not intended to handle. If this flag is set to true, all
+   * instances of MergedT will fall through and return Top. Otherwise, we
+   * attempt to convert the use_t's under the MergedT. This operation only
+   * succeeds if the use is a UseT and the underlying type is successfully
+   * normalized.
+   *
+   * Pick `true` if the result does not need to be "parseable", e.g. coverage.
+   *)
   fall_through_merged: bool;
 
   (* Expand the signatures of built-in functions, such as:
-      Function.prototype.apply: (thisArg: any, argArray?: any): any
-  *)
+   * Function.prototype.apply: (thisArg: any, argArray?: any): any
+   *)
   expand_internal_types: bool;
 
   (* If set to `true` type aliase names will be expanded to the types they represent.
-     WARNING: This can cause a blow-up in the size of the produced types.
-  *)
+   *
+   * WARNING: This can cause a blow-up in the size of the produced types.
+   *)
   expand_type_aliases: bool;
 
   (* The normalizer keeps a stack of type parameters that are in scope. This stack
-     may contain the same name twice (but with different associated locations).
-     This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
-     we do not wish to allow the generation of type parameters that are shadowed by
-     another definition. For example the inferred type for `z` in:
+   * may contain the same name twice (but with different associated locations).
+   * This is a case of shadowing. For certain uses of normalized types (e.g. suggest)
+   * we do not wish to allow the generation of type parameters that are shadowed by
+   * another definition. For example the inferred type for `z` in:*
 
-     function outer<T>(y: T) {
-       function inner<T>(x: T, z) { inner(x, y); }
-     }
-
-    is the _outer_ T. Adding the annotation ": T" for `z` would not be correct.
-    This flags toggles this behavior.
-  *)
+   * function outer<T>(y: T) {
+   *     function inner<T>(x: T, z) { inner(x, y); }
+   * }
+   *
+   * is the _outer_ T. Adding the annotation ": T" for `z` would not be correct.
+   * This flags toggles this behavior.
+   *)
   flag_shadowed_type_params: bool;
 
   (* Makes the normalizer more aggressive in preserving inferred literal types *)
@@ -60,7 +61,9 @@ type options = {
   evaluate_type_destructors: bool;
 
   (* Run an optimization pass that removes duplicates from unions and intersections.
-     WARNING May be slow for large types *)
+   *
+   * WARNING May be slow for large types
+   *)
   optimize_types: bool;
 
   (* Omits type params if they match the defaults, e.g:
