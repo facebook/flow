@@ -163,6 +163,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
       evaluate_type_destructors = true;
       optimize_types = true;
       omit_targ_defaults = false;
+      simplify_empty = true;
     } in
     let file = Context.file cx in
     let type_table = Context.type_table cx in
@@ -209,6 +210,7 @@ let autocomplete_id cx file_sig env =
         evaluate_type_destructors = true;
         optimize_types = true;
         omit_targ_defaults = false;
+        simplify_empty = true;
       } in
       let file = Context.file cx in
       let type_table = Context.type_table cx in

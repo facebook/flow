@@ -1588,7 +1588,8 @@ end = struct
     let result, state = run state (type__ ~env t) in
     let result = match result with
       | Ok t when options.Env.optimize_types ->
-        Ok (Ty_utils.simplify_unions_inters t)
+        let { Env.simplify_empty; _ } = options in
+        Ok (Ty_utils.simplify_type ~simplify_empty t)
       | _ -> result
     in
     result, state
