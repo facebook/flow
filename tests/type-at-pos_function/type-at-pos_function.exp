@@ -254,7 +254,7 @@ function-poly-2.js:11:12 = {
   "end":17
 }
 function-poly-3.js:8:1 = {
-  "type":"number | string",
+  "type":"string | number",
   "reasons":[],
   "loc":{
     "source":"function-poly-3.js",

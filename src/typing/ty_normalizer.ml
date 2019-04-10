@@ -309,13 +309,13 @@ end = struct
         method! on_t env t =
           match env, t with
           | (v, _), Union (t0,t1,ts) ->
-            let ts = t0::t1::ts in
-            let ts' = self#on_list self#on_t (v, `Union) ts in
-            if ts == ts' then t else Ty.mk_union ts'
+            let t0' = self#on_t (v, `Union) t0 in
+            let ts' = self#on_list self#on_t (v, `Union) (t1::ts) in
+            if t0 == t0' && ts == ts' then t else Ty.mk_union (t0', ts')
           | (v, _), Inter (t0,t1,ts) ->
-            let ts = t0::t1::ts in
-            let ts' = self#on_list self#on_t (v, `Inter) ts in
-            if ts == ts' then t else Ty.mk_inter ts'
+            let t0' = self#on_t (v, `Inter) t0 in
+            let ts' = self#on_list self#on_t (v, `Inter) (t1::ts) in
+            if t0 == t0' && ts == ts' then t else Ty.mk_inter (t0', ts')
           | (v, mode), TVar (Ty.RVar v', _) when v = v' ->
             self#env_zero mode
           | _, Mu (v, rt) ->
@@ -604,9 +604,9 @@ end = struct
     | DefT (_, _,SingletonStrT lit) -> return (Ty.StrLit lit)
     | DefT (_, _,SingletonBoolT lit) -> return (Ty.BoolLit lit)
     | MaybeT (_, t) ->
-      type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; Ty.Null; t]
+      type__ ~env t >>| fun t -> Ty.mk_union (Ty.Void, [Ty.Null; t])
     | OptionalT (_, t) ->
-      type__ ~env t >>| fun t -> Ty.mk_union [Ty.Void; t]
+      type__ ~env t >>| fun t -> Ty.mk_union (Ty.Void, [t])
     | DefT (_, _,FunT (_, _, f)) ->
       fun_ty ~env f None >>| fun t -> Ty.Fun t
     | DefT (r, _, ObjT o) -> obj_ty ~env r o
@@ -616,13 +616,13 @@ end = struct
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
-      Ty.mk_union (t0::t1::ts)
+      Ty.mk_union (t0, t1::ts)
     | IntersectionT (_, rep) ->
       let t0, (t1, ts) = InterRep.members_nel rep in
       type__ ~env t0 >>= fun t0 ->
       type__ ~env t1 >>= fun t1 ->
       mapM (type__ ~env) ts >>| fun ts ->
-      Ty.mk_inter (t0::t1::ts)
+      Ty.mk_inter (t0, t1::ts)
     | DefT (_, _, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
     | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
     | DefT (_, _ ,TypeAppT (_, t, ts)) -> type_app ~env t (Some ts)
@@ -766,16 +766,22 @@ end = struct
   (* Resolving a type variable amounts to normalizing its lower bounds and
      taking their union.
   *)
-  and resolve_bounds ~env =
-    let open Constraint in
-    function
-    | Resolved t | FullyResolved t -> type__ ~env t
-    | Unresolved bounds ->
-      T.TypeMap.keys bounds.lower |>
-      mapM (fun t -> type__ ~env t >>| Ty.bk_union) >>|
-      Core_list.concat >>|
-      Core_list.dedup >>|
-      Ty.mk_union ~flattened:true
+  and resolve_bounds ~env = function
+    | Constraint.Resolved t
+    | Constraint.FullyResolved t ->
+      type__ ~env t
+    | Constraint.Unresolved bounds ->
+      resolve_from_lower_bounds ~env bounds >>| fun ts ->
+      begin match ts with
+        | [] -> Ty.Bot
+        | hd::tl -> Ty.mk_union ~flattened:true (hd, tl)
+      end
+
+  and resolve_from_lower_bounds ~env bounds =
+    T.TypeMap.keys bounds.Constraint.lower |>
+    mapM (fun t -> type__ ~env t >>| fun ty -> Nel.to_list (Ty.bk_union ty)) >>|
+    Core_list.concat >>|
+    Core_list.dedup
 
   and bound_t ~env reason name =
     let { Ty.loc; name; _ } = symbol_from_reason env reason name in
@@ -962,7 +968,7 @@ end = struct
         obj_literal = false;
         obj_props = static_flds;
       } in
-      Ty.mk_inter [parent_class; props_obj]
+      Ty.mk_inter (parent_class, [props_obj])
 
   and instance_t ~env r inst =
     let open Type in
@@ -1254,7 +1260,7 @@ end = struct
         ("success", Ty.BoolLit true, false);
         ("value", builtin_t "TypeAssertT", false);
       ]) in
-      let ret = Ty.mk_union [result_fail_ty; result_succ_ty] in
+      let ret = Ty.mk_union (result_fail_ty, [result_succ_ty]) in
       return (mk_fun ~tparams ~params ret)
 
     (* debugPrint: (_: any[]) => void *)
@@ -1317,7 +1323,7 @@ end = struct
         ]
         in
         let f2 = mk_fun ~tparams ~params reactElement in
-        mk_inter [f1; f2]
+        mk_inter (f1, [f2])
       )
 
     (* Fallback *)
@@ -1365,7 +1371,7 @@ end = struct
         ("success", Ty.BoolLit true, false);
         ("value", builtin_t "TypeAssertT", false);
       ]) in
-      let ret = Ty.mk_union [result_fail_ty; result_succ_ty] in
+      let ret = Ty.mk_union (result_fail_ty, [result_succ_ty]) in
       return (mk_fun ~tparams ~params ret)
 
     | DebugPrint -> return (builtin_t "$Flow$DebugPrint")
@@ -1528,9 +1534,15 @@ end = struct
       terr ~kind:BadUse ~msg None
 
   and merged_t ~env uses =
-    if Env.fall_through_merged env
-    then return Ty.Top
-    else mapM (use_t ~env) uses >>| Ty.mk_inter
+    if Env.fall_through_merged env then
+      return Ty.Top
+    else
+      mapM (use_t ~env) uses >>| function
+      | [] ->
+        (* shouldn't happen - MergedT has at least one use by construction *)
+        Ty.Bot
+      | t::ts ->
+        Ty.mk_inter (t, ts)
 
   let run_type ~options ~genv ~imported_names ~tparams state t =
     let env = Env.init ~options ~genv ~tparams ~imported_names in
