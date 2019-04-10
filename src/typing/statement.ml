@@ -1081,7 +1081,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
   (*******************************************************)
 
-  | (loc, Return { Return.argument }) ->
+  | (loc, Return { Return.argument; comments }) ->
       let reason = mk_reason (RCustom "return") loc in
       let ret = Env.get_internal_var cx "return" loc in
       let t, argument_ast = match argument with
@@ -1143,7 +1143,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       Env.reset_current_activation loc;
       Abnormal.save Abnormal.Return;
       Abnormal.throw_stmt_control_flow_exception
-        (loc, Return { Return.argument = argument_ast })
+        ( loc, Return { Return.
+            argument = argument_ast;
+            comments = comments;
+          } )
         Abnormal.Return
 
   | (loc, Throw { Throw.argument }) ->
@@ -6808,8 +6811,9 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
             | None -> None
           ) in
           let body = Ast.Function.BodyBlock (loc, {Ast.Statement.Block.body = [
-              (loc, Ast.Statement.Return {
-                Ast.Statement.Return.argument = Some e
+              (loc, Ast.Statement.Return { Ast.Statement.Return.
+                argument = Some e;
+                comments = Flow_ast_utils.mk_comments_opt ();
               })
             ]}) in
           let return = Ast.Type.Available (loc, return) in
@@ -6832,6 +6836,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
               body = Ast.Function.BodyBlock (pred_loc, { Ast.Statement.Block.
                 body = [_, Ast.Statement.Return { Ast.Statement.Return.
                   argument = Some e;
+                  comments = _;
                 }]
               });
               _;

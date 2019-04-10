@@ -487,8 +487,8 @@ let program (algo : diff_algorithm)
       Some (do_while_statement do_while1 do_while2)
     | (_, Switch switch1), (_, Switch switch2) ->
       switch_statement switch1 switch2
-    | (_, Return return1), (_, Return return2) ->
-      return_statement return1 return2
+    | (loc, Return return1), (_, Return return2) ->
+      return_statement loc return1 return2
     | (_, Labeled labeled1), (_, Labeled labeled2) ->
       Some (labeled_statement labeled1 labeled2)
     | (_, With with1), (_, With with2) ->
@@ -1443,13 +1443,15 @@ let program (algo : diff_algorithm)
     let test = diff_if_changed expression test1 test2 in
     List.concat [body; test]
 
-  and return_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Return.t)
-                       (stmt2: (Loc.t, Loc.t) Ast.Statement.Return.t)
+  and return_statement loc (stmt1: (Loc.t, Loc.t) Ast.Statement.Return.t)
+                           (stmt2: (Loc.t, Loc.t) Ast.Statement.Return.t)
       : node change list option =
     let open Ast.Statement.Return in
-    let { argument = argument1; } = stmt1 in
-    let { argument = argument2; } = stmt2 in
-    diff_if_changed_nonopt_fn expression argument1 argument2
+    let { argument = argument1; comments = comments1 } = stmt1 in
+    let { argument = argument2; comments = comments2 } = stmt2 in
+    let comments = syntax_opt loc comments1 comments2 in
+    join_diff_list
+      [comments; diff_if_changed_nonopt_fn expression argument1 argument2]
 
   and throw_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.Throw.t)
                       (stmt2: (Loc.t, Loc.t) Ast.Statement.Throw.t)

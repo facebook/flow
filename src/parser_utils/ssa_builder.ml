@@ -498,7 +498,7 @@ module Make
 
     method! return _loc (stmt: (L.t, L.t) Ast.Statement.Return.t) =
       let open Ast.Statement.Return in
-      let { argument } = stmt in
+      let { argument; comments = _ } = stmt in
       ignore @@ Flow_ast_mapper.map_opt this#expression argument;
       this#raise_abrupt_completion AbruptCompletion.return
 

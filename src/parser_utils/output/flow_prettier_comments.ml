@@ -119,7 +119,7 @@ and get_children_nodes (statement: (Loc.t, Loc.t) Ast.Statement.t) =
             in
             nodes @ test_nodes @ consequent_nodes )
           [] cases
-  | Return {Return.argument} ->
+  | Return {Return.argument; comments = _} ->
       node_list_of_option ~f:statement_list_of_expression argument
   | Throw {Throw.argument} -> statement_list_of_expression argument
   | Try {Try.block= _, {Block.body}; handler; finalizer} ->

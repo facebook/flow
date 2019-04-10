@@ -237,9 +237,12 @@ let toplevels id cx this super ~decls ~stmts ~expr
     | Some (Ast.Function.BodyBlock (loc, { Block.body })) ->
       body, (fun body -> Some (Ast.Function.BodyBlock (loc, { Block.body })))
     | Some (Ast.Function.BodyExpression expr) ->
-      [fst expr, Return {Return.argument = Some expr}],
+      [ fst expr, Return { Return.
+          argument = Some expr;
+          comments = Flow_ast_utils.mk_comments_opt ();
+        } ],
       (function
-      | [_, Return { Return.argument = Some expr }]
+      | [_, Return {Return.argument = Some expr; comments = _}]
       | [_, Expression { Expression.expression = expr; _ }] ->
         Some (Ast.Function.BodyExpression expr)
       | _ -> failwith "expected return body")
@@ -252,7 +255,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
     match kind with
     | Predicate -> begin
         match statements with
-        | [(_, Return { Return.argument = Some _})] -> ()
+        | [(_, Return {Return.argument = Some _; comments = _})] -> ()
         | _ ->
           let loc = aloc_of_reason reason in
           Flow_js.add_output cx

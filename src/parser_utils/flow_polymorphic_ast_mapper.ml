@@ -1373,9 +1373,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method return (stmt: ('M, 'T) Ast.Statement.Return.t) : ('N, 'U) Ast.Statement.Return.t =
     let open Ast.Statement.Return in
-    let { argument } = stmt in
+    let { argument; comments } = stmt in
     let argument' = Option.map ~f:this#expression argument in
-    { argument = argument' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { argument = argument'; comments = comments' }
 
   method sequence (expr: ('M, 'T) Ast.Expression.Sequence.t) : ('N, 'U) Ast.Expression.Sequence.t =
     let open Ast.Expression.Sequence in

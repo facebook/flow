@@ -19,7 +19,7 @@ module Procedure_decider = struct
 
     method! return _loc (stmt: (Loc.t, Loc.t) Flow_ast.Statement.Return.t) =
       let open Flow_ast.Statement.Return in
-      let { argument } = stmt in
+      let { argument; comments = _ } = stmt in
       begin match argument with
         | None -> ()
         | Some _ -> this#no

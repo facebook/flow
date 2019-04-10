@@ -228,8 +228,8 @@ module Statements = struct
   let if_ test consequent alternate =
     Loc.none, If { If.test; consequent; alternate }
 
-  let return ?(loc=Loc.none) expr =
-    loc, Return { Return.argument = expr }
+  let return ?(loc=Loc.none) ?comments expr =
+    loc, Return { Return.argument = expr; comments }
 
   let directive txt =
     let expr = Loc.none, Ast.Expression.Literal (Literals.string txt) in

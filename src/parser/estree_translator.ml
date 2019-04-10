@@ -171,8 +171,8 @@ end with type t = Impl.t) = struct
           "discriminant", expression discriminant;
           "cases", array_of_list case cases;
         ]
-    | loc, Return { Return.argument } ->
-        node "ReturnStatement" loc [
+    | loc, Return { Return.argument; comments } ->
+        node ?comments "ReturnStatement" loc [
           "argument", option expression argument;
         ]
     | loc, Throw { Throw.argument } ->

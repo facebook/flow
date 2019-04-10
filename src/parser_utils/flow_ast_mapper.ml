@@ -786,7 +786,7 @@ class ['loc] mapper = object(this)
     let (loc, { name; comments }) = id in
     let comments' = this#syntax_opt comments in
     if comments == comments' then id
-    else loc, { name; comments= comments' }
+    else loc, { name; comments = comments' }
 
   method interface _loc (interface: ('loc, 'loc) Flow_ast.Statement.Interface.t) =
     let open Flow_ast.Statement.Interface in
@@ -1286,9 +1286,11 @@ class ['loc] mapper = object(this)
 
   method return _loc (stmt: ('loc, 'loc) Flow_ast.Statement.Return.t) =
     let open Flow_ast.Statement.Return in
-    let { argument } = stmt in
+    let { argument; comments } = stmt in
     let argument' = map_opt this#expression argument in
-    if argument == argument' then stmt else { argument = argument' }
+    let comments' = this#syntax_opt comments in
+    if argument == argument' && comments == comments' then stmt
+    else { argument = argument'; comments = comments' }
 
   method sequence _loc (expr: ('loc, 'loc) Flow_ast.Expression.Sequence.t) =
     let open Flow_ast.Expression.Sequence in

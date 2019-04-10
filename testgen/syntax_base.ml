@@ -133,7 +133,10 @@ let mk_expr_stmt (expr : (Loc.t, Loc.t) E.t') : (Loc.t, Loc.t) S.t' =
                               directive = None})
 
 let mk_ret_stmt (expr : (Loc.t, Loc.t) E.t') : t =
-  Stmt (S.Return.(S.Return {argument = Some (Loc.none, expr)}))
+  Stmt (S.Return { S.Return.
+    argument = Some (Loc.none, expr);
+    comments = Flow_ast_utils.mk_comments_opt ();
+  })
 
 let mk_func_def
     (fname : string)

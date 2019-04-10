@@ -319,14 +319,16 @@ module Statement
   and return = with_loc (fun env ->
     if not (in_function env)
     then error env Error.IllegalReturn;
+    let leading = Peek.comments env in
     Expect.token env T_RETURN;
-    let argument =
+    let argument, trailing =
       if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
-      then None
-      else Some (Parse.expression env) in
+      then (None, Peek.comments env)
+      else (Some (Parse.expression env), []) in
     Eat.semicolon env;
     Statement.Return { Statement.Return.
       argument;
+      comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
     }
   )
 

@@ -56,6 +56,7 @@ let layout_prettier ast =
 
 let print_annotated_program annot_ast =
   annot_ast
+  |> Comment_utils.strip_inlined_comments
   |> layout_prettier
   |> Pretty_printer.print ~source_maps:None
   |> Source.contents

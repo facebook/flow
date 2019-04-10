@@ -24,7 +24,7 @@ and Identifier : sig
 
   and 'M t' = {
     name: string;
-    comments: ('M, unit) Syntax.t option
+    comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]
 end = Identifier
@@ -376,6 +376,7 @@ and Statement : sig
   module Return : sig
     type ('M, 'T) t = {
       argument: ('M, 'T) Expression.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

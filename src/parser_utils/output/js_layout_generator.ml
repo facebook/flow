@@ -514,9 +514,9 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         pretty_space;
         cases_node;
       ]
-    | S.Return { S.Return.argument } ->
+    | S.Return { S.Return.argument; comments } ->
       let s_return = Atom "return" in
-      with_semicolon (
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (
         match argument with
         | Some arg ->
           let arg = match arg with
