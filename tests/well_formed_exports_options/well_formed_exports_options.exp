@@ -1,7 +1,8 @@
 Error -------------------------------------------------------------------------------------------------------- a.js:4:18
 
-Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
-(`signature-verification-failure`)
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. (`signature-verification-failure`)
 
    4| module.exports = foo();
                        ^^^^^
@@ -9,8 +10,9 @@ Could not build a typed interface for this module. Expected literal expression i
 
 Error --------------------------------------------------------------------------------------------------- dirA/a.js:4:16
 
-Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
-(`signature-verification-failure`)
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. (`signature-verification-failure`)
 
    4| export default foo(); // sig. verification error - file is whitelisted
                      ^^^^^
@@ -18,8 +20,9 @@ Could not build a typed interface for this module. Expected literal expression i
 
 Error --------------------------------------------------------------------------------------------------- dirA/b.js:4:16
 
-Could not build a typed interface for this module. Expected literal expression instead of Call, try using a type cast.
-(`signature-verification-failure`)
+Failed to build a typed interface for this module. The exports of this module must be annotated with types. Cannot
+determine the type of this call expression. Please provide an annotation, e.g., by adding a type cast around this
+expression. (`signature-verification-failure`)
 
    4| export default foo(); // sig. verification error - dirA is whitelisted
                      ^^^^^

@@ -81,7 +81,7 @@ let tests_data = [
 
   name "empty_object_literal",
   ["export default { };"],
-  ["Cannot determine types of initialized properties of empty object @ (1, 15) to (1, 18)"],
+  ["Cannot determine types of initialized properties of an empty object @ (1, 15) to (1, 18)"],
   [];
 
   name "export_class_reference",
@@ -216,7 +216,7 @@ let tests_data = [
 
   name "empty_array_literal",
   ["export default [ ];"],
-  ["Cannot determine element type of empty array @ (1, 15) to (1, 18)"],
+  ["Cannot determine the element type of an empty array @ (1, 15) to (1, 18)"],
   [];
 
   name "non_empty_array_literal",
@@ -422,7 +422,7 @@ let tests_data = [
 
   name "reference_expression2",
   ["module.exports = 'x'.length"],
-  ["Expected literal expression instead of Member @ (1, 17) to (1, 27)"],
+  ["Cannot determine the type of this member expression @ (1, 17) to (1, 27)"],
   [];
 
   name "arith_expression1",
@@ -432,7 +432,7 @@ let tests_data = [
 
   name "arith_expression2",
   ["module.exports = 6+7"],
-  ["Expected literal expression instead of Binary @ (1, 17) to (1, 20)"],
+  ["Cannot determine the type of this binary expression @ (1, 17) to (1, 20)"],
   [];
 
   name "named_class_expression",
@@ -501,7 +501,7 @@ let tests_data = [
 
   name "jsx_div",
   ["module.exports = <div></div>"],
-  ["Expected literal expression instead of JSXElement @ (1, 17) to (1, 28)"],
+  ["Cannot determine the type of this JSX element @ (1, 17) to (1, 28)"],
   [];
 
   name "function_return",
