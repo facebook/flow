@@ -876,10 +876,6 @@ let is_not_comment =
       ~f:(fun (regexp) -> Str.string_match regexp line 0)
       comment_regexps)
 
-let default_lint_severities = [
-  Lints.DeprecatedCallSyntax, (Severity.Err, None);
-]
-
 let read filename =
   let contents = Sys_utils.cat_no_fail filename in
   let hash =
@@ -897,7 +893,7 @@ let read filename =
 let get_empty_config () =
   let lint_severities = Core_list.fold_left ~f:(fun acc (lint, severity) ->
     LintSettings.set_value lint severity acc
-  ) ~init:empty_config.lint_severities default_lint_severities in
+  ) ~init:empty_config.lint_severities LintSettings.default_lint_severities in
   { empty_config with lint_severities }
 
 let init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints =

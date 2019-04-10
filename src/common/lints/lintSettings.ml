@@ -7,6 +7,7 @@
 
 open Lints
 open Severity
+open Utils_js
 
 let (>>=) = Core_result.bind
 
@@ -23,6 +24,10 @@ let of_default default_value = {
   default_value;
   explicit_values = LintMap.empty
 }
+
+let default_lint_severities = [
+  Lints.DeprecatedCallSyntax, (Severity.Err, None);
+]
 
 let set_value key value settings =
   let new_map = LintMap.add key value settings.explicit_values
@@ -110,9 +115,16 @@ let of_lines base_settings =
       "Malformed lint rule. Properly formed rules contain a single '=' character.")
   in
 
+  let config_default =
+    Core_list.Assoc.find default_lint_severities ~equal:(=)
+    %> Option.map ~f:fst
+    %> Option.value ~default:Severity.Off
+  in
+
   let add_value keys value settings =
     let (new_settings, all_redundant) = List.fold_left (fun (settings, all_redundant) key ->
-        let all_redundant = all_redundant && get_value key settings = fst value in
+        let v = get_value key settings in
+        let all_redundant = all_redundant && v = fst value && v <> config_default key in
         let settings = set_value key value settings in
         (settings, all_redundant))
       (settings, true) keys
