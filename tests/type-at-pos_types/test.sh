@@ -90,6 +90,18 @@ assert_ok "$FLOW" type-at-pos implicit-instantiation.js 10 21 --strip-root --pre
 printf "mixed.js:18:17 = "
 assert_ok "$FLOW" type-at-pos mixed.js 18 17 --strip-root --pretty
 
+# callable-object.js
+printf "callable-object.js:8:6 = "
+assert_ok "$FLOW" type-at-pos callable-object.js 8 6 --strip-root --pretty
+printf "callable-object.js:13:6 = "
+assert_ok "$FLOW" type-at-pos callable-object.js 13 6 --strip-root --pretty
+printf "callable-object.js:18:6 = "
+assert_ok "$FLOW" type-at-pos callable-object.js 18 6 --strip-root --pretty
+printf "callable-object.js:23:6 = "
+assert_ok "$FLOW" type-at-pos callable-object.js 23 6 --strip-root --pretty
+printf "callable-object.js:31:6 = "
+assert_ok "$FLOW" type-at-pos callable-object.js 31 6 --strip-root --pretty
+
 # opaque.js
 printf "opaque.js:3:20 = "
 assert_ok "$FLOW" type-at-pos opaque.js 3 20 --strip-root --pretty

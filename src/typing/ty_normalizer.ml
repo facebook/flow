@@ -808,29 +808,16 @@ end = struct
     | _ -> return None
 
   and obj_ty ~env reason o =
-    let { T.flags; props_tmap; dict_t; _ } = o in
+    let { T.flags; props_tmap; call_t; dict_t; _ } = o in
     let { T.exact = obj_exact; T.frozen = obj_frozen; _ } = flags in
     let obj_literal = match Reason.desc_of_reason reason with
       | Reason.RObjectLit -> true
       | _ -> false
     in
-    obj_props ~env props_tmap dict_t >>| fun obj_props ->
+    obj_props ~env props_tmap call_t dict_t >>| fun obj_props ->
     Ty.Obj { Ty.obj_exact; obj_frozen; obj_literal; obj_props }
 
-  and obj_props ~env id dict =
-    let dispatch (x, p) =
-      if x = "$call"
-        then call_prop ~env p
-        else obj_prop ~env x p
-    in
-    let cx = Env.get_cx env in
-    let props = SMap.bindings (Context.find_props cx id) in
-    concat_fold_m dispatch props >>= fun obj_props ->
-    match dict with
-    | Some d -> index_prop ~env d >>| fun i -> i::obj_props
-    | None -> return obj_props
-
-  and obj_prop ~env x p =
+  and obj_prop ~env (x, p) =
     match p with
     | T.Field (_, t, polarity) ->
       let fld_polarity = type_polarity polarity in
@@ -843,30 +830,61 @@ end = struct
     | T.Set (_, t) ->
       type__ ~env t >>| fun t -> [Ty.NamedProp (x, Ty.Set t)]
     | T.GetSet (loc1, t1, loc2, t2) ->
-      obj_prop ~env x (T.Get (loc1, t1)) >>= fun p1 ->
-      obj_prop ~env x (T.Set (loc2, t2)) >>| fun p2 ->
+      obj_prop ~env (x, T.Get (loc1, t1)) >>= fun p1 ->
+      obj_prop ~env (x, T.Set (loc2, t2)) >>| fun p2 ->
       p1@p2
 
-  and call_prop ~env =
-    let intersection = function
-    | T.IntersectionT (_, rep) -> T.InterRep.members rep
-    | t -> [t]
+  and call_prop_from_t ~env t =
+    let ts = match t with
+      | T.IntersectionT (_, rep) -> T.InterRep.members rep
+      | t -> [t]
     in
-    let multi_call ts =
-      mapM (method_ty ~env) ts >>| fun ts ->
-      Core_list.map ~f:(fun t -> Ty.CallProp t) ts
-    in
-    function
-    | T.Method (_, t) -> intersection t |> multi_call
-    | T.Field (_, t, _) -> intersection t |> multi_call
+    mapM (method_ty ~env) ts >>| fun ts ->
+    Core_list.map ~f:(fun t -> Ty.CallProp t) ts
+
+  and call_prop ~env = function
+    | _, T.Method (_, t)
+    | _, T.Field (_, t, _) -> call_prop_from_t ~env t
     | _ -> terr ~kind:BadCallProp None
 
-  and index_prop ~env d =
-    let {T.dict_polarity; dict_name; key; value} = d in
-    let dict_polarity = type_polarity dict_polarity in
-    type__ ~env key >>= fun dict_key ->
-    type__ ~env value >>| fun dict_value ->
-    Ty.(IndexProp {dict_polarity; dict_name; dict_key; dict_value})
+  and obj_props =
+    (* call property *)
+    let do_calls ~env = function
+      | Some call_id ->
+        let cx = Env.get_cx env in
+        let ft = Context.find_call cx call_id in
+        call_prop_from_t ~env ft
+      | None ->
+        return []
+    in
+    (* `$call` property *)
+    let do_calls_legacy ~env call_props =
+      concat_fold_m (call_prop ~env) call_props
+    in
+    let do_props ~env props =
+      concat_fold_m (obj_prop ~env) props
+    in
+    let do_dict ~env = function
+      | Some d ->
+        let {T.dict_polarity; dict_name; key; value} = d in
+        let dict_polarity = type_polarity dict_polarity in
+        type__ ~env key >>= fun dict_key ->
+        type__ ~env value >>| fun dict_value ->
+        [Ty.IndexProp {Ty.dict_polarity; dict_name; dict_key; dict_value}]
+      | None -> return []
+    in
+    fun ~env props_id call_id_opt dict ->
+      let cx = Env.get_cx env in
+      let call_props, props =
+        Context.find_props cx props_id
+        |> SMap.bindings
+        |> Core_list.partition_tf ~f:(fun (x, _) -> x = "$call")
+      in
+      do_calls_legacy ~env call_props >>= fun call_props_legacy ->
+      do_calls ~env call_id_opt >>= fun call_props ->
+      do_props ~env props >>= fun props ->
+      do_dict ~env dict >>| fun dict ->
+      call_props_legacy @ call_props @ props @ dict
 
   and arr_ty ~env reason elt_t =
     let arr_literal = match Reason.desc_of_reason reason with
@@ -907,7 +925,7 @@ end = struct
       | T.DefT (_, _, T.ObjT { T.props_tmap; _ }) ->
         Context.find_props cx props_tmap |>
         SMap.bindings |>
-        mapM (fun (name, p) -> obj_prop ~env name p) >>|
+        mapM (fun (name, p) -> obj_prop ~env (name, p)) >>|
         List.concat
       | _ -> return []
     in
