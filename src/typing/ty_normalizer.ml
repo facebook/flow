@@ -289,11 +289,14 @@ end = struct
     *)
     let mk_mu ~definitely_appears i t =
       let open Ty in
-      if definitely_appears || Ty_utils.appears_in_t ~is_top:true i t then
+      if definitely_appears ||
+        Ty_utils.tvar_appears_in_type ~is_toplevel:true (Ty.RVar i) t
+      then
         match t with
         | TypeAlias { ta_name; _ } -> subst (RVar i) ta_name t
         | _ -> Mu (i, t)
-      else t
+      else
+        t
 
     (* When inferring recursive types, the top-level appearances of the recursive
        variable should be eliminated. This visitor performs the following
