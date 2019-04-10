@@ -775,6 +775,22 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         T.FixMe.mk_pattern default loc
 
   and literal_expr =
+    let string_value_of_object_key object_key =
+      let open Ast.Expression.Object.Property in
+      match object_key with
+        | Literal (loc, { Ast.Literal.value = Ast.Literal.String value; raw; comments= _ }) ->
+           loc, T.StringLiteral { Ast.StringLiteral.value; raw }
+        | Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
+           loc, T.StringLiteral { Ast.StringLiteral.value = name; raw = Printf.sprintf "'%s'" name }
+        | _ -> assert false
+    in
+    let keys_as_string_values_of_object_properties object_properties =
+      try Some (Nel.map (function
+          | loc, T.OInit (x, _) -> loc, T.OInit (x, string_value_of_object_key x)
+          | _ -> assert false
+          ) object_properties)
+      with _ -> None
+    in
     let open Ast.Expression in
     function
       | loc, Literal { Ast.Literal.value; raw; comments= _ } ->
@@ -856,6 +872,22 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         begin match object_ properties with
           | Some o -> loc, T.ObjectLiteral { frozen = true; properties = o }
           | None -> T.FixMe.mk_expr_type loc
+        end
+      | _, Call {
+          Ast.Expression.Call.
+          callee = (_, Identifier (_, { Ast.Identifier.name= "keyMirror"; comments= _ }));
+          targs = None;
+          arguments = [Expression (loc, Object stuff)]
+        } ->
+        let open Ast.Expression.Object in
+        let { properties; comments= _ } = stuff in
+        begin match object_ properties with
+        | Some o ->
+           begin match keys_as_string_values_of_object_properties o with
+           | Some o' -> loc, T.ObjectLiteral { frozen = true; properties = o' }
+           | None -> T.FixMe.mk_expr_type loc
+           end
+        | None -> T.FixMe.mk_expr_type loc
         end
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
@@ -1139,7 +1171,6 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
           | SpreadProperty p -> object_spread_property p
         ) (property, properties))
         with _ -> None
-
 end
 
 module Generator(Env: Signature_builder_verify.EvalEnv) = struct
