@@ -415,9 +415,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       )
     with
     | Malformed_build_id as e ->
+      let stack = Caml.Printexc.get_raw_backtrace () in
       HackEventLogger.malformed_build_id ();
       Hh_logger.log "Malformed Build ID";
-      raise e
+      Caml.Printexc.raise_with_backtrace e stack
 
   and push_purgatory_clients env =
     (** We create a queue and transfer all the purgatory clients to it before

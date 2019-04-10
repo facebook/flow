@@ -27,9 +27,10 @@ module Alarm_timeout = struct
       let ret =
         try do_ id
         with exn ->
+          let stack = Printexc.get_raw_backtrace () in
           (* Any uncaught exception will cancel the timeout *)
           Timer.cancel_timer timer;
-          raise exn
+          Printexc.raise_with_backtrace exn stack
       in
       Timer.cancel_timer timer;
       ret
