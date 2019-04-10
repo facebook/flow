@@ -48,6 +48,17 @@ type options = {
   (* Makes the normalizer more aggressive in preserving inferred literal types *)
   preserve_inferred_literal_types: bool;
 
+  (* If this flag is set to `true` then the normalizer will attempt to reuse the
+     cached results of evaluated type-destructors. If this is set to `false`, then
+     instread it will try to use:
+      - a potentially attendant type-alias annotation, or
+      - reuse the utility type that corresponds to this the specific type-destructor.
+
+     Choosing 'false' will typically result in smaller produced types, which makes
+     it a more appropriate option for codemods.
+  *)
+  evaluate_type_destructors: bool;
+
   (* Run an optimization pass that removes duplicates from unions and intersections.
      WARNING May be slow for large types *)
   optimize_types: bool;
@@ -162,6 +173,7 @@ let get_cx e = e.genv.cx
 let fall_through_merged e = e.options.fall_through_merged
 let expand_internal_types e = e.options.expand_internal_types
 let expand_type_aliases e = e.options.expand_type_aliases
+let evaluate_type_destructors e = e.options.evaluate_type_destructors
 let flag_shadowed_type_params e = e.options.flag_shadowed_type_params
 let preserve_inferred_literal_types e = e.options.preserve_inferred_literal_types
 let omit_targ_defaults e = e.options.omit_targ_defaults

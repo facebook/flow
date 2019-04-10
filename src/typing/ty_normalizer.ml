@@ -531,11 +531,12 @@ end = struct
        annotation. *)
     match t with
     | OpenT _
-    | EvalT _
     (* TypeDestructorTriggerT might hold a type-app, so avoid using the type here.
      * Instead do the fallback action which is to normalize to Bot. The trigger
      * should have actually produced another concrete type as a lower bound. *)
     | TypeDestructorTriggerT _ ->
+      type_after_reason ~env t
+    | EvalT _ when Env.evaluate_type_destructors env ->
       type_after_reason ~env t
     | _ ->
       begin match desc_of_reason ~unwrap:false reason with
@@ -1442,9 +1443,6 @@ end = struct
   (* EvalT    *)
   (************)
 
-  and destructuring_t ~env t =
-    type__ ~env t
-
   and spread =
     let spread_of_ty = function
       | Ty.Obj { Ty.obj_props; _ } -> obj_props
@@ -1473,7 +1471,17 @@ end = struct
       ) [] tys_rev in
       mk_spread ty target prefix_tys
 
-  and type_destructor_t ~env t d =
+  and type_destructor_t ~env id t d =
+    if Env.evaluate_type_destructors env then
+      let cx = Env.get_cx env in
+      let evaluated = Context.evaluated cx in
+      match IMap.get id evaluated with
+      | Some t -> type__ ~env t
+      | None -> type_destructor_unevaluated ~env t d (* fallback *)
+    else
+      type_destructor_unevaluated ~env t d
+
+  and type_destructor_unevaluated ~env t d =
     type__ ~env t >>= fun ty ->
     match d with
     | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
@@ -1506,15 +1514,18 @@ end = struct
     | T.Bind _ as d ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 
-  and eval_t ~env t id d =
+  and destructuring_t ~env id t =
     let cx = Env.get_cx env in
     let evaluated = Context.evaluated cx in
-    match IMap.get id evaluated with
-    | Some t -> type__ ~env t
-    | None ->
-      match d with
-      | Type.DestructuringT (_r, _s) -> destructuring_t ~env t
-      | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env t d
+    let t' = match IMap.get id evaluated with
+      | Some evaled_t -> evaled_t
+      | None -> t
+    in
+    type__ ~env t'
+
+  and eval_t ~env t id = function
+    | Type.DestructuringT _ -> destructuring_t ~env id t
+    | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
 
   and module_t env reason t =
     match desc_of_reason reason with

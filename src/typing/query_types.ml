@@ -54,6 +54,7 @@ let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_default
     expand_type_aliases = expand_aliases;
     flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults;
   } in
@@ -75,6 +76,7 @@ let dump_types cx file_sig ~printer =
     expand_type_aliases = false;
     flag_shadowed_type_params = false;
     preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults = false;
   } in
@@ -143,6 +145,7 @@ let suggest_types cx file_sig =
     expand_type_aliases = false;
     flag_shadowed_type_params = true;
     preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
     optimize_types = true;
     omit_targ_defaults = false;
   } in

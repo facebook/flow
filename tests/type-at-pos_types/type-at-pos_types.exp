@@ -1157,7 +1157,7 @@ recursive.js:60:31 = {
   "end":31
 }
 spread.js:11:6 = {
-  "type":"type Obj1 = {w: mixed, x?: O, y?: O, z: O}",
+  "type":"type Obj1 = {w: O, y: O, x: O, z: O}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1172,7 +1172,7 @@ spread.js:11:6 = {
   "end":9
 }
 spread.js:12:6 = {
-  "type":"type EObj2 = {|w: O, x: O, y: O, z: O|}",
+  "type":"type EObj2 = {|w: O, y: O, x: O, z: O|}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1187,7 +1187,7 @@ spread.js:12:6 = {
   "end":10
 }
 spread.js:13:6 = {
-  "type":"type C1 = {f: O, o: O}",
+  "type":"type C1 = {...C, o: O}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1202,7 +1202,7 @@ spread.js:13:6 = {
   "end":7
 }
 spread.js:14:6 = {
-  "type":"type C2 = {f: O, o: O}",
+  "type":"type C2 = {o: O, ...C}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1217,7 +1217,7 @@ spread.js:14:6 = {
   "end":7
 }
 spread.js:15:6 = {
-  "type":"type EC1 = {|f: O, o: O|}",
+  "type":"type EC1 = {|...$Exact<C>, o: O|}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1232,7 +1232,7 @@ spread.js:15:6 = {
   "end":8
 }
 spread.js:16:6 = {
-  "type":"type EC2 = {|f: O, o: O|}",
+  "type":"type EC2 = {|o: O, ...C|}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1247,7 +1247,7 @@ spread.js:16:6 = {
   "end":8
 }
 spread.js:17:6 = {
-  "type":"type Ctor1 = {name?: string, o: O}",
+  "type":"type Ctor1 = {...Ctor, o: O}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1262,7 +1262,7 @@ spread.js:17:6 = {
   "end":10
 }
 spread.js:18:6 = {
-  "type":"type Ctor2 = {name?: string, o: mixed}",
+  "type":"type Ctor2 = {o: O, ...Ctor}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1307,7 +1307,7 @@ spread.js:20:6 = {
   "end":7
 }
 spread.js:21:6 = {
-  "type":"type N1 = {o: mixed}",
+  "type":"type N1 = {o: O, ...Number}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1322,7 +1322,7 @@ spread.js:21:6 = {
   "end":7
 }
 spread.js:22:6 = {
-  "type":"type Rec = empty",
+  "type":"type Rec = {o: O, ...Rec}",
   "reasons":[],
   "loc":{
     "source":"spread.js",
@@ -1337,7 +1337,7 @@ spread.js:22:6 = {
   "end":8
 }
 spread.js:23:6 = {
-  "type":"type Inter1 = {w?: mixed, x?: O, y?: O, z?: O} & {f?: O, o?: O}",
+  "type":"type Inter1 = {...Obj1} & {...C1}",
   "reasons":[],
   "loc":{
     "source":"spread.js",

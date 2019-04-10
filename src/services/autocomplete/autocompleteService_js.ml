@@ -160,6 +160,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
       expand_type_aliases = false;
       flag_shadowed_type_params = true;
       preserve_inferred_literal_types = false;
+      evaluate_type_destructors = true;
       optimize_types = true;
       omit_targ_defaults = false;
     } in
@@ -205,6 +206,7 @@ let autocomplete_id cx file_sig env =
         expand_type_aliases = false;
         flag_shadowed_type_params = true;
         preserve_inferred_literal_types = false;
+        evaluate_type_destructors = true;
         optimize_types = true;
         omit_targ_defaults = false;
       } in
