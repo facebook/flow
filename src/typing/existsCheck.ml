@@ -24,7 +24,7 @@ let empty = {
 let debug_to_string t =
   let string_of_loc_option = function
     | None -> "None"
-    | Some loc -> ALoc.to_string ~include_source:true loc
+    | Some loc -> ALoc.debug_to_string ~include_source:true loc
   in
   [
     ("null_loc", t.null_loc);

@@ -31,7 +31,7 @@ module ALocS : (S with type t = ALoc.t) = struct
   type t = ALoc.t
   let compare = ALoc.compare
   let equal = ALoc.equal
-  let debug_to_string = ALoc.to_string
+  let debug_to_string = ALoc.debug_to_string
 
   module LMap = MyMap.Make(ALoc)
   module LSet = Set.Make(ALoc)

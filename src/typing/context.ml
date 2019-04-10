@@ -285,7 +285,7 @@ let find_exports cx id =
   with Not_found -> raise (Exports_not_found id)
 let find_require cx loc =
   try ALocMap.find_unsafe loc cx.require_map
-  with Not_found -> raise (Require_not_found (ALoc.to_string ~include_source:true loc))
+  with Not_found -> raise (Require_not_found (ALoc.debug_to_string ~include_source:true loc))
 let find_module cx m = find_module_sig (sig_cx cx) m
 let find_tvar cx id =
   try IMap.find_unsafe id cx.sig_cx.graph

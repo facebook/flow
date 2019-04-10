@@ -24,4 +24,4 @@ val equal: t -> t -> bool
 (* Stringifies the underlying representation of the ALoc.t, without concretizing it, for debugging
  * purposes. If you make any typechecking behavior depend on the result of this function you are a
  * bad person. *)
-val to_string: ?include_source:bool -> t -> string
+val debug_to_string: ?include_source:bool -> t -> string

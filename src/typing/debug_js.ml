@@ -302,7 +302,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
     | None -> JSON_Null in
     [
       "type", t;
-      "id", JSON_String (ALoc.to_string opaquetype.opaque_id);
+      "id", JSON_String (ALoc.debug_to_string opaquetype.opaque_id);
       "supertype", st
   ]
 
@@ -1557,7 +1557,7 @@ let json_of_scope = Scope.(
   let json_of_class json_cx c =
     let pmap = Context.find_props json_cx.cx c.class_private_fields in
     JSON_Object [
-      "class_id", JSON_String (ALoc.to_string c.class_binding_id);
+      "class_id", JSON_String (ALoc.debug_to_string c.class_binding_id);
       "class_private_fields", json_of_pmap json_cx pmap;
     ] in
 
@@ -1784,7 +1784,7 @@ let rec dump_t_ (depth, tvars) cx t =
       ~extra:(spf "ReadOnlyArray %s" (kid elemt)) t
   | DefT (_, trust, CharSetT chars) -> p ~trust:(Some trust) ~extra:(spf "<%S>" (String_utils.CharSet.to_string chars)) t
   | DefT (_, trust, ClassT inst) -> p ~trust:(Some trust) ~extra:(kid inst) t
-  | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) -> p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.to_string class_id)) t
+  | DefT (_, trust, InstanceT (_, _, _, { class_id; _ })) -> p ~trust:(Some trust) ~extra:(spf "#%s" (ALoc.debug_to_string class_id)) t
   | DefT (_, trust, TypeT (_, arg)) -> p ~trust:(Some trust) ~extra:(kid arg) t
   | AnnotT (_, arg, use_desc) ->
     p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
@@ -2317,7 +2317,7 @@ let string_of_scope_entry = Scope.(
   fun cx -> Entry.(function
   | Value r -> spf "Value %s" (string_of_value_binding cx r)
   | Type r -> spf "Type %s" (string_of_type_binding cx r)
-  | Class r -> spf "Class %s" (ALoc.to_string r.class_binding_id)
+  | Class r -> spf "Class %s" (ALoc.debug_to_string r.class_binding_id)
   )
 )
 
