@@ -1,10 +1,14 @@
 /* @flow */
 
 declare var x: Array<string>
-var foo = Object.freeze(x)
+var foo = Object.freeze(x) // TODO: doesn't work
 
-const bar = Object.freeze([('12345': '12345')])
+const bar = Object.freeze([('12345': '12345')]) // TODO: why type becomes $ReadOnlyArray<number | "12345">
 bar[0] = 1; // error
+
+const bizz = Object.freeze(['hello'])
+bizz[0] = 'hello' // error
+bizz[1] = 1 // error
 
 var bazz = [12345]
 var bliffll = Object.freeze(['12345', ...bazz])
