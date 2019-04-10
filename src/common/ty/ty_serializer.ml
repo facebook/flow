@@ -52,7 +52,7 @@ let rec type_ t =
   | Generic (x, _, ts) -> generic x ts
   | Any _ -> just T.Any
   | Top -> just T.Mixed
-  | Bot -> just T.Empty
+  | Bot _ -> just T.Empty
   | Void -> just T.Void
   | Null -> just T.Null
   | Num (Some lit) ->

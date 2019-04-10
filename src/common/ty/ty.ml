@@ -15,7 +15,8 @@ type t =
   | Bound of aloc * string
   | Generic of symbol * gen_kind * t list option
   | Any of any_kind
-  | Top | Bot
+  | Top
+  | Bot of bot_kind
   | Void | Null
   | Num of string option
   | Str of string option
@@ -41,7 +42,34 @@ and tvar = RVar of int [@@unboxed]            (* Recursive variable *)
 
 and path = string list
 
-and any_kind = Implicit | Explicit
+and any_kind =
+  | Implicit
+  | Explicit
+
+(* The purpose of adding this distinction is to enable normalized types to mimic
+ * the behavior of the signature optimizer when exporting types that contain
+ * tvars with no lower bounds.
+ *)
+and upper_bound_kind =
+  (* No upper bounds are exported as `any` *)
+  | NoUpper
+  (* If there is some upper bound (use), this is exported as `MergedT use`. This
+   * type is not helpful in a normalized form. So instead we attempt to normalize
+   * the use to a type `t`. If this succeeds then we create `SomeKnownUpper t`.
+   *)
+  | SomeKnownUpper of t
+  (* If the above case fails we resort to this last case. *)
+  | SomeUnknownUpper
+
+and bot_kind =
+  (* Type.Empty *)
+  | EmptyType
+  (* Type.MatchingPropT *)
+  | EmptyMatchingPropT
+  (* Type.TypeDestructorTriggerT *)
+  | EmptyTypeDestructorTriggerT
+  (* A tvar with no lower bounds *)
+  | NoLowerWithUpper of upper_bound_kind
 
 and gen_kind =
   | ClassKind
@@ -223,7 +251,7 @@ let rec mk_exact ty =
     TypeAlias { a with ta_type }
   | Mu (i, t) -> Mu (i, mk_exact t)
   (* Not applicable *)
-  | Any _ | Top | Bot | Void | Null
+  | Any _ | Top | Bot _ | Void | Null
   | Num _ | Str _ | Bool _ | NumLit _ | StrLit _ | BoolLit _
   | Fun _ | Arr _ | Tup _ -> ty
   (* Do not nest $Exact *)

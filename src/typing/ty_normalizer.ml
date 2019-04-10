@@ -220,6 +220,17 @@ end = struct
   let generic_builtin_t name ts =
     generic_talias (Ty.builtin_symbol name) (Some ts)
 
+  let empty_type = Ty.Bot Ty.EmptyType
+  let empty_matching_prop_t = Ty.Bot Ty.EmptyMatchingPropT
+  let empty_type_destructor_trigger_t = Ty.Bot Ty.EmptyTypeDestructorTriggerT
+
+  let mk_empty bot_kind =
+    match bot_kind with
+    | Ty.EmptyType -> empty_type
+    | Ty.EmptyMatchingPropT -> empty_matching_prop_t
+    | Ty.EmptyTypeDestructorTriggerT -> empty_type_destructor_trigger_t
+    | Ty.NoLowerWithUpper _ -> Ty.Bot bot_kind
+
 
   (*********************)
   (* Recursive types   *)
@@ -304,8 +315,10 @@ end = struct
       let open Ty in
       let o = object (self)
         inherit [_] endo_ty
-        method env_zero =
-          function `Union -> Bot | `Inter -> Top
+        method env_zero = function
+          | `Union -> Bot (NoLowerWithUpper NoUpper)
+          | `Inter -> Top
+
         method! on_t env t =
           match env, t with
           | (v, _), Union (t0,t1,ts) ->
@@ -574,7 +587,7 @@ end = struct
     | ExactT (_, t) -> exact_t ~env t
     | CustomFunT (_, f) -> custom_fun ~env f
     | InternalT i -> internal_t ~env t i
-    | MatchingPropT _ -> return Ty.Bot
+    | MatchingPropT _ -> return (mk_empty Ty.EmptyMatchingPropT)
     | AnyWithUpperBoundT t ->
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Subtype t)
@@ -599,7 +612,7 @@ end = struct
       when Env.preserve_inferred_literal_types env ->
       return (Ty.Bool (Some x))
     | DefT (_, _,BoolT _) -> return (Ty.Bool None)
-    | DefT (_, _,EmptyT) -> return Ty.Bot
+    | DefT (_, _, EmptyT) -> return (mk_empty Ty.EmptyType)
     | DefT (_, _,NullT) -> return Ty.Null
     | DefT (_, _,SingletonNumT (_, lit)) -> return (Ty.NumLit lit)
     | DefT (_, _,SingletonStrT lit) -> return (Ty.StrLit lit)
@@ -643,7 +656,7 @@ end = struct
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
     | ShapeT t -> type__ ~env t
-    | TypeDestructorTriggerT _ -> return Ty.Bot
+    | TypeDestructorTriggerT _ -> return (mk_empty Ty.EmptyTypeDestructorTriggerT)
     | MergedT (_, uses) -> merged_t ~env uses
     | ExistsT _ -> return (Ty.Utility Ty.Exists)
     | ObjProtoT _ -> return (Ty.TypeOf (["Object"], "prototype"))
@@ -772,17 +785,20 @@ end = struct
     | Constraint.FullyResolved t ->
       type__ ~env t
     | Constraint.Unresolved bounds ->
-      resolve_from_lower_bounds ~env bounds >>| fun ts ->
-      begin match ts with
-        | [] -> Ty.Bot
-        | hd::tl -> Ty.mk_union ~flattened:true (hd, tl)
-      end
+      resolve_from_lower_bounds ~env bounds >>= function
+      | [] -> empty_with_upper_bounds ~env bounds
+      | hd::tl -> return (Ty.mk_union ~flattened:true (hd, tl))
 
   and resolve_from_lower_bounds ~env bounds =
     T.TypeMap.keys bounds.Constraint.lower |>
     mapM (fun t -> type__ ~env t >>| fun ty -> Nel.to_list (Ty.bk_union ty)) >>|
     Core_list.concat >>|
     Core_list.dedup
+
+  and empty_with_upper_bounds ~env bounds =
+    let uses = T.UseTypeMap.keys bounds.Constraint.upper in
+    uses_t ~env uses >>| fun use_kind ->
+    Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
   and bound_t ~env reason name =
     let { Ty.loc; name; _ } = symbol_from_reason env reason name in
@@ -999,7 +1015,7 @@ end = struct
             end
         end
       | Ty.Utility (Ty.Class _ | Ty.Exists)
-      | Ty.Bot
+      | Ty.Bot _
       | Ty.Any _
       | Ty.Top
       | Ty.Union _
@@ -1138,7 +1154,7 @@ end = struct
             in
             return (generic_talias ta_name targs)
         end
-      | Ty.(Any _ | Bot | Top) as ty -> return ty
+      | Ty.(Any _ | Bot _ | Top) as ty -> return ty
       (* "Fix" type application on recursive types *)
       | Ty.TVar (Ty.RVar v, None) ->
         return (Ty.TVar (Ty.RVar v, targs))
@@ -1275,7 +1291,7 @@ end = struct
       )
 
     (* debugThrow: () => empty *)
-    | DebugThrow -> return (mk_fun Ty.Bot)
+    | DebugThrow -> return (mk_fun (mk_empty Ty.EmptyType))
 
     (* debugSleep: (seconds: number) => void *)
     | DebugSleep -> return Ty.(
@@ -1537,23 +1553,35 @@ end = struct
     | _ ->
       terr ~kind:UnsupportedTypeCtor (Some t)
 
-  and use_t ~env = function
-    | T.UseT (_, t) -> type__ ~env t
-    | T.ReposLowerT (_, _, u) -> use_t ~env u
-    | u ->
-      let msg = spf "Use: %s" (Type.string_of_use_ctor u) in
-      terr ~kind:BadUse ~msg None
+  and uses_t =
+    let rec uses_t_aux ~env acc uses =
+      match uses with
+      | [] ->
+        begin match acc with
+          | [] -> return Ty.NoUpper
+          | hd::tl -> return (Ty.SomeKnownUpper (Ty.mk_inter (hd, tl)))
+        end
+      | T.UseT (_, t)::rest ->
+        type__ ~env t >>= fun t ->
+        uses_t_aux ~env (t::acc) rest
+      | T.ReposLowerT (_, _, u)::rest ->
+        uses_t_aux ~env acc (u::rest)
+      | _ ->
+        return Ty.SomeUnknownUpper
+    in
+    fun ~env uses -> uses_t_aux ~env [] uses
 
   and merged_t ~env uses =
-    if Env.fall_through_merged env then
-      return Ty.Top
-    else
-      mapM (use_t ~env) uses >>| function
-      | [] ->
-        (* shouldn't happen - MergedT has at least one use by construction *)
-        Ty.Bot
-      | t::ts ->
-        Ty.mk_inter (t, ts)
+    uses_t ~env uses >>= function
+    | Ty.SomeUnknownUpper ->
+      (* un-normalizable *)
+      terr ~kind:BadUse None
+    | Ty.NoUpper ->
+      (* shouldn't happen - MergedT has at least one use by construction *)
+      return (mk_empty (Ty.NoLowerWithUpper Ty.NoUpper))
+    | Ty.SomeKnownUpper t ->
+      (* return the recorded use type *)
+      return t
 
   let run_type ~options ~genv ~imported_names ~tparams state t =
     let env = Env.init ~options ~genv ~tparams ~imported_names in
