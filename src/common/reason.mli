@@ -185,7 +185,6 @@ val string_of_desc: 'loc virtual_reason_desc -> string
 
 val map_reason_locs : ('a -> 'b) -> 'a virtual_reason -> 'b virtual_reason
 val map_desc_locs : ('a -> 'b) -> 'a virtual_reason_desc -> 'b virtual_reason_desc
-val string_of_loc_pos: Loc.t -> string
 val string_of_loc: ?strip_root:Path.t option -> Loc.t -> string
 val string_of_aloc: ?strip_root:Path.t option -> ALoc.t -> string
 val json_of_loc: ?strip_root:Path.t option -> ?catch_offset_errors:bool -> offset_table:Offset_utils.t option -> Loc.t -> Hh_json.json
