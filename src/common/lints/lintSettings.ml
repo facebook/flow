@@ -27,6 +27,7 @@ let of_default default_value = {
 
 let default_lint_severities = [
   Lints.DeprecatedCallSyntax, (Severity.Err, None);
+  Lints.DeprecatedUtility,    (Severity.Err, None);
 ]
 
 let set_value key value settings =
