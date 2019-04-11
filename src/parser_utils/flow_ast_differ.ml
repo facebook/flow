@@ -901,8 +901,8 @@ let program (algo : diff_algorithm)
         Some (type_cast t1 t2)
       | (_, Logical l1), (_, Logical l2) ->
         logical l1 l2
-      | (_, Array arr1), (_, Array arr2) ->
-        array arr1 arr2
+      | (loc, Array arr1), (_, Array arr2) ->
+        array loc arr1 arr2
       | expr, (loc, TypeCast t2) ->
         Some (type_cast_added expr loc t2)
       | (_, Update update1), (_, Update update2) ->
@@ -1340,13 +1340,13 @@ let program (algo : diff_algorithm)
     else
       None
 
-  and array arr1 arr2 : node change list option =
+  and array loc arr1 arr2 : node change list option =
     let open Ast.Expression.Array in
-    let { elements = elems1 } = arr1 in
-    let { elements = elems2 } = arr2 in
-    diff_and_recurse_no_trivial
-      (diff_if_changed_opt expression_or_spread)
-      elems1 elems2
+    let { elements = elems1; comments = comments1 } = arr1 in
+    let { elements = elems2; comments = comments2 } = arr2 in
+    let comments = syntax_opt loc comments1 comments2 in
+    let elements = diff_and_recurse_no_trivial (diff_if_changed_opt expression_or_spread) elems1 elems2 in
+    join_diff_list [ comments; elements ]
 
   and for_statement (stmt1: (Loc.t, Loc.t) Ast.Statement.For.t)
                     (stmt2: (Loc.t, Loc.t) Ast.Statement.For.t)

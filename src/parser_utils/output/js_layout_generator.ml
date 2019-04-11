@@ -694,7 +694,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
     match expr with
     | E.This -> Atom "this"
     | E.Super -> Atom "super"
-    | E.Array { E.Array.elements } ->
+    | E.Array { E.Array.elements; comments } ->
       let rev_elements = List.rev_map (function
         | Some expr -> expression_or_spread ~ctxt:normal_context expr
         | None -> Empty
@@ -707,7 +707,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         | _ -> true, rev_elements
       in
 
-      group [
+      layout_node_with_simple_comments_opt loc comments @@ group [
         new_list
           ~wrap:(Atom "[", Atom "]")
           ~sep:(Atom ",")

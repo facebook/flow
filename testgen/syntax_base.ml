@@ -39,7 +39,7 @@ let rec mk_literal_expr (t : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) E.t' =
                    |> Core_list.map ~f:snd
                    |> Core_list.map ~f:mk_literal_expr
                    |> Core_list.map ~f:(fun e -> Some (E.Expression (Loc.none, e))) in
-    E.Array.(E.Array {elements})
+    E.Array.(E.Array {elements; comments = Flow_ast_utils.mk_comments_opt ()})
   | T.Object obj_t -> mk_obj_literal_expr obj_t
   | T.StringLiteral lit ->
     let value = Ast.StringLiteral.(lit.value) in
@@ -56,7 +56,7 @@ let rec mk_literal_expr (t : (Loc.t, Loc.t) T.t') : (Loc.t, Loc.t) E.t' =
     let elements = Core_list.map ~f:(fun (_, tt) ->
         let e = mk_literal_expr tt in
         Some (E.Expression (Loc.none, e))) tlist in
-    E.Array.(E.Array {elements})
+    E.Array.(E.Array {elements; comments = Flow_ast_utils.mk_comments_opt ()})
   | T.Array t -> mk_literal_expr (T.Tuple [t; t; t; t; t;])
   | _ ->
     E.Literal (Ast.Literal.({value = Null; raw = "null"; comments = Flow_ast_utils.mk_comments_opt ()}))
@@ -117,7 +117,7 @@ let mk_check_opt_prop (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t')
     let elements =
       (get_obj expr [])
       |> Core_list.map ~f:(fun e -> Some (E.Expression (Loc.none, e))) in
-    E.Array.(E.Array {elements}) in
+    E.Array.(E.Array {elements; comments = Flow_ast_utils.mk_comments_opt ()}) in
   let arguments =
     [E.Expression (Loc.none, parent_array);
      E.Expression (Loc.none, expr);

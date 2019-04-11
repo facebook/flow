@@ -210,7 +210,7 @@ and get_children_nodes_expr expression =
   let loc, expr = expression in
   let open Ast.Expression in
   match expr with
-  | Array {Array.elements} ->
+  | Array {Array.elements; comments= _} ->
       List.fold_left
         (fun nodes element ->
           nodes

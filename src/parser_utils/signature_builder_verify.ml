@@ -302,7 +302,7 @@ module Eval(Env: EvalEnv) = struct
         else object_ tps loc properties
       | loc, Array stuff ->
         let open Ast.Expression.Array in
-        let { elements } = stuff in
+        let { elements; comments= _ } = stuff in
         begin match elements with
           | [] -> Deps.top (Error.EmptyArray loc)
           | e::es -> array_ tps loc (e, es)

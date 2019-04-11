@@ -937,7 +937,7 @@ module Expression
         Cover_patt ((loc, Expression.Object obj), errs)
     | T_LBRACKET ->
         let loc, arr, errs = array_initializer env in
-        Cover_patt ((loc, Expression.Array arr), errs)
+        Cover_patt ((loc, Expression.Array arr), errs);
     | T_DIV
     | T_DIV_ASSIGN -> Cover_expr (regexp env)
     | T_LESS_THAN ->
@@ -1080,13 +1080,17 @@ module Expression
           elements env (acc, errs)
 
     in fun env ->
-      let loc, (elements, errs) = with_loc (fun env ->
+      let loc, (expr, errs) = with_loc (fun env ->
+        let leading = Peek.comments env in
         Expect.token env T_LBRACKET;
-        let res = elements env ([], Pattern_cover.empty_errors) in
+        let elems, errs = elements env ([], Pattern_cover.empty_errors) in
         Expect.token env T_RBRACKET;
-        res
-      ) env in
-      loc, { Expression.Array.elements; }, errs
+        let trailing = Peek.comments env in
+        { Ast.Expression.Array.elements = elems;
+          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+        }, errs
+        ) env in
+      loc, expr, errs
 
   and regexp env =
     Eat.push_lex_mode env Lex_mode.REGEXP;

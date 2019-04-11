@@ -687,6 +687,7 @@ and Expression : sig
   module Array : sig
     type ('M, 'T) t = {
       elements: ('M, 'T) expression_or_spread option list;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

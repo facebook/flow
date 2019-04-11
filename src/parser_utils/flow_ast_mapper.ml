@@ -202,10 +202,11 @@ class ['loc] mapper = object(this)
 
   method array _loc (expr: ('loc, 'loc) Flow_ast.Expression.Array.t) =
     let open Flow_ast.Expression in
-    let { Array.elements } = expr in
+    let { Array.elements; comments } = expr in
     let elements' = ListUtils.ident_map (map_opt this#expression_or_spread) elements in
-    if elements == elements' then expr
-    else { Array.elements = elements' }
+    let comments' = this#syntax_opt comments in
+    if elements == elements' && comments == comments' then expr
+    else { Array.elements = elements'; comments = comments' }
 
   method arrow_function loc (expr: ('loc, 'loc) Flow_ast.Function.t) =
     this#function_ loc expr

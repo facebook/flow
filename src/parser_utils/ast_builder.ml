@@ -254,8 +254,8 @@ module Expressions = struct
   let identifier ?(loc=Loc.none) ?(comments=None) name =
     loc, Identifier (loc, { Ast.Identifier.name; comments })
 
-  let array elements =
-    Loc.none, Array { Array.elements }
+  let array ?comments elements =
+    Loc.none, Array { Array.elements; comments }
 
   let call_node ?targs ?(args=[]) callee = { Call.callee; targs; arguments = args }
 

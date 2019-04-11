@@ -305,7 +305,7 @@ end = struct
       |> SMap.fold (test_actual_prop path emap) amap
       |> SMap.fold (test_expected_prop path amap) emap
     | JSON_Array aitems,
-      (_, Array { Array.elements = eitems }) ->
+      (_, Array { Array.elements = eitems; comments= _ }) ->
       let a_len = List.length aitems in
       let e_len = List.length eitems in
       if e_len <> a_len then
@@ -465,7 +465,7 @@ end = struct
           | _ -> failwith "Invalid JSON"
         ) expected_props diff_props in
         Some (loc, Object { Object.properties; comments })
-      | (loc, Array { Array.elements = expected_elems; }) ->
+      | (loc, Array { Array.elements = expected_elems; comments }) ->
         let expected_length = List.length expected_elems in
         let elements = List.fold_left (fun elems diff_prop ->
           match diff_prop with
@@ -494,7 +494,7 @@ end = struct
               ) elems
           | _ -> failwith "Invalid JSON"
         ) expected_elems diff_props in
-        Some (loc, Array { Array.elements })
+        Some (loc, Array { Array.elements; comments })
       | _ -> Some expected
       end
     | (_, Literal _) -> Some diff

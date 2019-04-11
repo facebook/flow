@@ -131,7 +131,7 @@ module Pattern
     )
     in
 
-    fun env (loc, { Ast.Expression.Array.elements = elems }) ->
+    fun env (loc, { Ast.Expression.Array.elements = elems; comments = _ (* TODO *) }) ->
       loc, Pattern.Array { Pattern.Array.
         elements = elements env [] elems;
         annot = missing_annot env;

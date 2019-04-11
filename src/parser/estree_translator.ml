@@ -353,8 +353,8 @@ end with type t = Impl.t) = struct
     and expression = Expression.(function
       | loc, This -> node "ThisExpression" loc []
       | loc, Super -> node "Super" loc []
-      | loc, Array { Array.elements } ->
-          node "ArrayExpression" loc [
+      | loc, Array { Array.elements; comments } ->
+          node ?comments "ArrayExpression" loc [
             "elements", array_of_list (option expression_or_spread) elements;
           ]
       | loc, Object { Object.properties; comments } ->

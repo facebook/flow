@@ -173,9 +173,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method array (expr: ('M, 'T) Ast.Expression.Array.t) : ('N, 'U) Ast.Expression.Array.t =
     let open Ast.Expression in
-    let { Array.elements } = expr in
+    let { Array.elements; Array.comments } = expr in
     let elements' = Core_list.map ~f:(Option.map ~f:this#expression_or_spread) elements in
-    { Array.elements = elements' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { Array.elements = elements'; comments = comments' }
 
   method arrow_function (expr: ('M, 'T) Ast.Function.t) : ('N, 'U) Ast.Function.t =
     this#function_ expr

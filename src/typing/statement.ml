@@ -2992,7 +2992,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
     let t, properties = object_ cx reason properties in
     (loc, t), Object { Object.properties; comments }
 
-  | Array { Array.elements } -> (
+  | Array { Array.elements; comments } -> (
     let reason = mk_reason RArrayLit loc in
     match elements with
     | [] ->
@@ -3001,7 +3001,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
         let elemt = Tvar.mk cx element_reason in
         let reason = replace_reason_const REmptyArrayLit reason in
         (loc, DefT (reason, make_trust (), ArrT (ArrayAT (elemt, Some [])))),
-        Array { Array.elements = [] }
+        Array { Array.elements = []; comments }
     | elems ->
         let elem_spread_list, elements = expression_or_spread_list cx loc elems in
         (
@@ -3016,7 +3016,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
             Flow.resolve_spread_list cx ~use_op:unknown_use ~reason_op elem_spread_list resolve_to
           )
         ),
-        Array { Array.elements; }
+        Array { Array.elements; comments }
     )
 
   | New {
@@ -3581,7 +3581,7 @@ and subscript =
       let lhs_t, arguments = (
         match targs, arguments with
         | None, [
-            Expression(_, Array({Array.elements;}) as elems_exp);
+            Expression(_, Array({Array.elements; comments = _ }) as elems_exp);
             Expression(callback_expr);
           ] ->
           (**

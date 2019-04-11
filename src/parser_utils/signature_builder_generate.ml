@@ -833,7 +833,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         end
       | loc, Array stuff ->
         let open Ast.Expression.Array in
-        let { elements } = stuff in
+        let { elements; comments= _ } = stuff in
         begin match array_ elements with
           | Some a -> loc, T.ArrayLiteral a
           | None -> T.FixMe.mk_expr_type loc

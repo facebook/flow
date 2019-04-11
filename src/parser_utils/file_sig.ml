@@ -811,7 +811,7 @@ module Make
               bindings;
             })
         | ((_, Identifier (loc, { Ast.Identifier.name= "requireLazy"; comments= _ })),
-           [Expression (_, Array ({ Array.elements })); Expression (_);])
+           [Expression (_, Array ({ Array.elements; comments= _ })); Expression (_);])
           ->
           let element = function
             | Some (Expression (source_loc, Literal { Ast.Literal.value = Ast.Literal.String name; _ })) ->
