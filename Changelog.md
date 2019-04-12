@@ -1,3 +1,36 @@
+### 0.97.0
+
+Likely to cause new Flow errors:
+
+* Refining a variable of type `mixed` with `instanceof A` produces type `A` instead `empty` which was produced before.
+* Types imported in a `declare module` are no longer automatically exported from that module as well.
+
+New Features:
+
+* #7518 Adds support for LSP function parameter completion (thanks @vicapow)
+
+Notable bug fixes:
+
+* Return a better error message when `flow coverage` is passed an invalid input path.
+* Fixed a bug in which Flow crashed on very long directory paths.
+* Fixed type-at-pos results when reporting the type of a callable object.
+
+Misc:
+
+* Improvements in AST utilities: The differ got improved support in several kinds of type annotations (literals, generic identifiers, `typeof`, tuples and interface types). The mapper got support for qualified identifiers.
+* Introduces a resizable array data structure that is used in union-find.
+* Improved error messages around callable and indexer.
+* Type-at-pos now shows results without evaluating type destructors like object spread, `$Diff`, etc. This should lead to more compact results.
+* Various refactorings in the internal type language and environment.
+
+Library definition improvements:
+
+* Updates in Node definitions. The stream definitions were updated to the latest version, and the readline.createInterface definitions were also updated.
+
+Parser:
+
+* #7471 Adds support for parsing of BigInt (Arbitrary precision integers) (thanks @goodmind)
+
 ### 0.96.1
 
 * Object literals with spreads can be described by object types with spreads in the signature verifier/builder.
