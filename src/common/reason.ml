@@ -899,7 +899,7 @@ let is_lib_reason r =
   |> Option.value_map ~default:false ~f:File_key.is_lib_file
 
 let is_blamable_reason r =
-  not Loc.(ALoc.to_loc r.loc = none || is_lib_reason r)
+  not (r.loc = ALoc.none || is_lib_reason r)
 
 let reasons_overlap r1 r2 =
   let r1_loc, r2_loc = ALoc.to_loc r1.loc, ALoc.to_loc r2.loc in
