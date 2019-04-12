@@ -901,10 +901,6 @@ let is_lib_reason r =
 let is_blamable_reason r =
   not (r.loc = ALoc.none || is_lib_reason r)
 
-let reasons_overlap r1 r2 =
-  let r1_loc, r2_loc = ALoc.to_loc r1.loc, ALoc.to_loc r2.loc in
-  Loc.contains r1_loc r2_loc
-
 (* reason transformers: *)
 
 (* returns reason with new description and position of original *)

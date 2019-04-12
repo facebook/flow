@@ -227,7 +227,6 @@ val builtin_reason: reason_desc -> reason
 val is_builtin_reason: ('loc -> File_key.t option) -> 'loc virtual_reason -> bool
 val is_lib_reason: reason -> bool
 val is_blamable_reason: reason -> bool
-val reasons_overlap: reason -> reason -> bool
 
 val string_of_source: ?strip_root:Path.t option -> File_key.t -> string
 val string_of_reason: ?strip_root:Path.t option -> reason -> string
