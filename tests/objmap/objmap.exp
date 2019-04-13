@@ -282,6 +282,34 @@ References:
                                                        ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- modifiers.js:123:11
+
+Property `a` is read-only in object type [1] but writable in object type [2].
+
+   modifiers.js:123:11
+   123| var foo2: {+a: string}; // not ok
+                  ^^^^^^^^^^^^ [1]
+
+References:
+   modifiers.js:124:11
+   124| var foo2: $ObjMap<{ a: string }, Id, Config>; // TODO: doesn't support aliases / generics
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- modifiers.js:127:11
+
+Property `a` is read-only in object type [1] but writable in object type [2].
+
+   modifiers.js:127:11
+   127| var foo3: {+a: string}; // not ok
+                  ^^^^^^^^^^^^ [1]
+
+References:
+   modifiers.js:128:11
+   128| var foo3: Polarity<{ a: string }, '+'>; // TODO: doesn't support aliases / generics
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- objmap.js:10:2
 
 Cannot cast `o.FOO` to string literal `BAR` because string literal `FOO` [1] is incompatible with string literal
@@ -352,4 +380,4 @@ References:
 
 
 
-Found 23 errors
+Found 25 errors
