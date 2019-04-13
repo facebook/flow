@@ -5431,7 +5431,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT elemt)) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap funt, tout))
 
-    | DefT (_, _, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
+    | DefT (_, trust, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
       let map_t t =
         let t, opt = match t with
         | OptionalT (_, t) -> t, true
@@ -5454,7 +5454,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) o.dict_t in
       let mapped_t =
         let reason = replace_reason_const RObjectType reason_op in
-        DefT (reason, bogus_trust (), ObjT {o with props_tmap; dict_t})
+        let t = DefT (reason, trust, ObjT {o with props_tmap; dict_t}) in
+        if o.flags.exact then ExactT (reason, t) else t
       in
       rec_flow_t cx trace (mapped_t, tout)
 
@@ -5485,7 +5486,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ) o.dict_t in
       let mapped_t =
         let reason = replace_reason_const RObjectType reason_op in
-        DefT (reason, trust, ObjT {o with props_tmap; dict_t})
+        let t = DefT (reason, trust, ObjT {o with props_tmap; dict_t}) in
+        if o.flags.exact then ExactT (reason, t) else t
       in
       rec_flow_t cx trace (mapped_t, tout)
 
