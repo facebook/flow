@@ -150,8 +150,8 @@ and utility =
   | PropertyType of t * t
   | ElementType of t * t
   | NonMaybeType of t
-  | ObjMap of t * t
-  | ObjMapi of t * t
+  | ObjMap of t * t * t option
+  | ObjMapi of t * t * t option
   | TupleMap of t * t
   | Call of t * t list
   | Class of t
@@ -314,8 +314,10 @@ let types_of_utility = function
   | PropertyType (t1, t2) -> Some [t1; t2]
   | ElementType (t1, t2) -> Some [t1; t2]
   | NonMaybeType t -> Some [t]
-  | ObjMap (t1, t2) -> Some [t1; t2]
-  | ObjMapi (t1, t2) -> Some [t1; t2]
+  | ObjMap (t1, t2, None) -> Some [t1; t2]
+  | ObjMapi (t1, t2, None) -> Some [t1; t2]
+  | ObjMap (t1, t2, Some t3) -> Some [t1; t2; t3]
+  | ObjMapi (t1, t2, Some t3) -> Some [t1; t2; t3]
   | TupleMap (t1, t2) -> Some [t1; t2]
   | Call (t, ts) -> Some (t::ts)
   | Class t -> Some [t]

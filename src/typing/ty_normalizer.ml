@@ -1510,10 +1510,14 @@ end = struct
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ElementType (ty, ty'))
     | T.CallType ts ->
       mapM (type__ ~env) ts >>| fun tys -> Ty.Utility (Ty.Call (ty, tys))
-    | T.TypeMap (T.ObjectMap t') ->
-      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMap (ty, ty'))
-    | T.TypeMap (T.ObjectMapi t') ->
-      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMapi (ty, ty'))
+    | T.TypeMap (T.ObjectMap (t', Some t2')) ->
+      mapM (type__ ~env) [t'; t2'] >>| fun tys -> Ty.Utility (Ty.ObjMap (ty, Core_list.nth_exn tys 0, Core_list.nth tys 1))
+    | T.TypeMap (T.ObjectMapi (t', Some t2')) ->
+      mapM (type__ ~env) [t'; t2'] >>| fun tys -> Ty.Utility (Ty.ObjMapi (ty, Core_list.nth_exn tys 0, Core_list.nth tys 1))
+    | T.TypeMap (T.ObjectMap (t', _)) ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMap (ty, ty', None))
+    | T.TypeMap (T.ObjectMapi (t', _)) ->
+      type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.ObjMapi (ty, ty', None))
     | T.PropertyType k ->
       return (Ty.Utility (Ty.PropertyType (ty, Ty.StrLit k)))
     | T.TypeMap (T.TupleMap t') ->

@@ -298,7 +298,9 @@ and collect_of_destructor ?log_unresolved cx reason acc = function
     -> acc
 
 and collect_of_type_map ?log_unresolved cx reason acc = function
-  | TupleMap t | ObjectMap t | ObjectMapi t ->
+  | TupleMap t 
+  | ObjectMap (t, _)
+  | ObjectMapi (t, _) ->
     collect_of_type ?log_unresolved cx reason acc t
 
 (* TODO: Support for use types is currently sketchy. Full resolution of use

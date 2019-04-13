@@ -1060,9 +1060,9 @@ module rec TypeTerm : sig
 
   and type_map =
   | TupleMap of t
-  | ObjectMap of t
-  | ObjectMapi of t
-
+  | ObjectMap of t * t option
+  | ObjectMapi of t * t option
+ 
   and prototype = t
 
   and super = t
