@@ -35,12 +35,6 @@ val make_scoped : string -> t
  * string will return the same id. *)
 val make_unscoped : string -> t
 
-(** Returns the same id every time for a given string argument. Used for
- * function / method parameters.
- * The ids returned here are guaranteed not to overlap with those returned by
- * Local_id.make_scoped, which is used for naming local variables. *)
-val get : string -> t
-
 val tmp : unit -> t
 
 module Set : module type of Set.Make(S)

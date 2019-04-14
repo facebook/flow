@@ -32,11 +32,6 @@ let make_scoped x = (next (), x)
 
 let make_unscoped x = (0, x)
 
-(* `make` always returns a positive value. By multiplying the hash by -1 we
- * ensure that the value returned by `get` never overlaps with those returned
- * by `make` *)
-let get x = (-(Hashtbl.hash x), x)
-
 let tmp () =
   let res = next () in
   (res, ("__tmp"^string_of_int res))
