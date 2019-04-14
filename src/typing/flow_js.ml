@@ -5444,6 +5444,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             props_tmap;
             _
           })) -> Context.find_props cx props_tmap
+        | Some (DefT (reason_op, _, _)) -> 
+          add_output cx ~trace (Error_message.EIncompatible {
+            lower = reason_op, None;
+            upper = reason_op, Error_message.IncompatibleMapTypeTObject;
+            use_op = None;
+            branches = [];
+          });
+          SMap.empty
         | _ -> SMap.empty
       in
       let optional_field = match SMap.get "optional" props with
@@ -5456,7 +5464,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some (Field (_, DefT (_, _, SingletonStrT "N"), _)) -> Some Neutral
         | _ -> None
       in
-      let map_t t polarity =
+      let map_t ?(is_dict=false) t polarity =
         let input_t = match t with
         | OptionalT (_, t) -> t
         | _ -> t
@@ -5467,13 +5475,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | _, Some polarity -> polarity
           | polarity, None -> polarity
         in
-        let t = match t, optional_field with
-          | OptionalT (_, _), None -> optional result
-          | OptionalT (_, _), Some true -> optional result
-          | OptionalT (_, _), Some false -> result
-          | _, None -> result
-          | _, Some true -> optional result
-          | _, Some false -> result 
+        let t = match t, optional_field, is_dict with
+          | OptionalT (_, _), None, _ -> optional result
+          | OptionalT (_, _), Some true, _ -> optional result
+          | OptionalT (_, _), Some false, _ -> result
+          | _, None, _ -> result
+          | _, Some true, true -> result
+          | _, Some true, false -> optional result
+          | _, Some false, _ -> result 
         in
         (t, polarity)
       in
@@ -5489,7 +5498,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         |> Context.make_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
-        let (value, dict_polarity) = map_t dict.value dict.dict_polarity in
+        let (value, dict_polarity) = map_t ~is_dict:true dict.value dict.dict_polarity in
         {dict with value; dict_polarity}
       ) o.dict_t in
       let mapped_t =
@@ -5512,7 +5521,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             props_tmap;
             _
           })) -> Context.find_props cx props_tmap
-        | _ -> SMap.empty
+        | _ -> 
+          SMap.empty
       in
       let optional_field = match SMap.get "optional" props with
         | Some (Field (_, DefT (_, _, SingletonBoolT bool), _)) -> Some bool
@@ -5524,7 +5534,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | Some (Field (_, DefT (_, _, SingletonStrT "N"), _)) -> Some Neutral
         | _ -> None
       in
-      let mapi_t key t polarity =
+      let mapi_t ?(is_dict=false) key t polarity =
         let input_t = match t with
         | OptionalT (_, t) -> t
         | _ -> t
@@ -5535,13 +5545,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           | _, Some polarity -> polarity
           | polarity, None -> polarity
         in
-        let t = match t, optional_field with
-          | OptionalT (_, _), None -> optional result
-          | OptionalT (_, _), Some true -> optional result
-          | OptionalT (_, _), Some false -> result
-          | _, None -> result
-          | _, Some true -> optional result
-          | _, Some false -> result 
+        let t = match t, optional_field, is_dict with
+          | OptionalT (_, _), None, _ -> optional result
+          | OptionalT (_, _), Some true, _ -> optional result
+          | OptionalT (_, _), Some false, _ -> result
+          | _, None, _ -> result
+          | _, Some true, true -> result
+          | _, Some true, false -> optional result
+          | _, Some false, _ -> result 
         in
         (t, polarity)
       in
@@ -5558,7 +5569,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         |> Context.make_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
-        let (value, dict_polarity) = mapi_t dict.key dict.value dict.dict_polarity in
+        let (value, dict_polarity) = mapi_t ~is_dict:true dict.key dict.value dict.dict_polarity in
         {dict with value; dict_polarity}
       ) o.dict_t in
       let mapped_t =
