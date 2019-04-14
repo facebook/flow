@@ -114,17 +114,17 @@ function f4(x: $ObjMap<Foo, Id>) {
 
 var foo1: T;
 var foo1: $ObjMap<T, Id, {}>;
-var foo1: $ObjMap<T, Id, null>; // TODO: should error
-var foo1: $ObjMap<T, Id, boolean>; // TODO: should error
-var foo1: $ObjMap<T, Id, string>; // TODO: should error
-var foo1: $ObjMap<T, Id, string>; // TODO: should error
+var foo1: $ObjMap<T, Id, null>;
+var foo1: $ObjMap<T, Id, boolean>;
+var foo1: $ObjMap<T, Id, string>;
+var foo1: $ObjMap<T, Id, string>;
 
 type Config = { polarity: '+' }
-var foo2: {+a: string}; // not ok
+var foo2: { +a: string }; // not ok
 var foo2: $ObjMap<{ a: string }, Id, Config>; // TODO: doesn't support aliases / generics
 
 type Polarity<T: {}, K: '-' | '+' | 'N' > = $ObjMap<T, Id, { polarity: K }>;
-var foo3: {+a: string}; // not ok
+var foo3: { +a: string }; // not ok
 var foo3: Polarity<{ a: string }, '+'>; // TODO: doesn't support aliases / generics
 
 var foo4: {+a: 'a', +b: 'b'}
@@ -138,3 +138,15 @@ var foo5: ReadWrite<{-a: string, -b: string}>;
 
 var foo6: { a: string, b: string };
 var foo6: Required<{ a?: string, b?: string }>;
+
+var dict0: { +[key: string]: number };
+var dict0: Readonly<{ [key: string]: number }>;
+
+var dict1: { -[key: string]: number };
+var dict1: Writeonly<{ [key: string]: number }>;
+
+var dict2: { [key: string]: number };
+var dict2: Partial<{ [key: string]: number }>;
+
+var dict3: { [key: string]: number };
+var dict3: Required<{ [key: string]: number }>;

@@ -282,13 +282,45 @@ References:
                                                        ^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------- modifiers.js:117:26
+
+null [1] is not an object.
+
+   117| var foo1: $ObjMap<T, Id, null>;
+                                 ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- modifiers.js:118:26
+
+boolean [1] is not an object.
+
+   118| var foo1: $ObjMap<T, Id, boolean>;
+                                 ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- modifiers.js:119:26
+
+string [1] is not an object.
+
+   119| var foo1: $ObjMap<T, Id, string>;
+                                 ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- modifiers.js:120:26
+
+string [1] is not an object.
+
+   120| var foo1: $ObjMap<T, Id, string>;
+                                 ^^^^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------- modifiers.js:123:11
 
 Property `a` is read-only in object type [1] but writable in object type [2].
 
    modifiers.js:123:11
-   123| var foo2: {+a: string}; // not ok
-                  ^^^^^^^^^^^^ [1]
+   123| var foo2: { +a: string }; // not ok
+                  ^^^^^^^^^^^^^^ [1]
 
 References:
    modifiers.js:124:11
@@ -301,8 +333,8 @@ Error --------------------------------------------------------------------------
 Property `a` is read-only in object type [1] but writable in object type [2].
 
    modifiers.js:127:11
-   127| var foo3: {+a: string}; // not ok
-                  ^^^^^^^^^^^^ [1]
+   127| var foo3: { +a: string }; // not ok
+                  ^^^^^^^^^^^^^^ [1]
 
 References:
    modifiers.js:128:11
@@ -380,4 +412,4 @@ References:
 
 
 
-Found 25 errors
+Found 29 errors
