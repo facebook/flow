@@ -771,13 +771,22 @@ let program (algo : diff_algorithm)
       id=id2; body=body2; tparams=tparams2; extends=extends2;
       implements=implements2; classDecorators=classDecorators2;
     } = class2 in
-    if id1 != id2 || (* body handled below *) tparams1 != tparams2 || extends1 != extends2 ||
+    if id1 != id2 || (* body handled below *) tparams1 != tparams2 || (* extends handled below *)
         implements1 != implements2 || classDecorators1 != classDecorators2
     then
       None
     else
-      (* just body changed *)
-      class_body body1 body2
+      let extends_diff = diff_if_changed_opt class_extends extends1 extends2 in
+      let body_diff = diff_if_changed_ret_opt class_body body1 body2 in
+      join_diff_list [extends_diff; body_diff]
+
+  and class_extends ((_loc, extends1): (Loc.t, Loc.t) Ast.Class.Extends.t) ((_loc, extends2): (Loc.t, Loc.t) Ast.Class.Extends.t) =
+    let open Ast.Class.Extends in
+    let { expr = expr1; targs = targs1 } = extends1 in
+    let { expr = expr2; targs = targs2 } = extends2 in
+    let expr_diff = diff_if_changed expression expr1 expr2 |> Option.return in
+    let targs_diff = diff_if_changed_opt type_parameter_instantiation targs1 targs2 in
+    join_diff_list [expr_diff; targs_diff]
 
   and interface
       (intf1: (Loc.t, Loc.t) Ast.Statement.Interface.t)

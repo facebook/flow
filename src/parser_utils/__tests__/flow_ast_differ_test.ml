@@ -645,6 +645,18 @@ let tests = "ast_differ" >::: [
       ~expected:"class A { f: number = (x: string) => x; }"
       ~mapper:(new prop_annot_mapper)
   end;
+  "class_extends" >:: begin fun ctxt ->
+    let source = "class A extends rename<rename, dontrename> { }" in
+    assert_edits_equal ctxt ~edits:[((16, 22), "gotRenamed"); ((23, 29), "gotRenamed")] ~source
+      ~expected:"class A extends gotRenamed<gotRenamed, dontrename> { }"
+      ~mapper:(new useless_mapper)
+  end;
+  "class_extends_integration" >:: begin fun ctxt ->
+    let source = "class A extends rename { bar = 4 }" in
+    assert_edits_equal ctxt ~edits:[((16, 22), "gotRenamed"); ((31, 32), "5")] ~source
+      ~expected:"class A extends gotRenamed { bar = 5 }"
+      ~mapper:(new useless_mapper)
+  end;
   "interface_id" >:: begin fun ctxt ->
     let source = "interface Rename { }" in
     assert_edits_equal ctxt ~edits:[((10, 16), "GotRenamed")] ~source
