@@ -1,3 +1,5 @@
 (library
   (name collections)
-  (wrapped false))
+  (wrapped false)
+  (libraries
+    core_kernel))
