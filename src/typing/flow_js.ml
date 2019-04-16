@@ -4573,6 +4573,30 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           rec_flow cx trace (DefT (r1, trust, ArrT (TupleAT (t1, ts1))), u)
       end
 
+    (* Tuples can flow to numeric objects *)
+    | DefT (r1, trust, ArrT (TupleAT (_, ts1))),
+      UseT (use_op, DefT (r2, _, ObjT o)) ->
+      let fresh = (desc_of_reason r1) = RArrayLit in
+      let fields = Core_list.foldi ts1 ~f:(fun i map value -> 
+        let key = (Dtoa.ecma_string_of_float (float_of_int i)) in
+        let prop = Context.get_prop cx o.props_tmap key in
+        let use_op = Frame (TupleElementCompatibility {
+          n = i + 1;
+          lower = r1;
+          upper = r2;
+        }, use_op) in
+        let value = match prop with 
+          | Some field ->
+            (match Property.read_t field with
+              | Some t2 -> flow_to_mutable_child cx trace use_op fresh value t2;
+              | None -> ());
+            field
+          | None -> Field (None, value, Neutral) in
+        SMap.add key value map
+      ) ~init:SMap.empty in
+      let props_tmap = Context.make_property_map cx fields in 
+      rec_flow cx trace (DefT (r1, trust, ObjT {o with props_tmap;}), u)
+
     (* Read only arrays are the super type of all tuples and arrays *)
     | DefT (r1, _, ArrT (ArrayAT (t1, _) | TupleAT (t1, _) | ROArrayAT (t1))),
       UseT (use_op, DefT (r2, _, ArrT (ROArrayAT (t2)))) ->
