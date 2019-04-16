@@ -532,25 +532,31 @@ let rec convert cx tparams_map = Ast.Type.(function
     )
 
   | "$ObjMap" ->
-    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-      let t1, t2, targs = match convert_type_params () with
-      | [t1; t2], targs -> t1, t2, targs
-      | _ -> assert false in
-      let reason = mk_reason RObjectMap loc in
-      reconstruct_ast
-        (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMap t2)), mk_id ()))
-        targs
+    let reason = mk_reason RObjectMap loc in
+    (match convert_type_params () with
+      | ([t1; t2; t3], targs) ->
+        reconstruct_ast
+          (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMap (t2, Some t3))), mk_id ()))
+          targs
+      | ([t1; t2], targs) ->
+        reconstruct_ast
+          (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMap (t2, None))), mk_id ()))
+          targs
+      | _ -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 2)) t_ast
     )
 
   | "$ObjMapi" ->
-    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
-      let t1, t2, targs = match convert_type_params () with
-      | [t1; t2], targs -> t1, t2, targs
-      | _ -> assert false in
-      let reason = mk_reason RObjectMapi loc in
-      reconstruct_ast
-        (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi t2)), mk_id ()))
-        targs
+    let reason = mk_reason RObjectMapi loc in
+    (match convert_type_params () with
+      | ([t1; t2; t3], targs) ->
+        reconstruct_ast
+          (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi (t2, Some t3))), mk_id ()))
+          targs
+      | ([t1; t2], targs) ->
+        reconstruct_ast
+          (EvalT (t1, TypeDestructorT (use_op reason, reason, TypeMap (ObjectMapi (t2, None))), mk_id ()))
+          targs
+      | _ -> error_type cx loc (Error_message.ETypeParamMinArity (loc, 2)) t_ast
     )
 
   | "$CharSet" ->

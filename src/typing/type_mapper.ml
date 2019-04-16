@@ -548,14 +548,14 @@ class virtual ['a] t = object(self)
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t
       else TupleMap t''
-    | ObjectMap t' ->
+    | ObjectMap (t', t2') ->
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t
-      else ObjectMap t''
-    | ObjectMapi t' ->
+      else ObjectMap (t'', t2')
+    | ObjectMapi (t', t2') ->
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t
-      else ObjectMapi t''
+      else ObjectMapi (t'', t2')
 
   method virtual props: Context.t -> 'a -> Properties.id -> Properties.id
 

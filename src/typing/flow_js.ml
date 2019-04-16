@@ -5441,61 +5441,151 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT elemt)) in
       rec_flow cx trace (t, MapTypeT (reason, TupleMap funt, tout))
 
-    | DefT (_, _, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
-      let map_t t =
-        let t, opt = match t with
-        | OptionalT (_, t) -> t, true
-        | _ -> t, false
+    | DefT (_, trust, ObjT o), MapTypeT (reason_op, ObjectMap (
+      funt, 
+      (* TODO:
+       * this is just static object, it can't be passed with generic, 
+       * or we get error about BoundT and other stuff 
+       *)
+      config
+    ), tout) ->
+      let props = match config with
+        | Some (DefT (_, _, ObjT {
+            props_tmap;
+            _
+          })) -> Context.find_props cx props_tmap
+        | Some (DefT (reason_op, _, _)) -> 
+          add_output cx ~trace (Error_message.EIncompatible {
+            lower = reason_op, None;
+            upper = reason_op, Error_message.IncompatibleMapTypeTObject;
+            use_op = None;
+            branches = [];
+          });
+          SMap.empty
+        | _ -> SMap.empty
+      in
+      let optional_field = match SMap.get "optional" props with
+        | Some (Field (_, DefT (_, _, SingletonBoolT bool), _)) -> Some bool
+        | _ -> None
+      in
+      let polarity_field = match SMap.get "polarity" props with
+        | Some (Field (_, DefT (_, _, SingletonStrT "+"), _)) -> Some Positive
+        | Some (Field (_, DefT (_, _, SingletonStrT "-"), _)) -> Some Negative
+        | Some (Field (_, DefT (_, _, SingletonStrT "N"), _)) -> Some Neutral
+        | _ -> None
+      in
+      let map_t ?(is_dict=false) t polarity =
+        let input_t = match t with
+        | OptionalT (_, t) -> t
+        | _ -> t
         in
-        let t = EvalT (funt, TypeDestructorT
-          (unknown_use, reason_op, CallType [t]), mk_id ()) in
-        if opt
-          then optional t
-          else t
+        let result = EvalT (funt, TypeDestructorT
+          (unknown_use, reason_op, CallType [input_t]), mk_id ()) in
+        let polarity = match polarity, polarity_field with
+          | _, Some polarity -> polarity
+          | polarity, None -> polarity
+        in
+        let t = match t, optional_field, is_dict with
+          | OptionalT (_, _), None, _ -> optional result
+          | OptionalT (_, _), Some true, _ -> optional result
+          | OptionalT (_, _), Some false, _ -> result
+          | _, None, _ -> result
+          | _, Some true, true -> result
+          | _, Some true, false -> optional result
+          | _, Some false, _ -> result 
+        in
+        (t, polarity)
+      in
+      let map_field = function
+        | Field (loc, t, polarity) ->
+          let (t, polarity) = map_t t polarity in
+          Field (loc, t, polarity)
+        | p -> p
       in
       let props_tmap =
         Context.find_props cx o.props_tmap
-        |> Properties.map_fields map_t
+        |> SMap.map map_field
         |> Context.make_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
-        let value = map_t dict.value in
-        {dict with value}
+        let (value, dict_polarity) = map_t ~is_dict:true dict.value dict.dict_polarity in
+        {dict with value; dict_polarity}
       ) o.dict_t in
       let mapped_t =
         let reason = replace_reason_const RObjectType reason_op in
-        DefT (reason, bogus_trust (), ObjT {o with props_tmap; dict_t})
+        let t = DefT (reason, trust, ObjT {o with props_tmap; dict_t}) in
+        if o.flags.exact then ExactT (reason, t) else t
       in
       rec_flow_t cx trace (mapped_t, tout)
-
-    | DefT (_, trust, ObjT o), MapTypeT (reason_op, ObjectMapi funt, tout) ->
-      let mapi_t key t =
-        let t, opt = match t with
-        | OptionalT (_, t) -> t, true
-        | _ -> t, false
-        in
-        let t = EvalT (funt, TypeDestructorT
-          (unknown_use, reason_op, CallType [key; t]), mk_id ()) in
-        if opt
-          then optional t
-          else t
+    
+    | DefT (_, trust, ObjT o), MapTypeT (reason_op, ObjectMapi (
+      funt, 
+      (* TODO:
+       * this is just static object, it can't be passed with generic, 
+       * or we get error about BoundT and other stuff 
+       *)
+      config
+    ), tout) ->
+      let props = match config with
+        | Some (DefT (_, _, ObjT {
+            props_tmap;
+            _
+          })) -> Context.find_props cx props_tmap
+        | _ -> 
+          SMap.empty
       in
-      let mapi_field key t =
-        let reason = replace_reason_const (RStringLit key) reason_op in
-        mapi_t (DefT (reason, bogus_trust (), SingletonStrT key)) t
+      let optional_field = match SMap.get "optional" props with
+        | Some (Field (_, DefT (_, _, SingletonBoolT bool), _)) -> Some bool
+        | _ -> None
+      in
+      let polarity_field = match SMap.get "polarity" props with
+        | Some (Field (_, DefT (_, _, SingletonStrT "+"), _)) -> Some Positive
+        | Some (Field (_, DefT (_, _, SingletonStrT "-"), _)) -> Some Negative
+        | Some (Field (_, DefT (_, _, SingletonStrT "N"), _)) -> Some Neutral
+        | _ -> None
+      in
+      let mapi_t ?(is_dict=false) key t polarity =
+        let input_t = match t with
+        | OptionalT (_, t) -> t
+        | _ -> t
+        in
+        let result = EvalT (funt, TypeDestructorT
+          (unknown_use, reason_op, CallType [key; input_t]), mk_id ()) in
+        let polarity = match polarity, polarity_field with
+          | _, Some polarity -> polarity
+          | polarity, None -> polarity
+        in
+        let t = match t, optional_field, is_dict with
+          | OptionalT (_, _), None, _ -> optional result
+          | OptionalT (_, _), Some true, _ -> optional result
+          | OptionalT (_, _), Some false, _ -> result
+          | _, None, _ -> result
+          | _, Some true, true -> result
+          | _, Some true, false -> optional result
+          | _, Some false, _ -> result 
+        in
+        (t, polarity)
+      in
+      let mapi_field key = function
+        | Field (loc, t, polarity) ->
+          let reason = replace_reason_const (RStringLit key) reason_op in
+          let (t, polarity) = mapi_t (DefT (reason, bogus_trust (), SingletonStrT key)) t polarity in
+          Field (loc, t, polarity)
+        | p -> p
       in
       let props_tmap =
         Context.find_props cx o.props_tmap
-        |> Properties.mapi_fields mapi_field
+        |> SMap.mapi mapi_field
         |> Context.make_property_map cx
       in
       let dict_t = Option.map ~f:(fun dict ->
-        let value = mapi_t dict.key dict.value in
-        {dict with value}
+        let (value, dict_polarity) = mapi_t ~is_dict:true dict.key dict.value dict.dict_polarity in
+        {dict with value; dict_polarity}
       ) o.dict_t in
       let mapped_t =
         let reason = replace_reason_const RObjectType reason_op in
-        DefT (reason, trust, ObjT {o with props_tmap; dict_t})
+        let t = DefT (reason, trust, ObjT {o with props_tmap; dict_t}) in
+        if o.flags.exact then ExactT (reason, t) else t
       in
       rec_flow_t cx trace (mapped_t, tout)
 
@@ -6772,7 +6862,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
            TODO: adding properties to unsealed objects directly is done whether speculating or not,
            and that should also be done when not speculating; during speculating, it should be a
            deferred action. *)
-        if not (Obj_type.sealed_in_op ureason lflags.sealed) && not (Speculation.speculating ())
+        if not rflags.exact && not (Obj_type.sealed_in_op ureason lflags.sealed) && not (Speculation.speculating ())
         then Context.set_prop cx lflds s up
         else
         (* otherwise, look up the property in the prototype *)
