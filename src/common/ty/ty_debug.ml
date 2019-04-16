@@ -113,9 +113,9 @@ and dump_generics ~depth = function
 
 and dump_tvar (RVar i) = spf "T_%d" i
 
-and dump_symbol { provenance; loc; name; _ } =
+and dump_symbol { provenance; def_loc; name; _ } =
   spf "(%s, %s) %s" (Ty.debug_string_of_provenance_ctor provenance)
-    (Reason.string_of_aloc loc) name
+    (Reason.string_of_aloc def_loc) name
 
 and dump_utility ~depth u =
   let ctor = Ty.string_of_utility_ctor u in
@@ -228,9 +228,9 @@ let json_of_t ~strip_root =
     ])
   in
 
-  let json_of_symbol { provenance; loc; name; _ } = Hh_json.(
+  let json_of_symbol { provenance; def_loc; name; _ } = Hh_json.(
     JSON_Object [
-      "provenance", json_of_provenance loc provenance;
+      "provenance", json_of_provenance def_loc provenance;
       "name", JSON_String name;
     ])
   in

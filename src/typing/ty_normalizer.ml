@@ -8,6 +8,7 @@
 open Pervasives
 open Utils_js
 open Reason
+open Loc_collections
 
 module Env = Ty_normalizer_env
 module T = Type
@@ -35,7 +36,6 @@ type error_kind =
   | BadPoly
   | BadTypeAlias
   | BadTypeApp
-  | BadImport
   | BadInternalT
   | BadInstanceT
   | BadEvalT
@@ -58,7 +58,6 @@ let error_kind_to_string = function
   | BadTypeApp -> "Bad type application"
   | BadInternalT -> "Bad internal type"
   | BadInstanceT -> "Bad instance type"
-  | BadImport -> "Bad import type"
   | BadEvalT -> "Bad eval"
   | BadUse -> "Bad use"
   | ShadowTypeParam -> "Shadowed type parameters"
@@ -80,7 +79,7 @@ module NormalizerMonad : sig
   val run_type :
     options:Env.options ->
     genv:Env.genv ->
-    imported_names:ALoc.t SMap.t ->
+    imported_names:Ty.imported_ident ALocMap.t ->
     tparams:Type.typeparam list ->
     State.t ->
     Type.t ->
@@ -89,7 +88,7 @@ module NormalizerMonad : sig
   val run_imports:
     options:Env.options ->
     genv:Env.genv ->
-    ALoc.t SMap.t
+    Ty.imported_ident ALocMap.t
 
 end = struct
 
@@ -453,32 +452,26 @@ end = struct
     tp_default = default;
   })
 
-  let symbol_from_loc env loc name =
+  let symbol_from_loc env def_loc name =
     let open File_key in
-    let symbol_source = ALoc.source loc in
-    let provenance =
-      match symbol_source with
-      | Some LibFile _ -> Ty.Library
-      | Some (SourceFile _) ->
+    let symbol_source = ALoc.source def_loc in
+    let provenance = match symbol_source with
+      | Some LibFile _ ->
+        Ty.Library
+      | Some (SourceFile def_source) ->
         let current_source = Env.(env.genv.file) in
-        (* Locally defined name *)
-        if Some current_source = symbol_source
+        if File_key.to_string current_source = def_source
         then Ty.Local
-        (* Otherwise it is one of:
-           - Imported, or
-           - Remote (defined in a different file but not imported in this one) *)
-        else
-          begin match SMap.get name env.Env.imported_names with
-            | Some loc' when loc = loc' -> Ty.Imported
-            | _ -> Ty.Remote
-          end
+        else Ty.Remote {
+          Ty.imported_as = ALocMap.get def_loc env.Env.imported_names;
+        }
       | Some (JsonFile _)
       | Some (ResourceFile _) -> Ty.Local
       | Some Builtins -> Ty.Builtin
       | None -> Ty.Local
     in
     let anonymous = name = "<<anonymous class>>" in
-    { Ty.provenance; name; anonymous; loc }
+    { Ty.provenance; name; anonymous; def_loc }
 
   (* TODO due to repositioninig `reason_loc` may not point to the actual
      location where `name` was defined. *)
@@ -804,8 +797,8 @@ end = struct
     Ty.Bot (Ty.NoLowerWithUpper use_kind)
 
   and bound_t ~env reason name =
-    let { Ty.loc; name; _ } = symbol_from_reason env reason name in
-    return (Ty.Bound (loc, name))
+    let { Ty.def_loc; name; _ } = symbol_from_reason env reason name in
+    return (Ty.Bound (def_loc, name))
 
   and fun_ty ~env f fun_type_params =
     let {T.params; rest_param; return_t; _} = f in
@@ -1116,6 +1109,7 @@ end = struct
         return ty
       | _ ->
         return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:ty)
+        (* return ty *)
     in
     let import_typeof env r t ps = import env r t ps in
     let opaque env t ps =
@@ -1608,83 +1602,100 @@ end = struct
   module Imports = struct
     open File_sig
 
-    let from_imported_locs local imported_locs acc =
-      let { local_loc; _ } = imported_locs in
-      SMap.add local local_loc acc
+    (* Collect the names and locations of types that are available as we scan
+     * the imports. Later we'll match them with some remote defining loc. *)
+    type acc_t = Ty.imported_ident list
 
-    let from_imported_locs_map map acc =
+    let from_imported_locs_map ~import_mode map (acc: acc_t) =
       SMap.fold (fun _remote remote_map acc ->
         SMap.fold (fun local imported_locs_nel acc ->
-          Nel.fold_left (fun acc imported_locs  ->
-            from_imported_locs local imported_locs acc
+          Nel.fold_left (fun acc { local_loc; _ } ->
+            (local_loc, local, import_mode)::acc
           ) acc imported_locs_nel
         ) remote_map acc
       ) map acc
 
-    let rec from_binding binding acc =
+    let rec from_binding ~import_mode binding (acc: acc_t) =
       match binding with
-      | BindIdent (loc, x) -> SMap.add x loc acc
-      | BindNamed map -> List.fold_left (fun acc (_, binding) ->
-          from_binding binding acc
+      | BindIdent (loc, name) ->
+        (loc, name, import_mode)::acc
+      | BindNamed map ->
+        List.fold_left (fun acc (_, binding) ->
+          from_binding ~import_mode binding acc
         ) acc map
 
-    let from_bindings bindings_opt acc =
-      Option.value_map ~default:acc ~f:(fun bs -> from_binding bs acc)
-        bindings_opt
+    let from_bindings ~import_mode bindings_opt acc =
+      match bindings_opt with
+      | Some bindings -> from_binding ~import_mode bindings acc
+      | None -> acc
 
-    let from_require require acc =
+    let from_require require (acc: acc_t) =
       match require with
-      | Require { source=_; require_loc=_; bindings } ->
-        from_bindings bindings acc
-      | Import { import_loc=_; source=_; named; ns=_; types; typesof; typesof_ns=_; } ->
+      | Require { source = _; require_loc = _; bindings } ->
+        from_bindings ~import_mode:Ty.ValueMode bindings acc
+
+      | Import {
+          import_loc = _; source = _; named; ns = _; types; typesof; typesof_ns = _
+        } ->
         (* TODO import namespaces (`ns`) as modules that might contain imported types *)
         acc
-        |> from_imported_locs_map named
-        |> from_imported_locs_map types
-        |> from_imported_locs_map typesof
+        |> from_imported_locs_map ~import_mode:Ty.ValueMode named
+        |> from_imported_locs_map ~import_mode:Ty.TypeMode types
+        |> from_imported_locs_map ~import_mode:Ty.TypeofMode typesof
+
       | ImportDynamic _
       | Import0 _ -> acc
 
-    let from_requires requires =
+    let extract_imported_idents requires =
       List.fold_left (fun acc require ->
         from_require require acc
-      ) SMap.empty requires
+      ) [] requires
 
-    let extract_schemes type_table imported_locs =
-      SMap.fold (fun x loc acc ->
+    let extract_schemes type_table (imported_locs: acc_t) =
+      List.fold_left (fun acc (loc, name, import_mode) ->
+        (* TODO use typed AST *)
         match Type_table.find_type_info type_table loc with
-        | Some (_, e, _) -> SMap.add x e acc
+        | Some (_, scheme, _) ->  (name, loc, import_mode, scheme)::acc
         | None -> acc
-      ) imported_locs SMap.empty
+      ) [] imported_locs
 
-    let extract_ident ~options ~genv (x, scheme) = Ty.(
+    let extract_ident ~options ~genv scheme =
       let { Type.TypeScheme.tparams; type_ = t } = scheme in
-      let env = Env.init ~options ~genv ~tparams ~imported_names:SMap.empty in
-      type__ ~env t >>= fun ty ->
-      match ty with
-      | TypeAlias { ta_name = { loc; _ } ; _ }
-      | ClassDecl ({ loc; _ }, _)
-      | InterfaceDecl ({ loc; _ }, _) ->
-        return (x, loc)
-      | _ ->
-        terr ~kind:BadImport ~msg:x (Some t)
-    )
+      let imported_names = ALocMap.empty in
+      let env = Env.init ~options ~genv ~tparams ~imported_names in
+      type__ ~env t >>| function
+      | Ty.TypeAlias { Ty.ta_name = { Ty.def_loc; _ }; _ }
+      | Ty.ClassDecl ({ Ty.def_loc; _ }, _)
+      | Ty.InterfaceDecl ({ Ty.def_loc; _ }, _) ->
+        Some def_loc
+      | Ty.Utility (Ty.Class (Ty.Generic ({ Ty.def_loc; _ }, _, None))) ->
+        (* This is an acceptable proxy only if the class is not polymorphic *)
+        Some def_loc
+      | _ -> None
+
+    let normalize_imports ~options ~genv imported_schemes: Ty.imported_ident ALocMap.t =
+      let state = State.empty in
+      let _, result = List.fold_left (fun (st, acc) (name, loc, import_mode, scheme) ->
+        match run st (extract_ident ~options ~genv scheme) with
+        | Ok (Some def_loc), st ->
+          st, ALocMap.add def_loc (loc, name, import_mode) acc
+        | Ok None, st ->
+          (* unrecognizable remote type *)
+          st, acc
+        | Error _, st ->
+          (* normalization error *)
+          st, acc
+      ) (state, ALocMap.empty) imported_schemes in
+      result
   end
 
   let run_imports ~options ~genv =
     let open Imports in
-    let state = State.empty in
     let file_sig = genv.Env.file_sig in
-    let requires = File_sig.(file_sig.module_sig.requires) in
-    let type_table = genv.Env.type_table in
-    let imported_locs = from_requires requires in
-    let imported_schemes = extract_schemes type_table imported_locs in
-    let _, imports_map = SMap.fold (fun k v (st, acc) ->
-      match run st (extract_ident ~options ~genv (k, v)) with
-      | Ok (x, loc), st -> (st, SMap.add x loc acc)
-      | Error _, st -> (st, acc)
-    ) imported_schemes (state, SMap.empty) in
-    imports_map
+    File_sig.(file_sig.module_sig.requires) |>
+    extract_imported_idents |>
+    extract_schemes genv.Env.type_table |>
+    normalize_imports ~options ~genv
 
 end
 

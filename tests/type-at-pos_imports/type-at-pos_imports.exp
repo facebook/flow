@@ -70,7 +70,7 @@ import_lib_named.js:3:15 (--expand-json-output) = {
   "expanded_type":{
     "kind":"InterfaceDecl",
     "name":{
-      "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
+      "provenance":{"kind":"Imported","loc":"import_interfaces.js:9:18-25"},
       "name":"Listener"
     },
     "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]
@@ -93,7 +93,7 @@ import_lib_named.js:3:27 (--expand-json-output) = {
   "expanded_type":{
     "kind":"InterfaceDecl",
     "name":{
-      "provenance":{"kind":"Remote","loc":"import_interfaces.js:9:18-25"},
+      "provenance":{"kind":"Imported","loc":"import_interfaces.js:9:18-25"},
       "name":"Listener"
     },
     "typeParams":[{"name":"TFields","bound":null,"polarity":"Neutral"}]

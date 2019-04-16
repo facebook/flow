@@ -140,7 +140,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
 
   and type_alias { ta_name = { provenance; name; _ }; ta_tparams; ta_type } =
     match provenance with
-    | Imported | Remote -> fuse [
+    | Remote _ -> fuse [
         Atom "imported"; space;
         identifier name;
         option (type_parameter ~depth:0) ta_tparams;

@@ -270,14 +270,14 @@ let named_alias ?ta_tparams ?ta_type name =
 
 let debug_string_of_provenance_ctor = function
   | Local -> "Local"
-  | Imported -> "Imported"
-  | Remote -> "Remote"
+  | Remote { imported_as = Some _ } -> "Imported"
+  | Remote { imported_as = None } -> "Remote"
   | Library -> "Library"
   | Builtin -> "Builtin"
 
-let debug_string_of_symbol { provenance; loc; name; _ } =
+let debug_string_of_symbol { provenance; def_loc; name; _ } =
   Utils_js.spf "%s (%s:%s)" name (debug_string_of_provenance_ctor provenance)
-    (Reason.string_of_aloc loc)
+    (Reason.string_of_aloc def_loc)
 
 let debug_string_of_generic_kind = function
   | ClassKind -> "class"

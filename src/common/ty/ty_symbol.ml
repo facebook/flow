@@ -5,23 +5,33 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+type import_mode =
+ | ValueMode
+ | TypeMode
+ | TypeofMode
+
+type imported_ident = ALoc.t * string * import_mode
+
+type remote_info = {
+  imported_as: imported_ident option;
+}
+
 type provenance =
-  | Local       (* Defined locally *)
-  | Imported    (* Defined remotely, imported to file *)
-  | Remote      (* Defined remotely, NOT imported to file *)
-  | Library     (* Defined in library *)
+  | Local
+  | Remote of remote_info
+  | Library
   | Builtin
 
 type symbol = {
   provenance: provenance;
-  loc: ALoc.t;
+  def_loc: ALoc.t;
   name: string;
   anonymous: bool;
 }
 
 let builtin_symbol name = {
   provenance = Builtin;
-  loc = ALoc.none;
+  def_loc = ALoc.none;
   name;
   anonymous = false;
 }
