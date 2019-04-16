@@ -112,40 +112,175 @@ import_lib_named.js:3:27 (--expand-json-output) = {
   "start":27,
   "end":36
 }
-import-class-as-type.js:6:13 = {
-  "type":"any (implicit)",
+import-class-as-type.js:8:13 = {
+  "type":"C",
   "reasons":[],
   "loc":{
     "source":"import-class-as-type.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":13,"offset":119},
-    "end":{"line":6,"column":14,"offset":121}
+    "start":{"line":8,"column":13,"offset":221},
+    "end":{"line":8,"column":13,"offset":222}
   },
   "path":"import-class-as-type.js",
-  "line":6,
-  "endline":6,
+  "line":8,
+  "endline":8,
+  "start":13,
+  "end":13
+}
+import-class-as-type.js:9:13 = {
+  "type":"P<number>",
+  "reasons":[],
+  "loc":{
+    "source":"import-class-as-type.js",
+    "type":"SourceFile",
+    "start":{"line":9,"column":13,"offset":239},
+    "end":{"line":9,"column":13,"offset":240}
+  },
+  "path":"import-class-as-type.js",
+  "line":9,
+  "endline":9,
+  "start":13,
+  "end":13
+}
+import-class-as-type.js:10:13 = {
+  "type":"C",
+  "reasons":[],
+  "loc":{
+    "source":"import-class-as-type.js",
+    "type":"SourceFile",
+    "start":{"line":10,"column":13,"offset":265},
+    "end":{"line":10,"column":14,"offset":267}
+  },
+  "path":"import-class-as-type.js",
+  "line":10,
+  "endline":10,
   "start":13,
   "end":14
 }
-import-default.js:3:16 = {
-  "type":"type MyFileOneType = (a: FileOneType) => void",
+import-class-as-type.js:11:13 = {
+  "type":"P<number>",
+  "reasons":[],
+  "loc":{
+    "source":"import-class-as-type.js",
+    "type":"SourceFile",
+    "start":{"line":11,"column":13,"offset":289},
+    "end":{"line":11,"column":14,"offset":291}
+  },
+  "path":"import-class-as-type.js",
+  "line":11,
+  "endline":11,
+  "start":13,
+  "end":14
+}
+import-default.js:15:13 = {
+  "type":"(unknown)",
+  "reasons":[],
+  "loc":{
+    "source":null,
+    "type":null,
+    "start":{"line":0,"column":1,"offset":0},
+    "end":{"line":0,"column":0,"offset":0}
+  },
+  "path":"",
+  "line":0,
+  "endline":0,
+  "start":1,
+  "end":0
+}
+import-default.js:16:13 = {
+  "type":"A",
   "reasons":[],
   "loc":{
     "source":"import-default.js",
     "type":"SourceFile",
-    "start":{"line":3,"column":15,"offset":24},
-    "end":{"line":3,"column":27,"offset":37}
+    "start":{"line":16,"column":13,"offset":878},
+    "end":{"line":16,"column":14,"offset":880}
   },
   "path":"import-default.js",
-  "line":3,
-  "endline":3,
-  "start":15,
-  "end":27
+  "line":16,
+  "endline":16,
+  "start":13,
+  "end":14
+}
+import-default.js:17:13 = {
+  "type":"P<number>",
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":17,"column":13,"offset":933},
+    "end":{"line":17,"column":14,"offset":935}
+  },
+  "path":"import-default.js",
+  "line":17,
+  "endline":17,
+  "start":13,
+  "end":14
+}
+import-default.js:18:13 = {
+  "type":"B",
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":18,"column":13,"offset":1000},
+    "end":{"line":18,"column":14,"offset":1002}
+  },
+  "path":"import-default.js",
+  "line":18,
+  "endline":18,
+  "start":13,
+  "end":14
+}
+import-default.js:19:13 = {
+  "type":"B<number>",
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":19,"column":13,"offset":1070},
+    "end":{"line":19,"column":14,"offset":1072}
+  },
+  "path":"import-default.js",
+  "line":19,
+  "endline":19,
+  "start":13,
+  "end":14
+}
+import-default.js:20:13 = {
+  "type":"class B",
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":20,"column":13,"offset":1164},
+    "end":{"line":20,"column":14,"offset":1166}
+  },
+  "path":"import-default.js",
+  "line":20,
+  "endline":20,
+  "start":13,
+  "end":14
+}
+import-default.js:21:13 = {
+  "type":"class B<X>",
+  "reasons":[],
+  "loc":{
+    "source":"import-default.js",
+    "type":"SourceFile",
+    "start":{"line":21,"column":13,"offset":1238},
+    "end":{"line":21,"column":14,"offset":1240}
+  },
+  "path":"import-default.js",
+  "line":21,
+  "endline":21,
+  "start":13,
+  "end":14
 }
 import-typeof-class.js:6:16 {
   "expanded_type":{
     "kind":"ClassDecl",
-    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "name":{"provenance":{"kind":"Imported","loc":"exports-class.js:3:15"},"name":"C"},
     "typeParams":null
   },
   "type":"class C",
@@ -153,8 +288,8 @@ import-typeof-class.js:6:16 {
   "loc":{
     "source":"import-typeof-class.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":16,"offset":117},
-    "end":{"line":6,"column":16,"offset":118}
+    "start":{"line":6,"column":16,"offset":119},
+    "end":{"line":6,"column":16,"offset":120}
   },
   "path":"import-typeof-class.js",
   "line":6,
@@ -165,7 +300,7 @@ import-typeof-class.js:6:16 {
 import-typeof-class.js:7:16 {
   "expanded_type":{
     "kind":"ClassDecl",
-    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "name":{"provenance":{"kind":"Imported","loc":"exports-class.js:3:15"},"name":"C"},
     "typeParams":null
   },
   "type":"class C",
@@ -173,8 +308,8 @@ import-typeof-class.js:7:16 {
   "loc":{
     "source":"import-typeof-class.js",
     "type":"SourceFile",
-    "start":{"line":7,"column":16,"offset":135},
-    "end":{"line":7,"column":16,"offset":136}
+    "start":{"line":7,"column":16,"offset":137},
+    "end":{"line":7,"column":16,"offset":138}
   },
   "path":"import-typeof-class.js",
   "line":7,
@@ -215,7 +350,7 @@ module-import.js:3:7 = {
 require-class.js:5:16 = {
   "expanded_type":{
     "kind":"ClassDecl",
-    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "name":{"provenance":{"kind":"Imported","loc":"exports-class.js:3:15"},"name":"C"},
     "typeParams":null
   },
   "type":"class C",
@@ -223,8 +358,8 @@ require-class.js:5:16 = {
   "loc":{
     "source":"require-class.js",
     "type":"SourceFile",
-    "start":{"line":5,"column":16,"offset":73},
-    "end":{"line":5,"column":16,"offset":74}
+    "start":{"line":5,"column":16,"offset":74},
+    "end":{"line":5,"column":16,"offset":75}
   },
   "path":"require-class.js",
   "line":5,
@@ -235,7 +370,7 @@ require-class.js:5:16 = {
 require-class.js:6:16 = {
   "expanded_type":{
     "kind":"ClassDecl",
-    "name":{"provenance":{"kind":"Imported","loc":"export-class.js.flow:3:15"},"name":"C"},
+    "name":{"provenance":{"kind":"Imported","loc":"exports-class.js:3:15"},"name":"C"},
     "typeParams":null
   },
   "type":"class C",
@@ -243,8 +378,8 @@ require-class.js:6:16 = {
   "loc":{
     "source":"require-class.js",
     "type":"SourceFile",
-    "start":{"line":6,"column":16,"offset":91},
-    "end":{"line":6,"column":16,"offset":92}
+    "start":{"line":6,"column":16,"offset":92},
+    "end":{"line":6,"column":16,"offset":93}
   },
   "path":"require-class.js",
   "line":6,

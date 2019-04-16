@@ -1,6 +1,11 @@
 // @flow
 
-import type { A } from './class-poly-1';
+import type { C } from './exports-class';
+import type { P } from './exports-poly-class';
+import type { C as LocalC } from './exports-class';
+import type { P as LocalP } from './exports-poly-class';
 
-// Flow_js.canonicalize_imported_type PolyT-ThisClassT
-declare var an: A<number>;
+declare var c: C;
+declare var p: P<number>;
+declare var lc: LocalC;
+declare var lp: LocalP<number>;

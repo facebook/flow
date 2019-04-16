@@ -1,6 +1,6 @@
 // @flow
 
-const { C, C: D } = require('./export-class');
+const { C, C: D } = require('./exports-class');
 
 declare var c: C;
 declare var d: D;

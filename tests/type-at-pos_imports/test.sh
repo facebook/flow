@@ -19,12 +19,30 @@ printf "import_lib_named.js:3:27 (--expand-json-output) = "
 assert_ok "$FLOW" type-at-pos import_lib_named.js 3 27 --strip-root --pretty --expand-json-output
 
 # import-class-as-type.js
-printf "import-class-as-type.js:6:13 = "
-assert_ok "$FLOW" type-at-pos import-class-as-type.js 6 13 --strip-root --pretty
+printf "import-class-as-type.js:8:13 = "
+assert_ok "$FLOW" type-at-pos import-class-as-type.js 8 13 --strip-root --pretty
+printf "import-class-as-type.js:9:13 = "
+assert_ok "$FLOW" type-at-pos import-class-as-type.js 9 13 --strip-root --pretty
+printf "import-class-as-type.js:10:13 = "
+assert_ok "$FLOW" type-at-pos import-class-as-type.js 10 13 --strip-root --pretty
+printf "import-class-as-type.js:11:13 = "
+assert_ok "$FLOW" type-at-pos import-class-as-type.js 11 13 --strip-root --pretty
 
 # import-default.js
-printf "import-default.js:3:16 = "
-assert_ok "$FLOW" type-at-pos import-default.js 3 16 --strip-root --pretty
+printf "import-default.js:15:13 = "
+assert_ok "$FLOW" type-at-pos import-default.js 15 13 --strip-root --pretty
+printf "import-default.js:16:13 = "
+assert_ok "$FLOW" type-at-pos import-default.js 16 13 --strip-root --pretty
+printf "import-default.js:17:13 = "
+assert_ok "$FLOW" type-at-pos import-default.js 17 13 --strip-root --pretty
+printf "import-default.js:18:13 = "
+assert_ok "$FLOW" type-at-pos import-default.js 18 13 --strip-root --pretty
+printf "import-default.js:19:13 = "
+assert_ok "$FLOW" type-at-pos import-default.js 19 13 --strip-root --pretty
+printf "import-default.js:20:13 = "
+assert_ok "$FLOW" type-at-pos import-default.js 20 13 --strip-root --pretty
+printf "import-default.js:21:13 = "
+assert_ok "$FLOW" type-at-pos import-default.js 21 13 --strip-root --pretty
 
 # import-typeof-class.js
 printf "import-typeof-class.js:6:16 "
