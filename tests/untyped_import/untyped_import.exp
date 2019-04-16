@@ -1,3 +1,21 @@
+Error ----------------------------------------------------------------------------------------------- export_star.js:6:1
+
+Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./untyped_exports`? (`untyped-import`)
+
+   6| export * from './untyped_exports' // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- export_star.js:7:1
+
+Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
+`./untyped_exports`? (`untyped-import`)
+
+   7| export type * from './untyped_exports' // Error
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- imports.js:4:9
 
 Importing from an untyped module makes it `any` and is not safe! Did you mean to add `// @flow` to the top of
@@ -60,4 +78,4 @@ Cannot resolve module `./nonexistent.js`.
 
 
 
-Found 7 errors
+Found 9 errors

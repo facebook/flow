@@ -1680,7 +1680,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         rec_flow_t cx trace (target_module_t, t_out)
 
     (* There is nothing to copy from a module exporting `any` or `Object`. *)
-    | AnyT _, CopyNamedExportsT(_, target_module, t) ->
+    | AnyT (lreason, _),
+      (CopyNamedExportsT(reason, target_module, t) | CopyTypeExportsT(reason, target_module, t)) ->
+      let () = match desc_of_reason lreason with
+        (* Use a special reason so we can tell the difference between an any-typed import
+         * from an untyped module and an any-typed import from a nonexistent module. *)
+        | RUntypedModule module_name ->
+          let loc = Reason.aloc_of_reason reason in
+          let message = Error_message.EUntypedImport (loc, module_name) in
+          add_output cx ~trace message
+        | _ -> ()
+      in
       rec_flow_t cx trace (target_module, t)
 
     (**
