@@ -25,6 +25,7 @@ type env = {
   emoji : bool;
   quiet : bool;
   flowconfig_name: string;
+  rerun_on_mismatch: bool;
 }
 
 let arg name value arr = match value with
@@ -108,7 +109,7 @@ let reset_retries_if_necessary retries = function
   | Error CCS.Server_busy _ -> retries
   | Ok _
   | Error CCS.Server_socket_missing
-  | Error CCS.Build_id_mismatch ->
+  | Error CCS.Build_id_mismatch _ ->
       { retries with
         retries_remaining = retries.original_retries;
       }
@@ -161,7 +162,7 @@ let rec connect ~flowconfig_name ~client_handshake env retries start_time =
         (if retries.retries_remaining = 1 then "retry" else "retries")
         (Tty.spinner());
       connect ~client_handshake env (consume_retry retries) start_time
-  | Error CCS.Build_id_mismatch ->
+  | Error CCS.(Build_id_mismatch Server_exited) ->
       let msg = "The flow server's version didn't match the client's, so it exited." in
       if env.autostart
       then
@@ -179,6 +180,24 @@ let rec connect ~flowconfig_name ~client_handshake env retries start_time =
       else
         let msg = "\n"^msg in
         FlowExitStatus.(exit ~msg Build_id_mismatch)
+  | Error CCS.(Build_id_mismatch (Client_should_error { server_bin; server_version; })) ->
+    if env.rerun_on_mismatch
+    then begin
+      if not env.quiet
+      then (
+        Printf.eprintf "Version mismatch! Server binary is Flow v%s but we are using v%s\n%!"
+          server_version Flow_version.version;
+        Printf.eprintf "Restarting command using the same binary as the server\n%!"
+      );
+      let argv = Array.copy Sys.argv in
+      argv.(0) <- server_bin;
+      Unix.execv server_bin argv
+    end else
+      let msg = Printf.sprintf
+        "\nThe Flow server's version (v%s) didn't match the client's (v%s). Exiting"
+        server_version Flow_version.version
+      in
+      FlowExitStatus.(exit ~msg Build_id_mismatch)
   | Error CCS.Server_socket_missing ->
       begin try
         if not env.quiet then Utils_js.prerr_endlinef

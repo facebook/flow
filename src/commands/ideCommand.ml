@@ -373,9 +373,11 @@ let main base_flags option_values root protocol strip_root json_version () =
   let strip_root = if strip_root then Some root else None in
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
+    client_version = Flow_version.version;
     is_stop_request = false;
     server_should_hangup_if_still_initializing = false;
-    server_should_exit_if_version_mismatch = true; }, {
+    version_mismatch_strategy = Stop_server_if_older;
+  }, {
     client_type = Persistent { logging_context = FlowEventLogger.get_context (); lsp = None; };
   }) in
   Printf.eprintf "Connecting to server...\n%!";

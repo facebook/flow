@@ -10,8 +10,12 @@ type busy_reason =
   | Not_responding
   | Fail_on_init of (ServerStatus.status * FileWatcherStatus.status)
 
+type mismatch_behavior =
+  | Server_exited
+  | Client_should_error of { server_bin: string; server_version: string; }
+
 type error =
-  | Build_id_mismatch
+  | Build_id_mismatch of mismatch_behavior
   | Server_busy of busy_reason
   | Server_missing
   | Server_socket_missing

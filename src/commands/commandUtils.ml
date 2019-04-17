@@ -363,6 +363,24 @@ let quiet_flag prev = CommandSpec.ArgSpec.(
       ~doc:"Suppress output about server startup"
 )
 
+type on_mismatch_behavior =
+  | Choose_newest
+  | Stop_server
+  | Restart_client
+  | Error_client
+
+let on_mismatch_flag prev = CommandSpec.ArgSpec.(
+  prev
+  |> flag "--on-mismatch"
+  (required ~default:Choose_newest (enum [
+    "choose-newest", Choose_newest;
+    "stop-server", Stop_server;
+    "restart-client", Restart_client;
+    "error-client", Error_client;
+  ]))
+  ~doc:("What to do when the client and server are different versions (choose-newest, stop-server, restart-client, error-client) (default: choose-newest)")
+)
+
 let root_flag prev = CommandSpec.ArgSpec.(
   prev
   |> flag "--root" string
@@ -637,6 +655,7 @@ type connect_params = {
   shm_flags          : shared_mem_params;
   ignore_version     : bool;
   quiet              : bool;
+  on_mismatch        : on_mismatch_behavior;
 }
 
 let collect_connect_flags
@@ -649,7 +668,8 @@ let collect_connect_flags
     temp_dir
     shm_flags
     ignore_version
-    quiet =
+    quiet
+    on_mismatch =
   let default def = function
   | Some x -> x
   | None -> def in
@@ -669,6 +689,7 @@ let collect_connect_flags
     shm_flags;
     ignore_version;
     quiet;
+    on_mismatch;
   }
 
 let collect_connect_flags_without_lazy main = collect_connect_flags main None
@@ -688,6 +709,7 @@ let connect_flags_with_lazy_collector collector = CommandSpec.ArgSpec.(
   |> from_flag
   |> ignore_version_flag
   |> quiet_flag
+  |> on_mismatch_flag
 )
 
 let connect_flags_no_lazy prev = CommandSpec.ArgSpec.(
@@ -1069,6 +1091,14 @@ let make_env flowconfig_name connect_flags root =
   | None -> None
   | Some n -> Some (Unix.gettimeofday () +. float n)
   in
+  let rerun_on_mismatch = match connect_flags.on_mismatch with
+  | Choose_newest
+  | Restart_client ->
+    true
+  | Stop_server
+  | Error_client ->
+    false
+  in
   { CommandConnect.
     root;
     autostart = not connect_flags.no_auto_start;
@@ -1087,6 +1117,7 @@ let make_env flowconfig_name connect_flags root =
     emoji = FlowConfig.emoji flowconfig;
     quiet = connect_flags.quiet;
     flowconfig_name;
+    rerun_on_mismatch;
   }
 
 let connect ~flowconfig_name ~client_handshake connect_flags root =
@@ -1263,12 +1294,20 @@ let rec connect_and_make_request flowconfig_name =
     if retries < 0
     then FlowExitStatus.(exit ~msg:"Out of retries, exiting!" Out_of_retries);
 
+    let version_mismatch_strategy = match connect_flags.on_mismatch with
+    | Choose_newest -> SocketHandshake.Stop_server_if_older
+    | Stop_server -> SocketHandshake.Always_stop_server
+    | Restart_client -> SocketHandshake.Error_client
+    | Error_client -> SocketHandshake.Error_client
+    in
+
     let quiet = connect_flags.quiet in
     let client_handshake = ({ SocketHandshake.
       client_build_id = SocketHandshake.build_revision;
+      client_version = Flow_version.version;
       is_stop_request = false;
       server_should_hangup_if_still_initializing = not connect_flags.retry_if_init;
-      server_should_exit_if_version_mismatch = true;
+      version_mismatch_strategy;
     }, { SocketHandshake.
       client_type = SocketHandshake.Ephemeral;
     }) in

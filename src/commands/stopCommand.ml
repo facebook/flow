@@ -47,9 +47,11 @@ let main base_flags temp_dir quiet root () =
   if not quiet then prerr_endlinef "Trying to connect to server for `%s`" (Path.to_string root);
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
+    client_version = Flow_version.version;
     is_stop_request = true;
     server_should_hangup_if_still_initializing = false;
-    server_should_exit_if_version_mismatch = true; }, {
+    version_mismatch_strategy = Always_stop_server;
+  }, {
     client_type = Ephemeral;
   }) in
   CommandConnectSimple.(
@@ -75,9 +77,10 @@ let main base_flags temp_dir quiet root () =
     | Error Server_missing ->
         if not quiet then prerr_endlinef
           "Warning: no server to kill for `%s`" root_s
-    | Error Build_id_mismatch ->
+    | Error (Build_id_mismatch Server_exited) ->
         if not quiet then prerr_endlinef
           "Successfully killed server for `%s`" root_s
+    | Error (Build_id_mismatch (Client_should_error _))
     | Error Server_busy _
     | Error Server_socket_missing ->
         begin try

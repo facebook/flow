@@ -41,3 +41,6 @@ let satisfies (range:string) (version:string) =
   let range = range_of_string range in
   let version = version_of_string version in
   Semver_range.satisfies range version
+
+let compare a b =
+  Semver_version.compare_precedence (version_of_string a) (version_of_string b)

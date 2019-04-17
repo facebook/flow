@@ -467,7 +467,10 @@ let show_connecting (reason: CommandConnectSimple.error) (env: disconnected_env)
   let message, shortMessage, progress, total = match reason, env.d_server_status with
     | CommandConnectSimple.Server_missing, _ -> "Flow: Server starting", None, None, None
     | CommandConnectSimple.Server_socket_missing, _ -> "Flow: Server starting?", None, None, None
-    | CommandConnectSimple.Build_id_mismatch, _ -> "Flow: Server is wrong version", None, None, None
+    | CommandConnectSimple.(Build_id_mismatch Server_exited), _ ->
+      "Flow: Server was wrong version and exited", None, None, None
+    | CommandConnectSimple.(Build_id_mismatch (Client_should_error _)), _ ->
+      "Flow: Server is wrong version", None, None, None
     | CommandConnectSimple.Server_busy (CommandConnectSimple.Too_many_clients), _ ->
       "Flow: Server busy", None, None, None
     | CommandConnectSimple.Server_busy _, None -> "Flow: Server busy", None, None, None
@@ -537,16 +540,21 @@ let try_connect flowconfig_name (env: disconnected_env) : state =
 
   let client_handshake = SocketHandshake.({
     client_build_id = build_revision;
+    client_version = Flow_version.version;
     is_stop_request = false;
-    server_should_exit_if_version_mismatch = env.d_autostart; (* only exit if we'll restart it *)
-    server_should_hangup_if_still_initializing = true; }, {
+    server_should_hangup_if_still_initializing = true;
+    (* only exit if we'll restart it *)
+    version_mismatch_strategy =
+      if env.d_autostart then Stop_server_if_older else SocketHandshake.Error_client;
+  }, {
     client_type = Persistent {
       logging_context = FlowEventLogger.get_context ();
       lsp = Some env.d_ienv.i_initialize_params;
     };
   }) in
   let conn = CommandConnectSimple.connect_once
-    ~flowconfig_name ~client_handshake ~tmp_dir:start_env.CommandConnect.tmp_dir
+    ~flowconfig_name ~client_handshake
+    ~tmp_dir:start_env.CommandConnect.tmp_dir
     start_env.CommandConnect.root in
 
   match conn with
@@ -620,18 +628,41 @@ let try_connect flowconfig_name (env: disconnected_env) : state =
       show_disconnected None (Some msg) { env with d_server_status = None; }
     end
 
-  (* Build_id_mismatch is because the server version was different from client *)
-  (* If we didn't ask the server to exit on mismatch, then we're stuck.        *)
-  | Error (CommandConnectSimple.Build_id_mismatch as _reason) when not env.d_autostart ->
-    let msg = "Flow: the running server is the wrong version" in
-    show_disconnected None (Some msg) { env with d_server_status = None; }
+  (* The server exited due to a version mismatch between the lsp and the server. *)
+  | Error (CommandConnectSimple.(Build_id_mismatch Server_exited) as reason) ->
+    if env.d_autostart
+    then show_connecting reason { env with d_server_status = None; }
+    else
+      (* We shouldn't hit this case. When `env.d_autostart` is `false`, we ask the server NOT to
+       * die on a version mismatch. *)
+      let msg = "Flow: the server was the wrong version" in
+      show_disconnected None (Some msg) { env with d_server_status = None; }
 
-  (* If we did ask the server to terminate upon version mismatch, then we'll   *)
-  (* just keep trying to connect, and next time we'll start a new server.      *)
-  (* and the server terminates immediately after telling us this - so we'll    *)
-  (* just keep trying to connect, and the next time we'll start a new server.  *)
-  | Error (CommandConnectSimple.Build_id_mismatch as reason) ->
-    show_connecting reason { env with d_server_status = None; }
+  (* The server and the lsp are different binaries and can't talk to each other. The server is not
+   * stopping (either because we asked it not to stop or because it is newer than this client). In
+   * this case, our best option is to stop the lsp and let the IDE start a new lsp with a newer
+   * binary *)
+  | Error (CommandConnectSimple.(Build_id_mismatch (Client_should_error { server_version; _} ))) ->
+    (match Semver.compare server_version Flow_version.version with
+    | n when n < 0 ->
+      Printf.eprintf
+        "Flow: the running server is an older version of Flow (%s) than the LSP (%s), \
+          but we're not allowed to stop it"
+        server_version
+        Flow_version.version
+    | 0 ->
+      Printf.eprintf
+        "Flow: the running server is a different binary with the same version (%s)"
+        Flow_version.version
+    | _ ->
+      Printf.eprintf
+        "Flow: the running server is a newer version of Flow (%s) than the LSP (%s)"
+        server_version
+        Flow_version.version
+    );
+    Printf.eprintf
+      "LSP is exiting. Hopefully the IDE will start an LSP with the same binary as the server";
+    lsp_exit_bad ()
 
   (* While the server is busy initializing, sometimes we get Server_busy.Fail_on_init *)
   (* with a server-status telling us how far it is through init. And sometimes we get *)
@@ -1408,6 +1439,7 @@ let rec main
     shm_flags;
     ignore_version = false;
     quiet = false;
+    on_mismatch = Choose_newest;
   } in
   let client = Jsonrpc.make_queue () in
   let state = (Pre_init connect_params) in
