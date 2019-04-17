@@ -54,9 +54,6 @@ let advance t =
     in
     match extant_value with
     | None -> replace_with v
-    | Some _ when t.is_canonical v ->
-      Hashtbl.set t.tbl id (v, true);
-      Yield (id, v)
     | Some extant_value ->
       let v = t.merge ~earlier:extant_value ~later:v in
       if phys_equal v extant_value then Skipped else replace_with v
