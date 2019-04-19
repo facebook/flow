@@ -27,6 +27,13 @@ assert_errors "$FLOW" status
 
 assert_ok "$FLOW" stop
 
+printf "\\n--saved-state-force-recheck does recheck & sees new error\\n"
+start_flow . --lazy --saved-state-fetcher "local" --saved-state-no-fallback \
+  --saved-state-force-recheck
+assert_errors "$FLOW" status
+
+assert_ok "$FLOW" stop
+
 echo -e "$(pwd)/bar.js\\n$(pwd)/.flowconfig" \
   > ".flow.saved_state_file_changes"
 

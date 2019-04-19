@@ -761,6 +761,7 @@ module Options_flags = struct
     profile: bool;
     quiet: bool;
     saved_state_fetcher: Options.saved_state_fetcher option;
+    saved_state_force_recheck: bool;
     saved_state_no_fallback: bool;
     strip_root: bool;
     temp_dir: string option;
@@ -800,8 +801,8 @@ let options_flags =
   let collect_options_flags main
     debug profile all wait_for_recheck weak traces no_flowlib munge_underscore_members max_workers
     include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
-    merge_timeout saved_state_fetcher saved_state_no_fallback no_saved_state types_first
-    include_suppressions trust_mode =
+    merge_timeout saved_state_fetcher saved_state_force_recheck saved_state_no_fallback
+    no_saved_state types_first include_suppressions trust_mode =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -826,6 +827,7 @@ let options_flags =
       quiet;
       merge_timeout;
       saved_state_fetcher;
+      saved_state_force_recheck;
       saved_state_no_fallback;
       no_saved_state;
       trust_mode;
@@ -872,6 +874,8 @@ let options_flags =
         "fb", Options.Fb_fetcher;
       ])
       ~doc:("Which saved state fetcher Flow should use (none, local) (default: none)")
+    |> flag "--saved-state-force-recheck" no_arg
+      ~doc:"Force a lazy server to recheck the changes since the saved state was generated"
     |> flag "--saved-state-no-fallback" no_arg
       ~doc:"If saved state fails to load, exit (normally fallback is to initialize from scratch)"
     |> flag "--no-saved-state" no_arg
@@ -1066,6 +1070,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_strict_mode = strict_mode;
     opt_merge_timeout;
     opt_saved_state_fetcher;
+    opt_saved_state_force_recheck = options_flags.saved_state_force_recheck;
     opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
     opt_no_saved_state = options_flags.no_saved_state;
     opt_arch;
