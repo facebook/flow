@@ -15,6 +15,12 @@ aliases:
       - image: circleci/node:8
     working_directory: ~/flow
 
+  # Saves the currently-installed opam version to a file, which we include
+  # in cache keys.
+  - &opam_version
+    name: Calculate opam version
+    command: opam --version > .circleci/opamversion
+
   - &opam_deps
     name: Install deps from opam
     command: |
@@ -25,12 +31,12 @@ aliases:
 
   - &restore_opam_cache
     keys:
-      - opam-cache-{{ arch }}-opam_1_2_2-ocaml_4_05_0-{{ checksum "opam" }}
-      - opam-cache-{{ arch }}-opam_1_2_2-ocaml_4_05_0
-      - opam-cache-{{ arch }}-opam_1_2_2
+      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
+      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0
+      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}
 
   - &save_opam_cache
-    key: opam-cache-{{ arch }}-opam_1_2_2-ocaml_4_05_0-{{ checksum "opam" }}
+    key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
     paths:
       - ~/.opam
 
@@ -62,8 +68,19 @@ jobs:
           at: ~/flow
       - run:
           # TODO: move this to a custom docker image
+          # installs `zip` but also has to fix some apt issues:
+          # https://discuss.circleci.com/t/failed-to-fetch-jessie-updates/29246
           name: Install deps
-          command: sudo apt-get update && sudo apt-get install zip
+          command: |
+            sudo rm /etc/apt/sources.list
+            echo "deb http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
+            echo "deb http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
+            echo "deb-src http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
+            echo "deb-src http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
+            echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
+            echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
+            sudo apt-get update && sudo apt-get install zip
+      - run: *opam_version
       - restore_cache: *restore_opam_cache
       - run:
           name: Update opam repo
@@ -126,9 +143,10 @@ jobs:
     steps:
       - attach_workspace:
           at: ~/flow
-      - restore_cache:
-          keys:
-            - brew-cache-{{ arch }}-v2
+      # https://github.com/Homebrew/brew/issues/5513
+      - run:
+          name: Fix homebrew python
+          command: brew update
       # https://github.com/Homebrew/homebrew-core/issues/26358
       - run:
           name: Fix homebrew python
@@ -136,17 +154,13 @@ jobs:
       - run:
           name: Install opam
           command: command -v opam || brew install opam aspcud
-      - save_cache:
-          key: brew-cache-{{ arch }}-v2
-          paths:
-            - /usr/local/bin/opam
-            - /usr/local/bin/aspcud
+      - run: *opam_version
       - restore_cache: *restore_opam_cache
       - run:
           name: Install ocaml
           command: opam init --comp 4.05.0 -yn | cat
       - save_cache:
-          key: opam-cache-{{ arch }}-opam_1_2_2-ocaml_4_05_0
+          key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0
           paths:
             - ~/.opam
       - run:

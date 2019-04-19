@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "flow_parser"
-version: "0.72.0"
+version: "0.97.0"
 maintainer: "flow@fb.com"
 authors: ["Flow Team <flow@fb.com>"]
 homepage: "https://github.com/facebook/flow/tree/master/src/parser"
@@ -13,7 +13,9 @@ remove: ["ocamlfind" "remove" "flow_parser"]
 depends: [
   "ocamlfind" {build}
   "ocamlbuild" {build}
-  "sedlex"
+  "ppx_deriving" {build}
+  "ppx_gen_rec" {build}
+  "sedlex" {= "1.99.4"}
   "wtf8"
 ]
 available: [ocaml-version >= "4.03.0"]

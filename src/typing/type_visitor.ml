@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -22,13 +22,13 @@ class ['a] t = object(self)
   method type_ cx pole (acc: 'a) = function
   | OpenT (r, id) -> self#tvar cx pole acc r id
 
-  | DefT (_, t) -> self#def_type cx pole acc t
+  | DefT (_, _, t) -> self#def_type cx pole acc t
 
   | InternalT (ChoiceKitT (_, Trigger)) -> acc
 
   | TypeDestructorTriggerT (_, _, _, d, t) ->
     let acc = self#destructor cx acc d in
-    let acc = self#type_ cx pole_TODO acc t in
+    let acc = self#type_ cx pole acc t in
     acc
 
   | FunProtoT _
@@ -54,7 +54,7 @@ class ['a] t = object(self)
     in
     acc
 
-  | BoundT typeparam -> self#type_param cx pole acc typeparam
+  | BoundT _ -> acc
 
   | ExistsT _ -> acc
 
@@ -72,7 +72,7 @@ class ['a] t = object(self)
 
   | KeysT (_, t) -> self#type_ cx Positive acc t
 
-  | AnnotT (t, _) -> self#type_ cx Positive acc t
+  | AnnotT (_, t, _) -> self#type_ cx Positive acc t
 
   | OpaqueT (_, ot) ->
     let {
@@ -80,13 +80,11 @@ class ['a] t = object(self)
       underlying_t;
       super_t;
       opaque_type_args;
-      opaque_arg_polarities;
       opaque_name = _;
     } = ot in
-    let acc = SMap.fold (fun x (_, t) acc ->
-      let pole' = SMap.find_unsafe x opaque_arg_polarities in
+    let acc = self#list (fun acc (_, _, t, pole') ->
       self#type_ cx (P.mult (pole, pole')) acc t
-    ) opaque_type_args acc in
+    ) acc opaque_type_args in
     let acc = self#opt (self#type_ cx pole) acc underlying_t in
     let acc = self#opt (self#type_ cx pole) acc super_t in
     acc
@@ -99,9 +97,6 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t2 in
     acc
 
-  | InternalT (IdxWrapper (_, t)) ->
-    self#type_ cx pole acc t
-
   | OpenPredT (_ , t, p_map, n_map) ->
     let acc = self#type_ cx pole acc t in
     let acc = self#list (self#predicate cx) acc (Key_map.values p_map) in
@@ -111,8 +106,11 @@ class ['a] t = object(self)
   | ThisClassT (_, t) -> self#type_ cx pole acc t
 
   | ThisTypeAppT (_, t, this, ts_opt) ->
-    let acc = self#type_ cx pole acc t in
+    let acc = self#type_ cx Positive acc t in
     let acc = self#type_ cx pole acc this in
+    (* If we knew what `t` resolved to, we could determine the polarities for
+       `ts`, but in general `t` might be unresolved. Subclasses which have more
+       information should override this to be more specific. *)
     let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc ts_opt in
     acc
 
@@ -120,17 +118,26 @@ class ['a] t = object(self)
   | InternalT (ReposUpperT (_, t)) ->
     self#type_ cx pole acc t
 
+  | AnyT _
+  | InternalT (OptionalChainVoidT _) -> acc
+
+  | OptionalT (_, t)
+  | MaybeT (_, t) -> self#type_ cx pole acc t
+
+  | IntersectionT (_, rep) ->
+    self#list (self#type_ cx pole) acc (InterRep.members rep)
+
+  | UnionT (_, rep) ->
+    self#list (self#type_ cx pole) acc (UnionRep.members rep)
+
   method def_type cx pole acc = function
-  | AnyT
   | NumT _
   | StrT _
   | BoolT _
-  | EmptyT
+  | EmptyT _
   | MixedT _
   | NullT
   | VoidT
-  | AnyObjT
-  | AnyFunT
     -> acc
 
   | FunT (static, prototype, funtype) ->
@@ -158,12 +165,11 @@ class ['a] t = object(self)
   | SingletonNumT _
   | SingletonBoolT _ -> acc
 
-  | TypeT t -> self#type_ cx pole acc t
+  | TypeT (_, t) -> self#type_ cx pole acc t
 
-  | OptionalT t -> self#type_ cx pole acc t
 
-  | PolyT (xs, t, _) ->
-    let acc = self#list (self#type_param cx pole) acc xs in
+  | PolyT (_, xs, t, _) ->
+    let acc = self#nel (self#type_param cx pole) acc xs in
     let acc = self#type_ cx pole acc t in
     acc
 
@@ -175,13 +181,17 @@ class ['a] t = object(self)
     let acc = self#list (self#type_ cx pole_TODO) acc ts in
     acc
 
-  | MaybeT t -> self#type_ cx pole acc t
+  | IdxWrapper t ->
+    self#type_ cx pole acc t
 
-  | IntersectionT rep ->
-    self#list (self#type_ cx pole) acc (InterRep.members rep)
+  | ReactAbstractComponentT {config; instance} ->
+    let acc = self#type_ cx (P.inv pole) acc config in
+    self#type_ cx pole acc instance
 
-  | UnionT rep ->
-    self#list (self#type_ cx pole) acc (UnionRep.members rep)
+  method targ cx pole acc = function
+  | ImplicitArg _ -> acc
+  | ExplicitArg t -> self#type_ cx pole acc t
+
 
   method private defer_use_type cx acc = function
   | DestructuringT (_, s) -> self#selector cx acc s
@@ -213,12 +223,13 @@ class ['a] t = object(self)
   | NumP -> acc
   | ObjP -> acc
   | StrP -> acc
+  | SymbolP -> acc
   | VoidP -> acc
   | ArrP -> acc
   | PropExistsP _ -> acc
   | LatentP (t, _) -> self#type_ cx Positive acc t
 
-  method private destructor cx acc = function
+  method destructor cx acc = function
   | NonMaybeType
   | PropertyType _
   | ValuesType
@@ -227,6 +238,7 @@ class ['a] t = object(self)
   | ReactElementConfigType
   | ReactElementRefType
     -> acc
+  | ReactConfigType default_props -> self#type_ cx pole_TODO acc default_props
   | ElementType t -> self#type_ cx pole_TODO acc t
   | Bind t -> self#type_ cx pole_TODO acc t
   | SpreadType (_, ts) -> self#list (self#type_ cx pole_TODO) acc ts
@@ -247,6 +259,9 @@ class ['a] t = object(self)
   | ReactCreateElement
   | ReactCloneElement
   | Idx
+  | TypeAssertIs
+  | TypeAssertThrows
+  | TypeAssertWraps
   | DebugPrint
   | DebugThrow
   | DebugSleep
@@ -273,6 +288,7 @@ class ['a] t = object(self)
     acc
 
   | GetPropT (_, _, p, t)
+  | MatchPropT(_, _, p, t)
   | TestPropT (_, _, p, t) ->
     let acc = self#propref cx acc p in
     let acc = self#type_ cx pole_TODO acc t in
@@ -314,13 +330,17 @@ class ['a] t = object(self)
   | ReposUseT (_, _, _, t) -> self#type_ cx pole_TODO acc t
 
   | ConstructorT (_, _, targs, args, t) ->
-    let acc = Option.fold ~init:acc ~f:(List.fold_left (self#type_ cx pole_TODO)) targs in
+    let acc = Option.fold ~init:acc ~f:(List.fold_left (self#targ cx pole_TODO)) targs in
     let acc = List.fold_left (self#call_arg cx) acc args in
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | SuperT (_, _, DerivedInstance i) -> self#inst_type cx pole_TODO acc i
-  | SuperT (_, _, DerivedStatics o) -> self#obj_type cx pole_TODO acc o
+  | SuperT (_, _, Derived {own; proto; static}) ->
+    let acc = self#smap (self#prop cx pole_TODO) acc own in
+    let acc = self#smap (self#prop cx pole_TODO) acc proto in
+    let acc = self#smap (self#prop cx pole_TODO) acc static in
+    acc
+
   | ImplementsT (_, t) -> self#type_ cx pole_TODO acc t
   | MixinT (_, t) -> self#type_ cx pole_TODO acc t
   | ToStringT (_, t) -> self#use_type_ cx acc t
@@ -336,8 +356,7 @@ class ['a] t = object(self)
   | AssertArithmeticOperandT _
   | AssertBinaryInLHST _
   | AssertBinaryInRHST _
-  | AssertForInRHST _
-  | AssertRestParamT _ -> acc
+  | AssertForInRHST _ -> acc
 
   | PredicateT (predicate, t) ->
     let acc = self#predicate cx acc predicate in
@@ -366,9 +385,9 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc t in
     acc
 
-  | ThisSpecializeT (_, t1, t2) ->
-    let acc = self#type_ cx pole_TODO acc t1 in
-    let acc = self#type_ cx pole_TODO acc t2 in
+  | ThisSpecializeT (_, this, k) ->
+    let acc = self#type_ cx pole_TODO acc this in
+    let acc = self#cont cx acc k in
     acc
 
   | VarianceCheckT (_, ts, _) -> List.fold_left (self#type_ cx pole_TODO) acc ts
@@ -449,7 +468,11 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
-  | ExportNamedT (_, _, ts, tout) ->
+  | AssertExportIsTypeT (_, _, tout) ->
+    let acc = self#type_ cx pole_TODO acc tout in
+    acc
+
+  | ExportNamedT (_, _, ts, _, tout) ->
     let visit_pair acc (_loc, t) = self#type_ cx pole_TODO acc t in
     let acc = self#smap visit_pair acc ts in
     let acc = self#type_ cx pole_TODO acc tout in
@@ -463,6 +486,9 @@ class ['a] t = object(self)
   | ReactKitT (_, _, tool) -> (match tool with
     | React.GetProps t | React.GetConfig t | React.GetRef t
       -> self#type_ cx pole_TODO acc t
+    | React.GetConfigType (default_props, t) ->
+        let acc = self#type_ cx pole_TODO acc default_props in
+        self#type_ cx pole_TODO acc t
     | React.CreateElement0 (_, config, (children, children_spread), tout) ->
       let acc = self#type_ cx pole_TODO acc config in
       let acc = List.fold_left (self#type_ cx pole_TODO) acc children in
@@ -550,10 +576,12 @@ class ['a] t = object(self)
   | IdxUnMaybeifyT (_, tout) ->
     self#type_ cx pole_TODO acc tout
 
-  | OptionalChainT (_, uses) ->
+  | OptionalChainT (_, _, uses) ->
     Nel.fold_left (fun acc (use, tout) ->
       self#use_type_ cx acc (apply_opt_use use tout)
     ) acc uses
+
+  | InvariantT _ -> acc
 
   | CallLatentPredT (_, _, _, t1, t2)
   | CallOpenPredT (_, _, _, t1, t2) ->
@@ -567,6 +595,10 @@ class ['a] t = object(self)
     let acc = self#predicate cx acc predicate in
     let acc = self#type_ cx pole_TODO acc t in
     acc
+
+  | ReactPropsToOut (_, t)
+  | ReactInToProps (_, t) ->
+    self#type_ cx pole_TODO acc t
 
   | ResolveSpreadT (_, _, { rrt_resolved; rrt_unresolved; rrt_resolve_to }) ->
     let acc = List.fold_left (fun (acc: 'a) -> function
@@ -605,8 +637,9 @@ class ['a] t = object(self)
     in
     acc
 
-  | CondT (_, t, tout) ->
-    let acc = self#type_ cx pole_TODO acc t in
+  | CondT (_, then_t_opt, else_t, tout) ->
+    let acc = self#opt (self#type_ cx pole_TODO) acc then_t_opt in
+    let acc = self#type_ cx pole_TODO acc else_t in
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
@@ -665,6 +698,10 @@ class ['a] t = object(self)
       let acc = self#type_ cx (P.inv pole) acc t2 in
       acc
 
+  method call_prop cx pole acc id =
+    let t = Context.find_call cx id in
+    self#type_ cx pole acc t
+
   method exports cx pole acc id =
     let visit_pair acc (_loc, t) = self#type_ cx pole acc t in
     Context.find_exports cx id
@@ -709,11 +746,13 @@ class ['a] t = object(self)
       dict_t;
       props_tmap;
       proto_t;
+      call_t;
       flags = _;
     } = o in
     let acc = self#opt (self#dict_type cx pole) acc dict_t in
     let acc = self#props cx pole acc props_tmap in
     let acc = self#type_ cx pole acc proto_t in
+    let acc = self#opt (self#call_prop cx pole) acc call_t in
     acc
 
   method private arr_type cx pole acc = function
@@ -726,26 +765,25 @@ class ['a] t = object(self)
     acc
   | ROArrayAT t ->
     self#type_ cx pole acc t
-  | EmptyAT -> acc
 
   method private inst_type cx pole acc i =
     let {
-      arg_polarities;
-      type_args;
-      fields_tmap;
-      methods_tmap;
       class_id = _;
-      initialized_field_names = _;
-      initialized_static_field_names = _;
+      type_args;
+      own_props;
+      proto_props;
+      inst_call_t;
+      initialized_fields = _;
+      initialized_static_fields = _;
       has_unknown_react_mixins = _;
       structural = _;
     } = i in
-    let acc = SMap.fold (fun x (_, t) acc ->
-      let pole' = SMap.find_unsafe x arg_polarities in
+    let acc = self#list (fun acc (_, _, t, pole') ->
       self#type_ cx (P.mult (pole, pole')) acc t
-    ) type_args acc in
-    let acc = self#props cx pole acc fields_tmap in
-    let acc = self#props cx pole acc methods_tmap in
+    ) acc type_args in
+    let acc = self#props cx pole acc own_props in
+    let acc = self#props cx pole acc proto_props in
+    let acc = self#opt (self#call_prop cx pole) acc inst_call_t in
     acc
 
   method private export_types cx pole acc e =
@@ -768,7 +806,7 @@ class ['a] t = object(self)
       call_strict_arity = _;
     } = call in
     let acc = self#type_ cx pole_TODO acc call_this_t in
-    let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc call_targs in
+    let acc = self#opt (self#list (self#targ cx pole_TODO)) acc call_targs in
     let acc = self#list (self#call_arg cx) acc call_args_tlist in
     let acc = self#type_ cx pole_TODO acc call_tout in
     acc
@@ -806,7 +844,7 @@ class ['a] t = object(self)
   | LookupProp (_, prop)
   | SuperProp (_, prop) ->
     self#prop cx pole_TODO acc prop
-  | MatchProp t ->
+  | MatchProp (_, t) ->
     self#type_ cx pole_TODO acc t
 
   method private read_write cx acc = function
@@ -975,6 +1013,9 @@ class ['a] t = object(self)
 
   method private list: 't. ('a -> 't -> 'a) -> 'a -> 't list -> 'a =
     List.fold_left
+
+  method private nel: 't. ('a -> 't -> 'a) -> 'a -> 't Nel.t -> 'a =
+    Nel.fold_left
 
   method private opt: 't. ('a -> 't -> 'a) -> 'a -> 't option -> 'a =
     fun f acc opt -> Option.fold opt ~init:acc ~f

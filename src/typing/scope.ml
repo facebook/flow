@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -85,10 +85,10 @@ module Entry = struct
     value_state: State.t;
 
     (* The location where the binding was declared/created *)
-    value_declare_loc: Loc.t;
+    value_declare_loc: ALoc.t;
 
     (* The last location (in this scope) where the entry value was assigned *)
-    value_assign_loc: Loc.t;
+    value_assign_loc: ALoc.t;
 
     specific: Type.t;
     general: Type.t;
@@ -101,8 +101,8 @@ module Entry = struct
   type type_binding = {
     type_binding_kind: type_binding_kind;
     type_state: State.t;
-    type_loc: Loc.t;
-    _type: Type.t;
+    type_loc: ALoc.t;
+    type_: Type.t;
   }
 
   type t =
@@ -121,7 +121,7 @@ module Entry = struct
       value_declare_loc;
       value_assign_loc = value_declare_loc;
       specific;
-      general
+      general;
     }
 
   let new_const ~loc ?(state=State.Undeclared) ?(kind=ConstVarBinding) t =
@@ -137,45 +137,45 @@ module Entry = struct
     let specific = match specific with Some t -> t | None -> general in
     new_value (Var kind) state specific general loc
 
-  let new_type_ type_binding_kind state loc _type =
+  let new_type_ type_binding_kind state loc type_ =
     Type {
       type_binding_kind;
       type_state = state;
       type_loc = loc;
-      _type
+      type_
     }
 
-  let new_type ~loc ?(state=State.Undeclared) _type =
-    new_type_ TypeBinding state loc _type
+  let new_type ~loc ?(state=State.Undeclared) type_ =
+    new_type_ TypeBinding state loc type_
 
-  let new_import_type ~loc _type =
-    new_type_ ImportTypeBinding State.Initialized loc _type
+  let new_import_type ~loc type_ =
+    new_type_ ImportTypeBinding State.Initialized loc type_
 
   (* accessors *)
   let entry_loc = function
   | Value v -> v.value_declare_loc
   | Type t -> t.type_loc
-  | Class _ -> Loc.none
+  | Class _ -> ALoc.none
 
   let assign_loc = function
   | Value v -> v.value_assign_loc
   | Type t -> t.type_loc
-  | Class _ -> Loc.none
+  | Class _ -> ALoc.none
 
   let declared_type = function
   | Value v -> v.general
-  | Type t -> t._type
+  | Type t -> t.type_
   | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let actual_type = function
   | Value v -> v.specific
-  | Type t -> t._type
+  | Type t -> t.type_
   | Class _ -> assert_false "Internal Error: Class bindings have no type"
 
   let string_of_kind = function
   | Value v -> string_of_value_kind v.kind
   | Type _ -> "type"
-  | Class c -> spf "Class %i" c.Type.class_binding_id
+  | Class c -> spf "Class %s" (ALoc.debug_to_string c.Type.class_binding_id)
 
   let kind_of_value (value: value_binding) = value.kind
   let general_of_value (value: value_binding) = value.general
@@ -190,7 +190,7 @@ module Entry = struct
     match entry with
     | Type _ ->
       entry
-    | Value ({ kind = Const _; specific = Type.DefT (_, Type.EmptyT); _ } as v) ->
+    | Value ({ kind = Const _; specific = Type.DefT (_, _, Type.EmptyT _); _ } as v) ->
       (* cleared consts: see note on Env.reset_current_activation *)
       if Reason.is_internal_name name
       then entry
@@ -217,7 +217,7 @@ module Entry = struct
     | Value v ->
       if Reason.is_internal_name name
       then entry
-      else Value { v with specific = Type.EmptyT.at loc }
+      else Value { v with specific = Type.EmptyT.at loc |> Type.with_trust Trust.bogus_trust}
 
   let is_lex = function
     | Type _ -> false
@@ -261,7 +261,7 @@ let string_of_kind = function
 | LexScope -> "LexScope"
 
 type refi_binding = {
-  refi_loc: Loc.t;
+  refi_loc: ALoc.t;
   refined: Type.t;
   original: Type.t;
 }
@@ -270,12 +270,26 @@ type refi_binding = {
 (* scopes are tagged by id, which are shared by clones. function
    types hold the id of their activation scopes. *)
 (* TODO add in-scope type variable binding table *)
+(* when the typechecker is constructing the typed AST, declare functions are
+   processed separately from (before) when most statements are processed. To
+   be able to put the typed ASTs of the type annotations that were on the
+   declare functions into the spots where they go in the typed AST, we put
+   the declare functions' type annotations' typed ASTs in the scope during the
+   earlier pass when the declare functions are processed, then during the
+   second pass when the full typed AST is being constructed, we get them from
+   the scope and put them where they belong in the typed AST. *)
 type t = {
   id: int;
   kind: kind;
   mutable entries: Entry.t SMap.t;
-  mutable tparam_entries: Loc.t SMap.t;  (* used to populate the type tables *)
   mutable refis: refi_binding Key_map.t;
+  mutable declare_func_annots: (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation SMap.t;
+  (* Map containing all local bindings declared in a 'declare module'. Instead
+     of creating a chain of ModuleT ~> ExportNamedT for each one of the local
+     exports of a DeclareModule that we encounter, we create a single flow at the
+     end of processing the DeclareModule using this mapping as the payload of
+     ExportNamedT. *)
+  mutable declare_module_local_exports: (ALoc.t option * Type.t) SMap.t;
 }
 
 (* ctor helper *)
@@ -283,8 +297,9 @@ let fresh_impl kind = {
   id = mk_id ();
   kind;
   entries = SMap.empty;
-  tparam_entries = SMap.empty;
   refis = Key_map.empty;
+  declare_func_annots = SMap.empty;
+  declare_module_local_exports = SMap.empty;
 }
 
 (* return a fresh scope of the most common kind (var) *)
@@ -297,8 +312,8 @@ let fresh_lex () = fresh_impl LexScope
 (* clone a scope: snapshot mutable entries.
    NOTE: tvars (OpenT) are essentially refs, and are shared by clones.
  *)
-let clone { id; kind; entries; tparam_entries; refis } =
-  { id; kind; entries; tparam_entries; refis }
+let clone { id; kind; entries; refis; declare_func_annots; declare_module_local_exports } =
+  { id; kind; entries; refis; declare_func_annots; declare_module_local_exports }
 
 (* use passed f to iterate over all scope entries *)
 let iter_entries f scope =
@@ -311,9 +326,6 @@ let update_entries f scope =
 (* add entry to scope *)
 let add_entry name entry scope =
   scope.entries <- SMap.add name entry scope.entries
-
-let add_tparam_entry name entry scope =
-  scope.tparam_entries <- SMap.add name entry scope.tparam_entries
 
 (* remove entry from scope *)
 let remove_entry name scope =
@@ -388,6 +400,12 @@ let reset loc scope =
   havoc_all_refis scope;
   update_entries (Entry.reset loc) scope
 
+let add_declare_func_annot name annot scope =
+  scope.declare_func_annots <- SMap.add name annot scope.declare_func_annots
+
+let get_declare_func_annot name scope =
+  SMap.get name scope.declare_func_annots
+
 let is_lex scope =
   match scope.kind with
   | LexScope -> true
@@ -397,3 +415,12 @@ let is_global scope =
   match scope.kind with
   | VarScope Global -> true
   | _ -> false
+
+let set_declare_module_local_export scope name loc t =
+  scope.declare_module_local_exports <-
+    SMap.add name (Some loc, t) scope.declare_module_local_exports
+
+let with_declare_module_local_exports scope f =
+  scope.declare_module_local_exports <- SMap.empty;
+  let r = f () in
+  r, scope.declare_module_local_exports

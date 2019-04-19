@@ -1,13 +1,39 @@
 include Disk_sig.Types
 
-let cat filename =
+let cat (filename : string) : string =
   let ic = open_in_bin filename in
-  let len = in_channel_length ic in
-  let buf = Buffer.create len in
-  Buffer.add_channel buf ic len;
-  let content = Buffer.contents buf in
-  close_in ic;
-  content
+  let len =
+    try
+      in_channel_length ic
+    with Sys_error _ -> 0 in
+  (* in_channel_length returns 0 for non-regular files; try reading it
+    using a fixed-sized buffer if it appears to be empty.
+    NOTE: JaneStreet's Core Sys module defines a function is_file which
+    does a proper check on whether the file exists and is regular. *)
+  if len > 0 then
+  begin
+    let buf = Buffer.create len in
+    Buffer.add_channel buf ic len;
+    close_in ic;
+    Buffer.contents buf
+  end
+  else begin
+    let len = 1024 in (* for Buffer, that's the initial size of the internal byte sequence *)
+    let buf = Buffer.create len in
+    let bytes = Bytes.create len in
+    let rec read_bytes () : unit =
+      try
+        let n = input ic bytes 0 len in
+        if n = 0 then ()
+        else begin
+          Buffer.add_subbytes buf bytes 0 n; (* 0 is offset *)
+          read_bytes()
+        end
+      with End_of_file -> () in
+    read_bytes();
+    close_in ic;
+    Buffer.contents buf
+  end
 
 let is_file_not_exist_error ~file ~err_msg =
   let msg = Printf.sprintf "%s: No such file or directory" file in

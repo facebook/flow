@@ -1,0 +1,11 @@
+flow config check:
+{
+  "flowVersion":"<VERSION>",
+  "exit":{
+    "code":8,
+    "reason":"Invalid_flowconfig",
+    "msg":"Wrong version of Flow. The config specifies version ^0.1 but this is version <VERSION>"
+  }
+}
+
+flow config check --ignore-version:

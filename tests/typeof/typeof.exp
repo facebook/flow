@@ -28,7 +28,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:43:19
 
-Cannot assign `MyClass1` to `b` because statics of `MyClass1` [1] is incompatible with `MyClass1` [2].
+Cannot assign `MyClass1` to `b` because class `MyClass1` [1] is incompatible with `MyClass1` [2].
 
    typeof.js:43:19
    43| var b: MyClass1 = MyClass1;
@@ -45,7 +45,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:53:26
 
-Cannot assign `new MyClass2()` to `c` because `MyClass2` [1] is incompatible with `typeof MyClass2` [2].
+Cannot assign `new MyClass2()` to `c` because `MyClass2` [1] is incompatible with class `MyClass2` [2].
 
    typeof.js:53:26
    53| var c: typeof MyClass2 = new MyClass2();
@@ -66,9 +66,9 @@ Cannot assign `'asdf'` to `e` because string [1] is incompatible with number [2]
                                 ^^^^^^ [1]
 
 References:
-   typeof.js:59:14
-   59| var numValue:number = 42;
-                    ^^^^^^ [2]
+   typeof.js:61:8
+   61| var e: typeof numValue = 'asdf'; // Error: string ~> number
+              ^^^^^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:73:15

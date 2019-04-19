@@ -12,12 +12,15 @@ Table of contents:
 - [`$Exact<T>`](#toc-exact)
 - [`$Diff<A, B>`](#toc-diff)
 - [`$Rest<A, B>`](#toc-rest)
-- [`$PropertyType<T>`](#toc-propertytype)
-- [`$ElementType<T>`](#toc-elementtype)
+- [`$PropertyType<T, k>`](#toc-propertytype)
+- [`$ElementType<T, K>`](#toc-elementtype)
+- [`$NonMaybeType<T>`](#toc-nonmaybe)
 - [`$ObjMap<T, F>`](#toc-objmap)
+- [`$ObjMapi<T, F>`](#toc-objmapi)
 - [`$TupleMap<T, F>`](#toc-tuplemap)
-- [`$Call<F>`](#toc-call)
+- [`$Call<F, T...>`](#toc-call)
 - [`Class<T>`](#toc-class)
+- [`$Shape<T>`](#toc-shape)
 - [`$Supertype<T>`](#toc-supertype)
 - [`$Subtype<T>`](#toc-subtype)
 - [`Existential Type (*)`](#toc-existential-type)
@@ -55,7 +58,7 @@ function printSuitNumber(suit: Suit) {
   console.log(suitNumbers[suit]);
 }
 
-printSuitNumber('Diamonds'); // 2
+printSuitNumber('Diamonds'); // 1
 printSuitNumber('foo'); // 'foo' is not a Suit
 ```
 
@@ -81,7 +84,7 @@ In the example above, the type of `Country` is equivalent to `type Country = 'US
 
 ## `$Values<T>` <a class="toc" id="toc-values" href="#toc-values"></a>
 
-`$Values<T>` represents the union type of all the value types of the enumerable properties in an [Object Type](../objects/) `T`.
+`$Values<T>` represents the union type of all the value types (not the values, but their *types*!) of the enumerable properties in an [Object Type](../objects/) `T`.
 
 For example:
 ```js
@@ -144,6 +147,9 @@ type Obj = {
 
 type MappedObj = $ReadOnly<$ObjMap<Obj, TypeFn>> // Still read-only
 ```
+
+> Note: `$ReadOnly` is only for making read-only _object_ types. See the Array docs
+> for how to [type read-only arrays with `$ReadOnlyArray`](../arrays/#toc-readonlyarray).
 
 ## `$Exact<T>` <a class="toc" id="toc-exact" href="#toc-exact"></a>
 
@@ -232,9 +238,9 @@ type Person = {
   parent: Person
 };
 
-const newName: $PropertyType<Person, 'name'> = 'Michael Jackson';
-const newAge: $PropertyType<Person, 'age'> = 50;
-const newParent: $PropertyType<Person, 'parent'> = 'Joe Jackson';
+const newName: $PropertyType<Person, 'name'> = 'Toni Braxton';
+const newAge: $PropertyType<Person, 'age'> = 51;
+const newParent: $PropertyType<Person, 'parent'> = 'Evelyn Braxton';
 ```
 
 This can be especially useful for referring to the type of React props, or, even the entire `props` type itself.
@@ -307,7 +313,7 @@ type Tuple = [boolean, string];
 ('bar': $ElementType<Tuple, 2>); // Nope, can't access position 2
 ```
 
-In the above case, we're using literal values as `K`, similarly to [`$PropertyType<T>`](#toc-propertytype). However, when using `$ElementType<T, K>`, `K` is allowed to be any type, as long as that type exists on the keys of `T`. For example:
+In the above case, we're using literal values as `K`, similarly to [`$PropertyType<T, k>`](#toc-propertytype). However, when using `$ElementType<T, K>`, `K` is allowed to be any type, as long as that type exists on the keys of `T`. For example:
 
 ```js
 // @flow
@@ -337,7 +343,7 @@ type NumberObj = {
 (42: $ElementType<$ElementType<NumberObj, 'nums'>, number>);
 ```
 
-Additionally, one of the things that also makes `$ElementType<T, K>` more powerful than [`$PropertyType<T>`](#toc-propertytype) is that you can use it with generics. For example:
+Additionally, one of the things that also makes `$ElementType<T, K>` more powerful than [`$PropertyType<T, k>`](#toc-propertytype) is that you can use it with generics. For example:
 
 ```js
 // @flow
@@ -348,6 +354,21 @@ function getProp<O: {+[string]: mixed}, P: $Keys<O>>(o: O, p: P): $ElementType<O
 (getProp({a: 42}, 'a'): number); // OK
 (getProp({a: 42}, 'a'): string); // Error: number is not a string
 getProp({a: 42}, 'b'); // Error: `b` does not exist
+```
+
+## `$NonMaybeType<T>` <a class="toc" id="toc-nonmaybe" href="#toc-nonmaybe"></a>
+
+`$NonMaybeType<T>` converts a type `T` to a non-maybe type. In other words, the values of `$NonMaybeType<T>` are the values of `T` except for `null` and `undefined`.
+
+```js
+// @flow
+type MaybeName = ?string;
+type Name = $NonMaybeType<MaybeName>;
+
+('Gabriel': MaybeName); // Ok
+(null: MaybeName); // Ok
+('Gabriel': Name); // Ok
+(null: Name); // Error! null can't be annotated as Name because Name is not a maybe type
 ```
 
 ## `$ObjMap<T, F>` <a class="toc" id="toc-objmap" href="#toc-objmap"></a>
@@ -373,11 +394,9 @@ This is where `ObjMap<T, F>` comes in handy.
 // @flow
 
 // let's write a function type that takes a `() => V` and returns a `V` (its return type)
-type ExtractReturnType = <V>(() => V) => V
+type ExtractReturnType = <V>(() => V) => V;
 
-function run<O: {[key: string]: Function}>(o: O): $ObjMap<O, ExtractReturnType> {
-  return Object.keys(o).reduce((acc, k) => Object.assign(acc, { [k]: o[k]() }), {});
-}
+declare function run<O: {[key: string]: Function}>(o: O): $ObjMap<O, ExtractReturnType>;
 
 const o = {
   a: () => true,
@@ -413,6 +432,33 @@ props(promises).then(o => {
 });
 ```
 
+## `$ObjMapi<T, F>` <a class="toc" id="toc-objmapi" href="#toc-objmapi"></a>
+
+`ObjMapi<T, F>` is similar to [`ObjMap<T, F>`](#toc-objmap). The difference is that function
+type `F` will be [called](#toc-call) with both the key and value types of the elements of
+the object type `T`, instead of just the value types. For example:
+
+```js
+// @flow
+const o = {
+  a: () => true,
+  b: () => 'foo'
+};
+
+type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V };
+
+declare function run<O: Object>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
+
+(run(o).a: { k: 'a', v: boolean }); // Ok
+(run(o).b: { k: 'b', v: string });  // Ok
+// $ExpectError
+(run(o).a: { k: 'b', v: boolean }); // Nope, a.k is "a"
+// $ExpectError
+(run(o).b: { k: 'b', v: number });  // Nope, b.v is a string
+// $ExpectError
+run(o).c;                           // Nope, c was not in the original object
+```
+
 ## `$TupleMap<T, F>` <a class="toc" id="toc-tuplemap" href="#toc-tuplemap"></a>
 
 `$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a [function type](../functions) `F`, and returns the iterable type obtained by mapping the type of each value in the iterable with the provided function type `F`. This is analogous to the Javascript function `map`.
@@ -435,9 +481,9 @@ const arr = [() => 'foo', () => 'bar'];
 (run(arr)[1]: boolean); // Error
 ```
 
-## `$Call<F>` <a class="toc" id="toc-call" href="#toc-call"></a>
+## `$Call<F, T...>` <a class="toc" id="toc-call" href="#toc-call"></a>
 
-`$Call<F>` is a type that that represents the result of calling the given [function type](../functions) `F`. This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
+`$Call<F, T...>` is a type that represents the result of calling the given [function type](../functions) `F` with 0 or more arguments `T...`. This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
 
 Let's see a couple of examples:
 ```js
@@ -563,13 +609,32 @@ function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): ParamStor
 (makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
 ```
 
+## `$Shape<T>` <a class="toc" id="toc-shape" href="#toc-shape"></a>
+
+Copies the shape of the type supplied, but marks every field optional.
+
+```js
+// @flow
+type Person = {
+  age: number,
+  name: string,
+}
+type PersonDetails = $Shape<Person>;
+
+const person1: Person = {age: 28};  // Error: missing `name`
+const person2: Person = {name: 'a'};  // Error: missing `age`
+const person3: PersonDetails = {age: 28};  // OK
+const person4: PersonDetails = {name: 'a'};  // OK
+const person5: PersonDetails = {age: 28, name: 'a'};  // OK
+```
+
 ## `$Supertype<T>` <a class="toc" id="toc-supertype" href="#toc-supertype"></a>
 
-Work in progress
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-utility) for details.
 
 ## `$Subtype<T>` <a class="toc" id="toc-subtype" href="#toc-subtype"></a>
 
-Work in progress
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-utility) for details.
 
 ## Existential Type (`*`) <a class="toc" id="toc-existential-type" href="#toc-existential-type"></a>
 

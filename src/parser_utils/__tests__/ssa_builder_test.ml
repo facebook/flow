@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -9,7 +9,7 @@
 open OUnit2
 open Test_utils
 
-module LocMap = Utils_js.LocMap
+module LocMap = Loc_collections.LocMap
 
 let mk_ssa_builder_test contents expected_values =
   begin fun ctxt ->

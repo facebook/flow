@@ -1,14 +1,14 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-module S = Ast.Statement;;
-module E = Ast.Expression;;
-module T = Ast.Type;;
-module P = Ast.Pattern;;
+module S = Flow_ast.Statement;;
+module E = Flow_ast.Expression;;
+module T = Flow_ast.Type;;
+module P = Flow_ast.Pattern;;
 module Utils = Flowtestgen_utils;;
 
 (* ESSENTIAL: Syntax type and related functions *)
@@ -44,7 +44,7 @@ class ruleset_rtest = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 

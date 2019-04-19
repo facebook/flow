@@ -54,7 +54,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `f()` to `bad_` because string [1] is incompatible with number [2].
 
    B.js:10:20
-   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+   10| var bad_: number = f(); // error: string ~> number
                           ^^^
 
 References:
@@ -62,22 +62,8 @@ References:
     9|   foo: function(): string { return 'hi'; }
                           ^^^^^^ [1]
    B.js:10:11
-   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
+   10| var bad_: number = f(); // error: string ~> number
                  ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------- B.js:10:20
-
-Cannot call `f` because property `foo` is missing in global object [1] but exists in object literal [2].
-
-   B.js:10:20
-   10| var bad_: number = f(); // errors: string ~> number, global object incompatible with `this`
-                          ^^^ [1]
-
-References:
-   A.js:8:25
-    8| var Bad = Object.assign({}, EventEmitter.prototype, {
-                               ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------- B.js:12:19
@@ -95,6 +81,111 @@ References:
    B.js:12:10
    12| var bad: number = A.Bad.foo(); // error: string, number (but `this` types are compatible)
                 ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- apply.js:4:2
+
+Cannot cast `Object.assign.apply(...)` to object type because number [1] is incompatible with string [2] in property
+`b`.
+
+   apply.js:4:2
+   4| (Object.assign.apply(null, [{}, {a: 1}, {b: 2}]): {a: number, b: string}); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   apply.js:4:45
+   4| (Object.assign.apply(null, [{}, {a: 1}, {b: 2}]): {a: number, b: string}); // error
+                                                  ^ [1]
+   apply.js:4:66
+   4| (Object.assign.apply(null, [{}, {a: 1}, {b: 2}]): {a: number, b: string}); // error
+                                                                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:5:26
+
+A spread argument is unsupported here.
+
+   5| (Object.assign.apply({}, {a: 1}, {b: 'foo'}): {a: number, b: string}); // error
+                               ^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:5:26
+
+Property `@@iterator` is missing in object literal [1] but exists in `$Iterable` [2].
+
+   apply.js:5:26
+     5| (Object.assign.apply({}, {a: 1}, {b: 'foo'}): {a: number, b: string}); // error
+                                 ^^^^^^ [1]
+
+References:
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
+                  ^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- apply.js:7:2
+
+array literal [1] is not an object.
+
+   apply.js:7:2
+   7| (Object.assign.call({}, [{a: 1}, {b: 'foo'}]): {a: number, b: string}); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   apply.js:7:25
+   7| (Object.assign.call({}, [{a: 1}, {b: 'foo'}]): {a: number, b: string}); // error
+                              ^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- apply.js:9:2
+
+Cannot cast `Object.assign.call(...)` to object type because number [1] is incompatible with string [2] in property `b`.
+
+   apply.js:9:2
+   9| (Object.assign.call({}, {a: 1}, {b: 2}): {a: number, b: string}); // error
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   apply.js:9:37
+   9| (Object.assign.call({}, {a: 1}, {b: 2}): {a: number, b: string}); // error
+                                          ^ [1]
+   apply.js:9:57
+   9| (Object.assign.call({}, {a: 1}, {b: 2}): {a: number, b: string}); // error
+                                                              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:12:2
+
+Cannot cast `Object.assign.length` to string because number [1] is incompatible with string [2].
+
+   apply.js:12:2
+    12| (Object.assign.length : string); // error
+         ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:116:13
+   116|     length: number;
+                    ^^^^^^ [1]
+   apply.js:12:25
+    12| (Object.assign.length : string); // error
+                                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- apply.js:14:2
+
+Cannot cast `Object.assign.name` to number because string [1] is incompatible with number [2].
+
+   apply.js:14:2
+    14| (Object.assign.name : number); // error
+         ^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:117:11
+   117|     name: string;
+                  ^^^^^^ [1]
+   apply.js:14:23
+    14| (Object.assign.name : number); // error
+                              ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
@@ -137,6 +228,23 @@ References:
    non_objects.js:5:27
    5| Object.assign({a: "foo"}, 123);
                                 ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- scope.js:33:4
+
+Cannot cast `obj.attr` to number because string [1] is incompatible with number [2].
+
+   scope.js:33:4
+   33|   (obj.attr: number);
+          ^^^^^^^^
+
+References:
+   scope.js:31:16
+   31|     obj.attr = "hello";
+                      ^^^^^^^ [1]
+   scope.js:33:14
+   33|   (obj.attr: number);
+                    ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- spread.js:7:2
@@ -214,4 +322,4 @@ References:
 
 
 
-Found 13 errors
+Found 20 errors

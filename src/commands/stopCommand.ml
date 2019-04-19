@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,6 +24,7 @@ let spec = {
       exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> temp_dir_flag
     |> from_flag
     |> quiet_flag
@@ -33,28 +34,35 @@ let spec = {
 
 exception FailedToKillNicely
 
-let main temp_dir from quiet root () =
-  let root = guess_root root in
-  let config = FlowConfig.get (Server_files_js.config_file root) in
+let main base_flags temp_dir quiet root () =
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name root in
+  let config = read_config_or_exit (Server_files_js.config_file flowconfig_name root) in
   let root_s = Path.to_string root in
   let tmp_dir = match temp_dir with
   | Some x -> x
   | None -> FlowConfig.temp_dir config
   in
   let tmp_dir = Path.to_string (Path.make tmp_dir) in
-  FlowEventLogger.set_from from;
-  if not quiet then prerr_endlinef
-    "Trying to connect to server for `%s`"
-    (Path.to_string root);
+  if not quiet then prerr_endlinef "Trying to connect to server for `%s`" (Path.to_string root);
+  let client_handshake = SocketHandshake.({
+    client_build_id = build_revision;
+    client_version = Flow_version.version;
+    is_stop_request = true;
+    server_should_hangup_if_still_initializing = false;
+    version_mismatch_strategy = Always_stop_server;
+  }, {
+    client_type = Ephemeral;
+  }) in
   CommandConnectSimple.(
-    match connect_once ~client_type:SocketHandshake.StabbityStabStab ~tmp_dir root with
+    match connect_once ~flowconfig_name ~client_handshake ~tmp_dir root with
     | Ok _ ->
         begin try
           if not quiet then prerr_endlinef
             "Told server for `%s` to die. Waiting for confirmation..."
             (Path.to_string root);
           let i = ref 0 in
-          while CommandConnectSimple.server_exists ~tmp_dir root do
+          while CommandConnectSimple.server_exists ~flowconfig_name ~tmp_dir root do
             incr i;
             if !i < 5 then ignore @@ Unix.sleep 1
             else raise FailedToKillNicely
@@ -69,16 +77,17 @@ let main temp_dir from quiet root () =
     | Error Server_missing ->
         if not quiet then prerr_endlinef
           "Warning: no server to kill for `%s`" root_s
-    | Error Build_id_mismatch ->
+    | Error (Build_id_mismatch Server_exited) ->
         if not quiet then prerr_endlinef
           "Successfully killed server for `%s`" root_s
+    | Error (Build_id_mismatch (Client_should_error _))
     | Error Server_busy _
     | Error Server_socket_missing ->
         begin try
           if not quiet then prerr_endlinef
             "Attempting to meanly kill server for `%s`"
             (Path.to_string root);
-          CommandMeanKill.mean_kill ~tmp_dir root;
+          CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
           if not quiet then prerr_endlinef
             "Successfully killed server for `%s`"
             (Path.to_string root)

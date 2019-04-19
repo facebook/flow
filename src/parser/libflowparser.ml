@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -30,14 +30,16 @@ end
 
 module Translate = Estree_translator.Translate (AbstractTranslator) (struct
   (* TODO: make these configurable via CLI flags *)
+
+  let include_interned_comments = false
   let include_comments = true
   let include_locs = true
 end)
 
 module Token_translator = Token_translator.Translate (AbstractTranslator)
 
-let translate_tokens tokens =
-  AbstractTranslator.array (List.rev_map Token_translator.token tokens)
+let translate_tokens offset_table tokens =
+  AbstractTranslator.array (List.rev_map (Token_translator.token offset_table) tokens)
 
 let convert_options opts =
   let open Parser_env in
@@ -77,11 +79,12 @@ let parse content options =
     content
   in
 
-  match Translate.program ast with
+  let offset_table = Offset_utils.make content in
+  match Translate.program (Some offset_table) ast with
   | JObject params ->
     let params = ("errors", Translate.errors errors)::params in
     let params =
-      if include_tokens then ("tokens", translate_tokens !rev_tokens)::params
+      if include_tokens then ("tokens", translate_tokens offset_table !rev_tokens)::params
       else params
     in
     JObject params

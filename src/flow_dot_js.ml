@@ -1,19 +1,23 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 let error_of_parse_error source_file (loc, err) =
-  let flow_err = Flow_error.EParseError (loc, err) in
-  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+  Error_message.EParseError (ALoc.of_loc loc, err)
+  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
+  |> Flow_error.concretize_error
+  |> Flow_error.make_error_printable
 
 let error_of_file_sig_error source_file e =
-  let flow_err = File_sig.(match e with
-  | IndeterminateModuleType loc -> Flow_error.EIndeterminateModuleType loc
-  ) in
-  Flow_error.error_of_msg ~trace_reasons:[] ~source_file flow_err
+  File_sig.With_Loc.(match e with
+    | IndeterminateModuleType loc -> Error_message.EIndeterminateModuleType (ALoc.of_loc loc)
+  )
+  |> Flow_error.error_of_msg ~trace_reasons:[] ~source_file
+  |> Flow_error.concretize_error
+  |> Flow_error.make_error_printable
 
 let parse_content file content =
   let parse_options = Some Parser_env.({
@@ -36,12 +40,12 @@ let parse_content file content =
   in
   if parse_errors <> [] then
     let converted = List.fold_left (fun acc parse_error ->
-      Errors.ErrorSet.add (error_of_parse_error file parse_error) acc
-    ) Errors.ErrorSet.empty parse_errors in
+      Errors.ConcreteLocPrintableErrorSet.add (error_of_parse_error file parse_error) acc
+    ) Errors.ConcreteLocPrintableErrorSet.empty parse_errors in
     Error converted
   else
-    match File_sig.program ~ast with
-    | Error e -> Error (Errors.ErrorSet.singleton (error_of_file_sig_error file e))
+    match File_sig.With_Loc.program ~ast ~module_ref_prefix:None with
+    | Error e -> Error (Errors.ConcreteLocPrintableErrorSet.singleton (error_of_file_sig_error file e))
     | Ok fsig -> Ok (ast, fsig)
 
 let array_of_list f lst =
@@ -77,7 +81,7 @@ let load_lib_files ~master_cx ~metadata files
         let cx = Context.make sig_cx metadata lib_file Files.lib_module_ref in
         Flow_js.mk_builtins cx;
         let syms = Type_inference_js.infer_lib_file cx ast
-          ~exclude_syms ~file_sig ~lint_severities:LintSettings.empty_severities
+          ~exclude_syms ~file_sig:(File_sig.abstractify_locs file_sig) ~lint_severities:LintSettings.empty_severities ~file_options:None
         in
 
         Context.merge_into (Context.sig_cx master_cx) sig_cx;
@@ -116,6 +120,7 @@ let load_lib_files ~master_cx ~metadata files
 
 let stub_docblock = { Docblock.
   flow = None;
+  typeAssert = false;
   preventMunge = None;
   providesModule = None;
   isDeclarationFile = false;
@@ -131,8 +136,10 @@ let stub_metadata ~root ~checked = { Context.
   jsx = Options.Jsx_react;
   strict = false;
   strict_local = false;
+  include_suppressions = false;
 
   (* global *)
+  max_literal_length = 100;
   enable_const_params = false;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
@@ -141,7 +148,9 @@ let stub_metadata ~root ~checked = { Context.
   esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  facebook_fbs = None;
   facebook_fbt = None;
+  haste_module_ref_prefix = None;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
@@ -149,6 +158,8 @@ let stub_metadata ~root ~checked = { Context.
   strip_root = true;
   suppress_comments = [];
   suppress_types = SSet.empty;
+  default_lib_dir = None;
+  trust_mode = Options.NoTrust;
 }
 
 let get_master_cx =
@@ -193,22 +204,24 @@ let infer_and_merge ~root filename ast file_sig =
   Flow_js.Cache.clear();
   let metadata = stub_metadata ~root ~checked:true in
   let master_cx = get_master_cx root in
-  let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+  let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
   let reqs = SMap.fold (fun module_name locs reqs ->
     let m = Modulename.String module_name in
-    let locs = locs |> Nel.to_list |> Utils_js.LocSet.of_list in
+    let locs = locs |> Nel.to_list |> Loc_collections.ALocSet.of_list in
     Merge_js.Reqs.add_decl module_name filename (locs, m) reqs
   ) require_loc_map Merge_js.Reqs.empty in
   let lint_severities = LintSettings.empty_severities in
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
-  let cx, _other_cxs = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~strict_mode ~file_sigs
-    ~get_ast_unsafe:(fun _ -> ast)
+  let (_, _, comments) = ast in
+  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let ((cx, tast, _), _other_cxs) = Merge_js.merge_component_strict
+    ~metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
+    ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
     ~get_docblock_unsafe:(fun _ -> stub_docblock)
     (Nel.one filename) reqs [] (Context.sig_cx master_cx)
   in
-  cx
+  (cx, tast)
 
 let check_content ~filename ~content =
   let stdin_file = Some (Path.make_unsafe filename, content) in
@@ -216,12 +229,23 @@ let check_content ~filename ~content =
   let filename = File_key.SourceFile filename in
   let errors, warnings = match parse_content filename content with
   | Ok (ast, file_sig) ->
-    let cx = infer_and_merge ~root filename ast file_sig in
-    let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-      Error_suppressions.empty (Context.severity_cover cx) (Context.errors cx)
-    in errors, warnings
+    let file_sig = File_sig.abstractify_locs file_sig in
+    let cx, _ = infer_and_merge ~root filename ast file_sig in
+    let suppressions = Error_suppressions.empty in (* TODO: support suppressions *)
+    let errors = Context.errors cx in
+    let severity_cover = Context.severity_cover cx in
+    let include_suppressions = Context.include_suppressions cx in
+    let errors, warnings, suppressions =
+      Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+    let errors = Flow_error.make_errors_printable errors in
+    let warnings = Flow_error.make_errors_printable warnings in
+    let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
+      ~root ~file_options:None suppressions errors ~unused:suppressions in
+    let warnings, _, _ = Error_suppressions.filter_suppressed_errors
+      ~root ~file_options:None suppressions warnings ~unused:suppressions in
+    errors, warnings
   | Error parse_errors ->
-    parse_errors, Errors.ErrorSet.empty
+    parse_errors, Errors.ConcreteLocPrintableErrorSet.empty
   in
   let strip_root = Some root in
   Errors.Json_output.json_of_errors_with_context
@@ -235,7 +259,7 @@ let check filename =
 let set_libs_js js_libs =
   Js.to_array js_libs
   |> Array.to_list
-  |> List.map (fun x -> Js.to_string x)
+  |> List.map Js.to_string
   |> set_libs
 
 let check_js js_file =
@@ -250,8 +274,8 @@ let mk_loc file line col =
   {
     Loc.
     source = Some file;
-    start = { Loc.line; column = col; offset = 0; };
-    _end = { Loc.line; column = col + 1; offset = 0; };
+    start = { Loc.line; column = col; };
+    _end = { Loc.line; column = col + 1; };
   }
 
 let infer_type filename content line col =
@@ -260,9 +284,14 @@ let infer_type filename content line col =
     match parse_content filename content with
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
-      let cx = infer_and_merge ~root filename ast file_sig in
+      let file_sig = File_sig.abstractify_locs file_sig in
+      let cx, typed_ast = infer_and_merge ~root filename ast file_sig in
+      let type_table = Context.type_table cx in
+      let file = Context.file cx in
       let loc = mk_loc filename line col in Query_types.(
-        match query_type cx loc with
+        let result = type_at_pos_type ~full_cx:cx ~file ~file_sig ~expand_aliases:false
+          ~omit_targ_defaults:false ~type_table ~typed_ast loc in
+        match result with
         | FailureNoMatch -> Loc.none, Error "No match"
         | FailureUnparseable (loc, _, _) -> loc, Error "Unparseable"
         | Success (loc, t) ->
@@ -276,7 +305,7 @@ let types_to_json types ~strip_root =
     let json_assoc = (
       ("type", JSON_String str) ::
       ("reasons", JSON_Array []) ::
-      ("loc", json_of_loc ~strip_root loc) ::
+      ("loc", json_of_loc ~strip_root ~offset_table:None loc) ::
       (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     JSON_Object json_assoc
@@ -290,9 +319,10 @@ let dump_types js_file js_content =
     match parse_content filename content with
     | Error _ -> failwith "parse error"
     | Ok (ast, file_sig) ->
-      let cx = infer_and_merge ~root filename ast file_sig in
+      let file_sig = File_sig.abstractify_locs file_sig in
+      let cx, _ = infer_and_merge ~root filename ast file_sig in
       let printer = Ty_printer.string_of_t in
-      let types = Query_types.dump_types ~printer cx in
+      let types = Query_types.dump_types cx file_sig ~printer in
       let strip_root = None in
       let types_json = types_to_json types ~strip_root in
 

@@ -1,122 +1,206 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
+module FreeVars = struct
+  type env = {
+    is_toplevel: bool;
+    skip: ISet.t;
+  }
 
-(* Set and map based on type variables *)
+  let searcher = object (self)
+    inherit [_] Ty.reduce_ty as super
+    method zero = ISet.empty
+    method plus = ISet.union
 
-module TVarSet = struct
-  include ISet
-  let append = union
-end
-
-
-(********************)
-(* Free Variables   *)
-(********************)
-
-(* This module decides if a type variable appears free inside a type. Here are
-   some cases where this information can be useful:
-
-   - Deciding well-formedness: a type variable should not appear free in a
-     top-level type.
-
-   - Computing recursive types: we decide if a type is recursive, we will need
-     if it appears free in its expansion. (More can be found in the type
-     normalizer module.)
-*)
-module FreeVars : sig
-  (* The reason we require the is_top parameter is to determine if the TypeAlias
-     body will be walked over. Typically the body is only useful when TypeAlias
-     appears as the top-level constructor, and is ignored otherwise.
-  *)
-  val is_free_in : is_top:bool -> int -> Ty.t -> bool
-end = struct
-
-  (* In computing the set of free variables in a type we use a set of variables
-     that are in scope, i.e. bound through a Mu constructor, and add them to the
-     skip set of the environment.
-
-    The environment also includes a flag to denote if the constructor is
-    top-level, since we special type-aliases based on that.
-  *)
-  module Env = struct
-    type t = {
-      is_top: bool;
-      skip: TVarSet.t;
-    }
-
-    (* After descending at least one level, is_top becomes false. *)
-    let descend _ e = { e with is_top = false }
-
+    method! on_t env t =
+      let open Ty in
+      match t with
+      | TVar (RVar i, _) when not (ISet.mem i env.skip) ->
+        ISet.singleton i
+      | TypeAlias { ta_tparams; ta_type = Some t_body; _ } ->
+        let env' = { env with is_toplevel = false } in
+        let acc = self#on_option (self#on_list self#on_type_param) env' ta_tparams in
+        (* If the type alias is the top-level constructor, then the body of the alias
+         * will be useful and so we descend into that type expression and collect
+         * variables. Otherwise we avoid collecting variables from the body as it is
+         * typically not be exposed through a type query. *)
+        if env.is_toplevel
+        then self#plus acc (self#on_t env' t_body)
+        else acc
+      | Mu (v, t) ->
+        let env = { env with skip = ISet.add v env.skip } in
+        super#on_t env t
+      | t ->
+        super#on_t env t
   end
 
-  (* The visitor is a writer monad where the sate is the set of variables that
-     have been deemed as appearing free.
-  *)
-  module Visitor = Ty_visitor.Make(TVarSet)(Env)
-  open Visitor
-
   (* Computes the set of variables appearing free in the input. *)
-  let from_type =
-    let open Env in
-    (* The visitor class is also a mapper. This visitor does not alter its input. *)
-    let visitor = object(self) inherit c as super
-      method! type_ env = function
-      | Ty.TVar (Ty.RVar i, _) as t when not (TVarSet.mem i env.skip) ->
-        tell (TVarSet.singleton i) >>= fun _ ->
-        super#type_ env t >>| fun _ ->
-        t
-
-      | Ty.TypeAlias { Ty.ta_tparams; ta_type=Some t_body; _ } as t
-        ->
-        let env' = Env.descend t env in
-        opt (mapM (self#param_t env')) ta_tparams >>= fun _ ->
-        begin
-        if env.is_top then
-          (* The type alias is the top-level constructor: the body of
-             the alias will be useful and so we descends into
-            that type expression and collects variables.
-          *)
-          self#type_ env' t_body >>= fun _ ->
-          return ()
-        else
-          (* The type alias is not the top-level constructor: we avoid
-             collecting variables from the body as it is typically not be
-             exposed through a type query.
-          *)
-          return ()
-        end >>| fun _ -> t
-
-      | Ty.Mu (v, t) ->
-        let env = { env with skip = TVarSet.add v env.skip } in
-        super#type_ env t
-
-      | t ->
-        super#type_ env t
-    end
-    in fun ~is_top t ->
-    snd (visitor#type_ { is_top; skip = TVarSet.empty} t)
-
-  let is_free_in ~is_top v t = TVarSet.mem v (from_type ~is_top t)
-
+  let of_type ~is_toplevel t =
+    let env = { is_toplevel; skip = ISet.empty } in
+    searcher#on_t env t
 end
 
+let tvar_appears_in_type ~is_toplevel v t =
+  let Ty.RVar v = v in
+  ISet.mem v (FreeVars.of_type ~is_toplevel t)
 
-(******************)
-(* Substitution   *)
-(******************)
 
-(* Substitute a recursive type variable `from_v` for a symbol `to_sym` in a given type *)
-let subst from_v (structural, to_sym) t =
-  let open Ty_visitor.UnitVisitor in
-  let visitor = object inherit c as super
-    method! type_ env = function
-    | Ty.TVar (i, ts) when from_v = i ->
-      super#type_ env (Ty.Generic (to_sym, structural, ts))
-    | t -> super#type_ env t
+module Size = struct
+  exception SizeCutOff
+
+  type bounded_int =
+    | Exactly of int
+    | GreaterThan of int
+
+  let _size_to_string = function
+    | Exactly x -> Utils_js.spf "%d" x
+    | GreaterThan x -> Utils_js.spf "(Greater than %d)" x
+
+  let of_type =
+    let open Ty in
+    let size = ref 0 in
+    let o = object
+      inherit [_] iter_ty as super
+      method! on_t max (t: Ty.t) =
+        size := !size + 1;
+        if !size > max then
+          raise SizeCutOff;
+        super#on_t max t
+    end in
+    fun ~max t ->
+      size := 0;
+      match o#on_t max t with
+      | exception SizeCutOff -> GreaterThan max
+      | () -> Exactly !size
+end
+
+let size_of_type ?(max=10000) t =
+  match Size.of_type ~max t with
+  | Size.GreaterThan _ -> None
+  | Size.Exactly s -> Some s
+
+let symbols_of_type =
+  let open Ty in
+  let o = object (_self)
+    inherit [_] reduce_ty as _super
+    method zero = []
+    method plus = List.rev_append
+    method! on_symbol _env s = [s]
   end in
-  fst (visitor#type_ () t)
+  fun t -> o#on_t () t
+
+
+module type TopAndBotQueries = sig
+  val is_bot: Ty.t -> bool
+  val is_top: Ty.t -> bool
+end
+
+module Simplifier(Q: TopAndBotQueries) = struct
+
+  (* Simplify union/intersection types
+
+     This visitor:
+     - removes identical nodes from union and intersection types. (At the moment
+       the comparison used is `Pervasives.compare`, but perhaps something more
+       clever can replace this.)
+     - removes the neutral element for union (resp. intersection) types, which
+       is the bottom (resp. top) type.
+
+     The Any state of this visitor is used to capture any change to the type
+     structure.
+
+     WARNING: This visitor will do a deep type traversal
+  *)
+
+  let rec simplify_list ~is_zero ~is_one acc = function
+    | [] -> acc
+    | t::ts ->
+      if is_zero t then [t]
+      else if is_one t then simplify_list ~is_zero ~is_one acc ts
+      else simplify_list ~is_zero ~is_one (t::acc) ts
+
+  let simplify_nel ~is_zero ~is_one (t, ts) =
+    match simplify_list [] ~is_zero ~is_one (t::ts) with
+    | [] -> (t, [])
+    | t::ts -> (t, ts)
+
+  let mapper = object (self)
+    inherit [_] Ty.endo_ty as super
+
+    method private on_nel f env nel =
+      let (hd, tl) = nel in
+      let hd' = f env hd in
+      let tl' = self#on_list f env tl in
+      if hd == hd' && tl == tl' then nel else (hd', tl')
+
+    method private simplify env ~break ~is_zero ~is_one ~make ~default ts0 =
+      let ts1 = self#on_nel self#on_t env ts0 in
+      let ts2 = Nel.map_concat break ts1 in
+      let ts2 = if Nel.length ts1 <> Nel.length ts2 then ts2 else ts1 in
+      let ts3 = ts2 |> simplify_nel ~is_zero ~is_one |> Nel.dedup in
+      let ts3 = if Nel.length ts2 <> Nel.length ts3 then ts3 else ts2 in
+      if ts0 == ts3 then default else make ts3
+
+    method! on_t env t =
+      match t with
+      | Ty.Union (t0,t1,ts) ->
+        self#simplify
+          ~break:Ty.bk_union ~make:Ty.mk_union
+          ~is_zero:Q.is_top ~is_one:Q.is_bot
+          ~default:t env (t0, t1::ts)
+      | Ty.Inter (t0,t1,ts) ->
+        self#simplify
+          ~break:Ty.bk_inter ~make:Ty.mk_inter
+          ~is_zero:Q.is_bot ~is_one:Q.is_top
+          ~default:t env (t0, t1::ts)
+      | _ ->
+        super#on_t env t
+  end
+
+  let rec run t =
+    let t' = mapper#on_t () t in
+    if t == t' then t else run t'
+end
+
+module BotSensitiveQueries: TopAndBotQueries = struct
+  let is_top = function
+    | Ty.Top -> true
+    | _ -> false
+
+  let is_bot_upper_kind = function
+    | Ty.NoUpper -> true
+    | Ty.SomeKnownUpper _
+    | Ty.SomeUnknownUpper -> false
+
+  let is_bot_kind = function
+    | Ty.EmptyType -> true
+    | Ty.EmptyTypeDestructorTriggerT -> false
+    | Ty.EmptyMatchingPropT -> false
+    | Ty.NoLowerWithUpper kind -> is_bot_upper_kind kind
+
+  let is_bot = function
+    | Ty.Bot kind -> is_bot_kind kind
+    | _ -> false
+end
+
+module BotInsensitiveQueries: TopAndBotQueries = struct
+  let is_top = function
+    | Ty.Top -> true
+    | _ -> false
+
+  let is_bot = function
+    | Ty.Bot _ -> true
+    | _ -> false
+end
+
+let simplify_type =
+  let module BotInsensitiveSimplifier = Simplifier(BotInsensitiveQueries) in
+  let module BotSensitiveSimplifier = Simplifier(BotSensitiveQueries) in
+  fun ~simplify_empty t ->
+    if simplify_empty
+    then BotInsensitiveSimplifier.run t
+    else BotSensitiveSimplifier.run t

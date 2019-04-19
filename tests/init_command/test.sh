@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-
-FLOW=$1
 
 rm .flowconfig
 assert_ok "$FLOW" init

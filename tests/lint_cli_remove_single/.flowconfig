@@ -8,3 +8,4 @@
 
 [lints]
 all=error
+sketchy-number=off

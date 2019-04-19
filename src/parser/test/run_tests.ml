@@ -1,9 +1,11 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
+module Ast = Flow_ast
 
 module String_utils = struct
   let spf = Printf.sprintf
@@ -29,11 +31,6 @@ module String_utils = struct
     chopped, ext
 end
 
-module Translate = Estree_translator.Translate (Json_of_estree) (struct
-  let include_comments = true
-  let include_locs = true
-end)
-
 module RunEsprimaTests : sig
   val main : unit -> unit
 end = struct
@@ -51,7 +48,7 @@ end = struct
     then
       C.cprint to_print
     else
-      let strings = List.map snd to_print in
+      let strings = Core_list.map ~f:snd to_print in
       List.iter (Printf.printf "%s") strings
 
   type case_expectation =
@@ -65,9 +62,13 @@ end = struct
     | Todo of string (* reason *)
     | Same
 
+  type test_options = {
+    intern_comments: bool;
+  }
+
   type case = {
     source: string option;
-    options: Parser_env.parse_options option;
+    options: test_options * Parser_env.parse_options option;
     expected: case_expectation option;
     diff: case_diff;
     skipped: string list;
@@ -85,7 +86,7 @@ end = struct
 
   let empty_case = {
     source = None;
-    options = None;
+    options = { intern_comments = false }, None;
     expected = None;
     diff = Same;
     skipped = [];
@@ -115,35 +116,38 @@ end = struct
       | _ -> fail "expected options to be a JSON object"
       end
     >>= fun props ->
-      List.fold_left (fun opts (k, v) -> opts >>= (fun opts ->
+      List.fold_left (fun opts (k, v) -> opts >>= (fun (test_opts, opts) ->
         match k with
         | "esproposal_class_instance_fields" -> get_bool k v >>= fun v ->
-          return { opts with Parser_env.esproposal_class_instance_fields = v }
+          return (test_opts, { opts with Parser_env.esproposal_class_instance_fields = v })
 
         | "esproposal_class_static_fields" -> get_bool k v >>= fun v ->
-          return { opts with Parser_env.esproposal_class_static_fields = v }
+          return (test_opts, { opts with Parser_env.esproposal_class_static_fields = v })
 
         | "esproposal_decorators" -> get_bool k v >>= fun v ->
-          return { opts with Parser_env.esproposal_decorators = v }
+          return (test_opts, { opts with Parser_env.esproposal_decorators = v })
 
         | "esproposal_export_star_as" -> get_bool k v >>= fun v ->
-          return { opts with Parser_env.esproposal_export_star_as = v }
+          return (test_opts, { opts with Parser_env.esproposal_export_star_as = v })
 
         | "esproposal_optional_chaining" -> get_bool k v >>= fun v ->
-          return { opts with Parser_env.esproposal_optional_chaining = v }
+          return (test_opts, { opts with Parser_env.esproposal_optional_chaining = v })
 
         | "esproposal_nullish_coalescing" -> get_bool k v >>= fun v ->
-          return { opts with Parser_env.esproposal_nullish_coalescing = v }
+          return (test_opts, { opts with Parser_env.esproposal_nullish_coalescing = v })
 
         | "types" -> get_bool k v >>= fun v ->
-          return { opts with Parser_env.types = v }
+          return (test_opts, { opts with Parser_env.types = v })
 
         | "use_strict" -> get_bool k v >>= fun v ->
-          return { opts with Parser_env.use_strict = v }
+          return (test_opts, { opts with Parser_env.use_strict = v })
+
+        | "intern_comments" -> get_bool k v >>= fun v ->
+          return ( { intern_comments = v }, opts)
 
         | _ ->
           failf "unknown option %S" k
-      )) (return Parser_env.default_parse_options) props
+      )) (return ({intern_comments = false}, Parser_env.default_parse_options)) props
 
   let tests_of_path path =
     let relativize = strip_prefix path in
@@ -180,7 +184,7 @@ end = struct
             | "options" ->
               (* TODO: propagate errors better *)
               let options = Core_result.ok_or_failwith (parse_options content) in
-              { case with options = Some options; }
+              { case with options = fst options, Some (snd options); }
             | _ -> { case with skipped = file::case.skipped }
             in
             SMap.add case_name case test.cases
@@ -268,7 +272,7 @@ end = struct
       match prop with
       | Object.Property (_loc, Object.Property.Init {
           key = Object.Property.Literal (_, {
-            Ast.Literal.value = Ast.Literal.String name; raw = _
+            Ast.Literal.value = Ast.Literal.String name; raw = _; comments = _;
           });
           value;
           shorthand = false;
@@ -288,20 +292,20 @@ end = struct
   let rec test_tree
     (path: path_part list)
     (actual: Hh_json.json)
-    (expected: Loc.t Ast.Expression.t)
+    (expected: (Loc.t, Loc.t) Ast.Expression.t)
     (errors: string list)
   : string list =
     let open Ast.Expression in
     match actual, expected with
     | JSON_Object aprops,
-      (_, Object { Object.properties = eprops }) ->
+      (_, Object { Object.properties = eprops; comments= _ }) ->
       let amap = map_of_pairs aprops in
       let emap = map_of_properties eprops in
       errors
       |> SMap.fold (test_actual_prop path emap) amap
       |> SMap.fold (test_expected_prop path amap) emap
     | JSON_Array aitems,
-      (_, Array { Array.elements = eitems }) ->
+      (_, Array { Array.elements = eitems; comments= _ }) ->
       let a_len = List.length aitems in
       let e_len = List.length eitems in
       if e_len <> a_len then
@@ -323,6 +327,7 @@ end = struct
       (_, Literal { Ast.Literal.
         value = Ast.Literal.Boolean expected;
         raw = _;
+        comments = _;
       }) ->
         if actual <> expected then
           let path = string_of_path path in
@@ -333,6 +338,7 @@ end = struct
       (_, Literal { Ast.Literal.
         value = Ast.Literal.Number _;
         raw = expected;
+        comments = _;
       }) ->
         if actual <> expected then
           let path = string_of_path path in
@@ -342,10 +348,10 @@ end = struct
     | JSON_Number actual,
       (_, Unary { Unary.
         operator = Unary.Minus;
-        prefix = _;
         argument = (_, Literal { Ast.Literal.
           value = Ast.Literal.Number _;
           raw = expected;
+          comments = _;
         })
       }) ->
         let expected = "-" ^ expected in
@@ -358,6 +364,7 @@ end = struct
       (_, Literal { Ast.Literal.
         value = Ast.Literal.String expected;
         raw = _;
+        comments = _;
       }) ->
         if not (string_value_matches expected actual) then
           let path = string_of_path path in
@@ -368,6 +375,7 @@ end = struct
       (_, Literal { Ast.Literal.
         value = Ast.Literal.Null;
         raw = _;
+        comments = _;
       }) ->
         errors
     | _, _ ->
@@ -402,7 +410,7 @@ end = struct
   let prop_name_and_value = Ast.Expression.(function
     | Object.Property.Init {
         key = Object.Property.Literal (_, {
-          Ast.Literal.value = Ast.Literal.String name; raw = _
+          Ast.Literal.value = Ast.Literal.String name; raw = _; comments = _;
         });
         value;
         shorthand = false;
@@ -412,7 +420,7 @@ end = struct
 
   let has_prop
       (needle: string)
-      (haystack: Loc.t Ast.Expression.Object.property list) =
+      (haystack: (Loc.t, Loc.t) Ast.Expression.Object.property list) =
     List.exists Ast.Expression.(function
       | Object.Property (_, prop) -> fst (prop_name_and_value prop) = needle
       | _ -> false
@@ -423,7 +431,7 @@ end = struct
     match diff with
     | (_, Object { Object.properties = diff_props; _ }) ->
       begin match expected with
-      | (loc, Object { Object.properties = expected_props; }) ->
+      | (loc, Object { Object.properties = expected_props; comments }) ->
         let properties = List.fold_left (fun props diff_prop ->
           match diff_prop with
           | Object.Property (diff_loc, diff_prop) ->
@@ -456,8 +464,8 @@ end = struct
             ) [] props
           | _ -> failwith "Invalid JSON"
         ) expected_props diff_props in
-        Some (loc, Object { Object.properties })
-      | (loc, Array { Array.elements = expected_elems; }) ->
+        Some (loc, Object { Object.properties; comments })
+      | (loc, Array { Array.elements = expected_elems; comments }) ->
         let expected_length = List.length expected_elems in
         let elements = List.fold_left (fun elems diff_prop ->
           match diff_prop with
@@ -486,18 +494,25 @@ end = struct
               ) elems
           | _ -> failwith "Invalid JSON"
         ) expected_elems diff_props in
-        Some (loc, Array { Array.elements })
+        Some (loc, Array { Array.elements; comments })
       | _ -> Some expected
       end
     | (_, Literal _) -> Some diff
-    | (_, Identifier (_, "undefined")) ->
+    | (_, Identifier (_, { Ast.Identifier.name= "undefined"; comments= _ })) ->
         None
     | _ -> failwith "Invalid diff format"
 
-  let parse_file ?parse_options content =
+  let parse_file (test_options, parse_options) content =
     let (ast, errors) = Parser_flow.program_file
       ~fail:false ~parse_options content None in
-    match Translate.program ast with
+    let offset_table = Some (Offset_utils.make content) in
+    let module Translate = Estree_translator.Translate (Json_of_estree) (struct
+      let include_interned_comments = test_options.intern_comments
+      let include_comments = true
+      let include_locs = true
+      end)
+    in
+    match Translate.program offset_table ast with
     | JSON_Object params ->
         let params =
           if errors = [] then params
@@ -512,7 +527,7 @@ end = struct
       then Case_error ["No source"]
       else Case_skipped None
     | Some content ->
-      let actual = parse_file ?parse_options:case.options content in
+      let actual = parse_file case.options content in
       let diff, todo =
         match case.diff with
         | Diff str -> Some str, None
@@ -526,7 +541,7 @@ end = struct
           if json_errors <> [] then begin
             let (loc, err) = List.hd json_errors in
             let str = Printf.sprintf "Unable to parse .tree.json: %s: %s"
-              (Loc.to_string loc) (Parse_error.PP.error err) in
+              (Loc.debug_to_string loc) (Parse_error.PP.error err) in
             Case_error [str]
           end else
           let expected = match diff with
@@ -586,7 +601,7 @@ end = struct
     | Some content, Some (Tree _) ->
       let (/) a b = a ^ Filename.dir_sep ^ b in
       let filename = (path / test_name / case_name) ^ ".tree.json" in
-      let json = parse_file ?parse_options:case.options content in
+      let json = parse_file case.options content in
       let oc = open_out filename in
       output_string oc (Hh_json.json_to_multiline json);
       output_char oc '\n';

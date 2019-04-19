@@ -54,6 +54,8 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
         let _ = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd request in
         Lwt.return_unit
       with exn ->
+        let stack = Printexc.get_backtrace () in
+        Hh_logger.error "Failed to read response from work #%d\n%s" (worker_id w) stack;
         (* Failed to send the job to the worker. Is it because the worker is dead or is it
          * something else? *)
         let%lwt pid, status = Lwt_unix.waitpid [Unix.WNOHANG] slave_pid in
@@ -68,8 +70,22 @@ let call w (type a) (type b) (f : a -> b) (x : a) : b Lwt.t =
         let%lwt () = Lwt_unix.wait_read infd_lwt in
         (* Read in a lwt-unfriendly, blocking manner from the worker *)
         (* Due to https://github.com/ocsigen/lwt/issues/564, annotation cannot go on let%let node *)
-        Lwt.return (Marshal_tools.from_fd_with_preamble infd: (b * Measure.record_data))
-      with exn ->
+        let data : b = Marshal_tools.from_fd_with_preamble infd in
+        let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
+        Lwt.return (data, stats)
+      with
+      | Lwt.Canceled as exn ->
+        (* Worker is handling a job but we're cancelling *)
+
+        (* Each worker might call this but that's ok *)
+        WorkerCancel.stop_workers ();
+        (* Wait for the worker to finish cancelling *)
+        let%lwt () = Lwt_unix.wait_read infd_lwt in
+        (* Read the junk from the pipe *)
+        let _ = Marshal_tools.from_fd_with_preamble infd in
+        let _ = Marshal_tools.from_fd_with_preamble infd in
+        raise exn
+      | exn ->
         let%lwt pid, status = Lwt_unix.waitpid [Unix.WNOHANG] slave_pid in
         begin match pid, status with
         | 0, _ | _, Unix.WEXITED 0 ->

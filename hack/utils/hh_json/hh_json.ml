@@ -138,7 +138,7 @@ let char_code env =
     if len = 0 then acc
     else begin
       env.pos <- env.pos + 1;
-      let c = peek env in
+      let c = Char.lowercase_ascii (peek env) in
       let i =
         if '0' <= c && c <= '9' then (Char.code c) - (Char.code '0')
         else if 'a' <= c && c <= 'f' then 10 + (Char.code c) - (Char.code 'a')
@@ -472,6 +472,13 @@ let json_of_file ?strict filename =
   json_of_string ?strict (string_of_file filename)
 
 let int_ n = JSON_Number (string_of_int n)
+
+let float_ n =
+  let s = string_of_float n in
+  (* ocaml strings can end in '.', which isn't allowed in json *)
+  let len = String.length s in
+  let s = if String.get s (len - 1) = '.' then String.sub s 0 (len - 1) else s in
+  JSON_Number s
 
 let string_ s = JSON_String s
 

@@ -7,13 +7,15 @@
  *
  *)
 
+module Hh_bucket = Bucket
+open Core_kernel
 type worker
 
 val call :
   worker list option ->
   job:('c -> 'a -> 'b) ->
   merge:('b -> 'c -> 'c) -> neutral:'c ->
-  next:'a Bucket.next ->
+  next:'a Hh_bucket.next ->
   'c Lwt.t
 
 val next :
@@ -21,7 +23,7 @@ val next :
   ?max_size: int ->
   worker list option ->
   'a list ->
-  'a list Bucket.next
+  'a list Hh_bucket.next
 
 (* Creates a pool of workers. *)
 val make:
@@ -33,3 +35,5 @@ val make:
   gc_control  : Gc.control ->
   heap_handle : SharedMem.handle ->
     worker list
+
+val set_report_canceled_callback: (total:int -> finished:int -> unit) -> unit

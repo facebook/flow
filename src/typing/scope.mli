@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -36,8 +36,8 @@ module Entry :
     type value_binding = {
       kind : value_kind;
       value_state : State.t;
-      value_declare_loc : Loc.t;
-      value_assign_loc : Loc.t;
+      value_declare_loc : ALoc.t;
+      value_assign_loc : ALoc.t;
       specific : Type.t;
       general : Type.t;
     }
@@ -47,24 +47,24 @@ module Entry :
     type type_binding = {
       type_binding_kind: type_binding_kind;
       type_state : State.t;
-      type_loc : Loc.t;
-      _type : Type.t;
+      type_loc : ALoc.t;
+      type_ : Type.t;
     }
     type t = Value of value_binding | Type of type_binding | Class of Type.class_binding
-    val new_class : int -> Type.Properties.id -> Type.Properties.id -> t
-    val new_value : value_kind -> State.t -> Type.t -> Type.t -> Loc.t -> t
+    val new_class : ALoc.t -> Type.Properties.id -> Type.Properties.id -> t
+    val new_value : value_kind -> State.t -> Type.t -> Type.t -> ALoc.t -> t
     val new_const :
-      loc:Loc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.t -> t
+      loc:ALoc.t -> ?state:State.t -> ?kind:const_binding_kind -> Type.t -> t
     val new_import :
-      loc:Loc.t -> Type.t -> t
+      loc:ALoc.t -> Type.t -> t
     val new_let :
-      loc:Loc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.t -> t
+      loc:ALoc.t -> ?state:State.t -> ?kind:let_binding_kind -> Type.t -> t
     val new_var :
-      loc:Loc.t -> ?state:State.t -> ?kind:var_binding_kind -> ?specific:Type.t -> Type.t -> t
-    val new_type : loc:Loc.t -> ?state:State.t -> Type.t -> t
-    val new_import_type : loc:Loc.t -> Type.t -> t
-    val entry_loc : t -> Loc.t
-    val assign_loc : t -> Loc.t
+      loc:ALoc.t -> ?state:State.t -> ?kind:var_binding_kind -> ?specific:Type.t -> Type.t -> t
+    val new_type : loc:ALoc.t -> ?state:State.t -> Type.t -> t
+    val new_import_type : loc:ALoc.t -> Type.t -> t
+    val entry_loc : t -> ALoc.t
+    val assign_loc : t -> ALoc.t
     val declared_type : t -> Type.t
     val actual_type : t -> Type.t
     val string_of_kind : t -> string
@@ -72,7 +72,7 @@ module Entry :
     val general_of_value : value_binding -> Type.t
     val state_of_value : value_binding -> State.t
     val havoc : string -> t -> t
-    val reset : Loc.t -> string -> t -> t
+    val reset : ALoc.t -> string -> t -> t
     val is_lex : t -> bool
   end
 type var_scope_kind =
@@ -88,7 +88,7 @@ val string_of_var_scope_kind : var_scope_kind -> string
 type kind = VarScope of var_scope_kind | LexScope
 val string_of_kind : kind -> string
 type refi_binding = {
-  refi_loc : Loc.t;
+  refi_loc : ALoc.t;
   refined : Type.t;
   original : Type.t;
 }
@@ -96,8 +96,9 @@ type t = {
   id : int;
   kind : kind;
   mutable entries : Entry.t SMap.t;
-  mutable tparam_entries : Loc.t SMap.t;
   mutable refis : refi_binding Key_map.t;
+  mutable declare_func_annots: (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation SMap.t;
+  mutable declare_module_local_exports: (ALoc.t option * Type.t) SMap.t;
 }
 val fresh_impl : kind -> t
 val fresh : ?var_scope_kind:var_scope_kind -> unit -> t
@@ -106,7 +107,6 @@ val clone : t -> t
 val iter_entries : (SMap.key -> Entry.t -> unit) -> t -> unit
 val update_entries : (SMap.key -> Entry.t -> Entry.t) -> t -> unit
 val add_entry : SMap.key -> Entry.t -> t -> unit
-val add_tparam_entry : SMap.key -> Loc.t -> t -> unit
 val remove_entry : SMap.key -> t -> unit
 val get_entry : SMap.key -> t -> Entry.t option
 val havoc_entry : SMap.key -> t -> unit
@@ -119,6 +119,10 @@ val filter_refis_using_propname : private_:bool -> string -> 'a Key_map.t -> 'a 
 val havoc_refis : ?name:string -> private_:bool -> t -> unit
 val havoc_all_refis : ?name:string -> t -> unit
 val havoc : t -> unit
-val reset : Loc.t -> t -> unit
+val reset : ALoc.t -> t -> unit
+val add_declare_func_annot : string -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation -> t -> unit
+val get_declare_func_annot : string -> t -> (ALoc.t, ALoc.t * Type.t) Flow_ast.Type.annotation option
 val is_lex : t -> bool
 val is_global : t -> bool
+val set_declare_module_local_export : t -> string -> ALoc.t -> Type.t -> unit
+val with_declare_module_local_exports : t -> (unit -> 'a) -> 'a * (ALoc.t option * Type.t) SMap.t

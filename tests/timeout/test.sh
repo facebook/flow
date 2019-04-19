@@ -1,6 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
 
 # Only make sleep.js visible after we've started the server. Otherwise, we'll
 # have to wait like 10s before we even start running test.sh

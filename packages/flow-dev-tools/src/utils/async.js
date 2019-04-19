@@ -1,7 +1,10 @@
-/* @flow */
+/*
+ * @flow
+ * @format
+ */
 
-import { exec as cp_exec } from 'child_process';
-import { createInterface as rl_createInterface} from 'readline';
+import {exec as cp_exec} from 'child_process';
+import {createInterface as rl_createInterface} from 'readline';
 import {
   appendFile as fs_appendFile,
   exists as fs_exists,
@@ -24,9 +27,10 @@ import type {ReadStream, WriteStream} from 'fs';
 
 export type ExecOpts = child_process$execOpts & {
   stdin?: string,
-}
+};
 
-// Based on nothing but a few experiments on my laptop, this seems like a pretty safe size.
+// Based on nothing but a few experiments on my laptop,
+// this seems like a pretty safe size.
 const STDIN_WRITE_CHUNK_SIZE = 10000;
 
 export function exec(cmd: string, options?: ExecOpts): Promise<string> {
@@ -58,12 +62,16 @@ export function exec(cmd: string, options?: ExecOpts): Promise<string> {
   });
 }
 
-export function execManual(cmd: string, options?: Object): Promise<[?Object, string | Buffer, string | Buffer]> {
+export function execManual(
+  cmd: string,
+  options?: Object,
+): Promise<[?Object, string | Buffer, string | Buffer]> {
   return new Promise((resolve, reject) =>
-    cp_exec(cmd, options, (err, stdout, stderr) => resolve([err, stdout, stderr]))
-  )
+    cp_exec(cmd, options, (err, stdout, stderr) =>
+      resolve([err, stdout, stderr]),
+    ),
+  );
 }
-
 
 type WriteFileOptions = {
   encoding?: string | null,
@@ -76,25 +84,25 @@ export function writeFile(
   options?: WriteFileOptions = {},
 ): Promise<void> {
   return new Promise((resolve, reject) => {
-    fs_writeFile(filename, data, options, (err) => {
+    fs_writeFile(filename, data, options, err => {
       if (err == null) {
         resolve();
       } else {
         reject(err);
       }
-    })
+    });
   });
 }
 
 export function appendFile(filename: string, data: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    fs_appendFile(filename, data, (err) => {
+    fs_appendFile(filename, data, err => {
       if (err == null) {
         resolve();
       } else {
         reject(err);
       }
-    })
+    });
   });
 }
 
@@ -104,11 +112,11 @@ export function readFile(filename: string): Promise<string> {
       if (err == null) {
         // Even if we check out the files without CRLF, reading seems to add it
         // in.
-        resolve(data.replace(/\r\n/g, "\n"));
+        resolve(data.replace(/\r\n/g, '\n'));
       } else {
         reject(err);
       }
-    })
+    });
   });
 }
 
@@ -120,13 +128,13 @@ export function readdir(dir: string): Promise<Array<string>> {
       } else {
         reject(err);
       }
-    })
+    });
   });
 }
 
 export function rename(old_path: string, new_path: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    fs_rename(old_path, new_path, (err) => {
+    fs_rename(old_path, new_path, err => {
       if (err == null) {
         resolve();
       } else {
@@ -138,7 +146,7 @@ export function rename(old_path: string, new_path: string): Promise<void> {
 
 export function rimraf(path: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    rimraf_rimraf(path, (err) => {
+    rimraf_rimraf(path, err => {
       if (err == null) {
         resolve();
       } else {
@@ -150,7 +158,7 @@ export function rimraf(path: string): Promise<void> {
 
 export function unlink(file: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    fs_unlink(file, (err) => {
+    fs_unlink(file, err => {
       if (err == null) {
         resolve();
       } else {
@@ -162,7 +170,7 @@ export function unlink(file: string): Promise<void> {
 
 export function mkdirp(dir: string): Promise<void> {
   return new Promise((resolve, reject) => {
-    mkdirp_mkdirp(dir, (err) => {
+    mkdirp_mkdirp(dir, err => {
       if (err) {
         reject(err);
       } else {
@@ -180,14 +188,18 @@ export type NCPFile = {
 };
 
 type NCPOptions = {
-  filter?: RegExp | (filename: string) => boolean,
+  filter?: RegExp | ((filename: string) => boolean),
   transform?: (read: ReadStream, write: WriteStream, file: NCPFile) => mixed,
   clobber?: boolean,
   dereference?: boolean,
   stopOnErr?: boolean,
   errs?: any,
 };
-export function ncp(source: string, dest: string, options?: NCPOptions): Promise<void> {
+export function ncp(
+  source: string,
+  dest: string,
+  options?: NCPOptions,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     ncp_ncp(source, dest, options || {}, err => {
       if (err) {
@@ -199,9 +211,11 @@ export function ncp(source: string, dest: string, options?: NCPOptions): Promise
   });
 }
 
-export function drain(writer: stream$Writable | tty$WriteStream): Promise<void> {
+export function drain(
+  writer: stream$Writable | tty$WriteStream,
+): Promise<void> {
   return new Promise((resolve, reject) => {
-    writer.once('drain', resolve)
+    writer.once('drain', resolve);
   });
 }
 
@@ -218,7 +232,7 @@ export function symlink(
   return new Promise((resolve, reject) => {
     // $FlowIssue - symlink can omit the type
     fs_symlink(target.toString(), path.toString(), resolve);
-  })
+  });
 }
 
 type GlobOptions = {
@@ -242,7 +256,7 @@ export function glob(
 }
 
 export function isRunning(pid: number): Promise<boolean> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     try {
       process.kill(pid, 0);
       resolve(true);
@@ -253,7 +267,7 @@ export function isRunning(pid: number): Promise<boolean> {
 }
 
 export function sleep(timeoutMs: number): Promise<void> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     setTimeout(resolve, timeoutMs);
   });
 }
@@ -261,12 +275,26 @@ export function sleep(timeoutMs: number): Promise<void> {
 export function prompt(message: string): Promise<string> {
   const rl = rl_createInterface({
     input: process.stdin,
-    output: process.stdout
+    output: process.stdout,
   });
-  return new Promise((resolve) => {
-    rl.question(message, (result) => {
+  return new Promise(resolve => {
+    rl.question(message, result => {
       rl.close();
       resolve(result);
     });
   });
+}
+
+export function withTimeout<A, B>(
+  timeout_ms: number,
+  promise: Promise<A>,
+  onTimeout: () => B,
+): Promise<A | B> {
+  let timer;
+  const timeout = new Promise(resolve => {
+    timer = setTimeout(() => resolve(onTimeout()), timeout_ms);
+  });
+  return Promise.race([timeout, promise]).finally(
+    () => timer && clearTimeout(timer),
+  );
 }

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -121,7 +121,7 @@ module Mk_Generator(Gen_rule : Gen_rule_t) = struct
         [], []
       else
         (* get their corresponding rules *)
-        let new_rules = List.map (fun cond -> Gen_rule.cond_to_rule all_rules cond) to_sat in
+        let new_rules = Core_list.map ~f:(fun cond -> Gen_rule.cond_to_rule all_rules cond) to_sat in
 
         (* exercise necessary rules *)
         let result = List.fold_left (fun acc r ->

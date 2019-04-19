@@ -22,10 +22,10 @@ declare class Foo {
   get propWithMismatchingGetterAndSetter(): number;
   set propWithMismatchingGetterAndSetter(x: string): void; // doesn't match getter (OK)
 
-  propOverriddenWithGetter: number;
+  propOverriddenWithGetter: number; // error: can't shadow proto with incompatible own
   get propOverriddenWithGetter(): string;
 
-  propOverriddenWithSetter: number;
+  propOverriddenWithSetter: number; // error: can't shadow proto with incompatible own
   set propOverriddenWithSetter(x: string): void;
 };
 

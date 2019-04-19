@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,7 +27,12 @@ type t =
   | UnexpectedTypeImport
   | UnexpectedTypeExport
   | UnexpectedTypeInterface
+  | UnexpectedSpreadType
+  | UnexpectedExplicitInexactInObject
+  | InexactInsideExact
+  | InexactInsideNonObject
   | NewlineAfterThrow
+  | InvalidBigInt
   | InvalidRegExp
   | InvalidRegExpFlags of string
   | UnterminatedRegExp
@@ -146,7 +151,16 @@ module PP =
       | UnexpectedTypeImport -> "Type imports are not allowed in untyped mode"
       | UnexpectedTypeExport -> "Type exports are not allowed in untyped mode"
       | UnexpectedTypeInterface -> "Interfaces are not allowed in untyped mode"
+      | UnexpectedSpreadType ->
+          "Spreading a type is only allowed inside an object type"
+      | UnexpectedExplicitInexactInObject ->
+          "Explicit inexact syntax must come at the end of an object type"
+      | InexactInsideExact ->
+          "Explicit inexact syntax cannot appear inside an explicit exact object type"
+      | InexactInsideNonObject ->
+          "Explicit inexact syntax can only appear inside an object type"
       | NewlineAfterThrow ->  "Illegal newline after throw"
+      | InvalidBigInt -> "Invalid bigint literal"
       | InvalidRegExp -> "Invalid regular expression"
       | InvalidRegExpFlags flags -> "Invalid flags supplied to RegExp constructor '"^flags^"'"
       | UnterminatedRegExp ->  "Invalid regular expression: missing /"

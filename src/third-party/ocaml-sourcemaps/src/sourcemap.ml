@@ -84,21 +84,27 @@ let find_original map generated =
 (* for each mapping in `map`, update to the `original` info corresponding to
    that loc in map2 *)
 let compose map map2 =
-  let mappings, names = List.fold_left (fun (mappings, names) mapping ->
-    let mapping, names = match mapping.original with
-    | Some { original_loc; _ } ->
-      begin match find_original map2 original_loc with
-      | Some ({ name; _ } as original) ->
-        let mapping = { mapping with original = Some original } in
-        let names = match name with Some name -> SSet.add name names | None -> names in
-        mapping, names
-      | None -> mapping, names
-      end
-    | None -> mapping, names
-    in
-    mapping::mappings, names
-  ) ([], map.names) map.mappings in
-  { map with mappings = List.rev mappings; names }
+  let mappings, names, sources_contents =
+    List.fold_left (fun (mappings, names, sources_contents) mapping ->
+      match mapping.original with
+      | Some { original_loc; _ } ->
+        begin match find_original map2 original_loc with
+        | Some ({ name; source; _ } as original) ->
+          let mapping = { mapping with original = Some original } in
+          let names = match name with Some name -> SSet.add name names | None -> names in
+          let sources_contents =
+            match SMap.find_opt source map2.sources_contents with
+            | Some content -> SMap.add source content sources_contents
+            | _ -> sources_contents
+          in
+          mapping::mappings, names, sources_contents
+        | None -> mappings, names, sources_contents
+        end
+      | None -> mappings, names, sources_contents
+  ) ([], SSet.empty, SMap.empty) map.mappings in
+  { map with mappings = List.rev mappings; names; sources_contents;
+    source_root = map2.source_root }
+
 
 let add_mapping ~original ~generated map =
   let names = match original.name with
@@ -291,6 +297,7 @@ let sources_contents map =
 let version _map = "3"
 let names map = SSet.elements map.names
 let source_root map = map.source_root
+let file map = map.file
 
 module type Json_writer_intf = sig
   type t
@@ -374,8 +381,7 @@ module Make_json_reader (Json : Json_reader_intf) : (Json_reader with type json 
       | None -> acc
     ) SMap.empty sources contents
 
-  (* TODO: use Map.find_opt when minimum ocaml >= 4.05 *)
-  let find_opt key map = try Some (SMap.find key map) with Not_found -> None
+  let find_opt key map = SMap.find_opt key map
   let opt f key map = match find_opt key map with Some x -> Some (f x) | None -> None
 
   let sourcemap_of_json json =

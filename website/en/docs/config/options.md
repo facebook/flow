@@ -26,6 +26,7 @@ can be overridden with command line flags.
 * [`esproposal.nullish_coalescing`](#toc-esproposal-nullish-coalescing-enable-ignore-warn)
 * [`experimental.const_params`](#toc-experimental-const-params-boolean)
 * [`include_warnings`](#toc-include-warnings-boolean)
+* [`lazy_mode`](#toc-lazy-mode-fs-ide-watchman-none)
 * [`log.file`](#toc-log-file-string)
 * [`max_header_tokens`](#toc-max-header-tokens-integer)
 * [`module.file_ext`](#toc-module-file-ext-string)
@@ -42,13 +43,13 @@ can be overridden with command line flags.
 * [`sharedmemory.minimum_available`](#toc-sharedmemory-minimum-available-unsigned-integer)
 * [`sharedmemory.dep_table_pow`](#toc-sharedmemory-dep-table-pow-unsigned-integer)
 * [`sharedmemory.hash_table_pow`](#toc-sharedmemory-hash-table-pow-unsigned-integer)
+* [`sharedmemory.heap_size`](#toc-sharedmemory-heap-size-unsigned-integer)
 * [`sharedmemory.log_level`](#toc-sharedmemory-log-level-unsigned-integer)
 * [`strip_root`](#toc-strip-root-boolean)
 * [`suppress_comment`](#toc-suppress-comment-regex)
 * [`suppress_type`](#toc-suppress-type-string)
 * [`temp_dir`](#toc-temp-dir-string)
 * [`traces`](#toc-traces-integer)
-* [`unsafe.enable_getters_and_setters`](#toc-unsafe-enable-getters-and-setters-boolean)
 
 #### `all` _`(boolean)`_ <a class="toc" id="toc-all-boolean" href="#toc-all-boolean"></a>
 
@@ -145,6 +146,16 @@ much better interface to show warnings.)
 
 The default value is `false`.
 
+#### `lazy_mode` _`(fs|ide|watchman|none)`_ <a class="toc" id="toc-lazy-mode-fs-ide-watchman-none" href="#toc-lazy-mode-fs-ide-watchman-none"></a>
+
+For more on lazy modes, see the [lazy modes docs](/en/docs/lang/lazy-modes/).
+
+Setting `lazy_mode` in the `.flowconfig` will cause new Flow servers for that
+root to use that lazy mode (or no lazy mode if set to `none`). This option can
+be overridden from the CLI using the `--lazy-mode` flag.
+
+The default value is `none`.
+
 #### `log.file` _`(string)`_ <a class="toc" id="toc-log-file-string" href="#toc-log-file-string"></a>
 
 The path to the log file (defaults to `/tmp/flow/<escaped root path>.log`).
@@ -155,6 +166,10 @@ Flow tries to avoid parsing non-flow files. This means Flow needs to
 start lexing a file to see if it has `@flow` or `@noflow` in it. This option
 lets you configure how much of the file Flow lexes before it decides there is
 no relevant docblock.
+
+- Neither `@flow` nor `@noflow` - Parse this file with Flow syntax disallowed and do not typecheck it.
+- @flow - Parse this file with Flow syntax allowed and typecheck it.
+- @noflow - Parse this file with Flow syntax allowed and do not typecheck it. This is meant as an escape hatch to suppress Flow in a file without having to delete all the Flow-specific syntax.
 
 The default value of `max_header_tokens` is 10.
 
@@ -326,6 +341,17 @@ which is 16*2^X bytes.
 
 By default, this is set to 19 (Table size is 2^19, which is 8 megabytes)
 
+#### `sharedmemory.heap_size` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-heap-size-unsigned-integer" href="#toc-sharedmemory-heap-size-unsigned-integer"></a>
+
+This option configures the maximum possible size for the shared heap. You should
+most likely not need to configure this, as it doesn't really affect how much
+RSS Flow uses. However, if you are working on a massive codebase you might see
+the following error after init: "Heap init size is too close to max heap size;
+GC will never get triggered!" In this case, you may need to increase the size
+of the heap.
+
+By default, this is set to 26843545600 (25 * 2^30 bytes, which is 25GiB)
+
 #### `sharedmemory.log_level` _`(unsigned integer)`_ <a class="toc" id="toc-sharedmemory-log-level-unsigned-integer" href="#toc-sharedmemory-log-level-unsigned-integer"></a>
 
 Setting this to 1 will cause Flow to output some stats about the data that is
@@ -410,12 +436,3 @@ The default value is `/tmp/flow`.
 Enables traces on all error output (showing additional details about the flow
 of types through the system), to the depth specified. This can be very
 expensive, so is disabled by default.
-
-#### `unsafe.enable_getters_and_setters` _`(boolean)`_ <a class="toc" id="toc-unsafe-enable-getters-and-setters-boolean" href="#toc-unsafe-enable-getters-and-setters-boolean"></a>
-
-Flow cannot safely type getter and setter properties, so using them is an
-error by default. If you want Flow to allow them, set this option to `true`.
-Flow will recognize these properties exist and give them types, but won't
-properly invalidate refinements when they're read or written.
-
-The default value is `false`.

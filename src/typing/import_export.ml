@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -52,10 +52,10 @@ let mk_resource_module_t cx loc f =
   let reason, exports_t = match Utils_js.extension_of_filename f with
   | Some ".css" ->
     let reason = Reason.mk_reason RObjectType loc in
-    reason, Type.DefT (reason, Type.AnyObjT)
+    reason, Type.AnyT.make Type.Untyped reason
   | Some _ ->
     let reason = Reason.mk_reason RString loc in
-    reason, Type.StrT.why reason
+    reason, Type.StrT.why reason |> with_trust bogus_trust
   | _ -> failwith "How did we find a resource file without an extension?!"
   in
 
@@ -93,7 +93,7 @@ let module_t_of_cx cx =
   | Some t -> t
   | None ->
     let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    let reason = (Reason.mk_reason (RCustom "exports") loc) in
+    let reason = (Reason.mk_reason (RCustom "exports") (loc |> ALoc.of_loc)) in
     Tvar.mk_where cx reason (fun t -> Context.add_module cx m t)
 
 let set_module_t cx reason f =
@@ -127,7 +127,7 @@ let set_module_kind cx loc new_exports_kind = Context.(
   | (ESModule, CommonJSModule(Some _))
   | (CommonJSModule(Some _), ESModule)
     ->
-      Flow.add_output cx (Flow_error.EIndeterminateModuleType loc)
+      Flow.add_output cx (Error_message.EIndeterminateModuleType loc)
   | _ -> ()
   );
   Context.set_module_kind cx new_exports_kind
@@ -137,33 +137,44 @@ let set_module_kind cx loc new_exports_kind = Context.(
  * Given an exported default declaration, identify nameless declarations and
  * name them with a special internal name that can be used to reference them
  * when assigning the export value.
+ *
+ * Paired with function which undoes this, for typed AST construction
  *)
-let nameify_default_export_decl decl = Ast.Statement.(
+let nameify_default_export_decl decl = Flow_ast.Statement.(
+  let identity x = x in
   match decl with
-  | loc, FunctionDeclaration func_decl -> Ast.Function.(
-    if func_decl.id <> None then decl else
-      loc, FunctionDeclaration {
+  | loc, FunctionDeclaration func_decl -> Flow_ast.Function.(
+    if func_decl.id <> None then decl, identity else
+      (loc, FunctionDeclaration {
         func_decl with
-          id = Some (loc, internal_name "*default*");
-      }
+          id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
+      }), (function
+        | x, FunctionDeclaration func_decl ->
+          x, FunctionDeclaration { func_decl with id = None }
+        | _ -> failwith "expected FunctionDeclaration"
+      )
     )
 
-  | loc, ClassDeclaration class_decl -> Ast.Class.(
-    if class_decl.id <> None then decl else
-      loc, ClassDeclaration {
+  | loc, ClassDeclaration class_decl -> Flow_ast.Class.(
+    if class_decl.id <> None then decl, identity else
+      (loc, ClassDeclaration {
         class_decl with
-          id = Some (loc, internal_name "*default*");
-      }
+          id = Some (Flow_ast_utils.ident_of_source (loc, internal_name "*default*"));
+      }), (function
+        | x, ClassDeclaration class_decl ->
+          x, ClassDeclaration { class_decl with id = None }
+        | _ -> failwith "expected ClassDeclaration"
+      )
     )
 
-  | _ -> decl
+  | _ -> decl, identity
 )
 
 let warn_or_ignore_export_star_as cx name =
   if name = None then () else
   match Context.esproposal_export_star_as cx, name with
   | Options.ESPROPOSAL_WARN, Some(loc, _) ->
-    Flow.add_output cx (Flow_error.EExperimentalExportStarAs loc)
+    Flow.add_output cx (Error_message.EExperimentalExportStarAs loc)
   | _ -> ()
 
 (* Module exports are treated differently than `exports`. The latter is a

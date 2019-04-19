@@ -55,3 +55,10 @@ function from_test() {
     return String(val);
   });
 }
+
+function of_test() {
+  var emptyArrayOkay: Array<empty> = Array.of();
+  var exactMatchOkay: Array<string> = Array.of("hello", "world");
+  var upcastOkay: Array<string | number> = Array.of("hello", "world");
+  var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
+}

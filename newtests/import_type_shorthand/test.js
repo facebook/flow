@@ -63,7 +63,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": C);
-                ^^^^^ Cannot cast \`"str"\` to \`C\` because string [1] is incompatible with statics of \`C\` [2].
+                ^^^^^ Cannot cast \`"str"\` to \`C\` because string [1] is incompatible with class \`C\` [2].
             References:
               9: ("str": C);
                   ^^^^^ [1]
@@ -85,7 +85,7 @@ export default suite(({addFile, addFiles, addCode}) => [
         `
           test.js:9
             9: ("str": CPrime);
-                ^^^^^ Cannot cast \`"str"\` to \`CPrime\` because string [1] is incompatible with statics of \`C\` [2].
+                ^^^^^ Cannot cast \`"str"\` to \`CPrime\` because string [1] is incompatible with class \`C\` [2].
             References:
               9: ("str": CPrime);
                   ^^^^^ [1]

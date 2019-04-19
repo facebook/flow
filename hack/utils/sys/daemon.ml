@@ -109,7 +109,7 @@ end = struct
         ~mode:[Open_binary]
         ~temp_dir:Sys_utils.temp_dir_name
         "daemon_param" ".bin" in
-    output_value oc data;
+    Marshal.to_channel oc data [Marshal.Closures];
     close_out oc;
     Unix.putenv "HH_SERVER_DAEMON_PARAM" file
 
@@ -134,7 +134,7 @@ end = struct
         Sys.remove file;
         res
       with exn ->
-        failwith "Can't find daemon parameters." in
+        failwith ("Can't find daemon parameters: " ^ (Printexc.to_string exn)) in
     (entry, param,
      (Timeout.in_channel_of_descr in_handle,
       Unix.out_channel_of_descr out_handle))
@@ -259,7 +259,7 @@ let spawn
   if stdin <> Unix.stdin then close_if_open stdin;
   if stdout <> Unix.stdout then close_if_open stdout;
   if stderr <> Unix.stderr && stderr <> stdout then close_if_open stderr;
-  
+
   PidLog.log
     ~reason:(Entry.name_of_entry entry)
     ~no_fail:true

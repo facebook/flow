@@ -16,7 +16,10 @@
 
 #include <time.h>
 
-#ifdef HH_BUILD_ID
+#ifdef NO_HHVM
+#define HHVM_VERSION_MAJOR 0
+#define HHVM_VERSION_MINOR 0
+#else
 #include "hphp/runtime/version.h"
 #endif
 
@@ -71,6 +74,14 @@ value hh_get_build_commit_time_string(void) {
 
   result = caml_copy_string(s);
   CAMLreturn(result);
+}
+
+value hh_get_build_major(void) {
+  return Val_long(HHVM_VERSION_MAJOR);
+}
+
+value hh_get_build_minor(void) {
+  return Val_long(HHVM_VERSION_MINOR);
 }
 
 value hh_get_build_commit_time(void) {

@@ -1,0 +1,2 @@
+[lints]
+deprecated-call-syntax=error

@@ -1,0 +1,3 @@
+(library
+  (name injector_config)
+  (wrapped false))

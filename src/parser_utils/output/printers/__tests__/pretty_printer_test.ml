@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -10,6 +10,8 @@ open Layout
 open OUnit2
 
 let space_regex = Str.regexp_string " "
+
+let flat_pretty_space = IfBreak (Empty, pretty_space)
 
 let assert_pretty_print ~ctxt ?msg expected_str layout =
   let out = layout
@@ -53,7 +55,7 @@ let tests = "pretty_printer" >::: [
             Atom "a";
             fuse [
               Atom "b"; space; Atom "=>";
-              fuse_vertically ~indent:2 ~inline:(false, true) [Atom short_string];
+              Indent (fuse [pretty_hardline; Atom short_string]);
             ];
           ];
       ] in
@@ -191,5 +193,41 @@ let tests = "pretty_printer" >::: [
         ]
       in
       assert_pretty_print ~ctxt ("("^a80^")") layout;
+    end;
+
+  "group_break" >::
+    begin fun ctxt ->
+      let a40 = String.make 40 'A' in
+      let a80 = String.make 80 'A' in
+
+      (* fits *)
+      assert_pretty_print ~ctxt
+        ("("^a40^")")
+        (Group [Atom "("; Atom a40; Atom ")"]);
+
+      (* fits *)
+      assert_pretty_print ~ctxt
+        ("( "^a40^" )")
+        (Group [Atom "("; line; Atom a40; line; Atom ")"]);
+
+      (* exceeds 80 cols since there are no breaks *)
+      assert_pretty_print ~ctxt
+        ("("^a80^")")
+        (Group [Atom "("; Atom a80; Atom ")"]);
+
+      (* breaks *)
+      assert_pretty_print ~ctxt
+        ("(\n"^a80^"\n)")
+        (Group [Atom "("; line; Atom a80; line; Atom ")"]);
+
+      (* doesn't exceed 80 cols *)
+      assert_pretty_print ~ctxt
+        ("( "^a40^" )")
+        (Group [Atom "("; Indent (Concat [line; Atom a40]); line; Atom ")"]);
+
+      (* breaks, but indent makes it 82 cols *)
+      assert_pretty_print ~ctxt
+        ("(\n  "^a80^"\n)")
+        (Group [Atom "("; Indent (Concat [line; Atom a80]); line; Atom ")"]);
     end;
 ]

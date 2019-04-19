@@ -78,5 +78,23 @@ module List = struct
       let env, rl = map2_env env rl1 rl2 ~f in
       env, x :: rl
 
+  let rec map3_env env l1 l2 l3 ~f =
+    if length l1 <> length l2 || length l2 <> length l3
+    then raise @@ Invalid_argument "map3_env"
+    else match l1, l2, l3 with
+    | [], [], [] -> env, []
+    | [], _, _ | _, [], _ | _, _, [] -> raise @@ Invalid_argument "map3_env"
+    | x1 :: rl1, x2 :: rl2, x3 :: rl3 ->
+      let env, x = f env x1 x2 x3 in
+      let env, rl = map3_env env rl1 rl2 rl3 ~f in
+      env, x :: rl
+
+  let filter_map_env env xs ~f =
+    let env, l = rev_map_env env xs ~f in
+    env, rev_filter_map l ~f:(fun x -> x)
+
   let for_all2 = List.for_all2
+
+  let same_length_and_for_all2 ~f l1 l2 =
+    (List.length l1 = List.length l2) && for_all2 f l1 l2
 end

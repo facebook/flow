@@ -1,7 +1,4 @@
 #!/bin/sh
-. ../assert.sh
-FLOW=$1
-
 printf "Without --include-warnings\n"
 assert_errors "$FLOW" check --all --strip-root
 

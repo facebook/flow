@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -64,12 +64,22 @@ end)
 (* This is the common entry point for both daemonize and start. *)
 let internal_start ~is_daemon ?waiting_fd monitor_options =
   let { FlowServerMonitorOptions.server_options; argv; _; } = monitor_options in
+
+  let () =
+    let file_watcher =
+      FileWatcherStatus.string_of_file_watcher monitor_options.FlowServerMonitorOptions.file_watcher
+    in
+    FlowEventLogger.set_monitor_options ~file_watcher;
+    LoggingUtils.set_server_options ~server_options
+  in
+
   let root = Options.root server_options in
   let tmp_dir = Options.temp_dir server_options in
 
   (* We need to grab the lock before initializing the pid files and before allocating the shared
    * heap. Luckily for us, the server will do both of these later *)
-  if not (Lock.grab (Server_files_js.lock_file ~tmp_dir root))
+  let flowconfig_name = Options.flowconfig_name server_options in
+  if not (Lock.grab (Server_files_js.lock_file ~flowconfig_name ~tmp_dir root))
   then begin
    let msg = "Error: another server is already running?\n" in
    FlowExitStatus.(exit ~msg Lock_stolen)
@@ -98,9 +108,11 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
    * socket, it will fail immediately. The blocking behavior is a little nicer
    *)
   let monitor_socket_fd =
-    Socket.init_unix_socket (Server_files_js.socket_file ~tmp_dir root) in
-  let legacy_socket_fd =
-    Socket.init_unix_socket (Server_files_js.legacy_socket_file ~tmp_dir root) in
+    Socket.init_unix_socket (Server_files_js.socket_file ~flowconfig_name ~tmp_dir root) in
+  let legacy2_socket_fd =
+    Socket.init_unix_socket (Server_files_js.legacy2_socket_file ~flowconfig_name ~tmp_dir root) in
+  let legacy1_socket_fd =
+    Socket.init_unix_socket (Server_files_js.legacy1_socket_file ~flowconfig_name ~tmp_dir root) in
 
   (************************* HERE BEGINS THE MAGICAL WORLD OF LWT *********************************)
 
@@ -110,12 +122,9 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     (* If `prom`  in `Lwt.async (fun () -> prom)` resolves to an exception, this function will be
      * called *)
     Lwt.async_exception_hook := (fun exn ->
-      let bt = Printexc.get_backtrace () in
-      let msg = Utils.spf "Uncaught async exception: %s%s"
-        (Printexc.to_string exn)
-        (if bt = "" then bt else "\n"^bt)
-      in
-      Logger.fatal ~exn "Uncaught async exception. Exiting";
+      let exn = Exception.wrap exn in
+      let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
+      Logger.fatal_s ~exn "Uncaught async exception. Exiting";
       FlowExitStatus.(exit ~msg Unknown_error)
     );
 
@@ -144,7 +153,12 @@ let internal_start ~is_daemon ?waiting_fd monitor_options =
     );
     Lwt.async (fun () ->
       SocketAcceptor.run_legacy (
-        Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy_socket_fd
+        Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy2_socket_fd
+      )
+    );
+    Lwt.async (fun () ->
+      SocketAcceptor.run_legacy (
+        Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true legacy1_socket_fd
       )
     );
 
@@ -163,7 +177,8 @@ let daemonize ~wait ~on_spawn monitor_options =
   (* Let's make sure this isn't all for naught before we fork *)
   let root = Options.root server_options in
   let tmp_dir = Options.temp_dir server_options in
-  let lock = Server_files_js.lock_file ~tmp_dir root in
+  let flowconfig_name = Options.flowconfig_name server_options in
+  let lock = Server_files_js.lock_file ~flowconfig_name ~tmp_dir root in
   if not (Lock.check lock)
   then begin
     let msg = spf

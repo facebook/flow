@@ -1,0 +1,9 @@
+(executable
+  (name discover)
+  (libraries
+    imported_core
+    dune.configurator))
+
+(rule
+  (targets c_flags.sexp c_library_flags.sexp)
+  (action (run ./discover.exe)))

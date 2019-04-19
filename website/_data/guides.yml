@@ -6,6 +6,9 @@
       additional_reading:
         - guide: types
         - guide: lang
+- id: faq
+  pages:
+    - path: "/docs/faq/"
 
 - id: types
   pages:
@@ -86,8 +89,10 @@
 - id: config
   pages:
     - path: "/docs/config/"
+    - path: "/docs/config/declarations/"
     - path: "/docs/config/include/"
     - path: "/docs/config/ignore/"
+    - path: "/docs/config/untyped/"
     - path: "/docs/config/libs/"
     - path: "/docs/config/lints/"
     - path: "/docs/config/options/"
@@ -111,6 +116,7 @@
     - path: "/docs/react/refs/"
     - path: "/docs/react/children/"
     - path: "/docs/react/hoc/"
+    - path: "/docs/react/context/"
     - path: "/docs/react/redux/"
     - path: "/docs/react/types/"
 

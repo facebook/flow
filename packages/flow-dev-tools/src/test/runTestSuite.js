@@ -10,7 +10,7 @@ import {format} from 'util';
 import {noErrors} from '../flowResult';
 import {TestStep, TestStepFirstStage} from './TestStep';
 import {newEnv} from './stepEnv';
-import {writeFile} from '../utils/async';
+import {withTimeout, writeFile} from '../utils/async';
 
 import type Builder, {TestBuilder} from './builder';
 import type Suite from './Suite';
@@ -103,6 +103,7 @@ export default (async function(
         testNum,
         test.flowConfigFilename,
         test.lazyMode,
+        test.shouldWaitForRecheck,
       );
 
       let firstIdeStartStep = null;
@@ -143,6 +144,7 @@ export default (async function(
           throw new Error(format('Expected a TestStep, instead got', step));
         }
         printStatus('RUN');
+        await testBuilder.log('\nSTEP %d', i + 1);
 
         if (step.needsFlowServer()) {
           // No-op if one is already running
@@ -160,8 +162,16 @@ export default (async function(
 
         testBuilder.setAllowFlowServerToDie(step.allowFlowServerToDie());
 
-        await testBuilder.log('\nSTEP %d', i + 1);
-        await step.performActions(testBuilder, envWrite);
+        const timeout = step.getTimeout();
+
+        let actions_promise = step.performActions(testBuilder, envWrite);
+        if (timeout == null) {
+          await actions_promise;
+        } else {
+          await withTimeout(timeout, actions_promise, () => {
+            testBuilder.log('Hit timeout of %dms.', timeout);
+          });
+        }
 
         let oldErrors = flowErrors;
 

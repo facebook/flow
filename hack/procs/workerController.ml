@@ -7,7 +7,7 @@
  *
  *)
 
-open Hh_core
+open Core_kernel
 open Worker
 
 (*****************************************************************************
@@ -33,6 +33,7 @@ open Worker
  *****************************************************************************)
 
 type process_id = int
+type worker_id = int
 type worker_failure =
   (* Worker killed by Out Of Memory. *)
   | Worker_oomed
@@ -47,15 +48,24 @@ type send_job_failure =
 
 exception Worker_failed_to_send_job of send_job_failure
 
-let failure_to_string f =
-  let status_string = function
-    | Unix.WEXITED i -> Printf.sprintf "WEXITED %d" i
-    | Unix.WSIGNALED i -> Printf.sprintf "WSIGNALED %d" i
-    | Unix.WSTOPPED i -> Printf.sprintf "WSTOPPED %d" i
-  in
-  match f with
+let status_string = function
+  | Unix.WEXITED i -> Printf.sprintf "WEXITED %d" i
+  | Unix.WSIGNALED i -> Printf.sprintf "WSIGNALED %d" i
+  | Unix.WSTOPPED i -> Printf.sprintf "WSTOPPED %d" i
+
+let failure_to_string f = match f with
   | Worker_oomed -> "Worker_oomed"
   | Worker_quit s -> Printf.sprintf "(Worker_quit %s)" (status_string s)
+
+let () = Caml.Printexc.register_printer @@ function
+  | Worker_failed_to_send_job Other_send_job_failure exn ->
+    Some (Printf.sprintf "Other_send_job_failure: %s" (Exn.to_string exn))
+  | Worker_failed_to_send_job Worker_already_exited status ->
+    Some (Printf.sprintf "Worker_already_exited: %s" (status_string status))
+  | Worker_failed (id, failure) ->
+    Some (Printf.sprintf "Worker_failed (process_id = %d): %s" id
+      (failure_to_string failure))
+  | _ -> None
 
 (* Should we 'prespawn' the worker ? *)
 let use_prespawned = not Sys.win32
@@ -72,9 +82,13 @@ type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
  *****************************************************************************)
 
 type worker = {
-  id: int; (* Simple id for the worker. This is not the worker pid: on
-              Windows, we spawn a new worker for each job. *)
-
+  (* Simple id for the worker. This is not the worker pid: on Windows, we spawn
+   * a new worker for each job.
+   *
+   * This is also an offset into the shared heap segment, used to access
+   * worker-local data. As such, the numbering is important. The IDs must be
+   * dense and start at 1. (0 is the master process offset.) *)
+  id: int;
 
   (** The call wrapper will wrap any workload sent to the worker (via "call"
    * below) before invoking the workload.
@@ -98,38 +112,15 @@ type worker = {
   (* Sanity check: is the worker currently busy ? *)
   mutable busy: bool;
 
+  (* If the worker is currently busy, handle of the job it's execuing *)
+  mutable handle: 'a 'b. ('a, 'b) handle option;
+
   (* On Unix, a reference to the 'prespawned' worker. *)
   prespawned: (void, request) Daemon.handle option;
 
   (* On Windows, a function to spawn a slave. *)
   spawn: unit -> (void, request) Daemon.handle;
 }
-
-let worker_id w = w.id
-
-(* Has the worker been killed *)
-let is_killed w = w.killed
-
-(* Mark the worker as busy. Throw if it is already busy *)
-let mark_busy w =
-  if w.busy then raise Worker_busy;
-  w.busy <- true
-
-(* Mark the worker as free *)
-let mark_free w = w.busy <- false
-
-(* If the worker isn't prespawned, spawn the worker *)
-let spawn w = match w.prespawned with
-| None -> w.spawn ()
-| Some handle -> handle
-
-(* If the worker isn't prespawned, close the worker *)
-let close w h = if w.prespawned = None then Daemon.close h
-
-(* If there is a call_wrapper, apply it and create the Request *)
-let wrap_request w f x = match w.call_wrapper with
-  | Some { wrap } -> Request (fun { send } -> send (wrap f x))
-  | None -> Request (fun { send } -> send (f x))
 
 (*****************************************************************************
  * The handle is what we get back when we start a job. It's a "future"
@@ -138,13 +129,15 @@ let wrap_request w f x = match w.call_wrapper with
  *
  *****************************************************************************)
 
-type ('a, 'b) handle = ('a, 'b) delayed ref
+and ('a, 'b) handle = ('a, 'b) delayed ref
 
-and ('a, 'b) delayed = 'a * 'b worker_handle
+(* Integer represents job the handle belongs to.
+ * See MultiThreadedCall.call_id. *)
+and ('a, 'b) delayed = ('a * int) * 'b worker_handle
 
 and 'b worker_handle =
   | Processing of 'b slave
-  | Cached of 'b
+  | Cached of 'b * worker
   | Canceled
   | Failed of exn
 
@@ -170,15 +163,45 @@ and 'a slave = {
 
 }
 
-type 'a entry_state = 'a * Gc.control * SharedMem.handle
+let worker_id w = w.id
+
+(* Has the worker been killed *)
+let is_killed w = w.killed
+
+(* Mark the worker as busy. Throw if it is already busy *)
+let mark_busy w =
+  if w.busy then raise Worker_busy;
+  w.busy <- true
+
+let get_handle_UNSAFE w = w.handle
+
+(* Mark the worker as free *)
+let mark_free w =
+  w.busy <- false;
+  w.handle <- None
+
+(* If the worker isn't prespawned, spawn the worker *)
+let spawn w = match w.prespawned with
+| None -> w.spawn ()
+| Some handle -> handle
+
+(* If the worker isn't prespawned, close the worker *)
+let close w h = if w.prespawned = None then Daemon.close h
+
+(* If there is a call_wrapper, apply it and create the Request *)
+let wrap_request w f x = match w.call_wrapper with
+  | Some { wrap } -> Request (fun { send } -> send (wrap f x))
+  | None -> Request (fun { send } -> send (f x))
+
+type 'a entry_state = 'a * Gc.control * SharedMem.handle * int
 type 'a entry = ('a entry_state * (Unix.file_descr option), request, void) Daemon.entry
 
 let entry_counter = ref 0
 let register_entry_point ~restore =
   incr entry_counter;
-  let restore (st, gc_control, heap_handle) =
+  let restore (st, gc_control, heap_handle, worker_id) =
     restore st;
-    SharedMem.connect heap_handle ~is_master:false;
+    SharedMem.connect heap_handle ~worker_id;
     Gc.set gc_control in
   let name = Printf.sprintf "slave_%d" !entry_counter in
   Daemon.register_entry_point
@@ -204,6 +227,7 @@ let make_one ?call_wrapper controller_fd spawn id =
     controller_fd;
     id;
     busy = false;
+    handle = None;
     killed = false;
     prespawned;
     spawn }
@@ -226,14 +250,14 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
       (** We don't use the side channel on Windows. *)
       None, None
   in
-  let spawn name child_fd () =
+  let spawn worker_id name child_fd () =
     Unix.clear_close_on_exec heap_handle.SharedMem.h_fd;
     (** Daemon.spawn runs exec after forking. We explicitly *do* want to "leak"
      * child_fd to this one spawned process because it will be using that FD to
      * send messages back up to us. Close_on_exec is probably already false, but
      * we force it again to be false here just in case. *)
     Option.iter child_fd ~f:Unix.clear_close_on_exec;
-    let state = (saved_state, gc_control, heap_handle) in
+    let state = (saved_state, gc_control, heap_handle, worker_id) in
     let handle =
       Daemon.spawn
         ~name
@@ -251,7 +275,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
   for n = 1 to nbr_procs do
     let controller_fd, child_fd = setup_controller_fd () in
     let name = Printf.sprintf "worker process %d/%d for server %d" n nbr_procs pid in
-    made_workers := make_one ?call_wrapper controller_fd (spawn name child_fd) n :: !made_workers
+    made_workers := make_one ?call_wrapper controller_fd (spawn n name child_fd) n :: !made_workers
   done;
   !made_workers
 
@@ -261,7 +285,7 @@ let make ?call_wrapper ~saved_state ~entry ~nbr_procs ~gc_control ~heap_handle =
  *
  **************************************************************************)
 
-let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
+let call ?(call_id=0) w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   if is_killed w then Printf.ksprintf failwith "killed worker (%d)" (worker_id w);
   mark_busy w;
 
@@ -320,10 +344,11 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
   (* Prepare ourself to read answer from the slave. *)
   let get_result_with_status_check ?(block_on_waitpid=false) () : b =
     with_exit_status_check ~block_on_waitpid slave_pid begin fun () ->
-      let res : b * Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
+      let data : b = Marshal_tools.from_fd_with_preamble infd in
+      let stats : Measure.record_data = Marshal_tools.from_fd_with_preamble infd in
       close w h;
-      Measure.merge (Measure.deserialize (snd res));
-      fst res
+      Measure.merge (Measure.deserialize stats);
+      data
     end in
   let result () : b =
     (**
@@ -359,6 +384,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
        * (written by interrupt signal that exited). The types don't match, but we
        * ignore both of them anyway. *)
       let _ : 'c = Marshal_tools.from_fd_with_preamble infd in
+      let _ : 'c = Marshal_tools.from_fd_with_preamble infd in
       ()
     end
   in
@@ -378,7 +404,9 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
     end
   in
   (* And returned the 'handle'. *)
-  ref (x, Processing slave)
+  let handle = ref ((x, call_id), Processing slave) in
+  w.handle <- Obj.magic (Some handle);
+  handle
 
 
 (**************************************************************************
@@ -390,7 +418,7 @@ let call w (type a) (type b) (f : a -> b) (x : a) : (a, b) handle =
 let with_worker_exn (handle : ('a, 'b) handle) slave f =
   try f () with
   | Worker_failed (pid, status) as exn ->
-    slave.worker.busy <- false;
+    mark_free slave.worker;
     handle := fst !handle, Failed exn;
     begin match status with
     | Worker_quit (Unix.WSIGNALED -7) ->
@@ -399,20 +427,20 @@ let with_worker_exn (handle : ('a, 'b) handle) slave f =
       raise exn
     end
   | exn ->
-    slave.worker.busy <- false;
+    mark_free slave.worker;
     handle := fst !handle, Failed exn;
     raise exn
 
 let get_result d =
   match snd !d with
-  | Cached x -> x
+  | Cached (x, _) -> x
   | Failed exn -> raise exn
   | Canceled -> raise End_of_file
   | Processing s ->
     with_worker_exn d s begin fun () ->
       let res = s.result () in
-      s.worker.busy <- false;
-      d := fst !d, Cached res;
+      mark_free s.worker;
+      d := fst !d, Cached (res, s.worker);
       res
     end
 
@@ -442,13 +470,13 @@ let select ds additional_fds =
     else
       Sys_utils.select_non_intr (fds @ additional_fds) [] [] ~-.1. in
   let additional_ready_fds =
-    List.filter ~f:(List.mem ready_fds) additional_fds in
+    List.filter ~f:(List.mem ~equal:(=) ready_fds) additional_fds in
   List.fold_right
     ~f:(fun d acc ->
       match snd !d with
       | Cached _ | Canceled | Failed _ ->
           { acc with readys = d :: acc.readys }
-      | Processing s when List.mem ready_fds s.infd ->
+      | Processing s when List.mem ~equal:(=) ready_fds s.infd ->
           { acc with readys = d :: acc.readys }
       | Processing _ ->
           { acc with waiters = d :: acc.waiters})
@@ -458,11 +486,13 @@ let select ds additional_fds =
 let get_worker h =
   match snd !h with
   | Processing {worker; _} -> worker
-  | Cached _
+  | Cached (_, worker) -> worker
   | Canceled
   | Failed _ -> invalid_arg "Worker.get_worker"
 
-let get_job h = fst !h
+let get_job h = fst (fst !h)
+
+let get_call_id h = snd (fst !h)
 
 (**************************************************************************
  * Worker termination
@@ -482,13 +512,13 @@ let wait_for_cancel d =
   | Processing s ->
     with_worker_exn d s begin fun () ->
       s.wait_for_cancel ();
-      s.worker.busy <- false;
+      mark_free s.worker;
       d := fst !d, Canceled
     end
   | _ -> ()
 
 let cancel handles =
-  SharedMem.stop_workers ();
+  WorkerCancel.stop_workers ();
   List.iter handles ~f:(fun x -> wait_for_cancel x);
-  SharedMem.resume_workers ();
+  WorkerCancel.resume_workers ();
   ()

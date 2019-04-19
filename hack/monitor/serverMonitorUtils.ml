@@ -19,14 +19,39 @@ type monitor_config =
     monitor_log_file: string;
   }
 
-(** Informant-induced restart may specify the mini saved state
- * we should load from. *)
-type target_mini_state = {
-  (** True if this is a tiny saved state. *)
-  is_tiny : bool;
-  mini_state_everstore_handle : string;
-  target_svn_rev : int;
+(** In an Informant-directed restart, Watchman provided a new
+ * mergebase, a new clock, and a list of files changed w.r.t.
+ * that mergebase.
+ *
+ * A new server instance can "resume" from that new mergebase
+ * given that it handles the list of files changed w.r.t. that
+ * new mergebase, and just starts a watchman subscription
+ * beginning with that clock.
+ *)
+type watchman_mergebase = {
+  (** Watchman says current repo mergebase is this. *)
+  mergebase_global_rev : int;
+  (** ... plus these files changed to represent its current state *)
+  files_changed : SSet.t;
+  (** ...as of this clock *)
+  watchman_clock : string;
 }
+
+(** Informant-induced restart may specify the saved state
+ * we should load from. *)
+type target_saved_state = {
+  saved_state_everstore_handle : string;
+  (** The global revision to which the above handle corresponds to. *)
+  target_global_rev : int;
+  watchman_mergebase : watchman_mergebase option;
+}
+
+let watchman_mergebase_to_string { mergebase_global_rev; files_changed; watchman_clock; } =
+  Printf.sprintf
+    "watchman_mergebase (mergebase_global_rev: %d; files_changed count: %d; watchman_clock: %s)"
+    mergebase_global_rev
+    (SSet.cardinal files_changed)
+    watchman_clock
 
 module type Server_config = sig
 
@@ -35,7 +60,7 @@ module type Server_config = sig
   (** Start the server. Optionally takes in the exit code of the previously
    * running server that exited. *)
   val start_server :
-    ?target_mini_state:target_mini_state ->
+    ?target_saved_state:target_saved_state ->
     informant_managed:bool ->
     prior_exit_status:(int option) ->
     server_start_options ->
@@ -86,6 +111,7 @@ type connection_error =
   (** Server dormant and can't join the (now full) queue of connections
    * waiting for the next server. *)
   | Server_dormant
+  | Server_dormant_out_of_retries
   | Build_id_mismatched of build_mismatch_info option
   | Monitor_connection_failure
 

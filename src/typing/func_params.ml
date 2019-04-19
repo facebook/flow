@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,12 +18,11 @@ module Flow = Flow_js
 
 open Reason
 open Type
-open Destructuring
 
 type param = string option * Type.t
-type rest = string option * Loc.t * Type.t
-type default = Loc.t Ast.Expression.t Default.t
-type binding = string * Loc.t * Type.t * default option
+type rest = string option * ALoc.t * Type.t
+type default = (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t
+type binding = string * ALoc.t * Type.t * default option
 
 type t = {
   params_rev: param list;
@@ -37,13 +36,13 @@ let empty = {
   bindings_rev = [];
 }
 
-let add_simple cx ~tparams_map ~optional ?default loc id t x =
+let add_simple cx ~optional ?default loc id t x =
   let param_t = if optional || default <> None then Type.optional t else t in
   let bound_t = if default <> None then t else param_t in
-  Env.add_type_table cx ~tparams_map loc t;
+  Type_table.set (Context.type_table cx) loc t;
   let name = Option.map id ~f:(fun (id_loc, name) ->
     let id_info = name, bound_t, Type_table.Other in
-    Env.add_type_table_info cx ~tparams_map id_loc id_info;
+    Type_table.set_info id_loc id_info (Context.type_table cx);
     name
   ) in
   let params_rev = (name, param_t) :: x.params_rev in
@@ -55,28 +54,37 @@ let add_simple cx ~tparams_map ~optional ?default loc id t x =
   in
   { x with params_rev; bindings_rev }
 
-let add_complex cx ~tparams_map ~expr ?default patt t x =
-  let default = Option.map default Default.expr in
+let add_complex cx ~expr (loc, { Flow_ast.Function.Param.argument; default = def_expr }) t x =
+  let default = Option.map def_expr Default.expr in
   let bindings_rev = ref x.bindings_rev in
-  destructuring cx ~expr t None default patt ~f:(fun ~use_op:_ loc name default t ->
-    let t = match type_of_pattern patt with
-    | None -> t
-    | Some _ ->
-      let reason = mk_reason (RIdentifier name) loc in
-      EvalT (t, DestructuringT (reason, Become), mk_id())
+  let argument =
+    let f ~use_op:_ loc name default t =
+      let t = match Destructuring.type_of_pattern argument with
+      | Flow_ast.Type.Missing _ -> t
+      | Flow_ast.Type.Available _ ->
+        let reason = mk_reason (RIdentifier name) loc in
+        EvalT (t, DestructuringT (reason, Become), mk_id())
+      in
+      Type_table.set (Context.type_table cx) loc t;
+      bindings_rev := (name, loc, t, default) :: !bindings_rev
     in
-    Env.add_type_table cx ~tparams_map loc t;
-    bindings_rev := (name, loc, t, default) :: !bindings_rev
-  );
+    let init = Destructuring.empty ?default t in
+    Destructuring.pattern cx ~expr ~f init argument
+  in
   let t = if default <> None then Type.optional t else t in
   let params_rev = (None, t) :: x.params_rev in
   let bindings_rev = !bindings_rev in
-  { x with params_rev; bindings_rev }
+  let def_expr = match def_expr with
+  | Some e -> Some (Typed_ast_utils.unimplemented_mapper#expression e)
+  | None -> None
+  in
+  let param = loc, { Flow_ast.Function.Param.argument = argument; default = def_expr } in
+  { x with params_rev; bindings_rev }, param
 
-let add_rest cx ~tparams_map loc id t x =
+let add_rest cx loc id t x =
   let name = Option.map id ~f:(fun (id_loc, name) ->
     let id_info = name, t, Type_table.Other in
-    Env.add_type_table_info cx ~tparams_map id_loc id_info;
+    Type_table.set_info id_loc id_info (Context.type_table cx);
     name
   ) in
   let rest = Some (name, loc, t) in
@@ -97,7 +105,7 @@ let subst_rest cx map (name, loc, t) = (name, loc, Flow.subst cx map t)
 let subst_binding cx map (name, loc, t, default) = (name, loc, Flow.subst cx map t, default)
 
 let subst cx map { params_rev; rest; bindings_rev } = {
-  params_rev = List.map (subst_param cx map) params_rev;
+  params_rev = Core_list.map ~f:(subst_param cx map) params_rev;
   rest = Option.map ~f:(subst_rest cx map) rest;
-  bindings_rev = List.map (subst_binding cx map) bindings_rev;
+  bindings_rev = Core_list.map ~f:(subst_binding cx map) bindings_rev;
 }

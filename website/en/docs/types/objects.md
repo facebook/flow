@@ -172,7 +172,7 @@ var val1: boolean = obj.prop; // Error!
 var val2: string  = obj.prop; // Works!
 ```
 
-As Flow gets smarter and smarter, there should be fewer instances of these scenarios.
+As Flow gets smarter and smarter, it will figure out the types of properties in more scenarios.
 
 ##### Unknown property lookup on unsealed objects is unsafe <a class="toc" id="toc-unknown-property-lookup-on-unsealed-objects-is-unsafe" href="#toc-unknown-property-lookup-on-unsealed-objects-is-unsafe"></a>
 
@@ -227,6 +227,21 @@ properties to an exact object type.
 ```js
 // @flow
 var foo: {| foo: string |} = { foo: "Hello", bar: "World!" }; // Error!
+```
+
+Intersections of exact object types may not work as you expect. If you need to combine exact object types, use object type spread:
+
+```js
+// @flow
+
+type FooT = {| foo: string |};
+type BarT = {| bar: number |};
+
+type FooBarFailT = FooT & BarT;
+type FooBarT = {| ...FooT, ...BarT |};
+
+const fooBarFail: FooBarFailT = { foo: '123', bar: 12 }; // Error!
+const fooBar: FooBarT = { foo: '123', bar: 12 }; // Works!
 ```
 
 ## Objects as maps <a class="toc" id="toc-objects-as-maps" href="#toc-objects-as-maps"></a>

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -56,12 +56,11 @@ module Command(CommandList : COMMAND_LIST) = struct
           )
       | _ -> "ARGUMENT"
 
-  let main from current rest () =
-    FlowEventLogger.set_from from;
+  let main current rest () =
     let current = match current with Some x -> x | None -> 0 in
     let rest = match rest with Some x -> x | None -> [] in
     if current <= 1 then (
-      let commands = CommandList.commands |> List.map (fun (command) ->
+      let commands = CommandList.commands |> Core_list.map ~f:(fun (command) ->
         CommandSpec.name command
       ) in
       print_endline (String.concat " " commands)

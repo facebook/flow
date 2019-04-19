@@ -9,7 +9,7 @@
 
 module S = struct
   type t = int * string
-  let compare x y = fst x - fst y
+  let compare = Pervasives.compare
 end
 
 include S
@@ -28,12 +28,9 @@ let to_int x = fst x
 
 let get_name x = to_string x
 
-let make x = (next (), x)
+let make_scoped x = (next (), x)
 
-(* `make` always returns a positive value. By multiplying the hash by -1 we
- * ensure that the value returned by `get` never overlaps with those returned
- * by `make` *)
-let get x = (-(Hashtbl.hash x), x)
+let make_unscoped x = (0, x)
 
 let tmp () =
   let res = next () in

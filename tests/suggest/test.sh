@@ -1,8 +1,5 @@
 #!/bin/bash
 
-. ../assert.sh
-FLOW=$1
-
 ## Correct tests
 
 # Dump the generated file in a temporary folder and in the end Flow check them
@@ -15,12 +12,15 @@ do_file() {
 }
 
 mkdir $TEMP_DIR
+do_file "array.js"
 do_file "arrow-0.js"
 do_file "arrow-1.js"
 do_file "class-0.js"
 do_file "class-1.js"
 do_file "class-2.js"
 # do_file "class-3.js" # TODO
+do_file "comments-0.js"
+do_file "dictionary.js"
 do_file "func-0.js"
 do_file "func-1.js"
 do_file "func-2.js"
@@ -30,6 +30,9 @@ do_file "object-1.js"
 do_file "object-2.js"
 do_file "poly-0.js"
 do_file "react-0.js"
+do_file "spread.js"
+do_file "string-literal.js"
+do_file "type-utils.js"
 do_file "union-0.js"
 
 "$FLOW" init $TEMP_DIR
@@ -60,3 +63,6 @@ assert_ok "$FLOW" suggest --strip-root --quiet --fail-on-tc-errors warn-empty-0.
 
 echo "warn-func-poly-0.js"
 assert_errors "$FLOW" suggest --strip-root --quiet --fail-on-suggest-warnings warn-func-poly-0.js 2>&1
+
+echo "warn-anonymous-class.js"
+assert_errors "$FLOW" suggest --strip-root --quiet --fail-on-suggest-warnings warn-anonymous-class.js 2>&1

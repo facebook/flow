@@ -35,6 +35,32 @@ function identity<T>(value: T): T {
 Generics can be used within functions, function types, classes, type aliases,
 and interfaces.
 
+> **Warning:** Flow does not infer generic types. If you want something to have a
+generic type, **annotate it**. Otherwise, Flow may infer a type that is less
+polymorphic than you expect.
+
+In the following example, we forget to properly annotate `identity` with a generic type, so we run into trouble when we try to assign it to `func`. On the other hand, `genericIdentity` is properly typed, and we are able to use it as expected.
+
+```js
+// @flow
+
+type IdentityWrapper = {
+  func<T>(T): T
+}
+
+function identity(value) {
+  return value;
+}
+
+function genericIdentity<T>(value: T): T {
+  return value;
+}
+
+// $ExpectError
+const bad: IdentityWrapper = { func: identity }; // Error!
+const good: IdentityWrapper = { func: genericIdentity }; // Works!
+```
+
 ### Syntax of generics <a class="toc" id="toc-syntax-of-generics" href="#toc-syntax-of-generics"></a>
 
 There are a number of different places where generic types appear in syntax.
@@ -123,6 +149,39 @@ interface Item<T> {
 }
 ```
 
+##### Supplying Type Arguments to Callables <a class="toc" id="toc-supplying-type-arguments-to-callables" href="#toc-supplying-type-arguments-to-callables"></a>
+
+You can give callable entities type arguments for their generics directly in the call:
+
+```js
+//@flow
+function doSomething<T>(param: T): T {
+  // ...
+  return param;
+}
+
+doSomething<number>(3);
+```
+
+You can also give generic classes type arguments directly in the `new` expression:
+```js
+//@flow
+class GenericClass<T> {}
+const c = new GenericClass<number>();
+```
+
+If you only want to specify some of the type arguments, you can use `_` to let flow infer a type for you:
+
+```js
+//@flow
+class GenericClass<T, U, V>{}
+const c = new GenericClass<_, number, _>()
+```
+
+> **Warning:** For performance purposes, we always recommend you annotate with
+concrete arguments when you can. `_` is not unsafe, but it is slower than explicitly
+specifying the type arguments.
+
 ## Behavior of generics <a class="toc" id="toc-behavior-of-generics" href="#toc-behavior-of-generics"></a>
 
 #### Generics act like variables <a class="toc" id="toc-generics-act-like-variables" href="#toc-generics-act-like-variables"></a>
@@ -131,7 +190,7 @@ Generic types work a lot like variables or function parameters except that they
 are used for types. You can use them whenever they are in scope.
 
 ```js
-function constant<T>(value: T) {
+function constant<T>(value: T): () => T {
   return function(): T {
     return value;
   };
@@ -386,3 +445,43 @@ let bar: Item<2> = { prop: 2 };
 
 You must always include the brackets `<>` when using the type (just like
 parentheses for a function call).
+
+#### Variance Sigils<a class="toc" id="toc-variance-sigils" href="#toc-variance-sigils"></a>
+
+You can also specify the subtyping behavior of a generic via variance sigils.
+By default, generics behave invariantly, but you may add a `+` to their
+declaration to make them behave covariantly, or a `-` to their declaration to
+make them behave contravariantly. See [our docs on variance](../../lang/variance)
+for a more information on variance in Flow.
+
+Variance sigils allow you to be more specific about how you intend to
+use your generics, giving Flow the power to do more precise type checking.
+For example, you may want this relationship to hold:
+
+```js
+//@flow
+type GenericBox<+T> = T;
+
+var x: GenericBox<number> = 3;
+(x: GenericBox<number| string>);
+```
+
+The example above could not be accomplished without the `+` variance sigil:
+
+```js
+//@flow
+type GenericBoxError<T> = T;
+
+var x: GenericBoxError<number> = 3;
+(x: GenericBoxError<number| string>); // number | string is not compatible with number.
+```
+
+Note that if you annotate your generic with variance sigils then Flow will
+check to make sure those types only appear in positions that make sense for
+that variance sigil. For example, you cannot declare a generic type parameter
+to behave covariantly and use it in a contravariant position:
+
+```js
+//@flow
+type NotActuallyCovariant<+T> = (T) => void;
+```

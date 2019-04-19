@@ -1,13 +1,16 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 open Token
+open Parser_common
 open Parser_env
-open Ast
+open Flow_ast
 module Error = Parse_error
 
 module JSX (Parse: Parser_common.PARSER) = struct
@@ -127,7 +130,10 @@ module JSX (Parse: Parser_common.PARSER) = struct
       if Peek.token env = T_ASSIGN
       then begin
         Expect.token env T_ASSIGN;
-        match Peek.token env with
+        let leading = Peek.comments env in
+        let tkn = Peek.token env in
+        let trailing = Peek.comments env in
+        match tkn with
         | T_LCURLY ->
             let loc, expression_container = expression_container env in
             begin
@@ -141,13 +147,13 @@ module JSX (Parse: Parser_common.PARSER) = struct
         | T_JSX_TEXT (loc, value, raw) as token ->
             Expect.token env token;
             let value = Ast.Literal.String value in
-            loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw;}))
+            loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw; comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());}))
         | _ ->
             error env Error.InvalidJSXAttributeValue;
             let loc = Peek.loc env in
             let raw = "" in
             let value = Ast.Literal.String "" in
-            loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw;}))
+            loc, Some (JSX.Attribute.Literal (loc, { Ast.Literal.value; raw;comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ());}))
       end else end_loc, None in
     Loc.btwn start_loc end_loc, JSX.Attribute.({
       name;
@@ -209,10 +215,10 @@ module JSX (Parse: Parser_common.PARSER) = struct
         Loc.btwn start_loc end_loc, `Fragment
 
     type element_or_closing =
-      | Closing of Loc.t JSX.Closing.t
+      | Closing of (Loc.t, Loc.t) JSX.Closing.t
       | ClosingFragment of Loc.t
-      | ChildElement of (Loc.t * Loc.t JSX.element)
-      | ChildFragment of (Loc.t * Loc.t JSX.fragment)
+      | ChildElement of (Loc.t * (Loc.t, Loc.t) JSX.element)
+      | ChildFragment of (Loc.t * (Loc.t, Loc.t) JSX.fragment)
 
     let rec child env =
       match Peek.token env with
@@ -239,25 +245,37 @@ module JSX (Parse: Parser_common.PARSER) = struct
             | (loc, `Element e) -> ChildElement (loc, e)
             | (loc, `Fragment f) -> ChildFragment (loc, f))
 
-      in let rec children_and_closing env acc =
-        match Peek.token env with
-        | T_LESS_THAN -> (
-            match element_or_closing env with
-            | Closing closingElement ->
-                List.rev acc, `Element closingElement
-            | ClosingFragment closingFragment ->
-                List.rev acc, `Fragment closingFragment
-            | ChildElement element ->
-                let element = fst element, JSX.Element (snd element) in
-                children_and_closing env (element::acc)
-            | ChildFragment fragment ->
-                let fragment = fst fragment, JSX.Fragment (snd fragment) in
-                children_and_closing env (fragment::acc))
-        | T_EOF ->
-            error_unexpected env;
-            List.rev acc, `None
-        | _ ->
-            children_and_closing env ((child env)::acc)
+      in let children_and_closing =
+        let rec children_and_closing env acc =
+          let previous_loc = last_loc env in
+          match Peek.token env with
+          | T_LESS_THAN -> (
+              match element_or_closing env with
+              | Closing closingElement ->
+                  List.rev acc, previous_loc, `Element closingElement
+              | ClosingFragment closingFragment ->
+                  List.rev acc, previous_loc, `Fragment closingFragment
+              | ChildElement element ->
+                  let element = fst element, JSX.Element (snd element) in
+                  children_and_closing env (element::acc)
+              | ChildFragment fragment ->
+                  let fragment = fst fragment, JSX.Fragment (snd fragment) in
+                  children_and_closing env (fragment::acc))
+          | T_EOF ->
+              error_unexpected env;
+              List.rev acc, previous_loc, `None
+          | _ ->
+              children_and_closing env ((child env)::acc)
+        in
+        fun env ->
+          let start_loc = Peek.loc env in
+          let children, last_child_loc, closing = children_and_closing env [] in
+          let last_child_loc = match last_child_loc with Some x -> x | None -> start_loc in
+          (* It's a little bit tricky to untangle the parsing of the child elements from the parsing
+           * of the closing element, so we can't easily use `with_loc` here. Instead, we'll use the
+           * same logic that `with_loc` uses, but manipulate the locations explicitly. *)
+          let children_loc = Loc.btwn start_loc last_child_loc in
+          ((children_loc, children), closing)
 
       in let rec normalize name = JSX.(match name with
         | Identifier (_, { Identifier.name }) -> name
@@ -277,12 +295,11 @@ module JSX (Parse: Parser_common.PARSER) = struct
           let selfClosing = match snd openingElement with
             | `Element e -> e.JSX.Opening.selfClosing
             | `Fragment -> false in
-          if selfClosing
-          then [], `None
+          if selfClosing then
+            with_loc (fun _ -> []) env, `None
           else begin
             Eat.push_lex_mode env Lex_mode.JSX_CHILD;
-            let ret = children_and_closing env [] in
-            ret
+            children_and_closing env
           end in
         let end_loc = match closingElement with
           | `Element (loc, { JSX.Closing.name }) ->
@@ -312,8 +329,10 @@ module JSX (Parse: Parser_common.PARSER) = struct
           Loc.btwn (fst openingElement) end_loc, `Fragment JSX.({
             frag_openingElement = fst openingElement;
             frag_closingElement = (match closingElement with
-                              | `Fragment loc -> Some loc
-                              | _ -> None);
+                              | `Fragment loc -> loc
+                              (* the following are parse erros *)
+                              | `Element (loc, _) -> loc
+                              | _ -> end_loc);
             frag_children = children;
           })
 

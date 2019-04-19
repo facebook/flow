@@ -58,7 +58,7 @@ let parse_charset (header_value: string) : string option =
    | _ -> None
  in
  match Str.split (Str.regexp ";") header_value with
-   | mime_type :: params -> List.find_map params ~f:charset_value
+   | _mime_type :: params -> List.find_map params ~f:charset_value
    | _ -> None
 
 (** read_message_utf8: reads an http-style message "Headers...Body"

@@ -1,14 +1,14 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-module S = Ast.Statement;;
-module E = Ast.Expression;;
-module T = Ast.Type;;
-module P = Ast.Pattern;;
+module S = Flow_ast.Statement;;
+module E = Flow_ast.Expression;;
+module T = Flow_ast.Type;;
+module P = Flow_ast.Pattern;;
 module Utils = Flowtestgen_utils;;
 
 (* ESSENTIAL: Syntax type and related functions *)
@@ -22,8 +22,8 @@ class ruleset_depth = object(self)
 
   method! weak_assert b = self#backtrack_on_false b
 
-  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
-    let get_prop_set (o : Loc.t T.Object.t) =
+  method! is_subtype_obj (o1 : (Loc.t, Loc.t) T.Object.t) (o2 : (Loc.t, Loc.t) T.Object.t) =
+    let get_prop_set (o : (Loc.t, Loc.t) T.Object.t) =
       let tbl = Hashtbl.create 1000 in
       let open T.Object.Property in
       List.iter (fun p -> match p with
@@ -49,29 +49,29 @@ class ruleset_depth = object(self)
 
   (* A helper funtions for wrapping an expression and a type
      into an object for mutation and expose type errors. *)
-  method wrap_in_obj (expr : Loc.t E.t') (etype : Loc.t T.t') : (Loc.t E.t' * Loc.t T.t') =
+  method wrap_in_obj (expr : (Loc.t, Loc.t) E.t') (etype : (Loc.t, Loc.t) T.t') : ((Loc.t, Loc.t) E.t' * (Loc.t, Loc.t) T.t') =
     let pname = "p_0" in
     let obj_expr =
       let prop =
         let open E.Object.Property in
         E.Object.Property (Loc.none, Init {
-          key = Identifier (Loc.none, pname);
+          key = Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
           value = Loc.none, expr;
           shorthand = false
         }) in
       let properties = [prop] in
-      E.Object.(E.Object {properties}) in
+      E.Object.(E.Object {properties; comments = Flow_ast_utils.mk_comments_opt ()}) in
     let obj_type =
       let open T.Object.Property in
       let prop_type =
-        T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Loc.none, pname);
+        T.Object.Property (Loc.none, {key = E.Object.Property.Identifier (Flow_ast_utils.ident_of_source (Loc.none, pname));
                                       value = Init (Loc.none, etype);
                                       optional = false;
                                       static = false;
                                       proto = false;
                                       _method = false;
                                       variance = None;}) in
-      T.Object.(T.Object {exact = false; properties = [prop_type]}) in
+      T.Object.(T.Object {exact = false; properties = [prop_type]; inexact = true}) in
       obj_expr, obj_type
 
   (* property update rule *)
@@ -166,7 +166,7 @@ class ruleset_depth = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 

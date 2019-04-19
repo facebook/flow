@@ -48,6 +48,7 @@
                 "loc":{"source":null,"start":{"line":2,"column":6},"end":{"line":2,"column":18}},
                 "range":[16,28],
                 "exact":false,
+                "inexact":false,
                 "properties":[
                   {
                     "type":"ObjectTypeProperty",

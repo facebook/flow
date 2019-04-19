@@ -33,7 +33,11 @@ val end_cnum : 'a pos -> int
 
 val line : 'a pos -> int
 
+val line_column : 'a pos -> int * int
+
 val end_line : 'a pos -> int
+
+val end_line_column : 'a pos -> int * int
 
 (* This returns a closed interval that's incorrect for multi-line spans. *)
 val info_pos : 'a pos -> int * int * int
@@ -62,6 +66,8 @@ val json : absolute -> Hh_json.json
 
 (* This returns a half-open interval. *)
 val multiline_json : absolute -> Hh_json.json
+
+val line_beg_offset : t -> int * int * int
 
 val inside : 'a pos -> int -> int -> bool
 
@@ -94,10 +100,23 @@ val first_char_of_line : t -> t
 
 val to_absolute : t -> absolute
 
+val to_relative: absolute -> t
+
 val to_relative_string : t -> string pos
+
+val get_text_from_pos: content:string -> 'a pos -> string
 
 (* This returns a half-open interval. *)
 val destruct_range : 'a pos -> (int * int * int * int)
+
+(* Advance the ending position by one character *)
+val advance_one : 'a pos -> 'a pos
+
+(* Reduce the size of this position element by one character on the left and
+ * one character on the right.  For example, if you've captured a position
+ * that includes outside apostrophes, this will shrink it to only the contents
+ * within the apostrophes. *)
+val shrink_by_one_char_both_sides : 'a pos -> 'a pos
 
 (* Compare by filename, then tie-break by start position, and finally by the
  * end position *)

@@ -1,0 +1,363 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:10:8
+
+string literal `qux` [1] is incompatible with enum [2].
+
+   test.js:10:8
+   10|   case 'qux': // error
+              ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:8
+
+number literal `3` [1] is incompatible with enum [2].
+
+   test.js:19:8
+   19|   case 3: // error
+              ^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:28:8
+
+string literal `qux` [1] is incompatible with enum [2].
+
+   test.js:28:8
+   28|   case 'qux': // error
+              ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:35:16
+
+string literal `qux` [1] is incompatible with enum [2].
+
+   test.js:35:16
+   35| else if (x === 'qux') {} // error
+                      ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:39:16
+
+string literal `qux` [1] is incompatible with enum [2].
+
+   test.js:39:16
+   39| else if (x === 'qux') {} // error
+                      ^^^^^ [1]
+
+References:
+   test.js:4:16
+    4| declare var x: Enum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:47:8
+
+number literal `4` [1] is incompatible with enum [2].
+
+   test.js:47:8
+   47|   case 4: // error
+              ^ [1]
+
+References:
+   test.js:42:16
+   42| declare var y: eNum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:56:8
+
+number literal `4` [1] is incompatible with enum [2].
+
+   test.js:56:8
+   56|   case 4: // error
+              ^ [1]
+
+References:
+   test.js:42:16
+   42| declare var y: eNum;
+                      ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:67:3
+
+All branches are incompatible:
+ - Either object with property `type` that matches string literal `qux` [1] is incompatible with string literal
+   `foo` [2].
+ - Or object with property `type` that matches string literal `qux` [1] is incompatible with string literal `bar` [3].
+ - Or object with property `type` that matches string literal `qux` [1] is incompatible with string literal `baz` [4].
+
+   test.js:67:3
+         v-------------------
+   67|   case 'qux': // error
+   68|     break;
+           -----^ [1]
+
+References:
+   test.js:60:30
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                    ^^^^^ [2]
+   test.js:60:48
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                      ^^^^^ [3]
+   test.js:60:66
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                        ^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:67:8
+
+All branches are incompatible:
+ - Either string [1] is incompatible with string literal `foo` [2].
+ - Or string [1] is incompatible with string literal `bar` [3].
+ - Or string [1] is incompatible with string literal `baz` [4].
+
+   test.js:67:8
+   67|   case 'qux': // error
+              ^^^^^ [1]
+
+References:
+   test.js:60:30
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                    ^^^^^ [2]
+   test.js:60:48
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                      ^^^^^ [3]
+   test.js:60:66
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                        ^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:76:8
+
+All branches are incompatible:
+ - Either string [1] is incompatible with string literal `foo` [2].
+ - Or string [1] is incompatible with string literal `bar` [3].
+ - Or string [1] is incompatible with string literal `baz` [4].
+
+   test.js:76:8
+   76|   case 'qux': // error
+              ^^^^^ [1]
+
+References:
+   test.js:60:30
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                    ^^^^^ [2]
+   test.js:60:48
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                      ^^^^^ [3]
+   test.js:60:66
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                        ^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:85:8
+
+All branches are incompatible:
+ - Either number [1] is incompatible with string literal `foo` [2].
+ - Or number [1] is incompatible with string literal `bar` [3].
+ - Or number [1] is incompatible with string literal `baz` [4].
+
+   test.js:85:8
+   85|   case 3: // error
+              ^ [1]
+
+References:
+   test.js:60:30
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                    ^^^^^ [2]
+   test.js:60:48
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                      ^^^^^ [3]
+   test.js:60:66
+   60| type DisjointUnion = { type: 'foo' } | { type: 'bar' } | { type: 'baz' }
+                                                                        ^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:90:11
+
+string literal `a` [1] is incompatible with `String` [2].
+
+   test.js:90:11
+   90| if (s === "a" || s === "b") {} // error
+                 ^^^ [1]
+
+References:
+   test.js:89:16
+   89| declare var s: String;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:90:24
+
+string literal `b` [1] is incompatible with `String` [2].
+
+   test.js:90:24
+   90| if (s === "a" || s === "b") {} // error
+                              ^^^ [1]
+
+References:
+   test.js:89:16
+   89| declare var s: String;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:91:11
+
+string literal `a` [1] is incompatible with `String` [2].
+
+   test.js:91:11
+   91| if (s === "a" && s === "b") {} // error
+                 ^^^ [1]
+
+References:
+   test.js:89:16
+   89| declare var s: String;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:91:24
+
+string literal `b` [1] is incompatible with `String` [2].
+
+   test.js:91:24
+   91| if (s === "a" && s === "b") {} // error
+                              ^^^ [1]
+
+References:
+   test.js:89:16
+   89| declare var s: String;
+                      ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:94:12
+
+number literal `1` [1] is incompatible with string [2].
+
+   test.js:94:12
+   94| if (st === 1 || st === 2) {} // error
+                  ^ [1]
+
+References:
+   test.js:93:17
+   93| declare var st: string;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:94:24
+
+number literal `2` [1] is incompatible with string [2].
+
+   test.js:94:24
+   94| if (st === 1 || st === 2) {} // error
+                              ^ [1]
+
+References:
+   test.js:93:17
+   93| declare var st: string;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:95:12
+
+number literal `1` [1] is incompatible with string [2].
+
+   test.js:95:12
+   95| if (st === 1 && st === 2) {} // error
+                  ^ [1]
+
+References:
+   test.js:93:17
+   93| declare var st: string;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:95:24
+
+number literal `2` [1] is incompatible with string [2].
+
+   test.js:95:24
+   95| if (st === 1 && st === 2) {} // error
+                              ^ [1]
+
+References:
+   test.js:93:17
+   93| declare var st: string;
+                       ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:99:19
+
+number [1] is incompatible with string [2].
+
+   test.js:99:19
+   99| if (obj.field === 1 || obj.field === 2) {} // error
+                         ^ [1]
+
+References:
+   test.js:97:22
+   97| type Obj = { field : string };
+                            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:99:38
+
+number [1] is incompatible with string [2].
+
+   test.js:99:38
+   99| if (obj.field === 1 || obj.field === 2) {} // error
+                                            ^ [1]
+
+References:
+   test.js:97:22
+   97| type Obj = { field : string };
+                            ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:100:19
+
+number [1] is incompatible with string [2].
+
+   test.js:100:19
+   100| if (obj.field === 1 && obj.field === 2) {} // error
+                          ^ [1]
+
+References:
+   test.js:97:22
+    97| type Obj = { field : string };
+                             ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- test.js:100:38
+
+number [1] is incompatible with string [2].
+
+   test.js:100:38
+   100| if (obj.field === 1 && obj.field === 2) {} // error
+                                             ^ [1]
+
+References:
+   test.js:97:22
+    97| type Obj = { field : string };
+                             ^^^^^^ [2]
+
+
+
+Found 23 errors

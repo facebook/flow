@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -17,8 +17,8 @@ type 'a builder = (Loc.t * 'a) list
 let new_builder =
   let open Loc in
   let full_range source =
-    let start = {line = 0; column = 0; offset = 0} in
-    let _end = {line = max_int / 2; column = max_int / 2; offset = max_int / 2} in
+    let start = {line = 0; column = 0} in
+    let _end = {line = max_int / 2; column = max_int / 2} in
     {source; start; _end}
   in fun source value -> [full_range (Some source), value]
 
@@ -95,7 +95,7 @@ let get_overlap ~old_range ~new_range =
 let update_entry ((old_range, old_value) as original) new_range map_fun builder =
   let overlap, remaining_ranges = get_overlap ~old_range ~new_range in
   let new_overlap = (overlap, map_fun old_value) in
-  let new_remaining = List.map (fun loc -> (loc, old_value)) remaining_ranges in
+  let new_remaining = Core_list.map ~f:(fun loc -> (loc, old_value)) remaining_ranges in
   let builder = builder |> remove original |> add new_overlap in
   List.fold_left (Fn.flip add) builder new_remaining
 
@@ -111,7 +111,7 @@ let update_range range map_fun builder =
 let update_settings =
   let map_fun setting_list old_settings =
     let setting_list =
-      List.map (fun (kind, (state, loc)) -> (kind, (state, Some loc))) setting_list
+      Core_list.map ~f:(fun (kind, (state, loc)) -> (kind, (state, Some loc))) setting_list
     in
     LintSettings.set_all setting_list old_settings
   in
@@ -156,8 +156,6 @@ let bake builder =
 (* Supports O(log(n)) queries to get the value associated with a loc. *)
 type 'a t = 'a SpanMap.t
 
-let empty = SpanMap.empty
-
 let file_cover source value = new_builder source value |> bake
 
 (* Gets the value associated with a certain location in the code. To resolve
@@ -166,16 +164,11 @@ let file_cover source value = new_builder source value |> bake
 let find loc cover =
   let first_char = Loc.first_char loc in
   try SpanMap.find_unsafe first_char cover
-  with Not_found -> raise (Uncovered (Loc.to_string ~include_source:true loc))
+  with Not_found -> raise (Uncovered (Loc.debug_to_string ~include_source:true loc))
 
-let union a b = SpanMap.union a b
-
-let union_all cover_set =
-  Utils_js.FilenameMap.fold
-    (fun _key -> union)
-    cover_set
-    empty
-
+let find_opt loc cover =
+  let first_char = Loc.first_char loc in
+  SpanMap.get first_char cover
 
 (* `severity LintSettings.t`-specific functions *)
 
@@ -193,7 +186,7 @@ let is_explicit lint_kind loc severity_cover =
 find loc severity_cover |> LintSettings.is_explicit lint_kind
 
 let to_string settings =
-  let loc_to_str = Loc.to_string ~include_source:true in
+  let loc_to_str = Loc.debug_to_string ~include_source:true in
   let acc = Buffer.create 100 in
   let () = SpanMap.iter (fun loc settings ->
       Buffer.add_string acc (Printf.sprintf "%s: %s\n"

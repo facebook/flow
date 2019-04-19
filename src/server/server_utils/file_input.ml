@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,4 +25,6 @@ let content_of_file_input_unsafe = function
 
 let content_of_file_input file =
   try Ok (content_of_file_input_unsafe file)
-  with exn -> Error (Printexc.to_string exn)
+  with exn ->
+    let exn = Exception.wrap exn in
+    Error (Exception.to_string exn)

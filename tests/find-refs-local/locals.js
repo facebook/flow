@@ -37,6 +37,8 @@ let { x, y } = { x: 0, y: 0 };
 let { x: _x, y: _y } = { x, y };
 ({ x: _x, y: _y });
 
+let { [x]: y } = { };
+
 // Not in scope
 wut1;
 wut1 = wut2;

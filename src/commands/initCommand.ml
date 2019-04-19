@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -29,6 +29,7 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> CommandUtils.base_flags
     |> CommandUtils.from_flag
     |> CommandUtils.flowconfig_flags
     |> flag "--options" (optional string)
@@ -37,8 +38,15 @@ let spec = {
   )
 }
 
-let main from flowconfig_flags options root () =
-  FlowEventLogger.set_from from;
+let error (errs:(int * string) list) =
+  let msg =
+    errs
+    |> Core_list.map ~f:(fun (ln, msg) -> Utils_js.spf ".flowconfig:%d %s" ln msg)
+    |> String.concat "\n"
+  in
+  FlowExitStatus.(exit ~msg Invalid_flowconfig)
+
+let main base_flags flowconfig_flags options root () =
   let root = match root with
   | None -> Sys.getcwd () |> Path.make
   | Some root -> Path.make root
@@ -50,18 +58,25 @@ let main from flowconfig_flags options root () =
   in
   let ignores = flowconfig_flags.CommandUtils.ignores in
   let untyped = flowconfig_flags.CommandUtils.untyped in
+  let declarations = flowconfig_flags.CommandUtils.declarations in
   let includes = flowconfig_flags.CommandUtils.includes in
   let libs = flowconfig_flags.CommandUtils.libs in
   let lints = flowconfig_flags.CommandUtils.raw_lint_severities in
 
-  let file = Server_files_js.config_file root in
+  let file = Server_files_js.config_file base_flags.CommandUtils.Base_flags.flowconfig_name root in
   if Sys.file_exists file
   then begin
     let msg = Utils_js.spf "Error: \"%s\" already exists!\n%!" file in
     FlowExitStatus.(exit ~msg Invalid_flowconfig)
   end;
 
-  let config = FlowConfig.init ~ignores ~untyped ~includes ~libs ~options ~lints in
+  let config = FlowConfig.init ~ignores ~untyped ~declarations ~includes ~libs ~options ~lints in
+
+  let config = match config with
+  | Ok (config, []) -> config
+  | Ok (_, warnings) -> error warnings (* TODO: write warnings to stderr instead of exiting *)
+  | Error err -> error [err]
+  in
 
   let out = Sys_utils.open_out_no_fail file in
   FlowConfig.write config out;

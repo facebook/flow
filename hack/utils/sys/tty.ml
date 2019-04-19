@@ -89,20 +89,29 @@ let should_color color_mode =
   | Color_Never -> false
   | Color_Auto -> supports_color ()
 
-let emoji_spinner = [
-  "\xF0\x9F\x98\xA1"; (* Angry Face *)
-  "\xF0\x9F\x98\x82"; (* Face With Tears of Joy *)
-  "\xF0\x9F\xA4\x94"; (* Thinking Face *)
-  "\xF0\x9F\x92\xAF" (* Hundred Points *)
-]
+let emoji_spinner =
+  List.map
+    (* Some terminals display the emoji using only one column, even though they
+    may take up two columns, and put the cursor immediately after it in an
+    illegible manner. Add an extra space to separate the cursor from the emoji. *)
+    ~f:(fun x -> x ^ " ")
+    [
+      "\xF0\x9F\x98\xA1"; (* Angry Face *)
+      "\xF0\x9F\x98\x82"; (* Face With Tears of Joy *)
+      "\xF0\x9F\xA4\x94"; (* Thinking Face *)
+      "\xF0\x9F\x92\xAF" (* Hundred Points *)
+    ]
 
 (* See https://github.com/yarnpkg/yarn/issues/405. *)
 let supports_emoji () = Sys.os_type <> "Win32" && supports_color ()
 
-let print_one ?(color_mode=Color_Auto) ?(out_channel=stdout) c s =
+let apply_color ?(color_mode=Color_Auto) c s: string =
   if should_color color_mode
-  then Printf.fprintf out_channel "\x1b[%sm%s\x1b[0m" (style_num c) (s)
-  else Printf.fprintf out_channel "%s" s
+  then Printf.sprintf "\x1b[%sm%s\x1b[0m" (style_num c) (s)
+  else Printf.sprintf "%s" s
+
+let print_one ?(color_mode=Color_Auto) ?(out_channel=stdout) c s =
+  Printf.fprintf out_channel "%s" (apply_color ~color_mode c s)
 
 let cprint ?(color_mode=Color_Auto) ?(out_channel=stdout) strs =
   List.iter strs (fun (c, s) -> print_one ~color_mode ~out_channel c s)

@@ -1,14 +1,14 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-module S = Ast.Statement;;
-module E = Ast.Expression;;
-module T = Ast.Type;;
-module P = Ast.Pattern;;
+module S = Flow_ast.Statement;;
+module E = Flow_ast.Expression;;
+module T = Flow_ast.Type;;
+module P = Flow_ast.Pattern;;
 module Utils = Flowtestgen_utils;;
 
 (* ESSENTIAL: Syntax type and related functions *)
@@ -22,8 +22,8 @@ class ruleset_optional = object(self)
 
   method! weak_assert b = self#backtrack_on_false b
 
-  method! is_subtype_obj (o1 : Loc.t T.Object.t) (o2 : Loc.t T.Object.t) =
-    let get_prop_set (o : Loc.t T.Object.t) =
+  method! is_subtype_obj (o1 : (Loc.t, Loc.t) T.Object.t) (o2 : (Loc.t, Loc.t) T.Object.t) =
+    let get_prop_set (o : (Loc.t, Loc.t) T.Object.t) =
       let tbl = Hashtbl.create 1000 in
 
       (* hash table for storing optional properties *)
@@ -75,7 +75,7 @@ class ruleset_optional = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), init_type)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), init_type)) in
     let new_env = self#add_binding new_env (Type init_type) in
     var_decl, new_env
 
@@ -105,7 +105,7 @@ class ruleset_optional = object(self)
     let new_env =
       self#add_binding
         env
-        (Expr ((E.Identifier (Loc.none, vname)), vtype)) in
+        (Expr ((E.Identifier (Flow_ast_utils.ident_of_source (Loc.none, vname))), vtype)) in
     let new_env = self#add_binding new_env (Type vtype) in
     var_decl, new_env
 

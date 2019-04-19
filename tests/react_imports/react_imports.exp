@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    commonjs-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -34,8 +34,8 @@ References:
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:20:5
-   20|   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ [4]
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- commonjs-pascal.js:7:8
@@ -47,14 +47,14 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:280:27
-   280|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:404:27
+   404|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    commonjs.js:4:2
     4| (React.Component: number); // Error
@@ -88,8 +88,8 @@ References:
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:20:5
-   20|   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ [4]
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- commonjs.js:7:8
@@ -108,7 +108,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- es-default-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    es-default-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -142,8 +142,8 @@ References:
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:20:5
-   20|   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ [4]
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------- es-default-pascal.js:7:8
@@ -155,14 +155,14 @@ Cannot get `React.Missing` because property `Missing` is missing in module `reac
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:280:27
-   280|   declare module.exports: $Exports<'react'>;
+   <BUILTINS>/react.js:404:27
+   404|   declare module.exports: $Exports<'react'>;
                                   ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ es-default.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    es-default.js:4:2
     4| (React.Component: number); // Error
@@ -186,25 +186,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
                           ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:258:26
+   <BUILTINS>/react.js:367:26
                                  v-
-   258|   declare export default {|
-   259|     +DOM: typeof DOM,
-   260|     +PropTypes: typeof PropTypes,
-   261|     +version: typeof version,
-   262|     +checkPropTypes: typeof checkPropTypes,
-   263|     +createClass: typeof createClass,
-   264|     +createContext: typeof createContext,
-   265|     +createElement: typeof createElement,
-   266|     +cloneElement: typeof cloneElement,
-   267|     +createFactory: typeof createFactory,
-   268|     +createRef: typeof createRef,
-   269|     +isValidElement: typeof isValidElement,
-   270|     +Component: typeof Component,
-   271|     +PureComponent: typeof PureComponent,
-   272|     +Fragment: typeof Fragment,
-   273|     +Children: typeof Children,
-   274|   |};
+   367|   declare export default {|
+   368|     +DOM: typeof DOM,
+   369|     +PropTypes: typeof PropTypes,
+   370|     +version: typeof version,
+   371|     +checkPropTypes: typeof checkPropTypes,
+   372|     +memo: typeof memo,
+   373|     +lazy: typeof lazy,
+   374|     +createClass: typeof createClass,
+   375|     +createContext: typeof createContext,
+   376|     +createElement: typeof createElement,
+   377|     +cloneElement: typeof cloneElement,
+   378|     +createFactory: typeof createFactory,
+   379|     +createRef: typeof createRef,
+   380|     +forwardRef: typeof forwardRef,
+   381|     +isValidElement: typeof isValidElement,
+      :
+   384|     +Fragment: typeof Fragment,
+   385|     +Children: typeof Children,
+   386|     +ConcurrentMode: typeof ConcurrentMode,
+   387|     +StrictMode: typeof StrictMode,
+   388|     +Suspense: typeof Suspense,
+   389|     +useContext: typeof useContext,
+   390|     +useState: typeof useState,
+   391|     +useReducer: typeof useReducer,
+   392|     +useRef: typeof useRef,
+   393|     +useEffect: typeof useEffect,
+   394|     +useLayoutEffect: typeof useLayoutEffect,
+   395|     +useCallback: typeof useCallback,
+   396|     +useMemo: typeof useMemo,
+   397|     +useImperativeHandle: typeof useImperativeHandle,
+   398|   |};
           -^ [1]
 
 
@@ -217,25 +231,39 @@ Cannot get `React.Node` because property `Node` is missing in object type [1].
              ^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:258:26
+   <BUILTINS>/react.js:367:26
                                  v-
-   258|   declare export default {|
-   259|     +DOM: typeof DOM,
-   260|     +PropTypes: typeof PropTypes,
-   261|     +version: typeof version,
-   262|     +checkPropTypes: typeof checkPropTypes,
-   263|     +createClass: typeof createClass,
-   264|     +createContext: typeof createContext,
-   265|     +createElement: typeof createElement,
-   266|     +cloneElement: typeof cloneElement,
-   267|     +createFactory: typeof createFactory,
-   268|     +createRef: typeof createRef,
-   269|     +isValidElement: typeof isValidElement,
-   270|     +Component: typeof Component,
-   271|     +PureComponent: typeof PureComponent,
-   272|     +Fragment: typeof Fragment,
-   273|     +Children: typeof Children,
-   274|   |};
+   367|   declare export default {|
+   368|     +DOM: typeof DOM,
+   369|     +PropTypes: typeof PropTypes,
+   370|     +version: typeof version,
+   371|     +checkPropTypes: typeof checkPropTypes,
+   372|     +memo: typeof memo,
+   373|     +lazy: typeof lazy,
+   374|     +createClass: typeof createClass,
+   375|     +createContext: typeof createContext,
+   376|     +createElement: typeof createElement,
+   377|     +cloneElement: typeof cloneElement,
+   378|     +createFactory: typeof createFactory,
+   379|     +createRef: typeof createRef,
+   380|     +forwardRef: typeof forwardRef,
+   381|     +isValidElement: typeof isValidElement,
+      :
+   384|     +Fragment: typeof Fragment,
+   385|     +Children: typeof Children,
+   386|     +ConcurrentMode: typeof ConcurrentMode,
+   387|     +StrictMode: typeof StrictMode,
+   388|     +Suspense: typeof Suspense,
+   389|     +useContext: typeof useContext,
+   390|     +useState: typeof useState,
+   391|     +useReducer: typeof useReducer,
+   392|     +useRef: typeof useRef,
+   393|     +useEffect: typeof useEffect,
+   394|     +useLayoutEffect: typeof useLayoutEffect,
+   395|     +useCallback: typeof useCallback,
+   396|     +useMemo: typeof useMemo,
+   397|     +useImperativeHandle: typeof useImperativeHandle,
+   398|   |};
           -^ [1]
 
 
@@ -248,31 +276,45 @@ Cannot get `React.Missing` because property `Missing` is missing in object type 
                ^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:258:26
+   <BUILTINS>/react.js:367:26
                                  v-
-   258|   declare export default {|
-   259|     +DOM: typeof DOM,
-   260|     +PropTypes: typeof PropTypes,
-   261|     +version: typeof version,
-   262|     +checkPropTypes: typeof checkPropTypes,
-   263|     +createClass: typeof createClass,
-   264|     +createContext: typeof createContext,
-   265|     +createElement: typeof createElement,
-   266|     +cloneElement: typeof cloneElement,
-   267|     +createFactory: typeof createFactory,
-   268|     +createRef: typeof createRef,
-   269|     +isValidElement: typeof isValidElement,
-   270|     +Component: typeof Component,
-   271|     +PureComponent: typeof PureComponent,
-   272|     +Fragment: typeof Fragment,
-   273|     +Children: typeof Children,
-   274|   |};
+   367|   declare export default {|
+   368|     +DOM: typeof DOM,
+   369|     +PropTypes: typeof PropTypes,
+   370|     +version: typeof version,
+   371|     +checkPropTypes: typeof checkPropTypes,
+   372|     +memo: typeof memo,
+   373|     +lazy: typeof lazy,
+   374|     +createClass: typeof createClass,
+   375|     +createContext: typeof createContext,
+   376|     +createElement: typeof createElement,
+   377|     +cloneElement: typeof cloneElement,
+   378|     +createFactory: typeof createFactory,
+   379|     +createRef: typeof createRef,
+   380|     +forwardRef: typeof forwardRef,
+   381|     +isValidElement: typeof isValidElement,
+      :
+   384|     +Fragment: typeof Fragment,
+   385|     +Children: typeof Children,
+   386|     +ConcurrentMode: typeof ConcurrentMode,
+   387|     +StrictMode: typeof StrictMode,
+   388|     +Suspense: typeof Suspense,
+   389|     +useContext: typeof useContext,
+   390|     +useState: typeof useState,
+   391|     +useReducer: typeof useReducer,
+   392|     +useRef: typeof useRef,
+   393|     +useEffect: typeof useEffect,
+   394|     +useLayoutEffect: typeof useLayoutEffect,
+   395|     +useCallback: typeof useCallback,
+   396|     +useMemo: typeof useMemo,
+   397|     +useImperativeHandle: typeof useImperativeHandle,
+   398|   |};
           -^ [1]
 
 
 Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    es-namespace-pascal.js:4:2
     4| (React.Component: number); // Error
@@ -306,8 +348,8 @@ References:
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:20:5
-   20|   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ [4]
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------- es-namespace-pascal.js:7:8
@@ -326,7 +368,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
 
-Cannot cast `React.Component` to number because statics of `React.Component` [1] is incompatible with number [2].
+Cannot cast `React.Component` to number because class `React.Component` [1] is incompatible with number [2].
 
    es-namespace.js:4:2
     4| (React.Component: number); // Error
@@ -360,8 +402,8 @@ References:
    19|   | React$Portal
            ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:20:5
-   20|   | Iterable<React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^ [4]
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:7:8

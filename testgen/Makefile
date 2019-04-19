@@ -1,4 +1,4 @@
-# Copyright (c) 2013-present, Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 # All rights reserved.
 
 DIR:=$(dir $(abspath $(lastword $(MAKEFILE_LIST))))

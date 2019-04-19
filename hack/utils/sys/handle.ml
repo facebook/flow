@@ -13,7 +13,7 @@
 
 type handle = int
 external raw_get_handle :
-  Unix.file_descr -> handle = "caml_hh_worker_get_handle" "noalloc"
+  Unix.file_descr -> handle = "caml_hh_worker_get_handle" [@@noalloc]
 external raw_wrap_handle :
   handle -> Unix.file_descr = "caml_hh_worker_create_handle"
 external win_setup_handle_serialization :

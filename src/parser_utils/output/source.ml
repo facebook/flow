@@ -1,14 +1,11 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-module LocMap = Utils_js.LocMap
-
-type source_entry = int * Loc.t
-type source_line = source_entry list
+module LocMap = Loc_collections.LocMap
 
 type t = {
   buffer: Buffer.t;
@@ -40,9 +37,6 @@ let pop_loc source =
   (* raises if you call pop more than push *)
   let loc_stack = List.tl source.loc_stack in
   { source with loc_stack }
-
-let pos_add_cols pos len =
-   Sourcemap.({ pos with col = pos.col + len })
 
 let pos_new_line pos =
    Sourcemap.({ line = pos.line + 1; col = 0 })
@@ -104,36 +98,5 @@ let add_newline source =
 let add_space num b =
   add_string (String.make num ' ') b
 
-(* Merge two source builders. The first is mutated *)
-let add_source src1 src2 =
-  (* TODO: handle merging source mappings, currently you will get incorrect
-     source maps after merging (the compact printer doesn't use this API) *)
-  Buffer.add_buffer src1.buffer src2.buffer;
-  let pos =
-    let open Sourcemap in
-    let line = src1.pos.line + src2.pos.line - 1 in
-    let col = if src2.pos.line > 1 then src2.pos.col else src1.pos.col + src2.pos.col in
-    { line; col }
-  in
-  { src1 with pos }
-
 let contents b = Buffer.contents b.buffer
-
-module Json = Sourcemap.Make_json_writer (struct
-  type t = Hh_json.json
-  let of_string x = Hh_json.JSON_String x
-  let of_obj props = Hh_json.JSON_Object props
-  let of_array arr = Hh_json.JSON_Array arr
-  let of_number x = Hh_json.JSON_Number x
-  let null = Hh_json.JSON_Null
-end)
-
-let json_of_source source =
-  let open Hh_json in
-  let rev_props = ["code", JSON_String (contents source)] in
-  let rev_props = match source.sourcemap with
-  | Some sourcemap ->
-    ("sourceMap", Json.json_of_sourcemap sourcemap)::rev_props
-  | None -> rev_props
-  in
-  JSON_Object (List.rev rev_props)
+let sourcemap b = b.sourcemap

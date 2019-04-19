@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "foo_parse_fail.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root foo_parse_fail.js 10 17 < foo_parse_fail.js
@@ -89,3 +86,19 @@ assert_ok \
 printf "class.js = "
 assert_ok \
   "$FLOW" autocomplete --strip-root --pretty class.js 7 5 < class.js
+
+printf "optional_chaining_new.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty optional_chaining_new.js 9 15 < optional_chaining_new.js
+
+printf "optional_chaining_continue.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty optional_chaining_continue.js 13 19 < optional_chaining_continue.js
+
+printf "idx.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty idx.js 12 28 < idx.js
+
+printf "generic_alias.js = "
+assert_ok \
+  "$FLOW" autocomplete --strip-root --pretty generic_alias.js 7 5 < generic_alias.js

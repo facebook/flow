@@ -1,3 +1,9 @@
+(**
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *)
 type t =
   | Interrupted
   | No_error
@@ -23,9 +29,13 @@ type t =
   | Server_start_failed of Unix.process_status
   | Missing_flowlib
   | Autostop
+  | Killed_by_monitor
+  | Invalid_saved_state
+  | Restart
   | Socket_error
   | Dfind_died
   | Dfind_unresponsive
+  | Watchman_error
   | Unknown_error
 
 exception Exit_with of t
@@ -35,3 +45,6 @@ val error_code: t -> int
 val error_type: int -> t
 val to_string: t -> string
 val set_json_mode: pretty:bool -> unit
+val unset_json_mode: unit -> unit
+
+val json_props_of_t: ?msg:string -> t -> (string * Hh_json.json) list

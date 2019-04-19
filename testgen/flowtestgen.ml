@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -40,7 +40,7 @@ let sys_init () =
 
 let move_func (prog : Syntax.t list) =
   let is_func s = match s with
-      | Syntax.Stmt (Ast.Statement.FunctionDeclaration _) -> true
+      | Syntax.Stmt (Flow_ast.Statement.FunctionDeclaration _) -> true
       | _ -> false in
 
   let all_func = List.filter is_func prog in
@@ -50,7 +50,7 @@ let move_func (prog : Syntax.t list) =
 (* Main entry functions for generating code *)
 let mk_code engine prog_num =
   engine#gen_prog prog_num
-  |> (List.map (fun (slist, env) ->
+  |> (Core_list.map ~f:(fun (slist, env) ->
       (* We add type assertions at the end *)
       let prog = slist |> move_func in
       Printf.sprintf "%s\n%!" ((Syntax.combine_syntax prog) ^ (Ruleset_base.str_of_env env))))

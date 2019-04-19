@@ -34,5 +34,13 @@ Unused suppression comment.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Warning ------------------------------------------------------------------------------------------------------- E.js:8:1
 
-Found 2 errors and 1 warning
+Unused suppression comment.
+
+   8| // $FlowFixMe - this is unused because sketchy-null-string is off
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 2 errors and 2 warnings

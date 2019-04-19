@@ -10,10 +10,10 @@ React.createElement(42); // Error: Number is not a valid component type.
 React.createElement('div', {}); // OK
 React.createElement(42, {}); // Error: Number is not a valid component type.
 React.createElement({}, {}); // Error: Object is not a valid component type.
-React.createElement(() => {}, {}); // OK
+React.createElement(() => { return null }, {}); // OK
 
 class A extends React.Component<{foo: number, bar: number}> {}
-function B(props: {foo: number, bar: number}) {}
+function B(props: {foo: number, bar: number}) { return null }
 
 React.createElement(A, {foo: 1, bar: 2}); // OK
 React.createElement(B, {foo: 1, bar: 2}); // OK
@@ -47,7 +47,7 @@ React.createElement(B); // Error: Missing `foo` and `bar`.
 class C extends React.Component<{foo: number, bar: number}> {
   static defaultProps = {bar: 42};
 }
-function D(props: {foo: number, bar: number}) {}
+function D(props: {foo: number, bar: number}) { return null }
 D.defaultProps = {bar: 42};
 
 React.createElement(C, {foo: 1, bar: 2}); // OK

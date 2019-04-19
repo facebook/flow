@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 printf "\nCheck without --all doesn't read malformed @flow file\n"
 assert_ok "$FLOW" check --strip-root .
 

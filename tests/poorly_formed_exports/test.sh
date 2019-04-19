@@ -1,8 +1,5 @@
 #!/bin/bash
 
-. ../assert.sh
-FLOW=$1
-
 echo "FLOW STATUS:"
 
 assert_errors $FLOW status

@@ -1,9 +1,13 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
+module Ast = Flow_ast
+open Typed_ast_utils
+open Utils_js
 
 (*****************)
 (* Query/Suggest *)
@@ -36,76 +40,98 @@ type result =
 | FailureUnparseable of Loc.t * Type.t * string
 | Success of Loc.t * Ty.t
 
-module QueryTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = false
-  let expand_internal_types = false
-  let expand_annots = false
-  let flag_shadowed_type_params = false
-end)
+let concretize_loc_pairs pair_list =
+  Core_list.map ~f:(fun (loc, x) -> ALoc.to_loc loc, x) pair_list
 
-let query_type cx loc =
-  let pred = fun range -> Reason.in_range loc range in
-  let type_table = Context.type_table cx in
-  match Type_table.find_type_info ~pred type_table with
+let sort_loc_pairs pair_list =
+  List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
+
+let type_at_pos_type ~full_cx ~file ~file_sig ~expand_aliases ~omit_targ_defaults ~type_table ~typed_ast loc =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = expand_aliases;
+    flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
+    optimize_types = true;
+    omit_targ_defaults;
+    simplify_empty = true;
+  } in
+  match find_type_at_pos_annotation typed_ast loc with
   | None -> FailureNoMatch
-  | Some (loc, (_, scheme, _)) ->
-    (match QueryTypeNormalizer.from_scheme ~cx scheme with
+  | Some  (loc, scheme) ->
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~file_sig ~type_table in
+    (match Ty_normalizer.from_scheme ~options ~genv scheme with
     | Ok ty -> Success (loc, ty)
     | Error err ->
       let msg = Ty_normalizer.error_to_string err in
-      print_endline msg;
-      let Type_table.Scheme (_, t) = scheme in
-      FailureUnparseable (loc, t, msg))
+      FailureUnparseable (loc, scheme.Type.TypeScheme.type_, msg))
 
-
-module DumpTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = false
-  let expand_internal_types = false
-  let expand_annots = false
-  let flag_shadowed_type_params = false
-end)
-
-let dump_types ~printer cx =
-  Type_table.coverage_to_list (Context.type_table cx)
-  |> DumpTypeNormalizer.from_schemes ~cx
-  |> Core_list.filter_map ~f:(function
+let dump_types cx file_sig ~printer =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = false;
+    flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
+    optimize_types = true;
+    omit_targ_defaults = false;
+    simplify_empty = true;
+  } in
+  let file = Context.file cx in
+  let type_table = Context.type_table cx in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+  let result = Ty_normalizer.from_schemes ~options ~genv
+    (Type_table.coverage_to_list type_table) in
+  let print_ok = function
     | l, Ok t -> Some (l, printer t)
     | _ -> None
-  )
-  |> List.sort (fun (a, _) (b, _) -> Loc.compare a b)
-
-let is_covered = function
-  | Ty.Any
-  | Ty.Bot -> false
-  | _ -> true
-
-module CoverageTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = true
-  let expand_internal_types = false
-  let expand_annots = false
-  let flag_shadowed_type_params = false
-end)
-
-let covered_types cx ~should_check =
-  let f =
-    if should_check then
-      fun acc (loc, result) ->
-        match result with
-        | Ok t -> (loc, is_covered t)::acc
-        | _ -> (loc, false)::acc
-    else
-      fun acc (loc, _) -> (loc, false)::acc
   in
-  let htbl = Type_table.coverage_hashtbl (Context.type_table cx) in
-  CoverageTypeNormalizer.fold_hashtbl ~cx ~f ~g:(fun t -> t) ~htbl []
-  |> List.sort (fun (a_loc, _) (b_loc, _) -> Loc.compare a_loc b_loc)
+  (Core_list.filter_map result ~f:print_ok)
+  |> concretize_loc_pairs
+  |> sort_loc_pairs
 
-module SuggestTypeNormalizer = Ty_normalizer.Make(struct
-  let fall_through_merged = false
-  let expand_internal_types = false
-  let expand_annots = false
-  let flag_shadowed_type_params = true
-end)
+let covered_types cx ~should_check ~check_trust =
+  let type_table = Context.type_table cx in
+  let htbl = Type_table.coverage_hashtbl type_table in
+  let check_trust =
+    if check_trust then
+      fun x -> x
+    else
+      function
+      | Coverage.Tainted -> Coverage.Untainted
+      | x -> x
+  in
+  let coverage = new Coverage.visitor in
+  let compute_cov =
+    if should_check
+    then coverage#type_ cx %> Coverage.result_of_coverage %> check_trust
+    else fun _ -> Coverage.Empty
+  in
+  let result_pairs =
+    Hashtbl.fold (fun loc { Type.TypeScheme.type_; _ } acc ->
+      (ALoc.to_loc loc, compute_cov type_)::acc
+    ) htbl []
+  in
+  sort_loc_pairs result_pairs
+
+let component_coverage ~full_cx =
+  let open Coverage in
+  let coverage_computer = new visitor in
+  Core_list.map ~f:(fun cx ->
+    let type_table = Context.type_table cx in
+    Type_table.fold_coverage (fun _ { Type.TypeScheme.type_; _ } coverage ->
+      match coverage_computer#type_ full_cx type_ |> Coverage.result_of_coverage with
+      | Uncovered -> { coverage with uncovered = coverage.uncovered + 1 }
+      | Untainted -> { coverage with untainted = coverage.untainted + 1 }
+      | Tainted   -> { coverage with tainted   = coverage.tainted   + 1 }
+      | Empty     -> { coverage with empty     = coverage.empty     + 1 }
+    ) type_table initial_coverage
+  )
 
 (* 'suggest' can use as many types in the type tables as possible, which is why
    we are querying the tables from both "coverage" and "type_info". Coverage
@@ -113,15 +139,31 @@ end)
    reliably. On the other hand "type_info" only stores information about
    identifiers, so anonymous functions and arrows are not captured.
 *)
-let suggest_types cx =
+let suggest_types cx file_sig =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = false;
+    flag_shadowed_type_params = true;
+    preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
+    optimize_types = true;
+    omit_targ_defaults = false;
+    simplify_empty = true;
+  } in
   let type_table = Context.type_table cx in
-  let result = Utils_js.LocMap.empty in
-  let result = SuggestTypeNormalizer.fold_hashtbl ~cx
-    ~f:(fun acc (loc, t) -> Utils_js.LocMap.add loc t acc)
+  let file = Context.file cx in
+  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+  let result = Loc_collections.ALocMap.empty in
+  let result = Ty_normalizer.fold_hashtbl
+    ~options ~genv
+    ~f:(fun acc (loc, t) -> Loc_collections.ALocMap.add loc t acc)
     ~g:(fun t -> t)
     ~htbl:(Type_table.coverage_hashtbl type_table) result in
-  let result = SuggestTypeNormalizer.fold_hashtbl ~cx
-    ~f:(fun acc (loc, t) -> Utils_js.LocMap.add loc t acc)
+  let result = Ty_normalizer.fold_hashtbl
+    ~options ~genv
+    ~f:(fun acc (loc, t) -> Loc_collections.ALocMap.add loc t acc)
     ~g:(fun (_, t, _) -> t)
     ~htbl:(Type_table.type_info_hashtbl type_table) result in
   result

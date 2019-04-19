@@ -12,6 +12,7 @@ module Types = struct
   exception Timeout
   exception Watchman_error of string
   exception Subscription_canceled_by_watchman
+  exception Watchman_restarted
 
 
   type subscribe_mode =
@@ -32,8 +33,13 @@ module Types = struct
     init_timeout: int;
     (** See watchman expression terms. *)
     expression_terms: Hh_json.json list;
-    root: Path.t;
+    debug_logging: bool;
+    roots: Path.t list;
+    subscription_prefix: string;
   }
+
+  (** The message's clock. *)
+  type clock = string
 
   type pushed_changes =
     (**
@@ -53,13 +59,13 @@ module Types = struct
      *)
     | State_enter of string * Hh_json.json option
     | State_leave of string * Hh_json.json option
-    | Changed_merge_base of string * SSet.t
+    | Changed_merge_base of string * SSet.t * clock
     | Files_changed of SSet.t
 
   type changes =
     | Watchman_unavailable
     | Watchman_pushed of pushed_changes
-    | Watchman_synchronous of SSet.t
+    | Watchman_synchronous of pushed_changes list
 end
 
 (** The abstract types, and the types that are defined in terms of
@@ -77,27 +83,69 @@ module Abstract_types = struct
     | Watchman_alive of env
 end
 
+
+module type WATCHMAN_PROCESS = sig
+  type 'a result
+  type conn
+
+  exception Read_payload_too_long
+
+  val (>>=): 'a result -> ('a -> 'b result) -> 'b result
+  val (>|=): 'a result -> ('a -> 'b) -> 'b result
+  val return: 'a -> 'a result
+  val catch: f:(unit -> 'b result) -> catch:(stack: string -> exn -> 'b result) -> 'b result
+
+  val list_fold_values: 'a list -> init:'b -> f:('b -> 'a -> 'b result) -> 'b result
+
+  val open_connection: timeout:float -> conn result
+  val request:
+    debug_logging:bool -> ?conn:conn -> ?timeout:float -> Hh_json.json -> Hh_json.json result
+  val send_request_and_do_not_wait_for_response:
+    debug_logging:bool -> conn:conn -> Hh_json.json -> unit result
+  val blocking_read: debug_logging:bool -> ?timeout:float -> conn:conn -> Hh_json.json option result
+  val close_connection: conn -> unit result
+
+  module Testing: sig
+    val get_test_conn: unit -> conn result
+  end
+end
+
 module type S = sig
 
   include module type of Types
   include module type of Abstract_types
 
-  val crash_marker_path: Path.t -> string
+  type 'a result
+  type conn
 
-  val init: init_settings -> env option
+  val init: ?since_clockspec:string -> init_settings -> unit -> env option result
 
-  val get_all_files: env -> string list
+  val get_all_files: env -> string list result
+
+  val get_changes_since_mergebase: ?timeout:float -> env -> string list result
+
+  val get_mergebase: ?timeout:float -> env -> string result
 
   val get_changes: ?deadline:float ->
-    watchman_instance -> watchman_instance * changes
+    watchman_instance -> (watchman_instance * changes) result
   val get_changes_synchronously: timeout:int ->
-    watchman_instance -> watchman_instance * SSet.t
+    watchman_instance -> (watchman_instance * (pushed_changes list)) result
 
-  val get_fd: watchman_instance -> Unix.file_descr option
+  val conn_of_instance: watchman_instance -> conn option
+
+  val close: env -> unit result
+
+  val with_instance:
+    watchman_instance ->
+    try_to_restart:bool ->
+    on_alive:(env -> 'a result) ->
+    on_dead:(dead_env -> 'a result) ->
+    'a result
+
 
   (** Expose some things for testing. *)
   module Testing : sig
-    val test_env : env
+    val get_test_env : unit -> env result
     val test_settings : init_settings
 
     val transform_asynchronous_get_changes_response :

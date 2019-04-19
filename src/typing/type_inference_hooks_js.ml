@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -19,7 +19,7 @@ let jsx_nop _ _ _ _ = false
 
 let ref_nop _ _ _ = ()
 
-let class_member_decl_nop _ _ _ _ = ()
+let class_member_decl_nop _ _ _ _ _ = ()
 
 let obj_prop_decl_nop _ _ _ = ()
 
@@ -27,7 +27,9 @@ let require_pattern_nop _ = ()
 
 let obj_to_obj_nop _ _ _ = ()
 
-let export_default_nop _ = ()
+let instance_to_obj_nop _ _ _ = ()
+
+let export_named_nop _ _ = ()
 
 (* This type represents the possible definition-points for an lvalue. *)
 type def =
@@ -65,17 +67,17 @@ type def =
 type hook_state_t = {
   id_hook:
      (Context.t ->
-      string -> Loc.t ->
+      string -> ALoc.t ->
       bool);
 
   lval_hook:
     (Context.t ->
-      string -> Loc.t -> def ->
+      string -> ALoc.t -> def ->
       unit);
 
   member_hook:
      (Context.t ->
-      string -> Loc.t -> Type.t ->
+      string -> ALoc.t -> Type.t ->
       bool);
 
 (* TODO: This is inconsistent with the way the id/member hooks work, but we
@@ -83,38 +85,42 @@ type hook_state_t = {
          things a bit *)
   call_hook:
      (Context.t ->
-      string -> Loc.t -> Type.t ->
+      string -> ALoc.t -> Type.t ->
       unit);
 
   import_hook:
       (Context.t ->
-       (Loc.t * string) -> Loc.t ->
+       (* Location of the string identifiying the imported module, and the contents of that string. *)
+       (ALoc.t * string) ->
+       (* Location of the entire import statement/require call *)
+       ALoc.t ->
        unit);
 
   jsx_hook:
       (Context.t ->
-       string -> Loc.t -> Type.t ->
+       string -> ALoc.t -> Type.t ->
        bool);
 
   ref_hook:
       (Context.t ->
-       Loc.t ->
-       Loc.t ->
+       ALoc.t ->
+       ALoc.t ->
        unit);
 
   class_member_decl_hook:
      (Context.t ->
       Type.t (* self *) ->
-      string -> Loc.t ->
+      bool (* static *) ->
+      string -> ALoc.t ->
       unit);
 
   obj_prop_decl_hook:
       (Context.t ->
-        string -> Loc.t ->
+        string -> ALoc.t ->
         unit);
 
   require_pattern_hook:
-    Loc.t -> unit;
+    ALoc.t -> unit;
 
   (* Called when ObjT 1 ~> ObjT 2 *)
   obj_to_obj_hook:
@@ -123,7 +129,15 @@ type hook_state_t = {
         Type.t (* ObjT 2 *) ->
         unit);
 
-  export_default_hook: Loc.t -> unit;
+  (* Called when InstanceT ~> ObjT *)
+  instance_to_obj_hook:
+      (Context.t ->
+        Type.t (* InstanceT *) ->
+        Type.t (* ObjT *) ->
+        unit);
+
+  (* Dispatched with "default" for default exports *)
+  export_named_hook: string (* name *) -> ALoc.t -> unit;
 }
 
 let nop_hook_state = {
@@ -138,7 +152,8 @@ let nop_hook_state = {
   obj_prop_decl_hook = obj_prop_decl_nop;
   require_pattern_hook = require_pattern_nop;
   obj_to_obj_hook = obj_to_obj_nop;
-  export_default_hook = export_default_nop;
+  instance_to_obj_hook = instance_to_obj_nop;
+  export_named_hook = export_named_nop;
 }
 
 let hook_state = ref nop_hook_state
@@ -176,8 +191,11 @@ let set_require_pattern_hook hook =
 let set_obj_to_obj_hook hook =
   hook_state := { !hook_state with obj_to_obj_hook = hook }
 
-let set_export_default_hook hook =
-  hook_state := { !hook_state with export_default_hook = hook }
+let set_instance_to_obj_hook hook =
+  hook_state := { !hook_state with instance_to_obj_hook = hook }
+
+let set_export_named_hook hook =
+  hook_state := { !hook_state with export_named_hook = hook }
 
 let reset_hooks () =
   hook_state := nop_hook_state
@@ -203,8 +221,8 @@ let dispatch_jsx_hook cx name loc this_t =
 let dispatch_ref_hook cx loc =
     !hook_state.ref_hook cx loc
 
-let dispatch_class_member_decl_hook cx self name loc =
-  !hook_state.class_member_decl_hook cx self name loc
+let dispatch_class_member_decl_hook cx self static name loc =
+  !hook_state.class_member_decl_hook cx self static name loc
 
 let dispatch_obj_prop_decl_hook cx name loc =
   !hook_state.obj_prop_decl_hook cx name loc
@@ -215,5 +233,8 @@ let dispatch_require_pattern_hook loc =
 let dispatch_obj_to_obj_hook cx t1 t2 =
   !hook_state.obj_to_obj_hook cx t1 t2
 
-let dispatch_export_default_hook loc =
-  !hook_state.export_default_hook loc
+let dispatch_instance_to_obj_hook cx t1 t2 =
+  !hook_state.instance_to_obj_hook cx t1 t2
+
+let dispatch_export_named_hook loc =
+  !hook_state.export_named_hook loc

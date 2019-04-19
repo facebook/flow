@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -37,7 +37,8 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           exe_name;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_and_json_flags
+        |> base_flags
+        |> connect_and_json_flags
         |> json_version_flag
         |> error_flags
         |> strip_root_flag
@@ -48,7 +49,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     }
   else
     let command_info = CommandList.commands
-      |> List.map (fun (command) ->
+      |> Core_list.map ~f:(fun (command) ->
         (CommandSpec.name command, CommandSpec.doc command)
       )
       |> List.filter (fun (cmd, doc) -> cmd <> "" && doc <> "")
@@ -57,7 +58,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let col_width = List.fold_left
       (fun acc (cmd, _) -> max acc (String.length cmd)) 0 command_info in
     let cmd_usage = command_info
-      |> List.map (fun (cmd, doc) ->
+      |> Core_list.map ~f:(fun (cmd, doc) ->
             Utils_js.spf "  %-*s  %s" col_width cmd doc
          )
       |> String.concat "\n"
@@ -78,20 +79,20 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
           cmd_usage;
       args = CommandSpec.ArgSpec.(
         empty
-        |> server_and_json_flags
+        |> base_flags
+        |> connect_and_json_flags
         |> json_version_flag
         |> error_flags
         |> strip_root_flag
         |> from_flag
         |> flag "--version" no_arg
-            ~doc:"(Deprecated, use `flow version` instead) Print version number and exit"
+            ~doc:"Print version number and exit"
         |> anon "root" (optional string)
       )
     }
 
   type args = {
     root: Path.t;
-    from: string;
     output_json: bool;
     output_json_version: Errors.Json_output.json_version option;
     pretty: bool;
@@ -99,12 +100,16 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     strip_root: bool;
   }
 
-  let check_status (args:args) server_flags =
+  let check_status flowconfig_name (args:args) connect_flags =
     let name = "flow" in
 
     let include_warnings = args.error_flags.Errors.Cli_output.include_warnings in
-    let request = ServerProt.Request.STATUS (args.root, include_warnings) in
-    let response, lazy_stats = match connect_and_make_request server_flags args.root request with
+    let request = ServerProt.Request.STATUS {
+      client_root = args.root;
+      include_warnings;
+    } in
+    let response, lazy_stats = match connect_and_make_request flowconfig_name connect_flags
+      args.root request with
     | ServerProt.Response.STATUS {status_response; lazy_stats} -> status_response, lazy_stats
     | response -> failwith_bad_response ~request ~response
     in
@@ -114,15 +119,21 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       ~suppressed_errors:([])
     in
     let lazy_msg = match lazy_stats.ServerProt.Response.lazy_mode with
-    | Some mode -> Some (
+    | Options.NON_LAZY_MODE -> None
+    | mode -> Some (
         Printf.sprintf
           ("The Flow server is currently in %s lazy mode and is only checking %d/%d files.\n" ^^
           "To learn more, visit flow.org/en/docs/lang/lazy-modes")
-        Options.(match mode with | LAZY_MODE_FILESYSTEM -> "filesystem" | LAZY_MODE_IDE -> "IDE")
+        Options.(match mode with
+          | LAZY_MODE_FILESYSTEM -> "filesystem"
+          | LAZY_MODE_IDE -> "IDE"
+          | LAZY_MODE_WATCHMAN -> "Watchman"
+          | NON_LAZY_MODE -> assert false
+        )
         lazy_stats.ServerProt.Response.checked_files
         lazy_stats.ServerProt.Response.total_files
       )
-    | None -> None in
+    in
     match response with
     | ServerProt.Response.DIRECTORY_MISMATCH d ->
       let msg = Printf.sprintf
@@ -135,9 +146,10 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
     | ServerProt.Response.ERRORS {errors; warnings} ->
       let error_flags = args.error_flags in
+      let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
       begin if args.output_json then
         print_json ~errors ~warnings ()
-      else if args.from = "vim" || args.from = "emacs" then
+      else if from = Some "vim" || from = Some "emacs" then
         Errors.Vim_emacs_output.print_errors ~strip_root
           stdout ~errors ~warnings ()
       else
@@ -153,7 +165,7 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
     | ServerProt.Response.NO_ERRORS ->
       if args.output_json then
-        print_json ~errors:Errors.ErrorSet.empty ~warnings:Errors.ErrorSet.empty ()
+        print_json ~errors:Errors.ConcreteLocPrintableErrorSet.empty ~warnings:Errors.ConcreteLocPrintableErrorSet.empty ()
       else begin
         Printf.printf "No errors!\n%!";
         Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")
@@ -163,29 +175,27 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       let msg = "Why on earth did the server respond with NOT_COVERED?" in
       FlowExitStatus.(exit ~msg Unknown_error)
 
-  let main server_flags json pretty json_version error_flags strip_root from version root () =
-    FlowEventLogger.set_from from;
+  let main base_flags connect_flags json pretty json_version error_flags strip_root
+    version root () =
     if version then (
-      prerr_endline "Warning: \
-        `flow --version` is deprecated in favor of `flow version`";
       print_version ();
       FlowExitStatus.(exit No_error)
     );
 
-    let root = guess_root root in
+    let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+    let root = guess_root flowconfig_name root in
 
     let json = json || Option.is_some json_version || pretty in
 
     let args = {
       root;
-      from = server_flags.CommandUtils.from;
       output_json = json;
       output_json_version = json_version;
       pretty;
       error_flags;
       strip_root;
     } in
-    check_status args server_flags
+    check_status flowconfig_name args connect_flags
 end
 
 module Status(CommandList : COMMAND_LIST) = struct

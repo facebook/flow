@@ -14,10 +14,12 @@
  *)
 type t [@@deriving show]
 
+val reset_global_state : unit -> unit
+
 (* Creates a line break map from/for the given string. *)
 val make : string -> t
 
-val offset_to_file_pos_triple : ?cyclic_index:bool -> t -> int -> int * int * int
+val offset_to_file_pos_triple: t -> int -> int * int * int
 
 (* Take a zero-based offset, produce a one-based (line, column) pair.
  *
@@ -26,7 +28,7 @@ val offset_to_file_pos_triple : ?cyclic_index:bool -> t -> int -> int * int * in
  * an offset x where x < -l defaults to offset 0, i.e. offsets only wrap around\
  * once.
  *)
-val offset_to_position : ?cyclic_index:bool -> t -> int -> int * int
+val offset_to_position: t -> int -> int * int
 
 (* Take a one-based (line, column) pair, produce a zero-based offset.
  *
@@ -38,8 +40,7 @@ val offset_to_position : ?cyclic_index:bool -> t -> int -> int * int
  * last line in the original string. Without cyclic_index, Invalid_argument is
  * raised with an array-out-of-bounds message.
  *)
-val position_to_offset :
-  ?cyclic_index:bool -> ?existing:bool -> t -> int * int -> int
+val position_to_offset : ?existing:bool -> t -> int * int -> int
 
 (* Does what it says on the tin. *)
-val offset_to_line_start_offset : ?cyclic_index:bool -> t -> int -> int
+val offset_to_line_start_offset : t -> int -> int

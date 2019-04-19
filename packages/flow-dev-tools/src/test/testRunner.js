@@ -69,7 +69,7 @@ function startWatchAndRun(suites, args) {
 
   const startListeningForShortcuts = () => {
     if (typeof process.stdin.setRawMode === 'function') {
-      process.stdin.setRawMode(true);
+      (process.stdin.setRawMode: any).call(process.stdin, true);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
       process.stdin.on('data', keydown);
@@ -80,7 +80,7 @@ function startWatchAndRun(suites, args) {
 
   const stopListeningForShortcuts = () => {
     if (typeof process.stdin.setRawMode === 'function') {
-      process.stdin.setRawMode(false);
+      (process.stdin.setRawMode: any).call(process.stdin, false);
       process.stdin.resume();
       process.stdin.setEncoding('utf8');
       process.stdin.removeListener('data', keydown);
@@ -221,7 +221,7 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
   }
   if (args.maxErroredTestsPct != null) {
     const numTests = Object.keys(suites).length;
-    maxErroredTests = Math.floor(numTests * args.maxErroredTestsPct / 100);
+    maxErroredTests = Math.floor((numTests * args.maxErroredTestsPct) / 100);
   }
   if (maxErroredTests > 0) {
     process.stderr.write(
@@ -370,6 +370,9 @@ async function runOnce(suites: {[suiteName: string]: Suite}, args) {
 
 export default (async function(args: Args): Promise<void> {
   process.env.IN_FLOW_TEST = '1';
+  if (!process.env.hasOwnProperty('FLOW_MAX_WORKERS')) {
+    process.env.FLOW_MAX_WORKERS = '2';
+  }
 
   await write(process.stderr, `Using flow binary: ${args.bin}\n`);
 

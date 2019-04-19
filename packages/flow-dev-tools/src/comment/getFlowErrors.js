@@ -5,19 +5,28 @@ import {execManual} from '../utils/async';
 
 import type {FlowResult} from '../flowResult';
 
-async function getFlowErrors(bin, errorCheckCommand, root, withWarnings) {
+async function getFlowErrors(
+    bin,
+    errorCheckCommand,
+    root,
+    withWarnings,
+    flowconfigName,
+) {
   const includeWarnings = withWarnings ? '--include-warnings' : '';
+  const flowconfigNameFlag = '--flowconfig-name ' + flowconfigName;
   const cmd = errorCheckCommand === 'check'
   ? format(
-      "%s check --strip-root --json %s %s",
+      "%s check --strip-root --json %s %s %s",
       bin,
       includeWarnings,
+      flowconfigNameFlag,
       root,
     )
   : format(
-      "%s status --no-auto-start --strip-root --json %s %s",
+      "%s status --no-auto-start --strip-root --json %s %s %s",
       bin,
       includeWarnings,
+      flowconfigNameFlag,
       root,
     )
   const [err, stdout, stderr] = await execManual(
@@ -38,14 +47,16 @@ export function getFlowErrorsWithWarnings(
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
+  flowconfigName: string,
 ): Promise<FlowResult> {
-  return getFlowErrors(bin, errorCheckCommand, root, true);
+  return getFlowErrors(bin, errorCheckCommand, root, true, flowconfigName);
 }
 
 export default async function(
   bin: string,
   errorCheckCommand: 'check' | 'status',
   root: string,
+  flowconfigName: string,
 ): Promise<FlowResult> {
-  return getFlowErrors(bin, errorCheckCommand, root, false);
+  return getFlowErrors(bin, errorCheckCommand, root, false, flowconfigName);
 }

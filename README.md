@@ -10,7 +10,7 @@ Flow works with:
 
 * Mac OS X
 * Linux (64-bit)
-* Windows (64-bit)
+* Windows (64-bit, Windows 10 recommended)
 
 There are [binary distributions](https://github.com/facebook/flow/releases) for each of these platforms and you can also build it from source on any of them as well.
 
@@ -80,13 +80,17 @@ flow init
 ``` javascript
 /* @flow */
 ```
+or
+``` javascript
+// @flow
+```
 
 - Run and see the magic happen
 ```
 flow check
 ```
 
-More thorough documentation and many examples can be found at https://flow.org.
+More thorough documentation and many examples can be found at [flow.org](https://flow.org/).
 
 ## Building Flow
 
@@ -184,7 +188,8 @@ To run a subset of the tests you can pass a second argument to the `runtests.sh`
 For example: `bash runtests.sh bin/flow class | grep -v 'SKIP'`
 
 ## Join the Flow community
-* Website: [https://flow.org/](https://flow.org/)
+* Website: [https://flow.org](https://flow.org/)
+* Discord (for contributors): https://discord.gg/8ezwRUK
 * irc: #flowtype on Freenode
 * Twitter: follow [@flowtype](https://twitter.com/flowtype) and [#flowtype](https://twitter.com/hashtag/flowtype) to keep up with the latest Flow news.
 * Stack Overflow: Ask a question with the [flowtype tag](http://stackoverflow.com/questions/tagged/flowtype)

@@ -12,13 +12,13 @@ class MyComponent extends React.Component<{
   a: number,
   b: number,
   prop: number,
-}> {}
+}> { render() { return null } }
 
 function MyFunctionComponent(props: {
   a: number,
   b: number,
   prop: number,
-}) {}
+}) { return null }
 
 const MyEnhancedComponent = connect(MyComponent);
 const MyEnhancedFunctionComponent = connect(MyFunctionComponent);

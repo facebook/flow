@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 # This test has a dependency tree that looks like this:
 #
 #                   ____focused.js

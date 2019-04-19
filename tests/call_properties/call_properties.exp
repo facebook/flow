@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:23:10
 
-Cannot call `f` because a callable signature is missing in object type [1].
+Cannot call `f` because a call signature declaring the expected parameter / return type is missing in object type [1].
 
    A.js:23:10
    23|   return f();
@@ -59,7 +59,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- A.js:29:10
 
-Cannot call `x` because a callable signature is missing in object literal [1].
+Cannot call `x` because a call signature declaring the expected parameter / return type is missing in object
+literal [1].
 
    A.js:29:10
    29|   return x();
@@ -175,7 +176,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:23:10
 
-Cannot return `x` because a callable signature is missing in object type [1] but exists in function type [2].
+Cannot return `x` because a call signature declaring the expected parameter / return type is missing in object type [1]
+but exists in function type [2].
 
    C.js:23:10
    23|   return x;
@@ -188,23 +190,6 @@ References:
    C.js:22:20
    22| function e(x: {}): () => string {
                           ^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------------- C.js:33:10
-
-Cannot return `x` because a callable signature is missing in object type [1] but exists in function type [2].
-
-   C.js:33:10
-   33|   return x; // error
-                ^
-
-References:
-   C.js:32:15
-   32| function g(x: {}): Function {
-                     ^^ [1]
-   C.js:32:20
-   32| function g(x: {}): Function {
-                          ^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------------- D.js:12:3
@@ -289,10 +274,175 @@ References:
                    ^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------------- G.js:5:1
+
+Cannot call `o` because a call signature declaring the expected parameter / return type is missing in
+`Object.create` [1].
+
+   G.js:5:1
+   5| o(); // error: o is not callable
+      ^^^
+
+References:
+   G.js:4:9
+   4| var o = Object.create(f);
+              ^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ deprecated.js:2:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   2|   $call: () => void;
+        ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ deprecated.js:6:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   6|   $call: () => void;
+        ^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- deprecated.js:10:3
+
+Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
+
+   10|   $call: () => void;
+         ^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- internal_slot.js:5:2
+
+Cannot cast object literal to `O` because a call signature declaring the expected parameter / return type is missing in
+object literal [1] but exists in `O` [2].
+
+   internal_slot.js:5:2
+   5| ({}: O); // err: no callable property
+       ^^ [1]
+
+References:
+   internal_slot.js:5:6
+   5| ({}: O); // err: no callable property
+           ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- internal_slot.js:6:2
+
+Cannot cast function to `O` because number [1] is incompatible with undefined [2] in the return value.
+
+   internal_slot.js:6:2
+   6| (function() { return 0 }: O); // err: number ~> void
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   internal_slot.js:6:22
+   6| (function() { return 0 }: O); // err: number ~> void
+                           ^ [1]
+   internal_slot.js:2:15
+   2|   [[call]](): void;
+                    ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:13:2
+
+Cannot cast object literal to `I` because a call signature declaring the expected parameter / return type is missing in
+object literal [1] but exists in `I` [2].
+
+   internal_slot.js:13:2
+   13| ({}: I); // err: no callable property
+        ^^ [1]
+
+References:
+   internal_slot.js:13:6
+   13| ({}: I); // err: no callable property
+            ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:14:2
+
+Cannot cast function to `I` because number [1] is incompatible with undefined [2] in the return value.
+
+   internal_slot.js:14:2
+   14| (function() { return 0 }: I); // err: number ~> void
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   internal_slot.js:14:22
+   14| (function() { return 0 }: I); // err: number ~> void
+                            ^ [1]
+   internal_slot.js:10:15
+   10|   [[call]](): void;
+                     ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:20:2
+
+Cannot cast `C1()` to empty because undefined [1] is incompatible with empty [2].
+
+   internal_slot.js:20:2
+   20| (C1(): empty); // error: void ~> empty
+        ^^^^
+
+References:
+   internal_slot.js:18:22
+   18|   static [[call]](): void;
+                            ^^^^ [1]
+   internal_slot.js:20:8
+   20| (C1(): empty); // error: void ~> empty
+              ^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:23:1
+
+Cannot call `mixed_callable` because mixed [1] is not a function.
+
+   internal_slot.js:23:1
+   23| mixed_callable();
+       ^^^^^^^^^^^^^^^^
+
+References:
+   internal_slot.js:22:41
+   22| declare var mixed_callable: { [[call]]: mixed };
+                                               ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- internal_slot.js:28:16
+
+Cannot call `annot_callable` with `0` bound to the first parameter because number [1] is incompatible with string [2].
+
+   internal_slot.js:28:16
+   28| annot_callable(0); // error: number ~> string
+                      ^ [1]
+
+References:
+   internal_slot.js:26:11
+   26| type Fn = string => number;
+                 ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- internal_slot.js:29:2
+
+Cannot cast `annot_callable(...)` to empty because number [1] is incompatible with empty [2].
+
+   internal_slot.js:29:2
+   29| (annot_callable("foo"): empty); // error: number ~> empty
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   internal_slot.js:26:21
+   26| type Fn = string => number;
+                           ^^^^^^ [1]
+   internal_slot.js:29:25
+   29| (annot_callable("foo"): empty); // error: number ~> empty
+                               ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
 
-Cannot cast `a` to `B` because a callable signature is missing in object type [1] but exists in function type [2] in
-property `p`.
+Cannot cast `a` to `B` because a call signature declaring the expected parameter / return type is missing in object
+type [1] but exists in function type [2] in property `p`.
 
    use_ops.js:4:2
    4| (a: B); // error HERE and preserve use ops
@@ -308,7 +458,7 @@ References:
 
 
 
-Found 19 errors
+Found 30 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

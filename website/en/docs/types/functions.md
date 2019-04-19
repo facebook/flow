@@ -195,6 +195,15 @@ function method(): boolean {
 }
 ```
 
+Async functions implicitly return a promise, so the return type must always be a `Promise`.
+
+```js
+// @flow
+async function method(): Promise<number> {
+  return 123;
+}
+```
+
 ### Function `this` <a class="toc" id="toc-function-this" href="#toc-function-this"></a>
 
 Every function in JavaScript can be called with a special context named `this`.
@@ -288,6 +297,27 @@ foo(5);
 foo([]);
 ```
 
+### Callable Objects <a class="toc" id="toc-callable-objects" href="#toc-callable-objects"></a>
+
+Callable objects can be typed, for example:
+
+```js
+type CallableObj = {
+  (number, number): number,
+  bar: string
+};
+
+function add(x, y) {
+  return x + y; 
+}
+
+// $ExpectError
+(add: CallableObj);
+
+add.bar = "hello world";
+
+(add: CallableObj);
+```
 
 ### `Function` Type <a class="toc" id="toc-function-type" href="#toc-function-type"></a>
 

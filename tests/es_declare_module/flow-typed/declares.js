@@ -19,3 +19,7 @@ declare module "ES" {
   declare export type T = number;
   declare var exports: number;
 }
+
+declare module "re-export" {
+  import type {Foo} from 'to-import';
+}

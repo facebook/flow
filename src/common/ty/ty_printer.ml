@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -31,11 +31,16 @@ let in_quotes s =
 
 let option ~f = Option.value_map ~default:Empty ~f
 
+let property_key_quotes_needed x =
+  let regexp = Str.regexp "^[a-zA-Z\\$_][a-zA-Z0-9\\$_]*$" in
+  not (Str.string_match regexp x 0)
+
+
 (*************************)
 (* Main Transformation   *)
 (*************************)
 
-let type_ ?(size=5000) t =
+let type_ ?(size=5000) ?(with_comments=true) t =
 
   let env_map: (Layout.layout_node IMap.t) ref = ref IMap.empty in
   let size = ref size in
@@ -67,29 +72,29 @@ let type_ ?(size=5000) t =
   and type_impl ~depth (t: Ty.t) =
     match t with
     | TVar (v, ts) -> type_generic ~depth (type_var v) ts
-    | Bound (Symbol (_, s)) -> Atom s
-    | Any -> Atom "any"
-    | AnyObj -> Atom "Object"
-    | AnyFun -> Atom "Function"
+    | Bound (_, name) -> Atom name
+    | Any k -> any ~depth k
     | Top -> Atom "mixed"
-    | Bot -> Atom "empty"
+    | Bot _ -> Atom "empty"
     | Void -> Atom "void"
     | Null -> Atom "null"
-    | Num -> Atom "number"
-    | Str -> Atom "string"
-    | Bool -> Atom "boolean"
+    | Num _ -> Atom "number"
+    | Str _ -> Atom "string"
+    | Bool _ -> Atom "boolean"
     | Fun func ->
       type_function ~depth
         ~sep:(fuse [pretty_space; Atom "=>"])
         func
     | Obj obj -> type_object ~depth obj
-    | Arr t -> fuse [Atom "Array<"; type_ ~depth t; Atom ">"]
-    | Generic (Symbol (_, id), _, ts) -> type_generic ~depth (identifier id) ts
+    | Arr arr -> type_array ~depth arr
+    | Generic ({ name; _ }, _, ts) -> type_generic ~depth (identifier name) ts
     | Union (t1, t2, ts) ->
       type_union ~depth  (t1::t2::ts)
     | Inter (t1, t2, ts) ->
       type_intersection ~depth (t1::t2::ts)
-    | Class (n, s, ps) -> type_class ~depth n s ps
+    | ClassDecl (n, ps) -> class_decl ~depth n ps
+    | InterfaceDecl (n, ps) -> interface_decl ~depth n ps
+    | Utility s -> utility ~depth s
     | Tup ts ->
       list
         ~wrap:(Atom "[", Atom "]")
@@ -99,10 +104,12 @@ let type_ ?(size=5000) t =
     | StrLit raw -> fuse (in_quotes raw)
     | NumLit raw -> Atom raw
     | BoolLit value -> Atom (if value then "true" else "false")
-    | Exists -> Atom "*"
     | TypeAlias ta -> type_alias ta
-    | TypeOf (Symbol (_, n)) -> fuse [Atom "typeof"; space; identifier n]
-    | Module (Symbol (_, n)) -> fuse [Atom "module"; space; identifier n]
+    | TypeOf (path, name) ->
+      let path = Core_list.map ~f:(fun x -> [Atom x; Atom "."]) path in
+      let value = (List.concat path) @ [Atom name] in
+      fuse ([Atom "typeof"; space] @ value)
+    | Module { name; _ } -> fuse [Atom "module"; space; identifier name]
     | Mu (i, t) ->
       let t = type_ ~depth:0 t in
       env_map := IMap.add i t !env_map;
@@ -124,30 +131,24 @@ let type_ ?(size=5000) t =
 
   and identifier name = Atom name
 
-  and type_alias { ta_name = Symbol (provenance, id); ta_tparams; ta_type } =
-    match provenance with
-    | Remote loc ->
-      (match Loc.source loc with
-      | Some source ->
-        fuse ([
-            Atom "imported"; space;
-            identifier id; space;
-            Atom "from"; space;
-          ]
-          @ in_quotes (File_key.to_string source)
-        )
-      | _ ->
-        identifier id)
+  and any ~depth kind =
+    let kind = match kind with Explicit -> "explicit" | Implicit -> "implicit" in
+    fuse [
+      Atom "any";
+      if depth = 1 && with_comments then fuse [pretty_space; Atom kind |> wrap_in_parens] else Empty
+    ]
 
-    | Imported _ -> fuse [
+  and type_alias { ta_name = { provenance; name; _ }; ta_tparams; ta_type } =
+    match provenance with
+    | Remote _ -> fuse [
         Atom "imported"; space;
-        identifier id;
+        identifier name;
         option (type_parameter ~depth:0) ta_tparams;
       ]
 
     | _ -> fuse ([
         Atom "type"; space;
-        identifier id;
+        identifier name;
         option (type_parameter ~depth:0) ta_tparams;
       ]
       @ Option.value_map ta_type ~default:[] ~f:(fun t -> [
@@ -191,15 +192,23 @@ let type_ ?(size=5000) t =
       type_ ~depth annot;
     ]
 
-  and type_object_property ~depth =
+  and type_object_property =
+    let to_key x =
+      if property_key_quotes_needed x then
+        let quote = better_quote x in
+        fuse [Atom quote; Atom (utf8_escape ~quote x); Atom quote]
+      else
+        identifier x
+    in
     let open Ty in
-    function
+    fun ~depth prop ->
+    match prop with
     | NamedProp (key, named_prop) -> begin
       match named_prop with
       | Field (t, { fld_polarity; fld_optional }) ->
         fuse [
           variance_ fld_polarity;
-          identifier key;
+          to_key key;
           if fld_optional then Atom "?" else Empty;
           Atom ":";
           pretty_space;
@@ -207,19 +216,19 @@ let type_ ?(size=5000) t =
         ]
 
       | Method func -> fuse [
-          identifier key;
+          to_key key;
           type_function ~depth ~sep:(Atom ":") func;
         ]
 
       | Get t -> fuse [
           Atom "get"; space;
-          identifier key;
+          to_key key;
           type_ ~depth t;
         ]
 
       | Set t -> fuse [
           Atom "set"; space;
-          identifier key;
+          to_key key;
           type_ ~depth t;
         ]
       end
@@ -242,7 +251,20 @@ let type_ ?(size=5000) t =
         type_function ~depth ~sep:(Atom ":") func
       ]
 
-  and type_object ~depth ?(sep=(Atom ",")) { obj_exact; obj_props } =
+    | SpreadProp t -> fuse [
+        Atom "...";
+        type_ ~depth t;
+      ]
+
+  and type_array ~depth { arr_readonly; arr_literal = _; arr_elt_t } =
+    fuse [
+      Atom (if arr_readonly then "$ReadOnlyArray" else "Array");
+      Atom "<";
+      type_ ~depth arr_elt_t;
+      Atom ">";
+    ]
+
+  and type_object ~depth ?(sep=(Atom ",")) { obj_exact; obj_props; _ } =
     let s_exact = if obj_exact then Atom "|" else Empty in
     list
       ~wrap:(fuse [Atom "{"; s_exact], fuse [s_exact; Atom "}"])
@@ -255,7 +277,7 @@ let type_ ?(size=5000) t =
       if List.mem Null ts && List.mem Void ts then
         let ts = List.filter (fun t -> t <> Null && t <> Void) ts in
         let ts = match ts with
-          | [] -> [Bot]
+          | [] -> [Bot EmptyType]
           | _ -> ts in
         (Atom "?", ts)
       else
@@ -287,12 +309,24 @@ let type_ ?(size=5000) t =
     | Inter _ -> wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
 
-  and type_class ~depth (Symbol (_, id)) structural typeParameters = fuse [
-    Atom (if structural then "interface" else "class");
+  and class_decl ~depth { name; _ } typeParameters = fuse [
+    Atom "class";
     space;
-    identifier id;
+    identifier name;
     option (type_parameter ~depth) typeParameters;
   ]
+
+  and interface_decl ~depth { name; _ } typeParameters = fuse [
+    Atom "interface";
+    space;
+    identifier name;
+    option (type_parameter ~depth) typeParameters;
+  ]
+
+  and utility ~depth u =
+    let ctor = Ty.string_of_utility_ctor u in
+    let ts = Ty.types_of_utility u in
+    type_generic ~depth (identifier ctor) ts
 
   and type_parameter ~depth params =
     list
@@ -342,14 +376,10 @@ let type_ ?(size=5000) t =
   (* Main call *)
   let type_layout = type_ ~depth:0 t in
   (* Run type_ first so that env_map has been populated *)
-  let env_layout = List.map env_ (IMap.bindings !env_map) in
-  Sequence (
-    { break=Break_always; inline=(true, true); indent=0 },
-    env_layout @ [type_layout]
-  )
+  let env_layout = Core_list.map ~f:env_ (IMap.bindings !env_map) in
+  Layout.(join Newline (env_layout @ [type_layout]))
 
 (* Same as Compact_printer with the exception of:
-   - "Sequence Break_always" to allow breaks after every type alias
    - IfPretty to allow spaces after punctuation.
    We still maintain a single line format.
 *)
@@ -357,18 +387,13 @@ let print ~force_single_line ~source_maps node =
   let rec print_node src = function
     (* this printer does not output locations *)
     | SourceLocation _ -> src
-    | Sequence ({ break=Break_always; _ }, nodes) ->
-      let rec go acc = function
-      | [] -> acc
-      | [n] -> print_node acc n
-      | n::ns ->
-        if force_single_line
-          then go (Source.add_space 1 (print_node acc n)) ns
-          else go (Source.add_newline (print_node acc n)) ns
-      in
-      go src nodes
+    | Newline ->
+        if force_single_line then Source.add_space 1 src
+        else Source.add_newline src
+    | Indent node -> print_node src node
     | IfPretty (node, _) -> print_node src node
     | Concat nodes
+    | Group nodes
     | Sequence (_, nodes) -> List.fold_left print_node src nodes
     | Atom s -> Source.add_string s src
     | Identifier (loc, s) -> Source.add_identifier loc s src
@@ -377,5 +402,5 @@ let print ~force_single_line ~source_maps node =
     in
   print_node (Source.create ~source_maps ()) node
 
-let string_of_t ?(force_single_line=false) (ty: Ty.t) : string =
-  print ~force_single_line ~source_maps:None (type_ ty) |> Source.contents
+let string_of_t ?(force_single_line=false) ?(with_comments=true) (ty: Ty.t): string =
+  print ~force_single_line ~source_maps:None (type_ ~with_comments ty) |> Source.contents

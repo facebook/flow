@@ -18,6 +18,7 @@ async function getErrors(args: Args): Promise<Map<string, Array<FlowLoc>>> {
     args.bin,
     args.errorCheckCommand,
     args.root,
+    args.flowconfigName,
   );
 
   const errors = result.errors.filter(error => (

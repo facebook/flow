@@ -26,9 +26,10 @@ type slave_job_status =
 
 let on_slave_cancelled parent_outfd =
   (* The cancelling controller will ignore result of cancelled job anyway (see
-   * wait_for_cancel function), so we can send back anything. *)
-  Marshal_tools.to_fd_with_preamble parent_outfd "anything"
-  |> ignore
+   * wait_for_cancel function), so we can send back anything. Write twice, since
+   * the normal response writes twice too *)
+  Marshal_tools.to_fd_with_preamble parent_outfd "anything" |> ignore;
+  Marshal_tools.to_fd_with_preamble parent_outfd "anything" |> ignore
 
 (*****************************************************************************
  * Entry point for spawned worker.
@@ -43,11 +44,13 @@ let slave_main ic oc =
   let start_major_words = ref 0. in
   let start_minor_collections = ref 0 in
   let start_major_collections = ref 0 in
+  let start_wall_time = ref 0. in
 
   let infd = Daemon.descr_of_in_channel ic in
   let outfd = Daemon.descr_of_out_channel oc in
 
   let send_result data =
+    Mem_profile.stop ();
     let tm = Unix.times () in
     let end_user_time = tm.Unix.tms_utime +. tm.Unix.tms_cutime in
     let end_system_time = tm.Unix.tms_stime +. tm.Unix.tms_cstime in
@@ -59,17 +62,32 @@ let slave_main ic oc =
       major_collections = end_major_collections;
       _;
     } = Gc.quick_stat () in
+
+    let major_time, minor_time = Sys_utils.get_gc_time () in
+    Measure.sample "worker_gc_major_wall_time" major_time;
+    Measure.sample "worker_gc_minor_wall_time" minor_time;
+
     Measure.sample "worker_user_time" (end_user_time -. !start_user_time);
     Measure.sample "worker_system_time" (end_system_time -. !start_system_time);
+    Measure.sample "worker_wall_time" (Unix.gettimeofday () -. !start_wall_time);
+
+    Measure.track_distribution "minor_words" ~bucket_size:(float (100 * 1024 * 1024));
     Measure.sample "minor_words" (end_minor_words -. !start_minor_words);
+
+    Measure.track_distribution "promoted_words" ~bucket_size:(float (25 * 1024 * 1024));
     Measure.sample "promoted_words" (end_promoted_words -. !start_promoted_words);
+
+    Measure.track_distribution "major_words" ~bucket_size:(float (50 * 1024 * 1024));
     Measure.sample "major_words" (end_major_words -. !start_major_words);
+
     Measure.sample "minor_collections" (float (end_minor_collections - !start_minor_collections));
     Measure.sample "major_collections" (float (end_major_collections - !start_major_collections));
-    let stats = Measure.serialize (Measure.pop_global ()) in
+
     (* If we got so far, just let it finish "naturally" *)
-    SharedMem.set_on_worker_cancelled (fun () -> ());
-    let len = Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd (data,stats) in
+    WorkerCancel.set_on_worker_cancelled (fun () -> ());
+    let len = Measure.time "worker_send_response" (fun () ->
+      Marshal_tools.to_fd_with_preamble ~flags:[Marshal.Closures] outfd data
+    ) in
     if len > 30 * 1024 * 1024 (* 30 MB *) then begin
       Hh_logger.log "WARNING: you are sending quite a lot of data (%d bytes), \
         which may have an adverse performance impact. If you are sending \
@@ -77,15 +95,27 @@ let slave_main ic oc =
         values in their environment." len;
       Printf.eprintf "%s" (Printexc.raw_backtrace_to_string
         (Printexc.get_callstack 100));
-    end
+    end;
+
+    Measure.sample "worker_response_len" (float len);
+
+    let stats = Measure.serialize (Measure.pop_global ()) in
+
+    let _ = Marshal_tools.to_fd_with_preamble outfd stats in
+    ()
   in
 
   try
     Measure.push_global ();
-    let Request do_process = Marshal_tools.from_fd_with_preamble infd in
-    SharedMem.set_on_worker_cancelled (fun () -> on_slave_cancelled outfd);
+    let Request do_process = Measure.time "worker_read_request" (fun () ->
+      Marshal_tools.from_fd_with_preamble infd
+    ) in
+    WorkerCancel.set_on_worker_cancelled (fun () -> on_slave_cancelled outfd);
     let tm = Unix.times () in
     let gc = Gc.quick_stat () in
+
+    Sys_utils.start_gc_profiling ();
+
     start_user_time := tm.Unix.tms_utime +. tm.Unix.tms_cutime;
     start_system_time := tm.Unix.tms_stime +. tm.Unix.tms_cstime;
     start_minor_words := gc.Gc.minor_words;
@@ -93,6 +123,8 @@ let slave_main ic oc =
     start_major_words := gc.Gc.major_words;
     start_minor_collections := gc.Gc.minor_collections;
     start_major_collections := gc.Gc.major_collections;
+    start_wall_time := Unix.gettimeofday ();
+    Mem_profile.start ();
     do_process { send = send_result };
     exit 0
   with
@@ -113,13 +145,14 @@ let slave_main ic oc =
       in
       Exit_status.exit exit_code
   | e ->
+      let e_backtrace = Printexc.get_backtrace () in
       let e_str = Printexc.to_string e in
-      Printf.printf "Exception: %s\n" e_str;
+      let pid = Unix.getpid () in
+      Printf.printf "Worker slave %d exception: %s\n%!" pid e_str;
       EventLogger.log_if_initialized (fun () ->
         EventLogger.worker_exception e_str
       );
-      print_endline "Potential backtrace:";
-      Printexc.print_backtrace stdout;
+      Printf.printf "Worker slave %d Potential backtrace:\n%s\n%!" pid e_backtrace;
       exit 2
 
 let win32_worker_main restore (state, _controller_fd) (ic, oc) =
@@ -153,6 +186,19 @@ let maybe_send_status_to_controller fd status =
           to_controller fd (Slave_terminated status)
         )
 
+(* On Unix each job runs in a forked process. The first thing these jobs do is
+ * deserialize a marshaled closure which is the job.
+ *
+ * The marshaled representation of a closure includes a MD5 digest of the code
+ * segment and an offset. The digest is lazily computed, but if it has not been
+ * computed before the fork, then each forked process will need to compute it.
+ *
+ * To avoid this, we deserialize a dummy closure before forking, so that we only
+ * need to calculate the digest once per worker instead of once per job. *)
+let dummy_closure_bytes =
+  let closure () = () in
+  Marshal.to_bytes closure [Marshal.Closures]
+
 (**
  * On Windows, the Worker is a process and runs the job directly. See above.
  *
@@ -178,6 +224,8 @@ let maybe_send_status_to_controller fd status =
  *)
 let unix_worker_main restore (state, controller_fd) (ic, oc) =
   restore state;
+  (* see dummy_closure_bytes above *)
+  ignore (Marshal.from_bytes dummy_closure_bytes 0);
   let in_fd = Daemon.descr_of_in_channel ic in
   if !Utils.profile then Utils.log := prerr_endline;
   try

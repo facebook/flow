@@ -1,11 +1,8 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the "flow" directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *)
 
 open CommandUtils
@@ -28,8 +25,11 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
+    |> base_flags
     |> temp_dir_flag
     |> shm_flags
+    |> lazy_flags
+    |> autostop_flag
     |> from_flag
   )
 }
@@ -84,9 +84,26 @@ type server_conn = {
   oc: out_channel;
 }
 
+type show_status_t =
+  | Never_shown
+  | Shown of lsp_id option * ShowStatus.showStatusParams
+    (* Shown (Some id, params) -- means it is currently shown *)
+    (* Shown (None, params) - means it was shown but user dismissed it *)
+
+type open_file_info = {
+  (* o_open_doc is guaranteed to be up-to-date with respect to the editor *)
+  o_open_doc: Lsp.TextDocumentItem.t;
+  (* o_ast, if present, is guaranteed to be up-to-date. It gets computed lazily. *)
+  o_ast: (Loc.t, Loc.t) Flow_ast.program option;
+  (* o_live_diagnostics, if present, is guaranteed to be up-to-date, and to only contain
+   * parse errors, and to be a better source of truth about the parse errors
+   * in this file than what the flow server has told us. It also gets computed lazily. *)
+  o_live_diagnostics: PublishDiagnostics.diagnostic list option;
+}
+
 type initialized_env = {
   i_initialize_params: Lsp.Initialize.params;
-  i_connect_params: command_params;
+  i_connect_params: connect_params;
   i_root: Path.t;
   i_version: string option;
   i_server_id: int;
@@ -95,36 +112,35 @@ type initialized_env = {
   i_outstanding_local_requests: lsp_request IdMap.t;
   i_outstanding_requests_from_server: Lsp.lsp_request WrappedMap.t;
   i_isConnected: bool; (* what we've told the client about our connection status *)
+  i_status: show_status_t;
+  i_open_files: open_file_info SMap.t;
+  i_outstanding_diagnostics: SSet.t;
 }
 
 and disconnected_env = {
   d_ienv: initialized_env;
-  d_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
   d_autostart: bool;
-  d_start_time: float;
-  d_dialog_stopped_ok: bool; (* if the user has already dismissed it, don't reshow *)
-  d_dialog_stopped: ShowMessageRequest.t; (* "Flow server is stopped. [Restart]" *)
-  d_actionRequired_stopped: ActionRequired.t; (* "Flow server is stopped." *)
-  d_dialog_connecting: ShowMessageRequest.t; (* "Connecting to Flow server." *)
-  d_progress_connecting: Progress.t; (* "Connecting... busy/initializing [53s]" *)
+  d_server_status: (ServerStatus.status * FileWatcherStatus.status) option;
 }
 
 and connected_env = {
   c_ienv: initialized_env;
   c_conn: server_conn;
-  c_editor_open_files: Lsp.TextDocumentItem.t SMap.t;
+  c_server_status: ServerStatus.status * (FileWatcherStatus.status option);
+  c_recent_summaries: (float * ServerStatus.summary) list; (* newest at head of list *)
   c_about_to_exit_code: FlowExitStatus.t option;
-  c_dialog_connected: ShowMessageRequest.t; (* "Connected to Flow server" *)
+  (* stateful handling of Errors+status from server... *)
+  c_is_rechecking: bool;
+  c_lazy_stats: ServerProt.Response.lazy_stats option;
+  c_diagnostics: PublishDiagnostics.diagnostic list SMap.t;
   (* if server gets disconnected, we will tidy up these things... *)
   c_outstanding_requests_to_server: Lsp.IdSet.t;
-  c_outstanding_progress: ISet.t; (* we'll send progress(null) *)
-  c_outstanding_action: ISet.t; (* we'll send action(null) *)
   c_outstanding_diagnostics: SSet.t; (* we'll send publishDiagnostics([]) *)
 }
 
 and state =
   (* Pre_init: we haven't yet received the initialize request.           *)
-  | Pre_init of command_params
+  | Pre_init of connect_params
   (* Disconnected: we'll attempt to reconnect once a tick.               *)
   | Disconnected of disconnected_env
   (* Main_loop: we have a working connection to both server and client.  *)
@@ -138,7 +154,7 @@ exception Server_fatal_connection_exception of Marshal_tools.remote_exception_da
 
 type event =
   | Server_message of Persistent_connection_prot.response
-  | Client_message of Lsp.lsp_message
+  | Client_message of Lsp.lsp_message * Persistent_connection_prot.metadata
   | Tick (* once per second, on idle *)
 
 
@@ -146,108 +162,235 @@ let string_of_state (state: state) : string =
   match state with
   | Pre_init _ -> "Pre_init"
   | Disconnected _ -> "Disconnected"
-  | Connected env -> "Connected." ^
-      (Option.value_map env.c_about_to_exit_code ~default:"" ~f:FlowExitStatus.to_string)
+  | Connected _ -> "Connected"
   | Post_shutdown -> "Post_shutdown"
 
 
-let string_of_event (event: event) : string =
+let denorm_string_of_event (event: event) : string =
   match event with
   | Server_message response ->
     Printf.sprintf "Server_message(%s)" (Persistent_connection_prot.string_of_response response)
-  | Client_message c ->
-    Printf.sprintf "Client_message(%s)" (Lsp_fmt.message_to_string c)
+  | Client_message (c, _) ->
+    Printf.sprintf "Client_message(%s)" (Lsp_fmt.denorm_message_to_string c)
   | Tick ->
     "Tick"
-
 
 let to_stdout (json: Hh_json.json) : unit =
   (* Extra \r\n purely for easier logfile reading; not required by protocol. *)
   let s = (Hh_json.json_to_string json) ^ "\r\n\r\n" in
   Http_lite.write_message stdout s
 
-let get_current_version (root: Path.t) : string option =
-  Server_files_js.config_file root
-    |> FlowConfig.get ~allow_cache:false
+let get_current_version flowconfig_name (root: Path.t) : string option =
+  Server_files_js.config_file flowconfig_name root
+    |> read_config_or_exit ~allow_cache:false
     |> FlowConfig.required_version
 
+let is_lazy_mode_set_in_flowconfig flowconfig_name (root: Path.t) : bool =
+  let lazy_mode =
+    Server_files_js.config_file flowconfig_name root
+    |> read_config_or_exit ~allow_cache:false
+    |> FlowConfig.lazy_mode
+  in
+  lazy_mode <> None
 
-let get_editor_open_files (state: state) : Lsp.TextDocumentItem.t SMap.t option =
+let get_root (state: state) : Path.t option =
   match state with
-  | Connected cenv -> Some cenv.c_editor_open_files
-  | Disconnected denv -> Some denv.d_editor_open_files
+  | Connected cenv -> Some cenv.c_ienv.i_root
+  | Disconnected denv -> Some denv.d_ienv.i_root
   | _ -> None
+
+let get_open_files (state: state) : open_file_info SMap.t option =
+  match state with
+  | Connected cenv -> Some cenv.c_ienv.i_open_files
+  | Disconnected denv -> Some denv.d_ienv.i_open_files
+  | _ -> None
+
+let update_open_file (uri: string) (open_file_info: open_file_info option) (state: state) : state =
+  let update_ienv ienv =
+    match open_file_info with
+    | Some open_file_info -> {ienv with i_open_files=SMap.add uri open_file_info ienv.i_open_files}
+    | None -> { ienv with i_open_files = SMap.remove uri ienv.i_open_files}
+  in
+  match state with
+  | Connected cenv -> Connected { cenv with c_ienv=update_ienv cenv.c_ienv }
+  | Disconnected denv -> Disconnected { denv with d_ienv=update_ienv denv.d_ienv }
+  | _ -> failwith ("client shouldn't be updating files in state " ^ (string_of_state state))
+
+
+let new_metadata (state: state) (message: Jsonrpc.message) : Persistent_connection_prot.metadata =
+  let start_lsp_state, start_lsp_state_reason, start_server_status, start_watcher_status =
+    match state with
+    | Connected {c_server_status=(s,w); _} ->
+      None, None, Some s, w
+    | Disconnected {d_server_status=Some (s,w); _} ->
+      Some (string_of_state state), None, Some s, Some w
+    | Disconnected {d_server_status=None; d_ienv; _} ->
+      Some (string_of_state state), Some d_ienv.i_status, None, None
+    | _ ->
+      Some (string_of_state state), None, None, None in
+  let start_lsp_state_reason = match start_lsp_state_reason with
+    | None
+    | Some Never_shown -> None
+    | Some (Shown (_, params)) -> Some params.ShowStatus.request.ShowMessageRequest.message
+  in
+  { Persistent_connection_prot.
+    start_wall_time = message.Jsonrpc.timestamp;
+    start_server_status;
+    start_watcher_status;
+    start_json_truncated = Hh_json.json_truncate message.Jsonrpc.json
+      ~max_string_length:256 ~max_child_count:4;
+    start_lsp_state;
+    start_lsp_state_reason;
+    error_info = None;
+    server_profiling = None;
+    client_duration = None;
+    extra_data = [];
+    server_logging_context = None;
+  }
 
 
 let get_next_event_from_server (fd: Unix.file_descr) : event =
-  try
+  let r = begin try
     Server_message (Marshal_tools.from_fd_with_preamble fd)
   with e ->
-    let message = Printexc.to_string e in
-    let stack = Printexc.get_backtrace () in
+    let e = Exception.wrap e in
+    let message = Exception.get_ctor_string e in
+    let stack = Exception.get_backtrace_string e in
     raise (Server_fatal_connection_exception { Marshal_tools.message; stack; })
+  end in
+  (* The server sends an explicit 'EOF' message in case the underlying *)
+  (* transport protocol doesn't result in EOF normally. We'll respond  *)
+  (* to it by synthesizing the EOF exception we'd otherwise get. *)
+  if r = Server_message Persistent_connection_prot.EOF then begin
+    let stack = Exception.get_current_callstack_string 100 in
+    raise (Server_fatal_connection_exception { Marshal_tools.message="End_of_file"; stack; });
+  end else
+    r
 
 let get_next_event_from_client
+    (state: state)
     (client: Jsonrpc.queue)
     (parser: Jsonrpc.message -> Lsp.lsp_message)
-  : event =
-  let message = Jsonrpc.get_message client in
+  : event Lwt.t =
+  let%lwt message = Jsonrpc.get_message client in
   match message with
-  | `Message c -> Client_message (parser c)
-  | `Fatal_exception edata -> raise (Client_fatal_connection_exception edata)
-  | `Recoverable_exception edata -> raise (Client_recoverable_connection_exception edata)
+  | `Message message ->
+    Lwt.return (Client_message (parser message, new_metadata state message))
+  | `Fatal_exception edata ->
+    raise (Client_fatal_connection_exception edata)
+  | `Recoverable_exception edata ->
+    raise (Client_recoverable_connection_exception edata)
 
 let get_next_event
     (state: state)
     (client: Jsonrpc.queue)
     (parser: Jsonrpc.message -> Lsp.lsp_message)
-  : event =
+  : event Lwt.t =
   if Jsonrpc.has_message client then
-    get_next_event_from_client client parser
+    get_next_event_from_client state client parser
   else
     let client_fd = Jsonrpc.get_read_fd client in
     match state with
     | Connected { c_conn; _ } ->
       let server_fd = Timeout.descr_of_in_channel c_conn.ic in
       let fds, _, _ = Unix.select [server_fd; client_fd] [] [] 1.0 in
-      if fds = [] then Tick
-      else if List.mem fds server_fd then get_next_event_from_server server_fd
-      else get_next_event_from_client client parser
+      if fds = [] then
+        Lwt.return Tick
+      else if List.mem fds server_fd then
+        Lwt.return (get_next_event_from_server server_fd)
+      else
+        let%lwt event = get_next_event_from_client state client parser in
+        Lwt.return event
     | _ ->
       let fds, _, _ = Unix.select [client_fd] [] [] 1.0 in
-      if fds = [] then Tick
-      else get_next_event_from_client client parser
+      if fds = [] then
+        Lwt.return Tick
+      else
+        let%lwt event = get_next_event_from_client state client parser in
+        Lwt.return event
 
-
-let showMessageRequest
-    (handler: state lsp_handler)
-    (type_: MessageType.t)
-    (message: string)
-    (titles: string list)
+let show_status
+    ?(titles = [])
+    ?(handler = fun _title state -> state)
+    ~(type_: MessageType.t)
+    ~(message: string)
+    ~(shortMessage: string option)
+    ~(progress: int option)
+    ~(total: int option)
     (ienv: initialized_env)
-  : (ShowMessageRequest.t * initialized_env) =
-  let id = NumberId (Jsonrpc.get_next_request_id ()) in
-  let actions = List.map titles ~f:(fun title -> { ShowMessageRequest.title; }) in
-  let request = ShowMessageRequestRequest { ShowMessageRequest.type_; message;  actions; } in
-  let json = Lsp_fmt.print_lsp (RequestMessage (id, request)) in
-  to_stdout json;
-  let i_outstanding_local_requests = IdMap.add id request ienv.i_outstanding_local_requests in
-  let i_outstanding_local_handlers = IdMap.add id handler ienv.i_outstanding_local_handlers in
-  let ienv = { ienv with i_outstanding_local_requests; i_outstanding_local_handlers; } in
-  (ShowMessageRequest.Some { id; }, ienv)
+  : initialized_env =
+  let open ShowStatus in
+  let open ShowMessageRequest in
+  let open MessageType in
+  let use_status = Lsp_helpers.supports_status ienv.i_initialize_params in
+  let actions = List.map titles ~f:(fun title -> { title; }) in
+  let params = {request={type_; message; actions;}; shortMessage; progress; total;} in
 
-(* This function merely posts a $/cancelRequest notification; the client   *)
-(* will respond asynchronously, maybe with RequestCancelled response, or   *)
-(* maybe with a real respoonse.                                            *)
-let dismiss_showMessageRequest (dialog: ShowMessageRequest.t) : ShowMessageRequest.t =
-  begin match dialog with
-    | ShowMessageRequest.None -> ()
-    | ShowMessageRequest.Some { id; _ } ->
+  (* What should we display/hide? It's a tricky question... *)
+  let will_dismiss_old, will_show_new = match use_status, ienv.i_status, params with
+    (* If the new status is identical to the old, then no-op *)
+    | _, Shown (_, existingParams), params when existingParams = params -> false, false
+    (* If the client supports status reporting, then we'll blindly send everything *)
+    | true, _, _ -> false, true
+    (* If the client only supports dialog boxes, then we'll be very limited:  *)
+    (* only every display failures; and if there was already an error up even *)
+    (* a different one then leave it undisturbed. *)
+    | false, Shown (_, {request={type_=ErrorMessage; _};_}),
+        {request={type_=ErrorMessage;_};_} -> false, false
+    | false, Shown (id, _), {request={type_=ErrorMessage;_};_} -> Option.is_some id, true
+    | false, Shown (id, _), _ -> Option.is_some id, false
+    | false, Never_shown, {request={type_=ErrorMessage;_};_} -> false, true
+    | false, Never_shown, _ -> false, false in
+
+  (* dismiss the old one *)
+  let ienv = match will_dismiss_old, ienv.i_status with
+    | true, Shown (id, existingParams) ->
+      let id = Option.value_exn id in
       let notification = CancelRequestNotification { CancelRequest.id; } in
       let json = Lsp_fmt.print_lsp (NotificationMessage notification) in
-      to_stdout json
-  end;
-  ShowMessageRequest.None
+      to_stdout json;
+      { ienv with i_status = Shown (None, existingParams); }
+    | _, _ -> ienv in
+
+  (* show the new one *)
+  if not will_show_new then
+    ienv
+  else begin
+    let id = NumberId (Jsonrpc.get_next_request_id ()) in
+    let request = if use_status
+      then ShowStatusRequest params else ShowMessageRequestRequest params.request in
+    let json = Lsp_fmt.print_lsp (RequestMessage (id, request)) in
+    to_stdout json;
+
+    let mark_ienv_shown future_ienv =
+      match future_ienv.i_status with
+      | Shown (Some future_id, future_params) when future_id = id ->
+        { future_ienv with i_status = Shown (None, future_params); }
+      | _ -> future_ienv in
+    let mark_state_shown state =
+      match state with
+      | Connected cenv -> Connected { cenv with c_ienv = mark_ienv_shown cenv.c_ienv; }
+      | Disconnected denv -> Disconnected { denv with d_ienv = mark_ienv_shown denv.d_ienv; }
+      | _ -> state in
+    let handle_error _e state =
+      mark_state_shown state in
+    let handle_result (r: ShowMessageRequest.result) state =
+      let state = mark_state_shown state in
+      match r with
+      | Some {ShowMessageRequest.title} -> handler title state
+      | None -> state in
+    let handle_result = if use_status
+      then (ShowStatusHandler handle_result) else (ShowMessageHandler handle_result) in
+    let handlers = (handle_result, handle_error) in
+    let i_outstanding_local_requests = IdMap.add id request ienv.i_outstanding_local_requests in
+    let i_outstanding_local_handlers = IdMap.add id handlers ienv.i_outstanding_local_handlers
+    in
+    { ienv with
+      i_status = Shown (Some id, params);
+      i_outstanding_local_requests;
+      i_outstanding_local_handlers;
+    }
+  end
 
 
 let send_to_server (env: connected_env) (request: Persistent_connection_prot.request) : unit =
@@ -255,8 +398,13 @@ let send_to_server (env: connected_env) (request: Persistent_connection_prot.req
     Marshal_tools.to_fd_with_preamble (Unix.descr_of_out_channel env.c_conn.oc) request in
   ()
 
-let send_lsp_to_server (env: connected_env) (message: lsp_message) : unit =
-  send_to_server env (Persistent_connection_prot.LspToServer message)
+
+let send_lsp_to_server
+    (cenv: connected_env)
+    (metadata: Persistent_connection_prot.metadata)
+    (message: lsp_message)
+  : unit =
+  send_to_server cenv (Persistent_connection_prot.LspToServer (message, metadata))
 
 
 (************************************************************************)
@@ -272,7 +420,7 @@ let do_initialize () : Initialize.result =
         want_change = IncrementalSync;
         want_willSave = false;
         want_willSaveWaitUntil = false;
-        want_didSave = Some { includeText = true }
+        want_didSave = None;
       };
       hoverProvider = true;
       completionProvider = Some {
@@ -281,114 +429,68 @@ let do_initialize () : Initialize.result =
       };
       signatureHelpProvider = None;
       definitionProvider = true;
-      referencesProvider = false;
-      documentHighlightProvider = false;
-      documentSymbolProvider = false;
+      referencesProvider = true;
+      documentHighlightProvider = true;
+      documentSymbolProvider = true;
       workspaceSymbolProvider = false;
       codeActionProvider = false;
       codeLensProvider = None;
       documentFormattingProvider = false;
       documentRangeFormattingProvider = false;
-      documentOnTypeFormattingProvider = Some {
-        firstTriggerCharacter = ";";
-        moreTriggerCharacter = ["}"];
-      };
-      renameProvider = false;
+      documentOnTypeFormattingProvider = None;
+      renameProvider = true;
       documentLinkProvider = None;
       executeCommandProvider = None;
-      typeCoverageProvider = false;
-      rageProvider = false;
+      typeCoverageProvider = true;
+      rageProvider = true;
     }
   }
 
 
-let dismiss_ui (state: state) : state =
-  match state with
-  | Pre_init _ -> state
-  | Post_shutdown -> state
-  | Disconnected env ->
-    let d_dialog_stopped = dismiss_showMessageRequest env.d_dialog_stopped in
-    let d_actionRequired_stopped = Lsp_helpers.notify_actionRequired env.d_ienv.i_initialize_params
-      to_stdout env.d_actionRequired_stopped None in
-    let d_dialog_connecting = dismiss_showMessageRequest env.d_dialog_connecting in
-    let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params
-      to_stdout env.d_progress_connecting None in
-    Disconnected { env with
-      d_dialog_stopped; d_actionRequired_stopped; d_dialog_connecting; d_progress_connecting;
-    }
-  | Connected env ->
-    let c_dialog_connected = dismiss_showMessageRequest env.c_dialog_connected in
-    Connected { env with c_dialog_connected; }
-
-
-let show_connected (start_time: float) (env: connected_env) : state =
+let show_connected (env: connected_env) : state =
   (* report that we're connected to telemetry/connectionStatus *)
   let i_isConnected = Lsp_helpers.notify_connectionStatus env.c_ienv.i_initialize_params
     to_stdout env.c_ienv.i_isConnected true in
   let env = { env with c_ienv = { env.c_ienv with i_isConnected; }; } in
-  (* show a notification if necessary *)
-  let time = Unix.gettimeofday () in
-  if (time -. start_time <= 30.0) then
-    Connected env
-  else
-    let seconds = int_of_float (time -. start_time) in
-    let msg = Printf.sprintf "Flow server is now ready, after %i seconds." seconds in
-    let clear_flag state = match state with
-      | Connected cenv ->
-        Connected { cenv with c_dialog_connected = ShowMessageRequest.None; }
-      | _ -> state in
-    let handle_error (_e, _stack) state = clear_flag state in
-    let handle_result _r state = clear_flag state in
-    let handle = (ShowMessageHandler handle_result, handle_error) in
-    let (c_dialog_connected, c_ienv) = showMessageRequest handle
-      MessageType.InfoMessage msg [] env.c_ienv in
-    Connected { env with c_ienv; c_dialog_connected; }
+  (* show green status *)
+  let message = "Flow server is now ready" in
+  let c_ienv = show_status
+    ~type_:MessageType.InfoMessage ~message ~shortMessage:None ~progress:None ~total:None env.c_ienv
+  in
+  Connected { env with c_ienv; }
 
 
 let show_connecting (reason: CommandConnectSimple.error) (env: disconnected_env) : state =
-  let d_dialog_stopped = dismiss_showMessageRequest env.d_dialog_stopped in
-  let d_actionRequired_stopped = Lsp_helpers.notify_actionRequired env.d_ienv.i_initialize_params
-    to_stdout env.d_actionRequired_stopped None in
-
   if reason = CommandConnectSimple.Server_missing then
     Lsp_helpers.log_info to_stdout "Starting Flow server";
 
-  let (d_dialog_connecting, d_ienv) = match env.d_dialog_connecting with
-    | ShowMessageRequest.Some _ -> env.d_dialog_connecting, env.d_ienv
-    | ShowMessageRequest.None -> begin
-      let clear_flag state = match state with
-        | Disconnected e -> Disconnected { e with d_dialog_connecting = ShowMessageRequest.None; }
-        | _ -> state in
-      let handle_error (_e, _stack) state = clear_flag state in
-      let handle_result _r state = clear_flag state in
-      let handle = (ShowMessageHandler handle_result, handle_error) in
-      showMessageRequest handle MessageType.InfoMessage  "Connecting to Flow server" [] env.d_ienv
-    end in
-
-  let time = Unix.gettimeofday () in
-  let delay = int_of_float (time -. env.d_start_time) in
-  let reason_str = match reason with
-    | CommandConnectSimple.Server_missing -> "starting"
-    | CommandConnectSimple.Server_socket_missing -> "starting?"
-    | CommandConnectSimple.Server_busy _ -> "busy"
-    | CommandConnectSimple.Build_id_mismatch -> "wrong version" in
-  let msg = Printf.sprintf "Connecting to Flow server... %s [%i seconds]" reason_str delay in
-  let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params
-    to_stdout env.d_progress_connecting (Some msg)
+  let message, shortMessage, progress, total = match reason, env.d_server_status with
+    | CommandConnectSimple.Server_missing, _ -> "Flow: Server starting", None, None, None
+    | CommandConnectSimple.Server_socket_missing, _ -> "Flow: Server starting?", None, None, None
+    | CommandConnectSimple.(Build_id_mismatch Server_exited), _ ->
+      "Flow: Server was wrong version and exited", None, None, None
+    | CommandConnectSimple.(Build_id_mismatch (Client_should_error _)), _ ->
+      "Flow: Server is wrong version", None, None, None
+    | CommandConnectSimple.Server_busy (CommandConnectSimple.Too_many_clients), _ ->
+      "Flow: Server busy", None, None, None
+    | CommandConnectSimple.Server_busy _, None -> "Flow: Server busy", None, None, None
+    | CommandConnectSimple.Server_busy _, Some (server_status, watcher_status) ->
+      if not (ServerStatus.is_free server_status) then
+        let shortMessage, progress, total = ServerStatus.get_progress server_status in
+        "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status),
+        shortMessage, progress, total
+      else
+        "Flow: " ^ (FileWatcherStatus.string_of_status watcher_status), None, None, None
 
   in
-  Disconnected { env with
-    d_ienv;
-    d_dialog_stopped;
-    d_actionRequired_stopped;
-    d_dialog_connecting;
-    d_progress_connecting;
+  Disconnected { env with d_ienv = show_status
+    ~type_:MessageType.WarningMessage ~message ~shortMessage ~progress ~total env.d_ienv;
   }
 
 
 let show_disconnected
     (code: FlowExitStatus.t option)
-    (msg: string option)
+    (message: string option)
     (env: disconnected_env)
   : state =
   (* report that we're disconnected to telemetry/connectionStatus *)
@@ -396,60 +498,25 @@ let show_disconnected
     to_stdout env.d_ienv.i_isConnected false in
   let env = { env with d_ienv = { env.d_ienv with i_isConnected; }; } in
 
-  (* update dialogs/progress as necessary *)
-  let d_dialog_connecting = dismiss_showMessageRequest env.d_dialog_connecting in
-  let d_progress_connecting = Lsp_helpers.notify_progress env.d_ienv.i_initialize_params to_stdout
-    env.d_progress_connecting None in
-
-  let full_msg = match code, msg with
-    | Some code, Some msg -> Printf.sprintf "Flow server is stopped - %s [%s]"
-        msg (FlowExitStatus.to_string code)
-    | _ -> "Flow server is stopped."
-  in
-
-  let (d_dialog_stopped, d_ienv) = match env.d_dialog_stopped with
-    | ShowMessageRequest.Some _ -> env.d_dialog_stopped, env.d_ienv
-    | ShowMessageRequest.None when not env.d_dialog_stopped_ok -> env.d_dialog_stopped, env.d_ienv
-    | ShowMessageRequest.None -> begin
-      let handle_error (_e, _stack) state = match state with
-        | Disconnected e -> Disconnected { e with d_dialog_stopped = ShowMessageRequest.None; }
-        | _ -> state in
-      let handle_result result state = match state, result with
-        | Disconnected e, Some { ShowMessageRequest.title = "Restart"; } ->
-          (* on the next tick, try_connect will invoke start_flow_server... *)
-          Disconnected { e with
-            d_dialog_stopped = ShowMessageRequest.None;
-            d_autostart = true;
-          }
-        | Disconnected e, _ ->
-          (* on subsequent ticks, try_connect won't display errors and won't autostart... *)
-          Disconnected { e with
-            d_dialog_stopped = ShowMessageRequest.None;
-            d_dialog_stopped_ok = false;
-          }
-        | _ ->
-          state in
-      let handle = (ShowMessageHandler handle_result, handle_error) in
-      showMessageRequest handle MessageType.ErrorMessage full_msg ["Restart"] env.d_ienv
-      end in
-
-  let d_actionRequired_stopped = Lsp_helpers.notify_actionRequired env.d_ienv.i_initialize_params
-    to_stdout env.d_actionRequired_stopped (Some full_msg)
-
+  (* show red status *)
+  let message = Option.value message ~default:"Flow: server is stopped" in
+  let message = match code with
+    | Some code -> Printf.sprintf "%s [%s]" message (FlowExitStatus.to_string code)
+    | None -> message in
+  let handler r state = match state, r with
+    | Disconnected e, "Restart" -> Disconnected { e with d_autostart = true; }
+    | _ -> state
   in
   Disconnected { env with
-    d_ienv;
-    d_dialog_stopped;
-    d_actionRequired_stopped;
-    d_dialog_connecting;
-    d_progress_connecting;
+    d_ienv = show_status ~handler ~titles:["Restart"] ~type_:MessageType.ErrorMessage
+      ~message ~shortMessage:None ~progress:None ~total:None env.d_ienv;
   }
 
 
-let try_connect (env: disconnected_env) : state =
+let try_connect flowconfig_name (env: disconnected_env) : state =
   (* If the version in .flowconfig has changed under our feet then we mustn't *)
   (* connect. We'll terminate and trust the editor to relaunch an ok version. *)
-  let current_version = get_current_version env.d_ienv.i_root in
+  let current_version = get_current_version flowconfig_name env.d_ienv.i_root in
   if env.d_ienv.i_version <> current_version then begin
     let prev_version_str = Option.value env.d_ienv.i_version ~default: "[None]" in
     let current_version_str = Option.value current_version ~default: "[None]" in
@@ -460,13 +527,35 @@ let try_connect (env: disconnected_env) : state =
     Lsp_helpers.telemetry_log to_stdout message;
     lsp_exit_bad ()
   end;
-  let start_env = CommandUtils.make_env env.d_ienv.i_connect_params env.d_ienv.i_root in
-  let start_env = { start_env with CommandConnect.autostop = true; } in
+  let start_env =
+    let connect_params =
+      (* If the .flowconfig has explicitly set lazy_mode, then we don't want to override that if we
+       * start a new server *)
+      if is_lazy_mode_set_in_flowconfig flowconfig_name env.d_ienv.i_root
+      then { env.d_ienv.i_connect_params with lazy_mode = None; }
+      else env.d_ienv.i_connect_params
+    in
+    CommandUtils.make_env flowconfig_name connect_params env.d_ienv.i_root
+  in
 
-  let client_type = SocketHandshake.PersistentLsp
-    (FlowEventLogger.get_context (), env.d_ienv.i_initialize_params) in
+  let client_handshake = SocketHandshake.({
+    client_build_id = build_revision;
+    client_version = Flow_version.version;
+    is_stop_request = false;
+    server_should_hangup_if_still_initializing = true;
+    (* only exit if we'll restart it *)
+    version_mismatch_strategy =
+      if env.d_autostart then Stop_server_if_older else SocketHandshake.Error_client;
+  }, {
+    client_type = Persistent {
+      logging_context = FlowEventLogger.get_context ();
+      lsp = Some env.d_ienv.i_initialize_params;
+    };
+  }) in
   let conn = CommandConnectSimple.connect_once
-    ~client_type ~tmp_dir:start_env.CommandConnect.tmp_dir start_env.CommandConnect.root in
+    ~flowconfig_name ~client_handshake
+    ~tmp_dir:start_env.CommandConnect.tmp_dir
+    start_env.CommandConnect.root in
 
   match conn with
   | Ok (ic, oc) ->
@@ -477,28 +566,43 @@ let try_connect (env: disconnected_env) : state =
     let new_env = {
       c_ienv = { env.d_ienv with i_server_id; };
       c_conn = { ic; oc; };
+      c_server_status = (ServerStatus.initial_status, None);
       c_about_to_exit_code = None;
-      c_dialog_connected = ShowMessageRequest.None;
+      c_is_rechecking = false;
+      c_lazy_stats = None;
+      c_diagnostics = SMap.empty;
       c_outstanding_requests_to_server = Lsp.IdSet.empty;
-      c_outstanding_progress = ISet.empty;
-      c_outstanding_action = ISet.empty;
       c_outstanding_diagnostics = SSet.empty;
-      c_editor_open_files = env.d_editor_open_files;
+      c_recent_summaries = [];
     } in
     (* send the initial messages to the server *)
     send_to_server new_env Persistent_connection_prot.Subscribe;
     let make_open_message (textDocument: TextDocumentItem.t) : lsp_message =
       NotificationMessage (DidOpenNotification { DidOpen.textDocument; }) in
-    let open_messages = env.d_editor_open_files |> SMap.bindings |> List.map ~f:snd
-      |> List.map ~f:make_open_message in
-    List.iter open_messages ~f:(send_lsp_to_server new_env);
+    let open_messages = env.d_ienv.i_open_files |> SMap.bindings
+      |> List.map ~f:(fun (_, {o_open_doc; _}) -> make_open_message o_open_doc) in
+    let open Hh_json in
+    let metadata = { Persistent_connection_prot.
+      start_wall_time = Unix.gettimeofday ();
+      start_server_status = Some (fst new_env.c_server_status);
+      start_watcher_status = snd new_env.c_server_status;
+      start_json_truncated = JSON_Object ["method", JSON_String "synthetic/open"];
+      start_lsp_state = None;
+      start_lsp_state_reason = None;
+      error_info = None;
+      server_profiling = None;
+      client_duration = None;
+      extra_data = [];
+      server_logging_context = None;
+    } in
+    List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
     (* close the old UI and bring up the new *)
-    let _state = dismiss_ui (Disconnected env) in
-    let new_state = show_connected env.d_start_time new_env in
+    let new_state = show_connected new_env in
     new_state
 
+  (* Server_missing means the lock file is absent, because the server isn't running *)
   | Error (CommandConnectSimple.Server_missing as reason) ->
-    let new_env = { env with d_autostart = false; } in
+    let new_env = { env with d_autostart = false; d_server_status = None; } in
     if env.d_autostart then
       let start_result = CommandConnect.start_flow_server start_env in
       match start_result with
@@ -507,26 +611,77 @@ let try_connect (env: disconnected_env) : state =
     else
       show_disconnected None None new_env
 
-  | Error (CommandConnectSimple.Build_id_mismatch as reason)
-  | Error (CommandConnectSimple.Server_socket_missing as reason)
-  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Fail_on_init) as reason)
-  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Too_many_clients) as reason)
-  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Not_responding) as reason) ->
-    show_connecting reason env
+  (* Server_socket_missing means the server is present but lacks its sock *)
+  (* file. There's a tiny race possibility that the server has created a  *)
+  (* lock but not yet created a sock file. More likely is that the server *)
+  (* is an old version of the server which doesn't even create the right  *)
+  (* sock file. We'll kill the server now so we can start a new one next. *)
+  (* And if it was in that race? bad luck... *)
+  | Error (CommandConnectSimple.Server_socket_missing as reason) ->
+    begin try
+      let tmp_dir = start_env.CommandConnect.tmp_dir in
+      let root = start_env.CommandConnect.root in
+      CommandMeanKill.mean_kill ~flowconfig_name ~tmp_dir root;
+      show_connecting reason { env with d_server_status = None; }
+    with CommandMeanKill.FailedToKill _ ->
+      let msg = "An old version of the Flow server is running. Please stop it." in
+      show_disconnected None (Some msg) { env with d_server_status = None; }
+    end
 
+  (* The server exited due to a version mismatch between the lsp and the server. *)
+  | Error (CommandConnectSimple.(Build_id_mismatch Server_exited) as reason) ->
+    if env.d_autostart
+    then show_connecting reason { env with d_server_status = None; }
+    else
+      (* We shouldn't hit this case. When `env.d_autostart` is `false`, we ask the server NOT to
+       * die on a version mismatch. *)
+      let msg = "Flow: the server was the wrong version" in
+      show_disconnected None (Some msg) { env with d_server_status = None; }
+
+  (* The server and the lsp are different binaries and can't talk to each other. The server is not
+   * stopping (either because we asked it not to stop or because it is newer than this client). In
+   * this case, our best option is to stop the lsp and let the IDE start a new lsp with a newer
+   * binary *)
+  | Error (CommandConnectSimple.(Build_id_mismatch (Client_should_error { server_version; _} ))) ->
+    (match Semver.compare server_version Flow_version.version with
+    | n when n < 0 ->
+      Printf.eprintf
+        "Flow: the running server is an older version of Flow (%s) than the LSP (%s), \
+          but we're not allowed to stop it"
+        server_version
+        Flow_version.version
+    | 0 ->
+      Printf.eprintf
+        "Flow: the running server is a different binary with the same version (%s)"
+        Flow_version.version
+    | _ ->
+      Printf.eprintf
+        "Flow: the running server is a newer version of Flow (%s) than the LSP (%s)"
+        server_version
+        Flow_version.version
+    );
+    Printf.eprintf
+      "LSP is exiting. Hopefully the IDE will start an LSP with the same binary as the server";
+    lsp_exit_bad ()
+
+  (* While the server is busy initializing, sometimes we get Server_busy.Fail_on_init *)
+  (* with a server-status telling us how far it is through init. And sometimes we get *)
+  (* just ServerStatus.Not_responding if the server was just too busy to give us a    *)
+  (* status update. These are cases where the right version of the server is running  *)
+  (* but it's not speaking to us just now. So we'll keep trying until it's ready.     *)
+  | Error ((CommandConnectSimple.Server_busy (CommandConnectSimple.Fail_on_init st)) as reason) ->
+    show_connecting reason { env with d_server_status = Some st; }
+
+  (* The following codes mean the right version of the server is running so   *)
+  (* we'll retry. They provide no information about the d_server_status of    *)
+  (* the server, so we'll leave it as it was before.                          *)
+  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Not_responding) as reason)
+  | Error ((CommandConnectSimple.Server_busy CommandConnectSimple.Too_many_clients) as reason) ->
+    show_connecting reason env
 
 let close_conn (env: connected_env) : unit =
   try Timeout.shutdown_connection env.c_conn.ic with _ -> ();
   try Timeout.close_in_noerr env.c_conn.ic with _ -> ()
-
-
-let dismiss_connected_dialog_if_necessary (state: state) (event: event) : state =
-  match state, event with
-  | Connected env, Client_message (Lsp.RequestMessage _)
-  | Connected env, Client_message (Lsp.NotificationMessage _) ->
-    let c_dialog_connected = dismiss_showMessageRequest env.c_dialog_connected in
-    Connected { env with c_dialog_connected; }
-  | _ -> state
 
 
 (************************************************************************)
@@ -574,41 +729,66 @@ let dismiss_connected_dialog_if_necessary (state: state) (event: event) : state 
 (*   so it can erase all outstanding progress messages.                 *)
 (* OUTSTANDING_ACTION_REQUIRED - similar to outstanding_progress.       *)
 
-let track_to_server (state: state) (c: Lsp.lsp_message) : state =
-  (* didOpen, didChange, didSave, didClose: save them up in editor_file_events *)
-  let editor_open_files = match (get_editor_open_files state), c with
-    | Some editor_open_files, NotificationMessage (DidOpenNotification params) ->
-      let doc = params.DidOpen.textDocument in
+type track_effect = {
+  changed_live_uri: string option;
+}
+
+let track_to_server (state: state) (c: Lsp.lsp_message) : (state * track_effect) =
+  let changed_open_file = match (get_open_files state), c with
+    | _, NotificationMessage (DidOpenNotification params) ->
+      let o_open_doc = params.DidOpen.textDocument in
       let uri = params.DidOpen.textDocument.TextDocumentItem.uri in
-      SMap.add uri doc editor_open_files
+      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None;})
 
-    | Some editor_open_files, NotificationMessage (DidCloseNotification params) ->
+    | _, NotificationMessage (DidCloseNotification params) ->
       let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri in
-      SMap.remove uri editor_open_files
+      Some (uri, None)
 
-    | Some editor_open_files, NotificationMessage (DidChangeNotification params) ->
+    | Some open_files, NotificationMessage (DidChangeNotification params) ->
       let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
-      let doc = SMap.find uri editor_open_files in
-      let text = doc.TextDocumentItem.text in
-      let doc' = { Lsp.TextDocumentItem.
+      let {o_open_doc; _} = SMap.find uri open_files in
+      let text = o_open_doc.TextDocumentItem.text in
+      let text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges in
+      let o_open_doc = { Lsp.TextDocumentItem.
         uri;
-        languageId = doc.TextDocumentItem.languageId;
+        languageId = o_open_doc.TextDocumentItem.languageId;
         version = params.DidChange.textDocument.VersionedTextDocumentIdentifier.version;
-        text = Lsp_helpers.apply_changes_unsafe text params.DidChange.contentChanges;
+        text;
       } in
-      SMap.add uri doc' editor_open_files
+      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None;})
 
-    | Some editor_open_files, _ ->
-      editor_open_files
-
-    | None, _ ->
-      SMap.empty
+    | _, _ ->
+      None
   in
-  let state = match state with
-    | Connected env -> Connected { env with c_editor_open_files = editor_open_files; }
-    | Disconnected env -> Disconnected { env with d_editor_open_files = editor_open_files; }
+  (* update ienv.i_open_files... *)
+  let state, changed_live_uri = match changed_open_file with
+    | Some (uri, open_file_info) -> update_open_file uri open_file_info state, Some uri
+    | None -> state, None
+  in
+  (* update cenv.c_diagnostics... we don't need to send updated squiggle locations *)
+  (* right now ourselves, since all editors take care of that; but if ever we *)
+  (* re-send the server's existing diagnostics for this file then that should take *)
+  (* into account any user edits since then. This isn't perfect - e.g. if the user *)
+  (* modifies a file we'll update squiggles, but if the user subsquently closes the *)
+  (* file unsaved and then re-opens it then we'll be left with wrong squiggles. *)
+  (* It also doesn't compensate if the flow server starts a typecheck, then receives *)
+  (* a DidChange, then sends error spans from as it was at the start of the typecheck. *)
+  (* Still, at least we're doing better on the common case -- where the server has sent *)
+  (* diagnostics, then the user types, then we re-send live syntax errors. *)
+  let state = match state, c with
+    | Connected cenv, NotificationMessage (DidChangeNotification params) -> begin
+      let uri = params.DidChange.textDocument.VersionedTextDocumentIdentifier.uri in
+      match SMap.find_opt uri cenv.c_diagnostics with
+        | Some diagnostics_for_uri ->
+          let diagnostics_for_uri = Lsp_helpers.update_diagnostics_due_to_change
+            diagnostics_for_uri params in
+          let c_diagnostics = SMap.add uri diagnostics_for_uri cenv.c_diagnostics in
+          Connected {cenv with c_diagnostics; }
+        | _ -> state
+      end
     | _ -> state
   in
+  (* update cenv.c_outstanding_requests*... *)
   let state = match state, c with
     (* client->server requests *)
     | Connected env, RequestMessage (id, _) ->
@@ -624,7 +804,7 @@ let track_to_server (state: state) (c: Lsp.lsp_message) : state =
       Connected { env with c_ienv; }
     | _ -> state
   in
-  state
+  state, { changed_live_uri; }
 
 
 let track_from_server (state: state) (c: Lsp.lsp_message) : state =
@@ -641,37 +821,20 @@ let track_from_server (state: state) (c: Lsp.lsp_message) : state =
       WrappedMap.add wrapped params env.c_ienv.i_outstanding_requests_from_server;
     } in
     Connected { env with c_ienv; }
-  (* server->client publishDiagnostics *)
+  (* server->client publishDiagnostics: save up all URIs with non-empty diagnostics *)
   | Connected env, NotificationMessage (PublishDiagnosticsNotification params) ->
-    (* publishDiagnostics: save up all URIs with non-empty diagnostics *)
     let uri = params.PublishDiagnostics.uri in
     let published = params.PublishDiagnostics.diagnostics in
     let c_outstanding_diagnostics = match published with
       | [] -> SSet.remove uri env.c_outstanding_diagnostics
       | _ -> SSet.add uri env.c_outstanding_diagnostics in
     Connected { env with c_outstanding_diagnostics }
-  (* server->client progress *)
-  | Connected env, NotificationMessage (ProgressNotification params) ->
-    let id = params.Progress.id in
-    let label = params.Progress.label in
-    let c_outstanding_progress = match label with
-      | None -> ISet.remove id env.c_outstanding_progress
-      | Some _ -> ISet.add id env.c_outstanding_progress in
-    Connected { env with c_outstanding_progress }
-  (* server->client actionRequired *)
-  | Connected env, NotificationMessage (ActionRequiredNotification params) ->
-    let id = params.ActionRequired.id in
-    let label = params.ActionRequired.label in
-    let c_outstanding_action = match label with
-      | None -> ISet.remove id env.c_outstanding_action
-      | Some _ -> ISet.add id env.c_outstanding_action in
-    Connected { env with c_outstanding_action }
   | _, _ -> state
 
 let dismiss_tracks (state: state) : state =
   let decline_request_to_server (id: lsp_id) : unit =
-    let e = Error.RequestCancelled "Connection to server has been lost" in
-    let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
+    let e = Lsp_fmt.error_of_exn (Error.RequestCancelled "Connection to server has been lost") in
+    let stack = Exception.get_current_callstack_string 100 in
     let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
     to_stdout json
   in
@@ -687,16 +850,6 @@ let dismiss_tracks (state: state) : state =
     else
       ()
   in
-  let close_progress (id: int) : unit =
-    let notification = ProgressNotification { Progress.id; label = None; } in
-    let json = Lsp_fmt.print_lsp_notification notification in
-    to_stdout json
-  in
-  let close_actionRequired (id: int) : unit =
-    let notification = ActionRequiredNotification { ActionRequired.id; label = None; } in
-    let json = Lsp_fmt.print_lsp_notification notification in
-    to_stdout json
-  in
   let clear_diagnostics (uri: string) : unit =
     let notification = PublishDiagnosticsNotification {
       PublishDiagnostics.uri; diagnostics = []; } in
@@ -708,18 +861,521 @@ let dismiss_tracks (state: state) : state =
     WrappedMap.iter (cancel_request_from_server env.c_ienv.i_server_id)
        env.c_ienv.i_outstanding_requests_from_server;
     IdSet.iter decline_request_to_server env.c_outstanding_requests_to_server;
-    ISet.iter close_progress env.c_outstanding_progress;
-    ISet.iter close_actionRequired env.c_outstanding_action;
     SSet.iter clear_diagnostics env.c_outstanding_diagnostics;
     Connected { env with
       c_outstanding_requests_to_server = IdSet.empty;
-      c_outstanding_progress = ISet.empty;
-      c_outstanding_action = ISet.empty;
       c_outstanding_diagnostics = SSet.empty;
     }
   | _ -> state
 
 
+let lsp_DocumentItem_to_flow (open_doc: Lsp.TextDocumentItem.t) : File_input.t =
+  let uri = open_doc.TextDocumentItem.uri in
+  let fn = Lsp_helpers.lsp_uri_to_path uri in
+  let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
+  File_input.FileContent (Some fn, open_doc.TextDocumentItem.text)
+
+
+let lsp_DocumentIdentifier_to_flow
+    (textDocument: Lsp.TextDocumentIdentifier.t)
+    ~(state: state)
+  : File_input.t =
+  let uri = textDocument.TextDocumentIdentifier.uri in
+  let editor_open_files = get_open_files state in
+  match Option.bind editor_open_files (SMap.get uri) with
+  | None ->
+    let fn = Lsp_helpers.lsp_uri_to_path uri in
+    let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
+    File_input.FileName fn
+  | Some {o_open_doc; _} -> lsp_DocumentItem_to_flow o_open_doc
+
+
+(******************************************************************************)
+(* Diagnostics                                                                *)
+(* These should really be handle inside the flow server so it sends out       *)
+(* LSP publishDiagnostics notifications and we track them in the normal way.  *)
+(* But while the flow server has to handle legacy clients as well as LSP      *)
+(* clients, we don't want to make the flow server code too complex, so we're  *)
+(* handling them here for now.                                                *)
+(******************************************************************************)
+
+let error_to_lsp
+    ~(severity: PublishDiagnostics.diagnosticSeverity option)
+    ~(default_uri: string)
+    (error: Loc.t Errors.printable_error)
+  : string * PublishDiagnostics.diagnostic =
+  let error = Errors.Lsp_output.lsp_of_error error in
+  let location = Flow_lsp_conversions.loc_to_lsp_with_default
+    error.Errors.Lsp_output.loc ~default_uri in
+  let uri = location.Lsp.Location.uri in
+  let related_to_lsp (loc, relatedMessage) =
+    let relatedLocation = Flow_lsp_conversions.loc_to_lsp_with_default loc ~default_uri in
+    { Lsp.PublishDiagnostics.relatedLocation; relatedMessage; } in
+  let relatedInformation =
+    List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp
+  in
+  uri, { Lsp.PublishDiagnostics.
+    range = location.Lsp.Location.range;
+    severity;
+    code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
+    source = Some "Flow";
+    message = error.Errors.Lsp_output.message;
+    relatedInformation;
+    relatedLocations = relatedInformation; (* legacy fb extension *)
+  }
+
+
+(* parse_and_cache: either the uri is an open file for which we already
+ * have parse results (ast+diagnostics), so we can just return them;
+ * or it's an open file and we are expected to lazily compute the parse results
+ * and store them in the state;
+ * or it's an unopened file in which case we'll retrieve parse results but
+ * won't store them. *)
+let parse_and_cache flowconfig_name (state: state) (uri: string)
+  : state * (Loc.t, Loc.t) Flow_ast.program * PublishDiagnostics.diagnostic list option =
+  (* part of parsing is producing parse errors, if so desired *)
+  let liveSyntaxErrors = let open Initialize in match state with
+    | Connected cenv -> cenv.c_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors
+    | Disconnected denv -> denv.d_ienv.i_initialize_params.initializationOptions.liveSyntaxErrors
+    | _ -> false in
+
+  let error_to_diagnostic (loc, parse_error) =
+    let message = Errors.Friendly.message_of_string (Parse_error.PP.error parse_error) in
+    let error = Errors.mk_error ~kind:Errors.ParseError loc message in
+    let _, diagnostic = error_to_lsp
+      ~default_uri:uri ~severity:(Some PublishDiagnostics.Error) error in
+    diagnostic in
+
+  (* The way flow compilation works in the flow server is that parser options *)
+  (* are permissive to allow all constructs, so that parsing works well; if   *)
+  (* the user choses not to enable features through the user's .flowconfig    *)
+  (* then use of impermissable constructs will be reported at typecheck time  *)
+  (* (not as parse errors). We'll do the same here, with permissive parsing   *)
+  (* and only reporting parse errors.                                         *)
+  let get_parse_options () =
+    let root = get_root state in
+    let use_strict = Option.value_map root ~default:false ~f:(fun root ->
+      Server_files_js.config_file flowconfig_name root
+      |> read_config_or_exit |> FlowConfig.modules_are_use_strict) in
+    Some Parser_env.({
+      esproposal_class_instance_fields = true;
+      esproposal_class_static_fields = true;
+      esproposal_decorators = true;
+      esproposal_export_star_as = true;
+      esproposal_optional_chaining = true;
+      esproposal_nullish_coalescing = true;
+      types = true;
+      use_strict;
+    }) in
+
+  let parse file =
+    let (program, errors) = try
+      let content = File_input.content_of_file_input_unsafe file in
+      let filename_opt = File_input.path_of_file_input file in
+      let filekey = Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
+      let parse_options = get_parse_options () in
+      Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
+    with _ ->
+      (Loc.none,[],[]), []
+    in
+    program, if liveSyntaxErrors then Some (List.map errors ~f:error_to_diagnostic) else None in
+
+  let open_files = get_open_files state in
+  let existing_open_file_info = Option.bind open_files (SMap.get uri) in
+  match existing_open_file_info with
+  | Some {o_ast=Some o_ast; o_live_diagnostics; _} ->
+    state, o_ast, o_live_diagnostics
+  | Some {o_open_doc; _} ->
+    let file = lsp_DocumentItem_to_flow o_open_doc in
+    let o_ast, o_live_diagnostics = parse file in
+    let open_file_info = Some {o_open_doc; o_ast=Some o_ast; o_live_diagnostics;} in
+    let state = update_open_file uri open_file_info state in
+    state, o_ast, o_live_diagnostics
+  | None ->
+    let fn = Lsp_helpers.lsp_uri_to_path uri in
+    let fn = Option.value (Sys_utils.realpath fn) ~default:fn in
+    let file = File_input.FileName fn in
+    let open_ast, open_diagnostics = parse file in
+    state, open_ast, open_diagnostics
+
+
+(* print_diagnostics: just pushes the set of diagnostics for this uri to the client
+ * taking into account whether there are superceding local parse errors as well.
+ * We actually only send the first 200 errors per file to the client, since
+ * more than that wouldn't add value to the user, and makes clients sluggish. *)
+let print_diagnostics
+    (uri: string)
+    (diagnostics: PublishDiagnostics.diagnostic list)
+    (state: state)
+  : state =
+  let open PublishDiagnostics in
+
+  let prev_server_reported, prev_open_reported = match state with
+    | Connected cenv ->
+      SSet.mem uri cenv.c_outstanding_diagnostics,
+      SSet.mem uri cenv.c_ienv.i_outstanding_diagnostics
+    | Disconnected denv ->
+      false, SSet.mem uri denv.d_ienv.i_outstanding_diagnostics
+    | _ -> false, false in
+
+  (* First we'll look at server tracks, update then appropriately. *)
+  (* This is to maintain the list of all URIs for which the server has sent *)
+  (* diagnostics, so all those URIs can be cleared should the server disconnect. *)
+  let msg = NotificationMessage
+    (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
+  let state = track_from_server state msg in
+
+  (* Next look at open-file tracks, update them appropriately. *)
+  let open_file_info = Option.bind (get_open_files state) (SMap.get uri) in
+  let state, use_live, o_live_diagnostics = match open_file_info with
+    | None
+    | Some {o_live_diagnostics=None; _} ->
+      state, false, []
+    | Some {o_live_diagnostics=Some o_live_diagnostics; _} ->
+      let update_ienv ienv =
+        let i_outstanding_diagnostics = match o_live_diagnostics with
+        | [] -> SSet.remove uri ienv.i_outstanding_diagnostics
+        | _ -> SSet.add uri ienv.i_outstanding_diagnostics in
+        { ienv with i_outstanding_diagnostics; } in
+      let state = match state with
+        | Connected cenv -> Connected {cenv with c_ienv = update_ienv cenv.c_ienv}
+        | Disconnected denv -> Disconnected {denv with d_ienv=update_ienv denv.d_ienv}
+        | _ -> state in
+      state, true, o_live_diagnostics in
+
+  (* If using live-diagnostics, then strip out parse errors from the server diagnostics *)
+  (* and instead include the local ones. *)
+  let diagnostics = if use_live then
+    let parse_code = Errors.string_of_kind Errors.ParseError in
+    let diagnostics = List.filter diagnostics ~f:(fun d ->  d.code <> StringCode (parse_code)) in
+    o_live_diagnostics @ diagnostics
+  else
+    diagnostics in
+
+  (* Send only the first 'cap' diagnostics per file to the client *)
+  let cap = 200 in
+  let is_below_cap = (List.nth diagnostics cap) = None in
+  let diagnostics = if is_below_cap then
+    (* avoid O(nlogn) sort in this case *)
+    diagnostics
+  else begin
+    let cmp d1 d2 = Lsp_helpers.pos_compare d1.range.start d2.range.start in
+    let diagnostics = List.sort cmp diagnostics in
+    let (retain, discard) = List.split_n diagnostics cap in
+    match discard with
+    | [] -> retain
+    | discard ->
+      let discard_count = List.length discard in
+      let message = Printf.sprintf "[Only showing %i/%i diagnostics]" cap (cap + discard_count) in
+      let diagnostic = { PublishDiagnostics.
+        (* the following range displays fine in all editors, regardless of contents *)
+        range = {start={line=0; character=0;}; end_={line=0; character=0;}};
+        severity = Some PublishDiagnostics.Information;
+        code = NoCode;
+        source = Some "Flow";
+        message;
+        relatedInformation = [];
+        relatedLocations = [];
+      } in
+      diagnostic :: retain
+    end in
+
+  (* Avoid sending the message if it was empty before and is empty now. *)
+  (* This isn't needed for correct client behavior, but it makes the transcripts *)
+  (* easier to write unit-tests for! *)
+  let msg = NotificationMessage
+    (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
+  let new_reported = match diagnostics with [] -> false | _ -> true in
+  if prev_open_reported || prev_server_reported || new_reported then
+    to_stdout (Lsp_fmt.print_lsp msg);
+  state
+
+let do_additional_diagnostics
+    (cenv: connected_env)
+    (diagnostics: PublishDiagnostics.diagnostic list SMap.t)
+  : state =
+  (* Merge the additional diagnostics into cenv *)
+  let uris = SMap.bindings diagnostics |> List.map ~f:fst |> SSet.of_list in
+  let combine _uri existing additions = Some (existing @ additions) in
+  let c_diagnostics = SMap.union ~combine cenv.c_diagnostics diagnostics in
+  let state = Connected { cenv with c_diagnostics; } in
+
+  (* Send publishDiagnostics for all files touched by the additions. *)
+  let to_send = SMap.filter (fun uri _ -> SSet.mem uri uris) c_diagnostics in
+  let state = SMap.fold print_diagnostics to_send state
+  in
+  state
+
+let do_replacement_diagnostics
+    (cenv: connected_env)
+    (c_diagnostics: PublishDiagnostics.diagnostic list SMap.t)
+  : state =
+  let state = Connected { cenv with c_diagnostics; } in
+
+  (* Send publishDiagnostics for all files that no longer have diagnostics *)
+  let old_uris = SMap.bindings cenv.c_diagnostics |> List.map ~f:fst |> SSet.of_list in
+  let new_uris = SMap.bindings c_diagnostics |> List.map ~f:fst |> SSet.of_list in
+  let now_empty_uris = SSet.diff old_uris new_uris in
+  let print_empty uri state = print_diagnostics uri [] state in
+  let state = SSet.fold print_empty now_empty_uris state in
+
+  (* Send publishDiagnostics for all files that have diagnostics *)
+  let state = SMap.fold print_diagnostics c_diagnostics state
+  in
+  state
+
+let do_live_diagnostics flowconfig_name (state: state) (uri: string): state =
+  (* reparse the file and write it into the state's editor_open_files as needed *)
+  let state, _, _ = parse_and_cache flowconfig_name state uri in
+  (* republish the diagnostics for this file based on a mix of server-generated ones *)
+  (* if present, and client-generated ones if the file is open *)
+  let server_diagnostics = match state with
+    | Connected cenv -> Option.value (SMap.get uri cenv.c_diagnostics) ~default:[]
+    | _ -> [] in
+  let state = print_diagnostics uri server_diagnostics state in
+  state
+
+
+let show_recheck_progress (cenv: connected_env) : state =
+  let type_, message, shortMessage, progress, total =
+  match cenv.c_is_rechecking, cenv.c_server_status, cenv.c_lazy_stats with
+    | true, (server_status, _), _ when not (ServerStatus.is_free server_status) ->
+      let shortMessage, progress, total = ServerStatus.get_progress server_status in
+      let message = "Flow: " ^ (ServerStatus.string_of_status ~use_emoji:true server_status) in
+      MessageType.WarningMessage, message, shortMessage, progress, total
+    | true, _, _ ->
+      MessageType.WarningMessage, "Flow: Server is rechecking...", None, None, None
+    | false, _, Some {ServerProt.Response.lazy_mode=mode; checked_files; total_files}
+      when checked_files < total_files && mode <> Options.NON_LAZY_MODE ->
+      let message = Printf.sprintf
+        "Flow: done recheck. (%s lazy mode let it check only %d/%d files [[more...](%s)])"
+        (Options.lazy_mode_to_string mode)
+        checked_files total_files "https://flow.org/en/docs/lang/lazy-modes/" in
+      MessageType.InfoMessage, message, None, None, None
+    | false, _, _ ->
+      MessageType.InfoMessage, "Flow: done recheck", None, None, None
+  in
+  Connected { cenv with
+    c_ienv = show_status~type_ ~message ~shortMessage ~progress ~total cenv.c_ienv
+  }
+
+let do_documentSymbol flowconfig_name (state: state) (id: lsp_id)
+  (params: DocumentSymbol.params): state =
+  let uri = params.DocumentSymbol.textDocument.TextDocumentIdentifier.uri in
+  let state, ast, _ = parse_and_cache flowconfig_name state uri in
+  let result = Flow_lsp_conversions.flow_ast_to_lsp_symbols ~uri ast in
+  let json = Lsp_fmt.print_lsp (ResponseMessage (id, DocumentSymbolResult result)) in
+  to_stdout json;
+  state
+
+
+
+
+module RagePrint = struct
+  let addline (b: Buffer.t) (prefix: string) (s: string) : unit =
+    Buffer.add_string b prefix;
+    Buffer.add_string b s;
+    Buffer.add_string b "\n";
+    ()
+
+  let string_of_lazy_stats (lazy_stats: ServerProt.Response.lazy_stats) : string =
+    let open ServerProt in
+    Printf.sprintf "lazy_mode=%s, checked_files=%d, total_files=%d"
+      (Options.lazy_mode_to_string lazy_stats.Response.lazy_mode)
+      lazy_stats.Response.checked_files lazy_stats.Response.total_files
+
+  let string_of_connect_params (p: connect_params) : string =
+    let open CommandUtils in
+    Printf.sprintf (
+      "retries=%d, retry_if_init=%B, no_auto_start=%B, autostop=%B, \
+      ignore_version=%B quiet=%B, temp_dir=%s, \
+      timeout=%s, lazy_mode=%s")
+    p.retries p.retry_if_init p.no_auto_start p.autostop
+    p.ignore_version p.quiet (Option.value ~default:"None" p.temp_dir)
+    (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
+    (Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string)
+
+  let string_of_open_file {o_open_doc; o_ast; o_live_diagnostics} : string =
+    Printf.sprintf "(uri=%s version=%d text=[%d bytes] ast=[%s] diagnostics=[%s])"
+      o_open_doc.TextDocumentItem.uri
+      o_open_doc.TextDocumentItem.version
+      (String.length o_open_doc.TextDocumentItem.text)
+      (Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
+      (Option.value_map o_live_diagnostics ~default:"absent"
+        ~f:(fun d -> List.length d |> string_of_int))
+
+  let string_of_open_files (files: open_file_info SMap.t) : string =
+    SMap.bindings files
+      |> List.map ~f:(fun (_,ofi) -> string_of_open_file ofi)
+      |> String.concat ","
+
+  let string_of_show_status (show_status: show_status_t) : string =
+    match show_status with
+    | Never_shown -> "Never_shown"
+    | Shown (id_opt, params) -> Printf.sprintf "Shown id=%s params=%s"
+        (Option.value_map id_opt ~default:"None" ~f:Lsp_fmt.id_to_string)
+        (print_showStatus params |> Hh_json.json_to_string)
+
+  let add_ienv (b: Buffer.t) (ienv: initialized_env) : unit =
+    addline b "i_connect_params=" (ienv.i_connect_params |> string_of_connect_params);
+    addline b "i_root=" (ienv.i_root |> Path.to_string);
+    addline b "i_version=" (ienv.i_version |> Option.value ~default:"None");
+    addline b "i_server_id=" (ienv.i_server_id |> string_of_int);
+    addline b "i_can_autostart_after_version_mismatch=" (ienv.i_can_autostart_after_version_mismatch
+      |> string_of_bool);
+    addline b "i_outstanding_local_handlers=" (ienv.i_outstanding_local_handlers
+      |> IdMap.bindings |> List.map ~f:(fun (id,_handler) -> Lsp_fmt.id_to_string id)
+      |> String.concat ",");
+    addline b "i_outstanding_local_requests=" (ienv.i_outstanding_local_requests
+      |> IdMap.bindings |> List.map ~f:(fun (id,req) -> Printf.sprintf "%s:%s"
+          (Lsp_fmt.id_to_string id) (Lsp_fmt.request_name_to_string req))
+      |> String.concat ",");
+    addline b "i_outstanding_requests_from_server=" (ienv.i_outstanding_requests_from_server
+      |> WrappedMap.bindings
+      |> List.map ~f:(fun (id,req) -> Printf.sprintf "#%d:%s:%s"
+          id.server_id (Lsp_fmt.id_to_string id.message_id) (Lsp_fmt.request_name_to_string req))
+      |> String.concat ",");
+    addline b "i_isConnected=" (ienv.i_isConnected |> string_of_bool);
+    addline b "i_status=" (ienv.i_status |> string_of_show_status);
+    addline b "i_open_files=" (ienv.i_open_files |> string_of_open_files);
+    addline b "i_outstanding_diagnostics=" (ienv.i_outstanding_diagnostics
+      |> SSet.elements |> String.concat ", ");
+    ()
+
+  let add_denv (b: Buffer.t) (denv: disconnected_env) : unit =
+    let server_status, watcher_status = match denv.d_server_status with
+      | None -> None, None
+      | Some (s, w) -> Some s, Some w in
+    add_ienv b denv.d_ienv;
+    addline b "d_autostart=" (denv.d_autostart |> string_of_bool);
+    addline b "d_server_status:server=" (server_status
+      |> Option.value_map  ~default:"None" ~f:ServerStatus.string_of_status);
+    addline b "d_server_status:watcher=" (watcher_status
+      |> Option.value_map  ~default:"None" ~f:FileWatcherStatus.string_of_status);
+    ()
+
+  let add_cenv (b: Buffer.t) (cenv: connected_env) : unit =
+    let server_status, watcher_status = cenv.c_server_status in
+    add_ienv b cenv.c_ienv;
+    addline b "c_server_status:server=" (server_status |> ServerStatus.string_of_status);
+    addline b "c_server_status:watcher=" (watcher_status
+      |> Option.value_map  ~default:"None" ~f:FileWatcherStatus.string_of_status);
+    addline b "c_about_to_exit_code=" (cenv.c_about_to_exit_code
+      |> Option.value_map ~default:"None" ~f:FlowExitStatus.to_string);
+    addline b "c_is_rechecking=" (cenv.c_is_rechecking |> string_of_bool);
+    addline b "c_diagnostics=" (cenv.c_diagnostics
+      |> SMap.bindings |> List.map ~f:(fun (uri, d) -> Printf.sprintf "%s:%d" uri (List.length d))
+      |> String.concat ", ");
+    addline b "c_lazy_stats=" (cenv.c_lazy_stats
+      |> Option.value_map ~default:"None" ~f:string_of_lazy_stats);
+    addline b "c_outstanding_requests_to_server=" (cenv.c_outstanding_requests_to_server
+      |> IdSet.elements |> List.map ~f:Lsp_fmt.id_to_string |> String.concat ",");
+    addline b "c_outstanding_diagnostics=" (cenv.c_outstanding_diagnostics
+      |> SSet.elements |> String.concat ", ");
+    ()
+
+  let string_of_state (state: state) : string =
+    let b = Buffer.create 10000 in
+    begin match state with
+      | Pre_init p -> Buffer.add_string b (Printf.sprintf "Pre_init:\n%s\n"
+        (string_of_connect_params p))
+      | Post_shutdown -> Buffer.add_string b "Post_shutdown:\n[]\n"
+      | Disconnected denv -> Buffer.add_string b "Disconnected:\n"; add_denv b denv;
+      | Connected cenv -> Buffer.add_string b "Connected:\n"; add_cenv b cenv;
+    end;
+    Buffer.contents b
+end
+
+let do_rage flowconfig_name (state: state) : Rage.result =
+  let open Rage in
+
+  (* Some helpers to add various types of data to the rage output... *)
+  let add_file (items: rageItem list) (file: Path.t) : rageItem list =
+    let data = if Path.file_exists file then
+      let data = Path.cat file in (* cat even up to 1gig is workable even if ugly *)
+      let len = String.length data in
+      let max_len = 10 * 1024 * 1024 in (* maximum 10mb *)
+      if len <= max_len then data else String.sub data (len - max_len) max_len
+    else
+      Printf.sprintf "File not found: %s" (Path.to_string file) in
+    { title = Some (Path.to_string file); data; } :: items in
+  let add_string (items: rageItem list) (data: string) : rageItem list =
+    { title = None; data; } :: items in
+  let add_pid (items: rageItem list) ((pid, reason): (int * string)) : rageItem list =
+    if String_utils.string_starts_with reason "slave" then
+     items
+    else
+      let pid = string_of_int pid in
+      (* some systems have "pstack", some have "gstack", some have neither... *)
+      let stack = try Sys_utils.exec_read_lines ~reverse:true ("pstack " ^ pid)
+      with _ -> begin
+        try Sys_utils.exec_read_lines ~reverse:true ("gstack " ^ pid)
+        with e ->
+          let e = Exception.wrap e in
+          ["unable to pstack - " ^ (Exception.get_ctor_string e)]
+      end in
+      let stack = String.concat "\n" stack in
+      add_string items (Printf.sprintf "PSTACK %s (%s) - %s\n\n" pid reason stack)
+  in
+
+  let items: rageItem list = [] in
+
+  (* LOGFILES. *)
+  (* Where are the logs? Specified explicitly by the user with --log-file and *)
+  (* --monitor-log-file when they launched the server. Failing that, the      *)
+  (* values in environment variables FLOW_LOG_FILE and FLOW_MONITOR_LOG_FILE  *)
+  (* upon launch. Failing that, CommandUtils.server_log_file will look in the *)
+  (* flowconfig for a "log.file" option. Failing that it will synthesize one  *)
+  (* from `Server_files_js.log_file` in the tmp-directory. And                *)
+  (* CommandUtils.monitor_log_file is similar except it bypasses flowconfig.  *)
+  (* As for tmp dir, that's --temp_dir, failing that FLOW_TEMP_DIR, failing   *)
+  (* that temp_dir in flowconfig, failing that Sys_utils.temp_dir_name /flow. *)
+  (* WOW! *)
+  (* Notionally the only authoritative way to find logs is to connect to a    *)
+  (* running monitor and ask it. But we're a 'rage' command whose whole point *)
+  (* is to give good answers even when things are not working, e.g. when the  *)
+  (* monitor is down. And in any case, by design, a flow client can only ever *)
+  (* interact with a server if the client was launched with the same flags    *)
+  (* (minimum tmp_dir and flowconfig) as the server was launched with.        *)
+  (* Therefore there's no need to ask the monitor. We'll just work with what  *)
+  (* log files we'd write to were we ourselves asked to start a server.       *)
+  let ienv = match state with
+    | Pre_init _ -> None
+    | Disconnected denv -> Some denv.d_ienv
+    | Connected cenv -> Some cenv.c_ienv
+    | Post_shutdown -> None in
+  let items = match ienv with
+    | None -> items
+    | Some ienv ->
+      let start_env = CommandUtils.make_env flowconfig_name ienv.i_connect_params ienv.i_root in
+      let tmp_dir = start_env.CommandConnect.tmp_dir in
+      let server_log_file = Path.make start_env.CommandConnect.log_file in
+      (* monitor log file isn't retained anywhere. But since flow lsp doesn't *)
+      (* take a --monitor-log-file option, then we know where it must be.     *)
+      let monitor_log_file =
+         CommandUtils.monitor_log_file flowconfig_name tmp_dir start_env.CommandConnect.root in
+      let items = add_file items server_log_file in
+      let items = add_file items monitor_log_file in
+      (* Let's pick up the old files in case user reported bug after a crash *)
+      let items = add_file items (Path.make ((Path.to_string server_log_file) ^ ".old")) in
+      let items = add_file items (Path.make ((Path.to_string monitor_log_file) ^ ".old")) in
+      (* And the pids file *)
+      let items = try
+        let pids = PidLog.get_pids (Server_files_js.pids_file ~flowconfig_name ~tmp_dir ienv.i_root)
+        in
+        Core_list.fold pids ~init:items ~f:add_pid
+      with e ->
+        let e = Exception.wrap e in
+        add_string items (Printf.sprintf "Failed to get PIDs: %s" (Exception.to_string e))
+      in
+      items
+  in
+
+  (* CLIENT. This includes the client's perception of the server state. *)
+  let items = add_string items ("LSP adapter state: " ^ (RagePrint.string_of_state state) ^ "\n") in
+
+  (* DONE! *)
+  items
 
 
 let parse_json (state: state) (json: Jsonrpc.message) : lsp_message =
@@ -736,104 +1392,178 @@ let parse_json (state: state) (json: Jsonrpc.message) : lsp_message =
   in
   Lsp_fmt.parse_lsp json.Jsonrpc.json outstanding
 
+let with_timer (f: unit -> 'a) : (float * 'a) =
+  let start = Unix.gettimeofday () in
+  let ret = f () in
+  let duration = Unix.gettimeofday () -. start in
+  duration, ret
+
+(* The EventLogger needs to be periodically flushed. LspCommand was originally written to flush
+ * when idle, but the idle detection didn't quite work so we never really flushed until exiting. So
+ * instead lets periodically flush. Flushing should be fast and this is basically what the monitor
+ * does too. *)
+module LogFlusher = LwtLoop.Make (struct
+  type acc = unit
+
+  let main () =
+    let%lwt () = Lwt_unix.sleep 5.0 in
+    EventLoggerLwt.flush ()
+
+  let catch () exn =
+    Exception.(reraise (wrap exn))
+end)
+
 
 (************************************************************************)
 (** Main loop                                                          **)
 (************************************************************************)
 
+type log_needed = LogNeeded of Persistent_connection_prot.metadata | LogDeferred | LogNotNeeded
+
 let rec main
+    base_flags
     (temp_dir: string option)
     (shm_flags: CommandUtils.shared_mem_params)
-    (from: string option)
+    (lazy_mode: Options.lazy_mode option)
+    (autostop: bool)
     ((): unit)
   : unit =
   let connect_params = {
-    from = Option.value from ~default:"";
     retries = 0;
     retry_if_init = false;
     timeout = None;
     no_auto_start = false;
     temp_dir;
+    autostop;
+    lazy_mode;
     shm_flags;
     ignore_version = false;
     quiet = false;
+    on_mismatch = Choose_newest;
   } in
   let client = Jsonrpc.make_queue () in
   let state = (Pre_init connect_params) in
-  main_loop client state
+  LwtInit.run_lwt (initial_lwt_thread base_flags.Base_flags.flowconfig_name client state)
 
-and main_loop (client: Jsonrpc.queue) (state: state) : unit =
-  let state = main_handle client state in
-  main_loop client state
+and initial_lwt_thread flowconfig_name client state () =
+  (* If `prom`  in `Lwt.async (fun () -> prom)` resolves to an exception, this function will be
+   * called *)
+  Lwt.async_exception_hook := (fun exn ->
+    let exn = Exception.wrap exn in
+    let msg = Utils.spf "Uncaught async exception: %s" (Exception.to_string exn) in
+    FlowExitStatus.(exit ~msg Unknown_error)
+  );
 
-and main_handle (client: Jsonrpc.queue) (state: state) : state =
-  try
-    let event = get_next_event state client (parse_json state) in
-    try
-      let state2 = dismiss_connected_dialog_if_necessary state event in
-      try
-        main_handle_unsafe state2 event
-      with e -> main_handle_error e (Printexc.get_backtrace ()) state2 (Some event)
-    with e -> main_handle_error e (Printexc.get_backtrace ()) state (Some event)
-  with e -> main_handle_error e (Printexc.get_backtrace ()) state None
+  Lwt.async LogFlusher.run;
 
-and main_handle_unsafe (state: state) (event: event) : state =
+  main_loop flowconfig_name client state
+
+and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit Lwt.t =
+  let%lwt event =
+    try%lwt
+      let%lwt event = get_next_event state client (parse_json state) in
+      Lwt.return_ok event
+    with e ->
+      let exn = Exception.wrap e in
+      let stack = Exception.get_backtrace_string exn in
+      Lwt.return_error (state, e, Utils.Callstack stack) in
+  let result = match event with
+    | Error (state, e, stack) -> Error (state, e, stack, None)
+    | Ok event ->
+      let (client_duration, result) = with_timer (fun () ->
+        try main_handle_unsafe flowconfig_name state event
+          with e ->
+            let exn = Exception.wrap e in
+            let stack = Exception.get_backtrace_string exn in
+            Error (state, e, Utils.Callstack stack)) in
+      match result with
+      | Ok (state, logneeded) -> Ok (state, logneeded, client_duration)
+      | Error (state, e, stack) -> Error (state, e, stack, Some event)
+  in
+  let state = match result with
+    | Ok (state, LogNeeded metadata, client_duration) ->
+      let open Persistent_connection_prot in
+      let client_duration = if metadata.client_duration = None then Some client_duration
+        else metadata.client_duration in
+      let metadata = {metadata with client_duration} in
+      main_log_command state metadata;
+      state
+    | Ok (state, _, _) ->
+      state
+    | Error (state, e, stack, event) -> main_handle_error e stack state event
+  in
+  main_loop flowconfig_name client state
+
+
+and main_handle_unsafe flowconfig_name (state: state) (event: event)
+  : (state * log_needed, state * exn * Utils.callstack) result =
 begin
   match state, event with
   | Pre_init i_connect_params,
-    Client_message (RequestMessage (id, InitializeRequest i_initialize_params)) ->
+    Client_message (RequestMessage (id, InitializeRequest i_initialize_params), metadata) ->
     let i_root = Lsp_helpers.get_root i_initialize_params |> Path.make in
     let d_ienv = {
       i_initialize_params;
       i_connect_params;
       i_root;
-      i_version = get_current_version i_root;
+      i_version = get_current_version flowconfig_name i_root;
       i_can_autostart_after_version_mismatch = true;
       i_server_id = 0;
       i_outstanding_local_requests = IdMap.empty;
       i_outstanding_local_handlers = IdMap.empty;
       i_outstanding_requests_from_server = WrappedMap.empty;
       i_isConnected = false;
+      i_status = Never_shown;
+      i_open_files = SMap.empty;
+      i_outstanding_diagnostics = SSet.empty;
     } in
+    (* If the version in .flowconfig is simply incompatible with our current *)
+    (* binary then it doesn't even make sense for us to start up. And future *)
+    (* attempts by the client to launch us will fail as well. Clients which  *)
+    (* receive the following response are expected to shut down their LSP.   *)
+    let required_version = get_current_version flowconfig_name i_root in
+    begin match CommandUtils.check_version required_version with
+      | Ok () -> ()
+      | Error msg -> raise (Error.ServerErrorStart (msg, {Initialize.retry=false;}))
+    end;
     let response = ResponseMessage (id, InitializeResult (do_initialize ())) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
     let env = {
       d_ienv;
       d_autostart = true;
-      d_start_time =  Unix.gettimeofday ();
-      d_dialog_stopped_ok = true;
-      d_dialog_stopped = ShowMessageRequest.None;
-      d_actionRequired_stopped = ActionRequired.None;
-      d_dialog_connecting = ShowMessageRequest.None;
-      d_progress_connecting = Progress.None;
-      d_editor_open_files = SMap.empty;
+      d_server_status = None;
     } in
-    try_connect env
+    Ok (try_connect flowconfig_name env, LogNeeded metadata)
 
-  | _, Client_message (RequestMessage (id, ShutdownRequest)) ->
+  | _, Client_message (NotificationMessage InitializedNotification, _metadata) ->
+    Ok (state, LogNotNeeded)
+
+  | _, Client_message (NotificationMessage SetTraceNotification, _metadata)
+  | _, Client_message (NotificationMessage LogTraceNotification, _metadata) ->
+    (* specific to VSCode logging *)
+    Ok (state, LogNotNeeded)
+
+  | _, Client_message (RequestMessage (id, ShutdownRequest), _metadata) ->
     begin match state with Connected env -> close_conn env | _ -> () end;
     let response = ResponseMessage (id, ShutdownResult) in
     let json = Lsp_fmt.print_lsp response in
     to_stdout json;
-    let _state = dismiss_ui state in
-    Post_shutdown
+    Ok (Post_shutdown, LogNotNeeded)
 
-  | _, Client_message (NotificationMessage ExitNotification) ->
+  | _, Client_message (NotificationMessage ExitNotification, _metadata) ->
     if state = Post_shutdown then lsp_exit_ok () else lsp_exit_bad ()
-
-  | _, Client_message (NotificationMessage (CancelRequestNotification _)) ->
-    state
 
   | Pre_init _, Client_message _ ->
     raise (Error.ServerNotInitialized "Server not initialized")
 
-  | _, Client_message ((ResponseMessage (id, result)) as c) ->
+  | _, Client_message ((ResponseMessage (id, result)) as c, metadata) ->
     let ienv = match state with
       | Connected env -> env.c_ienv
       | Disconnected env -> env.d_ienv
       | _ -> failwith "Didn't expect an LSP response yet" in
     begin try
+      (* was it a response to a request issued by lspCommand? *)
       let (handle, handle_error) = IdMap.find id ienv.i_outstanding_local_handlers in
       let i_outstanding_local_handlers = IdMap.remove id ienv.i_outstanding_local_handlers in
       let i_outstanding_local_requests = IdMap.remove id ienv.i_outstanding_local_requests in
@@ -844,133 +1574,241 @@ begin
         | _ -> failwith "Didn't expect an LSP response to be found yet"
       in
       match result, handle with
-      | ShowMessageRequestResult result, ShowMessageHandler handle -> handle result state
-      | ErrorResult (e, msg), _ -> handle_error (e, msg) state
-      | _ -> failwith (Printf.sprintf "Response %s has mistyped handler" (message_to_string c))
+      | ShowMessageRequestResult result, ShowMessageHandler handle ->
+        Ok (handle result state, LogNotNeeded)
+      | ShowStatusResult result, ShowStatusHandler handle -> Ok (handle result state, LogNotNeeded)
+      | ErrorResult (e, msg), _ -> Ok (handle_error (e, msg) state, LogNotNeeded)
+      | _ -> failwith (Printf.sprintf "Response %s has mistyped handler" (message_name_to_string c))
     with Not_found ->
+      (* if not, it must be a response to a request issued by the server *)
       match state with
       | Connected cenv ->
-        let state = track_to_server state c in
+        let (state, _) = track_to_server state c in
         let wrapped = decode_wrapped id in (* only forward responses if they're to current server *)
-        if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv c;
-        state
+        if wrapped.server_id = cenv.c_ienv.i_server_id then send_lsp_to_server cenv metadata c;
+        Ok (state, LogNotNeeded)
       | _ ->
-        failwith (Printf.sprintf "Response %s has missing handler" (message_to_string c))
+        failwith (Printf.sprintf "Response %s has missing handler" (message_name_to_string c))
     end
 
-  | Connected cenv, Client_message c ->
-    let state = track_to_server state c in
-    send_lsp_to_server cenv c;
-    state
+  | _, Client_message (RequestMessage (id, DocumentSymbolRequest params), metadata) ->
+    (* documentSymbols is handled in the client, not the server, since it's *)
+    (* purely syntax-driven and we'd like it to work even if the server is  *)
+    (* busy or disconnected *)
+    let state = do_documentSymbol flowconfig_name state id params in
+    Ok (state, LogNeeded metadata)
 
-  | _, Client_message ((NotificationMessage (DidOpenNotification _)) as c)
-  | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c)
-  | _, Client_message ((NotificationMessage (DidSaveNotification _)) as c)
-  | _, Client_message ((NotificationMessage (DidCloseNotification _)) as c) ->
-    let state = track_to_server state c in
-    state
+  | Connected cenv, Client_message (c, metadata) ->
+    (* We'll track what's being sent to the server. This might involve some client *)
+    (* computation work, which we'll profile, and send it over in metadata. *)
+    (* Note: in the case where c is a cancel-notification for a request that *)
+    (* was already handled in lspCommand like ShutdownRequest or DocSymbolsRequest *)
+    (* we'll still forward it; that's okay since server already has to be *)
+    (* hardened against unrecognized ids in cancel requests. *)
+    let client_duration, state = with_timer (fun () ->
+      let state, {changed_live_uri} = track_to_server state c in
+      let state = Option.value_map changed_live_uri ~default:state
+        ~f:(do_live_diagnostics flowconfig_name state) in
+      state) in
+    let metadata = { metadata with
+      Persistent_connection_prot.client_duration=Some client_duration } in
+    send_lsp_to_server cenv metadata c;
+    Ok (state, LogDeferred)
 
-  | Disconnected _, Client_message c ->
-    let state = track_to_server state c in
-    let method_ = Lsp_fmt.message_to_string c in
+  | _, Client_message (RequestMessage (id, RageRequest), metadata) ->
+    (* How to handle a rage request? If we're connected to a server, then the *)
+    (* above case will just have forwarded the message on to the server (and  *)
+    (* we'll patch in our own extra information when the server replies). But *)
+    (* if there's no server then we have to reply here and now.               *)
+    let result = do_rage flowconfig_name state in
+    let response = ResponseMessage (id, RageResult result) in
+    let json = Lsp_fmt.print_lsp response in
+    to_stdout json;
+    Ok (state, LogNeeded metadata)
+
+  | _, Client_message ((NotificationMessage (DidOpenNotification _)) as c, metadata)
+  | _, Client_message ((NotificationMessage (DidChangeNotification _)) as c, metadata)
+  | _, Client_message ((NotificationMessage (DidSaveNotification _)) as c, metadata)
+  | _, Client_message ((NotificationMessage (DidCloseNotification _)) as c, metadata) ->
+    (* these are editor events that happen while disconnected. *)
+    let client_duration, state = with_timer (fun () ->
+      let state, {changed_live_uri} = track_to_server state c in
+      let state = Option.value_map changed_live_uri ~default:state
+        ~f:(do_live_diagnostics flowconfig_name state) in
+      state) in
+    let metadata = { metadata with
+      Persistent_connection_prot.client_duration=Some client_duration } in
+    Ok (state, LogNeeded metadata)
+
+  | _, Client_message (NotificationMessage (CancelRequestNotification _), _metadata) ->
+    (* let's just not bother reporting any error in this case *)
+    Ok (state, LogNotNeeded)
+
+  | Disconnected _, Client_message (c, _metadata) ->
+    let (state, _) = track_to_server state c in
+    let method_ = Lsp_fmt.denorm_message_to_string c in
     let e = Error.RequestCancelled ("Server not connected; can't handle " ^ method_) in
-    let stack = Printexc.get_callstack 100 |> Printexc.raw_backtrace_to_string in
-    main_handle_error e stack state (Some event)
+    let stack = Exception.get_current_callstack_string 100 in
+    Error (state, e, Utils.Callstack stack)
 
-  | Post_shutdown, Client_message _ ->
+  | Post_shutdown, Client_message (_, _metadata) ->
     raise (Error.RequestCancelled "Server shutting down")
 
   | Connected cenv, Server_message (Persistent_connection_prot.ServerExit exit_code) ->
-    Connected { cenv with c_about_to_exit_code = Some exit_code; }
+    let state = Connected { cenv with c_about_to_exit_code = Some exit_code; } in
+    Ok (state, LogNotNeeded)
 
-  | Connected cenv, Server_message (Persistent_connection_prot.LspFromServer outgoing) ->
-    let state = track_from_server state outgoing in
-    let outgoing = match outgoing with
-      | RequestMessage (id, request) ->
-        let wrapped = { server_id = cenv.c_ienv.i_server_id; message_id = id; } in
-        RequestMessage (encode_wrapped wrapped, request)
-      | _ -> outgoing
+  | Connected cenv, Server_message (Persistent_connection_prot.LspFromServer (msg, metadata)) ->
+    let state, metadata = match msg with
+      | None -> state, metadata
+      | Some outgoing ->
+        let state = track_from_server state outgoing in
+        let outgoing, metadata = match outgoing with
+          | RequestMessage (id, request) ->
+            let wrapped = { server_id = cenv.c_ienv.i_server_id; message_id = id; } in
+            RequestMessage (encode_wrapped wrapped, request), metadata
+          | ResponseMessage (id, RageResult items) ->
+            (* we'll zero out the "client_duration", which at the moment represents client-side *)
+            (* work we did before sending out the request. By zeroing it out now, it'll get *)
+            (* filled out with the client-side work that gets done right here and now. *)
+            let metadata = { metadata with Persistent_connection_prot.client_duration = None} in
+            ResponseMessage (id, RageResult (items @ (do_rage flowconfig_name state))), metadata
+          | _ -> outgoing, metadata
+        in
+        to_stdout (Lsp_fmt.print_lsp outgoing);
+        state, metadata
     in
-    to_stdout (Lsp_fmt.print_lsp outgoing);
-    state
+    Ok (state, LogNeeded metadata)
 
   | Connected cenv, Server_message (Persistent_connection_prot.Errors {errors; warnings}) ->
+    (* A note about the errors reported by this server message:               *)
+    (* While a recheck is in progress, between StartRecheck and EndRecheck,   *)
+    (* the server will periodically send errors+warnings. These are additive  *)
+    (* to the errors which have previously been reported. Once the recheck    *)
+    (* has finished then the server will send a new exhaustive set of errors. *)
+    (* At this opportunity we should erase all errors not in this set.        *)
+    (* This differs considerably from the semantics of LSP publishDiagnostics *)
+    (* which says "whenever you send publishDiagnostics for a file, that      *)
+    (* now contains the complete truth for that file."                        *)
+
     (* I hope that flow won't produce errors with an empty path. But such errors are *)
     (* fatal to Nuclide, so if it does, then we'll at least use a fall-back path.    *)
     let default_uri = cenv.c_ienv.i_root |> Path.to_string |> File_url.create in
     (* 'all' is an SMap from uri to diagnostic list, and 'add' appends the error within the map *)
-    let add
-        (severity: PublishDiagnostics.diagnosticSeverity option)
-        (error: Errors.error)
-        (all: PublishDiagnostics.diagnostic list SMap.t)
-      : PublishDiagnostics.diagnostic list SMap.t =
-      let error = Errors.Lsp_output.lsp_of_error error in
-      let location = Flow_lsp_conversions.loc_to_lsp error.Errors.Lsp_output.loc ~default_uri in
-      let uri = location.Lsp.Location.uri in
-      let related_to_lsp (loc, relatedMessage) =
-        let relatedLocation = Flow_lsp_conversions.loc_to_lsp loc ~default_uri in
-        { Lsp.PublishDiagnostics.relatedLocation; relatedMessage; } in
-      let diagnostic = { Lsp.PublishDiagnostics.
-        range = location.Lsp.Location.range;
-        severity;
-        code = Lsp.PublishDiagnostics.StringCode error.Errors.Lsp_output.code;
-        source = Some "Flow";
-        message = error.Errors.Lsp_output.message;
-        relatedLocations = List.map error.Errors.Lsp_output.relatedLocations ~f:related_to_lsp;
-      } in
-      SMap.add ~combine:List.append uri [diagnostic] all
-    in
-    (* print: just pushes the set of diagnostis for this uri to the client *)
-    let print uri diagnostics state =
-      let msg = NotificationMessage
-        (PublishDiagnosticsNotification { PublishDiagnostics.uri; diagnostics; }) in
-      let state = track_from_server state msg in
-      to_stdout (Lsp_fmt.print_lsp msg);
-      state
-    in
+    let add severity error all =
+      let uri, diagnostic = error_to_lsp ~severity ~default_uri error in
+      SMap.add ~combine:List.append uri [diagnostic] all in
     (* First construct an SMap from uri to diagnostic list, which gathers together *)
     (* all the errors and warnings per uri *)
-    let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
-    let all = Errors.ErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all in
-    (* Next, for each uri, send its list of diagnostics to the client *)
-    let state = SMap.fold print all state in
-    state
+    let all = Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
+    let all = Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
+    in
+    if cenv.c_is_rechecking then
+      Ok (do_additional_diagnostics cenv all, LogNotNeeded)
+    else
+      Ok (do_replacement_diagnostics cenv all, LogNotNeeded)
 
   | Connected cenv, Server_message Persistent_connection_prot.StartRecheck ->
-    if Lsp_helpers.supports_progress cenv.c_ienv.i_initialize_params then
-      let msg = NotificationMessage
-        (ProgressNotification { Lsp.Progress.id = 1; label = Some "Flow rechecking..."; }) in
-      let state = track_from_server state msg in
-      to_stdout (Lsp_fmt.print_lsp msg);
-      state
-    else
-      state
+    let state = show_recheck_progress { cenv with
+      c_is_rechecking = true;
+      c_lazy_stats = None;
+    } in
+    Ok (state, LogNotNeeded)
 
-  | Connected cenv, Server_message Persistent_connection_prot.EndRecheck ->
-    if Lsp_helpers.supports_progress cenv.c_ienv.i_initialize_params then
-      let msg = NotificationMessage
-        (ProgressNotification { Lsp.Progress.id = 1; label = None; }) in
-      let state = track_from_server state msg in
-      to_stdout (Lsp_fmt.print_lsp msg);
-      state
-    else
-      state
+  | Connected cenv, Server_message Persistent_connection_prot.EndRecheck lazy_stats ->
+    let state = show_recheck_progress { cenv with
+      c_is_rechecking = false;
+      c_lazy_stats = Some lazy_stats;
+    } in
+    Ok (state, LogNotNeeded)
+
+  | Connected cenv, Server_message (Persistent_connection_prot.Please_hold status) ->
+    let (server_status, watcher_status) = status in
+    let c_server_status = (server_status, Some watcher_status) in
+    (* We keep a log of typecheck summaries over the past 2mins. *)
+    let c_recent_summaries = cenv.c_recent_summaries in
+    let new_time = Unix.gettimeofday () in
+    let summary = ServerStatus.get_summary server_status in
+    let c_recent_summaries = Option.value_map summary ~default:c_recent_summaries ~f:(fun summary ->
+      (new_time, summary) :: cenv.c_recent_summaries
+        |> List.filter ~f:(fun (t,_) -> t >= new_time -. 120.0))
+    in
+    let state = show_recheck_progress { cenv with c_server_status; c_recent_summaries; } in
+    Ok (state, LogNotNeeded)
 
   | _, Server_message _ ->
-    failwith (Printf.sprintf "Unexpected %s in state %s"
-      (string_of_event event) (string_of_state state))
+    failwith (Printf.sprintf "In state %s, unexpected event %s"
+      (string_of_state state) (denorm_string_of_event event))
 
   | Disconnected env, Tick ->
-    let state = try_connect env in
-    state
+    let state = try_connect flowconfig_name env in
+    Ok (state, LogNotNeeded)
 
   | _, Tick ->
-    state
+    Ok (state, LogNotNeeded)
 end
+
+
+and main_log_command
+    (state: state)
+    (metadata: Persistent_connection_prot.metadata)
+  : unit =
+  let open Persistent_connection_prot in
+  let client_context = FlowEventLogger.get_context () in
+  let request = metadata.start_json_truncated |> Hh_json.json_to_string in
+  let wall_start = metadata.start_wall_time in
+  let server_profiling = metadata.server_profiling in
+  let client_duration = metadata.client_duration in
+  let extra_data = metadata.extra_data in
+  let persistent_context = Some { FlowEventLogger.
+    start_lsp_state = metadata.start_lsp_state;
+    start_lsp_state_reason = metadata.start_lsp_state_reason;
+    start_server_status = Option.map metadata.start_server_status
+      ~f:(ServerStatus.string_of_status ~terse:true);
+    start_watcher_status = Option.map metadata.start_watcher_status
+      ~f:(FileWatcherStatus.string_of_status);
+  } in
+  let server_logging_context = metadata.server_logging_context in
+  (* gather any recent typechecks that finished after the request had arrived *)
+  let delays = match state with
+    | Connected cenv -> Core_list.filter_map cenv.c_recent_summaries ~f:(fun (t,s) ->
+      if t > wall_start then Some s else None)
+    | _ -> [] in
+  let root = Option.value ~default:Path.dummy_path (get_root state) in
+  let persistent_delay = if delays = [] then None
+    else Some (ServerStatus.log_of_summaries ~root delays) in
+
+  match metadata.error_info with
+  | None -> FlowEventLogger.persistent_command_success
+      ~server_logging_context ~request ~extra_data
+      ~client_context ~persistent_context ~persistent_delay
+      ~server_profiling ~client_duration ~wall_start ~error:None
+  | Some (ExpectedError, msg, stack) -> FlowEventLogger.persistent_command_success
+      ~server_logging_context ~request ~extra_data
+      ~client_context ~persistent_context ~persistent_delay
+      ~server_profiling ~client_duration ~wall_start ~error:(Some (msg, stack))
+  | Some (UnexpectedError, msg, stack) -> FlowEventLogger.persistent_command_failure
+      ~server_logging_context ~request ~extra_data
+      ~client_context ~persistent_context ~persistent_delay
+      ~server_profiling ~client_duration ~wall_start ~error:(msg, stack)
+
+and main_log_error ~(expected: bool) (msg: string) (stack: string) (event: event option) : unit =
+  let error = (msg, Utils.Callstack stack) in
+  let client_context = FlowEventLogger.get_context () in
+  let request = match event with
+  | Some (Client_message (_, metadata)) ->
+    Some (metadata.Persistent_connection_prot.start_json_truncated |> Hh_json.json_to_string)
+  | Some (Server_message _)
+  | Some Tick
+  | None -> None
+  in
+  match expected with
+  | true -> FlowEventLogger.persistent_expected_error ~request ~client_context ~error
+  | false -> FlowEventLogger.persistent_unexpected_error ~request ~client_context ~error
 
 and main_handle_error
     (e: exn)
-    (stack: string)
+    (Utils.Callstack stack)
     (state: state)
     (event: event option)
   : state =
@@ -980,6 +1818,9 @@ and main_handle_error
     state
 
   | Server_fatal_connection_exception edata -> begin
+    (* log the error *)
+    let stack = edata.stack ^ "---\n" ^ stack in
+    main_log_error ~expected:true ("[Server fatal] " ^ edata.message) stack event;
     (* report that we're disconnected to telemetry/connectionStatus *)
     let state = begin match state with
       | Connected env ->
@@ -994,7 +1835,6 @@ and main_handle_error
       | Connected cenv -> cenv.c_about_to_exit_code
       | _ -> None in
     let code = Option.value_map code ~f:FlowExitStatus.to_string ~default:"" in
-    let stack = edata.stack ^ "---\n" ^ stack in
     let report = Printf.sprintf "Server fatal exception: [%s] %s\n%s" code edata.message stack in
     Lsp_helpers.telemetry_error to_stdout report;
     let d_autostart, d_ienv = match state with
@@ -1017,43 +1857,39 @@ and main_handle_error
     let env = {
       d_ienv;
       d_autostart;
-      d_start_time =  Unix.time ();
-      d_dialog_stopped_ok = true;
-      d_dialog_stopped = ShowMessageRequest.None;
-      d_actionRequired_stopped = ActionRequired.None;
-      d_dialog_connecting = ShowMessageRequest.None;
-      d_progress_connecting = Progress.None;
-      d_editor_open_files = Option.value (get_editor_open_files state) ~default:SMap.empty;
+      d_server_status = None;
     }
     in
-    let _state = state |> dismiss_ui |> dismiss_tracks in
+    let _state = state |> dismiss_tracks in
     let state = Disconnected env in
     state
     end
 
   | Client_recoverable_connection_exception edata ->
     let stack = edata.stack ^ "---\n" ^ stack in
+    main_log_error ~expected:true ("[Client recoverable] " ^ edata.message) stack event;
     let report = Printf.sprintf "Client exception: %s\n%s" edata.message stack in
     Lsp_helpers.telemetry_error to_stdout report;
     state
 
   | Client_fatal_connection_exception edata ->
-    (* TODO(ljw): log this to scuba; normally no one even attends to stderr *)
     let stack = edata.stack ^ "---\n" ^ stack in
+    main_log_error ~expected:true ("[Client fatal] " ^ edata.message) stack event;
     let report = Printf.sprintf "Client fatal exception: %s\n%s" edata.message stack in
     Printf.eprintf "%s" report;
     lsp_exit_bad ()
 
-  | e -> begin
-      let (code, message, _data) = get_error_info e in
-      let text = Printf.sprintf "FlowLSP exception %s [%i]\n%s" message code stack in
-      match event with
-      | Some (Client_message (RequestMessage (id, _request))) ->
+  | e ->
+    let e = Lsp_fmt.error_of_exn e in
+    main_log_error ~expected:true ("[FlowLSP] " ^ e.Error.message) stack event;
+    let text = Printf.sprintf "FlowLSP exception %s [%i]\n%s" e.Error.message e.Error.code stack in
+    let () = match event with
+      | Some (Client_message (RequestMessage (id, _request), _metadata)) ->
         let json = Lsp_fmt.print_lsp_response id (ErrorResult (e, stack)) in
         to_stdout json;
       | _ ->
         Lsp_helpers.telemetry_error to_stdout text
-    end;
+    in
     state
 
 

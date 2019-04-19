@@ -70,12 +70,24 @@ let info_pos p =
     let start = start_minus1 + 1 in
     let end_offset = File_pos_small.offset pos_end in
     let end_ = end_offset - bol in
+    (* To represent the empty interval, pos_start and pos_end are equal because
+      end_offset is exclusive. Here, it's best for error messages to the user if
+      we print characters N to N (highlighting a single character) rather than characters
+      N to (N-1), which is very unintuitive.
+    *)
+    let end_ = if start = end_ + 1 then start else end_ in
     line, start, end_
   | Pos_large { pos_start; pos_end; _ } ->
     let line, start_minus1, bol = File_pos_large.line_column_beg pos_start in
     let start = start_minus1 + 1 in
     let end_offset = File_pos_large.offset pos_end in
     let end_ = end_offset - bol in
+    (* To represent the empty interval, pos_start and pos_end are equal because
+      end_offset is exclusive. Here, it's best for error messages to the user if
+      we print characters N to N (highlighting a single character) rather than characters
+      N to (N-1), which is very unintuitive.
+    *)
+    let end_ = if start = end_ + 1 then start else end_ in
     line, start, end_
 
 (* This returns a closed interval. *)
@@ -183,10 +195,11 @@ let contains pos_container pos =
     pend <= cend
 
 let overlaps pos1 pos2 =
-  let _start1, end1 = info_raw pos1 in
-  let start2, _end2 = info_raw pos2 in
+  let start1, end1 = info_raw pos1 in
+  let start2, end2 = info_raw pos2 in
   filename pos1 = filename pos2 &&
-  end1 > start2
+  end1 > start2 &&
+  start1 < end2
 
 let make_from_lexing_pos pos_file pos_start pos_end =
   match File_pos_small.of_lexing_pos pos_start, File_pos_small.of_lexing_pos pos_end with
@@ -245,6 +258,8 @@ let set_file pos_file pos =
 let to_absolute p =
   set_file (Relative_path.to_absolute (filename p)) p
 
+let to_relative p =
+  set_file (Relative_path.create_detect_prefix (filename p)) p
 
 let btw x1 x2 =
   if filename x1 <> filename x2
@@ -257,7 +272,7 @@ let btw x1 x2 =
 let rec merge x1 x2 =
   match x1, x2 with
   | Pos_small { pos_file = file1; pos_start = start1; pos_end = end1; },
-    Pos_small { pos_file = file2; pos_start = start2; pos_end = end2; } ->
+    Pos_small { pos_file = _; pos_start = start2; pos_end = end2; } ->
     let pos_start =
       if File_pos_small.is_dummy start1
       then start2
@@ -274,7 +289,7 @@ let rec merge x1 x2 =
       else if end_cnum x1 < end_cnum x2 then end2 else end1 in
     Pos_small { pos_file = file1; pos_start = pos_start; pos_end = pos_end }
   | Pos_large { pos_file = file1; pos_start = start1; pos_end = end1; },
-    Pos_large { pos_file = file2; pos_start = start2; pos_end = end2; } ->
+    Pos_large { pos_file = _; pos_start = start2; pos_end = end2; } ->
     let pos_start =
       if File_pos_large.is_dummy start1
       then start2
@@ -298,9 +313,9 @@ let last_char p =
   then none
   else
   match p with
-  | Pos_small { pos_start; pos_end; pos_file } ->
+  | Pos_small { pos_start = _ ; pos_end; pos_file } ->
     Pos_small { pos_start = pos_end; pos_end; pos_file }
-  | Pos_large { pos_start; pos_end; pos_file } ->
+  | Pos_large { pos_start = _; pos_end; pos_file } ->
     Pos_large { pos_start = pos_end; pos_end; pos_file }
 
 let first_char_of_line p =
@@ -308,15 +323,20 @@ let first_char_of_line p =
   then none
   else
   match p with
-  | Pos_small { pos_start; pos_end; pos_file } ->
+  | Pos_small { pos_start; pos_end = _; pos_file } ->
     let start = File_pos_small.set_column 0 pos_start in
     Pos_small { pos_start = start; pos_end = start; pos_file }
-  | Pos_large { pos_start; pos_end; pos_file } ->
+  | Pos_large { pos_start; pos_end = _; pos_file } ->
     let start = File_pos_large.set_column 0 pos_start in
     Pos_large { pos_start = start; pos_end = start; pos_file }
 
 let to_relative_string p =
   set_file (Relative_path.suffix (filename p)) p
+
+let get_text_from_pos ~content pos =
+  let pos_length = length pos in
+  let offset = start_cnum pos in
+  String.sub content offset pos_length
 
 (* Compare by filename, then tie-break by start position, and finally by the
  * end position
@@ -337,6 +357,55 @@ let destruct_range (p : 'a pos) : (int * int * int * int) =
   let line_end,   col_end_minus1   = end_line_column p in
   line_start, col_start_minus1 + 1,
   line_end,   col_end_minus1 + 1
+
+let advance_one (p : 'a pos): 'a pos =
+  match p with
+  | Pos_small { pos_file; pos_start; pos_end } ->
+    Pos_small {
+      pos_file;
+      pos_start;
+      pos_end =
+        let column = File_pos_small.column pos_end in
+        File_pos_small.set_column (column + 1) pos_end
+    }
+  | Pos_large { pos_file; pos_start; pos_end } ->
+    Pos_large {
+      pos_file;
+      pos_start;
+      pos_end =
+        let column = File_pos_large.column pos_end in
+        File_pos_large.set_column (column + 1) pos_end
+    }
+
+(* This function is used when we have captured a position that includes
+ * outside boundary characters like apostrophes.  If we need to remove these
+ * apostrophes, this function shrinks by one character in each direction. *)
+let shrink_by_one_char_both_sides (p : 'a pos): 'a pos =
+  match p with
+  | Pos_small { pos_file; pos_start; pos_end } ->
+    let new_pos_start =
+      (let column = File_pos_small.column pos_start in
+      File_pos_small.set_column (column + 1) pos_start) in
+    let new_pos_end =
+      (let column = File_pos_small.column pos_end in
+      File_pos_small.set_column (column - 1) pos_end) in
+    Pos_small {
+      pos_file;
+      pos_start = new_pos_start;
+      pos_end = new_pos_end;
+    }
+  | Pos_large { pos_file; pos_start; pos_end } ->
+    let new_pos_start =
+      (let column = File_pos_large.column pos_start in
+      File_pos_large.set_column (column + 1) pos_start) in
+    let new_pos_end =
+      (let column = File_pos_large.column pos_end in
+      File_pos_large.set_column (column - 1) pos_end) in
+    Pos_large {
+      pos_file;
+      pos_start = new_pos_start;
+      pos_end = new_pos_end;
+    }
 
 (* This returns a half-open interval. *)
 let multiline_string t =

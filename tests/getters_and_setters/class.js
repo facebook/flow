@@ -25,12 +25,6 @@ class Foo {
   get propWithMismatchingGetterAndSetter(): number { return 4; }
   set propWithMismatchingGetterAndSetter(x: string) { } // doesn't match getter (OK)
 
-  propOverriddenWithGetter: number;
-  get propOverriddenWithGetter() { return "hello"; }
-
-  propOverriddenWithSetter: number;
-  set propOverriddenWithSetter(x: string) { }
-
   set [z](x: string) {}
   get [z](): string { return string; }
 };
@@ -53,6 +47,3 @@ foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
 foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
 
 var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-
-var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
-foo.propOverriddenWithSetter = 123; // Error number ~> string

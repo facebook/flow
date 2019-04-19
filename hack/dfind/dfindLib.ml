@@ -36,23 +36,28 @@ module DFindLibFunctor (Marshal_tools: MARSHAL_TOOLS): sig
   val wait_until_ready : t -> unit Marshal_tools.result
   val pid : t -> int
   val get_changes : ?timeout:Timeout.t -> t -> SSet.t Marshal_tools.result
+  val stop : t -> unit
 end = struct
   let (>>=) = Marshal_tools.(>>=)
 
-  type t = {infd: Marshal_tools.fd; outfd: Marshal_tools.fd; pid: int }
+  type t = {
+    infd: Marshal_tools.fd;
+    outfd: Marshal_tools.fd;
+    daemon_handle: (DfindServer.msg, unit) Daemon.handle
+  }
 
   let init log_fds (scuba_table, roots) =
     let name = Printf.sprintf "file watching process for server %d" (Unix.getpid ()) in
-    let {Daemon.channels = (ic, oc); pid} =
+    let {Daemon.channels = (ic, oc); _;} as daemon_handle =
       Daemon.spawn ~name log_fds DfindServer.entry_point (scuba_table, roots)
     in
     {
       infd = Marshal_tools.descr_of_in_channel ic;
       outfd = Marshal_tools.descr_of_out_channel oc;
-      pid;
+      daemon_handle;
     }
 
-  let pid handle = handle.pid
+  let pid handle = handle.daemon_handle.Daemon.pid
 
   let wait_until_ready handle =
     Marshal_tools.from_fd_with_preamble handle.infd
@@ -78,6 +83,8 @@ end = struct
         end
       )
     in loop SSet.empty
+
+  let stop handle = Daemon.kill handle.daemon_handle
 end
 
 module RegularMarshalTools: MARSHAL_TOOLS

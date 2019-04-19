@@ -33,6 +33,8 @@ type color_mode =
   | Color_Never
   | Color_Auto
 
+val apply_color : ?color_mode:color_mode -> style -> string -> string
+
 (*
  * Print a sequence of colorized strings to stdout/stderr, using ANSI color
  * escapes codes.

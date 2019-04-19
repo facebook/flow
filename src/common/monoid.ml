@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,4 +21,10 @@ module Any: S with type t = bool = struct
   type t = bool
   let empty = false
   let append = (||)
+end
+
+module Counter: S with type t = int = struct
+  type t = int
+  let empty = 0
+  let append = (+)
 end

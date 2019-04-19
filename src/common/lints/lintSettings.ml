@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,6 +7,7 @@
 
 open Lints
 open Severity
+open Utils_js
 
 let (>>=) = Core_result.bind
 
@@ -23,6 +24,11 @@ let of_default default_value = {
   default_value;
   explicit_values = LintMap.empty
 }
+
+let default_lint_severities = [
+  Lints.DeprecatedCallSyntax, (Severity.Err, None);
+  Lints.DeprecatedUtility,    (Severity.Err, None);
+]
 
 let set_value key value settings =
   let new_map = LintMap.add key value settings.explicit_values
@@ -110,9 +116,16 @@ let of_lines base_settings =
       "Malformed lint rule. Properly formed rules contain a single '=' character.")
   in
 
+  let config_default =
+    Core_list.Assoc.find default_lint_severities ~equal:(=)
+    %> Option.map ~f:fst
+    %> Option.value ~default:Severity.Off
+  in
+
   let add_value keys value settings =
     let (new_settings, all_redundant) = List.fold_left (fun (settings, all_redundant) key ->
-        let all_redundant = all_redundant && get_value key settings = fst value in
+        let v = get_value key settings in
+        let all_redundant = all_redundant && v = fst value && v <> config_default key in
         let settings = set_value key value settings in
         (settings, all_redundant))
       (settings, true) keys
@@ -141,8 +154,8 @@ let of_lines base_settings =
 
   let loc_of_line line =
     let open Loc in
-    let start = {line; column = 0; offset = 0} in
-    let _end = {line = line + 1; column = 0; offset = 0} in
+    let start = {line; column = 0} in
+    let _end = {line = line + 1; column = 0} in
     {source = None; start; _end}
   in
 
@@ -155,21 +168,21 @@ let of_lines base_settings =
     in
 
     (* Artificially locate the lines to detect unused lines *)
-    let located_lines = List.map locate_fun lint_lines in
+    let located_lines = Core_list.map ~f:locate_fun lint_lines in
     let settings = loop base_settings located_lines in
 
     settings >>= (fun settings ->
         let used_locs = fold
           (fun _kind (_enabled, loc) acc ->
-            Option.value_map loc ~f:(fun loc -> Utils_js.LocSet.add loc acc) ~default:acc)
-          settings Utils_js.LocSet.empty
+            Option.value_map loc ~f:(fun loc -> Loc_collections.LocSet.add loc acc) ~default:acc)
+          settings Loc_collections.LocSet.empty
         in
         let first_unused = List.fold_left
           (fun acc (art_loc, (label, line)) ->
             match acc with
               | Some _ -> acc
               | None ->
-                if Utils_js.LocSet.mem art_loc used_locs
+                if Loc_collections.LocSet.mem art_loc used_locs
                   || Str.string_match all_regex (String.trim line) 0
                 then None else Some label
           ) None located_lines

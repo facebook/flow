@@ -7,71 +7,71 @@ Cannot assign `x` to `z` because string [1] is incompatible with number [2].
                                              ^
 
 References:
-   class.js:52:30
-   52| foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
+   class.js:46:30
+   46| foo.goodSetterNoAnnotation = "hello"; // Error string ~> number
                                     ^^^^^^^ [1]
    class.js:5:8
     5| var z: number = 123;
               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:34:3
+Error ---------------------------------------------------------------------------------------------------- class.js:28:3
 
 Computed property keys not supported.
 
-   34|   set [z](x: string) {}
+   28|   set [z](x: string) {}
          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- class.js:35:3
+Error ---------------------------------------------------------------------------------------------------- class.js:29:3
 
 Computed property keys not supported.
 
-   35|   get [z](): string { return string; }
+   29|   get [z](): string { return string; }
          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:44:36
+Error --------------------------------------------------------------------------------------------------- class.js:38:36
 
 Cannot assign `foo.goodGetterNoAnnotation` to `testGetterWithError1` because number [1] is incompatible with string [2].
 
-   class.js:44:36
-   44| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
+   class.js:38:36
+   38| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    class.js:8:41
     8|   get goodGetterNoAnnotation() { return 4; }
                                                ^ [1]
-   class.js:44:27
-   44| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
+   class.js:38:27
+   38| var testGetterWithError1: string = foo.goodGetterNoAnnotation; // Error number ~> string
                                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:45:36
+Error --------------------------------------------------------------------------------------------------- class.js:39:36
 
 Cannot assign `foo.goodGetterWithAnnotation` to `testGetterWithError2` because number [1] is incompatible with
 string [2].
 
-   class.js:45:36
-   45| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+   class.js:39:36
+   39| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    class.js:9:35
     9|   get goodGetterWithAnnotation(): number { return 4; }
                                          ^^^^^^ [1]
-   class.js:45:27
-   45| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
+   class.js:39:27
+   39| var testGetterWithError2: string = foo.goodGetterWithAnnotation; // Error number ~> string
                                  ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:53:32
+Error --------------------------------------------------------------------------------------------------- class.js:47:32
 
 Cannot assign `"hello"` to `foo.goodSetterWithAnnotation` because string [1] is incompatible with number [2].
 
-   class.js:53:32
-   53| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
+   class.js:47:32
+   47| foo.goodSetterWithAnnotation = "hello"; // Error string ~> number
                                       ^^^^^^^ [1]
 
 References:
@@ -80,54 +80,62 @@ References:
                                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:55:44
+Error --------------------------------------------------------------------------------------------------- class.js:49:44
 
 Cannot assign `foo.propWithSubtypingGetterAndSetter` to `testSubtypingGetterAndSetter` because null or undefined [1] is
 incompatible with number [2].
 
-   class.js:55:44
-   55| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   class.js:49:44
+   49| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    class.js:18:43
    18|   get propWithSubtypingGetterAndSetter(): ?number { return 4; }
                                                  ^^^^^^^ [1]
-   class.js:55:35
-   55| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
+   class.js:49:35
+   49| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
                                          ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- class.js:57:43
+Error -------------------------------------------------------------------------------------------- declare_class.js:25:3
 
-Cannot assign `foo.propOverriddenWithGetter` to `testPropOverridenWithGetter` because string [1] is incompatible with
-number [2].
+Cannot shadow proto property `propOverriddenWithGetter` [1] because number [2] is incompatible with string [3].
 
-   class.js:57:43
-   57| var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   class.js:29:43
-   29|   get propOverriddenWithGetter() { return "hello"; }
-                                                 ^^^^^^^ [1]
-   class.js:57:34
-   57| var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
-                                        ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- class.js:58:32
-
-Cannot assign `123` to `foo.propOverriddenWithSetter` because number [1] is incompatible with string [2].
-
-   class.js:58:32
-   58| foo.propOverriddenWithSetter = 123; // Error number ~> string
-                                      ^^^ [1]
+   declare_class.js:25:3
+   25|   propOverriddenWithGetter: number; // error: can't shadow proto with incompatible own
+         ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   class.js:32:35
-   32|   set propOverriddenWithSetter(x: string) { }
+   declare_class.js:26:7
+   26|   get propOverriddenWithGetter(): string;
+             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   declare_class.js:25:29
+   25|   propOverriddenWithGetter: number; // error: can't shadow proto with incompatible own
+                                   ^^^^^^ [2]
+   declare_class.js:26:35
+   26|   get propOverriddenWithGetter(): string;
+                                         ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- declare_class.js:28:3
+
+Cannot shadow proto property `propOverriddenWithSetter` [1] because string [2] is incompatible with number [3].
+
+   declare_class.js:28:3
+   28|   propOverriddenWithSetter: number; // error: can't shadow proto with incompatible own
+         ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   declare_class.js:29:7
+   29|   set propOverriddenWithSetter(x: string): void;
+             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   declare_class.js:29:35
+   29|   set propOverriddenWithSetter(x: string): void;
                                          ^^^^^^ [2]
+   declare_class.js:28:29
+   28|   propOverriddenWithSetter: number; // error: can't shadow proto with incompatible own
+                                   ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- declare_class.js:37:36
@@ -177,38 +185,6 @@ References:
                                                  ^^^^^^^ [1]
    declare_class.js:44:35
    44| var testSubtypingGetterAndSetter: number = foo.propWithSubtypingGetterAndSetter; // Error ?number ~> number
-                                         ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- declare_class.js:46:43
-
-Cannot assign `foo.propOverriddenWithGetter` to `testPropOverridenWithGetter` because string [1] is incompatible with
-number [2].
-
-   declare_class.js:46:43
-   46| var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   declare_class.js:26:35
-   26|   get propOverriddenWithGetter(): string;
-                                         ^^^^^^ [1]
-   declare_class.js:46:34
-   46| var testPropOverridenWithGetter: number = foo.propOverriddenWithGetter; // Error string ~> number
-                                        ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- declare_class.js:47:32
-
-Cannot assign `123` to `foo.propOverriddenWithSetter` because number [1] is incompatible with string [2].
-
-   declare_class.js:47:32
-   47| foo.propOverriddenWithSetter = 123; // Error number ~> string
-                                      ^^^ [1]
-
-References:
-   declare_class.js:29:35
-   29|   set propOverriddenWithSetter(x: string): void;
                                          ^^^^^^ [2]
 
 
@@ -489,8 +465,8 @@ References:
    react.js:17:13
     17| (<Example a="bad" />); // error: number ~> string
                     ^^^^^ [1]
-   <BUILTINS>/react.js:313:36
-   313|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:437:36
+   437|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [2]
 
 
@@ -506,15 +482,15 @@ References:
    react.js:18:20
     18| (<Example a={0} c={0} />); // error: number ~> string
                            ^ [1]
-   <BUILTINS>/react.js:315:36
-   315|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:439:36
+   439|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:21:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is read-only in `<<anonymous class>>` [2] but
-writable in `Base` [3].
+writable in `Base` [1].
 
    variance.js:21:2
         v-------------------
@@ -528,15 +504,12 @@ References:
    variance.js:21:16
    21| (class extends Base {
                       ^^^^ [1]
-   variance.js:11:7
-   11| class Base {
-             ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:26:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `x` is write-only in `<<anonymous class>>` [2] but
-readable in `Base` [3].
+readable in `Base` [1].
 
    variance.js:26:2
         v-------------------
@@ -550,15 +523,12 @@ References:
    variance.js:26:16
    26| (class extends Base {
                       ^^^^ [1]
-   variance.js:11:7
-   11| class Base {
-             ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:37:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `pos` is write-only in `<<anonymous class>>` [2]
-but read-only in `Base` [3].
+but read-only in `Base` [1].
 
    variance.js:37:2
         v-------------------
@@ -572,15 +542,12 @@ References:
    variance.js:37:16
    37| (class extends Base {
                       ^^^^ [1]
-   variance.js:11:7
-   11| class Base {
-             ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:47:2
 
 Cannot extend `Base` [1] with `<<anonymous class>>` because property `neg` is read-only in `<<anonymous class>>` [2] but
-write-only in `Base` [3].
+write-only in `Base` [1].
 
    variance.js:47:2
         v-------------------
@@ -594,10 +561,7 @@ References:
    variance.js:47:16
    47| (class extends Base {
                       ^^^^ [1]
-   variance.js:11:7
-   11| class Base {
-             ^^^^ [3]
 
 
 
-Found 37 errors
+Found 35 errors

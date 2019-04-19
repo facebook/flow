@@ -23,31 +23,29 @@ let set_log filename fd =
   dupe_log := Some (filename, fd)
 let get_log_name () = Option.map !dupe_log ~f:fst
 
-let print_with_newline =
+let print_with_newline ?exn fmt =
   let print_raw ?exn s =
-    let time = timestamp_string () in
     let exn_str = Option.value_map exn ~default:"" ~f:(fun exn ->
-      let bt = String_utils.indent 8 @@ String.trim @@ Printexc.get_backtrace () in
+      let bt = String_utils.indent 8 @@ String.trim @@ (Exception.get_backtrace_string exn) in
       let bt = if bt = "" then "" else ("\n    Backtrace:\n" ^ bt) in
-      Printf.sprintf "\n    Exception: %s%s" (Printexc.to_string exn) bt
+      Printf.sprintf "\n    Exception: %s%s" (Exception.get_ctor_string exn) bt
     ) in
+    let time = timestamp_string () in
     begin match !dupe_log with
     | None -> ()
-    | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%s\n%!" time s exn_str end;
+    | Some (_, dupe_log_oc) -> Printf.fprintf dupe_log_oc "%s %s%s\n%!" time s exn_str
+    end;
     Printf.eprintf "%s %s%s\n%!" time s exn_str
   in
-  fun ?exn fmt -> Printf.ksprintf (print_raw ?exn) fmt
+  Printf.ksprintf (print_raw ?exn) fmt
 
 let print_duration name t =
   let t2 = Unix.gettimeofday () in
   print_with_newline "%s: %f" name (t2 -. t);
   t2
 
-let exc ?(prefix="") e =
-  (* TODO - delete this function and use call normal Hh_logger functions with ~exn *)
-  print_with_newline "%s%s" prefix (Printexc.to_string e);
-  Printexc.print_backtrace stderr;
-  ()
+let exc ?(prefix: string = "") ~(stack: string) (e: exn) : unit =
+  print_with_newline "%s%s\n%s" prefix (Printexc.to_string e) stack
 
 module Level : sig
   type t =
@@ -60,7 +58,7 @@ module Level : sig
   val min_level : unit -> t
   val set_min_level : t -> unit
   val passes_min_level: t -> bool
-  val log : t -> ?exn:exn -> ('a, unit, string, string, string, unit) format6 -> 'a
+  val log : t -> ?exn:Exception.t -> ('a, unit, string, string, string, unit) format6 -> 'a
   val log_duration : t -> string -> float -> float
 end = struct
   type t =

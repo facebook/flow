@@ -1,17 +1,17 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Ast
+open Flow_ast
 open Parser_common
 open Parser_env
 
 module type COVER = sig
-  val as_expression : env -> pattern_cover -> Loc.t Expression.t
-  val as_pattern : ?err:Parse_error.t -> env -> pattern_cover -> Loc.t Pattern.t
+  val as_expression : env -> pattern_cover -> (Loc.t, Loc.t) Expression.t
+  val as_pattern : ?err:Parse_error.t -> env -> pattern_cover -> (Loc.t, Loc.t) Pattern.t
   val empty_errors : pattern_errors
   val rev_append_errors : pattern_errors -> pattern_errors -> pattern_errors
   val rev_errors : pattern_errors -> pattern_errors
@@ -38,7 +38,7 @@ module Cover
     then error_at env (fst expr, err);
 
     (match expr with
-    | loc, Ast.Expression.Identifier (_, name)
+    | loc, Flow_ast.Expression.Identifier (_, { Flow_ast.Identifier.name; comments= _ })
       when is_restricted name ->
         strict_error_at env (loc, Error.StrictLHSAssignment)
     | _ -> ());

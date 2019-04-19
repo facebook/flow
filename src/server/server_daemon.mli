@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,5 +20,6 @@ val daemonize :
   shared_mem_config:SharedMem_js.config ->
   argv: string array ->
   options:Options.t ->
+  file_watcher_pid: int option ->
   entry_point ->
   (MonitorProt.server_to_monitor_message, MonitorProt.monitor_to_server_message) Daemon.handle

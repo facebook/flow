@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -24,16 +24,8 @@ type t = {
   shared_mem_config: SharedMem_js.config;
   (* The argv of the process which created the server monitor *)
   argv: string array;
-}
-
-let make
-  ~log_file ~autostop ~no_restart ~server_log_file ~server_options ~shared_mem_config ~argv
-  = {
-  log_file;
-  autostop;
-  no_restart;
-  server_log_file;
-  server_options;
-  shared_mem_config;
-  argv;
+  (* What to use for file watching *)
+  file_watcher: Options.file_watcher;
+  (* Turn on debugging messages for the file watcher *)
+  file_watcher_debug: bool;
 }

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -23,29 +23,30 @@ module Make
 
   (** Nodes are N.t. Edges are dependencies. **)
   type topsort_state = {
-    (* outgoing edges not yet explored *)
-    mutable unexplored_edges: NSet.t NMap.t;
+    graph: NSet.t NMap.t;
     (* nodes not yet visited *)
     mutable not_yet_visited: NSet.t;
     (* number of nodes visited *)
     mutable visit_count: int;
     (* visit ordering *)
-    mutable indices: int NMap.t;
+    indices: (N.t, int) Hashtbl.t;
     (* nodes in a strongly connected component *)
     mutable stack: N.t list;
+    mem_stack: (N.t, bool) Hashtbl.t;
     (* back edges to earliest visited nodes *)
-    mutable lowlinks: int NMap.t;
+    lowlinks: (N.t, int) Hashtbl.t;
     (* components *)
     mutable components: N.t Nel.t list;
   }
 
   let initial_state ~roots graph = {
-    unexplored_edges = graph;
+    graph;
     not_yet_visited = roots;
     visit_count = 0;
-    indices = NMap.empty;
+    indices = Hashtbl.create 0;
     stack = [];
-    lowlinks = NMap.empty;
+    mem_stack = Hashtbl.create 0;
+    lowlinks = Hashtbl.create 0;
     components = [];
   }
 
@@ -55,37 +56,39 @@ module Make
     state.visit_count <- i + 1;
 
     (* visit m *)
-    state.indices <- NMap.add m i state.indices;
+    Hashtbl.replace state.indices m i;
     state.not_yet_visited <- NSet.remove m state.not_yet_visited;
-    state.unexplored_edges <- NMap.remove m state.unexplored_edges;
 
     (* push on stack *)
     state.stack <- m :: state.stack;
+    Hashtbl.replace state.mem_stack m true;
 
     (* initialize lowlink *)
     let lowlink = ref i in
 
     (* for each require r in rs: *)
     rs |> NSet.iter (fun r ->
-      match NMap.get r state.unexplored_edges with
-      | Some rs_ ->
+      if Hashtbl.mem state.indices r
+      then begin
+        if (Hashtbl.find state.mem_stack r) then
+          (** either back edge, or cross edge where strongly connected component
+              is not yet complete **)
+          (* update lowlink with index of r *)
+          let index_r = Hashtbl.find state.indices r in
+          lowlink := min !lowlink index_r
+      end else match NMap.get r state.graph with
+        | Some rs_ ->
           (* recursively compute strongly connected component of r *)
           strongconnect state r rs_;
 
           (* update lowlink with that of r *)
-          let lowlink_r = NMap.find_unsafe r state.lowlinks in
+          let lowlink_r = Hashtbl.find state.lowlinks r in
           lowlink := min !lowlink lowlink_r
 
-      | None ->
-          if (List.mem r state.stack) then
-            (** either back edge, or cross edge where strongly connected component
-                is not yet complete **)
-            (* update lowlink with index of r *)
-            let index_r = NMap.find_unsafe r state.indices in
-            lowlink := min !lowlink index_r
+        | None -> ()
     );
 
-    state.lowlinks <- NMap.add m !lowlink state.lowlinks;
+    Hashtbl.replace state.lowlinks m !lowlink;
     if (!lowlink = i) then
       (* strongly connected component *)
       let c = component state m in
@@ -96,6 +99,7 @@ module Make
     (* pop stack until m is found *)
     let m_ = List.hd state.stack in
     state.stack <- List.tl state.stack;
+    Hashtbl.replace state.mem_stack m_ false;
     if (m = m_) then []
     else m_ :: (component state m)
 
@@ -106,7 +110,7 @@ module Make
       (** NOTE: this choice is non-deterministic, so any computations that depend
           on the visit order, such as heights, are in general non-repeatable. **)
       let m = NSet.choose state.not_yet_visited in
-      let rs = NMap.find_unsafe m state.unexplored_edges in
+      let rs = NMap.find_unsafe m state.graph in
       strongconnect state m rs
     done
 
@@ -122,21 +126,10 @@ module Make
       then
         let nodes = mc
         |> Nel.to_list
-        |> List.map N.to_string
+        |> Core_list.map ~f:N.to_string
         |> String.concat "\n\t"
         in
         Printf.ksprintf prerr_endline
           "cycle detected among the following nodes:\n\t%s" nodes
     )
-
-  let reverse nodes =
-    nodes
-    |> NMap.map (fun _ -> NSet.empty)
-    |> NMap.fold (fun from_f ->
-         NSet.fold (fun to_f rev_nodes ->
-           let from_fs = NMap.find_unsafe to_f rev_nodes in
-           NMap.add to_f (NSet.add from_f from_fs) rev_nodes
-         )
-        ) nodes
-
 end

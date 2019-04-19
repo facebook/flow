@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -18,7 +18,9 @@ module Logger = FlowServerMonitorLogger
 (* This is the status info for a single Flow server *)
 type t = {
   mutable status: ServerStatus.status;
+  mutable watcher_status: FileWatcherStatus.status;
   mutable ever_been_free: bool;
+  restart_reason: ServerStatus.restart_reason option;
   stream: ServerStatus.status Lwt_stream.t;
   push_to_stream: ServerStatus.status option -> unit
 }
@@ -31,9 +33,7 @@ let to_call_on_free = ref []
 
 let significant_transition = Lwt_condition.create ()
 
-module UpdateLoop = LwtLoop.Make (struct
-  type acc = t
-
+let check_if_free =
   let invoke_all_call_on_free () =
     let%lwt to_call = Lwt_mutex.with_lock mutex (fun () ->
       let to_call = !to_call_on_free in
@@ -42,21 +42,31 @@ module UpdateLoop = LwtLoop.Make (struct
     ) in
     Lwt_list.iter_p (fun f -> f ()) to_call
 
+  in fun t ->
+    if ServerStatus.is_free t.status && (snd t.watcher_status) = FileWatcherStatus.Ready then begin
+      t.ever_been_free <- true;
+      Lwt.async invoke_all_call_on_free
+    end
+
+let broadcast_significant_transition t =
+  Lwt_condition.broadcast significant_transition (t.status, t.watcher_status)
+
+module UpdateLoop = LwtLoop.Make (struct
+  type acc = t
+
   let process_update t new_status =
+    let new_status = ServerStatus.change_init_to_restart t.restart_reason new_status in
+
     Logger.debug "Server status: %s" (ServerStatus.string_of_status new_status);
 
     let old_status = t.status in
     (* We don't need a lock here, since we're the only thread processing statuses *)
     t.status <- new_status;
 
-    if ServerStatus.is_free new_status then begin
-      t.ever_been_free <- true;
-      Lwt.async invoke_all_call_on_free
-    end;
+    check_if_free t;
 
-    if ServerStatus.is_significant_transition old_status new_status then begin
-      Lwt_condition.broadcast significant_transition new_status
-    end;
+    if ServerStatus.is_significant_transition old_status new_status
+    then broadcast_significant_transition t;
 
     Lwt.return t
 
@@ -74,11 +84,13 @@ module UpdateLoop = LwtLoop.Make (struct
       Lwt.return_unit
 end)
 
-let empty () =
+let empty file_watcher restart_reason =
   let stream, push_to_stream = Lwt_stream.create () in
   let ret = {
     status = ServerStatus.initial_status;
+    watcher_status = (file_watcher, FileWatcherStatus.Initializing);
     ever_been_free = false;
+    restart_reason;
     stream;
     push_to_stream;
   } in
@@ -86,7 +98,7 @@ let empty () =
   ret
 
 (* This is the status info for the current Flow server *)
-let current_status = ref (empty ())
+let current_status = ref (empty Options.NoFileWatcher None)
 
 (* Call f the next time the server is free. If the server is currently free, then call now *)
 let call_on_free ~f =
@@ -97,14 +109,22 @@ let call_on_free ~f =
     Lwt.return_unit
   )
 
+let file_watcher_ready () =
+  let t = !current_status in
+  t.watcher_status <- (fst t.watcher_status, FileWatcherStatus.Ready);
+  check_if_free t;
+  broadcast_significant_transition t
+
 (* When a new server starts up, we close the old server's status stream and start over *)
-let reset () = Lwt_mutex.with_lock mutex (fun () ->
+let reset file_watcher restart_reason = Lwt_mutex.with_lock mutex (fun () ->
   !current_status.push_to_stream None;
-  current_status := empty ();
+  current_status := empty file_watcher restart_reason;
   Lwt.return_unit
 )
 
-let get_status () = !current_status.status
+let get_status () =
+  let { status; watcher_status; _; } = !current_status in
+  status, watcher_status
 
 let ever_been_free () = !current_status.ever_been_free
 

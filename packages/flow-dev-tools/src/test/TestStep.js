@@ -76,6 +76,7 @@ export class TestStep {
   _startsIde: boolean;
   _readsIdeMessages: boolean;
   _allowServerToDie: boolean;
+  _timeout: ?number;
 
   constructor(step?: TestStep) {
     this._actions = step == null ? [] : step._actions.slice();
@@ -86,6 +87,7 @@ export class TestStep {
     this._startsIde = step == null ? false : step._startsIde;
     this._readsIdeMessages = step == null ? false : step._readsIdeMessages;
     this._allowServerToDie = step == null ? false : step._allowServerToDie;
+    this._timeout = step == null ? null : step._timeout;
   }
 
   async performActions(
@@ -125,6 +127,10 @@ export class TestStep {
 
   allowFlowServerToDie(): boolean {
     return this._allowServerToDie;
+  }
+
+  getTimeout(): ?number {
+    return this._timeout;
   }
 }
 
@@ -180,6 +186,12 @@ class TestStepFirstOrSecondStage extends TestStep {
     const assertLoc = searchStackForTestAssertion();
     const ret = this._cloneWithAssertion(ideStderr(expected, assertLoc));
     ret._needsFlowCheck = true;
+    return ret;
+  }
+
+  timeout(seconds: number): TestStepSecondStage {
+    const ret = new TestStepSecondStage(this);
+    ret._timeout = seconds;
     return ret;
   }
 
@@ -293,8 +305,12 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
     return ret;
   };
 
+  lspIgnoreStatusAndCancellation: Array<string> = [
+    'window/showStatus',
+    '$/cancelRequest',
+  ];
+
   lspInitializeParams: any = {
-    rootPath: '<PLACEHOLDER_PROJECT_DIR>',
     rootUri: '<PLACEHOLDER_PROJECT_URL>',
     capabilities: {
       workspace: {},
@@ -304,7 +320,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         hover: {},
         definition: {},
       },
-      window: {progress: {}, actionRequired: {}},
+      window: {status: {}, progress: {}, actionRequired: {}},
       telemetry: {connectionStatus: {}},
     },
     trace: 'verbose',
@@ -336,7 +352,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
 
   ideStartAndConnect: (?number) => TestStepSecondStage = timeoutMsOpt => {
     const assertLoc = searchStackForTestAssertion();
-    const timeoutMs = timeoutMsOpt || 20000;
+    const timeoutMs = timeoutMsOpt || 60000;
 
     const expected = 'telemetry/connectionStatus{true}';
     const ret = this._cloneWithAction(async (builder, env) => {
@@ -358,7 +374,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         isConnected
           ? 'connected'
           : 'disconnected' +
-            JSON.stringify(env.getIDEMessagesSinceStartOfStep()),
+              JSON.stringify(env.getIDEMessagesSinceStartOfStep()),
         assertLoc,
         reason,
         "'is connected to flow server?'",
@@ -477,7 +493,7 @@ export class TestStepFirstStage extends TestStepFirstOrSecondStage {
         actuals.join(','),
         assertLoc,
         reason,
-        "'what required message arrived'",
+        'messages',
         suggestion,
       );
     });

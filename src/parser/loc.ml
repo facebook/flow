@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -8,19 +8,18 @@
 type position = {
   line: int;
   column: int;
-  offset: int;
-}
+} [@@deriving show]
 
 type t = {
   source: File_key.t option;
   start: position;
   _end: position;
-}
+} [@@deriving show]
 
 let none = {
   source = None;
-  start = { line = 0; column = 0; offset = 0; };
-  _end = { line = 0; column = 0; offset = 0; };
+  start = { line = 0; column = 0; };
+  _end = { line = 0; column = 0; };
 }
 
 let btwn loc1 loc2 = {
@@ -40,11 +39,11 @@ let btwn_exclusive loc1 loc2 = {
    char on the same line. *)
 let char_before loc =
   let start =
-    let { line; column; offset } = loc.start in
-    let column, offset = if column > 0
-    then column - 1, offset - 1
-    else column, offset in
-    { line; column; offset }
+    let { line; column; } = loc.start in
+    let column = if column > 0
+    then column - 1
+    else column in
+    { line; column }
   in
   let _end = loc.start in
   { loc with start; _end }
@@ -53,7 +52,7 @@ let char_before loc =
  * first line is a newline character, but is still consistent with loc orderings. *)
 let first_char loc =
   let start = loc.start in
-  let _end = {start with column = start.column + 1; offset = start.offset + 1} in
+  let _end = {start with column = start.column + 1; } in
   {loc with _end}
 
 let pos_cmp a b =
@@ -98,7 +97,7 @@ let equal loc1 loc2 = compare loc1 loc2 = 0
  * This is mostly useful for debugging purposes.
  * Please don't dead-code delete this!
  *)
-let to_string ?(include_source=false) loc =
+let debug_to_string ?(include_source=false) loc =
   let source =
     if include_source
     then Printf.sprintf "%S: " (
@@ -115,11 +114,27 @@ let to_string ?(include_source=false) loc =
   in
   source ^ pos
 
+let to_string_no_source loc =
+  let line = loc.start.line in
+  let start = loc.start.column + 1 in
+  let end_ = loc._end.column in
+  if line <= 0 then
+    "0:0"
+  else if line = loc._end.line && start = end_ then
+    Printf.sprintf "%d:%d" line start
+  else if line != loc._end.line then
+    Printf.sprintf "%d:%d,%d:%d" line start loc._end.line end_
+  else
+    Printf.sprintf "%d:%d-%d" line start end_
+
 let source loc = loc.source
 
 let make file line col =
   {
     source = Some file;
-    start = { line; column = col; offset = 0; };
-    _end = { line; column = col + 1; offset = 0; };
+    start = { line; column = col; };
+    _end = { line; column = col + 1; };
   }
+
+let start_loc loc = {loc with _end = loc.start}
+let end_loc   loc = {loc with start = loc._end}

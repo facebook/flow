@@ -44,6 +44,11 @@ def("DeclareExportAllDeclaration")
     .build("source")
     .field("source", def("Literal"));
 
+def("Decorator")
+  .bases("Node")
+  .build("expression")
+  .field("expression", def("Expression"));
+
 def("OpaqueType")
   .bases("Declaration")
   .build("id", "typeParameters", "impltype", "supertype")
@@ -173,6 +178,7 @@ def("Function")
 
 def("ObjectTypeAnnotation")
     .field("exact", Boolean)
+    .field("inexact", or(Boolean, void 0), defaults["undefined"])
     .field("properties", [or(
       def("ObjectTypeProperty"),
       def("ObjectTypeSpreadProperty"))])
@@ -223,7 +229,8 @@ def("ObjectTypeInternalSlot")
   .build("id", "static", "method")
   .field("id", def("Identifier"))
   .field("static", Boolean)
-  .field("method", Boolean);
+  .field("method", Boolean)
+  .field("value", def("Type"));
 
 // https://github.com/benjamn/ast-types/issues/186
 def("ForAwaitStatement")
@@ -253,3 +260,23 @@ def('OptionalCallExpression')
 
 def('LogicalExpression')
   .field('operator', or("||", "&&", "??"));
+
+def("CatchClause")
+    .bases("Node")
+    .build("param", "guard", "body")
+    // https://github.com/tc39/proposal-optional-catch-binding
+    .field("param", or(def("Pattern"), null), defaults["null"])
+    .field("guard", or(def("Expression"), null), defaults["null"])
+    .field("body", def("BlockStatement"));
+
+def("BigIntLiteral")
+  .bases("Literal")
+  .build("value", "bigint")
+  .field("value", or(def("BigInt"), null))
+  .field("bigint", String);
+
+def("BigIntLiteralTypeAnnotation")
+  .bases("Type")
+  .build("value", "raw")
+  .field("value", or(def("BigInt"), null))
+  .field("raw", String);

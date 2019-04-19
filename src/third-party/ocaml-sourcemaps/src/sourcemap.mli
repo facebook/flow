@@ -27,6 +27,7 @@ val add_mapping: original:original -> generated:line_col -> t -> t
 val add_source_content: source:string -> content:string -> t -> t
 
 val version: t -> string
+val file: t -> string option
 val string_of_mappings: t -> string
 val names: t -> string list
 val source_root: t -> string option

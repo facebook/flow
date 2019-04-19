@@ -1,3 +1,11 @@
+Error ---------------------------------------------------------------------------------------- require-type-error.js:4:8
+
+Cannot import the type `MyType` as a value. Use `import type` instead.
+
+   4| const {MyType} = require('./exports-type');
+             ^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------------- require.js:9:14
 
 Cannot call `takesAString` with `A.numberValue` bound to `str` because number [1] is incompatible with string [2].
@@ -82,4 +90,4 @@ The parameter passed to `require` must be a string literal.
 
 
 
-Found 7 errors
+Found 8 errors

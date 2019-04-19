@@ -1,3 +1,35 @@
+Error ---------------------------------------------------------------------------------- class_static_constructor.js:4:3
+
+Classes may not have fields named `constructor`.
+
+   4|   static constructor: Object; // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------ class_static_prototype.js:4:3
+
+Classes may not have static fields named `prototype`.
+
+   4|   static prototype: Object; // error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------ declared_class_static_constructor.js:4:10
+
+Classes may not have static fields named `constructor`.
+
+   4|   static constructor: Object; // error
+               ^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------- declared_class_static_prototype.js:4:10
+
+Classes may not have static fields named `prototype`.
+
+   4|   static prototype: Object; // error
+               ^^^^^^^^^
+
+
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
 Cannot assign function to `A.qux` because property `qux` is missing in statics of `A` [1].
@@ -174,7 +206,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:47:2
 
-Cannot cast `new A()` to `typeof A` because `A` [1] is incompatible with `typeof A` [2].
+Cannot cast `new A()` to `typeof A` because `A` [1] is incompatible with class `A` [2].
 
    test.js:47:2
    47| (new A: typeof A);
@@ -218,4 +250,4 @@ References:
 
 
 
-Found 14 errors
+Found 18 errors

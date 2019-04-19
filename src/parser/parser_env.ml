@@ -1,11 +1,11 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Ast
+open Flow_ast
 module Error = Parse_error
 module SSet = Set.Make(String)
 
@@ -56,14 +56,7 @@ end = struct
   }
 
   let create lex_env mode =
-    let lexbuf = Lex_env.lexbuf lex_env in
-    (* copy all the mutable things so that we have a distinct lexing environment
-     * that does not interfere with ordinary lexer operations *)
-    (* lex_buffer has type bytes, which is itself mutable, but the lexer
-     * promises not to change it so a shallow copy should be fine *)
-    (* I don't know how to do a copy without an update *)
-    let lexbuf = lexbuf |> Obj.repr |> Obj.dup |> Obj.obj in
-    let lex_env = Lex_env.with_lexbuf ~lexbuf lex_env in
+    let lex_env = Lex_env.clone lex_env in
     {
       la_results = [||];
       la_num_lexed = 0;
@@ -97,22 +90,14 @@ end = struct
     let lex_env = t.la_lex_env in
     let lex_env, lex_result =
       match t.la_lex_mode with
-      | Lex_mode.NORMAL -> Lexer.token lex_env
-      | Lex_mode.TYPE -> Lexer.type_token lex_env
-      | Lex_mode.JSX_TAG -> Lexer.jsx_tag lex_env
-      | Lex_mode.JSX_CHILD -> Lexer.jsx_child lex_env
-      | Lex_mode.TEMPLATE -> Lexer.template_tail lex_env
-      | Lex_mode.REGEXP -> Lexer.regexp lex_env
+      | Lex_mode.NORMAL -> Flow_lexer.token lex_env
+      | Lex_mode.TYPE -> Flow_lexer.type_token lex_env
+      | Lex_mode.JSX_TAG -> Flow_lexer.jsx_tag lex_env
+      | Lex_mode.JSX_CHILD -> Flow_lexer.jsx_child lex_env
+      | Lex_mode.TEMPLATE -> Flow_lexer.template_tail lex_env
+      | Lex_mode.REGEXP -> Flow_lexer.regexp lex_env
     in
-    let cloned_env =
-      let lexbuf =
-        Lex_env.lexbuf lex_env
-        |> Obj.repr
-        |> Obj.dup
-        |> Obj.obj
-      in
-      Lex_env.with_lexbuf ~lexbuf lex_env
-    in
+    let cloned_env = Lex_env.clone lex_env in
     t.la_lex_env <- lex_env;
     t.la_results.(t.la_num_lexed) <- Some (cloned_env, lex_result);
     t.la_num_lexed <- t.la_num_lexed + 1
@@ -291,9 +276,7 @@ let error_at env (loc, e) =
   match env.error_callback with
   | None -> ()
   | Some callback -> callback env e
-let comment_list env =
-  List.iter (fun c -> env.comments := c :: !(env.comments))
-let record_export env (loc, export_name) =
+let record_export env (loc, { Identifier.name= export_name; comments= _ }) =
   if export_name = "" then () else (* empty identifiers signify an error, don't export it *)
   let exports = !(env.exports) in
   if SSet.mem export_name exports
@@ -456,8 +439,8 @@ let is_reserved str_val =
 
 let is_reserved_type str_val =
   match str_val with
-  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number"
-  | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends"
+  | "any" | "bool" | "boolean" | "empty" | "false" | "mixed" | "null" | "number" | "bigint"
+  | "static" | "string" | "true" | "typeof" | "void" | "interface" | "extends" | "_"
     -> true
   | _ -> false
 
@@ -474,6 +457,13 @@ module Peek = struct
 
   let token env = ith_token ~i:0 env
   let loc env = ith_loc ~i:0 env
+  (* loc_skip_lookahead is used to give a loc hint to optional tokens such as type annotations *)
+  let loc_skip_lookahead env =
+    let loc = match last_loc env with
+    | Some loc -> loc
+    | None -> failwith "Peeking current location when not available" in
+    Loc.({ loc with start = loc._end})
+
   let errors env = ith_errors ~i:0 env
   let comments env = ith_comments ~i:0 env
   let lex_env env = ith_lex_env ~i:0 env
@@ -527,10 +517,12 @@ module Peek = struct
       | T_MIXED_TYPE
       | T_EMPTY_TYPE
       | T_NUMBER_TYPE
+      | T_BIGINT_TYPE
       | T_STRING_TYPE
       | T_VOID_TYPE
       | T_BOOLEAN_TYPE _
       | T_NUMBER_SINGLETON_TYPE _
+      | T_BIGINT_SINGLETON_TYPE _
 
       (* identifier-ish *)
       | T_ASYNC
@@ -654,6 +646,7 @@ module Peek = struct
 
       (* literals *)
       | T_NUMBER _
+      | T_BIGINT _
       | T_STRING _
       | T_TEMPLATE_PART _
       | T_REGEXP _
@@ -682,7 +675,8 @@ module Peek = struct
 
   let is_function env =
     token env = T_FUNCTION ||
-    (token env = T_ASYNC && ith_token ~i:1 env = T_FUNCTION)
+    (token env = T_ASYNC && ith_token ~i:1 env = T_FUNCTION &&
+      (loc env)._end.line = (ith_loc ~i:1 env).start.line)
 
   let is_class env =
     match token env with
@@ -762,7 +756,7 @@ module Eat = struct
     env.lex_env := Peek.lex_env env;
 
     error_list env (Peek.errors env);
-    comment_list env (Peek.comments env);
+    env.comments := List.rev_append (Peek.comments env) !(env.comments);
     env.last_lex_result := Some (lookahead ~i:0 env);
 
     Lookahead.junk !(env.lookahead)
@@ -830,7 +824,7 @@ module Try = struct
 
   type saved_state = {
     saved_errors          : (Loc.t * Error.t) list;
-    saved_comments        : Loc.t Ast.Comment.t list;
+    saved_comments        : Loc.t Flow_ast.Comment.t list;
     saved_last_lex_result : Lex_result.t option;
     saved_lex_mode_stack  : Lex_mode.t list;
     saved_lex_env         : Lex_env.t;

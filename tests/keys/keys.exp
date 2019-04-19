@@ -16,7 +16,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- errors.js:10:2
 
-Cannot cast `'c'` to `K` because property `c` is missing in `typeof O` [1].
+Cannot cast `'c'` to `K` because property `c` is missing in object literal [1].
 
    errors.js:10:2
    10| ('c': K);
@@ -114,7 +114,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:38:4
 
-Cannot cast `str` to key set because an indexer property is missing in `ObjLit` [1].
+Cannot cast `str` to key set because an index signature declaring the expected key / value type is missing in
+`ObjLit` [1].
 
    keys.js:38:4
    38|   (str: $Keys<ObjLit>); // Error: string -> keys of ObjLit
@@ -128,7 +129,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:40:6
 
-Cannot cast `str` to key set because an indexer property is missing in `ObjLit` [1].
+Cannot cast `str` to key set because an index signature declaring the expected key / value type is missing in
+`ObjLit` [1].
 
    keys.js:40:6
    40|     (str: $Keys<ObjLit>); // Error: truthy string -> keys of ObjLit

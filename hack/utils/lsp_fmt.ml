@@ -65,6 +65,15 @@ let print_location (location: Location.t) : json =
     "range", print_range location.range;
   ]
 
+let print_definition_location (definition_location: DefinitionLocation.t) : json =
+  let open DefinitionLocation in
+  let location = definition_location.location in
+  Jprint.object_opt [
+    "uri", Some (JSON_String location.Location.uri);
+    "range", Some (print_range location.Location.range);
+    "title", Option.map definition_location.title ~f:string_;
+  ]
+
 let parse_range_exn (json: json option) : range =
   {
     start = Jget.obj_exn json "start" |> parse_position;
@@ -163,7 +172,7 @@ let parse_formattingOptions (json: json option)
   : DocumentFormatting.formattingOptions =
   { DocumentFormatting.
     tabSize = Jget.int_d json "tabSize" 2;
-    insertSpaces = Jget.bool_d json "insertSpaces" false;
+    insertSpaces = Jget.bool_d json "insertSpaces" true;
   }
 
 let print_symbolInformation (info: SymbolInformation.t) : json =
@@ -338,6 +347,31 @@ let print_signatureHelp (r: SignatureHelp.result) : json =
     ]
 
 
+
+(************************************************************************)
+(** textDocument/rename Request                                        **)
+(************************************************************************)
+
+let parse_documentRename (params: json option) : Rename.params =
+  let open Rename in
+  {
+    textDocument = Jget.obj_exn params "textDocument"
+                   |> parse_textDocumentIdentifier;
+    position = Jget.obj_exn params "position" |> parse_position;
+    newName = Jget.string_exn params "newName";
+  }
+
+let print_documentRename (r: Rename.result) : json =
+  let open WorkspaceEdit in
+  let print_workspace_edit_changes (uri, text_edits) =
+      uri, JSON_Array (List.map ~f:print_textEdit text_edits)
+  in
+  JSON_Object [
+    "changes", JSON_Object (List.map (SMap.elements r.changes) ~f:print_workspace_edit_changes);
+  ]
+
+
+
 (************************************************************************)
 (** textDocument/publishDiagnostics notification                       **)
 (************************************************************************)
@@ -367,6 +401,8 @@ let print_diagnostics (r: PublishDiagnostics.params) : json =
       "code", print_diagnosticCode diagnostic.code;
       "source", Option.map diagnostic.source string_;
       "message", Some (JSON_String diagnostic.message);
+      "relatedInformation",
+        Some (JSON_Array (List.map diagnostic.relatedInformation ~f:print_related));
       "relatedLocations", Some (JSON_Array (List.map diagnostic.relatedLocations ~f:print_related));
     ]
   in
@@ -405,29 +441,45 @@ let print_showMessage (type_: MessageType.t) (message: string) : json =
 (** window/showMessage request                                         **)
 (************************************************************************)
 
-let print_showMessageRequest
-    (type_: MessageType.t)
-    (message: string)
-    (titles: string list)
-  : json =
-  let open ShowMessageRequest in
-  let print_action (action: messageActionItem) : json =
+let print_showMessageRequest (r: ShowMessageRequest.showMessageRequestParams) : json =
+  let print_action (action: ShowMessageRequest.messageActionItem) : json =
     JSON_Object [
-      "title", JSON_String action.title;
+      "title", JSON_String action.ShowMessageRequest.title;
     ]
   in
-  let actions = List.map titles ~f:(fun title -> { title; }) in
-  let r = { type_; message; actions; } in
-  JSON_Object [
-    "type", print_messageType r.type_;
-    "message", JSON_String r.message;
-    "actions", JSON_Array (List.map r.actions ~f:print_action);
+  Jprint.object_opt [
+    "type", Some (print_messageType r.ShowMessageRequest.type_);
+    "message", Some (JSON_String r.ShowMessageRequest.message);
+    "actions", Some (JSON_Array (List.map r.ShowMessageRequest.actions ~f:print_action));
   ]
 
 let parse_result_showMessageRequest (result: json option) : ShowMessageRequest.result =
   let open ShowMessageRequest in
   let title = Jget.string_opt result "title" in
   Option.map title ~f:(fun title -> { title; })
+
+
+(************************************************************************)
+(** window/showStatus request                                          **)
+(************************************************************************)
+
+let print_showStatus (r: ShowStatus.showStatusParams) : json =
+  let print_action (action: ShowMessageRequest.messageActionItem) : json =
+    JSON_Object [
+      "title", JSON_String action.ShowMessageRequest.title;
+    ]
+  in
+  let rr = r.ShowStatus.request in
+  Jprint.object_opt [
+    "type", Some (print_messageType rr.ShowMessageRequest.type_);
+    "actions", Some (JSON_Array (List.map rr.ShowMessageRequest.actions ~f:print_action));
+    "message", Some (JSON_String rr.ShowMessageRequest.message);
+    "shortMessage", Option.map r.ShowStatus.shortMessage ~f:string_;
+    "progress", Option.map r.ShowStatus.progress ~f:(fun progress -> Jprint.object_opt [
+      "numerator", Some (int_ progress);
+      "denominator", Option.map r.ShowStatus.total ~f:int_;
+      ]);
+  ]
 
 
 (************************************************************************)
@@ -493,7 +545,7 @@ let parse_definition (params: json option) : Definition.params =
   parse_textDocumentPositionParams params
 
 let print_definition (r: Definition.result) : json =
-  JSON_Array (List.map r ~f:print_location)
+  JSON_Array (List.map r ~f:print_definition_location)
 
 
 (************************************************************************)
@@ -553,8 +605,23 @@ let print_completionItem (item: Completion.completionItem) : json =
 (** textDocument/completion request                                    **)
 (************************************************************************)
 
-let parse_completion (params: json option) : Definition.params =
-  parse_textDocumentPositionParams params
+let parse_completion (params: json option) : Completion.params =
+  let open Lsp.Completion in
+  let context = Jget.obj_opt params "context" in
+  {
+    loc = parse_textDocumentPositionParams params;
+    context = match context with
+    | Some _ ->
+      Some {
+        triggerKind = (match Jget.int_exn context "triggerKind" with
+        | 1 -> Invoked
+        | 2 -> TriggerCharacter
+        | 3 -> TriggerForIncompleteCompletions
+        | x -> failwith ("Unsupported trigger kind: "^(string_of_int x))
+        );
+      }
+    | None -> None
+  }
 
 let print_completion (r: Completion.result) : json =
   let open Completion in
@@ -599,15 +666,13 @@ let print_documentSymbol (r: DocumentSymbol.result) : json =
 (************************************************************************)
 
 let parse_findReferences (params: json option) : FindReferences.params =
-  let open TextDocumentPositionParams in
-  let as_positionParams = parse_textDocumentPositionParams params in
   let context = Jget.obj_opt params "context" in
   { FindReferences.
-    textDocument = as_positionParams.textDocument;
-    position = as_positionParams.position;
+    loc = parse_textDocumentPositionParams params;
     context =
       { FindReferences.
         includeDeclaration = Jget.bool_d context "includeDeclaration" true;
+        includeIndirectReferences = Jget.bool_d context "includeIndirectReferences" false;
       }
   }
 
@@ -653,14 +718,15 @@ let parse_typeCoverage (params: json option)
 let print_typeCoverage (r: TypeCoverage.result) : json =
   let open TypeCoverage in
   let print_uncov (uncov: uncoveredRange) : json =
-    JSON_Object [
-      "range", print_range uncov.range;
-      "message", string_ uncov.message;
+    Jprint.object_opt [
+      "range", Some (print_range uncov.range);
+      "message", Option.map uncov.message ~f:string_;
     ]
   in
   JSON_Object [
     "coveredPercent", int_ r.coveredPercent;
-    "uncoveredRanges", JSON_Array (List.map r.uncoveredRanges ~f:print_uncov)
+    "uncoveredRanges", JSON_Array (List.map r.uncoveredRanges ~f:print_uncov);
+    "defaultMessage", JSON_String r.defaultMessage;
   ]
 
 (************************************************************************)
@@ -749,8 +815,8 @@ let parse_initialize (params: json option) : Initialize.params =
     | _ -> Off
   and parse_initializationOptions json =
     {
-      use_textedit_autocomplete =
-        Option.value (Jget.bool_opt json "useTextEditAutocomplete") ~default:false;
+      useTextEditAutocomplete = Jget.bool_d json "useTextEditAutocomplete" ~default:false;
+      liveSyntaxErrors = Jget.bool_d json "liveSyntaxErrors" ~default:true;
     }
   and parse_capabilities json =
     {
@@ -791,6 +857,7 @@ let parse_initialize (params: json option) : Initialize.params =
     }
   and parse_window json =
     {
+      status = Jget.obj_opt json "status" |> Option.is_some;
       progress = Jget.obj_opt json "progress" |> Option.is_some;
       actionRequired = Jget.obj_opt json "actionRequired" |> Option.is_some;
     }
@@ -868,57 +935,48 @@ let print_initialize (r: Initialize.result) : json =
 (** error response                                                     **)
 (************************************************************************)
 
-let get_error_info (e: exn) : int * string * json option =
-  (* returns (lspErrorCode, friendlyMessage, lspData) *)
+let error_of_exn (e: exn) : Lsp.Error.t =
+  let open Lsp.Error in
   match e with
-  | Error.Parse message -> (-32700, message, None)
-  | Error.InvalidRequest message -> (-32600, message, None)
-  | Error.MethodNotFound message -> (-32601, message, None)
-  | Error.InvalidParams message -> (-32602, message, None)
-  | Error.InternalError message -> (-32603, message, None)
-  | Error.ServerErrorStart (message, data) -> (-32099, message, Some (print_initializeError data))
-  | Error.ServerErrorEnd message -> (-32000, message, None)
-  | Error.ServerNotInitialized message -> (-32002, message, None)
-  | Error.Unknown message -> (-32001, message, None)
-  | Error.RequestCancelled message -> (-32800, message, None)
-  | Exit_status.Exit_with code -> (-32001, Exit_status.to_string code, None)
-  | _ -> (-32001, Printexc.to_string e, None)
+  | Error.Parse message -> {code= -32700; message; data=None;}
+  | Error.InvalidRequest message -> {code= -32600; message; data=None;}
+  | Error.MethodNotFound message -> {code= -32601; message; data=None;}
+  | Error.InvalidParams message -> {code= -32602; message; data=None;}
+  | Error.InternalError message -> {code= -32603; message; data=None;}
+  | Error.ServerErrorStart (message, data) ->
+      {code= -32099; message; data=Some (print_initializeError data);}
+  | Error.ServerErrorEnd message -> {code= -32000; message; data=None;}
+  | Error.ServerNotInitialized message -> {code= -32002; message; data=None;}
+  | Error.Unknown message -> {code= -32001; message; data=None;}
+  | Error.RequestCancelled message -> {code= -32800; message; data=None;}
+  | Exit_status.Exit_with code -> {code= -32001; message=Exit_status.to_string code; data=None;}
+  | _ -> {code= -32001; message=Printexc.to_string e; data=None;}
 
-let print_error (e: exn) (stack: string) : json =
+let print_error (e: Error.t) (stack: string) : json =
   let open Hh_json in
-  let (code, message, original_data) = get_error_info e in
+  let open Error in
   let stack_json_property = ("stack", string_ stack) in
   (* We'd like to add a stack-trace. The only place we can fit it, that will *)
   (* be respected by vscode-jsonrpc, is inside the 'data' field. And we can  *)
   (* do that only if data is an object. We can synthesize one if needed.     *)
-  let data = match original_data with
+  let data = match e.data with
     | None -> JSON_Object [stack_json_property]
     | Some (JSON_Object o) -> JSON_Object (stack_json_property :: o)
     | Some primitive -> primitive
   in
   JSON_Object [
-    "code", int_ code;
-    "message", string_ message;
+    "code", int_ e.code;
+    "message", string_ e.message;
     "data", data;
   ]
 
-let parse_error (error: json) : exn =
+let parse_error (error: json) : Error.t =
   let json = Some error in
   let code = Jget.int_exn json "code" in
   let message = Jget.string_exn json "message" in
-  let _data = Jget.val_opt json "data" in
-  match code with
-  | -32700 -> Error.Parse message
-  | -32600 -> Error.InvalidRequest message
-  | -32601 -> Error.MethodNotFound message
-  | -32602 -> Error.InvalidParams message
-  | -32603 -> Error.InternalError message
-  | -32800 -> Error.RequestCancelled message
-  | -32001 -> Error.Unknown message
-  | -32099 (* Error.ServerErrorStart *)
-  | -32000 (* Error.ServerErrorEnd *)
-  | -32002 (* Error.ServerNotInitialized *)
-  | _ -> raise (Error.Parse ("Unrecognized LSP error code: " ^ (string_of_int code)))
+  let data = Jget.val_opt json "data"
+  in
+  {Error.code; message; data}
 
 
 (************************************************************************)
@@ -928,6 +986,7 @@ let parse_error (error: json) : exn =
 let request_name_to_string (request: lsp_request) : string =
   match request with
   | ShowMessageRequestRequest _ -> "window/showMessageRequest"
+  | ShowStatusRequest _ -> "window/showStatus"
   | InitializeRequest _ -> "initialize"
   | ShutdownRequest -> "shutdown"
   | HoverRequest _ -> "textDocument/hover"
@@ -943,10 +1002,13 @@ let request_name_to_string (request: lsp_request) : string =
   | DocumentRangeFormattingRequest _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingRequest _ -> "textDocument/onTypeFormatting"
   | RageRequest -> "telemetry/rage"
+  | RenameRequest _ -> "textDocument/rename"
+  | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result: lsp_result) : string =
   match result with
   | ShowMessageRequestResult _ -> "window/showMessageRequest"
+  | ShowStatusResult _ -> "window/showStatus"
   | InitializeResult _ -> "initialize"
   | ShutdownResult -> "shutdown"
   | HoverResult _ -> "textDocument/hover"
@@ -962,7 +1024,8 @@ let result_name_to_string (result: lsp_result) : string =
   | DocumentRangeFormattingResult _ -> "textDocument/rangeFormatting"
   | DocumentOnTypeFormattingResult _ -> "textDocument/onTypeFormatting"
   | RageResult _ -> "telemetry/rage"
-  | ErrorResult _ -> "ERROR"
+  | RenameResult _ -> "textDocument/rename"
+  | ErrorResult (e, _stack) -> "ERROR/" ^ (e.Error.message)
 
 let notification_name_to_string (notification: lsp_notification) : string =
   match notification with
@@ -973,23 +1036,33 @@ let notification_name_to_string (notification: lsp_notification) : string =
   | DidCloseNotification _ -> "textDocument/didClose"
   | DidSaveNotification _ -> "textDocument/didSave"
   | DidChangeNotification _ -> "textDocument/didChange"
+  | TelemetryNotification _ -> "telemetry/event"
   | LogMessageNotification _ -> "window/logMessage"
   | ShowMessageNotification _ -> "window/showMessage"
   | ProgressNotification _ -> "window/progress"
   | ActionRequiredNotification _ -> "window/actionRequired"
   | ConnectionStatusNotification _ -> "telemetry/connectionStatus"
+  | InitializedNotification -> "initialized"
+  | SetTraceNotification -> "$/setTraceNotification"
+  | LogTraceNotification -> "$/logTraceNotification"
+  | UnknownNotification (method_, _params) -> method_
 
-let message_to_string (message: lsp_message) : string =
+let message_name_to_string (message: lsp_message) : string =
+  match message with
+  | RequestMessage (_, r) -> request_name_to_string r
+  | NotificationMessage n -> notification_name_to_string n
+  | ResponseMessage (_, r) -> result_name_to_string r
+
+let denorm_message_to_string (message: lsp_message) : string =
   match message with
   | RequestMessage (id, r) ->
     Printf.sprintf "request %s %s" (id_to_string id) (request_name_to_string r)
   | NotificationMessage n ->
     Printf.sprintf "notification %s" (notification_name_to_string n)
   | ResponseMessage (id, ErrorResult (e, _stack)) ->
-    Printf.sprintf "error %s %s" (id_to_string id) (Printexc.to_string e)
+    Printf.sprintf "error %s %s" (id_to_string id) (e.Error.message)
   | ResponseMessage (id, r) ->
     Printf.sprintf "result %s %s" (id_to_string id) (result_name_to_string r)
-
 
 let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   match method_ with
@@ -1001,6 +1074,7 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   | "workspace/symbol" -> WorkspaceSymbolRequest (parse_workspaceSymbol params)
   | "textDocument/documentSymbol" -> DocumentSymbolRequest (parse_documentSymbol params)
   | "textDocument/references" -> FindReferencesRequest (parse_findReferences params)
+  | "textDocument/rename" -> RenameRequest (parse_documentRename params)
   | "textDocument/documentHighlight" -> DocumentHighlightRequest (parse_documentHighlight params)
   | "textDocument/typeCoverage" -> TypeCoverageRequest (parse_typeCoverage params)
   | "textDocument/formatting" -> DocumentFormattingRequest (parse_documentFormatting params)
@@ -1011,11 +1085,15 @@ let parse_lsp_request (method_: string) (params: json option) : lsp_request =
   | "telemetry/rage" -> RageRequest
   | "completionItem/resolve"
   | "window/showMessageRequest"
-  | _ -> raise (Error.Parse ("Don't know how to parse LSP request " ^ method_))
+  | "window/showStatus"
+  | _ -> UnknownRequest (method_, params)
 
 let parse_lsp_notification (method_: string) (params: json option) : lsp_notification =
   match method_ with
   | "$/cancelRequest" -> CancelRequestNotification (parse_cancelRequest params)
+  | "$/setTraceNotification" -> SetTraceNotification
+  | "$/logTraceNotification" -> LogTraceNotification
+  | "initialized" -> InitializedNotification
   | "exit" -> ExitNotification
   | "textDocument/didOpen" -> DidOpenNotification (parse_didOpen params)
   | "textDocument/didClose" -> DidCloseNotification (parse_didClose params)
@@ -1027,13 +1105,15 @@ let parse_lsp_notification (method_: string) (params: json option) : lsp_notific
   | "window/progress"
   | "window/actionRequired"
   | "telemetry/connectionStatus"
-  | _ -> raise (Error.Parse ("Don't know how to parse LSP notification " ^ method_))
+  | _ -> UnknownNotification (method_, params)
 
 let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   let method_ = request_name_to_string request in
   match request with
   | ShowMessageRequestRequest _ ->
     ShowMessageRequestResult (parse_result_showMessageRequest (Some result))
+  | ShowStatusRequest _ ->
+    ShowStatusResult (parse_result_showMessageRequest (Some result)) (* shares result type *)
   | InitializeRequest _
   | ShutdownRequest
   | HoverRequest _
@@ -1048,7 +1128,9 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | DocumentFormattingRequest _
   | DocumentRangeFormattingRequest _
   | DocumentOnTypeFormattingRequest _
-  | RageRequest ->
+  | RageRequest
+  | RenameRequest _
+  | UnknownRequest _ ->
     raise (Error.Parse ("Don't know how to parse LSP response " ^ method_))
 
 (* parse_lsp: non-jsonrpc inputs - will raise an exception                    *)
@@ -1075,10 +1157,8 @@ let parse_lsp (json: json) (outstanding: lsp_id -> lsp_request) : lsp_message =
 let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
   let method_ = request_name_to_string request in
   let params = match request with
-    | ShowMessageRequestRequest r ->
-      let open ShowMessageRequest in
-      let titles = List.map r.actions ~f:(fun action -> action.title) in
-      print_showMessageRequest r.type_ r.message titles
+    | ShowMessageRequestRequest r -> print_showMessageRequest r
+    | ShowStatusRequest r -> print_showStatus r
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _
@@ -1093,7 +1173,9 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
     | DocumentFormattingRequest _
     | DocumentRangeFormattingRequest _
     | DocumentOnTypeFormattingRequest _
-    | RageRequest ->
+    | RageRequest
+    | RenameRequest _
+    | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
   JSON_Object [
@@ -1120,7 +1202,9 @@ let print_lsp_response (id: lsp_id) (result: lsp_result) : json =
     | DocumentRangeFormattingResult r -> print_documentRangeFormatting r
     | DocumentOnTypeFormattingResult r -> print_documentOnTypeFormatting r
     | RageResult r -> print_rage r
+    | RenameResult r -> print_documentRename r
     | ShowMessageRequestResult _
+    | ShowStatusResult _
     | CompletionItemResolveResult _ ->
       failwith ("Don't know how to print result " ^ method_)
     | ErrorResult (e, stack) -> print_error e stack
@@ -1144,6 +1228,7 @@ let print_lsp_notification (notification: lsp_notification) : json =
   let params = match notification with
     | CancelRequestNotification r -> print_cancelRequest r
     | PublishDiagnosticsNotification r -> print_diagnostics r
+    | TelemetryNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | LogMessageNotification r -> print_logMessage r.LogMessage.type_ r.LogMessage.message
     | ShowMessageNotification r -> print_showMessage r.ShowMessage.type_ r.ShowMessage.message
     | ProgressNotification r -> print_progress r.Progress.id r.Progress.label
@@ -1151,10 +1236,14 @@ let print_lsp_notification (notification: lsp_notification) : json =
         print_actionRequired r.ActionRequired.id r.ActionRequired.label
     | ConnectionStatusNotification r -> print_connectionStatus r
     | ExitNotification
+    | InitializedNotification
+    | SetTraceNotification
+    | LogTraceNotification
     | DidOpenNotification _
     | DidCloseNotification _
     | DidSaveNotification _
-    | DidChangeNotification _ ->
+    | DidChangeNotification _
+    | UnknownNotification _ ->
       failwith ("Don't know how to print notification " ^ method_)
   in
   JSON_Object [

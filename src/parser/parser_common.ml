@@ -1,12 +1,12 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 open Parser_env
-open Ast
+open Flow_ast
 module Error = Parse_error
 
 type pattern_errors = {
@@ -15,42 +15,43 @@ type pattern_errors = {
 }
 
 type pattern_cover =
-  | Cover_expr of Loc.t Expression.t
-  | Cover_patt of Loc.t Expression.t * pattern_errors
+  | Cover_expr of (Loc.t, Loc.t) Expression.t
+  | Cover_patt of (Loc.t, Loc.t) Expression.t * pattern_errors
 
 module type PARSER = sig
-  val program : env -> Loc.t program
-  val statement : env -> Loc.t Statement.t
-  val statement_list_item : ?decorators:Loc.t Expression.t list -> env -> Loc.t Statement.t
-  val statement_list : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list
-  val statement_list_with_directives : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list * bool
-  val module_body : term_fn:(Token.t -> bool) -> env -> Loc.t Statement.t list
-  val expression : env -> Loc.t Expression.t
+  val program : env -> (Loc.t, Loc.t) program
+  val statement : env -> (Loc.t, Loc.t) Statement.t
+  val statement_list_item : ?decorators:(Loc.t, Loc.t) Class.Decorator.t list -> env -> (Loc.t, Loc.t) Statement.t
+  val statement_list : term_fn:(Token.t -> bool) -> env -> (Loc.t, Loc.t) Statement.t list
+  val statement_list_with_directives : term_fn:(Token.t -> bool) -> env -> (Loc.t, Loc.t) Statement.t list * bool
+  val module_body : term_fn:(Token.t -> bool) -> env -> (Loc.t, Loc.t) Statement.t list
+  val expression : env -> (Loc.t, Loc.t) Expression.t
   val expression_or_pattern : env -> pattern_cover
-  val conditional : env -> Loc.t Expression.t
-  val assignment : env -> Loc.t Expression.t
-  val left_hand_side : env -> Loc.t Expression.t
-  val object_initializer : env -> Loc.t * Loc.t Expression.Object.t * pattern_errors
+  val conditional : env -> (Loc.t, Loc.t) Expression.t
+  val assignment : env -> (Loc.t, Loc.t) Expression.t
+  val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
+  val object_initializer : env -> Loc.t * (Loc.t, Loc.t) Expression.Object.t * pattern_errors
   val identifier : ?restricted_error:Error.t -> env -> Loc.t Identifier.t
-  val identifier_with_type : env -> ?no_optional:bool -> Error.t -> Loc.t * Loc.t Pattern.Identifier.t
+  val identifier_with_type : env -> ?no_optional:bool -> Error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
   val assert_identifier_name_is_identifier :
-    ?restricted_error:Error.t -> env -> Loc.t * string -> unit
-  val block_body : env -> Loc.t * Loc.t Statement.Block.t
-  val function_block_body : env -> Loc.t * Loc.t Statement.Block.t * bool
+    ?restricted_error:Error.t -> env -> Loc.t Identifier.t -> unit
+  val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
+  val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
   val jsx_element_or_fragment :
-    env -> Loc.t * [`Element of Loc.t JSX.element | `Fragment of Loc.t JSX.fragment]
-  val pattern : env -> Error.t -> Loc.t Pattern.t
-  val pattern_from_expr : env -> Loc.t Expression.t -> Loc.t Pattern.t
-  val object_key : ?class_body: bool -> env -> Loc.t * Loc.t Expression.Object.Property.key
-  val class_declaration : env -> Loc.t Expression.t list -> Loc.t Statement.t
-  val class_expression : env -> Loc.t Expression.t
-  val is_assignable_lhs : Loc.t Expression.t -> bool
+    env -> Loc.t * [`Element of (Loc.t, Loc.t) JSX.element | `Fragment of (Loc.t, Loc.t) JSX.fragment]
+  val pattern : env -> Error.t -> (Loc.t, Loc.t) Pattern.t
+  val pattern_from_expr : env -> (Loc.t, Loc.t) Expression.t -> (Loc.t, Loc.t) Pattern.t
+  val object_key : ?class_body: bool -> env -> Loc.t * (Loc.t, Loc.t) Expression.Object.Property.key
+  val class_declaration : env -> (Loc.t, Loc.t) Class.Decorator.t list -> (Loc.t, Loc.t) Statement.t
+  val class_expression : env -> (Loc.t, Loc.t) Expression.t
+  val is_assignable_lhs : (Loc.t, Loc.t) Expression.t -> bool
 end
 
 (* IdentifierName - https://tc39.github.io/ecma262/#prod-IdentifierName *)
 let identifier_name env =
   let open Token in
   let loc = Peek.loc env in
+  let leading = Peek.comments env in
   let name = match Peek.token env with
   (* obviously, Identifier is a valid IdentifierName *)
   | T_IDENTIFIER { value; _ } -> value
@@ -114,6 +115,7 @@ let identifier_name env =
   | T_BOOLEAN_TYPE BOOL -> "bool"
   | T_BOOLEAN_TYPE BOOLEAN -> "boolean"
   | T_NUMBER_TYPE -> "number"
+  | T_BIGINT_TYPE -> "bigint"
   | T_STRING_TYPE -> "string"
   | T_VOID_TYPE -> "void"
   (* Contextual stuff *)
@@ -123,7 +125,9 @@ let identifier_name env =
   | _ -> error_unexpected env; ""
   in
   Eat.token env;
-  loc, name
+  let trailing = Peek.comments env in
+  let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+  (loc, { Identifier.name; comments })
 
 (**
  * The abstract operation IsLabelledFunction
@@ -131,9 +135,9 @@ let identifier_name env =
  * https://tc39.github.io/ecma262/#sec-islabelledfunction
  *)
 let rec is_labelled_function = function
-  | _, Ast.Statement.Labeled { Ast.Statement.Labeled.body; _ } ->
+  | _, Flow_ast.Statement.Labeled { Flow_ast.Statement.Labeled.body; _ } ->
     begin match body with
-    | _, Ast.Statement.FunctionDeclaration _ -> true
+    | _, Flow_ast.Statement.FunctionDeclaration _ -> true
     | _ -> is_labelled_function body
     end
   | _ ->

@@ -7,7 +7,7 @@
  *
  **)
 
-open Hh_core
+open Core_kernel
 open Utils
 
 (*
@@ -27,11 +27,205 @@ module Testing_common = struct
     subscribe_mode = Some Defer_changes;
     init_timeout = 0;
     expression_terms = [];
-    root = Path.dummy_path;
+    debug_logging = false;
+    roots = [Path.dummy_path];
+    subscription_prefix = "dummy_prefix"
   }
 end
 
-module Watchman_actual = struct
+module Watchman_process_helpers = struct
+  include Watchman_sig.Types
+  module J = Hh_json_helpers.AdhocJsonHelpers
+
+  let debug = false
+
+  (** Throw this exception when we know there is something to read from
+   * the watchman channel, but reading took too long. *)
+  exception Read_payload_too_long
+
+  (* Looks for common errors in watchman responses *)
+  let assert_no_error obj =
+    (try
+      let warning = J.get_string_val "warning" obj in
+      EventLogger.watchman_warning warning;
+      Hh_logger.log "Watchman warning: %s\n" warning
+    with Caml.Not_found -> ());
+    (try
+      let error = J.get_string_val "error" obj in
+      EventLogger.watchman_error error;
+      raise @@ Watchman_error error
+    with Caml.Not_found -> ());
+    (try
+      let canceled = J.get_bool_val "canceled" obj in
+      if canceled then begin
+      EventLogger.watchman_error "Subscription canceled by watchman";
+      raise @@ Subscription_canceled_by_watchman
+      end else ()
+    with Caml.Not_found -> ())
+
+  (* Verifies that a watchman response is valid JSON and free from common errors *)
+  let sanitize_watchman_response ~debug_logging output =
+    if debug_logging then Hh_logger.info "Watchman response: %s" output;
+    let response =
+    try Hh_json.json_of_string output
+    with e ->
+      let raw_stack = Caml.Printexc.get_raw_backtrace () in
+      let stack = Caml.Printexc.raw_backtrace_to_string raw_stack in
+      Hh_logger.error "Failed to parse string as JSON: %s\nEXCEPTION:%s\nSTACK:%s\n"
+        output (Exn.to_string e) stack;
+      Caml.Printexc.raise_with_backtrace e raw_stack
+    in
+    assert_no_error response;
+    response
+end
+
+module Regular_watchman_process: sig
+  include Watchman_sig.WATCHMAN_PROCESS with type 'a result = 'a
+
+  val get_reader: conn -> Buffered_line_reader.t
+end = struct
+  include Watchman_process_helpers
+
+  type 'a result = 'a
+  type conn = Buffered_line_reader.t * Out_channel.t
+
+  let (>>=) a f = f a
+  let (>|=) a f = f a
+  let return x = x
+
+  let catch ~f ~catch =
+    try
+      f ()
+    with exn ->
+      let stack = Printexc.get_backtrace () in
+      catch ~stack exn
+
+  let list_fold_values = List.fold
+
+  (* Send a request to the watchman process *)
+  let send_request ~debug_logging oc json =
+    let json_str = Hh_json.(json_to_string json) in
+    if debug_logging then Hh_logger.info "Watchman request: %s" json_str ;
+    Out_channel.output_string oc json_str;
+    Out_channel.output_string oc "\n";
+    Out_channel.flush oc
+
+  (***************************************************************************)
+  (* Handling requests and responses. *)
+  (***************************************************************************)
+
+  let has_input timeout reader =
+    if Buffered_line_reader.has_buffered_content reader
+    then true
+    else
+      match Sys_utils.select_non_intr [Buffered_line_reader.get_fd reader] [] [] timeout with
+      | [], _, _ -> false
+      | _ -> true
+
+  let read_with_timeout timeout reader =
+    let start_t = Unix.time () in
+    if not (has_input timeout reader)
+    then
+      raise Timeout
+    else
+      let remaining = start_t +. timeout -. Unix.time () in
+      let timeout = int_of_float remaining in
+      let timeout = max timeout 10 in
+      Timeout.with_timeout
+        ~do_: (fun _ -> Buffered_line_reader.get_next_line reader)
+        ~timeout
+        ~on_timeout:(fun () ->
+          let () = EventLogger.watchman_timeout () in
+          raise Read_payload_too_long
+        )
+
+  (* Asks watchman for the path to the socket file *)
+  let get_sockname timeout =
+    let ic =
+      Timeout.open_process_in "watchman"
+      [| "watchman"; "get-sockname"; "--no-pretty" |] in
+    let reader = Buffered_line_reader.create @@
+      Timeout.descr_of_in_channel ic in
+    let output = read_with_timeout timeout reader in
+    assert (Timeout.close_process_in ic = Unix.WEXITED 0);
+    let json = Hh_json.json_of_string output in
+    J.get_string_val "sockname" json
+
+  (* Opens a connection to the watchman process through the socket *)
+  let open_connection ~timeout =
+    let sockname = get_sockname timeout in
+    let (tic, oc) = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
+    let reader = Buffered_line_reader.create
+      @@ Timeout.descr_of_in_channel @@ tic in
+    reader, oc
+
+  let close_connection conn =
+    let reader, _ = conn in
+    Unix.close @@ Buffered_line_reader.get_fd reader
+
+  (** Open a connection to the watchman socket, call the continuation, then
+    * close. *)
+  let with_watchman_conn ~timeout f =
+    let conn = open_connection ~timeout in
+    let result = try f conn with
+      | e ->
+        let stack = Caml.Printexc.get_raw_backtrace () in
+        Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
+        Caml.Printexc.raise_with_backtrace e stack
+    in
+    Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
+    result
+
+  (* Sends a request to watchman and returns the response. If we don't have a connection,
+   * a new connection will be created before the request and destroyed after the response *)
+  let rec request ~debug_logging ?conn ?(timeout=120.0) json =
+    match conn with
+    | None ->
+      with_watchman_conn ~timeout (fun conn -> request ~debug_logging ~conn ~timeout json)
+    | Some (reader, oc) -> begin
+      send_request ~debug_logging oc json;
+      sanitize_watchman_response ~debug_logging (read_with_timeout timeout reader)
+    end
+
+  let send_request_and_do_not_wait_for_response ~debug_logging ~conn:(_, oc) json =
+    send_request ~debug_logging oc json
+
+  let blocking_read ~debug_logging ?timeout ~conn =
+    let timeout = Option.value timeout ~default:0.0 in
+    let ready = has_input timeout @@ fst conn in
+    if not ready then
+      if timeout = 0.0 then None
+      else raise Timeout
+    else
+      (* Use the timeout mechanism to limit maximum time to read payload (cap
+       * data size) so we don't freeze if watchman sends an inordinate amount of
+       * data, or if it is malformed (i.e. doesn't end in a newline). *)
+      let timeout = 40 in
+      let output = Timeout.with_timeout
+        ~do_: (fun _ -> Buffered_line_reader.get_next_line @@ fst conn)
+        ~timeout
+        ~on_timeout:begin fun () ->
+          let () = Hh_logger.log "Regular_watchman_process.blocking_read timed out" in
+          raise Read_payload_too_long
+        end
+      in
+      Some (sanitize_watchman_response ~debug_logging output)
+
+  let get_reader (reader, _) = reader
+
+  module Testing = struct
+    let get_test_conn () = (Buffered_line_reader.get_null_reader (), Out_channel.create "/dev/null")
+  end
+end
+
+module Functor (Watchman_process: Watchman_sig.WATCHMAN_PROCESS): Watchman_sig.S
+  with type 'a result = 'a Watchman_process.result and type conn = Watchman_process.conn =
+struct
+  let (>>=) = Watchman_process.(>>=)
+  let (>|=) = Watchman_process.(>|=)
+
+  type 'a result = 'a Watchman_process.result
+  type conn = Watchman_process.conn
 
   (**
    * Ocaml module signatures are static. This means since mocking
@@ -52,26 +246,14 @@ module Watchman_actual = struct
       raise Cannot_set_when_mocks_disabled
   end
 
-  (** Throw this exception when we know there is something to read from
-   * the watchman channel, but reading took too long. *)
-  exception Read_payload_too_long
-
-  let debug = false
-
   (** This number is totally arbitrary. Just need some cap. *)
   let max_reinit_attempts = 8
-
-  let subscription_name = "hh_type_check_watcher"
 
   (**
    * Triggers watchman to flush buffered updates on this subscription.
    * See watchman/docs/cmd/flush-subscriptions.html
    *)
   let flush_subscriptions_cmd = "cmd-flush-subscriptions"
-
-  let crash_marker_path root =
-    let root_name = Path.slash_escaped_string_of_path root in
-    Filename.concat GlobalConfig.tmp_dir (spf ".%s.watchman_failed" root_name)
 
   include Watchman_sig.Types
 
@@ -84,10 +266,6 @@ module Watchman_actual = struct
   }
 
   type env = {
-    settings : init_settings;
-    socket: Buffered_line_reader.t * out_channel;
-    watch_root: string;
-    relative_path: string;
     (* See https://facebook.github.io/watchman/docs/clockspec.html
      *
      * This is also used to reliably detect a crashed watchman. Watchman has a
@@ -95,6 +273,11 @@ module Watchman_actual = struct
      *
      * See also assert_no_fresh_instance *)
     mutable clockspec: string;
+    conn: Watchman_process.conn;
+    settings: init_settings;
+    subscription: string;
+    watch_root: string;
+    watched_path_expression_terms: Hh_json.json option;
   }
 
   let dead_env_from_alive env =
@@ -117,7 +300,7 @@ module Watchman_actual = struct
      *
      * TODO: Currently fallback to a Watchman_dead is only handled in calls
      * wrapped by the with_crash_record. Pipe errors elsewhere (for example
-     * during exec) will still result in Hack exiting. Need to cover those
+     * during request) will still result in Hack exiting. Need to cover those
      * cases too. *)
     | Watchman_dead of dead_env
     | Watchman_alive of env
@@ -134,7 +317,7 @@ module Watchman_actual = struct
 
   (** Conjunction of extra_expressions and expression_terms. *)
   let request_json
-      ?(extra_kv=[]) ?(extra_expressions=[]) ~expression_terms watchman_command env =
+      ?(extra_kv=[]) ?(extra_expressions=[]) watchman_command env =
     let open Hh_json in
     let command = begin match watchman_command with
       | Subscribe -> "subscribe"
@@ -143,18 +326,21 @@ module Watchman_actual = struct
       [JSON_String command ; JSON_String env.watch_root] @
         begin
           match watchman_command with
-          | Subscribe -> [JSON_String subscription_name]
+          | Subscribe -> [JSON_String env.subscription]
           | _ -> []
         end in
-    let expressions = extra_expressions @ expression_terms in
+    let expressions = extra_expressions @ (env.settings.expression_terms) in
+    let expressions = match env.watched_path_expression_terms with
+    | Some terms -> terms :: expressions
+    | None -> expressions
+    in
+    assert (expressions <> []);
     let directives = [
       JSON_Object (extra_kv
       @ [
         "fields", J.strlist ["name"];
-        "relative_root", JSON_String env.relative_path;]
-      (** Watchman doesn't allow an empty allof expression. Omit if empty. *)
-      @ if expressions = [] then [] else [
-        "expression", J.pred "allof" expressions
+        (** Watchman doesn't allow an empty allof expression. But expressions is never empty *)
+        "expression", J.pred "allof" expressions;
       ])
     ] in
     let request = JSON_Array (header @ directives) in
@@ -163,20 +349,29 @@ module Watchman_actual = struct
   let all_query env =
     request_json
       ~extra_expressions:([Hh_json.JSON_String "exists"])
-      ~expression_terms:env.settings.expression_terms
+      Query env
+
+  let get_changes_since_mergebase_query env =
+    let extra_kv = [
+      "since", Hh_json.JSON_Object [
+        ("scm", Hh_json.JSON_Object [("mergebase-with", Hh_json.JSON_String "master")])
+      ]
+    ] in
+    request_json
+      ~extra_kv
       Query env
 
   let since_query env =
     request_json
       ~extra_kv: ["since", Hh_json.JSON_String env.clockspec;
                   "empty_on_fresh_instance", Hh_json.JSON_Bool true]
-      ~expression_terms:env.settings.expression_terms
       Query env
 
-  let subscribe mode env =
+  let subscribe ~mode env =
     let since, mode = match mode with
     | All_changes -> Hh_json.JSON_String env.clockspec, []
-    | Defer_changes -> Hh_json.JSON_String env.clockspec, ["defer", J.strlist ["hg.update"]]
+    | Defer_changes ->
+      Hh_json.JSON_String env.clockspec, ["defer", J.strlist ["hg.update"]]
     | Drop_changes -> Hh_json.JSON_String env.clockspec, ["drop", J.strlist ["hg.update"]]
     | Scm_aware ->
         Hh_logger.log "Making Scm_aware subscription";
@@ -190,7 +385,6 @@ module Watchman_actual = struct
       ~extra_kv:((["since", since] @ mode) @
                  ["empty_on_fresh_instance",
                  Hh_json.JSON_Bool true])
-      ~expression_terms:env.settings.expression_terms
       Subscribe env
 
   let watch_project root = J.strlist ["watch-project"; root]
@@ -206,35 +400,6 @@ module Watchman_actual = struct
         ]
       ]
     end
-
-  (***************************************************************************)
-  (* Handling requests and responses. *)
-  (***************************************************************************)
-
-  let has_input timeout reader =
-    if Buffered_line_reader.has_buffered_content reader
-    then true
-    else
-      match Unix.select [Buffered_line_reader.get_fd reader] [] [] timeout with
-      | [], _, _ -> false
-      | _ -> true
-
-  let read_with_timeout timeout reader =
-    let start_t = Unix.time () in
-    if not (has_input timeout reader)
-    then
-      raise Timeout
-    else
-      let remaining = start_t +. timeout -. Unix.time () in
-      let timeout = int_of_float remaining in
-      let timeout = max timeout 10 in
-      Timeout.with_timeout
-        ~do_: (fun _ -> Buffered_line_reader.get_next_line reader)
-        ~timeout
-        ~on_timeout:(fun () ->
-          let () = EventLogger.watchman_timeout () in
-          raise Read_payload_too_long
-        )
 
   (** We filter all responses from get_changes through this. This is to detect
    * Watchman server crashes.
@@ -254,97 +419,27 @@ module Watchman_actual = struct
       ) in
     ()
 
-  let assert_no_error obj =
-    (try
-       let warning = J.get_string_val "warning" obj in
-       EventLogger.watchman_warning warning;
-       Hh_logger.log "Watchman warning: %s\n" warning
-     with Not_found -> ());
-    (try
-       let error = J.get_string_val "error" obj in
-       EventLogger.watchman_error error;
-       raise @@ Watchman_error error
-     with Not_found -> ());
-    (try
-       let canceled = J.get_bool_val "canceled" obj in
-       if canceled then begin
-       EventLogger.watchman_error "Subscription canceled by watchman";
-       raise @@ Subscription_canceled_by_watchman
-       end else ()
-     with Not_found -> ())
-
-  let sanitize_watchman_response output =
-    if debug then Printf.eprintf "Watchman response: %s\n%!" output;
-    let response =
-      try Hh_json.json_of_string output
-      with e ->
-        Printf.eprintf "Failed to parse string as JSON: %s\n%!" output;
-        raise e
-    in
-    assert_no_error response;
-    response
-
-  let send_request oc json =
-    let json_str = Hh_json.(json_to_string json) in
-    if debug then Printf.eprintf "Watchman request: %s\n%!" json_str ;
-    output_string oc json_str;
-    output_string oc "\n";
-    flush oc
-
-  let get_sockname timeout =
-    let ic =
-      Timeout.open_process_in "watchman"
-      [| "watchman"; "get-sockname"; "--no-pretty" |] in
-    let reader = Buffered_line_reader.create @@
-      Timeout.descr_of_in_channel ic in
-    let output = read_with_timeout timeout reader in
-    assert (Timeout.close_process_in ic = Unix.WEXITED 0);
-    let json = Hh_json.json_of_string output in
-    J.get_string_val "sockname" json
-
-  let open_watchman_connection ~timeout =
-    let sockname = get_sockname timeout in
-    let (tic, oc) = Timeout.open_connection (Unix.ADDR_UNIX sockname) in
-    let reader = Buffered_line_reader.create
-      @@ Timeout.descr_of_in_channel @@ tic in
-    reader, oc
-
-  (** Open a connection to the watchman socket, call the continuation, then
-    * close. *)
-  let with_watchman_conn ~timeout f =
-    let conn = open_watchman_connection ~timeout in
-    let result = try f conn with
-      | e ->
-        Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
-        raise e
-    in
-    Unix.close @@ Buffered_line_reader.get_fd @@ fst conn;
-    result
-
-  (** Execute the given json command on the provided watchman connection.
-   * If none is provided, one will be opened and closed for you. *)
-  let rec exec ?conn ?(timeout=120.0) json =
-    match conn with
-    | None ->
-      with_watchman_conn ~timeout (fun conn -> exec ~conn ~timeout json)
-    | Some (reader, oc) -> begin
-      send_request oc json;
-      sanitize_watchman_response (read_with_timeout timeout reader)
-    end
-
   (****************************************************************************)
   (* Initialization, reinitialization, and crash-tracking. *)
   (****************************************************************************)
 
-  let with_crash_record_exn root source f =
-    try f ()
-    with e ->
-      close_out @@ open_out @@ crash_marker_path root;
-      Hh_logger.exc ~prefix:("Watchman " ^ source ^ ": ") e;
+  let with_crash_record_exn source f =
+    Watchman_process.catch ~f ~catch:(fun ~stack e ->
+      Hh_logger.exc ~prefix:("Watchman " ^ source ^ ": ") ~stack e;
       raise e
+    )
 
-  let with_crash_record_opt root source f =
-    Option.try_with (fun () -> with_crash_record_exn root source f)
+  let with_crash_record_opt source f =
+    Watchman_process.catch
+      ~f:(fun () -> with_crash_record_exn source f >|= fun v -> Some v)
+      ~catch:(fun ~stack:_ e ->
+        let exn = Exception.wrap e in
+        match e with
+        (* Avoid swallowing these *)
+        | Exit_status.Exit_with _
+        | Watchman_restarted -> Exception.reraise exn
+        | _ -> Watchman_process.return None
+      )
 
   let has_capability name capabilities =
     (** Projects down from the boolean error monad into booleans.
@@ -361,78 +456,142 @@ module Watchman_actual = struct
       >>= get_bool name
       |> project_bool
 
+  (* When we re-init our connection to Watchman, we use the old clockspec to get all the changes
+   * since our last response. However, if Watchman has restarted and the old clockspec pre-dates
+   * the new Watchman, then we may miss updates. It is important for Flow and Hack to restart
+   * in that case.
+   *
+   * Unfortunately, the response to "subscribe" doesn't have the "is_fresh_instance" field. So
+   * we'll instead send a small "query" request. It should always return 0 files, but it should
+   * tell us whether the Watchman service has restarted since clockspec.
+   *)
+  let assert_watchman_has_not_restarted_since ~debug_logging ~conn ~watch_root ~clockspec =
+    let hard_to_match_name = "irrelevant.potato" in
+    let query = Hh_json.(JSON_Array [
+      JSON_String "query";
+      JSON_String watch_root;
+      JSON_Object [
+        "since", JSON_String clockspec;
+        "empty_on_fresh_instance", JSON_Bool true;
+        "expression", JSON_Array [ JSON_String "name"; JSON_String hard_to_match_name ]
+      ]
+    ]) in
+    Watchman_process.request ~debug_logging ~conn query
+    >>= fun response ->
+      match Hh_json_helpers.Jget.bool_opt (Some response) "is_fresh_instance" with
+      | Some false -> Watchman_process.return ()
+      | Some true ->
+        Hh_logger.error "Watchman server restarted so we may have missed some updates";
+        raise Watchman_restarted
+      | None ->
+        (* The response to this query **always** should include the `is_fresh_instance` boolean
+         * property. If it is missing then something has gone wrong with Watchman. Since we can't
+         * prove that Watchman has not restarted, we must treat this as an error. *)
+         Hh_logger.error "Invalid Watchman response to `empty_on_fresh_instance` query:\n%s"
+          (Hh_json.json_to_string ~pretty:true response);
+         raise Exit_status.(Exit_with Watchman_failed)
+
   let re_init ?prior_clockspec
-    { init_timeout; subscribe_mode; expression_terms; root } =
-    with_crash_record_opt root "init" @@ fun () ->
-    let root_s = Path.to_string root in
-    let conn = open_watchman_connection ~timeout:(float_of_int init_timeout) in
-    let capabilities = exec ~conn
+    { init_timeout; subscribe_mode; expression_terms; debug_logging; roots; subscription_prefix } =
+
+    with_crash_record_opt "init" @@ fun () ->
+    Watchman_process.open_connection ~timeout:(float_of_int init_timeout) >>= fun conn ->
+    Watchman_process.request ~debug_logging ~conn
       (capability_check ~optional:[ flush_subscriptions_cmd ]
-      ["relative_root"]) in
-    assert_no_error capabilities;
+      ["relative_root"]) >>= fun capabilities ->
     let supports_flush = has_capability flush_subscriptions_cmd capabilities in
     (** Disable subscribe if Watchman flush feature isn't supported. *)
     let subscribe_mode = if supports_flush then subscribe_mode else None in
-    let response = exec ~conn (watch_project root_s) in
-    let watch_root = J.get_string_val "watch" response in
-    let relative_path = J.get_string_val "relative_path" ~default:""
-      response in
-    let clockspec = match prior_clockspec with
-      | Some s -> s
-      | None -> exec ~conn (clock watch_root) |> J.get_string_val "clock"
+
+    Watchman_process.list_fold_values roots
+      ~init:(Some [], SSet.empty)
+      ~f: (fun (terms, watch_roots) path ->
+        (* Watch this root *)
+        Watchman_process.request
+          ~debug_logging ~conn (watch_project (Path.to_string path)) >|= fun response ->
+        let watch_root = J.get_string_val "watch" response in
+        let relative_path = J.get_string_val "relative_path" ~default:"" response in
+
+        let terms = match terms with
+        | None -> None
+        | Some _ when relative_path = "" ->
+          (* If we're watching the watch root directory, then there's no point in specifying a list
+           * of files and directories to watch. We're already subscribed to any change in this
+           * watch root anyway *)
+          None
+        | Some terms ->
+          (* So lets say we're being told to watch foo/bar. Is foo/bar a directory? Is it a file?
+           * If it is a file now, might it become a directory later? I'm not aware of a term which
+           * will watch for either a file or a directory, so let's add two terms *)
+          Some (J.strlist ["dirname"; relative_path] :: J.strlist ["name"; relative_path] :: terms)
+        in
+
+        let watch_roots = SSet.add watch_root watch_roots in
+        terms, watch_roots
+      )
+    >>= fun (watched_path_expression_terms, watch_roots) ->
+
+    (* All of our watched paths should have the same watch root. Let's assert that *)
+    let watch_root = match SSet.elements watch_roots with
+    | [] -> failwith "Cannot run watchman with fewer than 1 root";
+    | [watch_root] -> watch_root
+    | _ ->
+      failwith (
+        spf "Can't watch paths across multiple Watchman watch_roots. Found %d watch_roots"
+          (SSet.cardinal watch_roots)
+      )
     in
+
+    (* If we don't have a prior clockspec, grab the current clock *)
+    (match prior_clockspec with
+      | Some clockspec ->
+        assert_watchman_has_not_restarted_since ~debug_logging ~conn ~watch_root ~clockspec
+        >>= fun () -> Watchman_process.return clockspec
+      | None ->
+        Watchman_process.request ~debug_logging ~conn (clock watch_root)
+        >|= J.get_string_val "clock"
+    ) >>= fun clockspec ->
+
+    let watched_path_expression_terms =
+      Option.map watched_path_expression_terms ~f:(J.pred "anyof")
+    in
+
     let env = {
       settings = {
         init_timeout;
+        debug_logging;
         subscribe_mode;
         expression_terms;
-        root;
+        roots;
+        subscription_prefix;
       };
-      socket = conn;
+      conn;
       watch_root;
-      relative_path;
+      watched_path_expression_terms;
       clockspec;
+      subscription = Printf.sprintf "%s.%d" subscription_prefix (Unix.getpid ());
     } in
-    match subscribe_mode with
-    | None -> env
-    | Some subscribe_mode ->
-      (ignore @@ exec ~conn:env.socket (subscribe subscribe_mode env));
-      env
+    (match subscribe_mode with
+    | None -> Watchman_process.return ()
+    | Some mode ->
+      Watchman_process.request ~debug_logging ~conn (subscribe ~mode env) >|= ignore
+    ) >|= fun () ->
+    env
 
-  let init settings = re_init settings
-
-  let poll_for_updates ?timeout env =
-    let timeout = Option.value timeout ~default:0.0 in
-    let ready = has_input timeout @@ fst env.socket in
-    if not ready then
-      if timeout = 0.0 then None
-      else raise Timeout
-    else
-      (* Use the timeout mechanism to limit maximum time to read payload (cap
-       * data size) so we don't freeze if watchman sends an inordinate amount of
-       * data, or if it is malformed (i.e. doesn't end in a newline). *)
-      let timeout = 40 in
-      let output = Timeout.with_timeout
-        ~do_: (fun _ -> Buffered_line_reader.get_next_line @@ fst env.socket)
-        ~timeout
-        ~on_timeout:begin fun () ->
-          let () = Hh_logger.log "Watchman.poll_for_updates timed out" in
-          raise Read_payload_too_long
-        end
-      in
-      Some (sanitize_watchman_response output)
+  let init ?since_clockspec settings () =
+    let prior_clockspec = since_clockspec in
+    re_init ?prior_clockspec settings
 
   let extract_file_names env json =
     let files = try J.get_array_val "files" json with
       (** When an hg.update happens, it shows up in the watchman subscription
        * as a notification with no files key present. *)
-      | Not_found -> []
+      | Caml.Not_found -> []
     in
     let files = List.map files begin fun json ->
       let s = Hh_json.get_string_exn json in
       let abs =
-        Filename.concat env.watch_root @@
-        Filename.concat env.relative_path s in
+        Filename.concat env.watch_root s in
       abs
     end in
     files
@@ -442,18 +601,18 @@ module Watchman_actual = struct
     (Unix.time ()) >= time +. offset
 
   let maybe_restart_instance instance = match instance with
-    | Watchman_alive _ -> instance
+    | Watchman_alive _ -> Watchman_process.return instance
     | Watchman_dead dead_env ->
       if dead_env.reinit_attempts >= max_reinit_attempts then
         let () = Hh_logger.log
           "Ran out of watchman reinit attempts. Exiting." in
         raise Exit_status.(Exit_with Watchman_failed)
-      else if within_backoff_time dead_env.reinit_attempts
-      dead_env.dead_since then
+      else if within_backoff_time dead_env.reinit_attempts dead_env.dead_since
+      then
         let () =
           Hh_logger.log "Attemping to reestablish watchman subscription" in
-        match re_init ~prior_clockspec:dead_env.prior_clockspec
-          dead_env.prior_settings with
+        re_init ~prior_clockspec:dead_env.prior_clockspec dead_env.prior_settings
+        >|= function
         | None ->
           Hh_logger.log "Reestablishing watchman subscription failed.";
           EventLogger.watchman_connection_reestablishment_failed ();
@@ -464,13 +623,23 @@ module Watchman_actual = struct
           EventLogger.watchman_connection_reestablished ();
           Watchman_alive env
       else
-        instance
+        Watchman_process.return instance
+
+  let close env = Watchman_process.close_connection env.conn
 
   let close_channel_on_instance env =
-    let reader, _ = env.socket in
-    Unix.close @@ Buffered_line_reader.get_fd reader;
+    close env >|= fun () ->
     EventLogger.watchman_died_caught ();
     Watchman_dead (dead_env_from_alive env), Watchman_unavailable
+
+
+  let with_instance instance ~try_to_restart ~on_alive ~on_dead =
+    (if try_to_restart
+    then maybe_restart_instance instance
+    else Watchman_process.return instance)
+    >>= function
+    | Watchman_dead dead_env -> on_dead dead_env
+    | Watchman_alive env -> on_alive env
 
   (** Calls f on the instance, maybe restarting it if its dead and maybe
    * reverting it to a dead state if things go south. For example, if watchman
@@ -479,68 +648,74 @@ module Watchman_actual = struct
    * Alternatively, we also proactively revert to a dead instance if it appears
    * to be unresponsive (Timeout), and if reading the payload from it is
    * taking too long. *)
-  let call_on_instance instance source f =
-    let instance = maybe_restart_instance instance in
-    match instance with
-    | Watchman_dead _ ->
-      instance, Watchman_unavailable
-    | Watchman_alive env -> begin
-      try
-        let env, result = with_crash_record_exn
-          env.settings.root source (fun () -> f env) in
-        Watchman_alive env, result
-      with
-        | Sys_error("Broken pipe") ->
-          Hh_logger.log "Watchman Pipe broken.";
-          close_channel_on_instance env
-        | Sys_error("Connection reset by peer") ->
-          Hh_logger.log "Watchman connection reset by peer.";
-          close_channel_on_instance env
-        | Sys_error("Bad file descriptor") ->
-          (** This happens when watchman is tearing itself down after we
-           * retrieved a sock address and connected to the sock address. That's
-           * because Unix.open_connection (via Timeout.open_connection) doesn't
-           * error even when the sock adddress is no longer valid and actually -
-           * it returns a channel that will error at some later time when you
-           * actually try to do anything with it (write to it, or even get the
-           * file descriptor of it). I'm pretty sure we don't need to close the
-           * channel when that happens since we never had a useable channel
-           * to start with. *)
-          Hh_logger.log "Watchman bad file descriptor.";
-          EventLogger.watchman_died_caught ();
-          Watchman_dead (dead_env_from_alive env), Watchman_unavailable
-        | End_of_file ->
-          Hh_logger.log "Watchman connection End_of_file. Closing channel";
-          close_channel_on_instance env
-        | Read_payload_too_long ->
-          Hh_logger.log "Watchman reading payload too long. Closing channel";
-          close_channel_on_instance env
-        | Timeout ->
-          Hh_logger.log "Watchman reading Timeout. Closing channel";
-          close_channel_on_instance env
-        | Watchman_error msg ->
-          Hh_logger.log "Watchman error: %s. Closing channel" msg;
-          close_channel_on_instance env
-        | e ->
-          let msg = Printexc.to_string e in
-          EventLogger.watchman_uncaught_failure msg;
-          raise Exit_status.(Exit_with Watchman_failed)
-    end
+  let call_on_instance =
+    let on_dead dead_env =
+      Watchman_process.return (Watchman_dead dead_env, Watchman_unavailable)
+    in
+
+    let on_alive source f env =
+      Watchman_process.catch
+        ~f:(fun () ->
+          with_crash_record_exn source (fun () -> f env) >|= fun (env, result) ->
+          Watchman_alive env, result
+        )
+        ~catch:(fun ~stack exn ->
+          match exn with
+          | Sys_error msg when msg = "Broken pipe" ->
+            Hh_logger.log "Watchman Pipe broken.";
+            close_channel_on_instance env
+          | Sys_error msg when msg = "Connection reset by peer" ->
+            Hh_logger.log "Watchman connection reset by peer.";
+            close_channel_on_instance env
+          | Sys_error msg when msg = "Bad file descriptor" ->
+            (** This happens when watchman is tearing itself down after we
+             * retrieved a sock address and connected to the sock address. That's
+             * because Unix.open_connection (via Timeout.open_connection) doesn't
+             * error even when the sock adddress is no longer valid and actually -
+             * it returns a channel that will error at some later time when you
+             * actually try to do anything with it (write to it, or even get the
+             * file descriptor of it). I'm pretty sure we don't need to close the
+             * channel when that happens since we never had a useable channel
+             * to start with. *)
+            Hh_logger.log "Watchman bad file descriptor.";
+            EventLogger.watchman_died_caught ();
+            Watchman_process.return (Watchman_dead (dead_env_from_alive env), Watchman_unavailable)
+          | End_of_file ->
+            Hh_logger.log "Watchman connection End_of_file. Closing channel";
+            close_channel_on_instance env
+          | Watchman_process.Read_payload_too_long ->
+            Hh_logger.log "Watchman reading payload too long. Closing channel";
+            close_channel_on_instance env
+          | Timeout ->
+            Hh_logger.log "Watchman reading Timeout. Closing channel";
+            close_channel_on_instance env
+          | Watchman_error msg ->
+            Hh_logger.log "Watchman error: %s. Closing channel" msg;
+            close_channel_on_instance env
+          | e ->
+            let msg = Printf.sprintf "%s\n%s" (Exn.to_string e) stack in
+            EventLogger.watchman_uncaught_failure msg;
+            raise Exit_status.(Exit_with Watchman_failed)
+        )
+    in
+
+    fun instance source f ->
+      with_instance instance ~try_to_restart:true ~on_dead ~on_alive:(on_alive source f)
 
   (** This is a large >50MB payload, which could longer than 2 minutes for
    * Watchman to generate and push down the channel. *)
   let get_all_files env =
-    try with_crash_record_exn env.settings.root "get_all_files"  @@ fun () ->
-      let response = exec (all_query env) in
-      env.clockspec <- J.get_string_val "clock" response;
-      extract_file_names env response with
-      | _ ->
-        raise Exit_status.(Exit_with Watchman_failed)
-
-  let transform_synchronous_get_changes_response env data =
-    env.clockspec <- J.get_string_val "clock" data;
-    assert_no_fresh_instance data;
-    env, set_of_list @@ extract_file_names env data
+    Watchman_process.catch
+      ~f:(fun () ->
+        with_crash_record_exn "get_all_files" @@ fun () ->
+          Watchman_process.request
+            ~debug_logging:env.settings.debug_logging
+            (all_query env)
+          >|= fun response ->
+          env.clockspec <- J.get_string_val "clock" response;
+          extract_file_names env response
+      )
+      ~catch:(fun ~stack:_ _ -> raise Exit_status.(Exit_with Watchman_failed))
 
   let make_state_change_response state name data =
     let metadata = J.try_get_val "metadata" data in
@@ -550,35 +725,47 @@ module Watchman_actual = struct
     | `Leave ->
       State_leave (name, metadata)
 
-  let make_mergebase_changed_response env data =
+  let extract_mergebase data =
     let open Hh_json.Access in
     let accessor = return data in
-    accessor >>=
+    let ret =
+      accessor >>=
       get_obj "clock" >>=
-      get_string "clock" >>= fun (clock, _) ->
-    accessor >>= get_obj "clock" >>=
-      get_obj "scm" >>=
-      get_string "mergebase" >>= fun (mergebase, keytrace) ->
-    let files = set_of_list @@ extract_file_names env data in
-    env.clockspec <- clock;
-    let response = Changed_merge_base (mergebase, files) in
-    Ok ((env, response), keytrace)
+      get_string "clock" >>=
+      fun (clock, _) ->
+        accessor >>= get_obj "clock" >>=
+        get_obj "scm" >>=
+        get_string "mergebase" >>=
+        fun (mergebase, _) ->
+          return (clock, mergebase)
+    in
+    to_option ret
+
+  let make_mergebase_changed_response env data =
+    match extract_mergebase data with
+    | None -> Error "Failed to extract mergebase"
+    | Some (clock, mergebase) ->
+      let files = set_of_list @@ extract_file_names env data in
+      env.clockspec <- clock;
+      let response = Changed_merge_base (mergebase, files, clock) in
+      Ok (env, response)
 
   let transform_asynchronous_get_changes_response env data = match data with
     | None ->
       env, Files_changed (SSet.empty)
     | Some data -> begin
+
       match make_mergebase_changed_response env data with
-      | Ok ((env, response), _) -> env, response
+      | Ok (env, response) -> env, response
       | Error _ ->
         env.clockspec <- J.get_string_val "clock" data;
         assert_no_fresh_instance data;
         try env, make_state_change_response `Enter
           (J.get_string_val "state-enter" data) data with
-        | Not_found ->
+        | Caml.Not_found ->
         try env, make_state_change_response `Leave
           (J.get_string_val "state-leave" data) data with
-        | Not_found ->
+        | Caml.Not_found ->
           env, Files_changed (set_of_list @@ extract_file_names env data)
     end
 
@@ -588,20 +775,35 @@ module Watchman_actual = struct
       max timeout 0.0
     ) in
     call_on_instance instance "get_changes" @@ fun env ->
+      let debug_logging = env.settings.debug_logging in
       if env.settings.subscribe_mode <> None
       then
-        let env, result = transform_asynchronous_get_changes_response
-          env (poll_for_updates ?timeout env) in
+        Watchman_process.blocking_read ~debug_logging ?timeout ~conn:env.conn >|= fun response ->
+        let env, result = transform_asynchronous_get_changes_response env response in
         env, Watchman_pushed result
       else
-        let env, result = transform_synchronous_get_changes_response
-          env (exec ~conn:env.socket ?timeout (since_query env)) in
-        env, Watchman_synchronous result
+        let query = since_query env in
+        Watchman_process.request ~debug_logging ~conn:env.conn ?timeout query
+        >|= fun response ->
+        let env, changes = transform_asynchronous_get_changes_response env (Some response) in
+        env, Watchman_synchronous [changes]
 
-  let get_fd instance = match instance with
-    | Watchman_dead _ -> None
-    | Watchman_alive {socket = (reader, _); _} ->
-      Some (Buffered_line_reader.get_fd reader)
+  let get_changes_since_mergebase ?timeout env =
+    Watchman_process.request
+      ?timeout
+      ~debug_logging:env.settings.debug_logging
+      (get_changes_since_mergebase_query env)
+    >|= extract_file_names env
+
+  let get_mergebase ?timeout env =
+    Watchman_process.request
+      ?timeout
+      ~debug_logging:env.settings.debug_logging
+      (get_changes_since_mergebase_query env)
+    >|= fun response ->
+      match extract_mergebase response with
+      | Some (_clock, mergebase) -> mergebase
+      | None -> raise (Watchman_error "Failed to extract mergebase from response")
 
   let flush_request ~(timeout:int) watch_root =
     let open Hh_json in
@@ -619,71 +821,89 @@ module Watchman_actual = struct
       | None -> false
       | Some json -> begin
         let open Hh_json.Access in
-        let synced = (return json) >>= get_array "synced" |> begin function
+        let is_synced = lazy ((return json) >>= get_array "synced" |> function
           | Error _ -> false
           | Ok (vs, _) ->
-            List.fold_left vs ~init:false ~f:(fun acc v ->
-              acc || ((Hh_json.get_string_exn v) = subscription_name)) end
-        in
-        let not_needed = (return json) >>= get_array "no_sync_needed"
-          |> begin function
-            | Error _ -> false
-            | Ok (vs, _) ->
-              List.fold_left vs ~init:false ~f:(fun acc v ->
-                acc || ((Hh_json.get_string_exn v) = subscription_name)) end
-        in
-        synced || not_needed
+            List.exists vs ~f:(fun str -> Hh_json.get_string_exn str = env.subscription)
+        ) in
+        let is_not_needed = lazy ((return json) >>= get_array "no_sync_needed" |> function
+          | Error _ -> false
+          | Ok (vs, _) ->
+            List.exists vs ~f:(fun str -> Hh_json.get_string_exn str = env.subscription)
+        ) in
+        Lazy.force is_synced || Lazy.force is_not_needed
       end
     in
     let timeout = deadline -. Unix.time () in
     if timeout < 0.0 then raise Timeout else ();
-    let json = poll_for_updates ~timeout env in
-    if is_finished_flush_response json then (env, acc) else
-      let env, result = match json with
-        | None -> env, SSet.empty
-        | Some json -> transform_synchronous_get_changes_response env json in
-      poll_until_sync ~deadline env (SSet.union acc result)
+
+    let debug_logging = env.settings.debug_logging in
+    Watchman_process.blocking_read ~debug_logging ~timeout ~conn:env.conn >>= fun json ->
+
+    if is_finished_flush_response json
+    then Watchman_process.return (env, acc)
+    else
+      let env, acc = match json with
+      | None -> env, acc
+      | Some json ->
+        let env, result = transform_asynchronous_get_changes_response env (Some json) in
+        env, (result::acc)
+      in
+      poll_until_sync ~deadline env acc
 
   let poll_until_sync ~deadline env =
-    poll_until_sync ~deadline env SSet.empty
+    poll_until_sync ~deadline env []
 
   let get_changes_synchronously ~(timeout:int) instance =
-    let instance, result = call_on_instance instance "get_changes_synchronously"
+    call_on_instance instance "get_changes_synchronously"
       @@ (fun env ->
         if env.settings.subscribe_mode = None
         then
-          let env, files = transform_synchronous_get_changes_response
-            env (exec ~conn:env.socket
-              ~timeout:(float_of_int timeout) (since_query env))
-          in
-          env, Watchman_synchronous files
+          let timeout = float_of_int timeout in
+          let query = since_query env in
+          Watchman_process.request
+            ~debug_logging:env.settings.debug_logging
+            ~conn:env.conn ~timeout query
+          >|= fun response ->
+          let env, changes = transform_asynchronous_get_changes_response env (Some response) in
+          env, Watchman_synchronous [changes]
         else
           let request = flush_request ~timeout env.watch_root in
-          let _, oc = env.socket in
-          let () = send_request oc request in
+          let conn = env.conn in
+          Watchman_process.send_request_and_do_not_wait_for_response
+            ~debug_logging:env.settings.debug_logging ~conn request >>= fun () ->
           let deadline = Unix.time () +. (float_of_int timeout) in
-          let env, files = poll_until_sync ~deadline env in
-          env, Watchman_synchronous files
+          poll_until_sync ~deadline env >|= fun (env, changes) ->
+          env, Watchman_synchronous (List.rev changes)
       )
-    in
-    match result with
-    | Watchman_unavailable ->
+    >|= function
+    | _, Watchman_unavailable ->
       raise (Watchman_error "Watchman unavailable for synchronous response")
-    | Watchman_pushed _ ->
+    | _, Watchman_pushed _ ->
       raise (Watchman_error "Wtf? pushed response from synchronous request")
-    | Watchman_synchronous files ->
+    | instance, Watchman_synchronous files ->
       instance, files
+
+  let conn_of_instance = function
+    | Watchman_dead _ -> None
+    | Watchman_alive {conn; _} -> Some conn
 
   module Testing = struct
     include Testing_common
 
-    let test_env = {
-      settings = test_settings;
-      socket = (Buffered_line_reader.get_null_reader (), open_out "/dev/null");
-      watch_root = "";
-      relative_path = "";
-      clockspec = "";
-    }
+    let get_test_env () =
+      Watchman_process.Testing.get_test_conn () >|= fun conn ->
+      {
+        settings = test_settings;
+        conn;
+        watch_root = "/path/to/root";
+        clockspec = "";
+        watched_path_expression_terms = Some (J.pred "anyof" [
+          J.strlist ["dirname"; "foo"];
+          J.strlist ["name"; "foo"];
+        ]);
+        subscription = "dummy_prefix.123456789";
+      }
 
     let transform_asynchronous_get_changes_response env json =
       transform_asynchronous_get_changes_response env json
@@ -691,10 +911,19 @@ module Watchman_actual = struct
 
 end;;
 
+module Watchman_actual = struct
+  include Functor (Regular_watchman_process)
+
+  let get_reader instance =
+    Option.map (conn_of_instance instance) ~f:Regular_watchman_process.get_reader
+end
+
 module Watchman_mock = struct
 
   exception Not_available_in_mocking
 
+  type 'a result = 'a
+  type conn
 
   include Watchman_sig.Types
   type env = string
@@ -714,7 +943,7 @@ module Watchman_mock = struct
     let get_changes_returns v =
       changes := v
 
-    let changes_synchronously = ref SSet.empty
+    let changes_synchronously = ref []
 
     let all_files = ref []
 
@@ -722,13 +951,13 @@ module Watchman_mock = struct
 
   module Testing = struct
     include Testing_common
-    let test_env = "test_env"
+    let get_test_env () = "test_env"
     let transform_asynchronous_get_changes_response _ _ =
       raise Not_available_in_mocking
 
   end
 
-  let init _ = !Mocking.init
+  let init ?since_clockspec:_ _ () = !Mocking.init
   let get_changes ?deadline instance =
     let _ = deadline in
     let result = !Mocking.changes in
@@ -738,22 +967,37 @@ module Watchman_mock = struct
   let get_changes_synchronously ~timeout instance =
     let _ = timeout in
     let result = !Mocking.changes_synchronously in
-    Mocking.changes_synchronously := SSet.empty;
+    Mocking.changes_synchronously := [];
     instance, result
 
-  let get_fd _ = None
+  let get_reader _ = None
+
+  let conn_of_instance _ = None
 
   let get_all_files _ =
     let result = !Mocking.all_files in
     Mocking.all_files := [];
     result
 
-  let crash_marker_path _ =
-    raise Not_available_in_mocking
+  let get_changes_since_mergebase ?timeout:_ _  = []
 
+  let get_mergebase ?timeout:_ _ = "mergebase"
+
+  let close _ = ()
+
+  let with_instance instance ~try_to_restart:_ ~on_alive ~on_dead =
+    match instance with
+    | Watchman_dead dead_env -> on_dead dead_env
+    | Watchman_alive env -> on_alive env
+end
+
+module type S = sig
+  include Watchman_sig.S with type 'a result = 'a
+
+  val get_reader: watchman_instance -> Buffered_line_reader.t option
 end
 
 include (val (if Injector_config.use_test_stubbing
-  then (module Watchman_mock : Watchman_sig.S)
-  else (module Watchman_actual : Watchman_sig.S)
+  then (module Watchman_mock : S)
+  else (module Watchman_actual : S)
 ))

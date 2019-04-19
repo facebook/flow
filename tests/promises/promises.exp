@@ -84,8 +84,8 @@ Cannot call `Promise.all` because property `@@iterator` is missing in undefined 
         ^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:601:19
-   601|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:650:19
+   650|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                           ^^^^^^^^^^^^^^^ [2]
 
 
@@ -99,8 +99,8 @@ in `$Iterable` [2].
                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:601:19
-   601|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
+   <BUILTINS>/core.js:650:19
+   650|     static all<T: Iterable<mixed>>(promises: T): Promise<$TupleMap<T, typeof $await>>;
                           ^^^^^^^^^^^^^^^ [2]
 
 
@@ -380,10 +380,16 @@ References:
 
 Error ------------------------------------------------------------------------------------------ resolve_global.js:39:23
 
-Cannot instantiate `Promise` because `Promise` [1] is not a polymorphic type.
+Cannot instantiate class `Promise` because class `Promise` [1] is not a polymorphic type.
 
+   resolve_global.js:39:23
    39| async function baz(): Promise<number> {
-                             ^^^^^^^^^^^^^^^ [1]
+                             ^^^^^^^^^^^^^^^
+
+References:
+   resolve_global.js:9:7
+    9| class Promise {}
+             ^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- resolve_void.js:3:2
@@ -399,8 +405,8 @@ References:
    resolve_void.js:3:29
      3| (Promise.resolve(): Promise<number>); // error
                                     ^^^^^^ [2]
-   <BUILTINS>/core.js:576:24
-   576| declare class Promise<+R> {
+   <BUILTINS>/core.js:625:24
+   625| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -420,8 +426,8 @@ References:
    resolve_void.js:5:38
      5| (Promise.resolve(undefined): Promise<number>); // error
                                              ^^^^^^ [2]
-   <BUILTINS>/core.js:576:24
-   576| declare class Promise<+R> {
+   <BUILTINS>/core.js:625:24
+   625| declare class Promise<+R> {
                                ^ [3]
 
 

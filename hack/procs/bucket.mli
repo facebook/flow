@@ -23,6 +23,15 @@ type 'a next =
 val set_max_bucket_size : int -> unit
 val max_size : unit -> int
 
+(** Given a number of jobs, number of workers, and a maximum bucket size, will
+    calculate the optimal bucket size to get the work done as quickly as
+    possible.
+
+    Specifically, if the number of jobs is less than the number of workers times
+    the maximum bucket size, smaller bucket sizes will be returned in order to
+    utilize as many workers as possible. *)
+val calculate_bucket_size : num_jobs:int -> num_workers:int -> max_size:int -> int
+
 (* Makes a bucket out of a list, without regard for number of workers or the
    size of the list.  *)
 val of_list : 'a list -> 'a list bucket

@@ -72,7 +72,8 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `y` to object type because:
  - object type [1] is incompatible with function prototype [2].
- - a callable signature is missing in object type [1] but exists in object type [2].
+ - a call signature declaring the expected parameter / return type is missing in object type [1] but exists in object
+   type [2].
 
    call.js:4:2
    4| (y: {(number): string});

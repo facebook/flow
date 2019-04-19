@@ -1,3 +1,48 @@
+Error ------------------------------------------------------------------------------------------ tagged_template.js:8:14
+
+Cannot call `tag` with string bound to `x` because string [1] is incompatible with number [2].
+
+   tagged_template.js:8:14
+   8|     tag`foo${'bad'}bar${2}`; // error: string !~> number
+                   ^^^^^ [1]
+
+References:
+   tagged_template.js:6:44
+   6|     function tag(quasis: Array<string>, x: number, y: number) {}
+                                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ tagged_template.js:14:5
+
+Cannot call `tag` because no more than 2 arguments are expected by function [1].
+
+   tagged_template.js:14:5
+   14|     tag`foo${1}bar${2}`; // error: expected 2 args, got 3
+           ^^^^^^^^^^^^^^^^^^^
+
+References:
+   tagged_template.js:13:5
+   13|     function tag(quasis: Array<string>, number) {}
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ tagged_template.js:21:5
+
+Cannot call `tag` because string [1] is incompatible with number [2] in array element.
+
+   tagged_template.js:21:5
+   21|     tag`foo${'bad'}`; // error: string !~> number
+           ^^^^^^^^^^^^^^^^
+
+References:
+   tagged_template.js:21:14
+   21|     tag`foo${'bad'}`; // error: string !~> number
+                    ^^^^^ [1]
+   tagged_template.js:19:57
+   19|     function tag(quasis: Array<string>, ...exprs: Array<number>) {}
+                                                               ^^^^^^ [2]
+
+
 Error -------------------------------------------------------------------------------------------------- template.js:5:2
 
 Cannot cast template string to number because string [1] is incompatible with number [2].
@@ -105,4 +150,4 @@ References:
 
 
 
-Found 8 errors
+Found 11 errors

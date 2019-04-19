@@ -67,6 +67,7 @@ export class TestBuilder {
   testErrors = [];
   allowFlowServerToDie = false;
   logStream: stream$Writable | null;
+  waitForRecheck: boolean;
 
   constructor(
     bin: string,
@@ -76,6 +77,7 @@ export class TestBuilder {
     testNum: number,
     flowConfigFilename: string,
     lazyMode: 'ide' | 'fs' | null,
+    wait_for_recheck: boolean,
   ) {
     this.bin = bin;
     // If we're testing lazy mode, then we must use status
@@ -90,6 +92,7 @@ export class TestBuilder {
     this.lazyMode = lazyMode;
     this.ide = null;
     this.ideMessages = [];
+    this.waitForRecheck = wait_for_recheck;
   }
 
   getFileName(): string {
@@ -118,7 +121,7 @@ export class TestBuilder {
         format(fmt, ...args),
       );
       return new Promise((resolve, reject) => {
-        logStream.write(msg, 'utf8', resolve);
+        logStream.write(msg, 'utf8', err => (err ? reject(err) : resolve()));
       });
     }
   }
@@ -250,6 +253,26 @@ export class TestBuilder {
     await this.forceRecheck([filename]);
   }
 
+  async execManualAndLog(
+    cmd: string,
+    options?: Object,
+  ): Promise<[?Object, string, string]> {
+    await this.log(`# ${cmd}...`);
+    const [err, stdout_, stderr_] = await execManual(cmd, options);
+    await this.log(`# Finished ${cmd}.`);
+    const stderr = typeof stderr_ === 'string' ? stderr_ : stderr_.toString();
+    const stdout = typeof stdout_ === 'string' ? stdout_ : stdout_.toString();
+    if (err != null) {
+      await this.log(`# err.code=${err.code} err=${String(err)}`);
+    }
+    if (stderr !== '') {
+      await this.log(`# stderr=BEGIN`);
+      await this.log(stderr);
+      await this.log(`# END stderr`);
+    }
+    return [err, stdout, stderr];
+  }
+
   async flowCmd(
     args: Array<string>,
     stdinFile?: string,
@@ -260,10 +283,12 @@ export class TestBuilder {
       args.map(arg => format('"%s"', arg)).join(' '),
       stdinFile == null ? '' : format('< %s', stdinFile),
     );
-    const [err, stdout, stderr] = await execManual(cmd, {cwd: this.dir});
+    const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
+      cwd: this.dir,
+    });
     const code = err == null ? 0 : err.code;
 
-    return [code, stdout.toString(), stderr.toString()];
+    return [code, stdout, stderr];
   }
 
   async getFlowErrors(retry?: boolean = true): Promise<Object> {
@@ -286,7 +311,7 @@ export class TestBuilder {
       );
     }
 
-    const [err, stdout, stderr] = await execManual(cmd, {
+    const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
       cwd: __dirname,
       maxBuffer: 1024 * 1024,
     });
@@ -306,27 +331,27 @@ export class TestBuilder {
     }
     const lazyMode =
       this.lazyMode === null ? [] : ['--lazy-mode', this.lazyMode];
-    const serverProcess = spawn(
-      this.bin,
-      [
-        'server',
-        '--strip-root',
-        '--debug',
-        '--temp-dir',
-        this.tmpDir,
-        '--no-auto-restart',
-        '--file-watcher',
-        'none',
-      ]
-        .concat(lazyMode)
-        .concat([this.dir]),
-      {
-        // Useful for debugging flow server
-        // stdio: ["pipe", "pipe", process.stderr],
-        cwd: this.dir,
-        env: {...process.env, OCAMLRUNPARAM: 'b'},
-      },
-    );
+    const args = [
+      'server',
+      '--strip-root',
+      '--debug',
+      '--temp-dir',
+      this.tmpDir,
+      '--no-auto-restart',
+      '--file-watcher',
+      'none',
+      '--wait-for-recheck',
+      String(this.waitForRecheck),
+    ]
+      .concat(lazyMode)
+      .concat([this.dir]);
+    await this.log('# %s %s', this.bin, args.join(' '));
+    const serverProcess = spawn(this.bin, args, {
+      // Useful for debugging flow server
+      // stdio: ["pipe", "pipe", process.stderr],
+      cwd: this.dir,
+      env: {...process.env, OCAMLRUNPARAM: 'b'},
+    });
     this.server = serverProcess;
     this.serverEmitter.emit('server');
 
@@ -392,9 +417,9 @@ export class TestBuilder {
     const primaryArg = mode === 'lsp' ? 'lsp' : 'ide';
     const args =
       mode === 'lsp'
-        ? [primaryArg]
+        ? ['lsp', '--autostop', '--lazy-mode', 'ide']
         : [
-            primaryArg,
+            'ide',
             '--protocol',
             'very-unstable',
             '--no-auto-start',
@@ -574,6 +599,7 @@ export class TestBuilder {
     // a '.flowVersion' field
     // LSP sends back document URLs, to files within the test project
     const url = this.getDirUrl();
+    const urlslash = url + dir_sep;
     function replace(obj: Object) {
       for (const k in obj) {
         if (!obj.hasOwnProperty(k)) {
@@ -589,6 +615,10 @@ export class TestBuilder {
           case 'string':
             if (k == 'flowVersion') {
               obj[k] = '<VERSION STUBBED FOR TEST>';
+            } else if (obj[k].startsWith(urlslash)) {
+              obj[k] =
+                '<PLACEHOLDER_PROJECT_URL_SLASH>' +
+                obj[k].substr(urlslash.length);
             } else if (obj[k].startsWith(url)) {
               obj[k] = '<PLACEHOLDER_PROJECT_URL>' + obj[k].substr(url.length);
             }
@@ -622,8 +652,8 @@ export class TestBuilder {
           case 'string':
             if (obj[k].startsWith('<PLACEHOLDER')) {
               obj[k] = obj[k]
-                .replace(/^<PLACEHOLDER_PROJECT_DIR>/, dir)
-                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl);
+                .replace(/^<PLACEHOLDER_PROJECT_URL>/, dirUrl)
+                .replace(/^<PLACEHOLDER_PROJECT_URL_SLASH>/, dirUrl + dir_sep);
             }
             break;
         }
@@ -967,8 +997,7 @@ export class TestBuilder {
   async forceRecheck(files: Array<string>): Promise<void> {
     if (this.server && (await isRunning(this.server.pid))) {
       const files_str = files.map(s => `"${s}"`).join(' ');
-      await this.log('Running force-recheck for files: %s', files_str);
-      const [err, stdout, stderr] = await execManual(
+      const [err, stdout, stderr] = await this.execManualAndLog(
         format(
           '%s force-recheck --no-auto-start --temp-dir %s %s',
           this.bin,
@@ -976,13 +1005,19 @@ export class TestBuilder {
           files_str,
         ),
       );
-      await this.log('force-recheck finished');
 
       // No server running (6) is ok - the file change might have killed the
       // server and we raced it here
       if (err && err.code !== 6) {
         throw new Error(
-          format('flow force-recheck failed!', err, stdout, stderr, files),
+          format(
+            'flow force-recheck failed! err.code=%s err=%s stdout=%s stderr=%s files=%s',
+            err.code,
+            err,
+            stdout,
+            stderr,
+            files,
+          ),
         );
       }
     }
@@ -1003,7 +1038,7 @@ export default class Builder {
   // doesMethodMatch(actual, 'M') judges whether the method name of the actual
   // message was M. And doesMethodMatch(actual, 'M{C1,C2,...}') judges also
   // whether the strings C1, C2, ... were all found in the JSON representation
-  // of the actual message (up to whitespace).
+  // of the actual message.
   static doesMessageMatch(actual: IDEMessage, expected: string): boolean {
     const iOpenBrace = expected.indexOf('{');
     const iCloseBrace = expected.lastIndexOf('}');
@@ -1015,9 +1050,8 @@ export default class Builder {
       }
       const expectedContents = expected
         .substring(iOpenBrace + 1, iCloseBrace)
-        .replace(/\s/g, '')
         .split(',');
-      const json = JSON.stringify(actual).replace(/\s/g, '');
+      const json = JSON.stringify(actual);
       for (const expectedContent of expectedContents) {
         if (!json.includes(expectedContent)) {
           return false;
@@ -1054,6 +1088,7 @@ export default class Builder {
     testNum: number,
     flowConfigFilename: string,
     lazyMode: 'fs' | 'ide' | null,
+    wait_for_recheck: boolean,
   ): Promise<TestBuilder> {
     const testBuilder = new TestBuilder(
       bin,
@@ -1063,6 +1098,7 @@ export default class Builder {
       testNum,
       flowConfigFilename,
       lazyMode,
+      wait_for_recheck,
     );
     Builder.builders.push(testBuilder);
     await testBuilder.createFreshDir();

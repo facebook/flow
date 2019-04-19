@@ -66,6 +66,15 @@ module Location = struct
   }
 end
 
+(* Represents a location inside a resource which also wants to display a
+   friendly name to the user. *)
+module DefinitionLocation = struct
+  type t = {
+    location: Location.t;
+    title: string option;
+  }
+end
+
 (* markedString can be used to render human readable text. It is either a
  * markdown string or a code-block that provides a language and a code snippet.
  * Note that markdown strings will be sanitized by the client - including
@@ -123,11 +132,11 @@ module TextDocumentEdit = struct
 end
 
 (* A workspace edit represents changes to many resources managed in the
-   workspace. A workspace edit now consists of an array of TextDocumentEdits
-   each describing a change to a single text document. *)
+   workspace. A workspace edit consists of a mapping from a URI to an
+   array of TextEdits to be applied to the document with that URI. *)
 module WorkspaceEdit = struct
   type t = {
-    changes: TextDocumentEdit.t list;  (* holds changes to existing docs *)
+    changes: TextEdit.t list SMap.t;  (* holds changes to existing docs *)
   }
 end
 
@@ -173,7 +182,7 @@ module SymbolInformation = struct
   type t = {
     name: string;
     kind: symbolKind;
-    location: Location.t;  (* the location of the symbol token itself *)
+    location: Location.t;  (* the span of the symbol including its contents *)
     containerName: string option;  (* the symbol containing this symbol *)
   }
 
@@ -242,15 +251,13 @@ module Initialize = struct
     | Messages
     | Verbose
 
-  (** Although all of the values in here are technically optional, we don't
-      represent any of them as options. When working with optional
-      configuration, it's very important to track where optional values get
-      their defaults from in order to avoid some costly confusion later.
-      Instead of having the defaults implicitly defined by `match` statements
-      scattered far and wide throughout the code, we can use the type system to
-      enforce that they're only set in one easily-greppable place. *)
+  (* Following initialization options are unfortunately a mix of Hack
+   * and Flow. We should find a way to separate them.
+   * Anyway, they're all optional in the source json, but we pick
+   * a default if necessary while parsing. *)
   and initializationOptions = {
-    use_textedit_autocomplete: bool;
+    useTextEditAutocomplete: bool; (* only supported for Hack so far *)
+    liveSyntaxErrors: bool; (* implicitly true for Hack; supported in Flow *)
   }
 
   and client_capabilities = {
@@ -295,6 +302,7 @@ module Initialize = struct
   }
 
   and windowClientCapabilities = {
+    status: bool;  (* Nuclide-specific: client supports window/showStatusRequest *)
     progress: bool;  (* Nuclide-specific: client supports window/progress *)
     actionRequired: bool;  (* Nuclide-specific: client supports window/actionRequired *)
   }
@@ -420,7 +428,8 @@ module PublishDiagnostics = struct
     code: diagnosticCode;  (* the diagnostic's code. *)
     source: string option;  (* human-readable string, eg. typescript/lint *)
     message: string;  (* the diagnostic's message *)
-    relatedLocations: relatedLocation list;
+    relatedInformation: diagnosticRelatedInformation list;
+    relatedLocations: relatedLocation list; (* legacy FB extension *)
   }
 
   and diagnosticCode =
@@ -434,10 +443,13 @@ module PublishDiagnostics = struct
     | Information (* 3 *)
     | Hint (* 4 *)
 
-  and relatedLocation = {
+  and diagnosticRelatedInformation = {
     relatedLocation: Location.t;  (* wire: just "location" *)
     relatedMessage: string;  (* wire: just "message" *)
   }
+
+  (* legacy FB extension *)
+  and relatedLocation = diagnosticRelatedInformation
 end
 
 (* DidOpenTextDocument notification, method="textDocument/didOpen" *)
@@ -488,12 +500,26 @@ end
 module Definition = struct
   type params = TextDocumentPositionParams.t
 
-  and result = Location.t list  (* wire: either a single one or an array *)
+  and result = DefinitionLocation.t list  (* wire: either a single one or an array *)
 end
 
 (* Completion request, method="textDocument/completion" *)
 module Completion = struct
-  type params = TextDocumentPositionParams.t
+  type params = completionParams
+
+  and completionParams = {
+    loc: TextDocumentPositionParams.t;
+    context: completionContext option;
+  }
+
+  and completionContext = {
+    triggerKind: completionTriggerKind;
+  }
+
+  and completionTriggerKind =
+    | Invoked (* 1 *)
+    | TriggerCharacter (* 2 *)
+    | TriggerForIncompleteCompletions (* 3 *)
 
   and result = completionList  (* wire: can also be 'completionItem list' *)
 
@@ -641,16 +667,14 @@ module FindReferences = struct
 
   and result = Location.t list
 
-  (* Following structure is an extension of TextDocumentPositionParams.t *)
-  (* but we don't have nice inherantice in OCaml so we duplicate fields *)
   and referenceParams = {
-    textDocument: TextDocumentIdentifier.t;  (* the text document *)
-    position: position;  (* the position inside the text document *)
+    loc: TextDocumentPositionParams.t; (* wire: loc's members are part of referenceParams *)
     context: referenceContext;
   }
 
   and referenceContext = {
     includeDeclaration: bool;  (* include declaration of current symbol *)
+    includeIndirectReferences: bool;
   }
 end
 
@@ -681,6 +705,7 @@ module TypeCoverage = struct
   and result = {
     coveredPercent: int;
     uncoveredRanges: uncoveredRange list;
+    defaultMessage: string;
   }
 
   and typeCoverageParams = {
@@ -689,7 +714,7 @@ module TypeCoverage = struct
 
   and uncoveredRange = {
     range: range;
-    message: string;
+    message: string option;
   }
 end
 
@@ -766,6 +791,19 @@ module SignatureHelp = struct
   }
 end
 
+(* Workspace Rename request, method="textDocument/rename" *)
+module Rename = struct
+  type params = renameParams
+
+  and result = WorkspaceEdit.t
+
+  and renameParams = {
+    textDocument: TextDocumentIdentifier.t;
+    position: position;
+    newName: string;
+  }
+end
+
 
 (* LogMessage notification, method="window/logMessage" *)
 module LogMessage = struct
@@ -791,7 +829,7 @@ end
 
 (* ShowMessage request, method="window/showMessageRequest" *)
 module ShowMessageRequest = struct
-  type t = Some of {id: lsp_id;} | None
+  type t = Present of {id: lsp_id;} | Absent
 
   and params = showMessageRequestParams
 
@@ -809,9 +847,24 @@ module ShowMessageRequest = struct
 end
 
 
+(* ShowStatus request, method="window/showStatus" *)
+module ShowStatus = struct
+  type params = showStatusParams
+
+  and result = ShowMessageRequest.messageActionItem option
+
+  and showStatusParams = {
+    request: ShowMessageRequest.showMessageRequestParams;
+    progress: int option;
+    total: int option;
+    shortMessage: string option;
+  }
+end
+
+
 (* Progress notification, method="window/progress" *)
 module Progress = struct
-  type t = Some of {id: int; label: string;} | None
+  type t = Present of {id: int; label: string;} | Absent
 
   and params = progressParams
 
@@ -828,7 +881,7 @@ end
 
 (* ActionRequired notification, method="window/actionRequired" *)
 module ActionRequired = struct
-  type t = Some of {id: int; label: string;} | None
+  type t = Present of {id: int; label: string;} | Absent
 
   and params = actionRequiredParams
 
@@ -860,6 +913,11 @@ end
 
 (* ErrorResponse *)
 module Error = struct
+  type t = {code: int; message: string; data: Hh_json.json option}
+
+  (* Legacy: some code uses exceptions instead of Error.t. *)
+  (* Be careful with that since if you unmarshal one then you can't pattern-match it. *)
+
   (* Defined by JSON-RPC. *)
   exception Parse of string (* -32700 *)
   exception InvalidRequest of string (* -32600 *)
@@ -896,7 +954,10 @@ type lsp_request =
   | DocumentRangeFormattingRequest of DocumentRangeFormatting.params
   | DocumentOnTypeFormattingRequest of DocumentOnTypeFormatting.params
   | ShowMessageRequestRequest of ShowMessageRequest.params
+  | ShowStatusRequest of ShowStatus.params
   | RageRequest
+  | RenameRequest of Rename.params
+  | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
   | InitializeResult of Initialize.result
@@ -914,8 +975,10 @@ type lsp_result =
   | DocumentRangeFormattingResult of DocumentRangeFormatting.result
   | DocumentOnTypeFormattingResult of DocumentOnTypeFormatting.result
   | ShowMessageRequestResult of ShowMessageRequest.result
+  | ShowStatusResult of ShowStatus.result
   | RageResult of Rage.result
-  | ErrorResult of exn * string
+  | RenameResult of Rename.result
+  | ErrorResult of Error.t * string (* the string is a stacktrace *)
 
 type lsp_notification =
   | ExitNotification
@@ -926,10 +989,15 @@ type lsp_notification =
   | DidSaveNotification of DidSave.params
   | DidChangeNotification of DidChange.params
   | LogMessageNotification of LogMessage.params
+  | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params
   | ProgressNotification of Progress.params
   | ActionRequiredNotification of ActionRequired.params
   | ConnectionStatusNotification of ConnectionStatus.params
+  | InitializedNotification
+  | SetTraceNotification (* $/setTraceNotification *)
+  | LogTraceNotification (* $/logTraceNotification *)
+  | UnknownNotification of string * Hh_json.json option
 
 type lsp_message =
   | RequestMessage of lsp_id * lsp_request
@@ -938,10 +1006,11 @@ type lsp_message =
 
 type 'a lsp_handler = 'a lsp_result_handler * 'a lsp_error_handler
 
-and 'a lsp_error_handler = (exn * string) -> 'a -> 'a
+and 'a lsp_error_handler = (Error.t * string) -> 'a -> 'a
 
 and 'a lsp_result_handler =
   | ShowMessageHandler of (ShowMessageRequest.result -> 'a -> 'a)
+  | ShowStatusHandler of (ShowStatus.result -> 'a -> 'a)
 
 module IdKey = struct
   type t = lsp_id

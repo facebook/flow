@@ -19,7 +19,7 @@ class MyComponent extends React.Component<DefaultProps, Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<DefaultProps, Props, State> {
+  (class extends React.Component<DefaultProps, Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -30,7 +30,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -46,11 +46,11 @@ class MyComponent extends React.Component<DefaultProps, Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<DefaultProps, Props, State> {
+  (class extends React.Component<DefaultProps, Props, State> {
     static defaultProps: BadDefaultProps = {};
     props: BadProps;
     state: BadState = {};
-  }
+  })
 "
 `;
 
@@ -73,7 +73,7 @@ class MyComponent extends Component<DefaultProps, Props, State> {
 }
 
 const expression = () =>
-  class extends Component<DefaultProps, Props, State> {
+  (class extends Component<DefaultProps, Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -84,7 +84,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -106,7 +106,7 @@ class MyComponent extends React.Component<DefaultProps, Props> {
 }
 
 const expression = () =>
-  class extends React.Component<DefaultProps, Props> {
+  (class extends React.Component<DefaultProps, Props> {
     static defaultProps: DefaultProps = {};
 
     defaultProps: T;
@@ -116,7 +116,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -138,7 +138,7 @@ class MyComponent extends React.Component<$FlowFixMeDefaultProps, Props> {
 }
 
 const expression = () =>
-  class extends React.Component<$FlowFixMeDefaultProps, Props> {
+  (class extends React.Component<$FlowFixMeDefaultProps, Props> {
     static defaultProps = {};
 
     defaultProps: T;
@@ -148,7 +148,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -170,7 +170,7 @@ class MyComponent extends React.Component<{a: number, b: number, c: number}, Pro
 }
 
 const expression = () =>
-  class extends React.Component<{a: number, b: number, c: number}, Props> {
+  (class extends React.Component<{a: number, b: number, c: number}, Props> {
     static defaultProps: {a: number, b: number, c: number} = {a: 1, b: 2, c: 3};
 
     defaultProps: T;
@@ -180,7 +180,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -200,7 +200,7 @@ class MyComponent extends React.Component<DefaultProps, Props> {
 }
 
 const expression = () =>
-  class extends React.Component<DefaultProps, Props> {
+  (class extends React.Component<DefaultProps, Props> {
     defaultProps: T;
     static props: T;
     static state: T;
@@ -208,7 +208,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -229,7 +229,7 @@ class MyComponent extends React.Component<DefaultProps, Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<DefaultProps, Props, State> {
+  (class extends React.Component<DefaultProps, Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -240,7 +240,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -266,24 +266,24 @@ class MyComponent4 extends React.Component<void, $FlowFixMeProps, $FlowFixMeStat
 }
 
 const expression1 = () =>
-  class extends React.Component<void, $FlowFixMeProps> {
+  (class extends React.Component<void, $FlowFixMeProps> {
     componentWillReceiveProps(nextProps) {}
-  }
+  })
 
 const expression2 = () =>
-  class extends React.Component<void, $FlowFixMeProps, $FlowFixMeState> {
+  (class extends React.Component<void, $FlowFixMeProps, $FlowFixMeState> {
     shouldComponentUpdate(prevProps, prevState) {}
-  }
+  })
 
 const expression3 = () =>
-  class extends React.Component<void, $FlowFixMeProps, $FlowFixMeState> {
+  (class extends React.Component<void, $FlowFixMeProps, $FlowFixMeState> {
     componentWillUpdate(prevProps, prevState) {}
-  }
+  })
 
 const expression4 = () =>
-  class extends React.Component<void, $FlowFixMeProps, $FlowFixMeState> {
+  (class extends React.Component<void, $FlowFixMeProps, $FlowFixMeState> {
     componentDidUpdate(prevProps, prevState) {}
-  }
+  })
 "
 `;
 
@@ -309,24 +309,24 @@ class MyComponent4 extends React.Component<void, {}> {
 }
 
 const expression1 = () =>
-  class extends React.Component<void, {}> {
+  (class extends React.Component<void, {}> {
     componentWillReceiveProps() {}
-  }
+  })
 
 const expression2 = () =>
-  class extends React.Component<void, {}> {
+  (class extends React.Component<void, {}> {
     shouldComponentUpdate() {}
-  }
+  })
 
 const expression3 = () =>
-  class extends React.Component<void, {}> {
+  (class extends React.Component<void, {}> {
     componentWillUpdate() {}
-  }
+  })
 
 const expression4 = () =>
-  class extends React.Component<void, {}> {
+  (class extends React.Component<void, {}> {
     componentDidUpdate() {}
-  }
+  })
 "
 `;
 
@@ -352,24 +352,24 @@ class MyComponent4 extends React.Component<void, Props> {
 }
 
 const expression1 = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     componentWillReceiveProps(nextProps: Props) {}
-  }
+  })
 
 const expression2 = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     shouldComponentUpdate(prevProps: Props) {}
-  }
+  })
 
 const expression3 = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     componentWillUpdate(prevProps: Props) {}
-  }
+  })
 
 const expression4 = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     componentDidUpdate(prevProps: Props) {}
-  }
+  })
 "
 `;
 
@@ -395,24 +395,24 @@ class MyComponent4 extends React.Component<void, Props, State> {
 }
 
 const expression1 = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     componentWillReceiveProps(nextProps: Props) {}
-  }
+  })
 
 const expression2 = () =>
-  class extends React.Component<void, Props, State> {
+  (class extends React.Component<void, Props, State> {
     shouldComponentUpdate(prevProps: Props, prevState: State) {}
-  }
+  })
 
 const expression3 = () =>
-  class extends React.Component<void, Props, State> {
+  (class extends React.Component<void, Props, State> {
     componentWillUpdate(prevProps: Props, prevState: State) {}
-  }
+  })
 
 const expression4 = () =>
-  class extends React.Component<void, Props, State> {
+  (class extends React.Component<void, Props, State> {
     componentDidUpdate(prevProps: Props, prevState: State) {}
-  }
+  })
 "
 `;
 
@@ -432,7 +432,7 @@ class MyComponent extends React.Component<void, Props> {
 }
 
 const expression = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     defaultProps: T;
     static props: T;
     static state: T;
@@ -440,7 +440,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -474,7 +474,7 @@ class MyComponent2 extends React.Component<void, Props> {
 }
 
 const expression1 = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     constructor(props: Props) {}
 
     defaultProps: T;
@@ -484,10 +484,10 @@ const expression1 = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 
 const expression2 = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     constructor(props: Props) {}
 
     defaultProps: T;
@@ -497,7 +497,7 @@ const expression2 = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -519,7 +519,7 @@ class MyComponent extends React.Component<void, {a: number, b: number, c: number
 }
 
 const expression = () =>
-  class extends React.Component<void, {a: number, b: number, c: number}> {
+  (class extends React.Component<void, {a: number, b: number, c: number}> {
     constructor(props: {a: number, b: number, c: number}) {}
 
     defaultProps: T;
@@ -529,7 +529,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -563,7 +563,7 @@ class MyComponent2 extends React.Component<void, Props> {
 }
 
 const expression1 = () =>
-  class extends React.Component<void, $FlowFixMeProps> {
+  (class extends React.Component<void, $FlowFixMeProps> {
     constructor(props) {}
 
     defaultProps: T;
@@ -573,10 +573,10 @@ const expression1 = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 
 const expression2 = () =>
-  class extends React.Component<void, Props> {
+  (class extends React.Component<void, Props> {
     constructor(props) {}
 
     defaultProps: T;
@@ -586,7 +586,7 @@ const expression2 = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -607,7 +607,7 @@ class MyComponent extends React.Component<void, {}> {
 }
 
 const expression = () =>
-  class extends React.Component<void, {}> {
+  (class extends React.Component<void, {}> {
     constructor() {}
 
     defaultProps: T;
@@ -616,7 +616,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -636,7 +636,7 @@ class MyComponent extends React.Component<void, {a: number, b: number, c: number
 }
 
 const expression = () =>
-  class extends React.Component<void, {a: number, b: number, c: number}> {
+  (class extends React.Component<void, {a: number, b: number, c: number}> {
     defaultProps: T;
     static props: T;
     static state: T;
@@ -644,7 +644,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -663,14 +663,14 @@ class MyComponent extends React.Component<void, {}> {
 }
 
 const expression = () =>
-  class extends React.Component<void, {}> {
+  (class extends React.Component<void, {}> {
     defaultProps: T;
     static state: T;
     a: T;
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -699,26 +699,26 @@ class MyComponent3 extends React.Component<void, $FlowFixMeProps> {
 }
 
 const expression1 = () =>
-  class extends React.Component<void, $FlowFixMeProps, State> {
+  (class extends React.Component<void, $FlowFixMeProps, State> {
     state: State = {
       initialValue: this.props.value,
     };
-  }
+  })
 
 const expression2 = () =>
-  class extends React.Component<void, $FlowFixMeProps> {
+  (class extends React.Component<void, $FlowFixMeProps> {
     render() {
       return this.props.children;
     }
-  }
+  })
 
 const expression3 = () =>
-  class extends React.Component<void, $FlowFixMeProps> {
+  (class extends React.Component<void, $FlowFixMeProps> {
     render() {
       const props = {};
       return props;
     }
-  }
+  })
 "
 `;
 
@@ -741,7 +741,7 @@ class MyComponent extends React.PureComponent<DefaultProps, Props, State> {
 }
 
 const expression = () =>
-  class extends React.PureComponent<DefaultProps, Props, State> {
+  (class extends React.PureComponent<DefaultProps, Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -752,7 +752,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -775,7 +775,7 @@ class MyComponent extends PureComponent<DefaultProps, Props, State> {
 }
 
 const expression = () =>
-  class extends PureComponent<DefaultProps, Props, State> {
+  (class extends PureComponent<DefaultProps, Props, State> {
     static defaultProps: DefaultProps = {};
     state: State = {};
 
@@ -786,7 +786,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -843,7 +843,7 @@ class MyComponent extends React.Component<void, Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<void, Props, State> {
+  (class extends React.Component<void, Props, State> {
     state: State = {};
 
     defaultProps: T;
@@ -853,7 +853,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -875,7 +875,7 @@ class MyComponent extends React.Component<void, Props, $FlowFixMeState> {
 }
 
 const expression = () =>
-  class extends React.Component<void, Props, $FlowFixMeState> {
+  (class extends React.Component<void, Props, $FlowFixMeState> {
     state = {};
 
     defaultProps: T;
@@ -885,7 +885,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -907,7 +907,7 @@ class MyComponent extends React.Component<void, Props, {a: number, b: number, c:
 }
 
 const expression = () =>
-  class extends React.Component<void, Props, {a: number, b: number, c: number}> {
+  (class extends React.Component<void, Props, {a: number, b: number, c: number}> {
     state: {a: number, b: number, c: number} = {a: 1, b: 2, c: 3};
 
     defaultProps: T;
@@ -917,7 +917,7 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;
 
@@ -940,19 +940,19 @@ class MyComponent2 extends React.Component<void, {}, $FlowFixMeState> {
 }
 
 const expression1 = () =>
-  class extends React.Component<void, {}, $FlowFixMeState> {
+  (class extends React.Component<void, {}, $FlowFixMeState> {
     render() {
       return this.state.children;
     }
-  }
+  })
 
 const expression2 = () =>
-  class extends React.Component<void, {}, $FlowFixMeState> {
+  (class extends React.Component<void, {}, $FlowFixMeState> {
     render() {
       const state = {};
       return state;
     }
-  }
+  })
 "
 `;
 
@@ -972,7 +972,7 @@ class MyComponent extends React.Component<void, Props, State> {
 }
 
 const expression = () =>
-  class extends React.Component<void, Props, State> {
+  (class extends React.Component<void, Props, State> {
     defaultProps: T;
     static props: T;
     static state: T;
@@ -980,6 +980,6 @@ const expression = () =>
     b = 5;
     c: T = 5;
     method() {}
-  }
+  })
 "
 `;

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -27,7 +27,7 @@
    changed meaningfully.
 
    Finally, these structures may be huge, so we instead compare their digests,
-   tolerating improbable collisions (cf. SharedMem).
+   tolerating improbable collisions (cf. SharedMem_js).
 *)
 
 (* NOTE: it's critical that these are all constant constructors, which are
@@ -68,8 +68,6 @@ type hash =
   | AnyWithLowerBoundH
   | AnyWithUpperBoundH
   | MergedH
-  | AnyObjH
-  | AnyFunH
   | ShapeH
   | KeysH
   | SingletonStrH
@@ -90,6 +88,7 @@ type hash =
   | SetPropH
   | SetPrivatePropH
   | GetPropH
+  | MatchPropH
   | GetPrivatePropH
   | TestPropH
   | SetElemH
@@ -111,7 +110,6 @@ type hash =
   | AssertBinaryInLHSH
   | AssertBinaryInRHSH
   | AssertForInRHSH
-  | AssertRestParamH
   | PredicateH
   | GuardH
   | EqH
@@ -152,6 +150,7 @@ type hash =
   | CopyTypeExportsH
   | ExportNamedH
   | ExportTypeH
+  | TypeExportifyH
   | MapTypeH
   | ReactKitH
   | ObjKitH
@@ -171,27 +170,27 @@ type hash =
   | CondH
   | ExtendsUseH
   | ToStringH
+  | InvariantH
+  | ReactAbstractComponentH
+  | ReactPropsToOutH
+  | ReactInToPropsH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
   | PolyT _ -> failwith "undefined hash of PolyT"
+  | IdxWrapper _ -> failwith "undefined hash of IdxWrapper"
 
-  | AnyFunT -> AnyFunH
-  | AnyObjT -> AnyObjH
-  | AnyT -> AnyH
   | ArrT _ -> ArrH
   | BoolT _ -> BoolH
   | CharSetT _ -> CharSetH
   | ClassT _ -> ClassH
-  | EmptyT -> EmptyH
+  | EmptyT _ -> EmptyH
   | FunT _ -> FunH
-  | IntersectionT _ -> IntersectionH
-  | MaybeT _ -> MaybeH
   | MixedT _ -> MixedH
   | NullT -> NullH
   | NumT _ -> NumH
   | ObjT _ -> ObjH
-  | OptionalT _ -> OptionalH
+  | ReactAbstractComponentT _ -> ReactAbstractComponentH
   | SingletonBoolT _ -> SingletonBoolH
   | SingletonNumT _ -> SingletonNumH
   | SingletonStrT _ -> SingletonStrH
@@ -199,7 +198,6 @@ let hash_of_def_ctor = Type.(function
   | TypeT _ -> TypeH
   | TypeAppT _ -> TypeAppH
   | VoidT -> VoidH
-  | UnionT _ -> UnionH
 )
 
 let hash_of_ctor = Type.(function
@@ -207,6 +205,7 @@ let hash_of_ctor = Type.(function
   | InternalT _ -> failwith "undefined hash of InternalT"
   | OpaqueT _ -> failwith "undefined hash of OpaqueT"
 
+  | AnyT _ -> AnyH
   | AnnotT _ -> AnnotH
   | AnyWithLowerBoundT _ -> AnyWithLowerBoundH
   | AnyWithUpperBoundT _ -> AnyWithUpperBoundH
@@ -214,7 +213,7 @@ let hash_of_ctor = Type.(function
   | BoundT _ -> BoundH
   | TypeDestructorTriggerT _ -> TvarDestructorH
   | CustomFunT _ -> CustomFunH
-  | DefT (_, t) -> hash_of_def_ctor t
+  | DefT (_, _, t) -> hash_of_def_ctor t
   | EvalT _ -> EvalH
   | ExactT _ -> ExactH
   | ExistsT _ -> ExistsH
@@ -222,16 +221,20 @@ let hash_of_ctor = Type.(function
   | FunProtoApplyT _ -> FunProtoApplyH
   | FunProtoBindT _ -> FunProtoBindH
   | FunProtoCallT _ -> FunProtoCallH
+  | IntersectionT _ -> IntersectionH
   | KeysT _ -> KeysH
+  | MaybeT _ -> MaybeH
   | ModuleT _ -> ModuleH
   | NullProtoT _ -> NullProtoH
   | ObjProtoT _ -> ObjProtoH
+  | OptionalT _ -> OptionalH
   | MatchingPropT _ -> MatchingPropH
   | OpenPredT _ -> OpenPredH
   | ReposT _ -> ReposH
   | ShapeT _ -> ShapeH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
+  | UnionT _ -> UnionH
 )
 
 let hash_of_use_ctor = Type.(function
@@ -243,6 +246,7 @@ let hash_of_use_ctor = Type.(function
   | SetPropT _ -> SetPropH
   | SetPrivatePropT _ -> SetPrivatePropH
   | GetPropT _ -> GetPropH
+  | MatchPropT _ -> MatchPropH
   | GetPrivatePropT _ -> GetPrivatePropH
   | TestPropT _ -> TestPropH
   | SetElemT _ -> SetElemH
@@ -264,7 +268,6 @@ let hash_of_use_ctor = Type.(function
   | AssertBinaryInLHST _ -> AssertBinaryInLHSH
   | AssertBinaryInRHST _ -> AssertBinaryInRHSH
   | AssertForInRHST _ -> AssertForInRHSH
-  | AssertRestParamT _ -> AssertRestParamH
   | PredicateT _ -> PredicateH
   | GuardT _ -> GuardH
   | EqT _ -> EqH
@@ -305,6 +308,7 @@ let hash_of_use_ctor = Type.(function
   | CopyTypeExportsT _ -> CopyTypeExportsH
   | ExportNamedT _ -> ExportNamedH
   | ExportTypeT _ -> ExportTypeH
+  | AssertExportIsTypeT _ -> TypeExportifyH
   | MapTypeT _ -> MapTypeH
   | ReactKitT _ -> ReactKitH
   | ObjKitT _ -> ObjKitH
@@ -324,6 +328,9 @@ let hash_of_use_ctor = Type.(function
   | CondT _ -> CondH
   | ExtendsUseT _ -> ExtendsUseH
   | ToStringT _ -> ToStringH
+  | InvariantT _ -> InvariantH
+  | ReactPropsToOut _ -> ReactPropsToOutH
+  | ReactInToProps _ -> ReactInToPropsH
 )
 
 let add = Xx.update
@@ -346,19 +353,19 @@ let add_type state t =
   add_int state (hash_of_ctor t);
   let open Type in
   match t with
-  | DefT (_, BoolT b) ->
+  | DefT (_, _, BoolT b) ->
     add_option state add_bool b
-  | DefT (_, MixedT m) ->
+  | DefT (_, _, MixedT m) ->
     add_int state m
-  | DefT (_, NumT n) ->
+  | DefT (_, _, NumT n) ->
     add_literal state add_number_literal n
-  | DefT (_, SingletonBoolT b) ->
+  | DefT (_, _, SingletonBoolT b) ->
     add_bool state b
-  | DefT (_, SingletonNumT n) ->
+  | DefT (_, _, SingletonNumT n) ->
     add_number_literal state n
-  | DefT (_, SingletonStrT s) ->
+  | DefT (_, _, SingletonStrT s) ->
     add state s
-  | DefT (_, StrT s) ->
+  | DefT (_, _, StrT s) ->
     add_literal state add s
   | _ -> ()
 
@@ -386,10 +393,13 @@ let add_loc state loc =
   add_int state loc._end.line;
   add_int state loc._end.column
 
+let add_aloc state aloc =
+  add_loc state (ALoc.to_loc aloc)
+
 let add_reason state r =
   let open Reason in
-  add_loc state (loc_of_reason r);
-  add_loc state (def_loc_of_reason r)
+  add_loc state (aloc_of_reason r |> ALoc.to_loc);
+  add_loc state (def_aloc_of_reason r |> ALoc.to_loc)
 
 let add_polarity = add_int
 

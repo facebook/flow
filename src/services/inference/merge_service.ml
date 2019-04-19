@@ -1,24 +1,32 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 open Utils_js
+open Loc_collections
 module Reqs = Merge_js.Reqs
 
-type 'a merge_results = (File_key.t * ('a, Flow_error.error_message) result) list
+type 'a merge_job_result = ('a, Error_message.t) result
+type 'a merge_job_results = (File_key.t * 'a merge_job_result) list
 type 'a merge_job =
+  worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
-  'a merge_results ->
+  reader: Mutator_state_reader.t ->
   File_key.t Nel.t ->
-  'a merge_results
+  'a merge_job_result
+
+type 'a merge_results = 'a merge_job_results * int (* skipped count *)
 
 type merge_strict_context_result = {
   cx: Context.t;
   other_cxs: Context.t list;
   master_cx: Context.sig_t;
+  file_sigs: File_sig.With_ALoc.t FilenameMap.t;
+  typed_asts: (ALoc.t, ALoc.t * Type.t) Flow_ast.program FilenameMap.t;
+  coverage_map: Coverage.file_coverage FilenameMap.t;
 }
 
 (* To merge the contexts of a component with their dependencies, we call the
@@ -45,16 +53,16 @@ type merge_strict_context_result = {
    (g) decls: edges between files in the component and libraries, classified
    by requires (when implementations of such requires are not found).
 *)
-let reqs_of_component component required =
+let reqs_of_component ~reader component required =
   let dep_cxs, reqs =
     List.fold_left (fun (dep_cxs, reqs) req ->
       let r, locs, resolved_r, file = req in
-      let locs = locs |> Nel.to_list |> LocSet.of_list in
-      Module_js.(match get_file Expensive.ok resolved_r with
+      let locs = locs |> Nel.to_list |> ALocSet.of_list in
+      Module_heaps.(match Reader_dispatcher.get_file ~reader ~audit:Expensive.ok resolved_r with
       | Some (File_key.ResourceFile f) ->
         dep_cxs, Reqs.add_res f file locs reqs
       | Some dep ->
-        let info = get_info_unsafe ~audit:Expensive.ok dep in
+        let info = Reader_dispatcher.get_info_unsafe ~reader ~audit:Expensive.ok dep in
         if info.checked && info.parsed then
           (* checked implementation exists *)
           let m = Files.module_ref dep in
@@ -63,8 +71,8 @@ let reqs_of_component component required =
             dep_cxs, Reqs.add_impl m file locs reqs
           else
             (* look up impl sig_context *)
-            let leader = Context_cache.find_leader dep in
-            let dep_cx = Context_cache.find_sig leader in
+            let leader = Context_heaps.Reader_dispatcher.find_leader ~reader dep in
+            let dep_cx = Context_heaps.Reader_dispatcher.find_sig ~reader leader in
             dep_cx::dep_cxs, Reqs.add_dep_impl m file (dep_cx, locs) reqs
         else
           (* unchecked implementation exists *)
@@ -76,100 +84,115 @@ let reqs_of_component component required =
     ) ([], Reqs.empty) required
   in
 
-  let master_cx = Context_cache.find_sig File_key.Builtins in
+  let master_cx = Context_heaps.Reader_dispatcher.find_sig ~reader File_key.Builtins in
 
   master_cx, dep_cxs, reqs
 
-let merge_strict_context ~options component =
+let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_unsafe component =
   let required, file_sigs =
     Nel.fold_left (fun (required, file_sigs) file ->
-      let file_sig = Parsing_service_js.get_file_sig_unsafe file in
-      let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
+      let file_sig = get_file_sig_unsafe ~reader file in
+      let file_sigs = FilenameMap.add file file_sig file_sigs in
+      let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
       let required = SMap.fold (fun r locs acc ->
-        let resolved_r = Module_js.find_resolved_module ~audit:Expensive.ok
+        let resolved_r = Module_js.find_resolved_module ~reader ~audit:Expensive.ok
           file r in
         (r, locs, resolved_r, file) :: acc
       ) require_loc_map required in
-      required, FilenameMap.add file file_sig file_sigs
+      required, file_sigs
     ) ([], FilenameMap.empty) component in
 
   let master_cx, dep_cxs, file_reqs =
-    reqs_of_component component required
+    reqs_of_component ~reader component required
   in
 
   let metadata = Context.metadata_of_options options in
   let lint_severities = Options.lint_severities options in
+  let file_options = Some (Options.file_options options) in
   let strict_mode = Options.strict_mode options in
-  let cx, other_cxs = Merge_js.merge_component_strict
-    ~metadata ~lint_severities ~strict_mode ~file_sigs
-    ~get_ast_unsafe:Parsing_service_js.get_ast_unsafe
-    ~get_docblock_unsafe:Parsing_service_js.get_docblock_unsafe
-    ~do_gc:(Options.is_debug_mode options)
+  let (((cx, _, _), other_cxs) as cx_nel) = Merge_js.merge_component_strict
+    ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
+    ~get_ast_unsafe:(get_ast_unsafe ~reader)
+    ~get_docblock_unsafe:(Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader)
     component file_reqs dep_cxs master_cx
   in
 
-  { cx; other_cxs; master_cx }
+  let typed_asts, coverage_map = Nel.fold_left (fun (typed_asts, cov_map) (ctx, typed_ast, cov) ->
+    let file = Context.file ctx in
+    FilenameMap.add file typed_ast typed_asts, FilenameMap.add file cov cov_map
+  ) (FilenameMap.empty, FilenameMap.empty) cx_nel in
+
+  let other_cxs = Core_list.map ~f:(fun (cx, _, _) -> cx) other_cxs in
+
+  { cx; other_cxs; master_cx; file_sigs; typed_asts; coverage_map }
+
+let merge_strict_context ~options ~reader component =
+  merge_strict_context_generic ~options ~reader
+    ~get_ast_unsafe:(match options.Options.opt_arch with
+      | Options.Classic -> fun ~reader file ->
+        let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        (comments, aloc_ast)
+      | Options.TypesFirst -> fun ~reader file ->
+        let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
+        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        (comments, aloc_ast)
+    )
+    ~get_file_sig_unsafe:(match options.Options.opt_arch with
+      | Options.Classic -> fun ~reader file ->
+        let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
+        File_sig.abstractify_locs loc_file_sig
+      | Options.TypesFirst -> fun ~reader file ->
+        let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe ~reader file in
+        File_sig.abstractify_locs loc_file_sig
+    )
+    component
 
 (* Variation of merge_strict_context where requires may not have already been
    resolved. This is used by commands that make up a context on the fly. *)
-let merge_contents_context options file ast info file_sig ~ensure_checked_dependencies =
-  let resolved_rs, required =
-    let require_loc_map = File_sig.(require_loc_map file_sig.module_sig) in
-    SMap.fold (fun r locs (resolved_rs, required) ->
+let merge_contents_context ~reader options file ast info file_sig =
+  let (_, _, comments) = ast in
+  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let reader = Abstract_state_reader.State_reader reader in
+  let file_sig = File_sig.abstractify_locs file_sig in
+  let required =
+    let require_loc_map = File_sig.With_ALoc.(require_loc_map file_sig.module_sig) in
+    SMap.fold (fun r (locs: ALoc.t Nel.t) required ->
       let resolved_r = Module_js.imported_module
         ~options
+        ~reader
         ~node_modules_containers:!Files.node_modules_containers
         file locs r in
-      Modulename.Set.add resolved_r resolved_rs,
       (r, locs, resolved_r, file) :: required
-    ) require_loc_map (Modulename.Set.empty, [])
+    ) require_loc_map []
   in
   let file_sigs = FilenameMap.singleton file file_sig in
 
-  ensure_checked_dependencies resolved_rs (fun () ->
+  let component = Nel.one file in
 
-    let component = Nel.one file in
-
-    let master_cx, dep_cxs, file_reqs =
-      begin try reqs_of_component component required with
-        | Key_not_found _  ->
-          failwith "not all dependencies are ready yet, aborting..."
-        | e -> raise e
-      end
-    in
-
-    let metadata = Context.metadata_of_options options in
-    let lint_severities = Options.lint_severities options in
-    let strict_mode = Options.strict_mode options in
-    let cx, _ = Merge_js.merge_component_strict
-      ~metadata ~lint_severities ~strict_mode ~file_sigs
-      ~get_ast_unsafe:(fun _ -> ast)
-      ~get_docblock_unsafe:(fun _ -> info)
-      component file_reqs dep_cxs master_cx
-    in
-
-    cx
-  )
-
-(* This is a version of merge_contents_context which doesn't call ensure_checked_dependencies.
- * This makes it a little unsafe, so only use it if you're 100% sure all the needed dependencies
- * have already been checked.
- *
- * The advantage to this function is that, since we know all the dependencies have been checked,
- * we never need to call MultiWorkerLwt and this function doesn't return an Lwt.t *)
-let merge_contents_context_without_ensure_checked_dependencies options file ast info file_sig =
-  let ensure_checked_dependencies _resolved_rs callback = callback () in
-  merge_contents_context options file ast info file_sig ~ensure_checked_dependencies
-
-let merge_contents_context options file ast info file_sig ~ensure_checked_dependencies =
-  let ensure_checked_dependencies resolved_rs callback =
-    let%lwt () = ensure_checked_dependencies resolved_rs in
-    Lwt.return (callback ())
+  let master_cx, dep_cxs, file_reqs =
+    begin try reqs_of_component ~reader component required with
+      | Key_not_found _  ->
+        failwith "not all dependencies are ready yet, aborting..."
+      | e -> raise e
+    end
   in
-  merge_contents_context options file ast info file_sig ~ensure_checked_dependencies
+
+  let metadata = Context.metadata_of_options options in
+  let lint_severities = Options.lint_severities options in
+  let file_options = Some (Options.file_options options) in
+  let strict_mode = Options.strict_mode options in
+  let ((cx, tast, _), _) = Merge_js.merge_component_strict
+    ~metadata ~lint_severities ~file_options ~strict_mode ~file_sigs
+    ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
+    ~get_docblock_unsafe:(fun _ -> info)
+    component file_reqs dep_cxs master_cx
+  in
+
+  (cx, tast)
 
 (* Entry point for merging a component *)
-let merge_strict_component ~options merged_acc component =
+let merge_strict_component ~worker_mutator ~options ~reader component =
   let file = Nel.hd component in
 
   (* We choose file as the leader, and other_files are followers. It is always
@@ -184,9 +207,11 @@ let merge_strict_component ~options merged_acc component =
 
      It also follows when file is checked, other_files must be checked too!
   *)
-  let info = Module_js.get_info_unsafe ~audit:Expensive.ok file in
-  if info.Module_js.checked then (
-    let { cx; other_cxs = _; master_cx } = merge_strict_context ~options component in
+  let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
+  if info.Module_heaps.checked then (
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let { cx; other_cxs = _; master_cx; coverage_map; _ } =
+      merge_strict_context ~options ~reader component in
 
     let module_refs = List.rev_map Files.module_ref (Nel.to_list component) in
     let md5 = Merge_js.ContextOptimizer.sig_context cx module_refs in
@@ -196,6 +221,10 @@ let merge_strict_component ~options merged_acc component =
     let errors = Context.errors cx in
     let suppressions = Context.error_suppressions cx in
     let severity_cover = Context.severity_cover cx in
+    let include_suppressions = Context.include_suppressions cx in
+
+    let errors, warnings, suppressions =
+      Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
 
     Context.remove_all_errors cx;
     Context.remove_all_error_suppressions cx;
@@ -203,18 +232,47 @@ let merge_strict_component ~options merged_acc component =
 
     Context.clear_intermediates cx;
 
-    Context_cache.add_merge_on_diff ~audit:Expensive.ok cx component md5;
+    Context_heaps.Merge_context_mutator.add_merge_on_diff
+      ~audit:Expensive.ok worker_mutator cx component md5;
 
-    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
+    Ok (errors, warnings, suppressions, coverage_map)
   )
   else
-    let errors = Errors.ErrorSet.empty in
+    let errors = Flow_error.ErrorSet.empty in
     let suppressions = Error_suppressions.empty in
-    let severity_cover =
-      ExactCover.file_cover file
-        (Options.lint_severities options)
-    in
-    (file, Ok (errors, suppressions, severity_cover)) :: merged_acc
+    let warnings = Flow_error.ErrorSet.empty in
+    let coverage = FilenameMap.empty in
+    Ok (errors, warnings, suppressions, coverage)
+
+let check_file options ~reader file =
+  let info = Module_heaps.Mutator_reader.get_info_unsafe ~reader ~audit:Expensive.ok file in
+  if info.Module_heaps.checked then (
+    let reader = Abstract_state_reader.Mutator_state_reader reader in
+    let { cx; coverage_map; _; } = merge_strict_context_generic ~options ~reader
+      ~get_ast_unsafe:(fun ~reader file ->
+        let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        (comments, aloc_ast)
+      )
+      ~get_file_sig_unsafe:(fun ~reader file ->
+        Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file
+        |> File_sig.abstractify_locs
+      )
+      (Nel.one file) in
+    let errors = Context.errors cx in
+    let suppressions = Context.error_suppressions cx in
+    let severity_cover = Context.severity_cover cx in
+    let include_suppressions = Context.include_suppressions cx in
+    let errors, warnings, suppressions =
+      Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+    errors, warnings, suppressions, coverage_map
+  )
+  else
+    let errors = Flow_error.ErrorSet.empty in
+    let suppressions = Error_suppressions.empty in
+    let warnings = Flow_error.ErrorSet.empty in
+    let coverage = FilenameMap.empty in
+    (errors, warnings, suppressions, coverage)
 
 (* Wrap a potentially slow operation with a timer that fires every interval seconds. When it fires,
  * it calls ~on_timer. When the operation finishes, the timer is cancelled *)
@@ -240,14 +298,14 @@ let with_async_logging_timer ~interval ~on_timer ~f =
   cancel_timer ();
   ret
 
-let merge_strict_job ~job ~options merged elements =
+let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
   List.fold_left (fun merged -> function
     | Merge_stream.Component component ->
       (* A component may have several files: there's always at least one, and
          multiple files indicate a cycle. *)
       let files = component
       |> Nel.to_list
-      |> List.map File_key.to_string
+      |> Core_list.map ~f:File_key.to_string
       |> String.concat "\n\t"
       in
 
@@ -259,13 +317,13 @@ let merge_strict_job ~job ~options merged elements =
         ~on_timer:(fun run_time ->
           Hh_logger.info "[%d] Slow MERGE (%f seconds so far): %s" (Unix.getpid()) run_time files;
           Option.iter merge_timeout ~f:(fun merge_timeout ->
-            if run_time >= merge_timeout then raise (Flow_error.EMergeTimeout run_time)
+            if run_time >= merge_timeout then raise (Error_message.EMergeTimeout run_time)
           )
         )
         ~f:(fun () ->
           let start_time = Unix.gettimeofday () in
           (* prerr_endlinef "[%d] MERGE: %s" (Unix.getpid()) files; *)
-          let ret = job ~options merged component in
+          let ret = job ~worker_mutator ~options ~reader component in
           let merge_time = Unix.gettimeofday () -. start_time in
           if Options.should_profile options then begin
             let length = Nel.length component in
@@ -274,7 +332,7 @@ let merge_strict_job ~job ~options merged elements =
             if merge_time > 1.0
             then Hh_logger.info "[%d] perf: merged %s in %f" (Unix.getpid()) files merge_time
           end;
-          ret
+          (Nel.hd component, ret) :: merged
         )
       with
       | SharedMem_js.Out_of_shared_memory
@@ -282,20 +340,24 @@ let merge_strict_job ~job ~options merged elements =
       | SharedMem_js.Hash_table_full
       | SharedMem_js.Dep_table_full as exc -> raise exc
       (* A catch all suppression is probably a bad idea... *)
-      | exc ->
+      | unwrapped_exc ->
+        let exc = Exception.wrap unwrapped_exc in
+
+        let exn_str = Printf.sprintf "%s: %s" files (Exception.to_string exc) in
         (* Ensure heaps are in a good state before continuing. *)
-        Context_cache.add_merge_on_exn ~audit:Expensive.ok ~options component;
+        Context_heaps.Merge_context_mutator.add_merge_on_exn
+          ~audit:Expensive.ok worker_mutator ~options component;
         (* In dev mode, fail hard, but log and continue in prod. *)
-        if Build_mode.dev then raise exc else
+        if Build_mode.dev then Exception.reraise exc else
           prerr_endlinef "(%d) merge_strict_job THROWS: [%d] %s\n"
-            (Unix.getpid()) (Nel.length component) (fmt_file_exc files exc);
+            (Unix.getpid()) (Nel.length component) exn_str;
         (* An errored component is always changed. *)
         let file = Nel.hd component in
-        let file_loc = Loc.({ none with source = Some file }) in
+        let file_loc = Loc.({ none with source = Some file }) |> ALoc.of_loc in
         (* We can't pattern match on the exception type once it's marshalled
            back to the master process, so we pattern match on it here to create
            an error result. *)
-        let result = Error Flow_error.(match exc with
+        let result = Error Error_message.(match unwrapped_exc with
         | EDebugThrow loc -> EInternal (loc, DebugThrow)
         | EMergeTimeout s -> EInternal (file_loc, MergeTimeout s)
         | _ -> EInternal (file_loc, MergeJobException exc)
@@ -304,8 +366,10 @@ let merge_strict_job ~job ~options merged elements =
   ) merged elements
 
 (* make a map from component leaders to components *)
-let merge_runner ~job ~intermediate_result_callback ~options ~workers
+let merge_runner
+    ~job ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
     dependency_graph component_map recheck_map =
+  let num_workers = Options.max_workers options in
   (* make a map from files to their component leaders *)
   let leader_map =
     FilenameMap.fold (fun file component acc ->
@@ -320,17 +384,28 @@ let merge_runner ~job ~intermediate_result_callback ~options ~workers
   ) component_map in
 
   let start_time = Unix.gettimeofday () in
+  let stream = Merge_stream.create
+    ~num_workers
+    ~dependency_graph
+    ~leader_map
+    ~component_map
+    ~recheck_leader_map
+    ~intermediate_result_callback
+  in
+  Merge_stream.update_server_status stream;
   (* returns parallel lists of filenames, error sets, and suppression sets *)
   let%lwt ret = MultiWorkerLwt.call
     workers
-    ~job: (merge_strict_job ~options ~job)
+    ~job: (merge_strict_job ~worker_mutator ~reader ~options ~job)
     ~neutral: []
-    ~merge: (Merge_stream.join intermediate_result_callback)
-    ~next: (Merge_stream.make
-              dependency_graph leader_map component_map recheck_leader_map)
+    ~merge:(Merge_stream.merge ~master_mutator ~reader stream)
+    ~next:(Merge_stream.next stream)
   in
+  let total_files = Merge_stream.total_files stream in
+  let skipped_files = Merge_stream.skipped_files stream in
+  Hh_logger.info "Merge skipped %d of %d modules" skipped_files total_files;
   let elapsed = Unix.gettimeofday () -. start_time in
   if Options.should_profile options then Hh_logger.info "merged (strict) in %f" elapsed;
-  Lwt.return ret
+  Lwt.return (ret, skipped_files)
 
 let merge_strict = merge_runner ~job:merge_strict_component

@@ -23,7 +23,7 @@ This will give you information about everything that flow can do. Running this
 command should print something like this:
 
 ```
-Usage: flow [COMMAND]
+Usage: flow [COMMAND] [PROJECT_ROOT]
 
 Valid values for COMMAND:
   ast             Print the AST
@@ -36,7 +36,6 @@ Valid values for COMMAND:
   get-importers   Gets a list of all importers for one or more given modules
   get-imports     Get names of all modules imported by one or more given modules
   init            Initializes a directory to be used as a flow root directory
-  port            Shows ported type annotations for given files
   server          Runs a Flow server in the foreground
   start           Starts a Flow server
   status          (default) Shows current Flow errors by asking the Flow server
@@ -47,6 +46,7 @@ Valid values for COMMAND:
 
 Default values if unspecified:
   COMMAND         status
+  PROJECT_ROOT    current folder
 
 Status command options:
   --color              Display terminal output in color. never, always, auto (default: auto)
@@ -62,7 +62,20 @@ Status command options:
   --strip-root         Print paths without the root
   --temp-dir           Directory in which to store temp files (default: /tmp/flow/)
   --timeout            Maximum time to wait, in seconds
-  --version            (Deprecated, use `flow version` instead) Print version number and exit
+  --version            Print version number and exit
+```
+
+Example with custom project root:
+```sh
+mydir
+├── frontend
+│   ├── .flowconfig
+│   └── app.js
+└── backend
+```
+
+```sh
+flow check frontend
 ```
 
 You can then, further dig into particular COMMANDs by adding the `--help` flag.

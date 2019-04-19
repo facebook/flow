@@ -1,0 +1,36 @@
+Invalid flowconfig should fail
+.flowconfig:2 Unsupported option specified! (invalid_option1)
+.flowconfig:3 Unsupported option specified! (invalid_option2)
+.flowconfig:4 Unsupported option specified! (invalid_option2)
+
+Invalid flowconfig should pass
+.flowconfig:2 Unsupported option specified! (invalid_option1)
+.flowconfig:3 Unsupported option specified! (invalid_option2)
+.flowconfig:4 Unsupported option specified! (invalid_option2)
+Found 0 errors
+
+flow config check:
+{
+  "errors":[
+    {
+      "line":2,
+      "message":"Unsupported option specified! (invalid_option1)",
+      "level":"warning"
+    },
+    {
+      "line":3,
+      "message":"Unsupported option specified! (invalid_option2)",
+      "level":"warning"
+    },
+    {
+      "line":4,
+      "message":"Unsupported option specified! (invalid_option2)",
+      "level":"warning"
+    }
+  ],
+  "flowVersion":"<VERSION>",
+  "exit":{"code":8,"reason":"Invalid_flowconfig"}
+}
+
+flow config check --ignore-version:
+{}

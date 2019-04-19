@@ -1,11 +1,16 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 open OUnit2
+
+(* Unsafe *)
+let of_list lst = match Nel.of_list lst with
+  | Some nel -> nel
+  | None -> raise Not_found
 
 let assert_identical ~ctxt x y =
   assert_equal ~ctxt (x == y) true
@@ -69,6 +74,10 @@ let tests = "nel" >::: [
     assert_equal ~ctxt (Nel.rev_append lst lst2 |> Nel.to_list) [2; 4; 6; 3; 5]
   end;
 
+  "append" >:: begin fun ctxt ->
+    assert_equal ~ctxt (Nel.append lst lst2 |> Nel.to_list) [6; 4; 2; 3; 5]
+  end;
+
   "length" >:: begin fun ctxt ->
     assert_equal ~ctxt (Nel.length lst) 3
   end;
@@ -85,5 +94,11 @@ let tests = "nel" >::: [
     assert_equal ~ctxt (Nel.nth lst 0) 6;
     assert_equal ~ctxt (Nel.nth lst 1) 4;
     assert_equal ~ctxt (Nel.nth lst 2) 2
+  end;
+
+  "cat_maybes" >:: begin fun ctxt ->
+    assert_equal ~ctxt (Nel.cat_maybes (of_list [None])) None;
+    assert_equal ~ctxt (Nel.cat_maybes (of_list [Some 1; None])) (Some (of_list [1]));
+    assert_equal ~ctxt (Nel.cat_maybes (of_list [Some 0; None; Some 1])) (Some (of_list [0; 1]))
   end;
 ]

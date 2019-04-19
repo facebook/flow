@@ -25,14 +25,13 @@ let bool : boolean = tuple[1]; // Works!
 let str  : string  = tuple[2]; // Works!
 ```
 
-If you try getting from an index that does not exist it will return a type of
-`void`.
+Trying to access an index that does not exist results in an index-out-of-bounds error.
 
 ```js
 // @flow
 let tuple: [number, boolean, string] = [1, true, "three"];
 
-let none: void = tuple[3];
+let none = tuple[3]; // Error!
 ```
 
 If Flow doesn't know which index you are trying to access it will return all

@@ -55,11 +55,11 @@ class J extends React.Component<{p?: ?number}> {
 ({p: 42}: React.ElementConfig<typeof B>); // OK
 ({p: 'foo'}: React.ElementConfig<typeof B>); // Error: string ~> number
 
-({}: React.ElementConfig<typeof C>); // Error: missing property `p`
+(({}: {}): React.ElementConfig<typeof C>); // Error: missing property `p`
 ({p: 42}: React.ElementConfig<typeof C>); // OK
 ({p: 'foo'}: React.ElementConfig<typeof C>); // Error: string ~> number
 
-({}: React.ElementConfig<typeof D>); // Error: missing property `p`
+(({}: {}): React.ElementConfig<typeof D>); // Error: missing property `p`
 ({p: 42}: React.ElementConfig<typeof D>); // OK
 ({p: 'foo'}: React.ElementConfig<typeof D>); // Error: string ~> number
 

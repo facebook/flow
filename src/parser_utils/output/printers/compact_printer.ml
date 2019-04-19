@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -14,15 +14,11 @@ let print ~source_maps node =
       let src = print_node src node in
       let src = Source.pop_loc src in
       src
-    | Sequence ({ break=Break_always; inline=(left, right); indent = _ }, nodes) ->
-        List.fold_left (fun src node ->
-          let src = if not left then Source.add_newline src else src in
-          let src = print_node src node in
-          let src = if not right then Source.add_newline src else src in
-          src
-        ) src nodes
     | Concat nodes
+    | Group nodes
     | Sequence (_, nodes) -> List.fold_left print_node src nodes
+    | Indent node -> print_node src node
+    | Newline -> Source.add_newline src
     | Atom s -> Source.add_string s src
     | Identifier (loc, s) -> Source.add_identifier loc s src
     | IfPretty (_, node) -> print_node src node

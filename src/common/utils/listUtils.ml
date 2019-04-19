@@ -1,11 +1,23 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
-module M_ = Monad
+let rev_filter_map f lst =
+  let rec loop lst acc =
+    match lst with
+    | [] -> acc
+    | hd :: tl ->
+      match f hd with
+      | Some x -> loop tl (x :: acc)
+      | None   -> loop tl acc
+  in
+  loop lst []
+;;
+
+let filter_map f lst = rev_filter_map f lst |> Core_list.rev
 
 (** like List.fold_left, but f returns an option and so do we.
     f acc v = Some acc proceeds as usual; None stops the fold.
@@ -79,13 +91,33 @@ let rec first_some_map f = function
     | None -> first_some_map f tl
   end
 
+(** this function takes a list and truncates it if needed to no more than
+    the first n elements. If truncation happened, then the callback 'f'
+    is used to generated a final element e.g. "shown 5/200" *)
+let first_upto_n n f lst =
+  let (first, total) = Core_list.fold lst ~init:([],0) ~f:(fun (first, total) s ->
+    let first = if total < n then (s :: first) else first in
+    (first, total + 1)) in
+  let r = if total <= n then first else match f total with
+    | None -> first
+    | Some e -> e :: first in
+  Core_list.rev r
+
 (* truncate a list to first 0 < n <= len items *)
 let first_n n lst =
-  List.rev (fold_left_for n (fun rl x -> x :: rl) [] lst)
+  fold_left_for n (Fn.flip Core_list.cons) [] lst |> Core_list.rev
 
 (* truncate a list to last 0 < n <= len items *)
 let last_n n lst =
-  fold_left_for n (fun rl x -> x :: rl) [] (List.rev lst)
+  Core_list.rev lst |> fold_left_for n (Fn.flip Core_list.cons) []
+
+(* split a list into a list of lists, each of length n except the last whose length is in [0, n) *)
+let bucket_n n lst =
+  let _, curr, all = Core_list.fold_left ~f:(fun (i, curr, all) result ->
+    if i = n then 1, [result], (Core_list.rev curr)::all
+    else i+1, result::curr, all
+  ) ~init:(0, [], []) lst in
+  (Core_list.rev curr)::all |> Core_list.rev
 
 (* make a list of n copies of a given value *)
 let copy_n n v =
@@ -110,11 +142,34 @@ let rec phys_uniq = function
 
 (** performs a map, but returns the original list if there is no change **)
 let ident_map f lst =
-  let rev_lst, changed = List.fold_left (fun (lst_, changed) item ->
+  let rev_lst, changed = Core_list.fold_left ~f:(fun (lst_, changed) item ->
     let item_ = f item in
     item_::lst_, changed || item_ != item
-  ) ([], false) lst in
-  if changed then List.rev rev_lst else lst
+  ) ~init:([], false) lst in
+  if changed then Core_list.rev rev_lst else lst
+
+let ident_mapi f lst =
+  let _, rev_lst, changed = Core_list.fold_left ~f:(fun (index, lst_, changed) item ->
+    let item_ = f index item in
+    index + 1, item_::lst_, changed || item_ != item
+  ) ~init:(0, [], false) lst in
+  if changed then Core_list.rev rev_lst else lst
+
+let ident_map_multiple f lst =
+  let rev_lst, changed = Core_list.fold_left ~f:(fun (lst_, changed) item ->
+    match f item with
+    | [] -> lst_, true
+    | [item_] -> item_ :: lst_, changed || item != item_
+    | items_ -> Core_list.rev_append items_ lst_, true
+  ) ~init:([], false) lst in
+  if changed then Core_list.rev rev_lst else lst
+
+(** performs a filter, but returns the original list if there is no change **)
+let ident_filter f lst =
+  let rev_lst, changed = Core_list.fold_left ~f:(fun (lst', changed) item ->
+    if f item then item::lst', changed else lst', true
+  ) ~init:([], false) lst in
+  if changed then Core_list.rev rev_lst else lst
 
 let rec combine3 = function
   | ([], [], []) -> []
@@ -127,7 +182,7 @@ let rec split3 = function
       let (rx, ry,rz) = split3 l in (x::rx, y::ry, z::rz)
 
 let zipi xs ys =
-  List.combine xs ys |> List.mapi (fun i (x, y) -> (i,x,y))
+  Core_list.zip_exn xs ys |> Core_list.mapi ~f:(fun i (x, y) -> (i,x,y))
 
 let range_with f a b =
   if a > b then []
@@ -152,73 +207,45 @@ let rec cat_maybes = function
     accumulator
   *)
 let fold_map f acc xs =
-  let acc', ys = List.fold_left (fun (a, ys) x ->
+  let acc', ys = Core_list.fold_left ~f:(fun (a, ys) x ->
     let (a', y) = f a x in
     (a', y :: ys)
-  ) (acc, []) xs in
-  (acc', List.rev ys)
+  ) ~init:(acc, []) xs in
+  (acc', Core_list.rev ys)
 
 let concat_fold f acc items =
-  let acc, lists = List.fold_left (fun (acc, lists) item ->
+  let acc, lists = Core_list.fold_left ~f:(fun (acc, lists) item ->
     let acc, list = f acc item in
     acc, list :: lists
-  ) (acc, []) items in
-  acc, List.concat lists
+  ) ~init:(acc, []) items in
+  acc, Core_list.concat lists
 
-(** Monadic versions of previous folding operations
+let last_opt l =
+  let rec last l v = match l with
+  | [] -> v
+  | x :: xs -> last xs x
+  in
+  Core_list.nth l 0
+  |> Option.map ~f:(last l)
 
-    It's unfortunate that we have to replicate the definitions for
-    the cases where the monadic module accepts 1 or 2 type paramenters.
-  *)
-
-module Monad (M : M_.S) = struct
-
-  include M_.Make(struct
-    type 'a t = 'a M.t
-    let bind   = M.bind
-    let return = M.return
-    let map = `Custom M.map
-  end)
-
-  let fold_map_m f init xs =
-    List.fold_left (fun acc x -> acc >>= (fun (s, ys) ->
-      f s x >>| fun (s', y) ->
-      (s', y :: ys)
-    )) (return (init, [])) xs >>| fun (acc', ys) ->
-    (acc', List.rev ys)
-
-  let concat_fold_m f init items =
-    List.fold_left (fun a item -> a >>= fun (acc, lists) ->
-      f acc item >>| fun (acc, list) ->
-      (acc, list :: lists)
-    ) (return (init, [])) items >>| fun (acc, lists) ->
-    (acc, List.concat lists)
-end
-
-module Monad2 (M : M_.S2) = struct
-
-  include M_.Make2(struct
-    type ('a, 'b) t = ('a,'b) M.t
-    let bind   = M.bind
-    let return = M.return
-    let map = `Custom M.map
-  end)
-
-  let fold_map_m f init xs =
-    List.fold_left (fun acc x -> acc >>= (fun (s, ys) ->
-      f s x >>| fun (s', y) ->
-      (s', y :: ys)
-    )) (return (init, [])) xs >>| fun (acc', ys) ->
-    (acc', List.rev ys)
-
-  let concat_fold_m f init items =
-    List.fold_left (fun a item -> a >>= fun (acc, lists) ->
-      f acc item >>| fun (acc, list) ->
-      (acc, list :: lists)
-    ) (return (init, [])) items >>| fun (acc, lists) ->
-    (acc, List.concat lists)
-end
+let is_empty = function
+  | [] -> true
+  | _ -> false
 
 (* Stringify a list given a separator and a printer for the element type *)
 let to_string separator printer list =
-  String.concat separator @@ List.map printer list
+  String.concat separator @@ Core_list.map ~f:printer list
+
+(* Stringify an association list given a separator, a printer for the key type, a key/value
+   separator, and a printer for the value type *)
+let assoc_to_string separator key_printer key_value_separator value_printer list =
+  to_string separator (fun (k, v) ->
+    Printf.sprintf "%s%s%s" (key_printer k) key_value_separator (value_printer v)
+  ) list
+
+(* Dedups a list in O(n) time and space. Unlike Core_list.dedup, this
+   preserves order. Core's implementation is also O(n log n) *)
+let dedup l =
+  let tbl = Core_list.length l |> Hashtbl.create  in
+  let f l e = if Hashtbl.mem tbl e then l else begin Hashtbl.add tbl e (); e :: l end in
+  Core_list.fold_left ~f ~init:[] l |> Core_list.rev

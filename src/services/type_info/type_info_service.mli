@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2018-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -7,9 +7,10 @@
 
 val type_at_pos :
   options:Options.t ->
-  workers:MultiWorkerLwt.worker list option ->
-  env:ServerEnv.env ref ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
+  expand_aliases:bool ->
+  omit_targ_defaults:bool ->
   File_key.t ->
   string ->
   int ->
@@ -19,8 +20,7 @@ val type_at_pos :
 
 val dump_types :
   options:Options.t ->
-  workers:MultiWorkerLwt.worker list option ->
-  env:ServerEnv.env ref ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   File_key.t ->
   string ->
@@ -28,23 +28,22 @@ val dump_types :
 
 val coverage :
   options:Options.t ->
-  workers:MultiWorkerLwt.worker list option ->
-  env:ServerEnv.env ref ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   force:bool ->
+  trust:bool ->
   File_key.t ->
-  string -> ((Loc.t * bool) list, string) Core_result.t Lwt.t
+  string -> ((Loc.t * Coverage.expression_coverage) list, string) Core_result.t Lwt.t
 
 val suggest :
   options:Options.t ->
-  workers:MultiWorkerLwt.worker list option ->
-  env:ServerEnv.env ref ->
+  env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   File_key.t ->
   string ->
-  ((Errors.ErrorSet.t *   (* Typechecking errors *)
-    Errors.ErrorSet.t *   (* Typechecking warnings *)
-    Errors.ErrorSet.t *   (* Suggest-related warnings (normalization etc.) *)
-    Loc.t Ast.program),   (* Annotated program *)
-    Errors.ErrorSet.t     (* Parsing errors *)
+  ((Errors.ConcreteLocPrintableErrorSet.t *   (* Typechecking errors *)
+    Errors.ConcreteLocPrintableErrorSet.t *   (* Typechecking warnings *)
+    Errors.ConcreteLocPrintableErrorSet.t *   (* Suggest-related warnings (normalization etc.) *)
+    (Loc.t, Loc.t) Flow_ast.program),   (* Annotated program *)
+    Errors.ConcreteLocPrintableErrorSet.t     (* Parsing errors *)
   ) Core_result.t Lwt.t

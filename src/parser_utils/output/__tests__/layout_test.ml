@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -36,11 +36,11 @@ let tests = "layout" >::: [
       assert_layout ~ctxt expected actual;
 
       let actual = fuse_list ~wrap:(c, d) [a; b] in
-      let expected = Concat [c; Concat [a; pretty_space; b]; d] in
+      let expected = Concat [c; a; pretty_space; b; d] in
       assert_layout ~ctxt expected actual;
 
       let actual = fuse_list ~sep ~wrap:(c, d) [a; b] in
-      let expected = Concat [c; Concat [a; sep; pretty_space; b]; d] in
+      let expected = Concat [c; a; sep; pretty_space; b; d] in
       assert_layout ~ctxt expected actual;
     end;
 ]

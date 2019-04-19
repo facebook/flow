@@ -100,6 +100,14 @@ callback.
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------- requireLazy.js:21:14
+
+Cannot resolve name `nope`.
+
+   21| requireLazy([nope], function() {}); // Error: Non-stringliteral args
+                    ^^^^
+
+
 Error ---------------------------------------------------------------------------------------------- requireLazy.js:22:1
 
 The first argument to `requireLazy` must be an array literal of string literals and the second argument must be a
@@ -110,4 +118,4 @@ callback.
 
 
 
-Found 9 errors
+Found 10 errors

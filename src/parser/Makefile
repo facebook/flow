@@ -1,4 +1,4 @@
-# Copyright (c) 2013-present, Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 #
 # This source code is licensed under the MIT license found in the
 # LICENSE file in the root directory of this source tree.
@@ -11,6 +11,7 @@ OCB = ocamlbuild -use-ocamlfind
 
 NATIVE_OBJECT_FILES=\
 	hack/utils/sys/files.o\
+	hack/utils/sys/gc_profiling.o\
 	hack/utils/sys/getrusage.o\
 	hack/utils/sys/nproc.o\
 	hack/utils/sys/realpath.o\
@@ -99,7 +100,6 @@ test-js: js
 		$(NATIVE_OBJECT_FILES); \
 	$(OCB) -no-links \
 		$(foreach dir,$(RUNNER_DEPS),-I $(dir)) \
-	 	-lib unix -lib str \
 	 	-lflags "$(NATIVE_OBJECT_FILES)" \
 		$(REL_DIR)/test/run_tests.native
 

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -12,9 +12,17 @@ val process_updates :
   SSet.t ->
   Utils_js.FilenameSet.t
 
-val recheck:
+val recheck_single:
+  ?files_to_recheck:Utils_js.FilenameSet.t ->
+  ?files_to_force:CheckedSet.t ->
+  ?file_watcher_metadata:MonitorProt.file_watcher_metadata ->
   ServerEnv.genv ->
   ServerEnv.env ->
-  ?force_focus:bool ->
-  Utils_js.FilenameSet.t ->
-  (Profiling_js.finished option * ServerEnv.env) Lwt.t
+  (Profiling_js.finished * ServerEnv.env, ServerEnv.env) result Lwt.t
+
+val recheck_loop:
+  ServerEnv.genv ->
+  ServerEnv.env ->
+  (Profiling_js.finished list * ServerEnv.env) Lwt.t
+
+val get_lazy_stats: ServerEnv.genv -> ServerEnv.env -> ServerProt.Response.lazy_stats

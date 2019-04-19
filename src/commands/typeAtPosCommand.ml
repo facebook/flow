@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -25,14 +25,20 @@ let spec = {
       CommandUtils.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_and_json_flags
+    |> base_flags
+    |> connect_and_json_flags
     |> root_flag
     |> strip_root_flag
     |> verbose_flags
     |> from_flag
     |> path_flag
+    |> wait_for_recheck_flag
     |> flag "--expand-json-output" no_arg
         ~doc:"Includes an expanded version of the returned JSON type (implies --json)"
+    |> flag "--expand-type-aliases" no_arg
+        ~doc:"Replace type aliases with their bodies"
+    |> flag "--omit-typearg-defaults" no_arg
+        ~doc:"Omit type arguments when defaults exist and match the provided type argument"
     |> anon "args" (required (list_of string))
   )
 }
@@ -62,7 +68,7 @@ let parse_args path args =
   let (line, column) = convert_input_pos (line, column) in
   file, line, column
 
-let handle_response (loc, t) ~json ~pretty ~strip_root ~expanded =
+let handle_response (loc, t) ~file_contents ~json ~pretty ~strip_root ~expanded =
   let ty = match t with
     | None -> "(unknown)"
     | Some ty -> Ty_printer.string_of_t ty
@@ -71,10 +77,11 @@ let handle_response (loc, t) ~json ~pretty ~strip_root ~expanded =
   then (
     let open Hh_json in
     let open Reason in
+    let offset_table = Option.map file_contents ~f:Offset_utils.make in
     let json_assoc = (
         ("type", JSON_String ty) ::
         ("reasons", JSON_Array []) ::
-        ("loc", json_of_loc ~strip_root loc) ::
+        ("loc", json_of_loc ~strip_root ~offset_table loc) ::
         (Errors.deprecated_json_props_of_loc ~strip_root loc)
     ) in
     let json_assoc =
@@ -103,11 +110,12 @@ let handle_error err ~json ~pretty =
     prerr_endline err
   )
 
-let main option_values json pretty root strip_root verbose from path expanded args () =
-  FlowEventLogger.set_from from;
+let main base_flags option_values json pretty root strip_root verbose path wait_for_recheck expanded
+    expand_aliases omit_targ_defaults args () =
   let json = json || pretty || expanded in
   let (file, line, column) = parse_args path args in
-  let root = guess_root (
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
+  let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
     | None -> File_input.path_of_file_input file
@@ -117,11 +125,20 @@ let main option_values json pretty root strip_root verbose from path expanded ar
   if not json && (verbose <> None)
   then prerr_endline "NOTE: --verbose writes to the server log file";
 
-  let request = ServerProt.Request.INFER_TYPE (file, line, column, verbose) in
-  match connect_and_make_request option_values root request with
+  let request = ServerProt.Request.INFER_TYPE {
+    input = file;
+    line;
+    char = column;
+    verbose;
+    expand_aliases;
+    omit_targ_defaults;
+    wait_for_recheck;
+  } in
+  let file_contents = File_input.content_of_file_input file |> Core_result.ok in
+  match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.INFER_TYPE (Error err) -> handle_error err ~json ~pretty
   | ServerProt.Response.INFER_TYPE (Ok resp) ->
-    handle_response resp ~json ~pretty ~strip_root ~expanded
+    handle_response resp ~file_contents ~json ~pretty ~strip_root ~expanded
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

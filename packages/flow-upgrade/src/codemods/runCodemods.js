@@ -6,6 +6,7 @@
 const path = require('path');
 const fs = require('fs');
 const Runner = require('jscodeshift/src/Runner');
+const os = require('os');
 
 const AGGREGATE_CODEMOD_UTIL = path.join(
   __dirname,
@@ -24,7 +25,7 @@ module.exports = async function runCodemods(
 ) {
   // Create a temporary for our aggregate codemod file.
   const aggregateTransformPath = path.join(
-    fs.mkdtempSync('/tmp/flow-upgrade-'),
+    fs.mkdtempSync(path.join(os.tmpdir(), 'flow-upgrade-')),
     'codemod.js',
   );
   // The contents of our transform file.
@@ -35,8 +36,8 @@ module.exports = async function runCodemods(
  */
 module.exports = require(${JSON.stringify(AGGREGATE_CODEMOD_UTIL)})([
 ${transformPaths
-    .map(transformPath => `  ${JSON.stringify(transformPath)},`)
-    .join('\n')}
+  .map(transformPath => `  ${JSON.stringify(transformPath)},`)
+  .join('\n')}
 ]);
 `.slice(1);
   // Write the codemod to the folder we created for it.

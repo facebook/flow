@@ -19,6 +19,25 @@ References:
                ^^^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------- disjoint_union.js:8:22
+
+All branches are incompatible:
+ - Either string [1] is incompatible with string literal `rectangle` [2].
+ - Or string [1] is incompatible with string literal `circle` [3].
+
+   disjoint_union.js:8:22
+   8|   if (shape.type === 'square') { // error
+                           ^^^^^^^^ [1]
+
+References:
+   disjoint_union.js:4:10
+   4|   {type: 'rectangle', width: number, height: number} |
+               ^^^^^^^^^^^ [2]
+   disjoint_union.js:5:10
+   5|   {type: 'circle', radius: number};
+               ^^^^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------- disjoint_union.js:21:7
 
 All branches are incompatible:
@@ -30,6 +49,25 @@ All branches are incompatible:
    disjoint_union.js:21:7
    21|   if (shape.type === 'square') { // error
              ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   disjoint_union.js:17:11
+   17|   {|type: 'rectangle', width: number, height: number|} |
+                 ^^^^^^^^^^^ [2]
+   disjoint_union.js:18:11
+   18|   {|type: 'circle', radius: number|};
+                 ^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:21:22
+
+All branches are incompatible:
+ - Either string [1] is incompatible with string literal `rectangle` [2].
+ - Or string [1] is incompatible with string literal `circle` [3].
+
+   disjoint_union.js:21:22
+   21|   if (shape.type === 'square') { // error
+                            ^^^^^^^^ [1]
 
 References:
    disjoint_union.js:17:11
@@ -61,6 +99,25 @@ References:
                  ^^^^^^^^ [3]
 
 
+Error ------------------------------------------------------------------------------------------ disjoint_union.js:34:22
+
+All branches are incompatible:
+ - Either string [1] is incompatible with string literal `rectangle` [2].
+ - Or string [1] is incompatible with string literal `circle` [3].
+
+   disjoint_union.js:34:22
+   34|   if (shape.type === 'square') { // error
+                            ^^^^^^^^ [1]
+
+References:
+   disjoint_union.js:30:11
+   30|   {+type: 'rectangle', width: number, height: number} |
+                 ^^^^^^^^^^^ [2]
+   disjoint_union.js:31:11
+   31|   {+type: 'circle', radius: number};
+                 ^^^^^^^^ [3]
+
+
 Error ----------------------------------------------------------------------------------------------------- enum.js:8:25
 
 number literal `2` [1] is incompatible with enum [2].
@@ -76,4 +133,4 @@ References:
 
 
 
-Found 4 errors
+Found 7 errors

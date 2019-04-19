@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,6 +13,21 @@ module PersistentProt = Persistent_connection_prot
  * to which request a given response is replying *)
 type request_id = string
 
+type file_watcher_metadata = {
+  total_update_distance: int;
+  changed_mergebase: bool;
+}
+
+let empty_file_watcher_metadata = { total_update_distance = 0; changed_mergebase = false; }
+
+let merge_file_watcher_metadata a b = {
+  total_update_distance = a.total_update_distance + b.total_update_distance;
+  changed_mergebase = a.changed_mergebase || b.changed_mergebase;
+}
+
+type please_die_reason =
+| MonitorExiting of (FlowExitStatus.t * string)
+
 (* These are the messages that the monitor sends to the server *)
 type monitor_to_server_message =
 (* A request from an ephemeral socket connection. It expects a response *)
@@ -24,6 +39,10 @@ type monitor_to_server_message =
 | PersistentConnectionRequest of PersistentProt.client_id * PersistentProt.request
 (* A notification that a persistent socket connection is dead *)
 | DeadPersistentConnection of PersistentProt.client_id
+(* The file watcher has noticed changes *)
+| FileWatcherNotification of SSet.t * file_watcher_metadata option
+(* Monitor wants to kill the server but first asks nicely for the server to honorably kill itself *)
+| PleaseDie of please_die_reason
 
 (* These are the messages that the server sends to the monitor *)
 type server_to_monitor_message =
@@ -43,4 +62,4 @@ type monitor_to_client_message =
 (* The server threw an exception while processing the request *)
 | ServerException of string
 (* The server is currently busy. Please wait for a response *)
-| Please_hold of ServerStatus.status
+| Please_hold of (ServerStatus.status * FileWatcherStatus.status)

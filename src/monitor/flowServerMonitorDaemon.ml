@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2017-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -127,8 +127,14 @@ let daemonize ~wait ~on_spawn ~monitor_options (entry_point: entry_point) =
     set_close_on_exec stderr
   with Unix_error (EINVAL, _, _) -> ());
 
+  let root_str =
+    monitor_options.FlowServerMonitorOptions.server_options
+    |> Options.root
+    |> Path.to_string
+  in
+
   let {Daemon.pid; channels = (ic, oc)} =
-    Daemon.spawn (null_fd, null_fd, null_fd) entry_point (
+    Daemon.spawn ~name:(spf "monitor for %s" root_str) (null_fd, null_fd, null_fd) entry_point (
       monitor_options,
       FlowEventLogger.get_context ()
     )

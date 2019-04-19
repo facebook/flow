@@ -144,6 +144,13 @@ let filter t ~f =
   | Some v as o when f v -> o
   | _ -> None
 
+let compare ~cmp v1 v2 =
+  let tag_to_int = function Some _ -> 1 | None -> 0 in
+  match v1,v2 with
+  | Some v1,Some v2 -> cmp v1 v2
+  | None,None -> 0
+  | _ -> compare (tag_to_int v1) (tag_to_int v2)
+
 let try_with f =
   try Some (f ())
   with _ -> None

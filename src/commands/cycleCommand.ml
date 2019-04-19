@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -21,37 +21,31 @@ let spec = {
       Utils_js.exe_name;
   args = CommandSpec.ArgSpec.(
     empty
-    |> server_flags
+    |> base_flags
+    |> connect_flags
     |> root_flag
     |> strip_root_flag
     |> anon "FILE..." (required string)
   )
 }
 
-let main option_values root strip_root file () =
+let main base_flags option_values root strip_root file () =
+  let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let file = expand_path file in
-  let root = guess_root root in
+  let root = guess_root flowconfig_name root in
   let strip_root f =
     if strip_root
     then Files.relative_path (Path.to_string root) f
     else f
   in
   (* connect to server *)
-  let request = ServerProt.Request.CYCLE file in
-  match connect_and_make_request option_values root request with
+  let request = ServerProt.Request.CYCLE { filename = file; } in
+  match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.CYCLE (Error msg) ->
-    prerr_endline msg
+    FlowExitStatus.(exit ~msg Unknown_error)
   | ServerProt.Response.CYCLE (Ok dep_graph) ->
     (* print .dot file to stdout *)
-    print_endline "digraph {";
-    List.iter (fun (f, dep_fs) ->
-      List.iter (fun dep_f ->
-        print_endlinef "  \"%s\" -> \"%s\""
-          (strip_root f)
-          (strip_root dep_f)
-      ) dep_fs
-    ) dep_graph;
-    print_endline "}"
+    LwtUtils.output_graph Lwt_io.stdout strip_root dep_graph |> Lwt_main.run
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

@@ -1,0 +1,58 @@
+Error ----------------------------------------------------------------------------------------------------- index.js:6:1
+
+This use of `invariant` is unnecessary because boolean literal `true` [1] is always truthy. (`unnecessary-invariant`)
+
+   index.js:6:1
+   6| invariant(a);
+      ^^^^^^^^^^^^
+
+References:
+   index.js:5:16
+   5| declare var a: true;
+                     ^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:13:5
+
+This use of `invariant` is unnecessary because boolean [1] is always truthy. (`unnecessary-invariant`)
+
+   index.js:13:5
+   13| c ? invariant(c) : invariant(c);
+           ^^^^^^^^^^^^
+
+References:
+   index.js:11:16
+   11| declare var c: boolean;
+                      ^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:19:1
+
+This use of `invariant` is unnecessary because number literal `1` [1] is always truthy. (`unnecessary-invariant`)
+
+   index.js:19:1
+   19| invariant(e);
+       ^^^^^^^^^^^^
+
+References:
+   index.js:18:16
+   18| declare var e: 1;
+                      ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- index.js:25:1
+
+This use of `invariant` is unnecessary because intersection type [1] is always truthy. (`unnecessary-invariant`)
+
+   index.js:25:1
+   25| invariant(g);
+       ^^^^^^^^^^^^
+
+References:
+   index.js:24:16
+   24| declare var g: false & true;
+                      ^^^^^^^^^^^^ [1]
+
+
+
+Found 4 errors

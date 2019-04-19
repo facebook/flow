@@ -1,7 +1,4 @@
 #!/bin/bash
-. ../assert.sh
-FLOW=$1
-
 assert_ok "$FLOW" get-def example.js 12 10 --strip-root --json
 
 # import thing from "./exports_default.js";
@@ -123,9 +120,13 @@ printf "non-shorthand destructuring = "
 assert_ok "$FLOW" get-def objects.js 20 11 --strip-root --pretty
 printf "destructuring without type alias = "
 assert_ok "$FLOW" get-def objects.js 22 11 --strip-root --pretty
-# TODO this should return results
 printf "destructuring a shadow prop = "
 assert_ok "$FLOW" get-def objects.js 23 11 --strip-root --pretty
 # This one should return no results
 printf "bogus array destructuring of an object = "
 assert_ok "$FLOW" get-def objects.js 24 11 --strip-root --pretty
+
+printf "property access on the arg to the idx callback = "
+assert_ok "$FLOW" get-def idx.js 12 25 --strip-root --pretty
+printf "nested property access on the arg to the idx callback = "
+assert_ok "$FLOW" get-def idx.js 12 29 --strip-root --pretty

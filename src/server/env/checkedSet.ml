@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -38,6 +38,8 @@ let empty = FilenameMap.empty
 let is_empty = FilenameMap.is_empty
 let of_focused_list = List.fold_left (fun acc f -> FilenameMap.add f Focused acc) empty
 
+let cardinal = FilenameMap.cardinal
+
 let mem = FilenameMap.mem
 
 let add =
@@ -62,7 +64,27 @@ let fold f acc checked =
 
 let union = FilenameMap.union ~combine:(fun _ a b -> Some (combine a b))
 
-let diff a b = FilenameMap.filter (fun k _ -> not (FilenameMap.mem k b)) a
+(* Remove from `a` every key which exists in `b` and which has an equal or higher kind in `b` than
+ * it does in `a`, where Focused > Dependent > Dependency. So
+ *
+ * diff
+ *  { A: Focused, B: Focused,   C: Dependency, D: Dependent }
+ *  { A: Focused, B: Dependent, C: Dependent}
+ *
+ * = { B: Focused, D: Dependent }
+ *)
+let diff a b = FilenameMap.filter
+  (fun k kind1 ->
+    let kind2 = FilenameMap.get k b in
+    match kind1, kind2 with
+    | _, None -> true (* Key doesn't exist in b, so keep k around *)
+    | _, Some Focused -> false (* Focused removes anything *)
+    | Focused, _ -> true (* Focused survives anything except Focused *)
+    | _, Some Dependent -> false (* Dependent removes anything except Focused *)
+    | Dependent, Some Dependency -> true (* Dependent survives Dependency *)
+    | Dependency, Some Dependency -> false (* Dependency removes Dependency *)
+  )
+  a
 
 let filter ~f checked = FilenameMap.filter (fun k _ -> f k) checked
 
@@ -81,11 +103,15 @@ let dependents = filter_into_set ~f:(fun kind -> kind = Dependent)
 let dependencies = filter_into_set ~f:(fun kind -> kind = Dependency)
 
 (* Helper function for debugging *)
-let debug_to_string =
+let debug_to_string ?(limit) =
   let string_of_set set =
-    Utils_js.FilenameSet.elements set
-    |> List.map (fun f -> spf "\"%s\"" (File_key.to_string f))
-    |> String.concat "\n"
+    let files = Utils_js.FilenameSet.elements set
+      |> Core_list.map ~f:(fun f -> spf "\"%s\"" (File_key.to_string f)) in
+    let files = match limit with
+      | None -> files
+      | Some n -> ListUtils.first_upto_n n (fun t -> Some (spf "[shown %d/%d]" n t)) files
+    in
+    String.concat "\n" files
   in
   fun checked ->
     Printf.sprintf "Focused:\n%s\nDependents:\n%s\nDependencies:\n%s"

@@ -15,8 +15,10 @@ open Hh_core
 
 let extensions = [
   ".php"  ; (* normal php file *)
-  ".hh"   ; (* Hack extension some open source code is starting to use *)
-  ".phpt" ; (* our php template files *)
+  ".phpt" ; (* our php template or test files *)
+  ".hack" ; (* open source hack: bikeshed entry *)
+  ".hck"  ; (* open source hack: bikeshed entry *)
+  ".hh"   ; (* open source hack: biekshed entry *)
   ".hhi"  ; (* interface files only visible to the type checker *)
   ".xhp"  ; (* XHP extensions *)
 ]
@@ -40,3 +42,10 @@ let rec has_ancestor path ancestor_name =
     true
   else
     has_ancestor dirname ancestor_name
+
+let file_filter f =
+  (* Filter the relative path *)
+  let f = Relative_path.strip_root_if_possible f in
+  (is_php f && not (FilesToIgnore.should_ignore f))
+
+let path_filter f = Relative_path.suffix f |> file_filter

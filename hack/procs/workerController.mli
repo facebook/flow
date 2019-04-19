@@ -7,6 +7,8 @@
  *
  *)
 
+open Core_kernel
+
 (*****************************************************************************)
 (* Module building workers.
  * A worker is a subprocess executing an arbitrary function.
@@ -17,6 +19,7 @@
 (*****************************************************************************)
 
 type process_id = int
+type worker_id = int
 type worker_failure =
   (* Worker killed by Out Of Memory. *)
   | Worker_oomed
@@ -36,14 +39,25 @@ exception Worker_failed_to_send_job of send_job_failure
 
 (* The type of a worker visible to the outside world *)
 type worker
+(*****************************************************************************)
+(* The handle is what we get back when we start a job. It's a "future"
+ * (sometimes called a "promise"). The scheduler uses the handle to retrieve
+ * the result of the job when the task is done (cf multiWorker.ml).
+ *)
+(*****************************************************************************)
+type ('a, 'b) handle
 (* An empty type *)
 type void
 (* Get the worker's id *)
-val worker_id: worker -> int
+val worker_id: worker -> worker_id
 (* Has the worker been killed *)
 val is_killed: worker -> bool
 (* Mark the worker as busy. Throw if it is already busy *)
 val mark_busy: worker -> unit
+(* If the worker is busy, what is it doing. Note that calling this is not
+ * type safe: 'a and 'b are free type variables, and they depend on what is the
+ * job being executed by worker. *)
+val get_handle_UNSAFE: worker -> ('a, 'b) handle option
 (* Mark the worker as free *)
 val mark_free: worker -> unit
 (* If the worker isn't prespawned, spawn the worker *)
@@ -54,14 +68,6 @@ val close: worker -> (void, Worker.request) Daemon.handle -> unit
 val wrap_request: worker -> ('x -> 'b) -> 'x -> Worker.request
 
 type call_wrapper = { wrap: 'x 'b. ('x -> 'b) -> 'x -> 'b }
-
-(*****************************************************************************)
-(* The handle is what we get back when we start a job. It's a "future"
- * (sometimes called a "promise"). The scheduler uses the handle to retrieve
- * the result of the job when the task is done (cf multiWorker.ml).
- *)
-(*****************************************************************************)
-type ('a, 'b) handle
 
 type 'a entry
 val register_entry_point:
@@ -79,7 +85,10 @@ val make:
     worker list
 
 (* Call in a sub-process (CAREFUL, GLOBALS ARE COPIED) *)
-val call: worker -> ('a -> 'b) -> 'a -> ('a, 'b) handle
+val call: ?call_id:int -> worker -> ('a -> 'b) -> 'a -> ('a, 'b) handle
+
+(* See MultiThreadedCall.call_id *)
+val get_call_id: ('a, 'b) handle -> int
 
 (* Retrieves the job that the worker is currently processing *)
 val get_job: ('a, 'b) handle -> 'a

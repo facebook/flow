@@ -33,7 +33,7 @@ val has_message : queue -> bool
 val get_message : queue -> [>
 | `Message of message
 | `Fatal_exception of Marshal_tools.remote_exception_data
-| `Recoverable_exception of Marshal_tools.remote_exception_data ]
+| `Recoverable_exception of Marshal_tools.remote_exception_data ] Lwt.t
 
 (* 'respond to_this with_that' is for replying to a JsonRPC request. It will send either *)
 (* a response or an error depending on whether 'with_that' has an error id in it.        *)

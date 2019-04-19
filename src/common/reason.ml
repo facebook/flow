@@ -1,9 +1,11 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
+
+module Ast = Flow_ast
 
 (* This module defines a general notion of trace, which is used in modules
    Type_inference_js and Flow_js to record how the typechecker reasons about
@@ -50,18 +52,24 @@ module TestID = struct
   let run f a =
     let test_id = current () in
     _current := Some (mk_id ());
-    f a;
-    _current := test_id
+    let b = f a in
+    _current := test_id;
+    b
 
 end
 
-type reason_desc =
-  | RNumber | RString | RBoolean | RMixed | REmpty | RAny | RVoid | RNull
+type 'loc virtual_reason_desc =
+  | RTrusted of 'loc virtual_reason_desc
+  | RPrivate of 'loc virtual_reason_desc
+  | RAnyExplicit | RAnyImplicit
+  | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
   | RNullOrVoid
+  | RLongStringLit of int (* Max length *)
   | RStringLit of string
   | RNumberLit of string
+  | RBigIntLit of string
   | RBooleanLit of bool
-  | RMatchingProp of string * reason_desc
+  | RMatchingProp of string * 'loc virtual_reason_desc
   | RObject
   | RObjectLit
   | RObjectType
@@ -78,7 +86,7 @@ type reason_desc =
   | RFunction of reason_desc_function
   | RFunctionType
   | RFunctionBody
-  | RFunctionCall of reason_desc
+  | RFunctionCall of 'loc virtual_reason_desc
   | RFunctionCallType
   | RFunctionUnusedArgument
   | RJSXFunctionCall of string
@@ -87,11 +95,9 @@ type reason_desc =
   | RJSXElement of string option
   | RJSXText
   | RFbt
-  | RUnaryOperator of string * reason_desc
-  | RBinaryOperator of string * reason_desc * reason_desc
-  | RLogical of string * reason_desc * reason_desc
-  | RAnyObject
-  | RAnyFunction
+  | RUnaryOperator of string * 'loc virtual_reason_desc
+  | RBinaryOperator of string * 'loc virtual_reason_desc * 'loc virtual_reason_desc
+  | RLogical of string * 'loc virtual_reason_desc * 'loc virtual_reason_desc
   | RTemplateString
   | RUnknownString
   | REnum
@@ -99,9 +105,9 @@ type reason_desc =
   | RThis
   | RThisType
   | RExistential
+  | RImplicitInstantiation
   | RTooFewArgs
   | RTooFewArgsExpectedRest
-  | RUninitializedThis
   | RConstructorReturn
   | RNewObject
   | RUnion
@@ -118,9 +124,9 @@ type reason_desc =
   | RDefaultValue
   | RConstructor
   | RDefaultConstructor
-  | RConstructorCall of reason_desc
+  | RConstructorCall of 'loc virtual_reason_desc
   | RReturn
-  | RImplicitReturn of reason_desc
+  | RImplicitReturn of 'loc virtual_reason_desc
   | RRegExp
   | RSuper
   | RNoSuper
@@ -130,9 +136,10 @@ type reason_desc =
   | RObjectMap
   | RObjectMapi
   | RType of string
-  | RTypeAlias of string * reason_desc
+  | RTypeAlias of string * bool (* trust in normalization *) * 'loc virtual_reason_desc
   | ROpaqueType of string
-  | RTypeParam of string * reason_desc * Loc.t
+  | RTypeParam of string * ('loc virtual_reason_desc * 'loc) (*reason op *)
+                * ('loc virtual_reason_desc * 'loc) (* reason tapp *)
   | RTypeof of string
   | RMethod of string option
   | RMethodCall of string option
@@ -144,41 +151,46 @@ type reason_desc =
   | RProperty of string option
   | RPrivateProperty of string
   | RShadowProperty of string
-  | RPropertyOf of string * reason_desc
+  | RPropertyOf of string * 'loc virtual_reason_desc
   | RPropertyIsAString of string
   | RMissingProperty of string option
   | RUnknownProperty of string option
   | RUndefinedProperty of string
   | RSomeProperty
-  | RNameProperty of reason_desc
-  | RMissingAbstract of reason_desc
+  | RNameProperty of 'loc virtual_reason_desc
+  | RMissingAbstract of 'loc virtual_reason_desc
   | RFieldInitializer of string
   | RUntypedModule of string
-  | RNamedImportedType of string
+  | RNamedImportedType of string (* module *) * string (* local name *)
+  | RImportStarType of string
+  | RImportStarTypeOf of string
+  | RImportStar of string
   | RDefaultImportedType of string * string
   | RCode of string
   | RCustom of string
-  | RPolyType of reason_desc
-  | RPolyTest of string * reason_desc
-  | RExactType of reason_desc
-  | ROptional of reason_desc
-  | RMaybe of reason_desc
-  | RRestArray of reason_desc
-  | RAbstract of reason_desc
-  | RTypeApp of reason_desc
-  | RThisTypeApp of reason_desc
-  | RExtends of reason_desc
-  | RStatics of reason_desc
-  | RSuperOf of reason_desc
-  | RFrozen of reason_desc
-  | RBound of reason_desc
-  | RVarianceCheck of reason_desc
-  | RPredicateOf of reason_desc
-  | RPredicateCall of reason_desc
-  | RPredicateCallNeg of reason_desc
-  | RRefined of reason_desc
+  | RPolyType of 'loc virtual_reason_desc
+  | RPolyTest of string * 'loc virtual_reason_desc
+  | RExactType of 'loc virtual_reason_desc
+  | ROptional of 'loc virtual_reason_desc
+  | RMaybe of 'loc virtual_reason_desc
+  | RRestArray of 'loc virtual_reason_desc
+  | RAbstract of 'loc virtual_reason_desc
+  | RTypeApp of 'loc virtual_reason_desc
+  | RTypeAppImplicit of 'loc virtual_reason_desc
+  | RThisTypeApp of 'loc virtual_reason_desc
+  | RExtends of 'loc virtual_reason_desc
+  | RClass of 'loc virtual_reason_desc
+  | RStatics of 'loc virtual_reason_desc
+  | RSuperOf of 'loc virtual_reason_desc
+  | RFrozen of 'loc virtual_reason_desc
+  | RBound of 'loc virtual_reason_desc
+  | RVarianceCheck of 'loc virtual_reason_desc
+  | RPredicateOf of 'loc virtual_reason_desc
+  | RPredicateCall of 'loc virtual_reason_desc
+  | RPredicateCallNeg of 'loc virtual_reason_desc
+  | RRefined of 'loc virtual_reason_desc
   | RIncompatibleInstantiation of string
-  | RSpreadOf of reason_desc
+  | RSpreadOf of 'loc virtual_reason_desc
   | RObjectPatternRestProp
   | RArrayPatternRestProp
   | RCommonJSExports of string
@@ -194,71 +206,192 @@ type reason_desc =
   | RReactState
   | RReactPropTypes
   | RReactChildren
-  | RReactChildrenOrType of reason_desc
-  | RReactChildrenOrUndefinedOrType of reason_desc
+  | RReactChildrenOrType of 'loc virtual_reason_desc
+  | RReactChildrenOrUndefinedOrType of 'loc virtual_reason_desc
   | RReactSFC
+  | RReactConfig
 
 and reason_desc_function =
   | RAsync
   | RGenerator
   | RAsyncGenerator
   | RNormal
+  | RUnknown
 
-type reason = {
+and reason_desc = ALoc.t virtual_reason_desc
+
+let rec map_desc_locs f = function
+  | RAnyExplicit | RAnyImplicit
+  | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid | RNull | RSymbol
+  | RNullOrVoid
+  | RLongStringLit _
+  | RStringLit _
+  | RNumberLit _
+  | RBigIntLit _
+  | RBooleanLit _
+  | RObject
+  | RObjectLit
+  | RObjectType
+  | RObjectClassName
+  | RInterfaceType
+  | RArray
+  | RArrayLit
+  | REmptyArrayLit
+  | RArrayType
+  | RROArrayType
+  | RTupleType
+  | RTupleElement
+  | RTupleOutOfBoundsAccess
+  | RFunction _
+  | RFunctionType
+  | RFunctionBody
+  | RFunctionCallType
+  | RFunctionUnusedArgument
+  | RJSXFunctionCall _
+  | RJSXIdentifier _
+  | RJSXElementProps _
+  | RJSXElement _
+  | RJSXText
+  | RFbt as r -> r
+  | RFunctionCall desc -> RFunctionCall (map_desc_locs f desc)
+  | RUnaryOperator (s, desc) -> RUnaryOperator (s, map_desc_locs f desc)
+  | RBinaryOperator (s, d1, d2) -> RBinaryOperator (s, map_desc_locs f d1, map_desc_locs f d2)
+  | RLogical  (s, d1, d2) -> RLogical (s, map_desc_locs f d1, map_desc_locs f d2)
+  | RTemplateString
+  | RUnknownString
+  | REnum
+  | RGetterSetterProperty
+  | RThis
+  | RThisType
+  | RExistential
+  | RImplicitInstantiation
+  | RTooFewArgs
+  | RTooFewArgsExpectedRest
+  | RConstructorReturn
+  | RNewObject
+  | RUnion
+  | RUnionType
+  | RIntersection
+  | RIntersectionType
+  | RKeySet
+  | RAnd
+  | RConditional
+  | RPrototype
+  | RObjectPrototype
+  | RFunctionPrototype
+  | RDestructuring
+  | RDefaultValue
+  | RConstructor
+  | RReturn
+  | RDefaultConstructor
+  | RRegExp
+  | RSuper
+  | RNoSuper
+  | RDummyPrototype
+  | RDummyThis
+  | RTupleMap
+  | RObjectMap
+  | RType _
+  | RTypeof _
+  | RMethod _
+  | RMethodCall _
+  | RParameter _
+  | RRestParameter _
+  | RIdentifier _
+  | RIdentifierAssignment _
+  | RPropertyAssignment _
+  | RProperty _
+  | RPrivateProperty _
+  | RShadowProperty _
+  | RPropertyIsAString _
+  | RMissingProperty _
+  | RUnknownProperty _
+  | RUndefinedProperty _
+  | RSomeProperty
+  | RFieldInitializer _
+  | RUntypedModule _
+  | RNamedImportedType _
+  | RImportStarType _
+  | RImportStarTypeOf _
+  | RImportStar _
+  | RDefaultImportedType _
+  | RCode _
+  | RCustom _
+  | RIncompatibleInstantiation _
+  | ROpaqueType _
+  | RObjectMapi as r -> r
+  | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
+  | RImplicitReturn desc -> RImplicitReturn (map_desc_locs f desc)
+  | RTypeAlias (s, b, d) -> RTypeAlias (s, b, map_desc_locs f d)
+  | RTypeParam (s, (d1, l1), (d2, l2)) ->
+      RTypeParam (s, (map_desc_locs f d1, f l1), (map_desc_locs f d2, f l2))
+  | RPropertyOf (s, d) -> RPropertyOf (s, map_desc_locs f d)
+  | RNameProperty desc -> RNameProperty (map_desc_locs f desc)
+  | RMissingAbstract desc -> RMissingAbstract (map_desc_locs f desc)
+  | RPolyType desc -> RPolyType (map_desc_locs f desc)
+  | RPolyTest (s, desc) -> RPolyTest (s, map_desc_locs f desc)
+  | RExactType desc -> RExactType (map_desc_locs f desc)
+  | ROptional desc -> ROptional (map_desc_locs f desc)
+  | RMaybe desc -> RMaybe (map_desc_locs f desc)
+  | RRestArray desc -> RRestArray (map_desc_locs f desc)
+  | RAbstract desc -> RAbstract (map_desc_locs f desc)
+  | RTypeApp desc -> RTypeApp (map_desc_locs f desc)
+  | RTypeAppImplicit desc -> RTypeAppImplicit (map_desc_locs f desc)
+  | RThisTypeApp desc -> RThisTypeApp (map_desc_locs f desc)
+  | RExtends desc -> RExtends (map_desc_locs f desc)
+  | RClass desc -> RClass (map_desc_locs f desc)
+  | RStatics desc -> RStatics (map_desc_locs f desc)
+  | RSuperOf desc -> RSuperOf (map_desc_locs f desc)
+  | RFrozen desc -> RFrozen (map_desc_locs f desc)
+  | RBound desc -> RBound (map_desc_locs f desc)
+  | RVarianceCheck desc -> RVarianceCheck (map_desc_locs f desc)
+  | RPredicateOf desc -> RPredicateOf (map_desc_locs f desc)
+  | RPredicateCall desc -> RPredicateCall (map_desc_locs f desc)
+  | RPredicateCallNeg desc  -> RPredicateCallNeg (map_desc_locs f desc)
+  | RRefined desc -> RRefined (map_desc_locs f desc)
+  | RSpreadOf desc -> RSpreadOf (map_desc_locs f desc)
+  | RMatchingProp (s, desc) -> RMatchingProp (s, map_desc_locs f desc)
+  | RTrusted desc -> RTrusted (map_desc_locs f desc)
+  | RPrivate desc -> RPrivate (map_desc_locs f desc)
+  | RObjectPatternRestProp
+  | RArrayPatternRestProp
+  | RCommonJSExports _
+  | RModule _
+  | ROptionalChain
+
+  | RReactProps
+  | RReactElement _
+  | RReactClass
+  | RReactComponent
+  | RReactStatics
+  | RReactDefaultProps
+  | RReactState
+  | RReactPropTypes
+  | RReactChildren as r -> r
+  | RReactChildrenOrType desc -> RReactChildrenOrType (map_desc_locs f desc)
+  | RReactChildrenOrUndefinedOrType desc -> RReactChildrenOrUndefinedOrType (map_desc_locs f desc)
+  | RReactSFC
+  | RReactConfig as r -> r
+
+type 'loc virtual_reason = {
   test_id: int option;
   derivable: bool;
-  desc: reason_desc;
-  loc: Loc.t;
-  def_loc_opt: Loc.t option;
-  annot_loc_opt: Loc.t option;
+  desc: 'loc virtual_reason_desc ;
+  loc: 'loc;
+  def_loc_opt: 'loc option;
+  annot_loc_opt: 'loc option;
 }
+
+type reason = ALoc.t virtual_reason
+type concrete_reason = Loc.t virtual_reason
 
 type t = reason
-
-let lexpos file line col = {
-  Lexing.pos_fname = file;
-  Lexing.pos_lnum = line;
-  Lexing.pos_bol = 0;
-  Lexing.pos_cnum = col;
-}
-
-let diff_range loc = Loc.(
-  let line1, line2 = loc.start.line, loc._end.line in
-  (* TODO: Get rid of +1 which is here to ensure same behavior as old code
-     using Pos.info_pos *)
-  let start, end_  = loc.start.column + 1, loc._end.column in
-  (line2 - line1, end_ - start)
-)
 
 let in_range loc range = Loc.(
   let line, line1, line2 = loc.start.line, range.start.line, range._end.line in
   (line1 < line || (line = line1 && range.start.column <= loc.start.column)) &&
   (line < line2 || (line = line2 && loc._end.column <= range._end.column))
 )
-
-let rec patch ll offset lines = function
-  | [] -> ()
-  | (l,c,str)::insertions ->
-      let c = if l = ll then c + offset else c in
-      let del = try Some (int_of_string str) with _ -> None in
-      let line = lines.(l - 1) in
-      let shift = match del with
-      | Some n -> (* delete n chars at l, c *)
-          lines.(l - 1) <- spf "%s%s"
-            (string_before line c) (string_after line (c + n));
-          -n
-      | None -> (* insert str at l, c *)
-          lines.(l - 1) <- spf "%s%s%s"
-            (string_before line c) str (string_after line c);
-          String.length str
-      in
-      let offset = (if l = ll then offset else 0) + shift in
-      patch l offset lines insertions
-
-let do_patch lines insertions =
-  let lines = Array.of_list lines in
-  patch 1 0 lines insertions;
-  String.concat "\n" (Array.to_list lines)
 
 let string_of_source ?(strip_root=None) = File_key.(function
   | Builtins -> "(builtins)"
@@ -283,29 +416,46 @@ let string_of_source ?(strip_root=None) = File_key.(function
     end
 )
 
-let string_of_loc_pos loc = Loc.(
-  let line = loc.start.line in
-  let start = loc.start.column + 1 in
-  let end_ = loc._end.column in
-  if line <= 0 then
-    "0:0"
-  else if line = loc._end.line && start = end_ then
-    spf "%d:%d" line start
-  else if line != loc._end.line then
-    spf "%d:%d,%d:%d" line start loc._end.line end_
-  else
-    spf "%d:%d-%d" line start end_
-)
-
 let string_of_loc ?(strip_root=None) loc = Loc.(
   match loc.source with
   | None
   | Some File_key.Builtins -> ""
   | Some file ->
-    spf "%s:%s" (string_of_source ~strip_root file) (string_of_loc_pos loc)
+    spf "%s:%s" (string_of_source ~strip_root file) (Loc.to_string_no_source loc)
 )
 
-let json_of_loc_props ?(strip_root=None) loc = Hh_json.(Loc.(
+let string_of_aloc ?strip_root aloc = string_of_loc ?strip_root (ALoc.to_loc aloc)
+
+let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_table loc = Hh_json.(Loc.(
+  let offset_entry offset_table pos =
+    let offset = try
+      int_ (Offset_utils.offset offset_table pos)
+    with Offset_utils.Offset_lookup_failed _ as exn ->
+      if catch_offset_errors then JSON_Null
+      else raise exn
+    in
+    ["offset", offset]
+  in
+  let start =
+    [
+      "line", int_ loc.start.line;
+      (* It's not ideal that we use a different column numbering system here
+       * versus other places (like the estree translator) *)
+      "column", int_ (loc.start.column + 1);
+    ] @ begin match offset_table with
+      | None -> []
+      | Some table -> offset_entry table loc.start
+    end
+  in
+  let end_ =
+    [
+      "line", int_ loc._end.line;
+      "column", int_ loc._end.column;
+    ] @ begin match offset_table with
+      | None -> []
+      | Some table -> offset_entry table loc._end
+    end
+  in
   [
     "source", (
       match loc.source with
@@ -319,24 +469,17 @@ let json_of_loc_props ?(strip_root=None) loc = Hh_json.(Loc.(
     | Some File_key.ResourceFile _ -> JSON_String "ResourceFile"
     | Some File_key.Builtins -> JSON_String "Builtins"
     | None -> JSON_Null);
-    "start", JSON_Object [
-      "line", int_ loc.start.line;
-      (* It's not ideal that we use a different column numbering system here
-       * versus other places (like the estree translator) *)
-      "column", int_ (loc.start.column + 1);
-      "offset", int_ loc.start.offset;
-    ];
-    "end", JSON_Object [
-      "line", int_ loc._end.line;
-      "column", int_ loc._end.column;
-      "offset", int_ loc._end.offset;
-    ];
+    "start", JSON_Object start;
+    "end", JSON_Object end_;
   ]
 ))
 
-let json_of_loc ?strip_root loc = Hh_json.(
-  JSON_Object (json_of_loc_props ?strip_root loc)
+let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc = Hh_json.(
+  JSON_Object (json_of_loc_props ?strip_root ?catch_offset_errors ~offset_table loc)
 )
+
+let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
+  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc aloc)
 
 (* reason constructors, accessors, etc. *)
 
@@ -349,15 +492,24 @@ let mk_reason_with_test_id test_id desc loc def_loc_opt annot_loc_opt = {
   annot_loc_opt;
 }
 
+let map_reason_locs f reason =
+  let { def_loc_opt; annot_loc_opt; loc; desc; test_id; derivable } = reason in
+  let loc' = f loc in
+  let def_loc_opt' = Option.map ~f def_loc_opt in
+  let annot_loc_opt' = Option.map ~f annot_loc_opt in
+  let desc' = map_desc_locs f desc in
+  { def_loc_opt = def_loc_opt'; annot_loc_opt = annot_loc_opt'; loc = loc';
+    desc = desc'; test_id; derivable }
+
 (* The current test_id is included in every new reason. *)
-let mk_reason desc loc =
-  mk_reason_with_test_id (TestID.current ()) desc loc None None
+let mk_reason desc aloc =
+  mk_reason_with_test_id (TestID.current ()) desc aloc None None
 
 (* Lift a string to a reason. Usually used as a dummy reason. *)
 let locationless_reason desc =
-  mk_reason_with_test_id None desc Loc.none None None
+  mk_reason_with_test_id None desc (ALoc.none) None None
 
-let func_reason {Ast.Function.async; generator; _} =
+let func_reason ~async ~generator =
   let func_desc = match async, generator with
   | true, true -> RAsyncGenerator
   | true, false -> RAsync
@@ -366,22 +518,30 @@ let func_reason {Ast.Function.async; generator; _} =
   in
   mk_reason (RFunction func_desc)
 
+let poly_loc_of_reason r = r.loc
+let aloc_of_reason = poly_loc_of_reason
+let loc_of_reason = poly_loc_of_reason
 
-let loc_of_reason r = r.loc
-
-let def_loc_of_reason r =
+(* TODO return ALoc *)
+let def_poly_loc_of_reason r =
   match r.def_loc_opt with
   | Some loc -> loc
-  | None -> loc_of_reason r
+  | None -> aloc_of_reason r
 
-let annot_loc_of_reason r =
+let def_aloc_of_reason = def_poly_loc_of_reason
+let def_loc_of_reason = def_poly_loc_of_reason
+
+let annot_poly_loc_of_reason r =
   r.annot_loc_opt
 
+let annot_aloc_of_reason = annot_poly_loc_of_reason
+let annot_loc_of_reason = annot_poly_loc_of_reason
 let function_desc_prefix = function
   | RAsync -> "async "
   | RGenerator -> "generator "
   | RAsyncGenerator -> "async generator "
   | RNormal -> ""
+  | RUnknown -> "unknown "
 
 let prettify_react_util s =
   let length = String.length s in
@@ -390,18 +550,25 @@ let prettify_react_util s =
   else s
 
 let rec string_of_desc = function
+  | RTrusted r -> spf "trusted %s" (string_of_desc r)
+  | RPrivate r -> spf "private %s" (string_of_desc r)
   | RNumber -> "number"
-  | RString -> "string"
+  | RBigInt -> "bigint"
+  | RString
+  | RLongStringLit _ -> "string"
   | RBoolean -> "boolean"
   | RMixed -> "mixed"
   | REmpty -> "empty"
-  | RAny -> "any"
+  | RAnyImplicit -> "implicit 'any'"
+  | RAnyExplicit -> "explicit 'any'"
   | RVoid -> "undefined"
   | RNull -> "null"
   | RNullOrVoid -> "null or undefined"
+  | RSymbol -> "symbol"
   | RStringLit "" -> "empty string"
   | RStringLit x -> spf "string literal `%s`" x
   | RNumberLit x -> spf "number literal `%s`" x
+  | RBigIntLit x -> spf "bigint literal `%s`" x
   | RBooleanLit b -> spf "boolean literal `%s`" (string_of_bool b)
   | RMatchingProp (k, v) ->
     spf "object with property `%s` that matches %s" k (string_of_desc v)
@@ -439,8 +606,6 @@ let rec string_of_desc = function
     spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
   | RLogical (operator, left, right) ->
     spf "%s %s %s" (string_of_desc left) operator (string_of_desc right)
-  | RAnyObject -> "any object"
-  | RAnyFunction -> "any function"
   | RTemplateString -> "template string"
   | RUnknownString -> "some string with unknown value"
   | REnum -> "enum"
@@ -448,10 +613,10 @@ let rec string_of_desc = function
   | RThis -> "this"
   | RThisType -> "`this` type"
   | RExistential -> "existential"
+  | RImplicitInstantiation -> "implicit instantiation"
   | RTooFewArgs -> "undefined (too few arguments)"
   | RTooFewArgsExpectedRest ->
     "undefined (too few arguments, expected default/rest parameters)"
-  | RUninitializedThis -> "uninitialized this (expected super constructor call)"
   | RConstructorReturn -> "constructor return"
   | RNewObject -> "new object"
   | RUnion -> "union"
@@ -468,8 +633,8 @@ let rec string_of_desc = function
   | RDefaultValue -> "default value"
   | RConstructor -> "constructor"
   | RDefaultConstructor -> "default constructor"
-  | RConstructorCall (RPolyType (RStatics d)) -> string_of_desc d
-  | RConstructorCall (RStatics d) -> string_of_desc d
+  | RConstructorCall (RPolyType (RClass d)) -> string_of_desc d
+  | RConstructorCall (RClass d) -> string_of_desc d
   | RConstructorCall d -> spf "new %s" (string_of_desc d)
   | RReturn -> "return"
   | RImplicitReturn desc -> spf "implicitly-returned %s" (string_of_desc desc)
@@ -482,7 +647,7 @@ let rec string_of_desc = function
   | RObjectMap -> "`$ObjMap`"
   | RObjectMapi -> "`$ObjMapi`"
   | RType x -> spf "`%s`" (prettify_react_util x)
-  | RTypeAlias (x, _) -> spf "`%s`" (prettify_react_util x)
+  | RTypeAlias (x, _, _) -> spf "`%s`" (prettify_react_util x)
   | ROpaqueType x -> spf "`%s`" (prettify_react_util x)
   | RTypeParam (x, _, _) -> spf "`%s`" x
   | RTypeof x -> spf "`typeof %s`" x
@@ -516,11 +681,14 @@ let rec string_of_desc = function
     spf "undefined. Did you forget to declare %s?" (string_of_desc d)
   | RFieldInitializer x -> spf "field initializer for `%s`" x
   | RUntypedModule m -> spf "import from untyped module `%s`" m
-  | RNamedImportedType m -> spf "Named import from module `%s`" m
+  | RNamedImportedType (m, _) -> spf "Named import from module `%s`" m
+  | RImportStarType n ->  spf "import type * as %s" n
+  | RImportStarTypeOf n -> spf "import typeof * as %s" n
+  | RImportStar n -> spf "import * as %s" n
   | RCode x -> "`" ^ x ^ "`"
   | RDefaultImportedType (_, m) -> spf "Default import from `%s`" m
   | RCustom x -> x
-  | RPolyType (RStatics d) -> string_of_desc d
+  | RPolyType (RClass d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
   | RPolyTest (_, d) -> string_of_desc d
   | RExactType d -> string_of_desc d
@@ -534,8 +702,10 @@ let rec string_of_desc = function
   | RRestArray _ -> "rest array"
   | RAbstract d -> spf "abstract %s" (string_of_desc d)
   | RTypeApp d -> string_of_desc d
+  | RTypeAppImplicit d -> string_of_desc d
   | RThisTypeApp d -> spf "this instantiation of %s" (string_of_desc d)
   | RExtends d -> spf "extends %s" (string_of_desc d)
+  | RClass d -> spf "class %s" (string_of_desc d)
   | RStatics d -> spf "statics of %s" (string_of_desc d)
   | RSuperOf d -> spf "super of %s" (string_of_desc d)
   | RFrozen d -> spf "frozen %s" (string_of_desc d)
@@ -571,9 +741,10 @@ let rec string_of_desc = function
   | RReactChildrenOrUndefinedOrType desc ->
     spf "children array or %s" (string_of_desc desc)
   | RReactSFC -> "React stateless functional component"
+  | RReactConfig -> "config of React component"
 
 let string_of_reason ?(strip_root=None) r =
-  let spos = string_of_loc ~strip_root (loc_of_reason r) in
+  let spos = string_of_aloc ~strip_root (aloc_of_reason r) in
   let desc = string_of_desc r.desc in
   if spos = ""
   then desc
@@ -583,16 +754,16 @@ let string_of_reason ?(strip_root=None) r =
     else spf "%s:\n%s" spos desc
   )
 
-let json_of_reason ?(strip_root=None) r = Hh_json.(
+let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
   JSON_Object ([
-    "pos", json_of_loc ~strip_root (loc_of_reason r);
+    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc);
     "desc", JSON_String (string_of_desc r.desc)
   ])
 )
 
 let dump_reason ?(strip_root=None) r =
   spf "%s: %S%s"
-    (string_of_loc ~strip_root (loc_of_reason r))
+    (string_of_aloc ~strip_root (aloc_of_reason r))
     (string_of_desc r.desc)
     begin match r.test_id with
     | Some n -> spf " (test %d)" n
@@ -601,7 +772,7 @@ let dump_reason ?(strip_root=None) r =
 
 let desc_of_reason =
   let rec loop = function
-  | RTypeAlias (_, desc)
+  | RTypeAlias (_, _, desc)
   | RPolyTest (_, desc)
     -> loop desc
   | desc
@@ -629,7 +800,7 @@ let uninternal_module_name name =
     name
 
 let internal_pattern_name loc =
-  spf ".$pattern__%s" (string_of_loc loc)
+  spf ".$pattern__%s" (string_of_aloc loc)
 
 (* Instantiable reasons identify tvars that are created for the purpose of
    instantiation: they are fresh rather than shared, and should become types
@@ -640,6 +811,7 @@ let is_instantiable_reason r =
   | RTypeParam _
   | RThisType
   | RExistential -> true
+  | RImplicitInstantiation -> true
   | _ -> false
 
 (* TODO: Property accesses create unresolved tvars to hold results, even when
@@ -711,27 +883,23 @@ let derivable_reason r =
   { r with derivable = true }
 
 let builtin_reason desc =
-  mk_reason desc { Loc.none with Loc.source = Some File_key.Builtins }
+  { Loc.none with Loc.source = Some File_key.Builtins }
+  |> ALoc.of_loc
+  |> mk_reason desc
   |> derivable_reason
 
-let is_builtin_reason r =
-  Loc.(r.loc.source = Some File_key.Builtins)
+let is_builtin_reason f r =
+  r.loc
+  |> f
+  |> (=) (Some File_key.Builtins)
 
 let is_lib_reason r =
-  (* TODO: use File_key.is_lib_file *)
-  Loc.(match r.loc.source with
-  | Some File_key.LibFile _ -> true
-  | Some File_key.Builtins -> true
-  | Some File_key.SourceFile _ -> false
-  | Some File_key.JsonFile _ -> false
-  | Some File_key.ResourceFile _ -> false
-  | None -> false)
+  r.loc
+  |> ALoc.source
+  |> Option.value_map ~default:false ~f:File_key.is_lib_file
 
 let is_blamable_reason r =
-  not Loc.(r.loc = none || is_lib_reason r)
-
-let reasons_overlap r1 r2 =
-  Loc.(contains r1.loc r2.loc)
+  not (r.loc = ALoc.none || is_lib_reason r)
 
 (* reason transformers: *)
 
@@ -741,28 +909,28 @@ let replace_reason ?(keep_def_loc=false) f r =
   mk_reason_with_test_id
     (TestID.current ())
     (f (desc_of_reason ~unwrap:false r))
-    (loc_of_reason r)
+    (poly_loc_of_reason r)
     def_loc_opt
-    (annot_loc_of_reason r)
+    (annot_poly_loc_of_reason r)
 
 let replace_reason_const ?(keep_def_loc=false) desc r =
-  let (def_loc_opt, annot_loc_opt) = if keep_def_loc
+  let (def_aloc_opt, annot_aloc_opt) = if keep_def_loc
     then (r.def_loc_opt, r.annot_loc_opt)
     else (None, None)
   in
-  mk_reason_with_test_id r.test_id desc r.loc def_loc_opt annot_loc_opt
+  mk_reason_with_test_id r.test_id desc r.loc def_aloc_opt annot_aloc_opt
 
 (* returns reason with new location and description of original *)
-let repos_reason loc ?annot_loc reason =
-  let def_loc_opt =
-    let def_loc = def_loc_of_reason reason in
+let repos_reason loc ?(annot_loc: 'loc option) reason =
+  let def_aloc_opt =
+    let def_loc = def_poly_loc_of_reason reason in
     if loc = def_loc then None else Some def_loc
   in
-  let annot_loc_opt = match annot_loc with
+  let annot_aloc_opt = match annot_loc with
   | Some annot_loc -> Some annot_loc
   | None -> reason.annot_loc_opt
   in
-  mk_reason_with_test_id reason.test_id reason.desc loc def_loc_opt annot_loc_opt
+  mk_reason_with_test_id reason.test_id reason.desc loc def_aloc_opt annot_aloc_opt
 
 let annot_reason reason =
   {reason with annot_loc_opt = Some reason.loc}
@@ -805,21 +973,10 @@ Ast.Expression.(match x with
 | Assignment { Assignment.left; operator; right } ->
   let left = code_desc_of_pattern left in
   let right = code_desc_of_expression ~wrap:false right in
-  let operator = Assignment.(match operator with
-  | Assign -> "="
-  | PlusAssign -> "+="
-  | MinusAssign -> "-="
-  | MultAssign -> "*="
-  | ExpAssign -> "**="
-  | DivAssign -> "/="
-  | ModAssign -> "%="
-  | LShiftAssign -> "<<="
-  | RShiftAssign -> ">>="
-  | RShift3Assign -> ">>>="
-  | BitOrAssign -> "|="
-  | BitXorAssign -> "^="
-  | BitAndAssign -> "&="
-  ) in
+  let operator = match operator with
+  | None -> "="
+  | Some op -> Flow_ast_utils.string_of_assignment_operator op
+  in
   do_wrap (left ^ " " ^ operator ^ " " ^ right)
 | Binary { Binary.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Binary operator) right)
@@ -843,21 +1000,22 @@ Ast.Expression.(match x with
     (code_desc_of_expression ~wrap:false alternate)
   )
 | Function _ -> "function () { ... }"
-| Identifier (_, x) -> x
+| Identifier (_, { Ast.Identifier.name= x; comments= _ }) -> x
 | Import x -> "import(" ^ code_desc_of_expression ~wrap:false x ^ ")"
 | JSXElement x -> code_desc_of_jsx_element x
 | JSXFragment _ -> "<>...</>"
 | Ast.Expression.Literal x -> code_desc_of_literal x
 | Logical { Logical.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Logical operator) right)
-| Member { Member._object; property; computed = _ } -> Member.(
+| Member { Member._object; property } -> Member.(
   let o = code_desc_of_expression ~wrap:true _object in
   o ^ (match property with
-  | PropertyIdentifier (_, x) -> "." ^ x
-  | PropertyPrivateName (_, (_, x)) -> ".#" ^ x
+  | PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) -> "." ^ x
+  | PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) -> ".#" ^ x
   | PropertyExpression x -> "[" ^ code_desc_of_expression ~wrap:false x ^ "]"
   ))
-| MetaProperty { MetaProperty.meta = (_, o); property = (_, p) } -> o ^ "." ^ p
+| MetaProperty { MetaProperty.meta = (_, { Ast.Identifier.name= o; comments= _ }); property = (_, { Ast.Identifier.name= p; comments= _ }) } ->
+  o ^ "." ^ p
 | New { New.callee; targs; arguments } ->
   let targs = match targs with
   | None -> ""
@@ -887,13 +1045,13 @@ Ast.Expression.(match x with
     (if optional then "?." else "") ^
     targ_string ^ arg_string
 | OptionalMember { OptionalMember.
-    member = { Member._object; property; computed = _ };
+    member = { Member._object; property };
     optional;
   } ->
   let o = code_desc_of_expression ~wrap:true _object in
   o ^ Member.(match property with
-  | PropertyIdentifier (_, x) -> (if optional then "?." else ".") ^ x
-  | PropertyPrivateName (_, (_, x)) -> (if optional then "?.#" else ".#") ^ x
+  | PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) -> (if optional then "?." else ".") ^ x
+  | PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) -> (if optional then "?.#" else ".#") ^ x
   | PropertyExpression x ->
     (if optional then "?.[" else "[") ^ code_desc_of_expression ~wrap:false x ^ "]"
   )
@@ -904,7 +1062,7 @@ Ast.Expression.(match x with
 | TemplateLiteral _ -> "`...`"
 | This -> "this"
 | TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
-| Unary { Unary.operator; prefix; argument } ->
+| Unary { Unary.operator; argument } ->
   let x = code_desc_of_expression ~wrap:true argument in
   let op = Unary.(match operator with
   | Minus -> "-"
@@ -916,7 +1074,7 @@ Ast.Expression.(match x with
   | Delete -> "delete "
   | Await -> "await "
   ) in
-  do_wrap (if prefix then op ^ x else x ^ op)
+  do_wrap (op ^ x)
 | Update { Update.operator; prefix; argument } ->
   let x = code_desc_of_expression ~wrap:true argument in
   let op = Update.(match operator with
@@ -940,44 +1098,20 @@ Ast.Expression.(match x with
 and code_desc_of_pattern (_, x) = Ast.Pattern.(match x with
 | Object _ -> "{...}"
 | Array _ -> "[...]"
-| Assignment { Assignment.left; right } ->
-  code_desc_of_pattern left ^ " = " ^ code_desc_of_expression ~wrap:false right
-| Identifier { Identifier.name = (_, name); _ } -> name
+| Identifier { Identifier.name = (_, { Ast.Identifier.name; comments= _ }); _ } -> name
 | Expression x -> code_desc_of_expression ~wrap:false x
 )
 
 (* Implementation of operator flattening logic lifted from Prettier:
  * https://github.com/prettier/prettier/blob/dd78f31aaf5b4522b780f13194d57308e5fdf53b/src/common/util.js#L328-L399 *)
 and code_desc_of_operation = Ast.Expression.(
-  let string_of_operator = Binary.(function
-  | `Binary op -> (match op with
-    | Equal -> "=="
-    | NotEqual -> "!="
-    | StrictEqual -> "==="
-    | StrictNotEqual -> "!=="
-    | LessThan -> "<"
-    | LessThanEqual -> "<="
-    | GreaterThan -> ">"
-    | GreaterThanEqual -> ">="
-    | LShift -> "<<"
-    | RShift -> ">>"
-    | RShift3 -> ">>>"
-    | Plus -> "+"
-    | Minus -> "-"
-    | Mult -> "*"
-    | Exp -> "**"
-    | Div -> "/"
-    | Mod -> "%"
-    | BitOr -> "|"
-    | Xor -> "^"
-    | BitAnd -> "&"
-    | In -> "in"
-    | Instanceof -> "instanceof")
+  let string_of_operator = function
+  | `Binary op -> Flow_ast_utils.string_of_binary_operator op
   | `Logical op -> (match op with
     | Logical.Or -> "||"
     | Logical.And -> "&&"
     | Logical.NullishCoalesce -> "??")
-  ) in
+  in
   let should_flatten = Binary.(
     let precedence = function
     | `Logical Logical.Or -> 0
@@ -1057,14 +1191,17 @@ let rec mk_expression_reason = Ast.Expression.(function
 | (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
 | (loc, Object _) -> mk_reason RObjectLit loc
 | (loc, Array _) -> mk_reason RArrayLit loc
-| (loc, ArrowFunction f) -> func_reason f loc
-| (loc, Function f) -> func_reason f loc
+| (loc, ArrowFunction { Ast.Function.async; _ }) -> func_reason ~async ~generator:false loc
+| (loc, Function { Ast.Function.async; generator; _ }) -> func_reason ~async ~generator loc
 | (loc, Ast.Expression.Literal {Ast.Literal.value = Ast.Literal.String ""; _}) ->
   mk_reason (RStringLit "") loc
 | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
 | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
 | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 )
+
+let mk_pattern_reason ((loc, _) as patt) =
+  mk_reason (RCode (code_desc_of_pattern patt)) loc
 
 (* TODO: replace RCustom descriptions with proper descriptions *)
 let unknown_elem_empty_array_desc = RCustom "unknown element type of empty array"
@@ -1088,10 +1225,14 @@ let inferred_union_elem_array_desc = RCustom
  *)
 let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RNumber
+| RBigInt
 | RString
+| RSymbol
 | RBoolean
+| RLongStringLit _
 | RStringLit _
 | RNumberLit _
+| RBigIntLit _
 | RBooleanLit _
 | RJSXText
 | RFbt
@@ -1116,7 +1257,8 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
   -> `Array
 | RMixed
 | REmpty
-| RAny
+| RAnyExplicit
+| RAnyImplicit
 | RMatchingProp _
 | RObject
 | RObjectLit
@@ -1138,15 +1280,13 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RUnaryOperator _
 | RBinaryOperator _
 | RLogical _
-| RAnyObject
-| RAnyFunction
 | RGetterSetterProperty
 | RThis
 | RThisType
 | RExistential
+| RImplicitInstantiation
 | RTooFewArgs
 | RTooFewArgsExpectedRest
-| RUninitializedThis
 | RConstructorReturn
 | RNewObject
 | RUnion
@@ -1198,6 +1338,9 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RFieldInitializer _
 | RUntypedModule _
 | RNamedImportedType _
+| RImportStarType _
+| RImportStarTypeOf _
+| RImportStar _
 | RDefaultImportedType _
 | RCode _
 | RCustom _
@@ -1208,8 +1351,10 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RMaybe _
 | RAbstract _
 | RTypeApp _
+| RTypeAppImplicit _
 | RThisTypeApp _
 | RExtends _
+| RClass _
 | RStatics _
 | RSuperOf _
 | RFrozen _
@@ -1237,6 +1382,9 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RReactChildrenOrType _
 | RReactChildrenOrUndefinedOrType _
 | RReactSFC
+| RReactConfig
+| RTrusted _
+| RPrivate _
   -> `Unclassified
 
 let is_nullish_reason r =
@@ -1248,3 +1396,7 @@ let is_scalar_reason r =
 
 let is_array_reason r =
   classification_of_reason r = `Array
+
+let invalidate_rtype_alias = function
+  | RTypeAlias (name, true, desc) -> RTypeAlias (name, false, desc)
+  | desc -> desc

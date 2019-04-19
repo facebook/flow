@@ -1,16 +1,18 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 (* This file contains util functions*)
-module S = Ast.Statement;;
-module E = Ast.Expression;;
-module T = Ast.Type;;
-module P = Ast.Pattern;;
-module F = Ast.Function;;
+module S = Flow_ast.Statement;;
+module E = Flow_ast.Expression;;
+module T = Flow_ast.Type;;
+module P = Flow_ast.Pattern;;
+module F = Flow_ast.Function;;
 
 module StrSet = Set.Make(struct
     type t = string
@@ -63,43 +65,38 @@ let string_of_type =
 (* A hacky version of string_of function for AST nodes.
    This will be replaced once we have a better solution.
 *)
-let rec string_of_pattern (pattern : Loc.t P.t') =
+let rec string_of_pattern (pattern : (Loc.t, Loc.t) P.t') =
   match pattern with
   | P.Identifier id ->
     let open P.Identifier in
-    (snd id.name) ^
+    (Flow_ast_utils.name_of_ident id.name) ^
     (if id.optional then "?" else "") ^ " " ^
     (match id.annot with
-     | Some (_, (_, t)) -> " : " ^ (string_of_type t)
-     | None -> "")
+     | Ast.Type.Available (_, (_, t)) -> " : " ^ (string_of_type t)
+     | Ast.Type.Missing _ -> "")
   | P.Expression (_, e) -> string_of_expr e
-  | P.Assignment assign ->
-    let open P.Assignment in
-    (string_of_pattern (snd assign.left)) ^
-    " = " ^
-    (string_of_expr (snd assign.right))
   | _ -> failwith "[string_of_pattern] unsupported pattern"
 
-and string_of_expr (expr : Loc.t E.t') =
+and string_of_expr (expr : (Loc.t, Loc.t) E.t') =
   let string_of_proplist plist =
     let helper prop = match prop with
       | E.Object.Property (_, E.Object.Property.Init p) ->
         let open E.Object.Property in
         (match p.key, p.value with
-         | Identifier (_, name), (_, e) -> name ^ " : " ^ (string_of_expr e)
+         | Identifier (_, { Ast.Identifier.name; comments= _ }), (_, e) -> name ^ " : " ^ (string_of_expr e)
          | _ -> failwith "Unsupported expression")
       | _ -> failwith "Unsupported property" in
-    String.concat ", " (List.map helper plist) in
+    String.concat ", " (Core_list.map ~f:helper plist) in
 
   let string_of_assign_op op =
     let open E.Assignment in
     match op with
-    | Assign -> "="
-    | PlusAssign -> "+="
-    | MinusAssign -> "-="
-    | MultAssign -> "*="
-    | ExpAssign -> "^="
-    | DivAssign -> "/="
+    | None -> "="
+    | Some PlusAssign -> "+="
+    | Some MinusAssign -> "-="
+    | Some MultAssign -> "*="
+    | Some ExpAssign -> "^="
+    | Some DivAssign -> "/="
     | _ -> failwith "unsupported assign" in
 
   match expr with
@@ -117,20 +114,20 @@ and string_of_expr (expr : Loc.t E.t') =
     let callee_str = string_of_expr (snd call.callee) in
     let arglist_str =
       call.arguments
-      |> List.map (fun a -> match a with
+      |> Core_list.map ~f:(fun a -> match a with
           | E.Expression (_, e) -> e
           | E.Spread _ -> failwith "[string_of_expr] call does not support spread argument.")
-      |> List.map string_of_expr
+      |> Core_list.map ~f:string_of_expr
       |> String.concat ", " in
     callee_str ^ "(" ^ arglist_str ^ ")"
-  | E.Identifier (_, id) -> id
+  | E.Identifier (_, { Ast.Identifier.name; comments= _ }) -> name
   | E.Member mem ->
     let open E.Member in
     let obj_str = string_of_expr (snd mem._object) in
     let prop_str = match mem.property with
-      | PropertyIdentifier (_, id) -> id
+      | PropertyIdentifier (_, { Ast.Identifier.name; comments= _ }) -> name
       | PropertyExpression (_, e) -> string_of_expr e
-      | PropertyPrivateName (_, (_, id)) -> id in
+      | PropertyPrivateName (_, (_, { Ast.Identifier.name; comments= _ })) -> name in
     obj_str ^ "." ^ prop_str
   | E.TypeCast cast ->
     let open E.TypeCast in
@@ -140,7 +137,7 @@ and string_of_expr (expr : Loc.t E.t') =
   | E.Array array ->
     let open E.Array in
     "[" ^
-    (List.map (fun elt -> match elt with
+    (Core_list.map ~f:(fun elt -> match elt with
          | Some (E.Expression (_, e)) -> string_of_expr e
          | Some (E.Spread (_, e)) -> string_of_expr (E.SpreadElement.((snd e.argument)))
          | None -> "") array.elements
@@ -148,31 +145,36 @@ and string_of_expr (expr : Loc.t E.t') =
       "]"
   | _ -> failwith "unknown expr"
 
-and string_of_stmt (stmt : Loc.t S.t') =
+and string_of_stmt (stmt : (Loc.t, Loc.t) S.t') =
+  let string_of_function_param = function
+  | (_, { Ast.Function.Param.argument = (_, patt); default = None }) ->
+    string_of_pattern patt
+  | (_, { Ast.Function.Param.argument = (_, patt); default = Some (_, expr) }) ->
+    (string_of_pattern patt) ^ " = " ^ (string_of_expr expr)
+  in
   match stmt with
   | S.Block b ->
     S.Block.(b.body)
-    |> List.map snd
-    |> List.map string_of_stmt
+    |> Core_list.map ~f:snd
+    |> Core_list.map ~f:string_of_stmt
     |> String.concat "\n"
   | S.Empty -> "\n"
   | S.FunctionDeclaration func ->
     let open Ast.Function in
     let fname = match func.id with
-      | Some (_, n) -> n
+      | Some (_, { Ast.Identifier.name; comments= _ }) -> name
       | None -> "" in
     let params_str =
       let (_, { Ast.Function.Params.params; rest = _ }) = func.params in
       params
-      |> List.map snd
-      |> List.map string_of_pattern
+      |> Core_list.map ~f:string_of_function_param
       |> String.concat ", " in
     let body_str = match func.body with
       | BodyBlock (_, s) -> string_of_stmt (S.Block s)
       | BodyExpression (_, e) -> string_of_expr e in
     let ret_type_str = match func.return with
-      | Some (_, (_, t)) -> ": " ^ string_of_type t
-      | None -> "" in
+      | T.Available (_, (_, t)) -> ": " ^ string_of_type t
+      | T.Missing _ -> "" in
     "function " ^ fname ^ "(" ^ params_str ^ ") " ^ ret_type_str ^ " {\n" ^
     body_str ^
     "}\n"
@@ -193,15 +195,15 @@ and string_of_stmt (stmt : Loc.t S.t') =
       | Var -> "var"
       | Let -> "let"
       | Const -> "const" in
-    let dlist = List.map snd decl.declarations in
-    let dlist_str = String.concat ", " (List.map string_of_dtor dlist) in
+    let dlist = Core_list.map ~f:snd decl.declarations in
+    let dlist_str = String.concat ", " (Core_list.map ~f:string_of_dtor dlist) in
     kind_str ^ " " ^ dlist_str ^ "\n"
   | S.Expression e ->
     let open S.Expression in
     (string_of_expr (snd e.expression)) ^ ";\n"
   | _ -> failwith "[string_of_stmt] Unspported stmt"
 
-and string_of_type (t : Loc.t T.t') =
+and string_of_type (t : (Loc.t, Loc.t) T.t') =
 
   match t with
   | T.Any -> "any"
@@ -219,8 +221,8 @@ and string_of_type (t : Loc.t T.t') =
         let open T.Object.Property in
         let key_str = match p.key with
           | E.Object.Property.Literal (_, lit)  -> Ast.Literal.(lit.raw)
-          | E.Object.Property.Identifier (_, name) -> name
-          | E.Object.Property.PrivateName (_, (_, name)) -> name
+          | E.Object.Property.Identifier (_, { Ast.Identifier.name; comments= _ }) -> name
+          | E.Object.Property.PrivateName (_, (_, { Ast.Identifier.name; comments= _ })) -> name
           | E.Object.Property.Computed (_, e) -> string_of_expr e in
         let t_str = match p.value with
           | Init (_, init_t) -> string_of_type init_t
@@ -230,14 +232,14 @@ and string_of_type (t : Loc.t T.t') =
         key_str ^ opt ^ " : " ^ t_str
       | _ -> failwith "[string_of_prop] unsupported property" in
     let prop_str_list = ot.properties
-      |> List.map string_of_prop
+      |> Core_list.map ~f:string_of_prop
       |> String.concat ", " in
     if ot.exact then "{|" ^ prop_str_list ^ "|}"
     else "{" ^ prop_str_list ^ "}"
   | T.Union ((_, t1), (_, t2), trest) ->
     let t_strlist =
       [(string_of_type t1); (string_of_type t2)]
-      @ (trest |> (List.map snd) |> (List.map string_of_type)) in
+      @ (trest |> (Core_list.map ~f:snd) |> (Core_list.map ~f:string_of_type)) in
     String.concat " | " t_strlist
   | T.StringLiteral st -> Ast.StringLiteral.(st.raw)
   | T.NumberLiteral nt -> Ast.NumberLiteral.(nt.raw)
@@ -248,14 +250,14 @@ and string_of_type (t : Loc.t T.t') =
       let open T.Function.Param in
       let opt_str = if param.optional then "?" else "" in
       let name_str = match param.name with
-        | Some (_, id) -> id ^ opt_str ^ " : "
+        | Some (_, { Ast.Identifier.name; comments= _ }) -> name ^ opt_str ^ " : "
         | None -> "" in
       name_str ^ (string_of_type (snd param.annot)) in
     let params_str =
       let (_, { T.Function.Params.params; rest = _ }) = func.params in
       params
-      |> List.map snd
-      |> List.map string_of_param
+      |> Core_list.map ~f:snd
+      |> Core_list.map ~f:string_of_param
       |> String.concat ", " in
     let ret_type_str = (string_of_type (snd func.return)) in
     "(" ^ params_str ^ ") => " ^ ret_type_str
@@ -281,7 +283,7 @@ let mk_obj_cons = mk_gen "Obj";;
 (* Convert a code and its dependencies into a list
    CAUTION: This function will lose some independencies between
    codes *)
-let list_of_code (code : Code.t) : Loc.t Ast.Statement.t list =
+let list_of_code (code : Code.t) : (Loc.t, Loc.t) Ast.Statement.t list =
   let open Code in
   let rec helper acc lst = match lst with
     | [] -> acc
@@ -293,7 +295,7 @@ let list_of_code (code : Code.t) : Loc.t Ast.Statement.t list =
 (* Convert a list of statements into a code object. Dependencies
    are based on the order of the statements. Thus, it will create
    unnecessary dependnecies. USE THIS WITH CAUTION. *)
-let code_of_stmt_list (slist : Loc.t Ast.Statement.t list) : Code.t option =
+let code_of_stmt_list (slist : (Loc.t, Loc.t) Ast.Statement.t list) : Code.t option =
   let open Code in
 
   let rec helper lst = match lst with
@@ -310,7 +312,7 @@ let code_of_stmt_list (slist : Loc.t Ast.Statement.t list) : Code.t option =
    assignments will appear after empty object init.
 *)
 let rm_prop_write
-    (prop : Loc.t E.Member.t)
+    (prop : (Loc.t, Loc.t) E.Member.t)
     (clist : Code.t list) : Code.t list =
   let open S.Expression in
   let open Code in
@@ -334,10 +336,10 @@ let rm_vardecl
   let open S.VariableDeclaration in
 
   (* Check whether this declaration defines the target variable *)
-  let is_target (decl : Loc.t S.VariableDeclaration.Declarator.t) =
+  let is_target (decl : (Loc.t, Loc.t) S.VariableDeclaration.Declarator.t) =
     let decl' = (snd decl) in
     match decl'.id with
-    | (_, P.Identifier { P.Identifier.name = (_, name); _;})
+    | (_, P.Identifier { P.Identifier.name = (_, { Ast.Identifier.name; comments= _ }); _;})
       -> name != vname
     | _ -> true in
 
@@ -389,10 +391,10 @@ module Config = struct
   and t = (string * value) list;;
 
   (* Convert a JSON ast into a config *)
-  let rec to_config (ast : Loc.t E.Object.t) : t =
+  let rec to_config (ast : (Loc.t, Loc.t) E.Object.t) : t =
 
     (* get config value from an expression *)
-    let get_value (expr : Loc.t E.t') : value = match expr with
+    let get_value (expr : (Loc.t, Loc.t) E.t') : value = match expr with
       | E.Object o -> Obj (to_config o)
       | E.Literal lit -> let open Ast.Literal in
         (match lit.value with
@@ -405,7 +407,7 @@ module Config = struct
     let open E.Object in
 
     (* get all the properties *)
-    let prop_list = (List.map (fun p -> match p with
+    let prop_list = (Core_list.map ~f:(fun p -> match p with
         | Property (_, E.Object.Property.Init { key = k; value = (_, e); _ }) ->
           let k = (match k with
               | E.Object.Property.Literal (_, id) -> Ast.Literal.(match id.value with
@@ -429,26 +431,26 @@ module Config = struct
     prop_list
 
   (* Convert a config into an expression ast. Mainly used for printing *)
-  let rec ast_of_config (c : t) : Loc.t E.Object.t =
+  let rec ast_of_config (c : t) : (Loc.t, Loc.t) E.Object.t =
 
-    let expr_of_value (v : value) : Loc.t E.t' = let open Ast.Literal in
+    let expr_of_value (v : value) : (Loc.t, Loc.t) E.t' = let open Ast.Literal in
       match v with
-      | Int i -> E.Literal {value = Number (float_of_int i); raw = string_of_int i}
-      | Str s -> E.Literal {value = String s; raw = "\"" ^ s ^ "\""}
-      | Bool b -> E.Literal {value = Boolean b; raw = string_of_bool b}
+      | Int i -> E.Literal {value = Number (float_of_int i); raw = string_of_int i; comments = Flow_ast_utils.mk_comments_opt ()}
+      | Str s -> E.Literal {value = String s; raw = "\"" ^ s ^ "\""; comments = Flow_ast_utils.mk_comments_opt ()}
+      | Bool b -> E.Literal {value = Boolean b; raw = string_of_bool b; comments = Flow_ast_utils.mk_comments_opt ()}
       | Obj o -> E.Object (ast_of_config o) in
 
     (* Convert all properties into object properties *)
     let open E.Object in
     let prop_list =
       let open E.Object.Property in
-      List.map (fun (k, v) ->
-          let key = Identifier (Loc.none, "\"" ^ k ^ "\"") in
+      Core_list.map ~f:(fun (k, v) ->
+          let key = Identifier (Flow_ast_utils.ident_of_source (Loc.none, "\"" ^ k ^ "\"")) in
           let value = Loc.none, expr_of_value v in
           Property (Loc.none, Init {key;
                                value;
                                shorthand = false})) c in
-    {properties = prop_list};;
+    {properties = prop_list; comments = Flow_ast_utils.mk_comments_opt ()};;
 
   (* Convert a config into string for printing *)
   let string_of_config (c : t) : string =
@@ -458,7 +460,7 @@ module Config = struct
   (* Return an empty config *)
   let empty () : t =
     let open E.Object in
-    to_config {properties = []};;
+    to_config {properties = []; comments = Flow_ast_utils.mk_comments_opt ()};;
 
   (* Get a value from the config given a string.*)
   let get (conf : t) (prop_name : string) : value =
@@ -527,7 +529,9 @@ let stub_metadata ~root ~checked = { Context.
   jsx = Options.Jsx_react;
   strict = true;
   strict_local = false;
+  include_suppressions = false;
   (* global *)
+  max_literal_length = 100;
   enable_const_params = false;
   enforce_strict_call_arity = true;
   esproposal_class_static_fields = Options.ESPROPOSAL_ENABLE;
@@ -536,7 +540,9 @@ let stub_metadata ~root ~checked = { Context.
   esproposal_export_star_as = Options.ESPROPOSAL_ENABLE;
   esproposal_optional_chaining = Options.ESPROPOSAL_ENABLE;
   esproposal_nullish_coalescing = Options.ESPROPOSAL_ENABLE;
+  facebook_fbs = None;
   facebook_fbt = None;
+  haste_module_ref_prefix = None;
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
@@ -544,6 +550,8 @@ let stub_metadata ~root ~checked = { Context.
   strip_root = true;
   suppress_comments = [];
   suppress_types = SSet.empty;
+  default_lib_dir = None;
+  trust_mode = Options.NoTrust;
 }
 
 (* Invoke flow for type checking *)
@@ -563,7 +571,7 @@ let flow_check (code : string) : string option =
       let builtin_metadata = stub_metadata ~root ~checked:true in
       let lint_severities = LintSettings.empty_severities in
       let builtins_ast, _ = Parser_flow.program (read_file "lib/core.js") in
-      let builtins_file_sig = match File_sig.program ~ast:builtins_ast with
+      let builtins_file_sig = match File_sig.With_Loc.program ~ast:builtins_ast ~module_ref_prefix:None with
       | Ok file_sig -> file_sig
       | Error _ -> failwith "error calculating builtins file sig"
       in
@@ -571,7 +579,7 @@ let flow_check (code : string) : string option =
       let builtins_cx = Context.make builtins_sig_cx builtin_metadata
         File_key.Builtins Files.lib_module_ref in
       let _ = Type_inference_js.infer_lib_file builtins_cx builtins_ast
-        ~exclude_syms:SSet.empty ~lint_severities ~file_sig:builtins_file_sig in
+        ~exclude_syms:SSet.empty ~lint_severities ~file_options:None ~file_sig:(File_sig.abstractify_locs builtins_file_sig) in
       let () =
         let from_t = Context.find_module master_cx Files.lib_module_ref in
         let to_t = Context.find_module builtins_cx Files.lib_module_ref in
@@ -587,29 +595,42 @@ let flow_check (code : string) : string option =
       let strict_mode = StrictModeSettings.empty in
       let stub_docblock = { Docblock.
                             flow = Docblock.(Some OptIn);
+                            typeAssert = false;
                             preventMunge = None;
                             providesModule = None;
                             isDeclarationFile = false;
                             jsx = None;
                           } in
       let input_ast, _ = Parser_flow.program code in
+      let (_, _, comments) = input_ast in
+      let aloc_ast = Ast_loc_utils.abstractify_mapper#program input_ast in
       let filename = File_key.SourceFile "/tmp/foo.js" in
-      let file_sig = match File_sig.program ~ast:input_ast with
+      let file_sig = match File_sig.With_Loc.program ~ast:input_ast ~module_ref_prefix:None with
       | Ok file_sig -> file_sig
       | Error _ -> failwith "error calculating implementation file sig"
       in
-      let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
+      let file_sigs = Utils_js.FilenameMap.singleton filename (File_sig.abstractify_locs file_sig) in
       let reqs = Merge_js.Reqs.empty in
       (* WARNING: This line might crash. That's why we put the entire block into a try catch *)
-      let final_cx, _other_cxs = Merge_js.merge_component_strict
-          ~metadata:builtin_metadata ~lint_severities ~strict_mode ~file_sigs
-          ~get_ast_unsafe:(fun _ -> input_ast)
+      let ((final_cx, _, _), _other_cxs) = Merge_js.merge_component_strict
+          ~metadata:builtin_metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
+          ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))
           ~get_docblock_unsafe:(fun _ -> stub_docblock)
           (Nel.one filename) reqs [] master_sig_cx in
-      let errors, warnings, _, _ = Error_suppressions.filter_suppressed_errors
-          Error_suppressions.empty (ExactCover.default_file_cover filename) (Context.errors final_cx)
-      in
-      let error_num = Errors.ErrorSet.cardinal errors in
+      let suppressions = Error_suppressions.empty in
+      let severity_cover = Utils_js.FilenameMap.singleton filename (ExactCover.default_file_cover filename) in
+      let errors = Context.errors final_cx in
+      let include_suppressions = Context.include_suppressions final_cx in
+      let errors, warnings, suppressions =
+        Error_suppressions.filter_lints ~include_suppressions suppressions errors severity_cover in
+
+      let errors = Flow_error.make_errors_printable errors in
+      let warnings = Flow_error.make_errors_printable warnings in
+      let errors, _, suppressions = Error_suppressions.filter_suppressed_errors
+          ~root ~file_options:None suppressions errors ~unused:suppressions in
+      let warnings, _, _ = Error_suppressions.filter_suppressed_errors
+          ~root ~file_options:None suppressions warnings ~unused:suppressions in
+      let error_num = Errors.ConcreteLocPrintableErrorSet.cardinal errors in
       if error_num = 0 then
         None
       else begin
@@ -639,11 +660,11 @@ let flow_check (code : string) : string option =
                    (int_of_string (get_number_exn (List.assoc "offset" end_json)))) in
               Printf.sprintf "Error: %sStart: %s\nEnd: %s\n" desc start eend
             in
-            String.concat "" (List.map msg_helper (get_array_exn (List.assoc "message" error)))
+            String.concat "" (Core_list.map ~f:msg_helper (get_array_exn (List.assoc "message" error)))
           in
           (List.assoc "errors" (get_object_exn json))
           |> get_array_exn
-          |> List.map string_of_error
+          |> Core_list.map ~f:string_of_error
           |> String.concat "\n"
         in
 
@@ -651,10 +672,9 @@ let flow_check (code : string) : string option =
         let error_msg =
           let stdin_file = None in
           let strip_root = None in
-          let profiling = None in
           let suppressed_errors = [] in
-          let res = Errors.Json_output.full_status_json_of_errors ~strip_root ~profiling ~stdin_file
-              ~suppressed_errors ~errors ~warnings () in
+          let res = Errors.Json_output.full_status_json_of_errors ~strip_root ~stdin_file
+              ~suppressed_errors ~errors ~warnings () None in
         (*
         Printf.printf "%s\n" (Hh_json.json_to_string ~pretty:false res);
            *)
@@ -763,10 +783,10 @@ let batch_run (code_list : string list) : (string option) list =
   (* Split the batch run output into a list of single-program outputs *)
   let to_msg_list (output : string) : (string option) list =
     let msg_list = Str.split (Str.regexp "====\n") output in
-    List.map (fun m -> if (String.trim m) = "Done" then None else Some m) msg_list in
+    Core_list.map ~f:(fun m -> if (String.trim m) = "Done" then None else Some m) msg_list in
 
   (* Convert all programs into a string for batch run *)
-  let progs = List.map to_stmt code_list in
+  let progs = Core_list.map ~f:to_stmt code_list in
   let progs_string = String.concat "console.log('====');\n" progs in
 
   (* run all the programs *)

@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -13,4 +13,3 @@ open Utils_js
 *)
 val topsort: roots:FilenameSet.t -> FilenameSet.t FilenameMap.t -> File_key.t Nel.t list
 val log: File_key.t Nel.t list -> unit
-val reverse: FilenameSet.t FilenameMap.t -> FilenameSet.t FilenameMap.t

@@ -37,8 +37,8 @@ homepage_code_bigger_img_alt: ""
 homepage_code_bigger_description: >
   Working in a codebase with lots of developers can make it difficult to keep
   your master branch working. Flow can help prevent bad rebases. Flow can help
-  protect your carefully designed library from your coworkers. And Flow can help
-  you understand the code you wrote six months ago.
+  protect your carefully designed library from misuse and misinterpretation.
+  And Flow can help you understand the code you wrote six months ago.
 
 homepage_featurettes:
   - title: "Type Inference"
@@ -86,6 +86,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/getting-started/":
   title: "Getting Started"
   description: "Introduction to type checking with Flow"
+"/docs/faq/":
+  title: "FAQ"
+  description: "Frequently asked questions about using Flow"
 "/docs/install/":
   title: "Installation"
   description: "Installing and setting up Flow for a project"
@@ -167,6 +170,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/config/options/":
   title: ".flowconfig [options]"
   description: "How to configure Flow's various options"
+"/docs/config/untyped/":
+  title: ".flowconfig [untyped]"
+  description: "How to configure Flow to treat certain files as untyped"
 "/docs/config/version/":
   title: ".flowconfig [version]"
   description: "How to pin your project to a specific version of Flow"
@@ -302,13 +308,16 @@ docs_additional_reading: "Additional Reading"
   description: "The types and best practices for typing React event handlers with Flow"
 "/docs/react/refs/":
   title: "ref functions"
-  description: "How to use typed Flow's typed React ref functions"
+  description: "How to use Flow's typed React ref functions"
 "/docs/react/children/":
   title: "Children"
   description: "Learn how to use Flow to strictly type the children of your React components"
 "/docs/react/hoc/":
   title: "Higher-order Components"
   description: "Learn how to use Flow to type React higher-order components"
+"/docs/react/context/":
+  title: "Context"
+  description: "Learn how to use Flow with the React context API"
 "/docs/react/redux/":
   title: "Redux"
   description: "Learn how to use Flow with Redux"
@@ -388,6 +397,10 @@ guides:
     description: >
       Never used a type system before or just new to Flow? Let's get you up and
       running in a few minutes.
+  faq:
+    title: "FAQ"
+    description: >
+      Have a question about using Flow? Check here first!
   types:
     title: "Type Annotations"
     description: >

@@ -1,0 +1,6 @@
+(library
+  (name fsnotify_Linux)
+  (wrapped false)
+  (libraries
+    inotify
+    utils_core))

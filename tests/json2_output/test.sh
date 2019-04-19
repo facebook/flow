@@ -1,8 +1,5 @@
 #!/bin/bash
 
-source ../assert.sh
-
-FLOW=$1
 
 echo "flow check --json-version=2"
 assert_errors "$FLOW" check . --strip-root --json-version=2
@@ -61,5 +58,4 @@ echo ""
 
 echo "flow status --json-version=2 --pretty"
 assert_errors "$FLOW" status . --strip-root --json-version=2 --pretty
-echo ""
 echo ""

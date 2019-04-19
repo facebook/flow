@@ -7,11 +7,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:532:22
-   532|     get(key: K): V | void;
+   <BUILTINS>/core.js:562:22
+   562|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:487:11
-   487| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -24,11 +24,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:532:22
-   532|     get(key: K): V | void;
+   <BUILTINS>/core.js:562:22
+   562|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:487:11
-   487| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -41,11 +41,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:532:22
-   532|     get(key: K): V | void;
+   <BUILTINS>/core.js:562:22
+   562|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:487:11
-   487| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -58,11 +58,11 @@ Property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [2].
                         ^
 
 References:
-   <BUILTINS>/core.js:532:22
-   532|     get(key: K): V | void;
+   <BUILTINS>/core.js:562:22
+   562|     get(key: K): V | void;
                              ^^^^ [1]
-   <BUILTINS>/core.js:487:11
-   487| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:506:11
+   506| interface $Iterable<+Yield,+Return,-Next> {
                   ^^^^^^^^^ [2]
 
 
@@ -97,10 +97,7 @@ Cannot return function because:
  - property `v` is missing in `C` [1] but exists in `B` [3] in the first argument.
  - string literal `a` [4] is incompatible with string literal `b` [5] in property `kind` of the first argument.
  - string literal `a` [4] is incompatible with string literal `c` [6] in property `kind` of the first argument.
- - string literal `b` [5] is incompatible with string literal `a` [4] in property `kind` of the first argument.
  - string literal `b` [5] is incompatible with string literal `c` [6] in property `kind` of the first argument.
- - string literal `c` [6] is incompatible with string literal `a` [4] in property `kind` of the first argument.
- - string literal `c` [6] is incompatible with string literal `b` [5] in property `kind` of the first argument.
 
    issue6155.js:15:12
    15|     return (type) => cases[type.kind](type);
@@ -217,7 +214,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test3.js:13:10
 
-Cannot return `x` because a callable signature is missing in `Q` [1] but exists in `P` [2] in the return value.
+Cannot return `x` because a call signature declaring the expected parameter / return type is missing in `Q` [1] but
+exists in `P` [2] in the return value.
 
    test3.js:13:10
    13|   return x; // terminate despite expanding types, error
@@ -232,5 +230,39 @@ References:
                                          ^^^^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test9.js:13:2
 
-Found 23 errors
+Cannot cast `o` to `O` because number [1] is incompatible with string [2] in property `x`.
+
+   test9.js:13:2
+   13| (o: O);
+        ^
+
+References:
+   test9.js:4:6
+    4|   x: number,
+            ^^^^^^ [1]
+   test9.js:9:6
+    9|   x: string;
+            ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test9.js:14:2
+
+Cannot cast `o.y` to `O` because number [1] is incompatible with string [2] in property `x`.
+
+   test9.js:14:2
+   14| (o.y: O);
+        ^^^
+
+References:
+   test9.js:4:6
+    4|   x: number,
+            ^^^^^^ [1]
+   test9.js:9:6
+    9|   x: string;
+            ^^^^^^ [2]
+
+
+
+Found 22 errors

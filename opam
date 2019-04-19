@@ -1,6 +1,6 @@
 opam-version: "1.2"
 name: "flowtype"
-version: "0.72.0"
+version: "0.97.0"
 maintainer: "flow@fb.com"
 homepage: "https://flow.org"
 dev-repo: "https://github.com/facebook/flow.git"
@@ -14,10 +14,15 @@ depends: [
   "dtoa" { >= "0.3.1" }
   "ocamlbuild" {build}
   "ocamlfind" {build}
-  "sedlex" { >= "1.99.4" }
+  "core_kernel" { = "v0.11.1" }
+  "sedlex" { = "1.99.4" }
   "lwt" { >= "3.3.0" }
   "lwt_log" { = "1.0.0" }
   "lwt_ppx" { >= "1.1.0" }
+  "ppx_deriving" {build}
+  "ppx_gen_rec" {build}
+  "ppx_tools_versioned" { = "5.2" }
+  "visitors" {build}
   "wtf8"
 ]
 available: [ocaml-version >= "4.05.0"]

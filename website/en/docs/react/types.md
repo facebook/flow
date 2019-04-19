@@ -12,6 +12,7 @@ Table of contents:
 - [`React.Node`](#toc-react-node)
 - [`React.Element<typeof Component>`](#toc-react-element)
 - [`React.ChildrenArray<T>`](#toc-react-childrenarray)
+- [`React.AbstractComponent<Config, Instance>`](#toc-react-abstractcomponent)
 - [`React.ComponentType<Props>`](#toc-react-componenttype)
 - [`React.StatelessFunctionalComponent<Props>`](#toc-react-statelessfunctionalcomponent)
 - [`React.ElementType`](#toc-react-elementtype)
@@ -20,6 +21,7 @@ Table of contents:
 - [`React.ElementProps<typeof Component>`](#toc-react-elementprops)
 - [`React.ElementConfig<typeof Component>`](#toc-react-elementconfig)
 - [`React.ElementRef<typeof Component>`](#toc-react-elementref)
+- [`React.Config<Props, DefaultProps>`](#toc-react-config)
 
 These types are all exported as named type exports from the `react` module. If
 you want to access them as members on the `React` object (e.g.
@@ -75,11 +77,12 @@ import * as React from 'react';
 ## `React.Node` <a class="toc" id="toc-react-node" href="#toc-react-node"></a>
 
 This represents any node that can be rendered in a React application.
-`React.Node` can be undefined, null, a boolean, a number, a string, a React
+`React.Node` can be null, a boolean, a number, a string, a React
 element, or an array of any of those types recursively.
 
-If you need a return type for your component `render()` methods or you need a
-generic type for a children prop then you should use `React.Node`.
+If you need a return type for your component `render()` methods then you should use `React.Node`.
+However, if you need a generic type for a children prop, use `?React.Node`;
+children can be undefined, when `render()` can't return `undefined`.
 
 Here is an example of `React.Node` being used as the return type to `render()`:
 
@@ -170,7 +173,7 @@ as a type, so the following is correct: `(Bar: typeof Bar)`.
 A React children array can be a single value or an array nested to any level.
 It is designed to be used with the [`React.Children` API][].
 
-[`React.Children` API]: https://facebook.github.io/react/docs/react-api.html#react.children
+[`React.Children` API]: https://reactjs.org/docs/react-api.html#reactchildren
 
 For example if you want to get a normal JavaScript array from a
 `React.ChildrenArray<T>` see the following example:
@@ -186,6 +189,20 @@ const children: React.ChildrenArray<number> = [[1, 2], 3, [4, 5]];
 // Using the `React.Children` API can flatten the array.
 const array: Array<number> = React.Children.toArray(children);
 ```
+
+## `React.AbstractComponent<Config, Instance>` <a class="toc" id="toc-react-abstractcomponent" href="#toc-react-abstractcomponent"></a>
+
+`React.AbstractComponent<Config, Instance>` (v0.89.0+) represents a component with
+a config of type Config and instance of type Instance.
+
+Instance is optional and is mixed by default.
+
+
+A class or function component with config `Config` may be used in places that expect
+`React.AbstractComponent<Config>`.
+
+This is Flow's most abstract representation of a React component, and is most useful for
+writing HOCs and library definitions.
 
 ## `React.ComponentType<Props>` <a class="toc" id="toc-react-componenttype" href="#toc-react-componenttype"></a>
 
@@ -221,6 +238,10 @@ type ComponentType<Props> =
   | React.StatelessFunctionalComponent<Props>
   | Class<React.Component<Props, any>>;
 ```
+
+> **Note:** In 0.89.0+, React.ComponentType<Config> is an alias for React.AbstractComponent<Config, any>,
+which represents a component with config type Config and any instance type.
+
 
 ## `React.StatelessFunctionalComponent<Props>` <a class="toc" id="toc-react-statelessfunctionalcomponent" href="#toc-react-statelessfunctionalcomponent"></a>
 
@@ -286,11 +307,11 @@ type Ref<C> =
 
 ## `React.ElementProps<typeof Component>` <a class="toc" id="toc-react-elementprops" href="#toc-react-elementprops"></a>
 
-Gets the props for a React element type, *without* preserving the optionality of `defaultProps`. `Type` could be a React class
-component, a stateless functional component, or a JSX intrinsic string. This
-type is used for the `props` property on [`React.Element<typeof Component>`](#toc-react-element).
+Gets the props for a React element type, *without* preserving the optionality of `defaultProps`.
+`typeof Component` could be the type of a React class component, a stateless functional component, or a JSX intrinsic string.
+This type is used for the `props` property on [`React.Element<typeof Component>`](#toc-react-element).
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `Type` must be the
+Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
 type *of* a React component so you need to use `typeof` as in
 `React.ElementProps<typeof MyComponent>`.
 
@@ -321,7 +342,7 @@ class MyComponent extends React.Component<{foo: number}> {
 ({}: React.ElementConfig<typeof MyComponent>);
 ```
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `Type` must be the
+Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
 type *of* a React component so you need to use `typeof` as in
 `React.ElementProps<typeof MyComponent>`.
 
@@ -340,6 +361,11 @@ various component types:
   `React.ElementRef<'div'>` that would be `HTMLDivElement`. For
   `React.ElementRef<'input'>` that would be `HTMLInputElement`.
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `Type` must be the
+Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
 type *of* a React component so you need to use `typeof` as in
 `React.ElementRef<typeof MyComponent>`.
+
+## `React.Config<Props, DefaultProps>` <a class="toc" id="toc-react-config" href="#toc-react-config"></a>
+
+Calculates a config object from props and default props. This is most useful for annotating
+HOCs that are abstracted over configs. See our [docs on writing HOCs](../hoc) for more information.

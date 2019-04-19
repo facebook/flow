@@ -1,4 +1,4 @@
-# Copyright (c) 2013-present, Facebook, Inc.
+# Copyright (c) Facebook, Inc. and its affiliates.
 # All rights reserved.
 
 ################################################################################
@@ -8,8 +8,10 @@
 EXTRA_INCLUDE_PATHS=
 EXTRA_LIB_PATHS=
 EXTRA_LIBS=
-INTERNAL_MODULES=hack/stubs src/stubs
+INTERNAL_MODULES=hack/stubs/logging src/stubs
 INTERNAL_NATIVE_C_FILES=
+INTERNAL_BUILD_FLAGS=
+INTERNAL_FLAGS=
 
 ifeq ($(OS), Windows_NT)
   UNAME_S=Windows
@@ -69,15 +71,20 @@ MODULES=\
   src/commands/config\
   src/common\
   src/common/audit\
+  src/common/build_id\
   src/common/errors\
   src/common/lints\
   src/common/lwt\
+  src/common/modulename\
   src/common/monad\
   src/common/profiling\
+	src/common/semver\
   src/common/span\
   src/common/tarjan\
+  src/common/transaction\
   src/common/ty\
   src/common/utils\
+  src/common/utils/loc_utils\
   src/common/xx\
   src/flowlib\
   src/monitor\
@@ -86,29 +93,41 @@ MODULES=\
   src/monitor/utils\
   src/parser\
   src/parser_utils\
+  src/parser_utils/aloc\
   src/parser_utils/output\
   src/parser_utils/output/printers\
   src/parsing\
   src/server\
+  src/server/command_handler\
   src/server/env\
   src/server/error_collator\
   src/server/find_refs\
   src/server/lazy_mode_utils\
+  src/server/monitor_listener\
   src/server/persistent_connection\
   src/server/protocol\
   src/server/rechecker\
   src/server/server_files\
   src/server/server_utils\
   src/server/shmem\
+  src/server/watchman_expression_terms\
   src/services/autocomplete\
+  src/services/get_def\
   src/services/inference\
+  src/services/inference/module\
   src/services/flowFileGen\
-  src/services/port\
+  src/services/saved_state\
   src/services/type_info\
+  src/state/heaps/context\
+  src/state/heaps/module\
+  src/state/heaps/parsing\
+  src/state/locals/module\
+  src/state/readers\
   src/third-party/lz4\
   src/third-party/ocaml-sourcemaps/src\
   src/third-party/ocaml-vlq/src\
   src/typing\
+  src/typing/errors\
   hack/dfind\
   hack/find\
   hack/globals\
@@ -125,6 +144,7 @@ MODULES=\
   hack/utils/disk\
   hack/utils/hh_json\
   hack/utils/sys\
+  hack/watchman\
   $(INOTIFY)\
   $(FSNOTIFY)\
   $(INTERNAL_MODULES)
@@ -133,9 +153,12 @@ NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
+  hack/heap/hh_assert.c\
   hack/heap/hh_shared.c\
+  hack/heap/hh_shared_sqlite.c\
   hack/utils/get_build_id.c\
   hack/utils/sys/files.c\
+  hack/utils/sys/gc_profiling.c\
   hack/utils/sys/getrusage.c\
   hack/utils/sys/handle_stubs.c\
   hack/utils/sys/nproc.c\
@@ -149,7 +172,7 @@ NATIVE_C_FILES=\
 FINDLIB_PACKAGES=\
   sedlex\
   lwt\
-  lwt.log\
+  lwt_log\
   lwt.unix\
   lwt_ppx\
   unix\
@@ -183,7 +206,7 @@ BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
 
-CC_FLAGS=-DNO_SQLITE3
+CC_FLAGS=-DNO_SQLITE3 -DNO_HHVM
 CC_FLAGS += $(EXTRA_CC_FLAGS)
 CC_OPTS=$(foreach flag, $(CC_FLAGS), -ccopt $(flag))
 INCLUDE_OPTS=$(foreach dir,$(MODULES),-I $(dir))
@@ -207,7 +230,7 @@ all-homebrew:
 	export OPAMROOT="$(shell mktemp -d 2> /dev/null || mktemp -d -t opam)"; \
 	export OPAMYES="1"; \
 	export FLOW_RELEASE="1"; \
-	opam init --no-setup && \
+	opam init --no-setup --disable-sandboxing && \
 	opam pin add -n flowtype . && \
 	opam config exec -- opam install flowtype --deps-only && \
 	opam config exec -- make
@@ -218,24 +241,24 @@ clean:
 	rm -f hack/utils/get_build_id.gen.c
 	rm -f flow.odocl
 
-build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
+build-flow: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
 	# Both lwt and lwt_ppx provide ppx stuff. Fixed in lwt 4.0.0
 	# https://github.com/ocsigen/lwt/issues/453
 	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		src/flow.native
 
-build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE)
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+build-flow-debug: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLIB) $(COPIED_PRELUDE) $(INTERNAL_BUILD_FLAGS)
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags -custom -lflags "$(LINKER_FLAGS)" \
 		src/flow.d.byte
 	mkdir -p bin
 	cp _build/src/flow.d.byte bin/flow$(EXE)
 
 testgen: build-flow
-	$(OCB) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 	 	-lflags "$(LINKER_FLAGS)" \
 		$(RELEASE_TAGS) \
 		testgen/flowtestgen.native
@@ -272,9 +295,6 @@ $(COPIED_PRELUDE): _build/%.js: %.js
 
 _build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
 	$(OCB) -I scripts scripts/ppx_gen_flowlibs.native
-
-_build/scripts/ppx_gen_rec.native: scripts/ppx_gen_rec.ml
-	$(OCB) -I scripts scripts/ppx_gen_rec.native
 
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
@@ -360,7 +380,7 @@ flow.odocl: $(shell find . -name "*.ml" -o -name "*.mli")
 	done
 	# For some reason these two AST files cause ocamldoc to get stuck
 	cat deps \
-		| grep -v "src/parser/ast.ml" \
+		| grep -v "src/parser/flow_ast.ml" \
 		| sed "s/\.ml$$//" > $@
 	rm -f deps last_deps temp_deps
 

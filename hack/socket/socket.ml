@@ -67,7 +67,7 @@ let get_path path =
       let len = String.length root_part in
       let prefix = String.sub root_part 0 5 in
       let suffix = String.sub root_part (len - 5) 5 in
-      let digest = Digest.to_hex (Digest.string root_part) in
+      let digest = OpaqueDigest.to_hex (OpaqueDigest.string root_part) in
       (* 5 char prefix + 5 char suffix + 2 periods *)
       let max_digest_length = max_root_part_length - 12 in
       let digest_part = if String.length digest > max_digest_length

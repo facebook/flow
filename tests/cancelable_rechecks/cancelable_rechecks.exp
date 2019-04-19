@@ -1,0 +1,21 @@
+
+Init cannot be canceled
+
+
+Recheck can be canceled
+Error ------------------------------------------------------------------------------------------------------ foo.js:3:20
+
+Cannot assign `123` to `foo` because number [1] is incompatible with boolean [2].
+
+   foo.js:3:20
+   3|  const foo: bool = 123;
+                         ^^^ [1]
+
+References:
+   foo.js:3:13
+   3|  const foo: bool = 123;
+                  ^^^^ [2]
+
+
+
+Found 1 error

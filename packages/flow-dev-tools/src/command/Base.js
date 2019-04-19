@@ -33,6 +33,13 @@ export const commonFlags = {
     argName: "path/to/flow",
     description: "Path to the flow binary",
   },
+  flowconfigName: {
+    type: "string",
+    name: "flowconfigName",
+    argName: ".flowconfig",
+    description: "Name of the flowconfig to use in checking",
+    default: ".flowconfig",
+  },
   parallelism: {
     type: "string",
     name: "parallelism",

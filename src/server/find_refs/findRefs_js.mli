@@ -1,11 +1,12 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *)
 
 val find_refs:
+  reader: State_reader.t ->
   genv: ServerEnv.genv ->
   env: ServerEnv.env ref ->
   profiling: Profiling_js.running ->
@@ -14,4 +15,4 @@ val find_refs:
   col: int ->
   global: bool ->
   multi_hop: bool ->
-  (ServerProt.Response.find_refs_response * Hh_json.json option) Lwt.t
+  (FindRefsTypes.find_refs_result * Hh_json.json option) Lwt.t

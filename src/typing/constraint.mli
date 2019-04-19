@@ -1,5 +1,5 @@
 (**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
@@ -20,6 +20,7 @@ and root = {
 
 and constraints =
 | Resolved of Type.t
+| FullyResolved of Type.t
 | Unresolved of bounds
 
 and bounds = {
@@ -30,5 +31,3 @@ and bounds = {
 }
 
 val new_unresolved_root: unit -> node
-
-val copy_node: node -> node

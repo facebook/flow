@@ -22,6 +22,8 @@ val push: 'a t -> 'a -> 'a t
 
 val pop: 'a t -> ('a option * 'a t)
 
+val peek: 'a t -> ('a option * 'a t)
+
 (* Raises Empty if the queue is empty *)
 val pop_unsafe: 'a t -> ('a * 'a t)
 

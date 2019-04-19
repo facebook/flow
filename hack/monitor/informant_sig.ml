@@ -12,7 +12,7 @@ type report =
   (** Nothing to see here. *)
   | Move_along
   (** Kill the server (if one is running) and start a new one. *)
-  | Restart_server of ServerMonitorUtils.target_mini_state option
+  | Restart_server of ServerMonitorUtils.target_saved_state option
 
 type server_state =
   | Server_not_yet_started
@@ -30,6 +30,13 @@ module type S = sig
   type t
   type init_env
   val init : init_env -> t
+  (* Same as init, except it preserves internal Revision_map cache.
+   * This is used when server decides to restart itself due to rebase - we don't
+   * want Informant to then restart the server again. Reinitializing will discard
+   * the pending queue of state changes, and issue new query for base revision,
+   * in order to "synchronize" base revision understanding between server and
+   * monitor. *)
+  val reinit : t -> unit
   val report : t -> server_state -> report
   (**
    * Returns true if the informant is actually running and will
