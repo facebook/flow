@@ -284,6 +284,9 @@ docs_additional_reading: "Additional Reading"
 "/docs/types/any/":
   title: "Any Types"
   description: "Opting out of the type system with any"
+"/docs/types/empty/":
+  title: "Empty Types"
+  description: "Type without values"
 "/docs/types/variables/":
   title: "Variable Types"
   description: "Adding types to variable declarations"
