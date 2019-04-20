@@ -1120,7 +1120,7 @@ let handle_persistent_coverage ~options ~id ~params ~file ~metadata ~client ~pro
       (* Figure out each individual uncovered span *)
       let uncovereds = Core_list.filter_map all_locs ~f:(fun (loc, cov) ->
         match cov with
-        | Coverage.Tainted | Coverage.Untainted
+        | Coverage.Tainted | Coverage.Untainted -> None
         | Coverage.Uncovered
         | Coverage.Empty -> Some loc
       ) in
