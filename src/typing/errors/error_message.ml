@@ -244,6 +244,7 @@ and unsupported_syntax =
   | PredicateInvalidBody
   | PredicateVoidReturn
   | MultipleIndexers
+  | MultipleProtos
   | SpreadArgument
   | ImportDynamicArgument
   | IllegalName
@@ -1349,6 +1350,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           [text "Predicate functions need to return non-void."]
         | MultipleIndexers ->
           [text "Multiple indexers are not supported."]
+        | MultipleProtos ->
+          [text "Multiple prototypes specified."]
         | SpreadArgument ->
           [text "A spread argument is unsupported here."]
         | IllegalName ->

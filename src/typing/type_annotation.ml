@@ -1074,11 +1074,13 @@ and convert_object =
     let add_proto p {hd; tl} =
       let hd = match hd with
       | None ->
-        Some ([], None, SMap.empty, Some p)
-      | Some (cs, d, pmap, _) ->
-        Some (cs, d, pmap, Some p)
+        Ok (Some ([], None, SMap.empty, Some p))
+      | Some (cs, d, pmap, None) ->
+        Ok (Some (cs, d, pmap, Some p))
+      | Some (_, _, _, Some _) ->
+        Error Error_message.MultipleProtos
       in
-      {hd; tl}
+      Core_result.map hd ~f:(fun hd -> {hd; tl})
 
     let add_spread t {hd; tl} =
       let tl = match hd with
@@ -1161,8 +1163,13 @@ and convert_object =
             let proto = Tvar.mk_where cx reason (fun tout ->
               Flow.flow cx (t, ObjTestProtoT (reason, tout))
             ) in
-            Acc.add_proto (Flow.mk_typeof_annotation cx reason proto) acc,
-            prop_ast proto
+            let acc = match Acc.add_proto (Flow.mk_typeof_annotation cx reason proto) acc with
+            | Ok acc -> acc
+            | Error err ->
+              Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+              acc
+            in
+            acc, prop_ast proto
           else
             let t = if optional then Type.optional t else t in
             let id_info = name, t, Type_table.Other in

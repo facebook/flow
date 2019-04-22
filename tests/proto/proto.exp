@@ -217,6 +217,14 @@ Cannot use number [1] as a prototype. Expected an object or null.
                                      ^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------------- annot.js:44:3
+
+Multiple prototypes specified.
+
+   44|   __proto__: {}, // error: multiple protos
+         ^^^^^^^^^
+
+
 Error --------------------------------------------------------------------------------------------------- literal.js:2:2
 
 Cannot cast `o.p` to empty because number [1] is incompatible with empty [2].
@@ -445,4 +453,4 @@ References:
 
 
 
-Found 31 errors
+Found 32 errors

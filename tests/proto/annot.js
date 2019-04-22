@@ -38,3 +38,8 @@ declare var o_loop: O_loop;
 (o_loop.q: empty); // TODO: error (pruned at constraint cache)
 
 type O_invalid = { __proto__: number }; // error: number is not a valid proto
+
+type O_multi = {
+  __proto__: {},
+  __proto__: {}, // error: multiple protos
+}
