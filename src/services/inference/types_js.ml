@@ -2000,21 +2000,27 @@ let init ~profiling ~workers options =
     | Some (saved_state, updates) ->
       (* We loaded a saved state successfully! We are awesome! *)
       let%lwt env, libs_ok = init_from_saved_state ~profiling ~workers ~saved_state options in
+      let should_force_recheck =  Options.saved_state_force_recheck options in
       (* We know that all the files in updates have changed since the saved state was generated. We
        * have two ways to deal with them: *)
-      if Options.lazy_mode options = Options.NON_LAZY_MODE
+      if Options.lazy_mode options = Options.NON_LAZY_MODE || should_force_recheck
       then
         (* In non-lazy mode, we return updates here. They will immediately be rechecked. Due to
-         * fanout, this can be a huge recheck, but it's sound. *)
+         * fanout, this can be a huge recheck, but it's sound.
+         *
+         * We'll also hit this code path in lazy modes if the user has passed
+         * --saved-state-force-recheck. These users want to force Flow to recheck all the files that
+         * have changed since the saved state was generated*)
         Lwt.return (updates, env, libs_ok)
       else begin
         (* In lazy mode, we try to avoid the fanout problem. All we really want to do in lazy mode
          * is to update the dependency graph and stuff like that. We don't actually want to merge
          * anything yet. *)
         with_transaction @@ fun transaction reader ->
-          let%lwt env = Recheck.parse_and_update_dependency_info
-            ~profiling ~transaction ~reader ~options ~workers ~updates
-            ~files_to_force:CheckedSet.empty ~env
+          let%lwt env =
+            Recheck.parse_and_update_dependency_info
+              ~profiling ~transaction ~reader ~options ~workers ~updates
+              ~files_to_force:CheckedSet.empty ~env
           in
           Lwt.return (FilenameSet.empty, env, libs_ok)
       end
