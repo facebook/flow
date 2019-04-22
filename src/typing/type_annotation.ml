@@ -1024,118 +1024,96 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
 )
 
 and convert_object =
+  let obj_proto_t = ObjProtoT (locationless_reason RObjectPrototype) in
+  let fun_proto_t = FunProtoT (locationless_reason RFunctionPrototype) in
   let module Acc = struct
-    type slice =
-      Type.t list * (* call props *)
-      Type.dicttype option * (* dict *)
-      Type.Properties.t * (* props map *)
-      Type.t option (* proto *)
-
     type element =
       | Spread of Type.t
-      | Slice of slice
+      | Slice of {
+          dict: Type.dicttype option;
+          pmap: Type.Properties.t;
+        }
 
     type t = {
-      hd: slice option;
-      tl: element list;
+      dict: Type.dicttype option;
+      pmap: Type.Properties.t;
+      tail: element list;
+      proto: Type.t option;
+      calls: Type.t list;
     }
 
-    let empty = {hd = None; tl = []}
+    let empty = {
+      dict = None;
+      pmap = SMap.empty;
+      tail = [];
+      proto = None;
+      calls = [];
+    }
 
-    let add_call c {hd; tl} =
-      let hd = match hd with
+    let empty_slice = Slice {dict = None; pmap = SMap.empty}
+
+    let head_slice {dict; pmap; _}  =
+      if dict = None && SMap.is_empty pmap
+      then None
+      else Some (Slice {dict; pmap})
+
+    let add_call c = function
+      | {proto = Some _; _} -> Error Error_message.ExplicitCallAfterProto
+      | acc -> Ok { acc with calls = c::acc.calls }
+
+    let add_dict d = function
+      | {dict = Some _; _} -> Error Error_message.MultipleIndexers
+      | acc -> Ok { acc with dict = Some d }
+
+    let add_prop f acc =
+      {acc with pmap = f acc.pmap}
+
+    let add_proto p = function
+      | {proto = Some _; _} -> Error Error_message.MultipleProtos
+      | {calls = _::_; _} -> Error Error_message.ExplicitProtoAfterCall
+      | acc -> Ok {acc with proto = Some p}
+
+    let add_spread t acc =
+      let tail = match head_slice acc with
+      | None -> acc.tail
+      | Some slice -> slice::acc.tail
+      in
+      {acc with dict = None; pmap = SMap.empty; tail = (Spread t)::tail}
+
+    let elements_rev acc =
+      match head_slice acc with
+      | Some slice -> slice, acc.tail
       | None ->
-        Some ([c], None, SMap.empty, None)
-      | Some (cs, d, pmap, proto) ->
-        Some (c::cs, d, pmap, proto)
-      in
-      {hd; tl}
-
-    let add_dict d {hd; tl} =
-      let hd = match hd with
-      | None ->
-        Ok (Some ([], Some d, SMap.empty, None))
-      | Some (cs, None, pmap, proto) ->
-        Ok (Some (cs, Some d, pmap, proto))
-      | Some (_, Some _, _, _) ->
-        Error Error_message.MultipleIndexers
-      in
-      Core_result.map hd ~f:(fun hd -> {hd; tl})
-
-    let add_prop f {hd; tl} =
-      let hd = match hd with
-      | None ->
-        Some ([], None, f SMap.empty, None)
-      | Some (cs, d, pmap, proto) ->
-        Some (cs, d, f pmap, proto)
-      in
-      {hd; tl}
-
-    let add_proto p {hd; tl} =
-      let hd = match hd with
-      | None ->
-        Ok (Some ([], None, SMap.empty, Some p))
-      | Some (cs, d, pmap, None) ->
-        Ok (Some (cs, d, pmap, Some p))
-      | Some (_, _, _, Some _) ->
-        Error Error_message.MultipleProtos
-      in
-      Core_result.map hd ~f:(fun hd -> {hd; tl})
-
-    let add_spread t {hd; tl} =
-      let tl = match hd with
-      | None -> (Spread t)::tl
-      | Some slice -> (Spread t)::(Slice slice)::tl
-      in
-      {hd = None; tl}
-
-    let elements_rev = function
-      | {hd = None; tl = []} -> Slice ([], None, SMap.empty, None), []
-      | {hd = None; tl = x::xs} -> x, xs
-      | {hd = Some slice; tl} -> Slice slice, tl
+        match acc.tail with
+        | [] -> empty_slice, []
+        | x::xs -> x, xs
 
     let elements acc = Nel.rev (elements_rev acc)
+
+    let proto = function
+      | {proto = Some t; _} -> t
+      | {calls = _::_; _} -> fun_proto_t
+      | _ -> obj_proto_t
+
+    let calls_rev acc = acc.calls
   end in
-  let open Ast.Type in
-  let reason_desc = RObjectType in
-  let mk_object cx loc ~callable ~exact (call_props, dict, props_map, proto) =
-    let call = match List.rev call_props with
-      | [] -> None
-      | [t] -> Some t
-      | t0::t1::ts ->
-        let callable_reason = mk_reason (RCustom "callable object type") loc in
-        let rep = InterRep.make t0 t1 ts in
-        let t = IntersectionT (callable_reason, rep) in
-        Some t
-    in
-    (* Use the same reason for proto and the ObjT so we can walk the proto chain
-       and use the root proto reason to build an error. *)
-    let props_map, proto = match proto with
-      | Some t ->
-        (* The existence of a callable property already implies that
-         * __proto__ = Function.prototype. Treat __proto__ as a property *)
-        if callable
-        then
-          SMap.add "__proto__" (Field (None, t, Neutral)) props_map,
-          FunProtoT (locationless_reason RFunctionPrototype)
-        else
-          props_map, t
-      | None ->
-        props_map,
-        if callable
-        then FunProtoT (locationless_reason RFunctionPrototype)
-        else ObjProtoT (locationless_reason RObjectPrototype)
-    in
-    let call = Option.map call ~f:(Context.make_call_prop cx) in
-    let pmap = Context.make_property_map cx props_map in
-    let flags = {
-      sealed = Sealed;
-      exact;
-      frozen = false
-    } in
-    DefT (mk_reason reason_desc loc, annot_trust (),
+
+  let mk_object cx loc ~exact call dict pmap proto =
+    let pmap = Context.make_property_map cx pmap in
+    let call = Option.map ~f:(Context.make_call_prop cx) call in
+    let flags = {sealed = Sealed; exact; frozen = false} in
+    DefT (mk_reason RObjectType loc, annot_trust (),
       ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
   in
+
+  let mk_object_annot cx loc ~exact call dict pmap proto =
+    let t = mk_object cx loc ~exact call dict pmap proto in
+    if exact
+    then ExactT (mk_reason (RExactType RObjectType) loc, t)
+    else t
+  in
+
+  let open Ast.Type in
   let named_property cx tparams_map loc acc prop =
     match prop with
     | { Object.Property.
@@ -1231,6 +1209,7 @@ and convert_object =
       let _, prop_ast = Tast_utils.error_mapper#object_property_type (loc, prop) in
       acc, prop_ast
   in
+
   let make_call cx tparams_map loc call =
     let { Object.CallProperty.value = (fn_loc, fn); static } = call in
     let t, fn = match convert cx tparams_map (loc, Ast.Type.Function fn) with
@@ -1239,6 +1218,7 @@ and convert_object =
     in
     t, { Object.CallProperty.value = (fn_loc, fn); static }
   in
+
   let make_dict cx tparams_map indexer =
     let { Object.Indexer.id; key; value; static; variance; } = indexer in
     let (_, key), _ as key_ast = convert cx tparams_map key in
@@ -1251,12 +1231,19 @@ and convert_object =
     },
     { Object.Indexer.id; key = key_ast; value = value_ast; static; variance }
   in
+
   let property cx tparams_map acc =
     let open Object in
     function
     | CallProperty (loc, call) ->
       let t, call = make_call cx tparams_map loc call in
-      Acc.add_call t acc, CallProperty (loc, call)
+      let acc = match Acc.add_call t acc with
+      | Ok acc -> acc
+      | Error err ->
+        Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+        acc
+      in
+      acc, CallProperty (loc, call)
     | Indexer (loc, i) ->
       let d, i = make_dict cx tparams_map i in
       let acc = match Acc.add_dict d acc with
@@ -1280,8 +1267,13 @@ and convert_object =
       if name = "call" then
         let (_, t), _ as value_ast = convert cx tparams_map value in
         let t = if optional then Type.optional t else t in
-        Acc.add_call t acc,
-        InternalSlot (loc, { slot with Object.InternalSlot.value = value_ast })
+        let acc = match Acc.add_call t acc with
+        | Ok acc -> acc
+        | Error err ->
+          Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+          acc
+        in
+        acc, InternalSlot (loc, { slot with Object.InternalSlot.value = value_ast })
       else (
         Flow.add_output cx Error_message.(
           EUnsupportedSyntax (loc, UnsupportedInternalSlot {
@@ -1295,34 +1287,36 @@ and convert_object =
       Acc.add_spread t acc,
       SpreadProperty (loc, { SpreadProperty.argument = argument_ast })
   in
+
   fun cx tparams_map loc ~exact properties ->
-    let callable = List.exists (function
-      | Object.CallProperty (_, { Object.CallProperty.static; _ })
-      | Object.InternalSlot (_, { Object.InternalSlot.
-          id = (_, { Ast.Identifier.name = "call"; _ });
-          static; _ })
-        -> not static
-      | _ -> false
-    ) properties in
     let acc, rev_prop_asts =
       List.fold_left (fun (acc, rev_prop_asts) p ->
         let acc, prop_ast = property cx tparams_map acc p in
         acc, prop_ast::rev_prop_asts
       ) (Acc.empty, []) properties
     in
+    let proto = Acc.proto acc in
+    let calls_rev = Acc.calls_rev acc in
     let t = match Acc.elements acc with
-    | Acc.Slice o, [] ->
-      let t = mk_object cx loc ~callable ~exact o in
-      if exact
-      then ExactT (mk_reason (RExactType reason_desc) loc, t)
-      else t
+    | Acc.Slice {dict; pmap}, [] ->
+      let ts = List.rev_map (fun call ->
+        mk_object_annot cx loc ~exact (Some call) dict pmap proto
+      ) calls_rev in
+      (match ts with
+      | [] -> mk_object_annot cx loc ~exact None dict pmap proto
+      | [t] -> t
+      | t0::t1::ts ->
+        let callable_reason = mk_reason (RCustom "callable object type") loc in
+        let rep = InterRep.make t0 t1 ts in
+        IntersectionT (callable_reason, rep))
     | os ->
       let open Type.Object.Spread in
       let reason = mk_reason RObjectType loc in
       let target = Annot {make_exact = exact} in
       let t, ts = Nel.rev_map (function
         | Acc.Spread t -> t
-        | Acc.Slice o -> mk_object cx loc ~callable:false ~exact:true o
+        | Acc.Slice {dict; pmap} ->
+          mk_object cx loc ~exact:true None dict pmap obj_proto_t
       ) os in
       EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
     in

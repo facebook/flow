@@ -245,6 +245,8 @@ and unsupported_syntax =
   | PredicateVoidReturn
   | MultipleIndexers
   | MultipleProtos
+  | ExplicitCallAfterProto
+  | ExplicitProtoAfterCall
   | SpreadArgument
   | ImportDynamicArgument
   | IllegalName
@@ -1352,6 +1354,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
           [text "Multiple indexers are not supported."]
         | MultipleProtos ->
           [text "Multiple prototypes specified."]
+        | ExplicitCallAfterProto ->
+          [text "Unexpected call property after explicit prototype."]
+        | ExplicitProtoAfterCall ->
+          [text "Unexpected prototype after call property."]
         | SpreadArgument ->
           [text "A spread argument is unsupported here."]
         | IllegalName ->

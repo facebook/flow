@@ -572,7 +572,7 @@ callable-object.js:18:6 = {
   "end":9
 }
 callable-object.js:23:6 = {
-  "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, (...args: $ReadOnlyArray<mixed>): O2, (...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T}",
+  "type":"type Obj4 = {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",
@@ -587,7 +587,7 @@ callable-object.js:23:6 = {
   "end":9
 }
 callable-object.js:31:6 = {
-  "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, (...args: $ReadOnlyArray<mixed>): O1, (...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T}",
+  "type":"type Obj5 = {(...args: $ReadOnlyArray<mixed>): O4, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O1, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T} & {(...args: $ReadOnlyArray<mixed>): O2, $call: (...args: $ReadOnlyArray<mixed>) => O3, f: <T>(x: T) => T}",
   "reasons":[],
   "loc":{
     "source":"callable-object.js",

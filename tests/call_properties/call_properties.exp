@@ -211,7 +211,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- D.js:21:10
 
-Cannot return `x` because string [1] is incompatible with number [2] in the return value of the callable signature.
+Cannot return `x` because string [1] is incompatible with number [2] in the return value.
 
    D.js:21:10
    21|   return x;
