@@ -1024,6 +1024,76 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
 )
 
 and convert_object =
+  let module Acc = struct
+    type slice =
+      Type.t list * (* call props *)
+      Type.dicttype option * (* dict *)
+      Type.Properties.t * (* props map *)
+      Type.t option (* proto *)
+
+    type element =
+      | Spread of Type.t
+      | Slice of slice
+
+    type t = {
+      hd: slice option;
+      tl: element list;
+    }
+
+    let empty = {hd = None; tl = []}
+
+    let add_call c {hd; tl} =
+      let hd = match hd with
+      | None ->
+        Some ([c], None, SMap.empty, None)
+      | Some (cs, d, pmap, proto) ->
+        Some (c::cs, d, pmap, proto)
+      in
+      {hd; tl}
+
+    let add_dict d {hd; tl} =
+      let hd = match hd with
+      | None ->
+        Ok (Some ([], Some d, SMap.empty, None))
+      | Some (cs, None, pmap, proto) ->
+        Ok (Some (cs, Some d, pmap, proto))
+      | Some (_, Some _, _, _) ->
+        Error Error_message.MultipleIndexers
+      in
+      Core_result.map hd ~f:(fun hd -> {hd; tl})
+
+    let add_prop f {hd; tl} =
+      let hd = match hd with
+      | None ->
+        Some ([], None, f SMap.empty, None)
+      | Some (cs, d, pmap, proto) ->
+        Some (cs, d, f pmap, proto)
+      in
+      {hd; tl}
+
+    let add_proto p {hd; tl} =
+      let hd = match hd with
+      | None ->
+        Some ([], None, SMap.empty, Some p)
+      | Some (cs, d, pmap, _) ->
+        Some (cs, d, pmap, Some p)
+      in
+      {hd; tl}
+
+    let add_spread t {hd; tl} =
+      let tl = match hd with
+      | None -> (Spread t)::tl
+      | Some slice -> (Spread t)::(Slice slice)::tl
+      in
+      {hd = None; tl}
+
+    let elements_rev = function
+      | {hd = None; tl = []} -> Slice ([], None, SMap.empty, None), []
+      | {hd = None; tl = x::xs} -> x, xs
+      | {hd = Some slice; tl} -> Slice slice, tl
+
+    let elements acc = Nel.rev (elements_rev acc)
+  end in
   let open Ast.Type in
   let reason_desc = RObjectType in
   let mk_object cx loc ~callable ~exact (call_props, dict, props_map, proto) =
@@ -1064,7 +1134,7 @@ and convert_object =
     DefT (mk_reason reason_desc loc, annot_trust (),
       ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
   in
-  let named_property cx tparams_map loc prop props proto =
+  let named_property cx tparams_map loc acc prop =
     match prop with
     | { Object.Property.
         key; value = Object.Property.Init value; optional; variance; _method; _
@@ -1091,23 +1161,22 @@ and convert_object =
             let proto = Tvar.mk_where cx reason (fun tout ->
               Flow.flow cx (t, ObjTestProtoT (reason, tout))
             ) in
-            let prop_ast = prop_ast proto in
-            let proto = Some (Flow.mk_typeof_annotation cx reason proto) in
-            props, proto, prop_ast
+            Acc.add_proto (Flow.mk_typeof_annotation cx reason proto) acc,
+            prop_ast proto
           else
             let t = if optional then Type.optional t else t in
             let id_info = name, t, Type_table.Other in
             Type_table.set_info loc id_info (Context.type_table cx);
             let polarity = if _method then Positive else polarity variance in
-            let props = SMap.add name (Field (Some loc, t, polarity)) props in
-            props, proto, (prop_ast t)
+            Acc.add_prop (Properties.add_field name polarity (Some loc) t) acc,
+            prop_ast t
       | Ast.Expression.Object.Property.Literal (loc, _)
       | Ast.Expression.Object.Property.PrivateName (loc, _)
       | Ast.Expression.Object.Property.Computed (loc, _)
           ->
         Flow.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
         let _, prop_ast = Tast_utils.error_mapper#object_property_type (loc, prop) in
-        props, proto, prop_ast
+        acc, prop_ast
       end
 
     (* unsafe getter property *)
@@ -1124,8 +1193,7 @@ and convert_object =
       let return_t = Type.extract_getter_type function_type in
       let id_info = name, return_t, Type_table.Other in
       Type_table.set_info id_loc id_info (Context.type_table cx);
-      let props = Properties.add_getter name (Some id_loc) return_t props in
-      props, proto,
+      Acc.add_prop (Properties.add_getter name (Some id_loc) return_t) acc,
       { prop with Object.Property.
         key = Ast.Expression.Object.Property.Identifier ((id_loc, return_t), mk_commented_ident return_t comments name);
         value = Object.Property.Get (loc, f_ast);
@@ -1144,8 +1212,7 @@ and convert_object =
       let param_t = Type.extract_setter_type function_type in
       let id_info = name, param_t, Type_table.Other in
       Type_table.set_info id_loc id_info (Context.type_table cx);
-      let props = Properties.add_setter name (Some id_loc) param_t props in
-      props, proto,
+      Acc.add_prop (Properties.add_setter name (Some id_loc) param_t) acc,
       { prop with Object.Property.
         key = Ast.Expression.Object.Property.Identifier ((id_loc, param_t), mk_commented_ident param_t comments name);
         value = Object.Property.Set (loc, f_ast);
@@ -1155,61 +1222,46 @@ and convert_object =
       Flow.add_output cx
         Error_message.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
       let _, prop_ast = Tast_utils.error_mapper#object_property_type (loc, prop) in
-      props, proto, prop_ast
+      acc, prop_ast
   in
-  let add_call c = function
-    | None -> Some ([c], None, SMap.empty, None)
-    | Some (cs, d, pmap, proto) ->
-      Some (c::cs, d, pmap, proto)
+  let make_call cx tparams_map loc call =
+    let { Object.CallProperty.value = (fn_loc, fn); static } = call in
+    let t, fn = match convert cx tparams_map (loc, Ast.Type.Function fn) with
+      | (_, t), Ast.Type.Function fn -> t, fn
+      | _ -> assert false
+    in
+    t, { Object.CallProperty.value = (fn_loc, fn); static }
   in
-  let make_dict cx tparams_map ({ Object.Indexer.id; key; value; variance; _ } as indexer) =
+  let make_dict cx tparams_map indexer =
+    let { Object.Indexer.id; key; value; static; variance; } = indexer in
     let (_, key), _ as key_ast = convert cx tparams_map key in
     let (_, value), _ as value_ast = convert cx tparams_map value in
-    Some { Type.
+    { Type.
       dict_name = Option.map ~f:ident_name id;
       key;
       value;
       dict_polarity = polarity variance;
     },
-    { indexer with Object.Indexer.key = key_ast; value = value_ast; }
+    { Object.Indexer.id; key = key_ast; value = value_ast; static; variance }
   in
-  let add_dict cx tparams_map loc indexer = function
-    | None ->
-      let dict, indexer_ast = make_dict cx tparams_map indexer in
-      Some ([], dict, SMap.empty, None), indexer_ast
-    | Some (cs, None, pmap, proto) ->
-      let dict, indexer_ast = make_dict cx tparams_map indexer in
-      Some (cs, dict, pmap, proto), indexer_ast
-    | Some (_, Some _, _, _) as o ->
-      Flow.add_output cx
-        Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
-      let _, i = Tast_utils.error_mapper#object_indexer_type (loc, indexer) in
-      o, i
-  in
-  let add_prop cx tparams_map loc p = function
-    | None ->
-      let pmap, proto, p_ast = named_property cx tparams_map loc p SMap.empty None in
-      Some ([], None, pmap, proto), p_ast
-    | Some (cs, d, pmap, proto) ->
-      let pmap, proto, p_ast = named_property cx tparams_map loc p pmap proto in
-      Some (cs, d, pmap, proto), p_ast
-  in
-  let property cx tparams_map ~callable (o, ts, spread, rev_prop_asts) =
+  let property cx tparams_map acc =
     let open Object in
     function
-    | CallProperty (loc, { CallProperty.value = (value_loc, ft); static }) ->
-      let t, ft_ast = match convert cx tparams_map (loc, Ast.Type.Function ft) with
-        | (_, t), Ast.Type.Function ft_ast -> t, ft_ast
-        | _ -> assert false
-      in
-      let prop_ast = CallProperty (loc, { CallProperty.value = value_loc, ft_ast; static }) in
-      add_call t o, ts, spread, prop_ast::rev_prop_asts
+    | CallProperty (loc, call) ->
+      let t, call = make_call cx tparams_map loc call in
+      Acc.add_call t acc, CallProperty (loc, call)
     | Indexer (loc, i) ->
-      let o, i_ast = add_dict cx tparams_map loc i o in
-      o, ts, spread, Indexer (loc, i_ast)::rev_prop_asts
+      let d, i = make_dict cx tparams_map i in
+      let acc = match Acc.add_dict d acc with
+      | Ok acc -> acc
+      | Error err ->
+        Flow.add_output cx Error_message.(EUnsupportedSyntax (loc, err));
+        acc
+      in
+      acc, Indexer (loc, i)
     | Property (loc, p) ->
-      let o, p_ast = add_prop cx tparams_map loc p o in
-      o, ts, spread, Property (loc, p_ast)::rev_prop_asts
+      let acc, p = named_property cx tparams_map loc acc p in
+      acc, Property (loc, p)
     | InternalSlot (loc, slot) as prop ->
       let { Object.InternalSlot.
         id = (_, { Ast.Identifier.name; comments= _ });
@@ -1221,24 +1273,20 @@ and convert_object =
       if name = "call" then
         let (_, t), _ as value_ast = convert cx tparams_map value in
         let t = if optional then Type.optional t else t in
-        add_call t o, ts, spread,
-        InternalSlot (loc, { slot with Object.InternalSlot.value = value_ast })::rev_prop_asts
+        Acc.add_call t acc,
+        InternalSlot (loc, { slot with Object.InternalSlot.value = value_ast })
       else (
         Flow.add_output cx Error_message.(
           EUnsupportedSyntax (loc, UnsupportedInternalSlot {
             name;
             static = false;
           }));
-        o, ts, spread, (Tast_utils.error_mapper#object_type_property prop)::rev_prop_asts
+        acc, (Tast_utils.error_mapper#object_type_property prop)
       )
     | SpreadProperty (loc, { Object.SpreadProperty.argument }) ->
-      let ts = match o with
-      | None -> ts
-      | Some o -> (mk_object cx loc ~callable ~exact:true o)::ts
-      in
-      let (_, o), _ as argument_ast = convert cx tparams_map argument in
-      None, o::ts, true,
-      SpreadProperty (loc, { SpreadProperty.argument = argument_ast })::rev_prop_asts
+      let (_, t), _ as argument_ast = convert cx tparams_map argument in
+      Acc.add_spread t acc,
+      SpreadProperty (loc, { SpreadProperty.argument = argument_ast })
   in
   fun cx tparams_map loc ~exact properties ->
     let callable = List.exists (function
@@ -1249,30 +1297,26 @@ and convert_object =
         -> not static
       | _ -> false
     ) properties in
-    let o, ts, spread, rev_prop_asts =
-      List.fold_left
-        (property cx tparams_map ~callable)
-        (None, [], false, [])
-        properties
+    let acc, rev_prop_asts =
+      List.fold_left (fun (acc, rev_prop_asts) p ->
+        let acc, prop_ast = property cx tparams_map acc p in
+        acc, prop_ast::rev_prop_asts
+      ) (Acc.empty, []) properties
     in
-    let ts = match o with
-    | None -> ts
-    | Some o -> mk_object cx loc ~callable ~exact:spread o::ts
-    in
-    let t = match ts with
-    | [] ->
-      let t = mk_object cx loc ~callable ~exact ([], None, SMap.empty, None) in
+    let t = match Acc.elements acc with
+    | Acc.Slice o, [] ->
+      let t = mk_object cx loc ~callable ~exact o in
       if exact
       then ExactT (mk_reason (RExactType reason_desc) loc, t)
       else t
-    | [t] when not spread ->
-      if exact
-      then ExactT (mk_reason (RExactType reason_desc) loc, t)
-      else t
-    | t::ts ->
+    | os ->
       let open Type.Object.Spread in
       let reason = mk_reason RObjectType loc in
       let target = Annot {make_exact = exact} in
+      let t, ts = Nel.rev_map (function
+        | Acc.Spread t -> t
+        | Acc.Slice o -> mk_object cx loc ~callable:false ~exact:true o
+      ) os in
       EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
     in
     t, List.rev rev_prop_asts
