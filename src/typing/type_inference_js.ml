@@ -24,6 +24,9 @@ let infer_core cx statements =
   | Abnormal.Exn (Abnormal.Stmts stmts, Abnormal.Throw) ->
     (* throw is allowed as a top-level statement *)
     stmts
+  | Abnormal.Exn (Abnormal.Stmts stmts, Abnormal.Loop _) ->
+    (* loop is allowed as a top-level statement *)
+    stmts
   | Abnormal.Exn (Abnormal.Stmts stmts, _) ->
     (* should never happen *)
     let loc = Loc.({ none with source = Some (Context.file cx) }) |> ALoc.of_loc in
