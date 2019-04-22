@@ -273,9 +273,11 @@ let toplevels id cx this super ~decls ~stmts ~expr
   let is_void = Abnormal.(
     match statements_abnormal with
     | Some Return -> false
+    | Some Loop Infinite -> false
     | Some Throw -> false (* NOTE *)
     | Some Break _
     | Some Continue _ -> failwith "Illegal toplevel abnormal directive"
+    | Some Loop Finite
     | None -> true
   ) in
   let body_ast = reconstruct_body statements_ast in
