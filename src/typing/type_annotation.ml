@@ -934,7 +934,11 @@ let rec convert cx tparams_map = Ast.Type.(function
 | loc, Object { Object.exact; properties; inexact } ->
   let reason_desc = RObjectType in
   let callable = List.exists (function
-    | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
+    | Object.CallProperty (_, { Object.CallProperty.static; _ })
+    | Object.InternalSlot (_, { Object.InternalSlot.
+        id = (_, { Ast.Identifier.name = "call"; _ });
+        static; _ })
+      -> not static
     | _ -> false
   ) properties in
   let mk_object ~exact (call_props, dict, props_map, proto) =
