@@ -1,3 +1,155 @@
+Error ------------------------------------------------------------------------------------------ infinite_loops.js:20:19
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   20| function loop0(): empty { // error
+                         ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ infinite_loops.js:57:19
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   57| function loop5(): empty { // TODO: ok
+                         ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ infinite_loops.js:61:19
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   61| function loop6(): empty { // error
+                         ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ infinite_loops.js:65:19
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   65| function loop7(): empty { // TODO: ok
+                         ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ infinite_loops.js:77:19
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   77| function loop9(): empty { // error
+                         ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- infinite_loops.js:86:5
+
+Unreachable code.
+
+   86|     break l // 'Unreachable' in Flow
+           ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ infinite_loops.js:90:18
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   90| function for0(): empty { // TODO: ok
+                        ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ infinite_loops.js:94:18
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   94| function for1(): empty { // TODO: ok
+                        ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ infinite_loops.js:98:18
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   98| function for2(): empty { // TODO: ok
+                        ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:102:18
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   102| function for3(): empty { // error
+                         ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:106:18
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   106| function for4(): empty { // error
+                         ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:112:22
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   112| function doWhile0(): empty { // TODO: ok
+                             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:118:22
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   118| function doWhile1(): empty { // TODO: ok
+                             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:124:22
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   124| function doWhile2(): empty { // TODO: ok
+                             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:130:22
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   130| function doWhile3(): empty { // error
+                             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:136:22
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   136| function doWhile4(): empty { // error
+                             ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:147:17
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   147| function if0(): empty { // TODO: ok
+                        ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:153:17
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   153| function if1(): empty { // error
+                        ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- infinite_loops.js:159:17
+
+Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
+
+   159| function if2(): empty { // TODO: ok
+                        ^^^^^ [1]
+
+
 Error -------------------------------------------------------------------------------------------- toplevel_break.js:3:1
 
 Illegal break statement
@@ -23,4 +175,4 @@ Illegal return statement
 
 
 
-Found 3 errors
+Found 22 errors
