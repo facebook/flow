@@ -3165,7 +3165,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | IntersectionT (r, rep), u ->
       prep_try_intersection cx trace
-        (reason_of_use_t u) (parts_to_replace u) [] u r rep
+        (reason_of_use_t u) (parts_to_replace cx u) [] u r rep
 
     (************)
     (* matching *)
@@ -8098,7 +8098,7 @@ and try_intersection cx trace u reason rep =
     appears on that tvar. **)
 and prep_try_intersection cx trace reason unresolved resolved u r rep =
   match unresolved with
-  | [] -> try_intersection cx trace (replace_parts resolved u) r rep
+  | [] -> try_intersection cx trace (replace_parts cx resolved u) r rep
   | tvar::unresolved ->
     rec_flow cx trace (tvar, intersection_preprocess_kit reason
       (ConcretizeTypes (unresolved, resolved, IntersectionT (r, rep), u)))
@@ -8109,7 +8109,20 @@ and patt_that_needs_concretization = function
   | _ -> false
 
 (* for now, we only care about concretizating parts of functions and calls *)
-and parts_to_replace = function
+and parts_to_replace cx = function
+  | UseT (_, DefT (_, _, ObjT { call_t = Some id; _ })) ->
+    begin match Context.find_call cx id with
+    | DefT (_, _, FunT (_, _, ft)) ->
+      let ts = List.fold_left (fun acc (_, t) ->
+        if patt_that_needs_concretization t
+        then t::acc
+        else acc
+      ) [] ft.params in
+      (match ft.rest_param with
+      | Some (_, _, t) when patt_that_needs_concretization t -> t::ts
+      | _ -> ts)
+    | _ -> []
+    end
   | UseT (_, DefT (_, _, FunT (_, _, ft))) ->
     let ts = List.fold_left (fun acc (_, t) ->
       if patt_that_needs_concretization t
@@ -8155,7 +8168,18 @@ and replace_parts =
       let arg, ys = replace_arg ys arg in
       replace_args (arg::acc) (ys, args)
   in
-  fun resolved -> function
+  fun cx resolved -> function
+  | UseT (op, DefT (r1, t1, ObjT ({ call_t = Some id; _ } as o))) as u ->
+    begin match Context.find_call cx id with
+    | DefT (r2, t2, FunT (static, proto, ft)) ->
+      let resolved, params = replace_params [] (resolved, ft.params) in
+      let resolved, rest_param = replace_rest_param (resolved, ft.rest_param) in
+      assert (resolved = []);
+      let id' = Context.make_call_prop cx
+        (DefT (r2, t2, FunT (static, proto, { ft with params; rest_param }))) in
+      UseT (op, DefT (r1, t1, ObjT { o with call_t = Some id' }))
+    | _ -> u
+    end
   | UseT (op, DefT (r, trust, FunT (t1, t2, ft))) ->
     let resolved, params = replace_params [] (resolved, ft.params) in
     let resolved, rest_param = replace_rest_param (resolved, ft.rest_param) in
