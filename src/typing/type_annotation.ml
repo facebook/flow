@@ -932,16 +932,101 @@ let rec convert cx tparams_map = Ast.Type.(function
   }
 
 | loc, Object { Object.exact; properties; inexact } ->
+  let t, properties = convert_object cx tparams_map loc ~exact properties in
+  (loc, t), Object { Object.exact; properties; inexact }
+
+| loc, Interface {Interface.extends; body} ->
+  let body_loc, {Ast.Type.Object.properties; exact; inexact = _inexact } = body in
+  let reason = mk_reason RInterfaceType loc in
+  let iface_sig, extend_asts =
+    let id = ALoc.none in
+    let extends, extend_asts = extends
+      |> Core_list.map ~f:(mk_interface_super cx tparams_map)
+      |> List.split
+    in
+    let super =
+      let callable = List.exists Ast.Type.Object.(function
+        | CallProperty (_, { CallProperty.static; _ }) -> not static
+        | _ -> false
+      ) properties in
+      Class_sig.Interface { extends; callable }
+    in
+    Class_sig.empty id reason None tparams_map super, extend_asts
+  in
+  let iface_sig, property_asts =
+    add_interface_properties cx tparams_map properties iface_sig in
+  Class_sig.generate_tests cx (fun iface_sig ->
+    Class_sig.check_super cx reason iface_sig;
+    Class_sig.check_implements cx reason iface_sig
+  ) iface_sig |> ignore;
+  (loc, Class_sig.thistype cx iface_sig),
+  Interface { Interface.
+    body = body_loc, { Object.
+      exact;
+      inexact = false;
+      properties = property_asts;
+    };
+    extends = extend_asts;
+  }
+
+| loc, Exists ->
+  add_deprecated_type_error_if_not_lib_file cx loc;
+  (* Do not evaluate existential type variables when map is non-empty. This
+     ensures that existential type variables under a polymorphic type remain
+     unevaluated until the polymorphic type is applied. *)
+  let force = SMap.is_empty tparams_map in
+  let reason = derivable_reason (mk_reason RExistential loc) in
+  if force then begin
+    let tvar = Tvar.mk cx reason in
+    Type_table.set_info loc ("Star", tvar, Type_table.Exists) (Context.type_table cx);
+    (loc, tvar), Exists
+  end
+  else (loc, ExistsT reason), Exists
+)
+
+and convert_list =
+  let rec loop (ts, tasts) cx tparams_map = function
+  | [] -> (List.rev ts, List.rev tasts)
+  | ast::asts ->
+    let (_, t), _ as tast = convert cx tparams_map ast in
+    loop (t::ts, tast::tasts) cx tparams_map asts
+  in
+  fun cx tparams_map asts ->
+    loop ([], []) cx tparams_map asts
+
+and convert_opt cx tparams_map ast_opt =
+  let tast_opt = Option.map ~f:(convert cx tparams_map) ast_opt in
+  let t_opt = Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
+  t_opt, tast_opt
+
+and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
+  = Ast.Type.Generic.Identifier.(function
+  | Qualified (loc, { qualification; id; }) as qualified ->
+    let m, qualification =
+      convert_qualification ~lookup_mode cx reason_prefix qualification in
+    let id_loc, { Ast.Identifier.name; comments } = id in
+    let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
+    let reason = mk_reason desc loc in
+    let id_reason = mk_reason desc id_loc in
+    let t = Tvar.mk_where cx reason (fun t ->
+      let id_info = name, t, Type_table.Other in
+      Type_table.set_info id_loc id_info (Context.type_table cx);
+      let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
+      Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
+    ) in
+    t, Qualified (loc, { qualification; id = (id_loc, t), mk_commented_ident t comments name; })
+
+  | Unqualified (loc, { Ast.Identifier.name; comments }) ->
+    let t = Env.get_var ~lookup_mode cx name loc in
+    let id_info = name, t, Type_table.Other in
+    Type_table.set_info loc id_info (Context.type_table cx);
+    t, Unqualified ((loc, t), mk_commented_ident t comments name)
+)
+
+and convert_object =
+  let open Ast.Type in
   let reason_desc = RObjectType in
-  let callable = List.exists (function
-    | Object.CallProperty (_, { Object.CallProperty.static; _ })
-    | Object.InternalSlot (_, { Object.InternalSlot.
-        id = (_, { Ast.Identifier.name = "call"; _ });
-        static; _ })
-      -> not static
-    | _ -> false
-  ) properties in
-  let mk_object ~exact (call_props, dict, props_map, proto) =
+  let mk_object cx loc ~callable ~exact (call_props, dict, props_map, proto) =
     let call = match List.rev call_props with
       | [] -> None
       | [t] -> Some t
@@ -979,7 +1064,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     DefT (mk_reason reason_desc loc, annot_trust (),
       ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
   in
-  let property loc prop props proto =
+  let named_property cx tparams_map loc prop props proto =
     match prop with
     | { Object.Property.
         key; value = Object.Property.Init value; optional; variance; _method; _
@@ -1077,7 +1162,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     | Some (cs, d, pmap, proto) ->
       Some (c::cs, d, pmap, proto)
   in
-  let make_dict ({ Object.Indexer.id; key; value; variance; _ } as indexer) =
+  let make_dict cx tparams_map ({ Object.Indexer.id; key; value; variance; _ } as indexer) =
     let (_, key), _ as key_ast = convert cx tparams_map key in
     let (_, value), _ as value_ast = convert cx tparams_map value in
     Some { Type.
@@ -1088,12 +1173,12 @@ let rec convert cx tparams_map = Ast.Type.(function
     },
     { indexer with Object.Indexer.key = key_ast; value = value_ast; }
   in
-  let add_dict loc indexer = function
+  let add_dict cx tparams_map loc indexer = function
     | None ->
-      let dict, indexer_ast = make_dict indexer in
+      let dict, indexer_ast = make_dict cx tparams_map indexer in
       Some ([], dict, SMap.empty, None), indexer_ast
     | Some (cs, None, pmap, proto) ->
-      let dict, indexer_ast = make_dict indexer in
+      let dict, indexer_ast = make_dict cx tparams_map indexer in
       Some (cs, dict, pmap, proto), indexer_ast
     | Some (_, Some _, _, _) as o ->
       Flow.add_output cx
@@ -1101,16 +1186,17 @@ let rec convert cx tparams_map = Ast.Type.(function
       let _, i = Tast_utils.error_mapper#object_indexer_type (loc, indexer) in
       o, i
   in
-  let add_prop loc p = function
+  let add_prop cx tparams_map loc p = function
     | None ->
-      let pmap, proto, p_ast = property loc p SMap.empty None in
+      let pmap, proto, p_ast = named_property cx tparams_map loc p SMap.empty None in
       Some ([], None, pmap, proto), p_ast
     | Some (cs, d, pmap, proto) ->
-      let pmap, proto, p_ast = property loc p pmap proto in
+      let pmap, proto, p_ast = named_property cx tparams_map loc p pmap proto in
       Some (cs, d, pmap, proto), p_ast
   in
-  let o, ts, spread, rev_prop_asts = List.fold_left Object.(
-    fun (o, ts, spread, rev_prop_asts) -> function
+  let property cx tparams_map ~callable (o, ts, spread, rev_prop_asts) =
+    let open Object in
+    function
     | CallProperty (loc, { CallProperty.value = (value_loc, ft); static }) ->
       let t, ft_ast = match convert cx tparams_map (loc, Ast.Type.Function ft) with
         | (_, t), Ast.Type.Function ft_ast -> t, ft_ast
@@ -1119,10 +1205,10 @@ let rec convert cx tparams_map = Ast.Type.(function
       let prop_ast = CallProperty (loc, { CallProperty.value = value_loc, ft_ast; static }) in
       add_call t o, ts, spread, prop_ast::rev_prop_asts
     | Indexer (loc, i) ->
-      let o, i_ast = add_dict loc i o in
+      let o, i_ast = add_dict cx tparams_map loc i o in
       o, ts, spread, Indexer (loc, i_ast)::rev_prop_asts
     | Property (loc, p) ->
-      let o, p_ast = add_prop loc p o in
+      let o, p_ast = add_prop cx tparams_map loc p o in
       o, ts, spread, Property (loc, p_ast)::rev_prop_asts
     | InternalSlot (loc, slot) as prop ->
       let { Object.InternalSlot.
@@ -1148,121 +1234,49 @@ let rec convert cx tparams_map = Ast.Type.(function
     | SpreadProperty (loc, { Object.SpreadProperty.argument }) ->
       let ts = match o with
       | None -> ts
-      | Some o -> (mk_object ~exact:true o)::ts
+      | Some o -> (mk_object cx loc ~callable ~exact:true o)::ts
       in
       let (_, o), _ as argument_ast = convert cx tparams_map argument in
       None, o::ts, true,
       SpreadProperty (loc, { SpreadProperty.argument = argument_ast })::rev_prop_asts
-  ) (None, [], false, []) properties in
-  let ts = match o with
-  | None -> ts
-  | Some o -> mk_object ~exact:spread o::ts
-  in (
-  loc,
-  match ts with
-  | [] ->
-    let t = mk_object ~exact ([], None, SMap.empty, None) in
-    if exact
-    then ExactT (mk_reason (RExactType reason_desc) loc, t)
-    else t
-  | [t] when not spread ->
-    if exact
-    then ExactT (mk_reason (RExactType reason_desc) loc, t)
-    else t
-  | t::ts ->
-    let open Type.Object.Spread in
-    let reason = mk_reason RObjectType loc in
-    let target = Annot {make_exact = exact} in
-    EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
-  ), Object { Object.exact; properties = List.rev rev_prop_asts; inexact }
-
-| loc, Interface {Interface.extends; body} ->
-  let body_loc, {Ast.Type.Object.properties; exact; inexact = _inexact } = body in
-  let reason = mk_reason RInterfaceType loc in
-  let iface_sig, extend_asts =
-    let id = ALoc.none in
-    let extends, extend_asts = extends
-      |> Core_list.map ~f:(mk_interface_super cx tparams_map)
-      |> List.split
-    in
-    let super =
-      let callable = List.exists Ast.Type.Object.(function
-        | CallProperty (_, { CallProperty.static; _ }) -> not static
-        | _ -> false
-      ) properties in
-      Class_sig.Interface { extends; callable }
-    in
-    Class_sig.empty id reason None tparams_map super, extend_asts
   in
-  let iface_sig, property_asts =
-    add_interface_properties cx tparams_map properties iface_sig in
-  Class_sig.generate_tests cx (fun iface_sig ->
-    Class_sig.check_super cx reason iface_sig;
-    Class_sig.check_implements cx reason iface_sig
-  ) iface_sig |> ignore;
-  (loc, Class_sig.thistype cx iface_sig),
-  Interface { Interface.
-    body = body_loc, { Object.
-      exact;
-      inexact = false;
-      properties = property_asts;
-    };
-    extends = extend_asts;
-  }
+  fun cx tparams_map loc ~exact properties ->
+    let callable = List.exists (function
+      | Object.CallProperty (_, { Object.CallProperty.static; _ })
+      | Object.InternalSlot (_, { Object.InternalSlot.
+          id = (_, { Ast.Identifier.name = "call"; _ });
+          static; _ })
+        -> not static
+      | _ -> false
+    ) properties in
+    let o, ts, spread, rev_prop_asts =
+      List.fold_left
+        (property cx tparams_map ~callable)
+        (None, [], false, [])
+        properties
+    in
+    let ts = match o with
+    | None -> ts
+    | Some o -> mk_object cx loc ~callable ~exact:spread o::ts
+    in
+    let t = match ts with
+    | [] ->
+      let t = mk_object cx loc ~callable ~exact ([], None, SMap.empty, None) in
+      if exact
+      then ExactT (mk_reason (RExactType reason_desc) loc, t)
+      else t
+    | [t] when not spread ->
+      if exact
+      then ExactT (mk_reason (RExactType reason_desc) loc, t)
+      else t
+    | t::ts ->
+      let open Type.Object.Spread in
+      let reason = mk_reason RObjectType loc in
+      let target = Annot {make_exact = exact} in
+      EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, ts)), mk_id ())
+    in
+    t, List.rev rev_prop_asts
 
-| loc, Exists ->
-  add_deprecated_type_error_if_not_lib_file cx loc;
-  (* Do not evaluate existential type variables when map is non-empty. This
-     ensures that existential type variables under a polymorphic type remain
-     unevaluated until the polymorphic type is applied. *)
-  let force = SMap.is_empty tparams_map in
-  let reason = derivable_reason (mk_reason RExistential loc) in
-  if force then begin
-    let tvar = Tvar.mk cx reason in
-    Type_table.set_info loc ("Star", tvar, Type_table.Exists) (Context.type_table cx);
-    (loc, tvar), Exists
-  end
-  else (loc, ExistsT reason), Exists
-)
-
-and convert_list =
-  let rec loop (ts, tasts) cx tparams_map = function
-  | [] -> (List.rev ts, List.rev tasts)
-  | ast::asts ->
-    let (_, t), _ as tast = convert cx tparams_map ast in
-    loop (t::ts, tast::tasts) cx tparams_map asts
-  in
-  fun cx tparams_map asts ->
-    loop ([], []) cx tparams_map asts
-
-and convert_opt cx tparams_map ast_opt =
-  let tast_opt = Option.map ~f:(convert cx tparams_map) ast_opt in
-  let t_opt = Option.map ~f:(fun ((_, x), _) -> x) tast_opt in
-  t_opt, tast_opt
-
-and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
-  = Ast.Type.Generic.Identifier.(function
-  | Qualified (loc, { qualification; id; }) as qualified ->
-    let m, qualification =
-      convert_qualification ~lookup_mode cx reason_prefix qualification in
-    let id_loc, { Ast.Identifier.name; comments } = id in
-    let desc = RCustom (spf "%s `%s`" reason_prefix (qualified_name qualified)) in
-    let reason = mk_reason desc loc in
-    let id_reason = mk_reason desc id_loc in
-    let t = Tvar.mk_where cx reason (fun t ->
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info id_loc id_info (Context.type_table cx);
-      let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
-      Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
-    ) in
-    t, Qualified (loc, { qualification; id = (id_loc, t), mk_commented_ident t comments name; })
-
-  | Unqualified (loc, { Ast.Identifier.name; comments }) ->
-    let t = Env.get_var ~lookup_mode cx name loc in
-    let id_info = name, t, Type_table.Other in
-    Type_table.set_info loc id_info (Context.type_table cx);
-    t, Unqualified ((loc, t), mk_commented_ident t comments name)
-)
 
 and mk_func_sig =
   let open Ast.Type.Function in
