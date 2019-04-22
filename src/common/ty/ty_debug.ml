@@ -14,15 +14,20 @@ let cut_off ?(limit=1000) str =
     then String.sub str 0 (len - 1) ^ " ..."
     else str
 
-let rec dump_opt (f: 'a -> string) (o: 'a option) = match o with
-  | Some t -> f t
-  | None -> ""
+let dump_bot_upper_bound_kind = function
+  | NoUpper -> "NoUpper"
+  | SomeKnownUpper _ -> "SomeKnownUpper"
+  | SomeUnknownUpper -> "SomeUnknownUpper"
 
-and dump_bot_kind = function
+let dump_bot_kind = function
   | EmptyType -> "EmptyType"
   | EmptyMatchingPropT -> "EmptyMatchingPropT"
   | EmptyTypeDestructorTriggerT -> "EmptyTypeDestructorTriggerT"
-  | NoLowerWithUpper _ -> "NoLowerWithUpper"
+  | NoLowerWithUpper u -> spf "NoLowerWithUpper (%s)" (dump_bot_upper_bound_kind u)
+
+let rec dump_opt (f: 'a -> string) (o: 'a option) = match o with
+  | Some t -> f t
+  | None -> ""
 
 and dump_list : 'a . ('a -> string) -> ?sep:string -> 'a list -> string =
   fun f ?(sep=", ") ls ->
