@@ -28,7 +28,6 @@ type lint_kind =
  | InexactSpread
  | UnnecessaryOptionalChain
  | UnnecessaryInvariant
- | DeprecatedCallSyntax
  | SignatureVerificationFailure
 
 val string_of_kind: lint_kind -> string

@@ -861,11 +861,6 @@ end = struct
     mapM (method_ty ~env) ts >>| fun ts ->
     Core_list.map ~f:(fun t -> Ty.CallProp t) ts
 
-  and call_prop ~env = function
-    | _, T.Method (_, t)
-    | _, T.Field (_, t, _) -> call_prop_from_t ~env t
-    | _ -> terr ~kind:BadCallProp None
-
   and obj_props =
     (* call property *)
     let do_calls ~env = function
@@ -875,10 +870,6 @@ end = struct
         call_prop_from_t ~env ft
       | None ->
         return []
-    in
-    (* `$call` property *)
-    let do_calls_legacy ~env call_props =
-      concat_fold_m (call_prop ~env) call_props
     in
     let do_props ~env props =
       concat_fold_m (obj_prop ~env) props
@@ -894,16 +885,11 @@ end = struct
     in
     fun ~env props_id call_id_opt dict ->
       let cx = Env.get_cx env in
-      let call_props, props =
-        Context.find_props cx props_id
-        |> SMap.bindings
-        |> Core_list.partition_tf ~f:(fun (x, _) -> x = "$call")
-      in
-      do_calls_legacy ~env call_props >>= fun call_props_legacy ->
+      let props = SMap.bindings (Context.find_props cx props_id) in
       do_calls ~env call_id_opt >>= fun call_props ->
       do_props ~env props >>= fun props ->
       do_dict ~env dict >>| fun dict ->
-      call_props_legacy @ call_props @ props @ dict
+      call_props @ props @ dict
 
   and arr_ty ~env reason elt_t =
     let arr_literal = match Reason.desc_of_reason reason with

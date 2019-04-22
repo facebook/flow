@@ -177,7 +177,6 @@ and 'loc t' =
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
   | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
-  | EDeprecatedCallSyntax of 'loc
   | EUnexpectedTemporaryBaseType of 'loc
   | EBigIntNotYetSupported of 'loc virtual_reason
   (* These are unused when calculating locations so we can leave this as Aloc *)
@@ -480,7 +479,6 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
   | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
-  | EDeprecatedCallSyntax loc -> EDeprecatedCallSyntax (f loc)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
   | ESignatureVerification _ as e -> e
@@ -612,7 +610,6 @@ let util_use_op_of_msg nope util = function
 | EUnnecessaryOptionalChain _
 | EUnnecessaryInvariant _
 | EInexactSpread _
-| EDeprecatedCallSyntax _
 | EUnexpectedTemporaryBaseType _
 | EBigIntNotYetSupported _
 | ESignatureVerification _
@@ -666,7 +663,6 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EDeprecatedType loc
   | EDeprecatedUtility (loc, _)
   | EUnsafeGettersSetters loc
-  | EDeprecatedCallSyntax loc
   | EUnnecessaryOptionalChain (loc, _)
   | EUnnecessaryInvariant (loc, _)
   | EOptionalChainingMethods loc
@@ -771,7 +767,6 @@ let kind_of_msg = Errors.(function
   | EDeprecatedUtility _            -> LintError Lints.DeprecatedUtility
   | EDynamicExport _                -> LintError Lints.DynamicExport
   | EUnsafeGettersSetters _         -> LintError Lints.UnsafeGettersSetters
-  | EDeprecatedCallSyntax _         -> LintError Lints.DeprecatedCallSyntax
   | ESketchyNullLint { kind; _ }    -> LintError (Lints.SketchyNull kind)
   | ESketchyNumberLint (kind, _)    -> LintError (Lints.SketchyNumber kind)
   | EUnnecessaryOptionalChain _     -> LintError Lints.UnnecessaryOptionalChain
@@ -1745,10 +1740,6 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnsafeGettersSetters _ ->
       Normal
         [text "Getters and setters can have side effects and are unsafe."]
-
-    | EDeprecatedCallSyntax _ ->
-      Normal
-        [text "Deprecated $call syntax. Use callable property syntax instead."]
 
     | EUnusedSuppression _ ->
       Normal

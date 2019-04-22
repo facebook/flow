@@ -28,7 +28,6 @@ type lint_kind =
   | InexactSpread
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
-  | DeprecatedCallSyntax
   | SignatureVerificationFailure
 
 let string_of_sketchy_null_kind = function
@@ -54,7 +53,6 @@ let string_of_kind = function
   | InexactSpread -> "inexact-spread"
   | UnnecessaryOptionalChain -> "unnecessary-optional-chain"
   | UnnecessaryInvariant -> "unnecessary-invariant"
-  | DeprecatedCallSyntax -> "deprecated-call-syntax"
   | SignatureVerificationFailure -> "signature-verification-failure"
 
 let kinds_of_string = function
@@ -83,7 +81,6 @@ let kinds_of_string = function
   | "inexact-spread" -> Some [InexactSpread]
   | "unnecessary-optional-chain" -> Some [UnnecessaryOptionalChain]
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
-  | "deprecated-call-syntax" -> Some [DeprecatedCallSyntax]
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | _ -> None
 

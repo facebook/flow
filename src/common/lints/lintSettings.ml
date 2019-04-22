@@ -21,7 +21,6 @@ type 'a t = {
 }
 
 let default_lint_severities = [
-  Lints.DeprecatedCallSyntax, (Severity.Err, None);
   Lints.DeprecatedUtility,    (Severity.Err, None);
 ]
 

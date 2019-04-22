@@ -937,34 +937,15 @@ let rec convert cx tparams_map = Ast.Type.(function
     | Object.CallProperty (_, { Object.CallProperty.static; _ }) -> not static
     | _ -> false
   ) properties in
-  let mk_object ~exact (call_props, dict, props_map, proto, call_deprecated) =
+  let mk_object ~exact (call_props, dict, props_map, proto) =
     let call = match List.rev call_props with
-      | [] ->
-        (* Note that call properties using the call property syntax always override
-           $call properties. Previously, if both were present, the $call property
-           was ignored, but is now left as a named property. *)
-        call_deprecated
+      | [] -> None
       | [t] -> Some t
       | t0::t1::ts ->
         let callable_reason = mk_reason (RCustom "callable object type") loc in
         let rep = InterRep.make t0 t1 ts in
         let t = IntersectionT (callable_reason, rep) in
         Some t
-    in
-    (* Previously, call properties were stored in the props map under the key
-       $call. Unfortunately, this made it possible to specify call properties
-       using this syntax in object types, and some libraries adopted this
-       syntax.
-
-       Note that call properties using the call property syntax always override
-       $call properties. Previously, if both were present, the $call property
-       was ignored, but is now left as a named property. *)
-    let props_map, call =
-      if call <> None then props_map, call
-      else match SMap.get "$call" props_map with
-      | Some (Field (_, t, (Positive | Neutral))) ->
-        SMap.remove "$call" props_map, Some t
-      | _ -> props_map, call
     in
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
@@ -994,27 +975,12 @@ let rec convert cx tparams_map = Ast.Type.(function
     DefT (mk_reason reason_desc loc, annot_trust (),
       ObjT (mk_objecttype ~flags ~dict ~call pmap proto))
   in
-  let property loc prop props proto call_deprecated =
+  let property loc prop props proto =
     match prop with
     | { Object.Property.
         key; value = Object.Property.Init value; optional; variance; _method; _
       } ->
       begin match key with
-      (* Previously, call properties were stored in the props map under the key
-         $call. Unfortunately, this made it possible to specify call properties
-         using this syntax in object types, and some libraries adopted this
-         syntax.
-
-         Note that call properties using the call property syntax always override
-         $call properties. Previously, if both were present, the $call property
-         was ignored, but is now left as a named property. *)
-      | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name= "$call"; comments }) ->
-          Flow.add_output cx Error_message.(EDeprecatedCallSyntax loc);
-          let (_, t), _ as value_ast = convert cx tparams_map value in
-          let t = if optional then Type.optional t else t in
-          let key = Ast.Expression.Object.Property.Identifier ((loc, t), mk_commented_ident t comments "$call") in
-          props, proto, Some t,
-          { prop with Object.Property.key; value = Object.Property.Init value_ast }
       | Ast.Expression.Object.Property.Literal
           (loc, { Ast.Literal.value = Ast.Literal.String name; _ })
       | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments= _ }) ->
@@ -1038,21 +1004,21 @@ let rec convert cx tparams_map = Ast.Type.(function
             ) in
             let prop_ast = prop_ast proto in
             let proto = Some (Flow.mk_typeof_annotation cx reason proto) in
-            props, proto, call_deprecated, prop_ast
+            props, proto, prop_ast
           else
             let t = if optional then Type.optional t else t in
             let id_info = name, t, Type_table.Other in
             Type_table.set_info loc id_info (Context.type_table cx);
             let polarity = if _method then Positive else polarity variance in
             let props = SMap.add name (Field (Some loc, t, polarity)) props in
-            props, proto, call_deprecated, (prop_ast t)
+            props, proto, (prop_ast t)
       | Ast.Expression.Object.Property.Literal (loc, _)
       | Ast.Expression.Object.Property.PrivateName (loc, _)
       | Ast.Expression.Object.Property.Computed (loc, _)
           ->
         Flow.add_output cx (Error_message.EUnsupportedKeyInObjectType loc);
         let _, prop_ast = Tast_utils.error_mapper#object_property_type (loc, prop) in
-        props, proto, call_deprecated, prop_ast
+        props, proto, prop_ast
       end
 
     (* unsafe getter property *)
@@ -1070,7 +1036,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let id_info = name, return_t, Type_table.Other in
       Type_table.set_info id_loc id_info (Context.type_table cx);
       let props = Properties.add_getter name (Some id_loc) return_t props in
-      props, proto, call_deprecated,
+      props, proto,
       { prop with Object.Property.
         key = Ast.Expression.Object.Property.Identifier ((id_loc, return_t), mk_commented_ident return_t comments name);
         value = Object.Property.Get (loc, f_ast);
@@ -1090,7 +1056,7 @@ let rec convert cx tparams_map = Ast.Type.(function
       let id_info = name, param_t, Type_table.Other in
       Type_table.set_info id_loc id_info (Context.type_table cx);
       let props = Properties.add_setter name (Some id_loc) param_t props in
-      props, proto, call_deprecated,
+      props, proto,
       { prop with Object.Property.
         key = Ast.Expression.Object.Property.Identifier ((id_loc, param_t), mk_commented_ident param_t comments name);
         value = Object.Property.Set (loc, f_ast);
@@ -1100,15 +1066,12 @@ let rec convert cx tparams_map = Ast.Type.(function
       Flow.add_output cx
         Error_message.(EUnsupportedSyntax (loc, ObjectPropertyGetSet));
       let _, prop_ast = Tast_utils.error_mapper#object_property_type (loc, prop) in
-      props, proto, call_deprecated, prop_ast
+      props, proto, prop_ast
   in
   let add_call c = function
-    | None -> Some ([c], None, SMap.empty, None, None)
-    | Some (cs, d, pmap, proto, _) ->
-      (* Note that call properties using the call property syntax always override
-         $call properties. Previously, if both were present, the $call property
-         was ignored, but is now left as a named property. *)
-      Some (c::cs, d, pmap, proto, None)
+    | None -> Some ([c], None, SMap.empty, None)
+    | Some (cs, d, pmap, proto) ->
+      Some (c::cs, d, pmap, proto)
   in
   let make_dict ({ Object.Indexer.id; key; value; variance; _ } as indexer) =
     let (_, key), _ as key_ast = convert cx tparams_map key in
@@ -1124,11 +1087,11 @@ let rec convert cx tparams_map = Ast.Type.(function
   let add_dict loc indexer = function
     | None ->
       let dict, indexer_ast = make_dict indexer in
-      Some ([], dict, SMap.empty, None, None), indexer_ast
-    | Some (cs, None, pmap, proto, call_deprecated) ->
+      Some ([], dict, SMap.empty, None), indexer_ast
+    | Some (cs, None, pmap, proto) ->
       let dict, indexer_ast = make_dict indexer in
-      Some (cs, dict, pmap, proto, call_deprecated), indexer_ast
-    | Some (_, Some _, _, _, _) as o ->
+      Some (cs, dict, pmap, proto), indexer_ast
+    | Some (_, Some _, _, _) as o ->
       Flow.add_output cx
         Error_message.(EUnsupportedSyntax (loc, MultipleIndexers));
       let _, i = Tast_utils.error_mapper#object_indexer_type (loc, indexer) in
@@ -1136,11 +1099,11 @@ let rec convert cx tparams_map = Ast.Type.(function
   in
   let add_prop loc p = function
     | None ->
-      let pmap, proto, call_deprecated, p_ast = property loc p SMap.empty None None in
-      Some ([], None, pmap, proto, call_deprecated), p_ast
-    | Some (cs, d, pmap, proto, call_deprecated) ->
-      let pmap, proto, call_deprecated, p_ast = property loc p pmap proto call_deprecated in
-      Some (cs, d, pmap, proto, call_deprecated), p_ast
+      let pmap, proto, p_ast = property loc p SMap.empty None in
+      Some ([], None, pmap, proto), p_ast
+    | Some (cs, d, pmap, proto) ->
+      let pmap, proto, p_ast = property loc p pmap proto in
+      Some (cs, d, pmap, proto), p_ast
   in
   let o, ts, spread, rev_prop_asts = List.fold_left Object.(
     fun (o, ts, spread, rev_prop_asts) -> function
@@ -1194,7 +1157,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   loc,
   match ts with
   | [] ->
-    let t = mk_object ~exact ([], None, SMap.empty, None, None) in
+    let t = mk_object ~exact ([], None, SMap.empty, None) in
     if exact
     then ExactT (mk_reason (RExactType reason_desc) loc, t)
     else t
@@ -1531,24 +1494,6 @@ and add_interface_properties cx tparams_map properties s =
         | _, Property.Computed (loc, _), _ ->
             Flow.add_output cx (Error_message.EUnsupportedSyntax (loc, Error_message.IllegalName));
             x, Tast_utils.error_mapper#object_property_type (loc, prop)
-
-        (* Previously, call properties were stored in the props map under the key
-           $call. Unfortunately, this made it possible to specify call properties
-           using this syntax in interfaces, declared classes, and even normal classes.
-
-           Note that $call properties always override the call property syntax.
-           As before, if both are present, the $call property is used and the call
-           property is ignored. *)
-        | _, (Property.Identifier (id_loc, { Ast.Identifier.name= "$call"; comments })),
-            Ast.Type.Object.Property.Init value when not proto ->
-            Flow.add_output cx Error_message.(EDeprecatedCallSyntax id_loc);
-            let (_, t), _ as value_ast = convert cx tparams_map value in
-            let t = if optional then Type.optional t else t in
-            add_call_deprecated ~static t x,
-            Ast.Type.(loc, { prop with Object.Property.
-              key = Property.Identifier ((id_loc, t), mk_commented_ident t comments "$call");
-              value = Object.Property.Init value_ast;
-            })
 
         | true, (Property.Identifier (id_loc, { Ast.Identifier.name; comments })),
             Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func) ->

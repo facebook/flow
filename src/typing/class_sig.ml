@@ -37,7 +37,6 @@ type signature = {
   getters: func_info SMap.t;
   setters: func_info SMap.t;
   calls: Type.t list;
-  call_deprecated: Type.t option;
 }
 
 type t = {
@@ -79,7 +78,6 @@ let empty id reason tparams tparams_map super =
     getters = SMap.empty;
     setters = SMap.empty;
     calls = [];
-    call_deprecated = None;
   } in
   let constructor = [] in
   let static =
@@ -183,19 +181,7 @@ let append_method ~static name loc fsig ?(set_asts=ignore) ?(set_type=ignore) x 
   }) x
 
 let append_call ~static t = map_sig ~static (fun s ->
-  (* Note that $call properties always override the call property syntax.
-     As before, if both are present, the $call property is used and the call
-     property is ignored. *)
-  match s.call_deprecated with
-  | None -> { s with calls = t :: s.calls }
-  | Some _ -> s
-)
-
-let add_call_deprecated ~static t = map_sig ~static (fun s ->
-  (* Note that $call properties always override the call property syntax.
-     As before, if both are present, the $call property is used and the call
-     property is ignored. *)
-  { s with call_deprecated = Some t; calls = [] }
+  {s with calls = t :: s.calls}
 )
 
 let add_getter ~static name loc fsig ?(set_asts=ignore) ?(set_type=ignore) x =
@@ -246,7 +232,6 @@ let subst_sig cx map s =
     getters = SMap.map (subst_func_sig) s.getters;
     setters = SMap.map (subst_func_sig) s.setters;
     calls = Core_list.map ~f:(Flow.subst cx map) s.calls;
-    call_deprecated = Option.map ~f:(Flow.subst cx map) s.call_deprecated;
   }
 
 let subst_typeapp cx map (loc, c, targs) =
@@ -378,16 +363,7 @@ let elements cx ?constructor s =
   (* Treat getters and setters as methods *)
   let methods = SMap.union getters_and_setters methods in
 
-  (* Previously, call properties were stored in the props map under the key
-     $call. Unfortunately, this made it possible to specify call properties
-     using this syntax in interfaces, declared classes, and even normal classes.
-
-     Note that $call properties always override the call property syntax
-     As before, if both are present, the $call property is used and the call
-     property is ignored. *)
-  let call = match s.call_deprecated with
-  | Some t -> Some t
-  | None ->
+  let call =
     match List.rev s.calls with
     | [] -> None
     | [t] -> Some t

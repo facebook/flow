@@ -289,30 +289,6 @@ References:
               ^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------ deprecated.js:2:3
-
-Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
-
-   2|   $call: () => void;
-        ^^^^^
-
-
-Error ------------------------------------------------------------------------------------------------ deprecated.js:6:3
-
-Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
-
-   6|   $call: () => void;
-        ^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- deprecated.js:10:3
-
-Deprecated $call syntax. Use callable property syntax instead. (`deprecated-call-syntax`)
-
-   10|   $call: () => void;
-         ^^^^^
-
-
 Error --------------------------------------------------------------------------------------------- internal_slot.js:5:2
 
 Cannot cast object literal to `O` because a call signature declaring the expected parameter / return type is missing in
@@ -458,7 +434,7 @@ References:
 
 
 
-Found 30 errors
+Found 27 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
