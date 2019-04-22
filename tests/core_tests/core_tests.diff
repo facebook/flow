@@ -1,0 +1,164 @@
+--- core_tests.exp
++++ core_tests.out
+@@ -1,3 +1,155 @@
++Error ---------------------------------------------------------------------------------------------------- flow.js:20:19
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   20| function loop0(): empty { // error
++                         ^^^^^ [1]
++
++
++Error ---------------------------------------------------------------------------------------------------- flow.js:57:19
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   57| function loop5(): empty { // TODO: ok
++                         ^^^^^ [1]
++
++
++Error ---------------------------------------------------------------------------------------------------- flow.js:61:19
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   61| function loop6(): empty { // error
++                         ^^^^^ [1]
++
++
++Error ---------------------------------------------------------------------------------------------------- flow.js:65:19
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   65| function loop7(): empty { // TODO: ok
++                         ^^^^^ [1]
++
++
++Error ---------------------------------------------------------------------------------------------------- flow.js:77:19
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   77| function loop9(): empty { // error
++                         ^^^^^ [1]
++
++
++Error ----------------------------------------------------------------------------------------------------- flow.js:86:5
++
++Unreachable code.
++
++   86|     break l // 'Unreachable' in Flow
++           ^^^^^^^
++
++
++Error ---------------------------------------------------------------------------------------------------- flow.js:90:18
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   90| function for0(): empty { // TODO: ok
++                        ^^^^^ [1]
++
++
++Error ---------------------------------------------------------------------------------------------------- flow.js:94:18
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   94| function for1(): empty { // TODO: ok
++                        ^^^^^ [1]
++
++
++Error ---------------------------------------------------------------------------------------------------- flow.js:98:18
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   98| function for2(): empty { // TODO: ok
++                        ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:102:18
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   102| function for3(): empty { // error
++                         ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:106:18
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   106| function for4(): empty { // error
++                         ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:112:22
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   112| function doWhile0(): empty { // TODO: ok
++                             ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:118:22
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   118| function doWhile1(): empty { // TODO: ok
++                             ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:124:22
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   124| function doWhile2(): empty { // TODO: ok
++                             ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:130:22
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   130| function doWhile3(): empty { // error
++                             ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:136:22
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   136| function doWhile4(): empty { // error
++                             ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:147:17
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   147| function if0(): empty { // TODO: ok
++                        ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:153:17
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   153| function if1(): empty { // error
++                        ^^^^^ [1]
++
++
++Error --------------------------------------------------------------------------------------------------- flow.js:159:17
++
++Cannot expect empty as the return type of function because empty [1] is incompatible with implicitly-returned undefined.
++
++   159| function if2(): empty { // TODO: ok
++                        ^^^^^ [1]
++
++
+ Error -------------------------------------------------------------------------------------------- json_stringify.js:9:2
+ 
+ Cannot cast `JSON.stringify(...)` to string because undefined [1] is incompatible with string [2].
+@@ -140,4 +292,4 @@
+ 
+ 
+ 
+-Found 10 errors
++Found 29 errors
