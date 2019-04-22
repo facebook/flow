@@ -105,6 +105,24 @@ class return_finder = object(this)
     this#set_acc true;
     stmt
 
+  method! while_ _loc (stmt: (ALoc.t, ALoc.t) Flow_ast.Statement.While.t) =
+    begin match Flow_ast.Statement.While.(stmt.test) with 
+      | (_, Flow_ast.Expression.Literal {
+          Flow_ast.Literal.value = Flow_ast.Literal.Boolean true; 
+          _
+        }) 
+      | (_, Flow_ast.Expression.Logical {
+          Flow_ast.Expression.Logical.operator = Flow_ast.Expression.Logical.Or;
+          right = (_, Flow_ast.Expression.Literal {
+            Flow_ast.Literal.value = Flow_ast.Literal.Boolean true; 
+            _
+          });
+          _
+        }) -> this#set_acc true;
+      | _ -> ()
+    end;
+    stmt
+
   method! function_body_any body =
     begin match body with
       (* If it's a body expression, some value is implicitly returned *)
@@ -991,7 +1009,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           | Some Abnormal.Throw
           | Some Abnormal.Return
           | Some Abnormal.Break (Some _)
-          | Some Abnormal.Continue _ ->
+          | Some Abnormal.Continue _
+          | Some Abnormal.Loop _ ->
             false, false
           | Some Abnormal.Break None ->
             false, true
@@ -1355,6 +1374,22 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       let test_ast, preds, not_preds, orig_types =
         predicates_of_condition cx test in
 
+      let infinite_loop = match test_ast with
+        | (_, Flow_ast.Expression.Literal {
+            Flow_ast.Literal.value = Flow_ast.Literal.Boolean true; 
+            _
+          })
+        | (_, Flow_ast.Expression.Logical {
+            Flow_ast.Expression.Logical.operator = Flow_ast.Expression.Logical.Or;
+            right = (_, Flow_ast.Expression.Literal {
+              Flow_ast.Literal.value = Flow_ast.Literal.Boolean true; 
+              _
+            });
+            _
+          }) -> true
+        | _ -> false
+      in
+
       (* save current changeset and install an empty one *)
       let oldset = Changeset.Global.clear () in
 
@@ -1371,8 +1406,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       );
 
       (* traverse loop body - after this, body_env = Post' *)
-      let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
+      let body_ast, body_abnormal = Abnormal.catch_stmt_control_flow_exception
         (fun () -> statement cx body) in
+
+      let ast = loc, While { While.test = test_ast; body = body_ast } in
 
       (* save ref to env after loop body *)
       let body_env = Env.peek_env () in
@@ -1397,7 +1434,15 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       if Abnormal.swap_saved (Abnormal.Break None) save_break <> None
       then Env.havoc_vars newset;
 
-      loc, While { While.test = test_ast; body = body_ast }
+      begin match body_abnormal, infinite_loop with
+        | Some Abnormal.Break _, true -> ast
+        | _, true -> 
+          let abnormal = Abnormal.Loop Abnormal.Infinite in
+          Env.reset_current_activation loc;
+          Abnormal.save abnormal;
+          Abnormal.throw_stmt_control_flow_exception ast abnormal
+        | _ -> ast
+      end
 
   (***************************************************************************)
   (* Refinements for `do-while` are derived by the following Hoare logic rule:
@@ -6708,6 +6753,7 @@ and function_decl id cx loc func this super =
   let func_sig, reconstruct_func = mk_func_sig cx SMap.empty loc func in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
+  let save_infinite_loop = Abnormal.clear_saved (Abnormal.Loop Abnormal.Infinite) in
   let body = func_sig |> Func_sig.with_typeparams cx (fun () ->
     func_sig |> Func_sig.generate_tests cx (
       Func_sig.toplevels id cx this super
@@ -6718,6 +6764,7 @@ and function_decl id cx loc func this super =
   ) in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
+  ignore (Abnormal.swap_saved (Abnormal.Loop Abnormal.Infinite) save_infinite_loop);
   func_sig, reconstruct_func (Option.value_exn (fst body))
 
 (* Switch back to the declared type for an internal name. *)
