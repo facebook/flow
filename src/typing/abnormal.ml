@@ -7,10 +7,13 @@
 
 (* we model abnormal control flows using exceptions during traversal *)
 
+type loop_kind = Finite | Infinite
+
 (* control directives encountered during traversal *)
 type t =
   | Return
   | Throw
+  | Loop of loop_kind
   | Break of string option
   | Continue of string option
 
@@ -21,6 +24,7 @@ let opt_label name = function
 let to_string = function
   | Return -> "Return"
   | Throw -> "Throw"
+  | Loop _ -> "Loop"
   | Break label -> opt_label "Break" label
   | Continue label -> opt_label "Continue" label
 
@@ -159,6 +163,7 @@ let clear_saved abnormal =
 let string = function
   | Return -> "return"
   | Throw -> "throw"
+  | Loop _ -> "loop"
   | Break (Some lbl) -> spf "break `%s`" lbl
   | Break None -> "break"
   | Continue (Some lbl) -> spf "continue `%s`" lbl
