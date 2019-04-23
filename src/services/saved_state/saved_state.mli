@@ -46,6 +46,7 @@ val save:
   saved_state_filename:Path.t ->
   genv:ServerEnv.genv ->
   env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
   unit Lwt.t
 val load:
   workers:MultiWorkerLwt.worker list option ->

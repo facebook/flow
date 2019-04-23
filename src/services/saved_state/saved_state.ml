@@ -72,6 +72,7 @@ module Save: sig
     saved_state_filename:Path.t ->
     genv:ServerEnv.genv ->
     env:ServerEnv.env ->
+    profiling:Profiling_js.running ->
     unit Lwt.t
 end = struct
   let normalize_file_key ~root = File_key.map (Files.relative_path root)
@@ -194,21 +195,27 @@ end = struct
     Flow_error.ErrorSet.map (normalize_error ~root)
 
   (* Collect all the data for all the files *)
-  let collect_data ~workers ~genv ~env =
+  let collect_data ~workers ~genv ~env ~profiling =
     let options = genv.ServerEnv.options in
     let root = Options.root options |> Path.to_string in
     let reader = State_reader.create () in
-    let%lwt parsed_heaps = MultiWorkerLwt.call workers
-      ~job:(List.fold_left (collect_normalized_data_for_parsed_file ~root ~reader) )
-      ~neutral:FilenameMap.empty
-      ~merge:FilenameMap.union
-      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.files))
+    let%lwt parsed_heaps =
+      Profiling_js.with_timer_lwt profiling ~timer:"CollectParsed" ~f:(fun () ->
+        MultiWorkerLwt.call workers
+          ~job:(List.fold_left (collect_normalized_data_for_parsed_file ~root ~reader) )
+          ~neutral:FilenameMap.empty
+          ~merge:FilenameMap.union
+          ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.files))
+      )
     in
-    let%lwt unparsed_heaps = MultiWorkerLwt.call workers
-      ~job:(List.fold_left (collect_normalized_data_for_unparsed_file ~root ~reader) )
-      ~neutral:FilenameMap.empty
-      ~merge:FilenameMap.union
-      ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.unparsed))
+    let%lwt unparsed_heaps =
+      Profiling_js.with_timer_lwt profiling ~timer:"CollectUnparsed" ~f:(fun () ->
+        MultiWorkerLwt.call workers
+          ~job:(List.fold_left (collect_normalized_data_for_unparsed_file ~root ~reader) )
+          ~neutral:FilenameMap.empty
+          ~merge:FilenameMap.union
+          ~next:(MultiWorkerLwt.next workers (FilenameSet.elements env.ServerEnv.unparsed))
+      )
     in
     let ordered_non_flowlib_libs =
       env.ServerEnv.ordered_libs
@@ -243,12 +250,12 @@ end = struct
       node_modules_containers;
     }
 
-  let save ~saved_state_filename ~genv ~env =
+  let save ~saved_state_filename ~genv ~env ~profiling =
     Hh_logger.info "Collecting data for saved state";
 
     let workers = genv.ServerEnv.workers in
 
-    let%lwt data = collect_data ~workers ~genv ~env in
+    let%lwt data = collect_data ~workers ~genv ~env ~profiling in
 
     let filename = Path.to_string saved_state_filename in
 
@@ -257,26 +264,34 @@ end = struct
     let%lwt header_bytes_written = write_version fd in
 
     Hh_logger.info "Compressing saved state with lz4";
-    let saved_state_contents = Saved_state_compression.(
-      let compressed = marshal_and_compress data in
-      let orig_size = uncompressed_size compressed in
-      let new_size = compressed_size compressed in
-      Hh_logger.info "Compressed from %d bytes to %d bytes (%3.2f%%)"
-        orig_size new_size (100. *. (float_of_int new_size) /. (float_of_int orig_size));
-      compressed
-    ) in
-
-    Hh_logger.info "Writing saved-state file at %S" filename;
-    let%lwt data_bytes_written = Marshal_tools_lwt.to_fd_with_preamble fd saved_state_contents in
-    let%lwt () = Lwt_unix.close fd in
-
-    let bytes_written =
-      header_bytes_written + Marshal_tools_lwt.expected_preamble_size + data_bytes_written
+    let%lwt saved_state_contents =
+      Profiling_js.with_timer_lwt profiling ~timer:"Compress" ~f:(fun () ->
+        Saved_state_compression.(
+          let compressed = marshal_and_compress data in
+          let orig_size = uncompressed_size compressed in
+          let new_size = compressed_size compressed in
+          Hh_logger.info "Compressed from %d bytes to %d bytes (%3.2f%%)"
+            orig_size new_size (100. *. (float_of_int new_size) /. (float_of_int orig_size));
+          Lwt.return compressed
+        )
+      )
     in
 
-    Hh_logger.info "Finished writing %d bytes to saved-state file at %S" bytes_written filename;
+    Profiling_js.with_timer_lwt profiling ~timer:"Write" ~f:(fun () ->
+      Hh_logger.info "Writing saved-state file at %S" filename;
+      let%lwt data_bytes_written =
+        Marshal_tools_lwt.to_fd_with_preamble fd (saved_state_contents: Saved_state_compression.compressed)
+      in
+      let%lwt () = Lwt_unix.close fd in
 
-    Lwt.return_unit
+      let bytes_written =
+        header_bytes_written + Marshal_tools_lwt.expected_preamble_size + data_bytes_written
+      in
+
+      Hh_logger.info "Finished writing %d bytes to saved-state file at %S" bytes_written filename;
+
+      Lwt.return_unit
+    )
 end
 
 type invalid_reason =

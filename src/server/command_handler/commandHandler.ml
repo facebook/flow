@@ -354,9 +354,9 @@ let get_imports ~options ~reader module_names =
    * flow. *)
   List.fold_left add_to_results (SMap.empty, SSet.empty) module_names
 
-let save_state ~saved_state_filename ~genv ~env =
+let save_state ~saved_state_filename ~genv ~env ~profiling =
   try_with (fun () ->
-    let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env in
+    let%lwt () = Saved_state.save ~saved_state_filename ~genv ~env ~profiling in
     Lwt.return (Ok ())
   )
 
@@ -466,8 +466,8 @@ let handle_suggest ~options ~input ~profiling ~env =
   let%lwt result = suggest ~options ~env ~profiling input in
   Lwt.return (ServerProt.Response.SUGGEST result, None)
 
-let handle_save_state ~saved_state_filename ~genv ~profiling:_ ~env =
-  let%lwt result = save_state ~saved_state_filename ~genv ~env in
+let handle_save_state ~saved_state_filename ~genv ~profiling ~env =
+  let%lwt result = save_state ~saved_state_filename ~genv ~env ~profiling in
   Lwt.return (env, ServerProt.Response.SAVE_STATE result, None)
 
 
