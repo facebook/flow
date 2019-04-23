@@ -5,12 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type parsed_file_data = {
+type denormalized_file_data = {
   package: Package_json.t option; (* Only package.json files have this *)
-  info: Module_heaps.info;
   file_sig: File_sig.With_Loc.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
+}
+
+type normalized_file_data
+
+type parsed_file_data = {
+  info: Module_heaps.info;
+  normalized_file_data: normalized_file_data;
 }
 
 type unparsed_file_data = {
@@ -48,8 +54,11 @@ val save:
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
   unit Lwt.t
+
 val load:
   workers:MultiWorkerLwt.worker list option ->
   saved_state_filename:Path.t ->
   options:Options.t ->
   (Profiling_js.finished * saved_state_data) Lwt.t
+
+val denormalize_parsed_data: root:string -> normalized_file_data -> denormalized_file_data

@@ -1684,13 +1684,17 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
 
   Hh_logger.info "Restoring heaps";
   let%lwt () = with_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
+    let root = Options.root options |> Path.to_string in
     let%lwt () = MultiWorkerLwt.call workers
       ~job:(List.fold_left (fun () (fn, parsed_file_data) ->
+        let { Saved_state.package; file_sig; hash; resolved_requires; } =
+          Saved_state.denormalize_parsed_data ~root parsed_file_data.Saved_state.normalized_file_data
+        in
         (* Every package.json file should have a Package_json.t. Use those to restore the
          * PackageHeap and the ReversePackageHeap *)
         begin match fn with
         | File_key.JsonFile str when Filename.basename str = "package.json" ->
-          begin match parsed_file_data.Saved_state.package with
+          begin match package with
           | None -> failwith (Printf.sprintf "Saved state for `%s` missing Package_json.t data" str)
           | Some package -> Module_heaps.Package_heap_mutator.add_package_json str package
           end
@@ -1698,14 +1702,13 @@ let init_from_saved_state ~profiling ~workers ~saved_state options =
         end;
 
         (* Restore the FileSigHeap *)
-        Parsing_heaps.From_saved_state.add_file_sig fn parsed_file_data.Saved_state.file_sig;
+        Parsing_heaps.From_saved_state.add_file_sig fn file_sig;
 
         (* Restore the FileHashHeap *)
-        Parsing_heaps.From_saved_state.add_file_hash fn parsed_file_data.Saved_state.hash;
+        Parsing_heaps.From_saved_state.add_file_hash fn hash;
 
         (* Restore the ResolvedRequiresHeap *)
-        Module_heaps.From_saved_state.add_resolved_requires
-          fn parsed_file_data.Saved_state.resolved_requires
+        Module_heaps.From_saved_state.add_resolved_requires fn resolved_requires
       ))
       ~merge:(fun () () -> ())
       ~neutral:()

@@ -9,13 +9,19 @@ open Utils_js
 
 module File_sig = File_sig.With_Loc
 
-(* For each parsed file, this is what we will save *)
-type parsed_file_data = {
+type denormalized_file_data = {
   package: Package_json.t option; (* Only package.json files have this *)
-  info: Module_heaps.info;
   file_sig: File_sig.t;
   resolved_requires: Module_heaps.resolved_requires;
   hash: Xx.hash;
+}
+
+type normalized_file_data = denormalized_file_data
+
+(* For each parsed file, this is what we will save *)
+type parsed_file_data = {
+  info: Module_heaps.info;
+  normalized_file_data: normalized_file_data;
 }
 
 (* We also need to store the info for unparsed files *)
@@ -127,11 +133,11 @@ end = struct
     let info = normalize_info ~root parsed_file_data.info in
 
     (* file_sig *)
-    let file_sig = (new file_sig_normalizer root)#file_sig parsed_file_data.file_sig in
+    let file_sig = (new file_sig_normalizer root)#file_sig parsed_file_data.normalized_file_data.file_sig in
 
     (* resolved_requires *)
     let { Module_heaps.resolved_modules; phantom_dependents } =
-      parsed_file_data.resolved_requires
+      parsed_file_data.normalized_file_data.resolved_requires
     in
     let phantom_dependents = SSet.map (Files.relative_path root) phantom_dependents in
     let resolved_modules = SMap.map
@@ -139,11 +145,13 @@ end = struct
     let resolved_requires = { Module_heaps.resolved_modules; phantom_dependents } in
 
     {
-      package = parsed_file_data.package;
       info;
-      file_sig;
-      resolved_requires;
-      hash = parsed_file_data.hash;
+      normalized_file_data = {
+        package = parsed_file_data.normalized_file_data.package;
+        file_sig;
+        resolved_requires;
+        hash = parsed_file_data.normalized_file_data.hash;
+      }
     }
 
   (* Collect all the data for a single parsed file *)
@@ -156,12 +164,14 @@ end = struct
     in
 
     let file_data = {
-      package;
       info = Module_heaps.Reader.get_info_unsafe ~reader ~audit:Expensive.ok fn;
-      file_sig = Parsing_heaps.Reader.get_file_sig_unsafe ~reader fn;
-      resolved_requires =
-        Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
-      hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
+      normalized_file_data = {
+        package;
+        file_sig = Parsing_heaps.Reader.get_file_sig_unsafe ~reader fn;
+        resolved_requires =
+          Module_heaps.Reader.get_resolved_requires_unsafe ~reader ~audit:Expensive.ok fn;
+        hash = Parsing_heaps.Reader.get_file_hash_unsafe ~reader fn;
+      }
     } in
 
     let relative_fn = normalize_file_key ~root fn in
@@ -329,6 +339,8 @@ module Load: sig
     options:Options.t ->
     profiling:Profiling_js.running ->
     saved_state_data Lwt.t
+
+  val denormalize_parsed_data: root:string -> normalized_file_data -> denormalized_file_data
 end = struct
 
   let denormalize_file_key ~root fn = File_key.map (Files.absolute_path root) fn
@@ -392,9 +404,6 @@ end = struct
    *
    * We do our best to avoid reading the file system (which Path.make will do) *)
   let denormalize_parsed_data ~root file_data =
-    (* info *)
-    let info = denormalize_info ~root file_data.info in
-
     (* file_sig *)
     let file_sig = (new file_sig_denormalizer root)#file_sig file_data.file_sig in
 
@@ -407,31 +416,27 @@ end = struct
 
     {
       package = file_data.package;
-      info;
       file_sig;
       resolved_requires;
       hash = file_data.hash;
     }
 
-  let progress_fn real_total offset ~total:_ ~start ~length:_ =
-    let finished = start + offset in
+  let partially_denormalize_parsed_data ~root { info; normalized_file_data; } =
+    let info = denormalize_info ~root info in
+    { info; normalized_file_data; }
+
+
+  let progress_fn real_total ~total:_ ~start ~length:_ =
     MonitorRPC.status_update
-      ServerStatus.(Load_saved_state_progress { total = Some real_total; finished })
+      ServerStatus.(Load_saved_state_progress { total = Some real_total; finished = start; })
 
   (* Denormalize the data for all the parsed files. This is kind of slow :( *)
-  let denormalize_parsed_heaps ~workers ~root ~progress_fn parsed_heaps =
-    let next =
-      MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers (FilenameMap.bindings parsed_heaps)
-    in
-    MultiWorkerLwt.call workers
-      ~job:(List.fold_left (fun acc (relative_fn, parsed_file_data) ->
-        let parsed_file_data = denormalize_parsed_data ~root parsed_file_data in
-        let fn = denormalize_file_key ~root relative_fn in
-        FilenameMap.add fn parsed_file_data acc
-      ))
-      ~neutral:FilenameMap.empty
-      ~merge:FilenameMap.union
-      ~next
+  let denormalize_parsed_heaps ~root parsed_heaps =
+    FilenameMap.fold (fun relative_fn parsed_file_data acc ->
+      let parsed_file_data = partially_denormalize_parsed_data ~root parsed_file_data in
+      let fn = denormalize_file_key ~root relative_fn in
+      FilenameMap.add fn parsed_file_data acc
+    ) parsed_heaps FilenameMap.empty
 
   (* Denormalize the data for all the unparsed files *)
   let denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps =
@@ -478,18 +483,14 @@ end = struct
       raise (Invalid_saved_state Flowconfig_mismatch)
     end;
 
-    let parsed_count = FilenameMap.cardinal parsed_heaps in
-    let progress_fn = progress_fn (parsed_count + (FilenameMap.cardinal unparsed_heaps)) in
-
     Hh_logger.info "Denormalizing the data for the parsed files";
     let%lwt parsed_heaps =
-      let progress_fn = progress_fn 0 in
-      denormalize_parsed_heaps ~workers ~root ~progress_fn parsed_heaps
+      Lwt.return (denormalize_parsed_heaps ~root parsed_heaps)
     in
 
     Hh_logger.info "Denormalizing the data for the unparsed files";
     let%lwt unparsed_heaps =
-      let progress_fn = progress_fn parsed_count in
+      let progress_fn = progress_fn (FilenameMap.cardinal unparsed_heaps) in
       denormalize_unparsed_heaps ~workers ~root ~progress_fn unparsed_heaps
     in
 
@@ -580,3 +581,5 @@ let load ~workers ~saved_state_filename ~options =
   Profiling_js.with_profiling_lwt ~label:"LoadSavedState" ~should_print_summary (fun profiling ->
     Load.load ~workers ~saved_state_filename ~options ~profiling
   )
+
+let denormalize_parsed_data = Load.denormalize_parsed_data
