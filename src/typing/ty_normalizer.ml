@@ -651,7 +651,9 @@ end = struct
       Ty.Utility (Ty.Keys ty)
     | OpaqueT (r, o) -> opaque_t ~env r o
     | ReposT (_, t) -> type__ ~env t
-    | ShapeT t -> type__ ~env t
+    | ShapeT t ->
+      type__ ~env t >>| fun t ->
+      Ty.Utility (Ty.Shape t)
     | TypeDestructorTriggerT _ -> return (mk_empty Ty.EmptyTypeDestructorTriggerT)
     | MergedT (_, uses) -> merged_t ~env uses
     | ExistsT _ -> return (Ty.Utility Ty.Exists)
