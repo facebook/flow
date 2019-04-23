@@ -480,8 +480,8 @@ end = struct
    *
    * So here's the plan:
    *
-   * A) When abridged is set, only output the first 2 levels of the hierarchy. That should give us
-   *    totals and each sub timer.
+   * A) When abridged is set, only output the first 3 levels of the hierarchy. That should give us
+   *    totals, each timer, and each sub timer.
    * B) The legacy graphs and profiling assumes two main things:
    *    1) A flat object with all the timers. So we need to flatten out the results
    *    2) The "totals" to be in a timer named "Profiling".
@@ -491,10 +491,25 @@ end = struct
     json_of_results ~abridged ~max_depth [result]
 
   let to_json_legacy ~abridged result =
-    let results = { result with
-      timer_name = legacy_top_timer_name;
-     } :: result.sub_results in
-    let results = json_of_results ~abridged ~max_depth:0 results in
+    (* If we have the hierarchy
+     * <Total>
+     *   Foo
+     *   Bar
+     *     BazOne
+     *     BazTwo
+     *   Qux
+     *
+     * We flatten it to
+     *
+     * Profiling, Foo, Bar, Bar:BazOne, Bar:BazTwo, Qux
+     *)
+    let results_rev = List.fold_left (fun acc sub_result ->
+      let prefix = sub_result.timer_name ^ ":" in
+      List.fold_left (fun acc sub_sub_result ->
+        { sub_sub_result with timer_name = prefix ^ sub_sub_result.timer_name } :: acc
+      ) (sub_result::acc) sub_result.sub_results
+    ) [{ result with timer_name = legacy_top_timer_name; }] result.sub_results in
+    let results = json_of_results ~abridged ~max_depth:0 (List.rev results_rev) in
     Hh_json.JSON_Object [
       "results", results;
     ]
