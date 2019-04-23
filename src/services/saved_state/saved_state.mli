@@ -34,6 +34,7 @@ type invalid_reason =
 | Build_mismatch
 | Changed_files
 | Failed_to_marshal
+| Failed_to_decompress
 | File_does_not_exist
 | Flowconfig_mismatch
 

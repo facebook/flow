@@ -153,6 +153,7 @@ NATIVE_C_FILES=\
   $(INOTIFY_STUBS)\
   $(FSNOTIFY_STUBS)\
   src/common/xx/xx_stubs.c\
+  src/services/saved_state/saved_state_compression_stubs.c\
   hack/heap/hh_assert.c\
   hack/heap/hh_shared.c\
   hack/heap/hh_shared_sqlite.c\

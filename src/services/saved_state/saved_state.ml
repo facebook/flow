@@ -49,7 +49,7 @@ type saved_state_data = {
   coverage : Coverage.file_coverage Utils_js.FilenameMap.t;
   node_modules_containers: SSet.t;
 
-  (* TODO - Figure out what to do aboute module.resolver *)
+  (* TODO - Figure out what to do about module.resolver *)
 }
 
 let modulename_map_fn ~f = function
@@ -252,14 +252,22 @@ end = struct
 
     let filename = Path.to_string saved_state_filename in
 
-    Hh_logger.info "Writing saved-state file at %S" filename;
 
     let%lwt fd = Lwt_unix.openfile filename [Unix.O_WRONLY; Unix.O_CREAT; Unix.O_TRUNC] 0o666 in
     let%lwt header_bytes_written = write_version fd in
 
-    let%lwt data_bytes_written =
-      Marshal_tools_lwt.to_fd_with_preamble fd (data: saved_state_data)
-    in
+    Hh_logger.info "Compressing saved state with lz4";
+    let saved_state_contents = Saved_state_compression.(
+      let compressed = marshal_and_compress data in
+      let orig_size = uncompressed_size compressed in
+      let new_size = compressed_size compressed in
+      Hh_logger.info "Compressed from %d bytes to %d bytes (%3.2f%%)"
+        orig_size new_size (100. *. (float_of_int new_size) /. (float_of_int orig_size));
+      compressed
+    ) in
+
+    Hh_logger.info "Writing saved-state file at %S" filename;
+    let%lwt data_bytes_written = Marshal_tools_lwt.to_fd_with_preamble fd saved_state_contents in
     let%lwt () = Lwt_unix.close fd in
 
     let bytes_written =
@@ -276,6 +284,7 @@ type invalid_reason =
 | Build_mismatch
 | Changed_files
 | Failed_to_marshal
+| Failed_to_decompress
 | File_does_not_exist
 | Flowconfig_mismatch
 
@@ -284,6 +293,7 @@ let invalid_reason_to_string = function
 | Build_mismatch -> "Build ID of saved state does not match this binary"
 | Changed_files -> "A file change invalidated the saved state"
 | Failed_to_marshal -> "Failed to unmarshal data from saved state"
+| Failed_to_decompress -> "Failed to decompress saved state data"
 | File_does_not_exist -> "Saved state file does not exist"
 | Flowconfig_mismatch -> ".flowconfig has changed since saved state was generated"
 
@@ -511,15 +521,25 @@ end = struct
     in
 
     let%lwt () = verify_version fd in
-    let%lwt (data: saved_state_data) =
+    let%lwt (compressed_data: Saved_state_compression.compressed) =
       try%lwt Marshal_tools_lwt.from_fd_with_preamble fd
       with exn ->
         let exn = Exception.wrap exn in
-        Hh_logger.error "Failed to parsed saved state data\n%s" (Exception.to_string exn);
+        Hh_logger.error ~exn "Failed to parse saved state data";
         raise (Invalid_saved_state Failed_to_marshal)
     in
 
     let%lwt () = Lwt_unix.close fd in
+
+    Hh_logger.info "Decompressing saved-state data";
+
+    let (data: saved_state_data) =
+      try Saved_state_compression.decompress_and_unmarshal compressed_data
+      with exn ->
+        let exn = Exception.wrap exn in
+        Hh_logger.error ~exn "Failed to decompress saved state";
+        raise (Invalid_saved_state Failed_to_decompress)
+    in
 
     Hh_logger.info "Denormalizing saved-state data";
 
