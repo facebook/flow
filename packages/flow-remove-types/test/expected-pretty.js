@@ -111,3 +111,21 @@ export class TestClassWithDefault {
 
   constructor() {}
 }
+
+var newline_arrow = () => 42;
+
+var newline_arrow_2 = ()=>42;
+
+// Test calling a function with explicit type arguments
+doSomething(3);
+doSomething(3);
+
+// Test invoking a constructor with explicit type arguments
+new Event();
+
+// Test type union and intersection syntax with leading "operator"
+var union;
+var intersection;
+
+// Test generic async arrow funcion
+const f = async() => {};

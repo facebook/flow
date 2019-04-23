@@ -209,7 +209,7 @@ function transformAndOutput(content, outFile, source) {
         map.sources[0] = path.join(path.relative(path.dirname(outFile), path.dirname(source)), path.basename(source));
       }
     } else {
-      map.sourcesContent[0] = content;
+      map.sourcesContent = [content];
     }
 
     code += '\n//# sourceMappingURL=' + (inlineSourceMaps ?

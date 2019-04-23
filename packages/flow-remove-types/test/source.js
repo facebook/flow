@@ -150,3 +150,23 @@ export class TestClassWithDefault<+T: TestReadOnly = TestReadOnly> {
 
   constructor() {}
 }
+
+var newline_arrow = ():
+number => 42;
+
+var newline_arrow_2 = () :
+number=>42;
+
+// Test calling a function with explicit type arguments
+doSomething<number>(3);
+doSomething <T, U>(3);
+
+// Test invoking a constructor with explicit type arguments
+new Event<number>();
+
+// Test type union and intersection syntax with leading "operator"
+var union: | T | U;
+var intersection: & T & U;
+
+// Test generic async arrow funcion
+const f = async <T>(): T => {};

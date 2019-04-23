@@ -6,6 +6,7 @@
  */
 
 var flowRemoveTypes = require('./index');
+var pirates = require('pirates');
 
 // Supported options:
 //
@@ -20,34 +21,20 @@ module.exports = function setOptions(newOptions) {
   options = newOptions;
 }
 
-// Swizzle Module#_compile on each applicable module instance.
-// NOTE: if using alongside Babel or another require-hook which simply
-// over-writes the require.extensions and does not continue execution, then
-// this require hook must come after it. Encourage those module authors to call
-// the prior loader in their require hooks.
 var jsLoader = require.extensions['.js'];
 var exts = [ '.js', '.mjs', '.jsx', '.flow', '.es6' ];
-exts.forEach(function (ext) {
-  var superLoader = require.extensions[ext] || jsLoader;
-  require.extensions[ext] = function (module, filename) {
-    if (shouldTransform(filename, options)) {
-      var super_compile = module._compile;
-      module._compile = function _compile(code, filename) {
-        try {
-          var patched = flowRemoveTypes(code, options);
-        }
-        catch (e) {
-          e.message = filename + ': ' + e.message;
-          throw e;
-        }
-        super_compile.call(this, patched.toString(), filename);
-      };
-    }
-    superLoader(module, filename);
-  };
-});
 
-function shouldTransform(filename, options) {
+var revert = pirates.addHook(function hook(code, filename) {
+  try {
+    return flowRemoveTypes(code, options).toString();
+  }
+  catch (e) {
+    e.message = filename + ': ' + e.message;
+    throw e;
+  }
+}, { exts: exts, matcher: shouldTransform });
+
+function shouldTransform(filename) {
   var includes = options && regexpPattern(options.includes || options.include);
   var excludes =
     options && 'excludes' in options ? regexpPattern(options.excludes) :

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-var babylon = require('babylon');
+var parse = require('flow-parser').parse;
 var vlq = require('vlq');
 
 /**
@@ -49,14 +49,16 @@ module.exports = function flowRemoveTypes(source, options) {
     }
   }
 
-  // Babylon is one of the sources of truth for Flow syntax. This parse
-  // configuration is intended to be as permissive as possible.
-  var ast = babylon.parse(source, {
-    allowImportExportEverywhere: true,
-    allowReturnOutsideFunction: true,
-    allowSuperOutsideMethod: true,
-    sourceType: 'module',
-    plugins: [ '*', 'jsx', 'flow' ],
+  // This parse configuration is intended to be as permissive as possible.
+  var ast = parse(source, {
+    esproposal_decorators: true,
+    esproposal_class_instance_fields: true,
+    esproposal_class_static_fields: true,
+    esproposal_export_star_as: true,
+    esproposal_optional_chaining: true,
+    esproposal_nullish_coalescing: true,
+    types: true,
+    tokens: true,
   });
 
   var removedNodes = [];
@@ -70,10 +72,13 @@ module.exports = function flowRemoveTypes(source, options) {
 
   // Remove the flow pragma.
   if (pragmaStart !== -1) {
-    var pragmaIdx = findTokenIndex(ast.tokens, pragmaStart);
-    var pragmaType = ast.tokens[pragmaIdx].type;
-    if (pragmaType === 'CommentLine' || pragmaType === 'CommentBlock') {
-      removedNodes.push(getPragmaNode(context, pragmaStart, pragmaSize));
+    var comments = getComments(ast);
+    var pragmaIdx = findTokenIndex(comments, pragmaStart);
+    if (pragmaIdx >= 0 && pragmaIdx < comments.length) {
+      var pragmaType = comments[pragmaIdx].type;
+      if (pragmaType === 'Line' || pragmaType === 'Block') {
+        removedNodes.push(getPragmaNode(context, pragmaStart, pragmaSize));
+      }
     }
   }
 
@@ -99,10 +104,13 @@ function resultPrinter(options, source, removedNodes) {
       // Step through the removed nodes, building up the resulting string.
       for (var i = 0; i < removedNodes.length; i++) {
         var node = removedNodes[i];
-        result += source.slice(lastPos, node.start);
-        lastPos = node.end;
+        result += source.slice(lastPos, startOf(node));
+        lastPos = endOf(node);
+        if (typeof node.__spliceValue === 'string') {
+          result += node.__spliceValue;
+        }
         if (!pretty) {
-          var toReplace = source.slice(node.start, node.end);
+          var toReplace = source.slice(startOf(node), endOf(node));
           if (!node.loc || node.loc.start.line === node.loc.end.line) {
             result += space(toReplace.length);
           } else {
@@ -151,10 +159,10 @@ var removeFlowVisitor = {
   Identifier: function (context, node, ast) {
     if (node.optional) {
       // Find the optional token.
-      var idx = findTokenIndex(ast.tokens, node.start);
+      var idx = findTokenIndex(ast.tokens, startOf(node));
       do {
         idx++;
-      } while (ast.tokens[idx].type.label !== '?');
+      } while (getLabel(ast.tokens[idx]) !== '?');
       removeNode(context, ast.tokens[idx]);
     }
   },
@@ -179,18 +187,76 @@ var removeFlowVisitor = {
 
   ImportSpecifier: function(context, node) {
     if (node.importKind === 'type' || node.importKind === 'typeof') {
+      var ast = context.ast;
+
+      // Flow quirk: Remove importKind which is outside the node
+      var idxStart = findTokenIndex(ast.tokens, startOf(node));
+      var maybeImportKind = ast.tokens[idxStart - 1];
+      var maybeImportKindLabel = getLabel(maybeImportKind);
+      if (
+        maybeImportKindLabel === 'type' || maybeImportKindLabel === 'typeof'
+      ) {
+        removeNode(context, maybeImportKind);
+      }
+
+      // Remove the node itself
       removeNode(context, node);
 
       // Remove trailing comma
-      var ast = context.ast;
-      var idx = findTokenIndex(ast.tokens, node.end);
+      var idx = findTokenIndex(ast.tokens, endOf(node));
+
       while (isComment(ast.tokens[idx])) {
+        // NOTE: ast.tokens has no comments in Flow
         idx++;
       }
-      if (ast.tokens[idx].type.label === ',') {
+      if (getLabel(ast.tokens[idx]) === ',') {
         removeNode(context, ast.tokens[idx]);
       }
       return false;
+    }
+  },
+
+  ArrowFunctionExpression: function(context, node) {
+    // Naively erasing a multi-line return type from an arrow function will
+    // leave a newline between the parameter list and the arrow, which is not
+    // valid JS. Detect this here and move the arrow up to the correct line.
+
+    if (context.pretty) {
+      // Pretty-printing solves this naturally. Good, because our arrow-fudging
+      // below doesn't play nice with source maps... Which are only created when
+      // using --pretty.
+      return;
+    }
+    var returnType = node.returnType;
+    if (returnType) {
+      var ast = context.ast;
+      var paramEndIdx = findTokenIndex(ast.tokens, startOf(returnType));
+      do {
+        paramEndIdx--;
+      } while (isComment(ast.tokens[paramEndIdx]));
+
+      var arrowIdx = findTokenIndex(ast.tokens, endOf(returnType));
+      while (getLabel(ast.tokens[arrowIdx]) !== '=>') {
+        arrowIdx++;
+      }
+
+      if (
+        ast.tokens[paramEndIdx].loc.end.line <
+        ast.tokens[arrowIdx].loc.start.line
+      ) {
+        // Insert an arrow immediately after the parameter list.
+        removeNode(context,
+          getSpliceNodeAtPos(
+            context,
+            endOf(ast.tokens[paramEndIdx]),
+            ast.tokens[paramEndIdx].loc.end,
+            ' =>'
+          )
+        );
+
+        // Delete the original arrow token.
+        removeNode(context, ast.tokens[arrowIdx]);
+      }
     }
   }
 };
@@ -201,14 +267,15 @@ function removeImplementedInterfaces(context, node, ast) {
   if (node.implements && node.implements.length > 0) {
     var first = node.implements[0];
     var last = node.implements[node.implements.length - 1];
-    var idx = findTokenIndex(ast.tokens, first.start);
+    var idx = findTokenIndex(ast.tokens, startOf(first));
     do {
       idx--;
     } while (ast.tokens[idx].value !== 'implements');
 
-    var lastIdx = findTokenIndex(ast.tokens, last.start);
+    var lastIdx = findTokenIndex(ast.tokens, startOf(last));
     do {
       if (!isComment(ast.tokens[idx])) {
+        // NOTE: ast.tokens has no comments in Flow
         removeNode(context, ast.tokens[idx]);
       }
     } while (idx++ !== lastIdx);
@@ -226,7 +293,7 @@ function removeNode(context, node) {
   var spaceNode = context.pretty ? getLeadingSpaceNode(context, node) : null;
   var lineNode = context.pretty ? getTrailingLineNode(context, node) : null;
 
-  while (index > 0 && removedNodes[index - 1].end > node.start) {
+  while (index > 0 && endOf(removedNodes[index - 1]) > startOf(node)) {
     index--;
   }
 
@@ -274,35 +341,35 @@ function getPragmaNode(context, start, size) {
       column++;
     }
   }
-  return {
+  return createNode({
     start: start,
     end: start + size,
     loc: {
       start: { line: line, column: column },
       end: { line: line, column: column + size },
     },
-  };
+  });
 }
 
 function getLeadingSpaceNode(context, node) {
   var source = context.source;
-  var end = node.start;
+  var end = startOf(node);
   var start = end;
   while (source[start - 1] === ' ' || source[start - 1] === '\t') {
     start--;
   }
   if (start !== end) {
-    return {
+    return createNode({
       start: start,
       end: end,
       loc: { start: node.loc.start, end: node.loc.start }
-    };
+    });
   }
 }
 
 function getTrailingLineNode(context, node) {
   var source = context.source;
-  var start = node.end;
+  var start = endOf(node);
   var end = start;
   while (source[end] === ' ' || source[end] === '\t') {
     end++;
@@ -316,19 +383,30 @@ function getTrailingLineNode(context, node) {
     end++;
 
     if (isLastNodeRemovedFromLine(context, node)) {
-      return {
+      return createNode({
         start: start,
         end: end,
         loc: { start: node.loc.end, end: node.loc.end }
-      };
+      });
     }
   }
+}
+
+// Creates a zero-width "node" with a value to splice at that position.
+// WARNING: This is only safe to use when source maps are off!
+function getSpliceNodeAtPos(context, pos, loc, value) {
+  return createNode({
+    start: pos,
+    end: pos,
+    loc: {start: loc, end: loc},
+    __spliceValue: value
+  });
 }
 
 // Returns true if node is the last to be removed from a line.
 function isLastNodeRemovedFromLine(context, node) {
   var tokens = context.ast.tokens;
-  var priorTokenIdx = findTokenIndex(tokens, node.start) - 1;
+  var priorTokenIdx = findTokenIndex(tokens, startOf(node)) - 1;
   var token = tokens[priorTokenIdx];
   var line = node.loc.end.line;
 
@@ -350,21 +428,21 @@ function isRemovedToken(context, token) {
   var nodeIdx = removedNodes.length - 1;
 
   // Find the last removed node which could possibly contain this token.
-  while (nodeIdx >= 0 && removedNodes[nodeIdx].start > token.start) {
+  while (nodeIdx >= 0 && startOf(removedNodes[nodeIdx]) > startOf(token)) {
     nodeIdx--;
   }
 
   var node = removedNodes[nodeIdx];
 
   // This token couldn't be removed if not contained within the removed node.
-  if (nodeIdx === -1 || node.end < token.end) {
+  if (nodeIdx === -1 || endOf(node) < endOf(token)) {
     return false;
   }
 
   // Iterate through the tokens contained by the removed node to find a match.
   var tokens = context.ast.tokens;
-  var tokenIdx = findTokenIndex(tokens, node.start);
-  while (tokens[tokenIdx].end <= node.end) {
+  var tokenIdx = findTokenIndex(tokens, startOf(node));
+  while (endOf(tokens[tokenIdx]) <= endOf(node)) {
     if (token === tokens[tokenIdx]) {
       return true;
     }
@@ -374,7 +452,7 @@ function isRemovedToken(context, token) {
   return false;
 }
 
-// Given the AST output of babylon parse, walk through in a depth-first order,
+// Given the AST output from the parser, walk through in a depth-first order,
 // calling methods on the given visitor, providing context as the first argument.
 function visit(ast, context, visitor) {
   var stack;
@@ -390,7 +468,7 @@ function visit(ast, context, visitor) {
       index = stack.index;
       stack = stack.prev;
     } else {
-      var node = parent ? parent[keys[index]] : ast.program;
+      var node = parent ? parent[keys[index]] : getProgram(ast);
       if (node && typeof node === 'object' && (node.type || node.length)) {
         if (node.type) {
           var visitFn = visitor[node.type];
@@ -416,9 +494,9 @@ function findTokenIndex(tokens, offset) {
   while (min <= max) {
     var ptr = (min + max) / 2 | 0;
     var token = tokens[ptr];
-    if (token.end <= offset) {
+    if (endOf(token) <= offset) {
       min = ptr + 1;
-    } else if (token.start > offset) {
+    } else if (startOf(token) > offset) {
       max = ptr - 1;
     } else {
       return ptr;
@@ -430,7 +508,7 @@ function findTokenIndex(tokens, offset) {
 
 // True if the provided token is a comment.
 function isComment(token) {
-  return token.type === 'CommentBlock' || token.type === 'CommentLine';
+  return token.type === 'Block' || token.type === 'Line';
 }
 
 // Produce a string full of space characters of a given size.
@@ -483,4 +561,37 @@ function generateSourceMappings(removedNodes) {
   }
 
   return mappings;
+}
+
+/**
+ * A lightweight layer to abstract over the slightly different ASTs returned by
+ * Flow vs Babylon.
+ */
+
+function startOf(token) {
+  return token.range[0];
+}
+
+function endOf(token) {
+  return token.range[1];
+}
+
+function getComments(ast) {
+  return ast.comments;
+}
+
+function createNode(data) {
+  return {
+    range: [data.start, data.end],
+    loc: data.loc,
+    __spliceValue: data.__spliceValue
+  };
+}
+
+function getLabel(token) {
+  return token.value;
+}
+
+function getProgram(ast) {
+  return ast;
 }

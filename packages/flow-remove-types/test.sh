@@ -33,6 +33,11 @@ echo "Test: flow-remove-types --pretty --sourcemaps inline test/source.js"
 DIFF=$(./flow-remove-types --pretty --sourcemaps inline test/source.js | diff test/expected-pretty-inlinemap.js -);
 if [ -n "$DIFF" ]; then echo "$DIFF"; exit 1; fi;
 
+# Test expected source maps with --pretty --sourcemaps inline, from stdin
+echo "Test: flow-remove-types --pretty --sourcemaps inline < test/source.js"
+DIFF=$(./flow-remove-types --pretty --sourcemaps inline < test/source.js | diff test/expected-pretty-inlinemap-stdin.js -);
+if [ -n "$DIFF" ]; then echo "$DIFF"; exit 1; fi;
+
 # Test expected output with @flow outside of comments
 echo "Test: flow-remove-types test/without-flow.js"
 DIFF=$(./flow-remove-types test/without-flow.js | diff test/without-flow.js -);
