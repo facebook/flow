@@ -1899,40 +1899,42 @@ let load_saved_state ~profiling ~workers options =
     Hh_logger.info "No saved state available";
     Lwt.return_none
   | Saved_state_fetcher.Saved_state { saved_state_filename; changed_files; } ->
-    with_timer_lwt ~options "LoadSavedState" profiling (fun () ->
-      let changed_files_count = SSet.cardinal changed_files in
-      try%lwt
-        let%lwt saved_state = Saved_state.load ~workers ~saved_state_filename ~options in
-        let updates = Recheck_updates.process_updates
-          ~options
-          ~libs:(SSet.of_list saved_state.Saved_state.ordered_non_flowlib_libs)
-          changed_files
+    let changed_files_count = SSet.cardinal changed_files in
+    try%lwt
+      let%lwt load_profiling, saved_state =
+        Saved_state.load ~workers ~saved_state_filename ~options
+      in
+      Profiling_js.merge load_profiling profiling;
+
+      let updates = Recheck_updates.process_updates
+        ~options
+        ~libs:(SSet.of_list saved_state.Saved_state.ordered_non_flowlib_libs)
+        changed_files
+      in
+      let updates = match updates with
+      | Core_result.Error ({ Recheck_updates.msg; _; }) ->
+        Hh_logger.error "The saved state is no longer valid due to file changes: %s" msg;
+        raise Saved_state.(Invalid_saved_state Changed_files)
+      | Core_result.Ok updates -> updates in
+      Hh_logger.info "Saved state script reports %d files changed & we care about %d of them"
+        (SSet.cardinal changed_files)
+        (FilenameSet.cardinal updates);
+      FlowEventLogger.set_saved_state_filename (Path.to_string saved_state_filename);
+      FlowEventLogger.load_saved_state_success ~changed_files_count;
+      Lwt.return_some (saved_state, updates)
+    with Saved_state.Invalid_saved_state invalid_reason ->
+      let invalid_reason = Saved_state.invalid_reason_to_string invalid_reason in
+      FlowEventLogger.load_saved_state_error
+        ~saved_state_filename:(Path.to_string saved_state_filename)
+        ~changed_files_count
+        ~invalid_reason;
+      if Options.saved_state_no_fallback options
+      then
+        let msg =
+          spf "Failed to load saved state: %s" invalid_reason
         in
-        let updates = match updates with
-        | Core_result.Error ({ Recheck_updates.msg; _; }) ->
-          Hh_logger.error "The saved state is no longer valid due to file changes: %s" msg;
-          raise Saved_state.(Invalid_saved_state Changed_files)
-        | Core_result.Ok updates -> updates in
-        Hh_logger.info "Saved state script reports %d files changed & we care about %d of them"
-          (SSet.cardinal changed_files)
-          (FilenameSet.cardinal updates);
-        FlowEventLogger.set_saved_state_filename (Path.to_string saved_state_filename);
-        FlowEventLogger.load_saved_state_success ~changed_files_count;
-        Lwt.return_some (saved_state, updates)
-      with Saved_state.Invalid_saved_state invalid_reason ->
-        let invalid_reason = Saved_state.invalid_reason_to_string invalid_reason in
-        FlowEventLogger.load_saved_state_error
-          ~saved_state_filename:(Path.to_string saved_state_filename)
-          ~changed_files_count
-          ~invalid_reason;
-        if Options.saved_state_no_fallback options
-        then
-          let msg =
-            spf "Failed to load saved state: %s" invalid_reason
-          in
-          FlowExitStatus.exit ~msg FlowExitStatus.Invalid_saved_state
-        else Lwt.return_none
-    )
+        FlowExitStatus.exit ~msg FlowExitStatus.Invalid_saved_state
+      else Lwt.return_none
 
 let query_watchman_for_changed_files ~options =
   match Options.lazy_mode options with

@@ -52,4 +52,4 @@ val load:
   workers:MultiWorkerLwt.worker list option ->
   saved_state_filename:Path.t ->
   options:Options.t ->
-  saved_state_data Lwt.t
+  (Profiling_js.finished * saved_state_data) Lwt.t

@@ -327,6 +327,7 @@ module Load: sig
     workers:MultiWorkerLwt.worker list option ->
     saved_state_filename:Path.t ->
     options:Options.t ->
+    profiling:Profiling_js.running ->
     saved_state_data Lwt.t
 end = struct
 
@@ -519,7 +520,7 @@ end = struct
       node_modules_containers;
     }
 
-  let load ~workers ~saved_state_filename ~options =
+  let load ~workers ~saved_state_filename ~options ~profiling =
     let filename = Path.to_string saved_state_filename in
 
     Hh_logger.info "Reading saved-state file at %S" filename;
@@ -537,28 +538,36 @@ end = struct
 
     let%lwt () = verify_version fd in
     let%lwt (compressed_data: Saved_state_compression.compressed) =
-      try%lwt Marshal_tools_lwt.from_fd_with_preamble fd
-      with exn ->
-        let exn = Exception.wrap exn in
-        Hh_logger.error ~exn "Failed to parse saved state data";
-        raise (Invalid_saved_state Failed_to_marshal)
+      Profiling_js.with_timer_lwt profiling ~timer:"Read" ~f:(fun () ->
+        try%lwt Marshal_tools_lwt.from_fd_with_preamble fd
+        with exn ->
+          let exn = Exception.wrap exn in
+          Hh_logger.error ~exn "Failed to parse saved state data";
+          raise (Invalid_saved_state Failed_to_marshal)
+      )
     in
 
     let%lwt () = Lwt_unix.close fd in
 
     Hh_logger.info "Decompressing saved-state data";
 
-    let (data: saved_state_data) =
-      try Saved_state_compression.decompress_and_unmarshal compressed_data
-      with exn ->
-        let exn = Exception.wrap exn in
-        Hh_logger.error ~exn "Failed to decompress saved state";
-        raise (Invalid_saved_state Failed_to_decompress)
+    let%lwt (data: saved_state_data) =
+      Profiling_js.with_timer_lwt profiling ~timer:"Decompress" ~f:(fun () ->
+        try Lwt.return (Saved_state_compression.decompress_and_unmarshal compressed_data)
+        with exn ->
+          let exn = Exception.wrap exn in
+          Hh_logger.error ~exn "Failed to decompress saved state";
+          raise (Invalid_saved_state Failed_to_decompress)
+      )
     in
 
     Hh_logger.info "Denormalizing saved-state data";
 
-    let%lwt data = denormalize_data ~workers ~options ~data in
+    let%lwt data =
+      Profiling_js.with_timer_lwt profiling ~timer:"Denormalize" ~f:(fun () ->
+        denormalize_data ~workers ~options ~data
+      )
+    in
 
     Hh_logger.info "Finished loading saved-state";
 
@@ -566,4 +575,8 @@ end = struct
 end
 
 let save = Save.save
-let load = Load.load
+let load ~workers ~saved_state_filename ~options =
+  let should_print_summary = Options.should_profile options in
+  Profiling_js.with_profiling_lwt ~label:"LoadSavedState" ~should_print_summary (fun profiling ->
+    Load.load ~workers ~saved_state_filename ~options ~profiling
+  )
