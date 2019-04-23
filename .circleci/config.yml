@@ -258,17 +258,33 @@ jobs:
             cp dist/libflowparser-linux64.zip packages/flow-parser-bin/dist/release/libflowparser-linux64.zip
             cp dist/libflowparser-osx.zip packages/flow-parser-bin/dist/release/libflowparser-osx.zip
             make dist/npm-flow-parser-bin.tgz
+      - run:
+          name: Pack flow-remove-types and flow-node
+          command: |
+            rm -rf packages/flow-node
+            cp -r packages/flow-remove-types/ packages/flow-node/
+            sed -i '0,/flow-remove-types/s//flow-node/' packages/flow-node/package.json
+            make dist/npm-flow-remove-types.tgz
+            make dist/npm-flow-node.tgz
       - persist_to_workspace:
           root: .
           paths:
             - dist/npm-flow-parser.tgz
             - dist/npm-flow-parser-bin.tgz
+            - dist/npm-flow-node.tgz
+            - dist/npm-flow-remove-types.tgz
       - store_artifacts:
           path: dist/npm-flow-parser.tgz
           destination: npm-flow-parser.tgz
       - store_artifacts:
           path: dist/npm-flow-parser-bin.tgz
           destination: npm-flow-parser-bin.tgz
+      - store_artifacts:
+          path: dist/npm-flow-node.tgz
+          destination: npm-flow-node.tgz
+      - store_artifacts:
+          path: dist/npm-flow-remove-types.tgz
+          destination: npm-flow-remove-types.tgz
 
   npm_deploy:
     <<: *docker_node
