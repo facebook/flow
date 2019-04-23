@@ -67,7 +67,7 @@ module.exports = function flowRemoveTypes(source, options) {
     ast: ast,
     source: source,
     removedNodes: removedNodes,
-    pretty: Boolean(options && options.pretty)
+    pretty: Boolean(options && options.pretty),
   };
 
   // Remove the flow pragma.
@@ -86,14 +86,14 @@ module.exports = function flowRemoveTypes(source, options) {
   visit(ast, context, removeFlowVisitor);
 
   return resultPrinter(options, source, removedNodes);
-}
+};
 
 function resultPrinter(options, source, removedNodes) {
   // Options
   var pretty = Boolean(options && options.pretty);
 
   return {
-    toString: function () {
+    toString: function() {
       if (!removedNodes || removedNodes.length === 0) {
         return source;
       }
@@ -123,17 +123,17 @@ function resultPrinter(options, source, removedNodes) {
         }
       }
 
-      return result += source.slice(lastPos);
+      return (result += source.slice(lastPos));
     },
-    generateMap: function () {
+    generateMap: function() {
       return {
         version: 3,
-        sources: [ 'source.js' ],
+        sources: ['source.js'],
         names: [],
-        mappings: pretty ? generateSourceMappings(removedNodes) : ''
+        mappings: pretty ? generateSourceMappings(removedNodes) : '',
       };
-    }
-  }
+    },
+  };
 }
 
 var LINE_RX = /(\r\n?|\n|\u2028|\u2029)/;
@@ -143,7 +143,7 @@ var LINE_RX = /(\r\n?|\n|\u2028|\u2029)/;
 var removeFlowVisitor = {
   DeclareClass: removeNode,
   DeclareFunction: removeNode,
-  DeclareInterface:removeNode,
+  DeclareInterface: removeNode,
   DeclareModule: removeNode,
   DeclareTypeAlias: removeNode,
   DeclareVariable: removeNode,
@@ -156,7 +156,7 @@ var removeFlowVisitor = {
   ClassDeclaration: removeImplementedInterfaces,
   ClassExpression: removeImplementedInterfaces,
 
-  Identifier: function (context, node, ast) {
+  Identifier: function(context, node, ast) {
     if (node.optional) {
       // Find the optional token.
       var idx = findTokenIndex(ast.tokens, startOf(node));
@@ -167,19 +167,19 @@ var removeFlowVisitor = {
     }
   },
 
-  ClassProperty: function (context, node) {
+  ClassProperty: function(context, node) {
     if (!node.value) {
-      return removeNode(context, node)
+      return removeNode(context, node);
     }
   },
 
-  ExportNamedDeclaration: function (context, node) {
+  ExportNamedDeclaration: function(context, node) {
     if (node.exportKind === 'type' || node.exportKind === 'typeof') {
       return removeNode(context, node);
     }
   },
 
-  ImportDeclaration: function (context, node) {
+  ImportDeclaration: function(context, node) {
     if (node.importKind === 'type' || node.importKind === 'typeof') {
       return removeNode(context, node);
     }
@@ -194,7 +194,8 @@ var removeFlowVisitor = {
       var maybeImportKind = ast.tokens[idxStart - 1];
       var maybeImportKindLabel = getLabel(maybeImportKind);
       if (
-        maybeImportKindLabel === 'type' || maybeImportKindLabel === 'typeof'
+        maybeImportKindLabel === 'type' ||
+        maybeImportKindLabel === 'typeof'
       ) {
         removeNode(context, maybeImportKind);
       }
@@ -245,7 +246,8 @@ var removeFlowVisitor = {
         ast.tokens[arrowIdx].loc.start.line
       ) {
         // Insert an arrow immediately after the parameter list.
-        removeNode(context,
+        removeNode(
+          context,
           getSpliceNodeAtPos(
             context,
             endOf(ast.tokens[paramEndIdx]),
@@ -258,7 +260,7 @@ var removeFlowVisitor = {
         removeNode(context, ast.tokens[arrowIdx]);
       }
     }
-  }
+  },
 };
 
 // If this class declaration or expression implements interfaces, remove
@@ -345,8 +347,8 @@ function getPragmaNode(context, start, size) {
     start: start,
     end: start + size,
     loc: {
-      start: { line: line, column: column },
-      end: { line: line, column: column + size },
+      start: {line: line, column: column},
+      end: {line: line, column: column + size},
     },
   });
 }
@@ -362,7 +364,7 @@ function getLeadingSpaceNode(context, node) {
     return createNode({
       start: start,
       end: end,
-      loc: { start: node.loc.start, end: node.loc.start }
+      loc: {start: node.loc.start, end: node.loc.start},
     });
   }
 }
@@ -386,7 +388,7 @@ function getTrailingLineNode(context, node) {
       return createNode({
         start: start,
         end: end,
-        loc: { start: node.loc.end, end: node.loc.end }
+        loc: {start: node.loc.end, end: node.loc.end},
       });
     }
   }
@@ -399,7 +401,7 @@ function getSpliceNodeAtPos(context, pos, loc, value) {
     start: pos,
     end: pos,
     loc: {start: loc, end: loc},
-    __spliceValue: value
+    __spliceValue: value,
   });
 }
 
@@ -411,10 +413,12 @@ function isLastNodeRemovedFromLine(context, node) {
   var line = node.loc.end.line;
 
   // Find previous token that was not removed on the same line.
-  while (priorTokenIdx >= 0 &&
-         token.loc.end.line === line &&
-         isRemovedToken(context, token)) {
-    token = tokens[--priorTokenIdx]
+  while (
+    priorTokenIdx >= 0 &&
+    token.loc.end.line === line &&
+    isRemovedToken(context, token)
+  ) {
+    token = tokens[--priorTokenIdx];
   }
 
   // If there's no prior token (start of file), or the prior token is on another
@@ -476,7 +480,7 @@ function visit(ast, context, visitor) {
             continue;
           }
         }
-        stack = { parent: parent, keys: keys, index: index, prev: stack };
+        stack = {parent: parent, keys: keys, index: index, prev: stack};
         parent = node;
         keys = Object.keys(node);
         index = -1;
@@ -492,7 +496,7 @@ function findTokenIndex(tokens, offset) {
   var max = tokens.length - 1;
 
   while (min <= max) {
-    var ptr = (min + max) / 2 | 0;
+    var ptr = ((min + max) / 2) | 0;
     var token = tokens[ptr];
     if (endOf(token) <= offset) {
       min = ptr + 1;
@@ -513,7 +517,7 @@ function isComment(token) {
 
 // Produce a string full of space characters of a given size.
 function space(size) {
-  var sp = ' '
+  var sp = ' ';
   var result = '';
 
   for (;;) {
@@ -537,7 +541,7 @@ function generateSourceMappings(removedNodes) {
     return mappings;
   }
 
-  var end = { line: 1, column: 0 };
+  var end = {line: 1, column: 0};
 
   for (var i = 0; i < removedNodes.length; i++) {
     var start = removedNodes[i].loc.start;
@@ -547,17 +551,22 @@ function generateSourceMappings(removedNodes) {
       for (var l = 0; l !== lineDiff; l++) {
         mappings += ';';
       }
-      mappings += vlq.encode([ start.column, 0, lineDiff, columnDiff ]);
+      mappings += vlq.encode([start.column, 0, lineDiff, columnDiff]);
     } else if (columnDiff) {
       if (i) {
         mappings += ',';
       }
-      mappings += vlq.encode([ columnDiff, 0, lineDiff, columnDiff ]);
+      mappings += vlq.encode([columnDiff, 0, lineDiff, columnDiff]);
     }
 
     end = removedNodes[i].loc.end;
     mappings += ',';
-    mappings += vlq.encode([ 0, 0, end.line - start.line, end.column - start.column ]);
+    mappings += vlq.encode([
+      0,
+      0,
+      end.line - start.line,
+      end.column - start.column,
+    ]);
   }
 
   return mappings;
@@ -584,7 +593,7 @@ function createNode(data) {
   return {
     range: [data.start, data.end],
     loc: data.loc,
-    __spliceValue: data.__spliceValue
+    __spliceValue: data.__spliceValue,
   };
 }
 

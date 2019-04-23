@@ -16,15 +16,18 @@ if [ -n "$DIFF" ]; then echo "$DIFF"; exit 1; fi;
 
 # Test expected source maps with --pretty --sourcemaps
 echo "Test: flow-remove-types --pretty --sourcemaps test/source.js -d test/expected-with-maps"
-TEST_DIR=$(cd $(dirname ${BASH_SOURCE[0]}) && pwd)
+TEST_DIR=$(
+  DIR=$(dirname "${BASH_SOURCE[0]}");
+  cd "$DIR" && pwd
+)
 DIR=$(mktemp -d)
-cp -r test $DIR
-pushd $DIR > /dev/null
-$TEST_DIR/flow-remove-types --pretty --sourcemaps test/source.js -d test/expected-with-maps;
-popd > /dev/null
-DIFF_SOURCE=$(diff test/expected-with-maps/test/source.js $DIR/test/expected-with-maps/test/source.js);
-DIFF_MAP=$(diff test/expected-with-maps/test/source.js.map $DIR/test/expected-with-maps/test/source.js.map);
-rm -rf $DIR
+cp -r test "$DIR"
+pushd "$DIR" || exit 1 > /dev/null
+"$TEST_DIR/flow-remove-types" --pretty --sourcemaps test/source.js -d test/expected-with-maps;
+popd || exit 1 > /dev/null
+DIFF_SOURCE=$(diff test/expected-with-maps/test/source.js "$DIR/test/expected-with-maps/test/source.js");
+DIFF_MAP=$(diff test/expected-with-maps/test/source.js.map "$DIR/test/expected-with-maps/test/source.js.map");
+rm -rf "$DIR"
 if [ -n "$DIFF_SOURCE" ]; then echo "$DIFF_SOURCE"; exit 1; fi;
 if [ -n "$DIFF_MAP" ]; then echo "$DIFF_MAP"; exit 1; fi;
 

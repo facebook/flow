@@ -19,28 +19,35 @@ var pirates = require('pirates');
 var options;
 module.exports = function setOptions(newOptions) {
   options = newOptions;
-}
+};
 
 var jsLoader = require.extensions['.js'];
-var exts = [ '.js', '.mjs', '.jsx', '.flow', '.es6' ];
+var exts = ['.js', '.mjs', '.jsx', '.flow', '.es6'];
 
-var revert = pirates.addHook(function hook(code, filename) {
-  try {
-    return flowRemoveTypes(code, options).toString();
-  }
-  catch (e) {
-    e.message = filename + ': ' + e.message;
-    throw e;
-  }
-}, { exts: exts, matcher: shouldTransform });
+var revert = pirates.addHook(
+  function hook(code, filename) {
+    try {
+      return flowRemoveTypes(code, options).toString();
+    } catch (e) {
+      e.message = filename + ': ' + e.message;
+      throw e;
+    }
+  },
+  {exts: exts, matcher: shouldTransform}
+);
 
 function shouldTransform(filename) {
   var includes = options && regexpPattern(options.includes || options.include);
   var excludes =
-    options && 'excludes' in options ? regexpPattern(options.excludes) :
-    options && 'exclude' in options ? regexpPattern(options.exclude) :
-    /\/node_modules\//;
-  return (!includes || includes.test(filename)) && !(excludes && excludes.test(filename));
+    options && 'excludes' in options
+      ? regexpPattern(options.excludes)
+      : options && 'exclude' in options
+        ? regexpPattern(options.exclude)
+        : /\/node_modules\//;
+  return (
+    (!includes || includes.test(filename)) &&
+    !(excludes && excludes.test(filename))
+  );
 }
 
 // Given a null | string | RegExp | any, returns null | Regexp or throws a
@@ -62,6 +69,8 @@ function regexpPattern(pattern) {
     return pattern;
   }
   throw new Error(
-    'flow-remove-types: includes and excludes must be RegExp or path strings. Got: ' + pattern
+    'flow-remove-types: ' +
+      'includes and excludes must be RegExp or path strings. Got: ' +
+      pattern
   );
 }

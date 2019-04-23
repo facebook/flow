@@ -1,4 +1,5 @@
 /* @flow */
+// @nolint
 
 // Regular import
 import {

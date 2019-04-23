@@ -1,4 +1,5 @@
 /*  */
+// @nolint
 
 // Regular import
 import {
