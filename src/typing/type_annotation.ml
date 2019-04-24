@@ -1367,14 +1367,17 @@ and mk_func_sig =
     Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
     let fparams, params_ast = convert_params cx tparams_map func.Ast.Type.Function.params in
     let (_, return_t), _ as return_ast = convert cx tparams_map func.return in
+    let reason = mk_reason RFunctionType loc in
+    let knot = Tvar.mk cx reason in
     { Func_sig.
-      reason = mk_reason RFunctionType loc;
+      reason;
       kind = Func_sig.Ordinary;
       tparams;
       tparams_map;
       fparams;
       body = None;
       return_t;
+      knot;
     }, { Ast.Type.Function.
       tparams = tparams_ast;
       params = params_ast;

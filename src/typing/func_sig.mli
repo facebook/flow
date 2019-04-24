@@ -23,6 +23,7 @@ type t = {
   fparams: Func_params.t;
   body: (ALoc.t, ALoc.t) Flow_ast.Function.body option;
   return_t: Type.t;
+  knot: Type.t;
 }
 
 (** 1. Constructors *)

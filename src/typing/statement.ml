@@ -6690,7 +6690,8 @@ and mk_func_sig =
           fst (Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc)),
           Some (Tast_utils.error_mapper#type_predicate pred)
     ) in
-    {Func_sig.reason; kind; tparams; tparams_map; fparams; body; return_t},
+    let knot = Tvar.mk cx reason in
+    {Func_sig.reason; kind; tparams; tparams_map; fparams; body; return_t; knot},
     (fun body fun_type -> { func with Ast.Function.
       id = Option.map ~f:(fun (id_loc, name) -> (id_loc, fun_type), map_ident_new_type fun_type name) id;
       params;

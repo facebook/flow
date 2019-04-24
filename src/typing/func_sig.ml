@@ -29,6 +29,8 @@ type t = {
   fparams: Func_params.t;
   body: (ALoc.t, ALoc.t) Ast.Function.body option;
   return_t: Type.t;
+  (* To be unified with the type of the function. *)
+  knot: Type.t;
 }
 
 let return_loc = function
@@ -48,6 +50,9 @@ let default_constructor reason = {
   fparams = Func_params.empty;
   body = None;
   return_t = VoidT.why reason |> with_trust bogus_trust;
+  (* This can't be directly recursively called. In case this type is accidentally used downstream,
+   * stub it out with mixed. *)
+  knot = MixedT.why reason |> with_trust bogus_trust;
 }
 
 let field_initializer tparams_map reason expr return_t = {
@@ -58,6 +63,9 @@ let field_initializer tparams_map reason expr return_t = {
   fparams = Func_params.empty;
   body = None;
   return_t;
+  (* This can't be recursively called. In case this type is accidentally used downstream, stub it
+   * out with mixed. *)
+  knot = MixedT.why reason |> with_trust bogus_trust;
 }
 
 let subst cx map x =
@@ -86,9 +94,8 @@ let generate_tests cx f x =
     return_t = Flow.subst cx map return_t;
   })
 
-let functiontype cx this_t {reason; kind; tparams; fparams; return_t; _} =
+let functiontype cx this_t {reason; kind; tparams; fparams; return_t; knot; _} =
   let make_trust = Context.trust_constructor cx in
-  let knot = Tvar.mk cx reason in
   let static =
     let proto = FunProtoT reason in
     Obj_type.mk_with_proto cx reason ~call:knot proto
@@ -133,7 +140,7 @@ let settertype {fparams; _} =
   | _ -> failwith "Setter property with unexpected type"
 
 let toplevels id cx this super ~decls ~stmts ~expr
-  {reason=reason_fn; kind; tparams_map; fparams; body; return_t; _} =
+  {reason=reason_fn; kind; tparams_map; fparams; body; return_t; knot; _} =
 
   let loc = Ast.Function.(match body with
   | Some (BodyBlock (loc, _)) -> loc
@@ -205,7 +212,7 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
   (* early-add our own name binding for recursive calls. *)
   Option.iter id ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) ->
-    let entry = EmptyT.at loc |> with_trust bogus_trust |> Scope.Entry.new_var ~loc in
+    let entry = knot |> Scope.Entry.new_var ~loc in
     Scope.add_entry name entry function_scope
   );
 

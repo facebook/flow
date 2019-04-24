@@ -484,6 +484,20 @@ References:
                   ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ issue-7529.js:4:7
+
+Cannot call `foo` with `123` bound to `x` because number [1] is incompatible with string [2].
+
+   issue-7529.js:4:7
+   4|   foo(123);
+            ^^^ [1]
+
+References:
+   issue-7529.js:3:29
+   3| const bar = function foo(x: string) {
+                                  ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------------- rest.js:36:10
 
 Cannot call `xs.pop` because property `pop` is missing in `T` [1].
@@ -613,4 +627,4 @@ References:
 
 
 
-Found 45 errors
+Found 46 errors
