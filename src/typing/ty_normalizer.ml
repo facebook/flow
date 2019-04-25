@@ -1505,12 +1505,12 @@ end = struct
     | T.RestType (T.Object.Rest.IgnoreExactAndOwn, t') ->
       type__ ~env t' >>| fun ty' -> Ty.Utility (Ty.Diff (ty, ty'))
     | T.SpreadType (target, ts) -> spread ~env ty target ts
-    | T.ReactElementPropsType -> return (generic_builtin_t "React$ElementProps" [ty])
-    | T.ReactElementConfigType -> return (generic_builtin_t "React$ElementConfig" [ty])
-    | T.ReactElementRefType -> return (generic_builtin_t "React$ElementRef" [ty])
+    | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
+    | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
+    | T.ReactElementRefType -> return (Ty.Utility (Ty.ReactElementRefType ty))
     | T.ReactConfigType default_props ->
         type__ ~env default_props >>| fun default_props' ->
-          generic_builtin_t "React$Config" [ty; default_props']
+        Ty.Utility (Ty.ReactConfigType (ty, default_props'))
     | T.RestType (T.Object.Rest.ReactConfigMerge _, _)
     | T.Bind _ as d ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None

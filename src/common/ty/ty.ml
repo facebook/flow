@@ -139,8 +139,8 @@ and type_param = {
 
 and opt = bool
 
-(* https://flow.org/en/docs/types/utilities/ *)
 and utility =
+  (* https://flow.org/en/docs/types/utilities/ *)
   | Keys of t
   | Values of t
   | ReadOnly of t
@@ -159,6 +159,11 @@ and utility =
   | Supertype of t
   | Subtype of t
   | Exists
+  (* React utils *)
+  | ReactElementPropsType of t
+  | ReactElementConfigType of t
+  | ReactElementRefType of t
+  | ReactConfigType of t * t
 
 and polarity = Positive | Negative | Neutral
 [@@deriving visitors {
@@ -303,6 +308,10 @@ let string_of_utility_ctor = function
   | Supertype _ -> "$Supertype"
   | Subtype _ -> "$Subtype"
   | Exists -> "*"
+  | ReactElementPropsType _ -> "React$ElementProps"
+  | ReactElementConfigType _ -> "React$ElementConfig"
+  | ReactElementRefType _ -> "React$ElementRef"
+  | ReactConfigType _  -> "React$Config"
 
 let types_of_utility = function
   | Keys t -> Some [t]
@@ -323,3 +332,7 @@ let types_of_utility = function
   | Supertype t -> Some [t]
   | Subtype t -> Some [t]
   | Exists -> None
+  | ReactElementPropsType t -> Some [t]
+  | ReactElementConfigType t -> Some [t]
+  | ReactElementRefType t -> Some [t]
+  | ReactConfigType (t1, t2) -> Some [t1; t2]
