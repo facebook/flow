@@ -59,7 +59,7 @@ and upper_bound_kind =
    *)
   | SomeKnownUpper of t
   (* If the above case fails we resort to this last case. *)
-  | SomeUnknownUpper
+  | SomeUnknownUpper of string
 
 and bot_kind =
   (* Type.Empty *)

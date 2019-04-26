@@ -174,7 +174,7 @@ module BotSensitiveQueries: TopAndBotQueries = struct
   let is_bot_upper_kind = function
     | Ty.NoUpper -> true
     | Ty.SomeKnownUpper _
-    | Ty.SomeUnknownUpper -> false
+    | Ty.SomeUnknownUpper _ -> false
 
   let is_bot_kind = function
     | Ty.EmptyType -> true

@@ -17,7 +17,7 @@ let cut_off ?(limit=1000) str =
 let dump_bot_upper_bound_kind = function
   | NoUpper -> "NoUpper"
   | SomeKnownUpper _ -> "SomeKnownUpper"
-  | SomeUnknownUpper -> "SomeUnknownUpper"
+  | SomeUnknownUpper u -> spf "SomeUnknownUpper (%s)" u
 
 let dump_bot_kind = function
   | EmptyType -> "EmptyType"

@@ -1552,14 +1552,14 @@ end = struct
         uses_t_aux ~env (t::acc) rest
       | T.ReposLowerT (_, _, u)::rest ->
         uses_t_aux ~env acc (u::rest)
-      | _ ->
-        return Ty.SomeUnknownUpper
+      | u::_ ->
+        return (Ty.SomeUnknownUpper (T.string_of_use_ctor u))
     in
     fun ~env uses -> uses_t_aux ~env [] uses
 
   and merged_t ~env uses =
     uses_t ~env uses >>= function
-    | Ty.SomeUnknownUpper ->
+    | Ty.SomeUnknownUpper _ ->
       (* un-normalizable *)
       terr ~kind:BadUse None
     | Ty.NoUpper ->
