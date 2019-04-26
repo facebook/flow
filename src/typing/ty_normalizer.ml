@@ -1552,6 +1552,9 @@ end = struct
         uses_t_aux ~env (t::acc) rest
       | T.ReposLowerT (_, _, u)::rest ->
         uses_t_aux ~env acc (u::rest)
+      (* skip these *)
+      | T.CJSExtractNamedExportsT _::rest ->
+        uses_t_aux ~env acc rest
       | u::_ ->
         return (Ty.SomeUnknownUpper (T.string_of_use_ctor u))
     in
