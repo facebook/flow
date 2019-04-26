@@ -1501,6 +1501,40 @@ let jsx_tag env lexbuf =
     let buf = Buffer.create 127 in
     let env, end_pos = comment env buf lexbuf in
     Comment (env, mk_comment env start_pos end_pos buf true)
+  
+  | "/*", Star whitespace, (":" | "::" | "flow-include") ->
+    let pattern = lexeme lexbuf in
+    if not (is_comment_syntax_enabled env) then
+      let start_pos = start_pos_of_lexbuf env lexbuf in
+      let buf = Buffer.create 127 in
+      Buffer.add_string buf (String.sub pattern 2 (String.length pattern - 2));
+      let env, end_pos = comment env buf lexbuf in
+      Comment (env, mk_comment env start_pos end_pos buf true)
+    else
+      let env =
+        if is_in_comment_syntax env then
+          let loc = loc_of_lexbuf env lexbuf in
+          unexpected_error env loc pattern
+        else env
+      in
+      let env = in_comment_syntax true env in
+      let len = Sedlexing.lexeme_length lexbuf in
+      if Sedlexing.Utf8.sub_lexeme lexbuf (len - 1) 1 = ":" &&
+         Sedlexing.Utf8.sub_lexeme lexbuf (len - 2) 1 <> ":" then
+        Token (env, T_COLON)
+      else
+        Continue env
+
+  | "*/" ->
+    if is_in_comment_syntax env then
+      let env = in_comment_syntax false env in
+      Continue env
+    else begin
+      Sedlexing.rollback lexbuf;
+      match%sedlex lexbuf with
+      | "*" -> Token (env, T_MULT)
+      | _ -> failwith "expected *"
+    end
 
   | '<' -> Token (env, T_LESS_THAN)
   | '/' -> Token (env, T_DIV)
