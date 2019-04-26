@@ -5685,6 +5685,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* FunT ~> ObjT *)
 
+    (* Previously, call properties were stored in the props map, and were
+       checked against dictionary upper bounds. This is wrong, but useful for
+       distinguishing between thunk-like types found in graphql-js.
+
+       Now that call properties are stored separately, it is particularly
+       egregious to emit this constraint. This only serves to maintain buggy
+       behavior, which should be fixed, and this code removed. *)
+    | DefT (lreason, _, FunT _),
+      UseT (use_op, DefT (ureason, _, ObjT { dict_t = Some udict; _ })) ->
+      let { value; dict_polarity; _ } = udict in
+      let lit = is_literal_object_reason lreason in
+      let s = "$call" in
+      let use_op = Frame (PropertyCompatibility {
+        prop = Some s;
+        lower = lreason;
+        upper = ureason;
+        is_sentinel = false;
+      }, use_op) in
+      let lp = Field (None, l, Positive) in
+      let up = Field (None, value, dict_polarity) in
+      if lit
+      then
+        match Property.read_t lp, Property.read_t up with
+        | Some lt, Some ut -> rec_flow cx trace (lt, UseT (use_op, ut))
+        | _ -> ()
+      else
+        let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
+        let propref = Named (reason_prop, s) in
+        rec_flow_p cx trace ~use_op lreason ureason propref (lp, up)
+
     (* TODO: This rule doesn't interact very well with union-type checking. It
        looks up Function.prototype, which currently doesn't appear structurally
        in the function type, and thus may not be fully resolved when the
