@@ -5683,6 +5683,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* You can use a function as a callable object *)
     (***********************************************)
 
+    | DefT (_, _, FunT _), UseT (use_op, DefT (_, _, (
+        ObjT {call_t = Some id; _} |
+        InstanceT (_, _, _, {inst_call_t = Some id; _})
+      ))) ->
+      let t = Context.find_call cx id in
+      rec_flow cx trace (l, UseT (use_op, t))
+
     (* FunT ~> ObjT *)
 
     (* Previously, call properties were stored in the props map, and were

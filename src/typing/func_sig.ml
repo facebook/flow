@@ -98,7 +98,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; knot; _} =
   let make_trust = Context.trust_constructor cx in
   let static =
     let proto = FunProtoT reason in
-    Obj_type.mk_with_proto cx reason ~call:knot proto
+    Obj_type.mk_with_proto cx reason proto
   in
   let prototype =
     let reason = replace_reason_const RPrototype reason in
