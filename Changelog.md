@@ -1,3 +1,46 @@
+### 0.98.0
+
+Likely to cause new Flow errors:
+
+* Infer `void` before typechecking starts for functions without a `return` statement, lessening the impact of a union typechecking bug (#7322).
+* Fix a bug which prevented Flow from asking for required type annotations.
+* Turn the `deprecated-utility` lint on by default.
+* Two related changes to type refinements to fix unsoundness:
+  * `mixed` refined to an array produces a read-only array.
+  * `mixed` refined to an object produces a read-only object.
+
+New Features:
+
+* Add the ability to exclude paths included by a previous pattern in a `.flowconfig` (#7317).
+
+Notable bug fixes:
+
+* Fix a bug that led IDEs to report all code as uncovered (#7654).
+* Fix the `untyped-import` lint rule so that `export [type] * from` triggers it.
+* Flow now recognizes refinements against negative number literals.
+
+Misc:
+
+* Exclude `deprecated-utility` and `dynamic-export` lints when applying all=setting rules (#7473).
+* Improve client/server version mismatch behavior so that the newest of the two is preserved, rather than the client version.
+* Preserve exactness of the input type when using `$ObjMap` or `$ObjMapi` (#7642).
+* Minor changes to metadata in the results of `flow type-at-pos --json`.
+* Batch `DidOpen` notifications from the IDE in order to make checking in IDE lazy mode more efficient.
+* When `flow lsp` automatically starts a server, it prefers the lazy mode set in a `.flowconfig` to the lazy mode passed on the CLI.
+* Allow lints to be explicitly set to their defaults (normally redundant lint settings are disallowed).
+* Fix spurious missing annotation errors when the `this` type is used incorrectly.
+* Fix a bug that made `React.Element` behave differently than `React$Element`.
+* Fix an edge case where object property assignments were typechecked incorrectly (#7618).
+* Fix an unsoundness with addition or logical operators when combined with generics (#6671, #7070).
+* Fix an issue which allowed read-only arrays to be written to if the index was of type `any`.
+* Fix a bug which stymied typechecking after try/catch blocks (#7530).
+
+Libdefs:
+
+* Add `document.elementsFromPoint()` (#7540).
+* Add `ConstantSourceNode` (#7543).
+* Remove `React.Suspense` `maxDuration` attribute (#7613).
+
 ### 0.97.0
 
 Likely to cause new Flow errors:
