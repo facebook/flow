@@ -221,13 +221,12 @@ end = struct
 
   let empty_type = Ty.Bot Ty.EmptyType
   let empty_matching_prop_t = Ty.Bot Ty.EmptyMatchingPropT
-  let empty_type_destructor_trigger_t = Ty.Bot Ty.EmptyTypeDestructorTriggerT
 
   let mk_empty bot_kind =
     match bot_kind with
     | Ty.EmptyType -> empty_type
     | Ty.EmptyMatchingPropT -> empty_matching_prop_t
-    | Ty.EmptyTypeDestructorTriggerT -> empty_type_destructor_trigger_t
+    | Ty.EmptyTypeDestructorTriggerT _
     | Ty.NoLowerWithUpper _ -> Ty.Bot bot_kind
 
 
@@ -654,7 +653,9 @@ end = struct
     | ShapeT t ->
       type__ ~env t >>| fun t ->
       Ty.Utility (Ty.Shape t)
-    | TypeDestructorTriggerT _ -> return (mk_empty Ty.EmptyTypeDestructorTriggerT)
+    | TypeDestructorTriggerT (_, r, _, _, _) ->
+      let loc = Reason.def_aloc_of_reason r in
+      return (mk_empty (Ty.EmptyTypeDestructorTriggerT loc))
     | MergedT (_, uses) -> merged_t ~env uses
     | ExistsT _ -> return (Ty.Utility Ty.Exists)
     | ObjProtoT _ -> return (Ty.TypeOf (["Object"], "prototype"))

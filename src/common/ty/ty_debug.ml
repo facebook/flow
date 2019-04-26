@@ -22,7 +22,7 @@ let dump_bot_upper_bound_kind = function
 let dump_bot_kind = function
   | EmptyType -> "EmptyType"
   | EmptyMatchingPropT -> "EmptyMatchingPropT"
-  | EmptyTypeDestructorTriggerT -> "EmptyTypeDestructorTriggerT"
+  | EmptyTypeDestructorTriggerT _ -> "EmptyTypeDestructorTriggerT"
   | NoLowerWithUpper u -> spf "NoLowerWithUpper (%s)" (dump_bot_upper_bound_kind u)
 
 let rec dump_opt (f: 'a -> string) (o: 'a option) = match o with

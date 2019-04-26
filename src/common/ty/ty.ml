@@ -67,7 +67,7 @@ and bot_kind =
   (* Type.MatchingPropT *)
   | EmptyMatchingPropT
   (* Type.TypeDestructorTriggerT *)
-  | EmptyTypeDestructorTriggerT
+  | EmptyTypeDestructorTriggerT of aloc
   (* A tvar with no lower bounds *)
   | NoLowerWithUpper of upper_bound_kind
 
