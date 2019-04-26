@@ -1162,7 +1162,101 @@ export default suite(({addFile, flowCmd}) => [
     ).stdout(
        `
          {
-           "result": []
+           "result": [
+             {
+               "name": "hasOwnProperty",
+               "type": "(prop: any) => boolean",
+               "func_details": {
+                 "return_type": "boolean",
+                 "params": [
+                   {
+                     "name": "prop",
+                     "type": "any"
+                   }
+                 ]
+               },
+               "path": "[LIB] core.js",
+               "line": 66,
+               "endline": 66,
+               "start": 5,
+               "end": 38
+             },
+             {
+               "name": "isPrototypeOf",
+               "type": "(o: any) => boolean",
+               "func_details": {
+                 "return_type": "boolean",
+                 "params": [
+                   {
+                     "name": "o",
+                     "type": "any"
+                   }
+                 ]
+               },
+               "path": "[LIB] core.js",
+               "line": 67,
+               "endline": 67,
+               "start": 5,
+               "end": 34
+             },
+             {
+               "name": "propertyIsEnumerable",
+               "type": "(prop: any) => boolean",
+               "func_details": {
+                 "return_type": "boolean",
+                 "params": [
+                   {
+                     "name": "prop",
+                     "type": "any"
+                   }
+                 ]
+               },
+               "path": "[LIB] core.js",
+               "line": 68,
+               "endline": 68,
+               "start": 5,
+               "end": 44
+             },
+             {
+               "name": "toLocaleString",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 69,
+               "endline": 69,
+               "start": 5,
+               "end": 28
+             },
+             {
+               "name": "toString",
+               "type": "() => string",
+               "func_details": {
+                 "return_type": "string",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 70,
+               "endline": 70,
+               "start": 5,
+               "end": 22
+             },
+             {
+               "name": "valueOf",
+               "type": "() => mixed",
+               "func_details": {
+                 "return_type": "mixed",
+                 "params": []
+               },
+               "path": "[LIB] core.js",
+               "line": 71,
+               "endline": 71,
+               "start": 5,
+               "end": 20
+             }
+           ]
          }
        `,
      ).exitCodes([0]),

@@ -905,9 +905,14 @@ let rec convert cx tparams_map = Ast.Type.(function
   | None -> None, None in
 
   let (_, return_t), _ as return_ast = convert cx tparams_map return in
+  let statics_t =
+    let reason = replace_reason (fun d -> RStatics d) reason in
+    Obj_type.mk_with_proto cx reason (FunProtoT reason)
+      ~sealed:true ~exact:false ?call:None
+  in
   let ft =
     DefT (reason, annot_trust (), FunT (
-      dummy_static reason,
+      statics_t,
       mk_reason RPrototype loc |> Unsoundness.function_proto_any,
       {
         this_t = bound_function_dummy_this;
@@ -921,7 +926,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       }))
   in
   let id = Context.make_nominal cx in
-  (loc, poly_type_of_tparams id tparams ft),
+  let t = poly_type_of_tparams id tparams ft in
+  (loc, t),
   Function {
     Function.params = (params_loc, {
       Function.Params.params = List.rev rev_param_asts;
