@@ -13,7 +13,10 @@ open Parser_env
 open Flow_ast
 module Error = Parse_error
 
-module JSX (Parse: Parser_common.PARSER) = struct
+module JSX 
+  (Parse: Parser_common.PARSER)
+  (Type: Type_parser.TYPE)
+= struct
   let spread_attribute env =
     Eat.push_lex_mode env Lex_mode.NORMAL;
     let start_loc = Peek.loc env in
@@ -160,6 +163,42 @@ module JSX (Parse: Parser_common.PARSER) = struct
       value;
     })
 
+    let type_parameter_instantiation =
+      let jsx_identifier env name =
+        begin match Peek.token env with
+        | Token.T_JSX_IDENTIFIER { raw; _ } when raw = name -> ()
+        | _ -> error_unexpected env
+        end;
+        Eat.token env
+      in
+      let args env acc =
+        let rec args_helper env acc =
+          match Peek.token env with
+        | T_EOF
+        | T_GREATER_THAN -> List.rev acc
+        | _ ->
+            let t = match Peek.token env with
+            | T_JSX_IDENTIFIER {raw = "_"; _} ->
+                let loc = Peek.loc env in
+                jsx_identifier env "_";
+                Expression.TypeParameterInstantiation.Implicit loc
+            | _ -> Expression.TypeParameterInstantiation.Explicit(Type._type env)
+            in
+            let acc = t::acc in
+            if Peek.token env <> T_GREATER_THAN
+            then Expect.token env T_COMMA;
+            args_helper env acc
+        in args_helper env acc
+
+      in fun env -> if Peek.token env = T_LESS_THAN then
+        Some (with_loc (fun env ->
+          Expect.token env T_LESS_THAN;
+          let args = args env [] in
+          Expect.token env T_GREATER_THAN;
+          args
+        ) env)
+      else None
+
     let opening_element_without_lt =
       let rec attributes env acc =
         match Peek.token env with
@@ -174,14 +213,27 @@ module JSX (Parse: Parser_common.PARSER) = struct
             attributes env (attribute::acc)
 
       in fun env start_loc ->
-        let (name, attributes, selfClosing) = match Peek.token env with
+        let (name, targs, attributes, selfClosing) = match Peek.token env with
           | T_GREATER_THAN ->
-            (None, [], false)
+            (None, None, [], false)
           | _ ->
             let name = Some (name env) in
+            let targs = match Peek.token env with
+              | T_LESS_THAN when should_parse_types env ->
+                (* If we are parsing types, then f<T>(e) is a function call with a
+                  type application. If we aren't, it's a nested binary expression. *)
+                let error_callback _ _ = raise Try.Rollback in
+                let env = env |> with_error_callback error_callback in
+                (* Parameterized call syntax is ambiguous, so we fall back to
+                  standard parsing if it fails. *)
+                Try.or_else env ~fallback:None (fun env ->
+                  type_parameter_instantiation env
+                )
+              | _ -> None 
+            in
             let attributes = attributes env [] in
             let selfClosing = Peek.token env = T_DIV in
-            (name, attributes, selfClosing) in
+            (name, targs, attributes, selfClosing) in
         if selfClosing then Expect.token env T_DIV;
         let end_loc = Peek.loc env in
         Expect.token env T_GREATER_THAN;
@@ -190,6 +242,7 @@ module JSX (Parse: Parser_common.PARSER) = struct
         | Some name ->
           Loc.btwn start_loc end_loc, `Element JSX.Opening.({
             name;
+            targs;
             selfClosing;
             attributes;
           })
