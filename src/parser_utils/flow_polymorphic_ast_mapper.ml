@@ -960,10 +960,11 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method jsx_opening_element (elem: ('M, 'T) Ast.JSX.Opening.t) : ('N, 'U) Ast.JSX.Opening.t =
     let open Ast.JSX.Opening in
-    let annot, { name; selfClosing; attributes } = elem in
+    let annot, { name; targs; selfClosing; attributes } = elem in
     let name' = this#jsx_name name in
     let attributes' = Core_list.map ~f:this#jsx_opening_attribute attributes in
-    this#on_loc_annot annot, { name = name'; selfClosing; attributes = attributes' }
+    let targs' = Option.map ~f:this#type_parameter_instantiation_with_implicit targs in
+    this#on_loc_annot annot, { name = name'; targs = targs'; selfClosing; attributes = attributes' }
 
   method jsx_closing_element (elem: ('M, 'T) Ast.JSX.Closing.t) : ('N, 'U) Ast.JSX.Closing.t =
     let open Ast.JSX.Closing in
