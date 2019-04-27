@@ -1354,9 +1354,10 @@ end with type t = Impl.t) = struct
         "closingFragment", jsx_closing_fragment frag_closingElement
       ]
 
-    and jsx_opening (loc, { JSX.Opening.name; attributes; selfClosing }) =
+    and jsx_opening (loc, { JSX.Opening.name; targs; attributes; selfClosing }) =
       node "JSXOpeningElement" loc [
         "name", jsx_name name;
+        "typeArguments", option type_parameter_instantiation_with_implicit targs;
         "attributes", array_of_list jsx_opening_attribute attributes;
         "selfClosing", bool selfClosing;
       ]
