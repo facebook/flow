@@ -41,7 +41,7 @@ module rec Parse : PARSER = struct
   module Object = Object_parser.Object (Parse) (Type) (Declaration) (Expression) (Pattern_cover)
   module Statement = Statement_parser.Statement (Parse) (Type) (Declaration) (Object) (Pattern_cover)
   module Pattern = Pattern_parser.Pattern (Parse) (Type)
-  module JSX = Jsx_parser.JSX (Parse)
+  module JSX = Jsx_parser.JSX (Parse) (Type)
 
   let rec program env =
     let stmts = module_body_with_directives env (fun _ -> false) in
