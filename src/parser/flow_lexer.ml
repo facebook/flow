@@ -1508,6 +1508,7 @@ let jsx_tag env lexbuf =
   | '{' -> Token (env, T_LCURLY)
   | ':' -> Token (env, T_COLON)
   | '.' -> Token (env, T_PERIOD)
+  | ',' -> Token (env, T_COMMA)
   | '=' -> Token (env, T_ASSIGN)
   | js_id_start, Star ('-' | js_id_continue) ->
     Token (env, T_JSX_IDENTIFIER { raw = lexeme lexbuf })
