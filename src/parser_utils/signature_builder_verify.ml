@@ -365,7 +365,7 @@ module Eval(Env: EvalEnv) = struct
       | loc, JSXElement e ->
         let open Ast.JSX in
         let { openingElement; closingElement = _; children = _ } = e in
-        let _loc, { Opening.name; selfClosing = _; attributes = _ } = openingElement in
+        let _loc, { Opening.name; targs = _; selfClosing = _; attributes = _ } = openingElement in
         begin match name, Env.facebook_fbt with
           | Ast.JSX.Identifier (_loc_id, { Identifier.name = "fbt"}), Some _ -> Deps.bot
           | _ -> Deps.top (Error.UnexpectedExpression (loc, Ast_utils.ExpressionSort.JSXElement))

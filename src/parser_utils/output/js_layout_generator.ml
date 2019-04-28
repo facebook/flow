@@ -1754,7 +1754,7 @@ and jsx_opening_attr = function
   | Ast.JSX.Opening.Attribute attr -> jsx_attribute attr
   | Ast.JSX.Opening.SpreadAttribute attr -> jsx_spread_attribute attr
 
-and jsx_opening (loc, { Ast.JSX.Opening.name; attributes; selfClosing=_ }) =
+and jsx_opening (loc, { Ast.JSX.Opening.name; attributes; selfClosing=_; _ }) =
   jsx_opening_helper loc (Some name) attributes
 
 and jsx_fragment_opening loc =
@@ -1776,7 +1776,7 @@ and jsx_opening_helper loc nameOpt attributes =
   ])
 
 and jsx_self_closing (loc, { Ast.JSX.Opening.
-  name; attributes; selfClosing=_
+  name; attributes; selfClosing=_; _
 }) =
   let attributes = Core_list.map ~f:jsx_opening_attr attributes in
   source_location_with_comments (loc, group [
