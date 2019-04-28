@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":9}},
-  "range":[0,21],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":3,"column":12}},
+  "range":[0,34],
   "body":[
     {
       "type":"ExpressionStatement",
@@ -92,6 +92,67 @@
                   "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
                   "range":[15,16],
                   "name":"T",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            ]
+          },
+          "attributes":[],
+          "selfClosing":true
+        },
+        "closingElement":null,
+        "children":[]
+      },
+      "directive":null
+    },
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":12}},
+      "range":[22,34],
+      "expression":{
+        "type":"JSXElement",
+        "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":11}},
+        "range":[22,33],
+        "openingElement":{
+          "type":"JSXOpeningElement",
+          "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":11}},
+          "range":[22,33],
+          "name":{
+            "type":"JSXIdentifier",
+            "loc":{"source":null,"start":{"line":3,"column":1},"end":{"line":3,"column":2}},
+            "range":[23,24],
+            "name":"M"
+          },
+          "typeArguments":{
+            "type":"TypeParameterInstantiation",
+            "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":8}},
+            "range":[24,30],
+            "params":[
+              {
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":4}},
+                "range":[25,26],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":3,"column":3},"end":{"line":3,"column":4}},
+                  "range":[25,26],
+                  "name":"T",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              },
+              {
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":7}},
+                "range":[28,29],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":3,"column":6},"end":{"line":3,"column":7}},
+                  "range":[28,29],
+                  "name":"U",
                   "typeAnnotation":null,
                   "optional":false
                 },
