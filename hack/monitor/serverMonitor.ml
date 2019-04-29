@@ -517,7 +517,7 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
       | _ -> false in
     let is_heap_stale = match exit_status with
       | Some c
-          when c = Exit_status.(exit_code File_heap_stale) ||
+          when c = Exit_status.(exit_code File_provider_stale) ||
                c = Exit_status.(exit_code Decl_not_found) -> true
       | _ -> false in
     let is_sql_assertion_failure = match exit_status with

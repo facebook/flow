@@ -47,7 +47,7 @@ type t =
    *)
   | Watchman_fresh_instance
   | Watchman_invalid_result
-  | File_heap_stale
+  | File_provider_stale
   | Hhconfig_deleted
   | Hhconfig_changed
   | Server_shutting_down
@@ -133,7 +133,7 @@ let exit_code = function
   | Lazy_decl_bug ->                208
   | Decl_heap_elems_bug ->          209
   | Parser_heap_build_error ->      210
-  | File_heap_stale ->              211
+  | File_provider_stale ->          211
   | Sql_assertion_failure ->        212
   | Local_type_env_stale ->         213
   | Sql_cantopen ->                 214
@@ -202,7 +202,7 @@ let to_string = function
   | Decl_heap_elems_bug -> "Decl_heap_elems_bug"
   | Parser_heap_build_error -> "Parser_heap_build_error"
   | Heap_full -> "Heap_full"
-  | File_heap_stale -> "File_heap_stale"
+  | File_provider_stale -> "File_provider_stale"
   | Sql_assertion_failure -> "Sql_assertion_failure"
   | Local_type_env_stale -> "Local_type_env_stale"
   | Sql_cantopen -> "Sql_cantopen"
