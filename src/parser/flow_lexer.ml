@@ -1532,7 +1532,7 @@ let jsx_tag env lexbuf =
     else begin
       Sedlexing.rollback lexbuf;
       match%sedlex lexbuf with
-      | "*" -> Token (env, T_MULT)
+      | "*" -> Token (env, T_ERROR (lexeme lexbuf))
       | _ -> failwith "expected *"
     end
 
