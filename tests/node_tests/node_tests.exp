@@ -1477,6 +1477,125 @@ References:
                        ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:10:1
+
+Cannot call `process.emitWarning` because:
+ - Either undefined [1] is incompatible with string [2].
+ - Or undefined [1] is incompatible with `Error` [3].
+ - Or function type [4] requires another argument from call of method `emitWarning` [1].
+ - Or function type [5] requires another argument from call of method `emitWarning` [1].
+ - Or function type [6] requires another argument from call of method `emitWarning` [1].
+
+   process/emitWarning.js:10:1
+     10| process.emitWarning(); // error
+         ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/node.js:2330:24
+   2330|   emitWarning(warning: string | Error): void;
+                                ^^^^^^ [2]
+   <BUILTINS>/node.js:2330:33
+   2330|   emitWarning(warning: string | Error): void;
+                                         ^^^^^ [3]
+   <BUILTINS>/node.js:2331:3
+   2331|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/node.js:2332:3
+   2332|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/node.js:2333:3
+           v-----------
+   2333|   emitWarning(
+   2334|     warning: string,
+   2335|     type: string,
+   2336|     code: string,
+   2337|     ctor?: (...empty) => mixed
+   2338|   ): void;
+           ------^ [6]
+
+
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:11:1
+
+Cannot call `process.emitWarning` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
+ - Or number [1] is incompatible with string [4].
+
+   process/emitWarning.js:11:1
+     11| process.emitWarning(42); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   process/emitWarning.js:11:21
+     11| process.emitWarning(42); // error
+                             ^^ [1]
+   <BUILTINS>/node.js:2331:24
+   2331|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+                                ^^^^^^ [2]
+   <BUILTINS>/node.js:2332:24
+   2332|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+                                ^^^^^^ [3]
+   <BUILTINS>/node.js:2334:14
+   2334|     warning: string,
+                      ^^^^^^ [4]
+
+
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:12:1
+
+Cannot call `process.emitWarning` because:
+ - Either number [1] is incompatible with string [2].
+ - Or number [1] is incompatible with string [3].
+
+   process/emitWarning.js:12:1
+     12| process.emitWarning("blah", 42); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   process/emitWarning.js:12:29
+     12| process.emitWarning("blah", 42); // error
+                                     ^^ [1]
+   <BUILTINS>/node.js:2332:38
+   2332|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+                                              ^^^^^^ [2]
+   <BUILTINS>/node.js:2335:11
+   2335|     type: string,
+                   ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:13:1
+
+Cannot call `process.emitWarning` because number [1] is incompatible with string [2].
+
+   process/emitWarning.js:13:1
+     13| process.emitWarning("blah", "blah", 42); // error
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   process/emitWarning.js:13:37
+     13| process.emitWarning("blah", "blah", 42); // error
+                                             ^^ [1]
+   <BUILTINS>/node.js:2336:11
+   2336|     code: string,
+                   ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------- process/emitWarning.js:14:2
+
+Cannot cast `process.emitWarning(...)` to string because undefined [1] is incompatible with string [2].
+
+   process/emitWarning.js:14:2
+     14| (process.emitWarning("blah"): string); // error
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/node.js:2330:41
+   2330|   emitWarning(warning: string | Error): void;
+                                                 ^^^^ [1]
+   process/emitWarning.js:14:31
+     14| (process.emitWarning("blah"): string); // error
+                                       ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- process/nextTick.js:12:1
 
 Cannot call `process.nextTick` because:
@@ -1546,128 +1665,26 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2357:21
-   2357|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:2358:21
+   2358|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------ process/process.js:10:1
+Error ------------------------------------------------------------------------------------------- process/process.js:5:2
 
-Cannot call `process.emitWarning` because:
- - Either undefined [1] is incompatible with string [2].
- - Or undefined [1] is incompatible with `Error` [3].
- - Or function type [4] requires another argument from call of method `emitWarning` [1].
- - Or function type [5] requires another argument from call of method `emitWarning` [1].
- - Or function type [6] requires another argument from call of method `emitWarning` [1].
+Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is incompatible with string [2].
 
-   process/process.js:10:1
-     10| process.emitWarning(); // error
-         ^^^^^^^^^^^^^^^^^^^^^ [1]
+   process/process.js:5:2
+      5| (process.allowedNodeEnvironmentFlags: string); // error
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2329:24
-   2329|   emitWarning(warning: string | Error): void;
-                                ^^^^^^ [2]
-   <BUILTINS>/node.js:2329:33
-   2329|   emitWarning(warning: string | Error): void;
-                                         ^^^^^ [3]
-   <BUILTINS>/node.js:2330:3
-   2330|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2331:3
-   2331|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:2332:3
-           v-----------
-   2332|   emitWarning(
-   2333|     warning: string,
-   2334|     type: string,
-   2335|     code: string,
-   2336|     ctor?: (...empty) => mixed
-   2337|   ): void;
-           ------^ [6]
-
-
-Error ------------------------------------------------------------------------------------------ process/process.js:11:1
-
-Cannot call `process.emitWarning` because:
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with string [3].
- - Or number [1] is incompatible with string [4].
-
-   process/process.js:11:1
-     11| process.emitWarning(42); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   process/process.js:11:21
-     11| process.emitWarning(42); // error
-                             ^^ [1]
-   <BUILTINS>/node.js:2330:24
-   2330|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
-                                ^^^^^^ [2]
-   <BUILTINS>/node.js:2331:24
-   2331|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
-                                ^^^^^^ [3]
-   <BUILTINS>/node.js:2333:14
-   2333|     warning: string,
-                      ^^^^^^ [4]
-
-
-Error ------------------------------------------------------------------------------------------ process/process.js:12:1
-
-Cannot call `process.emitWarning` because:
- - Either number [1] is incompatible with string [2].
- - Or number [1] is incompatible with string [3].
-
-   process/process.js:12:1
-     12| process.emitWarning("blah", 42); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   process/process.js:12:29
-     12| process.emitWarning("blah", 42); // error
-                                     ^^ [1]
-   <BUILTINS>/node.js:2331:38
-   2331|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
-                                              ^^^^^^ [2]
-   <BUILTINS>/node.js:2334:11
-   2334|     type: string,
-                   ^^^^^^ [3]
-
-
-Error ------------------------------------------------------------------------------------------ process/process.js:13:1
-
-Cannot call `process.emitWarning` because number [1] is incompatible with string [2].
-
-   process/process.js:13:1
-     13| process.emitWarning("blah", "blah", 42); // error
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   process/process.js:13:37
-     13| process.emitWarning("blah", "blah", 42); // error
-                                             ^^ [1]
-   <BUILTINS>/node.js:2335:11
-   2335|     code: string,
-                   ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------ process/process.js:14:2
-
-Cannot cast `process.emitWarning(...)` to string because undefined [1] is incompatible with string [2].
-
-   process/process.js:14:2
-     14| (process.emitWarning("blah"): string); // error
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   <BUILTINS>/node.js:2329:41
-   2329|   emitWarning(warning: string | Error): void;
-                                                 ^^^^ [1]
-   process/process.js:14:31
-     14| (process.emitWarning("blah"): string); // error
-                                       ^^^^^^ [2]
+   <BUILTINS>/node.js:2319:32
+   2319|   allowedNodeEnvironmentFlags: Set<string>;
+                                        ^^^^^^^^^^^ [1]
+   process/process.js:5:39
+      5| (process.allowedNodeEnvironmentFlags: string); // error
+                                               ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- stream/stream.js:36:2
@@ -1843,7 +1860,7 @@ References:
 
 
 
-Found 98 errors
+Found 99 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
