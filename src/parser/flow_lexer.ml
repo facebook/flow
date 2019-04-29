@@ -427,6 +427,30 @@ type result =
   | Token of Lex_env.t * Token.t
   | Comment of Lex_env.t * Loc.t Flow_ast.Comment.t
   | Continue of Lex_env.t
+  
+let flow_comment env lexbuf =
+  let pattern = lexeme lexbuf in
+    if not (is_comment_syntax_enabled env) then
+      let start_pos = start_pos_of_lexbuf env lexbuf in
+      let buf = Buffer.create 127 in
+      Buffer.add_string buf (String.sub pattern 2 (String.length pattern - 2));
+      let env, end_pos = comment env buf lexbuf in
+      Comment (env, mk_comment env start_pos end_pos buf true)
+    else
+      let env =
+        if is_in_comment_syntax env then
+          let loc = loc_of_lexbuf env lexbuf in
+          unexpected_error env loc pattern
+        else env
+      in
+      let env = in_comment_syntax true env in
+      let len = Sedlexing.lexeme_length lexbuf in
+      if Sedlexing.Utf8.sub_lexeme lexbuf (len - 1) 1 = ":" &&
+         Sedlexing.Utf8.sub_lexeme lexbuf (len - 2) 1 <> ":" then
+        Token (env, T_COLON)
+      else
+        Continue env
+
 
 let rec comment env buf lexbuf =
   match%sedlex lexbuf with
@@ -687,27 +711,7 @@ let token (env: Lex_env.t) lexbuf : result =
     Comment (env, mk_comment env start_pos end_pos buf true)
 
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
-    let pattern = lexeme lexbuf in
-    if not (is_comment_syntax_enabled env) then
-      let start_pos = start_pos_of_lexbuf env lexbuf in
-      let buf = Buffer.create 127 in
-      Buffer.add_string buf (String.sub pattern 2 (String.length pattern - 2));
-      let env, end_pos = comment env buf lexbuf in
-      Comment (env, mk_comment env start_pos end_pos buf true)
-    else
-      let env =
-        if is_in_comment_syntax env then
-          let loc = loc_of_lexbuf env lexbuf in
-          unexpected_error env loc pattern
-        else env
-      in
-      let env = in_comment_syntax true env in
-      let len = Sedlexing.lexeme_length lexbuf in
-      if Sedlexing.Utf8.sub_lexeme lexbuf (len - 1) 1 = ":" &&
-         Sedlexing.Utf8.sub_lexeme lexbuf (len - 2) 1 <> ":" then
-        Token (env, T_COLON)
-      else
-        Continue env
+    flow_comment env lexbuf
 
   | "*/" ->
     if is_in_comment_syntax env then
@@ -1477,7 +1481,6 @@ let rec jsx_text env mode buf raw lexbuf =
 
   | _ -> failwith "unreachable"
 
-
 let jsx_tag env lexbuf =
   match%sedlex lexbuf with
   | eof ->
@@ -1503,27 +1506,7 @@ let jsx_tag env lexbuf =
     Comment (env, mk_comment env start_pos end_pos buf true)
   
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
-    let pattern = lexeme lexbuf in
-    if not (is_comment_syntax_enabled env) then
-      let start_pos = start_pos_of_lexbuf env lexbuf in
-      let buf = Buffer.create 127 in
-      Buffer.add_string buf (String.sub pattern 2 (String.length pattern - 2));
-      let env, end_pos = comment env buf lexbuf in
-      Comment (env, mk_comment env start_pos end_pos buf true)
-    else
-      let env =
-        if is_in_comment_syntax env then
-          let loc = loc_of_lexbuf env lexbuf in
-          unexpected_error env loc pattern
-        else env
-      in
-      let env = in_comment_syntax true env in
-      let len = Sedlexing.lexeme_length lexbuf in
-      if Sedlexing.Utf8.sub_lexeme lexbuf (len - 1) 1 = ":" &&
-         Sedlexing.Utf8.sub_lexeme lexbuf (len - 2) 1 <> ":" then
-        Token (env, T_COLON)
-      else
-        Continue env
+    flow_comment env lexbuf
 
   | "*/" ->
     if is_in_comment_syntax env then
@@ -1666,27 +1649,7 @@ let type_token env lexbuf =
     Comment (env, mk_comment env start_pos end_pos buf true)
 
   | "/*", Star whitespace, (":" | "::" | "flow-include") ->
-    let pattern = lexeme lexbuf in
-    if not (is_comment_syntax_enabled env) then
-      let start_pos = start_pos_of_lexbuf env lexbuf in
-      let buf = Buffer.create 127 in
-      Buffer.add_string buf pattern;
-      let env, end_pos = comment env buf lexbuf in
-      Comment (env, mk_comment env start_pos end_pos buf true)
-    else
-      let env =
-        if is_in_comment_syntax env then
-          let loc = loc_of_lexbuf env lexbuf in
-          unexpected_error env loc pattern
-        else env
-      in
-      let env = in_comment_syntax true env in
-      let len = Sedlexing.lexeme_length lexbuf in
-      if Sedlexing.Utf8.sub_lexeme lexbuf (len - 1) 1 = ":" &&
-         Sedlexing.Utf8.sub_lexeme lexbuf (len - 2) 1 <> ":" then
-        Token (env, T_COLON)
-      else
-        Continue env
+    flow_comment env lexbuf
 
   | "*/" ->
     if is_in_comment_syntax env then
