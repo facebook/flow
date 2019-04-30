@@ -202,6 +202,7 @@ val unnecessary_invariants: t -> (ALoc.t * Reason.t) list
 
 (* utils *)
 val iter_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
+val iter_real_props: t -> Type.Properties.id -> (string -> Type.Property.t -> unit) -> unit
 val has_prop: t -> Type.Properties.id -> string -> bool
 val get_prop: t -> Type.Properties.id -> string -> Type.Property.t option
 val set_prop: t -> Type.Properties.id -> string -> Type.Property.t -> unit

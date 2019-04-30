@@ -328,7 +328,6 @@ module rec TypeTerm : sig
         prop: string option;
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
-        is_sentinel: bool;
       }
     | ReactConfigCheck
     | ReactGetConfig of { polarity: Polarity.t }
@@ -2710,10 +2709,9 @@ end = struct
     | ImplicitTypeParam -> ImplicitTypeParam
     | IndexerKeyCompatibility { lower; upper } ->
         IndexerKeyCompatibility { lower = mod_reason lower; upper = mod_reason upper }
-    | PropertyCompatibility { prop; lower; upper; is_sentinel } ->
+    | PropertyCompatibility { prop; lower; upper } ->
         PropertyCompatibility {
           prop;
-          is_sentinel;
           lower = mod_reason lower;
           upper = mod_reason upper;
         }

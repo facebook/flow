@@ -52,7 +52,6 @@ let reason_score = 100
 let frame_score = reason_score * 2
 let type_arg_frame_score = frame_score * 2
 let tuple_element_frame_score = type_arg_frame_score * 2
-let property_sentinel_score = tuple_element_frame_score * 2
 
 (* Gets the score of a use_op. Used in score_of_msg. See the comment on
  * score_of_msg to learn more about scores.
@@ -109,11 +108,6 @@ let score_of_use_op use_op =
       | ArrayElementCompatibility _ -> type_arg_frame_score
       (* Higher signal then TypeArgCompatibility. *)
       | TupleElementCompatibility _ -> tuple_element_frame_score
-      (* If we error-ed on a sentinel prop compatibility then tank the score of
-       * this use_op. This is so that the score of errors which passed sentinel
-       * compatibility are always picked relative to the score of errors which
-       * failed their sentinel prop checks. *)
-      | PropertyCompatibility {is_sentinel=true; _} -> -property_sentinel_score
       (* ImplicitTypeParam is an internal marker use_op that doesn't get
        * rendered in error messages. So it doesn't necessarily signal anything
        * about the user's intent. *)

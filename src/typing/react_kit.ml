@@ -476,7 +476,6 @@ module Kit (Flow: Flow_common.S): REACT = struct
           prop = Some "key";
           lower = reason_of_t config;
           upper = reason_key;
-          is_sentinel = false;
         }, use_op) in
         let action = LookupProp (use_op, Field (None, key_t, Positive)) in
         rec_flow cx trace (config,
@@ -501,7 +500,6 @@ module Kit (Flow: Flow_common.S): REACT = struct
           prop = Some "ref";
           lower = reason_of_t config;
           upper = reason_ref;
-          is_sentinel = false;
         }, use_op) in
         let action = LookupProp (use_op, Field (None, ref_t, Positive)) in
         rec_flow cx trace (config,

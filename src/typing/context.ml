@@ -486,8 +486,16 @@ let unnecessary_invariants cx =
   ) cx.sig_cx.invariants_useful []
 
 (* utils *)
+let find_real_props cx id =
+  find_props cx id
+  |> SMap.filter (fun x _ -> not (Reason.is_internal_name x))
+
 let iter_props cx id f =
   find_props cx id
+  |> SMap.iter f
+
+let iter_real_props cx id f =
+  find_real_props cx id
   |> SMap.iter f
 
 let has_prop cx id x =

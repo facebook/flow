@@ -479,16 +479,6 @@ module Cache = struct
 
 end
 
-(* Iterate over properties of an object, prioritizing sentinel properties (if
-   any) and ignoring shadow properties (if any).
-
-   The first argument to f is a boolean which denotes if the property is a
-   sentinel property. *)
-let iter_real_props cx id f =
-  Context.find_props cx id
-  |> SMap.filter (fun x _ -> not (is_internal_name x))
-  |> SMap.iter (f ~is_sentinel:false)
-
 (*********************************************************************)
 
 exception SpeculativeError of Error_message.t
@@ -811,7 +801,6 @@ let quick_error_fun_as_obj cx trace ~use_op reason statics reason_o props =
         prop = Some x;
         lower = reason;
         upper = reason_o;
-        is_sentinel = false;
       }, use_op) in
       let reason_prop =
         replace_reason (fun desc -> RPropertyOf (x, desc)) reason_o in
@@ -3102,7 +3091,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | IntersectionT _,
       UseT (use_op, DefT (r, _, ObjT { flags; props_tmap; proto_t; dict_t; call_t }))
       when SMap.cardinal (Context.find_props cx props_tmap) > 1 ->
-      iter_real_props cx props_tmap (fun ~is_sentinel:_ x p ->
+      Context.iter_real_props cx props_tmap (fun x p ->
         let pmap = SMap.singleton x p in
         let id = Context.make_property_map cx pmap in
         let obj = mk_objecttype ~flags ~dict:dict_t ~call:call_t id dummy_prototype in
@@ -4325,7 +4314,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           prop = prop_name;
           lower = lreason;
           upper = ureason;
-          is_sentinel = false;
         }, use_op) in
         (match lcall with
         | Some lcall ->
@@ -4337,12 +4325,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
             ((reason_prop, lreason), lreason, prop_name, Some use_op)))
       );
 
-      iter_real_props cx uflds (fun ~is_sentinel s up ->
+      Context.iter_real_props cx uflds (fun s up ->
         let use_op = Frame (PropertyCompatibility {
           prop = Some s;
           lower = lreason;
           upper = ureason;
-          is_sentinel;
         }, use_op) in
         let propref =
           let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
@@ -4382,7 +4369,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           prop = prop_name;
           lower = reason;
           upper = reason_op;
-          is_sentinel = false;
         }, use_op)
       | _ -> use_op in
       let fun_t = match l with
@@ -4422,15 +4408,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ShapeT o, _ -> rec_flow cx trace (o, u)
 
-    | DefT (reason, _, ObjT { props_tmap = mapr; call_t = None; _ }), UseT (use_op', ShapeT proto) ->
+    | DefT (reason, _, ObjT { props_tmap; call_t = None; _ }), UseT (use_op', ShapeT proto) ->
         (* TODO: ShapeT should have its own reason *)
         let reason_op = reason_of_t proto in
-        iter_real_props cx mapr (fun ~is_sentinel x p ->
+        Context.iter_real_props cx props_tmap (fun x p ->
           let use_op = Frame (PropertyCompatibility {
             prop = Some x;
             upper = reason;
             lower = reason_of_t proto;
-            is_sentinel;
           }, use_op') in
           let reason_prop = replace_reason (fun desc ->
             RPropertyOf (x, desc)
@@ -5708,7 +5693,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         prop = Some s;
         lower = lreason;
         upper = ureason;
-        is_sentinel = false;
       }, use_op) in
       let lp = Field (None, l, Positive) in
       let up = Field (None, value, dict_polarity) in
@@ -6675,14 +6659,13 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
         prop = None;
         lower = lreason;
         upper = ureason;
-        is_sentinel = false;
       }, use_op)) lreason ureason (Computed uv)
         (Field (None, lv, lpolarity), Field (None, uv, upolarity))
     | _ -> ());
 
   if rflags.exact && rflags.sealed = Sealed && not (is_literal_object_reason ureason)
   then (
-    iter_real_props cx lflds (fun ~is_sentinel s _ ->
+    Context.iter_real_props cx lflds (fun s _ ->
       if not (Context.has_prop cx uflds s)
       then (
         let use_op = Frame (PropertyCompatibility {
@@ -6691,7 +6674,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
            * is the one requiring the prop. *)
           lower = ureason;
           upper = lreason;
-          is_sentinel;
         }, use_op) in
         let reason_prop = replace_reason_const (RProperty (Some s)) lreason in
         let err = Error_message.EPropNotFound (Some s, (reason_prop, ureason), use_op) in
@@ -6708,7 +6690,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
            * is the one requiring the prop. *)
           lower = ureason;
           upper = lreason;
-          is_sentinel = false;
         }, use_op) in
         let reason_prop = replace_reason_const (RProperty prop) lreason in
         let err = Error_message.EPropNotFound (prop, (reason_prop, ureason), use_op) in
@@ -6724,7 +6705,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       prop = prop_name;
       lower = lreason;
       upper = ureason;
-      is_sentinel = false;
     }, use_op) in
     (match lcall with
     | Some lcall ->
@@ -6737,7 +6717,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   | None -> ());
 
   (* Properties in u must either exist in l, or match l's indexer. *)
-  iter_real_props cx uflds (fun ~is_sentinel s up ->
+  Context.iter_real_props cx uflds (fun s up ->
     let reason_prop = replace_reason_const (RProperty (Some s)) ureason in
     let propref = Named (reason_prop, s) in
     let use_op' = use_op in
@@ -6745,7 +6725,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
       prop = Some s;
       lower = lreason;
       upper = ureason;
-      is_sentinel;
     }, use_op') in
     match Context.get_prop cx lflds s, ldict with
     | Some lp, _ ->
@@ -6829,7 +6808,7 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
   (match udict with
   | None -> ()
   | Some { key; value; dict_polarity; _ } ->
-    iter_real_props cx lflds (fun ~is_sentinel s lp ->
+    Context.iter_real_props cx lflds (fun s lp ->
       if not (Context.has_prop cx uflds s)
       then (
         rec_flow cx trace (string_key s lreason, UseT (
@@ -6840,7 +6819,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
           prop = Some s;
           lower = lreason;
           upper = ureason;
-          is_sentinel;
         }, use_op) in
         let lp = match lp with
         | Field (loc, OptionalT (_, lt), lpolarity) ->
@@ -6872,7 +6850,6 @@ and flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
           prop = Some s;
           lower = lreason;
           upper = ureason;
-          is_sentinel = false;
         }, use_op) in
         let lp = match Context.find_call cx lcall with
         | OptionalT (_, t) -> Field (None, t, Positive)
@@ -7387,7 +7364,6 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
       prop = Some s;
       lower = lreason;
       upper = reason_struct;
-      is_sentinel = false;
     }, use_op) in
     match p with
     | Field (_, OptionalT (_, t), polarity) ->
@@ -7416,7 +7392,6 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
       prop = Some s;
       lower = lreason;
       upper = reason_struct;
-      is_sentinel = false;
     }, use_op) in
     let propref =
       let reason_prop = replace_reason (fun desc ->
@@ -7433,7 +7408,6 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
       prop = prop_name;
       lower = lreason;
       upper = reason_struct;
-      is_sentinel = false;
     }, use_op) in
     match lower with
     | DefT (_, _, ObjT {call_t = Some lid; _})
@@ -7453,7 +7427,6 @@ and check_super cx trace ~use_op lreason ureason t x p =
     prop = Some x;
     lower = lreason;
     upper = ureason;
-    is_sentinel = false;
   }, use_op) in
   let strict = NonstrictReturning (None, None) in
   let reason_prop = replace_reason_const (RProperty (Some x)) lreason in
@@ -10003,14 +9976,12 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
           prop = None;
           lower = lreason;
           upper = ureason;
-          is_sentinel = false;
         }, use_op))
     | Some _, None ->
         let use_op = Frame (PropertyCompatibility {
           prop = None;
           lower = ureason;
           upper = lreason;
-          is_sentinel = false;
         }, use_op) in
         let lreason = replace_reason_const RSomeProperty lreason in
         let err = Error_message.EPropNotFound (None, (lreason, ureason), use_op) in
@@ -10020,7 +9991,6 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
           prop = None;
           lower = lreason;
           upper = ureason;
-          is_sentinel = false;
         }, Frame (UnifyFlip, use_op)) in
         let ureason = replace_reason_const RSomeProperty ureason in
         let err = Error_message.EPropNotFound (None, (ureason, lreason), use_op) in
@@ -10065,7 +10035,6 @@ and unify_props cx trace ~use_op x r1 r2 p1 p2 =
     prop = Some x;
     lower = r1;
     upper = r2;
-    is_sentinel = false;
   }, use_op) in
 
   (* If both sides are neutral fields, we can just unify once *)
@@ -10113,7 +10082,6 @@ and unify_prop_with_dict cx trace ~use_op x p prop_obj_reason dict_reason dict =
       prop = Some x;
       lower = dict_reason;
       upper = prop_obj_reason;
-      is_sentinel = false;
     }, use_op) in
     let err = Error_message.EPropNotFound (Some x, (prop_reason, dict_reason), use_op) in
     add_output cx ~trace err
@@ -11445,7 +11413,6 @@ and object_kit =
               prop = Some k;
               lower = r2;
               upper = r1;
-              is_sentinel = false;
             }, unknown_use) in
             let r2 = replace_reason_const (RProperty (Some k)) r2 in
             let err = Error_message.EPropNotFound (Some k, (r2, r1), use_op) in
