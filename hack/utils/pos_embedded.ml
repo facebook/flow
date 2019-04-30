@@ -13,6 +13,7 @@ type b = Pos_source.t
 (* Note: While Pos.string and Pos.info_pos return positions as closed intervals,
  * pos_start and pos_end actually form a half-open interval (i.e. pos_end points
  * to the character *after* the last character of the relevant lexeme.) *)
+[@@@warning "-32"]
 type 'a pos =
 | Pos_small of {
   pos_file: 'a ;
@@ -28,6 +29,7 @@ type 'a pos =
 type t = Relative_path.t pos [@@deriving show]
 
 type absolute = string pos [@@deriving show]
+[@@@warning "+32"]
 
 let none = Pos_small {
   pos_file = Relative_path.default ;
