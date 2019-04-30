@@ -7,6 +7,7 @@
 
 type error_kind =
   | ParseError
+  | PseudoParseError
   | InferError
   | InferWarning
   | InternalError

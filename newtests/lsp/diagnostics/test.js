@@ -176,5 +176,56 @@ function fred(): number {return 1+2;}
           [],
         ),
     ]),
+    test('pseudo parse errors', [
+      ideStartAndConnect(),
+      addFile('pseudo_parse_error.js')
+        .waitUntilIDEMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot return}',
+        )
+        .verifyAllIDEMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{"Flow does not yet support method or property calls in optional chains."}',
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        )
+        .newErrors(
+          `
+                pseudo_parse_error.js:6
+                  6: obj?.foo(); // Error
+                     ^^^^^^^^^^ Flow does not yet support method or property calls in optional chains.
+              `,
+        ),
+      ideNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL_SLASH>pseudo_parse_error.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+
+const obj = {};
+// Flow does not yet support method or property calls in optional chains, so
+// this will produce a pseudo parse error
+obj?.foo(); // Error
+`,
+        },
+      })
+        .waitUntilIDEMessage(
+          9000,
+          'textDocument/publishDiagnostics{Cannot return}',
+        )
+        .verifyAllIDEMessagesInStep(
+          [
+            'textDocument/publishDiagnostics{"Flow does not yet support method or property calls in optional chains."}',
+          ],
+          [
+            'textDocument/publishDiagnostics',
+            ...lspIgnoreStatusAndCancellation,
+          ],
+        ),
+    ]),
   ],
 );

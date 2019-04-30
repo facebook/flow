@@ -789,11 +789,11 @@ let kind_of_msg = Errors.(function
   | EInternal _                     -> InternalError
   | ERecursionLimit _               -> RecursionLimitError
   | EDuplicateModuleProvider _      -> DuplicateProviderError
-  | EParseError _
+  | EParseError _                   -> ParseError
   | EDocblockError _
   | ELintSetting _
   | EExperimentalOptionalChaining _
-  | EOptionalChainingMethods _      -> ParseError
+  | EOptionalChainingMethods _      -> PseudoParseError
   | _ -> InferError
 )
 

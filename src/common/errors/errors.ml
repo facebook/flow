@@ -8,7 +8,8 @@
 open Severity
 
 type error_kind =
-  | ParseError
+  | ParseError (* An error produced by the parser *)
+  | PseudoParseError (* An error produced elsewhere but reported as a parse error *)
   | InferError
   | InferWarning
   | InternalError
@@ -18,6 +19,7 @@ type error_kind =
 
 let string_of_kind = function
 | ParseError -> "ParseError"
+| PseudoParseError -> "PseudoParseError"
 | InferError -> "InferError"
 | InferWarning -> "InferWarning"
 | InternalError -> "InternalError"
@@ -851,6 +853,7 @@ let rec compare compare_loc =
     | InternalError -> 1
     | DuplicateProviderError -> 2
     | ParseError -> 3
+    | PseudoParseError -> 3
     | RecursionLimitError -> 4
     | InferError -> 5
     | InferWarning -> 5
@@ -2859,6 +2862,8 @@ module Json_output = struct
     let open Hh_json in
     let kind_str = match kind with
       | ParseError -> "parse"
+      (* We report this as a parse error even though it wasn't produced by the parser *)
+      | PseudoParseError -> "parse"
       | InferError -> "infer"
       (* "InferWarning"s should still really be treated as errors. (The name is outdated.) *)
       | InferWarning -> "infer"
