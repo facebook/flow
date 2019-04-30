@@ -229,7 +229,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     in fun env ->
       with_loc (fun env ->
         Expect.token env T_LBRACKET;
-        let tl = types env [] in
+        let tl = types (with_no_anon_function_type false env) [] in
         Expect.token env T_RBRACKET;
         Type.Tuple tl
       ) env
