@@ -48,7 +48,7 @@ type t =
   | Watchman_failed
   | Watchman_fresh_instance
   | Watchman_invalid_result
-  | File_heap_stale
+  | File_provider_stale
   | Hhconfig_deleted
   | Hhconfig_changed
   | Server_shutting_down
