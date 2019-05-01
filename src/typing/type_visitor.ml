@@ -535,6 +535,7 @@ class ['a] t = object(self)
     in
     let acc = match tool with
       | ReadOnly -> acc
+      | ObjectRep -> acc
       | Spread (_, state) ->
         let open Object.Spread in
         let { todo_rev; acc = object_spread_acc } = state in

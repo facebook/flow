@@ -11505,6 +11505,31 @@ and object_kit =
       rec_flow_t cx trace (t, tout)
   in
 
+  (**************)
+  (* Object Rep *)
+  (**************)
+
+  let object_rep =
+    let mk_object cx reason (r, props, dict, flags) =
+      (* TODO(jmbrown): Add polarity information to props *)
+      let polarity = Neutral in
+      let props = SMap.map (fun (t, _) -> Field (None, t, polarity)) props in
+      let dict = Option.map dict (fun dict -> { dict with dict_polarity = polarity }) in
+      let call = None in
+      let id = Context.make_property_map cx props in
+      let proto = ObjProtoT reason in
+      let t = mk_object_def_type ~reason:r ~flags ~dict ~call id proto in
+      if flags.exact then ExactT (reason, t) else t
+    in
+
+    fun cx trace use_op reason tout x ->
+      let t = match Nel.map (mk_object cx reason) x with
+      | (t, []) -> t
+      | (t0, t1::ts) -> UnionT (reason, UnionRep.make t0 t1 ts)
+      in
+      rec_flow_t cx trace ~use_op (t, tout)
+  in
+
   (****************)
   (* React Config *)
   (****************)
@@ -11654,6 +11679,7 @@ and object_kit =
   | Rest (options, state) -> object_rest options state
   | ReactConfig state -> react_config state
   | ReadOnly -> object_read_only
+  | ObjectRep -> object_rep
   in
 
   (* Intersect two object slices: slice * slice -> slice

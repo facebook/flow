@@ -2043,6 +2043,7 @@ and dump_use_t_ (depth, tvars) cx t =
     in
     let tool = function
       | ReadOnly -> "ReadOnly"
+      | ObjectRep -> "ObjectRep"
       | Spread (options, state) -> spread options state
       | Rest (options, state) -> rest options state
       | ReactConfig state -> react_props state

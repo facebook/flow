@@ -1282,6 +1282,7 @@ class virtual ['a] t_with_uses = object(self)
     let open Object in
     match tool with
     | ReadOnly -> tool
+    | ObjectRep -> tool
     | Spread (options, state) ->
       let open Object.Spread in
       let todo_rev' = ListUtils.ident_map (self#type_ cx map_cx) state.todo_rev in

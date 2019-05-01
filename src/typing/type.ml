@@ -2029,6 +2029,7 @@ and Object : sig
     | Spread of Spread.target * Spread.state
     | Rest of Rest.merge_mode * Rest.state
     | ReactConfig of ReactConfig.state
+    | ObjectRep
 end = Object
 
 and React : sig

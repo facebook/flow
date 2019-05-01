@@ -412,18 +412,13 @@ module Kit (Flow: Flow_common.S): REACT = struct
     let create_element clone component config children_args tout =
       (* If our config is void or null then we want to replace it with an
        * empty object. *)
-      let config =
-        let reason = reason_of_t config in
-        let empty_object = Obj_type.mk_with_proto
-          cx reason
-          ~sealed:true ~exact:true ~frozen:true
-          (ObjProtoT reason)
-        in
-        Tvar.mk_where cx reason (fun tout ->
-          rec_flow cx trace (filter_maybe cx ~trace reason config,
-            CondT (reason, None, empty_object, tout))
-        )
-      in
+      let normalized_config = Tvar.mk_where cx (reason_of_t config) (fun normalized_config ->
+        let open Object in
+        let reason = (reason_of_t config) in
+        rec_flow cx trace (config,
+          ObjKitT (use_op, reason, Resolve Next, ObjectRep, normalized_config))
+      ) in
+
       (* Create the optional children input type from the children arguments. *)
       let children = coerce_children_args children_args in
       (* Create a type variable for our props. *)
@@ -466,7 +461,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
        * in existing React code. *)
       let () =
         let reason_key =
-          (replace_reason_const (RCustom "React key") (reason_of_t config)) in
+          (replace_reason_const (RCustom "React key") (reason_of_t normalized_config)) in
         (* Create the key type. *)
         let key_t = optional (maybe (get_builtin_type cx reason_key "React$Key")) in
         (* Flow the config input key type to the key type. *)
@@ -474,11 +469,11 @@ module Kit (Flow: Flow_common.S): REACT = struct
         let propref = Named (reason_key, "key") in
         let use_op = Frame (PropertyCompatibility {
           prop = Some "key";
-          lower = reason_of_t config;
+          lower = reason_of_t normalized_config;
           upper = reason_key;
         }, use_op) in
         let action = LookupProp (use_op, Field (None, key_t, Positive)) in
-        rec_flow cx trace (config,
+        rec_flow cx trace (normalized_config,
           LookupT (reason_key, kind, [], propref, action))
       in
       (* Check the type of React refs in the config input.
@@ -490,7 +485,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
        * in existing React code. *)
       let () =
         let reason_ref =
-          (replace_reason_const (RCustom "React ref") (reason_of_t config)) in
+          (replace_reason_const (RCustom "React ref") (reason_of_t normalized_config)) in
         (* Create the ref type. *)
         let ref_t = optional (maybe (get_builtin_typeapp cx reason_ref "React$Ref" [l])) in
         (* Flow the config input ref type to the ref type. *)
@@ -498,11 +493,11 @@ module Kit (Flow: Flow_common.S): REACT = struct
         let propref = Named (reason_ref, "ref") in
         let use_op = Frame (PropertyCompatibility {
           prop = Some "ref";
-          lower = reason_of_t config;
+          lower = reason_of_t normalized_config;
           upper = reason_ref;
         }, use_op) in
         let action = LookupProp (use_op, Field (None, ref_t, Positive)) in
-        rec_flow cx trace (config,
+        rec_flow cx trace (normalized_config,
           LookupT (reason_ref, kind, [], propref, action))
       in
       (* Use object spread to add children to config (if we have children)
