@@ -1616,6 +1616,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | GetRef _
       | CreateElement0 _
       | CreateElement _
+      | ConfigCheck _
         -> "is not a React component"
       | GetConfigType _
         -> "cannot calculate config"

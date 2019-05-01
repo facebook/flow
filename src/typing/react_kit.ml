@@ -409,16 +409,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         Some (DefT (r, bogus_trust (), ArrT (ArrayAT (union_of_ts r (spread::t::ts), Some (t::ts)))))
     in
 
-    let create_element clone component config children_args tout =
-      (* If our config is void or null then we want to replace it with an
-       * empty object. *)
-      let normalized_config = Tvar.mk_where cx (reason_of_t config) (fun normalized_config ->
-        let open Object in
-        let reason = (reason_of_t config) in
-        rec_flow cx trace (config,
-          ObjKitT (use_op, reason, Resolve Next, ObjectRep, normalized_config))
-      ) in
-
+    let config_check clone config children_args =
       (* Create the optional children input type from the children arguments. *)
       let children = coerce_children_args children_args in
       (* Create a type variable for our props. *)
@@ -452,6 +443,47 @@ module Kit (Flow: Flow_common.S): REACT = struct
            * static default props property so that we may add it to our config input. *)
           get_defaults cx trace l ~reason_op ~rec_flow
       in
+      (* Use object spread to add children to config (if we have children)
+       * and remove key and ref since we already checked key and ref. Finally in
+       * this block we will flow the final config to our props type.
+       *
+       * NOTE: We don't eagerly run this check so that create_element can constrain the
+       * ref and key pseudoprops before we run the config check.
+       *)
+      let open Object in
+      let open Object.ReactConfig in
+      (* We need to treat config input as a literal here so we ensure it has the
+       * RReactProps reason description. *)
+      let reason = replace_reason_const RReactProps (reason_of_t config) in
+      (* Create the final config object using the ReactConfig object kit tool
+       * and flow it to our type for props.
+       *
+       * We wrap our use_op in a ReactConfigCheck frame to increment the
+       * speculation error message score. Usually we will already have a
+       * ReactCreateElementCall use_op, but we want errors after this point to
+       * win when picking the best errors speculation discovered. *)
+      let use_op = Frame (ReactConfigCheck, use_op) in
+      rec_flow cx trace (config,
+        ObjKitT (use_op, reason, Resolve Next,
+          ReactConfig (Config { defaults; children }), props))
+    in
+
+    let create_element clone component config children_args tout =
+      config_check clone config children_args;
+
+      (* If our config is void or null then we want to replace it with an
+       * empty object.
+       *
+       * NOTE: We only need the normalized config to look up the key
+       * and ref.
+       *)
+      let normalized_config = Tvar.mk_where cx (reason_of_t config) (fun normalized_config ->
+        let open Object in
+        let reason = (reason_of_t config) in
+        rec_flow cx trace (config,
+          ObjKitT (use_op, reason, Resolve Next, ObjectRep, normalized_config))
+      ) in
+
       (* Check the type of React keys in the config input.
        *
        * NOTE: We are intentionally being unsound here. If config is inexact
@@ -500,28 +532,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
         rec_flow cx trace (normalized_config,
           LookupT (reason_ref, kind, [], propref, action))
       in
-      (* Use object spread to add children to config (if we have children)
-       * and remove key and ref since we already checked key and ref. Finally in
-       * this block we will flow the final config to our props type. *)
-      let () =
-        let open Object in
-        let open Object.ReactConfig in
-        (* We need to treat config input as a literal here so we ensure it has the
-         * RReactProps reason description. *)
-        let reason = replace_reason_const RReactProps (reason_of_t config) in
-        (* Create the final config object using the ReactConfig object kit tool
-         * and flow it to our type for props.
-         *
-         * We wrap our use_op in a ReactConfigCheck frame to increment the
-         * speculation error message score. Usually we will already have a
-         * ReactCreateElementCall use_op, but we want errors after this point to
-         * win when picking the best errors speculation discovered. *)
-        let use_op = Frame (ReactConfigCheck, use_op) in
-        rec_flow cx trace (config,
-          ObjKitT (use_op, reason, Resolve Next,
-            ReactConfig (Config { defaults; children }), props))
-      in
-      (* Set the return type as a React element. *)
+
       let elem_reason = annot_reason (replace_reason_const (RType "React$Element") reason_op) in
       rec_flow_t cx trace (
         get_builtin_typeapp cx ~trace elem_reason "React$Element" [component],
@@ -1201,6 +1212,7 @@ module Kit (Flow: Flow_common.S): REACT = struct
     | CreateElement0 _ -> failwith "handled elsewhere"
     | CreateElement (clone, component, config, children, tout) ->
       create_element clone component config children tout
+    | ConfigCheck config -> config_check false config ([], None)
     | GetProps tout -> props_to_tout tout
     | GetConfig tout -> get_config tout
     | GetConfigType (default_props, tout) -> get_config_with_props_and_defaults default_props tout

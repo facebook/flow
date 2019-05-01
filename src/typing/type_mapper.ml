@@ -1235,6 +1235,10 @@ class virtual ['a] t_with_uses = object(self)
         children_spread' == children_spread &&
         tout' == tout
       ) then t else CreateElement (clone, component', config', (children', children_spread'), tout')
+    | ConfigCheck config ->
+      let config' = self#type_ cx map_cx config in
+      if config' == config then t
+      else ConfigCheck config'
     | GetProps tout ->
       let tout' = self#type_ cx map_cx tout in
       if tout' == tout then t

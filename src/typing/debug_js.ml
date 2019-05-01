@@ -1960,6 +1960,7 @@ and dump_use_t_ (depth, tvars) cx t =
             | Some children_spread -> spf "; ...%s" (kid children_spread)
             | None -> "")
           (kid tout)) t
+    | ConfigCheck config -> spf "ConfigCheck (%s)" (kid config)
     | GetProps tout -> spf "GetProps (%s)" (kid tout)
     | GetConfig tout -> spf "GetConfig (%s)" (kid tout)
     | GetConfigType (default_props, tout) ->

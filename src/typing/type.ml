@@ -2122,6 +2122,7 @@ and React : sig
   type tool =
   | CreateElement0 of bool * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
   | CreateElement of bool * TypeTerm.t * TypeTerm.t * (TypeTerm.t list * TypeTerm.t option) * TypeTerm.t_out
+  | ConfigCheck of TypeTerm.t
   | GetProps of TypeTerm.t_out
   | GetConfig of TypeTerm.t_out
   | GetConfigType of TypeTerm.t * TypeTerm.t_out

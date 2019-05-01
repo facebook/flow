@@ -502,6 +502,7 @@ class ['a] t = object(self)
       let acc = self#opt (self#type_ cx pole_TODO) acc children_spread in
       let acc = self#type_ cx pole_TODO acc tout in
       acc
+    | React.ConfigCheck config -> self#type_ cx pole_TODO acc config
     | React.SimplifyPropType (tool, t) ->
       let open React in
       let open React.SimplifyPropType in
