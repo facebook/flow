@@ -638,42 +638,5 @@ This utility has been deprecated and should be avoided. See [here](../../linting
 
 ## Existential Type (`*`) <a class="toc" id="toc-existential-type" href="#toc-existential-type"></a>
 
-`*` is known as the existential type.
+This utility has been deprecated and should be avoided. See [here](../../linting/rule-reference/#toc-deprecated-type) for details.
 
-An existential type is used as a placeholder to tell Flow to infer the type.
-
-For example, in the `Class<ParamStore<T>>` example, we could have used an existential type for the return:
-
-```js
-// @flow
-function makeParamStore<T>(storeClass: Class<ParamStore<T>>, data: T): * {
-  return new storeClass(data);
-}
-(makeParamStore(ParamStore, 1): ParamStore<number>);
-(makeParamStore(ParamStore, 1): ParamStore<boolean>); // failed because of the second parameter
-```
-
-The `*` can be thought of as an "auto" instruction to Flow, telling it to fill in the type from context.
-
-In comparison to `any`, `*` may allow you to avoid losing type safety.
-
-The existential operator is also useful for automatically filling in types without unnecessary verbosity:
-
-```js
-// @flow
-class DataStore {
-  data: *; // If this property weren't defined, you'd get an error just trying to assign `data`
-  constructor() {
-    this.data = {
-      name: 'DataStore',
-      isOffline: true
-    };
-  }
-  goOnline() {
-    this.data.isOffline = false;
-  }
-  changeName() {
-    this.data.isOffline = 'SomeStore'; // oops, wrong key!
-  }
-}
-```
