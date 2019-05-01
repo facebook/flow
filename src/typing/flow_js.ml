@@ -3862,10 +3862,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Function Component ~> AbstractComponent *)
     | DefT (reasonl, _, FunT (_, _, { return_t; _ })),
       UseT (use_op, DefT (_reasonu, _, ReactAbstractComponentT {config; instance})) ->
-        (* Contravariant config check *)
-        React_kit.get_config cx trace l ~use_op ~reason_op:reasonl ~rec_flow
-          ~rec_flow_t ~rec_unify ~get_builtin_type ~add_output
-          (React.GetConfig l) Negative config;
+        (* Function components will not always have an annotation, so the config may
+         * never resolve. To determine config compatibility, we instead
+         * call createElement on the function with the given component to determine
+         * the compatibility.
+         *
+         * We use ConfigCheck instead of CreateElement because:
+         *  1. We can't perform the key check. If config is mixed, which can happen in
+         *  polymorphic HOCs then the [string]: mixed indexer causes spurious errors.
+         *  2. We check the ref here, so we don't need to check it in the config as well.
+         *)
+        rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
 
         (* Ensure this is a function component *)
         rec_flow_t ~use_op cx trace (return_t, get_builtin_type cx reasonl "React$Node");

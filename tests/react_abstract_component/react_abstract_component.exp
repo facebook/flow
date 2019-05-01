@@ -389,8 +389,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_lower.js:7:2
 
-Cannot cast `Component` to AbstractComponent because property `foo` is missing in object type [1] but exists in
-`Props` [2].
+Cannot cast `Component` to AbstractComponent because property `foo` is missing in props [1] but exists in `Props` [2].
 
    function_lower.js:7:2
    7| (Component: React$AbstractComponent<{}, void>); // Error, missing foo
@@ -421,9 +420,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:18:2
 
-Cannot cast `ComponentWithDefaultProps` to AbstractComponent because:
- - property `bar` is missing in object type [1] but exists in `Props2` [2].
- - property `foo` is missing in object type [1] but exists in `Props2` [2].
+Cannot cast `ComponentWithDefaultProps` to AbstractComponent because property `bar` is missing in props [1] but exists
+in `Props2` [2].
 
    function_lower.js:18:2
    18| (ComponentWithDefaultProps: React$AbstractComponent<{}, void>); // Error, missing foo and bar
@@ -450,6 +448,29 @@ References:
    function_lower.js:20:62
    20| (ComponentWithDefaultProps: React$AbstractComponent<Config2, number>); // Error, void ~> number
                                                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------- function_lower.js:22:7
+
+Cannot assign class `NotAComponent` to `NotAComponent` because:
+ - Either inexact class `NotAComponent` [1] is incompatible with exact `React.Element` [2].
+ - Or class `NotAComponent` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in class `NotAComponent` [1] but exists in `$Iterable` [4].
+
+   function_lower.js:22:7
+   22| class NotAComponent {}; // Error, not a component
+             ^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:18:5
+   18|   | React$Element<any>
+           ^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:19:5
+   19|   | React$Portal
+           ^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- function_lower.js:28:2
@@ -533,6 +554,20 @@ References:
                          ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- no_annot_fun.js:3:29
+
+Cannot get `props.LOL` because property `LOL` is missing in props [1].
+
+   no_annot_fun.js:3:29
+   3| function Component(props) { props.LOL ; return null} // Error, missing LOL
+                                  ^^^^^^^^^
+
+References:
+   no_annot_fun.js:4:37
+   4| (Component: React$AbstractComponent<{}, void>);
+                                          ^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7
 
 Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` [1].
@@ -572,7 +607,7 @@ References:
 
 
 
-Found 41 errors
+Found 42 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

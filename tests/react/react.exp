@@ -1364,7 +1364,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ hoc.js:36:7
 
 Cannot call `myHOC` with function bound to `Component` because:
- - string [1] is incompatible with number [2] in property `foo`.
+ - number [1] is incompatible with string [2] in property `foo`.
  - all branches are incompatible:
     - Either undefined [3] is incompatible with null [4].
     - Or property `@@iterator` is missing in undefined [3] but exists in `$Iterable` [5].
@@ -1374,12 +1374,12 @@ Cannot call `myHOC` with function bound to `Component` because:
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   hoc.js:36:35
-   36| myHOC(function Empty(props: {foo: string}) {}); // Error
-                                         ^^^^^^ [1]
    hoc.js:6:40
     6|   Component: React$ComponentType<{foo: number, bar: number}>,
-                                              ^^^^^^ [2]
+                                              ^^^^^^ [1]
+   hoc.js:36:35
+   36| myHOC(function Empty(props: {foo: string}) {}); // Error
+                                         ^^^^^^ [2]
    hoc.js:36:43
    36| myHOC(function Empty(props: {foo: string}) {}); // Error
                                                  ^ [3]
@@ -1389,6 +1389,25 @@ References:
    <BUILTINS>/react.js:20:5
    20|   | Iterable<?React$Node>;
            ^^^^^^^^^^^^^^^^^^^^^ [5]
+
+
+Error ----------------------------------------------------------------------------------------------------- hoc.js:36:43
+
+All branches are incompatible:
+ - Either undefined [1] is incompatible with null [2].
+ - Or property `@@iterator` is missing in undefined [1] but exists in `$Iterable` [3].
+
+   hoc.js:36:43
+   36| myHOC(function Empty(props: {foo: string}) {}); // Error
+                                                 ^ [1]
+
+References:
+   <BUILTINS>/react.js:14:5
+   14|   | null
+           ^^^^ [2]
+   <BUILTINS>/react.js:20:5
+   20|   | Iterable<?React$Node>;
+           ^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:41:1
@@ -1453,9 +1472,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:24:45
 
 Cannot call `connect` with `MyFunctionComponent` bound to `Component` because:
- - property `a` is missing in object type [1] but exists in object type [2].
- - property `b` is missing in object type [1] but exists in object type [2].
- - number [3] is incompatible with string [4] in property `a`.
+ - property `a` is missing in props [1] but exists in object type [2].
+ - property `b` is missing in props [1] but exists in object type [2].
+ - string [3] is incompatible with number [4] in property `a`.
 
    hoc2.js:24:45
    24| const MyEnhancedFunctionComponent = connect(MyFunctionComponent);
@@ -1473,12 +1492,12 @@ References:
    20|   prop: number,
    21| |}) { return null }
        -^ [2]
-   hoc2.js:18:6
-   18|   a: number,
-            ^^^^^^ [3]
    hoc2.js:32:32
    32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                      ^^^^^ [4]
+                                      ^^^^^ [3]
+   hoc2.js:18:6
+   18|   a: number,
+            ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- hoc3.js:26:1
@@ -1527,9 +1546,12 @@ Cannot create `MyEnhancedFunctionComponent` element because:
 
    hoc3.js:30:1
    30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
+   hoc3.js:6:34
+    6|   Component: React.ComponentType<{prop: number} & TProps>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^ [1]
    hoc3.js:17:37
                                            v
    17| function MyFunctionComponent(props: {
@@ -1592,44 +1614,6 @@ References:
                               ^^^^^ [1]
    hoc4.js:12:6
    12|   a: number,
-            ^^^^^^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc4.js:30:1
-
-Cannot create `MyEnhancedFunctionComponent` element because:
- - property `a` is missing in props [1] but exists in object type [2].
- - property `b` is missing in props [1] but exists in object type [2].
-
-   hoc4.js:30:1
-   30| <MyEnhancedFunctionComponent/>; // Error: Needs `a` and `b`.
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-
-References:
-   hoc4.js:17:37
-                                           v
-   17| function MyFunctionComponent(props: {
-   18|   a: number,
-   19|   b: number,
-   20|   prop: number,
-   21| }) { return null }
-       ^ [2]
-
-
-Error ----------------------------------------------------------------------------------------------------- hoc4.js:32:1
-
-Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
-
-   hoc4.js:32:1
-   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-References:
-   hoc4.js:32:32
-   32| <MyEnhancedFunctionComponent a="foo" b={2} />; // Error: string ~> number
-                                      ^^^^^ [1]
-   hoc4.js:18:6
-   18|   a: number,
             ^^^^^^ [2]
 
 
@@ -4215,7 +4199,7 @@ References:
 
 
 
-Found 245 errors
+Found 243 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
