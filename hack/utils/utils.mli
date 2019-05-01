@@ -47,6 +47,7 @@ val set_of_list : SSet.elt list -> SSet.t
 val strip_ns : string -> string
 val add_ns : string -> string
 val strip_all_ns : string -> string
+val split_ns_from_name : string -> string * string
 val iter2_shortest : ('a -> 'b -> 'c) -> 'a list -> 'b list -> unit
 val fold_fun_list : 'a -> ('a -> 'a) list -> 'a
 val compose : ('a -> 'b) -> ('c -> 'a) -> 'c -> 'b
