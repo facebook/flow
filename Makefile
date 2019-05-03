@@ -156,7 +156,6 @@ NATIVE_C_FILES=\
   src/services/saved_state/saved_state_compression_stubs.c\
   hack/heap/hh_assert.c\
   hack/heap/hh_shared.c\
-  hack/heap/hh_shared_sqlite.c\
   hack/utils/get_build_id.c\
   hack/utils/sys/files.c\
   hack/utils/sys/gc_profiling.c\

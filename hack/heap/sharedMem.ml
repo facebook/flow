@@ -29,20 +29,6 @@ type handle = private {
   h_heap_size: int;
 }
 
-(* note: types are in the same kind as classes *)
-let int_of_kind kind = match kind with
-  | `ConstantK -> 0
-  | `ClassK -> 1
-  | `FuncK -> 2
-
-let kind_of_int x = match x with
-  | 0 -> `ConstantK
-  | 1 -> `ClassK
-  | 2 -> `FuncK
-  | _ when x < 0 -> failwith "kind_of_int: attempted to convert from negative int"
-  | _ -> assert (x > 0); failwith "kind_of_int: int too large, no corresponding kind"
-let _kind_of_int = kind_of_int
-
 
 exception Out_of_shared_memory
 exception Hash_table_full
@@ -203,22 +189,6 @@ let update_dep_table_sqlite : string -> string -> bool -> int =
   update_dep_table_sqlite_c fn build_revision replace_state_after_saving
 
 (*****************************************************************************)
-(* Serializes the dependency table and writes it to a file *)
-(*****************************************************************************)
-external hh_save_file_info_sqlite: string -> string -> int -> string -> unit =
-  "hh_save_file_info_sqlite"
-let save_file_info_sqlite ~hash ~name kind filespec =
-  hh_save_file_info_sqlite hash name (int_of_kind kind) filespec
-
-external hh_save_file_info_init : string -> unit =
-  "hh_save_file_info_init"
-let save_file_info_init path = hh_save_file_info_init path
-
-external hh_save_file_info_free : unit -> unit =
-  "hh_save_file_info_free"
-let save_file_info_free = hh_save_file_info_free
-
-(*****************************************************************************)
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
 
@@ -275,6 +245,13 @@ external dep_used_slots : unit -> int = "hh_dep_used_slots"
 external dep_slots : unit -> int = "hh_dep_slots"
 
 (*****************************************************************************)
+(* Gets the hash of a string *)
+(*****************************************************************************)
+external get_hash : string -> int64 = "get_hash_ocaml"
+let get_hash s =
+  get_hash (Digest.string s)
+
+(*****************************************************************************)
 (* Must be called after the initialization of the hack server is over.
  * (cf serverInit.ml). *)
 (*****************************************************************************)
@@ -284,17 +261,6 @@ external hh_removed_count : unit -> int = "hh_removed_count"
 external hh_init_done: unit -> unit = "hh_call_after_init"
 
 external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"
-
-external get_file_info_on_disk : unit -> bool = "get_file_info_on_disk"
-
-external get_file_info_on_disk_path : unit -> string =
-  "get_file_info_on_disk_path"
-
-external set_file_info_on_disk_path : string -> unit =
-  "set_file_info_on_disk_path"
-
-external open_file_info_db : unit -> unit = "open_file_info_db"
-
 let init_done () =
   hh_init_done ();
   EventLogger.sharedmem_init_done (heap_size ())

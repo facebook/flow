@@ -17,7 +17,7 @@ type prefix =
   | Hhi
   | Dummy
   | Tmp
-  [@@deriving show]
+  [@@deriving show, enum]
 
 
 let root = ref None

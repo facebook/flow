@@ -1,6 +1,20 @@
 #ifndef HH_SHARED_H
 #define HH_SHARED_H
 
+#ifndef NO_SQLITE3
+#include <sqlite3.h>
+
+#define assert_sql(db, x, y) (assert_sql_with_line((db), (x), (y), __LINE__))
+
+void assert_sql_with_line(
+  sqlite3 *db,
+  int result,
+  int correct_result,
+  int line_number);
+
+void make_all_tables(sqlite3 *db);
+#endif // NO_SQLITE3
+
 #define CAML_NAME_SPACE
 #include <caml/mlvalues.h>
 
@@ -122,15 +136,5 @@ CAMLprim value hh_load_dep_table_sqlite(
         value ignore_hh_version
 );
 CAMLprim value hh_get_dep_sqlite(value ocaml_key);
-
-/* File information. */
-CAMLprim value hh_save_file_info_init(value ml_path);
-CAMLprim value hh_save_file_info_free(value ml_unit);
-CAMLprim value hh_save_file_info_sqlite(
-        value ml_hash,
-        value ml_name,
-        value ml_kind,
-        value ml_filespec
-);
 
 #endif

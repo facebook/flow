@@ -124,7 +124,6 @@ static sqlite3_stmt *g_get_dep_select_stmt = NULL;
 
 
 #include "hh_assert.h"
-#include "hh_shared_sqlite.h"
 
 #define UNUSED(x) \
     ((void)(x))
@@ -501,8 +500,6 @@ static size_t allow_hashtable_writes_by_current_process = 1;
 static size_t worker_can_exit = 1;
 
 static char *db_filename = NULL;
-
-#define FILE_INFO_ON_DISK_PATH "FILE_INFO_ON_DISK_PATH"
 
 /* Where the heap started (bottom) */
 static char* heap_init = NULL;
@@ -1775,6 +1772,10 @@ static uint64_t get_hash(value key) {
   return *((uint64_t*)String_val(key));
 }
 
+CAMLprim value get_hash_ocaml(value key) {
+  return caml_copy_int64(*((uint64_t*)String_val(key)));
+}
+
 /*****************************************************************************/
 /* Writes the data in one of the slots of the hashtable. There might be
  * concurrent writers, when that happens, the first writer wins.
@@ -2090,6 +2091,9 @@ void hh_cleanup_sqlite(void) {
   CAMLreturn0;
 }
 
+#define ARRAY_SIZE(array) \
+    (sizeof(array) / sizeof((array)[0]))
+
 #define Val_none Val_int(0)
 
 value Val_some(value v)
@@ -2106,64 +2110,58 @@ value Val_some(value v)
 #ifndef NO_SQLITE3
 
 // ------------------------ START OF SQLITE3 SECTION --------------------------
+
+void assert_sql_with_line(
+  sqlite3 *db,
+  int result,
+  int correct_result,
+  int line_number
+) {
+  if (result == correct_result) {
+    return;
+  }
+
+  fprintf(
+    stderr,
+    "SQL assertion failure: Line: %d -> Expected: %d, Got: %d\n%s%s",
+    line_number,
+    correct_result,
+    result,
+    db == NULL ? "" : sqlite3_errmsg(db),
+    db == NULL ? "" : "\n");
+  static value *exn = NULL;
+  if (!exn) {
+    exn = caml_named_value("sql_assertion_failure");
+  }
+  caml_raise_with_arg(*exn, Val_long(result));
+}
+
+const char *create_tables_sql[] = {
+  "CREATE TABLE IF NOT EXISTS HEADER(" \
+  "    MAGIC_CONSTANT INTEGER PRIMARY KEY NOT NULL," \
+  "    BUILDINFO TEXT NOT NULL" \
+  ");",
+  "CREATE TABLE IF NOT EXISTS DEPTABLE(" \
+  "    KEY_VERTEX INTEGER PRIMARY KEY NOT NULL," \
+  "    VALUE_VERTEX BLOB NOT NULL" \
+  ");",
+};
+
+void make_all_tables(sqlite3 *db) {
+  assert(db);
+  for (int i = 0; i < ARRAY_SIZE(create_tables_sql); ++i) {
+    assert_sql(
+      db,
+      sqlite3_exec(db, create_tables_sql[i], NULL, 0, NULL),
+      SQLITE_OK);
+  }
+  return;
+}
+
 CAMLprim value hh_removed_count(value ml_unit) {
     CAMLparam1(ml_unit);
     UNUSED(ml_unit);
     return Val_long(removed_count);
-}
-
-CAMLprim value get_file_info_on_disk(
-    value ml_unit
-) {
-    CAMLparam1(ml_unit);
-    UNUSED(ml_unit);
-    const char *var = getenv(FILE_INFO_ON_DISK_PATH);
-    assert(var);
-    _Bool nonempty = strlen(var) > 0;
-    value ml_bool = Val_bool(nonempty);
-    CAMLreturn(ml_bool);
-}
-
-CAMLprim value set_file_info_on_disk_path(
-    value ml_str
-) {
-    CAMLparam1(ml_str);
-    assert(Tag_val(ml_str) == String_tag);
-    const char *str = String_val(ml_str);
-    setenv(FILE_INFO_ON_DISK_PATH, str, 1);
-    CAMLreturn(Val_unit);
-}
-
-CAMLprim value get_file_info_on_disk_path(
-    value ml_unit
-) {
-    CAMLparam1(ml_unit);
-    const char *str = getenv(FILE_INFO_ON_DISK_PATH);
-    assert(str);
-    CAMLreturn(caml_copy_string(str));
-}
-
-CAMLprim value open_file_info_db(
-    value ml_unit
-) {
-    CAMLparam1(ml_unit);
-    UNUSED(ml_unit);
-    const char *file_info_on_disk_path = getenv(FILE_INFO_ON_DISK_PATH);
-    assert(file_info_on_disk_path);
-    assert(strlen(file_info_on_disk_path) > 0);
-    if (g_db) {
-        CAMLreturn(Val_unit);
-    }
-    assert_sql(
-        NULL,
-        sqlite3_open_v2(
-            file_info_on_disk_path,
-            &g_db,
-            SQLITE_OPEN_READONLY,
-            NULL
-        ),
-    SQLITE_OK);
-    CAMLreturn(Val_unit);
 }
 
 // Expects the database to be open
@@ -2526,40 +2524,6 @@ CAMLprim value hh_update_dep_table_sqlite(
   CAMLreturn(Val_long(edges_added));
 }
 
-CAMLprim value hh_save_file_info_init(
-        value ml_path
-) {
-    CAMLparam1(ml_path);
-    const char *path = String_val(ml_path);
-    hhfi_init_db(path);
-    make_all_tables(hhfi_get_db());
-    CAMLreturn(Val_unit);
-}
-
-CAMLprim value hh_save_file_info_free(
-    value ml_unit
-) {
-    CAMLparam1(ml_unit);
-    UNUSED(ml_unit);
-    hhfi_free_db();
-    CAMLreturn(Val_unit);
-}
-
-CAMLprim value hh_save_file_info_sqlite(
-    value ml_hash,
-    value ml_name,
-    value ml_kind,
-    value ml_filespec
-) {
-  CAMLparam4(ml_hash, ml_name, ml_kind, ml_filespec);
-  assert_master();
-  const char *name = String_val(ml_name);
-  int64_t kind = Int_val(ml_kind);
-  const char *filespec = String_val(ml_filespec);
-  hhfi_insert_row(hhfi_get_db(), get_hash(ml_hash), name, kind, filespec);
-  CAMLreturn(Val_unit);
-}
-
 CAMLprim value hh_get_loaded_dep_table_filename() {
   CAMLparam0();
   CAMLlocal1(result);
@@ -2763,16 +2727,6 @@ CAMLprim value hh_update_dep_table_sqlite(
   CAMLreturn(Val_long(0));
 }
 
-CAMLprim value hh_save_file_info_sqlite(
-    value out_filename,
-    value ml_name,
-    value ml_kind,
-    value ml_filespec
-) {
-  CAMLparam0();
-  CAMLreturn(Val_long(0));
-}
-
 CAMLprim value hh_load_dep_table_sqlite(
     value in_filename,
     value ignore_hh_version) {
@@ -2784,51 +2738,6 @@ CAMLprim value hh_get_dep_sqlite(value ocaml_key) {
   // Empty list
   CAMLparam0();
   CAMLreturn(Val_int(0));
-}
-
-CAMLprim value set_file_info_on_disk(value ml_str) {
-  CAMLparam1(ml_str);
-  UNUSED(ml_str);
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value get_file_info_on_disk(value ml_str) {
-  CAMLparam1(ml_str);
-  UNUSED(ml_str);
-  CAMLreturn(Val_long(0));
-}
-
-CAMLprim value get_file_info_on_disk_path(value ml_str) {
-  CAMLparam1(ml_str);
-  UNUSED(ml_str);
-  CAMLreturn(caml_copy_string(""));
-}
-
-CAMLprim value set_file_info_on_disk_path(value ml_str) {
-  CAMLparam1(ml_str);
-  UNUSED(ml_str);
-  CAMLreturn(Val_unit);
-}
-
-CAMLprim value open_file_info_db(
-    value ml_unit
-) {
-  UNUSED(ml_unit);
-  return Val_unit;
-}
-
-CAMLprim value hh_save_file_info_init(
-        value ml_path
-) {
-    UNUSED(ml_path);
-    return Val_unit;
-}
-
-CAMLprim value hh_save_file_info_free(
-        value ml_unit
-) {
-    UNUSED(ml_unit);
-    return Val_unit;
 }
 
 CAMLprim value hh_removed_count(value ml_unit) {

@@ -14,7 +14,7 @@ type prefix =
   | Hhi
   | Dummy
   | Tmp
-  [@@deriving show]
+  [@@deriving show, enum]
 
 val set_path_prefix : prefix -> Path.t -> unit
 val path_of_prefix : prefix -> string
