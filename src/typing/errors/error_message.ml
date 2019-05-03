@@ -778,16 +778,16 @@ let kind_of_msg = Errors.(function
   | EUnnecessaryInvariant _         -> LintError Lints.UnnecessaryInvariant
   | EInexactSpread _                -> LintError Lints.InexactSpread
   | ESignatureVerification _        -> LintError Lints.SignatureVerificationFailure
+  | EBadExportPosition _
+  | EBadExportContext _             -> InferWarning ExportKind
   | EUnexpectedTypeof _
   | EExperimentalDecorators _
   | EExperimentalClassProperties _
   | EUnsafeGetSet _
   | EExperimentalExportStarAs _
   | EIndeterminateModuleType _
-  | EBadExportPosition _
-  | EBadExportContext _
   | EUnreachable _
-  | EInvalidTypeof _                -> InferWarning
+  | EInvalidTypeof _                -> InferWarning OtherKind
   | EInternal _                     -> InternalError
   | ERecursionLimit _               -> RecursionLimitError
   | EDuplicateModuleProvider _      -> DuplicateProviderError

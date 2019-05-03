@@ -80,7 +80,8 @@ let regenerate =
       if CheckedSet.mem file checked_files then errorset else
       Flow_error.ErrorSet.filter (fun error ->
         match Flow_error.kind_of_error error with
-        | Errors.LintError Lints.SignatureVerificationFailure -> false
+        | Errors.LintError Lints.SignatureVerificationFailure
+        | Errors.InferWarning Errors.ExportKind -> false
         | _ -> true
       ) errorset
     ) local_errors in

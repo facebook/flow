@@ -7,10 +7,14 @@
 
 open Severity
 
+type infer_warning_kind =
+  | ExportKind
+  | OtherKind
+
 type error_kind =
   | ParseError
   | InferError
-  | InferWarning
+  | InferWarning of infer_warning_kind
   | InternalError
   | DuplicateProviderError
   | RecursionLimitError
@@ -19,7 +23,7 @@ type error_kind =
 let string_of_kind = function
 | ParseError -> "ParseError"
 | InferError -> "InferError"
-| InferWarning -> "InferWarning"
+| InferWarning _ -> "InferWarning"
 | InternalError -> "InternalError"
 | DuplicateProviderError -> "DuplicateProviderError"
 | RecursionLimitError -> "RecursionLimitError"
@@ -853,7 +857,7 @@ let rec compare compare_loc =
     | ParseError -> 3
     | RecursionLimitError -> 4
     | InferError -> 5
-    | InferWarning -> 5
+    | InferWarning _ -> 5
     | LintError _ -> 6
     in
     fun k1 k2 -> (order_of_kind k1) - (order_of_kind k2)
@@ -2861,7 +2865,7 @@ module Json_output = struct
       | ParseError -> "parse"
       | InferError -> "infer"
       (* "InferWarning"s should still really be treated as errors. (The name is outdated.) *)
-      | InferWarning -> "infer"
+      | InferWarning _ -> "infer"
       | InternalError -> "internal"
       | DuplicateProviderError -> "duplicate provider"
       | RecursionLimitError -> "recursion limit exceeded"
