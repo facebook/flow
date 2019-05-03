@@ -260,14 +260,6 @@ let set_file pos_file pos =
 let to_absolute p =
   set_file (Relative_path.to_absolute (filename p)) p
 
-let to_absolute_for_test p =
-  let path = filename p in
-  let path_without_prefix = Relative_path.suffix path in
-  let p = set_file
-    (Relative_path.create Relative_path.Dummy path_without_prefix)
-    p in
-  to_absolute p
-
 let to_relative p =
   set_file (Relative_path.create_detect_prefix (filename p)) p
 

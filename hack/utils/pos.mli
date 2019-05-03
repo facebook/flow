@@ -7,4 +7,4 @@
  *
  *)
 
- include module type of Pos_embedded
+include module type of Pos_embedded

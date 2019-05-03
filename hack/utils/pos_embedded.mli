@@ -99,7 +99,6 @@ val last_char : t -> t
 val first_char_of_line : t -> t
 
 val to_absolute : t -> absolute
-val to_absolute_for_test : t -> absolute
 
 val to_relative: absolute -> t
 
