@@ -46,6 +46,8 @@ let set_all entries settings =
 
 let get_default settings = settings.default_value
 
+let get_explicit_values settings = settings.explicit_values
+
 let get_value lint_kind settings =
   LintMap.get lint_kind settings.explicit_values
   |> Option.value_map ~f:fst ~default:settings.default_value

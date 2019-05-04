@@ -346,6 +346,35 @@ js: _build/scripts/ppx_gen_flowlibs.native $(BUILT_OBJECT_FILES) $(COPIED_FLOWLI
 		exit 1; \
 	fi
 
+REL_DIR=src/commands/config
+
+flowconfig-js:
+	$(OCB) \
+		-pkgs js_of_ocaml \
+		-pkgs js_of_ocaml-ppx \
+		-lflags -custom \
+		$(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+		-lflags "$(BYTECODE_LINKER_FLAGS) -warn-error -31" \
+		$(REL_DIR)/flowConfig_dot_js.byte; \
+	[ -e "$(REL_DIR)/flowconfig.js" -a "$(REL_DIR)/flowconfig.js" -nt "_build/$(REL_DIR)/flowConfig_dot_js.byte" ] || \
+		js_of_ocaml \
+			--opt 3 \
+			--disable genprim \
+			--extern-fs \
+			-o $(REL_DIR)/flowconfig.js \
+			$(REL_DIR)/js/stdlib.js $(JS_STUBS) \
+			_build/$(REL_DIR)/flowConfig_dot_js.byte;
+    # Disable errors because we are overriding primitives
+		# ret=$$?; \
+		# if [ ! $$ret ]; then \
+		# 	exit $$ret; \
+		# elif [ -s _build/$(REL_DIR)/js_of_ocaml.err ]; then \
+		# 	printf "js_of_ocaml produced output on stderr:\n" 1>&2; \
+		# 	cat _build/$(REL_DIR)/js_of_ocaml.err 1>&2; \
+		# 	exit 1; \
+		# fi
+
+
 dist/flow/flow$(EXE): build-flow
 	mkdir -p $(@D)
 	cp _build/src/flow.native $@

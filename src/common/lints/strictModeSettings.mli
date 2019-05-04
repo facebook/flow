@@ -13,3 +13,4 @@ val empty: t
 val fold: (lint_kind -> 'acc -> 'acc) -> t -> 'acc -> 'acc
 val iter: (lint_kind -> unit) -> t -> unit
 val of_lines: (int * string) list -> (t, int * string) result
+val elements: t -> lint_kind list
