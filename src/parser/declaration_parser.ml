@@ -196,7 +196,12 @@ module Declaration
 
   let generator env = Expect.maybe env T_MULT
 
-  let async env = Expect.maybe env T_ASYNC
+  (* Returns true and consumes a token if the token is `async` and the token after it is on
+     the same line (see https://tc39.github.io/ecma262/#sec-async-function-definitions) *)
+  let async env =
+    if Peek.token env = T_ASYNC && not (Peek.ith_is_line_terminator ~i:1 env)
+    then let () = Eat.token env in true
+    else false
 
   let is_simple_function_params =
     let is_simple_param = function

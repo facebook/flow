@@ -294,10 +294,6 @@ language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplic
   Missing parse error
 language/expressions/async-arrow-function/early-errors-arrow-formals-body-duplicate.js (default)
   Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-formals-lineterminator.js (strict mode)
-  Missing parse error
-language/expressions/async-arrow-function/early-errors-arrow-formals-lineterminator.js (default)
-  Missing parse error
 language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/expressions/async-function/early-errors-expression-NSPL-with-USD.js (default)
@@ -334,18 +330,6 @@ language/expressions/class/fields-equality-init-err-contains-arguments.js (stric
   Missing parse error
 language/expressions/class/fields-equality-init-err-contains-arguments.js (default)
   Missing parse error
-language/expressions/class/fields-evaluation-error-computed-name-toprimitive-err.js (strict mode)
-  Unexpected token } at (55, 2) to (55, 3)
-language/expressions/class/fields-evaluation-error-computed-name-toprimitive-err.js (default)
-  Unexpected token } at (55, 2) to (55, 3)
-language/expressions/class/fields-evaluation-error-computed-name-tostring-err.js (strict mode)
-  Unexpected token } at (55, 2) to (55, 3)
-language/expressions/class/fields-evaluation-error-computed-name-tostring-err.js (default)
-  Unexpected token } at (55, 2) to (55, 3)
-language/expressions/class/fields-evaluation-error-computed-name-valueof-err.js (strict mode)
-  Unexpected token } at (56, 2) to (56, 3)
-language/expressions/class/fields-evaluation-error-computed-name-valueof-err.js (default)
-  Unexpected token } at (56, 2) to (56, 3)
 language/expressions/class/fields-initializer-static-private-fields-forbidden.js (strict mode)
   Missing parse error
 language/expressions/class/fields-initializer-static-private-fields-forbidden.js (default)
@@ -366,30 +350,6 @@ language/expressions/class/fields-literal-name-static-public-fields-forbidden.js
   Missing parse error
 language/expressions/class/fields-literal-name-static-public-fields-forbidden.js (default)
   Missing parse error
-language/expressions/class/fields-multiple-definitions-computed-names.js (strict mode)
-  Unexpected identifier at (30, 2) to (30, 4)
-language/expressions/class/fields-multiple-definitions-computed-names.js (default)
-  Unexpected identifier at (30, 2) to (30, 4)
-language/expressions/class/fields-multiple-definitions-private-names.js (strict mode)
-  Unexpected identifier at (31, 2) to (31, 4)
-language/expressions/class/fields-multiple-definitions-private-names.js (default)
-  Unexpected identifier at (31, 2) to (31, 4)
-language/expressions/class/fields-multiple-stacked-definitions-computed-names.js (strict mode)
-  Unexpected identifier at (28, 2) to (28, 5)
-language/expressions/class/fields-multiple-stacked-definitions-computed-names.js (default)
-  Unexpected identifier at (28, 2) to (28, 5)
-language/expressions/class/fields-multiple-stacked-definitions-private-names.js (strict mode)
-  Unexpected identifier at (29, 2) to (29, 5)
-language/expressions/class/fields-multiple-stacked-definitions-private-names.js (default)
-  Unexpected identifier at (29, 2) to (29, 5)
-language/expressions/class/fields-new-no-sc-line-method-computed-names.js (strict mode)
-  Unexpected identifier at (28, 2) to (28, 3)
-language/expressions/class/fields-new-no-sc-line-method-computed-names.js (default)
-  Unexpected identifier at (28, 2) to (28, 3)
-language/expressions/class/fields-new-no-sc-line-method-private-names.js (strict mode)
-  Unexpected identifier at (29, 2) to (29, 3)
-language/expressions/class/fields-new-no-sc-line-method-private-names.js (default)
-  Unexpected identifier at (29, 2) to (29, 3)
 language/expressions/class/fields-private-arrow-fnc-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/expressions/class/fields-private-arrow-fnc-init-err-contains-arguments.js (default)
@@ -410,14 +370,6 @@ language/expressions/class/fields-privatename-constructor-err.js (strict mode)
   Missing parse error
 language/expressions/class/fields-privatename-constructor-err.js (default)
   Missing parse error
-language/expressions/class/fields-regular-definitions-computed-names.js (strict mode)
-  Unexpected token } at (29, 0) to (29, 1)
-language/expressions/class/fields-regular-definitions-computed-names.js (default)
-  Unexpected token } at (29, 0) to (29, 1)
-language/expressions/class/fields-regular-definitions-private-names.js (strict mode)
-  Unexpected identifier at (28, 0) to (28, 1)
-language/expressions/class/fields-regular-definitions-private-names.js (default)
-  Unexpected identifier at (28, 0) to (28, 1)
 language/expressions/class/fields-string-literal-name-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/expressions/class/fields-string-literal-name-init-err-contains-arguments.js (default)
@@ -445,10 +397,6 @@ language/expressions/generators/use-strict-with-non-simple-param.js (default)
 language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-NSPL-with-USD.js (default)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-async-lineterminator.js (strict mode)
-  Missing parse error
-language/expressions/object/method-definition/early-errors-object-method-async-lineterminator.js (default)
   Missing parse error
 language/expressions/object/method-definition/early-errors-object-method-await-in-formals-default.js (strict mode)
   Missing parse error
@@ -696,10 +644,6 @@ language/statements/async-function/early-errors-declaration-formals-body-duplica
   Missing parse error
 language/statements/async-function/early-errors-declaration-formals-body-duplicate.js (default)
   Missing parse error
-language/statements/class/classelementname-abrupt-completion.js (strict mode)
-  Unexpected token } at (41, 2) to (41, 3)
-language/statements/class/classelementname-abrupt-completion.js (default)
-  Unexpected token } at (41, 2) to (41, 3)
 language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (strict mode)
   Missing parse error
 language/statements/class/definition/early-errors-class-method-NSPL-with-USD.js (default)
@@ -720,18 +664,6 @@ language/statements/class/fields-equality-init-err-contains-arguments.js (strict
   Missing parse error
 language/statements/class/fields-equality-init-err-contains-arguments.js (default)
   Missing parse error
-language/statements/class/fields-evaluation-error-computed-name-toprimitive-err.js (strict mode)
-  Unexpected token } at (55, 2) to (55, 3)
-language/statements/class/fields-evaluation-error-computed-name-toprimitive-err.js (default)
-  Unexpected token } at (55, 2) to (55, 3)
-language/statements/class/fields-evaluation-error-computed-name-tostring-err.js (strict mode)
-  Unexpected token } at (55, 2) to (55, 3)
-language/statements/class/fields-evaluation-error-computed-name-tostring-err.js (default)
-  Unexpected token } at (55, 2) to (55, 3)
-language/statements/class/fields-evaluation-error-computed-name-valueof-err.js (strict mode)
-  Unexpected token } at (56, 2) to (56, 3)
-language/statements/class/fields-evaluation-error-computed-name-valueof-err.js (default)
-  Unexpected token } at (56, 2) to (56, 3)
 language/statements/class/fields-initializer-static-private-fields-forbidden.js (strict mode)
   Missing parse error
 language/statements/class/fields-initializer-static-private-fields-forbidden.js (default)
@@ -752,30 +684,6 @@ language/statements/class/fields-literal-name-static-public-fields-forbidden.js 
   Missing parse error
 language/statements/class/fields-literal-name-static-public-fields-forbidden.js (default)
   Missing parse error
-language/statements/class/fields-multiple-definitions-computed-names.js (strict mode)
-  Unexpected identifier at (30, 2) to (30, 4)
-language/statements/class/fields-multiple-definitions-computed-names.js (default)
-  Unexpected identifier at (30, 2) to (30, 4)
-language/statements/class/fields-multiple-definitions-private-names.js (strict mode)
-  Unexpected identifier at (31, 2) to (31, 4)
-language/statements/class/fields-multiple-definitions-private-names.js (default)
-  Unexpected identifier at (31, 2) to (31, 4)
-language/statements/class/fields-multiple-stacked-definitions-computed-names.js (strict mode)
-  Unexpected identifier at (28, 2) to (28, 5)
-language/statements/class/fields-multiple-stacked-definitions-computed-names.js (default)
-  Unexpected identifier at (28, 2) to (28, 5)
-language/statements/class/fields-multiple-stacked-definitions-private-names.js (strict mode)
-  Unexpected identifier at (29, 2) to (29, 5)
-language/statements/class/fields-multiple-stacked-definitions-private-names.js (default)
-  Unexpected identifier at (29, 2) to (29, 5)
-language/statements/class/fields-new-no-sc-line-method-computed-names.js (strict mode)
-  Unexpected identifier at (28, 2) to (28, 3)
-language/statements/class/fields-new-no-sc-line-method-computed-names.js (default)
-  Unexpected identifier at (28, 2) to (28, 3)
-language/statements/class/fields-new-no-sc-line-method-private-names.js (strict mode)
-  Unexpected identifier at (29, 2) to (29, 3)
-language/statements/class/fields-new-no-sc-line-method-private-names.js (default)
-  Unexpected identifier at (29, 2) to (29, 3)
 language/statements/class/fields-private-arrow-fnc-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/statements/class/fields-private-arrow-fnc-init-err-contains-arguments.js (default)
@@ -796,14 +704,6 @@ language/statements/class/fields-privatename-constructor-err.js (strict mode)
   Missing parse error
 language/statements/class/fields-privatename-constructor-err.js (default)
   Missing parse error
-language/statements/class/fields-regular-definitions-computed-names.js (strict mode)
-  Unexpected token } at (29, 0) to (29, 1)
-language/statements/class/fields-regular-definitions-computed-names.js (default)
-  Unexpected token } at (29, 0) to (29, 1)
-language/statements/class/fields-regular-definitions-private-names.js (strict mode)
-  Unexpected identifier at (28, 0) to (28, 1)
-language/statements/class/fields-regular-definitions-private-names.js (default)
-  Unexpected identifier at (28, 0) to (28, 1)
 language/statements/class/fields-string-literal-name-init-err-contains-arguments.js (strict mode)
   Missing parse error
 language/statements/class/fields-string-literal-name-init-err-contains-arguments.js (default)
@@ -1194,18 +1094,16 @@ language/white-space/mongolian-vowel-separator.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 58378 (98.99%)
-Failed: 597 (1.01%)
+Passed: 58428 (99.07%)
+Failed: 547 (0.93%)
 
 Features:
-  Symbol.toPrimitive: 328/332 (98.80%)
   arrow-function: 136/146 (93.15%)
   async-functions: 197/257 (76.65%)
   async-iteration: 7092/7160 (99.05%)
-  class: 742/854 (86.89%)
-  class-fields-private: 204/248 (82.26%)
-  class-fields-public: 526/626 (84.03%)
-  computed-property-names: 264/292 (90.41%)
+  class: 788/854 (92.27%)
+  class-fields-private: 220/248 (88.71%)
+  class-fields-public: 572/626 (91.37%)
   generators: 5405/5479 (98.65%)
   let: 191/195 (97.95%)
   numeric-separator-literal: 202/204 (99.02%)

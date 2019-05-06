@@ -433,14 +433,14 @@ module Object
                   private_names
               | _ -> private_names
               end)
-            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, { Identifier.name; comments= _ })); _})
-              when String.equal name "#constructor" ->
-                error_at env (loc, Error.InvalidFieldName (name, false, true));
-                (seen_constructor, private_names)
-            | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, { Identifier.name; comments= _ })); _}) ->
-                if SSet.mem name private_names then
-                  error_at env (loc, Error.DuplicatePrivateFields name);
-                (seen_constructor, SSet.add name private_names)
+          | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, { Identifier.name; comments= _ })); _})
+            when String.equal name "#constructor" ->
+              error_at env (loc, Error.InvalidFieldName (name, false, true));
+              (seen_constructor, private_names)
+          | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, { Identifier.name; comments= _ })); _}) ->
+              if SSet.mem name private_names then
+                error_at env (loc, Error.DuplicatePrivateFields name);
+              (seen_constructor, SSet.add name private_names)
           end in
           elements env seen_constructor' private_names' (element::acc)
 
@@ -484,53 +484,60 @@ module Object
     | Some (loc, _) -> error_at env (loc, Error.UnexpectedVariance)
     | None -> ()
 
+    (* Class property with annotation *)
+    in let property env start_loc key static variance =
+      let loc, (annot, value) = with_loc ~start_loc (fun env ->
+        let annot = Type.annotation_opt env in
+        let options = parse_options env in
+        let value =
+          if Peek.token env = T_ASSIGN then (
+            if static && options.esproposal_class_static_fields
+               || (not static) && options.esproposal_class_instance_fields
+            then begin
+              Expect.token env T_ASSIGN;
+              Some (Parse.expression (env |> with_allow_super Super_prop))
+            end else None
+          ) else None
+        in
+        begin if Expect.maybe env T_SEMICOLON then
+          ()
+        else if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
+          error_unexpected env
+        end;
+        annot, value
+      ) env in
+      match key with
+      | Ast.Expression.Object.Property.PrivateName private_name ->
+        Ast.Class.(Body.PrivateField (loc, { PrivateField.
+          key = private_name;
+          value;
+          annot;
+          static;
+          variance;
+        }))
+      | _ -> Ast.Class.(Body.Property (loc, { Property.
+          key;
+          value;
+          annot;
+          static;
+          variance;
+        }))
+
     in let rec init env start_loc decorators key async generator static variance =
       match Peek.token env with
       | T_COLON
       | T_ASSIGN
-      | T_SEMICOLON when not async && not generator ->
-        (* Class property with annotation *)
-        let loc, (annot, value) = with_loc ~start_loc (fun env ->
-          let annot = Type.annotation_opt env in
-          let options = parse_options env in
-          let value =
-            if Peek.token env = T_ASSIGN then (
-              if static && options.esproposal_class_static_fields
-                 || (not static) && options.esproposal_class_instance_fields
-              then begin
-                Expect.token env T_ASSIGN;
-                Some (Parse.expression (env |> with_allow_super Super_prop))
-              end else None
-            ) else None
-          in
-          begin if Expect.maybe env T_SEMICOLON then
-            ()
-          else if Peek.token env == T_LBRACKET || Peek.token env == T_LPAREN then
-            error_unexpected env
-          end;
-          annot, value
-        ) env in
-        begin match key with
-        | Ast.Expression.Object.Property.PrivateName private_name ->
-          Ast.Class.(Body.PrivateField (loc, PrivateField.({
-            key = private_name;
-            value;
-            annot;
-            static;
-            variance;
-          })))
-        | _ -> Ast.Class.(Body.Property (loc, Property.({
-            key;
-            value;
-            annot;
-            static;
-            variance;
-          }))) end
+      | T_SEMICOLON
+      | T_RCURLY when not async && not generator ->
+        property env start_loc key static variance
       | T_PLING ->
         (* TODO: add support for optional class properties *)
         error_unexpected env;
         Eat.token env;
         init env start_loc decorators key async generator static variance
+      | _ when Peek.is_implicit_semicolon env ->
+        (* an uninitialized, unannotated property *)
+        property env start_loc key static variance
       | _ ->
         error_unsupported_variance env variance;
         let kind, env = match static, key with
@@ -584,6 +591,20 @@ module Object
           decorators;
         }))
 
+    in let ith_implies_identifier ~i env =
+      match Peek.ith_token ~i env with
+      | T_LESS_THAN
+      | T_COLON
+      | T_ASSIGN
+      | T_SEMICOLON
+      | T_LPAREN
+      | T_RCURLY
+        -> true
+      | _ ->
+        false
+
+    in let implies_identifier = ith_implies_identifier ~i:0
+
     in fun env ->
       let start_loc = Peek.loc env in
       let decorators = decorator_list env in
@@ -591,10 +612,11 @@ module Object
         Peek.ith_token ~i:1 env <> T_LPAREN &&
         Peek.ith_token ~i:1 env <> T_LESS_THAN &&
         Expect.maybe env T_STATIC in
-      let async =
-        Peek.ith_token ~i:1 env <> T_LPAREN &&
-        Peek.ith_token ~i:1 env <> T_COLON &&
-        Declaration.async env in
+      let async = Peek.token env = T_ASYNC &&
+        not (ith_implies_identifier ~i:1 env) &&
+        not (Peek.ith_is_line_terminator ~i:1 env)
+      in
+      if async then Eat.token env; (* consume `async` *)
       let generator = Declaration.generator env in
       let variance = Declaration.variance env async generator in
       let generator = match generator, variance with
@@ -604,28 +626,20 @@ module Object
       match async, generator, Peek.token env with
       | false, false, T_IDENTIFIER { raw = "get"; _ } ->
           let _, key = key ~class_body:true env in
-          (match Peek.token env with
-          | T_LESS_THAN
-          | T_COLON
-          | T_ASSIGN
-          | T_SEMICOLON
-          | T_LPAREN ->
+          if implies_identifier env then
             init env start_loc decorators key async generator static variance
-          | _ ->
+          else begin
             error_unsupported_variance env variance;
-            get env start_loc decorators static)
+            get env start_loc decorators static
+          end
       | false, false, T_IDENTIFIER { raw = "set"; _ } ->
           let _, key = key ~class_body:true env in
-          (match Peek.token env with
-          | T_LESS_THAN
-          | T_COLON
-          | T_ASSIGN
-          | T_SEMICOLON
-          | T_LPAREN ->
+          if implies_identifier env then
             init env start_loc decorators key async generator static variance
-          | _ ->
+          else begin
             error_unsupported_variance env variance;
-            set env start_loc decorators static)
+            set env start_loc decorators static
+          end
       | _, _, _ ->
           let _, key = key ~class_body:true env in
           init env start_loc decorators key async generator static variance

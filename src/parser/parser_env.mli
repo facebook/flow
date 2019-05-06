@@ -144,6 +144,7 @@ module Peek : sig
   val ith_loc : i:int -> env -> Loc.t
   val ith_errors : i:int -> env -> (Loc.t * Parse_error.t) list
   val ith_comments : i:int -> env -> Loc.t Flow_ast.Comment.t list
+  val ith_is_line_terminator : i:int -> env -> bool
   val ith_is_identifier : i:int -> env -> bool
   val ith_is_identifier_name : i:int -> env -> bool
   val ith_is_type_identifier : i:int -> env -> bool
