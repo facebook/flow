@@ -356,12 +356,12 @@ flowconfig-js:
 		$(INCLUDE_OPTS) $(FINDLIB_OPTS) \
 		-lflags "$(BYTECODE_LINKER_FLAGS) -warn-error -31" \
 		$(REL_DIR)/flowConfig_dot_js.byte; \
-	[ -e "$(REL_DIR)/flowconfig.js" -a "$(REL_DIR)/flowconfig.js" -nt "_build/$(REL_DIR)/flowConfig_dot_js.byte" ] || \
+	[ -e "$(REL_DIR)/flowconfig_parser.js" -a "$(REL_DIR)/flowconfig_parser.js" -nt "_build/$(REL_DIR)/flowConfig_dot_js.byte" ] || \
 		js_of_ocaml \
 			--opt 3 \
 			--disable genprim \
 			--extern-fs \
-			-o $(REL_DIR)/flowconfig.js \
+			-o $(REL_DIR)/flowconfig_parser.js \
 			$(REL_DIR)/js/stdlib.js $(JS_STUBS) \
 			_build/$(REL_DIR)/flowConfig_dot_js.byte;
     # Disable errors because we are overriding primitives

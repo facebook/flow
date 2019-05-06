@@ -1,0 +1,26 @@
+{
+  "name": "flowconfig-parser",
+  "version": "0.98.1",
+  "homepage": "https://flow.org",
+  "license": "MIT",
+  "author": {
+    "name": "Flow Team",
+    "email": "flow@fb.com"
+  },
+  "files": [
+    "flowconfig_parser.js"
+  ],
+  "main": "flowconfig_parser.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/flow.git"
+  },
+  "scripts": {
+    "test": "node test/run_tests.js",
+    "prepublish": "make js"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=0.4.0"
+  }
+}
