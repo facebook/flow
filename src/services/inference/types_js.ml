@@ -266,8 +266,7 @@ let include_dependencies_and_dependents
     ~unchanged_checked
     ~infer_input
     ~dependency_info
-    ~all_dependent_files
-    ~direct_dependent_files =
+    ~all_dependent_files =
   let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
@@ -301,11 +300,10 @@ let include_dependencies_and_dependents
   let to_merge = CheckedSet.add ~dependents:all_dependent_files infer_input in
 
   let recheck_map =
-    let roots = CheckedSet.add ~dependents:direct_dependent_files infer_input in
-    (* Definitely recheck inferred and direct_dependent_files. As merging proceeds, other
-       files in to_merge may or may not be rechecked. *)
+    (* Definitely recheck input files. As merging proceeds, other files in to_merge may or may not
+       be rechecked. *)
     CheckedSet.fold (fun recheck_map file ->
-      FilenameMap.add file (CheckedSet.mem file roots) recheck_map
+      FilenameMap.add file (CheckedSet.mem file infer_input) recheck_map
     ) FilenameMap.empty to_merge
   in
 
@@ -1277,7 +1275,7 @@ end = struct
 
 
     (* direct_dependent_files are unchanged files which directly depend on changed modules,
-       or are new / changed files that are phantom dependents. dependent_files are
+       or are new / changed files that are phantom dependents. all_dependent_files are
        direct_dependent_files plus their dependents (transitive closure) *)
     let%lwt all_dependent_files, direct_dependent_files =
       with_timer_lwt ~options "DependentFiles" profiling (fun () ->
@@ -1310,12 +1308,10 @@ end = struct
 
     Hh_logger.info "Recalculating dependency graph";
     let%lwt dependency_info = with_timer_lwt ~options "CalcDepsTypecheck" profiling (fun () ->
-      let files_to_include_in_dependency_info =
-        freshparsed
-        |> FilenameSet.union direct_dependent_files
-      in
-      let%lwt updated_dependency_info = Dep_service.calc_partial_dependency_info ~options ~reader workers
-        files_to_include_in_dependency_info ~parsed in
+      let files_to_update_dependency_info = FilenameSet.union freshparsed direct_dependent_files in
+      let%lwt updated_dependency_info =
+        Dep_service.calc_partial_dependency_info ~options ~reader workers
+        files_to_update_dependency_info ~parsed in
       let old_dependency_info = env.ServerEnv.dependency_info in
       match old_dependency_info, updated_dependency_info with
         | Dependency_info.Classic old_map, Dependency_info.Classic updated_map ->
@@ -1352,7 +1348,6 @@ end = struct
     let intermediate_values = (
       all_dependent_files,
       deleted,
-      direct_dependent_files,
       errors,
       files_to_force,
       freshparsed,
@@ -1374,7 +1369,6 @@ end = struct
     let (
       all_dependent_files,
       deleted,
-      direct_dependent_files,
       errors,
       files_to_force,
       freshparsed,
@@ -1458,7 +1452,6 @@ end = struct
     let%lwt to_merge, components, recheck_map =
       include_dependencies_and_dependents
         ~options ~profiling ~unchanged_checked ~infer_input ~dependency_info ~all_dependent_files
-        ~direct_dependent_files
     in
 
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
@@ -2089,7 +2082,6 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
         ~infer_input
         ~dependency_info
         ~all_dependent_files:FilenameSet.empty
-        ~direct_dependent_files:FilenameSet.empty
     in
     (* The values to_merge and recheck_map are essentially the same as infer_input, aggregated. This
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
