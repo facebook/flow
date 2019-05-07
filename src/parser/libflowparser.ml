@@ -24,6 +24,7 @@ module AbstractTranslator : (
   let obj props = JObject props
   let array arr = JArray arr
   let number x = JNumber x
+  let int x = number (float x) (* TODO: this is inefficient, push ints to C *)
   let null = JNull
   let regexp _loc _pattern _flags = JNull
 end

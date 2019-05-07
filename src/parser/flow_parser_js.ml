@@ -20,6 +20,7 @@ end = struct
   let obj props = Js.Unsafe.inject (Js.Unsafe.obj (Array.of_list props))
   let array arr = Js.Unsafe.inject (Js.array (Array.of_list arr))
   let number x = Js.Unsafe.inject (Js.number_of_float x)
+  let int x = number (float x)
   let null = Js.Unsafe.inject Js.null
   let regexp loc pattern flags =
     let regexp = try

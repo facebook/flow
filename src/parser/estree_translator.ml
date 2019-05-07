@@ -36,7 +36,6 @@ end with type t = Impl.t) = struct
   open Impl
 
   let array_of_list fn list = array (List.rev_map fn list |> List.rev)
-  let int x = number (float x)
   let option f = function
     | Some v -> f v
     | None -> null

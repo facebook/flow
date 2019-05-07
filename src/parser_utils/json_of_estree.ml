@@ -17,6 +17,7 @@ module Hh_json_translator : (
   let obj props = JSON_Object props
   let array arr = JSON_Array arr
   let number x = JSON_Number (Dtoa.ecma_string_of_float x)
+  let int x = JSON_Number (string_of_int x)
   let null = JSON_Null
   let regexp _loc _pattern _flags = JSON_Null
 end
