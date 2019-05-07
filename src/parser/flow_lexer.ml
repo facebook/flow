@@ -49,7 +49,7 @@ let underscored_decimal = [%sedlex.regexp?
 (* Different ways you can write a number *)
 let binnumber = [%sedlex.regexp? '0', ('B' | 'b'), underscored_bin]
 let octnumber = [%sedlex.regexp? '0', ('O' | 'o'), underscored_oct]
-let legacyoctnumber = [%sedlex.regexp? '0', underscored_oct]
+let legacyoctnumber = [%sedlex.regexp? '0', Plus oct_digit] (* no underscores allowed *)
 let hexnumber = [%sedlex.regexp? '0', ('X' | 'x'), underscored_hex]
 let scinumber = [%sedlex.regexp?
   ((decintlit, Opt ('.', Opt underscored_decimal)) | ('.', underscored_decimal)),
