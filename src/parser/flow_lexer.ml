@@ -106,10 +106,10 @@ let htmlentity = [%sedlex.regexp?
   Opt alphanumeric, Opt alphanumeric, Opt alphanumeric, Opt alphanumeric
 ]
 
-(* http://www.ecma-international.org/ecma-262/6.0/#table-32 *)
+(* https://tc39.github.io/ecma262/#sec-white-space *)
 let whitespace = [%sedlex.regexp?
   0x0009 | 0x000B | 0x000C | 0x0020 | 0x00A0 | 0xfeff |
-  0x1680 | 0x180e | 0x2000 .. 0x200a | 0x202f | 0x205f | 0x3000
+  0x1680 | 0x2000 .. 0x200a | 0x202f | 0x205f | 0x3000
 ]
 
 (* minus sign in front of negative numbers

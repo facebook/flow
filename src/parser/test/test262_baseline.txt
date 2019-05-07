@@ -1088,14 +1088,10 @@ language/statements/try/early-catch-var.js (strict mode)
   Missing parse error
 language/statements/try/early-catch-var.js (default)
   Missing parse error
-language/white-space/mongolian-vowel-separator.js (strict mode)
-  Missing parse error
-language/white-space/mongolian-vowel-separator.js (default)
-  Missing parse error
 
 === Summary ===
-Passed: 58428 (99.07%)
-Failed: 547 (0.93%)
+Passed: 58430 (99.08%)
+Failed: 545 (0.92%)
 
 Features:
   arrow-function: 136/146 (93.15%)
@@ -1107,4 +1103,3 @@ Features:
   generators: 5405/5479 (98.65%)
   let: 191/195 (97.95%)
   numeric-separator-literal: 202/204 (99.02%)
-  u180e: 46/48 (95.83%)
