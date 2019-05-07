@@ -37,6 +37,7 @@ class ['a] t = object(self)
   | FunProtoCallT _
   | ObjProtoT _
   | NullProtoT _
+  | GlobalThisT _
     -> acc
 
   | CustomFunT (_, kind) -> self#custom_fun_kind cx acc kind

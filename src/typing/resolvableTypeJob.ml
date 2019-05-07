@@ -251,6 +251,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | FunProtoT _
   | NullProtoT _
   | ObjProtoT _
+  | GlobalThisT _
   | CustomFunT (_, _)
 
   | ExistsT _

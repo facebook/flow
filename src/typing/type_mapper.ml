@@ -107,7 +107,8 @@ class virtual ['a] t = object(self)
       | NullProtoT _
       | FunProtoApplyT _
       | FunProtoBindT _
-      | FunProtoCallT _ -> t
+      | FunProtoCallT _ 
+      | GlobalThisT _ -> t
       | AnyWithLowerBoundT t' ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

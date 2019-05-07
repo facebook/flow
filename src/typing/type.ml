@@ -86,7 +86,7 @@ module rec TypeTerm : sig
     (* exact *)
     | ExactT of reason * t
 
-    | FunProtoT of reason      (* Function.prototype *)
+    | FunProtoT of reason       (* Function.prototype *)
     | ObjProtoT of reason       (* Object.prototype *)
 
     (* Signifies the end of the prototype chain. Distinct from NullT when it
@@ -96,6 +96,8 @@ module rec TypeTerm : sig
     | FunProtoApplyT of reason  (* Function.prototype.apply *)
     | FunProtoBindT of reason   (* Function.prototype.bind *)
     | FunProtoCallT of reason   (* Function.prototype.call *)
+
+    | GlobalThisT of reason      (* globalThis *)
 
     (* generalizations of AnyT *)
     | AnyWithLowerBoundT of t (* any supertype of t *)
@@ -2143,6 +2145,7 @@ end = struct
     | FunProtoApplyT reason -> reason
     | FunProtoBindT reason -> reason
     | FunProtoCallT reason -> reason
+    | GlobalThisT reason -> reason
     | KeysT (reason, _) -> reason
     | ModuleT (reason, _, _) -> reason
     | NullProtoT reason -> reason
@@ -2307,6 +2310,7 @@ end = struct
     | FunProtoT (reason) -> FunProtoT (f reason)
     | FunProtoBindT (reason) -> FunProtoBindT (f reason)
     | FunProtoCallT (reason) -> FunProtoCallT (f reason)
+    | GlobalThisT (reason) -> GlobalThisT (f reason)
     | KeysT (reason, t) -> KeysT (f reason, t)
     | ModuleT (reason, exports, is_strict) -> ModuleT (f reason, exports, is_strict)
     | NullProtoT reason -> NullProtoT (f reason)
@@ -3118,6 +3122,7 @@ let string_of_ctor = function
   | FunProtoApplyT _ -> "FunProtoApplyT"
   | FunProtoBindT _ -> "FunProtoBindT"
   | FunProtoCallT _ -> "FunProtoCallT"
+  | GlobalThisT _ -> "GlobalThisT"
   | KeysT _ -> "KeysT"
   | ModuleT _ -> "ModuleT"
   | NullProtoT _ -> "NullProtoT"

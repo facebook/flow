@@ -173,6 +173,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | FunProtoApplyT _
   | FunProtoBindT _
   | FunProtoCallT _
+  | GlobalThisT _
     -> []
 
   | DefT (_, _, FunT (static, proto, funtype)) -> [
@@ -1796,7 +1797,8 @@ let rec dump_t_ (depth, tvars) cx t =
   | FunProtoT _
   | FunProtoApplyT _
   | FunProtoBindT _
-  | FunProtoCallT _ -> p t
+  | FunProtoCallT _ 
+  | GlobalThisT _ -> p t
   | DefT (_, trust, PolyT (_, tps, c, id)) -> p ~trust:(Some trust) ~extra:(spf "%s [%s] #%d"
       (kid c)
       (String.concat "; " (Core_list.map ~f:(fun tp -> tp.name) (Nel.to_list tps)))
