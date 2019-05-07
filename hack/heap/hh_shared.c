@@ -1535,21 +1535,6 @@ CAMLprim value hh_get_dep(value ocaml_key) {
   CAMLreturn(result);
 }
 
-/*****************************************************************************/
-/* Must be called after the hack server is done initializing.
- * We keep the original size of the heap to estimate how often we should
- * garbage collect.
- */
-/*****************************************************************************/
-void hh_call_after_init(void) {
-  CAMLparam0();
-  if (2 * used_heap_size() >= heap_size) {
-    caml_failwith("Heap init size is too close to max heap size; "
-      "GC will never get triggered!");
-  }
-  CAMLreturn0;
-}
-
 value hh_check_heap_overflow(void) {
   if (*heap >= shared_mem + shared_mem_size) {
     return Val_bool(1);

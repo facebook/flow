@@ -258,11 +258,8 @@ let get_hash s =
 
 external hh_removed_count : unit -> int = "hh_removed_count"
 
-external hh_init_done: unit -> unit = "hh_call_after_init"
-
 external hh_check_heap_overflow: unit -> bool  = "hh_check_heap_overflow"
 let init_done () =
-  hh_init_done ();
   EventLogger.sharedmem_init_done (heap_size ())
 
 type table_stats = {
