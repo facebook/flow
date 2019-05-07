@@ -848,13 +848,8 @@ module Expression
       with Failure _ -> failwith ("Invalid binary/octal "^raw)
       end
     | NORMAL ->
-      begin try Flow_lexer.FloatOfString.float_of_string raw
-      with
-      | _ when Sys.win32 ->
-        error env Parse_error.WindowsFloatOfString;
-        789.0
-      | Failure _ ->
-        failwith ("Invalid number "^raw)
+      begin try float_of_string raw
+      with Failure _ -> failwith ("Invalid number "^raw)
       end
     in
     Expect.token env (T_NUMBER { kind; raw });
@@ -884,13 +879,8 @@ module Expression
       end
     | NORMAL ->
       let postraw = bigint_strip_n raw in
-      begin try Flow_lexer.FloatOfString.float_of_string postraw
-      with
-      | _ when Sys.win32 ->
-        error env Parse_error.WindowsFloatOfString;
-        789.0
-      | Failure _ ->
-        failwith ("Invalid bigint "^postraw)
+      begin try float_of_string postraw
+      with Failure _ -> failwith ("Invalid bigint "^postraw)
       end
     in
     Expect.token env (T_BIGINT { kind; raw });

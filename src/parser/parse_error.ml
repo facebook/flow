@@ -88,7 +88,6 @@ type t =
   | ExportNamelessFunction
   | UnsupportedDecorator
   | MissingTypeParamDefault
-  | WindowsFloatOfString
   | DuplicateDeclareModuleExports
   | AmbiguousDeclareModuleKind
   | GetterArity
@@ -242,10 +241,6 @@ module PP =
       | UnsupportedDecorator -> "Found a decorator in an unsupported position."
       | MissingTypeParamDefault -> "Type parameter declaration needs a default, \
           since a preceding type parameter declaration has a default."
-      | WindowsFloatOfString -> "The Windows version of OCaml has a bug in how \
-          it parses hexadecimal numbers. It is fixed in OCaml 4.03.0. Until we \
-          can switch to 4.03.0, please avoid either hexadecimal notation or \
-          Windows."
       | DuplicateDeclareModuleExports -> "Duplicate `declare module.exports` \
           statement!"
       | AmbiguousDeclareModuleKind -> "Found both `declare module.exports` and \
