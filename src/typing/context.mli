@@ -87,6 +87,7 @@ val esproposal_nullish_coalescing: t -> Options.esproposal_feature_mode
 val evaluated: t -> Type.t IMap.t
 val file: t -> File_key.t
 val find_props: t -> Type.Properties.id -> Type.Properties.t
+val find_real_props: t -> Type.Properties.id -> Type.Properties.t
 val find_call: t -> int -> Type.t
 val find_exports: t -> Type.Exports.id -> Type.Exports.t
 val find_require: t -> ALoc.t -> Type.t

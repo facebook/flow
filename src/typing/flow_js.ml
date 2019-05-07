@@ -4415,35 +4415,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | ShapeT o, _ -> rec_flow cx trace (o, u)
 
-    | DefT (reason, _, ObjT { props_tmap; call_t = None; _ }), UseT (use_op', ShapeT proto) ->
-        (* TODO: ShapeT should have its own reason *)
-        let reason_op = reason_of_t proto in
-        Context.iter_real_props cx props_tmap (fun x p ->
-          let use_op = Frame (PropertyCompatibility {
-            prop = Some x;
-            upper = reason;
-            lower = reason_of_t proto;
-          }, use_op') in
-          let reason_prop = replace_reason (fun desc ->
-            RPropertyOf (x, desc)
-          ) reason in
-          match Property.read_t p with
-          | Some t ->
-            let propref = Named (reason_prop, x) in
-            let t = filter_optional cx ~trace reason_prop t in
-            rec_flow cx trace (proto, MatchPropT (use_op, reason_op, propref, t))
-          | None ->
-            add_output cx ~trace (Error_message.EPropAccess (
-              (reason_prop, reason_op), Some x, Property.polarity p, Read, use_op'
-            ))
-        )
-
-    | DefT (r, _, InstanceT (_, _, _, {inst_call_t = None; own_props; proto_props; _})) as instance,
+    | DefT (reason, _, ObjT ({ call_t = None; _ } as o)),
       UseT (use_op, ShapeT proto) ->
-        rec_flow cx trace (proto,
-          GetPropT (use_op, r, Named (reason_of_t proto, "constructor"), class_type instance));
-        structural_subtype cx trace ~use_op ~ignore_polarity:true ~skip_ctor:true proto r
-          (own_props, proto_props, None);
+      let props = Context.find_real_props cx o.props_tmap in
+      match_shape cx trace ~use_op proto reason props
+
+    | DefT (reason, _, InstanceT (_, _, _, ({inst_call_t = None; _} as i))),
+      UseT (use_op, ShapeT proto) ->
+      let own_props = Context.find_props cx i.own_props in
+      let proto_props = Context.find_props cx i.proto_props in
+      let proto_props =
+        if i.structural
+        then proto_props
+        else SMap.remove "constructor" proto_props
+      in
+      let props = SMap.union own_props proto_props in
+      match_shape cx trace ~use_op proto reason props
 
     (* Function definitions are incompatible with ShapeT. ShapeT is meant to
      * match an object type with a subset of the props in the type being
@@ -7357,16 +7344,12 @@ and flow_type_args cx trace ~use_op lreason ureason targs1 targs2 =
 (* TODO: own_props/proto_props is misleading, since they come from interfaces,
    which don't have an own/proto distinction. *)
 and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
-  ?(ignore_polarity=false) ?(skip_ctor=false) (own_props, proto_props, call_id) =
-  let action use_op = function
-    | Field (_, t, _) when ignore_polarity -> MatchProp (use_op, t)
-    | p -> LookupProp (use_op, p) in
+  (own_props, proto_props, call_id) =
   let lreason = reason_of_t lower in
   let own_props = Context.find_props cx own_props in
   let proto_props = Context.find_props cx proto_props in
   let call_t = Option.map call_id ~f:(Context.find_call cx) in
   own_props |> SMap.iter (fun s p ->
-    if skip_ctor && s = "constructor" then () else
     let use_op = Frame (PropertyCompatibility {
       prop = Some s;
       lower = lreason;
@@ -7382,7 +7365,7 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
       in
       rec_flow cx trace (lower,
         LookupT (reason_struct, NonstrictReturning (None, None), [], propref,
-          Field (None, t, polarity) |> action use_op))
+          LookupProp (use_op, Field (None, t, polarity))))
     | _ ->
       let propref =
         let reason_prop = replace_reason (fun desc ->
@@ -7391,10 +7374,10 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
         Named (reason_prop, s)
       in
       rec_flow cx trace (lower,
-        LookupT (reason_struct, Strict lreason, [], propref, action use_op p))
+        LookupT (reason_struct, Strict lreason, [], propref,
+          LookupProp (use_op, p)))
   );
   proto_props |> SMap.iter (fun s p ->
-    if skip_ctor && s = "constructor" then () else
     let use_op = Frame (PropertyCompatibility {
       prop = Some s;
       lower = lreason;
@@ -7407,7 +7390,8 @@ and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
       Named (reason_prop, s)
     in
     rec_flow cx trace (lower,
-      LookupT (reason_struct, Strict lreason, [], propref, action use_op p))
+      LookupT (reason_struct, Strict lreason, [], propref,
+        LookupProp (use_op, p)))
   );
   call_t |> Option.iter ~f:(fun ut ->
     let prop_name = Some "$call" in
@@ -8850,6 +8834,29 @@ and match_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t =
 and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_t =
   RWProp (use_op, DefT (reason_obj, bogus_trust (), ObjT o), tin, Write (Normal, prop_t))
   |> writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op tin
+
+and match_shape cx trace ~use_op proto reason props =
+  (* TODO: ShapeT should have its own reason *)
+  let reason_op = reason_of_t proto in
+  SMap.iter (fun x p ->
+    let reason_prop = replace_reason (fun desc ->
+      RPropertyOf (x, desc)
+    ) reason in
+    match Property.read_t p with
+    | Some t ->
+      let use_op = Frame (PropertyCompatibility {
+        prop = Some x;
+        upper = reason;
+        lower = reason_op;
+      }, use_op) in
+      let propref = Named (reason_prop, x) in
+      let t = filter_optional cx ~trace reason_prop t in
+      rec_flow cx trace (proto, MatchPropT (use_op, reason_op, propref, t))
+    | None ->
+      add_output cx ~trace (Error_message.EPropAccess (
+        (reason_prop, reason_op), Some x, Property.polarity p, Read, use_op
+      ))
+  ) props
 
 and find_or_intro_shadow_prop cx trace reason_op x prop_loc =
   let intro_shadow_prop id =

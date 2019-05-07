@@ -63,20 +63,6 @@ References:
                                    ^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:38:13
-
-`PointB` [1] is incompatible with `PointC` [2].
-
-   test.js:38:13
-   38| (pc: $Shape<PointB>);
-                   ^^^^^^ [1]
-
-References:
-   test.js:32:17
-   32| declare var pc: PointC;
-                       ^^^^^^ [2]
-
-
 Error ----------------------------------------------------------------------------------------------------- test.js:40:2
 
 Cannot cast `pc` to object type because property `y` is missing in object type [1] but exists in `PointC` [2].
@@ -207,20 +193,6 @@ References:
                                                      ^^^^^^^^^^ [4]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:103:15
-
-`Two` [1] is incompatible with `One` [2].
-
-   test.js:103:15
-   103| (one : $Shape<Two>); // error
-                      ^^^ [1]
-
-References:
-   test.js:96:11
-    96| let one = new One(3);
-                  ^^^^^^^^^^ [2]
-
-
 Error ---------------------------------------------------------------------------------------------------- test.js:106:2
 
 Cannot cast `two` to `One` because `Two` [1] is incompatible with `One` [2].
@@ -256,19 +228,5 @@ References:
                                                      ^^^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- test.js:109:15
 
-`One` [1] is incompatible with `Two` [2].
-
-   test.js:109:15
-   109| (two : $Shape<One>); // error
-                      ^^^ [1]
-
-References:
-   test.js:97:11
-    97| let two = new Two();
-                  ^^^^^^^^^ [2]
-
-
-
-Found 17 errors
+Found 14 errors
