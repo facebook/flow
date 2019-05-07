@@ -865,19 +865,13 @@ module Expression
 
   and bigint env kind raw =
     let value = match kind with
-    | LEGACY_OCTAL ->
-      error env Error.StrictOctalLiteral;
-      let postraw = bigint_strip_n raw in
-      begin try Int64.to_float (Int64.of_string ("0o"^postraw))
-      with Failure _ -> failwith ("Invalid bigint legacy octal "^postraw)
-      end
-    | BINARY
-    | OCTAL ->
+    | BIG_BINARY
+    | BIG_OCTAL ->
       let postraw = bigint_strip_n raw in
       begin try Int64.to_float (Int64.of_string postraw)
       with Failure _ -> failwith ("Invalid bigint binary/octal "^postraw)
       end
-    | NORMAL ->
+    | BIG_NORMAL ->
       let postraw = bigint_strip_n raw in
       begin try float_of_string postraw
       with Failure _ -> failwith ("Invalid bigint "^postraw)

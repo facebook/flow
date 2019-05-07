@@ -130,12 +130,12 @@ export default suite(({ addFile, addFiles, addCode }) => [
     addCode(`
       type InvalidOctalLegacy = 016432n;
     `).newErrors(
-      `
+        `
           test.js:4
             4:       type InvalidOctalLegacy = 016432n;
-                                                      ^ Octal literals are not allowed in strict mode.
-        `
-    )
+                                               ^^^^^^^ Unexpected token ILLEGAL
+        `,
+      )
   ]),
 
   test("BigInt invalid negative octal legacy type literal", [
@@ -145,7 +145,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       type InvalidNegOctalLegacy = -016432n;
-                                                          ^ Octal literals are not allowed in strict mode.
+                                                  ^^^^^^^^ Unexpected token ILLEGAL
         `,
       )
   ]),
@@ -154,12 +154,12 @@ export default suite(({ addFile, addFiles, addCode }) => [
     addCode(`
       const invalid_octal_legacy = 016432n;
     `).newErrors(
-      `
+        `
           test.js:4
             4:       const invalid_octal_legacy = 016432n;
-                                                  ^^^^^^^ Octal literals are not allowed in strict mode.
-        `
-    )
+                                                  ^^^^^^^ Unexpected token ILLEGAL
+        `,
+      )
   ]),
 
   test("BigInt invalid negative octal legacy literal", [
@@ -169,7 +169,7 @@ export default suite(({ addFile, addFiles, addCode }) => [
         `
           test.js:4
             4:       const invalid_neg_octal_legacy = -016432n;
-                                                       ^^^^^^^ Octal literals are not allowed in strict mode.
+                                                       ^^^^^^^ Unexpected token ILLEGAL
         `,
       )
   ]),

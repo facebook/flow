@@ -184,8 +184,6 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
     | T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw } ->
         let bigint = raw in
         Expect.token env (T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw });
-        if kind = LEGACY_OCTAL
-        then error env Error.StrictOctalLiteral;
         loc, Type.BigIntLiteral {
           Ast.BigIntLiteral.approx_value;
           bigint;
