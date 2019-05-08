@@ -5,7 +5,7 @@ aliases:
 
   - &docker_opam
     docker:
-      - image: ocaml/opam:debian-8_ocaml-4.05.0
+      - image: ocaml/opam2:debian-9-ocaml-4.05
         environment:
           <<: *opam_env
     working_directory: ~/flow
@@ -24,7 +24,7 @@ aliases:
   - &opam_deps
     name: Install deps from opam
     command: |
-      eval $(opam config env)
+      eval $(opam env)
       opam pin add -n flowtype-ci . | cat
       opam depext flowtype-ci | cat
       opam install --deps-only flowtype-ci | cat
@@ -72,13 +72,6 @@ jobs:
           # https://discuss.circleci.com/t/failed-to-fetch-jessie-updates/29246
           name: Install deps
           command: |
-            sudo rm /etc/apt/sources.list
-            echo "deb http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb-src http://archive.debian.org/debian/ jessie main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "deb-src http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
-            echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
-            echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
             sudo apt-get update && sudo apt-get install zip
       - run: *opam_version
       - restore_cache: *restore_opam_cache
