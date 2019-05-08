@@ -6353,10 +6353,39 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (own_props, proto_props, inst_call_t);
       rec_flow cx trace (l, UseT (use_op, super))
 
-    | DefT (_, _, NullT),
+    (***********************)
+    (* Object library call *)
+    (***********************)
+
+    | ObjProtoT reason, _ ->
+      let use_desc = true in
+      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
+      rec_flow cx trace (obj_proto, u)
+
+    | _, UseT (use_op, ObjProtoT reason) ->
+      let use_desc = true in
+      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
+      rec_flow cx trace (l, UseT (use_op, obj_proto))
+
+    (*************************)
+    (* Function library call *)
+    (*************************)
+
+    | FunProtoT reason, _ ->
+      let use_desc = true in
+      let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
+      rec_flow cx trace (fun_proto, u)
+
+    | _, UseT (use_op, FunProtoT reason) ->
+      let use_desc = true in
+      let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
+      rec_flow cx trace (l, UseT (use_op, fun_proto))
+
+    | _,
       ExtendsUseT (use_op, _, [], t, tc) ->
       let reason_l, reason_u = FlowError.ordered_reasons (reason_of_t t, reason_of_t tc) in
       add_output cx ~trace (Error_message.EIncompatibleWithUseOp (reason_l, reason_u, use_op))
+
 
     (*******************************)
     (* ToString abstract operation *)
@@ -6404,34 +6433,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | DefT (reason, _, BoolT _), u when primitive_promoting_use_t u ->
       rec_flow cx trace (get_builtin_type cx ~trace reason "Boolean",u)
-
-    (*************************)
-    (* Function library call *)
-    (*************************)
-
-    | FunProtoT reason, _ ->
-      let use_desc = true in
-      let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
-      rec_flow cx trace (fun_proto, u)
-
-    | _, UseT (use_op, FunProtoT reason) ->
-      let use_desc = true in
-      let fun_proto = get_builtin_type cx ~trace reason ~use_desc "Function" in
-      rec_flow cx trace (l, UseT (use_op, fun_proto))
-
-    (***********************)
-    (* Object library call *)
-    (***********************)
-
-    | ObjProtoT reason, _ ->
-      let use_desc = true in
-      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
-      rec_flow cx trace (obj_proto, u)
-
-    | _, UseT (use_op, ObjProtoT reason) ->
-      let use_desc = true in
-      let obj_proto = get_builtin_type cx ~trace reason ~use_desc "Object" in
-      rec_flow cx trace (l, UseT (use_op, obj_proto))
 
     (*****************************************************)
     (* Nice error messages for mixed function refinement *)
