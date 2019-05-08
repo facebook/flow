@@ -87,6 +87,7 @@ MODULES=\
   src/common/utils/loc_utils\
   src/common/xx\
   src/flowlib\
+  src/lsp\
   src/monitor\
   src/monitor/connections\
   src/monitor/logger\
