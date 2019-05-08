@@ -187,9 +187,21 @@ function MyComponent(props: Props) {
 
 ### Using Default Props for Functional Components <a class="toc" id="toc-using-default-props-for-functional-components" href="#toc-using-default-props-for-functional-components"></a>
 
-React also supports default props on stateless functional components. Similarly
+Default props can be easily handled in JavaScript using the ES6 destructuring syntax.
+
+```js
+type Props = {
+  foo?: number,
+};
+
+function MyComponent({ foo = 42 }: Props) {}
+```
+
+Alternatively, React also supports default props on stateless functional components. Similarly
 to class components, default props for stateless functional components will
-work without any extra type annotations.
+work without any extra type annotations. 
+
+> Note that `defaultProps` doesn't work when you pass the component directly to a `React.forwardRef`.
 
 ```js
 import * as React from 'react';
