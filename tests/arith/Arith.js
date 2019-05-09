@@ -29,7 +29,7 @@ function bar1(x: number, y: ?number) {
   num(x + y);
 }
 
-// test MaybeT(BigNumT)
+// test MaybeT(BigIntT)
 function bigint_bar0(x: ?bigint, y: bigint) {
   bignum(x + y);
 }
@@ -45,7 +45,7 @@ function bar3(x: number, y?: number) {
   num(x + y);
 }
 
-// test OptionalT(BigNumT)
+// test OptionalT(BigIntT)
 function bigint_bar2(x?: bigint, y: bigint) {
   bignum(x + y);
 }
@@ -61,7 +61,7 @@ function bar5(x: number, y?: ?number) {
   num(x + y);
 }
 
-// test OptionalT(MaybeT(BigNumT))
+// test OptionalT(MaybeT(BigIntT))
 function bigint_bar4(x?: ?bigint, y: bigint) {
   bignum(x + y);
 }
