@@ -56,6 +56,7 @@ type t =
   | StrictParamDupe
   | StrictFunctionName
   | StrictOctalLiteral
+  | StrictNonOctalLiteral
   | StrictDelete
   | StrictDuplicateProperty
   | AccessorDataProperty
@@ -186,6 +187,7 @@ module PP =
       | StrictParamDupe -> "Strict mode function may not have duplicate parameter names"
       | StrictFunctionName ->  "Function name may not be eval or arguments in strict mode"
       | StrictOctalLiteral ->  "Octal literals are not allowed in strict mode."
+      | StrictNonOctalLiteral -> "Number literals with leading zeros are not allowed in strict mode."
       | StrictDelete ->  "Delete of an unqualified identifier in strict mode."
       | StrictDuplicateProperty ->  "Duplicate data property in object literal not allowed in strict mode"
       | AccessorDataProperty ->  "Object literal may not have data and accessor property with the same name"

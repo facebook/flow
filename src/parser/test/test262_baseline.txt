@@ -18,8 +18,6 @@ annexB/language/expressions/object/__proto__-duplicate.js (strict mode)
   Missing parse error
 annexB/language/expressions/object/__proto__-duplicate.js (default)
   Missing parse error
-annexB/language/literals/numeric/non-octal-decimal-integer.js (default)
-  Unexpected token ILLEGAL at (33, 17) to (33, 20)
 annexB/language/statements/for-in/nonstrict-initializer.js (default)
   Invalid left-hand side in for-in at (11, 7) to (11, 24)
 language/block-scope/syntax/redeclaration/async-function-declaration-attempt-to-redeclare-with-async-function-declaration.js (strict mode)
@@ -459,8 +457,6 @@ language/global-code/new.target.js (default)
 language/import/dup-bound-names.js (strict mode)
   Missing parse error
 language/import/dup-bound-names.js (default)
-  Missing parse error
-language/literals/numeric/non-octal-decimal-integer-strict.js (strict mode)
   Missing parse error
 language/literals/regexp/early-err-dup-flag.js (strict mode)
   Missing parse error
@@ -1090,8 +1086,8 @@ language/statements/try/early-catch-var.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 58430 (99.08%)
-Failed: 545 (0.92%)
+Passed: 58432 (99.08%)
+Failed: 543 (0.92%)
 
 Features:
   arrow-function: 136/146 (93.15%)

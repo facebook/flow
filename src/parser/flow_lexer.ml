@@ -50,6 +50,7 @@ let underscored_decimal = [%sedlex.regexp?
 let binnumber = [%sedlex.regexp? '0', ('B' | 'b'), underscored_bin]
 let octnumber = [%sedlex.regexp? '0', ('O' | 'o'), underscored_oct]
 let legacyoctnumber = [%sedlex.regexp? '0', Plus oct_digit] (* no underscores allowed *)
+let legacynonoctnumber = [%sedlex.regexp? '0', Star oct_digit, '8'..'9', Star digit]
 let hexnumber = [%sedlex.regexp? '0', ('X' | 'x'), underscored_hex]
 let scinumber = [%sedlex.regexp?
   ((decintlit, Opt ('.', Opt underscored_decimal)) | ('.', underscored_decimal)),
@@ -225,6 +226,7 @@ let mk_num_singleton number_type raw =
     begin try Int64.to_float (Int64.of_string num)
     with Failure _ -> failwith ("Invalid binary/octal "^num)
     end
+  | LEGACY_NON_OCTAL
   | NORMAL ->
     begin try float_of_string num
     with Failure _ -> failwith ("Invalid number "^num)
@@ -696,6 +698,15 @@ let token (env: Lex_env.t) lexbuf : result =
     )
   | octnumber ->
     Token (env, T_NUMBER { kind = OCTAL; raw = lexeme lexbuf })
+
+  | legacynonoctnumber, word ->
+    (* Numbers cannot be immediately followed by words *)
+    recover env lexbuf ~f:(fun env lexbuf -> match%sedlex lexbuf with
+    | legacynonoctnumber -> Token (env, T_NUMBER { kind = LEGACY_NON_OCTAL; raw = lexeme lexbuf })
+    | _ -> failwith "unreachable"
+    )
+  | legacynonoctnumber ->
+    Token (env, T_NUMBER { kind = LEGACY_NON_OCTAL; raw = lexeme lexbuf })
 
   | legacyoctnumber, (letter | '8'..'9'), Star alphanumeric ->
     (* Numbers cannot be immediately followed by words *)

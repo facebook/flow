@@ -842,6 +842,11 @@ module Expression
       begin try Int64.to_float (Int64.of_string ("0o"^raw))
       with Failure _ -> failwith ("Invalid legacy octal "^raw)
       end
+    | LEGACY_NON_OCTAL ->
+      strict_error env Error.StrictNonOctalLiteral;
+      begin try float_of_string raw
+      with Failure _ -> failwith ("Invalid number "^raw)
+      end
     | BINARY
     | OCTAL ->
       begin try Int64.to_float (Int64.of_string raw)
