@@ -22,7 +22,7 @@ let string_of_pred_ctor = function
   | BoolP -> "BoolP"
   | StrP -> "StrP"
   | NumP -> "NumP"
-  | BigNumP -> "BigNumP"
+  | BIgIntP -> "BIgIntP"
   | FunP -> "FunP"
   | ObjP -> "ObjP"
   | ArrP -> "ArrP"
@@ -30,7 +30,7 @@ let string_of_pred_ctor = function
   | SingletonBoolP _ -> "SingletonBoolP"
   | SingletonStrP _ -> "SingletonStrP"
   | SingletonNumP _ -> "SingletonNumP"
-  | SingletonBigNumP _ -> "SingletonBigNumP"
+  | SingletonBigIntP _ -> "SingletonBigIntP"
   | PropExistsP _ -> "PropExistsP"
   | LatentP _ -> "LatentP"
 
@@ -51,7 +51,7 @@ let string_of_polarity = function
 let string_of_enum = function
   | Enum.Str x -> spf "string %s" x
   | Enum.Num (_,x) -> spf "number %s" x
-  | Enum.BigNum (_,x) -> spf "bigint %s" x
+  | Enum.BigInt (_,x) -> spf "bigint %s" x
   | Enum.Bool x -> spf "boolean %b" x
   | Enum.Null -> "null"
   | Enum.Void -> "void"
@@ -150,7 +150,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
   | OpenT (_, id) -> _json_of_tvar json_cx id
 
   | DefT (_, _, NumT lit)
-  | DefT (_, _, BigNumT lit) ->
+  | DefT (_, _, BigIntT lit) ->
     begin match lit with
     | Literal (_, (_, raw)) -> ["literal", JSON_String raw]
     | Truthy -> ["refinement", JSON_String "Truthy"]
@@ -322,7 +322,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "literal", JSON_String s
     ]
 
-  | DefT (_, _, SingletonBigNumT (_, raw))
+  | DefT (_, _, SingletonBigIntT (_, raw))
   | DefT (_, _, SingletonNumT (_, raw)) -> [
       "literal", JSON_String raw
     ]
@@ -985,7 +985,7 @@ and json_of_resolve_to_impl json_cx resolve_to = Hh_json.(JSON_Object (
 and _json_of_enum _json_cx = function
   | Enum.Str s -> Hh_json.JSON_String s
   | Enum.Num (_, raw) -> Hh_json.JSON_String raw
-  | Enum.BigNum (_,raw) -> Hh_json.JSON_String raw
+  | Enum.BigInt (_,raw) -> Hh_json.JSON_String raw
   | Enum.Bool b -> Hh_json.JSON_Bool b
   | Enum.Null -> Hh_json.JSON_Null
   | Enum.Void -> Hh_json.JSON_Null (* hmm, undefined doesn't exist in JSON *)
@@ -1383,7 +1383,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
 
   | SingletonBoolP (_, value) -> ["value", JSON_Bool value]
   | SingletonStrP (_, _, str) -> ["value", JSON_String str]
-  | SingletonBigNumP (_, _, (_,raw))
+  | SingletonBigIntP (_, _, (_,raw))
   | SingletonNumP (_, _, (_,raw)) -> ["value", JSON_String raw]
 
   | PropExistsP (key, _) -> ["propName", JSON_String key]
@@ -1396,7 +1396,7 @@ and json_of_pred_impl json_cx p = Hh_json.(
   | StrP
   | SymbolP
   | NumP
-  | BigNumP
+  | BIgIntP
   | FunP
   | ObjP
   | ArrP
@@ -1781,7 +1781,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | Literal (_, (_, raw)) -> raw
     | Truthy -> "truthy"
     | AnyLiteral -> "") t
-  | DefT (_, trust, BigNumT lit) -> p ~trust:(Some trust) ~extra:(match lit with
+  | DefT (_, trust, BigIntT lit) -> p ~trust:(Some trust) ~extra:(match lit with
     | Literal (_, (_, raw)) -> raw
     | Truthy -> "truthy"
     | AnyLiteral -> "") t
@@ -1864,7 +1864,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | KeysT (_, arg) -> p ~extra:(kid arg) t
   | DefT (_, trust, SingletonStrT s) -> p ~trust:(Some trust) ~extra:(spf "%S" s) t
   | DefT (_, trust, SingletonNumT (_, s)) -> p ~trust:(Some trust) ~extra:s t
-  | DefT (_, trust, SingletonBigNumT (_, s)) -> p ~trust:(Some trust) ~extra:s t
+  | DefT (_, trust, SingletonBigIntT (_, s)) -> p ~trust:(Some trust) ~extra:s t
   | DefT (_, trust, SingletonBoolT b) -> p ~trust:(Some trust) ~extra:(spf "%B" b) t
   | ModuleT _ -> p t
   | InternalT (ExtendsT (_, l, u)) -> p ~extra:(spf "%s, %s" (kid l) (kid u)) t

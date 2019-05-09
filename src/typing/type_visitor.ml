@@ -140,7 +140,7 @@ class ['a] t = object(self)
 
   method def_type cx pole acc = function
   | NumT _
-  | BigNumT _
+  | BigIntT _
   | StrT _
   | BoolT _
   | EmptyT _
@@ -172,7 +172,7 @@ class ['a] t = object(self)
 
   | SingletonStrT _
   | SingletonNumT _
-  | SingletonBigNumT _
+  | SingletonBigIntT _
   | SingletonBoolT _ -> acc
 
   | TypeT (_, t) -> self#type_ cx pole acc t
@@ -218,11 +218,11 @@ class ['a] t = object(self)
   | SingletonBoolP _ -> acc
   | SingletonStrP _ -> acc
   | SingletonNumP _ -> acc
-  | SingletonBigNumP _ -> acc
+  | SingletonBigIntP _ -> acc
   | BoolP -> acc
   | FunP -> acc
   | NumP -> acc
-  | BigNumP -> acc
+  | BIgIntP -> acc
   | ObjP -> acc
   | StrP -> acc
   | SymbolP -> acc

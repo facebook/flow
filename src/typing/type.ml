@@ -209,7 +209,7 @@ module rec TypeTerm : sig
 
   and def_t =
     | NumT of number_literal literal
-    | BigNumT of bigint_literal literal
+    | BigIntT of bigint_literal literal
     | StrT of string literal
     | BoolT of bool option
     | EmptyT of empty_flavor
@@ -229,7 +229,7 @@ module rec TypeTerm : sig
        when it comes to floats... *)
     | SingletonNumT of number_literal
     (* matches exactly a given bigint literal *)
-    | SingletonBigNumT of bigint_literal
+    | SingletonBigIntT of bigint_literal
     (* singleton bool, matches exactly a given boolean literal *)
     | SingletonBoolT of bool
     (* A subset of StrT that represents a set of characters,
@@ -727,12 +727,12 @@ module rec TypeTerm : sig
     | SingletonBoolP of ALoc.t * bool (* true or false *)
     | SingletonStrP of ALoc.t * bool * string (* string literal *)
     | SingletonNumP of ALoc.t * bool * number_literal
-    | SingletonBigNumP of ALoc.t * bool * bigint_literal
+    | SingletonBigIntP of ALoc.t * bool * bigint_literal
 
     | BoolP (* boolean *)
     | FunP (* function *)
     | NumP (* number *)
-    | BigNumP (* bigint *)
+    | BIgIntP (* bigint *)
     | ObjP (* object *)
     | StrP (* string *)
     | SymbolP (* symbol *)
@@ -1199,7 +1199,7 @@ and Enum : sig
   type t =
     | Str of string
     | Num of TypeTerm.number_literal
-    | BigNum of TypeTerm.bigint_literal
+    | BigInt of TypeTerm.bigint_literal
     | Bool of bool
     | Void
     | Null
@@ -1211,7 +1211,7 @@ end = struct
   type t =
     | Str of string
     | Num of TypeTerm.number_literal
-    | BigNum of TypeTerm.bigint_literal
+    | BigInt of TypeTerm.bigint_literal
     | Bool of bool
     | Void
     | Null
@@ -1538,8 +1538,8 @@ end = struct
     | DefT (_, _, StrT (Literal (_, lit))) -> Some (Enum.Str lit)
     | DefT (_, _, SingletonNumT lit)
     | DefT (_, _, NumT (Literal (_, lit))) -> Some (Enum.Num lit)
-    | DefT (_, _, SingletonBigNumT lit)
-    | DefT (_, _, BigNumT (Literal (_, lit))) -> Some (Enum.BigNum lit)
+    | DefT (_, _, SingletonBigIntT lit)
+    | DefT (_, _, BigIntT (Literal (_, lit))) -> Some (Enum.BigInt lit)
     | DefT (_, _, SingletonBoolT lit)
     | DefT (_, _, BoolT (Some lit)) -> Some (Enum.Bool lit)
     | DefT (_, _, VoidT) -> Some (Enum.Void)
@@ -1550,7 +1550,7 @@ end = struct
   let is_base = TypeTerm.(function
     | DefT (_, _, SingletonStrT _)
     | DefT (_, _, SingletonNumT _)
-    | DefT (_, _, SingletonBigNumT _)
+    | DefT (_, _, SingletonBigIntT _)
     | DefT (_, _, SingletonBoolT _)
     | DefT (_, _, VoidT)
     | DefT (_, _, NullT)
@@ -2758,8 +2758,8 @@ end = struct
     match t1, t2 with
     | DefT (_, ltrust, NumT _), DefT (_, rtrust, NumT _)
     | DefT (_, ltrust, SingletonNumT _), DefT (_, rtrust, NumT _)
-    | DefT (_, ltrust, BigNumT _), DefT (_, rtrust, BigNumT _)
-    | DefT (_, ltrust, SingletonBigNumT _), DefT (_, rtrust, BigNumT _)
+    | DefT (_, ltrust, BigIntT _), DefT (_, rtrust, BigIntT _)
+    | DefT (_, ltrust, SingletonBigIntT _), DefT (_, rtrust, BigIntT _)
     | DefT (_, ltrust, StrT _), DefT (_, rtrust, StrT _)
     | DefT (_, ltrust, SingletonStrT _), DefT (_, rtrust, StrT _)
     | DefT (_, ltrust, BoolT _), DefT (_, rtrust, BoolT _)
@@ -2775,7 +2775,7 @@ end = struct
       (not trust_checked || trust_subtype_fixed ltrust rtrust) && literal_eq expected actual
     | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) ->
       (not trust_checked || trust_subtype_fixed ltrust rtrust) && number_literal_eq expected actual
-    | DefT (_, ltrust, BigNumT actual), DefT (_, rtrust, SingletonBigNumT expected) ->
+    | DefT (_, ltrust, BigIntT actual), DefT (_, rtrust, SingletonBigIntT expected) ->
       (not trust_checked || trust_subtype_fixed ltrust rtrust) && number_literal_eq expected actual
     | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) ->
       (not trust_checked || trust_subtype_fixed ltrust rtrust) && boolean_literal_eq expected actual
@@ -2828,9 +2828,9 @@ module NumT = Primitive (struct
   let make r trust = DefT (r, trust, NumT AnyLiteral)
 end)
 
-module BigNumT = Primitive (struct
+module BigIntT = Primitive (struct
   let desc = RBigInt
-  let make r trust = DefT (r, trust, BigNumT AnyLiteral)
+  let make r trust = DefT (r, trust, BigIntT AnyLiteral)
 end)
 
 module StrT = Primitive (struct
@@ -2942,7 +2942,7 @@ module Locationless = struct
     let t = P.make (locationless_reason P.desc)
   end
   module NumT = LocationLess (NumT)
-  module BigNumT = LocationLess (BigNumT)
+  module BigIntT = LocationLess (BigIntT)
   module StrT = LocationLess (StrT)
   module BoolT = LocationLess (BoolT)
   module MixedT = LocationLess (MixedT)
@@ -3111,13 +3111,13 @@ let string_of_def_ctor = function
   | MixedT _ -> "MixedT"
   | NullT -> "NullT"
   | NumT _ -> "NumT"
-  | BigNumT _ -> "BigNumT"
+  | BigIntT _ -> "BigIntT"
   | ObjT _ -> "ObjT"
   | PolyT _ -> "PolyT"
   | ReactAbstractComponentT _ -> "ReactAbstractComponentT"
   | SingletonBoolT _ -> "SingletonBoolT"
   | SingletonNumT _ -> "SingletonNumT"
-  | SingletonBigNumT _ -> "SingletonBigNumT"
+  | SingletonBigIntT _ -> "SingletonBigIntT"
   | SingletonStrT _ -> "SingletonStrT"
   | StrT _ -> "StrT"
   | TypeT _ -> "TypeT"
@@ -3364,14 +3364,14 @@ let rec string_of_predicate = function
   | SingletonBoolP (_, true) -> "true"
   | SingletonStrP (_, _, str) -> spf "string `%s`" str
   | SingletonNumP (_, _, (_,raw)) -> spf "number `%s`" raw
-  | SingletonBigNumP (_, _, (_,raw)) -> spf "bigint `%s`" raw
+  | SingletonBigIntP (_, _, (_,raw)) -> spf "bigint `%s`" raw
 
   (* typeof *)
   | VoidP -> "undefined"
   | BoolP -> "boolean"
   | StrP -> "string"
   | NumP -> "number"
-  | BigNumP -> "bigint"
+  | BIgIntP -> "bigint"
   | FunP -> "function"
   | ObjP -> "object"
   | SymbolP -> "symbol"

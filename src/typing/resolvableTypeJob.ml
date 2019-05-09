@@ -228,7 +228,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | InternalT (OptionalChainVoidT _) -> acc
 
   | DefT (_, _, NumT _)
-  | DefT (_, _, BigNumT _)
+  | DefT (_, _, BigIntT _)
   | DefT (_, _, StrT _)
   | DefT (_, _, BoolT _)
   | DefT (_, _, VoidT)
@@ -237,7 +237,7 @@ and collect_of_type ?log_unresolved cx acc = function
   | DefT (_, _, MixedT _)
   | DefT (_, _, SingletonBoolT _)
   | DefT (_, _, SingletonNumT _)
-  | DefT (_, _, SingletonBigNumT _)
+  | DefT (_, _, SingletonBigIntT _)
   | DefT (_, _, SingletonStrT _)
   | DefT (_, _, CharSetT _)
   | AnyT _

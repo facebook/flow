@@ -214,7 +214,7 @@ class virtual ['a] t = object(self)
   method def_type cx map_cx t =
     match t with
       | NumT _
-      | BigNumT _
+      | BigIntT _
       | StrT _
       | BoolT _
       | EmptyT _
@@ -249,7 +249,7 @@ class virtual ['a] t = object(self)
           else InstanceT (st', su', impl', instt')
       | SingletonStrT _
       | SingletonNumT _
-      | SingletonBigNumT _
+      | SingletonBigIntT _
       | SingletonBoolT _ -> t
       | TypeT (s, t') ->
           let t'' = self#type_ cx map_cx t' in
@@ -534,11 +534,11 @@ class virtual ['a] t = object(self)
     | SingletonBoolP _
     | SingletonStrP _
     | SingletonNumP _
-    | SingletonBigNumP _
+    | SingletonBigIntP _
     | BoolP
     | FunP
     | NumP
-    | BigNumP
+    | BIgIntP
     | ObjP
     | StrP
     | SymbolP

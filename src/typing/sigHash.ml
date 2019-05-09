@@ -36,7 +36,7 @@
 type hash =
   (* def types *)
   | NumH
-  | BigNumH
+  | BigIntH
   | StrH
   | BoolH
   | EmptyH
@@ -73,7 +73,7 @@ type hash =
   | KeysH
   | SingletonStrH
   | SingletonNumH
-  | SingletonBigNumH
+  | SingletonBigIntH
   | SingletonBoolH
   | TypeH
   | AnnotH
@@ -194,12 +194,12 @@ let hash_of_def_ctor = Type.(function
   | MixedT _ -> MixedH
   | NullT -> NullH
   | NumT _ -> NumH
-  | BigNumT _ -> BigNumH
+  | BigIntT _ -> BigIntH
   | ObjT _ -> ObjH
   | ReactAbstractComponentT _ -> ReactAbstractComponentH
   | SingletonBoolT _ -> SingletonBoolH
   | SingletonNumT _ -> SingletonNumH
-  | SingletonBigNumT _ -> SingletonBigNumH
+  | SingletonBigIntT _ -> SingletonBigIntH
   | SingletonStrT _ -> SingletonStrH
   | StrT _ -> StrH
   | TypeT _ -> TypeH

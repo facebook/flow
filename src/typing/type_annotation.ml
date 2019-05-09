@@ -154,7 +154,7 @@ let rec convert cx tparams_map = Ast.Type.(function
 | loc, (Number as t_ast) -> (loc, NumT.at loc |> with_trust_inference cx), t_ast
 
 | loc, (BigInt as t_ast) ->
-  (loc, BigNumT.at loc |> with_trust annot_trust), t_ast
+  (loc, BigIntT.at loc |> with_trust annot_trust), t_ast
 
 | loc, (String as t_ast) -> (loc, StrT.at loc |> with_trust_inference cx), t_ast
 
@@ -465,9 +465,9 @@ let rec convert cx tparams_map = Ast.Type.(function
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let elemts, targs = convert_type_params () in
       match List.hd elemts with
-        | DefT (r, trust, SingletonBigNumT bignum_lit) ->
+        | DefT (r, trust, SingletonBigIntT bignum_lit) ->
           reconstruct_ast
-            (DefT (replace_reason_const RBigInt r, trust, BigNumT (Literal (None, bignum_lit))))
+            (DefT (replace_reason_const RBigInt r, trust, BigIntT (Literal (None, bignum_lit))))
             targs
         | _ -> error_type cx loc (Error_message.EUnexpectedTemporaryBaseType loc) t_ast
     )
@@ -1676,7 +1676,7 @@ and mk_singleton_number cx loc num raw =
 
 and mk_singleton_bigint cx loc num raw =
   let reason = mk_reason (RBigIntLit raw) loc in
-  DefT (reason, infer_trust cx, SingletonBigNumT (num, raw))
+  DefT (reason, infer_trust cx, SingletonBigIntT (num, raw))
 
 and mk_singleton_boolean cx loc b =
   let reason = mk_reason (RBooleanLit b) loc in
