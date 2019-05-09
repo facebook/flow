@@ -153,9 +153,9 @@ and dump_t ?(depth = 10) t =
   | Num (Some x) -> spf "Num (%s)" x
   | Num None -> "Num"
   | NumLit s -> spf "\"%s\"" s
-  | BigNum (Some x) -> spf "BigNum (%s)" x
-  | BigNum None -> "BigNum"
-  | BigNumLit s -> spf "\"%s\"" s
+  | BigInt (Some x) -> spf "BigInt (%s)" x
+  | BigInt None -> "BigInt"
+  | BigIntLit s -> spf "\"%s\"" s
   | Str (Some x) -> spf "Str (%s)" x
   | Str None -> "Str"
   | StrLit s -> spf "\"%s\"" s
@@ -208,11 +208,11 @@ let string_of_ctor = function
   | Void -> "Void"
   | Null -> "Null"
   | Num _ -> "Num"
-  | BigNum _ -> "BigNum"
+  | BigInt _ -> "BigInt"
   | Str _ -> "Str"
   | Bool _ -> "Bool"
   | NumLit _ -> "NumLit"
-  | BigNumLit _ -> "BigNumLit"
+  | BigIntLit _ -> "BigIntLit"
   | StrLit _ -> "StrLit"
   | BoolLit _ -> "BoolLit"
   | Fun _ -> "Fun"
@@ -263,9 +263,9 @@ let json_of_t ~strip_root =
     | Any Explicit -> [ "any", JSON_String "explicit" ]
     | Top | Bot _
     | Void | Null
-    | Num _ | BigNum _ | Str _ | Bool _ -> []
+    | Num _ | BigInt _ | Str _ | Bool _ -> []
     | NumLit s
-    | BigNumLit s
+    | BigIntLit s
     | StrLit s -> [
         "literal", JSON_String s
       ]
