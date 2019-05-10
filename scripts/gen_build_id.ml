@@ -47,8 +47,8 @@ let () =
     )
   in
   let content = Printf.sprintf
-    "const char* const BuildInfo_kRevision = %S;\nconst unsigned long BuildInfo_kRevisionCommitTimeUnix = %sul;\n"
-    rev time in
+    "const char* const BuildInfo_kRevision = %S;\nconst unsigned long BuildInfo_kRevisionCommitTimeUnix = %sul;\nconst char* const BuildInfo_kBuildMode = %S;\n"
+    rev time "" (* not implemented *) in
   let do_dump =
     not (Sys.file_exists out_file) || string_of_file out_file <> content in
   if do_dump then

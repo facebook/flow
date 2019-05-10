@@ -25,6 +25,7 @@
 
 extern const char* const BuildInfo_kRevision;
 extern const uint64_t BuildInfo_kRevisionCommitTimeUnix;
+extern const char* const BuildInfo_kBuildMode;
 
 #define STRINGIFY_HELPER(x) #x
 #define STRINGIFY_VALUE(x) STRINGIFY_HELPER(x)
@@ -86,4 +87,16 @@ value hh_get_build_minor(void) {
 
 value hh_get_build_commit_time(void) {
   return Val_long(BuildInfo_kRevisionCommitTimeUnix);
+}
+
+value hh_get_build_mode(void) {
+  CAMLparam0();
+  CAMLlocal1(result);
+
+  const size_t len = strlen(BuildInfo_kBuildMode);
+  result = caml_alloc_string(len);
+
+  memcpy(String_val(result), BuildInfo_kBuildMode, len);
+
+  CAMLreturn(result);
 }

@@ -25,3 +25,5 @@ val build_commit_time : int
 val build_major_version : int
 val build_minor_version : int
 val build_api_version : int
+val build_mode : string
+val is_build_optimized : bool
