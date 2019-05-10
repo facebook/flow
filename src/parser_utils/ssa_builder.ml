@@ -960,6 +960,14 @@ module Make
       this#havoc_current_ssa_env;
       expr
 
+    method! new_ _loc (expr: (L.t, L.t) Ast.Expression.New.t) =
+      let open Ast.Expression.New in
+      let { callee; targs = _; arguments } = expr in
+      ignore @@ this#expression callee;
+      ignore @@ ListUtils.ident_map this#expression_or_spread arguments;
+      this#havoc_current_ssa_env;
+      expr
+
     (* Labeled statements handle labeled breaks, but also push labeled continues
        that are expected to be handled by immediately nested loops. *)
     method! labeled_statement _loc (stmt: (L.t, L.t) Ast.Statement.Labeled.t) =
