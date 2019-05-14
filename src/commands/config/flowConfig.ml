@@ -82,7 +82,6 @@ module Opts = struct
     temp_dir: string;
     traces: int;
     trust_mode: Options.trust_mode;
-    version: string option;
     wait_for_recheck: bool;
     weak: bool;
   }
@@ -168,7 +167,6 @@ module Opts = struct
     temp_dir = default_temp_dir;
     traces = 0;
     trust_mode = Options.NoTrust;
-    version = None;
     wait_for_recheck = false;
     weak = false;
   }
@@ -635,6 +633,8 @@ type config = {
   strict_mode: StrictModeSettings.t;
   (* config options *)
   options: Opts.t;
+  (* version constraint *)
+  version: string option;
 }
 
 module Pp : sig
@@ -740,7 +740,8 @@ let empty_config = {
   libs = [];
   lint_severities = LintSettings.empty_severities;
   strict_mode = StrictModeSettings.empty;
-  options = Opts.default_options
+  options = Opts.default_options;
+  version = None;
 }
 
 let group_into_sections : line list -> (section list, error) result =
@@ -819,8 +820,7 @@ let parse_version lines config =
           version_str
       ))
     else
-      let options = { config.options with Opts.version = Some version_str } in
-      Ok ({ config with options }, [])
+      Ok ({ config with version = Some version_str }, [])
   | _ -> Ok (config, [])
 
 let parse_lints lines config : (config * warning list, error) result =
@@ -1009,7 +1009,7 @@ let suppress_types c = c.options.Opts.suppress_types
 let temp_dir c = c.options.Opts.temp_dir
 let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
-let required_version c = c.options.Opts.version
+let required_version c = c.version
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 let weak c = c.options.Opts.weak
 
