@@ -31,7 +31,7 @@ let map_loc_of_error f { loc; msg; source_file; trace_reasons } = {
   trace_reasons = Core_list.map ~f:(Reason.map_reason_locs f) trace_reasons;
 }
 
-let concretize_error = map_loc_of_error ALoc.to_loc
+let concretize_error = map_loc_of_error ALoc.to_loc_exn
 
 let kind_of_error err = msg_of_error err |> kind_of_msg
 

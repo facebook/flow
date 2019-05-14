@@ -1114,7 +1114,7 @@ and json_of_insttype_impl json_cx insttype = Hh_json.(
   let own_props = Context.find_props json_cx.cx insttype.own_props in
   let proto_props = Context.find_props json_cx.cx insttype.proto_props in
   JSON_Object [
-    "classId", json_of_loc ~offset_table:None (ALoc.to_loc insttype.class_id);
+    "classId", json_of_loc ~offset_table:None (ALoc.to_loc_exn insttype.class_id);
     "typeArgs", JSON_Array (Core_list.map ~f:(fun (x, _, t, p) ->
       JSON_Object [
         "name", JSON_String x;
@@ -1301,7 +1301,7 @@ and json_of_type_binding json_cx = check_depth json_of_type_binding_impl json_cx
 and json_of_type_binding_impl json_cx (name, (loc, t)) = Hh_json.(
   let loc_json = match loc with
     | None -> Hh_json.JSON_Null
-    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root ~offset_table:None (ALoc.to_loc loc)
+    | Some loc -> json_of_loc ~strip_root:json_cx.strip_root ~offset_table:None (ALoc.to_loc_exn loc)
   in
   JSON_Object [
     "name", JSON_String name;

@@ -8,7 +8,7 @@
 type t = Loc.t
 
 let of_loc loc = loc
-let to_loc loc = loc
+let to_loc_exn loc = loc
 
 let none = Loc.none
 

@@ -96,7 +96,7 @@ class type_at_pos_searcher (target_loc: Loc.t) = object(self)
   inherit type_parameter_mapper as super
 
   method covers_target loc =
-    Reason.in_range target_loc (ALoc.to_loc loc)
+    Reason.in_range target_loc (ALoc.to_loc_exn loc)
 
   method find_loc: 'a . ALoc.t -> Type.t -> Type.typeparam list -> 'a =
     fun loc t tparams ->
@@ -165,7 +165,7 @@ let find_type_at_pos_annotation (typed_ast: (ALoc.t, ALoc.t * Type.t) Flow_ast.p
     let _ = searcher#program typed_ast in
     None
   with
-  | Found (loc, scheme) -> Some (ALoc.to_loc loc, scheme)
+  | Found (loc, scheme) -> Some (ALoc.to_loc_exn loc, scheme)
   | exc -> raise exc
 
 let typed_ast_to_map typed_ast : (Type.TypeScheme.t ALocMap.t) =

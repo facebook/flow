@@ -135,7 +135,7 @@ class visitor ~cxs = object(this)
     let { id; _ } = func in
     let id = Option.map id ~f:(fun (loc, name) -> ALoc.of_loc loc, name) in
     let search loc =
-      Type_table.function_decl_loc id (ALoc.of_loc loc) |> ALoc.to_loc
+      Type_table.function_decl_loc id (ALoc.of_loc loc) |> ALoc.to_loc_exn
     in
     this#callable_return ~search loc func
 

@@ -290,7 +290,7 @@ let to_command_result_aloc = function
         "autocomplete on unexpected type of value %s (please file a task!)"
         (string_of_ctor t))
 
-let loc_tmap_of_aloc_tmap = Option.map ~f:ALoc.to_loc |> map_fst |> SMap.map
+let loc_tmap_of_aloc_tmap = Option.map ~f:ALoc.to_loc_exn |> map_fst |> SMap.map
 
 let to_command_result = to_command_result_aloc %> Core_result.map ~f:loc_tmap_of_aloc_tmap
 

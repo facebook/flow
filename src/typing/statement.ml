@@ -5330,7 +5330,7 @@ and jsx_body cx (loc, child) = Ast.JSX.(
 )
 
 and jsx_trim_text make_trust loc value =
-  match (Utils_jsx.trim_jsx_text (ALoc.to_loc loc) value) with
+  match (Utils_jsx.trim_jsx_text (ALoc.to_loc_exn loc) value) with
   | Some (loc, trimmed) ->
     Some (DefT (mk_reason RJSXText (loc |> ALoc.of_loc), make_trust (), StrT (Type.Literal (None, trimmed))))
   | None -> None

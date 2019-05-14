@@ -123,7 +123,7 @@ let autocomplete_filter_members members =
   ) members
 
 let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name ac_loc docblock =
-  let ac_loc = ALoc.to_loc ac_loc in
+  let ac_loc = ALoc.to_loc_exn ac_loc in
   let this_t = Members.resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
      autocompletion on these too. *)
@@ -170,7 +170,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
     let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
     let result = result_map
     |> autocomplete_filter_members
-    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t |> ALoc.to_loc), t))
+    |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t |> ALoc.to_loc_exn), t))
     |> SMap.values
     |> Ty_normalizer.from_types ~options ~genv
     |> Core_list.filter_map ~f:(function
@@ -198,7 +198,7 @@ let autocomplete_id cx file_sig env =
         then (Loc.none, "this")
         else if is_super
         then (Loc.none, "super")
-        else (Scope.Entry.entry_loc entry |> ALoc.to_loc, name)
+        else (Scope.Entry.entry_loc entry |> ALoc.to_loc_exn, name)
       in
       let options = {
         Ty_normalizer_env.

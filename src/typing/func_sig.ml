@@ -38,7 +38,7 @@ let return_loc = function
   | {Ast.Function.body = Ast.Function.BodyExpression (loc, _); _} -> loc
   | {Ast.Function.body = Ast.Function.BodyBlock (loc, _); _} ->
     loc
-    |> ALoc.to_loc
+    |> ALoc.to_loc_exn
     |> Loc.char_before
     |> ALoc.of_loc
 

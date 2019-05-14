@@ -394,12 +394,12 @@ let add_loc state loc =
   add_int state loc._end.column
 
 let add_aloc state aloc =
-  add_loc state (ALoc.to_loc aloc)
+  add_loc state (ALoc.to_loc_exn aloc)
 
 let add_reason state r =
   let open Reason in
-  add_loc state (aloc_of_reason r |> ALoc.to_loc);
-  add_loc state (def_aloc_of_reason r |> ALoc.to_loc)
+  add_loc state (aloc_of_reason r |> ALoc.to_loc_exn);
+  add_loc state (def_aloc_of_reason r |> ALoc.to_loc_exn)
 
 let add_polarity = add_int
 

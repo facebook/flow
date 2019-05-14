@@ -41,7 +41,7 @@ type result =
 | Success of Loc.t * Ty.t
 
 let concretize_loc_pairs pair_list =
-  Core_list.map ~f:(fun (loc, x) -> ALoc.to_loc loc, x) pair_list
+  Core_list.map ~f:(fun (loc, x) -> ALoc.to_loc_exn loc, x) pair_list
 
 let sort_loc_pairs pair_list =
   List.sort (fun (a, _) (b, _) -> Loc.compare a b) pair_list
@@ -114,7 +114,7 @@ let covered_types cx ~should_check ~check_trust =
   in
   let result_pairs =
     Hashtbl.fold (fun loc { Type.TypeScheme.type_; _ } acc ->
-      (ALoc.to_loc loc, compute_cov type_)::acc
+      (ALoc.to_loc_exn loc, compute_cov type_)::acc
     ) htbl []
   in
   sort_loc_pairs result_pairs

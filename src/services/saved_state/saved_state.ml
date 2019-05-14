@@ -97,7 +97,7 @@ end = struct
   (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
   let normalize_error ~root =
     let f loc =
-      let loc = ALoc.to_loc loc in
+      let loc = ALoc.to_loc_exn loc in
       { loc with
         Loc.source = Option.map ~f:(normalize_file_key ~root) loc.Loc.source;
       }
@@ -356,7 +356,7 @@ end = struct
 
   let denormalize_error ~root =
     let f loc =
-      let loc = ALoc.to_loc loc in
+      let loc = ALoc.to_loc_exn loc in
       { loc with
         Loc.source = Option.map ~f:(denormalize_file_key ~root) loc.Loc.source;
       }

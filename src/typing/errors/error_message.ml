@@ -1401,7 +1401,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       (* We can call to_loc here because reaching this point requires that everything else
         in the error message is concretized already; making Scopes polymorphic is not a good idea *)
-      let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.to_loc) in
+      let x = mk_reason desc (Scope.Entry.entry_loc entry |> ALoc.to_loc_exn) in
       let msg = match binding_error with
       | ENameAlreadyBound ->
         [text "Cannot declare "; ref x; text " because the name is already bound."]

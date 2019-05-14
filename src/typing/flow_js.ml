@@ -500,7 +500,7 @@ let add_output cx ?trace msg =
       begin match Error_message.aloc_of_msg msg with
         | Some loc ->
             (* Okay here because lints must have a concrete location *)
-            ALoc.to_loc loc
+            ALoc.to_loc_exn loc
             |> Error_suppressions.get_lint_settings (Context.severity_cover cx)
             |> Option.value_map ~default:true ~f:(fun lint_settings ->
                  (LintSettings.is_explicit lint_kind lint_settings) ||

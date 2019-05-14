@@ -129,7 +129,7 @@ let function_decl_loc id loc =
   match id with
   | Some (loc, _) -> loc
   | None ->
-    let loc = ALoc.to_loc loc in
+    let loc = ALoc.to_loc_exn loc in
     Loc.({ loc with
       _end = {
         line = loc.start.line;

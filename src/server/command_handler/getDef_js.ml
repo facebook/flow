@@ -37,19 +37,19 @@ let id state name =
     (* similarly for import type bindings *)
     state.getdef_type <- Some (Gdval v)
   | Some entry ->
-    state.getdef_type <- Some (Gdloc (entry_loc entry |> ALoc.to_loc))
+    state.getdef_type <- Some (Gdloc (entry_loc entry |> ALoc.to_loc_exn))
   | None ->
     ()
   )
 
 let getdef_id (state, loc1) _cx name loc2 =
-  let loc2 = ALoc.to_loc loc2 in
+  let loc2 = ALoc.to_loc_exn loc2 in
   if Reason.in_range loc1 loc2
   then id state name;
   false
 
 let getdef_lval (state, loc1) _cx name loc2 rhs =
-  let loc2 = ALoc.to_loc loc2 in
+  let loc2 = ALoc.to_loc_exn loc2 in
   if Reason.in_range loc1 loc2
   then match rhs with
   | Type_inference_hooks_js.Val v ->
@@ -60,15 +60,15 @@ let getdef_lval (state, loc1) _cx name loc2 rhs =
     id state name
 
 let getdef_import (state, user_requested_loc) _cx (loc, name) import_loc =
-  let source = (ALoc.to_loc loc, name) in
-  let import_loc = ALoc.to_loc import_loc in
+  let source = (ALoc.to_loc_exn loc, name) in
+  let import_loc = ALoc.to_loc_exn import_loc in
   if (Reason.in_range user_requested_loc import_loc)
   then (
     state.getdef_type <- Some (Gdrequire (source, import_loc))
   )
 
 let getdef_require_pattern state loc =
-  let loc = ALoc.to_loc loc in
+  let loc = ALoc.to_loc_exn loc in
   state.getdef_require_patterns <- loc::state.getdef_require_patterns
 
 let extract_member_def cx this name =
@@ -95,7 +95,7 @@ let extract_member_def cx this name =
     begin match SMap.get name result_map with
     | Some (loc, t) ->
         begin match loc with
-          | None -> Type.loc_of_t t |> ALoc.to_loc
+          | None -> Type.loc_of_t t |> ALoc.to_loc_exn
           | Some x -> x
         end
     | None -> Loc.none
@@ -105,7 +105,7 @@ let extract_member_def cx this name =
 let getdef_from_type_table cx loc =
   let typetable = Context.type_table cx in
   let type_info =
-    Type_table.find_type_info_with_pred typetable (fun l -> Loc.contains (ALoc.to_loc l) loc)
+    Type_table.find_type_info_with_pred typetable (fun l -> Loc.contains (ALoc.to_loc_exn l) loc)
   in
   Option.bind type_info begin function
     | _, (_, _, Type_table.Import (name, obj_t))
@@ -130,7 +130,7 @@ let getdef_get_result_from_hooks ~options ~reader cx state =
        actually interested in the location of the resolved types. *)
     let ts = Flow_js.possible_types_of_type cx v in
     Done begin match ts with
-    | [t] -> Type.def_loc_of_t t |> ALoc.to_loc
+    | [t] -> Type.def_loc_of_t t |> ALoc.to_loc_exn
     | _ -> Loc.none
     end, None
   | Some Gdmem (name, this) ->
@@ -160,7 +160,7 @@ let getdef_get_result_from_hooks ~options ~reader cx state =
           (* If we have a location for the cjs export, go there. Otherwise
            * fall back to just the top of the file *)
           let loc = match cjs_export with
-            | Some t -> loc_of_t t |> ALoc.to_loc (* This can return Loc.none *)
+            | Some t -> loc_of_t t |> ALoc.to_loc_exn (* This can return Loc.none *)
             | None -> Loc.none
           in
           if loc = Loc.none then

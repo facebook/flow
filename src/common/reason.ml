@@ -484,7 +484,7 @@ let json_of_loc ?strip_root ?catch_offset_errors ~offset_table loc = Hh_json.(
 )
 
 let json_of_aloc ?strip_root ?catch_offset_errors ~offset_table aloc =
-  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc aloc)
+  json_of_loc ?strip_root ?catch_offset_errors ~offset_table (ALoc.to_loc_exn aloc)
 
 (* reason constructors, accessors, etc. *)
 
@@ -761,7 +761,7 @@ let string_of_reason ?(strip_root=None) r =
 
 let json_of_reason ?(strip_root=None) ~offset_table r = Hh_json.(
   JSON_Object ([
-    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc);
+    "pos", json_of_loc ~strip_root ~offset_table (aloc_of_reason r |> ALoc.to_loc_exn);
     "desc", JSON_String (string_of_desc r.desc)
   ])
 )

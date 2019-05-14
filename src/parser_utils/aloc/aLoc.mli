@@ -12,7 +12,7 @@ type t
 
 (* TODO at some point we will also need to provide a key of some sort here *)
 val of_loc: Loc.t -> t
-val to_loc: t -> Loc.t
+val to_loc_exn: t -> Loc.t
 
 (* The specific contents of this string should not be used to influence typechecking, but it can be
  * used as a unique identifier within a given source file. *)
