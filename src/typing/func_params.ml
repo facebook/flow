@@ -48,9 +48,9 @@ let add_simple cx ~optional ?default loc id t x =
   let params_rev = (name, param_t) :: x.params_rev in
   let bindings_rev = match id with
   | None -> x.bindings_rev
-  | Some (_, name) ->
+  | Some (id_loc, name) ->
     let default = Option.map default Default.expr in
-    (name, loc, bound_t, default) :: x.bindings_rev
+    (name, id_loc, bound_t, default) :: x.bindings_rev
   in
   { x with params_rev; bindings_rev }
 
@@ -90,7 +90,7 @@ let add_rest cx loc id t x =
   let rest = Some (name, loc, t) in
   let bindings_rev = match id with
   | None -> x.bindings_rev
-  | Some (_, name) -> (name, loc, t, None) :: x.bindings_rev
+  | Some (id_loc, name) -> (name, id_loc, t, None) :: x.bindings_rev
   in
   { x with rest; bindings_rev }
 
