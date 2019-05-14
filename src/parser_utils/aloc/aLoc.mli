@@ -14,6 +14,10 @@ type t
 val of_loc: Loc.t -> t
 val to_loc: t -> Loc.t
 
+(* The specific contents of this string should not be used to influence typechecking, but it can be
+ * used as a unique identifier within a given source file. *)
+val to_string_no_source: t -> string
+
 val none: t
 
 val source: t -> File_key.t option
