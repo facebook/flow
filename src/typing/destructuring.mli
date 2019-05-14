@@ -34,6 +34,22 @@ val pattern:
   (ALoc.t, ALoc.t) Flow_ast.Pattern.t ->
   (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.t
 
+val array_elements:
+  Context.t ->
+  expr:expr ->
+  f:callback ->
+  state ->
+  (ALoc.t, ALoc.t) Flow_ast.Pattern.Array.element option list ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Array.element option list
+
+val object_properties:
+  Context.t ->
+  expr:expr ->
+  f:callback ->
+  state ->
+  (ALoc.t, ALoc.t) Flow_ast.Pattern.Object.property list ->
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.Pattern.Object.property list
+
 val type_of_pattern:
   'a * (ALoc.t, ALoc.t) Flow_ast.Pattern.t' ->
   (ALoc.t, ALoc.t) Flow_ast.Type.annotation_or_hint

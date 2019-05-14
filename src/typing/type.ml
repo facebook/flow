@@ -792,11 +792,14 @@ module rec TypeTerm : sig
     | UnresolvedType
     | WeakContext
 
+  and fun_param = string option * t
+  and fun_rest_param = string option * ALoc.t * t
+
   (* used by FunT *)
   and funtype = {
     this_t: t;
-    params: (string option * t) list;
-    rest_param: (string option * ALoc.t * t) option;
+    params: fun_param list;
+    rest_param: fun_rest_param option;
     return_t: t;
     closure_t: int;
     is_predicate: bool;

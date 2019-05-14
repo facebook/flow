@@ -780,3 +780,18 @@ type-utils.js:12:13 {
   "start":13,
   "end":31
 }
+default.js:4:17 {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"default.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":17,"offset":37},
+    "end":{"line":4,"column":17,"offset":38}
+  },
+  "path":"default.js",
+  "line":4,
+  "endline":4,
+  "start":17,
+  "end":17
+}

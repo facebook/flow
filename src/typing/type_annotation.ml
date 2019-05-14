@@ -16,6 +16,41 @@ open Env.LookupMode
 module Flow = Flow_js
 module T = Ast.Type
 
+module Func_type_params = Func_params.Make (struct
+  type 'T ast = (ALoc.t, 'T) Ast.Type.Function.Params.t
+  type 'T param_ast = (ALoc.t, 'T) Ast.Type.Function.Param.t
+  type 'T rest_ast = (ALoc.t, 'T) Ast.Type.Function.RestParam.t
+
+  type param = Type.t * (ALoc.t * Type.t) param_ast
+  type rest = Type.t * (ALoc.t * Type.t) rest_ast
+
+  let id_name (_, { Ast.Identifier.name; _ }) = name
+
+  let param_type (t, (_, { Ast.Type.Function.Param.name; optional; _ })) =
+    let name = Option.map name ~f:id_name in
+    let t = if optional then Type.optional t else t in
+    name, t
+
+  let rest_type (t, (loc, { Ast.Type.Function.RestParam.argument })) =
+    let (_, { Ast.Type.Function.Param.name; _ }) = argument in
+    let name = Option.map name ~f:id_name in
+    name, loc, t
+
+  let subst_param cx map (t, tast) =
+    let t = Flow.subst cx map t in
+    t, tast
+
+  let subst_rest cx map (t, tast) =
+    let t = Flow.subst cx map t in
+    t, tast
+
+  let eval_param _cx (_, tast) = tast
+
+  let eval_rest _cx (_, tast) = tast
+end)
+module Func_type_sig = Func_sig.Make (Func_type_params)
+module Class_type_sig = Class_sig.Make (Func_type_sig)
+
 (* AST helpers *)
 
 let qualified_name =
@@ -955,17 +990,17 @@ let rec convert cx tparams_map = Ast.Type.(function
         | CallProperty (_, { CallProperty.static; _ }) -> not static
         | _ -> false
       ) properties in
-      Class_sig.Interface { extends; callable }
+      Class_type_sig.Interface { extends; callable }
     in
-    Class_sig.empty id reason None tparams_map super, extend_asts
+    Class_type_sig.empty id reason None tparams_map super, extend_asts
   in
   let iface_sig, property_asts =
     add_interface_properties cx tparams_map properties iface_sig in
-  Class_sig.generate_tests cx (fun iface_sig ->
-    Class_sig.check_super cx reason iface_sig;
-    Class_sig.check_implements cx reason iface_sig
+  Class_type_sig.generate_tests cx (fun iface_sig ->
+    Class_type_sig.check_super cx reason iface_sig;
+    Class_type_sig.check_implements cx reason iface_sig
   ) iface_sig |> ignore;
-  (loc, Class_sig.thistype cx iface_sig),
+  (loc, Class_type_sig.thistype cx iface_sig),
   Interface { Interface.
     body = body_loc, { Object.
       exact;
@@ -1331,41 +1366,36 @@ and convert_object =
 
 and mk_func_sig =
   let open Ast.Type.Function in
-  let add_param cx tparams_map (x, rev_param_asts) (loc, param) =
-    let { Param.name = id; annot; optional } = param in
+  let add_param cx tparams_map x param =
+    let (loc, { Param.name; annot; optional }) = param in
     let (_, t), _ as annot = convert cx tparams_map annot in
-    Func_params.add_simple cx ~optional loc (Option.map ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) -> (loc, name)) id) t x,
-    (loc, { Param.
-      name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments }) -> (loc, t), mk_commented_ident t comments name) id;
-      annot;
-      optional
-    })::rev_param_asts
+    let name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments }) ->
+      (loc, t), mk_commented_ident t comments name
+    ) name in
+    let param = t, (loc, { Param.name; annot; optional }) in
+    Func_type_params.add_param param x
   in
-  let add_rest cx tparams_map (loc, param) x =
-    let { Param.name = id; annot; optional } = param in
+  let add_rest cx tparams_map x rest_param =
+    let (rest_loc, { RestParam.
+      argument = (loc, { Param.name; annot; optional });
+    }) = rest_param in
     let (_, t), _ as annot = convert cx tparams_map annot in
-    Func_params.add_rest cx loc (Option.map ~f:(fun (loc, { Ast.Identifier.name; comments= _ }) -> (loc, name)) id) t x,
-    (loc, { Param.
-      name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments }) -> (loc, t), mk_commented_ident t comments name) id;
-      annot;
-      optional
-    })
+    let name = Option.map ~f:(fun (loc, { Ast.Identifier.name; comments }) ->
+      (loc, t), mk_commented_ident t comments name
+    ) name in
+    let rest = t, (rest_loc, { RestParam.
+      argument = (loc, { Param.name; annot; optional });
+    }) in
+    Func_type_params.add_rest rest x
   in
   let convert_params cx tparams_map (loc, {Params.params; rest}) =
-    let params, rev_param_asts =
-      List.fold_left (add_param cx tparams_map) (Func_params.empty, []) params in
-    match rest with
-    | Some (rest_loc, { RestParam.argument }) ->
-      let params, argument = add_rest cx tparams_map argument params in
-      params, (
-        loc,
-        { Params.
-          params = List.rev rev_param_asts;
-          rest = Some (rest_loc, { RestParam.argument; })
-        }
-      )
-    | None ->
-      params, (loc, { Params.params = List.rev rev_param_asts; rest = None; })
+    let fparams = Func_type_params.empty (fun params rest ->
+      Some (loc, { Params.params; rest })
+    ) in
+    let fparams = List.fold_left (add_param cx tparams_map) fparams params in
+    let fparams = Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
+    let params_ast = Func_type_params.eval cx fparams in
+    fparams, Option.value_exn params_ast
   in
   fun cx tparams_map loc func ->
     let tparams, tparams_map, tparams_ast =
@@ -1375,7 +1405,7 @@ and mk_func_sig =
     let (_, return_t), _ as return_ast = convert cx tparams_map func.return in
     let reason = mk_reason RFunctionType loc in
     let knot = Tvar.mk cx reason in
-    { Func_sig.
+    { Func_type_sig.
       reason;
       kind = Func_sig.Ordinary;
       tparams;
@@ -1530,7 +1560,7 @@ and mk_interface_super cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
   typeapp, (loc, { Ast.Type.Generic.id; targs })
 
 and add_interface_properties cx tparams_map properties s =
-  let open Class_sig in
+  let open Class_type_sig in
   let x, rev_prop_asts =
     List.fold_left Ast.Type.Object.(fun (x, rev_prop_asts) -> function
     | CallProperty (loc, { CallProperty.value = value_loc, ft; static }) ->
@@ -1570,7 +1600,7 @@ and add_interface_properties cx tparams_map properties s =
         | true, (Property.Identifier (id_loc, { Ast.Identifier.name; comments })),
             Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func) ->
             let fsig, func_ast = mk_func_sig cx tparams_map loc func in
-            let ft = Func_sig.methodtype cx fsig in
+            let ft = Func_type_sig.methodtype cx fsig in
             let append_method = match static, name with
             | false, "constructor" -> append_constructor (Some id_loc)
             | _ -> append_method ~static name id_loc
@@ -1602,7 +1632,7 @@ and add_interface_properties cx tparams_map properties s =
             Ast.Type.Object.Property.Get (get_loc, func) ->
             Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
             let fsig, func_ast = mk_func_sig cx tparams_map loc func in
-            let prop_t = fsig.Func_sig.return_t in
+            let prop_t = fsig.Func_type_sig.return_t in
             add_getter ~static name id_loc fsig x,
             Ast.Type.(loc, { prop with Object.Property.
               key = Property.Identifier ((id_loc, prop_t), mk_commented_ident prop_t comments name);
@@ -1615,8 +1645,8 @@ and add_interface_properties cx tparams_map properties s =
             Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc);
             let fsig, func_ast = mk_func_sig cx tparams_map loc func in
             let prop_t = match fsig with
-            | { Func_sig.tparams=None; fparams; _ } ->
-              (match Func_params.value fparams with
+            | { Func_type_sig.tparams=None; fparams; _ } ->
+              (match Func_type_params.value fparams with
               | [_, t] -> t
               | _ -> AnyT.at AnyError id_loc (* error case: report any ok *))
             | _ -> AnyT.at AnyError id_loc (* error case: report any ok *) in
@@ -1666,7 +1696,7 @@ let mk_super cx tparams_map loc c targs =
     (loc, c, Some ts), Some (targs_loc, targs_ast)
 
 let mk_interface_sig cx reason decl =
-  let open Class_sig in
+  let open Class_type_sig in
   let { Ast.Statement.Interface.
     id = id_loc, { Ast.Identifier.name= id_name; comments };
     tparams;
@@ -1713,7 +1743,7 @@ let mk_interface_sig cx reason decl =
   }
 
 let mk_declare_class_sig =
-  let open Class_sig in
+  let open Class_type_sig in
 
   let mk_mixins cx tparams_map (loc, {Ast.Type.Generic.id; targs}) =
     let name = qualified_name id in
@@ -1754,7 +1784,7 @@ let mk_declare_class_sig =
     let id_info = id_name, self, Type_table.Other in
     Type_table.set_info id_loc id_info (Context.type_table cx);
 
-    let _, tparams, tparams_map = Class_sig.add_this self cx reason tparams tparams_map in
+    let _, tparams, tparams_map = Class_type_sig.add_this self cx reason tparams tparams_map in
 
     Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
 

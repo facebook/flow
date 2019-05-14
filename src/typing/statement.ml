@@ -17,6 +17,7 @@ module Tast_utils = Typed_ast_utils
    point inside a function (and when to narrow or widen their types). *)
 
 module Anno = Type_annotation
+module Class_type_sig = Anno.Class_type_sig
 module Flow = Flow_js
 module T = Type
 
@@ -122,6 +123,179 @@ end
 let might_have_nonvoid_return loc function_ast =
   let finder = new return_finder in
   finder#eval (finder#function_ loc) function_ast
+
+module Func_stmt_config = struct
+  type 'T ast = (ALoc.t, 'T) Ast.Function.Params.t
+  type 'T param_ast = (ALoc.t, 'T) Ast.Function.Param.t
+  type 'T rest_ast = (ALoc.t, 'T) Ast.Function.RestParam.t
+
+  type expr =
+    Context.t ->
+    (ALoc.t, ALoc.t) Flow_ast.Expression.t ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.Expression.t
+
+  type pattern =
+    | Id of (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t
+    | Object of {
+        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
+        properties: (ALoc.t, ALoc.t) Ast.Pattern.Object.property list;
+      }
+    | Array of {
+        annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
+        elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element option list;
+      }
+
+  type param = Param of {
+    t: Type.t;
+    loc: ALoc.t;
+    ploc: ALoc.t;
+    pattern: pattern;
+    default: (ALoc.t, ALoc.t) Ast.Expression.t option;
+    expr: expr;
+  }
+
+  type rest = Rest of {
+    t: Type.t;
+    loc: ALoc.t;
+    ploc: ALoc.t;
+    id: (ALoc.t, ALoc.t * Type.t) Ast.Pattern.Identifier.t;
+  }
+
+  let param_type (Param { t; pattern; default; _ }) =
+    match pattern with
+    | Id id ->
+      let { Ast.Pattern.Identifier.
+        name = (_, { Ast.Identifier.name; _ });
+        optional; _;
+      } = id in
+      let t = if optional || default <> None then Type.optional t else t in
+      Some name, t
+    | _ ->
+      let t = if default <> None then Type.optional t else t in
+      None, t
+
+  let rest_type (Rest { t; loc; id; _ }) =
+    let { Ast.Pattern.Identifier.
+      name = (_, { Ast.Identifier.name; _ });
+      _;
+    } = id in
+    Some name, loc, t
+
+  let subst_param cx map param =
+    let Param { t; loc; ploc; pattern; default; expr } = param in
+    let t = Flow.subst cx map t in
+    Param { t; loc; ploc; pattern; default; expr }
+
+  let subst_rest cx map rest =
+    let Rest { t; loc; ploc; id } = rest in
+    let t = Flow.subst cx map t in
+    Rest { t; loc; ploc; id }
+
+  let bind cx name t loc =
+    let open Scope in
+    if Context.enable_const_params cx
+    then
+      let kind = Entry.ConstParamBinding in
+      Env.bind_implicit_const ~state:State.Initialized
+        kind cx name t loc
+    else
+      let kind =
+        if Env.promote_to_const_like cx loc
+        then Entry.ConstlikeParamBinding
+        else Entry.ParamBinding
+      in
+      Env.bind_implicit_let ~state:State.Initialized
+        kind cx name t loc
+
+  let destruct cx annot ~expr ~use_op:_ loc name default t =
+    let reason = mk_reason (RIdentifier name) loc in
+    let t = match annot with
+    | Ast.Type.Missing _ -> t
+    | Ast.Type.Available _ ->
+      EvalT (t, DestructuringT (reason, Become), mk_id ())
+    in
+    Type_table.set (Context.type_table cx) loc t;
+    Option.iter ~f:(fun d ->
+      let default_t = Flow.mk_default cx reason d
+        ~expr:(fun cx e -> snd_fst (expr cx e)) in
+      Flow.flow_t cx (default_t, t)
+    ) default;
+    bind cx name t loc
+
+  let eval_default cx ~expr = function
+    | None -> None
+    | Some e -> Some (expr cx e)
+
+  let eval_param cx (Param {t; loc; ploc; pattern; default; expr}) =
+    match pattern with
+    | Id id ->
+      Type_table.set (Context.type_table cx) loc t;
+      let default = eval_default cx ~expr default in
+      let () =
+        match default with
+        | None -> ()
+        | Some ((_, default_t), _) -> Flow.flow_t cx (default_t, t)
+      in
+      let () =
+        let { Ast.Pattern.Identifier.
+          name = ((loc, _), { Ast.Identifier.name; _ });
+          optional; _
+        } = id in
+        let t = if optional && default = None then Type.optional t else t in
+        bind cx name t loc
+      in
+      loc, { Ast.Function.Param.
+        argument = ((ploc, t), Ast.Pattern.Identifier id);
+        default;
+      }
+
+    | Object { annot; properties } ->
+      let properties =
+        let default = Option.map default Default.expr in
+        let init = Destructuring.empty ?default t in
+        let f = destruct cx annot ~expr in
+        Destructuring.object_properties cx ~expr ~f init properties
+      in
+      let default = eval_default cx ~expr default in
+      loc, { Ast.Function.Param.
+        argument = ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.
+          properties;
+          annot;
+        });
+        default;
+      }
+
+    | Array { annot; elements } ->
+      let elements =
+        let default = Option.map default Default.expr in
+        let init = Destructuring.empty ?default t in
+        let f = destruct cx annot ~expr in
+        Destructuring.array_elements cx ~expr ~f init elements
+      in
+      let default = eval_default cx ~expr default in
+      loc, { Ast.Function.Param.
+        argument = ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.
+          elements;
+          annot;
+        });
+        default;
+      }
+
+  let eval_rest cx (Rest {t; loc; ploc; id}) =
+    let () =
+      let { Ast.Pattern.Identifier.
+        name = ((loc, _), { Ast.Identifier.name; _ });
+        _
+      } = id in
+      bind cx name t loc
+    in
+    loc, { Ast.Function.RestParam.
+      argument = ((ploc, t), Ast.Pattern.Identifier id)
+    }
+end
+module Func_stmt_params = Func_params.Make (Func_stmt_config)
+module Func_stmt_sig = Func_sig.Make (Func_stmt_params)
+module Class_stmt_sig = Class_sig.Make (Func_stmt_sig)
 
 (************)
 (* Visitors *)
@@ -513,11 +687,11 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
   let interface_helper cx loc (iface_sig, self) =
     let def_reason = mk_reason (desc_of_t self) loc in
-    Class_sig.generate_tests cx (fun iface_sig ->
-      Class_sig.check_super cx def_reason iface_sig;
-      Class_sig.check_implements cx def_reason iface_sig
+    Class_type_sig.generate_tests cx (fun iface_sig ->
+      Class_type_sig.check_super cx def_reason iface_sig;
+      Class_type_sig.check_implements cx def_reason iface_sig
     ) iface_sig;
-    let t = Class_sig.classtype ~check_polarity:false cx iface_sig in
+    let t = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
     Flow.unify cx self t;
     Type_table.set (Context.type_table cx) loc t;
     t
@@ -6254,20 +6428,20 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
 
 and mk_class cx class_loc ~name_loc reason c =
   let def_reason = repos_reason class_loc reason in
-  let this_in_class = Class_sig.This.in_class c in
+  let this_in_class = Class_stmt_sig.This.in_class c in
   let self = Tvar.mk cx reason in
   let class_sig, class_ast_f = mk_class_sig cx name_loc reason self c in
-  class_sig |> Class_sig.with_typeparams cx (fun () ->
-    class_sig |> Class_sig.generate_tests cx (fun class_sig ->
-      Class_sig.check_super cx def_reason class_sig;
-      Class_sig.check_implements cx def_reason class_sig;
-      if this_in_class || not (Class_sig.This.is_bound_to_empty class_sig) then
-        Class_sig.toplevels cx class_sig
+  class_sig |> Class_stmt_sig.with_typeparams cx (fun () ->
+    class_sig |> Class_stmt_sig.generate_tests cx (fun class_sig ->
+      Class_stmt_sig.check_super cx def_reason class_sig;
+      Class_stmt_sig.check_implements cx def_reason class_sig;
+      if this_in_class || not (Class_stmt_sig.This.is_bound_to_empty class_sig) then
+        Class_stmt_sig.toplevels cx class_sig
         ~decls:toplevel_decls
         ~stmts:toplevels
         ~expr:expression
     );
-    let class_t = Class_sig.classtype cx class_sig in
+    let class_t = Class_stmt_sig.classtype cx class_sig in
     Flow.unify cx self class_t;
     class_t, class_ast_f class_t
   )
@@ -6279,7 +6453,7 @@ and mk_class cx class_loc ~name_loc reason c =
    "metaclass": thus, the static type is itself implemented as an instance
    type. *)
 and mk_class_sig =
-  let open Class_sig in
+  let open Class_stmt_sig in
 
   (*  Given information about a field, returns:
       - Class_sig.field representation of this field
@@ -6297,8 +6471,8 @@ and mk_class_sig =
       | Some expr ->
         let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
         Infer (
-          Func_sig.field_initializer tparams_map reason expr annot_t,
-          (fun (_, value_opt) -> value_ref := Some (Option.value_exn value_opt))
+          Func_stmt_sig.field_initializer tparams_map reason expr annot_t,
+          (fun (_, _, value_opt) -> value_ref := Some (Option.value_exn value_opt))
         ),
         (fun () -> Some (Option.value (!value_ref)
           ~default:(Tast_utils.error_mapper#expression expr)))
@@ -6447,15 +6621,21 @@ and mk_class_sig =
           than attempting to return a list of method bodies from the Class_sig.toplevels
           function, we have it place the function bodies into a list via side effects.
           We use a similar approach for method types *)
+      let params_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t option ref = ref None in
       let body_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.body option ref = ref None in
-      let set_asts (body_opt, _) = body_ref := Some (Option.value_exn body_opt) in
+      let set_asts (params_opt, body_opt, _) =
+        params_ref := Some (Option.value_exn params_opt);
+        body_ref := Some (Option.value_exn body_opt)
+      in
       let func_t_ref : Type.t option ref = ref None in
       let set_type t = func_t_ref := Some t in
       let get_element () =
+        let params = Option.value (!params_ref)
+          ~default:(Tast_utils.error_mapper#function_params func.Ast.Function.params) in
         let body = Option.value (!body_ref)
           ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body) in
         let func_t = Option.value (!func_t_ref) ~default:(EmptyT.at id_loc |> with_trust bogus_trust ) in
-        let func = reconstruct_func body func_t in
+        let func = reconstruct_func params body func_t in
         let decorators = List.map Tast_utils.unimplemented_mapper#class_decorator decorators in
         Body.Method ((loc, func_t), { Method.
           key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), map_ident_new_type func_t id);
@@ -6564,9 +6744,8 @@ and mk_class_sig =
   })
 
 and mk_func_sig =
-  let open Func_sig in
-
   let function_kind ~async ~generator ~predicate =
+    let open Func_sig in
     Ast.Type.Predicate.(match async, generator, predicate with
     | true, true, None -> AsyncGenerator
     | true, false, None -> Async
@@ -6577,73 +6756,68 @@ and mk_func_sig =
     | _, _, _ -> Utils_js.assert_false "(async || generator) && pred")
   in
 
-  let mk_params cx tparams_map params =
-    let add_param param params =
-      let (loc, { Ast.Function.Param.argument; default }) = param in
-      match argument with
-      | arg_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-          name = (name_loc, ({ Ast.Identifier.name= name_str; comments= _ } as id));
-          annot;
-          optional;
-        } ->
-        let reason = mk_reason (RParameter (Some name_str)) arg_loc in
-        let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
-        Func_params.add_simple cx ~optional ?default arg_loc (Some (name_loc, name_str)) t params,
-        let argument = (arg_loc, t), Ast.Pattern.Identifier {
-          Ast.Pattern.Identifier.name = ((name_loc, t), map_ident_new_type t id);
-          annot;
-          optional;
-        } in
-        let default = match default with
-        | Some e -> Some (Tast_utils.unimplemented_mapper#expression e)
-        | None -> None
-        in
-        (loc, { Ast.Function.Param.argument; default })
-      | arg_log, _ ->
-        let reason = mk_reason RDestructuring arg_log in
-        let annot = Destructuring.type_of_pattern argument in
-        let t, _ = Anno.mk_type_annotation cx tparams_map reason annot in
-        Func_params.add_complex cx ~expr:expression param t params
+  let id_param cx tparams_map id mk_reason =
+    let { Ast.Pattern.Identifier.name; annot; optional } = id in
+    let (id_loc, ({ Ast.Identifier.name; comments = _ } as id)) = name in
+    let reason = mk_reason name in
+    let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
+    let name = (id_loc, t), map_ident_new_type t id in
+    t, { Ast.Pattern.Identifier.name; annot; optional }
+  in
+
+  let mk_param cx tparams_map param =
+    let (loc, { Ast.Function.Param.argument = (ploc, patt); default }) = param in
+    let expr = expression in
+    let t, pattern = match patt with
+    | Ast.Pattern.Identifier id ->
+      let t, id = id_param cx tparams_map id (fun name ->
+        mk_reason (RParameter (Some name)) ploc
+      ) in
+      t, Func_stmt_config.Id id
+    | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties } ->
+      let reason = mk_reason RDestructuring ploc in
+      let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
+      t, Func_stmt_config.Object { annot; properties }
+    | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements } ->
+      let reason = mk_reason RDestructuring ploc in
+      let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
+      t, Func_stmt_config.Array { annot; elements; }
+    | Ast.Pattern.Expression _ ->
+      failwith "unexpected expression pattern in param"
     in
-    let add_rest patt params =
-      match patt with
-      | loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-          name = (name_loc, ({ Ast.Identifier.name= name_str; comments= _ } as id));
-          annot;
-          optional;
-        } ->
-        let reason = mk_reason (RRestParameter (Some name_str)) loc in
-        let t, annot = Anno.mk_type_annotation cx tparams_map reason annot in
-        Func_params.add_rest cx loc (Some (name_loc, name_str)) t params,
-        ((loc, t), Ast.Pattern.Identifier {
-          Ast.Pattern.Identifier.name = ((name_loc, t), map_ident_new_type t id);
-          annot;
-          optional;
-        })
-      | loc, _ ->
-        Flow_js.add_output cx
-          Error_message.(EInternal (loc, RestParameterNotIdentifierPattern));
-        params, Tast_utils.error_mapper#pattern patt
-    in
-    let (params_loc, { Ast.Function.Params.params; rest }) = params in
-    let params, rev_param_asts =
-      List.fold_left (fun (params, rev_param_asts) param ->
-        let acc, param_ast = add_param param params in
-        acc, param_ast::rev_param_asts
-      ) (Func_params.empty, []) params
-    in
-    let params, rest_ast =
-      match rest with
-      | Some (rest_loc, { Ast.Function.RestParam.argument }) ->
-        let params, rest = add_rest argument params in
-        params, Some (rest_loc, { Ast.Function.RestParam.argument = rest })
-      | None ->
-        params, None
-    in
-    params, (params_loc, { Ast.Function.Params.
-      params = List.rev rev_param_asts;
-      rest = rest_ast;
-    })
+    Func_stmt_config.Param { t; loc; ploc; pattern; default; expr }
+  in
+
+  let mk_rest cx tparams_map rest =
+    let (loc, { Ast.Function.RestParam.argument = (ploc, patt) }) = rest in
+    match patt with
+    | Ast.Pattern.Identifier id ->
+      let t, id = id_param cx tparams_map id (fun name ->
+        mk_reason (RRestParameter (Some name)) ploc
+      ) in
+      Ok (Func_stmt_config.Rest { t; loc; ploc; id })
+    | Ast.Pattern.Object _
+    | Ast.Pattern.Array _
+    | Ast.Pattern.Expression _ ->
+      (* TODO: this should be a parse error, unrepresentable AST *)
+      Error (Error_message.(EInternal (ploc, RestParameterNotIdentifierPattern)))
+  in
+
+  let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest })  =
+    let fparams = Func_stmt_params.empty (fun params rest ->
+      Some (loc, { Ast.Function.Params.params; rest })
+    ) in
+    let fparams = List.fold_left (fun acc param ->
+      Func_stmt_params.add_param (mk_param cx tparams_map param) acc
+    ) fparams params in
+    let fparams = Option.fold ~f:(fun acc rest ->
+      match mk_rest cx tparams_map rest with
+      | Ok rest -> Func_stmt_params.add_rest rest acc
+      | Error err ->
+        Flow_js.add_output cx err;
+        acc
+    ) ~init:fparams rest in
+    fparams
   in
 
   fun cx tparams_map loc func ->
@@ -6664,13 +6838,13 @@ and mk_func_sig =
       Anno.mk_type_param_declarations cx ~tparams_map tparams
     in
     Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
-    let fparams, params = mk_params cx tparams_map params in
+    let fparams = mk_params cx tparams_map params in
     let body = Some body in
-    let ret_reason = mk_reason RReturn (return_loc func) in
+    let ret_reason = mk_reason RReturn (Func_sig.return_loc func) in
     let return_t, return =
       let has_nonvoid_return = might_have_nonvoid_return loc func in
       let definitely_returns_void =
-        kind = Ordinary &&
+        kind = Func_sig.Ordinary &&
         not has_nonvoid_return
       in
       Anno.mk_return_type_annotation cx tparams_map ret_reason ~definitely_returns_void return
@@ -6691,8 +6865,8 @@ and mk_func_sig =
           Some (Tast_utils.error_mapper#type_predicate pred)
     ) in
     let knot = Tvar.mk cx reason in
-    {Func_sig.reason; kind; tparams; tparams_map; fparams; body; return_t; knot},
-    (fun body fun_type -> { func with Ast.Function.
+    {Func_stmt_sig.reason; kind; tparams; tparams_map; fparams; body; return_t; knot},
+    (fun params body fun_type -> { func with Ast.Function.
       id = Option.map ~f:(fun (id_loc, name) -> (id_loc, fun_type), map_ident_new_type fun_type name) id;
       params;
       body;
@@ -6709,9 +6883,9 @@ and function_decl id cx loc func this super =
   let func_sig, reconstruct_func = mk_func_sig cx SMap.empty loc func in
   let save_return = Abnormal.clear_saved Abnormal.Return in
   let save_throw = Abnormal.clear_saved Abnormal.Throw in
-  let body = func_sig |> Func_sig.with_typeparams cx (fun () ->
-    func_sig |> Func_sig.generate_tests cx (
-      Func_sig.toplevels id cx this super
+  let (params_ast, body_ast, _) = func_sig |> Func_stmt_sig.with_typeparams cx (fun () ->
+    func_sig |> Func_stmt_sig.generate_tests cx (
+      Func_stmt_sig.toplevels id cx this super
         ~decls:toplevel_decls
         ~stmts:toplevels
         ~expr:expression
@@ -6719,7 +6893,8 @@ and function_decl id cx loc func this super =
   ) in
   ignore (Abnormal.swap_saved Abnormal.Return save_return);
   ignore (Abnormal.swap_saved Abnormal.Throw save_throw);
-  func_sig, reconstruct_func (Option.value_exn (fst body))
+  func_sig,
+  reconstruct_func (Option.value_exn params_ast) (Option.value_exn body_ast)
 
 (* Switch back to the declared type for an internal name. *)
 and define_internal cx reason x =
@@ -6747,7 +6922,7 @@ and mk_function id cx loc func =
     Scope.Entry.new_let t ~loc ~state:Scope.State.Initialized
   in
   let func_sig, reconstruct_ast = function_decl id cx loc func this super in
-  let fun_type = Func_sig.functiontype cx this_t func_sig in
+  let fun_type = Func_stmt_sig.functiontype cx this_t func_sig in
   fun_type, reconstruct_ast fun_type
 
 (* Process an arrow function, returning a (polymorphic) function type. *)
@@ -6760,7 +6935,7 @@ and mk_arrow cx loc func =
      function_decl above has already done the necessary checking of `this` in
      the body of the function. Now we want to avoid re-binding `this` to
      objects through which the function may be called. *)
-  let fun_type = Func_sig.functiontype cx dummy_this func_sig in
+  let fun_type = Func_stmt_sig.functiontype cx dummy_this func_sig in
   fun_type, reconstruct_ast fun_type
 
 (* Transform predicate declare functions to functions whose body is the

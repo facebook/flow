@@ -6,12 +6,18 @@
  *)
 
 module Ast = Flow_ast
-
 module Flow = Flow_js
 
 open Reason
 
+include Class_sig_intf
+
+module Make (F: Func_sig.S) = struct
+type func_sig = F.t
+type func_params_tast = F.func_params_tast
+
 type set_asts =
+  func_params_tast option *
   (ALoc.t, ALoc.t * Type.t) Ast.Function.body option *
   (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
   -> unit
@@ -20,11 +26,11 @@ type set_type = Type.t -> unit
 
 and field =
   | Annot of Type.t
-  | Infer of Func_sig.t * set_asts
+  | Infer of func_sig * set_asts
 
 type field' = ALoc.t option * Type.polarity * field
 
-type func_info = ALoc.t option * Func_sig.t * set_asts * set_type
+type func_info = ALoc.t option * func_sig * set_asts * set_type
 
 type signature = {
   reason: reason;
@@ -106,14 +112,14 @@ let add_private_field name loc polarity field = map_sig (fun s -> {
 })
 
 let add_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
-  {s with constructor = [loc, Func_sig.to_ctor_sig fsig, set_asts, set_type]}
+  {s with constructor = [loc, F.to_ctor_sig fsig, set_asts, set_type]}
 
 let add_default_constructor reason s =
-  let fsig = Func_sig.default_constructor reason in
+  let fsig = F.default_constructor reason in
   add_constructor None fsig s
 
 let append_constructor loc fsig ?(set_asts=ignore) ?(set_type=ignore) s =
-  {s with constructor = (loc, Func_sig.to_ctor_sig fsig, set_asts, set_type)::s.constructor}
+  {s with constructor = (loc, F.to_ctor_sig fsig, set_asts, set_type)::s.constructor}
 
 let add_field' ~static name fld x =
   let flat = static || structural x in
@@ -219,10 +225,10 @@ let iter_methods f s =
 let subst_field cx map (loc, polarity, field) =
   loc, polarity, match field with
   | Annot t -> Annot (Flow.subst cx map t)
-  | Infer (fsig, set_asts) -> Infer (Func_sig.subst cx map fsig, set_asts)
+  | Infer (fsig, set_asts) -> Infer (F.subst cx map fsig, set_asts)
 
 let subst_sig cx map s =
-  let subst_func_sig (loc, sig_, f, g) = (loc, Func_sig.subst cx map sig_, f, g) in
+  let subst_func_sig (loc, sig_, f, g) = (loc, F.subst cx map sig_, f, g) in
   {
     reason = s.reason;
     fields = SMap.map (subst_field cx map) s.fields;
@@ -264,7 +270,7 @@ let generate_tests cx f x =
     super = subst_super cx map x.super;
     constructor =
       List.map
-        (fun (loc, sig_, g, h) -> loc, Func_sig.subst cx map sig_, g, h)
+        (fun (loc, sig_, g, h) -> loc, F.subst cx map sig_, g, h)
         x.constructor;
     static = subst_sig cx map x.static;
     instance = subst_sig cx map x.instance;
@@ -273,7 +279,7 @@ let generate_tests cx f x =
 let to_field (loc, polarity, field) =
   let t = match field with
   | Annot t -> t
-  | Infer (fsig, _) -> Func_sig.gettertype fsig
+  | Infer (fsig, _) -> F.gettertype fsig
   in
   Type.Field (loc, t, polarity)
 
@@ -284,7 +290,7 @@ let elements cx ?constructor s =
        function signature for this method, simply return the method type. *)
     SMap.mapi Type.(fun name xs ->
       let ms =
-        Nel.rev_map (fun (loc, x, _, set_type) -> loc, Func_sig.methodtype cx x, set_type) xs in
+        Nel.rev_map (fun (loc, x, _, set_type) -> loc, F.methodtype cx x, set_type) xs in
       (* Keep track of these before intersections are merged, to enable
        * type information on every member of the intersection. *)
       ms |> Nel.iter (fun (loc, t, set_type) ->
@@ -312,11 +318,11 @@ let elements cx ?constructor s =
      the getter. Otherwise just use the getter type or the setter type *)
   let getters =
     SMap.map
-      (fun (loc, t, _, set_type) -> loc, Func_sig.gettertype t, set_type)
+      (fun (loc, t, _, set_type) -> loc, F.gettertype t, set_type)
       s.getters in
   let setters =
     SMap.map
-      (fun (loc, t, _, set_type) -> loc, Func_sig.settertype t, set_type)
+      (fun (loc, t, _, set_type) -> loc, F.settertype t, set_type)
       s.setters in
 
   (* Register getters and setters with the type table *)
@@ -344,7 +350,7 @@ let elements cx ?constructor s =
   SMap.iter (fun name fld ->
     let loc_type_opt = match fld with
     | Some loc, _, Annot t -> Some (loc, t)
-    | Some loc, _, Infer (func_sig, _) -> Some (loc, Func_sig.gettertype func_sig)
+    | Some loc, _, Infer (func_sig, _) -> Some (loc, F.gettertype func_sig)
     | _ -> None
     in
     Option.iter ~f:(fun (loc, t) ->
@@ -425,7 +431,7 @@ let statictype cx tparams_with_this x =
 
 let insttype cx ~initialized_static_fields s =
   let constructor =
-    let ts = List.rev_map (fun (loc, t, _, _) -> loc, Func_sig.methodtype cx t) s.constructor in
+    let ts = List.rev_map (fun (loc, t, _, _) -> loc, F.methodtype cx t) s.constructor in
     match ts with
     | [] -> None
     | [x] -> Some x
@@ -665,8 +671,8 @@ let toplevels cx ~decls ~stmts ~expr x =
     let method_ this super ~set_asts f =
       let save_return = Abnormal.clear_saved Abnormal.Return in
       let save_throw = Abnormal.clear_saved Abnormal.Throw in
-      let asts = f |> Func_sig.generate_tests cx (
-        Func_sig.toplevels None cx this super ~decls ~stmts ~expr
+      let asts = f |> F.generate_tests cx (
+        F.toplevels None cx this super ~decls ~stmts ~expr
       ) in
       set_asts asts;
       ignore (Abnormal.swap_saved Abnormal.Return save_return);
@@ -776,3 +782,4 @@ end
 
 let with_typeparams cx f x =
   Type_table.with_typeparams (Type.TypeParams.to_list x.tparams) (Context.type_table cx) f
+end

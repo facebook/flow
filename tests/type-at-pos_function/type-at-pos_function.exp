@@ -58,6 +58,21 @@ function.js:16:3 = {
   "start":3,
   "end":3
 }
+default.js:4:16 = {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"default.js",
+    "type":"SourceFile",
+    "start":{"line":4,"column":16,"offset":36},
+    "end":{"line":4,"column":16,"offset":37}
+  },
+  "path":"default.js",
+  "line":4,
+  "endline":4,
+  "start":16,
+  "end":16
+}
 function-poly-0.js:3:10 = {
   "type":"<T>(x: T) => T",
   "reasons":[],
