@@ -424,7 +424,12 @@ let string_of_loc ?(strip_root=None) loc = Loc.(
     spf "%s:%s" (string_of_source ~strip_root file) (Loc.to_string_no_source loc)
 )
 
-let string_of_aloc ?strip_root aloc = string_of_loc ?strip_root (ALoc.to_loc aloc)
+let string_of_aloc ?(strip_root=None) aloc =
+  match ALoc.source aloc with
+  | None
+  | Some File_key.Builtins -> ""
+  | Some file ->
+    spf "%s:%s" (string_of_source ~strip_root file) (ALoc.to_string_no_source aloc)
 
 let json_of_loc_props ?(strip_root=None) ?(catch_offset_errors=false) ~offset_table loc = Hh_json.(Loc.(
   let offset_entry offset_table pos =
