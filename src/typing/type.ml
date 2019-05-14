@@ -2751,6 +2751,7 @@ end = struct
     fun t1 t2 ->
       if t1 == t2 then 0 else
       compare t1 (swap_reason t2 t1)
+
   let reasonless_eq t1 t2 =
     reasonless_compare t1 t2 = 0
 
@@ -2783,9 +2784,12 @@ end = struct
       -> not trust_checked || Trust.subtype_trust ltrust rtrust
     | DefT (_, ltrust, EmptyT _), _ -> not trust_checked || Trust.is_public ltrust
     | _, DefT (_, rtrust, MixedT _) -> not trust_checked || Trust.is_tainted rtrust
-    | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) -> Trust.subtype_trust ltrust rtrust && literal_eq expected actual
-    | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) -> Trust.subtype_trust ltrust rtrust && number_literal_eq expected actual
-    | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) -> Trust.subtype_trust ltrust rtrust && boolean_literal_eq expected actual
+    | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) ->
+        (not trust_checked || Trust.subtype_trust ltrust rtrust) && literal_eq expected actual
+    | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) ->
+        (not trust_checked || Trust.subtype_trust ltrust rtrust) && number_literal_eq expected actual
+    | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) ->
+        (not trust_checked || Trust.subtype_trust ltrust rtrust) && boolean_literal_eq expected actual
     | _ -> reasonless_eq t1 t2
 end
 
