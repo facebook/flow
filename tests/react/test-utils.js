@@ -56,3 +56,17 @@ TestUtils.act(() => {
   Math.random();
 });
 TestUtils.act(() => ({count: 123})); // error
+async function runTest() {
+  await TestUtils.act(async () => {
+    // .. some test code
+    await Promise.resolve();
+  });
+  /* // wishlist - 
+  act(async () => {
+    // some test code
+  }); // ideally this should error 
+  await act(() => {
+    // ...
+  }); // ideally this should error 
+  */
+}
