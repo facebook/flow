@@ -1100,17 +1100,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         then rec_flow cx trace (result, ReposUseT (reason, false, use_op, l))
         else rec_flow cx trace (l, UseT (use_op, result))
 
-    | EvalT (t, DestructuringT (reason, s), i), _ ->
-      rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
-
     | EvalT (t, LatentPredT (reason, p), i), _ ->
       rec_flow cx trace (eval_latent_pred cx ~trace reason t p i, u)
-
-    (** NOTE: the rule with EvalT (_, DestructuringT _, _) as upper bound is
-        moved below the OpenT rules, so that we can take advantage of the
-        caching inherent in those rules (in particular, when OpenT is a lower
-        bound). This caching seems necessary to avoid non-termination. There
-        could be other, better ways of achieving the same effect. **)
 
     (******************)
     (* process X ~> Y *)
@@ -1190,9 +1181,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (****************)
     (* eval, contd. *)
     (****************)
-
-    | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
-      rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
 
     | _, UseT (use_op, EvalT (t, LatentPredT (reason, p), i)) ->
       rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
@@ -5393,6 +5381,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT (_, src), ArrRestT (_, reason, _, tout) ->
       rec_flow_t cx trace (AnyT.why src reason, tout)
 
+    (*****************)
+    (* destructuring *)
+    (*****************)
+
+    | _, DestructuringT (reason, s, tout) ->
+      eval_selector cx ~trace reason l s tout
+
     (**************)
     (* object kit *)
     (**************)
@@ -6883,6 +6878,7 @@ and empty_success flavor u =
   | _, UseT (_, TypeDestructorTriggerT _)
   | _, ChoiceKitUseT _
   | _, CondT _
+  | _, DestructuringT _
   | _, MakeExactT _
   | _, ObjKitT _
   | _, ReposLowerT _
@@ -7108,6 +7104,7 @@ and any_propagated cx trace any u =
   | ConstructorT _
   | CopyNamedExportsT _
   | CopyTypeExportsT _
+  | DestructuringT _
   | ElemT _
   | ExportNamedT _
   | ExportTypeT _
@@ -7441,23 +7438,14 @@ and eval_latent_pred cx ?trace reason curr_t p i =
   | Some it ->
     it
 
-and eval_selector cx ?trace reason curr_t s i =
-  let evaluated = Context.evaluated cx in
-  match IMap.get i evaluated with
-  | None ->
-    Tvar.mk_where cx reason (fun tvar ->
-      Context.set_evaluated cx (IMap.add i tvar evaluated);
-      flow_opt cx ?trace (curr_t, match s with
-      | Prop x -> GetPropT (unknown_use, reason, Named (reason, x), tvar)
-      | Elem key -> GetElemT (unknown_use, reason, key, tvar)
-      | ObjRest xs -> ObjRestT (reason, xs, tvar)
-      | ArrRest i -> ArrRestT (unknown_use, reason, i, tvar)
-      | Default -> PredicateT (NotP VoidP, tvar)
-      | Become -> BecomeT (reason, tvar)
-      )
-    )
-  | Some it ->
-    it
+and eval_selector cx ?trace reason curr_t s tvar =
+  flow_opt cx ?trace (curr_t, match s with
+    | Prop x -> GetPropT (unknown_use, reason, Named (reason, x), tvar)
+    | Elem key -> GetElemT (unknown_use, reason, key, tvar)
+    | ObjRest xs -> ObjRestT (reason, xs, tvar)
+    | ArrRest i -> ArrRestT (unknown_use, reason, i, tvar)
+    | Default -> PredicateT (NotP VoidP, tvar)
+  )
 
 and mk_type_destructor cx ~trace use_op reason t d id =
   let evaluated = Context.evaluated cx in
@@ -11924,5 +11912,5 @@ let mk_default cx reason = Default.fold
       flow_t cx (t1, tvar);
       flow_t cx (t2, tvar)))
   ~selector:(fun r t sel ->
-    let id = mk_id () in
-    eval_selector cx r t sel id)
+    Tvar.mk_where cx r (fun tvar ->
+      eval_selector cx r t sel tvar))

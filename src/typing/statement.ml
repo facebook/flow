@@ -212,7 +212,10 @@ module Func_stmt_config = struct
     let t = match annot with
     | Ast.Type.Missing _ -> t
     | Ast.Type.Available _ ->
-      EvalT (t, DestructuringT (reason, Become), mk_id ())
+      let source = Tvar.mk_where cx reason (fun t' ->
+        Flow.flow cx (t, BecomeT (reason, t'))
+      ) in
+      AnnotT (reason, source, false)
     in
     Type_table.set (Context.type_table cx) loc t;
     Option.iter ~f:(fun d ->
@@ -362,8 +365,11 @@ and binding_pattern_decl cx ~kind ((loc, _) as p) =
     let t = match annot with
     | Ast.Type.Missing _ -> t
     | Ast.Type.Available _ ->
-      let r = mk_reason (RIdentifier name) loc in
-      EvalT (t, DestructuringT (r, Become), mk_id())
+      let reason = mk_reason (RIdentifier name) loc in
+      let source = Tvar.mk_where cx reason (fun t' ->
+        Flow.flow cx (t, BecomeT (reason, t'))
+      ) in
+      AnnotT (reason, source, false)
     in
     Type_table.set (Context.type_table cx) loc t;
     bind cx name t loc

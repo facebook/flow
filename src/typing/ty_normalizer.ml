@@ -1516,7 +1516,7 @@ end = struct
     | T.Bind _ as d ->
       terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None
 
-  and destructuring_t ~env id t =
+  and latent_pred_t ~env id t =
     let cx = Env.get_cx env in
     let evaluated = Context.evaluated cx in
     let t' = match IMap.get id evaluated with
@@ -1526,8 +1526,7 @@ end = struct
     type__ ~env t'
 
   and eval_t ~env t id = function
-    | Type.LatentPredT _ -> destructuring_t ~env id t
-    | Type.DestructuringT _ -> destructuring_t ~env id t
+    | Type.LatentPredT _ -> latent_pred_t ~env id t
     | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
 
   and module_t env reason t =

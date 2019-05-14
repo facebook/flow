@@ -61,6 +61,31 @@ let string_of_rw = function
   | Read -> "Read"
   | Write _ -> "Write"
 
+let string_of_selector = function
+  | Elem _ -> "Elem _" (* TODO print info about the key *)
+  | Prop x -> spf "Prop %s" x
+  | ArrRest i -> spf "ArrRest %i" i
+  | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
+  | Default -> "Default"
+
+let string_of_destructor = function
+  | NonMaybeType -> "NonMaybeType"
+  | PropertyType x -> spf "PropertyType %s" x
+  | ElementType _ -> "ElementType"
+  | Bind _ -> "Bind"
+  | ReadOnlyType -> "ReadOnly"
+  | SpreadType _ -> "Spread"
+  | RestType _ -> "Rest"
+  | ValuesType -> "Values"
+  | CallType _ -> "CallType"
+  | TypeMap (TupleMap _) -> "TupleMap"
+  | TypeMap (ObjectMap _) -> "ObjectMap"
+  | TypeMap (ObjectMapi _) -> "ObjectMapi"
+  | ReactElementPropsType -> "ReactElementProps"
+  | ReactElementConfigType -> "ReactElementConfig"
+  | ReactElementRefType -> "ReactElementRef"
+  | ReactConfigType _ -> "ReactConfig"
+
 type json_cx = {
   stack: ISet.t;
   size: int ref;
@@ -887,6 +912,10 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "type1", _json_of_t json_cx t1;
       "type2", _json_of_t json_cx t2
     ]
+  | DestructuringT (_, s, t_out) -> [
+      "selector", json_of_selector json_cx s;
+      "t_out", _json_of_t json_cx t_out;
+    ]
   )
 )
 
@@ -1146,9 +1175,6 @@ and json_of_selector_impl json_cx = Hh_json.(function
   | Default -> JSON_Object [
       "default", JSON_Bool true;
     ]
-  | Become -> JSON_Object [
-      "become", JSON_Bool true;
-    ]
 )
 
 and json_of_destructor json_cx = check_depth json_of_destructor_impl json_cx
@@ -1258,9 +1284,6 @@ and json_of_defer_use_t json_cx = check_depth json_of_defer_use_t_impl json_cx
 and json_of_defer_use_t_impl json_cx = Hh_json.(function
   | LatentPredT (_, p) -> JSON_Object [
       "predicate", json_of_pred json_cx p
-    ]
-  | DestructuringT (_, s) -> JSON_Object [
-      "selector", json_of_selector json_cx s
     ]
   | TypeDestructorT (_, _, s) -> JSON_Object [
       "destructor", json_of_destructor json_cx s
@@ -1640,39 +1663,10 @@ let rec dump_t_ (depth, tvars) cx t =
   let kid = dump_t_ (depth-1, tvars) cx in
   let tvar id = dump_tvar_ (depth-1, tvars) cx id in
 
-  let string_of_destructor = function
-  | NonMaybeType -> "non-maybe type"
-  | PropertyType x -> spf "property type `%s`" x
-  | ElementType _ -> "element type"
-  | Bind _ -> "bind"
-  | ReadOnlyType -> "read only"
-  | SpreadType _ -> "spread"
-  | RestType _ -> "rest"
-  | ValuesType -> "values"
-  | CallType _ -> "function call"
-  | TypeMap (TupleMap _) -> "tuple map"
-  | TypeMap (ObjectMap _) -> "object map"
-  | TypeMap (ObjectMapi _) -> "object mapi"
-  | ReactElementPropsType -> "React element props"
-  | ReactElementConfigType -> "React element config"
-  | ReactElementRefType -> "React element instance"
-  | ReactConfigType _ -> "React config"
-  in
-
   let defer_use =
-    let string_of_selector = function
-    | Prop name -> spf "prop `%s`" name
-    | Elem _ -> "elem"
-    | ObjRest _ -> "obj rest"
-    | ArrRest i -> spf "arr rest at index %d" i
-    | Default -> "default"
-    | Become -> "become"
-    in
     fun expr t -> match expr with
     | LatentPredT (_, p) ->
       spf "LatentPred %s on %s" (string_of_predicate p) t
-    | DestructuringT (_, selector) ->
-      spf "Destructure %s on %s" (string_of_selector selector) t
     | TypeDestructorT (use_op, _, destructor) ->
       spf "%s, TypeDestruct %s on %s"
         (string_of_use_op use_op)
@@ -2230,6 +2224,8 @@ and dump_use_t_ (depth, tvars) cx t =
         (kid tout))
   | ExtendsUseT (_, _, nexts, l, u) -> p ~extra:(spf "[%s], %s, %s"
     (String.concat "; " (Core_list.map ~f:kid nexts)) (kid l) (kid u)) t
+  | DestructuringT (_, s, tout) -> p t
+      ~extra:(spf "%s, %s" (string_of_selector s) (kid tout))
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then spf "%d, ^" id else
@@ -2371,32 +2367,6 @@ let string_of_file cx =
     if String_utils.string_starts_with filename root_str
       then Files.relative_path root_str filename
       else filename
-
-let string_of_selector = function
-  | Elem _ -> "Elem _" (* TODO print info about the key *)
-  | Prop x -> spf "Prop %s" x
-  | ArrRest i -> spf "ArrRest %i" i
-  | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
-  | Default -> "Default"
-  | Become -> "Become"
-
-let string_of_destructor = function
-  | NonMaybeType -> "NonMaybeType"
-  | PropertyType x -> spf "PropertyType %s" x
-  | ElementType _ -> "ElementType"
-  | Bind _ -> "Bind"
-  | ReadOnlyType -> "ReadOnly"
-  | SpreadType _ -> "Spread"
-  | RestType _ -> "Rest"
-  | ValuesType -> "Values"
-  | CallType _ -> "CallType"
-  | TypeMap (TupleMap _) -> "TupleMap"
-  | TypeMap (ObjectMap _) -> "ObjectMap"
-  | TypeMap (ObjectMapi _) -> "ObjectMapi"
-  | ReactElementPropsType -> "ReactElementProps"
-  | ReactElementConfigType -> "ReactElementConfig"
-  | ReactElementRefType -> "ReactElementRef"
-  | ReactConfigType _ -> "ReactConfig"
 
 let string_of_default = Default.fold
   ~expr:(fun (loc, _) ->

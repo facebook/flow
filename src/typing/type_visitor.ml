@@ -47,7 +47,6 @@ class ['a] t = object(self)
     let acc =
       let pole = match defer_use_t, t with
       | LatentPredT _, _ -> pole
-      | DestructuringT _, _ -> pole
       | TypeDestructorT _, OpenT _ -> Neutral
       | TypeDestructorT _, _ -> Positive
       in
@@ -196,7 +195,6 @@ class ['a] t = object(self)
 
   method private defer_use_type cx acc = function
   | LatentPredT (_, p) -> self#predicate cx acc p
-  | DestructuringT (_, s) -> self#selector cx acc s
   | TypeDestructorT (_, _, d) -> self#destructor cx acc d
 
   method private selector cx acc = function
@@ -205,7 +203,6 @@ class ['a] t = object(self)
   | ObjRest _ -> acc
   | ArrRest _ -> acc
   | Default -> acc
-  | Become -> acc
 
   method private predicate cx acc = function
   | AndP (p1, p2) -> self#list (self#predicate cx) acc [p1;p2]
@@ -671,6 +668,11 @@ class ['a] t = object(self)
       let acc = self#type_ cx pole_TODO acc t1 in
       let acc = self#type_ cx pole_TODO acc t2 in
       acc)
+
+  | DestructuringT (_, s, tout) ->
+    let acc = self#selector cx acc s in
+    let acc = self#type_ cx pole_TODO acc tout in
+    acc
 
   (* The default behavior here could be fleshed out a bit, to look up the graph,
      handle Resolved and Unresolved cases, etc. *)

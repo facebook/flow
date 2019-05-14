@@ -9,15 +9,6 @@
    to perform at the leaves. A type for the pattern is passed, which is taken
    apart as the visitor goes deeper. *)
 
-(** NOTE: Since the type of the pattern may contain (unsubstituted) type
-    parameters, it is important that this visitor does not emit constraints:
-    otherwise, we may end up with (unsubstituted) type parameters appearing as
-    lower or upper bounds of constraints, which would violate a core
-    invariant. So, instead we model the operation of destructuring with a
-    wrapper constructor, `DestructuringT` (with lazy evaluation rules that
-    trigger whenever a result is needed, e.g., to interact in flows with other
-    lower and upper bounds). **)
-
 (** TODO currently type annotations internal to patterns get parsed but not
   * checked. We should either update this to give users a warning that internal
   * annotations aren't checked, or update this to check internal annotations.
@@ -63,7 +54,9 @@ let pattern_default cx ~expr acc = function
     let (loc, t), _ as e = expr cx e in
     let default = Some (Default.expr ?default t) in
     let reason = mk_reason RDefaultValue loc in
-    let current = EvalT (current, DestructuringT (reason, Default), mk_id()) in
+    let current = Tvar.mk_where cx reason (fun tout ->
+      Flow_js.flow cx (current, DestructuringT (reason, Default, tout))
+    ) in
     let acc = { acc with current; default } in
     acc, Some e
 
@@ -93,17 +86,19 @@ let array_element cx acc i loc =
   | Some t -> None, t
   | None ->
     Some current,
-    EvalT (current, DestructuringT (reason, Elem key), mk_id ())
+    Tvar.mk_where cx reason (fun tout ->
+      Flow_js.flow cx (current, DestructuringT (reason, Elem key, tout)))
   in
   let default = Option.map default (Default.elem key reason) in
   { parent; current; init; default }
 
-let array_rest_element _cx acc i loc =
+let array_rest_element cx acc i loc =
   let { current; default; _ } = acc in
   let reason = mk_reason RArrayPatternRestProp loc in
   let parent, current =
     Some current,
-    EvalT (current, DestructuringT (reason, ArrRest i), mk_id ())
+    Tvar.mk_where cx reason (fun tout ->
+      Flow_js.flow cx (current, DestructuringT (reason, ArrRest i, tout)))
   in
   let default = Option.map default (Default.arr_rest i reason) in
   { acc with parent; current; default }
@@ -127,7 +122,8 @@ let object_named_property cx acc loc x comments =
        given `var {foo} = ...`, `foo` is both. compare to `a.foo`
        where `foo` is the name and `a.foo` is the lookup. *)
     Some current,
-    EvalT (current, DestructuringT (reason, Prop x), mk_id())
+    Tvar.mk_where cx reason (fun tout ->
+      Flow_js.flow cx (current, DestructuringT (reason, Prop x, tout)))
   in
   let default = Option.map default (Default.prop x reason) in
   let () = match parent with
@@ -161,17 +157,19 @@ let object_computed_property cx ~expr acc e =
   | Some t -> None, t
   | None ->
     Some current,
-    EvalT (current, DestructuringT (reason, Elem t), mk_id ())
+    Tvar.mk_where cx reason (fun tout ->
+      Flow_js.flow cx (current, DestructuringT (reason, Elem t, tout)))
   in
   let default = Option.map default (Default.elem t reason) in
   { parent; current; init; default }, e'
 
-let object_rest_property _cx acc xs loc =
+let object_rest_property cx acc xs loc =
   let { current; default; _ } = acc in
   let reason = mk_reason RObjectPatternRestProp loc in
   let parent, current =
     Some current,
-    EvalT (current, DestructuringT (reason, ObjRest xs), mk_id ())
+    Tvar.mk_where cx reason (fun tout ->
+      Flow_js.flow cx (current, DestructuringT (reason, ObjRest xs, tout)))
   in
   let default = Option.map default (Default.obj_rest xs reason) in
   { acc with parent; current; default }

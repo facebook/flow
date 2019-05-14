@@ -610,7 +610,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:20:15
 
-Cannot assign array literal to `c` because `c` [1] is incompatible with string [2].
+Cannot assign array literal to `c` because rest of array pattern [1] is incompatible with string [2].
 
    destructuring.js:20:15
    20| [a,,b,...c] = [0,1,true,3];
@@ -627,7 +627,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:23:37
 
-Cannot assign `z` to `o` because property `x` is missing in `z` [1] but exists in object type [2].
+Cannot assign `z` to `o` because property `x` is missing in rest of object pattern [1] but exists in object type [2].
 
    destructuring.js:23:37
    23|     var o:{x: string; y: number;} = z;
@@ -753,7 +753,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- destructuring.js:46:4
 
-Cannot get `rest.baz` because property `baz` is missing in `rest` [1].
+Cannot get `rest.baz` because property `baz` is missing in rest of object pattern [1].
 
    destructuring.js:46:4
    46|   (rest.baz: string); // error, rest is sealed
@@ -865,7 +865,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- object_rest.js:5:1
 
-Cannot assign `0` to `o1_rest.x` because property `x` is missing in `o1_rest` [1].
+Cannot assign `0` to `o1_rest.x` because property `x` is missing in rest of object pattern [1].
 
    object_rest.js:5:1
    5| o1_rest.x = 0; // error: rest result is sealed
@@ -879,7 +879,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:11:1
 
-Cannot assign `0` to `o2_rest.x` because property `x` is missing in `o2_rest` [1].
+Cannot assign `0` to `o2_rest.x` because property `x` is missing in rest of object pattern [1].
 
    object_rest.js:11:1
    11| o2_rest.x = 0; // error: rest result is sealed
@@ -893,7 +893,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_rest.js:16:1
 
-Cannot assign `0` to `o3_rest.x` because property `x` is missing in `o3_rest` [1].
+Cannot assign `0` to `o3_rest.x` because property `x` is missing in rest of object pattern [1].
 
    object_rest.js:16:1
    16| o3_rest.x = 0; // error: rest result is sealed

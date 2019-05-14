@@ -258,14 +258,7 @@ module rec TypeTerm : sig
 
   and defer_use_t =
     | LatentPredT of reason * predicate
-    (* type of a variable / parameter / property extracted from a pattern *)
-    | DestructuringT of reason * selector
     (* destructors that extract parts of various kinds of types *)
-    (* TODO: in principle it should be possible to encode destructors as
-       selectors (see above), but currently we don't because some selectors are
-       programmed to do more than just destruct types---e.g., they handle
-       defaults---and these additional behaviors cannot be covered by a simple
-       implementation of destructors. *)
     | TypeDestructorT of use_op * reason * destructor
 
   and internal_t =
@@ -688,6 +681,8 @@ module rec TypeTerm : sig
     | ReactPropsToOut of reason * t
     | ReactInToProps of reason * t
 
+    | DestructuringT of reason * selector * t_out
+
 
   (* use_ts which can be part of an optional chain, with t_out factored out *)
   and opt_use_t =
@@ -1042,7 +1037,6 @@ module rec TypeTerm : sig
   | ObjRest of string list
   | ArrRest of int
   | Default
-  | Become
 
   and destructor =
   | NonMaybeType
@@ -2214,7 +2208,6 @@ end = struct
 
   and reason_of_defer_use_t = function
     | LatentPredT (reason, _)
-    | DestructuringT (reason, _)
     | TypeDestructorT (_, reason, _) ->
         reason
 
@@ -2311,6 +2304,7 @@ end = struct
     | MatchPropT (_, reason, _, _) -> reason
     | ReactPropsToOut (reason, _)
     | ReactInToProps (reason, _) -> reason
+    | DestructuringT (reason, _, _) -> reason
 
   (* helper: we want the tvar id as well *)
   (* NOTE: uncalled for now, because ids are nondetermistic
@@ -2371,7 +2365,6 @@ end = struct
 
   and mod_reason_of_defer_use_t f = function
     | LatentPredT (reason, p) -> LatentPredT (f reason, p)
-    | DestructuringT (reason, s) -> DestructuringT (f reason, s)
     | TypeDestructorT (use_op, reason, s) -> TypeDestructorT (use_op, f reason, s)
 
   and mod_reason_of_use_t f = function
@@ -2491,6 +2484,7 @@ end = struct
     | MatchPropT (op, reason, prop, t) -> MatchPropT (op, f reason, prop, t)
     | ReactPropsToOut (reason, t) -> ReactPropsToOut (f reason, t)
     | ReactInToProps (reason, t) -> ReactInToProps (f reason, t)
+    | DestructuringT (reason, s, t) -> DestructuringT (f reason, s, t)
 
   and mod_reason_of_opt_use_t f = function
   | OptCallT (use_op, reason, ft) -> OptCallT (use_op, reason, ft)
@@ -2609,6 +2603,7 @@ end = struct
   | CondT (_, _, _, _)
   | ReactPropsToOut _
   | ReactInToProps _
+  | DestructuringT _
     -> nope u
 
   let use_op_of_use_t =
@@ -3092,7 +3087,6 @@ end
 (* printing *)
 let string_of_defer_use_ctor = function
   | LatentPredT _ -> "LatentPredT"
-  | DestructuringT _ -> "DestructuringT"
   | TypeDestructorT _ -> "TypeDestructorT"
 
 let string_of_def_ctor = function
@@ -3328,6 +3322,7 @@ let string_of_use_ctor = function
   | CondT _ -> "CondT"
   | ReactPropsToOut _ -> "ReactPropsToOut"
   | ReactInToProps _ -> "ReactInToProps"
+  | DestructuringT _ -> "DestructuringT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"

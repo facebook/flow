@@ -5,7 +5,7 @@
 
 import {suite, test} from 'flow-dev-tools/src/test/Tester';
 
-export default suite(({addFile, removeFile, exitCode, flowCmd}) => [
+export default suite(({addFile, removeFile, flowCmd}) => [
   test('node - Adding a package.json should kill the server', [
     addFile('start.json', 'package.json')
       .startFlowServer()

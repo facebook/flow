@@ -258,10 +258,6 @@ class virtual ['a] t = object(self)
       let p' = self#predicate cx map_cx p in
       if p' == p then t
       else LatentPredT (r, p')
-    | DestructuringT (r, s) ->
-        let s' = self#selector cx map_cx s in
-        if s' == s then t
-        else DestructuringT (r, s')
     | TypeDestructorT (u, r, d) ->
         let d' = self#destructor cx map_cx d in
         if d == d' then t
@@ -362,8 +358,7 @@ class virtual ['a] t = object(self)
           else Elem t''
       | ObjRest _
       | ArrRest _
-      | Default
-      | Become -> t
+      | Default -> t
 
   method destructor cx map_cx t =
     match t with
@@ -997,6 +992,11 @@ class virtual ['a] t_with_uses = object(self)
         let t2' = self#type_ cx map_cx t2 in
         if tlist' == tlist && t1' == t1 && t2' == t2 then t
         else ExtendsUseT (use_op, r, tlist', t1', t2')
+      | DestructuringT (r, s, t') ->
+        let s' = self#selector cx map_cx s in
+        let t'' = self#type_ cx map_cx t' in
+        if s' == s && t'' == t' then t
+        else DestructuringT (r, s', t'')
 
     method private opt_use_type cx map_cx t = match t with
     | OptCallT (op, r, funcall) ->
