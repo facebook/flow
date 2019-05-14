@@ -222,15 +222,18 @@ let new_metadata (state: state) (message: Jsonrpc.message) : Persistent_connecti
     server_logging_context = None;
   }
 
+let edata_of_exception exn =
+  let message = Exception.get_ctor_string exn in
+  let stack = Exception.get_backtrace_string exn in
+  { Marshal_tools.message; stack; }
 
 let get_next_event_from_server (fd: Unix.file_descr) : event =
   let r = begin try
     Server_message (Marshal_tools.from_fd_with_preamble fd)
   with e ->
     let e = Exception.wrap e in
-    let message = Exception.get_ctor_string e in
-    let stack = Exception.get_backtrace_string e in
-    raise (Server_fatal_connection_exception { Marshal_tools.message; stack; })
+    let edata = edata_of_exception e in
+    raise (Server_fatal_connection_exception edata)
   end in
   (* The server sends an explicit 'EOF' message in case the underlying *)
   (* transport protocol doesn't result in EOF normally. We'll respond  *)
@@ -267,7 +270,20 @@ let get_next_event
     match state with
     | Connected { c_conn; _ } ->
       let server_fd = Timeout.descr_of_in_channel c_conn.ic in
-      let fds, _, _ = Unix.select [server_fd; client_fd] [] [] 1.0 in
+      let fds, _, _ =
+        try Unix.select [server_fd; client_fd] [] [] 1.0
+        with Unix.Unix_error (Unix.EBADF, _, _) as e ->
+          (* Either the server died or the Jsonrpc died. Figure out which one *)
+          let exn = Exception.wrap e in
+          let edata = edata_of_exception exn in
+          let server_died =
+            try let _ = Unix.select [client_fd] [] [] 0.0 in false
+            with Unix.Unix_error (Unix.EBADF, _, _)  -> true
+          in
+          if server_died
+          then raise (Server_fatal_connection_exception edata)
+          else raise (Client_fatal_connection_exception edata)
+      in
       if fds = [] then
         Lwt.return Tick
       else if List.mem fds server_fd then
@@ -276,7 +292,14 @@ let get_next_event
         let%lwt event = get_next_event_from_client state client parser in
         Lwt.return event
     | _ ->
-      let fds, _, _ = Unix.select [client_fd] [] [] 1.0 in
+      let fds, _, _ =
+        try Unix.select [client_fd] [] [] 1.0
+        with Unix.Unix_error (Unix.EBADF, _, _) as e ->
+          (* Jsonrpc process died. This is unrecoverable *)
+          let exn = Exception.wrap e in
+          let edata = edata_of_exception exn in
+          raise (Client_fatal_connection_exception edata)
+      in
       if fds = [] then
         Lwt.return Tick
       else
