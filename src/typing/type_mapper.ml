@@ -254,6 +254,10 @@ class virtual ['a] t = object(self)
 
   method defer_use_type cx map_cx t =
     match t with
+    | LatentPredT (r, p) ->
+      let p' = self#predicate cx map_cx p in
+      if p' == p then t
+      else LatentPredT (r, p')
     | DestructuringT (r, s) ->
         let s' = self#selector cx map_cx s in
         if s' == s then t
@@ -360,10 +364,6 @@ class virtual ['a] t = object(self)
       | ArrRest _
       | Default
       | Become -> t
-      | Refine p ->
-          let p' = self#predicate cx map_cx p in
-          if p' == p then t
-          else Refine p'
 
   method destructor cx map_cx t =
     match t with

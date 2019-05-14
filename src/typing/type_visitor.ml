@@ -46,6 +46,7 @@ class ['a] t = object(self)
     let acc = self#defer_use_type cx acc defer_use_t in
     let acc =
       let pole = match defer_use_t, t with
+      | LatentPredT _, _ -> pole
       | DestructuringT _, _ -> pole
       | TypeDestructorT _, OpenT _ -> Neutral
       | TypeDestructorT _, _ -> Positive
@@ -194,6 +195,7 @@ class ['a] t = object(self)
 
 
   method private defer_use_type cx acc = function
+  | LatentPredT (_, p) -> self#predicate cx acc p
   | DestructuringT (_, s) -> self#selector cx acc s
   | TypeDestructorT (_, _, d) -> self#destructor cx acc d
 
@@ -204,7 +206,6 @@ class ['a] t = object(self)
   | ArrRest _ -> acc
   | Default -> acc
   | Become -> acc
-  | Refine p -> self#predicate cx acc p
 
   method private predicate cx acc = function
   | AndP (p1, p2) -> self#list (self#predicate cx) acc [p1;p2]

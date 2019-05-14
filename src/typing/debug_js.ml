@@ -1149,9 +1149,6 @@ and json_of_selector_impl json_cx = Hh_json.(function
   | Become -> JSON_Object [
       "become", JSON_Bool true;
     ]
-  | Refine p -> JSON_Object [
-      "predicate", json_of_pred json_cx p
-    ]
 )
 
 and json_of_destructor json_cx = check_depth json_of_destructor_impl json_cx
@@ -1259,6 +1256,9 @@ and json_of_pmap_impl json_cx bindings = Hh_json.(
 
 and json_of_defer_use_t json_cx = check_depth json_of_defer_use_t_impl json_cx
 and json_of_defer_use_t_impl json_cx = Hh_json.(function
+  | LatentPredT (_, p) -> JSON_Object [
+      "predicate", json_of_pred json_cx p
+    ]
   | DestructuringT (_, s) -> JSON_Object [
       "selector", json_of_selector json_cx s
     ]
@@ -1667,9 +1667,10 @@ let rec dump_t_ (depth, tvars) cx t =
     | ArrRest i -> spf "arr rest at index %d" i
     | Default -> "default"
     | Become -> "become"
-    | Refine _ -> "refine"
     in
     fun expr t -> match expr with
+    | LatentPredT (_, p) ->
+      spf "LatentPred %s on %s" (string_of_predicate p) t
     | DestructuringT (_, selector) ->
       spf "Destructure %s on %s" (string_of_selector selector) t
     | TypeDestructorT (use_op, _, destructor) ->
@@ -2378,7 +2379,6 @@ let string_of_selector = function
   | ObjRest xs -> spf "ObjRest [%s]" (String.concat "; " xs)
   | Default -> "Default"
   | Become -> "Become"
-  | Refine p -> spf "Refine with %s" (string_of_predicate p)
 
 let string_of_destructor = function
   | NonMaybeType -> "NonMaybeType"

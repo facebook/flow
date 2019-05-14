@@ -1526,6 +1526,7 @@ end = struct
     type__ ~env t'
 
   and eval_t ~env t id = function
+    | Type.LatentPredT _ -> destructuring_t ~env id t
     | Type.DestructuringT _ -> destructuring_t ~env id t
     | Type.TypeDestructorT (_, _, d) -> type_destructor_t ~env id t d
 

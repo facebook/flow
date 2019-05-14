@@ -856,7 +856,7 @@ let rec convert cx tparams_map = Ast.Type.(function
           let reason = mk_reason (RCustom "refined type") loc in
           let pred = LatentP (fun_pred_t, idx) in
           reconstruct_ast
-            (EvalT (base_t, DestructuringT (reason, Refine pred), mk_id()))
+            (EvalT (base_t, LatentPredT (reason, pred), mk_id()))
             targs
       | _ ->
         error_type cx loc (Error_message.ERefineAnnot loc) t_ast

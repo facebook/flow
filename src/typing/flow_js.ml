@@ -1103,6 +1103,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | EvalT (t, DestructuringT (reason, s), i), _ ->
       rec_flow cx trace (eval_selector cx ~trace reason t s i, u)
 
+    | EvalT (t, LatentPredT (reason, p), i), _ ->
+      rec_flow cx trace (eval_latent_pred cx ~trace reason t p i, u)
+
     (** NOTE: the rule with EvalT (_, DestructuringT _, _) as upper bound is
         moved below the OpenT rules, so that we can take advantage of the
         caching inherent in those rules (in particular, when OpenT is a lower
@@ -1190,6 +1193,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     | _, UseT (use_op, EvalT (t, DestructuringT (reason, s), i)) ->
       rec_flow cx trace (l, UseT (use_op, eval_selector cx ~trace reason t s i))
+
+    | _, UseT (use_op, EvalT (t, LatentPredT (reason, p), i)) ->
+      rec_flow cx trace (l, UseT (use_op, eval_latent_pred cx ~trace reason t p i))
 
     (***************************)
     (* type destructor trigger *)
@@ -7424,6 +7430,17 @@ and check_super cx trace ~use_op lreason ureason t x p =
   let reason_prop = replace_reason_const (RProperty (Some x)) lreason in
   lookup_prop cx trace t reason_prop lreason strict x (SuperProp (use_op, p))
 
+and eval_latent_pred cx ?trace reason curr_t p i =
+  let evaluated = Context.evaluated cx in
+  match IMap.get i evaluated with
+  | None ->
+    Tvar.mk_where cx reason (fun tvar ->
+      Context.set_evaluated cx (IMap.add i tvar evaluated);
+      flow_opt cx ?trace (curr_t, RefineT (reason, p, tvar))
+    )
+  | Some it ->
+    it
+
 and eval_selector cx ?trace reason curr_t s i =
   let evaluated = Context.evaluated cx in
   match IMap.get i evaluated with
@@ -7437,7 +7454,6 @@ and eval_selector cx ?trace reason curr_t s i =
       | ArrRest i -> ArrRestT (unknown_use, reason, i, tvar)
       | Default -> PredicateT (NotP VoidP, tvar)
       | Become -> BecomeT (reason, tvar)
-      | Refine p -> RefineT (reason, p, tvar)
       )
     )
   | Some it ->

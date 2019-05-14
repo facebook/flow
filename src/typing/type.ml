@@ -257,6 +257,7 @@ module rec TypeTerm : sig
     | ReactAbstractComponentT of {config: t; instance: t}
 
   and defer_use_t =
+    | LatentPredT of reason * predicate
     (* type of a variable / parameter / property extracted from a pattern *)
     | DestructuringT of reason * selector
     (* destructors that extract parts of various kinds of types *)
@@ -1042,7 +1043,6 @@ module rec TypeTerm : sig
   | ArrRest of int
   | Default
   | Become
-  | Refine of predicate
 
   and destructor =
   | NonMaybeType
@@ -2213,6 +2213,7 @@ end = struct
     | OptionalT (reason, _) -> reason
 
   and reason_of_defer_use_t = function
+    | LatentPredT (reason, _)
     | DestructuringT (reason, _)
     | TypeDestructorT (_, reason, _) ->
         reason
@@ -2369,6 +2370,7 @@ end = struct
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
 
   and mod_reason_of_defer_use_t f = function
+    | LatentPredT (reason, p) -> LatentPredT (f reason, p)
     | DestructuringT (reason, s) -> DestructuringT (f reason, s)
     | TypeDestructorT (use_op, reason, s) -> TypeDestructorT (use_op, f reason, s)
 
@@ -3089,6 +3091,7 @@ end
 
 (* printing *)
 let string_of_defer_use_ctor = function
+  | LatentPredT _ -> "LatentPredT"
   | DestructuringT _ -> "DestructuringT"
   | TypeDestructorT _ -> "TypeDestructorT"
 
