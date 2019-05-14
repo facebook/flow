@@ -207,7 +207,7 @@ module Func_stmt_config = struct
       Env.bind_implicit_let ~state:State.Initialized
         kind cx name t loc
 
-  let destruct cx annot ~expr ~use_op:_ loc name default t =
+  let destruct cx annot ~use_op:_ loc name default t =
     let reason = mk_reason (RIdentifier name) loc in
     let t = match annot with
     | Ast.Type.Missing _ -> t
@@ -216,8 +216,7 @@ module Func_stmt_config = struct
     in
     Type_table.set (Context.type_table cx) loc t;
     Option.iter ~f:(fun d ->
-      let default_t = Flow.mk_default cx reason d
-        ~expr:(fun cx e -> snd_fst (expr cx e)) in
+      let default_t = Flow.mk_default cx reason d in
       Flow.flow_t cx (default_t, t)
     ) default;
     bind cx name t loc
@@ -250,13 +249,15 @@ module Func_stmt_config = struct
       }
 
     | Object { annot; properties } ->
+      let default = eval_default cx ~expr default in
       let properties =
-        let default = Option.map default Default.expr in
+        let default = Option.map default (fun ((_, t), _) ->
+          Default.expr t
+        ) in
         let init = Destructuring.empty ?default t in
-        let f = destruct cx annot ~expr in
+        let f = destruct cx annot in
         Destructuring.object_properties cx ~expr ~f init properties
       in
-      let default = eval_default cx ~expr default in
       loc, { Ast.Function.Param.
         argument = ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.
           properties;
@@ -266,13 +267,15 @@ module Func_stmt_config = struct
       }
 
     | Array { annot; elements } ->
+      let default = eval_default cx ~expr default in
       let elements =
-        let default = Option.map default Default.expr in
+        let default = Option.map default (fun ((_, t), _) ->
+          Default.expr t
+        ) in
         let init = Destructuring.empty ?default t in
-        let f = destruct cx annot ~expr in
+        let f = destruct cx annot in
         Destructuring.array_elements cx ~expr ~f init elements
       in
-      let default = eval_default cx ~expr default in
       loc, { Ast.Function.Param.
         argument = ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.
           elements;
@@ -3048,8 +3051,7 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
           let f ~use_op loc name default t =
             let reason = mk_reason (RIdentifier name) loc in
             Option.iter default (fun d ->
-              let default_t = Flow.mk_default cx reason d
-                ~expr:(fun cx e -> snd_fst (expression cx e)) in
+              let default_t = Flow.mk_default cx reason d in
               Flow.flow_t cx (default_t, t)
             );
             Flow.flow cx (t, AssertImportIsValueT(reason, name));

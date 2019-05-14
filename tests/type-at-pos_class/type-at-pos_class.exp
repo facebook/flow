@@ -795,3 +795,18 @@ default.js:4:17 {
   "start":17,
   "end":17
 }
+default.js:5:18 {
+  "type":"number",
+  "reasons":[],
+  "loc":{
+    "source":"default.js",
+    "type":"SourceFile",
+    "start":{"line":5,"column":18,"offset":62},
+    "end":{"line":5,"column":18,"offset":63}
+  },
+  "path":"default.js",
+  "line":5,
+  "endline":5,
+  "start":18,
+  "end":18
+}

@@ -67,9 +67,7 @@ val mk_type_destructor : Context.t -> trace:Trace.t -> Type.use_op -> Reason.t -
 
 (* ... *)
 
-val mk_default: Context.t -> reason ->
-  expr:(Context.t -> 'a -> Type.t) ->
-  'a Default.t -> Type.t
+val mk_default: Context.t -> reason -> Type.t Default.t -> Type.t
 
 (* val graph: bounds IMap.t ref *)
 val lookup_module: Context.t -> string -> Type.t

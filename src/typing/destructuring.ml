@@ -33,7 +33,7 @@ type state = {
   parent: Type.t option;
   current: Type.t;
   init: (ALoc.t, ALoc.t) Flow_ast.Expression.t option;
-  default: (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t option;
+  default: Type.t Default.t option;
 }
 
 type expr =
@@ -45,7 +45,7 @@ type callback =
   use_op:Type.use_op ->
   ALoc.t ->
   string ->
-  (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t option ->
+  Type.t Default.t option ->
   Type.t ->
   unit
 
@@ -56,15 +56,16 @@ let empty ?init ?default current = {
   default;
 }
 
-let pattern_default acc = function
+let pattern_default cx ~expr acc = function
   | None -> acc, None
-  | Some ((loc, _) as e) ->
+  | Some e ->
     let { current; default; _ } = acc in
-    let default = Some (Default.expr ?default e) in
+    let (loc, t), _ as e = expr cx e in
+    let default = Some (Default.expr ?default t) in
     let reason = mk_reason RDefaultValue loc in
     let current = EvalT (current, DestructuringT (reason, Default), mk_id()) in
     let acc = { acc with current; default } in
-    acc, Some (Tast_utils.unimplemented_mapper#expression e)
+    acc, Some e
 
 let array_element cx acc i loc =
   let { current; init; default; _ } = acc in
@@ -259,7 +260,7 @@ and array_elements cx ~expr ~f acc =
     function
     | Element (loc, { Element.argument = p; default = d }) ->
       let acc = array_element cx acc i loc in
-      let acc, d = pattern_default acc d in
+      let acc, d = pattern_default cx ~expr acc d in
       let p = pattern cx ~expr ~f acc p in
       Element (loc, { Element.argument = p; default = d })
     | RestElement (loc, { RestElement.argument = p }) ->
@@ -274,7 +275,7 @@ and object_properties =
     match p with
     | Property (loc, { Property.key; pattern = p; default = d; shorthand }) ->
       let acc, xs, key = object_property cx ~expr acc xs key in
-      let acc, d = pattern_default acc d in
+      let acc, d = pattern_default cx ~expr acc d in
       let p = pattern cx ~expr ~f acc p in
       xs, Property (loc, { Property.key; pattern = p; default = d; shorthand })
     | RestProperty (loc, { RestProperty.argument = p }) ->

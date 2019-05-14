@@ -16,13 +16,13 @@ type callback =
   use_op:Type.use_op ->
   ALoc.t ->
   string ->
-  (ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t option ->
+  Type.t Default.t option ->
   Type.t ->
   unit
 
 val empty:
   ?init:(ALoc.t, ALoc.t) Flow_ast.Expression.t ->
-  ?default:(ALoc.t, ALoc.t) Flow_ast.Expression.t Default.t ->
+  ?default:Type.t Default.t ->
   Type.t ->
   state
 

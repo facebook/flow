@@ -11901,8 +11901,8 @@ include FlowJs
 (************* end of slab **************************************************)
 
 (* Would rather this live elsewhere, but here because module DAG. *)
-let mk_default cx reason ~expr = Default.fold
-  ~expr:(expr cx)
+let mk_default cx reason = Default.fold
+  ~expr:(fun t -> t)
   ~cons:(fun t1 t2 ->
     Tvar.mk_where cx reason (fun tvar ->
       flow_t cx (t1, tvar);
