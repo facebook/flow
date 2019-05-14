@@ -73,7 +73,6 @@ module Opts = struct
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_dep_table_pow: int;
     shm_dirs: string list;
-    shm_global_size: int;
     shm_hash_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
@@ -160,7 +159,6 @@ module Opts = struct
     saved_state_fetcher = Options.Dummy_fetcher;
     shm_dep_table_pow = 17;
     shm_dirs = default_shm_dirs;
-    shm_global_size = 1024 * 1024 * 1024; (* 1 gig *)
     shm_hash_table_pow = 19;
     shm_heap_size = 1024 * 1024 * 1024 * 25; (* 25 gigs *)
     shm_log_level = 0;
@@ -1002,7 +1000,6 @@ let root_name c = c.options.Opts.root_name
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow
 let shm_dirs c = c.options.Opts.shm_dirs
-let shm_global_size c = c.options.Opts.shm_global_size
 let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 let shm_heap_size c = c.options.Opts.shm_heap_size
 let shm_log_level c = c.options.Opts.shm_log_level

@@ -264,7 +264,7 @@ let shm_config shm_flags flowconfig =
     ~default:(FlowConfig.shm_log_level flowconfig) in
   let sample_rate = 0.0 in
   { SharedMem_js.
-    global_size = FlowConfig.shm_global_size flowconfig;
+    global_size = 0; (* we don't use GlobalStorage, don't waste space on it *)
     heap_size = FlowConfig.shm_heap_size flowconfig;
     dep_table_pow;
     hash_table_pow;
