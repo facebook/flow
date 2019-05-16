@@ -323,7 +323,7 @@ let run_merge_service
     acc
     =
   with_timer_lwt ~options "Merge" profiling (fun () ->
-    let%lwt merged, skipped_count = Merge_service.merge_strict
+    let%lwt merged, { Merge_service.skipped_count; sig_new_or_changed } = Merge_service.merge_strict
       ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
       dependency_graph component_map recheck_map
     in
@@ -349,7 +349,7 @@ let run_merge_service
         update_errset errors file new_errors, warnings, suppressions, coverage
     ) acc merged
     in
-    Lwt.return (errs, warnings, suppressions, coverage, skipped_count)
+    Lwt.return (errs, warnings, suppressions, coverage, skipped_count, sig_new_or_changed)
   )
 
 (* This function does some last minute preparation and then calls into the merge service, which
@@ -362,7 +362,6 @@ let merge
   ~profiling
   ~workers
   ~errors
-  ~unchanged_checked
   ~to_merge
   ~components
   ~recheck_map
@@ -371,6 +370,7 @@ let merge
   ~persistent_connections
   ~prep_merge =
   let { ServerEnv.local_errors; merge_errors; warnings; suppressions; } = errors in
+  let coverage = FilenameMap.empty in
 
   let%lwt send_errors_over_connection =
     match persistent_connections with
@@ -451,7 +451,6 @@ let merge
      initially.
   *)
   Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
-  Hh_logger.info "unchanged_checked: %s" (CheckedSet.debug_counts_to_string unchanged_checked);
   Hh_logger.info "Calculating dependencies";
   MonitorRPC.status_update ~event:ServerStatus.Calculating_dependencies_progress;
   let files_to_merge = CheckedSet.all to_merge in
@@ -459,7 +458,7 @@ let merge
     calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge in
 
   Hh_logger.info "Merging";
-  let%lwt merge_errors, warnings, suppressions, coverage, skipped_count =
+  let%lwt merge_errors, warnings, suppressions, coverage, skipped_count, sig_new_or_changed =
     let intermediate_result_callback results =
       let errors = lazy (
         Core_list.map ~f:(fun (file, result) ->
@@ -486,7 +485,7 @@ let merge
 
     let merge_start_time = Unix.gettimeofday () in
 
-    let%lwt merge_errors, warnings, suppressions, coverage, skipped_count =
+    let%lwt result =
       run_merge_service
         ~master_mutator
         ~worker_mutator
@@ -498,7 +497,7 @@ let merge
         dependency_graph
         component_map
         recheck_map
-        (merge_errors, warnings, suppressions, FilenameMap.empty)
+        (merge_errors, warnings, suppressions, coverage)
     in
     let%lwt () =
       if Options.should_profile options
@@ -515,24 +514,44 @@ let merge
     in
 
     Hh_logger.info "Done";
-    Lwt.return (merge_errors, warnings, suppressions, coverage, skipped_count)
+    Lwt.return result
   in
-
-  let checked = CheckedSet.union unchanged_checked to_merge in
-  Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked);
 
   let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
   let cycle_leaders = component_map
     |> Utils_js.FilenameMap.elements
     |> Core_list.map ~f:(fun (leader, members) -> (leader, Nel.length members))
     |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
-  Lwt.return (checked, cycle_leaders, errors, coverage, skipped_count)
+  Lwt.return (cycle_leaders, errors, coverage, skipped_count, sig_new_or_changed)
 
-let check_files ~options ~reader ~workers errors coverage checked_files =
-  let files = FilenameSet.union (CheckedSet.focused checked_files) (CheckedSet.dependents checked_files) in
+let check_files
+  ~reader
+  ~options
+  ~workers
+  ~errors
+  ~updated_errors
+  ~coverage
+  ~merged_files
+  ~sig_new_or_changed
+  ~dependency_info =
   match options.Options.opt_arch with
-  | Options.Classic -> Lwt.return (errors, coverage)
+  | Options.Classic -> Lwt.return (updated_errors, coverage)
   | Options.TypesFirst ->
+    Hh_logger.info "Check prep";
+    Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
+    let focused_to_check = CheckedSet.focused merged_files in
+    let merged_dependents = CheckedSet.dependents merged_files in
+    let skipped_count = ref 0 in
+    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+    (* skip dependents whenever none of their dependencies have new or changed signatures *)
+    let dependents_to_check =
+      FilenameSet.filter (fun f ->
+        (FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
+         @@ FilenameMap.find_unsafe f all_dependency_graph)
+        || (incr skipped_count; false)
+      ) @@ merged_dependents in
+    Hh_logger.info "Check will skip %d files" !skipped_count;
+    let files = FilenameSet.union focused_to_check dependents_to_check in
     let job = List.fold_left (fun (errors, warnings, suppressions, coverage) file ->
       let new_errors, new_warnings, new_suppressions, new_coverage =
         Merge_service.check_file options ~reader file in
@@ -547,12 +566,12 @@ let check_files ~options ~reader ~workers errors coverage checked_files =
       Error_suppressions.empty,
       FilenameMap.empty in
     let merge
-        (errors, warnings, suppressions, coverage)
-        (new_errors, new_warnings, new_suppressions, new_coverage) =
-      FilenameMap.union errors new_errors,
-      FilenameMap.union warnings new_warnings,
+      (new_errors, new_warnings, new_suppressions, new_coverage)
+      (errors, warnings, suppressions, coverage) =
+      FilenameMap.union new_errors errors, (* WARNING! order matters (new wins over old) *)
+      FilenameMap.union new_warnings warnings, (* WARNING! order matters (new wins over old) *)
       Error_suppressions.update_suppressions suppressions new_suppressions,
-      FilenameMap.union coverage new_coverage
+      FilenameMap.union new_coverage coverage (* WARNING! order matters (new wins over old) *)
       in
 
     Hh_logger.info "Checking files";
@@ -560,7 +579,7 @@ let check_files ~options ~reader ~workers errors coverage checked_files =
       MonitorRPC.status_update
         ServerStatus.(Checking_progress { total = Some total; finished = start })
     in
-    let%lwt merge_errors, warnings, suppressions, coverage = MultiWorkerLwt.call
+    let%lwt new_errors, new_warnings, new_suppressions, new_coverage = MultiWorkerLwt.call
         workers
         ~job
         ~neutral
@@ -568,6 +587,11 @@ let check_files ~options ~reader ~workers errors coverage checked_files =
         ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers
                  (FilenameSet.elements files))
     in
+    let merge_errors, warnings, suppressions, coverage =
+      merge
+        (* NOTE: Order matters when there is overlap. We want new stuff to overwrite old stuff. *)
+        (new_errors, new_warnings, new_suppressions, new_coverage)
+        ServerEnv.(errors.merge_errors, errors.warnings, errors.suppressions, coverage) in
     Hh_logger.info "Done";
     let errors = { errors with
       ServerEnv.merge_errors;
@@ -626,12 +650,12 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
       else acc
     | None -> acc (* complain elsewhere about required module not found *)
   ) resolved_requires CheckedSet.empty in
-  let unchanged_checked = env.ServerEnv.checked_files in
+  let checked = env.ServerEnv.checked_files in
 
   (* Often, all dependencies have already been checked, so infer_input contains no unchecked files.
    * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
    * large repos *)
-  let unchecked_dependencies = CheckedSet.diff infer_input unchanged_checked in
+  let unchecked_dependencies = CheckedSet.diff infer_input checked in
   if CheckedSet.is_empty unchecked_dependencies
   then Lwt.return_unit
   else begin
@@ -1466,14 +1490,13 @@ end = struct
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
     (* recheck *)
-    let%lwt checked_files, cycle_leaders, errors, coverage, skipped_count = merge
+    let%lwt cycle_leaders, updated_errors, coverage, skipped_count, sig_new_or_changed = merge
       ~transaction
       ~reader
       ~options
       ~profiling
       ~workers
       ~errors
-      ~unchanged_checked
       ~to_merge
       ~components
       ~recheck_map
@@ -1493,7 +1516,20 @@ end = struct
       ))
     in
 
-    let%lwt errors, coverage = check_files ~options ~reader ~workers errors coverage checked_files in
+    let merged_files = to_merge in
+    let%lwt errors, coverage = check_files
+      ~reader
+      ~options
+      ~workers
+      ~errors
+      ~updated_errors
+      ~coverage
+      ~merged_files
+      ~sig_new_or_changed
+      ~dependency_info in
+
+    let checked_files = CheckedSet.union unchanged_checked merged_files in
+    Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
 
     (* NOTE: unused fields are left in their initial empty state *)
     env.ServerEnv.collated_errors := None;
@@ -2073,12 +2109,10 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
     let%lwt infer_input = files_to_infer
       ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info in
 
-    let unchanged_checked = CheckedSet.empty in
-
     let%lwt to_merge, components, recheck_map =
       include_dependencies_and_dependents
         ~options ~profiling
-        ~unchanged_checked
+        ~unchanged_checked:CheckedSet.empty
         ~infer_input
         ~dependency_info
         ~all_dependent_files:FilenameSet.empty
@@ -2090,14 +2124,13 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
-    let%lwt (checked_files, _, errors, coverage, _) = merge
+    let%lwt _, updated_errors, coverage, _, sig_new_or_changed = merge
       ~transaction
       ~reader
       ~options
       ~profiling
       ~workers
       ~errors
-      ~unchanged_checked
       ~to_merge
       ~components
       ~recheck_map
@@ -2105,6 +2138,18 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~deleted:FilenameSet.empty
       ~persistent_connections:None
       ~prep_merge:None in
-    let%lwt errors, coverage = check_files ~options ~reader ~workers errors coverage checked_files in
+    let merged_files = to_merge in
+    let%lwt errors, coverage = check_files
+      ~reader
+      ~options
+      ~workers
+      ~errors
+      ~updated_errors
+      ~coverage
+      ~merged_files
+      ~sig_new_or_changed
+      ~dependency_info in
+    let checked_files = merged_files in
+    Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
     Lwt.return { env with ServerEnv.checked_files; errors; coverage }
   )

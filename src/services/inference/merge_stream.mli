@@ -33,4 +33,5 @@ val merge:
   'a merge_result -> 'a merge_result -> 'a merge_result
 
 val total_files: 'a t -> int
-val skipped_files: 'a t -> int
+val skipped_count: 'a t -> int
+val sig_new_or_changed: Context_heaps.Merge_context_mutator.master_mutator -> FilenameSet.t

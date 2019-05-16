@@ -232,5 +232,9 @@ let merge ~master_mutator ~reader stream =
     update_server_status stream;
     List.rev_append merged acc
 
+(* NOTE: call these functions only at the end of merge, not during. *)
 let total_files stream = stream.total_files
-let skipped_files stream = stream.skipped_files
+let skipped_count stream = stream.skipped_files
+(* See explanation in Context_heaps for why calling this function at the end of merge returns files
+   whose signatures are new or have changed. *)
+let sig_new_or_changed = Context_heaps.Merge_context_mutator.unrevived_files

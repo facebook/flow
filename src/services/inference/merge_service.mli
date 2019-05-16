@@ -16,7 +16,14 @@ type 'a merge_job =
   File_key.t Nel.t ->
   'a merge_job_result
 
-type 'a merge_results = 'a merge_job_results * int (* skipped count *)
+type sig_opts_data = {
+  skipped_count: int;
+  sig_new_or_changed: FilenameSet.t;
+}
+
+type 'a merge_results =
+  'a merge_job_results *
+   sig_opts_data
 
 type merge_strict_context_result = {
   cx: Context.t;

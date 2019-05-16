@@ -18,7 +18,14 @@ type 'a merge_job =
   File_key.t Nel.t ->
   'a merge_job_result
 
-type 'a merge_results = 'a merge_job_results * int (* skipped count *)
+type sig_opts_data = {
+  skipped_count: int;
+  sig_new_or_changed: FilenameSet.t;
+}
+
+type 'a merge_results =
+  'a merge_job_results *
+   sig_opts_data
 
 type merge_strict_context_result = {
   cx: Context.t;
@@ -402,10 +409,11 @@ let merge_runner
     ~next:(Merge_stream.next stream)
   in
   let total_files = Merge_stream.total_files stream in
-  let skipped_files = Merge_stream.skipped_files stream in
-  Hh_logger.info "Merge skipped %d of %d modules" skipped_files total_files;
+  let skipped_count = Merge_stream.skipped_count stream in
+  let sig_new_or_changed = Merge_stream.sig_new_or_changed master_mutator in
+  Hh_logger.info "Merge skipped %d of %d modules" skipped_count total_files;
   let elapsed = Unix.gettimeofday () -. start_time in
   if Options.should_profile options then Hh_logger.info "merged (strict) in %f" elapsed;
-  Lwt.return (ret, skipped_files)
+  Lwt.return (ret, { skipped_count; sig_new_or_changed })
 
 let merge_strict = merge_runner ~job:merge_strict_component
