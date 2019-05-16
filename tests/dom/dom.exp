@@ -7,8 +7,8 @@ Cannot call `ctx.moveTo` with `'0'` bound to `x` because string [1] is incompati
                         ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1997:13
-   1997|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2000:13
+   2000|   moveTo(x: number, y: number): void;
                      ^^^^^^ [2]
 
 
@@ -21,8 +21,8 @@ Cannot call `ctx.moveTo` with `'1'` bound to `y` because string [1] is incompati
                              ^^^ [1]
 
 References:
-   <BUILTINS>/dom.js:1997:24
-   1997|   moveTo(x: number, y: number): void;
+   <BUILTINS>/dom.js:2000:24
+   2000|   moveTo(x: number, y: number): void;
                                 ^^^^^^ [2]
 
 
@@ -107,8 +107,8 @@ References:
    Element.js:14:40
      14|     element.scrollIntoView({ behavior: 'invalid' });
                                                 ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1465:49
-   1465|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1468:49
+   1468|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -125,8 +125,8 @@ References:
    Element.js:15:37
      15|     element.scrollIntoView({ block: 'invalid' });
                                              ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1465:90
-   1465|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1468:90
+   1468|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -139,8 +139,8 @@ Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] 
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1465:25
-   1465|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1468:25
+   1468|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                  ^^^^^^^ [2]
 
 
@@ -185,8 +185,8 @@ References:
    HTMLElement.js:14:40
      14|     element.scrollIntoView({ behavior: 'invalid' });
                                                 ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1465:49
-   1465|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1468:49
+   1468|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -203,8 +203,8 @@ References:
    HTMLElement.js:15:37
      15|     element.scrollIntoView({ block: 'invalid' });
                                              ^^^^^^^^^ [1]
-   <BUILTINS>/dom.js:1465:90
-   1465|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1468:90
+   1468|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -217,9 +217,41 @@ Cannot call `element.scrollIntoView` with `1` bound to `arg` because number [1] 
                                     ^ [1]
 
 References:
-   <BUILTINS>/dom.js:1465:25
-   1465|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
+   <BUILTINS>/dom.js:1468:25
+   1468|   scrollIntoView(arg?: (boolean | { behavior?: ('auto' | 'instant' | 'smooth'), block?: ('start' | 'center' | 'end' | 'nearest'), inline?: ('start' | 'center' | 'end' | 'nearest')  })): void;
                                  ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- HTMLElement.js:27:19
+
+Cannot call `element.focus` with object literal bound to `options` because string [1] is incompatible with boolean [2]
+in property `preventScroll`.
+
+   HTMLElement.js:27:19
+     27|     element.focus({ preventScroll: 'invalid' });
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   HTMLElement.js:27:36
+     27|     element.focus({ preventScroll: 'invalid' });
+                                            ^^^^^^^^^ [1]
+   <BUILTINS>/dom.js:1293:19
+   1293|   preventScroll?: boolean
+                           ^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- HTMLElement.js:28:19
+
+Cannot call `element.focus` with `1` bound to `options` because number [1] is incompatible with `FocusOptions` [2].
+
+   HTMLElement.js:28:19
+     28|     element.focus(1);
+                           ^ [1]
+
+References:
+   <BUILTINS>/dom.js:1624:19
+   1624|   focus(options?: FocusOptions): void;
+                           ^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------ HTMLFormElement.js:23:1
@@ -231,8 +263,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2925:43
-   2925|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2928:43
+   2928|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -245,8 +277,8 @@ Cannot get `el.className` because property `className` is missing in null [1].
          ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:2925:43
-   2925|   [index: number | string]: HTMLElement | null;
+   <BUILTINS>/dom.js:2928:43
+   2928|   [index: number | string]: HTMLElement | null;
                                                    ^^^^ [1]
 
 
@@ -262,8 +294,8 @@ References:
    HTMLInputElement.js:7:28
       7|     el.setRangeText('foo', 123); // end is required
                                     ^^^ [1]
-   <BUILTINS>/dom.js:3306:45
-   3306|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
+   <BUILTINS>/dom.js:3309:45
+   3309|   setRangeText(replacement: string, start?: void, end?: void, selectMode?: void): void;
                                                      ^^^^ [2]
 
 
@@ -279,8 +311,8 @@ References:
    HTMLInputElement.js:10:38
      10|     el.setRangeText('foo', 123, 234, 'bogus'); // invalid value
                                               ^^^^^^^ [1]
-   <BUILTINS>/dom.js:3307:78
-   3307|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
+   <BUILTINS>/dom.js:3310:78
+   3310|   setRangeText(replacement: string, start: number, end: number, selectMode?: SelectionMode): void;
                                                                                       ^^^^^^^^^^^^^ [2]
 
 
@@ -293,8 +325,8 @@ Cannot get `form.action` because property `action` is missing in null [1].
          ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3367:27
-   3367|   form: HTMLFormElement | null;
+   <BUILTINS>/dom.js:3370:27
+   3370|   form: HTMLFormElement | null;
                                    ^^^^ [1]
 
 
@@ -307,8 +339,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3385:44
-   3385|   item(index: number): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3388:44
+   3388|   item(index: number): HTMLOptionElement | null;
                                                     ^^^^ [1]
 
 
@@ -321,8 +353,8 @@ Cannot get `item.value` because property `value` is missing in null [1].
          ^^^^^^^^^^
 
 References:
-   <BUILTINS>/dom.js:3386:48
-   3386|   namedItem(name: string): HTMLOptionElement | null;
+   <BUILTINS>/dom.js:3389:48
+   3389|   namedItem(name: string): HTMLOptionElement | null;
                                                         ^^^^ [1]
 
 
@@ -380,8 +412,8 @@ References:
    path2d.js:16:33
      16|     (path.arcTo(0, 0, 0, 0, 10, '20', 5): void); // invalid
                                          ^^^^ [1]
-   <BUILTINS>/dom.js:1862:83
-   1862|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
+   <BUILTINS>/dom.js:1865:83
+   1865|   arcTo(x1: number, y1: number, x2: number, y2: number, radiusX: number, radiusY: number, rotation: number): void;
                                                                                            ^^^^^^ [2]
 
 
@@ -788,11 +820,11 @@ References:
    traversal.js:186:60
     186|     document.createNodeIterator(document_body, -1, node => 'accept'); // invalid
                                                                     ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3849:1
+   <BUILTINS>/dom.js:3852:1
          v--------------------------------
-   3849| typeof NodeFilter.FILTER_ACCEPT |
-   3850| typeof NodeFilter.FILTER_REJECT |
-   3851| typeof NodeFilter.FILTER_SKIP;
+   3852| typeof NodeFilter.FILTER_ACCEPT |
+   3853| typeof NodeFilter.FILTER_REJECT |
+   3854| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -809,11 +841,11 @@ References:
    traversal.js:188:74
     188|     document.createNodeIterator(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3849:1
+   <BUILTINS>/dom.js:3852:1
          v--------------------------------
-   3849| typeof NodeFilter.FILTER_ACCEPT |
-   3850| typeof NodeFilter.FILTER_REJECT |
-   3851| typeof NodeFilter.FILTER_SKIP;
+   3852| typeof NodeFilter.FILTER_ACCEPT |
+   3853| typeof NodeFilter.FILTER_REJECT |
+   3854| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -872,11 +904,11 @@ References:
    traversal.js:193:58
     193|     document.createTreeWalker(document_body, -1, node => 'accept'); // invalid
                                                                   ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3849:1
+   <BUILTINS>/dom.js:3852:1
          v--------------------------------
-   3849| typeof NodeFilter.FILTER_ACCEPT |
-   3850| typeof NodeFilter.FILTER_REJECT |
-   3851| typeof NodeFilter.FILTER_SKIP;
+   3852| typeof NodeFilter.FILTER_ACCEPT |
+   3853| typeof NodeFilter.FILTER_REJECT |
+   3854| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -893,11 +925,11 @@ References:
    traversal.js:195:72
     195|     document.createTreeWalker(document_body, -1, { acceptNode: node => 'accept' }); // invalid
                                                                                 ^^^^^^^^ [1]
-   <BUILTINS>/dom.js:3849:1
+   <BUILTINS>/dom.js:3852:1
          v--------------------------------
-   3849| typeof NodeFilter.FILTER_ACCEPT |
-   3850| typeof NodeFilter.FILTER_REJECT |
-   3851| typeof NodeFilter.FILTER_SKIP;
+   3852| typeof NodeFilter.FILTER_ACCEPT |
+   3853| typeof NodeFilter.FILTER_REJECT |
+   3854| typeof NodeFilter.FILTER_SKIP;
          ----------------------------^ [2]
 
 
@@ -944,7 +976,7 @@ References:
 
 
 
-Found 35 errors
+Found 37 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
