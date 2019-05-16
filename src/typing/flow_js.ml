@@ -895,8 +895,21 @@ let function_like_op = function
 
 let equatable = function
   | DefT (_, _, NumT _), DefT (_, _, NumT _)
+  | DefT (_, _, SingletonNumT _), DefT (_, _, SingletonNumT _)
+  | DefT (_, _, SingletonNumT _), DefT (_, _, NumT _)
+  | DefT (_, _, NumT _), DefT (_, _, SingletonNumT _)
+
   | DefT (_, _, StrT _), DefT (_, _, StrT _)
+  | DefT (_, _, StrT _), DefT (_, _, SingletonStrT _)
+  | DefT (_, _, SingletonStrT _), DefT (_, _, StrT _)
+  | DefT (_, _, SingletonStrT _), DefT (_, _, SingletonStrT _)
+
+
   | DefT (_, _, BoolT _), DefT (_, _, BoolT _)
+  | DefT (_, _, BoolT _), DefT (_, _, SingletonBoolT _)
+  | DefT (_, _, SingletonBoolT _), DefT (_, _, BoolT _)
+  | DefT (_, _, SingletonBoolT _), DefT (_, _, SingletonBoolT _)
+
   | DefT (_, _, EmptyT _), _ | _, DefT (_, _, EmptyT _)
   | _, DefT (_, _, MixedT _) | DefT (_, _, MixedT _), _
   | AnyT _, _ | _, AnyT _
@@ -904,8 +917,8 @@ let equatable = function
   | DefT (_, _, NullT), _ | _, DefT (_, _, NullT)
     -> true
 
-  | DefT (_, _, (NumT _ | StrT _ | BoolT _)), _
-  | _, DefT (_, _, (NumT _ | StrT _ | BoolT _))
+  | DefT (_, _, (NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _)), _
+  | _, DefT (_, _, (NumT _ | StrT _ | BoolT _ | SingletonNumT _ | SingletonStrT _ | SingletonBoolT _))
     -> false
 
   | _ -> true
