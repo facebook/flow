@@ -21,12 +21,14 @@ type 'a t = {
 }
 
 let default_lint_severities = [
-  Lints.DeprecatedUtility,    (Severity.Err, None);
+  Lints.DeprecatedUtility, (Severity.Err, None);
+  Lints.DeprecatedEnumUtility, (Severity.Err, None);
 ]
 
 let ignored_by_all = [
   Lints.DynamicExport;
-  Lints.DeprecatedUtility
+  Lints.DeprecatedUtility;
+  Lints.DeprecatedEnumUtility;
 ]
 
 let config_default =
