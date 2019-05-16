@@ -10,6 +10,8 @@ type position = {
   column: int;
 } [@@deriving show]
 
+(* If you are modifying this record, go look at ALoc.ml and make sure you understand the
+ * representation there. *)
 type t = {
   source: File_key.t option;
   start: position;
