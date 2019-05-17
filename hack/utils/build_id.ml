@@ -14,10 +14,11 @@ external get_build_commit_time_string : unit -> string =
 external get_build_major : unit -> int = "hh_get_build_major"
 external get_build_minor : unit -> int = "hh_get_build_minor"
 external get_build_mode : unit -> string = "hh_get_build_mode"
+external get_build_banner : unit -> string = "hh_get_build_banner"
 
 let build_revision = get_build_revision ()
 
-let build_id_ohai = build_revision ^ " " ^ get_build_commit_time_string ()
+let build_id_ohai = get_build_banner ()
 
 let build_commit_time = get_build_commit_time ()
 

@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <time.h>
@@ -43,12 +44,7 @@ value hh_get_build_revision(void) {
   CAMLparam0();
   CAMLlocal1(result);
 
-#ifdef HH_BUILD_ID
-  const char* const buf =
-    STRINGIFY_VALUE(HH_BUILD_ID) "-" HHVM_VERSION_C_STRING_LITERALS;
-#else
   const char* const buf = BuildInfo_kRevision;
-#endif
   const size_t len = strlen(buf);
   result = caml_alloc_string(len);
 
@@ -57,23 +53,26 @@ value hh_get_build_revision(void) {
   CAMLreturn(result);
 }
 
-value hh_get_build_commit_time_string(void) {
-  CAMLparam0();
-  CAMLlocal1(result);
-
-  char s[25];
+static struct tm *get_built_timestamp(void) {
   unsigned long timestamp = BuildInfo_kRevisionCommitTimeUnix;
 #ifdef HH_BUILD_TIMESTAMP
   if (timestamp == 0) {
     timestamp = HH_BUILD_TIMESTAMP;
   }
 #endif
-
   // A previous version used localtime_r, which is not available on Windows
-  struct tm *p = localtime((time_t*)&timestamp);
-  strftime(s, sizeof(s), "%c", p);
+  return localtime((time_t*)&timestamp);
+}
 
-  result = caml_copy_string(s);
+value hh_get_build_commit_time_string(void) {
+  CAMLparam0();
+  CAMLlocal1(result);
+
+  char timestamp_string[25];
+  struct tm *timestamp = get_built_timestamp();
+  strftime(timestamp_string, sizeof(timestamp_string), "%c", timestamp);
+
+  result = caml_copy_string(timestamp_string);
   CAMLreturn(result);
 }
 
@@ -97,6 +96,30 @@ value hh_get_build_mode(void) {
   result = caml_alloc_string(len);
 
   memcpy(String_val(result), BuildInfo_kBuildMode, len);
+
+  CAMLreturn(result);
+}
+
+value hh_get_build_banner(void) {
+  CAMLparam0();
+  CAMLlocal1(result);
+
+  char timestamp_string[25] = { 0 };
+#ifdef HH_BUILD_BANNER
+  const char* const buf =
+    STRINGIFY_VALUE(HH_BUILD_BANNER) "-" HHVM_VERSION_C_STRING_LITERALS;
+  const size_t len = strlen(buf);
+  const size_t timestamp_string_len = 0;
+#else
+  const char* const buf = BuildInfo_kRevision;
+  const size_t len = strlen(buf);
+  struct tm *timestamp = get_built_timestamp();
+  strftime(timestamp_string, sizeof(timestamp_string), "%c", timestamp);
+  const size_t timestamp_string_len = strlen(timestamp_string);
+#endif
+  result = caml_alloc_string(len + timestamp_string_len + 1);
+
+  sprintf(String_val(result), "%s %s", buf, timestamp_string);
 
   CAMLreturn(result);
 }
