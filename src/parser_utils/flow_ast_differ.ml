@@ -1656,7 +1656,8 @@ let program (algo : diff_algorithm)
       | Function fn1, Function fn2 -> diff_if_changed_ret_opt function_type fn1 fn2
       | Interface i1, Interface i2 -> interface_type i1 i2
       | Generic g1, Generic g2 -> generic_type g1 g2
-      | Intersection (t0, t1, ts), Intersection (t0', t1', ts') ->
+      | Intersection (t0, t1, ts), Intersection (t0', t1', ts')
+      | Union (t0, t1, ts), Union (t0', t1', ts') ->
         diff_and_recurse_nonopt_no_trivial type_ (t0 :: t1 :: ts) (t0' :: t1' :: ts')
       | Nullable (t1_loc, t1), Nullable (t2_loc, t2) -> Some (type_ (t1_loc, t1) (t2_loc, t2))
       | Object obj1, Object obj2 -> diff_if_changed_ret_opt object_type obj1 obj2

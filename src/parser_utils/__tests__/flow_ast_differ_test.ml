@@ -535,6 +535,18 @@ class true_to_false_mapper = object
     | _ -> annot
   end
 
+class remove_annotation_rest_mapper = object
+  inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+  method! type_ (annot: (Loc.t, Loc.t) Type.t) =
+    let annot = super#type_ annot in
+    let (loc, typ) = annot in
+    match typ with
+    | Type.Intersection (t, t', _) -> (loc, Type.Intersection (t, t', []))
+    | Type.Union (t, t', _) -> (loc, Type.Union (t, t', []))
+    | _ -> annot
+end
+
 let edits_of_source algo source mapper =
   let ast, _ = Parser_flow.program source ~parse_options in
   let new_ast = mapper#program ast in
@@ -1690,23 +1702,10 @@ let tests = "ast_differ" >::: [
       ~mapper:(new useless_mapper)
   end;
   "type_alias_intersection_argument_mismatch" >:: begin fun ctxt ->
-    let module M =
-      struct
-        class mapper = object
-          inherit [Loc.t] Flow_ast_mapper.mapper as super
-          method! type_ (annot: (Loc.t, Loc.t) Type.t) =
-            let annot = super#type_ annot in
-            let (loc, typ) = annot in
-            match typ with
-            | Type.Intersection (t, ((_, Type.BooleanLiteral true) as t'), [(_, Type.Boolean)]) ->
-              (loc, Type.Intersection (t, t', []))
-            | _ -> annot
-          end
-      end in
     let source = "type foo = bar & true & boolean" in
     assert_edits_equal ctxt ~edits:[((11, 31), "bar & true")]
       ~source ~expected:"type foo = bar & true"
-      ~mapper:(new M.mapper)
+      ~mapper:(new remove_annotation_rest_mapper)
   end;
   "type_alias_nullable" >:: begin fun ctxt ->
     let source = "type foo = ?number" in
@@ -2102,4 +2101,28 @@ import type {there as here} from \"new_import2\";const x: (() => number) = (bla:
       ((13, 13), "/*hello*/"); ((16, 16), "/*bye*/")]
     ~expected:"const /*hello*/a/*bye*/: /*hello*/Box/*bye*/</*hello*/Bla/*bye*/> = {}"
   end;
+  "let_union_first" >:: begin fun ctxt ->
+    let source = "let x : number | void = 42;" in
+    assert_edits_equal ctxt ~edits:[((8, 14), "string")]
+      ~source ~expected:"let x : string | void = 42;"
+      ~mapper:(new useless_mapper)
+  end;
+  "let_union_second" >:: begin fun ctxt ->
+    let source = "let x : boolean | number = 42;" in
+    assert_edits_equal ctxt ~edits:[((18, 24), "string")]
+      ~source ~expected:"let x : boolean | string = 42;"
+      ~mapper:(new useless_mapper)
+  end;
+  "let_union_rest" >:: begin fun ctxt ->
+    let source = "let x : boolean | void | number = 42;" in
+    assert_edits_equal ctxt ~edits:[((25, 31), "string")]
+      ~source ~expected:"let x : boolean | void | string = 42;"
+      ~mapper:(new useless_mapper)
+  end;
+  "type_alias_union_argument_mismatch" >:: begin fun ctxt ->
+    let source = "type foo = bar | true | boolean" in
+    assert_edits_equal ctxt ~edits:[((11, 31), "bar | true")]
+      ~source ~expected:"type foo = bar | true"
+      ~mapper:(new remove_annotation_rest_mapper)
+  end
 ]
