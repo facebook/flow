@@ -8499,7 +8499,7 @@ and long_path_speculative_matches cx trace r speculation_id spec = Speculation.C
           else begin
             let prev_case_id = prev_case.case_id in
             let cases: Type.t list = choices_of_spec spec in
-            blame_unresolved cx trace prev_case_id case_id cases case_r r ts
+            blame_unresolved cx trace prev_case_id case_id cases case_r ts
           end
         end
       | Some err ->
@@ -8572,16 +8572,16 @@ and long_path_speculative_matches cx trace r speculation_id spec = Speculation.C
    encounters potentially side-effectful constraints involving unresolved tvars
    during a trial.
 *)
-and blame_unresolved cx trace prev_i i cases case_r r tvars =
+and blame_unresolved cx trace prev_i i cases case_r tvars =
   let rs = tvars |> Core_list.map ~f:(fun (_, r) -> r) |> List.sort compare in
   let prev_case = reason_of_t (List.nth cases prev_i) in
   let case = reason_of_t (List.nth cases i) in
-  add_output cx ~trace (Error_message.ESpeculationAmbiguous (
-    (case_r, r),
-    (prev_i, prev_case),
-    (i, case),
-    rs
-  ))
+  add_output cx ~trace (Error_message.ESpeculationAmbiguous {
+    reason = case_r;
+    prev_case = (prev_i, prev_case);
+    case = (i, case);
+    cases = rs;
+  })
 
 and trials_of_spec = function
   | UnionCases (use_op, l, _rep, us) ->

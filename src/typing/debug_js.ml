@@ -2601,10 +2601,9 @@ let dump_error_message =
           (string_of_use_op use_op)
           (dump_reason cx reason)
           (dump_reason cx reason_op)
-    | ESpeculationAmbiguous ((reason1, reason2), _, _, _) ->
-        spf "ESpeculationAmbiguous ((%s, %s), _, _, _)"
-          (dump_reason cx reason1)
-          (dump_reason cx reason2)
+    | ESpeculationAmbiguous { reason; _ } ->
+        spf "ESpeculationAmbiguous { reason = %s; _ }"
+          (dump_reason cx reason)
     | EIncompatibleWithExact ((reason1, reason2), use_op) ->
         spf "EIncompatibleWithExact ((%s, %s), %s)"
           (dump_reason cx reason1)

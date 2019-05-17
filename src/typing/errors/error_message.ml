@@ -84,7 +84,12 @@ and 'loc t' =
       reason_op: 'loc virtual_reason;
       branches: ('loc virtual_reason * t) list;
     }
-  | ESpeculationAmbiguous of ('loc virtual_reason * 'loc virtual_reason) * (int * 'loc virtual_reason) * (int * 'loc virtual_reason) * 'loc virtual_reason list
+  | ESpeculationAmbiguous of {
+      reason: 'loc virtual_reason;
+      prev_case: int * 'loc virtual_reason;
+      case: int * 'loc virtual_reason;
+      cases: 'loc virtual_reason list;
+    }
   | EIncompatibleWithExact of ('loc virtual_reason * 'loc virtual_reason) * 'loc virtual_use_op
   | EUnsupportedExact of ('loc virtual_reason * 'loc virtual_reason)
   | EIdxArity of 'loc virtual_reason
@@ -405,9 +410,18 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EPolarityMismatch {reason; name; expected_polarity; actual_polarity} ->
       EPolarityMismatch {reason = map_reason reason; name; expected_polarity; actual_polarity}
   | EComparison (r1, r2) -> EComparison (map_reason r1, map_reason r2)
-  | ESpeculationAmbiguous ((r1, r2), (i1, r3), (i2, r4), rs) ->
-      ESpeculationAmbiguous ((map_reason r1, map_reason r2), (i1, map_reason r3),
-        (i2, map_reason r4), Core_list.map ~f:map_reason rs)
+  | ESpeculationAmbiguous {
+      reason;
+      prev_case = (prev_i, prev_case_reason);
+      case = (i, case_reason);
+      cases;
+    } ->
+      ESpeculationAmbiguous {
+        reason = map_reason reason;
+        prev_case = (prev_i, map_reason prev_case_reason);
+        case = (i, map_reason case_reason);
+        cases = Core_list.map ~f:map_reason cases;
+      }
   | EUnsupportedExact (r1, r2) -> EUnsupportedExact (map_reason r1, map_reason r2)
   | EIdxArity r -> EIdxArity (map_reason r)
   | EIdxUse1 r -> EIdxUse1 (map_reason r)
@@ -545,7 +559,7 @@ let util_use_op_of_msg nope util = function
 | EPolarityMismatch {reason=_; name=_; expected_polarity=_; actual_polarity=_}
 | EStrictLookupFailed (_, _, _, None)
 | EComparison (_, _)
-| ESpeculationAmbiguous (_, _, _, _)
+| ESpeculationAmbiguous _
 | EUnsupportedExact (_, _)
 | EIdxArity (_)
 | EIdxUse1 (_)
@@ -735,7 +749,7 @@ let aloc_of_msg : t -> ALoc.t option = function
       ) in
       Some (ALoc.of_loc loc1)
   | EBindingError (_, loc, _, _) -> Some loc
-  | ESpeculationAmbiguous ((union_r, _), _, _, _) -> Some (aloc_of_reason union_r)
+  | ESpeculationAmbiguous { reason; _ } -> Some (aloc_of_reason reason)
   | EStrictLookupFailed ((reason, _), lreason, _, _) when is_builtin_reason ALoc.source lreason ->
       Some (aloc_of_reason reason)
   | EFunctionCallExtraArg _
@@ -1116,7 +1130,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
     | EUnionSpeculationFailed { use_op; reason; reason_op=_; branches } ->
       Speculation (loc_of_reason reason, use_op, branches)
 
-    | ESpeculationAmbiguous (_, (prev_i, prev_case), (i, case), case_rs) ->
+    | ESpeculationAmbiguous {
+        reason = _;
+        prev_case = (prev_i, prev_case);
+        case = (i, case);
+        cases = case_rs;
+      } ->
       let open Friendly in
       let prev_case_r =
         mk_reason (RCustom
