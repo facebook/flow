@@ -1,14 +1,5 @@
 /* @flow */
 
-/* emitWarning */
+(process.allowedNodeEnvironmentFlags: Set<string>);
 
-process.emitWarning("blah");
-process.emitWarning(new Error("blah"));
-process.emitWarning("blah", "blah");
-process.emitWarning("blah", "blah", () => {});
-
-process.emitWarning(); // error
-process.emitWarning(42); // error
-process.emitWarning("blah", 42); // error
-process.emitWarning("blah", "blah", 42); // error
-(process.emitWarning("blah"): string); // error
+(process.allowedNodeEnvironmentFlags: string); // error
