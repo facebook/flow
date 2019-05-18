@@ -105,7 +105,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; knot; _} =
   Flow.unify cx t knot;
   t
 
-let methodtype cx {reason; tparams; fparams; return_t; _} =
+let methodtype cx {reason; kind; tparams; fparams; return_t; _} =
   let params = F.value fparams in
   let params_names, params_tlist = List.split params in
   let rest_param = F.rest fparams in
@@ -114,7 +114,7 @@ let methodtype cx {reason; tparams; fparams; return_t; _} =
     dummy_static reason,
     dummy_prototype,
     mk_boundfunctiontype
-      params_tlist ~rest_param ~def_reason ~params_names return_t
+      params_tlist ~rest_param ~def_reason ~params_names ~is_predicate:(kind = Predicate) return_t
   )) in
   poly_type_of_tparams (Context.make_nominal cx) tparams t
 
