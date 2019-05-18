@@ -1,12 +1,19 @@
 // @flow
 
-import {Seq} from './class-static-predicate-lib'
+import {Seq, isSeq} from './class-static-predicate-lib'
 
-declare var m: string | Seq<number, string>;
+declare var foo: string | Seq<number, string>;
 
 // TODO: should refine
-if (Seq.isSeq(m)) {
-  m.size // Cannot get `m.size` because property `size` is missing in  `String` 
+if (Seq.isSeq(foo)) {
+  foo.size // Cannot get `m.size` because property `size` is missing in  `String` 
 } else {
-  ;(m: string);
+  ;(foo: string);
+}
+
+// TODO: should refine
+if (isSeq(foo)) {
+  foo.size // Cannot get `m.size` because property `size` is missing in  `String` 
+} else {
+  ;(foo: string);
 }

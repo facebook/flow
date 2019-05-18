@@ -7,7 +7,7 @@ declare export class Seq<K, +V> {
   size: number | void;
 }
 
-declare function isSeq(
+declare export function isSeq(
   maybeSeq: mixed
 ): boolean /*::%checks(maybeSeq instanceof Seq)*/;
 
