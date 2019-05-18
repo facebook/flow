@@ -118,7 +118,7 @@ module Make (F : Func_params.S) = struct
     Flow.unify cx t knot;
     t
 
-  let methodtype cx { reason; tparams; fparams; return_t; _ } =
+  let methodtype cx { reason; kind; tparams; fparams; return_t; _ } =
     let params = F.value fparams in
     let (params_names, params_tlist) = List.split params in
     let rest_param = F.rest fparams in
@@ -137,6 +137,7 @@ module Make (F : Func_params.S) = struct
                 ~rest_param
                 ~def_reason
                 ~params_names
+                ~is_predicate:(kind = Predicate) 
                 (TypeUtil.type_t_of_annotated_or_inferred return_t) ) )
     in
     poly_type_of_tparams (Context.generate_poly_id cx) tparams t

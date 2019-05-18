@@ -5127,7 +5127,9 @@ and predicated_call_expression_
            | _ -> Utils_js.assert_false "No spreads should reach here")
   in
   let (((_, f), _) as callee_ast) = expression cx ~annot:None callee in
-  let reason = mk_reason (RFunctionCall (desc_of_t f)) loc in
+  let reason = match callee with 
+  | (_, Ast.Expression.Member _) -> mk_reason (RMethodCall None) loc 
+  | _ -> mk_reason (RFunctionCall (desc_of_t f)) loc in
   let arg_asts = Base.List.map ~f:(expression cx ~annot:None) args in
   let argts = Base.List.map ~f:snd_fst arg_asts in
   let argks = Base.List.map ~f:(Refinement.key ~allow_optional:false) args in
@@ -5141,7 +5143,17 @@ and predicated_call_expression_
            local = true;
          })
   in
-  let t = func_call cx reason ~use_op f targts (Base.List.map ~f:(fun e -> Arg e) argts) in
+  let f, t = match callee with
+  | (_, Ast.Expression.Member {
+      Ast.Expression.Member._object;
+      property = Ast.Expression.Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments= _ });
+      _;
+    }) -> 
+    let (_, ot), _ as _object = expression cx ~annot:None _object in
+    method_call cx reason ~use_op prop_loc (callee, ot, name) targts (Base.List.map ~f:(fun e -> Arg e) argts)
+  | _ -> 
+    (f, func_call cx reason ~use_op f targts (Base.List.map ~f:(fun e -> Arg e) argts))
+  in
   let arguments_ast =
     ( args_loc,
       {
@@ -7277,8 +7289,23 @@ and predicates_of_condition cx ~cond e =
     | (None, e) -> empty_result e)
   (* e.m(...) *)
   (* TODO: Don't trap method calls for now *)
-  | (_, Call { Call.callee = (_, (Member _ | OptionalMember _)); _ }) ->
-    empty_result (expression cx ~annot:None e)
+  | loc, Call ({ Call.callee = (_, Member _); arguments = (_, { ArgList.arguments; comments = _ }); _ } as call) ->
+    let is_spread = function | Spread _ -> true | _ -> false in
+    if List.exists is_spread arguments then
+      empty_result (expression cx ~annot:None e)
+    else
+      let fun_t, keys, arg_ts, ret_t, call_ast =
+        predicated_call_expression cx loc call in
+      let ast = (loc, ret_t), Call call_ast in
+      let args_with_offset = ListUtils.zipi keys arg_ts in
+      let emp_pred_map = empty_result ast in
+      List.fold_left (fun pred_map arg_info -> match arg_info with
+        | (idx, Some key, unrefined_t) ->
+            let pred = LatentP (fun_t, idx+1) in
+            add_predicate key unrefined_t pred true pred_map
+        | _ ->
+            pred_map
+      ) emp_pred_map args_with_offset
   (* f(...) *)
   (* The concrete predicate is not known at this point. We attach a "latent"
      predicate pointing to the type of the function that will supply this

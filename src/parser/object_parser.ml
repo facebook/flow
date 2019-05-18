@@ -741,7 +741,7 @@ module Object
         let value =
           with_loc
             (fun env ->
-              let (sig_loc, (tparams, params, return)) =
+              let (sig_loc, (tparams, params, return, predicate)) =
                 with_loc
                   (fun env ->
                     let tparams = type_params_remove_trailing env (Type.type_params env) in
@@ -771,10 +771,9 @@ module Object
                           (loc, { params with this_ = None })
                         | params -> params)
                     in
-                    let return =
-                      type_annotation_hint_remove_trailing env (Type.annotation_opt env)
+                    let (return, predicate) = Type.annotation_and_predicate_opt env
                     in
-                    (tparams, params, return))
+                    (tparams, params, type_annotation_hint_remove_trailing env return, predicate))
                   env
               in
               let (body, strict) =
@@ -789,7 +788,7 @@ module Object
                 generator;
                 async;
                 (* TODO: add support for method predicates *)
-                predicate = None;
+                predicate;
                 return;
                 tparams;
                 sig_loc;
