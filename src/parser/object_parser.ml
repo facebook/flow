@@ -553,7 +553,7 @@ module Object
             env |> with_allow_super Super_prop
         in
         let value = with_loc (fun env ->
-          let sig_loc, (tparams, params, return) = with_loc (fun env ->
+          let sig_loc, (tparams, params, return, predicate) = with_loc (fun env ->
             let tparams = Type.type_parameter_declaration env in
             let params =
               let yield, await = match async, generator with
@@ -564,8 +564,8 @@ module Object
               in
               Declaration.function_params ~await ~yield env
             in
-            let return = Type.annotation_opt env in
-            (tparams, params, return)
+            let (return, predicate) = Type.annotation_and_predicate_opt env in
+            (tparams, params, return, predicate)
           ) env in
           let body, strict = Declaration.function_body env ~async ~generator in
           let simple = Declaration.is_simple_function_params params in
@@ -577,7 +577,7 @@ module Object
             generator;
             async;
             (* TODO: add support for method predicates *)
-            predicate = None;
+            predicate;
             return;
             tparams;
             sig_loc;
