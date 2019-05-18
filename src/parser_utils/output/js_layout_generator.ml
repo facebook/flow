@@ -1438,6 +1438,23 @@ and class_body (loc, { Ast.Class.Body.body }) =
     )
   else Atom "{}"
 
+and class_implements implements = match implements with
+  | [] -> None
+  | _ -> Some (fuse [
+      Atom "implements"; space;
+      fuse_list
+        ~sep:(Atom ",")
+        (List.map
+          (fun (loc, { Ast.Class.Implements.id; targs }) ->
+            source_location_with_comments (loc, fuse [
+              identifier id;
+              option type_parameter_instantiation targs;
+            ])
+          )
+          implements
+        )
+    ])
+
 and class_base { Ast.Class.
   id; body; tparams; extends;
   implements; classDecorators
@@ -1465,23 +1482,7 @@ and class_base { Ast.Class.
         ])
       | None -> None
       end;
-      begin match implements with
-      | [] -> None
-      | _ -> Some (fuse [
-          Atom "implements"; space;
-          fuse_list
-            ~sep:(Atom ",")
-            (List.map
-              (fun (loc, { Ast.Class.Implements.id; targs }) ->
-                source_location_with_comments (loc, fuse [
-                  identifier id;
-                  option type_parameter_instantiation targs;
-                ])
-              )
-              implements
-            )
-        ])
-      end;
+      class_implements implements;
     ] in
     match deoptionalize class_extends with
     | [] -> []
@@ -2407,23 +2408,45 @@ and declare_interface interface =
   ]) interface
 
 and declare_class ?(s_type=Empty) { Ast.Statement.DeclareClass.
-  id; tparams; body=(loc, obj); extends; mixins=_; implements=_;
+  id; tparams; body=(loc, obj); extends; mixins; implements;
 } =
-  (* TODO: What are mixins? *)
-  (* TODO: Print implements *)
+  let extends_parts =
+    let class_extends = [
+      begin match extends with
+      | Some (loc, generic) -> Some (fuse [
+          Atom "extends"; space;
+          source_location_with_comments (loc, type_generic generic)
+        ])
+      | None -> None
+      end;
+      begin match mixins with
+      | [] -> None
+      | xs -> Some (fuse [
+        Atom "mixins"; space;
+        fuse_list
+          ~sep:(Atom ",")
+          (List.map
+            (fun (loc, generic) -> source_location_with_comments (loc, type_generic generic))
+            xs
+          )
+        ])
+      end;
+      class_implements implements;
+    ] in
+    match deoptionalize class_extends with
+    | [] -> Empty 
+    | items ->Layout.Indent (fuse [
+      line;
+      join line items;
+    ])
+  in
   fuse [
     Atom "declare"; space;
     s_type;
     Atom "class"; space;
     identifier id;
     option type_parameter tparams;
-    begin match extends with
-    | None -> Empty
-    | Some (loc, generic) -> fuse [
-        space; Atom "extends"; space;
-        source_location_with_comments (loc, type_generic generic)
-      ]
-    end;
+    extends_parts;
     pretty_space;
     source_location_with_comments (loc, type_object ~sep:(Atom ",") obj)
   ]

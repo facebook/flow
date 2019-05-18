@@ -1,6 +1,15 @@
 // @flow
 
-declare class C<P> {};
+interface D { }
+declare class C<P> { };
+
+declare class A extends C<any> { };
+
+declare class G implements D { };
+
+declare class B extends A mixins C<any> implements D { };
+
+declare class E extends C<any> implements D { };
 
 declare var typeof_C: typeof C;
 () => typeof_C;
