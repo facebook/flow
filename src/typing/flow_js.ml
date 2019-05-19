@@ -9557,6 +9557,7 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
 and flow_use_op op1 u =
   let ignore_root = function
   | UnknownUse -> true
+  | Internal _ -> true
   (* If we are speculating then a Speculation use_op should be considered
    * "opaque". If we are not speculating then Speculation use_ops that escaped
    * (through benign tvars) should be ignored.
