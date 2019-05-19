@@ -1,0 +1,500 @@
+Error ----------------------------------------------------------------------------------- dangerouslySetInnerHTML.js:5:1
+
+Cannot create `article` element because boolean [1] is incompatible with object type [2] in property
+`dangerouslySetInnerHTML`.
+
+   dangerouslySetInnerHTML.js:5:1
+     5| <article dangerouslySetInnerHTML />; // Error: Expected object
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   dangerouslySetInnerHTML.js:5:10
+     5| <article dangerouslySetInnerHTML />; // Error: Expected object
+                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:587:29
+   587|   dangerouslySetInnerHTML?: { __html: string },
+                                    ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- dangerouslySetInnerHTML.js:6:1
+
+Cannot create `article` element because string [1] is incompatible with object type [2] in property
+`dangerouslySetInnerHTML`.
+
+   dangerouslySetInnerHTML.js:6:1
+     6| <article dangerouslySetInnerHTML="<blink>Hello</blink>" />; // Error: Expected object
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   dangerouslySetInnerHTML.js:6:34
+     6| <article dangerouslySetInnerHTML="<blink>Hello</blink>" />; // Error: Expected object
+                                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:587:29
+   587|   dangerouslySetInnerHTML?: { __html: string },
+                                    ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------- dangerouslySetInnerHTML.js:8:1
+
+Cannot create `article` element because property `__html` is missing in object literal [1] but exists in object type [2]
+in property `dangerouslySetInnerHTML`.
+
+   dangerouslySetInnerHTML.js:8:1
+     8| <article dangerouslySetInnerHTML={{ html: "<blink>Hello</blink>" }} />; // Error: Missing __html
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   dangerouslySetInnerHTML.js:8:35
+     8| <article dangerouslySetInnerHTML={{ html: "<blink>Hello</blink>" }} />; // Error: Missing __html
+                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:587:29
+   587|   dangerouslySetInnerHTML?: { __html: string },
+                                    ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- events.js:6:1
+
+Cannot create `input` element because string [1] is incompatible with function type [2] in property `onChange`.
+
+   events.js:6:1
+     6| <input onChange="foo" />; // Error: Expected function
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   events.js:6:17
+     6| <input onChange="foo" />; // Error: Expected function
+                        ^^^^^ [1]
+   <BUILTINS>/react-dom.js:436:14
+   436|   onChange?: (SyntheticEvent<E>) => void,
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- events.js:8:1
+
+Cannot create `textarea` element because `SyntheticKeyboardEvent` [1] is incompatible with `SyntheticMouseEvent` [2] in
+the first argument of property `onKeyDown`.
+
+   events.js:8:1
+     8| <textarea onKeyDown={(event: SyntheticMouseEvent<HTMLElement>) => {}} />; // Error: Wrong event type
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:490:16
+   490|   onKeyDown?: (SyntheticKeyboardEvent<E>) => void,
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   events.js:8:30
+     8| <textarea onKeyDown={(event: SyntheticMouseEvent<HTMLElement>) => {}} />; // Error: Wrong event type
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------- events.js:18:29
+
+Cannot assign `event.buttons` to `buttons` because number [1] is incompatible with string [2].
+
+   events.js:18:29
+    18|     const buttons: string = event.buttons; // Error: number ~> string
+                                    ^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/react-dom.js:207:12
+   207|   buttons: number;
+                   ^^^^^^ [1]
+   events.js:18:20
+    18|     const buttons: string = event.buttons; // Error: number ~> string
+                           ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- props_boolean.js:7:1
+
+Cannot create `span` element because in property `hidden`:
+ - Either null [1] is incompatible with string literal `hidden` [2].
+ - Or null [1] is incompatible with boolean [3].
+
+   props_boolean.js:7:1
+     7| <span hidden={null} />; // Error: Expected DOM boolean
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_boolean.js:7:15
+     7| <span hidden={null} />; // Error: Expected DOM boolean
+                      ^^^^ [1]
+   <BUILTINS>/react-dom.js:649:5
+   649|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:650:5
+   650|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- props_boolean.js:8:1
+
+Cannot create `span` element because in property `hidden`:
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_boolean.js:8:1
+     8| <span hidden="true" />; // Error: Expected DOM boolean
+        ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_boolean.js:8:14
+     8| <span hidden="true" />; // Error: Expected DOM boolean
+                     ^^^^^^ [1]
+   <BUILTINS>/react-dom.js:649:5
+   649|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:650:5
+   650|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- props_boolean.js:9:1
+
+Cannot create `span` element because in property `hidden`:
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_boolean.js:9:1
+     9| <span hidden="false" />; // Error: Expected DOM boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_boolean.js:9:14
+     9| <span hidden="false" />; // Error: Expected DOM boolean
+                     ^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:649:5
+   649|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:650:5
+   650|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- props_boolean.js:10:1
+
+Cannot create `span` element because in property `hidden`:
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_boolean.js:10:1
+    10| <span hidden="" />; // Error: Expected DOM boolean
+        ^^^^^^^^^^^^^^^^^^
+
+References:
+   props_boolean.js:10:14
+    10| <span hidden="" />; // Error: Expected DOM boolean
+                     ^^ [1]
+   <BUILTINS>/react-dom.js:649:5
+   649|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:650:5
+   650|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- props_boolean.js:11:1
+
+Cannot create `span` element because in property `hidden`:
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_boolean.js:11:1
+    11| <span hidden="yes" />; // Error: Expected DOM boolean
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_boolean.js:11:14
+    11| <span hidden="yes" />; // Error: Expected DOM boolean
+                     ^^^^^ [1]
+   <BUILTINS>/react-dom.js:649:5
+   649|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:650:5
+   650|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- props_boolean.js:15:1
+
+Cannot create `span` element because in property `hidden`:
+ - Either string [1] is incompatible with string literal `hidden` [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_boolean.js:15:1
+    15| <span hidden="Hidden" />; // Currently an error
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_boolean.js:15:14
+    15| <span hidden="Hidden" />; // Currently an error
+                     ^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:649:5
+   649|   | $TODO$CaseInsensitive<AttributeName>
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:650:5
+   650|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------- props_booleanish_string.js:7:1
+
+Cannot create `div` element because in property `contentEditable`:
+ - Either null [1] is incompatible with enum [2].
+ - Or null [1] is incompatible with boolean [3].
+
+   props_booleanish_string.js:7:1
+     7| <div contentEditable={null} />; // Error: Expected booleanish string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_booleanish_string.js:7:23
+     7| <div contentEditable={null} />; // Error: Expected booleanish string
+                              ^^^^ [1]
+   <BUILTINS>/react-dom.js:645:5
+   645|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:646:5
+   646|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- props_booleanish_string.js:10:1
+
+Cannot create `div` element because in property `contentEditable`:
+ - Either string [1] is incompatible with enum [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_booleanish_string.js:10:1
+    10| <div contentEditable="" />; // Error: Expected booleanish string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_booleanish_string.js:10:22
+    10| <div contentEditable="" />; // Error: Expected booleanish string
+                             ^^ [1]
+   <BUILTINS>/react-dom.js:645:5
+   645|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:646:5
+   646|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- props_booleanish_string.js:11:1
+
+Cannot create `div` element because in property `contentEditable`:
+ - Either string [1] is incompatible with enum [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_booleanish_string.js:11:1
+    11| <div contentEditable="yes" />; // Error: Expected booleanish string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_booleanish_string.js:11:22
+    11| <div contentEditable="yes" />; // Error: Expected booleanish string
+                             ^^^^^ [1]
+   <BUILTINS>/react-dom.js:645:5
+   645|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:646:5
+   646|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------------- props_booleanish_string.js:12:1
+
+Cannot create `div` element because in property `contentEditable`:
+ - Either string [1] is incompatible with enum [2].
+ - Or string [1] is incompatible with boolean [3].
+
+   props_booleanish_string.js:12:1
+    12| <div contentEditable="contentEditable" />; // Error: Expected booleanish string
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_booleanish_string.js:12:22
+    12| <div contentEditable="contentEditable" />; // Error: Expected booleanish string
+                             ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:645:5
+   645|   | $TODO$CaseInsensitive<"true" | "false">
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react-dom.js:646:5
+   646|   | boolean;
+            ^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ props_enum.js:5:1
+
+Cannot create `header` element because boolean [1] is incompatible with enum [2] in property `dir`.
+
+   props_enum.js:5:1
+     5| <header dir />; // Error: Expected enum
+        ^^^^^^^^^^^^^^
+
+References:
+   props_enum.js:5:9
+     5| <header dir />; // Error: Expected enum
+                ^^^ [1]
+   <BUILTINS>/react-dom.js:611:9
+   611|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- props_enum.js:11:1
+
+Cannot create `header` element because string [1] is incompatible with enum [2] in property `dir`.
+
+   props_enum.js:11:1
+    11| <header dir="Ltr" />; // currently an error
+        ^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_enum.js:11:13
+    11| <header dir="Ltr" />; // currently an error
+                    ^^^^^ [1]
+   <BUILTINS>/react-dom.js:611:9
+   611|   dir?: $TODO$CaseInsensitive<"ltr" | "rtl" | "LTR" | "RTL" | "auto">,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- props_number.js:5:1
+
+Cannot create `h1` element because boolean [1] is incompatible with number [2] in property `tabIndex`.
+
+   props_number.js:5:1
+     5| <h1 tabIndex />; // Error: Expected number
+        ^^^^^^^^^^^^^^^
+
+References:
+   props_number.js:5:5
+     5| <h1 tabIndex />; // Error: Expected number
+            ^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:592:14
+   592|   tabIndex?: ReactDOM$Number,
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- props_number.js:10:1
+
+Cannot create `h1` element because string [1] is incompatible with number [2] in property `tabIndex`.
+
+   props_number.js:10:1
+    10| <h1 tabIndex="foo" />; // Error: Expected number
+        ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_number.js:10:14
+    10| <h1 tabIndex="foo" />; // Error: Expected number
+                     ^^^^^ [1]
+   <BUILTINS>/react-dom.js:592:14
+   592|   tabIndex?: ReactDOM$Number,
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- props_number.js:11:1
+
+Cannot create `h1` element because string [1] is incompatible with number [2] in property `tabIndex`.
+
+   props_number.js:11:1
+    11| <h1 tabIndex="1" />; // Error: Expected number
+        ^^^^^^^^^^^^^^^^^^^
+
+References:
+   props_number.js:11:14
+    11| <h1 tabIndex="1" />; // Error: Expected number
+                     ^^^ [1]
+   <BUILTINS>/react-dom.js:592:14
+   592|   tabIndex?: ReactDOM$Number,
+                     ^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- props_string.js:6:1
+
+Cannot create `html` element because number [1] is incompatible with string [2] in property `id`.
+
+   props_string.js:6:1
+     6| <html id={42} />; // Error: Expected string
+        ^^^^^^^^^^^^^^^^
+
+References:
+   props_string.js:6:11
+     6| <html id={42} />; // Error: Expected string
+                  ^^ [1]
+   <BUILTINS>/react-dom.js:588:8
+   588|   id?: string,
+               ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- suppress_warnings.js:6:1
+
+Cannot create `p` element because string [1] is incompatible with boolean [2] in property `suppressHydrationWarning`.
+
+   suppress_warnings.js:6:1
+     6| <p suppressHydrationWarning="false" />; // Error: Expected boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   suppress_warnings.js:6:29
+     6| <p suppressHydrationWarning="false" />; // Error: Expected boolean
+                                    ^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:591:30
+   591|   suppressHydrationWarning?: boolean,
+                                     ^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- suppress_warnings.js:10:1
+
+Cannot create `aside` element because string [1] is incompatible with boolean [2] in property
+`suppressContentEditableWarning`.
+
+   suppress_warnings.js:10:1
+    10| <aside contentEditable suppressContentEditableWarning="false" />; // Error: Expected boolean
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   suppress_warnings.js:10:55
+    10| <aside contentEditable suppressContentEditableWarning="false" />; // Error: Expected boolean
+                                                              ^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:621:36
+   621|   suppressContentEditableWarning?: boolean,
+                                           ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- void_element_tags.js:7:1
+
+Cannot create `menuitem` element because object literal [1] is incompatible with undefined [2] in property
+`dangerouslySetInnerHTML`.
+
+   void_element_tags.js:7:1
+     7| <menuitem dangerouslySetInnerHTML={{ __html: "Content" }} />; // Error
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   void_element_tags.js:7:36
+     7| <menuitem dangerouslySetInnerHTML={{ __html: "Content" }} />; // Error
+                                           ^^^^^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:684:30
+   684|   dangerouslySetInnerHTML?: ?void // innerHTML cannot be set on empty elements
+                                     ^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- void_element_tags.js:8:1
+
+Cannot create `br` element because JSX text [1] is incompatible with undefined [2] in property `children`.
+
+   void_element_tags.js:8:1
+     8| <br>Content</br>; // Error
+        ^^^^^^^^^^^^^^^^
+
+References:
+   void_element_tags.js:8:5
+     8| <br>Content</br>; // Error
+            ^^^^^^^ [1]
+   <BUILTINS>/react-dom.js:683:15
+   683|   children?: ?void, // Empty elements cannot have children
+                      ^^^^ [2]
+
+
+
+Found 26 errors
