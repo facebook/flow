@@ -28,7 +28,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- example6.js:9:10
 
-Could not decide which case to select. Since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
+Could not decide which case to select, since case 1 [1] may work but if it doesn't case 2 [2] looks promising too. To
 fix add a type annotation to return [3] or to `x` [4].
 
    example6.js:9:10

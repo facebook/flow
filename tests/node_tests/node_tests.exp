@@ -560,7 +560,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- fs/fs.js:13:1
 
-Could not decide which case to select. Since case 3 [1] may work but if it doesn't case 4 [2] looks promising too. To
+Could not decide which case to select, since case 3 [1] may work but if it doesn't case 4 [2] looks promising too. To
 fix add a type annotation to `_` [3] or to `data` [4].
 
    fs/fs.js:13:1

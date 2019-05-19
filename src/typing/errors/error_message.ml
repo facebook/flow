@@ -1147,7 +1147,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       Normal (
         [
-          text "Could not decide which case to select. Since "; ref prev_case_r; text " ";
+          text "Could not decide which case to select, since "; ref prev_case_r; text " ";
           text "may work but if it doesn't "; ref case_r; text " looks promising ";
           text "too. To fix add a type annotation ";
         ] @
