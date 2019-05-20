@@ -2374,6 +2374,12 @@ let tests = "js_layout_generator" >::: [
       let ast = expression_of_string "\"\xF0\x9F\x92\xA9\"" in
       assert_expression ~ctxt {|"\ud83d\udca9"|} ast;
 
+      (* zero followed by ASCII number *)
+      let ast = expression_of_string "\"\x00\x31\"" in
+      assert_expression ~ctxt {|"\x001"|} ast; (* not `\01`! *)
+      let ast = expression_of_string "\"\x00\x39\"" in
+      assert_expression ~ctxt {|"\x009"|} ast; (* not `\09`! *)
+
       (* unprintable ascii, escaped *)
       let ast = expression_of_string {|"\x07"|} in
       assert_expression ~ctxt {|"\x07"|} ast;
