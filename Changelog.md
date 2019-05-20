@@ -1,3 +1,24 @@
+### 0.99.0
+
+Likely to cause new Flow errors:
+
+* The statics of function types used to be `any` but are now typed as an empty object.
+* Recursive calls of named function expressions were previously unchecked, but are now checked.
+* `$call` property syntax, deprecated in Flow v0.75, has finally been removed.
+
+Notable bug fixes:
+
+* Fix an issue where Flow would not catch certain errors involving React function components with unannotated props.
+* Fix React synthetic mouse events for drag, wheel, pointer events to give the specific native event type. (Thanks, @Kiwka!)
+
+Misc:
+
+* Improved performance of starting a server from a saved state.
+
+Parser:
+
+* Fix parsing of function types inside tuples inside arrow function return types.
+
 ### 0.98.1
 
 Notable bug fixes:
