@@ -193,8 +193,8 @@ Cannot assign `this.props.x` to `_` because number [1] is incompatible with stri
                             ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:437:36
-   437|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:440:36
+   440|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [1]
    classes.js:57:12
     57|     var _: string = this.props.x;
@@ -420,8 +420,8 @@ Cannot assign `this.props.z` to `qux` because:
                                   ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:437:36
-   437|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:440:36
+   440|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [1]
    new_react.js:19:18
     19|         var qux: string = this.props.z;
@@ -437,8 +437,8 @@ Cannot assign `this.props.x` to `w` because string [1] is incompatible with numb
                                ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:439:36
-   439|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:442:36
+   442|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    new_react.js:20:15
     20|         var w:number = this.props.x;
@@ -472,8 +472,8 @@ References:
    new_react.js:29:23
     29| var element = <C x = {0}/>;
                               ^ [1]
-   <BUILTINS>/react.js:439:36
-   439|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:442:36
+   442|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
 
 
@@ -530,8 +530,8 @@ Cannot assign `this.props.x` to `a` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:439:36
-   439|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:442:36
+   442|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [1]
    props.js:14:16
     14|         var a: number = this.props.x; // error
@@ -567,8 +567,8 @@ Cannot assign `this.props.z` to `c` because:
                                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:437:36
-   437|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:440:36
+   440|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [1]
    props.js:16:16
     16|         var c: string = this.props.z; // error
@@ -589,14 +589,14 @@ References:
    props.js:20:29
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                     ^^^^^ [1]
-   <BUILTINS>/react.js:439:36
-   439|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:442:36
+   442|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
    props.js:20:49
     20| var element = <TestProps x={false} y={false} z={false} />; // 3 errors
                                                         ^^^^^ [3]
-   <BUILTINS>/react.js:437:36
-   437|   number: React$PropType$Primitive<number>;
+   <BUILTINS>/react.js:440:36
+   440|   number: React$PropType$Primitive<number>;
                                            ^^^^^^ [4]
 
 
@@ -653,8 +653,8 @@ References:
    props2.js:9:41
      9|     getInitialState: function(): { bar: number } {
                                                 ^^^^^^ [1]
-   <BUILTINS>/react.js:439:36
-   439|   string: React$PropType$Primitive<string>;
+   <BUILTINS>/react.js:442:36
+   442|   string: React$PropType$Primitive<string>;
                                            ^^^^^^ [2]
    props2.js:15:42
     15|         return <C {...this.state} foo = {0} />;
@@ -670,8 +670,8 @@ Cannot get `React.PropTypes.imaginaryType` because property `imaginaryType` is m
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:218:33
-   218|   declare export var PropTypes: ReactPropTypes;
+   <BUILTINS>/react.js:221:33
+   221|   declare export var PropTypes: ReactPropTypes;
                                         ^^^^^^^^^^^^^^ [1]
 
 
@@ -685,12 +685,12 @@ Cannot get `React.PropTypes.string.inRequired` because property `inRequired` is 
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:413:39
+   <BUILTINS>/react.js:416:39
                                               v
-   413| type ReactPropsChainableTypeChecker = {
-   414|   isRequired: ReactPropsCheckType;
-   415|   (props: any, propName: string, componentName: string, href?: string): ?Error;
-   416| };
+   416| type ReactPropsChainableTypeChecker = {
+   417|   isRequired: ReactPropsCheckType;
+   418|   (props: any, propName: string, componentName: string, href?: string): ?Error;
+   419| };
         ^ [1]
 
 
