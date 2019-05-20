@@ -182,7 +182,7 @@ react_component.js:32:29 = {
       "kind":"Generic",
       "typeArgs":[{"kind":"Bound","bound":"P"}],
       "type":{
-        "provenance":{"kind":"Library","loc":"[LIB] react.js:159:45-80"},
+        "provenance":{"kind":"Library","loc":"[LIB] react.js:159:45-82"},
         "name":"React$ComponentType"
       },
       "kind":"type alias"
