@@ -250,12 +250,12 @@ let calc_deps ~options ~profiling ~dependency_graph ~components to_merge =
     Lwt.return (dependency_graph, component_map)
   )
 
-(* The infer_input passed in basically tells us what the caller wants to typecheck.
+(* The input passed in basically tells us what the caller wants to typecheck.
  * However, due to laziness, it's possible that certain dependents or dependencies have not been
  * checked yet. So we need to calculate all the transitive dependents and transitive dependencies
- * and add them to infer_input, unless they're already checked and in unchanged_checked
+ * and add them to input, unless they're already checked and in unchanged_checked
  *
- * Note that we do not want to add all_dependent_files to infer_input directly! We only want to
+ * Note that we do not want to add all_dependent_files to input directly! We only want to
  * pass the dependencies, and later add dependent files as needed. This is important for recheck
  * optimizations. We create the recheck map which indicates whether a given file needs to be
  * rechecked. Dependent files only need to be rechecked if their dependencies change.
@@ -264,14 +264,15 @@ let include_dependencies_and_dependents
     ~options
     ~profiling
     ~unchanged_checked
-    ~infer_input
+    ~input
     ~dependency_info
     ~all_dependent_files =
-  let%lwt infer_input, components = with_timer_lwt ~options "PruneDeps" profiling (fun () ->
+  let%lwt input_with_dependencies_of_all_dependents, components =
+    with_timer_lwt ~options "PruneDeps" profiling (fun () ->
     (* Don't just look up the dependencies of the focused or dependent modules. Also look up
      * the dependencies of dependencies, since we need to check transitive dependencies *)
     let preliminary_to_merge = CheckedSet.all
-      (CheckedSet.add ~dependents:all_dependent_files infer_input) in
+      (CheckedSet.add ~dependents:all_dependent_files input) in
     let preliminary_to_merge = Dep_service.calc_direct_dependencies dependency_info
       preliminary_to_merge in
     (* So we want to prune our dependencies to only the dependencies which changed. However,
@@ -288,22 +289,25 @@ let include_dependencies_and_dependents
       (* If every element is unchanged, drop the component *)
       else dependencies
     ) FilenameSet.empty components in
-    Lwt.return (CheckedSet.add ~dependencies infer_input, components)
+    Lwt.return (CheckedSet.add ~dependencies input, components)
   ) in
 
-  (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with infer_input +
-     all_dependent_files (which is = to_merge later) on dependency_graph, we would get exactly the
-     same components. Later, we will filter dependency_graph to just to_merge, and correspondingly
-     filter components as well. This will work out because every component is either entirely inside
-     to_merge or entirely outside. *)
+  (* NOTE: An important invariant here is that if we recompute Sort_js.topsort with
+     input_with_dependencies_of_all_dependents + all_dependent_files (which is = to_merge later) on
+     dependency_graph, we would get exactly the same components. Later, we will filter
+     dependency_graph to just to_merge, and correspondingly filter components as well. This will
+     work out because every component is either entirely inside to_merge or entirely outside. *)
 
-  let to_merge = CheckedSet.add ~dependents:all_dependent_files infer_input in
+  let to_merge =
+    CheckedSet.add ~dependents:all_dependent_files input_with_dependencies_of_all_dependents in
 
   let recheck_set =
     (* Definitely recheck input files. As merging proceeds, other files in to_merge may or may not
        be rechecked. *)
     CheckedSet.fold (fun recheck_set file ->
-      if CheckedSet.mem file infer_input then FilenameSet.add file recheck_set else recheck_set
+      if CheckedSet.mem file input_with_dependencies_of_all_dependents
+      then FilenameSet.add file recheck_set
+      else recheck_set
     ) FilenameSet.empty to_merge
   in
 
@@ -640,7 +644,7 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
     ) require_loc_map Modulename.Set.empty
   in
 
-  let infer_input = Modulename.Set.fold (fun m acc ->
+  let input = Modulename.Set.fold (fun m acc ->
     match Module_heaps.Reader.get_file ~reader m ~audit:Expensive.warn with
     | Some f ->
       let reader = Abstract_state_reader.State_reader reader in
@@ -652,10 +656,10 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
   ) resolved_requires CheckedSet.empty in
   let checked = env.ServerEnv.checked_files in
 
-  (* Often, all dependencies have already been checked, so infer_input contains no unchecked files.
+  (* Often, all dependencies have already been checked, so input contains no unchecked files.
    * In that case, let's short-circuit typecheck, since a no-op typecheck still takes time on
    * large repos *)
-  let unchecked_dependencies = CheckedSet.diff infer_input checked in
+  let unchecked_dependencies = CheckedSet.diff input checked in
   if CheckedSet.is_empty unchecked_dependencies
   then Lwt.return_unit
   else begin
@@ -1469,13 +1473,13 @@ end = struct
 
     (* Filter updated_checked_files down to the files which we just parsed or unchanged files which
      * will be focused *)
-    let infer_input = CheckedSet.filter updated_checked_files ~f:(fun fn ->
+    let input = CheckedSet.filter updated_checked_files ~f:(fun fn ->
       FilenameSet.mem fn acceptable_files_to_focus
     ) in
 
     let%lwt to_merge, components, recheck_set =
       include_dependencies_and_dependents
-        ~options ~profiling ~unchanged_checked ~infer_input ~dependency_info ~all_dependent_files
+        ~options ~profiling ~unchanged_checked ~input ~dependency_info ~all_dependent_files
     in
 
     (* This is a much better estimate of what checked_files will be after the merge finishes. We now
@@ -2106,18 +2110,18 @@ let init ~profiling ~workers options =
 let full_check ~profiling ~options ~workers ?focus_targets env =
   let { ServerEnv.files = parsed; dependency_info; errors; _; } = env in
   with_transaction (fun transaction reader ->
-    let%lwt infer_input = files_to_infer
+    let%lwt input = files_to_infer
       ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info in
 
     let%lwt to_merge, components, recheck_set =
       include_dependencies_and_dependents
         ~options ~profiling
         ~unchanged_checked:CheckedSet.empty
-        ~infer_input
+        ~input
         ~dependency_info
         ~all_dependent_files:FilenameSet.empty
     in
-    (* The values to_merge and recheck_set are essentially the same as infer_input, aggregated. This
+    (* The values to_merge and recheck_set are essentially the same as input, aggregated. This
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
        of calling include_dependencies_and_dependents is to compute components. *)
 
