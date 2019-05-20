@@ -24,6 +24,9 @@ do_file "dictionary.js"
 do_file "func-0.js"
 do_file "func-1.js"
 do_file "func-2.js"
+do_file "func-3.js"
+do_file "func-4.js"
+do_file "func-5.js"
 do_file "func-poly-0.js"
 do_file "object-0.js"
 do_file "object-1.js"
@@ -54,6 +57,9 @@ assert_errors "$FLOW" suggest --strip-root --quiet --quiet err-parse-1.js 2>&1
 
 echo "warn-empty-0.js"
 assert_ok "$FLOW" suggest --strip-root --quiet warn-empty-0.js 2>&1
+
+echo "func-6.js"
+assert_ok "$FLOW" suggest --strip-root --quiet "func-6.js"
 
 echo "warn-empty-0.js (--fail-on-suggest-warnings)"
 assert_errors "$FLOW" suggest --strip-root --quiet --fail-on-suggest-warnings warn-empty-0.js 2>&1

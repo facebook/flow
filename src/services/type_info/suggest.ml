@@ -39,20 +39,21 @@ class visitor ~cxs = object(this)
 
   method warnings () = _warnings
 
-  method private inferred_type ~search ~index loc =
+  method private inferred_type ~search ~index ?annotate_bottom:(ann_bot=false) loc =
     let search_loc = search loc |> ALoc.of_loc in
     match Loc_collections.ALocMap.get search_loc cxs with
     | Some (Ok ty) -> (
-        match index ty with
-        | Ok Ty.Bot _ ->
-          this#warn loc SkipEmpty
-        | Ok ty -> (
-            match Ty_serializer.type_ ty with
-            | Ok type_ast ->
-              Some (Loc.none, type_ast)
-            | Error desc -> this#warn loc (Serializer desc)
+      match index ty with
+      | Ok ty -> (
+        match Ty_serializer.type_ ty with
+        | Ok type_ast -> (
+          match ty with
+          | Ty.Bot _ when not ann_bot -> this#warn loc SkipEmpty
+          | _ -> Some (Loc.none, type_ast)
           )
-        | Error err -> this#warn loc err
+        | Error desc -> this#warn loc (Serializer desc)
+        )
+      | Error err -> this#warn loc err
       )
     | Some (Error err) -> this#warn loc (NormalizerError err)
     | None -> this#warn loc MissingFromTypeTables
@@ -150,7 +151,7 @@ class visitor ~cxs = object(this)
           | Fun { fun_return; _ } -> Ok fun_return
           | ty -> Error (NonFunctionType (Ty_printer.string_of_t ty))
         ) in
-        match this#inferred_type ~search ~index loc with
+        match this#inferred_type ~search ~index ~annotate_bottom:true loc with
         | Some annot -> Ast.Type.Available annot
         | None -> miss
     in

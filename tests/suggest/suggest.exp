@@ -151,6 +151,32 @@ function foo(x: number, y: number): void {
 
 foo(1, 1);
 
+func-3.js
+// @flow
+function throws_arg(): empty {
+  throw 42;
+}
+
+func-4.js
+// @flow
+function throws_arg(): empty {
+  if (Math.random() < 0.5) {
+    throw 42;
+  } else {
+    throw 42;
+  }
+}
+
+func-5.js
+// @flow
+function throws_arg(): number {
+  if (Math.random() < 0.5) {
+    return 42;
+  } else {
+    throw 42;
+  }
+}
+
 func-poly-0.js
 // @flow
 function outer<T>(y: T): void {
@@ -360,22 +386,20 @@ Unexpected token @
 Found 1 error
 warn-empty-0.js
 // @flow
-function foo(x: number, y) {
+function foo(x: number, y): empty {
   return x + y;
 }
 
+func-6.js
+// @flow
+function error(wrong: number): number {
+  return wrong;
+}
+function throws_arg(): number {
+  return error("42");
+}
+
 warn-empty-0.js (--fail-on-suggest-warnings)
-
-Warning -------------------------------------------------------------------------------------------- warn-empty-0.js:3:1
-
-Inferred type is empty.
-
-      v---------------------------
-   3| function foo(x: number, y) {
-   4|   return x + y;
-   5| }
-      ^
-
 
 Warning ------------------------------------------------------------------------------------------- warn-empty-0.js:3:25
 
@@ -385,10 +409,10 @@ Inferred type is empty.
                               ^
 
 
-Found 2 warnings
+Found 1 warning
 warn-empty-0.js (--fail-on-tc-errors)
 // @flow
-function foo(x: number, y) {
+function foo(x: number, y): empty {
   return x + y;
 }
 
