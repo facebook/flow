@@ -8,7 +8,7 @@ For a background on the project, please read [this overview](https://flow.org/en
 
 Flow works with:
 
-* Mac OS X
+* macOS
 * Linux (64-bit)
 * Windows (64-bit, Windows 10 recommended)
 
@@ -43,7 +43,7 @@ npm install -g flow-bin
 flow # make sure `npm bin -g` is on your path
 ```
 
-On Mac OS X, you can install Flow via the [Homebrew](http://brew.sh/) package manager:
+On macOS, you can install Flow via the [Homebrew](http://brew.sh/) package manager:
 
 ```
 brew update
@@ -94,7 +94,7 @@ More thorough documentation and many examples can be found at [flow.org](https:/
 
 ## Building Flow
 
-Flow is written in OCaml (OCaml 4.05.0 or higher is required). You can install OCaml on Mac OS X and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
+Flow is written in OCaml (OCaml 4.05.0 or higher is required). You can install OCaml on macOS and Linux by following the instructions at [ocaml.org](https://ocaml.org/docs/install.html).
 
 For example, on Ubuntu 16.04 and similar systems:
 
@@ -103,7 +103,7 @@ sudo apt-get install opam
 opam init --comp 4.05.0
 ```
 
-On OS X, using the [brew package manager](http://brew.sh/):
+On macOS, using the [brew package manager](http://brew.sh/):
 
 ```
 brew install opam
