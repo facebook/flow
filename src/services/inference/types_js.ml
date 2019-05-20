@@ -317,15 +317,15 @@ let run_merge_service
     ~options
     ~profiling
     ~workers
-    dependency_graph
-    component_map
-    recheck_set
+    ~dependency_graph
+    ~component_map
+    ~recheck_set
     acc
     =
   with_timer_lwt ~options "Merge" profiling (fun () ->
     let%lwt merged, { Merge_service.skipped_count; sig_new_or_changed } = Merge_service.merge_strict
       ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
-      dependency_graph component_map recheck_set
+      ~dependency_graph ~component_map ~recheck_set
     in
     let errs, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
       let component = FilenameMap.find_unsafe file component_map in
@@ -494,9 +494,9 @@ let merge
         ~options
         ~profiling
         ~workers
-        dependency_graph
-        component_map
-        recheck_set
+        ~dependency_graph
+        ~component_map
+        ~recheck_set
         (merge_errors, warnings, suppressions, coverage)
     in
     let%lwt () =

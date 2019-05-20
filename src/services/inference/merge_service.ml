@@ -375,7 +375,7 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
 (* make a map from component leaders to components *)
 let merge_runner
     ~job ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
-    dependency_graph component_map recheck_set =
+    ~dependency_graph ~component_map ~recheck_set =
   let num_workers = Options.max_workers options in
   (* make a map from files to their component leaders *)
   let leader_map =

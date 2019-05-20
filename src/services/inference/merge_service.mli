@@ -64,9 +64,9 @@ val merge_runner:
   intermediate_result_callback: ('a merge_job_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: MultiWorkerLwt.worker list option ->
-  FilenameSet.t FilenameMap.t ->
-  (File_key.t Nel.t) FilenameMap.t ->
-  FilenameSet.t ->
+  dependency_graph: FilenameSet.t FilenameMap.t ->
+  component_map: (File_key.t Nel.t) FilenameMap.t ->
+  recheck_set: FilenameSet.t ->
   'a merge_results Lwt.t
 
 val merge_strict:
@@ -78,8 +78,8 @@ val merge_strict:
       Error_suppressions.t * Coverage.file_coverage FilenameMap.t) merge_job_results Lazy.t -> unit) ->
   options: Options.t ->
   workers: MultiWorkerLwt.worker list option ->
-  FilenameSet.t FilenameMap.t ->
-  (File_key.t Nel.t) FilenameMap.t ->
-  FilenameSet.t ->
+  dependency_graph: FilenameSet.t FilenameMap.t ->
+  component_map: (File_key.t Nel.t) FilenameMap.t ->
+  recheck_set: FilenameSet.t ->
   (Flow_error.ErrorSet.t * Flow_error.ErrorSet.t  * Error_suppressions.t
     * Coverage.file_coverage FilenameMap.t) merge_results Lwt.t
