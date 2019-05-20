@@ -379,16 +379,19 @@ let merge_runner
   let num_workers = Options.max_workers options in
   (* make a map from files to their component leaders *)
   let leader_map =
-    FilenameMap.fold (fun file component acc ->
-      Nel.fold_left (fun acc file_ ->
-        FilenameMap.add file_ file acc
+    FilenameMap.fold (fun leader component acc ->
+      Nel.fold_left (fun acc file ->
+        FilenameMap.add file leader acc
       ) acc component
     ) component_map FilenameMap.empty
   in
   (* lift recheck map from files to leaders *)
-  let recheck_leader_map = FilenameMap.map (
-    Nel.exists (fun f -> FilenameSet.mem f recheck_set)
-  ) component_map in
+  let recheck_leader_set =
+    FilenameMap.fold (fun leader component acc ->
+      if Nel.exists (fun file -> FilenameSet.mem file recheck_set) component
+      then FilenameSet.add leader acc
+      else acc
+  ) component_map FilenameSet.empty in
 
   let start_time = Unix.gettimeofday () in
   let stream = Merge_stream.create
@@ -396,7 +399,7 @@ let merge_runner
     ~dependency_graph
     ~leader_map
     ~component_map
-    ~recheck_leader_map
+    ~recheck_leader_set
     ~intermediate_result_callback
   in
   Merge_stream.update_server_status stream;

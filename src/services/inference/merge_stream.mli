@@ -18,7 +18,7 @@ val create:
   dependency_graph: FilenameSet.t FilenameMap.t ->
   leader_map: File_key.t FilenameMap.t ->
   component_map: File_key.t Nel.t FilenameMap.t ->
-  recheck_leader_map: bool FilenameMap.t ->
+  recheck_leader_set: FilenameSet.t ->
   intermediate_result_callback: ('a merge_result Lazy.t -> unit) ->
   'a t
 

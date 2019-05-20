@@ -96,7 +96,7 @@ let create
   ~dependency_graph
   ~leader_map
   ~component_map
-  ~recheck_leader_map
+  ~recheck_leader_set
   ~intermediate_result_callback =
 
   (* create node for each component *)
@@ -104,7 +104,7 @@ let create
     component;
     dependents = FilenameMap.empty; (* computed later *)
     blocking = 0; (* computed later *)
-    recheck = FilenameMap.find_unsafe leader recheck_leader_map;
+    recheck = FilenameSet.mem leader recheck_leader_set;
     size = Nel.length component;
   }) component_map in
 
