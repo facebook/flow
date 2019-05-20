@@ -16,11 +16,14 @@ let status_log errors =
     else Hh_logger.info "Status: Error";
   flush stdout
 
-let convert_errors ~errors ~warnings =
-  if Errors.ConcreteLocPrintableErrorSet.is_empty errors && Errors.ConcreteLocPrintableErrorSet.is_empty warnings then
+let convert_errors ~errors ~warnings ~suppressed_errors =
+  if Errors.ConcreteLocPrintableErrorSet.is_empty errors &&
+     Errors.ConcreteLocPrintableErrorSet.is_empty warnings &&
+     suppressed_errors = []
+  then
     ServerProt.Response.NO_ERRORS
   else
-    ServerProt.Response.ERRORS {errors; warnings}
+    ServerProt.Response.ERRORS {errors; warnings; suppressed_errors}
 
 let get_status genv env client_root =
   let options = genv.ServerEnv.options in
@@ -34,17 +37,21 @@ let get_status genv env client_root =
       }
     end else begin
       (* collate errors by origin *)
-      let errors, warnings, _ = ErrorCollator.get ~options env in
+      let errors, warnings, suppressed_errors = ErrorCollator.get ~options env in
       let warnings = if Options.should_include_warnings options
         then warnings
         else Errors.ConcreteLocPrintableErrorSet.empty
+      in
+      let suppressed_errors = if Options.include_suppressions options
+        then suppressed_errors
+        else []
       in
 
       (* TODO: check status.directory *)
       status_log errors;
       FlowEventLogger.status_response
         ~num_errors:(Errors.ConcreteLocPrintableErrorSet.cardinal errors);
-      convert_errors errors warnings
+      convert_errors ~errors ~warnings ~suppressed_errors
     end
   in
   status_response, lazy_stats
@@ -93,7 +100,7 @@ let check_file ~options ~env ~profiling ~force file_input =
         let%lwt _, errors, warnings =
           Types_js.typecheck_contents ~options ~env ~profiling content file
         in
-        Lwt.return (convert_errors ~errors ~warnings)
+        Lwt.return (convert_errors ~errors ~warnings ~suppressed_errors:[])
       else
         Lwt.return (ServerProt.Response.NOT_COVERED)
 

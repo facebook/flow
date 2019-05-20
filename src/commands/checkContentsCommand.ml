@@ -93,12 +93,12 @@ let main base_flags option_values json pretty json_version root error_flags stri
   let print_json = Errors.Json_output.print_errors
     ~out_channel:stdout ~strip_root ~pretty
     ?version:json_version
-    ~stdin_file ~suppressed_errors:([]) in
+    ~stdin_file in
   match response with
-  | ServerProt.Response.ERRORS {errors; warnings} ->
+  | ServerProt.Response.ERRORS {errors; warnings; suppressed_errors} ->
       if json
       then
-        print_json ~errors ~warnings ()
+        print_json ~errors ~warnings ~suppressed_errors ()
       else (
         Errors.Cli_output.print_errors
           ~out_channel:stdout
@@ -115,12 +115,20 @@ let main base_flags option_values json pretty json_version root error_flags stri
       )
   | ServerProt.Response.NO_ERRORS ->
       if json then
-        print_json ~errors:Errors.ConcreteLocPrintableErrorSet.empty ~warnings:Errors.ConcreteLocPrintableErrorSet.empty ()
+        print_json
+          ~errors:Errors.ConcreteLocPrintableErrorSet.empty
+          ~warnings:Errors.ConcreteLocPrintableErrorSet.empty
+          ~suppressed_errors:[]
+          ()
       else Printf.printf "No errors!\n%!";
       FlowExitStatus.(exit No_error)
   | ServerProt.Response.NOT_COVERED ->
       if json then
-        print_json ~errors:Errors.ConcreteLocPrintableErrorSet.empty ~warnings:Errors.ConcreteLocPrintableErrorSet.empty ()
+        print_json
+          ~errors:Errors.ConcreteLocPrintableErrorSet.empty
+          ~warnings:Errors.ConcreteLocPrintableErrorSet.empty
+          ~suppressed_errors:[]
+          ()
       else Printf.printf "File is not @flow!\n%!";
       FlowExitStatus.(exit No_error)
   | _ ->

@@ -116,7 +116,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
     let strip_root = if args.strip_root then Some args.root else None in
     let print_json = Errors.Json_output.print_errors
       ~out_channel:stdout ~strip_root ~pretty:args.pretty ?version:args.output_json_version
-      ~suppressed_errors:([])
     in
     let lazy_msg = match lazy_stats.ServerProt.Response.lazy_mode with
     | Options.NON_LAZY_MODE -> None
@@ -144,15 +143,20 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
         (Path.to_string d.ServerProt.Response.client)
       in
       FlowExitStatus.(exit ~msg Server_client_directory_mismatch)
-    | ServerProt.Response.ERRORS {errors; warnings} ->
+    | ServerProt.Response.ERRORS {errors; warnings; suppressed_errors} ->
       let error_flags = args.error_flags in
       let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
       begin if args.output_json then
-        print_json ~errors ~warnings ()
+        print_json ~errors ~warnings ~suppressed_errors ()
       else if from = Some "vim" || from = Some "emacs" then
         Errors.Vim_emacs_output.print_errors ~strip_root
           stdout ~errors ~warnings ()
       else
+        let errors = List.fold_left
+          (fun acc (error, _) -> Errors.ConcreteLocPrintableErrorSet.add error acc)
+          errors
+          suppressed_errors
+        in
         Errors.Cli_output.print_errors
           ~strip_root
           ~flags:error_flags
@@ -165,7 +169,11 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
       FlowExitStatus.exit (get_check_or_status_exit_code errors warnings error_flags.Errors.Cli_output.max_warnings)
     | ServerProt.Response.NO_ERRORS ->
       if args.output_json then
-        print_json ~errors:Errors.ConcreteLocPrintableErrorSet.empty ~warnings:Errors.ConcreteLocPrintableErrorSet.empty ()
+        print_json
+          ~errors:Errors.ConcreteLocPrintableErrorSet.empty
+          ~warnings:Errors.ConcreteLocPrintableErrorSet.empty
+          ~suppressed_errors:[]
+          ()
       else begin
         Printf.printf "No errors!\n%!";
         Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")

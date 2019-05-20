@@ -208,7 +208,11 @@ module Response = struct
 
   type status_response =
   | DIRECTORY_MISMATCH of directory_mismatch
-  | ERRORS of {errors: Errors.ConcreteLocPrintableErrorSet.t; warnings: Errors.ConcreteLocPrintableErrorSet.t}
+  | ERRORS of {
+      errors: Errors.ConcreteLocPrintableErrorSet.t;
+      warnings: Errors.ConcreteLocPrintableErrorSet.t;
+      suppressed_errors: (Loc.t Errors.printable_error * Loc_collections.LocSet.t) list;
+    }
   | NO_ERRORS
   | NOT_COVERED
 
