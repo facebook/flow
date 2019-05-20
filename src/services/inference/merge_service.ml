@@ -372,26 +372,24 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
         (file, result) :: merged
   ) merged elements
 
-(* make a map from component leaders to components *)
 let merge_runner
     ~job ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
     ~dependency_graph ~component_map ~recheck_set =
   let num_workers = Options.max_workers options in
-  (* make a map from files to their component leaders *)
-  let leader_map =
-    FilenameMap.fold (fun leader component acc ->
-      Nel.fold_left (fun acc file ->
-        FilenameMap.add file leader acc
-      ) acc component
-    ) component_map FilenameMap.empty
+  (* (1) make a map from files to their component leaders
+     (2) lift recheck set from files to their component leaders *)
+  let leader_map, recheck_leader_set =
+    FilenameMap.fold (fun leader component (leader_map, recheck_leader_set) ->
+      let leader_map, recheck_leader = Nel.fold_left (fun (leader_map, recheck_leader) file ->
+        FilenameMap.add file leader leader_map,
+        recheck_leader || FilenameSet.mem file recheck_set
+      ) (leader_map, false) component in
+      let recheck_leader_set =
+        if recheck_leader then FilenameSet.add leader recheck_leader_set
+        else recheck_leader_set in
+      leader_map, recheck_leader_set
+    ) component_map (FilenameMap.empty, FilenameSet.empty)
   in
-  (* lift recheck map from files to leaders *)
-  let recheck_leader_set =
-    FilenameMap.fold (fun leader component acc ->
-      if Nel.exists (fun file -> FilenameSet.mem file recheck_set) component
-      then FilenameSet.add leader acc
-      else acc
-  ) component_map FilenameSet.empty in
 
   let start_time = Unix.gettimeofday () in
   let stream = Merge_stream.create
