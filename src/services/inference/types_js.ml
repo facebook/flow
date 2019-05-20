@@ -299,15 +299,15 @@ let include_dependencies_and_dependents
 
   let to_merge = CheckedSet.add ~dependents:all_dependent_files infer_input in
 
-  let recheck_map =
+  let recheck_set =
     (* Definitely recheck input files. As merging proceeds, other files in to_merge may or may not
        be rechecked. *)
-    CheckedSet.fold (fun recheck_map file ->
-      FilenameMap.add file (CheckedSet.mem file infer_input) recheck_map
-    ) FilenameMap.empty to_merge
+    CheckedSet.fold (fun recheck_set file ->
+      if CheckedSet.mem file infer_input then FilenameSet.add file recheck_set else recheck_set
+    ) FilenameSet.empty to_merge
   in
 
-  Lwt.return (to_merge, components, recheck_map)
+  Lwt.return (to_merge, components, recheck_set)
 
 let run_merge_service
     ~master_mutator
@@ -319,13 +319,13 @@ let run_merge_service
     ~workers
     dependency_graph
     component_map
-    recheck_map
+    recheck_set
     acc
     =
   with_timer_lwt ~options "Merge" profiling (fun () ->
     let%lwt merged, { Merge_service.skipped_count; sig_new_or_changed } = Merge_service.merge_strict
       ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
-      dependency_graph component_map recheck_map
+      dependency_graph component_map recheck_set
     in
     let errs, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
       let component = FilenameMap.find_unsafe file component_map in
@@ -364,7 +364,7 @@ let merge
   ~errors
   ~to_merge
   ~components
-  ~recheck_map
+  ~recheck_set
   ~dependency_graph
   ~deleted
   ~persistent_connections
@@ -447,7 +447,7 @@ let merge
   (* to_merge is the union of inferred (newly inferred files) and the
      transitive closure of all dependents.
 
-     recheck_map maps each file in to_merge to whether it should be rechecked
+     recheck_set maps each file in to_merge to whether it should be rechecked
      initially.
   *)
   Hh_logger.info "to_merge: %s" (CheckedSet.debug_counts_to_string to_merge);
@@ -496,7 +496,7 @@ let merge
         ~workers
         dependency_graph
         component_map
-        recheck_map
+        recheck_set
         (merge_errors, warnings, suppressions, coverage)
     in
     let%lwt () =
@@ -1473,7 +1473,7 @@ end = struct
       FilenameSet.mem fn acceptable_files_to_focus
     ) in
 
-    let%lwt to_merge, components, recheck_map =
+    let%lwt to_merge, components, recheck_set =
       include_dependencies_and_dependents
         ~options ~profiling ~unchanged_checked ~infer_input ~dependency_info ~all_dependent_files
     in
@@ -1499,7 +1499,7 @@ end = struct
       ~errors
       ~to_merge
       ~components
-      ~recheck_map
+      ~recheck_set
       ~dependency_graph
       ~deleted
       ~persistent_connections:(Some env.ServerEnv.connections)
@@ -2109,7 +2109,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
     let%lwt infer_input = files_to_infer
       ~options ~reader ?focus_targets ~profiling ~parsed ~dependency_info in
 
-    let%lwt to_merge, components, recheck_map =
+    let%lwt to_merge, components, recheck_set =
       include_dependencies_and_dependents
         ~options ~profiling
         ~unchanged_checked:CheckedSet.empty
@@ -2117,7 +2117,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
         ~dependency_info
         ~all_dependent_files:FilenameSet.empty
     in
-    (* The values to_merge and recheck_map are essentially the same as infer_input, aggregated. This
+    (* The values to_merge and recheck_set are essentially the same as infer_input, aggregated. This
        is not surprising because files_to_infer returns a closed checked set. Thus, the only purpose
        of calling include_dependencies_and_dependents is to compute components. *)
 
@@ -2133,7 +2133,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~errors
       ~to_merge
       ~components
-      ~recheck_map
+      ~recheck_set
       ~dependency_graph
       ~deleted:FilenameSet.empty
       ~persistent_connections:None

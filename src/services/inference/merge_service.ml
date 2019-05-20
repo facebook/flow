@@ -375,7 +375,7 @@ let merge_strict_job ~worker_mutator ~reader ~job ~options merged elements =
 (* make a map from component leaders to components *)
 let merge_runner
     ~job ~master_mutator ~worker_mutator ~reader ~intermediate_result_callback ~options ~workers
-    dependency_graph component_map recheck_map =
+    dependency_graph component_map recheck_set =
   let num_workers = Options.max_workers options in
   (* make a map from files to their component leaders *)
   let leader_map =
@@ -387,7 +387,7 @@ let merge_runner
   in
   (* lift recheck map from files to leaders *)
   let recheck_leader_map = FilenameMap.map (
-    Nel.exists (fun f -> FilenameMap.find_unsafe f recheck_map)
+    Nel.exists (fun f -> FilenameSet.mem f recheck_set)
   ) component_map in
 
   let start_time = Unix.gettimeofday () in

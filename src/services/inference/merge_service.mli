@@ -66,7 +66,7 @@ val merge_runner:
   workers: MultiWorkerLwt.worker list option ->
   FilenameSet.t FilenameMap.t ->
   (File_key.t Nel.t) FilenameMap.t ->
-  bool FilenameMap.t ->
+  FilenameSet.t ->
   'a merge_results Lwt.t
 
 val merge_strict:
@@ -80,6 +80,6 @@ val merge_strict:
   workers: MultiWorkerLwt.worker list option ->
   FilenameSet.t FilenameMap.t ->
   (File_key.t Nel.t) FilenameMap.t ->
-  bool FilenameMap.t ->
+  FilenameSet.t ->
   (Flow_error.ErrorSet.t * Flow_error.ErrorSet.t  * Error_suppressions.t
     * Coverage.file_coverage FilenameMap.t) merge_results Lwt.t
