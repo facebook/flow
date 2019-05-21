@@ -398,7 +398,10 @@ module Object
 
   and check_private_names env seen_names private_name (kind: [`Field | `Getter | `Setter]) =
     let (loc, (_, { Identifier.name; comments= _; })) = private_name in
-    match SMap.find_opt name seen_names with
+    if String.equal name "constructor" then
+      let () = error_at env (loc, Error.InvalidFieldName (name, false, true)) in
+      seen_names
+    else match SMap.find_opt name seen_names with
     | Some seen ->
       begin match kind, seen with
       | `Getter, `Setter
@@ -466,10 +469,6 @@ module Object
                   private_names
               | _ -> private_names
               end)
-          | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, { Identifier.name; comments= _ })); _})
-            when String.equal name "#constructor" ->
-              error_at env (loc, Error.InvalidFieldName (name, false, true));
-              (seen_constructor, private_names)
           | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key; _}) ->
               let private_names = check_private_names env private_names key `Field in
               (seen_constructor, private_names)
