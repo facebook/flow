@@ -81,11 +81,11 @@ module Object
         if is_private then error_at env (loc, Parse_error.PrivateNotInClass);
         loc, Identifier id
 
-  let getter_or_setter env is_getter =
+  let getter_or_setter env ~in_class_body is_getter =
     (* this is a getter or setter, it cannot be async *)
     let async = false in
     let generator = Declaration.generator env in
-    let key_loc, key = key env in
+    let key_loc, key = key ~class_body:in_class_body env in
     let value = with_loc (fun env ->
       (* #sec-function-definitions-static-semantics-early-errors *)
       let env = env |> with_allow_super Super_prop in
@@ -134,14 +134,14 @@ module Object
 
     let get env start_loc =
       let loc, (key, value) = with_loc ~start_loc (fun env ->
-        getter_or_setter env true
+        getter_or_setter env ~in_class_body:false true
       ) env in
       Ast.Expression.Object.(Property (loc, Property.Get { key; value }))
     in
 
     let set env start_loc =
       let loc, (key, value) = with_loc ~start_loc (fun env ->
-        getter_or_setter env false
+        getter_or_setter env ~in_class_body:false false
       ) env in
       Ast.Expression.Object.(Property (loc, Property.Set { key; value }))
     in
@@ -458,7 +458,7 @@ module Object
   and class_element =
     let get env start_loc decorators static =
       let loc, (key, value) = with_loc ~start_loc (fun env ->
-        getter_or_setter env true
+        getter_or_setter env ~in_class_body:true true
       ) env in
       Ast.Class.(Body.Method (loc, { Method.
         key;
@@ -470,7 +470,7 @@ module Object
 
     in let set env start_loc decorators static =
       let loc, (key, value) = with_loc ~start_loc (fun env ->
-        getter_or_setter env false
+        getter_or_setter env ~in_class_body:true false
       ) env in
       Ast.Class.(Body.Method (loc, { Method.
         key;
