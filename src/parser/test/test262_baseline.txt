@@ -5588,22 +5588,6 @@ language/expressions/class/elements/syntax/early-errors/grammar-field-identifier
   Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-field-identifier-invalid-zwnj-error.js (default)
   Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-get-field.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-get-field.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-get-get.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-get-get.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-set-field.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-set-field.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-set-set.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-set-set.js (default)
-  Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-privatename-constructor.js (strict mode)
   Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-privatename-constructor.js (default)
@@ -10654,22 +10638,6 @@ language/statements/class/elements/syntax/early-errors/grammar-field-identifier-
   Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-field-identifier-invalid-zwnj-error.js (default)
   Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-get-field.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-get-field.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-get-get.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-get-get.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-set-field.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-set-field.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-set-set.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatemeth-duplicate-set-set.js (default)
-  Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-privatename-constructor.js (strict mode)
   Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-privatename-constructor.js (default)
@@ -11192,8 +11160,8 @@ language/statements/try/early-catch-lex.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 64138 (91.98%)
-Failed: 5596 (8.02%)
+Passed: 64154 (92.00%)
+Failed: 5580 (8.00%)
 
 Features:
   Proxy: 661/663 (99.70%)
@@ -11202,10 +11170,10 @@ Features:
   arrow-function: 108/118 (91.53%)
   async-functions: 719/907 (79.27%)
   async-iteration: 7688/9388 (81.89%)
-  class: 3482/7578 (45.95%)
-  class-fields-private: 1540/1736 (88.71%)
+  class: 3498/7578 (46.16%)
+  class-fields-private: 1548/1736 (89.17%)
   class-fields-public: 2424/3388 (71.55%)
-  class-methods-private: 1074/3082 (34.85%)
+  class-methods-private: 1090/3082 (35.37%)
   class-static-fields-private: 556/640 (86.88%)
   class-static-fields-public: 38/54 (70.37%)
   class-static-methods-private: 300/2756 (10.89%)

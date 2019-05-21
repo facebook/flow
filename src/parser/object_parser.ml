@@ -11,7 +11,7 @@ open Token
 open Parser_env
 open Flow_ast
 module Error = Parse_error
-module SSet = Set.Make(String)
+module SMap = Map.Make(String)
 
 open Parser_common
 
@@ -396,6 +396,22 @@ module Object
     let body = class_body env in
     body, extends, implements
 
+  and check_private_names env seen_names private_name (kind: [`Field | `Getter | `Setter]) =
+    let (loc, (_, { Identifier.name; comments= _; })) = private_name in
+    match SMap.find_opt name seen_names with
+    | Some seen ->
+      begin match kind, seen with
+      | `Getter, `Setter
+      | `Setter, `Getter ->
+        (* one getter and one setter are allowed as long as it's not used as a field *)
+        ()
+      | _ ->
+        error_at env (loc, Error.DuplicatePrivateFields name)
+      end;
+      SMap.add name `Field seen_names
+    | None ->
+      SMap.add name kind seen_names
+
   and class_body =
     let rec elements env seen_constructor private_names acc =
       match Peek.token env with
@@ -411,10 +427,14 @@ module Object
           | Ast.Class.Body.Method (loc, m) ->
               let open Ast.Class.Method in
               begin match m.kind with
-              | Constructor when not m.static ->
+              | Constructor ->
+                if m.static then
+                  (seen_constructor, private_names)
+                else begin
                   if seen_constructor then
                     error_at env (loc, Error.DuplicateConstructor);
                   (true, private_names)
+                end
               | Method ->
                 (seen_constructor, begin match m.key with
                 | Ast.Expression.Object.Property.PrivateName _ ->
@@ -422,7 +442,20 @@ module Object
                     private_names
                 | _ -> private_names
                 end)
-              | _ -> (seen_constructor, private_names)
+              | Get ->
+                let private_names = match m.key with
+                | Ast.Expression.Object.Property.PrivateName name ->
+                  check_private_names env private_names name `Getter
+                | _ -> private_names
+                in
+                (seen_constructor, private_names)
+              | Set ->
+                let private_names = match m.key with
+                | Ast.Expression.Object.Property.PrivateName name ->
+                  check_private_names env private_names name `Setter
+                | _ -> private_names
+                in
+                (seen_constructor, private_names)
               end
           | Ast.Class.Body.Property (loc, p) ->
               let open Ast.Expression.Object.Property in
@@ -437,17 +470,16 @@ module Object
             when String.equal name "#constructor" ->
               error_at env (loc, Error.InvalidFieldName (name, false, true));
               (seen_constructor, private_names)
-          | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key = (loc, (_, { Identifier.name; comments= _ })); _}) ->
-              if SSet.mem name private_names then
-                error_at env (loc, Error.DuplicatePrivateFields name);
-              (seen_constructor, SSet.add name private_names)
+          | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key; _}) ->
+              let private_names = check_private_names env private_names key `Field in
+              (seen_constructor, private_names)
           end in
           elements env seen_constructor' private_names' (element::acc)
 
     in fun env -> with_loc (fun env ->
       Expect.token env T_LCURLY;
       enter_class env;
-      let body = elements env false SSet.empty [] in
+      let body = elements env false SMap.empty [] in
       exit_class env;
       Expect.token env T_RCURLY;
       { Ast.Class.Body.body }
