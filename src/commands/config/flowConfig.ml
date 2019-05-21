@@ -31,6 +31,17 @@ let less_or_equal_curr_version = Version_regex.less_than_or_equal_to_version (Fl
 let map_add map (key, value) = SMap.add key value map
 
 module Opts = struct
+  type raw_value = int * string
+  type raw_values = raw_value list
+  type raw_options = raw_values SMap.t
+
+  type error_kind =
+    | Failed_to_parse_value of string
+    | Failed_to_set of string
+    | Duplicate_option
+
+  type opt_error = int * error_kind
+
   type t = {
     all: bool;
     emoji: bool;
@@ -173,7 +184,7 @@ module Opts = struct
     weak = false;
   }
 
-  let parse_lines : line list -> ((int * string) list SMap.t, error) result =
+  let parse_lines : line list -> (raw_options, error) result =
     let rec loop acc lines = acc >>= (fun map ->
       match lines with
       | [] -> Ok map
@@ -210,22 +221,22 @@ module Opts = struct
     * settings, we want to start from a clean list.
     *)
   let opt =
-    let rec loop optparser setter key values config =
+    let rec loop optparser setter values config =
       match values with
       | [] -> Ok config
       | (line_num, value_str)::rest ->
         let value =
           optparser value_str
           |> Core_result.map_error
-              ~f:(fun msg -> line_num, spf "Error parsing value for \"%s\". %s" key msg)
+              ~f:(fun msg -> line_num, Failed_to_parse_value msg)
         in
         let config =
           value >>= fun value ->
           setter config value
           |> Core_result.map_error
-              ~f:(fun msg -> line_num, spf "Error setting value for \"%s\". %s" key msg)
+              ~f:(fun msg -> line_num, Failed_to_set msg)
         in
-        config >>= loop optparser setter key rest
+        config >>= loop optparser setter rest
     in
     fun
       (optparser: (string -> ('a, string) result))
@@ -234,7 +245,7 @@ module Opts = struct
       (setter: (t -> 'a -> (t, string) result))
       key
       (raw_opts, config)
-  : ((int * string) list SMap.t * t, error) result ->
+  : (raw_options * t, opt_error) result ->
     match SMap.get key raw_opts with
     | None -> Ok (raw_opts, config)
     | Some values ->
@@ -246,10 +257,10 @@ module Opts = struct
       (* Error when duplicate options were incorrectly given *)
       match multiple, values with
       | false, _::(dupe_ln, _)::_ ->
-        Error (dupe_ln, spf "Duplicate option: \"%s\"" key)
+        Error (dupe_ln, Duplicate_option)
       | _ ->
         Ok config
-        >>= loop optparser setter key values
+        >>= loop optparser setter values
         >>= fun config ->
           let new_raw_opts = SMap.remove key raw_opts in
           Ok (new_raw_opts, config)
@@ -608,12 +619,27 @@ module Opts = struct
   ]
 
   let parse =
-    let rec loop acc parsers =
+    let error_of_opt_error key (line_num, opt_error) =
+      let msg = match opt_error with
+      | Failed_to_parse_value msg -> spf "Error parsing value for \"%s\". %s" key msg
+      | Failed_to_set msg -> spf "Error setting value for \"%s\". %s" key msg
+      | Duplicate_option -> spf "Duplicate option: \"%s\"" key
+      in
+      line_num, msg
+    in
+    let rec loop
+        (acc: ((raw_options * t), error) result)
+        (parsers: (string * (string -> raw_options * t -> ((raw_options * t), opt_error) result)) list)
+    =
       acc >>= fun acc ->
       match parsers with
       | [] -> Ok acc
       | (key, f)::rest ->
-        loop (f key acc) rest
+        let acc =
+          f key acc
+          |> Core_result.map_error ~f:(error_of_opt_error key)
+        in
+        loop acc rest
     in
     fun (init: t) (lines: line list) : (t * warning list, error) result ->
       parse_lines lines >>= fun raw_options ->
