@@ -82,6 +82,7 @@ module Opts = struct
     temp_dir: string;
     traces: int;
     trust_mode: Options.trust_mode;
+    types_first: bool;
     wait_for_recheck: bool;
     weak: bool;
   }
@@ -167,6 +168,7 @@ module Opts = struct
     temp_dir = default_temp_dir;
     traces = 0;
     trust_mode = Options.NoTrust;
+    types_first = false;
     wait_for_recheck = false;
     weak = false;
   }
@@ -589,6 +591,9 @@ module Opts = struct
             set to \"true\"."
         );
 
+    "experimental.types_first",
+      boolean (fun opts v -> Ok { opts with types_first = v });
+
     "no_flowlib",
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
 
@@ -1009,6 +1014,7 @@ let suppress_types c = c.options.Opts.suppress_types
 let temp_dir c = c.options.Opts.temp_dir
 let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
+let types_first c = c.options.Opts.types_first
 let required_version c = c.version
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 let weak c = c.options.Opts.weak

@@ -4,7 +4,7 @@ mkdir tmp
 cp test1.js tmp/
 
 printf "\\nServer should start in types-first mode\\n"
-start_flow . --types-first
+start_flow .
 assert_errors "$FLOW" status --strip-root
 
 printf "\\nAdding a line should cause minimal rechecking (but preserve errors)\\n"

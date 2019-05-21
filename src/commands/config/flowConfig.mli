@@ -89,6 +89,7 @@ val suppress_types: config -> SSet.t
 val temp_dir: config -> string
 val traces: config -> int
 val trust_mode: config -> Options.trust_mode
+val types_first: config -> bool
 val wait_for_recheck: config -> bool
 val weak: config -> bool
 
