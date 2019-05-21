@@ -13,8 +13,8 @@ foo.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":73,
+      "endline":73,
       "start":5,
       "end":38
     },
@@ -23,8 +23,8 @@ foo.js = {
       "type":"(o: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":74,
+      "endline":74,
       "start":5,
       "end":34
     },
@@ -43,8 +43,8 @@ foo.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":75,
+      "endline":75,
       "start":5,
       "end":44
     },
@@ -63,8 +63,8 @@ foo.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":69,
-      "endline":69,
+      "line":76,
+      "endline":76,
       "start":5,
       "end":28
     },
@@ -73,8 +73,8 @@ foo.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":70,
-      "endline":70,
+      "line":77,
+      "endline":77,
       "start":5,
       "end":22
     },
@@ -83,8 +83,8 @@ foo.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":71,
-      "endline":71,
+      "line":78,
+      "endline":78,
       "start":5,
       "end":20
     }
@@ -112,8 +112,8 @@ str.js = {
       "type":"() => Iterator<string>",
       "func_details":{"return_type":"Iterator<string>","params":[]},
       "path":"[LIB] core.js",
-      "line":295,
-      "endline":295,
+      "line":302,
+      "endline":302,
       "start":5,
       "end":34
     },
@@ -122,8 +122,8 @@ str.js = {
       "type":"(name: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"name","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":296,
-      "endline":296,
+      "line":303,
+      "endline":303,
       "start":5,
       "end":32
     },
@@ -132,8 +132,8 @@ str.js = {
       "type":"(pos: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"pos","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":297,
-      "endline":297,
+      "line":304,
+      "endline":304,
       "start":5,
       "end":31
     },
@@ -142,8 +142,8 @@ str.js = {
       "type":"(index: number) => number",
       "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":298,
-      "endline":298,
+      "line":305,
+      "endline":305,
       "start":5,
       "end":37
     },
@@ -152,8 +152,8 @@ str.js = {
       "type":"(index: number) => number",
       "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":299,
-      "endline":299,
+      "line":306,
+      "endline":306,
       "start":5,
       "end":38
     },
@@ -165,8 +165,8 @@ str.js = {
         "params":[{"name":"...strings","type":"Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":300,
-      "endline":300,
+      "line":307,
+      "endline":307,
       "start":5,
       "end":45
     },
@@ -178,8 +178,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":302,
-      "endline":302,
+      "line":309,
+      "endline":309,
       "start":5,
       "end":62
     },
@@ -191,8 +191,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":303,
-      "endline":303,
+      "line":310,
+      "endline":310,
       "start":5,
       "end":62
     },
@@ -204,8 +204,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":304,
-      "endline":304,
+      "line":311,
+      "endline":311,
       "start":5,
       "end":60
     },
@@ -217,8 +217,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":305,
-      "endline":305,
+      "line":312,
+      "endline":312,
       "start":5,
       "end":64
     },
@@ -227,8 +227,8 @@ str.js = {
       "type":"number",
       "func_details":null,
       "path":"[LIB] core.js",
-      "line":331,
-      "endline":331,
+      "line":338,
+      "endline":338,
       "start":13,
       "end":18
     },
@@ -237,8 +237,8 @@ str.js = {
       "type":"(href: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"href","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":306,
-      "endline":306,
+      "line":313,
+      "endline":313,
       "start":5,
       "end":30
     },
@@ -254,8 +254,8 @@ str.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":307,
-      "endline":307,
+      "line":314,
+      "endline":314,
       "start":5,
       "end":105
     },
@@ -267,8 +267,8 @@ str.js = {
         "params":[{"name":"regexp","type":"string | RegExp"}]
       },
       "path":"[LIB] core.js",
-      "line":308,
-      "endline":308,
+      "line":315,
+      "endline":315,
       "start":5,
       "end":61
     },
@@ -277,8 +277,8 @@ str.js = {
       "type":"(format?: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"format?","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":309,
-      "endline":309,
+      "line":316,
+      "endline":316,
       "start":5,
       "end":38
     },
@@ -290,8 +290,8 @@ str.js = {
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       },
       "path":"[LIB] core.js",
-      "line":310,
-      "endline":310,
+      "line":317,
+      "endline":317,
       "start":5,
       "end":60
     },
@@ -303,8 +303,8 @@ str.js = {
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       },
       "path":"[LIB] core.js",
-      "line":311,
-      "endline":311,
+      "line":318,
+      "endline":318,
       "start":5,
       "end":62
     },
@@ -313,8 +313,8 @@ str.js = {
       "type":"(count: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"count","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":312,
-      "endline":312,
+      "line":319,
+      "endline":319,
       "start":5,
       "end":33
     },
@@ -332,8 +332,8 @@ str.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":313,
-      "endline":313,
+      "line":320,
+      "endline":320,
       "start":5,
       "end":124
     },
@@ -342,8 +342,8 @@ str.js = {
       "type":"(regexp: (string | RegExp)) => number",
       "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]},
       "path":"[LIB] core.js",
-      "line":314,
-      "endline":314,
+      "line":321,
+      "endline":321,
       "start":5,
       "end":43
     },
@@ -355,8 +355,8 @@ str.js = {
         "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":315,
-      "endline":315,
+      "line":322,
+      "endline":322,
       "start":5,
       "end":47
     },
@@ -371,8 +371,8 @@ str.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":316,
-      "endline":316,
+      "line":323,
+      "endline":323,
       "start":5,
       "end":69
     },
@@ -384,8 +384,8 @@ str.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":317,
-      "endline":317,
+      "line":324,
+      "endline":324,
       "start":5,
       "end":64
     },
@@ -397,8 +397,8 @@ str.js = {
         "params":[{"name":"from","type":"number"},{"name":"length?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":318,
-      "endline":318,
+      "line":325,
+      "endline":325,
       "start":5,
       "end":49
     },
@@ -410,8 +410,8 @@ str.js = {
         "params":[{"name":"start","type":"number"},{"name":"end?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":319,
-      "endline":319,
+      "line":326,
+      "endline":326,
       "start":5,
       "end":50
     },
@@ -423,8 +423,8 @@ str.js = {
         "params":[{"name":"locale?","type":"string | Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":320,
-      "endline":320,
+      "line":327,
+      "endline":327,
       "start":5,
       "end":62
     },
@@ -436,8 +436,8 @@ str.js = {
         "params":[{"name":"locale?","type":"string | Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":321,
-      "endline":321,
+      "line":328,
+      "endline":328,
       "start":5,
       "end":62
     },
@@ -446,8 +446,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":322,
-      "endline":322,
+      "line":329,
+      "endline":329,
       "start":5,
       "end":25
     },
@@ -456,8 +456,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":330,
-      "endline":330,
+      "line":337,
+      "endline":337,
       "start":5,
       "end":22
     },
@@ -466,8 +466,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":323,
-      "endline":323,
+      "line":330,
+      "endline":330,
       "start":5,
       "end":25
     },
@@ -476,8 +476,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":324,
-      "endline":324,
+      "line":331,
+      "endline":331,
       "start":5,
       "end":18
     },
@@ -486,8 +486,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":325,
-      "endline":325,
+      "line":332,
+      "endline":332,
       "start":5,
       "end":21
     },
@@ -496,8 +496,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":326,
-      "endline":326,
+      "line":333,
+      "endline":333,
       "start":5,
       "end":22
     },
@@ -506,8 +506,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":327,
-      "endline":327,
+      "line":334,
+      "endline":334,
       "start":5,
       "end":23
     },
@@ -516,8 +516,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":328,
-      "endline":328,
+      "line":335,
+      "endline":335,
       "start":5,
       "end":23
     },
@@ -526,8 +526,8 @@ str.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":329,
-      "endline":329,
+      "line":336,
+      "endline":336,
       "start":5,
       "end":21
     }
@@ -540,8 +540,8 @@ num.js = {
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":144,
-      "endline":144,
+      "line":151,
+      "endline":151,
       "start":5,
       "end":50
     },
@@ -550,8 +550,8 @@ num.js = {
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":145,
-      "endline":145,
+      "line":152,
+      "endline":152,
       "start":5,
       "end":44
     },
@@ -566,8 +566,8 @@ num.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":146,
-      "endline":146,
+      "line":153,
+      "endline":153,
       "start":5,
       "end":96
     },
@@ -576,8 +576,8 @@ num.js = {
       "type":"(precision?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"precision?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":147,
-      "endline":147,
+      "line":154,
+      "endline":154,
       "start":5,
       "end":43
     },
@@ -586,8 +586,8 @@ num.js = {
       "type":"(radix?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"radix?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":148,
-      "endline":148,
+      "line":155,
+      "endline":155,
       "start":5,
       "end":36
     },
@@ -596,8 +596,8 @@ num.js = {
       "type":"() => number",
       "func_details":{"return_type":"number","params":[]},
       "path":"[LIB] core.js",
-      "line":149,
-      "endline":149,
+      "line":156,
+      "endline":156,
       "start":5,
       "end":21
     }
@@ -610,8 +610,8 @@ bool.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":124,
-      "endline":124,
+      "line":131,
+      "endline":131,
       "start":5,
       "end":22
     },
@@ -620,8 +620,8 @@ bool.js = {
       "type":"() => boolean",
       "func_details":{"return_type":"boolean","params":[]},
       "path":"[LIB] core.js",
-      "line":123,
-      "endline":123,
+      "line":130,
+      "endline":130,
       "start":5,
       "end":22
     }
@@ -644,8 +644,8 @@ union.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":73,
+      "endline":73,
       "start":5,
       "end":38
     },
@@ -654,8 +654,8 @@ union.js = {
       "type":"(o: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":74,
+      "endline":74,
       "start":5,
       "end":34
     },
@@ -664,8 +664,8 @@ union.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":75,
+      "endline":75,
       "start":5,
       "end":44
     },
@@ -674,8 +674,8 @@ union.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":69,
-      "endline":69,
+      "line":76,
+      "endline":76,
       "start":5,
       "end":28
     },
@@ -684,8 +684,8 @@ union.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":70,
-      "endline":70,
+      "line":77,
+      "endline":77,
       "start":5,
       "end":22
     },
@@ -694,8 +694,8 @@ union.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":71,
-      "endline":71,
+      "line":78,
+      "endline":78,
       "start":5,
       "end":20
     }
@@ -710,8 +710,8 @@ fun.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":73,
+      "endline":73,
       "start":5,
       "end":38
     },
@@ -720,8 +720,8 @@ fun.js = {
       "type":"(o: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":74,
+      "endline":74,
       "start":5,
       "end":34
     },
@@ -730,8 +730,8 @@ fun.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":75,
+      "endline":75,
       "start":5,
       "end":44
     },
@@ -740,8 +740,8 @@ fun.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":69,
-      "endline":69,
+      "line":76,
+      "endline":76,
       "start":5,
       "end":28
     },
@@ -750,8 +750,8 @@ fun.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":70,
-      "endline":70,
+      "line":77,
+      "endline":77,
       "start":5,
       "end":22
     },
@@ -760,8 +760,8 @@ fun.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":71,
-      "endline":71,
+      "line":78,
+      "endline":78,
       "start":5,
       "end":20
     }
@@ -808,8 +808,8 @@ typeparams.js = {
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":144,
-      "endline":144,
+      "line":151,
+      "endline":151,
       "start":5,
       "end":50
     },
@@ -818,8 +818,8 @@ typeparams.js = {
       "type":"(fractionDigits?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"fractionDigits?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":145,
-      "endline":145,
+      "line":152,
+      "endline":152,
       "start":5,
       "end":44
     },
@@ -834,8 +834,8 @@ typeparams.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":146,
-      "endline":146,
+      "line":153,
+      "endline":153,
       "start":5,
       "end":96
     },
@@ -844,8 +844,8 @@ typeparams.js = {
       "type":"(precision?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"precision?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":147,
-      "endline":147,
+      "line":154,
+      "endline":154,
       "start":5,
       "end":43
     },
@@ -854,8 +854,8 @@ typeparams.js = {
       "type":"(radix?: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"radix?","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":148,
-      "endline":148,
+      "line":155,
+      "endline":155,
       "start":5,
       "end":36
     },
@@ -864,8 +864,8 @@ typeparams.js = {
       "type":"() => number",
       "func_details":{"return_type":"number","params":[]},
       "path":"[LIB] core.js",
-      "line":149,
-      "endline":149,
+      "line":156,
+      "endline":156,
       "start":5,
       "end":21
     }
@@ -888,8 +888,8 @@ generics.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":73,
+      "endline":73,
       "start":5,
       "end":38
     },
@@ -898,8 +898,8 @@ generics.js = {
       "type":"(o: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":74,
+      "endline":74,
       "start":5,
       "end":34
     },
@@ -908,8 +908,8 @@ generics.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":75,
+      "endline":75,
       "start":5,
       "end":44
     },
@@ -918,8 +918,8 @@ generics.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":69,
-      "endline":69,
+      "line":76,
+      "endline":76,
       "start":5,
       "end":28
     },
@@ -928,8 +928,8 @@ generics.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":70,
-      "endline":70,
+      "line":77,
+      "endline":77,
       "start":5,
       "end":22
     },
@@ -938,8 +938,8 @@ generics.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":71,
-      "endline":71,
+      "line":78,
+      "endline":78,
       "start":5,
       "end":20
     }
@@ -962,8 +962,8 @@ optional.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":73,
+      "endline":73,
       "start":5,
       "end":38
     },
@@ -972,8 +972,8 @@ optional.js = {
       "type":"(o: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":74,
+      "endline":74,
       "start":5,
       "end":34
     },
@@ -992,8 +992,8 @@ optional.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":75,
+      "endline":75,
       "start":5,
       "end":44
     },
@@ -1002,8 +1002,8 @@ optional.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":69,
-      "endline":69,
+      "line":76,
+      "endline":76,
       "start":5,
       "end":28
     },
@@ -1012,8 +1012,8 @@ optional.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":70,
-      "endline":70,
+      "line":77,
+      "endline":77,
       "start":5,
       "end":22
     },
@@ -1022,8 +1022,8 @@ optional.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":71,
-      "endline":71,
+      "line":78,
+      "endline":78,
       "start":5,
       "end":20
     },
@@ -1171,8 +1171,8 @@ if.js = {
       "type":"() => Iterator<string>",
       "func_details":{"return_type":"Iterator<string>","params":[]},
       "path":"[LIB] core.js",
-      "line":295,
-      "endline":295,
+      "line":302,
+      "endline":302,
       "start":5,
       "end":34
     },
@@ -1181,8 +1181,8 @@ if.js = {
       "type":"(name: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"name","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":296,
-      "endline":296,
+      "line":303,
+      "endline":303,
       "start":5,
       "end":32
     },
@@ -1191,8 +1191,8 @@ if.js = {
       "type":"(pos: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"pos","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":297,
-      "endline":297,
+      "line":304,
+      "endline":304,
       "start":5,
       "end":31
     },
@@ -1201,8 +1201,8 @@ if.js = {
       "type":"(index: number) => number",
       "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":298,
-      "endline":298,
+      "line":305,
+      "endline":305,
       "start":5,
       "end":37
     },
@@ -1211,8 +1211,8 @@ if.js = {
       "type":"(index: number) => number",
       "func_details":{"return_type":"number","params":[{"name":"index","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":299,
-      "endline":299,
+      "line":306,
+      "endline":306,
       "start":5,
       "end":38
     },
@@ -1224,8 +1224,8 @@ if.js = {
         "params":[{"name":"...strings","type":"Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":300,
-      "endline":300,
+      "line":307,
+      "endline":307,
       "start":5,
       "end":45
     },
@@ -1237,8 +1237,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":302,
-      "endline":302,
+      "line":309,
+      "endline":309,
       "start":5,
       "end":62
     },
@@ -1250,8 +1250,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":303,
-      "endline":303,
+      "line":310,
+      "endline":310,
       "start":5,
       "end":62
     },
@@ -1263,8 +1263,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":304,
-      "endline":304,
+      "line":311,
+      "endline":311,
       "start":5,
       "end":60
     },
@@ -1276,8 +1276,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":305,
-      "endline":305,
+      "line":312,
+      "endline":312,
       "start":5,
       "end":64
     },
@@ -1286,8 +1286,8 @@ if.js = {
       "type":"number",
       "func_details":null,
       "path":"[LIB] core.js",
-      "line":331,
-      "endline":331,
+      "line":338,
+      "endline":338,
       "start":13,
       "end":18
     },
@@ -1296,8 +1296,8 @@ if.js = {
       "type":"(href: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"href","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":306,
-      "endline":306,
+      "line":313,
+      "endline":313,
       "start":5,
       "end":30
     },
@@ -1313,8 +1313,8 @@ if.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":307,
-      "endline":307,
+      "line":314,
+      "endline":314,
       "start":5,
       "end":105
     },
@@ -1326,8 +1326,8 @@ if.js = {
         "params":[{"name":"regexp","type":"string | RegExp"}]
       },
       "path":"[LIB] core.js",
-      "line":308,
-      "endline":308,
+      "line":315,
+      "endline":315,
       "start":5,
       "end":61
     },
@@ -1336,8 +1336,8 @@ if.js = {
       "type":"(format?: string) => string",
       "func_details":{"return_type":"string","params":[{"name":"format?","type":"string"}]},
       "path":"[LIB] core.js",
-      "line":309,
-      "endline":309,
+      "line":316,
+      "endline":316,
       "start":5,
       "end":38
     },
@@ -1349,8 +1349,8 @@ if.js = {
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       },
       "path":"[LIB] core.js",
-      "line":310,
-      "endline":310,
+      "line":317,
+      "endline":317,
       "start":5,
       "end":60
     },
@@ -1362,8 +1362,8 @@ if.js = {
         "params":[{"name":"targetLength","type":"number"},{"name":"padString?","type":"string"}]
       },
       "path":"[LIB] core.js",
-      "line":311,
-      "endline":311,
+      "line":318,
+      "endline":318,
       "start":5,
       "end":62
     },
@@ -1372,8 +1372,8 @@ if.js = {
       "type":"(count: number) => string",
       "func_details":{"return_type":"string","params":[{"name":"count","type":"number"}]},
       "path":"[LIB] core.js",
-      "line":312,
-      "endline":312,
+      "line":319,
+      "endline":319,
       "start":5,
       "end":33
     },
@@ -1391,8 +1391,8 @@ if.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":313,
-      "endline":313,
+      "line":320,
+      "endline":320,
       "start":5,
       "end":124
     },
@@ -1401,8 +1401,8 @@ if.js = {
       "type":"(regexp: (string | RegExp)) => number",
       "func_details":{"return_type":"number","params":[{"name":"regexp","type":"string | RegExp"}]},
       "path":"[LIB] core.js",
-      "line":314,
-      "endline":314,
+      "line":321,
+      "endline":321,
       "start":5,
       "end":43
     },
@@ -1414,8 +1414,8 @@ if.js = {
         "params":[{"name":"start?","type":"number"},{"name":"end?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":315,
-      "endline":315,
+      "line":322,
+      "endline":322,
       "start":5,
       "end":47
     },
@@ -1430,8 +1430,8 @@ if.js = {
         ]
       },
       "path":"[LIB] core.js",
-      "line":316,
-      "endline":316,
+      "line":323,
+      "endline":323,
       "start":5,
       "end":69
     },
@@ -1443,8 +1443,8 @@ if.js = {
         "params":[{"name":"searchString","type":"string"},{"name":"position?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":317,
-      "endline":317,
+      "line":324,
+      "endline":324,
       "start":5,
       "end":64
     },
@@ -1456,8 +1456,8 @@ if.js = {
         "params":[{"name":"from","type":"number"},{"name":"length?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":318,
-      "endline":318,
+      "line":325,
+      "endline":325,
       "start":5,
       "end":49
     },
@@ -1469,8 +1469,8 @@ if.js = {
         "params":[{"name":"start","type":"number"},{"name":"end?","type":"number"}]
       },
       "path":"[LIB] core.js",
-      "line":319,
-      "endline":319,
+      "line":326,
+      "endline":326,
       "start":5,
       "end":50
     },
@@ -1482,8 +1482,8 @@ if.js = {
         "params":[{"name":"locale?","type":"string | Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":320,
-      "endline":320,
+      "line":327,
+      "endline":327,
       "start":5,
       "end":62
     },
@@ -1495,8 +1495,8 @@ if.js = {
         "params":[{"name":"locale?","type":"string | Array<string>"}]
       },
       "path":"[LIB] core.js",
-      "line":321,
-      "endline":321,
+      "line":328,
+      "endline":328,
       "start":5,
       "end":62
     },
@@ -1505,8 +1505,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":322,
-      "endline":322,
+      "line":329,
+      "endline":329,
       "start":5,
       "end":25
     },
@@ -1515,8 +1515,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":330,
-      "endline":330,
+      "line":337,
+      "endline":337,
       "start":5,
       "end":22
     },
@@ -1525,8 +1525,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":323,
-      "endline":323,
+      "line":330,
+      "endline":330,
       "start":5,
       "end":25
     },
@@ -1535,8 +1535,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":324,
-      "endline":324,
+      "line":331,
+      "endline":331,
       "start":5,
       "end":18
     },
@@ -1545,8 +1545,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":325,
-      "endline":325,
+      "line":332,
+      "endline":332,
       "start":5,
       "end":21
     },
@@ -1555,8 +1555,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":326,
-      "endline":326,
+      "line":333,
+      "endline":333,
       "start":5,
       "end":22
     },
@@ -1565,8 +1565,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":327,
-      "endline":327,
+      "line":334,
+      "endline":334,
       "start":5,
       "end":23
     },
@@ -1575,8 +1575,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":328,
-      "endline":328,
+      "line":335,
+      "endline":335,
       "start":5,
       "end":23
     },
@@ -1585,8 +1585,8 @@ if.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":329,
-      "endline":329,
+      "line":336,
+      "endline":336,
       "start":5,
       "end":21
     }
@@ -1643,8 +1643,8 @@ class.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":73,
+      "endline":73,
       "start":5,
       "end":38
     },
@@ -1653,8 +1653,8 @@ class.js = {
       "type":"(o: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":74,
+      "endline":74,
       "start":5,
       "end":34
     },
@@ -1673,8 +1673,8 @@ class.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":75,
+      "endline":75,
       "start":5,
       "end":44
     },
@@ -1683,8 +1683,8 @@ class.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":69,
-      "endline":69,
+      "line":76,
+      "endline":76,
       "start":5,
       "end":28
     },
@@ -1693,8 +1693,8 @@ class.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":70,
-      "endline":70,
+      "line":77,
+      "endline":77,
       "start":5,
       "end":22
     },
@@ -1703,8 +1703,8 @@ class.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":71,
-      "endline":71,
+      "line":78,
+      "endline":78,
       "start":5,
       "end":20
     }
@@ -1755,8 +1755,8 @@ idx.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":73,
+      "endline":73,
       "start":5,
       "end":38
     },
@@ -1765,8 +1765,8 @@ idx.js = {
       "type":"(o: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":74,
+      "endline":74,
       "start":5,
       "end":34
     },
@@ -1775,8 +1775,8 @@ idx.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":75,
+      "endline":75,
       "start":5,
       "end":44
     },
@@ -1785,8 +1785,8 @@ idx.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":69,
-      "endline":69,
+      "line":76,
+      "endline":76,
       "start":5,
       "end":28
     },
@@ -1795,8 +1795,8 @@ idx.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":70,
-      "endline":70,
+      "line":77,
+      "endline":77,
       "start":5,
       "end":22
     },
@@ -1805,8 +1805,8 @@ idx.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":71,
-      "endline":71,
+      "line":78,
+      "endline":78,
       "start":5,
       "end":20
     }
@@ -1819,8 +1819,8 @@ generic_alias.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":66,
-      "endline":66,
+      "line":73,
+      "endline":73,
       "start":5,
       "end":38
     },
@@ -1829,8 +1829,8 @@ generic_alias.js = {
       "type":"(o: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"o","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":67,
-      "endline":67,
+      "line":74,
+      "endline":74,
       "start":5,
       "end":34
     },
@@ -1849,8 +1849,8 @@ generic_alias.js = {
       "type":"(prop: any) => boolean",
       "func_details":{"return_type":"boolean","params":[{"name":"prop","type":"any"}]},
       "path":"[LIB] core.js",
-      "line":68,
-      "endline":68,
+      "line":75,
+      "endline":75,
       "start":5,
       "end":44
     },
@@ -1859,8 +1859,8 @@ generic_alias.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":69,
-      "endline":69,
+      "line":76,
+      "endline":76,
       "start":5,
       "end":28
     },
@@ -1869,8 +1869,8 @@ generic_alias.js = {
       "type":"() => string",
       "func_details":{"return_type":"string","params":[]},
       "path":"[LIB] core.js",
-      "line":70,
-      "endline":70,
+      "line":77,
+      "endline":77,
       "start":5,
       "end":22
     },
@@ -1879,8 +1879,8 @@ generic_alias.js = {
       "type":"() => mixed",
       "func_details":{"return_type":"mixed","params":[]},
       "path":"[LIB] core.js",
-      "line":71,
-      "endline":71,
+      "line":78,
+      "endline":78,
       "start":5,
       "end":20
     }

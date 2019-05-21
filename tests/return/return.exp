@@ -43,8 +43,8 @@ References:
    implicit.js:7:30
      7| async function g2(): Promise<number> {}
                                      ^^^^^^ [1]
-   <BUILTINS>/core.js:625:24
-   625| declare class Promise<+R> {
+   <BUILTINS>/core.js:632:24
+   632| declare class Promise<+R> {
                                ^ [2]
 
 
