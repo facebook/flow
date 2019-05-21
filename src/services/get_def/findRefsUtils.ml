@@ -29,8 +29,10 @@ let compute_ast_result options file content =
   let open Parsing_service_js in
   let types_mode = TypesAllowed in
   let use_strict = true in
-  let result = do_parse ~fail:false ~types_mode ~use_strict ~info:docblock
-    ~module_ref_prefix ~facebook_fbt ~arch content file in
+  let parse_options = make_parse_options
+      ~fail:false ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ()
+  in
+  let result = do_parse ~parse_options ~info:docblock content file in
   match result with
     | Parse_ok parse_ok ->
       let ast, file_sig = basic parse_ok in

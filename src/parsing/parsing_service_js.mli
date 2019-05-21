@@ -58,6 +58,27 @@ type results = {
   parse_unchanged: FilenameSet.t;
 }
 
+type parse_options = {
+  parse_fail: bool;
+  parse_types_mode: types_mode;
+  parse_use_strict: bool;
+  parse_prevent_munge: bool;
+  parse_module_ref_prefix: string option;
+  parse_facebook_fbt: string option;
+  parse_arch: Options.arch;
+}
+
+val make_parse_options:
+  ?fail: bool ->
+  ?arch: Options.arch ->
+  ?prevent_munge: bool ->
+  types_mode: types_mode ->
+  use_strict: bool ->
+  module_ref_prefix: string option ->
+  facebook_fbt: string option ->
+  unit ->
+  parse_options
+
 val docblock_max_tokens: int
 
 (* Use default values for the various settings that parse takes. Each one can be overridden
@@ -104,14 +125,8 @@ val parse_json_file :
 
 (* parse contents of a file *)
 val do_parse:
-  ?fail:bool ->
-  types_mode: types_mode ->
-  use_strict: bool ->
+  parse_options: parse_options ->
   info: Docblock.t ->
-  ?prevent_munge: bool ->
-  module_ref_prefix: string option ->
-  facebook_fbt: string option ->
-  ?arch: Options.arch ->
   string ->                 (* contents of the file *)
   File_key.t ->               (* filename *)
   result
