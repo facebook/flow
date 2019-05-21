@@ -24,7 +24,7 @@ function parseGroup(lines: Array<string>): {
 function parseTimeframe(line: string): {| begin: number; end: number |} {
     var timestamps = line.split('-->');
     return {
-        begin: parseTimestamp(timestamps[0].trim()),
-        end: parseTimestamp(timestamps[1].trim())
+        begin: parseTimestamp((timestamps[0] || '').trim()),
+        end: parseTimestamp((timestamps[1] || '').trim())
     };
 }

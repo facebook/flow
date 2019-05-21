@@ -139,5 +139,19 @@ References:
                             ^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------------- string.js:7:16
 
-Found 10 errors
+Cannot call `parts[0].replace` because property `replace` is missing in null or undefined [1].
+
+   string.js:7:16
+     7|     parts[0] = parts[0].replace(',', ''); // invalid, we don't know this is a string
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:323:63
+   323|     split(separator?: string | RegExp, limit?: number): Array<?string>;
+                                                                      ^^^^^^^ [1]
+
+
+
+Found 11 errors

@@ -98,7 +98,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ overload.js:10:18
 
-Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with number [2].
+Cannot assign `"".split(...)[0]` to `x4` because:
+ - null or undefined [1] is incompatible with number [2].
+ - string [3] is incompatible with number [2].
 
    overload.js:10:18
     10| var x4: number = "".split(/pattern/)[0];
@@ -106,11 +108,14 @@ Cannot assign `"".split(...)[0]` to `x4` because string [1] is incompatible with
 
 References:
    <BUILTINS>/core.js:323:63
-   323|     split(separator?: string | RegExp, limit?: number): Array<string>;
-                                                                      ^^^^^^ [1]
+   323|     split(separator?: string | RegExp, limit?: number): Array<?string>;
+                                                                      ^^^^^^^ [1]
    overload.js:10:9
     10| var x4: number = "".split(/pattern/)[0];
                 ^^^^^^ [2]
+   <BUILTINS>/core.js:323:64
+   323|     split(separator?: string | RegExp, limit?: number): Array<?string>;
+                                                                       ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- overload.js:24:1
@@ -197,7 +202,7 @@ References:
 
 
 
-Found 11 errors
+Found 12 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

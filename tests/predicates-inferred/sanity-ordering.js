@@ -12,7 +12,7 @@ function dotAccess(head, create) {
   const stack = path.split('.');
   do {
     const key = stack.shift();
-    head = head[key] || create && (head[key] = {});
+    if (key) head = head[key] || create && (head[key] = {});
   } while (stack.length && head);
   return head;
 }

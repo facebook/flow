@@ -362,9 +362,9 @@ str.js = {
     },
     {
       "name":"split",
-      "type":"(separator?: (string | RegExp), limit?: number) => Array<string>",
+      "type":"(separator?: (string | RegExp), limit?: number) => Array<?string>",
       "func_details":{
-        "return_type":"Array<string>",
+        "return_type":"Array<?string>",
         "params":[
           {"name":"separator?","type":"string | RegExp"},
           {"name":"limit?","type":"number"}
@@ -374,7 +374,7 @@ str.js = {
       "line":323,
       "endline":323,
       "start":5,
-      "end":69
+      "end":70
     },
     {
       "name":"startsWith",
@@ -1421,9 +1421,9 @@ if.js = {
     },
     {
       "name":"split",
-      "type":"(separator?: (string | RegExp), limit?: number) => Array<string>",
+      "type":"(separator?: (string | RegExp), limit?: number) => Array<?string>",
       "func_details":{
-        "return_type":"Array<string>",
+        "return_type":"Array<?string>",
         "params":[
           {"name":"separator?","type":"string | RegExp"},
           {"name":"limit?","type":"number"}
@@ -1433,7 +1433,7 @@ if.js = {
       "line":323,
       "endline":323,
       "start":5,
-      "end":69
+      "end":70
     },
     {
       "name":"startsWith",
