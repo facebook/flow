@@ -1,3 +1,9 @@
+### 0.98.1
+
+Notable bug fixes:
+
+* Do not report bad module uses in unchecked files
+
 ### 0.98.0
 
 Likely to cause new Flow errors:
