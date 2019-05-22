@@ -2775,7 +2775,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- render.js:8:1
 
-Cannot extend property `Component` [1] with `A` because in the return value of property `render`:
+Cannot extend `React.Component` [1] with `A` because in the return value of property `render`:
  - Either undefined [2] is incompatible with null [3].
  - Or property `@@iterator` is missing in undefined [2] but exists in `$Iterable` [4].
 
@@ -2850,7 +2850,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- render.js:46:1
 
-Cannot extend property `Component` [1] with `F` because in the return value of property `render`:
+Cannot extend `React.Component` [1] with `F` because in the return value of property `render`:
  - Either undefined [2] is incompatible with null [3].
  - Or property `@@iterator` is missing in undefined [2] but exists in `$Iterable` [4].
 

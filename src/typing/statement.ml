@@ -4245,9 +4245,9 @@ and subscript =
         Member._object;
         property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name; comments= _ } as id));
       } ->
-        let expr_reason = mk_reason (RProperty (Some name)) loc in
+        let expr_reason = mk_expression_reason ex in
         let prop_reason = mk_reason (RProperty (Some name)) ploc in
-        let use_op = Op (GetProperty (mk_expression_reason ex)) in
+        let use_op = Op (GetProperty expr_reason) in
         begin match opt_state with
         | NonOptional ->
           let (_, tobj), _ as _object_ast = expression cx _object in
@@ -5635,7 +5635,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let (_, obj_t), _ as _object_ast = expression cx _object in
 
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
-      let expr_reason = mk_reason (RProperty (Some prop_name)) expr_loc in
+      let expr_reason = mk_expression_reason expr in
       let prop_t = match Refinement.get cx expr expr_loc with
       | Some t -> t
       | None ->
@@ -5988,7 +5988,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
              as `_object = foo.bar`, `prop_name = baz`, and `bar` must exist. *)
           expression cx _object
       in
-      let expr_reason = mk_reason (RProperty (Some prop_name)) loc in
+      let expr_reason = mk_expression_reason e in
       let prop_reason = mk_reason (RProperty (Some prop_name)) prop_loc in
       let t = match Refinement.get cx e loc with
       | Some t -> t

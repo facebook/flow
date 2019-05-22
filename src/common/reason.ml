@@ -151,6 +151,7 @@ type 'loc virtual_reason_desc =
   | RProperty of string option
   | RPrivateProperty of string
   | RShadowProperty of string
+  | RMember of { object_: string; property: string }
   | RPropertyOf of string * 'loc virtual_reason_desc
   | RPropertyIsAString of string
   | RMissingProperty of string option
@@ -303,6 +304,7 @@ let rec map_desc_locs f = function
   | RProperty _
   | RPrivateProperty _
   | RShadowProperty _
+  | RMember _
   | RPropertyIsAString _
   | RMissingProperty _
   | RUnknownProperty _
@@ -669,6 +671,7 @@ let rec string_of_desc = function
   | RProperty (Some x) -> spf "property `%s`" x
   | RProperty None -> "computed property"
   | RPrivateProperty x -> spf "property `#%s`" x
+  | RMember { object_; property } -> spf "`%s%s`" object_ property
   | RPropertyAssignment (Some x) -> spf "assignment of property `%s`" x
   | RPropertyAssignment None -> "assignment of computed property/element"
   | RShadowProperty x -> spf ".%s" x
@@ -839,6 +842,7 @@ let is_constant_reason r =
   | RIdentifier x
   | RProperty (Some x)
   | RPrivateProperty x
+  | RMember { object_ = _; property = x }
   | RPropertyOf (x,_)
   | RPropertyIsAString x ->
     let len = String.length x in
@@ -1012,13 +1016,10 @@ Ast.Expression.(match x with
 | Ast.Expression.Literal x -> code_desc_of_literal x
 | Logical { Logical.operator; left; right } ->
   do_wrap (code_desc_of_operation left (`Logical operator) right)
-| Member { Member._object; property } -> Member.(
+| Member { Member._object; property } ->
   let o = code_desc_of_expression ~wrap:true _object in
-  o ^ (match property with
-  | PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) -> "." ^ x
-  | PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) -> ".#" ^ x
-  | PropertyExpression x -> "[" ^ code_desc_of_expression ~wrap:false x ^ "]"
-  ))
+  let p = code_desc_of_property ~optional:false property in
+  o ^ p
 | MetaProperty { MetaProperty.meta = (_, { Ast.Identifier.name= o; comments= _ }); property = (_, { Ast.Identifier.name= p; comments= _ }) } ->
   o ^ "." ^ p
 | New { New.callee; targs; arguments } ->
@@ -1054,12 +1055,8 @@ Ast.Expression.(match x with
     optional;
   } ->
   let o = code_desc_of_expression ~wrap:true _object in
-  o ^ Member.(match property with
-  | PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) -> (if optional then "?." else ".") ^ x
-  | PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) -> (if optional then "?.#" else ".#") ^ x
-  | PropertyExpression x ->
-    (if optional then "?.[" else "[") ^ code_desc_of_expression ~wrap:false x ^ "]"
-  )
+  let p = code_desc_of_property ~optional property in
+  o ^ p
 | Sequence { Sequence.expressions } ->
   code_desc_of_expression ~wrap (List.hd (List.rev expressions))
 | Super -> "super"
@@ -1192,6 +1189,16 @@ and code_desc_of_literal x = Ast.(match x.Literal.value with
 | _ -> x.Literal.raw
 )
 
+and code_desc_of_property ~optional property =
+  match property with
+  | Ast.Expression.Member.PropertyIdentifier (_, { Ast.Identifier.name= x; comments= _ }) ->
+      (if optional then "?." else ".") ^ x
+  | Ast.Expression.Member.PropertyPrivateName (_, (_, { Ast.Identifier.name= x; comments= _ })) ->
+      (if optional then "?.#" else ".#") ^ x
+  | Ast.Expression.Member.PropertyExpression x ->
+      (if optional then "?.[" else "[") ^ code_desc_of_expression ~wrap:false x ^ "]"
+
+
 let rec mk_expression_reason = Ast.Expression.(function
 | (loc, TypeCast { TypeCast.expression; _ }) -> repos_reason loc (mk_expression_reason expression)
 | (loc, Object _) -> mk_reason RObjectLit loc
@@ -1202,6 +1209,11 @@ let rec mk_expression_reason = Ast.Expression.(function
   mk_reason (RStringLit "") loc
 | (loc, TaggedTemplate _) -> mk_reason RTemplateString loc
 | (loc, TemplateLiteral _) -> mk_reason RTemplateString loc
+| (loc, Member { Member._object; property }) ->
+  mk_reason (RMember {
+    object_ = code_desc_of_expression ~wrap:true _object;
+    property = code_desc_of_property ~optional:false property;
+  }) loc
 | (loc, _) as x -> mk_reason (RCode (code_desc_of_expression ~wrap:false x)) loc
 )
 
@@ -1332,6 +1344,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RProperty _
 | RPrivateProperty _
 | RShadowProperty _
+| RMember _
 | RPropertyOf _
 | RPropertyIsAString _
 | RMissingProperty _

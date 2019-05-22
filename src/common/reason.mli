@@ -98,6 +98,7 @@ type 'loc virtual_reason_desc =
   | RProperty of string option
   | RPrivateProperty of string
   | RShadowProperty of string
+  | RMember of { object_: string; property: string }
   | RPropertyOf of string * 'loc virtual_reason_desc
   | RPropertyIsAString of string
   | RMissingProperty of string option
