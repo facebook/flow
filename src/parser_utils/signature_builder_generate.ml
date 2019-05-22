@@ -179,7 +179,7 @@ module T = struct
 
     let mk_extends loc =
       Some (loc, {
-        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "$FlowFixMe"));
+        Ast.Type.Generic.id = Ast.Type.Generic.Identifier.Unqualified (Flow_ast_utils.ident_of_source (loc, "$TEMPORARY$Super$FlowFixMe"));
         targs = None;
       })
 

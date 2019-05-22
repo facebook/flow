@@ -511,6 +511,11 @@ let tests = "signature_generator" >::: ([
      "declare class C {foo(x?: string): void}";
      "export {C};"];
 
+  "class_extends_error" >:: mk_signature_generator_test
+    ["export class C extends (undefined: any) { }"]
+    ["declare class C extends $TEMPORARY$Super$FlowFixMe {}";
+     "export {C};"];
+
   "function_overloading" >:: mk_signature_generator_test
     ["declare function foo<T>(x: T): void;";
      "declare function foo<T,S>(x: T): void;";
