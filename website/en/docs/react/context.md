@@ -13,7 +13,7 @@ Flow will infer types from the way you use a context's `{ Provider, Consumer }`
 pair:
 
 ```js
-import React from "react";
+import * as React from "react";
 
 const Theme = React.createContext();
 
@@ -34,7 +34,7 @@ If your context has a default value, Flow will type your consumer component
 accordingly:
 
 ```js
-import React from "react";
+import * as React from "react";
 
 const Theme = React.createContext("light");
 
@@ -45,9 +45,9 @@ To explicitly specify the type of a context value, pass a type parameter to
 `createContext`:
 
 ```js
-import React from "react";
+import * as React from "react";
 
-const Theme = React.createContext<"light" | "dark">("light");
+const Theme: React.Context<"light" | "dark"> = React.createContext("light");
 
 <Theme.Provider value="blue" />; // Error! "blue" is not one of the allowed values.
 ```
