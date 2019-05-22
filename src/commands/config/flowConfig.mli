@@ -38,6 +38,7 @@ val includes: config -> string list
 val libs: config -> string list
 
 (* options *)
+val abstract_locations: config -> bool
 val all: config -> bool
 val emoji: config -> bool
 val enable_const_params: config -> bool

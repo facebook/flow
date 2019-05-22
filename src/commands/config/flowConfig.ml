@@ -43,6 +43,7 @@ module Opts = struct
   type opt_error = int * error_kind
 
   type t = {
+    abstract_locations: bool;
     all: bool;
     emoji: bool;
     enable_const_params: bool;
@@ -129,6 +130,7 @@ module Opts = struct
     |> SSet.add ".webm"
 
   let default_options = {
+    abstract_locations = false;
     all = false;
     emoji = false;
     enable_const_params = false;
@@ -605,6 +607,9 @@ module Opts = struct
     "experimental.types_first",
       boolean (fun opts v -> Ok { opts with types_first = v });
 
+    "experimental.abstract_locations",
+      boolean (fun opts v -> Ok { opts with abstract_locations = v });
+
     "no_flowlib",
       boolean (fun opts v -> Ok { opts with no_flowlib = v });
 
@@ -990,6 +995,7 @@ let includes config = config.includes
 let libs config = config.libs
 
 (* options *)
+let abstract_locations c = c.options.Opts.abstract_locations
 let all c = c.options.Opts.all
 let emoji c = c.options.Opts.emoji
 let max_literal_length c = c.options.Opts.max_literal_length

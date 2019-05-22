@@ -768,6 +768,7 @@ module Options_flags = struct
     traces: int option;
     trust_mode: Options.trust_mode option;
     types_first: bool;
+    abstract_locations: bool;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     weak: bool;
@@ -802,7 +803,7 @@ let options_flags =
     debug profile all wait_for_recheck weak traces no_flowlib munge_underscore_members max_workers
     include_warnings max_warnings flowconfig_flags verbose strip_root temp_dir quiet
     merge_timeout saved_state_fetcher saved_state_force_recheck saved_state_no_fallback
-    no_saved_state types_first include_suppressions trust_mode =
+    no_saved_state types_first abstract_locations include_suppressions trust_mode =
     (match merge_timeout with
     | Some timeout when timeout < 0 ->
       FlowExitStatus.(exit ~msg:"--merge-timeout must be non-negative" Commandline_usage_error)
@@ -832,6 +833,7 @@ let options_flags =
       no_saved_state;
       trust_mode;
       types_first;
+      abstract_locations;
       include_suppressions;
    }
   in
@@ -882,6 +884,8 @@ let options_flags =
       ~doc:"Do not load from a saved state even if one is available"
     |> flag "--types-first" no_arg
         ~doc:"[EXPERIMENTAL] types-first architecture"
+    |> flag "--abstract-locations" no_arg
+        ~doc:"[EXPERIMENTAL] Use abstract locations to improve recheck times. Has no effect unless types-first is also enabled"
     |> flag "--include-suppressed" no_arg
         ~doc:"Ignore any `suppress_comment` lines in .flowconfig"
     |> flag "--trust-mode"
@@ -1007,6 +1011,8 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     else Options.Classic
   in
 
+  let opt_abstract_locations = options_flags.abstract_locations || FlowConfig.abstract_locations flowconfig in
+
   let opt_wait_for_recheck =
     Option.value options_flags.wait_for_recheck ~default:(FlowConfig.wait_for_recheck flowconfig)
   in
@@ -1074,6 +1080,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_saved_state_no_fallback = options_flags.saved_state_no_fallback;
     opt_no_saved_state = options_flags.no_saved_state;
     opt_arch;
+    opt_abstract_locations;
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode = Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
   }
