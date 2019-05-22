@@ -5,15 +5,15 @@
       "message":"Classes may only have one constructor"
     },
     {
-      "loc":{"source":null,"start":{"line":7,"column":2},"end":{"line":7,"column":28}},
+      "loc":{"source":null,"start":{"line":7,"column":9},"end":{"line":7,"column":20}},
+      "message":"Classes may not have static fields named `constructor`."
+    },
+    {
+      "loc":{"source":null,"start":{"line":11,"column":2},"end":{"line":11,"column":13}},
       "message":"Classes may not have fields named `constructor`."
     },
     {
-      "loc":{"source":null,"start":{"line":11,"column":2},"end":{"line":11,"column":21}},
-      "message":"Classes may not have fields named `constructor`."
-    },
-    {
-      "loc":{"source":null,"start":{"line":24,"column":2},"end":{"line":24,"column":26}},
+      "loc":{"source":null,"start":{"line":24,"column":9},"end":{"line":24,"column":18}},
       "message":"Classes may not have static fields named `prototype`."
     }
   ],
@@ -112,8 +112,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]
@@ -164,8 +164,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]
@@ -216,8 +216,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]
@@ -313,8 +313,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]
@@ -365,8 +365,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]
@@ -417,8 +417,8 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
+      "superClass":null,
       "superTypeParameters":null,
       "implements":[],
       "decorators":[]

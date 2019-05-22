@@ -4956,18 +4956,6 @@ language/expressions/class/elements/fields-multiple-definitions-static-private-m
   Classes may not have private methods. at (27, 2) to (29, 3)
 language/expressions/class/elements/fields-multiple-definitions-static-private-methods-proxy.js (default)
   Classes may not have private methods. at (27, 2) to (29, 3)
-language/expressions/class/elements/fields-string-name-propname-constructor.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/fields-string-name-propname-constructor.js (default)
-  Missing parse error
-language/expressions/class/elements/fields-string-name-static-propname-constructor.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/fields-string-name-static-propname-constructor.js (default)
-  Missing parse error
-language/expressions/class/elements/fields-string-name-static-propname-prototype.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/fields-string-name-static-propname-prototype.js (default)
-  Missing parse error
 language/expressions/class/elements/gen-private-method-static/yield-spread-arr-multiple.js (strict mode)
   Classes may not have private methods. at (35, 4) to (38, 5)
 language/expressions/class/elements/gen-private-method-static/yield-spread-arr-multiple.js (default)
@@ -9986,18 +9974,6 @@ language/statements/class/elements/fields-asi-same-line-2.js (strict mode)
   Missing parse error
 language/statements/class/elements/fields-asi-same-line-2.js (default)
   Missing parse error
-language/statements/class/elements/fields-string-name-propname-constructor.js (strict mode)
-  Missing parse error
-language/statements/class/elements/fields-string-name-propname-constructor.js (default)
-  Missing parse error
-language/statements/class/elements/fields-string-name-static-propname-constructor.js (strict mode)
-  Missing parse error
-language/statements/class/elements/fields-string-name-static-propname-constructor.js (default)
-  Missing parse error
-language/statements/class/elements/fields-string-name-static-propname-prototype.js (strict mode)
-  Missing parse error
-language/statements/class/elements/fields-string-name-static-propname-prototype.js (default)
-  Missing parse error
 language/statements/class/elements/gen-private-method-static/yield-spread-arr-multiple.js (strict mode)
   Classes may not have private methods. at (35, 4) to (38, 5)
 language/statements/class/elements/gen-private-method-static/yield-spread-arr-multiple.js (default)
@@ -11144,8 +11120,8 @@ language/statements/try/early-catch-lex.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 64162 (92.01%)
-Failed: 5572 (7.99%)
+Passed: 64174 (92.03%)
+Failed: 5560 (7.97%)
 
 Features:
   Proxy: 661/663 (99.70%)
@@ -11154,12 +11130,12 @@ Features:
   arrow-function: 108/118 (91.53%)
   async-functions: 719/907 (79.27%)
   async-iteration: 7688/9388 (81.89%)
-  class: 3506/7578 (46.27%)
+  class: 3518/7578 (46.42%)
   class-fields-private: 1552/1736 (89.40%)
-  class-fields-public: 2424/3388 (71.55%)
+  class-fields-public: 2432/3388 (71.78%)
   class-methods-private: 1090/3082 (35.37%)
   class-static-fields-private: 560/640 (87.50%)
-  class-static-fields-public: 38/54 (70.37%)
+  class-static-fields-public: 42/54 (77.78%)
   class-static-methods-private: 300/2756 (10.89%)
   computed-property-names: 312/318 (98.11%)
   default-parameters: 3436/4380 (78.45%)

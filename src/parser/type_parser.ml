@@ -559,7 +559,11 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       match key with
       | Expression.Object.Property.Identifier (loc, { Identifier.name; comments= _ })
         when is_class && (is_constructor name || (is_static && is_prototype name)) ->
-        error_at env (loc, Error.InvalidFieldName (name, is_static, false))
+        error_at env (loc, Error.InvalidFieldName {
+          name;
+          static = is_static;
+          private_ = false;
+        })
       | _ -> ()
 
     in let rec properties ~is_class ~allow_inexact ~allow_spread ~exact env

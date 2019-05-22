@@ -396,10 +396,22 @@ module Object
     let body = class_body env in
     body, extends, implements
 
+  and check_property_name env loc name static =
+    if String.equal name "constructor" || (String.equal name "prototype" && static) then
+      error_at env (loc, Error.InvalidFieldName {
+        name;
+        static;
+        private_ = false;
+      })
+
   and check_private_names env seen_names private_name (kind: [`Field | `Getter | `Setter]) =
     let (loc, (_, { Identifier.name; comments= _; })) = private_name in
     if String.equal name "constructor" then
-      let () = error_at env (loc, Error.InvalidFieldName (name, false, true)) in
+      let () = error_at env (loc, Error.InvalidFieldName {
+        name;
+        static = false;
+        private_ = true;
+      }) in
       seen_names
     else match SMap.find_opt name seen_names with
     | Some seen ->
@@ -460,15 +472,18 @@ module Object
                 in
                 (seen_constructor, private_names)
               end
-          | Ast.Class.Body.Property (loc, p) ->
+          | Ast.Class.Body.Property (_, {Ast.Class.Property.key; static; _}) ->
               let open Ast.Expression.Object.Property in
-              (seen_constructor, begin match p.Ast.Class.Property.key with
-              | Identifier (_, { Identifier.name= x; comments= _ }) when String.equal x "constructor" ||
-                (String.equal x "prototype" && p.Ast.Class.Property.static) ->
-                  error_at env (loc, Error.InvalidFieldName (x, String.equal x "prototype", false));
-                  private_names
-              | _ -> private_names
-              end)
+              begin match key with
+              | Identifier (loc, { Identifier.name; comments= _ })
+              | Literal (loc, { Literal.value = Literal.String name; _ }) ->
+                  check_property_name env loc name static
+              | Literal _
+              | Computed _  -> ()
+              | PrivateName _ ->
+                  failwith "unexpected PrivateName in Property, expected a PrivateField"
+              end;
+              (seen_constructor, private_names)
           | Ast.Class.Body.PrivateField (_, {Ast.Class.PrivateField.key; _}) ->
               let private_names = check_private_names env private_names key `Field in
               (seen_constructor, private_names)
