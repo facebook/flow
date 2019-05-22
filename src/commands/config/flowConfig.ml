@@ -245,27 +245,20 @@ module Opts = struct
       ?init
       ?(multiple=false)
       (setter: (t -> 'a -> (t, string) result))
-      key
-      (raw_opts, config)
-  : (raw_options * t, opt_error) result ->
-    match SMap.get key raw_opts with
-    | None -> Ok (raw_opts, config)
-    | Some values ->
-      let config =
-        match init with
-        | None -> config
-        | Some f -> f config
-      in
-      (* Error when duplicate options were incorrectly given *)
-      match multiple, values with
-      | false, _::(dupe_ln, _)::_ ->
-        Error (dupe_ln, Duplicate_option)
-      | _ ->
-        Ok config
-        >>= loop optparser setter values
-        >>= fun config ->
-          let new_raw_opts = SMap.remove key raw_opts in
-          Ok (new_raw_opts, config)
+      (values: raw_values)
+      config
+  : (t, opt_error) result ->
+    let config =
+      match init with
+      | None -> config
+      | Some f -> f config
+    in
+    (* Error when duplicate options were incorrectly given *)
+    match multiple, values with
+    | false, _::(dupe_ln, _)::_ ->
+      Error (dupe_ln, Duplicate_option)
+    | _ ->
+      loop optparser setter values config
 
   let optparse_string str =
     try Ok (Scanf.unescaped str)
@@ -634,15 +627,21 @@ module Opts = struct
     in
     let rec loop
         (acc: ((raw_options * t), error) result)
-        (parsers: (string * (string -> raw_options * t -> ((raw_options * t), opt_error) result)) list)
+        (parsers: (string * (raw_values -> t -> (t, opt_error) result)) list)
     =
-      acc >>= fun acc ->
+      acc >>= fun (raw_opts, config) ->
       match parsers with
-      | [] -> Ok acc
+      | [] -> Ok (raw_opts, config)
       | (key, f)::rest ->
         let acc =
-          f key acc
-          |> Core_result.map_error ~f:(error_of_opt_error key)
+          match SMap.get key raw_opts with
+          | None -> Ok (raw_opts, config)
+          | Some values ->
+            f values config
+            |> Core_result.map_error ~f:(error_of_opt_error key)
+            >>= fun config ->
+            let new_raw_opts = SMap.remove key raw_opts in
+            Ok (new_raw_opts, config)
         in
         loop acc rest
     in
