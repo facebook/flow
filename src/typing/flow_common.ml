@@ -14,6 +14,11 @@ module type ASSERT_GROUND = sig
   val enforce_strict: Context.t -> Type.t -> unit
 end
 
+module type TRUST_CHECKING = sig
+  val trust_flow_to_use_t: Context.t -> Trace.t -> Type.t -> Type.use_t -> unit
+  val trust_flow: Context.t -> Trace.t -> Type.use_op -> Type.t -> Type.t -> unit
+end
+
 module type S = sig
   val add_output: Context.t -> ?trace:Trace.t -> Error_message.t -> unit
   val check_polarity: Context.t -> ?trace:Trace.t -> polarity -> Type.t -> unit

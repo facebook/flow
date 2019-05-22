@@ -1038,6 +1038,7 @@ let poly_minimum_arity =
 module M__flow
   (ReactJs: React_kit.REACT)
   (AssertGround: Flow_common.ASSERT_GROUND)
+  (TrustChecking: Flow_common.TRUST_CHECKING)
   (CustomFunKit: Custom_fun_kit.CUSTOM_FUN)
 = struct
 (** NOTE: Do not call this function directly. Instead, call the wrapper
@@ -1047,14 +1048,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
   if ground_subtype (l, u) then begin
     if Context.trust_tracking cx then
-      trust_flow_to_use_t cx trace l u;
+      TrustChecking.trust_flow_to_use_t cx trace l u;
     print_types_if_verbose cx trace (l, u)
   end else if Cache.FlowConstraint.get cx (l, u) then
     print_types_if_verbose cx trace ~note:"(cached)" (l, u)
   else (
     print_types_if_verbose cx trace (l, u);
     if Context.trust_tracking cx then
-      trust_flow_to_use_t cx trace l u;
+      TrustChecking.trust_flow_to_use_t cx trace l u;
 
     (* limit recursion depth *)
     RecursionCheck.check trace;
@@ -6494,28 +6495,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         branches = [];
       })
   )
-and trust_flow_to_use_t cx trace l u =
-  match u with
-  | UseT (use_op, u) -> trust_flow cx trace use_op l u
-  | _ -> ()
-
-and trust_flow cx trace use_op l u =
-  let check (lr, ltrust) (ur, utrust) =
-    if Context.trust_errors cx
-        && not (subtype_trust ltrust utrust) then
-      add_output cx ~trace (Error_message.ETrustIncompatibleWithUseOp (
-        lr, ur, use_op
-      ))
-  in
-
-  match l, u with
-  | DefT (lr, ltrust, _), DefT (ur, utrust, _) when is_qualifier ltrust && is_qualifier utrust ->
-    check (lr, as_qualifier ltrust) (ur, as_qualifier utrust)
-  | AnyT (r, _), DefT (ur, utrust, _) when is_qualifier utrust ->
-    check (r, dynamic_qualifier ()) (ur, as_qualifier utrust)
-  | DefT (lr, ltrust, _), AnyT (r, _) when is_qualifier ltrust ->
-    check (lr, as_qualifier ltrust) (r, dynamic_qualifier ())
-  | _ -> ()
 
 (**
  * Addition
@@ -11903,13 +11882,16 @@ and object_kit =
     match resolve_tool with
     | Resolve resolve_tool -> resolve cx trace use_op reason resolve_tool tool tout l
     | Super (acc, resolve_tool) -> super cx trace use_op reason resolve_tool tool tout acc l
+
   include AssertGround
+  include TrustChecking
 end
 module rec FlowJs: Flow_common.S = struct
   module React = React_kit.Kit (FlowJs)
   module AssertGround = Assert_ground.Kit (FlowJs)
+  module TrustKit = Trust_checking.TrustKit (FlowJs)
   module CustomFun = Custom_fun_kit.Kit (FlowJs)
-  include M__flow (React) (AssertGround) (CustomFun)
+  include M__flow (React) (AssertGround) (TrustKit) (CustomFun)
   let add_output = add_output
   let union_of_ts = union_of_ts
   let generate_tests = generate_tests
