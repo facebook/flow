@@ -481,6 +481,8 @@ let rec convert cx tparams_map = Ast.Type.(function
   (* $Keys<T> is the set of keys of T *)
   (** TODO: remove $Enum **)
   | "$Keys" | "$Enum" ->
+    if name = "$Enum" then
+      Error_message.EDeprecatedEnumUtility loc |> Flow_js.add_output cx;
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let ts, targs = convert_type_params () in
       let t = List.hd ts in
