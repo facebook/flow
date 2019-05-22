@@ -10,6 +10,6 @@ type patch = (int * int * string) list
 val show_patch: patch -> string
 
 val mk_patch_ast_differ : Flow_ast_differ.node Flow_ast_differ.change list ->
-  (Loc.t, Loc.t) Flow_ast.program -> string -> patch
+  (Loc.t, Loc.t) Flow_ast.program -> File_input.t -> patch
 
-val print : patch -> string -> string
+val print : patch -> File_input.t -> string
