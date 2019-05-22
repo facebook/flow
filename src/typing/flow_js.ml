@@ -6509,12 +6509,12 @@ and trust_flow cx trace use_op l u =
   in
 
   match l, u with
-  | DefT (lr, ltrust, _), DefT (ur, utrust, _) ->
-    check (lr, ltrust) (ur, utrust)
-  | AnyT (r, _), DefT (ur, utrust, _) ->
-    check (r, dynamic_trust ()) (ur, utrust)
-  | DefT (lr, ltrust, _), AnyT (r, _) ->
-    check (lr, ltrust) (r, dynamic_trust ())
+  | DefT (lr, ltrust, _), DefT (ur, utrust, _) when is_qualifier ltrust && is_qualifier utrust ->
+    check (lr, as_qualifier ltrust) (ur, as_qualifier utrust)
+  | AnyT (r, _), DefT (ur, utrust, _) when is_qualifier utrust ->
+    check (r, dynamic_qualifier ()) (ur, as_qualifier utrust)
+  | DefT (lr, ltrust, _), AnyT (r, _) when is_qualifier ltrust ->
+    check (lr, as_qualifier ltrust) (r, dynamic_qualifier ())
   | _ -> ()
 
 (**

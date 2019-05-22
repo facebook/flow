@@ -55,7 +55,7 @@ module rec TypeTerm : sig
     (* def types *)
     (*************)
 
-    | DefT of reason * Trust.trust * def_t
+    | DefT of reason * Trust.trust_rep * def_t
 
     (* type expression whose evaluation is deferred *)
     (* Usually a type expression is evaluated by splitting it into a def type
@@ -2769,7 +2769,13 @@ end = struct
     | Some y -> x = y
     | None -> false
 
+  let trust_subtype_fixed tr1 tr2 =
+    match Trust.expand tr1, Trust.expand tr2 with
+    | Trust.Qualifier trust1, Trust.Qualifier trust2 -> Trust.subtype_trust trust1 trust2
+    | _ -> false
+
   let quick_subtype trust_checked t1 t2 =
+    let open Trust in
     match t1, t2 with
     | DefT (_, ltrust, NumT _), DefT (_, rtrust, NumT _)
     | DefT (_, ltrust, SingletonNumT _), DefT (_, rtrust, NumT _)
@@ -2781,15 +2787,15 @@ end = struct
     | DefT (_, ltrust, VoidT), DefT (_, rtrust, VoidT)
     | DefT (_, ltrust, EmptyT _), DefT(_, rtrust, _)
     | DefT (_, ltrust, _), DefT (_, rtrust, MixedT _)
-      -> not trust_checked || Trust.subtype_trust ltrust rtrust
-    | DefT (_, ltrust, EmptyT _), _ -> not trust_checked || Trust.is_public ltrust
-    | _, DefT (_, rtrust, MixedT _) -> not trust_checked || Trust.is_tainted rtrust
+      -> not trust_checked || trust_subtype_fixed ltrust rtrust
+    | DefT (_, ltrust, EmptyT _), _ -> not trust_checked || trust_value_map ~f:is_public ~default:false ltrust
+    | _, DefT (_, rtrust, MixedT _) -> not trust_checked || trust_value_map ~f:is_tainted ~default:false rtrust
     | DefT (_, ltrust, StrT actual), DefT (_, rtrust, SingletonStrT expected) ->
-        (not trust_checked || Trust.subtype_trust ltrust rtrust) && literal_eq expected actual
+      (not trust_checked || trust_subtype_fixed ltrust rtrust) && literal_eq expected actual
     | DefT (_, ltrust, NumT actual), DefT (_, rtrust, SingletonNumT expected) ->
-        (not trust_checked || Trust.subtype_trust ltrust rtrust) && number_literal_eq expected actual
+      (not trust_checked || trust_subtype_fixed ltrust rtrust) && number_literal_eq expected actual
     | DefT (_, ltrust, BoolT actual), DefT (_, rtrust, SingletonBoolT expected) ->
-        (not trust_checked || Trust.subtype_trust ltrust rtrust) && boolean_literal_eq expected actual
+      (not trust_checked || trust_subtype_fixed ltrust rtrust) && boolean_literal_eq expected actual
     | _ -> reasonless_eq t1 t2
 end
 
@@ -2809,8 +2815,8 @@ include Trust
 (**** Trust utilities ****)
 
 let with_trust
-    (trust_constructor: unit -> trust)
-    (type_constructor: trust -> t) : t =
+    (trust_constructor: unit -> trust_rep)
+    (type_constructor: trust_rep -> t) : t =
   trust_constructor () |> type_constructor
 
 (*********************************************************)
@@ -2824,7 +2830,7 @@ let open_tvar tvar =
 
 module type PrimitiveType = sig
   val desc: reason_desc
-  val make: reason -> trust -> t
+  val make: reason -> trust_rep -> t
 end
 
 module Primitive (P: PrimitiveType) = struct

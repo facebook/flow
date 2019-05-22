@@ -62,8 +62,8 @@ val make_sig: unit -> sig_t
 val make: sig_t -> metadata -> File_key.t -> string -> t
 val metadata_of_options: Options.t -> metadata
 
-val trust_constructor: t -> (unit -> Trust.trust)
-val cx_with_trust: t -> (unit -> Trust.trust) -> t
+val trust_constructor: t -> (unit -> Trust.trust_rep)
+val cx_with_trust: t -> (unit -> Trust.trust_rep) -> t
 
 val sig_cx: t -> sig_t
 val graph_sig: sig_t -> Constraint.node IMap.t

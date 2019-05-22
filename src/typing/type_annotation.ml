@@ -868,10 +868,13 @@ let rec convert cx tparams_map = Ast.Type.(function
       match convert_type_params () with
       | [AnyT _], _ ->
           error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
-      | [DefT (rs, trust, ty)], targs ->
+      | [DefT (_, trust, _) as t], targs when is_ident trust ->
+          reconstruct_ast t targs
+      | [DefT (rs, trust, ty)], targs when is_qualifier trust ->
           reconstruct_ast
             (DefT (annot_reason
-              (mk_reason (RTrusted (desc_of_reason rs)) loc), make_trusted trust, ty))
+              (mk_reason (RTrusted (desc_of_reason rs)) loc),
+                as_qualifier trust |> make_trusted |> from_qualifier, ty))
             targs
       | _ ->
         error_type cx loc (Error_message.ETrustedAnnot loc) t_ast
@@ -879,10 +882,15 @@ let rec convert cx tparams_map = Ast.Type.(function
   | "$Private" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       match convert_type_params () with
-      | [DefT (rs, trust, ty)], targs ->
+      | [AnyT _], _ ->
+          error_type cx loc (Error_message.EPrivateAnnot loc) t_ast
+      | [DefT (_, trust, _) as t], targs when is_ident trust ->
+          reconstruct_ast t targs
+      | [DefT (rs, trust, ty)], targs when is_qualifier trust ->
           reconstruct_ast
             (DefT (annot_reason
-              (mk_reason (RPrivate (desc_of_reason rs)) loc), make_private trust, ty))
+              (mk_reason (RPrivate (desc_of_reason rs)) loc),
+                as_qualifier trust |> make_private |> from_qualifier, ty))
             targs
       | _ ->
         error_type cx loc (Error_message.EPrivateAnnot loc) t_ast

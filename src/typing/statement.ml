@@ -6760,7 +6760,7 @@ and mk_func_sig =
     | false, true, None -> Generator
     | false, false, None -> Ordinary
     | false, false, Some (_, Declared _) -> Predicate
-    | false, false, Some (_ , Inferred) -> Predicate
+    | false, false, Some (_ , Ast.Type.Predicate.Inferred) -> Predicate
     | _, _, _ -> Utils_js.assert_false "(async || generator) && pred")
   in
 
@@ -6860,11 +6860,11 @@ and mk_func_sig =
     let return_t, predicate = Ast.Type.Predicate.(match predicate with
       | None ->
           return_t, None
-      | Some (loc, Inferred) ->
+      | Some (loc, Ast.Type.Predicate.Inferred) ->
           (* Restrict the fresh condition type by the declared return type *)
           let fresh_t, _ = Anno.mk_type_annotation cx tparams_map ret_reason (Ast.Type.Missing loc) in
           Flow.flow_t cx (fresh_t, return_t);
-          fresh_t, Some (loc, Inferred)
+          fresh_t, Some (loc, Ast.Type.Predicate.Inferred)
       | Some ((loc, Declared _) as pred) ->
           Flow_js.add_output cx Error_message.(
             EUnsupportedSyntax (loc, PredicateDeclarationForImplementation)

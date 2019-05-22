@@ -38,7 +38,8 @@ let unit_of_op = function
 module Taint = struct
   type t = Untainted | Tainted
 
-  let of_trust tr = if Trust.is_tainted tr then Tainted else Untainted
+  let of_trust tr =
+    if Trust.is_qualifier tr && Trust.as_qualifier tr |> Trust.is_tainted then Tainted else Untainted
 
   let to_string = function
     | Untainted -> "Untainted"

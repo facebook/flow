@@ -140,7 +140,7 @@ type t = {
   mutable require_map: Type.t ALocMap.t;
 
   type_table: Type_table.t;
-  trust_constructor: unit -> Trust.trust;
+  trust_constructor: unit -> Trust.trust_rep;
 
   mutable declare_module_ref: string option;
 
