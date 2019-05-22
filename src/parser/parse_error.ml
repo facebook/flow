@@ -118,6 +118,7 @@ type t =
   | OptionalChainNew
   | OptionalChainTemplate
   | NullishCoalescingDisabled
+  | WhitespaceInPrivateName
 
 exception Error of (Loc.t * t) list
 
@@ -299,4 +300,5 @@ module PP =
         use the nullish coalescing operator (`??`). Nullish coalescing is an active early-stage \
         feature proposal which may change and is not enabled by default. To enable support in \
         the parser, use the `esproposal_nullish_coalescing` option."
+      | WhitespaceInPrivateName -> "Unexpected whitespace between `#` and identifier"
   end

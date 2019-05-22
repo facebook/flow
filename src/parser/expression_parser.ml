@@ -1221,8 +1221,12 @@ module Expression
 
   and property_name_include_private env =
     let start_loc = Peek.loc env in
-    let is_private = Expect.maybe env T_POUND in
-    let (id_loc, _) as id = identifier_name env in
-    let loc = Loc.btwn start_loc id_loc in
+    let loc, (is_private, id) = with_loc (fun env ->
+      let is_private = Expect.maybe env T_POUND in
+      let id = identifier_name env in
+      is_private, id
+    ) env in
+    if is_private && start_loc.Loc._end <> (fst id).Loc.start then
+      error_at env (loc, Error.WhitespaceInPrivateName);
     loc, id, is_private
 end

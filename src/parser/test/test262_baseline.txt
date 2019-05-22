@@ -5576,10 +5576,6 @@ language/expressions/class/elements/syntax/early-errors/grammar-field-identifier
   Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-field-identifier-invalid-zwnj-error.js (default)
   Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-error.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-error.js (default)
-  Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwj-error.js (strict mode)
   Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwj-error.js (default)
@@ -5587,46 +5583,6 @@ language/expressions/class/elements/syntax/early-errors/grammar-privatename-iden
 language/expressions/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwnj-error.js (strict mode)
   Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwnj-error.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-accessor-get-meth.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-accessor-get-meth.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-accessor-set-meth.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-accessor-set-meth.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-call-expr.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-call-expr.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-field-init.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-field-init.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-field.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-field.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-member-expr.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-member-expr.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-accessor-get-meth.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-accessor-get-meth.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-accessor-set-meth.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-accessor-set-meth.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-field-init.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-field-init.js (default)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-field.js (strict mode)
-  Missing parse error
-language/expressions/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-field.js (default)
   Missing parse error
 language/expressions/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-gen.js (strict mode)
   Missing parse error
@@ -10606,10 +10562,6 @@ language/statements/class/elements/syntax/early-errors/grammar-field-identifier-
   Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-field-identifier-invalid-zwnj-error.js (default)
   Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-error.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-error.js (default)
-  Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwj-error.js (strict mode)
   Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwj-error.js (default)
@@ -10617,46 +10569,6 @@ language/statements/class/elements/syntax/early-errors/grammar-privatename-ident
 language/statements/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwnj-error.js (strict mode)
   Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-privatename-identifier-invalid-zwnj-error.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-accessor-get-meth.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-accessor-get-meth.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-accessor-set-meth.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-accessor-set-meth.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-call-expr.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-call-expr.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-field-init.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-field-init.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-field.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-field.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-member-expr.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-member-expr.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-accessor-get-meth.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-accessor-get-meth.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-accessor-set-meth.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-accessor-set-meth.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-field-init.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-field-init.js (default)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-field.js (strict mode)
-  Missing parse error
-language/statements/class/elements/syntax/early-errors/grammar-privatename-whitespace-error-static-field.js (default)
   Missing parse error
 language/statements/class/elements/syntax/early-errors/grammar-special-meth-ctor-async-gen.js (strict mode)
   Missing parse error
@@ -11120,8 +11032,8 @@ language/statements/try/early-catch-lex.js (default)
   Missing parse error
 
 === Summary ===
-Passed: 64174 (92.03%)
-Failed: 5560 (7.97%)
+Passed: 64218 (92.09%)
+Failed: 5516 (7.91%)
 
 Features:
   Proxy: 661/663 (99.70%)
@@ -11130,13 +11042,13 @@ Features:
   arrow-function: 108/118 (91.53%)
   async-functions: 719/907 (79.27%)
   async-iteration: 7688/9388 (81.89%)
-  class: 3518/7578 (46.42%)
-  class-fields-private: 1552/1736 (89.40%)
+  class: 3562/7578 (47.00%)
+  class-fields-private: 1572/1736 (90.55%)
   class-fields-public: 2432/3388 (71.78%)
-  class-methods-private: 1090/3082 (35.37%)
-  class-static-fields-private: 560/640 (87.50%)
+  class-methods-private: 1098/3082 (35.63%)
+  class-static-fields-private: 568/640 (88.75%)
   class-static-fields-public: 42/54 (77.78%)
-  class-static-methods-private: 300/2756 (10.89%)
+  class-static-methods-private: 308/2756 (11.18%)
   computed-property-names: 312/318 (98.11%)
   default-parameters: 3436/4380 (78.45%)
   destructuring-binding: 10835/12723 (85.16%)
