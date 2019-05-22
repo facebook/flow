@@ -1153,7 +1153,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
 
       let id1, constraints1 = Context.find_constraints cx tvar in
-      (match constraints1 with
+            (match constraints1 with
       | Unresolved bounds1 ->
           edges_and_flows_to_t cx trace (id1, bounds1) t2
 

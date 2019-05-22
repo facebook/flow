@@ -1,0 +1,40 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:10:48
+
+Property `q` is missing in `MySpec` [1] in the first argument.
+
+   test.js:10:48
+                                                      v--------
+   10| export type PickKeysFromObject<Spec, KeyMap> = $ObjMapi<
+   11|   KeyMap,
+   12|   MapKeyValue<Spec>,
+   13| >;
+       ^
+
+References:
+   test.js:22:31
+   22|   type A = PickKeysFromObject<MySpec, typeof keys>;
+                                     ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:25:17
+
+Cannot assign `_a` to `_b` because property `q` is missing in object type [1] but exists in object type [2].
+
+   test.js:25:17
+   25|   const _b: A = _a;
+                       ^^
+
+References:
+   test.js:23:19
+   23|   declare var _a: {|x: number|};
+                         ^^^^^^^^^^^^^ [1]
+   test.js:25:13
+   25|   const _b: A = _a;
+                   ^ [2]
+
+
+
+Found 2 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches
