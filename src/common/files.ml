@@ -288,7 +288,8 @@ let init ?(flowlibs_only=false) (options: options) =
     else
       let get_next lib =
         let lib_str = Path.to_string lib in
-        let filter' path = path = lib_str || filter path in
+        (* TODO: better to parse json files, not ignore them *)
+        let filter' path = (path = lib_str || filter path) && (not (is_json_file path)) in
         make_next_files_following_symlinks
           ~node_module_filter
           ~path_filter:filter'
