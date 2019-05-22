@@ -3083,8 +3083,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- test-utils.js:58:15
 
-Cannot call `TestUtils.act` with function bound to `callback` because object literal [1] is incompatible with
-undefined [2] in the return value.
+Cannot call `TestUtils.act` with function bound to `callback` because property `then` is missing in object literal [1]
+but exists in `Thenable` [2] in the return value.
 
    test-utils.js:58:15
     58| TestUtils.act(() => ({count: 123})); // error
@@ -3094,9 +3094,9 @@ References:
    test-utils.js:58:22
     58| TestUtils.act(() => ({count: 123})); // error
                              ^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:120:43
-   120|   declare function act<X>(callback: () => void): Thenable;
-                                                  ^^^^ [2]
+   <BUILTINS>/react-dom.js:120:47
+   120|   declare function act(callback: () => void | Thenable): Thenable;
+                                                      ^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- undefined_prop.js:7:1
