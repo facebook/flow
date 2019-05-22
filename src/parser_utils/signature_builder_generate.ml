@@ -1248,40 +1248,70 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
       ) entries acc
     ) env []
 
-  let cjs_exports outlined =
-    function
-      | None, [] -> []
-      | Some mod_exp_loc, [File_sig.DeclareModuleExportsDef (loc, t)] ->
-        [mod_exp_loc, Ast.Statement.DeclareModuleExports (loc, t)]
-      | Some mod_exp_loc, [File_sig.SetModuleExportsDef expr] ->
+  let cjs_exports =
+    let declare_module_exports mod_exp_loc loc t =
+      mod_exp_loc, Ast.Statement.DeclareModuleExports (loc, t)
+    in
+    let set_module_exports mod_exp_loc outlined expr =
+      let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
+      mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot)
+    in
+    let add_module_exports mod_exp_loc outlined add_module_exports_list =
+      let properties = Core_list.rev_map ~f:(fun (id, expr) ->
         let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
-        [mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot)]
+        let open Ast.Type.Object in
+        Property (fst id, {
+          Property.key = Ast.Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source id);
+          value = Property.Init annot;
+          optional = false;
+          static = false;
+          proto = false;
+          _method = true;
+          variance = None;
+        })
+      ) add_module_exports_list in
+      let ot = {
+        Ast.Type.Object.exact = true;
+        inexact = false;
+        properties;
+      } in
+      let t = mod_exp_loc, Ast.Type.Object ot in
+      [mod_exp_loc, Ast.Statement.DeclareModuleExports (mod_exp_loc, t)]
+    in
+    fun outlined -> function
+      | None, _ -> []
       | Some mod_exp_loc, list ->
-        let properties =
-          try Core_list.map ~f:(function
-          | File_sig.AddModuleExportsDef (id, expr) ->
-            let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
-            let open Ast.Type.Object in
-            Property (fst id, {
-              Property.key = Ast.Expression.Object.Property.Identifier (Flow_ast_utils.ident_of_source id);
-              value = Property.Init annot;
-              optional = false;
-              static = false;
-              proto = false;
-              _method = true;
-              variance = None;
-            })
-          | _ -> assert false
-          ) list
-          with _ -> [] in
-        let ot = {
-          Ast.Type.Object.exact = true;
-          inexact = false;
-          properties;
-        } in
-        let t = mod_exp_loc, Ast.Type.Object ot in
-        [mod_exp_loc, Ast.Statement.DeclareModuleExports (mod_exp_loc, t)]
-      | _ -> []
+         let declare_module_exports_list, set_module_exports_list, add_module_exports_list =
+           List.fold_left (fun (
+             declare_module_exports_list,
+             set_module_exports_list,
+             add_module_exports_list
+           ) -> function
+             | File_sig.DeclareModuleExportsDef (loc, t) ->
+               (loc, t)::declare_module_exports_list,
+               set_module_exports_list,
+               add_module_exports_list
+             | File_sig.SetModuleExportsDef expr ->
+               declare_module_exports_list,
+               expr::set_module_exports_list,
+               add_module_exports_list
+             | File_sig.AddModuleExportsDef (id, expr) ->
+               declare_module_exports_list,
+               set_module_exports_list,
+               (id, expr)::add_module_exports_list
+           ) ([], [], []) list in
+         match declare_module_exports_list, set_module_exports_list, add_module_exports_list with
+         | (loc, t)::rest, _, _ ->
+           (* declare module.exports: ... wins, unless there are duplicates *)
+           if rest = [] then [declare_module_exports mod_exp_loc loc t]
+           else []
+         | [], expr::rest, _ ->
+           (* otherwise, module.exports = ... wins, unless there are duplicates *)
+           if rest = [] then [set_module_exports mod_exp_loc outlined expr]
+           else []
+         | [], [], _ ->
+           (* otherwise, collect every module.exports.X = ... *)
+           add_module_exports mod_exp_loc outlined add_module_exports_list
 
   let eval_export_default_declaration = Ast.Statement.ExportDefaultDeclaration.(function
     | Declaration (loc, Ast.Statement.FunctionDeclaration

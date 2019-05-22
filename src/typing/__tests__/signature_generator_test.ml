@@ -642,4 +642,14 @@ let tests = "signature_generator" >::: ([
      "  {|a: $TEMPORARY$string<'a'>, b: $TEMPORARY$string<'b'>|},";
      ">;"];
 
+  "unusual_cjs_exports1" >:: mk_signature_generator_test
+    ["exports.wut = 'wut';";
+     "module.exports = { x: 42 };"]
+    ["declare module.exports: $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>;"];
+
+  "unusual_cjs_exports2" >:: mk_signature_generator_test
+    ["module.exports = { x: 42 };";
+     "module.exports.wut = 'wut';"]
+    ["declare module.exports: $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>;"];
+
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)
