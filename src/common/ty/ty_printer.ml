@@ -220,16 +220,24 @@ let type_ ?(size=5000) ?(with_comments=true) t =
           type_function ~depth ~sep:(Atom ":") func;
         ]
 
-      | Get t -> fuse [
+      | Get t -> group [
           Atom "get"; space;
           to_key key;
+          Atom "(";
+          softline;
+          Atom ")";
+          Atom ":";
+          pretty_space;
           type_ ~depth t;
         ]
 
-      | Set t -> fuse [
+      | Set t -> group [
           Atom "set"; space;
           to_key key;
-          type_ ~depth t;
+          wrap_and_indent (Atom "(", Atom ")") [type_ ~depth t];
+          Atom ":";
+          pretty_space;
+          type_ ~depth Void;
         ]
       end
 

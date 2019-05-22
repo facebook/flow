@@ -1,5 +1,5 @@
 dictionary.js:3:7 = {
-  "type":"{|\"\": null, \" \": null, \"'\": null, \"1\": null, _: null, \"a b\": null, \"a'b\": null, ab: null, get xnull, set ystring|}",
+  "type":"{|\"\": null, \" \": null, \"'\": null, \"1\": null, _: null, \"a b\": null, \"a'b\": null, ab: null, get x(): null, set y(string): void|}",
   "reasons":[],
   "loc":{
     "source":"dictionary.js",
@@ -14,7 +14,7 @@ dictionary.js:3:7 = {
   "end":8
 }
 dictionary.js:19:7 = {
-  "type":"{|\"\": null, \" \": null, '\"': null, \"1\": null, _: null, \"a b\": null, 'a\"b': null, ab: null, get xnull, set ystring|}",
+  "type":"{|\"\": null, \" \": null, '\"': null, \"1\": null, _: null, \"a b\": null, 'a\"b': null, ab: null, get x(): null, set y(string): void|}",
   "reasons":[],
   "loc":{
     "source":"dictionary.js",
