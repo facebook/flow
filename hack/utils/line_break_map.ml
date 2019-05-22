@@ -73,6 +73,11 @@ let position_to_offset ?(existing = false)
   let len = Array.length bolmap in
   let file_line = line in
 
+  (* We want to throw the error "Not_found" if the position is wrong,
+   * rather than "index out of bounds" *)
+  if file_line > len then begin
+    raise Not_found
+  end;
   let line_start = Array.get bolmap (file_line - 1) in
   let offset = line_start + column - 1 in
 
