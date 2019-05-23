@@ -276,6 +276,8 @@ module rec TypeTerm : sig
     | WidenEnv
 
   and 'loc virtual_root_use_op =
+    | ObjectSpread of {op : 'loc virtual_reason}
+    | ObjectChain of {op : 'loc virtual_reason}
     | Addition of { op: 'loc virtual_reason; left: 'loc virtual_reason; right: 'loc virtual_reason }
     | AssignVar of { var: 'loc virtual_reason option; init: 'loc virtual_reason }
     | Cast of { lower: 'loc virtual_reason; upper: 'loc virtual_reason }
@@ -481,9 +483,9 @@ module rec TypeTerm : sig
     (* operations on objects *)
 
     (* Resolves the object into which the properties are assigned *)
-    | ObjAssignToT of reason * t * t * obj_assign_kind
+    | ObjAssignToT of use_op * reason * t * t * obj_assign_kind
     (* Resolves the object from which the properties are assigned *)
-    | ObjAssignFromT of reason * t * t * obj_assign_kind
+    | ObjAssignFromT of use_op * reason * t * t * obj_assign_kind
     | ObjFreezeT of reason * t
     | ObjRestT of reason * string list * t
     | ObjSealT of reason * t
@@ -2268,8 +2270,8 @@ end = struct
     | MixinT (reason, _) -> reason
     | NotT (reason, _) -> reason
     | NullishCoalesceT (reason, _, _) -> reason
-    | ObjAssignToT (reason, _, _, _) -> reason
-    | ObjAssignFromT (reason, _, _, _) -> reason
+    | ObjAssignToT (_, reason, _, _, _) -> reason
+    | ObjAssignFromT (_, reason, _, _, _) -> reason
     | ObjFreezeT (reason, _) -> reason
     | ObjRestT (reason, _, _) -> reason
     | ObjSealT (reason, _) -> reason
@@ -2439,10 +2441,10 @@ end = struct
     | MixinT (reason, inst) -> MixinT (f reason, inst)
     | NotT (reason, t) -> NotT (f reason, t)
     | NullishCoalesceT (reason, t1, t2) -> NullishCoalesceT (f reason, t1, t2)
-    | ObjAssignToT (reason, t, t2, kind) ->
-        ObjAssignToT (f reason, t, t2, kind)
-    | ObjAssignFromT (reason, t, t2, kind) ->
-        ObjAssignFromT (f reason, t, t2, kind)
+    | ObjAssignToT (op, reason, t, t2, kind) ->
+        ObjAssignToT (op, f reason, t, t2, kind)
+    | ObjAssignFromT (op, reason, t, t2, kind) ->
+        ObjAssignFromT (op, f reason, t, t2, kind)
     | ObjFreezeT (reason, t) -> ObjFreezeT (f reason, t)
     | ObjRestT (reason, t, t2) -> ObjRestT (f reason, t, t2)
     | ObjSealT (reason, t) -> ObjSealT (f reason, t)
@@ -2562,8 +2564,8 @@ end = struct
   | ThisSpecializeT (_, _, _)
   | VarianceCheckT (_, _, _)
   | LookupT (_, _, _, _, _)
-  | ObjAssignToT (_, _, _, _)
-  | ObjAssignFromT (_, _, _, _)
+  | ObjAssignToT (_, _, _, _ ,_)
+  | ObjAssignFromT (_, _, _, _, _)
   | ObjFreezeT (_, _)
   | ObjRestT (_, _, _)
   | ObjSealT (_, _)
@@ -2625,6 +2627,8 @@ end = struct
   let rec mod_loc_of_virtual_use_op f =
     let mod_reason = Reason.map_reason_locs f in
     let mod_loc_of_root_use_op f = function
+    | ObjectSpread {op} -> ObjectSpread {op = mod_reason op}
+    | ObjectChain {op} -> ObjectChain {op = mod_reason op}
     | Addition { op; left; right } ->
         Addition {op = mod_reason op; left = mod_reason left; right = mod_reason right}
     | AssignVar { var; init} ->
@@ -3043,6 +3047,8 @@ let replace_speculation_root_use_op =
     | Error use_op -> use_op
 
 let aloc_of_root_use_op : root_use_op -> ALoc.t = function
+| ObjectSpread {op}
+| ObjectChain {op}
 | Addition {op; _}
 | AssignVar {init=op; _}
 | Cast {lower=op; _}
@@ -3170,6 +3176,8 @@ let string_of_internal_use_op = function
   | WidenEnv -> "WidenEnv"
 
 let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
+| ObjectSpread _ -> "ObjectSpread"
+| ObjectChain _ -> "ObjectChain"
 | Addition _ -> "Addition"
 | AssignVar _ -> "AssignVar"
 | Cast _ -> "Cast"

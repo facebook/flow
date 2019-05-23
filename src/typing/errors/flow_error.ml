@@ -350,6 +350,14 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
       | Op (Type.Speculation _) ->
         `UnknownRoot true
 
+      | Op (ObjectSpread {op}) ->
+        `Root (op, None,
+          [text "Cannot spread "; desc op])
+
+      | Op (ObjectChain {op}) ->
+        `Root (op, None,
+          [text "Incorrect arugments passed to "; desc op])
+
       | Op (Addition {op; left; right}) ->
         `Root (op, None,
           [text "Cannot add "; desc left; text " and "; desc right])

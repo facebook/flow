@@ -190,7 +190,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:3:1
 
-Property `a` is missing in string [1].
+Incorrect arugments passed to call of method `assign` because property `a` is missing in string [1].
 
    non_objects.js:3:1
    3| Object.assign("123", {a: "foo"});
@@ -204,7 +204,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- non_objects.js:4:1
 
-Property `a` is missing in number [1].
+Incorrect arugments passed to call of method `assign` because property `a` is missing in number [1].
 
    non_objects.js:4:1
    4| Object.assign(123, {a: "foo"});

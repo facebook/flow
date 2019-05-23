@@ -783,16 +783,16 @@ class virtual ['a] t_with_uses = object(self)
           let action' = self#lookup_action cx map_cx action in
           if lookup' == lookup && tlist' == tlist && prop' == prop && action' == action then t
           else LookupT (r, lookup', tlist', prop', action')
-      | ObjAssignToT (r, t1, t2, obj_assign) ->
+      | ObjAssignToT (op, r, t1, t2, obj_assign) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
           if t1' == t1 && t2' == t2 then t
-          else ObjAssignToT (r, t1', t2', obj_assign)
-      | ObjAssignFromT (r, t1, t2, obj_assign) ->
+          else ObjAssignToT (op, r, t1', t2', obj_assign)
+      | ObjAssignFromT (op, r, t1, t2, obj_assign) ->
           let t1' = self#type_ cx map_cx t1 in
           let t2' = self#type_ cx map_cx t2 in
           if t1' == t1 && t2' == t2 then t
-          else ObjAssignFromT (r, t1', t2', obj_assign)
+          else ObjAssignFromT (op, r, t1', t2', obj_assign)
       | ObjFreezeT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t

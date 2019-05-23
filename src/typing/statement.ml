@@ -2817,8 +2817,9 @@ and object_ cx reason ?(allow_sealed=true) props =
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
   let mk_spread from_obj to_obj ~assert_exact =
+    let use_op = Op (ObjectSpread {op = (reason_of_t from_obj)}) in
     Tvar.mk_where cx reason (fun t ->
-      Flow.flow cx (to_obj, ObjAssignToT(reason, from_obj, t, ObjAssign { assert_exact }));
+      Flow.flow cx (to_obj, ObjAssignToT(use_op, reason, from_obj, t, ObjAssign { assert_exact }));
     )
   in
 
@@ -5028,13 +5029,13 @@ and assignment cx loc (lhs, op, rhs) =
   | None -> simple_assignment cx loc lhs rhs
   | Some op -> op_assignment cx loc lhs op rhs
 
-and clone_object cx reason this that =
+and clone_object cx reason this that use_op =
   Tvar.mk_where cx reason (fun tvar ->
     let u = ObjRestT (reason, [], tvar) in
     let t = Flow.tvar_with_constraint cx u in
     Flow.flow cx (
       this,
-      ObjAssignToT (reason, that, t, default_obj_assign_kind)
+      ObjAssignToT (use_op, reason, that, t, default_obj_assign_kind)
     )
   )
 
@@ -5268,10 +5269,11 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
   in
   (* Copy properties from from_obj to to_obj. We should ensure that to_obj is
      not sealed. *)
-  let mk_spread from_obj to_obj ~assert_exact =
+  let mk_spread from_obj to_obj ~assert_exact  =
+    let use_op = Op (ObjectSpread {op = (reason_of_t from_obj)}) in
     Tvar.mk_where cx reason_props (fun t ->
       Flow.flow cx (to_obj,
-        ObjAssignToT (reason_props, from_obj, t, ObjAssign { assert_exact }));
+        ObjAssignToT (use_op, reason_props, from_obj, t, ObjAssign { assert_exact }));
     )
   in
   (* When there's no result, return a new object with specified sealing. When
@@ -5347,7 +5349,7 @@ and jsx_mk_props cx reason c name attributes children = Ast.JSX.(
         let (_, spread), _ as argument = expression cx argument in
         let obj = eval_props (map, result) in
         let result = mk_spread spread obj
-          ~assert_exact:(not (SMap.is_empty map && result = None)) in
+                       ~assert_exact:(not (SMap.is_empty map && result = None)) in
         let att = Opening.SpreadAttribute (spread_loc, { SpreadAttribute.argument }) in
         sealed, SMap.empty, Some result, att::atts
   ) (true, SMap.empty, None, []) attributes in

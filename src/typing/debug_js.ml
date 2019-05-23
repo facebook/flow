@@ -640,13 +640,13 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "action", json_of_lookup_action json_cx action
     ]
 
-  | ObjAssignFromT (_, proto, tvar, kind) -> [
+  | ObjAssignFromT (_, _, proto, tvar, kind) -> [
       "target", _json_of_t json_cx proto;
       "resultType", _json_of_t json_cx tvar;
       "kind", json_of_obj_assign_kind json_cx kind;
   ]
 
-  | ObjAssignToT (_, from, tvar, kind) -> [
+  | ObjAssignToT (_, _, from, tvar, kind) -> [
       "source", _json_of_t json_cx from;
       "resultType", _json_of_t json_cx tvar;
       "kind", json_of_obj_assign_kind json_cx kind;
@@ -2140,9 +2140,9 @@ and dump_use_t_ (depth, tvars) cx t =
   | MixinT (_, arg) -> p ~extra:(kid arg) t
   | NotT (_, arg) -> p ~extra:(kid arg) t
   | NullishCoalesceT (_, x, y) -> p ~extra:(spf "%s, %s" (kid x) (kid y)) t
-  | ObjAssignToT (_, arg1, arg2, _) -> p t
+  | ObjAssignToT (_, _, arg1, arg2, _) -> p t
       ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
-  | ObjAssignFromT (_, arg1, arg2, _) -> p t
+  | ObjAssignFromT (_, _, arg1, arg2, _) -> p t
       ~extra:(spf "%s, %s" (kid arg1) (kid arg2))
   | ObjFreezeT _ -> p t
   | ObjRestT (_, xs, arg) -> p t

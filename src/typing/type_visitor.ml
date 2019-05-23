@@ -410,8 +410,8 @@ class ['a] t = object(self)
     let acc = self#lookup_action cx acc action in
     acc
 
-  | ObjAssignToT (_, t1, t2, _)
-  | ObjAssignFromT (_, t1, t2, _)
+  | ObjAssignToT (_, _, t1, t2, _)
+  | ObjAssignFromT (_, _, t1, t2, _)
   | ObjTestT (_, t1, t2) ->
     let acc = self#type_ cx pole_TODO acc t1 in
     let acc = self#type_ cx pole_TODO acc t2 in

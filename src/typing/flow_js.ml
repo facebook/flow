@@ -717,7 +717,7 @@ let error_message_kind_of_upper = function
   | SetElemT (_, _, t, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
   | CallElemT (_, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
   | ElemT (_, _, DefT (_, _, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT
-  | ObjAssignFromT (_, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
+  | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
   | ObjAssignFromT _ -> Error_message.IncompatibleObjAssignFromT
   | ObjRestT _ -> Error_message.IncompatibleObjRestT
   | ObjSealT _ -> Error_message.IncompatibleObjSealT
@@ -2318,7 +2318,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let desc = if use_desc then Some (desc_of_reason reason_op) else None in
       rec_flow cx trace (reposition cx ~trace loc ?desc l, u)
 
-    | MaybeT (_, t), ObjAssignFromT (_, _, _, ObjAssign _) ->
+    | MaybeT (_, t), ObjAssignFromT (_, _, _, _, ObjAssign _) ->
       (* This isn't correct, but matches the existing incorrectness of spreads
        * today. In particular, spreading `null` and `void` become {}. The wrong
        * part is that spreads should distribute through unions, so `{...?T}`
@@ -2348,7 +2348,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
          reposition the entire optional type. *)
       rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
 
-    | OptionalT (_, t), ObjAssignFromT (_, _, _, ObjAssign _) ->
+    | OptionalT (_, t), ObjAssignFromT (_, _, _, _, ObjAssign _) ->
       (* This isn't correct, but matches the existing incorrectness of spreads
        * today. In particular, spreading `null` and `void` become {}. The wrong
        * part is that spreads should distribute through unions, so `{...?T}`
@@ -3120,14 +3120,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         Here we simulate a merged object type by iterating over the
         entire intersection. *)
     | IntersectionT (_, rep),
-      ObjAssignFromT (reason_op, proto, tout, kind) ->
+      ObjAssignFromT (op, reason_op, proto, tout, kind) ->
       let tvar = List.fold_left (fun tout t ->
         let tvar = match Cache.Fix.find reason_op t with
         | Some tvar -> tvar
         | None ->
           Tvar.mk_where cx reason_op (fun tvar ->
             Cache.Fix.add reason_op t tvar;
-            rec_flow cx trace (t, ObjAssignFromT (reason_op, proto, tvar, kind))
+            rec_flow cx trace (t, ObjAssignFromT (op, reason_op, proto, tvar, kind))
           )
         in
         rec_flow_t cx trace (tvar, tout);
@@ -4947,11 +4947,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* Special case any. Otherwise this will lead to confusing errors when any tranforms to an
        object type. *)
-    | AnyT _, ObjAssignToT (_, _, t, _) ->
+    | AnyT _, ObjAssignToT (_, _, _, t, _) ->
       rec_flow_t cx trace (l, t)
 
-    | to_obj, ObjAssignToT (reason, from_obj, t, kind) ->
-      rec_flow cx trace (from_obj, ObjAssignFromT (reason, to_obj, t, kind))
+    | to_obj, ObjAssignToT (use_op, reason, from_obj, t, kind) ->
+      rec_flow cx trace (from_obj, ObjAssignFromT (use_op, reason, to_obj, t, kind))
 
     (** When some object-like type O1 flows to
         ObjAssignFromT(_,O2,X,ObjAssign), the properties of O1 are copied to
@@ -4966,7 +4966,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         when O2 is resolved, we make the switch. **)
 
     | DefT (lreason, _, ObjT { props_tmap = mapr; flags; dict_t; _ }),
-      ObjAssignFromT (reason_op, to_obj, t, ObjAssign error_flags) ->
+      ObjAssignFromT (use_op, reason_op, to_obj, t, ObjAssign error_flags) ->
       Context.iter_props cx mapr (fun x p ->
         (* move the reason to the call site instead of the definition, so
            that it is in the same scope as the Object.assign, so that
@@ -4981,22 +4981,23 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           let propref = Named (reason_prop, x) in
           let t = filter_optional cx ~trace reason_prop t in
           rec_flow cx trace (to_obj, SetPropT (
-            unknown_use, reason_prop, propref, Normal, t, None
+            use_op, reason_prop, propref, Normal, t, None
           ))
         | None ->
           add_output cx ~trace (Error_message.EPropAccess (
-            (reason_prop, reason_op), Some x, Property.polarity p, Read, unknown_use
+            (reason_prop, reason_op), Some x, Property.polarity p, Read, use_op
           ))
       );
-      if dict_t <> None then rec_flow_t cx trace (AnyT.make Untyped reason_op, t)
+      if dict_t <> None then
+        rec_flow_t cx trace ~use_op (AnyT.make Untyped reason_op, t)
       else begin
         if error_flags.assert_exact && not flags.exact
         then add_output cx ~trace (Error_message.EInexactSpread (lreason, reason_op));
-        rec_flow_t cx trace (to_obj, t)
+        rec_flow_t cx trace ~use_op (to_obj, t)
       end
 
     | DefT (lreason, _, InstanceT (_, _, _, { own_props; proto_props; _ })),
-      ObjAssignFromT (reason_op, to_obj, t, ObjAssign _) ->
+      ObjAssignFromT (_, reason_op, to_obj, t, ObjAssign _) ->
       let own_props = Context.find_props cx own_props in
       let proto_props = Context.find_props cx proto_props in
       let props = SMap.union own_props proto_props in
@@ -5021,21 +5022,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
        existing object destroys all of the keys, turning the result into an
        AnyT as well. TODO: wait for `to_obj` to be resolved, and then call
        `SetPropT (_, _, _, AnyT, _)` on all of its props. *)
-    | AnyT (_, src), ObjAssignFromT (reason, _, t, ObjAssign _) ->
+    | AnyT (_, src), ObjAssignFromT (_, reason, _, t, ObjAssign _) ->
       rec_flow_t cx trace (AnyT.make src reason, t)
 
-    | AnyT _, ObjAssignFromT (_, _, t, _) ->
+    | AnyT _, ObjAssignFromT (_, _, _, t, _) ->
       rec_flow_t cx trace (l, t)
 
-    | ObjProtoT _, ObjAssignFromT (_, to_obj, t, ObjAssign _) ->
+    | ObjProtoT _, ObjAssignFromT (_, _, to_obj, t, ObjAssign _) ->
       rec_flow_t cx trace (to_obj, t)
 
     (* Object.assign semantics *)
-    | DefT (_, _, (NullT | VoidT)), ObjAssignFromT (_, to_obj, tout, ObjAssign _) ->
+    | DefT (_, _, (NullT | VoidT)), ObjAssignFromT (_, _, to_obj, tout, ObjAssign _) ->
       rec_flow_t cx trace (to_obj, tout)
 
     (* {...mixed} is the equivalent of {...{[string]: mixed}} *)
-    | DefT (reason, _, MixedT _), ObjAssignFromT (_, _, _, ObjAssign _) ->
+    | DefT (reason, _, MixedT _), ObjAssignFromT (_, _, _, _, ObjAssign _) ->
       let dict = {
         dict_name = None;
         key = StrT.make reason |> with_trust bogus_trust;
@@ -5049,17 +5050,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow cx trace (o, u)
 
-    | DefT (_, _, ArrT arrtype), ObjAssignFromT (r, o, t, ObjSpreadAssign) ->
+    | DefT (_, _, ArrT arrtype), ObjAssignFromT (use_op, r, o, t, ObjSpreadAssign) ->
       begin match arrtype with
       | ArrayAT (elemt, None)
       | ROArrayAT (elemt) ->
         (* Object.assign(o, ...Array<x>) -> Object.assign(o, x) *)
-        rec_flow cx trace (elemt, ObjAssignFromT (r, o, t, default_obj_assign_kind))
+        rec_flow cx trace (elemt, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
       | TupleAT (_, ts)
       | ArrayAT (_, Some ts) ->
         (* Object.assign(o, ...[x,y,z]) -> Object.assign(o, x, y, z) *)
         List.iter (fun from ->
-          rec_flow cx trace (from, ObjAssignFromT (r, o, t, default_obj_assign_kind))
+          rec_flow cx trace (from, ObjAssignFromT (use_op, r, o, t, default_obj_assign_kind))
         ) ts
       end
 
@@ -5103,7 +5104,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let o = Tvar.mk_where cx reason_op (fun tvar ->
         rec_flow cx trace (
           obj_inst,
-          ObjAssignFromT (reason_op, obj_super, tvar, default_obj_assign_kind)
+          ObjAssignFromT (unknown_use, reason_op, obj_super, tvar, default_obj_assign_kind)
         )
       ) in
 
@@ -5499,8 +5500,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* functions may have their prototypes written *)
     (***********************************************)
 
-    | DefT (_, _, FunT (_, t, _)), SetPropT (_, reason_op, Named (_, "prototype"), _, tin, _) ->
-      rec_flow cx trace (tin, ObjAssignFromT (reason_op, t,
+    | DefT (_, _, FunT (_, t, _)), SetPropT (use_op, reason_op, Named (_, "prototype"), _, tin, _) ->
+      rec_flow cx trace (tin, ObjAssignFromT (use_op, reason_op, t,
         AnyT.locationless Unsoundness.function_proto, default_obj_assign_kind))
 
     (*********************************)
@@ -7932,7 +7933,8 @@ and chain_objects cx ?trace reason this those =
         t, ObjSpreadAssign
     in
     Tvar.mk_where cx reason (fun t ->
-      flow_opt cx ?trace (result, ObjAssignToT(reason, that, t, kind));
+        flow_opt cx ?trace (result, ObjAssignToT(Op (ObjectChain {op = reason}),
+                                                 reason, that, t, kind));
     )
   ) this those in
   reposition cx ?trace (aloc_of_reason reason) result
@@ -9555,6 +9557,7 @@ and flow_use_op op1 u =
   | FunImplicitReturn _ | FunReturnStatement _
   | GetProperty _ | SetProperty _
   | JSXCreateElement _
+  | ObjectSpread _ | ObjectChain _
     -> true
   | Cast _
   | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _
