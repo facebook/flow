@@ -30,14 +30,19 @@ let path_ref_of_prefix = function
   | Tmp -> tmp
   | Dummy -> ref (Some "")
 
-let path_of_prefix x =
-  unsafe_opt_note "Prefix has not been set!" !(path_ref_of_prefix x)
-
 let string_of_prefix = function
   | Root -> "root"
   | Hhi -> "hhi"
   | Tmp -> "tmp"
   | Dummy -> ""
+
+let path_of_prefix prefix =
+  match !(path_ref_of_prefix prefix) with
+  | Some path -> path
+  | None ->
+    let message = Printf.sprintf "Prefix '%s' has not been set!"
+      (string_of_prefix prefix) in
+    raise (Invalid_argument message)
 
 let set_path_prefix prefix v =
   let v = Path.to_string v in
