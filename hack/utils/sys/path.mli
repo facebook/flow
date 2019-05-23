@@ -20,6 +20,7 @@ val compare: t -> t -> int
 val concat: t -> string -> t
 val chdir: t -> unit
 val dirname: t -> t
+val basename: t -> string
 val getcwd: unit -> t
 val output: out_channel -> t -> unit
 val remove: t -> unit
