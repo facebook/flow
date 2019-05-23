@@ -462,8 +462,6 @@ let bind_entry cx name entry loc =
         | LexScope, Value { Entry.kind = Const _; _ }
         | LexScope, Class _
         | VarScope _, _ ->
-          let loc = entry_loc entry in
-          Type_inference_hooks_js.dispatch_ref_hook cx loc loc;
           add_entry name entry scope
         (* otherwise, keep looking for our scope *)
         | _ -> loop scopes)
@@ -765,10 +763,8 @@ let allow_forward_ref = Scope.Entry.(function
 )
 
 (* helper - does semantic checking and returns entry type *)
-let read_entry ~track_ref ~lookup_mode ~specific cx name ?desc loc =
+let read_entry ~lookup_mode ~specific cx name ?desc loc =
   let scope, entry = find_entry cx name ?desc loc in
-  if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.entry_loc entry) loc;
   Entry.(match entry with
 
   | Type _ when lookup_mode != ForType ->
@@ -819,21 +815,21 @@ let get_current_env_refi key =
 
 (* get var's specific type (and track the reference) *)
 let get_var ?(lookup_mode=ForValue) =
-  read_entry ~track_ref:true ~lookup_mode ~specific:true ?desc:None
+  read_entry ~lookup_mode ~specific:true ?desc:None
 
 (* query var's specific type *)
-let query_var ~track_ref ?(lookup_mode=ForValue) =
-  read_entry ~track_ref ~lookup_mode ~specific:true
+let query_var ?(lookup_mode=ForValue) =
+  read_entry ~lookup_mode ~specific:true
 
 let get_internal_var cx name loc =
-  query_var ~track_ref:false cx (internal_name name) loc
+  query_var cx (internal_name name) loc
 
 (* get var's general type - for annotated vars, this is the
    annotated type, and for others it's the union of all
    types assigned to the var throughout its lifetime.
  *)
 let get_var_declared_type ?(lookup_mode=ForValue) =
-  read_entry ~track_ref:false ~lookup_mode ~specific:false ?desc:None
+  read_entry ~lookup_mode ~specific:false ?desc:None
 
 (* Unify declared type with another type. This is useful for allowing forward
    references in declared types to other types declared later in scope. *)
@@ -877,7 +873,7 @@ let is_global_var _cx name =
 
 (* get var type, with given location used in type's reason *)
 let var_ref ?(lookup_mode=ForValue) cx name ?desc loc =
-  let t = query_var ~track_ref:true ~lookup_mode cx name ?desc loc in
+  let t = query_var ~lookup_mode cx name ?desc loc in
   Flow.reposition cx loc t
 
 (* get refinement entry *)
@@ -888,10 +884,8 @@ let get_refinement cx key loc =
   | _ -> None
 
 (* helper: update let or var entry *)
-let update_var ?(track_ref=false) op cx ~use_op name specific loc =
+let update_var op cx ~use_op name specific loc =
   let scope, entry = find_entry cx name loc in
-  if track_ref then Type_inference_hooks_js.dispatch_ref_hook cx
-    (Entry.entry_loc entry) loc;
   Entry.(match entry with
   | Value ({
       Entry.kind = (Let _ as kind); value_state = State.Undeclared; _
@@ -937,10 +931,10 @@ let update_var ?(track_ref=false) op cx ~use_op name specific loc =
   )
 
 (* update var by direct assignment *)
-let set_var = update_var ~track_ref:true Changeset.Write
+let set_var = update_var Changeset.Write
 
 let set_internal_var cx name t loc =
-  update_var ~track_ref:false Changeset.Write cx ~use_op:unknown_use (internal_name name) t loc
+  update_var Changeset.Write cx ~use_op:unknown_use (internal_name name) t loc
 
 (* update var by refinement test *)
 let refine_var = update_var Changeset.Refine ~use_op:(Op (Internal Refinement))
@@ -1400,7 +1394,7 @@ let refine_with_preds cx loc preds orig_types =
       Entry.(match find_entry cx name loc with
       | _, Value v ->
         let orig_type =
-          query_var ~track_ref:false cx name loc
+          query_var cx name loc
         in
         let refi_type = mk_refi_type orig_type pred refi_reason in
         let refine = match Entry.kind_of_value v with
