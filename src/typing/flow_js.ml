@@ -23,6 +23,7 @@ open Loc_collections
 open Reason
 open Constraint
 open Type
+open Debug_js.Verbose
 
 module FlowError = Flow_error
 
@@ -646,42 +647,6 @@ let check_nonstrict_import cx trace is_strict imported_is_strict reason =
     let loc = Reason.aloc_of_reason reason in
     let message = Error_message.ENonstrictImport loc in
     add_output cx ~trace message
-
-let print_if_verbose_lazy cx trace
-    ?(delim = "")
-    ?(indent = 0)
-    (lines: string Lazy.t list) =
-  match Context.verbose cx with
-  | Some { Verbose.indent = num_spaces; _ } ->
-    let indent = indent + Trace.trace_depth trace - 1 in
-    let prefix = String.make (indent * num_spaces) ' ' in
-    let pid = Context.pid_prefix cx in
-    let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
-    let lines = Core_list.map ~f:add_prefix lines in
-    prerr_endline (String.concat delim lines)
-  | None ->
-    ()
-
-let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines: string list) =
-  match Context.verbose cx with
-  | Some _ ->
-    let lines = Core_list.map ~f:(fun line -> lazy line) lines in
-    print_if_verbose_lazy cx trace ~delim ~indent lines
-  | None ->
-    ()
-
-let print_types_if_verbose cx trace
-    ?(note: string option)
-    ((l: Type.t), (u: Type.use_t)) =
-  match Context.verbose cx with
-  | Some { Verbose.depth; _ } ->
-    let delim = match note with Some x -> spf " ~> %s" x | None -> " ~>" in
-    print_if_verbose cx trace ~delim [
-      Debug_js.dump_t ~depth cx l;
-      Debug_js.dump_use_t ~depth cx u;
-    ]
-  | None ->
-    ()
 
 let subst = Subst.subst
 

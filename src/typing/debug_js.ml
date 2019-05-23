@@ -2851,3 +2851,41 @@ let dump_error_message =
       spf "ESignatureVerification (%s)" (Signature_builder_deps.With_ALoc.Error.debug_to_string sve)
     | EBigIntNotYetSupported reason ->
       spf "EBigIntNotYetSupported (%s)" (dump_reason cx reason)
+
+module Verbose = struct
+  let print_if_verbose_lazy cx trace
+      ?(delim = "")
+      ?(indent = 0)
+      (lines: string Lazy.t list) =
+    match Context.verbose cx with
+    | Some { Verbose.indent = num_spaces; _ } ->
+      let indent = indent + Trace.trace_depth trace - 1 in
+      let prefix = String.make (indent * num_spaces) ' ' in
+      let pid = Context.pid_prefix cx in
+      let add_prefix line = spf "\n%s%s%s" prefix pid (Lazy.force line) in
+      let lines = Core_list.map ~f:add_prefix lines in
+      prerr_endline (String.concat delim lines)
+    | None ->
+      ()
+
+  let print_if_verbose cx trace ?(delim = "") ?(indent = 0) (lines: string list) =
+    match Context.verbose cx with
+    | Some _ ->
+      let lines = Core_list.map ~f:(fun line -> lazy line) lines in
+      print_if_verbose_lazy cx trace ~delim ~indent lines
+    | None ->
+      ()
+
+  let print_types_if_verbose cx trace
+      ?(note: string option)
+      ((l: Type.t), (u: Type.use_t)) =
+    match Context.verbose cx with
+    | Some { Verbose.depth; _ } ->
+      let delim = match note with Some x -> spf " ~> %s" x | None -> " ~>" in
+      print_if_verbose cx trace ~delim [
+        dump_t ~depth cx l;
+        dump_use_t ~depth cx u;
+      ]
+    | None ->
+      ()
+end
