@@ -19,7 +19,7 @@ end)
 module SigASTHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
     type t = (Loc.t, Loc.t) Flow_ast.program
     let prefix = Prefix.make()
-    let description = "AST"
+    let description = "SigAST"
 end)
 
 let source_remover = object(this)
@@ -59,7 +59,7 @@ end)
 module SigFileSigHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
     type t = File_sig.t
     let prefix = Prefix.make()
-    let description = "Requires"
+    let description = "SigRequires"
 end)
 
 (* Contains the hash for every file we even consider parsing *)
