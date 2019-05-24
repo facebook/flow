@@ -110,7 +110,7 @@ and collect_of_type ?log_unresolved cx reason acc = function
       collect_of_types ?log_unresolved cx reason acc ts
     end
 
-  | DefT (_, _, TypeAppT (_, poly_t, targs))
+  | TypeAppT (_, _, poly_t, targs)
     ->
     begin match poly_t with
     | OpenT tvar ->

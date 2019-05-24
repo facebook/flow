@@ -79,6 +79,8 @@ module rec TypeTerm : sig
     | ThisClassT of reason * t
     (* this instantiation *)
     | ThisTypeAppT of reason * t * t * t list option
+    (* type application *)
+    | TypeAppT of reason * use_op * t * t list
 
     (* exact *)
     | ExactT of reason * t
@@ -247,8 +249,6 @@ module rec TypeTerm : sig
 
     (* polymorphic type *)
     | PolyT of ALoc.t * typeparam Nel.t * t * int
-    (* type application *)
-    | TypeAppT of use_op * t * t list
 
     (* Type that wraps object types for the CustomFunT(Idx) function *)
     | IdxWrapper of t
@@ -1667,7 +1667,7 @@ end = struct
       | OpenT _
       (* some types may not be evaluated yet; TODO *)
       | EvalT _
-      | DefT (_, _, TypeAppT _)
+      | TypeAppT _
       | KeysT _
       | IntersectionT _
       (* other types might wrap parts that are accessible directly *)
@@ -2202,6 +2202,7 @@ end = struct
     | ShapeT (t) -> reason_of_t t
     | ThisClassT (reason, _) -> reason
     | ThisTypeAppT (reason, _, _, _) -> reason
+    | TypeAppT (reason, _, _, _) -> reason
     | AnyT (reason, _) -> reason
     | UnionT (reason, _) -> reason
     | IntersectionT (reason, _) -> reason
@@ -2364,6 +2365,7 @@ end = struct
     | ShapeT t -> ShapeT (mod_reason_of_t f t)
     | ThisClassT (reason, t) -> ThisClassT (f reason, t)
     | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
+    | TypeAppT (reason, t1, t2, t3) -> TypeAppT (f reason, t1, t2, t3)
 
   and mod_reason_of_defer_use_t f = function
     | LatentPredT (reason, p) -> LatentPredT (f reason, p)
@@ -3125,7 +3127,6 @@ let string_of_def_ctor = function
   | SingletonStrT _ -> "SingletonStrT"
   | StrT _ -> "StrT"
   | TypeT _ -> "TypeT"
-  | TypeAppT _ -> "TypeAppT"
   | VoidT -> "VoidT"
 
 let string_of_ctor = function
@@ -3164,6 +3165,7 @@ let string_of_ctor = function
   | ShapeT _ -> "ShapeT"
   | ThisClassT _ -> "ThisClassT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
+  | TypeAppT _ -> "TypeAppT"
   | UnionT _ -> "UnionT"
   | IntersectionT _ -> "IntersectionT"
   | OptionalT _ -> "OptionalT"
@@ -3462,7 +3464,7 @@ let typeapp ?(implicit=false) ?annot_loc t targs =
   | None -> reason
   in
   let use_op = Op (TypeApplication { type' = reason }) in
-  DefT (reason, bogus_trust (), TypeAppT (use_op, t, targs))
+  TypeAppT (reason, use_op, t, targs)
 
 let this_typeapp ?annot_loc t this targs =
   let reason = match targs with

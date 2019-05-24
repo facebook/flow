@@ -197,7 +197,6 @@ let hash_of_def_ctor = Type.(function
   | SingletonStrT _ -> SingletonStrH
   | StrT _ -> StrH
   | TypeT _ -> TypeH
-  | TypeAppT _ -> TypeAppH
   | VoidT -> VoidH
 )
 
@@ -235,6 +234,7 @@ let hash_of_ctor = Type.(function
   | ShapeT _ -> ShapeH
   | ThisClassT _ -> ThisClassH
   | ThisTypeAppT _ -> ThisTypeAppH
+  | TypeAppT _ -> TypeAppH
   | UnionT _ -> UnionH
 )
 

@@ -371,7 +371,7 @@ let rec extract_type cx this_t = match this_t with
       let inst_t = instantiate_poly_t cx c ts_opt in
       let inst_t = instantiate_type inst_t in
       extract_type cx inst_t
-  | DefT (_, _, TypeAppT (_, c, ts)) ->
+  | TypeAppT (_, _, c, ts) ->
       let c = resolve_type cx c in
       let inst_t = instantiate_poly_t cx c (Some ts) in
       let inst_t = instantiate_type inst_t in

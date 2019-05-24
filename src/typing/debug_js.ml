@@ -222,7 +222,7 @@ and _json_of_t_impl json_cx t = Hh_json.(
       "type", _json_of_t json_cx t
     ]
 
-  | DefT (_, _, TypeAppT (_, t, targs)) -> [
+  | TypeAppT (_, _, t, targs) -> [
       "typeArgs", JSON_Array (Core_list.map ~f:(_json_of_t json_cx) targs);
       "type", _json_of_t json_cx t
     ]
@@ -1788,7 +1788,7 @@ let rec dump_t_ (depth, tvars) cx t =
   | OptionalT (_, arg) -> p ~extra:(kid arg) t
   | EvalT (arg, expr, id) -> p
       ~extra:(spf "%s, %d" (defer_use expr (kid arg)) id) t
-  | DefT (_, trust, TypeAppT (_, base, args)) -> p ~trust:(Some trust) ~extra:(spf "%s, [%s]"
+  | TypeAppT (_, _, base, args) -> p ~extra:(spf "%s, [%s]"
       (kid base) (String.concat "; " (Core_list.map ~f:kid args))) t
   | ThisTypeAppT (_, base, this, args_opt) -> p ~reason:false
       ~extra:begin match args_opt with

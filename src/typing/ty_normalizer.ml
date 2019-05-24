@@ -634,7 +634,7 @@ end = struct
       Ty.mk_inter (t0, t1::ts)
     | DefT (_, _, PolyT (_, ps, t, _)) -> poly_ty ~env t ps
     | DefT (r, _, TypeT (kind, t)) -> type_t ~env r kind t None
-    | DefT (_, _ ,TypeAppT (_, t, ts)) -> type_app ~env t (Some ts)
+    | TypeAppT (_, _, t, ts) -> type_app ~env t (Some ts)
     | DefT (r, _, InstanceT (_, _, _, t)) -> instance_t ~env r t
     | DefT (_, _, ClassT t) -> class_t ~env t None
     | DefT (_, _, IdxWrapper t) -> type__ ~env t

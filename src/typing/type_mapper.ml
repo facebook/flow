@@ -76,6 +76,11 @@ class virtual ['a] t = object(self)
           let tlist_opt' = OptionUtils.ident_map (ListUtils.ident_map (self#type_ cx map_cx)) tlist_opt in
           if t1' == t1 && t2' == t2 && tlist_opt' == tlist_opt then t
           else ThisTypeAppT(r, t1', t2', tlist_opt')
+      | TypeAppT (r, op, t', ts) ->
+          let t'' = self#type_ cx map_cx t' in
+          let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
+          if t' == t'' && ts == ts' then t
+          else TypeAppT (r, op, t'', ts')
       | ExactT (r, t') ->
           let t'' = self#type_ cx map_cx t' in
           if t'' == t' then t
@@ -236,11 +241,6 @@ class virtual ['a] t = object(self)
           let t'' = self#type_ cx map_cx t' in
           if tparamlist == tparamlist' && t' == t'' then t
           else PolyT (tparams_loc, tparamlist', t'', Reason.mk_id ())
-      | TypeAppT (op, t', ts) ->
-          let t'' = self#type_ cx map_cx t' in
-          let ts' = ListUtils.ident_map (self#type_ cx map_cx) ts in
-          if t' == t'' && ts == ts' then t
-          else TypeAppT (op, t'', ts')
       | IdxWrapper t' ->
           let t'' = self#type_ cx map_cx t' in
           if t' == t'' then t

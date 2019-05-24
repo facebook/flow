@@ -165,7 +165,7 @@ module Kit (Flow: Flow_common.S): Flow_common.ASSERT_GROUND = struct
         | KeysT _ ->
           (* Same idea as type destructors. *)
           seen
-        | DefT (_, _, TypeAppT (_, c, ts)) ->
+        | TypeAppT (_, _, c, ts) ->
           self#typeapp ts cx pole seen c
         | DefT (r, _, ArrT (ArrayAT (t, ts))) when is_literal_array_reason r ->
           self#arrlit cx pole seen t ts

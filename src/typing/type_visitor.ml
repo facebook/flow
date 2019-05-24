@@ -114,6 +114,14 @@ class ['a] t = object(self)
     let acc = self#opt (self#list (self#type_ cx pole_TODO)) acc ts_opt in
     acc
 
+  | TypeAppT (_, _, t, ts) ->
+    let acc = self#type_ cx Positive acc t in
+    (* If we knew what `t` resolved to, we could determine the polarities for
+       `ts`, but in general `t` might be unresolved. Subclasses which have more
+       information should override this to be more specific. *)
+    let acc = self#list (self#type_ cx pole_TODO) acc ts in
+    acc
+
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
     self#type_ cx pole acc t
@@ -171,14 +179,6 @@ class ['a] t = object(self)
   | PolyT (_, xs, t, _) ->
     let acc = self#nel (self#type_param cx pole) acc xs in
     let acc = self#type_ cx pole acc t in
-    acc
-
-  | TypeAppT (_, t, ts) ->
-    let acc = self#type_ cx Positive acc t in
-    (* If we knew what `t` resolved to, we could determine the polarities for
-       `ts`, but in general `t` might be unresolved. Subclasses which have more
-       information should override this to be more specific. *)
-    let acc = self#list (self#type_ cx pole_TODO) acc ts in
     acc
 
   | IdxWrapper t ->

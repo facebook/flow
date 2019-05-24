@@ -252,7 +252,7 @@ end = struct
     inherit [TypeSet.t] Type_visitor.t as super
 
     method! type_ cx pole acc t = match t with
-    | DefT (_, _, TypeAppT (_, c, _)) -> super#type_ cx pole (TypeSet.add c acc) t
+    | TypeAppT (_, _, c, _) -> super#type_ cx pole (TypeSet.add c acc) t
     | OpenT _ -> (match ImplicitTypeArgument.abstract_targ t with
       | None -> acc
       | Some t -> TypeSet.add t acc
@@ -2470,10 +2470,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let tc = specialize_class cx trace ~reason_op ~reason_tapp c ts in
       instantiate_this_class cx trace reason_tapp tc this (Lower (use_op, l))
 
-    | DefT (_, _, TypeAppT _), ReposLowerT (reason, use_desc, u) ->
+    | TypeAppT _, ReposLowerT (reason, use_desc, u) ->
         rec_flow cx trace (reposition_reason cx ~trace reason ~use_desc l, u)
 
-    | DefT (reason_tapp, _, TypeAppT(use_op, c, ts)), MethodT (_, _, _, _, _, _) ->
+    | TypeAppT(reason_tapp, use_op, c, ts), MethodT (_, _, _, _, _, _) ->
         let reason_op = reason_of_use_t u in
         let t = mk_typeapp_instance cx
           ~trace ~use_op ~reason_op ~reason_tapp ~cache:[] c ts in
@@ -2490,8 +2490,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
      * upper and lower TypeAppT bound. We start by concretizing the upper bound
      * which we signal by setting the final element in ConcretizeTypeAppsT to
      * true. *)
-    | DefT (r1, _, TypeAppT (op1, c1, ts1)),
-      UseT (use_op, DefT (r2, _, TypeAppT (op2, c2, ts2))) ->
+    | TypeAppT (r1, op1, c1, ts1),
+      UseT (use_op, TypeAppT (r2, op2, c2, ts2)) ->
       if TypeAppExpansion.push_unless_loop cx (c1, ts1) then (
         if TypeAppExpansion.push_unless_loop cx (c2, ts2) then (
           rec_flow cx trace (c2, ConcretizeTypeAppsT
@@ -2543,7 +2543,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         id2 tparams_loc2 xs2 t2 ts2 in
       rec_flow cx trace (t1, UseT (use_op, t2))
 
-    | DefT (reason_tapp, _, TypeAppT (use_op, c, ts)), _ ->
+    |  TypeAppT (reason_tapp, use_op, c, ts), _ ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
         let reason_op = reason_of_use_t u in
         let t = mk_typeapp_instance cx ~trace ~use_op ~reason_op ~reason_tapp c ts in
@@ -2551,7 +2551,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         TypeAppExpansion.pop ();
       );
 
-    | _, UseT (use_op, DefT (reason_tapp, _, TypeAppT (use_op_tapp, c, ts))) ->
+    | _, UseT (use_op, TypeAppT(reason_tapp, use_op_tapp, c, ts)) ->
       if TypeAppExpansion.push_unless_loop cx (c, ts) then (
         let reason_op = reason_of_t l in
         let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op ~reason_tapp c ts in
@@ -6854,7 +6854,7 @@ and empty_success flavor u =
      empty, but they propagate the LHS to other types and trigger additional
      flows that may need to occur. *)
   | _, UseT (_, DefT (_, _, PolyT _))
-  | _, UseT (_, DefT (_, _, TypeAppT _))
+  | _, UseT (_, TypeAppT _)
   | _, UseT (_, AnyWithLowerBoundT _)
   | _, UseT (_, AnyWithUpperBoundT _)
   | _, UseT (_, MaybeT _)
@@ -7242,7 +7242,7 @@ and any_propagated_use cx trace use_op any l =
   | OptionalT _
   | MaybeT _
   | DefT (_, _, PolyT _)
-  | DefT (_, _, TypeAppT _)
+  | TypeAppT _
   | UnionT _
   | IntersectionT _
   | ThisTypeAppT _ ->
@@ -7454,7 +7454,7 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
 (* Specialize TypeAppTs before evaluating them so that we can handle special
    cases. Like the union case below. mk_typeapp_instance will return an AnnotT
    which will be fully resolved using the AnnotT case above. *)
-| DefT (reason_tapp, _, TypeAppT (use_op_tapp, c, ts)) ->
+| TypeAppT (reason_tapp, use_op_tapp, c, ts) ->
   let destructor = TypeDestructorT (use_op, reason, d) in
   let t = mk_typeapp_instance cx ~trace ~use_op:use_op_tapp ~reason_op:reason ~reason_tapp c ts in
   rec_flow_t cx trace (EvalT (t, destructor, Cache.Eval.id t destructor), tout)
@@ -7614,7 +7614,7 @@ and check_polarity cx ?trace polarity = function
     check_polarity cx ?trace Positive c
 
   | ThisTypeAppT (_, c, _, Some ts)
-  | DefT (_, _, TypeAppT (_, c, ts))
+  | TypeAppT (_, _, c, ts)
     ->
     check_polarity cx ?trace Positive c;
     check_polarity_typeapp cx ?trace polarity c ts
@@ -10002,7 +10002,7 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
     ) funtype1.params funtype2.params;
     rec_unify cx trace ~use_op funtype1.return_t funtype2.return_t
 
-  | DefT (_, _, TypeAppT (_, c1, ts1)), DefT (_, _, TypeAppT (_, c2, ts2))
+  | TypeAppT (_, _, c1, ts1), TypeAppT (_, _, c2, ts2)
     when c1 = c2 && List.length ts1 = List.length ts2 ->
     List.iter2 (rec_unify cx trace ~use_op) ts1 ts2
 
