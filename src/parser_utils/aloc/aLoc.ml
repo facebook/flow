@@ -33,6 +33,8 @@ module Repr: sig
   val of_key: File_key.t option -> key -> t
 
   val source: t -> File_key.t option
+  val update_source: (File_key.t option -> File_key.t option) -> t -> t
+
   val kind: t -> kind
   (* Raises unless `kind` returns `Abstract` *)
   val get_key_exn: t -> key
@@ -88,6 +90,11 @@ end = struct
     Obj.magic loc
 
   let source {Loc.source; _} = source
+
+  let update_source f loc = Loc.({
+    loc with
+    source = f loc.source;
+  })
 
   (* See the definition site of the `kind` property for an explanation *)
   let is_abstract (loc: t): bool = (Obj.magic loc).kind = abstract_sentinel_value
@@ -157,6 +164,8 @@ let to_loc table loc =
 let none = Repr.of_loc Loc.none
 
 let source = Repr.source
+
+let update_source = Repr.update_source
 
 let debug_to_string ?(include_source=false) loc =
   match Repr.kind loc with

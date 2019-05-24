@@ -41,6 +41,8 @@ val none: t
 
 val source: t -> File_key.t option
 
+val update_source: (File_key.t option -> File_key.t option) -> t -> t
+
 val compare: t -> t -> int
 val equal: t -> t -> bool
 
