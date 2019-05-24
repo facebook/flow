@@ -12,8 +12,43 @@ module Identifiers = struct
 end
 
 module Types = struct
+  module Functions = struct
+    let params ?(loc=Loc.none) ?rest params = loc, { Ast.Type.Function.Params.params; rest }
+    let make ?tparams params return = { Ast.Type.Function.tparams; params; return }
+  end
+
+  module Objects = struct
+    let make ?(exact=true) ?(inexact=false) properties =
+      { Ast.Type.Object.exact; inexact; properties }
+
+    let property
+        ?(loc=Loc.none)
+        ?(optional=false)
+        ?(static=false)
+        ?(proto=false)
+        ?(_method=false)
+        ?(variance=None)
+        key
+        value
+    =
+      loc, { Ast.Type.Object.Property.key; value; optional; static; proto; _method; variance }
+
+    let getter ?(loc=Loc.none) ?optional ?static ?proto ?_method ?variance key func =
+      let value = Ast.Type.Object.Property.Get (loc, func) in
+      let prop = property ~loc ?optional ?static ?proto ?_method ?variance key value in
+      Ast.Type.Object.Property prop
+
+    let setter ?(loc=Loc.none) ?optional ?static ?proto ?_method ?variance key func =
+      let value = Ast.Type.Object.Property.Set (loc, func) in
+      let prop = property ~loc ?optional ?static ?proto ?_method ?variance key value in
+      Ast.Type.Object.Property prop
+  end
+
   let mixed = Loc.none, Ast.Type.Mixed
   let annotation t = Loc.none, t
+
+  let object_ ?(loc=Loc.none) ?exact ?inexact properties =
+    loc, Ast.Type.Object (Objects.make ?exact ?inexact properties)
 end
 
 module Literals = struct
