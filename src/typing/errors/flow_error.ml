@@ -356,7 +356,7 @@ let rec make_error_printable (error : Loc.t t) : Loc.t Errors.printable_error =
 
       | Op (ObjectChain {op}) ->
         `Root (op, None,
-          [text "Incorrect arugments passed to "; desc op])
+          [text "Incorrect arguments passed to "; desc op])
 
       | Op (Addition {op; left; right}) ->
         `Root (op, None,
