@@ -2722,7 +2722,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* flow the union of keys of l to keys *)
         let keylist = SMap.fold (fun x _ acc ->
           let reason = replace_reason_const (RStringLit x) reason_op in
-          DefT (reason, bogus_trust (), StrT (Literal (None, x)))::acc
+          DefT (reason, bogus_trust (), SingletonStrT x)::acc
         ) (Context.find_props cx props_tmap) [] in
         rec_flow cx trace (union_of_ts reason_op keylist, keys);
         Option.iter dict_t (fun { key; _ } ->
@@ -2737,7 +2737,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let own_props = Context.find_props cx instance.own_props in
       let keylist = SMap.fold (fun x _ acc ->
         let reason = replace_reason_const (RStringLit x) reason_op in
-        DefT (reason, bogus_trust (), StrT (Literal (None, x)))::acc
+        DefT (reason, bogus_trust (), SingletonStrT x)::acc
       ) own_props [] in
       rec_flow cx trace (union_of_ts reason_op keylist, keys)
 
@@ -9444,9 +9444,12 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
       if orig_obj = obj then rec_flow_t cx trace (orig_obj, result)
   in
   let sentinel_of_literal = function
-    | DefT (_, _, StrT (Literal (_, value))) -> Some Enum.(One (Str value))
-    | DefT (_, _, NumT (Literal (_, value))) -> Some Enum.(One (Num value))
-    | DefT (_, _, BoolT (Some value)) -> Some Enum.(One (Bool value))
+    | DefT (_, _, StrT (Literal (_, value)))
+    | DefT (_, _, SingletonStrT value)       -> Some Enum.(One (Str value))
+    | DefT (_, _, NumT (Literal (_, value)))
+    | DefT (_, _, SingletonNumT value)       -> Some Enum.(One (Num value))
+    | DefT (_, _, BoolT (Some value))
+    | DefT (_, _, SingletonBoolT value)      -> Some Enum.(One (Bool value))
     | DefT (_, _, VoidT) -> Some Enum.(One Void)
     | DefT (_, _, NullT) -> Some Enum.(One Null)
     | UnionT (_, rep) ->
