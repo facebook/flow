@@ -196,6 +196,7 @@ JS_STUBS=\
 OUNIT_TESTS=\
 	src/commands/config/__tests__/command_config_tests.native\
 	src/common/lwt/__tests__/lwt_tests.native\
+	src/common/ty/__tests__/ty_tests.native\
 	src/common/utils/__tests__/common_utils_tests.native\
 	src/common/semver/__tests__/semver_tests.native\
 	src/parser/__tests__/parser_tests.native\
