@@ -193,6 +193,17 @@ COPIED_PRELUDE=\
 JS_STUBS=\
 	$(wildcard js/*.js)
 
+OUNIT_TESTS=\
+	src/commands/config/__tests__/command_config_tests.native\
+	src/common/lwt/__tests__/lwt_tests.native\
+	src/common/utils/__tests__/common_utils_tests.native\
+	src/common/semver/__tests__/semver_tests.native\
+	src/parser/__tests__/parser_tests.native\
+	src/parser_utils/__tests__/parser_utils_tests.native\
+	src/parser_utils/output/__tests__/parser_utils_output_tests.native\
+	src/parser_utils/output/printers/__tests__/parser_utils_output_printers_tests.native\
+	src/server/find_refs/__tests__/find_refs_tests.native
+	# src/typing/__tests__/typing_tests.native
 
 ################################################################################
 #                                    Rules                                     #
@@ -206,6 +217,7 @@ NATIVE_OBJECT_FILES+=hack/utils/get_build_id.gen.o
 BUILT_C_DIRS=$(addprefix _build/,$(NATIVE_C_DIRS))
 BUILT_C_FILES=$(addprefix _build/,$(NATIVE_C_FILES))
 BUILT_OBJECT_FILES=$(addprefix _build/,$(NATIVE_OBJECT_FILES))
+BUILT_OUNIT_TESTS=$(addprefix _build/,$(OUNIT_TESTS))
 
 CC_FLAGS=-DNO_SQLITE3 -DNO_HHVM
 CC_FLAGS += $(EXTRA_CC_FLAGS)
@@ -300,6 +312,28 @@ _build/scripts/ppx_gen_flowlibs.native: scripts/ppx_gen_flowlibs.ml
 bin/flow$(EXE): build-flow
 	mkdir -p $(@D)
 	cp _build/src/flow.native $@
+
+$(BUILT_OUNIT_TESTS): $(BUILT_OBJECT_FILES) FORCE
+	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+		-I $(patsubst _build/%,%,$(@D)) \
+		-lflags "$(LINKER_FLAGS)" \
+		$(patsubst _build/%,%,$@)
+
+.PHONY: build-ounit-tests
+build-ounit-tests: $(BUILT_OBJECT_FILES) FORCE
+	export OCAMLFIND_IGNORE_DUPS_IN="$(shell ocamlfind query lwt)"; \
+	$(OCB) $(INTERNAL_FLAGS) $(INCLUDE_OPTS) $(FINDLIB_OPTS) \
+		$(foreach dir,$(dir $(OUNIT_TESTS)),-I $(dir)) \
+		-lflags "$(LINKER_FLAGS)" \
+		$(OUNIT_TESTS)
+
+.PHONY: ounit-tests
+ounit-tests: build-ounit-tests
+	@for cmd in $(BUILT_OUNIT_TESTS); do \
+		echo "Running $$cmd:"; \
+		"$$cmd"; \
+	done
 
 do-test:
 	./runtests.sh bin/flow$(EXE)
