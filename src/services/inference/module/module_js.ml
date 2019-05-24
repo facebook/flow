@@ -405,9 +405,37 @@ module Node = struct
       ])
     )
 
+  let flow_typed_node_module import_str =
+    let scoped_module_regex = Str.regexp "^@\\([a-zA-Z0-9$_.-]+\\)/\\(.*\\)$" in
+    if Str.string_match scoped_module_regex import_str 0 then
+      let scope = Str.matched_group 1 import_str in
+      let name = Str.matched_group 2 import_str in
+      scope ^ "__" ^ name
+    else
+      import_str
+
   let rec node_module ~options ~reader node_modules_containers file loc resolution_acc dir r =
     let file_options = Options.file_options options in
     lazy_seq [
+      lazy (
+        if SSet.mem dir node_modules_containers then
+          lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
+            lazy (resolve_relative
+              ~options ~reader
+              loc ?resolution_acc dir (
+                spf 
+                "%s%s%s%s%s" 
+                dirname 
+                Filename.dir_sep 
+                "@flowtyped" 
+                Filename.dir_sep 
+                (flow_typed_node_module r)
+              )
+            )
+          ))
+        else None
+      );
+
       lazy (
         if SSet.mem dir node_modules_containers then
           lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
@@ -439,9 +467,14 @@ module Node = struct
   let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
-    if explicitly_relative import_str || absolute import_str
-    then resolve_relative ~options ~reader loc ?resolution_acc dir import_str
-    else node_module ~options ~reader node_modules_containers f loc resolution_acc dir import_str
+    lazy_seq [
+      lazy (External.resolve_import options f import_str);
+      lazy (
+        if explicitly_relative import_str || absolute import_str
+        then resolve_relative ~options ~reader loc ?resolution_acc dir import_str
+        else node_module ~options ~reader node_modules_containers f loc resolution_acc dir import_str
+      );
+    ]
 
   let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str =
     let candidates = module_name_candidates ~options import_str in
