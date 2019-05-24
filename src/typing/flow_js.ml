@@ -5939,14 +5939,6 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         else rec_flow_t cx trace (l, result)
 
     | DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)),
-      SentinelPropTestT (reason, obj, key, sense, Enum.Many enums, result) ->
-      if sense
-      then EnumSet.iter (fun enum ->
-        rec_flow cx trace (l, SentinelPropTestT (reason, obj, key, sense, Enum.One enum, result))
-      ) enums
-      else rec_flow_t cx trace (obj, result)
-
-    | DefT (_, _, (StrT _ | NumT _ | BoolT _ | NullT | VoidT)),
       SentinelPropTestT (_reason, l, _key, sense, _, result) ->
         (* types don't match (would've been matched above) *)
         (* we don't prune other types like objects or instances, even though
