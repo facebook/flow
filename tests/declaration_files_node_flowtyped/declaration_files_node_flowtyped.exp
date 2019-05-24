@@ -1,0 +1,70 @@
+Error ------------------------------------------------------------------------------------ test_prefers_flowtyped.js:5:2
+
+Cannot cast `A.fun()` to string because number [1] is incompatible with string [2].
+
+   test_prefers_flowtyped.js:5:2
+   5| (A.fun(): string); // Error number ~> string
+       ^^^^^^^
+
+References:
+   node_modules/@flowtyped/foo/index.js.flow:3:32
+   3| declare export function fun(): number;
+                                     ^^^^^^ [1]
+   test_prefers_flowtyped.js:5:11
+   5| (A.fun(): string); // Error number ~> string
+                ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- test_regular.js:5:2
+
+Cannot cast `A.fun()` to number because string [1] is incompatible with number [2].
+
+   test_regular.js:5:2
+   5| (A.fun(): number); // Error string ~> number
+       ^^^^^^^
+
+References:
+   node_modules/baz/index.js.flow:3:32
+   3| declare export function fun(): string;
+                                     ^^^^^^ [1]
+   test_regular.js:5:11
+   5| (A.fun(): number); // Error string ~> number
+                ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- test_scoped.js:5:2
+
+Cannot cast `A.fun()` to string because number [1] is incompatible with string [2].
+
+   test_scoped.js:5:2
+   5| (A.fun(): string); // Error number ~> string
+       ^^^^^^^
+
+References:
+   node_modules/@flowtyped/foo__bar/index.js.flow:3:32
+   3| declare export function fun(): number;
+                                     ^^^^^^ [1]
+   test_scoped.js:5:11
+   5| (A.fun(): string); // Error number ~> string
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- test_with_main.js:5:2
+
+Cannot cast `A.fun()` to string because number [1] is incompatible with string [2].
+
+   test_with_main.js:5:2
+   5| (A.fun(): string); // Error number ~> string
+       ^^^^^^^
+
+References:
+   node_modules/@flowtyped/bar/code.js.flow:3:32
+   3| declare export function fun(): number;
+                                     ^^^^^^ [1]
+   test_with_main.js:5:11
+   5| (A.fun(): string); // Error number ~> string
+                ^^^^^^ [2]
+
+
+
+Found 4 errors
