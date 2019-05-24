@@ -267,18 +267,17 @@ let get_cycle ~env fn =
     |> serialize_graph
   ))
 
-let suggest ~options ~env ~profiling file_input =
-  let file = File_input.filename_of_file_input file_input in
-  let file = File_key.SourceFile file in
-  File_input.content_of_file_input file_input
-  %>>= fun content -> try_with (fun _ ->
+let suggest ~options ~env ~profiling file =
+  let file_name = File_input.filename_of_file_input file in
+  File_input.content_of_file_input file
+  %>>= fun file_content -> try_with (fun _ ->
     let%lwt result =
-      Type_info_service.suggest ~options ~env ~profiling file content
+      Type_info_service.suggest ~options ~env ~profiling file_name file_content
     in
     match result with
-    | Ok (tc_errors, tc_warnings, suggest_warnings, annotated_program) ->
+    | Ok (tc_errors, tc_warnings, suggest_warnings, file_patch) ->
       Lwt.return (Ok (ServerProt.Response.Suggest_Ok {
-        tc_errors; tc_warnings; suggest_warnings; annotated_program
+        tc_errors; tc_warnings; suggest_warnings; file_patch
       }))
     | Error errors ->
       Lwt.return (Ok (ServerProt.Response.Suggest_Error errors))

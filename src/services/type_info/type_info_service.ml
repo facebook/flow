@@ -68,14 +68,18 @@ let coverage ~options ~env ~profiling ~force ~trust file content =
   Types_js.basic_check_contents ~options ~env ~profiling content file >|=
   map ~f:(fun (cx, _, _, _) -> Query_types.covered_types cx ~should_check ~check_trust:trust)
 
-let suggest ~options ~env ~profiling file content =
-  Types_js.typecheck_contents ~options ~env ~profiling content file >|=
-  function
+
+let suggest ~options ~env ~profiling file_name file_content =
+  let file_key = File_key.SourceFile file_name in
+  Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
   | (Some (cx, ast, file_sig, _), tc_errors, tc_warnings) ->
     let cxs = Query_types.suggest_types cx (File_sig.abstractify_locs file_sig) in
     let visitor = new Suggest.visitor ~cxs in
     let typed_ast = visitor#program ast in
     let suggest_warnings = visitor#warnings () in
-    Ok (tc_errors, tc_warnings, suggest_warnings, typed_ast)
+    (*let open Flow_ast_differ in*)
+    let ast_diff = Flow_ast_differ.(program Standard ast typed_ast) in
+    let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff typed_ast file_content in
+    Ok (tc_errors, tc_warnings, suggest_warnings, file_patch)
   | (None, errors, _) ->
     Error errors

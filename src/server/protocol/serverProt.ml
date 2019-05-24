@@ -189,7 +189,7 @@ module Response = struct
       tc_errors: Errors.ConcreteLocPrintableErrorSet.t;
       tc_warnings: Errors.ConcreteLocPrintableErrorSet.t;
       suggest_warnings: Errors.ConcreteLocPrintableErrorSet.t;
-      annotated_program: (Loc.t, Loc.t) Flow_ast.program;
+      file_patch: Replacement_printer.patch;
     }
   | Suggest_Error of Errors.ConcreteLocPrintableErrorSet.t
 

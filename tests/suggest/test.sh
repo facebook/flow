@@ -37,6 +37,12 @@ do_file "spread.js"
 do_file "string-literal.js"
 do_file "type-utils.js"
 do_file "union-0.js"
+do_file "replacement-array.js"
+do_file "replacement-arrow.js"
+do_file "replacement-class.js"
+do_file "replacement-dictionary.js"
+do_file "replacement-function.js"
+do_file "replacement-object.js"
 
 "$FLOW" init $TEMP_DIR
 assert_ok "$FLOW" check $TEMP_DIR

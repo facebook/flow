@@ -47,22 +47,7 @@ let handle_error err =
   prerr_endline err;
   FlowExitStatus.(exit Unknown_error)
 
-let layout_prettier ast =
-  let attached_comments = Flow_prettier_comments.attach_comments ast in
-  Js_layout_generator.with_attached_comments := Some attached_comments ;
-  let layout = Js_layout_generator.program_simple ast in
-  Js_layout_generator.with_attached_comments := None ;
-  layout
-
-let print_annotated_program annot_ast =
-  annot_ast
-  |> Comment_utils.strip_inlined_comments
-  |> layout_prettier
-  |> Pretty_printer.print ~source_maps:None
-  |> Source.contents
-  |> print_endline
-
-let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_warnings =
+let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_warnings content =
   let with_errors_and_warnings do_step errors warnings max_warnings next =
     let err () =
       Errors.Cli_output.print_errors ~out_channel:stderr ~flags:error_flags
@@ -80,7 +65,7 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
   in
   function
   | ServerProt.Response.Suggest_Ok {
-      tc_errors; tc_warnings; suggest_warnings; annotated_program
+      tc_errors; tc_warnings; suggest_warnings; file_patch
     } ->
     (* First, see if the command should fail on a typechecking error. Use
      * tc_errors and tc_warnings with the `with_errors_and_warnings` defined
@@ -93,7 +78,7 @@ let handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_war
     with_errors_and_warnings fail_on_suggest_warnings Errors.ConcreteLocPrintableErrorSet.empty
       suggest_warnings (Some 0) @@ fun () ->
     (* Finally, print the AST if no error has been flagged. *)
-    print_annotated_program annotated_program
+    print_string @@ Replacement_printer.print file_patch content
   | ServerProt.Response.Suggest_Error errors ->
     (* This is the case of a parse fail (no context is created). The `errors`
      * set ought to be non-empty. Otherwise, we throw an exception. If this
@@ -106,6 +91,17 @@ let main base_flags option_values root error_flags strip_root path wait_for_rech
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let file = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name)
     path (Option.map ~f:expand_path filename) in
+  let open File_input in
+  let content =
+    match content_of_file_input file with
+    | Ok content -> content
+    (* If the File_input is from stdin we would have been in the previous line.
+       If the File_input is from a file then expand_path verified the file exists. *)
+    | _ ->
+      let msg =
+        Printf.sprintf "Failed to open file: %s" @@ filename_of_file_input file in
+      FlowExitStatus.(exit ~msg Input_error) in
+  let file = FileContent(path_of_file_input file, content) in
   let root = guess_root flowconfig_name (
     match root with
     | Some root -> Some root
@@ -115,7 +111,8 @@ let main base_flags option_values root error_flags strip_root path wait_for_rech
   let request = ServerProt.Request.SUGGEST { input = file; wait_for_recheck; } in
   match connect_and_make_request flowconfig_name option_values root request with
   | ServerProt.Response.SUGGEST (Ok result) ->
-    handle_response strip_root error_flags fail_on_tc_errors fail_on_suggest_warnings result;
+    handle_response strip_root error_flags fail_on_tc_errors
+      fail_on_suggest_warnings content result;
     flush stdout
   | ServerProt.Response.SUGGEST (Error error) ->
     handle_error error
