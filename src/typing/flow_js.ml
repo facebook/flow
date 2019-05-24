@@ -2890,6 +2890,18 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         | _ -> UnionRep.members rep |> List.iter (fun t -> rec_flow cx trace (t, u))
       end
 
+    | UnionT (_, rep1), EqT (_, _, UnionT (_, rep2)) ->
+        if match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
+          (* If both enums are subsets of each other, they contain the same elements.
+            2 n log n still grows slower than n^2 *)
+          | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2 && EnumSet.subset enums2 enums1
+          | _ -> false
+        then () else
+          UnionRep.members rep1 |> Core_list.iter ~f:(fun t -> rec_flow cx trace (t, u))
+
+    | UnionT _, EqT (reason, flip, t) when needs_resolution t ->
+        rec_flow cx trace (t, EqT(reason, not flip, l))
+
     | UnionT (r, rep), SentinelPropTestT (_reason, l, _key, sense, sentinel, result) ->
       (* we have the check l.key === sentinel where l.key is a union *)
       if sense then
@@ -5818,10 +5830,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (**************************)
 
     | (l, ComparatorT(reason, flip, r)) ->
-      flow_comparator cx trace reason flip l r;
+      flow_comparator cx trace reason flip l r
 
     | (l, EqT(reason, flip, r)) ->
-      flow_eq cx trace reason flip l r;
+      flow_eq cx trace reason flip l r
 
     (************************)
     (* unary minus operator *)
