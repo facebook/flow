@@ -467,14 +467,9 @@ module Node = struct
   let resolve_import ~options ~reader node_modules_containers f loc ?resolution_acc import_str =
     let file = File_key.to_string f in
     let dir = Filename.dirname file in
-    lazy_seq [
-      lazy (External.resolve_import options f import_str);
-      lazy (
-        if explicitly_relative import_str || absolute import_str
-        then resolve_relative ~options ~reader loc ?resolution_acc dir import_str
-        else node_module ~options ~reader node_modules_containers f loc resolution_acc dir import_str
-      );
-    ]
+    if explicitly_relative import_str || absolute import_str
+    then resolve_relative ~options ~reader loc ?resolution_acc dir import_str
+    else node_module ~options ~reader node_modules_containers f loc resolution_acc dir import_str
 
   let imported_module ~options ~reader node_modules_containers file loc ?resolution_acc import_str =
     let candidates = module_name_candidates ~options import_str in
