@@ -17,6 +17,7 @@ end = struct
   let commands = [
     AstCommand.command;
     AutocompleteCommand.command;
+    AutofixCommand.command;
     CheckCommands.CheckCommand.command;
     CheckCommands.FocusCheckCommand.command;
     CheckContentsCommand.command;
