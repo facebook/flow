@@ -17,6 +17,23 @@ let maybe_known f x =
     | Unknown x -> Unknown x
   end
 
+let unwrap_type =
+  let rec unwrap seen cx t =
+  match t with
+  | OpenT (_, id) ->
+    if ISet.mem id !seen then t
+    else begin
+      seen := ISet.add id !seen;
+      let open Constraint in
+      match Context.find_graph cx id with
+      | Resolved t' | FullyResolved t' -> unwrap seen cx t'
+      | Unresolved _ -> t
+    end
+  | AnnotT (_, t, _)
+  | ReposT (_, t) -> unwrap seen cx t
+  | t -> t in
+  fun cx -> unwrap (ref ISet.empty) cx
+
 (* NOTE: While union flattening could be performed at any time, it is most effective when we know
    that all tvars have been resolved. *)
 let union_flatten =

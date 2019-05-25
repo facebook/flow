@@ -2830,23 +2830,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
 
     (* cases where there is no loss of precision *)
 
-    (* Optimization where an union is a subset of another. Equality modulo
-        reasons is important for this optimization to be effective, since types
-        are repositioned everywhere. *)
-
-    (** TODO: (1) Define a more general partial equality, that takes into
-        account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
-    | UnionT (_, rep1), UseT (_, UnionT (_, rep2)) when
-       (* Try n log n check before n^2 check *)
-        begin match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
-          | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2
-          | _, _ ->
-              let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
-              Type_mapper.union_flatten cx @@ UnionRep.members rep1
-              |> List.for_all (fun t1 -> List.exists
-                  (TypeUtil.quick_subtype (Context.trust_errors cx) t1) ts2)
-        end ->
-      ()
+    | UnionT _, UseT (_, (UnionT _ as u)) when union_optimization_guard cx l u -> ()
 
     (* Optimization to treat maybe and optional types as special unions for subset comparision *)
 
@@ -10765,6 +10749,40 @@ and mk_instance cx ?trace instance_reason ?(use_desc=false) c =
     flow_opt_t cx ?trace (c, DefT (instance_reason, bogus_trust (), TypeT (InstanceKind, t)))
   ) in
   AnnotT (instance_reason, source, use_desc)
+
+(* Optimization where an union is a subset of another. Equality modulo
+    reasons is important for this optimization to be effective, since types
+    are repositioned everywhere. *)
+
+(** TODO: (1) Define a more general partial equality, that takes into
+    account unified type variables. (2) Get rid of UnionRep.quick_mem. **)
+and union_optimization_guard =
+  (* Check if l is a subset of u. Flatten both unions and then check that each element
+     of l appears somewhere in u *)
+  let union_subtype cx rep1 rep2 =
+    let ts2 = Type_mapper.union_flatten cx @@ UnionRep.members rep2 in
+    Type_mapper.union_flatten cx @@ UnionRep.members rep1
+    |> Core_list.for_all ~f:(fun t1 -> Core_list.exists
+        ~f:(TypeUtil.quick_subtype (Context.trust_errors cx) t1) ts2) in
+  let rec union_optimization_guard_impl seen cx l u =
+    match l, u with
+    | UnionT (_, rep1), UnionT (_, rep2) ->
+      (* Try n log n check before n^2 check *)
+      begin match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
+      | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2
+      | _, _ ->
+        (* Check if u contains l after unwrapping annots, tvars and repos types.
+           This is faster than the n^2 case below because it avoids flattening both
+           unions *)
+        begin
+          UnionRep.members rep2
+          |> Core_list.map ~f:(Type_mapper.unwrap_type cx)
+          |> Core_list.exists ~f:(fun u ->
+            not (TypeSet.mem u seen) && union_optimization_guard_impl (TypeSet.add u seen) cx l u)
+        end || (union_subtype cx rep1 rep2)
+      end
+    | _ -> false in
+  union_optimization_guard_impl TypeSet.empty
 
 and reposition_reason cx ?trace reason ?(use_desc=false) t =
   reposition
