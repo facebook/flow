@@ -2781,6 +2781,8 @@ let dump_error_message =
         | MultipleProvidesModuleAttributes -> "MultipleProvidesModuleAttributes"
         | MultipleJSXAttributes -> "MultipleJSXAttributes"
         | InvalidJSXAttribute _ -> "InvalidJSXAttribute")
+    | EImplicitInexactObject loc ->
+      spf "EImplicitInexactObject (%s)" (string_of_aloc loc)
     | EUntypedTypeImport (loc, module_name) ->
       spf "EUntypedTypeImport (%s, %s)" (string_of_aloc loc) module_name
     | EUntypedImport (loc, module_name) ->

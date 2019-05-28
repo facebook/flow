@@ -158,6 +158,7 @@ and 'loc t' =
     }
   | EParseError of 'loc * Parse_error.t
   | EDocblockError of 'loc * docblock_error
+  | EImplicitInexactObject of 'loc
   (* The string is either the name of a module or "the module that exports `_`". *)
   | EUntypedTypeImport of 'loc * string
   | EUntypedImport of 'loc * string
@@ -478,6 +479,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EDuplicateModuleProvider {module_name=_; provider=_; conflict=_} as e -> e
   | EParseError (loc, p) -> EParseError (f loc, p)
   | EDocblockError (loc, e) -> EDocblockError (f loc, e)
+  | EImplicitInexactObject loc -> EImplicitInexactObject (f loc)
   | EUntypedTypeImport (loc, s) -> EUntypedTypeImport (f loc, s)
   | EUntypedImport (loc, s) -> EUntypedImport (f loc, s)
   | ENonstrictImport loc -> ENonstrictImport (f loc)
@@ -611,6 +613,7 @@ let util_use_op_of_msg nope util = function
 | EDuplicateModuleProvider {module_name=_; provider=_; conflict=_}
 | EParseError (_, _)
 | EDocblockError (_, _)
+| EImplicitInexactObject (_)
 | EUntypedTypeImport (_, _)
 | EUntypedImport (_, _)
 | ENonstrictImport (_)
@@ -690,6 +693,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EExperimentalOptionalChaining loc
   | EUnusedSuppression loc
   | EDocblockError (loc, _)
+  | EImplicitInexactObject loc
   | EParseError (loc, _)
   | EInvalidLHSInAssignment loc
   | EInvalidTypeof (loc, _)
@@ -795,6 +799,7 @@ let kind_of_msg = Errors.(function
   | EUnnecessaryInvariant _         -> LintError Lints.UnnecessaryInvariant
   | EInexactSpread _                -> LintError Lints.InexactSpread
   | ESignatureVerification _        -> LintError Lints.SignatureVerificationFailure
+  | EImplicitInexactObject _        -> LintError Lints.ImplicitInexactObject
   | EBadExportPosition _
   | EBadExportContext _             -> InferWarning ExportKind
   | EUnexpectedTypeof _
@@ -1729,6 +1734,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       in
       Normal msg
 
+    | EImplicitInexactObject _ ->
+      Normal [
+        text "Please add "; code "..."; text " to the end of the list of ";
+        text "properties to express an inexact object type.";
+      ]
+
     | EUntypedTypeImport (_, module_name) ->
       Normal [
         text "Importing a type from an untyped module makes it "; code "any"; text " ";
@@ -1893,5 +1904,6 @@ let is_lint_error = function
   | EBigIntNotYetSupported _
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
+  | EImplicitInexactObject _
       -> true
   | _ -> false

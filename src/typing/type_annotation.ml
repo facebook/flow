@@ -984,6 +984,8 @@ let rec convert cx tparams_map = Ast.Type.(function
 
 | loc, Object { Object.exact; properties; inexact } ->
   let t, properties = convert_object cx tparams_map loc ~exact properties in
+  if (not exact) && (not inexact) then
+    Flow.add_output cx Error_message.(EImplicitInexactObject loc);
   (loc, t), Object { Object.exact; properties; inexact }
 
 | loc, Interface {Interface.extends; body} ->

@@ -1,0 +1,2 @@
+[lints]
+implicit-inexact-object=error

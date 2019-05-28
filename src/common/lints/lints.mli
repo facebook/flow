@@ -30,6 +30,7 @@ type lint_kind =
   | UnnecessaryOptionalChain
   | UnnecessaryInvariant
   | SignatureVerificationFailure
+  | ImplicitInexactObject
 
 val string_of_kind: lint_kind -> string
 
