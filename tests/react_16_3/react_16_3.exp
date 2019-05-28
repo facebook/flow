@@ -41,11 +41,11 @@ References:
    forwardRef.js:19:32
     19| const badRef = React.createRef<HTMLDivElement>();
                                        ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react-dom.js:290:22
-   290|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
-                             ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:243:6
-   243|   ): {|current: null | T|};
+   <BUILTINS>/react-dom.js:313:15
+   313|     instance: HTMLButtonElement,
+                      ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:247:6
+   247|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:198:6
    198|   | ((React$ElementRef<ElementType> | null) => mixed)
@@ -67,14 +67,14 @@ References:
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:197:5
-   197|   | {-current: React$ElementRef<ElementType> | null}
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   197|   | { -current: React$ElementRef<ElementType> | null, ... }
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    forwardRef.js:23:50
     23| const _g =  <FancyButton foo={3} ref={(x: null | HTMLDivElement) => x} />; // Incorrect ref type
                                                          ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react-dom.js:290:22
-   290|   button: {instance: HTMLButtonElement, props: {children?: React$Node, [key: string]: any}},
-                             ^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react-dom.js:313:15
+   313|     instance: HTMLButtonElement,
+                      ^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:42:12
@@ -99,8 +99,8 @@ References:
    forwardRef.js:41:57
     41| const badUnionRef = React.createRef<HTMLButtonElement | HTMLDivElement>();
                                                                 ^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:243:6
-   243|   ): {|current: null | T|};
+   <BUILTINS>/react.js:247:6
+   247|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:198:6
    198|   | ((React$ElementRef<ElementType> | null) => mixed)

@@ -37,9 +37,9 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:307:22
-   307|     component: () => Promise<{ default: React$ComponentType<P> }>,
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:313:22
+   313|     component: () => Promise<{ default: React$ComponentType<P>, ... }>,
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:12
@@ -55,9 +55,9 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:307:22
-   307|     component: () => Promise<{ default: React$ComponentType<P> }>,
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:313:22
+   313|     component: () => Promise<{ default: React$ComponentType<P>, ... }>,
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:11:12
@@ -73,11 +73,11 @@ References:
    lazy.js:6:1
      6| function FunctionComponent(x: Props): React.Node { return null }
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:307:30
-   307|     component: () => Promise<{ default: React$ComponentType<P> }>,
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:632:24
-   632| declare class Promise<+R> {
+   <BUILTINS>/react.js:313:30
+   313|     component: () => Promise<{ default: React$ComponentType<P>, ... }>,
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:649:24
+   649| declare class Promise<+R> {
                                ^ [3]
 
 
@@ -94,11 +94,11 @@ References:
    lazy.js:7:7
      7| class ClassComponent extends React.Component<Props> {}
               ^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:307:30
-   307|     component: () => Promise<{ default: React$ComponentType<P> }>,
-                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:632:24
-   632| declare class Promise<+R> {
+   <BUILTINS>/react.js:313:30
+   313|     component: () => Promise<{ default: React$ComponentType<P>, ... }>,
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/core.js:649:24
+   649| declare class Promise<+R> {
                                ^ [3]
 
 

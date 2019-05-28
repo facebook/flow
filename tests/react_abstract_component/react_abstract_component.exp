@@ -254,8 +254,8 @@ References:
    create_element.js:15:32
     15| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:243:6
-   243|   ): {|current: null | T|};
+   <BUILTINS>/react.js:247:6
+   247|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:198:6
    198|   | ((React$ElementRef<ElementType> | null) => mixed)
@@ -511,8 +511,8 @@ Cannot call `x.displayName.toString` because:
           ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:133:17
-   133|   displayName?: ?string,
+   <BUILTINS>/react.js:131:17
+   131|   displayName?: ?string,
                         ^^^^^^^ [1]
    get_set_props.js:6:21
      6|     x.displayName = null;
@@ -529,14 +529,15 @@ Cannot get `x.definitelyNotHere` because property `definitelyNotHere` is missing
           ^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:132:47
+   <BUILTINS>/react.js:130:47
                                                       v
-   132| declare type React$AbstractComponentStatics = {
-   133|   displayName?: ?string,
-   134|   // This is only on function components, but trying to access name when
-   135|   // displayName is undefined is a common pattern.
-   136|   name?: ?string,
-   137| };
+   130| declare type React$AbstractComponentStatics = {
+   131|   displayName?: ?string,
+   132|   // This is only on function components, but trying to access name when
+   133|   // displayName is undefined is a common pattern.
+   134|   name?: ?string,
+   135|   ...
+   136| };
         ^ [1]
 
 
@@ -549,8 +550,8 @@ Cannot assign `3` to `x.displayName` because number [1] is incompatible with str
                           ^ [1]
 
 References:
-   <BUILTINS>/react.js:133:18
-   133|   displayName?: ?string,
+   <BUILTINS>/react.js:131:18
+   131|   displayName?: ?string,
                          ^^^^^^ [2]
 
 
@@ -593,8 +594,8 @@ Cannot call `foo` with `ref` bound to `a` because:
             ^^^
 
 References:
-   <BUILTINS>/react-dom.js:416:13
-   416|   instance: HTMLElement,
+   <BUILTINS>/react-dom.js:781:13
+   781|   instance: HTMLElement,
                     ^^^^^^^^^^^ [1]
    strict.js:7:26
      7| declare function foo(a: ?React$Component<any, any>): void;
@@ -613,14 +614,15 @@ Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` 
               ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:132:47
+   <BUILTINS>/react.js:130:47
                                                       v
-   132| declare type React$AbstractComponentStatics = {
-   133|   displayName?: ?string,
-   134|   // This is only on function components, but trying to access name when
-   135|   // displayName is undefined is a common pattern.
-   136|   name?: ?string,
-   137| };
+   130| declare type React$AbstractComponentStatics = {
+   131|   displayName?: ?string,
+   132|   // This is only on function components, but trying to access name when
+   133|   // displayName is undefined is a common pattern.
+   134|   name?: ?string,
+   135|   ...
+   136| };
         ^ [1]
 
 

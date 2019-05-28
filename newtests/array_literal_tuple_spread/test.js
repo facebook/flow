@@ -325,8 +325,8 @@ export default suite(({addFile, addFiles, addCode}) => [
             3: const arr: Array<number> = [..."hello"];
                                           ^^^^^^^^^^^^ Cannot assign array literal to \`arr\` because string [1] is incompatible with number [2] in array element.
             References:
-            302:     @@iterator(): Iterator<string>;
-                                            ^^^^^^ [1]. See lib: [LIB] core.js:302
+            311:     @@iterator(): Iterator<string>;
+                                            ^^^^^^ [1]. See lib: [LIB] core.js:311
               3: const arr: Array<number> = [..."hello"];
                                   ^^^^^^ [2]
         `,
