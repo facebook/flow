@@ -2402,6 +2402,8 @@ let dump_error_message =
   | Error_message.DebugThrow -> "DebugThrow"
   | MergeTimeout _ -> "MergeTimeout"
   | MergeJobException _ -> "MergeJobException"
+  | CheckTimeout _ -> "CheckTimeout"
+  | CheckJobException _ -> "CheckJobException"
   | UnexpectedTypeapp _ -> "UnexpectedTypeapp"
   in
   let dump_upper_kind = function

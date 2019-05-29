@@ -11,6 +11,7 @@ open Utils_js
 
 exception EDebugThrow of ALoc.t
 exception EMergeTimeout of float
+exception ECheckTimeout of float
 
 type invalid_char_set =
   | DuplicateChar of Char.t
@@ -226,6 +227,8 @@ and internal_error =
   | DebugThrow
   | MergeTimeout of float
   | MergeJobException of Exception.t
+  | CheckTimeout of float
+  | CheckJobException of Exception.t
   | UnexpectedTypeapp of string
 
 and unsupported_syntax =
@@ -1320,6 +1323,10 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       | MergeTimeout s ->
           spf "merge job timed out after %0.2f seconds" s
       | MergeJobException exc ->
+          "uncaught exception: "^(Exception.to_string exc)
+      | CheckTimeout s ->
+          spf "check job timed out after %0.2f seconds" s
+      | CheckJobException exc ->
           "uncaught exception: "^(Exception.to_string exc)
       | UnexpectedTypeapp s ->
           "unexpected typeapp: "^s
