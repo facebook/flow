@@ -1,3 +1,9 @@
+### 0.99.1
+
+Notable bug fixes:
+
+* Fix bug where well-formed-exports errors were reported for unchecked files
+
 ### 0.99.0
 
 Likely to cause new Flow errors:
