@@ -356,26 +356,7 @@ let run_merge_service
     Lwt.return (errs, warnings, suppressions, coverage, skipped_count, sig_new_or_changed)
   )
 
-(* This function does some last minute preparation and then calls into the merge service, which
- * typechecks the code. By the time this function is called, we know exactly what we want to merge
- * (though we may later decline to typecheck some files due to recheck optimizations) *)
-let merge
-  ~transaction
-  ~reader
-  ~options
-  ~profiling
-  ~workers
-  ~errors
-  ~to_merge
-  ~components
-  ~recheck_set
-  ~dependency_graph
-  ~deleted
-  ~persistent_connections
-  ~prep_merge =
-  let { ServerEnv.local_errors; merge_errors; warnings; suppressions; } = errors in
-  let coverage = FilenameMap.empty in
-
+let mk_intermediate_result_callback ~options ~profiling ~persistent_connections suppressions =
   let%lwt send_errors_over_connection =
     match persistent_connections with
     | None -> Lwt.return (fun _ -> ())
@@ -438,7 +419,48 @@ let merge
           ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
       ))
   in
+  let intermediate_result_callback results =
+    let errors = lazy (
+      Core_list.map ~f:(fun (file, result) ->
+        match result with
+        | Ok (errors, warnings, suppressions, _) ->
+          let errors = Flow_error.make_errors_printable errors in
+          let warnings = Flow_error.make_errors_printable warnings in
+          file, errors, warnings, suppressions
+        | Error msg ->
+          let errors = error_set_of_merge_error file msg in
+          let errors = Flow_error.make_errors_printable errors in
+          let suppressions = Error_suppressions.empty in
+          let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
+          file, errors, warnings, suppressions
+      ) (Lazy.force results)
+    ) in
+    send_errors_over_connection errors
+  in
+  Lwt.return intermediate_result_callback
 
+(* This function does some last minute preparation and then calls into the merge service, which
+ * typechecks the code. By the time this function is called, we know exactly what we want to merge
+ * (though we may later decline to typecheck some files due to recheck optimizations) *)
+let merge
+  ~transaction
+  ~reader
+  ~options
+  ~profiling
+  ~workers
+  ~errors
+  ~to_merge
+  ~components
+  ~recheck_set
+  ~dependency_graph
+  ~deleted
+  ~persistent_connections
+  ~prep_merge =
+  let { ServerEnv.local_errors; merge_errors; warnings; suppressions; } = errors in
+  let coverage = FilenameMap.empty in
+
+  let%lwt intermediate_result_callback =
+    mk_intermediate_result_callback ~options ~profiling ~persistent_connections suppressions in
   let%lwt () = match prep_merge with
     | None -> Lwt.return_unit
     | Some callback ->
@@ -463,25 +485,6 @@ let merge
 
   Hh_logger.info "Merging";
   let%lwt merge_errors, warnings, suppressions, coverage, skipped_count, sig_new_or_changed =
-    let intermediate_result_callback results =
-      let errors = lazy (
-        Core_list.map ~f:(fun (file, result) ->
-          match result with
-          | Ok (errors, warnings, suppressions, _) ->
-            let errors = Flow_error.make_errors_printable errors in
-            let warnings = Flow_error.make_errors_printable warnings in
-            file, errors, warnings, suppressions
-          | Error msg ->
-            let errors = error_set_of_merge_error file msg in
-            let errors = Flow_error.make_errors_printable errors in
-            let suppressions = Error_suppressions.empty in
-            let warnings = Errors.ConcreteLocPrintableErrorSet.empty in
-            file, errors, warnings, suppressions
-        ) (Lazy.force results)
-      ) in
-      send_errors_over_connection errors
-    in
-
     let master_mutator, worker_mutator =
       Context_heaps.Merge_context_mutator.create
         transaction (FilenameSet.union files_to_merge deleted)
