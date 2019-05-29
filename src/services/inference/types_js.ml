@@ -592,10 +592,17 @@ let check_files
                  (FilenameSet.elements files))
     in
     let merge_errors, warnings, suppressions, coverage =
+      let errors, warnings, suppressions, coverage =
+        FilenameSet.fold (fun file (errors, warnings, suppressions, coverage) ->
+          FilenameMap.remove file errors,
+          FilenameMap.remove file warnings,
+          Error_suppressions.remove file suppressions,
+          FilenameMap.remove file coverage
+        ) files ServerEnv.(errors.merge_errors, errors.warnings, errors.suppressions, coverage) in
       merge
         (* NOTE: Order matters when there is overlap. We want new stuff to overwrite old stuff. *)
         (new_errors, new_warnings, new_suppressions, new_coverage)
-        ServerEnv.(errors.merge_errors, errors.warnings, errors.suppressions, coverage) in
+        (errors, warnings, suppressions, coverage) in
     Hh_logger.info "Done";
     let errors = { errors with
       ServerEnv.merge_errors;
