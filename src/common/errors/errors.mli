@@ -5,11 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+
+type infer_warning_kind =
+  | ExportKind
+  | OtherKind
+
 type error_kind =
   | ParseError
   | PseudoParseError
   | InferError
-  | InferWarning
+  | InferWarning of infer_warning_kind
   | InternalError
   | DuplicateProviderError
   | RecursionLimitError

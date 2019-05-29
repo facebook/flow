@@ -7,14 +7,6 @@ Cannot resolve name `exports`.
         ^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
-
-Exports can only appear at the top level
-
-   4|   exports.foo = 5;
-        ^^^^^^^
-
-
 Error ---------------------------------------------------------------------------------------- bad-default-export.js:4:3
 
 Exports can only appear at the top level
@@ -176,7 +168,7 @@ Error --------------------------------------------------------------------------
 
 
 
-Found 22 errors
+Found 21 errors
 FLOW CHECK-CONTENTS:
 Error ------------------------------------------------------------------------------------------------- libs/libs.js:4:3
 
