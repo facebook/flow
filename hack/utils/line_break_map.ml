@@ -46,6 +46,7 @@ let make text =
 
 let offset_to_file_pos_triple bolmap offset =
   let len = Array.length bolmap in
+  if !curr_index >= len then curr_index := len - 1;
   let rec forward_search i =
     let offset_at_i = Array.unsafe_get bolmap i in
     if offset < offset_at_i then i - 1 else
