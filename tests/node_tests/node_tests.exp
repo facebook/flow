@@ -44,17 +44,17 @@ Cannot cast `hmac.read()` to number because:
                 ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1827:24
-   1827|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1829:24
+   1829|   read(size?: number): ?(string | Buffer);
                                 ^^^^^^^^^^^^^^^^^^ [1]
    crypto/crypto.js:12:21
      12|       (hmac.read(): number); // 4 errors: null, void, string, Buffer
                              ^^^^^^ [2]
-   <BUILTINS>/node.js:1827:26
-   1827|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1829:26
+   1829|   read(size?: number): ?(string | Buffer);
                                   ^^^^^^ [3]
-   <BUILTINS>/node.js:1827:35
-   1827|   read(size?: number): ?(string | Buffer);
+   <BUILTINS>/node.js:1829:35
+   1829|   read(size?: number): ?(string | Buffer);
                                            ^^^^^^ [4]
 
 
@@ -72,11 +72,11 @@ References:
    crypto/crypto.js:16:16
      16|     hmac.write(123); // 2 errors: not a string or a Buffer
                         ^^^ [1]
-   <BUILTINS>/node.js:1870:16
-   1870|   write(chunk: string | Buffer | Uint8Array, callback?: (error?: Error) => void): boolean;
+   <BUILTINS>/node.js:1872:16
+   1872|   write(chunk: string | Buffer | Uint8Array, callback?: (error?: Error) => void): boolean;
                         ^^^^^^ [2]
-   <BUILTINS>/node.js:1871:16
-   1871|   write(chunk: string | Buffer | Uint8Array, encoding?: string,  callback?: (error?: Error) => void): boolean;
+   <BUILTINS>/node.js:1873:16
+   1873|   write(chunk: string | Buffer | Uint8Array, encoding?: string,  callback?: (error?: Error) => void): boolean;
                         ^^^^^^ [3]
 
 
@@ -679,8 +679,8 @@ References:
    http/get.js:13:10
      13| http.get(-1); // error
                   ^^ [1]
-   <BUILTINS>/node.js:1489:10
-   1489|     url: string,
+   <BUILTINS>/node.js:1490:10
+   1490|     url: string,
                   ^^^^^^ [2]
 
 
@@ -713,8 +713,8 @@ References:
    http/get.js:15:19
      15| http.get(url, {}, -1); // error
                            ^^ [1]
-   <BUILTINS>/node.js:1491:16
-   1491|     callback?: (response: IncomingMessage) => void
+   <BUILTINS>/node.js:1492:16
+   1492|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -747,8 +747,8 @@ References:
    http/request.js:13:14
      13| http.request(-1); // error
                       ^^ [1]
-   <BUILTINS>/node.js:1480:10
-   1480|     url: string,
+   <BUILTINS>/node.js:1481:10
+   1481|     url: string,
                   ^^^^^^ [2]
 
 
@@ -781,8 +781,8 @@ References:
    http/request.js:15:23
      15| http.request(url, {}, -1); // error
                                ^^ [1]
-   <BUILTINS>/node.js:1482:16
-   1482|     callback?: (response: IncomingMessage) => void
+   <BUILTINS>/node.js:1483:16
+   1483|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1091,8 +1091,8 @@ References:
    https/get.js:13:11
      13| https.get(-1); // error
                    ^^ [1]
-   <BUILTINS>/node.js:1535:10
-   1535|     url: string,
+   <BUILTINS>/node.js:1537:10
+   1537|     url: string,
                   ^^^^^^ [2]
 
 
@@ -1125,8 +1125,8 @@ References:
    https/get.js:15:20
      15| https.get(url, {}, -1); // error
                             ^^ [1]
-   <BUILTINS>/node.js:1537:16
-   1537|     callback?: (response: IncomingMessage) => void
+   <BUILTINS>/node.js:1539:16
+   1539|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1159,8 +1159,8 @@ References:
    https/request.js:13:15
      13| https.request(-1); // error
                        ^^ [1]
-   <BUILTINS>/node.js:1526:10
-   1526|     url: string,
+   <BUILTINS>/node.js:1528:10
+   1528|     url: string,
                   ^^^^^^ [2]
 
 
@@ -1193,8 +1193,8 @@ References:
    https/request.js:15:24
      15| https.request(url, {}, -1); // error
                                 ^^ [1]
-   <BUILTINS>/node.js:1528:16
-   1528|     callback?: (response: IncomingMessage) => void
+   <BUILTINS>/node.js:1530:16
+   1530|     callback?: (response: IncomingMessage) => void
                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1711,8 +1711,8 @@ Cannot cast `u1.username` to `Buffer` because string [1] is incompatible with `B
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1678:13
-   1678|   username: string,
+   <BUILTINS>/node.js:1680:13
+   1680|   username: string,
                      ^^^^^^ [1]
    os/userInfo.js:7:15
       7| (u1.username: Buffer); // error
@@ -1728,8 +1728,8 @@ Cannot cast `u2.username` to `Buffer` because string [1] is incompatible with `B
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1678:13
-   1678|   username: string,
+   <BUILTINS>/node.js:1680:13
+   1680|   username: string,
                      ^^^^^^ [1]
    os/userInfo.js:11:15
      11| (u2.username: Buffer); // error
@@ -1745,8 +1745,8 @@ Cannot cast `u3.username` to string because `Buffer` [1] is incompatible with st
           ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:1669:13
-   1669|   username: Buffer,
+   <BUILTINS>/node.js:1671:13
+   1671|   username: Buffer,
                      ^^^^^^ [1]
    os/userInfo.js:14:15
      14| (u3.username: string); // error
@@ -1767,26 +1767,26 @@ Cannot call `process.emitWarning` because:
          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/node.js:2550:24
-   2550|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2552:24
+   2552|   emitWarning(warning: string | Error): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2550:33
-   2550|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2552:33
+   2552|   emitWarning(warning: string | Error): void;
                                          ^^^^^ [3]
-   <BUILTINS>/node.js:2551:3
-   2551|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:2552:3
-   2552|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
    <BUILTINS>/node.js:2553:3
+   2553|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/node.js:2554:3
+   2554|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/node.js:2555:3
            v-----------
-   2553|   emitWarning(
-   2554|     warning: string,
-   2555|     type: string,
-   2556|     code: string,
-   2557|     ctor?: (...empty) => mixed
-   2558|   ): void;
+   2555|   emitWarning(
+   2556|     warning: string,
+   2557|     type: string,
+   2558|     code: string,
+   2559|     ctor?: (...empty) => mixed
+   2560|   ): void;
            ------^ [6]
 
 
@@ -1805,14 +1805,14 @@ References:
    process/emitWarning.js:11:21
      11| process.emitWarning(42); // error
                              ^^ [1]
-   <BUILTINS>/node.js:2551:24
-   2551|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2553:24
+   2553|   emitWarning(warning: string, typeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [2]
-   <BUILTINS>/node.js:2552:24
-   2552|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2554:24
+   2554|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                 ^^^^^^ [3]
-   <BUILTINS>/node.js:2554:14
-   2554|     warning: string,
+   <BUILTINS>/node.js:2556:14
+   2556|     warning: string,
                       ^^^^^^ [4]
 
 
@@ -1830,11 +1830,11 @@ References:
    process/emitWarning.js:12:29
      12| process.emitWarning("blah", 42); // error
                                      ^^ [1]
-   <BUILTINS>/node.js:2552:38
-   2552|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
+   <BUILTINS>/node.js:2554:38
+   2554|   emitWarning(warning: string, type: string, codeOrCtor: string | (...empty) => mixed): void;
                                               ^^^^^^ [2]
-   <BUILTINS>/node.js:2555:11
-   2555|     type: string,
+   <BUILTINS>/node.js:2557:11
+   2557|     type: string,
                    ^^^^^^ [3]
 
 
@@ -1850,8 +1850,8 @@ References:
    process/emitWarning.js:13:37
      13| process.emitWarning("blah", "blah", 42); // error
                                              ^^ [1]
-   <BUILTINS>/node.js:2556:11
-   2556|     code: string,
+   <BUILTINS>/node.js:2558:11
+   2558|     code: string,
                    ^^^^^^ [2]
 
 
@@ -1864,8 +1864,8 @@ Cannot cast `process.emitWarning(...)` to string because undefined [1] is incomp
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2550:41
-   2550|   emitWarning(warning: string | Error): void;
+   <BUILTINS>/node.js:2552:41
+   2552|   emitWarning(warning: string | Error): void;
                                                  ^^^^ [1]
    process/emitWarning.js:14:31
      14| (process.emitWarning("blah"): string); // error
@@ -1941,8 +1941,8 @@ References:
    process/nextTick.js:27:3
      27|   (a: string, b: number, c: boolean) => {} // Error: too few arguments
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:2579:21
-   2579|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
+   <BUILTINS>/node.js:2581:21
+   2581|   nextTick: <T>(cb: (...T) => mixed, ...T) => void;
                              ^^^^^^^^^^^^^^^ [2]
 
 
@@ -1955,8 +1955,8 @@ Cannot cast `process.allowedNodeEnvironmentFlags` to string because `Set` [1] is
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/node.js:2539:32
-   2539|   allowedNodeEnvironmentFlags: Set<string>;
+   <BUILTINS>/node.js:2541:32
+   2541|   allowedNodeEnvironmentFlags: Set<string>;
                                         ^^^^^^^^^^^ [1]
    process/process.js:5:39
       5| (process.allowedNodeEnvironmentFlags: string); // error
@@ -1991,8 +1991,8 @@ Cannot cast `error` to null because:
               ^^^^^
 
 References:
-   <BUILTINS>/node.js:1954:18
-   1954|     cb: (error?: Error) => void,
+   <BUILTINS>/node.js:1956:18
+   1956|     cb: (error?: Error) => void,
                           ^^^^^ [1]
    stream/stream.js:45:13
      45|     (error: null); // error
@@ -2039,23 +2039,23 @@ References:
    stream/stream.js:53:3
      53|   new MyWriteStream(), // error - first stream must be Readable
            ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1939:9
-   1939|     s1: stream$Readable,
+   <BUILTINS>/node.js:1941:9
+   1941|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/node.js:1944:9
-   1944|     s1: stream$Readable,
+   <BUILTINS>/node.js:1946:9
+   1946|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/node.js:1950:9
-   1950|     s1: stream$Readable,
+   <BUILTINS>/node.js:1952:9
+   1952|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:1957:9
-   1957|     s1: stream$Readable,
+   <BUILTINS>/node.js:1959:9
+   1959|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:1965:9
-   1965|     s1: stream$Readable,
+   <BUILTINS>/node.js:1967:9
+   1967|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [6]
-   <BUILTINS>/node.js:1974:9
-   1974|     s1: stream$Readable,
+   <BUILTINS>/node.js:1976:9
+   1976|     s1: stream$Readable,
                  ^^^^^^^^^^^^^^^ [7]
 
 
@@ -2082,20 +2082,20 @@ References:
    stream/stream.js:60:3
      60|   new MyWriteStream(), // error - middle stream must be Duplex
            ^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1945:9
-   1945|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1947:9
+   1947|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/node.js:1951:9
-   1951|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1953:9
+   1953|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [3]
-   <BUILTINS>/node.js:1958:9
-   1958|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1960:9
+   1960|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:1966:9
-   1966|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1968:9
+   1968|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [5]
-   <BUILTINS>/node.js:1975:9
-   1975|     s2: stream$Duplex,
+   <BUILTINS>/node.js:1977:9
+   1977|     s2: stream$Duplex,
                  ^^^^^^^^^^^^^ [6]
 
 
@@ -2121,17 +2121,17 @@ References:
    stream/stream.js:68:3
      68|   new MyReadStream(), // error - last stream must be Writable
            ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/node.js:1952:9
-   1952|     s3: stream$Duplex,
+   <BUILTINS>/node.js:1954:9
+   1954|     s3: stream$Duplex,
                  ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/node.js:1959:9
-   1959|     s3: stream$Duplex,
+   <BUILTINS>/node.js:1961:9
+   1961|     s3: stream$Duplex,
                  ^^^^^^^^^^^^^ [3]
-   <BUILTINS>/node.js:1967:9
-   1967|     s3: stream$Duplex,
+   <BUILTINS>/node.js:1969:9
+   1969|     s3: stream$Duplex,
                  ^^^^^^^^^^^^^ [4]
-   <BUILTINS>/node.js:1976:9
-   1976|     s3: stream$Duplex,
+   <BUILTINS>/node.js:1978:9
+   1978|     s3: stream$Duplex,
                  ^^^^^^^^^^^^^ [5]
 
 
