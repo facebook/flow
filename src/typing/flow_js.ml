@@ -9493,53 +9493,58 @@ and sentinel_prop_test_generic key cx trace result orig_obj =
 (*******************************************************************)
 and flow_use_op op1 u =
   let ignore_root = function
-  | UnknownUse -> true
-  | Internal _ -> true
-  (* If we are speculating then a Speculation use_op should be considered
-   * "opaque". If we are not speculating then Speculation use_ops that escaped
-   * (through benign tvars) should be ignored.
-   *
-   * Ideally we could replace the Speculation use_ops on benign tvars with their
-   * underlying use_op after speculation ends. *)
-  | Speculation _ -> not (Speculation.speculating ())
-  | _ -> false
+    | UnknownUse -> true
+    | Internal _ -> true
+    (* If we are speculating then a Speculation use_op should be considered
+     * "opaque". If we are not speculating then Speculation use_ops that escaped
+     * (through benign tvars) should be ignored.
+     *
+     * Ideally we could replace the Speculation use_ops on benign tvars with their
+     * underlying use_op after speculation ends. *)
+    | Speculation _ -> not (Speculation.speculating ())
+    | _ -> false
   in
-  let local_root = function
-  | FunCall {local; _} | FunCallMethod {local; _} ->
-      local
-  | Addition _
-  | AssignVar _
-  | Coercion _
-  | FunImplicitReturn _ | FunReturnStatement _
-  | GetProperty _ | SetProperty _
-  | JSXCreateElement _
-  | ObjectSpread _ | ObjectChain _
-    -> true
-  | Cast _
-  | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _
-  | GeneratorYield _
-  | Internal _
-  | ReactCreateElementCall _ | ReactGetIntrinsic _
-  | Speculation _ | TypeApplication _ | UnknownUse
-    -> false in
-  mod_use_op_of_use_t (fun op2 ->
-    let alt = fold_use_op
-      (* If the root of the previous use_op is UnknownUse and our alternate
-       * use_op does not have an UnknownUse root then we use our
-       * alternate use_op. *)
-      ignore_root
-      (fun alt -> function
-        (* If the use was added to an implicit type param then we want to use
-         * our alternate if the implicit type param use_op chain is inside
-         * the implicit type param instantiation. Since we can't directly compare
-         * abstract locations, we determine whether to do this using a heuristic
-         * based on the 'locality' of the use_op root. *)
-        | ImplicitTypeParam when not alt -> root_of_use_op op2 |> local_root
-        | _ -> alt)
-      op2
-    in
-    if alt && not (ignore_root (root_of_use_op op1))  then op1 else op2
-  ) u
+  if ignore_root (root_of_use_op op1) then
+    u
+  else
+    mod_use_op_of_use_t (fun op2 ->
+        let root_of_op2 = root_of_use_op op2 in
+        let should_replace = fold_use_op
+                               (* If the root of the previous use_op is UnknownUse and our alternate
+                                * use_op does not have an UnknownUse root then we use our
+                                * alternate use_op. *)
+                               ignore_root
+                               (fun should_replace -> function
+                                 (* If the use was added to an implicit type param then we want to use
+                                  * our alternate if the implicit type param use_op chain is inside
+                                  * the implicit type param instantiation. Since we can't directly compare
+                                  * abstract locations, we determine whether to do this using a heuristic
+                                  * based on the 'locality' of the use_op root. *)
+                                 | ImplicitTypeParam when not should_replace ->
+                                    (match root_of_op2 with
+                                     | FunCall {local; _} | FunCallMethod {local; _} ->
+                                        local
+                                     | Addition _
+                                       | AssignVar _
+                                       | Coercion _
+                                       | FunImplicitReturn _ | FunReturnStatement _
+                                       | GetProperty _ | SetProperty _
+                                       | JSXCreateElement _
+                                       | ObjectSpread _ | ObjectChain _
+                                       | TypeApplication _ 
+                                       -> true
+                                     | Cast _
+                                       | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _
+                                       | GeneratorYield _
+                                       | Internal _
+                                       | ReactCreateElementCall _ | ReactGetIntrinsic _
+                                       | Speculation _ | UnknownUse
+                                       -> false)
+                                 | _ -> should_replace)
+                               op2
+        in
+        if should_replace then op1 else op2
+      ) u
 
 (***********************)
 (* bounds manipulation *)
