@@ -5,6 +5,7 @@
 .*/json5/test/parse-cases/.*
 .*/newtests/gen_flow_files_command/type_error.js
 .*/newtests/ide/lazy/errorsWithFlowPragma.js
+.*/newtests/types-first-ide/fileWithNonLocalError.js
 
 [options]
 suppress_comment=.*\\$FlowFixMe

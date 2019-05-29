@@ -361,13 +361,15 @@ let mk_intermediate_result_callback ~options ~profiling ~persistent_connections 
     match persistent_connections with
     | None -> Lwt.return (fun _ -> ())
     | Some clients -> with_timer_lwt ~options "MakeSendErrors" profiling (fun () ->
-      (* Each merge step uncovers new errors, warnings, suppressions.
-
+      (* In classic, each merge step uncovers new errors, warnings, suppressions.
          While more suppressions may come in later steps, the suppressions we've seen so far are
          sufficient to filter the errors and warnings we've seen so far.
-
          Intuitively, we will not see an error (or warning) before we've seen all the files involved
-         in that error, and thus all the suppressions which could possibly suppress the error. *)
+         in that error, and thus all the suppressions which could possibly suppress the error.
+
+         In types-first, we have already accumulated suppressions in the overall merge step, and
+         each check step uses those suppressions to filter the errors and warnings uncovered.
+       *)
       let open Errors in
       let curr_errors = ref ConcreteLocPrintableErrorSet.empty in
       let curr_warnings = ref ConcreteLocPrintableErrorSet.empty in
@@ -460,6 +462,9 @@ let merge
   let coverage = FilenameMap.empty in
 
   let%lwt intermediate_result_callback =
+    let persistent_connections = match options.Options.opt_arch with
+      | Options.Classic -> persistent_connections
+      | Options.TypesFirst -> None in
     mk_intermediate_result_callback ~options ~profiling ~persistent_connections suppressions in
   let%lwt () = match prep_merge with
     | None -> Lwt.return_unit
@@ -542,7 +547,8 @@ let check_files
   ~merged_files
   ~direct_dependent_files
   ~sig_new_or_changed
-  ~dependency_info =
+  ~dependency_info
+  ~persistent_connections =
   match options.Options.opt_arch with
   | Options.Classic -> Lwt.return (updated_errors, coverage)
   | Options.TypesFirst ->
@@ -571,31 +577,54 @@ let check_files
       Hh_logger.info "Check will skip %d files" !skipped_count;
       let files = FilenameSet.union focused_to_check dependents_to_check in
 
+      let%lwt intermediate_result_callback =
+        mk_intermediate_result_callback
+          ~options
+          ~profiling
+          ~persistent_connections
+          updated_errors.ServerEnv.suppressions in
+
       Hh_logger.info "Checking files";
       let job = List.fold_left (fun acc file ->
         let result = Merge_service.check_file options ~reader file in
-        (file, result) :: acc
+        (file, Ok result) :: acc
       ) in
+      let merge new_acc acc =
+        intermediate_result_callback (lazy new_acc);
+        List.rev_append new_acc acc in
       let progress_fn ~total ~start ~length:_ =
         MonitorRPC.status_update
           ServerStatus.(Checking_progress { total = Some total; finished = start })
       in
-      let%lwt acc = MultiWorkerLwt.call
+      let%lwt ret = MultiWorkerLwt.call
         workers
         ~job
         ~neutral:[]
-        ~merge:List.rev_append
+        ~merge
         ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers (FilenameSet.elements files))
       in
+
+      let { ServerEnv.merge_errors; warnings; suppressions; _ } = errors in
       let merge_errors, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
-        let errors, warnings, suppressions, coverage = acc in
-        let new_errors, new_warnings, new_suppressions, new_coverage = result in
-        update_errset (FilenameMap.remove file errors) file new_errors,
-        update_errset (FilenameMap.remove file warnings) file new_warnings,
-        Error_suppressions.update_suppressions
-          (Error_suppressions.remove file suppressions) new_suppressions,
-        update_coverage (FilenameMap.remove file coverage) new_coverage
-      ) ServerEnv.(errors.merge_errors, errors.warnings, errors.suppressions, coverage) acc in
+        let errors, warnings, suppressions, coverage =
+          let errors, warnings, suppressions, coverage = acc in
+          FilenameMap.remove file errors,
+          FilenameMap.remove file warnings,
+          Error_suppressions.remove file suppressions,
+          FilenameMap.remove file coverage
+        in
+        match result with
+        | Ok (new_errors, new_warnings, new_suppressions, new_coverage) ->
+           update_errset errors file new_errors,
+           update_errset warnings file new_warnings,
+           Error_suppressions.update_suppressions suppressions new_suppressions,
+           update_coverage coverage new_coverage
+        | Error _ -> (* TODO *)
+           errors,
+           warnings,
+           suppressions,
+           coverage
+      ) (merge_errors, warnings, suppressions, coverage) ret in
       Hh_logger.info "Done";
       let errors = { errors with
         ServerEnv.merge_errors;
@@ -1534,7 +1563,8 @@ end = struct
       ~merged_files
       ~direct_dependent_files
       ~sig_new_or_changed
-      ~dependency_info in
+      ~dependency_info
+      ~persistent_connections:(Some env.ServerEnv.connections) in
 
     let checked_files = CheckedSet.union unchanged_checked merged_files in
     Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
@@ -2158,7 +2188,8 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~merged_files
       ~direct_dependent_files:FilenameSet.empty
       ~sig_new_or_changed
-      ~dependency_info in
+      ~dependency_info
+      ~persistent_connections:None in
     let checked_files = merged_files in
     Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
     Lwt.return { env with ServerEnv.checked_files; errors; coverage }
