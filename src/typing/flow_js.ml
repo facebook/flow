@@ -10767,6 +10767,7 @@ and union_optimization_guard =
   let rec union_optimization_guard_impl seen cx l u =
     match l, u with
     | UnionT (_, rep1), UnionT (_, rep2) ->
+      rep1 = rep2 ||
       (* Try n log n check before n^2 check *)
       begin match UnionRep.check_enum rep1, UnionRep.check_enum rep2 with
       | Some enums1, Some enums2 -> EnumSet.subset enums1 enums2
