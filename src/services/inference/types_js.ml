@@ -536,6 +536,7 @@ let check_files
   ~updated_errors
   ~coverage
   ~merged_files
+  ~direct_dependent_files
   ~sig_new_or_changed
   ~dependency_info =
   match options.Options.opt_arch with
@@ -548,10 +549,18 @@ let check_files
     let skipped_count = ref 0 in
     let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
     (* skip dependents whenever none of their dependencies have new or changed signatures *)
+    (* NOTE: We don't skip direct dependents because, in particular, they might be direct dependents
+       of files that were deleted, became unparsed, or fell out of @flow; those files would not be
+       dependencies tracked by the dependency graph; the direct dependents of those files would need
+       to be checked nevertheless. Of course, this is a hammer of a solution for a nail of a
+       problem.
+
+       TODO: Figure out how to safely skip direct dependents. *)
     let dependents_to_check =
       FilenameSet.filter (fun f ->
-        (FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-         @@ FilenameMap.find_unsafe f all_dependency_graph)
+        (FilenameSet.mem f direct_dependent_files)
+        || (FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
+            @@ FilenameMap.find_unsafe f all_dependency_graph)
         || (incr skipped_count; false)
       ) @@ merged_dependents in
     Hh_logger.info "Check will skip %d files" !skipped_count;
@@ -1383,6 +1392,7 @@ end = struct
     let intermediate_values = (
       all_dependent_files,
       deleted,
+      direct_dependent_files,
       errors,
       files_to_force,
       freshparsed,
@@ -1404,6 +1414,7 @@ end = struct
     let (
       all_dependent_files,
       deleted,
+      direct_dependent_files,
       errors,
       files_to_force,
       freshparsed,
@@ -1526,7 +1537,6 @@ end = struct
         Hh_logger.info "Merge prep"
       ))
     in
-
     let merged_files = to_merge in
     let%lwt errors, coverage = check_files
       ~reader
@@ -1536,6 +1546,7 @@ end = struct
       ~updated_errors
       ~coverage
       ~merged_files
+      ~direct_dependent_files
       ~sig_new_or_changed
       ~dependency_info in
 
@@ -2158,6 +2169,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~updated_errors
       ~coverage
       ~merged_files
+      ~direct_dependent_files:FilenameSet.empty
       ~sig_new_or_changed
       ~dependency_info in
     let checked_files = merged_files in
