@@ -45,6 +45,9 @@ let set {coverage; tparams; _} loc type_ =
   let scheme = { Type.TypeScheme.tparams = !tparams; type_ } in
   Hashtbl.replace coverage loc scheme
 
+let unset {coverage; _} loc =
+  Hashtbl.remove coverage loc
+
 (* Insert a located tuple into the type_info hashtable (intended for type-at-pos).
  * In certain contexts it is useful to allow the caller to provide some additional
  * type parameters that should be in scope when reconstructing this type. See for

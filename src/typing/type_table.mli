@@ -19,6 +19,7 @@ type t
 
 val create: unit -> t
 val set: t -> ALoc.t -> Type.t -> unit
+val unset: t -> ALoc.t -> unit
 val set_targ: t -> ALoc.t -> Type.t -> unit
 val set_info: ?extra_tparams:Type.typeparam list -> ALoc.t -> type_entry -> t -> unit
 val fold_coverage: (ALoc.t -> Type.TypeScheme.t -> 'a -> 'a) -> t -> 'a -> 'a

@@ -1131,6 +1131,12 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
             left = discriminant; right = expr
           }) in
           let (_, fake_ast), preds, not_preds, xtypes = predicates_of_condition cx fake in
+
+          (* predicates_of_condition will set the type table for the Case, but
+           * we don't want this to be part of the type-tables, so we're reverting
+           * this here *)
+          Type_table.unset (Context.type_table cx) loc;
+
           let expr_ast = match fake_ast with
           | Ast.Expression.(Binary { Binary.right; _ }) -> right
           | _ -> assert false
@@ -1909,6 +1915,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       | Some(id_loc, { Ast.Identifier.name; comments= _ }) ->
         let id_info = name, fn_type, Type_table.Other in
         Type_table.set_info id_loc id_info (Context.type_table cx);
+        Type_table.set (Context.type_table cx) id_loc fn_type;
         let use_op = Op (AssignVar {
           var = Some (mk_reason (RIdentifier name) loc);
           init = reason_of_t fn_type
@@ -2317,10 +2324,12 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           let id_kind = Type_table.Import (remote_name, module_t) in
           let id_info = remote_name, imported_t, id_kind in
           Type_table.set_info remote_name_loc id_info (Context.type_table cx);
+          Type_table.set (Context.type_table cx) remote_name_loc imported_t;
           let remote_ast = (remote_name_loc, imported_t), rmt in
           let local_ast = Option.map local ~f:(fun (local_loc, local_id) ->
             let { Ast.Identifier.name = local_name; comments } = local_id in
             let id_info = local_name, imported_t, id_kind in
+            Type_table.set (Context.type_table cx) local_loc imported_t ;
             Type_table.set_info local_loc id_info (Context.type_table cx);
             (local_loc, imported_t), mk_ident ~comments local_name
           ) in
@@ -2395,6 +2404,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           in
           let id_info = local_name, imported_t, Type_table.Import ("default", module_t) in
           Type_table.set_info loc id_info (Context.type_table cx);
+          Type_table.set (Context.type_table cx) loc imported_t;
           (loc, local_name, imported_t, None) :: specifiers,
           Some ((loc, imported_t), id)
       | None -> specifiers, None
@@ -3282,6 +3292,8 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
           Tvar.mk cx element_reason, None
         in
         let id_t = identifier cx name callee_loc in
+        Type_table.set (Context.type_table cx) callee_loc id_t;
+
         (* TODO - tuple_types could be undefined x N if given a literal *)
         (loc, DefT (reason, bogus_trust (), ArrT (ArrayAT (t, None)))),
         New { New.
@@ -3428,7 +3440,8 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       (match id with
       | Some (id_loc, { Ast.Identifier.name; comments= _ }) ->
           let id_info = name, t, Type_table.Other in
-          Type_table.set_info id_loc id_info (Context.type_table cx)
+          Type_table.set_info id_loc id_info (Context.type_table cx);
+          Type_table.set (Context.type_table cx) id_loc t
       | _ -> ());
       (loc, t), Function func
 
@@ -3742,6 +3755,7 @@ and subscript =
           AnyT.at AnyError loc, List.map Tast_utils.error_mapper#expression_or_spread arguments
       ) in
       let id_t = bogus_trust () |> MixedT.at callee_loc in
+      Type_table.set (Context.type_table cx) callee_loc id_t;
       ex, lhs_t, acc, (
         (loc, lhs_t),
         call_ast { Call.
@@ -3847,6 +3861,7 @@ and subscript =
         ex, lhs_t, acc, (
           (loc, lhs_t),
           let t = bogus_trust () |> MixedT.at callee_loc in
+          Type_table.set (Context.type_table cx) callee_loc t;
           call_ast { Call.
             (* TODO(vijayramamurthy): what is the type of `Object.name` ? *)
             callee = (callee_loc, t), Member { Member.
@@ -3871,6 +3886,7 @@ and subscript =
         let reason_prop = mk_reason (RProperty (Some name)) ploc in
         let super = super_ cx super_loc in
         let id_info = "super", super, Type_table.Other in
+        Type_table.set (Context.type_table cx) super_loc super;
         Type_table.set_info super_loc id_info (Context.type_table cx);
         let targts, targs = convert_targs cx targs in
         let argts, argument_asts = arguments
@@ -3888,6 +3904,7 @@ and subscript =
             local = true;
           }) in
           let id_info = name, prop_t, Type_table.PropertyAccess super in
+          Type_table.set (Context.type_table cx) callee_loc prop_t;
           Type_table.set_info ploc id_info (Context.type_table cx);
           Flow.flow cx (
             super,
@@ -3958,6 +3975,7 @@ and subscript =
           )),
           Member.PropertyExpression expr
         ) in
+        Type_table.set (Context.type_table cx) lookup_loc prop_t;
         ex, lhs_t, acc, (
           (loc, lhs_t),
           call_ast { Call.
@@ -3988,6 +4006,7 @@ and subscript =
         let this = this_ cx loc in
         let super = super_ cx super_loc in
         let id_info = "super", super, Type_table.Other in
+        Type_table.set (Context.type_table cx) super_loc super;
         Type_table.set_info super_loc id_info (Context.type_table cx);
         let super_reason = reason_of_t super in
         let lhs_t = Tvar.mk_where cx reason (fun t ->
@@ -4186,6 +4205,7 @@ and subscript =
         let lhs_t = get_module_exports cx loc in
         let module_reason = mk_reason (RCustom "module") object_loc in
         let module_t = MixedT.why module_reason |> with_trust bogus_trust in
+        Type_table.set (Context.type_table cx) object_loc module_t;
         let _object =
           (object_loc, module_t),
           Ast.Expression.Identifier ((id_loc, module_t), id_name)
@@ -4223,6 +4243,7 @@ and subscript =
         let super = super_ cx super_loc in
         let id_info = "super", super, Type_table.Other in
         Type_table.set_info super_loc id_info (Context.type_table cx);
+        Type_table.set (Context.type_table cx) super_loc super;
         let expr_reason = mk_reason (RProperty (Some name)) loc in
         let lhs_t = (match Refinement.get cx (loc, e) loc with
         | Some t -> t
@@ -4446,6 +4467,7 @@ and func_call cx reason ~use_op ?(call_strict_arity=true) func_t targts argts =
 and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
     (expr, obj_t, name) targts argts =
   Type_inference_hooks_js.dispatch_call_hook cx name prop_loc obj_t;
+  let expr_loc, _ = expr in
   (match Refinement.get cx expr (aloc_of_reason reason) with
   | Some f ->
       (* note: the current state of affairs is that we understand
@@ -4457,6 +4479,7 @@ and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
       Env.havoc_heap_refinements ();
       let id_info = name, f, Type_table.PropertyAccess obj_t in
       Type_table.set_info prop_loc id_info (Context.type_table cx);
+      Type_table.set (Context.type_table cx) expr_loc f;
       f,
       Tvar.mk_where cx reason (fun t ->
         let frame = Env.peek_frame () in
@@ -4471,13 +4494,13 @@ and method_call cx reason ~use_op ?(call_strict_arity=true) prop_loc
       prop_t,
       Tvar.mk_where cx reason (fun t ->
         let frame = Env.peek_frame () in
-        let expr_loc, _ = expr in
         let reason_expr = mk_reason (RProperty (Some name)) expr_loc in
         let app =
           mk_methodcalltype obj_t targts argts t ~frame ~call_strict_arity in
         let propref = Named (reason_prop, name) in
         let id_info = name, prop_t, Type_table.PropertyAccess obj_t in
         Type_table.set_info prop_loc id_info (Context.type_table cx);
+      Type_table.set (Context.type_table cx) expr_loc prop_t;
         Flow.flow cx (obj_t, MethodT (use_op, reason, reason_expr, propref, app, Some prop_t))
       )
   )
@@ -4637,6 +4660,7 @@ and update cx loc expr = Ast.Expression.Update.(
     }) in
     ignore (Env.set_var cx ~use_op name result_t id_loc);
     let t = NumT.at arg_loc |> with_trust bogus_trust in
+    Type_table.set (Context.type_table cx) id_loc t;
     { expr with
         argument = (arg_loc, t), Ast.Expression.Identifier ((id_loc, t), id_name) }
   | argument ->
@@ -4783,6 +4807,7 @@ and assignment_lhs cx patt =
       annot;
     } ->
       let t = identifier cx name loc in
+      Type_table.set (Context.type_table cx) loc t;
       ((pat_loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
         name = (loc, t), name;
         annot = (match annot with
@@ -4832,6 +4857,8 @@ and simple_assignment cx _loc lhs rhs =
           (object_loc, module_t),
           Ast.Expression.Identifier ((id_loc, module_t), mod_name)
         in
+        Type_table.set (Context.type_table cx) object_loc module_t;
+        Type_table.set (Context.type_table cx) lhs_loc t;
         let property = Member.PropertyIdentifier ((ploc, t), name) in
         (lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), Member { Member.
           _object;
@@ -4885,6 +4912,7 @@ and simple_assignment cx _loc lhs rhs =
           let prop_t = Tvar.mk cx prop_reason in
           let id_info = name, prop_t, Type_table.PropertyAccess o in
           Type_table.set_info prop_loc id_info (Context.type_table cx);
+          Type_table.set (Context.type_table cx) lhs_loc prop_t;
           let use_op = Op (SetProperty {
             lhs = reason;
             prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
@@ -4923,6 +4951,7 @@ and simple_assignment cx _loc lhs rhs =
           let prop_t = Tvar.mk cx prop_reason in
           let id_info = name, prop_t, Type_table.PropertyAccess o in
           Type_table.set_info prop_loc id_info (Context.type_table cx);
+          Type_table.set (Context.type_table cx) lhs_loc prop_t;
           let use_op = Op (SetProperty {
             lhs = reason;
             prop = mk_reason (desc_of_reason (mk_pattern_reason lhs)) prop_loc;
@@ -4954,6 +4983,7 @@ and simple_assignment cx _loc lhs rhs =
           value = mk_expression_reason rhs;
         }) in
         Flow.flow cx (a, SetElemT (use_op, reason, i, t, None));
+        Type_table.set (Context.type_table cx) lhs_loc t;
 
         (* types involved in the assignment itself are computed
            in pre-havoc environment. it's the assignment itself
@@ -4977,9 +5007,11 @@ and op_assignment cx loc lhs op rhs =
   | Assignment.PlusAssign ->
       (* lhs += rhs *)
       let reason = mk_reason (RCustom "+=") loc in
-      let (_, lhs_t), _ as lhs_ast = assignment_lhs cx lhs in
+      let (lhs_loc, lhs_t), _ as lhs_ast = assignment_lhs cx lhs in
       let (_, rhs_t), _ as rhs_ast = expression cx rhs in
+      Type_table.set (Context.type_table cx) lhs_loc lhs_t;
       let result_t = Tvar.mk cx reason in
+
       (* lhs = lhs + rhs *)
       let () =
         let use_op = Op (Addition {
@@ -5018,8 +5050,9 @@ and op_assignment cx loc lhs op rhs =
     ->
       (* lhs (numop)= rhs *)
       let reason = mk_reason (RCustom "(numop)=") loc in
-      let (_, lhs_t), _ as lhs_ast = assignment_lhs cx lhs in
+      let (lhs_loc, lhs_t), _ as lhs_ast = assignment_lhs cx lhs in
       let (_, rhs_t), _ as rhs_ast = expression cx rhs in
+      Type_table.set (Context.type_table cx) lhs_loc lhs_t;
       (* lhs = lhs (numop) rhs *)
       Flow.flow cx (lhs_t, AssertArithmeticOperandT reason);
       Flow.flow cx (rhs_t, AssertArithmeticOperandT reason);
@@ -5698,10 +5731,15 @@ and predicates_of_condition cx e = Ast.(Expression.(
     let ast = reconstruct_ast e_ast in
     flow_eqt ~strict loc (t, null_t);
     let out = match Refinement.key e with
-    | None -> empty_result ((loc, BoolT.at loc |> with_trust bogus_trust), ast)
+    | None ->
+      let t_out = BoolT.at loc |> with_trust bogus_trust in
+      Type_table.set (Context.type_table cx) loc t_out;
+      empty_result ((loc, t_out), ast)
     | Some name ->
-        let pred = if strict then NullP else MaybeP in
-        result ((loc, BoolT.at loc |> with_trust bogus_trust), ast) name t pred sense
+      let pred = if strict then NullP else MaybeP in
+      let t_out = BoolT.at loc |> with_trust bogus_trust in
+      Type_table.set (Context.type_table cx) loc t_out;
+      result ((loc, t_out), ast) name t pred sense
     in
     match sentinel_refinement with
     | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
@@ -5721,10 +5759,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
     let ast = reconstruct_ast e_ast in
     flow_eqt ~strict loc (t, void_t);
     let out = match Refinement.key e with
-    | None -> empty_result ((loc, BoolT.at loc |> with_trust bogus_trust), ast)
+    | None ->
+      let t_out = BoolT.at loc |> with_trust bogus_trust in
+      empty_result ((loc, t_out), ast)
     | Some name ->
-        let pred = if strict then VoidP else MaybeP in
-        result ((loc, BoolT.at loc |> with_trust bogus_trust), ast) name t pred sense
+      let pred = if strict then VoidP else MaybeP in
+      let t_out = BoolT.at loc |> with_trust bogus_trust in
+      result ((loc, t_out), ast) name t pred sense
     in
     match sentinel_refinement with
     | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
@@ -5748,8 +5789,14 @@ and predicates_of_condition cx e = Ast.(Expression.(
     flow_eqt ~strict loc (t, val_t);
     let refinement = if strict then Refinement.key expr else None in
     let out = match refinement with
-    | Some name -> result ((loc, BoolT.at loc |> with_trust bogus_trust), ast) name t pred sense
-    | None -> empty_result ((loc, BoolT.at loc |> with_trust bogus_trust), ast)
+    | Some name ->
+      let t_out = BoolT.at loc |> with_trust bogus_trust in
+      Type_table.set (Context.type_table cx) loc t_out;
+      result ((loc, t_out), ast) name t pred sense
+    | None ->
+      let t = BoolT.at loc |> with_trust bogus_trust in
+      Type_table.set (Context.type_table cx) loc t;
+      empty_result ((loc, t), ast)
     in
     match sentinel_refinement with
     | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
@@ -5759,6 +5806,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
   (* inspect a typeof equality test *)
   let typeof_test loc sense arg typename str_loc reconstruct_ast =
     let bool = BoolT.at loc |> with_trust bogus_trust in
+    Type_table.set (Context.type_table cx) loc bool;
     match refinable_lvalue arg with
     | Some name, ((_, t), _ as arg) ->
         let pred = match typename with
@@ -5785,7 +5833,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
       condition_of_maybe_sentinel cx ~sense ~strict expr val_t in
     let ast = reconstruct_ast expr_ast in
     flow_eqt ~strict loc (t, val_t);
-    let out = empty_result ((loc, BoolT.at loc |> with_trust bogus_trust), ast) in
+    let t_out = BoolT.at loc |> with_trust bogus_trust in
+    Type_table.set (Context.type_table cx) loc t_out;
+    let out = empty_result ((loc, t_out), ast) in
     match sentinel_refinement with
     | Some (name, obj_t, p, sense) -> out |> add_predicate name obj_t p sense
     | None -> out
@@ -5816,18 +5866,28 @@ and predicates_of_condition cx e = Ast.(Expression.(
     | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }),
       (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)) ->
       typeof_test loc sense argument s str_loc (fun argument ->
-        reconstruct_ast (
-          (typeof_loc, StrT.at typeof_loc |> with_trust bogus_trust),
-          Expression.Unary { Unary.operator = Unary.Typeof; argument }
-        ) ((str_loc, StrT.at str_loc |> with_trust bogus_trust), lit_exp)
+        let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
+        let left = (typeof_loc, left_t), Expression.Unary {
+          Unary.operator = Unary.Typeof; argument
+        } in
+        let right_t = StrT.at str_loc |> with_trust bogus_trust in
+        let right = (str_loc, right_t), lit_exp in
+        Type_table.set (Context.type_table cx) typeof_loc left_t;
+        Type_table.set (Context.type_table cx) str_loc right_t;
+        reconstruct_ast left right
       )
     | (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)),
       (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }) ->
       typeof_test loc sense argument s str_loc (fun argument ->
-        reconstruct_ast ((str_loc, StrT.at str_loc |> with_trust bogus_trust), lit_exp) (
-          (typeof_loc, StrT.at typeof_loc |> with_trust bogus_trust),
-          Expression.Unary { Unary.operator = Unary.Typeof; argument }
-        )
+        let left_t = StrT.at str_loc |> with_trust bogus_trust in
+        let left = (str_loc, left_t), lit_exp in
+        let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
+        let right = (typeof_loc, right_t), Expression.Unary {
+          Unary.operator = Unary.Typeof; argument
+        } in
+        Type_table.set (Context.type_table cx) str_loc left_t;
+        Type_table.set (Context.type_table cx) typeof_loc right_t;
+        reconstruct_ast left right
       )
     | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }),
       (str_loc, (Expression.TemplateLiteral {
@@ -5839,10 +5899,15 @@ and predicates_of_condition cx e = Ast.(Expression.(
         expressions = [];
       } as lit_exp)) ->
       typeof_test loc sense argument s str_loc (fun argument ->
-        reconstruct_ast (
-          (typeof_loc, StrT.at typeof_loc |> with_trust bogus_trust),
-          Expression.Unary { Unary.operator = Unary.Typeof; argument }
-        ) ((str_loc, StrT.at str_loc |> with_trust bogus_trust), lit_exp)
+        let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
+        let left = (typeof_loc, left_t), Expression.Unary {
+          Unary.operator = Unary.Typeof; argument
+        } in
+        let right_t = StrT.at str_loc |> with_trust bogus_trust in
+        let right = (str_loc, right_t), lit_exp in
+        Type_table.set (Context.type_table cx) typeof_loc left_t;
+        Type_table.set (Context.type_table cx) str_loc right_t;
+        reconstruct_ast left right
       )
     | (str_loc, (Expression.TemplateLiteral {
         TemplateLiteral.quasis = [_, {
@@ -5854,10 +5919,15 @@ and predicates_of_condition cx e = Ast.(Expression.(
       } as lit_exp)),
       (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }) ->
       typeof_test loc sense argument s str_loc (fun argument ->
-        reconstruct_ast ((str_loc, StrT.at str_loc |> with_trust bogus_trust), lit_exp) (
-          (typeof_loc, StrT.at typeof_loc |> with_trust bogus_trust),
-          Expression.Unary { Unary.operator = Unary.Typeof; argument }
-        )
+        let left_t = StrT.at str_loc |> with_trust bogus_trust in
+        let left = (str_loc, left_t), lit_exp in
+        let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
+        let right = (typeof_loc, right_t), Expression.Unary {
+          Unary.operator = Unary.Typeof; argument
+        } in
+        Type_table.set (Context.type_table cx) typeof_loc left_t;
+        Type_table.set (Context.type_table cx) str_loc right_t;
+        reconstruct_ast left right
       )
 
     (* special case equality relations involving booleans *)
@@ -5961,7 +6031,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let (_, t2), _ as value = expression cx value in
       flow_eqt ~strict loc (t1, t2);
       let ast = reconstruct_ast expr value in
-      empty_result ((loc, BoolT.at loc |> with_trust bogus_trust), ast)
+      let t_out = BoolT.at loc |> with_trust bogus_trust in
+      Type_table.set (Context.type_table cx) loc t_out;
+      empty_result ((loc, t_out), ast)
   in
 
   let mk_and map1 map2 = Key_map.merge
@@ -6054,6 +6126,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
   (* expr instanceof t *)
   | loc, Binary { Binary.operator = Binary.Instanceof; left; right } -> (
       let bool = BoolT.at loc |> with_trust bogus_trust in
+      Type_table.set (Context.type_table cx) loc bool;
       let name_opt, ((_, left_t), _ as left_ast) = refinable_lvalue left in
       let (_, right_t), _ as right_ast = expression cx right in
       let ast =
@@ -6114,7 +6187,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
         let use_op = Op (GetProperty (mk_expression_reason e)) in
         Flow.flow cx (obj_t, GetPropT (use_op, reason, Named (prop_reason, "isArray"), t))
       ) in
-      Type_table.set (Context.type_table cx) prop_loc fn_t;
       let id_info = "isArray", fn_t, Type_table.Other in
       Type_table.set_info prop_loc id_info (Context.type_table cx);
 
@@ -6143,19 +6215,16 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let ((_, t2), _ as right_ast), map2, not_map2, xts2 = Env.in_refined_env cx loc map1 xts1
         (fun () -> predicates_of_condition cx right) in
       let reason = mk_reason (RLogical ("&&", desc_of_t t1, desc_of_t t2)) loc in
-      (
-        (
-          (loc, Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t));)),
-          Logical { Logical.
-            operator = Logical.And;
-            left = left_ast;
-            right = right_ast;
-          }
-        ),
-        mk_and map1 map2,
-        mk_or not_map1 not_map2,
-        Key_map.union xts1 xts2
-      )
+      let t_out = Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, AndT (reason, t2, t))) in
+      Type_table.set (Context.type_table cx) loc t_out;
+      ((loc, t_out), Logical { Logical.
+        operator = Logical.And;
+        left = left_ast;
+        right = right_ast;
+      }),
+      mk_and map1 map2,
+      mk_or not_map1 not_map2,
+      Key_map.union xts1 xts2
 
   (* test1 || test2 *)
   | loc, Logical { Logical.operator = Logical.Or; left; right } ->
@@ -6165,25 +6234,24 @@ and predicates_of_condition cx e = Ast.(Expression.(
       let ((_, t2), _ as right_ast), map2, not_map2, xts2 = Env.in_refined_env cx loc not_map1 xts1
         (fun () -> predicates_of_condition cx right) in
       let reason = mk_reason (RLogical ("||", desc_of_t t1, desc_of_t t2)) loc in
-      (
-        (
-          (loc, Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t)))),
-          Logical { Logical.
-            operator = Logical.Or;
-            left = left_ast;
-            right = right_ast;
-          }
-        ),
-        mk_or map1 map2,
-        mk_and not_map1 not_map2,
-        Key_map.union xts1 xts2
-      )
+      let t_out = Tvar.mk_where cx reason (fun t -> Flow.flow cx (t1, OrT (reason, t2, t))) in
+      Type_table.set (Context.type_table cx) loc t_out;
+      ((loc, t_out), Logical { Logical.
+        operator = Logical.Or;
+        left = left_ast;
+        right = right_ast;
+      }),
+      mk_or map1 map2,
+      mk_and not_map1 not_map2,
+      Key_map.union xts1 xts2
 
   (* !test *)
   | loc, Unary { Unary.operator = Unary.Not; argument; } ->
       let (arg, map, not_map, xts) = predicates_of_condition cx argument in
       let ast' = Unary { Unary.operator = Unary.Not; argument = arg } in
-      let ast = (loc, BoolT.at loc |> with_trust bogus_trust), ast' in
+      let t_out = BoolT.at loc |> with_trust bogus_trust in
+      Type_table.set (Context.type_table cx) loc t_out;
+      let ast = (loc, t_out), ast' in
       (ast, not_map, map, xts)
 
   (* ids *)
@@ -6226,9 +6294,6 @@ and predicates_of_condition cx e = Ast.(Expression.(
   | e ->
       empty_result (expression cx e)
 ))
-
-
-
 
 
 (* Conditional expressions are checked like expressions, except that property

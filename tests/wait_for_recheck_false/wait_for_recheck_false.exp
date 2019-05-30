@@ -63,7 +63,7 @@ Found 1 error
 
 
 coverage without --wait-for-recheck runs immediately:
-Covered: 100.00% (2 of 2 expressions)
+Covered: 100.00% (3 of 3 expressions)
 
 
 
