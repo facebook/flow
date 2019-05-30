@@ -420,15 +420,20 @@ module Eval(Env: EvalEnv) = struct
   and arith_unary tps operator loc argument =
     let open Ast.Expression.Unary in
     match operator with
-      | Minus
       | Plus
-      | Not
       | BitNot
       | Typeof
       | Void
       | Delete
         ->
         (* These operations have simple result types. *)
+        ignore tps; ignore argument; Deps.bot
+      | Minus
+      | Not
+        ->
+        (* TODO: These operations are evaluated by Flow; they may or may not have simple result
+           types. Ideally we'd be verifying the argument. Unfortunately, we don't (see below). The
+           generator does some basic constant evaluation to compensate, but it's not enough. *)
         ignore tps; ignore argument; Deps.bot
       | Await ->
         (* The result type of this operation depends in a complicated way on the argument type. *)

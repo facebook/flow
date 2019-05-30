@@ -975,17 +975,42 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         end
       | _ -> None
 
-  and arith_unary operator loc _argument =
+  and arith_unary operator loc argument =
     let open Ast.Expression.Unary in
     match operator with
       (* These operations have simple result types. *)
-      | Minus -> loc, T.Number
       | Plus -> loc, T.Number
-      | Not -> loc, T.Boolean
       | BitNot -> loc, T.Number
       | Typeof -> loc, T.String
       | Void -> loc, T.Void
       | Delete -> loc, T.Boolean
+
+      (* These operations may or may not have simple result types. See associated TODO: comment in
+         Signature_builder_verify. *)
+      | Minus ->
+        begin match literal_expr argument with
+        | _, T.NumberLiteral { Ast.NumberLiteral.value; raw } ->
+          loc, T.NumberLiteral { Ast.NumberLiteral.value = -.value; raw = "-"^raw }
+        | _ -> loc, T.Number
+        end
+      | Not ->
+        begin match literal_expr argument with
+        | _, T.BooleanLiteral b ->
+          loc, T.BooleanLiteral (not b)
+        | _, T.Function _
+        | _, T.ObjectLiteral _
+        | _, T.ArrayLiteral _
+        | _, T.JSXLiteral _
+          -> loc, T.BooleanLiteral false
+        | _, T.Void
+        | _, T.Null
+          -> loc, T.BooleanLiteral true
+        | _, T.NumberLiteral { Ast.NumberLiteral.value; _ } ->
+           loc, T.BooleanLiteral (value = 0.)
+        | _, T.StringLiteral { Ast.StringLiteral.value; _ } ->
+           loc, T.BooleanLiteral (value = "")
+        | _ -> loc, T.Boolean
+        end
 
       | Await ->
         (* The result type of this operation depends in a complicated way on the argument type. *)
