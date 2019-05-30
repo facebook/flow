@@ -1769,7 +1769,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
                 name = ((name_loc, t), map_ident_new_type t id);
                 annot = (match annot with
                   | Ast.Type.Available _ ->
-                    Tast_utils.unimplemented_mapper#type_annotation_hint annot
+                    Tast_utils.unchecked_mapper#type_annotation_hint annot
                   | Ast.Type.Missing loc ->
                     Ast.Type.Missing (loc, t));
                 optional;
@@ -3595,17 +3595,17 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
   | Comprehension _ ->
     Flow.add_output cx
       Error_message.(EUnsupportedSyntax (loc, ComprehensionExpression));
-    Tast_utils.unimplemented_mapper#expression ex
+    Tast_utils.error_mapper#expression ex
 
   | Generator _ ->
     Flow.add_output cx
       Error_message.(EUnsupportedSyntax (loc, GeneratorExpression));
-    Tast_utils.unimplemented_mapper#expression ex
+    Tast_utils.error_mapper#expression ex
 
   | MetaProperty _->
     Flow.add_output cx
       Error_message.(EUnsupportedSyntax (loc, MetaPropertyExpression));
-    Tast_utils.unimplemented_mapper#expression ex
+    Tast_utils.error_mapper#expression ex
 
   | Import arg -> (
     match arg with
@@ -3642,10 +3642,13 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
       let ignore_non_literals =
         Context.should_ignore_non_literal_requires cx in
       if not ignore_non_literals
-      then
+      then begin
         Flow.add_output cx
           Error_message.(EUnsupportedSyntax (loc, ImportDynamicArgument));
-      Tast_utils.unimplemented_mapper#expression ex
+        Tast_utils.error_mapper#expression ex
+      end
+      else
+        Tast_utils.unchecked_mapper#expression ex
   )
 )
 
@@ -6501,13 +6504,17 @@ and mk_class_sig =
   in
 
   let warn_or_ignore_decorators cx = function
-  | [] -> ()
+  | [] -> []
   | decorators ->
     match Context.esproposal_decorators cx with
     | Options.ESPROPOSAL_ENABLE -> failwith "Decorators cannot be enabled!"
-    | Options.ESPROPOSAL_IGNORE -> ()
+    | Options.ESPROPOSAL_IGNORE ->
+      Core_list.map ~f:Tast_utils.unchecked_mapper#class_decorator decorators
     | Options.ESPROPOSAL_WARN ->
-      decorators |> List.iter (fun (loc, _) -> Flow.add_output cx (Error_message.EExperimentalDecorators loc))
+      List.iter (fun (loc, _) ->
+        Flow.add_output cx (Error_message.EExperimentalDecorators loc)
+      ) decorators;
+      Core_list.map ~f:Tast_utils.error_mapper#class_decorator decorators
   in
 
   let warn_or_ignore_class_properties cx ~static loc =
@@ -6533,7 +6540,7 @@ and mk_class_sig =
     classDecorators;
   } ->
 
-  warn_or_ignore_decorators cx classDecorators;
+  let classDecorators_ast = warn_or_ignore_decorators cx classDecorators in
 
   let tparams, tparams_map, tparams_ast =
     Anno.mk_type_param_declarations cx tparams
@@ -6618,7 +6625,7 @@ and mk_class_sig =
       }) ->
 
       Type_inference_hooks_js.dispatch_class_member_decl_hook cx self static name id_loc;
-      warn_or_ignore_decorators cx decorators;
+      let decorators = warn_or_ignore_decorators cx decorators in
 
       (match kind with
       | Method.Get | Method.Set -> Flow_js.add_output cx (Error_message.EUnsafeGettersSetters loc)
@@ -6646,7 +6653,6 @@ and mk_class_sig =
           ~default:(Tast_utils.error_mapper#function_body func.Ast.Function.body) in
         let func_t = Option.value (!func_t_ref) ~default:(EmptyT.at id_loc |> with_trust bogus_trust ) in
         let func = reconstruct_func params body func_t in
-        let decorators = List.map Tast_utils.unimplemented_mapper#class_decorator decorators in
         Body.Method ((loc, func_t), { Method.
           key = Ast.Expression.Object.Property.Identifier ((id_loc, func_t), map_ident_new_type func_t id);
           value = func_loc, func;
@@ -6749,8 +6755,7 @@ and mk_class_sig =
     tparams = tparams_ast;
     extends = extends_ast;
     implements = implements_ast;
-    classDecorators =
-      List.map Tast_utils.unimplemented_mapper#class_decorator classDecorators;
+    classDecorators = classDecorators_ast;
   })
 
 and mk_func_sig =
