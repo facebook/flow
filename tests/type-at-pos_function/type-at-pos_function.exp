@@ -1,3 +1,18 @@
+declare.js:4:3 = {
+  "type":"() => void",
+  "reasons":[],
+  "loc":{
+    "source":"declare.js",
+    "type":"SourceFile",
+    "start":{"line":3,"column":18,"offset":27},
+    "end":{"line":3,"column":20,"offset":30}
+  },
+  "path":"declare.js",
+  "line":3,
+  "endline":3,
+  "start":18,
+  "end":20
+}
 function.js:4:3 = {
   "type":"() => void",
   "reasons":[],

@@ -403,7 +403,7 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
                                : ('N, 'U) Ast.Statement.DeclareFunction.t =
     let open Ast.Statement.DeclareFunction in
     let { id = ident; annot; predicate } = decl in
-    let id' = this#function_identifier ident in
+    let id' = this#t_function_identifier ident in
     let annot' = this#type_annotation annot in
     let predicate' = Option.map ~f:this#type_predicate predicate in
     { id = id'; annot = annot'; predicate = predicate' }

@@ -1936,8 +1936,8 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       | Some (func_decl, reconstruct_ast) ->
           loc, DeclareFunction (reconstruct_ast (statement cx (loc, func_decl)))
       | None -> (* error case *)
-          let { DeclareFunction.id; annot; predicate; _ } = declare_function in
-          let id_loc, { Ast.Identifier.name; comments = _ } = id in
+          let { DeclareFunction.id = (id_loc, id_name); annot; predicate; _ } = declare_function in
+          let { Ast.Identifier.name; comments = _ } = id_name in
           let t, annot_ast =
             Anno.mk_type_available_annotation cx SMap.empty annot in
           let id_info = name, t, Type_table.Other in
@@ -1945,7 +1945,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           Env.unify_declared_fun_type cx name loc t;
           let predicate = Option.map ~f:Tast_utils.error_mapper#type_predicate predicate in
           loc, DeclareFunction { DeclareFunction.
-            id;
+            id = (id_loc, t), id_name;
             annot = annot_ast;
             predicate;
           }
@@ -7075,7 +7075,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                 )
               in
               { Ast.Statement.DeclareFunction.
-                id = id_loc, id_name;
+                id = (id_loc, fun_type), id_name;
                 annot;
                 predicate = Some (pred_loc, Ast.Type.Predicate.Declared e)
               }
