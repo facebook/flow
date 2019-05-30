@@ -476,7 +476,7 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
-  | MapTypeT (_, map, tout) ->
+  | MapTypeT (_, _, map, tout) ->
     let acc = self#type_map cx acc map in
     let acc = self#type_ cx pole_TODO acc tout in
     acc

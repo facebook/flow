@@ -698,7 +698,7 @@ let error_message_kind_of_upper = function
   | HasOwnPropT (_, r, _) -> Error_message.IncompatibleHasOwnPropT (aloc_of_reason r, None)
   | GetValuesT _ -> Error_message.IncompatibleGetValuesT
   | UnaryMinusT _ -> Error_message.IncompatibleUnaryMinusT
-  | MapTypeT (_, (ObjectMap _ | ObjectMapi _), _) -> Error_message.IncompatibleMapTypeTObject
+  | MapTypeT (_, _, (ObjectMap _ | ObjectMapi _), _) -> Error_message.IncompatibleMapTypeTObject
   | TypeAppVarianceCheckT _ -> Error_message.IncompatibleTypeAppVarianceCheckT
   | GetStaticsT _ -> Error_message.IncompatibleGetStaticsT
   | use_t -> Error_message.IncompatibleUnclassified (string_of_use_ctor use_t)
@@ -1073,7 +1073,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let _, result = mk_type_destructor cx ~trace use_op' reason t d id in
       rec_flow cx trace (result, u)
 
-    | _, UseT (use_op, EvalT (t, TypeDestructorT (use_op', reason, d), id)) ->
+     | _, UseT (use_op, EvalT (t, TypeDestructorT (use_op', reason, d), id)) ->
       let slingshot, result = mk_type_destructor cx ~trace use_op' reason t d id in
       if slingshot
         then rec_flow cx trace (result, ReposUseT (reason, false, use_op, l))
@@ -5380,11 +5380,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* function types can be mapped over a structure  *)
     (**************************************************)
 
-    | AnyT _, MapTypeT (reason_op, _, tout) ->
+    | AnyT _, MapTypeT (_, reason_op, _, tout) ->
       rec_flow_t cx trace (AnyT.untyped reason_op, tout)
 
-    | DefT (_, trust, ArrT arrtype), MapTypeT (reason_op, TupleMap funt, tout) ->
-      let f x = EvalT (funt, TypeDestructorT (unknown_use, reason_op, CallType [x]), mk_id ()) in
+    | DefT (_, trust, ArrT arrtype), MapTypeT (use_op, reason_op, TupleMap funt, tout) ->
+      let f x = EvalT (funt, TypeDestructorT (use_op, reason_op, CallType [x]), mk_id ()) in
       let arrtype = match arrtype with
       | ArrayAT (elemt, ts) -> ArrayAT (f elemt, Option.map ~f:(Core_list.map ~f:f) ts)
       | TupleAT (elemt, ts) -> TupleAT (f elemt, Core_list.map ~f:f ts)
@@ -5395,21 +5395,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (t, tout)
 
-    | _, MapTypeT (reason, TupleMap funt, tout) ->
+    | _, MapTypeT (use_op, reason, TupleMap funt, tout) ->
       let iter = get_builtin cx ~trace "$iterate" reason in
       let elemt = EvalT (iter, TypeDestructorT
-        (unknown_use, reason, CallType [l]), mk_id ()) in
+        (use_op, reason, CallType [l]), mk_id ()) in
       let t = DefT (reason, bogus_trust (), ArrT (ROArrayAT elemt)) in
-      rec_flow cx trace (t, MapTypeT (reason, TupleMap funt, tout))
+      rec_flow cx trace (t, MapTypeT (use_op, reason, TupleMap funt, tout))
 
-    | DefT (_, trust, ObjT o), MapTypeT (reason_op, ObjectMap funt, tout) ->
+    | DefT (_, trust, ObjT o), MapTypeT (use_op, reason_op, ObjectMap funt, tout) ->
       let map_t t =
         let t, opt = match t with
         | OptionalT (_, t) -> t, true
         | _ -> t, false
         in
         let t = EvalT (funt, TypeDestructorT
-          (unknown_use, reason_op, CallType [t]), mk_id ()) in
+          (use_op, reason_op, CallType [t]), mk_id ()) in
         if opt
           then optional t
           else t
@@ -5430,14 +5430,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       in
       rec_flow_t cx trace (mapped_t, tout)
 
-    | DefT (_, trust, ObjT o), MapTypeT (reason_op, ObjectMapi funt, tout) ->
+    | DefT (_, trust, ObjT o), MapTypeT (use_op, reason_op, ObjectMapi funt, tout) ->
       let mapi_t key t =
         let t, opt = match t with
         | OptionalT (_, t) -> t, true
         | _ -> t, false
         in
         let t = EvalT (funt, TypeDestructorT
-          (unknown_use, reason_op, CallType [key; t]), mk_id ()) in
+          (use_op, reason_op, CallType [key; t]), mk_id ()) in
         if opt
           then optional t
           else t
@@ -6874,7 +6874,7 @@ and empty_success flavor u =
   | _, ImportTypeofT _
   | _, IntersectionPreprocessKitT _
   | _, InvariantT _
-  | _, MapTypeT (_, TupleMap _, _)
+  | _, MapTypeT (_, _, TupleMap _, _)
   | _, NotT _
   | _, NullishCoalesceT _
   | _, ObjAssignToT _
@@ -7507,7 +7507,7 @@ and eval_destructor cx ~trace use_op reason t d tout = match t with
     let call = mk_functioncalltype reason None args tout in
     let call = {call with call_strict_arity = false} in
     CallT (use_op, reason, call)
-  | TypeMap tmap -> MapTypeT (reason, tmap, tout)
+  | TypeMap tmap -> MapTypeT (use_op, reason, tmap, tout)
   | ReactElementPropsType -> ReactKitT (use_op, reason, React.GetProps tout)
   | ReactElementConfigType -> ReactKitT (use_op, reason, React.GetConfig tout)
   | ReactElementRefType -> ReactKitT (use_op, reason, React.GetRef tout)

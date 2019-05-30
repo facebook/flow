@@ -766,7 +766,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | DebugPrintT _ -> []
   | DebugSleepT _ -> []
 
-  | MapTypeT (_, kind, t) -> [
+  | MapTypeT (_, _, kind, t) -> [
       "kind", JSON_String (string_of_type_map kind);
       "t", _json_of_t json_cx t;
     ]

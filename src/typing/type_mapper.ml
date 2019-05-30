@@ -928,11 +928,11 @@ class virtual ['a] t_with_uses = object(self)
           let t1' = self#type_ cx map_cx t1 in
           if t1' == t1 then t
           else AssertExportIsTypeT (r, name, t1')
-      | MapTypeT (r, tmap, t') ->
+      | MapTypeT (use_op, r, tmap, t') ->
           let tmap' = self#type_map cx map_cx tmap in
           let t'' = self#type_ cx map_cx t' in
           if tmap' == tmap && t'' == t' then t
-          else MapTypeT (r, tmap', t'')
+          else MapTypeT (use_op, r, tmap', t'')
       | ReactKitT (use_op, r, react_tool) ->
           let react_tool' = self#react_tool cx map_cx react_tool in
           if react_tool' == react_tool then t

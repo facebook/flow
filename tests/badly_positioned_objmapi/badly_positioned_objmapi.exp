@@ -1,14 +1,10 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:10:48
+Error ---------------------------------------------------------------------------------------------------- test.js:22:12
 
-Property `q` is missing in `MySpec` [1] in the first argument.
+Cannot instantiate `PickKeysFromObject` because property `q` is missing in `MySpec` [1] in the first argument.
 
-   test.js:10:48
-                                                      v--------
-   10| export type PickKeysFromObject<Spec, KeyMap> = $ObjMapi<
-   11|   KeyMap,
-   12|   MapKeyValue<Spec>,
-   13| >;
-       ^
+   test.js:22:12
+   22|   type A = PickKeysFromObject<MySpec, typeof keys>;
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    test.js:22:31

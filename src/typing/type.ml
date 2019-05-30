@@ -554,7 +554,7 @@ module rec TypeTerm : sig
     | AssertExportIsTypeT of reason * string (* export name *) * t_out
 
     (* Map a FunT over a structure *)
-    | MapTypeT of reason * type_map * t_out
+    | MapTypeT of use_op * reason * type_map * t_out
 
     | ObjKitT of use_op * reason * Object.resolve_tool * Object.tool * t_out
 
@@ -2266,7 +2266,7 @@ end = struct
     | InvariantT reason -> reason
     | LookupT(reason, _, _, _, _) -> reason
     | MakeExactT (reason, _) -> reason
-    | MapTypeT (reason, _, _) -> reason
+    | MapTypeT (_, reason, _, _) -> reason
     | MethodT (_,reason,_,_,_,_) -> reason
     | MixinT (reason, _) -> reason
     | NotT (reason, _) -> reason
@@ -2437,7 +2437,7 @@ end = struct
     | InvariantT reason -> InvariantT (f reason)
     | LookupT (reason, r2, ts, x, t) -> LookupT (f reason, r2, ts, x, t)
     | MakeExactT (reason, t) -> MakeExactT (f reason, t)
-    | MapTypeT (reason, kind, t) -> MapTypeT (f reason, kind, t)
+    | MapTypeT (use_op, reason, kind, t) -> MapTypeT (use_op, f reason, kind, t)
     | MethodT (use_op, reason_call, reason_lookup, name, ft, tm) ->
         MethodT (use_op, f reason_call, reason_lookup, name, ft, tm)
     | MixinT (reason, inst) -> MixinT (f reason, inst)
@@ -2590,7 +2590,7 @@ end = struct
   | ExportNamedT (_, _, _, _, _)
   | ExportTypeT (_, _, _, _, _)
   | AssertExportIsTypeT (_, _, _)
-  | MapTypeT (_, _, _)
+  | MapTypeT (_, _, _, _)
   | ChoiceKitUseT (_, _)
   | IntersectionPreprocessKitT (_, _)
   | DebugPrintT (_)
