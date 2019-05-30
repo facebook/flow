@@ -291,7 +291,7 @@ class ['loc] mapper = object(this)
     if expr == expr' && targs == targs' then extends
     else { expr = expr'; targs = targs' }
 
-  method class_identifier (ident: 'loc Flow_ast.Identifier.t) =
+  method class_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
     this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let ident
 
   method class_body (cls_body: ('loc, 'loc) Flow_ast.Class.Body.t) =
@@ -554,7 +554,7 @@ class ['loc] mapper = object(this)
       tparams = tparams'
     }
 
-  method label_identifier (ident: 'loc Flow_ast.Identifier.t) =
+  method label_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
     this#identifier ident
 
   method object_property_value_type (opvt: ('loc, 'loc) Flow_ast.Type.Object.Property.value) =
@@ -776,13 +776,13 @@ class ['loc] mapper = object(this)
   method function_body loc (block: ('loc, 'loc) Flow_ast.Statement.Block.t) =
     this#block loc block
 
-  method function_identifier (ident: 'loc Flow_ast.Identifier.t) =
+  method function_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
     this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Var ident
 
   (* TODO *)
   method generator _loc (expr: ('loc, 'loc) Flow_ast.Expression.Generator.t) = expr
 
-  method identifier (id: 'loc Flow_ast.Identifier.t) =
+  method identifier (id: ('loc, 'loc) Flow_ast.Identifier.t) =
     let open Flow_ast.Identifier in
     let (loc, { name; comments }) = id in
     let comments' = this#syntax_opt comments in
@@ -844,7 +844,7 @@ class ['loc] mapper = object(this)
       id_loc this#import_namespace_specifier loc ident specifier
         (fun ident -> ImportNamespaceSpecifier (loc, ident))
 
-  method import_named_specifier (specifier: 'loc Flow_ast.Statement.ImportDeclaration.named_specifier) =
+  method import_named_specifier (specifier: ('loc, 'loc) Flow_ast.Statement.ImportDeclaration.named_specifier) =
     let open Flow_ast.Statement.ImportDeclaration in
     let { kind; local; remote } = specifier in
     let remote' = this#identifier remote in
@@ -856,10 +856,10 @@ class ['loc] mapper = object(this)
     if local == local' && remote == remote' then specifier
     else { kind; local = local'; remote = remote'}
 
-  method import_default_specifier (id: 'loc Flow_ast.Identifier.t) =
+  method import_default_specifier (id: ('loc, 'loc) Flow_ast.Identifier.t) =
     this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let id
 
-  method import_namespace_specifier _loc (id: 'loc Flow_ast.Identifier.t) =
+  method import_namespace_specifier _loc (id: ('loc, 'loc) Flow_ast.Identifier.t) =
     this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let id
 
   method jsx_element _loc (expr: ('loc, 'loc) Flow_ast.JSX.element) =
@@ -1036,7 +1036,7 @@ class ['loc] mapper = object(this)
     | PropertyExpression e ->
       id this#member_property_expression e expr (fun e -> PropertyExpression e)
 
-  method member_property_identifier (ident: 'loc Flow_ast.Identifier.t) =
+  method member_property_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
     this#identifier ident
 
   method member_private_name (name: 'loc Flow_ast.PrivateName.t) =
@@ -1112,7 +1112,7 @@ class ['loc] mapper = object(this)
     | Computed expr ->
       id this#expression expr key (fun expr -> Computed expr)
 
-  method object_key_identifier (ident: 'loc Flow_ast.Identifier.t) =
+  method object_key_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
     this#identifier ident
 
   method opaque_type _loc (otype: ('loc, 'loc) Flow_ast.Statement.OpaqueType.t) =
@@ -1184,7 +1184,7 @@ class ['loc] mapper = object(this)
     in
     if patt == patt' then expr else (loc, patt')
 
-  method pattern_identifier ?kind (ident: 'loc Flow_ast.Identifier.t) =
+  method pattern_identifier ?kind (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
     ignore kind;
     this#identifier ident
 
@@ -1222,7 +1222,7 @@ class ['loc] mapper = object(this)
   method pattern_object_property_literal_key ?kind loc (key: 'loc Flow_ast.Literal.t) =
     this#pattern_literal ?kind loc key
 
-  method pattern_object_property_identifier_key ?kind (key: 'loc Flow_ast.Identifier.t) =
+  method pattern_object_property_identifier_key ?kind (key: ('loc, 'loc) Flow_ast.Identifier.t) =
     this#pattern_identifier ?kind key
 
   method pattern_object_property_computed_key ?kind (key: ('loc, 'loc) Flow_ast.Expression.t) =

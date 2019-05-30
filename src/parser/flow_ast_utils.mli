@@ -10,13 +10,13 @@ type 'loc ident = 'loc * string
 type 'loc source = 'loc * string
 
 val fold_bindings_of_pattern:
-  ('a -> 'loc Flow_ast.Identifier.t -> 'a) ->
+  ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> 'a) ->
   'a ->
   ('loc, 'loc) Flow_ast.Pattern.t' ->
   'a
 
 val fold_bindings_of_variable_declarations:
-  ('a -> 'loc Flow_ast.Identifier.t -> 'a) ->
+  ('a -> ('loc, 'loc) Flow_ast.Identifier.t -> 'a) ->
   'a ->
   ('loc, 'loc) Flow_ast.Statement.VariableDeclaration.Declarator.t list ->
   'a
@@ -39,16 +39,16 @@ val loc_of_pattern:
   ('a, 'a) Flow_ast.Pattern.t -> 'a
 
 val loc_of_ident:
-  ('a) Flow_ast.Identifier.t -> 'a
+  ('a, 'a) Flow_ast.Identifier.t -> 'a
 
 val name_of_ident:
-  ('a) Flow_ast.Identifier.t -> string
+  ('loc, 'a) Flow_ast.Identifier.t -> string
 
 val source_of_ident:
-  ('a) Flow_ast.Identifier.t -> 'a source
+  ('a, 'a) Flow_ast.Identifier.t -> 'a source
 
 val ident_of_source:
-  'a source -> ('a) Flow_ast.Identifier.t
+  'a source -> ('a, 'a) Flow_ast.Identifier.t
 
 val mk_comments:
   ?leading: 'loc Flow_ast.Comment.t list ->
@@ -61,16 +61,6 @@ val mk_comments_opt:
   ?trailing: 'loc Flow_ast.Comment.t list ->
   unit ->
   ('loc, unit) Flow_ast.Syntax.t option
-
-val map_comments:
-  f:('a -> 'b) ->
-  ('a, 'internal) Flow_ast.Syntax.t ->
-  ('b, 'internal) Flow_ast.Syntax.t
-
-val map_comments_opt:
-  f:('a -> 'b) ->
-  ('a, 'internal) Flow_ast.Syntax.t option ->
-  ('b, 'internal) Flow_ast.Syntax.t option
 
 module ExpressionSort: sig
   type t =

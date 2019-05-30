@@ -16,7 +16,7 @@ module type S = sig
       | FunctionReturn
       | PrivateField of L.t Flow_ast.PrivateName.t
       | Property of (L.t, L.t) Flow_ast.Expression.Object.Property.key
-      | VariableDefinition of L.t Flow_ast.Identifier.t
+      | VariableDefinition of (L.t, L.t) Flow_ast.Identifier.t
 
     val property_key_to_string: (L.t, L.t) Flow_ast.Expression.Object.Property.key -> string
     val to_string: t -> string

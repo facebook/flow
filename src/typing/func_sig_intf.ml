@@ -80,7 +80,7 @@ val generate_tests: Context.t ->
     necessary. This is when the body of the function gets checked, so it also
     returns a typed AST of the function body. *)
 val toplevels:
-  ALoc.t Flow_ast.Identifier.t option -> (* id *)
+  (ALoc.t, ALoc.t) Flow_ast.Identifier.t option -> (* id *)
   Context.t ->
   Scope.Entry.t -> (* this *)
   Scope.Entry.t -> (* super *)

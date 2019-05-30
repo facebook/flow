@@ -15,7 +15,7 @@ module Error = Parse_error
 
 module type TYPE = sig
   val _type : env -> (Loc.t, Loc.t) Ast.Type.t
-  val type_identifier : env -> Loc.t Ast.Identifier.t
+  val type_identifier : env -> (Loc.t, Loc.t) Ast.Identifier.t
   val type_parameter_declaration : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
   val type_parameter_declaration_with_defaults : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
   val type_parameter_instantiation : env -> (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option
