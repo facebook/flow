@@ -6,6 +6,7 @@
  *)
 
 open Utils_js
+open Fieldslib
 
 let (>>=) = Core_result.(>>=)
 
@@ -83,9 +84,9 @@ module Opts = struct
     node_resolver_dirnames: string list;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
-    shm_dep_table_pow: int;
     shm_dirs: string list;
     shm_hash_table_pow: int;
+    shm_dep_table_pow: int;
     shm_heap_size: int;
     shm_log_level: int;
     shm_min_avail: int;
@@ -97,7 +98,7 @@ module Opts = struct
     types_first: bool;
     wait_for_recheck: bool;
     weak: bool;
-  }
+  } [@@deriving fields]
 
   let warn_on_unknown_opts (raw_opts, config) : (t * warning list, error) result =
     (* If the user specified any options that aren't defined, issue a warning *)
@@ -651,6 +652,9 @@ module Opts = struct
       warn_on_unknown_opts
 end
 
+(* Suppress unused Direct module warning *)
+(* let _ = Opts.Direct.fold *)
+
 type config = {
   (* completely ignored files (both module resolving and typing) *)
   ignores: string list;
@@ -696,25 +700,155 @@ end = struct
     Core_list.iter ~f:(fprintf o "%s\n")
 
   let options =
-    let pp_opt o name value = fprintf o "%s=%s\n" name value
+    let pp_field_name = function
+    (* esproposal *)
+    | "esproposal_class_instance_fields" -> "esproposal.class_instance_fields"
+    | "esproposal_class_static_fields" -> "esproposal.class_static_fields"
+    | "esproposal_decorators" -> "esproposal.decorators"
+    | "esproposal_export_star_as" -> "esproposal.export_star_as"
+    | "esproposal_optional_chaining" -> "esproposal.optional_chaining"
+    | "esproposal_nullish_coalescing" -> "esproposal.nullish_coalescing"
 
-    in let module_system = function
-      | Options.Node -> "node"
-      | Options.Haste -> "haste"
+    (* facebook *)
+    | "facebook_fbs" -> "facebook.fbs"
+    | "facebook_fbt" -> "facebook.fbt"
+
+    (* module *)
+    | "ignore_non_literal_requires" -> "module.ignore_non_literal_requires"
+    | "module_file_exts" -> "module.file_ext"
+    | "module_resolver" -> "module.resolver"
+    | "modules_are_use_strict" -> "module.use_strict"
+    (* module.name_mapper *)
+    | "module_name_mappers" -> "module.name_mapper"
+    (* module.system *)
+    | "module_system" -> "module.system"
+    (* module.system.haste *)
+    | "haste_module_ref_prefix" -> "module.system.haste.module_ref_prefix"
+    | "haste_name_reducers" -> "module.system.haste.name_reducers"
+    | "haste_paths_blacklist" -> "module.system.haste.paths.blacklist"
+    | "haste_paths_whitelist" -> "module.system.haste.paths.whitelist"
+    | "haste_use_name_reducers" -> "module.system.haste.use_name_reducers"
+    (* module.system.node *)
+    | "node_resolver_dirnames" -> "module.system.node.resolve_dirname"
+
+    (* log *)
+    | "log_file" -> "log.file"
+    (* server *)
+    | "max_workers" -> "server.max_workers"
+    (* saved_state *)
+    | "saved_state_fetcher" -> "saved_state.fetcher"
+
+    (* sharedmemory *)
+    | "shm_dirs" -> "sharedmemory.dirs"
+    | "shm_min_avail" -> "sharedmemory.minimum_available"
+    | "shm_dep_table_pow" -> "sharedmemory.dep_table_pow"
+    | "shm_hash_table_pow" -> "sharedmemory.hash_table_pow"
+    | "shm_heap_size" -> "sharedmemory.heap_size"
+    | "shm_log_level" -> "sharedmemory.log_level"
+
+    (* experimental *)
+    | "enable_const_params" -> "experimental.const_params"
+    | "enforce_strict_call_arity" -> "experimental.strict_call_arity"
+    | "enforce_well_formed_exports" -> "experimental.well_formed_exports"
+    | "enforce_well_formed_exports_whitelist" -> "experimental.well_formed_exports.whitelist"
+    | "types_first" -> "experimental.types_first"
+    | "abstract_locations" -> "experimental.abstract_locations"
+
+    | "root_name" -> "name"
+    | "suppress_comments" -> "suppress_comment"
+    | "suppress_types" -> "suppress_type"
+    | t -> t
+
+    in let pp_opt o to_s = fun (name: string) value ->
+      fprintf o "%s=%s\n" (pp_field_name name) (to_s value)
 
     in fun o config ->
       let open Opts in
       let options = config.options in
-      if options.module_system <> default_options.module_system
-      then pp_opt o "module.system" (module_system options.module_system);
-      if options.all <> default_options.all
-      then pp_opt o "all" (string_of_bool options.all);
-      if options.weak <> default_options.weak
-      then pp_opt o "weak" (string_of_bool options.weak);
-      if options.temp_dir <> default_options.temp_dir
-      then pp_opt o "temp_dir" options.temp_dir;
-      if options.include_warnings <> default_options.include_warnings
-      then pp_opt o "include_warnings" (string_of_bool options.include_warnings)
+
+      let noop = (fun _ _ -> ()) in
+      let bool = pp_opt o string_of_bool in
+      let int = pp_opt o string_of_int in
+      let string = pp_opt o (fun s -> s) in
+      let esproposal_feature_mode = pp_opt o Options.esproposal_feature_mode_to_string in
+      let path = pp_opt o Path.to_string in
+
+      (* We can't convert Str.regexp to string *)
+      let mapping = noop in
+      let regexp = noop in
+
+      let list t = fun (name: string) values ->
+        Core_list.iter ~f:(fun v -> t name v) values
+      in
+      let sset (name: string) sset =
+        SSet.iter (fun v -> string name v) sset
+      in
+      let option fn = fun (name: string) value ->
+        match value with
+        | Some v -> fn name v
+        | None -> ()
+      in
+      let print t = fun f _ value ->
+        if value <> (Field.get f default_options) then
+        t (Field.name f) value
+      in
+
+      Fields.Direct.iter
+        options
+        ~abstract_locations: (print bool)
+        ~all: (print bool)
+        ~emoji: (print bool)
+        ~enable_const_params: (print bool)
+        ~enforce_strict_call_arity: (print bool)
+        ~enforce_well_formed_exports: (print bool)
+        ~enforce_well_formed_exports_whitelist: (print (list string))
+        ~esproposal_class_instance_fields: (print esproposal_feature_mode)
+        ~esproposal_class_static_fields: (print esproposal_feature_mode)
+        ~esproposal_decorators: (print esproposal_feature_mode)
+        ~esproposal_export_star_as: (print esproposal_feature_mode)
+        ~esproposal_nullish_coalescing: (print esproposal_feature_mode)
+        ~esproposal_optional_chaining: (print esproposal_feature_mode)
+        ~facebook_fbs: (print (option string))
+        ~facebook_fbt: (print (option string))
+        ~file_watcher: (print (option (pp_opt o Options.file_watcher_to_string)))
+        ~haste_module_ref_prefix: (print (option string))
+        ~haste_name_reducers: (print (list mapping))
+        ~haste_paths_blacklist: (print (list string))
+        ~haste_paths_whitelist: (print (list string))
+        ~haste_use_name_reducers: (print bool)
+        ~ignore_non_literal_requires: (print bool)
+        ~include_warnings: (print bool)
+        ~lazy_mode: (print (option (pp_opt o Options.lazy_mode_to_string)))
+        ~log_file: (print (option path))
+        ~max_header_tokens: (print int)
+        ~max_literal_length: (print int)
+        ~max_workers: (print int)
+        ~merge_timeout: (print (option int))
+        ~module_file_exts: (print sset)
+        ~module_name_mappers: (print (list mapping))
+        ~module_resolver: (print (option path))
+        ~module_resource_exts: (print noop)
+        ~module_system: (print (pp_opt o Options.module_system_to_string))
+        ~modules_are_use_strict: (print bool)
+        ~munge_underscores: (print bool)
+        ~no_flowlib: (print bool)
+        ~node_resolver_dirnames: (print (list string))
+        ~root_name: (print (option string))
+        ~saved_state_fetcher: (print (pp_opt o Options.saved_state_fetcher_to_string))
+        ~shm_dirs: (print (list string))
+        ~shm_hash_table_pow: (print int)
+        ~shm_dep_table_pow: (print int)
+        ~shm_heap_size: (print int)
+        ~shm_log_level: (print int)
+        ~shm_min_avail: (print int)
+        ~suppress_comments: (print (list regexp))
+        ~suppress_types: (print sset)
+        ~temp_dir: (print string)
+        ~traces: (print int)
+        ~trust_mode: (print (pp_opt o Options.trust_mode_to_string))
+        ~types_first: (print bool)
+        ~wait_for_recheck: (print bool)
+        ~weak: (print bool)
 
   let lints o config =
     let open Lints in
