@@ -134,7 +134,6 @@ type t = {
 
   mutable require_map: Type.t ALocMap.t;
 
-  type_table: Type_table.t;
   trust_constructor: unit -> Trust.trust_rep;
 
   mutable declare_module_ref: string option;
@@ -217,8 +216,6 @@ let make sig_cx metadata file module_ref = {
   imported_ts = SMap.empty;
 
   require_map = ALocMap.empty;
-
-  type_table = Type_table.create ();
 
   trust_constructor = Trust.literal_trust;
 
@@ -319,7 +316,6 @@ let default_lib_dir cx = cx.metadata.default_lib_dir
 
 let type_asserts cx = cx.sig_cx.type_asserts
 let type_graph cx = cx.sig_cx.type_graph
-let type_table cx = cx.type_table
 let trust_mode cx = cx.metadata.trust_mode
 let verbose cx = cx.metadata.verbose
 let max_workers cx = cx.metadata.max_workers

@@ -218,8 +218,6 @@ let identifier cx ~f acc loc name =
       -> RIdentifier name
     | desc -> desc
   )) current in
-  let id_info = name, current, Type_table.Other in
-  Type_table.set_info loc id_info (Context.type_table cx);
   let use_op = Op (AssignVar {
     var = Some (mk_reason (RIdentifier name) loc);
     init = (

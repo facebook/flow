@@ -288,15 +288,13 @@ let elements cx ?constructor s =
     (* If this is an overloaded method, create an intersection, attributed
        to the first declared function signature. If there is a single
        function signature for this method, simply return the method type. *)
-    SMap.mapi Type.(fun name xs ->
+    SMap.mapi Type.(fun _name xs ->
       let ms =
         Nel.rev_map (fun (loc, x, _, set_type) -> loc, F.methodtype cx x, set_type) xs in
       (* Keep track of these before intersections are merged, to enable
        * type information on every member of the intersection. *)
       ms |> Nel.iter (fun (loc, t, set_type) ->
-        Option.iter loc ~f:(fun loc ->
-          let id_info = name, t, Type_table.Other in
-          Type_table.set_info loc id_info (Context.type_table cx);
+        Option.iter loc ~f:(fun _loc ->
           set_type t
         )
       );
@@ -324,14 +322,9 @@ let elements cx ?constructor s =
     SMap.map
       (fun (loc, t, _, set_type) -> loc, F.settertype t, set_type)
       s.setters in
-
-  (* Register getters and setters with the type table *)
-  let register_accessors = SMap.iter (fun name (loc, t, set_type) ->
-    Option.iter ~f:(fun loc ->
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info loc id_info (Context.type_table cx);
-      set_type t
-    ) loc
+(* Register getters and setters with the typed AST *)
+  let register_accessors = SMap.iter (fun _ (loc, t, set_type) ->
+    Option.iter ~f:(fun _ -> set_type t) loc
   ) in
   register_accessors getters;
   register_accessors setters;
@@ -345,19 +338,6 @@ let elements cx ?constructor s =
   ) getters setters in
 
   let fields = SMap.map to_field s.fields in
-
-  (* Register fields with the type table *)
-  SMap.iter (fun name fld ->
-    let loc_type_opt = match fld with
-    | Some loc, _, Annot t -> Some (loc, t)
-    | Some loc, _, Infer (func_sig, _) -> Some (loc, F.gettertype func_sig)
-    | _ -> None
-    in
-    Option.iter ~f:(fun (loc, t) ->
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info loc id_info (Context.type_table cx)
-    ) loc_type_opt
-  ) s.fields;
 
   let methods = SMap.map (fun (loc, t) -> Type.Method (loc, t)) methods in
 
@@ -780,6 +760,4 @@ module This = struct
     with FoundInClass -> true
 end
 
-let with_typeparams cx f x =
-  Type_table.with_typeparams (Type.TypeParams.to_list x.tparams) (Context.type_table cx) f
 end

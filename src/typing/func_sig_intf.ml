@@ -120,6 +120,4 @@ val settertype: t -> Type.t
 
 val to_ctor_sig: t -> t
 
-val with_typeparams: Context.t -> (unit -> 'a) -> t -> 'a
-
 end

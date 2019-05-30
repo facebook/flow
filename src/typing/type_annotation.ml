@@ -247,8 +247,6 @@ let rec convert cx tparams_map = Ast.Type.(function
   let id_reason = mk_reason (RType name) id_loc in
   let qid_reason = mk_reason (RType (qualified_name qid)) qid_loc in
   let t_unapplied = Tvar.mk_where cx qid_reason (fun t ->
-    let id_info = name, t, Type_table.Other in
-    Type_table.set_info id_loc id_info (Context.type_table cx);
     let use_op = Op (GetProperty qid_reason) in
     Flow.flow cx (m, GetPropT (use_op, qid_reason, Named (id_reason, name), t));
   ) in
@@ -977,8 +975,6 @@ let rec convert cx tparams_map = Ast.Type.(function
   | _ when SMap.mem name tparams_map ->
     check_type_arg_arity cx loc t_ast targs 0 (fun () ->
       let t = Flow.reposition cx loc (SMap.find_unsafe name tparams_map) in
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info name_loc id_info (Context.type_table cx);
       reconstruct_ast t None
     )
 
@@ -1060,8 +1056,6 @@ let rec convert cx tparams_map = Ast.Type.(function
   | _ ->
     let reason = mk_reason (RType name) loc in
     let c = type_identifier cx name name_loc in
-    let id_info = name, c, Type_table.Other in
-    Type_table.set_info name_loc id_info (Context.type_table cx);
     let t, targs = mk_nominal_type cx reason tparams_map (c, targs) in
     reconstruct_ast t ~id_t:c targs
 
@@ -1075,18 +1069,11 @@ let rec convert cx tparams_map = Ast.Type.(function
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx ~tparams_map tparams in
 
-  let tparams_list = Type.TypeParams.to_list tparams in
-
   let rev_params, rev_param_asts = List.fold_left (fun (params_acc, asts_acc) (param_loc, param) ->
     let { Function.Param.name; annot; optional } = param in
     let (_, t), _ as annot_ast = convert cx tparams_map annot in
     let t = if optional then Type.optional t else t in
-    let name = Option.map ~f:(fun (loc, id_name) ->
-      let { Ast.Identifier.name; comments = _ } = id_name in
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info ~extra_tparams:tparams_list loc id_info (Context.type_table cx);
-      (loc, t), id_name
-    ) name in
+    let name = Option.map ~f:(fun (loc, id_name) -> (loc, t), id_name) name in
     (Option.map ~f:ident_name name, t) :: params_acc,
     (param_loc, {
       Function.Param.name;
@@ -1193,7 +1180,6 @@ let rec convert cx tparams_map = Ast.Type.(function
   let reason = derivable_reason (mk_reason RExistential loc) in
   if force then begin
     let tvar = Tvar.mk cx reason in
-    Type_table.set_info loc ("Star", tvar, Type_table.Exists) (Context.type_table cx);
     (loc, tvar), Exists
   end
   else (loc, ExistsT reason), Exists
@@ -1225,8 +1211,6 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
     let reason = mk_reason desc loc in
     let id_reason = mk_reason desc id_loc in
     let t = Tvar.mk_where cx reason (fun t ->
-      let id_info = name, t, Type_table.Other in
-      Type_table.set_info id_loc id_info (Context.type_table cx);
       let use_op = Op (GetProperty (mk_reason (RType (qualified_name qualified)) loc)) in
       Flow.flow cx (m, GetPropT (use_op, id_reason, Named (id_reason, name), t));
     ) in
@@ -1234,8 +1218,6 @@ and convert_qualification ?(lookup_mode=ForType) cx reason_prefix
 
   | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
     let t = Env.get_var ~lookup_mode cx name loc in
-    let id_info = name, t, Type_table.Other in
-    Type_table.set_info loc id_info (Context.type_table cx);
     t, Unqualified ((loc, t), id_name)
 )
 
@@ -1374,8 +1356,6 @@ and convert_object =
             acc, prop_ast proto
           else
             let t = if optional then Type.optional t else t in
-            let id_info = name, t, Type_table.Other in
-            Type_table.set_info loc id_info (Context.type_table cx);
             let polarity = if _method then Positive else polarity variance in
             Acc.add_prop (Properties.add_field name polarity (Some loc) t) acc,
             prop_ast t
@@ -1403,8 +1383,6 @@ and convert_object =
         | _ -> assert false
       in
       let return_t = Type.extract_getter_type function_type in
-      let id_info = name, return_t, Type_table.Other in
-      Type_table.set_info id_loc id_info (Context.type_table cx);
       Acc.add_prop (Properties.add_getter name (Some id_loc) return_t) acc,
       { prop with Object.Property.
         key = Ast.Expression.Object.Property.Identifier ((id_loc, return_t), id_name);
@@ -1425,8 +1403,6 @@ and convert_object =
         | _ -> assert false
       in
       let param_t = Type.extract_setter_type function_type in
-      let id_info = name, param_t, Type_table.Other in
-      Type_table.set_info id_loc id_info (Context.type_table cx);
       Acc.add_prop (Properties.add_setter name (Some id_loc) param_t) acc,
       { prop with Object.Property.
         key = Ast.Expression.Object.Property.Identifier ((id_loc, param_t), id_name);
@@ -1585,7 +1561,6 @@ and mk_func_sig =
   fun cx tparams_map loc func ->
     let tparams, tparams_map, tparams_ast =
       mk_type_param_declarations cx ~tparams_map func.tparams in
-    Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
     let fparams, params_ast = convert_params cx tparams_map func.Ast.Type.Function.params in
     let (_, return_t), _ as return_ast = convert cx tparams_map func.return in
     let reason = mk_reason RFunctionType loc in
@@ -1693,7 +1668,6 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
     let polarity = polarity variance in
     let tparam = { reason; name; bound; polarity; default; } in
     let t = BoundT (reason, name, polarity) in
-    let id_info = name, t, Type_table.Other in
 
     let name_ast =
       let loc, id_name = id in
@@ -1707,7 +1681,6 @@ and mk_type_param_declarations cx ?(tparams_map=SMap.empty) tparams =
       default = default_ast
     } in
     let tparams = tparam :: tparams in
-    Type_table.set_info ~extra_tparams:tparams name_loc id_info (Context.type_table cx);
     tparams,
     SMap.add name t tparams_map,
     SMap.add name (Flow.subst cx bounds_map bound) bounds_map,
@@ -1883,7 +1856,7 @@ let mk_super cx tparams_map loc c targs =
 let mk_interface_sig cx reason decl =
   let open Class_type_sig in
   let { Ast.Statement.Interface.
-    id = id_loc, ({ Ast.Identifier.name; comments = _ } as id_name);
+    id = id_loc, id_name;
     tparams;
     body = (body_loc, { Ast.Type.Object.properties; exact; inexact = _inexact });
     extends;
@@ -1895,8 +1868,6 @@ let mk_interface_sig cx reason decl =
   let tparams, tparams_map, tparams_ast =
     mk_type_param_declarations cx tparams in
 
-  let id_info = name, self, Type_table.Other in
-  Type_table.set_info id_loc id_info (Context.type_table cx);
 
   let iface_sig, extends_ast =
     let id = id_loc in
@@ -1960,19 +1931,14 @@ let mk_declare_class_sig =
       mixins;
       implements;
     } = decl in
-    let { Ast.Identifier.name; comments =_ } = id_name in
-
     let self = Tvar.mk cx reason in
 
     let tparams, tparams_map, tparam_asts =
       mk_type_param_declarations cx tparams in
 
-    let id_info = name, self, Type_table.Other in
-    Type_table.set_info id_loc id_info (Context.type_table cx);
 
     let _, tparams, tparams_map = Class_type_sig.add_this self cx reason tparams tparams_map in
 
-    Type_table.with_typeparams (TypeParams.to_list tparams) (Context.type_table cx) @@ fun _ ->
 
     let iface_sig, extends_ast, mixins_ast, implements_ast =
       let id = id_loc in

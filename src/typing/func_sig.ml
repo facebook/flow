@@ -315,8 +315,6 @@ let toplevels id cx this super ~decls ~stmts ~expr
 
 let to_ctor_sig f = { f with kind = Ctor }
 
-let with_typeparams cx f x =
-  Type_table.with_typeparams (TypeParams.to_list x.tparams) (Context.type_table cx) f
 end
 
 let return_loc = function

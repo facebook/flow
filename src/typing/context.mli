@@ -126,7 +126,6 @@ val trust_mode: t -> Options.trust_mode
 val trust_tracking: t -> bool
 val trust_errors: t -> bool
 val type_graph: t -> Graph_explorer.graph
-val type_table: t -> Type_table.t
 val type_asserts: t -> (type_assert_kind * ALoc.t) ALocMap.t
 val verbose: t -> Verbose.t option
 val max_workers: t -> int

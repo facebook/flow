@@ -197,5 +197,4 @@ module This: sig
   val in_class: (ALoc.t, ALoc.t) Flow_ast.Class.t -> bool
 end
 
-val with_typeparams: Context.t -> (unit -> 'a) -> t -> 'a
 end
