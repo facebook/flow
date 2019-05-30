@@ -1,3 +1,22 @@
+Error ---------------------------------------------------------------------------------------------------- driver.js:9:2
+
+Cannot cast `b1` to `B1` because:
+ - Either property `y` is missing in `B` [1] but exists in object literal [2].
+ - Or property `x` is missing in `B` [1] but exists in object literal [2].
+
+   driver.js:9:2
+    9| (b1: B1);
+        ^^
+
+References:
+   test1.js:11:17
+   11| export type B = {| z: number, ...A |}
+                       ^^^^^^^^^^^^^^^^^^^^^ [1]
+   test1.js:12:18
+   12| module.exports = b;
+                        ^ [2]
+
+
 Error --------------------------------------------------------------------------------------------------- driver.js:10:2
 
 Cannot cast `b1.x` to string because number [1] is incompatible with string [2].
@@ -15,20 +34,6 @@ References:
               ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- driver.js:10:2
-
-Cannot get `b1.x` because property `x` is missing in object type [1].
-
-   driver.js:10:2
-   10| (b1.x: string);
-        ^^^^
-
-References:
-   test1.js:12:18
-   12| module.exports = b;
-                        ^ [1]
-
-
 Error --------------------------------------------------------------------------------------------------- driver.js:11:2
 
 Cannot cast `b1.y` to string because number [1] is incompatible with string [2].
@@ -44,20 +49,6 @@ References:
    driver.js:11:8
    11| (b1.y: string);
               ^^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- driver.js:11:2
-
-Cannot get `b1.y` because property `y` is missing in object type [1].
-
-   driver.js:11:2
-   11| (b1.y: string);
-        ^^^^
-
-References:
-   test1.js:12:18
-   12| module.exports = b;
-                        ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- driver.js:12:2
@@ -86,9 +77,9 @@ Cannot cast `b2.x` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   test2.js:3:16
-    3| const a = { x: 0 };
-                      ^ [1]
+   test2.js:8:16
+    8| type A = {| x: number |}
+                      ^^^^^^ [1]
    driver.js:15:8
    15| (b2.x: string);
               ^^^^^^ [2]
@@ -103,9 +94,9 @@ Cannot cast `b2.z` to string because number [1] is incompatible with string [2].
         ^^^^
 
 References:
-   test2.js:4:16
-    4| const b = { z: 0, ...a };
-                      ^ [1]
+   test2.js:9:23
+    9| export type B = {| z: number, ...A |}
+                             ^^^^^^ [1]
    driver.js:16:8
    16| (b2.z: string);
               ^^^^^^ [2]
@@ -197,4 +188,4 @@ References:
 
 
 
-Found 12 errors
+Found 11 errors
