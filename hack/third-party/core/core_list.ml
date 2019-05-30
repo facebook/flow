@@ -10,6 +10,12 @@ end
 
 include T
 
+module Or_unequal_lengths = struct
+  type 'a t =
+    | Ok of 'a
+    | Unequal_lengths
+end
+
 let of_list t = t
 
 let range ?(stride=1) ?(start=`inclusive) ?(stop=`exclusive) start_i stop_i =
@@ -84,11 +90,17 @@ let rev_map t ~f = List.rev_map t ~f
 
 exception Length_mismatch of string * int * int
 
-let check_length2 name l1 l2 =
+let check_length2_exn name l1 l2 =
   let n1 = length l1 in
   let n2 = length l2 in
   if n1 <> n2 then
     raise (invalid_argf "length mismatch in %s: %d <> %d " name n1 n2 ())
+;;
+
+let check_length2 l1 l2 ~f =
+  if length l1 <> length l2
+  then Or_unequal_lengths.Unequal_lengths
+  else Or_unequal_lengths.Ok (f l1 l2)
 ;;
 
 let check_length3 name l1 l2 l3 =
@@ -100,28 +112,38 @@ let check_length3 name l1 l2 l3 =
              name n1 n2 n2 n3 ())
 ;;
 
+let iter2 l1 l2 ~f = check_length2 l1 l2 ~f:(List.iter2 ~f)
+
 let iter2_exn l1 l2 ~f =
-  check_length2 "iter2_exn" l1 l2;
+  check_length2_exn "iter2_exn" l1 l2;
   List.iter2 l1 l2 ~f;
 ;;
 
+let rev_map2 l1 l2 ~f = check_length2 l1 l2 ~f:(List.rev_map2 ~f)
+
 let rev_map2_exn l1 l2 ~f  =
-  check_length2 "rev_map2_exn" l1 l2;
+  check_length2_exn "rev_map2_exn" l1 l2;
   List.rev_map2 l1 l2 ~f;
 ;;
 
+let fold2 l1 l2 ~init ~f = check_length2 l1 l2 ~f:(List.fold_left2 ~init ~f)
+
 let fold2_exn l1 l2 ~init ~f =
-  check_length2 "fold2_exn" l1 l2;
+  check_length2_exn "fold2_exn" l1 l2;
   List.fold_left2 l1 l2 ~init ~f;
 ;;
 
+let for_all2 l1 l2 ~f = check_length2 l1 l2 ~f:(List.for_all2 ~f)
+
 let for_all2_exn l1 l2 ~f =
-  check_length2 "for_all2_exn" l1 l2;
+  check_length2_exn "for_all2_exn" l1 l2;
   List.for_all2 l1 l2 ~f;
 ;;
 
+let exists2 l1 l2 ~f = check_length2 l1 l2 ~f:(List.exists2 ~f)
+
 let exists2_exn l1 l2 ~f =
-  check_length2 "exists2_exn" l1 l2;
+  check_length2_exn "exists2_exn" l1 l2;
   List.exists2 l1 l2 ~f;
 ;;
 
