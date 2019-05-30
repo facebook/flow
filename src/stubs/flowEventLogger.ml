@@ -75,6 +75,7 @@ let out_of_date _ = ()
 let exit _ _ = ()
 let report_from_monitor_server_exit_due_to_signal _ = ()
 let recheck
+    ~recheck_reasons:_
     ~modified:_
     ~deleted:_
     ~dependent_files:_

@@ -357,7 +357,8 @@ let run_merge_service
     Lwt.return (errs, warnings, suppressions, coverage, skipped_count, sig_new_or_changed)
   )
 
-let mk_intermediate_result_callback ~options ~profiling ~persistent_connections suppressions =
+let mk_intermediate_result_callback
+    ~options ~profiling ~persistent_connections ~recheck_reasons suppressions =
   let%lwt send_errors_over_connection =
     match persistent_connections with
     | None -> Lwt.return (fun _ -> ())
@@ -417,9 +418,12 @@ let mk_intermediate_result_callback ~options ~profiling ~persistent_connections 
         curr_suppressions := suppressions;
 
         if not (ConcreteLocPrintableErrorSet.is_empty new_errors && FilenameMap.is_empty new_warnings)
-        then Persistent_connection.update_clients
-          ~clients
-          ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
+        then
+          let errors_reason = Persistent_connection_prot.Recheck_streaming { recheck_reasons; } in
+          Persistent_connection.update_clients
+            ~clients
+            ~errors_reason
+            ~calc_errors_and_warnings:(fun () -> new_errors, new_warnings)
       ))
   in
   let intermediate_result_callback results =
@@ -458,6 +462,7 @@ let merge
   ~dependency_graph
   ~deleted
   ~persistent_connections
+  ~recheck_reasons
   ~prep_merge =
   let { ServerEnv.local_errors; merge_errors; warnings; suppressions; } = errors in
   let coverage = FilenameMap.empty in
@@ -466,7 +471,8 @@ let merge
     let persistent_connections = match options.Options.opt_arch with
       | Options.Classic -> persistent_connections
       | Options.TypesFirst -> None in
-    mk_intermediate_result_callback ~options ~profiling ~persistent_connections suppressions in
+    mk_intermediate_result_callback
+      ~options ~profiling ~persistent_connections ~recheck_reasons suppressions in
   let%lwt () = match prep_merge with
     | None -> Lwt.return_unit
     | Some callback ->
@@ -549,7 +555,8 @@ let check_files
   ~direct_dependent_files
   ~sig_new_or_changed
   ~dependency_info
-  ~persistent_connections =
+  ~persistent_connections
+  ~recheck_reasons =
   match options.Options.opt_arch with
   | Options.Classic -> Lwt.return (updated_errors, coverage)
   | Options.TypesFirst ->
@@ -583,6 +590,7 @@ let check_files
           ~options
           ~profiling
           ~persistent_connections
+          ~recheck_reasons
           updated_errors.ServerEnv.suppressions in
 
       Hh_logger.info "Checking files";
@@ -632,7 +640,13 @@ let ensure_parsed ~options ~profiling ~workers ~reader files =
         parse_hash_mismatch_skips
         SSet.empty
       in
-      ServerMonitorListenerState.push_files_to_recheck files_to_recheck;
+      let file_count = SSet.cardinal files_to_recheck in
+      let reason = Persistent_connection_prot.(
+        if file_count = 1
+        then Single_file_changed { filename = SSet.elements files_to_recheck |> List.hd; }
+        else Many_files_changed { file_count; }
+      ) in
+      ServerMonitorListenerState.push_files_to_recheck ~reason files_to_recheck;
       raise Lwt.Canceled
     end
   )
@@ -679,7 +693,10 @@ let ensure_checked_dependencies ~options ~reader ~env file file_sig =
   else begin
     Hh_logger.info "Canceling command due to %d unchecked dependencies"
       (CheckedSet.cardinal unchecked_dependencies);
-    ServerMonitorListenerState.push_checked_set_to_force unchecked_dependencies;
+    let reason =
+      Persistent_connection_prot.Unchecked_dependencies { filename = File_key.to_string file; }
+    in
+    ServerMonitorListenerState.push_checked_set_to_force ~reason unchecked_dependencies;
     raise Lwt.Canceled
   end
 
@@ -1016,6 +1033,7 @@ module Recheck: sig
     updates:Utils_js.FilenameSet.t ->
     files_to_force:CheckedSet.t ->
     file_watcher_metadata:MonitorProt.file_watcher_metadata ->
+    recheck_reasons:Persistent_connection_prot.recheck_reason list ->
     will_be_checked_files:CheckedSet.t ref ->
     env:ServerEnv.env ->
     (ServerEnv.env * recheck_result) Lwt.t
@@ -1028,6 +1046,7 @@ module Recheck: sig
     workers:MultiWorkerLwt.worker list option ->
     updates:Utils_js.FilenameSet.t ->
     files_to_force:CheckedSet.t ->
+    recheck_reasons:Persistent_connection_prot.recheck_reason list ->
     env:ServerEnv.env ->
     ServerEnv.env Lwt.t
 end = struct
@@ -1046,7 +1065,8 @@ end = struct
    * It returns an updated env and a bunch of intermediate values which `recheck_merge` can use to
    * calculate the to_merge and perform the merge *)
   let recheck_parse_and_update_dependency_info
-      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env =
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
+      ~env =
     let errors = env.ServerEnv.errors in
 
     (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
@@ -1119,6 +1139,7 @@ end = struct
         if Errors.ConcreteLocPrintableErrorSet.cardinal error_set > 0
         then Persistent_connection.update_clients
           ~clients:env.ServerEnv.connections
+          ~errors_reason:(Persistent_connection_prot.Recheck_streaming { recheck_reasons; })
           ~calc_errors_and_warnings:(fun () -> error_set, FilenameMap.empty)
       in
       let local_errors = merge_error_maps new_local_errors errors.ServerEnv.local_errors in
@@ -1397,7 +1418,7 @@ end = struct
    * merge. Then it merges them. *)
   let recheck_merge
       ~profiling ~transaction ~reader ~options ~workers
-      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~env =
+      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~recheck_reasons ~env =
 
     let (
       all_dependent_files,
@@ -1513,6 +1534,7 @@ end = struct
       ~dependency_graph
       ~deleted
       ~persistent_connections:(Some env.ServerEnv.connections)
+      ~recheck_reasons
       ~prep_merge:(Some (fun () ->
         let n = FilenameSet.cardinal all_dependent_files in
         if n > 0
@@ -1538,7 +1560,8 @@ end = struct
       ~direct_dependent_files
       ~sig_new_or_changed
       ~dependency_info
-      ~persistent_connections:(Some env.ServerEnv.connections) in
+      ~persistent_connections:(Some env.ServerEnv.connections)
+      ~recheck_reasons in
 
     let checked_files = CheckedSet.union unchanged_checked merged_files in
     Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
@@ -1571,18 +1594,21 @@ end = struct
    *)
   let full
       ~profiling ~transaction ~reader ~options ~workers ~updates
-      ~files_to_force ~file_watcher_metadata ~will_be_checked_files ~env =
+      ~files_to_force ~file_watcher_metadata ~recheck_reasons ~will_be_checked_files ~env =
     let%lwt env, intermediate_values = recheck_parse_and_update_dependency_info
-      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
+      ~env
     in
     recheck_merge
       ~profiling ~transaction ~reader ~options ~workers
-      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~env
+      ~will_be_checked_files ~file_watcher_metadata ~intermediate_values ~recheck_reasons ~env
 
   let parse_and_update_dependency_info
-    ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env=
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
+      ~env=
     let%lwt env, _intermediate_values = recheck_parse_and_update_dependency_info
-      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~env
+      ~profiling ~transaction ~reader ~options ~workers ~updates ~files_to_force ~recheck_reasons
+      ~env
     in
     Lwt.return env
 end
@@ -1593,7 +1619,8 @@ let with_transaction f =
     f transaction reader
 
 let recheck
-    ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata ~will_be_checked_files =
+    ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata ~recheck_reasons
+    ~will_be_checked_files =
   let should_print_summary = Options.should_profile options in
   let%lwt profiling, (env, stats) =
     Profiling_js.with_profiling_lwt ~label:"Recheck" ~should_print_summary (fun profiling ->
@@ -1601,7 +1628,7 @@ let recheck
         with_transaction (fun transaction reader ->
           Recheck.full
             ~profiling ~transaction ~reader ~options ~workers ~updates ~env
-            ~files_to_force ~file_watcher_metadata ~will_be_checked_files
+            ~files_to_force ~file_watcher_metadata ~recheck_reasons ~will_be_checked_files
         )
       )
     )
@@ -1641,6 +1668,9 @@ let recheck
   ) in
   (** TODO: update log to reflect current terminology **)
   FlowEventLogger.recheck
+    ~recheck_reasons:(
+      List.map Persistent_connection_prot.verbose_string_of_recheck_reason recheck_reasons
+    )
     ~modified
     ~deleted
     ~dependent_files
@@ -2063,10 +2093,11 @@ let init ~profiling ~workers options =
          * is to update the dependency graph and stuff like that. We don't actually want to merge
          * anything yet. *)
         with_transaction @@ fun transaction reader ->
+          let recheck_reasons = [Persistent_connection_prot.Lazy_init_update_deps] in
           let%lwt env =
             Recheck.parse_and_update_dependency_info
               ~profiling ~transaction ~reader ~options ~workers ~updates
-              ~files_to_force:CheckedSet.empty ~env
+              ~files_to_force:CheckedSet.empty ~recheck_reasons ~env
           in
           Lwt.return (FilenameSet.empty, env, libs_ok)
       end
@@ -2101,6 +2132,7 @@ let init ~profiling ~workers options =
   then Lwt.return (libs_ok, env, last_estimates)
   else begin
     let files_to_force = CheckedSet.(add ~focused:files_to_focus empty) in
+    let recheck_reasons = [Persistent_connection_prot.Lazy_init_typecheck] in
     let%lwt recheck_profiling, _summary, env =
       recheck
         ~options
@@ -2109,6 +2141,7 @@ let init ~profiling ~workers options =
         env
         ~files_to_force
         ~file_watcher_metadata:MonitorProt.empty_file_watcher_metadata
+        ~recheck_reasons
         ~will_be_checked_files:(ref files_to_force)
     in
     Profiling_js.merge ~from:recheck_profiling ~into:profiling;
@@ -2136,6 +2169,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
     let%lwt () = ensure_parsed ~options ~profiling ~workers ~reader to_merge in
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
+    let recheck_reasons = [Persistent_connection_prot.Full_init] in
     let%lwt _, updated_errors, coverage, _, sig_new_or_changed = merge
       ~transaction
       ~reader
@@ -2149,6 +2183,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~dependency_graph
       ~deleted:FilenameSet.empty
       ~persistent_connections:None
+      ~recheck_reasons
       ~prep_merge:None in
     let merged_files = to_merge in
     let%lwt errors, coverage = check_files
@@ -2163,7 +2198,8 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~direct_dependent_files:FilenameSet.empty
       ~sig_new_or_changed
       ~dependency_info
-      ~persistent_connections:None in
+      ~persistent_connections:None
+      ~recheck_reasons in
     let checked_files = merged_files in
     Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
     Lwt.return { env with ServerEnv.checked_files; errors; coverage }

@@ -81,8 +81,8 @@ let process_updates genv env updates =
 
 (* on notification, execute client commands or recheck files *)
 let recheck
-    genv env ?(files_to_force=CheckedSet.empty) ~file_watcher_metadata ~will_be_checked_files
-    updates =
+    genv env ?(files_to_force=CheckedSet.empty) ~file_watcher_metadata ~recheck_reasons
+    ~will_be_checked_files updates =
   (* Caller should have already checked this *)
   assert (not (FilenameSet.is_empty updates && CheckedSet.is_empty files_to_force));
 
@@ -93,7 +93,8 @@ let recheck
 
   let%lwt profiling, summary, env =
     Types_js.recheck
-      ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata ~will_be_checked_files
+      ~options ~workers ~updates env ~files_to_force ~file_watcher_metadata ~recheck_reasons
+      ~will_be_checked_files
   in
 
   let lazy_stats = get_lazy_stats genv env in
@@ -104,7 +105,9 @@ let recheck
     let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
     errors, warnings
   in
-  Persistent_connection.update_clients ~clients:env.connections ~calc_errors_and_warnings;
+  let errors_reason = Persistent_connection_prot.End_of_recheck { recheck_reasons; } in
+  Persistent_connection.update_clients
+    ~clients:env.connections ~errors_reason ~calc_errors_and_warnings ;
 
   MonitorRPC.status_update ~event:(ServerStatus.Finishing_up summary);
   Lwt.return (profiling, env)
@@ -141,6 +144,7 @@ let rec recheck_single
     ?(files_to_recheck=FilenameSet.empty)
     ?(files_to_force=CheckedSet.empty)
     ?(file_watcher_metadata=MonitorProt.empty_file_watcher_metadata)
+    ?(recheck_reasons_list_rev=[])
     genv env =
   let open ServerMonitorListenerState in
   let env = update_env env in
@@ -162,6 +166,7 @@ let rec recheck_single
   let file_watcher_metadata =
     MonitorProt.merge_file_watcher_metadata file_watcher_metadata workload.metadata
   in
+  let recheck_reasons_list_rev = workload.recheck_reasons_rev :: recheck_reasons_list_rev in
   if FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force
   then begin
     List.iter (fun callback -> callback None) workload.profiling_callbacks;
@@ -172,13 +177,20 @@ let rec recheck_single
     let post_cancel () =
       Hh_logger.info
         "Recheck successfully canceled. Restarting the recheck to include new file changes";
-      recheck_single ~files_to_recheck ~files_to_force ~file_watcher_metadata genv env
+      recheck_single
+        ~files_to_recheck ~files_to_force ~file_watcher_metadata ~recheck_reasons_list_rev genv env
     in
     let f () =
+      (* Take something like [[10, 9], [8], [7], [6,5,4,3], [2,1]] and output [1,2,3,4,5,6,7,8,9,10]
+       *)
+      let recheck_reasons = List.fold_left (fun recheck_reasons recheck_reasons_rev ->
+        List.rev_append recheck_reasons_rev recheck_reasons
+      ) [] recheck_reasons_list_rev in
       let%lwt profiling, env =
         try%lwt
           recheck
-            genv env ~files_to_force ~file_watcher_metadata ~will_be_checked_files files_to_recheck
+            genv env ~files_to_force ~file_watcher_metadata ~recheck_reasons ~will_be_checked_files
+            files_to_recheck
         with exn ->
           let exn = Exception.wrap exn in
           let%lwt () = stop_parallelizable_workloads () in
@@ -215,3 +227,5 @@ let recheck_loop =
 
   fun genv env ->
     loop genv env
+
+let recheck_single ?files_to_force genv env = recheck_single ?files_to_force genv env

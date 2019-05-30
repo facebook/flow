@@ -45,21 +45,22 @@ type recheck_msg = {
   callback: (Profiling_js.finished option -> unit) option;
   file_watcher_metadata: MonitorProt.file_watcher_metadata option;
   files: recheck_files;
+  recheck_reason: Persistent_connection_prot.recheck_reason;
 }
 and recheck_files =
 | ChangedFiles of SSet.t
-| FilesToForceFocused of SSet.t
+| FilesToForceFocusedAndRecheck of SSet.t
 | CheckedSetToForce of CheckedSet.t
 (* Files which have changed *)
 let recheck_stream, push_recheck_msg = Lwt_stream.create ()
-let push_recheck_msg ?metadata ?callback files =
-  push_recheck_msg (Some { files; callback; file_watcher_metadata = metadata; })
-let push_files_to_recheck ?metadata ?callback changed_files =
-  push_recheck_msg ?metadata ?callback (ChangedFiles changed_files)
-let push_files_to_force_focused ?callback forced_focused_files =
-  push_recheck_msg ?callback (FilesToForceFocused forced_focused_files)
-let push_checked_set_to_force ?callback checked_set =
-  push_recheck_msg ?callback (CheckedSetToForce checked_set)
+let push_recheck_msg ?metadata ?callback ~reason:recheck_reason files =
+  push_recheck_msg (Some { files; callback; file_watcher_metadata = metadata; recheck_reason; })
+let push_files_to_recheck ?metadata ?callback ~reason changed_files =
+  push_recheck_msg ?metadata ?callback ~reason (ChangedFiles changed_files)
+let push_files_to_force_focused_and_recheck ?callback ~reason forced_focused_files =
+  push_recheck_msg ?callback ~reason (FilesToForceFocusedAndRecheck forced_focused_files)
+let push_checked_set_to_force ?callback ~reason checked_set =
+  push_recheck_msg ?callback ~reason (CheckedSetToForce checked_set)
 
 let pop_next_workload () =
   WorkloadStream.pop workload_stream
@@ -79,17 +80,26 @@ type recheck_workload = {
   files_to_force: CheckedSet.t;
   profiling_callbacks: (Profiling_js.finished option -> unit) list;
   metadata: MonitorProt.file_watcher_metadata;
+  recheck_reasons_rev: Persistent_connection_prot.recheck_reason list;
 }
 let empty_recheck_workload = {
   files_to_recheck = FilenameSet.empty;
   files_to_force = CheckedSet.empty;
   profiling_callbacks = [];
   metadata = MonitorProt.empty_file_watcher_metadata;
+  recheck_reasons_rev = [];
 }
 
 let recheck_workload_is_empty workload =
-  let { files_to_recheck; files_to_force; profiling_callbacks=_; metadata=_;} = workload in
+  let {
+    files_to_recheck;
+    files_to_force;
+    profiling_callbacks=_;
+    metadata=_;
+    recheck_reasons_rev=_;
+  } = workload in
   FilenameSet.is_empty files_to_recheck && CheckedSet.is_empty files_to_force
+
 let recheck_acc = ref empty_recheck_workload
 
 (* Process the messages which are currently in the recheck stream and return the resulting workload
@@ -107,17 +117,20 @@ let recheck_fetch ~process_updates ~get_forced =
     Lwt_stream.get_available recheck_stream (* Get all the files which have changed *)
     |> Core_list.fold_left
       ~init:(!recheck_acc)
-      ~f:(fun workload { files; callback; file_watcher_metadata; } ->
+      ~f:(fun workload { files; callback; file_watcher_metadata; recheck_reason; } ->
         let is_empty_msg, workload = match files with
         | ChangedFiles changed_files ->
           let updates = process_updates changed_files in
           FilenameSet.is_empty updates,
             { workload with files_to_recheck = FilenameSet.union updates workload.files_to_recheck }
-        | FilesToForceFocused forced_focused_files ->
-          let focused = process_updates forced_focused_files in
-          let focused = FilenameSet.diff focused (get_forced () |> CheckedSet.focused) in
-          FilenameSet.is_empty focused,
-            { workload with files_to_force = CheckedSet.add ~focused workload.files_to_force }
+        | FilesToForceFocusedAndRecheck forced_focused_files ->
+          let updates = process_updates forced_focused_files in
+          let focused = FilenameSet.diff updates (get_forced () |> CheckedSet.focused) in
+          FilenameSet.is_empty updates,
+            { workload with
+                files_to_force = CheckedSet.add ~focused workload.files_to_force;
+                files_to_recheck = FilenameSet.union updates workload.files_to_recheck
+            }
         | CheckedSetToForce checked_set ->
           let checked_set = CheckedSet.diff checked_set (get_forced ()) in
           CheckedSet.is_empty checked_set,
@@ -133,6 +146,9 @@ let recheck_fetch ~process_updates ~get_forced =
             workload
           end else
             { workload with profiling_callbacks = callback :: workload.profiling_callbacks; }
+        in
+        let workload =
+          { workload with recheck_reasons_rev = recheck_reason :: workload.recheck_reasons_rev; }
         in
         MonitorProt.(match file_watcher_metadata with
         | None -> workload
