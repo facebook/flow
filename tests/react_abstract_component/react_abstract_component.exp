@@ -568,6 +568,42 @@ References:
                                           ^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- strict.js:4:11
+
+Cannot create `Component` element because props [1] is incompatible with empty [2].
+
+   strict.js:4:11
+     4| const c = <Component f = {3}/>;
+                  ^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   <BUILTINS>/react.js:171:29
+   171|   | React$AbstractComponent<empty, mixed>;
+                                    ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- strict.js:9:5
+
+Cannot call `foo` with `ref` bound to `a` because:
+ - `HTMLElement` [1] is incompatible with `React.Component` [2].
+ - mixed [3] is incompatible with `React.Component` [2].
+
+   strict.js:9:5
+     9| foo(ref);
+            ^^^
+
+References:
+   <BUILTINS>/react-dom.js:416:13
+   416|   instance: HTMLElement,
+                    ^^^^^^^^^^^ [1]
+   strict.js:7:26
+     7| declare function foo(a: ?React$Component<any, any>): void;
+                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:171:36
+   171|   | React$AbstractComponent<empty, mixed>;
+                                           ^^^^^ [3]
+
+
 Error ------------------------------------------------------------------------------------------------- test_prop.js:5:7
 
 Property `notOnEitherSFCOrClass` is missing in `React.AbstractComponentStatics` [1].
@@ -607,7 +643,7 @@ References:
 
 
 
-Found 42 errors
+Found 45 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches
