@@ -1,5 +1,9 @@
 #!/bin/bash
 
+# import.js
+printf "import.js:5:1 = "
+assert_ok "$FLOW" type-at-pos import.js 5 1 --strip-root --pretty
+
 # exports.js
 printf "exports.js:3:24 = "
 assert_ok "$FLOW" type-at-pos exports.js 3 24 --strip-root --pretty
@@ -50,9 +54,21 @@ assert_ok "$FLOW" type-at-pos import-typeof-class.js 6 16 --strip-root --pretty 
 printf "import-typeof-class.js:7:16 "
 assert_ok "$FLOW" type-at-pos import-typeof-class.js 7 16 --strip-root --pretty --expand-json-output
 
-# module-export.js
-printf "module-export.js:7:13 = "
-assert_ok "$FLOW" type-at-pos module-export.js 7 13 --strip-root --pretty
+# module-export-0.js
+printf "module-export-0.js:7:13 = "
+assert_ok "$FLOW" type-at-pos module-export-0.js 7 13 --strip-root --pretty
+
+# module-export-1.js
+printf "module-export-1.js:3:8 = "
+assert_ok "$FLOW" type-at-pos module-export-1.js 3 8 --strip-root --pretty
+printf "module-export-1.js:4:9 = "
+assert_ok "$FLOW" type-at-pos module-export-1.js 4 9 --strip-root --pretty
+printf "module-export-1.js:7:10 = "
+assert_ok "$FLOW" type-at-pos module-export-1.js 7 10 --strip-root --pretty
+printf "module-export-1.js:8:11 = "
+assert_ok "$FLOW" type-at-pos module-export-1.js 8 11 --strip-root --pretty
+printf "module-export-1.js:10:9 = "
+assert_ok "$FLOW" type-at-pos module-export-1.js 10 9 --strip-root --pretty
 
 # module-import.js
 printf "module-import.js:3:7 = "

@@ -4176,13 +4176,24 @@ and subscript =
         end
 
     | Member {
-        Member._object = _, Identifier (_, { Ast.Identifier.name= "module"; comments= _ }) as _object;
-        property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name= "exports"; comments= _ } as exports_name));
-      } -> let lhs_t = get_module_exports cx loc in
+        Member._object = object_loc, Identifier (id_loc, (
+          { Ast.Identifier.name = "module"; comments = _ } as id_name
+        ));
+        property = Member.PropertyIdentifier (ploc, (
+          { Ast.Identifier.name = "exports"; comments = _ } as exports_name
+        ));
+      } ->
+        let lhs_t = get_module_exports cx loc in
+        let module_reason = mk_reason (RCustom "module") object_loc in
+        let module_t = MixedT.why module_reason |> with_trust bogus_trust in
+        let _object =
+          (object_loc, module_t),
+          Ast.Expression.Identifier ((id_loc, module_t), id_name)
+        in
         ex, lhs_t, acc, (
           (loc, lhs_t),
           member_ast { Member.
-            _object = Typed_ast_utils.unchecked_mapper#expression _object;
+            _object;
             property = Member.PropertyIdentifier ((ploc, lhs_t), exports_name);
           }
         )
@@ -4805,18 +4816,25 @@ and simple_assignment cx _loc lhs rhs =
 
     (* module.exports = e *)
     | lhs_loc, Ast.Pattern.Expression (pat_loc, Member {
-        Member._object = object_loc, Ast.Expression.Identifier (id_loc, ({ Ast.Identifier.name= "module"; comments= _ } as mod_name));
-        property = Member.PropertyIdentifier (ploc, ({ Ast.Identifier.name= "exports"; comments= _ } as name));
+        Member.
+        _object = object_loc, Ast.Expression.Identifier (id_loc, ({
+          Ast.Identifier.name = "module"; comments= _
+        } as mod_name));
+        property = Member.PropertyIdentifier (ploc, ({
+          Ast.Identifier.name = "exports"; comments= _
+        } as name));
       }) ->
         set_module_kind cx lhs_loc (Context.CommonJSModule(Some(lhs_loc)));
         set_module_exports cx lhs_loc t;
-        (* TODO: we should revisit what the type of "module" is once we make
-          the treatment of module.exports accurate (this isn't sensitive to
-          shadowing of the "module" variable, etc.) *)
-        let t = AnyT.at Untyped object_loc in
+        let module_reason = mk_reason (RCustom "module") object_loc in
+        let module_t = MixedT.why module_reason |> with_trust bogus_trust in
+        let _object =
+          (object_loc, module_t),
+          Ast.Expression.Identifier ((id_loc, module_t), mod_name)
+        in
         let property = Member.PropertyIdentifier ((ploc, t), name) in
         (lhs_loc, t), Ast.Pattern.Expression ((pat_loc, t), Member { Member.
-          _object = (object_loc, t), Ast.Expression.Identifier ((id_loc, t), mod_name);
+          _object;
           property;
         })
 
