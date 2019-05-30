@@ -181,3 +181,32 @@ let lazy_mode_to_string lazy_mode =
   | LAZY_MODE_IDE -> "ide"
   | LAZY_MODE_WATCHMAN -> "watchman"
   | NON_LAZY_MODE -> "none"
+
+let esproposal_feature_mode_to_string esproposal_feature_mode =
+  match esproposal_feature_mode with
+  | ESPROPOSAL_ENABLE -> "enable"
+  | ESPROPOSAL_IGNORE -> "ignore"
+  | ESPROPOSAL_WARN -> "warn"
+
+let file_watcher_to_string file_watcher =
+  match file_watcher with
+  | NoFileWatcher -> "none"
+  | DFind -> "dfind"
+  | Watchman -> "watchman"
+
+let module_system_to_string module_system =
+  match module_system with
+  | Node -> "node"
+  | Haste -> "haste"
+
+let saved_state_fetcher_to_string saved_state_fetcher =
+  match saved_state_fetcher with
+  | Dummy_fetcher -> "none"
+  | Local_fetcher -> "local"
+  | Fb_fetcher -> "fb"
+
+let trust_mode_to_string trust_mode =
+  match trust_mode with
+  | NoTrust -> "none"
+  | SilentTrust -> "silent"
+  | CheckTrust -> "check" 
