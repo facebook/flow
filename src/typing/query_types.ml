@@ -136,13 +136,7 @@ let component_coverage ~full_cx =
     ) type_table initial_coverage
   )
 
-(* 'suggest' can use as many types in the type tables as possible, which is why
-   we are querying the tables from both "coverage" and "type_info". Coverage
-   should be enough on its own, but "type_info" stores method types more
-   reliably. On the other hand "type_info" only stores information about
-   identifiers, so anonymous functions and arrows are not captured.
-*)
-let suggest_types cx file_sig typed_ast =
+let suggest_types cx file_sig typed_ast loc =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -155,22 +149,8 @@ let suggest_types cx file_sig typed_ast =
     omit_targ_defaults = false;
     simplify_empty = true;
   } in
-  let type_table = Context.type_table cx in
   let file = Context.file cx in
-  let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
-  let result = Loc_collections.ALocMap.empty in
-  let result = Ty_normalizer.fold_hashtbl
-    ~options ~genv
-    ~f:(fun acc (loc, t) -> Loc_collections.ALocMap.add loc t acc)
-    ~g:(fun t -> t)
-    ~htbl:(Type_table.coverage_hashtbl type_table)
-    result
-  in
-  let result = Ty_normalizer.fold_hashtbl
-    ~options ~genv
-    ~f:(fun acc (loc, t) -> Loc_collections.ALocMap.add loc t acc)
-    ~g:(fun (_, t, _) -> t)
-    ~htbl:(Type_table.type_info_hashtbl type_table)
-    result
-  in
-  result
+  match Typed_ast_utils.find_exact_match_annotation typed_ast loc with
+  | None -> FailureNoMatch
+  | Some (loc, scheme) ->
+    type_of_scheme ~options ~full_cx:cx ~file ~file_sig typed_ast loc scheme

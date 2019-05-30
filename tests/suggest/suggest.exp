@@ -448,18 +448,6 @@ function foo(x: number, y): empty {
 }
 warn-func-poly-0.js
 
-Warning ---------------------------------------------------------------------------------------- warn-func-poly-0.js:4:3
-
-Normalizer error:
-[Shadowed type parameters] Raised on type: MixedT
-
-        v---------------------------
-   4|   function inner<T>(x: T, z) {
-   5|     inner(x, y);
-   6|   }
-        ^
-
-
 Warning --------------------------------------------------------------------------------------- warn-func-poly-0.js:4:27
 
 Normalizer error:
@@ -469,7 +457,7 @@ Normalizer error:
                                 ^
 
 
-Found 2 warnings
+Found 1 warning
 warn-anonymous-class.js
 
 Warning ------------------------------------------------------------------------------------ warn-anonymous-class.js:3:1

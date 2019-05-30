@@ -73,8 +73,9 @@ let suggest ~options ~env ~profiling file_name file_content =
   let file_key = File_key.SourceFile file_name in
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
   | (Some (cx, ast, file_sig, tast), tc_errors, tc_warnings) ->
-    let cxs = Query_types.suggest_types cx (File_sig.abstractify_locs file_sig) tast in
-    let visitor = new Suggest.visitor ~cxs in
+    let file_sig = File_sig.abstractify_locs file_sig in
+    let ty_query loc = Query_types.suggest_types cx file_sig tast (ALoc.of_loc loc) in
+    let visitor = new Suggest.visitor ~ty_query in
     let ast_with_suggestions = visitor#program ast in
     let suggest_warnings = visitor#warnings () in
     let ast_diff = Flow_ast_differ.(program Standard ast ast_with_suggestions) in

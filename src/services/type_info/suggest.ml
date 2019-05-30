@@ -9,7 +9,7 @@ module Ast = Flow_ast
 
 type warning =
   | MissingFromTypeTables
-  | NormalizerError of Ty_normalizer.error
+  | NormalizerError of string
   | NonFunctionType of string
   | Serializer of string
   | SkipEmpty
@@ -18,7 +18,7 @@ let warning_desc_to_string = function
   | MissingFromTypeTables ->
     Utils_js.spf "Location was not found in type tables."
   | NormalizerError err ->
-    Utils_js.spf "Normalizer error:\n%s" (Ty_normalizer.error_to_string err)
+    Utils_js.spf "Normalizer error:\n%s" err
   | NonFunctionType ty_str ->
     Utils_js.spf "Expected function type but got: %s" ty_str
   | Serializer err_msg ->
@@ -26,7 +26,7 @@ let warning_desc_to_string = function
   | SkipEmpty ->
     Utils_js.spf "Inferred type is empty."
 
-class visitor ~cxs = object(this)
+class visitor ~ty_query = object(this)
   inherit [unit, Loc.t] Flow_ast_visitor.visitor ~init:() as super
 
   val mutable _warnings = Errors.ConcreteLocPrintableErrorSet.empty
@@ -34,44 +34,47 @@ class visitor ~cxs = object(this)
   method private warn loc (w: warning) =
     let open Errors in
     let desc = warning_desc_to_string w in
-    _warnings <- ConcreteLocPrintableErrorSet.add (mk_error loc (Friendly.message_of_string desc)) _warnings;
+    let err = mk_error loc (Friendly.message_of_string desc) in
+    _warnings <- ConcreteLocPrintableErrorSet.add err _warnings;
     None
 
   method warnings () = _warnings
 
-  method private inferred_type ~search ~index ?annotate_bottom:(ann_bot=false) loc =
-    let search_loc = search loc |> ALoc.of_loc in
-    match Loc_collections.ALocMap.get search_loc cxs with
-    | Some (Ok ty) -> (
-      match index ty with
-      | Ok ty -> (
-        match Ty_serializer.type_ ty with
-        | Ok type_ast -> (
-          match ty with
-          | Ty.Bot _ when not ann_bot -> this#warn loc SkipEmpty
-          | _ -> Some (Loc.none, type_ast)
-          )
-        | Error desc -> this#warn loc (Serializer desc)
-        )
-      | Error err -> this#warn loc err
-      )
-    | Some (Error err) -> this#warn loc (NormalizerError err)
-    | None -> this#warn loc MissingFromTypeTables
+  method private inferred_type ?blame_loc ?annotate_bottom:(ann_bot=false) loc =
+    let blame_loc = match blame_loc with
+      | Some bloc -> bloc
+      | None -> loc
+    in
+    match ty_query loc with
+    | Query_types.Success (_, ty) ->
+      begin match ty with
+        | Ty.Bot _ when not ann_bot ->
+          this#warn blame_loc SkipEmpty
+        | _ ->
+          begin match Ty_serializer.type_ ty with
+            | Ok type_ast -> Some (Loc.none, type_ast)
+            | Error desc -> this#warn blame_loc (Serializer desc)
+          end
+      end
+    | Query_types.FailureUnparseable (_, _, msg) ->
+      this#warn blame_loc (NormalizerError msg)
+    | Query_types.FailureNoMatch ->
+      this#warn blame_loc MissingFromTypeTables
 
   method! expression (expr: (Loc.t, Loc.t) Ast.Expression.t) =
     let open Ast.Expression in
     match super#expression expr with
     | loc, Function x ->
-      Flow_ast_mapper.id (this#function_return loc) x expr (fun x -> loc, Function x)
+      Flow_ast_mapper.id (this#callable_return loc) x expr (fun x -> loc, Function x)
     | loc, ArrowFunction x ->
-      Flow_ast_mapper.id (this#arrow_return loc) x expr  (fun x -> loc, ArrowFunction x)
+      Flow_ast_mapper.id (this#callable_return loc) x expr (fun x -> loc, ArrowFunction x)
     | expr -> expr
 
   method! statement (stmt: (Loc.t, Loc.t) Ast.Statement.t) =
     let open Ast.Statement in
     match super#statement stmt with
     | (loc, FunctionDeclaration x) ->
-      Flow_ast_mapper.id (this#function_return loc) x stmt (fun x -> loc, FunctionDeclaration x)
+      Flow_ast_mapper.id (this#callable_return loc) x stmt (fun x -> loc, FunctionDeclaration x)
     | stmt -> stmt
 
   method! object_property (prop: (Loc.t, Loc.t) Ast.Expression.Object.Property.t) =
@@ -87,7 +90,7 @@ class visitor ~cxs = object(this)
          this if this changes.
       *)
       let key' = this#object_key key in
-      let fn' = this#method_return fn_loc fn in
+      let fn' = this#callable_return fn_loc fn in
       if key == key' && fn == fn' then prop
       else (loc, Method { key = key'; value = (fn_loc, fn') })
     | _ -> prop
@@ -99,7 +102,7 @@ class visitor ~cxs = object(this)
     let { key; value = (loc, func); _ } = meth in
     match key with
     | Identifier (id_loc, _) ->
-      let func' = this#method_return id_loc func in
+      let func' = this#callable_return id_loc func in
       { meth with value = (loc, func') }
     | _ -> meth
 
@@ -110,11 +113,10 @@ class visitor ~cxs = object(this)
       | Identifier { Identifier.name; annot; optional } -> (
           match annot with
           | Ast.Type.Missing mis_loc ->
-            let annot = this#inferred_type ~search:(fun x -> x)
-              ~index:(fun x -> Ok x) loc in
-            let annot = match annot with
-            | Some annot -> Ast.Type.Available annot
-            | None -> Ast.Type.Missing mis_loc in
+            let annot = match this#inferred_type loc with
+              | Some annot -> Ast.Type.Available annot
+              | None -> Ast.Type.Missing mis_loc
+            in
             Identifier { Identifier.name; annot; optional }
           | Ast.Type.Available _ -> patt
         )
@@ -124,34 +126,14 @@ class visitor ~cxs = object(this)
     in
     if patt == patt' then expr else (loc, patt')
 
-  method arrow_return loc func =
-    this#callable_return ~search:(fun x -> x) loc func
-
-  method method_return loc func =
-    this#callable_return ~search:(fun x -> x) loc func
-
-  (* Constructs that have keyword 'function', but may be missing a name. *)
-  method function_return loc func =
-    let open Ast.Function in
-    let { id; _ } = func in
-    let id = Option.map id ~f:(fun (loc, name) -> ALoc.of_loc loc, name) in
-    let search loc =
-      Type_table.function_decl_loc id (ALoc.of_loc loc) |> ALoc.to_loc_exn
-    in
-    this#callable_return ~search loc func
-
-  method callable_return ~search loc func =
+  method callable_return loc func =
     let open Ast.Function in
     let { return; _ } = func in
     let return' =
       match return with
       | Ast.Type.Available _ -> return
-      | Ast.Type.Missing _ as miss ->
-        let index = Ty.(function
-          | Fun { fun_return; _ } -> Ok fun_return
-          | ty -> Error (NonFunctionType (Ty_printer.string_of_t ty))
-        ) in
-        match this#inferred_type ~search ~index ~annotate_bottom:true loc with
+      | Ast.Type.Missing missing_loc as miss ->
+        match this#inferred_type ~blame_loc:loc ~annotate_bottom:true missing_loc with
         | Some annot -> Ast.Type.Available annot
         | None -> miss
     in
