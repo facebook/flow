@@ -652,9 +652,6 @@ module Opts = struct
       warn_on_unknown_opts
 end
 
-(* Suppress unused Direct module warning *)
-(* let _ = Opts.Direct.fold *)
-
 type config = {
   (* completely ignored files (both module resolving and typing) *)
   ignores: string list;
