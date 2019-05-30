@@ -66,7 +66,9 @@ let coverage ~options ~env ~profiling ~force ~trust file content =
       Docblock.is_flow docblock
   in
   Types_js.basic_check_contents ~options ~env ~profiling content file >|=
-  map ~f:(fun (cx, _, _, _) -> Query_types.covered_types cx ~should_check ~check_trust:trust)
+  map ~f:(fun (cx, _, _, tast) ->
+    Query_types.covered_types cx ~should_check ~check_trust:trust tast
+  )
 
 
 let suggest ~options ~env ~profiling file_name file_content =

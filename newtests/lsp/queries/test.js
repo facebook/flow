@@ -202,11 +202,14 @@ export default suite(
       ideRequestAndWaitUntilResponse('textDocument/typeCoverage', {
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>coverage.js'},
       }).verifyAllIDEMessagesInStep(
-        [
-          'textDocument/typeCoverage{"coveredPercent":84,"uncoveredRanges":[{"range":{"start":{"line":12,"character":9},"end":{"line":12,"character":10}}},{"range":{"start":{"line":8,"character":4},"end":{"line":8,"character":5}}},{"range":{"start":{"line":6,"character":6},"end":{"line":6,"character":12}}}],"defaultMessage":"Un-type checked code. Consider adding type annotations."}',
-        ],
-        [...lspIgnoreStatusAndCancellation],
-      ),
+          [
+            "textDocument/typeCoverage"
+          ],
+          [
+            "window/showStatus",
+            "$/cancelRequest"
+          ],
+        ),
     ]),
 
     test('textDocument/typeCoverage 2', [

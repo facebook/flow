@@ -115,7 +115,7 @@ coverage.js
         "source":"coverage.js",
         "type":"SourceFile",
         "start":{"line":4,"column":7,"offset":30},
-        "end":{"line":4,"column":13,"offset":37}
+        "end":{"line":4,"column":8,"offset":32}
       },
       {
         "source":"coverage.js",

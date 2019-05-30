@@ -433,7 +433,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
     ) locs
   );
 
-  let coverages = cx :: other_cxs |> Query_types.component_coverage ~full_cx:cx in
+  let coverages = Query_types.component_coverage ~full_cx:cx tasts in
 
   (* Post-merge errors.
    *

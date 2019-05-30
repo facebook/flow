@@ -97,9 +97,7 @@ let dump_types ~printer cx file_sig typed_ast =
   |> concretize_loc_pairs
   |> sort_loc_pairs
 
-let covered_types cx ~should_check ~check_trust =
-  let type_table = Context.type_table cx in
-  let htbl = Type_table.coverage_hashtbl type_table in
+let covered_types ~should_check ~check_trust cx tast =
   let check_trust =
     if check_trust then
       fun x -> x
@@ -108,32 +106,36 @@ let covered_types cx ~should_check ~check_trust =
       | Coverage.Tainted -> Coverage.Untainted
       | x -> x
   in
-  let coverage = new Coverage.visitor in
   let compute_cov =
-    if should_check
-    then coverage#type_ cx %> Coverage.result_of_coverage %> check_trust
-    else fun _ -> Coverage.Empty
+    if should_check then
+      (new Coverage.visitor)#type_ cx %>
+      Coverage.result_of_coverage %>
+      check_trust
+    else
+      fun _ -> Coverage.Empty
   in
-  let result_pairs =
-    Hashtbl.fold (fun loc { Type.TypeScheme.type_; _ } acc ->
-      (ALoc.to_loc_exn loc, compute_cov type_)::acc
-    ) htbl []
-  in
-  sort_loc_pairs result_pairs
+  let step loc t acc = (ALoc.to_loc_exn loc, compute_cov t)::acc in
+  coverage_fold_tast ~f:step ~init:[] tast |>
+  sort_loc_pairs
 
-let component_coverage ~full_cx =
+let component_coverage:
+  full_cx:Context.t ->
+  (ALoc.t, ALoc.t * Type.t) Flow_polymorphic_ast_mapper.Ast.program list ->
+  Coverage.file_coverage list
+  =
   let open Coverage in
   let coverage_computer = new visitor in
-  Core_list.map ~f:(fun cx ->
-    let type_table = Context.type_table cx in
-    Type_table.fold_coverage (fun _ { Type.TypeScheme.type_; _ } coverage ->
-      match coverage_computer#type_ full_cx type_ |> Coverage.result_of_coverage with
-      | Uncovered -> { coverage with uncovered = coverage.uncovered + 1 }
-      | Untainted -> { coverage with untainted = coverage.untainted + 1 }
-      | Tainted   -> { coverage with tainted   = coverage.tainted   + 1 }
-      | Empty     -> { coverage with empty     = coverage.empty     + 1 }
-    ) type_table initial_coverage
-  )
+  let step cx _ t acc =
+    let coverage = coverage_computer#type_ cx t in
+    match Coverage.result_of_coverage coverage with
+    | Uncovered -> { acc with uncovered = acc.uncovered + 1 }
+    | Untainted -> { acc with untainted = acc.untainted + 1 }
+    | Tainted   -> { acc with tainted   = acc.tainted   + 1 }
+    | Empty     -> { acc with empty     = acc.empty     + 1 }
+  in
+  fun ~full_cx tasts ->
+    let step = step full_cx in
+    Core_list.map ~f:(Typed_ast_utils.coverage_fold_tast ~f:step ~init:initial_coverage) tasts
 
 let suggest_types cx file_sig typed_ast loc =
   let options = {
