@@ -71,14 +71,6 @@ let convert_targs cx = function
   | None -> None, None
   | Some (loc, args) ->
     let targts, targs_ast = convert_tparam_instantiations cx SMap.empty args in
-    List.iter (fun t ->
-      match t with
-      | ExplicitArg t ->
-          Type_table.set_targ (Context.type_table cx) (TypeUtil.loc_of_t t) t
-      | ImplicitArg _ ->
-          (* TODO: Figure out to do with implicit instantiation in the type table *)
-          ()
-    ) targts;
     Some targts, Some (loc, targs_ast)
 
 class return_finder = object(this)

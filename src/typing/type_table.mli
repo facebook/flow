@@ -18,14 +18,10 @@ type type_entry = name * Type.t * id_kind
 type t
 
 val create: unit -> t
-val set_targ: t -> ALoc.t -> Type.t -> unit
 val set_info: ?extra_tparams:Type.typeparam list -> ALoc.t -> type_entry -> t -> unit
-val find_unsafe_targ: t -> ALoc.t -> Type.TypeScheme.t
 val reset: t -> unit
 val copy: t -> t
 val with_typeparams: Type.typeparam list -> t -> (unit -> 'a) -> 'a
 val find_type_info: t -> ALoc.t -> scheme_entry option
 val find_type_info_with_pred: t -> (ALoc.t -> bool) -> (ALoc.t * scheme_entry) option
-val targs_hashtbl: t -> (ALoc.t, Type.TypeScheme.t) Hashtbl.t
-val targs_to_list: t -> (ALoc.t * Type.TypeScheme.t) list
 val type_info_hashtbl: t -> (ALoc.t, scheme_entry) Hashtbl.t

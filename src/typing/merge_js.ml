@@ -210,7 +210,8 @@ let check_type_visitor wrap =
     | Top -> wrap Reason.RMixed
     | Bot _ -> wrap Reason.REmpty
     | Module { Ty.name; _ } -> wrap (Reason.RModule name)
-    | TypeAlias { ta_name = { Ty.name; _ }; _} ->
+    | TypeAlias { ta_tparams = None; ta_type = Some t; _ } -> self#on_t env t
+    | TypeAlias { ta_name = { Ty.name; _ }; _ } ->
       wrap (Reason.RCustom ("type alias " ^ name))
     | (Obj _ | Arr _ | Tup _ | Union _ | Inter _) as t -> super#on_t env t
     | (Void|Null|Num _|Str _|Bool _|NumLit _|StrLit _|BoolLit _|TypeOf _|
@@ -231,16 +232,17 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs tasts =
     omit_targ_defaults = false;
     simplify_empty = true;
   } in
-  let check_valid_call ~genv ~targs_map call_loc (_, targ_loc) =
-    Option.iter (Hashtbl.find_opt targs_map targ_loc) ~f:(fun scheme ->
+  let check_valid_call ~genv (call_loc: ALoc.t) (_, targ_loc) =
+    let typed_ast = genv.Ty_normalizer_env.typed_ast in
+    let ty_opt = Typed_ast_utils.find_exact_match_annotation typed_ast targ_loc in
+    Option.iter ty_opt ~f:(fun (_, scheme) ->
       let desc = Reason.RCustom "TypeAssert library function" in
       let reason_main = Reason.mk_reason desc call_loc in
       let wrap reason = Flow_js.add_output full_cx (Error_message.EInvalidTypeArgs (
         reason_main, Reason.mk_reason reason call_loc
       )) in
       match Ty_normalizer.from_scheme ~options ~genv scheme with
-      | Ok ty ->
-        (check_type_visitor wrap)#on_t () ty
+      | Ok ty -> (check_type_visitor wrap)#on_t () ty
       | Error _ ->
         let { Type.TypeScheme.type_ = t; _ } = scheme in
         wrap (Type.desc_of_t t)
@@ -248,12 +250,9 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs tasts =
   in
   Core_list.iter2_exn ~f:(fun cx typed_ast ->
     let file = Context.file cx in
-    let type_table = Context.type_table cx in
-    let targs_map = Type_table.targs_hashtbl type_table in
     let file_sig = FilenameMap.find_unsafe file file_sigs in
     let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
-    Loc_collections.ALocMap.iter (check_valid_call ~genv ~targs_map)
-      (Context.type_asserts cx)
+    Loc_collections.ALocMap.iter (check_valid_call ~genv) (Context.type_asserts cx)
   ) cxs tasts
 
 let force_annotations leader_cx other_cxs =
