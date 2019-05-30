@@ -9513,42 +9513,41 @@ and flow_use_op op1 u =
     u
   else
     mod_use_op_of_use_t (fun op2 ->
-        let root_of_op2 = root_of_use_op op2 in
-        let should_replace = fold_use_op
-                               (* If the root of the previous use_op is UnknownUse and our alternate
-                                * use_op does not have an UnknownUse root then we use our
-                                * alternate use_op. *)
-                               ignore_root
-                               (fun should_replace -> function
-                                 (* If the use was added to an implicit type param then we want to use
-                                  * our alternate if the implicit type param use_op chain is inside
-                                  * the implicit type param instantiation. Since we can't directly compare
-                                  * abstract locations, we determine whether to do this using a heuristic
-                                  * based on the 'locality' of the use_op root. *)
-                                 | ImplicitTypeParam when not should_replace ->
-                                    (match root_of_op2 with
-                                     | FunCall {local; _} | FunCallMethod {local; _} ->
-                                        local
-                                     | Addition _
-                                       | AssignVar _
-                                       | Coercion _
-                                       | FunImplicitReturn _ | FunReturnStatement _
-                                       | GetProperty _ | SetProperty _
-                                       | JSXCreateElement _
-                                       | ObjectSpread _ | ObjectChain _
-                                       | TypeApplication _ 
-                                       -> true
-                                     | Cast _
-                                       | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _
-                                       | GeneratorYield _
-                                       | Internal _
-                                       | ReactCreateElementCall _ | ReactGetIntrinsic _
-                                       | Speculation _ | UnknownUse
-                                       -> false)
-                                 | _ -> should_replace)
-                               op2
-        in
-        if should_replace then op1 else op2
+      let root_of_op2 = root_of_use_op op2 in
+      let should_replace = fold_use_op
+        (* If the root of the previous use_op is UnknownUse and our alternate
+         * use_op does not have an UnknownUse root then we use our
+         * alternate use_op. *)
+        ignore_root
+        (fun should_replace -> function
+          (* If the use was added to an implicit type param then we want to use
+           * our alternate if the implicit type param use_op chain is inside
+           * the implicit type param instantiation. Since we can't directly compare
+           * abstract locations, we determine whether to do this using a heuristic
+           * based on the 'locality' of the use_op root. *)
+          | ImplicitTypeParam when not should_replace ->
+             (match root_of_op2 with
+              | FunCall {local; _} | FunCallMethod {local; _} ->
+                 local
+              | Addition _
+                | AssignVar _
+                | Coercion _
+                | FunImplicitReturn _ | FunReturnStatement _
+                | GetProperty _ | SetProperty _
+                | JSXCreateElement _
+                | ObjectSpread _ | ObjectChain _
+                | TypeApplication _
+                -> true
+              | Cast _
+                | ClassExtendsCheck _ | ClassImplementsCheck _ | ClassOwnProtoCheck _
+                | GeneratorYield _
+                | Internal _
+                | ReactCreateElementCall _ | ReactGetIntrinsic _
+                | Speculation _ | UnknownUse
+                -> false)
+          | _ -> should_replace)
+        op2 in
+      if should_replace then op1 else op2
       ) u
 
 (***********************)
