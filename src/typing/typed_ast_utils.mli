@@ -5,6 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val find_exact_match_annotation :
+  (ALoc.t, ALoc.t * Type.t) Flow_ast.program ->
+  ALoc.t ->
+  (Loc.t * Type.TypeScheme.t) option
+
 (* It's convenient to use Loc.t here, since this is usually called in direct response to a user
  * query, where the user has provided a concrete location. In contrast, the other functions in this
  * module simply reduce the information available in the typed AST. *)

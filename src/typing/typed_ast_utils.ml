@@ -82,9 +82,30 @@ class type_parameter_mapper = object(_)
 end
 
 
-(* Find identifier under location *)
-
 exception Found of ALoc.t * Type.TypeScheme.t
+
+(* Find exact location match *)
+class exact_match_searcher (target_loc: ALoc.t) = object(self)
+  inherit type_parameter_mapper as super
+
+  method find_loc: 'a . ALoc.t -> Type.t -> Type.typeparam list -> 'a =
+    fun loc t tparams ->
+      raise (Found (loc, { Type.TypeScheme.tparams; type_ = t}))
+
+  method! on_type_annot annot =
+    let (loc, t) = annot in
+    if target_loc = loc then
+      self#annot_with_tparams (self#find_loc loc t)
+    else
+      super#on_type_annot annot
+end
+
+let find_exact_match_annotation typed_ast loc =
+  let searcher = new exact_match_searcher loc in
+  try ignore (searcher#program typed_ast); None with
+  | Found (loc, scheme) -> Some (ALoc.to_loc_exn loc, scheme)
+  | exc -> raise exc
+
 
 (* Kinds of nodes that "type-at-pos" is interested in:
  * - identifiers              (handled in t_identifier)
