@@ -1098,7 +1098,6 @@ end = struct
         return ty
       | _ ->
         return (Ty.named_alias symbol ?ta_tparams:ps ~ta_type:ty)
-        (* return ty *)
     in
     let import_typeof env r t ps = import env r t ps in
     let opaque env t ps =
@@ -1643,11 +1642,11 @@ end = struct
         from_require require acc
       ) [] requires
 
-    let extract_schemes type_table (imported_locs: acc_t) =
+    let extract_schemes typed_ast (imported_locs: acc_t) =
       List.fold_left (fun acc (loc, name, import_mode) ->
-        (* TODO use typed AST *)
-        match Type_table.find_type_info type_table loc with
-        | Some (_, scheme, _) ->  (name, loc, import_mode, scheme)::acc
+        let loc = ALoc.to_loc_exn loc in
+        match Typed_ast_utils.find_type_at_pos_annotation typed_ast loc with
+        | Some (_, scheme) ->  (name, loc, import_mode, scheme)::acc
         | None -> acc
       ) [] imported_locs
 
@@ -1670,7 +1669,7 @@ end = struct
       let _, result = List.fold_left (fun (st, acc) (name, loc, import_mode, scheme) ->
         match run st (extract_ident ~options ~genv scheme) with
         | Ok (Some def_loc), st ->
-          st, ALocMap.add def_loc (loc, name, import_mode) acc
+          st, ALocMap.add def_loc (ALoc.of_loc loc, name, import_mode) acc
         | Ok None, st ->
           (* unrecognizable remote type *)
           st, acc
@@ -1683,10 +1682,12 @@ end = struct
 
   let run_imports ~options ~genv =
     let open Imports in
-    let file_sig = genv.Env.file_sig in
-    File_sig.(file_sig.module_sig.requires) |>
-    extract_imported_idents |>
-    extract_schemes genv.Env.type_table |>
+    let {
+      Env.file_sig = { File_sig.module_sig = { File_sig.requires; _ }; _ };
+      typed_ast; _
+    } = genv in
+    extract_imported_idents requires |>
+    extract_schemes typed_ast |>
     normalize_imports ~options ~genv
 
 end

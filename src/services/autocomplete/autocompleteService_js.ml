@@ -122,7 +122,9 @@ let autocomplete_filter_members members =
     not (Reason.is_internal_name key)
   ) members
 
-let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name ac_loc docblock =
+let autocomplete_member
+    ~exclude_proto_members ~ac_type
+    cx file_sig typed_ast this ac_name ac_loc docblock =
   let ac_loc = ALoc.to_loc_exn ac_loc in
   let this_t = Members.resolve_type cx this in
   (* Resolve primitive types to their internal class type. We do this to allow
@@ -166,8 +168,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
       simplify_empty = true;
     } in
     let file = Context.file cx in
-    let type_table = Context.type_table cx in
-    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+    let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
     let result = result_map
     |> autocomplete_filter_members
     |> SMap.mapi (fun name (_id_loc, t) -> ((name, Type.loc_of_t t |> ALoc.to_loc_exn), t))
@@ -183,7 +184,7 @@ let autocomplete_member ~exclude_proto_members ~ac_type cx file_sig this ac_name
 
 
 (* env is all visible bound names at cursor *)
-let autocomplete_id cx file_sig env =
+let autocomplete_id cx file_sig env typed_ast =
   let result = SMap.fold (fun name entry acc ->
     (* Filter out internal environment variables except for this and
        super. *)
@@ -213,8 +214,7 @@ let autocomplete_id cx file_sig env =
         simplify_empty = true;
       } in
       let file = Context.file cx in
-      let type_table = Context.type_table cx in
-      let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~type_table ~file_sig in
+      let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
       let type_ = Scope.Entry.actual_type entry in
       match Ty_normalizer.from_type ~options ~genv type_ with
       | Ok t -> autocomplete_create_result ((name, loc), t) :: acc
@@ -227,7 +227,7 @@ let autocomplete_id cx file_sig env =
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
    type, so we need to extract that and then route to autocomplete_member. *)
-let autocomplete_jsx cx file_sig cls ac_name ac_loc docblock = Flow_js.(
+let autocomplete_jsx cx file_sig typed_ast cls ac_name ac_loc docblock = Flow_js.(
     let reason = Reason.mk_reason (Reason.RCustom ac_name) ac_loc in
     let component_instance = mk_instance cx reason cls in
     let props_object = Tvar.mk_where cx reason (fun tvar ->
@@ -237,16 +237,19 @@ let autocomplete_jsx cx file_sig cls ac_name ac_loc docblock = Flow_js.(
         Type.GetPropT (use_op, reason, Type.Named (reason, "props"), tvar))
     ) in
     (* Only include own properties, so we don't suggest things like `hasOwnProperty` as potential JSX properties *)
-    autocomplete_member ~exclude_proto_members:true ~ac_type:"Acjsx" cx file_sig props_object ac_name ac_loc docblock
+    autocomplete_member
+      ~exclude_proto_members:true ~ac_type:"Acjsx" cx file_sig typed_ast
+      props_object ac_name ac_loc docblock
   )
 
-let autocomplete_get_results cx file_sig state docblock =
+let autocomplete_get_results cx file_sig typed_ast state docblock =
   let file_sig = File_sig.abstractify_locs file_sig in
   match !state with
   | Some { ac_type = Acid (env); _; } ->
-    autocomplete_id cx file_sig env
+    autocomplete_id cx file_sig env typed_ast
   | Some { ac_name; ac_loc; ac_type = Acmem (this); } ->
-    autocomplete_member ~exclude_proto_members:false ~ac_type:"Acmem" cx file_sig this ac_name ac_loc docblock
+    autocomplete_member ~exclude_proto_members:false ~ac_type:"Acmem"
+      cx file_sig typed_ast this ac_name ac_loc docblock
   | Some { ac_name; ac_loc; ac_type = Acjsx (cls); } ->
-    autocomplete_jsx cx file_sig cls ac_name ac_loc docblock
+    autocomplete_jsx cx file_sig typed_ast cls ac_name ac_loc docblock
   | None -> Ok ([], None)

@@ -21,16 +21,13 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults fil
         "type", ty_json;
       ] in
       Query_types.(
-        let type_table = Context.type_table cx in
         let file = Context.file cx in
-        (* passing in type_table only because it seems necessary for constructing genv *)
         let result = type_at_pos_type
           ~full_cx:cx
           ~file
           ~file_sig:(File_sig.abstractify_locs file_sig)
           ~expand_aliases
           ~omit_targ_defaults
-          ~type_table
           ~typed_ast
           loc
         in
@@ -55,7 +52,10 @@ let dump_types ~options ~env ~profiling file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
   Types_js.basic_check_contents ~options ~env ~profiling content file >|=
-  map ~f:(fun (cx, _info, file_sig, _) -> Query_types.dump_types cx (File_sig.abstractify_locs file_sig) ~printer)
+  map ~f:(fun (cx, _info, file_sig, tast) ->
+    let abs_file_sig = File_sig.abstractify_locs file_sig in
+    Query_types.dump_types ~printer cx abs_file_sig tast
+  )
 
 
 let coverage ~options ~env ~profiling ~force ~trust file content =
@@ -72,14 +72,15 @@ let coverage ~options ~env ~profiling ~force ~trust file content =
 let suggest ~options ~env ~profiling file_name file_content =
   let file_key = File_key.SourceFile file_name in
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-  | (Some (cx, ast, file_sig, _), tc_errors, tc_warnings) ->
-    let cxs = Query_types.suggest_types cx (File_sig.abstractify_locs file_sig) in
+  | (Some (cx, ast, file_sig, tast), tc_errors, tc_warnings) ->
+    let cxs = Query_types.suggest_types cx (File_sig.abstractify_locs file_sig) tast in
     let visitor = new Suggest.visitor ~cxs in
-    let typed_ast = visitor#program ast in
+    let ast_with_suggestions = visitor#program ast in
     let suggest_warnings = visitor#warnings () in
-    (*let open Flow_ast_differ in*)
-    let ast_diff = Flow_ast_differ.(program Standard ast typed_ast) in
-    let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff typed_ast file_content in
+    let ast_diff = Flow_ast_differ.(program Standard ast ast_with_suggestions) in
+    let file_patch =
+      Replacement_printer.mk_patch_ast_differ ast_diff ast_with_suggestions file_content
+    in
     Ok (tc_errors, tc_warnings, suggest_warnings, file_patch)
   | (None, errors, _) ->
     Error errors

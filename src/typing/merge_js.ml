@@ -218,7 +218,7 @@ let check_type_visitor wrap =
 
   end
 
-let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
+let detect_invalid_type_assert_calls ~full_cx file_sigs cxs tasts =
   let options = {
     Ty_normalizer_env.
     fall_through_merged = false;
@@ -246,14 +246,15 @@ let detect_invalid_type_assert_calls ~full_cx file_sigs cxs =
         wrap (Type.desc_of_t t)
     )
   in
-  Core_list.iter ~f:(fun cx ->
+  Core_list.iter2_exn ~f:(fun cx typed_ast ->
     let file = Context.file cx in
     let type_table = Context.type_table cx in
     let targs_map = Type_table.targs_hashtbl type_table in
     let file_sig = FilenameMap.find_unsafe file file_sigs in
-    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~type_table ~file_sig in
-    Loc_collections.ALocMap.iter (check_valid_call ~genv ~targs_map) (Context.type_asserts cx)
-  ) cxs
+    let genv = Ty_normalizer_env.mk_genv ~full_cx ~file ~typed_ast ~file_sig in
+    Loc_collections.ALocMap.iter (check_valid_call ~genv ~targs_map)
+      (Context.type_asserts cx)
+  ) cxs tasts
 
 let force_annotations leader_cx other_cxs =
   Core_list.iter ~f:(fun cx ->
@@ -445,7 +446,7 @@ let merge_component_strict ~metadata ~lint_severities ~file_options ~strict_mode
   detect_test_prop_misses cx;
   detect_unnecessary_optional_chains cx;
   detect_unnecessary_invariants cx;
-  detect_invalid_type_assert_calls ~full_cx:cx file_sigs cxs;
+  detect_invalid_type_assert_calls ~full_cx:cx file_sigs cxs tasts;
 
   force_annotations cx other_cxs;
 
