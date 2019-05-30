@@ -86,10 +86,9 @@ let dump_types ~printer cx file_sig typed_ast =
     simplify_empty = true;
   } in
   let file = Context.file cx in
-  let type_table = Context.type_table cx in
   let genv = Ty_normalizer_env.mk_genv ~full_cx:cx ~file ~typed_ast ~file_sig in
-  let typed_locs = Type_table.coverage_to_list type_table in
-  let result = Ty_normalizer.from_schemes ~options ~genv typed_locs in
+  let result = Ty_normalizer.from_schemes ~options ~genv
+    (Typed_ast_utils.typed_ast_to_list typed_ast) in
   let print_ok = function
     | l, Ok t -> Some (l, printer t)
     | _ -> None
