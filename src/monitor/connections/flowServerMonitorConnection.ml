@@ -157,10 +157,15 @@ module Make (ConnectionProcessor: CONNECTION_PROCESSOR) : CONNECTION
       Lwt.return connection
 
     let catch connection exn =
-      Logger.error
-        ~exn
-        "Closing connection '%s' due to uncaught exception in read loop"
-        connection.name;
+      (match exn with
+      | End_of_file ->
+        Logger.error "Connection '%s' was closed from the other side" connection.name
+      | _ ->
+        Logger.error
+          ~exn
+          "Closing connection '%s' due to uncaught exception in read loop"
+          connection.name
+      );
       close_immediately connection
   end)
 
