@@ -1,3 +1,28 @@
+### 0.100.0
+
+Likely to cause new Flow errors:
+
+* The `React$ElementType` annotation, which was previously unsafe, is now strict. Before you could create an element given a component with this type using arbitrary props. To annotate any component that accepts some given props, use `React$ComponentType` instead. [Try Flow example](https://flow.org/try/#0JYWwDg9gTgLgBAKjgQwM5wEoFNkGN4BmUEIcARFDvmQNwBQdMAnmFnAArFjoC8cA3gB84AO2QgsALjioYUYCIDmcQQF96dAgFcR+YBBFwA4pSwwsUABRguqaZwjcAlALpw4lGFqiGAPGAA+AAksABtQiAAaOAASfhtHVAA6MQlVAEJfAHpA+lUGbV0YfUMdVGQCLABhA1koLXxLGvADLBEYaWw8GBiAUVCsCXaAFRYsF343OCysuF6oYihpKuRDEQh4XFq5BvhVuDDBtr30CAI4ADEIgHc4ADcABiSARgenh6nfZsgRY7hrgAWyHMdwsPDITAgWjI-1WMHBAIsWBhWQCeQYZQq1W29UaJiwZgsTg0hT0BhkWJqIjquyaJB+x06VB631aIzGvgc3ACEymMzmC2g0mGiNQbGQlDgMER-2ISjgCW46U+rN+7X+QJBYIhUJh1zhCKRKLRUz5swA8gBpYWi8WS6VsRXoaXAuAAA3xhKgboOAA9WPhUCr6Wz4KksOCAOrQUIAE2NdHydHKlSpNLxpnMUGJQA)
+* The `React$ComponentType` annotation is now strict when used with refs. Before, it was possible to pass a `ref` having any type when creating an element from a component using this type. If you need to describe components that accept refs, use the `React$AbstractComponent` type instead. [Try Flow example](https://flow.org/try/#0JYWwDg9gTgLgBAKjgQwM5wEoFNkGN4BmUEIcARFDvmQNwBQdMAnmFnAArFjoC8cA3gB84AO2QgsALjioYUYCIDmcQQF96dXABs06AOKUsMLFDhYAHsZEATdNjwwAdAGESkEVhEwAPJwjcAPgE6ODhKGxMACgBKYNDQyhgAVygROG8wAIAJLC0tCAAaOAASfhgAC2BURzAuarEJVQBCbwB6TPpQ1RC4HpAYgW7uzQgRWTgAQWl7fBc3Uc8YABUWLF86oL4DLCMTDVbWuABRKGIoaQADSgILuCq4ZlZrFHQLkGBzLGtbtDgIAjgADF8gB3OAANwADI4AIyQ+F0bwTUTiLA8MgAdWgWmsZDCWAIPH41zgPCCJIAZBT8QRHP1oqo4K0AgxcKNxgAhaZUJwTABGsigDlc4AWXnW-lQRW2uygmzgMuMUH2hwA8gBpIpXAm3e6PL4vFBwC6Kky6sYwZAiXBYREclESdFYqA4vHXIkksk0uBUml0mKM5lAA)
+* The `$Enum` built-in type annotation is now deprecated. Please use the semantically equivalent `$Keys` type instead.
+* Destructuring patterns could previously include missing properties if the resulting binding was unused. This is now an error even when unused. [Try Flow example](https://flow.org/try/#0C4TwDgpgBA8lC8UDeUwC4oGdgCcCWAdgOZQC+A3AFAD01UAojjgPY4YAqAFhDtHplALNULSDlBQABgEdJUQlFCQpMSQBooAQwHMAZlABiAG2YB3KADcADADoAjFdtXKugK4EAxsDzMCUXQAUSGAa0qQYMACUyKRAA)
+
+New Features:
+
+* You can now use the built-in type `React$MixedElement` as the sound superclass of all React elements. This is a type alias for `React$Element<React$ElementType>`.
+
+Misc:
+
+* Add `decode` method to `HTMLImageElement` (thanks, @vicapow!)
+
+Parser:
+
+* Handle NonOctalDecimalIntegerLiteral
+* Remove U+180e (Mongolian vowel separator) from list of valid whitespace code points
+* Remove support for legacy octal literals with numeric separators
+* Remove support for legacy octal bigints
+* Fix various issues related to automatic semicolon insertion (ASI) for class properties
+
 ### 0.99.1
 
 Notable bug fixes:
