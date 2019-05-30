@@ -63,7 +63,7 @@ let get_ast_result ~reader file
 let get_dependents ~reader options workers env file_key content =
   let docblock = compute_docblock file_key content in
   let reader = Abstract_state_reader.State_reader reader in
-  let modulename = Module_js.exported_module ~options ~reader file_key docblock in
+  let modulename = Module_js.exported_module ~options file_key docblock in
   Dep_service.dependent_files
     ~reader
     workers

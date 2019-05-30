@@ -495,10 +495,7 @@ let reducer
           | Some old_hash when old_hash = new_hash ->
             (* If this optimization is turned off then still parse the file, even though it's
              * unchanged *)
-            not parse_unchanged &&
-              (* Let's disable this optimization for .flow files. Sometimes we still want to recheck
-               * foo.js.flow file because foo.js changed *)
-              not (File_key.check_suffix file Files.flow_ext)
+            not parse_unchanged
           | _ ->
             (* The file has changed. Let's record the new hash *)
             worker_mutator.Parsing_heaps.add_hash file new_hash;

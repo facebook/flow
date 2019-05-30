@@ -24,7 +24,6 @@ val eponymous_module: File_key.t -> Modulename.t
 (* export and import functions for the module system *)
 val exported_module:
   options: Options.t ->
-  reader: Abstract_state_reader.t ->
   File_key.t -> Docblock.t -> Modulename.t
 
 type resolution_acc = {
