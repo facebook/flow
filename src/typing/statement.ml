@@ -6307,22 +6307,6 @@ and static_method_call_Object cx loc callee_loc prop_loc expr obj_t m targs args
       Expression ((obj_loc, AnyT.at Untyped obj_loc), Object { Object.properties; comments })
     ]
 
-  | ("getOwnPropertyNames" | "keys"), None, [Expression e] ->
-    let arr_reason = mk_reason RArrayType loc in
-    let (_, o), _ as e_ast = expression cx e in
-    DefT (arr_reason, bogus_trust (), ArrT (
-      ArrayAT (
-        Tvar.mk_where cx arr_reason (fun tvar ->
-          let keys_reason = replace_reason (fun desc ->
-            RCustom (spf "element of %s" (string_of_desc desc))
-          ) reason in
-          Flow.flow cx (o, GetKeysT (keys_reason, UseT (unknown_use, tvar)));
-        ),
-        None
-      )
-    )),
-    None,
-    [Expression e_ast]
 
   | "defineProperty", None, [
       Expression e;
