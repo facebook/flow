@@ -40,3 +40,11 @@ let is_build_optimized =
  * v5 (hvvm 3.23, 17 Nov 2017) - 'hh_client lsp' stable
  *)
 let build_api_version = 5
+
+let build_version_json =
+  let open Hh_json in
+  JSON_Object [
+    "commit", JSON_String build_revision;
+    "commit_time", int_ build_commit_time;
+    "api_version", int_ build_api_version;
+  ]
