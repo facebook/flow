@@ -1100,6 +1100,7 @@ and JSX : sig
 
     and ('M, 'T) t' = {
       name: ('M, 'T) name;
+      targs: ('M, 'T) Expression.TypeParameterInstantiation.t option;
       selfClosing: bool;
       attributes: ('M, 'T) attribute list;
     }

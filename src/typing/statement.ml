@@ -5021,7 +5021,8 @@ and jsx_fragment cx expr_loc fragment: Type.t * (ALoc.t, ALoc.t * Type.t) Ast.JS
 and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
   let make_trust = Context.trust_constructor cx in
   let loc_element, _, _ = locs in
-  let loc, { Opening.name; attributes; selfClosing } = openingElement in
+  let loc, { Opening.name; targs; attributes; selfClosing } = openingElement in
+  let _, targs_ast = convert_targs cx targs in
   let facebook_fbs = Context.facebook_fbs cx in
   let facebook_fbt = Context.facebook_fbt cx in
   let jsx_mode = Context.jsx cx in
@@ -5121,7 +5122,12 @@ and jsx_title cx openingElement closingElement children locs = Ast.JSX.(
       Some (c_loc, { Closing.name = jsx_match_closing_element name cname })
     | None -> None
   in
-  t, (loc, { Opening.name; selfClosing; attributes; }), closingElement
+  t, (loc, { 
+    Opening.name; 
+    targs = targs_ast;
+    selfClosing; 
+    attributes; 
+  }), closingElement
 )
 
 and jsx_match_closing_element =
