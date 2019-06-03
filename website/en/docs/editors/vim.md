@@ -26,12 +26,13 @@ nnoremap <leader>an :ALENextWrap<cr>
 nnoremap <leader>ap :ALEPreviousWrap<cr>
 ```
 
-### vim-flow <a class="toc" id="vim-flow" href="#vim-flow"></a>
+### LanguageClient-neovim <a class="toc" id="LanguageClient-neovim" href="#LanguageClient-neovim"></a>
 
-Another way to add support for Flow in Vim is to use [vim-flow](https://github.com/flowtype/vim-flow).
+Another way to add support for Flow in Vim is to use [LanguageClient-neovim](https://github.com/autozimu/LanguageClient-neovim).
 
 * Adds completions to omnifunc
 * Checks JavaScript files for type errors on save
+* Look up types under cursor
 
 #### Requirements <a class="toc" id="vim-requirements" href="#vim-requirements"></a>
 
@@ -43,7 +44,7 @@ Another way to add support for Flow in Vim is to use [vim-flow](https://github.c
 
 ```sh
 cd ~/.vim/bundle
-git clone git://github.com/flowtype/vim-flow.git
+git clone git://github.com/autozimu/LanguageClient-neovim.git
 ```
 
 #### NeoBundle <a class="toc" id="neobundle" href="#neobundle"></a>
@@ -51,7 +52,7 @@ git clone git://github.com/flowtype/vim-flow.git
 Add this to your ~/.vimrc
 
 ```
-  NeoBundleLazy 'flowtype/vim-flow', {
+  NeoBundleLazy 'autozimu/LanguageClient-neovim', {
     \ 'autoload': {
     \     'filetypes': 'javascript'
     \ }}
@@ -60,7 +61,7 @@ Add this to your ~/.vimrc
 With Flow build step, using flow-bin
 
 ```
-  NeoBundleLazy 'flowtype/vim-flow', {
+  NeoBundleLazy 'autozimu/LanguageClient-neovim', {
     \ 'autoload': {
     \     'filetypes': 'javascript'
     \ },
@@ -68,4 +69,31 @@ With Flow build step, using flow-bin
     \     'mac': 'npm install -g flow-bin',
     \     'unix': 'npm install -g flow-bin'
     \ }}
+```
+
+#### VimPlug <a class="toc" id="vimplug" href="#vimplug"></a>
+
+```
+  Plug 'autozimu/LanguageClient-neovim', {
+    \ 'branch': 'next',
+    \ 'do': 'bash install.sh && npm install -g flow-bin',
+    \ }
+```
+
+#### Setup
+```
+let g:LanguageClient_rootMarkers = {
+\   'javascript': ['tsconfig.json', '.flowconfig', 'package.json'],
+\   'typescript': ['tsconfig.json', '.flowconfig', 'package.json']
+\ }
+" auto start server for these file types
+let g:LSP_ts_command = ['typescript-language-server', '--stdio']
+let g:LanguageClient_serverCommands={
+\   'javascript': ['flow', 'lsp'],
+\   'javascript.jsx': ['flow', 'lsp']
+\}
+
+" check the type under cursor w/ leader T
+nnoremap <leader>t :call LanguageClient_textDocument_hover()<CR>
+nnoremap <leader>y :call LanguageClient_textDocument_definition()<CR>
 ```
