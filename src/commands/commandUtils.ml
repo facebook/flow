@@ -1245,6 +1245,29 @@ let get_file_from_filename_or_stdin ~cmd path = function
       ) in
       File_input.FileContent (filename, contents)
 
+(* Takes a list of strings. If there are 2 then they are both parsed as intengers
+   and stdin is read from. If there are 3 then the first is treated as a input file
+   and the following 2 are parsed as integers. *)
+let parse_location_with_optional_filename spec path args =
+  let exit () =
+      CommandSpec.usage spec;
+      FlowExitStatus.(exit Commandline_usage_error) in
+  let (file, line, column) =
+    begin match args with
+    | [file; line; column] ->
+      let file = expand_path file in
+      File_input.FileName file, line, column
+    | [line; column] ->
+      get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path None,
+      line,
+      column
+    | _ -> exit ()
+    end in
+  let (line, column) = try (int_of_string line), (int_of_string column)
+    with Failure(_) -> exit () in
+  let (line, column) = convert_input_pos (line, column) in
+  file, line, column
+
 let range_string_of_loc ~strip_root loc = Loc.(
   let file = match loc.source with
   | Some file -> Reason.string_of_source ~strip_root file
