@@ -401,6 +401,7 @@ let merge_runner
   let start_time = Unix.gettimeofday () in
   let stream = Merge_stream.create
     ~num_workers
+    ~arch:options.Options.opt_arch
     ~dependency_graph
     ~leader_map
     ~component_map
