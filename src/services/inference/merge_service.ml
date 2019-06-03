@@ -148,7 +148,8 @@ let merge_strict_context ~options ~reader component =
         let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
         (comments, aloc_ast)
       | Options.TypesFirst -> fun ~reader file ->
-        let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
+        let (_, _, comments) = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
+        let ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
         let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
         (comments, aloc_ast)
     )
