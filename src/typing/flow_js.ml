@@ -7298,7 +7298,7 @@ and flow_type_args cx trace ~use_op lreason ureason targs1 targs2 =
    requirements given in the tuple. *)
 (* TODO: own_props/proto_props is misleading, since they come from interfaces,
    which don't have an own/proto distinction. *)
-and structural_subtype cx trace ?(use_op=unknown_use) lower reason_struct
+and structural_subtype cx trace ~use_op lower reason_struct
   (own_props, proto_props, call_id) =
   let lreason = reason_of_t lower in
   let own_props = Context.find_props cx own_props in
