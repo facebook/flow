@@ -1,3 +1,17 @@
+Error ----------------------------------------------------------------------------------------- argless_function.js:10:1
+
+Cannot assign `3` to `x.foo` because property `foo` is missing in function [1].
+
+   argless_function.js:10:1
+   10| x.foo = 3; // Error, the props type for Component is a sealed empty object.
+       ^^^^^
+
+References:
+   argless_function.js:9:8
+    9| var x: React.ElementProps<typeof Component> = element.props;
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------- bad_default_props.js:15:18
 
 Cannot use `React.Component` [1] with fewer than 1 type argument.
@@ -921,7 +935,7 @@ References:
 
 
 
-Found 61 errors
+Found 62 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

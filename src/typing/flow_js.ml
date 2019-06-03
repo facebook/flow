@@ -3897,14 +3897,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       ReactPropsToOut (_, props) ->
         (* Contravariance *)
         Core_list.hd params
-        |> Option.value_map ~f:snd ~default:(Obj_type.mk cx reason)
+        |> Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
         |> fun t -> rec_flow_t cx trace (t, props)
 
     | DefT (reason, _, FunT (_, _, { params; return_t; rest_param = None; is_predicate = false; _})),
       ReactInToProps (reason_op, props) ->
         (* Contravariance *)
         Core_list.hd params
-        |> Option.value_map ~f:snd ~default:(Obj_type.mk cx reason)
+        |> Option.value_map ~f:snd ~default:(Obj_type.mk ~sealed:true cx reason)
         |> fun t -> rec_flow_t cx trace (props, t);
         rec_flow_t cx trace (return_t, get_builtin_type cx reason_op "React$Node")
 
