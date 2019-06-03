@@ -115,11 +115,7 @@ let main base_flags option_values json pretty root strip_root verbose path wait_
   let json = json || pretty || expanded in
   let (file, line, column) = parse_args path args in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
-  let root = guess_root flowconfig_name (
-    match root with
-    | Some root -> Some root
-    | None -> File_input.path_of_file_input file
-  ) in
+  let root = find_a_root ~base_flags ~input:file root in
   let strip_root = if strip_root then Some root else None in
 
   if not json && (verbose <> None)

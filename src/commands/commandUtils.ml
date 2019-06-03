@@ -1171,6 +1171,35 @@ let guess_root flowconfig_name dir_or_file =
         FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
   )
 
+(* Favor the root argument, over the input file, over the current directory
+   as the place to begin searching for the root. *)
+let find_a_root ?input ~base_flags root_arg =
+  let flowconfig_name = Base_flags.(base_flags.flowconfig_name) in
+  guess_root flowconfig_name (match root_arg, input with
+    | Some provided_root, _ -> Some provided_root
+    | None, Some provided_input -> File_input.path_of_file_input provided_input
+    | None, None -> None)
+
+(* If a root is given then validate it and use it. Otherwise, favor the input file
+   over the current directory as the place to begin searching for the root. *)
+let get_the_root ?input ~base_flags root_arg =
+  match root_arg with
+  | Some provided_root ->
+    let root_dir = Path.make provided_root in
+    if Path.file_exists root_dir && Path.is_directory root_dir then
+      let flowconfig_name = Base_flags.(base_flags.flowconfig_name) in
+      let root_config = Path.concat root_dir flowconfig_name in
+      if Path.file_exists root_config then
+        root_dir
+      else
+        let msg = spf "Failed to open %s" @@ Path.to_string root_config in
+        FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+    else
+      let msg = spf "Invalid root directory %s" provided_root in
+      FlowExitStatus.(exit ~msg Could_not_find_flowconfig)
+  | None -> find_a_root ?input ~base_flags None
+
+
 (* convert 1,1 based line/column to 1,0 for internal use *)
 let convert_input_pos (line, column) =
   let column =

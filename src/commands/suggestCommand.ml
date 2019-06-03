@@ -102,11 +102,7 @@ let main base_flags option_values root error_flags strip_root path wait_for_rech
         Printf.sprintf "Failed to open file: %s" @@ filename_of_file_input file in
       FlowExitStatus.(exit ~msg Input_error) in
   let file = FileContent(path_of_file_input file, content) in
-  let root = guess_root flowconfig_name (
-    match root with
-    | Some root -> Some root
-    | None -> File_input.path_of_file_input file
-  ) in
+  let root = find_a_root ~base_flags ~input:file root in
   let strip_root = if strip_root then Some root else None in
   let request = ServerProt.Request.SUGGEST { input = file; wait_for_recheck; } in
   match connect_and_make_request flowconfig_name option_values root request with
