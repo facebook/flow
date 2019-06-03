@@ -1,6 +1,8 @@
 /* @flow */
 // @nolint
 
+// multi-byte chars: Гарного дня, котики!
+
 // Regular import
 import {
   Something,
