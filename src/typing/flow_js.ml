@@ -3129,14 +3129,14 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* matching *)
     (************)
 
-    | MatchingPropT (reason, x, t), UseT (_, l) ->
+    | MatchingPropT (reason, x, t), UseT (use_op, l) ->
       (* Things that can have properties are object-like (objects, instances,
          and their exact versions). Notably, "meta" types like union, annot,
          typeapp, eval, maybe, optional, and intersection should have boiled
          away by this point. *)
       let propref = Named (reason, x) in
       let strict = NonstrictReturning (None, None) in
-      let u = LookupT (reason, strict, [], propref, MatchProp (unknown_use, t)) in
+      let u = LookupT (reason, strict, [], propref, MatchProp (use_op, t)) in
       rec_flow cx trace (l, u)
 
     | MatchingPropT _, _ when is_use u ->
