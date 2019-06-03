@@ -88,20 +88,20 @@ module.exports = function flowRemoveTypes(source, options) {
   // Remove all flow type definitions.
   visit(ast, context, removeFlowVisitor);
 
-  if (removedNodes.length === 0) {
-    return source;
-  }
-
-  return resultPrinter(options, sourceBuffer, removedNodes, context.bytesAdded);
+  return resultPrinter(options, source, sourceBuffer, removedNodes, context.bytesAdded);
 };
 
-function resultPrinter(options, sourceBuffer, removedNodes, bytesAdded) {
+function resultPrinter(options, source, sourceBuffer, removedNodes, bytesAdded) {
   // Options
   var pretty = Boolean(options && options.pretty);
-  var buf = Buffer.alloc(sourceBuffer.length + bytesAdded);
 
   return {
     toString: function() {
+      if (!removedNodes || removedNodes.length === 0) {
+        return source;
+      }
+
+      var buf = Buffer.alloc(sourceBuffer.length + bytesAdded);
       var lastPos = 0;
       var offset = 0;
 
