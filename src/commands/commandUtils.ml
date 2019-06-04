@@ -1100,6 +1100,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
     opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
     opt_type_asserts = FlowConfig.type_asserts flowconfig;
+    opt_jsx_pragma = FlowConfig.jsx_pragma flowconfig;
   }
 
 let make_env flowconfig_name connect_flags root =

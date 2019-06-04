@@ -95,6 +95,7 @@ val traces: config -> int
 val trust_mode: config -> Options.trust_mode
 val type_asserts: config -> bool
 val types_first: config -> bool
+val jsx_pragma: config -> string option
 val wait_for_recheck: config -> bool
 val weak: config -> bool
 

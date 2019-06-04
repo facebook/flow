@@ -101,6 +101,7 @@ module Opts = struct
     types_first: bool;
     wait_for_recheck: bool;
     weak: bool;
+    jsx_pragma: string option;
   }
 
   let warn_on_unknown_opts (raw_opts, config) : (t * warning list, error) result =
@@ -192,6 +193,7 @@ module Opts = struct
     types_first = false;
     wait_for_recheck = false;
     weak = false;
+    jsx_pragma = None;
   }
 
   let parse_lines : line list -> (raw_options, error) result =
@@ -634,6 +636,9 @@ module Opts = struct
 
     "experimental.types_first.max_files_checked_per_worker",
       uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v });
+      
+    "jsx.pragma",
+      string (fun opts v -> Ok { opts with jsx_pragma = Some v });
   ]
 
   let parse =
@@ -1070,6 +1075,7 @@ let traces c = c.options.Opts.traces
 let trust_mode c = c.options.Opts.trust_mode
 let type_asserts c = c.options.Opts.type_asserts
 let types_first c = c.options.Opts.types_first
+let jsx_pragma c = c.options.Opts.jsx_pragma
 let required_version c = c.version
 let wait_for_recheck c = c.options.Opts.wait_for_recheck
 let weak c = c.options.Opts.weak
