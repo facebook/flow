@@ -1,3 +1,19 @@
+Error --------------------------------------------------------------------------------------------------- delete.js:8:12
+
+Invalid left-hand side in assignment expression.
+
+   8|     delete { a: 1 } // error
+                 ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:11:12
+
+Invalid left-hand side in assignment expression.
+
+   11|     delete [1, 2, 3] // error
+                  ^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------------- unary.js:8:10
 
 string [1] is not a number.
@@ -198,4 +214,4 @@ References:
 
 
 
-Found 14 errors
+Found 16 errors
