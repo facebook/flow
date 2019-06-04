@@ -1,17 +1,17 @@
 Error --------------------------------------------------------------------------------------------------- delete.js:8:12
 
-Invalid left-hand side in assignment expression.
+Cannot perform delete operation because object literal [1] is not a property reference.
 
    8|     delete { a: 1 } // error
-                 ^^^^^^^^
+                 ^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- delete.js:11:12
 
-Invalid left-hand side in assignment expression.
+Cannot perform delete operation because array literal [1] is not a property reference.
 
    11|     delete [1, 2, 3] // error
-                  ^^^^^^^^^
+                  ^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- unary.js:8:10
