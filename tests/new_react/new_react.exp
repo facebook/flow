@@ -533,6 +533,78 @@ References:
                                ^^^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------- object_component.js:14:12
+
+Cannot create `Component` element because property `bar` is missing in props [1] but exists in object type [2].
+
+   object_component.js:14:12
+   14| const _a = <Component />; // Error, missing bar
+                  ^^^^^^^^^^^^^ [1]
+
+References:
+   object_component.js:8:11
+    8|   (props: {| foo: number, bar: number |}): React.Node,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_component.js:17:12
+
+Cannot create `Component` element because property `baz` is missing in object type [1] but exists in props [2].
+
+   object_component.js:17:12
+   17| const _d = <Component foo={3} bar={3} baz={3} />; // Error, baz is not in the config
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   object_component.js:8:11
+    8|   (props: {| foo: number, bar: number |}): React.Node,
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- object_component.js:20:47
+
+Cannot assign `null` to `_y` because null [1] is incompatible with undefined [2].
+
+   object_component.js:20:47
+   20| const _y: React.ElementRef<ObjectComponent> = null; // Error, ref is undefined
+                                                     ^^^^ [1]
+
+References:
+   object_component.js:20:11
+   20| const _y: React.ElementRef<ObjectComponent> = null; // Error, ref is undefined
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_component.js:23:56
+
+Cannot assign object literal to `_badProps` because property `foo` is missing in object literal [1] but exists in object
+type [2].
+
+   object_component.js:23:56
+   23| const _badProps: React.ElementProps<ObjectComponent> = {bar: 3}; // Error missing foo
+                                                              ^^^^^^^^ [1]
+
+References:
+   object_component.js:23:18
+   23| const _badProps: React.ElementProps<ObjectComponent> = {bar: 3}; // Error missing foo
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- object_component.js:24:57
+
+Cannot assign object literal to `_badProps2` because property `baz` is missing in object type [1] but exists in object
+literal [2].
+
+   object_component.js:24:57
+   24| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
+                                                               ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+
+References:
+   object_component.js:24:19
+   24| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- props.js:14:25
 
 Cannot assign `this.props.x` to `a` because:
@@ -935,7 +1007,7 @@ References:
 
 
 
-Found 62 errors
+Found 67 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

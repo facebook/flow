@@ -107,7 +107,8 @@ let lookup_defaults cx trace component ~reason_op ~rec_flow upper pole =
 let get_defaults cx trace component ~reason_op ~rec_flow =
   match component with
   | DefT (_, _, ClassT _)
-  | DefT (_, _, FunT _) ->
+  | DefT (_, _, FunT _)
+  | DefT (_, _, ObjT _) ->
     let tvar = Tvar.mk cx reason_op in
     lookup_defaults cx trace component ~reason_op ~rec_flow tvar Positive;
     Some tvar
