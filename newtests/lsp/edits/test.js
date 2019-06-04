@@ -64,7 +64,7 @@ wilbur();
         textDocument: {uri: '<PLACEHOLDER_PROJECT_URL_SLASH>open.js'},
         position: {line: 3, character: 1},
       }).verifyAllIDEMessagesInStep(
-        ['textDocument/definition{No such file or directory}'],
+        ['textDocument/definition{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
     ]),

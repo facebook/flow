@@ -29,7 +29,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
-        ['foobar{not implemented}'],
+        ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('barfoo', {})
@@ -47,7 +47,7 @@ export default suite(
         [...lspIgnoreStatusAndCancellation],
       ),
       ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
-        ['foobar{not implemented}'],
+        ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('barfoo', {})

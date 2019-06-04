@@ -18,7 +18,7 @@ export default suite(
     test('invalid_method', [
       ideStartAndConnect(),
       ideRequestAndWaitUntilResponse('foobar', {}).verifyAllIDEMessagesInStep(
-        ['foobar{not implemented}'],
+        ['foobar{unexpected error}'],
         [...lspIgnoreStatusAndCancellation],
       ),
       ideNotification('barfoo', {})

@@ -1580,6 +1580,11 @@ let wrap_persistent_handler
       let e = Lsp_fmt.error_of_exn (Failure reason) in
       let lsp_response = match request with
         | LspToServer (RequestMessage (id, _), _) ->
+          let friendly_message =
+            "Flow encountered an unexpected error while handling this request. " ^
+            "See the Flow logs for more details."
+          in
+          let e = {e with Lsp.Error.message=friendly_message} in
           Some (ResponseMessage (id, ErrorResult (e, stack)))
         | LspToServer _ ->
           let open LogMessage in
