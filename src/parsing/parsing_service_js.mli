@@ -12,9 +12,10 @@ type types_mode =
   | TypesForbiddenByDefault
 
 type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
+type aloc_t = (ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_Loc.t
 type parse_ok =
   | Classic of t
-  | TypesFirst of t * t (* sig *)
+  | TypesFirst of t * aloc_t (* sig *)
 
 val basic: parse_ok -> t
 

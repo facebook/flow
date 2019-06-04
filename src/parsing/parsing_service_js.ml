@@ -11,9 +11,10 @@ open Utils_js
 open Sys_utils
 
 type t = (Loc.t, Loc.t) Ast.program * File_sig.With_Loc.t
+type aloc_t = (ALoc.t, ALoc.t) Ast.program * File_sig.With_Loc.t
 type parse_ok =
   | Classic of t
-  | TypesFirst of t * t (* sig *)
+  | TypesFirst of t * aloc_t (* sig *)
 
 let basic = function
   | Classic t -> t
@@ -424,6 +425,7 @@ let do_parse ~parse_options ~info content file =
             let sig_file_sig = match File_sig.With_Loc.program ~ast:sig_ast ~module_ref_prefix with
               | Ok fs -> fs
               | Error _ -> assert false in
+            let sig_ast = Ast_loc_utils.abstractify_mapper#program sig_ast in
             begin match arch with
               | Options.Classic ->
                 Parse_ok (Classic (ast, file_sig))
