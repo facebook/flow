@@ -228,6 +228,37 @@ let edata_of_exception exn =
   let stack = Exception.get_backtrace_string exn in
   { Marshal_tools.message; stack; }
 
+let selectively_omit_errors (request_name: string) (response: lsp_message) =
+  match response with
+  | ResponseMessage (id, ErrorResult _) ->
+    let new_response = match request_name with
+    (* Autocomplete requests are rarely manually-requested, so let's suppress errors from them to
+     * avoid spamming users if something isn't working. Once we reduce the error rate, we can undo
+     * this, but right now there are some known problems with the code in `members.ml` that often
+     * lead to errors. Once we migrate off of that, we will likely be able to display errors to
+     * users without degrading the experience.
+     *
+     * Another option would be to inspect the `completionTriggerKind` field, but `Invoked` doesn't
+     * actually mean that it was manually invoked. Typing an identifier char also results in an
+     * `Invoked` trigger.
+     *
+     * See https://microsoft.github.io/language-server-protocol/specification#textDocument_completion
+     *)
+    | "textDocument/completion" ->
+      Some Completion.(CompletionResult {
+        isIncomplete = false;
+        items = [];
+      })
+    (* Like autocomplete requests, users rarely request these explicitly. The IDE sends them when
+     * people are simply moving the cursor around. For the same reasons, let's suppress errors here
+     * for now. *)
+    | "textDocument/documentHighlight" -> Some (DocumentHighlightResult [])
+    | _ -> None
+    in
+    Option.map ~f:(fun response -> ResponseMessage (id, response)) new_response
+    |> Option.value ~default:response
+  | _ -> response
+
 let get_next_event_from_server (fd: Unix.file_descr) : event =
   let r = begin try
     Server_message (Marshal_tools.from_fd_with_preamble fd)
@@ -1638,6 +1669,9 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
             let metadata = { metadata with Persistent_connection_prot.client_duration = None} in
             ResponseMessage (id, RageResult (items @ (do_rage flowconfig_name state))), metadata
           | _ -> outgoing, metadata
+        in
+        let outgoing =
+          selectively_omit_errors Persistent_connection_prot.(metadata.lsp_method_name) outgoing
         in
         to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
         state, metadata
