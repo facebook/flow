@@ -4384,7 +4384,7 @@ and unary cx loc = Ast.Expression.Unary.(function
       VoidT.at loc |> with_trust literal_trust, { operator = Void; argument; comments }
 
   | { operator = Delete; argument; comments } ->
-      let (rhs_loc, argt), _ as argument = expression cx argument in
+      let (rhs_loc, _), _ as argument = expression cx argument in
       (match argument with
       | _, Ast.Expression.Identifier _ -> ()
       | _, Ast.Expression.Member _ -> ()
