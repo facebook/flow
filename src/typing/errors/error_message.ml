@@ -2181,7 +2181,7 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
       ]
     | EDeleteOperand reason ->
       Normal [
-        text "Cannot perform delete operation because"; ref reason; text " ";
+        text "Cannot perform delete operation because "; ref reason; text " ";
         text "is not a property reference.";
       ]
 )
