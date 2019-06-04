@@ -952,23 +952,29 @@ let error_of_exn (e: exn) : Lsp.Error.t =
   | Exit_status.Exit_with code -> {code= -32001; message=Exit_status.to_string code; data=None;}
   | _ -> {code= -32001; message=Printexc.to_string e; data=None;}
 
-let print_error (e: Error.t) (stack: string) : json =
+let print_error ?(include_error_stack_trace=true) (e: Error.t) (stack: string) : json =
   let open Hh_json in
   let open Error in
-  let stack_json_property = ("stack", string_ stack) in
-  (* We'd like to add a stack-trace. The only place we can fit it, that will *)
-  (* be respected by vscode-jsonrpc, is inside the 'data' field. And we can  *)
-  (* do that only if data is an object. We can synthesize one if needed.     *)
-  let data = match e.data with
-    | None -> JSON_Object [stack_json_property]
-    | Some (JSON_Object o) -> JSON_Object (stack_json_property :: o)
-    | Some primitive -> primitive
+  let entries = if include_error_stack_trace then
+    let stack_json_property = ("stack", string_ stack) in
+    (* We'd like to add a stack-trace. The only place we can fit it, that will *)
+    (* be respected by vscode-jsonrpc, is inside the 'data' field. And we can  *)
+    (* do that only if data is an object. We can synthesize one if needed.     *)
+    let data = match e.data with
+      | None -> JSON_Object [stack_json_property]
+      | Some (JSON_Object o) -> JSON_Object (stack_json_property :: o)
+      | Some primitive -> primitive
+    in
+    ["data", data]
+  else
+    []
   in
-  JSON_Object [
-    "code", int_ e.code;
-    "message", string_ e.message;
-    "data", data;
-  ]
+  let entries =
+    ("code", int_ e.code) ::
+    ("message", string_ e.message) ::
+    entries
+  in
+  JSON_Object entries
 
 let parse_error (error: json) : Error.t =
   let json = Some error in
@@ -1185,7 +1191,7 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
     "params", params;
   ]
 
-let print_lsp_response (id: lsp_id) (result: lsp_result) : json =
+let print_lsp_response ?include_error_stack_trace (id: lsp_id) (result: lsp_result) : json =
   let method_ = result_name_to_string result in
   let json = match result with
     | InitializeResult r -> print_initialize r
@@ -1207,7 +1213,7 @@ let print_lsp_response (id: lsp_id) (result: lsp_result) : json =
     | ShowStatusResult _
     | CompletionItemResolveResult _ ->
       failwith ("Don't know how to print result " ^ method_)
-    | ErrorResult (e, stack) -> print_error e stack
+    | ErrorResult (e, stack) -> print_error ?include_error_stack_trace e stack
   in
   match result with
   | ErrorResult _ ->
@@ -1252,8 +1258,8 @@ let print_lsp_notification (notification: lsp_notification) : json =
     "params", params;
   ]
 
-let print_lsp (message: lsp_message) : json =
+let print_lsp ?include_error_stack_trace (message: lsp_message) : json =
   match message with
   | RequestMessage (id, request) -> print_lsp_request id request
-  | ResponseMessage (id, result) -> print_lsp_response id result
+  | ResponseMessage (id, result) -> print_lsp_response ?include_error_stack_trace id result
   | NotificationMessage notification -> print_lsp_notification notification

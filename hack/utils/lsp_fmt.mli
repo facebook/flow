@@ -102,7 +102,7 @@ val parse_initialize : Hh_json.json option -> Lsp.Initialize.params
 val print_initializeError : Lsp.Initialize.errorData -> Hh_json.json
 val print_initialize : Lsp.Initialize.result -> Hh_json.json
 val error_of_exn : exn -> Lsp.Error.t
-val print_error : Lsp.Error.t -> string -> Hh_json.json
+val print_error : ?include_error_stack_trace: bool -> Lsp.Error.t -> string -> Hh_json.json
 val parse_error : Hh_json.json -> Lsp.Error.t
 val request_name_to_string : Lsp.lsp_request -> string
 val result_name_to_string : Lsp.lsp_result -> string
@@ -116,6 +116,6 @@ val parse_lsp_result : Lsp.lsp_request -> Hh_json.json -> Lsp.lsp_result
 val parse_lsp :
   Hh_json.json -> (Lsp.lsp_id -> Lsp.lsp_request) -> Lsp.lsp_message
 val print_lsp_request : Lsp.lsp_id -> Lsp.lsp_request -> Hh_json.json
-val print_lsp_response : Lsp.lsp_id -> Lsp.lsp_result -> Hh_json.json
+val print_lsp_response : ?include_error_stack_trace: bool -> Lsp.lsp_id -> Lsp.lsp_result -> Hh_json.json
 val print_lsp_notification : Lsp.lsp_notification -> Hh_json.json
-val print_lsp : Lsp.lsp_message -> Hh_json.json
+val print_lsp : ?include_error_stack_trace: bool -> Lsp.lsp_message -> Hh_json.json
