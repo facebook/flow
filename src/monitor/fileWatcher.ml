@@ -403,7 +403,23 @@ end = struct
          * the watchman listening thread itself dies, then we need to tell the monitor that this
          * file watcher is dead. *)
         let env = self#get_env in
-        env.listening_thread
+
+        (* waitpid should return a thread that resolves when the listening_thread resolves. So why
+         * don't we just return the listening_thread?
+         *
+         * It's because we need to return a cancelable thread. The listening_thread will resolve to
+         * unit when it is canceled. That is the wrong behavior.
+         *
+         * So how do we wrap the listening_thread in a cancelable thread? By running it
+         * asynchronously, having it signal when it resolves, and waiting for the signal *)
+        let signal = Lwt_condition.create () in
+        Lwt.async (fun () ->
+          let%lwt () = env.listening_thread in
+          Lwt_condition.signal signal ();
+          Lwt.return_unit
+        );
+
+        Lwt_condition.wait signal
 
       method getpid = None
     end
