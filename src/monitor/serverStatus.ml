@@ -159,6 +159,8 @@ let string_of_event = function
 | Collating_errors_start -> "Collating_errors_start"
 | Watchman_wait_start deadline -> spf "Watchman_wait_start %f" deadline
 
+(* As a general rule, use past tense for status updates that show progress and present perfect
+   progressive for those that don't. *)
 let string_of_typecheck_status ~use_emoji = function
 | Starting_typecheck ->
   spf "%sstarting up" (render_emoji ~use_emoji Sleeping_face)
@@ -175,9 +177,9 @@ let string_of_typecheck_status ~use_emoji = function
 | Merging progress ->
   spf "%smerged files %s" (render_emoji ~use_emoji Bicyclist) (string_of_progress progress)
 | Merging_types progress ->
-  spf "%smerged types of files %s" (render_emoji ~use_emoji Motorcycle) (string_of_progress progress)
+  spf "%smerged module interfaces %s" (render_emoji ~use_emoji Motorcycle) (string_of_progress progress)
 | Checking progress ->
-  spf "%schecking files %s" (render_emoji ~use_emoji Skier) (string_of_progress progress)
+  spf "%schecked files %s" (render_emoji ~use_emoji Skier) (string_of_progress progress)
 | Canceling progress ->
   spf "%scanceling workers %s"
     (render_emoji ~use_emoji Recycling_symbol) (string_of_progress progress)
