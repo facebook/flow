@@ -37,6 +37,8 @@ type metadata = {
   extra_data: (string * Hh_json.json) list;
   (* The logging context for the server *)
   server_logging_context: FlowEventLogger.logging_context option;
+  (* LSP method (e.g. 'textDocument/completion') *)
+  lsp_method_name: string;
 }
 
 (* This is the reason why we start to do a recheck. Since rechecks can be combined together, there

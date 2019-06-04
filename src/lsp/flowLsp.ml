@@ -220,6 +220,7 @@ let new_metadata (state: state) (message: Jsonrpc.message) : Persistent_connecti
     client_duration = None;
     extra_data = [];
     server_logging_context = None;
+    lsp_method_name = Jsonrpc.(message.method_);
   }
 
 let edata_of_exception exn =
@@ -579,11 +580,12 @@ let try_connect flowconfig_name (env: disconnected_env) : state =
     let open_messages = env.d_ienv.i_open_files |> SMap.bindings
       |> List.map ~f:(fun (_, {o_open_doc; _}) -> make_open_message o_open_doc) in
     let open Hh_json in
+    let method_name = "synthetic/open" in
     let metadata = { Persistent_connection_prot.
       start_wall_time = Unix.gettimeofday ();
       start_server_status = Some (fst new_env.c_server_status);
       start_watcher_status = snd new_env.c_server_status;
-      start_json_truncated = JSON_Object ["method", JSON_String "synthetic/open"];
+      start_json_truncated = JSON_Object ["method", JSON_String method_name];
       start_lsp_state = None;
       start_lsp_state_reason = None;
       error_info = None;
@@ -591,6 +593,7 @@ let try_connect flowconfig_name (env: disconnected_env) : state =
       client_duration = None;
       extra_data = [];
       server_logging_context = None;
+      lsp_method_name = method_name;
     } in
     List.iter open_messages ~f:(send_lsp_to_server new_env metadata);
     (* close the old UI and bring up the new *)
