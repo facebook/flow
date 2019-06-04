@@ -2988,6 +2988,8 @@ let dump_error_message =
         (dump_reason cx key_reason)
         (dump_reason cx value_reason)
         (dump_reason cx object2_reason)
+    | EDeleteOperand reason ->
+      spf "EDeleteOperand (%s)" (dump_reason cx reason)
 
 module Verbose = struct
   let print_if_verbose_lazy cx trace

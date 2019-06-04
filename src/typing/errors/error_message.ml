@@ -231,6 +231,7 @@ and 'loc t' =
   | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
   | EBigIntNotYetSupported of 'loc virtual_reason
+  | EDeleteOperand of 'loc virtual_reason
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
   | ENonArraySpread of 'loc virtual_reason
@@ -628,6 +629,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
+  | EDeleteOperand r -> EDeleteOperand (map_reason r)
   | ESignatureVerification _ as e -> e
   | ENonArraySpread r -> ENonArraySpread (map_reason r)
   | ECannotSpreadInterface {spread_reason; interface_reason} -> ECannotSpreadInterface {
@@ -814,6 +816,7 @@ let util_use_op_of_msg nope util = function
 | EInexactSpread _
 | EUnexpectedTemporaryBaseType _
 | EBigIntNotYetSupported _
+| EDeleteOperand (_)
 | ESignatureVerification _
 | ENonArraySpread _
 | ECannotSpreadInterface _
@@ -861,8 +864,9 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EImportTypeAsTypeof (reason, _)
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
-  | EDebugPrint (reason, _)
   | ENonArraySpread reason ->
+  | EDeleteOperand reason
+  | EDebugPrint (reason, _) ->
         Some (aloc_of_reason reason)
 
   (* We position around the use of the object instead of the spread because the
@@ -2137,44 +2141,49 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text "Cannot spread non-array iterable "; ref reason; text ". Use ";
         code "...Array.from(<iterable>)"; text " instead."
       ]
-  | ECannotSpreadInterface {spread_reason; interface_reason} ->
-    Normal [
-      text "Cannot determine a type for "; ref spread_reason; text ". ";
-      ref interface_reason; text " cannot be spread because interfaces do not ";
-      text "track the own-ness of their properties. Can you use an object type instead?";
-    ]
-  | ECannotSpreadIndexerOnRight {spread_reason; object_reason; key_reason} ->
-    Normal [
-      text "Cannot determine a type for "; ref spread_reason; text ". ";
-      ref object_reason; text " cannot be spread because the indexer "; ref key_reason;
-      text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
-      text "Can you spread "; ref object_reason; text " first or remove the indexer?";
-    ]
+    | ECannotSpreadInterface {spread_reason; interface_reason} ->
+      Normal [
+        text "Cannot determine a type for "; ref spread_reason; text ". ";
+        ref interface_reason; text " cannot be spread because interfaces do not ";
+        text "track the own-ness of their properties. Can you use an object type instead?";
+      ]
+    | ECannotSpreadIndexerOnRight {spread_reason; object_reason; key_reason} ->
+      Normal [
+        text "Cannot determine a type for "; ref spread_reason; text ". ";
+        ref object_reason; text " cannot be spread because the indexer "; ref key_reason;
+        text " may overwrite properties with explicit keys in a way that Flow cannot track. ";
+        text "Can you spread "; ref object_reason; text " first or remove the indexer?";
+      ]
 
-  | EUnableToSpread ({spread_reason; object1_reason; object2_reason; propname; error_kind}) ->
-    let error_reason, fix_suggestion = match error_kind with
-      | Inexact -> "is inexact",
-        [text " Can you make "; ref object2_reason; text " exact?"]
-      | Indexer -> "has an indexer",
-        [
-          text " Can you remove the indexer in "; ref object2_reason;
-          text " or make "; code propname; text " a required property?";
-        ]
-    in
-    Normal ([
-      text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
-      text " "; text error_reason; text ", so it may contain ";
-      code propname; text " with a type that conflicts with "; code propname;
-      text "'s definition in "; ref object1_reason; text ".";
-    ] @ fix_suggestion)
+    | EUnableToSpread ({spread_reason; object1_reason; object2_reason; propname; error_kind}) ->
+      let error_reason, fix_suggestion = match error_kind with
+        | Inexact -> "is inexact",
+          [text " Can you make "; ref object2_reason; text " exact?"]
+        | Indexer -> "has an indexer",
+          [
+            text " Can you remove the indexer in "; ref object2_reason;
+            text " or make "; code propname; text " a required property?";
+          ]
+      in
+      Normal ([
+        text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
+        text " "; text error_reason; text ", so it may contain ";
+        code propname; text " with a type that conflicts with "; code propname;
+        text "'s definition in "; ref object1_reason; text ".";
+      ] @ fix_suggestion)
 
-  | EInexactMayOverwriteIndexer ({spread_reason; key_reason; value_reason; object2_reason}) ->
-    Normal [
-      text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
-      text " is inexact and may "; text "have a property key that conflicts with "; ref key_reason;
-      text " or a property value that conflicts with "; ref value_reason;
-      text ". Can you make "; ref object2_reason; text " exact?";
-    ]
+    | EInexactMayOverwriteIndexer ({spread_reason; key_reason; value_reason; object2_reason}) ->
+      Normal [
+        text "Cannot determine a type for "; ref spread_reason; text ". "; ref object2_reason;
+        text " is inexact and may "; text "have a property key that conflicts with "; ref key_reason;
+        text " or a property value that conflicts with "; ref value_reason;
+        text ". Can you make "; ref object2_reason; text " exact?";
+      ]
+    | EDeleteOperand reason ->
+      Normal [
+        text "Cannot perform delete operation because"; ref reason; text " ";
+        text "is not a property reference.";
+      ]
 )
 
 let is_lint_error = function

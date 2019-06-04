@@ -4384,13 +4384,14 @@ and unary cx loc = Ast.Expression.Unary.(function
       VoidT.at loc |> with_trust literal_trust, { operator = Void; argument; comments }
 
   | { operator = Delete; argument; comments } ->
-      let (rhs_loc, _), _ as argument = expression cx argument in
+      let reason = mk_expression_reason argument in
+      let (_, _), _ as argument = expression cx argument in
       (match argument with
       | _, Ast.Expression.Identifier _ -> ()
       | _, Ast.Expression.Member _ -> ()
       | _, Ast.Expression.OptionalMember _ -> ()
       | _ ->
-        Flow.add_output cx (Error_message.EInvalidLHSInAssignment rhs_loc);
+        Flow.add_output cx (Error_message.EDeleteOperand reason);
       );
       BoolT.at loc |> with_trust literal_trust, { operator = Delete; argument; comments }
 
