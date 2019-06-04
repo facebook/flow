@@ -1636,7 +1636,7 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
             ResponseMessage (id, RageResult (items @ (do_rage flowconfig_name state))), metadata
           | _ -> outgoing, metadata
         in
-        to_stdout (Lsp_fmt.print_lsp outgoing);
+        to_stdout (Lsp_fmt.print_lsp ~include_error_stack_trace:false outgoing);
         state, metadata
     in
     Ok (state, LogNeeded metadata)
