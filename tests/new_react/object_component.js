@@ -23,5 +23,4 @@ const _props: React.ElementProps<ObjectComponent> = {foo: 3, bar: 3};
 const _badProps: React.ElementProps<ObjectComponent> = {bar: 3}; // Error missing foo
 const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
 
-// Errors, but shouldn't. Taking care of this in the next diff in the stack
-// const AC: React.AbstractComponent<{| +foo?: number, +bar: number |}, void> = Component;
+const AC: React.AbstractComponent<{| +foo?: number, +bar: number |}, void> = Component;

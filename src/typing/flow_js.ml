@@ -3851,16 +3851,22 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           ((VoidT.make (replace_reason_const RVoid reasonl) |> with_trust bogus_trust), instance);
 
     (* Object Component ~> AbstractComponent *)
-    | DefT (r, _, ObjT {call_t = Some id; _}),
-      UseT (_, DefT (reason_op, _, ReactAbstractComponentT _)) ->
-        begin match Context.find_call cx id with
-          | DefT (_, _, FunT (_, _, { rest_param = None; is_predicate = false; _ }))
-          | DefT (_, _, PolyT (_, _, DefT (_, _, FunT _), _)) as fun_t ->
-              rec_flow cx trace (fun_t, u)
-          | _ ->
-              React.GetConfig l
-              |> React_kit.err_incompatible cx trace ~use_op:unknown_use ~reason_op ~add_output r
-        end
+    | DefT (reasonl, _, ObjT {call_t = Some id; _}),
+      UseT (use_op, DefT (reasonu, trust, ReactAbstractComponentT {config; instance})) ->
+        rec_flow cx trace (l, ReactKitT (use_op, reasonl, React.ConfigCheck config));
+        (* Ensure the callable signature's return type is compatible with React.Node. We
+         * do this by flowing it to (...empty): React.Node *)
+        let funtype = mk_functiontype reasonu []
+          ~rest_param:(Some (None, aloc_of_reason reasonu,
+            EmptyT.why (replace_reason_const REmpty reasonu) (bogus_trust())))
+          ~def_reason:reasonl
+          (get_builtin_type cx reasonu "React$Node") in
+        let mixed = MixedT.why reasonu (bogus_trust ()) in
+        rec_flow_t ~use_op cx trace
+          (Context.find_call cx id, DefT (reasonu, trust, FunT (mixed, mixed, funtype)));
+        (* An object component instance type is always void, so flow void to instance *)
+        rec_flow_t cx trace ~use_op
+          ((VoidT.make (replace_reason_const RVoid reasonl) |> with_trust bogus_trust), instance);
 
     (* AbstractComponent ~> AbstractComponent *)
     | DefT (_reasonl, _, ReactAbstractComponentT {config = configl;
