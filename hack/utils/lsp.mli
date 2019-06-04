@@ -329,6 +329,13 @@ module Completion :
       | Color (* 16 *)
       | File (* 17 *)
       | Reference (* 18 *)
+      | Folder (* 19 *)
+      | EnumMember (* 20 *)
+      | Constant (* 21 *)
+      | Struct (* 22 *)
+      | Event (* 23 *)
+      | Operator (* 24 *)
+      | TypeParameter (* 25 *)
 
     (** Keep this in sync with `int_of_completionItemKind`. *)
     and insertTextFormat =
