@@ -38,5 +38,9 @@ let set_server_options ~server_options =
   | Options.LAZY_MODE_WATCHMAN -> "watchman"
   | Options.NON_LAZY_MODE -> "off"
   in
+  let arch = match Options.arch server_options with
+  | Options.Classic -> "classic"
+  | Options.TypesFirst -> "types_first"
+  in
 
-  FlowEventLogger.set_server_options ~lazy_mode
+  FlowEventLogger.set_server_options ~lazy_mode ~arch
