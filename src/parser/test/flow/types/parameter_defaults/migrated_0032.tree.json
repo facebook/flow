@@ -1,78 +1,50 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":1,"column":3},"end":{"line":1,"column":4}},
-      "message":"Unexpected token ="
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected token ILLEGAL"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input"
-    }
-  ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-  "range":[0,22],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
+  "range":[0,21],
   "body":[
     {
       "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":2,"column":0}},
-      "range":[0,22],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
+      "range":[0,21],
       "expression":{
-        "type":"JSXElement",
-        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":12}},
-        "range":[0,12],
-        "openingElement":{
-          "type":"JSXOpeningElement",
+        "type":"ArrowFunctionExpression",
+        "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":21}},
+        "range":[0,21],
+        "id":null,
+        "params":[],
+        "body":{
+          "type":"Literal",
+          "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":21}},
+          "range":[18,21],
+          "value":123,
+          "raw":"123"
+        },
+        "async":false,
+        "generator":false,
+        "predicate":null,
+        "expression":true,
+        "returnType":null,
+        "typeParameters":{
+          "type":"TypeParameterDeclaration",
           "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":12}},
           "range":[0,12],
-          "name":{
-            "type":"JSXIdentifier",
-            "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":2}},
-            "range":[1,2],
-            "name":"T"
-          },
-          "attributes":[
+          "params":[
             {
-              "type":"JSXAttribute",
-              "loc":{"source":null,"start":{"line":1,"column":3},"end":{"line":1,"column":4}},
-              "range":[3,4],
-              "name":{
-                "type":"JSXIdentifier",
-                "loc":{"source":null,"start":{"line":1,"column":3},"end":{"line":1,"column":4}},
-                "range":[3,4],
-                "name":""
-              },
-              "value":null
-            },
-            {
-              "type":"JSXAttribute",
-              "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":11}},
-              "range":[5,11],
-              "name":{
-                "type":"JSXIdentifier",
+              "type":"TypeParameter",
+              "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":11}},
+              "range":[1,11],
+              "name":"T",
+              "bound":null,
+              "variance":null,
+              "default":{
+                "type":"StringTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":11}},
-                "range":[5,11],
-                "name":"string"
-              },
-              "value":null
+                "range":[5,11]
+              }
             }
-          ],
-          "selfClosing":false
-        },
-        "closingElement":null,
-        "children":[
-          {
-            "type":"JSXText",
-            "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":2,"column":0}},
-            "range":[12,22],
-            "value":"() => 123\n",
-            "raw":"() => 123\n"
-          }
-        ]
+          ]
+        }
       },
       "directive":null
     }

@@ -701,7 +701,7 @@ module Object
       | true, false -> None
       | _ -> Some(Parse.identifier tmp_env)
     ) in
-    let tparams = Type.type_parameter_declaration_with_defaults env in
+    let tparams = Type.type_parameter_declaration env in
     let body, extends, implements = _class env in
     Ast.Statement.ClassDeclaration { Class.
       id;
@@ -724,7 +724,7 @@ module Object
       | T_LCURLY -> None, None
       | _ ->
           let id = Some (Parse.identifier env) in
-          let tparams = Type.type_parameter_declaration_with_defaults env in
+          let tparams = Type.type_parameter_declaration env in
           id, tparams in
     let body, extends, implements = _class env in
     Ast.Expression.Class { Class.
