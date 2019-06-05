@@ -149,6 +149,7 @@ type 'loc virtual_reason_desc =
   | RRestParameter of string option
   | RIdentifier of string
   | RIdentifierAssignment of string
+  | RPropertyDelete of string option
   | RPropertyAssignment of string option
   | RProperty of string option
   | RPrivateProperty of string
@@ -305,6 +306,7 @@ let rec map_desc_locs f = function
   | RRestParameter _
   | RIdentifier _
   | RIdentifierAssignment _
+  | RPropertyDelete _
   | RPropertyAssignment _
   | RProperty _
   | RPrivateProperty _
@@ -682,6 +684,8 @@ let rec string_of_desc = function
   | RProperty None -> "computed property"
   | RPrivateProperty x -> spf "property `#%s`" x
   | RMember { object_; property } -> spf "`%s%s`" object_ property
+  | RPropertyDelete (Some x) -> spf "delete of property `%s`" x
+  | RPropertyDelete None -> "delete of computed property/element"
   | RPropertyAssignment (Some x) -> spf "assignment of property `%s`" x
   | RPropertyAssignment None -> "assignment of computed property/element"
   | RShadowProperty x -> spf ".%s" x
@@ -1348,6 +1352,7 @@ let classification_of_reason r = match desc_of_reason ~unwrap:true r with
 | RRestParameter _
 | RIdentifier _
 | RIdentifierAssignment _
+| RPropertyDelete _
 | RPropertyAssignment _
 | RProperty _
 | RPrivateProperty _
