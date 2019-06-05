@@ -3579,15 +3579,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         add_output cx ~trace
           (Error_message.ETooManyTypeArgs (reason_tapp, reason_arity, maximum_arity));
       ) else (
-        let unused_targs = Nel.fold_left (fun targs { name; default; polarity; reason; _ } ->
-          match default, targs with
-          | None, [] ->
-            (* fewer arguments than params but no default *)
-            add_output cx ~trace (Error_message.ETooFewTypeArgs
-              (reason_tapp, reason_arity, minimum_arity));
-            []
-          | _, [] -> []
-          | _, (t1, t2)::targs ->
+        let unused_targs, _, _ = Nel.fold_left (fun (targs, map1, map2) tparam->
+          let { name; default; polarity; reason; _ } = tparam in
+          let flow_targs t1 t2 =
             let use_op = Frame (TypeArgCompatibility {
               name;
               targ = reason;
@@ -3595,12 +3589,26 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
               upper = reason_tapp;
               polarity;
             }, use_op) in
-            (match polarity with
+            match polarity with
             | Positive -> rec_flow cx trace (t1, UseT (use_op, t2))
             | Negative -> rec_flow cx trace (t2, UseT (use_op, t1))
-            | Neutral -> rec_unify cx trace ~use_op t1 t2);
-            targs
-        ) targs tparams in
+            | Neutral -> rec_unify cx trace ~use_op t1 t2;
+          in
+          match default, targs with
+          | None, [] ->
+            (* fewer arguments than params but no default *)
+            add_output cx ~trace (Error_message.ETooFewTypeArgs
+              (reason_tapp, reason_arity, minimum_arity));
+            [], map1, map2
+          | Some default, [] ->
+            let t1 = subst cx ~use_op map1 default in
+            let t2 = subst cx ~use_op map2 default in
+            flow_targs t1 t2;
+            [], SMap.add name t1 map1, SMap.add name t2 map2
+          | _, (t1, t2)::targs ->
+            flow_targs t1 t2;
+            targs, SMap.add name t1 map1, SMap.add name t2 map2
+        ) (targs, SMap.empty, SMap.empty) tparams in
         assert (unused_targs = []);
       )
 
