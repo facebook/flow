@@ -332,7 +332,7 @@ const g: F = (x?: number | string) => { // $ExpectError
 }
 ```
 
-Callable objects can be viewed equivalently as functions with static fields. Function statics are initially typed to `{}`. Flow will notice when you try to access function statics without annotation.
+Callable objects can be viewed equivalently as functions with static fields. Function type statics are initially `{}`. Flow will notice when you annotate a variable as function type and try to access its statics without annotation.
 
 ```js
 type F = () => void;
