@@ -643,13 +643,26 @@ let tests = "signature_generator" >::: ([
      ">;"];
 
   "unusual_cjs_exports1" >:: mk_signature_generator_test
-    ["exports.wut = 'wut';";
+    ["exports.wut = 'dead';";
      "module.exports = { x: 42 };"]
     ["declare module.exports: $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>;"];
 
   "unusual_cjs_exports2" >:: mk_signature_generator_test
     ["module.exports = { x: 42 };";
      "module.exports.wut = 'wut';"]
-    ["declare module.exports: $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>;"];
+    ["declare module.exports: $TEMPORARY$module$exports$assign<";
+     "  $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>,";
+     "  {wut: $TEMPORARY$string<'wut'>, ...},";
+     ">;"];
+
+  "unusual_cjs_exports3" >:: mk_signature_generator_test
+    ["module.exports = { x: 0xdead };";
+     "module.exports.wut = 'dead';";
+     "module.exports = { x: 42 };";
+     "module.exports.wut = 'wut';"]
+    ["declare module.exports: $TEMPORARY$module$exports$assign<";
+     "  $TEMPORARY$object<{|x: $TEMPORARY$number<42>|}>,";
+     "  {wut: $TEMPORARY$string<'wut'>, ...},";
+     ">;"];
 
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)

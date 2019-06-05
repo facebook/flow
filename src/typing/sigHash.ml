@@ -175,6 +175,7 @@ type hash =
   | ReactPropsToOutH
   | ReactInToPropsH
   | DestructuringH
+  | ModuleExportsAssignH
 
 let hash_of_def_ctor = Type.(function
   | InstanceT _ -> failwith "undefined hash of InstanceT"
@@ -333,6 +334,7 @@ let hash_of_use_ctor = Type.(function
   | ReactPropsToOut _ -> ReactPropsToOutH
   | ReactInToProps _ -> ReactInToPropsH
   | DestructuringT _ -> DestructuringH
+  | ModuleExportsAssignT _ -> ModuleExportsAssignH
 )
 
 let add = Xx.update

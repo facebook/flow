@@ -674,6 +674,11 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tout in
     acc
 
+  | ModuleExportsAssignT (_, t, tout) ->
+    let acc = self#type_ cx pole_TODO acc t in
+    let acc = self#type_ cx pole_TODO acc tout in
+    acc
+
   (* The default behavior here could be fleshed out a bit, to look up the graph,
      handle Resolved and Unresolved cases, etc. *)
   method tvar _cx _pole acc _r _id = acc

@@ -1277,12 +1277,8 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
     let declare_module_exports mod_exp_loc loc t =
       mod_exp_loc, Ast.Statement.DeclareModuleExports (loc, t)
     in
-    let set_module_exports mod_exp_loc outlined expr =
-      let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
-      mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot)
-    in
-    let add_module_exports mod_exp_loc outlined add_module_exports_list =
-      let properties = Core_list.rev_map ~f:(fun (id, expr) ->
+    let additional_properties_of_module_exports outlined add_module_exports_list =
+      Core_list.rev_map ~f:(fun (id, expr) ->
         let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
         let open Ast.Type.Object in
         Property (fst id, {
@@ -1294,7 +1290,36 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           _method = false;
           variance = None;
         })
-      ) add_module_exports_list in
+      ) add_module_exports_list
+    in
+    let set_module_exports mod_exp_loc outlined expr add_module_exports_list =
+      let annot = T.type_of_expr_type outlined (Eval.literal_expr expr) in
+
+      if ListUtils.is_empty add_module_exports_list then begin
+        mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, annot)
+      end else
+        let properties = additional_properties_of_module_exports outlined add_module_exports_list in
+        let ot = {
+          Ast.Type.Object.exact = false;
+          inexact = true;
+          properties;
+        } in
+        let assign = mod_exp_loc, Ast.Type.Object ot in
+        let t =
+          let name = "$TEMPORARY$module$exports$assign" in
+          let id = Ast.Type.Generic.Identifier.Unqualified (
+            Flow_ast_utils.ident_of_source (mod_exp_loc, name)
+          ) in
+          mod_exp_loc, Ast.Type.Generic {
+            Ast.Type.Generic.id;
+            targs = Some (mod_exp_loc, [annot; assign]);
+          }
+        in
+        mod_exp_loc, Ast.Statement.DeclareModuleExports (fst annot, t)
+
+    in
+    let add_module_exports mod_exp_loc outlined add_module_exports_list =
+      let properties = additional_properties_of_module_exports outlined add_module_exports_list in
       let ot = {
         Ast.Type.Object.exact = true;
         inexact = false;
@@ -1314,12 +1339,12 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
            ) -> function
              | File_sig.DeclareModuleExportsDef (loc, t) ->
                (loc, t)::declare_module_exports_list,
-               set_module_exports_list,
-               add_module_exports_list
+               [],
+               []
              | File_sig.SetModuleExportsDef expr ->
                declare_module_exports_list,
-               expr::set_module_exports_list,
-               add_module_exports_list
+               (expr, add_module_exports_list)::set_module_exports_list,
+               []
              | File_sig.AddModuleExportsDef (id, expr) ->
                declare_module_exports_list,
                set_module_exports_list,
@@ -1332,8 +1357,8 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
            [declare_module_exports mod_exp_loc loc t]
          | [], _::_, _ ->
            (* if there are any `module.exports = ...`, then the last such wins *)
-           let expr = List.hd (List.rev set_module_exports_list) in
-           [set_module_exports mod_exp_loc outlined expr]
+           let expr, add_module_exports_list = List.hd (List.rev set_module_exports_list) in
+           [set_module_exports mod_exp_loc outlined expr add_module_exports_list]
          | [], [], _ ->
            (* otherwise, collect every `module.exports.X = ...` *)
            add_module_exports mod_exp_loc outlined add_module_exports_list

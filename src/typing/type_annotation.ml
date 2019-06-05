@@ -490,6 +490,19 @@ let rec convert cx tparams_map = Ast.Type.(function
       reconstruct_ast tout targs
     )
 
+  | "$TEMPORARY$module$exports$assign" ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+      let ts, targs = convert_type_params () in
+      match ts with
+      | [annot; assign] ->
+         let reason = reason_of_t annot in
+         let tout = Tvar.mk_where cx reason (fun tvar ->
+           Flow.flow cx (annot, ModuleExportsAssignT (reason, assign, tvar));
+         ) in
+         reconstruct_ast tout targs
+      | _ -> assert false
+    )
+
   | "$TEMPORARY$object" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let fake_ts, fake_targs = convert_type_params () in

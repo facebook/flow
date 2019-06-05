@@ -916,6 +916,11 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       "selector", json_of_selector json_cx s;
       "t_out", _json_of_t json_cx t_out;
     ]
+
+  | ModuleExportsAssignT (_, assign, t_out) -> [
+      "assign", _json_of_t json_cx assign;
+      "t_out", _json_of_t json_cx t_out;
+    ]
   )
 )
 
@@ -2226,6 +2231,7 @@ and dump_use_t_ (depth, tvars) cx t =
     (String.concat "; " (Core_list.map ~f:kid nexts)) (kid l) (kid u)) t
   | DestructuringT (_, s, tout) -> p t
       ~extra:(spf "%s, %s" (string_of_selector s) (kid tout))
+  | ModuleExportsAssignT (_, _, _) -> p t
 
 and dump_tvar_ (depth, tvars) cx id =
   if ISet.mem id tvars then spf "%d, ^" id else
