@@ -368,6 +368,14 @@ obj.n(0)
 
 
 // This is kinda trailing whitespace
+func-arg-only.js
+// @flow
+
+function foo(x: number) : number {
+  return x + 2;
+}
+
+foo(1);
 Found 0 errors
 err-infer-0.js
 // @flow
