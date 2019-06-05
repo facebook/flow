@@ -1,16 +1,78 @@
-Error --------------------------------------------------------------------------------------------------- delete.js:8:12
+Error -------------------------------------------------------------------------------------------------- delete.js:12:12
+
+Cannot delete `foo.a` because property `a` is not writable.
+
+   12|     delete foo.a; // error
+                  ^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:15:12
+
+Cannot delete `foo['a']` because property `a` is not writable.
+
+   15|     delete foo['a']; // error
+                  ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:29:12
+
+Cannot delete `foo[1]` because tuple type [1] only has 1 element, so index 1 is out of bounds.
+
+   delete.js:29:12
+   29|     delete foo[1] // error
+                  ^^^^^^
+
+References:
+   delete.js:28:18
+   28|   function (foo: [number]) {
+                        ^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:32:12
+
+Cannot delete `foo[0]` because read-only arrays cannot be written to.
+
+   32|     delete foo[0] // error
+                  ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:42:12
+
+Cannot get `foo?.a` because property `a` is not readable.
+
+   42|     delete foo?.a // TODO
+                  ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:49:12
+
+Cannot delete `foo['bar']` because property `bar` is not writable.
+
+   49|     delete foo['bar'] // error
+                  ^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:59:12
+
+Cannot delete `foo[1]` because an index signature declaring the expected key / value type is not writable.
+
+   59|     delete foo[1] // error
+                  ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------------- delete.js:66:12
 
 Cannot perform delete operation because object literal [1] is not a property reference.
 
-   8|     delete { a: 1 } // error
-                 ^^^^^^^^ [1]
+   66|     delete { a: 1 } // error
+                  ^^^^^^^^ [1]
 
 
-Error -------------------------------------------------------------------------------------------------- delete.js:11:12
+Error -------------------------------------------------------------------------------------------------- delete.js:69:12
 
 Cannot perform delete operation because array literal [1] is not a property reference.
 
-   11|     delete [1, 2, 3] // error
+   69|     delete [1, 2, 3] // error
                   ^^^^^^^^^ [1]
 
 
@@ -214,4 +276,4 @@ References:
 
 
 
-Found 16 errors
+Found 23 errors
