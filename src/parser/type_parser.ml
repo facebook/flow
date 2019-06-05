@@ -17,7 +17,6 @@ module type TYPE = sig
   val _type : env -> (Loc.t, Loc.t) Ast.Type.t
   val type_identifier : env -> Loc.t Ast.Identifier.t
   val type_parameter_declaration : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
-  val type_parameter_declaration_with_defaults : env -> (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option
   val type_parameter_instantiation : env -> (Loc.t, Loc.t) Ast.Type.ParameterInstantiation.t option
   val generic : env -> Loc.t * (Loc.t, Loc.t) Ast.Type.Generic.t
   val _object : is_class:bool -> env -> Loc.t * (Loc.t, Loc.t) Type.Object.t
@@ -377,7 +376,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and _function env =
     let start_loc = Peek.loc env in
-    let tparams = type_parameter_declaration ~allow_default:false env in
+    let tparams = type_parameter_declaration env in
     let params = function_param_list env in
     function_with_params env start_loc tparams params
 
@@ -402,7 +401,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       ) env
 
     in let method_property env start_loc static key =
-      let tparams = type_parameter_declaration ~allow_default:false env in
+      let tparams = type_parameter_declaration env in
       let value = methodish env start_loc tparams in
       let value = fst value, Type.Function (snd value) in
       Type.Object.(Property (fst value, Property.({
@@ -417,7 +416,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
     in let call_property env start_loc static =
       let prop = with_loc ~start_loc (fun env ->
-        let tparams = type_parameter_declaration ~allow_default:false env in
+        let tparams = type_parameter_declaration env in
         let value = methodish env (Peek.loc env) tparams in
         Type.Object.CallProperty.({
           value;
@@ -506,7 +505,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         let optional, _method, value = match Peek.token env with
         | T_LESS_THAN
         | T_LPAREN ->
-          let tparams = type_parameter_declaration ~allow_default:false env in
+          let tparams = type_parameter_declaration env in
           let value =
             let fn_loc, fn = methodish env start_loc tparams in
             fn_loc, Type.Function fn
@@ -775,16 +774,15 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
   ) env
 
   and type_parameter_declaration =
-    let rec params env ~allow_default ~require_default acc = Type.ParameterDeclaration.TypeParam.(
+    let rec params env ~require_default acc = Type.ParameterDeclaration.TypeParam.(
       let loc, (variance, name, bound, default, require_default) = with_loc (fun env ->
         let variance = variance env in
         let loc, (name, bound) = bounded_type env in
-        let default, require_default = match allow_default, Peek.token env with
-        | false, _ -> None, false
-        | true, T_ASSIGN ->
+        let default, require_default = match Peek.token env with
+        | T_ASSIGN ->
             Eat.token env;
             Some (_type env), true
-        | true, _ ->
+        | _ ->
             if require_default
             then error_at env (loc, Error.MissingTypeParamDefault);
             None, require_default in
@@ -804,16 +802,16 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         Expect.token env T_COMMA;
         if Peek.token env = T_GREATER_THAN
         then List.rev acc
-        else params env ~allow_default ~require_default acc
+        else params env ~require_default acc
     )
-    in fun ~allow_default env ->
+    in fun env ->
         if Peek.token env = T_LESS_THAN
         then begin
           if not (should_parse_types env)
           then error env Error.UnexpectedTypeAnnotation;
           Some (with_loc (fun env ->
             Expect.token env T_LESS_THAN;
-            let params = params env ~allow_default ~require_default:false [] in
+            let params = params env ~require_default:false [] in
             Expect.token env T_GREATER_THAN;
             params
           ) env)
@@ -916,10 +914,7 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   let _type = wrap _type
   let type_identifier = wrap type_identifier
-  let type_parameter_declaration_with_defaults =
-    wrap (type_parameter_declaration ~allow_default:true)
-  let type_parameter_declaration =
-    wrap (type_parameter_declaration ~allow_default:false)
+  let type_parameter_declaration = wrap type_parameter_declaration
   let type_parameter_instantiation = wrap type_parameter_instantiation
   let _object ~is_class env =
     wrap (_object ~is_class ~allow_exact:false ~allow_spread:false) env
