@@ -15,15 +15,24 @@ function error(message: string): empty {
 }
 ```
 
-or never returns:
+Functions that return `empty` are called _diverging functions_.
+
+You can use `empty`-assertions to describe impossible branches in your code.
+
+For example:
 
 ```js
-// @flow
-function loop(): empty {
-  while (true) {
+//@flow
+type User = {type: 'userSelf'} | {type: 'userForeign', firstName: string}
 
+function handleUser(data: User): string {
+  switch (data.type) {
+    case 'userSelf':
+      return 'Me'
+    case 'userForeign':
+      return user.firstName
+    default:
+      ;(data.type: empty) // This would error if you forgot to handle case, or misspelled type
   }
 }
 ```
-
-Functions that return `empty` are called _diverging functions_.
