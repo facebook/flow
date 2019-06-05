@@ -5552,13 +5552,17 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
           Op (FunCallMethod {op; fn; prop; args = []; local})
       | _ -> use_op
       in
-      if (List.length call_args_tlist) > 2 then begin
-        add_output cx ~trace Error_message.(ECallTypeArity {
-          call_loc = aloc_of_reason reason_op;
-          is_new = false;
-          reason_arity = lreason;
-          expected_arity = 2;
-        });
+      begin match call_args_tlist with
+      | [] -> ()
+      | _::_::(Arg t | SpreadArg t)::_ ->
+        Error_message.EFunctionCallExtraArg (
+          mk_reason RFunctionUnusedArgument (loc_of_t t),
+          lreason,
+          2,
+          use_op
+        )
+        |> add_output cx ~trace
+      | _ -> ()
       end;
       begin match call_args_tlist with
       (* func.apply() *)

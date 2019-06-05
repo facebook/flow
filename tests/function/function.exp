@@ -23,7 +23,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- apply.js:6:1
 
-Cannot call function type [1] without exactly 2 type arguments.
+Cannot call `test.apply` because no more than 2 arguments are expected by function type [1].
 
    apply.js:6:1
      6| test.apply("", ["", 0], 'error')
