@@ -5,14 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type logging_context = {
-  argv: string;
-  command: string option;
-  from: string option;
-  root: string option;
-  root_name: string option;
-  start_time: float;
-}
+type logging_context = { from: string option }
 
 type persistent_context = {
   start_lsp_state: string option;
@@ -39,19 +32,14 @@ type persistent_delay = {
 }
 
 let context = ref {
-  argv = "";
-  command = None;
   from = None;
-  root = None;
-  root_name = None;
-  start_time = 0.0;
 }
 
 let get_context () = !context
 let get_from_I_AM_A_CLOWN () = !context.from
 let restore_context _ = ()
 let set_command _ = ()
-let set_from from = context := { !context with from; }
+let set_from from = context := { from; }
 let set_root _ = ()
 let set_root_name _ = ()
 let set_saved_state_filename _ = ()

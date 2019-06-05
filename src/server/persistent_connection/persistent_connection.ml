@@ -23,18 +23,6 @@ let active_clients: single_client IMap.t ref = ref IMap.empty
 
 let get_client client_id = IMap.get client_id !active_clients
 
-let to_string (clients: t) : string =
-  let client_to_string client_id : string =
-    match get_client client_id with
-    | None -> "{id:%d DEAD CLIENT}"
-    | Some client ->
-      Printf.sprintf "{id:%d opened:%d subscribed:%B context:%f}"
-        client.client_id (SMap.cardinal client.opened_files)
-        client.subscribed client.logging_context.FlowEventLogger.start_time
-  in
-  let clients_str = Core_list.map ~f:client_to_string clients in
-  Printf.sprintf "[%s]" (String.concat ", " clients_str)
-
 let empty = []
 
 let send_message_to_client response client =

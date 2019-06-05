@@ -12,8 +12,6 @@ type t
 
 type single_client
 
-val to_string: t -> string
-
 val empty: t
 
 val add_client:
