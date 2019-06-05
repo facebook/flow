@@ -93,9 +93,10 @@ let file_key_to_uri (file_key_opt: File_key.t option): (string, string) result =
     >>| File_url.create
 
 let loc_to_lsp_range (loc: Loc.t): Lsp.range =
+  let open Loc in
   { Lsp.
-    start = { Lsp.line=loc.Loc.start.Loc.line-1; character=loc.Loc.start.Loc.column; };
-    end_ = { Lsp.line=loc.Loc._end.Loc.line-1; character=loc.Loc._end.Loc.column; };
+    start = { Lsp.line=max 0 (loc.start.line-1); character=loc.start.column; };
+    end_ = { Lsp.line=max 0 (loc._end.line-1); character=loc._end.column; };
   }
 
 let loc_to_lsp (loc: Loc.t): (Lsp.Location.t, string) result =

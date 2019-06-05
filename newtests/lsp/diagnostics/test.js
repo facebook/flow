@@ -257,11 +257,11 @@ obj?.foo(); // Error
                       uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
                       range: {
                         start: {
-                          line: -1,
+                          line: 0,
                           character: 0,
                         },
                         end: {
-                          line: -1,
+                          line: 0,
                           character: 0,
                         },
                       },
@@ -274,8 +274,8 @@ obj?.foo(); // Error
                     location: {
                       uri: '<PLACEHOLDER_PROJECT_URL_SLASH>empty.js',
                       range: {
-                        start: {line: -1, character: 0},
-                        end: {line: -1, character: 0},
+                        start: {line: 0, character: 0},
+                        end: {line: 0, character: 0},
                       },
                     },
                     message: '[1] exports',
