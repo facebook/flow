@@ -142,7 +142,7 @@ let merge_strict_context_generic ~options ~reader ~get_ast_unsafe ~get_file_sig_
 
 let merge_strict_context ~options ~reader component =
   merge_strict_context_generic ~options ~reader
-    ~get_ast_unsafe:(match options.Options.opt_arch with
+    ~get_ast_unsafe:(match Options.arch options with
       | Options.Classic -> fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
         let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
@@ -152,7 +152,7 @@ let merge_strict_context ~options ~reader component =
         let aloc_ast = Parsing_heaps.Reader_dispatcher.get_sig_ast_unsafe ~reader file in
         (comments, aloc_ast)
     )
-    ~get_file_sig_unsafe:(match options.Options.opt_arch with
+    ~get_file_sig_unsafe:(match Options.arch options with
       | Options.Classic -> fun ~reader file ->
         let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
         File_sig.abstractify_locs loc_file_sig
@@ -401,7 +401,7 @@ let merge_runner
   let start_time = Unix.gettimeofday () in
   let stream = Merge_stream.create
     ~num_workers
-    ~arch:options.Options.opt_arch
+    ~arch:(Options.arch options)
     ~dependency_graph
     ~leader_map
     ~component_map

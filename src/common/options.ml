@@ -116,6 +116,7 @@ type t = {
 }
 
 let all opts = opts.opt_all
+let arch opts = opts.opt_arch
 let max_literal_length opts = opts.opt_max_literal_length
 let enable_const_params opts = opts.opt_enable_const_params
 let enforce_strict_call_arity opts = opts.opt_enforce_strict_call_arity

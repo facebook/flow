@@ -650,7 +650,7 @@ let parse_with_defaults ?types_mode ?use_strict ~reader options workers next =
   in
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = options.Options.opt_arch in
+  let arch = Options.arch options in
   let parse_options  =
     make_parse_options ~arch ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ()
   in
@@ -670,7 +670,7 @@ let reparse_with_defaults
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let parse_unchanged = false in (* We're rechecking, so let's skip files which haven't changed *)
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = options.Options.opt_arch in
+  let arch = Options.arch options in
   let parse_options  =
     make_parse_options ~arch ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ()
   in
@@ -712,7 +712,7 @@ let ensure_parsed ~reader options workers files =
     MultiWorkerLwt.next ~progress_fn workers (FilenameSet.elements files_missing_asts)
   in
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = options.Options.opt_arch in
+  let arch = Options.arch options in
 
   let parse_options =
     make_parse_options ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ()

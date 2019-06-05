@@ -24,7 +24,7 @@ let compute_docblock file content =
 let compute_ast_result options file content =
   let module_ref_prefix = Options.haste_module_ref_prefix options in
   let facebook_fbt = Options.facebook_fbt options in
-  let arch = options.Options.opt_arch in
+  let arch = Options.arch options in
   let docblock = compute_docblock file content in
   let open Parsing_service_js in
   let types_mode = TypesAllowed in

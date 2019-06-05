@@ -115,7 +115,7 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
     let max_tokens = Options.max_header_tokens options in
     let module_ref_prefix = Options.haste_module_ref_prefix options in
     let facebook_fbt = Options.facebook_fbt options in
-    let arch = options.Options.opt_arch in
+    let arch = Options.arch options in
 
     let docblock_errors, info =
       Parsing_service_js.parse_docblock ~max_tokens filename contents in
@@ -468,7 +468,7 @@ let merge
   let coverage = FilenameMap.empty in
 
   let%lwt intermediate_result_callback =
-    let persistent_connections = match options.Options.opt_arch with
+    let persistent_connections = match Options.arch options with
       | Options.Classic -> persistent_connections
       | Options.TypesFirst -> None in
     mk_intermediate_result_callback
@@ -557,7 +557,7 @@ let check_files
   ~dependency_info
   ~persistent_connections
   ~recheck_reasons =
-  match options.Options.opt_arch with
+  match Options.arch options with
   | Options.Classic -> Lwt.return (updated_errors, coverage)
   | Options.TypesFirst ->
     with_timer_lwt ~options "Check" profiling (fun () ->
