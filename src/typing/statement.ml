@@ -4384,15 +4384,89 @@ and unary cx loc = Ast.Expression.Unary.(function
       VoidT.at loc |> with_trust literal_trust, { operator = Void; argument; comments }
 
   | { operator = Delete; argument; comments } ->
-      let reason = mk_expression_reason argument in
-      let (_, _), _ as argument = expression cx argument in
-      (match argument with
-      | _, Ast.Expression.Identifier _ -> ()
-      | _, Ast.Expression.Member _ -> ()
-      | _, Ast.Expression.OptionalMember _ -> ()
+      let open Ast.Expression in
+      let op_prop_reason = mk_expression_reason argument in
+      let argument = match argument with
+
+      (* delete super.name *)
+      | rhs_loc, Member {
+        Member._object = super_loc, Super;
+        property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments=_ } as id));
+      } ->
+        let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
+        let super = super_ cx rhs_loc in
+        let prop_t = Tvar.mk cx prop_reason in
+        Flow.add_output cx (Error_message.EDeleteSuperReference op_prop_reason);
+        let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
+        (rhs_loc, prop_t), Member { Member.
+          _object = (super_loc, super), Super;
+          property;
+        }
+
+      (* delete _object.name *)
+      | rhs_loc, Member {
+        Member._object;
+        property = Member.PropertyIdentifier (prop_loc, ({ Ast.Identifier.name; comments= _ } as id));
+      } ->
+        let (_, o), _ as _object = expression cx _object in
+        (* if we fire this hook, it means the assignment is a sham. *)
+        let prop_t = if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
+        then Unsoundness.at InferenceHooks prop_loc
+        else
+          let reason = mk_reason (RPropertyDelete (Some name)) rhs_loc in
+          let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
+          (* flow type to object property itself *)
+          let prop_t = Tvar.mk cx prop_reason in
+          let use_op = Op (DeleteProperty {
+            lhs = reason;
+            prop = mk_reason (desc_of_reason op_prop_reason) prop_loc;
+          }) in
+          Flow.flow cx (o, DeletePropT (
+            use_op, reason, Named (prop_reason, name), prop_t
+          ));
+          (* post_assignment_havoc ~private_:false name argument prop_t t; *)
+          prop_t
+        in
+        let property = Member.PropertyIdentifier ((prop_loc, prop_t), id) in
+        (rhs_loc, prop_t), Member { Member.
+          _object;
+          property;
+        }
+
+      (* delete _object[index] *)
+      | rhs_loc, Member {
+        Member._object;
+        property = Member.PropertyExpression ((iloc, _) as index);
+      } ->
+        let reason = mk_reason (RPropertyDelete None) rhs_loc in
+        let (_, a), _ as _object = expression cx _object in
+        let (_, i), _ as index = expression cx index in
+        (* TODO: find better way to model this *)
+        let t = EmptyT.at loc |> with_trust bogus_trust in
+        let use_op = Op (DeleteProperty {
+          lhs = reason;
+          prop = mk_reason (desc_of_reason op_prop_reason) iloc;
+        }) in
+        Flow.flow cx (a, DeleteElemT (use_op, reason, i, t));
+
+        (* types involved in the assignment itself are computed
+           in pre-havoc environment. it's the assignment itself
+           which clears refis *)
+        Env.havoc_heap_refinements ();
+        (rhs_loc, t), Member { Member.
+          _object;
+          property = Member.PropertyExpression index;
+        }
+      | _, Identifier _
+      | _, Member _
+      | _, OptionalMember _ ->
+        let (_, _), _ as argument = expression cx argument in
+        argument
       | _ ->
-        Flow.add_output cx (Error_message.EDeleteOperand reason);
-      );
+        Flow.add_output cx (Error_message.EDeleteOperand op_prop_reason);
+        let (_, _), _ as argument = expression cx argument in
+        argument
+      in
       BoolT.at loc |> with_trust literal_trust, { operator = Delete; argument; comments }
 
   | { operator = Await; argument; comments } ->

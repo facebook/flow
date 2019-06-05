@@ -504,6 +504,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   | SetPropT (_, _, name, _, t, _)
   | GetPropT (_, _, name, t)
   | MatchPropT (_, _, name, t)
+  | DeletePropT (_, _, name, t)
   | TestPropT (_, _, name, t) -> [
       "propRef", json_of_propref json_cx name;
       "propType", _json_of_t json_cx t
@@ -515,6 +516,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
   ]
 
   | SetElemT (_, _, indext, elemt, _)
+  | DeleteElemT (_, _, indext, elemt)
   | GetElemT (_, _, indext, elemt) -> [
       "indexType", _json_of_t json_cx indext;
       "elemType", _json_of_t json_cx elemt
@@ -723,6 +725,7 @@ and _json_of_use_t_impl json_cx t = Hh_json.(
       match action with
       | ReadElem t -> "readElem", _json_of_t json_cx t
       | WriteElem (t, _) -> "writeElem", _json_of_t json_cx t
+      | DeleteElem t -> "deleteElem", _json_of_t json_cx t
       | CallElem (_, funtype) -> "callElem", json_of_funcalltype json_cx funtype
     ]
 
@@ -1545,6 +1548,10 @@ and json_of_lookup_action_impl json_cx action = Hh_json.(
         "kind", JSON_String "MatchProp";
         "t", _json_of_t json_cx t
       ]
+    | DeleteProp (_, t) -> [
+        "kind", JSON_String "DeleteProp";
+        "t", _json_of_t json_cx t
+      ]
   )
 )
 
@@ -1966,6 +1973,7 @@ and dump_use_t_ (depth, tvars) cx t =
   | WriteProp { tin; _ } -> spf "Write %s" (kid tin)
   | LookupProp (op, p) -> spf "Lookup (%s, %s)" (string_of_use_op op) (prop p)
   | SuperProp (_, p) -> spf "Super %s" (prop p)
+  | DeleteProp (_, t) -> spf "Delete %s" (kid t)
   | MatchProp (_, t) -> spf "Match %s" (kid t)
   in
 
@@ -2207,10 +2215,12 @@ and dump_use_t_ (depth, tvars) cx t =
   | GetKeysT _ -> p t
   | GetValuesT _ -> p t
   | MatchPropT (use_op, _, prop, ptype)
+  | DeletePropT (use_op, _, prop, ptype)
   | GetPropT (use_op, _, prop, ptype) -> p ~extra:(spf "%s, (%s), %s"
       (string_of_use_op use_op)
       (propref prop)
       (kid ptype)) t
+  | DeleteElemT (_, _, ix, etype) -> p ~extra:(spf "%s, %s" (kid ix) (kid etype)) t
   | GetPrivatePropT (_, _, prop, _, _, ptype) -> p ~extra:(spf "(%s), %s"
       (prop)
       (kid ptype)) t
@@ -2514,6 +2524,7 @@ let dump_error_message =
   | IncompatibleGetPropT _ -> "IncompatibleGetPropT"
   | IncompatibleSetPropT _ -> "IncompatibleSetPropT"
   | IncompatibleMatchPropT _ -> "IncompatibleSetPropT"
+  | IncompatibleDeletePropT _ -> "IncompatibleDeletePropT"
   | IncompatibleGetPrivatePropT -> "IncompatibleGetPrivatePropT"
   | IncompatibleSetPrivatePropT -> "IncompatibleSetPrivatePropT"
   | IncompatibleMethodT _ -> "IncompatibleMethodT"
@@ -2522,6 +2533,7 @@ let dump_error_message =
   | IncompatibleConstructorT -> "IncompatibleConstructorT"
   | IncompatibleGetElemT _ -> "IncompatibleGetElemT"
   | IncompatibleSetElemT _ -> "IncompatibleSetElemT"
+  | IncompatibleDeleteElemT _ -> "IncompatibleDeleteElemT"
   | IncompatibleCallElemT _ -> "IncompatibleCallElemT"
   | IncompatibleElemTOfArrT -> "IncompatibleElemTOfArrT"
   | IncompatibleObjAssignFromTSpread -> "IncompatibleObjAssignFromTSpread"
@@ -2988,6 +3000,8 @@ let dump_error_message =
         (dump_reason cx key_reason)
         (dump_reason cx value_reason)
         (dump_reason cx object2_reason)
+    | EDeleteSuperReference reason ->
+      spf "EDeleteSuperReference (%s)" (dump_reason cx reason)
     | EDeleteOperand reason ->
       spf "EDeleteOperand (%s)" (dump_reason cx reason)
 

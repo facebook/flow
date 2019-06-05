@@ -670,6 +670,8 @@ let error_message_kind_of_upper = function
   | SetPropT (_, _, Computed t, _, _, _) -> Error_message.IncompatibleSetPropT (loc_of_t t, None)
   | MatchPropT (_, _, Named (r, name), _) -> Error_message.IncompatibleMatchPropT (aloc_of_reason r, Some name)
   | MatchPropT (_, _, Computed t, _) -> Error_message.IncompatibleMatchPropT (loc_of_t t, None)
+  | DeletePropT (_, _, Named (r, name), _) -> Error_message.IncompatibleDeletePropT (aloc_of_reason r, Some name)
+  | DeletePropT (_, _, Computed t, _) -> Error_message.IncompatibleDeletePropT (loc_of_t t, None)
   | SetPrivatePropT (_, _, _, _, _, _, _) -> Error_message.IncompatibleSetPrivatePropT
   | MethodT (_, _, _, Named (r, name), _, _) -> Error_message.IncompatibleMethodT (aloc_of_reason r, Some name)
   | MethodT (_, _, _, Computed t, _, _) -> Error_message.IncompatibleMethodT (loc_of_t t, None)
@@ -677,6 +679,7 @@ let error_message_kind_of_upper = function
   | ConstructorT _ -> Error_message.IncompatibleConstructorT
   | GetElemT (_, _, t, _) -> Error_message.IncompatibleGetElemT (loc_of_t t)
   | SetElemT (_, _, t, _, _) -> Error_message.IncompatibleSetElemT (loc_of_t t)
+  | DeleteElemT (_, _, t, _) -> Error_message.IncompatibleDeleteElemT (loc_of_t t)
   | CallElemT (_, _, t, _) -> Error_message.IncompatibleCallElemT (loc_of_t t)
   | ElemT (_, _, DefT (_, _, ArrT _), _) -> Error_message.IncompatibleElemTOfArrT
   | ObjAssignFromT (_, _, _, _, ObjSpreadAssign) -> Error_message.IncompatibleObjAssignFromTSpread
@@ -703,7 +706,7 @@ let error_message_kind_of_upper = function
 let use_op_of_lookup_action = function
   | ReadProp { use_op; _ } -> Some use_op
   | WriteProp { use_op; _ } -> Some use_op
-  | LookupProp (use_op, _) -> Some use_op
+  | DeleteProp (use_op, _) -> Some use_op
   | SuperProp (use_op, _) -> Some use_op
   | MatchProp (use_op, _) -> Some use_op
 
@@ -841,12 +844,12 @@ let object_use = function
   | _ -> false
 
 let object_like_op = function
-  | SetPropT _ | GetPropT _ | TestPropT _ | MethodT _ | LookupT _ | MatchPropT _
+  | SetPropT _ | GetPropT _ | TestPropT _ | MethodT _ | LookupT _ | MatchPropT _ | DeletePropT _
   | GetProtoT _ | SetProtoT _
   | SuperT _
   | GetKeysT _ | HasOwnPropT _ | GetValuesT _
   | ObjAssignToT _ | ObjAssignFromT _ | ObjRestT _
-  | SetElemT _ | GetElemT _
+  | SetElemT _ | GetElemT _ | DeleteElemT _
   | UseT (_, AnyT _) -> true
   | _ -> false
 
@@ -4923,6 +4926,25 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed))
 
     (********************************)
+    (* ... and their fields deleted *)
+    (********************************)
+
+    | DefT (reason_c, _, InstanceT (_, super, _, instance)),
+      DeletePropT (use_op, reason_op, Named (reason_prop, x), prop_t) ->
+      let own_props = Context.find_props cx instance.own_props in
+      let proto_props = Context.find_props cx instance.proto_props in
+      let fields = SMap.union own_props proto_props in
+      let strict = Strict reason_c in
+      delete_prop cx trace ~use_op reason_prop reason_op strict super x fields prop_t
+
+    | DefT (_, _, InstanceT _), DeletePropT (_, reason_op, Computed _, _) ->
+      (* Instances don't have proper dictionary support. All computed accesses
+         are converted to named property access to `$key` and `$value` during
+         element resolution in ElemT. *)
+      let loc = aloc_of_reason reason_op in
+      add_output cx ~trace Error_message.(EInternal (loc, InstanceLookupComputed))
+
+    (********************************)
     (* ... and their methods called *)
     (********************************)
 
@@ -5319,6 +5341,36 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow_t cx trace (AnyT.untyped reason_op, tout)
 
     (********************************)
+    (* ... and their fields deleted *)
+    (********************************)
+
+    | DefT (_, _, ObjT {flags; _}),
+      DeletePropT (use_op, reason_op, Named (prop, "constructor"), _) ->
+      if flags.frozen
+      then
+        add_output cx ~trace
+          (Error_message.EPropAccess ((prop, reason_op), Some "constructor",
+            Positive, Write (Normal, None), use_op))
+
+    (** `delete o.x;` has the additional effect of `delete o[_];` **)
+
+    | DefT (_, _, ObjT { flags; _ }), DeletePropT (use_op, reason_op, prop, _)
+      when flags.frozen ->
+      let reason_prop, prop = match prop with
+      | Named (r, prop) -> r, Some prop
+      | Computed t -> reason_of_t t, None
+      in
+      add_output cx ~trace (Error_message.EPropAccess ((reason_prop, reason_op), prop,
+        Positive, Write (Normal, None), use_op))
+
+    | DefT (reason_obj, _, ObjT o), DeletePropT (use_op, reason_op, propref, prop_t) ->
+      delete_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t
+
+    (* Since we don't know the type of the prop, use AnyT. *)
+    | AnyT _, DeletePropT (use_op, reason_op, _, t) ->
+      rec_flow cx trace (t, UseT (use_op, AnyT.untyped reason_op))
+
+    (********************************)
     (* ... and their methods called *)
     (********************************)
 
@@ -5359,6 +5411,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (key, ElemT (use_op, reason_op, l, ReadElem tout))
 
     | (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
+      DeleteElemT (use_op, reason_op, key, tout) ->
+      rec_flow cx trace (key, ElemT (use_op, reason_op, l, DeleteElem tout))
+
+    | (DefT (_, _, (ObjT _ | ArrT _)) | AnyT _),
       CallElemT (reason_call, reason_lookup, key, ft) ->
       let action = CallElem (reason_call, ft) in
       rec_flow cx trace (key, ElemT (unknown_use, reason_lookup, l, action))
@@ -5377,6 +5433,8 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       | WriteElem (tin, tout) ->
         rec_flow cx trace (obj, SetPropT (use_op, reason_op, propref, Normal, tin, None));
         Option.iter ~f:(fun t -> rec_flow_t cx trace (obj, t)) tout
+      | DeleteElem t ->
+        rec_flow cx trace (obj, DeletePropT (use_op, reason_op, propref, t))
       | CallElem (reason_call, ft) ->
         rec_flow cx trace (obj, MethodT (use_op, reason_call, reason_op, propref, ft, None)))
 
@@ -5390,7 +5448,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | AnyT _,
       ElemT (use_op, reason_op, (DefT (reason_tup, _, ArrT arrtype) as arr), action) ->
         begin match action, arrtype with
-        | WriteElem _, ROArrayAT _ ->
+        | (WriteElem _ | DeleteElem _), ROArrayAT _ ->
           let reasons = (reason_op, reason_tup) in
             add_output
               cx
@@ -5452,7 +5510,9 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         (* These are safe to do with tuples and unknown indexes *)
         | ReadElem _ | CallElem _ -> ()
         (* This isn't *)
-        | WriteElem _ ->
+        | WriteElem _
+        | DeleteElem _ ->
+          let reasons = (reason, reason_tup) in
           let error =
             match ts with
             | Some _ -> Error_message.ETupleUnsafeWrite { reason; use_op }
@@ -6262,6 +6322,10 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       rec_flow cx trace (l, SetPropT (use_op, reason, Named (reason, "$value"), Normal, tin, None));
       Option.iter ~f:(fun t -> rec_flow_t cx trace (l, t)) tout
 
+    | DefT (_, _, InstanceT _), DeleteElemT (use_op, reason, i, t) ->
+      rec_flow cx trace (l, DeletePropT (use_op, reason, Named (reason, "$key"), i));
+      rec_flow cx trace (l, DeletePropT (use_op, reason, Named (reason, "$value"), t))
+
     (***************************)
     (* conditional type switch *)
     (***************************)
@@ -6589,7 +6653,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     (* Nice error messages for mixed function refinement *)
     (*****************************************************)
     | DefT (lreason, _, MixedT Mixed_function),
-        (MethodT _ | SetPropT _ | GetPropT _ | MatchPropT _ | LookupT _) ->
+        (MethodT _ | SetPropT _ | GetPropT _ | MatchPropT _ | DeletePropT _ | LookupT _) ->
         rec_flow cx trace (FunProtoT lreason, u)
 
     | DefT (lreason, _, MixedT Mixed_function),
@@ -7123,6 +7187,8 @@ and empty_success flavor u =
   | _, SetElemT _
   | _, SetPrivatePropT _
   | _, SetPropT _
+  | _, DeleteElemT _
+  | _, DeletePropT _
   | _, SpecializeT _
   | _, SubstOnPredT _
   | _, SuperT _
@@ -7279,6 +7345,8 @@ and any_propagated cx trace any u =
   | SetElemT _
   | SetPropT _
   | ModuleExportsAssignT _
+  | DeleteElemT _
+  | DeletePropT _
   | SpecializeT _
   | SubstOnPredT _ (* Should be impossible. We only generate these with OpenPredTs. *)
   | TestPropT _
@@ -8872,6 +8940,10 @@ and set_prop cx ?(wr_ctx=Normal) trace ~use_op
   WriteProp { use_op; obj_t = l; prop_tout; tin; write_ctx = wr_ctx }
   |> access_prop cx trace reason_prop reason_op strict super x pmap
 
+and delete_prop cx trace ~use_op reason_prop reason_op strict super x pmap prop_t =
+  DeleteProp (use_op, prop_t)
+  |> access_prop cx trace reason_prop reason_op strict super x pmap
+
 and get_obj_prop cx trace o propref reason_op =
   let named_prop = match propref with
   | Named (_, x) -> Context.get_prop cx o.props_tmap x
@@ -8975,6 +9047,10 @@ and write_obj_prop cx trace ~use_op o propref reason_obj reason_op tin prop_tout
   let obj_t = DefT (reason_obj, bogus_trust (), ObjT o) in
   WriteProp { use_op; obj_t; prop_tout; tin; write_ctx = Normal }
   |> writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op tin
+
+and delete_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t =
+  DeleteProp (use_op, prop_t)
+  |> writelike_obj_prop cx trace ~use_op o propref reason_obj reason_op prop_t
 
 and match_shape cx trace ~use_op proto reason props =
   (* TODO: ShapeT should have its own reason *)
@@ -9722,7 +9798,7 @@ and flow_use_op op1 u =
               | AssignVar _
               | Coercion _
               | FunImplicitReturn _ | FunReturnStatement _
-              | GetProperty _ | SetProperty _
+              | GetProperty _ | SetProperty _ | DeleteProperty _
               | JSXCreateElement _
               | ObjectSpread _ | ObjectChain _
               | TypeApplication _
@@ -10915,6 +10991,19 @@ and perform_lookup_action cx trace propref p lreason ureason = function
         in
         add_output cx ~trace (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
     end
+  | DeleteProp (use_op, _) ->
+    begin match Property.access (Write (Normal, None)) p with
+      | Some _ ->
+        (* TODO: add delete write semantics *)
+        ()
+      | None ->
+        let r, x = match propref with
+        | Named (r, x) -> r, Some x
+        | Computed t -> reason_of_t t, None
+        in
+        add_output cx ~trace
+          (Error_message.EPropAccess ((r, ureason), x, Property.polarity p, Write (Normal, None), use_op))
+    end
 
 and perform_elem_action cx trace ~use_op reason_op l value = function
   | ReadElem t ->
@@ -10923,6 +11012,8 @@ and perform_elem_action cx trace ~use_op reason_op l value = function
   | WriteElem (tin, tout) ->
     rec_flow cx trace (tin, UseT (use_op, value));
     Option.iter ~f:(fun t -> rec_flow_t cx trace (l, t)) tout
+  | DeleteElem t ->
+    rec_flow cx trace (t, UseT (use_op, value))
   | CallElem (reason_call, ft) ->
     rec_flow cx trace (value, CallT (use_op, reason_call, ft))
 

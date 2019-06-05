@@ -656,6 +656,11 @@ class virtual ['a] t_with_uses = object(self)
           let t'' = self#type_ cx map_cx t' in
           if prop' == prop && t'' == t' then t
           else MatchPropT (use_op, r, prop', t'')
+      | DeletePropT (use_op, r, prop, t') ->
+          let prop' = self#prop_ref cx map_cx prop in
+          let t'' = self#type_ cx map_cx t' in
+          if prop' == prop && t'' == t' then t
+          else DeletePropT (use_op, r, prop', t'')
       | GetPrivatePropT (use_op, r, prop, scopes, static, t') ->
           let t'' = self#type_ cx map_cx t' in
           let scopes' = ListUtils.ident_map (self#class_binding cx map_cx) scopes in
@@ -677,6 +682,11 @@ class virtual ['a] t_with_uses = object(self)
           let t2' = self#type_ cx map_cx t2 in
           if t1' == t1 && t2' == t2 then t
           else GetElemT (use_op, r, t1', t2')
+      | DeleteElemT (use_op, r, t1, t2) ->
+          let t1' = self#type_ cx map_cx t1 in
+          let t2' = self#type_ cx map_cx t2 in
+          if t1' == t1 && t2' == t2 then t
+          else DeleteElemT (use_op, r, t1', t2')
       | CallElemT (r1, r2, t', funcall) ->
           let t'' = self#type_ cx map_cx t' in
           let funcall' = self#fun_call_type cx map_cx funcall in
@@ -1091,6 +1101,10 @@ class virtual ['a] t_with_uses = object(self)
         let tout' = OptionUtils.ident_map (self#type_ cx map_cx) tout in
         if tin' == tin && tout' == tout then t
         else WriteElem (tin', tout')
+    | DeleteElem t' ->
+        let t'' = self#type_ cx map_cx t' in
+        if t'' == t' then t
+        else DeleteElem t''
     | CallElem (r, funcall) ->
         let funcall' = self#fun_call_type cx map_cx funcall in
         if funcall' == funcall then t
@@ -1243,6 +1257,10 @@ class virtual ['a] t_with_uses = object(self)
       let t'' = self#type_ cx map_cx t' in
       if t'' == t' then t
       else MatchProp (use, t')
+    | DeleteProp (use, t') ->
+      let t'' = self#type_ cx map_cx t' in
+      if t'' == t' then t
+      else DeleteProp (use, t')
 
   method cont cx map_cx t =
     match t with

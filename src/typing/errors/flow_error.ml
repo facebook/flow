@@ -465,6 +465,10 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
         `Root (loc_reason, None,
           [text "Cannot assign "; desc value; text " to "; desc prop])
 
+      | Op (DeleteProperty {prop; lhs; _}) ->
+        `Root (lhs, None,
+          [text "Cannot delete "; desc prop])
+
       | Frame (ArrayElementCompatibility {lower; _}, use_op) ->
         `Frame (lower, use_op,
           [text "array element"])
@@ -815,11 +819,13 @@ let rec make_error_printable lazy_table_of_aloc (error : Loc.t t) : Loc.t Errors
     | IncompatibleGetPropT (prop_loc, prop)
     | IncompatibleSetPropT (prop_loc, prop)
     | IncompatibleMatchPropT (prop_loc, prop)
+    | IncompatibleDeletePropT (prop_loc, prop)
     | IncompatibleHasOwnPropT (prop_loc, prop)
     | IncompatibleMethodT (prop_loc, prop)
       -> mk_prop_missing_error prop_loc prop lower use_op
     | IncompatibleGetElemT prop_loc
     | IncompatibleSetElemT prop_loc
+    | IncompatibleDeleteElemT prop_loc
     | IncompatibleCallElemT prop_loc
       -> mk_prop_missing_error prop_loc None lower use_op
     | IncompatibleGetStaticsT

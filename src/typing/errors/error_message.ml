@@ -231,6 +231,7 @@ and 'loc t' =
   | EInexactSpread of 'loc virtual_reason * 'loc virtual_reason
   | EUnexpectedTemporaryBaseType of 'loc
   | EBigIntNotYetSupported of 'loc virtual_reason
+  | EDeleteSuperReference of 'loc virtual_reason
   | EDeleteOperand of 'loc virtual_reason
   (* These are unused when calculating locations so we can leave this as Aloc *)
   | ESignatureVerification of Signature_builder_deps.With_ALoc.Error.t
@@ -345,6 +346,7 @@ and 'loc upper_kind =
   | IncompatibleGetPropT of 'loc * string option
   | IncompatibleSetPropT of 'loc * string option
   | IncompatibleMatchPropT of 'loc * string option
+  | IncompatibleDeletePropT of 'loc * string option
   | IncompatibleGetPrivatePropT
   | IncompatibleSetPrivatePropT
   | IncompatibleMethodT of 'loc * string option
@@ -353,6 +355,7 @@ and 'loc upper_kind =
   | IncompatibleConstructorT
   | IncompatibleGetElemT of 'loc
   | IncompatibleSetElemT of 'loc
+  | IncompatibleDeleteElemT of 'loc
   | IncompatibleCallElemT of 'loc
   | IncompatibleElemTOfArrT
   | IncompatibleObjAssignFromTSpread
@@ -381,10 +384,12 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     | IncompatibleGetPropT (loc, s) -> IncompatibleGetPropT (f loc, s)
     | IncompatibleSetPropT (loc, s) -> IncompatibleSetPropT (f loc, s)
     | IncompatibleMatchPropT (loc, s) -> IncompatibleMatchPropT (f loc, s)
+    | IncompatibleDeletePropT (loc, s) -> IncompatibleDeletePropT (f loc, s)
     | IncompatibleMethodT (loc, s) -> IncompatibleMethodT (f loc, s)
     | IncompatibleHasOwnPropT (loc, s) -> IncompatibleHasOwnPropT (f loc, s)
     | IncompatibleGetElemT loc -> IncompatibleGetElemT (f loc)
     | IncompatibleSetElemT loc -> IncompatibleSetElemT (f loc)
+    | IncompatibleDeleteElemT loc -> IncompatibleDeleteElemT (f loc)
     | IncompatibleCallElemT loc -> IncompatibleCallElemT (f loc)
     | IncompatibleGetPrivatePropT
     | IncompatibleSetPrivatePropT
@@ -629,6 +634,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInexactSpread (r1, r2) -> EInexactSpread (map_reason r1, map_reason r2)
   | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | EBigIntNotYetSupported r -> EBigIntNotYetSupported (map_reason r)
+  | EDeleteSuperReference r -> EDeleteSuperReference (map_reason r)
   | EDeleteOperand r -> EDeleteOperand (map_reason r)
   | ESignatureVerification _ as e -> e
   | ENonArraySpread r -> ENonArraySpread (map_reason r)
@@ -816,6 +822,7 @@ let util_use_op_of_msg nope util = function
 | EInexactSpread _
 | EUnexpectedTemporaryBaseType _
 | EBigIntNotYetSupported _
+| EDeleteSuperReference (_)
 | EDeleteOperand (_)
 | ESignatureVerification _
 | ENonArraySpread _
@@ -865,6 +872,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EExportValueAsType (reason, _)
   | EImportValueAsType (reason, _)
   | ENonArraySpread reason ->
+  | EDeleteSuperReference reason
   | EDeleteOperand reason
   | EDebugPrint (reason, _) ->
         Some (aloc_of_reason reason)
@@ -2178,6 +2186,11 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         text " is inexact and may "; text "have a property key that conflicts with "; ref key_reason;
         text " or a property value that conflicts with "; ref value_reason;
         text ". Can you make "; ref object2_reason; text " exact?";
+      ]
+    | EDeleteSuperReference reason ->
+      Normal [
+        text "Cannot perform delete operation because "; ref reason; text " ";
+        text "is unsupported reference.";
       ]
     | EDeleteOperand reason ->
       Normal [

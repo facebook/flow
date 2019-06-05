@@ -89,11 +89,13 @@ type hash =
   | SetPrivatePropH
   | GetPropH
   | MatchPropH
+  | DeletePropH
   | GetPrivatePropH
   | TestPropH
   | SetElemH
   | GetElemH
   | CallElemH
+  | DeleteElemH
   | GetStaticsH
   | GetProtoH
   | SetProtoH
@@ -249,10 +251,12 @@ let hash_of_use_ctor = Type.(function
   | SetPrivatePropT _ -> SetPrivatePropH
   | GetPropT _ -> GetPropH
   | MatchPropT _ -> MatchPropH
+  | DeletePropT _ -> DeletePropH
   | GetPrivatePropT _ -> GetPrivatePropH
   | TestPropT _ -> TestPropH
   | SetElemT _ -> SetElemH
   | GetElemT _ -> GetElemH
+  | DeleteElemT _ -> DeleteElemH
   | CallElemT _ -> CallElemH
   | GetStaticsT _ -> GetStaticsH
   | GetProtoT _ -> GetProtoH

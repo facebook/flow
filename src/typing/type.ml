@@ -311,6 +311,7 @@ module rec TypeTerm : sig
     | Speculation of 'loc virtual_use_op
     | TypeApplication of { type': 'loc virtual_reason }
     | SetProperty of { lhs: 'loc virtual_reason; prop: 'loc virtual_reason; value: 'loc virtual_reason }
+    | DeleteProperty of { lhs: 'loc virtual_reason; prop: 'loc virtual_reason }
     | UnknownUse
 
   and 'loc virtual_frame_use_op =
@@ -372,6 +373,7 @@ module rec TypeTerm : sig
     | GetPropT of use_op * reason * propref * t
     (* For shapes *)
     | MatchPropT of use_op * reason * propref * t
+    | DeletePropT of use_op * reason * propref * t
     (* The same comment on SetPrivatePropT applies here *)
     | GetPrivatePropT of use_op * reason * string * class_binding list * bool * t
     | TestPropT of reason * ident * propref * t
@@ -382,6 +384,7 @@ module rec TypeTerm : sig
        need to ensure that reads happen after writes. *)
     | SetElemT of use_op * reason * t * t * t option (*tout *)
     | GetElemT of use_op * reason * t * t
+    | DeleteElemT of use_op * reason * t * t
     | CallElemT of (* call *) reason * (* lookup *) reason * t * funcalltype
     | GetStaticsT of reason * t_out
 
@@ -945,6 +948,7 @@ module rec TypeTerm : sig
     }
   | LookupProp of use_op * Property.t
   | SuperProp of use_op * Property.t
+  | DeleteProp of use_op * t
   | MatchProp of use_op * t
 
   and write_ctx = ThisInCtor | Normal
@@ -956,6 +960,7 @@ module rec TypeTerm : sig
      need to ensure that reads happen after writes. *)
   and elem_action =
     | ReadElem of t
+    | DeleteElem of t
     | WriteElem of t * t option (* tout *)
     | CallElem of reason (* call *) * funcalltype
 
@@ -2305,6 +2310,8 @@ end = struct
     | SentinelPropTestT (_, _, _, _, _, result) -> reason_of_t result
     | SetElemT (_,reason,_,_,_) -> reason
     | SetPropT (_,reason,_,_,_,_) -> reason
+    | DeleteElemT (_,reason,_,_) -> reason
+    | DeletePropT (_,reason,_,_) -> reason
     | SetPrivatePropT (_,reason,_,_,_,_,_) -> reason
     | SetProtoT (reason,_) -> reason
     | SpecializeT(_,_,reason,_,_,_) -> reason
@@ -2480,7 +2487,9 @@ end = struct
     | SentinelPropTestT (reason_op, l, key, sense, sentinel, result) ->
       SentinelPropTestT (reason_op, l, key, sense, sentinel, mod_reason_of_t f result)
     | SetElemT (use_op, reason, it, et, t) -> SetElemT (use_op, f reason, it, et, t)
+    | DeleteElemT (use_op, reason, it, et) -> DeleteElemT (use_op, f reason, it, et)
     | SetPropT (use_op, reason, n, i, t, tp) -> SetPropT (use_op, f reason, n, i, t, tp)
+    | DeletePropT (use_op, reason, propref, prop_t) -> DeletePropT (use_op, reason, propref, prop_t)
     | SetPrivatePropT (use_op, reason, n, scopes, static, t, tp) ->
         SetPrivatePropT (use_op, f reason, n, scopes, static, t, tp)
     | SetProtoT (reason, t) -> SetProtoT (f reason, t)
@@ -2535,6 +2544,7 @@ end = struct
   | CallT (op, r, f) -> util op (fun op -> CallT (op, r, f))
   | MethodT (op, r1, r2, p, f, tm) -> util op (fun op -> MethodT (op, r1, r2, p, f, tm))
   | SetPropT (op, r, p, w, t, tp) -> util op (fun op -> SetPropT (op, r, p, w, t, tp))
+  | DeletePropT (op, r, p, t) -> util op (fun op -> DeletePropT (op, r, p, t))
   | SetPrivatePropT (op, r, s, c, b, t, tp) ->
     util op (fun op -> SetPrivatePropT (op, r, s, c, b, t, tp))
   | GetPropT (op, r, p, t) -> util op (fun op -> GetPropT (op, r, p, t))
@@ -2542,6 +2552,7 @@ end = struct
   | GetPrivatePropT (op, r, s, c, b, t) -> util op (fun op -> GetPrivatePropT (op, r, s, c, b, t))
   | SetElemT (op, r, t1, t2, t3) -> util op (fun op -> SetElemT (op, r, t1, t2, t3))
   | GetElemT (op, r, t1, t2) -> util op (fun op -> GetElemT (op, r, t1, t2))
+  | DeleteElemT (op, r, t1, t2) -> util op (fun op -> DeleteElemT (op, r, t1, t2))
   | ReposLowerT (r, d, u2) -> nested_util u2 (fun u2 -> ReposLowerT (r, d, u2))
   | ReposUseT (r, d, op, t) -> util op (fun op -> ReposUseT (r, d, op, t))
   | ConstructorT (op, r, targs, args, t) -> util op (fun op -> ConstructorT (op, r, targs, args, t))
@@ -2720,6 +2731,11 @@ end = struct
           lhs = mod_reason lhs;
           prop = mod_reason prop;
           value = mod_reason value
+        }
+    | DeleteProperty { lhs; prop } ->
+        DeleteProperty {
+          lhs = mod_reason lhs;
+          prop = mod_reason prop
         }
     | UnknownUse -> UnknownUse in
     let mod_loc_of_frame_use_op = function
@@ -3098,6 +3114,7 @@ let aloc_of_root_use_op : root_use_op -> ALoc.t = function
 | ReactCreateElementCall {op; _}
 | TypeApplication {type'=op}
 | SetProperty {value=op; _}
+| DeleteProperty {prop=op; _}
   -> aloc_of_reason op
 | ReactGetIntrinsic _
 | Speculation _
@@ -3232,6 +3249,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
 | Speculation _ -> "Speculation"
 | TypeApplication _ -> "TypeApplication"
 | SetProperty _ -> "SetProperty"
+| DeleteProperty _ -> "DeleteProperty"
 | UnknownUse -> "UnknownUse"
 
 let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string  = function
@@ -3356,6 +3374,8 @@ let string_of_use_ctor = function
   | SentinelPropTestT _ -> "SentinelPropTestT"
   | SetElemT _ -> "SetElemT"
   | SetPropT _ -> "SetPropT"
+  | DeleteElemT _ -> "DeleteElemT"
+  | DeletePropT _ -> "DeletePropT"
   | MatchPropT _ -> "MatchPropT"
   | SetPrivatePropT _ -> "SetPrivatePropT"
   | SetProtoT _ -> "SetProtoT"

@@ -288,7 +288,8 @@ class ['a] t = object(self)
     acc
 
   | GetPropT (_, _, p, t)
-  | MatchPropT(_, _, p, t)
+  | MatchPropT (_, _, p, t)
+  | DeletePropT (_, _, p, t)
   | TestPropT (_, _, p, t) ->
     let acc = self#propref cx acc p in
     let acc = self#type_ cx pole_TODO acc t in
@@ -312,6 +313,11 @@ class ['a] t = object(self)
     acc
 
   | GetElemT (_, _, e, t) ->
+    let acc = self#type_ cx pole_TODO acc e in
+    let acc = self#type_ cx pole_TODO acc t in
+    acc
+
+  | DeleteElemT (_, _, e, t) ->
     let acc = self#type_ cx pole_TODO acc e in
     let acc = self#type_ cx pole_TODO acc t in
     acc
@@ -857,6 +863,7 @@ class ['a] t = object(self)
   | LookupProp (_, prop)
   | SuperProp (_, prop) ->
     self#prop cx pole_TODO acc prop
+  | DeleteProp (_, t)
   | MatchProp (_, t) ->
     self#type_ cx pole_TODO acc t
 
@@ -867,6 +874,8 @@ class ['a] t = object(self)
     let acc = self#type_ cx pole_TODO acc tin in
     let acc = self#opt (self#type_ cx pole_TODO) acc tout in
     acc
+  | DeleteElem t ->
+    self#type_ cx pole_TODO acc t
   | CallElem (_, fn) ->
     self#fun_call_type cx acc fn
 
