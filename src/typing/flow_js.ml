@@ -4269,8 +4269,13 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
     | DefT (lreason, _, ObjT ({ props_tmap = lflds; _ } as l_obj)),
       UseT (use_op, (DefT (ureason, _, ObjT ({ props_tmap = uflds; _ } as u_obj)) as u_deft)) ->
       Type_inference_hooks_js.dispatch_obj_to_obj_hook cx l u_deft;
-      if lflds = uflds then ()
-      else flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj)
+      let print_fast_path = match Context.verbose cx with Some _ -> true | _ -> false in
+      if lflds = uflds then
+        (if print_fast_path then prerr_endline "ObjT ~> ObjT fast path: yes")
+      else begin
+        (if print_fast_path then prerr_endline "ObjT ~> ObjT fast path: no");
+        flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj)
+      end
 
     | DefT (_, _, ObjT _), UseT (_, NullProtoT _) -> ()
 
