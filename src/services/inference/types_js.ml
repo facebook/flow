@@ -570,53 +570,32 @@ let check_files
         ) @@ merged_dependents in
       Hh_logger.info "Check will skip %d files" !skipped_count;
       let files = FilenameSet.union focused_to_check dependents_to_check in
-      let job = List.fold_left (fun (errors, warnings, suppressions, coverage) file ->
-        let new_errors, new_warnings, new_suppressions, new_coverage =
-          Merge_service.check_file options ~reader file in
-        update_errset errors file new_errors,
-        update_errset warnings file new_warnings,
-        Error_suppressions.update_suppressions suppressions new_suppressions,
-        update_coverage coverage new_coverage
-      ) in
-      let neutral =
-        FilenameMap.empty,
-        FilenameMap.empty,
-        Error_suppressions.empty,
-        FilenameMap.empty in
-      let merge
-        (new_errors, new_warnings, new_suppressions, new_coverage)
-        (errors, warnings, suppressions, coverage) =
-        FilenameMap.union new_errors errors, (* WARNING! order matters (new wins over old) *)
-        FilenameMap.union new_warnings warnings, (* WARNING! order matters (new wins over old) *)
-        Error_suppressions.update_suppressions suppressions new_suppressions,
-        FilenameMap.union new_coverage coverage (* WARNING! order matters (new wins over old) *)
-        in
 
       Hh_logger.info "Checking files";
+      let job = List.fold_left (fun acc file ->
+        let result = Merge_service.check_file options ~reader file in
+        (file, result) :: acc
+      ) in
       let progress_fn ~total ~start ~length:_ =
         MonitorRPC.status_update
           ServerStatus.(Checking_progress { total = Some total; finished = start })
       in
-      let%lwt new_errors, new_warnings, new_suppressions, new_coverage = MultiWorkerLwt.call
-          workers
-          ~job
-          ~neutral
-          ~merge
-          ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers
-                   (FilenameSet.elements files))
+      let%lwt acc = MultiWorkerLwt.call
+        workers
+        ~job
+        ~neutral:[]
+        ~merge:List.rev_append
+        ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers (FilenameSet.elements files))
       in
-      let merge_errors, warnings, suppressions, coverage =
-        let errors, warnings, suppressions, coverage =
-          FilenameSet.fold (fun file (errors, warnings, suppressions, coverage) ->
-            FilenameMap.remove file errors,
-            FilenameMap.remove file warnings,
-            Error_suppressions.remove file suppressions,
-            FilenameMap.remove file coverage
-          ) files ServerEnv.(errors.merge_errors, errors.warnings, errors.suppressions, coverage) in
-        merge
-          (* NOTE: Order matters when there is overlap. We want new stuff to overwrite old stuff. *)
-          (new_errors, new_warnings, new_suppressions, new_coverage)
-          (errors, warnings, suppressions, coverage) in
+      let merge_errors, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
+        let errors, warnings, suppressions, coverage = acc in
+        let new_errors, new_warnings, new_suppressions, new_coverage = result in
+        update_errset (FilenameMap.remove file errors) file new_errors,
+        update_errset (FilenameMap.remove file warnings) file new_warnings,
+        Error_suppressions.update_suppressions
+          (Error_suppressions.remove file suppressions) new_suppressions,
+        update_coverage (FilenameMap.remove file coverage) new_coverage
+      ) ServerEnv.(errors.merge_errors, errors.warnings, errors.suppressions, coverage) acc in
       Hh_logger.info "Done";
       let errors = { errors with
         ServerEnv.merge_errors;
