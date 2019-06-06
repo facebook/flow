@@ -35,7 +35,10 @@ module Repr: sig
   val source: t -> File_key.t option
   val update_source: (File_key.t option -> File_key.t option) -> t -> t
 
+  (* `is_abstract x` is equivalent to `kind x = Abstract` *)
+  val is_abstract: t -> bool
   val kind: t -> kind
+
   (* Raises unless `kind` returns `Abstract` *)
   val get_key_exn: t -> key
   (* Raises if `kind` returns `Abstract` *)
@@ -142,10 +145,7 @@ let abstractify table loc =
 let to_loc_exn = Repr.to_loc_exn
 
 let to_loc table loc =
-  match Repr.kind loc with
-  | Repr.Concrete | Repr.ALocNone ->
-    Repr.to_loc_exn loc
-  | Repr.Abstract ->
+  if Repr.is_abstract loc then
     let source = Repr.source loc in
     let key = Repr.get_key_exn loc in
     let table = Lazy.force table in
@@ -160,6 +160,8 @@ let to_loc table loc =
           (string_of_key key)
           (File_key.to_string table.file)
         )
+  else
+    Repr.to_loc_exn loc
 
 let none = Repr.of_loc Loc.none
 
@@ -168,11 +170,7 @@ let source = Repr.source
 let update_source = Repr.update_source
 
 let debug_to_string ?(include_source=false) loc =
-  match Repr.kind loc with
-  | Repr.Concrete | Repr.ALocNone ->
-    let loc = Repr.to_loc_exn loc in
-    Loc.debug_to_string ~include_source loc
-  | Repr.Abstract ->
+  if Repr.is_abstract loc then
     let source = Repr.source loc in
     let key = Repr.get_key_exn loc in
     let source = if include_source then
@@ -186,6 +184,9 @@ let debug_to_string ?(include_source=false) loc =
     in
     let key = string_of_key key in
     source ^ key
+  else
+    let loc = Repr.to_loc_exn loc in
+    Loc.debug_to_string ~include_source loc
 
 let compare loc1 loc2 =
   let source_compare = File_key.compare_opt (Repr.source loc1) (Repr.source loc2) in
@@ -219,18 +220,15 @@ let compare loc1 loc2 =
 
 let equal loc1 loc2 = compare loc1 loc2 = 0
 
-let to_string_no_source loc = match Repr.kind loc with
-| Repr.Concrete | Repr.ALocNone ->
-  Loc.to_string_no_source (Repr.to_loc_exn loc)
-| Repr.Abstract ->
-  let key = Repr.get_key_exn loc in
-  string_of_key key
+let to_string_no_source loc =
+  if Repr.is_abstract loc then
+    let key = Repr.get_key_exn loc in
+    string_of_key key
+  else
+    Loc.to_string_no_source (Repr.to_loc_exn loc)
 
 module ALocRepresentationDoNotUse = struct
-  let is_abstract loc = match Repr.kind loc with
-    | Repr.Abstract -> true
-    | Repr.Concrete -> false
-    | Repr.ALocNone -> false
+  let is_abstract = Repr.is_abstract
 
   let get_key_exn = Repr.get_key_exn
 end
