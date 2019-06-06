@@ -156,9 +156,7 @@ let merge_strict_context ~options ~reader component =
       | Options.Classic -> fun ~reader file ->
         let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_file_sig_unsafe ~reader file in
         File_sig.abstractify_locs loc_file_sig
-      | Options.TypesFirst -> fun ~reader file ->
-        let loc_file_sig = Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe ~reader file in
-        File_sig.abstractify_locs loc_file_sig
+      | Options.TypesFirst -> Parsing_heaps.Reader_dispatcher.get_sig_file_sig_unsafe
     )
     component
 

@@ -11,7 +11,7 @@ open Utils_js
 open Sys_utils
 
 type t = (Loc.t, Loc.t) Ast.program * File_sig.With_Loc.t
-type aloc_t = (ALoc.t, ALoc.t) Ast.program * File_sig.With_Loc.t
+type aloc_t = (ALoc.t, ALoc.t) Ast.program * File_sig.With_ALoc.t
 type parse_ok =
   | Classic of t
   | TypesFirst of t * aloc_t (* sig *)
@@ -421,11 +421,11 @@ let do_parse ~parse_options ~info content file =
                 ?prevent_munge ~facebook_fbt
                 ~ignore_static_propTypes ~facebook_keyMirror
                 signature ast in
+            let sig_ast = Ast_loc_utils.abstractify_mapper#program sig_ast in
             let file_sig = File_sig.With_Loc.verified errors (snd signature) in
-            let sig_file_sig = match File_sig.With_Loc.program ~ast:sig_ast ~module_ref_prefix with
+            let sig_file_sig = match File_sig.With_ALoc.program ~ast:sig_ast ~module_ref_prefix with
               | Ok fs -> fs
               | Error _ -> assert false in
-            let sig_ast = Ast_loc_utils.abstractify_mapper#program sig_ast in
             begin match arch with
               | Options.Classic ->
                 Parse_ok (Classic (ast, file_sig))

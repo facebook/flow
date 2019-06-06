@@ -77,7 +77,7 @@ module FileSigHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) 
 end)
 
 module SigFileSigHeap = SharedMem_js.WithCache (SharedMem_js.Immediate) (File_key) (struct
-    type t = File_sig.With_Loc.t
+    type t = File_sig.With_ALoc.t
     let prefix = Prefix.make()
     let description = "SigRequires"
 end)
@@ -159,14 +159,14 @@ module type READER = sig
   val get_ast: reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program option
   val get_docblock: reader:reader -> File_key.t -> Docblock.t option
   val get_file_sig: reader:reader -> File_key.t -> File_sig.With_Loc.t option
-  val get_sig_file_sig: reader:reader -> File_key.t -> File_sig.With_Loc.t option
+  val get_sig_file_sig: reader:reader -> File_key.t -> File_sig.With_ALoc.t option
   val get_file_hash: reader:reader -> File_key.t -> Xx.hash option
 
   val get_ast_unsafe: reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program
   val get_sig_ast_unsafe: reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.program
   val get_docblock_unsafe: reader:reader -> File_key.t -> Docblock.t
   val get_file_sig_unsafe: reader:reader -> File_key.t -> File_sig.With_Loc.t
-  val get_sig_file_sig_unsafe: reader:reader -> File_key.t -> File_sig.With_Loc.t
+  val get_sig_file_sig_unsafe: reader:reader -> File_key.t -> File_sig.With_ALoc.t
   val get_file_hash_unsafe: reader:reader -> File_key.t -> Xx.hash
 end
 
@@ -222,7 +222,7 @@ end
 (* For use by a worker process *)
 type worker_mutator = {
   add_file: File_key.t -> Docblock.t -> ((Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t) ->
-            ((ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_Loc.t) option -> unit;
+            ((ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t) option -> unit;
   add_hash: File_key.t -> Xx.hash -> unit
 }
 
