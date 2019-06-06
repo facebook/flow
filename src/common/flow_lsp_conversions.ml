@@ -147,10 +147,10 @@ module DocumentSymbols = struct
     | PrivateName (_, (_, { Ast.Identifier.name= id; comments= _ })) -> Some id
     | Computed (_, _) -> None
 
-  let name_of_id ((_, { Ast.Identifier.name; comments= _ }): Loc.t Ast.Identifier.t) : string =
+  let name_of_id ((_, { Ast.Identifier.name; comments= _ }): (Loc.t, Loc.t) Ast.Identifier.t) : string =
     name
 
-  let name_of_id_opt (id_opt: Loc.t Ast.Identifier.t option) : string option =
+  let name_of_id_opt (id_opt: (Loc.t, Loc.t) Ast.Identifier.t option) : string option =
     Option.map id_opt ~f:name_of_id
 
   let ast_name
@@ -175,10 +175,10 @@ module DocumentSymbols = struct
   let ast_key ~uri ~containerName ~acc ~loc ~(key:(Loc.t, Loc.t) Ast.Expression.Object.Property.key) ~kind =
     ast_name_opt ~uri ~containerName ~acc ~loc ~name_opt:(name_of_key key) ~kind
 
-  let ast_id ~uri ~containerName ~acc ~loc ~(id: Loc.t Ast.Identifier.t) ~kind =
+  let ast_id ~uri ~containerName ~acc ~loc ~(id: (Loc.t, Loc.t) Ast.Identifier.t) ~kind =
     ast_name ~uri ~containerName ~acc ~loc ~name:(name_of_id id) ~kind
 
-  let ast_id_opt ~uri ~containerName ~acc ~loc ~(id_opt: Loc.t Ast.Identifier.t option) ~kind =
+  let ast_id_opt ~uri ~containerName ~acc ~loc ~(id_opt: (Loc.t, Loc.t) Ast.Identifier.t option) ~kind =
     ast_name_opt ~uri ~containerName ~acc ~loc ~name_opt:(name_of_id_opt id_opt) ~kind
 
   let ast_class_member

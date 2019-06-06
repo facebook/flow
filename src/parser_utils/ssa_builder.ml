@@ -387,7 +387,7 @@ module Make
     val mutable possible_labeled_continues = []
 
     (* write *)
-    method! pattern_identifier ?kind (ident: L.t Ast.Identifier.t) =
+    method! pattern_identifier ?kind (ident: (L.t, L.t) Ast.Identifier.t) =
       ignore kind;
       let loc, { Ast.Identifier.name= x; comments= _ } = ident in
       begin match SMap.get x ssa_env with
@@ -406,7 +406,7 @@ module Make
         | None -> ()
       end;
 
-    method! identifier (ident: L.t Ast.Identifier.t) =
+    method! identifier (ident: (L.t, L.t) Ast.Identifier.t) =
       let loc, { Ast.Identifier.name= x; comments= _ } = ident in
       this#any_identifier loc x;
       super#identifier ident

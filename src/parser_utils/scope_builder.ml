@@ -143,7 +143,7 @@ module Make
         counter <- save_counter;
         Core_result.ok_exn result
 
-    method! identifier (expr: L.t Ast.Identifier.t) =
+    method! identifier (expr: (L.t, L.t) Ast.Identifier.t) =
       uses <- expr::uses;
       expr
 
@@ -154,13 +154,13 @@ module Make
       id
 
     (* don't rename the `foo` in `x.foo` *)
-    method! member_property_identifier (id: L.t Ast.Identifier.t) = id
+    method! member_property_identifier (id: (L.t, L.t) Ast.Identifier.t) = id
 
     (* don't rename the `foo` in `const {foo: bar} = x` *)
     method! pattern_object_property_identifier_key ?kind id = ignore kind; id
 
     (* don't rename the `foo` in `{ foo: ... }` *)
-    method! object_key_identifier (id: L.t Ast.Identifier.t) = id
+    method! object_key_identifier (id: (L.t, L.t) Ast.Identifier.t) = id
 
     method! block loc (stmt: (L.t, L.t) Ast.Statement.Block.t) =
       let lexical_hoist = new lexical_hoister in

@@ -20,7 +20,7 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
       | FunctionReturn
       | PrivateField of L.t Flow_ast.PrivateName.t
       | Property of (L.t, L.t) Flow_ast.Expression.Object.Property.key
-      | VariableDefinition of L.t Flow_ast.Identifier.t
+      | VariableDefinition of (L.t, L.t) Flow_ast.Identifier.t
 
     let property_key_to_string =
       let open Flow_ast.Expression.Object.Property in

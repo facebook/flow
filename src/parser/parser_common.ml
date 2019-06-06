@@ -31,10 +31,10 @@ module type PARSER = sig
   val assignment : env -> (Loc.t, Loc.t) Expression.t
   val left_hand_side : env -> (Loc.t, Loc.t) Expression.t
   val object_initializer : env -> Loc.t * (Loc.t, Loc.t) Expression.Object.t * pattern_errors
-  val identifier : ?restricted_error:Error.t -> env -> Loc.t Identifier.t
+  val identifier : ?restricted_error:Error.t -> env -> (Loc.t, Loc.t) Identifier.t
   val identifier_with_type : env -> ?no_optional:bool -> Error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
   val assert_identifier_name_is_identifier :
-    ?restricted_error:Error.t -> env -> Loc.t Identifier.t -> unit
+    ?restricted_error:Error.t -> env -> (Loc.t, Loc.t) Identifier.t -> unit
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
   val function_block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t * bool
   val jsx_element_or_fragment :

@@ -9,7 +9,7 @@ module Ast = Flow_ast
 
 module Kind = Signature_builder_kind
 
-type t = Loc.t Ast.Identifier.t * Kind.t
+type t = (Loc.t, Loc.t) Ast.Identifier.t * Kind.t
 
 let rec pattern loc ?annot_path ?init_path (p: (Loc.t, Loc.t) Ast.Pattern.t) =
   let open Ast.Pattern in

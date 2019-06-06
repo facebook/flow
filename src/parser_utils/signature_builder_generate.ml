@@ -122,7 +122,7 @@ module T = struct
     Loc.t * pattern list * (Loc.t * pattern) option
 
   and pattern =
-      Loc.t * Loc.t Ast.Identifier.t option * bool (* optional *) * type_
+      Loc.t * (Loc.t, Loc.t) Ast.Identifier.t option * bool (* optional *) * type_
 
   and class_t =
     | CLASS of {

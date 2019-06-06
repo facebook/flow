@@ -576,18 +576,18 @@ let program (algo : diff_algorithm)
     diff_if_changed_opt export_named_declaration_specifier specs1 specs2
 
   and import_default_specifier
-      (ident1: Loc.t Ast.Identifier.t option)
-      (ident2: Loc.t Ast.Identifier.t option): node change list option =
+      (ident1: (Loc.t, Loc.t) Ast.Identifier.t option)
+      (ident2: (Loc.t, Loc.t) Ast.Identifier.t option): node change list option =
     diff_if_changed_nonopt_fn identifier ident1 ident2
 
   and import_namespace_specifier
-      (ident1: Loc.t Ast.Identifier.t)
-      (ident2: Loc.t Ast.Identifier.t): node change list option =
+      (ident1: (Loc.t, Loc.t) Ast.Identifier.t)
+      (ident2: (Loc.t, Loc.t) Ast.Identifier.t): node change list option =
     diff_if_changed identifier ident1 ident2 |> Option.return
 
   and import_named_specifier
-      (nm_spec1: Loc.t Ast.Statement.ImportDeclaration.named_specifier)
-      (nm_spec2: Loc.t Ast.Statement.ImportDeclaration.named_specifier): node change list option =
+      (nm_spec1: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier)
+      (nm_spec2: (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.named_specifier): node change list option =
     let open Ast.Statement.ImportDeclaration in
     let { kind = kind1; local = local1; remote = remote1 } = nm_spec1 in
     let { kind = kind2; local = local2; remote = remote2 } = nm_spec2 in
@@ -1253,7 +1253,7 @@ let program (algo : diff_algorithm)
     else
       Some (expression arg1 arg2)
 
-  and identifier (id1: Loc.t Ast.Identifier.t) (id2: Loc.t Ast.Identifier.t): node change list =
+  and identifier (id1: (Loc.t, Loc.t) Ast.Identifier.t) (id2: (Loc.t, Loc.t) Ast.Identifier.t): node change list =
     let (old_loc, { Ast.Identifier.name= name1; comments= comments1 }) = id1 in
     let (_new_loc, { Ast.Identifier.name= name2; comments= comments2 }) = id2 in
     let name =
