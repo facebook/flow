@@ -1266,7 +1266,7 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
           optional = false;
           static = false;
           proto = false;
-          _method = true;
+          _method = false;
           variance = None;
         })
       ) add_module_exports_list in
