@@ -518,6 +518,14 @@ let tests_data = [
    "Expected annotation at function return @ (2, 42) to (2, 42)"],
   ["Reachable: bar, n"];
 
+  name "function_statics",
+  ["function bar(): void { };";
+   "const x = 42;";
+   "bar.x = x;";
+   "module.exports = bar;"],
+  [],
+  ["Reachable: bar, x"];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?facebook_fbt

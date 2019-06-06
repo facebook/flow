@@ -593,12 +593,23 @@ module Verifier(Env: EvalEnv) = struct
 
   module Eval = Eval(Env)
 
-  let eval id_loc (loc, kind) =
+  let rec eval id_loc (loc, kind) =
     match kind with
+      | Kind.WithPropertiesDef { base; properties } ->
+        begin match Kind.get_function_kind_info base with
+        | Some (generator, tparams, params, return, body) ->
+          let deps = Eval.function_ SSet.empty generator tparams params return body in
+          let deps =
+            List.fold_left
+              (Deps.reduce_join (fun (_id_prop, expr) -> Eval.literal_expr SSet.empty expr))
+              deps properties in
+          deps
+        | None -> eval id_loc (loc, base)
+        end
       | Kind.VariableDef { id; annot; init } ->
         Eval.annotation ~sort:(EASort.VariableDefinition id) ?init
           SSet.empty (id_loc, annot)
-      | Kind.FunctionDef { generator; tparams; params; return; body; } ->
+      | Kind.FunctionDef { generator; tparams; params; return; body } ->
         Eval.function_ SSet.empty generator tparams params return body
       | Kind.DeclareFunctionDef { annot = (_, t) } ->
         Eval.type_ SSet.empty t

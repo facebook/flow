@@ -505,6 +505,33 @@ let rec convert cx tparams_map = Ast.Type.(function
       | _ -> assert false
     )
 
+  | "$TEMPORARY$function" ->
+    check_type_arg_arity cx loc t_ast targs 2 (fun () ->
+      let ts, targs = convert_type_params () in
+      match ts with
+      | [annot; assign] ->
+        begin match annot with
+        | DefT (r, trust, FunT (statics, proto, ft)) ->
+          let reason = reason_of_t statics in
+          let statics' = mod_reason_of_t (fun _ -> reason) assign in
+          let t = DefT (r, trust, FunT (statics', proto, ft)) in
+          reconstruct_ast t targs
+        | DefT (poly_r, poly_trust, PolyT (tparams_loc, tparams,
+            DefT (r, trust, FunT (statics, proto, ft)),
+          id)) ->
+          let reason = reason_of_t statics in
+          let statics' = mod_reason_of_t (fun _ -> reason) assign in
+          let t = DefT (poly_r, poly_trust, PolyT (tparams_loc, tparams,
+            DefT (r, trust, FunT (statics', proto, ft)),
+          id)) in
+          reconstruct_ast t targs
+        | _ ->
+          (* fall back *)
+          reconstruct_ast annot targs
+        end
+      | _ -> assert false
+    )
+
   | "$TEMPORARY$object" ->
     check_type_arg_arity cx loc t_ast targs 1 (fun () ->
       let fake_ts, fake_targs = convert_type_params () in
