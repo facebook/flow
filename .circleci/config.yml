@@ -5,7 +5,7 @@ aliases:
 
   - &docker_opam
     docker:
-      - image: ocaml/opam:debian-8_ocaml-4.05.0
+      - image: ocaml/opam2:debian-8
         environment:
           <<: *opam_env
     working_directory: ~/flow
@@ -24,16 +24,12 @@ aliases:
   - &opam_deps
     name: Install deps from opam
     command: |
-      eval $(opam config env)
-      opam pin add -n flowtype-ci . | cat
-      opam depext flowtype-ci | cat
-      opam install --deps-only flowtype-ci | cat
+      eval $(opam env)
+      opam switch create . 4.05.0 --deps-only | cat
 
   - &restore_opam_cache
     keys:
       - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
-      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0
-      - opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}
 
   - &save_opam_cache
     key: opam-cache-{{ arch }}-opam_{{ checksum ".circleci/opamversion" }}-ocaml_4_05_0-{{ checksum "opam" }}
@@ -68,7 +64,7 @@ jobs:
           at: ~/flow
       - run:
           # TODO: move this to a custom docker image
-          # installs `zip` but also has to fix some apt issues:
+          # installs `zip` and `m4` but also has to fix some apt issues:
           # https://discuss.circleci.com/t/failed-to-fetch-jessie-updates/29246
           name: Install deps
           command: |
@@ -79,7 +75,7 @@ jobs:
             echo "deb-src http://archive.debian.org/debian/ jessie-backports main contrib non-free" | sudo tee -a /etc/apt/sources.list
             echo "Acquire::Check-Valid-Until false;" | sudo tee -a /etc/apt/apt.conf.d/10-nocheckvalid
             echo 'Package: *\nPin: origin "archive.debian.org"\nPin-Priority: 500' | sudo tee -a /etc/apt/preferences.d/10-archive-pin
-            sudo apt-get update && sudo apt-get install zip
+            sudo apt-get update && sudo apt-get --yes install zip m4
       - run: *opam_version
       - restore_cache: *restore_opam_cache
       - run:
@@ -96,17 +92,17 @@ jobs:
       - run:
           name: Build flow
           command: |
-            opam config exec -- make bin/flow dist/flow.zip
+            opam exec -- make bin/flow dist/flow.zip
             mkdir -p bin/linux && cp bin/flow bin/linux/flow
       - run:
           name: Build libflowparser
-          command: opam config exec -- make -C src/parser dist/libflowparser.zip
+          command: opam exec -- make -C src/parser dist/libflowparser.zip
       - run:
           name: Build flow.js
-          command: opam config exec -- make js
+          command: opam exec -- make js
       - run:
           name: Build flow_parser.js
-          command: opam config exec -- make -C src/parser js
+          command: opam exec -- make -C src/parser js
       - run:
           name: Create artifacts
           command: |
@@ -171,11 +167,11 @@ jobs:
       - run:
           name: Build flow
           command: |
-            opam config exec -- make bin/flow dist/flow.zip
+            opam exec -- make bin/flow dist/flow.zip
             mkdir -p bin/macos && cp bin/flow bin/macos/flow
       - run:
           name: Build libflowparser
-          command: opam config exec -- make -C src/parser dist/libflowparser.zip
+          command: opam exec -- make -C src/parser dist/libflowparser.zip
       - run:
           name: Create artifacts
           command: |
