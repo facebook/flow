@@ -65,6 +65,10 @@ module Sort = struct
 end
 
 type t =
+  | WithPropertiesDef of {
+      properties: ((Loc.t, Loc.t) Ast.Identifier.t * (Loc.t, Loc.t) Ast.Expression.t) list;
+      base: t;
+    }
   | VariableDef of {
       id: (Loc.t, Loc.t) Ast.Identifier.t;
       annot: Annot_path.t option;
@@ -122,7 +126,8 @@ type t =
     }
   | SketchyToplevelDef
 
-let to_string = function
+let rec to_string = function
+  | WithPropertiesDef { base; _ } -> Printf.sprintf "WithPropertiesDef(%s)" (to_string base)
   | VariableDef _ -> "VariableDef"
   | FunctionDef _ -> "FunctionDef"
   | DeclareFunctionDef _  -> "DeclareFunctionDef"
@@ -136,7 +141,8 @@ let to_string = function
   | RequireDef _ -> "RequireDef"
   | SketchyToplevelDef -> "SketchyToplevelDef"
 
-let is_type = function
+let rec is_type = function
+  | WithPropertiesDef { base; _ } -> is_type base
   | VariableDef _ -> true (* conditional *)
   | FunctionDef _ -> false
   | DeclareFunctionDef _  -> true
@@ -150,7 +156,8 @@ let is_type = function
   | RequireDef _ -> true (* conditional *)
   | SketchyToplevelDef -> true (* don't care *)
 
-let is_value = function
+let rec is_value = function
+  | WithPropertiesDef { base; _ } -> is_value base
   | VariableDef _ -> true
   | FunctionDef _ -> true
   | DeclareFunctionDef _ -> true
@@ -167,3 +174,16 @@ let is_value = function
 let validator = function
   | Sort.Type -> is_type
   | Sort.Value -> is_value
+
+let get_function_kind_info = function
+  | FunctionDef { generator; tparams; params; return; body } ->
+    Some (generator, tparams, params, return, body)
+  | VariableDef {
+      id = _;
+      annot = None;
+      init = Some (Init_path.Init (_, Ast.Expression.(Function stuff | ArrowFunction stuff)))
+    } ->
+    let open Ast.Function in
+    let { id = _; generator; tparams; params; return; body; _ } = stuff in
+    Some (generator, tparams, params, return, body)
+  | _ -> None

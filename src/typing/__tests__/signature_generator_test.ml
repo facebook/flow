@@ -665,4 +665,14 @@ let tests = "signature_generator" >::: ([
      "  {wut: $TEMPORARY$string<'wut'>, ...},";
      ">;"];
 
+  "function_statics" >:: mk_signature_generator_test
+    ["function bar(): void { };";
+     "const x = 42;";
+     "bar.x = x;";
+     "module.exports = bar;"]
+    ["declare var bar: $TEMPORARY$function<() => void, {x: typeof x, ...}>;";
+     "declare var x: $TEMPORARY$number<42>;";
+     "";
+     "declare module.exports: typeof bar;"];
+
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)

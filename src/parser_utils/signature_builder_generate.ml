@@ -46,6 +46,10 @@ module T = struct
     (* declarations and outlined expressions *)
     | ClassDecl of class_t
     | FunctionDecl of little_annotation
+    | FunctionWithStaticsDecl of {
+        base: Loc.t * expr_type;
+        statics: ((Loc.t, Loc.t) Ast.Identifier.t * (Loc.t * expr_type)) list;
+      }
     | VariableDecl of little_annotation
     (* remote *)
     | ImportNamed of {
@@ -587,6 +591,41 @@ module T = struct
         Ast.Statement.DeclareFunction.id;
         annot = annot_of_little_annotation outlined little_annotation;
         predicate = None;
+      }
+    | FunctionWithStaticsDecl { base; statics } ->
+      let annot = type_of_expr_type outlined base in
+      let properties = Core_list.rev_map ~f:(fun (id, expr) ->
+        let annot = type_of_expr_type outlined expr in
+        let open Ast.Type.Object in
+        Property (fst id, {
+          Property.key = Ast.Expression.Object.Property.Identifier id;
+          value = Property.Init annot;
+          optional = false;
+          static = false;
+          proto = false;
+          _method = false;
+          variance = None;
+        })
+      ) statics in
+      let ot = {
+        Ast.Type.Object.exact = false;
+        inexact = true;
+        properties;
+      } in
+      let assign = decl_loc, Ast.Type.Object ot in
+      let t =
+        let name = "$TEMPORARY$function" in
+        let id = Ast.Type.Generic.Identifier.Unqualified (
+          Flow_ast_utils.ident_of_source (decl_loc, name)
+        ) in
+        decl_loc, Ast.Type.Generic {
+          Ast.Type.Generic.id;
+          targs = Some (decl_loc, [annot; assign]);
+        }
+      in
+      decl_loc, Ast.Statement.DeclareVariable {
+        Ast.Statement.DeclareVariable.id;
+        annot = Ast.Type.Available (fst annot, t)
       }
     | VariableDecl little_annotation ->
       decl_loc, Ast.Statement.DeclareVariable {
@@ -1202,11 +1241,21 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
 
   module Eval = Eval(Env)
 
-  let eval (loc, kind) =
+  let rec eval (loc, kind) =
     match kind with
+      | Kind.WithPropertiesDef { base; properties } ->
+        begin match Kind.get_function_kind_info base with
+        | Some (generator, tparams, params, return, body) ->
+          T.FunctionWithStaticsDecl {
+            base = (loc, T.Function (Eval.function_ generator tparams params return body));
+            statics = Core_list.map properties
+                        ~f:(fun (id_prop, expr) -> (id_prop, Eval.literal_expr expr));
+          }
+        | None -> eval (loc, base)
+        end
       | Kind.VariableDef { id = _; annot; init } ->
         T.VariableDecl (Eval.annotation loc ?init annot)
-      | Kind.FunctionDef { generator; tparams; params; return; body; } ->
+      | Kind.FunctionDef { generator; tparams; params; return; body } ->
         T.FunctionDecl (T.EXPR
           (loc, T.Function (Eval.function_ generator tparams params return body)))
       | Kind.DeclareFunctionDef { annot = (_, t) } ->
