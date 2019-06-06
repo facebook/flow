@@ -534,6 +534,7 @@ let merge
 let check_files
   ~reader
   ~options
+  ~profiling
   ~workers
   ~errors
   ~updated_errors
@@ -545,83 +546,85 @@ let check_files
   match options.Options.opt_arch with
   | Options.Classic -> Lwt.return (updated_errors, coverage)
   | Options.TypesFirst ->
-    Hh_logger.info "Check prep";
-    Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
-    let focused_to_check = CheckedSet.focused merged_files in
-    let merged_dependents = CheckedSet.dependents merged_files in
-    let skipped_count = ref 0 in
-    let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
-    (* skip dependents whenever none of their dependencies have new or changed signatures *)
-    (* NOTE: We don't skip direct dependents because, in particular, they might be direct dependents
-       of files that were deleted, became unparsed, or fell out of @flow; those files would not be
-       dependencies tracked by the dependency graph; the direct dependents of those files would need
-       to be checked nevertheless. Of course, this is a hammer of a solution for a nail of a
-       problem.
+    with_timer_lwt ~options "Check" profiling (fun () ->
+      Hh_logger.info "Check prep";
+      Hh_logger.info "new or changed signatures: %d" (FilenameSet.cardinal sig_new_or_changed);
+      let focused_to_check = CheckedSet.focused merged_files in
+      let merged_dependents = CheckedSet.dependents merged_files in
+      let skipped_count = ref 0 in
+      let all_dependency_graph = Dependency_info.all_dependency_graph dependency_info in
+      (* skip dependents whenever none of their dependencies have new or changed signatures *)
+      (* NOTE: We don't skip direct dependents because, in particular, they might be direct
+         dependents of files that were deleted, became unparsed, or fell out of @flow; those files
+         would not be dependencies tracked by the dependency graph; the direct dependents of those
+         files would need to be checked nevertheless. Of course, this is a hammer of a solution for
+         a nail of a problem.
 
-       TODO: Figure out how to safely skip direct dependents. *)
-    let dependents_to_check =
-      FilenameSet.filter (fun f ->
-        (FilenameSet.mem f direct_dependent_files)
-        || (FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
-            @@ FilenameMap.find_unsafe f all_dependency_graph)
-        || (incr skipped_count; false)
-      ) @@ merged_dependents in
-    Hh_logger.info "Check will skip %d files" !skipped_count;
-    let files = FilenameSet.union focused_to_check dependents_to_check in
-    let job = List.fold_left (fun (errors, warnings, suppressions, coverage) file ->
-      let new_errors, new_warnings, new_suppressions, new_coverage =
-        Merge_service.check_file options ~reader file in
-      update_errset errors file new_errors,
-      update_errset warnings file new_warnings,
-      Error_suppressions.update_suppressions suppressions new_suppressions,
-      update_coverage coverage new_coverage
-    ) in
-    let neutral =
-      FilenameMap.empty,
-      FilenameMap.empty,
-      Error_suppressions.empty,
-      FilenameMap.empty in
-    let merge
-      (new_errors, new_warnings, new_suppressions, new_coverage)
-      (errors, warnings, suppressions, coverage) =
-      FilenameMap.union new_errors errors, (* WARNING! order matters (new wins over old) *)
-      FilenameMap.union new_warnings warnings, (* WARNING! order matters (new wins over old) *)
-      Error_suppressions.update_suppressions suppressions new_suppressions,
-      FilenameMap.union new_coverage coverage (* WARNING! order matters (new wins over old) *)
-      in
-
-    Hh_logger.info "Checking files";
-    let progress_fn ~total ~start ~length:_ =
-      MonitorRPC.status_update
-        ServerStatus.(Checking_progress { total = Some total; finished = start })
-    in
-    let%lwt new_errors, new_warnings, new_suppressions, new_coverage = MultiWorkerLwt.call
-        workers
-        ~job
-        ~neutral
-        ~merge
-        ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers
-                 (FilenameSet.elements files))
-    in
-    let merge_errors, warnings, suppressions, coverage =
-      let errors, warnings, suppressions, coverage =
-        FilenameSet.fold (fun file (errors, warnings, suppressions, coverage) ->
-          FilenameMap.remove file errors,
-          FilenameMap.remove file warnings,
-          Error_suppressions.remove file suppressions,
-          FilenameMap.remove file coverage
-        ) files ServerEnv.(errors.merge_errors, errors.warnings, errors.suppressions, coverage) in
-      merge
-        (* NOTE: Order matters when there is overlap. We want new stuff to overwrite old stuff. *)
+         TODO: Figure out how to safely skip direct dependents. *)
+      let dependents_to_check =
+        FilenameSet.filter (fun f ->
+          (FilenameSet.mem f direct_dependent_files)
+          || (FilenameSet.exists (fun f' -> FilenameSet.mem f' sig_new_or_changed)
+              @@ FilenameMap.find_unsafe f all_dependency_graph)
+          || (incr skipped_count; false)
+        ) @@ merged_dependents in
+      Hh_logger.info "Check will skip %d files" !skipped_count;
+      let files = FilenameSet.union focused_to_check dependents_to_check in
+      let job = List.fold_left (fun (errors, warnings, suppressions, coverage) file ->
+        let new_errors, new_warnings, new_suppressions, new_coverage =
+          Merge_service.check_file options ~reader file in
+        update_errset errors file new_errors,
+        update_errset warnings file new_warnings,
+        Error_suppressions.update_suppressions suppressions new_suppressions,
+        update_coverage coverage new_coverage
+      ) in
+      let neutral =
+        FilenameMap.empty,
+        FilenameMap.empty,
+        Error_suppressions.empty,
+        FilenameMap.empty in
+      let merge
         (new_errors, new_warnings, new_suppressions, new_coverage)
-        (errors, warnings, suppressions, coverage) in
-    Hh_logger.info "Done";
-    let errors = { errors with
-      ServerEnv.merge_errors;
-      warnings;
-      suppressions;
-    } in
-    Lwt.return (errors, coverage)
+        (errors, warnings, suppressions, coverage) =
+        FilenameMap.union new_errors errors, (* WARNING! order matters (new wins over old) *)
+        FilenameMap.union new_warnings warnings, (* WARNING! order matters (new wins over old) *)
+        Error_suppressions.update_suppressions suppressions new_suppressions,
+        FilenameMap.union new_coverage coverage (* WARNING! order matters (new wins over old) *)
+        in
+
+      Hh_logger.info "Checking files";
+      let progress_fn ~total ~start ~length:_ =
+        MonitorRPC.status_update
+          ServerStatus.(Checking_progress { total = Some total; finished = start })
+      in
+      let%lwt new_errors, new_warnings, new_suppressions, new_coverage = MultiWorkerLwt.call
+          workers
+          ~job
+          ~neutral
+          ~merge
+          ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers
+                   (FilenameSet.elements files))
+      in
+      let merge_errors, warnings, suppressions, coverage =
+        let errors, warnings, suppressions, coverage =
+          FilenameSet.fold (fun file (errors, warnings, suppressions, coverage) ->
+            FilenameMap.remove file errors,
+            FilenameMap.remove file warnings,
+            Error_suppressions.remove file suppressions,
+            FilenameMap.remove file coverage
+          ) files ServerEnv.(errors.merge_errors, errors.warnings, errors.suppressions, coverage) in
+        merge
+          (* NOTE: Order matters when there is overlap. We want new stuff to overwrite old stuff. *)
+          (new_errors, new_warnings, new_suppressions, new_coverage)
+          (errors, warnings, suppressions, coverage) in
+      Hh_logger.info "Done";
+      let errors = { errors with
+        ServerEnv.merge_errors;
+        warnings;
+        suppressions;
+      } in
+      Lwt.return (errors, coverage)
+    )
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
   with_timer_lwt ~options "EnsureParsed" profiling (fun () ->
@@ -1534,6 +1537,7 @@ end = struct
     let%lwt errors, coverage = check_files
       ~reader
       ~options
+      ~profiling
       ~workers
       ~errors
       ~updated_errors
@@ -2157,6 +2161,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
     let%lwt errors, coverage = check_files
       ~reader
       ~options
+      ~profiling
       ~workers
       ~errors
       ~updated_errors
