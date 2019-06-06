@@ -1454,6 +1454,10 @@ and initial_lwt_thread flowconfig_name client state () =
   main_loop flowconfig_name client state
 
 and main_loop flowconfig_name (client: Jsonrpc.queue) (state: state) : unit Lwt.t =
+  (* TODO - delete this line once this loop is fully lwt. At the moment, the idle loop never
+   * actually does any lwt io so never yields. This starves any asynchronous lwt. This pause call
+   * just yields *)
+  let%lwt () = Lwt.pause () in
   let%lwt event =
     try%lwt
       let%lwt event = get_next_event state client (parse_json state) in
