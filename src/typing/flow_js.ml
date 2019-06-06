@@ -5489,6 +5489,21 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       let instance = reposition cx ~trace (aloc_of_reason reason) instance in
       rec_flow_t cx trace (instance, tout)
 
+    (***************************************************************************)
+    (* assignment of properties to module.exports;                             *)
+    (* the only interesting case is where functions may have their statics set *)
+    (***************************************************************************)
+
+    | _, ModuleExportsAssignT (_, assign, tout) ->
+      let l' = match l with
+        | DefT (r, trust, FunT (statics, proto, ft)) ->
+          let reason = reason_of_t statics in
+          let statics' = mod_reason_of_t (fun _ -> reason) assign in
+          DefT (r, trust, FunT (statics', proto, ft))
+        | _ -> l
+      in
+      rec_flow_t cx trace (l', tout)
+
     (***************************************************************)
     (* functions may be called by passing a receiver and arguments *)
     (***************************************************************)
@@ -6962,6 +6977,7 @@ and empty_success flavor u =
   | _, TypeAppVarianceCheckT _
   | _, UnaryMinusT _
   | _, VarianceCheckT _
+  | _, ModuleExportsAssignT _
     -> true
 
 (* "Expands" any to match the form of a type. Allows us to reuse our propagation rules for any
@@ -7108,6 +7124,7 @@ and any_propagated cx trace any u =
   | SentinelPropTestT _
   | SetElemT _
   | SetPropT _
+  | ModuleExportsAssignT _
   | SpecializeT _
   | SubstOnPredT _ (* Should be impossible. We only generate these with OpenPredTs. *)
   | TestPropT _

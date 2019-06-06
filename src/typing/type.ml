@@ -494,6 +494,10 @@ module rec TypeTerm : sig
     (* test that something is object-like, returning a default type otherwise *)
     | ObjTestT of reason * t * t
 
+    (* Assign properties to module.exports. The only interesting case is when module.exports is a
+       function type, where we set the statics field of the function type. *)
+    | ModuleExportsAssignT of reason * t * t
+
     (* assignment rest element in array pattern *)
     | ArrRestT of use_op * reason * int * t
 
@@ -2293,6 +2297,7 @@ end = struct
     | SetProtoT (reason,_) -> reason
     | SpecializeT(_,_,reason,_,_,_) -> reason
     | ObjKitT (_, reason, _, _, _) -> reason
+    | ModuleExportsAssignT (reason, _, _) -> reason
     | SubstOnPredT (reason, _, _) -> reason
     | SuperT (_,reason,_) -> reason
     | TestPropT (reason, _, _, _) -> reason
@@ -2471,6 +2476,7 @@ end = struct
         SpecializeT (use_op, f reason_op, reason_tapp, cache, ts, t)
     | ObjKitT (use_op, reason, resolve_tool, tool, tout) ->
         ObjKitT (use_op, f reason, resolve_tool, tool, tout)
+    | ModuleExportsAssignT (reason, ts, t) -> ModuleExportsAssignT (f reason, ts, t)
     | SubstOnPredT (reason, subst, t) -> SubstOnPredT (f reason, subst, t)
     | SuperT (op, reason, inst) -> SuperT (op, f reason, inst)
     | TestPropT (reason, id, n, t) -> TestPropT (f reason, id, n, t)
@@ -2608,6 +2614,7 @@ end = struct
   | ReactPropsToOut _
   | ReactInToProps _
   | DestructuringT _
+  | ModuleExportsAssignT _
     -> nope u
 
   let use_op_of_use_t =
@@ -3343,6 +3350,7 @@ let string_of_use_ctor = function
   | ReactPropsToOut _ -> "ReactPropsToOut"
   | ReactInToProps _ -> "ReactInToProps"
   | DestructuringT _ -> "DestructuringT"
+  | ModuleExportsAssignT _ -> "ModuleExportsAssignT"
 
 let string_of_binary_test = function
   | InstanceofTest -> "instanceof"
