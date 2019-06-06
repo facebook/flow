@@ -1301,16 +1301,16 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
                (id, expr)::add_module_exports_list
            ) ([], [], []) list in
          match declare_module_exports_list, set_module_exports_list, add_module_exports_list with
-         | (loc, t)::rest, _, _ ->
-           (* declare module.exports: ... wins, unless there are duplicates *)
-           if rest = [] then [declare_module_exports mod_exp_loc loc t]
-           else []
-         | [], expr::rest, _ ->
-           (* otherwise, module.exports = ... wins, unless there are duplicates *)
-           if rest = [] then [set_module_exports mod_exp_loc outlined expr]
-           else []
+         | _::_, _, _ ->
+           (* if there are any `declare module.exports: ...`, then the last such wins *)
+           let loc, t = List.hd (List.rev declare_module_exports_list) in
+           [declare_module_exports mod_exp_loc loc t]
+         | [], _::_, _ ->
+           (* if there are any `module.exports = ...`, then the last such wins *)
+           let expr = List.hd (List.rev set_module_exports_list) in
+           [set_module_exports mod_exp_loc outlined expr]
          | [], [], _ ->
-           (* otherwise, collect every module.exports.X = ... *)
+           (* otherwise, collect every `module.exports.X = ...` *)
            add_module_exports mod_exp_loc outlined add_module_exports_list
 
   let eval_export_default_declaration = Ast.Statement.ExportDefaultDeclaration.(function
