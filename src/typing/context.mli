@@ -43,6 +43,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
+  recursion_limit: int;
   root: Path.t;
   strip_root: bool;
   suppress_comments: Str.regexp list;
@@ -112,6 +113,7 @@ val module_ref: t -> string
 val property_maps: t -> Type.Properties.map
 val call_props: t -> Type.t IMap.t
 val export_maps: t -> Type.Exports.map
+val recursion_limit: t -> int
 val root: t -> Path.t
 val facebook_fbs: t -> string option
 val facebook_fbt: t -> string option
