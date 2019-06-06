@@ -522,6 +522,7 @@ let set_export cx id name t =
 (* constructors *)
 let make_property_map cx pmap =
   let id = Type.Properties.mk_id () in
+  add_nominal_id cx (id :> int);
   add_property_map cx id pmap;
   id
 
