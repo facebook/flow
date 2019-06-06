@@ -12,7 +12,7 @@ type types_mode =
   | TypesForbiddenByDefault
 
 type t = (Loc.t, Loc.t) Flow_ast.program * File_sig.With_Loc.t
-type aloc_t = (ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t
+type aloc_t = (ALoc.t, ALoc.t) Flow_ast.program * File_sig.With_ALoc.t * ALoc.table option
 type parse_ok =
   | Classic of t
   | TypesFirst of t * aloc_t (* sig *)

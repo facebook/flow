@@ -11,7 +11,7 @@ open Utils_js
 open Sys_utils
 
 type t = (Loc.t, Loc.t) Ast.program * File_sig.With_Loc.t
-type aloc_t = (ALoc.t, ALoc.t) Ast.program * File_sig.With_ALoc.t
+type aloc_t = (ALoc.t, ALoc.t) Ast.program * File_sig.With_ALoc.t * ALoc.table option
 type parse_ok =
   | Classic of t
   | TypesFirst of t * aloc_t (* sig *)
@@ -422,6 +422,8 @@ let do_parse ~parse_options ~info content file =
                 ~ignore_static_propTypes ~facebook_keyMirror
                 signature ast in
             let sig_ast = Ast_loc_utils.abstractify_mapper#program sig_ast in
+            (* TODO create and populate a table when the abstract_locations flag is set *)
+            let aloc_table = None in
             let file_sig = File_sig.With_Loc.verified errors (snd signature) in
             let sig_file_sig = match File_sig.With_ALoc.program ~ast:sig_ast ~module_ref_prefix with
               | Ok fs -> fs
@@ -430,7 +432,7 @@ let do_parse ~parse_options ~info content file =
               | Options.Classic ->
                 Parse_ok (Classic (ast, file_sig))
               | Options.TypesFirst ->
-                Parse_ok (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig)))
+                Parse_ok (TypesFirst ((ast, file_sig), (sig_ast, sig_file_sig, aloc_table)))
             end
           | Error e -> Parse_fail (File_sig_error e)
         else
