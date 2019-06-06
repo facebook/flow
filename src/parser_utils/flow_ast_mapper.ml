@@ -350,9 +350,10 @@ class ['loc] mapper = object(this)
 
   method continue _loc (cont: 'loc Flow_ast.Statement.Continue.t) =
     let open Flow_ast.Statement.Continue in
-    let { label } = cont in
+    let { label; comments } = cont in
     let label' = map_opt this#label_identifier label in
-    if label == label' then cont else { label = label' }
+    let comments' = this#syntax_opt comments in
+    if label == label' then cont else { label = label'; comments = comments' }
 
   method debugger _loc =
     ()

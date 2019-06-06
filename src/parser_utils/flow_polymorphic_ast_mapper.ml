@@ -326,9 +326,10 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
 
   method continue (cont: 'M Ast.Statement.Continue.t) : 'N Ast.Statement.Continue.t =
     let open Ast.Statement.Continue in
-    let { label } = cont in
+    let { label; comments } = cont in
     let label' = Option.map ~f:this#label_identifier label in
-    { label = label' }
+    let comments' = Option.map ~f:this#syntax comments in
+    { label = label'; comments = comments' }
 
   method debugger () =
     ()

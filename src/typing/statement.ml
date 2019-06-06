@@ -954,13 +954,13 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       Abnormal.save abnormal ~env;
       Abnormal.throw_stmt_control_flow_exception ast abnormal
 
-  | (loc, Continue { Continue.label }) ->
+  | (loc, Continue { Continue.label; comments }) ->
       let label_opt, label_ast = match label with
         | None -> None, None
         | Some (_, { Ast.Identifier.name; comments= _ } as lab_ast) -> Some name, Some lab_ast
       in
       Env.reset_current_activation loc;
-      let ast = loc, Continue { Continue.label = label_ast } in
+      let ast = loc, Continue { Continue.label = label_ast; comments = comments } in
       let abnormal = Abnormal.Continue label_opt in
       Abnormal.save abnormal;
       Abnormal.throw_stmt_control_flow_exception ast abnormal

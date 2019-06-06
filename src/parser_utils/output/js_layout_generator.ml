@@ -505,9 +505,9 @@ and statement ?(pretty_semicolon=false) (root_stmt: (Loc.t, Loc.t) Ast.Statement
         | Some l -> fuse [s_break; space; identifier l]
         | None -> s_break;
       )
-    | S.Continue { S.Continue.label } ->
+    | S.Continue { S.Continue.label; comments } ->
       let s_continue = Atom "continue" in
-      with_semicolon (
+      with_semicolon @@ layout_node_with_simple_comments_opt loc comments (
         match label with
         | Some l -> fuse [s_continue; space; identifier l]
         | None -> s_continue;

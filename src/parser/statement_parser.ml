@@ -102,8 +102,11 @@ module Statement
     loc, Statement.Break { Statement.Break.label }
 
   and continue env =
+    let leading = Peek.comments env in
+    let trailingComments = ref [] in
     let loc, label = with_loc (fun env ->
       Expect.token env T_CONTINUE;
+      trailingComments := Peek.comments env;
       let label =
         if Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env
         then None
@@ -118,7 +121,9 @@ module Statement
       label
     ) env in
     if not (in_loop env) then error_at env (loc, Error.IllegalContinue);
-    loc, Statement.Continue { Statement.Continue.label }
+    let trailing = !trailingComments in
+    loc, Statement.Continue { Statement.Continue.label;
+    comments= (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()); }
 
   and debugger = with_loc (fun env ->
     Expect.token env T_DEBUGGER;

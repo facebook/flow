@@ -331,6 +331,7 @@ and Statement : sig
   module Continue : sig
     type 'M t = {
       label: ('M, 'M) Identifier.t option;
+      comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
   end

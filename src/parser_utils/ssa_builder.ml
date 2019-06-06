@@ -493,7 +493,7 @@ module Make
 
     method! continue _loc (stmt: L.t Ast.Statement.Continue.t) =
       let open Ast.Statement.Continue in
-      let { label } = stmt in
+      let { label; comments = _ } = stmt in
       this#raise_abrupt_completion (AbruptCompletion.continue label)
 
     method! return _loc (stmt: (L.t, L.t) Ast.Statement.Return.t) =

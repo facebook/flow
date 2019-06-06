@@ -154,8 +154,8 @@ end with type t = Impl.t) = struct
         node "BreakStatement" loc [
           "label", option identifier label;
         ]
-    | loc, Continue { Continue.label } ->
-        node "ContinueStatement" loc [
+    | loc, Continue { Continue.label; comments } ->
+        node ?comments "ContinueStatement" loc [
           "label", option identifier label;
         ]
     | loc, With { With._object; body } ->
