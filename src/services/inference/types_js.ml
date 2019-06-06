@@ -1059,16 +1059,6 @@ end = struct
      * or at a more important level *)
     let files_to_force = CheckedSet.diff files_to_force env.ServerEnv.checked_files in
 
-    (* If foo.js is updated and foo.js.flow exists, then mark foo.js.flow as
-     * updated too. This is because sometimes we decide what foo.js.flow
-     * provides based on the existence of foo.js *)
-    let updates = FilenameSet.fold (fun file updates ->
-      if not (File_key.check_suffix file Files.flow_ext) &&
-        Parsing_heaps.Mutator_reader.has_ast ~reader (File_key.with_suffix file Files.flow_ext)
-      then FilenameSet.add (File_key.with_suffix file Files.flow_ext) updates
-      else updates
-    ) updates updates in
-
     (* split updates into deleted files and modified files *)
     (** NOTE: We use the term "modified" in the same sense as the underlying file
         system: a modified file exists, and in relation to an old file system

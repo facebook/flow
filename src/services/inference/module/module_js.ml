@@ -115,7 +115,6 @@ type resolution_acc = {
 module type MODULE_SYSTEM = sig
   (* Given a file and docblock info, make the name of the module it exports. *)
   val exported_module:
-    reader:Abstract_state_reader.t ->
     Options.t ->
     File_key.t ->
     Docblock.t ->
@@ -308,7 +307,7 @@ end
 (*******************************)
 
 module Node = struct
-  let exported_module ~reader:_ _ file _ =
+  let exported_module _ file _ =
     eponymous_module file
 
   let record_path path = function
@@ -520,7 +519,7 @@ module Haste: MODULE_SYSTEM = struct
         name
         (Options.haste_name_reducers options)
 
-  let rec exported_module ~reader options file info =
+  let exported_module options file info =
     match file with
     | File_key.SourceFile _ ->
       if is_mock file
@@ -531,30 +530,13 @@ module Haste: MODULE_SYSTEM = struct
         let normalized_file_name = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
         if is_haste_file options normalized_file_name
         then Modulename.String (haste_name options normalized_file_name)
-        else exported_non_haste_module ~reader options file
+        else Modulename.Filename file
       else begin match Docblock.providesModule info with
         | Some m -> Modulename.String m
-        | None ->
-            (* If foo.js.flow doesn't have a @providesModule, then look at foo.js
-             * and use its @providesModule instead *)
-            exported_non_haste_module ~reader options file
+        | None -> Modulename.Filename file
       end
     | _ ->
       (* Lib files, resource files, etc don't have any fancy haste name *)
-      Modulename.Filename file
-
-  and exported_non_haste_module ~reader options file =
-    match Files.chop_flow_ext file with
-    | Some file_without_flow_ext ->
-      if Parsing_heaps.Reader_dispatcher.has_ast ~reader file_without_flow_ext
-      then
-        let info =
-          Parsing_heaps.Reader_dispatcher.get_docblock_unsafe ~reader file_without_flow_ext
-        in
-        exported_module ~reader options file_without_flow_ext info
-      else
-        Modulename.Filename (file_without_flow_ext)
-    | None ->
       Modulename.Filename file
 
   let expanded_name ~reader r =
@@ -644,9 +626,9 @@ let get_module_system opts =
     module_system := Some system;
     system
 
-let exported_module ~options ~reader file info =
+let exported_module ~options file info =
   let module M = (val (get_module_system options)) in
-  M.exported_module ~reader options file info
+  M.exported_module options file info
 
 let imported_module ~options ~reader ~node_modules_containers file loc ?resolution_acc r =
   let module M = (val (get_module_system options)) in
@@ -952,8 +934,7 @@ end = struct
   let add_parsed_info ~mutator ~reader ~options file =
     let force_check = Options.all options in
     let docblock = Parsing_heaps.Mutator_reader.get_docblock_unsafe ~reader file in
-    let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let module_name = exported_module ~options ~reader file docblock in
+    let module_name = exported_module ~options file docblock in
     let checked =
       force_check ||
       Docblock.is_flow docblock
@@ -973,9 +954,9 @@ end = struct
      the module names of unparsed files, we're able to tell whether an
      unparsed file has been required/imported.
    *)
-  let add_unparsed_info ~mutator ~reader ~options (file, docblock) =
+  let add_unparsed_info ~mutator ~options (file, docblock) =
     let force_check = Options.all options in
-    let module_name = exported_module ~options ~reader file docblock in
+    let module_name = exported_module ~options file docblock in
     let checked =
       force_check ||
       File_key.is_lib_file file ||
@@ -1040,7 +1021,7 @@ end = struct
   let introduce_files ~mutator ~reader =
     let add_parsed_info = add_parsed_info ~mutator ~reader in
     let reader = Abstract_state_reader.Mutator_state_reader reader in
-    let add_unparsed_info = add_unparsed_info ~mutator ~reader in
+    let add_unparsed_info = add_unparsed_info ~mutator in
     introduce_files_generic ~add_parsed_info ~add_unparsed_info ~reader
 
   let introduce_files_from_saved_state ~mutator =
