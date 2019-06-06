@@ -1,3 +1,7 @@
+### 0.100.1
+
+* Made the type checker recursion limit configurable though the .flowconfig
+
 ### 0.100.0
 
 Likely to cause new Flow errors:
