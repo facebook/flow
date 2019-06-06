@@ -587,8 +587,7 @@ let check_files
 
       Hh_logger.info "Checking files";
       let job = List.fold_left (fun acc file ->
-        let result = Merge_service.check_file options ~reader file in
-        (file, Ok result) :: acc
+        (Merge_service.check options ~reader file) :: acc
       ) in
       let merge new_acc acc =
         intermediate_result_callback (lazy new_acc);

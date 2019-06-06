@@ -9,14 +9,21 @@ open Utils_js
 open Loc_collections
 module Reqs = Merge_js.Reqs
 
-type 'a merge_job_result = ('a, Error_message.t) result
-type 'a merge_job_results = (File_key.t * 'a merge_job_result) list
+type 'a unit_result = ('a, Error_message.t) result
+type 'a file_keyed_result = File_key.t * 'a unit_result
+type acc =
+  (Flow_error.ErrorSet.t *
+   Flow_error.ErrorSet.t *
+   Error_suppressions.t *
+   Coverage.file_coverage FilenameMap.t)
+
+type 'a merge_job_results = 'a file_keyed_result list
 type 'a merge_job =
   worker_mutator: Context_heaps.Merge_context_mutator.worker_mutator ->
   options:Options.t ->
   reader: Mutator_state_reader.t ->
   File_key.t Nel.t ->
-  'a merge_job_result
+  'a unit_result
 
 type sig_opts_data = {
   skipped_count: int;
@@ -419,3 +426,30 @@ let merge_runner
   Lwt.return (ret, { skipped_count; sig_new_or_changed })
 
 let merge_strict = merge_runner ~job:merge_strict_component
+
+let check options ~reader file =
+  let result =
+    try Ok (check_file options ~reader file)
+    with
+    | SharedMem_js.Out_of_shared_memory
+    | SharedMem_js.Heap_full
+    | SharedMem_js.Hash_table_full
+    | SharedMem_js.Dep_table_full as exc -> raise exc
+    (* A catch all suppression is probably a bad idea... *)
+    | unwrapped_exc ->
+      let exc = Exception.wrap unwrapped_exc in
+      let exn_str = Printf.sprintf "%s: %s" (File_key.to_string file) (Exception.to_string exc) in
+      (* In dev mode, fail hard, but log and continue in prod. *)
+      if Build_mode.dev then Exception.reraise exc else
+        prerr_endlinef "(%d) check_job THROWS: %s\n"
+          (Unix.getpid()) exn_str;
+      let file_loc = Loc.({ none with source = Some file }) |> ALoc.of_loc in
+      (* We can't pattern match on the exception type once it's marshalled
+         back to the master process, so we pattern match on it here to create
+         an error result. *)
+      Error Error_message.(match unwrapped_exc with
+      | EDebugThrow loc -> EInternal (loc, DebugThrow)
+      | ECheckTimeout s -> EInternal (file_loc, CheckTimeout s) (* TODO: can't happen yet *)
+      | _ -> EInternal (file_loc, CheckJobException exc))
+  in
+  (file, result)
