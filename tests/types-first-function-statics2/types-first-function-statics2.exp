@@ -29,5 +29,36 @@ References:
                        ^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------------- b.js:15:2
 
-Found 2 errors
+Cannot cast `poly_a.g` to number because string [1] is incompatible with number [2].
+
+   b.js:15:2
+   15| (poly_a.g: number);
+        ^^^^^^^^
+
+References:
+   poly_a.js:5:20
+    5| module.exports.g = "a";
+                          ^^^ [1]
+   b.js:15:12
+   15| (poly_a.g: number);
+                  ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------------------- b.js:16:2
+
+Cannot get `poly_a.other` because property `other` is missing in statics of function type [1].
+
+   b.js:16:2
+   16| (poly_a.other: string);
+        ^^^^^^^^^^^^
+
+References:
+   poly_a.js:3:18
+    3| module.exports = <T>() => {};
+                        ^^^^^^^^^^^ [1]
+
+
+
+Found 4 errors
