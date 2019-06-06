@@ -546,6 +546,7 @@ let stub_metadata ~root ~checked = { Context.
   ignore_non_literal_requires = false;
   max_trace_depth = 0;
   max_workers = 0;
+  recursion_limit = 10000;
   root;
   strip_root = true;
   suppress_comments = [];
