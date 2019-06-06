@@ -952,6 +952,23 @@ module Error = struct
 
   (* Defined by the protocol. *)
   exception RequestCancelled of string (* -32800 *)
+
+  module Code = struct
+    (* Defined by JSON RPC *)
+    let parseError = -32700
+    let invalidRequest = -32600
+    let methodNotFound = -32601
+    let invalidParams = -32602
+    let internalError = -32603
+    let serverErrorStart = -32099
+    let serverErrorEnd = -32000
+    let serverNotInitialized = -32002
+    let unknownErrorCode = -32001
+
+    (* Defined by the protocol. *)
+    let requestCancelled = -32800
+    let contentModified = -32801
+  end
 end
 
 
