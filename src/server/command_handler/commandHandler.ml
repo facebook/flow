@@ -125,6 +125,19 @@ let infer_type
     ) in
     Lwt.return (split_result result)
 
+let insert_type ~options ~env ~profiling (file_input, line, column) =
+  let filename = File_input.filename_of_file_input file_input in
+  let file_key = File_key.SourceFile filename in
+  File_input.content_of_file_input file_input
+    %>>= fun file_content -> try_with (fun _ ->
+      let%lwt result =
+        Type_info_service.insert_type ~options ~env ~profiling file_key file_content line column
+      in
+      (* TODO After we figure out the error return value change the Server Result to match *)
+      match result with
+      | Ok ty -> Lwt.return @@ Ok ty
+      | Error _ -> Lwt.return @@ Error "Flow: server failed to insert type")
+
 let collect_rage ~options ~reader ~env ~files =
   let items = [] in
 
@@ -453,6 +466,10 @@ let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
+let handle_insert_type ~options ~input ~line ~column ~profiling ~env =
+  let%lwt result = insert_type ~options ~env ~profiling (input, line, column) in
+  Lwt.return (ServerProt.Response.INSERT_TYPE result, None)
+
 let handle_rage ~reader ~options ~files ~profiling:_ ~env =
   let items = collect_rage ~options ~reader ~env ~files:(Some files) in
   Lwt.return (ServerProt.Response.RAGE items, None)
@@ -587,6 +604,8 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.RAGE { files; } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
+  | ServerProt.Request.INSERT_TYPE {input; line; column; wait_for_recheck; _ } ->
+    mk_parallelizable ~wait_for_recheck ~options (handle_insert_type ~options ~input ~line ~column)
   | ServerProt.Request.REFACTOR { input; line; char; refactor_variant; } ->
    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
     * parallelizable *)

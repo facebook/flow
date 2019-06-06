@@ -48,6 +48,24 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults fil
 
     Ok ((loc, ty), Some json_data)
 
+let insert_type ~options ~env ~profiling file_key file_content line column =
+  Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
+  | (Some (cx, ast, file_sig, typed_ast), _tc_errors, _tc_warnings) ->
+    let ty_query loc =
+      let aloc = ALoc.of_loc loc in
+      let asig = (File_sig.abstractify_locs file_sig) in
+      Query_types.suggest_types cx asig typed_ast aloc
+    in
+    let start = Loc.{line; column;} in
+    let loc = Loc.{source = Some file_key; start; _end=start} in begin
+    let new_ast = (new Insert_type.mapper ty_query loc)#program ast in
+    let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
+    let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff ast file_content in
+    Ok file_patch
+    end
+  | (None, errors, _) -> Error errors
+
+
 let dump_types ~options ~env ~profiling file content =
   (* Print type using Flow type syntax *)
   let printer = Ty_printer.string_of_t in
@@ -74,7 +92,7 @@ let coverage ~options ~env ~profiling ~force ~trust file content =
 let suggest ~options ~env ~profiling file_name file_content =
   let file_key = File_key.SourceFile file_name in
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
-  | (Some (cx, ast, file_sig, tast), tc_errors, tc_warnings) ->
+  | (Some (cx,  ast, file_sig, tast), tc_errors, tc_warnings) ->
     let file_sig = File_sig.abstractify_locs file_sig in
     let ty_query loc = Query_types.suggest_types cx file_sig tast (ALoc.of_loc loc) in
     let visitor = new Suggest.visitor ~ty_query in

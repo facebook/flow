@@ -52,6 +52,13 @@ module Request = struct
       omit_targ_defaults: bool;
       wait_for_recheck: bool option;
     }
+  | INSERT_TYPE of {
+      input: File_input.t;
+      line: int;
+      column: int;
+      verbose: Verbose.t option;
+      wait_for_recheck: bool option;
+    }
   | RAGE of { files: string list }
   | REFACTOR of {
       input: File_input.t;
@@ -110,6 +117,9 @@ module Request = struct
       "suggest"
   | SAVE_STATE { outfile; } ->
       Printf.sprintf "save-state %s" (Path.to_string outfile)
+  | INSERT_TYPE { input; line; column; verbose=_; wait_for_recheck=_; } ->
+      Printf.sprintf "autofix insert-type %s:%d:%d"
+        (File_input.filename_of_file_input input) line column
 
   type command_with_context = {
     client_logging_context: FlowEventLogger.logging_context;
@@ -175,6 +185,8 @@ module Response = struct
     string
   ) result
 
+  type insert_type_response = (Replacement_printer.patch, string) result
+
   type textedit = Loc.t * string
   type refactor_ok = {
     refactor_edits: textedit list;
@@ -234,6 +246,7 @@ module Response = struct
   | GET_DEF of get_def_response
   | GET_IMPORTS of get_imports_response
   | INFER_TYPE of infer_type_response
+  | INSERT_TYPE of insert_type_response
   | RAGE of rage_response
   | REFACTOR of refactor_response
   | STATUS of { status_response: status_response; lazy_stats: lazy_stats }
@@ -254,6 +267,7 @@ module Response = struct
   | GET_DEF _ -> "get_def response"
   | GET_IMPORTS _ -> "get_imports response"
   | INFER_TYPE _ -> "infer_type response"
+  | INSERT_TYPE _ -> "insert_type response"
   | RAGE _ -> "rage response"
   | REFACTOR _ -> "refactor response"
   | STATUS _ -> "status response"

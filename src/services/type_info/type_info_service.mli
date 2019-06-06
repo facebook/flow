@@ -47,3 +47,10 @@ val suggest :
     Replacement_printer.patch),   (* Annotated program *)
     Errors.ConcreteLocPrintableErrorSet.t     (* Parsing errors *)
   ) Core_result.t Lwt.t
+
+val insert_type :
+  options:Options.t ->
+  env:ServerEnv.env ->
+  profiling:Profiling_js.running ->
+  File_key.t -> string -> int -> int ->
+  (Replacement_printer.patch, Errors.ConcreteLocPrintableErrorSet.t) Core_result.t Lwt.t
