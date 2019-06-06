@@ -313,6 +313,23 @@ let include_dependencies_and_dependents
 
   Lwt.return (to_merge, components, recheck_set)
 
+let remove_old_results (errors, warnings, suppressions, coverage) file =
+  FilenameMap.remove file errors,
+  FilenameMap.remove file warnings,
+  Error_suppressions.remove file suppressions,
+  FilenameMap.remove file coverage
+
+let add_new_results (errors, warnings, suppressions, coverage) file result =
+  match result with
+  | Ok (new_errors, new_warnings, new_suppressions, new_coverage) ->
+    update_errset errors file new_errors,
+    update_errset warnings file new_warnings,
+    Error_suppressions.update_suppressions suppressions new_suppressions,
+    update_coverage coverage new_coverage
+  | Error msg ->
+    let new_errors = error_set_of_merge_error file msg in
+    update_errset errors file new_errors, warnings, suppressions, coverage
+
 let run_merge_service
     ~master_mutator
     ~worker_mutator
@@ -333,24 +350,8 @@ let run_merge_service
     in
     let errs, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
       let component = FilenameMap.find_unsafe file component_map in
-      (* remove all errors, suppressions for rechecked component *)
-      let errors, warnings, suppressions, coverage =
-        Nel.fold_left (fun (errors, warnings, suppressions, coverage) file ->
-          FilenameMap.remove file errors,
-          FilenameMap.remove file warnings,
-          Error_suppressions.remove file suppressions,
-          FilenameMap.remove file coverage
-        ) acc component
-      in
-      match result with
-      | Ok (new_errors, new_warnings, new_suppressions, new_coverage) ->
-        update_errset errors file new_errors,
-        update_errset warnings file new_warnings,
-        Error_suppressions.update_suppressions suppressions new_suppressions,
-        update_coverage coverage new_coverage
-      | Error msg ->
-        let new_errors = error_set_of_merge_error file msg in
-        update_errset errors file new_errors, warnings, suppressions, coverage
+      let acc = Nel.fold_left remove_old_results acc component in
+      add_new_results acc file result
     ) acc merged
     in
     Lwt.return (errs, warnings, suppressions, coverage, skipped_count, sig_new_or_changed)
@@ -606,24 +607,8 @@ let check_files
 
       let { ServerEnv.merge_errors; warnings; suppressions; _ } = errors in
       let merge_errors, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
-        let errors, warnings, suppressions, coverage =
-          let errors, warnings, suppressions, coverage = acc in
-          FilenameMap.remove file errors,
-          FilenameMap.remove file warnings,
-          Error_suppressions.remove file suppressions,
-          FilenameMap.remove file coverage
-        in
-        match result with
-        | Ok (new_errors, new_warnings, new_suppressions, new_coverage) ->
-           update_errset errors file new_errors,
-           update_errset warnings file new_warnings,
-           Error_suppressions.update_suppressions suppressions new_suppressions,
-           update_coverage coverage new_coverage
-        | Error _ -> (* TODO *)
-           errors,
-           warnings,
-           suppressions,
-           coverage
+        let acc = remove_old_results acc file in
+        add_new_results acc file result
       ) (merge_errors, warnings, suppressions, coverage) ret in
       Hh_logger.info "Done";
       let errors = { errors with
