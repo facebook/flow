@@ -90,7 +90,7 @@ let substituter = object(self)
         let xs = Option.value_exn xs in
         let inner_ = self#type_ cx (map, false, None) inner in
         let changed = changed || inner_ != inner in
-        if changed then DefT (reason, trust, PolyT (tparams_loc, xs, inner_, mk_id ())) else t
+        if changed then DefT (reason, trust, PolyT (tparams_loc, xs, inner_, Context.make_nominal cx)) else t
 
       | ThisClassT (reason, this) ->
         let map = SMap.remove "this" map in

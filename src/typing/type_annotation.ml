@@ -970,8 +970,7 @@ let rec convert cx tparams_map = Ast.Type.(function
         def_reason = reason;
       }))
   in
-  let id = Context.make_nominal cx in
-  let t = poly_type_of_tparams id tparams ft in
+  let t = poly_type_of_tparams (Context.make_nominal cx) tparams ft in
   (loc, t),
   Function {
     Function.params = (params_loc, {

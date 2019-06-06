@@ -90,6 +90,10 @@ type sig_t = {
   (* map from module names to their types *)
   mutable module_map: Type.t SMap.t;
 
+  (** We track nominal ids in the context to help decide when the types exported by a module have
+     meaningfully changed: see Merge_js.ContextOptimizer. **)
+  mutable nominal_ids: ISet.t;
+
   (* map from TypeAssert assertion locations to the type being asserted *)
   mutable type_asserts: (type_assert_kind * ALoc.t) ALocMap.t;
 
@@ -127,15 +131,6 @@ type t = {
 
   mutable import_stmts: (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list;
   mutable imported_ts: Type.t SMap.t;
-
-  (* set of "nominal" ids (created by Flow_js.mk_nominal_id) *)
-  (** Nominal ids are used to identify classes and to check nominal subtyping
-      between classes. They are different from other "structural" ids, used to
-      identify type variables and property maps, where subtyping cares about the
-      underlying types rather than the ids themselves. We track nominal ids in
-      the context to help decide when the types exported by a module have
-      meaningfully changed: see Merge_js.ContextOptimizer. **)
-  mutable nominal_ids: ISet.t;
 
   mutable require_map: Type.t ALocMap.t;
 
@@ -194,6 +189,7 @@ let make_sig () = {
   all_unresolved = IMap.empty;
   envs = IMap.empty;
   module_map = SMap.empty;
+  nominal_ids = ISet.empty;
   type_asserts = ALocMap.empty;
   errors = Flow_error.ErrorSet.empty;
   error_suppressions = Error_suppressions.empty;
@@ -219,8 +215,6 @@ let make sig_cx metadata file module_ref = {
 
   import_stmts = [];
   imported_ts = SMap.empty;
-
-  nominal_ids = ISet.empty;
 
   require_map = ALocMap.empty;
 
@@ -290,7 +284,7 @@ let find_module cx m = find_module_sig (sig_cx cx) m
 let find_tvar cx id =
   try IMap.find_unsafe id cx.sig_cx.graph
   with Not_found -> raise (Tvar_not_found id)
-let mem_nominal_id cx id = ISet.mem id cx.nominal_ids
+let mem_nominal_id cx id = ISet.mem id cx.sig_cx.nominal_ids
 let graph cx = graph_sig cx.sig_cx
 let import_stmts cx = cx.import_stmts
 let imported_ts cx = cx.imported_ts
@@ -385,7 +379,7 @@ let add_export_map cx id tmap =
 let add_tvar cx id bounds =
   cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.graph
 let add_nominal_id cx id =
-  cx.nominal_ids <- ISet.add id cx.nominal_ids
+  cx.sig_cx.nominal_ids <- ISet.add id cx.sig_cx.nominal_ids
 let add_type_assert cx k v =
   cx.sig_cx.type_asserts <- ALocMap.add k v cx.sig_cx.type_asserts
 let remove_all_errors cx =
@@ -426,6 +420,7 @@ let set_module_map cx module_map =
 let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
+  cx.sig_cx.nominal_ids <- ISet.empty;
   cx.sig_cx.exists_checks <- ALocMap.empty;
   cx.sig_cx.exists_excuses <- ALocMap.empty;
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;

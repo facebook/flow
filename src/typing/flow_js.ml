@@ -7851,7 +7851,7 @@ and canonicalize_imported_type cx trace reason t =
       |> Nel.to_list
     in
     let tapp = typeapp ~implicit:true t targs in
-    Some (poly_type (mk_id ()) tparams_loc typeparams (class_type tapp))
+    Some (poly_type (Context.make_nominal cx) tparams_loc typeparams (class_type tapp))
 
   | DefT (_, _, PolyT (_, _, DefT (_, _, TypeT _), _)) ->
     Some t
