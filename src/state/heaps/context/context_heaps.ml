@@ -111,8 +111,7 @@ end = struct
      * expensive to send the set of oldified files to the worker *)
     let diff = match SigHashHeap.get_old leader_f with
     | None -> true
-    | Some xx_old ->
-      File_key.check_suffix leader_f Files.flow_ext || xx <> xx_old
+    | Some xx_old -> xx <> xx_old
     in
     if diff then (
       Nel.iter (fun f ->
@@ -206,8 +205,7 @@ end = struct
     | Some xx ->
       match SigHashHeap.get_old f with
       | None -> true
-      | Some xx_old ->
-        File_key.check_suffix f Files.flow_ext || xx <> xx_old
+      | Some xx_old -> xx <> xx_old
 end
 
 module Reader: READER with type reader = State_reader.t = struct
