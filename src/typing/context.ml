@@ -43,6 +43,7 @@ type metadata = {
   haste_module_ref_prefix: string option;
   ignore_non_literal_requires: bool;
   max_trace_depth: int;
+  recursion_limit: int;
   root: Path.t;
   strip_root: bool;
   suppress_comments: Str.regexp list;
@@ -168,6 +169,7 @@ let metadata_of_options options = {
   ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
   max_trace_depth = Options.max_trace_depth options;
   max_workers = Options.max_workers options;
+  recursion_limit = Options.recursion_limit options;
   root = Options.root options;
   strip_root = Options.should_strip_root options;
   suppress_comments = Options.suppress_comments options;
@@ -303,6 +305,7 @@ let module_ref cx =
 let property_maps cx = cx.sig_cx.property_maps
 let call_props cx = cx.sig_cx.call_props
 let export_maps cx = cx.sig_cx.export_maps
+let recursion_limit cx = cx.metadata.recursion_limit
 let root cx = cx.metadata.root
 let facebook_fbs cx = cx.metadata.facebook_fbs
 let facebook_fbt cx = cx.metadata.facebook_fbt

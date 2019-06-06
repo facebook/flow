@@ -94,6 +94,7 @@ type t = {
   opt_profile : bool;
   opt_lazy_mode: lazy_mode;
   opt_quiet : bool;
+  opt_recursion_limit : int;
   opt_root : Path.t;
   opt_root_name : string option;
   opt_saved_state_fetcher: saved_state_fetcher;
@@ -149,6 +150,7 @@ let module_resolver opts = opts.opt_module_resolver
 let module_system opts = opts.opt_module
 let modules_are_use_strict opts = opts.opt_modules_are_use_strict
 let no_saved_state opts = opts.opt_no_saved_state
+let recursion_limit opts = opts.opt_recursion_limit
 let root opts = opts.opt_root
 let root_name opts = opts.opt_root_name
 let facebook_fbs opts = opts.opt_facebook_fbs
