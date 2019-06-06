@@ -561,6 +561,7 @@ module ContextOptimizer = struct
     val mutable stable_eval_ids = IMap.empty
     val mutable stable_poly_ids = IMap.empty
     val mutable stable_props_ids = IMap.empty
+    val mutable stable_call_prop_ids = IMap.empty
     val mutable reduced_module_map = SMap.empty;
     val mutable reduced_graph = IMap.empty;
     val mutable reduced_property_maps = Properties.Map.empty;
@@ -660,9 +661,14 @@ module ContextOptimizer = struct
     method call_prop cx pole id =
       if (IMap.mem id reduced_call_props)
       then
-        let () = SigHash.add_int sig_hash id in
+        let stable_id = IMap.find_unsafe id stable_call_prop_ids in
+        let () = SigHash.add_int sig_hash stable_id in
         id
       else
+        let () =
+          let stable_id = self#fresh_stable_id in
+          stable_call_prop_ids <- IMap.add id stable_id stable_call_prop_ids
+        in
         let t = Context.find_call cx id in
         reduced_call_props <- IMap.add id t reduced_call_props;
         let t' = self#type_ cx pole t in
