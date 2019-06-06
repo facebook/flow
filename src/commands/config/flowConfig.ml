@@ -69,6 +69,7 @@ module Opts = struct
     munge_underscores: bool;
     no_flowlib: bool;
     node_resolver_dirnames: string list;
+    recursion_limit: int;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
     shm_dep_table_pow: int;
@@ -154,6 +155,7 @@ module Opts = struct
     munge_underscores = false;
     no_flowlib = false;
     node_resolver_dirnames = ["node_modules"];
+    recursion_limit = 10000;
     root_name = None;
     saved_state_fetcher = Options.Dummy_fetcher;
     shm_dep_table_pow = 17;
@@ -600,6 +602,9 @@ module Opts = struct
           ("none", Options.NoTrust);
         ]
         (fun opts trust_mode -> Ok { opts with trust_mode });
+
+    "recursion_limit",
+      uint (fun opts v -> Ok { opts with recursion_limit = v });
   ]
 
   let parse =
@@ -996,6 +1001,7 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 let munge_underscores c = c.options.Opts.munge_underscores
 let no_flowlib c = c.options.Opts.no_flowlib
 let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
+let recursion_limit c = c.options.Opts.recursion_limit
 let root_name c = c.options.Opts.root_name
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
 let shm_dep_table_pow c = c.options.Opts.shm_dep_table_pow

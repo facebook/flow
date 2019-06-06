@@ -556,16 +556,15 @@ let add_output cx ?trace msg =
  *)
 module RecursionCheck : sig
   exception LimitExceeded of Trace.t
-  val check: Trace.t -> unit
+  val check: Context.t -> Trace.t -> unit
 
 end = struct
   exception LimitExceeded of Trace.t
-  let limit = 10000
 
   (* check trace depth as a proxy for recursion depth
      and throw when limit is exceeded *)
-  let check trace =
-    if Trace.trace_depth trace >= limit
+  let check cx trace =
+    if Trace.trace_depth trace >= Context.recursion_limit cx
     then raise (LimitExceeded trace)
 end
 
@@ -1044,7 +1043,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       trust_flow_to_use_t cx trace l u;
 
     (* limit recursion depth *)
-    RecursionCheck.check trace;
+    RecursionCheck.check cx trace;
 
     (* Check if this worker has been told to cancel *)
     check_canceled ();
@@ -9908,7 +9907,7 @@ and __unify cx ~use_op ~unify_any t1 t2 trace =
   if t1 = t2 then () else (
 
   (* limit recursion depth *)
-  RecursionCheck.check trace;
+  RecursionCheck.check cx trace;
 
   (* In general, unifying t1 and t2 should have similar effects as flowing t1 to
      t2 and flowing t2 to t1. This also means that any restrictions on such
