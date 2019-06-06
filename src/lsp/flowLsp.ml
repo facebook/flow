@@ -73,6 +73,8 @@ type open_file_info = {
    * parse errors, and to be a better source of truth about the parse errors
    * in this file than what the flow server has told us. It also gets computed lazily. *)
   o_live_diagnostics: PublishDiagnostics.diagnostic list option;
+  (* o_unsaved if true means that this open file has unsaved changes to the buffer. *)
+  o_unsaved: bool;
 }
 
 type initialized_env = {
@@ -449,7 +451,9 @@ let do_initialize () : Initialize.result =
         want_change = IncrementalSync;
         want_willSave = false;
         want_willSaveWaitUntil = false;
-        want_didSave = None;
+        want_didSave = Some {
+          includeText = false;
+        };
       };
       hoverProvider = true;
       completionProvider = Some {
@@ -769,7 +773,7 @@ let track_to_server (state: state) (c: Lsp.lsp_message) : (state * track_effect)
     | _, NotificationMessage (DidOpenNotification params) ->
       let o_open_doc = params.DidOpen.textDocument in
       let uri = params.DidOpen.textDocument.TextDocumentItem.uri in
-      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None;})
+      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None; o_unsaved=false; })
 
     | _, NotificationMessage (DidCloseNotification params) ->
       let uri = params.DidClose.textDocument.TextDocumentIdentifier.uri in
@@ -786,7 +790,12 @@ let track_to_server (state: state) (c: Lsp.lsp_message) : (state * track_effect)
         version = params.DidChange.textDocument.VersionedTextDocumentIdentifier.version;
         text;
       } in
-      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None;})
+      Some (uri, Some {o_open_doc; o_ast=None; o_live_diagnostics=None; o_unsaved=true;})
+
+    | Some open_files, NotificationMessage (DidSaveNotification params) ->
+      let uri = params.DidSave.textDocument.TextDocumentIdentifier.uri in
+      let open_file = SMap.find uri open_files in
+      Some (uri, Some { open_file with o_unsaved = false; })
 
     | _, _ ->
       None
@@ -1001,10 +1010,10 @@ let parse_and_cache flowconfig_name (state: state) (uri: string)
   match existing_open_file_info with
   | Some {o_ast=Some o_ast; o_live_diagnostics; _} ->
     state, o_ast, o_live_diagnostics
-  | Some {o_open_doc; _} ->
+  | Some {o_open_doc; o_unsaved; _} ->
     let file = lsp_DocumentItem_to_flow o_open_doc in
     let o_ast, o_live_diagnostics = parse file in
-    let open_file_info = Some {o_open_doc; o_ast=Some o_ast; o_live_diagnostics;} in
+    let open_file_info = Some {o_open_doc; o_ast=Some o_ast; o_live_diagnostics; o_unsaved} in
     let state = update_open_file uri open_file_info state in
     state, o_ast, o_live_diagnostics
   | None ->
@@ -1211,14 +1220,15 @@ module RagePrint = struct
     (Option.value_map p.timeout ~default:"None" ~f:string_of_int)
     (Option.value_map p.lazy_mode ~default:"None" ~f:Options.lazy_mode_to_string)
 
-  let string_of_open_file {o_open_doc; o_ast; o_live_diagnostics} : string =
-    Printf.sprintf "(uri=%s version=%d text=[%d bytes] ast=[%s] diagnostics=[%s])"
+  let string_of_open_file {o_open_doc; o_ast; o_live_diagnostics; o_unsaved} : string =
+    Printf.sprintf "(uri=%s version=%d text=[%d bytes] ast=[%s] diagnostics=[%s] unsaved=%b)"
       o_open_doc.TextDocumentItem.uri
       o_open_doc.TextDocumentItem.version
       (String.length o_open_doc.TextDocumentItem.text)
       (Option.value_map o_ast ~default:"absent" ~f:(fun _ -> "present"))
       (Option.value_map o_live_diagnostics ~default:"absent"
         ~f:(fun d -> List.length d |> string_of_int))
+      (o_unsaved)
 
   let string_of_open_files (files: open_file_info SMap.t) : string =
     SMap.bindings files
