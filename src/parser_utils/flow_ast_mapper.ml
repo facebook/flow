@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+module Ast = Flow_ast
+
 let map_opt: 'node. ('node -> 'node) -> 'node option -> 'node option =
   fun map opt ->
     match opt with
@@ -29,15 +31,15 @@ let map_loc: 'node. ('loc -> 'node -> 'node) -> ('loc * 'node) -> ('loc * 'node)
     id_loc map loc item same (fun diff -> (loc, diff))
 
 class ['loc] mapper = object(this)
-  method program (program: ('loc, 'loc) Flow_ast.program) =
+  method program (program: ('loc, 'loc) Ast.program) =
     let (loc, statements, comments) = program in
     let statements' = this#toplevel_statement_list statements in
     let comments' = ListUtils.ident_map (this#comment) comments in
     if statements == statements' && comments == comments' then program
     else loc, statements', comments'
 
-  method statement (stmt: ('loc, 'loc) Flow_ast.Statement.t) =
-    let open Flow_ast.Statement in
+  method statement (stmt: ('loc, 'loc) Ast.Statement.t) =
+    let open Ast.Statement in
     match stmt with
     | (loc, Block block) ->
       id_loc this#block loc block stmt (fun block -> loc, Block block)
@@ -149,24 +151,24 @@ class ['loc] mapper = object(this)
     (* TODO: Flow specific stuff *)
     | (_loc, DeclareOpaqueType _) -> stmt
 
-  method comment (c: 'loc Flow_ast.Comment.t) = c
+  method comment (c: 'loc Ast.Comment.t) = c
 
-  method syntax_opt: 'internal. ('loc, 'internal) Flow_ast.Syntax.t option ->
-                                ('loc, 'internal) Flow_ast.Syntax.t option =
+  method syntax_opt: 'internal. ('loc, 'internal) Ast.Syntax.t option ->
+                                ('loc, 'internal) Ast.Syntax.t option =
     map_opt this#syntax
 
-  method syntax: 'internal. ('loc, 'internal) Flow_ast.Syntax.t ->
-                            ('loc, 'internal) Flow_ast.Syntax.t =
+  method syntax: 'internal. ('loc, 'internal) Ast.Syntax.t ->
+                            ('loc, 'internal) Ast.Syntax.t =
     fun attached ->
-      let open Flow_ast.Syntax in
+      let open Ast.Syntax in
       let { leading; trailing; internal } = attached in
       let leading' = ListUtils.ident_map this#comment leading in
       let trailing' = ListUtils.ident_map this#comment trailing in
       if leading == leading' && trailing == trailing' then attached
       else { leading= leading'; trailing= trailing'; internal }
 
-  method expression (expr: ('loc, 'loc) Flow_ast.Expression.t) =
-    let open Flow_ast.Expression in
+  method expression (expr: ('loc, 'loc) Ast.Expression.t) =
+    let open Ast.Expression in
     match expr with
     | _, This -> expr
     | _, Super -> expr
@@ -200,47 +202,47 @@ class ['loc] mapper = object(this)
     | loc, Update x -> id_loc this#update_expression loc x expr (fun x -> loc, Update x)
     | loc, Yield x -> id_loc this#yield loc x expr (fun x -> loc, Yield x)
 
-  method array _loc (expr: ('loc, 'loc) Flow_ast.Expression.Array.t) =
-    let open Flow_ast.Expression in
+  method array _loc (expr: ('loc, 'loc) Ast.Expression.Array.t) =
+    let open Ast.Expression in
     let { Array.elements; comments } = expr in
     let elements' = ListUtils.ident_map (map_opt this#expression_or_spread) elements in
     let comments' = this#syntax_opt comments in
     if elements == elements' && comments == comments' then expr
     else { Array.elements = elements'; comments = comments' }
 
-  method arrow_function loc (expr: ('loc, 'loc) Flow_ast.Function.t) =
+  method arrow_function loc (expr: ('loc, 'loc) Ast.Function.t) =
     this#function_ loc expr
 
-  method assignment _loc (expr: ('loc, 'loc) Flow_ast.Expression.Assignment.t) =
-    let open Flow_ast.Expression.Assignment in
+  method assignment _loc (expr: ('loc, 'loc) Ast.Expression.Assignment.t) =
+    let open Ast.Expression.Assignment in
     let { operator = _; left; right } = expr in
     let left' = this#assignment_pattern left in
     let right' = this#expression right in
     if left == left' && right == right' then expr
     else { expr with left = left'; right = right' }
 
-  method binary _loc (expr: ('loc, 'loc) Flow_ast.Expression.Binary.t) =
-    let open Flow_ast.Expression.Binary in
+  method binary _loc (expr: ('loc, 'loc) Ast.Expression.Binary.t) =
+    let open Ast.Expression.Binary in
     let { operator = _; left; right } = expr in
     let left' = this#expression left in
     let right' = this#expression right in
     if left == left' && right == right' then expr
     else { expr with left = left'; right = right' }
 
-  method block _loc (stmt: ('loc, 'loc) Flow_ast.Statement.Block.t) =
-    let open Flow_ast.Statement.Block in
+  method block _loc (stmt: ('loc, 'loc) Ast.Statement.Block.t) =
+    let open Ast.Statement.Block in
     let { body } = stmt in
     let body' = this#statement_list body in
     if body == body' then stmt else { body = body' }
 
-  method break _loc (break: 'loc Flow_ast.Statement.Break.t) =
-    let open Flow_ast.Statement.Break in
+  method break _loc (break: 'loc Ast.Statement.Break.t) =
+    let open Ast.Statement.Break in
     let { label } = break in
     let label' = map_opt this#label_identifier label in
     if label == label' then break else { label = label' }
 
-  method call _loc (expr: ('loc, 'loc) Flow_ast.Expression.Call.t) =
-    let open Flow_ast.Expression.Call in
+  method call _loc (expr: ('loc, 'loc) Ast.Expression.Call.t) =
+    let open Ast.Expression.Call in
     let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
     let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
@@ -248,21 +250,21 @@ class ['loc] mapper = object(this)
     if callee == callee' && targs == targs' && arguments == arguments' then expr
     else { callee = callee'; targs = targs'; arguments = arguments' }
 
-  method call_arguments (arguments: ('loc, 'loc) Flow_ast.Expression.expression_or_spread list) =
+  method call_arguments (arguments: ('loc, 'loc) Ast.Expression.expression_or_spread list) =
     ListUtils.ident_map this#expression_or_spread arguments
 
-  method optional_call loc (expr: ('loc, 'loc) Flow_ast.Expression.OptionalCall.t) =
-    let open Flow_ast.Expression.OptionalCall in
+  method optional_call loc (expr: ('loc, 'loc) Ast.Expression.OptionalCall.t) =
+    let open Ast.Expression.OptionalCall in
     let { call; optional = _ } = expr in
     let call' = this#call loc call in
     if call == call' then expr
     else { expr with call = call' }
 
-  method catch_body (body: 'loc * ('loc, 'loc) Flow_ast.Statement.Block.t) =
+  method catch_body (body: 'loc * ('loc, 'loc) Ast.Statement.Block.t) =
     map_loc this#block body
 
-  method catch_clause _loc (clause: ('loc, 'loc) Flow_ast.Statement.Try.CatchClause.t') =
-    let open Flow_ast.Statement.Try.CatchClause in
+  method catch_clause _loc (clause: ('loc, 'loc) Ast.Statement.Try.CatchClause.t') =
+    let open Ast.Statement.Try.CatchClause in
     let { param; body } = clause in
 
     let param' = map_opt this#catch_clause_pattern param in
@@ -270,8 +272,8 @@ class ['loc] mapper = object(this)
     if param == param' && body == body' then clause
     else { param = param'; body = body' }
 
-  method class_ _loc (cls: ('loc, 'loc) Flow_ast.Class.t) =
-    let open Flow_ast.Class in
+  method class_ _loc (cls: ('loc, 'loc) Ast.Class.t) =
+    let open Ast.Class in
     let {
       id; body; tparams = _;
       extends;
@@ -283,42 +285,42 @@ class ['loc] mapper = object(this)
     if id == id' && body == body' && extends == extends' then cls
     else { cls with id = id'; body = body'; extends = extends' }
 
-  method class_extends _loc (extends: ('loc, 'loc) Flow_ast.Class.Extends.t') =
-    let open Flow_ast.Class.Extends in
+  method class_extends _loc (extends: ('loc, 'loc) Ast.Class.Extends.t') =
+    let open Ast.Class.Extends in
     let { expr; targs } = extends in
     let expr' = this#expression expr in
     let targs' = map_opt this#type_parameter_instantiation targs in
     if expr == expr' && targs == targs' then extends
     else { expr = expr'; targs = targs' }
 
-  method class_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
-    this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let ident
+  method class_identifier (ident: ('loc, 'loc) Ast.Identifier.t) =
+    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let ident
 
-  method class_body (cls_body: ('loc, 'loc) Flow_ast.Class.Body.t) =
-    let open Flow_ast.Class.Body in
+  method class_body (cls_body: ('loc, 'loc) Ast.Class.Body.t) =
+    let open Ast.Class.Body in
     let loc, { body } = cls_body in
     let body' = ListUtils.ident_map this#class_element body in
     if body == body' then cls_body
     else loc, { body = body' }
 
-  method class_element (elem: ('loc, 'loc) Flow_ast.Class.Body.element) =
-    let open Flow_ast.Class.Body in
+  method class_element (elem: ('loc, 'loc) Ast.Class.Body.element) =
+    let open Ast.Class.Body in
     match elem with
     | Method (loc, meth) -> id_loc this#class_method loc meth elem (fun meth -> Method (loc, meth))
     | Property (loc, prop) -> id_loc this#class_property loc prop elem (fun prop -> Property (loc, prop))
     | PrivateField (loc, field) -> id_loc this#class_private_field loc field elem
       (fun field -> PrivateField (loc, field))
 
-  method class_method _loc (meth: ('loc, 'loc) Flow_ast.Class.Method.t') =
-    let open Flow_ast.Class.Method in
+  method class_method _loc (meth: ('loc, 'loc) Ast.Class.Method.t') =
+    let open Ast.Class.Method in
     let { kind = _; key; value; static = _; decorators = _; } = meth in
     let key' = this#object_key key in
     let value' = map_loc this#function_expression value in
     if key == key' && value == value' then meth
     else { meth with key = key'; value = value' }
 
-  method class_property _loc (prop: ('loc, 'loc) Flow_ast.Class.Property.t') =
-    let open Flow_ast.Class.Property in
+  method class_property _loc (prop: ('loc, 'loc) Ast.Class.Property.t') =
+    let open Ast.Class.Property in
     let { key; value; annot; static = _; variance = _; } = prop in
     let key' = this#object_key key in
     let value' = map_opt this#expression value in
@@ -326,8 +328,8 @@ class ['loc] mapper = object(this)
     if key == key' && value == value' && annot' == annot then prop
     else { prop with key = key'; value = value'; annot = annot' }
 
-  method class_private_field _loc (prop: ('loc, 'loc) Flow_ast.Class.PrivateField.t') =
-    let open Flow_ast.Class.PrivateField in
+  method class_private_field _loc (prop: ('loc, 'loc) Ast.Class.PrivateField.t') =
+    let open Ast.Class.PrivateField in
     let { key; value; annot; static = _; variance = _; } = prop in
     let key' = this#private_name key in
     let value' = map_opt this#expression value in
@@ -336,10 +338,10 @@ class ['loc] mapper = object(this)
     else { prop with key = key'; value = value'; annot = annot' }
 
   (* TODO *)
-  method comprehension _loc (expr: ('loc, 'loc) Flow_ast.Expression.Comprehension.t) = expr
+  method comprehension _loc (expr: ('loc, 'loc) Ast.Expression.Comprehension.t) = expr
 
-  method conditional _loc (expr: ('loc, 'loc) Flow_ast.Expression.Conditional.t) =
-    let open Flow_ast.Expression.Conditional in
+  method conditional _loc (expr: ('loc, 'loc) Ast.Expression.Conditional.t) =
+    let open Ast.Expression.Conditional in
     let { test; consequent; alternate } = expr in
     let test' = this#predicate_expression test in
     let consequent' = this#expression consequent in
@@ -348,8 +350,8 @@ class ['loc] mapper = object(this)
     then expr
     else { test = test'; consequent = consequent'; alternate = alternate' }
 
-  method continue _loc (cont: 'loc Flow_ast.Statement.Continue.t) =
-    let open Flow_ast.Statement.Continue in
+  method continue _loc (cont: 'loc Ast.Statement.Continue.t) =
+    let open Ast.Statement.Continue in
     let { label; comments } = cont in
     let label' = map_opt this#label_identifier label in
     let comments' = this#syntax_opt comments in
@@ -358,8 +360,8 @@ class ['loc] mapper = object(this)
   method debugger _loc =
     ()
 
-  method declare_class _loc (decl: ('loc, 'loc) Flow_ast.Statement.DeclareClass.t) =
-    let open Flow_ast.Statement.DeclareClass in
+  method declare_class _loc (decl: ('loc, 'loc) Ast.Statement.DeclareClass.t) =
+    let open Ast.Statement.DeclareClass in
     let { id = ident; tparams; body; extends; mixins; implements } = decl in
     let id' = this#class_identifier ident in
     let tparams' = map_opt this#type_parameter_declaration tparams in
@@ -371,8 +373,8 @@ class ['loc] mapper = object(this)
     else { id = id'; tparams = tparams'; body = body'; extends = extends';
            mixins = mixins'; implements }
 
-  method declare_export_declaration _loc (decl: ('loc, 'loc) Flow_ast.Statement.DeclareExportDeclaration.t) =
-    let open Flow_ast.Statement.DeclareExportDeclaration in
+  method declare_export_declaration _loc (decl: ('loc, 'loc) Ast.Statement.DeclareExportDeclaration.t) =
+    let open Ast.Statement.DeclareExportDeclaration in
     let { default; source; specifiers; declaration } = decl in
     let specifiers' = map_opt this#export_named_specifier specifiers in
     let declaration' = map_opt this#declare_export_declaration_decl declaration in
@@ -380,11 +382,11 @@ class ['loc] mapper = object(this)
     else { default; source; specifiers = specifiers'; declaration = declaration' }
 
   (* TODO(T22777134): Implement this when the mapper supports OpaqueType. *)
-  method declare_export_declaration_decl (decl: ('loc, 'loc) Flow_ast.Statement.DeclareExportDeclaration.declaration) =
+  method declare_export_declaration_decl (decl: ('loc, 'loc) Ast.Statement.DeclareExportDeclaration.declaration) =
     decl
 
-  method declare_function _loc (decl: ('loc, 'loc) Flow_ast.Statement.DeclareFunction.t) =
-    let open Flow_ast.Statement.DeclareFunction in
+  method declare_function _loc (decl: ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
+    let open Ast.Statement.DeclareFunction in
     let { id = ident; annot; predicate } = decl in
     let id' = this#function_identifier ident in
     let annot' = this#type_annotation annot in
@@ -392,33 +394,33 @@ class ['loc] mapper = object(this)
     if id' == ident && annot' == annot then decl
     else { id = id'; annot = annot'; predicate }
 
-  method declare_interface loc (decl: ('loc, 'loc) Flow_ast.Statement.Interface.t) =
+  method declare_interface loc (decl: ('loc, 'loc) Ast.Statement.Interface.t) =
     this#interface loc decl
 
-  method declare_module _loc (m: ('loc, 'loc) Flow_ast.Statement.DeclareModule.t) =
-    let open Flow_ast.Statement.DeclareModule in
+  method declare_module _loc (m: ('loc, 'loc) Ast.Statement.DeclareModule.t) =
+    let open Ast.Statement.DeclareModule in
     let { id; body; kind } = m in
     let body' = map_loc this#block body in
     if body' == body then m
     else { id; body = body'; kind }
 
   (* TODO *)
-  method declare_module_exports _loc (annot: ('loc, 'loc) Flow_ast.Type.annotation) =
+  method declare_module_exports _loc (annot: ('loc, 'loc) Ast.Type.annotation) =
     annot
 
-  method declare_type_alias loc (decl: ('loc, 'loc) Flow_ast.Statement.TypeAlias.t) =
+  method declare_type_alias loc (decl: ('loc, 'loc) Ast.Statement.TypeAlias.t) =
     this#type_alias loc decl
 
-  method declare_variable _loc (decl: ('loc, 'loc) Flow_ast.Statement.DeclareVariable.t) =
-    let open Flow_ast.Statement.DeclareVariable in
+  method declare_variable _loc (decl: ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
+    let open Ast.Statement.DeclareVariable in
     let { id = ident; annot } = decl in
-    let id' = this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Var ident in
+    let id' = this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident in
     let annot' = this#type_annotation_hint annot in
     if id' == ident && annot' == annot then decl
     else { id = id'; annot = annot' }
 
-  method do_while _loc (stuff: ('loc, 'loc) Flow_ast.Statement.DoWhile.t) =
-    let open Flow_ast.Statement.DoWhile in
+  method do_while _loc (stuff: ('loc, 'loc) Ast.Statement.DoWhile.t) =
+    let open Ast.Statement.DoWhile in
     let { body; test } = stuff in
     let body' = this#statement body in
     let test' = this#predicate_expression test in
@@ -428,21 +430,21 @@ class ['loc] mapper = object(this)
   method empty _loc =
     ()
 
-  method export_default_declaration _loc (decl: ('loc, 'loc) Flow_ast.Statement.ExportDefaultDeclaration.t) =
-    let open Flow_ast.Statement.ExportDefaultDeclaration in
+  method export_default_declaration _loc (decl: ('loc, 'loc) Ast.Statement.ExportDefaultDeclaration.t) =
+    let open Ast.Statement.ExportDefaultDeclaration in
     let { default; declaration } = decl in
     let declaration' = this#export_default_declaration_decl declaration in
     if declaration' = declaration then decl
     else { default; declaration = declaration' }
 
-  method export_default_declaration_decl (decl: ('loc, 'loc) Flow_ast.Statement.ExportDefaultDeclaration.declaration) =
-    let open Flow_ast.Statement.ExportDefaultDeclaration in
+  method export_default_declaration_decl (decl: ('loc, 'loc) Ast.Statement.ExportDefaultDeclaration.declaration) =
+    let open Ast.Statement.ExportDefaultDeclaration in
     match decl with
     | Declaration stmt -> id this#statement stmt decl (fun stmt -> Declaration stmt)
     | Expression expr -> id this#expression expr decl (fun expr -> Expression expr)
 
-  method export_named_declaration _loc (decl: ('loc, 'loc) Flow_ast.Statement.ExportNamedDeclaration.t) =
-    let open Flow_ast.Statement.ExportNamedDeclaration in
+  method export_named_declaration _loc (decl: ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.t) =
+    let open Ast.Statement.ExportNamedDeclaration in
     let { exportKind; source; specifiers; declaration } = decl in
     let specifiers' = map_opt this#export_named_specifier specifiers in
     let declaration' = map_opt this#statement declaration in
@@ -450,24 +452,24 @@ class ['loc] mapper = object(this)
     else { exportKind; source; specifiers = specifiers'; declaration = declaration' }
 
   (* TODO *)
-  method export_named_specifier (spec: 'loc Flow_ast.Statement.ExportNamedDeclaration.specifier) =
+  method export_named_specifier (spec: 'loc Ast.Statement.ExportNamedDeclaration.specifier) =
     spec
 
-  method expression_statement _loc (stmt: ('loc, 'loc) Flow_ast.Statement.Expression.t) =
-    let open Flow_ast.Statement.Expression in
+  method expression_statement _loc (stmt: ('loc, 'loc) Ast.Statement.Expression.t) =
+    let open Ast.Statement.Expression in
     let { expression = expr; directive = _ } = stmt in
     id this#expression expr stmt (fun expression -> { stmt with expression })
 
   method expression_or_spread expr_or_spread =
-    let open Flow_ast.Expression in
+    let open Ast.Expression in
     match expr_or_spread with
     | Expression expr ->
       id this#expression expr expr_or_spread (fun expr -> Expression expr)
     | Spread spread ->
       id this#spread_element spread expr_or_spread (fun spread -> Spread spread)
 
-  method for_in_statement _loc (stmt: ('loc, 'loc) Flow_ast.Statement.ForIn.t) =
-    let open Flow_ast.Statement.ForIn in
+  method for_in_statement _loc (stmt: ('loc, 'loc) Ast.Statement.ForIn.t) =
+    let open Ast.Statement.ForIn in
     let { left; right; body; each } = stmt in
     let left' = this#for_in_statement_lhs left in
     let right' = this#expression right in
@@ -475,16 +477,16 @@ class ['loc] mapper = object(this)
     if left == left' && right == right' && body == body' then stmt
     else { left = left'; right = right'; body = body'; each }
 
-  method for_in_statement_lhs (left: ('loc, 'loc) Flow_ast.Statement.ForIn.left) =
-    let open Flow_ast.Statement.ForIn in
+  method for_in_statement_lhs (left: ('loc, 'loc) Ast.Statement.ForIn.left) =
+    let open Ast.Statement.ForIn in
     match left with
     | LeftDeclaration (loc, decl) ->
       id_loc this#variable_declaration loc decl left (fun decl -> LeftDeclaration (loc, decl))
     | LeftPattern patt ->
       id this#for_in_assignment_pattern patt left (fun patt -> LeftPattern patt)
 
-  method for_of_statement _loc (stuff: ('loc, 'loc) Flow_ast.Statement.ForOf.t) =
-    let open Flow_ast.Statement.ForOf in
+  method for_of_statement _loc (stuff: ('loc, 'loc) Ast.Statement.ForOf.t) =
+    let open Ast.Statement.ForOf in
     let { left; right; body; async } = stuff in
     let left' = this#for_of_statement_lhs left in
     let right' = this#expression right in
@@ -492,16 +494,16 @@ class ['loc] mapper = object(this)
     if left == left' && right == right' && body == body' then stuff
     else { left = left'; right = right'; body = body'; async }
 
-  method for_of_statement_lhs (left: ('loc, 'loc) Flow_ast.Statement.ForOf.left) =
-    let open Flow_ast.Statement.ForOf in
+  method for_of_statement_lhs (left: ('loc, 'loc) Ast.Statement.ForOf.left) =
+    let open Ast.Statement.ForOf in
     match left with
     | LeftDeclaration (loc, decl) ->
       id_loc this#variable_declaration loc decl left (fun decl -> LeftDeclaration (loc, decl))
     | LeftPattern patt ->
       id this#for_of_assignment_pattern patt left (fun patt -> LeftPattern patt)
 
-  method for_statement _loc (stmt: ('loc, 'loc) Flow_ast.Statement.For.t) =
-    let open Flow_ast.Statement.For in
+  method for_statement _loc (stmt: ('loc, 'loc) Ast.Statement.For.t) =
+    let open Ast.Statement.For in
     let { init; test; update; body } = stmt in
     let init' = map_opt this#for_statement_init init in
     let test' = map_opt this#predicate_expression test in
@@ -514,8 +516,8 @@ class ['loc] mapper = object(this)
       then stmt
       else { init = init'; test = test'; update = update'; body = body' }
 
-  method for_statement_init (init: ('loc, 'loc) Flow_ast.Statement.For.init) =
-    let open Flow_ast.Statement.For in
+  method for_statement_init (init: ('loc, 'loc) Ast.Statement.For.init) =
+    let open Ast.Statement.For in
     match init with
     | InitDeclaration (loc, decl) ->
       id_loc this#variable_declaration loc decl init
@@ -523,22 +525,22 @@ class ['loc] mapper = object(this)
     | InitExpression expr ->
       id this#expression expr init (fun expr -> InitExpression expr)
 
-  method function_param_type (fpt: ('loc, 'loc) Flow_ast.Type.Function.Param.t) =
-    let open Flow_ast.Type.Function.Param in
+  method function_param_type (fpt: ('loc, 'loc) Ast.Type.Function.Param.t) =
+    let open Ast.Type.Function.Param in
     let loc, { annot; name; optional; } = fpt in
     let annot' = this#type_ annot in
     if annot' == annot then fpt
     else loc, { annot = annot'; name; optional }
 
-  method function_rest_param_type (frpt: ('loc, 'loc) Flow_ast.Type.Function.RestParam.t) =
-    let open Flow_ast.Type.Function.RestParam in
+  method function_rest_param_type (frpt: ('loc, 'loc) Ast.Type.Function.RestParam.t) =
+    let open Ast.Type.Function.RestParam in
     let loc, { argument } = frpt in
     let argument' = this#function_param_type argument in
     if argument' == argument then frpt
     else loc, { argument = argument' }
 
-  method function_type _loc (ft: ('loc, 'loc) Flow_ast.Type.Function.t) =
-    let open Flow_ast.Type.Function in
+  method function_type _loc (ft: ('loc, 'loc) Ast.Type.Function.t) =
+    let open Ast.Type.Function in
     let {
       params = (params_loc, { Params.params = ps; rest = rpo });
       return;
@@ -555,40 +557,40 @@ class ['loc] mapper = object(this)
       tparams = tparams'
     }
 
-  method label_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
+  method label_identifier (ident: ('loc, 'loc) Ast.Identifier.t) =
     this#identifier ident
 
-  method object_property_value_type (opvt: ('loc, 'loc) Flow_ast.Type.Object.Property.value) =
-    let open Flow_ast.Type.Object.Property in
+  method object_property_value_type (opvt: ('loc, 'loc) Ast.Type.Object.Property.value) =
+    let open Ast.Type.Object.Property in
     match opvt with
     | Init t -> id this#type_ t opvt (fun t -> Init t)
     | Get (loc, ft) -> id_loc this#function_type loc ft opvt (fun ft -> Get (loc, ft))
     | Set (loc, ft) -> id_loc this#function_type loc ft opvt (fun ft -> Set (loc, ft))
 
-  method object_property_type (opt: ('loc, 'loc) Flow_ast.Type.Object.Property.t) =
-    let open Flow_ast.Type.Object.Property in
+  method object_property_type (opt: ('loc, 'loc) Ast.Type.Object.Property.t) =
+    let open Ast.Type.Object.Property in
     let loc, { key; value; optional; static; proto; _method; variance; } = opt in
     let value' = this#object_property_value_type value in
     if value' == value then opt
     else loc, { key; value = value'; optional; static; proto; _method; variance }
 
-  method object_spread_property_type (opt: ('loc, 'loc) Flow_ast.Type.Object.SpreadProperty.t) =
-    let open Flow_ast.Type.Object.SpreadProperty in
+  method object_spread_property_type (opt: ('loc, 'loc) Ast.Type.Object.SpreadProperty.t) =
+    let open Ast.Type.Object.SpreadProperty in
     let loc, { argument; } = opt in
     let argument' = this#type_ argument in
     if argument' == argument then opt
     else loc, { argument = argument'; }
 
-  method object_indexer_property_type (opt: ('loc, 'loc) Flow_ast.Type.Object.Indexer.t) =
-    let open Flow_ast.Type.Object.Indexer in
+  method object_indexer_property_type (opt: ('loc, 'loc) Ast.Type.Object.Indexer.t) =
+    let open Ast.Type.Object.Indexer in
     let loc, { id; key; value; static; variance; } = opt in
     let key' = this#type_ key in
     let value' = this#type_ value in
     if key' == key && value' == value then opt
     else loc, { id; key = key'; value = value'; static; variance; }
 
-  method object_type _loc (ot: ('loc, 'loc) Flow_ast.Type.Object.t) =
-    let open Flow_ast.Type.Object in
+  method object_type _loc (ot: ('loc, 'loc) Ast.Type.Object.t) =
+    let open Ast.Type.Object in
     let { properties ; exact; inexact } = ot in
     let properties' = ListUtils.ident_map (fun p -> match p with
       | Property p' -> id this#object_property_type p' p (fun p' -> Property p')
@@ -600,16 +602,16 @@ class ['loc] mapper = object(this)
     if properties' == properties then ot
     else { properties = properties'; exact; inexact }
 
-  method interface_type _loc (i: ('loc, 'loc) Flow_ast.Type.Interface.t) =
-    let open Flow_ast.Type.Interface in
+  method interface_type _loc (i: ('loc, 'loc) Ast.Type.Interface.t) =
+    let open Ast.Type.Interface in
     let { extends; body } = i in
     let extends' = ListUtils.ident_map (map_loc this#generic_type) extends in
     let body' = map_loc this#object_type body in
     if extends' == extends && body' == body then i
     else { extends = extends'; body = body' }
 
-  method generic_identifier_type (git: ('loc, 'loc) Flow_ast.Type.Generic.Identifier.t) =
-    let open Flow_ast.Type.Generic.Identifier in
+  method generic_identifier_type (git: ('loc, 'loc) Ast.Type.Generic.Identifier.t) =
+    let open Ast.Type.Generic.Identifier in
     match git with
     | Unqualified i -> id this#identifier i git (fun i -> Unqualified i)
     | Qualified (loc, {qualification; id}) ->
@@ -618,29 +620,29 @@ class ['loc] mapper = object(this)
       if qualification' == qualification && id' == id then git
       else Qualified (loc, {qualification = qualification'; id = id'})
 
-  method variance (variance: ('loc) Flow_ast.Variance.t option) = variance
+  method variance (variance: ('loc) Ast.Variance.t option) = variance
 
   method type_parameter_instantiation_with_implicit
-  (pi: ('loc, 'loc) Flow_ast.Expression.TypeParameterInstantiation.t) =
+  (pi: ('loc, 'loc) Ast.Expression.TypeParameterInstantiation.t) =
     let loc, targs = pi in
     let targs' = ListUtils.ident_map this#type_or_implicit targs in
     if targs' == targs then pi
     else loc, targs'
 
-  method type_parameter_instantiation (pi: ('loc, 'loc) Flow_ast.Type.ParameterInstantiation.t) =
+  method type_parameter_instantiation (pi: ('loc, 'loc) Ast.Type.ParameterInstantiation.t) =
     let loc, targs = pi in
     let targs' = ListUtils.ident_map this#type_ targs in
     if targs' == targs then pi
     else loc, targs'
 
-  method type_parameter_declaration (pd: ('loc, 'loc) Flow_ast.Type.ParameterDeclaration.t) =
+  method type_parameter_declaration (pd: ('loc, 'loc) Ast.Type.ParameterDeclaration.t) =
     let loc, type_params = pd in
     let type_params' = ListUtils.ident_map this#type_parameter_declaration_type_param type_params in
     if type_params' == type_params then pd
     else loc, type_params'
 
-  method type_parameter_declaration_type_param (type_param: ('loc, 'loc) Flow_ast.Type.ParameterDeclaration.TypeParam.t) =
-    let open Flow_ast.Type.ParameterDeclaration.TypeParam in
+  method type_parameter_declaration_type_param (type_param: ('loc, 'loc) Ast.Type.ParameterDeclaration.TypeParam.t) =
+    let open Ast.Type.ParameterDeclaration.TypeParam in
     let loc, { name; bound; variance; default; } = type_param in
     let name' = this#identifier name in
     let bound' = this#type_annotation_hint bound in
@@ -650,18 +652,18 @@ class ['loc] mapper = object(this)
     then type_param
     else loc, { name = name'; bound = bound'; variance = variance'; default = default'; }
 
-  method generic_type _loc (gt: ('loc, 'loc) Flow_ast.Type.Generic.t) =
-    let open Flow_ast.Type.Generic in
+  method generic_type _loc (gt: ('loc, 'loc) Ast.Type.Generic.t) =
+    let open Ast.Type.Generic in
     let { id; targs; } = gt in
     let id' = this#generic_identifier_type id in
     let targs' = map_opt this#type_parameter_instantiation targs in
     if id' == id && targs' == targs then gt
     else { id = id'; targs = targs' }
 
-  method string_literal_type _loc (lit: Flow_ast.StringLiteral.t) = lit
+  method string_literal_type _loc (lit: Ast.StringLiteral.t) = lit
 
-  method type_ (t: ('loc, 'loc) Flow_ast.Type.t) =
-    let open Flow_ast.Type in
+  method type_ (t: ('loc, 'loc) Ast.Type.t) =
+    let open Ast.Type in
     match t with
     | _, Any
     | _, Mixed
@@ -704,7 +706,7 @@ class ['loc] mapper = object(this)
       else loc, Tuple ts'
 
   method type_or_implicit t =
-    let open Flow_ast.Expression.TypeParameterInstantiation in
+    let open Ast.Expression.TypeParameterInstantiation in
     match t with
     | Explicit x ->
       let x' = this#type_ x in
@@ -712,12 +714,12 @@ class ['loc] mapper = object(this)
       else Explicit x'
     | Implicit _ -> t
 
-  method type_annotation (annot: ('loc, 'loc) Flow_ast.Type.annotation) =
+  method type_annotation (annot: ('loc, 'loc) Ast.Type.annotation) =
     let loc, a = annot in
     id this#type_ a annot (fun a -> (loc, a))
 
-  method type_annotation_hint (return: ('M, 'T) Flow_ast.Type.annotation_or_hint) =
-    let open Flow_ast.Type in
+  method type_annotation_hint (return: ('M, 'T) Ast.Type.annotation_or_hint) =
+    let open Ast.Type in
     match return with
     | Available annot ->
       let annot' = this#type_annotation annot in
@@ -725,15 +727,15 @@ class ['loc] mapper = object(this)
       else Available annot'
     | Missing _loc -> return
 
-  method function_declaration loc (stmt: ('loc, 'loc) Flow_ast.Function.t) =
+  method function_declaration loc (stmt: ('loc, 'loc) Ast.Function.t) =
     this#function_ loc stmt
 
-  method function_expression loc (stmt: ('loc, 'loc) Flow_ast.Function.t) =
+  method function_expression loc (stmt: ('loc, 'loc) Ast.Function.t) =
     this#function_ loc stmt
 
   (* Internal helper for function declarations, function expressions and arrow functions *)
-  method function_ _loc (expr: ('loc, 'loc) Flow_ast.Function.t) =
-    let open Flow_ast.Function in
+  method function_ _loc (expr: ('loc, 'loc) Ast.Function.t) =
+    let open Ast.Function in
     let {
       id = ident; params; body; async; generator;
       predicate; return; tparams; sig_loc;
@@ -751,47 +753,47 @@ class ['loc] mapper = object(this)
       async; generator; predicate; tparams = tparams'; sig_loc;
     }
 
-  method function_params (params: ('loc, 'loc) Flow_ast.Function.Params.t) =
-    let open Flow_ast.Function in
+  method function_params (params: ('loc, 'loc) Ast.Function.Params.t) =
+    let open Ast.Function in
     let (loc, { Params.params = params_list; rest }) = params in
     let params_list' = ListUtils.ident_map this#function_param params_list in
     let rest' = map_opt this#function_rest_param rest in
     if params_list == params_list' && rest == rest' then params
     else (loc, { Params.params = params_list'; rest = rest' })
 
-  method function_param (param: ('loc, 'loc) Flow_ast.Function.Param.t) =
-    let open Flow_ast.Function.Param in
+  method function_param (param: ('loc, 'loc) Ast.Function.Param.t) =
+    let open Ast.Function.Param in
     let (loc, { argument; default }) = param in
     let argument' = this#function_param_pattern argument in
     let default' = map_opt this#expression default in
     if argument == argument' && default == default' then param
     else (loc, { argument = argument'; default = default' })
 
-  method function_body_any (body: ('loc, 'loc) Flow_ast.Function.body) =
+  method function_body_any (body: ('loc, 'loc) Ast.Function.body) =
     match body with
-      | Flow_ast.Function.BodyBlock (loc, block) ->
-        id_loc this#function_body loc block body (fun block -> Flow_ast.Function.BodyBlock (loc, block))
-      | Flow_ast.Function.BodyExpression expr ->
-        id this#expression expr body (fun expr -> Flow_ast.Function.BodyExpression expr)
+      | Ast.Function.BodyBlock (loc, block) ->
+        id_loc this#function_body loc block body (fun block -> Ast.Function.BodyBlock (loc, block))
+      | Ast.Function.BodyExpression expr ->
+        id this#expression expr body (fun expr -> Ast.Function.BodyExpression expr)
 
-  method function_body loc (block: ('loc, 'loc) Flow_ast.Statement.Block.t) =
+  method function_body loc (block: ('loc, 'loc) Ast.Statement.Block.t) =
     this#block loc block
 
-  method function_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
-    this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Var ident
+  method function_identifier (ident: ('loc, 'loc) Ast.Identifier.t) =
+    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Var ident
 
   (* TODO *)
-  method generator _loc (expr: ('loc, 'loc) Flow_ast.Expression.Generator.t) = expr
+  method generator _loc (expr: ('loc, 'loc) Ast.Expression.Generator.t) = expr
 
-  method identifier (id: ('loc, 'loc) Flow_ast.Identifier.t) =
-    let open Flow_ast.Identifier in
+  method identifier (id: ('loc, 'loc) Ast.Identifier.t) =
+    let open Ast.Identifier in
     let (loc, { name; comments }) = id in
     let comments' = this#syntax_opt comments in
     if comments == comments' then id
     else loc, { name; comments = comments' }
 
-  method interface _loc (interface: ('loc, 'loc) Flow_ast.Statement.Interface.t) =
-    let open Flow_ast.Statement.Interface in
+  method interface _loc (interface: ('loc, 'loc) Ast.Statement.Interface.t) =
+    let open Ast.Statement.Interface in
     let { id = ident; tparams; extends; body } = interface in
     let id' = this#class_identifier ident in
     let tparams' = map_opt this#type_parameter_declaration tparams in
@@ -801,22 +803,22 @@ class ['loc] mapper = object(this)
     then interface
     else { id = id'; tparams = tparams'; extends = extends'; body = body' }
 
-  method interface_declaration loc (decl: ('loc, 'loc) Flow_ast.Statement.Interface.t) =
+  method interface_declaration loc (decl: ('loc, 'loc) Ast.Statement.Interface.t) =
     this#interface loc decl
 
-  method private_name (expr: 'loc Flow_ast.PrivateName.t) = expr
+  method private_name (expr: 'loc Ast.PrivateName.t) = expr
 
-  method import _loc (expr: ('loc, 'loc) Flow_ast.Expression.t) = expr
+  method import _loc (expr: ('loc, 'loc) Ast.Expression.t) = expr
 
-  method if_consequent_statement ~has_else (stmt: ('loc, 'loc) Flow_ast.Statement.t) =
+  method if_consequent_statement ~has_else (stmt: ('loc, 'loc) Ast.Statement.t) =
     ignore has_else;
     this#statement stmt
 
-  method if_alternate_statement (stmt: ('loc, 'loc) Flow_ast.Statement.t) =
+  method if_alternate_statement (stmt: ('loc, 'loc) Ast.Statement.t) =
     this#statement stmt
 
-  method if_statement _loc (stmt: ('loc, 'loc) Flow_ast.Statement.If.t) =
-    let open Flow_ast.Statement.If in
+  method if_statement _loc (stmt: ('loc, 'loc) Ast.Statement.If.t) =
+    let open Ast.Statement.If in
     let { test; consequent; alternate } = stmt in
     let test' = this#predicate_expression test in
     let consequent' =
@@ -826,16 +828,16 @@ class ['loc] mapper = object(this)
     then stmt
     else { test = test'; consequent = consequent'; alternate = alternate' }
 
-  method import_declaration _loc (decl: ('loc, 'loc) Flow_ast.Statement.ImportDeclaration.t) =
-    let open Flow_ast.Statement.ImportDeclaration in
+  method import_declaration _loc (decl: ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
+    let open Ast.Statement.ImportDeclaration in
     let { importKind; source; specifiers; default } = decl in
     let specifiers' = map_opt this#import_specifier specifiers in
     let default' = map_opt this#import_default_specifier default in
     if specifiers == specifiers' && default == default' then decl
     else { importKind; source; specifiers = specifiers'; default = default' }
 
-  method import_specifier (specifier: ('loc, 'loc) Flow_ast.Statement.ImportDeclaration.specifier) =
-    let open Flow_ast.Statement.ImportDeclaration in
+  method import_specifier (specifier: ('loc, 'loc) Ast.Statement.ImportDeclaration.specifier) =
+    let open Ast.Statement.ImportDeclaration in
     match specifier with
     | ImportNamedSpecifiers named_specifiers ->
       let named_specifiers' = ListUtils.ident_map this#import_named_specifier named_specifiers in
@@ -845,26 +847,26 @@ class ['loc] mapper = object(this)
       id_loc this#import_namespace_specifier loc ident specifier
         (fun ident -> ImportNamespaceSpecifier (loc, ident))
 
-  method import_named_specifier (specifier: ('loc, 'loc) Flow_ast.Statement.ImportDeclaration.named_specifier) =
-    let open Flow_ast.Statement.ImportDeclaration in
+  method import_named_specifier (specifier: ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =
+    let open Ast.Statement.ImportDeclaration in
     let { kind; local; remote } = specifier in
     let remote' = this#identifier remote in
     let local' = begin match local with
       | None -> None
-      | Some ident -> id (this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let)
+      | Some ident -> id (this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let)
           ident local (fun ident -> Some ident)
       end in
     if local == local' && remote == remote' then specifier
     else { kind; local = local'; remote = remote'}
 
-  method import_default_specifier (id: ('loc, 'loc) Flow_ast.Identifier.t) =
-    this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let id
+  method import_default_specifier (id: ('loc, 'loc) Ast.Identifier.t) =
+    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
-  method import_namespace_specifier _loc (id: ('loc, 'loc) Flow_ast.Identifier.t) =
-    this#pattern_identifier ~kind:Flow_ast.Statement.VariableDeclaration.Let id
+  method import_namespace_specifier _loc (id: ('loc, 'loc) Ast.Identifier.t) =
+    this#pattern_identifier ~kind:Ast.Statement.VariableDeclaration.Let id
 
-  method jsx_element _loc (expr: ('loc, 'loc) Flow_ast.JSX.element) =
-    let open Flow_ast.JSX in
+  method jsx_element _loc (expr: ('loc, 'loc) Ast.JSX.element) =
+    let open Ast.JSX in
     let { openingElement; closingElement; children } = expr in
     let openingElement' = this#jsx_opening_element openingElement in
     let closingElement' = map_opt this#jsx_closing_element closingElement in
@@ -872,61 +874,61 @@ class ['loc] mapper = object(this)
     if openingElement == openingElement' && closingElement == closingElement' && children == children' then expr
     else { openingElement = openingElement'; closingElement = closingElement'; children = children' }
 
-  method jsx_fragment _loc (expr: ('loc, 'loc) Flow_ast.JSX.fragment) =
-    let open Flow_ast.JSX in
+  method jsx_fragment _loc (expr: ('loc, 'loc) Ast.JSX.fragment) =
+    let open Ast.JSX in
     let { frag_children; _ } = expr in
     let children' = this#jsx_children frag_children in
     if frag_children == children' then expr
     else { expr with frag_children = children' }
 
-  method jsx_opening_element (elem: ('loc, 'loc) Flow_ast.JSX.Opening.t) =
-    let open Flow_ast.JSX.Opening in
+  method jsx_opening_element (elem: ('loc, 'loc) Ast.JSX.Opening.t) =
+    let open Ast.JSX.Opening in
     let loc, { name; selfClosing; attributes } = elem in
     let name' = this#jsx_name name in
     let attributes' = ListUtils.ident_map this#jsx_opening_attribute attributes in
     if name == name' && attributes == attributes' then elem
     else loc, { name = name'; selfClosing; attributes = attributes' }
 
-  method jsx_closing_element (elem: ('loc, 'loc) Flow_ast.JSX.Closing.t) =
-    let open Flow_ast.JSX.Closing in
+  method jsx_closing_element (elem: ('loc, 'loc) Ast.JSX.Closing.t) =
+    let open Ast.JSX.Closing in
     let loc, {name} = elem in
     let name' = this#jsx_name name in
     if name == name' then elem else loc, {name=name'}
 
-  method jsx_opening_attribute (jsx_attr: ('loc, 'loc) Flow_ast.JSX.Opening.attribute) =
-    let open Flow_ast.JSX.Opening in
+  method jsx_opening_attribute (jsx_attr: ('loc, 'loc) Ast.JSX.Opening.attribute) =
+    let open Ast.JSX.Opening in
     match jsx_attr with
     | Attribute attr ->
       id this#jsx_attribute attr jsx_attr (fun attr -> Attribute attr)
     | SpreadAttribute (loc, attr) ->
       id_loc this#jsx_spread_attribute loc attr jsx_attr (fun attr -> SpreadAttribute (loc, attr))
 
-  method jsx_spread_attribute _loc (attr: ('loc, 'loc) Flow_ast.JSX.SpreadAttribute.t') =
-    let open Flow_ast.JSX.SpreadAttribute in
+  method jsx_spread_attribute _loc (attr: ('loc, 'loc) Ast.JSX.SpreadAttribute.t') =
+    let open Ast.JSX.SpreadAttribute in
     let { argument } = attr in
     id this#expression argument attr (fun argument -> { argument })
 
-  method jsx_attribute (attr: ('loc, 'loc) Flow_ast.JSX.Attribute.t) =
-    let open Flow_ast.JSX.Attribute in
+  method jsx_attribute (attr: ('loc, 'loc) Ast.JSX.Attribute.t) =
+    let open Ast.JSX.Attribute in
     let loc, { name; value } = attr in
     let value' = map_opt this#jsx_attribute_value value in
     if value == value' then attr
     else loc, { name; value = value' }
 
-  method jsx_attribute_value (value: ('loc, 'loc) Flow_ast.JSX.Attribute.value) =
-    let open Flow_ast.JSX.Attribute in
+  method jsx_attribute_value (value: ('loc, 'loc) Ast.JSX.Attribute.value) =
+    let open Ast.JSX.Attribute in
     match value with
     | Literal _ -> value
     | ExpressionContainer (loc, expr) ->
       id_loc this#jsx_expression loc expr value (fun expr -> ExpressionContainer (loc, expr))
 
-  method jsx_children ((loc, children) as orig: 'loc * ('loc, 'loc) Flow_ast.JSX.child list) =
+  method jsx_children ((loc, children) as orig: 'loc * ('loc, 'loc) Ast.JSX.child list) =
     let children' = ListUtils.ident_map this#jsx_child children in
     if children == children' then orig
     else (loc, children')
 
-  method jsx_child (child: ('loc, 'loc) Flow_ast.JSX.child) =
-    let open Flow_ast.JSX in
+  method jsx_child (child: ('loc, 'loc) Ast.JSX.child) =
+    let open Ast.JSX in
     match child with
     | loc, Element elem ->
       id_loc this#jsx_element loc elem child (fun elem -> loc, Element elem)
@@ -938,16 +940,16 @@ class ['loc] mapper = object(this)
       id this#expression expr child (fun expr -> loc, SpreadChild expr)
     | _loc, Text _ -> child
 
-  method jsx_expression _loc (jsx_expr: ('loc, 'loc) Flow_ast.JSX.ExpressionContainer.t) =
-    let open Flow_ast.JSX.ExpressionContainer in
+  method jsx_expression _loc (jsx_expr: ('loc, 'loc) Ast.JSX.ExpressionContainer.t) =
+    let open Ast.JSX.ExpressionContainer in
     let { expression } = jsx_expr in
     match expression with
     | Expression expr ->
       id this#expression expr jsx_expr (fun expr -> { expression = Expression expr})
     | EmptyExpression _ -> jsx_expr
 
-  method jsx_name (name: ('loc, 'loc) Flow_ast.JSX.name) =
-    let open Flow_ast.JSX in
+  method jsx_name (name: ('loc, 'loc) Ast.JSX.name) =
+    let open Ast.JSX in
     let name' = match name with
       | Identifier id -> Identifier (this#jsx_identifier id)
       | NamespacedName namespaced_name ->
@@ -959,8 +961,8 @@ class ['loc] mapper = object(this)
      * above *)
     if name = name' then name else name'
 
-  method jsx_namespaced_name (namespaced_name: ('loc, 'loc) Flow_ast.JSX.NamespacedName.t) =
-    let open Flow_ast.JSX in
+  method jsx_namespaced_name (namespaced_name: ('loc, 'loc) Ast.JSX.NamespacedName.t) =
+    let open Ast.JSX in
     let open NamespacedName in
     let loc, {namespace; name} = namespaced_name in
     let namespace' = this#jsx_identifier namespace in
@@ -970,8 +972,8 @@ class ['loc] mapper = object(this)
     else
       loc, {namespace=namespace'; name=name'}
 
-  method jsx_member_expression (member_exp: ('loc, 'loc) Flow_ast.JSX.MemberExpression.t) =
-    let open Flow_ast.JSX in
+  method jsx_member_expression (member_exp: ('loc, 'loc) Ast.JSX.MemberExpression.t) =
+    let open Ast.JSX in
     let loc, {MemberExpression._object; MemberExpression.property} = member_exp in
     let _object' = match _object with
       | MemberExpression.Identifier id ->
@@ -990,43 +992,43 @@ class ['loc] mapper = object(this)
     else
       loc, MemberExpression.({_object=_object'; property=property'})
 
-  method jsx_identifier (id: 'loc Flow_ast.JSX.Identifier.t) = id
+  method jsx_identifier (id: 'loc Ast.JSX.Identifier.t) = id
 
-  method labeled_statement _loc (stmt: ('loc, 'loc) Flow_ast.Statement.Labeled.t) =
-    let open Flow_ast.Statement.Labeled in
+  method labeled_statement _loc (stmt: ('loc, 'loc) Ast.Statement.Labeled.t) =
+    let open Ast.Statement.Labeled in
     let { label; body } = stmt in
     let label' = this#label_identifier label in
     let body' = this#statement body in
     if label == label' && body == body' then stmt
     else { label = label'; body = body' }
 
-  method literal _loc (expr: 'loc Flow_ast.Literal.t) = expr
+  method literal _loc (expr: 'loc Ast.Literal.t) = expr
 
-  method logical _loc (expr: ('loc, 'loc) Flow_ast.Expression.Logical.t) =
-    let open Flow_ast.Expression.Logical in
+  method logical _loc (expr: ('loc, 'loc) Ast.Expression.Logical.t) =
+    let open Ast.Expression.Logical in
     let { operator = _; left; right } = expr in
     let left' = this#expression left in
     let right' = this#expression right in
     if left == left' && right == right' then expr
     else { expr with left = left'; right = right' }
 
-  method member _loc (expr: ('loc, 'loc) Flow_ast.Expression.Member.t) =
-    let open Flow_ast.Expression.Member in
+  method member _loc (expr: ('loc, 'loc) Ast.Expression.Member.t) =
+    let open Ast.Expression.Member in
     let { _object; property } = expr in
     let _object' = this#expression _object in
     let property' = this#member_property property in
     if _object == _object' && property == property' then expr
     else { _object = _object'; property = property' }
 
-  method optional_member loc (expr: ('loc, 'loc) Flow_ast.Expression.OptionalMember.t) =
-    let open Flow_ast.Expression.OptionalMember in
+  method optional_member loc (expr: ('loc, 'loc) Ast.Expression.OptionalMember.t) =
+    let open Ast.Expression.OptionalMember in
     let { member; optional = _ } = expr in
     let member' = this#member loc member in
     if member == member' then expr
     else { expr with member = member' }
 
-  method member_property (expr: ('loc, 'loc) Flow_ast.Expression.Member.property) =
-    let open Flow_ast.Expression.Member in
+  method member_property (expr: ('loc, 'loc) Ast.Expression.Member.property) =
+    let open Ast.Expression.Member in
     match expr with
     | PropertyIdentifier ident ->
       id this#member_property_identifier ident expr
@@ -1037,20 +1039,20 @@ class ['loc] mapper = object(this)
     | PropertyExpression e ->
       id this#member_property_expression e expr (fun e -> PropertyExpression e)
 
-  method member_property_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
+  method member_property_identifier (ident: ('loc, 'loc) Ast.Identifier.t) =
     this#identifier ident
 
-  method member_private_name (name: 'loc Flow_ast.PrivateName.t) =
+  method member_private_name (name: 'loc Ast.PrivateName.t) =
     this#private_name name
 
-  method member_property_expression (expr: ('loc, 'loc) Flow_ast.Expression.t) =
+  method member_property_expression (expr: ('loc, 'loc) Ast.Expression.t) =
     this#expression expr
 
   (* TODO *)
-  method meta_property _loc (expr: 'loc Flow_ast.Expression.MetaProperty.t) = expr
+  method meta_property _loc (expr: 'loc Ast.Expression.MetaProperty.t) = expr
 
-  method new_ _loc (expr: ('loc, 'loc) Flow_ast.Expression.New.t) =
-    let open Flow_ast.Expression.New in
+  method new_ _loc (expr: ('loc, 'loc) Ast.Expression.New.t) =
+    let open Ast.Expression.New in
     let { callee; targs; arguments } = expr in
     let callee' = this#expression callee in
     let targs' = map_opt this#type_parameter_instantiation_with_implicit targs in
@@ -1058,8 +1060,8 @@ class ['loc] mapper = object(this)
     if callee == callee' && targs == targs' && arguments == arguments' then expr
     else { callee = callee'; targs = targs'; arguments = arguments' }
 
-  method object_ _loc (expr: ('loc, 'loc) Flow_ast.Expression.Object.t) =
-    let open Flow_ast.Expression.Object in
+  method object_ _loc (expr: ('loc, 'loc) Ast.Expression.Object.t) =
+    let open Ast.Expression.Object in
     let { properties; comments } = expr in
     let properties' = ListUtils.ident_map (fun prop ->
       match prop with
@@ -1074,8 +1076,8 @@ class ['loc] mapper = object(this)
     if properties == properties' && comments == comments' then expr
     else { properties = properties'; comments = comments' }
 
-  method object_property (prop: ('loc, 'loc) Flow_ast.Expression.Object.Property.t) =
-    let open Flow_ast.Expression.Object.Property in
+  method object_property (prop: ('loc, 'loc) Ast.Expression.Object.Property.t) =
+    let open Ast.Expression.Object.Property in
     match prop with
     | loc, Init { key; value; shorthand } ->
       let key' = this#object_key key in
@@ -1101,8 +1103,8 @@ class ['loc] mapper = object(this)
       if key == key' && fn == fn' then prop
       else (loc, Set { key = key'; value = fn' })
 
-  method object_key (key: ('loc, 'loc) Flow_ast.Expression.Object.Property.key) =
-    let open Flow_ast.Expression.Object.Property in
+  method object_key (key: ('loc, 'loc) Ast.Expression.Object.Property.key) =
+    let open Ast.Expression.Object.Property in
     match key with
     | Literal (loc, lit) ->
       id_loc this#literal loc lit key (fun lit -> Literal (loc, lit))
@@ -1113,11 +1115,11 @@ class ['loc] mapper = object(this)
     | Computed expr ->
       id this#expression expr key (fun expr -> Computed expr)
 
-  method object_key_identifier (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
+  method object_key_identifier (ident: ('loc, 'loc) Ast.Identifier.t) =
     this#identifier ident
 
-  method opaque_type _loc (otype: ('loc, 'loc) Flow_ast.Statement.OpaqueType.t) =
-    let open Flow_ast.Statement.OpaqueType in
+  method opaque_type _loc (otype: ('loc, 'loc) Ast.Statement.OpaqueType.t) =
+    let open Ast.Statement.OpaqueType in
     let { id; tparams; impltype; supertype } = otype in
     let id' = this#identifier id in
     let tparams' = map_opt this#type_parameter_declaration tparams in
@@ -1136,33 +1138,33 @@ class ['loc] mapper = object(this)
       supertype = supertype'
     }
 
-  method function_param_pattern (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method function_param_pattern (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#binding_pattern expr
 
-  method variable_declarator_pattern ~kind (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method variable_declarator_pattern ~kind (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#binding_pattern ~kind expr
 
-  method catch_clause_pattern (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
-    this#binding_pattern ~kind:Flow_ast.Statement.VariableDeclaration.Let expr
+  method catch_clause_pattern (expr: ('loc, 'loc) Ast.Pattern.t) =
+    this#binding_pattern ~kind:Ast.Statement.VariableDeclaration.Let expr
 
-  method for_in_assignment_pattern (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method for_in_assignment_pattern (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#assignment_pattern expr
 
-  method for_of_assignment_pattern (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method for_of_assignment_pattern (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#assignment_pattern expr
 
-  method binding_pattern ?(kind=Flow_ast.Statement.VariableDeclaration.Var) (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method binding_pattern ?(kind=Ast.Statement.VariableDeclaration.Var) (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#pattern ~kind expr
 
-  method assignment_pattern (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method assignment_pattern (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#pattern expr
 
   (* NOTE: Patterns are highly overloaded. A pattern can be a binding pattern,
      which has a kind (Var/Let/Const, with Var being the default for all pre-ES5
      bindings), or an assignment pattern, which has no kind. Subterms that are
      patterns inherit the kind (or lack thereof). *)
-  method pattern ?kind (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
-    let open Flow_ast.Pattern in
+  method pattern ?kind (expr: ('loc, 'loc) Ast.Pattern.t) =
+    let open Ast.Pattern in
     let (loc, patt) = expr in
     let patt' = match patt with
       | Object { Object.properties; annot } ->
@@ -1185,24 +1187,24 @@ class ['loc] mapper = object(this)
     in
     if patt == patt' then expr else (loc, patt')
 
-  method pattern_identifier ?kind (ident: ('loc, 'loc) Flow_ast.Identifier.t) =
+  method pattern_identifier ?kind (ident: ('loc, 'loc) Ast.Identifier.t) =
     ignore kind;
     this#identifier ident
 
-  method pattern_literal ?kind loc (expr: 'loc Flow_ast.Literal.t) =
+  method pattern_literal ?kind loc (expr: 'loc Ast.Literal.t) =
     ignore kind;
     this#literal loc expr
 
-  method pattern_object_p ?kind (p: ('loc, 'loc) Flow_ast.Pattern.Object.property) =
-    let open Flow_ast.Pattern.Object in
+  method pattern_object_p ?kind (p: ('loc, 'loc) Ast.Pattern.Object.property) =
+    let open Ast.Pattern.Object in
     match p with
     | Property (loc, prop) ->
       id (this#pattern_object_property ?kind) prop p (fun prop -> Property (loc, prop))
     | RestProperty (loc, prop) ->
       id (this#pattern_object_rest_property ?kind) prop p (fun prop -> RestProperty (loc, prop))
 
-  method pattern_object_property ?kind (prop: ('loc, 'loc) Flow_ast.Pattern.Object.Property.t') =
-    let open Flow_ast.Pattern.Object.Property in
+  method pattern_object_property ?kind (prop: ('loc, 'loc) Ast.Pattern.Object.Property.t') =
+    let open Ast.Pattern.Object.Property in
     let { key; pattern; default; shorthand = _ } = prop in
     let key' = this#pattern_object_property_key ?kind key in
     let pattern' = this#pattern_object_property_pattern ?kind pattern in
@@ -1210,8 +1212,8 @@ class ['loc] mapper = object(this)
     if key' == key && pattern' == pattern && default' == default then prop
     else { key = key'; pattern = pattern'; default = default'; shorthand = false }
 
-  method pattern_object_property_key ?kind (key: ('loc, 'loc) Flow_ast.Pattern.Object.Property.key) =
-    let open Flow_ast.Pattern.Object.Property in
+  method pattern_object_property_key ?kind (key: ('loc, 'loc) Ast.Pattern.Object.Property.key) =
+    let open Ast.Pattern.Object.Property in
     match key with
     | Literal (loc, lit) ->
       id_loc (this#pattern_object_property_literal_key ?kind) loc lit key (fun lit' -> Literal (loc, lit'))
@@ -1220,131 +1222,131 @@ class ['loc] mapper = object(this)
     | Computed expr ->
       id (this#pattern_object_property_computed_key ?kind) expr key (fun expr' -> Computed expr')
 
-  method pattern_object_property_literal_key ?kind loc (key: 'loc Flow_ast.Literal.t) =
+  method pattern_object_property_literal_key ?kind loc (key: 'loc Ast.Literal.t) =
     this#pattern_literal ?kind loc key
 
-  method pattern_object_property_identifier_key ?kind (key: ('loc, 'loc) Flow_ast.Identifier.t) =
+  method pattern_object_property_identifier_key ?kind (key: ('loc, 'loc) Ast.Identifier.t) =
     this#pattern_identifier ?kind key
 
-  method pattern_object_property_computed_key ?kind (key: ('loc, 'loc) Flow_ast.Expression.t) =
+  method pattern_object_property_computed_key ?kind (key: ('loc, 'loc) Ast.Expression.t) =
     ignore kind;
     this#pattern_expression key
 
-  method pattern_object_rest_property ?kind (prop: ('loc, 'loc) Flow_ast.Pattern.Object.RestProperty.t') =
-    let open Flow_ast.Pattern.Object.RestProperty in
+  method pattern_object_rest_property ?kind (prop: ('loc, 'loc) Ast.Pattern.Object.RestProperty.t') =
+    let open Ast.Pattern.Object.RestProperty in
     let { argument } = prop in
     let argument' = this#pattern_object_rest_property_pattern ?kind argument in
     if argument' == argument then prop
     else { argument = argument' }
 
-  method pattern_object_property_pattern ?kind (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method pattern_object_property_pattern ?kind (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#pattern ?kind expr
 
-  method pattern_object_rest_property_pattern ?kind (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method pattern_object_rest_property_pattern ?kind (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#pattern ?kind expr
 
-  method pattern_array_e ?kind (e: ('loc, 'loc) Flow_ast.Pattern.Array.element) =
-    let open Flow_ast.Pattern.Array in
+  method pattern_array_e ?kind (e: ('loc, 'loc) Ast.Pattern.Array.element) =
+    let open Ast.Pattern.Array in
     match e with
     | Element (loc, elem) ->
       id (this#pattern_array_element ?kind) elem e (fun elem -> Element (loc, elem))
     | RestElement (loc, elem) ->
       id (this#pattern_array_rest_element ?kind) elem e (fun elem -> RestElement (loc, elem))
 
-  method pattern_array_element ?kind (elem: ('loc, 'loc) Flow_ast.Pattern.Array.Element.t') =
-    let open Flow_ast.Pattern.Array.Element in
+  method pattern_array_element ?kind (elem: ('loc, 'loc) Ast.Pattern.Array.Element.t') =
+    let open Ast.Pattern.Array.Element in
     let { argument; default } = elem in
     let argument' = this#pattern_array_element_pattern ?kind argument in
     let default' = map_opt this#expression default in
     if argument == argument' && default == default' then elem
     else { argument = argument'; default = default' }
 
-  method pattern_array_element_pattern ?kind (patt: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method pattern_array_element_pattern ?kind (patt: ('loc, 'loc) Ast.Pattern.t) =
     this#pattern ?kind patt
 
-  method pattern_array_rest_element ?kind (elem: ('loc, 'loc) Flow_ast.Pattern.Array.RestElement.t') =
-    let open Flow_ast.Pattern.Array.RestElement in
+  method pattern_array_rest_element ?kind (elem: ('loc, 'loc) Ast.Pattern.Array.RestElement.t') =
+    let open Ast.Pattern.Array.RestElement in
     let { argument } = elem in
     let argument' = this#pattern_array_rest_element_pattern ?kind argument in
     if argument' == argument then elem
     else { argument = argument' }
 
-  method pattern_array_rest_element_pattern ?kind (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method pattern_array_rest_element_pattern ?kind (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#pattern ?kind expr
 
-  method pattern_assignment_pattern ?kind (expr: ('loc, 'loc) Flow_ast.Pattern.t) =
+  method pattern_assignment_pattern ?kind (expr: ('loc, 'loc) Ast.Pattern.t) =
     this#pattern ?kind expr
 
-  method pattern_expression (expr: ('loc, 'loc) Flow_ast.Expression.t) =
+  method pattern_expression (expr: ('loc, 'loc) Ast.Expression.t) =
     this#expression expr
 
-  method predicate_expression (expr: ('loc, 'loc) Flow_ast.Expression.t) =
+  method predicate_expression (expr: ('loc, 'loc) Ast.Expression.t) =
     this#expression expr
 
-  method function_rest_param (expr: ('loc, 'loc) Flow_ast.Function.RestParam.t) =
-    let open Flow_ast.Function.RestParam in
+  method function_rest_param (expr: ('loc, 'loc) Ast.Function.RestParam.t) =
+    let open Ast.Function.RestParam in
     let loc, { argument } = expr in
     id this#binding_pattern argument expr (fun argument -> loc, { argument })
 
-  method return _loc (stmt: ('loc, 'loc) Flow_ast.Statement.Return.t) =
-    let open Flow_ast.Statement.Return in
+  method return _loc (stmt: ('loc, 'loc) Ast.Statement.Return.t) =
+    let open Ast.Statement.Return in
     let { argument; comments } = stmt in
     let argument' = map_opt this#expression argument in
     let comments' = this#syntax_opt comments in
     if argument == argument' && comments == comments' then stmt
     else { argument = argument'; comments = comments' }
 
-  method sequence _loc (expr: ('loc, 'loc) Flow_ast.Expression.Sequence.t) =
-    let open Flow_ast.Expression.Sequence in
+  method sequence _loc (expr: ('loc, 'loc) Ast.Expression.Sequence.t) =
+    let open Ast.Expression.Sequence in
     let { expressions } = expr in
     let expressions' = ListUtils.ident_map this#expression expressions in
     if expressions == expressions' then expr else { expressions = expressions' }
 
-  method toplevel_statement_list (stmts: ('loc, 'loc) Flow_ast.Statement.t list) =
+  method toplevel_statement_list (stmts: ('loc, 'loc) Ast.Statement.t list) =
     this#statement_list stmts
 
-  method statement_list (stmts: ('loc, 'loc) Flow_ast.Statement.t list) =
+  method statement_list (stmts: ('loc, 'loc) Ast.Statement.t list) =
     ListUtils.ident_map_multiple this#statement_fork_point stmts
 
-  method statement_fork_point (stmt: ('loc, 'loc) Flow_ast.Statement.t) =
+  method statement_fork_point (stmt: ('loc, 'loc) Ast.Statement.t) =
     [this#statement stmt]
 
-  method spread_element (expr: ('loc, 'loc) Flow_ast.Expression.SpreadElement.t) =
-    let open Flow_ast.Expression.SpreadElement in
+  method spread_element (expr: ('loc, 'loc) Ast.Expression.SpreadElement.t) =
+    let open Ast.Expression.SpreadElement in
     let loc, { argument } = expr in
     id this#expression argument expr (fun argument -> loc, { argument })
 
-  method spread_property (expr: ('loc, 'loc) Flow_ast.Expression.Object.SpreadProperty.t) =
-    let open Flow_ast.Expression.Object.SpreadProperty in
+  method spread_property (expr: ('loc, 'loc) Ast.Expression.Object.SpreadProperty.t) =
+    let open Ast.Expression.Object.SpreadProperty in
     let (loc, { argument }) = expr in
     id this#expression argument expr (fun argument -> loc, { argument })
 
-  method switch _loc (switch: ('loc, 'loc) Flow_ast.Statement.Switch.t) =
-    let open Flow_ast.Statement.Switch in
+  method switch _loc (switch: ('loc, 'loc) Ast.Statement.Switch.t) =
+    let open Ast.Statement.Switch in
     let { discriminant; cases } = switch in
     let discriminant' = this#expression discriminant in
     let cases' = ListUtils.ident_map (map_loc this#switch_case) cases in
     if discriminant == discriminant' && cases == cases' then switch
     else { discriminant = discriminant'; cases = cases' }
 
-  method switch_case _loc (case: ('loc, 'loc) Flow_ast.Statement.Switch.Case.t') =
-    let open Flow_ast.Statement.Switch.Case in
+  method switch_case _loc (case: ('loc, 'loc) Ast.Statement.Switch.Case.t') =
+    let open Ast.Statement.Switch.Case in
     let { test; consequent } = case in
     let test' = map_opt this#expression test in
     let consequent' = this#statement_list consequent in
     if test == test' && consequent == consequent' then case
     else { test = test'; consequent = consequent' }
 
-  method tagged_template _loc (expr: ('loc, 'loc) Flow_ast.Expression.TaggedTemplate.t) =
-    let open Flow_ast.Expression.TaggedTemplate in
+  method tagged_template _loc (expr: ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
+    let open Ast.Expression.TaggedTemplate in
     let { tag; quasi } = expr in
     let tag' = this#expression tag in
     let quasi' = map_loc this#template_literal quasi in
     if tag == tag' && quasi == quasi' then expr
     else { tag = tag'; quasi = quasi' }
 
-  method template_literal _loc (expr: ('loc, 'loc) Flow_ast.Expression.TemplateLiteral.t) =
-    let open Flow_ast.Expression.TemplateLiteral in
+  method template_literal _loc (expr: ('loc, 'loc) Ast.Expression.TemplateLiteral.t) =
+    let open Ast.Expression.TemplateLiteral in
     let { quasis; expressions } = expr in
     let quasis' = ListUtils.ident_map this#template_literal_element quasis in
     let expressions' = ListUtils.ident_map this#expression expressions in
@@ -1352,16 +1354,16 @@ class ['loc] mapper = object(this)
     else { quasis = quasis'; expressions = expressions' }
 
   (* TODO *)
-  method template_literal_element (elem: 'loc Flow_ast.Expression.TemplateLiteral.Element.t) =
+  method template_literal_element (elem: 'loc Ast.Expression.TemplateLiteral.Element.t) =
     elem
 
-  method throw _loc (stmt: ('loc, 'loc) Flow_ast.Statement.Throw.t) =
-    let open Flow_ast.Statement.Throw in
+  method throw _loc (stmt: ('loc, 'loc) Ast.Statement.Throw.t) =
+    let open Ast.Statement.Throw in
     let { argument } = stmt in
     id this#expression argument stmt (fun argument -> { argument })
 
-  method try_catch _loc (stmt: ('loc, 'loc) Flow_ast.Statement.Try.t) =
-    let open Flow_ast.Statement.Try in
+  method try_catch _loc (stmt: ('loc, 'loc) Ast.Statement.Try.t) =
+    let open Ast.Statement.Try in
     let { block; handler; finalizer } = stmt in
     let block' = map_loc this#block block in
     let handler' = match handler with
@@ -1382,58 +1384,58 @@ class ['loc] mapper = object(this)
       finalizer = finalizer'
     }
 
-  method type_cast _loc (expr: ('loc, 'loc) Flow_ast.Expression.TypeCast.t) =
-    let open Flow_ast.Expression.TypeCast in
+  method type_cast _loc (expr: ('loc, 'loc) Ast.Expression.TypeCast.t) =
+    let open Ast.Expression.TypeCast in
     let { expression; annot; } = expr in
     let expression' = this#expression expression in
     let annot' = this#type_annotation annot in
     if expression' == expression && annot' == annot then expr
     else { expression = expression'; annot = annot' }
 
-  method unary_expression _loc (expr: ('loc, 'loc) Flow_ast.Expression.Unary.t) =
-    let open Flow_ast.Expression in
+  method unary_expression _loc (expr: ('loc, 'loc) Ast.Expression.Unary.t) =
+    let open Ast.Expression in
     let { Unary.argument; operator = _ } = expr in
     id this#expression argument expr
       (fun argument -> { expr with Unary.argument })
 
-  method update_expression _loc (expr: ('loc, 'loc) Flow_ast.Expression.Update.t) =
-    let open Flow_ast.Expression.Update in
+  method update_expression _loc (expr: ('loc, 'loc) Ast.Expression.Update.t) =
+    let open Ast.Expression.Update in
     let { argument; operator = _; prefix = _ } = expr in
     id this#expression argument expr (fun argument -> { expr with argument })
 
-  method variable_declaration _loc (decl: ('loc, 'loc) Flow_ast.Statement.VariableDeclaration.t) =
-    let open Flow_ast.Statement.VariableDeclaration in
+  method variable_declaration _loc (decl: ('loc, 'loc) Ast.Statement.VariableDeclaration.t) =
+    let open Ast.Statement.VariableDeclaration in
     let { declarations; kind } = decl in
     let decls' = ListUtils.ident_map (this#variable_declarator ~kind) declarations in
     if declarations == decls' then decl
     else { declarations = decls'; kind }
 
-  method variable_declarator ~kind (decl: ('loc, 'loc) Flow_ast.Statement.VariableDeclaration.Declarator.t) =
-    let open Flow_ast.Statement.VariableDeclaration.Declarator in
+  method variable_declarator ~kind (decl: ('loc, 'loc) Ast.Statement.VariableDeclaration.Declarator.t) =
+    let open Ast.Statement.VariableDeclaration.Declarator in
     let (loc, { id; init }) = decl in
     let id' = this#variable_declarator_pattern ~kind id in
     let init' = map_opt this#expression init in
     if id == id' && init == init' then decl
     else (loc, { id = id'; init = init' })
 
-  method while_ _loc (stuff: ('loc, 'loc) Flow_ast.Statement.While.t) =
-    let open Flow_ast.Statement.While in
+  method while_ _loc (stuff: ('loc, 'loc) Ast.Statement.While.t) =
+    let open Ast.Statement.While in
     let { test; body } = stuff in
     let test' = this#predicate_expression test in
     let body' = this#statement body in
     if test == test' && body == body' then stuff
     else { test = test'; body = body' }
 
-  method with_ _loc (stuff: ('loc, 'loc) Flow_ast.Statement.With.t) =
-    let open Flow_ast.Statement.With in
+  method with_ _loc (stuff: ('loc, 'loc) Ast.Statement.With.t) =
+    let open Ast.Statement.With in
     let { _object; body } = stuff in
     let _object' = this#expression _object in
     let body' = this#statement body in
     if _object == _object' && body == body' then stuff
     else { _object = _object'; body = body' }
 
-  method type_alias _loc (stuff: ('loc, 'loc) Flow_ast.Statement.TypeAlias.t) =
-    let open Flow_ast.Statement.TypeAlias in
+  method type_alias _loc (stuff: ('loc, 'loc) Ast.Statement.TypeAlias.t) =
+    let open Ast.Statement.TypeAlias in
     let { id; tparams; right } = stuff in
     let id' = this#identifier id in
     let tparams' = map_opt this#type_parameter_declaration tparams in
@@ -1441,8 +1443,8 @@ class ['loc] mapper = object(this)
     if id == id' && right == right' && tparams == tparams' then stuff
     else { id = id'; tparams = tparams'; right = right' }
 
-  method yield _loc (expr: ('loc, 'loc) Flow_ast.Expression.Yield.t) =
-    let open Flow_ast.Expression.Yield in
+  method yield _loc (expr: ('loc, 'loc) Ast.Expression.Yield.t) =
+    let open Ast.Expression.Yield in
     let { argument; delegate } = expr in
     let argument' = map_opt this#expression argument in
     if argument == argument' then expr else { argument = argument'; delegate }
