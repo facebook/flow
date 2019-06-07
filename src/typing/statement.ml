@@ -4415,6 +4415,7 @@ and unary cx loc = Ast.Expression.Unary.(function
 )
 
 (* numeric pre/post inc/dec *)
+(* TODO: add bigint *)
 and update cx loc expr = Ast.Expression.Update.(
   let reason = mk_reason (RCustom "update") loc in
   let result_t = NumT.at loc |> with_trust literal_trust in
@@ -4787,6 +4788,7 @@ and simple_assignment cx _loc lhs rhs =
   t, lhs, typed_rhs
 
 (* traverse assignment expressions with operators (`lhs += rhs`, `lhs *= rhs`, etc) *)
+(* TODO: add bigint *)
 and op_assignment cx loc lhs op rhs =
   let open Ast.Expression in
   match op with
