@@ -27,7 +27,7 @@ val trust_value: default:trust_qualifier -> trust_rep -> trust_qualifier
 val trust_value_map: default:'t -> f:(trust_qualifier -> 't) -> trust_rep -> 't
 
 val string_of_trust: trust_qualifier -> string
-val string_of_trust_rep: trust_rep -> string
+val string_of_trust_rep: (int -> trust_qualifier) -> trust_rep -> string
 
 val bogus_trust  : unit -> trust_rep
 val literal_trust: unit -> trust_rep

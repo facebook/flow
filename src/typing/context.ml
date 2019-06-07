@@ -67,6 +67,9 @@ type sig_t = {
   (* map from tvar ids to nodes (type info structures) *)
   mutable graph: Constraint.node IMap.t;
 
+  (* map from tvar ids to trust nodes *)
+  mutable trust_graph: Trust_constraint.node IMap.t;
+
   (* obj types point to mutable property maps *)
   mutable property_maps: Type.Properties.map;
 
@@ -182,6 +185,7 @@ let empty_use_def = Scope_api.{ max_distinct = 0; scopes = IMap.empty }, ALocMap
 
 let make_sig () = {
   graph = IMap.empty;
+  trust_graph = IMap.empty;
   property_maps = Type.Properties.Map.empty;
   call_props = IMap.empty;
   export_maps = Type.Exports.Map.empty;
@@ -228,6 +232,7 @@ let make sig_cx metadata file module_ref = {
 
 let sig_cx cx = cx.sig_cx
 let graph_sig sig_cx = sig_cx.graph
+let trust_graph_sig sig_cx = sig_cx.trust_graph
 let find_module_sig sig_cx m =
   try SMap.find_unsafe m sig_cx.module_map
   with Not_found -> raise (Module_not_found m)
@@ -285,6 +290,7 @@ let find_tvar cx id =
   with Not_found -> raise (Tvar_not_found id)
 let mem_nominal_id cx id = ISet.mem id cx.sig_cx.nominal_ids
 let graph cx = graph_sig cx.sig_cx
+let trust_graph cx = trust_graph_sig cx.sig_cx
 let import_stmts cx = cx.import_stmts
 let imported_ts cx = cx.imported_ts
 let is_checked cx = cx.metadata.checked
@@ -346,6 +352,7 @@ let copy_of_context cx = {
   sig_cx = {
     cx.sig_cx with
     graph = cx.sig_cx.graph;
+    trust_graph = cx.sig_cx.trust_graph;
   };
 }
 
@@ -377,6 +384,8 @@ let add_export_map cx id tmap =
   cx.sig_cx.export_maps <- Type.Exports.Map.add id tmap cx.sig_cx.export_maps
 let add_tvar cx id bounds =
   cx.sig_cx.graph <- IMap.add id bounds cx.sig_cx.graph
+let add_trust_var cx id bounds =
+  cx.sig_cx.trust_graph <- IMap.add id bounds cx.sig_cx.trust_graph
 let add_nominal_id cx id =
   cx.sig_cx.nominal_ids <- ISet.add id cx.sig_cx.nominal_ids
 let add_type_assert cx k v =
@@ -397,6 +406,8 @@ let set_evaluated cx evaluated =
   cx.sig_cx.evaluated <- evaluated
 let set_graph cx graph =
   cx.sig_cx.graph <- graph
+let set_trust_graph cx trust_graph =
+  cx.sig_cx.trust_graph <- trust_graph
 let set_module_kind cx module_kind =
   cx.module_kind <- module_kind
 let set_property_maps cx property_maps =
@@ -436,6 +447,8 @@ let clear_intermediates cx =
 let clear_master_shared cx master_cx =
   set_graph cx (graph cx |> IMap.filter (fun id _ -> not
     (IMap.mem id master_cx.graph)));
+  set_trust_graph cx (trust_graph cx |> IMap.filter (fun id _ -> not
+    (IMap.mem id master_cx.trust_graph)));
   set_property_maps cx (property_maps cx |> Type.Properties.Map.filter (fun id _ -> not
     (Type.Properties.Map.mem id master_cx.property_maps)));
   set_call_props cx (call_props cx |> IMap.filter (fun id _ -> not
@@ -543,6 +556,7 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
   sig_cx.type_graph <- Graph_explorer.union sig_cx_other.type_graph sig_cx.type_graph;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
+  sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
   sig_cx.type_asserts <- ALocMap.union sig_cx.type_asserts sig_cx_other.type_asserts;
 
   (* These entries are intermediates, and will be cleared from dep_cxs before
@@ -602,3 +616,28 @@ let rec find_resolved cx = function
     end
   | Type.AnnotT (_, t, _) -> find_resolved cx t
   | t -> Some t
+
+let rec find_trust_root cx (id: Trust_constraint.ident) =
+  let open Trust_constraint in
+  match IMap.get id (trust_graph cx) with
+  | Some (TrustGoto next_id) ->
+      let root_id, root = find_trust_root cx next_id in
+      if root_id != next_id then Trust_constraint.new_goto root_id |> add_trust_var cx id;
+      root_id, root
+
+  | Some (TrustRoot root) ->
+      id, root
+
+  | None ->
+      let msg = Utils_js.spf "find_trust_root: trust var %d not found in file %s" id
+        (File_key.to_string @@ file cx)
+      in
+      Utils_js.assert_false msg
+
+let find_trust_constraints cx id =
+  let root_id, root = find_trust_root cx id in
+  root_id, Trust_constraint.get_constraints root
+
+let find_trust_graph cx id =
+  let _, constraints = find_trust_constraints cx id in
+  constraints

@@ -96,6 +96,7 @@ val find_module: t -> string -> Type.t
 val find_tvar: t -> Constraint.ident -> Constraint.node
 val mem_nominal_id: t -> Constraint.ident -> bool
 val graph: t -> Constraint.node IMap.t
+val trust_graph: t -> Trust_constraint.node IMap.t
 val import_stmts: t -> (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list
 val imported_ts: t -> Type.t SMap.t
 val is_checked: t -> bool
@@ -158,6 +159,7 @@ val add_property_map: t -> Type.Properties.id -> Type.Properties.t -> unit
 val add_call_prop: t -> int -> Type.t -> unit
 val add_export_map: t -> Type.Exports.id -> Type.Exports.t -> unit
 val add_tvar: t -> Constraint.ident -> Constraint.node -> unit
+val add_trust_var: t -> Trust_constraint.ident -> Trust_constraint.node -> unit
 val add_nominal_id: t -> Constraint.ident -> unit
 val add_type_assert: t -> ALoc.t -> (type_assert_kind * ALoc.t) -> unit
 val remove_all_errors: t -> unit
@@ -169,6 +171,7 @@ val set_evaluated: t  -> Type.t IMap.t -> unit
 val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
+val set_trust_graph: t -> Trust_constraint.node IMap.t -> unit
 val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_call_props: t -> Type.t IMap.t -> unit
@@ -224,3 +227,10 @@ val find_constraints:
 val find_graph: t -> Constraint.ident -> Constraint.constraints
 val find_root: t -> Constraint.ident -> Constraint.ident * Constraint.root
 val find_resolved: t -> Type.t -> Type.t option
+
+val find_trust_constraints:
+  t ->
+  Trust_constraint.ident ->
+  Trust_constraint.ident * Trust_constraint.constraints
+val find_trust_graph: t -> Trust_constraint.ident -> Trust_constraint.constraints
+val find_trust_root: t -> Trust_constraint.ident -> Trust_constraint.ident * Trust_constraint.root
