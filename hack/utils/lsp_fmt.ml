@@ -593,7 +593,7 @@ let print_completionItem (item: Completion.completionItem) : json =
     "insertText", Option.map item.insertText string_;
     "insertTextFormat", Option.map item.insertTextFormat (fun x -> int_ @@ int_of_insertFormat x);
     "textEdit", Option.map (List.hd item.textEdits) print_textEdit;
-    "additionalTextEdit", (match (List.tl item.textEdits) with
+    "additionalTextEdits", (match (List.tl item.textEdits) with
       | None | Some [] -> None
       | Some l -> Some (JSON_Array (List.map l ~f:print_textEdit)));
     "command", Option.map item.command print_command;
