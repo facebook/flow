@@ -252,10 +252,10 @@ let bigint_literal expected_loc sense expected t =
   | DefT (r, trust, MixedT _) ->
     DefT (lit_reason r, trust, BigIntT (Literal (None, expected)))
   | AnyT _ as t -> t
-  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
+  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_bigint_literal expected = function
-  | DefT (r, trust, BigIntT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, trust, EmptyT)
+  | DefT (r, trust, BigIntT (Literal (_, actual))) when snd actual = snd expected -> DefT (r, trust, EmptyT Bottom)
   | t -> t
 
 let true_ t =
@@ -355,14 +355,14 @@ let bigint t =
   | DefT (r, trust, MixedT Mixed_truthy) -> DefT (replace_reason_const BigIntT.desc r, trust, BigIntT Truthy)
   | DefT (r, trust, MixedT _) -> BigIntT.why r trust
   | DefT (_, _, (BigIntT _)) | AnyT _ -> t
-  | DefT (r, trust, _) -> DefT (r, trust, EmptyT)
-  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT)
+  | DefT (r, trust, _) -> DefT (r, trust, EmptyT Bottom)
+  | _ -> DefT (reason_of_t t, bogus_trust (), EmptyT Bottom)
 
 let not_bigint t =
   match t with
   (* TODO: this is wrong, AnyT can be a number *)
-  | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT)
-  | DefT (_, trust, (BigIntT _)) -> DefT (reason_of_t t, trust, EmptyT)
+  | AnyT _ -> DefT (reason_of_t t, Trust.bogus_trust (), EmptyT Bottom)
+  | DefT (_, trust, (BigIntT _)) -> DefT (reason_of_t t, trust, EmptyT Bottom)
   | _ -> t
 
 let object_ cx t =
