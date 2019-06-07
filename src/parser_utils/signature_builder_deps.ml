@@ -60,6 +60,7 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
       | EmptyObject of L.t
       | UnexpectedExpression of L.t * Ast_utils.ExpressionSort.t
       | SketchyToplevelDef of L.t
+      | UnsupportedPredicateExpression of L.t
       | TODO of string * L.t
 
     let compare = Pervasives.compare
@@ -88,6 +89,8 @@ module Make (L: Loc_sig.S) : Signature_builder_deps_sig.S with module L = L = st
           (Ast_utils.ExpressionSort.to_string esort) (L.debug_to_string loc)
       | SketchyToplevelDef loc ->
         spf "Unexpected toplevel definition that needs hoisting @ %s" (L.debug_to_string loc)
+      | UnsupportedPredicateExpression loc ->
+        spf "Unsupported predicate expression @ %s" (L.debug_to_string loc)
       | TODO (msg, loc) -> spf "TODO: %s @ %s" msg (L.debug_to_string loc)
 
   end
@@ -236,4 +239,6 @@ let abstractify_error =
   | WL.EmptyObject loc -> WA.EmptyObject (ALoc.of_loc loc)
   | WL.UnexpectedExpression (loc, sort) -> WA.UnexpectedExpression (ALoc.of_loc loc, sort)
   | WL.SketchyToplevelDef loc -> WA.SketchyToplevelDef (ALoc.of_loc loc)
+  | WL.UnsupportedPredicateExpression loc ->
+    WA.UnsupportedPredicateExpression (ALoc.of_loc loc)
   | WL.TODO (str, loc) -> WA.TODO (str, ALoc.of_loc loc)

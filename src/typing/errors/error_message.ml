@@ -747,6 +747,7 @@ let aloc_of_msg : t -> ALoc.t option = function
         | EmptyObject loc
         | UnexpectedExpression (loc, _)
         | SketchyToplevelDef loc
+        | UnsupportedPredicateExpression loc
         | TODO (_, loc) -> Some loc
       )
   | EDuplicateModuleProvider {conflict; _ } ->
@@ -1575,6 +1576,8 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
            text "Please provide an annotation, e.g., by adding a type cast around this expression."]
         | SketchyToplevelDef _ ->
           [text "Unexpected toplevel definition that needs hoisting:"]
+        | UnsupportedPredicateExpression _ ->
+          [text "Unsupported kind of expression in predicate function:"]
         | TODO (msg, _) ->
           [text (spf "TODO: %s is not supported yet, try using a type cast." msg)]
       end in

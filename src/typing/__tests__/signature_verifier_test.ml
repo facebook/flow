@@ -526,6 +526,45 @@ let tests_data = [
   [],
   ["Reachable: bar, x"];
 
+  name "function_predicates_1",
+  ["class A {}";
+   "export function foo(x: mixed): boolean %checks {";
+   "  return x === new A;";
+   "}"],
+  ["Unsupported predicate expression @ (3, 15) to (3, 20)"],
+  ["Reachable: foo"];
+
+  name "function_predicates_2",
+  ["declare function bar(x: mixed): boolean %checks(x === null);";
+   "export function foo(x: mixed): boolean %checks {";
+   "  return bar(x);";
+   "}"],
+  [],
+  ["Reachable: bar, foo"];
+
+  name "function_predicates_3",
+  ["function bar(x: mixed): %checks { return x === null; }";
+   "declare export function foo(x: mixed): boolean %checks(bar(x));"],
+  ["Expected annotation at function return @ (1, 31) to (1, 31)"],
+  ["Reachable: bar, foo"];
+
+  name "function_predicates_4",
+  ["function one() { return 1; }";
+   "const n = one()";
+   "export function isOne(x: mixed): boolean %checks {";
+   "  return x === n;";
+   "}"],
+  ["Cannot determine the type of this call expression @ (2, 10) to (2, 15)"],
+  ["Reachable: isOne, n"];
+
+  name "function_predicates_5",
+  ["const one = 1;";
+   "export function isOne(x: mixed): boolean %checks {";
+   "  return x === one;";
+   "}"],
+  [],
+  ["Reachable: isOne, one"];
+
 ]
 
 let mk_signature_verifier_test ?prevent_munge ?facebook_fbt

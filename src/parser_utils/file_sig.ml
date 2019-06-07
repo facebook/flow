@@ -1224,6 +1224,11 @@ module Make
             if loc == loc'
             then tolerable_error
             else SignatureVerificationError (SketchyToplevelDef loc')
+          | UnsupportedPredicateExpression loc ->
+            let loc' = this#loc loc in
+            if loc == loc'
+            then tolerable_error
+            else SignatureVerificationError (UnsupportedPredicateExpression loc')
           | TODO (msg, loc) ->
             let loc' = this#loc loc in
             if loc == loc'
