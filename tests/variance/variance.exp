@@ -1,0 +1,98 @@
+Error ---------------------------------------------------------------------------------------- property_op_assign.js:7:1
+
+Cannot assign number to `f.x` because property `x` is not writable.
+
+   7| f.x++;
+      ^^^
+
+
+Error ---------------------------------------------------------------------------------------- property_op_assign.js:8:1
+
+Cannot assign number to `f.x` because property `x` is not writable.
+
+   8| f.x--;
+      ^^^
+
+
+Error ---------------------------------------------------------------------------------------- property_op_assign.js:9:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   9| f.x += 0;
+      ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:10:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   10| f.x -= 0;
+       ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:11:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   11| f.x /= 0;
+       ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:12:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   12| f.x %= 0;
+       ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:13:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   13| f.x <<= 0;
+       ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:14:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   14| f.x >>= 0;
+       ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:15:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   15| f.x >>>= 0;
+       ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:16:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   16| f.x |= 0;
+       ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:17:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   17| f.x ^= 0;
+       ^^^
+
+
+Error --------------------------------------------------------------------------------------- property_op_assign.js:18:1
+
+Cannot assign `0` to `f.x` because property `x` is not writable.
+
+   18| f.x &= 0;
+       ^^^
+
+
+
+Found 12 errors
