@@ -4543,6 +4543,123 @@ and update cx loc expr = Ast.Expression.Update.(
     let t = NumT.at arg_loc |> with_trust bogus_trust in
     { expr with
         argument = (arg_loc, t), Ast.Expression.Identifier ((id_loc, t), id_name) }
+
+  (* super.name++ *)
+  | lhs_loc, Ast.Expression.Member {
+      Ast.Expression.Member._object = _, Ast.Expression.Super;
+      property = Ast.Expression.Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments=_ });
+    } ->
+      let (_, arg_t), _ as arg_ast = expression cx expr.argument in
+      Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
+      let reason =
+        mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+      let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
+      let super = super_ cx lhs_loc in
+      let prop_t = Tvar.mk cx prop_reason in
+      let use_op = Op (SetProperty {
+        lhs = reason;
+        prop = mk_reason (desc_of_reason (mk_expression_reason expr.argument)) prop_loc;
+        value = reason_of_t result_t;
+      }) in
+      Flow.flow cx (super, SetPropT (
+        use_op, reason, Named (prop_reason, name), Normal, arg_t, Some prop_t
+      ));
+      { expr with argument = arg_ast }
+
+    (* _object.#name++ *)
+    | lhs_loc, Ast.Expression.Member {
+        Ast.Expression.Member._object;
+        property = Ast.Expression.Member.PropertyPrivateName (prop_loc, (_, { Ast.Identifier.name; comments= _ }));
+      } ->
+        let (_, arg_t), _ as arg_ast = expression cx expr.argument in
+        Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
+        let (_, o), _ as _object = expression cx _object in
+        let prop_t =
+        (* if we fire this hook, it means the assignment is a sham. *)
+        if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
+        then Unsoundness.at InferenceHooks prop_loc
+        else
+          let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+
+          (* flow type to object property itself *)
+          let class_entries = Env.get_class_entries () in
+          let prop_reason = mk_reason (RPrivateProperty name) prop_loc in
+          let prop_t = Tvar.mk cx prop_reason in
+          let use_op = Op (SetProperty {
+            lhs = reason;
+            prop = mk_reason (desc_of_reason (mk_expression_reason expr.argument)) prop_loc;
+            value = reason_of_t result_t;
+          }) in
+          Flow.flow cx (o, SetPrivatePropT (
+            use_op, reason, name, class_entries, false, arg_t, Some prop_t
+          ));
+          (* TODO: re-enable this *)
+          (* post_assignment_havoc ~private_:true name expr.argument prop_t arg_t; *)
+          prop_t
+        in
+        ignore prop_t;
+        { expr with argument = arg_ast }
+
+    (* _object.name++ *)
+    | lhs_loc, Ast.Expression.Member {
+        Ast.Expression.Member._object;
+        property = Ast.Expression.Member.PropertyIdentifier (prop_loc, { Ast.Identifier.name; comments= _ });
+      } ->
+        let (_, arg_t), _ as arg_ast = expression cx expr.argument in
+        Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
+        let wr_ctx = match _object, Env.var_scope_kind () with
+          | (_, Ast.Expression.This), Scope.Ctor -> ThisInCtor
+          | _ -> Normal
+        in
+        let (_, o), _ as _object = expression cx _object in
+        let prop_t =
+        (* if we fire this hook, it means the assignment is a sham. *)
+        if Type_inference_hooks_js.dispatch_member_hook cx name prop_loc o
+        then Unsoundness.at InferenceHooks prop_loc
+        else
+          let reason = mk_reason (RPropertyAssignment (Some name)) lhs_loc in
+          let prop_reason = mk_reason (RProperty (Some name)) prop_loc in
+
+          (* flow type to object property itself *)
+          let prop_t = Tvar.mk cx prop_reason in
+          let use_op = Op (SetProperty {
+            lhs = reason;
+            prop = mk_reason (desc_of_reason (mk_expression_reason expr.argument)) prop_loc;
+            value = reason_of_t result_t;
+          }) in
+          Flow.flow cx (o, SetPropT (
+            use_op, reason, Named (prop_reason, name), wr_ctx, arg_t, Some prop_t
+          ));
+          (* TODO: re-enable this *)
+          (* post_assignment_havoc ~private_:false name expr.argument prop_t arg_t; *)
+          prop_t
+        in
+        ignore prop_t;
+        { expr with argument = arg_ast }
+
+    (* _object[index]++ *)
+    | lhs_loc, Ast.Expression.Member {
+        Ast.Expression.Member._object;
+        property = Ast.Expression.Member.PropertyExpression ((iloc, _) as index);
+      } ->
+        let (_, arg_t), _ as arg_ast = expression cx expr.argument in
+        Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
+        let reason = mk_reason (RPropertyAssignment None) lhs_loc in
+        let (_, a), _ = expression cx _object in
+        let (_, i), _ = expression cx index in
+        let use_op = Op (SetProperty {
+          lhs = reason;
+          prop = mk_reason (desc_of_reason (mk_expression_reason expr.argument)) iloc;
+          value = reason_of_t result_t;
+        }) in
+        Flow.flow cx (a, SetElemT (use_op, reason, i, arg_t, None));
+
+        (* types involved in the assignment itself are computed
+           in pre-havoc environment. it's the assignment itself
+           which clears refis *)
+        Env.havoc_heap_refinements ();
+        { expr with argument = arg_ast }
+
   | argument ->
     let (_, arg_t), _ as arg_ast = expression cx argument in
     Flow.flow cx (arg_t, AssertArithmeticOperandT reason);
