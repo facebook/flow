@@ -7057,6 +7057,7 @@ and empty_success flavor u =
   | _, UseT (_, DefT (_, _, TypeT _))
   | _, UseT (_, ShapeT _)
   | _, AssertArithmeticOperandT _
+  | _, AssertBigIntArithmeticOperandT _
   | _, AssertBinaryInLHST _
   | _, AssertBinaryInRHST _
   | _, AssertForInRHST _
