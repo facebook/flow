@@ -45,7 +45,10 @@ module T = struct
       }
     (* declarations and outlined expressions *)
     | ClassDecl of class_t
-    | FunctionDecl of little_annotation
+    | FunctionDecl of {
+        annot: little_annotation;
+        predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
+      }
     | FunctionWithStaticsDecl of {
         base: Loc.t * expr_type;
         statics: ((Loc.t, Loc.t) Ast.Identifier.t * (Loc.t * expr_type)) list;
@@ -586,11 +589,11 @@ module T = struct
       decl_loc, Ast.Statement.DeclareClass {
         Ast.Statement.DeclareClass.id; tparams; extends; implements; mixins; body;
       }
-    | FunctionDecl little_annotation ->
+    | FunctionDecl { annot = little_annotation; predicate } ->
       decl_loc, Ast.Statement.DeclareFunction {
         Ast.Statement.DeclareFunction.id;
         annot = annot_of_little_annotation outlined little_annotation;
-        predicate = None;
+        predicate;
       }
     | FunctionWithStaticsDecl { base; statics } ->
       let annot = type_of_expr_type outlined base in
@@ -1106,6 +1109,23 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       else T.FixMe.mk_little_annotation loc
     | Ast.Type.Available (_, t) -> T.TYPE (type_ t)
 
+  and function_predicate body predicate =
+    match predicate, body with
+    | None, _ -> None
+    | Some (loc, Ast.Type.Predicate.Inferred), (
+        Ast.Function.BodyBlock (_, {
+          Ast.Statement.Block.body = [
+            _, Ast.Statement.Return {
+              Ast.Statement.Return.argument = Some e; _
+            }
+          ]
+        }) |
+        Ast.Function.BodyExpression e
+      ) ->
+      Some (loc, Ast.Type.Predicate.Declared e)
+    | Some (_, Ast.Type.Predicate.Inferred), _ -> None
+    | Some (_, Ast.Type.Predicate.Declared _), _ -> predicate
+
   and function_ generator tparams params return body =
     let tparams = type_params tparams in
     let params = function_params params in
@@ -1113,7 +1133,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       let is_missing_ok () = not generator && Signature_utils.Procedure_decider.is body in
       function_return ~is_missing_ok return
     in
-    (* TODO: It is unclear whether what happens for async or generator functions. In particular,
+    (* TODO: It is unclear what happens for async or generator functions. In particular,
        what do declarations of such functions look like, aside from the return type being
        `Promise<...>` or `Generator<...>`? *)
     T.FUNCTION {
@@ -1255,11 +1275,14 @@ module Generator(Env: Signature_builder_verify.EvalEnv) = struct
         end
       | Kind.VariableDef { id = _; annot; init } ->
         T.VariableDecl (Eval.annotation loc ?init annot)
-      | Kind.FunctionDef { generator; tparams; params; return; body } ->
-        T.FunctionDecl (T.EXPR
-          (loc, T.Function (Eval.function_ generator tparams params return body)))
-      | Kind.DeclareFunctionDef { annot = (_, t) } ->
-        T.FunctionDecl (T.TYPE (Eval.type_ t))
+      | Kind.FunctionDef { generator; tparams; params; return; body; predicate } ->
+        let annot = T.EXPR (loc, T.Function (
+          Eval.function_ generator tparams params return body
+        )) in
+        let predicate = Eval.function_predicate body predicate in
+        T.FunctionDecl { annot; predicate; }
+      | Kind.DeclareFunctionDef { annot = (_, t); predicate } ->
+        T.FunctionDecl ({ annot = T.TYPE (Eval.type_ t); predicate })
       | Kind.ClassDef { tparams; body; super; super_targs; implements } ->
         T.ClassDecl (Eval.class_ tparams body super super_targs implements)
       | Kind.DeclareClassDef { tparams; body = (body_loc, body); extends; mixins; implements } ->

@@ -36,6 +36,7 @@ module type S = sig
       | EmptyObject of L.t (* object loc *)
       | UnexpectedExpression of L.t * Flow_ast_utils.ExpressionSort.t
       | SketchyToplevelDef of L.t
+      | UnsupportedPredicateExpression of L.t
       | TODO of string * L.t
 
     val compare: t -> t -> int

@@ -80,9 +80,11 @@ type t =
       params: (Loc.t, Loc.t) Ast.Function.Params.t;
       return: (Loc.t, Loc.t) Ast.Type.annotation_or_hint;
       body: (Loc.t, Loc.t) Ast.Function.body;
+      predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
     }
   | DeclareFunctionDef of {
       annot: (Loc.t, Loc.t) Ast.Type.annotation;
+      predicate: (Loc.t, Loc.t) Ast.Type.Predicate.t option;
     }
   | ClassDef of {
       tparams: (Loc.t, Loc.t) Ast.Type.ParameterDeclaration.t option;
@@ -176,7 +178,7 @@ let validator = function
   | Sort.Value -> is_value
 
 let get_function_kind_info = function
-  | FunctionDef { generator; tparams; params; return; body } ->
+  | FunctionDef { generator; tparams; params; return; body; predicate = _ } ->
     Some (generator, tparams, params, return, body)
   | VariableDef {
       id = _;

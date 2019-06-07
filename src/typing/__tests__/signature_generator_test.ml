@@ -675,4 +675,44 @@ let tests = "signature_generator" >::: ([
      "";
      "declare module.exports: typeof bar;"];
 
+  "function_predicates1" >:: mk_signature_generator_test
+    ["function foo(str: ?string): boolean %checks {";
+     "return str == null || str === '';";
+     "}";
+     "module.exports = foo;"]
+    ["declare function foo(str: ?string): boolean %checks(str == null || str === \"\");";
+     "declare module.exports: typeof foo;"];
+
+  "function_predicates2" >:: mk_signature_generator_test
+    ["declare function foo(str: ?string): boolean %checks(str == null || str === '');";
+     "module.exports = foo;"]
+    ["declare function foo(str: ?string): boolean %checks(str == null || str === \"\");";
+     "declare module.exports: typeof foo;"];
+
+  "function_predicates2" >:: mk_signature_generator_test
+    ["function foo1(x: ?string): boolean %checks { return x == null || x === ''; };";
+     "function foo2(x: ?string): boolean %checks { return foo1(x); }";
+     "module.exports = foo2;"]
+    ["declare function foo1(x: ?string): boolean %checks(x == null || x === \"\");";
+     "declare function foo2(x: ?string): boolean %checks(foo1(x));";
+     "declare module.exports: typeof foo2;"];
+
+  "function_predicates3" >:: mk_signature_generator_test
+    ["class A {};";
+     "function foo(x: mixed): boolean %checks { return x instanceof A; };";
+     "module.exports = foo;"]
+    ["declare class A {}";
+     "declare function foo(x: mixed): boolean %checks(x instanceof A);";
+     "declare module.exports: typeof foo;"];
+
+  "function_predicates4" >:: mk_signature_generator_test
+    ["function foo(x: mixed): boolean %checks { return typeof x === \"number\"; };";
+     "const obj = { foo };";
+     "function bar(x: mixed): boolean %checks { return obj.foo(x); };";
+     "module.exports = bar;"]
+    ["declare function foo(x: mixed): boolean %checks(typeof x === \"number\");";
+     "declare var obj: $TEMPORARY$object<{|foo: typeof foo|}>;";
+     "declare function bar(x: mixed): boolean %checks(obj.foo(x));";
+     "declare module.exports: typeof bar;"];
+
 ] @ verified_signature_generator_tests @ generated_signature_file_sig_tests)
