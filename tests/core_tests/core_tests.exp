@@ -139,5 +139,68 @@ References:
                             ^^^^^^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- weakset.js:19:23
 
-Found 10 errors
+Cannot call `WeakSet` with array literal bound to `iterable` because:
+ - in type argument `Yield` [1] of the return value of property `@@iterator`:
+    - Either number [2] is incompatible with object type [3].
+    - Or number [2] is incompatible with read-only array type [4].
+ - in type argument `Yield` [1] of the return value of property `@@iterator`:
+    - Either number [5] is incompatible with object type [3].
+    - Or number [5] is incompatible with read-only array type [4].
+ - in type argument `Yield` [1] of the return value of property `@@iterator`:
+    - Either number [6] is incompatible with object type [3].
+    - Or number [6] is incompatible with read-only array type [4].
+
+   weakset.js:19:23
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                              ^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:524:22
+   524| interface $Iterator<+Yield,+Return,-Next> {
+                             ^^^^^ [1]
+   weakset.js:19:24
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                               ^ [2]
+   <BUILTINS>/core.js:638:26
+   638| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+                                 ^^^^^ [3]
+   <BUILTINS>/core.js:638:34
+   638| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+                                         ^^^^^^^^^^^^^^^^^^^ [4]
+   weakset.js:19:27
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                                  ^ [5]
+   weakset.js:19:30
+    19| let ws3 = new WeakSet([1, 2, 3]); // error, must be objects
+                                     ^ [6]
+
+
+Error ------------------------------------------------------------------------------------------------- weakset.js:36:23
+
+Cannot call `WeakSet` with `numbers()` bound to `iterable` because in type argument `Yield` [1]:
+ - Either number [2] is incompatible with object type [3].
+ - Or number [2] is incompatible with read-only array type [4].
+
+   weakset.js:36:23
+    36| let ws5 = new WeakSet(numbers()); // error, must be objects
+                              ^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:530:22
+   530| interface $Iterable<+Yield,+Return,-Next> {
+                             ^^^^^ [1]
+   weakset.js:29:31
+    29| function* numbers(): Iterable<number> {
+                                      ^^^^^^ [2]
+   <BUILTINS>/core.js:638:26
+   638| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+                                 ^^^^^ [3]
+   <BUILTINS>/core.js:638:34
+   638| declare class WeakSet<T: {...} | $ReadOnlyArray<any>> extends $ReadOnlyWeakSet<T> {
+                                         ^^^^^^^^^^^^^^^^^^^ [4]
+
+
+
+Found 14 errors
