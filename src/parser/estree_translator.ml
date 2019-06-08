@@ -1101,7 +1101,7 @@ end with type t = Impl.t) = struct
       ]
 
     and function_type (loc, { Type.Function.
-      params = (_, { Type.Function.Params.params; rest });
+      params = (_, { Type.Function.Params.params; rest; this });
       return;
       tparams;
     }) =
@@ -1109,6 +1109,7 @@ end with type t = Impl.t) = struct
         "params", array_of_list function_type_param params;
         "returnType", _type return;
         "rest", option function_type_rest rest;
+        "this", option function_type_param this;
         "typeParameters", option type_parameter_declaration tparams;
       ]
 

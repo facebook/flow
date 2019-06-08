@@ -111,6 +111,7 @@ and Type : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
       and ('M, 'T) t' = {
         params: ('M, 'T) Param.t list;
+        this: ('M, 'T) Param.t option;
         rest: ('M, 'T) RestParam.t option;
       }
       [@@deriving show]

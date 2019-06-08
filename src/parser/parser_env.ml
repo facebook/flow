@@ -178,6 +178,7 @@ type env = {
   no_in                 : bool;
   no_call               : bool;
   no_let                : bool;
+  no_this               : bool;
   no_anon_function_type : bool;
   no_new                : bool;
   allow_yield           : bool;
@@ -230,6 +231,7 @@ let init_env ?(token_sink=None) ?(parse_options=None) source content =
     no_in = false;
     no_call = false;
     no_let = false;
+    no_this = true;
     no_anon_function_type = false;
     no_new = false;
     allow_yield = false;
@@ -263,6 +265,7 @@ let allow_super env = env.allow_super
 let no_in env = env.no_in
 let no_call env = env.no_call
 let no_let env = env.no_let
+let no_this env = env.no_this
 let no_anon_function_type env = env.no_anon_function_type
 let no_new env = env.no_new
 let errors env = !(env.errors)
@@ -336,6 +339,7 @@ let with_allow_yield allow_yield env = { env with allow_yield }
 let with_allow_await allow_await env = { env with allow_await }
 let with_allow_directive allow_directive env = { env with allow_directive }
 let with_allow_super allow_super env = { env with allow_super }
+let with_no_this no_this env = { env with no_this }
 let with_no_let no_let env = { env with no_let }
 let with_in_loop in_loop env = { env with in_loop }
 let with_no_in no_in env = { env with no_in }

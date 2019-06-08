@@ -275,6 +275,8 @@ module rec Parse : PARSER = struct
          https://tc39.github.io/ecma262/#sec-identifiers-static-semantics-early-errors *)
       if allow_yield env then error_at env (loc, Error.UnexpectedReserved)
       else strict_error_at env (loc, Error.StrictReservedWord)
+    | "this" ->
+      if no_this env then error_at env (loc, Error.UnexpectedToken name)
     | _ when is_strict_reserved name ->
       strict_error_at env (loc, Error.StrictReservedWord)
     | _ when is_reserved name ->
