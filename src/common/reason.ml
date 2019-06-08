@@ -1064,7 +1064,7 @@ Ast.Expression.(match x with
 | TemplateLiteral _ -> "`...`"
 | This -> "this"
 | TypeCast { TypeCast.expression; _ } -> code_desc_of_expression ~wrap expression
-| Unary { Unary.operator; argument } ->
+| Unary { Unary.operator; argument; comments= _ } ->
   let x = code_desc_of_expression ~wrap:true argument in
   let op = Unary.(match operator with
   | Minus -> "-"

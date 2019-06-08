@@ -1392,11 +1392,13 @@ class ['loc] mapper = object(this)
     if expression' == expression && annot' == annot then expr
     else { expression = expression'; annot = annot' }
 
-  method unary_expression _loc (expr: ('loc, 'loc) Ast.Expression.Unary.t) =
-    let open Ast.Expression in
-    let { Unary.argument; operator = _ } = expr in
-    id this#expression argument expr
-      (fun argument -> { expr with Unary.argument })
+  method unary_expression _loc (expr: ('loc, 'loc) Flow_ast.Expression.Unary.t) =
+    let open Flow_ast.Expression.Unary in
+    let { argument; operator = _; comments } = expr in
+    let argument' = this#expression argument in
+    let comments' = this#syntax_opt comments in
+    if argument == argument' && comments == comments' then expr
+    else { expr with argument = argument'; comments = comments' }
 
   method update_expression _loc (expr: ('loc, 'loc) Ast.Expression.Update.t) =
     let open Ast.Expression.Update in

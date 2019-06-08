@@ -336,10 +336,11 @@ module Expressions = struct
   let logical ~op left right =
     Loc.none, Logical { Logical.operator = op; left; right }
 
-  let unary ~op argument =
+  let unary ?(comments=None) ~op argument =
     Loc.none, Unary { Unary.
       operator = op;
       argument;
+      comments;
     }
 
   let unary_plus (b: (Loc.t, Loc.t) Ast.Expression.t) = unary ~op:Unary.Plus b

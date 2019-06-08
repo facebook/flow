@@ -933,7 +933,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         end
       | loc, Unary stuff ->
         let open Ast.Expression.Unary in
-        let { operator; argument } = stuff in
+        let { operator; argument; comments=_ } = stuff in
         arith_unary operator loc argument
       | loc, Binary stuff ->
         let open Ast.Expression.Binary in

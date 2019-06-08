@@ -394,7 +394,7 @@ end with type t = Impl.t) = struct
           node "SequenceExpression" loc [
             "expressions", array_of_list expression expressions;
           ]
-      | loc, Unary { Unary.operator; argument } -> Unary.(
+      | loc, Unary { Unary.operator; argument; comments } -> Unary.(
           match operator with
           | Await ->
             (* await is defined as a separate expression in ast-types
@@ -406,7 +406,7 @@ end with type t = Impl.t) = struct
              * 3) Modify the esprima test runner to compare AwaitExpression and
              *    our UnaryExpression
              * *)
-            node "AwaitExpression" loc [
+            node ?comments "AwaitExpression" loc [
               "argument", expression argument;
             ]
           | _ -> begin
@@ -420,7 +420,7 @@ end with type t = Impl.t) = struct
             | Delete -> "delete"
             | Await -> failwith "matched above"
             in
-            node "UnaryExpression" loc [
+            node ?comments "UnaryExpression" loc [
               "operator", string operator;
               "prefix", bool true;
               "argument", expression argument;

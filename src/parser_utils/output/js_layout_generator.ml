@@ -866,7 +866,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
           ~sep:(Atom ",")
           (Core_list.map ~f:expression_or_spread arguments);
       ];
-    | E.Unary { E.Unary.operator; argument } ->
+    | E.Unary { E.Unary.operator; argument; comments } ->
       let s_operator, needs_space = begin match operator with
       | E.Unary.Minus -> Atom "-", false
       | E.Unary.Plus -> Atom "+", false
@@ -886,7 +886,7 @@ and expression ?(ctxt=normal_context) (root_expr: (Loc.t, Loc.t) Ast.Expression.
         } in
         expression_with_parens ~precedence ~ctxt argument
       in
-      fuse [
+      layout_node_with_simple_comments_opt loc comments @@ fuse [
         s_operator;
         if needs_space then begin match argument with
         | (_, E.Sequence _) -> Empty

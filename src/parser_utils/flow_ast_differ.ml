@@ -876,8 +876,8 @@ let program (algo : diff_algorithm)
         Some (literal loc lit1 lit2)
       | (_, Binary b1), (_, Binary b2) ->
         binary b1 b2
-      | (_, Unary u1), (_, Unary u2) ->
-        unary u1 u2
+      | (loc, Unary u1), (_, Unary u2) ->
+        unary loc u1 u2
       | (_, Ast.Expression.Identifier id1), (_, Ast.Expression.Identifier id2) ->
         identifier id1 id2 |> Option.return
       | (_, Conditional c1), (_, Conditional c2) ->
@@ -1244,14 +1244,17 @@ let program (algo : diff_algorithm)
     else
       Some (diff_if_changed expression left1 left2 @ diff_if_changed expression right1 right2)
 
-  and unary (u1: (Loc.t, Loc.t) Ast.Expression.Unary.t) (u2: (Loc.t, Loc.t) Ast.Expression.Unary.t): node change list option =
+  and unary loc (u1: (Loc.t, Loc.t) Ast.Expression.Unary.t) (u2: (Loc.t, Loc.t) Ast.Expression.Unary.t): node change list option =
     let open Ast.Expression.Unary in
-    let { operator = op1; argument = arg1 } = u1 in
-    let { operator = op2; argument = arg2 } = u2 in
+    let { operator = op1; argument = arg1; comments = comments1 } = u1 in
+    let { operator = op2; argument = arg2; comments = comments2 } = u2 in
+    let comments = syntax_opt loc comments1 comments2
+      |> Option.value ~default:[]
+    in
     if op1 != op2 then
       None
     else
-      Some (expression arg1 arg2)
+      Some (comments @ (expression arg1 arg2))
 
   and identifier (id1: (Loc.t, Loc.t) Ast.Identifier.t) (id2: (Loc.t, Loc.t) Ast.Identifier.t): node change list =
     let (old_loc, { Ast.Identifier.name= name1; comments= comments1 }) = id1 in

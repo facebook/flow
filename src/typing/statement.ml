@@ -4456,17 +4456,17 @@ and literal cx loc lit =
 
 (* traverse a unary expression, return result type *)
 and unary cx loc = Ast.Expression.Unary.(function
-  | { operator = Not; argument } ->
+  | { operator = Not; argument; comments } ->
       let (_, arg), _ as argument = expression cx argument in
       let reason = mk_reason (RUnaryOperator ("not", desc_of_t arg)) loc in
       Tvar.mk_where cx reason (fun t -> Flow.flow cx (arg, NotT (reason, t))),
-      { operator = Not; argument; }
+      { operator = Not; argument; comments }
 
-  | { operator = Plus; argument } ->
+  | { operator = Plus; argument; comments } ->
       let argument = expression cx argument in
-      NumT.at loc |> with_trust literal_trust, { operator = Plus; argument; }
+      NumT.at loc |> with_trust literal_trust, { operator = Plus; argument; comments }
 
-  | { operator = Minus; argument } ->
+  | { operator = Minus; argument; comments } ->
       let (_, argt), _ as argument = expression cx argument in
       begin match argt with
       | DefT (reason, trust, NumT (Literal (sense, (value, raw)))) ->
@@ -4483,27 +4483,27 @@ and unary cx loc = Ast.Expression.Unary.(function
           Flow.flow cx (arg, UnaryMinusT (reason, t));
         )
       end,
-      { operator = Minus; argument; }
+      { operator = Minus; argument; comments }
 
-  | { operator = BitNot; argument } ->
+  | { operator = BitNot; argument; comments } ->
       let t = NumT.at loc |> with_trust literal_trust in
       let (_, argt), _ as argument = expression cx argument in
       Flow.flow_t cx (argt, t);
-      t, { operator = BitNot; argument; }
+      t, { operator = BitNot; argument; comments}
 
-  | { operator = Typeof; argument } ->
+  | { operator = Typeof; argument; comments } ->
       let argument = expression cx argument in
-      StrT.at loc |> with_trust literal_trust, { operator = Typeof; argument }
+      StrT.at loc |> with_trust literal_trust, { operator = Typeof; argument; comments }
 
-  | { operator = Void; argument } ->
+  | { operator = Void; argument; comments } ->
       let argument = expression cx argument in
-      VoidT.at loc |> with_trust literal_trust, { operator = Void; argument }
+      VoidT.at loc |> with_trust literal_trust, { operator = Void; argument; comments }
 
-  | { operator = Delete; argument } ->
+  | { operator = Delete; argument; comments } ->
       let argument = expression cx argument in
-      BoolT.at loc |> with_trust literal_trust, { operator = Delete; argument }
+      BoolT.at loc |> with_trust literal_trust, { operator = Delete; argument; comments }
 
-  | { operator = Await; argument } ->
+  | { operator = Await; argument; comments } ->
     (** TODO: await should look up Promise in the environment instead of going
         directly to the core definition. Otherwise, the following won't work
         with a polyfilled Promise! **)
@@ -4523,7 +4523,7 @@ and unary cx loc = Ast.Expression.Unary.(function
       local = true;
     }) in
     func_call cx reason ~use_op await None [Arg arg],
-    { operator = Await; argument = argument_ast }
+    { operator = Await; argument = argument_ast; comments }
 )
 
 (* numeric pre/post inc/dec *)
@@ -5700,7 +5700,11 @@ and predicates_of_condition cx e = Ast.(Expression.(
     let is_number_literal node =
       match node with
       | Expression.Literal { Literal.value = Literal.Number _; _ }
-      | Expression.Unary { Unary.operator = Unary.Minus; argument = _, Expression.Literal { Literal.value = Literal.Number _; _ } }
+      | Expression.Unary {
+        Unary.operator = Unary.Minus;
+        argument = _, Expression.Literal {
+          Literal.value = Literal.Number _; _ };
+        comments = _ }
         -> true
       | _ -> false
     in
@@ -5709,7 +5713,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
       | Expression.Literal { Literal.value = Literal.Number lit; raw; comments= _ } ->
         lit, raw
       | Expression.Unary { Unary.operator = Unary.Minus;
-          argument = _, Expression.Literal { Literal.value = Literal.Number lit; raw; _ } } ->
+          argument = _, Expression.Literal {
+            Literal.value = Literal.Number lit; raw; _ };
+          comments = _ } ->
         -.lit, ("-" ^ raw)
       | _ -> Utils_js.assert_false "not a number literal"
     in
@@ -5718,29 +5724,29 @@ and predicates_of_condition cx e = Ast.(Expression.(
     (* typeof expr ==/=== string *)
     (* this must happen before the case below involving Literal.String in order
        to match anything. *)
-    | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }),
+    | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }),
       (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)) ->
       typeof_test loc sense argument s str_loc (fun argument ->
         let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
         let left = (typeof_loc, left_t), Expression.Unary {
-          Unary.operator = Unary.Typeof; argument
+          Unary.operator = Unary.Typeof; argument; comments
         } in
         let right_t = StrT.at str_loc |> with_trust bogus_trust in
         let right = (str_loc, right_t), lit_exp in
         reconstruct_ast left right
       )
     | (str_loc, (Expression.Literal { Literal.value = Literal.String s; _ } as lit_exp)),
-      (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }) ->
+      (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }) ->
       typeof_test loc sense argument s str_loc (fun argument ->
         let left_t = StrT.at str_loc |> with_trust bogus_trust in
         let left = (str_loc, left_t), lit_exp in
         let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
         let right = (typeof_loc, right_t), Expression.Unary {
-          Unary.operator = Unary.Typeof; argument
+          Unary.operator = Unary.Typeof; argument; comments
         } in
         reconstruct_ast left right
       )
-    | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }),
+    | (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }),
       (str_loc, (Expression.TemplateLiteral {
         TemplateLiteral.quasis = [_, {
           TemplateLiteral.Element.value = {
@@ -5752,7 +5758,7 @@ and predicates_of_condition cx e = Ast.(Expression.(
       typeof_test loc sense argument s str_loc (fun argument ->
         let left_t = StrT.at typeof_loc |> with_trust bogus_trust in
         let left = (typeof_loc, left_t), Expression.Unary {
-          Unary.operator = Unary.Typeof; argument
+          Unary.operator = Unary.Typeof; argument; comments
         } in
         let right_t = StrT.at str_loc |> with_trust bogus_trust in
         let right = (str_loc, right_t), lit_exp in
@@ -5766,13 +5772,13 @@ and predicates_of_condition cx e = Ast.(Expression.(
         }];
         expressions = [];
       } as lit_exp)),
-      (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; }) ->
+      (typeof_loc, Expression.Unary { Unary.operator = Unary.Typeof; argument; comments }) ->
       typeof_test loc sense argument s str_loc (fun argument ->
         let left_t = StrT.at str_loc |> with_trust bogus_trust in
         let left = (str_loc, left_t), lit_exp in
         let right_t = StrT.at typeof_loc |> with_trust bogus_trust in
         let right = (typeof_loc, right_t), Expression.Unary {
-          Unary.operator = Unary.Typeof; argument
+          Unary.operator = Unary.Typeof; argument; comments
         } in
         reconstruct_ast left right
       )
@@ -6082,9 +6088,9 @@ and predicates_of_condition cx e = Ast.(Expression.(
       Key_map.union xts1 xts2
 
   (* !test *)
-  | loc, Unary { Unary.operator = Unary.Not; argument; } ->
+  | loc, Unary { Unary.operator = Unary.Not; argument; comments } ->
       let (arg, map, not_map, xts) = predicates_of_condition cx argument in
-      let ast' = Unary { Unary.operator = Unary.Not; argument = arg } in
+      let ast' = Unary { Unary.operator = Unary.Not; argument = arg; comments } in
       let t_out = BoolT.at loc |> with_trust bogus_trust in
       let ast = (loc, t_out), ast' in
       (ast, not_map, map, xts)

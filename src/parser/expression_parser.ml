@@ -408,6 +408,7 @@ module Expression
 
   and unary_cover env =
     let begin_loc = Peek.loc env in
+    let leading = Peek.comments env in
     let op = peek_unary_op env in
     match op with
     | None -> begin
@@ -450,6 +451,7 @@ module Expression
       Cover_expr (loc, Expression.(Unary { Unary.
         operator;
         argument;
+        comments= (Flow_ast_utils.mk_comments_opt ~leading ())
       }))
 
   and unary env = as_expression env (unary_cover env)

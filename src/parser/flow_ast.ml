@@ -785,7 +785,8 @@ and Expression : sig
 
     and ('M, 'T) t = {
       operator: operator;
-      argument: ('M, 'T) Expression.t
+      argument: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
     }
 
     [@@deriving show]
