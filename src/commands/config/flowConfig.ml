@@ -68,6 +68,7 @@ module Opts = struct
     include_warnings: bool;
     lazy_mode: Options.lazy_mode option;
     log_file: Path.t option;
+    max_files_checked_per_worker: int;
     max_header_tokens: int;
     max_literal_length: int;
     max_workers: int;
@@ -157,6 +158,7 @@ module Opts = struct
     lazy_mode = None;
     log_file = None;
     max_header_tokens = 10;
+    max_files_checked_per_worker = 100;
     max_literal_length = 100;
     max_workers = Sys_utils.nbr_procs;
     merge_timeout = Some 100;
@@ -619,6 +621,9 @@ module Opts = struct
 
     "recursion_limit",
       uint (fun opts v -> Ok { opts with recursion_limit = v });
+
+    "experimental.types_first.max_files_checked_per_worker",
+      uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v });
   ]
 
   let parse =
@@ -1025,6 +1030,7 @@ let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 let include_warnings c = c.options.Opts.include_warnings
 let lazy_mode c = c.options.Opts.lazy_mode
 let log_file c = c.options.Opts.log_file
+let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 let max_header_tokens c = c.options.Opts.max_header_tokens
 let max_workers c = c.options.Opts.max_workers
 let merge_timeout c = c.options.Opts.merge_timeout

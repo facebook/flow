@@ -596,12 +596,13 @@ let check_files
         MonitorRPC.status_update
           ServerStatus.(Checking_progress { total = Some total; finished = start })
       in
+      let max_size = Options.max_files_checked_per_worker options in
       let%lwt ret = MultiWorkerLwt.call
         workers
         ~job
         ~neutral:[]
         ~merge
-        ~next:(MultiWorkerLwt.next ~progress_fn ~max_size:100 workers (FilenameSet.elements files))
+        ~next:(MultiWorkerLwt.next ~progress_fn ~max_size workers (FilenameSet.elements files))
       in
 
       let { ServerEnv.merge_errors; warnings; suppressions; _ } = errors in

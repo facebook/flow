@@ -1084,6 +1084,7 @@ let make_options ~flowconfig_name ~flowconfig ~lazy_mode ~root (options_flags: O
     opt_include_suppressions = options_flags.include_suppressions;
     opt_trust_mode = Option.value options_flags.trust_mode ~default:(FlowConfig.trust_mode flowconfig);
     opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
+    opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
   }
 
 let make_env flowconfig_name connect_flags root =

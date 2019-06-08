@@ -83,6 +83,7 @@ type t = {
   opt_haste_use_name_reducers: bool;
   opt_ignore_non_literal_requires: bool;
   opt_include_warnings: bool;
+  opt_max_files_checked_per_worker: int;
   opt_max_workers: int;
   opt_merge_timeout: float option;
   opt_module: module_system;
@@ -140,6 +141,7 @@ let is_debug_mode opts = opts.opt_debug
 let is_lazy_mode opts = opts.opt_lazy_mode <> NON_LAZY_MODE
 let lazy_mode opts = opts.opt_lazy_mode
 let is_quiet opts = opts.opt_quiet
+let max_files_checked_per_worker opts = opts.opt_max_files_checked_per_worker
 let max_header_tokens opts = opts.opt_max_header_tokens
 let max_trace_depth opts = opts.opt_traces
 let max_workers opts = opts.opt_max_workers
