@@ -580,16 +580,17 @@ class virtual ['M, 'T, 'N, 'U] mapper = object(this)
   method function_type (ft: ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
     let open Ast.Type.Function in
     let {
-      params = (params_annot, { Params.params = ps; rest = rpo });
+      params = (params_annot, { Params.params = ps; rest = rpo; this = tpo });
       return;
       tparams;
     } = ft in
     this#type_parameter_declaration_opt tparams (fun tparams' ->
       let ps' = Core_list.map ~f:this#function_param_type ps in
       let rpo' = Option.map ~f:this#function_rest_param_type rpo in
+      let tpo' = Option.map ~f:this#function_param_type tpo in
       let return' = this#type_ return in
       {
-        params = (this#on_loc_annot params_annot, { Params.params = ps'; rest = rpo' });
+        params = (this#on_loc_annot params_annot, { Params.params = ps'; rest = rpo'; this = tpo' });
         return = return';
         tparams = tparams';
       }

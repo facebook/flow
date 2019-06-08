@@ -492,15 +492,18 @@ module T = struct
         return: little_annotation;
       } ->
       let params_loc, params, rest = params in
+      let rest = match rest with
+        | None -> None
+        | Some (loc, rest) -> Some (loc, {
+            Ast.Type.Function.RestParam.argument = param_of_type rest
+          })
+      in
       loc, {
         Ast.Type.Function.tparams;
         params = params_loc, {
           Ast.Type.Function.Params.params = Core_list.map ~f:param_of_type params;
-          rest = match rest with
-            | None -> None
-            | Some (loc, rest) -> Some (loc, {
-                Ast.Type.Function.RestParam.argument = param_of_type rest
-              })
+          rest;
+          this = None;
         };
         return = type_of_little_annotation outlined return;
       }

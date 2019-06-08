@@ -542,17 +542,18 @@ class ['loc] mapper = object(this)
   method function_type _loc (ft: ('loc, 'loc) Ast.Type.Function.t) =
     let open Ast.Type.Function in
     let {
-      params = (params_loc, { Params.params = ps; rest = rpo });
+      params = (params_loc, { Params.params = ps; rest = rpo; this = tpo });
       return;
       tparams;
     } = ft in
     let ps' = ListUtils.ident_map this#function_param_type ps in
     let rpo' = map_opt this#function_rest_param_type rpo in
+    let tpo' = map_opt this#function_param_type tpo in
     let return' = this#type_ return in
     let tparams' = map_opt this#type_parameter_declaration tparams in
-    if ps' == ps && rpo' == rpo && return' == return && tparams' == tparams then ft
+    if ps' == ps && rpo' == rpo && tpo' == tpo && return' == return && tparams' == tparams then ft
     else {
-      params = (params_loc, { Params.params = ps'; rest = rpo' });
+      params = (params_loc, { Params.params = ps'; rest = rpo'; this = tpo' });
       return = return';
       tparams = tparams'
     }

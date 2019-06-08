@@ -2212,7 +2212,7 @@ and type_function_param (loc, { Ast.Type.Function.Param.
   ])
 
 and type_function ~sep { Ast.Type.Function.
-  params = (_, { Ast.Type.Function.Params.params; rest = restParams});
+  params = (_, { Ast.Type.Function.Params.params; rest = restParams; _});
   return;
   tparams;
 } =
