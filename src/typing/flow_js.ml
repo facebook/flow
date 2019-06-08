@@ -2210,6 +2210,7 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
         mk_reason RPrototype fun_loc |> Unsoundness.function_proto_any,
         {
           this_t = mk_reason RThis fun_loc |> MixedT.make |> with_trust bogus_trust;
+          has_explicit_this = false;
           params = [(Some "value", MixedT.at fun_loc |> with_trust bogus_trust)];
           rest_param = None;
           return_t = return_t;
@@ -7012,7 +7013,7 @@ and expand_any _cx any t =
       failwith "no any expansion defined for this case"
 
 and any_prop_to_function use_op {this_t; params; rest_param; return_t;
-    closure_t = _; is_predicate = _; changeset = _; def_reason = _;} covariant contravariant =
+    closure_t = _; is_predicate = _; changeset = _; def_reason = _; has_explicit_this = _;} covariant contravariant =
   List.iter (snd %> contravariant ~use_op) params;
   Option.iter ~f:(fun (_, _, t) -> contravariant ~use_op t) rest_param;
   contravariant ~use_op this_t;

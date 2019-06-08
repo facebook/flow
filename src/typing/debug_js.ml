@@ -1070,6 +1070,7 @@ and json_of_changeset_impl _json_cx = Hh_json.(
 and json_of_funtype json_cx = check_depth json_of_funtype_impl json_cx
 and json_of_funtype_impl json_cx {
   this_t;
+  has_explicit_this;
   params;
   rest_param;
   return_t;
@@ -1102,6 +1103,7 @@ and json_of_funtype_impl json_cx {
         | None -> []
         | Some name -> ["restParamName", JSON_String name])));
     "returnType", _json_of_t json_cx return_t;
+    "hasExplicitThis", JSON_Bool has_explicit_this;
     "isPredicate", JSON_Bool is_predicate;
     "closureIndex", int_ closure_t;
     "changeset", json_of_changeset json_cx changeset;

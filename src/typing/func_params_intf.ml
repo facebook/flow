@@ -17,10 +17,12 @@ module type S = sig
   type reconstruct =
     (ALoc.t * Type.t) param_ast list ->
     (ALoc.t * Type.t) rest_ast option ->
+    (ALoc.t * Type.t) param_ast option ->
     (ALoc.t * Type.t) ast option
 
   val empty: reconstruct -> t
   val add_param: param -> t -> t
+  val add_this: param -> t -> t
   val add_rest: rest -> t -> t
 
   val value: t -> Type.fun_param list

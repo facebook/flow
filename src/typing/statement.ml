@@ -6727,7 +6727,7 @@ and mk_func_sig =
   in
 
   let mk_params cx tparams_map (loc, { Ast.Function.Params.params; rest })  =
-    let fparams = Func_stmt_params.empty (fun params rest ->
+    let fparams = Func_stmt_params.empty (fun params rest _ ->
       Some (loc, { Ast.Function.Params.params; rest })
     ) in
     let fparams = List.fold_left (fun acc param ->
@@ -6874,7 +6874,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
   | Some (loc, Ast.Type.Predicate.Declared e) -> begin
       match annot with
       | (annot_loc, (func_annot_loc, Ast.Type.Function
-        { Ast.Type.Function.params = (params_loc, { Ast.Type.Function.Params.params; rest });
+        { Ast.Type.Function.params = (params_loc, { Ast.Type.Function.Params.params; rest; _ });
           Ast.Type.Function.return;
           Ast.Type.Function.tparams;
         })) ->
@@ -6960,7 +6960,7 @@ and declare_function_to_function_declaration cx declare_loc func_decl =
                 annot_loc, (
                   (func_annot_loc, fun_type),
                   Ast.Type.Function { Ast.Type.Function.
-                    params = params_loc, { Ast.Type.Function.Params.params; rest; };
+                    params = params_loc, { Ast.Type.Function.Params.params; rest; this = None };
                     return;
                     tparams;
                   }

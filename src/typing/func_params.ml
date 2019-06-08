@@ -27,17 +27,20 @@ module Make (C: Config) = struct
   type reconstruct =
     (ALoc.t * Type.t) param_ast list ->
     (ALoc.t * Type.t) rest_ast option ->
+    (ALoc.t * Type.t) param_ast option ->
     (ALoc.t * Type.t) ast option
 
   type t = {
     params_rev: param list;
     rest: rest option;
+    this: param option;
     reconstruct: reconstruct;
   }
 
   let empty reconstruct = {
     params_rev = [];
     rest = None;
+    this = None;
     reconstruct;
   }
 
@@ -46,6 +49,9 @@ module Make (C: Config) = struct
 
   let add_rest r x =
     { x with rest = Some r }
+
+  let add_this t x =
+    { x with this = Some t }
 
   let value {params_rev; _} =
     List.fold_left (fun acc p ->
@@ -56,15 +62,17 @@ module Make (C: Config) = struct
   let rest {rest; _} =
     Option.map ~f:C.rest_type rest
 
-  let subst cx map { params_rev; rest; reconstruct } = {
+  let subst cx map { params_rev; rest; this; reconstruct } = {
     params_rev = Core_list.map ~f:(C.subst_param cx map) params_rev;
     rest = Option.map ~f:(C.subst_rest cx map) rest;
+    this = Option.map ~f:(C.subst_param cx map) this;
     reconstruct;
   }
 
-  let eval cx { params_rev; rest; reconstruct } =
+  let eval cx { params_rev; rest; this; reconstruct } =
     let params = List.rev params_rev in
     let param_tasts_rev = List.rev_map (C.eval_param cx) params in
     let rest_tast = Option.map ~f:(C.eval_rest cx) rest in
-    reconstruct (List.rev param_tasts_rev) rest_tast
+    let this_tast = Option.map ~f:(C.eval_param cx) this in
+    reconstruct (List.rev param_tasts_rev) rest_tast this_tast
 end

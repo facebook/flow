@@ -435,10 +435,11 @@ end = struct
   let opt_param = Ty.({ prm_optional = true })
   let non_opt_param = Ty.({ prm_optional = false })
 
-  let mk_fun ?(params=[]) ?rest ?tparams ret = Ty.(
+  let mk_fun ?(params=[]) ?rest ?this ?tparams ret = Ty.(
     Fun {
       fun_params = params;
       fun_rest_param = rest;
+      fun_this_param = this;
       fun_return = ret;
       fun_type_params = tparams;
     }
@@ -804,11 +805,12 @@ end = struct
     return (Ty.Bound (def_loc, name))
 
   and fun_ty ~env f fun_type_params =
-    let {T.params; rest_param; return_t; _} = f in
+    let {T.params; this_t; has_explicit_this; rest_param; return_t; _} = f in
     mapM (fun_param ~env) params >>= fun fun_params ->
     fun_rest_param_t ~env rest_param >>= fun fun_rest_param ->
     type__ ~env return_t >>= fun fun_return ->
-    return {Ty.fun_params; fun_rest_param; fun_return; fun_type_params}
+    fun_this_param_t ~env this_t has_explicit_this >>= fun fun_this_param ->
+    return {Ty.fun_params; fun_rest_param; fun_this_param; fun_return; fun_type_params}
 
   and method_ty ~env t =
     let open Type in
@@ -828,6 +830,10 @@ end = struct
   and fun_rest_param_t ~env = function
     | Some (x, _, t) -> type__ ~env t >>| fun t -> Some (x,t)
     | _ -> return None
+
+  and fun_this_param_t ~env t is_explicit =
+    fun_param ~env (Some "this", t) >>| fun p ->
+      if is_explicit then Some p else None
 
   and obj_ty ~env reason o =
     let { T.flags; props_tmap; call_t; dict_t; _ } = o in

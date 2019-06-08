@@ -804,6 +804,7 @@ module rec TypeTerm : sig
     rest_param: fun_rest_param option;
     return_t: t;
     closure_t: int;
+    has_explicit_this: bool;
     is_predicate: bool;
     changeset: Changeset.t;
     def_reason: Reason.t;
@@ -3523,6 +3524,7 @@ let mk_methodtype
     this tins ~rest_param ~def_reason
     ?(frame=0) ?params_names ?(is_predicate=false) tout = {
   this_t = this;
+  has_explicit_this = false;
   params = (
     match params_names with
     | None -> Core_list.map ~f:(fun t -> None, t) tins

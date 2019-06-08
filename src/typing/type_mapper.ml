@@ -287,6 +287,7 @@ class virtual ['a] t = object(self)
     else {exports_tmap = exports_tmap'; cjs_export = cjs_export'; has_every_named_export}
 
   method fun_type cx map_cx ({ this_t;
+                       has_explicit_this;
                        params;
                        rest_param;
                        return_t;
@@ -315,7 +316,7 @@ class virtual ['a] t = object(self)
       let return_t = return_t' in
       let params = params' in
       let rest_param = rest_param' in
-      {this_t; params; rest_param; return_t;
+      {this_t; has_explicit_this; params; rest_param; return_t;
        closure_t; is_predicate; changeset; def_reason}
 
   method inst_type cx map_cx i =

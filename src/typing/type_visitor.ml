@@ -744,6 +744,7 @@ class ['a] t = object(self)
       is_predicate = _;
       changeset = _;
       def_reason = _;
+      has_explicit_this = _;
     } = ft in
     let acc = self#type_ cx pole acc this_t in
     let acc = self#list (fun acc (_, t) -> self#type_ cx (P.inv pole) acc t) acc params in

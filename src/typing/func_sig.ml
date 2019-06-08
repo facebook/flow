@@ -33,7 +33,7 @@ let default_constructor reason = {
   kind = Ctor;
   tparams = None;
   tparams_map = SMap.empty;
-  fparams = F.empty (fun _ _ -> None);
+  fparams = F.empty (fun _ _ _ -> None);
   body = None;
   return_t = VoidT.why reason |> with_trust bogus_trust;
   (* This can't be directly recursively called. In case this type is accidentally used downstream,
@@ -46,7 +46,7 @@ let field_initializer tparams_map reason expr return_t = {
   kind = FieldInit expr;
   tparams = None;
   tparams_map;
-  fparams = F.empty (fun _ _ -> None);
+  fparams = F.empty (fun _ _ _ -> None);
   body = None;
   return_t;
   (* This can't be recursively called. In case this type is accidentally used downstream, stub it
@@ -99,6 +99,7 @@ let functiontype cx this_t {reason; kind; tparams; fparams; return_t; knot; _} =
     closure_t = Env.peek_frame ();
     changeset = Env.retrieve_closure_changeset ();
     def_reason = reason;
+    has_explicit_this = false;
   } in
   let t = DefT (reason, make_trust (), FunT (static, prototype, funtype)) in
   let t = poly_type_of_tparams (Context.make_nominal cx) tparams t in

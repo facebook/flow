@@ -1101,7 +1101,7 @@ let rec convert cx tparams_map = Ast.Type.(function
   end
 
 | loc, Function { Function.
-    params = (params_loc, { Function.Params.params; rest });
+    params = (params_loc, { Function.Params.params; rest; this });
     return;
     tparams;
   } ->
@@ -1122,6 +1122,20 @@ let rec convert cx tparams_map = Ast.Type.(function
   ) ([], []) params in
 
   let reason = mk_reason RFunctionType loc in
+
+  let this_t, this_ast, has_explicit_this = match this with
+  | Some (param_loc, { Function.Param.name; annot; optional }) ->
+    let (_, t), _ as annot_ast = convert cx tparams_map annot in
+    let t = if optional then Type.optional t else t in
+    let name = Option.map ~f:(fun (loc, id_name) -> (loc, t), id_name) name in
+    t,
+    Some (param_loc, {
+      Function.Param.name;
+      annot = annot_ast;
+      optional
+    }),
+    true
+  | None -> bound_function_dummy_this, None, false in
 
   let rest_param, rest_param_ast = match rest with
   | Some (rest_loc, { Function.RestParam.argument = (param_loc, param) }) ->
@@ -1149,7 +1163,8 @@ let rec convert cx tparams_map = Ast.Type.(function
       statics_t,
       mk_reason RPrototype loc |> Unsoundness.function_proto_any,
       {
-        this_t = bound_function_dummy_this;
+        this_t;
+        has_explicit_this;
         params = List.rev rev_params;
         rest_param;
         return_t;
@@ -1165,6 +1180,7 @@ let rec convert cx tparams_map = Ast.Type.(function
     Function.params = (params_loc, {
       Function.Params.params = List.rev rev_param_asts;
       rest = rest_param_ast;
+      this = this_ast;
     });
     return = return_ast;
     tparams = tparams_ast;
@@ -1588,12 +1604,20 @@ and mk_func_sig =
     }) in
     Func_type_params.add_rest rest x
   in
-  let convert_params cx tparams_map (loc, {Params.params; rest}) =
-    let fparams = Func_type_params.empty (fun params rest ->
-      Some (loc, { Params.params; rest })
+  let add_this cx tparams_map x this_param =
+    let (this_loc, { Param.name; annot; optional }) = this_param in
+    let (_, t), _ as annot = convert cx tparams_map annot in
+    let name = Option.map ~f:(fun (loc, id_name) -> (loc, t), id_name) name in
+    let this = t, (this_loc, { Param.name; annot; optional }) in
+    Func_type_params.add_this this x
+  in
+  let convert_params cx tparams_map (loc, {Params.params; rest; this}) =
+    let fparams = Func_type_params.empty (fun params rest this ->
+      Some (loc, { Params.params; rest; this })
     ) in
     let fparams = List.fold_left (add_param cx tparams_map) fparams params in
     let fparams = Option.fold ~f:(add_rest cx tparams_map) ~init:fparams rest in
+    let fparams = Option.fold ~f:(add_this cx tparams_map) ~init:fparams this in
     let params_ast = Func_type_params.eval cx fparams in
     fparams, Option.value_exn params_ast
   in
