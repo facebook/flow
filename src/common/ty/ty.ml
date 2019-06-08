@@ -78,6 +78,7 @@ and gen_kind =
 
 and fun_t = {
   fun_params: (string option * t * fun_param) list;
+  fun_this_param: (string option * t * fun_param) option;
   fun_rest_param: (string option * t) option;
   fun_return: t;
   fun_type_params: type_param list option;

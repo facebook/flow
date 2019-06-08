@@ -47,6 +47,10 @@ and dump_rest_params ~depth = function
     spf "...%s" (dump_param ~depth (o, t, { prm_optional = false }))
   | _ -> ""
 
+and dump_this_param ~depth = function
+  | Some p -> dump_param ~depth p
+  | _ -> ""
+
 and dump_bound ~depth = function
   | Some t -> spf " <: %s" (dump_t ~depth t)
   | _ -> ""
@@ -65,9 +69,10 @@ and dump_type_params ~depth = function
   | Some ps -> spf "TypeParams(%s)" (dump_list (dump_type_param ~depth) ps)
   | _ -> ""
 
-and dump_fun_t ~depth { fun_params; fun_rest_param; fun_return; fun_type_params } =
-  spf "Fun(%s, %s, %s, out: %s)"
+and dump_fun_t ~depth { fun_params; fun_rest_param; fun_this_param; fun_return; fun_type_params } =
+  spf "Fun(%s, %s, %s, %s, out: %s)"
     (dump_type_params ~depth fun_type_params)
+    (dump_this_param  ~depth  fun_this_param)
     (dump_list (dump_param ~depth) fun_params)
     (dump_rest_params ~depth  fun_rest_param)
     (dump_t ~depth fun_return)
@@ -317,7 +322,7 @@ let json_of_t ~strip_root =
 
   and json_of_tvar (RVar i) = Hh_json.(["id", int_ i])
 
-  and json_of_fun_t { fun_params; fun_rest_param; fun_return; fun_type_params } =
+  and json_of_fun_t { fun_params; fun_rest_param; fun_this_param; fun_return; fun_type_params } =
     Hh_json.(
       [
         "typeParams", json_of_type_params fun_type_params;
@@ -329,6 +334,11 @@ let json_of_t ~strip_root =
           | (Some n, _, _) -> JSON_String n
           | (None, _, _) -> JSON_String "_"
           ) fun_params);
+      ] @ [
+        "thisParam", (match fun_this_param with
+        | None -> JSON_Null
+        | Some (Some n, _, _) -> JSON_String n
+        | Some (None, _, _) -> JSON_String "_")
       ] @ [
         "restParam", (match fun_rest_param with
         | None -> JSON_Null

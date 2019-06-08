@@ -131,6 +131,7 @@ and fun_params params rest_param =
     T.Function.Params.
     params;
     rest;
+    this = None;
   })
 
 and fun_param (name, t, {prm_optional}) =
@@ -282,6 +283,7 @@ and num_lit lit = {
 and getter t = function_ {
   fun_params = [];
   fun_rest_param = None;
+  fun_this_param = None;
   fun_return = t;
   fun_type_params = None;
 }
@@ -289,6 +291,7 @@ and getter t = function_ {
 and setter t = function_ {
   fun_params = [(None, t, {prm_optional = false})];
   fun_rest_param = None;
+  fun_this_param = None;
   fun_return = Void;
   fun_type_params = None;
 }

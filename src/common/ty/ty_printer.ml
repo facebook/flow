@@ -156,7 +156,7 @@ let type_ ?(size=5000) ?(with_comments=true) t =
         ]))
 
   and type_function ~depth ~sep
-    { fun_params; fun_rest_param; fun_return; fun_type_params } =
+    { fun_params; fun_rest_param; fun_this_param; fun_return; fun_type_params } =
     let params = counted_map (type_function_param ~depth) fun_params in
     let params = match fun_rest_param with
     | Some (name, t) -> params @ [ fuse [
@@ -164,6 +164,14 @@ let type_ ?(size=5000) ?(with_comments=true) t =
           type_function_param ~depth (name, t, { prm_optional = false })
         ]
       ]
+    | None -> params
+    in
+    let params = match fun_this_param with
+    | Some p -> [
+      fuse [
+        type_function_param ~depth p
+      ]
+    ] @ params
     | None -> params
     in
     fuse [
