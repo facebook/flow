@@ -499,6 +499,14 @@ let merge_tvar =
           then AnyT.locationless Unsoundness.existential
           else MergedT (r, uses)
 
+let merge_trust_var constr =
+  let open Trust_constraint in
+  match constr with
+  | TrustResolved t -> t
+  | TrustUnresolved bound ->
+    get_trust bound |> Trust.fix
+
+
 (****************** signature contexts *********************)
 
 (* Once a context is merged with other contexts it depends on, it is ready to be
@@ -558,12 +566,14 @@ module ContextOptimizer = struct
       stable_id
 
     val mutable stable_tvar_ids = IMap.empty
+    val mutable stable_trust_var_ids = IMap.empty
     val mutable stable_eval_ids = IMap.empty
     val mutable stable_poly_ids = IMap.empty
     val mutable stable_props_ids = IMap.empty
     val mutable stable_call_prop_ids = IMap.empty
     val mutable reduced_module_map = SMap.empty;
     val mutable reduced_graph = IMap.empty;
+    val mutable reduced_trust_graph = IMap.empty;
     val mutable reduced_property_maps = Properties.Map.empty;
     val mutable reduced_call_props = IMap.empty;
     val mutable reduced_export_maps = Exports.Map.empty;
@@ -626,6 +636,29 @@ module ContextOptimizer = struct
         ignore (self#tvar cx pole r root_id);
         let node = Goto root_id in
         reduced_graph <- IMap.add id node reduced_graph;
+        id
+      )
+
+    method trust_var cx pole id =
+      let root_id, constr = Context.find_trust_constraints cx id in
+      if id == root_id then
+        if IMap.mem id reduced_trust_graph then
+          let stable_id = IMap.find_unsafe root_id stable_trust_var_ids in
+          SigHash.add_int sig_hash stable_id;
+          id
+        else
+          let t = merge_trust_var constr in
+          let node = Trust_constraint.new_resolved_root t in
+          reduced_trust_graph <- IMap.add id node reduced_trust_graph;
+          let () =
+            let stable_id = self#fresh_stable_id in
+            stable_trust_var_ids <- IMap.add id stable_id stable_trust_var_ids
+          in
+          id
+      else (
+        ignore (self#trust_var cx pole root_id);
+        let node = Trust_constraint.TrustGoto root_id in
+        reduced_trust_graph <- IMap.add id node reduced_trust_graph;
         id
       )
 
@@ -724,6 +757,11 @@ module ContextOptimizer = struct
 
     method! type_ cx pole t =
       SigHash.add_reason sig_hash (reason_of_t t);
+      begin match t with
+        | DefT (_, trust, _) when Context.trust_tracking cx && is_ident trust ->
+          ignore (self#trust_var cx pole (as_ident trust))
+        | _ -> ()
+      end;
       match t with
       | InternalT _ -> Utils_js.assert_false "internal types should not appear in signatures"
       | OpenT _ -> super#type_ cx pole t
@@ -797,10 +835,12 @@ module ContextOptimizer = struct
       (seen', id)
 
     method get_stable_tvar_ids = stable_tvar_ids
+    method get_stable_trust_var_ids = stable_trust_var_ids
     method get_stable_eval_ids = stable_eval_ids
     method get_stable_poly_ids = stable_poly_ids
     method get_reduced_module_map = reduced_module_map
     method get_reduced_graph = reduced_graph
+    method get_reduced_trust_graph = reduced_trust_graph
     method get_reduced_property_maps = reduced_property_maps
     method get_reduced_call_props = reduced_call_props
     method get_reduced_export_maps = reduced_export_maps
@@ -818,6 +858,7 @@ module ContextOptimizer = struct
     let sig_hash, reducer = reduce_context cx module_refs in
     Context.set_module_map cx reducer#get_reduced_module_map;
     Context.set_graph cx reducer#get_reduced_graph;
+    Context.set_trust_graph cx reducer#get_reduced_trust_graph;
     Context.set_property_maps cx reducer#get_reduced_property_maps;
     Context.set_call_props cx reducer#get_reduced_call_props;
     Context.set_export_maps cx reducer#get_reduced_export_maps;
