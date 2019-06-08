@@ -17,6 +17,8 @@ end
 module type TRUST_CHECKING = sig
   val trust_flow_to_use_t: Context.t -> Trace.t -> Type.t -> Type.use_t -> unit
   val trust_flow: Context.t -> Trace.t -> Type.use_op -> Type.t -> Type.t -> unit
+  val mk_trust_var: Context.t -> ?initial:Trust.trust_qualifier -> unit -> Type.ident
+  val strengthen_trust: Context.t -> Type.ident -> Trust.trust_qualifier -> Error_message.t -> unit
 end
 
 module type S = sig
@@ -58,4 +60,5 @@ val eval_selector : Context.t -> ?trace:Trace.t -> reason -> Type.t -> Type.sele
   val union_of_ts: reason -> Type.t list -> Type.t
 
   include ASSERT_GROUND
+  include TRUST_CHECKING
 end
