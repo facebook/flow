@@ -702,5 +702,84 @@ References:
                                  ^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------ this_annot_type.js:11:4
 
-Found 51 errors
+Cannot cast `this.foo` to string because number [1] is incompatible with string [2].
+
+   this_annot_type.js:11:4
+   11|   (this.foo: string); // error
+          ^^^^^^^^
+
+References:
+   this_annot_type.js:4:8
+    4|   foo: number
+              ^^^^^^ [1]
+   this_annot_type.js:11:14
+   11|   (this.foo: string); // error
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ this_annot_type.js:17:4
+
+Cannot cast `this` to string because `T` [1] is incompatible with string [2].
+
+   this_annot_type.js:17:4
+   17|   (this: string); // error
+          ^^^^
+
+References:
+   this_annot_type.js:14:18
+   14| type F1 = (this: T, foo: number) => void
+                        ^ [1]
+   this_annot_type.js:17:10
+   17|   (this: string); // error
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ this_annot_type.js:19:4
+
+Cannot cast `foo` to string because number [1] is incompatible with string [2].
+
+   this_annot_type.js:19:4
+   19|   (foo: string); // error
+          ^^^
+
+References:
+   this_annot_type.js:14:26
+   14| type F1 = (this: T, foo: number) => void
+                                ^^^^^^ [1]
+   this_annot_type.js:19:9
+   19|   (foo: string); // error
+               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ this_annot_type.js:24:1
+
+Cannot call `f2` because property `foo` is missing in global object [1] but exists in `T` [2].
+
+   this_annot_type.js:24:1
+   24| f2(); // error
+       ^^^^ [1]
+
+References:
+   this_annot_type.js:22:27
+   22| declare function f2(this: T): void;
+                                 ^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ this_annot_type.js:25:9
+
+null [1] is incompatible with `T` [2].
+
+   this_annot_type.js:25:9
+   25| f2.bind(null) // error
+               ^^^^ [1]
+
+References:
+   this_annot_type.js:22:27
+   22| declare function f2(this: T): void;
+                                 ^ [2]
+
+
+
+Found 56 errors
