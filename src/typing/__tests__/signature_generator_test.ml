@@ -638,9 +638,7 @@ let tests = "signature_generator" >::: ([
      "  a: null,";
      "  b: null,";
      "})"]
-    ["declare module.exports: $TEMPORARY$Object$freeze<";
-     "  {|a: $TEMPORARY$string<'a'>, b: $TEMPORARY$string<'b'>|},";
-     ">;"];
+    ["declare module.exports: $TEMPORARY$object<{|a: 'a', b: 'b'|}>;"];
 
   "unusual_cjs_exports1" >:: mk_signature_generator_test
     ["exports.wut = 'dead';";
