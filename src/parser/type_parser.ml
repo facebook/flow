@@ -137,6 +137,64 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
       postfix_with env t
     end else t
 
+  and typeof env =
+    let loc = Peek.loc env in
+    match Peek.token env with
+    | T_MULT ->
+        Expect.token env T_MULT;
+        loc, Type.Exists
+    | T_LESS_THAN -> _function env
+    | T_LPAREN -> function_or_group env
+    | T_LCURLY
+    | T_LCURLYBAR ->
+      let loc, o = _object env
+        ~is_class:false ~allow_exact:true ~allow_spread:true in
+      loc, Type.Object o
+    | T_INTERFACE ->
+      with_loc (fun env ->
+        Expect.token env T_INTERFACE;
+        Type.Interface (interface_helper env)
+      ) env
+    | T_TYPEOF ->
+        let env = env |> with_no_reserved_type false in
+        with_loc (fun env ->
+          Expect.token env T_TYPEOF;
+          Type.Typeof (typeof env)
+        ) env
+    | T_LBRACKET -> tuple env
+    | T_STRING (loc, value, raw, octal)  ->
+        if octal then strict_error env Error.StrictOctalLiteral;
+        Expect.token env (T_STRING (loc, value, raw, octal));
+        loc, Type.StringLiteral {
+          Ast.StringLiteral.value;
+          raw;
+        }
+    | T_NUMBER_SINGLETON_TYPE { kind; value; raw } ->
+        Expect.token env (T_NUMBER_SINGLETON_TYPE { kind; value; raw });
+        if kind = LEGACY_OCTAL
+        then strict_error env Error.StrictOctalLiteral;
+        loc, Type.NumberLiteral {
+          Ast.NumberLiteral.value;
+          raw;
+        }
+    | T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw } ->
+        let bigint = raw in
+        Expect.token env (T_BIGINT_SINGLETON_TYPE { kind; approx_value; raw });
+        loc, Type.BigIntLiteral {
+          Ast.BigIntLiteral.approx_value;
+          bigint;
+        }
+    | (T_TRUE | T_FALSE) as token ->
+        Expect.token env token;
+        let value = token = T_TRUE in
+        loc, Type.BooleanLiteral value
+    | T_NULL ->
+      Expect.token env T_NULL;
+      loc, Type.Null
+    | _ ->
+        let loc, g = generic env in
+        loc, Type.Generic g
+
   and primary env =
     let loc = Peek.loc env in
     match Peek.token env with
@@ -156,9 +214,10 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
         Type.Interface (interface_helper env)
       ) env
     | T_TYPEOF ->
+        let env = env |> with_no_reserved_type false in
         with_loc (fun env ->
           Expect.token env T_TYPEOF;
-          Type.Typeof (primary env)
+          Type.Typeof (typeof env)
         ) env
     | T_LBRACKET -> tuple env
     | T_IDENTIFIER _
@@ -759,7 +818,8 @@ module Type (Parse: Parser_common.PARSER) : TYPE = struct
 
   and type_identifier env =
     let loc, { Identifier.name; comments } = identifier_name env in
-    if is_reserved_type name then error_at env (loc, Parse_error.UnexpectedReservedType);
+    if no_reserved_type env && is_reserved_type name then
+      error_at env (loc, Parse_error.UnexpectedReservedType);
     loc, { Identifier.name; comments }
 
   and bounded_type env = with_loc (fun env ->

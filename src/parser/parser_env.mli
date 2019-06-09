@@ -72,6 +72,7 @@ val allow_super : env -> allowed_super
 val no_in : env -> bool
 val no_call : env -> bool
 val no_let : env -> bool
+val no_reserved_type : env -> bool
 val no_anon_function_type : env -> bool
 val no_new : env -> bool
 val errors : env -> (Loc.t * Parse_error.t) list
@@ -104,6 +105,7 @@ val with_allow_await : bool -> env -> env
 val with_allow_directive : bool -> env -> env
 val with_allow_super : allowed_super -> env -> env
 val with_no_let : bool -> env -> env
+val with_no_reserved_type : bool -> env -> env
 val with_in_loop : bool -> env -> env
 val with_no_in : bool -> env -> env
 val with_no_anon_function_type : bool -> env -> env
