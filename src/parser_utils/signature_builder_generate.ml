@@ -821,9 +821,11 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
       let open Ast.Expression.Object.Property in
       match object_key with
         | Literal (loc, { Ast.Literal.value = Ast.Literal.String value; raw; comments= _ }) ->
-           loc, T.StringLiteral { Ast.StringLiteral.value; raw }
+           loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw })
         | Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
-           loc, T.StringLiteral { Ast.StringLiteral.value = name; raw = Printf.sprintf "'%s'" name }
+           let value = name in
+           let raw = Printf.sprintf "'%s'" name in
+           loc, T.TypeCast (loc, Ast.Type.StringLiteral { Ast.StringLiteral.value; raw })
         | _ -> assert false
     in
     let keys_as_string_values_of_object_properties object_properties =
@@ -926,7 +928,7 @@ module Eval(Env: Signature_builder_verify.EvalEnv) = struct
         begin match object_ properties with
         | Some o ->
            begin match keys_as_string_values_of_object_properties o with
-           | Some o' -> loc, T.ObjectLiteral { frozen = true; properties = o' }
+           | Some o' -> loc, T.ObjectLiteral { frozen = false; properties = o' }
            | None -> T.FixMe.mk_expr_type loc
            end
         | None -> T.FixMe.mk_expr_type loc
