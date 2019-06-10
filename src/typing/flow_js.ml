@@ -1575,10 +1575,11 @@ let rec __flow cx ((l: Type.t), (u: Type.use_t)) trace =
       );
       rec_flow_t cx trace (l, t_out)
 
-    | _, AssertExportIsTypeT (reason, name, t_out) ->
+    | _, AssertExportIsTypeT (_, name, t_out) ->
       if is_type l then
         rec_flow_t cx trace (l, t_out)
       else begin
+        let reason = reason_of_t l in
         add_output cx ~trace Error_message.(EExportValueAsType (reason, name));
         rec_flow_t cx trace (AnyT.error reason, t_out)
       end

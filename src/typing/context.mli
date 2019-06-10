@@ -53,10 +53,6 @@ type metadata = {
   trust_mode: Options.trust_mode;
 }
 
-type module_kind =
-  | CommonJSModule of ALoc.t option
-  | ESModule
-
 type type_assert_kind = Is | Throws | Wraps
 
 val make_sig: unit -> sig_t
@@ -107,7 +103,7 @@ val is_strict_local: t -> bool
 val include_suppressions: t -> bool
 val severity_cover: t -> ExactCover.lint_severity_cover Utils_js.FilenameMap.t
 val max_trace_depth: t -> int
-val module_kind: t -> module_kind
+val module_kind: t -> Module_info.kind
 val require_map: t -> Type.t ALocMap.t
 val module_map: t -> Type.t SMap.t
 val module_ref: t -> string
@@ -141,9 +137,10 @@ val pid_prefix: t -> string
 val copy_of_context: t -> t
 val merge_into: sig_t -> sig_t -> unit
 
-val push_declare_module: t -> string -> unit
+(* modules *)
+val push_declare_module: t -> Module_info.t -> unit
 val pop_declare_module: t -> unit
-val in_declare_module: t -> bool
+val module_info: t -> Module_info.t
 
 (* mutators *)
 val add_env: t -> int -> env -> unit
@@ -172,7 +169,6 @@ val set_type_graph: t  -> Graph_explorer.graph -> unit
 val set_all_unresolved: t  -> ISet.t IMap.t -> unit
 val set_graph: t -> Constraint.node IMap.t -> unit
 val set_trust_graph: t -> Trust_constraint.node IMap.t -> unit
-val set_module_kind: t -> module_kind -> unit
 val set_property_maps: t -> Type.Properties.map -> unit
 val set_call_props: t -> Type.t IMap.t -> unit
 val set_export_maps: t -> Type.Exports.map -> unit

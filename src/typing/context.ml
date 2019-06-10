@@ -53,10 +53,6 @@ type metadata = {
   trust_mode: Options.trust_mode
 }
 
-type module_kind =
-  | CommonJSModule of ALoc.t option
-  | ESModule
-
 type test_prop_hit_or_miss =
   | Hit
   | Miss of string option * (Reason.t * Reason.t) * Type.use_op
@@ -128,10 +124,9 @@ type t = {
   sig_cx: sig_t;
 
   file: File_key.t;
-  module_ref: string;
   metadata: metadata;
 
-  mutable module_kind: module_kind;
+  module_info: Module_info.t;
 
   mutable import_stmts: (ALoc.t, ALoc.t) Flow_ast.Statement.ImportDeclaration.t list;
   mutable imported_ts: Type.t SMap.t;
@@ -140,7 +135,7 @@ type t = {
 
   trust_constructor: unit -> Trust.trust_rep;
 
-  mutable declare_module_ref: string option;
+  mutable declare_module_ref: Module_info.t option;
 
   mutable use_def : Scope_api.info * Ssa_api.With_ALoc.values;
 }
@@ -213,10 +208,9 @@ let make sig_cx metadata file module_ref = {
   sig_cx;
 
   file;
-  module_ref;
   metadata;
 
-  module_kind = CommonJSModule(None);
+  module_info = Module_info.empty_cjs_module module_ref;
 
   import_stmts = [];
   imported_ts = SMap.empty;
@@ -237,18 +231,30 @@ let find_module_sig sig_cx m =
   try SMap.find_unsafe m sig_cx.module_map
   with Not_found -> raise (Module_not_found m)
 
-let push_declare_module cx module_ref =
+(* modules *)
+
+let push_declare_module cx info =
   match cx.declare_module_ref with
   | Some _ -> failwith "declare module must be one level deep"
-  | None -> cx.declare_module_ref <- Some module_ref
+  | None -> cx.declare_module_ref <- Some info
 
 let pop_declare_module cx =
   match cx.declare_module_ref with
   | None -> failwith "pop empty declare module"
   | Some _ -> cx.declare_module_ref <- None
 
-let in_declare_module cx =
-  Option.is_some cx.declare_module_ref
+let module_info cx =
+  match cx.declare_module_ref with
+  | Some info -> info
+  | None -> cx.module_info
+
+let module_kind cx =
+  let info = module_info cx in
+  info.Module_info.kind
+
+let module_ref cx =
+  let info = module_info cx in
+  info.Module_info.ref
 
 (* accessors *)
 let all_unresolved cx = cx.sig_cx.all_unresolved
@@ -301,13 +307,8 @@ let is_strict_local cx = cx.metadata.strict_local
 let include_suppressions cx = cx.metadata.include_suppressions
 let severity_cover cx = cx.sig_cx.severity_cover
 let max_trace_depth cx = cx.metadata.max_trace_depth
-let module_kind cx = cx.module_kind
 let require_map cx = cx.require_map
 let module_map cx = cx.sig_cx.module_map
-let module_ref cx =
-  match cx.declare_module_ref with
-  | Some module_ref -> module_ref
-  | None -> cx.module_ref
 let property_maps cx = cx.sig_cx.property_maps
 let call_props cx = cx.sig_cx.call_props
 let export_maps cx = cx.sig_cx.export_maps
@@ -408,8 +409,6 @@ let set_graph cx graph =
   cx.sig_cx.graph <- graph
 let set_trust_graph cx trust_graph =
   cx.sig_cx.trust_graph <- trust_graph
-let set_module_kind cx module_kind =
-  cx.module_kind <- module_kind
 let set_property_maps cx property_maps =
   cx.sig_cx.property_maps <- property_maps
 let set_call_props cx call_props =

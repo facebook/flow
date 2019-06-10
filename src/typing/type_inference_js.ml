@@ -434,7 +434,6 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
   let file_loc = Loc.({ none with source = Some filename }) |> ALoc.of_loc in
   let reason = Reason.mk_reason (Reason.RCustom "exports") file_loc in
 
-  let initial_module_t = ImpExp.module_t_of_cx cx in
   let init_exports = Obj_type.mk cx reason in
   ImpExp.set_module_exports cx file_loc init_exports;
 
@@ -444,24 +443,8 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
 
   scan_for_suppressions cx lint_severities file_options comments;
 
-  let module_t = Context.(
-    match Context.module_kind cx with
-    (* CommonJS with a clobbered module.exports *)
-    | CommonJSModule(Some(loc)) ->
-      let module_exports_t = ImpExp.get_module_exports cx file_loc in
-      let reason = Reason.mk_reason (Reason.RCustom "exports") loc in
-      ImpExp.mk_commonjs_module_t cx reason_exports_module
-        reason module_exports_t
-
-    (* CommonJS with a mutated 'exports' object *)
-    | CommonJSModule(None) ->
-      ImpExp.mk_commonjs_module_t cx reason_exports_module
-        reason local_exports_var
-
-    (* Uses standard ES module exports *)
-    | ESModule -> ImpExp.mk_module_t cx reason_exports_module
-  ) in
-  Flow_js.flow_t cx (module_t, initial_module_t);
+  let module_t = Import_export.mk_module_t cx reason in
+  Context.add_module cx module_ref module_t;
 
   prog_aloc, typed_statements, aloc_comments
 

@@ -27,7 +27,6 @@ open Type
 open Env.LookupMode
 
 open Destructuring
-open Import_export
 
 (*************)
 (* Utilities *)
@@ -578,7 +577,8 @@ and statement_decl cx = Ast.Statement.(
   | _, ExportDefaultDeclaration { ExportDefaultDeclaration.declaration; _ } -> (
       match declaration with
       | ExportDefaultDeclaration.Declaration stmt ->
-        statement_decl cx (fst (nameify_default_export_decl stmt))
+        let stmt, _ = Import_export.nameify_default_export_decl stmt in
+        statement_decl cx stmt
       | ExportDefaultDeclaration.Expression _ -> ()
     )
   | (_, ImportDeclaration { ImportDeclaration.importKind; specifiers; default; source = _ }) ->
@@ -1970,39 +1970,24 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       module_scope;
 
     Env.push_var_scope cx module_scope;
-    let outer_module_exports_kind = Context.module_kind cx in
-    Context.set_module_kind cx (Context.CommonJSModule None);
-    Context.push_declare_module cx module_ref;
+    Context.push_declare_module cx (Module_info.empty_cjs_module module_ref);
 
-    let initial_module_t = module_t_of_cx cx in
-
-    let (elements_ast, elements_abnormal), local_exports =
-      Scope.with_declare_module_local_exports module_scope (fun _ ->
-        Abnormal.catch_stmts_control_flow_exception (fun () ->
-          toplevel_decls cx elements;
-          toplevels cx elements;
-        )
+    let elements_ast, elements_abnormal =
+      Abnormal.catch_stmts_control_flow_exception (fun () ->
+        toplevel_decls cx elements;
+        toplevels cx elements;
       )
     in
-    if not (SMap.is_empty local_exports) then begin
-      let reason = mk_reason (RCustom (spf "export * from %S" name)) loc in
-      set_module_t cx reason (fun t ->
-        (* TODO: I suspect that ReExport is the wrong export kind to use here. It looks like this is
-         * actually how ordinary exports are handled in `declare module`, despite what the reason
-         * above seems to indicate. However, I'm not sure about this so for now I'm setting this to
-         * ReExport because it it won't change the existing behavior. *)
-        Flow.flow cx (module_t_of_cx cx, ExportNamedT (reason, false, local_exports, ReExport, t))
-      );
-    end;
 
     let reason = mk_reason (RModule name) loc in
-    let module_t = match Context.module_kind cx with
-    | Context.ESModule -> mk_module_t cx reason
-    | Context.CommonJSModule clobbered ->
+
+    let () = match Context.module_kind cx with
+    | Module_info.ES _ -> ()
+    | Module_info.CJS clobbered ->
       let open Scope in
       let open Entry in
-      let cjs_exports = match clobbered with
-      | Some loc -> get_module_exports cx loc
+      let () = match clobbered with
+      | Some _ -> ()
       | None ->
         let props = SMap.fold (fun x entry acc ->
           match entry with
@@ -2012,23 +1997,20 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           | Type _ | Class _ -> acc
         ) module_scope.entries SMap.empty in
         let proto = ObjProtoT reason in
-        Obj_type.mk_with_proto cx reason ~props proto
+        let t = Obj_type.mk_with_proto cx reason ~props proto in
+        Import_export.set_module_exports cx loc t
       in
-      let type_exports = SMap.fold (fun x entry acc ->
+      SMap.iter (fun x entry ->
         match entry with
-        (* TODO we may want to provide a location here *)
-        | Type {type_; type_binding_kind=TypeBinding; _} -> SMap.add x (None, type_) acc
+        | Type {type_; type_binding_kind=TypeBinding; _} ->
+          (* TODO we may want to provide a location here *)
+          Import_export.export_type cx x None type_
         | Type {type_binding_kind=ImportTypeBinding; _ }
-        | Value _ | Class _ -> acc
-      ) module_scope.entries SMap.empty in
-      set_module_t cx reason (fun t ->
-        Flow.flow cx (
-          module_t_of_cx cx,
-          ExportNamedT (reason, false, type_exports, Type.ExportType, t)
-        )
-      );
-      mk_commonjs_module_t cx reason reason cjs_exports
+        | Value _ | Class _ -> ()
+      ) module_scope.entries;
     in
+
+    let module_t = Import_export.mk_module_t cx reason in
 
     let ast = loc, DeclareModule { DeclareModule.
       id = begin match id with
@@ -2043,14 +2025,10 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
     ignore (Abnormal.check_stmt_control_flow_exception (ast, elements_abnormal)
       : (ALoc.t, ALoc.t * Type.t) Ast.Statement.t);
 
-
-    Flow.flow_t cx (module_t, initial_module_t);
-
     let t = Env.get_var_declared_type cx module_ref loc in
-    Flow.flow_t cx (initial_module_t, t);
+    Flow.flow_t cx (module_t, t);
 
     Context.pop_declare_module cx;
-    Context.set_module_kind cx outer_module_exports_kind;
     Env.pop_var_scope ();
 
     ast
@@ -2133,8 +2111,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
 
   | (loc, DeclareModuleExports (t_loc, t)) ->
     let (_, t), _ as t_ast = Anno.convert cx SMap.empty t in
-    set_module_kind cx loc (Context.CommonJSModule(Some loc));
-    set_module_exports cx loc t;
+    Import_export.cjs_clobber cx loc t;
     loc, DeclareModuleExports (t_loc, t_ast)
 
   | (loc, ExportNamedDeclaration ({ ExportNamedDeclaration.
@@ -2188,7 +2165,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       Type_inference_hooks_js.dispatch_export_named_hook "default" default;
       let declaration, export_info = match declaration with
       | ExportDefaultDeclaration.Declaration decl ->
-          let decl, undo_nameify = nameify_default_export_decl decl in
+          let decl, undo_nameify = Import_export.nameify_default_export_decl decl in
           ExportDefaultDeclaration.Declaration (undo_nameify (statement cx decl)),
           (match decl with
           | loc, FunctionDeclaration {Ast.Function.id = None; _} ->
@@ -2243,7 +2220,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       | ImportDeclaration.ImportValue -> Type.ImportValue
     in
 
-    let module_t = import cx (source_loc, module_name) import_loc in
+    let module_t = Import_export.import cx (source_loc, module_name) import_loc in
 
     let get_imported_t get_reason import_kind remote_export_name local_name =
       Tvar.mk_where cx get_reason (fun t ->
@@ -2315,7 +2292,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
           | ImportDeclaration.ImportTypeof ->
             let bind_reason = repos_reason (fst local) import_reason in
             let module_ns_t =
-              import_ns cx import_reason (fst source, module_name) import_loc
+              Import_export.import_ns cx import_reason (fst source, module_name) import_loc
             in
             let module_ns_typeof =
               Tvar.mk_where cx bind_reason (fun t ->
@@ -2330,7 +2307,7 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
               mk_reason (RModule module_name) import_loc
             in
             let module_ns_t =
-              import_ns cx reason (fst source, module_name) import_loc
+              Import_export.import_ns cx reason (fst source, module_name) import_loc
             in
             Context.add_imported_t cx local_name module_ns_t;
             [fst local, local_name, module_ns_t, None]
@@ -2383,74 +2360,27 @@ and export_statement cx loc
   ~default declaration_export_info specifiers source exportKind =
 
   let open Ast.Statement in
-  let (lookup_mode, export_kind_start) = (
-    match exportKind with
-    | Ast.Statement.ExportValue -> (ForValue, "export")
-    | Ast.Statement.ExportType -> (ForType, "export type")
-  ) in
 
-  (* type.ml has a different representation for export kind. Convert it over *)
-  let type_ml_export_kind = match exportKind with
-  | Ast.Statement.ExportType -> Type.ExportType
-  | Ast.Statement.ExportValue -> Type.ExportValue
+  let lookup_mode = match exportKind with
+    | Ast.Statement.ExportValue -> ForValue
+    | Ast.Statement.ExportType -> ForType
   in
 
-  let export_reason_start = spf "%s%s" export_kind_start (
-    if (Option.is_some default) then " default" else ""
-  ) in
-
-  let export_from_local (export_reason, loc, local_name, local_tvar) = (
-    let reason =
-      mk_reason (RCustom (spf "%s %s" export_reason_start export_reason)) loc
-    in
+  let export_from_local (_, loc, local_name, local_tvar) = (
     let local_tvar = match local_tvar with
     | None -> Env.var_ref ~lookup_mode cx local_name loc
     | Some t -> t in
 
-    (**
-      * NOTE: We do not use type-only exports as an indicator of an
-      *       ES module in order to allow CommonJS modules to export types.
-      *
-      *       Note that this means that modules that consist only of
-      *       type-only exports will be internally considered a CommonJS
-      *       module, but this should have minimal observable effect to the
-      *       user given CommonJS<->ESModule interop.
-      *)
-    (if lookup_mode != ForType then
-      set_module_kind cx loc Context.ESModule);
-
     let local_name = if (Option.is_some default) then "default" else local_name in
 
-    (**
-      * Special-casing 'declare module' to avoid long chains of ModuleT ~>
-      * ExportNamedT, known to cause exceptions due to "Maximum call stack size
-      * exceeded" errors. Here we track the named export and later in the main
-      * DeclareModule handler we create a single flow to ExportedNamedT with a
-      * map containing all bindings included in the declare module.
-      *
-      * Note that by looking up `local_tvar` in the environment we account for
-      * multiple declarations of the same name. So storing these types in an SMap
-      * does not cause loss of information.
-      *)
-    if Context.in_declare_module cx then
-      let scope = Env.peek_scope () in
-      Scope.set_declare_module_local_export scope local_name loc local_tvar
-    else
-      set_module_t cx reason (fun t ->
-        Flow.flow cx (
-          module_t_of_cx cx,
-          (* Use the location of the "default" keyword if this is a default export. For named exports,
-           * use the location of the identifier. *)
-          let loc = Option.value ~default:loc default in
-          ExportNamedT (
-            reason,
-            false,
-            SMap.singleton local_name (Some loc, local_tvar),
-            type_ml_export_kind,
-            t
-          )
-        )
-      )
+    (* Use the location of the "default" keyword if this is a default export. For named exports,
+     * use the location of the identifier. *)
+    let loc = Option.value ~default:loc default in
+    match exportKind with
+    | Ast.Statement.ExportType ->
+      Import_export.export_type cx local_name (Some loc) local_tvar
+    | Ast.Statement.ExportValue ->
+      Import_export.export cx local_name loc local_tvar
   ) in
 
   (match (declaration_export_info, specifiers) with
@@ -2486,16 +2416,9 @@ and export_statement cx loc
             let reason =
               mk_reason (RCustom "ModuleNamespace for export {} from") src_loc
             in
-            Some (import_ns cx reason (src_loc, module_name) loc)
+            Some (Import_export.import_ns cx reason (src_loc, module_name) loc)
           | None -> None
         ) in
-
-        (* If we are re-exporting from another module (e.g. `export {...} from '...'`) then we need
-         * to update the export kind to reflect that. *)
-        let type_ml_export_kind = match source with
-        | Some _ -> Type.ReExport
-        | None -> type_ml_export_kind
-        in
 
         let local_tvar = (
           match source_module_tvar with
@@ -2507,32 +2430,11 @@ and export_statement cx loc
             Env.var_ref ~lookup_mode cx local_name loc
         ) in
 
-        (**
-          * NOTE: We do not use type-only exports as an indicator of an
-          *       ES module in order to allow CommonJS modules to export
-          *       types.
-          *
-          *       Note that this means that modules that consist only of
-          *       type-only exports will be internally considered a
-          *       CommonJS module, but this should have minimal observable
-          *       effect to the user given CommonJS<->ESModule interop.
-          *)
-        (if lookup_mode != ForType
-        then set_module_kind cx loc Context.ESModule);
-
-        set_module_t cx reason (fun t ->
-          Flow.flow cx (
-            module_t_of_cx cx,
-            ExportNamedT(
-              reason,
-              false,
-              (* TODO we may need a more precise loc here *)
-              SMap.singleton remote_name (Some loc, local_tvar),
-              type_ml_export_kind,
-              t
-            )
-          )
-        )
+        match exportKind with
+        | Ast.Statement.ExportType ->
+          Import_export.export_type cx remote_name (Some loc) local_tvar
+        | Ast.Statement.ExportValue ->
+          Import_export.export cx remote_name loc local_tvar
       ) in
       List.iter export_specifier specifiers
 
@@ -2550,7 +2452,7 @@ and export_statement cx loc
         )
       ) in
 
-      warn_or_ignore_export_star_as cx star_as_name;
+      Import_export.warn_or_ignore_export_star_as cx star_as_name;
 
       let parse_export_star_as = Context.esproposal_export_star_as cx in
       (match star_as_name with
@@ -2561,11 +2463,10 @@ and export_statement cx loc
             (RCustom (spf "export * as %s from %S" name source_module_name))
             loc
         in
-        set_module_kind cx loc Context.ESModule;
 
         let remote_namespace_t =
           if parse_export_star_as = Options.ESPROPOSAL_ENABLE
-          then import_ns cx reason (source_loc, source_module_name) loc
+          then Import_export.import_ns cx reason (source_loc, source_module_name) loc
           else AnyT.untyped (
             let config_value =
               if parse_export_star_as = Options.ESPROPOSAL_IGNORE
@@ -2577,37 +2478,18 @@ and export_statement cx loc
             mk_reason (RCustom reason) batch_loc
           )
         in
-        set_module_t cx reason (fun t ->
-          Flow.flow cx (
-            module_t_of_cx cx,
-            ExportNamedT (
-              reason,
-              false,
-              (* TODO we may need a more precise loc here *)
-              SMap.singleton name (Some loc, remote_namespace_t),
-              ReExport,
-              t
-            )
-          )
-        )
+
+        Import_export.export cx name loc remote_namespace_t;
       | None ->
-        let reason =
-          mk_reason
-            (RCustom (spf "%s * from %S" export_kind_start source_module_name))
-            loc
+        let source_module_t =
+          Import_export.import cx (source_loc, source_module_name) loc
         in
 
-        (* It's legal to export types from a CommonJS module. *)
-        if exportKind != Ast.Statement.ExportType
-        then set_module_kind cx loc Context.ESModule;
-
-        set_module_t cx reason (fun t -> Flow.flow cx (
-          import cx (source_loc, source_module_name) loc,
-          let module_t = module_t_of_cx cx in
-          match exportKind with
-          | Ast.Statement.ExportValue -> CopyNamedExportsT(reason, module_t, t)
-          | Ast.Statement.ExportType -> CopyTypeExportsT(reason, module_t, t)
-        ))
+        match exportKind with
+        | Ast.Statement.ExportValue ->
+          Import_export.export_star cx loc source_module_t
+        | Ast.Statement.ExportType ->
+          Import_export.export_type_star cx loc source_module_t
       )
 
     | ([], None) -> failwith (
@@ -3558,7 +3440,7 @@ and expression_ ~is_cond cx loc e : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t =
 
       let imported_module_t =
         let import_reason = mk_reason (RModule module_name) loc in
-        import_ns cx import_reason (source_loc, module_name) loc
+        Import_export.import_ns cx import_reason (source_loc, module_name) loc
       in
 
       let reason = annot_reason (mk_reason (RCustom "async import") loc) in
@@ -3645,7 +3527,7 @@ and subscript =
         | None, [ Expression (source_loc, Ast.Expression.Literal {
             Ast.Literal.value = Ast.Literal.String module_name; _;
           } as lit_exp) ] ->
-          require cx (source_loc, module_name) loc,
+          Import_export.require cx (source_loc, module_name) loc,
           [ Expression (expression cx lit_exp) ]
         | None, [ Expression (source_loc, TemplateLiteral {
             TemplateLiteral.quasis = [ _, {
@@ -3655,7 +3537,7 @@ and subscript =
             } ];
             expressions = [];
           } as lit_exp) ] ->
-          require cx (source_loc, module_name) loc,
+          Import_export.require cx (source_loc, module_name) loc,
           [ Expression (expression cx lit_exp) ]
         | Some _, _ ->
           List.iter (fun arg -> ignore (expression_or_spread cx arg)) arguments;
@@ -3716,7 +3598,7 @@ and subscript =
                 Ast.Literal.value = Ast.Literal.String module_name;
                 _;
               })) ->
-                let module_tvar = require cx (source_loc, module_name) loc in
+                let module_tvar = Import_export.require cx (source_loc, module_name) loc in
                 module_tvar::tvars
             | _ ->
                 Flow.add_output cx Error_message.(
@@ -4112,7 +3994,7 @@ and subscript =
           { Ast.Identifier.name = "exports"; comments = _ } as exports_name
         ));
       } ->
-        let lhs_t = get_module_exports cx loc in
+        let lhs_t = Import_export.get_module_exports cx loc in
         let module_reason = mk_reason (RCustom "module") object_loc in
         let module_t = MixedT.why module_reason |> with_trust bogus_trust in
         let _object =
@@ -4422,7 +4304,7 @@ and literal cx loc lit =
     match Context.haste_module_ref_prefix cx with
     | Some prefix when String_utils.string_starts_with s prefix ->
       let m = String_utils.lstrip s prefix in
-      let t = require cx (loc, m) loc in
+      let t = Import_export.require cx (loc, m) loc in
       let reason = mk_reason (RCustom "module reference") loc in
       Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [t]
     | _ ->
@@ -4728,8 +4610,7 @@ and simple_assignment cx _loc lhs rhs =
           Ast.Identifier.name = "exports"; comments= _
         } as name));
       }) ->
-        set_module_kind cx lhs_loc (Context.CommonJSModule(Some(lhs_loc)));
-        set_module_exports cx lhs_loc t;
+        Import_export.cjs_clobber cx lhs_loc t;
         let module_reason = mk_reason (RCustom "module") object_loc in
         let module_t = MixedT.why module_reason |> with_trust bogus_trust in
         let _object =

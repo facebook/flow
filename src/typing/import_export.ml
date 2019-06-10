@@ -87,52 +87,6 @@ let import_ns cx reason source import_loc =
     Flow.flow cx (module_t, ImportModuleNsT(reason, t, Context.is_strict cx))
   )
 
-let module_t_of_cx cx =
-  let m = Context.module_ref cx in
-  match SMap.get m (Context.module_map cx) with
-  | Some t -> t
-  | None ->
-    let loc = Loc.({ none with source = Some (Context.file cx) }) in
-    let reason = (Reason.mk_reason (RCustom "exports") (loc |> ALoc.of_loc)) in
-    Tvar.mk_where cx reason (fun t -> Context.add_module cx m t)
-
-let set_module_t cx reason f =
-  let module_ref = Context.module_ref cx in
-  Context.add_module cx module_ref (Tvar.mk_where cx reason f)
-
-(**
- * Before running inference, we assume that we're dealing with a CommonJS
- * module that has a built-in, initialized `exports` object (i.e. it is not an
- * ES module).
- *
- * During inference, if we encounter an assignment to module.exports then we
- * use this as an indicator that the module is definitely a CommonJS module --
- * but that the bult-in `exports` value is no longer the exported variable.
- * Instead, whatever was assigned to `module.exports` is now that CJS exported
- * value.
- *
- * On the other hand, if we encounter an ES `export` statement during inference,
- * we use this as an indicator that the module is an ES module. The one
- * exception to this rule is that we do not use `export type` as an indicator of
- * an ES module (since we want CommonJS modules to be able to use `export type`
- * as well).
- *
- * At the end of inference, we make use of this information to decide which
- * types to store as the expors of the module (i.e. Do we use the built-in
- * `exports` value? Do we use the type that clobbered `module.exports`? Or do we
- * use neither because the module only has direct ES exports?).
- *)
-let set_module_kind cx loc new_exports_kind = Context.(
-  (match (Context.module_kind cx, new_exports_kind) with
-  | (ESModule, CommonJSModule(Some _))
-  | (CommonJSModule(Some _), ESModule)
-    ->
-      Flow.add_output cx (Error_message.EIndeterminateModuleType loc)
-  | _ -> ()
-  );
-  Context.set_module_kind cx new_exports_kind
-)
-
 (**
  * Given an exported default declaration, identify nameless declarations and
  * name them with a special internal name that can be used to reference them
@@ -196,3 +150,83 @@ let set_module_exports cx loc t =
   let change: Changeset.EntryRef.t option =
     Env.set_internal_var cx "exports" t loc in
   ignore change
+
+let cjs_clobber cx loc t =
+  match Module_info.cjs_clobber (Context.module_info cx) loc with
+  | Ok () -> set_module_exports cx loc t
+  | Error msg -> Flow.add_output cx msg
+
+let export cx name loc t =
+  match Module_info.export (Context.module_info cx) name loc t with
+  | Ok () -> ()
+  | Error msg -> Flow.add_output cx msg
+
+let export_star cx loc ns =
+  match Module_info.export_star (Context.module_info cx) loc ns with
+  | Ok () -> ()
+  | Error msg -> Flow.add_output cx msg
+
+let export_type cx =
+  Module_info.export_type (Context.module_info cx)
+
+let export_type_star cx =
+  Module_info.export_type_star (Context.module_info cx)
+
+(* After we have seen all the export statements in a module, this function will
+ * calculate a ModuleT type (or a tvar that resolves to one) describing the
+ * exports of a file.
+ *
+ * For CommonJS modules, this is fairly simple. We have the exported value
+ * itself, plus any type exports. If the exported value is an object, we treat
+ * the fields as named exports for ES module dependents.
+ *
+ * For ES modules, we have both named exports and "star" exports, which copy the
+ * exports of one file into another. This can lead to conflits, which are
+ * resolved carefully. Note that locally named exports always win, even if they
+ * are followed by a star export that includes a conflicting name.
+ *
+ * Finally, both CJS and ES modules can export types, which also has a star
+ * export variant. Conflicts are handled in the same way.
+ *)
+let mk_module_t =
+  let open Module_info in
+
+  let copy_named_exports cx reason module_t (loc, from_ns) =
+    let reason = repos_reason loc reason in
+    Tvar.mk_where cx reason (fun tout ->
+      Flow.flow cx (from_ns, CopyNamedExportsT (reason, module_t, tout)))
+  in
+
+  let copy_type_exports cx reason module_t (loc, from_ns) =
+    let reason = repos_reason loc reason in
+    Tvar.mk_where cx reason (fun tout ->
+      Flow.flow cx (from_ns, CopyTypeExportsT (reason, module_t, tout)))
+  in
+
+  let copy_star_exports cx reason exports module_t =
+    Module_info.fold_star2
+      (copy_named_exports cx reason)
+      (copy_type_exports cx reason)
+      module_t exports
+  in
+
+  let export_named cx reason kind named module_t =
+    Tvar.mk_where cx reason (fun tout ->
+      Flow.flow cx (module_t, ExportNamedT (reason, false, named, kind, tout)))
+  in
+
+  fun cx reason ->
+    let info = Context.module_info cx in
+    match info.kind with
+    | CJS _ ->
+      Loc.({ none with source = Some (Context.file cx) })
+      |> ALoc.of_loc
+      |> get_module_exports cx
+      |> mk_commonjs_module_t cx reason reason
+      |> export_named cx reason ExportType info.type_named
+      |> copy_star_exports cx reason ([], info.type_star)
+    | ES { named; star } ->
+      mk_module_t cx reason
+      |> export_named cx reason ExportValue named
+      |> export_named cx reason ExportType info.type_named
+      |> copy_star_exports cx reason (star, info.type_star)
