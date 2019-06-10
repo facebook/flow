@@ -10,7 +10,7 @@ module Ast = Flow_ast
 let flow_position_to_lsp (line: int) (char: int): Lsp.position =
   let open Lsp in
   {
-    line = line - 1;
+    line = max 0 (line - 1);
     character = char;
   }
 
@@ -21,9 +21,17 @@ let lsp_position_to_flow (position: Lsp.position): int * int =
   in
   (line, char)
 
+let loc_to_lsp_range (loc: Loc.t): Lsp.range =
+  let open Loc in
+  let loc_start = loc.start in
+  let loc_end = loc._end in
+  let start = flow_position_to_lsp loc_start.line loc_start.column in
+  (* Flow's end range is inclusive, LSP's is exclusive.
+   * +1 for that, but -1 to make it 0-based *)
+  let end_ = flow_position_to_lsp loc_end.line loc_end.column in
+  { Lsp.start; end_; }
+
 let flow_completion_to_lsp
-    (line: int)
-    (character: int)
     (is_snippet_supported: bool)
     (item: ServerProt.Response.complete_autocomplete_result)
   : Lsp.Completion.completionItem =
@@ -39,34 +47,31 @@ let flow_completion_to_lsp
     let params = Core_list.mapi ~f:(fun i p -> "${" ^ string_of_int (i +1 ) ^ ":" ^ p.param_name ^ "}") params in
     name ^ "(" ^ (String.concat ", " params) ^ ")"
   in
+  let text_edit loc newText : Lsp.TextEdit.t = {
+    Lsp.TextEdit.range = loc_to_lsp_range loc;
+    Lsp.TextEdit.newText = newText;
+  } in
   let func_snippet item func_details =
     let newText = flow_params_to_lsp_snippet item.res_name func_details.param_tys in
-    let open Lsp in
-    let start = (flow_position_to_lsp line (character - 1)) in
-    let end_ = (flow_position_to_lsp line (character + 1)) in
-    let textEdit: TextEdit.t = {
-      Lsp.TextEdit.range = {
-        start;
-        end_;
-      };
-      Lsp.TextEdit.newText = newText;
-    } in
-    [textEdit]
+    text_edit item.res_loc newText
   in
   let itemType, inlineDetail, detail, insertTextFormat, textEdits = match item.func_details with
     | Some func_details ->
       let itemType = Some (trunc 30 func_details.return_ty) in
       let inlineDetail = Some (trunc 40 (flow_params_to_string func_details.param_tys)) in
-      let detail = Some (trunc80 item.res_ty) in
+      let (_ty_loc, ty) = item.res_ty in
+      let detail = Some (trunc80 ty) in
       let (insertTextFormat, textEdits) = match is_snippet_supported with
-        | true -> (Some SnippetFormat, (func_snippet item func_details))
+        | true -> (Some SnippetFormat, [func_snippet item func_details])
         | false -> (Some PlainText, [])  in
       itemType, inlineDetail, detail, insertTextFormat, textEdits
     | None ->
       let itemType = None in
-      let inlineDetail = Some (trunc80 item.res_ty) in
-      let detail = Some (trunc80 item.res_ty) in
-      itemType, inlineDetail, detail, Some PlainText, []
+      let (_ty_loc, ty) = item.res_ty in
+      let inlineDetail = Some (trunc80 ty) in
+      let detail = inlineDetail in
+      let textEdits = [] in
+      itemType, inlineDetail, detail, Some PlainText, textEdits
   in
   {
     label = item.res_name;
@@ -91,13 +96,6 @@ let file_key_to_uri (file_key_opt: File_key.t option): (string, string) result =
   Core_result.of_option file_key_opt ~error:"File_key is None"
     >>= File_key.to_path
     >>| File_url.create
-
-let loc_to_lsp_range (loc: Loc.t): Lsp.range =
-  let open Loc in
-  { Lsp.
-    start = { Lsp.line=max 0 (loc.start.line-1); character=loc.start.column; };
-    end_ = { Lsp.line=max 0 (loc._end.line-1); character=loc._end.column; };
-  }
 
 let loc_to_lsp (loc: Loc.t): (Lsp.Location.t, string) result =
   let (>>|) = Core_result.(>>|) in
