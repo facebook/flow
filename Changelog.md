@@ -1,3 +1,30 @@
+### 0.101.0
+
+Likely to cause new Flow errors:
+  * `$Keys` now produces a more precise type, which may find errors where incompatible strings were passed to something expecting the `$Keys` of some object.
+
+New Features:
+  * We released a new implicit-inexact-object lint to detect when an inexact object is used without explicitly adding `...` to the
+    end of the props list. See [here](https://medium.com/flow-type/on-the-roadmap-exact-objects-by-default-16b72933c5cf) for context.
+  * Function type parameters may now use default arguments. This is not yet supported by babel.
+
+Notable bug fixes:
+  * Fixed a bug with ranges returned by autocomplete
+  * Fixed a bug where errors with bad locations reported over the LSP could cause the editor to clear all errors.
+
+Misc:
+  * `React.memo` and `React.lazy` now both allow you to specify an instance type via `React.AbstractComponent`.
+  * Various performance improvements to union types.
+  * Various libdef fixes and improvements.
+  * Various improvements to error positioning.
+  * The recursion limit is now configurable in the .flowconfig via `recursion_limit`. Most projects will not need to override this value.
+
+Parser:
+  * Forbid private fields named `#constructor`
+  * Fix duplicate private class field validation for getters/setters
+  * Fix parsing of private getters and setters
+  * Function type parameters may now use default arguments.
+
 ### 0.100.0
 
 Likely to cause new Flow errors:
