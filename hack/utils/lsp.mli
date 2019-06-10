@@ -522,6 +522,20 @@ module Error :
     exception ServerNotInitialized of string
     exception Unknown of string
     exception RequestCancelled of string
+
+    module Code : sig
+      val parseError: int
+      val invalidRequest: int
+      val methodNotFound: int
+      val invalidParams: int
+      val internalError: int
+      val serverErrorStart: int
+      val serverErrorEnd: int
+      val serverNotInitialized: int
+      val unknownErrorCode: int
+      val requestCancelled: int
+      val contentModified: int
+    end
   end
 type lsp_request =
   | InitializeRequest of Initialize.params

@@ -938,19 +938,20 @@ let print_initialize (r: Initialize.result) : json =
 let error_of_exn (e: exn) : Lsp.Error.t =
   let open Lsp.Error in
   match e with
-  | Error.Parse message -> {code= -32700; message; data=None;}
-  | Error.InvalidRequest message -> {code= -32600; message; data=None;}
-  | Error.MethodNotFound message -> {code= -32601; message; data=None;}
-  | Error.InvalidParams message -> {code= -32602; message; data=None;}
-  | Error.InternalError message -> {code= -32603; message; data=None;}
+  | Error.Parse message -> {code= Code.parseError; message; data=None;}
+  | Error.InvalidRequest message -> {code= Code.invalidRequest; message; data=None;}
+  | Error.MethodNotFound message -> {code= Code.methodNotFound; message; data=None;}
+  | Error.InvalidParams message -> {code= Code.invalidParams; message; data=None;}
+  | Error.InternalError message -> {code= Code.internalError; message; data=None;}
   | Error.ServerErrorStart (message, data) ->
-      {code= -32099; message; data=Some (print_initializeError data);}
-  | Error.ServerErrorEnd message -> {code= -32000; message; data=None;}
-  | Error.ServerNotInitialized message -> {code= -32002; message; data=None;}
-  | Error.Unknown message -> {code= -32001; message; data=None;}
-  | Error.RequestCancelled message -> {code= -32800; message; data=None;}
-  | Exit_status.Exit_with code -> {code= -32001; message=Exit_status.to_string code; data=None;}
-  | _ -> {code= -32001; message=Printexc.to_string e; data=None;}
+      {code= Code.serverErrorStart; message; data=Some (print_initializeError data);}
+  | Error.ServerErrorEnd message -> {code= Code.serverErrorEnd; message; data=None;}
+  | Error.ServerNotInitialized message -> {code= Code.serverNotInitialized; message; data=None;}
+  | Error.Unknown message -> {code= Code.unknownErrorCode; message; data=None;}
+  | Error.RequestCancelled message -> {code= Code.requestCancelled; message; data=None;}
+  | Exit_status.Exit_with code ->
+      {code= Code.unknownErrorCode; message=Exit_status.to_string code; data=None;}
+  | _ -> {code= Code.unknownErrorCode; message=Printexc.to_string e; data=None;}
 
 let print_error (e: Error.t) (stack: string) : json =
   let open Hh_json in
