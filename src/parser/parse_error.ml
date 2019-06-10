@@ -32,7 +32,8 @@ type t =
   | InexactInsideExact
   | InexactInsideNonObject
   | NewlineAfterThrow
-  | InvalidBigInt
+  | InvalidFloatBigInt
+  | InvalidSciBigInt
   | InvalidRegExp
   | InvalidRegExpFlags of string
   | UnterminatedRegExp
@@ -161,7 +162,8 @@ module PP =
       | InexactInsideNonObject ->
           "Explicit inexact syntax can only appear inside an object type"
       | NewlineAfterThrow ->  "Illegal newline after throw"
-      | InvalidBigInt -> "Invalid bigint literal"
+      | InvalidFloatBigInt -> "A bigint literal must be an integer"
+      | InvalidSciBigInt -> "A bigint literal cannot use exponential notation"
       | InvalidRegExp -> "Invalid regular expression"
       | InvalidRegExpFlags flags -> "Invalid flags supplied to RegExp constructor '"^flags^"'"
       | UnterminatedRegExp ->  "Invalid regular expression: missing /"
