@@ -1072,7 +1072,7 @@ let handle_persistent_autocomplete_lsp ~options ~id ~params ~loc ~metadata ~clie
       let metadata = with_data ~extra_data metadata in
       begin match result with
         | Ok items ->
-          let items = Core_list.map ~f: (Flow_lsp_conversions.flow_completion_to_lsp line char is_snippet_supported) items in
+          let items = Core_list.map ~f: (Flow_lsp_conversions.flow_completion_to_lsp is_snippet_supported) items in
           let r = CompletionResult { Lsp.Completion.isIncomplete = false; items; } in
           let response = ResponseMessage (id, r) in
           Lwt.return (LspResponse (Ok ((), Some response, metadata)))
