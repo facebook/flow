@@ -270,6 +270,8 @@ let trigger_of_lsp_msg = Lsp.(function
 | RequestMessage (_, ShowMessageRequestRequest _)
 | RequestMessage (_, ShowStatusRequest _)
 | RequestMessage (_, ShutdownRequest)
+(* TODO not sure if this is right, just need to unbreak the build. *)
+| RequestMessage (_, TypeDefinitionRequest _)
 | RequestMessage (_, UnknownRequest _)
 | RequestMessage (_, WorkspaceSymbolRequest _)
   -> None
@@ -286,6 +288,8 @@ let trigger_of_lsp_msg = Lsp.(function
 | ResponseMessage (_, FindReferencesResult _)
 | ResponseMessage (_, DocumentHighlightResult _)
 | ResponseMessage (_, TypeCoverageResult _)
+(* TODO not sure if this is right, just need to unbreak the build. *)
+| ResponseMessage (_, TypeDefinitionResult _)
 | ResponseMessage (_, DocumentFormattingResult _)
 | ResponseMessage (_, DocumentRangeFormattingResult _)
 | ResponseMessage (_, DocumentOnTypeFormattingResult _)
