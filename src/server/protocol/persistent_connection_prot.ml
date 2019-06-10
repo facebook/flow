@@ -37,6 +37,8 @@ type metadata = {
   extra_data: (string * Hh_json.json) list;
   (* The logging context for the server *)
   server_logging_context: FlowEventLogger.logging_context option;
+  (* If we're tracking an interaction in the lsp process, this is the id of the interaction *)
+  interaction_tracking_id: int option;
 }
 
 (* This is the reason why we start to do a recheck. Since rechecks can be combined together, there
@@ -72,6 +74,15 @@ let verbose_string_of_recheck_reason = function
 | Lazy_init_update_deps -> "Lazy init update deps"
 | Lazy_init_typecheck -> "Lazy init typecheck"
 | Full_init -> "Full init"
+
+let normalized_string_of_recheck_reason = function
+| Single_file_changed { filename=_; } -> "singleFileChanged"
+| Many_files_changed { file_count=_; } -> "manyFilesChanged"
+| Rebased { distance=_; file_count=_; } -> "rebased"
+| Unchecked_dependencies { filename=_; } -> "uncheckedDependencies"
+| Lazy_init_update_deps -> "lazyInitUpdateDeps"
+| Lazy_init_typecheck -> "lazyInitTypecheck"
+| Full_init -> "fullInit"
 
 type request =
   | Subscribe
