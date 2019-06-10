@@ -318,6 +318,7 @@ module Initialize = struct
     completionProvider: completionOptions option;
     signatureHelpProvider: signatureHelpOptions option;
     definitionProvider: bool;
+    typeDefinitionProvider: bool;
     referencesProvider: bool;
     documentHighlightProvider: bool;
     documentSymbolProvider: bool;  (* ie. document outline *)
@@ -501,6 +502,13 @@ module Definition = struct
   type params = TextDocumentPositionParams.t
 
   and result = DefinitionLocation.t list  (* wire: either a single one or an array *)
+end
+
+(* Goto TypeDefinition request, method="textDocument/typeDefinition" *)
+module TypeDefinition = struct
+  type params = TextDocumentPositionParams.t
+
+  and result = DefinitionLocation.t list
 end
 
 (* Completion request, method="textDocument/completion" *)
@@ -981,6 +989,7 @@ type lsp_request =
   | ShutdownRequest
   | HoverRequest of Hover.params
   | DefinitionRequest of Definition.params
+  | TypeDefinitionRequest of TypeDefinition.params
   | CompletionRequest of Completion.params
   | CompletionItemResolveRequest of CompletionItemResolve.params
   | WorkspaceSymbolRequest of WorkspaceSymbol.params
@@ -1002,6 +1011,7 @@ type lsp_result =
   | ShutdownResult
   | HoverResult of Hover.result
   | DefinitionResult of Definition.result
+  | TypeDefinitionResult of TypeDefinition.result
   | CompletionResult of Completion.result
   | CompletionItemResolveResult of CompletionItemResolve.result
   | WorkspaceSymbolResult of WorkspaceSymbol.result

@@ -463,6 +463,7 @@ let do_initialize () : Initialize.result =
       };
       signatureHelpProvider = None;
       definitionProvider = true;
+      typeDefinitionProvider = true;
       referencesProvider = true;
       documentHighlightProvider = true;
       documentSymbolProvider = true;
