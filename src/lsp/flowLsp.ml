@@ -1641,7 +1641,8 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
     in
     Ok (state, LogNeeded metadata)
 
-  | Connected cenv, Server_message (Persistent_connection_prot.Errors {errors; warnings}) ->
+  | Connected cenv,
+    Server_message (Persistent_connection_prot.Errors {errors; warnings; errors_reason=_; }) ->
     (* A note about the errors reported by this server message:               *)
     (* While a recheck is in progress, between StartRecheck and EndRecheck,   *)
     (* the server will periodically send errors+warnings. These are additive  *)
@@ -1664,6 +1665,7 @@ and main_handle_unsafe flowconfig_name (state: state) (event: event)
     let all = Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Error)) errors SMap.empty in
     let all = Errors.ConcreteLocPrintableErrorSet.fold (add (Some PublishDiagnostics.Warning)) warnings all
     in
+    (* TODO (glevi) Log when errors are displayed to the user as part of the UX logging *)
     if cenv.c_is_rechecking then
       Ok (do_additional_diagnostics cenv all, LogNotNeeded)
     else

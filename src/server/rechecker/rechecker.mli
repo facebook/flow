@@ -13,9 +13,7 @@ val process_updates :
   Utils_js.FilenameSet.t
 
 val recheck_single:
-  ?files_to_recheck:Utils_js.FilenameSet.t ->
   ?files_to_force:CheckedSet.t ->
-  ?file_watcher_metadata:MonitorProt.file_watcher_metadata ->
   ServerEnv.genv ->
   ServerEnv.env ->
   (Profiling_js.finished * ServerEnv.env, ServerEnv.env) result Lwt.t

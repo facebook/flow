@@ -402,12 +402,19 @@ let handle_find_refs ~reader ~genv ~filename ~line ~char ~global ~multi_hop ~pro
 let handle_force_recheck ~files ~focus ~profile ~profiling =
   let fileset = SSet.of_list files in
 
+  let reason = Persistent_connection_prot.(
+    match files with
+    | [filename] -> Single_file_changed { filename; }
+    | _ -> Many_files_changed { file_count = List.length files; }
+  ) in
+
   (* `flow force-recheck --focus a.js` not only marks a.js as a focused file, but it also
    * tells Flow that `a.js` has changed. In that case we push a.js to be rechecked and to be
    * focused *)
   let push ?callback files = ServerMonitorListenerState.(
-    if focus then push_files_to_force_focused files;
-    push_files_to_recheck ?metadata:None ?callback files (* Only register the callback once *)
+    if focus
+    then push_files_to_force_focused_and_recheck ?callback ~reason files
+    else push_files_to_recheck ?metadata:None ?callback ~reason files
   ) in
 
   if profile
@@ -794,7 +801,8 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
     if not triggered_recheck then begin
       (* This open doesn't trigger a recheck, but we'll still send down the errors *)
       let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
-      Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings
+      Persistent_connection.send_errors_if_subscribed
+        ~client ~errors_reason:Persistent_connection_prot.Env_change ~errors ~warnings
     end;
     Lwt.return env
   | Options.LAZY_MODE_FILESYSTEM
@@ -803,13 +811,15 @@ let did_open genv env client (files: (string*string) Nel.t) : ServerEnv.env Lwt.
     (* In filesystem lazy mode or in non-lazy mode, the only thing we need to do when
      * a new file is opened is to send the errors to the client *)
     let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
-    Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+    Persistent_connection.send_errors_if_subscribed
+      ~client ~errors_reason:Persistent_connection_prot.Env_change ~errors ~warnings;
     Lwt.return env
 
 let did_close genv env client : ServerEnv.env Lwt.t =
   let options = genv.options in
   let errors, warnings, _ = ErrorCollator.get_with_separate_warnings ~options env in
-  Persistent_connection.send_errors_if_subscribed ~client ~errors ~warnings;
+  Persistent_connection.send_errors_if_subscribed
+    ~client ~errors_reason:Persistent_connection_prot.Env_change ~errors ~warnings;
   Lwt.return env
 
 

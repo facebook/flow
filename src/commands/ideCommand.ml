@@ -83,7 +83,7 @@ module HumanReadable: ClientProtocol = struct
 
 
   let handle_server_response ~strip_root:_ ~json_version:_ = function
-    | Prot.Errors {errors; warnings} ->
+    | Prot.Errors {errors; warnings; errors_reason=_; } ->
       let err_count = Errors.ConcreteLocPrintableErrorSet.cardinal errors in
       let warn_count = Errors.ConcreteLocPrintableErrorSet.cardinal warnings in
       print_endline ("Received " ^ (string_of_int err_count) ^ " errors and "
@@ -130,7 +130,7 @@ module VeryUnstable: ClientProtocol = struct
       |> Http_lite.write_message stdout
 
   let handle_server_response ~strip_root ~json_version = function
-    | Prot.Errors {errors; warnings} ->
+    | Prot.Errors {errors; warnings; errors_reason=_; } ->
       print_errors ~strip_root ~json_version errors warnings
     | Prot.ServerExit _code -> () (* ignored here, but used in lspCommand *)
     | Prot.Please_hold _status -> () (* ignored here, but used in lspCommand *)

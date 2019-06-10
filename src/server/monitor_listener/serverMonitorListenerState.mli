@@ -16,11 +16,19 @@ val push_new_env_update: env_update -> unit
 val push_files_to_recheck:
   ?metadata:MonitorProt.file_watcher_metadata ->
   ?callback:(Profiling_js.finished option -> unit) ->
+  reason:Persistent_connection_prot.recheck_reason ->
   SSet.t ->
   unit
-val push_files_to_force_focused: ?callback:(Profiling_js.finished option -> unit) -> SSet.t -> unit
+val push_files_to_force_focused_and_recheck:
+  ?callback:(Profiling_js.finished option -> unit) ->
+  reason:Persistent_connection_prot.recheck_reason ->
+  SSet.t ->
+  unit
 val push_checked_set_to_force:
-  ?callback:(Profiling_js.finished option -> unit) -> CheckedSet.t -> unit
+  ?callback:(Profiling_js.finished option -> unit) ->
+  reason:Persistent_connection_prot.recheck_reason ->
+  CheckedSet.t ->
+  unit
 
 val cancellation_requests: Lsp.IdSet.t ref
 
@@ -40,6 +48,7 @@ type recheck_workload = {
   files_to_force: CheckedSet.t;
   profiling_callbacks: (Profiling_js.finished option -> unit) list;
   metadata: MonitorProt.file_watcher_metadata;
+  recheck_reasons_rev: Persistent_connection_prot.recheck_reason list;
 }
 
 val pop_next_workload: unit -> WorkloadStream.workload option
