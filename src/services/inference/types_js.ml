@@ -496,7 +496,9 @@ let merge
     calc_deps ~options ~profiling ~dependency_graph ~components files_to_merge in
 
   Hh_logger.info "Merging";
-  let%lwt merge_errors, warnings, suppressions, coverage, skipped_count, sig_new_or_changed =
+  let%lwt
+      (merge_errors, warnings, suppressions, coverage, skipped_count, sig_new_or_changed),
+      time_to_merge =
     let master_mutator, worker_mutator =
       Context_heaps.Merge_context_mutator.create
         transaction (FilenameSet.union files_to_merge deleted)
@@ -526,14 +528,10 @@ let merge
       else Lwt.return_unit
     in
 
-    let%lwt () = Recheck_stats.record_merge_time
-      ~options
-      ~total_time:(Unix.gettimeofday () -. merge_start_time)
-      ~merged_files:(CheckedSet.cardinal to_merge);
-    in
+    let time_to_merge = Unix.gettimeofday () -. merge_start_time in
 
     Hh_logger.info "Done";
-    Lwt.return result
+    Lwt.return (result, time_to_merge)
   in
 
   let errors = { ServerEnv.local_errors; merge_errors; warnings; suppressions } in
@@ -541,7 +539,7 @@ let merge
     |> Utils_js.FilenameMap.elements
     |> Core_list.map ~f:(fun (leader, members) -> (leader, Nel.length members))
     |> Core_list.filter ~f:(fun (_, member_count) -> member_count > 1) in
-  Lwt.return (cycle_leaders, errors, coverage, skipped_count, sig_new_or_changed)
+  Lwt.return (cycle_leaders, errors, coverage, skipped_count, sig_new_or_changed, time_to_merge)
 
 let check_files
   ~reader
@@ -558,7 +556,7 @@ let check_files
   ~persistent_connections
   ~recheck_reasons =
   match options.Options.opt_arch with
-  | Options.Classic -> Lwt.return (updated_errors, coverage)
+  | Options.Classic -> Lwt.return (updated_errors, coverage, 0.)
   | Options.TypesFirst ->
     with_timer_lwt ~options "Check" profiling (fun () ->
       Hh_logger.info "Check prep";
@@ -594,6 +592,9 @@ let check_files
           updated_errors.ServerEnv.suppressions in
 
       Hh_logger.info "Checking files";
+
+      let check_start_time = Unix.gettimeofday () in
+
       let job = List.fold_left (fun acc file ->
         (Merge_service.check options ~reader file) :: acc
       ) in
@@ -618,13 +619,16 @@ let check_files
         let acc = remove_old_results acc file in
         add_new_results acc file result
       ) (merge_errors, warnings, suppressions, coverage) ret in
+
+      let time_to_check_merged = Unix.gettimeofday () -. check_start_time in
+
       Hh_logger.info "Done";
       let errors = { errors with
         ServerEnv.merge_errors;
         warnings;
         suppressions;
       } in
-      Lwt.return (errors, coverage)
+      Lwt.return (errors, coverage, time_to_check_merged)
     )
 
 let ensure_parsed ~options ~profiling ~workers ~reader files =
@@ -991,8 +995,8 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge ~file_watcher_metadat
         estimated_time_to_recheck = time_to_recheck;
         estimated_time_to_restart = time_to_restart;
         estimated_time_to_init = init_time;
-        estimated_time_to_merge_a_file = per_file_time;
-        estimated_files_to_merge = files_about_to_recheck;
+        estimated_time_per_file = per_file_time;
+        estimated_files_to_recheck = files_about_to_recheck;
         estimated_files_to_init = files_already_checked;
       } in
 
@@ -1522,7 +1526,14 @@ end = struct
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
     (* recheck *)
-    let%lwt cycle_leaders, updated_errors, coverage, skipped_count, sig_new_or_changed = merge
+    let%lwt
+        cycle_leaders,
+        updated_errors,
+        coverage,
+        skipped_count,
+        sig_new_or_changed,
+        time_to_merge =
+      merge
       ~transaction
       ~reader
       ~options
@@ -1549,7 +1560,7 @@ end = struct
       ))
     in
     let merged_files = to_merge in
-    let%lwt errors, coverage = check_files
+    let%lwt errors, coverage, time_to_check_merged = check_files
       ~reader
       ~options
       ~profiling
@@ -1563,6 +1574,12 @@ end = struct
       ~dependency_info
       ~persistent_connections:(Some env.ServerEnv.connections)
       ~recheck_reasons in
+
+    let%lwt () = Recheck_stats.record_recheck_time
+      ~options
+      ~total_time:(time_to_merge +. time_to_check_merged)
+      ~rechecked_files:(CheckedSet.cardinal merged_files);
+    in
 
     let checked_files = CheckedSet.union unchanged_checked merged_files in
     Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
@@ -1646,8 +1663,8 @@ let recheck
     estimated_time_to_recheck,
     estimated_time_to_restart,
     estimated_time_to_init,
-    estimated_time_to_merge_a_file,
-    estimated_files_to_merge,
+    estimated_time_per_file,
+    estimated_files_to_recheck,
     estimated_files_to_init
   ) = Option.value_map estimates
     ~default:(None, None, None, None, None, None)
@@ -1655,15 +1672,15 @@ let recheck
       estimated_time_to_recheck;
       estimated_time_to_restart;
       estimated_time_to_init;
-      estimated_time_to_merge_a_file;
-      estimated_files_to_merge;
+      estimated_time_per_file;
+      estimated_files_to_recheck;
       estimated_files_to_init;
     } -> (
       Some estimated_time_to_recheck,
       Some estimated_time_to_restart,
       Some estimated_time_to_init,
-      Some estimated_time_to_merge_a_file,
-      Some estimated_files_to_merge,
+      Some estimated_time_per_file,
+      Some estimated_files_to_recheck,
       Some estimated_files_to_init
     )
   ) in
@@ -1680,8 +1697,8 @@ let recheck
     ~estimated_time_to_recheck
     ~estimated_time_to_restart
     ~estimated_time_to_init
-    ~estimated_time_to_merge_a_file
-    ~estimated_files_to_merge
+    ~estimated_time_per_file
+    ~estimated_files_to_recheck
     ~estimated_files_to_init
     ~scm_update_distance:file_watcher_metadata.MonitorProt.total_update_distance
     ~scm_changed_mergebase:file_watcher_metadata.MonitorProt.changed_mergebase;
@@ -2171,7 +2188,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
 
     let dependency_graph = Dependency_info.dependency_graph dependency_info in
     let recheck_reasons = [Persistent_connection_prot.Full_init] in
-    let%lwt _, updated_errors, coverage, _, sig_new_or_changed = merge
+    let%lwt _, updated_errors, coverage, _, sig_new_or_changed, _ = merge
       ~transaction
       ~reader
       ~options
@@ -2187,7 +2204,7 @@ let full_check ~profiling ~options ~workers ?focus_targets env =
       ~recheck_reasons
       ~prep_merge:None in
     let merged_files = to_merge in
-    let%lwt errors, coverage = check_files
+    let%lwt errors, coverage, _ = check_files
       ~reader
       ~options
       ~profiling

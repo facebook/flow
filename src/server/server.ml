@@ -143,16 +143,16 @@ let run ~monitor_channels ~shared_mem_config options =
           estimated_time_to_recheck;
           estimated_time_to_restart;
           estimated_time_to_init;
-          estimated_time_to_merge_a_file;
-          estimated_files_to_merge;
+          estimated_time_per_file;
+          estimated_files_to_recheck;
           estimated_files_to_init;
         } ->
           FlowEventLogger.init_done
             ~estimated_time_to_recheck
             ~estimated_time_to_restart
             ~estimated_time_to_init
-            ~estimated_time_to_merge_a_file
-            ~estimated_files_to_merge
+            ~estimated_time_per_file
+            ~estimated_files_to_recheck
             ~estimated_files_to_init
             profiling
       end;
