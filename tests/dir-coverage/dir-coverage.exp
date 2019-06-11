@@ -215,17 +215,17 @@ trust
 Coverage results from 13 file(s):
 
 other_folder/i.js: 16.67% trusted (2 of 12 expressions), 33.33% covered (4 of 12 expressions)
-other_folder/h.js: 44.44% trusted (4 of 9 expressions), 100.00% covered (9 of 9 expressions)
-match_coverage/coverage.js: 14.63% trusted (6 of 41 expressions), 24.39% covered (10 of 41 expressions)
+other_folder/h.js: 77.78% trusted (7 of 9 expressions), 100.00% covered (9 of 9 expressions)
+match_coverage/coverage.js: 24.39% trusted (10 of 41 expressions), 24.39% covered (10 of 41 expressions)
 folder/subfolder/j.js: 16.67% trusted (1 of 6 expressions), 100.00% covered (6 of 6 expressions)
 folder/e.js: 12.50% trusted (1 of 8 expressions), 37.50% covered (3 of 8 expressions)
 folder/d.js: 16.67% trusted (1 of 6 expressions), 50.00% covered (3 of 6 expressions)
 folder/c.js: 83.33% trusted (5 of 6 expressions), 100.00% covered (6 of 6 expressions)
 f.js: 12.50% trusted (1 of 8 expressions), 37.50% covered (3 of 8 expressions)
 cycle/cycle3.js: 5.26% trusted (1 of 19 expressions), 42.11% covered (8 of 19 expressions)
-cycle/cycle2.js: 10.53% trusted (2 of 19 expressions), 52.63% covered (10 of 19 expressions)
+cycle/cycle2.js: 15.79% trusted (3 of 19 expressions), 52.63% covered (10 of 19 expressions)
 cycle/cycle1.js: 6.25% trusted (1 of 16 expressions), 50.00% covered (8 of 16 expressions)
-b.js: 66.67% trusted (4 of 6 expressions), 100.00% covered (6 of 6 expressions)
+b.js: 83.33% trusted (5 of 6 expressions), 100.00% covered (6 of 6 expressions)
 a.js: 42.86% trusted (3 of 7 expressions), 57.14% covered (4 of 7 expressions)
 
 -----------------------------------
@@ -233,10 +233,10 @@ Aggregate coverage statistics
 -----------------------------------
 Files                : 13
 Expressions          :
-  Trusted            : 32
+  Trusted            : 41
   Covered            : 80
   Total              : 163
-  Trust Percentage   : 19.63%
+  Trust Percentage   : 25.15%
   Covered Percentage : 49.08%
 
 {
@@ -251,9 +251,9 @@ Expressions          :
     },
     {
       "file":"b.js",
-      "trusted_percentage":66.67,
+      "trusted_percentage":83.33,
       "percentage":100.00,
-      "trusted":4,
+      "trusted":5,
       "covered":6,
       "total":6
     },
@@ -267,9 +267,9 @@ Expressions          :
     },
     {
       "file":"cycle/cycle2.js",
-      "trusted_percentage":10.53,
+      "trusted_percentage":15.79,
       "percentage":52.63,
-      "trusted":2,
+      "trusted":3,
       "covered":10,
       "total":19
     },
@@ -323,17 +323,17 @@ Expressions          :
     },
     {
       "file":"match_coverage/coverage.js",
-      "trusted_percentage":14.63,
+      "trusted_percentage":24.39,
       "percentage":24.39,
-      "trusted":6,
+      "trusted":10,
       "covered":10,
       "total":41
     },
     {
       "file":"other_folder/h.js",
-      "trusted_percentage":44.44,
+      "trusted_percentage":77.78,
       "percentage":100.00,
-      "trusted":4,
+      "trusted":7,
       "covered":9,
       "total":9
     },
@@ -348,10 +348,10 @@ Expressions          :
   ],
   "statistics":{
     "files_in_directory":13,
-    "trusted_expressions":32,
+    "trusted_expressions":41,
     "covered_expressions":80,
     "total_expressions":163,
-    "trusted_percentage":19.63,
+    "trusted_percentage":25.15,
     "percentage":49.08
   }
 }
