@@ -116,12 +116,14 @@ let parse_contents ~options ~profiling ~check_syntax filename contents =
     let module_ref_prefix = Options.haste_module_ref_prefix options in
     let facebook_fbt = Options.facebook_fbt options in
     let arch = Options.arch options in
+    let abstract_locations = options.Options.opt_abstract_locations in
 
     let docblock_errors, info =
       Parsing_service_js.parse_docblock ~max_tokens filename contents in
     let errors = Inference_utils.set_of_docblock_errors ~source_file:filename docblock_errors in
     let parse_options = Parsing_service_js.make_parse_options
-        ~fail:check_syntax ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch ()
+        ~fail:check_syntax ~types_mode ~use_strict ~module_ref_prefix ~facebook_fbt ~arch
+        ~abstract_locations ()
     in
     let parse_result = Parsing_service_js.do_parse ~info ~parse_options contents filename in
     Lwt.return (errors, parse_result, info)

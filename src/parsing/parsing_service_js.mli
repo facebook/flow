@@ -67,11 +67,13 @@ type parse_options = {
   parse_module_ref_prefix: string option;
   parse_facebook_fbt: string option;
   parse_arch: Options.arch;
+  parse_abstract_locations: bool;
 }
 
 val make_parse_options:
   ?fail: bool ->
   ?arch: Options.arch ->
+  ?abstract_locations: bool ->
   ?prevent_munge: bool ->
   types_mode: types_mode ->
   use_strict: bool ->
