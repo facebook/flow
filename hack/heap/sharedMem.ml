@@ -170,6 +170,8 @@ let loaded_dep_table_filename () =
   else
     Some fn
 
+external save_dep_table_blob_c: string -> string -> int = "hh_save_dep_table_blob"
+
 (** Returns number of dependency edges added. *)
 external save_dep_table_sqlite_c: string -> string -> bool -> int = "hh_save_dep_table_sqlite"
 
@@ -179,9 +181,19 @@ external update_dep_table_sqlite_c: string -> string -> bool -> int ="hh_update_
 let save_dep_table_sqlite : string -> string -> bool -> int =
     fun fn build_revision replace_state_after_saving ->
   if (loaded_dep_table_filename ()) <> None then
-    failwith "save_dep_table_sqlite not supported when server is loaded from a saved state";
-  Hh_logger.log "Dumping a saved state deptable.";
+    failwith "save_dep_table_sqlite not supported when server is loaded from a saved state; \
+              use update_dep_table_sqlite";
+  Hh_logger.log "Dumping a saved state deptable into a SQLite DB.";
   save_dep_table_sqlite_c fn build_revision replace_state_after_saving
+
+let save_dep_table_blob : string -> string -> bool -> int =
+    fun fn build_revision _replace_state_after_saving ->
+  if (loaded_dep_table_filename ()) <> None then
+    failwith "save_dep_table_blob not supported when the server is loaded from a saved state; \
+              use update_dep_table_sqlite";
+  Hh_logger.log "Dumping a saved state deptable as a blob.";
+  (* TODO: use replace_state_after_saving? *)
+  save_dep_table_blob_c fn build_revision
 
 let update_dep_table_sqlite : string -> string -> bool -> int =
     fun fn build_revision replace_state_after_saving ->
@@ -192,7 +204,12 @@ let update_dep_table_sqlite : string -> string -> bool -> int =
 (* Loads the dependency table by reading from a file *)
 (*****************************************************************************)
 
+external load_dep_table_blob_c: string -> bool -> int = "hh_load_dep_table_blob"
+
 external load_dep_table_sqlite_c: string -> bool -> int = "hh_load_dep_table_sqlite"
+
+let load_dep_table_blob : string -> bool -> int = fun fn ignore_hh_version ->
+  load_dep_table_blob_c fn ignore_hh_version
 
 let load_dep_table_sqlite : string -> bool -> int = fun fn ignore_hh_version ->
   load_dep_table_sqlite_c fn ignore_hh_version
