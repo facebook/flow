@@ -176,11 +176,21 @@ module type READER = sig
   val get_ast_unsafe: reader:reader -> File_key.t -> (Loc.t, Loc.t) Flow_ast.program
   val get_sig_ast_unsafe: reader:reader -> File_key.t -> (ALoc.t, ALoc.t) Flow_ast.program
   val get_sig_ast_aloc_table_unsafe: reader:reader -> File_key.t -> ALoc.table
+  val get_sig_ast_aloc_table_unsafe_lazy: reader:reader -> ALoc.t -> ALoc.table Lazy.t
   val get_docblock_unsafe: reader:reader -> File_key.t -> Docblock.t
   val get_file_sig_unsafe: reader:reader -> File_key.t -> File_sig.With_Loc.t
   val get_sig_file_sig_unsafe: reader:reader -> File_key.t -> File_sig.With_ALoc.t
   val get_file_hash_unsafe: reader:reader -> File_key.t -> Xx.hash
 end
+
+let make_lazy_aloc_table_fetcher ~get_sig_ast_aloc_table_unsafe =
+  fun ~reader aloc -> lazy begin
+    let source = match ALoc.source aloc with
+    | None -> failwith "Expected `aloc` to have a `source`"
+    | Some x -> x
+    in
+    get_sig_ast_aloc_table_unsafe ~reader source
+  end
 
 (* Init/recheck will use Mutator_reader to read the shared memory *)
 module Mutator_reader: sig
@@ -217,6 +227,9 @@ end = struct
   let get_sig_ast_aloc_table_unsafe ~reader:_ file =
     try SigASTALocTableHeap.find_unsafe file
     with Not_found -> raise (Sig_ast_ALoc_table_not_found (File_key.to_string file))
+
+  let get_sig_ast_aloc_table_unsafe_lazy =
+    make_lazy_aloc_table_fetcher ~get_sig_ast_aloc_table_unsafe
 
   let get_docblock_unsafe ~reader:_ file =
     try DocblockHeap.find_unsafe file
@@ -379,6 +392,9 @@ module Reader: READER with type reader = State_reader.t = struct
     | Some table -> table
     | None -> raise (Sig_ast_ALoc_table_not_found (File_key.to_string file))
 
+  let get_sig_ast_aloc_table_unsafe_lazy =
+    make_lazy_aloc_table_fetcher ~get_sig_ast_aloc_table_unsafe
+
   let get_docblock_unsafe ~reader file =
     match get_docblock ~reader file with
     | Some docblock -> docblock
@@ -450,6 +466,9 @@ module Reader_dispatcher: READER with type reader = Abstract_state_reader.t = st
     match reader with
     | Mutator_state_reader reader -> Mutator_reader.get_sig_ast_aloc_table_unsafe ~reader
     | State_reader reader -> Reader.get_sig_ast_aloc_table_unsafe ~reader
+
+  let get_sig_ast_aloc_table_unsafe_lazy =
+    make_lazy_aloc_table_fetcher ~get_sig_ast_aloc_table_unsafe
 
   let get_docblock_unsafe ~reader =
     match reader with
