@@ -145,7 +145,7 @@ let merge_strict_context ~options ~reader component =
     ~get_ast_unsafe:(match Options.arch options with
       | Options.Classic -> fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
         (comments, aloc_ast)
       | Options.TypesFirst -> fun ~reader file ->
         let (_, _, comments) = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
@@ -164,7 +164,7 @@ let merge_strict_context ~options ~reader component =
    resolved. This is used by commands that make up a context on the fly. *)
 let merge_contents_context ~reader options file ast info file_sig =
   let (_, _, comments) = ast in
-  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let reader = Abstract_state_reader.State_reader reader in
   let file_sig = File_sig.abstractify_locs file_sig in
   let required =
@@ -263,7 +263,7 @@ let check_file options ~reader file =
     let { cx; coverage_map; _; } = merge_strict_context_generic ~options ~reader
       ~get_ast_unsafe:(fun ~reader file ->
         let (_, _, comments) as ast = Parsing_heaps.Reader_dispatcher.get_ast_unsafe ~reader file in
-        let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+        let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
         (comments, aloc_ast)
       )
       ~get_file_sig_unsafe:(fun ~reader file ->

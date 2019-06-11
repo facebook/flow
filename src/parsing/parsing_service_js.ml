@@ -421,7 +421,7 @@ let do_parse ~parse_options ~info content file =
                 ?prevent_munge ~facebook_fbt
                 ~ignore_static_propTypes ~facebook_keyMirror
                 signature ast in
-            let sig_ast = Ast_loc_utils.abstractify_mapper#program sig_ast in
+            let sig_ast = Ast_loc_utils.loc_to_aloc_mapper#program sig_ast in
             (* TODO create and populate a table when the abstract_locations flag is set *)
             let aloc_table = None in
             let file_sig = File_sig.With_Loc.verified errors (snd signature) in

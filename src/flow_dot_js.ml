@@ -215,7 +215,7 @@ let infer_and_merge ~root filename ast file_sig =
   let strict_mode = StrictModeSettings.empty in
   let file_sigs = Utils_js.FilenameMap.singleton filename file_sig in
   let (_, _, comments) = ast in
-  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let ((cx, tast, _), _other_cxs) = Merge_js.merge_component_strict
     ~metadata ~lint_severities ~file_options:None ~strict_mode ~file_sigs
     ~get_ast_unsafe:(fun _ -> (comments, aloc_ast))

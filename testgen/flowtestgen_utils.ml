@@ -604,7 +604,7 @@ let flow_check (code : string) : string option =
                           } in
       let input_ast, _ = Parser_flow.program code in
       let (_, _, comments) = input_ast in
-      let aloc_ast = Ast_loc_utils.abstractify_mapper#program input_ast in
+      let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program input_ast in
       let filename = File_key.SourceFile "/tmp/foo.js" in
       let file_sig = match File_sig.With_Loc.program ~ast:input_ast ~module_ref_prefix:None with
       | Ok file_sig -> file_sig

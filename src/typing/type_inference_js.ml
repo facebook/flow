@@ -455,7 +455,7 @@ let infer_ast ~lint_severities ~file_options ~file_sig cx filename comments aloc
    b) bindings are added as properties to the builtin object
  *)
 let infer_lib_file ~exclude_syms ~lint_severities ~file_options ~file_sig cx ast =
-  let aloc_ast = Ast_loc_utils.abstractify_mapper#program ast in
+  let aloc_ast = Ast_loc_utils.loc_to_aloc_mapper#program ast in
   let _, _, comments = ast in
   let _, aloc_statements, _ = aloc_ast in
   Flow_js.Cache.clear();

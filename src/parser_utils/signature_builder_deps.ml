@@ -216,9 +216,9 @@ let abstractify_expected_annotation_sort =
   function
   | WL.ArrayPattern -> WA.ArrayPattern
   | WL.FunctionReturn -> WA.FunctionReturn
-  | WL.Property key -> WA.Property (Ast_loc_utils.abstractify_mapper#object_key key)
-  | WL.PrivateField key -> WA.PrivateField (Ast_loc_utils.abstractify_mapper#private_name key)
-  | WL.VariableDefinition id -> WA.VariableDefinition (Ast_loc_utils.abstractify_mapper#identifier id)
+  | WL.Property key -> WA.Property (Ast_loc_utils.loc_to_aloc_mapper#object_key key)
+  | WL.PrivateField key -> WA.PrivateField (Ast_loc_utils.loc_to_aloc_mapper#private_name key)
+  | WL.VariableDefinition id -> WA.VariableDefinition (Ast_loc_utils.loc_to_aloc_mapper#identifier id)
 
 let abstractify_error =
   let module WL = With_Loc.Error in

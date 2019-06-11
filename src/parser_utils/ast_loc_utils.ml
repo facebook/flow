@@ -7,7 +7,7 @@
 
 (* Provides utilities for converting AST locations between ALoc.t and Loc.t *)
 
-let abstractify_mapper: (Loc.t, Loc.t, ALoc.t, ALoc.t) Flow_polymorphic_ast_mapper.mapper =
+let loc_to_aloc_mapper: (Loc.t, Loc.t, ALoc.t, ALoc.t) Flow_polymorphic_ast_mapper.mapper =
   object
     inherit [Loc.t, Loc.t, ALoc.t, ALoc.t] Flow_polymorphic_ast_mapper.mapper
     method on_loc_annot = ALoc.of_loc
