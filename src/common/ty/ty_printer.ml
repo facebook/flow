@@ -138,22 +138,15 @@ let type_ ?(size=5000) ?(with_comments=true) t =
       if depth = 1 && with_comments then fuse [pretty_space; Atom kind |> wrap_in_parens] else Empty
     ]
 
-  and type_alias { ta_name = { provenance; name; _ }; ta_tparams; ta_type } =
-    match provenance with
-    | Remote _ -> fuse [
-        Atom "imported"; space;
-        identifier name;
-        option (type_parameter ~depth:0) ta_tparams;
-      ]
-
-    | _ -> fuse ([
-        Atom "type"; space;
-        identifier name;
-        option (type_parameter ~depth:0) ta_tparams;
-      ]
-      @ Option.value_map ta_type ~default:[] ~f:(fun t -> [
-          pretty_space; Atom "="; pretty_space; type_ ~depth:0 t
-        ]))
+  and type_alias { ta_name = { name; _ }; ta_tparams; ta_type } =
+    fuse ([
+      Atom "type"; space;
+      identifier name;
+      option (type_parameter ~depth:0) ta_tparams;
+    ]
+    @ Option.value_map ta_type ~default:[] ~f:(fun t -> [
+        pretty_space; Atom "="; pretty_space; type_ ~depth:0 t
+      ]))
 
   and type_function ~depth ~sep
     { fun_params; fun_rest_param; fun_return; fun_type_params } =

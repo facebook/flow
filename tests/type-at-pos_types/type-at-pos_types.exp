@@ -842,7 +842,7 @@ opaque.js:19:14 = {
   "end":18
 }
 opaque.js:19:22 = {
-  "type":"imported Opaque",
+  "type":"type Opaque",
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -872,7 +872,7 @@ opaque.js:20:16 = {
   "end":27
 }
 opaque.js:20:34 = {
-  "type":"imported PolyTransparent<A>",
+  "type":"type PolyTransparent<A> = Poly$Opaque<A>",
   "reasons":[],
   "loc":{
     "source":"opaque.js",
@@ -902,7 +902,7 @@ opaque.js:21:19 = {
   "end":22
 }
 opaque.js:21:28 = {
-  "type":"imported PolyOpaque<A>",
+  "type":"type PolyOpaque<A>",
   "reasons":[],
   "loc":{
     "source":"opaque.js",
