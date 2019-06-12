@@ -8,6 +8,7 @@ environment:
       FORK_USER: ocaml
       FORK_BRANCH: master
       CYG_ROOT: C:\cygwin64
+      PACKAGE: flowtype-ci
       TESTS: false
       INSTALL: false
       DEPOPTS: false
