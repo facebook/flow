@@ -192,3 +192,18 @@ let try_finally
   in
   let%lwt () = finally () in
   Lwt.return res
+
+let read_all (path: string): (string, string) Lwt_result.t =
+  try%lwt
+    let%lwt contents = Lwt_io.with_file
+      ~mode:Lwt_io.Input
+      path
+      (fun ic ->
+        let%lwt contents = Lwt_io.read ic in
+        Lwt.return contents)
+    in
+    Lwt.return (Ok contents)
+  with _ ->
+    Lwt.return (Error (Printf.sprintf
+      "Could not read the contents of the file at path %s"
+      path))
