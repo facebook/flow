@@ -2177,7 +2177,7 @@ void hh_load_dep_table_blob_helper(const char* const in_filename) {
 
   // TODO: read MAGIC_CONSTANT
   // TODO: read the format version
-  ushort is_key = 1;
+  uint16_t is_key = 1;
   tagged_uint_t slot;
   tagged_uint_t key;
   tagged_uint_t value;
