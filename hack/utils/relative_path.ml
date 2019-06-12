@@ -154,8 +154,8 @@ let strip_root_if_possible s =
   let prefix_s = path_of_prefix Root in
   let prefix_len = String.length prefix_s in
   if not (string_starts_with s prefix_s)
-  then s else
-  String.sub s prefix_len (String.length s - prefix_len)
+  then None
+  else Some (String.sub s prefix_len (String.length s - prefix_len))
 
 
 let from_root (s : string) : t = Root, s
