@@ -274,6 +274,7 @@ let trigger_of_lsp_msg = Lsp.(function
 | RequestMessage (_, TypeDefinitionRequest _)
 | RequestMessage (_, UnknownRequest _)
 | RequestMessage (_, WorkspaceSymbolRequest _)
+| RequestMessage (_, RegisterCapabilityRequest _)
   -> None
 
 (* No responses trigger interactions *)
@@ -320,5 +321,6 @@ let trigger_of_lsp_msg = Lsp.(function
 | NotificationMessage (SetTraceNotification)
 | NotificationMessage (LogTraceNotification)
 | NotificationMessage (UnknownNotification _)
+| NotificationMessage (DidChangeWatchedFilesNotification _)
   -> None
 )

@@ -271,7 +271,13 @@ module Initialize = struct
   and workspaceClientCapabilities = {
     applyEdit: bool;  (* client supports appling batch edits *)
     workspaceEdit: workspaceEdit;
-    (* omitted: dynamic-registration fields *)
+
+    didChangeWatchedFiles: dynamicRegistration;
+    (* omitted: other dynamic-registration fields *)
+  }
+
+  and dynamicRegistration = {
+    dynamicRegistration: bool; (* client supports dynamic registration for this capability *)
   }
 
   and workspaceEdit = {
@@ -494,6 +500,32 @@ module DidChange = struct
     range: range option; (* the range of the document that changed *)
     rangeLength: int option; (* the length that got replaced *)
     text: string; (* the new text of the range/document *)
+  }
+end
+
+(* Watched files changed notification, method="workspace/didChangeWatchedFiles" *)
+module DidChangeWatchedFiles = struct
+  type registerOptions = {
+    watchers: fileSystemWatcher list;
+  }
+
+  and fileSystemWatcher = {
+    globPattern: string;
+  }
+
+  type fileChangeType =
+    | Created [@value 1]
+    | Updated [@value 2]
+    | Deleted [@value 3]
+    [@@deriving enum]
+
+  type params = {
+    changes: fileEvent list;
+  }
+
+  and fileEvent = {
+    uri: documentUri;
+    type_: fileChangeType;
   }
 end
 
@@ -979,6 +1011,35 @@ module Error = struct
   end
 end
 
+type lsp_registration_options =
+  | DidChangeWatchedFilesRegistrationOptions of
+      DidChangeWatchedFiles.registerOptions
+
+(* Register capability request, method="client/registerCapability" *)
+module RegisterCapability = struct
+  type params = {
+    registrations: registration list;
+  }
+
+  and registration = {
+    id: string;
+    method_: string;
+    registerOptions: lsp_registration_options;
+  }
+
+  let make_registration
+      (registerOptions: lsp_registration_options)
+      : registration =
+    (* The ID field is arbitrary but unique per type of capability (for future
+    deregistering, which we don't do). *)
+    let (id, method_) =
+      match registerOptions with
+      | DidChangeWatchedFilesRegistrationOptions _ ->
+        ("did-change-watched-files", "workspace/didChangeWatchedFiles")
+    in
+    { id; method_; registerOptions }
+end
+
 
 (**
  * Here are gathered-up ADTs for all the messages we handle
@@ -986,6 +1047,7 @@ end
 
 type lsp_request =
   | InitializeRequest of Initialize.params
+  | RegisterCapabilityRequest of RegisterCapability.params
   | ShutdownRequest
   | HoverRequest of Hover.params
   | DefinitionRequest of Definition.params
@@ -1036,6 +1098,7 @@ type lsp_notification =
   | DidCloseNotification of DidClose.params
   | DidSaveNotification of DidSave.params
   | DidChangeNotification of DidChange.params
+  | DidChangeWatchedFilesNotification of DidChangeWatchedFiles.params
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params

@@ -7,12 +7,6 @@
  *
 *)
 
-(* This `.mli` file was generated automatically. It may include extra
-definitions that should not actually be exposed to the caller. If you notice
-that this interface file is a poor interface, please take a few minutes to
-clean it up manually, and then delete this comment once the interface is in
-shape. *)
-
 type lsp_id = NumberId of int | StringId of string
 type documentUri = string
 type position = { line : int; character : int; }
@@ -128,6 +122,10 @@ module Initialize :
     and workspaceClientCapabilities = {
       applyEdit : bool;
       workspaceEdit : workspaceEdit;
+      didChangeWatchedFiles : dynamicRegistration;
+    }
+    and dynamicRegistration = {
+      dynamicRegistration : bool;
     }
     and workspaceEdit = { documentChanges : bool; }
     and textDocumentClientCapabilities = {
@@ -263,6 +261,27 @@ module DidChange :
       range : range option;
       rangeLength : int option;
       text : string;
+    }
+  end
+module DidChangeWatchedFiles :
+  sig
+    type registerOptions = {
+      watchers: fileSystemWatcher list;
+    }
+    and fileSystemWatcher = {
+      globPattern: string;
+    }
+    type fileChangeType =
+      | Created
+      | Updated
+      | Deleted
+      [@@deriving enum]
+    type params = {
+      changes: fileEvent list;
+    }
+    and fileEvent = {
+      uri: documentUri;
+      type_: fileChangeType;
     }
   end
 module Definition :
@@ -550,8 +569,26 @@ module Error :
       val contentModified: int
     end
   end
+
+type lsp_registration_options =
+  | DidChangeWatchedFilesRegistrationOptions of
+      DidChangeWatchedFiles.registerOptions
+module RegisterCapability :
+  sig
+    type params = {
+      registrations : registration list;
+    }
+    and registration = {
+      id : string;
+      method_ : string;
+      registerOptions : lsp_registration_options;
+    }
+    val make_registration : lsp_registration_options -> registration
+  end
+
 type lsp_request =
   | InitializeRequest of Initialize.params
+  | RegisterCapabilityRequest of RegisterCapability.params
   | ShutdownRequest
   | HoverRequest of Hover.params
   | DefinitionRequest of Definition.params
@@ -600,6 +637,7 @@ type lsp_notification =
   | DidCloseNotification of DidClose.params
   | DidSaveNotification of DidSave.params
   | DidChangeNotification of DidChange.params
+  | DidChangeWatchedFilesNotification of DidChangeWatchedFiles.params
   | LogMessageNotification of LogMessage.params
   | TelemetryNotification of LogMessage.params (* LSP allows 'any' but we only send these *)
   | ShowMessageNotification of ShowMessage.params
@@ -614,6 +652,7 @@ type lsp_message =
   | RequestMessage of lsp_id * lsp_request
   | ResponseMessage of lsp_id * lsp_result
   | NotificationMessage of lsp_notification
+
 type 'a lsp_handler = 'a lsp_result_handler * 'a lsp_error_handler
 and 'a lsp_error_handler = (Error.t * string) -> 'a -> 'a
 and 'a lsp_result_handler =

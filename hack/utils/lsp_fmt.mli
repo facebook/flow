@@ -7,12 +7,6 @@
  *
 *)
 
-(* This `.mli` file was generated automatically. It may include extra
-definitions that should not actually be exposed to the caller. If you notice
-that this interface file is a poor interface, please take a few minutes to
-clean it up manually, and then delete this comment once the interface is in
-shape. *)
-
 val parse_id : Hh_json.json -> Lsp.lsp_id
 val parse_id_opt : Hh_json.json option -> Lsp.lsp_id option
 val print_id : Lsp.lsp_id -> Hh_json.json
@@ -101,6 +95,9 @@ val print_documentOnTypeFormatting :
 val parse_initialize : Hh_json.json option -> Lsp.Initialize.params
 val print_initializeError : Lsp.Initialize.errorData -> Hh_json.json
 val print_initialize : Lsp.Initialize.result -> Hh_json.json
+val print_registerCapability : Lsp.RegisterCapability.params -> Hh_json.json
+val parse_didChangeWatchedFiles :
+  Hh_json.json option -> Lsp.DidChangeWatchedFiles.params
 val error_of_exn : exn -> Lsp.Error.t
 val print_error : ?include_error_stack_trace: bool -> Lsp.Error.t -> string -> Hh_json.json
 val parse_error : Hh_json.json -> Lsp.Error.t

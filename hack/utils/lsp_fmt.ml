@@ -791,7 +791,6 @@ let print_documentOnTypeFormatting (r: DocumentOnTypeFormatting.result)
   : json =
   JSON_Array (List.map r ~f:print_textEdit)
 
-
 (************************************************************************)
 (** initialize request                                                 **)
 (************************************************************************)
@@ -830,6 +829,13 @@ let parse_initialize (params: json option) : Initialize.params =
       applyEdit = Jget.bool_d json "applyEdit" ~default:false;
       workspaceEdit = Jget.obj_opt json "workspaceEdit"
                        |> parse_workspaceEdit;
+      didChangeWatchedFiles = Jget.obj_opt json "didChangeWatchedFiles"
+                       |> parse_dynamicRegistration;
+    }
+  and parse_dynamicRegistration json =
+    {
+      dynamicRegistration =
+        Jget.bool_d json "dynamicRegistration" ~default:false;
     }
   and parse_workspaceEdit json =
     {
@@ -931,6 +937,66 @@ let print_initialize (r: Initialize.result) : json =
     ];
   ]
 
+(************************************************************************)
+(** capabilities                                                       **)
+(************************************************************************)
+
+let print_registrationOptions
+    (registerOptions: Lsp.lsp_registration_options)
+    : Hh_json.json =
+  match registerOptions with
+  | Lsp.DidChangeWatchedFilesRegistrationOptions registerOptions ->
+    let open Lsp.DidChangeWatchedFiles in
+    JSON_Object [
+      ("watchers", JSON_Array (
+        List.map registerOptions.watchers ~f:(fun watcher ->
+          JSON_Object [
+            ("globPattern", JSON_String watcher.globPattern);
+            ("kind", int_ 7 (* all events: create, change, and delete *));
+          ]
+        )
+      ));
+    ]
+
+let print_registerCapability
+    (params: Lsp.RegisterCapability.params)
+    : Hh_json.json =
+  let open Lsp.RegisterCapability in
+  JSON_Object [
+    ("registrations", JSON_Array (
+      List.map params.registrations ~f:(fun registration ->
+        JSON_Object [
+          ("id", string_ registration.id);
+          ("method", string_ registration.method_);
+          ("registerOptions",
+            print_registrationOptions registration.registerOptions);
+        ]
+      )
+    ));
+  ]
+
+let parse_didChangeWatchedFiles
+    (json: Hh_json.json option)
+    : DidChangeWatchedFiles.params =
+  let changes = Jget.array_exn json "changes"
+    |> List.map ~f:(fun change ->
+        let uri = Jget.string_exn change "uri" in
+        let type_ = Jget.int_exn change "type" in
+        let type_ =
+          match DidChangeWatchedFiles.fileChangeType_of_enum type_ with
+          | Some type_ -> type_
+          | None -> failwith
+            (Printf.sprintf "Invalid file change type %d" type_)
+        in
+        { DidChangeWatchedFiles.
+          uri;
+          type_;
+        }
+      )
+  in
+  { DidChangeWatchedFiles.
+    changes;
+  }
 
 (************************************************************************)
 (** error response                                                     **)
@@ -996,6 +1062,7 @@ let request_name_to_string (request: lsp_request) : string =
   | ShowMessageRequestRequest _ -> "window/showMessageRequest"
   | ShowStatusRequest _ -> "window/showStatus"
   | InitializeRequest _ -> "initialize"
+  | RegisterCapabilityRequest _ -> "client/registerCapability"
   | ShutdownRequest -> "shutdown"
   | HoverRequest _ -> "textDocument/hover"
   | CompletionRequest _ -> "textDocument/completion"
@@ -1046,6 +1113,7 @@ let notification_name_to_string (notification: lsp_notification) : string =
   | DidCloseNotification _ -> "textDocument/didClose"
   | DidSaveNotification _ -> "textDocument/didSave"
   | DidChangeNotification _ -> "textDocument/didChange"
+  | DidChangeWatchedFilesNotification _ -> "workspace/didChangeWatchedFiles"
   | TelemetryNotification _ -> "telemetry/event"
   | LogMessageNotification _ -> "window/logMessage"
   | ShowMessageNotification _ -> "window/showMessage"
@@ -1109,6 +1177,8 @@ let parse_lsp_notification (method_: string) (params: json option) : lsp_notific
   | "textDocument/didClose" -> DidCloseNotification (parse_didClose params)
   | "textDocument/didSave" -> DidSaveNotification (parse_didSave params)
   | "textDocument/didChange" -> DidChangeNotification (parse_didChange params)
+  | "workspace/didChangeWatchedFiles" ->
+    DidChangeWatchedFilesNotification (parse_didChangeWatchedFiles params)
   | "textDocument/publishDiagnostics"
   | "window/logMessage"
   | "window/showMessage"
@@ -1125,6 +1195,7 @@ let parse_lsp_result (request: lsp_request) (result: json) : lsp_result =
   | ShowStatusRequest _ ->
     ShowStatusResult (parse_result_showMessageRequest (Some result)) (* shares result type *)
   | InitializeRequest _
+  | RegisterCapabilityRequest _
   | ShutdownRequest
   | HoverRequest _
   | CompletionRequest _
@@ -1170,6 +1241,7 @@ let print_lsp_request (id: lsp_id) (request: lsp_request) : json =
   let params = match request with
     | ShowMessageRequestRequest r -> print_showMessageRequest r
     | ShowStatusRequest r -> print_showStatus r
+    | RegisterCapabilityRequest r -> print_registerCapability r
     | InitializeRequest _
     | ShutdownRequest
     | HoverRequest _
@@ -1256,6 +1328,7 @@ let print_lsp_notification (notification: lsp_notification) : json =
     | DidCloseNotification _
     | DidSaveNotification _
     | DidChangeNotification _
+    | DidChangeWatchedFilesNotification _
     | UnknownNotification _ ->
       failwith ("Don't know how to print notification " ^ method_)
   in
