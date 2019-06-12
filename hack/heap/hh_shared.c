@@ -102,12 +102,12 @@
 #include <sys/resource.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
-#include <sys/time.h>
 #include <sys/types.h>
 #include <unistd.h>
 #endif
 
 #include <lz4.h>
+#include <sys/time.h>
 #include <time.h>
 
 #ifndef NO_SQLITE3
