@@ -241,8 +241,9 @@ and collect_of_type ?log_unresolved cx reason acc = function
   | AnyT _
     -> acc
 
-  | MergedT (_, uses) ->
-    List.fold_left (collect_of_use ?log_unresolved cx reason) acc uses
+  (* Since MergedT only arises from context opt, we can be certain that its
+   * uses are all fully resolved. No need to traverse the structure. *)
+  | MergedT _ -> acc
 
   | FunProtoBindT _
   | FunProtoCallT _
