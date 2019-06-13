@@ -173,6 +173,7 @@ let uses_of constraints =
   | Resolved t | FullyResolved t -> [UseT (unknown_use, t)]
 
 let possible_uses cx id = uses_of (Context.find_graph cx id)
+  |> List.filter is_proper_use
 
 (**************)
 (* builtins *)

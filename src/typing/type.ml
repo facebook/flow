@@ -2991,6 +2991,15 @@ let is_proper_def = function
   | MatchingPropT _ -> false
   | _ -> true
 
+(* not all use types should appear in "merged" types *)
+let is_proper_use = function
+  (* Speculation should be completed by the end of merge. This does not hold
+     today because non-0->1 things are erroneously considered 0->1, specifically
+     type parameters and sometimes eval types. Until this situation is fixed, we
+     can at least avoid these things leaking into dependent merge steps. *)
+  | ChoiceKitUseT _ -> false
+  | _ -> true
+
 (* convenience *)
 let is_bot = function
 | DefT (_, _, EmptyT _) -> true

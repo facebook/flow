@@ -808,36 +808,15 @@ module ContextOptimizer = struct
         SigHash.add_use sig_hash use;
         super#use_type cx pole use
 
-    method! choice_use_tool cx pole t =
-      match t with
-      | FullyResolveType id ->
-          ignore @@ self#type_graph cx pole ISet.empty id;
-          t
-      | _ -> super#choice_use_tool cx pole t
+    method! choice_use_tool =
+      (* Even with MergedT, any choice kit constraints should be fully
+         discharged by this point. This preserves a key invariant, that type
+         graphs are local to a single merge job. In other words, we will not see
+         a FullyResolveType constraint that corresponds to a tvar from another
+         context. This makes it possible to clear the type graph before storing
+         in the heap. *)
+    Utils_js.assert_false "choice kit uses should not appear in signatures"
 
-    method private type_graph cx pole seen id =
-      let open Graph_explorer in
-      let seen' = ISet.add id seen in
-      if seen' == seen then (seen, id) else
-      let graph = Context.type_graph cx in
-      ignore @@ self#eval_id cx pole id;
-      let seen' = match IMap.get id graph.explored_nodes with
-      | None -> seen'
-      | Some {deps} ->
-        ISet.fold (fun id seen -> fst @@ self#type_graph cx pole seen id) deps seen'
-      in
-      let seen' =
-        match IMap.get id graph.unexplored_nodes with
-        | None -> seen'
-        | Some {rev_deps} ->
-          ISet.fold (fun id seen -> fst @@ self#type_graph cx pole seen id) rev_deps seen'
-      in
-      (seen', id)
-
-    method get_stable_tvar_ids = stable_tvar_ids
-    method get_stable_trust_var_ids = stable_trust_var_ids
-    method get_stable_eval_ids = stable_eval_ids
-    method get_stable_poly_ids = stable_poly_ids
     method get_reduced_module_map = reduced_module_map
     method get_reduced_graph = reduced_graph
     method get_reduced_trust_graph = reduced_trust_graph
