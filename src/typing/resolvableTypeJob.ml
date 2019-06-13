@@ -56,8 +56,7 @@ let rec collect_of_types ?log_unresolved cx reason =
   List.fold_left (collect_of_type ?log_unresolved cx reason)
 
 and collect_of_type ?log_unresolved cx reason acc = function
-  | OpenT tvar ->
-    let r, id = tvar in
+  | OpenT ((r, id) as tvar) ->
     if IMap.mem id acc then acc
     else if is_constant_reason r
     (* It is important to consider reads of constant property names as fully
@@ -85,47 +84,20 @@ and collect_of_type ?log_unresolved cx reason acc = function
     end
 
   | AnnotT (_, t, _) ->
-    begin match t with
-    | OpenT ((_, id) as tvar) ->
-      if IMap.mem id acc then acc
-      else IMap.add id (Binding tvar) acc
-    | _ ->
-      collect_of_type ?log_unresolved cx reason acc t
-    end
+    collect_of_binding ?log_unresolved cx reason acc t
 
-  | ThisTypeAppT (_, poly_t, _, targs_opt) ->
-    let targs = match targs_opt with | None -> [] | Some targs -> targs in
-    begin match poly_t with
-    | OpenT tvar ->
-      let _, id = tvar in
-      if IMap.mem id acc then
-        collect_of_types ?log_unresolved cx reason acc targs
-      else begin
-        let acc = IMap.add id (Binding tvar) acc in
-        collect_of_types ?log_unresolved cx reason acc targs
-      end
+  | ThisTypeAppT (_, t, _, targs_opt) ->
+    let acc = collect_of_binding ?log_unresolved cx reason acc t in
+    let acc = match targs_opt with
+    | None -> acc
+    | Some targs -> collect_of_types ?log_unresolved cx reason acc targs
+    in
+    acc
 
-    | _ ->
-      let ts = poly_t::targs in
-      collect_of_types ?log_unresolved cx reason acc ts
-    end
-
-  | TypeAppT (_, _, poly_t, targs)
-    ->
-    begin match poly_t with
-    | OpenT tvar ->
-      let _, id = tvar in
-      if IMap.mem id acc then
-        collect_of_types ?log_unresolved cx reason acc targs
-      else begin
-        let acc = IMap.add id (Binding tvar) acc in
-        collect_of_types ?log_unresolved cx reason acc targs
-      end
-
-    | _ ->
-      let ts = poly_t::targs in
-      collect_of_types ?log_unresolved cx reason acc ts
-    end
+  | TypeAppT (_, _, t, targs) ->
+    let acc = collect_of_binding ?log_unresolved cx reason acc t in
+    let acc = collect_of_types ?log_unresolved cx reason acc targs in
+    acc
 
   | EvalT (t, TypeDestructorT (_, _, d), _) ->
     let acc = collect_of_type ?log_unresolved cx reason acc t in
@@ -299,6 +271,24 @@ and collect_of_destructor ?log_unresolved cx reason acc = function
 
 and collect_of_type_map ?log_unresolved cx reason acc = function
   | TupleMap t | ObjectMap t | ObjectMapi t ->
+    collect_of_type ?log_unresolved cx reason acc t
+
+(* In some positions, like annots, we trust that tvars are 0->1. *)
+and collect_of_binding ?log_unresolved cx reason acc = function
+  | OpenT ((_, id) as tvar) ->
+    if IMap.mem id acc then acc
+    else if (
+      let type_graph = Context.type_graph cx in
+      ISet.mem id type_graph.Graph_explorer.finished
+    ) then acc
+    else begin match Context.find_graph cx id with
+    | Resolved t | FullyResolved t ->
+      let acc = IMap.add id OpenResolved acc in
+      collect_of_type ?log_unresolved cx reason acc t
+    | Unresolved _ ->
+      IMap.add id (Binding tvar) acc
+    end
+  | t ->
     collect_of_type ?log_unresolved cx reason acc t
 
 (* TODO: Support for use types is currently sketchy. Full resolution of use
