@@ -71,10 +71,10 @@ type graph = {
   mutable finished: ISet.t;
 }
 
-let new_graph finished = {
+let new_graph () = {
   unexplored_nodes = IMap.empty;
   explored_nodes = IMap.empty;
-  finished;
+  finished = ISet.empty;
 }
 
 (* When other_graph belongs to a dependency, merge finished from other_graph to

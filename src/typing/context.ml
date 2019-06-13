@@ -185,7 +185,7 @@ let make_sig () = {
   call_props = IMap.empty;
   export_maps = Type.Exports.Map.empty;
   evaluated = IMap.empty;
-  type_graph = Graph_explorer.new_graph ISet.empty;
+  type_graph = Graph_explorer.new_graph ();
   all_unresolved = IMap.empty;
   envs = IMap.empty;
   module_map = SMap.empty;
@@ -430,6 +430,7 @@ let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
   cx.sig_cx.nominal_ids <- ISet.empty;
+  cx.sig_cx.type_graph <- Graph_explorer.new_graph ();
   cx.sig_cx.exists_checks <- ALocMap.empty;
   cx.sig_cx.exists_excuses <- ALocMap.empty;
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;
@@ -553,7 +554,6 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.call_props <- IMap.union sig_cx_other.call_props sig_cx.call_props;
   sig_cx.export_maps <- Type.Exports.Map.union sig_cx_other.export_maps sig_cx.export_maps;
   sig_cx.evaluated <- IMap.union sig_cx_other.evaluated sig_cx.evaluated;
-  sig_cx.type_graph <- Graph_explorer.union sig_cx_other.type_graph sig_cx.type_graph;
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
   sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
   sig_cx.type_asserts <- ALocMap.union sig_cx.type_asserts sig_cx_other.type_asserts;

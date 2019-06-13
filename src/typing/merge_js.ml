@@ -842,10 +842,6 @@ module ContextOptimizer = struct
     Context.set_call_props cx reducer#get_reduced_call_props;
     Context.set_export_maps cx reducer#get_reduced_export_maps;
     Context.set_evaluated cx reducer#get_reduced_evaluated;
-    Context.set_type_graph cx (
-      Graph_explorer.new_graph
-        (IMap.fold (fun k _ -> ISet.add k) reducer#get_reduced_graph ISet.empty)
-    );
     sig_hash
 
 end
