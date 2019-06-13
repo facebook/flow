@@ -839,7 +839,15 @@ let is_instantiable_reason r =
 *)
 let is_constant_reason r =
   match desc_of_reason r with
-  | RIdentifier x
+  | RIdentifier x ->
+    (* A single-letter variable name which happens to be upper-case should not
+       be confused with a constant reason. This should really be further
+       restricted to `const`-declared identifiers in scope. Or, better yet,
+       removing this heuristic entirely. *)
+    let len = String.length x in
+    if len < 2
+    then false
+    else is_not_lowercase x 0 (len - 1)
   | RProperty (Some x)
   | RPrivateProperty x
   | RMember { object_ = _; property = x }
