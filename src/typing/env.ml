@@ -696,8 +696,7 @@ let pseudo_init_declared_type cx name loc =
         specific = value_binding.general
       } in
       Scope.add_entry name entry scope
-    | Type _ ->
-      assert_false (spf "pseudo_init_declared_type %s: Type entry" name)
+    | Type _ -> already_bound_error cx name entry loc
     | Class _ ->
       assert_false (spf "pseudo_init_declared_type %s: Class entry" name)
   )
