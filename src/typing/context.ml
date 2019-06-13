@@ -557,18 +557,6 @@ let merge_into sig_cx sig_cx_other =
   sig_cx.graph <- IMap.union sig_cx_other.graph sig_cx.graph;
   sig_cx.trust_graph <- IMap.union sig_cx_other.trust_graph sig_cx.trust_graph;
   sig_cx.type_asserts <- ALocMap.union sig_cx.type_asserts sig_cx_other.type_asserts;
-
-  (* These entries are intermediates, and will be cleared from dep_cxs before
-     merge. However, initializing builtins is a bit different, and actually copy
-     these things from the lib cxs into the master sig_cx before we clear the
-     indeterminates and calculate the sig sig_cx. *)
-  sig_cx.envs <- IMap.union sig_cx_other.envs sig_cx.envs;
-  sig_cx.errors <- Flow_error.ErrorSet.union sig_cx_other.errors sig_cx.errors;
-  sig_cx.error_suppressions <- Error_suppressions.union sig_cx_other.error_suppressions sig_cx.error_suppressions;
-  sig_cx.severity_cover <- Utils_js.FilenameMap.union sig_cx_other.severity_cover sig_cx.severity_cover;
-  sig_cx.exists_checks <- ALocMap.union sig_cx_other.exists_checks sig_cx.exists_checks;
-  sig_cx.exists_excuses <- ALocMap.union sig_cx_other.exists_excuses sig_cx.exists_excuses;
-  sig_cx.all_unresolved <- IMap.union sig_cx_other.all_unresolved sig_cx.all_unresolved;
   ()
 
 (* Find the constraints of a type variable in the graph.
