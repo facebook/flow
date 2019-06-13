@@ -57,6 +57,7 @@ let rec collect_of_types ?log_unresolved cx reason =
 
 and collect_of_type ?log_unresolved cx reason acc = function
   | OpenT ((r, id) as tvar) ->
+    let id, constraints = Context.find_constraints cx id in
     if IMap.mem id acc then acc
     else if is_constant_reason r
     (* It is important to consider reads of constant property names as fully
@@ -68,7 +69,7 @@ and collect_of_type ?log_unresolved cx reason acc = function
        with the corresponding literal types to decide membership in those
        disjoint unions. *)
     then IMap.add id (Binding tvar) acc
-    else begin match Context.find_graph cx id with
+    else begin match constraints with
     | Resolved t | FullyResolved t ->
       let acc = IMap.add id OpenResolved acc in
       collect_of_type ?log_unresolved cx reason acc t
@@ -276,12 +277,13 @@ and collect_of_type_map ?log_unresolved cx reason acc = function
 (* In some positions, like annots, we trust that tvars are 0->1. *)
 and collect_of_binding ?log_unresolved cx reason acc = function
   | OpenT ((_, id) as tvar) ->
+    let id, constraints = Context.find_constraints cx id in
     if IMap.mem id acc then acc
     else if (
       let type_graph = Context.type_graph cx in
       ISet.mem id type_graph.Graph_explorer.finished
     ) then acc
-    else begin match Context.find_graph cx id with
+    else begin match constraints with
     | Resolved t | FullyResolved t ->
       let acc = IMap.add id OpenResolved acc in
       collect_of_type ?log_unresolved cx reason acc t
