@@ -8461,7 +8461,7 @@ and long_path_speculative_matches cx trace r speculation_id spec = Speculation.C
           (* umm, there's another previously found promising alternative *)
           (* so compute the difference in side effects between that alternative
              and this *)
-          let ts = diff prev_case case in
+          let ts = diff cx prev_case case in
           (* if the side effects of the previously found promising alternative
              are fewer, then keep holding on to that alternative *)
           if ts = [] then loop match_state trials
