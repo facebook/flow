@@ -381,7 +381,7 @@ module Cache = struct
   module Subst = struct
     let cache = Hashtbl.create 0
     let find = Hashtbl.find_opt cache
-    let add = Hashtbl.replace cache
+    let add = Hashtbl.add cache
   end
 
   (* Cache that limits instantiation of polymorphic definitions. Intuitively,
