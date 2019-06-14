@@ -31,6 +31,7 @@ type lint_kind =
   | UnnecessaryInvariant
   | SignatureVerificationFailure
   | ImplicitInexactObject
+  | UninitializedInstanceProperty
 
 let string_of_sketchy_null_kind = function
   | SketchyNullBool -> "sketchy-null-bool"
@@ -58,6 +59,7 @@ let string_of_kind = function
   | UnnecessaryInvariant -> "unnecessary-invariant"
   | SignatureVerificationFailure -> "signature-verification-failure"
   | ImplicitInexactObject -> "implicit-inexact-object"
+  | UninitializedInstanceProperty -> "uninitialized-instance-property"
 
 let kinds_of_string = function
   | "sketchy-null" -> Some [
@@ -88,6 +90,7 @@ let kinds_of_string = function
   | "unnecessary-invariant" -> Some [UnnecessaryInvariant]
   | "signature-verification-failure" -> Some [SignatureVerificationFailure]
   | "implicit-inexact-object" -> Some [ImplicitInexactObject]
+  | "uninitialized-instance-property" -> Some [UninitializedInstanceProperty]
   | _ -> None
 
 module LintKind = struct

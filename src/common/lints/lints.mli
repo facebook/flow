@@ -31,6 +31,7 @@ type lint_kind =
   | UnnecessaryInvariant
   | SignatureVerificationFailure
   | ImplicitInexactObject
+  | UninitializedInstanceProperty
 
 val string_of_kind: lint_kind -> string
 

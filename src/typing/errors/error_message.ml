@@ -131,6 +131,7 @@ and 'loc t' =
   | EExperimentalDecorators of 'loc
   | EExperimentalClassProperties of 'loc * bool
   | EUnsafeGetSet of 'loc
+  | EUninitializedInstanceProperty of 'loc
   | EExperimentalExportStarAs of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
@@ -461,6 +462,7 @@ let map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EExperimentalDecorators loc -> EExperimentalDecorators (f loc)
   | EExperimentalClassProperties (loc, b) -> EExperimentalClassProperties (f loc, b)
   | EUnsafeGetSet loc -> EUnsafeGetSet (f loc)
+  | EUninitializedInstanceProperty loc -> EUninitializedInstanceProperty (f loc)
   | EExperimentalExportStarAs loc -> EExperimentalExportStarAs (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
@@ -597,6 +599,7 @@ let util_use_op_of_msg nope util = function
 | EExperimentalDecorators (_)
 | EExperimentalClassProperties (_, _)
 | EUnsafeGetSet (_)
+| EUninitializedInstanceProperty (_)
 | EExperimentalExportStarAs (_)
 | EIndeterminateModuleType (_)
 | EBadExportPosition (_)
@@ -707,6 +710,7 @@ let aloc_of_msg : t -> ALoc.t option = function
   | EIndeterminateModuleType loc
   | EExperimentalExportStarAs loc
   | EUnsafeGetSet loc
+  | EUninitializedInstanceProperty loc
   | EExperimentalClassProperties (loc, _)
   | EExperimentalDecorators loc
   | EModuleOutsideRoot (loc, _)
@@ -804,6 +808,7 @@ let kind_of_msg = Errors.(function
   | EInexactSpread _                -> LintError Lints.InexactSpread
   | ESignatureVerification _        -> LintError Lints.SignatureVerificationFailure
   | EImplicitInexactObject _        -> LintError Lints.ImplicitInexactObject
+  | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
   | EBadExportPosition _
   | EBadExportContext _             -> InferWarning ExportKind
   | EUnexpectedTypeof _
@@ -1512,6 +1517,12 @@ let friendly_message_of_msg : Loc.t t' -> Loc.t friendly_message_recipe =
         code "[options]"; text " section of your "; code ".flowconfig"; text ".";
       ]
 
+    | EUninitializedInstanceProperty _ ->
+      Normal [
+        text "All instance properties should be initialized before use to ";
+        text "avoid potential runtime exceptions."
+      ]
+
     | EExperimentalExportStarAs _ ->
       Normal [
         text "Experimental "; code "export * as"; text " usage. ";
@@ -1915,5 +1926,6 @@ let is_lint_error = function
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EImplicitInexactObject _
+  | EUninitializedInstanceProperty _
       -> true
   | _ -> false

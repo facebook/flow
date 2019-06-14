@@ -30,6 +30,7 @@ let ignored_by_all = [
   Lints.DeprecatedUtility;
   Lints.DeprecatedEnumUtility;
   Lints.ImplicitInexactObject;
+  Lints.UninitializedInstanceProperty;
 ]
 
 let config_default =

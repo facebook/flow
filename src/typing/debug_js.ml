@@ -2716,6 +2716,8 @@ let dump_error_message =
         spf "EExperimentalClassProperties (%s, %b)" (string_of_aloc loc) static
     | EUnsafeGetSet loc ->
         spf "EUnsafeGetSet (%s)" (string_of_aloc loc)
+    | EUninitializedInstanceProperty loc ->
+        spf "EUninitializedInstanceProperty (%s)" (string_of_aloc loc)
     | EExperimentalExportStarAs loc ->
         spf "EExperimentalExportStarAs (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc ->
