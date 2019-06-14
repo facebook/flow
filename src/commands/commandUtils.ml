@@ -445,7 +445,20 @@ let check_version required_version =
   match required_version with
   | None -> Ok ()
   | Some version_constraint ->
-    if Semver.satisfies version_constraint Flow_version.version then
+    (* For the purposes of checking whether the *currently-running* version of Flow is compatible
+       with the given project, we'll include pre-releases. For example, this means that 0.61.0-beta
+       is compatible with >0.60.0, because it presumably implements the minimum necessary features
+       of 0.60.0.
+
+       This is subtly different than determining which version of Flow to run in the first place,
+       like when npm/yarn is solving the `flow-bin` constraint. In that case, we do not want
+       >0.60.0 to opt into pre-releases automatically. Those sorts of checks should not pass
+       `~includes_prereleases`.
+
+       So, if you've explicitly run v0.61.0-beta, and the flowconfig says `>0.60.0`, we'll allow it;
+       but if we were looking at the flowconfig to decide which version to run, you should not
+       choose the beta. *)
+    if Semver.satisfies ~include_prereleases:true version_constraint Flow_version.version then
       Ok ()
     else
       let msg = Utils_js.spf
