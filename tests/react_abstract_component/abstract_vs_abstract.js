@@ -20,6 +20,6 @@ function test4(x: React$AbstractComponent<{}, Component>): React$AbstractCompone
   return x;
 }
 
-function test5(x: React$AbstractComponent<{}, Subcomponent>): React$AbstractComponent<{}, Component> { // Ok, instance is covariant
+function test5(x: React$AbstractComponent<{}, Subcomponent>): React$AbstractComponent<{}, Component> { // Ok, instance is contravariant
   return x;
 }
