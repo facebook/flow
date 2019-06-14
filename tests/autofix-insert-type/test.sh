@@ -15,7 +15,6 @@ do_file() {
 
 mkdir $TEMP_DIR
 do_file "array.js" 3 15
-do_file "array.js" 3 16
 do_file "arrow-0.js" 3 8
 do_file "arrow-0.js" 3 13
 do_file "arrow-0.js" 3 14
@@ -38,7 +37,8 @@ do_file "object-0.js" 7 6
 do_file "object-1.js" 7 8
 do_file "object-2.js" 6 6
 do_file "poly-0.js" 3 22
-do_file "react-0.js" 6 16 # This returns any like suggest, but type at point {|date : Date|}
+do_file "poly-0.js" 3 15
+do_file "react-0.js" 6 21 # This returns any like suggest, but type at point {|date : Date|}
 do_file "spread.js" 10 3
 do_file "string-literal.js" 11 14
 do_file "type-utils.js" 6 3
@@ -52,3 +52,6 @@ do_file "replacement-object.js" 2 16
 
 $FLOW init $TEMP_DIR
 assert_ok "$FLOW" check $TEMP_DIR
+
+assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet "object-0.js" 4 4
+assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet "poly-0.js" 3 21

@@ -155,3 +155,18 @@ let suggest_types cx file_sig typed_ast loc =
   | None -> FailureNoMatch
   | Some (loc, scheme) ->
     type_of_scheme ~options ~full_cx:cx ~file ~file_sig typed_ast loc scheme
+
+let insert_type_normalize ~full_cx ?file:(file=Context.file full_cx) ~file_sig ~expand_aliases ~omit_targ_defaults ~typed_ast loc scheme =
+  let options = {
+    Ty_normalizer_env.
+    fall_through_merged = false;
+    expand_internal_types = false;
+    expand_type_aliases = expand_aliases;
+    flag_shadowed_type_params = false;
+    preserve_inferred_literal_types = false;
+    evaluate_type_destructors = false;
+    optimize_types = true;
+    omit_targ_defaults;
+    simplify_empty = true; }
+  in
+  type_of_scheme ~options ~full_cx ~file ~file_sig typed_ast loc scheme

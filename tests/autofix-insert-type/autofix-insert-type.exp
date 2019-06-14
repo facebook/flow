@@ -4,16 +4,10 @@ array.js 3 15
 function foo(): Array<number> {
   return [1, 2];
 }
-array.js 3 16
-// @flow
-
-function foo() {
-  return [1, 2];
-}
 arrow-0.js 3 8
 // @flow
 
-const a = (x) => x + 1;
+const a: ((x: number) => number) = (x) => x + 1;
 a(1);
 arrow-0.js 3 13
 // @flow
@@ -38,7 +32,7 @@ class-0.js 4 4
 // @flow
 
 class A {
-  f = 1;
+  f: number = 1;
   m(x) {
     return this.f + 1;
   }
@@ -97,7 +91,7 @@ dictionary.js 12 12
   " ": null,
   "_": null,
   "": null,
-  get "x"() {
+  get "x"(): null {
     return null;
   },
   set "y"(z: string) {}
@@ -219,7 +213,15 @@ function foo<T>(x: T): {|f: T|} {
     f: x
   }
 }
-react-0.js 6 16
+poly-0.js 3 15
+// @flow
+
+function foo<T: mixed>(x: T) {
+  return {
+    f: x
+  }
+}
+react-0.js 6 21
 // @flow
 
 import React from "react";

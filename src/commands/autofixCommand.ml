@@ -33,11 +33,13 @@ module InsertType = struct
         exe_name exe_name exe_name;
       args = ArgSpec.(base_arg_spec |> anon "args" (required (list_of string))
     )}
-  let handle_error msg = prerr_endline msg
+  let handle_error msg =
+    FlowExitStatus.(exit ~msg Unknown_error)
+
   let handle_ok patch input =
     match File_input.content_of_file_input input with
     | Ok content -> print_string @@ Replacement_printer.print patch content
-    | Error msg -> prerr_endline msg
+    | Error msg -> handle_error msg
 
   let main base_flags option_values json _pretty root_arg strip_root_arg
         verbose path wait_for_recheck args () =
