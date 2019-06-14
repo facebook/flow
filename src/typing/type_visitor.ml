@@ -893,19 +893,10 @@ class ['a] t = object(self)
     if seen' == seen then seen, acc else
     let graph = Context.type_graph cx in
     let acc = seen', self#eval_id cx pole_TODO acc id in
-    let acc =
-      match IMap.get id graph.explored_nodes with
-      | None -> acc
-      | Some {deps} ->
-        ISet.fold (fun id acc -> self#type_graph cx acc id) deps acc
-    in
-    let acc =
-      match IMap.get id graph.unexplored_nodes with
-      | None -> acc
-      | Some {rev_deps} ->
-        ISet.fold (fun id acc -> self#type_graph cx acc id) rev_deps acc
-    in
-    acc
+    match Tbl.find graph id with
+    | exception Not_found -> acc (* shouldn't happen *)
+    | Unexplored {rev_deps = deps} | Explored {deps} ->
+      ISet.fold (fun id acc -> self#type_graph cx acc id) deps acc
 
   method private try_flow_spec cx acc = function
   | UnionCases (_, t, _rep, ts) ->

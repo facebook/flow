@@ -430,7 +430,7 @@ let clear_intermediates cx =
   cx.sig_cx.envs <- IMap.empty;
   cx.sig_cx.all_unresolved <- IMap.empty;
   cx.sig_cx.nominal_ids <- ISet.empty;
-  cx.sig_cx.type_graph <- Graph_explorer.new_graph ();
+  cx.sig_cx.type_graph <- Graph_explorer.Tbl.create 0; (* still 176 bytes :/ *)
   cx.sig_cx.exists_checks <- ALocMap.empty;
   cx.sig_cx.exists_excuses <- ALocMap.empty;
   cx.sig_cx.test_prop_hits_and_misses <- IMap.empty;

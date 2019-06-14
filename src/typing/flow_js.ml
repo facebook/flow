@@ -8302,14 +8302,14 @@ and connect_id_to_bindings cx id bindings =
 and is_unexplored_source cx id =
   match Graph_explorer.stat_graph id (Context.type_graph cx) with
   | Graph_explorer.Finished -> false
-  | Graph_explorer.Not_found -> false
+  | Graph_explorer.Node_not_found -> false
   | Graph_explorer.Found node -> Graph_explorer.is_unexplored_node node
 
 and is_unfinished_target cx id =
   let type_graph = Context.type_graph cx in
   match Graph_explorer.stat_graph id type_graph with
   | Graph_explorer.Finished -> false
-  | Graph_explorer.Not_found ->
+  | Graph_explorer.Node_not_found ->
     Graph_explorer.node type_graph id;
     true
   | Graph_explorer.Found node ->
