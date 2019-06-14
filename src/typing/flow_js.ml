@@ -8028,11 +8028,11 @@ and try_union cx trace use_op l reason rep =
   let imap =
     (* since any final optimization must have happened after full resolution *)
     if UnionRep.is_optimized_finally rep then IMap.empty
-    else ResolvableTypeJob.collect_of_types cx reason IMap.empty ts in
+    else ResolvableTypeJob.collect_of_types cx IMap.empty ts in
   (* collect parts of the lower bound to be fully resolved, while logging
      unresolved tvars *)
   let imap = ResolvableTypeJob.collect_of_type
-    ~log_unresolved:speculation_id cx reason imap l in
+    ~log_unresolved:speculation_id cx imap l in
   (* fully resolve the collected types *)
   resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap) @@
   (* ...and then begin the choice-making process *)
@@ -8044,11 +8044,11 @@ and try_intersection cx trace u reason rep =
   Speculation.init_speculation cx speculation_id;
 
   (* collect parts of the intersection type to be fully resolved *)
-  let imap = ResolvableTypeJob.collect_of_types cx reason IMap.empty ts in
+  let imap = ResolvableTypeJob.collect_of_types cx IMap.empty ts in
   (* collect parts of the upper bound to be fully resolved, while logging
      unresolved tvars *)
   let imap = ResolvableTypeJob.collect_of_use
-    ~log_unresolved:speculation_id cx reason imap u in
+    ~log_unresolved:speculation_id cx imap u in
   (* fully resolve the collected types *)
   resolve_bindings_init cx trace reason (bindings_of_jobs cx trace imap) @@
   (* ...and then begin the choice-making process *)
@@ -8279,7 +8279,7 @@ and resolve_bindings cx trace reason id bindings =
 
 and fully_resolve_type cx trace reason id t =
   if is_unexplored_source cx id then
-    let imap = ResolvableTypeJob.collect_of_type cx reason IMap.empty t in
+    let imap = ResolvableTypeJob.collect_of_type cx IMap.empty t in
     let bindings = bindings_of_jobs cx trace imap in
     (* NOTE: bindings_of_jobs might change the state of id because it resolves it, so check
        again. TODO: there must be a better way *)

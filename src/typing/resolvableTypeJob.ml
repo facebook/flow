@@ -52,10 +52,10 @@ type t =
 (* log_unresolved is a mode that determines whether to log unresolved tvars:
    it is None when resolving annotations, and Some speculation_id when
    resolving inferred types. *)
-let rec collect_of_types ?log_unresolved cx reason =
-  List.fold_left (collect_of_type ?log_unresolved cx reason)
+let rec collect_of_types ?log_unresolved cx =
+  List.fold_left (collect_of_type ?log_unresolved cx)
 
-and collect_of_type ?log_unresolved cx reason acc = function
+and collect_of_type ?log_unresolved cx acc = function
   | OpenT (r, id) ->
     let id, constraints = Context.find_constraints cx id in
     if IMap.mem id acc then acc
@@ -66,7 +66,7 @@ and collect_of_type ?log_unresolved cx reason acc = function
       acc
     | Resolved t ->
       let acc = IMap.add id OpenResolved acc in
-      collect_of_type ?log_unresolved cx reason acc t
+      collect_of_type ?log_unresolved cx acc t
     | Unresolved _ ->
       (* It is important to consider reads of constant property names as fully
          resolvable, especially since constant property names are often used to
@@ -83,30 +83,30 @@ and collect_of_type ?log_unresolved cx reason acc = function
          instantiations of type parameters or as existentials. Constraining
          them during speculative matching typically do not cause side effects
          across branches, and help make progress. *)
-      else if is_instantiable_reason r || is_instantiable_reason reason
+      else if is_instantiable_reason r
       then acc
       else IMap.add id (OpenUnresolved (log_unresolved, r, id)) acc
     end
 
   | AnnotT (_, t, _) ->
-    collect_of_binding ?log_unresolved cx reason acc t
+    collect_of_binding ?log_unresolved cx acc t
 
   | ThisTypeAppT (_, t, _, targs_opt) ->
-    let acc = collect_of_binding ?log_unresolved cx reason acc t in
+    let acc = collect_of_binding ?log_unresolved cx acc t in
     let acc = match targs_opt with
     | None -> acc
-    | Some targs -> collect_of_types ?log_unresolved cx reason acc targs
+    | Some targs -> collect_of_types ?log_unresolved cx acc targs
     in
     acc
 
   | TypeAppT (_, _, t, targs) ->
-    let acc = collect_of_binding ?log_unresolved cx reason acc t in
-    let acc = collect_of_types ?log_unresolved cx reason acc targs in
+    let acc = collect_of_binding ?log_unresolved cx acc t in
+    let acc = collect_of_types ?log_unresolved cx acc targs in
     acc
 
   | EvalT (t, TypeDestructorT (_, _, d), _) ->
-    let acc = collect_of_type ?log_unresolved cx reason acc t in
-    collect_of_destructor ?log_unresolved cx reason acc d
+    let acc = collect_of_type ?log_unresolved cx acc t in
+    collect_of_destructor ?log_unresolved cx acc d
 
   (* Some common kinds of types are quite overloaded: sometimes they
      correspond to types written by the user, but sometimes they also model
@@ -133,18 +133,18 @@ and collect_of_type ?log_unresolved cx reason acc = function
     | None -> ts
     | Some id -> (Context.find_call cx id)::ts
     in
-    collect_of_types ?log_unresolved cx reason acc ts
+    collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, FunT (_, _, { params; return_t; _ })) ->
     let ts = List.fold_left (fun acc (_, t) -> t::acc) [return_t] params in
-    collect_of_types ?log_unresolved cx reason acc ts
+    collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ArrT (ArrayAT (elemt, tuple_types))) ->
     let ts = Option.value ~default:[] tuple_types in
     let ts = elemt::ts in
-    collect_of_types ?log_unresolved cx reason acc ts
+    collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, ArrT (TupleAT (elemt, tuple_types))) ->
-    collect_of_types ?log_unresolved cx reason acc (elemt::tuple_types)
+    collect_of_types ?log_unresolved cx acc (elemt::tuple_types)
   | DefT (_, _, ArrT (ROArrayAT (elemt))) ->
-    collect_of_type ?log_unresolved cx reason acc elemt
+    collect_of_type ?log_unresolved cx acc elemt
   | DefT (_, _, InstanceT (static, super, _,
       { class_id; type_args; own_props; proto_props; inst_call_t; _ })) ->
     let ts = if class_id = ALoc.none then [] else [super; static] in
@@ -160,9 +160,9 @@ and collect_of_type ?log_unresolved cx reason acc = function
     | None -> ts
     | Some id -> (Context.find_call cx id)::ts
     in
-    collect_of_types ?log_unresolved cx reason acc ts
+    collect_of_types ?log_unresolved cx acc ts
   | DefT (_, _, PolyT (_, _, t, _)) ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
   | BoundT _ ->
     acc
 
@@ -184,20 +184,20 @@ and collect_of_type ?log_unresolved cx reason acc = function
      degradation: this function is expected to be quite hot). *)
 
   | OptionalT (_, t) | MaybeT (_, t) ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
   | UnionT (_, rep) ->
     let ts = UnionRep.members rep in
-    collect_of_types ?log_unresolved cx reason acc ts
+    collect_of_types ?log_unresolved cx acc ts
   | IntersectionT (_, rep) ->
     let ts = InterRep.members rep in
-    collect_of_types ?log_unresolved cx reason acc ts
+    collect_of_types ?log_unresolved cx acc ts
 
   | DefT (_, _, ReactAbstractComponentT {config; instance}) ->
-    collect_of_types ?log_unresolved cx reason acc [config; instance]
+    collect_of_types ?log_unresolved cx acc [config; instance]
 
   | OpaqueT (_, {underlying_t; super_t; _}) ->
-    let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx reason) in
-    let acc = Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx reason) in
+    let acc = Option.fold underlying_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
+    let acc = Option.fold super_t ~init:acc ~f:(collect_of_type ?log_unresolved cx) in
     acc
 
   | AnyWithUpperBoundT t
@@ -207,23 +207,23 @@ and collect_of_type ?log_unresolved cx reason acc = function
   | DefT (_, _, ClassT t)
   | ThisClassT (_, t)
     ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
 
   | KeysT (_, t) ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
 
   | ShapeT (t) ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
 
   | MatchingPropT (_, _, t) ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
 
   | DefT (_, _, IdxWrapper t) ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
 
   | ReposT (_, t)
   | InternalT (ReposUpperT (_, t)) ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
 
   | InternalT (OptionalChainVoidT _) -> acc
 
@@ -258,29 +258,29 @@ and collect_of_type ?log_unresolved cx reason acc = function
     ->
     acc
 
-and collect_of_destructor ?log_unresolved cx reason acc = function
+and collect_of_destructor ?log_unresolved cx acc = function
   | NonMaybeType -> acc
   | PropertyType _ -> acc
-  | ElementType t -> collect_of_type ?log_unresolved cx reason acc t
-  | Bind t -> collect_of_type ?log_unresolved cx reason acc t
+  | ElementType t -> collect_of_type ?log_unresolved cx acc t
+  | Bind t -> collect_of_type ?log_unresolved cx acc t
   | ReadOnlyType -> acc
-  | SpreadType (_, ts) -> collect_of_types ?log_unresolved cx reason acc ts
-  | RestType (_, t) -> collect_of_type ?log_unresolved cx reason acc t
+  | SpreadType (_, ts) -> collect_of_types ?log_unresolved cx acc ts
+  | RestType (_, t) -> collect_of_type ?log_unresolved cx acc t
   | ValuesType -> acc
-  | CallType ts -> collect_of_types ?log_unresolved cx reason acc ts
-  | TypeMap tmap -> collect_of_type_map ?log_unresolved cx reason acc tmap
-  | ReactConfigType default_props -> collect_of_type ?log_unresolved cx reason acc default_props
+  | CallType ts -> collect_of_types ?log_unresolved cx acc ts
+  | TypeMap tmap -> collect_of_type_map ?log_unresolved cx acc tmap
+  | ReactConfigType default_props -> collect_of_type ?log_unresolved cx acc default_props
   | ReactElementPropsType
   | ReactElementConfigType
   | ReactElementRefType
     -> acc
 
-and collect_of_type_map ?log_unresolved cx reason acc = function
+and collect_of_type_map ?log_unresolved cx acc = function
   | TupleMap t | ObjectMap t | ObjectMapi t ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
 
 (* In some positions, like annots, we trust that tvars are 0->1. *)
-and collect_of_binding ?log_unresolved cx reason acc = function
+and collect_of_binding ?log_unresolved cx acc = function
   | OpenT ((_, id) as tvar) ->
     let id, constraints = Context.find_constraints cx id in
     if IMap.mem id acc then acc
@@ -291,24 +291,24 @@ and collect_of_binding ?log_unresolved cx reason acc = function
       acc
     | Resolved t ->
       let acc = IMap.add id OpenResolved acc in
-      collect_of_type ?log_unresolved cx reason acc t
+      collect_of_type ?log_unresolved cx acc t
     | Unresolved _ ->
       IMap.add id (Binding tvar) acc
     end
   | t ->
-    collect_of_type ?log_unresolved cx reason acc t
+    collect_of_type ?log_unresolved cx acc t
 
 (* TODO: Support for use types is currently sketchy. Full resolution of use
    types are only needed for choice-making on intersections. We care about
    calls in particular because one of the biggest uses of intersections is
    function overloading. More uses will be added over time. *)
-and collect_of_use ?log_unresolved cx reason acc = function
+and collect_of_use ?log_unresolved cx acc = function
 | UseT (_, t) ->
-  collect_of_type ?log_unresolved cx reason acc t
+  collect_of_type ?log_unresolved cx acc t
 | CallT (_, _, fct) ->
   let arg_types =
     Core_list.map ~f:(function Arg t | SpreadArg t -> t) fct.call_args_tlist in
-  collect_of_types ?log_unresolved cx reason acc (arg_types @ [fct.call_tout])
+  collect_of_types ?log_unresolved cx acc (arg_types @ [fct.call_tout])
 | GetPropT (_, _, _, t_out) ->
-  collect_of_type ?log_unresolved cx reason acc t_out
+  collect_of_type ?log_unresolved cx acc t_out
 | _ -> acc
