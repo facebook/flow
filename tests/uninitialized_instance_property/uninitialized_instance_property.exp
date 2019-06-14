@@ -1,0 +1,29 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:8:3
+
+All instance properties should be initialized before use to avoid potential runtime exceptions.
+(`uninitialized-instance-property`)
+
+   8|   p: number;
+        ^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:12:3
+
+All instance properties should be initialized before use to avoid potential runtime exceptions.
+(`uninitialized-instance-property`)
+
+   12|   p1: number;
+         ^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:13:3
+
+All instance properties should be initialized before use to avoid potential runtime exceptions.
+(`uninitialized-instance-property`)
+
+   13|   p2: number;
+         ^^
+
+
+
+Found 3 errors

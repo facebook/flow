@@ -6237,6 +6237,30 @@ and extract_class_name class_loc  = Ast.Class.(function {id; _;} ->
   | None -> (class_loc, "<<anonymous class>>")
 )
 
+and check_properties_initialized_before_use cx class_ast: unit =
+  let (_, body) = class_ast.Ast.Class.body in
+  let elements = body.Ast.Class.Body.body in
+
+  let uninitialized: ALoc.t SMap.t =
+    List.fold_left (fun uninited -> Ast.Class.(function
+      | Body.Property (_, {
+          Property.key = Ast.Expression.Object.Property.Identifier (
+            loc, { Ast.Identifier.name; _ }
+          );
+          Property.value = None;
+          Property.static = false;
+          _
+        }) -> SMap.add name loc uninited
+      | _ -> uninited
+      )
+    ) SMap.empty elements
+  in
+
+  uninitialized
+  |> SMap.iter (fun _ loc ->
+    Flow.add_output cx Error_message.(EUninitializedInstanceProperty loc)
+  )
+
 and mk_class cx class_loc ~name_loc reason c =
   let def_reason = repos_reason class_loc reason in
   let this_in_class = Class_stmt_sig.This.in_class c in
@@ -6251,6 +6275,7 @@ and mk_class cx class_loc ~name_loc reason c =
       ~stmts:toplevels
       ~expr:expression;
   );
+  check_properties_initialized_before_use cx c;
   let class_t = Class_stmt_sig.classtype cx class_sig in
   Flow.unify cx self class_t;
   class_t, class_ast_f class_t
