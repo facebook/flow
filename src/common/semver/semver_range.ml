@@ -35,11 +35,31 @@ let comparators_of_range t : Semver_comparator.t list =
   let comparators = fold_comparators_of_range (fun acc comp -> comp::acc) [] t in
   List.rev comparators
 
-let satisfies range version =
-  fold_comparators_of_range (fun acc comp ->
-    if not acc then acc
-    else Semver_comparator.satisfies version comp
-  ) true range
+(* Determines if the version is matched by the range.
+ *
+ * If the range and the version both have a prerelease, then they must be for the same
+ * version (major, minor, patch). for example, `>1.2.3-alpha` matches `1.2.3-beta` and
+ * `1.2.4`, but not `1.2.4-alpha`. this is so that opting into one prerelease version
+ * does not also opt you into all future prereleases. this behavior can be overridden
+ * with `~include_prereleases:true`.
+ *)
+let satisfies ?(include_prereleases=false) range version =
+  let open Semver_version in
+  let open Semver_comparator in
+  let satisfied =
+    fold_comparators_of_range (fun acc comp ->
+      if not acc then acc else Semver_comparator.satisfies version comp
+    ) true range
+  in
+  if not satisfied then false else
+  let { major; minor; patch; prerelease; build = _ } = version in
+  if prerelease = [] || include_prereleases then true else
+  fold_comparators_of_range (fun acc { version = allowed; op = _ } ->
+    if acc then acc else match allowed with
+    | { major = major'; minor = minor'; patch = patch'; prerelease = _::_; build = _ } ->
+        major = major' && minor = minor' && patch = patch'
+    | _ -> false
+  ) false range
 
 let string_of_part = function
   | Comparator c -> Semver_comparator.to_string c
