@@ -52,5 +52,9 @@ val insert_type :
   options:Options.t ->
   env:ServerEnv.env ->
   profiling:Profiling_js.running ->
-  File_key.t -> string -> int -> int ->
+  file_key:File_key.t ->
+  file_content:string ->
+  target:Loc.t ->
+  expand_aliases:bool ->
+  omit_targ_defaults:bool ->
   (Replacement_printer.patch, Errors.ConcreteLocPrintableErrorSet.t) Core_result.t Lwt.t

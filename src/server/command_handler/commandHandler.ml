@@ -125,13 +125,16 @@ let infer_type
     ) in
     Lwt.return (split_result result)
 
-let insert_type ~options ~env ~profiling (file_input, line, column) =
+let insert_type ~options ~env ~profiling ~file_input ~target
+      ~verbose ~expand_aliases ~omit_targ_defaults =
   let filename = File_input.filename_of_file_input file_input in
   let file_key = File_key.SourceFile filename in
+  let options = {options with Options.opt_verbose = verbose} in
   File_input.content_of_file_input file_input
     %>>= fun file_content -> try_with (fun _ ->
       let%lwt result =
-        Type_info_service.insert_type ~options ~env ~profiling file_key file_content line column
+        Type_info_service.insert_type ~options ~env ~profiling ~file_key ~file_content ~target
+          ~expand_aliases ~omit_targ_defaults
       in
       (* TODO After we figure out the error return value change the Server Result to match *)
       match result with
@@ -460,14 +463,17 @@ let handle_graph_dep_graph ~root ~strip_root ~outfile ~profiling:_ ~env =
   let%lwt response = output_dependencies ~env root strip_root outfile in
   Lwt.return (env, ServerProt.Response.GRAPH_DEP_GRAPH response, None)
 
-let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases ~omit_targ_defaults ~profiling ~env =
+let handle_infer_type ~options ~input ~line ~char ~verbose ~expand_aliases
+      ~omit_targ_defaults ~profiling ~env =
   let%lwt result, json_data =
     infer_type ~options ~env ~profiling (input, line, char, verbose, expand_aliases, omit_targ_defaults)
   in
   Lwt.return (ServerProt.Response.INFER_TYPE result, json_data)
 
-let handle_insert_type ~options ~input ~line ~column ~profiling ~env =
-  let%lwt result = insert_type ~options ~env ~profiling (input, line, column) in
+let handle_insert_type ~options ~file_input ~target ~verbose
+      ~expand_aliases ~omit_targ_defaults ~profiling ~env =
+  let%lwt result =
+    insert_type ~options ~env ~profiling ~file_input ~target ~verbose ~expand_aliases ~omit_targ_defaults in
   Lwt.return (ServerProt.Response.INSERT_TYPE result, None)
 
 let handle_rage ~reader ~options ~files ~profiling:_ ~env =
@@ -604,8 +610,11 @@ let get_ephemeral_handler genv command =
     )
   | ServerProt.Request.RAGE { files; } ->
     mk_parallelizable ~wait_for_recheck:None ~options (handle_rage ~reader ~options ~files)
-  | ServerProt.Request.INSERT_TYPE {input; line; column; wait_for_recheck; _ } ->
-    mk_parallelizable ~wait_for_recheck ~options (handle_insert_type ~options ~input ~line ~column)
+  | ServerProt.Request.INSERT_TYPE {input; target; wait_for_recheck; verbose;
+      expand_aliases; omit_targ_defaults;} ->
+    mk_parallelizable ~wait_for_recheck ~options
+      (handle_insert_type ~file_input:input ~options ~target
+          ~verbose ~expand_aliases ~omit_targ_defaults)
   | ServerProt.Request.REFACTOR { input; line; char; refactor_variant; } ->
    (* refactor delegates to find-refs, which is not parallelizable. Therefore refactor is also not
     * parallelizable *)

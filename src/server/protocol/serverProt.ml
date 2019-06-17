@@ -54,10 +54,11 @@ module Request = struct
     }
   | INSERT_TYPE of {
       input: File_input.t;
-      line: int;
-      column: int;
+      target: Loc.t;
       verbose: Verbose.t option;
       wait_for_recheck: bool option;
+      expand_aliases: bool;
+      omit_targ_defaults: bool;
     }
   | RAGE of { files: string list }
   | REFACTOR of {
@@ -104,6 +105,11 @@ module Request = struct
   | INFER_TYPE { input; line; char; verbose=_; expand_aliases=_; omit_targ_defaults=_; wait_for_recheck=_; } ->
       Printf.sprintf "type-at-pos %s:%d:%d"
         (File_input.filename_of_file_input input) line char
+  | INSERT_TYPE { input; target; _} ->
+    let open Loc in
+    Printf.sprintf "autofix insert-type %s:%d:%d-%d:%d"
+      (File_input.filename_of_file_input input)
+      target.start.line target.start.column target._end.line target._end.column
   | RAGE { files; } -> Printf.sprintf "rage %s" (String.concat " " files)
   | REFACTOR { input; line; char; refactor_variant; } ->
       Printf.sprintf "refactor %s:%d:%d:%s"
@@ -117,9 +123,6 @@ module Request = struct
       "suggest"
   | SAVE_STATE { outfile; } ->
       Printf.sprintf "save-state %s" (Path.to_string outfile)
-  | INSERT_TYPE { input; line; column; verbose=_; wait_for_recheck=_; } ->
-      Printf.sprintf "autofix insert-type %s:%d:%d"
-        (File_input.filename_of_file_input input) line column
 
   type command_with_context = {
     client_logging_context: FlowEventLogger.logging_context;

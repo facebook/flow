@@ -48,21 +48,19 @@ let type_at_pos ~options ~env ~profiling ~expand_aliases ~omit_targ_defaults fil
 
     Ok ((loc, ty), Some json_data)
 
-let insert_type ~options ~env ~profiling file_key file_content line column =
+let insert_type ~options ~env ~profiling ~file_key
+      ~file_content ~target ~expand_aliases ~omit_targ_defaults =
   Types_js.typecheck_contents ~options ~env ~profiling file_content file_key >|= function
   | (Some (full_cx, ast, file_sig, typed_ast), _tc_errors, _tc_warnings) ->
     let file_sig = (File_sig.abstractify_locs file_sig) in
     let normalize loc =
       Query_types.insert_type_normalize ~full_cx ~file_sig ~typed_ast
-        ~expand_aliases:false ~omit_targ_defaults:false loc in
+        ~expand_aliases ~omit_targ_defaults loc in
     let ty_lookup = Insert_type.type_lookup_at_location typed_ast in
-    let start = Loc.{line; column;} in
-    let target = Loc.{source = Some file_key; start; _end=start} in begin
     let new_ast = (new Insert_type.mapper target normalize ty_lookup)#program ast in
     let ast_diff = Flow_ast_differ.(program Standard ast new_ast) in
     let file_patch = Replacement_printer.mk_patch_ast_differ ast_diff ast file_content in
     Ok file_patch
-    end
   | (None, errors, _) -> Error errors
 
 

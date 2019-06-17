@@ -368,4 +368,125 @@ obj.n(0)
 
 
 // This is kinda trailing whitespace
-Found 0 errors
+func-0.js 4 14 4 15
+// @flow
+
+function foo(x: number, y) {
+  return x + (y: string);
+}
+
+foo(1, "");
+func-0.js 4 10 4 15
+// @flow
+
+function foo(x: number, y) {
+  return (x + y: string);
+}
+
+foo(1, "");
+arrow-0.js 3 11 3 23
+// @flow
+
+const a = ((x) => x + 1: (x: number) => number);
+a(1);
+arrow-0.js 4 1 4 5
+// @flow
+
+const a = (x) => x + 1;
+(a(1): number);
+alias.js 5 24
+// @flow
+
+type MyNumber = number;
+
+function f(x: MyNumber): MyNumber {
+  return x;
+};
+
+f(1);
+--expand-type-aliases alias.js 5 24
+// @flow
+
+type MyNumber = number;
+
+function f(x: MyNumber): number {
+  return x;
+};
+
+f(1);
+alias.js 6 10 6 11
+// @flow
+
+type MyNumber = number;
+
+function f(x: MyNumber) {
+  return (x: MyNumber);
+};
+
+f(1);
+--expand-type-aliases alias.js 9 1 9 5
+// @flow
+
+type MyNumber = number;
+
+function f(x: MyNumber) {
+  return x;
+};
+
+(f(1): number);
+alias-0.js 9 24
+// @flow
+
+type MyObject = {
+  foo: number,
+  bar: boolean,
+  baz: string,
+};
+
+function f(x: MyObject): MyObject {
+  return x;
+};
+
+f({foo:1, bar:true, baz:"baz"});
+--expand-type-aliases alias-0.js 9 24
+// @flow
+
+type MyObject = {
+  foo: number,
+  bar: boolean,
+  baz: string,
+};
+
+function f(x: MyObject): {bar: boolean, baz: string, foo: number} {
+  return x;
+};
+
+f({foo:1, bar:true, baz:"baz"});
+alias-0.js 10 10 10 11
+// @flow
+
+type MyObject = {
+  foo: number,
+  bar: boolean,
+  baz: string,
+};
+
+function f(x: MyObject) {
+  return (x: MyObject);
+};
+
+f({foo:1, bar:true, baz:"baz"});
+--expand-type-aliases alias-0.js 13 1 13 32
+// @flow
+
+type MyObject = {
+  foo: number,
+  bar: boolean,
+  baz: string,
+};
+
+function f(x: MyObject) {
+  return x;
+};
+
+(f({foo:1, bar:true, baz:"baz"}): {bar: boolean, baz: string, foo: number});
