@@ -2823,19 +2823,18 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
         | Ast.Type.Available _ -> true
         | Ast.Type.Missing _ -> false in
         let init = match init with
-          | Some ((rhs_loc, _) as expr) ->
+          | Some expr ->
             let (_, rhs_t), _ as rhs_ast = expression cx expr in
             (**
              * Const and let variables are not declared during evaluation of
              * their initializer expressions.
              *)
             declare_var cx name id_loc;
-            let rhs = Flow.reposition cx rhs_loc rhs_t in
             let use_op = Op (AssignVar {
               var = Some (mk_reason (RIdentifier name) id_loc);
               init = mk_expression_reason expr;
             }) in
-            init_var cx ~use_op name ~has_anno rhs id_loc;
+            init_var cx ~use_op name ~has_anno rhs_t id_loc;
             Some rhs_ast
           | None ->
             (match if_uninitialized with
