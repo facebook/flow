@@ -1,3 +1,17 @@
+Error ----------------------------------------------------------------------------------------------------- annot.js:3:5
+
+Cannot assign `42` to `p` because number [1] is incompatible with string [2].
+
+   annot.js:3:5
+   3| p = 42; // error: number ~> string
+          ^^ [1]
+
+References:
+   annot.js:4:14
+   4| type T = {p: string};
+                   ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ array_rest.js:7:2
 
 Cannot cast `a` to undefined because number [1] is incompatible with undefined [2].
@@ -284,7 +298,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- defaults.js:56:5
 
-Cannot assign object literal to variable because number [1] is incompatible with string [2] in property `p`.
+Cannot assign object literal to destructuring because number [1] is incompatible with string [2] in property `p`.
 
    defaults.js:56:5
            v
@@ -694,7 +708,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- destructuring.js:35:23
 
-Cannot assign object literal to variable because string [1] is incompatible with number [2] in property `n`.
+Cannot assign object literal to destructuring because string [1] is incompatible with number [2] in property `n`.
 
    destructuring.js:35:23
    35| var {n}:{n: number} = {n: ""}
@@ -937,4 +951,4 @@ References:
 
 
 
-Found 69 errors
+Found 70 errors

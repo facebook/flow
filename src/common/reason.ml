@@ -807,9 +807,6 @@ let uninternal_module_name name =
   else
     name
 
-let internal_pattern_name loc =
-  spf ".$pattern__%s" (string_of_aloc loc)
-
 (* Instantiable reasons identify tvars that are created for the purpose of
    instantiation: they are fresh rather than shared, and should become types
    that flow to them. We assume these characteristics when performing

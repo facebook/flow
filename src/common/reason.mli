@@ -203,8 +203,6 @@ val is_internal_module_name: string -> bool
 val internal_module_name: string -> string
 val uninternal_module_name: string -> string
 
-val internal_pattern_name: ALoc.t -> string
-
 val is_instantiable_reason: 'loc virtual_reason -> bool
 
 val is_constant_reason: 'loc virtual_reason -> bool

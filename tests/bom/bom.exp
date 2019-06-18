@@ -387,7 +387,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ FormData.js:64:52
 
-Cannot assign for-of element to variable because `Blob` [1] is incompatible with `File` [2] in index 1.
+Cannot assign for-of element to destructuring because `Blob` [1] is incompatible with `File` [2] in index 1.
 
    FormData.js:64:52
     64| for (let [x, y]: [string, string | File | Blob] of a.entries()) {} // incorrect
@@ -402,43 +402,9 @@ References:
                                            ^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:65:11
-
-Cannot assign element 0 to `x` because string [1] is incompatible with number [2].
-
-   FormData.js:65:11
-    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                  ^
-
-References:
-   <BUILTINS>/bom.js:357:26
-   357|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                 ^^^^^^ [1]
-   FormData.js:65:19
-    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                          ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ FormData.js:65:14
-
-Cannot assign element 1 to `y` because `File` [1] is incompatible with string [2].
-
-   FormData.js:65:14
-    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                     ^
-
-References:
-   <BUILTINS>/bom.js:357:34
-   357|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                         ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:65:27
-    65| for (let [x, y]: [number, string] of a.entries()) {} // incorrect
-                                  ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ FormData.js:65:38
 
-Cannot assign for-of element to variable because:
+Cannot assign for-of element to destructuring because:
  - string [1] is incompatible with number [2] in index 0.
  - `File` [3] is incompatible with string [4] in index 1.
 
@@ -461,28 +427,9 @@ References:
                                   ^^^^^^ [4]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:66:14
-
-Cannot assign element 1 to `y` because:
- - `File` [1] is incompatible with number [2].
- - string [1] is incompatible with number [2].
-
-   FormData.js:66:14
-    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                     ^
-
-References:
-   <BUILTINS>/bom.js:357:34
-   357|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                         ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:66:27
-    66| for (let [x, y]: [string, number] of a.entries()) {} // incorrect
-                                  ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ FormData.js:66:38
 
-Cannot assign for-of element to variable because:
+Cannot assign for-of element to destructuring because:
  - `File` [1] is incompatible with number [2] in index 1.
  - string [1] is incompatible with number [2] in index 1.
  - number [2] is incompatible with string [3] in index 1.
@@ -503,45 +450,9 @@ References:
                                   ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ FormData.js:67:11
-
-Cannot assign element 0 to `x` because string [1] is incompatible with number [2].
-
-   FormData.js:67:11
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                  ^
-
-References:
-   <BUILTINS>/bom.js:357:26
-   357|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                 ^^^^^^ [1]
-   FormData.js:67:19
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                          ^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------------ FormData.js:67:14
-
-Cannot assign element 1 to `y` because:
- - `File` [1] is incompatible with number [2].
- - string [1] is incompatible with number [2].
-
-   FormData.js:67:14
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                     ^
-
-References:
-   <BUILTINS>/bom.js:357:34
-   357|     entries(): Iterator<[string, FormDataEntryValue]>;
-                                         ^^^^^^^^^^^^^^^^^^ [1]
-   FormData.js:67:27
-    67| for (let [x, y]: [number, number] of a.entries()) {} // incorrect
-                                  ^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------------ FormData.js:67:38
 
-Cannot assign for-of element to variable because:
+Cannot assign for-of element to destructuring because:
  - string [1] is incompatible with number [2] in index 0.
  - `File` [3] is incompatible with number [4] in index 1.
  - string [3] is incompatible with number [4] in index 1.
@@ -812,7 +723,7 @@ References:
 
 
 
-Found 54 errors
+Found 47 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

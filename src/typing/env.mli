@@ -107,6 +107,8 @@ val init_fun: Context.t -> use_op:Type.use_op -> string -> Type.t -> ALoc.t -> u
 val init_const: Context.t -> use_op:Type.use_op -> string -> has_anno:bool -> Type.t -> ALoc.t -> unit
 val init_type: Context.t -> string -> Type.t -> ALoc.t -> unit
 
+val pseudo_init_declared_type: Context.t -> string -> ALoc.t -> unit
+
 module LookupMode: sig
   type t = ForValue | ForType | ForTypeof
 end

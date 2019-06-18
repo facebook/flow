@@ -297,67 +297,17 @@ module Class_stmt_sig = Class_sig.Make (Func_stmt_sig)
  ********************************************************************)
 
 let rec variable_decl cx { Ast.Statement.VariableDeclaration.kind; declarations } =
-  let declarator = function
-    | (loc, Ast.Pattern.Identifier id) ->
-      binding_identifier_decl cx ~kind (loc, id)
-    | p ->
-      binding_pattern_decl cx ~kind p
-  in
-  List.iter (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; _; }) ->
-    declarator id
-  ) declarations
-
-and binding_identifier_decl cx ~kind (_, { Ast.Pattern.Identifier.name=(id_loc, { Ast.Identifier.name; comments= _ }); _ }) =
-  let desc = RIdentifier name in
-  let r = mk_reason desc id_loc in
-  (* A variable declaration may have a type annotation, but trying to
-     resolve the type annotation now may lead to errors, since in general it
-     may contain types that will be declared later in this scope. So for
-     now, we create a tvar that will serve as the declared type. Later, we
-     will resolve the type annotation and unify it with this tvar. *)
-  let t = Tvar.mk cx r in
   let bind = match kind with
     | Ast.Statement.VariableDeclaration.Const -> Env.bind_const
     | Ast.Statement.VariableDeclaration.Let -> Env.bind_let
     | Ast.Statement.VariableDeclaration.Var -> Env.bind_var
   in
-  bind cx name t id_loc
-
-(* Binds a BindingPattern (https://tc39.github.io/ecma262/#prod-BindingPattern) in the env.
-   This really only needs to handle object and array patterns, since identifiers should be
-   handled by `binding_identifier_decl`, and other patterns should be invalid ASTs. *)
-and binding_pattern_decl cx ~kind ((loc, _) as p) =
-  let pattern_name = internal_pattern_name loc in
-  let desc, bind =
-    let open Ast.Statement.VariableDeclaration in
-    match kind with
-    | Const -> RCustom "const _", Env.bind_const
-    | Let -> RCustom "let _", Env.bind_let
-    | Var -> RCustom "var _", Env.bind_var
-  in
-  let r = mk_reason desc loc in
-  let annot = type_of_pattern p in
-  (* TODO: delay resolution of type annotation like above? *)
-  let t, _ = Anno.mk_type_annotation cx SMap.empty r annot in
-  bind cx pattern_name t loc;
-  let expr _ e =
-    (* don't eval computed property keys *)
-    Tast_utils.error_mapper#expression e in
-  let f ~use_op:_ loc name _default t =
-    let t = match annot with
-    | Ast.Type.Missing _ -> t
-    | Ast.Type.Available _ ->
+  Flow_ast_utils.fold_bindings_of_variable_declarations (
+    fun () (loc, { Ast.Identifier.name; comments = _ }) ->
       let reason = mk_reason (RIdentifier name) loc in
-      let source = Tvar.mk_where cx reason (fun t' ->
-        Flow.flow cx (t, BecomeT (reason, t'))
-      ) in
-      AnnotT (reason, source, false)
-    in
-    bind cx name t loc
-  in
-  let init = Destructuring.empty t in
-  let p = Destructuring.pattern cx ~expr ~f init p in
-  ignore (p: (ALoc.t, ALoc.t * T.t) Ast.Pattern.t)
+      let t = Tvar.mk cx reason in
+      bind cx name t loc
+  ) () declarations
 
 and toplevel_decls cx =
   List.iter (statement_decl cx)
@@ -2779,23 +2729,6 @@ and object_ cx reason ?(allow_sealed=true) props =
   eval_object ?proto ~sealed (map, result),
   List.rev rev_prop_asts
 
-(* simple lvalue *)
-and binding_identifier cx (loc, { Ast.Pattern.Identifier.
-  name = id_loc, ({ Ast.Identifier.name; comments= _ } as id); annot; optional
-}) =
-  (* make annotation, unify with declared type created in variable_decl *)
-  let t, annot_ast =
-    let desc = RIdentifier name in
-    let anno_reason = mk_reason desc loc in
-    Anno.mk_type_annotation cx SMap.empty anno_reason annot in
-  Env.unify_declared_type cx name t;
-  Type_inference_hooks_js.(dispatch_lval_hook cx name loc (Val t));
-  (loc, t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-    name = (id_loc, t), id;
-    annot = annot_ast;
-    optional;
-  }
-
 and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
   let init_var, declare_var = match kind with
     | VariableDeclaration.Const -> Env.init_const, Env.declare_const
@@ -2803,6 +2736,7 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
     | VariableDeclaration.Var -> Env.init_var, (fun _ _ _ -> ())
   in
   let { VariableDeclaration.Declarator.id; init } = vdecl in
+
   Ast.Expression.(match init with
     | Some (_, Call { Call.callee = _, Identifier (_, { Ast.Identifier.name= "require"; comments= _ }); _ })
         when not (Env.local_scope_entry_exists "require") ->
@@ -2814,82 +2748,98 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
       Type_inference_hooks_js.dispatch_require_pattern_hook loc
     | _ -> ()
   );
-  let id, init = match id with
-    | (loc, Ast.Pattern.Identifier id) ->
-        (* simple lvalue *)
-        let { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; comments= _ }); annot; optional } = id in
-        let id = binding_identifier cx (loc, id) in
-        let has_anno = match annot with
-        | Ast.Type.Available _ -> true
-        | Ast.Type.Missing _ -> false in
-        let init = match init with
-          | Some expr ->
-            let (_, rhs_t), _ as rhs_ast = expression cx expr in
-            (**
-             * Const and let variables are not declared during evaluation of
-             * their initializer expressions.
-             *)
-            declare_var cx name id_loc;
-            let use_op = Op (AssignVar {
-              var = Some (mk_reason (RIdentifier name) id_loc);
-              init = mk_expression_reason expr;
-            }) in
-            init_var cx ~use_op name ~has_anno rhs_t id_loc;
-            Some rhs_ast
-          | None ->
-            (match if_uninitialized with
-            | Some f ->
-              if not optional then
-                let t = f loc in
-                let use_op = Op (AssignVar {
-                  var = Some (mk_reason (RIdentifier name) id_loc);
-                  init = reason_of_t t;
-                }) in
-                init_var cx ~use_op name ~has_anno t id_loc
-            | None ->
-              declare_var cx name id_loc);
-            None
-        in
-        id, init
-    | loc, _ ->
-        (* compound lvalue *)
-        let pattern_name = internal_pattern_name loc in
-        let annot = type_of_pattern id in
-        let has_anno = match annot with
-        | Ast.Type.Available _ -> true
-        | Ast.Type.Missing _ -> false in
-        let t, init_ast, init_reason = match init with
-          | Some expr ->
-            let (_, t), _ as expr_ast = expression cx expr in
-            t, Some expr_ast, mk_expression_reason expr
-          | None -> (
-            let t = match if_uninitialized with
-            | Some f -> f loc
-            | None -> VoidT.at loc |> with_trust bogus_trust in
-            t, None, reason_of_t t
-          )
-        in
-        let use_op = Op (AssignVar {
-          var = None;
-          init = init_reason;
-        }) in
-        init_var cx ~use_op pattern_name ~has_anno t loc;
-        let id_ast =
-          let f ~use_op loc name default t =
-            let reason = mk_reason (RIdentifier name) loc in
-            Option.iter default (fun d ->
-              let default_t = Flow.mk_default cx reason d in
-              Flow.flow_t cx (default_t, t)
-            );
-            Flow.flow cx (t, AssertImportIsValueT(reason, name));
-            init_var cx ~use_op name ~has_anno t loc
-          in
-          let init = Destructuring.empty ?init t in
-          Destructuring.pattern cx ~expr:expression ~f init id
-        in
-        id_ast, init_ast
+
+  (* Identifiers do not need to be initialized at the declaration site as long
+   * as they are definitely initialized before use. Destructuring patterns must
+   * be initialized, since their declaration involves some operation on the
+   * right hand side, like a property access. *)
+  let init_opt, init_ast = match id, init, if_uninitialized with
+  | (_, Ast.Pattern.Identifier _), None, None ->
+    None, None
+  | _, Some expr, _ ->
+    let (_, t), _ as init_ast = expression cx expr in
+    let r = mk_expression_reason expr in
+    Some (t, r), Some init_ast
+  | (ploc, _), None, Some f ->
+    let t = f ploc in
+    let r = reason_of_t t in
+    Some (t, r), None
+  | (ploc, _), None, None ->
+    let t = VoidT.at ploc |> with_trust bogus_trust in
+    let r = reason_of_t t in
+    Some (t, r), None
   in
-  vdecl_loc, { VariableDeclaration.Declarator.id; init }
+
+  let id_reason = match id with
+  | _, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ } ->
+    let id_loc, { Ast.Identifier.name; _ } = name in
+    mk_reason (RIdentifier name) id_loc
+  | ploc, _ ->
+    mk_reason RDestructuring ploc
+  in
+
+  let annot = type_of_pattern id in
+  let annot_t, annot_ast = Anno.mk_type_annotation cx SMap.empty id_reason annot in
+
+  let has_anno = match annot with
+  | Ast.Type.Missing _ -> false
+  | Ast.Type.Available _ -> true
+  in
+
+  let id_ast = match id with
+  | ploc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot=_; optional } ->
+    let id_loc, { Ast.Identifier.name; comments } = name in
+    (* move const/let bindings from undeclared to declared *)
+    declare_var cx name id_loc;
+    Env.unify_declared_type cx name annot_t;
+    Option.iter init_opt ~f:(fun (init_t, init_reason) ->
+      let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
+      init_var cx ~use_op name ~has_anno init_t id_loc
+    );
+    Type_inference_hooks_js.(dispatch_lval_hook cx name id_loc (Val annot_t));
+    ((ploc, annot_t), Ast.Pattern.Identifier { Ast.Pattern.Identifier.
+      name = ((id_loc, annot_t), { Ast.Identifier.name; comments });
+      annot = annot_ast;
+      optional;
+    })
+  | _ ->
+    Option.iter init_opt ~f:(fun (init_t, init_reason) ->
+      let use_op = Op (AssignVar { var = Some id_reason; init = init_reason }) in
+      Flow.flow cx (init_t, UseT (use_op, annot_t))
+    );
+    let init = Destructuring.empty ?init annot_t in
+    Destructuring.pattern cx ~expr:expression init id ~f:(fun ~use_op loc name default t ->
+      let reason = mk_reason (RIdentifier name) loc in
+      declare_var cx name loc;
+      (* The bindings introduced by destructuring an annotation should themselves behave
+       * like annotations. That is, subsequent writes to this binding should be compatible
+       * with the relevant part of the annotation. *)
+      let t =
+        if has_anno then
+          AnnotT (reason, Tvar.mk_where cx reason (fun t' ->
+            Flow.flow cx (t, BecomeT (reason, t'))
+          ), false)
+        else t
+      in
+      let () =
+        if has_anno then begin
+          Env.unify_declared_type cx name t;
+          Env.pseudo_init_declared_type cx name loc;
+        end else
+          init_var cx ~use_op name ~has_anno t loc;
+      in
+      Flow.flow cx (t, AssertImportIsValueT (reason, name));
+      Option.iter default ~f:(fun d ->
+        let default_t = Flow.mk_default cx reason d in
+        Flow.flow cx (default_t, UseT (use_op, t))
+      )
+    )
+  in
+
+  vdecl_loc, { VariableDeclaration.Declarator.
+    id = id_ast;
+    init = init_ast;
+  }
 )
 
 and expression_or_spread cx = Ast.Expression.(function
