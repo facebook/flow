@@ -21,3 +21,5 @@ let interaction
   ~end_buffer_status:_ = ()
 
 let flush () = Lwt.return_unit
+
+let disable_logging () = ()

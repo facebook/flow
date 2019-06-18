@@ -44,3 +44,8 @@ let set_server_options ~server_options =
   in
 
   FlowEventLogger.set_server_options ~lazy_mode ~arch
+
+let disable_logging () =
+  EventLogger.disable_logging ();
+  FlowInteractionLogger.disable_logging ();
+  Flow_server_profile.disable_logging ()
