@@ -684,23 +684,6 @@ let init_type cx name type_ loc =
       ()
     )
 
-(* treat a var's declared (annotated) type as an initializer *)
-let pseudo_init_declared_type cx name loc =
-  if not (is_excluded name)
-  then Entry.(
-    let scope, entry = find_entry cx name loc in
-    match entry with
-    | Value value_binding ->
-      let entry = Value { value_binding with
-        value_state = State.Declared;
-        specific = value_binding.general
-      } in
-      Scope.add_entry name entry scope
-    | Type _ -> already_bound_error cx name entry loc
-    | Class _ ->
-      assert_false (spf "pseudo_init_declared_type %s: Class entry" name)
-  )
-
 (* helper for read/write tdz checks *)
 (* for now, we only enforce TDZ within the same activation.
    return true if the given target scope is in the same

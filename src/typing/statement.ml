@@ -2848,9 +2848,7 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
                 }) in
                 init_var cx ~use_op name ~has_anno t id_loc
             | None ->
-              if has_anno
-              then Env.pseudo_init_declared_type cx name id_loc
-              else declare_var cx name id_loc);
+              declare_var cx name id_loc);
             None
         in
         id, init
