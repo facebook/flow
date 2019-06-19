@@ -108,16 +108,18 @@ function resultPrinter(options, source, sourceBuffer, removedNodes, bytesAdded) 
       // Step through the removed nodes, building up the resulting string.
       for (var i = 0; i < removedNodes.length; i++) {
         var node = removedNodes[i];
-        offset += sourceBuffer.copy(buf, offset, lastPos, startOf(node));
-        lastPos = endOf(node);
+        var start = startOf(node);
+        var end = endOf(node);
+        offset += sourceBuffer.copy(buf, offset, lastPos, start);
+        lastPos = end;
         if (typeof node.__spliceValue === 'string') {
           offset += buf.write(node.__spliceValue, offset);
         }
         if (!pretty) {
           if (!node.loc || node.loc.start.line === node.loc.end.line) {
-            offset += buf.write(space(endOf(node) - startOf(node)), offset);
+            offset += buf.write(space(end - start), offset);
           } else {
-            var toReplaceLines = sourceBuffer.toString('utf8', startOf(node), endOf(node)).split(LINE_RX);
+            var toReplaceLines = sourceBuffer.toString('utf8', start, end).split(LINE_RX);
             offset += buf.write(space(toReplaceLines[0].length), offset);
             for (var j = 1; j < toReplaceLines.length; j += 2) {
               offset += buf.write(toReplaceLines[j] + space(toReplaceLines[j + 1].length), offset);
@@ -407,7 +409,7 @@ function getTrailingLineNode(context, node) {
 // Creates a zero-width "node" with a value to splice at that position.
 // WARNING: This is only safe to use when source maps are off!
 function getSpliceNodeAtPos(context, pos, loc, value) {
-  context.bytesAdded += value.length;
+  context.bytesAdded += Buffer.byteLength(value);
   return createNode({
     start: pos,
     end: pos,
