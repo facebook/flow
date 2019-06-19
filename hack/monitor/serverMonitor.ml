@@ -198,8 +198,10 @@ module Make_monitor (SC : ServerMonitorUtils.Server_config)
    * version specified in there matches our currently running version. *)
   let is_config_version_matching env =
     let filename = Relative_path.from_root Config_file.file_path_relative_to_repo_root in
-    let contents = Sys_utils.cat (Relative_path.to_absolute filename) in
-    let config = Config_file.parse_contents contents in
+    let _hash, config = Config_file.parse_hhconfig
+      ~silent:true
+      (Relative_path.to_absolute filename)
+    in
     let new_version = SMap.get "version" config in
     match env.current_version, new_version with
     | None, None -> true
