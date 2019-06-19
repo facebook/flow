@@ -1,6 +1,10 @@
 /* @flow */
 // @nolint
 
+// multi-byte chars:
+// Гарного дня, котики! 🐈
+var lambda: λ = (α: number): number => α;
+
 // Regular import
 import {
   Something,

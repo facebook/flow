@@ -1,6 +1,10 @@
 /*  */
 // @nolint
 
+// multi-byte chars:
+// Гарного дня, котики! 🐈
+var lambda = (α) => α;
+
 // Regular import
 import {
   Something,

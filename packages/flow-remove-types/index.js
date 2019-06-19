@@ -63,11 +63,14 @@ module.exports = function flowRemoveTypes(source, options) {
 
   var removedNodes = [];
 
+  var sourceBuffer = Buffer.from(source);
+
   var context = {
     ast: ast,
-    source: source,
+    sourceBuffer: sourceBuffer,
     removedNodes: removedNodes,
     pretty: Boolean(options && options.pretty),
+    bytesAdded: 0
   };
 
   // Remove the flow pragma.
@@ -85,10 +88,10 @@ module.exports = function flowRemoveTypes(source, options) {
   // Remove all flow type definitions.
   visit(ast, context, removeFlowVisitor);
 
-  return resultPrinter(options, source, removedNodes);
+  return resultPrinter(options, source, sourceBuffer, removedNodes, context.bytesAdded);
 };
 
-function resultPrinter(options, source, removedNodes) {
+function resultPrinter(options, source, sourceBuffer, removedNodes, bytesAdded) {
   // Options
   var pretty = Boolean(options && options.pretty);
 
@@ -98,32 +101,36 @@ function resultPrinter(options, source, removedNodes) {
         return source;
       }
 
-      var result = '';
+      var buf = Buffer.alloc(sourceBuffer.length + bytesAdded);
       var lastPos = 0;
+      var offset = 0;
 
       // Step through the removed nodes, building up the resulting string.
       for (var i = 0; i < removedNodes.length; i++) {
         var node = removedNodes[i];
-        result += source.slice(lastPos, startOf(node));
-        lastPos = endOf(node);
+        var start = startOf(node);
+        var end = endOf(node);
+        offset += sourceBuffer.copy(buf, offset, lastPos, start);
+        lastPos = end;
         if (typeof node.__spliceValue === 'string') {
-          result += node.__spliceValue;
+          offset += buf.write(node.__spliceValue, offset);
         }
         if (!pretty) {
-          var toReplace = source.slice(startOf(node), endOf(node));
           if (!node.loc || node.loc.start.line === node.loc.end.line) {
-            result += space(toReplace.length);
+            offset += buf.write(space(end - start), offset);
           } else {
-            var toReplaceLines = toReplace.split(LINE_RX);
-            result += space(toReplaceLines[0].length);
+            var toReplaceLines = sourceBuffer.toString('utf8', start, end).split(LINE_RX);
+            offset += buf.write(space(toReplaceLines[0].length), offset);
             for (var j = 1; j < toReplaceLines.length; j += 2) {
-              result += toReplaceLines[j] + space(toReplaceLines[j + 1].length);
+              offset += buf.write(toReplaceLines[j] + space(toReplaceLines[j + 1].length), offset);
             }
           }
         }
       }
 
-      return (result += source.slice(lastPos));
+      offset += sourceBuffer.copy(buf, offset, lastPos, sourceBuffer.length);
+
+      return buf.toString('utf8', 0, offset);
     },
     generateMap: function() {
       return {
@@ -324,17 +331,22 @@ function removeNode(context, node) {
   return false;
 }
 
+var SPACE = ' '.charCodeAt(0);
+var TAB = '\t'.charCodeAt(0);
+var RETURN = '\r'.charCodeAt(0);
+var NEWLINE = '\n'.charCodeAt(0);
+
 function getPragmaNode(context, start, size) {
-  var source = context.source;
+  var source = context.sourceBuffer;
   var line = 1;
   var column = 0;
   for (var position = 0; position < start; position++) {
     var char = source[position];
-    if (char === '\n') {
+    if (char === NEWLINE) {
       line++;
       column = 0;
-    } else if (char === '\r') {
-      if (source[position + 1] === '\n') {
+    } else if (char === RETURN) {
+      if (source[position + 1] === NEWLINE) {
         position++;
       }
       line++;
@@ -354,10 +366,10 @@ function getPragmaNode(context, start, size) {
 }
 
 function getLeadingSpaceNode(context, node) {
-  var source = context.source;
+  var source = context.sourceBuffer;
   var end = startOf(node);
   var start = end;
-  while (source[start - 1] === ' ' || source[start - 1] === '\t') {
+  while (source[start - 1] === SPACE || source[start - 1] === TAB) {
     start--;
   }
   if (start !== end) {
@@ -370,16 +382,16 @@ function getLeadingSpaceNode(context, node) {
 }
 
 function getTrailingLineNode(context, node) {
-  var source = context.source;
+  var source = context.sourceBuffer;
   var start = endOf(node);
   var end = start;
-  while (source[end] === ' ' || source[end] === '\t') {
+  while (source[end] === SPACE || source[end] === TAB) {
     end++;
   }
 
   // Remove all space including the line break if this token was alone on the line.
-  if (source[end] === '\n' || source[end] === '\r') {
-    if (source[end] === '\r' && source[end + 1] === '\n') {
+  if (source[end] === NEWLINE || source[end] === RETURN) {
+    if (source[end] === RETURN && source[end + 1] === NEWLINE) {
       end++;
     }
     end++;
@@ -397,6 +409,7 @@ function getTrailingLineNode(context, node) {
 // Creates a zero-width "node" with a value to splice at that position.
 // WARNING: This is only safe to use when source maps are off!
 function getSpliceNodeAtPos(context, pos, loc, value) {
+  context.bytesAdded += Buffer.byteLength(value);
   return createNode({
     start: pos,
     end: pos,
