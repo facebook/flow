@@ -185,3 +185,8 @@ function method(param /*: string */) /*: number */ {
 class MyClass {
   /*::               */
 }
+
+// Inferred predicate
+function testit(arg       )                  {
+  return !!arg;
+}

@@ -185,3 +185,8 @@ function method(param /*: string */) /*: number */ {
 class MyClass {
   /*:: prop: string; */
 }
+
+// Inferred predicate
+function testit(arg: mixed): boolean %checks {
+  return !!arg;
+}

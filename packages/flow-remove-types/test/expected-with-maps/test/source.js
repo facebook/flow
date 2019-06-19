@@ -145,4 +145,9 @@ class MyClass {
   /*:: */
 }
 
+// Inferred predicate
+function testit(arg) {
+  return !!arg;
+}
+
 //# sourceMappingURL=source.js.map
