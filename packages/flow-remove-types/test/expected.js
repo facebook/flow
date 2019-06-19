@@ -171,3 +171,17 @@ var intersection         ;
 
 // Test generic async arrow funcion
 const f = async    ()    => {};
+
+// Comment type annotations are preserved
+var X /*: {
+  version: string,
+} */ = { version: '42'};
+
+function method(param /*: string */) /*: number */ {
+  // ...
+}
+
+// Comment type includes are emptied out
+class MyClass {
+  /*::               */
+}
