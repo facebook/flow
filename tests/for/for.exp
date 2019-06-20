@@ -1,1 +1,16 @@
-Found 0 errors
+Error ---------------------------------------------------------------------------------------------------- scope.js:1:17
+
+Cannot use variable `x` [1] because the declaration either comes later or was skipped.
+
+   scope.js:1:17
+   1| for (const x in x) {} // error: can not reference undeclared x in right-hand expr
+                      ^
+
+References:
+   scope.js:1:12
+   1| for (const x in x) {} // error: can not reference undeclared x in right-hand expr
+                 ^ [1]
+
+
+
+Found 1 error

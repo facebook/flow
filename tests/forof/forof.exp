@@ -170,5 +170,19 @@ References:
                ^^^^ [3]
 
 
+Error ---------------------------------------------------------------------------------------------------- scope.js:2:17
 
-Found 11 errors
+Cannot use variable `x` [1] because the declaration either comes later or was skipped.
+
+   scope.js:2:17
+   2| for (const x of x) { // error: can not reference undeclared x in right-hand expr
+                      ^
+
+References:
+   scope.js:2:12
+   2| for (const x of x) { // error: can not reference undeclared x in right-hand expr
+                 ^ [1]
+
+
+
+Found 12 errors

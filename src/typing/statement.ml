@@ -618,9 +618,14 @@ and toplevels =
 
 (* can raise Abnormal.(Exn (Stmt _, _)) *)
 and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Statement.(
-  let variables cx { VariableDeclaration.declarations; kind } =
-    let declarations = Core_list.map ~f:(fun vdecl -> variable cx kind vdecl) declarations in
-    { VariableDeclaration.declarations; kind; }
+  let variables cx decls =
+    let open VariableDeclaration in
+    let { declarations; kind } = decls in
+    let declarations = Core_list.map ~f:(fun (loc, { Declarator.id; init }) ->
+      let id, init = variable cx kind id init in
+      (loc, { Declarator.id; init })
+    ) declarations in
+    { declarations; kind; }
   in
 
   let interface_helper cx loc (iface_sig, self) =
@@ -1650,9 +1655,6 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
 
-      let (_, right_t), _ as right_ast = expression cx right in
-      Flow.flow cx (right_t, AssertForInRHST reason);
-
       Env.in_lex_scope cx (fun () ->
 
         let env =  Env.peek_env () in
@@ -1662,25 +1664,37 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         let body_env = Env.clone_env env in
         Env.update_env cx loc body_env;
 
-        let _, preds, _, xtypes =
-          predicates_of_condition cx right in
-        ignore (Env.refine_with_preds cx loc preds xtypes : Changeset.t);
+        let eval_right () =
+          let ((right_loc, _), _ as right_ast), preds, _, xtypes =
+            predicates_of_condition cx right in
+          let (_: Changeset.t) = Env.refine_with_preds cx right_loc preds xtypes in
+          right_ast
+        in
 
-        let left_ast = match left with
+        let left_ast, right_ast = match left with
           | ForIn.LeftDeclaration (decl_loc, ({ VariableDeclaration.
-              kind; declarations = [vdecl]
+              kind;
+              declarations = [(vdecl_loc, { VariableDeclaration.Declarator.
+                id;
+                init = None;
+              })]
             } as decl)) ->
               variable_decl cx decl;
-              let vdecl_ast = variable cx kind
-                ~if_uninitialized:(StrT.at %> with_trust bogus_trust) vdecl in
+              let right_ast = eval_right () in
+              let id_ast, _ = variable cx kind id None
+                ~if_uninitialized:(StrT.at %> with_trust bogus_trust) in
               ForIn.LeftDeclaration (decl_loc, { VariableDeclaration.
                 kind;
-                declarations = [vdecl_ast];
-              })
+                declarations = [(vdecl_loc, { VariableDeclaration.Declarator.
+                  id = id_ast;
+                  init = None;
+                })];
+              }), right_ast
 
           | ForIn.LeftPattern (pat_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
               name = name_loc, ({ Ast.Identifier.name= name_str; comments= _ } as id); optional; annot;
             }) ->
+              let right_ast = eval_right () in
               let t = StrT.at pat_loc |> with_trust bogus_trust in
               let use_op = Op (AssignVar {
                 var = Some (mk_reason (RIdentifier name_str) pat_loc);
@@ -1695,12 +1709,16 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
                   | Ast.Type.Missing loc ->
                     Ast.Type.Missing (loc, t));
                 optional;
-              })
+              }), right_ast
 
           | _ ->
+              let right_ast = eval_right () in
               Flow.add_output cx Error_message.(EInternal (loc, ForInLHS));
-              Tast_utils.error_mapper#for_in_statement_lhs left
+              Tast_utils.error_mapper#for_in_statement_lhs left, right_ast
         in
+
+        let (_, right_t), _ = right_ast in
+        Flow.flow cx (right_t, AssertForInRHST reason);
 
         let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
           (fun () -> statement cx body) in
@@ -1735,24 +1753,32 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
       let reason = mk_reason reason_desc loc in
       let save_break = Abnormal.clear_saved (Abnormal.Break None) in
       let save_continue = Abnormal.clear_saved (Abnormal.Continue None) in
-      let (_, t), _ = expression cx right in
 
-      let element_tvar = Tvar.mk cx reason in
-      let o =
-        (* Second and third args here are never relevant to the loop, but they should be as
-        general as possible to allow iterating over arbitrary generators *)
-        let targs = [element_tvar; MixedT.why reason |> with_trust bogus_trust; EmptyT.why reason |> with_trust bogus_trust] in
-        if async then
-          let reason = mk_reason
-            (RCustom "async iteration expected on AsyncIterable") loc in
-          Flow.get_builtin_typeapp cx reason "$AsyncIterable" targs
-        else
-          Flow.get_builtin_typeapp cx
-            (mk_reason (RCustom "iteration expected on Iterable") loc)
-            "$Iterable" targs
+      let eval_right () =
+        let ((right_loc, t), _ as right_ast), preds, _, xtypes =
+          predicates_of_condition cx right in
+        let (_: Changeset.t) = Env.refine_with_preds cx right_loc preds xtypes in
+        let elem_t = Tvar.mk cx reason in
+        let o =
+          (* Second and third args here are never relevant to the loop, but they should be as
+             general as possible to allow iterating over arbitrary generators *)
+          let targs = [
+            elem_t;
+            MixedT.why reason |> with_trust bogus_trust;
+            EmptyT.why reason |> with_trust bogus_trust;
+          ] in
+          if async then
+            let reason = mk_reason
+              (RCustom "async iteration expected on AsyncIterable") loc in
+            Flow.get_builtin_typeapp cx reason "$AsyncIterable" targs
+          else
+            Flow.get_builtin_typeapp cx
+              (mk_reason (RCustom "iteration expected on Iterable") loc)
+              "$Iterable" targs
+        in
+        Flow.flow_t cx (t, o); (* null/undefined are NOT allowed *)
+        Flow.reposition cx (loc_of_t t) elem_t, right_ast
       in
-
-      Flow.flow_t cx (t, o); (* null/undefined are NOT allowed *)
 
       Env.in_lex_scope cx (fun () ->
 
@@ -1763,46 +1789,52 @@ and statement cx : 'a -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.t = Ast.Stateme
         let body_env = Env.clone_env env in
         Env.update_env cx loc body_env;
 
-        let right_ast, preds, _, xtypes =
-          predicates_of_condition cx right in
-        let _ = Env.refine_with_preds cx loc preds xtypes in
-
-        let left_ast = match left with
+        let left_ast, right_ast = match left with
           | ForOf.LeftDeclaration (decl_loc, ({ VariableDeclaration.
-              kind; declarations = [vdecl]
+              kind;
+              declarations = [(vdecl_loc, { VariableDeclaration.Declarator.
+                id;
+                init = None;
+              })]
             } as decl)) ->
-              let repos_tvar _ = Flow.reposition cx (loc_of_t t) element_tvar in
               variable_decl cx decl;
-              let vdecl_ast = variable cx kind ~if_uninitialized:repos_tvar vdecl in
+              let elem_t, right_ast = eval_right () in
+              let id_ast, _ = variable cx kind id None
+                ~if_uninitialized:(fun _ -> elem_t) in
               ForOf.LeftDeclaration (decl_loc, { VariableDeclaration.
                 kind;
-                declarations = [vdecl_ast]
-              })
+                declarations = [(vdecl_loc, { VariableDeclaration.Declarator.
+                  id = id_ast;
+                  init = None;
+                })];
+              }), right_ast
 
           | ForOf.LeftPattern (pat_loc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.
               name = name_loc, ({ Ast.Identifier.name= name_str; comments=_ } as id); optional; annot;
             }) ->
+              let elem_t, right_ast = eval_right () in
               let use_op = Op (AssignVar {
                 var = Some (mk_reason (RIdentifier name_str) pat_loc);
-                init = reason_of_t element_tvar;
+                init = reason_of_t elem_t;
               }) in
-              ignore Env.(set_var cx ~use_op name_str element_tvar pat_loc);
+              ignore Env.(set_var cx ~use_op name_str elem_t pat_loc);
               ForOf.LeftPattern (
-                (pat_loc, element_tvar),
+                (pat_loc, elem_t),
                 Ast.Pattern.Identifier { Ast.Pattern.Identifier.
-                  name = ((name_loc, element_tvar), id);
+                  name = ((name_loc, elem_t), id);
                   annot = (match annot with
                     | Ast.Type.Available annot ->
                       Ast.Type.Available (Tast_utils.error_mapper#type_annotation annot)
                     | Ast.Type.Missing loc ->
-                      Ast.Type.Missing (loc, element_tvar));
+                      Ast.Type.Missing (loc, elem_t));
                   optional;
                 }
-              )
+              ), right_ast
 
           | _ ->
+              let _, right_ast = eval_right () in
               Flow.add_output cx Error_message.(EInternal (loc, ForOfLHS));
-              Tast_utils.error_mapper#for_of_statement_lhs left
+              Tast_utils.error_mapper#for_of_statement_lhs left, right_ast
         in
 
         let body_ast, _ = Abnormal.catch_stmt_control_flow_exception
@@ -2729,13 +2761,12 @@ and object_ cx reason ?(allow_sealed=true) props =
   eval_object ?proto ~sealed (map, result),
   List.rev rev_prop_asts
 
-and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
+and variable cx kind ?if_uninitialized id init = Ast.Statement.(
   let init_var, declare_var = match kind with
     | VariableDeclaration.Const -> Env.init_const, Env.declare_const
     | VariableDeclaration.Let -> Env.init_let, Env.declare_let
     | VariableDeclaration.Var -> Env.init_var, (fun _ _ _ -> ())
   in
-  let { VariableDeclaration.Declarator.id; init } = vdecl in
 
   Ast.Expression.(match init with
     | Some (_, Call { Call.callee = _, Identifier (_, { Ast.Identifier.name= "require"; comments= _ }); _ })
@@ -2836,10 +2867,7 @@ and variable cx kind ?if_uninitialized (vdecl_loc, vdecl) = Ast.Statement.(
     )
   in
 
-  vdecl_loc, { VariableDeclaration.Declarator.
-    id = id_ast;
-    init = init_ast;
-  }
+  (id_ast, init_ast)
 )
 
 and expression_or_spread cx = Ast.Expression.(function
