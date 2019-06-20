@@ -950,6 +950,10 @@ let refine_var = update_var Changeset.Refine ~use_op:(Op (Internal Refinement))
 let refine_const cx name specific loc =
   let scope, entry = find_entry cx name loc in
   Entry.(match entry with
+  | Value ({ Entry.kind = Const _; value_state = State.Undeclared; _ } as v)
+    when same_activation scope ->
+    tdz_error cx name loc v;
+    None
   | Value ({ Entry.kind = Const _; _ } as v) ->
     let change = scope.id, name, Changeset.Refine in
     Changeset.Global.change_var change;
