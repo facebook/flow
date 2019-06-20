@@ -614,7 +614,8 @@ let check_files
         ~next:(MultiWorkerLwt.next ~progress_fn ~max_size workers (FilenameSet.elements files))
       in
 
-      let { ServerEnv.merge_errors; warnings; suppressions; _ } = errors in
+      let { ServerEnv.merge_errors; warnings; _ } = errors in
+      let suppressions = updated_errors.ServerEnv.suppressions in
       let merge_errors, warnings, suppressions, coverage = List.fold_left (fun acc (file, result) ->
         let acc = remove_old_results acc file in
         add_new_results acc file result
