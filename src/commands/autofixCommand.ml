@@ -32,6 +32,8 @@ module InsertType = struct
          or   %s autofix insert-type 12 3 < foo.js\n"
         exe_name exe_name exe_name;
       args = ArgSpec.(base_arg_spec
+        |> flag "--in-place" no_arg
+            ~doc:"Overwrite the input file or file specified by the path flag"
         |> flag "--expand-type-aliases" no_arg
             ~doc:"Replace type aliases with their bodies"
         |> flag "--omit-typearg-defaults" no_arg
@@ -40,11 +42,6 @@ module InsertType = struct
     )}
   let handle_error ?(code=FlowExitStatus.Unknown_error) msg =
     FlowExitStatus.(exit ~msg code)
-
-  let handle_ok patch input =
-    match File_input.content_of_file_input input with
-    | Ok content -> print_string @@ Replacement_printer.print patch content
-    | Error msg -> handle_error msg
 
   let rec parse_args args : Loc.t =
     let parse_pos line col : Loc.position =
@@ -62,11 +59,31 @@ module InsertType = struct
     | file :: (([_;_]|[_;_;_;_]) as loc) ->
       let loc = parse_args loc in
       Loc.{loc with source=Some (File_key.SourceFile(expand_path file))}
-    | [] -> handle_error "No position given"
-    | _ -> handle_error "Invalid position given"
+    | [] -> handle_error "Flow autofix insert-type: No position given"
+    | _ -> handle_error "Flow autofix insert-type: Invalid position given"
+
+  let select_output_channel in_place path source_path =
+    match in_place, path, source_path with
+    | false, _, _ ->
+      stdout
+    | true, Some p, _ | true, None, Some p ->
+      begin try open_out p with
+        | _ -> handle_error ~code:FlowExitStatus.Path_is_not_a_file
+          @@ Printf.sprintf "failed to open output file: %s" p
+      end
+    | true, None, None ->
+      handle_error "Flow: --in-place flag used without input file or explicit path"
+
+  let handle_ok patch input in_place path source_path =
+    match File_input.content_of_file_input input with
+    | Ok content ->
+      let out = select_output_channel in_place path source_path in
+      output_string out @@ Replacement_printer.print patch content;
+      close_out out
+    | Error msg -> handle_error msg
 
   let main base_flags option_values json _pretty root_arg strip_root_arg
-        verbose path wait_for_recheck expand_aliases omit_targ_defaults args () =
+        verbose path wait_for_recheck in_place expand_aliases omit_targ_defaults args () =
     let (Loc.{source; _} as target) = parse_args args in
     let source_path = Option.map ~f:File_key.to_string source in
     let input = get_file_from_filename_or_stdin ~cmd:spec.name path source_path in
@@ -83,8 +100,8 @@ module InsertType = struct
     | ServerProt.Response.INSERT_TYPE (Error err) -> handle_error err
     (* TODO implement a more useful set of error conditions *)
     | ServerProt.Response.INSERT_TYPE (Ok resp) ->
-      handle_ok resp input
-    | _ -> prerr_endline "Flow: invalid server response"
+      handle_ok resp input in_place path source_path
+    | _ -> handle_error "Flow: invalid server response"
 
     let command = CommandSpec.command spec main
 end

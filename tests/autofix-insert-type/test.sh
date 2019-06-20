@@ -64,3 +64,22 @@ do_file --expand-type-aliases "alias-0.js" 13 1 13 32
 assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet "object-0.js" 4 4
 assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet "poly-0.js" 3 21
 assert_exit 110 "$FLOW" autofix insert-type --strip-root --quiet "arrow-0.js" 3 7 3 8
+
+# Test File IO
+mkdir "$TEMP_DIR"
+"$FLOW" init "$TEMP_DIR"
+
+echo "insert-type array.js 3:15"
+cp "array.js" "$TEMP_DIR/array.js"
+assert_ok "$FLOW" autofix insert-type --strip-root --quiet --in-place "$TEMP_DIR/array.js" 3 15
+echo "cat array.js 3:15"
+cat "$TEMP_DIR/array.js"
+
+echo "insert-type arrow-0.js 3:11-3:23"
+cp "arrow-0.js" "$TEMP_DIR/arrow-0.js"
+assert_ok "$FLOW" autofix insert-type --strip-root --quiet \
+  --in-place --path "$TEMP_DIR/arrow-0-copy.js" "$TEMP_DIR/arrow-0.js" 3 11 3 23
+echo "cat arrow-0-copy.js 3:11-3:23"
+cat "$TEMP_DIR/arrow-0-copy.js"
+echo "cat arrow-0.js 3:11-3:23"
+cat "$TEMP_DIR/arrow-0.js"

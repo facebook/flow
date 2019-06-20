@@ -490,3 +490,21 @@ function f(x: MyObject) {
 };
 
 (f({foo:1, bar:true, baz:"baz"}): {bar: boolean, baz: string, foo: number});
+insert-type array.js 3:15
+cat array.js 3:15
+// @flow
+
+function foo(): Array<number> {
+  return [1, 2];
+}
+insert-type arrow-0.js 3:11-3:23
+cat arrow-0-copy.js 3:11-3:23
+// @flow
+
+const a = ((x) => x + 1: (x: number) => number);
+a(1);
+cat arrow-0.js 3:11-3:23
+// @flow
+
+const a = (x) => x + 1;
+a(1);
