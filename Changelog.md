@@ -1,4 +1,7 @@
-### 0.102.0
+### 0.101.1
+
+Notable bug fixes:
+* Fixed a bug with suppressions in the experimental types-first mode.
 
 ### 0.101.0
 
