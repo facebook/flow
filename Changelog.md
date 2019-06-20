@@ -399,6 +399,7 @@ Notable bug fixes:
 Misc:
 * We've deleted `flow gen-flow-files` due to bitrot. We do plan on building a better version in the future.
 * Various libdef updates. Thanks for all the PRs!
+* Assigning `{}` to any non-exact object is now valid as `{}` is considered `unsealed`. You can read more [here](https://github.com/facebook/flow/blob/027ab45ad39b2a522bf71669ac76a13f345f2174/website/en/docs/types/objects.md#unsealed-objects-)
 
 ### 0.88.0
 
