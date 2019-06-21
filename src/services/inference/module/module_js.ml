@@ -418,22 +418,18 @@ module Node = struct
     let file_options = Options.file_options options in
     lazy_seq [
       lazy (
-        if SSet.mem dir node_modules_containers then
-          lazy_seq (Files.node_resolver_dirnames file_options |> Core_list.map ~f:(fun dirname ->
-            lazy (resolve_relative
-              ~options ~reader
-              loc ?resolution_acc dir (
-                spf 
-                "%s%s%s%s%s" 
-                dirname 
-                Filename.dir_sep 
-                "@flowtyped" 
-                Filename.dir_sep 
-                (flow_typed_node_module r)
-              )
-            )
-          ))
-        else None
+        let flow_typed_r = spf
+          "%s%s%s"
+          "@flowtyped"
+          Filename.dir_sep
+          (flow_typed_node_module r)
+        in
+        if String_utils.string_starts_with r "@flowtyped" then
+          None
+        else
+          node_module
+            ~options ~reader node_modules_containers
+            file loc resolution_acc dir flow_typed_r
       );
 
       lazy (
