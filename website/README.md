@@ -47,6 +47,7 @@ Use Jekyll to serve the website locally (by default, at
 `http://localhost:8080`):
 
 ```sh
+make js
 $ cd website
 $ make
 $ open http://127.0.0.1:8080/
