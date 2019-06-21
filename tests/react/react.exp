@@ -1,15 +1,15 @@
-Error ----------------------------------------------------------------------------------------- abstractelement.js:11:23
+Error ------------------------------------------------------------------------------------------ abstractelement.js:13:3
 
-Cannot get `React.MixedElement` because property `MixedElement` is missing in module `react` [1].
+Cannot get `e.props.a` because property `a` is missing in mixed [1].
 
-   abstractelement.js:11:23
-   11| function takesTop(e : React.MixedElement) {
-                             ^^^^^^^^^^^^^^^^^^
+   abstractelement.js:13:3
+    13|   e.props.a; // error
+          ^^^^^^^^^
 
 References:
-   abstractelement.js:3:15
-    3| const React = require('react');
-                     ^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:184:49
+   184| declare type React$MixedElement = React$Element<React$ElementType>;
+                                                        ^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- createContext.js:17:15
@@ -1884,11 +1884,11 @@ References:
    key.js:12:11
     12| <Foo key={true} />; // Error
                   ^^^^ [1]
-   <BUILTINS>/react.js:191:26
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:26
+   190| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:191:35
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:35
+   190| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -1906,11 +1906,11 @@ References:
    key.js:21:16
     21| <FooExact key={true} />; // Error
                        ^^^^ [1]
-   <BUILTINS>/react.js:191:26
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:26
+   190| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:191:35
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:35
+   190| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
@@ -2696,8 +2696,8 @@ Cannot cast `foo` to `Foo` because null [1] is incompatible with `Foo` [2].
                           ^^^
 
 References:
-   <BUILTINS>/react.js:198:39
-   198|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:197:39
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
    ref.js:13:24
     13| <Foo ref={foo => (foo: Foo)} />; // Error: `Foo` may be null.
@@ -2748,8 +2748,8 @@ Cannot cast `foo` to `FooExact` because null [1] is incompatible with `FooExact`
                                ^^^
 
 References:
-   <BUILTINS>/react.js:198:39
-   198|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:197:39
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
                                               ^^^^ [1]
    ref.js:24:29
     24| <FooExact ref={foo => (foo: FooExact)} />; // Error: `FooExact` may be null.
@@ -3275,8 +3275,8 @@ References:
    useContext_hook.js:23:39
     23|   const InvalidContext: React$Context<CustomType> = React.createContext('hello'); // Error: inexact string is incompatible with exact CustomType
                                               ^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:205:28
-   205| declare type React$Context<T> = {
+   <BUILTINS>/react.js:204:28
+   204| declare type React$Context<T> = {
                                    ^ [3]
 
 

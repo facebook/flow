@@ -756,8 +756,8 @@ Cannot get `React.PropTypes.imaginaryType` because property `imaginaryType` is m
                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:225:33
-   225|   declare export var PropTypes: ReactPropTypes;
+   <BUILTINS>/react.js:224:33
+   224|   declare export var PropTypes: ReactPropTypes;
                                         ^^^^^^^^^^^^^^ [1]
 
 
