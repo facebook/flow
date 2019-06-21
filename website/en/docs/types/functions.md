@@ -308,7 +308,7 @@ type CallableObj = {
 };
 
 function add(x, y) {
-  return x + y; 
+  return x + y;
 }
 
 // $ExpectError
@@ -321,6 +321,10 @@ add.bar = "hello world";
 
 ### `Function` Type <a class="toc" id="toc-function-type" href="#toc-function-type"></a>
 
+** NOTE: `Function` has become an alias to `any`. For new code, either use `any` or
+`(...args: Array<any>) => any` but there really is no reason to use `Function` and will
+be deprecated and removed in a future version of Flow. **
+
 Sometimes it is useful to write types that accept arbitrary functions, for
 those you should write `() => mixed` like this:
 
@@ -331,13 +335,12 @@ function method(func: () => mixed) {
 ```
 
 However, if you need to opt-out of the type checker, and don't want to go all
-the way to `any`, you can instead use `Function`. **`Function` is unsafe and
-should be avoided.**
+the way to `any`, you can instead use `(...args: Array<any>) => any`. ** NOTE [`any`](../any/) is unsafe and should be avoided.**
 
 For example, the following code will not report any errors:
 
 ```js
-function method(func: Function) {
+function method(func: (...args: Array<any>) => any) {
   func(1, 2);     // Works.
   func("1", "2"); // Works.
   func({}, []);   // Works.
@@ -347,6 +350,17 @@ method(function(a: number, b: number) {
   // ...
 });
 ```
+
+Neither will this:
+
+```js
+function method(obj: Function) {
+  obj = 10;
+}
+
+method(function(a: number, b: number) {
+  // ...
+});
 
 > ***You should follow [all the same rules](../any/) as `any` when using
 > `Function`.***.
