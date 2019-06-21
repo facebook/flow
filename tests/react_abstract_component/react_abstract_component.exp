@@ -254,11 +254,11 @@ References:
    create_element.js:15:32
     15| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:247:6
-   247|   ): {|current: null | T|};
+   <BUILTINS>/react.js:246:6
+   246|   ): {|current: null | T|};
              ^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:198:6
-   198|   | ((React$ElementRef<ElementType> | null) => mixed)
+   <BUILTINS>/react.js:197:6
+   197|   | ((React$ElementRef<ElementType> | null) => mixed)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -276,11 +276,11 @@ References:
    create_element.js:19:49
     19| const _h = <C foo={3} bar="string" baz={4} key={{bad: 3}} />; // Error bad key
                                                         ^^^^^^^^ [1]
-   <BUILTINS>/react.js:191:26
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:26
+   190| declare type React$Key = string | number;
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:191:35
-   191| declare type React$Key = string | number;
+   <BUILTINS>/react.js:190:35
+   190| declare type React$Key = string | number;
                                           ^^^^^^ [3]
 
 
